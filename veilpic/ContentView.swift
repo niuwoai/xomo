@@ -22,6 +22,19 @@ struct ContentView: View {
     }
 }
 
+struct MainWindowView: View {
+    @StateObject private var viewModel: MenuBarUploadViewModel
+
+    init(viewModel: MenuBarUploadViewModel) {
+        _viewModel = StateObject(wrappedValue: viewModel)
+    }
+
+    var body: some View {
+        MenuBarPanelView(viewModel: viewModel)
+            .frame(minWidth: 560, minHeight: 560)
+    }
+}
+
 struct StorageSettingsView: View {
     @ObservedObject var viewModel: MenuBarUploadViewModel
     let mode: SettingsPresentationMode
@@ -284,7 +297,7 @@ struct MenuBarPanelView: View {
                     .controlSize(.small)
             } else {
                 Button {
-                    SettingsWindowPresenter.shared.open(mode: .settings)
+                    SettingsWindowPresenter.shared.openFromMenuBar(mode: .settings)
                 } label: {
                     Image(systemName: "gearshape")
                 }
@@ -358,7 +371,7 @@ struct MenuBarPanelView: View {
             Spacer()
 
             Button {
-                SettingsWindowPresenter.shared.open(mode: .onboarding)
+                SettingsWindowPresenter.shared.openFromMenuBar(mode: .onboarding)
             } label: {
                 Label("设置", systemImage: "arrow.up.right.square")
             }
@@ -594,7 +607,7 @@ struct MenuBarPanelView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
             Button("设置") {
-                SettingsWindowPresenter.shared.open(mode: .settings)
+                SettingsWindowPresenter.shared.openFromMenuBar(mode: .settings)
             }
             .buttonStyle(.borderless)
             Button("退出") {

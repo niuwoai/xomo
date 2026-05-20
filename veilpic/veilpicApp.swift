@@ -44,6 +44,51 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         SettingsWindowPresenter.shared.open(mode: .onboarding)
     }
+
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        if !flag {
+            MainWindowPresenter.shared.open()
+        }
+
+        return true
+    }
+}
+
+final class MainWindowPresenter: NSObject, NSWindowDelegate {
+    static let shared = MainWindowPresenter()
+
+    private var window: NSWindow?
+
+    private override init() {
+        super.init()
+    }
+
+    func open() {
+        let rootView = MainWindowView(viewModel: .shared)
+        let hostingController = NSHostingController(rootView: rootView)
+
+        if let window {
+            window.contentViewController = hostingController
+            show(window)
+            return
+        }
+
+        let window = NSWindow(contentViewController: hostingController)
+        window.title = "轻图"
+        window.styleMask = [.titled, .closable, .miniaturizable, .resizable]
+        window.isReleasedWhenClosed = false
+        window.delegate = self
+        window.setContentSize(NSSize(width: 680, height: 720))
+        window.minSize = NSSize(width: 560, height: 560)
+        window.center()
+        self.window = window
+        show(window)
+    }
+
+    private func show(_ window: NSWindow) {
+        NSApplication.shared.activate(ignoringOtherApps: true)
+        window.makeKeyAndOrderFront(nil)
+    }
 }
 
 final class SettingsWindowPresenter: NSObject, NSWindowDelegate {
@@ -74,6 +119,15 @@ final class SettingsWindowPresenter: NSObject, NSWindowDelegate {
         window.center()
         self.window = window
         show(window)
+    }
+
+    func openFromMenuBar(mode: SettingsPresentationMode) {
+        let menuBarWindow = NSApplication.shared.keyWindow
+        open(mode: mode)
+
+        if let menuBarWindow, menuBarWindow !== window {
+            menuBarWindow.close()
+        }
     }
 
     func close() {

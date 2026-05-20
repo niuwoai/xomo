@@ -210,7 +210,7 @@ final class MenuBarUploadViewModel: ObservableObject {
             phase = .failed
             showFeedback(.warning, title: "配置还没填完整", message: "请补充：\(missingFields.joined(separator: "、"))。")
             statusMessage = "请先补全存储配置"
-            SettingsWindowPresenter.shared.open(mode: .onboarding)
+            SettingsWindowPresenter.shared.openFromMenuBar(mode: .onboarding)
             NSSound.beep()
             return false
         }
