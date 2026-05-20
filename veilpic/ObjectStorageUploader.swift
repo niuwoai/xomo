@@ -72,7 +72,7 @@ struct ObjectStorageUploader: ImageUploading {
             return try AliyunOSSRequestSigner().signedPutRequest(variant: variant, objectKey: objectKey, profile: profile)
         case .tencentCOS:
             return try TencentCOSRequestSigner().signedPutRequest(variant: variant, objectKey: objectKey, profile: profile)
-        case .amazonS3, .cloudflareR2, .customS3:
+        case .amazonS3, .cloudflareR2, .wasabi, .backblazeB2, .digitalOceanSpaces, .minio, .customS3:
             return try S3V4RequestSigner().signedPutRequest(variant: variant, objectKey: objectKey, profile: profile)
         case .qiniuKodo:
             return try QiniuKodoRequestBuilder().uploadRequest(variant: variant, objectKey: objectKey, profile: profile)
@@ -92,13 +92,22 @@ struct S3V4RequestSigner {
         let service = "s3"
         let scope = "\(credentialDate)/\(region)/\(service)/aws4_request"
         let canonicalURI = URLComponents(url: url, resolvingAgainstBaseURL: false)?.percentEncodedPath ?? "/"
-        let canonicalHeaders = [
+        var canonicalHeaderItems = [
             "content-type:\(variant.contentType)",
             "host:\(endpoint.host ?? "")",
             "x-amz-content-sha256:\(payloadHash)",
             "x-amz-date:\(amzDate)"
-        ].joined(separator: "\n") + "\n"
-        let signedHeaders = "content-type;host;x-amz-content-sha256;x-amz-date"
+        ]
+        var signedHeaderItems = ["content-type", "host", "x-amz-content-sha256", "x-amz-date"]
+
+        let sessionToken = profile.activeSessionToken.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !sessionToken.isEmpty {
+            canonicalHeaderItems.append("x-amz-security-token:\(sessionToken)")
+            signedHeaderItems.append("x-amz-security-token")
+        }
+
+        let canonicalHeaders = canonicalHeaderItems.joined(separator: "\n") + "\n"
+        let signedHeaders = signedHeaderItems.joined(separator: ";")
         let canonicalRequest = [
             "PUT",
             canonicalURI,
@@ -121,6 +130,9 @@ struct S3V4RequestSigner {
         request.setValue(variant.contentType, forHTTPHeaderField: "Content-Type")
         request.setValue(payloadHash, forHTTPHeaderField: "x-amz-content-sha256")
         request.setValue(amzDate, forHTTPHeaderField: "x-amz-date")
+        if !sessionToken.isEmpty {
+            request.setValue(sessionToken, forHTTPHeaderField: "x-amz-security-token")
+        }
         request.setValue(authorization, forHTTPHeaderField: "Authorization")
         return request
     }
@@ -251,11 +263,17 @@ struct QiniuKodoRequestBuilder {
 extension StorageProfile {
     func validateForUpload() throws {
         if accessKeyId.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            throw UploadError.missingField("Access Key ID")
+            throw UploadError.missingField(provider.accessKeyLabel)
         }
 
         if accessKeySecret.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            throw UploadError.missingField("Access Key Secret")
+            throw UploadError.missingField(provider.secretKeyLabel)
+        }
+
+        if provider.supportsTemporaryCredentials,
+           credentialMode == .temporary,
+           sessionToken.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            throw UploadError.missingField("Session Token")
         }
 
         if bucket.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, provider != .customS3 {
@@ -343,7 +361,7 @@ extension StorageProfile {
             return "/" + objectKey.urlPathEncoded
         case .qiniuKodo:
             return "/" + objectKey.urlPathEncoded
-        case .amazonS3, .cloudflareR2, .customS3:
+        case .amazonS3, .cloudflareR2, .wasabi, .backblazeB2, .digitalOceanSpaces, .minio, .customS3:
             if bucket.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 return "/" + objectKey.urlPathEncoded
             }

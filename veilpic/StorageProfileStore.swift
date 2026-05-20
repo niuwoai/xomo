@@ -16,6 +16,7 @@ protocol StorageProfileStoring {
 final class StorageProfileStore: StorageProfileStoring {
     private let defaultsKey = "veilpic.storageProfile.v1"
     private let secretAccount = "storage.accessKeySecret"
+    private let sessionTokenAccount = "storage.sessionToken"
     private let keychain = KeychainCredentialStore(service: "com.veilpic.storage")
 
     func load() -> StorageProfile {
@@ -24,6 +25,7 @@ final class StorageProfileStore: StorageProfileStoring {
         if let data = UserDefaults.standard.data(forKey: defaultsKey),
            let snapshot = try? JSONDecoder().decode(StorageProfileSnapshot.self, from: data) {
             profile.provider = snapshot.provider
+            profile.credentialMode = snapshot.credentialMode ?? .longTerm
             profile.accessKeyId = snapshot.accessKeyId
             profile.bucket = snapshot.bucket
             profile.region = snapshot.region
@@ -33,6 +35,7 @@ final class StorageProfileStore: StorageProfileStoring {
         }
 
         profile.accessKeySecret = keychain.read(account: secretAccount) ?? ""
+        profile.sessionToken = keychain.read(account: sessionTokenAccount) ?? ""
         return profile
     }
 
@@ -43,11 +46,13 @@ final class StorageProfileStore: StorageProfileStoring {
         }
 
         keychain.save(profile.accessKeySecret, account: secretAccount)
+        keychain.save(profile.sessionToken, account: sessionTokenAccount)
     }
 }
 
 private struct StorageProfileSnapshot: Codable {
     let provider: StorageProviderKind
+    let credentialMode: StorageCredentialMode?
     let accessKeyId: String
     let bucket: String
     let region: String
@@ -57,6 +62,7 @@ private struct StorageProfileSnapshot: Codable {
 
     init(profile: StorageProfile) {
         provider = profile.provider
+        credentialMode = profile.credentialMode
         accessKeyId = profile.accessKeyId
         bucket = profile.bucket
         region = profile.region

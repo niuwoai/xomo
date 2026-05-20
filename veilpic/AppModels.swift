@@ -8,7 +8,32 @@
 import Foundation
 
 enum AppVersion {
-    static let current = "1.6.0"
+    static let current = "1.8.0"
+}
+
+enum StorageCredentialMode: String, CaseIterable, Identifiable, Codable {
+    case longTerm
+    case temporary
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .longTerm:
+            "长期 S3 API 凭据"
+        case .temporary:
+            "临时凭据"
+        }
+    }
+
+    var note: String {
+        switch self {
+        case .longTerm:
+            "使用控制台创建的 Access Key ID 和 Secret Access Key。"
+        case .temporary:
+            "使用临时 Access Key ID、Secret Access Key 和 Session Token。"
+        }
+    }
 }
 
 enum StorageProviderKind: String, CaseIterable, Identifiable, Codable {
@@ -17,6 +42,10 @@ enum StorageProviderKind: String, CaseIterable, Identifiable, Codable {
     case cloudflareR2
     case tencentCOS
     case qiniuKodo
+    case wasabi
+    case backblazeB2
+    case digitalOceanSpaces
+    case minio
     case customS3
 
     var id: String { rawValue }
@@ -33,6 +62,14 @@ enum StorageProviderKind: String, CaseIterable, Identifiable, Codable {
             "腾讯云 COS"
         case .qiniuKodo:
             "七牛云 Kodo"
+        case .wasabi:
+            "Wasabi"
+        case .backblazeB2:
+            "Backblaze B2"
+        case .digitalOceanSpaces:
+            "DigitalOcean Spaces"
+        case .minio:
+            "MinIO"
         case .customS3:
             "兼容 S3"
         }
@@ -50,6 +87,14 @@ enum StorageProviderKind: String, CaseIterable, Identifiable, Codable {
             "COS"
         case .qiniuKodo:
             "Kodo"
+        case .wasabi:
+            "Wasabi"
+        case .backblazeB2:
+            "B2"
+        case .digitalOceanSpaces:
+            "Spaces"
+        case .minio:
+            "MinIO"
         case .customS3:
             "S3-like"
         }
@@ -67,6 +112,14 @@ enum StorageProviderKind: String, CaseIterable, Identifiable, Codable {
             "square.stack.3d.up"
         case .qiniuKodo:
             "tray.and.arrow.up"
+        case .wasabi:
+            "leaf"
+        case .backblazeB2:
+            "flame"
+        case .digitalOceanSpaces:
+            "circle.grid.cross"
+        case .minio:
+            "internaldrive"
         case .customS3:
             "server.rack"
         }
@@ -84,6 +137,14 @@ enum StorageProviderKind: String, CaseIterable, Identifiable, Codable {
             "https://bucket-appid.cos.ap-guangzhou.myqcloud.com"
         case .qiniuKodo:
             "https://upload-z2.qiniup.com"
+        case .wasabi:
+            "https://s3.wasabisys.com"
+        case .backblazeB2:
+            "https://s3.us-west-001.backblazeb2.com"
+        case .digitalOceanSpaces:
+            "https://nyc3.digitaloceanspaces.com"
+        case .minio:
+            "https://minio.example.com"
         case .customS3:
             "https://storage.example.com"
         }
@@ -101,6 +162,14 @@ enum StorageProviderKind: String, CaseIterable, Identifiable, Codable {
             "ap-guangzhou"
         case .qiniuKodo:
             "z2"
+        case .wasabi:
+            "us-east-1"
+        case .backblazeB2:
+            "us-west-001"
+        case .digitalOceanSpaces:
+            "nyc3"
+        case .minio:
+            "us-east-1 或服务端配置"
         case .customS3:
             "auto 或服务商区域"
         }
@@ -118,16 +187,73 @@ enum StorageProviderKind: String, CaseIterable, Identifiable, Codable {
             "Endpoint 通常包含 bucket-appid 和区域。"
         case .qiniuKodo:
             "Endpoint 使用上传域名；必须配置 CDN 域名用于返回公开链接。"
+        case .wasabi:
+            "Wasabi 使用 S3 兼容 API；Region 通常与 endpoint 匹配。"
+        case .backblazeB2:
+            "使用 B2 S3 Endpoint；Application Key ID 相当于 Access Key。"
+        case .digitalOceanSpaces:
+            "Endpoint 使用 Spaces 区域域名；可选 CDN 域名用于公开访问。"
+        case .minio:
+            "适合自建 MinIO；Endpoint 填写 MinIO API 地址。"
         case .customS3:
             "适合 MinIO、Wasabi、Backblaze B2 等兼容 S3 的服务。"
+        }
+    }
+
+    var accessKeyLabel: String {
+        switch self {
+        case .aliyunOSS:
+            "AccessKey ID"
+        case .tencentCOS:
+            "SecretId"
+        case .qiniuKodo:
+            "AccessKey"
+        case .backblazeB2:
+            "Application Key ID"
+        case .amazonS3, .cloudflareR2, .wasabi, .digitalOceanSpaces:
+            "Access Key ID"
+        case .minio, .customS3:
+            "Access Key"
+        }
+    }
+
+    var secretKeyLabel: String {
+        switch self {
+        case .aliyunOSS:
+            "AccessKey Secret"
+        case .amazonS3, .cloudflareR2, .wasabi:
+            "Secret Access Key"
+        case .tencentCOS:
+            "SecretKey"
+        case .qiniuKodo:
+            "SecretKey"
+        case .backblazeB2:
+            "Application Key"
+        case .digitalOceanSpaces, .minio, .customS3:
+            "Secret Key"
+        }
+    }
+
+    var supportsTemporaryCredentials: Bool {
+        self == .cloudflareR2
+    }
+
+    var usesS3V4Signing: Bool {
+        switch self {
+        case .amazonS3, .cloudflareR2, .wasabi, .backblazeB2, .digitalOceanSpaces, .minio, .customS3:
+            true
+        case .aliyunOSS, .tencentCOS, .qiniuKodo:
+            false
         }
     }
 }
 
 struct StorageProfile {
     var provider: StorageProviderKind = .aliyunOSS
+    var credentialMode: StorageCredentialMode = .longTerm
     var accessKeyId = ""
     var accessKeySecret = ""
+    var sessionToken = ""
     var bucket = ""
     var region = ""
     var endpoint = ""
@@ -145,9 +271,13 @@ struct StorageProfile {
         var fields = [
             ("Bucket", bucket),
             ("Endpoint / API 域名", endpoint),
-            ("Access Key ID", accessKeyId),
-            ("Access Key Secret", accessKeySecret)
+            (provider.accessKeyLabel, accessKeyId),
+            (provider.secretKeyLabel, accessKeySecret)
         ]
+
+        if provider.supportsTemporaryCredentials, credentialMode == .temporary {
+            fields.append(("Session Token", sessionToken))
+        }
 
         if provider == .qiniuKodo {
             fields.append(("七牛云 CDN 域名", cdnDomain))
@@ -170,6 +300,14 @@ struct StorageProfile {
 
     var isReadyForUpload: Bool {
         missingFields.isEmpty
+    }
+
+    var activeSessionToken: String {
+        guard provider.supportsTemporaryCredentials, credentialMode == .temporary else {
+            return ""
+        }
+
+        return sessionToken
     }
 }
 

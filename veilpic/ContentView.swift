@@ -34,8 +34,12 @@ struct StorageSettingsView: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
+                    if mode == .onboarding {
+                        onboardingSteps
+                    }
                     configurationStatus
                     providerSelector
+                    credentialModeSelector
                     configurationFields
                     firstRunNote
                 }
@@ -72,6 +76,42 @@ struct StorageSettingsView: View {
             Spacer()
         }
         .padding(22)
+    }
+
+    private var onboardingSteps: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("三步完成初始化")
+                .font(.headline)
+
+            HStack(alignment: .top, spacing: 10) {
+                OnboardingStepView(
+                    number: 1,
+                    title: "准备存储",
+                    message: "选择 OSS / S3 或兼容服务，准备 bucket、endpoint 和访问密钥。",
+                    isDone: true,
+                    icon: "externaldrive.connected.to.line.below"
+                )
+
+                OnboardingStepView(
+                    number: 2,
+                    title: "填写配置",
+                    message: viewModel.profile.missingFields.isEmpty ? "连接信息已完整，可以开始上传。" : "补齐必填项：\(viewModel.missingConfigurationText)。",
+                    isDone: viewModel.profile.isReadyForUpload,
+                    icon: "key.horizontal"
+                )
+
+                OnboardingStepView(
+                    number: 3,
+                    title: "回到菜单栏",
+                    message: "之后点击菜单栏里的轻图图标，拖图或读取剪贴板即可上传。",
+                    isDone: viewModel.profile.isReadyForUpload,
+                    icon: "menubar.rectangle"
+                )
+            }
+        }
+        .padding(14)
+        .background(Color(NSColor.controlBackgroundColor))
+        .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 
     private var configurationStatus: some View {
@@ -119,6 +159,28 @@ struct StorageSettingsView: View {
         }
     }
 
+    @ViewBuilder
+    private var credentialModeSelector: some View {
+        if viewModel.profile.provider.supportsTemporaryCredentials {
+            VStack(alignment: .leading, spacing: 10) {
+                Text("凭据类型")
+                    .font(.headline)
+
+                Picker("凭据类型", selection: $viewModel.profile.credentialMode) {
+                    ForEach(StorageCredentialMode.allCases) { mode in
+                        Text(mode.title)
+                            .tag(mode)
+                    }
+                }
+                .pickerStyle(.segmented)
+
+                Text(viewModel.profile.credentialMode.note)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+
     private var configurationFields: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("连接信息")
@@ -129,8 +191,12 @@ struct StorageSettingsView: View {
             ConfigField(title: "Endpoint / API 域名", icon: "network", text: $viewModel.profile.endpoint, prompt: viewModel.profile.provider.endpointPlaceholder)
             ConfigField(title: "CDN 域名", icon: "globe", text: $viewModel.profile.cdnDomain, prompt: "https://img.example.com", isRequired: viewModel.profile.provider == .qiniuKodo)
             ConfigField(title: "对象前缀", icon: "folder", text: $viewModel.profile.objectPrefix, prompt: "veilpic", isRequired: false)
-            ConfigField(title: "Access Key ID", icon: "key", text: $viewModel.profile.accessKeyId)
-            SecretConfigField(title: "Access Key Secret", icon: "lock", text: $viewModel.profile.accessKeySecret)
+            ConfigField(title: viewModel.profile.provider.accessKeyLabel, icon: "key", text: $viewModel.profile.accessKeyId)
+            SecretConfigField(title: viewModel.profile.provider.secretKeyLabel, icon: "lock", text: $viewModel.profile.accessKeySecret)
+
+            if viewModel.profile.provider.supportsTemporaryCredentials, viewModel.profile.credentialMode == .temporary {
+                SecretConfigField(title: "Session Token", icon: "ticket", text: $viewModel.profile.sessionToken)
+            }
         }
     }
 

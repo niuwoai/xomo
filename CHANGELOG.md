@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.8.0 - 2026-05-20
+
+- 按不同存储后端动态展示凭据字段名称，例如腾讯云 COS 使用 `SecretId / SecretKey`，Cloudflare R2 使用 `Access Key ID / Secret Access Key`。
+- 新增 Cloudflare R2 临时凭据模式，支持填写 `Session Token` 并在 S3 V4 签名中发送安全令牌。
+- 新增 Wasabi、Backblaze B2、DigitalOcean Spaces 和 MinIO 存储后端入口，复用 S3 兼容上传链路。
+
+## 1.7.0 - 2026-05-20
+
+- 强化首次启动引导，在设置窗口顶部新增“准备存储 / 填写配置 / 回到菜单栏”的三步流程。
+- 新增每一步完成状态与缺失字段提示，让用户能按步骤确认初始化信息。
+- 优化引导窗口信息层级，保留普通设置模式的简洁表单体验。
+
 ## 1.6.0 - 2026-05-20
 
 - 新增首次启动设置引导窗口，未完成 OSS / S3 等存储配置时会主动打开普通设置窗体。

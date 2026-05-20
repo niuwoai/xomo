@@ -95,6 +95,56 @@ struct UploadProgressView: View {
     }
 }
 
+struct OnboardingStepView: View {
+    let number: Int
+    let title: String
+    let message: String
+    let isDone: Bool
+    let icon: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 9) {
+            HStack(spacing: 8) {
+                ZStack {
+                    Circle()
+                        .fill(isDone ? Color.green.opacity(0.16) : Color.accentColor.opacity(0.14))
+                    if isDone {
+                        Image(systemName: "checkmark")
+                            .font(.caption.weight(.bold))
+                            .foregroundStyle(.green)
+                    } else {
+                        Text("\(number)")
+                            .font(.caption.weight(.bold))
+                            .foregroundStyle(Color.accentColor)
+                    }
+                }
+                .frame(width: 24, height: 24)
+
+                Image(systemName: icon)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(isDone ? .green : Color.accentColor)
+            }
+
+            Text(title)
+                .font(.caption.weight(.semibold))
+                .lineLimit(1)
+
+            Text(message)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, minHeight: 112, alignment: .topLeading)
+        .padding(12)
+        .background(Color(NSColor.windowBackgroundColor))
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .overlay {
+            RoundedRectangle(cornerRadius: 8)
+                .strokeBorder(isDone ? Color.green.opacity(0.22) : Color.secondary.opacity(0.12))
+        }
+    }
+}
+
 struct MetricPill: View {
     let title: String
     let value: String
