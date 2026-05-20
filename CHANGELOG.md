@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.9.0 - 2026-05-20
+
+- 将已选定的“轻图”云端上传方向 logo 裁切并接入 macOS AppIcon 资产。
+- 新增 16px 到 1024px 的完整 AppIcon PNG 尺寸，并更新 Xcode 资产目录映射。
+- 新增单色 template 菜单栏图标资产，并让系统托盘入口使用轻图图标轮廓。
+
 ## 1.8.0 - 2026-05-20
 
 - 按不同存储后端动态展示凭据字段名称，例如腾讯云 COS 使用 `SecretId / SecretKey`，Cloudflare R2 使用 `Access Key ID / Secret Access Key`。

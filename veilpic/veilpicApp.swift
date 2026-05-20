@@ -17,7 +17,11 @@ struct veilpicApp: App {
         MenuBarExtra {
             ContentView(viewModel: viewModel)
         } label: {
-            Label("轻图", systemImage: "photo.on.rectangle.angled")
+            Label {
+                Text("轻图")
+            } icon: {
+                Image("MenuBarIcon")
+            }
         }
         .menuBarExtraStyle(.window)
 
