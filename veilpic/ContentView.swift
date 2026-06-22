@@ -37,6 +37,8 @@ struct MainWindowView: View {
 
 struct StorageSettingsView: View {
     @ObservedObject var viewModel: MenuBarUploadViewModel
+    @StateObject private var launchAtLogin = LaunchAtLoginSettings()
+    @ObservedObject private var dockVisibility = DockVisibilitySettings.shared
     let mode: SettingsPresentationMode
 
     var body: some View {
@@ -54,6 +56,9 @@ struct StorageSettingsView: View {
                     providerSelector
                     credentialModeSelector
                     configurationFields
+                    uploadBehaviorSection
+                    launchAtLoginSection
+                    dockVisibilitySection
                     firstRunNote
                 }
                 .padding(22)
@@ -79,9 +84,9 @@ struct StorageSettingsView: View {
             .frame(width: 46, height: 46)
 
             VStack(alignment: .leading, spacing: 4) {
-                Text(mode == .onboarding ? "开始使用轻图" : "轻图设置")
+                Text(mode == .onboarding ? L10n.text("settings.title.onboarding") : L10n.text("settings.title"))
                     .font(.title2.weight(.semibold))
-                Text("配置 OSS / S3 等对象存储；之后从菜单栏图标快速上传图片。")
+                Text(L10n.text("settings.subtitle"))
                     .font(.callout)
                     .foregroundStyle(.secondary)
             }
@@ -93,30 +98,30 @@ struct StorageSettingsView: View {
 
     private var onboardingSteps: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("三步完成初始化")
+            Text(L10n.text("onboarding.title"))
                 .font(.headline)
 
             HStack(alignment: .top, spacing: 10) {
                 OnboardingStepView(
                     number: 1,
-                    title: "准备存储",
-                    message: "选择 OSS / S3 或兼容服务，准备 bucket、endpoint 和访问密钥。",
+                    title: L10n.text("onboarding.step.storage.title"),
+                    message: L10n.text("onboarding.step.storage.message"),
                     isDone: true,
                     icon: "externaldrive.connected.to.line.below"
                 )
 
                 OnboardingStepView(
                     number: 2,
-                    title: "填写配置",
-                    message: viewModel.profile.missingFields.isEmpty ? "连接信息已完整，可以开始上传。" : "补齐必填项：\(viewModel.missingConfigurationText)。",
+                    title: L10n.text("onboarding.step.config.title"),
+                    message: viewModel.profile.missingFields.isEmpty ? L10n.text("onboarding.step.config.done") : L10n.format("onboarding.step.config.missing", viewModel.missingConfigurationText),
                     isDone: viewModel.profile.isReadyForUpload,
                     icon: "key.horizontal"
                 )
 
                 OnboardingStepView(
                     number: 3,
-                    title: "回到菜单栏",
-                    message: "之后点击菜单栏里的轻图图标，拖图或读取剪贴板即可上传。",
+                    title: L10n.text("onboarding.step.menubar.title"),
+                    message: L10n.text("onboarding.step.menubar.message"),
                     isDone: viewModel.profile.isReadyForUpload,
                     icon: "menubar.rectangle"
                 )
@@ -139,11 +144,11 @@ struct StorageSettingsView: View {
             ProgressView(value: viewModel.configurationProgress)
 
             if viewModel.profile.missingFields.isEmpty {
-                Label("配置已完整，可以回到菜单栏上传图片。", systemImage: "checkmark.circle.fill")
+                Label(L10n.text("settings.config.complete"), systemImage: "checkmark.circle.fill")
                     .font(.caption)
                     .foregroundStyle(.green)
             } else {
-                Label("待补充：\(viewModel.missingConfigurationText)", systemImage: "exclamationmark.triangle.fill")
+                Label(L10n.format("settings.config.missing", viewModel.missingConfigurationText), systemImage: "exclamationmark.triangle.fill")
                     .font(.caption)
                     .foregroundStyle(.orange)
             }
@@ -155,10 +160,10 @@ struct StorageSettingsView: View {
 
     private var providerSelector: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("存储后端")
+            Text(L10n.text("settings.provider"))
                 .font(.headline)
 
-            Picker("存储后端", selection: $viewModel.profile.provider) {
+            Picker(L10n.text("settings.provider"), selection: $viewModel.profile.provider) {
                 ForEach(StorageProviderKind.allCases) { provider in
                     Label(provider.title, systemImage: provider.symbolName)
                         .tag(provider)
@@ -176,10 +181,10 @@ struct StorageSettingsView: View {
     private var credentialModeSelector: some View {
         if viewModel.profile.provider.supportsTemporaryCredentials {
             VStack(alignment: .leading, spacing: 10) {
-                Text("凭据类型")
+                Text(L10n.text("settings.credentialMode"))
                     .font(.headline)
 
-                Picker("凭据类型", selection: $viewModel.profile.credentialMode) {
+                Picker(L10n.text("settings.credentialMode"), selection: $viewModel.profile.credentialMode) {
                     ForEach(StorageCredentialMode.allCases) { mode in
                         Text(mode.title)
                             .tag(mode)
@@ -196,28 +201,102 @@ struct StorageSettingsView: View {
 
     private var configurationFields: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("连接信息")
+            Text(L10n.text("settings.connectionInfo"))
                 .font(.headline)
 
-            ConfigField(title: "Bucket", icon: "shippingbox", text: $viewModel.profile.bucket)
-            ConfigField(title: "Region", icon: "map", text: $viewModel.profile.region, prompt: viewModel.profile.provider.regionPlaceholder, isRequired: false)
-            ConfigField(title: "Endpoint / API 域名", icon: "network", text: $viewModel.profile.endpoint, prompt: viewModel.profile.provider.endpointPlaceholder)
-            ConfigField(title: "CDN 域名", icon: "globe", text: $viewModel.profile.cdnDomain, prompt: "https://img.example.com", isRequired: viewModel.profile.provider == .qiniuKodo)
-            ConfigField(title: "对象前缀", icon: "folder", text: $viewModel.profile.objectPrefix, prompt: "veilpic", isRequired: false)
+            ConfigField(title: L10n.text("field.bucket"), icon: "shippingbox", text: $viewModel.profile.bucket)
+            ConfigField(title: L10n.text("field.region"), icon: "map", text: $viewModel.profile.region, prompt: viewModel.profile.provider.regionPlaceholder, isRequired: false)
+            ConfigField(title: L10n.text("field.endpoint"), icon: "network", text: $viewModel.profile.endpoint, prompt: viewModel.profile.provider.endpointPlaceholder)
+            ConfigField(title: L10n.text("field.cdnDomain"), icon: "globe", text: $viewModel.profile.cdnDomain, prompt: "https://img.example.com", isRequired: viewModel.profile.provider == .qiniuKodo)
+            ConfigField(title: L10n.text("field.objectPrefix"), icon: "folder", text: $viewModel.profile.objectPrefix, prompt: "veilpic", isRequired: false)
             ConfigField(title: viewModel.profile.provider.accessKeyLabel, icon: "key", text: $viewModel.profile.accessKeyId)
             SecretConfigField(title: viewModel.profile.provider.secretKeyLabel, icon: "lock", text: $viewModel.profile.accessKeySecret)
 
             if viewModel.profile.provider.supportsTemporaryCredentials, viewModel.profile.credentialMode == .temporary {
-                SecretConfigField(title: "Session Token", icon: "ticket", text: $viewModel.profile.sessionToken)
+                SecretConfigField(title: L10n.text("field.sessionToken"), icon: "ticket", text: $viewModel.profile.sessionToken)
             }
         }
     }
 
+    private var dockVisibilitySection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Toggle(isOn: $dockVisibility.hideDockIcon) {
+                Label(L10n.text("settings.dockVisibility.title"), systemImage: "dock.rectangle")
+                    .font(.headline)
+            }
+
+            Text(L10n.text("settings.dockVisibility.note"))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .padding(14)
+        .background(Color(NSColor.controlBackgroundColor))
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+    }
+
+    private var launchAtLoginSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Toggle(
+                isOn: Binding(
+                    get: { launchAtLogin.isEnabled },
+                    set: { launchAtLogin.setEnabled($0) }
+                )
+            ) {
+                Label(L10n.text("settings.launchAtLogin.title"), systemImage: "power")
+                    .font(.headline)
+            }
+
+            Text(L10n.text("settings.launchAtLogin.note"))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            if let errorMessage = launchAtLogin.errorMessage {
+                Label(L10n.format("settings.launchAtLogin.error", errorMessage), systemImage: "exclamationmark.triangle.fill")
+                    .font(.caption)
+                    .foregroundStyle(.orange)
+            }
+        }
+        .padding(14)
+        .background(Color(NSColor.controlBackgroundColor))
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .onAppear {
+            launchAtLogin.refresh()
+        }
+    }
+
+    private var uploadBehaviorSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(L10n.text("settings.uploadBehavior"))
+                .font(.headline)
+
+            Toggle(isOn: $viewModel.profile.automaticallyCopyAfterUpload) {
+                Label(L10n.text("settings.autoCopy.title"), systemImage: "doc.on.clipboard")
+                    .font(.caption.weight(.semibold))
+            }
+
+            Picker(L10n.text("settings.autoCopy.variant"), selection: $viewModel.profile.automaticCopyVariant) {
+                ForEach(ImageVariantKind.allCases) { kind in
+                    Label(kind.title, systemImage: kind.symbolName)
+                        .tag(kind)
+                }
+            }
+            .pickerStyle(.menu)
+            .disabled(!viewModel.profile.automaticallyCopyAfterUpload)
+
+            Text(L10n.text("settings.autoCopy.note"))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .padding(14)
+        .background(Color(NSColor.controlBackgroundColor))
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+    }
+
     private var firstRunNote: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Label("使用方式", systemImage: "menubar.rectangle")
+            Label(L10n.text("settings.usage.title"), systemImage: "menubar.rectangle")
                 .font(.headline)
-            Text("配置完成后，轻图会留在菜单栏。点击菜单栏图标即可拖拽图片、读取剪贴板、复制上传链接；设置也可以随时从托盘面板打开。")
+            Text(L10n.text("settings.usage.message"))
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -229,13 +308,13 @@ struct StorageSettingsView: View {
 
     private var settingsFooter: some View {
         HStack {
-            Text("版本 \(AppVersion.current)")
+            Text(L10n.format("app.version", AppVersion.current))
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
             Spacer()
 
-            Button("完成") {
+            Button(L10n.text("button.done")) {
                 SettingsWindowPresenter.shared.close()
             }
             .buttonStyle(.borderedProminent)
@@ -250,20 +329,27 @@ struct MenuBarPanelView: View {
     @State private var selectedSection: PanelSection = .upload
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            header
-            sectionPicker
+        ZStack(alignment: .bottom) {
+            VStack(alignment: .leading, spacing: 12) {
+                header
+                sectionPicker
+                content
+                footer
+            }
+            .padding(16)
 
             if let feedback = viewModel.feedback {
-                FeedbackBanner(feedback: feedback, dismiss: viewModel.dismissFeedback)
-                    .transition(.opacity.combined(with: .move(edge: .top)))
+                FeedbackToast(feedback: feedback, dismiss: viewModel.dismissFeedback)
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 50)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .task(id: feedback.id) {
+                        try? await Task.sleep(nanoseconds: 3_000_000_000)
+                        viewModel.dismissFeedback()
+                    }
             }
-
-            content
-            footer
         }
-        .padding(16)
-        .animation(.snappy(duration: 0.18), value: viewModel.feedback)
+        .animation(.snappy(duration: 0.2), value: viewModel.feedback)
         .onChange(of: viewModel.suggestedSection) { _, section in
             guard let section else { return }
             selectedSection = section
@@ -282,7 +368,7 @@ struct MenuBarPanelView: View {
             .frame(width: 38, height: 38)
 
             VStack(alignment: .leading, spacing: 3) {
-                Text("轻图")
+                Text(L10n.text("app.name"))
                     .font(.title2.weight(.semibold))
                 Text(viewModel.statusMessage)
                     .font(.callout)
@@ -300,15 +386,19 @@ struct MenuBarPanelView: View {
                     SettingsWindowPresenter.shared.openFromMenuBar(mode: .settings)
                 } label: {
                     Image(systemName: "gearshape")
+                        .font(.title3)
+                        .foregroundStyle(.secondary)
+                        .frame(width: 24, height: 24)
+                        .contentShape(Rectangle())
                 }
-                .buttonStyle(.borderless)
-                .help("打开设置")
+                .buttonStyle(.plain)
+                .help(L10n.text("help.openSettings"))
             }
         }
     }
 
     private var sectionPicker: some View {
-        Picker("面板", selection: $selectedSection) {
+        Picker(L10n.text("panel.picker"), selection: $selectedSection) {
             ForEach(PanelSection.allCases) { section in
                 Label(section.title, systemImage: section.icon)
                     .tag(section)
@@ -322,7 +412,7 @@ struct MenuBarPanelView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
                 if viewModel.isUploading || viewModel.phase != .idle {
-                    UploadProgressView(phase: viewModel.phase)
+                    UploadProgressView(phase: viewModel.phase, stats: viewModel.uploadStats)
                 }
 
                 switch selectedSection {
@@ -360,9 +450,9 @@ struct MenuBarPanelView: View {
                 .frame(width: 24)
 
             VStack(alignment: .leading, spacing: 3) {
-                Text("先配置对象存储")
+                Text(L10n.text("upload.configPrompt.title"))
                     .font(.caption.weight(.semibold))
-                Text("轻图需要 OSS / S3 等存储信息，配置后就能从菜单栏快速上传。")
+                Text(L10n.text("upload.configPrompt.message"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(2)
@@ -373,7 +463,7 @@ struct MenuBarPanelView: View {
             Button {
                 SettingsWindowPresenter.shared.openFromMenuBar(mode: .onboarding)
             } label: {
-                Label("设置", systemImage: "arrow.up.right.square")
+                Label(L10n.text("button.settings"), systemImage: "arrow.up.right.square")
             }
             .buttonStyle(.bordered)
         }
@@ -392,10 +482,10 @@ struct MenuBarPanelView: View {
                 .font(.system(size: 42, weight: .medium))
                 .foregroundStyle(viewModel.isDropTargeted ? .blue : .secondary)
 
-            Text(viewModel.isDropTargeted ? "松开即可上传" : "拖拽图片到这里")
+            Text(viewModel.isDropTargeted ? L10n.text("upload.drop.release") : L10n.text("upload.drop.idle"))
                 .font(.headline)
 
-            Text("生成原图、压缩图、缩略图和 WebP；上传成功后自动复制原图链接。")
+            Text(L10n.text("upload.drop.message"))
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -404,12 +494,29 @@ struct MenuBarPanelView: View {
             Button {
                 viewModel.uploadFromClipboard()
             } label: {
-                Label(viewModel.isUploading ? "正在上传" : "读取剪贴板并上传", systemImage: "doc.on.clipboard")
+                Label(viewModel.isUploading ? L10n.text("button.uploading") : L10n.text("button.uploadClipboard"), systemImage: "doc.on.clipboard")
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
-            .disabled(!viewModel.canUpload)
+
+            HStack(spacing: 8) {
+                Button {
+                    viewModel.chooseImageFiles()
+                } label: {
+                    Label(L10n.text("button.chooseImages"), systemImage: "photo.on.rectangle")
+                        .frame(maxWidth: .infinity)
+                }
+
+                Button {
+                    viewModel.chooseImageDirectory()
+                } label: {
+                    Label(L10n.text("button.chooseFolder"), systemImage: "folder.badge.plus")
+                        .frame(maxWidth: .infinity)
+                }
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.regular)
         }
         .frame(maxWidth: .infinity)
         .padding(24)
@@ -428,9 +535,9 @@ struct MenuBarPanelView: View {
 
     private var uploadQuickStats: some View {
         HStack(spacing: 10) {
-            MetricPill(title: "后端", value: viewModel.profile.provider.shortTitle, icon: viewModel.profile.provider.symbolName)
-            MetricPill(title: "路径", value: viewModel.profile.objectPrefix.isEmpty ? "日期目录" : viewModel.profile.objectPrefix, icon: "folder")
-            MetricPill(title: "配置", value: "\(Int((viewModel.configurationProgress * 100).rounded()))%", icon: "checkmark.seal")
+            MetricPill(title: L10n.text("metric.provider"), value: viewModel.profile.provider.shortTitle, icon: viewModel.profile.provider.symbolName)
+            MetricPill(title: L10n.text("metric.path"), value: viewModel.profile.objectPrefix.isEmpty ? L10n.text("metric.dateFolder") : viewModel.profile.objectPrefix, icon: "folder")
+            MetricPill(title: L10n.text("metric.config"), value: "\(Int((viewModel.configurationProgress * 100).rounded()))%", icon: "checkmark.seal")
         }
     }
 
@@ -438,8 +545,8 @@ struct MenuBarPanelView: View {
     private var currentImagePreview: some View {
         if let variant = previewVariant {
             ImagePreviewCard(
-                title: "图片预览",
-                subtitle: "本次上传将优先使用缩略图做历史封面",
+                title: L10n.text("preview.title"),
+                subtitle: L10n.text("preview.subtitle"),
                 imageData: variant.data,
                 footer: variant.byteCountText
             )
@@ -450,10 +557,16 @@ struct MenuBarPanelView: View {
     private var variantPreview: some View {
         if !viewModel.generatedVariants.isEmpty {
             VStack(alignment: .leading, spacing: 8) {
-                Text("本次生成")
+                Text(L10n.text("variants.generated"))
                     .font(.headline)
                 ForEach(viewModel.generatedVariants) { variant in
-                    VariantSummaryRow(variant: variant)
+                    VariantSummaryRow(
+                        variant: variant,
+                        url: viewModel.uploadResult?.links[variant.kind],
+                        copy: { url in
+                            viewModel.copyLink(url)
+                        }
+                    )
                 }
             }
         }
@@ -461,17 +574,17 @@ struct MenuBarPanelView: View {
 
     @ViewBuilder
     private var latestLinkPreview: some View {
-        if let result = viewModel.uploadResult, let url = result.links[.original] {
+        if let result = viewModel.uploadResult, let url = latestPreviewURL(from: result) {
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
-                    Label("原图链接已复制", systemImage: "checkmark.circle.fill")
+                    Label(latestPreviewTitle, systemImage: "checkmark.circle.fill")
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(.green)
                     Spacer()
                     Button {
                         selectedSection = .links
                     } label: {
-                        Label("查看", systemImage: "arrow.right")
+                        Label(L10n.text("button.view"), systemImage: "arrow.right")
                     }
                     .buttonStyle(.borderless)
                 }
@@ -493,7 +606,7 @@ struct MenuBarPanelView: View {
             if let result = viewModel.uploadResult {
                 HStack {
                     VStack(alignment: .leading, spacing: 3) {
-                        Text("最新上传")
+                        Text(L10n.text("links.latestUpload"))
                             .font(.headline)
                         Text("\(result.sourceName) · \(result.createdAt, format: Date.FormatStyle(date: .omitted, time: .standard))")
                             .font(.caption)
@@ -505,7 +618,7 @@ struct MenuBarPanelView: View {
                     Button {
                         viewModel.copyAllLinks()
                     } label: {
-                        Label("全部复制", systemImage: "doc.on.doc")
+                        Label(L10n.text("button.copyAll"), systemImage: "doc.on.doc")
                     }
                     .buttonStyle(.bordered)
                 }
@@ -520,8 +633,8 @@ struct MenuBarPanelView: View {
             } else {
                 EmptyStateView(
                     icon: "link.badge.plus",
-                    title: "还没有上传结果",
-                    message: "上传完成后，这里会列出原图、压缩图、缩略图和 WebP 链接。"
+                    title: L10n.text("empty.links.title"),
+                    message: L10n.text("empty.links.message")
                 )
             }
         }
@@ -532,8 +645,8 @@ struct MenuBarPanelView: View {
             if viewModel.uploadHistory.isEmpty {
                 EmptyStateView(
                     icon: "clock.arrow.circlepath",
-                    title: "还没有上传历史",
-                    message: "之后上传的图片会在本机保存预览、链接和时间，方便随时找回。"
+                    title: L10n.text("empty.history.title"),
+                    message: L10n.text("empty.history.message")
                 )
             } else {
                 historyHeader
@@ -579,9 +692,9 @@ struct MenuBarPanelView: View {
     private var historyHeader: some View {
         HStack {
             VStack(alignment: .leading, spacing: 3) {
-                Text("上传历史")
+                Text(L10n.text("history.title"))
                     .font(.headline)
-                Text("本地保存最近 \(viewModel.uploadHistory.count) 条记录")
+                Text(L10n.format("history.count", viewModel.uploadHistory.count))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -591,7 +704,7 @@ struct MenuBarPanelView: View {
             Button {
                 viewModel.clearHistory()
             } label: {
-                Label("清空", systemImage: "trash")
+                Label(L10n.text("button.clear"), systemImage: "trash")
             }
             .buttonStyle(.borderless)
         }
@@ -599,18 +712,18 @@ struct MenuBarPanelView: View {
 
     private var footer: some View {
         HStack(spacing: 10) {
-            Text("版本 \(AppVersion.current)")
+            Text(L10n.format("app.version", AppVersion.current))
                 .font(.caption)
                 .foregroundStyle(.secondary)
             Spacer()
             Text(viewModel.profile.provider.shortTitle)
                 .font(.caption)
                 .foregroundStyle(.secondary)
-            Button("设置") {
+            Button(L10n.text("button.settings")) {
                 SettingsWindowPresenter.shared.openFromMenuBar(mode: .settings)
             }
             .buttonStyle(.borderless)
-            Button("退出") {
+            Button(L10n.text("button.quit")) {
                 NSApplication.shared.terminate(nil)
             }
             .buttonStyle(.borderless)
@@ -621,5 +734,22 @@ struct MenuBarPanelView: View {
         viewModel.generatedVariants.first { $0.kind == .thumbnail }
             ?? viewModel.generatedVariants.first { $0.kind == .compressed }
             ?? viewModel.generatedVariants.first
+    }
+
+    private var latestPreviewTitle: String {
+        guard viewModel.profile.automaticallyCopyAfterUpload else {
+            return L10n.text("links.uploaded")
+        }
+
+        return L10n.format("links.variantCopied", viewModel.profile.automaticCopyVariant.copiedTitle)
+    }
+
+    private func latestPreviewURL(from result: UploadResult) -> URL? {
+        let preferredKind = viewModel.profile.automaticCopyVariant
+        return result.links[preferredKind]
+            ?? result.links[.compressed]
+            ?? result.links[.original]
+            ?? result.links[.thumbnail]
+            ?? result.links[.webpReference]
     }
 }

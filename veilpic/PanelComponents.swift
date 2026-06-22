@@ -23,7 +23,7 @@ struct ProviderBadge: View {
     }
 }
 
-struct FeedbackBanner: View {
+struct FeedbackToast: View {
     let feedback: UserFeedback
     let dismiss: () -> Void
 
@@ -40,7 +40,7 @@ struct FeedbackBanner: View {
                 Text(feedback.message)
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                    .lineLimit(2)
+                    .lineLimit(4)
             }
 
             Spacer()
@@ -49,15 +49,17 @@ struct FeedbackBanner: View {
                 Image(systemName: "xmark")
             }
             .buttonStyle(.borderless)
-            .help("关闭提示")
+            .help(L10n.text("help.dismissFeedback"))
         }
-        .padding(10)
-        .background(tint.opacity(0.1))
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .background(.regularMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 8))
         .overlay {
             RoundedRectangle(cornerRadius: 8)
-                .strokeBorder(tint.opacity(0.18))
+                .strokeBorder(tint.opacity(0.24))
         }
+        .shadow(color: .black.opacity(0.16), radius: 16, x: 0, y: 8)
     }
 
     private var tint: Color {
@@ -76,22 +78,95 @@ struct FeedbackBanner: View {
 
 struct UploadProgressView: View {
     let phase: UploadPhase
+    let stats: UploadDashboardState
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text(phase.title)
+                Label(phase.title, systemImage: "arrow.up.circle.fill")
                     .font(.caption.weight(.semibold))
+                    .foregroundStyle(Color.accentColor)
                 Spacer()
-                Text("\(Int((phase.progress * 100).rounded()))%")
+                Text(stats.isActive ? stats.percentText : "\(Int((phase.progress * 100).rounded()))%")
                     .font(.caption.monospacedDigit())
                     .foregroundStyle(.secondary)
             }
-            ProgressView(value: phase.progress)
+
+            if stats.isActive {
+                taskBars
+
+                HStack(spacing: 8) {
+                    UploadStatPill(title: L10n.text("upload.stats.done"), value: "\(stats.completedTasks)/\(stats.totalTasks)", icon: "checkmark.circle")
+                    UploadStatPill(title: L10n.text("upload.stats.active"), value: "\(stats.activeTasks)", icon: "bolt.horizontal")
+                    UploadStatPill(title: L10n.text("upload.stats.speed"), value: stats.speedText, icon: "speedometer")
+                }
+
+                if stats.failedTasks > 0 || stats.queuedTasks > 0 {
+                    HStack(spacing: 8) {
+                        if stats.failedTasks > 0 {
+                            UploadStatPill(title: L10n.text("upload.stats.failed"), value: "\(stats.failedTasks)", icon: "exclamationmark.triangle")
+                        }
+                        if stats.queuedTasks > 0 {
+                            UploadStatPill(title: L10n.text("upload.stats.queue"), value: "\(stats.queuedTasks)", icon: "tray.full")
+                        }
+                    }
+                }
+            } else {
+                ProgressView(value: phase.progress)
+            }
         }
         .padding(10)
         .background(Color(NSColor.controlBackgroundColor))
         .clipShape(RoundedRectangle(cornerRadius: 8))
+    }
+
+    private var taskBars: some View {
+        HStack(spacing: 3) {
+            ForEach(0..<max(stats.totalTasks, 1), id: \.self) { index in
+                RoundedRectangle(cornerRadius: 3)
+                    .fill(color(for: index))
+                    .frame(height: 12)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .animation(.easeInOut(duration: 0.2), value: stats)
+    }
+
+    private func color(for index: Int) -> Color {
+        if index < stats.completedTasks {
+            return .green
+        }
+        if index < stats.completedTasks + stats.failedTasks {
+            return .red
+        }
+        if index < stats.completedTasks + stats.failedTasks + stats.activeTasks {
+            return Color.accentColor
+        }
+        return Color.secondary.opacity(0.18)
+    }
+}
+
+private struct UploadStatPill: View {
+    let title: String
+    let value: String
+    let icon: String
+
+    var body: some View {
+        Label {
+            HStack(spacing: 4) {
+                Text(title)
+                Text(value)
+                    .font(.caption2.monospacedDigit().weight(.semibold))
+            }
+        } icon: {
+            Image(systemName: icon)
+        }
+        .font(.caption2)
+        .lineLimit(1)
+        .padding(.horizontal, 7)
+        .padding(.vertical, 5)
+        .background(Color.secondary.opacity(0.1))
+        .clipShape(RoundedRectangle(cornerRadius: 6))
     }
 }
 
@@ -186,7 +261,7 @@ struct ConfigField: View {
                     .font(.caption.weight(.medium))
                     .foregroundStyle(.secondary)
                 if isRequired {
-                    Text("必填")
+                    Text(L10n.text("field.required"))
                         .font(.caption2.weight(.medium))
                         .foregroundStyle(.orange)
                 }
@@ -209,7 +284,7 @@ struct SecretConfigField: View {
                 Label(title, systemImage: icon)
                     .font(.caption.weight(.medium))
                     .foregroundStyle(.secondary)
-                Text("必填")
+                Text(L10n.text("field.required"))
                     .font(.caption2.weight(.medium))
                     .foregroundStyle(.orange)
             }
@@ -221,23 +296,43 @@ struct SecretConfigField: View {
 
 struct VariantSummaryRow: View {
     let variant: GeneratedImageVariant
+    let url: URL?
+    let copy: (URL) -> Void
 
     var body: some View {
         HStack(spacing: 9) {
             Image(systemName: variant.kind.symbolName)
                 .foregroundStyle(Color.accentColor)
                 .frame(width: 18)
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 3) {
                 Text(variant.kind.title)
                     .font(.caption.weight(.semibold))
                 Text(variant.kind.detail)
                     .font(.caption2)
                     .foregroundStyle(.secondary)
+                if let url {
+                    Text(url.absoluteString)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                }
             }
             Spacer()
-            Text(variant.byteCountText)
-                .font(.caption.monospacedDigit())
-                .foregroundStyle(.secondary)
+            VStack(alignment: .trailing, spacing: 4) {
+                Text(variant.byteCountText)
+                    .font(.caption.monospacedDigit())
+                    .foregroundStyle(.secondary)
+                if let url {
+                    Button {
+                        copy(url)
+                    } label: {
+                        Image(systemName: "doc.on.doc")
+                    }
+                    .buttonStyle(.borderless)
+                    .help(L10n.text("help.copyLink"))
+                }
+            }
         }
         .padding(9)
         .background(Color(NSColor.controlBackgroundColor))
@@ -279,7 +374,7 @@ struct ImagePreviewCard: View {
                     VStack(spacing: 8) {
                         Image(systemName: "photo")
                             .font(.system(size: 32, weight: .medium))
-                        Text("暂无预览")
+                        Text(L10n.text("preview.empty"))
                             .font(.caption)
                     }
                     .foregroundStyle(.secondary)
@@ -306,16 +401,20 @@ struct HistoryPreviewCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 11) {
-            ImagePreviewCard(
-                title: item.sourceName,
-                subtitle: item.providerSummary,
-                imageData: item.thumbnailData,
-                footer: "\(item.links.count) 个链接"
-            )
+            Button(action: copyPrimary) {
+                ImagePreviewCard(
+                    title: item.sourceName,
+                    subtitle: item.providerSummary,
+                    imageData: item.thumbnailData,
+                    footer: L10n.format("links.count", item.links.count)
+                )
+            }
+            .buttonStyle(.plain)
+            .help(L10n.text("help.copyPrimary"))
 
             HStack(spacing: 8) {
                 Button(action: copyPrimary) {
-                    Label("复制主链接", systemImage: "link")
+                    Label(L10n.text("button.copyPrimary"), systemImage: "link")
                 }
                 .buttonStyle(.borderedProminent)
 
@@ -325,7 +424,7 @@ struct HistoryPreviewCard: View {
                 .buttonStyle(.bordered)
 
                 Button(action: copyAll) {
-                    Label("全部", systemImage: "doc.on.doc")
+                    Label(L10n.text("button.all"), systemImage: "doc.on.doc")
                 }
                 .buttonStyle(.bordered)
             }
@@ -341,7 +440,10 @@ struct HistoryItemRow: View {
     let remove: () -> Void
 
     var body: some View {
-        Button(action: select) {
+        Button {
+            select()
+            copy()
+        } label: {
             HStack(spacing: 10) {
                 thumbnail
 
@@ -368,13 +470,13 @@ struct HistoryItemRow: View {
                     Image(systemName: "doc.on.doc")
                 }
                 .buttonStyle(.borderless)
-                .help("复制主链接")
+                .help(L10n.text("help.copyPrimary"))
 
                 Button(action: remove) {
                     Image(systemName: "trash")
                 }
                 .buttonStyle(.borderless)
-                .help("移除本地历史")
+                .help(L10n.text("help.removeHistory"))
             }
             .padding(9)
             .background(isSelected ? Color.accentColor.opacity(0.12) : Color(NSColor.controlBackgroundColor))
@@ -433,7 +535,7 @@ struct LinkRow: View {
                 Image(systemName: "doc.on.doc")
             }
             .buttonStyle(.borderless)
-            .help("复制链接")
+            .help(L10n.text("help.copyLink"))
         }
         .padding(10)
         .background(Color(NSColor.controlBackgroundColor))

@@ -1,0 +1,51 @@
+# macOS
+.DS_Store
+
+# Xcode user data
+xcuserdata/
+*.xcuserstate
+*.xcuserdatad/
+
+# Xcode build artifacts
+build/
+DerivedData/
+*.xcodeproj/project.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+*.xcworkspace/xcuserdata/
+
+# Swift Package Manager / CocoaPods build
+.swiftpm/
+Pods/
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Archives & exports
+*.xcarchive
+*.app
+
+# fastlane / signing artifacts
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots
+fastlane/test_output
+
+# Secrets — never commit
+.env
+.env.*
+!.env.example
+*.p12
+*.mobileprovision
+*.cer
+*.pem
+*.key
+
+# Logs
+*.log
+
+# Editor / tool caches
+.vscode/
+.idea/
+.cursor/
+.claude/settings.local.json

@@ -56,6 +56,11 @@ private extension NSImage {
     }
 
     func webpData(maxPixelWidth: CGFloat, compression: CGFloat) -> Data? {
+        let writableTypes = CGImageDestinationCopyTypeIdentifiers() as? [String] ?? []
+        guard writableTypes.contains(UTType.webP.identifier) else {
+            return nil
+        }
+
         guard let resized = resized(maxPixelWidth: maxPixelWidth),
               let cgImage = resized.cgImage(forProposedRect: nil, context: nil, hints: nil)
         else {

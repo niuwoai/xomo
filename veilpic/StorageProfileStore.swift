@@ -32,6 +32,8 @@ final class StorageProfileStore: StorageProfileStoring {
             profile.endpoint = snapshot.endpoint
             profile.cdnDomain = snapshot.cdnDomain
             profile.objectPrefix = snapshot.objectPrefix
+            profile.automaticallyCopyAfterUpload = snapshot.automaticallyCopyAfterUpload ?? true
+            profile.automaticCopyVariant = snapshot.automaticCopyVariant ?? .compressed
         }
 
         profile.accessKeySecret = keychain.read(account: secretAccount) ?? ""
@@ -59,6 +61,8 @@ private struct StorageProfileSnapshot: Codable {
     let endpoint: String
     let cdnDomain: String
     let objectPrefix: String
+    let automaticallyCopyAfterUpload: Bool?
+    let automaticCopyVariant: ImageVariantKind?
 
     init(profile: StorageProfile) {
         provider = profile.provider
@@ -69,6 +73,8 @@ private struct StorageProfileSnapshot: Codable {
         endpoint = profile.endpoint
         cdnDomain = profile.cdnDomain
         objectPrefix = profile.objectPrefix
+        automaticallyCopyAfterUpload = profile.automaticallyCopyAfterUpload
+        automaticCopyVariant = profile.automaticCopyVariant
     }
 }
 

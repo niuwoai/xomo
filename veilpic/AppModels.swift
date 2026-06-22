@@ -8,10 +8,10 @@
 import Foundation
 
 enum AppVersion {
-    static let current = "1.9.0-rc2"
+    static let current = "1.12.0-rc1"
 }
 
-enum StorageCredentialMode: String, CaseIterable, Identifiable, Codable {
+enum StorageCredentialMode: String, CaseIterable, Identifiable, Codable, Sendable {
     case longTerm
     case temporary
 
@@ -20,23 +20,23 @@ enum StorageCredentialMode: String, CaseIterable, Identifiable, Codable {
     var title: String {
         switch self {
         case .longTerm:
-            "长期 S3 API 凭据"
+            L10n.text("credential.longTerm.title")
         case .temporary:
-            "临时凭据"
+            L10n.text("credential.temporary.title")
         }
     }
 
     var note: String {
         switch self {
         case .longTerm:
-            "使用控制台创建的 Access Key ID 和 Secret Access Key。"
+            L10n.text("credential.longTerm.note")
         case .temporary:
-            "使用临时 Access Key ID、Secret Access Key 和 Session Token。"
+            L10n.text("credential.temporary.note")
         }
     }
 }
 
-enum StorageProviderKind: String, CaseIterable, Identifiable, Codable {
+enum StorageProviderKind: String, CaseIterable, Identifiable, Codable, Sendable {
     case aliyunOSS
     case amazonS3
     case cloudflareR2
@@ -53,15 +53,15 @@ enum StorageProviderKind: String, CaseIterable, Identifiable, Codable {
     var title: String {
         switch self {
         case .aliyunOSS:
-            "阿里云 OSS"
+            L10n.text("provider.aliyunOSS.title")
         case .amazonS3:
             "Amazon S3"
         case .cloudflareR2:
             "Cloudflare R2"
         case .tencentCOS:
-            "腾讯云 COS"
+            L10n.text("provider.tencentCOS.title")
         case .qiniuKodo:
-            "七牛云 Kodo"
+            L10n.text("provider.qiniuKodo.title")
         case .wasabi:
             "Wasabi"
         case .backblazeB2:
@@ -71,7 +71,7 @@ enum StorageProviderKind: String, CaseIterable, Identifiable, Codable {
         case .minio:
             "MinIO"
         case .customS3:
-            "兼容 S3"
+            L10n.text("provider.customS3.title")
         }
     }
 
@@ -128,7 +128,7 @@ enum StorageProviderKind: String, CaseIterable, Identifiable, Codable {
     var endpointPlaceholder: String {
         switch self {
         case .aliyunOSS:
-            "https://bucket.oss-cn-hangzhou.aliyuncs.com"
+            "https://oss-cn-hangzhou.aliyuncs.com"
         case .amazonS3:
             "https://s3.us-east-1.amazonaws.com"
         case .cloudflareR2:
@@ -169,34 +169,34 @@ enum StorageProviderKind: String, CaseIterable, Identifiable, Codable {
         case .digitalOceanSpaces:
             "nyc3"
         case .minio:
-            "us-east-1 或服务端配置"
+            L10n.text("provider.minio.regionPlaceholder")
         case .customS3:
-            "auto 或服务商区域"
+            L10n.text("provider.customS3.regionPlaceholder")
         }
     }
 
     var configurationNote: String {
         switch self {
         case .aliyunOSS:
-            "Endpoint 建议使用 bucket 绑定后的 OSS 域名；CDN 域名可选。"
+            L10n.text("provider.aliyunOSS.note")
         case .amazonS3:
-            "使用 path-style 上传；Bucket 会写入请求路径。"
+            L10n.text("provider.amazonS3.note")
         case .cloudflareR2:
-            "Region 可填 auto；Endpoint 使用账号级 R2 API 域名。"
+            L10n.text("provider.cloudflareR2.note")
         case .tencentCOS:
-            "Endpoint 通常包含 bucket-appid 和区域。"
+            L10n.text("provider.tencentCOS.note")
         case .qiniuKodo:
-            "Endpoint 使用上传域名；必须配置 CDN 域名用于返回公开链接。"
+            L10n.text("provider.qiniuKodo.note")
         case .wasabi:
-            "Wasabi 使用 S3 兼容 API；Region 通常与 endpoint 匹配。"
+            L10n.text("provider.wasabi.note")
         case .backblazeB2:
-            "使用 B2 S3 Endpoint；Application Key ID 相当于 Access Key。"
+            L10n.text("provider.backblazeB2.note")
         case .digitalOceanSpaces:
-            "Endpoint 使用 Spaces 区域域名；可选 CDN 域名用于公开访问。"
+            L10n.text("provider.digitalOceanSpaces.note")
         case .minio:
-            "适合自建 MinIO；Endpoint 填写 MinIO API 地址。"
+            L10n.text("provider.minio.note")
         case .customS3:
-            "适合 MinIO、Wasabi、Backblaze B2 等兼容 S3 的服务。"
+            L10n.text("provider.customS3.note")
         }
     }
 
@@ -248,7 +248,7 @@ enum StorageProviderKind: String, CaseIterable, Identifiable, Codable {
     }
 }
 
-struct StorageProfile {
+struct StorageProfile: Sendable {
     var provider: StorageProviderKind = .aliyunOSS
     var credentialMode: StorageCredentialMode = .longTerm
     var accessKeyId = ""
@@ -259,6 +259,8 @@ struct StorageProfile {
     var endpoint = ""
     var cdnDomain = ""
     var objectPrefix = "veilpic"
+    var automaticallyCopyAfterUpload = true
+    var automaticCopyVariant: ImageVariantKind = .compressed
 
     var baseURL: URL? {
         let rawDomain = cdnDomain.isEmpty ? endpoint : cdnDomain
@@ -269,18 +271,18 @@ struct StorageProfile {
 
     var requiredFields: [(name: String, value: String)] {
         var fields = [
-            ("Bucket", bucket),
-            ("Endpoint / API 域名", endpoint),
+            (L10n.text("field.bucket"), bucket),
+            (L10n.text("field.endpoint"), endpoint),
             (provider.accessKeyLabel, accessKeyId),
             (provider.secretKeyLabel, accessKeySecret)
         ]
 
         if provider.supportsTemporaryCredentials, credentialMode == .temporary {
-            fields.append(("Session Token", sessionToken))
+            fields.append((L10n.text("field.sessionToken"), sessionToken))
         }
 
         if provider == .qiniuKodo {
-            fields.append(("七牛云 CDN 域名", cdnDomain))
+            fields.append((L10n.text("field.qiniuCdnDomain"), cdnDomain))
         }
 
         return fields
@@ -311,7 +313,7 @@ struct StorageProfile {
     }
 }
 
-enum ImageVariantKind: String, CaseIterable, Identifiable, Codable {
+enum ImageVariantKind: String, CaseIterable, Identifiable, Codable, Sendable {
     case original
     case compressed
     case thumbnail
@@ -322,26 +324,26 @@ enum ImageVariantKind: String, CaseIterable, Identifiable, Codable {
     var title: String {
         switch self {
         case .original:
-            "原图"
+            L10n.text("variant.original.title")
         case .compressed:
-            "压缩图"
+            L10n.text("variant.compressed.title")
         case .thumbnail:
-            "缩略图"
+            L10n.text("variant.thumbnail.title")
         case .webpReference:
-            "WebP"
+            L10n.text("variant.webp.title")
         }
     }
 
     var detail: String {
         switch self {
         case .original:
-            "保留 PNG 原始质量"
+            L10n.text("variant.original.detail")
         case .compressed:
-            "适合文档和聊天分享"
+            L10n.text("variant.compressed.detail")
         case .thumbnail:
-            "适合列表和预览"
+            L10n.text("variant.thumbnail.detail")
         case .webpReference:
-            "更小体积的现代格式"
+            L10n.text("variant.webp.detail")
         }
     }
 
@@ -359,7 +361,22 @@ enum ImageVariantKind: String, CaseIterable, Identifiable, Codable {
     }
 }
 
-struct GeneratedImageVariant: Identifiable {
+extension ImageVariantKind {
+    var copiedTitle: String {
+        switch self {
+        case .original:
+            L10n.text("variant.original.copiedTitle")
+        case .compressed:
+            L10n.text("variant.compressed.copiedTitle")
+        case .thumbnail:
+            L10n.text("variant.thumbnail.copiedTitle")
+        case .webpReference:
+            L10n.text("variant.webp.copiedTitle")
+        }
+    }
+}
+
+struct GeneratedImageVariant: Identifiable, Sendable {
     let id = UUID()
     let kind: ImageVariantKind
     let filename: String
@@ -371,7 +388,7 @@ struct GeneratedImageVariant: Identifiable {
     }
 }
 
-struct UploadResult: Identifiable {
+struct UploadResult: Identifiable, Sendable {
     let id = UUID()
     let sourceName: String
     let createdAt: Date
@@ -414,6 +431,38 @@ struct UploadHistoryItem: Identifiable, Codable, Equatable {
     }
 }
 
+struct UploadDashboardState: Equatable {
+    var totalTasks = 0
+    var completedTasks = 0
+    var failedTasks = 0
+    var activeTasks = 0
+    var queuedTasks = 0
+    var uploadedBytes = 0
+    var startedAt: Date?
+
+    static let idle = UploadDashboardState()
+
+    var isActive: Bool {
+        totalTasks > 0
+    }
+
+    var progress: Double {
+        guard totalTasks > 0 else { return 0 }
+        return Double(completedTasks + failedTasks) / Double(totalTasks)
+    }
+
+    var percentText: String {
+        "\(Int((progress * 100).rounded()))%"
+    }
+
+    var speedText: String {
+        guard let startedAt else { return ByteCountFormatter.string(fromByteCount: 0, countStyle: .file) + "/s" }
+        let elapsed = max(Date().timeIntervalSince(startedAt), 0.5)
+        let bytesPerSecond = Double(uploadedBytes) / elapsed
+        return ByteCountFormatter.string(fromByteCount: Int64(bytesPerSecond), countStyle: .file) + "/s"
+    }
+}
+
 enum PanelSection: String, CaseIterable, Identifiable {
     case upload
     case links
@@ -424,11 +473,11 @@ enum PanelSection: String, CaseIterable, Identifiable {
     var title: String {
         switch self {
         case .upload:
-            "上传"
+            L10n.text("section.upload")
         case .links:
-            "链接"
+            L10n.text("section.links")
         case .history:
-            "历史"
+            L10n.text("section.history")
         }
     }
 
@@ -476,19 +525,19 @@ enum UploadPhase: Equatable {
     var title: String {
         switch self {
         case .idle:
-            "准备就绪"
+            L10n.text("phase.idle")
         case .reading:
-            "正在读取图片"
+            L10n.text("phase.reading")
         case .preparing:
-            "正在生成多版本"
+            L10n.text("phase.preparing")
         case .uploading(let current, let total):
-            "正在上传 \(current)/\(total)"
+            L10n.format("phase.uploading", current, total)
         case .copying:
-            "正在复制链接"
+            L10n.text("phase.copying")
         case .finished:
-            "上传完成"
+            L10n.text("phase.finished")
         case .failed:
-            "上传失败"
+            L10n.text("phase.failed")
         }
     }
 }

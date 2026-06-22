@@ -17,13 +17,13 @@ enum UploadError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .missingField(let name):
-            return "缺少配置：\(name)"
+            return L10n.format("error.missingField", name)
         case .invalidEndpoint(let endpoint):
-            return "Endpoint 无效：\(endpoint)"
+            return L10n.format("error.invalidEndpoint", endpoint)
         case .invalidResponse:
-            return "上传响应无效"
+            return L10n.text("error.invalidResponse")
         case .uploadFailed(let statusCode, let body):
-            return "上传失败 HTTP \(statusCode)：\(body)"
+            return L10n.format("error.uploadFailed", statusCode, body)
         }
     }
 }
@@ -273,19 +273,19 @@ extension StorageProfile {
         if provider.supportsTemporaryCredentials,
            credentialMode == .temporary,
            sessionToken.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            throw UploadError.missingField("Session Token")
+            throw UploadError.missingField(L10n.text("field.sessionToken"))
         }
 
         if bucket.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, provider != .customS3 {
-            throw UploadError.missingField("Bucket")
+            throw UploadError.missingField(L10n.text("field.bucket"))
         }
 
         if endpoint.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            throw UploadError.missingField("Endpoint / API 域名")
+            throw UploadError.missingField(L10n.text("field.endpoint"))
         }
 
         if provider == .qiniuKodo, cdnDomain.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            throw UploadError.missingField("七牛云 Kodo 的 CDN 域名")
+            throw UploadError.missingField(L10n.text("field.qiniuCdnDomain"))
         }
     }
 
@@ -300,7 +300,7 @@ extension StorageProfile {
     }
 
     func objectAPIURL(for objectKey: String) throws -> URL {
-        let endpoint = try endpointURL()
+        let endpoint = try objectAPIBaseURL()
         let path = objectAPIPath(for: objectKey)
         guard var components = URLComponents(url: endpoint, resolvingAgainstBaseURL: false) else {
             throw UploadError.invalidEndpoint(self.endpoint)
@@ -346,10 +346,45 @@ extension StorageProfile {
     }
 
     private func publicBaseURL() throws -> URL {
+        if cdnDomain.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return try objectAPIBaseURL()
+        }
+
         let rawDomain = cdnDomain.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? endpoint : cdnDomain
         let normalized = rawDomain.hasPrefix("http://") || rawDomain.hasPrefix("https://") ? rawDomain : "https://\(rawDomain)"
         guard let url = URL(string: normalized), url.host != nil else {
             throw UploadError.invalidEndpoint(rawDomain)
+        }
+
+        return url
+    }
+
+    private func objectAPIBaseURL() throws -> URL {
+        let endpoint = try endpointURL()
+        guard provider == .aliyunOSS else {
+            return endpoint
+        }
+
+        return try aliyunOSSBucketURL(from: endpoint)
+    }
+
+    private func aliyunOSSBucketURL(from endpoint: URL) throws -> URL {
+        let bucketName = bucket.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !bucketName.isEmpty else {
+            return endpoint
+        }
+
+        guard var components = URLComponents(url: endpoint, resolvingAgainstBaseURL: false),
+              let host = components.host else {
+            throw UploadError.invalidEndpoint(self.endpoint)
+        }
+
+        if host.isAliyunOSSRegionalEndpoint {
+            components.host = "\(bucketName).\(host)"
+        }
+
+        guard let url = components.url else {
+            throw UploadError.invalidEndpoint(self.endpoint)
         }
 
         return url
@@ -372,6 +407,10 @@ extension StorageProfile {
 }
 
 private extension String {
+    var isAliyunOSSRegionalEndpoint: Bool {
+        (self == "oss.aliyuncs.com" || hasPrefix("oss-")) && hasSuffix(".aliyuncs.com")
+    }
+
     var urlPathEncoded: String {
         let allowed = CharacterSet.urlPathAllowed.subtracting(CharacterSet(charactersIn: "?#[]@!$&'()*+,;="))
         return addingPercentEncoding(withAllowedCharacters: allowed) ?? self

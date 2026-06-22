@@ -18,7 +18,7 @@ struct veilpicApp: App {
             ContentView(viewModel: viewModel)
         } label: {
             Label {
-                Text("轻图")
+                Text(L10n.text("app.name"))
             } icon: {
                 Image("MenuBarIcon")
             }
@@ -38,6 +38,8 @@ enum SettingsPresentationMode {
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
+        DockVisibilitySettings.shared.applyActivationPolicy()
+
         guard LaunchGuide.shouldOpenSettings(profile: MenuBarUploadViewModel.shared.profile) else {
             return
         }
@@ -74,7 +76,7 @@ final class MainWindowPresenter: NSObject, NSWindowDelegate {
         }
 
         let window = NSWindow(contentViewController: hostingController)
-        window.title = "轻图"
+        window.title = L10n.text("app.name")
         window.styleMask = [.titled, .closable, .miniaturizable, .resizable]
         window.isReleasedWhenClosed = false
         window.delegate = self
@@ -106,13 +108,13 @@ final class SettingsWindowPresenter: NSObject, NSWindowDelegate {
 
         if let window {
             window.contentViewController = hostingController
-            window.title = mode == .onboarding ? "开始使用轻图" : "轻图设置"
+            window.title = mode == .onboarding ? L10n.text("settings.title.onboarding") : L10n.text("settings.title")
             show(window)
             return
         }
 
         let window = NSWindow(contentViewController: hostingController)
-        window.title = mode == .onboarding ? "开始使用轻图" : "轻图设置"
+        window.title = mode == .onboarding ? L10n.text("settings.title.onboarding") : L10n.text("settings.title")
         window.styleMask = [.titled, .closable, .miniaturizable]
         window.isReleasedWhenClosed = false
         window.delegate = self
