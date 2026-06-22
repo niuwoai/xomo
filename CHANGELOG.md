@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.13.0 - 2026-06-03
+## 1.14.0 - 2026-06-22
 
 - 新增设置“隐藏 Dock 图标”开关，默认开启；隐藏后轻图以菜单栏托盘形态运行，关闭后可在 Dock 显示图标并从 Dock 调出主窗口。
 - 启动时根据该设置应用 `NSApplication.ActivationPolicy`，无需重启即可在 `.accessory` 与 `.regular` 之间切换。
