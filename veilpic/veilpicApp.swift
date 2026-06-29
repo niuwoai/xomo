@@ -82,6 +82,7 @@ final class MainWindowPresenter: NSObject, NSWindowDelegate {
         window.delegate = self
         window.setContentSize(NSSize(width: 680, height: 720))
         window.minSize = NSSize(width: 560, height: 560)
+        WindowChrome.applySeaSalt(to: window)
         window.center()
         self.window = window
         show(window)
@@ -118,6 +119,7 @@ final class SettingsWindowPresenter: NSObject, NSWindowDelegate {
         window.styleMask = [.titled, .closable, .miniaturizable]
         window.isReleasedWhenClosed = false
         window.delegate = self
+        WindowChrome.applySeaSalt(to: window)
         window.center()
         self.window = window
         show(window)

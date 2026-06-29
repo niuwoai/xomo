@@ -17,8 +17,8 @@ struct ProviderBadge: View {
             .labelStyle(.titleAndIcon)
             .padding(.horizontal, 8)
             .padding(.vertical, 5)
-            .background(Color.accentColor.opacity(0.12))
-            .foregroundStyle(Color.accentColor)
+            .background(AppTheme.accent.opacity(0.12))
+            .foregroundStyle(AppTheme.accent)
             .clipShape(Capsule())
     }
 }
@@ -54,9 +54,9 @@ struct FeedbackToast: View {
         .padding(.horizontal, 12)
         .padding(.vertical, 10)
         .background(.regularMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         .overlay {
-            RoundedRectangle(cornerRadius: 8)
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
                 .strokeBorder(tint.opacity(0.24))
         }
         .shadow(color: .black.opacity(0.16), radius: 16, x: 0, y: 8)
@@ -85,7 +85,7 @@ struct UploadProgressView: View {
             HStack {
                 Label(phase.title, systemImage: "arrow.up.circle.fill")
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(Color.accentColor)
+                    .foregroundStyle(AppTheme.accent)
                 Spacer()
                 Text(stats.isActive ? stats.percentText : "\(Int((phase.progress * 100).rounded()))%")
                     .font(.caption.monospacedDigit())
@@ -116,8 +116,7 @@ struct UploadProgressView: View {
             }
         }
         .padding(10)
-        .background(Color(NSColor.controlBackgroundColor))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .themedCard()
     }
 
     private var taskBars: some View {
@@ -140,7 +139,7 @@ struct UploadProgressView: View {
             return .red
         }
         if index < stats.completedTasks + stats.failedTasks + stats.activeTasks {
-            return Color.accentColor
+            return AppTheme.accent
         }
         return Color.secondary.opacity(0.18)
     }
@@ -182,7 +181,7 @@ struct OnboardingStepView: View {
             HStack(spacing: 8) {
                 ZStack {
                     Circle()
-                        .fill(isDone ? Color.green.opacity(0.16) : Color.accentColor.opacity(0.14))
+                        .fill(isDone ? Color.green.opacity(0.16) : AppTheme.accent.opacity(0.14))
                     if isDone {
                         Image(systemName: "checkmark")
                             .font(.caption.weight(.bold))
@@ -190,14 +189,14 @@ struct OnboardingStepView: View {
                     } else {
                         Text("\(number)")
                             .font(.caption.weight(.bold))
-                            .foregroundStyle(Color.accentColor)
+                            .foregroundStyle(AppTheme.accent)
                     }
                 }
                 .frame(width: 24, height: 24)
 
                 Image(systemName: icon)
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(isDone ? .green : Color.accentColor)
+                    .foregroundStyle(isDone ? .green : AppTheme.accent)
             }
 
             Text(title)
@@ -211,11 +210,11 @@ struct OnboardingStepView: View {
         }
         .frame(maxWidth: .infinity, minHeight: 112, alignment: .topLeading)
         .padding(12)
-        .background(Color(NSColor.windowBackgroundColor))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .background(isDone ? Color.green.opacity(0.10) : AppTheme.controlFill)
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         .overlay {
-            RoundedRectangle(cornerRadius: 8)
-                .strokeBorder(isDone ? Color.green.opacity(0.22) : Color.secondary.opacity(0.12))
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .strokeBorder(isDone ? Color.green.opacity(0.28) : AppTheme.hairline, lineWidth: 1)
         }
     }
 }
@@ -224,11 +223,12 @@ struct MetricPill: View {
     let title: String
     let value: String
     let icon: String
+    var iconColor: Color = .secondary
 
     var body: some View {
         HStack(spacing: 7) {
             Image(systemName: icon)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(iconColor)
                 .frame(width: 16)
             VStack(alignment: .leading, spacing: 1) {
                 Text(title)
@@ -242,8 +242,7 @@ struct MetricPill: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(9)
-        .background(Color(NSColor.controlBackgroundColor))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .themedCard(cornerRadius: 10, fill: AppTheme.controlFill, shadow: false)
     }
 }
 
@@ -302,7 +301,7 @@ struct VariantSummaryRow: View {
     var body: some View {
         HStack(spacing: 9) {
             Image(systemName: variant.kind.symbolName)
-                .foregroundStyle(Color.accentColor)
+                .foregroundStyle(AppTheme.accent)
                 .frame(width: 18)
             VStack(alignment: .leading, spacing: 3) {
                 Text(variant.kind.title)
@@ -335,8 +334,7 @@ struct VariantSummaryRow: View {
             }
         }
         .padding(9)
-        .background(Color(NSColor.controlBackgroundColor))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .themedCard(cornerRadius: 10, fill: AppTheme.controlFill, shadow: false)
     }
 }
 
@@ -363,8 +361,8 @@ struct ImagePreviewCard: View {
             }
 
             ZStack {
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(Color(NSColor.windowBackgroundColor))
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(Color.white.opacity(0.65))
                 if let imageData, let image = NSImage(data: imageData) {
                     Image(nsImage: image)
                         .resizable()
@@ -381,15 +379,14 @@ struct ImagePreviewCard: View {
                 }
             }
             .frame(height: 180)
-            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
             .overlay {
-                RoundedRectangle(cornerRadius: 8)
-                    .strokeBorder(Color.secondary.opacity(0.12))
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .strokeBorder(AppTheme.hairline, lineWidth: 1)
             }
         }
         .padding(12)
-        .background(Color(NSColor.controlBackgroundColor))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .themedCard()
     }
 }
 
@@ -479,11 +476,11 @@ struct HistoryItemRow: View {
                 .help(L10n.text("help.removeHistory"))
             }
             .padding(9)
-            .background(isSelected ? Color.accentColor.opacity(0.12) : Color(NSColor.controlBackgroundColor))
-            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .background(isSelected ? AppTheme.selectionFill : AppTheme.controlFill)
+            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
             .overlay {
-                RoundedRectangle(cornerRadius: 8)
-                    .strokeBorder(isSelected ? Color.accentColor.opacity(0.28) : Color.clear)
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .strokeBorder(isSelected ? AppTheme.accentHairline : AppTheme.hairline, lineWidth: 1)
             }
         }
         .buttonStyle(.plain)
@@ -491,8 +488,8 @@ struct HistoryItemRow: View {
 
     private var thumbnail: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 6)
-                .fill(Color(NSColor.windowBackgroundColor))
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(Color.white.opacity(0.65))
             if let data = item.thumbnailData, let image = NSImage(data: data) {
                 Image(nsImage: image)
                     .resizable()
@@ -503,7 +500,7 @@ struct HistoryItemRow: View {
             }
         }
         .frame(width: 46, height: 46)
-        .clipShape(RoundedRectangle(cornerRadius: 6))
+        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
     }
 }
 
@@ -516,7 +513,7 @@ struct LinkRow: View {
         HStack(spacing: 10) {
             Image(systemName: kind.symbolName)
                 .font(.title3)
-                .foregroundStyle(Color.accentColor)
+                .foregroundStyle(AppTheme.accent)
                 .frame(width: 24)
 
             VStack(alignment: .leading, spacing: 3) {
@@ -538,8 +535,7 @@ struct LinkRow: View {
             .help(L10n.text("help.copyLink"))
         }
         .padding(10)
-        .background(Color(NSColor.controlBackgroundColor))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .themedCard(cornerRadius: 10, fill: AppTheme.controlFill, shadow: false)
     }
 }
 
@@ -562,7 +558,6 @@ struct EmptyStateView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(28)
-        .background(Color(NSColor.controlBackgroundColor))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .themedCard()
     }
 }

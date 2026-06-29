@@ -179,6 +179,15 @@
 "upload.drop.idle" = "拖拽图片到这里";
 "upload.drop.message" = "可拖拽、选择图片或选择目录；上传成功后默认复制压缩图 URL。";
 "upload.drop.release" = "松开即可上传";
+"upload.hero.title" = "把图片拖到这片海里";
+"upload.hero.release" = "松开，让它入海";
+"upload.hero.subtitle" = "或点击下方卡片开始 · 上传后自动复制压缩图链接";
+"tile.clipboard.title" = "读剪贴板";
+"tile.clipboard.subtitle" = "截图即传";
+"tile.images.title" = "选图片";
+"tile.images.subtitle" = "可多选";
+"tile.folder.title" = "选目录";
+"tile.folder.subtitle" = "整批上传";
 "upload.stats.active" = "并发";
 "upload.stats.done" = "完成";
 "upload.stats.failed" = "失败";

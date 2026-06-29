@@ -179,6 +179,15 @@
 "upload.drop.idle" = "ここに画像をドロップ";
 "upload.drop.message" = "ドロップ、画像選択、フォルダ選択に対応。アップロード後は初期設定で圧縮画像 URL をコピーします。";
 "upload.drop.release" = "離すとアップロード";
+"upload.hero.title" = "画像をこの海へドロップ";
+"upload.hero.release" = "離して海へ送り出す";
+"upload.hero.subtitle" = "または下のカードから開始 · アップロード後に圧縮 URL をコピー";
+"tile.clipboard.title" = "クリップボード";
+"tile.clipboard.subtitle" = "貼り付けて送信";
+"tile.images.title" = "画像を選択";
+"tile.images.subtitle" = "複数選択可";
+"tile.folder.title" = "フォルダ";
+"tile.folder.subtitle" = "一括送信";
 "upload.stats.active" = "並列";
 "upload.stats.done" = "完了";
 "upload.stats.failed" = "失敗";

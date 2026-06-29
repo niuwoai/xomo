@@ -46,6 +46,7 @@ struct StorageSettingsView: View {
             settingsHeader
 
             Divider()
+                .overlay(AppTheme.hairline)
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
@@ -66,20 +67,29 @@ struct StorageSettingsView: View {
             }
 
             Divider()
+                .overlay(AppTheme.hairline)
 
             settingsFooter
         }
         .frame(width: 560, height: 620)
+        .themedWindowBackground()
     }
 
     private var settingsHeader: some View {
         HStack(alignment: .center, spacing: 14) {
             ZStack {
-                RoundedRectangle(cornerRadius: 9)
-                    .fill(Color.accentColor.opacity(0.12))
+                RoundedRectangle(cornerRadius: 11, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [AppTheme.accent, AppTheme.accent.opacity(0.78)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .shadow(color: AppTheme.accent.opacity(0.32), radius: 7, x: 0, y: 3)
                 Image(systemName: "photo.on.rectangle.angled")
                     .font(.title2.weight(.semibold))
-                    .foregroundStyle(Color.accentColor)
+                    .foregroundStyle(.white)
             }
             .frame(width: 46, height: 46)
 
@@ -128,8 +138,7 @@ struct StorageSettingsView: View {
             }
         }
         .padding(14)
-        .background(Color(NSColor.controlBackgroundColor))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .themedCard()
     }
 
     private var configurationStatus: some View {
@@ -154,8 +163,7 @@ struct StorageSettingsView: View {
             }
         }
         .padding(14)
-        .background(Color(NSColor.controlBackgroundColor))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .themedCard()
     }
 
     private var providerSelector: some View {
@@ -230,8 +238,7 @@ struct StorageSettingsView: View {
                 .foregroundStyle(.secondary)
         }
         .padding(14)
-        .background(Color(NSColor.controlBackgroundColor))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .themedCard()
     }
 
     private var launchAtLoginSection: some View {
@@ -257,8 +264,7 @@ struct StorageSettingsView: View {
             }
         }
         .padding(14)
-        .background(Color(NSColor.controlBackgroundColor))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .themedCard()
         .onAppear {
             launchAtLogin.refresh()
         }
@@ -288,8 +294,7 @@ struct StorageSettingsView: View {
                 .foregroundStyle(.secondary)
         }
         .padding(14)
-        .background(Color(NSColor.controlBackgroundColor))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .themedCard()
     }
 
     private var firstRunNote: some View {
@@ -302,8 +307,7 @@ struct StorageSettingsView: View {
                 .fixedSize(horizontal: false, vertical: true)
         }
         .padding(14)
-        .background(Color(NSColor.controlBackgroundColor))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .themedCard()
     }
 
     private var settingsFooter: some View {
@@ -332,7 +336,7 @@ struct MenuBarPanelView: View {
         ZStack(alignment: .bottom) {
             VStack(alignment: .leading, spacing: 12) {
                 header
-                sectionPicker
+                SectionPillNav(selection: $selectedSection)
                 content
                 footer
             }
@@ -349,6 +353,7 @@ struct MenuBarPanelView: View {
                     }
             }
         }
+        .themedWindowBackground()
         .animation(.snappy(duration: 0.2), value: viewModel.feedback)
         .onChange(of: viewModel.suggestedSection) { _, section in
             guard let section else { return }
@@ -359,11 +364,18 @@ struct MenuBarPanelView: View {
     private var header: some View {
         HStack(alignment: .center, spacing: 12) {
             ZStack {
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(Color.accentColor.opacity(0.12))
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [AppTheme.accent, AppTheme.accent.opacity(0.78)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .shadow(color: AppTheme.accent.opacity(0.32), radius: 6, x: 0, y: 3)
                 Image(systemName: "photo.on.rectangle.angled")
                     .font(.title3.weight(.semibold))
-                    .foregroundStyle(Color.accentColor)
+                    .foregroundStyle(.white)
             }
             .frame(width: 38, height: 38)
 
@@ -387,25 +399,20 @@ struct MenuBarPanelView: View {
                 } label: {
                     Image(systemName: "gearshape")
                         .font(.title3)
-                        .foregroundStyle(.secondary)
-                        .frame(width: 24, height: 24)
+                        .foregroundStyle(AppTheme.accent)
+                        .frame(width: 30, height: 30)
+                        .background(AppTheme.controlFill)
+                        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                .strokeBorder(AppTheme.hairline, lineWidth: 1)
+                        }
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .help(L10n.text("help.openSettings"))
             }
         }
-    }
-
-    private var sectionPicker: some View {
-        Picker(L10n.text("panel.picker"), selection: $selectedSection) {
-            ForEach(PanelSection.allCases) { section in
-                Label(section.title, systemImage: section.icon)
-                    .tag(section)
-            }
-        }
-        .pickerStyle(.segmented)
-        .labelsHidden()
     }
 
     private var content: some View {
@@ -434,11 +441,54 @@ struct MenuBarPanelView: View {
             if !viewModel.profile.isReadyForUpload {
                 configurationPrompt
             }
-            dropZone
+            heroDropZone
+            uploadTiles
             uploadQuickStats
             currentImagePreview
             variantPreview
             latestLinkPreview
+        }
+    }
+
+    private var heroDropZone: some View {
+        HeroDropZone(isTargeted: viewModel.isDropTargeted) {
+            viewModel.chooseImageFiles()
+        }
+        .onDrop(
+            of: [UTType.image.identifier, UTType.fileURL.identifier],
+            isTargeted: $viewModel.isDropTargeted,
+            perform: viewModel.handleDrop
+        )
+    }
+
+    private var uploadTiles: some View {
+        HStack(spacing: 12) {
+            UploadActionTile(
+                icon: "doc.on.clipboard",
+                title: L10n.text("tile.clipboard.title"),
+                subtitle: L10n.text("tile.clipboard.subtitle"),
+                style: .filledAccent
+            ) {
+                viewModel.uploadFromClipboard()
+            }
+
+            UploadActionTile(
+                icon: "photo.on.rectangle",
+                title: L10n.text("tile.images.title"),
+                subtitle: L10n.text("tile.images.subtitle"),
+                style: .sandOutline
+            ) {
+                viewModel.chooseImageFiles()
+            }
+
+            UploadActionTile(
+                icon: "folder.badge.plus",
+                title: L10n.text("tile.folder.title"),
+                subtitle: L10n.text("tile.folder.subtitle"),
+                style: .accentOutline
+            ) {
+                viewModel.chooseImageDirectory()
+            }
         }
     }
 
@@ -469,75 +519,18 @@ struct MenuBarPanelView: View {
         }
         .padding(10)
         .background(Color.orange.opacity(0.1))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         .overlay {
-            RoundedRectangle(cornerRadius: 8)
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
                 .strokeBorder(Color.orange.opacity(0.2))
         }
     }
 
-    private var dropZone: some View {
-        VStack(spacing: 11) {
-            Image(systemName: viewModel.isDropTargeted ? "arrow.down.circle.fill" : "photo.badge.plus")
-                .font(.system(size: 42, weight: .medium))
-                .foregroundStyle(viewModel.isDropTargeted ? .blue : .secondary)
-
-            Text(viewModel.isDropTargeted ? L10n.text("upload.drop.release") : L10n.text("upload.drop.idle"))
-                .font(.headline)
-
-            Text(L10n.text("upload.drop.message"))
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .lineLimit(2)
-
-            Button {
-                viewModel.uploadFromClipboard()
-            } label: {
-                Label(viewModel.isUploading ? L10n.text("button.uploading") : L10n.text("button.uploadClipboard"), systemImage: "doc.on.clipboard")
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
-
-            HStack(spacing: 8) {
-                Button {
-                    viewModel.chooseImageFiles()
-                } label: {
-                    Label(L10n.text("button.chooseImages"), systemImage: "photo.on.rectangle")
-                        .frame(maxWidth: .infinity)
-                }
-
-                Button {
-                    viewModel.chooseImageDirectory()
-                } label: {
-                    Label(L10n.text("button.chooseFolder"), systemImage: "folder.badge.plus")
-                        .frame(maxWidth: .infinity)
-                }
-            }
-            .buttonStyle(.bordered)
-            .controlSize(.regular)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(24)
-        .background(viewModel.isDropTargeted ? Color.blue.opacity(0.12) : Color(NSColor.controlBackgroundColor))
-        .clipShape(RoundedRectangle(cornerRadius: 8))
-        .overlay {
-            RoundedRectangle(cornerRadius: 8)
-                .strokeBorder(viewModel.isDropTargeted ? Color.blue : Color.secondary.opacity(0.22), style: StrokeStyle(lineWidth: 1, dash: [6]))
-        }
-        .onDrop(
-            of: [UTType.image.identifier, UTType.fileURL.identifier],
-            isTargeted: $viewModel.isDropTargeted,
-            perform: viewModel.handleDrop
-        )
-    }
-
     private var uploadQuickStats: some View {
         HStack(spacing: 10) {
-            MetricPill(title: L10n.text("metric.provider"), value: viewModel.profile.provider.shortTitle, icon: viewModel.profile.provider.symbolName)
-            MetricPill(title: L10n.text("metric.path"), value: viewModel.profile.objectPrefix.isEmpty ? L10n.text("metric.dateFolder") : viewModel.profile.objectPrefix, icon: "folder")
-            MetricPill(title: L10n.text("metric.config"), value: "\(Int((viewModel.configurationProgress * 100).rounded()))%", icon: "checkmark.seal")
+            MetricPill(title: L10n.text("metric.provider"), value: viewModel.profile.provider.shortTitle, icon: viewModel.profile.provider.symbolName, iconColor: AppTheme.accent)
+            MetricPill(title: L10n.text("metric.path"), value: viewModel.profile.objectPrefix.isEmpty ? L10n.text("metric.dateFolder") : viewModel.profile.objectPrefix, icon: "folder", iconColor: AppTheme.sandIcon)
+            MetricPill(title: L10n.text("metric.config"), value: "\(Int((viewModel.configurationProgress * 100).rounded()))%", icon: "checkmark.seal", iconColor: Color(red: 0.11, green: 0.62, blue: 0.46))
         }
     }
 
@@ -597,7 +590,11 @@ struct MenuBarPanelView: View {
             }
             .padding(10)
             .background(Color.green.opacity(0.08))
-            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .strokeBorder(Color.green.opacity(0.18), lineWidth: 1)
+            }
         }
     }
 

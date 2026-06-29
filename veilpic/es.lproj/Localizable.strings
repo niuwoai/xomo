@@ -179,6 +179,15 @@
 "upload.drop.idle" = "Arrastra imágenes aquí";
 "upload.drop.message" = "Arrastra, elige imágenes o elige una carpeta. Las URL comprimidas se copian por defecto tras subir.";
 "upload.drop.release" = "Suelta para subir";
+"upload.hero.title" = "Suelta tus imágenes en la bahía";
+"upload.hero.release" = "Suelta y déjalas zarpar";
+"upload.hero.subtitle" = "O toca una tarjeta abajo · URL comprimida copiada tras subir";
+"tile.clipboard.title" = "Portapapeles";
+"tile.clipboard.subtitle" = "Pega y listo";
+"tile.images.title" = "Imágenes";
+"tile.images.subtitle" = "Multiselección";
+"tile.folder.title" = "Carpeta";
+"tile.folder.subtitle" = "Subida por lotes";
 "upload.stats.active" = "Activas";
 "upload.stats.done" = "Listas";
 "upload.stats.failed" = "Fallidas";

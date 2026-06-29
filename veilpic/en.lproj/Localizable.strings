@@ -179,6 +179,15 @@
 "upload.drop.idle" = "Drop images here";
 "upload.drop.message" = "Drop, choose images, or choose a folder. Compressed image URLs are copied by default after upload.";
 "upload.drop.release" = "Release to upload";
+"upload.hero.title" = "Drop your images into the bay";
+"upload.hero.release" = "Release to set them adrift";
+"upload.hero.subtitle" = "Or tap a card below · compressed URL copied after upload";
+"tile.clipboard.title" = "Clipboard";
+"tile.clipboard.subtitle" = "Paste & go";
+"tile.images.title" = "Images";
+"tile.images.subtitle" = "Multi-select";
+"tile.folder.title" = "Folder";
+"tile.folder.subtitle" = "Batch upload";
 "upload.stats.active" = "Active";
 "upload.stats.done" = "Done";
 "upload.stats.failed" = "Failed";
