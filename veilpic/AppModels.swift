@@ -8,7 +8,7 @@
 import Foundation
 
 enum AppVersion {
-    static let current = "1.15.0"
+    static let current = "1.21.0-rc1"
 }
 
 enum StorageCredentialMode: String, CaseIterable, Identifiable, Codable, Sendable {
@@ -464,7 +464,7 @@ struct UploadDashboardState: Equatable {
 }
 
 enum PanelSection: String, CaseIterable, Identifiable {
-    case upload
+    case workbench
     case links
     case history
 
@@ -472,8 +472,8 @@ enum PanelSection: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .upload:
-            L10n.text("section.upload")
+        case .workbench:
+            L10n.text("section.workbench")
         case .links:
             L10n.text("section.links")
         case .history:
@@ -483,8 +483,8 @@ enum PanelSection: String, CaseIterable, Identifiable {
 
     var icon: String {
         switch self {
-        case .upload:
-            "arrow.up.circle"
+        case .workbench:
+            "slider.horizontal.3"
         case .links:
             "link"
         case .history:

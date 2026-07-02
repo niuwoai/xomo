@@ -34,12 +34,17 @@ final class MenuBarUploadViewModel: ObservableObject {
     @Published var suggestedSection: PanelSection?
     @Published var uploadHistory: [UploadHistoryItem]
     @Published var selectedHistoryItem: UploadHistoryItem?
+    @Published var workspaceItem: ImageWorkspaceItem?
+    @Published var postProcessRecipe = PostProcessRecipe.defaults(for: .original)
+    @Published var processedPreviewData: Data?
 
     private let builder = ImageVariantBuilder()
+    private let postProcessRenderer = PostProcessRenderer()
     private let uploader: ImageUploading = ObjectStorageUploader()
     private let profileStore: StorageProfileStoring
     private let historyStore: UploadHistoryStoring
     private var pendingUploadItems: [LocalImageUploadItem] = []
+    private var revealWorkspaceAfterCapture = false
     private let maxConcurrentUploads = 3
 
     init(
@@ -81,7 +86,7 @@ final class MenuBarUploadViewModel: ObservableObject {
             return
         }
 
-        upload(image, sourceName: L10n.text("source.clipboard"))
+        receiveImage(image, sourceName: L10n.text("source.clipboard"))
     }
 
     func chooseImageFiles() {
@@ -93,7 +98,7 @@ final class MenuBarUploadViewModel: ObservableObject {
         panel.prompt = L10n.text("button.chooseImages")
 
         guard panel.runModal() == .OK else { return }
-        uploadImageFiles(panel.urls)
+        handleChosenImageURLs(panel.urls)
     }
 
     func chooseImageDirectory() {
@@ -105,6 +110,109 @@ final class MenuBarUploadViewModel: ObservableObject {
 
         guard panel.runModal() == .OK, let directory = panel.url else { return }
         uploadImageFiles(imageFileURLs(in: directory))
+    }
+
+    func captureFullScreenToWorkspace(revealWhenDone: Bool = false) {
+        guard ScreenshotCaptureCoordinator.shared.requestScreenRecordingPermissionIfNeeded() else {
+            revealWorkspaceAfterCapture = false
+            showFeedback(.warning, title: L10n.text("feedback.screenshot.permission.title"), message: L10n.text("feedback.screenshot.permission.message"))
+            statusMessage = L10n.text("status.screenshot.permission")
+            NSSound.beep()
+            return
+        }
+
+        guard let captureTarget = chooseFullScreenCaptureTarget() else {
+            phase = .idle
+            statusMessage = L10n.text("status.screenshot.cancelled")
+            return
+        }
+
+        revealWorkspaceAfterCapture = revealWhenDone
+        phase = .reading
+        statusMessage = L10n.text("status.screenshot.capturing")
+
+        Task {
+            let image: NSImage?
+            switch captureTarget {
+            case .allDisplays:
+                image = await ScreenshotCaptureCoordinator.shared.captureAllDisplays()
+            case .screen(let screen):
+                image = await ScreenshotCaptureCoordinator.shared.captureScreen(screen)
+            }
+
+            guard let image else {
+                revealWorkspaceAfterCapture = false
+                showFeedback(.error, title: L10n.text("feedback.screenshot.failed.title"), message: L10n.text("feedback.screenshot.failed.message"))
+                statusMessage = L10n.text("status.screenshot.failed")
+                phase = .failed
+                NSSound.beep()
+                return
+            }
+
+            receiveImage(image, sourceName: L10n.text("source.fullscreen"))
+        }
+    }
+
+    private func chooseFullScreenCaptureTarget() -> FullScreenCaptureTarget? {
+        let screens = NSScreen.screens
+        guard screens.count > 1 else {
+            return .allDisplays
+        }
+
+        let popup = NSPopUpButton(frame: NSRect(x: 0, y: 0, width: 320, height: 28), pullsDown: false)
+        screens.enumerated().forEach { index, screen in
+            let size = "\(Int(screen.frame.width)) x \(Int(screen.frame.height))"
+            popup.addItem(withTitle: L10n.format("screenshot.fullscreen.screenOption", index + 1, screen.localizedName, size))
+        }
+
+        let alert = NSAlert()
+        alert.alertStyle = .informational
+        alert.messageText = L10n.text("screenshot.fullscreen.selection.title")
+        alert.informativeText = L10n.text("screenshot.fullscreen.selection.message")
+        alert.accessoryView = popup
+        alert.addButton(withTitle: L10n.text("screenshot.fullscreen.captureSelected"))
+        alert.addButton(withTitle: L10n.text("screenshot.fullscreen.captureAll"))
+        alert.addButton(withTitle: L10n.text("button.cancel"))
+
+        switch alert.runModal() {
+        case .alertFirstButtonReturn:
+            let index = max(0, min(popup.indexOfSelectedItem, screens.count - 1))
+            return .screen(screens[index])
+        case .alertSecondButtonReturn:
+            return .allDisplays
+        default:
+            return nil
+        }
+    }
+
+    func captureRegionToWorkspace(revealWhenDone: Bool = false) {
+        guard ScreenshotCaptureCoordinator.shared.requestScreenRecordingPermissionIfNeeded() else {
+            revealWorkspaceAfterCapture = false
+            showFeedback(.warning, title: L10n.text("feedback.screenshot.permission.title"), message: L10n.text("feedback.screenshot.permission.message"))
+            statusMessage = L10n.text("status.screenshot.permission")
+            NSSound.beep()
+            return
+        }
+
+        guard !RegionScreenshotCapture.shared.isCapturing else {
+            statusMessage = L10n.text("status.screenshot.region.active")
+            return
+        }
+
+        revealWorkspaceAfterCapture = revealWhenDone
+        phase = .reading
+        statusMessage = L10n.text("status.screenshot.region.selecting")
+        RegionScreenshotCapture.shared.start { [weak self] image in
+            guard let self else { return }
+            guard let image else {
+                self.revealWorkspaceAfterCapture = false
+                self.phase = .idle
+                self.statusMessage = L10n.text("status.screenshot.cancelled")
+                return
+            }
+
+            self.receiveImage(image, sourceName: L10n.text("source.region"))
+        }
     }
 
     func handleDrop(_ providers: [NSItemProvider]) -> Bool {
@@ -119,7 +227,7 @@ final class MenuBarUploadViewModel: ObservableObject {
 
         Task {
             if let image = await provider.loadImage() {
-                upload(image, sourceName: L10n.text("source.drop"))
+                receiveImage(image, sourceName: L10n.text("source.drop"))
             } else {
                 showFeedback(.error, title: L10n.text("feedback.read.failed.title"), message: L10n.text("feedback.read.failed.message"))
                 statusMessage = L10n.text("status.read.failed")
@@ -184,9 +292,143 @@ final class MenuBarUploadViewModel: ObservableObject {
         feedback = nil
     }
 
+    func receiveImage(_ image: NSImage, sourceName: String) {
+        let shouldRevealWorkspace = revealWorkspaceAfterCapture
+        revealWorkspaceAfterCapture = false
+        workspaceItem = ImageWorkspaceItem(originalImage: image, sourceName: sourceName, createdAt: Date())
+        postProcessRecipe = PostProcessRecipe.defaults(for: .original)
+        refreshProcessedPreview()
+        generatedVariants = []
+        uploadResult = nil
+        phase = .idle
+        suggestedSection = .workbench
+        statusMessage = L10n.text("status.workspace.ready")
+        showFeedback(.success, title: L10n.text("feedback.workspace.ready.title"), message: L10n.text("feedback.workspace.ready.message"))
+        if shouldRevealWorkspace {
+            MainWindowPresenter.shared.open()
+        }
+    }
+
+    func selectPostProcessTemplate(_ template: PostProcessTemplate) {
+        postProcessRecipe = PostProcessRecipe.defaults(for: template)
+        refreshProcessedPreview()
+        statusMessage = L10n.format("status.postprocess.selected", template.title)
+    }
+
+    func annotateWorkspaceImage() {
+        guard let item = workspaceItem else {
+            showFeedback(.warning, title: L10n.text("feedback.workspace.empty.title"), message: L10n.text("feedback.workspace.empty.message"))
+            statusMessage = L10n.text("status.workspace.empty")
+            NSSound.beep()
+            return
+        }
+
+        let currentRecipe = postProcessRecipe
+        ImageAnnotationEditorPresenter.shared.open(image: item.originalImage, sourceName: item.sourceName) { [weak self] annotatedImage in
+            guard let self else { return }
+            let sourceName = item.sourceName.hasSuffix("-annotated") ? item.sourceName : "\(item.sourceName)-annotated"
+            self.workspaceItem = ImageWorkspaceItem(originalImage: annotatedImage, sourceName: sourceName, createdAt: Date())
+            self.postProcessRecipe = currentRecipe
+            self.refreshProcessedPreview()
+            self.generatedVariants = []
+            self.uploadResult = nil
+            self.phase = .idle
+            self.suggestedSection = .workbench
+            self.statusMessage = L10n.text("status.annotation.applied")
+            self.showFeedback(.success, title: L10n.text("feedback.annotation.applied.title"), message: L10n.text("feedback.annotation.applied.message"))
+        }
+    }
+
+    func uploadWorkspaceImage() {
+        guard let item = workspaceItem else {
+            showFeedback(.warning, title: L10n.text("feedback.workspace.empty.title"), message: L10n.text("feedback.workspace.empty.message"))
+            statusMessage = L10n.text("status.workspace.empty")
+            NSSound.beep()
+            return
+        }
+
+        let image = renderedWorkspaceImage()
+        let sourceName = postProcessRecipe.template == .original
+            ? item.sourceName
+            : "\(item.sourceName)-\(postProcessRecipe.template.rawValue)"
+        upload(image, sourceName: sourceName)
+    }
+
+    func copyProcessedImage() {
+        guard let workspaceItem else {
+            showFeedback(.warning, title: L10n.text("feedback.workspace.empty.title"), message: L10n.text("feedback.workspace.empty.message"))
+            statusMessage = L10n.text("status.workspace.empty")
+            NSSound.beep()
+            return
+        }
+
+        let image = renderedWorkspaceImage()
+        let copyName = "\(uniqueBasename(from: workspaceItem.sourceName))-\(postProcessRecipe.template.rawValue).png"
+        guard ClipboardImageWriter.copy(image, preferredFileName: copyName) else {
+            showFeedback(.error, title: L10n.text("feedback.noVariants.title"), message: L10n.text("feedback.noVariants.message"))
+            statusMessage = L10n.text("status.encode.failed")
+            return
+        }
+
+        showFeedback(.success, title: L10n.text("feedback.imageCopied.title"), message: L10n.text("feedback.imageCopied.message"))
+        statusMessage = L10n.text("status.imageCopied")
+    }
+
+    func saveProcessedImage() {
+        guard let item = workspaceItem else {
+            showFeedback(.warning, title: L10n.text("feedback.workspace.empty.title"), message: L10n.text("feedback.workspace.empty.message"))
+            statusMessage = L10n.text("status.workspace.empty")
+            NSSound.beep()
+            return
+        }
+
+        let image = renderedWorkspaceImage()
+        guard let pngData = image.qingtuPNGData() else {
+            showFeedback(.error, title: L10n.text("feedback.noVariants.title"), message: L10n.text("feedback.noVariants.message"))
+            statusMessage = L10n.text("status.encode.failed")
+            return
+        }
+
+        let panel = NSSavePanel()
+        panel.allowedContentTypes = [.png]
+        panel.canCreateDirectories = true
+        panel.nameFieldStringValue = "\(uniqueBasename(from: item.sourceName))-\(postProcessRecipe.template.rawValue).png"
+        panel.prompt = L10n.text("button.save")
+
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+
+        do {
+            try pngData.write(to: url, options: .atomic)
+            showFeedback(.success, title: L10n.text("feedback.imageSaved.title"), message: L10n.format("feedback.imageSaved.message", url.lastPathComponent))
+            statusMessage = L10n.text("status.imageSaved")
+        } catch {
+            showFeedback(.error, title: L10n.text("feedback.imageSaveFailed.title"), message: error.localizedDescription)
+            statusMessage = L10n.text("status.imageSaveFailed")
+            NSSound.beep()
+        }
+    }
+
     private func upload(_ image: NSImage, sourceName: String) {
         let item = LocalImageUploadItem(image: image, url: nil, sourceName: sourceName, basename: uniqueBasename(from: sourceName))
         uploadItems([item])
+    }
+
+    private func handleChosenImageURLs(_ urls: [URL]) {
+        let imageURLs = urls.filter(isImageFile)
+        guard !imageURLs.isEmpty else {
+            phase = .failed
+            showFeedback(.warning, title: L10n.text("feedback.folder.empty.title"), message: L10n.text("feedback.folder.empty.message"))
+            statusMessage = L10n.text("status.noImagesSelected")
+            NSSound.beep()
+            return
+        }
+
+        if imageURLs.count == 1, let image = NSImage(contentsOf: imageURLs[0]) {
+            receiveImage(image, sourceName: imageURLs[0].lastPathComponent)
+            return
+        }
+
+        uploadImageFiles(imageURLs)
     }
 
     private func uploadImageFiles(_ urls: [URL]) {
@@ -468,6 +710,24 @@ final class MenuBarUploadViewModel: ObservableObject {
         let prefix = sanitized.isEmpty ? "veilpic" : sanitized
         return "\(prefix)-\(Int(Date().timeIntervalSince1970))-\(UUID().uuidString.prefix(8).lowercased())"
     }
+
+    private func refreshProcessedPreview() {
+        guard let workspaceItem else {
+            processedPreviewData = nil
+            return
+        }
+
+        let rendered = postProcessRenderer.render(image: workspaceItem.originalImage, recipe: postProcessRecipe)
+        processedPreviewData = rendered.qingtuPNGData()
+    }
+
+    private func renderedWorkspaceImage() -> NSImage {
+        guard let workspaceItem else {
+            return NSImage(size: .zero)
+        }
+
+        return postProcessRenderer.render(image: workspaceItem.originalImage, recipe: postProcessRecipe)
+    }
 }
 
 private struct LocalImageUploadItem {
@@ -475,6 +735,11 @@ private struct LocalImageUploadItem {
     let url: URL?
     let sourceName: String
     let basename: String
+}
+
+private enum FullScreenCaptureTarget {
+    case allDisplays
+    case screen(NSScreen)
 }
 
 private struct PreparedUploadItem: Sendable {

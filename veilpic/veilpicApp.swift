@@ -39,12 +39,17 @@ enum SettingsPresentationMode {
 final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         DockVisibilitySettings.shared.applyActivationPolicy()
+        GlobalScreenshotShortcutManager.shared.setup(viewModel: .shared)
 
         guard LaunchGuide.shouldOpenSettings(profile: MenuBarUploadViewModel.shared.profile) else {
             return
         }
 
         SettingsWindowPresenter.shared.open(mode: .onboarding)
+    }
+
+    func applicationWillTerminate(_ notification: Notification) {
+        GlobalScreenshotShortcutManager.shared.unregisterAll()
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {

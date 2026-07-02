@@ -18,7 +18,7 @@ struct ContentView: View {
 
     var body: some View {
         MenuBarPanelView(viewModel: viewModel)
-            .frame(width: 440, height: 520)
+            .frame(width: 480, height: 600)
     }
 }
 
@@ -38,6 +38,7 @@ struct MainWindowView: View {
 struct StorageSettingsView: View {
     @ObservedObject var viewModel: MenuBarUploadViewModel
     @StateObject private var launchAtLogin = LaunchAtLoginSettings()
+    @StateObject private var screenshotShortcuts = ScreenshotShortcutSettings.shared
     @ObservedObject private var dockVisibility = DockVisibilitySettings.shared
     let mode: SettingsPresentationMode
 
@@ -58,6 +59,7 @@ struct StorageSettingsView: View {
                     credentialModeSelector
                     configurationFields
                     uploadBehaviorSection
+                    screenshotShortcutsSection
                     launchAtLoginSection
                     dockVisibilitySection
                     firstRunNote
@@ -297,6 +299,43 @@ struct StorageSettingsView: View {
         .themedCard()
     }
 
+    private var screenshotShortcutsSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Label(L10n.text("settings.screenshotShortcuts"), systemImage: "keyboard")
+                    .font(.headline)
+
+                Spacer()
+
+                Button {
+                    screenshotShortcuts.resetToDefaults()
+                } label: {
+                    Label(L10n.text("settings.shortcut.reset"), systemImage: "arrow.counterclockwise")
+                }
+                .buttonStyle(.borderless)
+                .font(.caption)
+            }
+
+            VStack(spacing: 8) {
+                ScreenshotShortcutEditorRow(
+                    title: L10n.text("settings.shortcut.fullscreen"),
+                    shortcut: $screenshotShortcuts.fullScreenShortcut
+                )
+                ScreenshotShortcutEditorRow(
+                    title: L10n.text("settings.shortcut.region"),
+                    shortcut: $screenshotShortcuts.regionShortcut
+                )
+            }
+
+            Text(L10n.text("settings.screenshotShortcuts.note"))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(14)
+        .themedCard()
+    }
+
     private var firstRunNote: some View {
         VStack(alignment: .leading, spacing: 8) {
             Label(L10n.text("settings.usage.title"), systemImage: "menubar.rectangle")
@@ -328,9 +367,93 @@ struct StorageSettingsView: View {
     }
 }
 
+private struct ScreenshotShortcutEditorRow: View {
+    let title: String
+    @Binding var shortcut: ScreenshotKeyboardShortcut
+
+    private let modifierOptions: [(NSEvent.ModifierFlags, String)] = [
+        (.control, "⌃"),
+        (.option, "⌥"),
+        (.shift, "⇧"),
+        (.command, "⌘")
+    ]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 10) {
+                Text(title)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.primary)
+
+                Spacer()
+
+                Text(shortcut.displayText)
+                    .font(.caption.monospaced().weight(.semibold))
+                    .foregroundStyle(AppTheme.accent)
+                    .padding(.horizontal, 9)
+                    .padding(.vertical, 5)
+                    .background(AppTheme.accent.opacity(0.1))
+                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+            }
+
+            HStack(spacing: 8) {
+                ForEach(modifierOptions, id: \.0.rawValue) { option in
+                    Toggle(option.1, isOn: modifierBinding(option.0))
+                        .toggleStyle(.button)
+                        .controlSize(.small)
+                }
+
+                Spacer()
+
+                Picker(L10n.text("settings.shortcut.key"), selection: keyBinding) {
+                    ForEach(ScreenshotShortcutKey.allCases) { key in
+                        Text(key.rawValue)
+                            .tag(key)
+                    }
+                }
+                .pickerStyle(.menu)
+                .labelsHidden()
+                .frame(width: 72)
+            }
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .background(Color.white.opacity(0.54))
+        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .strokeBorder(AppTheme.hairline, lineWidth: 1)
+        }
+    }
+
+    private var keyBinding: Binding<ScreenshotShortcutKey> {
+        Binding(
+            get: { shortcut.key },
+            set: { shortcut = ScreenshotKeyboardShortcut(key: $0, modifiers: shortcut.normalizedModifiers) }
+        )
+    }
+
+    private func modifierBinding(_ modifier: NSEvent.ModifierFlags) -> Binding<Bool> {
+        Binding(
+            get: { shortcut.normalizedModifiers.contains(modifier) },
+            set: { isEnabled in
+                var next = shortcut.normalizedModifiers
+                if isEnabled {
+                    next.insert(modifier)
+                } else {
+                    let activeCount = modifierOptions.filter { next.contains($0.0) }.count
+                    guard activeCount > 1 else { return }
+                    next.remove(modifier)
+                }
+                shortcut = ScreenshotKeyboardShortcut(key: shortcut.key, modifiers: next)
+            }
+        )
+    }
+}
+
 struct MenuBarPanelView: View {
     @ObservedObject var viewModel: MenuBarUploadViewModel
-    @State private var selectedSection: PanelSection = .upload
+    @State private var selectedSection: PanelSection = .workbench
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -423,8 +546,8 @@ struct MenuBarPanelView: View {
                 }
 
                 switch selectedSection {
-                case .upload:
-                    uploadSection
+                case .workbench:
+                    workbenchSection
                 case .links:
                     linksSection
                 case .history:
@@ -436,15 +559,16 @@ struct MenuBarPanelView: View {
         .scrollIndicators(.never)
     }
 
-    private var uploadSection: some View {
+    private var workbenchSection: some View {
         VStack(alignment: .leading, spacing: 14) {
             if !viewModel.profile.isReadyForUpload {
                 configurationPrompt
             }
-            heroDropZone
-            uploadTiles
+            intakeTiles
+            workspacePreview
+            postProcessTemplates
+            workspaceActions
             uploadQuickStats
-            currentImagePreview
             variantPreview
             latestLinkPreview
         }
@@ -461,7 +585,47 @@ struct MenuBarPanelView: View {
         )
     }
 
-    private var uploadTiles: some View {
+    private var intakeTiles: some View {
+        VStack(spacing: 10) {
+            HStack(spacing: 10) {
+                CompactWorkbenchButton(
+                    icon: "selection.pin.in.out",
+                    title: L10n.text("workbench.intake.region"),
+                    subtitle: L10n.text("workbench.intake.region.subtitle")
+                ) {
+                    viewModel.captureRegionToWorkspace()
+                }
+
+                CompactWorkbenchButton(
+                    icon: "rectangle.on.rectangle",
+                    title: L10n.text("workbench.intake.fullscreen"),
+                    subtitle: L10n.text("workbench.intake.fullscreen.subtitle")
+                ) {
+                    viewModel.captureFullScreenToWorkspace()
+                }
+            }
+
+            HStack(spacing: 10) {
+                CompactWorkbenchButton(
+                    icon: "doc.on.clipboard",
+                    title: L10n.text("tile.clipboard.title"),
+                    subtitle: L10n.text("tile.clipboard.subtitle")
+                ) {
+                    viewModel.uploadFromClipboard()
+                }
+
+                CompactWorkbenchButton(
+                    icon: "photo.on.rectangle",
+                    title: L10n.text("tile.images.title"),
+                    subtitle: L10n.text("tile.images.subtitle")
+                ) {
+                    viewModel.chooseImageFiles()
+                }
+            }
+        }
+    }
+
+    private var legacyUploadTiles: some View {
         HStack(spacing: 12) {
             UploadActionTile(
                 icon: "doc.on.clipboard",
@@ -489,6 +653,77 @@ struct MenuBarPanelView: View {
             ) {
                 viewModel.chooseImageDirectory()
             }
+        }
+    }
+
+    @ViewBuilder
+    private var workspacePreview: some View {
+        if let item = viewModel.workspaceItem {
+            WorkbenchPreviewCard(
+                item: item,
+                template: viewModel.postProcessRecipe.template,
+                imageData: viewModel.processedPreviewData
+            )
+        } else {
+            heroDropZone
+        }
+    }
+
+    private var postProcessTemplates: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(L10n.text("post.templates.title"))
+                .font(.headline)
+
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3), spacing: 8) {
+                ForEach(PostProcessTemplate.allCases) { template in
+                    TemplatePillButton(
+                        template: template,
+                        isSelected: viewModel.postProcessRecipe.template == template
+                    ) {
+                        viewModel.selectPostProcessTemplate(template)
+                    }
+                }
+            }
+        }
+    }
+
+    private var workspaceActions: some View {
+        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 2), spacing: 10) {
+            Button {
+                viewModel.annotateWorkspaceImage()
+            } label: {
+                Label(L10n.text("workbench.action.annotate"), systemImage: "pencil.and.outline")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.bordered)
+            .disabled(viewModel.workspaceItem == nil)
+
+            Button {
+                viewModel.saveProcessedImage()
+            } label: {
+                Label(L10n.text("workbench.action.saveImage"), systemImage: "square.and.arrow.down")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.bordered)
+            .disabled(viewModel.workspaceItem == nil)
+
+            Button {
+                viewModel.uploadWorkspaceImage()
+            } label: {
+                Label(L10n.text("workbench.action.upload"), systemImage: "arrow.up.circle.fill")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.borderedProminent)
+            .disabled(viewModel.workspaceItem == nil || viewModel.isUploading)
+
+            Button {
+                viewModel.copyProcessedImage()
+            } label: {
+                Label(L10n.text("workbench.action.copyImage"), systemImage: "doc.on.doc")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.bordered)
+            .disabled(viewModel.workspaceItem == nil)
         }
     }
 
