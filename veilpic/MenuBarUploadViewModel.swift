@@ -149,7 +149,11 @@ final class MenuBarUploadViewModel: ObservableObject {
                 return
             }
 
-            receiveImage(image, sourceName: L10n.text("source.fullscreen"))
+            receiveImage(
+                image,
+                sourceName: L10n.text("source.fullscreen"),
+                copyToClipboard: profile.automaticallyCopyScreenshotToClipboard
+            )
         }
     }
 
@@ -211,7 +215,11 @@ final class MenuBarUploadViewModel: ObservableObject {
                 return
             }
 
-            self.receiveImage(image, sourceName: L10n.text("source.region"))
+            self.receiveImage(
+                image,
+                sourceName: L10n.text("source.region"),
+                copyToClipboard: self.profile.automaticallyCopyScreenshotToClipboard
+            )
         }
     }
 
@@ -292,9 +300,13 @@ final class MenuBarUploadViewModel: ObservableObject {
         feedback = nil
     }
 
-    func receiveImage(_ image: NSImage, sourceName: String) {
+    func receiveImage(_ image: NSImage, sourceName: String, copyToClipboard: Bool = false) {
         let shouldRevealWorkspace = revealWorkspaceAfterCapture
         revealWorkspaceAfterCapture = false
+        let didCopyToClipboard = copyToClipboard && ClipboardImageWriter.copy(
+            image,
+            preferredFileName: "\(uniqueBasename(from: sourceName))-screenshot.png"
+        )
         workspaceItem = ImageWorkspaceItem(originalImage: image, sourceName: sourceName, createdAt: Date())
         postProcessRecipe = PostProcessRecipe.defaults(for: .original)
         refreshProcessedPreview()
@@ -302,8 +314,16 @@ final class MenuBarUploadViewModel: ObservableObject {
         uploadResult = nil
         phase = .idle
         suggestedSection = .workbench
-        statusMessage = L10n.text("status.workspace.ready")
-        showFeedback(.success, title: L10n.text("feedback.workspace.ready.title"), message: L10n.text("feedback.workspace.ready.message"))
+        if didCopyToClipboard {
+            statusMessage = L10n.text("status.screenshot.copiedToClipboard")
+            showFeedback(.success, title: L10n.text("feedback.screenshot.copied.title"), message: L10n.text("feedback.screenshot.copied.message"))
+        } else if copyToClipboard {
+            statusMessage = L10n.text("status.screenshot.copyFailed")
+            showFeedback(.warning, title: L10n.text("feedback.screenshot.copyFailed.title"), message: L10n.text("feedback.screenshot.copyFailed.message"))
+        } else {
+            statusMessage = L10n.text("status.workspace.ready")
+            showFeedback(.success, title: L10n.text("feedback.workspace.ready.title"), message: L10n.text("feedback.workspace.ready.message"))
+        }
         if shouldRevealWorkspace {
             MainWindowPresenter.shared.open()
         }

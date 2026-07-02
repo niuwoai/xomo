@@ -34,6 +34,10 @@
 "feedback.annotation.applied.title" = "Annotations applied";
 "feedback.screenshot.failed.message" = "No screen content was captured. Check Screen Recording permission and try again.";
 "feedback.screenshot.failed.title" = "Screenshot failed";
+"feedback.screenshot.copied.message" = "The screenshot was copied to the system clipboard and added to the workbench for post-processing.";
+"feedback.screenshot.copied.title" = "Screenshot copied";
+"feedback.screenshot.copyFailed.message" = "The screenshot entered the workbench, but Qingtu could not write it to the system clipboard. Try Copy Image later.";
+"feedback.screenshot.copyFailed.title" = "Screenshot copy failed";
 "feedback.screenshot.permission.message" = "Allow Qingtu to record the screen in System Settings, then try again.";
 "feedback.screenshot.permission.title" = "Screen Recording permission needed";
 "feedback.screenshot.region.planned.message" = "Region screenshots enter the workbench for annotation, post-processing, saving, uploading, or copying.";
@@ -173,6 +177,9 @@
 "settings.launchAtLogin.note" = "When enabled, Qingtu starts automatically after you log in to macOS and stays in the menu bar.";
 "settings.launchAtLogin.title" = "Launch at login";
 "settings.provider" = "Storage backend";
+"settings.screenshotBehavior" = "Screenshot behavior";
+"settings.screenshotAutoCopy.note" = "On by default. Full-screen and region screenshots are written to the system clipboard immediately, while staying in the workbench for iPhone, iPad, MacBook, rounded, or gradient post-processing.";
+"settings.screenshotAutoCopy.title" = "Copy screenshots to clipboard automatically";
 "settings.screenshotShortcuts" = "Screenshot shortcuts";
 "settings.screenshotShortcuts.note" = "Changes are saved immediately and global shortcuts are re-registered. A shortcut sends the screenshot into the post-processing workbench and opens the main window.";
 "settings.shortcut.fullscreen" = "Full-screen screenshot";
@@ -215,6 +222,8 @@
 "status.readingDrop" = "Reading dropped image...";
 "status.screenshot.capturing" = "Capturing screen";
 "status.screenshot.cancelled" = "Screenshot cancelled";
+"status.screenshot.copiedToClipboard" = "Screenshot copied to the system clipboard";
+"status.screenshot.copyFailed" = "Failed to copy screenshot to clipboard";
 "status.screenshot.failed" = "Screenshot failed";
 "status.screenshot.permission" = "Screen Recording permission needed";
 "status.screenshot.region.active" = "Region capture is already active";

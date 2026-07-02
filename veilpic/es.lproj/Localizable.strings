@@ -34,6 +34,10 @@
 "feedback.annotation.applied.title" = "Anotaciones aplicadas";
 "feedback.screenshot.failed.message" = "No se capturó contenido de pantalla. Revisa el permiso de grabación de pantalla e inténtalo de nuevo.";
 "feedback.screenshot.failed.title" = "Error de captura";
+"feedback.screenshot.copied.message" = "La captura se copió al portapapeles del sistema y se añadió al banco para posprocesado.";
+"feedback.screenshot.copied.title" = "Captura copiada";
+"feedback.screenshot.copyFailed.message" = "La captura entró en el banco, pero Qingtu no pudo escribirla en el portapapeles del sistema. Prueba Copiar imagen más tarde.";
+"feedback.screenshot.copyFailed.title" = "Error al copiar captura";
 "feedback.screenshot.permission.message" = "Permite que Qingtu grabe la pantalla en Ajustes del sistema y vuelve a intentarlo.";
 "feedback.screenshot.permission.title" = "Se necesita permiso de grabación de pantalla";
 "feedback.screenshot.region.planned.message" = "Las capturas de región entran en el banco para anotar, posprocesar, guardar, subir o copiar.";
@@ -173,6 +177,9 @@
 "settings.launchAtLogin.note" = "Al activarlo, Qingtu se inicia automáticamente al entrar en macOS y queda en la barra de menús.";
 "settings.launchAtLogin.title" = "Iniciar al arrancar sesión";
 "settings.provider" = "Backend de almacenamiento";
+"settings.screenshotBehavior" = "Comportamiento de captura";
+"settings.screenshotAutoCopy.note" = "Activado por defecto. Las capturas de pantalla completa y de región se escriben de inmediato en el portapapeles del sistema y permanecen en el banco para posprocesado con iPhone, iPad, MacBook, esquinas redondeadas o degradados.";
+"settings.screenshotAutoCopy.title" = "Copiar capturas al portapapeles automáticamente";
 "settings.screenshotShortcuts" = "Atajos de captura";
 "settings.screenshotShortcuts.note" = "Los cambios se guardan al instante y se vuelven a registrar los atajos globales. Al usarlos, la captura entra en el banco de posprocesado y se abre la ventana principal.";
 "settings.shortcut.fullscreen" = "Pantalla completa";
@@ -215,6 +222,8 @@
 "status.readingDrop" = "Leyendo imagen arrastrada...";
 "status.screenshot.capturing" = "Capturando pantalla";
 "status.screenshot.cancelled" = "Captura cancelada";
+"status.screenshot.copiedToClipboard" = "Captura copiada al portapapeles del sistema";
+"status.screenshot.copyFailed" = "No se pudo copiar la captura al portapapeles";
 "status.screenshot.failed" = "Error de captura";
 "status.screenshot.permission" = "Se necesita permiso de grabación de pantalla";
 "status.screenshot.region.active" = "La captura de región ya está activa";

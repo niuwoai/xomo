@@ -59,6 +59,7 @@ struct StorageSettingsView: View {
                     credentialModeSelector
                     configurationFields
                     uploadBehaviorSection
+                    screenshotBehaviorSection
                     screenshotShortcutsSection
                     launchAtLoginSection
                     dockVisibilitySection
@@ -294,6 +295,25 @@ struct StorageSettingsView: View {
             Text(L10n.text("settings.autoCopy.note"))
                 .font(.caption)
                 .foregroundStyle(.secondary)
+        }
+        .padding(14)
+        .themedCard()
+    }
+
+    private var screenshotBehaviorSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(L10n.text("settings.screenshotBehavior"))
+                .font(.headline)
+
+            Toggle(isOn: $viewModel.profile.automaticallyCopyScreenshotToClipboard) {
+                Label(L10n.text("settings.screenshotAutoCopy.title"), systemImage: "doc.on.clipboard")
+                    .font(.caption.weight(.semibold))
+            }
+
+            Text(L10n.text("settings.screenshotAutoCopy.note"))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
         }
         .padding(14)
         .themedCard()

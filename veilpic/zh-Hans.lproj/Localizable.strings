@@ -34,6 +34,10 @@
 "feedback.annotation.applied.title" = "标注已应用";
 "feedback.screenshot.failed.message" = "没有捕获到屏幕内容，请检查屏幕录制权限后重试。";
 "feedback.screenshot.failed.title" = "截图失败";
+"feedback.screenshot.copied.message" = "截图已复制到系统剪贴板，同时进入工作台继续后处理。";
+"feedback.screenshot.copied.title" = "截图已复制";
+"feedback.screenshot.copyFailed.message" = "截图已进入工作台，但写入系统剪贴板失败。可以稍后用“复制图片”重试。";
+"feedback.screenshot.copyFailed.title" = "截图复制失败";
 "feedback.screenshot.permission.message" = "请在系统设置中允许轻图录制屏幕，授权后再重试。";
 "feedback.screenshot.permission.title" = "需要屏幕录制权限";
 "feedback.screenshot.region.planned.message" = "区域截图会进入工作台，可继续标注、后处理、保存、上传或复制。";
@@ -173,6 +177,9 @@
 "settings.launchAtLogin.note" = "开启后，轻图会在你登录 macOS 后自动启动，并停留在菜单栏。";
 "settings.launchAtLogin.title" = "开机自动启动";
 "settings.provider" = "存储后端";
+"settings.screenshotBehavior" = "截图行为";
+"settings.screenshotAutoCopy.note" = "默认开启。全屏截图和区域截图完成后会立即写入系统剪贴板，并保留在工作台里继续套用 iPhone、iPad、MacBook、圆角或渐变背景。";
+"settings.screenshotAutoCopy.title" = "截图后自动复制到剪贴板";
 "settings.screenshotShortcuts" = "截图快捷键";
 "settings.screenshotShortcuts.note" = "修改后会立即保存并重新注册全局快捷键；触发后截图会进入后处理工作台并打开主窗口。";
 "settings.shortcut.fullscreen" = "全屏截图";
@@ -215,6 +222,8 @@
 "status.readingDrop" = "正在读取拖入的图片...";
 "status.screenshot.capturing" = "正在截取屏幕";
 "status.screenshot.cancelled" = "已取消截图";
+"status.screenshot.copiedToClipboard" = "截图已复制到系统剪贴板";
+"status.screenshot.copyFailed" = "截图复制到剪贴板失败";
 "status.screenshot.failed" = "截图失败";
 "status.screenshot.permission" = "需要屏幕录制权限";
 "status.screenshot.region.active" = "区域截图已在进行中";

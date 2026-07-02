@@ -34,6 +34,10 @@
 "feedback.annotation.applied.title" = "注釈を適用しました";
 "feedback.screenshot.failed.message" = "画面内容を取得できませんでした。画面収録の権限を確認してから再試行してください。";
 "feedback.screenshot.failed.title" = "スクリーンショットに失敗しました";
+"feedback.screenshot.copied.message" = "スクリーンショットをシステムクリップボードにコピーし、後処理用にワークベンチへ追加しました。";
+"feedback.screenshot.copied.title" = "スクリーンショットをコピーしました";
+"feedback.screenshot.copyFailed.message" = "スクリーンショットはワークベンチに入りましたが、システムクリップボードへ書き込めませんでした。あとで「画像をコピー」をお試しください。";
+"feedback.screenshot.copyFailed.title" = "スクリーンショットのコピーに失敗しました";
 "feedback.screenshot.permission.message" = "システム設定で軽図に画面収録を許可してから再試行してください。";
 "feedback.screenshot.permission.title" = "画面収録の権限が必要です";
 "feedback.screenshot.region.planned.message" = "範囲スクリーンショットはワークベンチに入り、注釈、後処理、保存、アップロード、コピーを続けられます。";
@@ -173,6 +177,9 @@
 "settings.launchAtLogin.note" = "有効にすると、macOS へのログイン後に軽図が自動起動し、メニューバーに常駐します。";
 "settings.launchAtLogin.title" = "ログイン時に起動";
 "settings.provider" = "ストレージバックエンド";
+"settings.screenshotBehavior" = "スクリーンショット動作";
+"settings.screenshotAutoCopy.note" = "初期設定でオンです。全画面と範囲スクリーンショットはすぐシステムクリップボードへ書き込まれ、ワークベンチで iPhone、iPad、MacBook、角丸、グラデーション背景の後処理を続けられます。";
+"settings.screenshotAutoCopy.title" = "撮影後に自動でクリップボードへコピー";
 "settings.screenshotShortcuts" = "スクリーンショットのショートカット";
 "settings.screenshotShortcuts.note" = "変更はすぐに保存され、グローバルショートカットを再登録します。実行するとスクリーンショットが後処理ワークベンチに入り、メイン画面が開きます。";
 "settings.shortcut.fullscreen" = "全画面スクリーンショット";
@@ -215,6 +222,8 @@
 "status.readingDrop" = "ドロップされた画像を読み取り中...";
 "status.screenshot.capturing" = "画面を取得中";
 "status.screenshot.cancelled" = "スクリーンショットをキャンセルしました";
+"status.screenshot.copiedToClipboard" = "スクリーンショットをシステムクリップボードにコピーしました";
+"status.screenshot.copyFailed" = "スクリーンショットをクリップボードにコピーできませんでした";
 "status.screenshot.failed" = "スクリーンショットに失敗しました";
 "status.screenshot.permission" = "画面収録の権限が必要です";
 "status.screenshot.region.active" = "範囲キャプチャはすでに実行中です";

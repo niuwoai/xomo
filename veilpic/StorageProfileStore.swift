@@ -33,6 +33,7 @@ final class StorageProfileStore: StorageProfileStoring {
             profile.cdnDomain = snapshot.cdnDomain
             profile.objectPrefix = snapshot.objectPrefix
             profile.automaticallyCopyAfterUpload = snapshot.automaticallyCopyAfterUpload ?? true
+            profile.automaticallyCopyScreenshotToClipboard = snapshot.automaticallyCopyScreenshotToClipboard ?? true
             profile.automaticCopyVariant = snapshot.automaticCopyVariant ?? .compressed
         }
 
@@ -62,6 +63,7 @@ private struct StorageProfileSnapshot: Codable {
     let cdnDomain: String
     let objectPrefix: String
     let automaticallyCopyAfterUpload: Bool?
+    let automaticallyCopyScreenshotToClipboard: Bool?
     let automaticCopyVariant: ImageVariantKind?
 
     init(profile: StorageProfile) {
@@ -74,6 +76,7 @@ private struct StorageProfileSnapshot: Codable {
         cdnDomain = profile.cdnDomain
         objectPrefix = profile.objectPrefix
         automaticallyCopyAfterUpload = profile.automaticallyCopyAfterUpload
+        automaticallyCopyScreenshotToClipboard = profile.automaticallyCopyScreenshotToClipboard
         automaticCopyVariant = profile.automaticCopyVariant
     }
 }
