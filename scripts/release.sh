@@ -30,12 +30,12 @@ set -euo pipefail
 SCHEME="veilpic"                                         # xcodebuild scheme
 CONFIGURATION="Release"
 PROJECT_FILE="veilpic.xcodeproj"
-PRODUCT_NAME="musepic"                                   # 最终 .app / .dmg 文件名
+PRODUCT_NAME="QPic"                                   # 最终 .app / .dmg 文件名
 BUNDLE_ID="im.some.veilpic"
 TEAM_ID="ZH2S7D6PL6"                                     # Developer Team ID
 SIGNING_IDENTITY="Developer ID Application: Beijing Alibaba information Technology Co., Ltd. (ZH2S7D6PL6)"
 NOTARY_PROFILE="qingtu-notary"                           # store-credentials 时取的名字
-DMG_VOLUME_NAME="musepic"
+DMG_VOLUME_NAME="QPic"
 
 # ----- 路径 ----------------------------------------------------------------
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"

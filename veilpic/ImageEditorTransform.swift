@@ -18,7 +18,7 @@ extension ImageEditorViewModel {
     var canResizeSelectedLayer: Bool {
         let indices = selectedTransformableLayerIndices
         guard !indices.isEmpty, selectedLayerTransformFrame != nil else { return false }
-        return indices.allSatisfy { !document.isEffectivelyLocked(document.layers[$0]) }
+        return indices.allSatisfy { !document.isEffectivelyPositionLocked(document.layers[$0]) }
     }
 
     var canRotateSelectedLayer: Bool {
@@ -43,6 +43,11 @@ extension ImageEditorViewModel {
         for index in document.layers.indices where movingLayerIDs.contains(document.layers[index].id) {
             document.layers[index].frame.origin.x += delta.width
             document.layers[index].frame.origin.y += delta.height
+            if let mask = document.layers[index].mask,
+               !document.layers[index].isMaskLinked,
+               let shiftedMask = mask.offsetMask(by: CGSize(width: -delta.width, height: -delta.height)) {
+                document.layers[index].mask = shiftedMask
+            }
         }
         movingLayerDidChange = true
         statusText = L10n.text("imageEditor.status.layerMoved")
@@ -166,29 +171,38 @@ extension ImageEditorViewModel {
 
     func scaleSelectedLayer(by factor: CGFloat) {
         guard factor > 0 else { return }
-        guard let index = document.selectedLayerIndex else { return }
-        guard !document.layers[index].isGroup,
-              !document.layers[index].isAdjustment,
-              !document.layers[index].isFilter,
-              !document.layers[index].isText,
-              !document.isEffectivelyLocked(document.layers[index])
+        let indices = editableTransformLayerIndices()
+        guard !indices.isEmpty,
+              let transformFrame = transformFrame(for: indices)
         else {
             statusText = L10n.text("imageEditor.status.layerLocked")
             return
         }
 
-        let frame = document.layers[index].frame
-        let newSize = CGSize(
-            width: max(1, frame.width * factor),
-            height: max(1, frame.height * factor)
+        let originalFrames = indices.reduce(into: [:]) { frames, index in
+            frames[document.layers[index].id] = document.layers[index].frame.standardized
+        }
+        let scaledSize = CGSize(
+            width: max(1, transformFrame.width * factor),
+            height: max(1, transformFrame.height * factor)
         )
-        let newOrigin = CGPoint(
-            x: frame.midX - newSize.width / 2,
-            y: frame.midY - newSize.height / 2
+        let scaledFrame = CGRect(
+            x: transformFrame.midX - scaledSize.width / 2,
+            y: transformFrame.midY - scaledSize.height / 2,
+            width: scaledSize.width,
+            height: scaledSize.height
         )
 
         pushUndo()
-        document.layers[index].frame = CGRect(origin: newOrigin, size: newSize)
+        guard applyResizedTransformFrame(
+            scaledFrame,
+            originalTransformFrame: transformFrame,
+            originalFrames: originalFrames
+        ) else {
+            _ = undoStack.popLast()
+            updateStatus()
+            return
+        }
         appendHistory(L10n.text("imageEditor.history.layerScale"))
     }
 
@@ -215,9 +229,11 @@ extension ImageEditorViewModel {
     }
 
     var selectedTransformableLayerIndices: [Int] {
-        document.layers.indices.filter { index in
+        let baseLayerIDs = layerIDsExpandingGroups(document.selectedLayerIDs)
+        let transformLayerIDs = linkedTransformLayerIDs(startingFrom: baseLayerIDs)
+        return document.layers.indices.filter { index in
             let layer = document.layers[index]
-            return document.selectedLayerIDs.contains(layer.id)
+            return transformLayerIDs.contains(layer.id)
                 && !layer.isGroup
                 && !layer.isAdjustment
                 && !layer.isFilter
@@ -228,7 +244,7 @@ extension ImageEditorViewModel {
     func editableTransformLayerIndices() -> [Int] {
         let indices = selectedTransformableLayerIndices
         guard !indices.isEmpty,
-              indices.allSatisfy({ !document.isEffectivelyLocked(document.layers[$0]) })
+              indices.allSatisfy({ !document.isEffectivelyPositionLocked(document.layers[$0]) })
         else { return [] }
         return indices
     }
@@ -270,7 +286,9 @@ extension ImageEditorViewModel {
                     return false
                 }
                 rotatedLayer.image = rotatedImage
-                rotatedLayer.mask = originalLayer.mask?.rotated(degrees: degrees)
+                if originalLayer.isMaskLinked {
+                    rotatedLayer.mask = originalLayer.mask?.rotated(degrees: degrees)
+                }
             }
             rotatedLayer.frame = CGRect(
                 x: rotatedCenter.x - rotatedLayer.image.size.width / 2,
@@ -292,18 +310,20 @@ extension ImageEditorViewModel {
 
     func applyResizedTransformFrame(
         _ targetFrame: CGRect,
-        originalTransformFrame: CGRect
+        originalTransformFrame: CGRect,
+        originalFrames: [UUID: CGRect]? = nil
     ) -> Bool {
         guard originalTransformFrame.width > 0.1,
               originalTransformFrame.height > 0.1
         else { return false }
         let scaleX = targetFrame.width / originalTransformFrame.width
         let scaleY = targetFrame.height / originalTransformFrame.height
+        let sourceFrames = originalFrames ?? resizingOriginalFrames
         var changed = false
 
         for index in document.layers.indices {
             let id = document.layers[index].id
-            guard let originalFrame = resizingOriginalFrames[id] else { continue }
+            guard let originalFrame = sourceFrames[id] else { continue }
             let resizedFrame = CGRect(
                 x: targetFrame.minX + (originalFrame.minX - originalTransformFrame.minX) * scaleX,
                 y: targetFrame.minY + (originalFrame.minY - originalTransformFrame.minY) * scaleY,

@@ -12,7 +12,7 @@ import CoreImage.CIFilterBuiltins
 import Foundation
 import UniformTypeIdentifiers
 
-private enum ImageEditorImageProcessing {
+enum ImageEditorImageProcessing {
     static let ciContext = CIContext(options: nil)
 }
 
@@ -26,14 +26,31 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var opacity: CGFloat = 1
     @Published var hardness: CGFloat = 0.8
     @Published var feather: CGFloat = 0
+    @Published var selectionMode: ImageEditorSelectionMode = .replace
     @Published var foregroundColor: NSColor = .systemRed
     @Published var backgroundColor: NSColor = .clear
+    @Published var cloneSourcePoint: CGPoint?
     @Published var statusText: String = ""
     @Published var pointerText: String = "X: 0 Y: 0"
     @Published var textValue: String = ""
     @Published var textSize: Double = 32
     @Published var selectedAdjustment: ImageEditorAdjustment = .brightness
     @Published var adjustmentValue: Double = 0
+    @Published var levelsBlackPoint: Double = 0
+    @Published var levelsGamma: Double = 1
+    @Published var levelsWhitePoint: Double = 1
+    @Published var curvesShadows: Double = 0
+    @Published var curvesMidtones: Double = 0
+    @Published var curvesHighlights: Double = 0
+    @Published var colorBalanceShadowsCyanRed: Double = 0
+    @Published var colorBalanceShadowsMagentaGreen: Double = 0
+    @Published var colorBalanceShadowsYellowBlue: Double = 0
+    @Published var colorBalanceMidtonesCyanRed: Double = 0
+    @Published var colorBalanceMidtonesMagentaGreen: Double = 0
+    @Published var colorBalanceMidtonesYellowBlue: Double = 0
+    @Published var colorBalanceHighlightsCyanRed: Double = 0
+    @Published var colorBalanceHighlightsMagentaGreen: Double = 0
+    @Published var colorBalanceHighlightsYellowBlue: Double = 0
     @Published var selectedFilter: ImageEditorFilter = .gaussianBlur
     @Published var filterIntensity: Double = 0.5
     @Published var isEditingLayerMask: Bool = false
@@ -89,6 +106,33 @@ final class ImageEditorViewModel: ObservableObject {
         return layer.opacity
     }
 
+    var selectedLayerFillOpacity: Double {
+        guard let layer = document.selectedLayer else { return 1 }
+        return layer.fillOpacity
+    }
+
+    var canEditSelectedLayerFillOpacity: Bool {
+        guard let layer = document.selectedLayer else { return false }
+        return canSetLayerFillOpacity(layer)
+    }
+
+    var selectedLayerMaskDensity: Double {
+        guard let layer = document.selectedLayer else { return 1 }
+        return layer.maskDensity
+    }
+
+    var selectedLayerMaskFeather: Double {
+        guard let layer = document.selectedLayer else { return 0 }
+        return layer.maskFeather
+    }
+
+    var canEditSelectedLayerMaskProperties: Bool {
+        guard selectedLayerCount == 1,
+              let layer = document.selectedLayer
+        else { return false }
+        return layer.mask != nil && !document.isEffectivelyLocked(layer)
+    }
+
     var selectedLayerBlendMode: ImageEditorBlendMode {
         guard let layer = document.selectedLayer else { return .normal }
         return layer.blendMode
@@ -102,6 +146,27 @@ final class ImageEditorViewModel: ObservableObject {
         guard let layer = document.selectedLayer else { return "W 0 H 0" }
         guard !layer.isGroup else { return L10n.text("imageEditor.properties.groupLayer") }
         if let adjustment = layer.adjustment {
+            if adjustment.kind == .levels {
+                let settings = layer.adjustmentSettings.normalized()
+                return L10n.format(
+                    "imageEditor.properties.levelsLayerValue",
+                    Int((settings.levelsBlackPoint * 255).rounded()),
+                    String(format: "%.2f", settings.levelsGamma),
+                    Int((settings.levelsWhitePoint * 255).rounded())
+                )
+            }
+            if adjustment.kind == .curves {
+                let settings = layer.adjustmentSettings.normalized()
+                return L10n.format(
+                    "imageEditor.properties.curvesLayerValue",
+                    Int((settings.curvesShadows * 100).rounded()),
+                    Int((settings.curvesMidtones * 100).rounded()),
+                    Int((settings.curvesHighlights * 100).rounded())
+                )
+            }
+            if adjustment.kind == .colorBalance {
+                return L10n.text("imageEditor.properties.colorBalanceLayerValue")
+            }
             return L10n.format("imageEditor.properties.adjustmentLayerValue", adjustment.kind.title, Int((adjustment.amount * 100).rounded()))
         }
         if let filter = layer.filter {
@@ -109,6 +174,14 @@ final class ImageEditorViewModel: ObservableObject {
         }
         if let textContent = layer.textContent {
             return L10n.format("imageEditor.properties.textLayerValue", textContent.text, Int(textContent.fontSize.rounded()))
+        }
+        if let shapeContent = layer.shapeContent {
+            return L10n.format(
+                "imageEditor.properties.shapeLayerValue",
+                shapeContent.kind.title,
+                Int(layer.frame.width.rounded()),
+                Int(layer.frame.height.rounded())
+            )
         }
         return "X \(Int(layer.frame.minX.rounded()))  Y \(Int(layer.frame.minY.rounded()))  W \(Int(layer.frame.width.rounded()))  H \(Int(layer.frame.height.rounded()))"
     }
@@ -129,6 +202,38 @@ final class ImageEditorViewModel: ObservableObject {
         document.selectedLayer?.isText == true
     }
 
+    var selectedLayerIsShape: Bool {
+        document.selectedLayer?.isShape == true
+    }
+
+    var selectedLayerHasSmartFilters: Bool {
+        document.selectedLayer?.hasSmartFilters == true
+    }
+
+    var selectedLayerSmartFilters: [ImageEditorSmartFilter] {
+        document.selectedLayer?.smartFilters ?? []
+    }
+
+    var selectedLayerSmartFilterText: String {
+        guard let filters = document.selectedLayer?.smartFilters,
+              !filters.isEmpty
+        else {
+            return L10n.text("imageEditor.properties.smartFiltersEmpty")
+        }
+        let names = filters.map { smartFilterLabel($0) }
+        return names.joined(separator: L10n.text("imageEditor.properties.smartFilterSeparator"))
+    }
+
+    func smartFilterLabel(_ filter: ImageEditorSmartFilter) -> String {
+        let title = L10n.format(
+            "imageEditor.properties.smartFilterItem",
+            filter.kind.title,
+            Int((filter.normalizedIntensity * 100).rounded())
+        )
+        guard !filter.isEnabled else { return title }
+        return L10n.format("imageEditor.properties.smartFilterDisabled", title)
+    }
+
     var selectedLayerCount: Int {
         selectedLayerIndices.count
     }
@@ -137,12 +242,18 @@ final class ImageEditorViewModel: ObservableObject {
         selectedLayerCount > 1
     }
 
+    var visibleLayerRows: [ImageEditorLayer] {
+        document.layers.reversed().filter { layer in
+            document.ancestorGroups(for: layer).allSatisfy(\.isGroupExpanded)
+        }
+    }
+
     var selectedLayerIsClippingMask: Bool {
         document.selectedLayer?.isClippingMask == true
     }
 
     var selectedLayerHasMask: Bool {
-        guard let layer = document.selectedLayer, !layer.isGroup else { return false }
+        guard let layer = document.selectedLayer else { return false }
         return layer.mask != nil
     }
 
@@ -152,6 +263,14 @@ final class ImageEditorViewModel: ObservableObject {
 
     var selectedLayerHasShadow: Bool {
         document.selectedLayer?.style.shadowEnabled == true
+    }
+
+    var selectedLayerHasOuterGlow: Bool {
+        document.selectedLayer?.style.outerGlowEnabled == true
+    }
+
+    var selectedLayerHasInnerGlow: Bool {
+        document.selectedLayer?.style.innerGlowEnabled == true
     }
 
     var selectedLayerStrokeWidth: Double {
@@ -174,14 +293,38 @@ final class ImageEditorViewModel: ObservableObject {
         Double(document.selectedLayer?.style.shadowOffset.height ?? -7)
     }
 
+    var selectedLayerOuterGlowOpacity: Double {
+        Double(document.selectedLayer?.style.outerGlowOpacity ?? 0.42)
+    }
+
+    var selectedLayerOuterGlowBlur: Double {
+        Double(document.selectedLayer?.style.outerGlowBlur ?? 10)
+    }
+
+    var selectedLayerOuterGlowSpread: Double {
+        Double(document.selectedLayer?.style.outerGlowSpread ?? 3)
+    }
+
+    var selectedLayerInnerGlowOpacity: Double {
+        Double(document.selectedLayer?.style.innerGlowOpacity ?? 0.36)
+    }
+
+    var selectedLayerInnerGlowBlur: Double {
+        Double(document.selectedLayer?.style.innerGlowBlur ?? 8)
+    }
+
+    var selectedLayerInnerGlowChoke: Double {
+        Double(document.selectedLayer?.style.innerGlowChoke ?? 2)
+    }
+
     var canAddLayerMask: Bool {
         guard let layer = document.selectedLayer else { return false }
-        return !layer.isGroup && !document.isEffectivelyLocked(layer) && layer.mask == nil
+        return !document.isEffectivelyLocked(layer) && layer.mask == nil
     }
 
     var canDeleteLayerMask: Bool {
         guard let layer = document.selectedLayer else { return false }
-        return !layer.isGroup && !document.isEffectivelyLocked(layer) && layer.mask != nil
+        return !document.isEffectivelyLocked(layer) && layer.mask != nil
     }
 
     var selection: ImageEditorSelection? {
@@ -209,14 +352,14 @@ final class ImageEditorViewModel: ObservableObject {
                 && !lower.isAdjustment
                 && !lower.isFilter
                 && !document.isEffectivelyLocked(layer)
-                && !document.isEffectivelyLocked(lower)
+                && !document.isEffectivelyPixelsLocked(lower)
         }
         if layer.isFilter {
             return !lower.isGroup
                 && !lower.isAdjustment
                 && !lower.isFilter
                 && !document.isEffectivelyLocked(layer)
-                && !document.isEffectivelyLocked(lower)
+                && !document.isEffectivelyPixelsLocked(lower)
         }
         return !layer.isGroup
             && !layer.isAdjustment
@@ -224,8 +367,8 @@ final class ImageEditorViewModel: ObservableObject {
             && !lower.isGroup
             && !lower.isAdjustment
             && !lower.isFilter
-            && !document.isEffectivelyLocked(layer)
-            && !document.isEffectivelyLocked(lower)
+            && !document.isEffectivelyPixelsLocked(layer)
+            && !document.isEffectivelyPixelsLocked(lower)
     }
 
     var canStampVisibleLayers: Bool {
@@ -237,9 +380,27 @@ final class ImageEditorViewModel: ObservableObject {
     var canGroupSelectedLayer: Bool {
         let indices = selectedLayerIndices
         guard !indices.isEmpty else { return false }
+        let selectedLayers = indices.map { document.layers[$0] }
+        let parentIDs = Set(selectedLayers.map(\.groupID))
+        guard parentIDs.count == 1 else { return false }
         return indices.allSatisfy { index in
             let layer = document.layers[index]
-            return !layer.isGroup && layer.groupID == nil && !document.isEffectivelyLocked(layer)
+            return !document.isEffectivelyLocked(layer)
+        }
+    }
+
+    var canSelectSelectedGroupMembers: Bool {
+        guard selectedLayerCount == 1,
+              let layer = document.selectedLayer,
+              layer.isGroup
+        else { return false }
+        return !groupDescendantIndices(for: layer.id).isEmpty
+    }
+
+    var canUngroupSelectedLayers: Bool {
+        selectedLayerIndices.contains { index in
+            let layer = document.layers[index]
+            return layer.isGroup && !document.isEffectivelyLocked(layer)
         }
     }
 
@@ -262,9 +423,17 @@ final class ImageEditorViewModel: ObservableObject {
     var canToggleSelectedLayerClippingMask: Bool {
         guard let index = document.selectedLayerIndex else { return false }
         let layer = document.layers[index]
-        guard !layer.isGroup, !layer.isAdjustment, !layer.isFilter, !document.isEffectivelyLocked(layer) else { return false }
+        guard !layer.isGroup, !document.isEffectivelyLocked(layer) else { return false }
         if layer.isClippingMask { return true }
         return clippingBaseExists(below: index, groupID: layer.groupID)
+    }
+
+    var canAddSmartFilterToSelectedLayer: Bool {
+        guard selectedLayerCount == 1,
+              let layer = document.selectedLayer,
+              !document.isEffectivelyPixelsLocked(layer)
+        else { return false }
+        return !layer.isGroup && !layer.isAdjustment && !layer.isFilter
     }
 
     var colorText: String {
@@ -315,6 +484,7 @@ final class ImageEditorViewModel: ObservableObject {
         syncAdjustmentControlsFromSelection()
         syncFilterControlsFromSelection()
         syncTextControlsFromSelection()
+        syncShapeControlsFromSelection()
         updateStatus()
     }
 
@@ -326,6 +496,7 @@ final class ImageEditorViewModel: ObservableObject {
         syncAdjustmentControlsFromSelection()
         syncFilterControlsFromSelection()
         syncTextControlsFromSelection()
+        syncShapeControlsFromSelection()
         updateStatus()
     }
 
@@ -339,6 +510,7 @@ final class ImageEditorViewModel: ObservableObject {
         syncAdjustmentControlsFromSelection()
         syncFilterControlsFromSelection()
         syncTextControlsFromSelection()
+        syncShapeControlsFromSelection()
         appendHistory(L10n.text("imageEditor.history.revert"))
     }
 
@@ -370,10 +542,7 @@ final class ImageEditorViewModel: ObservableObject {
             height: abs(end.y - start.y)
         ).intersection(CGRect(origin: .zero, size: document.canvasSize))
         guard rect.width > 2, rect.height > 2 else { return }
-        pushUndo()
-        document.selection = .rectangle(rect)
-        appendHistory(L10n.text("imageEditor.history.selection"))
-        statusText = L10n.text("imageEditor.status.selectionCreated")
+        applySelectionCandidate(.rectangle(rect), replaceHistoryKey: "imageEditor.history.selection")
     }
 
     func createLassoSelection(points: [CGPoint]) {
@@ -381,20 +550,37 @@ final class ImageEditorViewModel: ObservableObject {
             CGRect(origin: .zero, size: document.canvasSize).contains(point)
         }
         guard let selection = ImageEditorSelection.polygon(boundedPoints) else { return }
-        pushUndo()
-        document.selection = selection
-        appendHistory(L10n.text("imageEditor.history.selection"))
-        statusText = L10n.text("imageEditor.status.selectionCreated")
+        applySelectionCandidate(selection, replaceHistoryKey: "imageEditor.history.selection")
     }
 
     func createMagicSelection(at point: CGPoint?) {
         guard let point,
               let selection = magicSelection(at: point)
         else { return }
+        applySelectionCandidate(selection, replaceHistoryKey: "imageEditor.history.magicSelection")
+    }
+
+    private func applySelectionCandidate(_ selection: ImageEditorSelection, replaceHistoryKey: String) {
+        let existingSelection = document.selection
+        guard existingSelection != nil || selectionMode == .replace || selectionMode == .add else {
+            statusText = L10n.text("imageEditor.status.noSelection")
+            return
+        }
+
+        let nextSelection = ImageEditorSelection.combined(
+            current: existingSelection,
+            candidate: selection,
+            mode: selectionMode,
+            canvasSize: document.canvasSize
+        )
+
         pushUndo()
-        document.selection = selection
-        appendHistory(L10n.text("imageEditor.history.magicSelection"))
-        statusText = L10n.text("imageEditor.status.selectionCreated")
+        document.selection = nextSelection
+        let historyKey = selectionMode == .replace ? replaceHistoryKey : selectionMode.historyKey
+        appendHistory(L10n.text(historyKey))
+        statusText = nextSelection == nil
+            ? L10n.text("imageEditor.status.selectionEmpty")
+            : L10n.text("imageEditor.status.selectionCreated")
     }
 
     func isLayerSelected(_ id: UUID) -> Bool {
@@ -421,6 +607,7 @@ final class ImageEditorViewModel: ObservableObject {
             syncAdjustmentControlsFromSelection()
             syncFilterControlsFromSelection()
             syncTextControlsFromSelection()
+            syncShapeControlsFromSelection()
             return
         }
 
@@ -430,6 +617,7 @@ final class ImageEditorViewModel: ObservableObject {
         syncAdjustmentControlsFromSelection()
         syncFilterControlsFromSelection()
         syncTextControlsFromSelection()
+        syncShapeControlsFromSelection()
     }
 
     func addLayer() {
@@ -464,10 +652,11 @@ final class ImageEditorViewModel: ObservableObject {
         guard canGroupSelectedLayer, let insertionIndex = indices.last else { return }
         pushUndo()
         let groupNumber = document.layers.filter(\.isGroup).count + 1
-        let group = ImageEditorLayer.group(
+        var group = ImageEditorLayer.group(
             name: L10n.format("imageEditor.layer.groupName", groupNumber),
             size: document.canvasSize
         )
+        group.groupID = document.layers[indices[0]].groupID
         for index in indices {
             document.layers[index].groupID = group.id
         }
@@ -478,22 +667,87 @@ final class ImageEditorViewModel: ObservableObject {
         appendHistory(L10n.text("imageEditor.history.layerGroupSelected"))
     }
 
-    func duplicateSelectedLayer() {
-        let indices = selectedLayerIndices
-        guard !indices.isEmpty else { return }
-        pushUndo()
-        var insertedIDs: [UUID] = []
-        var offset = 0
-        for index in indices {
-            var layer = document.layers[index + offset]
-            layer.id = UUID()
-            layer.name = L10n.format("imageEditor.layer.copyName", layer.name)
-            document.layers.insert(layer, at: index + offset + 1)
-            insertedIDs.append(layer.id)
-            offset += 1
+    func selectSelectedGroupMembers() {
+        guard canSelectSelectedGroupMembers,
+              let groupID = document.selectedLayerID
+        else {
+            statusText = L10n.text("imageEditor.status.layerGroupEmpty")
+            return
         }
-        document.selectedLayerID = insertedIDs.last
-        document.selectedLayerIDs = Set(insertedIDs)
+        let memberIDs = Set(groupDescendantIndices(for: groupID).map { document.layers[$0].id })
+        guard !memberIDs.isEmpty else {
+            statusText = L10n.text("imageEditor.status.layerGroupEmpty")
+            return
+        }
+        document.selectedLayerIDs = memberIDs
+        document.selectedLayerID = document.layers.reversed().first { memberIDs.contains($0.id) }?.id
+        isEditingLayerMask = false
+        updateStatus()
+    }
+
+    func ungroupSelectedLayers() {
+        let groupIDs = selectedUnlockedGroupIDs()
+        guard !groupIDs.isEmpty else { return }
+        pushUndo()
+        let memberIDs = Set(document.layers.filter { layer in
+            layer.groupID.map(groupIDs.contains) == true
+        }.map(\.id))
+        let replacementParents = groupReplacementParents(forRemoving: groupIDs)
+        for index in document.layers.indices {
+            guard let groupID = document.layers[index].groupID,
+                  groupIDs.contains(groupID)
+            else { continue }
+            document.layers[index].groupID = replacementParents[groupID] ?? nil
+        }
+        document.layers.removeAll { groupIDs.contains($0.id) }
+        normalizeLayerLinks()
+        document.selectedLayerIDs = memberIDs
+        document.selectedLayerID = document.layers.reversed().first { memberIDs.contains($0.id) }?.id ?? document.layers.last?.id
+        if document.selectedLayerIDs.isEmpty, let selectedLayerID = document.selectedLayerID {
+            document.selectedLayerIDs = [selectedLayerID]
+        }
+        isEditingLayerMask = false
+        appendHistory(L10n.text("imageEditor.history.layerUngroup"))
+    }
+
+    func duplicateSelectedLayer() {
+        let sourceIndices = duplicateSourceLayerIndices()
+        guard !sourceIndices.isEmpty else { return }
+        pushUndo()
+        var duplicatedLayers: [ImageEditorLayer] = []
+        var duplicatedIDs: [UUID] = []
+        var idMap: [UUID: UUID] = [:]
+        let selectedGroupIDs = Set(selectedLayerIndices.compactMap { index in
+            let layer = document.layers[index]
+            return layer.isGroup ? layer.id : nil
+        })
+
+        for index in sourceIndices {
+            let originalLayer = document.layers[index]
+            var layer = originalLayer
+            layer.id = UUID()
+            layer.linkedLayerIDs = []
+            layer.name = L10n.format("imageEditor.layer.copyName", layer.name)
+            if layer.isGroup {
+                idMap[originalLayer.id] = layer.id
+            }
+            duplicatedIDs.append(layer.id)
+            duplicatedLayers.append(layer)
+        }
+
+        for index in duplicatedLayers.indices {
+            if let groupID = duplicatedLayers[index].groupID,
+               (selectedGroupIDs.contains(groupID) || idMap[groupID] != nil),
+               let duplicatedGroupID = idMap[groupID] {
+                duplicatedLayers[index].groupID = duplicatedGroupID
+            }
+        }
+
+        let insertionIndex = min((sourceIndices.last ?? (document.layers.count - 1)) + 1, document.layers.count)
+        document.layers.insert(contentsOf: duplicatedLayers, at: insertionIndex)
+        let duplicatedIDSet = Set(duplicatedIDs)
+        document.selectedLayerID = duplicatedLayers.reversed().first { duplicatedIDSet.contains($0.id) }?.id
+        document.selectedLayerIDs = duplicatedIDSet
         isEditingLayerMask = false
         appendHistory(L10n.text("imageEditor.history.layerDuplicate"))
     }
@@ -518,6 +772,7 @@ final class ImageEditorViewModel: ObservableObject {
         let fallbackIndex = document.selectedLayerIndex ?? 0
         pushUndo()
         document.layers.removeAll { deletionIDs.contains($0.id) }
+        normalizeLayerLinks()
         let nextIndex = min(max(0, fallbackIndex - 1), max(0, document.layers.count - 1))
         document.selectedLayerID = document.layers.indices.contains(nextIndex)
             ? document.layers[nextIndex].id
@@ -550,6 +805,21 @@ final class ImageEditorViewModel: ObservableObject {
         appendHistory(L10n.text("imageEditor.history.layerVisibility"))
     }
 
+    func toggleLayerGroupExpansion(_ id: UUID) {
+        guard let index = document.layers.firstIndex(where: { $0.id == id }),
+              document.layers[index].isGroup
+        else { return }
+        document.layers[index].isGroupExpanded.toggle()
+        if !document.layers[index].isGroupExpanded {
+            let memberIDs = Set(groupDescendantIndices(for: id).map { document.layers[$0].id })
+            if !document.selectedLayerIDs.isDisjoint(with: memberIDs) {
+                document.selectedLayerID = id
+                document.selectedLayerIDs = [id]
+                isEditingLayerMask = false
+            }
+        }
+    }
+
     func toggleLayerLock(_ id: UUID) {
         guard let index = document.layers.firstIndex(where: { $0.id == id }) else { return }
         pushUndo()
@@ -560,9 +830,68 @@ final class ImageEditorViewModel: ObservableObject {
         appendHistory(L10n.text("imageEditor.history.layerLock"))
     }
 
+    func toggleLayerTransparentPixelsLock(_ id: UUID) {
+        guard let index = document.layers.firstIndex(where: { $0.id == id }) else { return }
+        guard canToggleTransparentPixelsLock(for: document.layers[index]) else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+        pushUndo()
+        document.layers[index].locksTransparentPixels.toggle()
+        appendHistory(L10n.text("imageEditor.history.layerTransparentPixelsLock"))
+    }
+
+    func toggleLayerPixelsLock(_ id: UUID) {
+        guard let index = document.layers.firstIndex(where: { $0.id == id }) else { return }
+        guard canTogglePixelsLock(for: document.layers[index]) else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+        pushUndo()
+        document.layers[index].locksPixels.toggle()
+        appendHistory(L10n.text("imageEditor.history.layerPixelsLock"))
+    }
+
+    func toggleLayerPositionLock(_ id: UUID) {
+        guard let index = document.layers.firstIndex(where: { $0.id == id }) else { return }
+        guard canTogglePositionLock(for: document.layers[index]) else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+        pushUndo()
+        document.layers[index].locksPosition.toggle()
+        appendHistory(L10n.text("imageEditor.history.layerPositionLock"))
+    }
+
     func setSelectedLayerOpacity(_ opacity: Double) {
-        guard let index = document.selectedLayerIndex else { return }
+        guard let index = document.selectedLayerIndex,
+              !document.isEffectivelyLocked(document.layers[index])
+        else { return }
         document.layers[index].opacity = max(0, min(1, opacity))
+        updateStatus()
+    }
+
+    func setSelectedLayerFillOpacity(_ fillOpacity: Double) {
+        guard let index = document.selectedLayerIndex,
+              canSetLayerFillOpacity(document.layers[index])
+        else { return }
+        document.layers[index].fillOpacity = max(0, min(1, fillOpacity))
+        updateStatus()
+    }
+
+    func setSelectedLayerMaskDensity(_ density: Double) {
+        guard let index = document.selectedLayerIndex,
+              canEditSelectedLayerMaskProperties
+        else { return }
+        document.layers[index].maskDensity = max(0, min(1, density))
+        updateStatus()
+    }
+
+    func setSelectedLayerMaskFeather(_ feather: Double) {
+        guard let index = document.selectedLayerIndex,
+              canEditSelectedLayerMaskProperties
+        else { return }
+        document.layers[index].maskFeather = max(0, min(80, feather))
         updateStatus()
     }
 
@@ -571,6 +900,7 @@ final class ImageEditorViewModel: ObservableObject {
               !document.layers[index].isGroup,
               !document.layers[index].isAdjustment,
               !document.layers[index].isFilter,
+              !document.isEffectivelyLocked(document.layers[index]),
               document.layers[index].blendMode != blendMode
         else { return }
         pushUndo()
@@ -580,6 +910,18 @@ final class ImageEditorViewModel: ObservableObject {
 
     func commitSelectedLayerOpacityChange() {
         appendHistory(L10n.text("imageEditor.history.layerOpacity"))
+    }
+
+    func commitSelectedLayerFillOpacityChange() {
+        appendHistory(L10n.text("imageEditor.history.layerFillOpacity"))
+    }
+
+    func commitSelectedLayerMaskDensityChange() {
+        appendHistory(L10n.text("imageEditor.history.layerMaskDensity"))
+    }
+
+    func commitSelectedLayerMaskFeatherChange() {
+        appendHistory(L10n.text("imageEditor.history.layerMaskFeather"))
     }
 
     func toggleSelectedLayerStroke() {
@@ -610,6 +952,36 @@ final class ImageEditorViewModel: ObservableObject {
         pushUndo()
         document.layers[index].style.shadowEnabled.toggle()
         appendHistory(L10n.text("imageEditor.history.layerShadow"))
+    }
+
+    func toggleSelectedLayerOuterGlow() {
+        guard let index = document.selectedLayerIndex else { return }
+        guard !document.layers[index].isGroup,
+              !document.layers[index].isAdjustment,
+              !document.layers[index].isFilter,
+              !document.isEffectivelyLocked(document.layers[index])
+        else {
+            statusText = L10n.text("imageEditor.status.layerLocked")
+            return
+        }
+        pushUndo()
+        document.layers[index].style.outerGlowEnabled.toggle()
+        appendHistory(L10n.text("imageEditor.history.layerOuterGlow"))
+    }
+
+    func toggleSelectedLayerInnerGlow() {
+        guard let index = document.selectedLayerIndex else { return }
+        guard !document.layers[index].isGroup,
+              !document.layers[index].isAdjustment,
+              !document.layers[index].isFilter,
+              !document.isEffectivelyLocked(document.layers[index])
+        else {
+            statusText = L10n.text("imageEditor.status.layerLocked")
+            return
+        }
+        pushUndo()
+        document.layers[index].style.innerGlowEnabled.toggle()
+        appendHistory(L10n.text("imageEditor.history.layerInnerGlow"))
     }
 
     func toggleSelectedLayerClippingMask() {
@@ -658,6 +1030,48 @@ final class ImageEditorViewModel: ObservableObject {
         }
     }
 
+    func setSelectedLayerOuterGlowOpacity(_ opacity: Double) {
+        updateSelectedLayerStyle {
+            $0.outerGlowEnabled = true
+            $0.outerGlowOpacity = max(0.05, min(1, CGFloat(opacity)))
+        }
+    }
+
+    func setSelectedLayerOuterGlowBlur(_ blur: Double) {
+        updateSelectedLayerStyle {
+            $0.outerGlowEnabled = true
+            $0.outerGlowBlur = max(0, min(40, CGFloat(blur)))
+        }
+    }
+
+    func setSelectedLayerOuterGlowSpread(_ spread: Double) {
+        updateSelectedLayerStyle {
+            $0.outerGlowEnabled = true
+            $0.outerGlowSpread = max(0, min(24, CGFloat(spread)))
+        }
+    }
+
+    func setSelectedLayerInnerGlowOpacity(_ opacity: Double) {
+        updateSelectedLayerStyle {
+            $0.innerGlowEnabled = true
+            $0.innerGlowOpacity = max(0.05, min(1, CGFloat(opacity)))
+        }
+    }
+
+    func setSelectedLayerInnerGlowBlur(_ blur: Double) {
+        updateSelectedLayerStyle {
+            $0.innerGlowEnabled = true
+            $0.innerGlowBlur = max(0, min(40, CGFloat(blur)))
+        }
+    }
+
+    func setSelectedLayerInnerGlowChoke(_ choke: Double) {
+        updateSelectedLayerStyle {
+            $0.innerGlowEnabled = true
+            $0.innerGlowChoke = max(0, min(24, CGFloat(choke)))
+        }
+    }
+
     func mergeSelectedLayerDown() {
         guard canMergeSelectedLayerDown, let index = document.selectedLayerIndex else { return }
         pushUndo()
@@ -700,6 +1114,7 @@ final class ImageEditorViewModel: ObservableObject {
         layer.image = document.compositedImage
         layer.frame = CGRect(origin: .zero, size: document.canvasSize)
         layer.opacity = 1
+        layer.fillOpacity = 1
         layer.blendMode = .normal
         layer.groupID = nil
         layer.isClippingMask = false
@@ -716,7 +1131,11 @@ final class ImageEditorViewModel: ObservableObject {
             return
         }
         pushUndo()
-        document.layers[index].mask = NSImage.opaqueMask(size: document.layers[index].image.size)
+        document.layers[index].mask = NSImage.opaqueMask(size: maskSize(for: document.layers[index]))
+        document.layers[index].isMaskEnabled = true
+        document.layers[index].isMaskLinked = true
+        document.layers[index].maskDensity = 1
+        document.layers[index].maskFeather = 0
         isEditingLayerMask = true
         appendHistory(L10n.text("imageEditor.history.layerMaskAdd"))
     }
@@ -725,6 +1144,10 @@ final class ImageEditorViewModel: ObservableObject {
         guard canDeleteLayerMask, let index = document.selectedLayerIndex else { return }
         pushUndo()
         document.layers[index].mask = nil
+        document.layers[index].isMaskEnabled = true
+        document.layers[index].isMaskLinked = true
+        document.layers[index].maskDensity = 1
+        document.layers[index].maskFeather = 0
         isEditingLayerMask = false
         appendHistory(L10n.text("imageEditor.history.layerMaskDelete"))
     }
@@ -829,12 +1252,6 @@ final class ImageEditorViewModel: ObservableObject {
         appendHistory(L10n.text("imageEditor.history.crop"))
     }
 
-    func addGradient() {
-        transformSelectedLayer(historyTitle: L10n.text("imageEditor.history.gradient")) { image in
-            image.withLinearGradientOverlay(start: foregroundColor, end: backgroundColor, opacity: opacity)
-        }
-    }
-
     func addText(at point: CGPoint? = nil) {
         let text = textValue.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else {
@@ -871,7 +1288,7 @@ final class ImageEditorViewModel: ObservableObject {
         }
         guard let index = document.selectedLayerIndex,
               var content = document.layers[index].textContent,
-              !document.isEffectivelyLocked(document.layers[index])
+              !document.isEffectivelyPixelsLocked(document.layers[index])
         else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
@@ -903,6 +1320,52 @@ final class ImageEditorViewModel: ObservableObject {
         }
     }
 
+    func setCloneSource(at point: CGPoint?) {
+        cloneSourcePoint = point
+        statusText = point == nil
+            ? L10n.text("imageEditor.status.cloneSourceMissing")
+            : L10n.text("imageEditor.status.cloneSourceSet")
+    }
+
+    func cloneStamp(points: [CGPoint]) {
+        guard points.count > 1 else { return }
+        guard !isEditingLayerMask else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+        guard let sourcePoint = cloneSourcePoint, let destinationStart = points.first else {
+            statusText = L10n.text("imageEditor.status.cloneSourceMissing")
+            return
+        }
+        guard let layer = editableSelectedLayer() else {
+            statusText = L10n.text("imageEditor.status.layerLocked")
+            return
+        }
+
+        let sourceOffset = CGSize(
+            width: sourcePoint.x - destinationStart.x,
+            height: sourcePoint.y - destinationStart.y
+        )
+        let sourceImage = layer.image.normalizedBitmapImage()
+        guard let output = sourceImage.withCloneStamp(
+            points: points,
+            sourceOffset: sourceOffset,
+            sourceImage: sourceImage,
+            width: brushSize,
+            opacity: opacity
+        ) else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+
+        replaceSelectedLayerPixels(
+            output,
+            historyTitle: L10n.text("imageEditor.history.cloneStamp"),
+            resetFrame: false
+        )
+        statusText = L10n.text("imageEditor.status.cloneStamped")
+    }
+
     func drawShape(from start: CGPoint, to end: CGPoint, ellipse: Bool) {
         let rect = CGRect(
             x: min(start.x, end.x),
@@ -911,9 +1374,26 @@ final class ImageEditorViewModel: ObservableObject {
             height: abs(end.y - start.y)
         )
         guard rect.width > 3, rect.height > 3 else { return }
-        transformSelectedLayer(historyTitle: ellipse ? L10n.text("imageEditor.history.ellipse") : L10n.text("imageEditor.history.rectangle")) { image in
-            image.withShape(rect: rect, color: foregroundColor, width: max(2, brushSize * 0.35), opacity: opacity, ellipse: ellipse)
+        addShapeLayer(frame: rect, kind: ellipse ? .ellipse : .rectangle)
+    }
+
+    func updateSelectedShapeLayer() {
+        guard let index = document.selectedLayerIndex,
+              var shapeContent = document.layers[index].shapeContent,
+              !document.isEffectivelyPixelsLocked(document.layers[index])
+        else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
         }
+        pushUndo()
+        shapeContent.fillColor = foregroundColor
+        shapeContent.fillOpacity = opacity
+        shapeContent.strokeColor = foregroundColor
+        shapeContent.strokeOpacity = min(1, max(0.15, opacity))
+        shapeContent.strokeWidth = max(1, min(96, brushSize * 0.35))
+        document.layers[index].kind = .shape(shapeContent.normalized(size: document.layers[index].image.size))
+        document.layers[index].name = L10n.format("imageEditor.layer.shapeName", shapeContent.kind.title)
+        appendHistory(L10n.text("imageEditor.history.layerShapeUpdate"))
     }
 
     func sampleColor(at point: CGPoint) {
@@ -924,12 +1404,16 @@ final class ImageEditorViewModel: ObservableObject {
 
     func applyAdjustment() {
         let title = selectedAdjustment.title
-        guard let output = adjustedImage(kind: selectedAdjustment, amount: adjustmentValue) else {
+        guard let output = adjustedImage(
+            kind: selectedAdjustment,
+            amount: adjustmentValue,
+            settings: currentAdjustmentSettings()
+        ) else {
             statusText = L10n.text("imageEditor.status.adjustmentFailed")
             return
         }
         replaceSelectedLayerImage(output, historyTitle: title)
-        adjustmentValue = 0
+        resetAdjustmentControls()
     }
 
     func addAdjustmentLayer() {
@@ -938,7 +1422,8 @@ final class ImageEditorViewModel: ObservableObject {
             name: L10n.format("imageEditor.layer.adjustmentName", selectedAdjustment.title),
             size: document.canvasSize,
             kind: selectedAdjustment,
-            amount: adjustmentValue
+            amount: adjustmentValue,
+            settings: currentAdjustmentSettings()
         )
         let insertionIndex = min((document.selectedLayerIndex ?? (document.layers.count - 1)) + 1, document.layers.count)
         document.layers.insert(layer, at: insertionIndex)
@@ -951,13 +1436,14 @@ final class ImageEditorViewModel: ObservableObject {
     func updateSelectedAdjustmentLayer() {
         guard let index = document.selectedLayerIndex,
               document.layers[index].isAdjustment,
-              !document.isEffectivelyLocked(document.layers[index])
+              !document.isEffectivelyPixelsLocked(document.layers[index])
         else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
         pushUndo()
         document.layers[index].kind = .adjustment(selectedAdjustment, adjustmentValue)
+        document.layers[index].adjustmentSettings = currentAdjustmentSettings()
         document.layers[index].name = L10n.format("imageEditor.layer.adjustmentName", selectedAdjustment.title)
         appendHistory(L10n.text("imageEditor.history.layerAdjustmentUpdate"))
     }
@@ -978,10 +1464,110 @@ final class ImageEditorViewModel: ObservableObject {
         appendHistory(L10n.text("imageEditor.history.layerFilterNew"))
     }
 
+    func addSmartFilterToSelectedLayer() {
+        guard canAddSmartFilterToSelectedLayer,
+              let index = document.selectedLayerIndex
+        else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+        pushUndo()
+        let smartFilter = ImageEditorSmartFilter(kind: selectedFilter, intensity: filterIntensity)
+        document.layers[index].smartFilters.append(smartFilter)
+        appendHistory(L10n.text("imageEditor.history.layerSmartFilterAdd"))
+    }
+
+    func updateLastSmartFilterOnSelectedLayer() {
+        guard canAddSmartFilterToSelectedLayer,
+              let index = document.selectedLayerIndex,
+              let lastIndex = document.layers[index].smartFilters.indices.last
+        else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+        pushUndo()
+        document.layers[index].smartFilters[lastIndex].kind = selectedFilter
+        document.layers[index].smartFilters[lastIndex].intensity = filterIntensity
+        document.layers[index].smartFilters[lastIndex].isEnabled = true
+        appendHistory(L10n.text("imageEditor.history.layerSmartFilterUpdate"))
+    }
+
+    func updateSmartFilterOnSelectedLayer(_ filterID: UUID) {
+        guard canAddSmartFilterToSelectedLayer,
+              let (layerIndex, filterIndex) = selectedSmartFilterIndex(filterID)
+        else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+        pushUndo()
+        document.layers[layerIndex].smartFilters[filterIndex].kind = selectedFilter
+        document.layers[layerIndex].smartFilters[filterIndex].intensity = filterIntensity
+        document.layers[layerIndex].smartFilters[filterIndex].isEnabled = true
+        appendHistory(L10n.text("imageEditor.history.layerSmartFilterUpdate"))
+    }
+
+    func toggleSmartFilterOnSelectedLayer(_ filterID: UUID) {
+        guard canAddSmartFilterToSelectedLayer,
+              let (layerIndex, filterIndex) = selectedSmartFilterIndex(filterID)
+        else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+        pushUndo()
+        document.layers[layerIndex].smartFilters[filterIndex].isEnabled.toggle()
+        appendHistory(L10n.text("imageEditor.history.layerSmartFilterToggle"))
+    }
+
+    func removeSmartFilterFromSelectedLayer(_ filterID: UUID) {
+        guard canAddSmartFilterToSelectedLayer,
+              let (layerIndex, filterIndex) = selectedSmartFilterIndex(filterID)
+        else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+        pushUndo()
+        document.layers[layerIndex].smartFilters.remove(at: filterIndex)
+        appendHistory(L10n.text("imageEditor.history.layerSmartFilterRemove"))
+    }
+
+    func moveSmartFilterOnSelectedLayer(_ filterID: UUID, offset: Int) {
+        guard offset != 0,
+              canAddSmartFilterToSelectedLayer,
+              let (layerIndex, filterIndex) = selectedSmartFilterIndex(filterID)
+        else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+        let targetIndex = filterIndex + offset
+        guard document.layers[layerIndex].smartFilters.indices.contains(targetIndex) else { return }
+        pushUndo()
+        let filter = document.layers[layerIndex].smartFilters.remove(at: filterIndex)
+        document.layers[layerIndex].smartFilters.insert(filter, at: targetIndex)
+        appendHistory(L10n.text("imageEditor.history.layerSmartFilterMove"))
+    }
+
+    func clearSmartFiltersFromSelectedLayer() {
+        guard canAddSmartFilterToSelectedLayer,
+              let index = document.selectedLayerIndex,
+              !document.layers[index].smartFilters.isEmpty
+        else { return }
+        pushUndo()
+        document.layers[index].smartFilters.removeAll()
+        appendHistory(L10n.text("imageEditor.history.layerSmartFilterClear"))
+    }
+
+    private func selectedSmartFilterIndex(_ filterID: UUID) -> (layerIndex: Int, filterIndex: Int)? {
+        guard let layerIndex = document.selectedLayerIndex else { return nil }
+        guard let filterIndex = document.layers[layerIndex].smartFilters.firstIndex(where: { $0.id == filterID }) else {
+            return nil
+        }
+        return (layerIndex, filterIndex)
+    }
+
     func updateSelectedFilterLayer() {
         guard let index = document.selectedLayerIndex,
               document.layers[index].isFilter,
-              !document.isEffectivelyLocked(document.layers[index])
+              !document.isEffectivelyPixelsLocked(document.layers[index])
         else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
@@ -1023,13 +1609,26 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     private func replaceSelectedLayerImage(_ image: NSImage, historyTitle: String) {
+        replaceSelectedLayerPixels(image, historyTitle: historyTitle, resetFrame: true)
+    }
+
+    private func replaceSelectedLayerPixels(_ image: NSImage, historyTitle: String, resetFrame: Bool) {
         guard let index = document.selectedLayerIndex else { return }
+        guard !document.isEffectivelyPixelsLocked(document.layers[index]) else {
+            statusText = L10n.text("imageEditor.status.layerLocked")
+            return
+        }
         pushUndo()
+        let original = document.layers[index].image
         let normalized = image.normalizedBitmapImage()
-        let output = clippedToSelection(original: document.layers[index].image, output: normalized)
-        document.layers[index].image = normalized
+        let clippedOutput = clippedToSelection(original: original, output: normalized)
+        let output = document.layers[index].locksTransparentPixels
+            ? (clippedOutput.preservingAlpha(from: original) ?? clippedOutput)
+            : clippedOutput
         document.layers[index].image = output
-        document.layers[index].frame = CGRect(origin: .zero, size: output.size)
+        if resetFrame {
+            document.layers[index].frame = CGRect(origin: .zero, size: output.size)
+        }
         appendHistory(historyTitle)
     }
 
@@ -1058,6 +1657,10 @@ final class ImageEditorViewModel: ObservableObject {
         pushUndo()
         document.layers[index].mask = clippedToSelection(original: mask, output: updated)
         appendHistory(reveal ? L10n.text("imageEditor.history.layerMaskReveal") : L10n.text("imageEditor.history.layerMaskHide"))
+    }
+
+    private func maskSize(for layer: ImageEditorLayer) -> CGSize {
+        layer.isGroup ? document.canvasSize : layer.image.size
     }
 
     private func clippedToSelection(original: NSImage, output: NSImage) -> NSImage {
@@ -1124,15 +1727,77 @@ final class ImageEditorViewModel: ObservableObject {
         return hardMask.blurred(radius: feather) ?? hardMask
     }
 
-    private func adjustedImage(kind: ImageEditorAdjustment, amount: Double) -> NSImage? {
+    private func adjustedImage(
+        kind: ImageEditorAdjustment,
+        amount: Double,
+        settings: ImageEditorAdjustmentSettings
+    ) -> NSImage? {
         guard let layer = editableSelectedLayer() else { return nil }
-        return layer.image.adjusted(kind: kind, amount: amount)
+        return layer.image.adjusted(kind: kind, amount: amount, settings: settings)
+    }
+
+    private func currentAdjustmentSettings() -> ImageEditorAdjustmentSettings {
+        ImageEditorAdjustmentSettings(
+            levelsBlackPoint: levelsBlackPoint,
+            levelsGamma: levelsGamma,
+            levelsWhitePoint: levelsWhitePoint,
+            curvesShadows: curvesShadows,
+            curvesMidtones: curvesMidtones,
+            curvesHighlights: curvesHighlights,
+            colorBalanceShadowsCyanRed: colorBalanceShadowsCyanRed,
+            colorBalanceShadowsMagentaGreen: colorBalanceShadowsMagentaGreen,
+            colorBalanceShadowsYellowBlue: colorBalanceShadowsYellowBlue,
+            colorBalanceMidtonesCyanRed: colorBalanceMidtonesCyanRed,
+            colorBalanceMidtonesMagentaGreen: colorBalanceMidtonesMagentaGreen,
+            colorBalanceMidtonesYellowBlue: colorBalanceMidtonesYellowBlue,
+            colorBalanceHighlightsCyanRed: colorBalanceHighlightsCyanRed,
+            colorBalanceHighlightsMagentaGreen: colorBalanceHighlightsMagentaGreen,
+            colorBalanceHighlightsYellowBlue: colorBalanceHighlightsYellowBlue
+        ).normalized()
+    }
+
+    private func resetAdjustmentControls() {
+        adjustmentValue = 0
+        levelsBlackPoint = 0
+        levelsGamma = 1
+        levelsWhitePoint = 1
+        curvesShadows = 0
+        curvesMidtones = 0
+        curvesHighlights = 0
+        colorBalanceShadowsCyanRed = 0
+        colorBalanceShadowsMagentaGreen = 0
+        colorBalanceShadowsYellowBlue = 0
+        colorBalanceMidtonesCyanRed = 0
+        colorBalanceMidtonesMagentaGreen = 0
+        colorBalanceMidtonesYellowBlue = 0
+        colorBalanceHighlightsCyanRed = 0
+        colorBalanceHighlightsMagentaGreen = 0
+        colorBalanceHighlightsYellowBlue = 0
     }
 
     private func editableSelectedLayer() -> ImageEditorLayer? {
         guard let index = document.selectedLayerIndex else { return nil }
         let layer = document.layers[index]
-        return layer.isGroup || layer.isAdjustment || layer.isFilter || layer.isText || document.isEffectivelyLocked(layer) ? nil : layer
+        return layer.isGroup || layer.isAdjustment || layer.isFilter || layer.isText || layer.isShape || document.isEffectivelyPixelsLocked(layer) ? nil : layer
+    }
+
+    private func canToggleTransparentPixelsLock(for layer: ImageEditorLayer) -> Bool {
+        !layer.isGroup && !layer.isAdjustment && !layer.isFilter && !layer.isText && !layer.isShape
+    }
+
+    private func canTogglePixelsLock(for layer: ImageEditorLayer) -> Bool {
+        !layer.isAdjustment && !layer.isFilter
+    }
+
+    private func canTogglePositionLock(for layer: ImageEditorLayer) -> Bool {
+        !layer.isAdjustment && !layer.isFilter
+    }
+
+    private func canSetLayerFillOpacity(_ layer: ImageEditorLayer) -> Bool {
+        !layer.isGroup
+            && !layer.isAdjustment
+            && !layer.isFilter
+            && !document.isEffectivelyLocked(layer)
     }
 
     private func updateSelectedLayerStyle(_ mutate: (inout ImageEditorLayerStyle) -> Void) {
@@ -1154,6 +1819,57 @@ final class ImageEditorViewModel: ObservableObject {
         document.layers.indices.filter { document.layers[$0].groupID == groupID }
     }
 
+    private func groupDescendantIndices(for groupID: UUID) -> [Int] {
+        let descendantIDs = groupDescendantIDs(for: groupID)
+        return document.layers.indices.filter { descendantIDs.contains(document.layers[$0].id) }
+    }
+
+    private func groupDescendantIDs(for groupID: UUID) -> Set<UUID> {
+        var descendantIDs = Set<UUID>()
+        var pendingGroupIDs = [groupID]
+        while let currentGroupID = pendingGroupIDs.popLast() {
+            for layer in document.layers where layer.groupID == currentGroupID && !descendantIDs.contains(layer.id) {
+                descendantIDs.insert(layer.id)
+                if layer.isGroup {
+                    pendingGroupIDs.append(layer.id)
+                }
+            }
+        }
+        return descendantIDs
+    }
+
+    func layerIDsExpandingGroups(_ ids: Set<UUID>) -> Set<UUID> {
+        var expandedIDs = ids
+        for index in document.layers.indices where ids.contains(document.layers[index].id) && document.layers[index].isGroup {
+            expandedIDs.formUnion(groupDescendantIDs(for: document.layers[index].id))
+        }
+        return expandedIDs
+    }
+
+    private func selectedUnlockedGroupIDs() -> Set<UUID> {
+        Set(selectedLayerIndices.compactMap { index in
+            let layer = document.layers[index]
+            guard layer.isGroup, !document.isEffectivelyLocked(layer) else { return nil }
+            return layer.id
+        })
+    }
+
+    private func duplicateSourceLayerIndices() -> [Int] {
+        let selectedIDs = document.selectedLayerIDs
+        let selectedGroupIDs = Set(selectedLayerIndices.compactMap { index in
+            let layer = document.layers[index]
+            return layer.isGroup ? layer.id : nil
+        })
+        let descendantIDs = selectedGroupIDs.reduce(into: Set<UUID>()) { result, groupID in
+            result.formUnion(groupDescendantIDs(for: groupID))
+        }
+        return document.layers.indices.filter { index in
+            let layer = document.layers[index]
+            return selectedIDs.contains(layer.id)
+                || descendantIDs.contains(layer.id)
+        }
+    }
+
     private var selectedLayerIndices: [Int] {
         document.layers.indices.filter { document.selectedLayerIDs.contains(document.layers[$0].id) }
     }
@@ -1172,16 +1888,30 @@ final class ImageEditorViewModel: ObservableObject {
         for index in selectedLayerIndices {
             let layer = document.layers[index]
             if layer.isGroup {
-                guard !layer.isLocked else { continue }
+                guard !document.isEffectivelyLocked(layer) else { continue }
                 deletionIDs.insert(layer.id)
-                document.layers
-                    .filter { $0.groupID == layer.id }
-                    .forEach { deletionIDs.insert($0.id) }
+                deletionIDs.formUnion(groupDescendantIDs(for: layer.id))
             } else if !document.isEffectivelyLocked(layer) {
                 deletionIDs.insert(layer.id)
             }
         }
         return deletionIDs
+    }
+
+    private func groupReplacementParents(forRemoving groupIDs: Set<UUID>) -> [UUID: UUID?] {
+        var replacements: [UUID: UUID?] = [:]
+        for groupID in groupIDs {
+            var parentID = document.layers.first { $0.id == groupID }?.groupID
+            var visitedIDs = Set<UUID>([groupID])
+            while let candidateID = parentID,
+                  groupIDs.contains(candidateID),
+                  !visitedIDs.contains(candidateID) {
+                visitedIDs.insert(candidateID)
+                parentID = document.layers.first { $0.id == candidateID }?.groupID
+            }
+            replacements[groupID] = parentID
+        }
+        return replacements
     }
 
     private func canMoveSelectedLayers(direction: Int) -> Bool {
@@ -1245,85 +1975,6 @@ final class ImageEditorViewModel: ObservableObject {
         document.hasClippingBase(below: index, groupID: groupID)
     }
 
-    private func magicSelection(at point: CGPoint) -> ImageEditorSelection? {
-        let image = document.compositedImage
-        guard let targetColor = image.color(at: point),
-              let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil),
-              let provider = cgImage.dataProvider,
-              let data = provider.data,
-              let bytes = CFDataGetBytePtr(data)
-        else {
-            return fallbackMagicSelection(at: point)
-        }
-
-        let target = rgbaComponents(targetColor)
-        let threshold: CGFloat = 0.22
-        let bytesPerPixel = max(1, cgImage.bitsPerPixel / 8)
-        var selectedBounds: CGRect?
-        let sampleStep = max(1, min(cgImage.width, cgImage.height) / 220)
-
-        var y = 0
-        while y < cgImage.height {
-            var x = 0
-            while x < cgImage.width {
-                let offset = y * cgImage.bytesPerRow + x * bytesPerPixel
-                if offset + 2 < CFDataGetLength(data) {
-                    let sampled = (
-                        r: CGFloat(bytes[offset]) / 255,
-                        g: CGFloat(bytes[offset + 1]) / 255,
-                        b: CGFloat(bytes[offset + 2]) / 255,
-                        a: bytesPerPixel > 3 ? CGFloat(bytes[offset + 3]) / 255 : 1
-                    )
-                    if colorDistance(sampled, target) <= threshold {
-                        let imagePoint = CGPoint(
-                            x: CGFloat(x) / CGFloat(cgImage.width) * image.size.width,
-                            y: image.size.height - CGFloat(y) / CGFloat(cgImage.height) * image.size.height
-                        )
-                        let rect = CGRect(origin: imagePoint, size: CGSize(width: CGFloat(sampleStep), height: CGFloat(sampleStep)))
-                        selectedBounds = selectedBounds?.union(rect) ?? rect
-                    }
-                }
-                x += sampleStep
-            }
-            y += sampleStep
-        }
-
-        guard let selectedBounds,
-              selectedBounds.width > 2,
-              selectedBounds.height > 2
-        else {
-            return fallbackMagicSelection(at: point)
-        }
-        return .rectangle(selectedBounds.intersection(CGRect(origin: .zero, size: document.canvasSize)))
-    }
-
-    private func fallbackMagicSelection(at point: CGPoint) -> ImageEditorSelection {
-        let side = max(24, min(document.canvasSize.width, document.canvasSize.height) * 0.18)
-        let rect = CGRect(
-            x: point.x - side / 2,
-            y: point.y - side / 2,
-            width: side,
-            height: side
-        ).intersection(CGRect(origin: .zero, size: document.canvasSize))
-        return .rectangle(rect)
-    }
-
-    private func rgbaComponents(_ color: NSColor) -> (r: CGFloat, g: CGFloat, b: CGFloat, a: CGFloat) {
-        let rgb = color.usingColorSpace(.deviceRGB) ?? color
-        return (rgb.redComponent, rgb.greenComponent, rgb.blueComponent, rgb.alphaComponent)
-    }
-
-    private func colorDistance(
-        _ lhs: (r: CGFloat, g: CGFloat, b: CGFloat, a: CGFloat),
-        _ rhs: (r: CGFloat, g: CGFloat, b: CGFloat, a: CGFloat)
-    ) -> CGFloat {
-        let red = lhs.r - rhs.r
-        let green = lhs.g - rhs.g
-        let blue = lhs.b - rhs.b
-        let alpha = lhs.a - rhs.a
-        return sqrt(red * red + green * green + blue * blue + alpha * alpha)
-    }
-
     private func mergedAdjustmentLayer(lowerIndex: Int, adjustmentIndex: Int) -> ImageEditorLayer? {
         guard document.layers.indices.contains(lowerIndex),
               document.layers.indices.contains(adjustmentIndex),
@@ -1338,7 +1989,8 @@ final class ImageEditorViewModel: ObservableObject {
               let adjustedImage = renderedLower.applyingAdjustment(
                 kind: adjustment.kind,
                 amount: adjustment.amount * adjustmentLayer.opacity,
-                mask: adjustmentLayer.mask
+                settings: adjustmentLayer.adjustmentSettings,
+                mask: document.localEffectMask(forLayerAt: adjustmentIndex)
               )
         else { return nil }
 
@@ -1348,12 +2000,15 @@ final class ImageEditorViewModel: ObservableObject {
         merged.image = adjustedImage
         merged.frame = CGRect(origin: .zero, size: canvasSize)
         merged.opacity = 1
+        merged.fillOpacity = 1
         merged.blendMode = .normal
         merged.isVisible = lower.isVisible || adjustmentLayer.isVisible
         merged.isLocked = false
         merged.mask = nil
         merged.style = ImageEditorLayerStyle()
+        merged.smartFilters = []
         merged.kind = .pixel
+        merged.adjustmentSettings = ImageEditorAdjustmentSettings()
         merged.isClippingMask = false
         return merged
     }
@@ -1372,7 +2027,7 @@ final class ImageEditorViewModel: ObservableObject {
               let filteredImage = renderedLower.applyingFilter(
                 kind: filter.kind,
                 intensity: filter.intensity * filterLayer.opacity,
-                mask: filterLayer.mask
+                mask: document.localEffectMask(forLayerAt: filterIndex)
               )
         else { return nil }
 
@@ -1382,11 +2037,13 @@ final class ImageEditorViewModel: ObservableObject {
         merged.image = filteredImage
         merged.frame = CGRect(origin: .zero, size: canvasSize)
         merged.opacity = 1
+        merged.fillOpacity = 1
         merged.blendMode = .normal
         merged.isVisible = lower.isVisible || filterLayer.isVisible
         merged.isLocked = false
         merged.mask = nil
         merged.style = ImageEditorLayerStyle()
+        merged.smartFilters = []
         merged.kind = .pixel
         merged.isClippingMask = false
         return merged
@@ -1410,11 +2067,13 @@ final class ImageEditorViewModel: ObservableObject {
         merged.image = image
         merged.frame = CGRect(origin: .zero, size: canvasSize)
         merged.opacity = 1
+        merged.fillOpacity = 1
         merged.blendMode = .normal
         merged.isVisible = lower.isVisible || upper.isVisible
         merged.isLocked = false
         merged.mask = nil
         merged.style = ImageEditorLayerStyle()
+        merged.smartFilters = []
         merged.kind = .pixel
         merged.isClippingMask = false
         return merged
@@ -1479,9 +2138,30 @@ final class ImageEditorViewModel: ObservableObject {
         guard let adjustment = document.selectedLayer?.adjustment else { return }
         selectedAdjustment = adjustment.kind
         adjustmentValue = adjustment.amount
+        let settings = (document.selectedLayer?.adjustmentSettings ?? ImageEditorAdjustmentSettings()).normalized()
+        levelsBlackPoint = settings.levelsBlackPoint
+        levelsGamma = settings.levelsGamma
+        levelsWhitePoint = settings.levelsWhitePoint
+        curvesShadows = settings.curvesShadows
+        curvesMidtones = settings.curvesMidtones
+        curvesHighlights = settings.curvesHighlights
+        colorBalanceShadowsCyanRed = settings.colorBalanceShadowsCyanRed
+        colorBalanceShadowsMagentaGreen = settings.colorBalanceShadowsMagentaGreen
+        colorBalanceShadowsYellowBlue = settings.colorBalanceShadowsYellowBlue
+        colorBalanceMidtonesCyanRed = settings.colorBalanceMidtonesCyanRed
+        colorBalanceMidtonesMagentaGreen = settings.colorBalanceMidtonesMagentaGreen
+        colorBalanceMidtonesYellowBlue = settings.colorBalanceMidtonesYellowBlue
+        colorBalanceHighlightsCyanRed = settings.colorBalanceHighlightsCyanRed
+        colorBalanceHighlightsMagentaGreen = settings.colorBalanceHighlightsMagentaGreen
+        colorBalanceHighlightsYellowBlue = settings.colorBalanceHighlightsYellowBlue
     }
 
     private func syncFilterControlsFromSelection() {
+        if let smartFilter = document.selectedLayer?.smartFilters.last {
+            selectedFilter = smartFilter.kind
+            filterIntensity = smartFilter.normalizedIntensity
+            return
+        }
         guard let filter = document.selectedLayer?.filter else { return }
         selectedFilter = filter.kind
         filterIntensity = filter.intensity
@@ -1492,6 +2172,37 @@ final class ImageEditorViewModel: ObservableObject {
         textValue = content.text
         textSize = Double(content.fontSize)
         foregroundColor = content.color
+    }
+
+    private func syncShapeControlsFromSelection() {
+        guard let content = document.selectedLayer?.shapeContent else { return }
+        foregroundColor = content.fillColor
+        opacity = content.fillOpacity
+        brushSize = max(1, content.strokeWidth / 0.35)
+    }
+
+    private func addShapeLayer(frame: CGRect, kind: ImageEditorShapeKind) {
+        let content = ImageEditorShapeContent(
+            kind: kind,
+            fillColor: foregroundColor,
+            fillOpacity: opacity,
+            strokeColor: foregroundColor,
+            strokeWidth: max(1, min(96, brushSize * 0.35)),
+            strokeOpacity: min(1, max(0.15, opacity))
+        )
+        pushUndo()
+        var layer = ImageEditorLayer.shape(
+            name: L10n.format("imageEditor.layer.shapeName", kind.title),
+            frame: frame,
+            content: content
+        )
+        layer.opacity = 1
+        let insertionIndex = min((document.selectedLayerIndex ?? (document.layers.count - 1)) + 1, document.layers.count)
+        document.layers.insert(layer, at: insertionIndex)
+        document.selectedLayerID = layer.id
+        document.selectedLayerIDs = [layer.id]
+        isEditingLayerMask = false
+        appendHistory(L10n.text("imageEditor.history.layerShapeNew"))
     }
 
     private func clampedTextSize(_ size: Double) -> Double {
@@ -1605,6 +2316,74 @@ extension NSImage {
         }
     }
 
+    func withCloneStamp(
+        points: [CGPoint],
+        sourceOffset: CGSize,
+        sourceImage: NSImage,
+        width: CGFloat,
+        opacity: CGFloat
+    ) -> NSImage? {
+        guard let first = points.first else { return nil }
+        let path = NSBezierPath()
+        path.lineJoinStyle = .round
+        path.lineCapStyle = .round
+        path.lineWidth = width
+        path.move(to: first)
+        for point in points.dropFirst() {
+            path.line(to: point)
+        }
+
+        let shiftedSource = NSImage.rendered(size: size) { _ in
+            sourceImage.draw(
+                in: CGRect(
+                    x: -sourceOffset.width,
+                    y: -sourceOffset.height,
+                    width: sourceImage.size.width,
+                    height: sourceImage.size.height
+                ),
+                from: CGRect(origin: .zero, size: sourceImage.size),
+                operation: .copy,
+                fraction: 1
+            )
+        }
+        let strokeMask = NSImage.rendered(size: size) { _ in
+            NSColor.white.setStroke()
+            path.stroke()
+        }
+        guard let shiftedSource, let strokeMask else { return nil }
+
+        let clippedStamp = NSImage.rendered(size: size) { _ in
+            shiftedSource.draw(
+                in: CGRect(origin: .zero, size: size),
+                from: CGRect(origin: .zero, size: shiftedSource.size),
+                operation: .copy,
+                fraction: 1
+            )
+            strokeMask.draw(
+                in: CGRect(origin: .zero, size: size),
+                from: CGRect(origin: .zero, size: strokeMask.size),
+                operation: .destinationIn,
+                fraction: 1
+            )
+        }
+        guard let clippedStamp else { return nil }
+
+        return rendered(size: size) { _ in
+            draw(
+                in: CGRect(origin: .zero, size: size),
+                from: CGRect(origin: .zero, size: size),
+                operation: .copy,
+                fraction: 1
+            )
+            clippedStamp.draw(
+                in: CGRect(origin: .zero, size: size),
+                from: CGRect(origin: .zero, size: clippedStamp.size),
+                operation: .sourceOver,
+                fraction: opacity
+            )
+        }
+    }
+
     func withMaskStroke(points: [CGPoint], width: CGFloat, opacity: CGFloat, reveal: Bool) -> NSImage? {
         rendered(size: size) { _ in
             draw(in: CGRect(origin: .zero, size: size), from: CGRect(origin: .zero, size: size), operation: .copy, fraction: 1)
@@ -1648,28 +2427,6 @@ extension NSImage {
                 .foregroundColor: color.withAlphaComponent(opacity)
             ]
             text.draw(at: point, withAttributes: attributes)
-        }
-    }
-
-    func withLinearGradientOverlay(start: NSColor, end: NSColor, opacity: CGFloat) -> NSImage? {
-        rendered(size: size) { _ in
-            draw(in: CGRect(origin: .zero, size: size), from: CGRect(origin: .zero, size: size), operation: .copy, fraction: 1)
-            guard let context = NSGraphicsContext.current?.cgContext,
-                  let gradient = CGGradient(
-                    colorsSpace: CGColorSpaceCreateDeviceRGB(),
-                    colors: [
-                        start.withAlphaComponent(opacity * 0.45).cgColor,
-                        end.withAlphaComponent(opacity * 0.45).cgColor
-                    ] as CFArray,
-                    locations: nil
-                  )
-            else { return }
-            context.drawLinearGradient(
-                gradient,
-                start: CGPoint(x: 0, y: size.height),
-                end: CGPoint(x: size.width, y: 0),
-                options: []
-            )
         }
     }
 
@@ -1773,79 +2530,6 @@ extension NSImage {
               let cgImage = ImageEditorImageProcessing.ciContext.createCGImage(output, from: ciImage.extent)
         else { return nil }
         return NSImage(cgImage: cgImage, size: size)
-    }
-
-    func adjusted(kind: ImageEditorAdjustment, amount: Double) -> NSImage? {
-        guard let ciImage = ciImageForEditing() else { return nil }
-        let clamped = max(-1, min(1, amount))
-        let output: CIImage?
-
-        switch kind {
-        case .brightness:
-            let filter = CIFilter.colorControls()
-            filter.inputImage = ciImage
-            filter.brightness = Float(clamped)
-            output = filter.outputImage
-        case .contrast:
-            let filter = CIFilter.colorControls()
-            filter.inputImage = ciImage
-            filter.contrast = Float(1 + clamped)
-            output = filter.outputImage
-        case .saturation:
-            let filter = CIFilter.colorControls()
-            filter.inputImage = ciImage
-            filter.saturation = Float(max(0, 1 + clamped))
-            output = filter.outputImage
-        case .blur:
-            let filter = CIFilter.gaussianBlur()
-            filter.inputImage = ciImage.clampedToExtent()
-            filter.radius = Float(max(0, clamped) * 18)
-            output = filter.outputImage?.cropped(to: ciImage.extent)
-        case .sharpen:
-            let filter = CIFilter.sharpenLuminance()
-            filter.inputImage = ciImage
-            filter.sharpness = Float(max(0, clamped) * 1.5)
-            output = filter.outputImage
-        }
-
-        guard let output,
-              let cgImage = ImageEditorImageProcessing.ciContext.createCGImage(output, from: ciImage.extent)
-        else { return nil }
-        return NSImage(cgImage: cgImage, size: size)
-    }
-
-    func applyingAdjustment(kind: ImageEditorAdjustment, amount: Double, mask: NSImage?) -> NSImage? {
-        guard let adjusted = adjusted(kind: kind, amount: amount) else { return nil }
-        guard let mask else { return adjusted }
-        let maskedAdjusted = NSImage.rendered(size: size) { _ in
-            adjusted.draw(
-                in: CGRect(origin: .zero, size: size),
-                from: CGRect(origin: .zero, size: adjusted.size),
-                operation: .copy,
-                fraction: 1
-            )
-            mask.draw(
-                in: CGRect(origin: .zero, size: size),
-                from: CGRect(origin: .zero, size: mask.size),
-                operation: .destinationIn,
-                fraction: 1
-            )
-        }
-        guard let maskedAdjusted else { return adjusted }
-        return NSImage.rendered(size: size) { _ in
-            draw(
-                in: CGRect(origin: .zero, size: size),
-                from: CGRect(origin: .zero, size: size),
-                operation: .copy,
-                fraction: 1
-            )
-            maskedAdjusted.draw(
-                in: CGRect(origin: .zero, size: size),
-                from: CGRect(origin: .zero, size: maskedAdjusted.size),
-                operation: .sourceOver,
-                fraction: 1
-            )
-        } ?? adjusted
     }
 
     func applyingFilter(kind: ImageEditorFilter, intensity: Double, mask: NSImage?) -> NSImage? {

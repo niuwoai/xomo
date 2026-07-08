@@ -97,6 +97,10 @@ struct ImageEditorView: View {
                 .font(.system(size: 12, weight: .semibold))
                 .frame(width: 132, alignment: .leading)
 
+            if viewModel.selectedTool.supportsSelectionMode {
+                selectionModePicker
+            }
+
             optionSlider(titleKey: "imageEditor.option.size", value: $viewModel.brushSize, range: 1...96, step: 1, suffix: "px")
             optionSlider(titleKey: "imageEditor.option.opacity", value: $viewModel.opacity, range: 0.05...1, step: 0.05, suffix: "")
             optionSlider(titleKey: "imageEditor.option.hardness", value: $viewModel.hardness, range: 0...1, step: 0.05, suffix: "")
@@ -125,6 +129,20 @@ struct ImageEditorView: View {
         .frame(height: 48)
         .padding(.horizontal, 12)
         .background(Color(nsColor: ImageEditorTheme.panel))
+    }
+
+    private var selectionModePicker: some View {
+        Picker(L10n.text("imageEditor.option.selectionMode"), selection: $viewModel.selectionMode) {
+            ForEach(ImageEditorSelectionMode.allCases) { mode in
+                Text(mode.compactTitle)
+                    .tag(mode)
+                    .help(mode.title)
+            }
+        }
+        .labelsHidden()
+        .pickerStyle(.segmented)
+        .frame(width: 226)
+        .help(L10n.text("imageEditor.option.selectionMode"))
     }
 
     private func optionSlider(titleKey: String, value: Binding<CGFloat>, range: ClosedRange<CGFloat>, step: CGFloat, suffix: String) -> some View {
@@ -262,6 +280,21 @@ struct ImageEditorView: View {
 
     @ViewBuilder
     private func dragOverlay(in size: CGSize) -> some View {
+        if let dragStart, let dragEnd, viewModel.selectedTool == .gradient {
+            let start = viewPoint(from: dragStart, in: size)
+            let end = viewPoint(from: dragEnd, in: size)
+            Canvas { context, _ in
+                var path = Path()
+                path.move(to: start)
+                path.addLine(to: end)
+                context.stroke(path, with: .color(Color.white.opacity(0.86)), style: StrokeStyle(lineWidth: 2, dash: [7, 5]))
+                context.stroke(path, with: .color(Color(nsColor: ImageEditorTheme.selected).opacity(0.9)), style: StrokeStyle(lineWidth: 2, dash: [7, 5], dashPhase: 6))
+                context.fill(Path(ellipseIn: CGRect(x: start.x - 4, y: start.y - 4, width: 8, height: 8)), with: .color(Color.white.opacity(0.92)))
+                context.fill(Path(ellipseIn: CGRect(x: end.x - 4, y: end.y - 4, width: 8, height: 8)), with: .color(Color(nsColor: ImageEditorTheme.selected).opacity(0.92)))
+            }
+            .allowsHitTesting(false)
+        }
+
         if let dragStart, let dragEnd, shouldShowDragRect {
             let start = viewPoint(from: dragStart, in: size)
             let end = viewPoint(from: dragEnd, in: size)
@@ -316,11 +349,11 @@ struct ImageEditorView: View {
                         }
                         lastMoveImagePoint = imagePoint
                     }
-                case .brush, .eraser:
+                case .brush, .eraser, .cloneStamp:
                     if let imagePoint {
                         dragPoints.append(imagePoint)
                     }
-                case .crop, .marquee, .rectangle, .ellipse:
+                case .crop, .marquee, .rectangle, .ellipse, .gradient:
                     if dragStart == nil {
                         dragStart = imagePoint
                     }
@@ -351,6 +384,12 @@ struct ImageEditorView: View {
                     viewModel.drawBrush(points: dragPoints)
                 case .eraser:
                     viewModel.drawBrush(points: dragPoints, erase: true)
+                case .cloneStamp:
+                    if NSEvent.modifierFlags.contains(.option), let imagePoint {
+                        viewModel.setCloneSource(at: imagePoint)
+                    } else {
+                        viewModel.cloneStamp(points: dragPoints)
+                    }
                 case .rectangle:
                     if let dragStart, let imagePoint {
                         viewModel.drawShape(from: dragStart, to: imagePoint, ellipse: false)
@@ -376,7 +415,7 @@ struct ImageEditorView: View {
                         viewModel.sampleColor(at: imagePoint)
                     }
                 case .gradient:
-                    viewModel.addGradient()
+                    viewModel.drawGradient(from: dragStart, to: imagePoint)
                 case .zoom:
                     viewModel.zoomIn()
                 default:
@@ -532,6 +571,76 @@ struct ImageEditorView: View {
                 }
                 .font(.system(size: 10, weight: .medium).monospacedDigit())
 
+                HStack(spacing: 8) {
+                    Text(L10n.text("imageEditor.option.fillOpacity"))
+                    Text("\(Int((viewModel.selectedLayerFillOpacity * 100).rounded()))%")
+                        .font(.system(size: 11, weight: .semibold).monospacedDigit())
+                }
+                .font(.system(size: 11, weight: .medium))
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+                Slider(value: selectedLayerFillOpacityBinding, in: 0...1, step: 0.05) {
+                    Text(L10n.text("imageEditor.option.fillOpacity"))
+                } minimumValueLabel: {
+                    Text("0")
+                } maximumValueLabel: {
+                    Text("100")
+                } onEditingChanged: { editing in
+                    if !editing {
+                        viewModel.commitSelectedLayerFillOpacityChange()
+                    }
+                }
+                .disabled(!viewModel.canEditSelectedLayerFillOpacity)
+                .font(.system(size: 10, weight: .medium).monospacedDigit())
+
+                if viewModel.selectedLayerHasMask {
+                    VStack(spacing: 6) {
+                        HStack(spacing: 8) {
+                            Text(L10n.text("imageEditor.option.maskDensity"))
+                            Text("\(Int((viewModel.selectedLayerMaskDensity * 100).rounded()))%")
+                                .font(.system(size: 11, weight: .semibold).monospacedDigit())
+                        }
+                        .font(.system(size: 11, weight: .medium))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+
+                        Slider(value: selectedLayerMaskDensityBinding, in: 0...1, step: 0.05) {
+                            Text(L10n.text("imageEditor.option.maskDensity"))
+                        } minimumValueLabel: {
+                            Text("0")
+                        } maximumValueLabel: {
+                            Text("100")
+                        } onEditingChanged: { editing in
+                            if !editing {
+                                viewModel.commitSelectedLayerMaskDensityChange()
+                            }
+                        }
+                        .disabled(!viewModel.canEditSelectedLayerMaskProperties)
+                        .font(.system(size: 10, weight: .medium).monospacedDigit())
+
+                        HStack(spacing: 8) {
+                            Text(L10n.text("imageEditor.option.maskFeather"))
+                            Text("\(Int(viewModel.selectedLayerMaskFeather.rounded())) px")
+                                .font(.system(size: 11, weight: .semibold).monospacedDigit())
+                        }
+                        .font(.system(size: 11, weight: .medium))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+
+                        Slider(value: selectedLayerMaskFeatherBinding, in: 0...80, step: 1) {
+                            Text(L10n.text("imageEditor.option.maskFeather"))
+                        } minimumValueLabel: {
+                            Text("0")
+                        } maximumValueLabel: {
+                            Text("80")
+                        } onEditingChanged: { editing in
+                            if !editing {
+                                viewModel.commitSelectedLayerMaskFeatherChange()
+                            }
+                        }
+                        .disabled(!viewModel.canEditSelectedLayerMaskProperties)
+                        .font(.system(size: 10, weight: .medium).monospacedDigit())
+                    }
+                }
+
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 6) {
                         layerActionButton(systemImage: "plus", helpKey: "imageEditor.action.layerNew") {
@@ -551,9 +660,49 @@ struct ImageEditorView: View {
                             viewModel.groupSelectedLayer()
                         }
                         .disabled(!viewModel.canGroupSelectedLayer)
+                        layerActionButton(systemImage: "list.bullet.indent", helpKey: "imageEditor.action.layerSelectGroupMembers") {
+                            viewModel.selectSelectedGroupMembers()
+                        }
+                        .disabled(!viewModel.canSelectSelectedGroupMembers)
+                        layerActionButton(systemImage: "folder.badge.minus", helpKey: "imageEditor.action.layerUngroup") {
+                            viewModel.ungroupSelectedLayers()
+                        }
+                        .disabled(!viewModel.canUngroupSelectedLayers)
                         layerActionButton(systemImage: "doc.on.doc", helpKey: "imageEditor.action.layerDuplicate") {
                             viewModel.duplicateSelectedLayer()
                         }
+                        layerActionButton(systemImage: "link", helpKey: "imageEditor.action.layerLink") {
+                            viewModel.linkSelectedLayers()
+                        }
+                        .disabled(!viewModel.canLinkSelectedLayers)
+                        layerActionButton(systemImage: "link.slash", helpKey: "imageEditor.action.layerUnlink") {
+                            viewModel.unlinkSelectedLayers()
+                        }
+                        .disabled(!viewModel.canUnlinkSelectedLayers)
+                        layerActionButton(systemImage: "align.horizontal.left", helpKey: "imageEditor.action.layerAlignLeft") {
+                            viewModel.alignSelectedLayers(.left)
+                        }
+                        .disabled(!viewModel.canAlignSelectedLayers)
+                        layerActionButton(systemImage: "align.horizontal.center", helpKey: "imageEditor.action.layerAlignHorizontalCenter") {
+                            viewModel.alignSelectedLayers(.horizontalCenter)
+                        }
+                        .disabled(!viewModel.canAlignSelectedLayers)
+                        layerActionButton(systemImage: "align.horizontal.right", helpKey: "imageEditor.action.layerAlignRight") {
+                            viewModel.alignSelectedLayers(.right)
+                        }
+                        .disabled(!viewModel.canAlignSelectedLayers)
+                        layerActionButton(systemImage: "align.vertical.top", helpKey: "imageEditor.action.layerAlignTop") {
+                            viewModel.alignSelectedLayers(.top)
+                        }
+                        .disabled(!viewModel.canAlignSelectedLayers)
+                        layerActionButton(systemImage: "align.vertical.center", helpKey: "imageEditor.action.layerAlignVerticalCenter") {
+                            viewModel.alignSelectedLayers(.verticalCenter)
+                        }
+                        .disabled(!viewModel.canAlignSelectedLayers)
+                        layerActionButton(systemImage: "align.vertical.bottom", helpKey: "imageEditor.action.layerAlignBottom") {
+                            viewModel.alignSelectedLayers(.bottom)
+                        }
+                        .disabled(!viewModel.canAlignSelectedLayers)
                         layerActionButton(systemImage: "trash", helpKey: "imageEditor.action.layerDelete") {
                             viewModel.deleteSelectedLayer()
                         }
@@ -602,6 +751,22 @@ struct ImageEditorView: View {
                             viewModel.editLayerMask()
                         }
                         .disabled(!viewModel.selectedLayerHasMask)
+                        layerActionButton(
+                            systemImage: "circle.slash",
+                            helpKey: "imageEditor.action.layerMaskToggle",
+                            isSelected: viewModel.document.selectedLayer?.isMaskEnabled == false
+                        ) {
+                            viewModel.toggleLayerMaskEnabled()
+                        }
+                        .disabled(!viewModel.canToggleLayerMaskEnabled)
+                        layerActionButton(
+                            systemImage: viewModel.document.selectedLayer?.isMaskLinked == false ? "link.slash" : "link",
+                            helpKey: "imageEditor.action.layerMaskLinkToggle",
+                            isSelected: viewModel.document.selectedLayer?.isMaskLinked == false
+                        ) {
+                            viewModel.toggleLayerMaskLinked()
+                        }
+                        .disabled(!viewModel.canToggleLayerMaskLinked)
                         layerActionButton(systemImage: "arrow.triangle.2.circlepath", helpKey: "imageEditor.action.layerMaskInvert") {
                             viewModel.invertLayerMask()
                         }
@@ -629,6 +794,20 @@ struct ImageEditorView: View {
                             viewModel.toggleSelectedLayerShadow()
                         }
                         layerActionButton(
+                            systemImage: "sun.max",
+                            helpKey: "imageEditor.action.layerOuterGlow",
+                            isSelected: viewModel.selectedLayerHasOuterGlow
+                        ) {
+                            viewModel.toggleSelectedLayerOuterGlow()
+                        }
+                        layerActionButton(
+                            systemImage: "circle.circle",
+                            helpKey: "imageEditor.action.layerInnerGlow",
+                            isSelected: viewModel.selectedLayerHasInnerGlow
+                        ) {
+                            viewModel.toggleSelectedLayerInnerGlow()
+                        }
+                        layerActionButton(
                             systemImage: "arrow.down.to.line.compact",
                             helpKey: "imageEditor.action.layerClippingMask",
                             isSelected: viewModel.selectedLayerIsClippingMask
@@ -649,14 +828,14 @@ struct ImageEditorView: View {
 
                 ScrollView {
                     VStack(spacing: 6) {
-                        ForEach(Array(viewModel.document.layers.reversed())) { layer in
+                        ForEach(viewModel.visibleLayerRows) { layer in
                             layerRow(layer)
                         }
                     }
                 }
             }
         }
-        .frame(height: 246)
+        .frame(height: 348)
     }
 
     private func layerActionButton(
@@ -675,8 +854,28 @@ struct ImageEditorView: View {
     }
 
     private func layerRow(_ layer: ImageEditorLayer) -> some View {
-        HStack(spacing: 8) {
-            if layer.groupID != nil {
+        let indentation = CGFloat(viewModel.document.groupDepth(for: layer)) * 14
+        return HStack(spacing: 8) {
+            if indentation > 0 {
+                Spacer()
+                    .frame(width: indentation)
+            }
+
+            if layer.isGroup {
+                Button {
+                    viewModel.toggleLayerGroupExpansion(layer.id)
+                } label: {
+                    Image(systemName: layer.isGroupExpanded ? "chevron.down" : "chevron.right")
+                        .font(.system(size: 10, weight: .bold))
+                        .frame(width: 14, height: 22)
+                        .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                }
+                .buttonStyle(.plain)
+                .help(L10n.text(layer.isGroupExpanded ? "imageEditor.action.layerGroupCollapse" : "imageEditor.action.layerGroupExpand"))
+            } else if layer.groupID != nil {
+                Spacer()
+                    .frame(width: 14)
+            } else {
                 Spacer()
                     .frame(width: 14)
             }
@@ -708,6 +907,12 @@ struct ImageEditorView: View {
                                 .overlay(Rectangle().stroke(contentThumbnailStroke(for: layer), lineWidth: 1.4))
 
                     if let maskThumbnail = layer.maskThumbnail() {
+                        Image(systemName: layer.isMaskLinked ? "link" : "link.slash")
+                            .font(.system(size: 9, weight: .bold))
+                            .frame(width: 12, height: 24)
+                            .foregroundStyle(layer.isMaskLinked ? Color(nsColor: ImageEditorTheme.mutedText) : Color(nsColor: ImageEditorTheme.selected))
+                            .help(L10n.text(layer.isMaskLinked ? "imageEditor.action.layerMaskLinked" : "imageEditor.action.layerMaskUnlinked"))
+
                         Button {
                             viewModel.selectLayer(layer.id, editingMask: true)
                         } label: {
@@ -718,6 +923,11 @@ struct ImageEditorView: View {
                                 .clipped()
                                 .background(Color.black.opacity(0.24))
                                 .overlay(Rectangle().stroke(maskThumbnailStroke(for: layer), lineWidth: 1.4))
+                                .overlay {
+                                    if !layer.isMaskEnabled {
+                                        DisabledMaskSlash()
+                                    }
+                                }
                         }
                         .buttonStyle(.plain)
                         .help(L10n.text("imageEditor.action.layerMaskEdit"))
@@ -749,6 +959,16 @@ struct ImageEditorView: View {
                             .font(.system(size: 10, weight: .bold))
                             .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
                             .lineLimit(1)
+                    } else if layer.isShape {
+                        Text(L10n.text("imageEditor.layer.shapeBadge"))
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                            .lineLimit(1)
+                    } else if layer.hasSmartFilters {
+                        Text(L10n.text("imageEditor.layer.smartFilterBadge"))
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                            .lineLimit(1)
                     } else if layer.blendMode != .normal {
                         Text(layer.blendMode.title)
                             .font(.system(size: 10, weight: .medium))
@@ -766,6 +986,14 @@ struct ImageEditorView: View {
                             .clipShape(RoundedRectangle(cornerRadius: 3, style: .continuous))
                     }
 
+                    if viewModel.isLayerLinked(layer.id) {
+                        Image(systemName: "link")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                            .frame(width: 14, height: 14)
+                            .help(L10n.text("imageEditor.layer.linkedBadge"))
+                    }
+
                     if layer.hasLayerEffects {
                         Text("fx")
                             .font(.system(size: 10, weight: .bold, design: .serif))
@@ -775,6 +1003,45 @@ struct ImageEditorView: View {
                             .background(Color(nsColor: ImageEditorTheme.selected).opacity(0.6))
                             .clipShape(RoundedRectangle(cornerRadius: 3, style: .continuous))
                     }
+
+                    Button {
+                        viewModel.toggleLayerPixelsLock(layer.id)
+                    } label: {
+                        Image(systemName: layer.locksPixels ? "photo.fill" : "photo")
+                            .font(.system(size: 10, weight: .bold))
+                            .frame(width: 16, height: 18)
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                    }
+                    .buttonStyle(.plain)
+                    .opacity(canTogglePixelsLock(for: layer) ? 1 : 0.35)
+                    .disabled(!canTogglePixelsLock(for: layer))
+                    .help(L10n.text(layer.locksPixels ? "imageEditor.action.layerPixelsUnlock" : "imageEditor.action.layerPixelsLock"))
+
+                    Button {
+                        viewModel.toggleLayerPositionLock(layer.id)
+                    } label: {
+                        Image(systemName: layer.locksPosition ? "arrow.up.left.and.arrow.down.right.circle.fill" : "arrow.up.left.and.arrow.down.right.circle")
+                            .font(.system(size: 10, weight: .bold))
+                            .frame(width: 16, height: 18)
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                    }
+                    .buttonStyle(.plain)
+                    .opacity(canTogglePositionLock(for: layer) ? 1 : 0.35)
+                    .disabled(!canTogglePositionLock(for: layer))
+                    .help(L10n.text(layer.locksPosition ? "imageEditor.action.layerPositionUnlock" : "imageEditor.action.layerPositionLock"))
+
+                    Button {
+                        viewModel.toggleLayerTransparentPixelsLock(layer.id)
+                    } label: {
+                        Image(systemName: layer.locksTransparentPixels ? "square.split.2x2.fill" : "square.split.2x2")
+                            .font(.system(size: 10, weight: .bold))
+                            .frame(width: 16, height: 18)
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                    }
+                    .buttonStyle(.plain)
+                    .opacity(canToggleTransparentPixelsLock(for: layer) ? 1 : 0.35)
+                    .disabled(!canToggleTransparentPixelsLock(for: layer))
+                    .help(L10n.text(layer.locksTransparentPixels ? "imageEditor.action.layerTransparentUnlock" : "imageEditor.action.layerTransparentLock"))
 
                     Text("\(Int((layer.opacity * 100).rounded()))%")
                         .font(.system(size: 11, weight: .medium).monospacedDigit())
@@ -799,6 +1066,18 @@ struct ImageEditorView: View {
         .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
     }
 
+    private func canToggleTransparentPixelsLock(for layer: ImageEditorLayer) -> Bool {
+        !layer.isGroup && !layer.isAdjustment && !layer.isFilter && !layer.isText && !layer.isShape
+    }
+
+    private func canTogglePixelsLock(for layer: ImageEditorLayer) -> Bool {
+        !layer.isAdjustment && !layer.isFilter
+    }
+
+    private func canTogglePositionLock(for layer: ImageEditorLayer) -> Bool {
+        !layer.isAdjustment && !layer.isFilter
+    }
+
     private func contentThumbnailStroke(for layer: ImageEditorLayer) -> Color {
         let selected = viewModel.isPrimaryLayer(layer.id) && !viewModel.isEditingLayerMask
         return selected ? Color.white.opacity(0.9) : Color.white.opacity(0.18)
@@ -814,6 +1093,30 @@ struct ImageEditorView: View {
             viewModel.selectedLayerOpacity
         } set: { value in
             viewModel.setSelectedLayerOpacity(value)
+        }
+    }
+
+    private var selectedLayerFillOpacityBinding: Binding<Double> {
+        Binding {
+            viewModel.selectedLayerFillOpacity
+        } set: { value in
+            viewModel.setSelectedLayerFillOpacity(value)
+        }
+    }
+
+    private var selectedLayerMaskDensityBinding: Binding<Double> {
+        Binding {
+            viewModel.selectedLayerMaskDensity
+        } set: { value in
+            viewModel.setSelectedLayerMaskDensity(value)
+        }
+    }
+
+    private var selectedLayerMaskFeatherBinding: Binding<Double> {
+        Binding {
+            viewModel.selectedLayerMaskFeather
+        } set: { value in
+            viewModel.setSelectedLayerMaskFeather(value)
         }
     }
 
@@ -871,6 +1174,54 @@ struct ImageEditorView: View {
             viewModel.selectedLayerShadowOffsetY
         } set: { value in
             viewModel.setSelectedLayerShadowOffsetY(value)
+        }
+    }
+
+    private var selectedLayerOuterGlowOpacityBinding: Binding<Double> {
+        Binding {
+            viewModel.selectedLayerOuterGlowOpacity
+        } set: { value in
+            viewModel.setSelectedLayerOuterGlowOpacity(value)
+        }
+    }
+
+    private var selectedLayerOuterGlowBlurBinding: Binding<Double> {
+        Binding {
+            viewModel.selectedLayerOuterGlowBlur
+        } set: { value in
+            viewModel.setSelectedLayerOuterGlowBlur(value)
+        }
+    }
+
+    private var selectedLayerOuterGlowSpreadBinding: Binding<Double> {
+        Binding {
+            viewModel.selectedLayerOuterGlowSpread
+        } set: { value in
+            viewModel.setSelectedLayerOuterGlowSpread(value)
+        }
+    }
+
+    private var selectedLayerInnerGlowOpacityBinding: Binding<Double> {
+        Binding {
+            viewModel.selectedLayerInnerGlowOpacity
+        } set: { value in
+            viewModel.setSelectedLayerInnerGlowOpacity(value)
+        }
+    }
+
+    private var selectedLayerInnerGlowBlurBinding: Binding<Double> {
+        Binding {
+            viewModel.selectedLayerInnerGlowBlur
+        } set: { value in
+            viewModel.setSelectedLayerInnerGlowBlur(value)
+        }
+    }
+
+    private var selectedLayerInnerGlowChokeBinding: Binding<Double> {
+        Binding {
+            viewModel.selectedLayerInnerGlowChoke
+        } set: { value in
+            viewModel.setSelectedLayerInnerGlowChoke(value)
         }
     }
 
@@ -1065,7 +1416,15 @@ struct ImageEditorView: View {
                         Text(adjustment.title).tag(adjustment)
                     }
                 }
-                Slider(value: $viewModel.adjustmentValue, in: -1...1, step: 0.05)
+                if viewModel.selectedAdjustment == .levels {
+                    levelsControls
+                } else if viewModel.selectedAdjustment == .curves {
+                    curvesControls
+                } else if viewModel.selectedAdjustment == .colorBalance {
+                    colorBalanceControls
+                } else {
+                    Slider(value: $viewModel.adjustmentValue, in: -1...1, step: 0.05)
+                }
                 VStack(alignment: .leading, spacing: 6) {
                     HStack {
                         Button(L10n.text("imageEditor.action.applyAdjustment")) {
@@ -1158,6 +1517,43 @@ struct ImageEditorView: View {
                     }
                 }
                 Slider(value: $viewModel.filterIntensity, in: 0...1, step: 0.05)
+                Text(viewModel.selectedLayerSmartFilterText)
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                    .lineLimit(2)
+                if viewModel.selectedLayerHasSmartFilters {
+                    VStack(spacing: 6) {
+                        ForEach(viewModel.selectedLayerSmartFilters) { filter in
+                            HStack(spacing: 6) {
+                                Text(viewModel.smartFilterLabel(filter))
+                                    .font(.system(size: 10, weight: .semibold))
+                                    .foregroundStyle(filter.isEnabled ? Color(nsColor: ImageEditorTheme.text) : Color(nsColor: ImageEditorTheme.mutedText))
+                                    .lineLimit(1)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                Button(L10n.text(filter.isEnabled ? "imageEditor.action.layerSmartFilterDisable" : "imageEditor.action.layerSmartFilterEnable")) {
+                                    viewModel.toggleSmartFilterOnSelectedLayer(filter.id)
+                                }
+                                .buttonStyle(EditorTextButtonStyle())
+                                Button(L10n.text("imageEditor.action.layerSmartFilterUpdateShort")) {
+                                    viewModel.updateSmartFilterOnSelectedLayer(filter.id)
+                                }
+                                .buttonStyle(EditorTextButtonStyle())
+                                Button(L10n.text("imageEditor.action.layerSmartFilterMoveUp")) {
+                                    viewModel.moveSmartFilterOnSelectedLayer(filter.id, offset: -1)
+                                }
+                                .buttonStyle(EditorTextButtonStyle())
+                                Button(L10n.text("imageEditor.action.layerSmartFilterMoveDown")) {
+                                    viewModel.moveSmartFilterOnSelectedLayer(filter.id, offset: 1)
+                                }
+                                .buttonStyle(EditorTextButtonStyle())
+                                Button(L10n.text("imageEditor.action.layerSmartFilterRemove")) {
+                                    viewModel.removeSmartFilterFromSelectedLayer(filter.id)
+                                }
+                                .buttonStyle(EditorTextButtonStyle())
+                            }
+                        }
+                    }
+                }
                 HStack {
                     Button(L10n.text("imageEditor.action.layerFilterNew")) {
                         viewModel.addFilterLayer()
@@ -1166,6 +1562,23 @@ struct ImageEditorView: View {
                     if viewModel.selectedLayerIsFilter {
                         Button(L10n.text("imageEditor.action.layerFilterUpdate")) {
                             viewModel.updateSelectedFilterLayer()
+                        }
+                        .buttonStyle(EditorTextButtonStyle())
+                    }
+                }
+                HStack {
+                    Button(L10n.text("imageEditor.action.layerSmartFilterAdd")) {
+                        viewModel.addSmartFilterToSelectedLayer()
+                    }
+                    .buttonStyle(EditorTextButtonStyle())
+                    .disabled(!viewModel.canAddSmartFilterToSelectedLayer)
+                    if viewModel.selectedLayerHasSmartFilters {
+                        Button(L10n.text("imageEditor.action.layerSmartFilterUpdate")) {
+                            viewModel.updateLastSmartFilterOnSelectedLayer()
+                        }
+                        .buttonStyle(EditorTextButtonStyle())
+                        Button(L10n.text("imageEditor.action.layerSmartFilterClear")) {
+                            viewModel.clearSmartFiltersFromSelectedLayer()
                         }
                         .buttonStyle(EditorTextButtonStyle())
                     }
@@ -1189,6 +1602,12 @@ struct ImageEditorView: View {
                     if viewModel.selectedLayerIsText {
                         Button(L10n.text("imageEditor.action.layerTextUpdate")) {
                             viewModel.updateSelectedTextLayer()
+                        }
+                        .buttonStyle(EditorTextButtonStyle())
+                    }
+                    if viewModel.selectedLayerIsShape {
+                        Button(L10n.text("imageEditor.action.layerShapeUpdate")) {
+                            viewModel.updateSelectedShapeLayer()
                         }
                         .buttonStyle(EditorTextButtonStyle())
                     }
@@ -1274,6 +1693,46 @@ struct ImageEditorView: View {
                         step: 1
                     )
                 }
+                Stepper(
+                    L10n.format("imageEditor.properties.outerGlowOpacityValue", Int((viewModel.selectedLayerOuterGlowOpacity * 100).rounded())),
+                    value: selectedLayerOuterGlowOpacityBinding,
+                    in: 0.05...1,
+                    step: 0.05
+                )
+                HStack {
+                    Stepper(
+                        L10n.format("imageEditor.properties.outerGlowBlurValue", Int(viewModel.selectedLayerOuterGlowBlur.rounded())),
+                        value: selectedLayerOuterGlowBlurBinding,
+                        in: 0...40,
+                        step: 1
+                    )
+                    Stepper(
+                        L10n.format("imageEditor.properties.outerGlowSpreadValue", Int(viewModel.selectedLayerOuterGlowSpread.rounded())),
+                        value: selectedLayerOuterGlowSpreadBinding,
+                        in: 0...24,
+                        step: 1
+                    )
+                }
+                Stepper(
+                    L10n.format("imageEditor.properties.innerGlowOpacityValue", Int((viewModel.selectedLayerInnerGlowOpacity * 100).rounded())),
+                    value: selectedLayerInnerGlowOpacityBinding,
+                    in: 0.05...1,
+                    step: 0.05
+                )
+                HStack {
+                    Stepper(
+                        L10n.format("imageEditor.properties.innerGlowBlurValue", Int(viewModel.selectedLayerInnerGlowBlur.rounded())),
+                        value: selectedLayerInnerGlowBlurBinding,
+                        in: 0...40,
+                        step: 1
+                    )
+                    Stepper(
+                        L10n.format("imageEditor.properties.innerGlowChokeValue", Int(viewModel.selectedLayerInnerGlowChoke.rounded())),
+                        value: selectedLayerInnerGlowChokeBinding,
+                        in: 0...24,
+                        step: 1
+                    )
+                }
 
                 Divider().overlay(editorBorder)
 
@@ -1303,6 +1762,145 @@ struct ImageEditorView: View {
         }
     }
 
+    private var levelsControls: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            levelsSlider(
+                labelKey: "imageEditor.levels.blackPoint",
+                value: $viewModel.levelsBlackPoint,
+                range: 0...0.98,
+                step: 0.01,
+                displayText: "\(Int((viewModel.levelsBlackPoint * 255).rounded()))"
+            )
+            levelsSlider(
+                labelKey: "imageEditor.levels.gamma",
+                value: $viewModel.levelsGamma,
+                range: 0.1...4,
+                step: 0.05,
+                displayText: String(format: "%.2f", viewModel.levelsGamma)
+            )
+            levelsSlider(
+                labelKey: "imageEditor.levels.whitePoint",
+                value: $viewModel.levelsWhitePoint,
+                range: 0.02...1,
+                step: 0.01,
+                displayText: "\(Int((viewModel.levelsWhitePoint * 255).rounded()))"
+            )
+        }
+    }
+
+    private var curvesControls: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            adjustmentSlider(
+                labelKey: "imageEditor.curves.shadows",
+                value: $viewModel.curvesShadows,
+                range: -1...1,
+                step: 0.05,
+                displayText: "\(Int((viewModel.curvesShadows * 100).rounded()))%"
+            )
+            adjustmentSlider(
+                labelKey: "imageEditor.curves.midtones",
+                value: $viewModel.curvesMidtones,
+                range: -1...1,
+                step: 0.05,
+                displayText: "\(Int((viewModel.curvesMidtones * 100).rounded()))%"
+            )
+            adjustmentSlider(
+                labelKey: "imageEditor.curves.highlights",
+                value: $viewModel.curvesHighlights,
+                range: -1...1,
+                step: 0.05,
+                displayText: "\(Int((viewModel.curvesHighlights * 100).rounded()))%"
+            )
+        }
+    }
+
+    private var colorBalanceControls: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            colorBalanceSection(
+                titleKey: "imageEditor.colorBalance.shadows",
+                cyanRed: $viewModel.colorBalanceShadowsCyanRed,
+                magentaGreen: $viewModel.colorBalanceShadowsMagentaGreen,
+                yellowBlue: $viewModel.colorBalanceShadowsYellowBlue
+            )
+            colorBalanceSection(
+                titleKey: "imageEditor.colorBalance.midtones",
+                cyanRed: $viewModel.colorBalanceMidtonesCyanRed,
+                magentaGreen: $viewModel.colorBalanceMidtonesMagentaGreen,
+                yellowBlue: $viewModel.colorBalanceMidtonesYellowBlue
+            )
+            colorBalanceSection(
+                titleKey: "imageEditor.colorBalance.highlights",
+                cyanRed: $viewModel.colorBalanceHighlightsCyanRed,
+                magentaGreen: $viewModel.colorBalanceHighlightsMagentaGreen,
+                yellowBlue: $viewModel.colorBalanceHighlightsYellowBlue
+            )
+        }
+    }
+
+    private func colorBalanceSection(
+        titleKey: String,
+        cyanRed: Binding<Double>,
+        magentaGreen: Binding<Double>,
+        yellowBlue: Binding<Double>
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 5) {
+            Text(L10n.text(titleKey))
+                .font(.system(size: 10, weight: .bold))
+                .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+            adjustmentSlider(
+                labelKey: "imageEditor.colorBalance.cyanRed",
+                value: cyanRed,
+                range: -1...1,
+                step: 0.05,
+                displayText: "\(Int((cyanRed.wrappedValue * 100).rounded()))%"
+            )
+            adjustmentSlider(
+                labelKey: "imageEditor.colorBalance.magentaGreen",
+                value: magentaGreen,
+                range: -1...1,
+                step: 0.05,
+                displayText: "\(Int((magentaGreen.wrappedValue * 100).rounded()))%"
+            )
+            adjustmentSlider(
+                labelKey: "imageEditor.colorBalance.yellowBlue",
+                value: yellowBlue,
+                range: -1...1,
+                step: 0.05,
+                displayText: "\(Int((yellowBlue.wrappedValue * 100).rounded()))%"
+            )
+        }
+    }
+
+    private func levelsSlider(
+        labelKey: String,
+        value: Binding<Double>,
+        range: ClosedRange<Double>,
+        step: Double,
+        displayText: String
+    ) -> some View {
+        adjustmentSlider(labelKey: labelKey, value: value, range: range, step: step, displayText: displayText)
+    }
+
+    private func adjustmentSlider(
+        labelKey: String,
+        value: Binding<Double>,
+        range: ClosedRange<Double>,
+        step: Double,
+        displayText: String
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 3) {
+            HStack {
+                Text(L10n.text(labelKey))
+                Spacer()
+                Text(verbatim: displayText)
+                    .monospacedDigit()
+            }
+            .font(.system(size: 11, weight: .semibold))
+            .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+            Slider(value: value, in: range, step: step)
+        }
+    }
+
     private var statusBar: some View {
         HStack {
             Text(viewModel.statusText)
@@ -1326,6 +1924,16 @@ struct ImageEditorView: View {
 
     private func closeWindow() {
         NSApplication.shared.keyWindow?.close()
+    }
+}
+
+private struct DisabledMaskSlash: View {
+    var body: some View {
+        Rectangle()
+            .fill(Color.red.opacity(0.85))
+            .frame(width: 30, height: 3)
+            .rotationEffect(.degrees(-38))
+            .shadow(color: .black.opacity(0.35), radius: 1, x: 0, y: 0)
     }
 }
 

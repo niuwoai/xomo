@@ -20,7 +20,7 @@ extension ImageEditorViewModel {
             && !layer.isAdjustment
             && !layer.isFilter
             && !layer.isText
-            && !document.isEffectivelyLocked(layer)
+            && !document.isEffectivelyPixelsLocked(layer)
     }
 
     var canCopySelectionToNewLayer: Bool {
@@ -31,7 +31,7 @@ extension ImageEditorViewModel {
         return !layer.isGroup
             && !layer.isAdjustment
             && !layer.isFilter
-            && !document.isEffectivelyLocked(layer)
+            && !document.isEffectivelyPixelsLocked(layer)
     }
 
     var canCutSelectionToNewLayer: Bool {
@@ -118,6 +118,7 @@ extension ImageEditorViewModel {
         layer.image = clippedImage.normalizedBitmapImage()
         layer.frame = sourceLayer.frame
         layer.opacity = sourceLayer.opacity
+        layer.fillOpacity = sourceLayer.fillOpacity
         layer.blendMode = sourceLayer.blendMode
         layer.groupID = sourceLayer.groupID
         document.layers.insert(layer, at: index + 1)
@@ -186,6 +187,7 @@ extension ImageEditorViewModel {
         layer.image = clippedImage.normalizedBitmapImage()
         layer.frame = sourceLayer.frame
         layer.opacity = sourceLayer.opacity
+        layer.fillOpacity = sourceLayer.fillOpacity
         layer.blendMode = sourceLayer.blendMode
         layer.groupID = sourceLayer.groupID
         document.layers.insert(layer, at: index + 1)

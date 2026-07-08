@@ -178,6 +178,141 @@ struct veilpicTests {
     }
 
     @MainActor
+    @Test func imageEditorLinkedLayersMoveTogetherAndCanBeUnlinked() async throws {
+        let image = testImage(color: .systemBlue, size: NSSize(width: 120, height: 90))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.addLayer()
+        let firstID = try #require(viewModel.document.selectedLayerID)
+        let firstIndex = try #require(viewModel.document.layers.firstIndex { $0.id == firstID })
+        viewModel.document.layers[firstIndex].frame = CGRect(x: 10, y: 12, width: 24, height: 18)
+
+        viewModel.addLayer()
+        let secondID = try #require(viewModel.document.selectedLayerID)
+        let secondIndex = try #require(viewModel.document.layers.firstIndex { $0.id == secondID })
+        viewModel.document.layers[secondIndex].frame = CGRect(x: 52, y: 30, width: 20, height: 16)
+
+        viewModel.selectLayer(firstID)
+        viewModel.selectLayer(secondID, extendingSelection: true)
+        #expect(viewModel.canLinkSelectedLayers)
+        viewModel.linkSelectedLayers()
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerLink"))
+        #expect(viewModel.isLayerLinked(firstID))
+        #expect(viewModel.isLayerLinked(secondID))
+
+        viewModel.selectLayer(firstID)
+        viewModel.beginMovingSelectedLayer()
+        viewModel.moveSelectedLayer(by: CGSize(width: 7, height: -3))
+        viewModel.finishMovingSelectedLayer()
+
+        let movedFirstIndex = try #require(viewModel.document.layers.firstIndex { $0.id == firstID })
+        let movedSecondIndex = try #require(viewModel.document.layers.firstIndex { $0.id == secondID })
+        #expect(viewModel.document.layers[movedFirstIndex].frame.origin == CGPoint(x: 17, y: 9))
+        #expect(viewModel.document.layers[movedSecondIndex].frame.origin == CGPoint(x: 59, y: 27))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerTranslate"))
+
+        viewModel.unlinkSelectedLayers()
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerUnlink"))
+        #expect(!viewModel.isLayerLinked(firstID))
+        #expect(!viewModel.isLayerLinked(secondID))
+
+        viewModel.beginMovingSelectedLayer()
+        viewModel.moveSelectedLayer(by: CGSize(width: 5, height: 5))
+        viewModel.finishMovingSelectedLayer()
+
+        let unlinkedFirstIndex = try #require(viewModel.document.layers.firstIndex { $0.id == firstID })
+        let unlinkedSecondIndex = try #require(viewModel.document.layers.firstIndex { $0.id == secondID })
+        #expect(viewModel.document.layers[unlinkedFirstIndex].frame.origin == CGPoint(x: 22, y: 14))
+        #expect(viewModel.document.layers[unlinkedSecondIndex].frame.origin == CGPoint(x: 59, y: 27))
+    }
+
+    @MainActor
+    @Test func imageEditorLinkedLayersScaleTogetherAndCleanLinksOnCopyDelete() async throws {
+        let image = testImage(color: .systemBlue, size: NSSize(width: 140, height: 100))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.addLayer()
+        let firstID = try #require(viewModel.document.selectedLayerID)
+        let firstIndex = try #require(viewModel.document.layers.firstIndex { $0.id == firstID })
+        viewModel.document.layers[firstIndex].frame = CGRect(x: 10, y: 10, width: 20, height: 10)
+
+        viewModel.addLayer()
+        let secondID = try #require(viewModel.document.selectedLayerID)
+        let secondIndex = try #require(viewModel.document.layers.firstIndex { $0.id == secondID })
+        viewModel.document.layers[secondIndex].frame = CGRect(x: 50, y: 30, width: 10, height: 10)
+
+        viewModel.selectLayer(firstID)
+        viewModel.selectLayer(secondID, extendingSelection: true)
+        viewModel.linkSelectedLayers()
+
+        viewModel.selectLayer(firstID)
+        viewModel.scaleSelectedLayer(by: 2)
+
+        let scaledFirstIndex = try #require(viewModel.document.layers.firstIndex { $0.id == firstID })
+        let scaledSecondIndex = try #require(viewModel.document.layers.firstIndex { $0.id == secondID })
+        #expect(viewModel.document.layers[scaledFirstIndex].frame == CGRect(x: -15, y: -5, width: 40, height: 20))
+        #expect(viewModel.document.layers[scaledSecondIndex].frame == CGRect(x: 65, y: 35, width: 20, height: 20))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerScale"))
+
+        viewModel.duplicateSelectedLayer()
+        let copiedID = try #require(viewModel.document.selectedLayerID)
+        #expect(!viewModel.isLayerLinked(copiedID))
+        #expect(viewModel.isLayerLinked(firstID))
+        #expect(viewModel.isLayerLinked(secondID))
+
+        viewModel.selectLayer(secondID)
+        viewModel.deleteSelectedLayer()
+        #expect(!viewModel.document.layers.contains { $0.id == secondID })
+        #expect(!viewModel.isLayerLinked(firstID))
+        #expect(!viewModel.isLayerLinked(copiedID))
+    }
+
+    @MainActor
+    @Test func imageEditorAlignsSelectedAndLinkedLayers() async throws {
+        let image = testImage(color: .systemBlue, size: NSSize(width: 140, height: 100))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.addLayer()
+        let firstID = try #require(viewModel.document.selectedLayerID)
+        let firstIndex = try #require(viewModel.document.layers.firstIndex { $0.id == firstID })
+        viewModel.document.layers[firstIndex].frame = CGRect(x: 10, y: 10, width: 20, height: 10)
+
+        viewModel.addLayer()
+        let secondID = try #require(viewModel.document.selectedLayerID)
+        let secondIndex = try #require(viewModel.document.layers.firstIndex { $0.id == secondID })
+        viewModel.document.layers[secondIndex].frame = CGRect(x: 50, y: 30, width: 10, height: 20)
+
+        viewModel.selectLayer(firstID)
+        viewModel.selectLayer(secondID, extendingSelection: true)
+        #expect(viewModel.canAlignSelectedLayers)
+        viewModel.alignSelectedLayers(.left)
+
+        let leftAlignedFirstIndex = try #require(viewModel.document.layers.firstIndex { $0.id == firstID })
+        let leftAlignedSecondIndex = try #require(viewModel.document.layers.firstIndex { $0.id == secondID })
+        #expect(viewModel.document.layers[leftAlignedFirstIndex].frame.minX == 10)
+        #expect(viewModel.document.layers[leftAlignedSecondIndex].frame.minX == 10)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerAlign"))
+
+        viewModel.alignSelectedLayers(.verticalCenter)
+        let centeredFirstIndex = try #require(viewModel.document.layers.firstIndex { $0.id == firstID })
+        let centeredSecondIndex = try #require(viewModel.document.layers.firstIndex { $0.id == secondID })
+        #expect(viewModel.document.layers[centeredFirstIndex].frame.midY == 25)
+        #expect(viewModel.document.layers[centeredSecondIndex].frame.midY == 25)
+
+        viewModel.undo()
+        viewModel.undo()
+        viewModel.linkSelectedLayers()
+        viewModel.selectLayer(firstID)
+        #expect(viewModel.canAlignSelectedLayers)
+        viewModel.alignSelectedLayers(.right)
+
+        let rightAlignedFirstIndex = try #require(viewModel.document.layers.firstIndex { $0.id == firstID })
+        let rightAlignedSecondIndex = try #require(viewModel.document.layers.firstIndex { $0.id == secondID })
+        #expect(viewModel.document.layers[rightAlignedFirstIndex].frame.maxX == 60)
+        #expect(viewModel.document.layers[rightAlignedSecondIndex].frame.maxX == 60)
+    }
+
+    @MainActor
     @Test func imageEditorImportImageCreatesCenteredScaledLayerAndUndoRestores() async throws {
         let canvas = testImage(color: .systemBlue, size: NSSize(width: 80, height: 60))
         let imported = testImage(color: .systemPink, size: NSSize(width: 160, height: 120))
@@ -500,6 +635,49 @@ struct veilpicTests {
     }
 
     @MainActor
+    @Test func imageEditorPhotoshopBlendModesCompositeWithPixelMath() async throws {
+        let canvasSize = NSSize(width: 40, height: 30)
+        let baseColor = NSColor(calibratedRed: 0.20, green: 0.25, blue: 0.30, alpha: 1)
+        let overlayColor = NSColor(calibratedRed: 0.70, green: 0.50, blue: 0.30, alpha: 1)
+        let image = testBitmapImage(size: canvasSize, background: baseColor)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.replaceSelectedLayerImageForTesting(
+            testBitmapImage(size: canvasSize, background: overlayColor),
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+
+        #expect(ImageEditorBlendMode.allCases.contains(.linearDodge))
+        #expect(ImageEditorBlendMode.allCases.contains(.linearBurn))
+        #expect(ImageEditorBlendMode.allCases.contains(.vividLight))
+        #expect(ImageEditorBlendMode.allCases.contains(.linearLight))
+        #expect(ImageEditorBlendMode.allCases.contains(.pinLight))
+        #expect(ImageEditorBlendMode.allCases.contains(.exclusion))
+        #expect(ImageEditorBlendMode.allCases.contains(.hue))
+        #expect(ImageEditorBlendMode.allCases.contains(.saturation))
+        #expect(ImageEditorBlendMode.allCases.contains(.color))
+        #expect(ImageEditorBlendMode.allCases.contains(.luminosity))
+
+        viewModel.setSelectedLayerBlendMode(.linearDodge)
+        let dodge = try #require(viewModel.currentImage.color(at: CGPoint(x: 20, y: 15))?.usingColorSpace(.deviceRGB))
+        #expect(abs(dodge.redComponent - 0.90) < 0.02)
+        #expect(abs(dodge.greenComponent - 0.75) < 0.02)
+        #expect(abs(dodge.blueComponent - 0.60) < 0.02)
+
+        viewModel.setSelectedLayerBlendMode(.linearBurn)
+        let burn = try #require(viewModel.currentImage.color(at: CGPoint(x: 20, y: 15))?.usingColorSpace(.deviceRGB))
+        #expect(burn.redComponent < 0.03)
+        #expect(burn.greenComponent < 0.03)
+        #expect(burn.blueComponent < 0.03)
+
+        viewModel.setSelectedLayerBlendMode(.color)
+        let color = try #require(viewModel.currentImage.color(at: CGPoint(x: 20, y: 15))?.usingColorSpace(.deviceRGB))
+        #expect(color.redComponent > color.greenComponent)
+        #expect(color.greenComponent > color.blueComponent)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerBlendMode"))
+    }
+
+    @MainActor
     @Test func imageEditorLockedLayerRejectsEditsUntilUnlocked() async throws {
         let image = testImage(color: .systemBlue, size: NSSize(width: 80, height: 60))
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
@@ -517,6 +695,109 @@ struct veilpicTests {
 
         #expect(lockedAfter == before)
         #expect(unlockedAfter != before)
+    }
+
+    @MainActor
+    @Test func imageEditorLayerPartialLocksProtectPixelsAndPositionSeparately() async throws {
+        let image = testImage(color: .systemBlue, size: NSSize(width: 80, height: 60))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let selectedID = try #require(viewModel.document.selectedLayerID)
+        let imageBeforePixelLock = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+        let frameBeforePixelLock = try #require(viewModel.document.selectedLayer?.frame)
+
+        viewModel.toggleLayerPixelsLock(selectedID)
+        viewModel.foregroundColor = .systemPink
+        viewModel.brushSize = 24
+        viewModel.drawBrush(points: [CGPoint(x: 8, y: 8), CGPoint(x: 70, y: 50)])
+
+        let imageAfterPixelLockedBrush = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+        #expect(viewModel.document.selectedLayer?.locksPixels == true)
+        #expect(imageAfterPixelLockedBrush == imageBeforePixelLock)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerPixelsLock"))
+
+        viewModel.beginMovingSelectedLayer()
+        viewModel.moveSelectedLayer(by: CGSize(width: 6, height: 4))
+        viewModel.finishMovingSelectedLayer()
+        #expect(viewModel.document.selectedLayer?.frame != frameBeforePixelLock)
+
+        viewModel.toggleLayerPixelsLock(selectedID)
+        viewModel.toggleLayerPositionLock(selectedID)
+        let frameBeforePositionLock = try #require(viewModel.document.selectedLayer?.frame)
+        viewModel.beginMovingSelectedLayer()
+        viewModel.moveSelectedLayer(by: CGSize(width: 8, height: 8))
+        viewModel.finishMovingSelectedLayer()
+        #expect(viewModel.document.selectedLayer?.locksPosition == true)
+        #expect(viewModel.document.selectedLayer?.frame == frameBeforePositionLock)
+
+        viewModel.drawBrush(points: [CGPoint(x: 8, y: 8), CGPoint(x: 70, y: 50)])
+        let imageAfterPositionLockedBrush = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+        #expect(imageAfterPositionLockedBrush != imageBeforePixelLock)
+    }
+
+    @MainActor
+    @Test func imageEditorGroupPositionLockProtectsDescendantTransforms() async throws {
+        let image = testImage(color: .systemBlue, size: NSSize(width: 80, height: 60))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let childID = try #require(viewModel.document.selectedLayerID)
+        let childFrame = try #require(viewModel.document.selectedLayer?.frame)
+
+        viewModel.groupSelectedLayer()
+        let groupID = try #require(viewModel.document.selectedLayerID)
+        viewModel.toggleLayerPositionLock(groupID)
+        #expect(viewModel.document.selectedLayer?.locksPosition == true)
+
+        viewModel.selectLayer(childID)
+        viewModel.beginMovingSelectedLayer()
+        viewModel.moveSelectedLayer(by: CGSize(width: 12, height: 9))
+        viewModel.finishMovingSelectedLayer()
+
+        let childLayer = try #require(viewModel.document.layers.first { $0.id == childID })
+        #expect(childLayer.frame == childFrame)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.layerLocked"))
+    }
+
+    @MainActor
+    @Test func imageEditorTransparentPixelLockPreservesLayerAlpha() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let image = testImage(color: .systemBlue, size: canvasSize)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let selectedID = try #require(viewModel.document.selectedLayerID)
+        let halfOpaqueLayer = testBitmapImage(
+            size: canvasSize,
+            background: NSColor(calibratedWhite: 0, alpha: 0),
+            fills: [
+                (CGRect(x: 0, y: 0, width: 32, height: 60), .systemPink)
+            ]
+        )
+
+        viewModel.replaceSelectedLayerImageForTesting(
+            halfOpaqueLayer,
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+        viewModel.toggleLayerTransparentPixelsLock(selectedID)
+
+        #expect(viewModel.document.selectedLayer?.locksTransparentPixels == true)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerTransparentPixelsLock"))
+
+        viewModel.foregroundColor = .systemGreen
+        viewModel.brushSize = 96
+        viewModel.opacity = 1
+        viewModel.drawBrush(points: [CGPoint(x: 0, y: 30), CGPoint(x: 80, y: 30)])
+
+        let paintedLayer = try #require(viewModel.document.selectedLayer)
+        let opaqueSide = try #require(paintedLayer.image.color(at: CGPoint(x: 12, y: 30))?.usingColorSpace(.deviceRGB))
+        let transparentSide = try #require(paintedLayer.image.color(at: CGPoint(x: 68, y: 30))?.usingColorSpace(.deviceRGB))
+
+        #expect(opaqueSide.alphaComponent > 0.8)
+        #expect(opaqueSide.greenComponent > opaqueSide.redComponent)
+        #expect(transparentSide.alphaComponent < 0.05)
+
+        viewModel.drawBrush(points: [CGPoint(x: 8, y: 30), CGPoint(x: 24, y: 30)], erase: true)
+        let erasedOpaqueSide = try #require(viewModel.document.selectedLayer?.image.color(at: CGPoint(x: 16, y: 30))?.usingColorSpace(.deviceRGB))
+        let erasedTransparentSide = try #require(viewModel.document.selectedLayer?.image.color(at: CGPoint(x: 68, y: 30))?.usingColorSpace(.deviceRGB))
+
+        #expect(erasedOpaqueSide.alphaComponent > 0.8)
+        #expect(erasedTransparentSide.alphaComponent < 0.05)
     }
 
     @MainActor
@@ -710,6 +991,207 @@ struct veilpicTests {
     }
 
     @MainActor
+    @Test func imageEditorLayerMaskDensityAndFeatherAreNonDestructiveUntilApplied() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let image = testBitmapImage(size: canvasSize, background: .systemBlue)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.replaceSelectedLayerImageForTesting(
+            testBitmapImage(size: canvasSize, background: .systemPink),
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+        viewModel.createRectSelection(from: CGPoint(x: 20, y: 12), to: CGPoint(x: 60, y: 48))
+        viewModel.addLayerMaskFromSelection()
+
+        let outsideHard = try #require(viewModel.currentImage.color(at: CGPoint(x: 8, y: 30))?.usingColorSpace(.deviceRGB))
+        #expect(outsideHard.blueComponent > outsideHard.redComponent)
+
+        viewModel.setSelectedLayerMaskDensity(0.5)
+        viewModel.commitSelectedLayerMaskDensityChange()
+        let outsideDense = try #require(viewModel.currentImage.color(at: CGPoint(x: 8, y: 30))?.usingColorSpace(.deviceRGB))
+        #expect(viewModel.selectedLayerMaskDensity == 0.5)
+        #expect(outsideDense.redComponent > outsideHard.redComponent + 0.15)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerMaskDensity"))
+
+        viewModel.setSelectedLayerMaskDensity(1)
+        viewModel.setSelectedLayerMaskFeather(8)
+        viewModel.commitSelectedLayerMaskFeatherChange()
+        let featheredEdge = try #require(viewModel.currentImage.color(at: CGPoint(x: 18, y: 30))?.usingColorSpace(.deviceRGB))
+        #expect(viewModel.selectedLayerMaskFeather == 8)
+        #expect(featheredEdge.redComponent > outsideHard.redComponent + 0.15)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerMaskFeather"))
+
+        let compositedBeforeApply = try #require(viewModel.currentImage.qingtuPNGData())
+        viewModel.applyLayerMask()
+        let appliedLayer = try #require(viewModel.document.selectedLayer)
+
+        #expect(appliedLayer.mask == nil)
+        #expect(appliedLayer.maskDensity == 1)
+        #expect(appliedLayer.maskFeather == 0)
+        #expect(try #require(viewModel.currentImage.qingtuPNGData()) == compositedBeforeApply)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerMaskApply"))
+    }
+
+    @MainActor
+    @Test func imageEditorCanDisableReenableAndApplyDisabledLayerMask() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let image = testBitmapImage(size: canvasSize, background: .systemBlue)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.replaceSelectedLayerImageForTesting(
+            testBitmapImage(size: canvasSize, background: .systemPink),
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+        viewModel.createRectSelection(from: CGPoint(x: 20, y: 12), to: CGPoint(x: 60, y: 48))
+        viewModel.addLayerMaskFromSelection()
+
+        let outsideMasked = try #require(viewModel.currentImage.color(at: CGPoint(x: 8, y: 30))?.usingColorSpace(.deviceRGB))
+        #expect(outsideMasked.blueComponent > outsideMasked.redComponent)
+        #expect(viewModel.document.selectedLayer?.isMaskEnabled == true)
+
+        viewModel.toggleLayerMaskEnabled()
+        let outsideDisabled = try #require(viewModel.currentImage.color(at: CGPoint(x: 8, y: 30))?.usingColorSpace(.deviceRGB))
+        #expect(viewModel.document.selectedLayer?.isMaskEnabled == false)
+        #expect(outsideDisabled.redComponent > outsideMasked.redComponent + 0.25)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerMaskDisable"))
+
+        viewModel.toggleLayerMaskEnabled()
+        let outsideReenabled = try #require(viewModel.currentImage.color(at: CGPoint(x: 8, y: 30))?.usingColorSpace(.deviceRGB))
+        #expect(viewModel.document.selectedLayer?.isMaskEnabled == true)
+        #expect(outsideReenabled.blueComponent > outsideReenabled.redComponent)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerMaskEnable"))
+
+        viewModel.toggleLayerMaskEnabled()
+        let visibleBeforeApply = try #require(viewModel.currentImage.qingtuPNGData())
+        viewModel.applyLayerMask()
+        let appliedLayer = try #require(viewModel.document.selectedLayer)
+
+        #expect(appliedLayer.mask == nil)
+        #expect(appliedLayer.isMaskEnabled)
+        #expect(try #require(viewModel.currentImage.qingtuPNGData()) == visibleBeforeApply)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerMaskApply"))
+    }
+
+    @MainActor
+    @Test func imageEditorCanUnlinkLayerMaskBeforeMovingLayerContents() async throws {
+        func maskedViewModel() -> ImageEditorViewModel {
+            let canvasSize = NSSize(width: 80, height: 60)
+            let image = testBitmapImage(size: canvasSize, background: .systemBlue)
+            let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+            viewModel.replaceSelectedLayerImageForTesting(
+                testBitmapImage(size: canvasSize, background: .systemPink),
+                historyTitle: L10n.text("imageEditor.history.brush")
+            )
+            viewModel.createRectSelection(from: CGPoint(x: 20, y: 12), to: CGPoint(x: 60, y: 48))
+            viewModel.addLayerMaskFromSelection()
+            return viewModel
+        }
+
+        let linkedViewModel = maskedViewModel()
+        linkedViewModel.beginMovingSelectedLayer()
+        linkedViewModel.moveSelectedLayer(by: CGSize(width: 12, height: 0))
+        linkedViewModel.finishMovingSelectedLayer()
+
+        let linkedSample = try #require(linkedViewModel.currentImage.color(at: CGPoint(x: 25, y: 30))?.usingColorSpace(.deviceRGB))
+        #expect(linkedViewModel.document.selectedLayer?.isMaskLinked == true)
+        #expect(linkedSample.blueComponent > linkedSample.redComponent)
+
+        let unlinkedViewModel = maskedViewModel()
+        unlinkedViewModel.toggleLayerMaskLinked()
+        #expect(unlinkedViewModel.document.selectedLayer?.isMaskLinked == false)
+        #expect(unlinkedViewModel.document.history.last?.title == L10n.text("imageEditor.history.layerMaskUnlink"))
+
+        unlinkedViewModel.beginMovingSelectedLayer()
+        unlinkedViewModel.moveSelectedLayer(by: CGSize(width: 12, height: 0))
+        unlinkedViewModel.finishMovingSelectedLayer()
+
+        let unlinkedSample = try #require(unlinkedViewModel.currentImage.color(at: CGPoint(x: 25, y: 30))?.usingColorSpace(.deviceRGB))
+        #expect(unlinkedSample.redComponent > linkedSample.redComponent + 0.25)
+        #expect(unlinkedSample.redComponent > unlinkedSample.blueComponent)
+    }
+
+    @MainActor
+    @Test func imageEditorCloneStampSamplesCurrentLayerPixels() async throws {
+        let image = testBitmapImage(
+            size: NSSize(width: 80, height: 60),
+            background: .systemBlue,
+            fills: [
+                (CGRect(x: 8, y: 20, width: 20, height: 20), .systemRed)
+            ]
+        )
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.brushSize = 8
+        viewModel.opacity = 1
+        viewModel.setCloneSource(at: CGPoint(x: 16, y: 30))
+        viewModel.cloneStamp(points: [
+            CGPoint(x: 55, y: 30),
+            CGPoint(x: 65, y: 30)
+        ])
+
+        let cloned = try #require(viewModel.currentImage.color(at: CGPoint(x: 56, y: 30))?.usingColorSpace(.deviceRGB))
+        let untouched = try #require(viewModel.currentImage.color(at: CGPoint(x: 45, y: 30))?.usingColorSpace(.deviceRGB))
+        #expect(cloned.redComponent > cloned.blueComponent + 0.25)
+        #expect(untouched.blueComponent > untouched.redComponent + 0.25)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.cloneStamp"))
+    }
+
+    @MainActor
+    @Test func imageEditorLayerGroupMaskClipsDescendantLayers() async throws {
+        let canvasSize = NSSize(width: 90, height: 60)
+        let image = testBitmapImage(size: canvasSize, background: .systemBlue)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.addLayer()
+        let firstID = try #require(viewModel.document.selectedLayerID)
+        viewModel.document.layers[try #require(viewModel.document.layers.firstIndex { $0.id == firstID })].image = testBitmapImage(
+            size: canvasSize,
+            background: .clear,
+            fills: [(CGRect(x: 0, y: 0, width: 45, height: 60), .systemPink)]
+        )
+
+        viewModel.addLayer()
+        let secondID = try #require(viewModel.document.selectedLayerID)
+        viewModel.document.layers[try #require(viewModel.document.layers.firstIndex { $0.id == secondID })].image = testBitmapImage(
+            size: canvasSize,
+            background: .clear,
+            fills: [(CGRect(x: 45, y: 0, width: 45, height: 60), .systemGreen)]
+        )
+
+        viewModel.selectLayer(firstID)
+        viewModel.selectLayer(secondID, extendingSelection: true)
+        viewModel.groupSelectedLayer()
+        let groupID = try #require(viewModel.document.selectedLayerID)
+        viewModel.createRectSelection(from: CGPoint(x: 0, y: 0), to: CGPoint(x: 45, y: 60))
+
+        #expect(viewModel.canCreateLayerMaskFromSelection)
+        viewModel.addLayerMaskFromSelection()
+        let groupLayer = try #require(viewModel.document.layers.first { $0.id == groupID })
+        let visibleLeft = try #require(viewModel.currentImage.color(at: CGPoint(x: 20, y: 30))?.usingColorSpace(.deviceRGB))
+        let clippedRight = try #require(viewModel.currentImage.color(at: CGPoint(x: 70, y: 30))?.usingColorSpace(.deviceRGB))
+
+        #expect(groupLayer.isGroup)
+        #expect(groupLayer.mask?.size == canvasSize)
+        #expect(viewModel.selectedLayerHasMask)
+        #expect(viewModel.isEditingLayerMask)
+        #expect(!viewModel.canApplyLayerMask)
+        #expect(visibleLeft.redComponent > visibleLeft.blueComponent + 0.2)
+        #expect(clippedRight.blueComponent > clippedRight.greenComponent + 0.2)
+
+        viewModel.invertLayerMask()
+        let clippedLeft = try #require(viewModel.currentImage.color(at: CGPoint(x: 20, y: 30))?.usingColorSpace(.deviceRGB))
+        let visibleRight = try #require(viewModel.currentImage.color(at: CGPoint(x: 70, y: 30))?.usingColorSpace(.deviceRGB))
+        #expect(clippedLeft.blueComponent > clippedLeft.redComponent + 0.2)
+        #expect(visibleRight.greenComponent > visibleRight.blueComponent + 0.2)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerMaskInvert"))
+
+        viewModel.deleteLayerMask()
+        #expect(viewModel.document.layers.first { $0.id == groupID }?.mask == nil)
+        #expect(!viewModel.isEditingLayerMask)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerMaskDelete"))
+    }
+
+    @MainActor
     @Test func imageEditorMoveToolTranslatesSelectedLayerFrameAndUndoRestoresIt() async throws {
         let image = testImage(color: .systemBlue, size: NSSize(width: 80, height: 60))
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
@@ -789,6 +1271,8 @@ struct veilpicTests {
 
         viewModel.toggleSelectedLayerStroke()
         viewModel.toggleSelectedLayerShadow()
+        viewModel.toggleSelectedLayerOuterGlow()
+        viewModel.toggleSelectedLayerInnerGlow()
         let layerPixelsAfterStyle = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
         let compositedWithStyle = try #require(viewModel.currentImage.qingtuPNGData())
 
@@ -796,6 +1280,8 @@ struct veilpicTests {
         #expect(compositedWithStyle != compositedBeforeStyle)
         #expect(viewModel.selectedLayerHasStroke)
         #expect(viewModel.selectedLayerHasShadow)
+        #expect(viewModel.selectedLayerHasOuterGlow)
+        #expect(viewModel.selectedLayerHasInnerGlow)
 
         let layerCountBeforeMerge = viewModel.document.layers.count
         viewModel.mergeSelectedLayerDown()
@@ -819,21 +1305,74 @@ struct veilpicTests {
         viewModel.setSelectedLayerShadowBlur(14)
         viewModel.setSelectedLayerShadowOffsetX(11)
         viewModel.setSelectedLayerShadowOffsetY(-12)
+        viewModel.setSelectedLayerOuterGlowOpacity(0.65)
+        viewModel.setSelectedLayerOuterGlowBlur(18)
+        viewModel.setSelectedLayerOuterGlowSpread(6)
+        viewModel.setSelectedLayerInnerGlowOpacity(0.55)
+        viewModel.setSelectedLayerInnerGlowBlur(16)
+        viewModel.setSelectedLayerInnerGlowChoke(5)
         let styledLayer = try #require(viewModel.document.selectedLayer)
 
         #expect(styledLayer.style.strokeEnabled)
         #expect(styledLayer.style.shadowEnabled)
+        #expect(styledLayer.style.outerGlowEnabled)
+        #expect(styledLayer.style.innerGlowEnabled)
         #expect(styledLayer.style.strokeWidth == 9)
         #expect(styledLayer.style.shadowOpacity == 0.7)
         #expect(styledLayer.style.shadowBlur == 14)
         #expect(styledLayer.style.shadowOffset == CGSize(width: 11, height: -12))
+        #expect(styledLayer.style.outerGlowOpacity == 0.65)
+        #expect(styledLayer.style.outerGlowBlur == 18)
+        #expect(styledLayer.style.outerGlowSpread == 6)
+        #expect(styledLayer.style.innerGlowOpacity == 0.55)
+        #expect(styledLayer.style.innerGlowBlur == 16)
+        #expect(styledLayer.style.innerGlowChoke == 5)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStyle"))
 
         viewModel.toggleLayerLock(selectedID)
         viewModel.setSelectedLayerStrokeWidth(18)
+        viewModel.setSelectedLayerOuterGlowSpread(12)
+        viewModel.setSelectedLayerInnerGlowChoke(10)
 
         #expect(viewModel.document.selectedLayer?.style.strokeWidth == 9)
+        #expect(viewModel.document.selectedLayer?.style.outerGlowSpread == 6)
+        #expect(viewModel.document.selectedLayer?.style.innerGlowChoke == 5)
         #expect(viewModel.statusText == L10n.text("imageEditor.status.layerLocked"))
+    }
+
+    @MainActor
+    @Test func imageEditorLayerFillOpacityFadesContentButKeepsLayerStyleVisible() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let image = testImage(color: .systemBlue, size: canvasSize)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let content = testBitmapImage(
+            size: canvasSize,
+            background: NSColor(calibratedWhite: 0, alpha: 0),
+            fills: [
+                (CGRect(x: 28, y: 20, width: 24, height: 20), .systemPink)
+            ]
+        )
+
+        viewModel.replaceSelectedLayerImageForTesting(
+            content,
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+        viewModel.setSelectedLayerStrokeWidth(6)
+        viewModel.setSelectedLayerFillOpacity(0)
+        viewModel.commitSelectedLayerFillOpacityChange()
+
+        let fillHiddenCenter = try #require(viewModel.currentImage.color(at: CGPoint(x: 40, y: 30))?.usingColorSpace(.deviceRGB))
+        let strokeStillVisible = try #require(viewModel.currentImage.color(at: CGPoint(x: 24, y: 30))?.usingColorSpace(.deviceRGB))
+        #expect(viewModel.selectedLayerFillOpacity == 0)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerFillOpacity"))
+        #expect(fillHiddenCenter.blueComponent > fillHiddenCenter.redComponent)
+        #expect(strokeStillVisible.redComponent > 0.75)
+        #expect(strokeStillVisible.greenComponent > 0.75)
+        #expect(strokeStillVisible.blueComponent > 0.75)
+
+        viewModel.setSelectedLayerOpacity(0)
+        let opacityHiddenStroke = try #require(viewModel.currentImage.color(at: CGPoint(x: 24, y: 30))?.usingColorSpace(.deviceRGB))
+        #expect(opacityHiddenStroke.blueComponent > opacityHiddenStroke.redComponent)
     }
 
     @MainActor
@@ -926,6 +1465,170 @@ struct veilpicTests {
         #expect(viewModel.document.layers.contains { $0.id == firstID })
         #expect(viewModel.document.layers.contains { $0.id == secondID })
         #expect(viewModel.selectedLayerCount == 2)
+    }
+
+    @MainActor
+    @Test func imageEditorLayerGroupsCollapseSelectMembersAndUngroup() async throws {
+        let image = testImage(color: .systemTeal, size: NSSize(width: 80, height: 60))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.addLayer()
+        let firstID = try #require(viewModel.document.selectedLayerID)
+        viewModel.addLayer()
+        let secondID = try #require(viewModel.document.selectedLayerID)
+
+        viewModel.selectLayer(firstID)
+        viewModel.selectLayer(secondID, extendingSelection: true)
+        viewModel.groupSelectedLayer()
+        let groupID = try #require(viewModel.document.selectedLayerID)
+
+        #expect(viewModel.document.layers.first { $0.id == groupID }?.isGroup == true)
+        #expect(viewModel.visibleLayerRows.contains { $0.id == firstID })
+        #expect(viewModel.visibleLayerRows.contains { $0.id == secondID })
+
+        viewModel.selectLayer(firstID)
+        viewModel.toggleLayerGroupExpansion(groupID)
+        #expect(viewModel.document.layers.first { $0.id == groupID }?.isGroupExpanded == false)
+        #expect(viewModel.document.selectedLayerID == groupID)
+        #expect(viewModel.visibleLayerRows.contains { $0.id == groupID })
+        #expect(!viewModel.visibleLayerRows.contains { $0.id == firstID })
+        #expect(!viewModel.visibleLayerRows.contains { $0.id == secondID })
+
+        viewModel.toggleLayerGroupExpansion(groupID)
+        viewModel.selectSelectedGroupMembers()
+        #expect(viewModel.selectedLayerCount == 2)
+        #expect(viewModel.isLayerSelected(firstID))
+        #expect(viewModel.isLayerSelected(secondID))
+
+        viewModel.selectLayer(groupID)
+        #expect(viewModel.canUngroupSelectedLayers)
+        viewModel.ungroupSelectedLayers()
+        #expect(viewModel.document.layers.contains { $0.id == groupID } == false)
+        #expect(viewModel.document.layers.first { $0.id == firstID }?.groupID == nil)
+        #expect(viewModel.document.layers.first { $0.id == secondID }?.groupID == nil)
+        #expect(viewModel.selectedLayerCount == 2)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerUngroup"))
+
+        viewModel.undo()
+        #expect(viewModel.document.layers.contains { $0.id == groupID })
+        #expect(viewModel.document.layers.first { $0.id == firstID }?.groupID == groupID)
+        #expect(viewModel.document.layers.first { $0.id == secondID }?.groupID == groupID)
+    }
+
+    @MainActor
+    @Test func imageEditorLayerGroupsDuplicateAndTransformMembers() async throws {
+        let image = testImage(color: .systemIndigo, size: NSSize(width: 160, height: 120))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.addLayer()
+        let firstID = try #require(viewModel.document.selectedLayerID)
+        viewModel.document.layers[try #require(viewModel.document.layers.firstIndex { $0.id == firstID })].frame = CGRect(x: 10, y: 12, width: 20, height: 14)
+        viewModel.addLayer()
+        let secondID = try #require(viewModel.document.selectedLayerID)
+        viewModel.document.layers[try #require(viewModel.document.layers.firstIndex { $0.id == secondID })].frame = CGRect(x: 40, y: 24, width: 24, height: 18)
+
+        viewModel.selectLayer(firstID)
+        viewModel.selectLayer(secondID, extendingSelection: true)
+        viewModel.groupSelectedLayer()
+        let groupID = try #require(viewModel.document.selectedLayerID)
+
+        viewModel.duplicateSelectedLayer()
+        let duplicateGroupID = try #require(viewModel.document.selectedLayerID)
+        let duplicateGroup = try #require(viewModel.document.layers.first { $0.id == duplicateGroupID })
+        let duplicateMembers = viewModel.document.layers.filter { $0.groupID == duplicateGroupID }
+
+        #expect(duplicateGroup.isGroup)
+        #expect(duplicateGroupID != groupID)
+        #expect(duplicateMembers.count == 2)
+        #expect(duplicateMembers.allSatisfy { $0.id != firstID && $0.id != secondID })
+        #expect(viewModel.document.layers.filter { $0.groupID == groupID }.count == 2)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerDuplicate"))
+
+        viewModel.selectLayer(groupID)
+        #expect(viewModel.canResizeSelectedLayer)
+        let firstFrameBeforeMove = try #require(viewModel.document.layers.first { $0.id == firstID }?.frame)
+        let secondFrameBeforeMove = try #require(viewModel.document.layers.first { $0.id == secondID }?.frame)
+        viewModel.beginMovingSelectedLayer()
+        viewModel.moveSelectedLayer(by: CGSize(width: 8, height: -5))
+        viewModel.finishMovingSelectedLayer()
+        #expect(viewModel.document.layers.first { $0.id == firstID }?.frame.origin == CGPoint(x: firstFrameBeforeMove.minX + 8, y: firstFrameBeforeMove.minY - 5))
+        #expect(viewModel.document.layers.first { $0.id == secondID }?.frame.origin == CGPoint(x: secondFrameBeforeMove.minX + 8, y: secondFrameBeforeMove.minY - 5))
+
+        let firstFrameBeforeScale = try #require(viewModel.document.layers.first { $0.id == firstID }?.frame)
+        let secondFrameBeforeScale = try #require(viewModel.document.layers.first { $0.id == secondID }?.frame)
+        viewModel.scaleSelectedLayer(by: 1.5)
+        let firstFrameAfterScale = try #require(viewModel.document.layers.first { $0.id == firstID }?.frame)
+        let secondFrameAfterScale = try #require(viewModel.document.layers.first { $0.id == secondID }?.frame)
+        #expect(firstFrameAfterScale.width > firstFrameBeforeScale.width)
+        #expect(secondFrameAfterScale.width > secondFrameBeforeScale.width)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerScale"))
+    }
+
+    @MainActor
+    @Test func imageEditorNestedLayerGroupsInheritAndDuplicateHierarchy() async throws {
+        let image = testImage(color: .systemPurple, size: NSSize(width: 180, height: 140))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.addLayer()
+        let firstID = try #require(viewModel.document.selectedLayerID)
+        viewModel.document.layers[try #require(viewModel.document.layers.firstIndex { $0.id == firstID })].frame = CGRect(x: 10, y: 12, width: 20, height: 14)
+        viewModel.addLayer()
+        let secondID = try #require(viewModel.document.selectedLayerID)
+        viewModel.document.layers[try #require(viewModel.document.layers.firstIndex { $0.id == secondID })].frame = CGRect(x: 38, y: 20, width: 24, height: 18)
+
+        viewModel.selectLayer(firstID)
+        viewModel.selectLayer(secondID, extendingSelection: true)
+        viewModel.groupSelectedLayer()
+        let childGroupID = try #require(viewModel.document.selectedLayerID)
+
+        viewModel.addLayer()
+        let thirdID = try #require(viewModel.document.selectedLayerID)
+        viewModel.document.layers[try #require(viewModel.document.layers.firstIndex { $0.id == thirdID })].frame = CGRect(x: 70, y: 32, width: 18, height: 16)
+
+        viewModel.selectLayer(childGroupID)
+        viewModel.selectLayer(thirdID, extendingSelection: true)
+        #expect(viewModel.canGroupSelectedLayer)
+        viewModel.groupSelectedLayer()
+        let parentGroupID = try #require(viewModel.document.selectedLayerID)
+
+        #expect(viewModel.document.layers.first { $0.id == childGroupID }?.groupID == parentGroupID)
+        #expect(viewModel.document.layers.first { $0.id == thirdID }?.groupID == parentGroupID)
+        #expect(viewModel.document.layers.first { $0.id == firstID }?.groupID == childGroupID)
+        #expect(viewModel.document.groupDepth(for: try #require(viewModel.document.layers.first { $0.id == firstID })) == 2)
+
+        viewModel.toggleLayerGroupExpansion(parentGroupID)
+        #expect(viewModel.visibleLayerRows.contains { $0.id == parentGroupID })
+        #expect(!viewModel.visibleLayerRows.contains { $0.id == childGroupID })
+        #expect(!viewModel.visibleLayerRows.contains { $0.id == firstID })
+        #expect(!viewModel.visibleLayerRows.contains { $0.id == thirdID })
+        viewModel.toggleLayerGroupExpansion(parentGroupID)
+
+        viewModel.duplicateSelectedLayer()
+        let duplicateParentID = try #require(viewModel.document.selectedLayerID)
+        let duplicateParent = try #require(viewModel.document.layers.first { $0.id == duplicateParentID })
+        let duplicateChildGroups = viewModel.document.layers.filter { $0.groupID == duplicateParentID && $0.isGroup }
+        let duplicateLooseMembers = viewModel.document.layers.filter { $0.groupID == duplicateParentID && !$0.isGroup }
+        let duplicateChildGroup = try #require(duplicateChildGroups.first)
+
+        #expect(duplicateParent.isGroup)
+        #expect(duplicateChildGroups.count == 1)
+        #expect(duplicateLooseMembers.count == 1)
+        #expect(viewModel.document.layers.filter { $0.groupID == duplicateChildGroup.id && !$0.isGroup }.count == 2)
+
+        viewModel.selectLayer(parentGroupID)
+        let firstFrameBeforeMove = try #require(viewModel.document.layers.first { $0.id == firstID }?.frame)
+        let thirdFrameBeforeMove = try #require(viewModel.document.layers.first { $0.id == thirdID }?.frame)
+        viewModel.beginMovingSelectedLayer()
+        viewModel.moveSelectedLayer(by: CGSize(width: 11, height: 7))
+        viewModel.finishMovingSelectedLayer()
+        #expect(viewModel.document.layers.first { $0.id == firstID }?.frame.origin == CGPoint(x: firstFrameBeforeMove.minX + 11, y: firstFrameBeforeMove.minY + 7))
+        #expect(viewModel.document.layers.first { $0.id == thirdID }?.frame.origin == CGPoint(x: thirdFrameBeforeMove.minX + 11, y: thirdFrameBeforeMove.minY + 7))
+
+        viewModel.ungroupSelectedLayers()
+        #expect(!viewModel.document.layers.contains { $0.id == parentGroupID })
+        #expect(viewModel.document.layers.first { $0.id == childGroupID }?.groupID == nil)
+        #expect(viewModel.document.layers.first { $0.id == thirdID }?.groupID == nil)
+        #expect(viewModel.document.layers.first { $0.id == firstID }?.groupID == childGroupID)
     }
 
     @MainActor
@@ -1093,6 +1796,232 @@ struct veilpicTests {
     }
 
     @MainActor
+    @Test func imageEditorClippedAdjustmentLayerTargetsBaseAlphaAndMergeMatchesPreview() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let background = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: background) { _ in }
+        let baseImage = testBitmapImage(
+            size: canvasSize,
+            background: .clear,
+            fills: [(CGRect(x: 24, y: 18, width: 32, height: 24), NSColor(calibratedRed: 0.32, green: 0.32, blue: 0.32, alpha: 1))]
+        )
+        viewModel.replaceSelectedLayerImageForTesting(baseImage, historyTitle: L10n.text("imageEditor.history.brush"))
+        let baseLayerID = try #require(viewModel.document.selectedLayerID)
+        let basePixelsBefore = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+
+        viewModel.selectedAdjustment = .brightness
+        viewModel.adjustmentValue = 0.45
+        viewModel.addAdjustmentLayer()
+        #expect(viewModel.document.selectedLayer?.isAdjustment == true)
+        #expect(viewModel.canToggleSelectedLayerClippingMask)
+        viewModel.toggleSelectedLayerClippingMask()
+
+        let clippedLayer = try #require(viewModel.document.selectedLayer)
+        let outsidePreview = try #require(viewModel.currentImage.color(at: CGPoint(x: 8, y: 8))?.usingColorSpace(.deviceRGB))
+        let insidePreview = try #require(viewModel.currentImage.color(at: CGPoint(x: 40, y: 30))?.usingColorSpace(.deviceRGB))
+
+        #expect(clippedLayer.isClippingMask)
+        #expect(viewModel.document.layers.first { $0.id == baseLayerID }?.image.qingtuPNGData() == basePixelsBefore)
+        #expect(outsidePreview.redComponent < 0.05)
+        #expect(insidePreview.redComponent > 0.62)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerClippingMask"))
+
+        let previewData = try #require(viewModel.currentImage.qingtuPNGData())
+        let countBeforeMerge = viewModel.document.layers.count
+        viewModel.mergeSelectedLayerDown()
+        let mergedLayer = try #require(viewModel.document.selectedLayer)
+        let mergedOutside = try #require(mergedLayer.image.color(at: CGPoint(x: 8, y: 8))?.usingColorSpace(.deviceRGB))
+        let mergedInside = try #require(mergedLayer.image.color(at: CGPoint(x: 40, y: 30))?.usingColorSpace(.deviceRGB))
+
+        #expect(viewModel.document.layers.count == countBeforeMerge - 1)
+        #expect(!mergedLayer.isAdjustment)
+        #expect(!viewModel.selectedLayerIsClippingMask)
+        #expect(mergedOutside.alphaComponent < 0.05)
+        #expect(mergedInside.redComponent > 0.62)
+        #expect(try #require(viewModel.currentImage.qingtuPNGData()) == previewData)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerMergeDown"))
+    }
+
+    @MainActor
+    @Test func imageEditorAdditionalAdjustmentsSupportPixelApplyAndLayers() async throws {
+        let image = testBitmapImage(
+            size: NSSize(width: 80, height: 60),
+            background: NSColor(calibratedRed: 0.25, green: 0.25, blue: 0.25, alpha: 1),
+            fills: [
+                (CGRect(x: 40, y: 0, width: 40, height: 60), NSColor(calibratedRed: 0.8, green: 0.8, blue: 0.8, alpha: 1))
+            ]
+        )
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.selectedAdjustment = .invert
+        viewModel.applyAdjustment()
+        let inverted = try #require(viewModel.document.selectedLayer?.image.color(at: CGPoint(x: 10, y: 30))?.usingColorSpace(.deviceRGB))
+        #expect(inverted.redComponent > 0.68)
+
+        viewModel.undo()
+        viewModel.selectedAdjustment = .threshold
+        viewModel.adjustmentValue = 0
+        viewModel.applyAdjustment()
+        let darkThreshold = try #require(viewModel.document.selectedLayer?.image.color(at: CGPoint(x: 10, y: 30))?.usingColorSpace(.deviceRGB))
+        let lightThreshold = try #require(viewModel.document.selectedLayer?.image.color(at: CGPoint(x: 60, y: 30))?.usingColorSpace(.deviceRGB))
+        #expect(darkThreshold.redComponent < 0.1)
+        #expect(lightThreshold.redComponent > 0.9)
+
+        viewModel.undo()
+        let beforeExposure = try #require(viewModel.currentImage.color(at: CGPoint(x: 10, y: 30))?.usingColorSpace(.deviceRGB))
+        viewModel.selectedAdjustment = .exposure
+        viewModel.adjustmentValue = 0.5
+        viewModel.addAdjustmentLayer()
+        let afterExposure = try #require(viewModel.currentImage.color(at: CGPoint(x: 10, y: 30))?.usingColorSpace(.deviceRGB))
+        #expect(viewModel.document.selectedLayer?.adjustment?.kind == .exposure)
+        #expect(afterExposure.redComponent > beforeExposure.redComponent + 0.18)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerAdjustmentNew"))
+    }
+
+    @MainActor
+    @Test func imageEditorLevelsAdjustmentSupportsThreeParametersAndLayerState() async throws {
+        let image = testBitmapImage(
+            size: NSSize(width: 90, height: 60),
+            background: NSColor(calibratedRed: 0.18, green: 0.18, blue: 0.18, alpha: 1),
+            fills: [
+                (CGRect(x: 30, y: 0, width: 30, height: 60), NSColor(calibratedRed: 0.48, green: 0.48, blue: 0.48, alpha: 1)),
+                (CGRect(x: 60, y: 0, width: 30, height: 60), NSColor(calibratedRed: 0.82, green: 0.82, blue: 0.82, alpha: 1))
+            ]
+        )
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.selectedAdjustment = .levels
+        viewModel.levelsBlackPoint = 0.25
+        viewModel.levelsGamma = 0.55
+        viewModel.levelsWhitePoint = 0.78
+        viewModel.applyAdjustment()
+        let dark = try #require(viewModel.document.selectedLayer?.image.color(at: CGPoint(x: 10, y: 30))?.usingColorSpace(.deviceRGB))
+        let mid = try #require(viewModel.document.selectedLayer?.image.color(at: CGPoint(x: 45, y: 30))?.usingColorSpace(.deviceRGB))
+        let light = try #require(viewModel.document.selectedLayer?.image.color(at: CGPoint(x: 75, y: 30))?.usingColorSpace(.deviceRGB))
+        #expect(dark.redComponent < 0.04)
+        #expect(mid.redComponent > 0.55)
+        #expect(light.redComponent > 0.95)
+
+        viewModel.undo()
+        let baseLayerID = try #require(viewModel.document.selectedLayerID)
+        let basePixelsBefore = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+        viewModel.selectedAdjustment = .levels
+        viewModel.levelsBlackPoint = 0.20
+        viewModel.levelsGamma = 0.70
+        viewModel.levelsWhitePoint = 0.80
+        viewModel.addAdjustmentLayer()
+        let adjustmentLayer = try #require(viewModel.document.selectedLayer)
+        let settings = adjustmentLayer.adjustmentSettings.normalized()
+        let leveledLight = try #require(viewModel.currentImage.color(at: CGPoint(x: 75, y: 30))?.usingColorSpace(.deviceRGB))
+
+        #expect(adjustmentLayer.adjustment?.kind == .levels)
+        #expect(settings.levelsBlackPoint == 0.20)
+        #expect(settings.levelsGamma == 0.70)
+        #expect(settings.levelsWhitePoint == 0.80)
+        #expect(viewModel.document.layers.first { $0.id == baseLayerID }?.image.qingtuPNGData() == basePixelsBefore)
+        #expect(leveledLight.redComponent > 0.95)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerAdjustmentNew"))
+    }
+
+    @MainActor
+    @Test func imageEditorCurvesAdjustmentSupportsToneCurveAndLayerState() async throws {
+        let image = testBitmapImage(
+            size: NSSize(width: 90, height: 60),
+            background: NSColor(calibratedRed: 0.22, green: 0.22, blue: 0.22, alpha: 1),
+            fills: [
+                (CGRect(x: 30, y: 0, width: 30, height: 60), NSColor(calibratedRed: 0.50, green: 0.50, blue: 0.50, alpha: 1)),
+                (CGRect(x: 60, y: 0, width: 30, height: 60), NSColor(calibratedRed: 0.82, green: 0.82, blue: 0.82, alpha: 1))
+            ]
+        )
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.selectedAdjustment = .curves
+        viewModel.curvesShadows = 0.60
+        viewModel.curvesMidtones = 0.20
+        viewModel.curvesHighlights = -0.50
+        viewModel.applyAdjustment()
+        let liftedShadow = try #require(viewModel.document.selectedLayer?.image.color(at: CGPoint(x: 10, y: 30))?.usingColorSpace(.deviceRGB))
+        let liftedMidtone = try #require(viewModel.document.selectedLayer?.image.color(at: CGPoint(x: 45, y: 30))?.usingColorSpace(.deviceRGB))
+        let compressedHighlight = try #require(viewModel.document.selectedLayer?.image.color(at: CGPoint(x: 75, y: 30))?.usingColorSpace(.deviceRGB))
+        #expect(liftedShadow.redComponent > 0.34)
+        #expect(liftedMidtone.redComponent > 0.55)
+        #expect(compressedHighlight.redComponent < 0.78)
+
+        viewModel.undo()
+        let baseLayerID = try #require(viewModel.document.selectedLayerID)
+        let basePixelsBefore = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+        viewModel.selectedAdjustment = .curves
+        viewModel.curvesShadows = -0.40
+        viewModel.curvesMidtones = 0.30
+        viewModel.curvesHighlights = 0.20
+        viewModel.addAdjustmentLayer()
+        let adjustmentLayer = try #require(viewModel.document.selectedLayer)
+        let settings = adjustmentLayer.adjustmentSettings.normalized()
+        let adjustedMidtone = try #require(viewModel.currentImage.color(at: CGPoint(x: 45, y: 30))?.usingColorSpace(.deviceRGB))
+
+        #expect(adjustmentLayer.adjustment?.kind == .curves)
+        #expect(settings.curvesShadows == -0.40)
+        #expect(settings.curvesMidtones == 0.30)
+        #expect(settings.curvesHighlights == 0.20)
+        #expect(viewModel.document.layers.first { $0.id == baseLayerID }?.image.qingtuPNGData() == basePixelsBefore)
+        #expect(adjustedMidtone.redComponent > 0.58)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerAdjustmentNew"))
+    }
+
+    @MainActor
+    @Test func imageEditorColorBalanceAdjustmentSupportsToneRangesAndLayerState() async throws {
+        let image = testBitmapImage(
+            size: NSSize(width: 90, height: 60),
+            background: NSColor(calibratedRed: 0.22, green: 0.22, blue: 0.22, alpha: 1),
+            fills: [
+                (CGRect(x: 30, y: 0, width: 30, height: 60), NSColor(calibratedRed: 0.50, green: 0.50, blue: 0.50, alpha: 1)),
+                (CGRect(x: 60, y: 0, width: 30, height: 60), NSColor(calibratedRed: 0.82, green: 0.82, blue: 0.82, alpha: 1))
+            ]
+        )
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.selectedAdjustment = .colorBalance
+        viewModel.colorBalanceShadowsCyanRed = 0.70
+        viewModel.colorBalanceMidtonesMagentaGreen = 0.70
+        viewModel.colorBalanceHighlightsYellowBlue = 0.70
+        viewModel.applyAdjustment()
+        let shiftedShadow = try #require(viewModel.document.selectedLayer?.image.color(at: CGPoint(x: 10, y: 30))?.usingColorSpace(.deviceRGB))
+        let shiftedMidtone = try #require(viewModel.document.selectedLayer?.image.color(at: CGPoint(x: 45, y: 30))?.usingColorSpace(.deviceRGB))
+        let shiftedHighlight = try #require(viewModel.document.selectedLayer?.image.color(at: CGPoint(x: 75, y: 30))?.usingColorSpace(.deviceRGB))
+
+        #expect(shiftedShadow.redComponent > 0.30)
+        #expect(shiftedMidtone.greenComponent > 0.62)
+        #expect(shiftedHighlight.blueComponent > 0.90)
+
+        viewModel.undo()
+        let baseLayerID = try #require(viewModel.document.selectedLayerID)
+        let basePixelsBefore = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+        viewModel.selectedAdjustment = .colorBalance
+        viewModel.colorBalanceShadowsCyanRed = -0.35
+        viewModel.colorBalanceShadowsMagentaGreen = 0.20
+        viewModel.colorBalanceMidtonesCyanRed = 0.45
+        viewModel.colorBalanceMidtonesMagentaGreen = -0.25
+        viewModel.colorBalanceMidtonesYellowBlue = 0.30
+        viewModel.colorBalanceHighlightsYellowBlue = 0.55
+        viewModel.addAdjustmentLayer()
+        let adjustmentLayer = try #require(viewModel.document.selectedLayer)
+        let settings = adjustmentLayer.adjustmentSettings.normalized()
+        let adjustedMidtone = try #require(viewModel.currentImage.color(at: CGPoint(x: 45, y: 30))?.usingColorSpace(.deviceRGB))
+
+        #expect(adjustmentLayer.adjustment?.kind == .colorBalance)
+        #expect(settings.colorBalanceShadowsCyanRed == -0.35)
+        #expect(settings.colorBalanceShadowsMagentaGreen == 0.20)
+        #expect(settings.colorBalanceMidtonesCyanRed == 0.45)
+        #expect(settings.colorBalanceMidtonesMagentaGreen == -0.25)
+        #expect(settings.colorBalanceMidtonesYellowBlue == 0.30)
+        #expect(settings.colorBalanceHighlightsYellowBlue == 0.55)
+        #expect(viewModel.document.layers.first { $0.id == baseLayerID }?.image.qingtuPNGData() == basePixelsBefore)
+        #expect(adjustedMidtone.redComponent > 0.58)
+        #expect(adjustedMidtone.greenComponent < 0.48)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerAdjustmentNew"))
+    }
+
+    @MainActor
     @Test func imageEditorFilterLayerIsNonDestructiveAndCanMergeDown() async throws {
         let canvasSize = NSSize(width: 80, height: 60)
         let black = NSColor(calibratedWhite: 0, alpha: 1)
@@ -1141,6 +2070,153 @@ struct veilpicTests {
         #expect(!mergedLayer.isFilter)
         #expect(mergedBlackSide.redComponent > beforeBlackSide.redComponent + 0.02)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerMergeDown"))
+    }
+
+    @MainActor
+    @Test func imageEditorSmartFilterStackIsNonDestructiveAndBakesOnRasterizeAndMerge() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let black = NSColor(calibratedWhite: 0, alpha: 1)
+        let white = NSColor(calibratedWhite: 1, alpha: 1)
+        let background = testBitmapImage(size: canvasSize, background: black)
+        let edgeImage = testBitmapImage(
+            size: canvasSize,
+            background: black,
+            fills: [(CGRect(x: 40, y: 0, width: 40, height: 60), white)]
+        )
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: background) { _ in }
+
+        viewModel.replaceSelectedLayerImageForTesting(edgeImage, historyTitle: L10n.text("imageEditor.history.brush"))
+        let baseLayerID = try #require(viewModel.document.selectedLayerID)
+        let basePixelsBefore = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+        let compositedBefore = try #require(viewModel.currentImage.qingtuPNGData())
+        let beforeBlackSide = try #require(viewModel.currentImage.color(at: CGPoint(x: 39, y: 30))?.usingColorSpace(.deviceRGB))
+        let beforeWhiteSide = try #require(viewModel.currentImage.color(at: CGPoint(x: 41, y: 30))?.usingColorSpace(.deviceRGB))
+
+        viewModel.selectedFilter = .gaussianBlur
+        viewModel.filterIntensity = 0.9
+        #expect(viewModel.canAddSmartFilterToSelectedLayer)
+        viewModel.addSmartFilterToSelectedLayer()
+
+        var filteredLayer = try #require(viewModel.document.selectedLayer)
+        let afterBlackSide = try #require(viewModel.currentImage.color(at: CGPoint(x: 39, y: 30))?.usingColorSpace(.deviceRGB))
+        let afterWhiteSide = try #require(viewModel.currentImage.color(at: CGPoint(x: 41, y: 30))?.usingColorSpace(.deviceRGB))
+        #expect(filteredLayer.id == baseLayerID)
+        #expect(!filteredLayer.isFilter)
+        #expect(filteredLayer.smartFilters.count == 1)
+        #expect(filteredLayer.image.qingtuPNGData() == basePixelsBefore)
+        #expect(afterBlackSide.redComponent > beforeBlackSide.redComponent + 0.08)
+        #expect(afterWhiteSide.redComponent < beforeWhiteSide.redComponent - 0.08)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterAdd"))
+
+        viewModel.filterIntensity = 0.35
+        viewModel.updateLastSmartFilterOnSelectedLayer()
+        filteredLayer = try #require(viewModel.document.selectedLayer)
+        let firstFilterID = try #require(filteredLayer.smartFilters.last?.id)
+        #expect(filteredLayer.smartFilters.last?.intensity == 0.35)
+        #expect(filteredLayer.image.qingtuPNGData() == basePixelsBefore)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterUpdate"))
+
+        viewModel.toggleSmartFilterOnSelectedLayer(firstFilterID)
+        filteredLayer = try #require(viewModel.document.selectedLayer)
+        #expect(filteredLayer.smartFilters.first?.isEnabled == false)
+        #expect(try #require(viewModel.currentImage.qingtuPNGData()) == compositedBefore)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterToggle"))
+
+        viewModel.toggleSmartFilterOnSelectedLayer(firstFilterID)
+        filteredLayer = try #require(viewModel.document.selectedLayer)
+        #expect(filteredLayer.smartFilters.first?.isEnabled == true)
+        #expect(try #require(viewModel.currentImage.qingtuPNGData()) != compositedBefore)
+
+        viewModel.selectedFilter = .sharpen
+        viewModel.filterIntensity = 0.5
+        viewModel.addSmartFilterToSelectedLayer()
+        filteredLayer = try #require(viewModel.document.selectedLayer)
+        let secondFilterID = try #require(filteredLayer.smartFilters.last?.id)
+        #expect(filteredLayer.smartFilters.map(\.id) == [firstFilterID, secondFilterID])
+
+        viewModel.moveSmartFilterOnSelectedLayer(firstFilterID, offset: 1)
+        filteredLayer = try #require(viewModel.document.selectedLayer)
+        #expect(filteredLayer.smartFilters.map(\.id) == [secondFilterID, firstFilterID])
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterMove"))
+
+        viewModel.removeSmartFilterFromSelectedLayer(secondFilterID)
+        filteredLayer = try #require(viewModel.document.selectedLayer)
+        #expect(filteredLayer.smartFilters.map(\.id) == [firstFilterID])
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterRemove"))
+
+        viewModel.clearSmartFiltersFromSelectedLayer()
+        filteredLayer = try #require(viewModel.document.selectedLayer)
+        #expect(filteredLayer.smartFilters.isEmpty)
+        #expect(try #require(viewModel.currentImage.qingtuPNGData()) == compositedBefore)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterClear"))
+
+        viewModel.selectedFilter = .gaussianBlur
+        viewModel.filterIntensity = 0.9
+        viewModel.addSmartFilterToSelectedLayer()
+        let compositedBeforeRasterize = try #require(viewModel.currentImage.qingtuPNGData())
+        #expect(viewModel.canRasterizeSelectedLayer)
+        viewModel.rasterizeSelectedLayer()
+
+        let rasterizedLayer = try #require(viewModel.document.selectedLayer)
+        #expect(rasterizedLayer.smartFilters.isEmpty)
+        #expect(!rasterizedLayer.isFilter)
+        #expect(rasterizedLayer.image.qingtuPNGData() != basePixelsBefore)
+        #expect(try #require(viewModel.currentImage.qingtuPNGData()) == compositedBeforeRasterize)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerRasterize"))
+
+        let mergeViewModel = ImageEditorViewModel(sourceName: "source.png", image: background) { _ in }
+        mergeViewModel.replaceSelectedLayerImageForTesting(edgeImage, historyTitle: L10n.text("imageEditor.history.brush"))
+        mergeViewModel.selectedFilter = .gaussianBlur
+        mergeViewModel.filterIntensity = 0.9
+        mergeViewModel.addSmartFilterToSelectedLayer()
+        let compositedBeforeMerge = try #require(mergeViewModel.currentImage.qingtuPNGData())
+        let countBeforeMerge = mergeViewModel.document.layers.count
+
+        mergeViewModel.mergeSelectedLayerDown()
+        let mergedLayer = try #require(mergeViewModel.document.selectedLayer)
+        #expect(mergeViewModel.document.layers.count == countBeforeMerge - 1)
+        #expect(mergedLayer.smartFilters.isEmpty)
+        #expect(!mergedLayer.isFilter)
+        #expect(mergedLayer.image.qingtuPNGData() == compositedBeforeMerge)
+        #expect(try #require(mergeViewModel.currentImage.qingtuPNGData()) == compositedBeforeMerge)
+        #expect(mergeViewModel.document.history.last?.title == L10n.text("imageEditor.history.layerMergeDown"))
+    }
+
+    @MainActor
+    @Test func imageEditorClippedFilterLayerTargetsBaseAlpha() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let background = NSColor(calibratedRed: 0.02, green: 0.08, blue: 0.92, alpha: 1)
+        let image = testBitmapImage(size: canvasSize, background: background)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let baseImage = testBitmapImage(
+            size: canvasSize,
+            background: .clear,
+            fills: [
+                (CGRect(x: 20, y: 18, width: 20, height: 24), .white),
+                (CGRect(x: 40, y: 18, width: 20, height: 24), .black)
+            ]
+        )
+        viewModel.replaceSelectedLayerImageForTesting(baseImage, historyTitle: L10n.text("imageEditor.history.brush"))
+        let baseLayerID = try #require(viewModel.document.selectedLayerID)
+        let beforeInsideLeft = try #require(viewModel.currentImage.color(at: CGPoint(x: 38, y: 30))?.usingColorSpace(.deviceRGB))
+
+        viewModel.selectedFilter = .gaussianBlur
+        viewModel.filterIntensity = 0.9
+        viewModel.addFilterLayer()
+        #expect(viewModel.document.selectedLayer?.isFilter == true)
+        #expect(viewModel.canToggleSelectedLayerClippingMask)
+        viewModel.toggleSelectedLayerClippingMask()
+
+        let clippedFilter = try #require(viewModel.document.selectedLayer)
+        let outsidePreview = try #require(viewModel.currentImage.color(at: CGPoint(x: 8, y: 8))?.usingColorSpace(.deviceRGB))
+        let afterInsideLeft = try #require(viewModel.currentImage.color(at: CGPoint(x: 38, y: 30))?.usingColorSpace(.deviceRGB))
+
+        #expect(clippedFilter.isClippingMask)
+        #expect(viewModel.document.layers.first { $0.id == baseLayerID }?.image.qingtuPNGData() == baseImage.qingtuPNGData())
+        #expect(outsidePreview.blueComponent > 0.80)
+        #expect(outsidePreview.redComponent < 0.08)
+        #expect(afterInsideLeft.redComponent < beforeInsideLeft.redComponent - 0.08)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerClippingMask"))
     }
 
     @MainActor
@@ -1288,6 +2364,67 @@ struct veilpicTests {
         #expect(!mergedLayer.isText)
         #expect(mergedLayer.image.size == canvasSize)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerMergeDown"))
+    }
+
+    @MainActor
+    @Test func imageEditorShapeLayerIsEditableAndRasterizesWithoutChangingComposite() async throws {
+        let canvasSize = NSSize(width: 120, height: 80)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let editLayerID = try #require(viewModel.document.selectedLayerID)
+        let editPixelsBefore = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+        let compositedBefore = try #require(viewModel.currentImage.qingtuPNGData())
+
+        viewModel.foregroundColor = .systemPink
+        viewModel.brushSize = 18
+        viewModel.opacity = 0.9
+        viewModel.drawShape(from: CGPoint(x: 20, y: 18), to: CGPoint(x: 82, y: 58), ellipse: false)
+
+        let shapeLayer = try #require(viewModel.document.selectedLayer)
+        let shapeContent = try #require(shapeLayer.shapeContent)
+        let compositedWithShape = try #require(viewModel.currentImage.qingtuPNGData())
+        let shapeInside = try #require(viewModel.currentImage.color(at: CGPoint(x: 48, y: 36))?.usingColorSpace(.deviceRGB))
+        let shapeOutside = try #require(viewModel.currentImage.color(at: CGPoint(x: 8, y: 8))?.usingColorSpace(.deviceRGB))
+
+        #expect(viewModel.selectedLayerIsShape)
+        #expect(shapeContent.kind == .rectangle)
+        #expect(shapeLayer.frame == CGRect(x: 20, y: 18, width: 62, height: 40))
+        #expect(viewModel.document.layers.first { $0.id == editLayerID }?.image.qingtuPNGData() == editPixelsBefore)
+        #expect(compositedWithShape != compositedBefore)
+        #expect(shapeInside.redComponent > shapeInside.blueComponent + 0.15)
+        #expect(shapeOutside.redComponent < 0.05)
+        #expect(shapeOutside.greenComponent < 0.05)
+        #expect(shapeOutside.blueComponent < 0.05)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerShapeNew"))
+
+        viewModel.foregroundColor = .systemGreen
+        viewModel.brushSize = 30
+        viewModel.opacity = 1
+        viewModel.updateSelectedShapeLayer()
+
+        let updatedShapeLayer = try #require(viewModel.document.selectedLayer)
+        let updatedShapeContent = try #require(updatedShapeLayer.shapeContent)
+        let compositedWithUpdatedShape = try #require(viewModel.currentImage.qingtuPNGData())
+        let updatedInside = try #require(viewModel.currentImage.color(at: CGPoint(x: 48, y: 36))?.usingColorSpace(.deviceRGB))
+
+        #expect(updatedShapeContent.kind == .rectangle)
+        #expect(updatedShapeContent.strokeWidth > shapeContent.strokeWidth)
+        #expect(compositedWithUpdatedShape != compositedWithShape)
+        #expect(updatedInside.greenComponent > updatedInside.redComponent + 0.15)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerShapeUpdate"))
+
+        #expect(viewModel.canRasterizeSelectedLayer)
+        viewModel.rasterizeSelectedLayer()
+        let rasterizedLayer = try #require(viewModel.document.selectedLayer)
+
+        #expect(!rasterizedLayer.isShape)
+        #expect(!rasterizedLayer.isText)
+        #expect(isPixelLayer(rasterizedLayer))
+        #expect(try #require(viewModel.currentImage.qingtuPNGData()) == compositedWithUpdatedShape)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerRasterize"))
+
+        viewModel.undo()
+        #expect(try #require(viewModel.document.selectedLayer?.shapeContent).kind == .rectangle)
     }
 
     @MainActor
@@ -1441,6 +2578,108 @@ struct veilpicTests {
         #expect(jpegImage.size == NSSize(width: 40, height: 30))
     }
 
+    @MainActor
+    @Test func imageEditorGradientToolUsesDragDirectionSelectionAndMaskAlpha() async throws {
+        let image = testImage(color: .clear, size: NSSize(width: 80, height: 60))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let editIndex = try #require(viewModel.document.selectedLayerIndex)
+
+        viewModel.foregroundColor = .systemRed
+        viewModel.backgroundColor = .systemBlue
+        viewModel.opacity = 1
+        viewModel.createRectSelection(from: CGPoint(x: 0, y: 0), to: CGPoint(x: 40, y: 60))
+        viewModel.drawGradient(from: CGPoint(x: 0, y: 30), to: CGPoint(x: 80, y: 30))
+
+        let gradientLayer = viewModel.document.layers[editIndex]
+        let selectedStart = try #require(gradientLayer.image.color(at: CGPoint(x: 3, y: 30))?.usingColorSpace(.deviceRGB))
+        let selectedEnd = try #require(gradientLayer.image.color(at: CGPoint(x: 38, y: 30))?.usingColorSpace(.deviceRGB))
+        let outsideSelection = try #require(gradientLayer.image.color(at: CGPoint(x: 70, y: 30))?.usingColorSpace(.deviceRGB))
+
+        #expect(selectedStart.redComponent > selectedStart.blueComponent)
+        #expect(selectedEnd.blueComponent > 0.35)
+        #expect(outsideSelection.alphaComponent < 0.1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.gradient"))
+
+        viewModel.undo()
+        let restored = try #require(viewModel.document.layers[editIndex].image.color(at: CGPoint(x: 3, y: 30))?.usingColorSpace(.deviceRGB))
+        #expect(restored.alphaComponent < 0.1)
+
+        let maskViewModel = ImageEditorViewModel(sourceName: "source.png", image: testImage(color: .systemGreen, size: NSSize(width: 80, height: 60))) { _ in }
+        maskViewModel.opacity = 1
+        maskViewModel.addLayerMask()
+        #expect(maskViewModel.isEditingLayerMask)
+        maskViewModel.drawGradient(from: CGPoint(x: 0, y: 30), to: CGPoint(x: 80, y: 30))
+
+        let mask = try #require(maskViewModel.document.selectedLayer?.mask)
+        let maskStart = try #require(mask.color(at: CGPoint(x: 3, y: 30))?.usingColorSpace(.deviceRGB))
+        let maskEnd = try #require(mask.color(at: CGPoint(x: 77, y: 30))?.usingColorSpace(.deviceRGB))
+
+        #expect(maskStart.alphaComponent > 0.85)
+        #expect(maskEnd.alphaComponent < 0.2)
+        #expect(maskViewModel.document.history.last?.title == L10n.text("imageEditor.history.layerMaskGradient"))
+    }
+
+    @MainActor
+    @Test func imageEditorMagicWandSelectsContiguousRegionOnly() async throws {
+        let image = testBitmapImage(
+            size: NSSize(width: 80, height: 60),
+            background: .systemBlue,
+            fills: [
+                (CGRect(x: 5, y: 10, width: 20, height: 40), .systemRed),
+                (CGRect(x: 55, y: 10, width: 20, height: 40), .systemRed)
+            ]
+        )
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.createMagicSelection(at: CGPoint(x: 15, y: 30))
+        let selection = try #require(viewModel.document.selection)
+        let mask = try #require(selection.rasterMask)
+
+        #expect(maskAlpha(mask, x: 15, y: 30) == 255)
+        #expect(maskAlpha(mask, x: 35, y: 30) == 0)
+        #expect(maskAlpha(mask, x: 65, y: 30) == 0)
+        #expect(selection.bounds.minX < 6)
+        #expect(selection.bounds.maxX < 26)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.magicSelection"))
+    }
+
+    @MainActor
+    @Test func imageEditorSelectionBooleanModesProduceRasterMask() async throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: testImage(color: .white, size: NSSize(width: 80, height: 60))
+        ) { _ in }
+
+        viewModel.createRectSelection(from: CGPoint(x: 0, y: 0), to: CGPoint(x: 30, y: 30))
+
+        viewModel.selectionMode = .add
+        viewModel.createRectSelection(from: CGPoint(x: 40, y: 0), to: CGPoint(x: 70, y: 30))
+        let addedSelection = try #require(viewModel.document.selection)
+        let addedMask = try #require(addedSelection.rasterMask)
+        #expect(maskAlpha(addedMask, x: 10, y: 10) == 255)
+        #expect(maskAlpha(addedMask, x: 50, y: 10) == 255)
+        #expect(maskAlpha(addedMask, x: 35, y: 10) == 0)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionAdd"))
+
+        viewModel.selectionMode = .subtract
+        viewModel.createRectSelection(from: CGPoint(x: 0, y: 0), to: CGPoint(x: 20, y: 30))
+        let subtractedSelection = try #require(viewModel.document.selection)
+        let subtractedMask = try #require(subtractedSelection.rasterMask)
+        #expect(maskAlpha(subtractedMask, x: 10, y: 10) == 0)
+        #expect(maskAlpha(subtractedMask, x: 25, y: 10) == 255)
+        #expect(maskAlpha(subtractedMask, x: 50, y: 10) == 255)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionSubtract"))
+
+        viewModel.selectionMode = .intersect
+        viewModel.createRectSelection(from: CGPoint(x: 45, y: 0), to: CGPoint(x: 60, y: 30))
+        let intersectedSelection = try #require(viewModel.document.selection)
+        let intersectedMask = try #require(intersectedSelection.rasterMask)
+        #expect(maskAlpha(intersectedMask, x: 50, y: 10) == 255)
+        #expect(maskAlpha(intersectedMask, x: 25, y: 10) == 0)
+        #expect(maskAlpha(intersectedMask, x: 65, y: 10) == 0)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionIntersect"))
+    }
+
     private func testImage(color: NSColor, size: NSSize) -> NSImage {
         let image = NSImage(size: size)
         image.lockFocus()
@@ -1484,6 +2723,18 @@ struct veilpicTests {
         let image = NSImage(size: size)
         image.addRepresentation(representation)
         return image
+    }
+
+    private func maskAlpha(_ mask: ImageEditorSelectionMask, x: Int, y: Int) -> UInt8 {
+        guard x >= 0, y >= 0, x < mask.width, y < mask.height else { return 0 }
+        return mask.alpha[y * mask.width + x]
+    }
+
+    private func isPixelLayer(_ layer: ImageEditorLayer) -> Bool {
+        if case .pixel = layer.kind {
+            return true
+        }
+        return false
     }
 
 }

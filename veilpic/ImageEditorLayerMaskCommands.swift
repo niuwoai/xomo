@@ -15,7 +15,7 @@ extension ImageEditorViewModel {
               hasSelection,
               let layer = document.selectedLayer
         else { return false }
-        return !layer.isGroup && !document.isEffectivelyLocked(layer) && layer.mask == nil
+        return !document.isEffectivelyLocked(layer) && layer.mask == nil
     }
 
     var canApplyLayerMask: Bool {
@@ -25,7 +25,7 @@ extension ImageEditorViewModel {
         return !layer.isGroup
             && !layer.isAdjustment
             && !layer.isFilter
-            && !document.isEffectivelyLocked(layer)
+            && !document.isEffectivelyPixelsLocked(layer)
             && layer.mask != nil
     }
 
@@ -33,7 +33,21 @@ extension ImageEditorViewModel {
         guard selectedLayerCount == 1,
               let layer = document.selectedLayer
         else { return false }
-        return !layer.isGroup && !document.isEffectivelyLocked(layer) && layer.mask != nil
+        return !document.isEffectivelyLocked(layer) && layer.mask != nil
+    }
+
+    var canToggleLayerMaskEnabled: Bool {
+        guard selectedLayerCount == 1,
+              let layer = document.selectedLayer
+        else { return false }
+        return !document.isEffectivelyLocked(layer) && layer.mask != nil
+    }
+
+    var canToggleLayerMaskLinked: Bool {
+        guard selectedLayerCount == 1,
+              let layer = document.selectedLayer
+        else { return false }
+        return !document.isEffectivelyLocked(layer) && layer.mask != nil
     }
 
     func addLayerMaskFromSelection() {
@@ -51,6 +65,10 @@ extension ImageEditorViewModel {
 
         pushUndo()
         document.layers[index].mask = mask
+        document.layers[index].isMaskEnabled = true
+        document.layers[index].isMaskLinked = true
+        document.layers[index].maskDensity = 1
+        document.layers[index].maskFeather = 0
         isEditingLayerMask = true
         appendHistory(L10n.text("imageEditor.history.layerMaskFromSelection"))
         statusText = L10n.text("imageEditor.status.layerMaskFromSelection")
@@ -58,17 +76,21 @@ extension ImageEditorViewModel {
 
     func applyLayerMask() {
         guard canApplyLayerMask,
-              let index = document.selectedLayerIndex,
-              let mask = document.layers[index].mask,
-              let output = document.layers[index].contentImage.applyingAlphaMask(mask)
+              let index = document.selectedLayerIndex
         else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
+        let sourceImage = document.layers[index].contentImage
+        let output = document.layers[index].effectiveMask.flatMap { sourceImage.applyingAlphaMask($0) } ?? sourceImage
 
         pushUndo()
         document.layers[index].image = output.normalizedBitmapImage()
         document.layers[index].mask = nil
+        document.layers[index].isMaskEnabled = true
+        document.layers[index].isMaskLinked = true
+        document.layers[index].maskDensity = 1
+        document.layers[index].maskFeather = 0
         if document.layers[index].isText {
             document.layers[index].kind = .pixel
         }
@@ -94,7 +116,51 @@ extension ImageEditorViewModel {
         statusText = L10n.text("imageEditor.status.layerMaskInverted")
     }
 
+    func toggleLayerMaskEnabled() {
+        guard canToggleLayerMaskEnabled,
+              let index = document.selectedLayerIndex
+        else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+
+        pushUndo()
+        document.layers[index].isMaskEnabled.toggle()
+        appendHistory(
+            document.layers[index].isMaskEnabled
+                ? L10n.text("imageEditor.history.layerMaskEnable")
+                : L10n.text("imageEditor.history.layerMaskDisable")
+        )
+        statusText = document.layers[index].isMaskEnabled
+            ? L10n.text("imageEditor.status.layerMaskEnabled")
+            : L10n.text("imageEditor.status.layerMaskDisabled")
+    }
+
+    func toggleLayerMaskLinked() {
+        guard canToggleLayerMaskLinked,
+              let index = document.selectedLayerIndex
+        else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+
+        pushUndo()
+        document.layers[index].isMaskLinked.toggle()
+        appendHistory(
+            document.layers[index].isMaskLinked
+                ? L10n.text("imageEditor.history.layerMaskLink")
+                : L10n.text("imageEditor.history.layerMaskUnlink")
+        )
+        statusText = document.layers[index].isMaskLinked
+            ? L10n.text("imageEditor.status.layerMaskLinked")
+            : L10n.text("imageEditor.status.layerMaskUnlinked")
+    }
+
     private func selectionMaskForLayer(_ selection: ImageEditorSelection, layer: ImageEditorLayer) -> NSImage? {
+        if layer.isGroup {
+            return canvasSelectionMask(for: selection)
+        }
+
         guard layer.image.size.width > 0,
               layer.image.size.height > 0,
               layer.frame.width > 0,
@@ -141,6 +207,21 @@ extension ImageEditorViewModel {
         }
         guard let hardMask, feather > 0 else { return hardMask }
         return hardMask.blurred(radius: feather) ?? hardMask
+    }
+}
+
+extension NSImage {
+    func offsetMask(by delta: CGSize) -> NSImage? {
+        NSImage.rendered(size: size) { rect in
+            NSColor.clear.setFill()
+            rect.fill()
+            draw(
+                in: rect.offsetBy(dx: delta.width, dy: delta.height),
+                from: CGRect(origin: .zero, size: size),
+                operation: .sourceOver,
+                fraction: 1
+            )
+        }
     }
 }
 

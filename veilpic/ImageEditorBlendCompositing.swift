@@ -1,0 +1,296 @@
+//
+//  ImageEditorBlendCompositing.swift
+//  veilpic
+//
+//  Created by Codex on 2026/7/8.
+//
+
+import AppKit
+import Foundation
+
+extension NSImage {
+    func blended(
+        with overlay: NSImage,
+        mode: ImageEditorBlendMode,
+        opacity: Double
+    ) -> NSImage? {
+        let targetSize = size
+        guard targetSize.width > 0, targetSize.height > 0 else { return nil }
+        let width = max(1, Int(targetSize.width.rounded()))
+        let height = max(1, Int(targetSize.height.rounded()))
+        let bytesPerPixel = 4
+        let bytesPerRow = width * bytesPerPixel
+        let sourceOpacity = max(0, min(1, opacity))
+        guard sourceOpacity > 0 else { return self }
+
+        guard let basePixels = rgbaPixels(width: width, height: height, targetSize: targetSize),
+              let overlayPixels = overlay.rgbaPixels(width: width, height: height, targetSize: targetSize)
+        else { return nil }
+
+        var outputPixels = [UInt8](repeating: 0, count: bytesPerRow * height)
+
+        for y in 0..<height {
+            for x in 0..<width {
+                let offset = y * bytesPerRow + x * bytesPerPixel
+                let baseAlpha = Double(basePixels[offset + 3]) / 255
+                let overlayAlpha = Double(overlayPixels[offset + 3]) / 255 * sourceOpacity
+                let outputAlpha = overlayAlpha + baseAlpha * (1 - overlayAlpha)
+
+                guard outputAlpha > 0 else {
+                    outputPixels[offset] = 0
+                    outputPixels[offset + 1] = 0
+                    outputPixels[offset + 2] = 0
+                    outputPixels[offset + 3] = 0
+                    continue
+                }
+
+                let baseRed = Self.unpremultiplied(basePixels[offset], alpha: baseAlpha)
+                let baseGreen = Self.unpremultiplied(basePixels[offset + 1], alpha: baseAlpha)
+                let baseBlue = Self.unpremultiplied(basePixels[offset + 2], alpha: baseAlpha)
+                let overlayRed = Self.unpremultiplied(overlayPixels[offset], alpha: Double(overlayPixels[offset + 3]) / 255)
+                let overlayGreen = Self.unpremultiplied(overlayPixels[offset + 1], alpha: Double(overlayPixels[offset + 3]) / 255)
+                let overlayBlue = Self.unpremultiplied(overlayPixels[offset + 2], alpha: Double(overlayPixels[offset + 3]) / 255)
+
+                let blended = mode.blend(
+                    baseRed: baseRed,
+                    baseGreen: baseGreen,
+                    baseBlue: baseBlue,
+                    overlayRed: overlayRed,
+                    overlayGreen: overlayGreen,
+                    overlayBlue: overlayBlue
+                )
+                let compositedRed = overlayAlpha * ((1 - baseAlpha) * overlayRed + baseAlpha * blended.red)
+                    + baseAlpha * baseRed * (1 - overlayAlpha)
+                let compositedGreen = overlayAlpha * ((1 - baseAlpha) * overlayGreen + baseAlpha * blended.green)
+                    + baseAlpha * baseGreen * (1 - overlayAlpha)
+                let compositedBlue = overlayAlpha * ((1 - baseAlpha) * overlayBlue + baseAlpha * blended.blue)
+                    + baseAlpha * baseBlue * (1 - overlayAlpha)
+
+                outputPixels[offset] = Self.byte(compositedRed)
+                outputPixels[offset + 1] = Self.byte(compositedGreen)
+                outputPixels[offset + 2] = Self.byte(compositedBlue)
+                outputPixels[offset + 3] = Self.byte(outputAlpha)
+            }
+        }
+
+        guard let provider = CGDataProvider(data: Data(outputPixels) as CFData),
+              let image = CGImage(
+                width: width,
+                height: height,
+                bitsPerComponent: 8,
+                bitsPerPixel: 32,
+                bytesPerRow: bytesPerRow,
+                space: CGColorSpaceCreateDeviceRGB(),
+                bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue),
+                provider: provider,
+                decode: nil,
+                shouldInterpolate: false,
+                intent: .defaultIntent
+              )
+        else { return nil }
+
+        return NSImage(cgImage: image, size: targetSize)
+    }
+
+    private func rgbaPixels(width: Int, height: Int, targetSize: CGSize) -> [UInt8]? {
+        let bytesPerPixel = 4
+        let bytesPerRow = width * bytesPerPixel
+        var pixels = [UInt8](repeating: 0, count: bytesPerRow * height)
+        guard let cgImage = cgImage(forProposedRect: nil, context: nil, hints: nil),
+              let context = CGContext(
+                data: &pixels,
+                width: width,
+                height: height,
+                bitsPerComponent: 8,
+                bytesPerRow: bytesPerRow,
+                space: CGColorSpaceCreateDeviceRGB(),
+                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+              )
+        else { return nil }
+
+        context.interpolationQuality = .none
+        context.translateBy(x: 0, y: CGFloat(height))
+        context.scaleBy(x: 1, y: -1)
+        context.draw(cgImage, in: CGRect(origin: .zero, size: targetSize))
+        return pixels
+    }
+
+    private static func unpremultiplied(_ byte: UInt8, alpha: Double) -> Double {
+        guard alpha > 0 else { return 0 }
+        return max(0, min(1, Double(byte) / 255 / alpha))
+    }
+
+    private static func byte(_ value: Double) -> UInt8 {
+        UInt8(max(0, min(255, (value * 255).rounded())))
+    }
+}
+
+extension ImageEditorBlendMode {
+    func blend(
+        baseRed: Double,
+        baseGreen: Double,
+        baseBlue: Double,
+        overlayRed: Double,
+        overlayGreen: Double,
+        overlayBlue: Double
+    ) -> (red: Double, green: Double, blue: Double) {
+        switch self {
+        case .hue, .saturation, .color, .luminosity:
+            return hslBlend(
+                baseRed: baseRed,
+                baseGreen: baseGreen,
+                baseBlue: baseBlue,
+                overlayRed: overlayRed,
+                overlayGreen: overlayGreen,
+                overlayBlue: overlayBlue
+            )
+        case .normal, .multiply, .screen, .overlay, .darken, .lighten, .colorDodge, .colorBurn,
+             .linearDodge, .linearBurn, .softLight, .hardLight, .vividLight, .linearLight,
+             .pinLight, .difference, .exclusion:
+            return (
+                Self.blendChannel(mode: self, base: baseRed, overlay: overlayRed),
+                Self.blendChannel(mode: self, base: baseGreen, overlay: overlayGreen),
+                Self.blendChannel(mode: self, base: baseBlue, overlay: overlayBlue)
+            )
+        }
+    }
+
+    private static func blendChannel(mode: ImageEditorBlendMode, base: Double, overlay: Double) -> Double {
+        switch mode {
+        case .normal:
+            return overlay
+        case .multiply:
+            return base * overlay
+        case .screen:
+            return 1 - (1 - base) * (1 - overlay)
+        case .overlay:
+            return base < 0.5 ? 2 * base * overlay : 1 - 2 * (1 - base) * (1 - overlay)
+        case .darken:
+            return min(base, overlay)
+        case .lighten:
+            return max(base, overlay)
+        case .colorDodge:
+            return colorDodge(base: base, overlay: overlay)
+        case .colorBurn:
+            return colorBurn(base: base, overlay: overlay)
+        case .linearDodge:
+            return clamp(base + overlay)
+        case .linearBurn:
+            return clamp(base + overlay - 1)
+        case .softLight:
+            if overlay <= 0.5 {
+                return base - (1 - 2 * overlay) * base * (1 - base)
+            } else {
+                let d = base <= 0.25
+                    ? ((16 * base - 12) * base + 4) * base
+                    : sqrt(base)
+                return base + (2 * overlay - 1) * (d - base)
+            }
+        case .hardLight:
+            return overlay < 0.5 ? 2 * base * overlay : 1 - 2 * (1 - base) * (1 - overlay)
+        case .vividLight:
+            return overlay < 0.5
+                ? colorBurn(base: base, overlay: 2 * overlay)
+                : colorDodge(base: base, overlay: 2 * overlay - 1)
+        case .linearLight:
+            return clamp(base + 2 * overlay - 1)
+        case .pinLight:
+            return overlay < 0.5 ? min(base, 2 * overlay) : max(base, 2 * overlay - 1)
+        case .difference:
+            return abs(base - overlay)
+        case .exclusion:
+            return base + overlay - 2 * base * overlay
+        case .hue, .saturation, .color, .luminosity:
+            return overlay
+        }
+    }
+
+    private func hslBlend(
+        baseRed: Double,
+        baseGreen: Double,
+        baseBlue: Double,
+        overlayRed: Double,
+        overlayGreen: Double,
+        overlayBlue: Double
+    ) -> (red: Double, green: Double, blue: Double) {
+        let base = Self.hsl(red: baseRed, green: baseGreen, blue: baseBlue)
+        let overlay = Self.hsl(red: overlayRed, green: overlayGreen, blue: overlayBlue)
+        switch self {
+        case .hue:
+            return Self.rgb(hue: overlay.hue, saturation: base.saturation, lightness: base.lightness)
+        case .saturation:
+            return Self.rgb(hue: base.hue, saturation: overlay.saturation, lightness: base.lightness)
+        case .color:
+            return Self.rgb(hue: overlay.hue, saturation: overlay.saturation, lightness: base.lightness)
+        case .luminosity:
+            return Self.rgb(hue: base.hue, saturation: base.saturation, lightness: overlay.lightness)
+        case .normal, .multiply, .screen, .overlay, .darken, .lighten, .colorDodge, .colorBurn,
+             .linearDodge, .linearBurn, .softLight, .hardLight, .vividLight, .linearLight,
+             .pinLight, .difference, .exclusion:
+            return (overlayRed, overlayGreen, overlayBlue)
+        }
+    }
+
+    private static func colorDodge(base: Double, overlay: Double) -> Double {
+        guard overlay < 1 else { return 1 }
+        return clamp(base / (1 - overlay))
+    }
+
+    private static func colorBurn(base: Double, overlay: Double) -> Double {
+        guard overlay > 0 else { return 0 }
+        return 1 - clamp((1 - base) / overlay)
+    }
+
+    private static func hsl(red: Double, green: Double, blue: Double) -> (hue: Double, saturation: Double, lightness: Double) {
+        let maxValue = max(red, green, blue)
+        let minValue = min(red, green, blue)
+        let lightness = (maxValue + minValue) / 2
+        guard maxValue != minValue else {
+            return (0, 0, lightness)
+        }
+
+        let delta = maxValue - minValue
+        let saturation = lightness > 0.5
+            ? delta / (2 - maxValue - minValue)
+            : delta / (maxValue + minValue)
+        let hue: Double
+        if maxValue == red {
+            hue = ((green - blue) / delta + (green < blue ? 6 : 0)) / 6
+        } else if maxValue == green {
+            hue = ((blue - red) / delta + 2) / 6
+        } else {
+            hue = ((red - green) / delta + 4) / 6
+        }
+        return (hue, saturation, lightness)
+    }
+
+    private static func rgb(hue: Double, saturation: Double, lightness: Double) -> (red: Double, green: Double, blue: Double) {
+        guard saturation > 0 else {
+            return (lightness, lightness, lightness)
+        }
+
+        let q = lightness < 0.5
+            ? lightness * (1 + saturation)
+            : lightness + saturation - lightness * saturation
+        let p = 2 * lightness - q
+        return (
+            hueChannel(p: p, q: q, t: hue + 1 / 3),
+            hueChannel(p: p, q: q, t: hue),
+            hueChannel(p: p, q: q, t: hue - 1 / 3)
+        )
+    }
+
+    private static func hueChannel(p: Double, q: Double, t: Double) -> Double {
+        var value = t
+        if value < 0 { value += 1 }
+        if value > 1 { value -= 1 }
+        if value < 1 / 6 { return p + (q - p) * 6 * value }
+        if value < 1 / 2 { return q }
+        if value < 2 / 3 { return p + (q - p) * (2 / 3 - value) * 6 }
+        return p
+    }
+
+    private static func clamp(_ value: Double) -> Double {
+        max(0, min(1, value))
+    }
+}

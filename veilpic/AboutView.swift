@@ -45,7 +45,7 @@ struct AboutView: View {
                         Label(L10n.text("about.authorHomepage"), systemImage: "link")
                     }
 
-                    Link(destination: URL(string: "https://83d.me/zh/products/qingtu")!) {
+                    Link(destination: URL(string: "https://83d.me/products/qpic")!) {
                         Label(L10n.text("about.productPage"), systemImage: "photo.on.rectangle.angled")
                     }
                 }

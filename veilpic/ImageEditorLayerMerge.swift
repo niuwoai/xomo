@@ -93,11 +93,13 @@ extension ImageEditorViewModel {
         layer.image = image.normalizedBitmapImage()
         layer.frame = CGRect(origin: .zero, size: document.canvasSize)
         layer.opacity = 1
+        layer.fillOpacity = 1
         layer.blendMode = .normal
         layer.isVisible = true
         layer.isLocked = false
         layer.mask = nil
         layer.style = ImageEditorLayerStyle()
+        layer.smartFilters = []
         layer.kind = .pixel
         layer.groupID = nil
         layer.isClippingMask = false

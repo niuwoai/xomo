@@ -16,6 +16,7 @@ enum ImageEditorTool: String, CaseIterable, Identifiable {
     case crop
     case brush
     case eraser
+    case cloneStamp
     case gradient
     case eyedropper
     case text
@@ -46,6 +47,8 @@ enum ImageEditorTool: String, CaseIterable, Identifiable {
             "paintbrush.pointed"
         case .eraser:
             "eraser"
+        case .cloneStamp:
+            "seal"
         case .gradient:
             "square.lefthalf.filled"
         case .eyedropper:
@@ -65,8 +68,47 @@ enum ImageEditorTool: String, CaseIterable, Identifiable {
 
     var isImplemented: Bool {
         switch self {
-        case .move, .marquee, .lasso, .magicWand, .crop, .brush, .eraser, .gradient, .eyedropper, .text, .rectangle, .ellipse, .hand, .zoom:
+        case .move, .marquee, .lasso, .magicWand, .crop, .brush, .eraser, .cloneStamp, .gradient, .eyedropper, .text, .rectangle, .ellipse, .hand, .zoom:
             true
+        }
+    }
+
+    var supportsSelectionMode: Bool {
+        switch self {
+        case .marquee, .lasso, .magicWand:
+            true
+        default:
+            false
+        }
+    }
+}
+
+enum ImageEditorSelectionMode: String, CaseIterable, Identifiable {
+    case replace
+    case add
+    case subtract
+    case intersect
+
+    var id: String { rawValue }
+
+    var title: String {
+        L10n.text("imageEditor.selectionMode.\(rawValue)")
+    }
+
+    var compactTitle: String {
+        L10n.text("imageEditor.selectionMode.\(rawValue).short")
+    }
+
+    var historyKey: String {
+        switch self {
+        case .replace:
+            "imageEditor.history.selection"
+        case .add:
+            "imageEditor.history.selectionAdd"
+        case .subtract:
+            "imageEditor.history.selectionSubtract"
+        case .intersect:
+            "imageEditor.history.selectionIntersect"
         }
     }
 }
@@ -143,6 +185,13 @@ enum ImageEditorAdjustment: String, CaseIterable, Identifiable {
     case brightness
     case contrast
     case saturation
+    case exposure
+    case hue
+    case invert
+    case threshold
+    case levels
+    case curves
+    case colorBalance
     case blur
     case sharpen
 
@@ -150,6 +199,51 @@ enum ImageEditorAdjustment: String, CaseIterable, Identifiable {
 
     var title: String {
         L10n.text("imageEditor.adjustment.\(rawValue)")
+    }
+}
+
+struct ImageEditorAdjustmentSettings: Equatable {
+    var levelsBlackPoint: Double = 0
+    var levelsGamma: Double = 1
+    var levelsWhitePoint: Double = 1
+    var curvesShadows: Double = 0
+    var curvesMidtones: Double = 0
+    var curvesHighlights: Double = 0
+    var colorBalanceShadowsCyanRed: Double = 0
+    var colorBalanceShadowsMagentaGreen: Double = 0
+    var colorBalanceShadowsYellowBlue: Double = 0
+    var colorBalanceMidtonesCyanRed: Double = 0
+    var colorBalanceMidtonesMagentaGreen: Double = 0
+    var colorBalanceMidtonesYellowBlue: Double = 0
+    var colorBalanceHighlightsCyanRed: Double = 0
+    var colorBalanceHighlightsMagentaGreen: Double = 0
+    var colorBalanceHighlightsYellowBlue: Double = 0
+
+    func normalized() -> ImageEditorAdjustmentSettings {
+        let black = max(0, min(0.98, levelsBlackPoint))
+        let white = max(black + 0.01, min(1, levelsWhitePoint))
+        let gamma = max(0.1, min(4, levelsGamma))
+        return ImageEditorAdjustmentSettings(
+            levelsBlackPoint: black,
+            levelsGamma: gamma,
+            levelsWhitePoint: white,
+            curvesShadows: max(-1, min(1, curvesShadows)),
+            curvesMidtones: max(-1, min(1, curvesMidtones)),
+            curvesHighlights: max(-1, min(1, curvesHighlights)),
+            colorBalanceShadowsCyanRed: Self.unit(colorBalanceShadowsCyanRed),
+            colorBalanceShadowsMagentaGreen: Self.unit(colorBalanceShadowsMagentaGreen),
+            colorBalanceShadowsYellowBlue: Self.unit(colorBalanceShadowsYellowBlue),
+            colorBalanceMidtonesCyanRed: Self.unit(colorBalanceMidtonesCyanRed),
+            colorBalanceMidtonesMagentaGreen: Self.unit(colorBalanceMidtonesMagentaGreen),
+            colorBalanceMidtonesYellowBlue: Self.unit(colorBalanceMidtonesYellowBlue),
+            colorBalanceHighlightsCyanRed: Self.unit(colorBalanceHighlightsCyanRed),
+            colorBalanceHighlightsMagentaGreen: Self.unit(colorBalanceHighlightsMagentaGreen),
+            colorBalanceHighlightsYellowBlue: Self.unit(colorBalanceHighlightsYellowBlue)
+        )
+    }
+
+    private static func unit(_ value: Double) -> Double {
+        max(-1, min(1, value))
     }
 }
 
@@ -161,6 +255,17 @@ enum ImageEditorFilter: String, CaseIterable, Identifiable {
 
     var title: String {
         L10n.text("imageEditor.filter.\(rawValue)")
+    }
+}
+
+struct ImageEditorSmartFilter: Identifiable {
+    var id = UUID()
+    var kind: ImageEditorFilter
+    var intensity: Double
+    var isEnabled = true
+
+    var normalizedIntensity: Double {
+        max(0, min(1, intensity))
     }
 }
 
@@ -204,9 +309,19 @@ enum ImageEditorBlendMode: String, CaseIterable, Identifiable {
     case lighten
     case colorDodge
     case colorBurn
+    case linearDodge
+    case linearBurn
     case softLight
     case hardLight
+    case vividLight
+    case linearLight
+    case pinLight
     case difference
+    case exclusion
+    case hue
+    case saturation
+    case color
+    case luminosity
 
     var id: String { rawValue }
 
@@ -232,12 +347,20 @@ enum ImageEditorBlendMode: String, CaseIterable, Identifiable {
             .colorDodge
         case .colorBurn:
             .colorBurn
+        case .linearDodge:
+            .plusLighter
+        case .linearBurn:
+            .sourceOver
         case .softLight:
             .softLight
         case .hardLight:
             .hardLight
+        case .vividLight, .linearLight, .pinLight:
+            .sourceOver
         case .difference:
             .difference
+        case .exclusion, .hue, .saturation, .color, .luminosity:
+            .sourceOver
         }
     }
 }
@@ -251,9 +374,19 @@ struct ImageEditorLayerStyle {
     var shadowOpacity: CGFloat = 0.35
     var shadowBlur: CGFloat = 8
     var shadowOffset = CGSize(width: 7, height: -7)
+    var outerGlowEnabled = false
+    var outerGlowColor = NSColor.systemYellow
+    var outerGlowOpacity: CGFloat = 0.42
+    var outerGlowBlur: CGFloat = 10
+    var outerGlowSpread: CGFloat = 3
+    var innerGlowEnabled = false
+    var innerGlowColor = NSColor.systemCyan
+    var innerGlowOpacity: CGFloat = 0.36
+    var innerGlowBlur: CGFloat = 8
+    var innerGlowChoke: CGFloat = 2
 
     var hasEffects: Bool {
-        strokeEnabled || shadowEnabled
+        strokeEnabled || shadowEnabled || outerGlowEnabled || innerGlowEnabled
     }
 
     var padding: CGFloat {
@@ -262,7 +395,10 @@ struct ImageEditorLayerStyle {
         let shadowPadding = shadowEnabled
             ? shadowBlur * 2 + max(abs(shadowOffset.width), abs(shadowOffset.height))
             : 0
-        return ceil(max(strokePadding, shadowPadding) + 2)
+        let outerGlowPadding = outerGlowEnabled
+            ? outerGlowBlur * 2 + outerGlowSpread
+            : 0
+        return ceil(max(strokePadding, shadowPadding, outerGlowPadding) + 2)
     }
 }
 
@@ -288,12 +424,57 @@ struct ImageEditorTextContent {
     }
 }
 
+enum ImageEditorShapeKind: String {
+    case rectangle
+    case ellipse
+
+    var title: String {
+        L10n.text("imageEditor.shape.\(rawValue)")
+    }
+}
+
+struct ImageEditorShapeContent {
+    static let minimumStrokeWidth: CGFloat = 1
+
+    var kind: ImageEditorShapeKind
+    var fillColor: NSColor
+    var fillOpacity: CGFloat
+    var strokeColor: NSColor
+    var strokeWidth: CGFloat
+    var strokeOpacity: CGFloat
+
+    func normalized(size: CGSize) -> ImageEditorShapeContent {
+        var content = self
+        content.fillOpacity = max(0, min(1, fillOpacity))
+        content.strokeOpacity = max(0, min(1, strokeOpacity))
+        content.strokeWidth = max(Self.minimumStrokeWidth, min(min(size.width, size.height) / 2, strokeWidth))
+        return content
+    }
+
+    func renderedImage(size: CGSize) -> NSImage {
+        let normalized = normalized(size: size)
+        return NSImage.rendered(size: size) { rect in
+            let inset = normalized.strokeWidth / 2
+            let shapeRect = rect.insetBy(dx: inset, dy: inset)
+            let path = normalized.kind == .ellipse
+                ? NSBezierPath(ovalIn: shapeRect)
+                : NSBezierPath(rect: shapeRect)
+            normalized.fillColor.withAlphaComponent(normalized.fillOpacity).setFill()
+            path.fill()
+            path.lineWidth = normalized.strokeWidth
+            normalized.strokeColor.withAlphaComponent(normalized.strokeOpacity).setStroke()
+            path.stroke()
+        } ?? NSImage.transparent(size: size)
+    }
+}
+
 enum ImageEditorLayerKind {
     case pixel
     case group
     case adjustment(ImageEditorAdjustment, Double)
     case filter(ImageEditorFilter, Double)
     case text(ImageEditorTextContent)
+    case shape(ImageEditorShapeContent)
 }
 
 struct ImageEditorLayer: Identifiable {
@@ -301,13 +482,24 @@ struct ImageEditorLayer: Identifiable {
     var name: String
     var image: NSImage
     var mask: NSImage?
+    var isMaskEnabled = true
+    var isMaskLinked = true
+    var maskDensity: Double = 1
+    var maskFeather: Double = 0
+    var linkedLayerIDs: Set<UUID> = []
     var frame: CGRect
     var isVisible: Bool
     var opacity: Double
+    var fillOpacity: Double = 1
     var blendMode: ImageEditorBlendMode
     var isLocked: Bool
+    var locksPixels = false
+    var locksPosition = false
+    var locksTransparentPixels = false
     var style = ImageEditorLayerStyle()
     var kind: ImageEditorLayerKind = .pixel
+    var smartFilters: [ImageEditorSmartFilter] = []
+    var adjustmentSettings = ImageEditorAdjustmentSettings()
     var groupID: UUID?
     var isGroupExpanded = true
     var isClippingMask = false
@@ -352,8 +544,14 @@ struct ImageEditorLayer: Identifiable {
         )
     }
 
-    static func adjustment(name: String, size: CGSize, kind: ImageEditorAdjustment, amount: Double) -> ImageEditorLayer {
-        ImageEditorLayer(
+    static func adjustment(
+        name: String,
+        size: CGSize,
+        kind: ImageEditorAdjustment,
+        amount: Double,
+        settings: ImageEditorAdjustmentSettings = ImageEditorAdjustmentSettings()
+    ) -> ImageEditorLayer {
+        var layer = ImageEditorLayer(
             name: name,
             image: NSImage.transparent(size: size),
             mask: nil,
@@ -364,6 +562,8 @@ struct ImageEditorLayer: Identifiable {
             isLocked: false,
             kind: .adjustment(kind, amount)
         )
+        layer.adjustmentSettings = settings.normalized()
+        return layer
     }
 
     static func filter(name: String, size: CGSize, kind: ImageEditorFilter, intensity: Double) -> ImageEditorLayer {
@@ -409,6 +609,21 @@ struct ImageEditorLayer: Identifiable {
         )
     }
 
+    static func shape(name: String, frame: CGRect, content: ImageEditorShapeContent) -> ImageEditorLayer {
+        let size = CGSize(width: max(1, frame.width), height: max(1, frame.height))
+        return ImageEditorLayer(
+            name: name,
+            image: NSImage.transparent(size: size),
+            mask: nil,
+            frame: CGRect(origin: frame.origin, size: size),
+            isVisible: true,
+            opacity: 1,
+            blendMode: .normal,
+            isLocked: false,
+            kind: .shape(content.normalized(size: size))
+        )
+    }
+
     var isGroup: Bool {
         if case .group = kind { return true }
         return false
@@ -439,6 +654,15 @@ struct ImageEditorLayer: Identifiable {
 
     var isText: Bool {
         textContent != nil
+    }
+
+    var shapeContent: ImageEditorShapeContent? {
+        guard case let .shape(content) = kind else { return nil }
+        return content
+    }
+
+    var isShape: Bool {
+        shapeContent != nil
     }
 
     func thumbnail(size: CGSize = CGSize(width: 44, height: 34)) -> NSImage {
@@ -519,6 +743,22 @@ struct ImageEditorLayer: Identifiable {
                 )
             } ?? NSImage(size: size)
         }
+        if let shapeContent {
+            return NSImage.rendered(size: size) { rect in
+                NSColor(calibratedWhite: 0.15, alpha: 1).setFill()
+                rect.fill()
+                let inset = min(size.width, size.height) * 0.18
+                let shapeRect = rect.insetBy(dx: inset, dy: inset)
+                let path = shapeContent.kind == .ellipse
+                    ? NSBezierPath(ovalIn: shapeRect)
+                    : NSBezierPath(rect: shapeRect)
+                shapeContent.fillColor.withAlphaComponent(0.86).setFill()
+                path.fill()
+                NSColor.white.withAlphaComponent(0.9).setStroke()
+                path.lineWidth = 2
+                path.stroke()
+            } ?? NSImage(size: size)
+        }
         return image.thumbnailImage(targetSize: size)
     }
 
@@ -526,20 +766,39 @@ struct ImageEditorLayer: Identifiable {
         mask?.thumbnailImage(targetSize: size)
     }
 
+    var effectiveMask: NSImage? {
+        guard isMaskEnabled else { return nil }
+        return mask?.processedLayerMask(density: maskDensity, feather: maskFeather)
+    }
+
     var contentImage: NSImage {
-        guard let textContent else { return image }
-        return NSImage.rendered(size: image.size) { _ in
-            let attributes: [NSAttributedString.Key: Any] = [
-                .font: textContent.font,
-                .foregroundColor: textContent.color
-            ]
-            textContent.text.draw(at: textContent.point, withAttributes: attributes)
-        } ?? image
+        let baseImage: NSImage
+        if let textContent {
+            baseImage = NSImage.rendered(size: image.size) { _ in
+                let attributes: [NSAttributedString.Key: Any] = [
+                    .font: textContent.font,
+                    .foregroundColor: textContent.color
+                ]
+                textContent.text.draw(at: textContent.point, withAttributes: attributes)
+            } ?? image
+        } else if let shapeContent {
+            baseImage = shapeContent.renderedImage(size: image.size)
+        } else {
+            baseImage = image
+        }
+        return smartFilters.reduce(baseImage) { partial, filter in
+            guard filter.isEnabled else { return partial }
+            return partial.filtered(kind: filter.kind, intensity: filter.normalizedIntensity) ?? partial
+        }
+    }
+
+    var hasSmartFilters: Bool {
+        !smartFilters.isEmpty
     }
 
     var visibleImage: NSImage {
         let sourceImage = contentImage
-        guard let mask else { return sourceImage }
+        guard let mask = effectiveMask else { return sourceImage }
         return NSImage.rendered(size: sourceImage.size) { _ in
             sourceImage.draw(
                 in: CGRect(origin: .zero, size: sourceImage.size),
@@ -561,8 +820,12 @@ struct ImageEditorLayer: Identifiable {
     }
 
     var compositingImage: NSImage {
-        guard style.hasEffects else { return visibleImage }
         let baseImage = visibleImage
+        let normalizedFillOpacity = CGFloat(max(0, min(1, fillOpacity)))
+        guard style.hasEffects else {
+            guard normalizedFillOpacity < 1 else { return baseImage }
+            return baseImage.withOpacity(normalizedFillOpacity) ?? baseImage
+        }
         let padding = style.padding
         let outputSize = CGSize(
             width: baseImage.size.width + padding * 2,
@@ -610,12 +873,92 @@ struct ImageEditorLayer: Identifiable {
                 }
             }
 
+            if style.outerGlowEnabled {
+                let glowImage = baseImage.alphaTinted(
+                    color: style.outerGlowColor.withAlphaComponent(style.outerGlowOpacity)
+                )
+                let spread = max(0, Int(style.outerGlowSpread.rounded()))
+                let glowCanvas = NSImage.rendered(size: outputSize) { _ in
+                    glowImage.draw(
+                        in: contentRect,
+                        from: CGRect(origin: .zero, size: glowImage.size),
+                        operation: .sourceOver,
+                        fraction: 1
+                    )
+                    if spread > 0 {
+                        let directions = 24
+                        for radius in 1...spread {
+                            for step in 0..<directions {
+                                let angle = CGFloat(step) / CGFloat(directions) * .pi * 2
+                                let offset = CGSize(width: cos(angle) * CGFloat(radius), height: sin(angle) * CGFloat(radius))
+                                glowImage.draw(
+                                    in: contentRect.offsetBy(dx: offset.width, dy: offset.height),
+                                    from: CGRect(origin: .zero, size: glowImage.size),
+                                    operation: .sourceOver,
+                                    fraction: 1
+                                )
+                            }
+                        }
+                    }
+                } ?? NSImage(size: outputSize)
+                let blurredGlow = glowCanvas.blurred(radius: style.outerGlowBlur) ?? glowCanvas
+                blurredGlow.draw(
+                    in: CGRect(origin: .zero, size: outputSize),
+                    from: CGRect(origin: .zero, size: outputSize),
+                    operation: .sourceOver,
+                    fraction: 1
+                )
+            }
+
             baseImage.draw(
                 in: contentRect,
                 from: CGRect(origin: .zero, size: baseImage.size),
                 operation: .sourceOver,
-                fraction: 1
+                fraction: normalizedFillOpacity
             )
+
+            if style.innerGlowEnabled {
+                let innerGlowImage = baseImage.alphaTinted(
+                    color: style.innerGlowColor.withAlphaComponent(style.innerGlowOpacity)
+                )
+                let choke = max(0, Int(style.innerGlowChoke.rounded()))
+                let innerGlowCanvas = NSImage.rendered(size: outputSize) { _ in
+                    innerGlowImage.draw(
+                        in: contentRect,
+                        from: CGRect(origin: .zero, size: innerGlowImage.size),
+                        operation: .sourceOver,
+                        fraction: 1
+                    )
+                    if choke > 0 {
+                        let directions = 24
+                        for radius in 1...choke {
+                            for step in 0..<directions {
+                                let angle = CGFloat(step) / CGFloat(directions) * .pi * 2
+                                let offset = CGSize(width: cos(angle) * CGFloat(radius), height: sin(angle) * CGFloat(radius))
+                                innerGlowImage.draw(
+                                    in: contentRect.offsetBy(dx: offset.width, dy: offset.height),
+                                    from: CGRect(origin: .zero, size: innerGlowImage.size),
+                                    operation: .sourceOver,
+                                    fraction: 1
+                                )
+                            }
+                        }
+                    }
+                } ?? NSImage(size: outputSize)
+                let blurredInnerGlow = innerGlowCanvas.blurred(radius: style.innerGlowBlur) ?? innerGlowCanvas
+                blurredInnerGlow.draw(
+                    in: CGRect(origin: .zero, size: outputSize),
+                    from: CGRect(origin: .zero, size: outputSize),
+                    operation: .sourceOver,
+                    fraction: 1
+                )
+                baseImage.draw(
+                    in: contentRect,
+                    from: CGRect(origin: .zero, size: baseImage.size),
+                    operation: .destinationIn,
+                    fraction: 1
+                )
+            }
         } ?? visibleImage
     }
 
@@ -684,12 +1027,14 @@ struct ImageEditorDocument {
         for index in layers.indices {
             let layer = layers[index]
             guard shouldComposite(layer) else { continue }
-            let groupOpacity = group(for: layer)?.opacity ?? 1
+            let groupOpacity = effectiveGroupOpacity(for: layer)
+            let groupMask = effectiveGroupMask(for: layer)
             if let adjustment = layer.adjustment {
                 canvas = canvas.applyingAdjustment(
                     kind: adjustment.kind,
                     amount: adjustment.amount * layer.opacity * groupOpacity,
-                    mask: layer.mask
+                    settings: layer.adjustmentSettings,
+                    mask: effectiveCanvasMask(forLayerAt: index, layerMask: layer.effectiveMask, groupMask: groupMask)
                 ) ?? canvas
                 continue
             }
@@ -697,40 +1042,25 @@ struct ImageEditorDocument {
                 canvas = canvas.applyingFilter(
                     kind: filter.kind,
                     intensity: filter.intensity * layer.opacity * groupOpacity,
-                    mask: layer.mask
+                    mask: effectiveCanvasMask(forLayerAt: index, layerMask: layer.effectiveMask, groupMask: groupMask)
                 ) ?? canvas
                 continue
             }
 
-            let baseCanvas = canvas
-            canvas = NSImage.rendered(size: canvasSize) { _ in
-                baseCanvas.draw(
-                    in: CGRect(origin: .zero, size: canvasSize),
-                    from: CGRect(origin: .zero, size: canvasSize),
-                    operation: .copy,
-                    fraction: 1
-                )
+            let layerCanvas: NSImage
+            if layer.isClippingMask,
+               let clippedImage = clippedCompositingImage(forLayerAt: index) {
+                layerCanvas = imageByApplyingCanvasMask(clippedImage, mask: groupMask)
+            } else {
                 let compositingImage = layer.compositingImage
-                let context = NSGraphicsContext.current
-                context?.saveGraphicsState()
-                if layer.isClippingMask,
-                   let clippedImage = clippedCompositingImage(forLayerAt: index) {
-                    clippedImage.draw(
-                        in: CGRect(origin: .zero, size: canvasSize),
-                        from: CGRect(origin: .zero, size: canvasSize),
-                        operation: layer.blendMode.operation,
-                        fraction: layer.opacity * groupOpacity
-                    )
-                } else {
-                    compositingImage.draw(
-                        in: layer.compositingFrame,
-                        from: CGRect(origin: .zero, size: compositingImage.size),
-                        operation: layer.blendMode.operation,
-                        fraction: layer.opacity * groupOpacity
-                    )
-                }
-                context?.restoreGraphicsState()
-            } ?? canvas
+                let positionedCanvas = canvasImage(for: compositingImage, frame: layer.compositingFrame)
+                layerCanvas = imageByApplyingCanvasMask(positionedCanvas, mask: groupMask)
+            }
+            canvas = canvas.blended(
+                with: layerCanvas,
+                mode: layer.blendMode,
+                opacity: layer.opacity * groupOpacity
+            ) ?? canvas
         }
         return canvas
     }
@@ -740,12 +1070,126 @@ struct ImageEditorDocument {
         return layers.first { $0.id == groupID && $0.isGroup }
     }
 
+    func groupDepth(for layer: ImageEditorLayer) -> Int {
+        ancestorGroups(for: layer).count
+    }
+
+    func ancestorGroups(for layer: ImageEditorLayer) -> [ImageEditorLayer] {
+        var ancestors: [ImageEditorLayer] = []
+        var visitedIDs = Set<UUID>()
+        var currentGroupID = layer.groupID
+        while let groupID = currentGroupID,
+              !visitedIDs.contains(groupID),
+              let group = layers.first(where: { $0.id == groupID && $0.isGroup }) {
+            visitedIDs.insert(groupID)
+            ancestors.append(group)
+            currentGroupID = group.groupID
+        }
+        return ancestors
+    }
+
+    func effectiveGroupOpacity(for layer: ImageEditorLayer) -> Double {
+        ancestorGroups(for: layer).reduce(1) { partialResult, group in
+            partialResult * group.opacity
+        }
+    }
+
+    func effectiveGroupMask(for layer: ImageEditorLayer) -> NSImage? {
+        let masks = ancestorGroups(for: layer).compactMap(\.effectiveMask)
+        guard !masks.isEmpty else { return nil }
+        return masks.reduce(NSImage.opaqueMask(size: canvasSize)) { partialResult, mask in
+            imageByApplyingCanvasMask(partialResult, mask: mask)
+        }
+    }
+
+    private func combinedCanvasMask(_ layerMask: NSImage?, _ groupMask: NSImage?) -> NSImage? {
+        switch (layerMask, groupMask) {
+        case (.none, .none):
+            return nil
+        case let (.some(layerMask), .none):
+            return layerMask
+        case let (.none, .some(groupMask)):
+            return groupMask
+        case let (.some(layerMask), .some(groupMask)):
+            return imageByApplyingCanvasMask(layerMask, mask: groupMask)
+        }
+    }
+
+    func clippingBaseCanvasMask(forLayerAt index: Int) -> NSImage? {
+        guard layers.indices.contains(index),
+              let base = clippingBase(forLayerAt: index)
+        else { return nil }
+        let baseImage = base.compositingImage
+        return NSImage.rendered(size: canvasSize) { _ in
+            baseImage.draw(
+                in: base.compositingFrame,
+                from: CGRect(origin: .zero, size: baseImage.size),
+                operation: .sourceOver,
+                fraction: 1
+            )
+        }
+    }
+
+    func localEffectMask(forLayerAt index: Int) -> NSImage? {
+        guard layers.indices.contains(index) else { return nil }
+        let layerMask = layers[index].effectiveMask
+        guard let clippingMask = clippingBaseCanvasMask(forLayerAt: index) else { return layerMask }
+        return combinedCanvasMask(layerMask, clippingMask)
+    }
+
+    private func effectiveCanvasMask(forLayerAt index: Int, layerMask: NSImage?, groupMask: NSImage?) -> NSImage? {
+        let localMask = combinedCanvasMask(layerMask, groupMask)
+        guard let clippingMask = clippingBaseCanvasMask(forLayerAt: index) else { return localMask }
+        return combinedCanvasMask(localMask, clippingMask)
+    }
+
+    private func canvasImage(for image: NSImage, frame: CGRect) -> NSImage {
+        NSImage.rendered(size: canvasSize) { _ in
+            image.draw(
+                in: frame,
+                from: CGRect(origin: .zero, size: image.size),
+                operation: .copy,
+                fraction: 1
+            )
+        } ?? NSImage.transparent(size: canvasSize)
+    }
+
+    private func imageByApplyingCanvasMask(_ image: NSImage, mask: NSImage?) -> NSImage {
+        guard let mask else { return image }
+        return NSImage.rendered(size: image.size) { _ in
+            image.draw(
+                in: CGRect(origin: .zero, size: image.size),
+                from: CGRect(origin: .zero, size: image.size),
+                operation: .copy,
+                fraction: 1
+            )
+            mask.draw(
+                in: CGRect(origin: .zero, size: image.size),
+                from: CGRect(origin: .zero, size: mask.size),
+                operation: .destinationIn,
+                fraction: 1
+            )
+        } ?? image
+    }
+
     func isEffectivelyLocked(_ layer: ImageEditorLayer) -> Bool {
-        layer.isLocked || group(for: layer)?.isLocked == true
+        layer.isLocked || ancestorGroups(for: layer).contains { $0.isLocked }
+    }
+
+    func isEffectivelyPixelsLocked(_ layer: ImageEditorLayer) -> Bool {
+        isEffectivelyLocked(layer)
+            || layer.locksPixels
+            || ancestorGroups(for: layer).contains { $0.locksPixels }
+    }
+
+    func isEffectivelyPositionLocked(_ layer: ImageEditorLayer) -> Bool {
+        isEffectivelyLocked(layer)
+            || layer.locksPosition
+            || ancestorGroups(for: layer).contains { $0.locksPosition }
     }
 
     func isEffectivelyVisible(_ layer: ImageEditorLayer) -> Bool {
-        layer.isVisible && group(for: layer)?.isVisible != false
+        layer.isVisible && ancestorGroups(for: layer).allSatisfy(\.isVisible)
     }
 
     func shouldComposite(_ layer: ImageEditorLayer) -> Bool {
@@ -807,6 +1251,65 @@ struct ImageEditorDocument {
                 fraction: 1
             )
             context.restoreGState()
+        }
+    }
+}
+
+private extension NSImage {
+    func processedLayerMask(density: Double, feather: Double) -> NSImage? {
+        let normalizedDensity = max(0, min(1, density))
+        let normalizedFeather = max(0, min(80, feather))
+        let featheredMask = normalizedFeather > 0 ? (blurred(radius: normalizedFeather) ?? self) : self
+        guard normalizedDensity < 1 else { return featheredMask }
+        guard let alpha = featheredMask.alphaPlane() else { return featheredMask }
+        let adjustedAlpha = alpha.values.map { value -> UInt8 in
+            let revealed = 255 - Double(255 - Int(value)) * normalizedDensity
+            return UInt8(max(0, min(255, Int(revealed.rounded()))))
+        }
+        return NSImage.alphaMaskImage(width: alpha.width, height: alpha.height, alpha: adjustedAlpha)
+    }
+
+    func alphaPlane() -> (width: Int, height: Int, values: [UInt8])? {
+        guard let cgImage = cgImage(forProposedRect: nil, context: nil, hints: nil) else { return nil }
+        let width = max(1, cgImage.width)
+        let height = max(1, cgImage.height)
+        let bytesPerPixel = 4
+        let bytesPerRow = width * bytesPerPixel
+        var pixels = [UInt8](repeating: 0, count: bytesPerRow * height)
+
+        guard let context = CGContext(
+            data: &pixels,
+            width: width,
+            height: height,
+            bitsPerComponent: 8,
+            bytesPerRow: bytesPerRow,
+            space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ) else { return nil }
+
+        context.interpolationQuality = .none
+        context.translateBy(x: 0, y: CGFloat(height))
+        context.scaleBy(x: 1, y: -1)
+        context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
+
+        var alpha = [UInt8](repeating: 0, count: width * height)
+        for y in 0..<height {
+            for x in 0..<width {
+                alpha[y * width + x] = pixels[y * bytesPerRow + x * bytesPerPixel + 3]
+            }
+        }
+        return (width, height, alpha)
+    }
+
+    func withOpacity(_ opacity: CGFloat) -> NSImage? {
+        let normalizedOpacity = max(0, min(1, opacity))
+        return NSImage.rendered(size: size) { rect in
+            draw(
+                in: rect,
+                from: CGRect(origin: .zero, size: size),
+                operation: .sourceOver,
+                fraction: normalizedOpacity
+            )
         }
     }
 }

@@ -24,7 +24,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		5C64E7382FBCBBFB00FCD09D /* musepic.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = musepic.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		5C64E7382FBCBBFB00FCD09D /* QPic.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = QPic.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5C64E7472FBCBBFC00FCD09D /* veilpicTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = veilpicTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		5C64E7512FBCBBFC00FCD09D /* veilpicUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = veilpicUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -85,7 +85,7 @@
 		5C64E7392FBCBBFB00FCD09D /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				5C64E7382FBCBBFB00FCD09D /* musepic.app */,
+				5C64E7382FBCBBFB00FCD09D /* QPic.app */,
 				5C64E7472FBCBBFC00FCD09D /* veilpicTests.xctest */,
 				5C64E7512FBCBBFC00FCD09D /* veilpicUITests.xctest */,
 			);
@@ -114,7 +114,7 @@
 			packageProductDependencies = (
 			);
 			productName = veilpic;
-			productReference = 5C64E7382FBCBBFB00FCD09D /* musepic.app */;
+			productReference = 5C64E7382FBCBBFB00FCD09D /* QPic.app */;
 			productType = "com.apple.product-type.application";
 		};
 		5C64E7462FBCBBFC00FCD09D /* veilpicTests */ = {
@@ -407,16 +407,17 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = musepic;
-				INFOPLIST_KEY_CFBundleName = musepic;
+				INFOPLIST_KEY_CFBundleDisplayName = QPic;
+				INFOPLIST_KEY_CFBundleName = QPic;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.61.0;
+				MARKETING_VERSION = 1.89.0;
 				PRODUCT_BUNDLE_IDENTIFIER = im.some.veilpic;
-				PRODUCT_NAME = musepic;
+				PRODUCT_NAME = QPic;
+				PRODUCT_MODULE_NAME = musepic;
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -443,16 +444,17 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = musepic;
-				INFOPLIST_KEY_CFBundleName = musepic;
+				INFOPLIST_KEY_CFBundleDisplayName = QPic;
+				INFOPLIST_KEY_CFBundleName = QPic;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.61.0;
+				MARKETING_VERSION = 1.89.0;
 				PRODUCT_BUNDLE_IDENTIFIER = im.some.veilpic;
-				PRODUCT_NAME = musepic;
+				PRODUCT_NAME = QPic;
+				PRODUCT_MODULE_NAME = musepic;
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -472,7 +474,7 @@
 				DEVELOPMENT_TEAM = ZH2S7D6PL6;
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 26.3;
-				MARKETING_VERSION = 1.61.0;
+				MARKETING_VERSION = 1.89.0;
 				PRODUCT_BUNDLE_IDENTIFIER = im.some.veilpicTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
@@ -480,7 +482,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/musepic.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/musepic";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/QPic.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/QPic";
 			};
 			name = Debug;
 		};
@@ -493,7 +495,7 @@
 				DEVELOPMENT_TEAM = ZH2S7D6PL6;
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 26.3;
-				MARKETING_VERSION = 1.61.0;
+				MARKETING_VERSION = 1.89.0;
 				PRODUCT_BUNDLE_IDENTIFIER = im.some.veilpicTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
@@ -501,7 +503,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/musepic.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/musepic";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/QPic.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/QPic";
 			};
 			name = Release;
 		};
@@ -512,7 +514,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = ZH2S7D6PL6;
 				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.61.0;
+				MARKETING_VERSION = 1.89.0;
 				PRODUCT_BUNDLE_IDENTIFIER = im.some.veilpicUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
@@ -531,7 +533,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = ZH2S7D6PL6;
 				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.61.0;
+				MARKETING_VERSION = 1.89.0;
 				PRODUCT_BUNDLE_IDENTIFIER = im.some.veilpicUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;

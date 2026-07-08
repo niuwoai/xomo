@@ -16,9 +16,9 @@ extension ImageEditorViewModel {
               !layer.isAdjustment,
               !layer.isFilter,
               !layer.isClippingMask,
-              !document.isEffectivelyLocked(layer)
+              !document.isEffectivelyPixelsLocked(layer)
         else { return false }
-        return layer.isText || layer.mask != nil || layer.hasLayerEffects
+        return layer.isText || layer.isShape || layer.hasSmartFilters || layer.mask != nil || layer.hasLayerEffects
     }
 
     func rasterizeSelectedLayer() {
@@ -36,6 +36,8 @@ extension ImageEditorViewModel {
         document.layers[index].frame = source.compositingFrame
         document.layers[index].mask = nil
         document.layers[index].style = ImageEditorLayerStyle()
+        document.layers[index].smartFilters = []
+        document.layers[index].fillOpacity = 1
         document.layers[index].kind = .pixel
         document.layers[index].isClippingMask = false
         isEditingLayerMask = false
