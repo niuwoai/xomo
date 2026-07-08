@@ -9,19 +9,26 @@ import AppKit
 import Foundation
 
 enum ClipboardImageWriter {
-    static func copy(_ image: NSImage, preferredFileName: String) -> Bool {
+    static func copy(_ image: NSImage, preferredFileName: String, optimizeLosslessly: Bool = false) -> Bool {
+        let pngData = image.qingtuPNGData().map { data in
+            optimizeLosslessly
+                ? LosslessImageOptimizer.optimizedPNGData(data, image: image).optimizedData
+                : data
+        }
+        return copyPNGData(pngData, image: image, preferredFileName: preferredFileName)
+    }
+
+    static func copyPNGData(_ pngData: Data?, image: NSImage? = nil, preferredFileName: String) -> Bool {
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
 
         let imageItem = NSPasteboardItem()
         var hasImageData = false
-        let pngData = image.qingtuPNGData()
-
         if let pngData {
             imageItem.setData(pngData, forType: .png)
             hasImageData = true
         }
-        if let tiffData = image.tiffRepresentation {
+        if let tiffData = image?.tiffRepresentation {
             imageItem.setData(tiffData, forType: .tiff)
             hasImageData = true
         }
@@ -35,6 +42,7 @@ enum ClipboardImageWriter {
         }
 
         guard !objects.isEmpty else {
+            guard let image else { return false }
             return pasteboard.writeObjects([image])
         }
         return pasteboard.writeObjects(objects)
@@ -56,7 +64,7 @@ enum ClipboardImageWriter {
     private static func clipboardCacheDirectory() -> URL {
         let base = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first
             ?? FileManager.default.temporaryDirectory
-        return base.appendingPathComponent(".QingtuClipboard", isDirectory: true)
+        return base.appendingPathComponent(".musepicClipboard", isDirectory: true)
     }
 
     private static func sanitizedFileName(_ preferredFileName: String) -> String {
@@ -67,7 +75,7 @@ enum ClipboardImageWriter {
             .reduce(into: "") { $0.append($1) }
             .split(separator: "-")
             .joined(separator: "-")
-        let basename = sanitized.isEmpty ? "QingtuClipboard" : sanitized
+        let basename = sanitized.isEmpty ? "musepicClipboard" : sanitized
         if basename.lowercased().hasSuffix(".png") {
             return basename
         }

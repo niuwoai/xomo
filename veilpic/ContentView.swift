@@ -219,7 +219,7 @@ struct StorageSettingsView: View {
             ConfigField(title: L10n.text("field.region"), icon: "map", text: $viewModel.profile.region, prompt: viewModel.profile.provider.regionPlaceholder, isRequired: false)
             ConfigField(title: L10n.text("field.endpoint"), icon: "network", text: $viewModel.profile.endpoint, prompt: viewModel.profile.provider.endpointPlaceholder)
             ConfigField(title: L10n.text("field.cdnDomain"), icon: "globe", text: $viewModel.profile.cdnDomain, prompt: "https://img.example.com", isRequired: viewModel.profile.provider == .qiniuKodo)
-            ConfigField(title: L10n.text("field.objectPrefix"), icon: "folder", text: $viewModel.profile.objectPrefix, prompt: "veilpic", isRequired: false)
+            ConfigField(title: L10n.text("field.objectPrefix"), icon: "folder", text: $viewModel.profile.objectPrefix, prompt: "musepic", isRequired: false)
             ConfigField(title: viewModel.profile.provider.accessKeyLabel, icon: "key", text: $viewModel.profile.accessKeyId)
             SecretConfigField(title: viewModel.profile.provider.secretKeyLabel, icon: "lock", text: $viewModel.profile.accessKeySecret)
 
@@ -585,10 +585,8 @@ struct MenuBarPanelView: View {
                 configurationPrompt
             }
             intakeTiles
-            workspacePreview
-            postProcessTemplates
-            workspaceActions
-            uploadQuickStats
+            previewWithTemplateToolbar
+            illustratedOutputWorkbench
             variantPreview
             latestLinkPreview
         }
@@ -606,41 +604,33 @@ struct MenuBarPanelView: View {
     }
 
     private var intakeTiles: some View {
-        VStack(spacing: 10) {
-            HStack(spacing: 10) {
-                CompactWorkbenchButton(
-                    icon: "selection.pin.in.out",
-                    title: L10n.text("workbench.intake.region"),
-                    subtitle: L10n.text("workbench.intake.region.subtitle")
-                ) {
-                    viewModel.captureRegionToWorkspace()
-                }
-
-                CompactWorkbenchButton(
-                    icon: "rectangle.on.rectangle",
-                    title: L10n.text("workbench.intake.fullscreen"),
-                    subtitle: L10n.text("workbench.intake.fullscreen.subtitle")
-                ) {
-                    viewModel.captureFullScreenToWorkspace()
-                }
+        HStack(spacing: 8) {
+            IntakeQuickActionButton(
+                icon: "selection.pin.in.out",
+                title: L10n.text("workbench.intake.region")
+            ) {
+                viewModel.captureRegionToWorkspace()
             }
 
-            HStack(spacing: 10) {
-                CompactWorkbenchButton(
-                    icon: "doc.on.clipboard",
-                    title: L10n.text("tile.clipboard.title"),
-                    subtitle: L10n.text("tile.clipboard.subtitle")
-                ) {
-                    viewModel.uploadFromClipboard()
-                }
+            IntakeQuickActionButton(
+                icon: "rectangle.on.rectangle",
+                title: L10n.text("workbench.intake.fullscreen")
+            ) {
+                viewModel.captureFullScreenToWorkspace()
+            }
 
-                CompactWorkbenchButton(
-                    icon: "photo.on.rectangle",
-                    title: L10n.text("tile.images.title"),
-                    subtitle: L10n.text("tile.images.subtitle")
-                ) {
-                    viewModel.chooseImageFiles()
-                }
+            IntakeQuickActionButton(
+                icon: "doc.on.clipboard",
+                title: L10n.text("tile.clipboard.title")
+            ) {
+                viewModel.uploadFromClipboard()
+            }
+
+            IntakeQuickActionButton(
+                icon: "photo.on.rectangle",
+                title: L10n.text("workbench.intake.files")
+            ) {
+                viewModel.chooseImageFiles()
             }
         }
     }
@@ -682,21 +672,27 @@ struct MenuBarPanelView: View {
             WorkbenchPreviewCard(
                 item: item,
                 template: viewModel.postProcessRecipe.template,
-                imageData: viewModel.processedPreviewData
+                imageData: viewModel.processedPreviewData,
+                onEdit: viewModel.openImageEditor
             )
         } else {
             heroDropZone
         }
     }
 
-    private var postProcessTemplates: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(L10n.text("post.templates.title"))
-                .font(.headline)
+    private var previewWithTemplateToolbar: some View {
+        VStack(spacing: 6) {
+            workspacePreview
+            postProcessTemplates
+        }
+    }
 
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3), spacing: 8) {
+    private var postProcessTemplates: some View {
+        HStack(spacing: 8) {
+            Spacer(minLength: 0)
+            HStack(spacing: 6) {
                 ForEach(PostProcessTemplate.allCases) { template in
-                    TemplatePillButton(
+                    PostProcessToolbarButton(
                         template: template,
                         isSelected: viewModel.postProcessRecipe.template == template
                     ) {
@@ -704,46 +700,114 @@ struct MenuBarPanelView: View {
                     }
                 }
             }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 6)
+            .background(Color.white.opacity(0.56))
+            .clipShape(Capsule())
+            .overlay {
+                Capsule().strokeBorder(AppTheme.hairline, lineWidth: 1)
+            }
+            .shadow(color: AppTheme.cardShadow.opacity(0.58), radius: 8, x: 0, y: 3)
+            Spacer(minLength: 0)
         }
     }
 
+    private var illustratedOutputWorkbench: some View {
+        IllustratedWorkbenchPanel {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(alignment: .firstTextBaseline) {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(L10n.text("workbench.panel.title"))
+                            .font(.headline)
+                            .foregroundStyle(AppTheme.inkText)
+                        Text(L10n.text("workbench.panel.subtitle"))
+                            .font(.caption)
+                            .foregroundStyle(AppTheme.accent.opacity(0.86))
+                            .lineLimit(1)
+                    }
+                    Spacer()
+                    Image(systemName: viewModel.postProcessRecipe.template.symbolName)
+                        .font(.headline)
+                        .foregroundStyle(AppTheme.accent)
+                        .frame(width: 34, height: 34)
+                        .background(Color.white.opacity(0.66))
+                        .clipShape(Circle())
+                        .overlay {
+                            Circle().strokeBorder(AppTheme.hairline, lineWidth: 1)
+                        }
+                }
+
+                losslessCompressionRow
+                workspaceActions
+                uploadQuickStats
+            }
+        }
+    }
+
+    private var losslessCompressionRow: some View {
+        Toggle(isOn: $viewModel.profile.losslessCompressionBeforeOutput) {
+            HStack(alignment: .top, spacing: 8) {
+                Image(systemName: "arrow.down.forward.and.arrow.up.backward")
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(AppTheme.accent)
+                    .frame(width: 24, height: 24)
+                    .background(Color.white.opacity(0.62))
+                    .clipShape(Circle())
+                    .overlay {
+                        Circle().strokeBorder(AppTheme.hairline, lineWidth: 1)
+                    }
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(L10n.text("losslessCompression.title"))
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(AppTheme.inkText)
+                    Text(L10n.text("losslessCompression.note"))
+                        .font(.caption2)
+                        .foregroundStyle(AppTheme.inkText.opacity(0.68))
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+        }
+        .toggleStyle(.switch)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .background(Color.white.opacity(0.54))
+        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .strokeBorder(AppTheme.hairline, lineWidth: 1)
+        }
+        .disabled(viewModel.workspaceItem == nil)
+    }
+
     private var workspaceActions: some View {
-        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 2), spacing: 10) {
-            Button {
-                viewModel.annotateWorkspaceImage()
-            } label: {
-                Label(L10n.text("workbench.action.annotate"), systemImage: "pencil.and.outline")
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(.bordered)
-            .disabled(viewModel.workspaceItem == nil)
-
-            Button {
+        HStack(spacing: 8) {
+            WorkbenchActionButton(
+                icon: "square.and.arrow.down",
+                title: L10n.text("workbench.action.saveImage"),
+                style: .secondary,
+                isDisabled: viewModel.workspaceItem == nil
+            ) {
                 viewModel.saveProcessedImage()
-            } label: {
-                Label(L10n.text("workbench.action.saveImage"), systemImage: "square.and.arrow.down")
-                    .frame(maxWidth: .infinity)
             }
-            .buttonStyle(.bordered)
-            .disabled(viewModel.workspaceItem == nil)
 
-            Button {
+            WorkbenchActionButton(
+                icon: "arrow.up.circle.fill",
+                title: L10n.text("workbench.action.upload"),
+                style: .primary,
+                isDisabled: viewModel.workspaceItem == nil || viewModel.isUploading
+            ) {
                 viewModel.uploadWorkspaceImage()
-            } label: {
-                Label(L10n.text("workbench.action.upload"), systemImage: "arrow.up.circle.fill")
-                    .frame(maxWidth: .infinity)
             }
-            .buttonStyle(.borderedProminent)
-            .disabled(viewModel.workspaceItem == nil || viewModel.isUploading)
 
-            Button {
+            WorkbenchActionButton(
+                icon: "doc.on.doc",
+                title: L10n.text("workbench.action.copyImage"),
+                style: .secondary,
+                isDisabled: viewModel.workspaceItem == nil
+            ) {
                 viewModel.copyProcessedImage()
-            } label: {
-                Label(L10n.text("workbench.action.copyImage"), systemImage: "doc.on.doc")
-                    .frame(maxWidth: .infinity)
             }
-            .buttonStyle(.bordered)
-            .disabled(viewModel.workspaceItem == nil)
         }
     }
 

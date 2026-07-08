@@ -35,6 +35,7 @@ final class StorageProfileStore: StorageProfileStoring {
             profile.automaticallyCopyAfterUpload = snapshot.automaticallyCopyAfterUpload ?? true
             profile.automaticallyCopyScreenshotToClipboard = snapshot.automaticallyCopyScreenshotToClipboard ?? true
             profile.automaticCopyVariant = snapshot.automaticCopyVariant ?? .compressed
+            profile.losslessCompressionBeforeOutput = snapshot.losslessCompressionBeforeOutput ?? false
         }
 
         profile.accessKeySecret = keychain.read(account: secretAccount) ?? ""
@@ -65,6 +66,7 @@ private struct StorageProfileSnapshot: Codable {
     let automaticallyCopyAfterUpload: Bool?
     let automaticallyCopyScreenshotToClipboard: Bool?
     let automaticCopyVariant: ImageVariantKind?
+    let losslessCompressionBeforeOutput: Bool?
 
     init(profile: StorageProfile) {
         provider = profile.provider
@@ -78,6 +80,7 @@ private struct StorageProfileSnapshot: Codable {
         automaticallyCopyAfterUpload = profile.automaticallyCopyAfterUpload
         automaticallyCopyScreenshotToClipboard = profile.automaticallyCopyScreenshotToClipboard
         automaticCopyVariant = profile.automaticCopyVariant
+        losslessCompressionBeforeOutput = profile.losslessCompressionBeforeOutput
     }
 }
 

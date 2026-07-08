@@ -24,6 +24,13 @@ struct veilpicApp: App {
             }
         }
         .menuBarExtraStyle(.window)
+        .commands {
+            CommandGroup(replacing: .appInfo) {
+                Button(L10n.text("about.menuItem")) {
+                    AboutWindowPresenter.shared.open()
+                }
+            }
+        }
 
         Settings {
             StorageSettingsView(viewModel: viewModel, mode: .settings)
@@ -153,6 +160,46 @@ final class SettingsWindowPresenter: NSObject, NSWindowDelegate {
         if MenuBarUploadViewModel.shared.profile.isReadyForUpload {
             LaunchGuide.markSettingsSeen()
         }
+    }
+}
+
+final class ImageEditorWindowPresenter: NSObject, NSWindowDelegate {
+    static let shared = ImageEditorWindowPresenter()
+
+    private var window: NSWindow?
+
+    private override init() {
+        super.init()
+    }
+
+    func open(image: NSImage, sourceName: String, onApply: @escaping (NSImage) -> Void) {
+        let rootView = ImageEditorView(sourceName: sourceName, image: image, onApply: onApply)
+        let hostingController = NSHostingController(rootView: rootView)
+
+        if let window {
+            window.contentViewController = hostingController
+            show(window)
+            return
+        }
+
+        let window = NSWindow(contentViewController: hostingController)
+        window.title = L10n.text("imageEditor.window.title")
+        window.styleMask = [.titled, .closable, .miniaturizable, .resizable]
+        window.isReleasedWhenClosed = false
+        window.delegate = self
+        window.setContentSize(NSSize(width: 1440, height: 900))
+        window.minSize = NSSize(width: 1160, height: 720)
+        window.appearance = NSAppearance(named: .darkAqua)
+        window.titlebarAppearsTransparent = false
+        window.backgroundColor = ImageEditorTheme.window
+        window.center()
+        self.window = window
+        show(window)
+    }
+
+    private func show(_ window: NSWindow) {
+        NSApplication.shared.activate(ignoringOtherApps: true)
+        window.makeKeyAndOrderFront(nil)
     }
 }
 

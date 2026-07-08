@@ -335,28 +335,48 @@ final class MenuBarUploadViewModel: ObservableObject {
         statusMessage = L10n.format("status.postprocess.selected", template.title)
     }
 
-    func annotateWorkspaceImage() {
-        guard let item = workspaceItem else {
-            showFeedback(.warning, title: L10n.text("feedback.workspace.empty.title"), message: L10n.text("feedback.workspace.empty.message"))
-            statusMessage = L10n.text("status.workspace.empty")
-            NSSound.beep()
+    func openImageEditor() {
+        guard let workspaceItem,
+              let image = imageForPostProcessEditing()
+        else {
+            showFeedback(
+                .warning,
+                title: L10n.text("feedback.imageEditorUnavailable.title"),
+                message: L10n.text("feedback.imageEditorUnavailable.message")
+            )
             return
         }
 
-        let currentRecipe = postProcessRecipe
-        ImageAnnotationEditorPresenter.shared.open(image: item.originalImage, sourceName: item.sourceName) { [weak self] annotatedImage in
-            guard let self else { return }
-            let sourceName = item.sourceName.hasSuffix("-annotated") ? item.sourceName : "\(item.sourceName)-annotated"
-            self.workspaceItem = ImageWorkspaceItem(originalImage: annotatedImage, sourceName: sourceName, createdAt: Date())
-            self.postProcessRecipe = currentRecipe
-            self.refreshProcessedPreview()
-            self.generatedVariants = []
-            self.uploadResult = nil
-            self.phase = .idle
-            self.suggestedSection = .workbench
-            self.statusMessage = L10n.text("status.annotation.applied")
-            self.showFeedback(.success, title: L10n.text("feedback.annotation.applied.title"), message: L10n.text("feedback.annotation.applied.message"))
+        ImageEditorWindowPresenter.shared.open(
+            image: image,
+            sourceName: workspaceItem.sourceName
+        ) { [weak self] editedImage in
+            self?.applyEditedPreviewImage(editedImage)
         }
+    }
+
+    func imageForPostProcessEditing() -> NSImage? {
+        guard workspaceItem != nil else { return nil }
+        return renderedWorkspaceImage()
+    }
+
+    func applyEditedPreviewImage(_ image: NSImage) {
+        let sourceName = workspaceItem?.sourceName ?? L10n.text("imageEditor.defaultSourceName")
+        workspaceItem = ImageWorkspaceItem(
+            originalImage: image,
+            sourceName: "\(sourceName)-edited",
+            createdAt: Date()
+        )
+        postProcessRecipe = PostProcessRecipe.defaults(for: .original)
+        refreshProcessedPreview()
+        generatedVariants = []
+        uploadResult = nil
+        statusMessage = L10n.text("status.imageEditor.applied")
+        showFeedback(
+            .success,
+            title: L10n.text("feedback.imageEditorApplied.title"),
+            message: L10n.text("feedback.imageEditorApplied.message")
+        )
     }
 
     func uploadWorkspaceImage() {
@@ -384,13 +404,18 @@ final class MenuBarUploadViewModel: ObservableObject {
 
         let image = renderedWorkspaceImage()
         let copyName = "\(uniqueBasename(from: workspaceItem.sourceName))-\(postProcessRecipe.template.rawValue).png"
-        guard ClipboardImageWriter.copy(image, preferredFileName: copyName) else {
+        let pngResult = workspacePNGOutput(from: image)
+        guard ClipboardImageWriter.copyPNGData(pngResult?.optimizedData, image: image, preferredFileName: copyName) else {
             showFeedback(.error, title: L10n.text("feedback.noVariants.title"), message: L10n.text("feedback.noVariants.message"))
             statusMessage = L10n.text("status.encode.failed")
             return
         }
 
-        showFeedback(.success, title: L10n.text("feedback.imageCopied.title"), message: L10n.text("feedback.imageCopied.message"))
+        showFeedback(
+            .success,
+            title: L10n.text("feedback.imageCopied.title"),
+            message: outputMessage(baseKey: "feedback.imageCopied.message", optimizedKey: "feedback.imageCopied.optimized.message", result: pngResult)
+        )
         statusMessage = L10n.text("status.imageCopied")
     }
 
@@ -403,7 +428,7 @@ final class MenuBarUploadViewModel: ObservableObject {
         }
 
         let image = renderedWorkspaceImage()
-        guard let pngData = image.qingtuPNGData() else {
+        guard let pngResult = workspacePNGOutput(from: image) else {
             showFeedback(.error, title: L10n.text("feedback.noVariants.title"), message: L10n.text("feedback.noVariants.message"))
             statusMessage = L10n.text("status.encode.failed")
             return
@@ -418,8 +443,11 @@ final class MenuBarUploadViewModel: ObservableObject {
         guard panel.runModal() == .OK, let url = panel.url else { return }
 
         do {
-            try pngData.write(to: url, options: .atomic)
-            showFeedback(.success, title: L10n.text("feedback.imageSaved.title"), message: L10n.format("feedback.imageSaved.message", url.lastPathComponent))
+            try pngResult.optimizedData.write(to: url, options: .atomic)
+            let message = profile.losslessCompressionBeforeOutput
+                ? L10n.format("feedback.imageSaved.optimized.message", url.lastPathComponent, pngResult.savingsText)
+                : L10n.format("feedback.imageSaved.message", url.lastPathComponent)
+            showFeedback(.success, title: L10n.text("feedback.imageSaved.title"), message: message)
             statusMessage = L10n.text("status.imageSaved")
         } catch {
             showFeedback(.error, title: L10n.text("feedback.imageSaveFailed.title"), message: error.localizedDescription)
@@ -602,7 +630,11 @@ final class MenuBarUploadViewModel: ObservableObject {
             return nil
         }
 
-        let variants = builder.buildVariants(from: image, basename: item.basename)
+        let variants = builder.buildVariants(
+            from: image,
+            basename: item.basename,
+            optimizeLosslessly: profile.losslessCompressionBeforeOutput
+        )
         generatedVariants = variants
         guard !variants.isEmpty else {
             return nil
@@ -727,7 +759,7 @@ final class MenuBarUploadViewModel: ObservableObject {
             .reduce(into: "") { $0.append($1) }
             .split(separator: "-")
             .joined(separator: "-")
-        let prefix = sanitized.isEmpty ? "veilpic" : sanitized
+        let prefix = sanitized.isEmpty ? "musepic" : sanitized
         return "\(prefix)-\(Int(Date().timeIntervalSince1970))-\(UUID().uuidString.prefix(8).lowercased())"
     }
 
@@ -747,6 +779,24 @@ final class MenuBarUploadViewModel: ObservableObject {
         }
 
         return postProcessRenderer.render(image: workspaceItem.originalImage, recipe: postProcessRecipe)
+    }
+
+    private func workspacePNGOutput(from image: NSImage) -> LosslessOptimizationResult? {
+        guard profile.losslessCompressionBeforeOutput else {
+            return image.qingtuPNGData().map {
+                LosslessOptimizationResult(originalData: $0, optimizedData: $0)
+            }
+        }
+
+        return LosslessImageOptimizer.optimizedPNGData(from: image)
+    }
+
+    private func outputMessage(baseKey: String, optimizedKey: String, result: LosslessOptimizationResult?) -> String {
+        guard profile.losslessCompressionBeforeOutput, let result else {
+            return L10n.text(baseKey)
+        }
+
+        return L10n.format(optimizedKey, result.savingsText)
     }
 }
 

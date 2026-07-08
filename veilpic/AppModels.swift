@@ -8,7 +8,7 @@
 import Foundation
 
 enum AppVersion {
-    static let current = "1.21.0-rc2"
+    static let current = "1.61.0"
 }
 
 enum StorageCredentialMode: String, CaseIterable, Identifiable, Codable, Sendable {
@@ -258,10 +258,11 @@ struct StorageProfile: Sendable {
     var region = ""
     var endpoint = ""
     var cdnDomain = ""
-    var objectPrefix = "veilpic"
+    var objectPrefix = "musepic"
     var automaticallyCopyAfterUpload = true
     var automaticallyCopyScreenshotToClipboard = true
     var automaticCopyVariant: ImageVariantKind = .compressed
+    var losslessCompressionBeforeOutput = false
 
     var baseURL: URL? {
         let rawDomain = cdnDomain.isEmpty ? endpoint : cdnDomain

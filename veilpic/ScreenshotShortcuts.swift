@@ -271,7 +271,7 @@ final class GlobalScreenshotShortcutManager {
             id: ShortcutID.region,
             shortcut: settings.regionShortcut
         ) {
-            viewModel.captureRegionToWorkspace(revealWhenDone: true)
+            viewModel.captureRegionToWorkspace(revealWhenDone: false)
         }
 
         isSetup = true

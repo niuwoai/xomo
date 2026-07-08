@@ -10,11 +10,14 @@ import ImageIO
 import UniformTypeIdentifiers
 
 final class ImageVariantBuilder {
-    func buildVariants(from image: NSImage, basename: String) -> [GeneratedImageVariant] {
+    func buildVariants(from image: NSImage, basename: String, optimizeLosslessly: Bool = false) -> [GeneratedImageVariant] {
         var variants: [GeneratedImageVariant] = []
 
         if let png = image.pngData() {
-            variants.append(.init(kind: .original, filename: "\(basename)-original.png", data: png, contentType: "image/png"))
+            let outputPNG = optimizeLosslessly
+                ? LosslessImageOptimizer.optimizedPNGData(png, image: image).optimizedData
+                : png
+            variants.append(.init(kind: .original, filename: "\(basename)-original.png", data: outputPNG, contentType: "image/png"))
         }
 
         if let compressed = image.jpegData(maxPixelWidth: 1600, compression: 0.78) {
