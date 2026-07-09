@@ -1814,6 +1814,10 @@ struct ImageEditorView: View {
 
                 Divider().overlay(editorBorder)
 
+                solidColorFillControls
+
+                Divider().overlay(editorBorder)
+
                 gradientFillControls
 
                 Divider().overlay(editorBorder)
@@ -2908,6 +2912,32 @@ struct ImageEditorView: View {
         }
     }
 
+    private var solidColorFillControls: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(L10n.text("imageEditor.solidColorFill.title"))
+                .font(.system(size: 10, weight: .bold))
+                .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+            gradientFillColorSliders(
+                red: $viewModel.solidColorFillRed,
+                green: $viewModel.solidColorFillGreen,
+                blue: $viewModel.solidColorFillBlue,
+                labelPrefix: "imageEditor.solidColorFill"
+            )
+            HStack {
+                Button(L10n.text("imageEditor.action.layerSolidColorFillNew")) {
+                    viewModel.addSolidColorFillLayer()
+                }
+                .buttonStyle(EditorTextButtonStyle())
+                if viewModel.selectedLayerIsSolidColorFill {
+                    Button(L10n.text("imageEditor.action.layerSolidColorFillUpdate")) {
+                        viewModel.updateSelectedSolidColorFillLayer()
+                    }
+                    .buttonStyle(EditorTextButtonStyle())
+                }
+            }
+        }
+    }
+
     private var gradientFillControls: some View {
         VStack(alignment: .leading, spacing: 6) {
             Picker(L10n.text("imageEditor.gradientFill.preset"), selection: $viewModel.selectedGradientFillPreset) {
@@ -2940,7 +2970,8 @@ struct ImageEditorView: View {
                 gradientFillColorSliders(
                     red: $viewModel.gradientFillStartRed,
                     green: $viewModel.gradientFillStartGreen,
-                    blue: $viewModel.gradientFillStartBlue
+                    blue: $viewModel.gradientFillStartBlue,
+                    labelPrefix: "imageEditor.gradientFill"
                 )
                 Text(L10n.text("imageEditor.gradientFill.end"))
                     .font(.system(size: 10, weight: .bold))
@@ -2948,7 +2979,8 @@ struct ImageEditorView: View {
                 gradientFillColorSliders(
                     red: $viewModel.gradientFillEndRed,
                     green: $viewModel.gradientFillEndGreen,
-                    blue: $viewModel.gradientFillEndBlue
+                    blue: $viewModel.gradientFillEndBlue,
+                    labelPrefix: "imageEditor.gradientFill"
                 )
             }
             HStack {
@@ -3001,25 +3033,26 @@ struct ImageEditorView: View {
     private func gradientFillColorSliders(
         red: Binding<Double>,
         green: Binding<Double>,
-        blue: Binding<Double>
+        blue: Binding<Double>,
+        labelPrefix: String
     ) -> some View {
         VStack(alignment: .leading, spacing: 5) {
             adjustmentSlider(
-                labelKey: "imageEditor.gradientFill.red",
+                labelKey: "\(labelPrefix).red",
                 value: red,
                 range: 0...1,
                 step: 0.05,
                 displayText: "\(Int((red.wrappedValue * 100).rounded()))%"
             )
             adjustmentSlider(
-                labelKey: "imageEditor.gradientFill.green",
+                labelKey: "\(labelPrefix).green",
                 value: green,
                 range: 0...1,
                 step: 0.05,
                 displayText: "\(Int((green.wrappedValue * 100).rounded()))%"
             )
             adjustmentSlider(
-                labelKey: "imageEditor.gradientFill.blue",
+                labelKey: "\(labelPrefix).blue",
                 value: blue,
                 range: 0...1,
                 step: 0.05,

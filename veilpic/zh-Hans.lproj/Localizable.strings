@@ -520,6 +520,7 @@
 "imageEditor.properties.selectiveColorLayerValue" = "可选颜色：%@";
 "imageEditor.properties.gradientMapLayerValue" = "渐变映射：%@";
 "imageEditor.properties.filterLayerValue" = "%@ 滤镜：%d%%";
+"imageEditor.properties.solidColorFillLayerValue" = "纯色填充：R %d · G %d · B %d";
 "imageEditor.properties.gradientFillLayerValue" = "渐变填充：%@，%d°，%d%%";
 "imageEditor.properties.unsharpFilterLayerValue" = "USM 锐化：数量 %d%% · 半径 %@ · 阈值 %d";
 "imageEditor.properties.textLayerValue" = "文字：%@ · %d px";
@@ -631,6 +632,10 @@
 "imageEditor.gradientMap.red" = "红色";
 "imageEditor.gradientMap.green" = "绿色";
 "imageEditor.gradientMap.blue" = "蓝色";
+"imageEditor.solidColorFill.title" = "纯色填充";
+"imageEditor.solidColorFill.red" = "红色";
+"imageEditor.solidColorFill.green" = "绿色";
+"imageEditor.solidColorFill.blue" = "蓝色";
 "imageEditor.gradientFill.preset" = "渐变填充";
 "imageEditor.gradientFill.preset.blackWhite" = "黑白";
 "imageEditor.gradientFill.preset.sunset" = "日落";
@@ -708,6 +713,7 @@
 "imageEditor.layer.groupBadge" = "组";
 "imageEditor.layer.adjustmentBadge" = "调整";
 "imageEditor.layer.filterBadge" = "滤镜";
+"imageEditor.layer.solidColorFillBadge" = "纯色";
 "imageEditor.layer.gradientFillBadge" = "渐变";
 "imageEditor.layer.textBadge" = "文字";
 "imageEditor.layer.shapeBadge" = "形状";
@@ -718,6 +724,7 @@
 "imageEditor.layer.linkedBadge" = "已链接图层";
 "imageEditor.layer.adjustmentName" = "%@ 调整";
 "imageEditor.layer.filterName" = "%@ 滤镜";
+"imageEditor.layer.solidColorFillName" = "纯色填充";
 "imageEditor.layer.gradientFillName" = "渐变填充";
 "imageEditor.layer.textName" = "文字：%@";
 "imageEditor.layer.textFallbackName" = "文字";
@@ -755,6 +762,7 @@
 "imageEditor.layer.kindFilter.shape" = "只显示形状图层";
 "imageEditor.layer.kindFilter.adjustment" = "只显示调整图层";
 "imageEditor.layer.kindFilter.filter" = "只显示滤镜图层";
+"imageEditor.layer.kindFilter.solidColorFill" = "只显示纯色填充图层";
 "imageEditor.layer.kindFilter.gradientFill" = "只显示渐变填充图层";
 "imageEditor.layer.kindFilter.smartObject" = "只显示智能对象";
 "imageEditor.layer.kindFilter.group" = "只显示图层组";
@@ -933,6 +941,8 @@
 "imageEditor.history.selectionFromLayerMask" = "从图层蒙版载入选区";
 "imageEditor.history.selectionFromVectorMask" = "从矢量蒙版载入选区";
 "imageEditor.history.layerFilterNew" = "新建滤镜图层";
+"imageEditor.history.layerSolidColorFillNew" = "新建纯色填充图层";
+"imageEditor.history.layerSolidColorFillUpdate" = "更新纯色填充图层";
 "imageEditor.history.layerGradientFillNew" = "新建渐变填充图层";
 "imageEditor.history.layerGradientFillUpdate" = "更新渐变填充图层";
 "imageEditor.history.layerFilterUpdate" = "更新滤镜图层";
@@ -1236,6 +1246,8 @@
 "imageEditor.action.layerAdjustmentNew" = "新建调整图层";
 "imageEditor.action.layerAdjustmentUpdate" = "更新调整图层";
 "imageEditor.action.layerFilterNew" = "新建滤镜图层";
+"imageEditor.action.layerSolidColorFillNew" = "新建纯色填充";
+"imageEditor.action.layerSolidColorFillUpdate" = "更新纯色填充";
 "imageEditor.action.layerGradientFillNew" = "新建渐变填充";
 "imageEditor.action.layerGradientFillUpdate" = "更新渐变填充";
 "imageEditor.action.layerFilterUpdate" = "更新滤镜图层";

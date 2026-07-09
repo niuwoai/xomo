@@ -12,6 +12,65 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct ImageEditorAdjustmentTests {
+    @Test func imageEditorSolidColorFillLayerRendersSmartFiltersAndRoundTripsProjectState() async throws {
+        let canvasSize = NSSize(width: 60, height: 40)
+        let sourceImage = bitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: sourceImage) { _ in }
+        let baseLayerID = try #require(viewModel.document.selectedLayerID)
+        let basePixelsBefore = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+
+        viewModel.solidColorFillRed = 0.10
+        viewModel.solidColorFillGreen = 0.45
+        viewModel.solidColorFillBlue = 0.95
+        viewModel.addSolidColorFillLayer()
+
+        let fillLayer = try #require(viewModel.document.selectedLayer)
+        let fillContent = try #require(fillLayer.solidColorFillContent?.normalized())
+        let centerColor = try #require(viewModel.currentImage.color(at: CGPoint(x: 30, y: 20))?.usingColorSpace(.deviceRGB))
+
+        #expect(fillLayer.isSolidColorFill)
+        #expect(abs(fillContent.red - 0.10) < 0.001)
+        #expect(abs(fillContent.green - 0.45) < 0.001)
+        #expect(abs(fillContent.blue - 0.95) < 0.001)
+        #expect(abs(centerColor.redComponent - 0.10) < 0.03)
+        #expect(abs(centerColor.greenComponent - 0.45) < 0.03)
+        #expect(abs(centerColor.blueComponent - 0.95) < 0.03)
+        #expect(viewModel.document.layers.first { $0.id == baseLayerID }?.image.qingtuPNGData() == basePixelsBefore)
+        #expect(viewModel.selectedLayerGeometryText == L10n.format("imageEditor.properties.solidColorFillLayerValue", 26, 115, 242))
+        #expect(viewModel.visibleLayerRows(matching: "", kindFilter: .solidColorFill).contains { $0.id == fillLayer.id })
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSolidColorFillNew"))
+
+        viewModel.solidColorFillRed = 0.80
+        viewModel.solidColorFillGreen = 0.10
+        viewModel.solidColorFillBlue = 0.20
+        viewModel.updateSelectedSolidColorFillLayer()
+
+        let updatedContent = try #require(viewModel.document.selectedLayer?.solidColorFillContent?.normalized())
+        let updatedColor = try #require(viewModel.currentImage.color(at: CGPoint(x: 30, y: 20))?.usingColorSpace(.deviceRGB))
+        #expect(abs(updatedContent.red - 0.80) < 0.001)
+        #expect(updatedColor.redComponent > 0.76)
+        #expect(updatedColor.greenComponent < 0.13)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSolidColorFillUpdate"))
+
+        viewModel.selectedFilter = .vignette
+        viewModel.filterIntensity = 1
+        viewModel.addSmartFilterToSelectedLayer()
+
+        let smartFilteredLayer = try #require(viewModel.document.selectedLayer)
+        let cornerColor = try #require(viewModel.currentImage.color(at: CGPoint(x: 0, y: 0))?.usingColorSpace(.deviceRGB))
+        #expect(smartFilteredLayer.smartFilters.first?.kind == .vignette)
+        #expect(cornerColor.redComponent < updatedColor.redComponent * 0.35)
+
+        let project = try ImageEditorProjectDocument(document: viewModel.document)
+        let restoredDocument = try project.restoredDocument()
+        let restoredLayer = try #require(restoredDocument.layers.first { $0.id == fillLayer.id })
+        let restoredContent = try #require(restoredLayer.solidColorFillContent?.normalized())
+        #expect(restoredLayer.isSolidColorFill)
+        #expect(abs(restoredContent.red - 0.80) < 0.001)
+        #expect(abs(restoredContent.green - 0.10) < 0.001)
+        #expect(restoredLayer.smartFilters.first?.kind == .vignette)
+    }
+
     @Test func imageEditorGradientFillLayerRendersUpdatesAndRoundTripsProjectState() async throws {
         let canvasSize = NSSize(width: 80, height: 30)
         let sourceImage = bitmapImage(size: canvasSize, background: .black)

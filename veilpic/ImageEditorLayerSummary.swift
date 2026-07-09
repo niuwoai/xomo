@@ -32,6 +32,14 @@ extension ImageEditorViewModel {
                 Int((filter.intensity * 100).rounded())
             )
         }
+        if let solidColorFillContent = layer.solidColorFillContent?.normalized() {
+            return L10n.format(
+                "imageEditor.properties.solidColorFillLayerValue",
+                Int((solidColorFillContent.red * 255).rounded()),
+                Int((solidColorFillContent.green * 255).rounded()),
+                Int((solidColorFillContent.blue * 255).rounded())
+            )
+        }
         if let gradientFillContent = layer.gradientFillContent?.normalized() {
             return L10n.format(
                 "imageEditor.properties.gradientFillLayerValue",
