@@ -339,6 +339,7 @@ private extension ImageEditorLayerStyle {
     func scaled(by scale: CGFloat) -> ImageEditorLayerStyle {
         var style = self
         style.strokeWidth *= scale
+        style.strokePatternScale *= scale
         style.shadowBlur *= scale
         style.shadowOffset = CGSize(width: shadowOffset.width * scale, height: shadowOffset.height * scale)
         style.innerShadowBlur *= scale

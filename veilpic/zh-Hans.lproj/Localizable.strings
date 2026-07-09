@@ -678,8 +678,16 @@
 "imageEditor.strokePosition.center" = "居中";
 "imageEditor.strokePosition.inside" = "内侧";
 "imageEditor.properties.strokeOpacityValue" = "描边不透明度：%d%%";
+"imageEditor.properties.strokeFillType" = "描边填充";
+"imageEditor.strokeFillType.color" = "颜色";
+"imageEditor.strokeFillType.gradient" = "渐变";
+"imageEditor.strokeFillType.pattern" = "图案";
 "imageEditor.properties.strokeColor" = "描边颜色";
 "imageEditor.action.strokeColorFromForeground" = "使用前景色";
+"imageEditor.properties.strokeGradientStyle" = "描边渐变样式";
+"imageEditor.properties.strokeGradientAngleValue" = "描边渐变角度：%d°";
+"imageEditor.properties.strokePatternKind" = "描边图案";
+"imageEditor.properties.strokePatternScaleValue" = "描边图案缩放：%d px";
 "imageEditor.properties.shadowOpacityValue" = "投影不透明度：%d%%";
 "imageEditor.properties.shadowColor" = "投影颜色";
 "imageEditor.action.shadowColorFromForeground" = "使用前景色";
@@ -706,6 +714,7 @@
 "imageEditor.properties.colorOverlayOpacityValue" = "颜色叠加不透明度：%d%%";
 "imageEditor.properties.gradientOverlayOpacityValue" = "渐变叠加不透明度：%d%%";
 "imageEditor.properties.gradientOverlayStyle" = "渐变叠加样式";
+"imageEditor.properties.gradientOverlayScaleValue" = "渐变叠加缩放：%d%%";
 "imageEditor.properties.gradientOverlayAngleValue" = "渐变角度：%d°";
 "imageEditor.properties.patternOverlayKind" = "图案";
 "imageEditor.properties.patternOverlayOpacityValue" = "图案叠加不透明度：%d%%";

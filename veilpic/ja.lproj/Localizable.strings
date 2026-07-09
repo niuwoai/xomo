@@ -678,8 +678,16 @@
 "imageEditor.strokePosition.center" = "中央";
 "imageEditor.strokePosition.inside" = "内側";
 "imageEditor.properties.strokeOpacityValue" = "境界線の不透明度：%d%%";
+"imageEditor.properties.strokeFillType" = "境界線の塗り";
+"imageEditor.strokeFillType.color" = "カラー";
+"imageEditor.strokeFillType.gradient" = "グラデーション";
+"imageEditor.strokeFillType.pattern" = "パターン";
 "imageEditor.properties.strokeColor" = "境界線の色";
 "imageEditor.action.strokeColorFromForeground" = "前景色を使用";
+"imageEditor.properties.strokeGradientStyle" = "境界線グラデーションスタイル";
+"imageEditor.properties.strokeGradientAngleValue" = "境界線グラデーション角度：%d°";
+"imageEditor.properties.strokePatternKind" = "境界線パターン";
+"imageEditor.properties.strokePatternScaleValue" = "境界線パターンスケール：%d px";
 "imageEditor.properties.shadowOpacityValue" = "影の不透明度：%d%%";
 "imageEditor.properties.shadowColor" = "影の色";
 "imageEditor.action.shadowColorFromForeground" = "前景色を使用";
@@ -706,6 +714,7 @@
 "imageEditor.properties.colorOverlayOpacityValue" = "カラーオーバーレイ不透明度：%d%%";
 "imageEditor.properties.gradientOverlayOpacityValue" = "グラデーションオーバーレイ不透明度：%d%%";
 "imageEditor.properties.gradientOverlayStyle" = "グラデーションオーバーレイスタイル";
+"imageEditor.properties.gradientOverlayScaleValue" = "グラデーションオーバーレイスケール：%d%%";
 "imageEditor.properties.gradientOverlayAngleValue" = "グラデーション角度：%d°";
 "imageEditor.properties.patternOverlayKind" = "パターン";
 "imageEditor.properties.patternOverlayOpacityValue" = "パターンオーバーレイ不透明度：%d%%";

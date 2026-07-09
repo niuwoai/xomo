@@ -225,6 +225,55 @@ struct ImageEditorLayerStyleTests {
         #expect(center.blueComponent < 0.35)
     }
 
+    @Test func imageEditorStrokeSupportsGradientAndPatternFillTypesAndRoundTripsProjectState() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let baseImage = solidImage(color: .black, size: canvasSize)
+        let layerImage = centerRectImage(size: canvasSize, color: .systemGreen)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: baseImage) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(layerImage, historyTitle: L10n.text("imageEditor.history.brush"))
+        let layerPixelsBeforeStyle = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+
+        viewModel.foregroundColor = .systemRed
+        viewModel.backgroundColor = .systemBlue
+        viewModel.setSelectedLayerStrokeWidth(6)
+        viewModel.setSelectedLayerStrokeFillType(.gradient)
+        viewModel.setSelectedLayerStrokeGradientStyle(.linear)
+        viewModel.setSelectedLayerStrokeGradientAngle(0)
+
+        let gradientLayer = try #require(viewModel.document.selectedLayer)
+        let layerPixelsAfterGradientStroke = try #require(gradientLayer.image.qingtuPNGData())
+        let gradientLeft = try #require(viewModel.currentImage.color(at: CGPoint(x: 21, y: 30))?.usingColorSpace(.deviceRGB))
+        let gradientRight = try #require(viewModel.currentImage.color(at: CGPoint(x: 59, y: 30))?.usingColorSpace(.deviceRGB))
+
+        #expect(gradientLayer.style.strokeEnabled)
+        #expect(gradientLayer.style.strokeFillType == .gradient)
+        #expect(gradientLayer.style.strokeGradientStyle == .linear)
+        #expect(gradientLayer.style.strokeGradientAngle == 0)
+        #expect(layerPixelsAfterGradientStroke == layerPixelsBeforeStyle)
+        #expect(gradientLeft.redComponent > gradientRight.redComponent + 0.20)
+        #expect(gradientRight.blueComponent > gradientLeft.blueComponent + 0.20)
+
+        viewModel.setSelectedLayerStrokeFillType(.pattern)
+        viewModel.setSelectedLayerStrokePatternKind(.dots)
+        viewModel.setSelectedLayerStrokePatternScale(12)
+
+        let patternLayer = try #require(viewModel.document.selectedLayer)
+        let patternPixel = try #require(viewModel.currentImage.color(at: CGPoint(x: 21, y: 30))?.usingColorSpace(.deviceRGB))
+        #expect(patternLayer.style.strokeFillType == .pattern)
+        #expect(patternLayer.style.strokePatternKind == .dots)
+        #expect(patternLayer.style.strokePatternScale == 12)
+        #expect(patternPixel.alphaComponent > 0.9)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStyle"))
+
+        let project = try ImageEditorProjectDocument(document: viewModel.document)
+        let restoredDocument = try project.restoredDocument()
+        let restoredLayer = try #require(restoredDocument.layers.first { $0.id == patternLayer.id })
+        #expect(restoredLayer.style.strokeEnabled)
+        #expect(restoredLayer.style.strokeFillType == .pattern)
+        #expect(restoredLayer.style.strokePatternKind == .dots)
+        #expect(restoredLayer.style.strokePatternScale == 12)
+    }
+
     @Test func imageEditorDropShadowRemainsVisibleWhenFillOpacityIsZero() async throws {
         let canvasSize = NSSize(width: 80, height: 60)
         let baseImage = solidImage(color: .systemBlue, size: canvasSize)
@@ -550,6 +599,85 @@ struct ImageEditorLayerStyleTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStyle"))
     }
 
+    @Test func imageEditorStrokeGradientFillRendersAndRoundTripsProjectState() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let baseImage = solidImage(color: .systemBlue, size: canvasSize)
+        let layerImage = centerRectImage(size: canvasSize, color: .systemGreen)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: baseImage) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(layerImage, historyTitle: L10n.text("imageEditor.history.brush"))
+        let layerPixelsBeforeStyle = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+
+        viewModel.setSelectedLayerFillOpacity(0)
+        viewModel.setSelectedLayerStrokeWidth(6)
+        viewModel.setSelectedLayerStrokePosition(.inside)
+        viewModel.foregroundColor = .systemRed
+        viewModel.backgroundColor = .systemBlue
+        viewModel.setSelectedLayerStrokeFillType(.gradient)
+        viewModel.setSelectedLayerStrokeGradientStyle(.linear)
+        viewModel.setSelectedLayerStrokeGradientAngle(0)
+
+        let styledLayer = try #require(viewModel.document.selectedLayer)
+        let layerPixelsAfterStyle = try #require(styledLayer.image.qingtuPNGData())
+        let leftEdge = try #require(viewModel.currentImage.color(at: CGPoint(x: 25, y: 30))?.usingColorSpace(.deviceRGB))
+        let rightEdge = try #require(viewModel.currentImage.color(at: CGPoint(x: 54, y: 30))?.usingColorSpace(.deviceRGB))
+        let center = try #require(viewModel.currentImage.color(at: CGPoint(x: 40, y: 30))?.usingColorSpace(.deviceRGB))
+
+        #expect(styledLayer.style.strokeEnabled)
+        #expect(styledLayer.style.strokeFillType == .gradient)
+        #expect(styledLayer.style.strokeGradientStyle == .linear)
+        #expect(styledLayer.style.strokeGradientAngle == 0)
+        #expect(viewModel.selectedLayerStrokeFillType == .gradient)
+        #expect(viewModel.selectedLayerStrokeGradientStyle == .linear)
+        #expect(layerPixelsAfterStyle == layerPixelsBeforeStyle)
+        #expect(leftEdge.redComponent > rightEdge.redComponent + 0.20)
+        #expect(rightEdge.blueComponent > leftEdge.blueComponent + 0.20)
+        #expect(center.blueComponent > 0.75)
+        #expect(center.redComponent < 0.25)
+
+        let project = try ImageEditorProjectDocument(document: viewModel.document)
+        let restoredDocument = try project.restoredDocument()
+        let restoredLayer = try #require(restoredDocument.layers.first { $0.id == styledLayer.id })
+        #expect(restoredLayer.style.strokeFillType == .gradient)
+        #expect(restoredLayer.style.strokeGradientStyle == .linear)
+        #expect(restoredLayer.style.strokeGradientAngle == 0)
+    }
+
+    @Test func imageEditorStrokePatternFillRendersAndRoundTripsProjectState() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let baseImage = solidImage(color: .systemBlue, size: canvasSize)
+        let layerImage = centerRectImage(size: canvasSize, color: .systemGreen)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: baseImage) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(layerImage, historyTitle: L10n.text("imageEditor.history.brush"))
+        let layerPixelsBeforeStyle = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+        let compositedBeforeStyle = try #require(viewModel.currentImage.qingtuPNGData())
+
+        viewModel.setSelectedLayerFillOpacity(0)
+        viewModel.setSelectedLayerStrokeWidth(8)
+        viewModel.setSelectedLayerStrokePosition(.inside)
+        viewModel.foregroundColor = .white
+        viewModel.setSelectedLayerStrokePatternKind(.diagonalStripes)
+        viewModel.setSelectedLayerStrokePatternScale(12)
+
+        let styledLayer = try #require(viewModel.document.selectedLayer)
+        let layerPixelsAfterStyle = try #require(styledLayer.image.qingtuPNGData())
+        let compositedAfterStyle = try #require(viewModel.currentImage.qingtuPNGData())
+
+        #expect(styledLayer.style.strokeEnabled)
+        #expect(styledLayer.style.strokeFillType == .pattern)
+        #expect(styledLayer.style.strokePatternKind == .diagonalStripes)
+        #expect(styledLayer.style.strokePatternScale == 12)
+        #expect(viewModel.selectedLayerStrokePatternKind == .diagonalStripes)
+        #expect(layerPixelsAfterStyle == layerPixelsBeforeStyle)
+        #expect(compositedAfterStyle != compositedBeforeStyle)
+
+        let project = try ImageEditorProjectDocument(document: viewModel.document)
+        let restoredDocument = try project.restoredDocument()
+        let restoredLayer = try #require(restoredDocument.layers.first { $0.id == styledLayer.id })
+        #expect(restoredLayer.style.strokeFillType == .pattern)
+        #expect(restoredLayer.style.strokePatternKind == .diagonalStripes)
+        #expect(restoredLayer.style.strokePatternScale == 12)
+    }
+
     @Test func imageEditorBevelIsNonDestructiveAndUpdatesStyleParameters() async throws {
         let canvasSize = NSSize(width: 80, height: 60)
         let baseImage = solidImage(color: .systemBlue, size: canvasSize)
@@ -614,6 +742,7 @@ struct ImageEditorLayerStyleTests {
         viewModel.backgroundColor = .systemBlue
         viewModel.setSelectedLayerGradientOverlayOpacity(1)
         viewModel.setSelectedLayerGradientOverlayStyle(.radial)
+        viewModel.setSelectedLayerGradientOverlayScale(2)
         viewModel.setSelectedLayerGradientOverlayAngle(45)
 
         let styledLayer = try #require(viewModel.document.selectedLayer)
@@ -624,8 +753,10 @@ struct ImageEditorLayerStyleTests {
         #expect(styledLayer.style.gradientOverlayEnabled)
         #expect(styledLayer.style.gradientOverlayOpacity == 1)
         #expect(styledLayer.style.gradientOverlayStyle == .radial)
+        #expect(styledLayer.style.gradientOverlayScale == 2)
         #expect(styledLayer.style.gradientOverlayAngle == 45)
         #expect(viewModel.selectedLayerGradientOverlayStyle == .radial)
+        #expect(viewModel.selectedLayerGradientOverlayScale == 2)
         #expect(layerPixelsAfterStyle == layerPixelsBeforeStyle)
         #expect(compositedAfterStyle != compositedBeforeStyle)
         #expect(centerColor.redComponent > edgeColor.redComponent + 0.25)
@@ -637,6 +768,7 @@ struct ImageEditorLayerStyleTests {
         let restoredLayer = try #require(restoredDocument.layers.first { $0.id == styledLayer.id })
         #expect(restoredLayer.style.gradientOverlayEnabled)
         #expect(restoredLayer.style.gradientOverlayStyle == .radial)
+        #expect(restoredLayer.style.gradientOverlayScale == 2)
         #expect(restoredLayer.style.gradientOverlayOpacity == 1)
     }
 

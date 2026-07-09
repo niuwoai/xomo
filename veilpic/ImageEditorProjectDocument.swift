@@ -593,6 +593,14 @@ struct ImageEditorProjectLayerStyle: Codable, Equatable {
     var strokeWidth: CGFloat
     var strokePosition: ImageEditorStrokePosition?
     var strokeOpacity: CGFloat?
+    var strokeFillType: ImageEditorStrokeFillType?
+    var strokeGradientStartColor: ImageEditorProjectColor?
+    var strokeGradientEndColor: ImageEditorProjectColor?
+    var strokeGradientStyle: ImageEditorGradientFillStyle?
+    var strokeGradientAngle: CGFloat?
+    var strokePatternKind: ImageEditorPatternOverlayKind?
+    var strokePatternColor: ImageEditorProjectColor?
+    var strokePatternScale: CGFloat?
     var shadowEnabled: Bool
     var shadowColor: ImageEditorProjectColor
     var shadowOpacity: CGFloat
@@ -628,6 +636,7 @@ struct ImageEditorProjectLayerStyle: Codable, Equatable {
     var gradientOverlayEndColor: ImageEditorProjectColor
     var gradientOverlayOpacity: CGFloat
     var gradientOverlayStyle: ImageEditorGradientFillStyle?
+    var gradientOverlayScale: CGFloat?
     var gradientOverlayAngle: CGFloat
     var patternOverlayEnabled: Bool
     var patternOverlayKind: ImageEditorPatternOverlayKind
@@ -654,6 +663,14 @@ struct ImageEditorProjectLayerStyle: Codable, Equatable {
         strokeWidth = style.strokeWidth
         strokePosition = style.strokePosition
         strokeOpacity = style.strokeOpacity
+        strokeFillType = style.strokeFillType
+        strokeGradientStartColor = ImageEditorProjectColor(color: style.strokeGradientStartColor)
+        strokeGradientEndColor = ImageEditorProjectColor(color: style.strokeGradientEndColor)
+        strokeGradientStyle = style.strokeGradientStyle
+        strokeGradientAngle = style.strokeGradientAngle
+        strokePatternKind = style.strokePatternKind
+        strokePatternColor = ImageEditorProjectColor(color: style.strokePatternColor)
+        strokePatternScale = style.strokePatternScale
         shadowEnabled = style.shadowEnabled
         shadowColor = ImageEditorProjectColor(color: style.shadowColor)
         shadowOpacity = style.shadowOpacity
@@ -689,6 +706,7 @@ struct ImageEditorProjectLayerStyle: Codable, Equatable {
         gradientOverlayEndColor = ImageEditorProjectColor(color: style.gradientOverlayEndColor)
         gradientOverlayOpacity = style.gradientOverlayOpacity
         gradientOverlayStyle = style.gradientOverlayStyle
+        gradientOverlayScale = style.gradientOverlayScale
         gradientOverlayAngle = style.gradientOverlayAngle
         patternOverlayEnabled = style.patternOverlayEnabled
         patternOverlayKind = style.patternOverlayKind
@@ -719,6 +737,14 @@ struct ImageEditorProjectLayerStyle: Codable, Equatable {
             strokeWidth: strokeWidth,
             strokePosition: strokePosition ?? .outside,
             strokeOpacity: max(0.05, min(1, strokeOpacity ?? 1)),
+            strokeFillType: strokeFillType ?? .color,
+            strokeGradientStartColor: strokeGradientStartColor?.nsColor ?? .white,
+            strokeGradientEndColor: strokeGradientEndColor?.nsColor ?? .black,
+            strokeGradientStyle: strokeGradientStyle ?? .linear,
+            strokeGradientAngle: max(-180, min(180, strokeGradientAngle ?? 0)),
+            strokePatternKind: strokePatternKind ?? .checkerboard,
+            strokePatternColor: strokePatternColor?.nsColor ?? .white,
+            strokePatternScale: max(6, min(64, strokePatternScale ?? 14)),
             shadowEnabled: shadowEnabled,
             shadowColor: shadowColor.nsColor,
             shadowOpacity: shadowOpacity,
@@ -754,6 +780,7 @@ struct ImageEditorProjectLayerStyle: Codable, Equatable {
             gradientOverlayEndColor: gradientOverlayEndColor.nsColor,
             gradientOverlayOpacity: gradientOverlayOpacity,
             gradientOverlayStyle: gradientOverlayStyle ?? .linear,
+            gradientOverlayScale: max(0.25, min(4, gradientOverlayScale ?? 1)),
             gradientOverlayAngle: gradientOverlayAngle,
             patternOverlayEnabled: patternOverlayEnabled,
             patternOverlayKind: patternOverlayKind,

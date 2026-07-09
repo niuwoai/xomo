@@ -84,8 +84,28 @@ extension ImageEditorViewModel {
         Double(document.selectedLayer?.style.strokeOpacity ?? 1)
     }
 
+    var selectedLayerStrokeFillType: ImageEditorStrokeFillType {
+        document.selectedLayer?.style.strokeFillType ?? .color
+    }
+
     var selectedLayerStrokeColor: NSColor {
         document.selectedLayer?.style.strokeColor ?? .white
+    }
+
+    var selectedLayerStrokeGradientStyle: ImageEditorGradientFillStyle {
+        document.selectedLayer?.style.strokeGradientStyle ?? .linear
+    }
+
+    var selectedLayerStrokeGradientAngle: Double {
+        Double(document.selectedLayer?.style.strokeGradientAngle ?? 0)
+    }
+
+    var selectedLayerStrokePatternKind: ImageEditorPatternOverlayKind {
+        document.selectedLayer?.style.strokePatternKind ?? .checkerboard
+    }
+
+    var selectedLayerStrokePatternScale: Double {
+        Double(document.selectedLayer?.style.strokePatternScale ?? 14)
     }
 
     var selectedLayerShadowOpacity: Double {
@@ -191,6 +211,10 @@ extension ImageEditorViewModel {
         document.selectedLayer?.style.gradientOverlayStyle ?? .linear
     }
 
+    var selectedLayerGradientOverlayScale: Double {
+        Double(document.selectedLayer?.style.gradientOverlayScale ?? 1)
+    }
+
     var selectedLayerGradientOverlayAngle: Double {
         Double(document.selectedLayer?.style.gradientOverlayAngle ?? 0)
     }
@@ -243,6 +267,7 @@ extension ImageEditorViewModel {
     func toggleSelectedLayerStroke() {
         toggleSelectedLayerStyleEffect(historyKey: "imageEditor.history.layerStroke") {
             $0.strokeEnabled.toggle()
+            updateStrokeFillDefaults(style: &$0)
         }
     }
 
@@ -372,10 +397,57 @@ extension ImageEditorViewModel {
         }
     }
 
+    func setSelectedLayerStrokeFillType(_ fillType: ImageEditorStrokeFillType) {
+        updateSelectedLayerStyle {
+            $0.strokeEnabled = true
+            $0.strokeFillType = fillType
+            updateStrokeFillDefaults(style: &$0)
+        }
+    }
+
     func setSelectedLayerStrokeColorFromForeground() {
         updateSelectedLayerStyle {
             $0.strokeEnabled = true
+            $0.strokeFillType = .color
             $0.strokeColor = strokeColor()
+        }
+    }
+
+    func setSelectedLayerStrokeGradientStyle(_ style: ImageEditorGradientFillStyle) {
+        updateSelectedLayerStyle {
+            $0.strokeEnabled = true
+            $0.strokeFillType = .gradient
+            $0.strokeGradientStartColor = foregroundColor
+            $0.strokeGradientEndColor = strokeGradientEndColor()
+            $0.strokeGradientStyle = style
+        }
+    }
+
+    func setSelectedLayerStrokeGradientAngle(_ angle: Double) {
+        updateSelectedLayerStyle {
+            $0.strokeEnabled = true
+            $0.strokeFillType = .gradient
+            $0.strokeGradientStartColor = foregroundColor
+            $0.strokeGradientEndColor = strokeGradientEndColor()
+            $0.strokeGradientAngle = CGFloat(angle).truncatingRemainder(dividingBy: 360)
+        }
+    }
+
+    func setSelectedLayerStrokePatternKind(_ kind: ImageEditorPatternOverlayKind) {
+        updateSelectedLayerStyle {
+            $0.strokeEnabled = true
+            $0.strokeFillType = .pattern
+            $0.strokePatternKind = kind
+            $0.strokePatternColor = strokePatternColor()
+        }
+    }
+
+    func setSelectedLayerStrokePatternScale(_ scale: Double) {
+        updateSelectedLayerStyle {
+            $0.strokeEnabled = true
+            $0.strokeFillType = .pattern
+            $0.strokePatternColor = strokePatternColor()
+            $0.strokePatternScale = max(6, min(64, CGFloat(scale)))
         }
     }
 
@@ -612,6 +684,15 @@ extension ImageEditorViewModel {
         }
     }
 
+    func setSelectedLayerGradientOverlayScale(_ scale: Double) {
+        updateSelectedLayerStyle {
+            $0.gradientOverlayEnabled = true
+            $0.gradientOverlayStartColor = foregroundColor
+            $0.gradientOverlayEndColor = gradientOverlayEndColor()
+            $0.gradientOverlayScale = max(0.25, min(4, CGFloat(scale)))
+        }
+    }
+
     func setSelectedLayerGradientOverlayAngle(_ angle: Double) {
         updateSelectedLayerStyle {
             $0.gradientOverlayEnabled = true
@@ -807,5 +888,29 @@ extension ImageEditorViewModel {
         let color = foregroundColor.usingColorSpace(.deviceRGB) ?? foregroundColor
         guard color.alphaComponent > 0.01 else { return .white }
         return foregroundColor
+    }
+
+    private func strokeGradientEndColor() -> NSColor {
+        let color = backgroundColor.usingColorSpace(.deviceRGB) ?? backgroundColor
+        guard color.alphaComponent > 0.01 else { return .black }
+        return backgroundColor
+    }
+
+    private func strokePatternColor() -> NSColor {
+        let color = foregroundColor.usingColorSpace(.deviceRGB) ?? foregroundColor
+        guard color.alphaComponent > 0.01 else { return .white }
+        return foregroundColor
+    }
+
+    private func updateStrokeFillDefaults(style: inout ImageEditorLayerStyle) {
+        switch style.strokeFillType {
+        case .color:
+            style.strokeColor = strokeColor()
+        case .gradient:
+            style.strokeGradientStartColor = foregroundColor
+            style.strokeGradientEndColor = strokeGradientEndColor()
+        case .pattern:
+            style.strokePatternColor = strokePatternColor()
+        }
     }
 }

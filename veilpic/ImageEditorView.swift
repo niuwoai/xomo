@@ -944,6 +944,46 @@ struct ImageEditorView: View {
         }
     }
 
+    private var selectedLayerStrokeFillTypeBinding: Binding<ImageEditorStrokeFillType> {
+        Binding {
+            viewModel.selectedLayerStrokeFillType
+        } set: { value in
+            viewModel.setSelectedLayerStrokeFillType(value)
+        }
+    }
+
+    private var selectedLayerStrokeGradientStyleBinding: Binding<ImageEditorGradientFillStyle> {
+        Binding {
+            viewModel.selectedLayerStrokeGradientStyle
+        } set: { value in
+            viewModel.setSelectedLayerStrokeGradientStyle(value)
+        }
+    }
+
+    private var selectedLayerStrokeGradientAngleBinding: Binding<Double> {
+        Binding {
+            viewModel.selectedLayerStrokeGradientAngle
+        } set: { value in
+            viewModel.setSelectedLayerStrokeGradientAngle(value)
+        }
+    }
+
+    private var selectedLayerStrokePatternKindBinding: Binding<ImageEditorPatternOverlayKind> {
+        Binding {
+            viewModel.selectedLayerStrokePatternKind
+        } set: { value in
+            viewModel.setSelectedLayerStrokePatternKind(value)
+        }
+    }
+
+    private var selectedLayerStrokePatternScaleBinding: Binding<Double> {
+        Binding {
+            viewModel.selectedLayerStrokePatternScale
+        } set: { value in
+            viewModel.setSelectedLayerStrokePatternScale(value)
+        }
+    }
+
     private var selectedLayerShadowOpacityBinding: Binding<Double> {
         Binding {
             viewModel.selectedLayerShadowOpacity
@@ -1133,6 +1173,14 @@ struct ImageEditorView: View {
             viewModel.selectedLayerGradientOverlayStyle
         } set: { value in
             viewModel.setSelectedLayerGradientOverlayStyle(value)
+        }
+    }
+
+    private var selectedLayerGradientOverlayScaleBinding: Binding<Double> {
+        Binding {
+            viewModel.selectedLayerGradientOverlayScale
+        } set: { value in
+            viewModel.setSelectedLayerGradientOverlayScale(value)
         }
     }
 
@@ -2251,22 +2299,56 @@ struct ImageEditorView: View {
                     in: 0.05...1,
                     step: 0.05
                 )
-                HStack(spacing: 8) {
-                    Text(L10n.text("imageEditor.properties.strokeColor"))
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
-                    RoundedRectangle(cornerRadius: 4)
-                        .fill(Color(nsColor: viewModel.selectedLayerStrokeColor))
-                        .frame(width: 20, height: 14)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 4)
-                                .stroke(Color(nsColor: ImageEditorTheme.border), lineWidth: 1)
-                        )
-                    Spacer(minLength: 4)
-                    Button(L10n.text("imageEditor.action.strokeColorFromForeground")) {
-                        viewModel.setSelectedLayerStrokeColorFromForeground()
+                Picker(L10n.text("imageEditor.properties.strokeFillType"), selection: selectedLayerStrokeFillTypeBinding) {
+                    ForEach(ImageEditorStrokeFillType.allCases) { fillType in
+                        Text(fillType.title).tag(fillType)
                     }
-                    .buttonStyle(EditorTextButtonStyle())
+                }
+                .pickerStyle(.menu)
+                if viewModel.selectedLayerStrokeFillType == .color {
+                    HStack(spacing: 8) {
+                        Text(L10n.text("imageEditor.properties.strokeColor"))
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(Color(nsColor: viewModel.selectedLayerStrokeColor))
+                            .frame(width: 20, height: 14)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 4)
+                                    .stroke(Color(nsColor: ImageEditorTheme.border), lineWidth: 1)
+                            )
+                        Spacer(minLength: 4)
+                        Button(L10n.text("imageEditor.action.strokeColorFromForeground")) {
+                            viewModel.setSelectedLayerStrokeColorFromForeground()
+                        }
+                        .buttonStyle(EditorTextButtonStyle())
+                    }
+                } else if viewModel.selectedLayerStrokeFillType == .gradient {
+                    Picker(L10n.text("imageEditor.properties.strokeGradientStyle"), selection: selectedLayerStrokeGradientStyleBinding) {
+                        ForEach(ImageEditorGradientFillStyle.allCases) { style in
+                            Text(style.title).tag(style)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    Stepper(
+                        L10n.format("imageEditor.properties.strokeGradientAngleValue", Int(viewModel.selectedLayerStrokeGradientAngle.rounded())),
+                        value: selectedLayerStrokeGradientAngleBinding,
+                        in: -180...180,
+                        step: 15
+                    )
+                } else {
+                    Picker(L10n.text("imageEditor.properties.strokePatternKind"), selection: selectedLayerStrokePatternKindBinding) {
+                        ForEach(ImageEditorPatternOverlayKind.allCases) { kind in
+                            Text(kind.title).tag(kind)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    Stepper(
+                        L10n.format("imageEditor.properties.strokePatternScaleValue", Int(viewModel.selectedLayerStrokePatternScale.rounded())),
+                        value: selectedLayerStrokePatternScaleBinding,
+                        in: 6...64,
+                        step: 2
+                    )
                 }
                 Stepper(
                     L10n.format("imageEditor.properties.shadowOpacityValue", Int((viewModel.selectedLayerShadowOpacity * 100).rounded())),
@@ -2439,6 +2521,12 @@ struct ImageEditorView: View {
                         step: 15
                     )
                 }
+                Stepper(
+                    L10n.format("imageEditor.properties.gradientOverlayScaleValue", Int((viewModel.selectedLayerGradientOverlayScale * 100).rounded())),
+                    value: selectedLayerGradientOverlayScaleBinding,
+                    in: 0.25...4,
+                    step: 0.05
+                )
                 Picker(L10n.text("imageEditor.properties.patternOverlayKind"), selection: selectedLayerPatternOverlayKindBinding) {
                     ForEach(ImageEditorPatternOverlayKind.allCases) { kind in
                         Text(kind.title).tag(kind)

@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.261.0 - 2026-07-10
+
+- 图层样式的 Gradient Overlay / 渐变叠加新增 Scale / 缩放控制，可调整 Linear、Radial、Reflected、Diamond 渐变覆盖尺度。
+- Stroke / 描边样式新增 Color、Gradient、Pattern 三种填充类型，可使用渐变样式、渐变角度、图案类型和图案缩放控制描边外观。
+- 渐变叠加缩放与描边填充类型接入属性面板和 `.qpicproject` 保存恢复，旧项目缺少新增字段时保持原有颜色描边和 100% 渐变叠加兼容。
+- 补齐中 / 英 / 日三语文案与渐变叠加缩放、描边填充类型回归测试；统一前后端版本号到 1.261.0。
+
 ## 1.260.0 - 2026-07-10
 
 - 图层样式的 Gradient Overlay / 渐变叠加新增 Linear、Radial、Reflected、Diamond 样式选择，复用渐变填充层的样式渲染能力。

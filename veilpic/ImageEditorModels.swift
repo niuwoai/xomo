@@ -1445,12 +1445,32 @@ enum ImageEditorStrokePosition: String, CaseIterable, Identifiable, Codable {
     }
 }
 
+enum ImageEditorStrokeFillType: String, CaseIterable, Identifiable, Codable {
+    case color
+    case gradient
+    case pattern
+
+    var id: String { rawValue }
+
+    var title: String {
+        L10n.text("imageEditor.strokeFillType.\(rawValue)")
+    }
+}
+
 struct ImageEditorLayerStyle {
     var strokeEnabled = false
     var strokeColor = NSColor.white
     var strokeWidth: CGFloat = 3
     var strokePosition = ImageEditorStrokePosition.outside
     var strokeOpacity: CGFloat = 1
+    var strokeFillType = ImageEditorStrokeFillType.color
+    var strokeGradientStartColor = NSColor.white
+    var strokeGradientEndColor = NSColor.black
+    var strokeGradientStyle = ImageEditorGradientFillStyle.linear
+    var strokeGradientAngle: CGFloat = 0
+    var strokePatternKind = ImageEditorPatternOverlayKind.checkerboard
+    var strokePatternColor = NSColor.white
+    var strokePatternScale: CGFloat = 14
     var shadowEnabled = false
     var shadowColor = NSColor.black
     var shadowOpacity: CGFloat = 0.35
@@ -1486,6 +1506,7 @@ struct ImageEditorLayerStyle {
     var gradientOverlayEndColor = NSColor.white
     var gradientOverlayOpacity: CGFloat = 0.55
     var gradientOverlayStyle = ImageEditorGradientFillStyle.linear
+    var gradientOverlayScale: CGFloat = 1
     var gradientOverlayAngle: CGFloat = 0
     var patternOverlayEnabled = false
     var patternOverlayKind = ImageEditorPatternOverlayKind.checkerboard
@@ -1570,6 +1591,41 @@ struct ImageEditorLayerStyle {
 
     static func shadowAngle(from offset: CGSize) -> CGFloat {
         atan2(offset.height, offset.width) * 180 / .pi
+    }
+
+    func strokeFillImage(size: CGSize) -> NSImage {
+        switch strokeFillType {
+        case .color:
+            return NSImage.rendered(size: size) { rect in
+                strokeColor.withAlphaComponent(strokeOpacity).setFill()
+                rect.fill()
+            } ?? NSImage.transparent(size: size)
+        case .gradient:
+            let start = strokeGradientStartColor.usingColorSpace(.deviceRGB) ?? .white
+            let end = strokeGradientEndColor.usingColorSpace(.deviceRGB) ?? .black
+            return ImageEditorGradientFillContent(
+                preset: .custom,
+                style: strokeGradientStyle,
+                angle: strokeGradientAngle,
+                scale: 1,
+                startRed: Double(start.redComponent),
+                startGreen: Double(start.greenComponent),
+                startBlue: Double(start.blueComponent),
+                endRed: Double(end.redComponent),
+                endGreen: Double(end.greenComponent),
+                endBlue: Double(end.blueComponent)
+            ).renderedImage(size: size).withOpacity(strokeOpacity) ?? NSImage.transparent(size: size)
+        case .pattern:
+            let tile = strokePatternKind.tileImage(
+                color: strokePatternColor,
+                opacity: strokeOpacity,
+                scale: strokePatternScale
+            )
+            return NSImage.rendered(size: size) { rect in
+                NSColor(patternImage: tile).setFill()
+                rect.fill()
+            } ?? NSImage.transparent(size: size)
+        }
     }
 }
 
@@ -2438,9 +2494,10 @@ struct ImageEditorLayer: Identifiable {
             if style.strokeEnabled {
                 let width = max(1, Int(style.strokeWidth.rounded()))
                 let outsideWidth = style.strokePosition.outsideWidth(totalWidth: width)
+                let strokeFillImage = style.strokeFillImage(size: outputSize)
                 if outsideWidth > 0,
                    let outsideStroke = baseImage.outsideStrokeCanvas(
-                       color: style.strokeColor.withAlphaComponent(style.strokeOpacity),
+                       fillImage: strokeFillImage,
                        width: outsideWidth,
                        contentRect: contentRect,
                        outputSize: outputSize
@@ -2502,9 +2559,10 @@ struct ImageEditorLayer: Identifiable {
             if style.strokeEnabled {
                 let width = max(1, Int(style.strokeWidth.rounded()))
                 let insideWidth = style.strokePosition.insideWidth(totalWidth: width)
+                let strokeFillImage = style.strokeFillImage(size: outputSize)
                 if insideWidth > 0,
                    let insideStroke = baseImage.insideStrokeCanvas(
-                       color: style.strokeColor.withAlphaComponent(style.strokeOpacity),
+                       fillImage: strokeFillImage,
                        width: insideWidth,
                        contentRect: contentRect,
                        outputSize: outputSize
@@ -2565,7 +2623,7 @@ struct ImageEditorLayer: Identifiable {
                    preset: .custom,
                    style: style.gradientOverlayStyle,
                    angle: style.gradientOverlayAngle,
-                   scale: 1,
+                   scale: style.gradientOverlayScale,
                    startRed: Double(style.gradientOverlayStartColor.usingColorSpace(.deviceRGB)?.redComponent ?? 1),
                    startGreen: Double(style.gradientOverlayStartColor.usingColorSpace(.deviceRGB)?.greenComponent ?? 0),
                    startBlue: Double(style.gradientOverlayStartColor.usingColorSpace(.deviceRGB)?.blueComponent ?? 0),
@@ -3743,11 +3801,11 @@ private extension NSImage {
         UInt8(max(0, min(255, (CGFloat(value) * multiplier).rounded())))
     }
 
-    func outsideStrokeCanvas(color: NSColor, width: Int, contentRect: CGRect, outputSize: CGSize) -> NSImage? {
-        let strokeImage = alphaTinted(color: color)
-        return NSImage.rendered(size: outputSize) { _ in
+    func outsideStrokeCanvas(fillImage: NSImage, width: Int, contentRect: CGRect, outputSize: CGSize) -> NSImage? {
+        let maskImage = alphaTinted(color: .white)
+        let strokeMask = NSImage.rendered(size: outputSize) { _ in
             drawExpandedAlpha(
-                strokeImage,
+                maskImage,
                 width: width,
                 contentRect: contentRect
             )
@@ -3758,15 +3816,28 @@ private extension NSImage {
                 fraction: 1
             )
         }
+        return NSImage.rendered(size: outputSize) { _ in
+            fillImage.draw(
+                in: CGRect(origin: .zero, size: outputSize),
+                from: CGRect(origin: .zero, size: fillImage.size),
+                operation: .sourceOver,
+                fraction: 1
+            )
+            strokeMask?.draw(
+                in: CGRect(origin: .zero, size: outputSize),
+                from: CGRect(origin: .zero, size: outputSize),
+                operation: .destinationIn,
+                fraction: 1
+            )
+        }
     }
 
-    func insideStrokeCanvas(color: NSColor, width: Int, contentRect: CGRect, outputSize: CGSize) -> NSImage? {
-        let strokeImage = alphaTinted(color: color)
+    func insideStrokeCanvas(fillImage: NSImage, width: Int, contentRect: CGRect, outputSize: CGSize) -> NSImage? {
         let maskImage = alphaTinted(color: .white)
         let erodedImage = NSImage.rendered(size: outputSize) { _ in
-            strokeImage.draw(
+            maskImage.draw(
                 in: contentRect,
-                from: CGRect(origin: .zero, size: strokeImage.size),
+                from: CGRect(origin: .zero, size: maskImage.size),
                 operation: .sourceOver,
                 fraction: 1
             )
@@ -3776,10 +3847,10 @@ private extension NSImage {
                 contentRect: contentRect
             )
         }
-        return NSImage.rendered(size: outputSize) { _ in
-            strokeImage.draw(
+        let strokeMask = NSImage.rendered(size: outputSize) { _ in
+            maskImage.draw(
                 in: contentRect,
-                from: CGRect(origin: .zero, size: strokeImage.size),
+                from: CGRect(origin: .zero, size: maskImage.size),
                 operation: .sourceOver,
                 fraction: 1
             )
@@ -3787,6 +3858,20 @@ private extension NSImage {
                 in: CGRect(origin: .zero, size: outputSize),
                 from: CGRect(origin: .zero, size: outputSize),
                 operation: .destinationOut,
+                fraction: 1
+            )
+        }
+        return NSImage.rendered(size: outputSize) { _ in
+            fillImage.draw(
+                in: CGRect(origin: .zero, size: outputSize),
+                from: CGRect(origin: .zero, size: fillImage.size),
+                operation: .sourceOver,
+                fraction: 1
+            )
+            strokeMask?.draw(
+                in: CGRect(origin: .zero, size: outputSize),
+                from: CGRect(origin: .zero, size: outputSize),
+                operation: .destinationIn,
                 fraction: 1
             )
         }

@@ -678,8 +678,16 @@
 "imageEditor.strokePosition.center" = "Center";
 "imageEditor.strokePosition.inside" = "Inside";
 "imageEditor.properties.strokeOpacityValue" = "Stroke Opacity: %d%%";
+"imageEditor.properties.strokeFillType" = "Stroke Fill";
+"imageEditor.strokeFillType.color" = "Color";
+"imageEditor.strokeFillType.gradient" = "Gradient";
+"imageEditor.strokeFillType.pattern" = "Pattern";
 "imageEditor.properties.strokeColor" = "Stroke Color";
 "imageEditor.action.strokeColorFromForeground" = "Use Foreground";
+"imageEditor.properties.strokeGradientStyle" = "Stroke Gradient Style";
+"imageEditor.properties.strokeGradientAngleValue" = "Stroke Gradient Angle: %d°";
+"imageEditor.properties.strokePatternKind" = "Stroke Pattern";
+"imageEditor.properties.strokePatternScaleValue" = "Stroke Pattern Scale: %d px";
 "imageEditor.properties.shadowOpacityValue" = "Shadow Opacity: %d%%";
 "imageEditor.properties.shadowColor" = "Shadow Color";
 "imageEditor.action.shadowColorFromForeground" = "Use Foreground";
@@ -706,6 +714,7 @@
 "imageEditor.properties.colorOverlayOpacityValue" = "Color Overlay Opacity: %d%%";
 "imageEditor.properties.gradientOverlayOpacityValue" = "Gradient Overlay Opacity: %d%%";
 "imageEditor.properties.gradientOverlayStyle" = "Gradient Overlay Style";
+"imageEditor.properties.gradientOverlayScaleValue" = "Gradient Overlay Scale: %d%%";
 "imageEditor.properties.gradientOverlayAngleValue" = "Gradient Angle: %d°";
 "imageEditor.properties.patternOverlayKind" = "Pattern";
 "imageEditor.properties.patternOverlayOpacityValue" = "Pattern Overlay Opacity: %d%%";
