@@ -466,6 +466,7 @@
 "imageEditor.histogram.title" = "直方图";
 "imageEditor.histogram.average" = "平均 RGB：%d / %d / %d";
 "imageEditor.histogram.luminance" = "平均亮度：%d";
+"imageEditor.histogram.clipping" = "裁切 暗/亮：%d%% / %d%%";
 "imageEditor.panel.history" = "历史";
 "imageEditor.panel.layers" = "图层";
 "imageEditor.panel.layersChannels" = "图层 / 通道";
@@ -853,6 +854,8 @@
 "imageEditor.history.layerClippingMaskCreateSelected" = "创建所选图层剪贴蒙版";
 "imageEditor.history.layerClippingMaskReleaseSelected" = "释放所选剪贴蒙版";
 "imageEditor.history.layerVisibility" = "切换图层可见性";
+"imageEditor.history.layerIsolateSelected" = "隔离显示所选图层";
+"imageEditor.history.layerShowAll" = "显示全部图层";
 "imageEditor.history.layerOpacity" = "调整图层不透明度";
 "imageEditor.history.layerFillOpacity" = "调整图层填充不透明度";
 "imageEditor.history.layerBlendIf" = "图层混合条件";
@@ -1055,6 +1058,8 @@
 "imageEditor.status.layerFromBackground" = "已将背景解锁为普通图层";
 "imageEditor.status.backgroundFromLayer" = "已将当前图层设为背景";
 "imageEditor.status.layerMaskCopied" = "已将图层蒙版复制到 %d 个图层";
+"imageEditor.status.layerIsolateSelected" = "已隔离显示 %d 个所选图层";
+"imageEditor.status.layerShowAll" = "已显示全部图层";
 "imageEditor.status.selectionCreated" = "已建立选区";
 "imageEditor.status.selectionAll" = "已选择整个画布";
 "imageEditor.status.selectionExpanded" = "已扩展选区 %d px";
@@ -1244,6 +1249,8 @@
 "imageEditor.action.vectorMaskSelect" = "选择矢量蒙版图层";
 "imageEditor.action.vectorMaskEditPath" = "编辑矢量蒙版路径";
 "imageEditor.action.layerDuplicate" = "复制图层";
+"imageEditor.action.layerIsolateSelected" = "隔离显示所选图层";
+"imageEditor.action.layerShowAll" = "显示全部图层";
 "imageEditor.action.layerFromBackground" = "从背景新建图层";
 "imageEditor.action.backgroundFromLayer" = "从图层新建背景";
 "imageEditor.action.layerSelectAll" = "选择全部图层";

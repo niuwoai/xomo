@@ -466,6 +466,7 @@
 "imageEditor.histogram.title" = "ヒストグラム";
 "imageEditor.histogram.average" = "平均 RGB：%d / %d / %d";
 "imageEditor.histogram.luminance" = "平均輝度：%d";
+"imageEditor.histogram.clipping" = "クリップ 暗/明：%d%% / %d%%";
 "imageEditor.panel.history" = "履歴";
 "imageEditor.panel.layers" = "レイヤー";
 "imageEditor.panel.layersChannels" = "レイヤー / チャンネル";
@@ -853,6 +854,8 @@
 "imageEditor.history.layerClippingMaskCreateSelected" = "選択レイヤーのクリッピングマスクを作成";
 "imageEditor.history.layerClippingMaskReleaseSelected" = "選択クリッピングマスクを解除";
 "imageEditor.history.layerVisibility" = "レイヤー表示を切り替え";
+"imageEditor.history.layerIsolateSelected" = "選択レイヤーを単独表示";
+"imageEditor.history.layerShowAll" = "すべてのレイヤーを表示";
 "imageEditor.history.layerOpacity" = "レイヤー不透明度";
 "imageEditor.history.layerFillOpacity" = "レイヤー塗り不透明度";
 "imageEditor.history.layerBlendIf" = "レイヤーブレンド条件";
@@ -1055,6 +1058,8 @@
 "imageEditor.status.layerFromBackground" = "背景を通常レイヤーとしてロック解除しました";
 "imageEditor.status.backgroundFromLayer" = "選択中のレイヤーを背景に変換しました";
 "imageEditor.status.layerMaskCopied" = "レイヤーマスクを %d 個のレイヤーにコピーしました";
+"imageEditor.status.layerIsolateSelected" = "%d 個の選択レイヤーを単独表示しました";
+"imageEditor.status.layerShowAll" = "すべてのレイヤーを表示しました";
 "imageEditor.status.selectionCreated" = "選択範囲を作成しました";
 "imageEditor.status.selectionAll" = "キャンバス全体を選択しました";
 "imageEditor.status.selectionExpanded" = "選択範囲を %d px 拡張しました";
@@ -1244,6 +1249,8 @@
 "imageEditor.action.vectorMaskSelect" = "ベクターマスクレイヤーを選択";
 "imageEditor.action.vectorMaskEditPath" = "ベクターマスクパスを編集";
 "imageEditor.action.layerDuplicate" = "レイヤーを複製";
+"imageEditor.action.layerIsolateSelected" = "選択レイヤーを単独表示";
+"imageEditor.action.layerShowAll" = "すべてのレイヤーを表示";
 "imageEditor.action.layerFromBackground" = "背景からレイヤーを作成";
 "imageEditor.action.backgroundFromLayer" = "レイヤーから背景を作成";
 "imageEditor.action.layerSelectAll" = "すべてのレイヤーを選択";

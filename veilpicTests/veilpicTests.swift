@@ -3153,6 +3153,57 @@ struct veilpicTests {
     }
 
     @MainActor
+    @Test func imageEditorCanIsolateSelectedLayersAndShowAllLayers() async throws {
+        let image = testImage(color: .systemIndigo, size: NSSize(width: 160, height: 120))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let backgroundID = try #require(viewModel.document.layers.first?.id)
+
+        viewModel.addLayer()
+        let firstID = try #require(viewModel.document.selectedLayerID)
+        viewModel.addLayer()
+        let secondID = try #require(viewModel.document.selectedLayerID)
+        viewModel.addLayer()
+        let outsideID = try #require(viewModel.document.selectedLayerID)
+
+        viewModel.selectLayer(firstID)
+        viewModel.selectLayer(secondID, extendingSelection: true)
+        viewModel.groupSelectedLayer()
+        let groupID = try #require(viewModel.document.selectedLayerID)
+
+        viewModel.selectLayer(firstID)
+        #expect(viewModel.canIsolateSelectedLayers)
+        viewModel.isolateSelectedLayers()
+        #expect(!isLayerVisible(backgroundID, in: viewModel))
+        #expect(isLayerVisible(groupID, in: viewModel))
+        #expect(isLayerVisible(firstID, in: viewModel))
+        #expect(!isLayerVisible(secondID, in: viewModel))
+        #expect(!isLayerVisible(outsideID, in: viewModel))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerIsolateSelected", 1))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerIsolateSelected"))
+
+        #expect(viewModel.canShowAllLayers)
+        viewModel.showAllLayers()
+        let allLayersVisible = viewModel.document.layers.allSatisfy { $0.isVisible }
+        #expect(allLayersVisible)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerShowAll"))
+
+        viewModel.undo()
+        #expect(isLayerVisible(groupID, in: viewModel))
+        #expect(isLayerVisible(firstID, in: viewModel))
+        #expect(!isLayerVisible(secondID, in: viewModel))
+        #expect(!isLayerVisible(outsideID, in: viewModel))
+
+        viewModel.showAllLayers()
+        viewModel.selectLayer(groupID)
+        #expect(viewModel.canIsolateSelectedLayers)
+        viewModel.isolateSelectedLayers()
+        #expect(isLayerVisible(groupID, in: viewModel))
+        #expect(isLayerVisible(firstID, in: viewModel))
+        #expect(isLayerVisible(secondID, in: viewModel))
+        #expect(!isLayerVisible(outsideID, in: viewModel))
+    }
+
+    @MainActor
     @Test func imageEditorMultiSelectTransformsLayersTogether() async throws {
         let canvasSize = NSSize(width: 160, height: 120)
         let image = testBitmapImage(size: canvasSize, background: .black)
@@ -4353,6 +4404,10 @@ struct veilpicTests {
     private func maskAlpha(_ mask: ImageEditorSelectionMask, x: Int, y: Int) -> UInt8 {
         guard x >= 0, y >= 0, x < mask.width, y < mask.height else { return 0 }
         return mask.alpha[y * mask.width + x]
+    }
+
+    private func isLayerVisible(_ id: UUID, in viewModel: ImageEditorViewModel) -> Bool {
+        viewModel.document.layers.first { $0.id == id }?.isVisible == true
     }
 
     private func isPixelLayer(_ layer: ImageEditorLayer) -> Bool {

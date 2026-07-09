@@ -25,7 +25,9 @@ struct ImageEditorHistogramSummary: Equatable {
         averageRed: 0,
         averageGreen: 0,
         averageBlue: 0,
-        averageLuminance: 0
+        averageLuminance: 0,
+        clippedShadowPixels: 0,
+        clippedHighlightPixels: 0
     )
 
     let bins: [ImageEditorHistogramBin]
@@ -34,6 +36,18 @@ struct ImageEditorHistogramSummary: Equatable {
     let averageGreen: Double
     let averageBlue: Double
     let averageLuminance: Double
+    let clippedShadowPixels: Int
+    let clippedHighlightPixels: Int
+
+    var clippedShadowRatio: Double {
+        guard pixelCount > 0 else { return 0 }
+        return Double(clippedShadowPixels) / Double(pixelCount)
+    }
+
+    var clippedHighlightRatio: Double {
+        guard pixelCount > 0 else { return 0 }
+        return Double(clippedHighlightPixels) / Double(pixelCount)
+    }
 }
 
 extension NSImage {
@@ -73,6 +87,8 @@ extension NSImage {
         var greenTotal = 0
         var blueTotal = 0
         var luminanceTotal = 0
+        var clippedShadowPixels = 0
+        var clippedHighlightPixels = 0
         let pixelCount = sampleWidth * sampleHeight
 
         for y in 0..<sampleHeight {
@@ -87,6 +103,12 @@ extension NSImage {
                 greenBins[histogramBinIndex(for: green, binCount: binCount)] += 1
                 blueBins[histogramBinIndex(for: blue, binCount: binCount)] += 1
                 luminanceBins[histogramBinIndex(for: luminance, binCount: binCount)] += 1
+                if luminance <= 0 {
+                    clippedShadowPixels += 1
+                }
+                if luminance >= 255 {
+                    clippedHighlightPixels += 1
+                }
                 redTotal += red
                 greenTotal += green
                 blueTotal += blue
@@ -117,7 +139,9 @@ extension NSImage {
             averageRed: Double(redTotal) / Double(pixelCount),
             averageGreen: Double(greenTotal) / Double(pixelCount),
             averageBlue: Double(blueTotal) / Double(pixelCount),
-            averageLuminance: Double(luminanceTotal) / Double(pixelCount)
+            averageLuminance: Double(luminanceTotal) / Double(pixelCount),
+            clippedShadowPixels: clippedShadowPixels,
+            clippedHighlightPixels: clippedHighlightPixels
         )
     }
 

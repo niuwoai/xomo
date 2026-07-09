@@ -614,11 +614,12 @@ struct ImageEditorView: View {
                 Text(viewModel.colorText)
                 Text(viewModel.histogramAverageText(for: histogramSummary))
                 Text(viewModel.histogramLuminanceText(for: histogramSummary))
+                Text(viewModel.histogramClippingText(for: histogramSummary))
             }
             .font(.system(size: 11, weight: .medium).monospacedDigit())
             .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
         }
-        .frame(height: 246)
+        .frame(height: 262)
     }
 
     private func histogramView(summary: ImageEditorHistogramSummary) -> some View {

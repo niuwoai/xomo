@@ -248,6 +248,18 @@ final class ImageEditorViewModel: ObservableObject {
         return L10n.format("imageEditor.histogram.luminance", Int(summary.averageLuminance.rounded()))
     }
 
+    var histogramClippingText: String {
+        histogramClippingText(for: histogramSummary)
+    }
+
+    func histogramClippingText(for summary: ImageEditorHistogramSummary) -> String {
+        return L10n.format(
+            "imageEditor.histogram.clipping",
+            Int((summary.clippedShadowRatio * 100).rounded()),
+            Int((summary.clippedHighlightRatio * 100).rounded())
+        )
+    }
+
     var selectedLayerOpacity: Double {
         guard let layer = document.selectedLayer else { return 1 }
         return layer.opacity
@@ -444,6 +456,18 @@ final class ImageEditorViewModel: ObservableObject {
 
     var canSetSelectedLayerLabelColor: Bool {
         selectedLayerCount > 0
+    }
+
+    var canIsolateSelectedLayers: Bool {
+        let visibleIDs = isolatedLayerVisibilityIDs()
+        guard !visibleIDs.isEmpty else { return false }
+        return document.layers.contains { layer in
+            layer.isVisible != visibleIDs.contains(layer.id)
+        }
+    }
+
+    var canShowAllLayers: Bool {
+        document.layers.contains { !$0.isVisible }
     }
 
     var visibleLayerRows: [ImageEditorLayer] {
@@ -1402,6 +1426,33 @@ final class ImageEditorViewModel: ObservableObject {
         pushUndo()
         document.layers[index].isVisible.toggle()
         appendHistory(L10n.text("imageEditor.history.layerVisibility"))
+    }
+
+    func isolateSelectedLayers() {
+        let visibleIDs = isolatedLayerVisibilityIDs()
+        guard !visibleIDs.isEmpty, canIsolateSelectedLayers else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+        pushUndo()
+        for index in document.layers.indices {
+            document.layers[index].isVisible = visibleIDs.contains(document.layers[index].id)
+        }
+        appendHistory(L10n.text("imageEditor.history.layerIsolateSelected"))
+        statusText = L10n.format("imageEditor.status.layerIsolateSelected", selectedLayerCount)
+    }
+
+    func showAllLayers() {
+        guard canShowAllLayers else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+        pushUndo()
+        for index in document.layers.indices {
+            document.layers[index].isVisible = true
+        }
+        appendHistory(L10n.text("imageEditor.history.layerShowAll"))
+        statusText = L10n.text("imageEditor.status.layerShowAll")
     }
 
     func toggleLayerGroupExpansion(_ id: UUID) {
@@ -3309,6 +3360,23 @@ final class ImageEditorViewModel: ObservableObject {
 
     private func clippingBaseExists(below index: Int, groupID: UUID?) -> Bool {
         document.hasClippingBase(below: index, groupID: groupID)
+    }
+
+    private func isolatedLayerVisibilityIDs() -> Set<UUID> {
+        var visibleIDs = document.selectedLayerIDs
+        for index in selectedLayerIndices {
+            let layer = document.layers[index]
+            if layer.isGroup {
+                visibleIDs.formUnion(groupDescendantIDs(for: layer.id))
+            }
+        }
+
+        var ancestorIDs = Set<UUID>()
+        for layer in document.layers where visibleIDs.contains(layer.id) {
+            ancestorIDs.formUnion(document.ancestorGroups(for: layer).map(\.id))
+        }
+        visibleIDs.formUnion(ancestorIDs)
+        return visibleIDs
     }
 
     private func selectedLayerClippingCreationIndices() -> [Int] {

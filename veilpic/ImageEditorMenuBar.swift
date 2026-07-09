@@ -284,6 +284,16 @@ extension ImageEditorView {
             viewModel.releaseSelectedClippingMasks()
         }
         .disabled(!viewModel.canReleaseSelectedClippingMasks)
+        Divider()
+        Button(L10n.text("imageEditor.action.layerIsolateSelected")) {
+            viewModel.isolateSelectedLayers()
+        }
+        .disabled(!viewModel.canIsolateSelectedLayers)
+        Button(L10n.text("imageEditor.action.layerShowAll")) {
+            viewModel.showAllLayers()
+        }
+        .disabled(!viewModel.canShowAllLayers)
+        Divider()
         Button(L10n.text("imageEditor.action.layerMergeDown")) {
             viewModel.mergeSelectedLayerDown()
         }

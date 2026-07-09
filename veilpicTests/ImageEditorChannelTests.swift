@@ -321,6 +321,10 @@ struct ImageEditorChannelTests {
         #expect(approximately(summary.averageGreen, 128, tolerance: 1))
         #expect(approximately(summary.averageBlue, 128, tolerance: 1))
         #expect(approximately(summary.averageLuminance, 128, tolerance: 1))
+        #expect(summary.clippedShadowPixels == 1)
+        #expect(summary.clippedHighlightPixels == 1)
+        #expect(approximately(summary.clippedShadowRatio, 0.25, tolerance: 0.01))
+        #expect(approximately(summary.clippedHighlightRatio, 0.25, tolerance: 0.01))
     }
 
     @Test func viewModelExposesHistogramReadoutsForNavigatorPanel() async throws {
@@ -330,6 +334,7 @@ struct ImageEditorChannelTests {
         #expect(viewModel.histogramSummary.bins.count == 32)
         #expect(viewModel.histogramAverageText.contains("128"))
         #expect(viewModel.histogramLuminanceText.contains("128"))
+        #expect(viewModel.histogramClippingText.contains("25"))
     }
 
     private func channelTestImage() -> NSImage {

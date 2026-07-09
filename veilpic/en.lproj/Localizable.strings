@@ -466,6 +466,7 @@
 "imageEditor.histogram.title" = "Histogram";
 "imageEditor.histogram.average" = "Avg RGB: %d / %d / %d";
 "imageEditor.histogram.luminance" = "Avg Luma: %d";
+"imageEditor.histogram.clipping" = "Clip S/H: %d%% / %d%%";
 "imageEditor.panel.history" = "History";
 "imageEditor.panel.layers" = "Layers";
 "imageEditor.panel.layersChannels" = "Layers / Channels";
@@ -853,6 +854,8 @@
 "imageEditor.history.layerClippingMaskCreateSelected" = "Create Selected Clipping Masks";
 "imageEditor.history.layerClippingMaskReleaseSelected" = "Release Selected Clipping Masks";
 "imageEditor.history.layerVisibility" = "Toggle Layer Visibility";
+"imageEditor.history.layerIsolateSelected" = "Isolate Selected Layers";
+"imageEditor.history.layerShowAll" = "Show All Layers";
 "imageEditor.history.layerOpacity" = "Layer Opacity";
 "imageEditor.history.layerFillOpacity" = "Layer Fill Opacity";
 "imageEditor.history.layerBlendIf" = "Layer Blend If";
@@ -1055,6 +1058,8 @@
 "imageEditor.status.layerFromBackground" = "Background unlocked as a normal layer";
 "imageEditor.status.backgroundFromLayer" = "Selected layer converted to background";
 "imageEditor.status.layerMaskCopied" = "Layer mask copied to %d layers";
+"imageEditor.status.layerIsolateSelected" = "Isolated %d selected layers";
+"imageEditor.status.layerShowAll" = "All layers shown";
 "imageEditor.status.selectionCreated" = "Selection created";
 "imageEditor.status.selectionAll" = "Entire canvas selected";
 "imageEditor.status.selectionExpanded" = "Selection expanded by %d px";
@@ -1244,6 +1249,8 @@
 "imageEditor.action.vectorMaskSelect" = "Select vector mask layer";
 "imageEditor.action.vectorMaskEditPath" = "Edit Vector Mask Path";
 "imageEditor.action.layerDuplicate" = "Duplicate Layer";
+"imageEditor.action.layerIsolateSelected" = "Isolate Selected Layers";
+"imageEditor.action.layerShowAll" = "Show All Layers";
 "imageEditor.action.layerFromBackground" = "Layer From Background";
 "imageEditor.action.backgroundFromLayer" = "Background From Layer";
 "imageEditor.action.layerSelectAll" = "Select All Layers";
