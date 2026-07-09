@@ -54,6 +54,9 @@ extension NSImage {
         if kind == .vignette {
             return vignetted(intensity: clamped)
         }
+        if kind == .liquifyPush {
+            return liquifyPushed(intensity: clamped, settings: settings)
+        }
 
         guard let ciImage = ciImageForEditing() else { return nil }
         let output: CIImage?
@@ -101,6 +104,8 @@ extension NSImage {
             return oilPainted(intensity: clamped)
         case .vignette:
             return vignetted(intensity: clamped)
+        case .liquifyPush:
+            return liquifyPushed(intensity: clamped, settings: settings)
         }
 
         guard let output,
@@ -499,7 +504,118 @@ extension NSImage {
         }
     }
 
+    private func liquifyPushed(intensity: Double, settings: ImageEditorFilterSettings) -> NSImage? {
+        let clampedIntensity = max(0, min(1, intensity))
+        guard clampedIntensity > 0 else { return self }
+        let normalizedSettings = settings.normalized()
+        return pixelSampledFromBuffer { x, y, width, height, pixels, bytesPerRow, bytesPerPixel in
+            let centerX = Double(max(width - 1, 1)) / 2
+            let centerY = Double(max(height - 1, 1)) / 2
+            let radius = max(2, min(Double(width), Double(height)) * 0.45)
+            let dx = Double(x) - centerX
+            let dy = Double(y) - centerY
+            let distance = hypot(dx, dy)
+            guard distance < radius else {
+                return Self.samplePixel(
+                    x: Double(x),
+                    y: Double(y),
+                    width: width,
+                    height: height,
+                    pixels: pixels,
+                    bytesPerRow: bytesPerRow,
+                    bytesPerPixel: bytesPerPixel
+                )
+            }
+
+            let falloff = pow(1 - distance / radius, 2)
+            let maxShift = radius * 0.42 * clampedIntensity
+            let sourceX = Double(x) - normalizedSettings.liquifyPushX * maxShift * falloff
+            let sourceY = Double(y) - normalizedSettings.liquifyPushY * maxShift * falloff
+            return Self.samplePixel(
+                x: sourceX,
+                y: sourceY,
+                width: width,
+                height: height,
+                pixels: pixels,
+                bytesPerRow: bytesPerRow,
+                bytesPerPixel: bytesPerPixel
+            )
+        }
+    }
+
     private func pixelMappedFromBuffer(
+        _ transform: (
+            _ x: Int,
+            _ y: Int,
+            _ width: Int,
+            _ height: Int,
+            _ pixels: [UInt8],
+            _ bytesPerRow: Int,
+            _ bytesPerPixel: Int
+        ) -> (Double, Double, Double, Double)
+    ) -> NSImage? {
+        guard let cgImage = cgImage(forProposedRect: nil, context: nil, hints: nil) else { return nil }
+        let width = max(1, cgImage.width)
+        let height = max(1, cgImage.height)
+        let bytesPerPixel = 4
+        let bytesPerRow = width * bytesPerPixel
+        var pixels = [UInt8](repeating: 0, count: bytesPerRow * height)
+
+        guard let context = CGContext(
+            data: &pixels,
+            width: width,
+            height: height,
+            bitsPerComponent: 8,
+            bytesPerRow: bytesPerRow,
+            space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ) else { return nil }
+
+        context.interpolationQuality = .none
+        context.translateBy(x: 0, y: CGFloat(height))
+        context.scaleBy(x: 1, y: -1)
+        context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
+
+        let sourcePixels = pixels
+        for y in 0..<height {
+            for x in 0..<width {
+                let offset = y * bytesPerRow + x * bytesPerPixel
+                let (red, green, blue, alpha) = transform(
+                    x,
+                    y,
+                    width,
+                    height,
+                    sourcePixels,
+                    bytesPerRow,
+                    bytesPerPixel
+                )
+                pixels[offset] = Self.byte(red)
+                pixels[offset + 1] = Self.byte(green)
+                pixels[offset + 2] = Self.byte(blue)
+                pixels[offset + 3] = Self.byte(alpha)
+            }
+        }
+
+        guard let provider = CGDataProvider(data: Data(pixels) as CFData),
+              let output = CGImage(
+                width: width,
+                height: height,
+                bitsPerComponent: 8,
+                bitsPerPixel: 32,
+                bytesPerRow: bytesPerRow,
+                space: CGColorSpaceCreateDeviceRGB(),
+                bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue),
+                provider: provider,
+                decode: nil,
+                shouldInterpolate: false,
+                intent: .defaultIntent
+              )
+        else { return nil }
+
+        return NSImage(cgImage: output, size: size)
+    }
+
+    private func pixelSampledFromBuffer(
         _ transform: (
             _ x: Int,
             _ y: Int,
@@ -633,6 +749,62 @@ extension NSImage {
         let green = Double(pixels[offset + 1]) / 255
         let blue = Double(pixels[offset + 2]) / 255
         return red * 0.299 + green * 0.587 + blue * 0.114
+    }
+
+    private static func samplePixel(
+        x: Double,
+        y: Double,
+        width: Int,
+        height: Int,
+        pixels: [UInt8],
+        bytesPerRow: Int,
+        bytesPerPixel: Int
+    ) -> (Double, Double, Double, Double) {
+        let clampedX = max(0, min(Double(width - 1), x))
+        let clampedY = max(0, min(Double(height - 1), y))
+        let x0 = Int(floor(clampedX))
+        let y0 = Int(floor(clampedY))
+        let x1 = min(width - 1, x0 + 1)
+        let y1 = min(height - 1, y0 + 1)
+        let tx = clampedX - Double(x0)
+        let ty = clampedY - Double(y0)
+        let topLeft = pixelComponents(x: x0, y: y0, pixels: pixels, bytesPerRow: bytesPerRow, bytesPerPixel: bytesPerPixel)
+        let topRight = pixelComponents(x: x1, y: y0, pixels: pixels, bytesPerRow: bytesPerRow, bytesPerPixel: bytesPerPixel)
+        let bottomLeft = pixelComponents(x: x0, y: y1, pixels: pixels, bytesPerRow: bytesPerRow, bytesPerPixel: bytesPerPixel)
+        let bottomRight = pixelComponents(x: x1, y: y1, pixels: pixels, bytesPerRow: bytesPerRow, bytesPerPixel: bytesPerPixel)
+        let top = mix(topLeft, topRight, tx)
+        let bottom = mix(bottomLeft, bottomRight, tx)
+        return mix(top, bottom, ty)
+    }
+
+    private static func pixelComponents(
+        x: Int,
+        y: Int,
+        pixels: [UInt8],
+        bytesPerRow: Int,
+        bytesPerPixel: Int
+    ) -> (Double, Double, Double, Double) {
+        let offset = y * bytesPerRow + x * bytesPerPixel
+        return (
+            Double(pixels[offset]) / 255,
+            Double(pixels[offset + 1]) / 255,
+            Double(pixels[offset + 2]) / 255,
+            Double(pixels[offset + 3]) / 255
+        )
+    }
+
+    private static func mix(
+        _ left: (Double, Double, Double, Double),
+        _ right: (Double, Double, Double, Double),
+        _ amount: Double
+    ) -> (Double, Double, Double, Double) {
+        let inverse = 1 - amount
+        return (
+            left.0 * inverse + right.0 * amount,
+            left.1 * inverse + right.1 * amount,
+            left.2 * inverse + right.2 * amount,
+            left.3 * inverse + right.3 * amount
+        )
     }
 
     private static func byte(_ value: Double) -> UInt8 {

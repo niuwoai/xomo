@@ -723,10 +723,13 @@ extension NSImage {
     private func gradientMapped(settings: ImageEditorAdjustmentSettings) -> NSImage? {
         let settings = settings.normalized()
         let stops = Self.gradientMapStops(settings: settings)
-        return pixelMapped { red, green, blue, alpha in
-            let luminance = settings.gradientMapReverse
+        return pixelMappedByCoordinate { x, y, red, green, blue, alpha in
+            let baseLuminance = settings.gradientMapReverse
                 ? 1 - Self.luminosity(red: red, green: green, blue: blue)
                 : Self.luminosity(red: red, green: green, blue: blue)
+            let luminance = settings.gradientMapDither
+                ? Self.ditheredGradientMapPosition(baseLuminance, x: x, y: y)
+                : baseLuminance
             let output = Self.gradientColor(at: luminance, stops: stops)
             return (output.red, output.green, output.blue, alpha)
         }
@@ -984,6 +987,18 @@ extension NSImage {
             )
         }
         return (last.red, last.green, last.blue)
+    }
+
+    private static func ditheredGradientMapPosition(_ position: Double, x: Int, y: Int) -> Double {
+        let bayer4x4 = [
+            [0, 8, 2, 10],
+            [12, 4, 14, 6],
+            [3, 11, 1, 9],
+            [15, 7, 13, 5]
+        ]
+        let threshold = (Double(bayer4x4[y & 3][x & 3]) + 0.5) / 16
+        let offset = (threshold - 0.5) / 96
+        return max(0, min(1, position + offset))
     }
 
     private static func luminosity(red: Double, green: Double, blue: Double) -> Double {
@@ -1257,6 +1272,14 @@ extension NSImage {
     private func pixelMapped(
         _ transform: (_ red: Double, _ green: Double, _ blue: Double, _ alpha: Double) -> (Double, Double, Double, Double)
     ) -> NSImage? {
+        pixelMappedByCoordinate { _, _, red, green, blue, alpha in
+            transform(red, green, blue, alpha)
+        }
+    }
+
+    private func pixelMappedByCoordinate(
+        _ transform: (_ x: Int, _ y: Int, _ red: Double, _ green: Double, _ blue: Double, _ alpha: Double) -> (Double, Double, Double, Double)
+    ) -> NSImage? {
         guard let cgImage = cgImage(forProposedRect: nil, context: nil, hints: nil) else { return nil }
         let width = max(1, cgImage.width)
         let height = max(1, cgImage.height)
@@ -1283,6 +1306,8 @@ extension NSImage {
             for x in 0..<width {
                 let offset = y * bytesPerRow + x * bytesPerPixel
                 let (red, green, blue, alpha) = transform(
+                    x,
+                    y,
                     Double(pixels[offset]) / 255,
                     Double(pixels[offset + 1]) / 255,
                     Double(pixels[offset + 2]) / 255,

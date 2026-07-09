@@ -463,10 +463,14 @@
 "imageEditor.filter.maximum" = "明るさの最大値";
 "imageEditor.filter.oilPaint" = "油彩";
 "imageEditor.filter.vignette" = "周辺光量";
+"imageEditor.filter.liquifyPush" = "ゆがみプッシュ";
 "imageEditor.filter.unsharpRadius" = "半径";
 "imageEditor.filter.unsharpRadiusValue" = "%@ px";
 "imageEditor.filter.unsharpThreshold" = "しきい値";
 "imageEditor.filter.unsharpThresholdValue" = "%d";
+"imageEditor.filter.liquifyPushX" = "水平プッシュ";
+"imageEditor.filter.liquifyPushY" = "垂直プッシュ";
+"imageEditor.filter.liquifyPushValue" = "%d";
 "imageEditor.shape.rectangle" = "長方形";
 "imageEditor.shape.ellipse" = "楕円";
 "imageEditor.shape.path" = "パス";
@@ -489,6 +493,7 @@
 "imageEditor.properties.smartFiltersEmpty" = "選択レイヤーにスマートフィルターはありません";
 "imageEditor.properties.smartFilterItem" = "%@ %d%%";
 "imageEditor.properties.smartFilterUnsharpItem" = "%@ %d%% · 半径 %@ · しきい値 %d";
+"imageEditor.properties.smartFilterLiquifyPushItem" = "%@ %d%% · X %d · Y %d";
 "imageEditor.properties.smartFilterDisabled" = "%@（オフ）";
 "imageEditor.properties.smartFilterSeparator" = "・";
 "imageEditor.properties.textPlaceholder" = "追加する文字";
@@ -521,6 +526,7 @@
 "imageEditor.properties.colorLookupLayerValue" = "カラールックアップ：%@";
 "imageEditor.properties.selectiveColorLayerValue" = "特定色域の選択：%@";
 "imageEditor.properties.gradientMapLayerValue" = "グラデーションマップ：%@";
+"imageEditor.properties.gradientMapDitherLayerValue" = "グラデーションマップ：%@・ディザー";
 "imageEditor.properties.filterLayerValue" = "%@ フィルター：%d%%";
 "imageEditor.properties.solidColorFillLayerValue" = "べた塗り：R %d・G %d・B %d";
 "imageEditor.properties.patternFillLayerValue" = "パターン塗り：%@・不透明度 %d%%・%d px";
@@ -632,6 +638,7 @@
 "imageEditor.gradientMap.preset.purpleTeal" = "パープル / ティール";
 "imageEditor.gradientMap.preset.custom" = "カスタム";
 "imageEditor.gradientMap.reverse" = "反転";
+"imageEditor.gradientMap.dither" = "ディザー";
 "imageEditor.gradientMap.shadows" = "シャドウカラー";
 "imageEditor.gradientMap.highlights" = "ハイライトカラー";
 "imageEditor.gradientMap.red" = "レッド";

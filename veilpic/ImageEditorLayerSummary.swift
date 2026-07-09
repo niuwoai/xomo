@@ -155,6 +155,12 @@ extension ImageEditorViewModel {
                 settings.selectiveColorMethod.title
             )
         case .gradientMap:
+            if settings.gradientMapDither {
+                return L10n.format(
+                    "imageEditor.properties.gradientMapDitherLayerValue",
+                    settings.gradientMapPreset.title
+                )
+            }
             return L10n.format(
                 "imageEditor.properties.gradientMapLayerValue",
                 settings.gradientMapPreset.title

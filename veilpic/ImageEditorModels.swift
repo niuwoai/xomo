@@ -892,6 +892,7 @@ struct ImageEditorAdjustmentSettings: Equatable, Codable {
     var selectiveColorMethod: ImageEditorSelectiveColorMethod = .relative
     var gradientMapPreset: ImageEditorGradientMapPreset = .blackWhite
     var gradientMapReverse: Bool = false
+    var gradientMapDither: Bool = false
     var gradientMapShadowRed: Double = 0
     var gradientMapShadowGreen: Double = 0
     var gradientMapShadowBlue: Double = 0
@@ -967,6 +968,7 @@ struct ImageEditorAdjustmentSettings: Equatable, Codable {
             selectiveColorMethod: selectiveColorMethod,
             gradientMapPreset: gradientMapPreset,
             gradientMapReverse: gradientMapReverse,
+            gradientMapDither: gradientMapDither,
             gradientMapShadowRed: Self.zeroOne(gradientMapShadowRed),
             gradientMapShadowGreen: Self.zeroOne(gradientMapShadowGreen),
             gradientMapShadowBlue: Self.zeroOne(gradientMapShadowBlue),
@@ -1058,6 +1060,7 @@ extension ImageEditorAdjustmentSettings {
         case selectiveColorMethod
         case gradientMapPreset
         case gradientMapReverse
+        case gradientMapDither
         case gradientMapShadowRed
         case gradientMapShadowGreen
         case gradientMapShadowBlue
@@ -1131,6 +1134,7 @@ extension ImageEditorAdjustmentSettings {
         selectiveColorMethod = try container.decodeIfPresent(ImageEditorSelectiveColorMethod.self, forKey: .selectiveColorMethod) ?? .relative
         gradientMapPreset = try container.decodeIfPresent(ImageEditorGradientMapPreset.self, forKey: .gradientMapPreset) ?? .blackWhite
         gradientMapReverse = try container.decodeIfPresent(Bool.self, forKey: .gradientMapReverse) ?? false
+        gradientMapDither = try container.decodeIfPresent(Bool.self, forKey: .gradientMapDither) ?? false
         gradientMapShadowRed = try container.decodeIfPresent(Double.self, forKey: .gradientMapShadowRed) ?? 0
         gradientMapShadowGreen = try container.decodeIfPresent(Double.self, forKey: .gradientMapShadowGreen) ?? 0
         gradientMapShadowBlue = try container.decodeIfPresent(Double.self, forKey: .gradientMapShadowBlue) ?? 0
@@ -1167,6 +1171,8 @@ extension ImageEditorAdjustmentSettings {
         try container.encode(exposureGamma, forKey: .exposureGamma)
         try container.encode(shadowsHighlightsShadows, forKey: .shadowsHighlightsShadows)
         try container.encode(shadowsHighlightsHighlights, forKey: .shadowsHighlightsHighlights)
+        try container.encode(vibranceAmount, forKey: .vibranceAmount)
+        try container.encode(vibranceSaturation, forKey: .vibranceSaturation)
         try container.encode(blackWhiteReds, forKey: .blackWhiteReds)
         try container.encode(blackWhiteYellows, forKey: .blackWhiteYellows)
         try container.encode(blackWhiteGreens, forKey: .blackWhiteGreens)
@@ -1202,6 +1208,7 @@ extension ImageEditorAdjustmentSettings {
         try container.encode(selectiveColorMethod, forKey: .selectiveColorMethod)
         try container.encode(gradientMapPreset, forKey: .gradientMapPreset)
         try container.encode(gradientMapReverse, forKey: .gradientMapReverse)
+        try container.encode(gradientMapDither, forKey: .gradientMapDither)
         try container.encode(gradientMapShadowRed, forKey: .gradientMapShadowRed)
         try container.encode(gradientMapShadowGreen, forKey: .gradientMapShadowGreen)
         try container.encode(gradientMapShadowBlue, forKey: .gradientMapShadowBlue)
@@ -1226,6 +1233,7 @@ enum ImageEditorFilter: String, CaseIterable, Identifiable {
     case maximum
     case oilPaint
     case vignette
+    case liquifyPush
 
     var id: String { rawValue }
 
@@ -1253,12 +1261,51 @@ struct ImageEditorSmartFilter: Identifiable, Equatable, Codable {
 struct ImageEditorFilterSettings: Equatable, Codable {
     var unsharpRadius: Double = 1
     var unsharpThreshold: Double = 0
+    var liquifyPushX: Double = 0.25
+    var liquifyPushY: Double = 0
+
+    init(
+        unsharpRadius: Double = 1,
+        unsharpThreshold: Double = 0,
+        liquifyPushX: Double = 0.25,
+        liquifyPushY: Double = 0
+    ) {
+        self.unsharpRadius = unsharpRadius
+        self.unsharpThreshold = unsharpThreshold
+        self.liquifyPushX = liquifyPushX
+        self.liquifyPushY = liquifyPushY
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        unsharpRadius = try container.decodeIfPresent(Double.self, forKey: .unsharpRadius) ?? 1
+        unsharpThreshold = try container.decodeIfPresent(Double.self, forKey: .unsharpThreshold) ?? 0
+        liquifyPushX = try container.decodeIfPresent(Double.self, forKey: .liquifyPushX) ?? 0.25
+        liquifyPushY = try container.decodeIfPresent(Double.self, forKey: .liquifyPushY) ?? 0
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(unsharpRadius, forKey: .unsharpRadius)
+        try container.encode(unsharpThreshold, forKey: .unsharpThreshold)
+        try container.encode(liquifyPushX, forKey: .liquifyPushX)
+        try container.encode(liquifyPushY, forKey: .liquifyPushY)
+    }
 
     func normalized() -> ImageEditorFilterSettings {
         ImageEditorFilterSettings(
             unsharpRadius: max(0.5, min(5, unsharpRadius)),
-            unsharpThreshold: max(0, min(1, unsharpThreshold))
+            unsharpThreshold: max(0, min(1, unsharpThreshold)),
+            liquifyPushX: max(-1, min(1, liquifyPushX)),
+            liquifyPushY: max(-1, min(1, liquifyPushY))
         )
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case unsharpRadius
+        case unsharpThreshold
+        case liquifyPushX
+        case liquifyPushY
     }
 }
 

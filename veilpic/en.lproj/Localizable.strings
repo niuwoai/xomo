@@ -463,10 +463,14 @@
 "imageEditor.filter.maximum" = "Maximum";
 "imageEditor.filter.oilPaint" = "Oil Paint";
 "imageEditor.filter.vignette" = "Vignette";
+"imageEditor.filter.liquifyPush" = "Liquify Push";
 "imageEditor.filter.unsharpRadius" = "Radius";
 "imageEditor.filter.unsharpRadiusValue" = "%@ px";
 "imageEditor.filter.unsharpThreshold" = "Threshold";
 "imageEditor.filter.unsharpThresholdValue" = "%d";
+"imageEditor.filter.liquifyPushX" = "Push X";
+"imageEditor.filter.liquifyPushY" = "Push Y";
+"imageEditor.filter.liquifyPushValue" = "%d";
 "imageEditor.shape.rectangle" = "Rectangle";
 "imageEditor.shape.ellipse" = "Ellipse";
 "imageEditor.shape.path" = "Path";
@@ -489,6 +493,7 @@
 "imageEditor.properties.smartFiltersEmpty" = "No smart filters on selected layer";
 "imageEditor.properties.smartFilterItem" = "%@ %d%%";
 "imageEditor.properties.smartFilterUnsharpItem" = "%@ %d%% · Radius %@ · Threshold %d";
+"imageEditor.properties.smartFilterLiquifyPushItem" = "%@ %d%% · X %d · Y %d";
 "imageEditor.properties.smartFilterDisabled" = "%@ (off)";
 "imageEditor.properties.smartFilterSeparator" = " · ";
 "imageEditor.properties.textPlaceholder" = "Text to add";
@@ -521,6 +526,7 @@
 "imageEditor.properties.colorLookupLayerValue" = "Color Lookup: %@";
 "imageEditor.properties.selectiveColorLayerValue" = "Selective Color: %@";
 "imageEditor.properties.gradientMapLayerValue" = "Gradient Map: %@";
+"imageEditor.properties.gradientMapDitherLayerValue" = "Gradient Map: %@ · dither";
 "imageEditor.properties.filterLayerValue" = "%@ Filter: %d%%";
 "imageEditor.properties.solidColorFillLayerValue" = "Solid Color Fill: R %d · G %d · B %d";
 "imageEditor.properties.patternFillLayerValue" = "Pattern Fill: %@ · Opacity %d%% · %d px";
@@ -632,6 +638,7 @@
 "imageEditor.gradientMap.preset.purpleTeal" = "Purple / Teal";
 "imageEditor.gradientMap.preset.custom" = "Custom";
 "imageEditor.gradientMap.reverse" = "Reverse";
+"imageEditor.gradientMap.dither" = "Dither";
 "imageEditor.gradientMap.shadows" = "Shadow Color";
 "imageEditor.gradientMap.highlights" = "Highlight Color";
 "imageEditor.gradientMap.red" = "Red";

@@ -6,6 +6,7 @@
 //
 
 import AppKit
+import Foundation
 import Testing
 @testable import musepic
 
@@ -311,6 +312,14 @@ struct ImageEditorAdjustmentTests {
         let restoredLayer = try #require(restoredDocument.layers.first { $0.id == adjustmentLayer.id })
         #expect(restoredLayer.adjustmentSettings.vibranceAmount == 0.55)
         #expect(restoredLayer.adjustmentSettings.vibranceSaturation == 0.25)
+
+        let encodedSettingsData = try JSONEncoder().encode(adjustmentLayer.adjustmentSettings)
+        let encodedSettings = try #require(String(data: encodedSettingsData, encoding: .utf8))
+        let decodedSettings = try JSONDecoder().decode(ImageEditorAdjustmentSettings.self, from: encodedSettingsData)
+        #expect(encodedSettings.contains("\"vibranceAmount\""))
+        #expect(encodedSettings.contains("\"vibranceSaturation\""))
+        #expect(decodedSettings.vibranceAmount == 0.55)
+        #expect(decodedSettings.vibranceSaturation == 0.25)
     }
 
     @Test func imageEditorPosterizeAdjustmentQuantizesChannelsAndSupportsLayerState() async throws {
@@ -574,6 +583,7 @@ struct ImageEditorAdjustmentTests {
         viewModel.selectedAdjustment = .gradientMap
         viewModel.selectedGradientMapPreset = .custom
         viewModel.gradientMapReverse = true
+        viewModel.gradientMapDither = true
         viewModel.gradientMapShadowRed = 1
         viewModel.gradientMapShadowGreen = 0
         viewModel.gradientMapShadowBlue = 0
@@ -585,19 +595,29 @@ struct ImageEditorAdjustmentTests {
         let adjustmentLayer = try #require(viewModel.document.selectedLayer)
         let settings = adjustmentLayer.adjustmentSettings.normalized()
         let previewBlack = try #require(viewModel.currentImage.color(at: CGPoint(x: 15, y: 30))?.usingColorSpace(.deviceRGB))
+        let previewGrayA = try #require(viewModel.currentImage.color(at: CGPoint(x: 44, y: 28))?.usingColorSpace(.deviceRGB))
+        let previewGrayB = try #require(viewModel.currentImage.color(at: CGPoint(x: 45, y: 28))?.usingColorSpace(.deviceRGB))
         let previewWhite = try #require(viewModel.currentImage.color(at: CGPoint(x: 75, y: 30))?.usingColorSpace(.deviceRGB))
 
         #expect(adjustmentLayer.adjustment?.kind == .gradientMap)
         #expect(settings.gradientMapPreset == .custom)
         #expect(settings.gradientMapReverse)
+        #expect(settings.gradientMapDither)
         #expect(settings.gradientMapShadowRed == 1)
         #expect(settings.gradientMapHighlightBlue == 1)
+        #expect(viewModel.selectedLayerGeometryText == L10n.format("imageEditor.properties.gradientMapDitherLayerValue", settings.gradientMapPreset.title))
         #expect(viewModel.document.layers.first { $0.id == baseLayerID }?.image.qingtuPNGData() == basePixelsBefore)
         #expect(previewBlack.blueComponent > 0.95)
         #expect(previewBlack.redComponent < 0.05)
+        #expect(abs(previewGrayA.redComponent - previewGrayB.redComponent) > 0.002)
         #expect(previewWhite.redComponent > 0.95)
         #expect(previewWhite.blueComponent < 0.05)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerAdjustmentNew"))
+
+        let project = try ImageEditorProjectDocument(document: viewModel.document)
+        let restoredDocument = try project.restoredDocument()
+        let restoredLayer = try #require(restoredDocument.layers.first { $0.id == adjustmentLayer.id })
+        #expect(restoredLayer.adjustmentSettings.gradientMapDither)
     }
 
     @Test func imageEditorSelectiveColorAdjustmentSupportsRangesAndLayerState() async throws {

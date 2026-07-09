@@ -129,6 +129,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var selectiveColorMethod: ImageEditorSelectiveColorMethod = .relative
     @Published var selectedGradientMapPreset: ImageEditorGradientMapPreset = .blackWhite
     @Published var gradientMapReverse: Bool = false
+    @Published var gradientMapDither: Bool = false
     @Published var gradientMapShadowRed: Double = 0
     @Published var gradientMapShadowGreen: Double = 0
     @Published var gradientMapShadowBlue: Double = 0
@@ -159,6 +160,8 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var filterIntensity: Double = 0.5
     @Published var filterUnsharpRadius: Double = 1
     @Published var filterUnsharpThreshold: Double = 0
+    @Published var filterLiquifyPushX: Double = 0.25
+    @Published var filterLiquifyPushY: Double = 0
     @Published var selectedChannelPreview: ImageEditorChannelPreview = .composite
     @Published var isEditingLayerMask: Bool = false
     @Published var pendingPenPathPoints: [CGPoint] = []
@@ -455,6 +458,18 @@ final class ImageEditorViewModel: ObservableObject {
                 Int((filter.normalizedIntensity * 100).rounded()),
                 String(format: "%.1f", settings.unsharpRadius),
                 Int((settings.unsharpThreshold * 255).rounded())
+            )
+            guard !filter.isEnabled else { return title }
+            return L10n.format("imageEditor.properties.smartFilterDisabled", title)
+        }
+        if filter.kind == .liquifyPush {
+            let settings = filter.normalizedSettings
+            let title = L10n.format(
+                "imageEditor.properties.smartFilterLiquifyPushItem",
+                filter.kind.title,
+                Int((filter.normalizedIntensity * 100).rounded()),
+                Int((settings.liquifyPushX * 100).rounded()),
+                Int((settings.liquifyPushY * 100).rounded())
             )
             guard !filter.isEnabled else { return title }
             return L10n.format("imageEditor.properties.smartFilterDisabled", title)
@@ -2654,7 +2669,9 @@ final class ImageEditorViewModel: ObservableObject {
     private func currentFilterSettings() -> ImageEditorFilterSettings {
         ImageEditorFilterSettings(
             unsharpRadius: filterUnsharpRadius,
-            unsharpThreshold: filterUnsharpThreshold
+            unsharpThreshold: filterUnsharpThreshold,
+            liquifyPushX: filterLiquifyPushX,
+            liquifyPushY: filterLiquifyPushY
         ).normalized()
     }
 
@@ -2881,6 +2898,7 @@ final class ImageEditorViewModel: ObservableObject {
             selectiveColorMethod: selectiveColorMethod,
             gradientMapPreset: selectedGradientMapPreset,
             gradientMapReverse: gradientMapReverse,
+            gradientMapDither: gradientMapDither,
             gradientMapShadowRed: gradientMapShadowRed,
             gradientMapShadowGreen: gradientMapShadowGreen,
             gradientMapShadowBlue: gradientMapShadowBlue,
@@ -2992,6 +3010,7 @@ final class ImageEditorViewModel: ObservableObject {
         selectiveColorMethod = .relative
         selectedGradientMapPreset = .blackWhite
         gradientMapReverse = false
+        gradientMapDither = false
         gradientMapShadowRed = 0
         gradientMapShadowGreen = 0
         gradientMapShadowBlue = 0
@@ -3865,6 +3884,7 @@ final class ImageEditorViewModel: ObservableObject {
         selectiveColorMethod = settings.selectiveColorMethod
         selectedGradientMapPreset = settings.gradientMapPreset
         gradientMapReverse = settings.gradientMapReverse
+        gradientMapDither = settings.gradientMapDither
         gradientMapShadowRed = settings.gradientMapShadowRed
         gradientMapShadowGreen = settings.gradientMapShadowGreen
         gradientMapShadowBlue = settings.gradientMapShadowBlue
@@ -3890,6 +3910,8 @@ final class ImageEditorViewModel: ObservableObject {
         let normalized = settings.normalized()
         filterUnsharpRadius = normalized.unsharpRadius
         filterUnsharpThreshold = normalized.unsharpThreshold
+        filterLiquifyPushX = normalized.liquifyPushX
+        filterLiquifyPushY = normalized.liquifyPushY
     }
 
     private func syncSolidColorFillControlsFromSelection() {

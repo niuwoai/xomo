@@ -2023,6 +2023,28 @@ struct ImageEditorView: View {
                             .frame(width: 44, alignment: .trailing)
                     }
                 }
+                if viewModel.selectedFilter == .liquifyPush {
+                    HStack {
+                        Text(L10n.text("imageEditor.filter.liquifyPushX"))
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                        Slider(value: $viewModel.filterLiquifyPushX, in: -1...1, step: 0.05)
+                        Text(L10n.format("imageEditor.filter.liquifyPushValue", Int((viewModel.filterLiquifyPushX * 100).rounded())))
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+                            .frame(width: 44, alignment: .trailing)
+                    }
+                    HStack {
+                        Text(L10n.text("imageEditor.filter.liquifyPushY"))
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                        Slider(value: $viewModel.filterLiquifyPushY, in: -1...1, step: 0.05)
+                        Text(L10n.format("imageEditor.filter.liquifyPushValue", Int((viewModel.filterLiquifyPushY * 100).rounded())))
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+                            .frame(width: 44, alignment: .trailing)
+                    }
+                }
                 Text(viewModel.selectedLayerSmartFilterText)
                     .font(.system(size: 10, weight: .medium))
                     .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
@@ -3218,6 +3240,10 @@ struct ImageEditorView: View {
                 }
             }
             Toggle(L10n.text("imageEditor.gradientMap.reverse"), isOn: $viewModel.gradientMapReverse)
+                .toggleStyle(.checkbox)
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+            Toggle(L10n.text("imageEditor.gradientMap.dither"), isOn: $viewModel.gradientMapDither)
                 .toggleStyle(.checkbox)
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))

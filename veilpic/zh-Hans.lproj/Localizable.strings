@@ -463,10 +463,14 @@
 "imageEditor.filter.maximum" = "最大值";
 "imageEditor.filter.oilPaint" = "油画";
 "imageEditor.filter.vignette" = "暗角";
+"imageEditor.filter.liquifyPush" = "液化推移";
 "imageEditor.filter.unsharpRadius" = "半径";
 "imageEditor.filter.unsharpRadiusValue" = "%@ px";
 "imageEditor.filter.unsharpThreshold" = "阈值";
 "imageEditor.filter.unsharpThresholdValue" = "%d";
+"imageEditor.filter.liquifyPushX" = "水平推移";
+"imageEditor.filter.liquifyPushY" = "垂直推移";
+"imageEditor.filter.liquifyPushValue" = "%d";
 "imageEditor.shape.rectangle" = "矩形";
 "imageEditor.shape.ellipse" = "椭圆";
 "imageEditor.shape.path" = "路径";
@@ -489,6 +493,7 @@
 "imageEditor.properties.smartFiltersEmpty" = "当前图层没有智能滤镜";
 "imageEditor.properties.smartFilterItem" = "%@ %d%%";
 "imageEditor.properties.smartFilterUnsharpItem" = "%@ %d%% · 半径 %@ · 阈值 %d";
+"imageEditor.properties.smartFilterLiquifyPushItem" = "%@ %d%% · X %d · Y %d";
 "imageEditor.properties.smartFilterDisabled" = "%@（已关闭）";
 "imageEditor.properties.smartFilterSeparator" = " · ";
 "imageEditor.properties.textPlaceholder" = "输入要添加的文字";
@@ -521,6 +526,7 @@
 "imageEditor.properties.colorLookupLayerValue" = "颜色查找：%@";
 "imageEditor.properties.selectiveColorLayerValue" = "可选颜色：%@";
 "imageEditor.properties.gradientMapLayerValue" = "渐变映射：%@";
+"imageEditor.properties.gradientMapDitherLayerValue" = "渐变映射：%@ · 抖动";
 "imageEditor.properties.filterLayerValue" = "%@ 滤镜：%d%%";
 "imageEditor.properties.solidColorFillLayerValue" = "纯色填充：R %d · G %d · B %d";
 "imageEditor.properties.patternFillLayerValue" = "图案填充：%@ · 不透明度 %d%% · %d px";
@@ -632,6 +638,7 @@
 "imageEditor.gradientMap.preset.purpleTeal" = "紫青";
 "imageEditor.gradientMap.preset.custom" = "自定义";
 "imageEditor.gradientMap.reverse" = "反向";
+"imageEditor.gradientMap.dither" = "抖动";
 "imageEditor.gradientMap.shadows" = "阴影颜色";
 "imageEditor.gradientMap.highlights" = "高光颜色";
 "imageEditor.gradientMap.red" = "红色";

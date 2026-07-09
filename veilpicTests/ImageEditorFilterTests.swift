@@ -572,10 +572,74 @@ struct ImageEditorFilterTests {
         #expect(try #require(smartViewModel.currentImage.qingtuPNGData()) == smartPreviewBefore)
     }
 
+    @Test func imageEditorLiquifyPushFilterLayerAndSmartFilterAreNonDestructive() async throws {
+        let canvasSize = NSSize(width: 48, height: 48)
+        let sourceImage = splitColorImage(size: canvasSize, left: .systemRed, right: .systemBlue)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: sourceImage) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(sourceImage, historyTitle: L10n.text("imageEditor.history.brush"))
+        let baseLayerID = try #require(viewModel.document.selectedLayerID)
+        let basePixelsBefore = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+        let centerBefore = try #require(viewModel.currentImage.color(at: CGPoint(x: 24, y: 24))?.usingColorSpace(.deviceRGB))
+
+        viewModel.selectedFilter = .liquifyPush
+        viewModel.filterIntensity = 1
+        viewModel.filterLiquifyPushX = 1
+        viewModel.filterLiquifyPushY = 0
+        viewModel.addFilterLayer()
+
+        let filterLayer = try #require(viewModel.document.selectedLayer)
+        let centerAfter = try #require(viewModel.currentImage.color(at: CGPoint(x: 24, y: 24))?.usingColorSpace(.deviceRGB))
+        #expect(filterLayer.isFilter)
+        #expect(filterLayer.filter?.kind == .liquifyPush)
+        #expect(filterLayer.filterSettings.normalized().liquifyPushX == 1)
+        #expect(filterLayer.filterSettings.normalized().liquifyPushY == 0)
+        #expect(viewModel.document.layers.first { $0.id == baseLayerID }?.image.qingtuPNGData() == basePixelsBefore)
+        #expect(centerBefore.blueComponent > centerBefore.redComponent + 0.4)
+        #expect(centerAfter.redComponent > centerAfter.blueComponent + 0.4)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerFilterNew"))
+
+        let smartViewModel = ImageEditorViewModel(sourceName: "source.png", image: sourceImage) { _ in }
+        smartViewModel.replaceSelectedLayerImageForTesting(sourceImage, historyTitle: L10n.text("imageEditor.history.brush"))
+        let smartBasePixelsBefore = try #require(smartViewModel.document.selectedLayer?.image.qingtuPNGData())
+        smartViewModel.selectedFilter = .liquifyPush
+        smartViewModel.filterIntensity = 1
+        smartViewModel.filterLiquifyPushX = 1
+        smartViewModel.filterLiquifyPushY = 0
+        smartViewModel.addSmartFilterToSelectedLayer()
+
+        let smartLayer = try #require(smartViewModel.document.selectedLayer)
+        let smartFilter = try #require(smartLayer.smartFilters.first)
+        let smartCenterAfter = try #require(smartViewModel.currentImage.color(at: CGPoint(x: 24, y: 24))?.usingColorSpace(.deviceRGB))
+        #expect(smartFilter.kind == .liquifyPush)
+        #expect(smartFilter.normalizedSettings.liquifyPushX == 1)
+        #expect(smartFilter.normalizedSettings.liquifyPushY == 0)
+        #expect(smartLayer.image.qingtuPNGData() == smartBasePixelsBefore)
+        #expect(smartCenterAfter.redComponent > smartCenterAfter.blueComponent + 0.4)
+        #expect(smartViewModel.smartFilterLabel(smartFilter) == L10n.format("imageEditor.properties.smartFilterLiquifyPushItem", smartFilter.kind.title, 100, 100, 0))
+        #expect(smartViewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterAdd"))
+
+        let project = try ImageEditorProjectDocument(document: smartViewModel.document)
+        let restoredDocument = try project.restoredDocument()
+        let restoredLayer = try #require(restoredDocument.layers.first { $0.id == smartLayer.id })
+        let restoredFilter = try #require(restoredLayer.smartFilters.first)
+        #expect(restoredFilter.kind == .liquifyPush)
+        #expect(restoredFilter.normalizedSettings.liquifyPushX == 1)
+        #expect(restoredFilter.normalizedSettings.liquifyPushY == 0)
+    }
+
     private func solidImage(size: NSSize, color: NSColor) -> NSImage {
         NSImage.rendered(size: size) { rect in
             color.setFill()
             rect.fill()
+        } ?? NSImage.transparent(size: size)
+    }
+
+    private func splitColorImage(size: NSSize, left: NSColor, right: NSColor) -> NSImage {
+        NSImage.rendered(size: size) { rect in
+            left.setFill()
+            CGRect(x: rect.minX, y: rect.minY, width: rect.width / 2, height: rect.height).fill()
+            right.setFill()
+            CGRect(x: rect.midX, y: rect.minY, width: rect.width / 2, height: rect.height).fill()
         } ?? NSImage.transparent(size: size)
     }
 
