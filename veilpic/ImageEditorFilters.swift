@@ -39,6 +39,9 @@ extension NSImage {
         if kind == .emboss {
             return embossed(intensity: clamped)
         }
+        if kind == .findEdges {
+            return findingEdges(intensity: clamped)
+        }
 
         guard let ciImage = ciImageForEditing() else { return nil }
         let output: CIImage?
@@ -76,6 +79,8 @@ extension NSImage {
             return highPassed(intensity: clamped)
         case .emboss:
             return embossed(intensity: clamped)
+        case .findEdges:
+            return findingEdges(intensity: clamped)
         }
 
         guard let output,
@@ -335,6 +340,37 @@ extension NSImage {
             )
             let relief = (highlight - shadow) * strength
             let value = 0.5 * alpha + relief
+            return (
+                Self.premultipliedChannel(value, alpha: alpha),
+                Self.premultipliedChannel(value, alpha: alpha),
+                Self.premultipliedChannel(value, alpha: alpha),
+                alpha
+            )
+        }
+    }
+
+    private func findingEdges(intensity: Double) -> NSImage? {
+        let clampedIntensity = max(0, min(1, intensity))
+        let strength = 1.2 + clampedIntensity * 3.4
+        return pixelMappedFromBuffer { x, y, width, height, pixels, bytesPerRow, bytesPerPixel in
+            let offset = y * bytesPerRow + x * bytesPerPixel
+            let alpha = Double(pixels[offset + 3]) / 255
+            let left = max(0, x - 1)
+            let right = min(width - 1, x + 1)
+            let top = max(0, y - 1)
+            let bottom = min(height - 1, y + 1)
+            let topLeft = Self.luminance(x: left, y: top, pixels: pixels, bytesPerRow: bytesPerRow, bytesPerPixel: bytesPerPixel)
+            let topCenter = Self.luminance(x: x, y: top, pixels: pixels, bytesPerRow: bytesPerRow, bytesPerPixel: bytesPerPixel)
+            let topRight = Self.luminance(x: right, y: top, pixels: pixels, bytesPerRow: bytesPerRow, bytesPerPixel: bytesPerPixel)
+            let middleLeft = Self.luminance(x: left, y: y, pixels: pixels, bytesPerRow: bytesPerRow, bytesPerPixel: bytesPerPixel)
+            let middleRight = Self.luminance(x: right, y: y, pixels: pixels, bytesPerRow: bytesPerRow, bytesPerPixel: bytesPerPixel)
+            let bottomLeft = Self.luminance(x: left, y: bottom, pixels: pixels, bytesPerRow: bytesPerRow, bytesPerPixel: bytesPerPixel)
+            let bottomCenter = Self.luminance(x: x, y: bottom, pixels: pixels, bytesPerRow: bytesPerRow, bytesPerPixel: bytesPerPixel)
+            let bottomRight = Self.luminance(x: right, y: bottom, pixels: pixels, bytesPerRow: bytesPerRow, bytesPerPixel: bytesPerPixel)
+            let horizontal = -topLeft - 2 * middleLeft - bottomLeft + topRight + 2 * middleRight + bottomRight
+            let vertical = -topLeft - 2 * topCenter - topRight + bottomLeft + 2 * bottomCenter + bottomRight
+            let edge = min(1, hypot(horizontal, vertical) * strength)
+            let value = alpha * (1 - edge)
             return (
                 Self.premultipliedChannel(value, alpha: alpha),
                 Self.premultipliedChannel(value, alpha: alpha),

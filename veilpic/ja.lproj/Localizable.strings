@@ -457,6 +457,7 @@
 "imageEditor.filter.unsharpMask" = "アンシャープマスク";
 "imageEditor.filter.highPass" = "ハイパス";
 "imageEditor.filter.emboss" = "エンボス";
+"imageEditor.filter.findEdges" = "輪郭検出";
 "imageEditor.filter.unsharpRadius" = "半径";
 "imageEditor.filter.unsharpRadiusValue" = "%@ px";
 "imageEditor.filter.unsharpThreshold" = "しきい値";

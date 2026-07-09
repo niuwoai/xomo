@@ -357,6 +357,55 @@ struct ImageEditorFilterTests {
         #expect(try #require(smartViewModel.currentImage.qingtuPNGData()) == smartPreviewBefore)
     }
 
+    @Test func imageEditorFindEdgesFilterLayerAndSmartFilterAreNonDestructive() async throws {
+        let canvasSize = NSSize(width: 72, height: 48)
+        let sourceImage = verticalEdgeImage(size: canvasSize)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: sourceImage) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(sourceImage, historyTitle: L10n.text("imageEditor.history.brush"))
+        let baseLayerID = try #require(viewModel.document.selectedLayerID)
+        let basePixelsBefore = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+
+        viewModel.selectedFilter = .findEdges
+        viewModel.filterIntensity = 1
+        viewModel.addFilterLayer()
+
+        let filterLayer = try #require(viewModel.document.selectedLayer)
+        let flatLeft = try #require(viewModel.currentImage.color(at: CGPoint(x: 12, y: 24))?.usingColorSpace(.deviceRGB))
+        let flatRight = try #require(viewModel.currentImage.color(at: CGPoint(x: 60, y: 24))?.usingColorSpace(.deviceRGB))
+        let detectedEdge = try #require(viewModel.currentImage.color(at: CGPoint(x: 35, y: 24))?.usingColorSpace(.deviceRGB))
+
+        #expect(filterLayer.isFilter)
+        #expect(filterLayer.filter?.kind == .findEdges)
+        #expect(viewModel.document.layers.first { $0.id == baseLayerID }?.image.qingtuPNGData() == basePixelsBefore)
+        #expect(flatLeft.redComponent > 0.95)
+        #expect(flatRight.redComponent > 0.95)
+        #expect(detectedEdge.redComponent < 0.08)
+        #expect(abs(detectedEdge.redComponent - detectedEdge.greenComponent) < 0.002)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerFilterNew"))
+
+        let smartViewModel = ImageEditorViewModel(sourceName: "source.png", image: sourceImage) { _ in }
+        smartViewModel.replaceSelectedLayerImageForTesting(sourceImage, historyTitle: L10n.text("imageEditor.history.brush"))
+        let smartBasePixelsBefore = try #require(smartViewModel.document.selectedLayer?.image.qingtuPNGData())
+        let smartPreviewBefore = try #require(smartViewModel.currentImage.qingtuPNGData())
+
+        smartViewModel.selectedFilter = .findEdges
+        smartViewModel.filterIntensity = 1
+        smartViewModel.addSmartFilterToSelectedLayer()
+
+        var smartLayer = try #require(smartViewModel.document.selectedLayer)
+        let smartFilterID = try #require(smartLayer.smartFilters.first?.id)
+        let smartDetectedEdge = try #require(smartViewModel.currentImage.color(at: CGPoint(x: 35, y: 24))?.usingColorSpace(.deviceRGB))
+        #expect(smartLayer.smartFilters.first?.kind == .findEdges)
+        #expect(smartLayer.image.qingtuPNGData() == smartBasePixelsBefore)
+        #expect(smartDetectedEdge.redComponent < 0.08)
+        #expect(smartViewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterAdd"))
+
+        smartViewModel.toggleSmartFilterOnSelectedLayer(smartFilterID)
+        smartLayer = try #require(smartViewModel.document.selectedLayer)
+        #expect(smartLayer.smartFilters.first?.isEnabled == false)
+        #expect(try #require(smartViewModel.currentImage.qingtuPNGData()) == smartPreviewBefore)
+    }
+
     private func solidImage(size: NSSize, color: NSColor) -> NSImage {
         NSImage.rendered(size: size) { rect in
             color.setFill()
