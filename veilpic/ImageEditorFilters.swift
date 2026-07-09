@@ -36,6 +36,9 @@ extension NSImage {
         if kind == .highPass {
             return highPassed(intensity: clamped)
         }
+        if kind == .emboss {
+            return embossed(intensity: clamped)
+        }
 
         guard let ciImage = ciImageForEditing() else { return nil }
         let output: CIImage?
@@ -71,6 +74,8 @@ extension NSImage {
             return unsharpMasked(intensity: clamped, settings: settings)
         case .highPass:
             return highPassed(intensity: clamped)
+        case .emboss:
+            return embossed(intensity: clamped)
         }
 
         guard let output,
@@ -308,6 +313,37 @@ extension NSImage {
         }
     }
 
+    private func embossed(intensity: Double) -> NSImage? {
+        let clampedIntensity = max(0, min(1, intensity))
+        let strength = 1.2 + clampedIntensity * 2.6
+        return pixelMappedFromBuffer { x, y, width, height, pixels, bytesPerRow, bytesPerPixel in
+            let offset = y * bytesPerRow + x * bytesPerPixel
+            let alpha = Double(pixels[offset + 3]) / 255
+            let shadow = Self.luminance(
+                x: max(0, x - 1),
+                y: max(0, y - 1),
+                pixels: pixels,
+                bytesPerRow: bytesPerRow,
+                bytesPerPixel: bytesPerPixel
+            )
+            let highlight = Self.luminance(
+                x: min(width - 1, x + 1),
+                y: min(height - 1, y + 1),
+                pixels: pixels,
+                bytesPerRow: bytesPerRow,
+                bytesPerPixel: bytesPerPixel
+            )
+            let relief = (highlight - shadow) * strength
+            let value = 0.5 * alpha + relief
+            return (
+                Self.premultipliedChannel(value, alpha: alpha),
+                Self.premultipliedChannel(value, alpha: alpha),
+                Self.premultipliedChannel(value, alpha: alpha),
+                alpha
+            )
+        }
+    }
+
     private func pixelMappedFromBuffer(
         _ transform: (
             _ x: Int,
@@ -428,6 +464,20 @@ extension NSImage {
         }
         guard count > 0 else { return (0, 0, 0) }
         return (red / count, green / count, blue / count)
+    }
+
+    private static func luminance(
+        x: Int,
+        y: Int,
+        pixels: [UInt8],
+        bytesPerRow: Int,
+        bytesPerPixel: Int
+    ) -> Double {
+        let offset = y * bytesPerRow + x * bytesPerPixel
+        let red = Double(pixels[offset]) / 255
+        let green = Double(pixels[offset + 1]) / 255
+        let blue = Double(pixels[offset + 2]) / 255
+        return red * 0.299 + green * 0.587 + blue * 0.114
     }
 
     private static func byte(_ value: Double) -> UInt8 {

@@ -290,6 +290,16 @@ extension ImageEditorBlendMode {
         overlayBlue: Double
     ) -> (red: Double, green: Double, blue: Double) {
         switch self {
+        case .darkerColor:
+            return Self.luminance(red: overlayRed, green: overlayGreen, blue: overlayBlue)
+                < Self.luminance(red: baseRed, green: baseGreen, blue: baseBlue)
+                ? (overlayRed, overlayGreen, overlayBlue)
+                : (baseRed, baseGreen, baseBlue)
+        case .lighterColor:
+            return Self.luminance(red: overlayRed, green: overlayGreen, blue: overlayBlue)
+                > Self.luminance(red: baseRed, green: baseGreen, blue: baseBlue)
+                ? (overlayRed, overlayGreen, overlayBlue)
+                : (baseRed, baseGreen, baseBlue)
         case .hue, .saturation, .color, .luminosity:
             return hslBlend(
                 baseRed: baseRed,
@@ -300,8 +310,8 @@ extension ImageEditorBlendMode {
                 overlayBlue: overlayBlue
             )
         case .passThrough, .normal, .dissolve, .multiply, .screen, .overlay, .darken, .lighten, .colorDodge,
-             .colorBurn, .linearDodge, .linearBurn, .softLight, .hardLight, .vividLight, .linearLight,
-             .pinLight, .difference, .exclusion:
+             .colorBurn, .linearDodge, .linearBurn, .subtract, .divide, .softLight, .hardLight, .vividLight,
+             .linearLight, .pinLight, .hardMix, .difference, .exclusion:
             return (
                 Self.blendChannel(mode: self, base: baseRed, overlay: overlayRed),
                 Self.blendChannel(mode: self, base: baseGreen, overlay: overlayGreen),
@@ -332,6 +342,11 @@ extension ImageEditorBlendMode {
             return clamp(base + overlay)
         case .linearBurn:
             return clamp(base + overlay - 1)
+        case .subtract:
+            return clamp(base - overlay)
+        case .divide:
+            guard overlay > 0 else { return 1 }
+            return clamp(base / overlay)
         case .softLight:
             if overlay <= 0.5 {
                 return base - (1 - 2 * overlay) * base * (1 - base)
@@ -351,11 +366,13 @@ extension ImageEditorBlendMode {
             return clamp(base + 2 * overlay - 1)
         case .pinLight:
             return overlay < 0.5 ? min(base, 2 * overlay) : max(base, 2 * overlay - 1)
+        case .hardMix:
+            return blendChannel(mode: .vividLight, base: base, overlay: overlay) < 0.5 ? 0 : 1
         case .difference:
             return abs(base - overlay)
         case .exclusion:
             return base + overlay - 2 * base * overlay
-        case .hue, .saturation, .color, .luminosity:
+        case .darkerColor, .lighterColor, .hue, .saturation, .color, .luminosity:
             return overlay
         }
     }
@@ -380,10 +397,14 @@ extension ImageEditorBlendMode {
         case .luminosity:
             return Self.rgb(hue: base.hue, saturation: base.saturation, lightness: overlay.lightness)
         case .passThrough, .normal, .dissolve, .multiply, .screen, .overlay, .darken, .lighten,
-             .colorDodge, .colorBurn, .linearDodge, .linearBurn, .softLight, .hardLight, .vividLight, .linearLight,
-             .pinLight, .difference, .exclusion:
+             .darkerColor, .lighterColor, .colorDodge, .colorBurn, .linearDodge, .linearBurn, .subtract, .divide,
+             .softLight, .hardLight, .vividLight, .linearLight, .pinLight, .hardMix, .difference, .exclusion:
             return (overlayRed, overlayGreen, overlayBlue)
         }
+    }
+
+    private static func luminance(red: Double, green: Double, blue: Double) -> Double {
+        0.2126 * red + 0.7152 * green + 0.0722 * blue
     }
 
     private static func colorDodge(base: Double, overlay: Double) -> Double {

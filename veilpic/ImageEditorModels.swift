@@ -909,6 +909,7 @@ enum ImageEditorFilter: String, CaseIterable, Identifiable {
     case median
     case unsharpMask
     case highPass
+    case emboss
 
     var id: String { rawValue }
 
@@ -985,15 +986,20 @@ enum ImageEditorBlendMode: String, CaseIterable, Identifiable {
     case overlay
     case darken
     case lighten
+    case darkerColor
+    case lighterColor
     case colorDodge
     case colorBurn
     case linearDodge
     case linearBurn
+    case subtract
+    case divide
     case softLight
     case hardLight
     case vividLight
     case linearLight
     case pinLight
+    case hardMix
     case difference
     case exclusion
     case hue
@@ -1021,19 +1027,23 @@ enum ImageEditorBlendMode: String, CaseIterable, Identifiable {
             .darken
         case .lighten:
             .lighten
+        case .darkerColor:
+            .darken
+        case .lighterColor:
+            .lighten
         case .colorDodge:
             .colorDodge
         case .colorBurn:
             .colorBurn
         case .linearDodge:
             .plusLighter
-        case .linearBurn:
+        case .linearBurn, .subtract, .divide:
             .sourceOver
         case .softLight:
             .softLight
         case .hardLight:
             .hardLight
-        case .vividLight, .linearLight, .pinLight:
+        case .vividLight, .linearLight, .pinLight, .hardMix:
             .sourceOver
         case .difference:
             .difference
