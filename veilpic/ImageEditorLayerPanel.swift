@@ -267,6 +267,16 @@ extension ImageEditorView {
             .help(L10n.format("imageEditor.action.alphaChannelThreshold", channel.name))
 
             Button {
+                viewModel.featherAlphaChannel(channel.id)
+            } label: {
+                Image(systemName: "circle.dotted")
+                    .font(.system(size: 12, weight: .semibold))
+                    .frame(width: 24, height: 28)
+            }
+            .buttonStyle(EditorIconButtonStyle(isSelected: false))
+            .help(L10n.format("imageEditor.action.alphaChannelFeather", channel.name))
+
+            Button {
                 viewModel.deleteAlphaChannel(channel.id)
             } label: {
                 Image(systemName: "trash")

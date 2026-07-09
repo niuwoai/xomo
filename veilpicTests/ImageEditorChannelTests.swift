@@ -401,6 +401,34 @@ struct ImageEditorChannelTests {
         #expect(viewModel.previewedAlphaChannelID == channel.id)
     }
 
+    @Test func alphaChannelsCanFeatherHardMasks() async throws {
+        let viewModel = ImageEditorViewModel(sourceName: "split.png", image: splitChannelImage()) { _ in }
+        let mask = ImageEditorSelectionMask(
+            width: 3,
+            height: 3,
+            alpha: [
+                0, 0, 0,
+                0, 255, 0,
+                0, 0, 0
+            ]
+        )
+        let channel = ImageEditorAlphaChannel(name: "Dot", mask: mask)
+        viewModel.document.alphaChannels = [channel]
+        viewModel.selectionModifyAmount = 1
+        viewModel.selectAlphaChannel(channel.id)
+
+        #expect(viewModel.canFeatherSelectedAlphaChannel)
+        viewModel.featherSelectedAlphaChannel()
+
+        let featheredChannel = try #require(viewModel.selectedAlphaChannel)
+        #expect(maskAlpha(featheredChannel.mask, x: 0, y: 0) == 28)
+        #expect(maskAlpha(featheredChannel.mask, x: 1, y: 1) == 28)
+        #expect(maskAlpha(featheredChannel.mask, x: 2, y: 2) == 28)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelFeathered", "Dot", 1))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelFeather"))
+        #expect(viewModel.previewedAlphaChannelID == channel.id)
+    }
+
     @Test func alphaChannelsRoundTripWithLayerMasks() async throws {
         let viewModel = ImageEditorViewModel(sourceName: "split.png", image: splitChannelImage()) { _ in }
 

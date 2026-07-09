@@ -107,6 +107,10 @@ extension ImageEditorViewModel {
         selectedAlphaChannel != nil
     }
 
+    var canFeatherSelectedAlphaChannel: Bool {
+        selectedAlphaChannel != nil
+    }
+
     var canDeleteSelectedAlphaChannel: Bool {
         selectedAlphaChannel != nil
     }
@@ -212,6 +216,11 @@ extension ImageEditorViewModel {
         thresholdAlphaChannel(selectedAlphaChannelID)
     }
 
+    func featherSelectedAlphaChannel() {
+        guard let selectedAlphaChannelID else { return }
+        featherAlphaChannel(selectedAlphaChannelID)
+    }
+
     func deleteSelectedAlphaChannel() {
         guard let selectedAlphaChannelID else { return }
         deleteAlphaChannel(selectedAlphaChannelID)
@@ -284,6 +293,25 @@ extension ImageEditorViewModel {
         selectedAlphaChannelID = id
         appendHistory(L10n.text("imageEditor.history.alphaChannelThreshold"))
         statusText = L10n.format("imageEditor.status.alphaChannelThresholded", document.alphaChannels[index].name)
+    }
+
+    func featherAlphaChannel(_ id: UUID, radius: Int? = nil) {
+        guard let index = document.alphaChannels.firstIndex(where: { $0.id == id }) else { return }
+        let effectiveRadius = max(1, min(64, radius ?? Int(selectionModifyAmount.rounded())))
+        guard let featheredMask = document.alphaChannels[index].mask.feathered(by: effectiveRadius) else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+
+        pushUndo()
+        document.alphaChannels[index].mask = featheredMask
+        selectedAlphaChannelID = id
+        appendHistory(L10n.text("imageEditor.history.alphaChannelFeather"))
+        statusText = L10n.format(
+            "imageEditor.status.alphaChannelFeathered",
+            document.alphaChannels[index].name,
+            effectiveRadius
+        )
     }
 
     func updateAlphaChannelFromSelection(_ id: UUID) {
