@@ -486,6 +486,31 @@ struct ImageEditorChannelTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelContract"))
     }
 
+    @Test func alphaChannelsCanSmoothMaskNoise() async throws {
+        let viewModel = ImageEditorViewModel(sourceName: "split.png", image: splitChannelImage()) { _ in }
+        let noisyMask = ImageEditorSelectionMask(
+            width: 3,
+            height: 3,
+            alpha: [
+                0, 0, 0,
+                0, 255, 0,
+                0, 0, 0
+            ]
+        )
+        let channel = ImageEditorAlphaChannel(name: "Noise", mask: noisyMask)
+        viewModel.document.alphaChannels = [channel]
+        viewModel.selectionModifyAmount = 1
+        viewModel.selectAlphaChannel(channel.id)
+
+        #expect(viewModel.canSmoothSelectedAlphaChannel)
+        viewModel.smoothSelectedAlphaChannel()
+
+        let smoothedChannel = try #require(viewModel.selectedAlphaChannel)
+        #expect((0..<3).allSatisfy { y in (0..<3).allSatisfy { x in maskAlpha(smoothedChannel.mask, x: x, y: y) == 0 } })
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelSmoothed", "Noise", 1))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelSmooth"))
+    }
+
     @Test func alphaChannelsRoundTripWithLayerMasks() async throws {
         let viewModel = ImageEditorViewModel(sourceName: "split.png", image: splitChannelImage()) { _ in }
 

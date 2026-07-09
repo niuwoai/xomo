@@ -307,6 +307,16 @@ extension ImageEditorView {
             .help(L10n.format("imageEditor.action.alphaChannelContract", channel.name))
 
             Button {
+                viewModel.smoothAlphaChannel(channel.id)
+            } label: {
+                Image(systemName: "sparkles")
+                    .font(.system(size: 12, weight: .semibold))
+                    .frame(width: 24, height: 28)
+            }
+            .buttonStyle(EditorIconButtonStyle(isSelected: false))
+            .help(L10n.format("imageEditor.action.alphaChannelSmooth", channel.name))
+
+            Button {
                 viewModel.deleteAlphaChannel(channel.id)
             } label: {
                 Image(systemName: "trash")

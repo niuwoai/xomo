@@ -124,6 +124,10 @@ extension ImageEditorViewModel {
         selectedAlphaChannel != nil
     }
 
+    var canSmoothSelectedAlphaChannel: Bool {
+        selectedAlphaChannel != nil
+    }
+
     var canDeleteSelectedAlphaChannel: Bool {
         selectedAlphaChannel != nil
     }
@@ -269,6 +273,11 @@ extension ImageEditorViewModel {
         contractAlphaChannel(selectedAlphaChannelID)
     }
 
+    func smoothSelectedAlphaChannel() {
+        guard let selectedAlphaChannelID else { return }
+        smoothAlphaChannel(selectedAlphaChannelID)
+    }
+
     func deleteSelectedAlphaChannel() {
         guard let selectedAlphaChannelID else { return }
         deleteAlphaChannel(selectedAlphaChannelID)
@@ -382,6 +391,25 @@ extension ImageEditorViewModel {
         ) { mask, effectiveRadius in
             mask.contracted(by: effectiveRadius)
         }
+    }
+
+    func smoothAlphaChannel(_ id: UUID, radius: Int? = nil) {
+        guard let index = document.alphaChannels.firstIndex(where: { $0.id == id }) else { return }
+        let effectiveRadius = max(1, min(16, radius ?? Int(selectionModifyAmount.rounded())))
+        guard let smoothedMask = document.alphaChannels[index].mask.smoothed(by: effectiveRadius) else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+
+        pushUndo()
+        document.alphaChannels[index].mask = smoothedMask
+        selectedAlphaChannelID = id
+        appendHistory(L10n.text("imageEditor.history.alphaChannelSmooth"))
+        statusText = L10n.format(
+            "imageEditor.status.alphaChannelSmoothed",
+            document.alphaChannels[index].name,
+            effectiveRadius
+        )
     }
 
     private func morphAlphaChannel(

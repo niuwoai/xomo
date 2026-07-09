@@ -952,6 +952,10 @@ extension ImageEditorView {
             viewModel.contractSelectedAlphaChannel()
         }
         .disabled(!viewModel.canContractSelectedAlphaChannel)
+        Button(L10n.text("imageEditor.action.alphaChannelSmoothSelected")) {
+            viewModel.smoothSelectedAlphaChannel()
+        }
+        .disabled(!viewModel.canSmoothSelectedAlphaChannel)
         Button(L10n.text("imageEditor.action.alphaChannelDeleteSelected")) {
             viewModel.deleteSelectedAlphaChannel()
         }
