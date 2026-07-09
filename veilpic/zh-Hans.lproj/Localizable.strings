@@ -460,6 +460,7 @@
 "imageEditor.filter.findEdges" = "查找边缘";
 "imageEditor.filter.minimum" = "最小值";
 "imageEditor.filter.maximum" = "最大值";
+"imageEditor.filter.oilPaint" = "油画";
 "imageEditor.filter.unsharpRadius" = "半径";
 "imageEditor.filter.unsharpRadiusValue" = "%@ px";
 "imageEditor.filter.unsharpThreshold" = "阈值";

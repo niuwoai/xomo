@@ -460,6 +460,7 @@
 "imageEditor.filter.findEdges" = "Find Edges";
 "imageEditor.filter.minimum" = "Minimum";
 "imageEditor.filter.maximum" = "Maximum";
+"imageEditor.filter.oilPaint" = "Oil Paint";
 "imageEditor.filter.unsharpRadius" = "Radius";
 "imageEditor.filter.unsharpRadiusValue" = "%@ px";
 "imageEditor.filter.unsharpThreshold" = "Threshold";

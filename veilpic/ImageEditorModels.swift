@@ -913,6 +913,7 @@ enum ImageEditorFilter: String, CaseIterable, Identifiable {
     case findEdges
     case minimum
     case maximum
+    case oilPaint
 
     var id: String { rawValue }
 

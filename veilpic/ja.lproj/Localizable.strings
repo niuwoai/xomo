@@ -460,6 +460,7 @@
 "imageEditor.filter.findEdges" = "輪郭検出";
 "imageEditor.filter.minimum" = "明るさの最小値";
 "imageEditor.filter.maximum" = "明るさの最大値";
+"imageEditor.filter.oilPaint" = "油彩";
 "imageEditor.filter.unsharpRadius" = "半径";
 "imageEditor.filter.unsharpRadiusValue" = "%@ px";
 "imageEditor.filter.unsharpThreshold" = "しきい値";

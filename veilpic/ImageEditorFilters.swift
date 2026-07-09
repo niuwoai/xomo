@@ -48,6 +48,9 @@ extension NSImage {
         if kind == .maximum {
             return morphologyFiltered(intensity: clamped, useMaximum: true)
         }
+        if kind == .oilPaint {
+            return oilPainted(intensity: clamped)
+        }
 
         guard let ciImage = ciImageForEditing() else { return nil }
         let output: CIImage?
@@ -91,6 +94,8 @@ extension NSImage {
             return morphologyFiltered(intensity: clamped, useMaximum: false)
         case .maximum:
             return morphologyFiltered(intensity: clamped, useMaximum: true)
+        case .oilPaint:
+            return oilPainted(intensity: clamped)
         }
 
         guard let output,
@@ -414,6 +419,51 @@ extension NSImage {
                 Self.premultipliedChannel(red, alpha: alpha),
                 Self.premultipliedChannel(green, alpha: alpha),
                 Self.premultipliedChannel(blue, alpha: alpha),
+                alpha
+            )
+        }
+    }
+
+    private func oilPainted(intensity: Double) -> NSImage? {
+        let clampedIntensity = max(0, min(1, intensity))
+        let radius = max(1, Int((1 + clampedIntensity * 5).rounded()))
+        let bucketCount = max(6, Int((18 - clampedIntensity * 10).rounded()))
+        return pixelMappedFromBuffer { x, y, width, height, pixels, bytesPerRow, bytesPerPixel in
+            let offset = y * bytesPerRow + x * bytesPerPixel
+            let alpha = Double(pixels[offset + 3]) / 255
+            var buckets = Array(
+                repeating: (count: 0, red: 0.0, green: 0.0, blue: 0.0),
+                count: bucketCount
+            )
+            for sampleY in max(0, y - radius)...min(height - 1, y + radius) {
+                for sampleX in max(0, x - radius)...min(width - 1, x + radius) {
+                    let sampleOffset = sampleY * bytesPerRow + sampleX * bytesPerPixel
+                    let sampleRed = Double(pixels[sampleOffset]) / 255
+                    let sampleGreen = Double(pixels[sampleOffset + 1]) / 255
+                    let sampleBlue = Double(pixels[sampleOffset + 2]) / 255
+                    let luminance = sampleRed * 0.299 + sampleGreen * 0.587 + sampleBlue * 0.114
+                    let bucketIndex = min(bucketCount - 1, max(0, Int((luminance * Double(bucketCount - 1)).rounded())))
+                    buckets[bucketIndex].count += 1
+                    buckets[bucketIndex].red += sampleRed
+                    buckets[bucketIndex].green += sampleGreen
+                    buckets[bucketIndex].blue += sampleBlue
+                }
+            }
+            guard let dominant = buckets.max(by: { $0.count < $1.count }),
+                  dominant.count > 0
+            else {
+                return (
+                    Double(pixels[offset]) / 255,
+                    Double(pixels[offset + 1]) / 255,
+                    Double(pixels[offset + 2]) / 255,
+                    alpha
+                )
+            }
+            let count = Double(dominant.count)
+            return (
+                Self.premultipliedChannel(dominant.red / count, alpha: alpha),
+                Self.premultipliedChannel(dominant.green / count, alpha: alpha),
+                Self.premultipliedChannel(dominant.blue / count, alpha: alpha),
                 alpha
             )
         }

@@ -475,6 +475,56 @@ struct ImageEditorFilterTests {
         #expect(try #require(smartViewModel.currentImage.qingtuPNGData()) == smartPreviewBefore)
     }
 
+    @Test func imageEditorOilPaintFilterLayerAndSmartFilterAreNonDestructive() async throws {
+        let canvasSize = NSSize(width: 48, height: 48)
+        let sourceImage = colorSpotImage(
+            size: canvasSize,
+            background: NSColor(calibratedRed: 0.9, green: 0.1, blue: 0.08, alpha: 1),
+            spot: NSColor(calibratedRed: 0.05, green: 0.2, blue: 0.95, alpha: 1),
+            spotSize: 3
+        )
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: sourceImage) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(sourceImage, historyTitle: L10n.text("imageEditor.history.brush"))
+        let baseLayerID = try #require(viewModel.document.selectedLayerID)
+        let basePixelsBefore = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+        let blueSpotBefore = try #require(viewModel.currentImage.color(at: CGPoint(x: 24, y: 24))?.usingColorSpace(.deviceRGB))
+
+        viewModel.selectedFilter = .oilPaint
+        viewModel.filterIntensity = 0.75
+        viewModel.addFilterLayer()
+
+        let filterLayer = try #require(viewModel.document.selectedLayer)
+        let paintedCenter = try #require(viewModel.currentImage.color(at: CGPoint(x: 24, y: 24))?.usingColorSpace(.deviceRGB))
+        #expect(filterLayer.isFilter)
+        #expect(filterLayer.filter?.kind == .oilPaint)
+        #expect(viewModel.document.layers.first { $0.id == baseLayerID }?.image.qingtuPNGData() == basePixelsBefore)
+        #expect(blueSpotBefore.blueComponent > 0.85)
+        #expect(paintedCenter.redComponent > 0.75)
+        #expect(paintedCenter.blueComponent < 0.25)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerFilterNew"))
+
+        let smartViewModel = ImageEditorViewModel(sourceName: "source.png", image: sourceImage) { _ in }
+        smartViewModel.replaceSelectedLayerImageForTesting(sourceImage, historyTitle: L10n.text("imageEditor.history.brush"))
+        let smartBasePixelsBefore = try #require(smartViewModel.document.selectedLayer?.image.qingtuPNGData())
+        let smartPreviewBefore = try #require(smartViewModel.currentImage.qingtuPNGData())
+        smartViewModel.selectedFilter = .oilPaint
+        smartViewModel.filterIntensity = 0.75
+        smartViewModel.addSmartFilterToSelectedLayer()
+
+        var smartLayer = try #require(smartViewModel.document.selectedLayer)
+        let smartFilterID = try #require(smartLayer.smartFilters.first?.id)
+        let smartPaintedCenter = try #require(smartViewModel.currentImage.color(at: CGPoint(x: 24, y: 24))?.usingColorSpace(.deviceRGB))
+        #expect(smartLayer.smartFilters.first?.kind == .oilPaint)
+        #expect(smartLayer.image.qingtuPNGData() == smartBasePixelsBefore)
+        #expect(smartPaintedCenter.redComponent > 0.75)
+        #expect(smartViewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterAdd"))
+
+        smartViewModel.toggleSmartFilterOnSelectedLayer(smartFilterID)
+        smartLayer = try #require(smartViewModel.document.selectedLayer)
+        #expect(smartLayer.smartFilters.first?.isEnabled == false)
+        #expect(try #require(smartViewModel.currentImage.qingtuPNGData()) == smartPreviewBefore)
+    }
+
     private func solidImage(size: NSSize, color: NSColor) -> NSImage {
         NSImage.rendered(size: size) { rect in
             color.setFill()
@@ -483,6 +533,20 @@ struct ImageEditorFilterTests {
     }
 
     private func binarySpotImage(size: NSSize, background: NSColor, spot: NSColor, spotSize: CGFloat) -> NSImage {
+        NSImage.rendered(size: size) { rect in
+            background.setFill()
+            rect.fill()
+            spot.setFill()
+            CGRect(
+                x: rect.midX - spotSize / 2,
+                y: rect.midY - spotSize / 2,
+                width: spotSize,
+                height: spotSize
+            ).fill()
+        } ?? NSImage.transparent(size: size)
+    }
+
+    private func colorSpotImage(size: NSSize, background: NSColor, spot: NSColor, spotSize: CGFloat) -> NSImage {
         NSImage.rendered(size: size) { rect in
             background.setFill()
             rect.fill()
