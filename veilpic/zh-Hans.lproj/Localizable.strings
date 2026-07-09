@@ -712,6 +712,10 @@
 "imageEditor.properties.innerGlowOpacityValue" = "内发光不透明度：%d%%";
 "imageEditor.properties.innerGlowBlurValue" = "内发光模糊：%d px";
 "imageEditor.properties.innerGlowChokeValue" = "阻塞：%d px";
+"imageEditor.properties.innerGlowNoiseValue" = "内发光噪点：%d%%";
+"imageEditor.properties.innerGlowSource" = "内发光来源";
+"imageEditor.innerGlowSource.edge" = "边缘";
+"imageEditor.innerGlowSource.center" = "中心";
 "imageEditor.properties.colorOverlayOpacityValue" = "颜色叠加不透明度：%d%%";
 "imageEditor.properties.gradientOverlayOpacityValue" = "渐变叠加不透明度：%d%%";
 "imageEditor.properties.gradientOverlayStyle" = "渐变叠加样式";

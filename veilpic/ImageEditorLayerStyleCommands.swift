@@ -203,6 +203,14 @@ extension ImageEditorViewModel {
         Double(document.selectedLayer?.style.innerGlowChoke ?? 2)
     }
 
+    var selectedLayerInnerGlowNoise: Double {
+        Double(document.selectedLayer?.style.innerGlowNoise ?? 0)
+    }
+
+    var selectedLayerInnerGlowSource: ImageEditorInnerGlowSource {
+        document.selectedLayer?.style.innerGlowSource ?? .edge
+    }
+
     var selectedLayerColorOverlayOpacity: Double {
         Double(document.selectedLayer?.style.colorOverlayOpacity ?? 0.55)
     }
@@ -666,6 +674,20 @@ extension ImageEditorViewModel {
         updateSelectedLayerStyle {
             $0.innerGlowEnabled = true
             $0.innerGlowChoke = max(0, min(24, CGFloat(choke)))
+        }
+    }
+
+    func setSelectedLayerInnerGlowNoise(_ noise: Double) {
+        updateSelectedLayerStyle {
+            $0.innerGlowEnabled = true
+            $0.innerGlowNoise = max(0, min(1, CGFloat(noise)))
+        }
+    }
+
+    func setSelectedLayerInnerGlowSource(_ source: ImageEditorInnerGlowSource) {
+        updateSelectedLayerStyle {
+            $0.innerGlowEnabled = true
+            $0.innerGlowSource = source
         }
     }
 

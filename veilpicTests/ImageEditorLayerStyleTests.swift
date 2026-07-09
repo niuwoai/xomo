@@ -400,6 +400,73 @@ struct ImageEditorLayerStyleTests {
         #expect(restoredLayer.style.outerGlowNoise == 1)
     }
 
+    @Test func imageEditorInnerGlowNoiseChangesGlowAndRoundTripsProjectState() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let baseImage = solidImage(color: .systemBlue, size: canvasSize)
+        let layerImage = centerRectImage(size: canvasSize, color: .systemGreen)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: baseImage) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(layerImage, historyTitle: L10n.text("imageEditor.history.brush"))
+        let layerPixelsBeforeStyle = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+
+        viewModel.setSelectedLayerInnerGlowOpacity(1)
+        viewModel.setSelectedLayerInnerGlowBlur(0)
+        viewModel.setSelectedLayerInnerGlowChoke(8)
+        viewModel.setSelectedLayerInnerGlowNoise(0)
+        let smoothGlowData = try #require(viewModel.currentImage.qingtuPNGData())
+
+        viewModel.setSelectedLayerInnerGlowNoise(1)
+
+        let styledLayer = try #require(viewModel.document.selectedLayer)
+        let layerPixelsAfterStyle = try #require(styledLayer.image.qingtuPNGData())
+        let noisyGlowData = try #require(viewModel.currentImage.qingtuPNGData())
+
+        #expect(styledLayer.style.innerGlowEnabled)
+        #expect(styledLayer.style.innerGlowNoise == 1)
+        #expect(viewModel.selectedLayerInnerGlowNoise == 1)
+        #expect(layerPixelsAfterStyle == layerPixelsBeforeStyle)
+        #expect(noisyGlowData != smoothGlowData)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStyle"))
+
+        viewModel.setSelectedLayerInnerGlowSource(.center)
+        let centeredLayer = try #require(viewModel.document.selectedLayer)
+        #expect(centeredLayer.style.innerGlowSource == .center)
+        #expect(viewModel.selectedLayerInnerGlowSource == .center)
+
+        let project = try ImageEditorProjectDocument(document: viewModel.document)
+        let restoredDocument = try project.restoredDocument()
+        let restoredLayer = try #require(restoredDocument.layers.first { $0.id == centeredLayer.id })
+        #expect(restoredLayer.style.innerGlowEnabled)
+        #expect(restoredLayer.style.innerGlowNoise == 1)
+        #expect(restoredLayer.style.innerGlowSource == .center)
+    }
+
+    @Test func imageEditorInnerGlowSourceChangesRenderedGlow() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let baseImage = solidImage(color: .systemBlue, size: canvasSize)
+        let layerImage = centerRectImage(size: canvasSize, color: .systemGreen)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: baseImage) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(layerImage, historyTitle: L10n.text("imageEditor.history.brush"))
+        let layerPixelsBeforeStyle = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+
+        viewModel.setSelectedLayerInnerGlowOpacity(1)
+        viewModel.setSelectedLayerInnerGlowBlur(0)
+        viewModel.setSelectedLayerInnerGlowChoke(8)
+        viewModel.setSelectedLayerInnerGlowSource(.edge)
+        let edgeGlowData = try #require(viewModel.currentImage.qingtuPNGData())
+
+        viewModel.setSelectedLayerInnerGlowSource(.center)
+
+        let styledLayer = try #require(viewModel.document.selectedLayer)
+        let layerPixelsAfterStyle = try #require(styledLayer.image.qingtuPNGData())
+        let centerGlowData = try #require(viewModel.currentImage.qingtuPNGData())
+
+        #expect(styledLayer.style.innerGlowSource == .center)
+        #expect(viewModel.selectedLayerInnerGlowSource == .center)
+        #expect(layerPixelsAfterStyle == layerPixelsBeforeStyle)
+        #expect(centerGlowData != edgeGlowData)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStyle"))
+    }
+
     @Test func imageEditorDropShadowAngleAndDistanceMoveShadowDirectionally() async throws {
         let canvasSize = NSSize(width: 80, height: 60)
         let baseImage = solidImage(color: .systemBlue, size: canvasSize)

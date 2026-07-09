@@ -712,6 +712,10 @@
 "imageEditor.properties.innerGlowOpacityValue" = "Inner Glow Opacity: %d%%";
 "imageEditor.properties.innerGlowBlurValue" = "Inner Glow Blur: %d px";
 "imageEditor.properties.innerGlowChokeValue" = "Choke: %d px";
+"imageEditor.properties.innerGlowNoiseValue" = "Inner Glow Noise: %d%%";
+"imageEditor.properties.innerGlowSource" = "Inner Glow Source";
+"imageEditor.innerGlowSource.edge" = "Edge";
+"imageEditor.innerGlowSource.center" = "Center";
 "imageEditor.properties.colorOverlayOpacityValue" = "Color Overlay Opacity: %d%%";
 "imageEditor.properties.gradientOverlayOpacityValue" = "Gradient Overlay Opacity: %d%%";
 "imageEditor.properties.gradientOverlayStyle" = "Gradient Overlay Style";

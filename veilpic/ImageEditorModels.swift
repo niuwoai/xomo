@@ -1457,6 +1457,17 @@ enum ImageEditorStrokeFillType: String, CaseIterable, Identifiable, Codable {
     }
 }
 
+enum ImageEditorInnerGlowSource: String, CaseIterable, Identifiable, Codable {
+    case edge
+    case center
+
+    var id: String { rawValue }
+
+    var title: String {
+        L10n.text("imageEditor.innerGlowSource.\(rawValue)")
+    }
+}
+
 struct ImageEditorLayerStyle {
     var strokeEnabled = false
     var strokeColor = NSColor.white
@@ -1499,6 +1510,8 @@ struct ImageEditorLayerStyle {
     var innerGlowOpacity: CGFloat = 0.36
     var innerGlowBlur: CGFloat = 8
     var innerGlowChoke: CGFloat = 2
+    var innerGlowNoise: CGFloat = 0
+    var innerGlowSource = ImageEditorInnerGlowSource.edge
     var colorOverlayEnabled = false
     var colorOverlayColor = NSColor.systemRed
     var colorOverlayOpacity: CGFloat = 0.55
@@ -2756,33 +2769,52 @@ struct ImageEditorLayer: Identifiable {
             }
 
             if style.innerGlowEnabled {
-                let innerGlowImage = baseImage.alphaTinted(
+                let rawInnerGlowImage = baseImage.alphaTinted(
                     color: style.innerGlowColor.withAlphaComponent(style.innerGlowOpacity)
                 )
+                let innerGlowImage = rawInnerGlowImage.shadowNoised(amount: style.innerGlowNoise) ?? rawInnerGlowImage
                 let choke = max(0, Int(style.innerGlowChoke.rounded()))
-                let innerGlowCanvas = NSImage.rendered(size: outputSize) { _ in
-                    innerGlowImage.draw(
-                        in: contentRect,
-                        from: CGRect(origin: .zero, size: innerGlowImage.size),
-                        operation: .sourceOver,
-                        fraction: 1
-                    )
-                    if choke > 0 {
-                        let directions = 24
-                        for radius in 1...choke {
-                            for step in 0..<directions {
-                                let angle = CGFloat(step) / CGFloat(directions) * .pi * 2
-                                let offset = CGSize(width: cos(angle) * CGFloat(radius), height: sin(angle) * CGFloat(radius))
-                                innerGlowImage.draw(
-                                    in: contentRect.offsetBy(dx: offset.width, dy: offset.height),
-                                    from: CGRect(origin: .zero, size: innerGlowImage.size),
-                                    operation: .sourceOver,
-                                    fraction: 1
-                                )
+                let rawInnerGlowCanvas = NSImage.rendered(size: outputSize) { _ in
+                    switch style.innerGlowSource {
+                    case .edge:
+                        innerGlowImage.draw(
+                            in: contentRect,
+                            from: CGRect(origin: .zero, size: innerGlowImage.size),
+                            operation: .sourceOver,
+                            fraction: 1
+                        )
+                        if choke > 0 {
+                            let directions = 24
+                            for radius in 1...choke {
+                                for step in 0..<directions {
+                                    let angle = CGFloat(step) / CGFloat(directions) * .pi * 2
+                                    let offset = CGSize(width: cos(angle) * CGFloat(radius), height: sin(angle) * CGFloat(radius))
+                                    innerGlowImage.draw(
+                                        in: contentRect.offsetBy(dx: offset.width, dy: offset.height),
+                                        from: CGRect(origin: .zero, size: innerGlowImage.size),
+                                        operation: .sourceOver,
+                                        fraction: 1
+                                    )
+                                }
                             }
                         }
+                    case .center:
+                        let glowColor = style.innerGlowColor.withAlphaComponent(style.innerGlowOpacity)
+                        let clearColor = style.innerGlowColor.withAlphaComponent(0)
+                        let center = CGPoint(x: contentRect.midX, y: contentRect.midY)
+                        let radius = max(contentRect.width, contentRect.height) * 0.5 + CGFloat(choke)
+                        NSGradient(starting: glowColor, ending: clearColor)?.draw(
+                            fromCenter: center,
+                            radius: 0,
+                            toCenter: center,
+                            radius: max(1, radius),
+                            options: []
+                        )
                     }
                 } ?? NSImage(size: outputSize)
+                let innerGlowCanvas = style.innerGlowSource == .center
+                    ? rawInnerGlowCanvas.shadowNoised(amount: style.innerGlowNoise) ?? rawInnerGlowCanvas
+                    : rawInnerGlowCanvas
                 let blurredInnerGlow = innerGlowCanvas.blurred(radius: style.innerGlowBlur) ?? innerGlowCanvas
                 blurredInnerGlow.draw(
                     in: CGRect(origin: .zero, size: outputSize),

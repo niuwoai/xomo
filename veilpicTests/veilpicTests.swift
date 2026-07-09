@@ -2684,6 +2684,8 @@ struct veilpicTests {
         viewModel.setSelectedLayerInnerGlowOpacity(0.55)
         viewModel.setSelectedLayerInnerGlowBlur(16)
         viewModel.setSelectedLayerInnerGlowChoke(5)
+        viewModel.setSelectedLayerInnerGlowNoise(0.45)
+        viewModel.setSelectedLayerInnerGlowSource(.center)
         let styledLayer = try #require(viewModel.document.selectedLayer)
 
         #expect(styledLayer.style.strokeEnabled)
@@ -2701,6 +2703,8 @@ struct veilpicTests {
         #expect(styledLayer.style.innerGlowOpacity == 0.55)
         #expect(styledLayer.style.innerGlowBlur == 16)
         #expect(styledLayer.style.innerGlowChoke == 5)
+        #expect(styledLayer.style.innerGlowNoise == 0.45)
+        #expect(styledLayer.style.innerGlowSource == .center)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStyle"))
 
         viewModel.toggleLayerLock(selectedID)
@@ -2708,11 +2712,15 @@ struct veilpicTests {
         viewModel.setSelectedLayerOuterGlowSpread(12)
         viewModel.setSelectedLayerOuterGlowNoise(0.9)
         viewModel.setSelectedLayerInnerGlowChoke(10)
+        viewModel.setSelectedLayerInnerGlowNoise(0.95)
+        viewModel.setSelectedLayerInnerGlowSource(.edge)
 
         #expect(viewModel.document.selectedLayer?.style.strokeWidth == 9)
         #expect(viewModel.document.selectedLayer?.style.outerGlowSpread == 6)
         #expect(viewModel.document.selectedLayer?.style.outerGlowNoise == 0.4)
         #expect(viewModel.document.selectedLayer?.style.innerGlowChoke == 5)
+        #expect(viewModel.document.selectedLayer?.style.innerGlowNoise == 0.45)
+        #expect(viewModel.document.selectedLayer?.style.innerGlowSource == .center)
         #expect(viewModel.statusText == L10n.text("imageEditor.status.layerLocked"))
     }
 

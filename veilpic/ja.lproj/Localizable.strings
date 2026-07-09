@@ -712,6 +712,10 @@
 "imageEditor.properties.innerGlowOpacityValue" = "内側光彩の不透明度：%d%%";
 "imageEditor.properties.innerGlowBlurValue" = "内側光彩のぼかし：%d px";
 "imageEditor.properties.innerGlowChokeValue" = "チョーク：%d px";
+"imageEditor.properties.innerGlowNoiseValue" = "内側光彩のノイズ：%d%%";
+"imageEditor.properties.innerGlowSource" = "内側光彩のソース";
+"imageEditor.innerGlowSource.edge" = "エッジ";
+"imageEditor.innerGlowSource.center" = "中心";
 "imageEditor.properties.colorOverlayOpacityValue" = "カラーオーバーレイ不透明度：%d%%";
 "imageEditor.properties.gradientOverlayOpacityValue" = "グラデーションオーバーレイ不透明度：%d%%";
 "imageEditor.properties.gradientOverlayStyle" = "グラデーションオーバーレイスタイル";
