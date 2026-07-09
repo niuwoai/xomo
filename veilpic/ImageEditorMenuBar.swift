@@ -923,6 +923,18 @@ extension ImageEditorView {
             viewModel.updateSelectedAlphaChannelFromSelection()
         }
         .disabled(!viewModel.canUpdateSelectedAlphaChannelFromSelection)
+        Button(L10n.text("imageEditor.action.alphaChannelSelectionAddSelected")) {
+            viewModel.addSelectionToSelectedAlphaChannel()
+        }
+        .disabled(!viewModel.canAddSelectionToSelectedAlphaChannel)
+        Button(L10n.text("imageEditor.action.alphaChannelSelectionSubtractSelected")) {
+            viewModel.subtractSelectionFromSelectedAlphaChannel()
+        }
+        .disabled(!viewModel.canSubtractSelectionFromSelectedAlphaChannel)
+        Button(L10n.text("imageEditor.action.alphaChannelSelectionIntersectSelected")) {
+            viewModel.intersectSelectionWithSelectedAlphaChannel()
+        }
+        .disabled(!viewModel.canIntersectSelectionWithSelectedAlphaChannel)
         Button(L10n.text("imageEditor.action.alphaChannelApplySelectedToMask")) {
             viewModel.applySelectedAlphaChannelToSelectedLayerMask()
         }

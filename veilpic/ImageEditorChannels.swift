@@ -96,6 +96,18 @@ extension ImageEditorViewModel {
         selectedAlphaChannel != nil && canSaveSelectionAsAlphaChannel
     }
 
+    var canAddSelectionToSelectedAlphaChannel: Bool {
+        selectedAlphaChannel != nil && canSaveSelectionAsAlphaChannel
+    }
+
+    var canSubtractSelectionFromSelectedAlphaChannel: Bool {
+        selectedAlphaChannel != nil && canSaveSelectionAsAlphaChannel
+    }
+
+    var canIntersectSelectionWithSelectedAlphaChannel: Bool {
+        selectedAlphaChannel != nil && canSaveSelectionAsAlphaChannel
+    }
+
     var canApplySelectedAlphaChannelToLayerMask: Bool {
         selectedAlphaChannel != nil && canApplyAlphaChannelToSelectedLayerMask
     }
@@ -292,6 +304,21 @@ extension ImageEditorViewModel {
     func updateSelectedAlphaChannelFromSelection() {
         guard let selectedAlphaChannelID else { return }
         updateAlphaChannelFromSelection(selectedAlphaChannelID)
+    }
+
+    func addSelectionToSelectedAlphaChannel() {
+        guard let selectedAlphaChannelID else { return }
+        addSelectionToAlphaChannel(selectedAlphaChannelID)
+    }
+
+    func subtractSelectionFromSelectedAlphaChannel() {
+        guard let selectedAlphaChannelID else { return }
+        subtractSelectionFromAlphaChannel(selectedAlphaChannelID)
+    }
+
+    func intersectSelectionWithSelectedAlphaChannel() {
+        guard let selectedAlphaChannelID else { return }
+        intersectSelectionWithAlphaChannel(selectedAlphaChannelID)
     }
 
     func applySelectedAlphaChannelToSelectedLayerMask() {
@@ -770,6 +797,58 @@ extension ImageEditorViewModel {
         selectedAlphaChannelID = id
         appendHistory(L10n.text("imageEditor.history.alphaChannelUpdate"))
         statusText = L10n.format("imageEditor.status.alphaChannelUpdated", document.alphaChannels[index].name)
+    }
+
+    func addSelectionToAlphaChannel(_ id: UUID) {
+        combineAlphaChannelWithCurrentSelection(
+            id,
+            mode: .add,
+            historyKey: "imageEditor.history.alphaChannelSelectionAdd",
+            statusKey: "imageEditor.status.alphaChannelSelectionAdded"
+        )
+    }
+
+    func subtractSelectionFromAlphaChannel(_ id: UUID) {
+        combineAlphaChannelWithCurrentSelection(
+            id,
+            mode: .subtract,
+            historyKey: "imageEditor.history.alphaChannelSelectionSubtract",
+            statusKey: "imageEditor.status.alphaChannelSelectionSubtracted"
+        )
+    }
+
+    func intersectSelectionWithAlphaChannel(_ id: UUID) {
+        combineAlphaChannelWithCurrentSelection(
+            id,
+            mode: .intersect,
+            historyKey: "imageEditor.history.alphaChannelSelectionIntersect",
+            statusKey: "imageEditor.status.alphaChannelSelectionIntersected"
+        )
+    }
+
+    private func combineAlphaChannelWithCurrentSelection(
+        _ id: UUID,
+        mode: ImageEditorSelectionMode,
+        historyKey: String,
+        statusKey: String
+    ) {
+        guard let index = document.alphaChannels.firstIndex(where: { $0.id == id }) else { return }
+        guard let selectionMask = document.selection?.rasterizedMask(canvasSize: document.canvasSize),
+              selectionMask.selectedBounds(in: document.canvasSize) != nil
+        else {
+            statusText = L10n.text("imageEditor.status.noSelection")
+            return
+        }
+        guard let outputMask = document.alphaChannels[index].mask.combined(with: selectionMask, mode: mode) else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+
+        pushUndo()
+        document.alphaChannels[index].mask = outputMask
+        selectedAlphaChannelID = id
+        appendHistory(L10n.text(historyKey))
+        statusText = L10n.format(statusKey, document.alphaChannels[index].name)
     }
 
     func applyAlphaChannelToSelectedLayerMask(_ id: UUID) {

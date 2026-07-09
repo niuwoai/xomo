@@ -236,6 +236,39 @@ extension ImageEditorView {
             .help(L10n.format("imageEditor.action.alphaChannelUpdate", channel.name))
 
             Button {
+                viewModel.addSelectionToAlphaChannel(channel.id)
+            } label: {
+                Image(systemName: "plus.square")
+                    .font(.system(size: 12, weight: .semibold))
+                    .frame(width: 24, height: 28)
+            }
+            .buttonStyle(EditorIconButtonStyle(isSelected: false))
+            .disabled(!viewModel.canSaveSelectionAsAlphaChannel)
+            .help(L10n.format("imageEditor.action.alphaChannelSelectionAdd", channel.name))
+
+            Button {
+                viewModel.subtractSelectionFromAlphaChannel(channel.id)
+            } label: {
+                Image(systemName: "minus.square")
+                    .font(.system(size: 12, weight: .semibold))
+                    .frame(width: 24, height: 28)
+            }
+            .buttonStyle(EditorIconButtonStyle(isSelected: false))
+            .disabled(!viewModel.canSaveSelectionAsAlphaChannel)
+            .help(L10n.format("imageEditor.action.alphaChannelSelectionSubtract", channel.name))
+
+            Button {
+                viewModel.intersectSelectionWithAlphaChannel(channel.id)
+            } label: {
+                Image(systemName: "square.grid.2x2")
+                    .font(.system(size: 12, weight: .semibold))
+                    .frame(width: 24, height: 28)
+            }
+            .buttonStyle(EditorIconButtonStyle(isSelected: false))
+            .disabled(!viewModel.canSaveSelectionAsAlphaChannel)
+            .help(L10n.format("imageEditor.action.alphaChannelSelectionIntersect", channel.name))
+
+            Button {
                 viewModel.applyAlphaChannelToSelectedLayerMask(channel.id)
             } label: {
                 Image(systemName: "rectangle.badge.checkmark")

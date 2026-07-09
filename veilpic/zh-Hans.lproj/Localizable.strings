@@ -1605,6 +1605,9 @@
 "imageEditor.action.alphaChannelSelect" = "预览并选择 Alpha 通道";
 "imageEditor.action.alphaChannelLoadSelection" = "将 %@ 载入为选区";
 "imageEditor.action.alphaChannelUpdate" = "用当前选区更新 %@";
+"imageEditor.action.alphaChannelSelectionAdd" = "把当前选区添加到 %@";
+"imageEditor.action.alphaChannelSelectionSubtract" = "从 %@ 减去当前选区";
+"imageEditor.action.alphaChannelSelectionIntersect" = "%@ 与当前选区相交";
 "imageEditor.action.alphaChannelApplyToMask" = "将 %@ 应用为当前图层蒙版";
 "imageEditor.action.alphaChannelDuplicate" = "复制 %@";
 "imageEditor.action.alphaChannelInvert" = "反相 %@";
@@ -1630,6 +1633,9 @@
 "imageEditor.action.alphaChannelDelete" = "删除 %@";
 "imageEditor.action.alphaChannelLoadSelectedSelection" = "将选中 Alpha 通道载入为选区";
 "imageEditor.action.alphaChannelUpdateSelected" = "用当前选区更新选中 Alpha 通道";
+"imageEditor.action.alphaChannelSelectionAddSelected" = "把当前选区添加到选中 Alpha 通道";
+"imageEditor.action.alphaChannelSelectionSubtractSelected" = "从选中 Alpha 通道减去当前选区";
+"imageEditor.action.alphaChannelSelectionIntersectSelected" = "选中 Alpha 通道与当前选区相交";
 "imageEditor.action.alphaChannelApplySelectedToMask" = "将选中 Alpha 通道应用为当前图层蒙版";
 "imageEditor.action.alphaChannelDuplicateSelected" = "复制选中 Alpha 通道";
 "imageEditor.action.alphaChannelInvertSelected" = "反相选中 Alpha 通道";
@@ -1665,6 +1671,9 @@
 "imageEditor.status.alphaChannelFromMaskFailed" = "当前图层没有可保存的蒙版";
 "imageEditor.status.alphaChannelLoaded" = "已将 %@ 载入为选区";
 "imageEditor.status.alphaChannelUpdated" = "已用当前选区更新 %@";
+"imageEditor.status.alphaChannelSelectionAdded" = "已把当前选区添加到 %@";
+"imageEditor.status.alphaChannelSelectionSubtracted" = "已从 %@ 减去当前选区";
+"imageEditor.status.alphaChannelSelectionIntersected" = "已让 %@ 与当前选区相交";
 "imageEditor.status.alphaChannelApplyToMask" = "已将 %@ 应用为当前图层蒙版";
 "imageEditor.status.alphaChannelDuplicated" = "已复制为 %@";
 "imageEditor.status.alphaChannelInverted" = "已反相 %@";
@@ -1694,6 +1703,9 @@
 "imageEditor.history.alphaChannelFromChannel" = "从通道保存 Alpha 通道";
 "imageEditor.history.alphaChannelLoad" = "载入 Alpha 通道选区";
 "imageEditor.history.alphaChannelUpdate" = "更新 Alpha 通道";
+"imageEditor.history.alphaChannelSelectionAdd" = "添加选区到 Alpha 通道";
+"imageEditor.history.alphaChannelSelectionSubtract" = "从 Alpha 通道减去选区";
+"imageEditor.history.alphaChannelSelectionIntersect" = "Alpha 通道与选区相交";
 "imageEditor.history.alphaChannelApplyToMask" = "应用 Alpha 通道为图层蒙版";
 "imageEditor.history.alphaChannelDuplicate" = "复制 Alpha 通道";
 "imageEditor.history.alphaChannelInvert" = "反相 Alpha 通道";

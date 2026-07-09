@@ -1605,6 +1605,9 @@
 "imageEditor.action.alphaChannelSelect" = "Alpha チャンネルをプレビューして選択";
 "imageEditor.action.alphaChannelLoadSelection" = "%@ を選択範囲として読み込み";
 "imageEditor.action.alphaChannelUpdate" = "現在の選択範囲で %@ を更新";
+"imageEditor.action.alphaChannelSelectionAdd" = "現在の選択範囲を %@ に追加";
+"imageEditor.action.alphaChannelSelectionSubtract" = "%@ から現在の選択範囲を削除";
+"imageEditor.action.alphaChannelSelectionIntersect" = "%@ と現在の選択範囲を交差";
 "imageEditor.action.alphaChannelApplyToMask" = "%@ を現在のレイヤーマスクとして適用";
 "imageEditor.action.alphaChannelDuplicate" = "%@ を複製";
 "imageEditor.action.alphaChannelInvert" = "%@ を反転";
@@ -1630,6 +1633,9 @@
 "imageEditor.action.alphaChannelDelete" = "%@ を削除";
 "imageEditor.action.alphaChannelLoadSelectedSelection" = "選択中の Alpha チャンネルを選択範囲として読み込み";
 "imageEditor.action.alphaChannelUpdateSelected" = "現在の選択範囲で選択中の Alpha チャンネルを更新";
+"imageEditor.action.alphaChannelSelectionAddSelected" = "現在の選択範囲を選択中の Alpha チャンネルに追加";
+"imageEditor.action.alphaChannelSelectionSubtractSelected" = "選択中の Alpha チャンネルから現在の選択範囲を削除";
+"imageEditor.action.alphaChannelSelectionIntersectSelected" = "選択中の Alpha チャンネルと現在の選択範囲を交差";
 "imageEditor.action.alphaChannelApplySelectedToMask" = "選択中の Alpha チャンネルを現在のレイヤーマスクとして適用";
 "imageEditor.action.alphaChannelDuplicateSelected" = "選択中の Alpha チャンネルを複製";
 "imageEditor.action.alphaChannelInvertSelected" = "選択中の Alpha チャンネルを反転";
@@ -1665,6 +1671,9 @@
 "imageEditor.status.alphaChannelFromMaskFailed" = "現在のレイヤーには保存できるマスクがありません";
 "imageEditor.status.alphaChannelLoaded" = "%@ を選択範囲として読み込みました";
 "imageEditor.status.alphaChannelUpdated" = "現在の選択範囲で %@ を更新しました";
+"imageEditor.status.alphaChannelSelectionAdded" = "現在の選択範囲を %@ に追加しました";
+"imageEditor.status.alphaChannelSelectionSubtracted" = "%@ から現在の選択範囲を削除しました";
+"imageEditor.status.alphaChannelSelectionIntersected" = "%@ と現在の選択範囲を交差しました";
 "imageEditor.status.alphaChannelApplyToMask" = "%@ を現在のレイヤーマスクとして適用しました";
 "imageEditor.status.alphaChannelDuplicated" = "%@ として複製しました";
 "imageEditor.status.alphaChannelInverted" = "%@ を反転しました";
@@ -1694,6 +1703,9 @@
 "imageEditor.history.alphaChannelFromChannel" = "チャンネルから Alpha チャンネルを保存";
 "imageEditor.history.alphaChannelLoad" = "Alpha チャンネル選択範囲を読み込み";
 "imageEditor.history.alphaChannelUpdate" = "Alpha チャンネルを更新";
+"imageEditor.history.alphaChannelSelectionAdd" = "選択範囲を Alpha チャンネルに追加";
+"imageEditor.history.alphaChannelSelectionSubtract" = "Alpha チャンネルから選択範囲を削除";
+"imageEditor.history.alphaChannelSelectionIntersect" = "Alpha チャンネルと選択範囲を交差";
 "imageEditor.history.alphaChannelApplyToMask" = "Alpha チャンネルをレイヤーマスクとして適用";
 "imageEditor.history.alphaChannelDuplicate" = "Alpha チャンネルを複製";
 "imageEditor.history.alphaChannelInvert" = "Alpha チャンネルを反転";

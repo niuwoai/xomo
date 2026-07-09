@@ -1605,6 +1605,9 @@
 "imageEditor.action.alphaChannelSelect" = "Preview and select alpha channel";
 "imageEditor.action.alphaChannelLoadSelection" = "Load %@ as selection";
 "imageEditor.action.alphaChannelUpdate" = "Update %@ from current selection";
+"imageEditor.action.alphaChannelSelectionAdd" = "Add current selection to %@";
+"imageEditor.action.alphaChannelSelectionSubtract" = "Subtract current selection from %@";
+"imageEditor.action.alphaChannelSelectionIntersect" = "Intersect %@ with current selection";
 "imageEditor.action.alphaChannelApplyToMask" = "Apply %@ as current layer mask";
 "imageEditor.action.alphaChannelDuplicate" = "Duplicate %@";
 "imageEditor.action.alphaChannelInvert" = "Invert %@";
@@ -1630,6 +1633,9 @@
 "imageEditor.action.alphaChannelDelete" = "Delete %@";
 "imageEditor.action.alphaChannelLoadSelectedSelection" = "Load selected alpha channel as selection";
 "imageEditor.action.alphaChannelUpdateSelected" = "Update selected alpha channel from current selection";
+"imageEditor.action.alphaChannelSelectionAddSelected" = "Add current selection to selected alpha channel";
+"imageEditor.action.alphaChannelSelectionSubtractSelected" = "Subtract current selection from selected alpha channel";
+"imageEditor.action.alphaChannelSelectionIntersectSelected" = "Intersect selected alpha channel with current selection";
 "imageEditor.action.alphaChannelApplySelectedToMask" = "Apply selected alpha channel as current layer mask";
 "imageEditor.action.alphaChannelDuplicateSelected" = "Duplicate selected alpha channel";
 "imageEditor.action.alphaChannelInvertSelected" = "Invert selected alpha channel";
@@ -1665,6 +1671,9 @@
 "imageEditor.status.alphaChannelFromMaskFailed" = "Current layer has no mask to save";
 "imageEditor.status.alphaChannelLoaded" = "Loaded %@ as selection";
 "imageEditor.status.alphaChannelUpdated" = "Updated %@ from current selection";
+"imageEditor.status.alphaChannelSelectionAdded" = "Added current selection to %@";
+"imageEditor.status.alphaChannelSelectionSubtracted" = "Subtracted current selection from %@";
+"imageEditor.status.alphaChannelSelectionIntersected" = "Intersected %@ with current selection";
 "imageEditor.status.alphaChannelApplyToMask" = "Applied %@ as current layer mask";
 "imageEditor.status.alphaChannelDuplicated" = "Duplicated as %@";
 "imageEditor.status.alphaChannelInverted" = "Inverted %@";
@@ -1694,6 +1703,9 @@
 "imageEditor.history.alphaChannelFromChannel" = "Save Alpha Channel from Channel";
 "imageEditor.history.alphaChannelLoad" = "Load Alpha Channel Selection";
 "imageEditor.history.alphaChannelUpdate" = "Update Alpha Channel";
+"imageEditor.history.alphaChannelSelectionAdd" = "Add Selection to Alpha Channel";
+"imageEditor.history.alphaChannelSelectionSubtract" = "Subtract Selection from Alpha Channel";
+"imageEditor.history.alphaChannelSelectionIntersect" = "Intersect Alpha Channel with Selection";
 "imageEditor.history.alphaChannelApplyToMask" = "Apply Alpha Channel as Layer Mask";
 "imageEditor.history.alphaChannelDuplicate" = "Duplicate Alpha Channel";
 "imageEditor.history.alphaChannelInvert" = "Invert Alpha Channel";

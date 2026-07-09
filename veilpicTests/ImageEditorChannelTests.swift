@@ -332,6 +332,62 @@ struct ImageEditorChannelTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelUpdate"))
     }
 
+    @Test func alphaChannelsCanCombineCurrentSelectionWithSavedMask() async throws {
+        let canvasSize = NSSize(width: 4, height: 1)
+        let image = NSImage.rendered(size: canvasSize) { rect in
+            NSColor.systemBlue.setFill()
+            rect.fill()
+        } ?? NSImage(size: canvasSize)
+        let viewModel = ImageEditorViewModel(sourceName: "combine-alpha.png", image: image) { _ in }
+        let channel = ImageEditorAlphaChannel(
+            name: "Combine Alpha",
+            mask: ImageEditorSelectionMask(width: 4, height: 1, alpha: [255, 0, 0, 0])
+        )
+        viewModel.document.alphaChannels = [channel]
+        viewModel.selectAlphaChannel(channel.id)
+        viewModel.document.selection = ImageEditorSelection.raster(
+            mask: ImageEditorSelectionMask(width: 4, height: 1, alpha: [0, 255, 0, 0]),
+            bounds: CGRect(x: 1, y: 0, width: 1, height: 1)
+        )
+
+        #expect(viewModel.canAddSelectionToSelectedAlphaChannel)
+        viewModel.addSelectionToSelectedAlphaChannel()
+
+        var combinedMask = try #require(viewModel.selectedAlphaChannel?.mask)
+        #expect(maskAlpha(combinedMask, x: 0, y: 0) == 255)
+        #expect(maskAlpha(combinedMask, x: 1, y: 0) == 255)
+        #expect(maskAlpha(combinedMask, x: 2, y: 0) == 0)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelSelectionAdded", "Combine Alpha"))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelSelectionAdd"))
+
+        viewModel.document.selection = ImageEditorSelection.raster(
+            mask: ImageEditorSelectionMask(width: 4, height: 1, alpha: [255, 0, 0, 0]),
+            bounds: CGRect(x: 0, y: 0, width: 1, height: 1)
+        )
+        #expect(viewModel.canSubtractSelectionFromSelectedAlphaChannel)
+        viewModel.subtractSelectionFromSelectedAlphaChannel()
+
+        combinedMask = try #require(viewModel.selectedAlphaChannel?.mask)
+        #expect(maskAlpha(combinedMask, x: 0, y: 0) == 0)
+        #expect(maskAlpha(combinedMask, x: 1, y: 0) == 255)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelSelectionSubtracted", "Combine Alpha"))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelSelectionSubtract"))
+
+        viewModel.document.selection = ImageEditorSelection.raster(
+            mask: ImageEditorSelectionMask(width: 4, height: 1, alpha: [0, 255, 255, 0]),
+            bounds: CGRect(x: 1, y: 0, width: 2, height: 1)
+        )
+        #expect(viewModel.canIntersectSelectionWithSelectedAlphaChannel)
+        viewModel.intersectSelectionWithSelectedAlphaChannel()
+
+        combinedMask = try #require(viewModel.selectedAlphaChannel?.mask)
+        #expect(maskAlpha(combinedMask, x: 0, y: 0) == 0)
+        #expect(maskAlpha(combinedMask, x: 1, y: 0) == 255)
+        #expect(maskAlpha(combinedMask, x: 2, y: 0) == 0)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelSelectionIntersected", "Combine Alpha"))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelSelectionIntersect"))
+    }
+
     @Test func selectedAlphaChannelDrivesMenuStyleCommands() async throws {
         let viewModel = ImageEditorViewModel(sourceName: "split.png", image: splitChannelImage()) { _ in }
 
