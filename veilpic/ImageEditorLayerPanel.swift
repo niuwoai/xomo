@@ -357,6 +357,26 @@ extension ImageEditorView {
             .help(L10n.format("imageEditor.action.alphaChannelFlipVertical", channel.name))
 
             Button {
+                viewModel.rotateAlphaChannelCounterclockwise(channel.id)
+            } label: {
+                Image(systemName: "rotate.left")
+                    .font(.system(size: 12, weight: .semibold))
+                    .frame(width: 24, height: 28)
+            }
+            .buttonStyle(EditorIconButtonStyle(isSelected: false))
+            .help(L10n.format("imageEditor.action.alphaChannelRotateCounterclockwise", channel.name))
+
+            Button {
+                viewModel.rotateAlphaChannelClockwise(channel.id)
+            } label: {
+                Image(systemName: "rotate.right")
+                    .font(.system(size: 12, weight: .semibold))
+                    .frame(width: 24, height: 28)
+            }
+            .buttonStyle(EditorIconButtonStyle(isSelected: false))
+            .help(L10n.format("imageEditor.action.alphaChannelRotateClockwise", channel.name))
+
+            Button {
                 viewModel.deleteAlphaChannel(channel.id)
             } label: {
                 Image(systemName: "trash")

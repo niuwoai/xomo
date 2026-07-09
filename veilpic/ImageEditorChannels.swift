@@ -144,6 +144,14 @@ extension ImageEditorViewModel {
         selectedAlphaChannel != nil
     }
 
+    var canRotateSelectedAlphaChannelClockwise: Bool {
+        selectedAlphaChannel != nil
+    }
+
+    var canRotateSelectedAlphaChannelCounterclockwise: Bool {
+        selectedAlphaChannel != nil
+    }
+
     var canDeleteSelectedAlphaChannel: Bool {
         selectedAlphaChannel != nil
     }
@@ -312,6 +320,16 @@ extension ImageEditorViewModel {
     func flipSelectedAlphaChannelVertical() {
         guard let selectedAlphaChannelID else { return }
         flipAlphaChannelVertical(selectedAlphaChannelID)
+    }
+
+    func rotateSelectedAlphaChannelClockwise() {
+        guard let selectedAlphaChannelID else { return }
+        rotateAlphaChannelClockwise(selectedAlphaChannelID)
+    }
+
+    func rotateSelectedAlphaChannelCounterclockwise() {
+        guard let selectedAlphaChannelID else { return }
+        rotateAlphaChannelCounterclockwise(selectedAlphaChannelID)
     }
 
     func deleteSelectedAlphaChannel() {
@@ -511,6 +529,38 @@ extension ImageEditorViewModel {
 
         pushUndo()
         document.alphaChannels[index].mask = flippedMask
+        selectedAlphaChannelID = id
+        appendHistory(L10n.text(historyKey))
+        statusText = L10n.format(statusKey, document.alphaChannels[index].name)
+    }
+
+    func rotateAlphaChannelClockwise(_ id: UUID) {
+        rotateAlphaChannel(
+            id,
+            clockwiseTurns: 1,
+            historyKey: "imageEditor.history.alphaChannelRotateClockwise",
+            statusKey: "imageEditor.status.alphaChannelRotatedClockwise"
+        )
+    }
+
+    func rotateAlphaChannelCounterclockwise(_ id: UUID) {
+        rotateAlphaChannel(
+            id,
+            clockwiseTurns: -1,
+            historyKey: "imageEditor.history.alphaChannelRotateCounterclockwise",
+            statusKey: "imageEditor.status.alphaChannelRotatedCounterclockwise"
+        )
+    }
+
+    private func rotateAlphaChannel(_ id: UUID, clockwiseTurns: Int, historyKey: String, statusKey: String) {
+        guard let index = document.alphaChannels.firstIndex(where: { $0.id == id }) else { return }
+        guard let rotatedMask = document.alphaChannels[index].mask.rotatedQuarterTurns(clockwiseTurns) else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+
+        pushUndo()
+        document.alphaChannels[index].mask = rotatedMask
         selectedAlphaChannelID = id
         appendHistory(L10n.text(historyKey))
         statusText = L10n.format(statusKey, document.alphaChannels[index].name)

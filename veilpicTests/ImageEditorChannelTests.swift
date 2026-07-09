@@ -611,6 +611,48 @@ struct ImageEditorChannelTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelFlipVertical"))
     }
 
+    @Test func alphaChannelsCanRotateMaskClockwiseAndCounterclockwise() async throws {
+        let viewModel = ImageEditorViewModel(sourceName: "split.png", image: splitChannelImage()) { _ in }
+        var alpha = [UInt8](repeating: 0, count: 42)
+        alpha[1 * 7 + 2] = 255
+        alpha[1 * 7 + 3] = 255
+        alpha[1 * 7 + 4] = 255
+        alpha[2 * 7 + 2] = 255
+        let lShapeMask = ImageEditorSelectionMask(width: 7, height: 6, alpha: alpha)
+
+        let clockwiseChannel = ImageEditorAlphaChannel(name: "Rotate CW", mask: lShapeMask)
+        viewModel.document.alphaChannels = [clockwiseChannel]
+        viewModel.selectAlphaChannel(clockwiseChannel.id)
+
+        #expect(viewModel.canRotateSelectedAlphaChannelClockwise)
+        viewModel.rotateSelectedAlphaChannelClockwise()
+
+        let clockwiseMask = try #require(viewModel.selectedAlphaChannel?.mask)
+        #expect(maskAlpha(clockwiseMask, x: 2, y: 1) == 255)
+        #expect(maskAlpha(clockwiseMask, x: 3, y: 1) == 255)
+        #expect(maskAlpha(clockwiseMask, x: 3, y: 2) == 255)
+        #expect(maskAlpha(clockwiseMask, x: 3, y: 3) == 255)
+        #expect(maskAlpha(clockwiseMask, x: 4, y: 1) == 0)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelRotatedClockwise", "Rotate CW"))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelRotateClockwise"))
+
+        let counterclockwiseChannel = ImageEditorAlphaChannel(name: "Rotate CCW", mask: lShapeMask)
+        viewModel.document.alphaChannels = [counterclockwiseChannel]
+        viewModel.selectAlphaChannel(counterclockwiseChannel.id)
+
+        #expect(viewModel.canRotateSelectedAlphaChannelCounterclockwise)
+        viewModel.rotateSelectedAlphaChannelCounterclockwise()
+
+        let counterclockwiseMask = try #require(viewModel.selectedAlphaChannel?.mask)
+        #expect(maskAlpha(counterclockwiseMask, x: 2, y: 1) == 255)
+        #expect(maskAlpha(counterclockwiseMask, x: 2, y: 2) == 255)
+        #expect(maskAlpha(counterclockwiseMask, x: 2, y: 3) == 255)
+        #expect(maskAlpha(counterclockwiseMask, x: 3, y: 3) == 255)
+        #expect(maskAlpha(counterclockwiseMask, x: 3, y: 1) == 0)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelRotatedCounterclockwise", "Rotate CCW"))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelRotateCounterclockwise"))
+    }
+
     @Test func alphaChannelsRoundTripWithLayerMasks() async throws {
         let viewModel = ImageEditorViewModel(sourceName: "split.png", image: splitChannelImage()) { _ in }
 

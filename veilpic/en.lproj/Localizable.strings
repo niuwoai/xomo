@@ -1617,6 +1617,8 @@
 "imageEditor.action.alphaChannelRemoveSpeckles" = "Remove speckles from %@";
 "imageEditor.action.alphaChannelFlipHorizontal" = "Flip %@ horizontally";
 "imageEditor.action.alphaChannelFlipVertical" = "Flip %@ vertically";
+"imageEditor.action.alphaChannelRotateCounterclockwise" = "Rotate %@ 90° counterclockwise";
+"imageEditor.action.alphaChannelRotateClockwise" = "Rotate %@ 90° clockwise";
 "imageEditor.action.alphaChannelDelete" = "Delete %@";
 "imageEditor.action.alphaChannelLoadSelectedSelection" = "Load selected alpha channel as selection";
 "imageEditor.action.alphaChannelUpdateSelected" = "Update selected alpha channel from current selection";
@@ -1632,6 +1634,8 @@
 "imageEditor.action.alphaChannelRemoveSpecklesSelected" = "Remove speckles from selected alpha channel";
 "imageEditor.action.alphaChannelFlipHorizontalSelected" = "Flip selected alpha channel horizontally";
 "imageEditor.action.alphaChannelFlipVerticalSelected" = "Flip selected alpha channel vertically";
+"imageEditor.action.alphaChannelRotateCounterclockwiseSelected" = "Rotate selected alpha channel 90° counterclockwise";
+"imageEditor.action.alphaChannelRotateClockwiseSelected" = "Rotate selected alpha channel 90° clockwise";
 "imageEditor.action.alphaChannelDeleteSelected" = "Delete selected alpha channel";
 "imageEditor.action.alphaChannelPrevious" = "Previous Alpha Channel";
 "imageEditor.action.alphaChannelNext" = "Next Alpha Channel";
@@ -1657,6 +1661,8 @@
 "imageEditor.status.alphaChannelSpecklesRemoved" = "Removed speckles from %@ (up to %d px)";
 "imageEditor.status.alphaChannelFlippedHorizontal" = "Flipped %@ horizontally";
 "imageEditor.status.alphaChannelFlippedVertical" = "Flipped %@ vertically";
+"imageEditor.status.alphaChannelRotatedCounterclockwise" = "Rotated %@ 90° counterclockwise";
+"imageEditor.status.alphaChannelRotatedClockwise" = "Rotated %@ 90° clockwise";
 "imageEditor.status.alphaChannelRenamed" = "Renamed alpha channel";
 "imageEditor.status.alphaChannelNameInvalid" = "Alpha channel name cannot be empty";
 "imageEditor.status.alphaChannelDeleted" = "Deleted alpha channel";
@@ -1679,6 +1685,8 @@
 "imageEditor.history.alphaChannelRemoveSpeckles" = "Remove Alpha Channel Speckles";
 "imageEditor.history.alphaChannelFlipHorizontal" = "Flip Alpha Channel Horizontally";
 "imageEditor.history.alphaChannelFlipVertical" = "Flip Alpha Channel Vertically";
+"imageEditor.history.alphaChannelRotateCounterclockwise" = "Rotate Alpha Channel 90° Counterclockwise";
+"imageEditor.history.alphaChannelRotateClockwise" = "Rotate Alpha Channel 90° Clockwise";
 "imageEditor.history.alphaChannelRename" = "Rename Alpha Channel";
 "imageEditor.history.alphaChannelDelete" = "Delete Alpha Channel";
 "imageEditor.action.layerCompNew" = "Save Layer Comp";

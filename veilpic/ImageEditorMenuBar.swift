@@ -972,6 +972,14 @@ extension ImageEditorView {
             viewModel.flipSelectedAlphaChannelVertical()
         }
         .disabled(!viewModel.canFlipSelectedAlphaChannelVertical)
+        Button(L10n.text("imageEditor.action.alphaChannelRotateCounterclockwiseSelected")) {
+            viewModel.rotateSelectedAlphaChannelCounterclockwise()
+        }
+        .disabled(!viewModel.canRotateSelectedAlphaChannelCounterclockwise)
+        Button(L10n.text("imageEditor.action.alphaChannelRotateClockwiseSelected")) {
+            viewModel.rotateSelectedAlphaChannelClockwise()
+        }
+        .disabled(!viewModel.canRotateSelectedAlphaChannelClockwise)
         Button(L10n.text("imageEditor.action.alphaChannelDeleteSelected")) {
             viewModel.deleteSelectedAlphaChannel()
         }
