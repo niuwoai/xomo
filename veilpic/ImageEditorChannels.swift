@@ -55,6 +55,10 @@ extension ImageEditorViewModel {
         return mask.selectedBounds(in: document.canvasSize) != nil
     }
 
+    var canCreateBlankAlphaChannel: Bool {
+        document.canvasSize.width > 0 && document.canvasSize.height > 0
+    }
+
     var canSaveSelectedLayerMaskAsAlphaChannel: Bool {
         guard selectedLayerCount == 1,
               let layer = document.selectedLayer
@@ -240,6 +244,28 @@ extension ImageEditorViewModel {
         selectedAlphaChannelID = channel.id
         appendHistory(L10n.text("imageEditor.history.alphaChannelSave"))
         statusText = L10n.text("imageEditor.status.alphaChannelSaved")
+    }
+
+    func createBlankAlphaChannel() {
+        guard canCreateBlankAlphaChannel else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+
+        let width = max(1, Int(document.canvasSize.width.rounded()))
+        let height = max(1, Int(document.canvasSize.height.rounded()))
+        let nextIndex = document.alphaChannels.count + 1
+        let channel = ImageEditorAlphaChannel(
+            name: L10n.format("imageEditor.channel.alphaChannelName", nextIndex),
+            mask: ImageEditorSelectionMask(width: width, height: height, alpha: [UInt8](repeating: 0, count: width * height))
+        )
+
+        pushUndo()
+        document.alphaChannels.append(channel)
+        selectedAlphaChannelID = channel.id
+        previewedAlphaChannelID = channel.id
+        appendHistory(L10n.text("imageEditor.history.alphaChannelBlank"))
+        statusText = L10n.format("imageEditor.status.alphaChannelBlank", channel.name)
     }
 
     func saveSelectedLayerMaskAsAlphaChannel() {

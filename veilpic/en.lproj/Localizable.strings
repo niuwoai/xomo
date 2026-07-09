@@ -1599,6 +1599,7 @@
 "imageEditor.action.channelPreview" = "Preview %@ channel";
 "imageEditor.action.channelLoadSelection" = "Load %@ channel as selection";
 "imageEditor.action.channelSaveSelection" = "Save Selection as Alpha Channel";
+"imageEditor.action.alphaChannelBlank" = "New Blank Alpha Channel";
 "imageEditor.action.channelSaveLayerMask" = "Save Layer Mask as Alpha Channel";
 "imageEditor.action.channelSaveCurrentAsAlpha" = "Save current preview channel as alpha channel";
 "imageEditor.action.channelSaveAsAlpha" = "Save %@ as alpha channel";
@@ -1666,6 +1667,7 @@
 "imageEditor.status.channelSelectionEmpty" = "%@ channel has no selectable pixels";
 "imageEditor.status.alphaChannelSelected" = "Previewing %@";
 "imageEditor.status.alphaChannelSaved" = "Saved as alpha channel";
+"imageEditor.status.alphaChannelBlank" = "Created blank alpha channel %@";
 "imageEditor.status.alphaChannelFromMask" = "Saved current layer mask as alpha channel";
 "imageEditor.status.alphaChannelFromChannel" = "Saved %@ as alpha channel";
 "imageEditor.status.alphaChannelFromMaskFailed" = "Current layer has no mask to save";
@@ -1699,6 +1701,7 @@
 "imageEditor.status.alphaChannelSelectionEmpty" = "Alpha channel has no selectable pixels";
 "imageEditor.history.selectionFromChannel" = "Load Channel Selection";
 "imageEditor.history.alphaChannelSave" = "Save Alpha Channel";
+"imageEditor.history.alphaChannelBlank" = "New Blank Alpha Channel";
 "imageEditor.history.alphaChannelFromMask" = "Save Alpha Channel from Layer Mask";
 "imageEditor.history.alphaChannelFromChannel" = "Save Alpha Channel from Channel";
 "imageEditor.history.alphaChannelLoad" = "Load Alpha Channel Selection";

@@ -902,6 +902,10 @@ extension ImageEditorView {
 
     @ViewBuilder
     private var alphaChannelMenu: some View {
+        Button(L10n.text("imageEditor.action.alphaChannelBlank")) {
+            viewModel.createBlankAlphaChannel()
+        }
+        .disabled(!viewModel.canCreateBlankAlphaChannel)
         Button(L10n.text("imageEditor.action.channelSaveSelection")) {
             viewModel.saveSelectionAsAlphaChannel()
         }

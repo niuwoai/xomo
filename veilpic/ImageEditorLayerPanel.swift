@@ -49,6 +49,21 @@ extension ImageEditorView {
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             Button {
+                viewModel.createBlankAlphaChannel()
+            } label: {
+                Label(L10n.text("imageEditor.action.alphaChannelBlank"), systemImage: "plus.square.dashed")
+                    .font(.system(size: 11, weight: .semibold))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .buttonStyle(.plain)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 7)
+            .background(Color.white.opacity(0.08))
+            .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+            .disabled(!viewModel.canCreateBlankAlphaChannel)
+            .help(L10n.text("imageEditor.action.alphaChannelBlank"))
+
+            Button {
                 viewModel.saveSelectionAsAlphaChannel()
             } label: {
                 Label(L10n.text("imageEditor.action.channelSaveSelection"), systemImage: "plus.rectangle.on.rectangle")

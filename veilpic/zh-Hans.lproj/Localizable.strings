@@ -1599,6 +1599,7 @@
 "imageEditor.action.channelPreview" = "预览 %@ 通道";
 "imageEditor.action.channelLoadSelection" = "将 %@ 通道载入为选区";
 "imageEditor.action.channelSaveSelection" = "保存选区为 Alpha 通道";
+"imageEditor.action.alphaChannelBlank" = "新建空白 Alpha 通道";
 "imageEditor.action.channelSaveLayerMask" = "保存图层蒙版为 Alpha 通道";
 "imageEditor.action.channelSaveCurrentAsAlpha" = "保存当前预览通道为 Alpha 通道";
 "imageEditor.action.channelSaveAsAlpha" = "保存 %@ 为 Alpha 通道";
@@ -1666,6 +1667,7 @@
 "imageEditor.status.channelSelectionEmpty" = "%@ 通道没有可选像素";
 "imageEditor.status.alphaChannelSelected" = "正在预览 %@";
 "imageEditor.status.alphaChannelSaved" = "已保存为 Alpha 通道";
+"imageEditor.status.alphaChannelBlank" = "已创建空白 Alpha 通道 %@";
 "imageEditor.status.alphaChannelFromMask" = "已从当前图层蒙版保存 Alpha 通道";
 "imageEditor.status.alphaChannelFromChannel" = "已将 %@ 保存为 Alpha 通道";
 "imageEditor.status.alphaChannelFromMaskFailed" = "当前图层没有可保存的蒙版";
@@ -1699,6 +1701,7 @@
 "imageEditor.status.alphaChannelSelectionEmpty" = "Alpha 通道没有可选像素";
 "imageEditor.history.selectionFromChannel" = "载入通道选区";
 "imageEditor.history.alphaChannelSave" = "保存 Alpha 通道";
+"imageEditor.history.alphaChannelBlank" = "新建空白 Alpha 通道";
 "imageEditor.history.alphaChannelFromMask" = "从图层蒙版保存 Alpha 通道";
 "imageEditor.history.alphaChannelFromChannel" = "从通道保存 Alpha 通道";
 "imageEditor.history.alphaChannelLoad" = "载入 Alpha 通道选区";

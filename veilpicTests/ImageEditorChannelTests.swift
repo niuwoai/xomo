@@ -60,6 +60,28 @@ struct ImageEditorChannelTests {
         #expect(try #require(viewModel.currentImage.qingtuPNGData()) == compositeData)
     }
 
+    @Test func blankAlphaChannelStartsEmptyAndSelected() async throws {
+        let viewModel = ImageEditorViewModel(sourceName: "blank-alpha.png", image: splitChannelImage()) { _ in }
+
+        #expect(viewModel.canCreateBlankAlphaChannel)
+        viewModel.createBlankAlphaChannel()
+
+        let channel = try #require(viewModel.document.alphaChannels.first)
+        #expect(channel.name == L10n.format("imageEditor.channel.alphaChannelName", 1))
+        #expect(channel.mask.width == Int(viewModel.document.canvasSize.width.rounded()))
+        #expect(channel.mask.height == Int(viewModel.document.canvasSize.height.rounded()))
+        #expect(channel.mask.alpha.allSatisfy { $0 == 0 })
+        #expect(viewModel.selectedAlphaChannelID == channel.id)
+        #expect(viewModel.previewedAlphaChannelID == channel.id)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelBlank"))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelBlank", channel.name))
+
+        viewModel.loadSelectionFromSelectedAlphaChannel()
+
+        #expect(viewModel.document.selection == nil)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.alphaChannelSelectionEmpty"))
+    }
+
     @Test func savedAlphaChannelCanPreviewOnMainCanvas() async throws {
         let viewModel = ImageEditorViewModel(sourceName: "split.png", image: splitChannelImage()) { _ in }
         let compositeData = try #require(viewModel.currentImage.qingtuPNGData())
