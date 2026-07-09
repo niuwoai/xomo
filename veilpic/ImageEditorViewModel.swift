@@ -136,6 +136,12 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var solidColorFillRed: Double = 1
     @Published var solidColorFillGreen: Double = 0
     @Published var solidColorFillBlue: Double = 0
+    @Published var selectedPatternFillKind: ImageEditorPatternOverlayKind = .checkerboard
+    @Published var patternFillRed: Double = 0.10
+    @Published var patternFillGreen: Double = 0.24
+    @Published var patternFillBlue: Double = 0.95
+    @Published var patternFillOpacity: Double = 0.55
+    @Published var patternFillScale: Double = 16
     @Published var selectedGradientFillPreset: ImageEditorGradientFillPreset = .blueOrange
     @Published var gradientFillReverse: Bool = false
     @Published var gradientFillAngle: Double = 0
@@ -358,6 +364,10 @@ final class ImageEditorViewModel: ObservableObject {
 
     var selectedLayerIsSolidColorFill: Bool {
         document.selectedLayer?.isSolidColorFill == true
+    }
+
+    var selectedLayerIsPatternFill: Bool {
+        document.selectedLayer?.isPatternFill == true
     }
 
     var selectedLayerIsGradientFill: Bool {
@@ -609,6 +619,8 @@ final class ImageEditorViewModel: ObservableObject {
             return !lower.isGroup
                 && !lower.isAdjustment
                 && !lower.isFilter
+                && !lower.isSolidColorFill
+                && !lower.isPatternFill
                 && !lower.isGradientFill
                 && !document.isEffectivelyLocked(layer)
                 && !document.isEffectivelyPixelsLocked(lower)
@@ -617,14 +629,18 @@ final class ImageEditorViewModel: ObservableObject {
             return !lower.isGroup
                 && !lower.isAdjustment
                 && !lower.isFilter
+                && !lower.isSolidColorFill
+                && !lower.isPatternFill
                 && !lower.isGradientFill
                 && !document.isEffectivelyLocked(layer)
                 && !document.isEffectivelyPixelsLocked(lower)
         }
-        if layer.isGradientFill {
+        if layer.isSolidColorFill || layer.isPatternFill || layer.isGradientFill {
             return !lower.isGroup
                 && !lower.isAdjustment
                 && !lower.isFilter
+                && !lower.isSolidColorFill
+                && !lower.isPatternFill
                 && !lower.isGradientFill
                 && !document.isEffectivelyLocked(layer)
                 && !document.isEffectivelyPixelsLocked(lower)
@@ -632,10 +648,14 @@ final class ImageEditorViewModel: ObservableObject {
         return !layer.isGroup
             && !layer.isAdjustment
             && !layer.isFilter
+            && !layer.isSolidColorFill
+            && !layer.isPatternFill
             && !layer.isGradientFill
             && !lower.isGroup
             && !lower.isAdjustment
             && !lower.isFilter
+            && !lower.isSolidColorFill
+            && !lower.isPatternFill
             && !lower.isGradientFill
             && !document.isEffectivelyPixelsLocked(layer)
             && !document.isEffectivelyPixelsLocked(lower)
@@ -2449,6 +2469,35 @@ final class ImageEditorViewModel: ObservableObject {
         appendHistory(L10n.text("imageEditor.history.layerSolidColorFillUpdate"))
     }
 
+    func addPatternFillLayer() {
+        pushUndo()
+        let layer = ImageEditorLayer.patternFill(
+            name: L10n.text("imageEditor.layer.patternFillName"),
+            size: document.canvasSize,
+            content: currentPatternFillContent()
+        )
+        let insertionIndex = min((document.selectedLayerIndex ?? (document.layers.count - 1)) + 1, document.layers.count)
+        document.layers.insert(layer, at: insertionIndex)
+        document.selectedLayerID = layer.id
+        document.selectedLayerIDs = [layer.id]
+        isEditingLayerMask = false
+        appendHistory(L10n.text("imageEditor.history.layerPatternFillNew"))
+    }
+
+    func updateSelectedPatternFillLayer() {
+        guard let index = document.selectedLayerIndex,
+              document.layers[index].isPatternFill,
+              !document.isEffectivelyPixelsLocked(document.layers[index])
+        else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+        pushUndo()
+        document.layers[index].kind = .patternFill(currentPatternFillContent())
+        document.layers[index].name = L10n.text("imageEditor.layer.patternFillName")
+        appendHistory(L10n.text("imageEditor.history.layerPatternFillUpdate"))
+    }
+
     func addGradientFillLayer() {
         pushUndo()
         let layer = ImageEditorLayer.gradientFill(
@@ -2844,6 +2893,17 @@ final class ImageEditorViewModel: ObservableObject {
         ).normalized()
     }
 
+    private func currentPatternFillContent() -> ImageEditorPatternFillContent {
+        ImageEditorPatternFillContent(
+            kind: selectedPatternFillKind,
+            red: patternFillRed,
+            green: patternFillGreen,
+            blue: patternFillBlue,
+            opacity: patternFillOpacity,
+            scale: CGFloat(patternFillScale)
+        ).normalized()
+    }
+
     private func currentGradientFillContent() -> ImageEditorGradientFillContent {
         ImageEditorGradientFillContent(
             preset: selectedGradientFillPreset,
@@ -2933,6 +2993,12 @@ final class ImageEditorViewModel: ObservableObject {
         solidColorFillRed = 1
         solidColorFillGreen = 0
         solidColorFillBlue = 0
+        selectedPatternFillKind = .checkerboard
+        patternFillRed = 0.10
+        patternFillGreen = 0.24
+        patternFillBlue = 0.95
+        patternFillOpacity = 0.55
+        patternFillScale = 16
         selectedGradientFillPreset = .blueOrange
         gradientFillReverse = false
         gradientFillAngle = 0
@@ -2948,7 +3014,7 @@ final class ImageEditorViewModel: ObservableObject {
     private func editableSelectedLayer() -> ImageEditorLayer? {
         guard let index = document.selectedLayerIndex else { return nil }
         let layer = document.layers[index]
-        return layer.isGroup || layer.isAdjustment || layer.isFilter || layer.isSolidColorFill || layer.isGradientFill || layer.isText || layer.isShape || document.isEffectivelyPixelsLocked(layer) ? nil : layer
+        return layer.isGroup || layer.isAdjustment || layer.isFilter || layer.isSolidColorFill || layer.isPatternFill || layer.isGradientFill || layer.isText || layer.isShape || document.isEffectivelyPixelsLocked(layer) ? nil : layer
     }
 
     private func smartObjectConversionCandidate() -> ImageEditorSmartObjectConversionCandidate? {
@@ -2969,6 +3035,7 @@ final class ImageEditorViewModel: ObservableObject {
                   !rootLayer.isAdjustment,
                   !rootLayer.isFilter,
                   !rootLayer.isSolidColorFill,
+                  !rootLayer.isPatternFill,
                   !rootLayer.isGradientFill
             else { return nil }
         }
@@ -3067,7 +3134,7 @@ final class ImageEditorViewModel: ObservableObject {
 
     private func smartObjectFallbackBounds(for layerIDs: Set<UUID>) -> CGRect {
         let bounds = document.layers
-            .filter { layerIDs.contains($0.id) && !$0.isGroup && !($0.isAdjustment || $0.isFilter || $0.isSolidColorFill || $0.isGradientFill) }
+            .filter { layerIDs.contains($0.id) && !$0.isGroup && !($0.isAdjustment || $0.isFilter || $0.isSolidColorFill || $0.isPatternFill || $0.isGradientFill) }
             .map { $0.renderedCompositingFrame(globalLightAngle: document.globalLightAngle) }
             .reduce(nil as CGRect?) { partial, rect in
                 partial.map { $0.union(rect) } ?? rect
@@ -3091,15 +3158,15 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     private func canToggleTransparentPixelsLock(for layer: ImageEditorLayer) -> Bool {
-        !layer.isGroup && !layer.isAdjustment && !layer.isFilter && !layer.isSolidColorFill && !layer.isGradientFill && !layer.isText && !layer.isShape
+        !layer.isGroup && !layer.isAdjustment && !layer.isFilter && !layer.isSolidColorFill && !layer.isPatternFill && !layer.isGradientFill && !layer.isText && !layer.isShape
     }
 
     private func canTogglePixelsLock(for layer: ImageEditorLayer) -> Bool {
-        !layer.isAdjustment && !layer.isFilter && !layer.isSolidColorFill && !layer.isGradientFill
+        !layer.isAdjustment && !layer.isFilter && !layer.isSolidColorFill && !layer.isPatternFill && !layer.isGradientFill
     }
 
     private func canTogglePositionLock(for layer: ImageEditorLayer) -> Bool {
-        !layer.isAdjustment && !layer.isFilter && !layer.isSolidColorFill && !layer.isGradientFill
+        !layer.isAdjustment && !layer.isFilter && !layer.isSolidColorFill && !layer.isPatternFill && !layer.isGradientFill
     }
 
     private func setSelectedLayerLocks(
@@ -3712,6 +3779,7 @@ final class ImageEditorViewModel: ObservableObject {
         syncAdjustmentControlsFromSelection()
         syncFilterControlsFromSelection()
         syncSolidColorFillControlsFromSelection()
+        syncPatternFillControlsFromSelection()
         syncGradientFillControlsFromSelection()
         syncTextControlsFromSelection()
         syncShapeControlsFromSelection()
@@ -3818,6 +3886,16 @@ final class ImageEditorViewModel: ObservableObject {
         solidColorFillRed = content.red
         solidColorFillGreen = content.green
         solidColorFillBlue = content.blue
+    }
+
+    private func syncPatternFillControlsFromSelection() {
+        guard let content = document.selectedLayer?.patternFillContent?.normalized() else { return }
+        selectedPatternFillKind = content.kind
+        patternFillRed = content.red
+        patternFillGreen = content.green
+        patternFillBlue = content.blue
+        patternFillOpacity = content.opacity
+        patternFillScale = Double(content.scale)
     }
 
     private func syncGradientFillControlsFromSelection() {

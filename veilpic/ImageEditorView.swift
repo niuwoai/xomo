@@ -1818,6 +1818,10 @@ struct ImageEditorView: View {
 
                 Divider().overlay(editorBorder)
 
+                patternFillControls
+
+                Divider().overlay(editorBorder)
+
                 gradientFillControls
 
                 Divider().overlay(editorBorder)
@@ -2931,6 +2935,51 @@ struct ImageEditorView: View {
                 if viewModel.selectedLayerIsSolidColorFill {
                     Button(L10n.text("imageEditor.action.layerSolidColorFillUpdate")) {
                         viewModel.updateSelectedSolidColorFillLayer()
+                    }
+                    .buttonStyle(EditorTextButtonStyle())
+                }
+            }
+        }
+    }
+
+    private var patternFillControls: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(L10n.text("imageEditor.patternFill.title"))
+                .font(.system(size: 10, weight: .bold))
+                .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+            Picker(L10n.text("imageEditor.patternFill.kind"), selection: $viewModel.selectedPatternFillKind) {
+                ForEach(ImageEditorPatternOverlayKind.allCases) { kind in
+                    Text(kind.title).tag(kind)
+                }
+            }
+            gradientFillColorSliders(
+                red: $viewModel.patternFillRed,
+                green: $viewModel.patternFillGreen,
+                blue: $viewModel.patternFillBlue,
+                labelPrefix: "imageEditor.patternFill"
+            )
+            adjustmentSlider(
+                labelKey: "imageEditor.patternFill.opacity",
+                value: $viewModel.patternFillOpacity,
+                range: 0.05...1,
+                step: 0.05,
+                displayText: L10n.format("imageEditor.patternFill.opacityValue", Int((viewModel.patternFillOpacity * 100).rounded()))
+            )
+            adjustmentSlider(
+                labelKey: "imageEditor.patternFill.scale",
+                value: $viewModel.patternFillScale,
+                range: 6...64,
+                step: 1,
+                displayText: L10n.format("imageEditor.patternFill.scaleValue", Int(viewModel.patternFillScale.rounded()))
+            )
+            HStack {
+                Button(L10n.text("imageEditor.action.layerPatternFillNew")) {
+                    viewModel.addPatternFillLayer()
+                }
+                .buttonStyle(EditorTextButtonStyle())
+                if viewModel.selectedLayerIsPatternFill {
+                    Button(L10n.text("imageEditor.action.layerPatternFillUpdate")) {
+                        viewModel.updateSelectedPatternFillLayer()
                     }
                     .buttonStyle(EditorTextButtonStyle())
                 }

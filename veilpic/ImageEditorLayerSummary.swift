@@ -40,6 +40,14 @@ extension ImageEditorViewModel {
                 Int((solidColorFillContent.blue * 255).rounded())
             )
         }
+        if let patternFillContent = layer.patternFillContent?.normalized() {
+            return L10n.format(
+                "imageEditor.properties.patternFillLayerValue",
+                patternFillContent.kind.title,
+                Int((patternFillContent.opacity * 100).rounded()),
+                Int(patternFillContent.scale.rounded())
+            )
+        }
         if let gradientFillContent = layer.gradientFillContent?.normalized() {
             return L10n.format(
                 "imageEditor.properties.gradientFillLayerValue",

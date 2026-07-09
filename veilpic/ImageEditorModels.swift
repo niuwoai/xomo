@@ -422,6 +422,47 @@ struct ImageEditorSolidColorFillContent: Equatable, Codable {
     }
 }
 
+struct ImageEditorPatternFillContent: Equatable, Codable {
+    var kind: ImageEditorPatternOverlayKind = .checkerboard
+    var red: Double = 0.10
+    var green: Double = 0.24
+    var blue: Double = 0.95
+    var opacity: Double = 0.55
+    var scale: CGFloat = 16
+
+    func normalized() -> ImageEditorPatternFillContent {
+        ImageEditorPatternFillContent(
+            kind: kind,
+            red: Self.zeroOne(red),
+            green: Self.zeroOne(green),
+            blue: Self.zeroOne(blue),
+            opacity: max(0.05, min(1, opacity)),
+            scale: max(6, min(64, scale))
+        )
+    }
+
+    var color: NSColor {
+        let content = normalized()
+        return NSColor(calibratedRed: content.red, green: content.green, blue: content.blue, alpha: 1)
+    }
+
+    func renderedImage(size: CGSize) -> NSImage {
+        let content = normalized()
+        return NSImage.rendered(size: size) { rect in
+            NSColor(patternImage: content.kind.tileImage(
+                color: content.color,
+                opacity: CGFloat(content.opacity),
+                scale: content.scale
+            )).setFill()
+            rect.fill()
+        } ?? NSImage.transparent(size: size)
+    }
+
+    private static func zeroOne(_ value: Double) -> Double {
+        max(0, min(1, value))
+    }
+}
+
 enum ImageEditorGradientFillPreset: String, CaseIterable, Identifiable {
     case blackWhite
     case sunset
@@ -1702,6 +1743,7 @@ enum ImageEditorLayerKind {
     case adjustment(ImageEditorAdjustment, Double)
     case filter(ImageEditorFilter, Double)
     case solidColorFill(ImageEditorSolidColorFillContent)
+    case patternFill(ImageEditorPatternFillContent)
     case gradientFill(ImageEditorGradientFillContent)
     case text(ImageEditorTextContent)
     case shape(ImageEditorShapeContent)
@@ -1846,6 +1888,20 @@ struct ImageEditorLayer: Identifiable {
         )
     }
 
+    static func patternFill(name: String, size: CGSize, content: ImageEditorPatternFillContent) -> ImageEditorLayer {
+        ImageEditorLayer(
+            name: name,
+            image: NSImage.transparent(size: size),
+            mask: nil,
+            frame: CGRect(origin: .zero, size: size),
+            isVisible: true,
+            opacity: 1,
+            blendMode: .normal,
+            isLocked: false,
+            kind: .patternFill(content.normalized())
+        )
+    }
+
     static func gradientFill(name: String, size: CGSize, content: ImageEditorGradientFillContent) -> ImageEditorLayer {
         ImageEditorLayer(
             name: name,
@@ -1956,6 +2012,15 @@ struct ImageEditorLayer: Identifiable {
         solidColorFillContent != nil
     }
 
+    var patternFillContent: ImageEditorPatternFillContent? {
+        guard case let .patternFill(content) = kind else { return nil }
+        return content
+    }
+
+    var isPatternFill: Bool {
+        patternFillContent != nil
+    }
+
     var gradientFillContent: ImageEditorGradientFillContent? {
         guard case let .gradientFill(content) = kind else { return nil }
         return content
@@ -2057,6 +2122,9 @@ struct ImageEditorLayer: Identifiable {
         if let solidColorFillContent {
             return solidColorFillContent.renderedImage(size: size)
         }
+        if let patternFillContent {
+            return patternFillContent.renderedImage(size: size)
+        }
         if let gradientFillContent {
             return gradientFillContent.renderedImage(size: size)
         }
@@ -2156,6 +2224,8 @@ struct ImageEditorLayer: Identifiable {
             } ?? image
         } else if let solidColorFillContent {
             baseImage = solidColorFillContent.renderedImage(size: image.size)
+        } else if let patternFillContent {
+            baseImage = patternFillContent.renderedImage(size: image.size)
         } else if let gradientFillContent {
             baseImage = gradientFillContent.renderedImage(size: image.size)
         } else if let shapeContent {
@@ -2610,6 +2680,7 @@ enum ImageEditorLayerKindFilter: String, CaseIterable, Identifiable {
     case adjustment
     case filter
     case solidColorFill
+    case patternFill
     case gradientFill
     case smartObject
     case group
@@ -2636,6 +2707,8 @@ enum ImageEditorLayerKindFilter: String, CaseIterable, Identifiable {
             return "sparkles"
         case .solidColorFill:
             return "paintbrush.pointed"
+        case .patternFill:
+            return "square.grid.3x3.fill"
         case .gradientFill:
             return "paintpalette"
         case .smartObject:
@@ -2661,6 +2734,8 @@ enum ImageEditorLayerKindFilter: String, CaseIterable, Identifiable {
             return layer.isFilter
         case .solidColorFill:
             return layer.isSolidColorFill
+        case .patternFill:
+            return layer.isPatternFill
         case .gradientFill:
             return layer.isGradientFill
         case .smartObject:

@@ -12,6 +12,71 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct ImageEditorAdjustmentTests {
+    @Test func imageEditorPatternFillLayerRendersSmartFiltersAndRoundTripsProjectState() async throws {
+        let canvasSize = NSSize(width: 60, height: 40)
+        let sourceImage = bitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: sourceImage) { _ in }
+        let baseLayerID = try #require(viewModel.document.selectedLayerID)
+        let basePixelsBefore = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+
+        viewModel.selectedPatternFillKind = .checkerboard
+        viewModel.patternFillRed = 0.90
+        viewModel.patternFillGreen = 0.20
+        viewModel.patternFillBlue = 0.10
+        viewModel.patternFillOpacity = 1
+        viewModel.patternFillScale = 10
+        viewModel.addPatternFillLayer()
+
+        let patternLayer = try #require(viewModel.document.selectedLayer)
+        let patternContent = try #require(patternLayer.patternFillContent?.normalized())
+        let coloredSquare = try #require(viewModel.currentImage.color(at: CGPoint(x: 2, y: 2))?.usingColorSpace(.deviceRGB))
+        let transparentSquare = try #require(viewModel.currentImage.color(at: CGPoint(x: 7, y: 2))?.usingColorSpace(.deviceRGB))
+
+        #expect(patternLayer.isPatternFill)
+        #expect(patternContent.kind == .checkerboard)
+        #expect(abs(patternContent.red - 0.90) < 0.001)
+        #expect(abs(patternContent.green - 0.20) < 0.001)
+        #expect(abs(patternContent.blue - 0.10) < 0.001)
+        #expect(abs(patternContent.opacity - 1) < 0.001)
+        #expect(abs(patternContent.scale - 10) < 0.001)
+        #expect(coloredSquare.redComponent > transparentSquare.redComponent + 0.45)
+        #expect(coloredSquare.greenComponent > transparentSquare.greenComponent + 0.08)
+        #expect(viewModel.document.layers.first { $0.id == baseLayerID }?.image.qingtuPNGData() == basePixelsBefore)
+        #expect(viewModel.selectedLayerGeometryText == L10n.format("imageEditor.properties.patternFillLayerValue", patternContent.kind.title, 100, 10))
+        #expect(viewModel.visibleLayerRows(matching: "", kindFilter: .patternFill).contains { $0.id == patternLayer.id })
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerPatternFillNew"))
+
+        viewModel.selectedPatternFillKind = .dots
+        viewModel.patternFillOpacity = 0.50
+        viewModel.patternFillScale = 18
+        viewModel.updateSelectedPatternFillLayer()
+
+        let updatedContent = try #require(viewModel.document.selectedLayer?.patternFillContent?.normalized())
+        #expect(updatedContent.kind == .dots)
+        #expect(abs(updatedContent.opacity - 0.50) < 0.001)
+        #expect(abs(updatedContent.scale - 18) < 0.001)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerPatternFillUpdate"))
+
+        viewModel.selectedFilter = .vignette
+        viewModel.filterIntensity = 1
+        viewModel.addSmartFilterToSelectedLayer()
+
+        let smartFilteredLayer = try #require(viewModel.document.selectedLayer)
+        let filteredCorner = try #require(viewModel.currentImage.color(at: CGPoint(x: 0, y: 0))?.usingColorSpace(.deviceRGB))
+        #expect(smartFilteredLayer.smartFilters.first?.kind == .vignette)
+        #expect(filteredCorner.redComponent < coloredSquare.redComponent * 0.35)
+
+        let project = try ImageEditorProjectDocument(document: viewModel.document)
+        let restoredDocument = try project.restoredDocument()
+        let restoredLayer = try #require(restoredDocument.layers.first { $0.id == patternLayer.id })
+        let restoredContent = try #require(restoredLayer.patternFillContent?.normalized())
+        #expect(restoredLayer.isPatternFill)
+        #expect(restoredContent.kind == .dots)
+        #expect(abs(restoredContent.opacity - 0.50) < 0.001)
+        #expect(abs(restoredContent.scale - 18) < 0.001)
+        #expect(restoredLayer.smartFilters.first?.kind == .vignette)
+    }
+
     @Test func imageEditorSolidColorFillLayerRendersSmartFiltersAndRoundTripsProjectState() async throws {
         let canvasSize = NSSize(width: 60, height: 40)
         let sourceImage = bitmapImage(size: canvasSize, background: .black)

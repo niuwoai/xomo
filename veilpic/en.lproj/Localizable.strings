@@ -521,6 +521,7 @@
 "imageEditor.properties.gradientMapLayerValue" = "Gradient Map: %@";
 "imageEditor.properties.filterLayerValue" = "%@ Filter: %d%%";
 "imageEditor.properties.solidColorFillLayerValue" = "Solid Color Fill: R %d · G %d · B %d";
+"imageEditor.properties.patternFillLayerValue" = "Pattern Fill: %@ · Opacity %d%% · %d px";
 "imageEditor.properties.gradientFillLayerValue" = "Gradient Fill: %@, %d°, %d%%";
 "imageEditor.properties.unsharpFilterLayerValue" = "Unsharp Mask: Amount %d%% · Radius %@ · Threshold %d";
 "imageEditor.properties.textLayerValue" = "Text: %@ · %d px";
@@ -656,6 +657,15 @@
 "imageEditor.patternOverlay.checkerboard" = "Checkerboard";
 "imageEditor.patternOverlay.diagonalStripes" = "Diagonal Stripes";
 "imageEditor.patternOverlay.dots" = "Dots";
+"imageEditor.patternFill.title" = "Pattern Fill";
+"imageEditor.patternFill.kind" = "Pattern";
+"imageEditor.patternFill.red" = "Red";
+"imageEditor.patternFill.green" = "Green";
+"imageEditor.patternFill.blue" = "Blue";
+"imageEditor.patternFill.opacity" = "Opacity";
+"imageEditor.patternFill.opacityValue" = "%d%%";
+"imageEditor.patternFill.scale" = "Scale";
+"imageEditor.patternFill.scaleValue" = "%d px";
 "imageEditor.properties.layerStyle" = "Layer Style";
 "imageEditor.properties.strokeWidthValue" = "Stroke: %d px";
 "imageEditor.properties.strokePosition" = "Stroke Position";
@@ -714,6 +724,7 @@
 "imageEditor.layer.adjustmentBadge" = "Adj";
 "imageEditor.layer.filterBadge" = "Filter";
 "imageEditor.layer.solidColorFillBadge" = "Solid";
+"imageEditor.layer.patternFillBadge" = "Pattern";
 "imageEditor.layer.gradientFillBadge" = "Gradient";
 "imageEditor.layer.textBadge" = "Text";
 "imageEditor.layer.shapeBadge" = "Shape";
@@ -725,6 +736,7 @@
 "imageEditor.layer.adjustmentName" = "%@ Adjustment";
 "imageEditor.layer.filterName" = "%@ Filter";
 "imageEditor.layer.solidColorFillName" = "Solid Color Fill";
+"imageEditor.layer.patternFillName" = "Pattern Fill";
 "imageEditor.layer.gradientFillName" = "Gradient Fill";
 "imageEditor.layer.textName" = "Text: %@";
 "imageEditor.layer.textFallbackName" = "Text";
@@ -763,6 +775,7 @@
 "imageEditor.layer.kindFilter.adjustment" = "Show adjustment layers only";
 "imageEditor.layer.kindFilter.filter" = "Show filter layers only";
 "imageEditor.layer.kindFilter.solidColorFill" = "Show solid fill layers only";
+"imageEditor.layer.kindFilter.patternFill" = "Show pattern fill layers only";
 "imageEditor.layer.kindFilter.gradientFill" = "Show gradient fill layers only";
 "imageEditor.layer.kindFilter.smartObject" = "Show smart objects only";
 "imageEditor.layer.kindFilter.group" = "Show layer groups only";
@@ -943,6 +956,8 @@
 "imageEditor.history.layerFilterNew" = "New Filter Layer";
 "imageEditor.history.layerSolidColorFillNew" = "New Solid Color Fill Layer";
 "imageEditor.history.layerSolidColorFillUpdate" = "Update Solid Color Fill Layer";
+"imageEditor.history.layerPatternFillNew" = "New Pattern Fill Layer";
+"imageEditor.history.layerPatternFillUpdate" = "Update Pattern Fill Layer";
 "imageEditor.history.layerGradientFillNew" = "New Gradient Fill Layer";
 "imageEditor.history.layerGradientFillUpdate" = "Update Gradient Fill Layer";
 "imageEditor.history.layerFilterUpdate" = "Update Filter Layer";
@@ -1248,6 +1263,8 @@
 "imageEditor.action.layerFilterNew" = "New Filter Layer";
 "imageEditor.action.layerSolidColorFillNew" = "New Solid Color Fill";
 "imageEditor.action.layerSolidColorFillUpdate" = "Update Solid Color Fill";
+"imageEditor.action.layerPatternFillNew" = "New Pattern Fill";
+"imageEditor.action.layerPatternFillUpdate" = "Update Pattern Fill";
 "imageEditor.action.layerGradientFillNew" = "New Gradient Fill";
 "imageEditor.action.layerGradientFillUpdate" = "Update Gradient Fill";
 "imageEditor.action.layerFilterUpdate" = "Update Filter Layer";

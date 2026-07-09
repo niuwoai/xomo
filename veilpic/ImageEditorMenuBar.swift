@@ -262,6 +262,9 @@ extension ImageEditorView {
         Button(L10n.text("imageEditor.action.layerSolidColorFillNew")) {
             viewModel.addSolidColorFillLayer()
         }
+        Button(L10n.text("imageEditor.action.layerPatternFillNew")) {
+            viewModel.addPatternFillLayer()
+        }
         Button(L10n.text("imageEditor.action.layerGradientFillNew")) {
             viewModel.addGradientFillLayer()
         }

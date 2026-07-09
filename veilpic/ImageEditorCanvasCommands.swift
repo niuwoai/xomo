@@ -241,6 +241,8 @@ private extension ImageEditorLayer {
             layer.vectorMask = vectorMask
         case .solidColorFill:
             layer.image = NSImage.transparent(size: targetLayerSize)
+        case .patternFill:
+            layer.image = NSImage.transparent(size: targetLayerSize)
         case .gradientFill:
             layer.image = NSImage.transparent(size: targetLayerSize)
         case .group, .pixel, .adjustment, .filter:

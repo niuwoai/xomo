@@ -333,6 +333,7 @@ enum ImageEditorProjectLayerKind: Equatable, Codable {
     case adjustment(ImageEditorAdjustment, Double)
     case filter(ImageEditorFilter, Double)
     case solidColorFill(ImageEditorSolidColorFillContent)
+    case patternFill(ImageEditorPatternFillContent)
     case gradientFill(ImageEditorGradientFillContent)
     case text(ImageEditorProjectTextContent)
     case shape(ImageEditorProjectShapeContent)
@@ -345,6 +346,7 @@ enum ImageEditorProjectLayerKind: Equatable, Codable {
         case filterKind
         case intensity
         case solidColorFill
+        case patternFill
         case gradientFill
         case text
         case shape
@@ -363,6 +365,8 @@ enum ImageEditorProjectLayerKind: Equatable, Codable {
             self = .filter(filterKind, intensity)
         case .solidColorFill(let content):
             self = .solidColorFill(content.normalized())
+        case .patternFill(let content):
+            self = .patternFill(content.normalized())
         case .gradientFill(let content):
             self = .gradientFill(content.normalized())
         case .text(let content):
@@ -386,6 +390,8 @@ enum ImageEditorProjectLayerKind: Equatable, Codable {
             return .filter(kind, intensity)
         case .solidColorFill(let content):
             return .solidColorFill(content.normalized())
+        case .patternFill(let content):
+            return .patternFill(content.normalized())
         case .gradientFill(let content):
             return .gradientFill(content.normalized())
         case .text(let content):
@@ -417,6 +423,8 @@ enum ImageEditorProjectLayerKind: Equatable, Codable {
             )
         case "solidColorFill":
             self = .solidColorFill(try container.decode(ImageEditorSolidColorFillContent.self, forKey: .solidColorFill))
+        case "patternFill":
+            self = .patternFill(try container.decode(ImageEditorPatternFillContent.self, forKey: .patternFill))
         case "gradientFill":
             self = .gradientFill(try container.decode(ImageEditorGradientFillContent.self, forKey: .gradientFill))
         case "text":
@@ -448,6 +456,9 @@ enum ImageEditorProjectLayerKind: Equatable, Codable {
         case .solidColorFill(let content):
             try container.encode("solidColorFill", forKey: .type)
             try container.encode(content.normalized(), forKey: .solidColorFill)
+        case .patternFill(let content):
+            try container.encode("patternFill", forKey: .type)
+            try container.encode(content.normalized(), forKey: .patternFill)
         case .gradientFill(let content):
             try container.encode("gradientFill", forKey: .type)
             try container.encode(content.normalized(), forKey: .gradientFill)

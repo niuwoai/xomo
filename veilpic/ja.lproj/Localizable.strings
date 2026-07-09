@@ -521,6 +521,7 @@
 "imageEditor.properties.gradientMapLayerValue" = "グラデーションマップ：%@";
 "imageEditor.properties.filterLayerValue" = "%@ フィルター：%d%%";
 "imageEditor.properties.solidColorFillLayerValue" = "べた塗り：R %d・G %d・B %d";
+"imageEditor.properties.patternFillLayerValue" = "パターン塗り：%@・不透明度 %d%%・%d px";
 "imageEditor.properties.gradientFillLayerValue" = "グラデーション塗り：%@、%d°、%d%%";
 "imageEditor.properties.unsharpFilterLayerValue" = "アンシャープマスク：量 %d%% · 半径 %@ · しきい値 %d";
 "imageEditor.properties.textLayerValue" = "文字：%@・%d px";
@@ -656,6 +657,15 @@
 "imageEditor.patternOverlay.checkerboard" = "市松模様";
 "imageEditor.patternOverlay.diagonalStripes" = "斜線";
 "imageEditor.patternOverlay.dots" = "ドット";
+"imageEditor.patternFill.title" = "パターン塗り";
+"imageEditor.patternFill.kind" = "パターン";
+"imageEditor.patternFill.red" = "レッド";
+"imageEditor.patternFill.green" = "グリーン";
+"imageEditor.patternFill.blue" = "ブルー";
+"imageEditor.patternFill.opacity" = "不透明度";
+"imageEditor.patternFill.opacityValue" = "%d%%";
+"imageEditor.patternFill.scale" = "スケール";
+"imageEditor.patternFill.scaleValue" = "%d px";
 "imageEditor.properties.layerStyle" = "レイヤースタイル";
 "imageEditor.properties.strokeWidthValue" = "境界線：%d px";
 "imageEditor.properties.strokePosition" = "境界線の位置";
@@ -714,6 +724,7 @@
 "imageEditor.layer.adjustmentBadge" = "調整";
 "imageEditor.layer.filterBadge" = "フィルター";
 "imageEditor.layer.solidColorFillBadge" = "べた";
+"imageEditor.layer.patternFillBadge" = "パターン";
 "imageEditor.layer.gradientFillBadge" = "グラデ";
 "imageEditor.layer.textBadge" = "文字";
 "imageEditor.layer.shapeBadge" = "シェイプ";
@@ -725,6 +736,7 @@
 "imageEditor.layer.adjustmentName" = "%@ 調整";
 "imageEditor.layer.filterName" = "%@ フィルター";
 "imageEditor.layer.solidColorFillName" = "べた塗り";
+"imageEditor.layer.patternFillName" = "パターン塗り";
 "imageEditor.layer.gradientFillName" = "グラデーション塗り";
 "imageEditor.layer.textName" = "文字：%@";
 "imageEditor.layer.textFallbackName" = "文字";
@@ -763,6 +775,7 @@
 "imageEditor.layer.kindFilter.adjustment" = "調整レイヤーのみ表示";
 "imageEditor.layer.kindFilter.filter" = "フィルターレイヤーのみ表示";
 "imageEditor.layer.kindFilter.solidColorFill" = "べた塗りレイヤーのみ表示";
+"imageEditor.layer.kindFilter.patternFill" = "パターン塗りレイヤーのみ表示";
 "imageEditor.layer.kindFilter.gradientFill" = "グラデーション塗りレイヤーのみ表示";
 "imageEditor.layer.kindFilter.smartObject" = "スマートオブジェクトのみ表示";
 "imageEditor.layer.kindFilter.group" = "レイヤーグループのみ表示";
@@ -943,6 +956,8 @@
 "imageEditor.history.layerFilterNew" = "フィルターレイヤーを作成";
 "imageEditor.history.layerSolidColorFillNew" = "べた塗りレイヤーを作成";
 "imageEditor.history.layerSolidColorFillUpdate" = "べた塗りレイヤーを更新";
+"imageEditor.history.layerPatternFillNew" = "パターン塗りレイヤーを作成";
+"imageEditor.history.layerPatternFillUpdate" = "パターン塗りレイヤーを更新";
 "imageEditor.history.layerGradientFillNew" = "グラデーション塗りレイヤーを作成";
 "imageEditor.history.layerGradientFillUpdate" = "グラデーション塗りレイヤーを更新";
 "imageEditor.history.layerFilterUpdate" = "フィルターレイヤーを更新";
@@ -1248,6 +1263,8 @@
 "imageEditor.action.layerFilterNew" = "フィルターレイヤーを作成";
 "imageEditor.action.layerSolidColorFillNew" = "べた塗りを作成";
 "imageEditor.action.layerSolidColorFillUpdate" = "べた塗りを更新";
+"imageEditor.action.layerPatternFillNew" = "パターン塗りを作成";
+"imageEditor.action.layerPatternFillUpdate" = "パターン塗りを更新";
 "imageEditor.action.layerGradientFillNew" = "グラデーション塗りを作成";
 "imageEditor.action.layerGradientFillUpdate" = "グラデーション塗りを更新";
 "imageEditor.action.layerFilterUpdate" = "フィルターレイヤーを更新";
