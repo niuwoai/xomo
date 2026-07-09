@@ -928,6 +928,10 @@ extension ImageEditorView {
             viewModel.duplicateSelectedAlphaChannel()
         }
         .disabled(!viewModel.canDuplicateSelectedAlphaChannel)
+        Button(L10n.text("imageEditor.action.alphaChannelInvertSelected")) {
+            viewModel.invertSelectedAlphaChannel()
+        }
+        .disabled(!viewModel.canInvertSelectedAlphaChannel)
         Button(L10n.text("imageEditor.action.alphaChannelDeleteSelected")) {
             viewModel.deleteSelectedAlphaChannel()
         }

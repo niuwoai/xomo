@@ -1604,11 +1604,13 @@
 "imageEditor.action.alphaChannelUpdate" = "現在の選択範囲で %@ を更新";
 "imageEditor.action.alphaChannelApplyToMask" = "%@ を現在のレイヤーマスクとして適用";
 "imageEditor.action.alphaChannelDuplicate" = "%@ を複製";
+"imageEditor.action.alphaChannelInvert" = "%@ を反転";
 "imageEditor.action.alphaChannelDelete" = "%@ を削除";
 "imageEditor.action.alphaChannelLoadSelectedSelection" = "選択中の Alpha チャンネルを選択範囲として読み込み";
 "imageEditor.action.alphaChannelUpdateSelected" = "現在の選択範囲で選択中の Alpha チャンネルを更新";
 "imageEditor.action.alphaChannelApplySelectedToMask" = "選択中の Alpha チャンネルを現在のレイヤーマスクとして適用";
 "imageEditor.action.alphaChannelDuplicateSelected" = "選択中の Alpha チャンネルを複製";
+"imageEditor.action.alphaChannelInvertSelected" = "選択中の Alpha チャンネルを反転";
 "imageEditor.action.alphaChannelDeleteSelected" = "選択中の Alpha チャンネルを削除";
 "imageEditor.action.alphaChannelPrevious" = "前の Alpha チャンネル";
 "imageEditor.action.alphaChannelNext" = "次の Alpha チャンネル";
@@ -1623,6 +1625,7 @@
 "imageEditor.status.alphaChannelUpdated" = "現在の選択範囲で %@ を更新しました";
 "imageEditor.status.alphaChannelApplyToMask" = "%@ を現在のレイヤーマスクとして適用しました";
 "imageEditor.status.alphaChannelDuplicated" = "%@ として複製しました";
+"imageEditor.status.alphaChannelInverted" = "%@ を反転しました";
 "imageEditor.status.alphaChannelRenamed" = "Alpha チャンネル名を変更しました";
 "imageEditor.status.alphaChannelNameInvalid" = "Alpha チャンネル名は空にできません";
 "imageEditor.status.alphaChannelDeleted" = "Alpha チャンネルを削除しました";
@@ -1634,6 +1637,7 @@
 "imageEditor.history.alphaChannelUpdate" = "Alpha チャンネルを更新";
 "imageEditor.history.alphaChannelApplyToMask" = "Alpha チャンネルをレイヤーマスクとして適用";
 "imageEditor.history.alphaChannelDuplicate" = "Alpha チャンネルを複製";
+"imageEditor.history.alphaChannelInvert" = "Alpha チャンネルを反転";
 "imageEditor.history.alphaChannelRename" = "Alpha チャンネル名を変更";
 "imageEditor.history.alphaChannelDelete" = "Alpha チャンネルを削除";
 "imageEditor.action.layerCompNew" = "レイヤーコンプを保存";

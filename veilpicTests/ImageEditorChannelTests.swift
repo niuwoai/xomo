@@ -346,11 +346,19 @@ struct ImageEditorChannelTests {
         #expect(viewModel.selectedAlphaChannelID == duplicatedChannel.id)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelDuplicate"))
 
+        #expect(viewModel.canInvertSelectedAlphaChannel)
+        viewModel.invertSelectedAlphaChannel()
+        let invertedChannel = try #require(viewModel.selectedAlphaChannel)
+        #expect(maskAlpha(invertedChannel.mask, x: 0, y: 0) == 255)
+        #expect(maskAlpha(invertedChannel.mask, x: 1, y: 0) == 0)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelInverted", invertedChannel.name))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelInvert"))
+
         viewModel.document.selection = nil
         viewModel.loadSelectionFromSelectedAlphaChannel()
         var mask = try #require(viewModel.document.selection?.rasterMask)
-        #expect(maskAlpha(mask, x: 0, y: 0) == 0)
-        #expect(maskAlpha(mask, x: 1, y: 0) == 255)
+        #expect(maskAlpha(mask, x: 0, y: 0) == 255)
+        #expect(maskAlpha(mask, x: 1, y: 0) == 0)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelLoad"))
 
         viewModel.loadSelectionFromChannel(.red)

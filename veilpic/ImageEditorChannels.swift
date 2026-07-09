@@ -99,6 +99,10 @@ extension ImageEditorViewModel {
         selectedAlphaChannel != nil
     }
 
+    var canInvertSelectedAlphaChannel: Bool {
+        selectedAlphaChannel != nil
+    }
+
     var canDeleteSelectedAlphaChannel: Bool {
         selectedAlphaChannel != nil
     }
@@ -194,6 +198,11 @@ extension ImageEditorViewModel {
         duplicateAlphaChannel(selectedAlphaChannelID)
     }
 
+    func invertSelectedAlphaChannel() {
+        guard let selectedAlphaChannelID else { return }
+        invertAlphaChannel(selectedAlphaChannelID)
+    }
+
     func deleteSelectedAlphaChannel() {
         guard let selectedAlphaChannelID else { return }
         deleteAlphaChannel(selectedAlphaChannelID)
@@ -244,6 +253,16 @@ extension ImageEditorViewModel {
         previewedAlphaChannelID = duplicatedChannel.id
         appendHistory(L10n.text("imageEditor.history.alphaChannelDuplicate"))
         statusText = L10n.format("imageEditor.status.alphaChannelDuplicated", duplicatedChannel.name)
+    }
+
+    func invertAlphaChannel(_ id: UUID) {
+        guard let index = document.alphaChannels.firstIndex(where: { $0.id == id }) else { return }
+
+        pushUndo()
+        document.alphaChannels[index].mask.alpha = document.alphaChannels[index].mask.alpha.map { UInt8.max - $0 }
+        selectedAlphaChannelID = id
+        appendHistory(L10n.text("imageEditor.history.alphaChannelInvert"))
+        statusText = L10n.format("imageEditor.status.alphaChannelInverted", document.alphaChannels[index].name)
     }
 
     func updateAlphaChannelFromSelection(_ id: UUID) {
