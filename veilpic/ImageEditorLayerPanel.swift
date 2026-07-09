@@ -387,6 +387,26 @@ extension ImageEditorView {
             .help(L10n.format("imageEditor.action.alphaChannelRotate180", channel.name))
 
             Button {
+                viewModel.scaleAlphaChannelUp(channel.id)
+            } label: {
+                Image(systemName: "plus.magnifyingglass")
+                    .font(.system(size: 12, weight: .semibold))
+                    .frame(width: 24, height: 28)
+            }
+            .buttonStyle(EditorIconButtonStyle(isSelected: false))
+            .help(L10n.format("imageEditor.action.alphaChannelScaleUp", channel.name))
+
+            Button {
+                viewModel.scaleAlphaChannelDown(channel.id)
+            } label: {
+                Image(systemName: "minus.magnifyingglass")
+                    .font(.system(size: 12, weight: .semibold))
+                    .frame(width: 24, height: 28)
+            }
+            .buttonStyle(EditorIconButtonStyle(isSelected: false))
+            .help(L10n.format("imageEditor.action.alphaChannelScaleDown", channel.name))
+
+            Button {
                 viewModel.deleteAlphaChannel(channel.id)
             } label: {
                 Image(systemName: "trash")

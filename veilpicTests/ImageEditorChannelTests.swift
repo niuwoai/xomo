@@ -679,6 +679,51 @@ struct ImageEditorChannelTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelRotate180"))
     }
 
+    @Test func alphaChannelsCanScaleMasksUpAndDown() async throws {
+        let viewModel = ImageEditorViewModel(sourceName: "split.png", image: splitChannelImage()) { _ in }
+        var alpha = [UInt8](repeating: 0, count: 64)
+        alpha[2 * 8 + 2] = 255
+        alpha[2 * 8 + 3] = 255
+        alpha[3 * 8 + 2] = 255
+        let smallMask = ImageEditorSelectionMask(width: 8, height: 8, alpha: alpha)
+        let upChannel = ImageEditorAlphaChannel(name: "Scale Up", mask: smallMask)
+        viewModel.document.alphaChannels = [upChannel]
+        viewModel.selectAlphaChannel(upChannel.id)
+
+        #expect(viewModel.canScaleSelectedAlphaChannelUp)
+        viewModel.scaleSelectedAlphaChannelUp()
+
+        var scaledMask = try #require(viewModel.selectedAlphaChannel?.mask)
+        #expect(maskAlpha(scaledMask, x: 1, y: 1) == 255)
+        #expect(maskAlpha(scaledMask, x: 4, y: 1) == 255)
+        #expect(maskAlpha(scaledMask, x: 1, y: 4) == 255)
+        #expect(maskAlpha(scaledMask, x: 4, y: 4) == 0)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelScaledUp", "Scale Up"))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelScaleUp"))
+
+        alpha = [UInt8](repeating: 0, count: 64)
+        for y in 2...5 {
+            for x in 2...5 {
+                alpha[y * 8 + x] = 255
+            }
+        }
+        let largeMask = ImageEditorSelectionMask(width: 8, height: 8, alpha: alpha)
+        let downChannel = ImageEditorAlphaChannel(name: "Scale Down", mask: largeMask)
+        viewModel.document.alphaChannels = [downChannel]
+        viewModel.selectAlphaChannel(downChannel.id)
+
+        #expect(viewModel.canScaleSelectedAlphaChannelDown)
+        viewModel.scaleSelectedAlphaChannelDown()
+
+        scaledMask = try #require(viewModel.selectedAlphaChannel?.mask)
+        #expect(maskAlpha(scaledMask, x: 2, y: 2) == 0)
+        #expect(maskAlpha(scaledMask, x: 3, y: 3) == 255)
+        #expect(maskAlpha(scaledMask, x: 4, y: 4) == 255)
+        #expect(maskAlpha(scaledMask, x: 5, y: 5) == 0)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelScaledDown", "Scale Down"))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelScaleDown"))
+    }
+
     @Test func alphaChannelsRoundTripWithLayerMasks() async throws {
         let viewModel = ImageEditorViewModel(sourceName: "split.png", image: splitChannelImage()) { _ in }
 

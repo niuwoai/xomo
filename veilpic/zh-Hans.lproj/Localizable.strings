@@ -1620,6 +1620,8 @@
 "imageEditor.action.alphaChannelRotateCounterclockwise" = "逆时针旋转 %@ 90°";
 "imageEditor.action.alphaChannelRotateClockwise" = "顺时针旋转 %@ 90°";
 "imageEditor.action.alphaChannelRotate180" = "旋转 %@ 180°";
+"imageEditor.action.alphaChannelScaleUp" = "放大 %@ 到 200%";
+"imageEditor.action.alphaChannelScaleDown" = "缩小 %@ 到 50%";
 "imageEditor.action.alphaChannelDelete" = "删除 %@";
 "imageEditor.action.alphaChannelLoadSelectedSelection" = "将选中 Alpha 通道载入为选区";
 "imageEditor.action.alphaChannelUpdateSelected" = "用当前选区更新选中 Alpha 通道";
@@ -1638,6 +1640,8 @@
 "imageEditor.action.alphaChannelRotateCounterclockwiseSelected" = "逆时针旋转选中 Alpha 通道 90°";
 "imageEditor.action.alphaChannelRotateClockwiseSelected" = "顺时针旋转选中 Alpha 通道 90°";
 "imageEditor.action.alphaChannelRotate180Selected" = "旋转选中 Alpha 通道 180°";
+"imageEditor.action.alphaChannelScaleUpSelected" = "放大选中 Alpha 通道到 200%";
+"imageEditor.action.alphaChannelScaleDownSelected" = "缩小选中 Alpha 通道到 50%";
 "imageEditor.action.alphaChannelDeleteSelected" = "删除选中 Alpha 通道";
 "imageEditor.action.alphaChannelPrevious" = "上一个 Alpha 通道";
 "imageEditor.action.alphaChannelNext" = "下一个 Alpha 通道";
@@ -1666,6 +1670,8 @@
 "imageEditor.status.alphaChannelRotatedCounterclockwise" = "已逆时针旋转 %@ 90°";
 "imageEditor.status.alphaChannelRotatedClockwise" = "已顺时针旋转 %@ 90°";
 "imageEditor.status.alphaChannelRotated180" = "已旋转 %@ 180°";
+"imageEditor.status.alphaChannelScaledUp" = "已放大 %@ 到 200%";
+"imageEditor.status.alphaChannelScaledDown" = "已缩小 %@ 到 50%";
 "imageEditor.status.alphaChannelRenamed" = "已重命名 Alpha 通道";
 "imageEditor.status.alphaChannelNameInvalid" = "Alpha 通道名称不能为空";
 "imageEditor.status.alphaChannelDeleted" = "已删除 Alpha 通道";
@@ -1691,6 +1697,8 @@
 "imageEditor.history.alphaChannelRotateCounterclockwise" = "逆时针旋转 Alpha 通道 90°";
 "imageEditor.history.alphaChannelRotateClockwise" = "顺时针旋转 Alpha 通道 90°";
 "imageEditor.history.alphaChannelRotate180" = "旋转 Alpha 通道 180°";
+"imageEditor.history.alphaChannelScaleUp" = "放大 Alpha 通道到 200%";
+"imageEditor.history.alphaChannelScaleDown" = "缩小 Alpha 通道到 50%";
 "imageEditor.history.alphaChannelRename" = "重命名 Alpha 通道";
 "imageEditor.history.alphaChannelDelete" = "删除 Alpha 通道";
 "imageEditor.action.layerCompNew" = "保存图层复合";

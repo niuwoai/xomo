@@ -984,6 +984,14 @@ extension ImageEditorView {
             viewModel.rotateSelectedAlphaChannel180()
         }
         .disabled(!viewModel.canRotateSelectedAlphaChannel180)
+        Button(L10n.text("imageEditor.action.alphaChannelScaleUpSelected")) {
+            viewModel.scaleSelectedAlphaChannelUp()
+        }
+        .disabled(!viewModel.canScaleSelectedAlphaChannelUp)
+        Button(L10n.text("imageEditor.action.alphaChannelScaleDownSelected")) {
+            viewModel.scaleSelectedAlphaChannelDown()
+        }
+        .disabled(!viewModel.canScaleSelectedAlphaChannelDown)
         Button(L10n.text("imageEditor.action.alphaChannelDeleteSelected")) {
             viewModel.deleteSelectedAlphaChannel()
         }

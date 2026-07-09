@@ -156,6 +156,14 @@ extension ImageEditorViewModel {
         selectedAlphaChannel != nil
     }
 
+    var canScaleSelectedAlphaChannelUp: Bool {
+        selectedAlphaChannel != nil
+    }
+
+    var canScaleSelectedAlphaChannelDown: Bool {
+        selectedAlphaChannel != nil
+    }
+
     var canDeleteSelectedAlphaChannel: Bool {
         selectedAlphaChannel != nil
     }
@@ -339,6 +347,16 @@ extension ImageEditorViewModel {
     func rotateSelectedAlphaChannel180() {
         guard let selectedAlphaChannelID else { return }
         rotateAlphaChannel180(selectedAlphaChannelID)
+    }
+
+    func scaleSelectedAlphaChannelUp() {
+        guard let selectedAlphaChannelID else { return }
+        scaleAlphaChannelUp(selectedAlphaChannelID)
+    }
+
+    func scaleSelectedAlphaChannelDown() {
+        guard let selectedAlphaChannelID else { return }
+        scaleAlphaChannelDown(selectedAlphaChannelID)
     }
 
     func deleteSelectedAlphaChannel() {
@@ -570,6 +588,24 @@ extension ImageEditorViewModel {
         )
     }
 
+    func scaleAlphaChannelUp(_ id: UUID) {
+        scaleAlphaChannel(
+            id,
+            factor: 2,
+            historyKey: "imageEditor.history.alphaChannelScaleUp",
+            statusKey: "imageEditor.status.alphaChannelScaledUp"
+        )
+    }
+
+    func scaleAlphaChannelDown(_ id: UUID) {
+        scaleAlphaChannel(
+            id,
+            factor: 0.5,
+            historyKey: "imageEditor.history.alphaChannelScaleDown",
+            statusKey: "imageEditor.status.alphaChannelScaledDown"
+        )
+    }
+
     private func rotateAlphaChannel(_ id: UUID, clockwiseTurns: Int, historyKey: String, statusKey: String) {
         guard let index = document.alphaChannels.firstIndex(where: { $0.id == id }) else { return }
         guard let rotatedMask = document.alphaChannels[index].mask.rotatedQuarterTurns(clockwiseTurns) else {
@@ -579,6 +615,20 @@ extension ImageEditorViewModel {
 
         pushUndo()
         document.alphaChannels[index].mask = rotatedMask
+        selectedAlphaChannelID = id
+        appendHistory(L10n.text(historyKey))
+        statusText = L10n.format(statusKey, document.alphaChannels[index].name)
+    }
+
+    private func scaleAlphaChannel(_ id: UUID, factor: CGFloat, historyKey: String, statusKey: String) {
+        guard let index = document.alphaChannels.firstIndex(where: { $0.id == id }) else { return }
+        guard let scaledMask = document.alphaChannels[index].mask.scaled(by: factor) else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+
+        pushUndo()
+        document.alphaChannels[index].mask = scaledMask
         selectedAlphaChannelID = id
         appendHistory(L10n.text(historyKey))
         statusText = L10n.format(statusKey, document.alphaChannels[index].name)
