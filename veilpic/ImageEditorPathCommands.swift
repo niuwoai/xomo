@@ -257,6 +257,18 @@ extension ImageEditorViewModel {
         return true
     }
 
+    var canDuplicateSelectedPathSubpath: Bool {
+        guard selectedLayerCount == 1,
+              let layer = document.selectedLayer,
+              let content = layer.shapeContent,
+              content.kind == .path,
+              content.allEditablePathSubpaths.indices.contains(selectedPathSubpathIndex),
+              !content.allEditablePathSubpaths[selectedPathSubpathIndex].isEmpty,
+              !document.isEffectivelyPixelsLocked(layer)
+        else { return false }
+        return true
+    }
+
     func nudgeSelectedPathSubpath(dx: CGFloat, dy: CGFloat) {
         moveSelectedPathSubpath(by: CGSize(width: dx, height: dy))
     }
@@ -295,6 +307,43 @@ extension ImageEditorViewModel {
         selectedPathControlRole = .anchor
         appendHistory(L10n.text("imageEditor.history.pathSubpathMove"))
         statusText = L10n.text("imageEditor.status.pathSubpathMoved")
+    }
+
+    func duplicateSelectedPathSubpath() {
+        guard canDuplicateSelectedPathSubpath,
+              let layerIndex = document.selectedLayerIndex,
+              let shapeContent = document.layers[layerIndex].shapeContent,
+              shapeContent.kind == .path,
+              shapeContent.allEditablePathSubpaths.indices.contains(selectedPathSubpathIndex)
+        else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+
+        let layer = document.layers[layerIndex]
+        var canvasSubpaths = shapeContent.allEditablePathSubpaths.map { subpath in
+            canvasAnchors(for: subpath, layer: layer)
+        }
+        guard canvasSubpaths.indices.contains(selectedPathSubpathIndex) else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+
+        let sourceAnchors = canvasSubpaths[selectedPathSubpathIndex]
+        let offset = duplicatePathSubpathOffset(for: sourceAnchors)
+        let duplicatedAnchors = sourceAnchors.map { anchor in
+            offsetPathAnchor(anchor, by: offset)
+        }
+        let insertionIndex = selectedPathSubpathIndex + 1
+
+        pushUndo()
+        canvasSubpaths.insert(duplicatedAnchors, at: insertionIndex)
+        updatePathLayer(at: layerIndex, shapeContent: shapeContent, canvasSubpaths: canvasSubpaths)
+        selectedPathSubpathIndex = insertionIndex
+        selectedPathAnchorIndex = duplicatedAnchors.isEmpty ? nil : 0
+        selectedPathControlRole = .anchor
+        appendHistory(L10n.text("imageEditor.history.pathSubpathDuplicate"))
+        statusText = L10n.text("imageEditor.status.pathSubpathDuplicated")
     }
 
     func clearSelectedPathAnchorHandles() {
@@ -974,6 +1023,20 @@ extension ImageEditorViewModel {
         max(8, min(22, brushSize * 0.45))
     }
 
+    private func duplicatePathSubpathOffset(for anchors: [ImageEditorPathAnchor]) -> CGSize {
+        let bounds = pathBounds(anchors)
+        let preferredOffset: CGFloat = 8
+        let right = min(preferredOffset, max(0, document.canvasSize.width - bounds.maxX))
+        let down = min(preferredOffset, max(0, document.canvasSize.height - bounds.maxY))
+        if right > 0 || down > 0 {
+            return CGSize(width: right, height: down)
+        }
+        return CGSize(
+            width: max(-preferredOffset, -bounds.minX),
+            height: max(-preferredOffset, -bounds.minY)
+        )
+    }
+
     private func distance(from first: CGPoint, to second: CGPoint) -> CGFloat {
         hypot(first.x - second.x, first.y - second.y)
     }
@@ -1178,7 +1241,7 @@ extension ImageEditorViewModel {
             pathAnchors: anchors,
             pathSubpaths: Array(subpaths.dropFirst()),
             isPathClosed: true
-        ).normalized(size: targetLayer.image.size)
+        ).normalized(size: maskSize(for: targetLayer))
     }
 
     private func vectorMaskPathLayer(
@@ -1189,7 +1252,7 @@ extension ImageEditorViewModel {
               vectorMask.isPathClosed,
               vectorMask.editablePathAnchors.count >= 3
         else { return nil }
-        let normalizedMask = vectorMask.normalized(size: targetLayer.image.size)
+        let normalizedMask = vectorMask.normalized(size: maskSize(for: targetLayer))
         let canvasSubpaths = normalizedMask.allEditablePathSubpaths.map { anchors in
             anchors.map { anchor in
                 ImageEditorPathAnchor(

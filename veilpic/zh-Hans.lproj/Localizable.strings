@@ -909,6 +909,7 @@
 "imageEditor.history.pathAnchorInsert" = "插入路径锚点";
 "imageEditor.history.pathAnchorDelete" = "删除路径锚点";
 "imageEditor.history.pathSubpathMove" = "移动路径子轮廓";
+"imageEditor.history.pathSubpathDuplicate" = "复制路径子轮廓";
 "imageEditor.history.pathSubpathDelete" = "删除路径子轮廓";
 "imageEditor.history.pathHandlesUpdate" = "更新路径控制柄";
 "imageEditor.history.pathHandlesSymmetric" = "对称路径控制柄";
@@ -996,6 +997,7 @@
 "imageEditor.status.pathAnchorDeleted" = "已删除路径锚点";
 "imageEditor.status.pathSubpathSelected" = "已选择路径子轮廓：%d / %d";
 "imageEditor.status.pathSubpathMoved" = "已移动路径子轮廓";
+"imageEditor.status.pathSubpathDuplicated" = "已复制路径子轮廓";
 "imageEditor.status.pathSubpathDeleted" = "已删除路径子轮廓";
 "imageEditor.status.pathHandlesSmoothed" = "已添加路径控制柄";
 "imageEditor.status.pathHandlesCleared" = "已清除路径控制柄";
@@ -1216,6 +1218,7 @@
 "imageEditor.action.pathAnchorDelete" = "删除锚点";
 "imageEditor.action.pathSubpathPrevious" = "上一个子轮廓";
 "imageEditor.action.pathSubpathNext" = "下一个子轮廓";
+"imageEditor.action.pathSubpathDuplicate" = "复制子轮廓";
 "imageEditor.action.pathSubpathDelete" = "删除子轮廓";
 "imageEditor.action.pathSubpathNudgeLeft" = "左移";
 "imageEditor.action.pathSubpathNudgeRight" = "右移";

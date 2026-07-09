@@ -52,8 +52,7 @@ extension ImageEditorViewModel {
               !selection.isInverted,
               let layer = document.selectedLayer
         else { return false }
-        return !layer.isGroup
-            && !document.isEffectivelyLocked(layer)
+        return !document.isEffectivelyLocked(layer)
             && layer.vectorMask == nil
             && selection.points.count >= 3
     }

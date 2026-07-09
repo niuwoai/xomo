@@ -555,6 +555,61 @@ struct ImageEditorVectorLayerTests {
         #expect(viewModel.statusText == L10n.text("imageEditor.status.pathSubpathDeleted"))
     }
 
+    @Test func imageEditorDuplicatesCompoundPathSubpathAndSelectsCopy() async throws {
+        let canvasSize = NSSize(width: 24, height: 16)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        var alpha = [UInt8](repeating: 0, count: 24 * 16)
+        for y in 2..<8 {
+            for x in 2..<7 {
+                alpha[y * 24 + x] = UInt8.max
+            }
+        }
+        for y in 9..<14 {
+            for x in 14..<22 {
+                alpha[y * 24 + x] = UInt8.max
+            }
+        }
+        let mask = ImageEditorSelectionMask(width: 24, height: 16, alpha: alpha)
+        let bounds = try #require(mask.selectedBounds(in: canvasSize))
+        viewModel.document.selection = .raster(mask: mask, bounds: bounds)
+        viewModel.createPathFromSelection()
+
+        let pathLayer = try #require(viewModel.document.selectedLayer)
+        let pathContent = try #require(pathLayer.shapeContent)
+        let primaryBefore = pathContent.editablePathAnchors.map { anchor in
+            CGPoint(x: pathLayer.frame.minX + anchor.point.x, y: pathLayer.frame.minY + anchor.point.y)
+        }
+
+        #expect(viewModel.canDuplicateSelectedPathSubpath)
+        viewModel.duplicateSelectedPathSubpath()
+
+        let duplicatedLayer = try #require(viewModel.document.selectedLayer)
+        let duplicatedContent = try #require(duplicatedLayer.shapeContent)
+        let primaryAfter = duplicatedContent.editablePathAnchors.map { anchor in
+            CGPoint(x: duplicatedLayer.frame.minX + anchor.point.x, y: duplicatedLayer.frame.minY + anchor.point.y)
+        }
+        let duplicatedSubpath = try #require(duplicatedContent.editablePathSubpaths.first).map { anchor in
+            CGPoint(x: duplicatedLayer.frame.minX + anchor.point.x, y: duplicatedLayer.frame.minY + anchor.point.y)
+        }
+
+        #expect(duplicatedContent.editablePathSubpaths.count == 2)
+        #expect(primaryAfter.count == primaryBefore.count)
+        #expect(duplicatedSubpath.count == primaryBefore.count)
+        for (before, after) in zip(primaryBefore, primaryAfter) {
+            #expect(Int(after.x.rounded()) == Int(before.x.rounded()))
+            #expect(Int(after.y.rounded()) == Int(before.y.rounded()))
+        }
+        for (before, duplicate) in zip(primaryBefore, duplicatedSubpath) {
+            #expect(Int(duplicate.x.rounded()) == Int((before.x + 8).rounded()))
+            #expect(Int(duplicate.y.rounded()) == Int((before.y + 8).rounded()))
+        }
+        #expect(viewModel.selectedPathSubpathIndex == 1)
+        #expect(viewModel.selectedPathAnchorIndex == 0)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.pathSubpathDuplicate"))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.pathSubpathDuplicated"))
+    }
+
     @Test func imageEditorNudgesCompoundPathSubpathWithoutMovingPrimaryPath() async throws {
         let canvasSize = NSSize(width: 24, height: 16)
         let image = testBitmapImage(size: canvasSize, background: .black)
@@ -1047,6 +1102,74 @@ struct ImageEditorVectorLayerTests {
         viewModel.loadSelectionFromVectorMask()
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionFromVectorMask"))
         #expect(viewModel.statusText == L10n.text("imageEditor.status.vectorMaskSelection"))
+    }
+
+    @Test func imageEditorCreatesVectorMaskOnLayerGroupFromCurrentSelection() async throws {
+        let canvasSize = NSSize(width: 100, height: 80)
+        let image = testBitmapImage(size: canvasSize, background: .systemBlue)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.addLayer()
+        let firstID = try #require(viewModel.document.selectedLayerID)
+        viewModel.document.layers[try #require(viewModel.document.layers.firstIndex { $0.id == firstID })].image = testBitmapImage(
+            size: canvasSize,
+            background: .clear,
+            fills: [(CGRect(x: 0, y: 0, width: 50, height: 80), .systemPink)]
+        )
+
+        viewModel.addLayer()
+        let secondID = try #require(viewModel.document.selectedLayerID)
+        viewModel.document.layers[try #require(viewModel.document.layers.firstIndex { $0.id == secondID })].image = testBitmapImage(
+            size: canvasSize,
+            background: .clear,
+            fills: [(CGRect(x: 50, y: 0, width: 50, height: 80), .systemGreen)]
+        )
+
+        viewModel.selectLayer(firstID)
+        viewModel.selectLayer(secondID, extendingSelection: true)
+        viewModel.groupSelectedLayer()
+        let groupID = try #require(viewModel.document.selectedLayerID)
+        viewModel.document.selection = .rectangle(CGRect(x: 0, y: 0, width: 50, height: 80))
+
+        #expect(viewModel.canCreateVectorMaskFromSelection)
+
+        viewModel.addVectorMaskFromSelection()
+
+        let groupLayer = try #require(viewModel.document.layers.first { $0.id == groupID })
+        let vectorMask = try #require(groupLayer.vectorMask)
+        let anchors = vectorMask.editablePathAnchors
+        let visibleLeft = try #require(viewModel.currentImage.color(at: CGPoint(x: 25, y: 40))?.usingColorSpace(.deviceRGB))
+        let clippedRight = try #require(viewModel.currentImage.color(at: CGPoint(x: 75, y: 40))?.usingColorSpace(.deviceRGB))
+
+        #expect(groupLayer.isGroup)
+        #expect(vectorMask.kind == .path)
+        #expect(vectorMask.isPathClosed)
+        #expect(anchors.map(\.point) == [
+            CGPoint(x: 0, y: 0),
+            CGPoint(x: 50, y: 0),
+            CGPoint(x: 50, y: 80),
+            CGPoint(x: 0, y: 80)
+        ])
+        #expect(groupLayer.isVectorMaskEnabled)
+        #expect(visibleLeft.redComponent > visibleLeft.blueComponent + 0.2)
+        #expect(clippedRight.blueComponent > clippedRight.greenComponent + 0.2)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.vectorMaskFromSelection"))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.vectorMaskFromSelection"))
+
+        #expect(viewModel.canLoadSelectionFromVectorMask)
+        viewModel.loadSelectionFromVectorMask()
+        let loadedSelection = try #require(viewModel.document.selection)
+        #expect(loadedSelection.rasterMask?.selectedBounds(in: canvasSize) == CGRect(x: 0, y: 0, width: 50, height: 80))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionFromVectorMask"))
+
+        #expect(viewModel.canEditSelectedVectorMaskAsPath)
+        viewModel.editSelectedVectorMaskAsPath()
+        let pathLayer = try #require(viewModel.document.selectedLayer)
+        let pathContent = try #require(pathLayer.shapeContent)
+        #expect(pathContent.kind == .path)
+        #expect(pathContent.isPathClosed)
+        #expect(viewModel.document.layers.first { $0.id == groupID }?.vectorMask == nil)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.vectorMaskEditPath"))
     }
 
     @Test func imageEditorCopiesVectorMaskToSelectedLayersWithScaledPath() async throws {

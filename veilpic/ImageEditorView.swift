@@ -1983,6 +1983,12 @@ struct ImageEditorView: View {
                             .disabled(!viewModel.canSelectAdjacentPathSubpath)
                         }
                         HStack {
+                            Button(L10n.text("imageEditor.action.pathSubpathDuplicate")) {
+                                viewModel.duplicateSelectedPathSubpath()
+                            }
+                            .buttonStyle(EditorTextButtonStyle())
+                            .disabled(!viewModel.canDuplicateSelectedPathSubpath)
+
                             Button(L10n.text("imageEditor.action.pathReverse")) {
                                 viewModel.reverseSelectedPathDirection()
                             }
