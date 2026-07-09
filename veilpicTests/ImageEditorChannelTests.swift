@@ -445,6 +445,47 @@ struct ImageEditorChannelTests {
         #expect(viewModel.previewedAlphaChannelID == channel.id)
     }
 
+    @Test func alphaChannelsCanExpandAndContractMasks() async throws {
+        let viewModel = ImageEditorViewModel(sourceName: "split.png", image: splitChannelImage()) { _ in }
+        let dotMask = ImageEditorSelectionMask(
+            width: 3,
+            height: 3,
+            alpha: [
+                0, 0, 0,
+                0, 255, 0,
+                0, 0, 0
+            ]
+        )
+        let dotChannel = ImageEditorAlphaChannel(name: "Dot", mask: dotMask)
+        viewModel.document.alphaChannels = [dotChannel]
+        viewModel.selectionModifyAmount = 1
+        viewModel.selectAlphaChannel(dotChannel.id)
+
+        #expect(viewModel.canExpandSelectedAlphaChannel)
+        viewModel.expandSelectedAlphaChannel()
+
+        let expandedChannel = try #require(viewModel.selectedAlphaChannel)
+        #expect((0..<3).allSatisfy { y in (0..<3).allSatisfy { x in maskAlpha(expandedChannel.mask, x: x, y: y) == 255 } })
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelExpanded", "Dot", 1))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelExpand"))
+
+        let fullMask = ImageEditorSelectionMask(width: 5, height: 5, alpha: Array(repeating: UInt8.max, count: 25))
+        let fullChannel = ImageEditorAlphaChannel(name: "Full", mask: fullMask)
+        viewModel.document.alphaChannels = [fullChannel]
+        viewModel.selectAlphaChannel(fullChannel.id)
+
+        #expect(viewModel.canContractSelectedAlphaChannel)
+        viewModel.contractSelectedAlphaChannel()
+
+        let contractedChannel = try #require(viewModel.selectedAlphaChannel)
+        #expect(maskAlpha(contractedChannel.mask, x: 0, y: 0) == 0)
+        #expect(maskAlpha(contractedChannel.mask, x: 1, y: 1) == 255)
+        #expect(maskAlpha(contractedChannel.mask, x: 3, y: 3) == 255)
+        #expect(maskAlpha(contractedChannel.mask, x: 4, y: 4) == 0)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelContracted", "Full", 1))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelContract"))
+    }
+
     @Test func alphaChannelsRoundTripWithLayerMasks() async throws {
         let viewModel = ImageEditorViewModel(sourceName: "split.png", image: splitChannelImage()) { _ in }
 

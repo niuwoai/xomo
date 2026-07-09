@@ -944,6 +944,14 @@ extension ImageEditorView {
             viewModel.featherSelectedAlphaChannel()
         }
         .disabled(!viewModel.canFeatherSelectedAlphaChannel)
+        Button(L10n.text("imageEditor.action.alphaChannelExpandSelected")) {
+            viewModel.expandSelectedAlphaChannel()
+        }
+        .disabled(!viewModel.canExpandSelectedAlphaChannel)
+        Button(L10n.text("imageEditor.action.alphaChannelContractSelected")) {
+            viewModel.contractSelectedAlphaChannel()
+        }
+        .disabled(!viewModel.canContractSelectedAlphaChannel)
         Button(L10n.text("imageEditor.action.alphaChannelDeleteSelected")) {
             viewModel.deleteSelectedAlphaChannel()
         }

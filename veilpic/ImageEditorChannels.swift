@@ -116,6 +116,14 @@ extension ImageEditorViewModel {
         selectedAlphaChannel != nil
     }
 
+    var canExpandSelectedAlphaChannel: Bool {
+        selectedAlphaChannel != nil
+    }
+
+    var canContractSelectedAlphaChannel: Bool {
+        selectedAlphaChannel != nil
+    }
+
     var canDeleteSelectedAlphaChannel: Bool {
         selectedAlphaChannel != nil
     }
@@ -251,6 +259,16 @@ extension ImageEditorViewModel {
         featherAlphaChannel(selectedAlphaChannelID)
     }
 
+    func expandSelectedAlphaChannel() {
+        guard let selectedAlphaChannelID else { return }
+        expandAlphaChannel(selectedAlphaChannelID)
+    }
+
+    func contractSelectedAlphaChannel() {
+        guard let selectedAlphaChannelID else { return }
+        contractAlphaChannel(selectedAlphaChannelID)
+    }
+
     func deleteSelectedAlphaChannel() {
         guard let selectedAlphaChannelID else { return }
         deleteAlphaChannel(selectedAlphaChannelID)
@@ -342,6 +360,49 @@ extension ImageEditorViewModel {
             document.alphaChannels[index].name,
             effectiveRadius
         )
+    }
+
+    func expandAlphaChannel(_ id: UUID, radius: Int? = nil) {
+        morphAlphaChannel(
+            id,
+            radius: radius,
+            historyKey: "imageEditor.history.alphaChannelExpand",
+            statusKey: "imageEditor.status.alphaChannelExpanded"
+        ) { mask, effectiveRadius in
+            mask.expanded(by: effectiveRadius)
+        }
+    }
+
+    func contractAlphaChannel(_ id: UUID, radius: Int? = nil) {
+        morphAlphaChannel(
+            id,
+            radius: radius,
+            historyKey: "imageEditor.history.alphaChannelContract",
+            statusKey: "imageEditor.status.alphaChannelContracted"
+        ) { mask, effectiveRadius in
+            mask.contracted(by: effectiveRadius)
+        }
+    }
+
+    private func morphAlphaChannel(
+        _ id: UUID,
+        radius: Int?,
+        historyKey: String,
+        statusKey: String,
+        transform: (ImageEditorSelectionMask, Int) -> ImageEditorSelectionMask?
+    ) {
+        guard let index = document.alphaChannels.firstIndex(where: { $0.id == id }) else { return }
+        let effectiveRadius = max(1, min(64, radius ?? Int(selectionModifyAmount.rounded())))
+        guard let outputMask = transform(document.alphaChannels[index].mask, effectiveRadius) else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+
+        pushUndo()
+        document.alphaChannels[index].mask = outputMask
+        selectedAlphaChannelID = id
+        appendHistory(L10n.text(historyKey))
+        statusText = L10n.format(statusKey, document.alphaChannels[index].name, effectiveRadius)
     }
 
     func updateAlphaChannelFromSelection(_ id: UUID) {
