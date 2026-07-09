@@ -1174,6 +1174,8 @@
 "imageEditor.status.layerTransparentPixelsLockSelected" = "選択レイヤーの透明ピクセルをロックしました";
 "imageEditor.status.layerTransparentPixelsUnlockSelected" = "選択レイヤーの透明ピクセルロックを解除しました";
 "imageEditor.status.layerSelectAll" = "%d 個すべてのレイヤーを選択しました";
+"imageEditor.status.layerSelectVisible" = "表示中のレイヤーを %d 個選択しました";
+"imageEditor.status.layerSelectHidden" = "非表示のレイヤーを %d 個選択しました";
 "imageEditor.status.layerSelectSameKind" = "同じ種類のレイヤーを %d 個選択しました：%@";
 "imageEditor.status.layerSelectSimilar" = "類似レイヤーを %d 個選択しました：%@・%@";
 "imageEditor.status.layerSelectSameBlendMode" = "同じ描画モードのレイヤーを %d 個選択しました：%@";
@@ -1403,6 +1405,8 @@
 "imageEditor.action.layerFromBackground" = "背景からレイヤーを作成";
 "imageEditor.action.backgroundFromLayer" = "レイヤーから背景を作成";
 "imageEditor.action.layerSelectAll" = "すべてのレイヤーを選択";
+"imageEditor.action.layerSelectVisible" = "表示中のレイヤーを選択";
+"imageEditor.action.layerSelectHidden" = "非表示のレイヤーを選択";
 "imageEditor.action.layerSelectSameKind" = "同じ種類のレイヤーを選択";
 "imageEditor.action.layerSelectSimilar" = "類似レイヤーを選択";
 "imageEditor.action.layerSelectSameBlendMode" = "同じ描画モードのレイヤーを選択";

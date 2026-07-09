@@ -205,6 +205,14 @@ extension ImageEditorView {
             viewModel.selectAllLayers()
         }
         .disabled(!viewModel.canSelectAllLayers)
+        Button(L10n.text("imageEditor.action.layerSelectVisible")) {
+            viewModel.selectVisibleLayers()
+        }
+        .disabled(!viewModel.canSelectVisibleLayers)
+        Button(L10n.text("imageEditor.action.layerSelectHidden")) {
+            viewModel.selectHiddenLayers()
+        }
+        .disabled(!viewModel.canSelectHiddenLayers)
         Button(L10n.text("imageEditor.action.layerSelectSameKind")) {
             viewModel.selectLayersWithSameKind()
         }

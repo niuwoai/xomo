@@ -321,6 +321,18 @@ struct veilpicTests {
         #expect(viewModel.visibleLayerRows(matching: "", kindFilter: .all, labelFilter: nil, stateFilter: .all, attributeFilter: .smartFiltered).map(\.id) == [smartObjectLayer.id])
         #expect(viewModel.visibleLayerRows(matching: "", kindFilter: .all, labelFilter: nil, stateFilter: .all, attributeFilter: .linked).map(\.id) == [shapeLayer.id, pixelLayer.id])
         #expect(viewModel.visibleLayerRows(matching: "retouch", kindFilter: .pixel, labelFilter: .blue, stateFilter: .visible, attributeFilter: .masked).map(\.id) == [pixelLayer.id])
+
+        #expect(viewModel.canSelectVisibleLayers)
+        viewModel.selectVisibleLayers()
+        #expect(viewModel.document.selectedLayerIDs == Set([pixelLayer.id, shapeLayer.id, adjustmentLayer.id, clippedFilterLayer.id, smartObjectLayer.id]))
+        #expect(viewModel.document.selectedLayerID == smartObjectLayer.id)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerSelectVisible", 5))
+
+        #expect(viewModel.canSelectHiddenLayers)
+        viewModel.selectHiddenLayers()
+        #expect(viewModel.document.selectedLayerIDs == Set([textLayer.id, groupLayer.id]))
+        #expect(viewModel.document.selectedLayerID == groupLayer.id)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerSelectHidden", 2))
     }
 
     @MainActor
@@ -408,6 +420,34 @@ struct veilpicTests {
 
         viewModel.selectLayer(captionLayer.id)
         #expect(!viewModel.canSelectLayersWithSameLabelColor)
+    }
+
+    @MainActor
+    @Test func imageEditorCanSelectVisibleAndHiddenLayers() async throws {
+        let image = testImage(color: .systemIndigo, size: NSSize(width: 80, height: 60))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let visibleLayer = ImageEditorLayer.blank(name: "Visible", size: image.size)
+        var hiddenLayer = ImageEditorLayer.blank(name: "Hidden", size: image.size)
+        hiddenLayer.isVisible = false
+        var groupLayer = ImageEditorLayer.group(name: "Hidden Group", size: image.size)
+        groupLayer.isVisible = false
+        var childLayer = ImageEditorLayer.blank(name: "Group Child", size: image.size)
+        childLayer.groupID = groupLayer.id
+        viewModel.document.layers = [visibleLayer, hiddenLayer, childLayer, groupLayer]
+        viewModel.document.selectedLayerID = visibleLayer.id
+        viewModel.document.selectedLayerIDs = [visibleLayer.id]
+
+        #expect(viewModel.canSelectVisibleLayers)
+        viewModel.selectVisibleLayers()
+        #expect(viewModel.document.selectedLayerIDs == [visibleLayer.id])
+        #expect(viewModel.document.selectedLayerID == visibleLayer.id)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerSelectVisible", 1))
+
+        #expect(viewModel.canSelectHiddenLayers)
+        viewModel.selectHiddenLayers()
+        #expect(viewModel.document.selectedLayerIDs == [hiddenLayer.id, childLayer.id, groupLayer.id])
+        #expect(viewModel.document.selectedLayerID == groupLayer.id)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerSelectHidden", 3))
     }
 
     @MainActor

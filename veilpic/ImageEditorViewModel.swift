@@ -593,6 +593,14 @@ final class ImageEditorViewModel: ObservableObject {
         !document.layers.isEmpty
     }
 
+    var canSelectVisibleLayers: Bool {
+        document.layers.contains { document.isEffectivelyVisible($0) }
+    }
+
+    var canSelectHiddenLayers: Bool {
+        document.layers.contains { !document.isEffectivelyVisible($0) }
+    }
+
     var canSelectLayersWithSameKind: Bool {
         document.selectedLayer != nil
     }
@@ -1175,6 +1183,16 @@ final class ImageEditorViewModel: ObservableObject {
             : L10n.format("imageEditor.status.layerSelectionInverted", document.selectedLayerIDs.count)
     }
 
+    func selectVisibleLayers() {
+        let layerIDs = Set(document.layers.filter { document.isEffectivelyVisible($0) }.map(\.id))
+        selectLayerIDs(layerIDs, statusKey: "imageEditor.status.layerSelectVisible")
+    }
+
+    func selectHiddenLayers() {
+        let layerIDs = Set(document.layers.filter { !document.isEffectivelyVisible($0) }.map(\.id))
+        selectLayerIDs(layerIDs, statusKey: "imageEditor.status.layerSelectHidden")
+    }
+
     func selectLayersWithSameKind() {
         guard let selectedLayer = document.selectedLayer else { return }
         let selectedKind = layerKindFilter(for: selectedLayer)
@@ -1240,6 +1258,15 @@ final class ImageEditorViewModel: ObservableObject {
             layerIDs.count,
             labelColor.title
         )
+    }
+
+    private func selectLayerIDs(_ layerIDs: Set<UUID>, statusKey: String) {
+        guard !layerIDs.isEmpty else { return }
+        document.selectedLayerIDs = layerIDs
+        document.selectedLayerID = topmostSelectedLayerID()
+        isEditingLayerMask = false
+        syncControlsFromLayerSelection()
+        statusText = L10n.format(statusKey, layerIDs.count)
     }
 
     func addLayer() {
