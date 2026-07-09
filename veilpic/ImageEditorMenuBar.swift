@@ -209,6 +209,10 @@ extension ImageEditorView {
             viewModel.selectLayersWithSameKind()
         }
         .disabled(!viewModel.canSelectLayersWithSameKind)
+        Button(L10n.text("imageEditor.action.layerSelectSimilar")) {
+            viewModel.selectSimilarLayers()
+        }
+        .disabled(!viewModel.canSelectSimilarLayers)
         Button(L10n.text("imageEditor.action.layerSelectSameBlendMode")) {
             viewModel.selectLayersWithSameBlendMode()
         }

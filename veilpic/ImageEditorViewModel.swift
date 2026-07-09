@@ -597,6 +597,10 @@ final class ImageEditorViewModel: ObservableObject {
         document.selectedLayer != nil
     }
 
+    var canSelectSimilarLayers: Bool {
+        document.selectedLayer != nil
+    }
+
     var canSelectLayersWithSameBlendMode: Bool {
         document.selectedLayer != nil
     }
@@ -1184,6 +1188,27 @@ final class ImageEditorViewModel: ObservableObject {
             "imageEditor.status.layerSelectSameKind",
             layerIDs.count,
             selectedKind.title
+        )
+    }
+
+    func selectSimilarLayers() {
+        guard let selectedLayer = document.selectedLayer else { return }
+        let selectedKind = layerKindFilter(for: selectedLayer)
+        let layerIDs = Set(document.layers.filter { layer in
+            selectedKind.matches(layer)
+                && layer.blendMode == selectedLayer.blendMode
+                && layer.labelColor == selectedLayer.labelColor
+        }.map(\.id))
+        guard !layerIDs.isEmpty else { return }
+        document.selectedLayerIDs = layerIDs
+        document.selectedLayerID = topmostSelectedLayerID()
+        isEditingLayerMask = false
+        syncControlsFromLayerSelection()
+        statusText = L10n.format(
+            "imageEditor.status.layerSelectSimilar",
+            layerIDs.count,
+            selectedKind.title,
+            selectedLayer.blendMode.title
         )
     }
 

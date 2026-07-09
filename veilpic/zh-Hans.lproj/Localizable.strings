@@ -1175,6 +1175,7 @@
 "imageEditor.status.layerTransparentPixelsUnlockSelected" = "已解锁所选图层透明像素";
 "imageEditor.status.layerSelectAll" = "已选择全部 %d 个图层";
 "imageEditor.status.layerSelectSameKind" = "已选择 %d 个同类图层：%@";
+"imageEditor.status.layerSelectSimilar" = "已选择 %d 个相似图层：%@ · %@";
 "imageEditor.status.layerSelectSameBlendMode" = "已选择 %d 个相同混合模式图层：%@";
 "imageEditor.status.layerSelectSameLabelColor" = "已选择 %d 个同色标签图层：%@";
 "imageEditor.status.layerSelectionInverted" = "已反选图层，当前选择 %d 个图层";
@@ -1403,6 +1404,7 @@
 "imageEditor.action.backgroundFromLayer" = "从图层新建背景";
 "imageEditor.action.layerSelectAll" = "选择全部图层";
 "imageEditor.action.layerSelectSameKind" = "选择同类图层";
+"imageEditor.action.layerSelectSimilar" = "选择相似图层";
 "imageEditor.action.layerSelectSameBlendMode" = "选择相同混合模式图层";
 "imageEditor.action.layerSelectSameLabelColor" = "选择同色标签图层";
 "imageEditor.action.layerSelectionInvert" = "反选图层";

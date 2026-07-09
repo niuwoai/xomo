@@ -324,7 +324,7 @@ struct veilpicTests {
     }
 
     @MainActor
-    @Test func imageEditorCanSelectLayersBySameKindOrLabelColor() async throws {
+    @Test func imageEditorCanSelectLayersByKindSimilarityBlendModeOrLabelColor() async throws {
         let image = testImage(color: .systemTeal, size: NSSize(width: 96, height: 72))
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
         var titleLayer = ImageEditorLayer.text(
@@ -339,6 +339,18 @@ struct veilpicTests {
         )
         titleLayer.labelColor = .green
         titleLayer.blendMode = .multiply
+        var subtitleLayer = ImageEditorLayer.text(
+            name: "Subtitle",
+            origin: CGPoint(x: 22, y: 46),
+            content: ImageEditorTextContent(
+                text: "Subtitle",
+                color: .white,
+                fontSize: 14,
+                point: CGPoint(x: 2, y: 2)
+            )
+        )
+        subtitleLayer.labelColor = .green
+        subtitleLayer.blendMode = .multiply
         var captionLayer = ImageEditorLayer.text(
             name: "Caption",
             origin: CGPoint(x: 16, y: 28),
@@ -364,28 +376,35 @@ struct veilpicTests {
         )
         shapeLayer.labelColor = .green
         shapeLayer.blendMode = .multiply
-        viewModel.document.layers.append(contentsOf: [titleLayer, captionLayer, shapeLayer])
+        viewModel.document.layers.append(contentsOf: [titleLayer, subtitleLayer, captionLayer, shapeLayer])
 
         viewModel.selectLayer(titleLayer.id)
         #expect(viewModel.canSelectLayersWithSameKind)
         viewModel.selectLayersWithSameKind()
-        #expect(viewModel.document.selectedLayerIDs == [titleLayer.id, captionLayer.id])
+        #expect(viewModel.document.selectedLayerIDs == [titleLayer.id, subtitleLayer.id, captionLayer.id])
         #expect(viewModel.document.selectedLayerID == captionLayer.id)
-        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerSelectSameKind", 2, ImageEditorLayerKindFilter.text.title))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerSelectSameKind", 3, ImageEditorLayerKindFilter.text.title))
+
+        viewModel.selectLayer(titleLayer.id)
+        #expect(viewModel.canSelectSimilarLayers)
+        viewModel.selectSimilarLayers()
+        #expect(viewModel.document.selectedLayerIDs == [titleLayer.id, subtitleLayer.id])
+        #expect(viewModel.document.selectedLayerID == subtitleLayer.id)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerSelectSimilar", 2, ImageEditorLayerKindFilter.text.title, ImageEditorBlendMode.multiply.title))
 
         viewModel.selectLayer(titleLayer.id)
         #expect(viewModel.canSelectLayersWithSameBlendMode)
         viewModel.selectLayersWithSameBlendMode()
-        #expect(viewModel.document.selectedLayerIDs == [titleLayer.id, shapeLayer.id])
+        #expect(viewModel.document.selectedLayerIDs == [titleLayer.id, subtitleLayer.id, shapeLayer.id])
         #expect(viewModel.document.selectedLayerID == shapeLayer.id)
-        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerSelectSameBlendMode", 2, ImageEditorBlendMode.multiply.title))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerSelectSameBlendMode", 3, ImageEditorBlendMode.multiply.title))
 
         viewModel.selectLayer(titleLayer.id)
         #expect(viewModel.canSelectLayersWithSameLabelColor)
         viewModel.selectLayersWithSameLabelColor()
-        #expect(viewModel.document.selectedLayerIDs == [titleLayer.id, shapeLayer.id])
+        #expect(viewModel.document.selectedLayerIDs == [titleLayer.id, subtitleLayer.id, shapeLayer.id])
         #expect(viewModel.document.selectedLayerID == shapeLayer.id)
-        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerSelectSameLabelColor", 2, ImageEditorLayerLabelColor.green.title))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerSelectSameLabelColor", 3, ImageEditorLayerLabelColor.green.title))
 
         viewModel.selectLayer(captionLayer.id)
         #expect(!viewModel.canSelectLayersWithSameLabelColor)
