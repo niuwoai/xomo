@@ -103,6 +103,10 @@ extension ImageEditorViewModel {
         selectedAlphaChannel != nil
     }
 
+    var canThresholdSelectedAlphaChannel: Bool {
+        selectedAlphaChannel != nil
+    }
+
     var canDeleteSelectedAlphaChannel: Bool {
         selectedAlphaChannel != nil
     }
@@ -203,6 +207,11 @@ extension ImageEditorViewModel {
         invertAlphaChannel(selectedAlphaChannelID)
     }
 
+    func thresholdSelectedAlphaChannel() {
+        guard let selectedAlphaChannelID else { return }
+        thresholdAlphaChannel(selectedAlphaChannelID)
+    }
+
     func deleteSelectedAlphaChannel() {
         guard let selectedAlphaChannelID else { return }
         deleteAlphaChannel(selectedAlphaChannelID)
@@ -263,6 +272,18 @@ extension ImageEditorViewModel {
         selectedAlphaChannelID = id
         appendHistory(L10n.text("imageEditor.history.alphaChannelInvert"))
         statusText = L10n.format("imageEditor.status.alphaChannelInverted", document.alphaChannels[index].name)
+    }
+
+    func thresholdAlphaChannel(_ id: UUID, cutoff: UInt8 = 127) {
+        guard let index = document.alphaChannels.firstIndex(where: { $0.id == id }) else { return }
+
+        pushUndo()
+        document.alphaChannels[index].mask.alpha = document.alphaChannels[index].mask.alpha.map {
+            $0 > cutoff ? UInt8.max : 0
+        }
+        selectedAlphaChannelID = id
+        appendHistory(L10n.text("imageEditor.history.alphaChannelThreshold"))
+        statusText = L10n.format("imageEditor.status.alphaChannelThresholded", document.alphaChannels[index].name)
     }
 
     func updateAlphaChannelFromSelection(_ id: UUID) {

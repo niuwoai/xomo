@@ -1605,12 +1605,14 @@
 "imageEditor.action.alphaChannelApplyToMask" = "Apply %@ as current layer mask";
 "imageEditor.action.alphaChannelDuplicate" = "Duplicate %@";
 "imageEditor.action.alphaChannelInvert" = "Invert %@";
+"imageEditor.action.alphaChannelThreshold" = "Threshold %@";
 "imageEditor.action.alphaChannelDelete" = "Delete %@";
 "imageEditor.action.alphaChannelLoadSelectedSelection" = "Load selected alpha channel as selection";
 "imageEditor.action.alphaChannelUpdateSelected" = "Update selected alpha channel from current selection";
 "imageEditor.action.alphaChannelApplySelectedToMask" = "Apply selected alpha channel as current layer mask";
 "imageEditor.action.alphaChannelDuplicateSelected" = "Duplicate selected alpha channel";
 "imageEditor.action.alphaChannelInvertSelected" = "Invert selected alpha channel";
+"imageEditor.action.alphaChannelThresholdSelected" = "Threshold selected alpha channel";
 "imageEditor.action.alphaChannelDeleteSelected" = "Delete selected alpha channel";
 "imageEditor.action.alphaChannelPrevious" = "Previous Alpha Channel";
 "imageEditor.action.alphaChannelNext" = "Next Alpha Channel";
@@ -1626,6 +1628,7 @@
 "imageEditor.status.alphaChannelApplyToMask" = "Applied %@ as current layer mask";
 "imageEditor.status.alphaChannelDuplicated" = "Duplicated as %@";
 "imageEditor.status.alphaChannelInverted" = "Inverted %@";
+"imageEditor.status.alphaChannelThresholded" = "Thresholded %@";
 "imageEditor.status.alphaChannelRenamed" = "Renamed alpha channel";
 "imageEditor.status.alphaChannelNameInvalid" = "Alpha channel name cannot be empty";
 "imageEditor.status.alphaChannelDeleted" = "Deleted alpha channel";
@@ -1638,6 +1641,7 @@
 "imageEditor.history.alphaChannelApplyToMask" = "Apply Alpha Channel as Layer Mask";
 "imageEditor.history.alphaChannelDuplicate" = "Duplicate Alpha Channel";
 "imageEditor.history.alphaChannelInvert" = "Invert Alpha Channel";
+"imageEditor.history.alphaChannelThreshold" = "Threshold Alpha Channel";
 "imageEditor.history.alphaChannelRename" = "Rename Alpha Channel";
 "imageEditor.history.alphaChannelDelete" = "Delete Alpha Channel";
 "imageEditor.action.layerCompNew" = "Save Layer Comp";

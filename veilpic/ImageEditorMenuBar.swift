@@ -932,6 +932,10 @@ extension ImageEditorView {
             viewModel.invertSelectedAlphaChannel()
         }
         .disabled(!viewModel.canInvertSelectedAlphaChannel)
+        Button(L10n.text("imageEditor.action.alphaChannelThresholdSelected")) {
+            viewModel.thresholdSelectedAlphaChannel()
+        }
+        .disabled(!viewModel.canThresholdSelectedAlphaChannel)
         Button(L10n.text("imageEditor.action.alphaChannelDeleteSelected")) {
             viewModel.deleteSelectedAlphaChannel()
         }

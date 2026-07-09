@@ -382,6 +382,25 @@ struct ImageEditorChannelTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelDelete"))
     }
 
+    @Test func alphaChannelsCanThresholdSoftMasks() async throws {
+        let viewModel = ImageEditorViewModel(sourceName: "split.png", image: splitChannelImage()) { _ in }
+        let mask = ImageEditorSelectionMask(width: 3, height: 1, alpha: [0, 127, 128])
+        let channel = ImageEditorAlphaChannel(name: "Soft", mask: mask)
+        viewModel.document.alphaChannels = [channel]
+        viewModel.selectAlphaChannel(channel.id)
+
+        #expect(viewModel.canThresholdSelectedAlphaChannel)
+        viewModel.thresholdSelectedAlphaChannel()
+
+        let thresholdedChannel = try #require(viewModel.selectedAlphaChannel)
+        #expect(maskAlpha(thresholdedChannel.mask, x: 0, y: 0) == 0)
+        #expect(maskAlpha(thresholdedChannel.mask, x: 1, y: 0) == 0)
+        #expect(maskAlpha(thresholdedChannel.mask, x: 2, y: 0) == 255)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelThresholded", "Soft"))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelThreshold"))
+        #expect(viewModel.previewedAlphaChannelID == channel.id)
+    }
+
     @Test func alphaChannelsRoundTripWithLayerMasks() async throws {
         let viewModel = ImageEditorViewModel(sourceName: "split.png", image: splitChannelImage()) { _ in }
 

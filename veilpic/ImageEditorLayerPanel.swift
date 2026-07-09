@@ -257,6 +257,16 @@ extension ImageEditorView {
             .help(L10n.format("imageEditor.action.alphaChannelInvert", channel.name))
 
             Button {
+                viewModel.thresholdAlphaChannel(channel.id)
+            } label: {
+                Image(systemName: "circle.righthalf.filled")
+                    .font(.system(size: 12, weight: .semibold))
+                    .frame(width: 24, height: 28)
+            }
+            .buttonStyle(EditorIconButtonStyle(isSelected: false))
+            .help(L10n.format("imageEditor.action.alphaChannelThreshold", channel.name))
+
+            Button {
                 viewModel.deleteAlphaChannel(channel.id)
             } label: {
                 Image(systemName: "trash")
