@@ -465,6 +465,7 @@
 "imageEditor.filter.vignette" = "暗角";
 "imageEditor.filter.liquifyPush" = "液化推移";
 "imageEditor.filter.liquifyTwirl" = "液化旋转";
+"imageEditor.filter.liquifyPuckerBloat" = "液化收缩/膨胀";
 "imageEditor.filter.unsharpRadius" = "半径";
 "imageEditor.filter.unsharpRadiusValue" = "%@ px";
 "imageEditor.filter.unsharpThreshold" = "阈值";
@@ -474,6 +475,8 @@
 "imageEditor.filter.liquifyPushValue" = "%d";
 "imageEditor.filter.liquifyTwirlAngle" = "旋转";
 "imageEditor.filter.liquifyTwirlValue" = "%d";
+"imageEditor.filter.liquifyBulgeAmount" = "收缩/膨胀";
+"imageEditor.filter.liquifyBulgeValue" = "%d";
 "imageEditor.shape.rectangle" = "矩形";
 "imageEditor.shape.ellipse" = "椭圆";
 "imageEditor.shape.path" = "路径";
@@ -498,6 +501,7 @@
 "imageEditor.properties.smartFilterUnsharpItem" = "%@ %d%% · 半径 %@ · 阈值 %d";
 "imageEditor.properties.smartFilterLiquifyPushItem" = "%@ %d%% · X %d · Y %d";
 "imageEditor.properties.smartFilterLiquifyTwirlItem" = "%@ %d%% · 旋转 %d";
+"imageEditor.properties.smartFilterLiquifyPuckerBloatItem" = "%@ %d%% · 收缩/膨胀 %d";
 "imageEditor.properties.smartFilterDisabled" = "%@（已关闭）";
 "imageEditor.properties.smartFilterSeparator" = " · ";
 "imageEditor.properties.textPlaceholder" = "输入要添加的文字";

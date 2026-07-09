@@ -465,6 +465,7 @@
 "imageEditor.filter.vignette" = "周辺光量";
 "imageEditor.filter.liquifyPush" = "ゆがみプッシュ";
 "imageEditor.filter.liquifyTwirl" = "ゆがみ回転";
+"imageEditor.filter.liquifyPuckerBloat" = "ゆがみ収縮/膨張";
 "imageEditor.filter.unsharpRadius" = "半径";
 "imageEditor.filter.unsharpRadiusValue" = "%@ px";
 "imageEditor.filter.unsharpThreshold" = "しきい値";
@@ -474,6 +475,8 @@
 "imageEditor.filter.liquifyPushValue" = "%d";
 "imageEditor.filter.liquifyTwirlAngle" = "回転";
 "imageEditor.filter.liquifyTwirlValue" = "%d";
+"imageEditor.filter.liquifyBulgeAmount" = "収縮/膨張";
+"imageEditor.filter.liquifyBulgeValue" = "%d";
 "imageEditor.shape.rectangle" = "長方形";
 "imageEditor.shape.ellipse" = "楕円";
 "imageEditor.shape.path" = "パス";
@@ -498,6 +501,7 @@
 "imageEditor.properties.smartFilterUnsharpItem" = "%@ %d%% · 半径 %@ · しきい値 %d";
 "imageEditor.properties.smartFilterLiquifyPushItem" = "%@ %d%% · X %d · Y %d";
 "imageEditor.properties.smartFilterLiquifyTwirlItem" = "%@ %d%% · 回転 %d";
+"imageEditor.properties.smartFilterLiquifyPuckerBloatItem" = "%@ %d%% · 収縮/膨張 %d";
 "imageEditor.properties.smartFilterDisabled" = "%@（オフ）";
 "imageEditor.properties.smartFilterSeparator" = "・";
 "imageEditor.properties.textPlaceholder" = "追加する文字";

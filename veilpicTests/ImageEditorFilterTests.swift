@@ -684,6 +684,58 @@ struct ImageEditorFilterTests {
         #expect(restoredFilter.normalizedSettings.liquifyTwirlAngle == 1)
     }
 
+    @Test func imageEditorLiquifyPuckerBloatFilterLayerAndSmartFilterWarpRadialPixels() async throws {
+        let canvasSize = NSSize(width: 48, height: 48)
+        let sourceImage = radialRampImage(size: canvasSize)
+        let samplePoint = CGPoint(x: 31, y: 24)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: sourceImage) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(sourceImage, historyTitle: L10n.text("imageEditor.history.brush"))
+        let baseLayerID = try #require(viewModel.document.selectedLayerID)
+        let basePixelsBefore = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+        let sampleBefore = try #require(viewModel.currentImage.color(at: samplePoint)?.usingColorSpace(.deviceRGB))
+
+        viewModel.selectedFilter = .liquifyPuckerBloat
+        viewModel.filterIntensity = 1
+        viewModel.filterLiquifyBulgeAmount = 1
+        viewModel.addFilterLayer()
+
+        let filterLayer = try #require(viewModel.document.selectedLayer)
+        let bloatedSample = try #require(viewModel.currentImage.color(at: samplePoint)?.usingColorSpace(.deviceRGB))
+        let farEdge = try #require(viewModel.currentImage.color(at: CGPoint(x: 47, y: 24))?.usingColorSpace(.deviceRGB))
+        #expect(filterLayer.isFilter)
+        #expect(filterLayer.filter?.kind == .liquifyPuckerBloat)
+        #expect(filterLayer.filterSettings.normalized().liquifyBulgeAmount == 1)
+        #expect(viewModel.document.layers.first { $0.id == baseLayerID }?.image.qingtuPNGData() == basePixelsBefore)
+        #expect(bloatedSample.redComponent < sampleBefore.redComponent - 0.05)
+        #expect(farEdge.redComponent > 0.88)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerFilterNew"))
+
+        let smartViewModel = ImageEditorViewModel(sourceName: "source.png", image: sourceImage) { _ in }
+        smartViewModel.replaceSelectedLayerImageForTesting(sourceImage, historyTitle: L10n.text("imageEditor.history.brush"))
+        let smartBasePixelsBefore = try #require(smartViewModel.document.selectedLayer?.image.qingtuPNGData())
+        smartViewModel.selectedFilter = .liquifyPuckerBloat
+        smartViewModel.filterIntensity = 1
+        smartViewModel.filterLiquifyBulgeAmount = -1
+        smartViewModel.addSmartFilterToSelectedLayer()
+
+        let smartLayer = try #require(smartViewModel.document.selectedLayer)
+        let smartFilter = try #require(smartLayer.smartFilters.first)
+        let puckeredSample = try #require(smartViewModel.currentImage.color(at: samplePoint)?.usingColorSpace(.deviceRGB))
+        #expect(smartFilter.kind == .liquifyPuckerBloat)
+        #expect(smartFilter.normalizedSettings.liquifyBulgeAmount == -1)
+        #expect(smartLayer.image.qingtuPNGData() == smartBasePixelsBefore)
+        #expect(puckeredSample.redComponent > sampleBefore.redComponent + 0.05)
+        #expect(smartViewModel.smartFilterLabel(smartFilter) == L10n.format("imageEditor.properties.smartFilterLiquifyPuckerBloatItem", smartFilter.kind.title, 100, -100))
+        #expect(smartViewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterAdd"))
+
+        let project = try ImageEditorProjectDocument(document: smartViewModel.document)
+        let restoredDocument = try project.restoredDocument()
+        let restoredLayer = try #require(restoredDocument.layers.first { $0.id == smartLayer.id })
+        let restoredFilter = try #require(restoredLayer.smartFilters.first)
+        #expect(restoredFilter.kind == .liquifyPuckerBloat)
+        #expect(restoredFilter.normalizedSettings.liquifyBulgeAmount == -1)
+    }
+
     private func solidImage(size: NSSize, color: NSColor) -> NSImage {
         NSImage.rendered(size: size) { rect in
             color.setFill()
@@ -719,6 +771,48 @@ struct ImageEditorFilterTests {
             bottomRight.setFill()
             CGRect(x: rect.midX, y: rect.midY, width: halfWidth, height: halfHeight).fill()
         } ?? NSImage.transparent(size: size)
+    }
+
+    private func radialRampImage(size: NSSize) -> NSImage {
+        let width = max(1, Int(size.width.rounded()))
+        let height = max(1, Int(size.height.rounded()))
+        let bytesPerPixel = 4
+        let bytesPerRow = width * bytesPerPixel
+        let centerX = Double(max(width - 1, 1)) / 2
+        let centerY = Double(max(height - 1, 1)) / 2
+        let maxDistance = max(1, min(Double(width), Double(height)) / 2)
+        var pixels = [UInt8](repeating: 255, count: bytesPerRow * height)
+        for y in 0..<height {
+            for x in 0..<width {
+                let offset = y * bytesPerRow + x * bytesPerPixel
+                let distance = min(1, hypot(Double(x) - centerX, Double(y) - centerY) / maxDistance)
+                let value = UInt8((0.12 + distance * 0.82) * 255)
+                pixels[offset] = value
+                pixels[offset + 1] = value
+                pixels[offset + 2] = value
+                pixels[offset + 3] = 255
+            }
+        }
+
+        guard let provider = CGDataProvider(data: Data(pixels) as CFData),
+              let cgImage = CGImage(
+                width: width,
+                height: height,
+                bitsPerComponent: 8,
+                bitsPerPixel: 32,
+                bytesPerRow: bytesPerRow,
+                space: CGColorSpaceCreateDeviceRGB(),
+                bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue),
+                provider: provider,
+                decode: nil,
+                shouldInterpolate: false,
+                intent: .defaultIntent
+              )
+        else {
+            return NSImage.transparent(size: size)
+        }
+
+        return NSImage(cgImage: cgImage, size: size)
     }
 
     private func binarySpotImage(size: NSSize, background: NSColor, spot: NSColor, spotSize: CGFloat) -> NSImage {

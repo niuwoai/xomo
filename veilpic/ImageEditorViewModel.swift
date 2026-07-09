@@ -163,6 +163,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var filterLiquifyPushX: Double = 0.25
     @Published var filterLiquifyPushY: Double = 0
     @Published var filterLiquifyTwirlAngle: Double = 0.5
+    @Published var filterLiquifyBulgeAmount: Double = 0.5
     @Published var selectedChannelPreview: ImageEditorChannelPreview = .composite
     @Published var isEditingLayerMask: Bool = false
     @Published var pendingPenPathPoints: [CGPoint] = []
@@ -482,6 +483,17 @@ final class ImageEditorViewModel: ObservableObject {
                 filter.kind.title,
                 Int((filter.normalizedIntensity * 100).rounded()),
                 Int((settings.liquifyTwirlAngle * 100).rounded())
+            )
+            guard !filter.isEnabled else { return title }
+            return L10n.format("imageEditor.properties.smartFilterDisabled", title)
+        }
+        if filter.kind == .liquifyPuckerBloat {
+            let settings = filter.normalizedSettings
+            let title = L10n.format(
+                "imageEditor.properties.smartFilterLiquifyPuckerBloatItem",
+                filter.kind.title,
+                Int((filter.normalizedIntensity * 100).rounded()),
+                Int((settings.liquifyBulgeAmount * 100).rounded())
             )
             guard !filter.isEnabled else { return title }
             return L10n.format("imageEditor.properties.smartFilterDisabled", title)
@@ -2684,7 +2696,8 @@ final class ImageEditorViewModel: ObservableObject {
             unsharpThreshold: filterUnsharpThreshold,
             liquifyPushX: filterLiquifyPushX,
             liquifyPushY: filterLiquifyPushY,
-            liquifyTwirlAngle: filterLiquifyTwirlAngle
+            liquifyTwirlAngle: filterLiquifyTwirlAngle,
+            liquifyBulgeAmount: filterLiquifyBulgeAmount
         ).normalized()
     }
 
@@ -3926,6 +3939,7 @@ final class ImageEditorViewModel: ObservableObject {
         filterLiquifyPushX = normalized.liquifyPushX
         filterLiquifyPushY = normalized.liquifyPushY
         filterLiquifyTwirlAngle = normalized.liquifyTwirlAngle
+        filterLiquifyBulgeAmount = normalized.liquifyBulgeAmount
     }
 
     private func syncSolidColorFillControlsFromSelection() {
