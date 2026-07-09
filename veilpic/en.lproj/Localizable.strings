@@ -415,6 +415,7 @@
 "imageEditor.tool.sharpen" = "Sharpen";
 "imageEditor.tool.smudge" = "Smudge";
 "imageEditor.tool.healingBrush" = "Healing Brush";
+"imageEditor.tool.patchTool" = "Patch";
 "imageEditor.tool.paintBucket" = "Paint Bucket";
 "imageEditor.tool.gradient" = "Gradient";
 "imageEditor.tool.eyedropper" = "Eyedropper";
@@ -511,6 +512,7 @@
 "imageEditor.properties.brightnessContrastLayerValue" = "Brightness/Contrast: brightness %d · contrast %d";
 "imageEditor.properties.exposureLayerValue" = "Exposure: exposure %+.2f · offset %+.2f · gamma %.2f";
 "imageEditor.properties.shadowsHighlightsLayerValue" = "Shadows/Highlights: shadows %d%% · highlights %d%%";
+"imageEditor.properties.vibranceLayerValue" = "Vibrance: vibrance %d · saturation %d";
 "imageEditor.properties.posterizeLayerValue" = "Posterize: %d levels";
 "imageEditor.properties.blackWhiteLayerValue" = "Black & White: six-channel mix";
 "imageEditor.properties.channelMixerLayerValue" = "Channel Mixer: RGB output matrix";
@@ -540,6 +542,8 @@
 "imageEditor.colorBalance.highlights" = "Highlights";
 "imageEditor.shadowsHighlights.shadows" = "Shadows";
 "imageEditor.shadowsHighlights.highlights" = "Highlights";
+"imageEditor.vibrance.vibrance" = "Vibrance";
+"imageEditor.vibrance.saturation" = "Saturation";
 "imageEditor.brightnessContrast.brightness" = "Brightness";
 "imageEditor.brightnessContrast.contrast" = "Contrast";
 "imageEditor.exposure.exposure" = "Exposure";
@@ -1056,6 +1060,7 @@
 "imageEditor.history.selectionRestored" = "Restore Selection";
 "imageEditor.history.selectionFill" = "Fill Selection";
 "imageEditor.history.selectionContentAwareFill" = "Content-Aware Fill Selection";
+"imageEditor.history.selectionPatch" = "Patch Selection";
 "imageEditor.history.selectionStroke" = "Stroke Selection";
 "imageEditor.history.selectionCopyLayer" = "Layer via Copy";
 "imageEditor.history.selectionCopyMergedLayer" = "Layer via Merged Copy";
@@ -1200,6 +1205,7 @@
 "imageEditor.status.selectionRestored" = "Saved selection restored";
 "imageEditor.status.selectionFilled" = "Selection filled";
 "imageEditor.status.selectionContentAwareFilled" = "Selection content-aware filled";
+"imageEditor.status.selectionPatched" = "Selection patched from the dragged sample area";
 "imageEditor.status.selectionStroked" = "Selection stroked";
 "imageEditor.status.selectionCopiedToLayer" = "Selection copied to a new layer";
 "imageEditor.status.selectionCopiedMergedToLayer" = "Merged visible content copied to a new layer";

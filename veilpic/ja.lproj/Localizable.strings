@@ -415,6 +415,7 @@
 "imageEditor.tool.sharpen" = "シャープ";
 "imageEditor.tool.smudge" = "指先";
 "imageEditor.tool.healingBrush" = "修復ブラシ";
+"imageEditor.tool.patchTool" = "パッチ";
 "imageEditor.tool.paintBucket" = "塗りつぶし";
 "imageEditor.tool.gradient" = "グラデ";
 "imageEditor.tool.eyedropper" = "スポイト";
@@ -511,6 +512,7 @@
 "imageEditor.properties.brightnessContrastLayerValue" = "明るさ・コントラスト：明るさ %d・コントラスト %d";
 "imageEditor.properties.exposureLayerValue" = "露光：露光 %+.2f・オフセット %+.2f・ガンマ %.2f";
 "imageEditor.properties.shadowsHighlightsLayerValue" = "シャドウ・ハイライト：シャドウ %d%%・ハイライト %d%%";
+"imageEditor.properties.vibranceLayerValue" = "自然な彩度：自然な彩度 %d・彩度 %d";
 "imageEditor.properties.posterizeLayerValue" = "ポスタリゼーション：%d 階調";
 "imageEditor.properties.blackWhiteLayerValue" = "白黒：6色チャンネルミックス";
 "imageEditor.properties.channelMixerLayerValue" = "チャンネルミキサー：RGB 出力マトリクス";
@@ -540,6 +542,8 @@
 "imageEditor.colorBalance.highlights" = "ハイライト";
 "imageEditor.shadowsHighlights.shadows" = "シャドウ";
 "imageEditor.shadowsHighlights.highlights" = "ハイライト";
+"imageEditor.vibrance.vibrance" = "自然な彩度";
+"imageEditor.vibrance.saturation" = "彩度";
 "imageEditor.brightnessContrast.brightness" = "明るさ";
 "imageEditor.brightnessContrast.contrast" = "コントラスト";
 "imageEditor.exposure.exposure" = "露光";
@@ -1056,6 +1060,7 @@
 "imageEditor.history.selectionRestored" = "選択範囲を復元";
 "imageEditor.history.selectionFill" = "選択範囲を塗りつぶし";
 "imageEditor.history.selectionContentAwareFill" = "選択範囲をコンテンツに応じて塗りつぶし";
+"imageEditor.history.selectionPatch" = "選択範囲にパッチを適用";
 "imageEditor.history.selectionStroke" = "選択範囲を境界線描画";
 "imageEditor.history.selectionCopyLayer" = "コピーして新規レイヤー";
 "imageEditor.history.selectionCopyMergedLayer" = "結合コピーで新規レイヤー";
@@ -1200,6 +1205,7 @@
 "imageEditor.status.selectionRestored" = "保存した選択範囲を復元しました";
 "imageEditor.status.selectionFilled" = "現在の選択範囲を塗りつぶしました";
 "imageEditor.status.selectionContentAwareFilled" = "現在の選択範囲をコンテンツに応じて塗りつぶしました";
+"imageEditor.status.selectionPatched" = "ドラッグしたサンプル領域から現在の選択範囲にパッチを適用しました";
 "imageEditor.status.selectionStroked" = "現在の選択範囲に境界線を描画しました";
 "imageEditor.status.selectionCopiedToLayer" = "選択範囲の内容を新規レイヤーへコピーしました";
 "imageEditor.status.selectionCopiedMergedToLayer" = "表示中の結合内容を新規レイヤーへコピーしました";

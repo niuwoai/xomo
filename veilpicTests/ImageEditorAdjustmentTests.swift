@@ -288,17 +288,29 @@ struct ImageEditorAdjustmentTests {
         let baseLayerID = try #require(viewModel.document.selectedLayerID)
         let basePixelsBefore = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
         viewModel.selectedAdjustment = .vibrance
-        viewModel.adjustmentValue = 0.75
+        viewModel.adjustmentValue = 0
+        viewModel.vibranceAmount = 0.55
+        viewModel.vibranceSaturation = 0.25
         viewModel.addAdjustmentLayer()
 
         let adjustmentLayer = try #require(viewModel.document.selectedLayer)
         let previewMuted = try #require(viewModel.currentImage.color(at: CGPoint(x: 20, y: 20))?.usingColorSpace(.deviceRGB))
 
         #expect(adjustmentLayer.adjustment?.kind == .vibrance)
-        #expect(adjustmentLayer.adjustment?.amount == 0.75)
+        #expect(adjustmentLayer.adjustment?.amount == 0)
+        #expect(adjustmentLayer.adjustmentSettings.vibranceAmount == 0.55)
+        #expect(adjustmentLayer.adjustmentSettings.vibranceSaturation == 0.25)
+        #expect(viewModel.vibranceAmount == 0.55)
+        #expect(viewModel.vibranceSaturation == 0.25)
         #expect(viewModel.document.layers.first { $0.id == baseLayerID }?.image.qingtuPNGData() == basePixelsBefore)
         #expect(saturation(of: previewMuted) > mutedBeforeSaturation + 0.30)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerAdjustmentNew"))
+
+        let project = try ImageEditorProjectDocument(document: viewModel.document)
+        let restoredDocument = try project.restoredDocument()
+        let restoredLayer = try #require(restoredDocument.layers.first { $0.id == adjustmentLayer.id })
+        #expect(restoredLayer.adjustmentSettings.vibranceAmount == 0.55)
+        #expect(restoredLayer.adjustmentSettings.vibranceSaturation == 0.25)
     }
 
     @Test func imageEditorPosterizeAdjustmentQuantizesChannelsAndSupportsLayerState() async throws {

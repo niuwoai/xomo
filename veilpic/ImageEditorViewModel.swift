@@ -90,6 +90,8 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var exposureGamma: Double = 1
     @Published var shadowsHighlightsShadows: Double = 0
     @Published var shadowsHighlightsHighlights: Double = 0
+    @Published var vibranceAmount: Double = 0
+    @Published var vibranceSaturation: Double = 0
     @Published var blackWhiteReds: Double = 0.40
     @Published var blackWhiteYellows: Double = 0.60
     @Published var blackWhiteGreens: Double = 0.40
@@ -2842,6 +2844,8 @@ final class ImageEditorViewModel: ObservableObject {
             exposureGamma: exposureGamma,
             shadowsHighlightsShadows: shadowsHighlightsShadows,
             shadowsHighlightsHighlights: shadowsHighlightsHighlights,
+            vibranceAmount: vibranceAmount,
+            vibranceSaturation: vibranceSaturation,
             blackWhiteReds: blackWhiteReds,
             blackWhiteYellows: blackWhiteYellows,
             blackWhiteGreens: blackWhiteGreens,
@@ -2949,6 +2953,8 @@ final class ImageEditorViewModel: ObservableObject {
         exposureGamma = 1
         shadowsHighlightsShadows = 0
         shadowsHighlightsHighlights = 0
+        vibranceAmount = 0
+        vibranceSaturation = 0
         blackWhiteReds = 0.40
         blackWhiteYellows = 0.60
         blackWhiteGreens = 0.40
@@ -3820,6 +3826,8 @@ final class ImageEditorViewModel: ObservableObject {
         exposureGamma = settings.exposureGamma
         shadowsHighlightsShadows = settings.shadowsHighlightsShadows
         shadowsHighlightsHighlights = settings.shadowsHighlightsHighlights
+        vibranceAmount = settings.vibranceAmount
+        vibranceSaturation = settings.vibranceSaturation
         blackWhiteReds = settings.blackWhiteReds
         blackWhiteYellows = settings.blackWhiteYellows
         blackWhiteGreens = settings.blackWhiteGreens

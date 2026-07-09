@@ -415,6 +415,7 @@
 "imageEditor.tool.sharpen" = "锐化";
 "imageEditor.tool.smudge" = "涂抹";
 "imageEditor.tool.healingBrush" = "修复画笔";
+"imageEditor.tool.patchTool" = "修补";
 "imageEditor.tool.paintBucket" = "油漆桶";
 "imageEditor.tool.gradient" = "渐变";
 "imageEditor.tool.eyedropper" = "吸管";
@@ -511,6 +512,7 @@
 "imageEditor.properties.brightnessContrastLayerValue" = "亮度/对比度：亮度 %d · 对比度 %d";
 "imageEditor.properties.exposureLayerValue" = "曝光：曝光 %+.2f · 位移 %+.2f · 伽马 %.2f";
 "imageEditor.properties.shadowsHighlightsLayerValue" = "阴影/高光：阴影 %d%% · 高光 %d%%";
+"imageEditor.properties.vibranceLayerValue" = "自然饱和度：自然饱和度 %d · 饱和度 %d";
 "imageEditor.properties.posterizeLayerValue" = "色调分离：%d 级";
 "imageEditor.properties.blackWhiteLayerValue" = "黑白：六色通道混合";
 "imageEditor.properties.channelMixerLayerValue" = "通道混合器：RGB 输出矩阵";
@@ -540,6 +542,8 @@
 "imageEditor.colorBalance.highlights" = "高光";
 "imageEditor.shadowsHighlights.shadows" = "阴影";
 "imageEditor.shadowsHighlights.highlights" = "高光";
+"imageEditor.vibrance.vibrance" = "自然饱和度";
+"imageEditor.vibrance.saturation" = "饱和度";
 "imageEditor.brightnessContrast.brightness" = "亮度";
 "imageEditor.brightnessContrast.contrast" = "对比度";
 "imageEditor.exposure.exposure" = "曝光";
@@ -1056,6 +1060,7 @@
 "imageEditor.history.selectionRestored" = "恢复选区";
 "imageEditor.history.selectionFill" = "填充选区";
 "imageEditor.history.selectionContentAwareFill" = "内容感知填充选区";
+"imageEditor.history.selectionPatch" = "修补选区";
 "imageEditor.history.selectionStroke" = "描边选区";
 "imageEditor.history.selectionCopyLayer" = "通过拷贝新建图层";
 "imageEditor.history.selectionCopyMergedLayer" = "通过合成拷贝新建图层";
@@ -1200,6 +1205,7 @@
 "imageEditor.status.selectionRestored" = "已恢复保存的选区";
 "imageEditor.status.selectionFilled" = "已填充当前选区";
 "imageEditor.status.selectionContentAwareFilled" = "已对当前选区执行内容感知填充";
+"imageEditor.status.selectionPatched" = "已从拖拽取样区域修补当前选区";
 "imageEditor.status.selectionStroked" = "已描边当前选区";
 "imageEditor.status.selectionCopiedToLayer" = "已将选区内容复制到新图层";
 "imageEditor.status.selectionCopiedMergedToLayer" = "已将可见合成内容复制到新图层";

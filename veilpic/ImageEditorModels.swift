@@ -24,6 +24,7 @@ enum ImageEditorTool: String, CaseIterable, Identifiable {
     case sharpen
     case smudge
     case healingBrush
+    case patchTool
     case paintBucket
     case gradient
     case eyedropper
@@ -70,6 +71,8 @@ enum ImageEditorTool: String, CaseIterable, Identifiable {
             "scribble.variable"
         case .healingBrush:
             "bandage"
+        case .patchTool:
+            "square.dashed"
         case .paintBucket:
             "paintbucket.fill"
         case .gradient:
@@ -93,7 +96,7 @@ enum ImageEditorTool: String, CaseIterable, Identifiable {
 
     var isImplemented: Bool {
         switch self {
-        case .move, .marquee, .lasso, .magicWand, .crop, .brush, .eraser, .cloneStamp, .dodge, .burn, .blur, .sharpen, .smudge, .healingBrush, .paintBucket, .gradient, .eyedropper, .text, .rectangle, .ellipse, .pen, .hand, .zoom:
+        case .move, .marquee, .lasso, .magicWand, .crop, .brush, .eraser, .cloneStamp, .dodge, .burn, .blur, .sharpen, .smudge, .healingBrush, .patchTool, .paintBucket, .gradient, .eyedropper, .text, .rectangle, .ellipse, .pen, .hand, .zoom:
             true
         }
     }
@@ -852,6 +855,8 @@ struct ImageEditorAdjustmentSettings: Equatable, Codable {
     var exposureGamma: Double = 1
     var shadowsHighlightsShadows: Double = 0
     var shadowsHighlightsHighlights: Double = 0
+    var vibranceAmount: Double = 0
+    var vibranceSaturation: Double = 0
     var blackWhiteReds: Double = 0.40
     var blackWhiteYellows: Double = 0.60
     var blackWhiteGreens: Double = 0.40
@@ -925,6 +930,8 @@ struct ImageEditorAdjustmentSettings: Equatable, Codable {
             exposureGamma: max(0.1, min(9.99, exposureGamma)),
             shadowsHighlightsShadows: Self.zeroOne(shadowsHighlightsShadows),
             shadowsHighlightsHighlights: Self.zeroOne(shadowsHighlightsHighlights),
+            vibranceAmount: Self.unit(vibranceAmount),
+            vibranceSaturation: Self.unit(vibranceSaturation),
             blackWhiteReds: Self.channelMix(blackWhiteReds),
             blackWhiteYellows: Self.channelMix(blackWhiteYellows),
             blackWhiteGreens: Self.channelMix(blackWhiteGreens),
@@ -1014,6 +1021,8 @@ extension ImageEditorAdjustmentSettings {
         case exposureGamma
         case shadowsHighlightsShadows
         case shadowsHighlightsHighlights
+        case vibranceAmount
+        case vibranceSaturation
         case blackWhiteReds
         case blackWhiteYellows
         case blackWhiteGreens
@@ -1085,6 +1094,8 @@ extension ImageEditorAdjustmentSettings {
         exposureGamma = try container.decodeIfPresent(Double.self, forKey: .exposureGamma) ?? 1
         shadowsHighlightsShadows = try container.decodeIfPresent(Double.self, forKey: .shadowsHighlightsShadows) ?? 0
         shadowsHighlightsHighlights = try container.decodeIfPresent(Double.self, forKey: .shadowsHighlightsHighlights) ?? 0
+        vibranceAmount = try container.decodeIfPresent(Double.self, forKey: .vibranceAmount) ?? 0
+        vibranceSaturation = try container.decodeIfPresent(Double.self, forKey: .vibranceSaturation) ?? 0
         blackWhiteReds = try container.decodeIfPresent(Double.self, forKey: .blackWhiteReds) ?? 0.40
         blackWhiteYellows = try container.decodeIfPresent(Double.self, forKey: .blackWhiteYellows) ?? 0.60
         blackWhiteGreens = try container.decodeIfPresent(Double.self, forKey: .blackWhiteGreens) ?? 0.40

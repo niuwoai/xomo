@@ -338,7 +338,7 @@ struct ImageEditorView: View {
             .allowsHitTesting(false)
         }
 
-        if let dragStart, let dragEnd, viewModel.selectedTool == .gradient {
+        if let dragStart, let dragEnd, viewModel.selectedTool == .gradient || viewModel.selectedTool == .patchTool {
             let start = viewPoint(from: dragStart, in: size)
             let end = viewPoint(from: dragEnd, in: size)
             Canvas { context, _ in
@@ -411,7 +411,7 @@ struct ImageEditorView: View {
                     if let imagePoint {
                         dragPoints.append(imagePoint)
                     }
-                case .crop, .marquee, .rectangle, .ellipse, .gradient:
+                case .crop, .marquee, .rectangle, .ellipse, .gradient, .patchTool:
                     if dragStart == nil {
                         dragStart = imagePoint
                     }
@@ -469,6 +469,8 @@ struct ImageEditorView: View {
                     viewModel.smudgeBrush(points: dragPoints)
                 case .healingBrush:
                     viewModel.healingBrush(points: dragPoints)
+                case .patchTool:
+                    viewModel.patchSelection(from: dragStart, to: imagePoint)
                 case .paintBucket:
                     viewModel.paintBucketFill(at: imagePoint)
                 case .rectangle:
@@ -1833,6 +1835,8 @@ struct ImageEditorView: View {
                     exposureControls
                 } else if viewModel.selectedAdjustment == .shadowsHighlights {
                     shadowsHighlightsControls
+                } else if viewModel.selectedAdjustment == .vibrance {
+                    vibranceControls
                 } else if viewModel.selectedAdjustment == .posterize {
                     posterizeControls
                 } else if viewModel.selectedAdjustment == .blackWhite {
@@ -3113,6 +3117,25 @@ struct ImageEditorView: View {
                 range: 0...1,
                 step: 0.05,
                 displayText: "\(Int((viewModel.shadowsHighlightsHighlights * 100).rounded()))%"
+            )
+        }
+    }
+
+    private var vibranceControls: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            adjustmentSlider(
+                labelKey: "imageEditor.vibrance.vibrance",
+                value: $viewModel.vibranceAmount,
+                range: -1...1,
+                step: 0.05,
+                displayText: "\(Int((viewModel.vibranceAmount * 100).rounded()))"
+            )
+            adjustmentSlider(
+                labelKey: "imageEditor.vibrance.saturation",
+                value: $viewModel.vibranceSaturation,
+                range: -1...1,
+                step: 0.05,
+                displayText: "\(Int((viewModel.vibranceSaturation * 100).rounded()))"
             )
         }
     }

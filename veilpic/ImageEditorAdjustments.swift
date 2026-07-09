@@ -36,7 +36,7 @@ extension NSImage {
         case .shadowsHighlights:
             return shadowsHighlighted(settings: settings)
         case .vibrance:
-            return vibranced(amount: clamped)
+            return vibranced(amount: clamped, settings: settings)
         case .blackWhite:
             return blackWhite(settings: settings)
         case .channelMixer:
@@ -613,8 +613,15 @@ extension NSImage {
         }
     }
 
-    private func vibranced(amount: Double) -> NSImage? {
-        let strength = max(-1, min(1, amount))
+    private func vibranced(amount: Double, settings: ImageEditorAdjustmentSettings) -> NSImage? {
+        let rawSettings = settings
+        var settings = settings.normalized()
+        if rawSettings.vibranceAmount == 0,
+           rawSettings.vibranceSaturation == 0 {
+            settings.vibranceAmount = max(-1, min(1, amount))
+        }
+        let strength = settings.vibranceAmount
+        let saturationAmount = settings.vibranceSaturation
         return pixelMapped { red, green, blue, alpha in
             let hsl = Self.hsl(red: red, green: green, blue: blue)
             guard hsl.saturation > 0.0001 else {
@@ -627,7 +634,8 @@ extension NSImage {
             } else {
                 delta = strength * (0.35 + hsl.saturation * 0.65)
             }
-            let saturation = max(0, min(1, hsl.saturation + delta))
+            let vibranceSaturation = max(0, min(1, hsl.saturation + delta))
+            let saturation = Self.adjustedSaturation(vibranceSaturation, amount: saturationAmount)
             let output = Self.rgb(hue: hsl.hue, saturation: saturation, lightness: hsl.lightness)
             return (output.red, output.green, output.blue, alpha)
         }

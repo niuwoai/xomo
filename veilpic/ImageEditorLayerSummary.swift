@@ -123,6 +123,12 @@ extension ImageEditorViewModel {
                 Int((settings.shadowsHighlightsShadows * 100).rounded()),
                 Int((settings.shadowsHighlightsHighlights * 100).rounded())
             )
+        case .vibrance:
+            return L10n.format(
+                "imageEditor.properties.vibranceLayerValue",
+                Int((settings.vibranceAmount * 100).rounded()),
+                Int((settings.vibranceSaturation * 100).rounded())
+            )
         case .posterize:
             return L10n.format(
                 "imageEditor.properties.posterizeLayerValue",
