@@ -406,10 +406,93 @@ struct ImageEditorFilterTests {
         #expect(try #require(smartViewModel.currentImage.qingtuPNGData()) == smartPreviewBefore)
     }
 
+    @Test func imageEditorMinimumAndMaximumFiltersExpandDarkAndLightRegions() async throws {
+        let canvasSize = NSSize(width: 48, height: 48)
+        let whiteSpotImage = binarySpotImage(
+            size: canvasSize,
+            background: .black,
+            spot: .white,
+            spotSize: 5
+        )
+        let maximumViewModel = ImageEditorViewModel(sourceName: "source.png", image: whiteSpotImage) { _ in }
+        maximumViewModel.replaceSelectedLayerImageForTesting(whiteSpotImage, historyTitle: L10n.text("imageEditor.history.brush"))
+        let maximumBaseLayerID = try #require(maximumViewModel.document.selectedLayerID)
+        let maximumBasePixelsBefore = try #require(maximumViewModel.document.selectedLayer?.image.qingtuPNGData())
+
+        maximumViewModel.selectedFilter = .maximum
+        maximumViewModel.filterIntensity = 0.35
+        maximumViewModel.addFilterLayer()
+
+        let maximumLayer = try #require(maximumViewModel.document.selectedLayer)
+        let expandedLight = try #require(maximumViewModel.currentImage.color(at: CGPoint(x: 28, y: 24))?.usingColorSpace(.deviceRGB))
+        let farDark = try #require(maximumViewModel.currentImage.color(at: CGPoint(x: 8, y: 24))?.usingColorSpace(.deviceRGB))
+        #expect(maximumLayer.isFilter)
+        #expect(maximumLayer.filter?.kind == .maximum)
+        #expect(maximumViewModel.document.layers.first { $0.id == maximumBaseLayerID }?.image.qingtuPNGData() == maximumBasePixelsBefore)
+        #expect(expandedLight.redComponent > 0.95)
+        #expect(farDark.redComponent < 0.05)
+        #expect(maximumViewModel.document.history.last?.title == L10n.text("imageEditor.history.layerFilterNew"))
+
+        let blackSpotImage = binarySpotImage(
+            size: canvasSize,
+            background: .white,
+            spot: .black,
+            spotSize: 5
+        )
+        let minimumViewModel = ImageEditorViewModel(sourceName: "source.png", image: blackSpotImage) { _ in }
+        minimumViewModel.replaceSelectedLayerImageForTesting(blackSpotImage, historyTitle: L10n.text("imageEditor.history.brush"))
+        minimumViewModel.selectedFilter = .minimum
+        minimumViewModel.filterIntensity = 0.35
+        minimumViewModel.addFilterLayer()
+
+        let minimumLayer = try #require(minimumViewModel.document.selectedLayer)
+        let expandedDark = try #require(minimumViewModel.currentImage.color(at: CGPoint(x: 28, y: 24))?.usingColorSpace(.deviceRGB))
+        let farLight = try #require(minimumViewModel.currentImage.color(at: CGPoint(x: 8, y: 24))?.usingColorSpace(.deviceRGB))
+        #expect(minimumLayer.isFilter)
+        #expect(minimumLayer.filter?.kind == .minimum)
+        #expect(expandedDark.redComponent < 0.05)
+        #expect(farLight.redComponent > 0.95)
+
+        let smartViewModel = ImageEditorViewModel(sourceName: "source.png", image: whiteSpotImage) { _ in }
+        smartViewModel.replaceSelectedLayerImageForTesting(whiteSpotImage, historyTitle: L10n.text("imageEditor.history.brush"))
+        let smartBasePixelsBefore = try #require(smartViewModel.document.selectedLayer?.image.qingtuPNGData())
+        let smartPreviewBefore = try #require(smartViewModel.currentImage.qingtuPNGData())
+        smartViewModel.selectedFilter = .maximum
+        smartViewModel.filterIntensity = 0.35
+        smartViewModel.addSmartFilterToSelectedLayer()
+
+        var smartLayer = try #require(smartViewModel.document.selectedLayer)
+        let smartFilterID = try #require(smartLayer.smartFilters.first?.id)
+        let smartExpandedLight = try #require(smartViewModel.currentImage.color(at: CGPoint(x: 28, y: 24))?.usingColorSpace(.deviceRGB))
+        #expect(smartLayer.smartFilters.first?.kind == .maximum)
+        #expect(smartLayer.image.qingtuPNGData() == smartBasePixelsBefore)
+        #expect(smartExpandedLight.redComponent > 0.95)
+        #expect(smartViewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterAdd"))
+
+        smartViewModel.toggleSmartFilterOnSelectedLayer(smartFilterID)
+        smartLayer = try #require(smartViewModel.document.selectedLayer)
+        #expect(smartLayer.smartFilters.first?.isEnabled == false)
+        #expect(try #require(smartViewModel.currentImage.qingtuPNGData()) == smartPreviewBefore)
+    }
+
     private func solidImage(size: NSSize, color: NSColor) -> NSImage {
         NSImage.rendered(size: size) { rect in
             color.setFill()
             rect.fill()
+        } ?? NSImage.transparent(size: size)
+    }
+
+    private func binarySpotImage(size: NSSize, background: NSColor, spot: NSColor, spotSize: CGFloat) -> NSImage {
+        NSImage.rendered(size: size) { rect in
+            background.setFill()
+            rect.fill()
+            spot.setFill()
+            CGRect(
+                x: rect.midX - spotSize / 2,
+                y: rect.midY - spotSize / 2,
+                width: spotSize,
+                height: spotSize
+            ).fill()
         } ?? NSImage.transparent(size: size)
     }
 

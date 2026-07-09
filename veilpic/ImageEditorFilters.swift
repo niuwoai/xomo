@@ -42,6 +42,12 @@ extension NSImage {
         if kind == .findEdges {
             return findingEdges(intensity: clamped)
         }
+        if kind == .minimum {
+            return morphologyFiltered(intensity: clamped, useMaximum: false)
+        }
+        if kind == .maximum {
+            return morphologyFiltered(intensity: clamped, useMaximum: true)
+        }
 
         guard let ciImage = ciImageForEditing() else { return nil }
         let output: CIImage?
@@ -81,6 +87,10 @@ extension NSImage {
             return embossed(intensity: clamped)
         case .findEdges:
             return findingEdges(intensity: clamped)
+        case .minimum:
+            return morphologyFiltered(intensity: clamped, useMaximum: false)
+        case .maximum:
+            return morphologyFiltered(intensity: clamped, useMaximum: true)
         }
 
         guard let output,
@@ -375,6 +385,35 @@ extension NSImage {
                 Self.premultipliedChannel(value, alpha: alpha),
                 Self.premultipliedChannel(value, alpha: alpha),
                 Self.premultipliedChannel(value, alpha: alpha),
+                alpha
+            )
+        }
+    }
+
+    private func morphologyFiltered(intensity: Double, useMaximum: Bool) -> NSImage? {
+        let clampedIntensity = max(0, min(1, intensity))
+        let radius = max(1, Int((1 + clampedIntensity * 4).rounded()))
+        return pixelMappedFromBuffer { x, y, width, height, pixels, bytesPerRow, bytesPerPixel in
+            let offset = y * bytesPerRow + x * bytesPerPixel
+            let alpha = Double(pixels[offset + 3]) / 255
+            var red = useMaximum ? 0.0 : 1.0
+            var green = useMaximum ? 0.0 : 1.0
+            var blue = useMaximum ? 0.0 : 1.0
+            for sampleY in max(0, y - radius)...min(height - 1, y + radius) {
+                for sampleX in max(0, x - radius)...min(width - 1, x + radius) {
+                    let sampleOffset = sampleY * bytesPerRow + sampleX * bytesPerPixel
+                    let sampleRed = Double(pixels[sampleOffset]) / 255
+                    let sampleGreen = Double(pixels[sampleOffset + 1]) / 255
+                    let sampleBlue = Double(pixels[sampleOffset + 2]) / 255
+                    red = useMaximum ? max(red, sampleRed) : min(red, sampleRed)
+                    green = useMaximum ? max(green, sampleGreen) : min(green, sampleGreen)
+                    blue = useMaximum ? max(blue, sampleBlue) : min(blue, sampleBlue)
+                }
+            }
+            return (
+                Self.premultipliedChannel(red, alpha: alpha),
+                Self.premultipliedChannel(green, alpha: alpha),
+                Self.premultipliedChannel(blue, alpha: alpha),
                 alpha
             )
         }

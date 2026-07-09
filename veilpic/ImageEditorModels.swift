@@ -911,6 +911,8 @@ enum ImageEditorFilter: String, CaseIterable, Identifiable {
     case highPass
     case emboss
     case findEdges
+    case minimum
+    case maximum
 
     var id: String { rawValue }
 
