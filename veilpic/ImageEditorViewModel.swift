@@ -223,6 +223,31 @@ final class ImageEditorViewModel: ObservableObject {
         return "\(Int(size.width.rounded())) x \(Int(size.height.rounded())) px"
     }
 
+    var histogramSummary: ImageEditorHistogramSummary {
+        currentImage.histogramSummary()
+    }
+
+    var histogramAverageText: String {
+        histogramAverageText(for: histogramSummary)
+    }
+
+    func histogramAverageText(for summary: ImageEditorHistogramSummary) -> String {
+        return L10n.format(
+            "imageEditor.histogram.average",
+            Int(summary.averageRed.rounded()),
+            Int(summary.averageGreen.rounded()),
+            Int(summary.averageBlue.rounded())
+        )
+    }
+
+    var histogramLuminanceText: String {
+        histogramLuminanceText(for: histogramSummary)
+    }
+
+    func histogramLuminanceText(for summary: ImageEditorHistogramSummary) -> String {
+        return L10n.format("imageEditor.histogram.luminance", Int(summary.averageLuminance.rounded()))
+    }
+
     var selectedLayerOpacity: Double {
         guard let layer = document.selectedLayer else { return 1 }
         return layer.opacity

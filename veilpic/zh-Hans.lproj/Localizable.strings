@@ -463,6 +463,9 @@
 "imageEditor.shape.ellipse" = "椭圆";
 "imageEditor.shape.path" = "路径";
 "imageEditor.panel.navigator" = "导航器 / 信息";
+"imageEditor.histogram.title" = "直方图";
+"imageEditor.histogram.average" = "平均 RGB：%d / %d / %d";
+"imageEditor.histogram.luminance" = "平均亮度：%d";
 "imageEditor.panel.history" = "历史";
 "imageEditor.panel.layers" = "图层";
 "imageEditor.panel.layersChannels" = "图层 / 通道";

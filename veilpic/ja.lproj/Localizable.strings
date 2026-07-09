@@ -463,6 +463,9 @@
 "imageEditor.shape.ellipse" = "楕円";
 "imageEditor.shape.path" = "パス";
 "imageEditor.panel.navigator" = "ナビ / 情報";
+"imageEditor.histogram.title" = "ヒストグラム";
+"imageEditor.histogram.average" = "平均 RGB：%d / %d / %d";
+"imageEditor.histogram.luminance" = "平均輝度：%d";
 "imageEditor.panel.history" = "履歴";
 "imageEditor.panel.layers" = "レイヤー";
 "imageEditor.panel.layersChannels" = "レイヤー / チャンネル";

@@ -599,7 +599,8 @@ struct ImageEditorView: View {
     }
 
     private var navigatorPanel: some View {
-        EditorPanel(title: L10n.text("imageEditor.panel.navigator")) {
+        let histogramSummary = viewModel.histogramSummary
+        return EditorPanel(title: L10n.text("imageEditor.panel.navigator")) {
             VStack(alignment: .leading, spacing: 8) {
                 Image(nsImage: viewModel.previewImage)
                     .resizable()
@@ -608,13 +609,47 @@ struct ImageEditorView: View {
                     .frame(maxWidth: .infinity)
                     .background(Color.black.opacity(0.22))
                     .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+                histogramView(summary: histogramSummary)
                 Text(viewModel.sizeText)
                 Text(viewModel.colorText)
+                Text(viewModel.histogramAverageText(for: histogramSummary))
+                Text(viewModel.histogramLuminanceText(for: histogramSummary))
             }
             .font(.system(size: 11, weight: .medium).monospacedDigit())
             .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
         }
-        .frame(height: 174)
+        .frame(height: 246)
+    }
+
+    private func histogramView(summary: ImageEditorHistogramSummary) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(L10n.text("imageEditor.histogram.title"))
+                .font(.system(size: 10, weight: .semibold))
+            HStack(alignment: .bottom, spacing: 1) {
+                ForEach(summary.bins) { bin in
+                    ZStack(alignment: .bottom) {
+                        Rectangle()
+                            .fill(Color.white.opacity(0.20))
+                            .frame(height: max(1, 38 * bin.luminance))
+                        Rectangle()
+                            .fill(Color.red.opacity(0.55))
+                            .frame(height: max(1, 38 * bin.red))
+                        Rectangle()
+                            .fill(Color.green.opacity(0.45))
+                            .frame(height: max(1, 38 * bin.green))
+                        Rectangle()
+                            .fill(Color.blue.opacity(0.55))
+                            .frame(height: max(1, 38 * bin.blue))
+                    }
+                    .frame(maxWidth: .infinity, minHeight: 38, maxHeight: 38, alignment: .bottom)
+                }
+            }
+            .frame(height: 40)
+            .padding(.horizontal, 4)
+            .background(Color.black.opacity(0.18))
+            .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+            .accessibilityLabel(L10n.text("imageEditor.histogram.title"))
+        }
     }
 
     private var historyPanel: some View {

@@ -463,6 +463,9 @@
 "imageEditor.shape.ellipse" = "Ellipse";
 "imageEditor.shape.path" = "Path";
 "imageEditor.panel.navigator" = "Navigator / Info";
+"imageEditor.histogram.title" = "Histogram";
+"imageEditor.histogram.average" = "Avg RGB: %d / %d / %d";
+"imageEditor.histogram.luminance" = "Avg Luma: %d";
 "imageEditor.panel.history" = "History";
 "imageEditor.panel.layers" = "Layers";
 "imageEditor.panel.layersChannels" = "Layers / Channels";

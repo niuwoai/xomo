@@ -310,6 +310,28 @@ struct ImageEditorChannelTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelFromMask"))
     }
 
+    @Test func histogramSummaryReportsBinsAndAverageColor() async throws {
+        let image = grayscaleHistogramImage()
+        let summary = image.histogramSummary(binCount: 4, maximumSampleEdge: 8)
+
+        #expect(summary.pixelCount == 4)
+        #expect(summary.bins.count == 4)
+        #expect(summary.bins.allSatisfy { approximately($0.luminance, 1, tolerance: 0.01) })
+        #expect(approximately(summary.averageRed, 128, tolerance: 1))
+        #expect(approximately(summary.averageGreen, 128, tolerance: 1))
+        #expect(approximately(summary.averageBlue, 128, tolerance: 1))
+        #expect(approximately(summary.averageLuminance, 128, tolerance: 1))
+    }
+
+    @Test func viewModelExposesHistogramReadoutsForNavigatorPanel() async throws {
+        let image = grayscaleHistogramImage()
+        let viewModel = ImageEditorViewModel(sourceName: "histogram.png", image: image) { _ in }
+
+        #expect(viewModel.histogramSummary.bins.count == 32)
+        #expect(viewModel.histogramAverageText.contains("128"))
+        #expect(viewModel.histogramLuminanceText.contains("128"))
+    }
+
     private func channelTestImage() -> NSImage {
         NSImage.rendered(size: NSSize(width: 2, height: 1)) { _ in
             NSColor(calibratedRed: 0.25, green: 0.50, blue: 0.75, alpha: 1).setFill()
@@ -348,6 +370,16 @@ struct ImageEditorChannelTests {
         } ?? NSImage(size: NSSize(width: 4, height: 1))
     }
 
+    private func grayscaleHistogramImage() -> NSImage {
+        NSImage.rendered(size: NSSize(width: 4, height: 1)) { _ in
+            for index in 0..<4 {
+                let value = CGFloat(index) / 3
+                NSColor(calibratedRed: value, green: value, blue: value, alpha: 1).setFill()
+                CGRect(x: index, y: 0, width: 1, height: 1).fill()
+            }
+        } ?? NSImage(size: NSSize(width: 4, height: 1))
+    }
+
     private func growColorSelectionTestImage() -> NSImage {
         NSImage.rendered(size: NSSize(width: 5, height: 1)) { _ in
             NSColor(calibratedRed: 1, green: 0, blue: 0, alpha: 1).setFill()
@@ -369,6 +401,10 @@ struct ImageEditorChannelTests {
     }
 
     private func approximately(_ value: CGFloat, _ expected: CGFloat, tolerance: CGFloat) -> Bool {
+        abs(value - expected) <= tolerance
+    }
+
+    private func approximately(_ value: Double, _ expected: Double, tolerance: Double) -> Bool {
         abs(value - expected) <= tolerance
     }
 }
