@@ -2069,6 +2069,28 @@ struct ImageEditorView: View {
                             .frame(width: 44, alignment: .trailing)
                     }
                 }
+                if viewModel.selectedFilter == .offset {
+                    HStack {
+                        Text(L10n.text("imageEditor.filter.offsetX"))
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                        Slider(value: $viewModel.filterOffsetX, in: -1...1, step: 0.05)
+                        Text(L10n.format("imageEditor.filter.offsetValue", Int((viewModel.filterOffsetX * 100).rounded())))
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+                            .frame(width: 44, alignment: .trailing)
+                    }
+                    HStack {
+                        Text(L10n.text("imageEditor.filter.offsetY"))
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                        Slider(value: $viewModel.filterOffsetY, in: -1...1, step: 0.05)
+                        Text(L10n.format("imageEditor.filter.offsetValue", Int((viewModel.filterOffsetY * 100).rounded())))
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+                            .frame(width: 44, alignment: .trailing)
+                    }
+                }
                 if viewModel.selectedFilter == .wave {
                     HStack {
                         Text(L10n.text("imageEditor.filter.waveAmplitude"))

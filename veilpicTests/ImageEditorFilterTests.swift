@@ -795,6 +795,72 @@ struct ImageEditorFilterTests {
         #expect(restoredFilter.normalizedSettings.waveFrequency == 0)
     }
 
+    @Test func imageEditorOffsetFilterLayerAndSmartFilterWrapPixels() async throws {
+        let canvasSize = NSSize(width: 48, height: 48)
+        let sourceImage = splitColorImage(size: canvasSize, left: .systemRed, right: .systemBlue)
+        let samplePoint = CGPoint(x: 12, y: 24)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: sourceImage) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(sourceImage, historyTitle: L10n.text("imageEditor.history.brush"))
+        let baseLayerID = try #require(viewModel.document.selectedLayerID)
+        let basePixelsBefore = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+        let sampleBefore = try #require(viewModel.currentImage.color(at: samplePoint)?.usingColorSpace(.deviceRGB))
+
+        viewModel.selectedFilter = .offset
+        viewModel.filterIntensity = 1
+        viewModel.filterOffsetX = 1
+        viewModel.filterOffsetY = 0
+        viewModel.addFilterLayer()
+
+        let filterLayer = try #require(viewModel.document.selectedLayer)
+        let sampleAfter = try #require(viewModel.currentImage.color(at: samplePoint)?.usingColorSpace(.deviceRGB))
+        #expect(filterLayer.isFilter)
+        #expect(filterLayer.filter?.kind == .offset)
+        #expect(filterLayer.filterSettings.normalized().offsetX == 1)
+        #expect(filterLayer.filterSettings.normalized().offsetY == 0)
+        #expect(viewModel.document.layers.first { $0.id == baseLayerID }?.image.qingtuPNGData() == basePixelsBefore)
+        #expect(sampleBefore.redComponent > sampleBefore.blueComponent + 0.4)
+        #expect(sampleAfter.blueComponent > sampleAfter.redComponent + 0.4)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerFilterNew"))
+
+        let quadrantSource = quadrantImage(
+            size: canvasSize,
+            topLeft: .systemRed,
+            topRight: .systemBlue,
+            bottomLeft: .systemGreen,
+            bottomRight: .systemYellow
+        )
+        let verticalSamplePoint = CGPoint(x: 12, y: 12)
+        let smartViewModel = ImageEditorViewModel(sourceName: "source.png", image: quadrantSource) { _ in }
+        smartViewModel.replaceSelectedLayerImageForTesting(quadrantSource, historyTitle: L10n.text("imageEditor.history.brush"))
+        let smartBasePixelsBefore = try #require(smartViewModel.document.selectedLayer?.image.qingtuPNGData())
+        let smartSampleBefore = try #require(smartViewModel.currentImage.color(at: verticalSamplePoint)?.usingColorSpace(.deviceRGB))
+        smartViewModel.selectedFilter = .offset
+        smartViewModel.filterIntensity = 1
+        smartViewModel.filterOffsetX = 0
+        smartViewModel.filterOffsetY = 1
+        smartViewModel.addSmartFilterToSelectedLayer()
+
+        let smartLayer = try #require(smartViewModel.document.selectedLayer)
+        let smartFilter = try #require(smartLayer.smartFilters.first)
+        let smartSampleAfter = try #require(smartViewModel.currentImage.color(at: verticalSamplePoint)?.usingColorSpace(.deviceRGB))
+        #expect(smartFilter.kind == .offset)
+        #expect(smartFilter.normalizedSettings.offsetX == 0)
+        #expect(smartFilter.normalizedSettings.offsetY == 1)
+        #expect(smartLayer.image.qingtuPNGData() == smartBasePixelsBefore)
+        #expect(smartSampleBefore.redComponent > smartSampleBefore.greenComponent + 0.4)
+        #expect(smartSampleAfter.greenComponent > smartSampleAfter.redComponent + 0.25)
+        #expect(smartViewModel.smartFilterLabel(smartFilter) == L10n.format("imageEditor.properties.smartFilterOffsetItem", smartFilter.kind.title, 100, 0, 100))
+        #expect(smartViewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterAdd"))
+
+        let project = try ImageEditorProjectDocument(document: smartViewModel.document)
+        let restoredDocument = try project.restoredDocument()
+        let restoredLayer = try #require(restoredDocument.layers.first { $0.id == smartLayer.id })
+        let restoredFilter = try #require(restoredLayer.smartFilters.first)
+        #expect(restoredFilter.kind == .offset)
+        #expect(restoredFilter.normalizedSettings.offsetX == 0)
+        #expect(restoredFilter.normalizedSettings.offsetY == 1)
+    }
+
     private func solidImage(size: NSSize, color: NSColor) -> NSImage {
         NSImage.rendered(size: size) { rect in
             color.setFill()

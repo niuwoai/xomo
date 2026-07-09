@@ -1233,6 +1233,7 @@ enum ImageEditorFilter: String, CaseIterable, Identifiable {
     case maximum
     case oilPaint
     case vignette
+    case offset
     case wave
     case liquifyPush
     case liquifyTwirl
@@ -1268,6 +1269,8 @@ struct ImageEditorFilterSettings: Equatable, Codable {
     var liquifyPushY: Double = 0
     var liquifyTwirlAngle: Double = 0.5
     var liquifyBulgeAmount: Double = 0.5
+    var offsetX: Double = 0.25
+    var offsetY: Double = 0
     var waveAmplitude: Double = 0.5
     var waveFrequency: Double = 0.25
 
@@ -1278,6 +1281,8 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         liquifyPushY: Double = 0,
         liquifyTwirlAngle: Double = 0.5,
         liquifyBulgeAmount: Double = 0.5,
+        offsetX: Double = 0.25,
+        offsetY: Double = 0,
         waveAmplitude: Double = 0.5,
         waveFrequency: Double = 0.25
     ) {
@@ -1287,6 +1292,8 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         self.liquifyPushY = liquifyPushY
         self.liquifyTwirlAngle = liquifyTwirlAngle
         self.liquifyBulgeAmount = liquifyBulgeAmount
+        self.offsetX = offsetX
+        self.offsetY = offsetY
         self.waveAmplitude = waveAmplitude
         self.waveFrequency = waveFrequency
     }
@@ -1299,6 +1306,8 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         liquifyPushY = try container.decodeIfPresent(Double.self, forKey: .liquifyPushY) ?? 0
         liquifyTwirlAngle = try container.decodeIfPresent(Double.self, forKey: .liquifyTwirlAngle) ?? 0.5
         liquifyBulgeAmount = try container.decodeIfPresent(Double.self, forKey: .liquifyBulgeAmount) ?? 0.5
+        offsetX = try container.decodeIfPresent(Double.self, forKey: .offsetX) ?? 0.25
+        offsetY = try container.decodeIfPresent(Double.self, forKey: .offsetY) ?? 0
         waveAmplitude = try container.decodeIfPresent(Double.self, forKey: .waveAmplitude) ?? 0.5
         waveFrequency = try container.decodeIfPresent(Double.self, forKey: .waveFrequency) ?? 0.25
     }
@@ -1311,6 +1320,8 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         try container.encode(liquifyPushY, forKey: .liquifyPushY)
         try container.encode(liquifyTwirlAngle, forKey: .liquifyTwirlAngle)
         try container.encode(liquifyBulgeAmount, forKey: .liquifyBulgeAmount)
+        try container.encode(offsetX, forKey: .offsetX)
+        try container.encode(offsetY, forKey: .offsetY)
         try container.encode(waveAmplitude, forKey: .waveAmplitude)
         try container.encode(waveFrequency, forKey: .waveFrequency)
     }
@@ -1323,6 +1334,8 @@ struct ImageEditorFilterSettings: Equatable, Codable {
             liquifyPushY: max(-1, min(1, liquifyPushY)),
             liquifyTwirlAngle: max(-1, min(1, liquifyTwirlAngle)),
             liquifyBulgeAmount: max(-1, min(1, liquifyBulgeAmount)),
+            offsetX: max(-1, min(1, offsetX)),
+            offsetY: max(-1, min(1, offsetY)),
             waveAmplitude: max(-1, min(1, waveAmplitude)),
             waveFrequency: max(0, min(1, waveFrequency))
         )
@@ -1335,6 +1348,8 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         case liquifyPushY
         case liquifyTwirlAngle
         case liquifyBulgeAmount
+        case offsetX
+        case offsetY
         case waveAmplitude
         case waveFrequency
     }

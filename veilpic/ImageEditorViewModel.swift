@@ -164,6 +164,8 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var filterLiquifyPushY: Double = 0
     @Published var filterLiquifyTwirlAngle: Double = 0.5
     @Published var filterLiquifyBulgeAmount: Double = 0.5
+    @Published var filterOffsetX: Double = 0.25
+    @Published var filterOffsetY: Double = 0
     @Published var filterWaveAmplitude: Double = 0.5
     @Published var filterWaveFrequency: Double = 0.25
     @Published var selectedChannelPreview: ImageEditorChannelPreview = .composite
@@ -508,6 +510,18 @@ final class ImageEditorViewModel: ObservableObject {
                 Int((filter.normalizedIntensity * 100).rounded()),
                 Int((settings.waveAmplitude * 100).rounded()),
                 Int((settings.waveFrequency * 100).rounded())
+            )
+            guard !filter.isEnabled else { return title }
+            return L10n.format("imageEditor.properties.smartFilterDisabled", title)
+        }
+        if filter.kind == .offset {
+            let settings = filter.normalizedSettings
+            let title = L10n.format(
+                "imageEditor.properties.smartFilterOffsetItem",
+                filter.kind.title,
+                Int((filter.normalizedIntensity * 100).rounded()),
+                Int((settings.offsetX * 100).rounded()),
+                Int((settings.offsetY * 100).rounded())
             )
             guard !filter.isEnabled else { return title }
             return L10n.format("imageEditor.properties.smartFilterDisabled", title)
@@ -2712,6 +2726,8 @@ final class ImageEditorViewModel: ObservableObject {
             liquifyPushY: filterLiquifyPushY,
             liquifyTwirlAngle: filterLiquifyTwirlAngle,
             liquifyBulgeAmount: filterLiquifyBulgeAmount,
+            offsetX: filterOffsetX,
+            offsetY: filterOffsetY,
             waveAmplitude: filterWaveAmplitude,
             waveFrequency: filterWaveFrequency
         ).normalized()
@@ -3956,6 +3972,8 @@ final class ImageEditorViewModel: ObservableObject {
         filterLiquifyPushY = normalized.liquifyPushY
         filterLiquifyTwirlAngle = normalized.liquifyTwirlAngle
         filterLiquifyBulgeAmount = normalized.liquifyBulgeAmount
+        filterOffsetX = normalized.offsetX
+        filterOffsetY = normalized.offsetY
         filterWaveAmplitude = normalized.waveAmplitude
         filterWaveFrequency = normalized.waveFrequency
     }

@@ -54,6 +54,9 @@ extension NSImage {
         if kind == .vignette {
             return vignetted(intensity: clamped)
         }
+        if kind == .offset {
+            return offset(intensity: clamped, settings: settings)
+        }
         if kind == .wave {
             return waved(intensity: clamped, settings: settings)
         }
@@ -113,6 +116,8 @@ extension NSImage {
             return oilPainted(intensity: clamped)
         case .vignette:
             return vignetted(intensity: clamped)
+        case .offset:
+            return offset(intensity: clamped, settings: settings)
         case .wave:
             return waved(intensity: clamped, settings: settings)
         case .liquifyPush:
@@ -558,6 +563,25 @@ extension NSImage {
         }
     }
 
+    private func offset(intensity: Double, settings: ImageEditorFilterSettings) -> NSImage? {
+        let clampedIntensity = max(0, min(1, intensity))
+        guard clampedIntensity > 0 else { return self }
+        let normalizedSettings = settings.normalized()
+        return pixelSampledFromBuffer { x, y, width, height, pixels, bytesPerRow, bytesPerPixel in
+            let shiftX = normalizedSettings.offsetX * Double(width) * 0.5 * clampedIntensity
+            let shiftY = normalizedSettings.offsetY * Double(height) * 0.5 * clampedIntensity
+            return Self.wrappedSamplePixel(
+                x: Double(x) - shiftX,
+                y: Double(y) - shiftY,
+                width: width,
+                height: height,
+                pixels: pixels,
+                bytesPerRow: bytesPerRow,
+                bytesPerPixel: bytesPerPixel
+            )
+        }
+    }
+
     private func waved(intensity: Double, settings: ImageEditorFilterSettings) -> NSImage? {
         let clampedIntensity = max(0, min(1, intensity))
         guard clampedIntensity > 0 else { return self }
@@ -891,6 +915,38 @@ extension NSImage {
         let top = mix(topLeft, topRight, tx)
         let bottom = mix(bottomLeft, bottomRight, tx)
         return mix(top, bottom, ty)
+    }
+
+    private static func wrappedSamplePixel(
+        x: Double,
+        y: Double,
+        width: Int,
+        height: Int,
+        pixels: [UInt8],
+        bytesPerRow: Int,
+        bytesPerPixel: Int
+    ) -> (Double, Double, Double, Double) {
+        let wrappedX = wrappedCoordinate(x, limit: width)
+        let wrappedY = wrappedCoordinate(y, limit: height)
+        let x0 = Int(floor(wrappedX))
+        let y0 = Int(floor(wrappedY))
+        let x1 = (x0 + 1) % width
+        let y1 = (y0 + 1) % height
+        let tx = wrappedX - Double(x0)
+        let ty = wrappedY - Double(y0)
+        let topLeft = pixelComponents(x: x0, y: y0, pixels: pixels, bytesPerRow: bytesPerRow, bytesPerPixel: bytesPerPixel)
+        let topRight = pixelComponents(x: x1, y: y0, pixels: pixels, bytesPerRow: bytesPerRow, bytesPerPixel: bytesPerPixel)
+        let bottomLeft = pixelComponents(x: x0, y: y1, pixels: pixels, bytesPerRow: bytesPerRow, bytesPerPixel: bytesPerPixel)
+        let bottomRight = pixelComponents(x: x1, y: y1, pixels: pixels, bytesPerRow: bytesPerRow, bytesPerPixel: bytesPerPixel)
+        let top = mix(topLeft, topRight, tx)
+        let bottom = mix(bottomLeft, bottomRight, tx)
+        return mix(top, bottom, ty)
+    }
+
+    private static func wrappedCoordinate(_ value: Double, limit: Int) -> Double {
+        let length = Double(max(limit, 1))
+        let remainder = value.truncatingRemainder(dividingBy: length)
+        return remainder >= 0 ? remainder : remainder + length
     }
 
     private static func pixelComponents(
