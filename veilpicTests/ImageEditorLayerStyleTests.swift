@@ -366,6 +366,40 @@ struct ImageEditorLayerStyleTests {
         #expect(restoredLayer.style.shadowNoise == 1)
     }
 
+    @Test func imageEditorOuterGlowNoiseChangesGlowAndRoundTripsProjectState() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let baseImage = solidImage(color: .systemBlue, size: canvasSize)
+        let layerImage = centerRectImage(size: canvasSize, color: .systemGreen)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: baseImage) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(layerImage, historyTitle: L10n.text("imageEditor.history.brush"))
+        let layerPixelsBeforeStyle = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+
+        viewModel.setSelectedLayerOuterGlowOpacity(1)
+        viewModel.setSelectedLayerOuterGlowBlur(0)
+        viewModel.setSelectedLayerOuterGlowSpread(8)
+        viewModel.setSelectedLayerOuterGlowNoise(0)
+        let smoothGlowData = try #require(viewModel.currentImage.qingtuPNGData())
+
+        viewModel.setSelectedLayerOuterGlowNoise(1)
+
+        let styledLayer = try #require(viewModel.document.selectedLayer)
+        let layerPixelsAfterStyle = try #require(styledLayer.image.qingtuPNGData())
+        let noisyGlowData = try #require(viewModel.currentImage.qingtuPNGData())
+
+        #expect(styledLayer.style.outerGlowEnabled)
+        #expect(styledLayer.style.outerGlowNoise == 1)
+        #expect(viewModel.selectedLayerOuterGlowNoise == 1)
+        #expect(layerPixelsAfterStyle == layerPixelsBeforeStyle)
+        #expect(noisyGlowData != smoothGlowData)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStyle"))
+
+        let project = try ImageEditorProjectDocument(document: viewModel.document)
+        let restoredDocument = try project.restoredDocument()
+        let restoredLayer = try #require(restoredDocument.layers.first { $0.id == styledLayer.id })
+        #expect(restoredLayer.style.outerGlowEnabled)
+        #expect(restoredLayer.style.outerGlowNoise == 1)
+    }
+
     @Test func imageEditorDropShadowAngleAndDistanceMoveShadowDirectionally() async throws {
         let canvasSize = NSSize(width: 80, height: 60)
         let baseImage = solidImage(color: .systemBlue, size: canvasSize)

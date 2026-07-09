@@ -1128,6 +1128,14 @@ struct ImageEditorView: View {
         }
     }
 
+    private var selectedLayerOuterGlowNoiseBinding: Binding<Double> {
+        Binding {
+            viewModel.selectedLayerOuterGlowNoise
+        } set: { value in
+            viewModel.setSelectedLayerOuterGlowNoise(value)
+        }
+    }
+
     private var selectedLayerInnerGlowOpacityBinding: Binding<Double> {
         Binding {
             viewModel.selectedLayerInnerGlowOpacity
@@ -2475,6 +2483,12 @@ struct ImageEditorView: View {
                         step: 1
                     )
                 }
+                Stepper(
+                    L10n.format("imageEditor.properties.outerGlowNoiseValue", Int((viewModel.selectedLayerOuterGlowNoise * 100).rounded())),
+                    value: selectedLayerOuterGlowNoiseBinding,
+                    in: 0...1,
+                    step: 0.05
+                )
                 Stepper(
                     L10n.format("imageEditor.properties.innerGlowOpacityValue", Int((viewModel.selectedLayerInnerGlowOpacity * 100).rounded())),
                     value: selectedLayerInnerGlowOpacityBinding,

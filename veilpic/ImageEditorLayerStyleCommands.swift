@@ -187,6 +187,10 @@ extension ImageEditorViewModel {
         Double(document.selectedLayer?.style.outerGlowSpread ?? 3)
     }
 
+    var selectedLayerOuterGlowNoise: Double {
+        Double(document.selectedLayer?.style.outerGlowNoise ?? 0)
+    }
+
     var selectedLayerInnerGlowOpacity: Double {
         Double(document.selectedLayer?.style.innerGlowOpacity ?? 0.36)
     }
@@ -634,6 +638,13 @@ extension ImageEditorViewModel {
         updateSelectedLayerStyle {
             $0.outerGlowEnabled = true
             $0.outerGlowSpread = max(0, min(24, CGFloat(spread)))
+        }
+    }
+
+    func setSelectedLayerOuterGlowNoise(_ noise: Double) {
+        updateSelectedLayerStyle {
+            $0.outerGlowEnabled = true
+            $0.outerGlowNoise = max(0, min(1, CGFloat(noise)))
         }
     }
 

@@ -1493,6 +1493,7 @@ struct ImageEditorLayerStyle {
     var outerGlowOpacity: CGFloat = 0.42
     var outerGlowBlur: CGFloat = 10
     var outerGlowSpread: CGFloat = 3
+    var outerGlowNoise: CGFloat = 0
     var innerGlowEnabled = false
     var innerGlowColor = NSColor.systemCyan
     var innerGlowOpacity: CGFloat = 0.36
@@ -2512,9 +2513,10 @@ struct ImageEditorLayer: Identifiable {
             }
 
             if style.outerGlowEnabled {
-                let glowImage = baseImage.alphaTinted(
+                let rawGlowImage = baseImage.alphaTinted(
                     color: style.outerGlowColor.withAlphaComponent(style.outerGlowOpacity)
                 )
+                let glowImage = rawGlowImage.shadowNoised(amount: style.outerGlowNoise) ?? rawGlowImage
                 let spread = max(0, Int(style.outerGlowSpread.rounded()))
                 let glowCanvas = NSImage.rendered(size: outputSize) { _ in
                     glowImage.draw(

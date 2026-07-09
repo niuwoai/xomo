@@ -2680,6 +2680,7 @@ struct veilpicTests {
         viewModel.setSelectedLayerOuterGlowOpacity(0.65)
         viewModel.setSelectedLayerOuterGlowBlur(18)
         viewModel.setSelectedLayerOuterGlowSpread(6)
+        viewModel.setSelectedLayerOuterGlowNoise(0.4)
         viewModel.setSelectedLayerInnerGlowOpacity(0.55)
         viewModel.setSelectedLayerInnerGlowBlur(16)
         viewModel.setSelectedLayerInnerGlowChoke(5)
@@ -2696,6 +2697,7 @@ struct veilpicTests {
         #expect(styledLayer.style.outerGlowOpacity == 0.65)
         #expect(styledLayer.style.outerGlowBlur == 18)
         #expect(styledLayer.style.outerGlowSpread == 6)
+        #expect(styledLayer.style.outerGlowNoise == 0.4)
         #expect(styledLayer.style.innerGlowOpacity == 0.55)
         #expect(styledLayer.style.innerGlowBlur == 16)
         #expect(styledLayer.style.innerGlowChoke == 5)
@@ -2704,10 +2706,12 @@ struct veilpicTests {
         viewModel.toggleLayerLock(selectedID)
         viewModel.setSelectedLayerStrokeWidth(18)
         viewModel.setSelectedLayerOuterGlowSpread(12)
+        viewModel.setSelectedLayerOuterGlowNoise(0.9)
         viewModel.setSelectedLayerInnerGlowChoke(10)
 
         #expect(viewModel.document.selectedLayer?.style.strokeWidth == 9)
         #expect(viewModel.document.selectedLayer?.style.outerGlowSpread == 6)
+        #expect(viewModel.document.selectedLayer?.style.outerGlowNoise == 0.4)
         #expect(viewModel.document.selectedLayer?.style.innerGlowChoke == 5)
         #expect(viewModel.statusText == L10n.text("imageEditor.status.layerLocked"))
     }
