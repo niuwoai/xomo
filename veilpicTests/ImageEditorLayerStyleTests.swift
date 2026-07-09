@@ -282,6 +282,41 @@ struct ImageEditorLayerStyleTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStyle"))
     }
 
+    @Test func imageEditorDropShadowNoiseVariesShadowAlphaAndRoundTripsProjectState() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let baseImage = solidImage(color: .systemBlue, size: canvasSize)
+        let layerImage = centerRectImage(size: canvasSize, color: .systemGreen)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: baseImage) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(layerImage, historyTitle: L10n.text("imageEditor.history.brush"))
+        let layerPixelsBeforeStyle = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+
+        viewModel.setSelectedLayerShadowOpacity(1)
+        viewModel.setSelectedLayerShadowBlur(0)
+        viewModel.setSelectedLayerShadowSpread(0)
+        viewModel.setSelectedLayerShadowDistance(12)
+        viewModel.setSelectedLayerShadowAngle(0)
+        viewModel.setSelectedLayerShadowNoise(1)
+
+        let styledLayer = try #require(viewModel.document.selectedLayer)
+        let layerPixelsAfterStyle = try #require(styledLayer.image.qingtuPNGData())
+        let lowNoiseShadow = try #require(viewModel.currentImage.color(at: CGPoint(x: 64, y: 30))?.usingColorSpace(.deviceRGB))
+        let highNoiseShadow = try #require(viewModel.currentImage.color(at: CGPoint(x: 64, y: 36))?.usingColorSpace(.deviceRGB))
+
+        #expect(styledLayer.style.shadowEnabled)
+        #expect(styledLayer.style.shadowNoise == 1)
+        #expect(viewModel.selectedLayerShadowNoise == 1)
+        #expect(layerPixelsAfterStyle == layerPixelsBeforeStyle)
+        #expect(lowNoiseShadow.blueComponent > highNoiseShadow.blueComponent + 0.45)
+        #expect(highNoiseShadow.blueComponent < 0.20)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStyle"))
+
+        let project = try ImageEditorProjectDocument(document: viewModel.document)
+        let restoredDocument = try project.restoredDocument()
+        let restoredLayer = try #require(restoredDocument.layers.first { $0.id == styledLayer.id })
+        #expect(restoredLayer.style.shadowEnabled)
+        #expect(restoredLayer.style.shadowNoise == 1)
+    }
+
     @Test func imageEditorDropShadowAngleAndDistanceMoveShadowDirectionally() async throws {
         let canvasSize = NSSize(width: 80, height: 60)
         let baseImage = solidImage(color: .systemBlue, size: canvasSize)

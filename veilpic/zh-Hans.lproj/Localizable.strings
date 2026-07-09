@@ -522,7 +522,7 @@
 "imageEditor.properties.filterLayerValue" = "%@ 滤镜：%d%%";
 "imageEditor.properties.solidColorFillLayerValue" = "纯色填充：R %d · G %d · B %d";
 "imageEditor.properties.patternFillLayerValue" = "图案填充：%@ · 不透明度 %d%% · %d px";
-"imageEditor.properties.gradientFillLayerValue" = "渐变填充：%@，%d°，%d%%";
+"imageEditor.properties.gradientFillLayerValue" = "渐变填充：%@ · %@，%d°，%d%%";
 "imageEditor.properties.unsharpFilterLayerValue" = "USM 锐化：数量 %d%% · 半径 %@ · 阈值 %d";
 "imageEditor.properties.textLayerValue" = "文字：%@ · %d px";
 "imageEditor.properties.shapeLayerValue" = "%@形状 · %d x %d px";
@@ -644,6 +644,11 @@
 "imageEditor.gradientFill.preset.purpleTeal" = "紫青";
 "imageEditor.gradientFill.preset.foregroundBackground" = "前景到背景";
 "imageEditor.gradientFill.preset.custom" = "自定义";
+"imageEditor.gradientFill.style" = "样式";
+"imageEditor.gradientFill.style.linear" = "线性";
+"imageEditor.gradientFill.style.radial" = "径向";
+"imageEditor.gradientFill.style.reflected" = "反射";
+"imageEditor.gradientFill.style.diamond" = "菱形";
 "imageEditor.gradientFill.reverse" = "反向";
 "imageEditor.gradientFill.angle" = "角度";
 "imageEditor.gradientFill.angleValue" = "%d°";
@@ -680,6 +685,7 @@
 "imageEditor.action.shadowColorFromForeground" = "使用前景色";
 "imageEditor.properties.shadowBlurValue" = "投影模糊：%d px";
 "imageEditor.properties.shadowSpreadValue" = "投影扩展：%d px";
+"imageEditor.properties.shadowNoiseValue" = "投影噪点：%d%%";
 "imageEditor.properties.shadowUseGlobalLight" = "投影使用全局光";
 "imageEditor.properties.globalLightAngleValue" = "全局光角度：%d°";
 "imageEditor.properties.shadowDistanceValue" = "投影距离：%d px";

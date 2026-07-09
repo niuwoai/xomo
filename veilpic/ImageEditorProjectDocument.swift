@@ -14,6 +14,7 @@ extension ImageEditorChannelMixerOutput: Codable {}
 extension ImageEditorPhotoFilterPreset: Codable {}
 extension ImageEditorGradientMapPreset: Codable {}
 extension ImageEditorGradientFillPreset: Codable {}
+extension ImageEditorGradientFillStyle: Codable {}
 extension ImageEditorSelectiveColorRange: Codable {}
 extension ImageEditorSelectiveColorComponent: Codable {}
 extension ImageEditorSelectiveColorMethod: Codable {}
@@ -597,6 +598,7 @@ struct ImageEditorProjectLayerStyle: Codable, Equatable {
     var shadowOpacity: CGFloat
     var shadowBlur: CGFloat
     var shadowSpread: CGFloat?
+    var shadowNoise: CGFloat?
     var shadowDistance: CGFloat?
     var shadowAngle: CGFloat?
     var shadowUsesGlobalLight: Bool?
@@ -656,6 +658,7 @@ struct ImageEditorProjectLayerStyle: Codable, Equatable {
         shadowOpacity = style.shadowOpacity
         shadowBlur = style.shadowBlur
         shadowSpread = style.shadowSpread
+        shadowNoise = style.shadowNoise
         shadowDistance = style.shadowDistance
         shadowAngle = style.shadowAngle
         shadowUsesGlobalLight = style.shadowUsesGlobalLight
@@ -719,6 +722,7 @@ struct ImageEditorProjectLayerStyle: Codable, Equatable {
             shadowOpacity: shadowOpacity,
             shadowBlur: shadowBlur,
             shadowSpread: max(0, min(24, shadowSpread ?? 0)),
+            shadowNoise: max(0, min(1, shadowNoise ?? 0)),
             shadowDistance: resolvedShadowDistance,
             shadowAngle: resolvedShadowAngle,
             shadowUsesGlobalLight: shadowUsesGlobalLight ?? true,

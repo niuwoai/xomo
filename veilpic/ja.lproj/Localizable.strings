@@ -522,7 +522,7 @@
 "imageEditor.properties.filterLayerValue" = "%@ フィルター：%d%%";
 "imageEditor.properties.solidColorFillLayerValue" = "べた塗り：R %d・G %d・B %d";
 "imageEditor.properties.patternFillLayerValue" = "パターン塗り：%@・不透明度 %d%%・%d px";
-"imageEditor.properties.gradientFillLayerValue" = "グラデーション塗り：%@、%d°、%d%%";
+"imageEditor.properties.gradientFillLayerValue" = "グラデーション塗り：%@・%@、%d°、%d%%";
 "imageEditor.properties.unsharpFilterLayerValue" = "アンシャープマスク：量 %d%% · 半径 %@ · しきい値 %d";
 "imageEditor.properties.textLayerValue" = "文字：%@・%d px";
 "imageEditor.properties.shapeLayerValue" = "%@シェイプ・%d x %d px";
@@ -644,6 +644,11 @@
 "imageEditor.gradientFill.preset.purpleTeal" = "パープル / ティール";
 "imageEditor.gradientFill.preset.foregroundBackground" = "描画色から背景色";
 "imageEditor.gradientFill.preset.custom" = "カスタム";
+"imageEditor.gradientFill.style" = "スタイル";
+"imageEditor.gradientFill.style.linear" = "線形";
+"imageEditor.gradientFill.style.radial" = "円形";
+"imageEditor.gradientFill.style.reflected" = "反射";
+"imageEditor.gradientFill.style.diamond" = "菱形";
 "imageEditor.gradientFill.reverse" = "反転";
 "imageEditor.gradientFill.angle" = "角度";
 "imageEditor.gradientFill.angleValue" = "%d°";
@@ -680,6 +685,7 @@
 "imageEditor.action.shadowColorFromForeground" = "前景色を使用";
 "imageEditor.properties.shadowBlurValue" = "影のぼかし：%d px";
 "imageEditor.properties.shadowSpreadValue" = "影のスプレッド：%d px";
+"imageEditor.properties.shadowNoiseValue" = "影のノイズ：%d%%";
 "imageEditor.properties.shadowUseGlobalLight" = "影にグローバルライトを使用";
 "imageEditor.properties.globalLightAngleValue" = "グローバルライト角度：%d°";
 "imageEditor.properties.shadowDistanceValue" = "影の距離：%d px";

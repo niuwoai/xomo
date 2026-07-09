@@ -143,6 +143,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var patternFillOpacity: Double = 0.55
     @Published var patternFillScale: Double = 16
     @Published var selectedGradientFillPreset: ImageEditorGradientFillPreset = .blueOrange
+    @Published var selectedGradientFillStyle: ImageEditorGradientFillStyle = .linear
     @Published var gradientFillReverse: Bool = false
     @Published var gradientFillAngle: Double = 0
     @Published var gradientFillScale: Double = 1
@@ -2907,6 +2908,7 @@ final class ImageEditorViewModel: ObservableObject {
     private func currentGradientFillContent() -> ImageEditorGradientFillContent {
         ImageEditorGradientFillContent(
             preset: selectedGradientFillPreset,
+            style: selectedGradientFillStyle,
             reverse: gradientFillReverse,
             angle: CGFloat(gradientFillAngle),
             scale: CGFloat(gradientFillScale),
@@ -3000,6 +3002,7 @@ final class ImageEditorViewModel: ObservableObject {
         patternFillOpacity = 0.55
         patternFillScale = 16
         selectedGradientFillPreset = .blueOrange
+        selectedGradientFillStyle = .linear
         gradientFillReverse = false
         gradientFillAngle = 0
         gradientFillScale = 1
@@ -3901,6 +3904,7 @@ final class ImageEditorViewModel: ObservableObject {
     private func syncGradientFillControlsFromSelection() {
         guard let content = document.selectedLayer?.gradientFillContent?.normalized() else { return }
         selectedGradientFillPreset = content.preset
+        selectedGradientFillStyle = content.style
         gradientFillReverse = content.reverse
         gradientFillAngle = Double(content.angle)
         gradientFillScale = Double(content.scale)

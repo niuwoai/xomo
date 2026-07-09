@@ -478,8 +478,22 @@ enum ImageEditorGradientFillPreset: String, CaseIterable, Identifiable {
     }
 }
 
+enum ImageEditorGradientFillStyle: String, CaseIterable, Identifiable {
+    case linear
+    case radial
+    case reflected
+    case diamond
+
+    var id: String { rawValue }
+
+    var title: String {
+        L10n.text("imageEditor.gradientFill.style.\(rawValue)")
+    }
+}
+
 struct ImageEditorGradientFillContent: Equatable, Codable {
     var preset: ImageEditorGradientFillPreset = .blueOrange
+    var style: ImageEditorGradientFillStyle = .linear
     var reverse: Bool = false
     var angle: CGFloat = 0
     var scale: CGFloat = 1
@@ -490,9 +504,65 @@ struct ImageEditorGradientFillContent: Equatable, Codable {
     var endGreen: Double = 0.50
     var endBlue: Double = 0.10
 
+    enum CodingKeys: String, CodingKey {
+        case preset
+        case style
+        case reverse
+        case angle
+        case scale
+        case startRed
+        case startGreen
+        case startBlue
+        case endRed
+        case endGreen
+        case endBlue
+    }
+
+    init(
+        preset: ImageEditorGradientFillPreset = .blueOrange,
+        style: ImageEditorGradientFillStyle = .linear,
+        reverse: Bool = false,
+        angle: CGFloat = 0,
+        scale: CGFloat = 1,
+        startRed: Double = 0.12,
+        startGreen: Double = 0.20,
+        startBlue: Double = 0.95,
+        endRed: Double = 1.0,
+        endGreen: Double = 0.50,
+        endBlue: Double = 0.10
+    ) {
+        self.preset = preset
+        self.style = style
+        self.reverse = reverse
+        self.angle = angle
+        self.scale = scale
+        self.startRed = startRed
+        self.startGreen = startGreen
+        self.startBlue = startBlue
+        self.endRed = endRed
+        self.endGreen = endGreen
+        self.endBlue = endBlue
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        preset = try container.decodeIfPresent(ImageEditorGradientFillPreset.self, forKey: .preset) ?? .blueOrange
+        style = try container.decodeIfPresent(ImageEditorGradientFillStyle.self, forKey: .style) ?? .linear
+        reverse = try container.decodeIfPresent(Bool.self, forKey: .reverse) ?? false
+        angle = try container.decodeIfPresent(CGFloat.self, forKey: .angle) ?? 0
+        scale = try container.decodeIfPresent(CGFloat.self, forKey: .scale) ?? 1
+        startRed = try container.decodeIfPresent(Double.self, forKey: .startRed) ?? 0.12
+        startGreen = try container.decodeIfPresent(Double.self, forKey: .startGreen) ?? 0.20
+        startBlue = try container.decodeIfPresent(Double.self, forKey: .startBlue) ?? 0.95
+        endRed = try container.decodeIfPresent(Double.self, forKey: .endRed) ?? 1.0
+        endGreen = try container.decodeIfPresent(Double.self, forKey: .endGreen) ?? 0.50
+        endBlue = try container.decodeIfPresent(Double.self, forKey: .endBlue) ?? 0.10
+    }
+
     func normalized() -> ImageEditorGradientFillContent {
         ImageEditorGradientFillContent(
             preset: preset,
+            style: style,
             reverse: reverse,
             angle: max(-180, min(180, angle)),
             scale: max(0.25, min(4, scale)),
@@ -540,12 +610,15 @@ struct ImageEditorGradientFillContent: Equatable, Codable {
         let direction = SIMD2<Double>(cos(radians), sin(radians))
         let span = max(1, abs(direction.x) * Double(width) + abs(direction.y) * Double(height)) * Double(content.scale)
         let center = SIMD2<Double>(Double(width - 1) / 2, Double(height - 1) / 2)
+        let cornerDistance = max(
+            1,
+            hypot(Double(width - 1) / 2, Double(height - 1) / 2) * Double(content.scale)
+        )
 
         for y in 0..<height {
             for x in 0..<width {
                 let point = SIMD2<Double>(Double(x), Double(y))
-                let projection = simd_dot(point - center, direction)
-                let t = max(0, min(1, 0.5 + projection / span))
+                let t = content.progress(at: point, center: center, direction: direction, span: span, cornerDistance: cornerDistance)
                 let color = start + (end - start) * t
                 let offset = y * bytesPerRow + x * bytesPerPixel
                 pixels[offset] = Self.byte(color.x)
@@ -572,6 +645,32 @@ struct ImageEditorGradientFillContent: Equatable, Codable {
         else { return NSImage.transparent(size: size) }
 
         return NSImage(cgImage: image, size: size)
+    }
+
+    private func progress(
+        at point: SIMD2<Double>,
+        center: SIMD2<Double>,
+        direction: SIMD2<Double>,
+        span: Double,
+        cornerDistance: Double
+    ) -> Double {
+        let delta = point - center
+        switch style {
+        case .linear:
+            let projection = simd_dot(delta, direction)
+            return Self.zeroOne(0.5 + projection / span)
+        case .radial:
+            return Self.zeroOne(hypot(delta.x, delta.y) / cornerDistance)
+        case .reflected:
+            let projection = abs(simd_dot(delta, direction))
+            return Self.zeroOne((projection * 2) / span)
+        case .diamond:
+            let xAxis = direction
+            let yAxis = SIMD2<Double>(-direction.y, direction.x)
+            let projectedX = abs(simd_dot(delta, xAxis))
+            let projectedY = abs(simd_dot(delta, yAxis))
+            return Self.zeroOne((projectedX + projectedY) / cornerDistance)
+        }
     }
 
     private static func rgbVector(_ color: NSColor) -> SIMD3<Double> {
@@ -1357,6 +1456,7 @@ struct ImageEditorLayerStyle {
     var shadowOpacity: CGFloat = 0.35
     var shadowBlur: CGFloat = 8
     var shadowSpread: CGFloat = 0
+    var shadowNoise: CGFloat = 0
     var shadowDistance: CGFloat = 10
     var shadowAngle: CGFloat = -45
     var shadowUsesGlobalLight = true
@@ -2296,9 +2396,10 @@ struct ImageEditorLayer: Identifiable {
                 let spread = max(0, Int(style.shadowSpread.rounded()))
                 let shadowOffset = style.resolvedShadowOffset(globalLightAngle: globalLightAngle)
                 let shadowCanvas = NSImage.rendered(size: outputSize) { _ in
-                    let shadowImage = baseImage.alphaTinted(
+                    let rawShadowImage = baseImage.alphaTinted(
                         color: style.shadowColor.withAlphaComponent(style.shadowOpacity)
                     )
+                    let shadowImage = rawShadowImage.shadowNoised(amount: style.shadowNoise) ?? rawShadowImage
                     shadowImage.draw(
                         in: contentRect.offsetBy(dx: shadowOffset.width, dy: shadowOffset.height),
                         from: CGRect(origin: .zero, size: shadowImage.size),
@@ -3554,6 +3655,80 @@ struct ImageEditorDocument {
 }
 
 private extension NSImage {
+    func shadowNoised(amount: CGFloat) -> NSImage? {
+        let normalizedAmount = max(0, min(1, amount))
+        guard normalizedAmount > 0,
+              let cgImage = cgImage(forProposedRect: nil, context: nil, hints: nil)
+        else { return self }
+
+        let width = max(1, cgImage.width)
+        let height = max(1, cgImage.height)
+        let bytesPerPixel = 4
+        let bytesPerRow = width * bytesPerPixel
+        var pixels = [UInt8](repeating: 0, count: bytesPerRow * height)
+
+        guard let context = CGContext(
+            data: &pixels,
+            width: width,
+            height: height,
+            bitsPerComponent: 8,
+            bytesPerRow: bytesPerRow,
+            space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ) else { return nil }
+
+        context.interpolationQuality = .none
+        context.translateBy(x: 0, y: CGFloat(height))
+        context.scaleBy(x: 1, y: -1)
+        context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
+
+        for y in 0..<height {
+            for x in 0..<width {
+                let offset = y * bytesPerRow + x * bytesPerPixel
+                let alpha = pixels[offset + 3]
+                guard alpha > 0 else { continue }
+                let noise = Self.stableNoise(x: x, y: y)
+                let multiplier = 1 - normalizedAmount + normalizedAmount * noise
+                let adjustedAlpha = CGFloat(alpha) * multiplier
+                pixels[offset] = Self.scaledByte(pixels[offset], multiplier: multiplier)
+                pixels[offset + 1] = Self.scaledByte(pixels[offset + 1], multiplier: multiplier)
+                pixels[offset + 2] = Self.scaledByte(pixels[offset + 2], multiplier: multiplier)
+                pixels[offset + 3] = UInt8(max(0, min(255, adjustedAlpha.rounded())))
+            }
+        }
+
+        guard let provider = CGDataProvider(data: Data(pixels) as CFData),
+              let output = CGImage(
+                width: width,
+                height: height,
+                bitsPerComponent: 8,
+                bitsPerPixel: 32,
+                bytesPerRow: bytesPerRow,
+                space: CGColorSpaceCreateDeviceRGB(),
+                bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue),
+                provider: provider,
+                decode: nil,
+                shouldInterpolate: false,
+                intent: .defaultIntent
+              )
+        else { return nil }
+
+        return NSImage(cgImage: output, size: size)
+    }
+
+    static func stableNoise(x: Int, y: Int) -> CGFloat {
+        var value = UInt32(truncatingIfNeeded: x)
+        value &*= 374_761_393
+        value &+= UInt32(truncatingIfNeeded: y) &* 668_265_263
+        value = (value ^ (value >> 13)) &* 1_274_126_177
+        value ^= value >> 16
+        return CGFloat(value & 0xff) / 255
+    }
+
+    static func scaledByte(_ value: UInt8, multiplier: CGFloat) -> UInt8 {
+        UInt8(max(0, min(255, (CGFloat(value) * multiplier).rounded())))
+    }
+
     func outsideStrokeCanvas(color: NSColor, width: Int, contentRect: CGRect, outputSize: CGSize) -> NSImage? {
         let strokeImage = alphaTinted(color: color)
         return NSImage.rendered(size: outputSize) { _ in

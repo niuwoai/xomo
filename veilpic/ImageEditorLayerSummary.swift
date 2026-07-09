@@ -52,6 +52,7 @@ extension ImageEditorViewModel {
             return L10n.format(
                 "imageEditor.properties.gradientFillLayerValue",
                 gradientFillContent.preset.title,
+                gradientFillContent.style.title,
                 Int(gradientFillContent.angle.rounded()),
                 Int((gradientFillContent.scale * 100).rounded())
             )

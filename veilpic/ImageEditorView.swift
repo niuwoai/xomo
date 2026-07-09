@@ -968,6 +968,14 @@ struct ImageEditorView: View {
         }
     }
 
+    private var selectedLayerShadowNoiseBinding: Binding<Double> {
+        Binding {
+            viewModel.selectedLayerShadowNoise
+        } set: { value in
+            viewModel.setSelectedLayerShadowNoise(value)
+        }
+    }
+
     private var globalLightAngleBinding: Binding<Double> {
         Binding {
             viewModel.globalLightAngle
@@ -2287,6 +2295,12 @@ struct ImageEditorView: View {
                     in: 0...24,
                     step: 1
                 )
+                Stepper(
+                    L10n.format("imageEditor.properties.shadowNoiseValue", Int((viewModel.selectedLayerShadowNoise * 100).rounded())),
+                    value: selectedLayerShadowNoiseBinding,
+                    in: 0...1,
+                    step: 0.05
+                )
                 Toggle(L10n.text("imageEditor.properties.shadowUseGlobalLight"), isOn: selectedLayerShadowUsesGlobalLightBinding)
                     .toggleStyle(.checkbox)
                 Stepper(
@@ -2992,6 +3006,11 @@ struct ImageEditorView: View {
             Picker(L10n.text("imageEditor.gradientFill.preset"), selection: $viewModel.selectedGradientFillPreset) {
                 ForEach(ImageEditorGradientFillPreset.allCases) { preset in
                     Text(preset.title).tag(preset)
+                }
+            }
+            Picker(L10n.text("imageEditor.gradientFill.style"), selection: $viewModel.selectedGradientFillStyle) {
+                ForEach(ImageEditorGradientFillStyle.allCases) { style in
+                    Text(style.title).tag(style)
                 }
             }
             Toggle(L10n.text("imageEditor.gradientFill.reverse"), isOn: $viewModel.gradientFillReverse)

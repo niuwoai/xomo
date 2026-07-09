@@ -522,7 +522,7 @@
 "imageEditor.properties.filterLayerValue" = "%@ Filter: %d%%";
 "imageEditor.properties.solidColorFillLayerValue" = "Solid Color Fill: R %d · G %d · B %d";
 "imageEditor.properties.patternFillLayerValue" = "Pattern Fill: %@ · Opacity %d%% · %d px";
-"imageEditor.properties.gradientFillLayerValue" = "Gradient Fill: %@, %d°, %d%%";
+"imageEditor.properties.gradientFillLayerValue" = "Gradient Fill: %@ · %@, %d°, %d%%";
 "imageEditor.properties.unsharpFilterLayerValue" = "Unsharp Mask: Amount %d%% · Radius %@ · Threshold %d";
 "imageEditor.properties.textLayerValue" = "Text: %@ · %d px";
 "imageEditor.properties.shapeLayerValue" = "%@ Shape · %d x %d px";
@@ -644,6 +644,11 @@
 "imageEditor.gradientFill.preset.purpleTeal" = "Purple / Teal";
 "imageEditor.gradientFill.preset.foregroundBackground" = "Foreground to Background";
 "imageEditor.gradientFill.preset.custom" = "Custom";
+"imageEditor.gradientFill.style" = "Style";
+"imageEditor.gradientFill.style.linear" = "Linear";
+"imageEditor.gradientFill.style.radial" = "Radial";
+"imageEditor.gradientFill.style.reflected" = "Reflected";
+"imageEditor.gradientFill.style.diamond" = "Diamond";
 "imageEditor.gradientFill.reverse" = "Reverse";
 "imageEditor.gradientFill.angle" = "Angle";
 "imageEditor.gradientFill.angleValue" = "%d°";
@@ -680,6 +685,7 @@
 "imageEditor.action.shadowColorFromForeground" = "Use Foreground";
 "imageEditor.properties.shadowBlurValue" = "Shadow Blur: %d px";
 "imageEditor.properties.shadowSpreadValue" = "Shadow Spread: %d px";
+"imageEditor.properties.shadowNoiseValue" = "Shadow Noise: %d%%";
 "imageEditor.properties.shadowUseGlobalLight" = "Use Global Light for Shadow";
 "imageEditor.properties.globalLightAngleValue" = "Global Light Angle: %d°";
 "imageEditor.properties.shadowDistanceValue" = "Shadow Distance: %d px";

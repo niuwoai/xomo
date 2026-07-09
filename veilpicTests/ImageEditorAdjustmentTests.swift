@@ -150,6 +150,7 @@ struct ImageEditorAdjustmentTests {
         viewModel.gradientFillEndRed = 0
         viewModel.gradientFillEndGreen = 1
         viewModel.gradientFillEndBlue = 0
+        viewModel.selectedGradientFillStyle = .linear
         viewModel.gradientFillAngle = 0
         viewModel.gradientFillScale = 1
         viewModel.addGradientFillLayer()
@@ -160,12 +161,13 @@ struct ImageEditorAdjustmentTests {
         let rightColor = try #require(viewModel.currentImage.color(at: CGPoint(x: 76, y: 15))?.usingColorSpace(.deviceRGB))
 
         #expect(content.preset == .custom)
+        #expect(content.style == .linear)
         #expect(content.angle == 0)
         #expect(content.scale == 1)
         #expect(leftColor.redComponent > rightColor.redComponent + 0.55)
         #expect(rightColor.greenComponent > leftColor.greenComponent + 0.55)
         #expect(viewModel.document.layers.first { $0.id == baseLayerID }?.image.qingtuPNGData() == basePixelsBefore)
-        #expect(viewModel.selectedLayerGeometryText == L10n.format("imageEditor.properties.gradientFillLayerValue", content.preset.title, 0, 100))
+        #expect(viewModel.selectedLayerGeometryText == L10n.format("imageEditor.properties.gradientFillLayerValue", content.preset.title, content.style.title, 0, 100))
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerGradientFillNew"))
 
         viewModel.gradientFillReverse = true
@@ -185,10 +187,67 @@ struct ImageEditorAdjustmentTests {
         let restoredLayer = try #require(restoredDocument.layers.first { $0.id == gradientLayer.id })
         let restoredContent = try #require(restoredLayer.gradientFillContent?.normalized())
         #expect(restoredContent.preset == .custom)
+        #expect(restoredContent.style == .linear)
         #expect(restoredContent.reverse)
         #expect(restoredContent.scale == 2)
         #expect(restoredContent.startRed == 1)
         #expect(restoredContent.endGreen == 1)
+    }
+
+    @Test func imageEditorGradientFillStylesRenderAndRoundTripProjectState() async throws {
+        let canvasSize = NSSize(width: 61, height: 61)
+        let sourceImage = bitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: sourceImage) { _ in }
+
+        viewModel.selectedGradientFillPreset = .custom
+        viewModel.selectedGradientFillStyle = .radial
+        viewModel.gradientFillStartRed = 1
+        viewModel.gradientFillStartGreen = 0
+        viewModel.gradientFillStartBlue = 0
+        viewModel.gradientFillEndRed = 0
+        viewModel.gradientFillEndGreen = 0
+        viewModel.gradientFillEndBlue = 1
+        viewModel.gradientFillScale = 1
+        viewModel.addGradientFillLayer()
+
+        let gradientLayer = try #require(viewModel.document.selectedLayer)
+        let radialContent = try #require(gradientLayer.gradientFillContent?.normalized())
+        let radialCenter = try #require(viewModel.currentImage.color(at: CGPoint(x: 30, y: 30))?.usingColorSpace(.deviceRGB))
+        let radialCorner = try #require(viewModel.currentImage.color(at: CGPoint(x: 0, y: 0))?.usingColorSpace(.deviceRGB))
+        #expect(radialContent.style == .radial)
+        #expect(radialCenter.redComponent > radialCorner.redComponent + 0.45)
+        #expect(radialCorner.blueComponent > radialCenter.blueComponent + 0.45)
+
+        viewModel.selectedGradientFillStyle = .reflected
+        viewModel.gradientFillAngle = 0
+        viewModel.updateSelectedGradientFillLayer()
+
+        let reflectedContent = try #require(viewModel.document.selectedLayer?.gradientFillContent?.normalized())
+        let reflectedCenter = try #require(viewModel.currentImage.color(at: CGPoint(x: 30, y: 30))?.usingColorSpace(.deviceRGB))
+        let reflectedEdge = try #require(viewModel.currentImage.color(at: CGPoint(x: 0, y: 30))?.usingColorSpace(.deviceRGB))
+        #expect(reflectedContent.style == .reflected)
+        #expect(reflectedCenter.redComponent > reflectedEdge.redComponent + 0.35)
+        #expect(reflectedEdge.blueComponent > reflectedCenter.blueComponent + 0.35)
+
+        viewModel.selectedGradientFillStyle = .diamond
+        viewModel.updateSelectedGradientFillLayer()
+
+        let diamondContent = try #require(viewModel.document.selectedLayer?.gradientFillContent?.normalized())
+        let diamondCenter = try #require(viewModel.currentImage.color(at: CGPoint(x: 30, y: 30))?.usingColorSpace(.deviceRGB))
+        let diamondCorner = try #require(viewModel.currentImage.color(at: CGPoint(x: 0, y: 0))?.usingColorSpace(.deviceRGB))
+        #expect(diamondContent.style == .diamond)
+        #expect(diamondCenter.redComponent > diamondCorner.redComponent + 0.45)
+        #expect(diamondCorner.blueComponent > diamondCenter.blueComponent + 0.45)
+        #expect(viewModel.selectedLayerGeometryText == L10n.format("imageEditor.properties.gradientFillLayerValue", diamondContent.preset.title, diamondContent.style.title, 0, 100))
+
+        let project = try ImageEditorProjectDocument(document: viewModel.document)
+        let restoredDocument = try project.restoredDocument()
+        let restoredLayer = try #require(restoredDocument.layers.first { $0.id == gradientLayer.id })
+        let restoredContent = try #require(restoredLayer.gradientFillContent?.normalized())
+        #expect(restoredContent.style == .diamond)
+        #expect(restoredContent.preset == .custom)
+        #expect(restoredContent.startRed == 1)
+        #expect(restoredContent.endBlue == 1)
     }
 
     @Test func imageEditorVibranceAdjustmentPrioritizesMutedColorsAndSupportsLayerState() async throws {

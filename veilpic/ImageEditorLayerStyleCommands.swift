@@ -104,6 +104,10 @@ extension ImageEditorViewModel {
         Double(document.selectedLayer?.style.shadowSpread ?? 0)
     }
 
+    var selectedLayerShadowNoise: Double {
+        Double(document.selectedLayer?.style.shadowNoise ?? 0)
+    }
+
     var globalLightAngle: Double {
         Double(document.globalLightAngle)
     }
@@ -396,6 +400,13 @@ extension ImageEditorViewModel {
         updateSelectedLayerStyle {
             $0.shadowEnabled = true
             $0.shadowSpread = max(0, min(24, CGFloat(spread)))
+        }
+    }
+
+    func setSelectedLayerShadowNoise(_ noise: Double) {
+        updateSelectedLayerStyle {
+            $0.shadowEnabled = true
+            $0.shadowNoise = max(0, min(1, CGFloat(noise)))
         }
     }
 
