@@ -275,6 +275,10 @@ extension ImageEditorView {
             viewModel.selectSelectedGroupMembers()
         }
         .disabled(!viewModel.canSelectSelectedGroupMembers)
+        Button(L10n.text("imageEditor.action.layerSelectParentGroup")) {
+            viewModel.selectParentGroup()
+        }
+        .disabled(!viewModel.canSelectParentGroup)
         Button(L10n.text("imageEditor.action.layerMoveIntoGroup")) {
             viewModel.moveSelectedLayersIntoGroup()
         }

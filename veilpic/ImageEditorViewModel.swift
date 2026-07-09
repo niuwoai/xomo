@@ -843,6 +843,13 @@ final class ImageEditorViewModel: ObservableObject {
         return !groupDescendantIndices(for: layer.id).isEmpty
     }
 
+    var canSelectParentGroup: Bool {
+        guard selectedLayerCount == 1,
+              let layer = document.selectedLayer
+        else { return false }
+        return document.group(for: layer) != nil
+    }
+
     var canMoveSelectedLayersIntoGroup: Bool {
         let indices = movableSelectedLayerIndicesForHierarchyChange()
         return !indices.isEmpty && groupTargetForMovingSelectionIntoGroup() != nil
@@ -1459,6 +1466,20 @@ final class ImageEditorViewModel: ObservableObject {
         isEditingLayerMask = false
         syncControlsFromLayerSelection()
         statusText = L10n.format("imageEditor.status.layerGroupMembersSelected", memberIDs.count)
+    }
+
+    func selectParentGroup() {
+        guard let layer = document.selectedLayer,
+              let parentGroup = document.group(for: layer)
+        else {
+            statusText = L10n.text("imageEditor.status.layerNotInGroup")
+            return
+        }
+        document.selectedLayerID = parentGroup.id
+        document.selectedLayerIDs = [parentGroup.id]
+        isEditingLayerMask = false
+        syncControlsFromLayerSelection()
+        statusText = L10n.format("imageEditor.status.layerParentGroupSelected", parentGroup.name)
     }
 
     func moveSelectedLayersIntoGroup() {

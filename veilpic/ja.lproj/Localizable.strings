@@ -1331,6 +1331,7 @@
 "imageEditor.status.layerNoLinks" = "選択中のレイヤーにリンクはありません";
 "imageEditor.status.layerGroupEmpty" = "選択中のグループに選択できるメンバーがありません";
 "imageEditor.status.layerGroupMembersSelected" = "グループ内レイヤーを %d 個選択しました";
+"imageEditor.status.layerParentGroupSelected" = "親レイヤーグループを選択しました：%@";
 "imageEditor.status.layerGroupTargetMissing" = "選択範囲の上に移動先にできるグループがありません";
 "imageEditor.status.layerNotInGroup" = "選択中のレイヤーはグループ内にありません";
 "imageEditor.status.layerReordered" = "レイヤースタックを並べ替えました";
@@ -1339,6 +1340,7 @@
 "imageEditor.action.layerGroupNew" = "新規レイヤーグループ";
 "imageEditor.action.layerGroupSelected" = "選択レイヤーをグループ化";
 "imageEditor.action.layerSelectGroupMembers" = "グループ内レイヤーを選択";
+"imageEditor.action.layerSelectParentGroup" = "親レイヤーグループを選択";
 "imageEditor.action.layerMoveIntoGroup" = "上のグループへ移動";
 "imageEditor.action.layerMoveOutOfGroup" = "グループ外へ移動";
 "imageEditor.action.layerUngroup" = "選択グループを解除";
