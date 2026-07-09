@@ -69,6 +69,41 @@ extension ImageEditorViewModel {
         return !document.isEffectivelyLocked(layer)
     }
 
+    var selectedAlphaChannel: ImageEditorAlphaChannel? {
+        guard let selectedAlphaChannelID else { return nil }
+        return document.alphaChannels.first { $0.id == selectedAlphaChannelID }
+    }
+
+    var canLoadSelectedAlphaChannelSelection: Bool {
+        selectedAlphaChannel != nil
+    }
+
+    var canUpdateSelectedAlphaChannelFromSelection: Bool {
+        selectedAlphaChannel != nil && canSaveSelectionAsAlphaChannel
+    }
+
+    var canApplySelectedAlphaChannelToLayerMask: Bool {
+        selectedAlphaChannel != nil && canApplyAlphaChannelToSelectedLayerMask
+    }
+
+    var canDuplicateSelectedAlphaChannel: Bool {
+        selectedAlphaChannel != nil
+    }
+
+    var canDeleteSelectedAlphaChannel: Bool {
+        selectedAlphaChannel != nil
+    }
+
+    var canSelectPreviousAlphaChannel: Bool {
+        guard let index = selectedAlphaChannelIndex else { return false }
+        return index > 0
+    }
+
+    var canSelectNextAlphaChannel: Bool {
+        guard let index = selectedAlphaChannelIndex else { return false }
+        return index < document.alphaChannels.count - 1
+    }
+
     func loadSelectionFromChannel(_ channel: ImageEditorChannelPreview) {
         guard let selection = currentImage.channelSelection(channel, canvasSize: document.canvasSize) else {
             statusText = L10n.format("imageEditor.status.channelSelectionEmpty", channel.title)
@@ -91,12 +126,12 @@ extension ImageEditorViewModel {
 
         pushUndo()
         let nextIndex = document.alphaChannels.count + 1
-        document.alphaChannels.append(
-            ImageEditorAlphaChannel(
-                name: L10n.format("imageEditor.channel.alphaChannelName", nextIndex),
-                mask: mask
-            )
+        let channel = ImageEditorAlphaChannel(
+            name: L10n.format("imageEditor.channel.alphaChannelName", nextIndex),
+            mask: mask
         )
+        document.alphaChannels.append(channel)
+        selectedAlphaChannelID = channel.id
         appendHistory(L10n.text("imageEditor.history.alphaChannelSave"))
         statusText = L10n.text("imageEditor.status.alphaChannelSaved")
     }
@@ -113,14 +148,59 @@ extension ImageEditorViewModel {
 
         pushUndo()
         let nextIndex = document.alphaChannels.count + 1
-        document.alphaChannels.append(
-            ImageEditorAlphaChannel(
-                name: L10n.format("imageEditor.channel.alphaChannelFromMaskName", nextIndex),
-                mask: alphaMask
-            )
+        let channel = ImageEditorAlphaChannel(
+            name: L10n.format("imageEditor.channel.alphaChannelFromMaskName", nextIndex),
+            mask: alphaMask
         )
+        document.alphaChannels.append(channel)
+        selectedAlphaChannelID = channel.id
         appendHistory(L10n.text("imageEditor.history.alphaChannelFromMask"))
         statusText = L10n.text("imageEditor.status.alphaChannelFromMask")
+    }
+
+    func selectAlphaChannel(_ id: UUID) {
+        guard let channel = document.alphaChannels.first(where: { $0.id == id }) else { return }
+        selectedAlphaChannelID = channel.id
+        statusText = L10n.format("imageEditor.status.alphaChannelSelected", channel.name)
+    }
+
+    func loadSelectionFromSelectedAlphaChannel() {
+        guard let selectedAlphaChannelID else { return }
+        loadSelectionFromAlphaChannel(selectedAlphaChannelID)
+    }
+
+    func updateSelectedAlphaChannelFromSelection() {
+        guard let selectedAlphaChannelID else { return }
+        updateAlphaChannelFromSelection(selectedAlphaChannelID)
+    }
+
+    func applySelectedAlphaChannelToSelectedLayerMask() {
+        guard let selectedAlphaChannelID else { return }
+        applyAlphaChannelToSelectedLayerMask(selectedAlphaChannelID)
+    }
+
+    func duplicateSelectedAlphaChannel() {
+        guard let selectedAlphaChannelID else { return }
+        duplicateAlphaChannel(selectedAlphaChannelID)
+    }
+
+    func deleteSelectedAlphaChannel() {
+        guard let selectedAlphaChannelID else { return }
+        deleteAlphaChannel(selectedAlphaChannelID)
+    }
+
+    func selectPreviousAlphaChannel() {
+        guard canSelectPreviousAlphaChannel,
+              let index = selectedAlphaChannelIndex
+        else { return }
+        selectAlphaChannel(document.alphaChannels[index - 1].id)
+    }
+
+    func selectNextAlphaChannel() {
+        guard canSelectNextAlphaChannel,
+              let index = selectedAlphaChannelIndex
+        else { return }
+        selectAlphaChannel(document.alphaChannels[index + 1].id)
     }
 
     func renameAlphaChannel(_ id: UUID, to proposedName: String) {
@@ -134,6 +214,7 @@ extension ImageEditorViewModel {
 
         pushUndo()
         document.alphaChannels[index].name = trimmedName
+        selectedAlphaChannelID = id
         appendHistory(L10n.text("imageEditor.history.alphaChannelRename"))
         statusText = L10n.text("imageEditor.status.alphaChannelRenamed")
     }
@@ -149,6 +230,7 @@ extension ImageEditorViewModel {
 
         pushUndo()
         document.alphaChannels.insert(duplicatedChannel, at: index + 1)
+        selectedAlphaChannelID = duplicatedChannel.id
         appendHistory(L10n.text("imageEditor.history.alphaChannelDuplicate"))
         statusText = L10n.format("imageEditor.status.alphaChannelDuplicated", duplicatedChannel.name)
     }
@@ -164,6 +246,7 @@ extension ImageEditorViewModel {
 
         pushUndo()
         document.alphaChannels[index].mask = mask
+        selectedAlphaChannelID = id
         appendHistory(L10n.text("imageEditor.history.alphaChannelUpdate"))
         statusText = L10n.format("imageEditor.status.alphaChannelUpdated", document.alphaChannels[index].name)
     }
@@ -185,6 +268,7 @@ extension ImageEditorViewModel {
         document.layers[layerIndex].maskDensity = 1
         document.layers[layerIndex].maskFeather = 0
         isEditingLayerMask = true
+        selectedAlphaChannelID = id
         appendHistory(L10n.text("imageEditor.history.alphaChannelApplyToMask"))
         statusText = L10n.format("imageEditor.status.alphaChannelApplyToMask", channel.name)
     }
@@ -200,6 +284,7 @@ extension ImageEditorViewModel {
         let selection = ImageEditorSelection.raster(mask: channel.mask, bounds: bounds)
         applySelectionCandidate(selection, replaceHistoryKey: "imageEditor.history.alphaChannelLoad")
         if document.selection != nil {
+            selectedAlphaChannelID = id
             statusText = L10n.format("imageEditor.status.alphaChannelLoaded", channel.name)
         }
     }
@@ -209,12 +294,24 @@ extension ImageEditorViewModel {
 
         pushUndo()
         document.alphaChannels.remove(at: index)
+        if selectedAlphaChannelID == id {
+            if document.alphaChannels.isEmpty {
+                selectedAlphaChannelID = nil
+            } else {
+                selectedAlphaChannelID = document.alphaChannels[min(index, document.alphaChannels.count - 1)].id
+            }
+        }
         appendHistory(L10n.text("imageEditor.history.alphaChannelDelete"))
         statusText = L10n.text("imageEditor.status.alphaChannelDeleted")
     }
 
     func alphaChannelPreviewImage(_ channel: ImageEditorAlphaChannel) -> NSImage {
         channel.mask.grayscalePreviewImage(targetSize: document.canvasSize)
+    }
+
+    private var selectedAlphaChannelIndex: Int? {
+        guard let selectedAlphaChannelID else { return nil }
+        return document.alphaChannels.firstIndex { $0.id == selectedAlphaChannelID }
     }
 
     private func uniqueAlphaChannelName(_ baseName: String) -> String {

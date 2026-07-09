@@ -816,6 +816,10 @@ extension ImageEditorView {
         }
         .disabled(!viewModel.canGrowColorSelection)
         Divider()
+        Menu(L10n.text("imageEditor.menu.select.alphaChannels")) {
+            alphaChannelMenu
+        }
+        Divider()
         Button(L10n.text("imageEditor.action.expandSelection")) {
             viewModel.expandSelection()
         }
@@ -894,6 +898,49 @@ extension ImageEditorView {
         Button(L10n.text("imageEditor.action.restoreSelection")) {
             viewModel.restoreSavedSelection()
         }
+    }
+
+    @ViewBuilder
+    private var alphaChannelMenu: some View {
+        Button(L10n.text("imageEditor.action.channelSaveSelection")) {
+            viewModel.saveSelectionAsAlphaChannel()
+        }
+        .disabled(!viewModel.canSaveSelectionAsAlphaChannel)
+        Button(L10n.text("imageEditor.action.channelSaveLayerMask")) {
+            viewModel.saveSelectedLayerMaskAsAlphaChannel()
+        }
+        .disabled(!viewModel.canSaveSelectedLayerMaskAsAlphaChannel)
+        Divider()
+        Button(L10n.text("imageEditor.action.alphaChannelLoadSelectedSelection")) {
+            viewModel.loadSelectionFromSelectedAlphaChannel()
+        }
+        .disabled(!viewModel.canLoadSelectedAlphaChannelSelection)
+        Button(L10n.text("imageEditor.action.alphaChannelUpdateSelected")) {
+            viewModel.updateSelectedAlphaChannelFromSelection()
+        }
+        .disabled(!viewModel.canUpdateSelectedAlphaChannelFromSelection)
+        Button(L10n.text("imageEditor.action.alphaChannelApplySelectedToMask")) {
+            viewModel.applySelectedAlphaChannelToSelectedLayerMask()
+        }
+        .disabled(!viewModel.canApplySelectedAlphaChannelToLayerMask)
+        Divider()
+        Button(L10n.text("imageEditor.action.alphaChannelDuplicateSelected")) {
+            viewModel.duplicateSelectedAlphaChannel()
+        }
+        .disabled(!viewModel.canDuplicateSelectedAlphaChannel)
+        Button(L10n.text("imageEditor.action.alphaChannelDeleteSelected")) {
+            viewModel.deleteSelectedAlphaChannel()
+        }
+        .disabled(!viewModel.canDeleteSelectedAlphaChannel)
+        Divider()
+        Button(L10n.text("imageEditor.action.alphaChannelPrevious")) {
+            viewModel.selectPreviousAlphaChannel()
+        }
+        .disabled(!viewModel.canSelectPreviousAlphaChannel)
+        Button(L10n.text("imageEditor.action.alphaChannelNext")) {
+            viewModel.selectNextAlphaChannel()
+        }
+        .disabled(!viewModel.canSelectNextAlphaChannel)
     }
 
     @ViewBuilder

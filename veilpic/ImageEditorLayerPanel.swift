@@ -160,11 +160,18 @@ extension ImageEditorView {
     }
 
     private func alphaChannelRow(_ channel: ImageEditorAlphaChannel) -> some View {
-        HStack(spacing: 6) {
-            Image(systemName: "square.dashed")
-                .font(.system(size: 13, weight: .semibold))
-                .frame(width: 18)
-                .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+        let isSelected = viewModel.selectedAlphaChannelID == channel.id
+        return HStack(spacing: 6) {
+            Button {
+                viewModel.selectAlphaChannel(channel.id)
+            } label: {
+                Image(systemName: isSelected ? "checkmark.square.fill" : "square.dashed")
+                    .font(.system(size: 13, weight: .semibold))
+                    .frame(width: 18)
+                    .foregroundStyle(Color(nsColor: isSelected ? ImageEditorTheme.selected : ImageEditorTheme.mutedText))
+            }
+            .buttonStyle(.plain)
+            .help(L10n.text("imageEditor.action.alphaChannelSelect"))
 
             Image(nsImage: viewModel.alphaChannelPreviewImage(channel))
                 .resizable()
@@ -251,7 +258,7 @@ extension ImageEditorView {
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 6)
-        .background(Color.white.opacity(0.04))
+        .background(isSelected ? Color(nsColor: ImageEditorTheme.selected).opacity(0.28) : Color.white.opacity(0.04))
         .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
     }
 

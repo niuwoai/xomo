@@ -173,6 +173,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var filterPinchAmount: Double = 0.5
     @Published var filterSpherizeAmount: Double = 0.5
     @Published var selectedChannelPreview: ImageEditorChannelPreview = .composite
+    @Published var selectedAlphaChannelID: UUID?
     @Published var isEditingLayerMask: Bool = false
     @Published var pendingPenPathPoints: [CGPoint] = []
     @Published var selectedPathSubpathIndex: Int = 0

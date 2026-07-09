@@ -283,6 +283,64 @@ struct ImageEditorChannelTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelUpdate"))
     }
 
+    @Test func selectedAlphaChannelDrivesMenuStyleCommands() async throws {
+        let viewModel = ImageEditorViewModel(sourceName: "split.png", image: splitChannelImage()) { _ in }
+
+        viewModel.loadSelectionFromChannel(.red)
+        viewModel.saveSelectionAsAlphaChannel()
+        let redChannel = try #require(viewModel.document.alphaChannels.first)
+        #expect(viewModel.selectedAlphaChannelID == redChannel.id)
+        #expect(viewModel.canLoadSelectedAlphaChannelSelection)
+
+        viewModel.loadSelectionFromChannel(.green)
+        viewModel.saveSelectionAsAlphaChannel()
+        let greenChannel = try #require(viewModel.document.alphaChannels.last)
+        #expect(viewModel.selectedAlphaChannelID == greenChannel.id)
+        #expect(viewModel.canSelectPreviousAlphaChannel)
+        #expect(!viewModel.canSelectNextAlphaChannel)
+
+        viewModel.selectPreviousAlphaChannel()
+        #expect(viewModel.selectedAlphaChannelID == redChannel.id)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelSelected", redChannel.name))
+
+        viewModel.selectNextAlphaChannel()
+        #expect(viewModel.selectedAlphaChannelID == greenChannel.id)
+        #expect(viewModel.canDuplicateSelectedAlphaChannel)
+        viewModel.duplicateSelectedAlphaChannel()
+
+        let duplicatedChannel = try #require(viewModel.selectedAlphaChannel)
+        #expect(viewModel.document.alphaChannels.count == 3)
+        #expect(viewModel.selectedAlphaChannelID == duplicatedChannel.id)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelDuplicate"))
+
+        viewModel.document.selection = nil
+        viewModel.loadSelectionFromSelectedAlphaChannel()
+        var mask = try #require(viewModel.document.selection?.rasterMask)
+        #expect(maskAlpha(mask, x: 0, y: 0) == 0)
+        #expect(maskAlpha(mask, x: 1, y: 0) == 255)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelLoad"))
+
+        viewModel.loadSelectionFromChannel(.red)
+        viewModel.updateSelectedAlphaChannelFromSelection()
+        let updatedChannel = try #require(viewModel.selectedAlphaChannel)
+        #expect(maskAlpha(updatedChannel.mask, x: 0, y: 0) == 255)
+        #expect(maskAlpha(updatedChannel.mask, x: 1, y: 0) == 0)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelUpdate"))
+
+        #expect(viewModel.canApplySelectedAlphaChannelToLayerMask)
+        viewModel.applySelectedAlphaChannelToSelectedLayerMask()
+        let layerMask = try #require(viewModel.document.selectedLayer?.mask)
+        mask = try #require(layerMask.alphaMask(width: 2, height: 1))
+        #expect(maskAlpha(mask, x: 0, y: 0) == 255)
+        #expect(maskAlpha(mask, x: 1, y: 0) == 0)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelApplyToMask"))
+
+        viewModel.deleteSelectedAlphaChannel()
+        #expect(!viewModel.document.alphaChannels.contains { $0.id == duplicatedChannel.id })
+        #expect(viewModel.selectedAlphaChannelID == greenChannel.id)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelDelete"))
+    }
+
     @Test func alphaChannelsRoundTripWithLayerMasks() async throws {
         let viewModel = ImageEditorViewModel(sourceName: "split.png", image: splitChannelImage()) { _ in }
 
