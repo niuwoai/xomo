@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.265.0 - 2026-07-10
+
+- 图层样式的 Bevel / 斜面浮雕新增 Soften / 柔化控制，可对斜面高光与阴影结果进行半径柔化。
+- 图层样式的 Drop Shadow / 投影、Inner Shadow / 内阴影和 Outer Glow / 外发光新增 Contour / 等高线控制，支持 Linear、Soft、Steep、Cone、Ring 五种 alpha 衰减曲线。
+- 斜面柔化与效果等高线接入属性面板、渲染和 `.qpicproject` 保存恢复，旧项目缺少字段时默认保持 0 px 柔化和 Linear 等高线兼容。
+- 补齐中 / 英 / 日三语文案与斜面柔化、效果等高线回归测试；统一前后端版本号到 1.265.0。
+
 ## 1.264.0 - 2026-07-10
 
 - 图层样式的 Bevel / 斜面浮雕新增 Direction / 方向控制，可在 Up / 上和 Down / 下之间切换高光与阴影方向。

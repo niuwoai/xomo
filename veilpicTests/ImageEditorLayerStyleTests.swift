@@ -400,6 +400,62 @@ struct ImageEditorLayerStyleTests {
         #expect(restoredLayer.style.outerGlowNoise == 1)
     }
 
+    @Test func imageEditorLayerEffectContoursChangeFalloffAndRoundTripProjectState() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let baseImage = solidImage(color: .systemBlue, size: canvasSize)
+        let layerImage = centerRectImage(size: canvasSize, color: .systemGreen)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: baseImage) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(layerImage, historyTitle: L10n.text("imageEditor.history.brush"))
+        let layerPixelsBeforeStyle = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+
+        viewModel.setSelectedLayerShadowOpacity(1)
+        viewModel.setSelectedLayerShadowBlur(8)
+        viewModel.setSelectedLayerShadowDistance(12)
+        viewModel.setSelectedLayerShadowAngle(0)
+        viewModel.setSelectedLayerShadowContour(.linear)
+        let linearShadowData = try #require(viewModel.currentImage.qingtuPNGData())
+        viewModel.setSelectedLayerShadowContour(.ring)
+        let ringShadowData = try #require(viewModel.currentImage.qingtuPNGData())
+
+        viewModel.setSelectedLayerInnerShadowOpacity(1)
+        viewModel.setSelectedLayerInnerShadowBlur(8)
+        viewModel.setSelectedLayerInnerShadowDistance(10)
+        viewModel.setSelectedLayerInnerShadowAngle(0)
+        viewModel.setSelectedLayerInnerShadowContour(.linear)
+        let linearInnerShadowData = try #require(viewModel.currentImage.qingtuPNGData())
+        viewModel.setSelectedLayerInnerShadowContour(.cone)
+        let coneInnerShadowData = try #require(viewModel.currentImage.qingtuPNGData())
+
+        viewModel.setSelectedLayerOuterGlowOpacity(1)
+        viewModel.setSelectedLayerOuterGlowBlur(8)
+        viewModel.setSelectedLayerOuterGlowSpread(6)
+        viewModel.setSelectedLayerOuterGlowContour(.linear)
+        let linearGlowData = try #require(viewModel.currentImage.qingtuPNGData())
+        viewModel.setSelectedLayerOuterGlowContour(.steep)
+        let steepGlowData = try #require(viewModel.currentImage.qingtuPNGData())
+
+        let styledLayer = try #require(viewModel.document.selectedLayer)
+        let layerPixelsAfterStyle = try #require(styledLayer.image.qingtuPNGData())
+        #expect(styledLayer.style.shadowContour == .ring)
+        #expect(styledLayer.style.innerShadowContour == .cone)
+        #expect(styledLayer.style.outerGlowContour == .steep)
+        #expect(viewModel.selectedLayerShadowContour == .ring)
+        #expect(viewModel.selectedLayerInnerShadowContour == .cone)
+        #expect(viewModel.selectedLayerOuterGlowContour == .steep)
+        #expect(layerPixelsAfterStyle == layerPixelsBeforeStyle)
+        #expect(ringShadowData != linearShadowData)
+        #expect(coneInnerShadowData != linearInnerShadowData)
+        #expect(steepGlowData != linearGlowData)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStyle"))
+
+        let project = try ImageEditorProjectDocument(document: viewModel.document)
+        let restoredDocument = try project.restoredDocument()
+        let restoredLayer = try #require(restoredDocument.layers.first { $0.id == styledLayer.id })
+        #expect(restoredLayer.style.shadowContour == .ring)
+        #expect(restoredLayer.style.innerShadowContour == .cone)
+        #expect(restoredLayer.style.outerGlowContour == .steep)
+    }
+
     @Test func imageEditorInnerGlowNoiseChangesGlowAndRoundTripsProjectState() async throws {
         let canvasSize = NSSize(width: 80, height: 60)
         let baseImage = solidImage(color: .systemBlue, size: canvasSize)
@@ -794,6 +850,8 @@ struct ImageEditorLayerStyleTests {
         viewModel.setSelectedLayerBevelDirection(.up)
         let upBevelData = try #require(viewModel.currentImage.qingtuPNGData())
         viewModel.setSelectedLayerBevelDirection(.down)
+        let hardDownBevelData = try #require(viewModel.currentImage.qingtuPNGData())
+        viewModel.setSelectedLayerBevelSoften(4)
 
         let styledLayer = try #require(viewModel.document.selectedLayer)
         let layerPixelsAfterStyle = try #require(styledLayer.image.qingtuPNGData())
@@ -802,10 +860,13 @@ struct ImageEditorLayerStyleTests {
         #expect(styledLayer.style.bevelSize == 8)
         #expect(styledLayer.style.bevelOpacity == 0.8)
         #expect(styledLayer.style.bevelDirection == .down)
+        #expect(styledLayer.style.bevelSoften == 4)
         #expect(viewModel.selectedLayerBevelDirection == .down)
+        #expect(viewModel.selectedLayerBevelSoften == 4)
         #expect(layerPixelsAfterStyle == layerPixelsBeforeStyle)
         #expect(compositedAfterStyle != compositedBeforeStyle)
         #expect(compositedAfterStyle != upBevelData)
+        #expect(compositedAfterStyle != hardDownBevelData)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStyle"))
 
         let project = try ImageEditorProjectDocument(document: viewModel.document)
@@ -813,6 +874,7 @@ struct ImageEditorLayerStyleTests {
         let restoredLayer = try #require(restoredDocument.layers.first { $0.id == styledLayer.id })
         #expect(restoredLayer.style.bevelEnabled)
         #expect(restoredLayer.style.bevelDirection == .down)
+        #expect(restoredLayer.style.bevelSoften == 4)
     }
 
     @Test func imageEditorInnerShadowIsNonDestructiveAndUpdatesStyleParameters() async throws {

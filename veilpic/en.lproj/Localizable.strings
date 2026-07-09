@@ -732,6 +732,7 @@
 "imageEditor.properties.satinAngleValue" = "Satin Angle: %d°";
 "imageEditor.properties.bevelSizeValue" = "Bevel Size: %d px";
 "imageEditor.properties.bevelOpacityValue" = "Bevel Opacity: %d%%";
+"imageEditor.properties.bevelSoftenValue" = "Bevel Soften: %d px";
 "imageEditor.properties.bevelUseGlobalLight" = "Use Global Light for Bevel";
 "imageEditor.properties.bevelDirection" = "Bevel Direction";
 "imageEditor.bevelDirection.up" = "Up";
@@ -1622,4 +1623,12 @@
 "about.productPage" = "QPic product page";
 "about.unknownVersion" = "Unknown version";
 "about.copyright" = "© %d rocky.x";
+"imageEditor.properties.shadowContour" = "Drop Shadow Contour";
+"imageEditor.properties.innerShadowContour" = "Inner Shadow Contour";
+"imageEditor.properties.outerGlowContour" = "Outer Glow Contour";
+"imageEditor.layerEffectContour.linear" = "Linear";
+"imageEditor.layerEffectContour.soft" = "Soft";
+"imageEditor.layerEffectContour.steep" = "Steep";
+"imageEditor.layerEffectContour.cone" = "Cone";
+"imageEditor.layerEffectContour.ring" = "Ring";
 "action.done" = "Done";

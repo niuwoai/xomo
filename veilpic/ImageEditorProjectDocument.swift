@@ -607,6 +607,7 @@ struct ImageEditorProjectLayerStyle: Codable, Equatable {
     var shadowBlur: CGFloat
     var shadowSpread: CGFloat?
     var shadowNoise: CGFloat?
+    var shadowContour: ImageEditorLayerEffectContour?
     var shadowDistance: CGFloat?
     var shadowAngle: CGFloat?
     var shadowUsesGlobalLight: Bool?
@@ -617,6 +618,7 @@ struct ImageEditorProjectLayerStyle: Codable, Equatable {
     var innerShadowBlur: CGFloat
     var innerShadowChoke: CGFloat?
     var innerShadowNoise: CGFloat?
+    var innerShadowContour: ImageEditorLayerEffectContour?
     var innerShadowDistance: CGFloat
     var innerShadowAngle: CGFloat
     var innerShadowUsesGlobalLight: Bool?
@@ -626,6 +628,7 @@ struct ImageEditorProjectLayerStyle: Codable, Equatable {
     var outerGlowBlur: CGFloat
     var outerGlowSpread: CGFloat
     var outerGlowNoise: CGFloat?
+    var outerGlowContour: ImageEditorLayerEffectContour?
     var innerGlowEnabled: Bool
     var innerGlowColor: ImageEditorProjectColor
     var innerGlowOpacity: CGFloat
@@ -659,6 +662,7 @@ struct ImageEditorProjectLayerStyle: Codable, Equatable {
     var bevelShadowColor: ImageEditorProjectColor
     var bevelOpacity: CGFloat
     var bevelSize: CGFloat
+    var bevelSoften: CGFloat?
     var bevelAngle: CGFloat?
     var bevelUsesGlobalLight: Bool?
     var bevelDirection: ImageEditorBevelDirection?
@@ -683,6 +687,7 @@ struct ImageEditorProjectLayerStyle: Codable, Equatable {
         shadowBlur = style.shadowBlur
         shadowSpread = style.shadowSpread
         shadowNoise = style.shadowNoise
+        shadowContour = style.shadowContour
         shadowDistance = style.shadowDistance
         shadowAngle = style.shadowAngle
         shadowUsesGlobalLight = style.shadowUsesGlobalLight
@@ -693,6 +698,7 @@ struct ImageEditorProjectLayerStyle: Codable, Equatable {
         innerShadowBlur = style.innerShadowBlur
         innerShadowChoke = style.innerShadowChoke
         innerShadowNoise = style.innerShadowNoise
+        innerShadowContour = style.innerShadowContour
         innerShadowDistance = style.innerShadowDistance
         innerShadowAngle = style.innerShadowAngle
         innerShadowUsesGlobalLight = style.innerShadowUsesGlobalLight
@@ -702,6 +708,7 @@ struct ImageEditorProjectLayerStyle: Codable, Equatable {
         outerGlowBlur = style.outerGlowBlur
         outerGlowSpread = style.outerGlowSpread
         outerGlowNoise = style.outerGlowNoise
+        outerGlowContour = style.outerGlowContour
         innerGlowEnabled = style.innerGlowEnabled
         innerGlowColor = ImageEditorProjectColor(color: style.innerGlowColor)
         innerGlowOpacity = style.innerGlowOpacity
@@ -735,6 +742,7 @@ struct ImageEditorProjectLayerStyle: Codable, Equatable {
         bevelShadowColor = ImageEditorProjectColor(color: style.bevelShadowColor)
         bevelOpacity = style.bevelOpacity
         bevelSize = style.bevelSize
+        bevelSoften = style.bevelSoften
         bevelAngle = style.bevelAngle
         bevelUsesGlobalLight = style.bevelUsesGlobalLight
         bevelDirection = style.bevelDirection
@@ -763,6 +771,7 @@ struct ImageEditorProjectLayerStyle: Codable, Equatable {
             shadowBlur: shadowBlur,
             shadowSpread: max(0, min(24, shadowSpread ?? 0)),
             shadowNoise: max(0, min(1, shadowNoise ?? 0)),
+            shadowContour: shadowContour ?? .linear,
             shadowDistance: resolvedShadowDistance,
             shadowAngle: resolvedShadowAngle,
             shadowUsesGlobalLight: shadowUsesGlobalLight ?? true,
@@ -773,6 +782,7 @@ struct ImageEditorProjectLayerStyle: Codable, Equatable {
             innerShadowBlur: innerShadowBlur,
             innerShadowChoke: max(0, min(24, innerShadowChoke ?? 0)),
             innerShadowNoise: max(0, min(1, innerShadowNoise ?? 0)),
+            innerShadowContour: innerShadowContour ?? .linear,
             innerShadowDistance: innerShadowDistance,
             innerShadowAngle: innerShadowAngle,
             innerShadowUsesGlobalLight: innerShadowUsesGlobalLight ?? true,
@@ -782,6 +792,7 @@ struct ImageEditorProjectLayerStyle: Codable, Equatable {
             outerGlowBlur: outerGlowBlur,
             outerGlowSpread: outerGlowSpread,
             outerGlowNoise: max(0, min(1, outerGlowNoise ?? 0)),
+            outerGlowContour: outerGlowContour ?? .linear,
             innerGlowEnabled: innerGlowEnabled,
             innerGlowColor: innerGlowColor.nsColor,
             innerGlowOpacity: innerGlowOpacity,
@@ -815,6 +826,7 @@ struct ImageEditorProjectLayerStyle: Codable, Equatable {
             bevelShadowColor: bevelShadowColor.nsColor,
             bevelOpacity: bevelOpacity,
             bevelSize: bevelSize,
+            bevelSoften: max(0, min(24, bevelSoften ?? 0)),
             bevelAngle: max(-180, min(180, bevelAngle ?? -45)),
             bevelUsesGlobalLight: bevelUsesGlobalLight ?? true,
             bevelDirection: bevelDirection ?? .up

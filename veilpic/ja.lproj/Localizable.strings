@@ -732,6 +732,7 @@
 "imageEditor.properties.satinAngleValue" = "サテン角度：%d°";
 "imageEditor.properties.bevelSizeValue" = "ベベルサイズ：%d px";
 "imageEditor.properties.bevelOpacityValue" = "ベベル不透明度：%d%%";
+"imageEditor.properties.bevelSoftenValue" = "ベベルソフト：%d px";
 "imageEditor.properties.bevelUseGlobalLight" = "ベベルにグローバルライトを使用";
 "imageEditor.properties.bevelDirection" = "ベベル方向";
 "imageEditor.bevelDirection.up" = "上";
@@ -1622,4 +1623,12 @@
 "about.productPage" = "軽図の製品ページ";
 "about.unknownVersion" = "不明なバージョン";
 "about.copyright" = "© %d rocky.x";
+"imageEditor.properties.shadowContour" = "ドロップシャドウの輪郭";
+"imageEditor.properties.innerShadowContour" = "内側シャドウの輪郭";
+"imageEditor.properties.outerGlowContour" = "外側光彩の輪郭";
+"imageEditor.layerEffectContour.linear" = "リニア";
+"imageEditor.layerEffectContour.soft" = "ソフト";
+"imageEditor.layerEffectContour.steep" = "急峻";
+"imageEditor.layerEffectContour.cone" = "コーン";
+"imageEditor.layerEffectContour.ring" = "リング";
 "action.done" = "完了";

@@ -1016,6 +1016,14 @@ struct ImageEditorView: View {
         }
     }
 
+    private var selectedLayerShadowContourBinding: Binding<ImageEditorLayerEffectContour> {
+        Binding {
+            viewModel.selectedLayerShadowContour
+        } set: { value in
+            viewModel.setSelectedLayerShadowContour(value)
+        }
+    }
+
     private var globalLightAngleBinding: Binding<Double> {
         Binding {
             viewModel.globalLightAngle
@@ -1096,6 +1104,14 @@ struct ImageEditorView: View {
         }
     }
 
+    private var selectedLayerInnerShadowContourBinding: Binding<ImageEditorLayerEffectContour> {
+        Binding {
+            viewModel.selectedLayerInnerShadowContour
+        } set: { value in
+            viewModel.setSelectedLayerInnerShadowContour(value)
+        }
+    }
+
     private var selectedLayerInnerShadowDistanceBinding: Binding<Double> {
         Binding {
             viewModel.selectedLayerInnerShadowDistance
@@ -1149,6 +1165,14 @@ struct ImageEditorView: View {
             viewModel.selectedLayerOuterGlowNoise
         } set: { value in
             viewModel.setSelectedLayerOuterGlowNoise(value)
+        }
+    }
+
+    private var selectedLayerOuterGlowContourBinding: Binding<ImageEditorLayerEffectContour> {
+        Binding {
+            viewModel.selectedLayerOuterGlowContour
+        } set: { value in
+            viewModel.setSelectedLayerOuterGlowContour(value)
         }
     }
 
@@ -1301,6 +1325,14 @@ struct ImageEditorView: View {
             viewModel.selectedLayerBevelOpacity
         } set: { value in
             viewModel.setSelectedLayerBevelOpacity(value)
+        }
+    }
+
+    private var selectedLayerBevelSoftenBinding: Binding<Double> {
+        Binding {
+            viewModel.selectedLayerBevelSoften
+        } set: { value in
+            viewModel.setSelectedLayerBevelSoften(value)
         }
     }
 
@@ -2439,6 +2471,12 @@ struct ImageEditorView: View {
                     in: 0...1,
                     step: 0.05
                 )
+                Picker(L10n.text("imageEditor.properties.shadowContour"), selection: selectedLayerShadowContourBinding) {
+                    ForEach(ImageEditorLayerEffectContour.allCases) { contour in
+                        Text(contour.title).tag(contour)
+                    }
+                }
+                .pickerStyle(.menu)
                 Toggle(L10n.text("imageEditor.properties.shadowUseGlobalLight"), isOn: selectedLayerShadowUsesGlobalLightBinding)
                     .toggleStyle(.checkbox)
                 Stepper(
@@ -2509,6 +2547,12 @@ struct ImageEditorView: View {
                         step: 0.05
                     )
                 }
+                Picker(L10n.text("imageEditor.properties.innerShadowContour"), selection: selectedLayerInnerShadowContourBinding) {
+                    ForEach(ImageEditorLayerEffectContour.allCases) { contour in
+                        Text(contour.title).tag(contour)
+                    }
+                }
+                .pickerStyle(.menu)
                 Stepper(
                     L10n.format("imageEditor.properties.innerShadowAngleValue", Int(viewModel.selectedLayerInnerShadowAngle.rounded())),
                     value: selectedLayerInnerShadowAngleBinding,
@@ -2543,6 +2587,12 @@ struct ImageEditorView: View {
                     in: 0...1,
                     step: 0.05
                 )
+                Picker(L10n.text("imageEditor.properties.outerGlowContour"), selection: selectedLayerOuterGlowContourBinding) {
+                    ForEach(ImageEditorLayerEffectContour.allCases) { contour in
+                        Text(contour.title).tag(contour)
+                    }
+                }
+                .pickerStyle(.menu)
                 Stepper(
                     L10n.format("imageEditor.properties.innerGlowOpacityValue", Int((viewModel.selectedLayerInnerGlowOpacity * 100).rounded())),
                     value: selectedLayerInnerGlowOpacityBinding,
@@ -2669,6 +2719,12 @@ struct ImageEditorView: View {
                         step: 0.05
                     )
                 }
+                Stepper(
+                    L10n.format("imageEditor.properties.bevelSoftenValue", Int(viewModel.selectedLayerBevelSoften.rounded())),
+                    value: selectedLayerBevelSoftenBinding,
+                    in: 0...24,
+                    step: 1
+                )
                 Toggle(L10n.text("imageEditor.properties.bevelUseGlobalLight"), isOn: selectedLayerBevelUsesGlobalLightBinding)
                     .toggleStyle(.checkbox)
                 Picker(L10n.text("imageEditor.properties.bevelDirection"), selection: selectedLayerBevelDirectionBinding) {

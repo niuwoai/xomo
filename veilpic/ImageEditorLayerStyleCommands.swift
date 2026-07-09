@@ -128,6 +128,10 @@ extension ImageEditorViewModel {
         Double(document.selectedLayer?.style.shadowNoise ?? 0)
     }
 
+    var selectedLayerShadowContour: ImageEditorLayerEffectContour {
+        document.selectedLayer?.style.shadowContour ?? .linear
+    }
+
     var globalLightAngle: Double {
         Double(document.globalLightAngle)
     }
@@ -170,6 +174,10 @@ extension ImageEditorViewModel {
         Double(document.selectedLayer?.style.innerShadowNoise ?? 0)
     }
 
+    var selectedLayerInnerShadowContour: ImageEditorLayerEffectContour {
+        document.selectedLayer?.style.innerShadowContour ?? .linear
+    }
+
     var selectedLayerInnerShadowDistance: Double {
         Double(document.selectedLayer?.style.innerShadowDistance ?? 7)
     }
@@ -197,6 +205,10 @@ extension ImageEditorViewModel {
 
     var selectedLayerOuterGlowNoise: Double {
         Double(document.selectedLayer?.style.outerGlowNoise ?? 0)
+    }
+
+    var selectedLayerOuterGlowContour: ImageEditorLayerEffectContour {
+        document.selectedLayer?.style.outerGlowContour ?? .linear
     }
 
     var selectedLayerInnerGlowOpacity: Double {
@@ -273,6 +285,10 @@ extension ImageEditorViewModel {
 
     var selectedLayerBevelOpacity: Double {
         Double(document.selectedLayer?.style.bevelOpacity ?? 0.38)
+    }
+
+    var selectedLayerBevelSoften: Double {
+        Double(document.selectedLayer?.style.bevelSoften ?? 0)
     }
 
     var selectedLayerBevelAngle: Double {
@@ -510,6 +526,13 @@ extension ImageEditorViewModel {
         }
     }
 
+    func setSelectedLayerShadowContour(_ contour: ImageEditorLayerEffectContour) {
+        updateSelectedLayerStyle {
+            $0.shadowEnabled = true
+            $0.shadowContour = contour
+        }
+    }
+
     func setSelectedLayerShadowDistance(_ distance: Double) {
         updateSelectedLayerStyle {
             $0.shadowEnabled = true
@@ -617,6 +640,14 @@ extension ImageEditorViewModel {
         }
     }
 
+    func setSelectedLayerInnerShadowContour(_ contour: ImageEditorLayerEffectContour) {
+        updateSelectedLayerStyle {
+            $0.innerShadowEnabled = true
+            $0.innerShadowColor = innerShadowColor()
+            $0.innerShadowContour = contour
+        }
+    }
+
     func setSelectedLayerInnerShadowDistance(_ distance: Double) {
         updateSelectedLayerStyle {
             $0.innerShadowEnabled = true
@@ -681,6 +712,13 @@ extension ImageEditorViewModel {
         updateSelectedLayerStyle {
             $0.outerGlowEnabled = true
             $0.outerGlowNoise = max(0, min(1, CGFloat(noise)))
+        }
+    }
+
+    func setSelectedLayerOuterGlowContour(_ contour: ImageEditorLayerEffectContour) {
+        updateSelectedLayerStyle {
+            $0.outerGlowEnabled = true
+            $0.outerGlowContour = contour
         }
     }
 
@@ -830,6 +868,13 @@ extension ImageEditorViewModel {
         updateSelectedLayerStyle {
             $0.bevelEnabled = true
             $0.bevelOpacity = max(0.05, min(1, CGFloat(opacity)))
+        }
+    }
+
+    func setSelectedLayerBevelSoften(_ soften: Double) {
+        updateSelectedLayerStyle {
+            $0.bevelEnabled = true
+            $0.bevelSoften = max(0, min(24, CGFloat(soften)))
         }
     }
 

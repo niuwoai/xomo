@@ -1479,6 +1479,36 @@ enum ImageEditorBevelDirection: String, CaseIterable, Identifiable, Codable {
     }
 }
 
+enum ImageEditorLayerEffectContour: String, CaseIterable, Identifiable, Codable {
+    case linear
+    case soft
+    case steep
+    case cone
+    case ring
+
+    var id: String { rawValue }
+
+    var title: String {
+        L10n.text("imageEditor.layerEffectContour.\(rawValue)")
+    }
+
+    func mappedAlpha(_ alpha: CGFloat) -> CGFloat {
+        let value = max(0, min(1, alpha))
+        switch self {
+        case .linear:
+            return value
+        case .soft:
+            return pow(value, 1.7)
+        case .steep:
+            return pow(value, 0.55)
+        case .cone:
+            return sin(value * .pi)
+        case .ring:
+            return pow(sin(value * .pi * 2), 2)
+        }
+    }
+}
+
 struct ImageEditorLayerStyle {
     var strokeEnabled = false
     var strokeColor = NSColor.white
@@ -1499,6 +1529,7 @@ struct ImageEditorLayerStyle {
     var shadowBlur: CGFloat = 8
     var shadowSpread: CGFloat = 0
     var shadowNoise: CGFloat = 0
+    var shadowContour = ImageEditorLayerEffectContour.linear
     var shadowDistance: CGFloat = 10
     var shadowAngle: CGFloat = -45
     var shadowUsesGlobalLight = true
@@ -1509,6 +1540,7 @@ struct ImageEditorLayerStyle {
     var innerShadowBlur: CGFloat = 8
     var innerShadowChoke: CGFloat = 0
     var innerShadowNoise: CGFloat = 0
+    var innerShadowContour = ImageEditorLayerEffectContour.linear
     var innerShadowDistance: CGFloat = 7
     var innerShadowAngle: CGFloat = -45
     var innerShadowUsesGlobalLight = true
@@ -1518,6 +1550,7 @@ struct ImageEditorLayerStyle {
     var outerGlowBlur: CGFloat = 10
     var outerGlowSpread: CGFloat = 3
     var outerGlowNoise: CGFloat = 0
+    var outerGlowContour = ImageEditorLayerEffectContour.linear
     var innerGlowEnabled = false
     var innerGlowColor = NSColor.systemCyan
     var innerGlowOpacity: CGFloat = 0.36
@@ -1551,6 +1584,7 @@ struct ImageEditorLayerStyle {
     var bevelShadowColor = NSColor.black
     var bevelOpacity: CGFloat = 0.38
     var bevelSize: CGFloat = 4
+    var bevelSoften: CGFloat = 0
     var bevelAngle: CGFloat = -45
     var bevelUsesGlobalLight = true
     var bevelDirection = ImageEditorBevelDirection.up
@@ -2511,9 +2545,10 @@ struct ImageEditorLayer: Identifiable {
                     }
                 } ?? NSImage(size: outputSize)
                 let blurredShadow = shadowCanvas.blurred(radius: style.shadowBlur) ?? shadowCanvas
-                blurredShadow.draw(
+                let contouredShadow = blurredShadow.applyingEffectContour(style.shadowContour) ?? blurredShadow
+                contouredShadow.draw(
                     in: CGRect(origin: .zero, size: outputSize),
-                    from: CGRect(origin: .zero, size: outputSize),
+                    from: CGRect(origin: .zero, size: contouredShadow.size),
                     operation: .sourceOver,
                     fraction: 1
                 )
@@ -2569,9 +2604,10 @@ struct ImageEditorLayer: Identifiable {
                     }
                 } ?? NSImage(size: outputSize)
                 let blurredGlow = glowCanvas.blurred(radius: style.outerGlowBlur) ?? glowCanvas
-                blurredGlow.draw(
+                let contouredGlow = blurredGlow.applyingEffectContour(style.outerGlowContour) ?? blurredGlow
+                contouredGlow.draw(
                     in: CGRect(origin: .zero, size: outputSize),
-                    from: CGRect(origin: .zero, size: outputSize),
+                    from: CGRect(origin: .zero, size: contouredGlow.size),
                     operation: .sourceOver,
                     fraction: 1
                 )
@@ -2647,9 +2683,10 @@ struct ImageEditorLayer: Identifiable {
                     )
                 } ?? NSImage(size: outputSize)
                 let softenedInnerShadow = innerShadowCanvas.blurred(radius: style.innerShadowBlur) ?? innerShadowCanvas
-                softenedInnerShadow.draw(
+                let contouredInnerShadow = softenedInnerShadow.applyingEffectContour(style.innerShadowContour) ?? softenedInnerShadow
+                contouredInnerShadow.draw(
                     in: CGRect(origin: .zero, size: outputSize),
-                    from: CGRect(origin: .zero, size: outputSize),
+                    from: CGRect(origin: .zero, size: contouredInnerShadow.size),
                     operation: .multiply,
                     fraction: 1
                 )
@@ -2800,9 +2837,12 @@ struct ImageEditorLayer: Identifiable {
                         fraction: 1
                     )
                 } ?? NSImage(size: outputSize)
-                bevelCanvas.draw(
+                let softenedBevel = style.bevelSoften > 0
+                    ? bevelCanvas.blurred(radius: style.bevelSoften) ?? bevelCanvas
+                    : bevelCanvas
+                softenedBevel.draw(
                     in: CGRect(origin: .zero, size: outputSize),
-                    from: CGRect(origin: .zero, size: outputSize),
+                    from: CGRect(origin: .zero, size: softenedBevel.size),
                     operation: .sourceOver,
                     fraction: 1
                 )
@@ -3801,6 +3841,64 @@ struct ImageEditorDocument {
 }
 
 private extension NSImage {
+    func applyingEffectContour(_ contour: ImageEditorLayerEffectContour) -> NSImage? {
+        guard contour != .linear else { return self }
+        guard let cgImage = cgImage(forProposedRect: nil, context: nil, hints: nil) else { return nil }
+
+        let width = max(1, cgImage.width)
+        let height = max(1, cgImage.height)
+        let bytesPerPixel = 4
+        let bytesPerRow = width * bytesPerPixel
+        var pixels = [UInt8](repeating: 0, count: bytesPerRow * height)
+
+        guard let context = CGContext(
+            data: &pixels,
+            width: width,
+            height: height,
+            bitsPerComponent: 8,
+            bytesPerRow: bytesPerRow,
+            space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ) else { return nil }
+
+        context.interpolationQuality = .none
+        context.translateBy(x: 0, y: CGFloat(height))
+        context.scaleBy(x: 1, y: -1)
+        context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
+
+        for y in 0..<height {
+            for x in 0..<width {
+                let offset = y * bytesPerRow + x * bytesPerPixel
+                let alpha = CGFloat(pixels[offset + 3]) / 255
+                guard alpha > 0 else { continue }
+                let mappedAlpha = contour.mappedAlpha(alpha)
+                let multiplier = mappedAlpha / alpha
+                pixels[offset] = Self.scaledByte(pixels[offset], multiplier: multiplier)
+                pixels[offset + 1] = Self.scaledByte(pixels[offset + 1], multiplier: multiplier)
+                pixels[offset + 2] = Self.scaledByte(pixels[offset + 2], multiplier: multiplier)
+                pixels[offset + 3] = UInt8(max(0, min(255, (mappedAlpha * 255).rounded())))
+            }
+        }
+
+        guard let provider = CGDataProvider(data: Data(pixels) as CFData),
+              let output = CGImage(
+                width: width,
+                height: height,
+                bitsPerComponent: 8,
+                bitsPerPixel: 32,
+                bytesPerRow: bytesPerRow,
+                space: CGColorSpaceCreateDeviceRGB(),
+                bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue),
+                provider: provider,
+                decode: nil,
+                shouldInterpolate: false,
+                intent: .defaultIntent
+              )
+        else { return nil }
+
+        return NSImage(cgImage: output, size: size)
+    }
+
     func shadowNoised(amount: CGFloat) -> NSImage? {
         let normalizedAmount = max(0, min(1, amount))
         guard normalizedAmount > 0,
