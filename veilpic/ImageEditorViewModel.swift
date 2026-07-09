@@ -1457,7 +1457,8 @@ final class ImageEditorViewModel: ObservableObject {
         document.selectedLayerIDs = memberIDs
         document.selectedLayerID = document.layers.reversed().first { memberIDs.contains($0.id) }?.id
         isEditingLayerMask = false
-        updateStatus()
+        syncControlsFromLayerSelection()
+        statusText = L10n.format("imageEditor.status.layerGroupMembersSelected", memberIDs.count)
     }
 
     func moveSelectedLayersIntoGroup() {

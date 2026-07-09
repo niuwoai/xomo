@@ -3205,10 +3205,12 @@ struct veilpicTests {
         #expect(!viewModel.visibleLayerRows.contains { $0.id == secondID })
 
         viewModel.toggleLayerGroupExpansion(groupID)
+        #expect(viewModel.canSelectSelectedGroupMembers)
         viewModel.selectSelectedGroupMembers()
         #expect(viewModel.selectedLayerCount == 2)
         #expect(viewModel.isLayerSelected(firstID))
         #expect(viewModel.isLayerSelected(secondID))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerGroupMembersSelected", 2))
 
         viewModel.selectLayer(groupID)
         #expect(viewModel.canUngroupSelectedLayers)

@@ -1330,6 +1330,7 @@
 "imageEditor.status.layerLinkNeedsSelection" = "请至少选择两个图层进行链接";
 "imageEditor.status.layerNoLinks" = "所选图层没有链接关系";
 "imageEditor.status.layerGroupEmpty" = "当前图层组没有可选择的成员";
+"imageEditor.status.layerGroupMembersSelected" = "已选择 %d 个组内图层";
 "imageEditor.status.layerGroupTargetMissing" = "所选图层上方没有可接收它们的图层组";
 "imageEditor.status.layerNotInGroup" = "所选图层不在图层组内";
 "imageEditor.status.layerReordered" = "已重排图层栈";

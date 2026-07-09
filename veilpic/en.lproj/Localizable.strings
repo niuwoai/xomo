@@ -1330,6 +1330,7 @@
 "imageEditor.status.layerLinkNeedsSelection" = "Select at least two layers to link";
 "imageEditor.status.layerNoLinks" = "Selected layers are not linked";
 "imageEditor.status.layerGroupEmpty" = "The selected group has no selectable members";
+"imageEditor.status.layerGroupMembersSelected" = "%d group members selected";
 "imageEditor.status.layerGroupTargetMissing" = "No group above the selection can receive these layers";
 "imageEditor.status.layerNotInGroup" = "Selected layers are not inside a group";
 "imageEditor.status.layerReordered" = "Layer stack reordered";

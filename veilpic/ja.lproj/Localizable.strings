@@ -1330,6 +1330,7 @@
 "imageEditor.status.layerLinkNeedsSelection" = "リンクするには 2 つ以上のレイヤーを選択してください";
 "imageEditor.status.layerNoLinks" = "選択中のレイヤーにリンクはありません";
 "imageEditor.status.layerGroupEmpty" = "選択中のグループに選択できるメンバーがありません";
+"imageEditor.status.layerGroupMembersSelected" = "グループ内レイヤーを %d 個選択しました";
 "imageEditor.status.layerGroupTargetMissing" = "選択範囲の上に移動先にできるグループがありません";
 "imageEditor.status.layerNotInGroup" = "選択中のレイヤーはグループ内にありません";
 "imageEditor.status.layerReordered" = "レイヤースタックを並べ替えました";
