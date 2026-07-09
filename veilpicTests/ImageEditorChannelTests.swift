@@ -539,6 +539,35 @@ struct ImageEditorChannelTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelFillHoles"))
     }
 
+    @Test func alphaChannelsCanRemoveMaskSpeckles() async throws {
+        let viewModel = ImageEditorViewModel(sourceName: "split.png", image: splitChannelImage()) { _ in }
+        let speckledMask = ImageEditorSelectionMask(
+            width: 5,
+            height: 5,
+            alpha: [
+                255, 0, 0, 0, 0,
+                0, 0, 0, 0, 0,
+                0, 0, 255, 255, 0,
+                0, 0, 255, 255, 0,
+                0, 0, 0, 0, 0
+            ]
+        )
+        let channel = ImageEditorAlphaChannel(name: "Speckles", mask: speckledMask)
+        viewModel.document.alphaChannels = [channel]
+        viewModel.selectionModifyAmount = 1
+        viewModel.selectAlphaChannel(channel.id)
+
+        #expect(viewModel.canRemoveSpecklesSelectedAlphaChannel)
+        viewModel.removeSpecklesSelectedAlphaChannel()
+
+        let cleanedChannel = try #require(viewModel.selectedAlphaChannel)
+        #expect(maskAlpha(cleanedChannel.mask, x: 0, y: 0) == 0)
+        #expect(maskAlpha(cleanedChannel.mask, x: 2, y: 2) == 255)
+        #expect(maskAlpha(cleanedChannel.mask, x: 3, y: 3) == 255)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelSpecklesRemoved", "Speckles", 1))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelRemoveSpeckles"))
+    }
+
     @Test func alphaChannelsRoundTripWithLayerMasks() async throws {
         let viewModel = ImageEditorViewModel(sourceName: "split.png", image: splitChannelImage()) { _ in }
 

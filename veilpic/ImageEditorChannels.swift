@@ -132,6 +132,10 @@ extension ImageEditorViewModel {
         selectedAlphaChannel != nil
     }
 
+    var canRemoveSpecklesSelectedAlphaChannel: Bool {
+        selectedAlphaChannel != nil
+    }
+
     var canDeleteSelectedAlphaChannel: Bool {
         selectedAlphaChannel != nil
     }
@@ -287,6 +291,11 @@ extension ImageEditorViewModel {
         fillHolesAlphaChannel(selectedAlphaChannelID)
     }
 
+    func removeSpecklesSelectedAlphaChannel() {
+        guard let selectedAlphaChannelID else { return }
+        removeSpecklesAlphaChannel(selectedAlphaChannelID)
+    }
+
     func deleteSelectedAlphaChannel() {
         guard let selectedAlphaChannelID else { return }
         deleteAlphaChannel(selectedAlphaChannelID)
@@ -435,6 +444,25 @@ extension ImageEditorViewModel {
         statusText = L10n.format(
             "imageEditor.status.alphaChannelFilledHoles",
             document.alphaChannels[index].name
+        )
+    }
+
+    func removeSpecklesAlphaChannel(_ id: UUID, maximumArea: Int? = nil) {
+        guard let index = document.alphaChannels.firstIndex(where: { $0.id == id }) else { return }
+        let effectiveMaximumArea = max(1, min(64, maximumArea ?? Int(selectionModifyAmount.rounded())))
+        guard let cleanedMask = document.alphaChannels[index].mask.removedSpeckles(maximumArea: effectiveMaximumArea) else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+
+        pushUndo()
+        document.alphaChannels[index].mask = cleanedMask
+        selectedAlphaChannelID = id
+        appendHistory(L10n.text("imageEditor.history.alphaChannelRemoveSpeckles"))
+        statusText = L10n.format(
+            "imageEditor.status.alphaChannelSpecklesRemoved",
+            document.alphaChannels[index].name,
+            effectiveMaximumArea
         )
     }
 

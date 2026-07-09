@@ -327,6 +327,16 @@ extension ImageEditorView {
             .help(L10n.format("imageEditor.action.alphaChannelFillHoles", channel.name))
 
             Button {
+                viewModel.removeSpecklesAlphaChannel(channel.id)
+            } label: {
+                Image(systemName: "eraser")
+                    .font(.system(size: 12, weight: .semibold))
+                    .frame(width: 24, height: 28)
+            }
+            .buttonStyle(EditorIconButtonStyle(isSelected: false))
+            .help(L10n.format("imageEditor.action.alphaChannelRemoveSpeckles", channel.name))
+
+            Button {
                 viewModel.deleteAlphaChannel(channel.id)
             } label: {
                 Image(systemName: "trash")

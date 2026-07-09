@@ -960,6 +960,10 @@ extension ImageEditorView {
             viewModel.fillHolesSelectedAlphaChannel()
         }
         .disabled(!viewModel.canFillHolesSelectedAlphaChannel)
+        Button(L10n.text("imageEditor.action.alphaChannelRemoveSpecklesSelected")) {
+            viewModel.removeSpecklesSelectedAlphaChannel()
+        }
+        .disabled(!viewModel.canRemoveSpecklesSelectedAlphaChannel)
         Button(L10n.text("imageEditor.action.alphaChannelDeleteSelected")) {
             viewModel.deleteSelectedAlphaChannel()
         }
