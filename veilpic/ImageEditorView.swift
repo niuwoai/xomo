@@ -1128,6 +1128,14 @@ struct ImageEditorView: View {
         }
     }
 
+    private var selectedLayerGradientOverlayStyleBinding: Binding<ImageEditorGradientFillStyle> {
+        Binding {
+            viewModel.selectedLayerGradientOverlayStyle
+        } set: { value in
+            viewModel.setSelectedLayerGradientOverlayStyle(value)
+        }
+    }
+
     private var selectedLayerGradientOverlayAngleBinding: Binding<Double> {
         Binding {
             viewModel.selectedLayerGradientOverlayAngle
@@ -2411,6 +2419,12 @@ struct ImageEditorView: View {
                     in: 0.05...1,
                     step: 0.05
                 )
+                Picker(L10n.text("imageEditor.properties.gradientOverlayStyle"), selection: selectedLayerGradientOverlayStyleBinding) {
+                    ForEach(ImageEditorGradientFillStyle.allCases) { style in
+                        Text(style.title).tag(style)
+                    }
+                }
+                .pickerStyle(.menu)
                 HStack {
                     Stepper(
                         L10n.format("imageEditor.properties.gradientOverlayOpacityValue", Int((viewModel.selectedLayerGradientOverlayOpacity * 100).rounded())),

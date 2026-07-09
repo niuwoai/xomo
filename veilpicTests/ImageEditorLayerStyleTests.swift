@@ -611,19 +611,33 @@ struct ImageEditorLayerStyleTests {
         let compositedBeforeStyle = try #require(viewModel.currentImage.qingtuPNGData())
 
         viewModel.foregroundColor = .systemRed
-        viewModel.backgroundColor = .systemYellow
+        viewModel.backgroundColor = .systemBlue
         viewModel.setSelectedLayerGradientOverlayOpacity(1)
+        viewModel.setSelectedLayerGradientOverlayStyle(.radial)
         viewModel.setSelectedLayerGradientOverlayAngle(45)
 
         let styledLayer = try #require(viewModel.document.selectedLayer)
         let layerPixelsAfterStyle = try #require(styledLayer.image.qingtuPNGData())
         let compositedAfterStyle = try #require(viewModel.currentImage.qingtuPNGData())
+        let centerColor = try #require(viewModel.currentImage.color(at: CGPoint(x: 40, y: 30))?.usingColorSpace(.deviceRGB))
+        let edgeColor = try #require(viewModel.currentImage.color(at: CGPoint(x: 24, y: 30))?.usingColorSpace(.deviceRGB))
         #expect(styledLayer.style.gradientOverlayEnabled)
         #expect(styledLayer.style.gradientOverlayOpacity == 1)
+        #expect(styledLayer.style.gradientOverlayStyle == .radial)
         #expect(styledLayer.style.gradientOverlayAngle == 45)
+        #expect(viewModel.selectedLayerGradientOverlayStyle == .radial)
         #expect(layerPixelsAfterStyle == layerPixelsBeforeStyle)
         #expect(compositedAfterStyle != compositedBeforeStyle)
+        #expect(centerColor.redComponent > edgeColor.redComponent + 0.25)
+        #expect(edgeColor.blueComponent > centerColor.blueComponent + 0.20)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStyle"))
+
+        let project = try ImageEditorProjectDocument(document: viewModel.document)
+        let restoredDocument = try project.restoredDocument()
+        let restoredLayer = try #require(restoredDocument.layers.first { $0.id == styledLayer.id })
+        #expect(restoredLayer.style.gradientOverlayEnabled)
+        #expect(restoredLayer.style.gradientOverlayStyle == .radial)
+        #expect(restoredLayer.style.gradientOverlayOpacity == 1)
     }
 
     @Test func imageEditorPatternOverlayIsNonDestructiveAndRemainsVisibleWithZeroFill() async throws {

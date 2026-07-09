@@ -187,6 +187,10 @@ extension ImageEditorViewModel {
         Double(document.selectedLayer?.style.gradientOverlayOpacity ?? 0.55)
     }
 
+    var selectedLayerGradientOverlayStyle: ImageEditorGradientFillStyle {
+        document.selectedLayer?.style.gradientOverlayStyle ?? .linear
+    }
+
     var selectedLayerGradientOverlayAngle: Double {
         Double(document.selectedLayer?.style.gradientOverlayAngle ?? 0)
     }
@@ -596,6 +600,15 @@ extension ImageEditorViewModel {
             $0.gradientOverlayStartColor = foregroundColor
             $0.gradientOverlayEndColor = gradientOverlayEndColor()
             $0.gradientOverlayOpacity = max(0.05, min(1, CGFloat(opacity)))
+        }
+    }
+
+    func setSelectedLayerGradientOverlayStyle(_ style: ImageEditorGradientFillStyle) {
+        updateSelectedLayerStyle {
+            $0.gradientOverlayEnabled = true
+            $0.gradientOverlayStartColor = foregroundColor
+            $0.gradientOverlayEndColor = gradientOverlayEndColor()
+            $0.gradientOverlayStyle = style
         }
     }
 

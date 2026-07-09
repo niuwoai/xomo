@@ -705,6 +705,7 @@
 "imageEditor.properties.innerGlowChokeValue" = "チョーク：%d px";
 "imageEditor.properties.colorOverlayOpacityValue" = "カラーオーバーレイ不透明度：%d%%";
 "imageEditor.properties.gradientOverlayOpacityValue" = "グラデーションオーバーレイ不透明度：%d%%";
+"imageEditor.properties.gradientOverlayStyle" = "グラデーションオーバーレイスタイル";
 "imageEditor.properties.gradientOverlayAngleValue" = "グラデーション角度：%d°";
 "imageEditor.properties.patternOverlayKind" = "パターン";
 "imageEditor.properties.patternOverlayOpacityValue" = "パターンオーバーレイ不透明度：%d%%";

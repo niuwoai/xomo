@@ -1485,6 +1485,7 @@ struct ImageEditorLayerStyle {
     var gradientOverlayStartColor = NSColor.systemRed
     var gradientOverlayEndColor = NSColor.white
     var gradientOverlayOpacity: CGFloat = 0.55
+    var gradientOverlayStyle = ImageEditorGradientFillStyle.linear
     var gradientOverlayAngle: CGFloat = 0
     var patternOverlayEnabled = false
     var patternOverlayKind = ImageEditorPatternOverlayKind.checkerboard
@@ -2560,12 +2561,25 @@ struct ImageEditorLayer: Identifiable {
             }
 
             if style.gradientOverlayEnabled,
-               let gradient = NSGradient(colors: [
-                   style.gradientOverlayStartColor.withAlphaComponent(style.gradientOverlayOpacity),
-                   style.gradientOverlayEndColor.withAlphaComponent(style.gradientOverlayOpacity)
-               ]) {
+               let gradientImage = ImageEditorGradientFillContent(
+                   preset: .custom,
+                   style: style.gradientOverlayStyle,
+                   angle: style.gradientOverlayAngle,
+                   scale: 1,
+                   startRed: Double(style.gradientOverlayStartColor.usingColorSpace(.deviceRGB)?.redComponent ?? 1),
+                   startGreen: Double(style.gradientOverlayStartColor.usingColorSpace(.deviceRGB)?.greenComponent ?? 0),
+                   startBlue: Double(style.gradientOverlayStartColor.usingColorSpace(.deviceRGB)?.blueComponent ?? 0),
+                   endRed: Double(style.gradientOverlayEndColor.usingColorSpace(.deviceRGB)?.redComponent ?? 1),
+                   endGreen: Double(style.gradientOverlayEndColor.usingColorSpace(.deviceRGB)?.greenComponent ?? 1),
+                   endBlue: Double(style.gradientOverlayEndColor.usingColorSpace(.deviceRGB)?.blueComponent ?? 1)
+               ).renderedImage(size: contentRect.size).withOpacity(style.gradientOverlayOpacity) {
                 let gradientCanvas = NSImage.rendered(size: outputSize) { _ in
-                    gradient.draw(in: contentRect, angle: style.gradientOverlayAngle)
+                    gradientImage.draw(
+                        in: contentRect,
+                        from: CGRect(origin: .zero, size: gradientImage.size),
+                        operation: .sourceOver,
+                        fraction: 1
+                    )
                     baseImage.draw(
                         in: contentRect,
                         from: CGRect(origin: .zero, size: baseImage.size),

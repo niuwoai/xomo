@@ -705,6 +705,7 @@
 "imageEditor.properties.innerGlowChokeValue" = "Choke: %d px";
 "imageEditor.properties.colorOverlayOpacityValue" = "Color Overlay Opacity: %d%%";
 "imageEditor.properties.gradientOverlayOpacityValue" = "Gradient Overlay Opacity: %d%%";
+"imageEditor.properties.gradientOverlayStyle" = "Gradient Overlay Style";
 "imageEditor.properties.gradientOverlayAngleValue" = "Gradient Angle: %d°";
 "imageEditor.properties.patternOverlayKind" = "Pattern";
 "imageEditor.properties.patternOverlayOpacityValue" = "Pattern Overlay Opacity: %d%%";

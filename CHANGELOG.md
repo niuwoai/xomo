@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.260.0 - 2026-07-10
+
+- 图层样式的 Gradient Overlay / 渐变叠加新增 Linear、Radial、Reflected、Diamond 样式选择，复用渐变填充层的样式渲染能力。
+- 渐变叠加样式接入属性面板和 `.qpicproject` 保存恢复，旧项目缺少样式字段时默认保持 Linear 兼容。
+- 补齐中 / 英 / 日三语文案与渐变叠加样式回归测试；统一前后端版本号到 1.260.0。
+
 ## 1.259.0 - 2026-07-10
 
 - 图层样式新增 Drop Shadow Noise / 投影噪点控制，可让投影 alpha 生成稳定颗粒，制作更接近 Photoshop 的粗糙投影效果。
