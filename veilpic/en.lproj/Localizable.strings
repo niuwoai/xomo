@@ -326,6 +326,7 @@
 "imageEditor.menu.view" = "View";
 "imageEditor.menu.window" = "Window";
 "imageEditor.menu.layer.lock" = "Lock";
+"imageEditor.menu.layer.selectAttribute" = "Select by Attribute";
 "imageEditor.menu.layer.order" = "Arrange";
 "imageEditor.menu.layer.transform" = "Transform";
 "imageEditor.menu.layer.align" = "Align";
@@ -1178,6 +1179,10 @@
 "imageEditor.status.layerSelectHidden" = "%d hidden layers selected";
 "imageEditor.status.layerSelectLocked" = "%d locked layers selected";
 "imageEditor.status.layerSelectUnlocked" = "%d unlocked layers selected";
+"imageEditor.status.layerSelectMasked" = "%d masked layers selected";
+"imageEditor.status.layerSelectStyled" = "%d styled layers selected";
+"imageEditor.status.layerSelectClipping" = "%d clipping mask layers selected";
+"imageEditor.status.layerSelectSmartFiltered" = "%d smart-filtered layers selected";
 "imageEditor.status.layerSelectSameKind" = "%d layers of the same kind selected: %@";
 "imageEditor.status.layerSelectSimilar" = "%d similar layers selected: %@ · %@";
 "imageEditor.status.layerSelectSameBlendMode" = "%d layers with the same blend mode selected: %@";
@@ -1411,6 +1416,10 @@
 "imageEditor.action.layerSelectHidden" = "Select Hidden Layers";
 "imageEditor.action.layerSelectLocked" = "Select Locked Layers";
 "imageEditor.action.layerSelectUnlocked" = "Select Unlocked Layers";
+"imageEditor.action.layerSelectMasked" = "Select Masked Layers";
+"imageEditor.action.layerSelectStyled" = "Select Styled Layers";
+"imageEditor.action.layerSelectClipping" = "Select Clipping Mask Layers";
+"imageEditor.action.layerSelectSmartFiltered" = "Select Smart-Filtered Layers";
 "imageEditor.action.layerSelectSameKind" = "Select Same Kind Layers";
 "imageEditor.action.layerSelectSimilar" = "Select Similar Layers";
 "imageEditor.action.layerSelectSameBlendMode" = "Select Same Blend Mode Layers";

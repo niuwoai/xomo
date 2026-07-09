@@ -221,6 +221,7 @@ extension ImageEditorView {
             viewModel.selectUnlockedLayers()
         }
         .disabled(!viewModel.canSelectUnlockedLayers)
+        layerSelectAttributeMenu
         Button(L10n.text("imageEditor.action.layerSelectSameKind")) {
             viewModel.selectLayersWithSameKind()
         }
@@ -359,6 +360,28 @@ extension ImageEditorView {
             viewModel.flattenImage()
         }
         .disabled(!viewModel.canFlattenImage)
+    }
+
+    @ViewBuilder
+    private var layerSelectAttributeMenu: some View {
+        Menu(L10n.text("imageEditor.menu.layer.selectAttribute")) {
+            Button(L10n.text("imageEditor.action.layerSelectMasked")) {
+                viewModel.selectMaskedLayers()
+            }
+            .disabled(!viewModel.canSelectMaskedLayers)
+            Button(L10n.text("imageEditor.action.layerSelectStyled")) {
+                viewModel.selectStyledLayers()
+            }
+            .disabled(!viewModel.canSelectStyledLayers)
+            Button(L10n.text("imageEditor.action.layerSelectClipping")) {
+                viewModel.selectClippingMaskLayers()
+            }
+            .disabled(!viewModel.canSelectClippingMaskLayers)
+            Button(L10n.text("imageEditor.action.layerSelectSmartFiltered")) {
+                viewModel.selectSmartFilteredLayers()
+            }
+            .disabled(!viewModel.canSelectSmartFilteredLayers)
+        }
     }
 
     @ViewBuilder

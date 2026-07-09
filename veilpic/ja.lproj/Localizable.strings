@@ -326,6 +326,7 @@
 "imageEditor.menu.view" = "表示";
 "imageEditor.menu.window" = "ウィンドウ";
 "imageEditor.menu.layer.lock" = "ロック";
+"imageEditor.menu.layer.selectAttribute" = "属性で選択";
 "imageEditor.menu.layer.order" = "重ね順";
 "imageEditor.menu.layer.transform" = "変形";
 "imageEditor.menu.layer.align" = "整列";
@@ -1178,6 +1179,10 @@
 "imageEditor.status.layerSelectHidden" = "非表示のレイヤーを %d 個選択しました";
 "imageEditor.status.layerSelectLocked" = "ロックされたレイヤーを %d 個選択しました";
 "imageEditor.status.layerSelectUnlocked" = "ロックされていないレイヤーを %d 個選択しました";
+"imageEditor.status.layerSelectMasked" = "マスク付きレイヤーを %d 個選択しました";
+"imageEditor.status.layerSelectStyled" = "レイヤースタイル付きレイヤーを %d 個選択しました";
+"imageEditor.status.layerSelectClipping" = "クリッピングマスクレイヤーを %d 個選択しました";
+"imageEditor.status.layerSelectSmartFiltered" = "スマートフィルター付きレイヤーを %d 個選択しました";
 "imageEditor.status.layerSelectSameKind" = "同じ種類のレイヤーを %d 個選択しました：%@";
 "imageEditor.status.layerSelectSimilar" = "類似レイヤーを %d 個選択しました：%@・%@";
 "imageEditor.status.layerSelectSameBlendMode" = "同じ描画モードのレイヤーを %d 個選択しました：%@";
@@ -1411,6 +1416,10 @@
 "imageEditor.action.layerSelectHidden" = "非表示のレイヤーを選択";
 "imageEditor.action.layerSelectLocked" = "ロックされたレイヤーを選択";
 "imageEditor.action.layerSelectUnlocked" = "ロックされていないレイヤーを選択";
+"imageEditor.action.layerSelectMasked" = "マスク付きレイヤーを選択";
+"imageEditor.action.layerSelectStyled" = "レイヤースタイル付きレイヤーを選択";
+"imageEditor.action.layerSelectClipping" = "クリッピングマスクレイヤーを選択";
+"imageEditor.action.layerSelectSmartFiltered" = "スマートフィルター付きレイヤーを選択";
 "imageEditor.action.layerSelectSameKind" = "同じ種類のレイヤーを選択";
 "imageEditor.action.layerSelectSimilar" = "類似レイヤーを選択";
 "imageEditor.action.layerSelectSameBlendMode" = "同じ描画モードのレイヤーを選択";

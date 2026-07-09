@@ -326,6 +326,7 @@
 "imageEditor.menu.view" = "视图";
 "imageEditor.menu.window" = "窗口";
 "imageEditor.menu.layer.lock" = "锁定";
+"imageEditor.menu.layer.selectAttribute" = "按属性选择";
 "imageEditor.menu.layer.order" = "排列";
 "imageEditor.menu.layer.transform" = "变换";
 "imageEditor.menu.layer.align" = "对齐";
@@ -1178,6 +1179,10 @@
 "imageEditor.status.layerSelectHidden" = "已选择 %d 个隐藏图层";
 "imageEditor.status.layerSelectLocked" = "已选择 %d 个锁定图层";
 "imageEditor.status.layerSelectUnlocked" = "已选择 %d 个未锁定图层";
+"imageEditor.status.layerSelectMasked" = "已选择 %d 个带蒙版图层";
+"imageEditor.status.layerSelectStyled" = "已选择 %d 个带图层样式图层";
+"imageEditor.status.layerSelectClipping" = "已选择 %d 个剪贴蒙版图层";
+"imageEditor.status.layerSelectSmartFiltered" = "已选择 %d 个带智能滤镜图层";
 "imageEditor.status.layerSelectSameKind" = "已选择 %d 个同类图层：%@";
 "imageEditor.status.layerSelectSimilar" = "已选择 %d 个相似图层：%@ · %@";
 "imageEditor.status.layerSelectSameBlendMode" = "已选择 %d 个相同混合模式图层：%@";
@@ -1411,6 +1416,10 @@
 "imageEditor.action.layerSelectHidden" = "选择隐藏图层";
 "imageEditor.action.layerSelectLocked" = "选择锁定图层";
 "imageEditor.action.layerSelectUnlocked" = "选择未锁定图层";
+"imageEditor.action.layerSelectMasked" = "选择带蒙版图层";
+"imageEditor.action.layerSelectStyled" = "选择带图层样式图层";
+"imageEditor.action.layerSelectClipping" = "选择剪贴蒙版图层";
+"imageEditor.action.layerSelectSmartFiltered" = "选择带智能滤镜图层";
 "imageEditor.action.layerSelectSameKind" = "选择同类图层";
 "imageEditor.action.layerSelectSimilar" = "选择相似图层";
 "imageEditor.action.layerSelectSameBlendMode" = "选择相同混合模式图层";

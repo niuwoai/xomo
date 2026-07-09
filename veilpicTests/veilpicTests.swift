@@ -333,6 +333,30 @@ struct veilpicTests {
         #expect(viewModel.document.selectedLayerIDs == Set([textLayer.id, groupLayer.id]))
         #expect(viewModel.document.selectedLayerID == groupLayer.id)
         #expect(viewModel.statusText == L10n.format("imageEditor.status.layerSelectHidden", 2))
+
+        #expect(viewModel.canSelectMaskedLayers)
+        viewModel.selectMaskedLayers()
+        #expect(viewModel.document.selectedLayerIDs == [pixelLayer.id])
+        #expect(viewModel.document.selectedLayerID == pixelLayer.id)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerSelectMasked", 1))
+
+        #expect(viewModel.canSelectStyledLayers)
+        viewModel.selectStyledLayers()
+        #expect(viewModel.document.selectedLayerIDs == [shapeLayer.id])
+        #expect(viewModel.document.selectedLayerID == shapeLayer.id)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerSelectStyled", 1))
+
+        #expect(viewModel.canSelectClippingMaskLayers)
+        viewModel.selectClippingMaskLayers()
+        #expect(viewModel.document.selectedLayerIDs == [clippedFilterLayer.id])
+        #expect(viewModel.document.selectedLayerID == clippedFilterLayer.id)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerSelectClipping", 1))
+
+        #expect(viewModel.canSelectSmartFilteredLayers)
+        viewModel.selectSmartFilteredLayers()
+        #expect(viewModel.document.selectedLayerIDs == [smartObjectLayer.id])
+        #expect(viewModel.document.selectedLayerID == smartObjectLayer.id)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerSelectSmartFiltered", 1))
     }
 
     @MainActor

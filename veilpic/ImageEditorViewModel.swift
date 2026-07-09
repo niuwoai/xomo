@@ -609,6 +609,22 @@ final class ImageEditorViewModel: ObservableObject {
         document.layers.contains { !document.isEffectivelyLocked($0) }
     }
 
+    var canSelectMaskedLayers: Bool {
+        canSelectLayers(matching: .masked)
+    }
+
+    var canSelectStyledLayers: Bool {
+        canSelectLayers(matching: .styled)
+    }
+
+    var canSelectClippingMaskLayers: Bool {
+        canSelectLayers(matching: .clipping)
+    }
+
+    var canSelectSmartFilteredLayers: Bool {
+        canSelectLayers(matching: .smartFiltered)
+    }
+
     var canSelectLayersWithSameKind: Bool {
         document.selectedLayer != nil
     }
@@ -1211,6 +1227,22 @@ final class ImageEditorViewModel: ObservableObject {
         selectLayerIDs(layerIDs, statusKey: "imageEditor.status.layerSelectUnlocked")
     }
 
+    func selectMaskedLayers() {
+        selectLayers(matching: .masked, statusKey: "imageEditor.status.layerSelectMasked")
+    }
+
+    func selectStyledLayers() {
+        selectLayers(matching: .styled, statusKey: "imageEditor.status.layerSelectStyled")
+    }
+
+    func selectClippingMaskLayers() {
+        selectLayers(matching: .clipping, statusKey: "imageEditor.status.layerSelectClipping")
+    }
+
+    func selectSmartFilteredLayers() {
+        selectLayers(matching: .smartFiltered, statusKey: "imageEditor.status.layerSelectSmartFiltered")
+    }
+
     func selectLayersWithSameKind() {
         guard let selectedLayer = document.selectedLayer else { return }
         let selectedKind = layerKindFilter(for: selectedLayer)
@@ -1285,6 +1317,15 @@ final class ImageEditorViewModel: ObservableObject {
         isEditingLayerMask = false
         syncControlsFromLayerSelection()
         statusText = L10n.format(statusKey, layerIDs.count)
+    }
+
+    private func canSelectLayers(matching attributeFilter: ImageEditorLayerAttributeFilter) -> Bool {
+        document.layers.contains { attributeFilter.matches($0) }
+    }
+
+    private func selectLayers(matching attributeFilter: ImageEditorLayerAttributeFilter, statusKey: String) {
+        let layerIDs = Set(document.layers.filter { attributeFilter.matches($0) }.map(\.id))
+        selectLayerIDs(layerIDs, statusKey: statusKey)
     }
 
     func addLayer() {
