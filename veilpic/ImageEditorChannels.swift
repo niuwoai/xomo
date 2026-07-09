@@ -74,6 +74,15 @@ extension ImageEditorViewModel {
         return document.alphaChannels.first { $0.id == selectedAlphaChannelID }
     }
 
+    var previewedAlphaChannel: ImageEditorAlphaChannel? {
+        guard let previewedAlphaChannelID else { return nil }
+        return document.alphaChannels.first { $0.id == previewedAlphaChannelID }
+    }
+
+    var channelPreviewTitle: String {
+        previewedAlphaChannel?.name ?? selectedChannelPreview.title
+    }
+
     var canLoadSelectedAlphaChannelSelection: Bool {
         selectedAlphaChannel != nil
     }
@@ -161,6 +170,7 @@ extension ImageEditorViewModel {
     func selectAlphaChannel(_ id: UUID) {
         guard let channel = document.alphaChannels.first(where: { $0.id == id }) else { return }
         selectedAlphaChannelID = channel.id
+        previewedAlphaChannelID = channel.id
         statusText = L10n.format("imageEditor.status.alphaChannelSelected", channel.name)
     }
 
@@ -231,6 +241,7 @@ extension ImageEditorViewModel {
         pushUndo()
         document.alphaChannels.insert(duplicatedChannel, at: index + 1)
         selectedAlphaChannelID = duplicatedChannel.id
+        previewedAlphaChannelID = duplicatedChannel.id
         appendHistory(L10n.text("imageEditor.history.alphaChannelDuplicate"))
         statusText = L10n.format("imageEditor.status.alphaChannelDuplicated", duplicatedChannel.name)
     }
@@ -300,6 +311,9 @@ extension ImageEditorViewModel {
             } else {
                 selectedAlphaChannelID = document.alphaChannels[min(index, document.alphaChannels.count - 1)].id
             }
+        }
+        if previewedAlphaChannelID == id {
+            previewedAlphaChannelID = selectedAlphaChannelID
         }
         appendHistory(L10n.text("imageEditor.history.alphaChannelDelete"))
         statusText = L10n.text("imageEditor.status.alphaChannelDeleted")

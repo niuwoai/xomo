@@ -43,7 +43,7 @@ extension ImageEditorView {
 
     private var channelsPanelContent: some View {
         VStack(spacing: 8) {
-            Text(L10n.format("imageEditor.channel.previewing", viewModel.selectedChannelPreview.title))
+            Text(L10n.format("imageEditor.channel.previewing", viewModel.channelPreviewTitle))
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -110,7 +110,7 @@ extension ImageEditorView {
     }
 
     private func channelRow(_ channel: ImageEditorChannelPreview) -> some View {
-        let isSelected = viewModel.selectedChannelPreview == channel
+        let isSelected = viewModel.previewedAlphaChannel == nil && viewModel.selectedChannelPreview == channel
         return HStack(spacing: 6) {
             Button {
                 viewModel.selectChannelPreview(channel)

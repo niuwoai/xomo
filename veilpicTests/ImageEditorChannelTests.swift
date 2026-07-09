@@ -60,6 +60,39 @@ struct ImageEditorChannelTests {
         #expect(try #require(viewModel.currentImage.qingtuPNGData()) == compositeData)
     }
 
+    @Test func savedAlphaChannelCanPreviewOnMainCanvas() async throws {
+        let viewModel = ImageEditorViewModel(sourceName: "split.png", image: splitChannelImage()) { _ in }
+        let compositeData = try #require(viewModel.currentImage.qingtuPNGData())
+
+        viewModel.loadSelectionFromChannel(.red)
+        viewModel.saveSelectionAsAlphaChannel()
+
+        let channel = try #require(viewModel.document.alphaChannels.first)
+        #expect(viewModel.previewedAlphaChannelID == nil)
+
+        viewModel.selectAlphaChannel(channel.id)
+
+        #expect(viewModel.selectedAlphaChannelID == channel.id)
+        #expect(viewModel.previewedAlphaChannelID == channel.id)
+        #expect(viewModel.channelPreviewTitle == channel.name)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelSelected", channel.name))
+
+        let selectedPreview = try #require(viewModel.previewImage.color(at: CGPoint(x: 0.5, y: 0.5))?.usingColorSpace(.deviceRGB))
+        let unselectedPreview = try #require(viewModel.previewImage.color(at: CGPoint(x: 1.5, y: 0.5))?.usingColorSpace(.deviceRGB))
+        #expect(approximately(selectedPreview.redComponent, 1, tolerance: 0.02))
+        #expect(approximately(selectedPreview.greenComponent, 1, tolerance: 0.02))
+        #expect(approximately(selectedPreview.blueComponent, 1, tolerance: 0.02))
+        #expect(approximately(unselectedPreview.redComponent, 0, tolerance: 0.02))
+        #expect(approximately(unselectedPreview.greenComponent, 0, tolerance: 0.02))
+        #expect(approximately(unselectedPreview.blueComponent, 0, tolerance: 0.02))
+        #expect(try #require(viewModel.currentImage.qingtuPNGData()) == compositeData)
+
+        viewModel.selectChannelPreview(.composite)
+
+        #expect(viewModel.previewedAlphaChannelID == nil)
+        #expect(viewModel.channelPreviewTitle == ImageEditorChannelPreview.composite.title)
+    }
+
     @Test func channelSelectionLoadsThroughSelectionModes() async throws {
         let viewModel = ImageEditorViewModel(sourceName: "split.png", image: splitChannelImage()) { _ in }
 

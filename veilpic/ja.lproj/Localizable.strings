@@ -1599,7 +1599,7 @@
 "imageEditor.action.channelLoadSelection" = "%@ チャンネルを選択範囲として読み込み";
 "imageEditor.action.channelSaveSelection" = "選択範囲を Alpha チャンネルとして保存";
 "imageEditor.action.channelSaveLayerMask" = "レイヤーマスクを Alpha チャンネルとして保存";
-"imageEditor.action.alphaChannelSelect" = "Alpha チャンネルを選択";
+"imageEditor.action.alphaChannelSelect" = "Alpha チャンネルをプレビューして選択";
 "imageEditor.action.alphaChannelLoadSelection" = "%@ を選択範囲として読み込み";
 "imageEditor.action.alphaChannelUpdate" = "現在の選択範囲で %@ を更新";
 "imageEditor.action.alphaChannelApplyToMask" = "%@ を現在のレイヤーマスクとして適用";
@@ -1615,7 +1615,7 @@
 "imageEditor.status.channelPreview" = "%@ チャンネルをプレビュー中";
 "imageEditor.status.channelSelection" = "%@ チャンネルを選択範囲として読み込みました";
 "imageEditor.status.channelSelectionEmpty" = "%@ チャンネルには選択できるピクセルがありません";
-"imageEditor.status.alphaChannelSelected" = "%@ を選択しました";
+"imageEditor.status.alphaChannelSelected" = "%@ をプレビュー中";
 "imageEditor.status.alphaChannelSaved" = "Alpha チャンネルとして保存しました";
 "imageEditor.status.alphaChannelFromMask" = "現在のレイヤーマスクを Alpha チャンネルとして保存しました";
 "imageEditor.status.alphaChannelFromMaskFailed" = "現在のレイヤーには保存できるマスクがありません";

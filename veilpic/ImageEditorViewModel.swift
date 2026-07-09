@@ -174,6 +174,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var filterSpherizeAmount: Double = 0.5
     @Published var selectedChannelPreview: ImageEditorChannelPreview = .composite
     @Published var selectedAlphaChannelID: UUID?
+    @Published var previewedAlphaChannelID: UUID?
     @Published var isEditingLayerMask: Bool = false
     @Published var pendingPenPathPoints: [CGPoint] = []
     @Published var selectedPathSubpathIndex: Int = 0
@@ -222,7 +223,10 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     var previewImage: NSImage {
-        currentImage.channelPreview(selectedChannelPreview)
+        if let previewedAlphaChannel {
+            return alphaChannelPreviewImage(previewedAlphaChannel)
+        }
+        return currentImage.channelPreview(selectedChannelPreview)
     }
 
     func channelPreviewImage(for channel: ImageEditorChannelPreview) -> NSImage {
@@ -231,6 +235,7 @@ final class ImageEditorViewModel: ObservableObject {
 
     func selectChannelPreview(_ channel: ImageEditorChannelPreview) {
         selectedChannelPreview = channel
+        previewedAlphaChannelID = nil
         statusText = L10n.format("imageEditor.status.channelPreview", channel.title)
     }
 
