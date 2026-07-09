@@ -1175,6 +1175,7 @@
 "imageEditor.status.layerTransparentPixelsUnlockSelected" = "Selected transparent pixels unlocked";
 "imageEditor.status.layerSelectAll" = "All %d layers selected";
 "imageEditor.status.layerSelectSameKind" = "%d layers of the same kind selected: %@";
+"imageEditor.status.layerSelectSameBlendMode" = "%d layers with the same blend mode selected: %@";
 "imageEditor.status.layerSelectSameLabelColor" = "%d layers with the same color label selected: %@";
 "imageEditor.status.layerSelectionInverted" = "Layer selection inverted; %d layers selected";
 "imageEditor.status.layerSelectionCleared" = "Layer selection cleared";
@@ -1402,6 +1403,7 @@
 "imageEditor.action.backgroundFromLayer" = "Background From Layer";
 "imageEditor.action.layerSelectAll" = "Select All Layers";
 "imageEditor.action.layerSelectSameKind" = "Select Same Kind Layers";
+"imageEditor.action.layerSelectSameBlendMode" = "Select Same Blend Mode Layers";
 "imageEditor.action.layerSelectSameLabelColor" = "Select Same Color Label Layers";
 "imageEditor.action.layerSelectionInvert" = "Invert Layer Selection";
 "imageEditor.action.layerSelectionClear" = "Clear Layer Selection";

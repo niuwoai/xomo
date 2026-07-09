@@ -338,7 +338,8 @@ struct veilpicTests {
             )
         )
         titleLayer.labelColor = .green
-        let captionLayer = ImageEditorLayer.text(
+        titleLayer.blendMode = .multiply
+        var captionLayer = ImageEditorLayer.text(
             name: "Caption",
             origin: CGPoint(x: 16, y: 28),
             content: ImageEditorTextContent(
@@ -348,6 +349,7 @@ struct veilpicTests {
                 point: CGPoint(x: 2, y: 2)
             )
         )
+        captionLayer.blendMode = .screen
         var shapeLayer = ImageEditorLayer.shape(
             name: "Badge",
             frame: CGRect(x: 12, y: 12, width: 24, height: 24),
@@ -361,6 +363,7 @@ struct veilpicTests {
             )
         )
         shapeLayer.labelColor = .green
+        shapeLayer.blendMode = .multiply
         viewModel.document.layers.append(contentsOf: [titleLayer, captionLayer, shapeLayer])
 
         viewModel.selectLayer(titleLayer.id)
@@ -369,6 +372,13 @@ struct veilpicTests {
         #expect(viewModel.document.selectedLayerIDs == [titleLayer.id, captionLayer.id])
         #expect(viewModel.document.selectedLayerID == captionLayer.id)
         #expect(viewModel.statusText == L10n.format("imageEditor.status.layerSelectSameKind", 2, ImageEditorLayerKindFilter.text.title))
+
+        viewModel.selectLayer(titleLayer.id)
+        #expect(viewModel.canSelectLayersWithSameBlendMode)
+        viewModel.selectLayersWithSameBlendMode()
+        #expect(viewModel.document.selectedLayerIDs == [titleLayer.id, shapeLayer.id])
+        #expect(viewModel.document.selectedLayerID == shapeLayer.id)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerSelectSameBlendMode", 2, ImageEditorBlendMode.multiply.title))
 
         viewModel.selectLayer(titleLayer.id)
         #expect(viewModel.canSelectLayersWithSameLabelColor)
