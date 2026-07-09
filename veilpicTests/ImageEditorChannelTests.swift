@@ -653,6 +653,32 @@ struct ImageEditorChannelTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelRotateCounterclockwise"))
     }
 
+    @Test func alphaChannelsCanRotateMask180() async throws {
+        let viewModel = ImageEditorViewModel(sourceName: "split.png", image: splitChannelImage()) { _ in }
+        var alpha = [UInt8](repeating: 0, count: 42)
+        alpha[1 * 7 + 2] = 255
+        alpha[1 * 7 + 3] = 255
+        alpha[1 * 7 + 4] = 255
+        alpha[2 * 7 + 2] = 255
+        let lShapeMask = ImageEditorSelectionMask(width: 7, height: 6, alpha: alpha)
+        let channel = ImageEditorAlphaChannel(name: "Rotate 180", mask: lShapeMask)
+        viewModel.document.alphaChannels = [channel]
+        viewModel.selectAlphaChannel(channel.id)
+
+        #expect(viewModel.canRotateSelectedAlphaChannel180)
+        viewModel.rotateSelectedAlphaChannel180()
+
+        let rotatedMask = try #require(viewModel.selectedAlphaChannel?.mask)
+        #expect(maskAlpha(rotatedMask, x: 2, y: 1) == 0)
+        #expect(maskAlpha(rotatedMask, x: 3, y: 1) == 0)
+        #expect(maskAlpha(rotatedMask, x: 4, y: 1) == 255)
+        #expect(maskAlpha(rotatedMask, x: 2, y: 2) == 255)
+        #expect(maskAlpha(rotatedMask, x: 3, y: 2) == 255)
+        #expect(maskAlpha(rotatedMask, x: 4, y: 2) == 255)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelRotated180", "Rotate 180"))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelRotate180"))
+    }
+
     @Test func alphaChannelsRoundTripWithLayerMasks() async throws {
         let viewModel = ImageEditorViewModel(sourceName: "split.png", image: splitChannelImage()) { _ in }
 

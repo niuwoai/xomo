@@ -377,6 +377,16 @@ extension ImageEditorView {
             .help(L10n.format("imageEditor.action.alphaChannelRotateClockwise", channel.name))
 
             Button {
+                viewModel.rotateAlphaChannel180(channel.id)
+            } label: {
+                Image(systemName: "arrow.triangle.2.circlepath")
+                    .font(.system(size: 12, weight: .semibold))
+                    .frame(width: 24, height: 28)
+            }
+            .buttonStyle(EditorIconButtonStyle(isSelected: false))
+            .help(L10n.format("imageEditor.action.alphaChannelRotate180", channel.name))
+
+            Button {
                 viewModel.deleteAlphaChannel(channel.id)
             } label: {
                 Image(systemName: "trash")

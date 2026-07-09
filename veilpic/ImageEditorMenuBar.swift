@@ -980,6 +980,10 @@ extension ImageEditorView {
             viewModel.rotateSelectedAlphaChannelClockwise()
         }
         .disabled(!viewModel.canRotateSelectedAlphaChannelClockwise)
+        Button(L10n.text("imageEditor.action.alphaChannelRotate180Selected")) {
+            viewModel.rotateSelectedAlphaChannel180()
+        }
+        .disabled(!viewModel.canRotateSelectedAlphaChannel180)
         Button(L10n.text("imageEditor.action.alphaChannelDeleteSelected")) {
             viewModel.deleteSelectedAlphaChannel()
         }

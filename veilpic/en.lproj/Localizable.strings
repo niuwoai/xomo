@@ -1619,6 +1619,7 @@
 "imageEditor.action.alphaChannelFlipVertical" = "Flip %@ vertically";
 "imageEditor.action.alphaChannelRotateCounterclockwise" = "Rotate %@ 90° counterclockwise";
 "imageEditor.action.alphaChannelRotateClockwise" = "Rotate %@ 90° clockwise";
+"imageEditor.action.alphaChannelRotate180" = "Rotate %@ 180°";
 "imageEditor.action.alphaChannelDelete" = "Delete %@";
 "imageEditor.action.alphaChannelLoadSelectedSelection" = "Load selected alpha channel as selection";
 "imageEditor.action.alphaChannelUpdateSelected" = "Update selected alpha channel from current selection";
@@ -1636,6 +1637,7 @@
 "imageEditor.action.alphaChannelFlipVerticalSelected" = "Flip selected alpha channel vertically";
 "imageEditor.action.alphaChannelRotateCounterclockwiseSelected" = "Rotate selected alpha channel 90° counterclockwise";
 "imageEditor.action.alphaChannelRotateClockwiseSelected" = "Rotate selected alpha channel 90° clockwise";
+"imageEditor.action.alphaChannelRotate180Selected" = "Rotate selected alpha channel 180°";
 "imageEditor.action.alphaChannelDeleteSelected" = "Delete selected alpha channel";
 "imageEditor.action.alphaChannelPrevious" = "Previous Alpha Channel";
 "imageEditor.action.alphaChannelNext" = "Next Alpha Channel";
@@ -1663,6 +1665,7 @@
 "imageEditor.status.alphaChannelFlippedVertical" = "Flipped %@ vertically";
 "imageEditor.status.alphaChannelRotatedCounterclockwise" = "Rotated %@ 90° counterclockwise";
 "imageEditor.status.alphaChannelRotatedClockwise" = "Rotated %@ 90° clockwise";
+"imageEditor.status.alphaChannelRotated180" = "Rotated %@ 180°";
 "imageEditor.status.alphaChannelRenamed" = "Renamed alpha channel";
 "imageEditor.status.alphaChannelNameInvalid" = "Alpha channel name cannot be empty";
 "imageEditor.status.alphaChannelDeleted" = "Deleted alpha channel";
@@ -1687,6 +1690,7 @@
 "imageEditor.history.alphaChannelFlipVertical" = "Flip Alpha Channel Vertically";
 "imageEditor.history.alphaChannelRotateCounterclockwise" = "Rotate Alpha Channel 90° Counterclockwise";
 "imageEditor.history.alphaChannelRotateClockwise" = "Rotate Alpha Channel 90° Clockwise";
+"imageEditor.history.alphaChannelRotate180" = "Rotate Alpha Channel 180°";
 "imageEditor.history.alphaChannelRename" = "Rename Alpha Channel";
 "imageEditor.history.alphaChannelDelete" = "Delete Alpha Channel";
 "imageEditor.action.layerCompNew" = "Save Layer Comp";

@@ -1619,6 +1619,7 @@
 "imageEditor.action.alphaChannelFlipVertical" = "%@ を上下反転";
 "imageEditor.action.alphaChannelRotateCounterclockwise" = "%@ を反時計回りに 90° 回転";
 "imageEditor.action.alphaChannelRotateClockwise" = "%@ を時計回りに 90° 回転";
+"imageEditor.action.alphaChannelRotate180" = "%@ を 180° 回転";
 "imageEditor.action.alphaChannelDelete" = "%@ を削除";
 "imageEditor.action.alphaChannelLoadSelectedSelection" = "選択中の Alpha チャンネルを選択範囲として読み込み";
 "imageEditor.action.alphaChannelUpdateSelected" = "現在の選択範囲で選択中の Alpha チャンネルを更新";
@@ -1636,6 +1637,7 @@
 "imageEditor.action.alphaChannelFlipVerticalSelected" = "選択中の Alpha チャンネルを上下反転";
 "imageEditor.action.alphaChannelRotateCounterclockwiseSelected" = "選択中の Alpha チャンネルを反時計回りに 90° 回転";
 "imageEditor.action.alphaChannelRotateClockwiseSelected" = "選択中の Alpha チャンネルを時計回りに 90° 回転";
+"imageEditor.action.alphaChannelRotate180Selected" = "選択中の Alpha チャンネルを 180° 回転";
 "imageEditor.action.alphaChannelDeleteSelected" = "選択中の Alpha チャンネルを削除";
 "imageEditor.action.alphaChannelPrevious" = "前の Alpha チャンネル";
 "imageEditor.action.alphaChannelNext" = "次の Alpha チャンネル";
@@ -1663,6 +1665,7 @@
 "imageEditor.status.alphaChannelFlippedVertical" = "%@ を上下反転しました";
 "imageEditor.status.alphaChannelRotatedCounterclockwise" = "%@ を反時計回りに 90° 回転しました";
 "imageEditor.status.alphaChannelRotatedClockwise" = "%@ を時計回りに 90° 回転しました";
+"imageEditor.status.alphaChannelRotated180" = "%@ を 180° 回転しました";
 "imageEditor.status.alphaChannelRenamed" = "Alpha チャンネル名を変更しました";
 "imageEditor.status.alphaChannelNameInvalid" = "Alpha チャンネル名は空にできません";
 "imageEditor.status.alphaChannelDeleted" = "Alpha チャンネルを削除しました";
@@ -1687,6 +1690,7 @@
 "imageEditor.history.alphaChannelFlipVertical" = "Alpha チャンネルを上下反転";
 "imageEditor.history.alphaChannelRotateCounterclockwise" = "Alpha チャンネルを反時計回りに 90° 回転";
 "imageEditor.history.alphaChannelRotateClockwise" = "Alpha チャンネルを時計回りに 90° 回転";
+"imageEditor.history.alphaChannelRotate180" = "Alpha チャンネルを 180° 回転";
 "imageEditor.history.alphaChannelRename" = "Alpha チャンネル名を変更";
 "imageEditor.history.alphaChannelDelete" = "Alpha チャンネルを削除";
 "imageEditor.action.layerCompNew" = "レイヤーコンプを保存";

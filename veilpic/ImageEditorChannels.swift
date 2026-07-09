@@ -152,6 +152,10 @@ extension ImageEditorViewModel {
         selectedAlphaChannel != nil
     }
 
+    var canRotateSelectedAlphaChannel180: Bool {
+        selectedAlphaChannel != nil
+    }
+
     var canDeleteSelectedAlphaChannel: Bool {
         selectedAlphaChannel != nil
     }
@@ -330,6 +334,11 @@ extension ImageEditorViewModel {
     func rotateSelectedAlphaChannelCounterclockwise() {
         guard let selectedAlphaChannelID else { return }
         rotateAlphaChannelCounterclockwise(selectedAlphaChannelID)
+    }
+
+    func rotateSelectedAlphaChannel180() {
+        guard let selectedAlphaChannelID else { return }
+        rotateAlphaChannel180(selectedAlphaChannelID)
     }
 
     func deleteSelectedAlphaChannel() {
@@ -549,6 +558,15 @@ extension ImageEditorViewModel {
             clockwiseTurns: -1,
             historyKey: "imageEditor.history.alphaChannelRotateCounterclockwise",
             statusKey: "imageEditor.status.alphaChannelRotatedCounterclockwise"
+        )
+    }
+
+    func rotateAlphaChannel180(_ id: UUID) {
+        rotateAlphaChannel(
+            id,
+            clockwiseTurns: 2,
+            historyKey: "imageEditor.history.alphaChannelRotate180",
+            statusKey: "imageEditor.status.alphaChannelRotated180"
         )
     }
 
