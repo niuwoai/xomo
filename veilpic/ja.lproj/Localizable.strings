@@ -461,6 +461,7 @@
 "imageEditor.filter.minimum" = "明るさの最小値";
 "imageEditor.filter.maximum" = "明るさの最大値";
 "imageEditor.filter.oilPaint" = "油彩";
+"imageEditor.filter.vignette" = "周辺光量";
 "imageEditor.filter.unsharpRadius" = "半径";
 "imageEditor.filter.unsharpRadiusValue" = "%@ px";
 "imageEditor.filter.unsharpThreshold" = "しきい値";
@@ -519,6 +520,7 @@
 "imageEditor.properties.selectiveColorLayerValue" = "特定色域の選択：%@";
 "imageEditor.properties.gradientMapLayerValue" = "グラデーションマップ：%@";
 "imageEditor.properties.filterLayerValue" = "%@ フィルター：%d%%";
+"imageEditor.properties.gradientFillLayerValue" = "グラデーション塗り：%@、%d°、%d%%";
 "imageEditor.properties.unsharpFilterLayerValue" = "アンシャープマスク：量 %d%% · 半径 %@ · しきい値 %d";
 "imageEditor.properties.textLayerValue" = "文字：%@・%d px";
 "imageEditor.properties.shapeLayerValue" = "%@シェイプ・%d x %d px";
@@ -629,6 +631,23 @@
 "imageEditor.gradientMap.red" = "レッド";
 "imageEditor.gradientMap.green" = "グリーン";
 "imageEditor.gradientMap.blue" = "ブルー";
+"imageEditor.gradientFill.preset" = "グラデーション塗り";
+"imageEditor.gradientFill.preset.blackWhite" = "白黒";
+"imageEditor.gradientFill.preset.sunset" = "サンセット";
+"imageEditor.gradientFill.preset.blueOrange" = "ブルー / オレンジ";
+"imageEditor.gradientFill.preset.purpleTeal" = "パープル / ティール";
+"imageEditor.gradientFill.preset.foregroundBackground" = "描画色から背景色";
+"imageEditor.gradientFill.preset.custom" = "カスタム";
+"imageEditor.gradientFill.reverse" = "反転";
+"imageEditor.gradientFill.angle" = "角度";
+"imageEditor.gradientFill.angleValue" = "%d°";
+"imageEditor.gradientFill.scale" = "スケール";
+"imageEditor.gradientFill.scaleValue" = "%d%%";
+"imageEditor.gradientFill.start" = "開始色";
+"imageEditor.gradientFill.end" = "終了色";
+"imageEditor.gradientFill.red" = "レッド";
+"imageEditor.gradientFill.green" = "グリーン";
+"imageEditor.gradientFill.blue" = "ブルー";
 "imageEditor.patternOverlay.checkerboard" = "市松模様";
 "imageEditor.patternOverlay.diagonalStripes" = "斜線";
 "imageEditor.patternOverlay.dots" = "ドット";
@@ -689,6 +708,7 @@
 "imageEditor.layer.groupBadge" = "グループ";
 "imageEditor.layer.adjustmentBadge" = "調整";
 "imageEditor.layer.filterBadge" = "フィルター";
+"imageEditor.layer.gradientFillBadge" = "グラデ";
 "imageEditor.layer.textBadge" = "文字";
 "imageEditor.layer.shapeBadge" = "シェイプ";
 "imageEditor.layer.smartObjectBadge" = "スマートオブジェクト";
@@ -698,6 +718,7 @@
 "imageEditor.layer.linkedBadge" = "リンク済みレイヤー";
 "imageEditor.layer.adjustmentName" = "%@ 調整";
 "imageEditor.layer.filterName" = "%@ フィルター";
+"imageEditor.layer.gradientFillName" = "グラデーション塗り";
 "imageEditor.layer.textName" = "文字：%@";
 "imageEditor.layer.textFallbackName" = "文字";
 "imageEditor.layer.shapeName" = "%@シェイプ";
@@ -734,6 +755,7 @@
 "imageEditor.layer.kindFilter.shape" = "シェイプレイヤーのみ表示";
 "imageEditor.layer.kindFilter.adjustment" = "調整レイヤーのみ表示";
 "imageEditor.layer.kindFilter.filter" = "フィルターレイヤーのみ表示";
+"imageEditor.layer.kindFilter.gradientFill" = "グラデーション塗りレイヤーのみ表示";
 "imageEditor.layer.kindFilter.smartObject" = "スマートオブジェクトのみ表示";
 "imageEditor.layer.kindFilter.group" = "レイヤーグループのみ表示";
 "imageEditor.layer.stateFilter.all" = "すべてのレイヤー状態を表示";
@@ -911,6 +933,8 @@
 "imageEditor.history.selectionFromLayerMask" = "レイヤーマスクから選択範囲を読み込み";
 "imageEditor.history.selectionFromVectorMask" = "ベクターマスクから選択範囲を読み込み";
 "imageEditor.history.layerFilterNew" = "フィルターレイヤーを作成";
+"imageEditor.history.layerGradientFillNew" = "グラデーション塗りレイヤーを作成";
+"imageEditor.history.layerGradientFillUpdate" = "グラデーション塗りレイヤーを更新";
 "imageEditor.history.layerFilterUpdate" = "フィルターレイヤーを更新";
 "imageEditor.history.layerSmartFilterAdd" = "スマートフィルターを追加";
 "imageEditor.history.layerSmartFilterUpdate" = "スマートフィルターを更新";
@@ -1212,6 +1236,8 @@
 "imageEditor.action.layerAdjustmentNew" = "調整レイヤーを作成";
 "imageEditor.action.layerAdjustmentUpdate" = "調整レイヤーを更新";
 "imageEditor.action.layerFilterNew" = "フィルターレイヤーを作成";
+"imageEditor.action.layerGradientFillNew" = "グラデーション塗りを作成";
+"imageEditor.action.layerGradientFillUpdate" = "グラデーション塗りを更新";
 "imageEditor.action.layerFilterUpdate" = "フィルターレイヤーを更新";
 "imageEditor.action.layerSmartFilterAdd" = "スマートフィルターを追加";
 "imageEditor.action.layerSmartFilterUpdate" = "最後のスマートフィルターを更新";

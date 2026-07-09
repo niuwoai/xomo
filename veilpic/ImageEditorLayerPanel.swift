@@ -1210,6 +1210,8 @@ extension ImageEditorView {
                 layerTextBadge("imageEditor.layer.adjustmentBadge")
             } else if layer.isFilter {
                 layerTextBadge("imageEditor.layer.filterBadge")
+            } else if layer.isGradientFill {
+                layerTextBadge("imageEditor.layer.gradientFillBadge")
             } else if layer.isText {
                 layerTextBadge("imageEditor.layer.textBadge")
             } else if layer.isShape {
@@ -1312,15 +1314,15 @@ extension ImageEditorView {
     }
 
     private func canToggleTransparentPixelsLock(for layer: ImageEditorLayer) -> Bool {
-        !layer.isGroup && !layer.isAdjustment && !layer.isFilter && !layer.isText && !layer.isShape
+        !layer.isGroup && !layer.isAdjustment && !layer.isFilter && !layer.isGradientFill && !layer.isText && !layer.isShape
     }
 
     private func canTogglePixelsLock(for layer: ImageEditorLayer) -> Bool {
-        !layer.isAdjustment && !layer.isFilter
+        !layer.isAdjustment && !layer.isFilter && !layer.isGradientFill
     }
 
     private func canTogglePositionLock(for layer: ImageEditorLayer) -> Bool {
-        !layer.isAdjustment && !layer.isFilter
+        !layer.isAdjustment && !layer.isFilter && !layer.isGradientFill
     }
 
     private func contentThumbnailStroke(for layer: ImageEditorLayer) -> Color {

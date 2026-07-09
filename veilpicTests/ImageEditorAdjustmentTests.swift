@@ -12,6 +12,61 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct ImageEditorAdjustmentTests {
+    @Test func imageEditorGradientFillLayerRendersUpdatesAndRoundTripsProjectState() async throws {
+        let canvasSize = NSSize(width: 80, height: 30)
+        let sourceImage = bitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: sourceImage) { _ in }
+        let baseLayerID = try #require(viewModel.document.selectedLayerID)
+        let basePixelsBefore = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+
+        viewModel.selectedGradientFillPreset = .custom
+        viewModel.gradientFillStartRed = 1
+        viewModel.gradientFillStartGreen = 0
+        viewModel.gradientFillStartBlue = 0
+        viewModel.gradientFillEndRed = 0
+        viewModel.gradientFillEndGreen = 1
+        viewModel.gradientFillEndBlue = 0
+        viewModel.gradientFillAngle = 0
+        viewModel.gradientFillScale = 1
+        viewModel.addGradientFillLayer()
+
+        let gradientLayer = try #require(viewModel.document.selectedLayer)
+        let content = try #require(gradientLayer.gradientFillContent?.normalized())
+        let leftColor = try #require(viewModel.currentImage.color(at: CGPoint(x: 4, y: 15))?.usingColorSpace(.deviceRGB))
+        let rightColor = try #require(viewModel.currentImage.color(at: CGPoint(x: 76, y: 15))?.usingColorSpace(.deviceRGB))
+
+        #expect(content.preset == .custom)
+        #expect(content.angle == 0)
+        #expect(content.scale == 1)
+        #expect(leftColor.redComponent > rightColor.redComponent + 0.55)
+        #expect(rightColor.greenComponent > leftColor.greenComponent + 0.55)
+        #expect(viewModel.document.layers.first { $0.id == baseLayerID }?.image.qingtuPNGData() == basePixelsBefore)
+        #expect(viewModel.selectedLayerGeometryText == L10n.format("imageEditor.properties.gradientFillLayerValue", content.preset.title, 0, 100))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerGradientFillNew"))
+
+        viewModel.gradientFillReverse = true
+        viewModel.gradientFillScale = 2
+        viewModel.updateSelectedGradientFillLayer()
+
+        let updatedContent = try #require(viewModel.document.selectedLayer?.gradientFillContent?.normalized())
+        let reversedLeft = try #require(viewModel.currentImage.color(at: CGPoint(x: 4, y: 15))?.usingColorSpace(.deviceRGB))
+        let reversedRight = try #require(viewModel.currentImage.color(at: CGPoint(x: 76, y: 15))?.usingColorSpace(.deviceRGB))
+        #expect(updatedContent.reverse)
+        #expect(updatedContent.scale == 2)
+        #expect(reversedLeft.greenComponent > reversedRight.greenComponent + 0.25)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerGradientFillUpdate"))
+
+        let project = try ImageEditorProjectDocument(document: viewModel.document)
+        let restoredDocument = try project.restoredDocument()
+        let restoredLayer = try #require(restoredDocument.layers.first { $0.id == gradientLayer.id })
+        let restoredContent = try #require(restoredLayer.gradientFillContent?.normalized())
+        #expect(restoredContent.preset == .custom)
+        #expect(restoredContent.reverse)
+        #expect(restoredContent.scale == 2)
+        #expect(restoredContent.startRed == 1)
+        #expect(restoredContent.endGreen == 1)
+    }
+
     @Test func imageEditorVibranceAdjustmentPrioritizesMutedColorsAndSupportsLayerState() async throws {
         let canvasSize = NSSize(width: 80, height: 40)
         let sourceImage = bitmapImage(size: canvasSize, background: .black)

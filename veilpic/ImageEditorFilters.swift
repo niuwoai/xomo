@@ -51,6 +51,9 @@ extension NSImage {
         if kind == .oilPaint {
             return oilPainted(intensity: clamped)
         }
+        if kind == .vignette {
+            return vignetted(intensity: clamped)
+        }
 
         guard let ciImage = ciImageForEditing() else { return nil }
         let output: CIImage?
@@ -96,6 +99,8 @@ extension NSImage {
             return morphologyFiltered(intensity: clamped, useMaximum: true)
         case .oilPaint:
             return oilPainted(intensity: clamped)
+        case .vignette:
+            return vignetted(intensity: clamped)
         }
 
         guard let output,
@@ -464,6 +469,31 @@ extension NSImage {
                 Self.premultipliedChannel(dominant.red / count, alpha: alpha),
                 Self.premultipliedChannel(dominant.green / count, alpha: alpha),
                 Self.premultipliedChannel(dominant.blue / count, alpha: alpha),
+                alpha
+            )
+        }
+    }
+
+    private func vignetted(intensity: Double) -> NSImage? {
+        let clampedIntensity = max(0, min(1, intensity))
+        guard clampedIntensity > 0 else { return self }
+        let strength = 0.85 * clampedIntensity
+        return pixelMappedFromBuffer { x, y, width, height, pixels, bytesPerRow, bytesPerPixel in
+            let offset = y * bytesPerRow + x * bytesPerPixel
+            let alpha = Double(pixels[offset + 3]) / 255
+            let centerX = Double(max(width - 1, 1)) / 2
+            let centerY = Double(max(height - 1, 1)) / 2
+            let normalizedX = (Double(x) - centerX) / max(centerX, 1)
+            let normalizedY = (Double(y) - centerY) / max(centerY, 1)
+            let radialDistance = min(1, hypot(normalizedX, normalizedY) / sqrt(2))
+            let featherStart = 0.28
+            let feather = max(0, min(1, (radialDistance - featherStart) / (1 - featherStart)))
+            let falloff = pow(feather, 1.8)
+            let factor = 1 - falloff * strength
+            return (
+                Self.premultipliedChannel(Double(pixels[offset]) / 255 * factor, alpha: alpha),
+                Self.premultipliedChannel(Double(pixels[offset + 1]) / 255 * factor, alpha: alpha),
+                Self.premultipliedChannel(Double(pixels[offset + 2]) / 255 * factor, alpha: alpha),
                 alpha
             )
         }

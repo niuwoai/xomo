@@ -13,6 +13,7 @@ extension ImageEditorAdjustment: Codable {}
 extension ImageEditorChannelMixerOutput: Codable {}
 extension ImageEditorPhotoFilterPreset: Codable {}
 extension ImageEditorGradientMapPreset: Codable {}
+extension ImageEditorGradientFillPreset: Codable {}
 extension ImageEditorSelectiveColorRange: Codable {}
 extension ImageEditorSelectiveColorComponent: Codable {}
 extension ImageEditorSelectiveColorMethod: Codable {}
@@ -331,6 +332,7 @@ enum ImageEditorProjectLayerKind: Equatable, Codable {
     case group
     case adjustment(ImageEditorAdjustment, Double)
     case filter(ImageEditorFilter, Double)
+    case gradientFill(ImageEditorGradientFillContent)
     case text(ImageEditorProjectTextContent)
     case shape(ImageEditorProjectShapeContent)
     case smartObject(ImageEditorProjectSmartObjectContent)
@@ -341,6 +343,7 @@ enum ImageEditorProjectLayerKind: Equatable, Codable {
         case amount
         case filterKind
         case intensity
+        case gradientFill
         case text
         case shape
         case smartObject
@@ -356,6 +359,8 @@ enum ImageEditorProjectLayerKind: Equatable, Codable {
             self = .adjustment(adjustmentKind, amount)
         case .filter(let filterKind, let intensity):
             self = .filter(filterKind, intensity)
+        case .gradientFill(let content):
+            self = .gradientFill(content.normalized())
         case .text(let content):
             self = .text(ImageEditorProjectTextContent(content: content))
         case .shape(let content):
@@ -375,6 +380,8 @@ enum ImageEditorProjectLayerKind: Equatable, Codable {
             return .adjustment(kind, amount)
         case .filter(let kind, let intensity):
             return .filter(kind, intensity)
+        case .gradientFill(let content):
+            return .gradientFill(content.normalized())
         case .text(let content):
             return .text(content.textContent)
         case .shape(let content):
@@ -402,6 +409,8 @@ enum ImageEditorProjectLayerKind: Equatable, Codable {
                 try container.decode(ImageEditorFilter.self, forKey: .filterKind),
                 try container.decode(Double.self, forKey: .intensity)
             )
+        case "gradientFill":
+            self = .gradientFill(try container.decode(ImageEditorGradientFillContent.self, forKey: .gradientFill))
         case "text":
             self = .text(try container.decode(ImageEditorProjectTextContent.self, forKey: .text))
         case "shape":
@@ -428,6 +437,9 @@ enum ImageEditorProjectLayerKind: Equatable, Codable {
             try container.encode("filter", forKey: .type)
             try container.encode(kind, forKey: .filterKind)
             try container.encode(intensity, forKey: .intensity)
+        case .gradientFill(let content):
+            try container.encode("gradientFill", forKey: .type)
+            try container.encode(content.normalized(), forKey: .gradientFill)
         case .text(let content):
             try container.encode("text", forKey: .type)
             try container.encode(content, forKey: .text)

@@ -1814,6 +1814,10 @@ struct ImageEditorView: View {
 
                 Divider().overlay(editorBorder)
 
+                gradientFillControls
+
+                Divider().overlay(editorBorder)
+
                 Picker(L10n.text("imageEditor.properties.filter"), selection: $viewModel.selectedFilter) {
                     ForEach(ImageEditorFilter.allCases) { filter in
                         Text(filter.title).tag(filter)
@@ -2904,6 +2908,64 @@ struct ImageEditorView: View {
         }
     }
 
+    private var gradientFillControls: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Picker(L10n.text("imageEditor.gradientFill.preset"), selection: $viewModel.selectedGradientFillPreset) {
+                ForEach(ImageEditorGradientFillPreset.allCases) { preset in
+                    Text(preset.title).tag(preset)
+                }
+            }
+            Toggle(L10n.text("imageEditor.gradientFill.reverse"), isOn: $viewModel.gradientFillReverse)
+                .toggleStyle(.checkbox)
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+            adjustmentSlider(
+                labelKey: "imageEditor.gradientFill.angle",
+                value: $viewModel.gradientFillAngle,
+                range: -180...180,
+                step: 5,
+                displayText: L10n.format("imageEditor.gradientFill.angleValue", Int(viewModel.gradientFillAngle.rounded()))
+            )
+            adjustmentSlider(
+                labelKey: "imageEditor.gradientFill.scale",
+                value: $viewModel.gradientFillScale,
+                range: 0.25...4,
+                step: 0.05,
+                displayText: L10n.format("imageEditor.gradientFill.scaleValue", Int((viewModel.gradientFillScale * 100).rounded()))
+            )
+            if viewModel.selectedGradientFillPreset == .custom {
+                Text(L10n.text("imageEditor.gradientFill.start"))
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                gradientFillColorSliders(
+                    red: $viewModel.gradientFillStartRed,
+                    green: $viewModel.gradientFillStartGreen,
+                    blue: $viewModel.gradientFillStartBlue
+                )
+                Text(L10n.text("imageEditor.gradientFill.end"))
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                gradientFillColorSliders(
+                    red: $viewModel.gradientFillEndRed,
+                    green: $viewModel.gradientFillEndGreen,
+                    blue: $viewModel.gradientFillEndBlue
+                )
+            }
+            HStack {
+                Button(L10n.text("imageEditor.action.layerGradientFillNew")) {
+                    viewModel.addGradientFillLayer()
+                }
+                .buttonStyle(EditorTextButtonStyle())
+                if viewModel.selectedLayerIsGradientFill {
+                    Button(L10n.text("imageEditor.action.layerGradientFillUpdate")) {
+                        viewModel.updateSelectedGradientFillLayer()
+                    }
+                    .buttonStyle(EditorTextButtonStyle())
+                }
+            }
+        }
+    }
+
     private func selectiveColorBinding(_ component: ImageEditorSelectiveColorComponent) -> Binding<Double> {
         Binding {
             let values = viewModel.selectiveColorSettings.values(for: viewModel.selectedSelectiveColorRange)
@@ -2933,6 +2995,36 @@ struct ImageEditorView: View {
             }
             settings.setValues(values, for: viewModel.selectedSelectiveColorRange)
             viewModel.selectiveColorSettings = settings
+        }
+    }
+
+    private func gradientFillColorSliders(
+        red: Binding<Double>,
+        green: Binding<Double>,
+        blue: Binding<Double>
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 5) {
+            adjustmentSlider(
+                labelKey: "imageEditor.gradientFill.red",
+                value: red,
+                range: 0...1,
+                step: 0.05,
+                displayText: "\(Int((red.wrappedValue * 100).rounded()))%"
+            )
+            adjustmentSlider(
+                labelKey: "imageEditor.gradientFill.green",
+                value: green,
+                range: 0...1,
+                step: 0.05,
+                displayText: "\(Int((green.wrappedValue * 100).rounded()))%"
+            )
+            adjustmentSlider(
+                labelKey: "imageEditor.gradientFill.blue",
+                value: blue,
+                range: 0...1,
+                step: 0.05,
+                displayText: "\(Int((blue.wrappedValue * 100).rounded()))%"
+            )
         }
     }
 

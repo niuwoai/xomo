@@ -7,6 +7,7 @@
 
 import AppKit
 import Foundation
+import simd
 
 enum ImageEditorTool: String, CaseIterable, Identifiable {
     case move
@@ -388,6 +389,135 @@ enum ImageEditorGradientMapPreset: String, CaseIterable, Identifiable {
 
     var title: String {
         L10n.text("imageEditor.gradientMap.preset.\(rawValue)")
+    }
+}
+
+enum ImageEditorGradientFillPreset: String, CaseIterable, Identifiable {
+    case blackWhite
+    case sunset
+    case blueOrange
+    case purpleTeal
+    case foregroundBackground
+    case custom
+
+    var id: String { rawValue }
+
+    var title: String {
+        L10n.text("imageEditor.gradientFill.preset.\(rawValue)")
+    }
+}
+
+struct ImageEditorGradientFillContent: Equatable, Codable {
+    var preset: ImageEditorGradientFillPreset = .blueOrange
+    var reverse: Bool = false
+    var angle: CGFloat = 0
+    var scale: CGFloat = 1
+    var startRed: Double = 0.12
+    var startGreen: Double = 0.20
+    var startBlue: Double = 0.95
+    var endRed: Double = 1.0
+    var endGreen: Double = 0.50
+    var endBlue: Double = 0.10
+
+    func normalized() -> ImageEditorGradientFillContent {
+        ImageEditorGradientFillContent(
+            preset: preset,
+            reverse: reverse,
+            angle: max(-180, min(180, angle)),
+            scale: max(0.25, min(4, scale)),
+            startRed: Self.zeroOne(startRed),
+            startGreen: Self.zeroOne(startGreen),
+            startBlue: Self.zeroOne(startBlue),
+            endRed: Self.zeroOne(endRed),
+            endGreen: Self.zeroOne(endGreen),
+            endBlue: Self.zeroOne(endBlue)
+        )
+    }
+
+    func colors(foreground: NSColor = .systemRed, background: NSColor = .clear) -> (start: SIMD3<Double>, end: SIMD3<Double>) {
+        switch normalized().preset {
+        case .blackWhite:
+            return (SIMD3<Double>(0, 0, 0), SIMD3<Double>(1, 1, 1))
+        case .sunset:
+            return (SIMD3<Double>(0.15, 0.04, 0.35), SIMD3<Double>(1.0, 0.55, 0.10))
+        case .blueOrange:
+            return (SIMD3<Double>(0.10, 0.24, 0.95), SIMD3<Double>(1.0, 0.50, 0.12))
+        case .purpleTeal:
+            return (SIMD3<Double>(0.45, 0.16, 0.80), SIMD3<Double>(0.05, 0.78, 0.72))
+        case .foregroundBackground:
+            return (Self.rgbVector(foreground), Self.rgbVector(background))
+        case .custom:
+            let content = normalized()
+            return (
+                SIMD3<Double>(content.startRed, content.startGreen, content.startBlue),
+                SIMD3<Double>(content.endRed, content.endGreen, content.endBlue)
+            )
+        }
+    }
+
+    func renderedImage(size: CGSize, foreground: NSColor = .systemRed, background: NSColor = .clear) -> NSImage {
+        let content = normalized()
+        let width = max(1, Int(size.width.rounded()))
+        let height = max(1, Int(size.height.rounded()))
+        let bytesPerPixel = 4
+        let bytesPerRow = width * bytesPerPixel
+        var pixels = [UInt8](repeating: 0, count: bytesPerRow * height)
+        let resolvedColors = content.colors(foreground: foreground, background: background)
+        let start = content.reverse ? resolvedColors.end : resolvedColors.start
+        let end = content.reverse ? resolvedColors.start : resolvedColors.end
+        let radians = Double(content.angle) * Double.pi / 180
+        let direction = SIMD2<Double>(cos(radians), sin(radians))
+        let span = max(1, abs(direction.x) * Double(width) + abs(direction.y) * Double(height)) * Double(content.scale)
+        let center = SIMD2<Double>(Double(width - 1) / 2, Double(height - 1) / 2)
+
+        for y in 0..<height {
+            for x in 0..<width {
+                let point = SIMD2<Double>(Double(x), Double(y))
+                let projection = simd_dot(point - center, direction)
+                let t = max(0, min(1, 0.5 + projection / span))
+                let color = start + (end - start) * t
+                let offset = y * bytesPerRow + x * bytesPerPixel
+                pixels[offset] = Self.byte(color.x)
+                pixels[offset + 1] = Self.byte(color.y)
+                pixels[offset + 2] = Self.byte(color.z)
+                pixels[offset + 3] = 255
+            }
+        }
+
+        guard let provider = CGDataProvider(data: Data(pixels) as CFData),
+              let image = CGImage(
+                width: width,
+                height: height,
+                bitsPerComponent: 8,
+                bitsPerPixel: 32,
+                bytesPerRow: bytesPerRow,
+                space: CGColorSpaceCreateDeviceRGB(),
+                bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue),
+                provider: provider,
+                decode: nil,
+                shouldInterpolate: false,
+                intent: .defaultIntent
+              )
+        else { return NSImage.transparent(size: size) }
+
+        return NSImage(cgImage: image, size: size)
+    }
+
+    private static func rgbVector(_ color: NSColor) -> SIMD3<Double> {
+        let rgb = color.usingColorSpace(.deviceRGB) ?? .black
+        return SIMD3<Double>(
+            zeroOne(Double(rgb.redComponent)),
+            zeroOne(Double(rgb.greenComponent)),
+            zeroOne(Double(rgb.blueComponent))
+        )
+    }
+
+    private static func zeroOne(_ value: Double) -> Double {
+        max(0, min(1, value))
+    }
+
+    private static func byte(_ value: Double) -> UInt8 {
+        UInt8(max(0, min(255, (zeroOne(value) * 255).rounded())))
     }
 }
 
@@ -914,6 +1044,7 @@ enum ImageEditorFilter: String, CaseIterable, Identifiable {
     case minimum
     case maximum
     case oilPaint
+    case vignette
 
     var id: String { rawValue }
 
@@ -1540,6 +1671,7 @@ enum ImageEditorLayerKind {
     case group
     case adjustment(ImageEditorAdjustment, Double)
     case filter(ImageEditorFilter, Double)
+    case gradientFill(ImageEditorGradientFillContent)
     case text(ImageEditorTextContent)
     case shape(ImageEditorShapeContent)
     case smartObject(ImageEditorSmartObjectContent)
@@ -1669,6 +1801,20 @@ struct ImageEditorLayer: Identifiable {
         return layer
     }
 
+    static func gradientFill(name: String, size: CGSize, content: ImageEditorGradientFillContent) -> ImageEditorLayer {
+        ImageEditorLayer(
+            name: name,
+            image: NSImage.transparent(size: size),
+            mask: nil,
+            frame: CGRect(origin: .zero, size: size),
+            isVisible: true,
+            opacity: 1,
+            blendMode: .normal,
+            isLocked: false,
+            kind: .gradientFill(content.normalized())
+        )
+    }
+
     static func text(name: String, size: CGSize, content: ImageEditorTextContent) -> ImageEditorLayer {
         ImageEditorLayer(
             name: name,
@@ -1754,6 +1900,15 @@ struct ImageEditorLayer: Identifiable {
 
     var isFilter: Bool {
         filter != nil
+    }
+
+    var gradientFillContent: ImageEditorGradientFillContent? {
+        guard case let .gradientFill(content) = kind else { return nil }
+        return content
+    }
+
+    var isGradientFill: Bool {
+        gradientFillContent != nil
     }
 
     var textContent: ImageEditorTextContent? {
@@ -1844,6 +1999,9 @@ struct ImageEditorLayer: Identifiable {
                 line.stroke()
                 _ = filter
             } ?? NSImage(size: size)
+        }
+        if let gradientFillContent {
+            return gradientFillContent.renderedImage(size: size)
         }
         if textContent != nil {
             return NSImage.rendered(size: size) { rect in
@@ -1939,6 +2097,8 @@ struct ImageEditorLayer: Identifiable {
                     options: [.usesLineFragmentOrigin, .usesFontLeading]
                 )
             } ?? image
+        } else if let gradientFillContent {
+            baseImage = gradientFillContent.renderedImage(size: image.size)
         } else if let shapeContent {
             baseImage = shapeContent.renderedImage(size: image.size)
         } else {
@@ -2390,6 +2550,7 @@ enum ImageEditorLayerKindFilter: String, CaseIterable, Identifiable {
     case shape
     case adjustment
     case filter
+    case gradientFill
     case smartObject
     case group
 
@@ -2413,6 +2574,8 @@ enum ImageEditorLayerKindFilter: String, CaseIterable, Identifiable {
             return "circle.lefthalf.filled"
         case .filter:
             return "sparkles"
+        case .gradientFill:
+            return "paintpalette"
         case .smartObject:
             return "cube"
         case .group:
@@ -2434,6 +2597,8 @@ enum ImageEditorLayerKindFilter: String, CaseIterable, Identifiable {
             return layer.isAdjustment
         case .filter:
             return layer.isFilter
+        case .gradientFill:
+            return layer.isGradientFill
         case .smartObject:
             return layer.isSmartObject
         case .group:

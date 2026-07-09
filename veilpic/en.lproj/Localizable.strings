@@ -461,6 +461,7 @@
 "imageEditor.filter.minimum" = "Minimum";
 "imageEditor.filter.maximum" = "Maximum";
 "imageEditor.filter.oilPaint" = "Oil Paint";
+"imageEditor.filter.vignette" = "Vignette";
 "imageEditor.filter.unsharpRadius" = "Radius";
 "imageEditor.filter.unsharpRadiusValue" = "%@ px";
 "imageEditor.filter.unsharpThreshold" = "Threshold";
@@ -519,6 +520,7 @@
 "imageEditor.properties.selectiveColorLayerValue" = "Selective Color: %@";
 "imageEditor.properties.gradientMapLayerValue" = "Gradient Map: %@";
 "imageEditor.properties.filterLayerValue" = "%@ Filter: %d%%";
+"imageEditor.properties.gradientFillLayerValue" = "Gradient Fill: %@, %d°, %d%%";
 "imageEditor.properties.unsharpFilterLayerValue" = "Unsharp Mask: Amount %d%% · Radius %@ · Threshold %d";
 "imageEditor.properties.textLayerValue" = "Text: %@ · %d px";
 "imageEditor.properties.shapeLayerValue" = "%@ Shape · %d x %d px";
@@ -629,6 +631,23 @@
 "imageEditor.gradientMap.red" = "Red";
 "imageEditor.gradientMap.green" = "Green";
 "imageEditor.gradientMap.blue" = "Blue";
+"imageEditor.gradientFill.preset" = "Gradient Fill";
+"imageEditor.gradientFill.preset.blackWhite" = "Black & White";
+"imageEditor.gradientFill.preset.sunset" = "Sunset";
+"imageEditor.gradientFill.preset.blueOrange" = "Blue / Orange";
+"imageEditor.gradientFill.preset.purpleTeal" = "Purple / Teal";
+"imageEditor.gradientFill.preset.foregroundBackground" = "Foreground to Background";
+"imageEditor.gradientFill.preset.custom" = "Custom";
+"imageEditor.gradientFill.reverse" = "Reverse";
+"imageEditor.gradientFill.angle" = "Angle";
+"imageEditor.gradientFill.angleValue" = "%d°";
+"imageEditor.gradientFill.scale" = "Scale";
+"imageEditor.gradientFill.scaleValue" = "%d%%";
+"imageEditor.gradientFill.start" = "Start Color";
+"imageEditor.gradientFill.end" = "End Color";
+"imageEditor.gradientFill.red" = "Red";
+"imageEditor.gradientFill.green" = "Green";
+"imageEditor.gradientFill.blue" = "Blue";
 "imageEditor.patternOverlay.checkerboard" = "Checkerboard";
 "imageEditor.patternOverlay.diagonalStripes" = "Diagonal Stripes";
 "imageEditor.patternOverlay.dots" = "Dots";
@@ -689,6 +708,7 @@
 "imageEditor.layer.groupBadge" = "Group";
 "imageEditor.layer.adjustmentBadge" = "Adj";
 "imageEditor.layer.filterBadge" = "Filter";
+"imageEditor.layer.gradientFillBadge" = "Gradient";
 "imageEditor.layer.textBadge" = "Text";
 "imageEditor.layer.shapeBadge" = "Shape";
 "imageEditor.layer.smartObjectBadge" = "Smart Object";
@@ -698,6 +718,7 @@
 "imageEditor.layer.linkedBadge" = "Linked layer";
 "imageEditor.layer.adjustmentName" = "%@ Adjustment";
 "imageEditor.layer.filterName" = "%@ Filter";
+"imageEditor.layer.gradientFillName" = "Gradient Fill";
 "imageEditor.layer.textName" = "Text: %@";
 "imageEditor.layer.textFallbackName" = "Text";
 "imageEditor.layer.shapeName" = "%@ Shape";
@@ -734,6 +755,7 @@
 "imageEditor.layer.kindFilter.shape" = "Show shape layers only";
 "imageEditor.layer.kindFilter.adjustment" = "Show adjustment layers only";
 "imageEditor.layer.kindFilter.filter" = "Show filter layers only";
+"imageEditor.layer.kindFilter.gradientFill" = "Show gradient fill layers only";
 "imageEditor.layer.kindFilter.smartObject" = "Show smart objects only";
 "imageEditor.layer.kindFilter.group" = "Show layer groups only";
 "imageEditor.layer.stateFilter.all" = "Show all layer states";
@@ -911,6 +933,8 @@
 "imageEditor.history.selectionFromLayerMask" = "Load Selection from Layer Mask";
 "imageEditor.history.selectionFromVectorMask" = "Load Selection from Vector Mask";
 "imageEditor.history.layerFilterNew" = "New Filter Layer";
+"imageEditor.history.layerGradientFillNew" = "New Gradient Fill Layer";
+"imageEditor.history.layerGradientFillUpdate" = "Update Gradient Fill Layer";
 "imageEditor.history.layerFilterUpdate" = "Update Filter Layer";
 "imageEditor.history.layerSmartFilterAdd" = "Add Smart Filter";
 "imageEditor.history.layerSmartFilterUpdate" = "Update Smart Filter";
@@ -1212,6 +1236,8 @@
 "imageEditor.action.layerAdjustmentNew" = "New Adjustment Layer";
 "imageEditor.action.layerAdjustmentUpdate" = "Update Adjustment Layer";
 "imageEditor.action.layerFilterNew" = "New Filter Layer";
+"imageEditor.action.layerGradientFillNew" = "New Gradient Fill";
+"imageEditor.action.layerGradientFillUpdate" = "Update Gradient Fill";
 "imageEditor.action.layerFilterUpdate" = "Update Filter Layer";
 "imageEditor.action.layerSmartFilterAdd" = "Add Smart Filter";
 "imageEditor.action.layerSmartFilterUpdate" = "Update Last Smart Filter";

@@ -32,6 +32,14 @@ extension ImageEditorViewModel {
                 Int((filter.intensity * 100).rounded())
             )
         }
+        if let gradientFillContent = layer.gradientFillContent?.normalized() {
+            return L10n.format(
+                "imageEditor.properties.gradientFillLayerValue",
+                gradientFillContent.preset.title,
+                Int(gradientFillContent.angle.rounded()),
+                Int((gradientFillContent.scale * 100).rounded())
+            )
+        }
         if let textContent = layer.textContent {
             return L10n.format(
                 "imageEditor.properties.textLayerValue",

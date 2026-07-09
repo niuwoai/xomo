@@ -48,6 +48,43 @@ struct ImageEditorProjectDocumentTests {
     }
 
     @Test
+    func gradientFillLayerRendersAndRoundTripsThroughProjectDocument() throws {
+        let canvasSize = NSSize(width: 40, height: 20)
+        let sourceImage = testImage(color: .black, size: canvasSize)
+        let viewModel = ImageEditorViewModel(sourceName: "gradient.png", image: sourceImage) { _ in }
+        viewModel.selectedGradientFillPreset = .custom
+        viewModel.gradientFillStartRed = 1
+        viewModel.gradientFillStartGreen = 0
+        viewModel.gradientFillStartBlue = 0
+        viewModel.gradientFillEndRed = 0
+        viewModel.gradientFillEndGreen = 0
+        viewModel.gradientFillEndBlue = 1
+        viewModel.gradientFillAngle = 0
+        viewModel.gradientFillScale = 1
+
+        viewModel.addGradientFillLayer()
+
+        let gradientLayer = try #require(viewModel.document.selectedLayer)
+        let leftColor = try #require(viewModel.currentImage.color(at: CGPoint(x: 2, y: 10))?.usingColorSpace(.deviceRGB))
+        let rightColor = try #require(viewModel.currentImage.color(at: CGPoint(x: 38, y: 10))?.usingColorSpace(.deviceRGB))
+        #expect(gradientLayer.isGradientFill)
+        #expect(gradientLayer.gradientFillContent?.preset == .custom)
+        #expect(leftColor.redComponent > rightColor.redComponent)
+        #expect(rightColor.blueComponent > leftColor.blueComponent)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerGradientFillNew"))
+
+        let project = try ImageEditorProjectDocument(document: viewModel.document)
+        let restoredDocument = try project.restoredDocument()
+        let restoredLayer = try #require(restoredDocument.layers.first { $0.id == gradientLayer.id })
+        let restoredLeftColor = try #require(restoredDocument.compositedImage.color(at: CGPoint(x: 2, y: 10))?.usingColorSpace(.deviceRGB))
+        let restoredRightColor = try #require(restoredDocument.compositedImage.color(at: CGPoint(x: 38, y: 10))?.usingColorSpace(.deviceRGB))
+        #expect(restoredLayer.isGradientFill)
+        #expect(restoredLayer.gradientFillContent?.preset == .custom)
+        #expect(restoredLeftColor.redComponent > restoredRightColor.redComponent)
+        #expect(restoredRightColor.blueComponent > restoredLeftColor.blueComponent)
+    }
+
+    @Test
     func projectDocumentRoundTripsEditableLayerState() throws {
         let sourceImage = testImage(color: .systemBlue, size: NSSize(width: 96, height: 72))
         let viewModel = ImageEditorViewModel(sourceName: "design.png", image: sourceImage) { _ in }
