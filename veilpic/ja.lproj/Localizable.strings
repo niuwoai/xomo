@@ -1615,6 +1615,8 @@
 "imageEditor.action.alphaChannelSmooth" = "%@ を滑らかにする";
 "imageEditor.action.alphaChannelFillHoles" = "%@ の穴を埋める";
 "imageEditor.action.alphaChannelRemoveSpeckles" = "%@ の斑点を除去";
+"imageEditor.action.alphaChannelFlipHorizontal" = "%@ を左右反転";
+"imageEditor.action.alphaChannelFlipVertical" = "%@ を上下反転";
 "imageEditor.action.alphaChannelDelete" = "%@ を削除";
 "imageEditor.action.alphaChannelLoadSelectedSelection" = "選択中の Alpha チャンネルを選択範囲として読み込み";
 "imageEditor.action.alphaChannelUpdateSelected" = "現在の選択範囲で選択中の Alpha チャンネルを更新";
@@ -1628,6 +1630,8 @@
 "imageEditor.action.alphaChannelSmoothSelected" = "選択中の Alpha チャンネルを滑らかにする";
 "imageEditor.action.alphaChannelFillHolesSelected" = "選択中の Alpha チャンネルの穴を埋める";
 "imageEditor.action.alphaChannelRemoveSpecklesSelected" = "選択中の Alpha チャンネルの斑点を除去";
+"imageEditor.action.alphaChannelFlipHorizontalSelected" = "選択中の Alpha チャンネルを左右反転";
+"imageEditor.action.alphaChannelFlipVerticalSelected" = "選択中の Alpha チャンネルを上下反転";
 "imageEditor.action.alphaChannelDeleteSelected" = "選択中の Alpha チャンネルを削除";
 "imageEditor.action.alphaChannelPrevious" = "前の Alpha チャンネル";
 "imageEditor.action.alphaChannelNext" = "次の Alpha チャンネル";
@@ -1651,6 +1655,8 @@
 "imageEditor.status.alphaChannelSmoothed" = "%@ を滑らかにしました（%d px）";
 "imageEditor.status.alphaChannelFilledHoles" = "%@ の穴を埋めました";
 "imageEditor.status.alphaChannelSpecklesRemoved" = "%@ から %d px 以下の斑点を除去しました";
+"imageEditor.status.alphaChannelFlippedHorizontal" = "%@ を左右反転しました";
+"imageEditor.status.alphaChannelFlippedVertical" = "%@ を上下反転しました";
 "imageEditor.status.alphaChannelRenamed" = "Alpha チャンネル名を変更しました";
 "imageEditor.status.alphaChannelNameInvalid" = "Alpha チャンネル名は空にできません";
 "imageEditor.status.alphaChannelDeleted" = "Alpha チャンネルを削除しました";
@@ -1671,6 +1677,8 @@
 "imageEditor.history.alphaChannelSmooth" = "Alpha チャンネルを滑らかにする";
 "imageEditor.history.alphaChannelFillHoles" = "Alpha チャンネルの穴を埋める";
 "imageEditor.history.alphaChannelRemoveSpeckles" = "Alpha チャンネルの斑点を除去";
+"imageEditor.history.alphaChannelFlipHorizontal" = "Alpha チャンネルを左右反転";
+"imageEditor.history.alphaChannelFlipVertical" = "Alpha チャンネルを上下反転";
 "imageEditor.history.alphaChannelRename" = "Alpha チャンネル名を変更";
 "imageEditor.history.alphaChannelDelete" = "Alpha チャンネルを削除";
 "imageEditor.action.layerCompNew" = "レイヤーコンプを保存";

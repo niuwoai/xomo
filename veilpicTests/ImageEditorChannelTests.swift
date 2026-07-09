@@ -568,6 +568,49 @@ struct ImageEditorChannelTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelRemoveSpeckles"))
     }
 
+    @Test func alphaChannelsCanFlipMaskHorizontalAndVertical() async throws {
+        let viewModel = ImageEditorViewModel(sourceName: "split.png", image: splitChannelImage()) { _ in }
+        let asymmetricMask = ImageEditorSelectionMask(
+            width: 4,
+            height: 3,
+            alpha: [
+                255, 0, 0, 0,
+                0, 255, 255, 0,
+                0, 0, 0, 0
+            ]
+        )
+
+        let horizontalChannel = ImageEditorAlphaChannel(name: "Asymmetric H", mask: asymmetricMask)
+        viewModel.document.alphaChannels = [horizontalChannel]
+        viewModel.selectAlphaChannel(horizontalChannel.id)
+
+        #expect(viewModel.canFlipSelectedAlphaChannelHorizontal)
+        viewModel.flipSelectedAlphaChannelHorizontal()
+
+        let flippedHorizontal = try #require(viewModel.selectedAlphaChannel)
+        #expect(maskAlpha(flippedHorizontal.mask, x: 0, y: 0) == 0)
+        #expect(maskAlpha(flippedHorizontal.mask, x: 2, y: 0) == 255)
+        #expect(maskAlpha(flippedHorizontal.mask, x: 0, y: 1) == 255)
+        #expect(maskAlpha(flippedHorizontal.mask, x: 1, y: 1) == 255)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelFlippedHorizontal", "Asymmetric H"))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelFlipHorizontal"))
+
+        let verticalChannel = ImageEditorAlphaChannel(name: "Asymmetric V", mask: asymmetricMask)
+        viewModel.document.alphaChannels = [verticalChannel]
+        viewModel.selectAlphaChannel(verticalChannel.id)
+
+        #expect(viewModel.canFlipSelectedAlphaChannelVertical)
+        viewModel.flipSelectedAlphaChannelVertical()
+
+        let flippedVertical = try #require(viewModel.selectedAlphaChannel)
+        #expect(maskAlpha(flippedVertical.mask, x: 0, y: 0) == 0)
+        #expect(maskAlpha(flippedVertical.mask, x: 0, y: 1) == 255)
+        #expect(maskAlpha(flippedVertical.mask, x: 1, y: 0) == 255)
+        #expect(maskAlpha(flippedVertical.mask, x: 2, y: 0) == 255)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelFlippedVertical", "Asymmetric V"))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelFlipVertical"))
+    }
+
     @Test func alphaChannelsRoundTripWithLayerMasks() async throws {
         let viewModel = ImageEditorViewModel(sourceName: "split.png", image: splitChannelImage()) { _ in }
 

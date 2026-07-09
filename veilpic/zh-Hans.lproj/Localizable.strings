@@ -1615,6 +1615,8 @@
 "imageEditor.action.alphaChannelSmooth" = "平滑 %@";
 "imageEditor.action.alphaChannelFillHoles" = "填充 %@ 的孔洞";
 "imageEditor.action.alphaChannelRemoveSpeckles" = "删除 %@ 的小斑点";
+"imageEditor.action.alphaChannelFlipHorizontal" = "水平翻转 %@";
+"imageEditor.action.alphaChannelFlipVertical" = "垂直翻转 %@";
 "imageEditor.action.alphaChannelDelete" = "删除 %@";
 "imageEditor.action.alphaChannelLoadSelectedSelection" = "将选中 Alpha 通道载入为选区";
 "imageEditor.action.alphaChannelUpdateSelected" = "用当前选区更新选中 Alpha 通道";
@@ -1628,6 +1630,8 @@
 "imageEditor.action.alphaChannelSmoothSelected" = "平滑选中 Alpha 通道";
 "imageEditor.action.alphaChannelFillHolesSelected" = "填充选中 Alpha 通道孔洞";
 "imageEditor.action.alphaChannelRemoveSpecklesSelected" = "删除选中 Alpha 通道小斑点";
+"imageEditor.action.alphaChannelFlipHorizontalSelected" = "水平翻转选中 Alpha 通道";
+"imageEditor.action.alphaChannelFlipVerticalSelected" = "垂直翻转选中 Alpha 通道";
 "imageEditor.action.alphaChannelDeleteSelected" = "删除选中 Alpha 通道";
 "imageEditor.action.alphaChannelPrevious" = "上一个 Alpha 通道";
 "imageEditor.action.alphaChannelNext" = "下一个 Alpha 通道";
@@ -1651,6 +1655,8 @@
 "imageEditor.status.alphaChannelSmoothed" = "已平滑 %@（%d px）";
 "imageEditor.status.alphaChannelFilledHoles" = "已填充 %@ 的孔洞";
 "imageEditor.status.alphaChannelSpecklesRemoved" = "已删除 %@ 中不超过 %d px 的小斑点";
+"imageEditor.status.alphaChannelFlippedHorizontal" = "已水平翻转 %@";
+"imageEditor.status.alphaChannelFlippedVertical" = "已垂直翻转 %@";
 "imageEditor.status.alphaChannelRenamed" = "已重命名 Alpha 通道";
 "imageEditor.status.alphaChannelNameInvalid" = "Alpha 通道名称不能为空";
 "imageEditor.status.alphaChannelDeleted" = "已删除 Alpha 通道";
@@ -1671,6 +1677,8 @@
 "imageEditor.history.alphaChannelSmooth" = "平滑 Alpha 通道";
 "imageEditor.history.alphaChannelFillHoles" = "填充 Alpha 通道孔洞";
 "imageEditor.history.alphaChannelRemoveSpeckles" = "删除 Alpha 通道小斑点";
+"imageEditor.history.alphaChannelFlipHorizontal" = "水平翻转 Alpha 通道";
+"imageEditor.history.alphaChannelFlipVertical" = "垂直翻转 Alpha 通道";
 "imageEditor.history.alphaChannelRename" = "重命名 Alpha 通道";
 "imageEditor.history.alphaChannelDelete" = "删除 Alpha 通道";
 "imageEditor.action.layerCompNew" = "保存图层复合";

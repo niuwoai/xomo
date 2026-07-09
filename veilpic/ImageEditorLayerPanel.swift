@@ -337,6 +337,26 @@ extension ImageEditorView {
             .help(L10n.format("imageEditor.action.alphaChannelRemoveSpeckles", channel.name))
 
             Button {
+                viewModel.flipAlphaChannelHorizontal(channel.id)
+            } label: {
+                Image(systemName: "arrow.left.and.right")
+                    .font(.system(size: 12, weight: .semibold))
+                    .frame(width: 24, height: 28)
+            }
+            .buttonStyle(EditorIconButtonStyle(isSelected: false))
+            .help(L10n.format("imageEditor.action.alphaChannelFlipHorizontal", channel.name))
+
+            Button {
+                viewModel.flipAlphaChannelVertical(channel.id)
+            } label: {
+                Image(systemName: "arrow.up.and.down")
+                    .font(.system(size: 12, weight: .semibold))
+                    .frame(width: 24, height: 28)
+            }
+            .buttonStyle(EditorIconButtonStyle(isSelected: false))
+            .help(L10n.format("imageEditor.action.alphaChannelFlipVertical", channel.name))
+
+            Button {
                 viewModel.deleteAlphaChannel(channel.id)
             } label: {
                 Image(systemName: "trash")

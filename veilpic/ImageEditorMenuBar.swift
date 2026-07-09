@@ -964,6 +964,14 @@ extension ImageEditorView {
             viewModel.removeSpecklesSelectedAlphaChannel()
         }
         .disabled(!viewModel.canRemoveSpecklesSelectedAlphaChannel)
+        Button(L10n.text("imageEditor.action.alphaChannelFlipHorizontalSelected")) {
+            viewModel.flipSelectedAlphaChannelHorizontal()
+        }
+        .disabled(!viewModel.canFlipSelectedAlphaChannelHorizontal)
+        Button(L10n.text("imageEditor.action.alphaChannelFlipVerticalSelected")) {
+            viewModel.flipSelectedAlphaChannelVertical()
+        }
+        .disabled(!viewModel.canFlipSelectedAlphaChannelVertical)
         Button(L10n.text("imageEditor.action.alphaChannelDeleteSelected")) {
             viewModel.deleteSelectedAlphaChannel()
         }

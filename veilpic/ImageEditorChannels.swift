@@ -136,6 +136,14 @@ extension ImageEditorViewModel {
         selectedAlphaChannel != nil
     }
 
+    var canFlipSelectedAlphaChannelHorizontal: Bool {
+        selectedAlphaChannel != nil
+    }
+
+    var canFlipSelectedAlphaChannelVertical: Bool {
+        selectedAlphaChannel != nil
+    }
+
     var canDeleteSelectedAlphaChannel: Bool {
         selectedAlphaChannel != nil
     }
@@ -294,6 +302,16 @@ extension ImageEditorViewModel {
     func removeSpecklesSelectedAlphaChannel() {
         guard let selectedAlphaChannelID else { return }
         removeSpecklesAlphaChannel(selectedAlphaChannelID)
+    }
+
+    func flipSelectedAlphaChannelHorizontal() {
+        guard let selectedAlphaChannelID else { return }
+        flipAlphaChannelHorizontal(selectedAlphaChannelID)
+    }
+
+    func flipSelectedAlphaChannelVertical() {
+        guard let selectedAlphaChannelID else { return }
+        flipAlphaChannelVertical(selectedAlphaChannelID)
     }
 
     func deleteSelectedAlphaChannel() {
@@ -464,6 +482,38 @@ extension ImageEditorViewModel {
             document.alphaChannels[index].name,
             effectiveMaximumArea
         )
+    }
+
+    func flipAlphaChannelHorizontal(_ id: UUID) {
+        flipAlphaChannel(
+            id,
+            horizontal: true,
+            historyKey: "imageEditor.history.alphaChannelFlipHorizontal",
+            statusKey: "imageEditor.status.alphaChannelFlippedHorizontal"
+        )
+    }
+
+    func flipAlphaChannelVertical(_ id: UUID) {
+        flipAlphaChannel(
+            id,
+            horizontal: false,
+            historyKey: "imageEditor.history.alphaChannelFlipVertical",
+            statusKey: "imageEditor.status.alphaChannelFlippedVertical"
+        )
+    }
+
+    private func flipAlphaChannel(_ id: UUID, horizontal: Bool, historyKey: String, statusKey: String) {
+        guard let index = document.alphaChannels.firstIndex(where: { $0.id == id }) else { return }
+        guard let flippedMask = document.alphaChannels[index].mask.flipped(horizontal: horizontal) else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+
+        pushUndo()
+        document.alphaChannels[index].mask = flippedMask
+        selectedAlphaChannelID = id
+        appendHistory(L10n.text(historyKey))
+        statusText = L10n.format(statusKey, document.alphaChannels[index].name)
     }
 
     private func morphAlphaChannel(
