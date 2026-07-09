@@ -1622,6 +1622,7 @@
 "imageEditor.action.alphaChannelRotate180" = "旋转 %@ 180°";
 "imageEditor.action.alphaChannelScaleUp" = "放大 %@ 到 200%";
 "imageEditor.action.alphaChannelScaleDown" = "缩小 %@ 到 50%";
+"imageEditor.action.alphaChannelFitCanvas" = "适配 %@ 到画布";
 "imageEditor.action.alphaChannelMoveLeft" = "向左移动 %@";
 "imageEditor.action.alphaChannelMoveRight" = "向右移动 %@";
 "imageEditor.action.alphaChannelMoveUp" = "向上移动 %@";
@@ -1646,6 +1647,7 @@
 "imageEditor.action.alphaChannelRotate180Selected" = "旋转选中 Alpha 通道 180°";
 "imageEditor.action.alphaChannelScaleUpSelected" = "放大选中 Alpha 通道到 200%";
 "imageEditor.action.alphaChannelScaleDownSelected" = "缩小选中 Alpha 通道到 50%";
+"imageEditor.action.alphaChannelFitCanvasSelected" = "适配选中 Alpha 通道到画布";
 "imageEditor.action.alphaChannelMoveLeftSelected" = "向左移动选中 Alpha 通道";
 "imageEditor.action.alphaChannelMoveRightSelected" = "向右移动选中 Alpha 通道";
 "imageEditor.action.alphaChannelMoveUpSelected" = "向上移动选中 Alpha 通道";
@@ -1680,6 +1682,7 @@
 "imageEditor.status.alphaChannelRotated180" = "已旋转 %@ 180°";
 "imageEditor.status.alphaChannelScaledUp" = "已放大 %@ 到 200%";
 "imageEditor.status.alphaChannelScaledDown" = "已缩小 %@ 到 50%";
+"imageEditor.status.alphaChannelFitCanvas" = "已适配 %@ 到画布";
 "imageEditor.status.alphaChannelMoved" = "已移动 %@ X:%d Y:%d px";
 "imageEditor.status.alphaChannelRenamed" = "已重命名 Alpha 通道";
 "imageEditor.status.alphaChannelNameInvalid" = "Alpha 通道名称不能为空";
@@ -1708,6 +1711,7 @@
 "imageEditor.history.alphaChannelRotate180" = "旋转 Alpha 通道 180°";
 "imageEditor.history.alphaChannelScaleUp" = "放大 Alpha 通道到 200%";
 "imageEditor.history.alphaChannelScaleDown" = "缩小 Alpha 通道到 50%";
+"imageEditor.history.alphaChannelFitCanvas" = "适配 Alpha 通道到画布";
 "imageEditor.history.alphaChannelMove" = "移动 Alpha 通道";
 "imageEditor.history.alphaChannelRename" = "重命名 Alpha 通道";
 "imageEditor.history.alphaChannelDelete" = "删除 Alpha 通道";

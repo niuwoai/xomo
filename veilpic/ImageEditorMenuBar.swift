@@ -992,6 +992,10 @@ extension ImageEditorView {
             viewModel.scaleSelectedAlphaChannelDown()
         }
         .disabled(!viewModel.canScaleSelectedAlphaChannelDown)
+        Button(L10n.text("imageEditor.action.alphaChannelFitCanvasSelected")) {
+            viewModel.fitSelectedAlphaChannelToCanvas()
+        }
+        .disabled(!viewModel.canFitSelectedAlphaChannelToCanvas)
         Divider()
         Button(L10n.text("imageEditor.action.alphaChannelMoveLeftSelected")) {
             viewModel.moveSelectedAlphaChannelLeft()

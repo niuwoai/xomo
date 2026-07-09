@@ -407,6 +407,16 @@ extension ImageEditorView {
             .help(L10n.format("imageEditor.action.alphaChannelScaleDown", channel.name))
 
             Button {
+                viewModel.fitAlphaChannelToCanvas(channel.id)
+            } label: {
+                Image(systemName: "viewfinder")
+                    .font(.system(size: 12, weight: .semibold))
+                    .frame(width: 24, height: 28)
+            }
+            .buttonStyle(EditorIconButtonStyle(isSelected: false))
+            .help(L10n.format("imageEditor.action.alphaChannelFitCanvas", channel.name))
+
+            Button {
                 viewModel.moveAlphaChannelLeft(channel.id)
             } label: {
                 Image(systemName: "arrow.left")

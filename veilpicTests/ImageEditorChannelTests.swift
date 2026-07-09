@@ -724,6 +724,34 @@ struct ImageEditorChannelTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelScaleDown"))
     }
 
+    @Test func alphaChannelsCanFitMasksToCanvas() async throws {
+        let canvasSize = NSSize(width: 5, height: 4)
+        let image = NSImage.rendered(size: canvasSize) { rect in
+            NSColor.systemBlue.setFill()
+            rect.fill()
+        } ?? NSImage(size: canvasSize)
+        let viewModel = ImageEditorViewModel(sourceName: "fit-alpha.png", image: image) { _ in }
+        var alpha = [UInt8](repeating: 0, count: Int(canvasSize.width * canvasSize.height))
+        alpha[2 * 5 + 3] = 255
+        let channel = ImageEditorAlphaChannel(
+            name: "Fit Alpha",
+            mask: ImageEditorSelectionMask(width: 5, height: 4, alpha: alpha)
+        )
+        viewModel.document.alphaChannels = [channel]
+        viewModel.selectAlphaChannel(channel.id)
+
+        #expect(viewModel.canFitSelectedAlphaChannelToCanvas)
+        viewModel.fitSelectedAlphaChannelToCanvas()
+
+        let fittedMask = try #require(viewModel.selectedAlphaChannel?.mask)
+        #expect(maskAlpha(fittedMask, x: 0, y: 0) == 255)
+        #expect(maskAlpha(fittedMask, x: 4, y: 0) == 255)
+        #expect(maskAlpha(fittedMask, x: 0, y: 3) == 255)
+        #expect(maskAlpha(fittedMask, x: 4, y: 3) == 255)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelFitCanvas", "Fit Alpha"))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelFitCanvas"))
+    }
+
     @Test func alphaChannelsCanMoveMasksByModifyAmount() async throws {
         let canvasSize = NSSize(width: 8, height: 6)
         let image = NSImage.rendered(size: canvasSize) { rect in

@@ -164,6 +164,10 @@ extension ImageEditorViewModel {
         selectedAlphaChannel != nil
     }
 
+    var canFitSelectedAlphaChannelToCanvas: Bool {
+        selectedAlphaChannel != nil
+    }
+
     var canMoveSelectedAlphaChannelLeft: Bool {
         selectedAlphaChannel != nil
     }
@@ -373,6 +377,11 @@ extension ImageEditorViewModel {
     func scaleSelectedAlphaChannelDown() {
         guard let selectedAlphaChannelID else { return }
         scaleAlphaChannelDown(selectedAlphaChannelID)
+    }
+
+    func fitSelectedAlphaChannelToCanvas() {
+        guard let selectedAlphaChannelID else { return }
+        fitAlphaChannelToCanvas(selectedAlphaChannelID)
     }
 
     func moveSelectedAlphaChannelLeft() {
@@ -656,6 +665,23 @@ extension ImageEditorViewModel {
 
     func moveAlphaChannelDown(_ id: UUID) {
         moveAlphaChannel(id, by: CGSize(width: 0, height: -alphaChannelMoveAmount))
+    }
+
+    func fitAlphaChannelToCanvas(_ id: UUID) {
+        guard let index = document.alphaChannels.firstIndex(where: { $0.id == id }) else { return }
+        guard let fittedMask = document.alphaChannels[index].mask.fittedToCanvas() else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+
+        pushUndo()
+        document.alphaChannels[index].mask = fittedMask
+        selectedAlphaChannelID = id
+        appendHistory(L10n.text("imageEditor.history.alphaChannelFitCanvas"))
+        statusText = L10n.format(
+            "imageEditor.status.alphaChannelFitCanvas",
+            document.alphaChannels[index].name
+        )
     }
 
     private func rotateAlphaChannel(_ id: UUID, clockwiseTurns: Int, historyKey: String, statusKey: String) {
