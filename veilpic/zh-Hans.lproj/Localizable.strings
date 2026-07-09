@@ -455,6 +455,7 @@
 "imageEditor.filter.addNoise" = "添加杂色";
 "imageEditor.filter.median" = "中值";
 "imageEditor.filter.unsharpMask" = "USM 锐化";
+"imageEditor.filter.highPass" = "高反差保留";
 "imageEditor.filter.unsharpRadius" = "半径";
 "imageEditor.filter.unsharpRadiusValue" = "%@ px";
 "imageEditor.filter.unsharpThreshold" = "阈值";

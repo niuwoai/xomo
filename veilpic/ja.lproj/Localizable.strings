@@ -455,6 +455,7 @@
 "imageEditor.filter.addNoise" = "ノイズを追加";
 "imageEditor.filter.median" = "メディアン";
 "imageEditor.filter.unsharpMask" = "アンシャープマスク";
+"imageEditor.filter.highPass" = "ハイパス";
 "imageEditor.filter.unsharpRadius" = "半径";
 "imageEditor.filter.unsharpRadiusValue" = "%@ px";
 "imageEditor.filter.unsharpThreshold" = "しきい値";

@@ -908,6 +908,7 @@ enum ImageEditorFilter: String, CaseIterable, Identifiable {
     case addNoise
     case median
     case unsharpMask
+    case highPass
 
     var id: String { rawValue }
 

@@ -33,6 +33,9 @@ extension NSImage {
         if kind == .unsharpMask {
             return unsharpMasked(intensity: clamped, settings: settings)
         }
+        if kind == .highPass {
+            return highPassed(intensity: clamped)
+        }
 
         guard let ciImage = ciImageForEditing() else { return nil }
         let output: CIImage?
@@ -66,6 +69,8 @@ extension NSImage {
             return medianDenoised(intensity: clamped)
         case .unsharpMask:
             return unsharpMasked(intensity: clamped, settings: settings)
+        case .highPass:
+            return highPassed(intensity: clamped)
         }
 
         guard let output,
@@ -268,6 +273,36 @@ extension NSImage {
                 Self.premultipliedChannel(red + (red - blurred.red) * amount, alpha: alpha),
                 Self.premultipliedChannel(green + (green - blurred.green) * amount, alpha: alpha),
                 Self.premultipliedChannel(blue + (blue - blurred.blue) * amount, alpha: alpha),
+                alpha
+            )
+        }
+    }
+
+    private func highPassed(intensity: Double) -> NSImage? {
+        let clampedIntensity = max(0, min(1, intensity))
+        let radius = max(1, Int((1 + clampedIntensity * 9).rounded()))
+        let contrast = 1.4 + clampedIntensity * 2.4
+        return pixelMappedFromBuffer { x, y, width, height, pixels, bytesPerRow, bytesPerPixel in
+            let offset = y * bytesPerRow + x * bytesPerPixel
+            let alpha = Double(pixels[offset + 3]) / 255
+            let red = Double(pixels[offset]) / 255
+            let green = Double(pixels[offset + 1]) / 255
+            let blue = Double(pixels[offset + 2]) / 255
+            let blurred = Self.averageColor(
+                x: x,
+                y: y,
+                radius: radius,
+                width: width,
+                height: height,
+                pixels: pixels,
+                bytesPerRow: bytesPerRow,
+                bytesPerPixel: bytesPerPixel
+            )
+            let neutral = 0.5 * alpha
+            return (
+                Self.premultipliedChannel(neutral + (red - blurred.red) * contrast, alpha: alpha),
+                Self.premultipliedChannel(neutral + (green - blurred.green) * contrast, alpha: alpha),
+                Self.premultipliedChannel(neutral + (blue - blurred.blue) * contrast, alpha: alpha),
                 alpha
             )
         }
