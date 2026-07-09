@@ -231,6 +231,60 @@ struct veilpicTests {
     }
 
     @MainActor
+    @Test func imageEditorLayerCompMenuCommandsDuplicateNavigateApplyUpdateAndDelete() async throws {
+        let image = testImage(color: .systemBlue, size: NSSize(width: 96, height: 72))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.addLayer()
+        let detailID = try #require(viewModel.document.selectedLayerID)
+
+        viewModel.addLayerComp(named: "Visible detail")
+        let visibleCompID = try #require(viewModel.document.selectedLayerCompID)
+
+        viewModel.toggleLayerVisibility(detailID)
+        viewModel.addLayerComp(named: "Hidden detail")
+        let hiddenCompID = try #require(viewModel.document.selectedLayerCompID)
+
+        #expect(viewModel.canSelectPreviousLayerComp)
+        #expect(!viewModel.canSelectNextLayerComp)
+
+        viewModel.selectPreviousLayerComp()
+        #expect(viewModel.document.selectedLayerCompID == visibleCompID)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerCompSelected", "Visible detail"))
+
+        viewModel.selectNextLayerComp()
+        #expect(viewModel.document.selectedLayerCompID == hiddenCompID)
+
+        viewModel.duplicateSelectedLayerComp()
+        let duplicatedCompID = try #require(viewModel.document.selectedLayerCompID)
+        #expect(viewModel.document.layerComps.count == 3)
+        #expect(viewModel.document.layerComps.first { $0.id == duplicatedCompID }?.name == L10n.format("imageEditor.layerComp.copyName", "Hidden detail"))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerCompDuplicate"))
+        #expect(viewModel.canApplySelectedLayerComp)
+        #expect(viewModel.canUpdateSelectedLayerComp)
+        #expect(viewModel.canDeleteSelectedLayerComp)
+
+        viewModel.toggleLayerVisibility(detailID)
+        #expect(viewModel.document.layers.first { $0.id == detailID }?.isVisible == true)
+
+        viewModel.applySelectedLayerComp()
+        #expect(viewModel.document.layers.first { $0.id == detailID }?.isVisible == false)
+
+        viewModel.toggleLayerVisibility(detailID)
+        viewModel.updateSelectedLayerComp()
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerCompUpdate"))
+
+        viewModel.toggleLayerVisibility(detailID)
+        viewModel.applySelectedLayerComp()
+        #expect(viewModel.document.layers.first { $0.id == detailID }?.isVisible == true)
+
+        viewModel.deleteSelectedLayerComp()
+        #expect(viewModel.document.layerComps.count == 2)
+        #expect(viewModel.document.selectedLayerCompID == hiddenCompID)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerCompDelete"))
+    }
+
+    @MainActor
     @Test func imageEditorVisibleLayerRowsCanFilterByNameKindLabelStateAndAttribute() async throws {
         let image = testImage(color: .systemTeal, size: NSSize(width: 96, height: 72))
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }

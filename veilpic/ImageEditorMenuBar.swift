@@ -297,6 +297,7 @@ extension ImageEditorView {
         layerAlignmentMenu
         layerMaskMenu
         layerStyleMenu
+        layerCompMenu
         Divider()
         Button(L10n.text("imageEditor.action.layerAdjustmentNew")) {
             viewModel.addAdjustmentLayer()
@@ -611,6 +612,41 @@ extension ImageEditorView {
                 viewModel.toggleSelectedLayerBevel()
             }
             .disabled(!viewModel.canEditSelectedLayerStyle)
+        }
+    }
+
+    @ViewBuilder
+    private var layerCompMenu: some View {
+        Menu(L10n.text("imageEditor.menu.layer.comps")) {
+            Button(L10n.text("imageEditor.action.layerCompNew")) {
+                viewModel.addLayerComp()
+            }
+            Divider()
+            Button(L10n.text("imageEditor.action.layerCompApply")) {
+                viewModel.applySelectedLayerComp()
+            }
+            .disabled(!viewModel.canApplySelectedLayerComp)
+            Button(L10n.text("imageEditor.action.layerCompUpdate")) {
+                viewModel.updateSelectedLayerComp()
+            }
+            .disabled(!viewModel.canUpdateSelectedLayerComp)
+            Button(L10n.text("imageEditor.action.layerCompDuplicate")) {
+                viewModel.duplicateSelectedLayerComp()
+            }
+            .disabled(!viewModel.canDuplicateSelectedLayerComp)
+            Button(L10n.text("imageEditor.action.layerCompDelete")) {
+                viewModel.deleteSelectedLayerComp()
+            }
+            .disabled(!viewModel.canDeleteSelectedLayerComp)
+            Divider()
+            Button(L10n.text("imageEditor.action.layerCompPrevious")) {
+                viewModel.selectPreviousLayerComp()
+            }
+            .disabled(!viewModel.canSelectPreviousLayerComp)
+            Button(L10n.text("imageEditor.action.layerCompNext")) {
+                viewModel.selectNextLayerComp()
+            }
+            .disabled(!viewModel.canSelectNextLayerComp)
         }
     }
 

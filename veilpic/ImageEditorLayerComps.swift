@@ -10,8 +10,33 @@ import Foundation
 
 @MainActor
 extension ImageEditorViewModel {
+    var selectedLayerComp: ImageEditorLayerComp? {
+        guard let selectedLayerCompID = document.selectedLayerCompID else { return nil }
+        return document.layerComps.first { $0.id == selectedLayerCompID }
+    }
+
     var canApplySelectedLayerComp: Bool {
-        document.selectedLayerCompID != nil
+        selectedLayerComp != nil
+    }
+
+    var canUpdateSelectedLayerComp: Bool {
+        selectedLayerComp != nil
+    }
+
+    var canDuplicateSelectedLayerComp: Bool {
+        selectedLayerComp != nil
+    }
+
+    var canDeleteSelectedLayerComp: Bool {
+        selectedLayerComp != nil
+    }
+
+    var canSelectPreviousLayerComp: Bool {
+        selectedLayerCompIndex.map { $0 > 0 } ?? false
+    }
+
+    var canSelectNextLayerComp: Bool {
+        selectedLayerCompIndex.map { $0 < document.layerComps.count - 1 } ?? false
     }
 
     func addLayerComp(named proposedName: String? = nil) {
@@ -116,6 +141,11 @@ extension ImageEditorViewModel {
         statusText = L10n.format("imageEditor.status.layerCompApplied", comp.name)
     }
 
+    func applySelectedLayerComp() {
+        guard let selectedLayerComp else { return }
+        applyLayerComp(selectedLayerComp.id)
+    }
+
     func updateLayerComp(_ id: UUID) {
         guard let index = document.layerComps.firstIndex(where: { $0.id == id }) else { return }
         let name = document.layerComps[index].name
@@ -127,6 +157,28 @@ extension ImageEditorViewModel {
         document.selectedLayerCompID = id
         appendHistory(L10n.text("imageEditor.history.layerCompUpdate"))
         statusText = L10n.format("imageEditor.status.layerCompUpdated", name)
+    }
+
+    func updateSelectedLayerComp() {
+        guard let selectedLayerComp else { return }
+        updateLayerComp(selectedLayerComp.id)
+    }
+
+    func duplicateSelectedLayerComp() {
+        guard let selectedLayerComp else { return }
+        pushUndo()
+        var duplicated = selectedLayerComp
+        duplicated.id = UUID()
+        duplicated.name = duplicateLayerCompName(for: selectedLayerComp.name)
+        duplicated.createdAt = Date()
+        if let selectedIndex = selectedLayerCompIndex {
+            document.layerComps.insert(duplicated, at: selectedIndex + 1)
+        } else {
+            document.layerComps.append(duplicated)
+        }
+        document.selectedLayerCompID = duplicated.id
+        appendHistory(L10n.text("imageEditor.history.layerCompDuplicate"))
+        statusText = L10n.format("imageEditor.status.layerCompDuplicated", duplicated.name)
     }
 
     func renameLayerComp(_ id: UUID, to proposedName: String) {
@@ -155,8 +207,25 @@ extension ImageEditorViewModel {
         statusText = L10n.format("imageEditor.status.layerCompDeleted", comp.name)
     }
 
+    func deleteSelectedLayerComp() {
+        guard let selectedLayerComp else { return }
+        deleteLayerComp(selectedLayerComp.id)
+    }
+
     func selectLayerComp(_ id: UUID) {
+        guard let comp = document.layerComps.first(where: { $0.id == id }) else { return }
         document.selectedLayerCompID = id
+        statusText = L10n.format("imageEditor.status.layerCompSelected", comp.name)
+    }
+
+    func selectPreviousLayerComp() {
+        guard canSelectPreviousLayerComp, let selectedLayerCompIndex else { return }
+        selectLayerComp(document.layerComps[selectedLayerCompIndex - 1].id)
+    }
+
+    func selectNextLayerComp() {
+        guard canSelectNextLayerComp, let selectedLayerCompIndex else { return }
+        selectLayerComp(document.layerComps[selectedLayerCompIndex + 1].id)
     }
 
     func layerCompSummary(_ comp: ImageEditorLayerComp) -> String {
@@ -169,6 +238,26 @@ extension ImageEditorViewModel {
             return L10n.format("imageEditor.layerComp.defaultName", fallbackIndex)
         }
         return trimmedName
+    }
+
+    private var selectedLayerCompIndex: Int? {
+        guard let selectedLayerCompID = document.selectedLayerCompID else { return nil }
+        return document.layerComps.firstIndex { $0.id == selectedLayerCompID }
+    }
+
+    private func duplicateLayerCompName(for sourceName: String) -> String {
+        let existingNames = Set(document.layerComps.map(\.name))
+        let baseName = L10n.format("imageEditor.layerComp.copyName", sourceName)
+        guard existingNames.contains(baseName) else { return baseName }
+
+        var suffix = 2
+        while true {
+            let candidate = L10n.format("imageEditor.layerComp.copyNameIndexed", sourceName, suffix)
+            if !existingNames.contains(candidate) {
+                return candidate
+            }
+            suffix += 1
+        }
     }
 
     private func restoreLayerOrder(from layerOrder: [UUID]) {
