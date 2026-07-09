@@ -626,6 +626,7 @@
 "imageEditor.channel.alphaChannelName" = "Alpha Channel %d";
 "imageEditor.channel.alphaChannelCopyName" = "%@ copy";
 "imageEditor.channel.alphaChannelFromMaskName" = "Mask Alpha Channel %d";
+"imageEditor.channel.alphaChannelFromTransparencyName" = "Layer Transparency Alpha %d";
 "imageEditor.channel.alphaChannelFromChannelName" = "%@ Alpha Channel";
 "imageEditor.channel.alphaNamePlaceholder" = "Alpha channel name";
 "imageEditor.photoFilter.preset" = "Filter";
@@ -1601,6 +1602,7 @@
 "imageEditor.action.channelSaveSelection" = "Save Selection as Alpha Channel";
 "imageEditor.action.alphaChannelBlank" = "New Blank Alpha Channel";
 "imageEditor.action.channelSaveLayerMask" = "Save Layer Mask as Alpha Channel";
+"imageEditor.action.channelSaveLayerTransparency" = "Save Layer Transparency as Alpha Channel";
 "imageEditor.action.channelSaveCurrentAsAlpha" = "Save current preview channel as alpha channel";
 "imageEditor.action.channelSaveAsAlpha" = "Save %@ as alpha channel";
 "imageEditor.action.alphaChannelSelect" = "Preview and select alpha channel";
@@ -1673,6 +1675,8 @@
 "imageEditor.status.alphaChannelSaved" = "Saved as alpha channel";
 "imageEditor.status.alphaChannelBlank" = "Created blank alpha channel %@";
 "imageEditor.status.alphaChannelFromMask" = "Saved current layer mask as alpha channel";
+"imageEditor.status.alphaChannelFromTransparency" = "Saved current layer transparency as alpha channel";
+"imageEditor.status.alphaChannelFromTransparencyFailed" = "Current layer has no transparency to save";
 "imageEditor.status.alphaChannelFromChannel" = "Saved %@ as alpha channel";
 "imageEditor.status.alphaChannelFromMaskFailed" = "Current layer has no mask to save";
 "imageEditor.status.alphaChannelLoaded" = "Loaded %@ as selection";
@@ -1709,6 +1713,7 @@
 "imageEditor.history.alphaChannelSave" = "Save Alpha Channel";
 "imageEditor.history.alphaChannelBlank" = "New Blank Alpha Channel";
 "imageEditor.history.alphaChannelFromMask" = "Save Alpha Channel from Layer Mask";
+"imageEditor.history.alphaChannelFromTransparency" = "Save Alpha Channel from Layer Transparency";
 "imageEditor.history.alphaChannelFromChannel" = "Save Alpha Channel from Channel";
 "imageEditor.history.alphaChannelLoad" = "Load Alpha Channel Selection";
 "imageEditor.history.alphaChannelUpdate" = "Update Alpha Channel";

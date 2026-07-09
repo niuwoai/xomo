@@ -66,6 +66,13 @@ extension ImageEditorViewModel {
         return layer.mask != nil
     }
 
+    var canSaveSelectedLayerTransparencyAsAlphaChannel: Bool {
+        guard selectedLayerCount == 1,
+              let layer = document.selectedLayer
+        else { return false }
+        return !layer.isGroup && !layer.isAdjustment && !layer.isFilter
+    }
+
     var canSaveSelectedChannelAsAlphaChannel: Bool {
         guard let mask = currentImage.channelSelectionMask(selectedChannelPreview) else { return false }
         return mask.selectedBounds(in: document.canvasSize) != nil
@@ -296,6 +303,29 @@ extension ImageEditorViewModel {
         selectedAlphaChannelID = channel.id
         appendHistory(L10n.text("imageEditor.history.alphaChannelFromMask"))
         statusText = L10n.text("imageEditor.status.alphaChannelFromMask")
+    }
+
+    func saveSelectedLayerTransparencyAsAlphaChannel() {
+        guard canSaveSelectedLayerTransparencyAsAlphaChannel,
+              let index = document.selectedLayerIndex,
+              let alphaMask = alphaChannelMaskFromLayerTransparency(at: index),
+              alphaMask.selectedBounds(in: document.canvasSize) != nil
+        else {
+            statusText = L10n.text("imageEditor.status.alphaChannelFromTransparencyFailed")
+            return
+        }
+
+        pushUndo()
+        let nextIndex = document.alphaChannels.count + 1
+        let channel = ImageEditorAlphaChannel(
+            name: L10n.format("imageEditor.channel.alphaChannelFromTransparencyName", nextIndex),
+            mask: alphaMask
+        )
+        document.alphaChannels.append(channel)
+        selectedAlphaChannelID = channel.id
+        previewedAlphaChannelID = channel.id
+        appendHistory(L10n.text("imageEditor.history.alphaChannelFromTransparency"))
+        statusText = L10n.text("imageEditor.status.alphaChannelFromTransparency")
     }
 
     func saveSelectedChannelAsAlphaChannel() {
@@ -1030,6 +1060,35 @@ extension ImageEditorViewModel {
                 fraction: 1
             )
         }
+    }
+
+    private func alphaChannelMaskFromLayerTransparency(at index: Int) -> ImageEditorSelectionMask? {
+        guard document.layers.indices.contains(index) else { return nil }
+        let layer = document.layers[index]
+        guard let image = NSImage.rendered(size: document.canvasSize, actions: { _ in
+            if layer.isClippingMask,
+               let clippedImage = document.clippedCompositingImage(forLayerAt: index) {
+                clippedImage.draw(
+                    in: CGRect(origin: .zero, size: document.canvasSize),
+                    from: CGRect(origin: .zero, size: document.canvasSize),
+                    operation: .sourceOver,
+                    fraction: 1
+                )
+            } else {
+                let compositingImage = layer.renderedCompositingImage(globalLightAngle: document.globalLightAngle)
+                compositingImage.draw(
+                    in: layer.renderedCompositingFrame(globalLightAngle: document.globalLightAngle),
+                    from: CGRect(origin: .zero, size: compositingImage.size),
+                    operation: .sourceOver,
+                    fraction: 1
+                )
+            }
+        }) else { return nil }
+
+        return image.alphaMask(
+            width: max(1, Int(document.canvasSize.width.rounded())),
+            height: max(1, Int(document.canvasSize.height.rounded()))
+        )
     }
 
     private func alphaChannelMask(fromLayerMask mask: NSImage, layer: ImageEditorLayer) -> ImageEditorSelectionMask? {

@@ -914,6 +914,10 @@ extension ImageEditorView {
             viewModel.saveSelectedLayerMaskAsAlphaChannel()
         }
         .disabled(!viewModel.canSaveSelectedLayerMaskAsAlphaChannel)
+        Button(L10n.text("imageEditor.action.channelSaveLayerTransparency")) {
+            viewModel.saveSelectedLayerTransparencyAsAlphaChannel()
+        }
+        .disabled(!viewModel.canSaveSelectedLayerTransparencyAsAlphaChannel)
         Button(L10n.text("imageEditor.action.channelSaveCurrentAsAlpha")) {
             viewModel.saveSelectedChannelAsAlphaChannel()
         }

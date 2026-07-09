@@ -93,6 +93,21 @@ extension ImageEditorView {
             .disabled(!viewModel.canSaveSelectedLayerMaskAsAlphaChannel)
             .help(L10n.text("imageEditor.action.channelSaveLayerMask"))
 
+            Button {
+                viewModel.saveSelectedLayerTransparencyAsAlphaChannel()
+            } label: {
+                Label(L10n.text("imageEditor.action.channelSaveLayerTransparency"), systemImage: "circle.dashed.rectangle")
+                    .font(.system(size: 11, weight: .semibold))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .buttonStyle(.plain)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 7)
+            .background(Color.white.opacity(0.08))
+            .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+            .disabled(!viewModel.canSaveSelectedLayerTransparencyAsAlphaChannel)
+            .help(L10n.text("imageEditor.action.channelSaveLayerTransparency"))
+
             VStack(spacing: 5) {
                 ForEach(ImageEditorChannelPreview.allCases) { channel in
                     channelRow(channel)

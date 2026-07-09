@@ -879,6 +879,22 @@ struct ImageEditorChannelTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelMove"))
     }
 
+    @Test func selectedLayerTransparencyCanSaveAsAlphaChannel() async throws {
+        let viewModel = ImageEditorViewModel(sourceName: "layer-alpha.png", image: alphaTestImage()) { _ in }
+
+        #expect(viewModel.canSaveSelectedLayerTransparencyAsAlphaChannel)
+        viewModel.saveSelectedLayerTransparencyAsAlphaChannel()
+
+        let channel = try #require(viewModel.document.alphaChannels.first)
+        #expect(channel.name == L10n.format("imageEditor.channel.alphaChannelFromTransparencyName", 1))
+        #expect(maskAlpha(channel.mask, x: 0, y: 0) == 0)
+        #expect(maskAlpha(channel.mask, x: 1, y: 0) == 255)
+        #expect(viewModel.selectedAlphaChannelID == channel.id)
+        #expect(viewModel.previewedAlphaChannelID == channel.id)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelFromTransparency"))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.alphaChannelFromTransparency"))
+    }
+
     @Test func alphaChannelsRoundTripWithLayerMasks() async throws {
         let viewModel = ImageEditorViewModel(sourceName: "split.png", image: splitChannelImage()) { _ in }
 
