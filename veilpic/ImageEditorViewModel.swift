@@ -168,6 +168,8 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var filterOffsetY: Double = 0
     @Published var filterWaveAmplitude: Double = 0.5
     @Published var filterWaveFrequency: Double = 0.25
+    @Published var filterRippleAmount: Double = 0.5
+    @Published var filterRippleFrequency: Double = 0.25
     @Published var selectedChannelPreview: ImageEditorChannelPreview = .composite
     @Published var isEditingLayerMask: Bool = false
     @Published var pendingPenPathPoints: [CGPoint] = []
@@ -522,6 +524,18 @@ final class ImageEditorViewModel: ObservableObject {
                 Int((filter.normalizedIntensity * 100).rounded()),
                 Int((settings.offsetX * 100).rounded()),
                 Int((settings.offsetY * 100).rounded())
+            )
+            guard !filter.isEnabled else { return title }
+            return L10n.format("imageEditor.properties.smartFilterDisabled", title)
+        }
+        if filter.kind == .ripple {
+            let settings = filter.normalizedSettings
+            let title = L10n.format(
+                "imageEditor.properties.smartFilterRippleItem",
+                filter.kind.title,
+                Int((filter.normalizedIntensity * 100).rounded()),
+                Int((settings.rippleAmount * 100).rounded()),
+                Int((settings.rippleFrequency * 100).rounded())
             )
             guard !filter.isEnabled else { return title }
             return L10n.format("imageEditor.properties.smartFilterDisabled", title)
@@ -2729,7 +2743,9 @@ final class ImageEditorViewModel: ObservableObject {
             offsetX: filterOffsetX,
             offsetY: filterOffsetY,
             waveAmplitude: filterWaveAmplitude,
-            waveFrequency: filterWaveFrequency
+            waveFrequency: filterWaveFrequency,
+            rippleAmount: filterRippleAmount,
+            rippleFrequency: filterRippleFrequency
         ).normalized()
     }
 
@@ -3976,6 +3992,8 @@ final class ImageEditorViewModel: ObservableObject {
         filterOffsetY = normalized.offsetY
         filterWaveAmplitude = normalized.waveAmplitude
         filterWaveFrequency = normalized.waveFrequency
+        filterRippleAmount = normalized.rippleAmount
+        filterRippleFrequency = normalized.rippleFrequency
     }
 
     private func syncSolidColorFillControlsFromSelection() {

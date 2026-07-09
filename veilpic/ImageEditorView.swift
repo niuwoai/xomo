@@ -2113,6 +2113,28 @@ struct ImageEditorView: View {
                             .frame(width: 44, alignment: .trailing)
                     }
                 }
+                if viewModel.selectedFilter == .ripple {
+                    HStack {
+                        Text(L10n.text("imageEditor.filter.rippleAmount"))
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                        Slider(value: $viewModel.filterRippleAmount, in: -1...1, step: 0.05)
+                        Text(L10n.format("imageEditor.filter.rippleAmountValue", Int((viewModel.filterRippleAmount * 100).rounded())))
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+                            .frame(width: 44, alignment: .trailing)
+                    }
+                    HStack {
+                        Text(L10n.text("imageEditor.filter.rippleFrequency"))
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                        Slider(value: $viewModel.filterRippleFrequency, in: 0...1, step: 0.05)
+                        Text(L10n.format("imageEditor.filter.rippleFrequencyValue", Int((viewModel.filterRippleFrequency * 100).rounded())))
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+                            .frame(width: 44, alignment: .trailing)
+                    }
+                }
                 Text(viewModel.selectedLayerSmartFilterText)
                     .font(.system(size: 10, weight: .medium))
                     .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))

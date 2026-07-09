@@ -1235,6 +1235,7 @@ enum ImageEditorFilter: String, CaseIterable, Identifiable {
     case vignette
     case offset
     case wave
+    case ripple
     case liquifyPush
     case liquifyTwirl
     case liquifyPuckerBloat
@@ -1273,6 +1274,8 @@ struct ImageEditorFilterSettings: Equatable, Codable {
     var offsetY: Double = 0
     var waveAmplitude: Double = 0.5
     var waveFrequency: Double = 0.25
+    var rippleAmount: Double = 0.5
+    var rippleFrequency: Double = 0.25
 
     init(
         unsharpRadius: Double = 1,
@@ -1284,7 +1287,9 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         offsetX: Double = 0.25,
         offsetY: Double = 0,
         waveAmplitude: Double = 0.5,
-        waveFrequency: Double = 0.25
+        waveFrequency: Double = 0.25,
+        rippleAmount: Double = 0.5,
+        rippleFrequency: Double = 0.25
     ) {
         self.unsharpRadius = unsharpRadius
         self.unsharpThreshold = unsharpThreshold
@@ -1296,6 +1301,8 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         self.offsetY = offsetY
         self.waveAmplitude = waveAmplitude
         self.waveFrequency = waveFrequency
+        self.rippleAmount = rippleAmount
+        self.rippleFrequency = rippleFrequency
     }
 
     init(from decoder: Decoder) throws {
@@ -1310,6 +1317,8 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         offsetY = try container.decodeIfPresent(Double.self, forKey: .offsetY) ?? 0
         waveAmplitude = try container.decodeIfPresent(Double.self, forKey: .waveAmplitude) ?? 0.5
         waveFrequency = try container.decodeIfPresent(Double.self, forKey: .waveFrequency) ?? 0.25
+        rippleAmount = try container.decodeIfPresent(Double.self, forKey: .rippleAmount) ?? 0.5
+        rippleFrequency = try container.decodeIfPresent(Double.self, forKey: .rippleFrequency) ?? 0.25
     }
 
     func encode(to encoder: Encoder) throws {
@@ -1324,6 +1333,8 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         try container.encode(offsetY, forKey: .offsetY)
         try container.encode(waveAmplitude, forKey: .waveAmplitude)
         try container.encode(waveFrequency, forKey: .waveFrequency)
+        try container.encode(rippleAmount, forKey: .rippleAmount)
+        try container.encode(rippleFrequency, forKey: .rippleFrequency)
     }
 
     func normalized() -> ImageEditorFilterSettings {
@@ -1337,7 +1348,9 @@ struct ImageEditorFilterSettings: Equatable, Codable {
             offsetX: max(-1, min(1, offsetX)),
             offsetY: max(-1, min(1, offsetY)),
             waveAmplitude: max(-1, min(1, waveAmplitude)),
-            waveFrequency: max(0, min(1, waveFrequency))
+            waveFrequency: max(0, min(1, waveFrequency)),
+            rippleAmount: max(-1, min(1, rippleAmount)),
+            rippleFrequency: max(0, min(1, rippleFrequency))
         )
     }
 
@@ -1352,6 +1365,8 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         case offsetY
         case waveAmplitude
         case waveFrequency
+        case rippleAmount
+        case rippleFrequency
     }
 }
 

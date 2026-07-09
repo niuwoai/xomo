@@ -465,6 +465,7 @@
 "imageEditor.filter.vignette" = "Vignette";
 "imageEditor.filter.offset" = "Offset";
 "imageEditor.filter.wave" = "Wave";
+"imageEditor.filter.ripple" = "Ripple";
 "imageEditor.filter.liquifyPush" = "Liquify Push";
 "imageEditor.filter.liquifyTwirl" = "Liquify Twirl";
 "imageEditor.filter.liquifyPuckerBloat" = "Liquify Pucker/Bloat";
@@ -486,6 +487,10 @@
 "imageEditor.filter.waveAmplitudeValue" = "%d";
 "imageEditor.filter.waveFrequency" = "Frequency";
 "imageEditor.filter.waveFrequencyValue" = "%d";
+"imageEditor.filter.rippleAmount" = "Amount";
+"imageEditor.filter.rippleAmountValue" = "%d";
+"imageEditor.filter.rippleFrequency" = "Frequency";
+"imageEditor.filter.rippleFrequencyValue" = "%d";
 "imageEditor.shape.rectangle" = "Rectangle";
 "imageEditor.shape.ellipse" = "Ellipse";
 "imageEditor.shape.path" = "Path";
@@ -513,6 +518,7 @@
 "imageEditor.properties.smartFilterLiquifyPuckerBloatItem" = "%@ %d%% · Pucker/Bloat %d";
 "imageEditor.properties.smartFilterWaveItem" = "%@ %d%% · Amp %d · Freq %d";
 "imageEditor.properties.smartFilterOffsetItem" = "%@ %d%% · X %d · Y %d";
+"imageEditor.properties.smartFilterRippleItem" = "%@ %d%% · Amount %d · Freq %d";
 "imageEditor.properties.smartFilterDisabled" = "%@ (off)";
 "imageEditor.properties.smartFilterSeparator" = " · ";
 "imageEditor.properties.textPlaceholder" = "Text to add";
