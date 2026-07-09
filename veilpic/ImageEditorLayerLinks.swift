@@ -17,6 +17,14 @@ extension ImageEditorViewModel {
         selectedLayerIDs.contains(where: isLayerLinked)
     }
 
+    var canSelectLinkedLayers: Bool {
+        selectedLayerIDs.contains(where: isLayerLinked)
+    }
+
+    var canUnlinkAllLayers: Bool {
+        document.layers.contains { isLayerLinked($0.id) }
+    }
+
     var selectedLayerIDs: Set<UUID> {
         document.selectedLayerIDs
     }
@@ -64,6 +72,33 @@ extension ImageEditorViewModel {
         }
         normalizeLayerLinks()
         appendHistory(L10n.text("imageEditor.history.layerUnlink"))
+    }
+
+    func unlinkAllLayers() {
+        guard canUnlinkAllLayers else {
+            statusText = L10n.text("imageEditor.status.layerNoLinks")
+            return
+        }
+
+        pushUndo()
+        for index in document.layers.indices {
+            document.layers[index].linkedLayerIDs.removeAll()
+        }
+        appendHistory(L10n.text("imageEditor.history.layerUnlinkAll"))
+    }
+
+    func selectLinkedLayers() {
+        let selectedIDs = selectedLayerIDs.intersection(Set(document.layers.map(\.id)))
+        let linkedIDs = linkedTransformLayerIDs(startingFrom: selectedIDs)
+        guard linkedIDs.count > selectedIDs.count else {
+            statusText = L10n.text("imageEditor.status.layerNoLinks")
+            return
+        }
+
+        document.selectedLayerIDs = linkedIDs
+        document.selectedLayerID = document.layers.reversed().first { linkedIDs.contains($0.id) }?.id
+        isEditingLayerMask = false
+        updateStatus()
     }
 
     func linkedTransformLayerIDs(startingFrom baseIDs: Set<UUID>) -> Set<UUID> {

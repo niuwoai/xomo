@@ -166,9 +166,9 @@ extension ImageEditorViewModel {
                     fraction: layer.opacity
                 )
             } else {
-                let image = layer.compositingImage
+                let image = layer.renderedCompositingImage(globalLightAngle: document.globalLightAngle)
                 image.draw(
-                    in: layer.compositingFrame,
+                    in: layer.renderedCompositingFrame(globalLightAngle: document.globalLightAngle),
                     from: CGRect(origin: .zero, size: image.size),
                     operation: .sourceOver,
                     fraction: layer.opacity

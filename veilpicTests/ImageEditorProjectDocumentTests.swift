@@ -1,0 +1,410 @@
+//
+//  ImageEditorProjectDocumentTests.swift
+//  veilpicTests
+//
+//  Created by Codex on 2026/7/9.
+//
+
+import AppKit
+import Testing
+@testable import musepic
+
+@MainActor
+struct ImageEditorProjectDocumentTests {
+    @Test
+    func adjustmentSettingsDecodeLegacyPayloadWithMissingNewFields() throws {
+        let legacyPayload = Data(
+            """
+            {
+              "levelsBlackPoint": 0.12,
+              "levelsGamma": 1.4,
+              "levelsWhitePoint": 0.92,
+              "hueSaturationHue": 24,
+              "hueSaturationSaturation": 0.35,
+              "photoFilterDensity": 0.7,
+              "gradientMapPreset": "sepia"
+            }
+            """.utf8
+        )
+
+        let settings = try JSONDecoder().decode(ImageEditorAdjustmentSettings.self, from: legacyPayload)
+
+        #expect(settings.levelsBlackPoint == 0.12)
+        #expect(settings.levelsGamma == 1.4)
+        #expect(settings.levelsWhitePoint == 0.92)
+        #expect(settings.hueSaturationHue == 24)
+        #expect(settings.hueSaturationSaturation == 0.35)
+        #expect(settings.exposureEV == 0)
+        #expect(settings.exposureOffset == 0)
+        #expect(settings.exposureGamma == 1)
+        #expect(settings.shadowsHighlightsShadows == 0)
+        #expect(settings.shadowsHighlightsHighlights == 0)
+        #expect(settings.blackWhiteReds == 0.40)
+        #expect(settings.channelMixerRedRed == 1)
+        #expect(settings.photoFilterDensity == 0.7)
+        #expect(settings.gradientMapPreset == .sepia)
+        #expect(!settings.gradientMapReverse)
+        #expect(settings.gradientMapHighlightBlue == 1)
+    }
+
+    @Test
+    func projectDocumentRoundTripsEditableLayerState() throws {
+        let sourceImage = testImage(color: .systemBlue, size: NSSize(width: 96, height: 72))
+        let viewModel = ImageEditorViewModel(sourceName: "design.png", image: sourceImage) { _ in }
+
+        var pixelLayer = ImageEditorLayer.blank(name: "Pixel detail", size: NSSize(width: 40, height: 30))
+        pixelLayer.image = testImage(color: .systemPink, size: NSSize(width: 40, height: 30))
+        pixelLayer.mask = NSImage.opaqueMask(size: NSSize(width: 40, height: 30))
+        pixelLayer.frame = CGRect(x: 12, y: 14, width: 40, height: 30)
+        pixelLayer.opacity = 0.65
+        pixelLayer.fillOpacity = 0.72
+        pixelLayer.blendIfSourceBlack = 0.2
+        pixelLayer.blendIfSourceWhite = 0.86
+        pixelLayer.blendIfUnderlyingBlack = 0.12
+        pixelLayer.blendIfUnderlyingWhite = 0.91
+        pixelLayer.blendMode = .multiply
+        pixelLayer.locksPixels = true
+        pixelLayer.style.strokeEnabled = true
+        pixelLayer.style.strokeColor = .systemYellow
+        pixelLayer.style.strokeWidth = 5
+        pixelLayer.style.strokePosition = .inside
+        pixelLayer.style.strokeOpacity = 0.44
+        pixelLayer.style.shadowEnabled = true
+        pixelLayer.style.shadowColor = .systemRed
+        pixelLayer.style.shadowDistance = 13
+        pixelLayer.style.shadowAngle = 30
+        pixelLayer.style.shadowUsesGlobalLight = false
+        pixelLayer.style.shadowOffset = ImageEditorLayerStyle.shadowOffset(distance: 13, angle: 30)
+        pixelLayer.style.shadowSpread = 9
+        pixelLayer.style.innerShadowEnabled = true
+        pixelLayer.style.innerShadowDistance = 8
+        pixelLayer.style.innerShadowAngle = 45
+        pixelLayer.style.innerShadowUsesGlobalLight = true
+        pixelLayer.style.bevelEnabled = true
+        pixelLayer.style.bevelSize = 6
+        pixelLayer.style.bevelAngle = 18
+        pixelLayer.style.bevelUsesGlobalLight = false
+        pixelLayer.smartFilters = [
+            ImageEditorSmartFilter(
+                kind: .unsharpMask,
+                intensity: 0.8,
+                settings: ImageEditorFilterSettings(unsharpRadius: 2.5, unsharpThreshold: 0.2)
+            )
+        ]
+        pixelLayer.vectorMask = ImageEditorShapeContent(
+            kind: .path,
+            fillColor: .white,
+            fillOpacity: 1,
+            strokeColor: .white,
+            strokeWidth: 1,
+            strokeOpacity: 1,
+            pathPoints: [
+                CGPoint(x: 4, y: 4),
+                CGPoint(x: 30, y: 6),
+                CGPoint(x: 20, y: 24)
+            ],
+            pathAnchors: [
+                ImageEditorPathAnchor(point: CGPoint(x: 4, y: 4)),
+                ImageEditorPathAnchor(point: CGPoint(x: 30, y: 6)),
+                ImageEditorPathAnchor(point: CGPoint(x: 20, y: 24))
+            ],
+            isPathClosed: true
+        )
+
+        let textContent = ImageEditorTextContent(
+            text: "Round trip",
+            color: .white,
+            fontSize: 18,
+            point: CGPoint(x: 2, y: 3),
+            isBold: true,
+            isItalic: true,
+            characterSpacing: 1.5,
+            lineSpacing: 2,
+            boxWidth: 80,
+            alignment: .center
+        )
+        var textLayer = ImageEditorLayer.text(
+            name: "Title",
+            origin: CGPoint(x: 20, y: 8),
+            content: textContent
+        )
+        textLayer.opacity = 0.9
+
+        let shapeContent = ImageEditorShapeContent(
+            kind: .ellipse,
+            fillColor: .systemGreen,
+            fillOpacity: 0.45,
+            strokeColor: .black,
+            strokeWidth: 3,
+            strokeOpacity: 0.8
+        )
+        let shapeLayer = ImageEditorLayer.shape(
+            name: "Badge",
+            frame: CGRect(x: 50, y: 20, width: 28, height: 28),
+            content: shapeContent
+        )
+        var smartObjectLayer = ImageEditorLayer.smartObject(
+            name: "Placed Logo",
+            image: testImage(color: .systemOrange, size: NSSize(width: 32, height: 24)),
+            sourceName: "logo.png"
+        )
+        smartObjectLayer.frame = CGRect(x: 10, y: 34, width: 48, height: 36)
+        var groupLayer = ImageEditorLayer.group(
+            name: "Composite Group",
+            size: NSSize(width: 96, height: 72)
+        )
+        groupLayer.blendMode = .multiply
+        groupLayer.opacity = 0.77
+        groupLayer.isGroupExpanded = false
+        pixelLayer.groupID = groupLayer.id
+        pixelLayer.labelColor = .blue
+        groupLayer.labelColor = .purple
+
+        viewModel.document.layers.append(pixelLayer)
+        viewModel.document.layers.append(textLayer)
+        viewModel.document.layers.append(shapeLayer)
+        viewModel.document.layers.append(smartObjectLayer)
+        viewModel.document.layers.append(groupLayer)
+        viewModel.document.selectedLayerID = textLayer.id
+        viewModel.document.selectedLayerIDs = [pixelLayer.id, textLayer.id]
+        viewModel.document.isGridVisible = true
+        viewModel.document.isGridSnappingEnabled = true
+        viewModel.document.gridSpacing = 40
+        viewModel.document.globalLightAngle = 72
+
+        let selectionMask = ImageEditorSelectionMask(width: 4, height: 3, alpha: [
+            255, 0, 255, 0,
+            0, 255, 0, 255,
+            255, 255, 0, 0
+        ])
+        viewModel.document.selection = ImageEditorSelection.raster(
+            mask: selectionMask,
+            bounds: CGRect(x: 0, y: 0, width: 4, height: 3)
+        )
+        viewModel.document.savedSelection = viewModel.document.selection
+        viewModel.document.alphaChannels = [
+            ImageEditorAlphaChannel(name: "Soft Mask", mask: selectionMask)
+        ]
+
+        let data = try viewModel.projectData()
+        let restoredViewModel = ImageEditorViewModel(
+            sourceName: "empty.png",
+            image: testImage(color: .black, size: NSSize(width: 12, height: 12))
+        ) { _ in }
+        try restoredViewModel.loadProjectData(data)
+
+        #expect(restoredViewModel.document.sourceName == "design.png")
+        #expect(restoredViewModel.document.canvasSize == NSSize(width: 96, height: 72))
+        #expect(restoredViewModel.document.layers.count == viewModel.document.layers.count)
+        #expect(restoredViewModel.document.selectedLayerID == textLayer.id)
+        #expect(restoredViewModel.document.selectedLayerIDs.contains(pixelLayer.id))
+        #expect(restoredViewModel.document.selectedLayerIDs.contains(textLayer.id))
+        #expect(restoredViewModel.document.isGridVisible)
+        #expect(restoredViewModel.document.isGridSnappingEnabled)
+        #expect(restoredViewModel.document.gridSpacing == 40)
+        #expect(restoredViewModel.document.globalLightAngle == 72)
+
+        let restoredPixel = try #require(restoredViewModel.document.layers.first { $0.id == pixelLayer.id })
+        #expect(restoredPixel.name == "Pixel detail")
+        #expect(restoredPixel.frame == pixelLayer.frame)
+        #expect(restoredPixel.opacity == 0.65)
+        #expect(restoredPixel.fillOpacity == 0.72)
+        #expect(restoredPixel.blendIfSourceBlack == 0.2)
+        #expect(restoredPixel.blendIfSourceWhite == 0.86)
+        #expect(restoredPixel.blendIfUnderlyingBlack == 0.12)
+        #expect(restoredPixel.blendIfUnderlyingWhite == 0.91)
+        #expect(restoredPixel.blendMode == .multiply)
+        #expect(restoredPixel.locksPixels)
+        #expect(restoredPixel.mask != nil)
+        #expect(restoredPixel.vectorMask?.kind == .path)
+        #expect(restoredPixel.vectorMask?.editablePathAnchors.count == 3)
+        #expect(restoredPixel.style.strokeEnabled)
+        #expect(restoredPixel.style.strokeWidth == 5)
+        #expect(restoredPixel.style.strokePosition == .inside)
+        #expect(restoredPixel.style.strokeOpacity == 0.44)
+        let restoredStrokeColor = try #require(restoredPixel.style.strokeColor.usingColorSpace(.deviceRGB))
+        #expect(restoredStrokeColor.redComponent > 0.75)
+        #expect(restoredStrokeColor.greenComponent > 0.55)
+        #expect(restoredPixel.style.shadowEnabled)
+        let restoredShadowColor = try #require(restoredPixel.style.shadowColor.usingColorSpace(.deviceRGB))
+        #expect(restoredShadowColor.redComponent > 0.75)
+        #expect(restoredShadowColor.greenComponent < 0.35)
+        #expect(restoredPixel.style.shadowSpread == 9)
+        #expect(abs(restoredPixel.style.shadowDistance - 13) < 0.001)
+        #expect(abs(restoredPixel.style.shadowAngle - 30) < 0.001)
+        #expect(!restoredPixel.style.shadowUsesGlobalLight)
+        #expect(restoredPixel.style.innerShadowEnabled)
+        #expect(restoredPixel.style.innerShadowUsesGlobalLight)
+        #expect(restoredPixel.style.resolvedInnerShadowAngle(globalLightAngle: restoredViewModel.document.globalLightAngle) == 72)
+        #expect(restoredPixel.style.bevelEnabled)
+        #expect(restoredPixel.style.bevelSize == 6)
+        #expect(!restoredPixel.style.bevelUsesGlobalLight)
+        #expect(restoredPixel.style.resolvedBevelAngle(globalLightAngle: restoredViewModel.document.globalLightAngle) == 18)
+        #expect(restoredPixel.smartFilters.count == 1)
+        #expect(restoredPixel.smartFilters.first?.kind == .unsharpMask)
+        #expect(restoredPixel.smartFilters.first?.normalizedSettings.unsharpRadius == 2.5)
+        #expect(restoredPixel.smartFilters.first?.normalizedSettings.unsharpThreshold == 0.2)
+        #expect(restoredPixel.groupID == groupLayer.id)
+        #expect(restoredPixel.labelColor == .blue)
+
+        let restoredText = try #require(restoredViewModel.document.layers.first { $0.id == textLayer.id })
+        let restoredTextContent = try #require(restoredText.textContent)
+        #expect(restoredTextContent.text == "Round trip")
+        #expect(restoredTextContent.isBold)
+        #expect(restoredTextContent.isItalic)
+        #expect(restoredTextContent.alignment == .center)
+        #expect(restoredTextContent.boxWidth == 80)
+
+        let restoredShape = try #require(restoredViewModel.document.layers.first { $0.id == shapeLayer.id })
+        let restoredShapeContent = try #require(restoredShape.shapeContent)
+        #expect(restoredShapeContent.kind == .ellipse)
+        #expect(restoredShapeContent.strokeWidth == 3)
+        #expect(restoredShapeContent.fillOpacity == 0.45)
+
+        let restoredSmartObject = try #require(restoredViewModel.document.layers.first { $0.id == smartObjectLayer.id })
+        let restoredSmartObjectContent = try #require(restoredSmartObject.smartObjectContent)
+        #expect(restoredSmartObject.frame == smartObjectLayer.frame)
+        #expect(restoredSmartObject.image.size == NSSize(width: 32, height: 24))
+        #expect(restoredSmartObjectContent.sourceName == "logo.png")
+        #expect(restoredSmartObjectContent.originalSize == NSSize(width: 32, height: 24))
+        #expect(restoredSmartObjectContent.sourceID == smartObjectLayer.smartObjectContent?.sourceID)
+
+        let restoredGroup = try #require(restoredViewModel.document.layers.first { $0.id == groupLayer.id })
+        #expect(restoredGroup.isGroup)
+        #expect(restoredGroup.blendMode == .multiply)
+        #expect(restoredGroup.opacity == 0.77)
+        #expect(!restoredGroup.isGroupExpanded)
+        #expect(restoredGroup.labelColor == .purple)
+
+        #expect(restoredViewModel.document.selection?.rasterMask == selectionMask)
+        #expect(restoredViewModel.document.savedSelection?.rasterMask == selectionMask)
+        #expect(restoredViewModel.document.alphaChannels.first?.name == "Soft Mask")
+        #expect(restoredViewModel.document.alphaChannels.first?.mask == selectionMask)
+    }
+
+    @Test
+    func projectDocumentStoresSmartObjectSourceOnceForSharedInstances() throws {
+        let sourceImage = testImage(color: .systemBlue, size: NSSize(width: 96, height: 72))
+        let viewModel = ImageEditorViewModel(sourceName: "design.png", image: sourceImage) { _ in }
+        let logoImage = testImage(color: .systemOrange, size: NSSize(width: 32, height: 24))
+
+        var firstInstance = ImageEditorLayer.smartObject(
+            name: "Logo",
+            image: logoImage,
+            sourceName: "logo.png"
+        )
+        firstInstance.frame = CGRect(x: 8, y: 10, width: 32, height: 24)
+        var secondInstance = firstInstance
+        secondInstance.id = UUID()
+        secondInstance.name = "Logo copy"
+        secondInstance.frame = CGRect(x: 48, y: 20, width: 32, height: 24)
+
+        viewModel.document.layers.append(firstInstance)
+        viewModel.document.layers.append(secondInstance)
+
+        let project = try ImageEditorProjectDocument(document: viewModel.document)
+        let sharedSource = try #require(project.smartObjectSources?.first)
+        #expect(project.formatVersion == 4)
+        #expect(project.smartObjectSources?.count == 1)
+        #expect(sharedSource.sourceID == firstInstance.smartObjectContent?.sourceID)
+
+        let smartObjectProjectLayers = project.layers.filter { layer in
+            if case .smartObject = layer.kind { return true }
+            return false
+        }
+        #expect(smartObjectProjectLayers.count == 2)
+        #expect(smartObjectProjectLayers.allSatisfy { $0.imageData == nil })
+
+        let restoredDocument = try project.restoredDocument()
+        let restoredSmartObjects = restoredDocument.layers.filter(\.isSmartObject)
+        #expect(restoredSmartObjects.count == 2)
+        #expect(restoredSmartObjects.allSatisfy {
+            $0.smartObjectContent?.sourceID == firstInstance.smartObjectContent?.sourceID
+        })
+        #expect(restoredSmartObjects.allSatisfy { $0.image.size == logoImage.size })
+        #expect(Set(restoredSmartObjects.map(\.frame)) == Set([firstInstance.frame, secondInstance.frame]))
+    }
+
+    @Test
+    func projectDocumentRestoresLegacySmartObjectLayerImageData() throws {
+        let sourceImage = testImage(color: .systemBlue, size: NSSize(width: 96, height: 72))
+        let viewModel = ImageEditorViewModel(sourceName: "design.png", image: sourceImage) { _ in }
+        let logoImage = testImage(color: .systemOrange, size: NSSize(width: 32, height: 24))
+        let smartObjectLayer = ImageEditorLayer.smartObject(
+            name: "Logo",
+            image: logoImage,
+            sourceName: "logo.png"
+        )
+        viewModel.document.layers.append(smartObjectLayer)
+
+        var project = try ImageEditorProjectDocument(document: viewModel.document)
+        project.smartObjectSources = nil
+        project.layers = try viewModel.document.layers.map(ImageEditorProjectLayer.init(layer:))
+
+        let restoredDocument = try project.restoredDocument()
+        let restoredSmartObject = try #require(restoredDocument.layers.first { $0.id == smartObjectLayer.id })
+        #expect(restoredSmartObject.image.size == logoImage.size)
+        #expect(restoredSmartObject.smartObjectContent?.sourceID == smartObjectLayer.smartObjectContent?.sourceID)
+    }
+
+    @Test
+    func layerGroupPassThroughKeepsChildBlendingAgainstBackdrop() throws {
+        let canvasSize = NSSize(width: 12, height: 12)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "design.png",
+            image: testImage(color: .blue, size: canvasSize)
+        ) { _ in }
+
+        var group = ImageEditorLayer.group(name: "Multiply Group", size: canvasSize)
+        var child = ImageEditorLayer.blank(name: "Red Multiply", size: canvasSize)
+        child.image = testImage(color: .red, size: canvasSize)
+        child.blendMode = .multiply
+        child.groupID = group.id
+        viewModel.document.layers.append(child)
+        viewModel.document.layers.append(group)
+
+        #expect(group.blendMode == .passThrough)
+        let passThroughColor = try #require(viewModel.currentImage.color(at: CGPoint(x: 4, y: 4))?.usingColorSpace(.deviceRGB))
+        #expect(passThroughColor.redComponent < 0.08)
+        #expect(passThroughColor.blueComponent < 0.08)
+
+        let groupIndex = try #require(viewModel.document.layers.firstIndex { $0.id == group.id })
+        viewModel.document.layers[groupIndex].blendMode = .normal
+        let isolatedColor = try #require(viewModel.currentImage.color(at: CGPoint(x: 4, y: 4))?.usingColorSpace(.deviceRGB))
+        #expect(isolatedColor.redComponent > 0.9)
+        #expect(isolatedColor.blueComponent < 0.08)
+    }
+
+    @Test
+    func projectDocumentMigratesLegacyNormalGroupsToPassThrough() throws {
+        let canvasSize = NSSize(width: 12, height: 12)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "legacy-group.png",
+            image: testImage(color: .blue, size: canvasSize)
+        ) { _ in }
+
+        var group = ImageEditorLayer.group(name: "Legacy Group", size: canvasSize)
+        group.blendMode = .normal
+        var child = ImageEditorLayer.blank(name: "Red Multiply", size: canvasSize)
+        child.image = testImage(color: .red, size: canvasSize)
+        child.blendMode = .multiply
+        child.groupID = group.id
+        viewModel.document.layers.append(child)
+        viewModel.document.layers.append(group)
+
+        var legacyProject = try ImageEditorProjectDocument(document: viewModel.document)
+        legacyProject.formatVersion = 2
+        let restoredDocument = try legacyProject.restoredDocument()
+        let restoredGroup = try #require(restoredDocument.layers.first { $0.id == group.id })
+        #expect(restoredGroup.blendMode == .passThrough)
+    }
+
+    private func testImage(color: NSColor, size: NSSize) -> NSImage {
+        let image = NSImage(size: size)
+        image.lockFocus()
+        color.setFill()
+        NSRect(origin: .zero, size: size).fill()
+        image.unlockFocus()
+        return image
+    }
+}

@@ -1,0 +1,468 @@
+//
+//  ImageEditorLayerCompTests.swift
+//  veilpicTests
+//
+//  Created by Codex on 2026/7/9.
+//
+
+import AppKit
+import Testing
+@testable import musepic
+
+@MainActor
+struct ImageEditorLayerCompTests {
+    @Test
+    func layerCompAppliesCapturedLayerState() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: testImage(color: .systemBlue, size: NSSize(width: 100, height: 80))
+        ) { _ in }
+        let editLayerIndex = try #require(viewModel.document.selectedLayerIndex)
+        let editLayerID = viewModel.document.layers[editLayerIndex].id
+        let groupLayer = ImageEditorLayer.group(name: "Hero Group", size: viewModel.document.canvasSize)
+        let groupID = groupLayer.id
+        viewModel.document.layers.append(groupLayer)
+        viewModel.document.layers[editLayerIndex].name = "Variant"
+        viewModel.document.layers[editLayerIndex].frame = CGRect(x: 10, y: 12, width: 50, height: 40)
+        viewModel.document.layers[editLayerIndex].opacity = 0.45
+        viewModel.document.layers[editLayerIndex].fillOpacity = 0.62
+        viewModel.document.layers[editLayerIndex].isMaskLinked = false
+        viewModel.document.layers[editLayerIndex].blendIfSourceBlack = 0.18
+        viewModel.document.layers[editLayerIndex].blendIfSourceWhite = 0.83
+        viewModel.document.layers[editLayerIndex].blendIfUnderlyingBlack = 0.24
+        viewModel.document.layers[editLayerIndex].blendIfUnderlyingWhite = 0.91
+        viewModel.document.layers[editLayerIndex].isMaskEnabled = false
+        viewModel.document.layers[editLayerIndex].maskDensity = 0.42
+        viewModel.document.layers[editLayerIndex].maskFeather = 13
+        viewModel.document.layers[editLayerIndex].isVectorMaskEnabled = false
+        viewModel.document.layers[editLayerIndex].style.strokeEnabled = true
+        viewModel.document.layers[editLayerIndex].style.strokeColor = NSColor(calibratedRed: 0.9, green: 0.2, blue: 0.1, alpha: 1)
+        viewModel.document.layers[editLayerIndex].style.strokeWidth = 7
+        viewModel.document.layers[editLayerIndex].style.strokePosition = .inside
+        viewModel.document.layers[editLayerIndex].style.shadowEnabled = true
+        viewModel.document.layers[editLayerIndex].style.shadowDistance = 11
+        viewModel.document.layers[editLayerIndex].style.shadowAngle = 25
+        viewModel.document.layers[editLayerIndex].style.shadowOffset = ImageEditorLayerStyle.shadowOffset(distance: 11, angle: 25)
+        viewModel.document.layers[editLayerIndex].blendMode = .screen
+        viewModel.document.layers[editLayerIndex].isVisible = false
+        viewModel.document.layers[editLayerIndex].linkedLayerIDs = [groupID]
+        viewModel.document.layers[editLayerIndex].groupID = groupID
+        viewModel.document.layers[editLayerIndex].isLocked = true
+        viewModel.document.layers[editLayerIndex].locksPixels = true
+        viewModel.document.layers[editLayerIndex].locksPosition = true
+        viewModel.document.layers[editLayerIndex].locksTransparentPixels = true
+        viewModel.document.layers[editLayerIndex].isClippingMask = true
+        let savedLayerOrder = viewModel.document.layers.map(\.id)
+
+        viewModel.addLayerComp(named: "Hero hidden")
+        let comp = try #require(viewModel.document.layerComps.first)
+
+        viewModel.document.layers[editLayerIndex].frame = CGRect(x: 2, y: 3, width: 25, height: 20)
+        viewModel.document.layers[editLayerIndex].opacity = 1
+        viewModel.document.layers[editLayerIndex].fillOpacity = 1
+        viewModel.document.layers[editLayerIndex].isMaskLinked = true
+        viewModel.document.layers[editLayerIndex].blendIfSourceBlack = 0
+        viewModel.document.layers[editLayerIndex].blendIfSourceWhite = 1
+        viewModel.document.layers[editLayerIndex].blendIfUnderlyingBlack = 0
+        viewModel.document.layers[editLayerIndex].blendIfUnderlyingWhite = 1
+        viewModel.document.layers[editLayerIndex].isMaskEnabled = true
+        viewModel.document.layers[editLayerIndex].maskDensity = 1
+        viewModel.document.layers[editLayerIndex].maskFeather = 0
+        viewModel.document.layers[editLayerIndex].isVectorMaskEnabled = true
+        viewModel.document.layers[editLayerIndex].style = ImageEditorLayerStyle()
+        viewModel.document.layers[editLayerIndex].blendMode = .normal
+        viewModel.document.layers[editLayerIndex].isVisible = true
+        viewModel.document.layers[editLayerIndex].linkedLayerIDs = []
+        viewModel.document.layers[editLayerIndex].groupID = nil
+        viewModel.document.layers[editLayerIndex].isLocked = false
+        viewModel.document.layers[editLayerIndex].locksPixels = false
+        viewModel.document.layers[editLayerIndex].locksPosition = false
+        viewModel.document.layers[editLayerIndex].locksTransparentPixels = false
+        viewModel.document.layers[editLayerIndex].isClippingMask = false
+        viewModel.document.layers.reverse()
+
+        viewModel.applyLayerComp(comp.id)
+
+        let restoredLayer = try #require(viewModel.document.layers.first { $0.id == editLayerID })
+        #expect(viewModel.document.layers.map(\.id) == savedLayerOrder)
+        #expect(restoredLayer.frame == CGRect(x: 10, y: 12, width: 50, height: 40))
+        #expect(restoredLayer.opacity == 0.45)
+        #expect(restoredLayer.fillOpacity == 0.62)
+        #expect(!restoredLayer.isMaskLinked)
+        #expect(restoredLayer.blendIfSourceBlack == 0.18)
+        #expect(restoredLayer.blendIfSourceWhite == 0.83)
+        #expect(restoredLayer.blendIfUnderlyingBlack == 0.24)
+        #expect(restoredLayer.blendIfUnderlyingWhite == 0.91)
+        #expect(!restoredLayer.isMaskEnabled)
+        #expect(restoredLayer.maskDensity == 0.42)
+        #expect(restoredLayer.maskFeather == 13)
+        #expect(!restoredLayer.isVectorMaskEnabled)
+        #expect(restoredLayer.style.strokeEnabled)
+        #expect(restoredLayer.style.strokeWidth == 7)
+        #expect(restoredLayer.style.strokePosition == .inside)
+        let restoredStrokeColor = try #require(restoredLayer.style.strokeColor.usingColorSpace(.deviceRGB))
+        #expect(abs(restoredStrokeColor.redComponent - 0.9) < 0.01)
+        #expect(restoredLayer.style.shadowEnabled)
+        #expect(abs(restoredLayer.style.shadowDistance - 11) < 0.001)
+        #expect(abs(restoredLayer.style.shadowAngle - 25) < 0.001)
+        #expect(restoredLayer.blendMode == .screen)
+        #expect(!restoredLayer.isVisible)
+        #expect(restoredLayer.linkedLayerIDs == [groupID])
+        #expect(restoredLayer.groupID == groupID)
+        #expect(restoredLayer.isLocked)
+        #expect(restoredLayer.locksPixels)
+        #expect(restoredLayer.locksPosition)
+        #expect(restoredLayer.locksTransparentPixels)
+        #expect(restoredLayer.isClippingMask)
+        #expect(viewModel.document.selectedLayerCompID == comp.id)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerCompApply"))
+    }
+
+    @Test
+    func layerCompStateDecodesLegacyFilesWithoutClippingMaskFlag() throws {
+        let state = ImageEditorLayerCompLayerState(
+            layerID: UUID(),
+            isVisible: true,
+            frame: CGRect(x: 4, y: 5, width: 20, height: 16),
+            opacity: 0.7,
+            fillOpacity: 0.8,
+            isMaskLinked: false,
+            blendIfSourceBlack: 0.2,
+            blendIfSourceWhite: 0.9,
+            blendIfUnderlyingBlack: 0.1,
+            blendIfUnderlyingWhite: 0.8,
+            isMaskEnabled: false,
+            maskDensity: 0.5,
+            maskFeather: 12,
+            hasMaskSnapshot: true,
+            maskData: Data([0, 1, 2, 3]),
+            isVectorMaskEnabled: false,
+            style: ImageEditorProjectLayerStyle(style: ImageEditorLayerStyle()),
+            blendMode: .multiply,
+            linkedLayerIDs: [UUID()],
+            groupID: UUID(),
+            isLocked: true,
+            locksPixels: true,
+            locksPosition: true,
+            locksTransparentPixels: true,
+            isGroupExpanded: false,
+            isClippingMask: true
+        )
+        let data = try JSONEncoder().encode(state)
+        let object = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        var legacyObject = object
+        legacyObject.removeValue(forKey: "isClippingMask")
+        legacyObject.removeValue(forKey: "isMaskLinked")
+        legacyObject.removeValue(forKey: "blendIfSourceBlack")
+        legacyObject.removeValue(forKey: "blendIfSourceWhite")
+        legacyObject.removeValue(forKey: "blendIfUnderlyingBlack")
+        legacyObject.removeValue(forKey: "blendIfUnderlyingWhite")
+        legacyObject.removeValue(forKey: "isMaskEnabled")
+        legacyObject.removeValue(forKey: "maskDensity")
+        legacyObject.removeValue(forKey: "maskFeather")
+        legacyObject.removeValue(forKey: "hasMaskSnapshot")
+        legacyObject.removeValue(forKey: "maskData")
+        legacyObject.removeValue(forKey: "isVectorMaskEnabled")
+        legacyObject.removeValue(forKey: "style")
+        legacyObject.removeValue(forKey: "kind")
+        legacyObject.removeValue(forKey: "smartFilters")
+        legacyObject.removeValue(forKey: "adjustmentSettings")
+        legacyObject.removeValue(forKey: "filterSettings")
+        legacyObject.removeValue(forKey: "hasVectorMaskSnapshot")
+        legacyObject.removeValue(forKey: "vectorMask")
+        legacyObject.removeValue(forKey: "linkedLayerIDs")
+        legacyObject.removeValue(forKey: "groupID")
+        legacyObject.removeValue(forKey: "isLocked")
+        legacyObject.removeValue(forKey: "locksPixels")
+        legacyObject.removeValue(forKey: "locksPosition")
+        legacyObject.removeValue(forKey: "locksTransparentPixels")
+        let legacyData = try JSONSerialization.data(withJSONObject: legacyObject)
+
+        let decoded = try JSONDecoder().decode(ImageEditorLayerCompLayerState.self, from: legacyData)
+
+        #expect(decoded.layerID == state.layerID)
+        #expect(decoded.frame == state.frame)
+        #expect(decoded.opacity == state.opacity)
+        #expect(decoded.fillOpacity == state.fillOpacity)
+        #expect(decoded.isMaskLinked)
+        #expect(decoded.blendIfSourceBlack == 0)
+        #expect(decoded.blendIfSourceWhite == 1)
+        #expect(decoded.blendIfUnderlyingBlack == 0)
+        #expect(decoded.blendIfUnderlyingWhite == 1)
+        #expect(decoded.isMaskEnabled)
+        #expect(decoded.maskDensity == 1)
+        #expect(decoded.maskFeather == 0)
+        #expect(!decoded.hasMaskSnapshot)
+        #expect(decoded.maskData == nil)
+        #expect(decoded.isVectorMaskEnabled)
+        #expect(!decoded.style.layerStyle.hasEffects)
+        #expect(decoded.blendMode == state.blendMode)
+        #expect(decoded.kind == nil)
+        #expect(decoded.smartFilters == nil)
+        #expect(decoded.adjustmentSettings == nil)
+        #expect(decoded.filterSettings == nil)
+        #expect(!decoded.hasVectorMaskSnapshot)
+        #expect(decoded.vectorMask == nil)
+        #expect(decoded.linkedLayerIDs.isEmpty)
+        #expect(decoded.groupID == nil)
+        #expect(!decoded.isLocked)
+        #expect(!decoded.locksPixels)
+        #expect(!decoded.locksPosition)
+        #expect(!decoded.locksTransparentPixels)
+        #expect(decoded.isGroupExpanded == state.isGroupExpanded)
+        #expect(!decoded.isClippingMask)
+    }
+
+    @Test
+    func layerCompAppliesCapturedRasterMaskSnapshot() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: testImage(color: .systemPurple, size: NSSize(width: 100, height: 80))
+        ) { _ in }
+        let editLayerIndex = try #require(viewModel.document.selectedLayerIndex)
+        let editLayerID = viewModel.document.layers[editLayerIndex].id
+        let originalMask = maskImage(
+            size: NSSize(width: 100, height: 80),
+            whiteRect: CGRect(x: 0, y: 0, width: 50, height: 80)
+        )
+        let originalMaskData = try #require(originalMask.qingtuPNGData())
+        viewModel.document.layers[editLayerIndex].mask = originalMask
+
+        viewModel.addLayerComp(named: "Left masked")
+        let comp = try #require(viewModel.document.layerComps.first)
+        viewModel.document.layers[editLayerIndex].mask = maskImage(
+            size: NSSize(width: 100, height: 80),
+            whiteRect: CGRect(x: 50, y: 0, width: 50, height: 80)
+        )
+
+        viewModel.applyLayerComp(comp.id)
+
+        let restoredLayer = try #require(viewModel.document.layers.first { $0.id == editLayerID })
+        #expect(restoredLayer.mask?.qingtuPNGData() == originalMaskData)
+    }
+
+    @Test
+    func layerCompClearsRasterMaskWhenCapturedWithoutMask() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: testImage(color: .systemOrange, size: NSSize(width: 100, height: 80))
+        ) { _ in }
+        let editLayerIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[editLayerIndex].mask = nil
+
+        viewModel.addLayerComp(named: "Unmasked")
+        let comp = try #require(viewModel.document.layerComps.first)
+        viewModel.document.layers[editLayerIndex].mask = maskImage(
+            size: NSSize(width: 100, height: 80),
+            whiteRect: CGRect(x: 0, y: 0, width: 100, height: 40)
+        )
+
+        viewModel.applyLayerComp(comp.id)
+
+        #expect(viewModel.document.layers[editLayerIndex].mask == nil)
+    }
+
+    @Test
+    func layerCompAppliesCapturedNonDestructiveContentState() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: testImage(color: .systemGreen, size: NSSize(width: 96, height: 72))
+        ) { _ in }
+        let editLayerIndex = try #require(viewModel.document.selectedLayerIndex)
+        let editLayerID = viewModel.document.layers[editLayerIndex].id
+        let originalText = ImageEditorTextContent(
+            text: "Draft title",
+            color: .white,
+            fontSize: 22,
+            point: CGPoint(x: 4, y: 5),
+            isBold: true,
+            isItalic: false,
+            characterSpacing: 1.5,
+            lineSpacing: 2,
+            boxWidth: 60,
+            alignment: .center
+        )
+        let originalVectorMask = ImageEditorShapeContent(
+            kind: .path,
+            fillColor: .white,
+            fillOpacity: 1,
+            strokeColor: .white,
+            strokeWidth: 1,
+            strokeOpacity: 1,
+            pathPoints: [],
+            pathAnchors: [
+                ImageEditorPathAnchor(point: CGPoint(x: 4, y: 4)),
+                ImageEditorPathAnchor(point: CGPoint(x: 50, y: 4)),
+                ImageEditorPathAnchor(point: CGPoint(x: 40, y: 44))
+            ],
+            isPathClosed: true
+        )
+        viewModel.document.layers[editLayerIndex].kind = .text(originalText)
+        viewModel.document.layers[editLayerIndex].smartFilters = [
+            ImageEditorSmartFilter(
+                kind: .gaussianBlur,
+                intensity: 0.42,
+                settings: ImageEditorFilterSettings(unsharpRadius: 2.5, unsharpThreshold: 0.16),
+                isEnabled: true
+            )
+        ]
+        viewModel.document.layers[editLayerIndex].vectorMask = originalVectorMask
+
+        var adjustmentSettings = ImageEditorAdjustmentSettings()
+        adjustmentSettings.levelsBlackPoint = 0.2
+        adjustmentSettings.levelsGamma = 1.4
+        adjustmentSettings.levelsWhitePoint = 0.88
+        let adjustmentLayer = ImageEditorLayer.adjustment(
+            name: "Levels",
+            size: viewModel.document.canvasSize,
+            kind: .levels,
+            amount: 0.76,
+            settings: adjustmentSettings
+        )
+        let adjustmentLayerID = adjustmentLayer.id
+
+        let filterSettings = ImageEditorFilterSettings(unsharpRadius: 3.5, unsharpThreshold: 0.22)
+        let filterLayer = ImageEditorLayer.filter(
+            name: "USM",
+            size: viewModel.document.canvasSize,
+            kind: .unsharpMask,
+            intensity: 0.66,
+            settings: filterSettings
+        )
+        let filterLayerID = filterLayer.id
+        viewModel.document.layers.append(adjustmentLayer)
+        viewModel.document.layers.append(filterLayer)
+
+        viewModel.addLayerComp(named: "Editorial")
+        let comp = try #require(viewModel.document.layerComps.first)
+
+        viewModel.document.layers[editLayerIndex].kind = .text(
+            ImageEditorTextContent(
+                text: "Changed",
+                color: .black,
+                fontSize: 12,
+                point: .zero
+            )
+        )
+        viewModel.document.layers[editLayerIndex].smartFilters = []
+        viewModel.document.layers[editLayerIndex].vectorMask = nil
+        let adjustmentIndex = try #require(viewModel.document.layers.firstIndex { $0.id == adjustmentLayerID })
+        viewModel.document.layers[adjustmentIndex].kind = .adjustment(.invert, 0.1)
+        viewModel.document.layers[adjustmentIndex].adjustmentSettings = ImageEditorAdjustmentSettings()
+        let filterIndex = try #require(viewModel.document.layers.firstIndex { $0.id == filterLayerID })
+        viewModel.document.layers[filterIndex].kind = .filter(.gaussianBlur, 0.2)
+        viewModel.document.layers[filterIndex].filterSettings = ImageEditorFilterSettings()
+
+        viewModel.applyLayerComp(comp.id)
+
+        let restoredTextLayer = try #require(viewModel.document.layers.first { $0.id == editLayerID })
+        let restoredText = try #require(restoredTextLayer.textContent)
+        #expect(restoredText.text == "Draft title")
+        #expect(restoredText.isBold)
+        #expect(restoredText.alignment == .center)
+        #expect(restoredTextLayer.smartFilters.count == 1)
+        #expect(restoredTextLayer.smartFilters.first?.kind == .gaussianBlur)
+        #expect(restoredTextLayer.smartFilters.first?.intensity == 0.42)
+        #expect(restoredTextLayer.vectorMask?.editablePathAnchors.count == 3)
+
+        let restoredAdjustmentLayer = try #require(viewModel.document.layers.first { $0.id == adjustmentLayerID })
+        let restoredAdjustment = try #require(restoredAdjustmentLayer.adjustment)
+        #expect(restoredAdjustment.kind == .levels)
+        #expect(restoredAdjustment.amount == 0.76)
+        #expect(restoredAdjustmentLayer.adjustmentSettings.levelsBlackPoint == 0.2)
+        #expect(restoredAdjustmentLayer.adjustmentSettings.levelsGamma == 1.4)
+        #expect(restoredAdjustmentLayer.adjustmentSettings.levelsWhitePoint == 0.88)
+
+        let restoredFilterLayer = try #require(viewModel.document.layers.first { $0.id == filterLayerID })
+        let restoredFilter = try #require(restoredFilterLayer.filter)
+        #expect(restoredFilter.kind == .unsharpMask)
+        #expect(restoredFilter.intensity == 0.66)
+        #expect(restoredFilterLayer.filterSettings.unsharpRadius == 3.5)
+        #expect(restoredFilterLayer.filterSettings.unsharpThreshold == 0.22)
+    }
+
+    @Test
+    func projectDocumentRoundTripsLayerComps() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: testImage(color: .systemRed, size: NSSize(width: 64, height: 48))
+        ) { _ in }
+        let editLayerIndex = try #require(viewModel.document.selectedLayerIndex)
+        let groupLayer = ImageEditorLayer.group(name: "Detail Group", size: viewModel.document.canvasSize)
+        let groupID = groupLayer.id
+        viewModel.document.layers.append(groupLayer)
+        viewModel.document.layers[editLayerIndex].frame = CGRect(x: 8, y: 6, width: 20, height: 18)
+        viewModel.document.layers[editLayerIndex].opacity = 0.35
+        viewModel.document.layers[editLayerIndex].blendIfSourceBlack = 0.2
+        viewModel.document.layers[editLayerIndex].blendIfUnderlyingWhite = 0.84
+        viewModel.document.layers[editLayerIndex].isMaskEnabled = false
+        viewModel.document.layers[editLayerIndex].maskDensity = 0.33
+        viewModel.document.layers[editLayerIndex].maskFeather = 9
+        let mask = maskImage(
+            size: NSSize(width: 64, height: 48),
+            whiteRect: CGRect(x: 4, y: 6, width: 28, height: 20)
+        )
+        let maskData = try #require(mask.qingtuPNGData())
+        viewModel.document.layers[editLayerIndex].mask = mask
+        viewModel.document.layers[editLayerIndex].isVectorMaskEnabled = false
+        viewModel.document.layers[editLayerIndex].style.outerGlowEnabled = true
+        viewModel.document.layers[editLayerIndex].style.outerGlowColor = NSColor(calibratedRed: 0.1, green: 0.7, blue: 0.9, alpha: 1)
+        viewModel.document.layers[editLayerIndex].style.outerGlowBlur = 14
+        viewModel.document.layers[editLayerIndex].linkedLayerIDs = [groupID]
+        viewModel.document.layers[editLayerIndex].groupID = groupID
+        viewModel.document.layers[editLayerIndex].isClippingMask = true
+        let layerOrder = viewModel.document.layers.map(\.id)
+        viewModel.addLayerComp(named: "Small detail")
+        let compID = try #require(viewModel.document.layerComps.first?.id)
+
+        let data = try viewModel.projectData()
+        let restoredViewModel = ImageEditorViewModel(
+            sourceName: "empty.png",
+            image: testImage(color: .black, size: NSSize(width: 12, height: 12))
+        ) { _ in }
+        try restoredViewModel.loadProjectData(data)
+
+        let restoredComp = try #require(restoredViewModel.document.layerComps.first)
+        #expect(restoredComp.id == compID)
+        #expect(restoredComp.name == "Small detail")
+        #expect(restoredComp.layerStates.count == viewModel.document.layers.count)
+        #expect(restoredComp.layerOrder == layerOrder)
+        #expect(restoredComp.layerStates.contains { $0.isClippingMask })
+        let restoredState = try #require(restoredComp.layerStates.first { $0.layerID == viewModel.document.layers[editLayerIndex].id })
+        #expect(restoredState.blendIfSourceBlack == 0.2)
+        #expect(restoredState.blendIfUnderlyingWhite == 0.84)
+        #expect(!restoredState.isMaskEnabled)
+        #expect(restoredState.maskDensity == 0.33)
+        #expect(restoredState.maskFeather == 9)
+        #expect(restoredState.hasMaskSnapshot)
+        #expect(restoredState.maskData == maskData)
+        #expect(!restoredState.isVectorMaskEnabled)
+        #expect(restoredState.style.outerGlowEnabled)
+        #expect(restoredState.style.outerGlowBlur == 14)
+        let restoredGlowColor = restoredState.style.outerGlowColor.nsColor
+        #expect(abs(restoredGlowColor.blueComponent - 0.9) < 0.01)
+        #expect(restoredState.linkedLayerIDs == [groupID])
+        #expect(restoredState.groupID == groupID)
+        #expect(restoredViewModel.document.selectedLayerCompID == compID)
+    }
+
+    private func testImage(color: NSColor, size: NSSize) -> NSImage {
+        let image = NSImage(size: size)
+        image.lockFocus()
+        color.setFill()
+        NSRect(origin: .zero, size: size).fill()
+        image.unlockFocus()
+        return image
+    }
+
+    private func maskImage(size: NSSize, whiteRect: CGRect) -> NSImage {
+        let image = NSImage(size: size)
+        image.lockFocus()
+        NSColor.black.setFill()
+        NSRect(origin: .zero, size: size).fill()
+        NSColor.white.setFill()
+        whiteRect.fill()
+        image.unlockFocus()
+        return image
+    }
+}

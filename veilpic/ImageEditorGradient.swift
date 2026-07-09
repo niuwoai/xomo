@@ -53,7 +53,10 @@ extension ImageEditorViewModel {
         }
 
         pushUndo()
-        document.layers[index].image = output.normalizedBitmapImage()
+        let protectedOutput = document.isEffectivelyTransparencyLocked(layer)
+            ? (output.preservingAlpha(from: layer.image) ?? output)
+            : output
+        document.layers[index].image = protectedOutput.normalizedBitmapImage()
         appendHistory(L10n.text("imageEditor.history.gradient"))
         statusText = L10n.text("imageEditor.status.gradientApplied")
     }

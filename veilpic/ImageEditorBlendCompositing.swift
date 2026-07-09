@@ -9,6 +9,126 @@ import AppKit
 import Foundation
 
 extension NSImage {
+    func applyingBlendIfSourceRange(black: Double, white: Double) -> NSImage? {
+        let lower = max(0, min(1, black))
+        let upper = max(0, min(1, white))
+        guard lower > 0 || upper < 1 else { return self }
+        let targetSize = size
+        guard targetSize.width > 0, targetSize.height > 0 else { return nil }
+        let width = max(1, Int(targetSize.width.rounded()))
+        let height = max(1, Int(targetSize.height.rounded()))
+        let bytesPerPixel = 4
+        let bytesPerRow = width * bytesPerPixel
+
+        guard var pixels = rgbaPixels(width: width, height: height, targetSize: targetSize) else { return nil }
+
+        for y in 0..<height {
+            for x in 0..<width {
+                let offset = y * bytesPerRow + x * bytesPerPixel
+                let alpha = Double(pixels[offset + 3]) / 255
+                guard alpha > 0 else { continue }
+
+                let red = Self.unpremultiplied(pixels[offset], alpha: alpha)
+                let green = Self.unpremultiplied(pixels[offset + 1], alpha: alpha)
+                let blue = Self.unpremultiplied(pixels[offset + 2], alpha: alpha)
+                let luminance = 0.2126 * red + 0.7152 * green + 0.0722 * blue
+                let rangeAlpha = Self.blendIfAlpha(luminance: luminance, black: lower, white: upper)
+                guard rangeAlpha < 1 else { continue }
+
+                let nextAlpha = alpha * rangeAlpha
+                pixels[offset] = Self.byte(red * nextAlpha)
+                pixels[offset + 1] = Self.byte(green * nextAlpha)
+                pixels[offset + 2] = Self.byte(blue * nextAlpha)
+                pixels[offset + 3] = Self.byte(nextAlpha)
+            }
+        }
+
+        guard let provider = CGDataProvider(data: Data(pixels) as CFData),
+              let image = CGImage(
+                width: width,
+                height: height,
+                bitsPerComponent: 8,
+                bitsPerPixel: 32,
+                bytesPerRow: bytesPerRow,
+                space: CGColorSpaceCreateDeviceRGB(),
+                bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue),
+                provider: provider,
+                decode: nil,
+                shouldInterpolate: false,
+                intent: .defaultIntent
+              )
+        else { return nil }
+
+        return NSImage(cgImage: image, size: targetSize)
+    }
+
+    func applyingBlendIfUnderlyingRange(black: Double, white: Double, backdrop: NSImage) -> NSImage? {
+        let lower = max(0, min(1, black))
+        let upper = max(0, min(1, white))
+        guard lower > 0 || upper < 1 else { return self }
+        let targetSize = size
+        guard targetSize.width > 0, targetSize.height > 0 else { return nil }
+        let width = max(1, Int(targetSize.width.rounded()))
+        let height = max(1, Int(targetSize.height.rounded()))
+        let bytesPerPixel = 4
+        let bytesPerRow = width * bytesPerPixel
+
+        guard var pixels = rgbaPixels(width: width, height: height, targetSize: targetSize),
+              let backdropPixels = backdrop.rgbaPixels(width: width, height: height, targetSize: targetSize)
+        else { return nil }
+
+        for y in 0..<height {
+            for x in 0..<width {
+                let offset = y * bytesPerRow + x * bytesPerPixel
+                let alpha = Double(pixels[offset + 3]) / 255
+                guard alpha > 0 else { continue }
+
+                let backdropAlpha = Double(backdropPixels[offset + 3]) / 255
+                guard backdropAlpha > 0 else {
+                    pixels[offset] = 0
+                    pixels[offset + 1] = 0
+                    pixels[offset + 2] = 0
+                    pixels[offset + 3] = 0
+                    continue
+                }
+
+                let red = Self.unpremultiplied(pixels[offset], alpha: alpha)
+                let green = Self.unpremultiplied(pixels[offset + 1], alpha: alpha)
+                let blue = Self.unpremultiplied(pixels[offset + 2], alpha: alpha)
+                let backdropRed = Self.unpremultiplied(backdropPixels[offset], alpha: backdropAlpha)
+                let backdropGreen = Self.unpremultiplied(backdropPixels[offset + 1], alpha: backdropAlpha)
+                let backdropBlue = Self.unpremultiplied(backdropPixels[offset + 2], alpha: backdropAlpha)
+                let luminance = 0.2126 * backdropRed + 0.7152 * backdropGreen + 0.0722 * backdropBlue
+                let rangeAlpha = Self.blendIfAlpha(luminance: luminance, black: lower, white: upper)
+                guard rangeAlpha < 1 else { continue }
+
+                let nextAlpha = alpha * rangeAlpha
+                pixels[offset] = Self.byte(red * nextAlpha)
+                pixels[offset + 1] = Self.byte(green * nextAlpha)
+                pixels[offset + 2] = Self.byte(blue * nextAlpha)
+                pixels[offset + 3] = Self.byte(nextAlpha)
+            }
+        }
+
+        guard let provider = CGDataProvider(data: Data(pixels) as CFData),
+              let image = CGImage(
+                width: width,
+                height: height,
+                bitsPerComponent: 8,
+                bitsPerPixel: 32,
+                bytesPerRow: bytesPerRow,
+                space: CGColorSpaceCreateDeviceRGB(),
+                bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue),
+                provider: provider,
+                decode: nil,
+                shouldInterpolate: false,
+                intent: .defaultIntent
+              )
+        else { return nil }
+
+        return NSImage(cgImage: image, size: targetSize)
+    }
+
     func blended(
         with overlay: NSImage,
         mode: ImageEditorBlendMode,
@@ -33,7 +153,11 @@ extension NSImage {
             for x in 0..<width {
                 let offset = y * bytesPerRow + x * bytesPerPixel
                 let baseAlpha = Double(basePixels[offset + 3]) / 255
-                let overlayAlpha = Double(overlayPixels[offset + 3]) / 255 * sourceOpacity
+                let originalOverlayAlpha = Double(overlayPixels[offset + 3]) / 255
+                let effectiveOverlayAlpha = originalOverlayAlpha * sourceOpacity
+                let overlayAlpha = mode == .dissolve
+                    ? Self.dissolvedAlpha(x: x, y: y, probability: effectiveOverlayAlpha)
+                    : effectiveOverlayAlpha
                 let outputAlpha = overlayAlpha + baseAlpha * (1 - overlayAlpha)
 
                 guard outputAlpha > 0 else {
@@ -47,9 +171,9 @@ extension NSImage {
                 let baseRed = Self.unpremultiplied(basePixels[offset], alpha: baseAlpha)
                 let baseGreen = Self.unpremultiplied(basePixels[offset + 1], alpha: baseAlpha)
                 let baseBlue = Self.unpremultiplied(basePixels[offset + 2], alpha: baseAlpha)
-                let overlayRed = Self.unpremultiplied(overlayPixels[offset], alpha: Double(overlayPixels[offset + 3]) / 255)
-                let overlayGreen = Self.unpremultiplied(overlayPixels[offset + 1], alpha: Double(overlayPixels[offset + 3]) / 255)
-                let overlayBlue = Self.unpremultiplied(overlayPixels[offset + 2], alpha: Double(overlayPixels[offset + 3]) / 255)
+                let overlayRed = Self.unpremultiplied(overlayPixels[offset], alpha: originalOverlayAlpha)
+                let overlayGreen = Self.unpremultiplied(overlayPixels[offset + 1], alpha: originalOverlayAlpha)
+                let overlayBlue = Self.unpremultiplied(overlayPixels[offset + 2], alpha: originalOverlayAlpha)
 
                 let blended = mode.blend(
                     baseRed: baseRed,
@@ -123,6 +247,37 @@ extension NSImage {
     private static func byte(_ value: Double) -> UInt8 {
         UInt8(max(0, min(255, (value * 255).rounded())))
     }
+
+    private static func blendIfAlpha(luminance: Double, black: Double, white: Double) -> Double {
+        if black >= white {
+            return luminance >= white ? 1 : 0
+        }
+        if luminance < black || luminance > white {
+            return 0
+        }
+        return 1
+    }
+
+    private static func dissolvedAlpha(x: Int, y: Int, probability: Double) -> Double {
+        if probability <= 0 { return 0 }
+        if probability >= 1 { return 1 }
+        let sample = Double(dissolveHash(x: x, y: y) & 0xffff) / 65_535
+        return sample < probability ? 1 : 0
+    }
+
+    private static func dissolveHash(x: Int, y: Int) -> UInt64 {
+        var value = UInt64(truncatingIfNeeded: x)
+            &* 0x9E37_79B9_7F4A_7C15
+            &+ UInt64(truncatingIfNeeded: y)
+            &* 0xBF58_476D_1CE4_E5B9
+            &+ 0x94D0_49BB_1331_11EB
+        value ^= value >> 30
+        value &*= 0xBF58_476D_1CE4_E5B9
+        value ^= value >> 27
+        value &*= 0x94D0_49BB_1331_11EB
+        value ^= value >> 31
+        return value
+    }
 }
 
 extension ImageEditorBlendMode {
@@ -144,8 +299,8 @@ extension ImageEditorBlendMode {
                 overlayGreen: overlayGreen,
                 overlayBlue: overlayBlue
             )
-        case .normal, .multiply, .screen, .overlay, .darken, .lighten, .colorDodge, .colorBurn,
-             .linearDodge, .linearBurn, .softLight, .hardLight, .vividLight, .linearLight,
+        case .passThrough, .normal, .dissolve, .multiply, .screen, .overlay, .darken, .lighten, .colorDodge,
+             .colorBurn, .linearDodge, .linearBurn, .softLight, .hardLight, .vividLight, .linearLight,
              .pinLight, .difference, .exclusion:
             return (
                 Self.blendChannel(mode: self, base: baseRed, overlay: overlayRed),
@@ -157,7 +312,7 @@ extension ImageEditorBlendMode {
 
     private static func blendChannel(mode: ImageEditorBlendMode, base: Double, overlay: Double) -> Double {
         switch mode {
-        case .normal:
+        case .passThrough, .normal, .dissolve:
             return overlay
         case .multiply:
             return base * overlay
@@ -224,8 +379,8 @@ extension ImageEditorBlendMode {
             return Self.rgb(hue: overlay.hue, saturation: overlay.saturation, lightness: base.lightness)
         case .luminosity:
             return Self.rgb(hue: base.hue, saturation: base.saturation, lightness: overlay.lightness)
-        case .normal, .multiply, .screen, .overlay, .darken, .lighten, .colorDodge, .colorBurn,
-             .linearDodge, .linearBurn, .softLight, .hardLight, .vividLight, .linearLight,
+        case .passThrough, .normal, .dissolve, .multiply, .screen, .overlay, .darken, .lighten,
+             .colorDodge, .colorBurn, .linearDodge, .linearBurn, .softLight, .hardLight, .vividLight, .linearLight,
              .pinLight, .difference, .exclusion:
             return (overlayRed, overlayGreen, overlayBlue)
         }

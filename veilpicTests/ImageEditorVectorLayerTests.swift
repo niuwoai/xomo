@@ -1,0 +1,1187 @@
+//
+//  ImageEditorVectorLayerTests.swift
+//  veilpicTests
+//
+//  Created by Codex on 2026/7/9.
+//
+
+import AppKit
+import Testing
+@testable import musepic
+
+@MainActor
+@Suite(.serialized)
+struct ImageEditorVectorLayerTests {
+    @Test func imageEditorTextLayerIsEditableAndCanMergeDown() async throws {
+        let canvasSize = NSSize(width: 120, height: 80)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let editLayerID = try #require(viewModel.document.selectedLayerID)
+        let editPixelsBefore = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+        let compositedBefore = try #require(viewModel.currentImage.qingtuPNGData())
+
+        viewModel.textValue = "Hello\nWorld"
+        viewModel.textSize = 28
+        viewModel.textBold = true
+        viewModel.textItalic = true
+        viewModel.textCharacterSpacing = 2
+        viewModel.textLineSpacing = 6
+        viewModel.textBoxWidth = 72
+        viewModel.selectedTextAlignment = .center
+        viewModel.foregroundColor = .white
+        viewModel.addText(at: CGPoint(x: 16, y: 24))
+
+        let textLayer = try #require(viewModel.document.selectedLayer)
+        let textContent = try #require(textLayer.textContent)
+        let compositedWithText = try #require(viewModel.currentImage.qingtuPNGData())
+
+        #expect(viewModel.selectedLayerIsText)
+        #expect(textContent.text == "Hello\nWorld")
+        #expect(textContent.fontSize == 28)
+        #expect(textContent.isBold)
+        #expect(textContent.isItalic)
+        #expect(textContent.characterSpacing == 2)
+        #expect(textContent.lineSpacing == 6)
+        #expect(textContent.boxWidth == 72)
+        #expect(textContent.alignment == .center)
+        #expect(viewModel.selectedTextAlignment == .center)
+        #expect(textLayer.frame.width < canvasSize.width)
+        #expect(textLayer.frame.height < canvasSize.height)
+        #expect(viewModel.document.layers.first { $0.id == editLayerID }?.image.qingtuPNGData() == editPixelsBefore)
+        #expect(compositedWithText != compositedBefore)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerTextNew"))
+
+        viewModel.textValue = "World"
+        viewModel.textSize = 36
+        viewModel.textBold = false
+        viewModel.textItalic = false
+        viewModel.textCharacterSpacing = 4
+        viewModel.textLineSpacing = 10
+        viewModel.textBoxWidth = 96
+        viewModel.selectedTextAlignment = .right
+        viewModel.foregroundColor = .systemPink
+        viewModel.updateSelectedTextLayer()
+
+        let updatedTextLayer = try #require(viewModel.document.selectedLayer)
+        let updatedTextContent = try #require(updatedTextLayer.textContent)
+        let compositedWithUpdatedText = try #require(viewModel.currentImage.qingtuPNGData())
+
+        #expect(updatedTextContent.text == "World")
+        #expect(updatedTextContent.fontSize == 36)
+        #expect(!updatedTextContent.isBold)
+        #expect(!updatedTextContent.isItalic)
+        #expect(updatedTextContent.characterSpacing == 4)
+        #expect(updatedTextContent.lineSpacing == 10)
+        #expect(updatedTextContent.boxWidth == 96)
+        #expect(updatedTextContent.alignment == .right)
+        #expect(compositedWithUpdatedText != compositedWithText)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerTextUpdate"))
+
+        let countBeforeMerge = viewModel.document.layers.count
+        viewModel.mergeSelectedLayerDown()
+        let mergedLayer = try #require(viewModel.document.selectedLayer)
+
+        #expect(viewModel.document.layers.count == countBeforeMerge - 1)
+        #expect(!mergedLayer.isText)
+        #expect(mergedLayer.image.size == canvasSize)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerMergeDown"))
+    }
+
+    @Test func imageEditorShapeLayerIsEditableAndRasterizesWithoutChangingComposite() async throws {
+        let canvasSize = NSSize(width: 120, height: 80)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let editLayerID = try #require(viewModel.document.selectedLayerID)
+        let editPixelsBefore = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+        let compositedBefore = try #require(viewModel.currentImage.qingtuPNGData())
+
+        viewModel.foregroundColor = .systemPink
+        viewModel.brushSize = 18
+        viewModel.opacity = 0.9
+        viewModel.drawShape(from: CGPoint(x: 20, y: 18), to: CGPoint(x: 82, y: 58), ellipse: false)
+
+        let shapeLayer = try #require(viewModel.document.selectedLayer)
+        let shapeContent = try #require(shapeLayer.shapeContent)
+        let compositedWithShape = try #require(viewModel.currentImage.qingtuPNGData())
+        let shapeInside = try #require(viewModel.currentImage.color(at: CGPoint(x: 48, y: 36))?.usingColorSpace(.deviceRGB))
+        let shapeOutside = try #require(viewModel.currentImage.color(at: CGPoint(x: 8, y: 8))?.usingColorSpace(.deviceRGB))
+
+        #expect(viewModel.selectedLayerIsShape)
+        #expect(shapeContent.kind == .rectangle)
+        #expect(shapeLayer.frame == CGRect(x: 20, y: 18, width: 62, height: 40))
+        #expect(viewModel.document.layers.first { $0.id == editLayerID }?.image.qingtuPNGData() == editPixelsBefore)
+        #expect(compositedWithShape != compositedBefore)
+        #expect(shapeInside.redComponent > shapeInside.blueComponent + 0.15)
+        #expect(shapeOutside.redComponent < 0.05)
+        #expect(shapeOutside.greenComponent < 0.05)
+        #expect(shapeOutside.blueComponent < 0.05)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerShapeNew"))
+
+        viewModel.foregroundColor = .systemGreen
+        viewModel.brushSize = 30
+        viewModel.opacity = 1
+        viewModel.updateSelectedShapeLayer()
+
+        let updatedShapeLayer = try #require(viewModel.document.selectedLayer)
+        let updatedShapeContent = try #require(updatedShapeLayer.shapeContent)
+        let compositedWithUpdatedShape = try #require(viewModel.currentImage.qingtuPNGData())
+        let updatedInside = try #require(viewModel.currentImage.color(at: CGPoint(x: 48, y: 36))?.usingColorSpace(.deviceRGB))
+
+        #expect(updatedShapeContent.kind == .rectangle)
+        #expect(updatedShapeContent.strokeWidth > shapeContent.strokeWidth)
+        #expect(compositedWithUpdatedShape != compositedWithShape)
+        #expect(updatedInside.greenComponent > updatedInside.redComponent + 0.15)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerShapeUpdate"))
+
+        #expect(viewModel.canRasterizeSelectedLayer)
+        viewModel.rasterizeSelectedLayer()
+        let rasterizedLayer = try #require(viewModel.document.selectedLayer)
+
+        #expect(!rasterizedLayer.isShape)
+        #expect(!rasterizedLayer.isText)
+        #expect(isPixelLayer(rasterizedLayer))
+        #expect(try #require(viewModel.currentImage.qingtuPNGData()) == compositedWithUpdatedShape)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerRasterize"))
+
+        viewModel.undo()
+        #expect(try #require(viewModel.document.selectedLayer?.shapeContent).kind == .rectangle)
+    }
+
+    @Test func imageEditorPenToolCreatesEditablePathShapeLayer() async throws {
+        let canvasSize = NSSize(width: 140, height: 100)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let targetLayerIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[targetLayerIndex].image = testBitmapImage(size: canvasSize, background: .systemBlue)
+        viewModel.document.layers[targetLayerIndex].frame = CGRect(origin: .zero, size: canvasSize)
+        let compositedBefore = try #require(viewModel.currentImage.qingtuPNGData())
+
+        viewModel.selectTool(.pen)
+        viewModel.foregroundColor = .systemYellow
+        viewModel.opacity = 0.85
+        viewModel.brushSize = 18
+        viewModel.addPenPoint(CGPoint(x: 20, y: 20))
+        viewModel.addPenPoint(CGPoint(x: 104, y: 28))
+        viewModel.addPenPoint(CGPoint(x: 70, y: 78))
+        viewModel.finishPenPath(closed: true)
+
+        let pathLayer = try #require(viewModel.document.selectedLayer)
+        let pathContent = try #require(pathLayer.shapeContent)
+        let compositedWithPath = try #require(viewModel.currentImage.qingtuPNGData())
+        let pathInside = try #require(viewModel.currentImage.color(at: CGPoint(x: 68, y: 42))?.usingColorSpace(.deviceRGB))
+
+        #expect(viewModel.pendingPenPathPoints.isEmpty)
+        #expect(viewModel.selectedLayerIsShape)
+        #expect(pathContent.kind == .path)
+        #expect(pathContent.isPathClosed)
+        #expect(pathContent.pathPoints.count == 3)
+        #expect(pathContent.pathAnchors.count == 3)
+        #expect(pathLayer.name == L10n.format("imageEditor.layer.shapeName", ImageEditorShapeKind.path.title))
+        #expect(compositedWithPath != compositedBefore)
+        #expect(pathInside.redComponent > 0.5)
+        #expect(pathInside.greenComponent > 0.4)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerShapeNew"))
+
+        viewModel.foregroundColor = .systemTeal
+        viewModel.brushSize = 26
+        viewModel.opacity = 1
+        viewModel.updateSelectedShapeLayer()
+
+        let updatedLayer = try #require(viewModel.document.selectedLayer)
+        let updatedContent = try #require(updatedLayer.shapeContent)
+
+        #expect(updatedContent.kind == .path)
+        #expect(updatedContent.pathPoints.count == 3)
+        #expect(updatedContent.pathAnchors.count == 3)
+        #expect(updatedContent.strokeWidth > pathContent.strokeWidth)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerShapeUpdate"))
+
+        viewModel.selectTool(.pen)
+        viewModel.selectNextPathAnchor()
+        viewModel.smoothSelectedPathAnchor()
+
+        let smoothLayer = try #require(viewModel.document.selectedLayer)
+        let smoothContent = try #require(smoothLayer.shapeContent)
+        let smoothedAnchor = try #require(smoothContent.pathAnchors[safe: 1])
+        let outHandle = try #require(viewModel.selectedPathOutControlCanvasPoint)
+
+        #expect(smoothedAnchor.inControl != nil)
+        #expect(smoothedAnchor.outControl != nil)
+        #expect(viewModel.selectedPathControlRole == .outHandle)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.pathHandlesUpdate"))
+
+        #expect(viewModel.beginMovingPathAnchor(at: outHandle))
+        viewModel.moveSelectedPathAnchor(to: CGPoint(x: outHandle.x + 12, y: outHandle.y + 9))
+        viewModel.finishMovingPathAnchor()
+
+        let handledLayer = try #require(viewModel.document.selectedLayer)
+        let handledContent = try #require(handledLayer.shapeContent)
+        let movedHandleAnchor = try #require(handledContent.pathAnchors[safe: 1])
+
+        #expect(viewModel.selectedPathControlRole == .outHandle)
+        #expect(movedHandleAnchor.outControl != smoothedAnchor.outControl)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.pathAnchorMove"))
+
+        #expect(viewModel.beginMovingPathAnchor(at: CGPoint(x: 20, y: 20)))
+        viewModel.moveSelectedPathAnchor(to: CGPoint(x: 32, y: 36))
+        viewModel.finishMovingPathAnchor()
+
+        let movedLayer = try #require(viewModel.document.selectedLayer)
+        let movedContent = try #require(movedLayer.shapeContent)
+        let movedPoint = try #require(viewModel.selectedPathAnchorCanvasPoint)
+
+        #expect(movedContent.kind == .path)
+        #expect(movedContent.pathPoints.count == 3)
+        #expect(movedContent.pathAnchors.count == 3)
+        #expect(Int(movedPoint.x.rounded()) == 32)
+        #expect(Int(movedPoint.y.rounded()) == 36)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.pathAnchorMove"))
+
+        #expect(viewModel.canLoadSelectionFromSelectedPath)
+        viewModel.selectionMode = .replace
+        viewModel.loadSelectionFromSelectedPath()
+
+        let pathSelection = try #require(viewModel.document.selection)
+        let pathSelectionMask = try #require(pathSelection.rasterMask)
+
+        #expect(pathSelection.bounds.width > 20)
+        #expect(pathSelection.bounds.height > 20)
+        #expect(pathSelectionMask.alpha.contains(UInt8.max))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionFromPath"))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionFromPath"))
+
+        let layerCountBeforeVectorMask = viewModel.document.layers.count
+        #expect(viewModel.canApplySelectedPathAsVectorMask)
+        viewModel.applySelectedPathAsVectorMask()
+
+        let maskedLayer = try #require(viewModel.document.selectedLayer)
+        let vectorMask = try #require(maskedLayer.vectorMask)
+        let maskedInside = try #require(viewModel.currentImage.color(at: CGPoint(x: 68, y: 42))?.usingColorSpace(.deviceRGB))
+        let maskedOutside = try #require(viewModel.currentImage.color(at: CGPoint(x: 8, y: 8))?.usingColorSpace(.deviceRGB))
+
+        #expect(viewModel.document.layers.count == layerCountBeforeVectorMask - 1)
+        #expect(vectorMask.kind == .path)
+        #expect(vectorMask.isPathClosed)
+        #expect(!maskedLayer.isShape)
+        #expect(maskedInside.blueComponent > 0.4)
+        #expect(maskedOutside.redComponent < 0.05)
+        #expect(maskedOutside.greenComponent < 0.05)
+        #expect(maskedOutside.blueComponent < 0.05)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.pathVectorMask"))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.pathVectorMask"))
+
+        #expect(viewModel.canToggleVectorMaskEnabled)
+        viewModel.toggleVectorMaskEnabled()
+
+        let disabledOutside = try #require(viewModel.currentImage.color(at: CGPoint(x: 8, y: 8))?.usingColorSpace(.deviceRGB))
+        #expect(viewModel.document.selectedLayer?.isVectorMaskEnabled == false)
+        #expect(disabledOutside.blueComponent > 0.4)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.vectorMaskDisable"))
+
+        viewModel.toggleVectorMaskEnabled()
+
+        let reenabledOutside = try #require(viewModel.currentImage.color(at: CGPoint(x: 8, y: 8))?.usingColorSpace(.deviceRGB))
+        #expect(viewModel.document.selectedLayer?.isVectorMaskEnabled == true)
+        #expect(reenabledOutside.blueComponent < 0.05)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.vectorMaskEnable"))
+
+        #expect(viewModel.canDeleteVectorMask)
+        viewModel.deleteVectorMask()
+
+        let deletedOutside = try #require(viewModel.currentImage.color(at: CGPoint(x: 8, y: 8))?.usingColorSpace(.deviceRGB))
+        #expect(viewModel.document.selectedLayer?.vectorMask == nil)
+        #expect(deletedOutside.blueComponent > 0.4)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.vectorMaskDelete"))
+    }
+
+    @Test func imageEditorCreatesEditablePathLayerFromCurrentSelection() async throws {
+        let canvasSize = NSSize(width: 140, height: 100)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let selectedLayerID = try #require(viewModel.document.selectedLayerID)
+        viewModel.foregroundColor = .systemYellow
+        viewModel.opacity = 0.8
+        viewModel.brushSize = 12
+        viewModel.document.selection = .rectangle(CGRect(x: 24, y: 18, width: 64, height: 42))
+
+        #expect(viewModel.canCreatePathFromSelection)
+        viewModel.createPathFromSelection()
+
+        let pathLayer = try #require(viewModel.document.selectedLayer)
+        let pathContent = try #require(pathLayer.shapeContent)
+        let selectedPoint = try #require(viewModel.selectedPathAnchorCanvasPoint)
+
+        #expect(pathLayer.id != selectedLayerID)
+        #expect(pathLayer.name == L10n.text("imageEditor.layer.selectionPathName"))
+        #expect(pathContent.kind == .path)
+        #expect(pathContent.isPathClosed)
+        #expect(pathContent.fillOpacity == 0)
+        #expect(pathContent.strokeOpacity > 0)
+        #expect(pathContent.editablePathAnchors.count == 4)
+        #expect(viewModel.selectedPathAnchorIndex == 0)
+        #expect(viewModel.selectedPathControlRole == .anchor)
+        #expect(Int(selectedPoint.x.rounded()) == 24)
+        #expect(Int(selectedPoint.y.rounded()) == 18)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.pathFromSelection"))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.pathFromSelection"))
+
+        #expect(viewModel.canLoadSelectionFromSelectedPath)
+        viewModel.selectionMode = .replace
+        viewModel.loadSelectionFromSelectedPath()
+
+        let loadedSelection = try #require(viewModel.document.selection)
+        let loadedMask = try #require(loadedSelection.rasterMask)
+
+        #expect(Int(loadedSelection.bounds.minX.rounded()) == 24)
+        #expect(Int(loadedSelection.bounds.minY.rounded()) == 18)
+        #expect(Int(loadedSelection.bounds.width.rounded()) == 64)
+        #expect(Int(loadedSelection.bounds.height.rounded()) == 42)
+        #expect(loadedMask.alpha.contains(UInt8.max))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionFromPath"))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionFromPath"))
+    }
+
+    @Test func imageEditorCreatesEditablePathLayerFromRasterSelectionOutline() async throws {
+        let canvasSize = NSSize(width: 20, height: 16)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        var alpha = [UInt8](repeating: 0, count: 20 * 16)
+        for y in 3..<12 {
+            for x in 2..<6 {
+                alpha[y * 20 + x] = UInt8.max
+            }
+        }
+        for y in 8..<12 {
+            for x in 6..<14 {
+                alpha[y * 20 + x] = UInt8.max
+            }
+        }
+        let mask = ImageEditorSelectionMask(width: 20, height: 16, alpha: alpha)
+        let bounds = try #require(mask.selectedBounds(in: canvasSize))
+        viewModel.foregroundColor = .systemYellow
+        viewModel.brushSize = 8
+        viewModel.document.selection = .raster(mask: mask, bounds: bounds)
+
+        #expect(viewModel.canCreatePathFromSelection)
+        viewModel.createPathFromSelection()
+
+        let pathLayer = try #require(viewModel.document.selectedLayer)
+        let pathContent = try #require(pathLayer.shapeContent)
+        let canvasAnchors = pathContent.editablePathAnchors.map { anchor in
+            CGPoint(x: pathLayer.frame.minX + anchor.point.x, y: pathLayer.frame.minY + anchor.point.y)
+        }
+
+        #expect(pathContent.kind == .path)
+        #expect(pathContent.isPathClosed)
+        #expect(pathContent.editablePathAnchors.count > 4)
+        #expect(canvasAnchors.contains { Int($0.x.rounded()) == 6 && Int($0.y.rounded()) == 8 })
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.pathFromSelection"))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.pathFromSelection"))
+
+        #expect(viewModel.canLoadSelectionFromSelectedPath)
+        viewModel.selectionMode = .replace
+        viewModel.loadSelectionFromSelectedPath()
+
+        let loadedSelection = try #require(viewModel.document.selection)
+        let loadedMask = try #require(loadedSelection.rasterMask)
+
+        #expect(maskAlpha(loadedMask, x: 3, y: 4) == UInt8.max)
+        #expect(maskAlpha(loadedMask, x: 10, y: 10) == UInt8.max)
+        #expect(maskAlpha(loadedMask, x: 10, y: 4) == 0)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionFromPath"))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionFromPath"))
+    }
+
+    @Test func imageEditorCreatesCompoundPathLayerFromRasterSelectionIslands() async throws {
+        let canvasSize = NSSize(width: 24, height: 16)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let layerCountBefore = viewModel.document.layers.count
+        var alpha = [UInt8](repeating: 0, count: 24 * 16)
+        for y in 2..<8 {
+            for x in 2..<7 {
+                alpha[y * 24 + x] = UInt8.max
+            }
+        }
+        for y in 9..<14 {
+            for x in 14..<22 {
+                alpha[y * 24 + x] = UInt8.max
+            }
+        }
+        let mask = ImageEditorSelectionMask(width: 24, height: 16, alpha: alpha)
+        let bounds = try #require(mask.selectedBounds(in: canvasSize))
+        viewModel.document.selection = .raster(mask: mask, bounds: bounds)
+
+        #expect(viewModel.canCreatePathFromSelection)
+        viewModel.createPathFromSelection()
+
+        let pathLayer = try #require(viewModel.document.selectedLayer)
+        let pathContent = try #require(pathLayer.shapeContent)
+
+        #expect(viewModel.document.layers.count == layerCountBefore + 1)
+        #expect(pathLayer.name == L10n.text("imageEditor.layer.selectionPathName"))
+        #expect(pathContent.kind == .path)
+        #expect(pathContent.editablePathAnchors.count == 4)
+        #expect(pathContent.editablePathSubpaths.count == 1)
+        #expect(pathContent.editablePathSubpaths.first?.count == 4)
+        #expect(viewModel.selectedPathAnchorIndex == 0)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.pathFromSelection"))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.pathContoursFromSelection", 2))
+
+        #expect(viewModel.canLoadSelectionFromSelectedPath)
+        viewModel.selectionMode = .replace
+        viewModel.loadSelectionFromSelectedPath()
+
+        let loadedSelection = try #require(viewModel.document.selection)
+        let loadedMask = try #require(loadedSelection.rasterMask)
+
+        #expect(maskAlpha(loadedMask, x: 4, y: 4) == UInt8.max)
+        #expect(maskAlpha(loadedMask, x: 18, y: 11) == UInt8.max)
+        #expect(maskAlpha(loadedMask, x: 10, y: 8) == 0)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionFromPath"))
+    }
+
+    @Test func imageEditorMovesCompoundPathSubpathAnchorWithoutChangingPrimaryPath() async throws {
+        let canvasSize = NSSize(width: 24, height: 16)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        var alpha = [UInt8](repeating: 0, count: 24 * 16)
+        for y in 2..<8 {
+            for x in 2..<7 {
+                alpha[y * 24 + x] = UInt8.max
+            }
+        }
+        for y in 9..<14 {
+            for x in 14..<22 {
+                alpha[y * 24 + x] = UInt8.max
+            }
+        }
+        let mask = ImageEditorSelectionMask(width: 24, height: 16, alpha: alpha)
+        let bounds = try #require(mask.selectedBounds(in: canvasSize))
+        viewModel.document.selection = .raster(mask: mask, bounds: bounds)
+        viewModel.createPathFromSelection()
+
+        let pathLayer = try #require(viewModel.document.selectedLayer)
+        let pathContent = try #require(pathLayer.shapeContent)
+        let subpath = try #require(pathContent.editablePathSubpaths.first)
+        let primaryBefore = pathContent.editablePathAnchors[0]
+        let subpathBefore = subpath[0]
+        let primaryBeforeCanvas = CGPoint(
+            x: pathLayer.frame.minX + primaryBefore.point.x,
+            y: pathLayer.frame.minY + primaryBefore.point.y
+        )
+        let subpathBeforeCanvas = CGPoint(
+            x: pathLayer.frame.minX + subpathBefore.point.x,
+            y: pathLayer.frame.minY + subpathBefore.point.y
+        )
+        let target = CGPoint(x: subpathBeforeCanvas.x + 2, y: subpathBeforeCanvas.y + 1)
+
+        #expect(viewModel.beginMovingPathAnchor(at: subpathBeforeCanvas))
+        #expect(viewModel.selectedPathSubpathIndex == 1)
+        #expect(viewModel.selectedPathAnchorIndex == 0)
+        viewModel.moveSelectedPathAnchor(to: target)
+        viewModel.finishMovingPathAnchor()
+
+        let movedLayer = try #require(viewModel.document.selectedLayer)
+        let movedContent = try #require(movedLayer.shapeContent)
+        let movedSubpath = try #require(movedContent.editablePathSubpaths.first)
+        let primaryAfterCanvas = CGPoint(
+            x: movedLayer.frame.minX + movedContent.editablePathAnchors[0].point.x,
+            y: movedLayer.frame.minY + movedContent.editablePathAnchors[0].point.y
+        )
+        let subpathAfterCanvas = CGPoint(
+            x: movedLayer.frame.minX + movedSubpath[0].point.x,
+            y: movedLayer.frame.minY + movedSubpath[0].point.y
+        )
+
+        #expect(Int(primaryAfterCanvas.x.rounded()) == Int(primaryBeforeCanvas.x.rounded()))
+        #expect(Int(primaryAfterCanvas.y.rounded()) == Int(primaryBeforeCanvas.y.rounded()))
+        #expect(Int(subpathAfterCanvas.x.rounded()) == Int(target.x.rounded()))
+        #expect(Int(subpathAfterCanvas.y.rounded()) == Int(target.y.rounded()))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.pathAnchorMove"))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.pathAnchorMoved"))
+    }
+
+    @Test func imageEditorDeletesCompoundPathSubpathWithoutRemovingPrimaryPath() async throws {
+        let canvasSize = NSSize(width: 24, height: 16)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        var alpha = [UInt8](repeating: 0, count: 24 * 16)
+        for y in 2..<8 {
+            for x in 2..<7 {
+                alpha[y * 24 + x] = UInt8.max
+            }
+        }
+        for y in 9..<14 {
+            for x in 14..<22 {
+                alpha[y * 24 + x] = UInt8.max
+            }
+        }
+        let mask = ImageEditorSelectionMask(width: 24, height: 16, alpha: alpha)
+        let bounds = try #require(mask.selectedBounds(in: canvasSize))
+        viewModel.document.selection = .raster(mask: mask, bounds: bounds)
+        viewModel.createPathFromSelection()
+
+        let pathLayer = try #require(viewModel.document.selectedLayer)
+        let pathContent = try #require(pathLayer.shapeContent)
+        let primaryBefore = try #require(pathContent.editablePathAnchors.first)
+        let primaryBeforeCanvas = CGPoint(
+            x: pathLayer.frame.minX + primaryBefore.point.x,
+            y: pathLayer.frame.minY + primaryBefore.point.y
+        )
+
+        #expect(pathContent.editablePathSubpaths.count == 1)
+        viewModel.selectedPathSubpathIndex = 1
+        viewModel.selectedPathAnchorIndex = 0
+        #expect(viewModel.canDeleteSelectedPathSubpath)
+
+        viewModel.deleteSelectedPathSubpath()
+
+        let updatedLayer = try #require(viewModel.document.selectedLayer)
+        let updatedContent = try #require(updatedLayer.shapeContent)
+        let primaryAfter = try #require(updatedContent.editablePathAnchors.first)
+        let primaryAfterCanvas = CGPoint(
+            x: updatedLayer.frame.minX + primaryAfter.point.x,
+            y: updatedLayer.frame.minY + primaryAfter.point.y
+        )
+
+        #expect(updatedContent.editablePathSubpaths.isEmpty)
+        #expect(viewModel.selectedPathSubpathIndex == 0)
+        #expect(viewModel.selectedPathAnchorIndex == 0)
+        #expect(!viewModel.canDeleteSelectedPathSubpath)
+        #expect(Int(primaryAfterCanvas.x.rounded()) == Int(primaryBeforeCanvas.x.rounded()))
+        #expect(Int(primaryAfterCanvas.y.rounded()) == Int(primaryBeforeCanvas.y.rounded()))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.pathSubpathDelete"))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.pathSubpathDeleted"))
+    }
+
+    @Test func imageEditorNudgesCompoundPathSubpathWithoutMovingPrimaryPath() async throws {
+        let canvasSize = NSSize(width: 24, height: 16)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        var alpha = [UInt8](repeating: 0, count: 24 * 16)
+        for y in 2..<8 {
+            for x in 2..<7 {
+                alpha[y * 24 + x] = UInt8.max
+            }
+        }
+        for y in 9..<14 {
+            for x in 14..<22 {
+                alpha[y * 24 + x] = UInt8.max
+            }
+        }
+        let mask = ImageEditorSelectionMask(width: 24, height: 16, alpha: alpha)
+        let bounds = try #require(mask.selectedBounds(in: canvasSize))
+        viewModel.document.selection = .raster(mask: mask, bounds: bounds)
+        viewModel.createPathFromSelection()
+
+        let pathLayer = try #require(viewModel.document.selectedLayer)
+        let pathContent = try #require(pathLayer.shapeContent)
+        let primaryBefore = pathContent.editablePathAnchors.map { anchor in
+            CGPoint(x: pathLayer.frame.minX + anchor.point.x, y: pathLayer.frame.minY + anchor.point.y)
+        }
+        let subpathBefore = try #require(pathContent.editablePathSubpaths.first).map { anchor in
+            CGPoint(x: pathLayer.frame.minX + anchor.point.x, y: pathLayer.frame.minY + anchor.point.y)
+        }
+
+        viewModel.selectedPathSubpathIndex = 1
+        viewModel.selectedPathAnchorIndex = 0
+        #expect(viewModel.canMoveSelectedPathSubpath)
+        viewModel.nudgeSelectedPathSubpath(dx: 2, dy: -1)
+
+        let movedLayer = try #require(viewModel.document.selectedLayer)
+        let movedContent = try #require(movedLayer.shapeContent)
+        let primaryAfter = movedContent.editablePathAnchors.map { anchor in
+            CGPoint(x: movedLayer.frame.minX + anchor.point.x, y: movedLayer.frame.minY + anchor.point.y)
+        }
+        let subpathAfter = try #require(movedContent.editablePathSubpaths.first).map { anchor in
+            CGPoint(x: movedLayer.frame.minX + anchor.point.x, y: movedLayer.frame.minY + anchor.point.y)
+        }
+
+        #expect(primaryAfter.count == primaryBefore.count)
+        #expect(subpathAfter.count == subpathBefore.count)
+        for (before, after) in zip(primaryBefore, primaryAfter) {
+            #expect(Int(after.x.rounded()) == Int(before.x.rounded()))
+            #expect(Int(after.y.rounded()) == Int(before.y.rounded()))
+        }
+        for (before, after) in zip(subpathBefore, subpathAfter) {
+            #expect(Int(after.x.rounded()) == Int((before.x + 2).rounded()))
+            #expect(Int(after.y.rounded()) == Int((before.y - 1).rounded()))
+        }
+        #expect(viewModel.selectedPathSubpathIndex == 1)
+        #expect(viewModel.selectedPathAnchorIndex == 0)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.pathSubpathMove"))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.pathSubpathMoved"))
+    }
+
+    @Test func imageEditorDeletesSelectedPathAnchorAndOpensSmallClosedPath() async throws {
+        let canvasSize = NSSize(width: 120, height: 90)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.selectTool(.pen)
+        viewModel.foregroundColor = .systemYellow
+        viewModel.addPenPoint(CGPoint(x: 20, y: 20))
+        viewModel.addPenPoint(CGPoint(x: 92, y: 24))
+        viewModel.addPenPoint(CGPoint(x: 54, y: 70))
+        viewModel.finishPenPath(closed: true)
+
+        var pathLayer = try #require(viewModel.document.selectedLayer)
+        var pathContent = try #require(pathLayer.shapeContent)
+        #expect(pathContent.isPathClosed)
+        #expect(pathContent.editablePathAnchors.count == 3)
+        #expect(viewModel.canDeleteSelectedPathAnchor)
+
+        viewModel.deleteSelectedPathAnchor()
+
+        pathLayer = try #require(viewModel.document.selectedLayer)
+        pathContent = try #require(pathLayer.shapeContent)
+        let selectedPoint = try #require(viewModel.selectedPathAnchorCanvasPoint)
+
+        #expect(!pathContent.isPathClosed)
+        #expect(pathContent.fillOpacity == 0)
+        #expect(pathContent.editablePathAnchors.count == 2)
+        #expect(!viewModel.canLoadSelectionFromSelectedPath)
+        #expect(!viewModel.canDeleteSelectedPathAnchor)
+        #expect(Int(selectedPoint.x.rounded()) == 92)
+        #expect(viewModel.selectedPathControlRole == .anchor)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.pathAnchorDelete"))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.pathAnchorDeleted"))
+    }
+
+    @Test func imageEditorInsertsPathAnchorAndPreservesCurvedSegmentHandles() async throws {
+        let canvasSize = NSSize(width: 140, height: 100)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.selectTool(.pen)
+        viewModel.addPenPoint(CGPoint(x: 20, y: 20))
+        viewModel.addPenPoint(CGPoint(x: 104, y: 28))
+        viewModel.addPenPoint(CGPoint(x: 70, y: 78))
+        viewModel.finishPenPath(closed: true)
+        viewModel.selectNextPathAnchor()
+        viewModel.smoothSelectedPathAnchor()
+
+        var pathContent = try #require(viewModel.document.selectedLayer?.shapeContent)
+        let smoothedAnchor = try #require(pathContent.pathAnchors[safe: 1])
+        #expect(smoothedAnchor.outControl != nil)
+        #expect(viewModel.canInsertPathAnchorAfterSelection)
+
+        viewModel.insertPathAnchorAfterSelection()
+
+        pathContent = try #require(viewModel.document.selectedLayer?.shapeContent)
+        let selectedPoint = try #require(viewModel.selectedPathAnchorCanvasPoint)
+        let previousAnchor = try #require(pathContent.pathAnchors[safe: 1])
+        let insertedAnchor = try #require(pathContent.pathAnchors[safe: 2])
+        let nextAnchor = try #require(pathContent.pathAnchors[safe: 3])
+
+        #expect(pathContent.isPathClosed)
+        #expect(pathContent.pathAnchors.count == 4)
+        #expect(previousAnchor.outControl != nil)
+        #expect(insertedAnchor.inControl != nil)
+        #expect(insertedAnchor.outControl != nil)
+        #expect(nextAnchor.inControl != nil)
+        #expect(Int(selectedPoint.x.rounded()) == 75)
+        #expect(Int(selectedPoint.y.rounded()) == 50)
+        #expect(viewModel.selectedPathControlRole == .anchor)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.pathAnchorInsert"))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.pathAnchorInserted"))
+    }
+
+    @Test func imageEditorTogglesOpenPathClosedAndBackToOpen() async throws {
+        let canvasSize = NSSize(width: 140, height: 100)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.selectTool(.pen)
+        viewModel.opacity = 0.7
+        viewModel.addPenPoint(CGPoint(x: 20, y: 20))
+        viewModel.addPenPoint(CGPoint(x: 104, y: 28))
+        viewModel.addPenPoint(CGPoint(x: 70, y: 78))
+        viewModel.finishPenPath(closed: false)
+
+        var pathContent = try #require(viewModel.document.selectedLayer?.shapeContent)
+        #expect(!pathContent.isPathClosed)
+        #expect(pathContent.fillOpacity == 0)
+        #expect(viewModel.canToggleSelectedPathClosed)
+        #expect(!viewModel.canLoadSelectionFromSelectedPath)
+        #expect(!viewModel.selectedPathIsClosed)
+
+        viewModel.toggleSelectedPathClosed()
+
+        pathContent = try #require(viewModel.document.selectedLayer?.shapeContent)
+        #expect(pathContent.isPathClosed)
+        #expect(pathContent.fillOpacity > 0)
+        #expect(viewModel.selectedPathAnchorIndex == 0)
+        #expect(viewModel.selectedPathControlRole == .anchor)
+        #expect(viewModel.canLoadSelectionFromSelectedPath)
+        #expect(viewModel.selectedPathIsClosed)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.pathClose"))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.pathClosed"))
+
+        viewModel.toggleSelectedPathClosed()
+
+        pathContent = try #require(viewModel.document.selectedLayer?.shapeContent)
+        #expect(!pathContent.isPathClosed)
+        #expect(pathContent.fillOpacity == 0)
+        #expect(!viewModel.canLoadSelectionFromSelectedPath)
+        #expect(!viewModel.selectedPathIsClosed)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.pathOpen"))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.pathOpened"))
+    }
+
+    @Test func imageEditorSymmetrizesSelectedPathAnchorHandles() async throws {
+        let canvasSize = NSSize(width: 140, height: 100)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.selectTool(.pen)
+        viewModel.addPenPoint(CGPoint(x: 20, y: 20))
+        viewModel.addPenPoint(CGPoint(x: 104, y: 28))
+        viewModel.addPenPoint(CGPoint(x: 70, y: 78))
+        viewModel.finishPenPath(closed: true)
+        viewModel.selectNextPathAnchor()
+        viewModel.smoothSelectedPathAnchor()
+
+        let originalOutHandle = try #require(viewModel.selectedPathOutControlCanvasPoint)
+        #expect(viewModel.beginMovingPathAnchor(at: originalOutHandle))
+        viewModel.moveSelectedPathAnchor(to: CGPoint(x: originalOutHandle.x + 18, y: originalOutHandle.y - 7))
+        viewModel.finishMovingPathAnchor()
+        #expect(viewModel.selectedPathControlRole == .outHandle)
+        #expect(viewModel.canSymmetrizeSelectedPathAnchorHandles)
+
+        viewModel.symmetrizeSelectedPathAnchorHandles()
+
+        let anchorPoint = try #require(viewModel.selectedPathAnchorCanvasPoint)
+        let inHandle = try #require(viewModel.selectedPathInControlCanvasPoint)
+        let outHandle = try #require(viewModel.selectedPathOutControlCanvasPoint)
+        let inVector = CGSize(width: anchorPoint.x - inHandle.x, height: anchorPoint.y - inHandle.y)
+        let outVector = CGSize(width: outHandle.x - anchorPoint.x, height: outHandle.y - anchorPoint.y)
+
+        #expect(Int(inVector.width.rounded()) == Int(outVector.width.rounded()))
+        #expect(Int(inVector.height.rounded()) == Int(outVector.height.rounded()))
+        #expect(viewModel.selectedPathControlRole == .outHandle)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.pathHandlesSymmetric"))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.pathHandlesSymmetric"))
+    }
+
+    @Test func imageEditorReversesPathDirectionAndSwapsControlHandles() async throws {
+        let canvasSize = NSSize(width: 140, height: 100)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.selectTool(.pen)
+        viewModel.addPenPoint(CGPoint(x: 20, y: 20))
+        viewModel.addPenPoint(CGPoint(x: 104, y: 28))
+        viewModel.addPenPoint(CGPoint(x: 70, y: 78))
+        viewModel.finishPenPath(closed: true)
+        viewModel.selectNextPathAnchor()
+        viewModel.smoothSelectedPathAnchor()
+
+        let beforeContent = try #require(viewModel.document.selectedLayer?.shapeContent)
+        let beforeFirst = try #require(beforeContent.pathAnchors.first)
+        let beforeMiddle = try #require(beforeContent.pathAnchors[safe: 1])
+        let beforeLast = try #require(beforeContent.pathAnchors.last)
+        #expect(beforeMiddle.inControl != nil)
+        #expect(beforeMiddle.outControl != nil)
+        #expect(viewModel.canReverseSelectedPathDirection)
+
+        viewModel.reverseSelectedPathDirection()
+
+        let afterContent = try #require(viewModel.document.selectedLayer?.shapeContent)
+        let afterFirst = try #require(afterContent.pathAnchors.first)
+        let afterMiddle = try #require(afterContent.pathAnchors[safe: 1])
+        let afterLast = try #require(afterContent.pathAnchors.last)
+
+        #expect(afterContent.isPathClosed)
+        #expect(afterContent.pathAnchors.count == beforeContent.pathAnchors.count)
+        #expect(afterFirst.point == beforeLast.point)
+        #expect(afterMiddle.point == beforeMiddle.point)
+        #expect(afterMiddle.inControl == beforeMiddle.outControl)
+        #expect(afterMiddle.outControl == beforeMiddle.inControl)
+        #expect(afterLast.point == beforeFirst.point)
+        #expect(viewModel.selectedPathAnchorIndex == 1)
+        #expect(viewModel.selectedPathControlRole == .anchor)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.pathReverse"))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.pathReversed"))
+    }
+
+    @Test func imageEditorStrokesSelectedPathToLowerPixelLayer() async throws {
+        let canvasSize = NSSize(width: 140, height: 100)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let targetLayerID = try #require(viewModel.document.selectedLayerID)
+        let targetPixelsBefore = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+
+        viewModel.selectTool(.pen)
+        viewModel.foregroundColor = .white
+        viewModel.brushSize = 10
+        viewModel.opacity = 1
+        viewModel.addPenPoint(CGPoint(x: 20, y: 20))
+        viewModel.addPenPoint(CGPoint(x: 104, y: 28))
+        viewModel.addPenPoint(CGPoint(x: 70, y: 78))
+        viewModel.finishPenPath(closed: false)
+
+        let pathLayerID = try #require(viewModel.document.selectedLayerID)
+        #expect(pathLayerID != targetLayerID)
+        #expect(viewModel.canStrokeSelectedPathToPixelLayer)
+
+        viewModel.strokeSelectedPathToPixelLayer()
+
+        let targetLayer = try #require(viewModel.document.layers.first { $0.id == targetLayerID })
+        let strokedPixel = try #require(targetLayer.image.color(at: CGPoint(x: 62, y: 24))?.usingColorSpace(.deviceRGB))
+
+        #expect(viewModel.document.selectedLayerID == pathLayerID)
+        #expect(try #require(targetLayer.image.qingtuPNGData()) != targetPixelsBefore)
+        #expect(strokedPixel.redComponent > 0.6)
+        #expect(strokedPixel.greenComponent > 0.6)
+        #expect(strokedPixel.blueComponent > 0.6)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.pathStroke"))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.pathStroked"))
+    }
+
+    @Test func imageEditorFillsSelectedPathToLowerPixelLayer() async throws {
+        let canvasSize = NSSize(width: 140, height: 100)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let targetLayerID = try #require(viewModel.document.selectedLayerID)
+        let targetPixelsBefore = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+
+        viewModel.selectTool(.pen)
+        viewModel.foregroundColor = .white
+        viewModel.opacity = 1
+        viewModel.addPenPoint(CGPoint(x: 22, y: 22))
+        viewModel.addPenPoint(CGPoint(x: 112, y: 26))
+        viewModel.addPenPoint(CGPoint(x: 68, y: 82))
+        viewModel.finishPenPath(closed: true)
+
+        let pathLayerID = try #require(viewModel.document.selectedLayerID)
+        #expect(pathLayerID != targetLayerID)
+        #expect(viewModel.canFillSelectedPathToPixelLayer)
+
+        viewModel.fillSelectedPathToPixelLayer()
+
+        let targetLayer = try #require(viewModel.document.layers.first { $0.id == targetLayerID })
+        let filledPixel = try #require(targetLayer.image.color(at: CGPoint(x: 70, y: 44))?.usingColorSpace(.deviceRGB))
+
+        #expect(viewModel.document.selectedLayerID == pathLayerID)
+        #expect(try #require(targetLayer.image.qingtuPNGData()) != targetPixelsBefore)
+        #expect(filledPixel.redComponent > 0.6)
+        #expect(filledPixel.greenComponent > 0.6)
+        #expect(filledPixel.blueComponent > 0.6)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.pathFill"))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.pathFilled"))
+    }
+
+    @Test func imageEditorAppliesSelectedPathAsLowerLayerMask() async throws {
+        let canvasSize = NSSize(width: 140, height: 100)
+        let image = testBitmapImage(size: canvasSize, background: .systemBlue)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let targetLayerID = try #require(viewModel.document.selectedLayerID)
+        let targetLayerIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[targetLayerIndex].isLocked = false
+
+        viewModel.selectTool(.pen)
+        viewModel.addPenPoint(CGPoint(x: 22, y: 22))
+        viewModel.addPenPoint(CGPoint(x: 112, y: 26))
+        viewModel.addPenPoint(CGPoint(x: 68, y: 82))
+        viewModel.finishPenPath(closed: true)
+
+        let pathLayerID = try #require(viewModel.document.selectedLayerID)
+        let layerCountBeforeMask = viewModel.document.layers.count
+        #expect(pathLayerID != targetLayerID)
+        #expect(viewModel.canApplySelectedPathAsLayerMask)
+
+        viewModel.applySelectedPathAsLayerMask()
+
+        let targetLayer = try #require(viewModel.document.layers.first { $0.id == targetLayerID })
+        let insidePixel = try #require(viewModel.currentImage.color(at: CGPoint(x: 70, y: 44))?.usingColorSpace(.deviceRGB))
+        let outsidePixel = try #require(viewModel.currentImage.color(at: CGPoint(x: 8, y: 8))?.usingColorSpace(.deviceRGB))
+
+        #expect(viewModel.document.layers.count == layerCountBeforeMask)
+        #expect(viewModel.document.selectedLayerID == pathLayerID)
+        #expect(targetLayer.mask != nil)
+        #expect(targetLayer.isMaskEnabled)
+        #expect(targetLayer.isMaskLinked)
+        #expect(insidePixel.blueComponent > 0.4)
+        #expect(outsidePixel.redComponent < 0.05)
+        #expect(outsidePixel.greenComponent < 0.05)
+        #expect(outsidePixel.blueComponent < 0.05)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.pathLayerMask"))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.pathLayerMask"))
+    }
+
+    @Test func imageEditorRasterizesSelectedVectorMaskToLayerMask() async throws {
+        let canvasSize = NSSize(width: 140, height: 100)
+        let image = testBitmapImage(size: canvasSize, background: .systemBlue)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let layerIndex = try #require(viewModel.document.selectedLayerIndex)
+        let vectorMask = ImageEditorShapeContent(
+            kind: .path,
+            fillColor: .white,
+            fillOpacity: 1,
+            strokeColor: .white,
+            strokeWidth: 1,
+            strokeOpacity: 0,
+            pathPoints: [
+                CGPoint(x: 22, y: 22),
+                CGPoint(x: 112, y: 26),
+                CGPoint(x: 68, y: 82)
+            ],
+            pathAnchors: [
+                ImageEditorPathAnchor(point: CGPoint(x: 22, y: 22)),
+                ImageEditorPathAnchor(point: CGPoint(x: 112, y: 26)),
+                ImageEditorPathAnchor(point: CGPoint(x: 68, y: 82))
+            ],
+            isPathClosed: true
+        )
+        viewModel.document.layers[layerIndex].isLocked = false
+        viewModel.document.layers[layerIndex].vectorMask = vectorMask.normalized(size: canvasSize)
+        viewModel.document.layers[layerIndex].isVectorMaskEnabled = true
+
+        let insideBefore = try #require(viewModel.currentImage.color(at: CGPoint(x: 70, y: 44))?.usingColorSpace(.deviceRGB))
+        let outsideBefore = try #require(viewModel.currentImage.color(at: CGPoint(x: 8, y: 8))?.usingColorSpace(.deviceRGB))
+
+        #expect(viewModel.canRasterizeSelectedVectorMask)
+        #expect(insideBefore.blueComponent > 0.4)
+        #expect(outsideBefore.redComponent < 0.05)
+        #expect(outsideBefore.greenComponent < 0.05)
+        #expect(outsideBefore.blueComponent < 0.05)
+
+        viewModel.rasterizeSelectedVectorMask()
+
+        let rasterizedLayer = try #require(viewModel.document.selectedLayer)
+        let insideAfter = try #require(viewModel.currentImage.color(at: CGPoint(x: 70, y: 44))?.usingColorSpace(.deviceRGB))
+        let outsideAfter = try #require(viewModel.currentImage.color(at: CGPoint(x: 8, y: 8))?.usingColorSpace(.deviceRGB))
+
+        #expect(rasterizedLayer.vectorMask == nil)
+        #expect(rasterizedLayer.mask != nil)
+        #expect(rasterizedLayer.isMaskEnabled)
+        #expect(rasterizedLayer.isMaskLinked)
+        #expect(viewModel.isEditingLayerMask)
+        #expect(insideAfter.blueComponent > 0.4)
+        #expect(outsideAfter.redComponent < 0.05)
+        #expect(outsideAfter.greenComponent < 0.05)
+        #expect(outsideAfter.blueComponent < 0.05)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.vectorMaskRasterize"))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.vectorMaskRasterized"))
+    }
+
+    @Test func imageEditorCreatesVectorMaskFromCurrentSelection() async throws {
+        let canvasSize = NSSize(width: 100, height: 80)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let layerIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[layerIndex].image = testBitmapImage(size: canvasSize, background: .systemBlue)
+        viewModel.document.layers[layerIndex].frame = CGRect(origin: .zero, size: canvasSize)
+        viewModel.document.layers[layerIndex].isLocked = false
+        viewModel.document.selection = .rectangle(CGRect(x: 20, y: 15, width: 50, height: 35))
+
+        #expect(viewModel.canCreateVectorMaskFromSelection)
+
+        viewModel.addVectorMaskFromSelection()
+
+        let maskedLayer = try #require(viewModel.document.selectedLayer)
+        let vectorMask = try #require(maskedLayer.vectorMask)
+        let anchors = vectorMask.editablePathAnchors
+        let inside = try #require(viewModel.currentImage.color(at: CGPoint(x: 40, y: 30))?.usingColorSpace(.deviceRGB))
+        let outside = try #require(viewModel.currentImage.color(at: CGPoint(x: 8, y: 8))?.usingColorSpace(.deviceRGB))
+
+        #expect(vectorMask.kind == .path)
+        #expect(vectorMask.isPathClosed)
+        #expect(anchors.map(\.point) == [
+            CGPoint(x: 20, y: 15),
+            CGPoint(x: 70, y: 15),
+            CGPoint(x: 70, y: 50),
+            CGPoint(x: 20, y: 50)
+        ])
+        #expect(maskedLayer.isVectorMaskEnabled)
+        #expect(inside.blueComponent > 0.4)
+        #expect(outside.redComponent < 0.05)
+        #expect(outside.greenComponent < 0.05)
+        #expect(outside.blueComponent < 0.05)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.vectorMaskFromSelection"))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.vectorMaskFromSelection"))
+
+        #expect(viewModel.canLoadSelectionFromVectorMask)
+        viewModel.loadSelectionFromVectorMask()
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionFromVectorMask"))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.vectorMaskSelection"))
+    }
+
+    @Test func imageEditorCopiesVectorMaskToSelectedLayersWithScaledPath() async throws {
+        let canvasSize = NSSize(width: 120, height: 90)
+        let image = testBitmapImage(size: canvasSize, background: .systemBlue)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let sourceID = try #require(viewModel.document.selectedLayerID)
+        let sourceIndex = try #require(viewModel.document.selectedLayerIndex)
+        let vectorMask = ImageEditorShapeContent(
+            kind: .path,
+            fillColor: .white,
+            fillOpacity: 1,
+            strokeColor: .white,
+            strokeWidth: 1,
+            strokeOpacity: 0,
+            pathPoints: [
+                CGPoint(x: 20, y: 10),
+                CGPoint(x: 100, y: 20),
+                CGPoint(x: 60, y: 80)
+            ],
+            pathAnchors: [
+                ImageEditorPathAnchor(
+                    point: CGPoint(x: 20, y: 10),
+                    inControl: CGPoint(x: 10, y: 8),
+                    outControl: CGPoint(x: 35, y: 16)
+                ),
+                ImageEditorPathAnchor(point: CGPoint(x: 100, y: 20)),
+                ImageEditorPathAnchor(point: CGPoint(x: 60, y: 80))
+            ],
+            isPathClosed: true
+        )
+        viewModel.document.layers[sourceIndex].vectorMask = vectorMask.normalized(size: canvasSize)
+        viewModel.document.layers[sourceIndex].isVectorMaskEnabled = false
+        viewModel.document.layers[sourceIndex].isMaskLinked = false
+
+        viewModel.addLayer()
+        let targetID = try #require(viewModel.document.selectedLayerID)
+        let targetIndex = try #require(viewModel.document.selectedLayerIndex)
+        let targetSize = NSSize(width: 60, height: 45)
+        viewModel.document.layers[targetIndex].image = testBitmapImage(size: targetSize, background: .clear)
+        viewModel.document.layers[targetIndex].frame = CGRect(origin: .zero, size: targetSize)
+
+        viewModel.selectLayer(targetID)
+        viewModel.selectLayer(sourceID, extendingSelection: true)
+
+        #expect(viewModel.canCopyVectorMaskToSelectedLayers)
+        viewModel.copyVectorMaskToSelectedLayers()
+
+        let copiedLayer = try #require(viewModel.document.layers.first { $0.id == targetID })
+        let copiedMask = try #require(copiedLayer.vectorMask)
+        let anchors = copiedMask.editablePathAnchors
+
+        #expect(anchors.count == 3)
+        #expect(anchors[0].point == CGPoint(x: 10, y: 5))
+        #expect(anchors[0].inControl == CGPoint(x: 5, y: 4))
+        #expect(anchors[0].outControl == CGPoint(x: 17.5, y: 8))
+        #expect(anchors[1].point == CGPoint(x: 50, y: 10))
+        #expect(anchors[2].point == CGPoint(x: 30, y: 40))
+        #expect(copiedLayer.isVectorMaskEnabled == false)
+        #expect(copiedLayer.isMaskLinked == false)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.vectorMaskCopy"))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.vectorMaskCopied", 1))
+    }
+
+    @Test func imageEditorVectorMaskCanRoundTripThroughEditablePathLayer() async throws {
+        let canvasSize = NSSize(width: 120, height: 90)
+        let image = testBitmapImage(size: canvasSize, background: .systemBlue)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let targetID = try #require(viewModel.document.selectedLayerID)
+        let targetIndex = try #require(viewModel.document.selectedLayerIndex)
+        let vectorMask = ImageEditorShapeContent(
+            kind: .path,
+            fillColor: .white,
+            fillOpacity: 1,
+            strokeColor: .white,
+            strokeWidth: 1,
+            strokeOpacity: 0,
+            pathPoints: [
+                CGPoint(x: 20, y: 18),
+                CGPoint(x: 96, y: 24),
+                CGPoint(x: 64, y: 72)
+            ],
+            pathAnchors: [
+                ImageEditorPathAnchor(point: CGPoint(x: 20, y: 18)),
+                ImageEditorPathAnchor(point: CGPoint(x: 96, y: 24)),
+                ImageEditorPathAnchor(point: CGPoint(x: 64, y: 72))
+            ],
+            isPathClosed: true
+        )
+        viewModel.document.layers[targetIndex].vectorMask = vectorMask.normalized(size: canvasSize)
+
+        let layerCountBeforeEdit = viewModel.document.layers.count
+        #expect(viewModel.canEditSelectedVectorMaskAsPath)
+        viewModel.editSelectedVectorMaskAsPath()
+
+        let pathLayer = try #require(viewModel.document.selectedLayer)
+        let pathContent = try #require(pathLayer.shapeContent)
+        let targetAfterEdit = try #require(viewModel.document.layers.first { $0.id == targetID })
+
+        #expect(viewModel.document.layers.count == layerCountBeforeEdit + 1)
+        #expect(targetAfterEdit.vectorMask == nil)
+        #expect(pathContent.kind == .path)
+        #expect(pathContent.isPathClosed)
+        #expect(pathContent.editablePathAnchors.count == 3)
+        #expect(pathLayer.name == L10n.text("imageEditor.layer.vectorMaskPathName"))
+        #expect(viewModel.selectedPathAnchorCanvasPoint != nil)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.vectorMaskEditPath"))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.vectorMaskEditPath"))
+
+        #expect(viewModel.canApplySelectedPathAsVectorMask)
+        viewModel.applySelectedPathAsVectorMask()
+
+        let targetAfterApply = try #require(viewModel.document.selectedLayer)
+        let reappliedMask = try #require(targetAfterApply.vectorMask)
+
+        #expect(viewModel.document.layers.count == layerCountBeforeEdit)
+        #expect(targetAfterApply.id == targetID)
+        #expect(reappliedMask.kind == .path)
+        #expect(reappliedMask.isPathClosed)
+        #expect(reappliedMask.editablePathAnchors.count == 3)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.pathVectorMask"))
+    }
+
+    private func testBitmapImage(
+        size: NSSize,
+        background: NSColor,
+        fills: [(rect: CGRect, color: NSColor)] = []
+    ) -> NSImage {
+        let width = Int(size.width.rounded())
+        let height = Int(size.height.rounded())
+        let representation = NSBitmapImageRep(
+            bitmapDataPlanes: nil,
+            pixelsWide: width,
+            pixelsHigh: height,
+            bitsPerSample: 8,
+            samplesPerPixel: 4,
+            hasAlpha: true,
+            isPlanar: false,
+            colorSpaceName: .deviceRGB,
+            bytesPerRow: 0,
+            bitsPerPixel: 0
+        )
+        guard let representation else { return NSImage(size: size) }
+
+        for y in 0..<height {
+            for x in 0..<width {
+                let point = CGPoint(x: CGFloat(x) + 0.5, y: CGFloat(y) + 0.5)
+                let fill = fills.last { item in
+                    item.rect.contains(point)
+                }
+                representation.setColor(fill?.color ?? background, atX: x, y: y)
+            }
+        }
+
+        let image = NSImage(size: size)
+        image.addRepresentation(representation)
+        return image
+    }
+
+    private func isPixelLayer(_ layer: ImageEditorLayer) -> Bool {
+        if case .pixel = layer.kind {
+            return true
+        }
+        return false
+    }
+
+    private func maskAlpha(_ mask: ImageEditorSelectionMask, x: Int, y: Int) -> UInt8 {
+        guard x >= 0, x < mask.width, y >= 0, y < mask.height else { return 0 }
+        return mask.alpha[y * mask.width + x]
+    }
+}
+
+private extension Array {
+    subscript(safe index: Int) -> Element? {
+        guard indices.contains(index) else { return nil }
+        return self[index]
+    }
+}

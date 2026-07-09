@@ -1,0 +1,847 @@
+//
+//  ImageEditorMenuBar.swift
+//  veilpic
+//
+//  Created by Codex on 2026/7/9.
+//
+
+import SwiftUI
+
+extension ImageEditorView {
+    var menuBar: some View {
+        HStack(spacing: 14) {
+            Menu(L10n.text("imageEditor.menu.file")) { fileMenu }
+            Menu(L10n.text("imageEditor.menu.edit")) { editMenu }
+            Menu(L10n.text("imageEditor.menu.image")) { imageMenu }
+            Menu(L10n.text("imageEditor.menu.layer")) { layerMenu }
+            Menu(L10n.text("imageEditor.menu.select")) { selectMenu }
+            Menu(L10n.text("imageEditor.menu.filter")) { filterMenu }
+            Menu(L10n.text("imageEditor.menu.view")) { viewMenu }
+            Menu(L10n.text("imageEditor.menu.window")) { windowMenu }
+
+            Spacer()
+
+            Button(L10n.text("imageEditor.action.projectOpen")) {
+                viewModel.openProjectDocument()
+            }
+            .buttonStyle(EditorTextButtonStyle())
+
+            Button(L10n.text("imageEditor.action.projectSave")) {
+                viewModel.saveProjectDocument()
+            }
+            .buttonStyle(EditorTextButtonStyle())
+
+            Button(L10n.text("imageEditor.action.cancel")) {
+                closeWindow()
+            }
+            .buttonStyle(EditorTextButtonStyle())
+
+            Button(L10n.text("imageEditor.action.apply")) {
+                viewModel.applyAndClose {
+                    closeWindow()
+                }
+            }
+            .buttonStyle(EditorPrimaryButtonStyle())
+
+            Button(L10n.text("imageEditor.action.export")) {
+                viewModel.openExportPanel()
+            }
+            .buttonStyle(EditorTextButtonStyle())
+        }
+        .frame(height: 42)
+        .padding(.horizontal, 14)
+        .background(Color(nsColor: ImageEditorTheme.chrome))
+    }
+
+    @ViewBuilder
+    private var fileMenu: some View {
+        Button(L10n.text("imageEditor.action.projectOpen")) {
+            viewModel.openProjectDocument()
+        }
+        Button(L10n.text("imageEditor.action.projectSave")) {
+            viewModel.saveProjectDocument()
+        }
+        Divider()
+        Button(L10n.text("imageEditor.action.layerImport")) {
+            viewModel.chooseImageLayerFile()
+        }
+        Button(L10n.text("imageEditor.action.export")) {
+            viewModel.openExportPanel()
+        }
+        Divider()
+        Button(L10n.text("imageEditor.action.apply")) {
+            viewModel.applyAndClose {
+                closeWindow()
+            }
+        }
+        Button(L10n.text("imageEditor.action.cancel")) {
+            closeWindow()
+        }
+    }
+
+    @ViewBuilder
+    private var editMenu: some View {
+        Button(L10n.text("imageEditor.action.undo")) {
+            viewModel.undo()
+        }
+        .disabled(!viewModel.canUndo)
+        Button(L10n.text("imageEditor.action.redo")) {
+            viewModel.redo()
+        }
+        .disabled(!viewModel.canRedo)
+        Divider()
+        Button(L10n.text("imageEditor.action.copySelectionClipboard")) {
+            viewModel.copySelectionToClipboard()
+        }
+        .disabled(!viewModel.canCopySelectionToClipboard)
+        Button(L10n.text("imageEditor.action.copyMergedClipboard")) {
+            viewModel.copyMergedToClipboard()
+        }
+        .disabled(!viewModel.canCopyMergedToClipboard)
+        Button(L10n.text("imageEditor.action.pasteClipboardLayer")) {
+            viewModel.pasteClipboardAsLayer()
+        }
+        .disabled(!viewModel.canPasteClipboardImage)
+        Button(L10n.text("imageEditor.action.pasteClipboardIntoSelection")) {
+            viewModel.pasteClipboardIntoSelectionAsLayer()
+        }
+        .disabled(!viewModel.canPasteClipboardImageIntoSelection)
+        Divider()
+        Button(L10n.text("imageEditor.action.historyClear")) {
+            viewModel.clearHistoryStates()
+        }
+        Divider()
+        Button(L10n.text("imageEditor.action.fillSelection")) {
+            viewModel.fillSelection()
+        }
+        .disabled(!viewModel.canEditSelectionPixels)
+        Button(L10n.text("imageEditor.action.strokeSelection")) {
+            viewModel.strokeSelection()
+        }
+        .disabled(!viewModel.canEditSelectionPixels)
+        Button(L10n.text("imageEditor.action.selectionCopyLayer")) {
+            viewModel.copySelectionToNewLayer()
+        }
+        .disabled(!viewModel.canCopySelectionToNewLayer)
+        Button(L10n.text("imageEditor.action.selectionCopyMergedLayer")) {
+            viewModel.copyMergedToNewLayer()
+        }
+        .disabled(!viewModel.canCopyMergedToNewLayer)
+        Button(L10n.text("imageEditor.action.selectionCutLayer")) {
+            viewModel.cutSelectionToNewLayer()
+        }
+        .disabled(!viewModel.canCutSelectionToNewLayer)
+        Button(L10n.text("imageEditor.action.clearSelectionPixels")) {
+            viewModel.clearSelectionPixels()
+        }
+        .disabled(!viewModel.canEditSelectionPixels)
+    }
+
+    @ViewBuilder
+    private var imageMenu: some View {
+        Button(L10n.text("imageEditor.action.imageResize")) {
+            viewModel.resizeImageToControlSize()
+        }
+        Button(L10n.text("imageEditor.action.canvasResize")) {
+            viewModel.resizeCanvasToControlSize()
+        }
+        Divider()
+        Button(L10n.text("imageEditor.action.autoLevels")) {
+            viewModel.autoLevelsSelectedLayer()
+        }
+        .disabled(!viewModel.canAutoLevelsSelectedLayer)
+        Button(L10n.text("imageEditor.action.autoContrast")) {
+            viewModel.autoContrastSelectedLayer()
+        }
+        .disabled(!viewModel.canAutoContrastSelectedLayer)
+        Button(L10n.text("imageEditor.action.autoColor")) {
+            viewModel.autoColorSelectedLayer()
+        }
+        .disabled(!viewModel.canAutoColorSelectedLayer)
+        Divider()
+        Button(L10n.text("imageEditor.action.cropCenter")) {
+            viewModel.cropCenter()
+        }
+        Button(L10n.text("imageEditor.action.rotate")) {
+            viewModel.rotateClockwise()
+        }
+        Button(L10n.text("imageEditor.action.flipH")) {
+            viewModel.flipHorizontal()
+        }
+        Button(L10n.text("imageEditor.action.flipV")) {
+            viewModel.flipVertical()
+        }
+    }
+
+    @ViewBuilder
+    private var layerMenu: some View {
+        Button(L10n.text("imageEditor.action.layerNew")) {
+            viewModel.addLayer()
+        }
+        Button(L10n.text("imageEditor.action.layerDuplicate")) {
+            viewModel.duplicateSelectedLayer()
+        }
+        Button(L10n.text("imageEditor.action.layerDelete")) {
+            viewModel.deleteSelectedLayer()
+        }
+        .disabled(!viewModel.canDeleteLayer)
+        Divider()
+        Button(L10n.text("imageEditor.action.layerFromBackground")) {
+            viewModel.convertBackgroundToLayer()
+        }
+        .disabled(!viewModel.canConvertBackgroundToLayer)
+        Button(L10n.text("imageEditor.action.backgroundFromLayer")) {
+            viewModel.convertSelectedLayerToBackground()
+        }
+        .disabled(!viewModel.canConvertSelectedLayerToBackground)
+        Divider()
+        layerLockMenu
+        Divider()
+        Button(L10n.text("imageEditor.action.layerSelectAll")) {
+            viewModel.selectAllLayers()
+        }
+        .disabled(!viewModel.canSelectAllLayers)
+        Button(L10n.text("imageEditor.action.layerSelectionInvert")) {
+            viewModel.invertLayerSelection()
+        }
+        .disabled(!viewModel.canInvertLayerSelection)
+        Button(L10n.text("imageEditor.action.layerSelectionClear")) {
+            viewModel.clearLayerSelection()
+        }
+        .disabled(!viewModel.canClearLayerSelection)
+        Divider()
+        Button(L10n.text("imageEditor.action.layerLink")) {
+            viewModel.linkSelectedLayers()
+        }
+        .disabled(!viewModel.canLinkSelectedLayers)
+        Button(L10n.text("imageEditor.action.layerSelectLinked")) {
+            viewModel.selectLinkedLayers()
+        }
+        .disabled(!viewModel.canSelectLinkedLayers)
+        Button(L10n.text("imageEditor.action.layerUnlink")) {
+            viewModel.unlinkSelectedLayers()
+        }
+        .disabled(!viewModel.canUnlinkSelectedLayers)
+        Button(L10n.text("imageEditor.action.layerUnlinkAll")) {
+            viewModel.unlinkAllLayers()
+        }
+        .disabled(!viewModel.canUnlinkAllLayers)
+        Divider()
+        Button(L10n.text("imageEditor.action.layerGroupNew")) {
+            viewModel.addLayerGroup()
+        }
+        Button(L10n.text("imageEditor.action.layerGroupSelected")) {
+            viewModel.groupSelectedLayer()
+        }
+        .disabled(!viewModel.canGroupSelectedLayer)
+        Button(L10n.text("imageEditor.action.layerMoveIntoGroup")) {
+            viewModel.moveSelectedLayersIntoGroup()
+        }
+        .disabled(!viewModel.canMoveSelectedLayersIntoGroup)
+        Button(L10n.text("imageEditor.action.layerMoveOutOfGroup")) {
+            viewModel.moveSelectedLayersOutOfGroup()
+        }
+        .disabled(!viewModel.canMoveSelectedLayersOutOfGroup)
+        Button(L10n.text("imageEditor.action.layerUngroup")) {
+            viewModel.ungroupSelectedLayers()
+        }
+        .disabled(!viewModel.canUngroupSelectedLayers)
+        Divider()
+        layerOrderMenu
+        layerTransformMenu
+        layerAlignmentMenu
+        layerMaskMenu
+        layerStyleMenu
+        Divider()
+        Button(L10n.text("imageEditor.action.layerAdjustmentNew")) {
+            viewModel.addAdjustmentLayer()
+        }
+        Button(L10n.text("imageEditor.action.layerFilterNew")) {
+            viewModel.addFilterLayer()
+        }
+        Button(L10n.text("imageEditor.action.layerSmartFilterAdd")) {
+            viewModel.addSmartFilterToSelectedLayer()
+        }
+        .disabled(!viewModel.canAddSmartFilterToSelectedLayer)
+        Button(L10n.text("imageEditor.action.layerSmartFilterClear")) {
+            viewModel.clearSmartFiltersFromSelectedLayer()
+        }
+        .disabled(!viewModel.selectedLayerHasSmartFilters)
+        Divider()
+        Button(L10n.text("imageEditor.action.layerRasterize")) {
+            viewModel.rasterizeSelectedLayer()
+        }
+        .disabled(!viewModel.canRasterizeSelectedLayer)
+        Button(L10n.text("imageEditor.action.layerClippingMask")) {
+            viewModel.toggleSelectedLayerClippingMask()
+        }
+        .disabled(!viewModel.canToggleSelectedLayerClippingMask)
+        Button(L10n.text("imageEditor.action.layerClippingMaskCreateSelected")) {
+            viewModel.createClippingMasksForSelectedLayers()
+        }
+        .disabled(!viewModel.canCreateClippingMasksForSelectedLayers)
+        Button(L10n.text("imageEditor.action.layerClippingMaskReleaseSelected")) {
+            viewModel.releaseSelectedClippingMasks()
+        }
+        .disabled(!viewModel.canReleaseSelectedClippingMasks)
+        Button(L10n.text("imageEditor.action.layerMergeDown")) {
+            viewModel.mergeSelectedLayerDown()
+        }
+        .disabled(!viewModel.canMergeSelectedLayerDown)
+        Button(L10n.text("imageEditor.action.layerMergeSelected")) {
+            viewModel.mergeSelectedLayers()
+        }
+        .disabled(!viewModel.canMergeSelectedLayers)
+        Button(L10n.text("imageEditor.action.layerStampVisible")) {
+            viewModel.stampVisibleLayers()
+        }
+        .disabled(!viewModel.canStampVisibleLayers)
+        Button(L10n.text("imageEditor.action.layerMergeVisible")) {
+            viewModel.mergeVisibleLayers()
+        }
+        .disabled(!viewModel.canMergeVisibleLayers)
+        Button(L10n.text("imageEditor.action.layerFlatten")) {
+            viewModel.flattenImage()
+        }
+        .disabled(!viewModel.canFlattenImage)
+    }
+
+    @ViewBuilder
+    private var layerLockMenu: some View {
+        Menu(L10n.text("imageEditor.menu.layer.lock")) {
+            Button(L10n.text("imageEditor.action.layerLockSelected")) {
+                viewModel.lockSelectedLayers()
+            }
+            .disabled(!viewModel.canLockSelectedLayers)
+            Button(L10n.text("imageEditor.action.layerUnlockSelected")) {
+                viewModel.unlockSelectedLayers()
+            }
+            .disabled(!viewModel.canUnlockSelectedLayers)
+            Divider()
+            Button(L10n.text("imageEditor.action.layerPixelsLockSelected")) {
+                viewModel.lockSelectedLayerPixels()
+            }
+            .disabled(!viewModel.canLockSelectedLayerPixels)
+            Button(L10n.text("imageEditor.action.layerPixelsUnlockSelected")) {
+                viewModel.unlockSelectedLayerPixels()
+            }
+            .disabled(!viewModel.canUnlockSelectedLayerPixels)
+            Divider()
+            Button(L10n.text("imageEditor.action.layerPositionLockSelected")) {
+                viewModel.lockSelectedLayerPosition()
+            }
+            .disabled(!viewModel.canLockSelectedLayerPosition)
+            Button(L10n.text("imageEditor.action.layerPositionUnlockSelected")) {
+                viewModel.unlockSelectedLayerPosition()
+            }
+            .disabled(!viewModel.canUnlockSelectedLayerPosition)
+            Divider()
+            Button(L10n.text("imageEditor.action.layerTransparentPixelsLockSelected")) {
+                viewModel.lockSelectedLayerTransparentPixels()
+            }
+            .disabled(!viewModel.canLockSelectedLayerTransparentPixels)
+            Button(L10n.text("imageEditor.action.layerTransparentPixelsUnlockSelected")) {
+                viewModel.unlockSelectedLayerTransparentPixels()
+            }
+            .disabled(!viewModel.canUnlockSelectedLayerTransparentPixels)
+        }
+    }
+
+    @ViewBuilder
+    private var layerOrderMenu: some View {
+        Menu(L10n.text("imageEditor.menu.layer.order")) {
+            Button(L10n.text("imageEditor.action.layerTop")) {
+                viewModel.moveSelectedLayerToTop()
+            }
+            .disabled(!viewModel.canMoveSelectedLayerToTop)
+            Button(L10n.text("imageEditor.action.layerUp")) {
+                viewModel.moveSelectedLayerUp()
+            }
+            .disabled(!viewModel.canMoveSelectedLayerUp)
+            Button(L10n.text("imageEditor.action.layerDown")) {
+                viewModel.moveSelectedLayerDown()
+            }
+            .disabled(!viewModel.canMoveSelectedLayerDown)
+            Button(L10n.text("imageEditor.action.layerBottom")) {
+                viewModel.moveSelectedLayerToBottom()
+            }
+            .disabled(!viewModel.canMoveSelectedLayerToBottom)
+        }
+    }
+
+    @ViewBuilder
+    private var layerTransformMenu: some View {
+        Menu(L10n.text("imageEditor.menu.layer.transform")) {
+            Button(L10n.text("imageEditor.action.layerRotate90Left")) {
+                viewModel.rotateSelectedLayerLeft90()
+            }
+            .disabled(!viewModel.canRotateSelectedLayer)
+            Button(L10n.text("imageEditor.action.layerRotate90Right")) {
+                viewModel.rotateSelectedLayerRight90()
+            }
+            .disabled(!viewModel.canRotateSelectedLayer)
+            Button(L10n.text("imageEditor.action.layerRotate180")) {
+                viewModel.rotateSelectedLayer180()
+            }
+            .disabled(!viewModel.canRotateSelectedLayer)
+            Divider()
+            Button(L10n.text("imageEditor.action.layerFlipHorizontal")) {
+                viewModel.flipSelectedLayerHorizontal()
+            }
+            .disabled(!viewModel.canFlipSelectedLayer)
+            Button(L10n.text("imageEditor.action.layerFlipVertical")) {
+                viewModel.flipSelectedLayerVertical()
+            }
+            .disabled(!viewModel.canFlipSelectedLayer)
+            Divider()
+            Button(L10n.text("imageEditor.action.layerFitCanvas")) {
+                viewModel.fitSelectedLayerToCanvas()
+            }
+            .disabled(!viewModel.canFitSelectedLayerToCanvas)
+            Button(L10n.text("imageEditor.action.layerFillCanvas")) {
+                viewModel.fillSelectedLayerToCanvas()
+            }
+            .disabled(!viewModel.canFitSelectedLayerToCanvas)
+            Divider()
+            Button(L10n.text("imageEditor.action.layerFitSelection")) {
+                viewModel.fitSelectedLayerToSelection()
+            }
+            .disabled(!viewModel.canFitSelectedLayerToSelection)
+            Button(L10n.text("imageEditor.action.layerFillSelection")) {
+                viewModel.fillSelectedLayerToSelection()
+            }
+            .disabled(!viewModel.canFitSelectedLayerToSelection)
+            Divider()
+            Button(L10n.text("imageEditor.action.layerTrimTransparentPixels")) {
+                viewModel.trimSelectedLayerTransparentPixels()
+            }
+            .disabled(!viewModel.canTrimSelectedLayerTransparentPixels)
+        }
+    }
+
+    @ViewBuilder
+    private var layerAlignmentMenu: some View {
+        Menu(L10n.text("imageEditor.menu.layer.align")) {
+            Button(L10n.text("imageEditor.action.layerAlignLeft")) {
+                viewModel.alignSelectedLayers(.left)
+            }
+            Button(L10n.text("imageEditor.action.layerAlignHorizontalCenter")) {
+                viewModel.alignSelectedLayers(.horizontalCenter)
+            }
+            Button(L10n.text("imageEditor.action.layerAlignRight")) {
+                viewModel.alignSelectedLayers(.right)
+            }
+            Button(L10n.text("imageEditor.action.layerAlignTop")) {
+                viewModel.alignSelectedLayers(.top)
+            }
+            Button(L10n.text("imageEditor.action.layerAlignVerticalCenter")) {
+                viewModel.alignSelectedLayers(.verticalCenter)
+            }
+            Button(L10n.text("imageEditor.action.layerAlignBottom")) {
+                viewModel.alignSelectedLayers(.bottom)
+            }
+            Divider()
+            Button(L10n.text("imageEditor.action.layerDistributeLeft")) {
+                viewModel.distributeSelectedLayers(.left)
+            }
+            .disabled(!viewModel.canDistributeSelectedLayers)
+            Button(L10n.text("imageEditor.action.layerDistributeHorizontalCenter")) {
+                viewModel.distributeSelectedLayers(.horizontalCenter)
+            }
+            .disabled(!viewModel.canDistributeSelectedLayers)
+            Button(L10n.text("imageEditor.action.layerDistributeRight")) {
+                viewModel.distributeSelectedLayers(.right)
+            }
+            .disabled(!viewModel.canDistributeSelectedLayers)
+            Button(L10n.text("imageEditor.action.layerDistributeTop")) {
+                viewModel.distributeSelectedLayers(.top)
+            }
+            .disabled(!viewModel.canDistributeSelectedLayers)
+            Button(L10n.text("imageEditor.action.layerDistributeVerticalCenter")) {
+                viewModel.distributeSelectedLayers(.verticalCenter)
+            }
+            .disabled(!viewModel.canDistributeSelectedLayers)
+            Button(L10n.text("imageEditor.action.layerDistributeBottom")) {
+                viewModel.distributeSelectedLayers(.bottom)
+            }
+            .disabled(!viewModel.canDistributeSelectedLayers)
+        }
+        .disabled(!viewModel.canAlignSelectedLayers)
+    }
+
+    @ViewBuilder
+    private var layerStyleMenu: some View {
+        Menu(L10n.text("imageEditor.menu.layer.style")) {
+            Button(L10n.text("imageEditor.action.layerStyleCopy")) {
+                viewModel.copySelectedLayerStyle()
+            }
+            .disabled(!viewModel.canCopySelectedLayerStyle)
+            Button(L10n.text("imageEditor.action.layerStylePaste")) {
+                viewModel.pasteLayerStyleToSelectedLayers()
+            }
+            .disabled(!viewModel.canPasteLayerStyleToSelectedLayers)
+            Button(L10n.text("imageEditor.action.layerStyleClear")) {
+                viewModel.clearSelectedLayerStyles()
+            }
+            .disabled(!viewModel.canClearSelectedLayerStyles)
+            Divider()
+            Button(L10n.text("imageEditor.action.layerStroke")) {
+                viewModel.toggleSelectedLayerStroke()
+            }
+            .disabled(!viewModel.canEditSelectedLayerStyle)
+            Button(L10n.text("imageEditor.action.layerShadow")) {
+                viewModel.toggleSelectedLayerShadow()
+            }
+            .disabled(!viewModel.canEditSelectedLayerStyle)
+            Button(L10n.text("imageEditor.action.layerInnerShadow")) {
+                viewModel.toggleSelectedLayerInnerShadow()
+            }
+            .disabled(!viewModel.canEditSelectedLayerStyle)
+            Button(L10n.text("imageEditor.action.layerOuterGlow")) {
+                viewModel.toggleSelectedLayerOuterGlow()
+            }
+            .disabled(!viewModel.canEditSelectedLayerStyle)
+            Button(L10n.text("imageEditor.action.layerInnerGlow")) {
+                viewModel.toggleSelectedLayerInnerGlow()
+            }
+            .disabled(!viewModel.canEditSelectedLayerStyle)
+            Button(L10n.text("imageEditor.action.layerColorOverlay")) {
+                viewModel.toggleSelectedLayerColorOverlay()
+            }
+            .disabled(!viewModel.canEditSelectedLayerStyle)
+            Button(L10n.text("imageEditor.action.layerGradientOverlay")) {
+                viewModel.toggleSelectedLayerGradientOverlay()
+            }
+            .disabled(!viewModel.canEditSelectedLayerStyle)
+            Button(L10n.text("imageEditor.action.layerPatternOverlay")) {
+                viewModel.toggleSelectedLayerPatternOverlay()
+            }
+            .disabled(!viewModel.canEditSelectedLayerStyle)
+            Button(L10n.text("imageEditor.action.layerSatin")) {
+                viewModel.toggleSelectedLayerSatin()
+            }
+            .disabled(!viewModel.canEditSelectedLayerStyle)
+            Button(L10n.text("imageEditor.action.layerBevel")) {
+                viewModel.toggleSelectedLayerBevel()
+            }
+            .disabled(!viewModel.canEditSelectedLayerStyle)
+        }
+    }
+
+    @ViewBuilder
+    private var layerMaskMenu: some View {
+        Menu(L10n.text("imageEditor.menu.layer.mask")) {
+            Button(L10n.text("imageEditor.action.layerMaskAdd")) {
+                viewModel.addLayerMask()
+            }
+            .disabled(!viewModel.canAddLayerMask)
+            Button(L10n.text("imageEditor.action.layerMaskHideAll")) {
+                viewModel.addLayerMaskHidingAll()
+            }
+            .disabled(!viewModel.canAddLayerMask)
+            Button(L10n.text("imageEditor.action.layerMaskFromSelection")) {
+                viewModel.addLayerMaskFromSelection()
+            }
+            .disabled(!viewModel.canCreateLayerMaskFromSelection)
+            Button(L10n.text("imageEditor.action.vectorMaskFromSelection")) {
+                viewModel.addVectorMaskFromSelection()
+            }
+            .disabled(!viewModel.canCreateVectorMaskFromSelection)
+            Button(L10n.text("imageEditor.action.layerMaskHideSelection")) {
+                viewModel.addLayerMaskHidingSelection()
+            }
+            .disabled(!viewModel.canCreateLayerMaskFromSelection)
+            Divider()
+            Button(L10n.text("imageEditor.action.layerMaskEdit")) {
+                viewModel.editLayerMask()
+            }
+            .disabled(!viewModel.selectedLayerHasMask)
+            Button(L10n.text("imageEditor.action.layerMaskToggle")) {
+                viewModel.toggleLayerMaskEnabled()
+            }
+            .disabled(!viewModel.canToggleLayerMaskEnabled)
+            Button(L10n.text("imageEditor.action.layerMaskLinkToggle")) {
+                viewModel.toggleLayerMaskLinked()
+            }
+            .disabled(!viewModel.canToggleLayerMaskLinked)
+            Button(L10n.text("imageEditor.action.layerMaskInvert")) {
+                viewModel.invertLayerMask()
+            }
+            .disabled(!viewModel.canInvertLayerMask)
+            Button(L10n.text("imageEditor.action.layerMaskRevealSelection")) {
+                viewModel.revealSelectionOnLayerMask()
+            }
+            .disabled(!viewModel.canCombineLayerMaskWithSelection)
+            Button(L10n.text("imageEditor.action.layerMaskHideSelectionFromMask")) {
+                viewModel.hideSelectionOnLayerMask()
+            }
+            .disabled(!viewModel.canCombineLayerMaskWithSelection)
+            Button(L10n.text("imageEditor.action.layerMaskIntersectSelection")) {
+                viewModel.intersectLayerMaskWithSelection()
+            }
+            .disabled(!viewModel.canCombineLayerMaskWithSelection)
+            Button(L10n.text("imageEditor.action.layerMaskLoadSelection")) {
+                viewModel.loadSelectionFromLayerMask()
+            }
+            .disabled(!viewModel.canLoadSelectionFromLayerMask)
+            Button(L10n.text("imageEditor.action.layerMaskCopyToSelected")) {
+                viewModel.copyLayerMaskToSelectedLayers()
+            }
+            .disabled(!viewModel.canCopyLayerMaskToSelectedLayers)
+            Button(L10n.text("imageEditor.action.layerMaskApply")) {
+                viewModel.applyLayerMask()
+            }
+            .disabled(!viewModel.canApplyLayerMask)
+            Button(L10n.text("imageEditor.action.layerMaskDelete")) {
+                viewModel.deleteLayerMask()
+            }
+            .disabled(!viewModel.canDeleteLayerMask)
+            Divider()
+            Button(L10n.text("imageEditor.action.vectorMaskToggle")) {
+                viewModel.toggleVectorMaskEnabled()
+            }
+            .disabled(!viewModel.canToggleVectorMaskEnabled)
+            Button(L10n.text("imageEditor.action.vectorMaskEditPath")) {
+                viewModel.editSelectedVectorMaskAsPath()
+            }
+            .disabled(!viewModel.canEditSelectedVectorMaskAsPath)
+            Button(L10n.text("imageEditor.action.vectorMaskLoadSelection")) {
+                viewModel.loadSelectionFromVectorMask()
+            }
+            .disabled(!viewModel.canLoadSelectionFromVectorMask)
+            Button(L10n.text("imageEditor.action.vectorMaskCopyToSelected")) {
+                viewModel.copyVectorMaskToSelectedLayers()
+            }
+            .disabled(!viewModel.canCopyVectorMaskToSelectedLayers)
+            Button(L10n.text("imageEditor.action.vectorMaskRasterize")) {
+                viewModel.rasterizeSelectedVectorMask()
+            }
+            .disabled(!viewModel.canRasterizeSelectedVectorMask)
+            Button(L10n.text("imageEditor.action.vectorMaskDelete")) {
+                viewModel.deleteVectorMask()
+            }
+            .disabled(!viewModel.canDeleteVectorMask)
+        }
+    }
+
+    @ViewBuilder
+    private var selectMenu: some View {
+        Button(L10n.text("imageEditor.action.selectAll")) {
+            viewModel.selectAll()
+        }
+        Button(L10n.text("imageEditor.action.clearSelection")) {
+            viewModel.clearSelection()
+        }
+        .disabled(!viewModel.hasSelection)
+        Button(L10n.text("imageEditor.action.invertSelection")) {
+            viewModel.invertSelection()
+        }
+        .disabled(!viewModel.hasSelection)
+        Divider()
+        Button(L10n.text("imageEditor.action.selectionFromLayer")) {
+            viewModel.loadSelectionFromLayerTransparency()
+        }
+        .disabled(!viewModel.canLoadSelectionFromLayerTransparency)
+        Button(L10n.text("imageEditor.action.pathSelection")) {
+            viewModel.loadSelectionFromSelectedPath()
+        }
+        .disabled(!viewModel.canLoadSelectionFromSelectedPath)
+        Button(L10n.text("imageEditor.action.pathFromSelection")) {
+            viewModel.createPathFromSelection()
+        }
+        .disabled(!viewModel.canCreatePathFromSelection)
+        Button(L10n.text("imageEditor.action.selectColorRange")) {
+            viewModel.presentColorRangePanel()
+        }
+        Button(L10n.text("imageEditor.action.selectSimilar")) {
+            viewModel.selectSimilarColors()
+        }
+        .disabled(!viewModel.canSelectSimilarColors)
+        Button(L10n.text("imageEditor.action.selectGrow")) {
+            viewModel.growColorSelection()
+        }
+        .disabled(!viewModel.canGrowColorSelection)
+        Divider()
+        Button(L10n.text("imageEditor.action.expandSelection")) {
+            viewModel.expandSelection()
+        }
+        .disabled(!viewModel.hasSelection)
+        Button(L10n.text("imageEditor.action.contractSelection")) {
+            viewModel.contractSelection()
+        }
+        .disabled(!viewModel.hasSelection)
+        Button(L10n.text("imageEditor.action.featherSelection")) {
+            viewModel.featherSelection()
+        }
+        .disabled(!viewModel.hasSelection)
+        Button(L10n.text("imageEditor.action.borderSelection")) {
+            viewModel.borderSelection()
+        }
+        .disabled(!viewModel.hasSelection)
+        Button(L10n.text("imageEditor.action.smoothSelection")) {
+            viewModel.smoothSelection()
+        }
+        .disabled(!viewModel.hasSelection)
+        Button(L10n.text("imageEditor.action.fillSelectionHoles")) {
+            viewModel.fillSelectionHoles()
+        }
+        .disabled(!viewModel.hasSelection)
+        Button(L10n.text("imageEditor.action.removeSelectionSpeckles")) {
+            viewModel.removeSelectionSpeckles()
+        }
+        .disabled(!viewModel.hasSelection)
+        Menu(L10n.text("imageEditor.menu.select.transform")) {
+            Button(L10n.text("imageEditor.action.selectionMoveLeft")) {
+                viewModel.moveSelectionLeft()
+            }
+            Button(L10n.text("imageEditor.action.selectionMoveRight")) {
+                viewModel.moveSelectionRight()
+            }
+            Button(L10n.text("imageEditor.action.selectionMoveUp")) {
+                viewModel.moveSelectionUp()
+            }
+            Button(L10n.text("imageEditor.action.selectionMoveDown")) {
+                viewModel.moveSelectionDown()
+            }
+            Divider()
+            Button(L10n.text("imageEditor.action.selectionFlipHorizontal")) {
+                viewModel.flipSelectionHorizontal()
+            }
+            Button(L10n.text("imageEditor.action.selectionFlipVertical")) {
+                viewModel.flipSelectionVertical()
+            }
+            Divider()
+            Button(L10n.text("imageEditor.action.selectionRotateClockwise")) {
+                viewModel.rotateSelectionClockwise()
+            }
+            Button(L10n.text("imageEditor.action.selectionRotateCounterclockwise")) {
+                viewModel.rotateSelectionCounterclockwise()
+            }
+            Button(L10n.text("imageEditor.action.selectionRotate180")) {
+                viewModel.rotateSelection180()
+            }
+            Divider()
+            Button(L10n.text("imageEditor.action.selectionScaleUp")) {
+                viewModel.scaleSelectionUp()
+            }
+            Button(L10n.text("imageEditor.action.selectionScaleDown")) {
+                viewModel.scaleSelectionDown()
+            }
+            Button(L10n.text("imageEditor.action.selectionFitCanvas")) {
+                viewModel.fitSelectionToCanvas()
+            }
+        }
+        .disabled(!viewModel.hasSelection)
+        Divider()
+        Button(L10n.text("imageEditor.action.saveSelection")) {
+            viewModel.saveCurrentSelection()
+        }
+        .disabled(!viewModel.hasSelection)
+        Button(L10n.text("imageEditor.action.restoreSelection")) {
+            viewModel.restoreSavedSelection()
+        }
+    }
+
+    @ViewBuilder
+    private var filterMenu: some View {
+        Button(L10n.text("imageEditor.action.autoLevels")) {
+            viewModel.autoLevelsSelectedLayer()
+        }
+        .disabled(!viewModel.canAutoLevelsSelectedLayer)
+        Button(L10n.text("imageEditor.action.autoContrast")) {
+            viewModel.autoContrastSelectedLayer()
+        }
+        .disabled(!viewModel.canAutoContrastSelectedLayer)
+        Button(L10n.text("imageEditor.action.autoColor")) {
+            viewModel.autoColorSelectedLayer()
+        }
+        .disabled(!viewModel.canAutoColorSelectedLayer)
+        Divider()
+        Button(L10n.text("imageEditor.action.applyAdjustment")) {
+            viewModel.applyAdjustment()
+        }
+        Button(L10n.text("imageEditor.action.layerAdjustmentNew")) {
+            viewModel.addAdjustmentLayer()
+        }
+        Button(L10n.text("imageEditor.action.layerAdjustmentUpdate")) {
+            viewModel.updateSelectedAdjustmentLayer()
+        }
+        .disabled(!viewModel.selectedLayerIsAdjustment)
+        Divider()
+        Button(L10n.text("imageEditor.action.layerFilterNew")) {
+            viewModel.addFilterLayer()
+        }
+        Button(L10n.text("imageEditor.action.layerFilterUpdate")) {
+            viewModel.updateSelectedFilterLayer()
+        }
+        .disabled(!viewModel.selectedLayerIsFilter)
+        Button(L10n.text("imageEditor.action.layerSmartFilterAdd")) {
+            viewModel.addSmartFilterToSelectedLayer()
+        }
+        .disabled(!viewModel.canAddSmartFilterToSelectedLayer)
+        Button(L10n.text("imageEditor.action.layerSmartFilterUpdate")) {
+            viewModel.updateLastSmartFilterOnSelectedLayer()
+        }
+        .disabled(!viewModel.selectedLayerHasSmartFilters)
+    }
+
+    @ViewBuilder
+    private var viewMenu: some View {
+        Button(L10n.text("imageEditor.action.rulersVisible")) {
+            viewModel.toggleRulersVisible()
+        }
+        Button(L10n.text("imageEditor.action.guidesVisible")) {
+            viewModel.toggleGuidesVisible()
+        }
+        Button(L10n.text("imageEditor.action.guidesSnap")) {
+            viewModel.toggleGuideSnapping()
+        }
+        Button(L10n.text("imageEditor.action.gridVisible")) {
+            viewModel.toggleGridVisible()
+        }
+        Button(L10n.text("imageEditor.action.gridSnap")) {
+            viewModel.toggleGridSnapping()
+        }
+        Divider()
+        Button(L10n.text("imageEditor.action.guideVerticalCenter")) {
+            viewModel.addVerticalGuideAtCanvasCenter()
+        }
+        Button(L10n.text("imageEditor.action.guideHorizontalCenter")) {
+            viewModel.addHorizontalGuideAtCanvasCenter()
+        }
+        Button(L10n.text("imageEditor.action.guidesClear")) {
+            viewModel.clearGuides()
+        }
+        .disabled(viewModel.document.guides.isEmpty)
+        Divider()
+        Button(L10n.text("imageEditor.menu.view.zoomIn")) {
+            viewModel.zoomIn()
+        }
+        Button(L10n.text("imageEditor.menu.view.zoomOut")) {
+            viewModel.zoomOut()
+        }
+        Button(L10n.text("imageEditor.menu.view.fit")) {
+            viewModel.fitZoom()
+        }
+    }
+
+    @ViewBuilder
+    private var windowMenu: some View {
+        Button(L10n.text("imageEditor.menu.window.layers")) {
+            selectedLayerPanelTab = .layers
+        }
+        Button(L10n.text("imageEditor.menu.window.channels")) {
+            selectedLayerPanelTab = .channels
+        }
+        Button(L10n.text("imageEditor.menu.window.layerComps")) {
+            selectedLayerPanelTab = .comps
+        }
+        Divider()
+        Button(L10n.text("imageEditor.menu.window.properties")) {
+            viewModel.statusText = L10n.text("imageEditor.status.propertiesVisible")
+        }
+        Button(L10n.text("imageEditor.menu.window.history")) {
+            viewModel.statusText = viewModel.historyStateSummary
+        }
+    }
+}

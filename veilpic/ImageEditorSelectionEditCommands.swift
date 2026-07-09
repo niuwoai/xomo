@@ -38,6 +38,18 @@ extension ImageEditorViewModel {
         canEditSelectionPixels
     }
 
+    var canCopySelectionToClipboard: Bool {
+        canCopySelectionToNewLayer
+    }
+
+    var canCopyMergedToClipboard: Bool {
+        document.canvasSize.width > 0 && document.canvasSize.height > 0
+    }
+
+    var canCopyMergedToNewLayer: Bool {
+        canCopyMergedToClipboard
+    }
+
     func fillSelection() {
         guard let selection = document.selection else {
             statusText = L10n.text("imageEditor.status.noSelection")
@@ -59,7 +71,11 @@ extension ImageEditorViewModel {
         }
 
         pushUndo()
-        document.layers[index].image = output.normalizedBitmapImage()
+        let layer = document.layers[index]
+        let protectedOutput = document.isEffectivelyTransparencyLocked(layer)
+            ? (output.preservingAlpha(from: layer.image) ?? output)
+            : output
+        document.layers[index].image = protectedOutput.normalizedBitmapImage()
         appendHistory(L10n.text("imageEditor.history.selectionFill"))
         statusText = L10n.text("imageEditor.status.selectionFilled")
     }
@@ -86,7 +102,11 @@ extension ImageEditorViewModel {
         }
 
         pushUndo()
-        document.layers[index].image = output.normalizedBitmapImage()
+        let layer = document.layers[index]
+        let protectedOutput = document.isEffectivelyTransparencyLocked(layer)
+            ? (output.preservingAlpha(from: layer.image) ?? output)
+            : output
+        document.layers[index].image = protectedOutput.normalizedBitmapImage()
         appendHistory(L10n.text("imageEditor.history.selectionStroke"))
         statusText = L10n.text("imageEditor.status.selectionStroked")
     }
@@ -196,6 +216,109 @@ extension ImageEditorViewModel {
         isEditingLayerMask = false
         appendHistory(L10n.text("imageEditor.history.selectionCutLayer"))
         statusText = L10n.text("imageEditor.status.selectionCutToLayer")
+    }
+
+    func copySelectionToClipboard() {
+        guard let selection = document.selection else {
+            statusText = L10n.text("imageEditor.status.noSelection")
+            return
+        }
+        guard canCopySelectionToClipboard,
+              let layer = document.selectedLayer,
+              let clippedImage = layer.visibleImage.copied(
+                selection: selection,
+                layerFrame: layer.frame,
+                canvasSize: document.canvasSize,
+                feather: feather
+              )
+        else {
+            statusText = L10n.text("imageEditor.status.selectionCopyToClipboardFailed")
+            return
+        }
+
+        let didCopy = ClipboardImageWriter.copy(
+            clippedImage.normalizedBitmapImage(),
+            preferredFileName: "\(layer.name)-selection.png"
+        )
+        statusText = didCopy
+            ? L10n.text("imageEditor.status.selectionCopiedToClipboard")
+            : L10n.text("imageEditor.status.selectionCopyToClipboardFailed")
+    }
+
+    func copyMergedToClipboard() {
+        guard canCopyMergedToClipboard else {
+            statusText = L10n.text("imageEditor.status.copyMergedToClipboardFailed")
+            return
+        }
+
+        let mergedImage: NSImage
+        if let selection = document.selection {
+            guard let clippedImage = document.compositedImage.copied(
+                selection: selection,
+                layerFrame: CGRect(origin: .zero, size: document.canvasSize),
+                canvasSize: document.canvasSize,
+                feather: feather
+            ) else {
+                statusText = L10n.text("imageEditor.status.copyMergedToClipboardFailed")
+                return
+            }
+            mergedImage = clippedImage
+        } else {
+            mergedImage = document.compositedImage
+        }
+
+        let didCopy = ClipboardImageWriter.copy(
+            mergedImage.normalizedBitmapImage(),
+            preferredFileName: "\(document.sourceName)-merged.png"
+        )
+        statusText = didCopy
+            ? L10n.text("imageEditor.status.copyMergedToClipboard")
+            : L10n.text("imageEditor.status.copyMergedToClipboardFailed")
+    }
+
+    func copyMergedToNewLayer() {
+        guard canCopyMergedToNewLayer else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+
+        let mergedImage: NSImage
+        let layerNameKey: String
+        if let selection = document.selection {
+            guard let clippedImage = document.compositedImage.copied(
+                selection: selection,
+                layerFrame: CGRect(origin: .zero, size: document.canvasSize),
+                canvasSize: document.canvasSize,
+                feather: feather
+            ) else {
+                statusText = L10n.text("imageEditor.status.operationFailed")
+                return
+            }
+            mergedImage = clippedImage
+            layerNameKey = "imageEditor.layer.mergedSelectionCopyName"
+        } else {
+            mergedImage = document.compositedImage
+            layerNameKey = "imageEditor.layer.mergedCopyName"
+        }
+
+        pushUndo()
+        var layer = ImageEditorLayer.blank(
+            name: L10n.text(layerNameKey),
+            size: document.canvasSize
+        )
+        layer.image = mergedImage.normalizedBitmapImage()
+        layer.frame = CGRect(origin: .zero, size: document.canvasSize)
+        layer.opacity = 1
+        layer.fillOpacity = 1
+        layer.blendMode = .normal
+        layer.groupID = nil
+        layer.isClippingMask = false
+        document.layers.append(layer)
+        document.selectedLayerID = layer.id
+        document.selectedLayerIDs = [layer.id]
+        isEditingLayerMask = false
+        appendHistory(L10n.text("imageEditor.history.selectionCopyMergedLayer"))
+        statusText = L10n.text("imageEditor.status.selectionCopiedMergedToLayer")
     }
 }
 

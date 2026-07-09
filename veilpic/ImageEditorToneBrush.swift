@@ -1,0 +1,225 @@
+//
+//  ImageEditorToneBrush.swift
+//  veilpic
+//
+//  Created by Codex on 2026/7/9.
+//
+
+import AppKit
+import Foundation
+
+extension NSImage {
+    func withToneBrush(points: [CGPoint], width: CGFloat, opacity: CGFloat, burn: Bool) -> NSImage? {
+        guard let first = points.first else { return nil }
+        let path = NSBezierPath()
+        path.lineJoinStyle = .round
+        path.lineCapStyle = .round
+        path.lineWidth = max(1, width)
+        path.move(to: first)
+        for point in points.dropFirst() {
+            path.line(to: point)
+        }
+
+        guard let strokeMask = NSImage.rendered(size: size, actions: { _ in
+            NSColor.white.setStroke()
+            path.stroke()
+        }) else { return nil }
+
+        return toneAdjusted(mask: strokeMask, opacity: opacity, burn: burn)
+    }
+
+    func withBlurBrush(points: [CGPoint], width: CGFloat, opacity: CGFloat, radius: CGFloat) -> NSImage? {
+        guard let blurredSource = blurred(radius: max(0.5, radius)) else { return nil }
+        return mixingBrushSource(blurredSource, points: points, width: width, opacity: opacity)
+    }
+
+    func withSharpenBrush(points: [CGPoint], width: CGFloat, opacity: CGFloat, intensity: CGFloat) -> NSImage? {
+        guard let sharpenedSource = filtered(kind: .sharpen, intensity: Double(max(0.1, min(1, intensity)))) else { return nil }
+        return mixingBrushSource(sharpenedSource, points: points, width: width, opacity: opacity)
+    }
+
+    func withSmudgeBrush(points: [CGPoint], width: CGFloat, opacity: CGFloat) -> NSImage? {
+        guard points.count > 1 else { return nil }
+        var output = self
+        let clampedOpacity = max(0, min(1, opacity)) * 0.86
+        let lineWidth = max(1, width)
+
+        for segmentIndex in 1..<points.count {
+            let previous = points[segmentIndex - 1]
+            let current = points[segmentIndex]
+            let delta = CGSize(width: current.x - previous.x, height: current.y - previous.y)
+            guard abs(delta.width) > 0.1 || abs(delta.height) > 0.1 else { continue }
+
+            let sourceSnapshot = output
+            guard let nextOutput = NSImage.rendered(size: size, actions: { _ in
+                output.draw(
+                    in: CGRect(origin: .zero, size: size),
+                    from: CGRect(origin: .zero, size: output.size),
+                    operation: .copy,
+                    fraction: 1
+                )
+
+                let path = NSBezierPath()
+                path.lineJoinStyle = .round
+                path.lineCapStyle = .round
+                path.lineWidth = lineWidth
+                path.move(to: previous)
+                path.line(to: current)
+
+                guard let context = NSGraphicsContext.current?.cgContext else { return }
+                context.saveGState()
+                path.addClip()
+                sourceSnapshot.draw(
+                    in: CGRect(x: delta.width, y: delta.height, width: size.width, height: size.height),
+                    from: CGRect(origin: .zero, size: sourceSnapshot.size),
+                    operation: .sourceOver,
+                    fraction: clampedOpacity
+                )
+                context.restoreGState()
+            }) else {
+                return nil
+            }
+            output = nextOutput
+        }
+
+        return output
+    }
+
+    private func mixingBrushSource(_ brushSource: NSImage, points: [CGPoint], width: CGFloat, opacity: CGFloat) -> NSImage? {
+        guard let first = points.first else { return nil }
+        let path = NSBezierPath()
+        path.lineJoinStyle = .round
+        path.lineCapStyle = .round
+        path.lineWidth = max(1, width)
+        path.move(to: first)
+        for point in points.dropFirst() {
+            path.line(to: point)
+        }
+
+        guard let strokeMask = NSImage.rendered(size: size, actions: { _ in
+                NSColor.white.setStroke()
+                path.stroke()
+              })
+        else {
+            return nil
+        }
+
+        guard let clippedBlur = NSImage.rendered(size: size, actions: { _ in
+            brushSource.draw(
+                in: CGRect(origin: .zero, size: size),
+                from: CGRect(origin: .zero, size: brushSource.size),
+                operation: .copy,
+                fraction: 1
+            )
+            strokeMask.draw(
+                in: CGRect(origin: .zero, size: size),
+                from: CGRect(origin: .zero, size: strokeMask.size),
+                operation: .destinationIn,
+                fraction: 1
+            )
+        }) else {
+            return nil
+        }
+
+        return NSImage.rendered(size: size, actions: { _ in
+            draw(
+                in: CGRect(origin: .zero, size: size),
+                from: CGRect(origin: .zero, size: size),
+                operation: .copy,
+                fraction: 1
+            )
+            clippedBlur.draw(
+                in: CGRect(origin: .zero, size: size),
+                from: CGRect(origin: .zero, size: clippedBlur.size),
+                operation: .sourceOver,
+                fraction: max(0, min(1, opacity))
+            )
+        })
+    }
+
+    private func toneAdjusted(mask: NSImage, opacity: CGFloat, burn: Bool) -> NSImage? {
+        let width = max(1, Int(size.width.rounded()))
+        let height = max(1, Int(size.height.rounded()))
+        let bytesPerPixel = 4
+        let bytesPerRow = width * bytesPerPixel
+        guard var sourcePixels = rgbaPixels(width: width, height: height, bytesPerRow: bytesPerRow),
+              let maskPixels = mask.rgbaPixels(width: width, height: height, bytesPerRow: bytesPerRow)
+        else {
+            return nil
+        }
+
+        let clampedOpacity = max(0, min(1, opacity))
+        let effectScale: CGFloat = 0.72
+        for y in 0..<height {
+            for x in 0..<width {
+                let offset = y * bytesPerRow + x * bytesPerPixel
+                let maskAlpha = CGFloat(maskPixels[offset + 3]) / 255
+                let strength = clampedOpacity * maskAlpha * effectScale
+                guard strength > 0 else { continue }
+
+                for channel in 0..<3 {
+                    let value = CGFloat(sourcePixels[offset + channel])
+                    let adjusted = burn
+                        ? value * (1 - strength)
+                        : value + (255 - value) * strength
+                    sourcePixels[offset + channel] = UInt8(max(0, min(255, adjusted.rounded())))
+                }
+            }
+        }
+
+        return NSImage.fromRGBA(
+            pixels: sourcePixels,
+            width: width,
+            height: height,
+            bytesPerRow: bytesPerRow,
+            size: size
+        )
+    }
+
+    private func rgbaPixels(width: Int, height: Int, bytesPerRow: Int) -> [UInt8]? {
+        var pixels = [UInt8](repeating: 0, count: bytesPerRow * height)
+        guard let cgImage = cgImage(forProposedRect: nil, context: nil, hints: nil),
+              let context = CGContext(
+                data: &pixels,
+                width: width,
+                height: height,
+                bitsPerComponent: 8,
+                bytesPerRow: bytesPerRow,
+                space: CGColorSpaceCreateDeviceRGB(),
+                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+              )
+        else {
+            return nil
+        }
+
+        context.interpolationQuality = .none
+        context.translateBy(x: 0, y: CGFloat(height))
+        context.scaleBy(x: 1, y: -1)
+        context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
+        return pixels
+    }
+
+    private static func fromRGBA(
+        pixels: [UInt8],
+        width: Int,
+        height: Int,
+        bytesPerRow: Int,
+        size: CGSize
+    ) -> NSImage? {
+        var outputPixels = pixels
+        guard let context = CGContext(
+            data: &outputPixels,
+            width: width,
+            height: height,
+            bitsPerComponent: 8,
+            bytesPerRow: bytesPerRow,
+            space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ),
+        let cgImage = context.makeImage()
+        else {
+            return nil
+        }
+        return NSImage(cgImage: cgImage, size: size)
+    }
+}

@@ -21,6 +21,21 @@ extension ImageEditorViewModel {
         document.savedSelection != nil
     }
 
+    var canSelectSimilarColors: Bool {
+        hasSelection
+    }
+
+    var canGrowColorSelection: Bool {
+        hasSelection
+    }
+
+    func selectAll() {
+        pushUndo()
+        document.selection = .fullCanvas(size: document.canvasSize)
+        appendHistory(L10n.text("imageEditor.history.selectionAll"))
+        statusText = L10n.text("imageEditor.status.selectionAll")
+    }
+
     func loadSelectionFromLayerTransparency() {
         guard canLoadSelectionFromLayerTransparency,
               let index = document.selectedLayerIndex,
@@ -60,6 +75,396 @@ extension ImageEditorViewModel {
         statusText = L10n.text("imageEditor.status.selectionRestored")
     }
 
+    func selectColorRangeFromForeground() {
+        guard let selection = currentImage.colorRangeSelection(
+            targetColor: foregroundColor,
+            tolerance: tolerance,
+            canvasSize: document.canvasSize,
+            inverted: false
+        ) else {
+            statusText = L10n.text("imageEditor.status.selectionColorRangeEmpty")
+            return
+        }
+
+        applySelectionCandidate(selection, replaceHistoryKey: "imageEditor.history.selectionColorRange")
+    }
+
+    func presentColorRangePanel() {
+        let color = foregroundColor.usingColorSpace(.deviceRGB) ?? foregroundColor
+        colorRangeColor = color
+        colorRangeIncludeColors = [color]
+        colorRangeExcludeColors = []
+        colorRangeSampleMode = .replace
+        colorRangeTolerance = tolerance
+        colorRangeInverted = false
+        isColorRangeSheetPresented = true
+        statusText = L10n.text("imageEditor.status.selectionColorRangePanel")
+    }
+
+    func applyColorRangeSelectionFromPanel() {
+        guard let selection = currentImage.colorRangeSelection(
+            targetColors: colorRangeTargetColors,
+            excludedColors: colorRangeExcludeColors,
+            tolerance: colorRangeTolerance,
+            canvasSize: document.canvasSize,
+            inverted: colorRangeInverted
+        ) else {
+            statusText = L10n.text("imageEditor.status.selectionColorRangeEmpty")
+            return
+        }
+
+        foregroundColor = colorRangeColor
+        tolerance = colorRangeTolerance
+        isColorRangeSheetPresented = false
+        applySelectionCandidate(selection, replaceHistoryKey: "imageEditor.history.selectionColorRange")
+    }
+
+    func selectSimilarColors() {
+        guard let sourceSelection = document.selection else {
+            statusText = L10n.text("imageEditor.status.noSelection")
+            return
+        }
+        let samples = colorRangeSamples(from: sourceSelection)
+        guard !samples.isEmpty else {
+            statusText = L10n.text("imageEditor.status.selectionSimilarSampleEmpty")
+            return
+        }
+        guard let selection = currentImage.colorRangeSelection(
+            targetColors: samples,
+            tolerance: tolerance,
+            canvasSize: document.canvasSize,
+            inverted: false
+        ) else {
+            statusText = L10n.text("imageEditor.status.selectionColorRangeEmpty")
+            return
+        }
+
+        applySelectionCandidate(selection, replaceHistoryKey: "imageEditor.history.selectionSimilar")
+    }
+
+    func growColorSelection() {
+        guard let sourceSelection = document.selection else {
+            statusText = L10n.text("imageEditor.status.noSelection")
+            return
+        }
+        guard let selection = currentImage.grownColorSelection(
+            from: sourceSelection,
+            tolerance: tolerance,
+            canvasSize: document.canvasSize
+        ) else {
+            statusText = L10n.text("imageEditor.status.selectionSimilarSampleEmpty")
+            return
+        }
+
+        pushUndo()
+        document.selection = selection
+        appendHistory(L10n.text("imageEditor.history.selectionGrow"))
+        statusText = L10n.text("imageEditor.status.selectionGrown")
+    }
+
+    func sampleColorRangeColor(at point: CGPoint) {
+        guard let color = currentImage.color(at: point)?.usingColorSpace(.deviceRGB) else { return }
+        colorRangeColor = color
+        switch colorRangeSampleMode {
+        case .replace:
+            colorRangeIncludeColors = [color]
+            colorRangeExcludeColors = []
+            statusText = L10n.text("imageEditor.status.selectionColorRangeSampled")
+        case .add:
+            colorRangeIncludeColors.appendUniqueColorRangeSample(color)
+            statusText = L10n.text("imageEditor.status.selectionColorRangeSampleAdded")
+        case .subtract:
+            colorRangeExcludeColors.appendUniqueColorRangeSample(color)
+            statusText = L10n.text("imageEditor.status.selectionColorRangeSampleSubtracted")
+        }
+    }
+
+    func setColorRangePrimaryColor(_ color: NSColor) {
+        guard let deviceColor = color.usingColorSpace(.deviceRGB) else { return }
+        colorRangeColor = deviceColor
+        colorRangeIncludeColors = [deviceColor]
+        colorRangeExcludeColors = []
+        colorRangeSampleMode = .replace
+    }
+
+    var colorRangePreviewImage: NSImage {
+        currentImage.colorRangePreviewImage(
+            targetColors: colorRangeTargetColors,
+            excludedColors: colorRangeExcludeColors,
+            tolerance: colorRangeTolerance,
+            inverted: colorRangeInverted
+        )
+    }
+
+    private var colorRangeTargetColors: [NSColor] {
+        colorRangeIncludeColors.isEmpty ? [colorRangeColor] : colorRangeIncludeColors
+    }
+
+    func expandSelection() {
+        modifySelectionBoundary(expanding: true)
+    }
+
+    func contractSelection() {
+        modifySelectionBoundary(expanding: false)
+    }
+
+    func featherSelection() {
+        guard let selection = document.selection else {
+            statusText = L10n.text("imageEditor.status.noSelection")
+            return
+        }
+        let radius = max(1, min(64, Int(selectionModifyAmount.rounded())))
+        let modified = selection.feathered(by: radius, canvasSize: document.canvasSize)
+
+        pushUndo()
+        document.selection = modified
+        appendHistory(L10n.text("imageEditor.history.selectionFeather"))
+        statusText = modified == nil
+            ? L10n.text("imageEditor.status.selectionEmpty")
+            : L10n.format("imageEditor.status.selectionFeathered", radius)
+    }
+
+    func borderSelection() {
+        guard let selection = document.selection else {
+            statusText = L10n.text("imageEditor.status.noSelection")
+            return
+        }
+        let radius = max(1, min(64, Int(selectionModifyAmount.rounded())))
+        let modified = selection.bordered(by: radius, canvasSize: document.canvasSize)
+
+        pushUndo()
+        document.selection = modified
+        appendHistory(L10n.text("imageEditor.history.selectionBorder"))
+        statusText = modified == nil
+            ? L10n.text("imageEditor.status.selectionEmpty")
+            : L10n.format("imageEditor.status.selectionBordered", radius)
+    }
+
+    func smoothSelection() {
+        guard let selection = document.selection else {
+            statusText = L10n.text("imageEditor.status.noSelection")
+            return
+        }
+        let radius = max(1, min(16, Int(selectionModifyAmount.rounded())))
+        let modified = selection.smoothed(by: radius, canvasSize: document.canvasSize)
+
+        pushUndo()
+        document.selection = modified
+        appendHistory(L10n.text("imageEditor.history.selectionSmooth"))
+        statusText = modified == nil
+            ? L10n.text("imageEditor.status.selectionEmpty")
+            : L10n.format("imageEditor.status.selectionSmoothed", radius)
+    }
+
+    func fillSelectionHoles() {
+        guard let selection = document.selection else {
+            statusText = L10n.text("imageEditor.status.noSelection")
+            return
+        }
+        guard let modified = selection.filledHoles(canvasSize: document.canvasSize) else {
+            statusText = L10n.text("imageEditor.status.selectionEmpty")
+            return
+        }
+
+        pushUndo()
+        document.selection = modified
+        appendHistory(L10n.text("imageEditor.history.selectionFillHoles"))
+        statusText = L10n.text("imageEditor.status.selectionFillHoles")
+    }
+
+    func removeSelectionSpeckles() {
+        guard let selection = document.selection else {
+            statusText = L10n.text("imageEditor.status.noSelection")
+            return
+        }
+        let maximumArea = max(1, min(64, Int(selectionModifyAmount.rounded())))
+        guard let modified = selection.removedSpeckles(
+            maximumArea: maximumArea,
+            canvasSize: document.canvasSize
+        ) else {
+            statusText = L10n.text("imageEditor.status.selectionEmpty")
+            return
+        }
+
+        pushUndo()
+        document.selection = modified
+        appendHistory(L10n.text("imageEditor.history.selectionRemoveSpeckles"))
+        statusText = L10n.format("imageEditor.status.selectionSpecklesRemoved", maximumArea)
+    }
+
+    func moveSelectionLeft() {
+        moveSelection(by: CGSize(width: -selectionMoveAmount, height: 0))
+    }
+
+    func moveSelectionRight() {
+        moveSelection(by: CGSize(width: selectionMoveAmount, height: 0))
+    }
+
+    func moveSelectionUp() {
+        moveSelection(by: CGSize(width: 0, height: selectionMoveAmount))
+    }
+
+    func moveSelectionDown() {
+        moveSelection(by: CGSize(width: 0, height: -selectionMoveAmount))
+    }
+
+    func flipSelectionHorizontal() {
+        flipSelection(horizontal: true)
+    }
+
+    func flipSelectionVertical() {
+        flipSelection(horizontal: false)
+    }
+
+    func rotateSelectionClockwise() {
+        rotateSelection(clockwiseTurns: 1)
+    }
+
+    func rotateSelectionCounterclockwise() {
+        rotateSelection(clockwiseTurns: -1)
+    }
+
+    func rotateSelection180() {
+        rotateSelection(clockwiseTurns: 2)
+    }
+
+    func scaleSelectionUp() {
+        scaleSelection(by: 2, historyKey: "imageEditor.history.selectionScaleUp", statusKey: "imageEditor.status.selectionScaledUp")
+    }
+
+    func scaleSelectionDown() {
+        scaleSelection(by: 0.5, historyKey: "imageEditor.history.selectionScaleDown", statusKey: "imageEditor.status.selectionScaledDown")
+    }
+
+    func fitSelectionToCanvas() {
+        guard let selection = document.selection else {
+            statusText = L10n.text("imageEditor.status.noSelection")
+            return
+        }
+        guard let modified = selection.fittedToCanvas(canvasSize: document.canvasSize) else {
+            statusText = L10n.text("imageEditor.status.selectionEmpty")
+            return
+        }
+
+        pushUndo()
+        document.selection = modified
+        appendHistory(L10n.text("imageEditor.history.selectionFitCanvas"))
+        statusText = L10n.text("imageEditor.status.selectionFitCanvas")
+    }
+
+    private var selectionMoveAmount: CGFloat {
+        CGFloat(max(1, min(512, Int(selectionModifyAmount.rounded()))))
+    }
+
+    private func moveSelection(by delta: CGSize) {
+        guard let selection = document.selection else {
+            statusText = L10n.text("imageEditor.status.noSelection")
+            return
+        }
+        guard let modified = selection.translated(by: delta, canvasSize: document.canvasSize) else {
+            statusText = L10n.text("imageEditor.status.selectionEmpty")
+            return
+        }
+
+        pushUndo()
+        document.selection = modified
+        appendHistory(L10n.text("imageEditor.history.selectionMove"))
+        statusText = L10n.format(
+            "imageEditor.status.selectionMoved",
+            Int(delta.width.rounded()),
+            Int(delta.height.rounded())
+        )
+    }
+
+    private func flipSelection(horizontal: Bool) {
+        guard let selection = document.selection else {
+            statusText = L10n.text("imageEditor.status.noSelection")
+            return
+        }
+        guard let modified = selection.flipped(horizontal: horizontal, canvasSize: document.canvasSize) else {
+            statusText = L10n.text("imageEditor.status.selectionEmpty")
+            return
+        }
+
+        pushUndo()
+        document.selection = modified
+        appendHistory(L10n.text(horizontal ? "imageEditor.history.selectionFlipHorizontal" : "imageEditor.history.selectionFlipVertical"))
+        statusText = L10n.text(horizontal ? "imageEditor.status.selectionFlippedHorizontal" : "imageEditor.status.selectionFlippedVertical")
+    }
+
+    private func rotateSelection(clockwiseTurns: Int) {
+        guard let selection = document.selection else {
+            statusText = L10n.text("imageEditor.status.noSelection")
+            return
+        }
+        guard let modified = selection.rotatedQuarterTurns(
+            clockwiseTurns: clockwiseTurns,
+            canvasSize: document.canvasSize
+        ) else {
+            statusText = L10n.text("imageEditor.status.selectionEmpty")
+            return
+        }
+
+        let normalizedTurns = ((clockwiseTurns % 4) + 4) % 4
+        let historyKey: String
+        let statusKey: String
+        switch normalizedTurns {
+        case 1:
+            historyKey = "imageEditor.history.selectionRotateClockwise"
+            statusKey = "imageEditor.status.selectionRotatedClockwise"
+        case 2:
+            historyKey = "imageEditor.history.selectionRotate180"
+            statusKey = "imageEditor.status.selectionRotated180"
+        case 3:
+            historyKey = "imageEditor.history.selectionRotateCounterclockwise"
+            statusKey = "imageEditor.status.selectionRotatedCounterclockwise"
+        default:
+            return
+        }
+
+        pushUndo()
+        document.selection = modified
+        appendHistory(L10n.text(historyKey))
+        statusText = L10n.text(statusKey)
+    }
+
+    private func scaleSelection(by factor: CGFloat, historyKey: String, statusKey: String) {
+        guard let selection = document.selection else {
+            statusText = L10n.text("imageEditor.status.noSelection")
+            return
+        }
+        guard let modified = selection.scaled(by: factor, canvasSize: document.canvasSize) else {
+            statusText = L10n.text("imageEditor.status.selectionEmpty")
+            return
+        }
+
+        pushUndo()
+        document.selection = modified
+        appendHistory(L10n.text(historyKey))
+        statusText = L10n.text(statusKey)
+    }
+
+    private func modifySelectionBoundary(expanding: Bool) {
+        guard let selection = document.selection else {
+            statusText = L10n.text("imageEditor.status.noSelection")
+            return
+        }
+        let radius = max(1, min(64, Int(selectionModifyAmount.rounded())))
+        let modified = expanding
+            ? selection.expanded(by: radius, canvasSize: document.canvasSize)
+            : selection.contracted(by: radius, canvasSize: document.canvasSize)
+
+        pushUndo()
+        document.selection = modified
+        appendHistory(L10n.text(expanding ? "imageEditor.history.selectionExpand" : "imageEditor.history.selectionContract"))
+        statusText = modified == nil
+            ? L10n.text("imageEditor.status.selectionEmpty")
+            : L10n.format(
+                expanding ? "imageEditor.status.selectionExpanded" : "imageEditor.status.selectionContracted",
+                radius
+            )
+    }
+
     private func transparencySelection(forLayerAt index: Int) -> ImageEditorSelection? {
         guard document.layers.indices.contains(index) else { return nil }
         let layer = document.layers[index]
@@ -73,9 +478,9 @@ extension ImageEditorViewModel {
                     fraction: 1
                 )
             } else {
-                let compositingImage = layer.compositingImage
+                let compositingImage = layer.renderedCompositingImage(globalLightAngle: document.globalLightAngle)
                 compositingImage.draw(
-                    in: layer.compositingFrame,
+                    in: layer.renderedCompositingFrame(globalLightAngle: document.globalLightAngle),
                     from: CGRect(origin: .zero, size: compositingImage.size),
                     operation: .sourceOver,
                     fraction: 1
@@ -84,9 +489,432 @@ extension ImageEditorViewModel {
         }) else { return nil }
         return image.alphaSelection(threshold: 8)
     }
+
+    private func colorRangeSamples(from selection: ImageEditorSelection) -> [NSColor] {
+        guard let mask = selection.rasterizedMask(canvasSize: document.canvasSize) else { return [] }
+        let selectedPixelCount = mask.alpha.reduce(0) { count, value in
+            value > 0 ? count + 1 : count
+        }
+        guard selectedPixelCount > 0 else { return [] }
+
+        let maxSamples = 48
+        let interval = max(1, selectedPixelCount / maxSamples)
+        var selectedIndex = 0
+        var colors: [NSColor] = []
+
+        for y in 0..<mask.height {
+            for x in 0..<mask.width {
+                guard mask.alpha[y * mask.width + x] > 0 else { continue }
+                defer { selectedIndex += 1 }
+                guard selectedIndex % interval == 0 else { continue }
+                let point = CGPoint(
+                    x: (CGFloat(x) + 0.5) / CGFloat(mask.width) * document.canvasSize.width,
+                    y: (CGFloat(y) + 0.5) / CGFloat(mask.height) * document.canvasSize.height
+                )
+                guard let color = currentImage.color(at: point)?.usingColorSpace(.deviceRGB) else { continue }
+                colors.appendUniqueColorRangeSample(color)
+                if colors.count >= maxSamples {
+                    return colors
+                }
+            }
+        }
+
+        return colors
+    }
+}
+
+private extension Array where Element == NSColor {
+    mutating func appendUniqueColorRangeSample(_ color: NSColor) {
+        guard !containsColorRangeMatch(
+            red: color.redComponent,
+            green: color.greenComponent,
+            blue: color.blueComponent,
+            tolerance: 0.01
+        ) else { return }
+        append(color)
+    }
+
+    func containsColorRangeMatch(
+        red: CGFloat,
+        green: CGFloat,
+        blue: CGFloat,
+        tolerance: CGFloat
+    ) -> Bool {
+        contains { target in
+            colorRangeDistance(red: red, green: green, blue: blue, target: target) <= tolerance
+        }
+    }
+
+    private func colorRangeDistance(
+        red: CGFloat,
+        green: CGFloat,
+        blue: CGFloat,
+        target: NSColor
+    ) -> CGFloat {
+        let redDelta = red - target.redComponent
+        let greenDelta = green - target.greenComponent
+        let blueDelta = blue - target.blueComponent
+        return sqrt(redDelta * redDelta + greenDelta * greenDelta + blueDelta * blueDelta)
+    }
 }
 
 extension NSImage {
+    func colorRangeSelection(
+        targetColor: NSColor,
+        tolerance: CGFloat,
+        canvasSize: CGSize,
+        inverted: Bool = false
+    ) -> ImageEditorSelection? {
+        colorRangeSelection(
+            targetColors: [targetColor],
+            excludedColors: [],
+            tolerance: tolerance,
+            canvasSize: canvasSize,
+            inverted: inverted
+        )
+    }
+
+    func colorRangeSelection(
+        targetColors: [NSColor],
+        excludedColors: [NSColor] = [],
+        tolerance: CGFloat,
+        canvasSize: CGSize,
+        inverted: Bool = false
+    ) -> ImageEditorSelection? {
+        let targets = targetColors.compactMap { $0.usingColorSpace(.deviceRGB) }
+        let exclusions = excludedColors.compactMap { $0.usingColorSpace(.deviceRGB) }
+        guard !targets.isEmpty,
+              let cgImage = cgImage(forProposedRect: nil, context: nil, hints: nil)
+        else { return nil }
+
+        let width = max(1, cgImage.width)
+        let height = max(1, cgImage.height)
+        let bytesPerPixel = 4
+        let bytesPerRow = width * bytesPerPixel
+        var pixels = [UInt8](repeating: 0, count: bytesPerRow * height)
+
+        guard let context = CGContext(
+            data: &pixels,
+            width: width,
+            height: height,
+            bitsPerComponent: 8,
+            bytesPerRow: bytesPerRow,
+            space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ) else { return nil }
+
+        context.interpolationQuality = .none
+        context.translateBy(x: 0, y: CGFloat(height))
+        context.scaleBy(x: 1, y: -1)
+        context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
+
+        let clampedTolerance = max(0, min(1, tolerance))
+        var alpha = [UInt8](repeating: 0, count: width * height)
+        var minX = width
+        var minY = height
+        var maxX = -1
+        var maxY = -1
+
+        for y in 0..<height {
+            for x in 0..<width {
+                let pixelOffset = y * bytesPerRow + x * bytesPerPixel
+                let pixelAlpha = pixels[pixelOffset + 3]
+                guard pixelAlpha > 8 else { continue }
+
+                let red = CGFloat(pixels[pixelOffset]) / 255
+                let green = CGFloat(pixels[pixelOffset + 1]) / 255
+                let blue = CGFloat(pixels[pixelOffset + 2]) / 255
+                let isIncluded = targets.containsColorRangeMatch(
+                    red: red,
+                    green: green,
+                    blue: blue,
+                    tolerance: clampedTolerance
+                )
+                let isExcluded = exclusions.containsColorRangeMatch(
+                    red: red,
+                    green: green,
+                    blue: blue,
+                    tolerance: clampedTolerance
+                )
+                let isColorMatch = isIncluded && !isExcluded
+                guard inverted ? !isColorMatch : isColorMatch else { continue }
+
+                alpha[y * width + x] = UInt8.max
+                minX = min(minX, x)
+                minY = min(minY, y)
+                maxX = max(maxX, x)
+                maxY = max(maxY, y)
+            }
+        }
+
+        guard maxX >= minX, maxY >= minY else { return nil }
+        let bounds = CGRect(
+            x: CGFloat(minX) / CGFloat(width) * canvasSize.width,
+            y: CGFloat(minY) / CGFloat(height) * canvasSize.height,
+            width: CGFloat(maxX - minX + 1) / CGFloat(width) * canvasSize.width,
+            height: CGFloat(maxY - minY + 1) / CGFloat(height) * canvasSize.height
+        )
+        return .raster(
+            mask: ImageEditorSelectionMask(width: width, height: height, alpha: alpha),
+            bounds: bounds
+        )
+    }
+
+    func colorRangePreviewImage(
+        targetColor: NSColor,
+        tolerance: CGFloat,
+        inverted: Bool
+    ) -> NSImage {
+        colorRangePreviewImage(
+            targetColors: [targetColor],
+            excludedColors: [],
+            tolerance: tolerance,
+            inverted: inverted
+        )
+    }
+
+    func colorRangePreviewImage(
+        targetColors: [NSColor],
+        excludedColors: [NSColor],
+        tolerance: CGFloat,
+        inverted: Bool
+    ) -> NSImage {
+        guard let selection = colorRangeSelection(
+            targetColors: targetColors,
+            excludedColors: excludedColors,
+            tolerance: tolerance,
+            canvasSize: size,
+            inverted: inverted
+        ),
+              let mask = selection.rasterMask
+        else {
+            return NSImage.binaryMaskPreviewImage(
+                width: max(1, Int(size.width.rounded())),
+                height: max(1, Int(size.height.rounded())),
+                alpha: []
+            ) ?? NSImage(size: size)
+        }
+
+        return NSImage.binaryMaskPreviewImage(
+            width: mask.width,
+            height: mask.height,
+            alpha: mask.alpha
+        ) ?? NSImage(size: size)
+    }
+
+    func grownColorSelection(
+        from selection: ImageEditorSelection,
+        tolerance: CGFloat,
+        canvasSize: CGSize
+    ) -> ImageEditorSelection? {
+        guard let cgImage = cgImage(forProposedRect: nil, context: nil, hints: nil) else { return nil }
+        let width = max(1, cgImage.width)
+        let height = max(1, cgImage.height)
+        guard let canvasMask = selection.rasterizedMask(canvasSize: canvasSize),
+              let maskImage = NSImage.selectionMaskImage(
+                canvasMask,
+                inverted: false,
+                targetSize: CGSize(width: width, height: height)
+              ),
+              let sourceMask = maskImage.selectionAlphaPlaneMask(width: width, height: height),
+              sourceMask.width == width,
+              sourceMask.height == height,
+              sourceMask.alpha.count == width * height
+        else { return nil }
+
+        let bytesPerPixel = 4
+        let bytesPerRow = width * bytesPerPixel
+        var pixels = [UInt8](repeating: 0, count: bytesPerRow * height)
+        guard let context = CGContext(
+            data: &pixels,
+            width: width,
+            height: height,
+            bitsPerComponent: 8,
+            bytesPerRow: bytesPerRow,
+            space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ) else { return nil }
+
+        context.interpolationQuality = .none
+        context.translateBy(x: 0, y: CGFloat(height))
+        context.scaleBy(x: 1, y: -1)
+        context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
+
+        let clampedTolerance = max(0, min(1, tolerance))
+        let targets = colorRangeSamples(from: sourceMask, pixels: pixels, bytesPerRow: bytesPerRow)
+        guard !targets.isEmpty else { return nil }
+
+        var output = sourceMask.alpha.map { $0 > 0 ? UInt8.max : 0 }
+        var queue: [Int] = output.indices.filter { output[$0] > 0 }
+        var readIndex = 0
+
+        while readIndex < queue.count {
+            let index = queue[readIndex]
+            readIndex += 1
+            let x = index % width
+            let y = index / width
+
+            for neighbor in neighboringPixelIndexes(x: x, y: y, width: width, height: height) {
+                guard output[neighbor] == 0 else { continue }
+                guard pixelMatchesColorRange(
+                    index: neighbor,
+                    pixels: pixels,
+                    bytesPerRow: bytesPerRow,
+                    width: width,
+                    targets: targets,
+                    tolerance: clampedTolerance
+                ) else { continue }
+                output[neighbor] = UInt8.max
+                queue.append(neighbor)
+            }
+        }
+
+        guard let outputMask = ImageEditorSelectionMask(width: width, height: height, alpha: output)
+            .combined(with: sourceMask, mode: .add),
+              let bounds = outputMask.selectedBounds(in: canvasSize)
+        else { return nil }
+
+        return .raster(mask: outputMask, bounds: bounds)
+    }
+
+    static func binaryMaskPreviewImage(width: Int, height: Int, alpha: [UInt8]) -> NSImage? {
+        let width = max(1, width)
+        let height = max(1, height)
+        let bytesPerPixel = 4
+        let bytesPerRow = width * bytesPerPixel
+        var pixels = [UInt8](repeating: 0, count: bytesPerRow * height)
+
+        for y in 0..<height {
+            for x in 0..<width {
+                let alphaIndex = y * width + x
+                let isSelected = alpha.indices.contains(alphaIndex) && alpha[alphaIndex] > 0
+                let value: UInt8 = isSelected ? UInt8.max : 0
+                let pixelOffset = y * bytesPerRow + x * bytesPerPixel
+                pixels[pixelOffset] = value
+                pixels[pixelOffset + 1] = value
+                pixels[pixelOffset + 2] = value
+                pixels[pixelOffset + 3] = UInt8.max
+            }
+        }
+
+        guard let provider = CGDataProvider(data: Data(pixels) as CFData),
+              let cgImage = CGImage(
+                width: width,
+                height: height,
+                bitsPerComponent: 8,
+                bitsPerPixel: 32,
+                bytesPerRow: bytesPerRow,
+                space: CGColorSpaceCreateDeviceRGB(),
+                bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue),
+                provider: provider,
+                decode: nil,
+                shouldInterpolate: false,
+                intent: .defaultIntent
+              )
+        else { return nil }
+
+        let image = NSImage(size: CGSize(width: width, height: height))
+        image.addRepresentation(NSBitmapImageRep(cgImage: cgImage))
+        return image
+    }
+
+    private func colorRangeSamples(
+        from mask: ImageEditorSelectionMask,
+        pixels: [UInt8],
+        bytesPerRow: Int
+    ) -> [NSColor] {
+        let maxSamples = 48
+        let selectedPixelCount = mask.alpha.reduce(0) { count, value in
+            value > 0 ? count + 1 : count
+        }
+        guard selectedPixelCount > 0 else { return [] }
+
+        let interval = max(1, selectedPixelCount / maxSamples)
+        var selectedIndex = 0
+        var colors: [NSColor] = []
+        for y in 0..<mask.height {
+            for x in 0..<mask.width {
+                guard mask.alpha[y * mask.width + x] > 0 else { continue }
+                defer { selectedIndex += 1 }
+                guard selectedIndex % interval == 0 else { continue }
+                let pixelOffset = y * bytesPerRow + x * 4
+                guard pixels[pixelOffset + 3] > 8 else { continue }
+                colors.appendUniqueColorRangeSample(
+                    NSColor(
+                        calibratedRed: CGFloat(pixels[pixelOffset]) / 255,
+                        green: CGFloat(pixels[pixelOffset + 1]) / 255,
+                        blue: CGFloat(pixels[pixelOffset + 2]) / 255,
+                        alpha: 1
+                    )
+                )
+                if colors.count >= maxSamples {
+                    return colors
+                }
+            }
+        }
+        return colors
+    }
+
+    private func neighboringPixelIndexes(x: Int, y: Int, width: Int, height: Int) -> [Int] {
+        var indexes: [Int] = []
+        if x > 0 { indexes.append(y * width + x - 1) }
+        if x + 1 < width { indexes.append(y * width + x + 1) }
+        if y > 0 { indexes.append((y - 1) * width + x) }
+        if y + 1 < height { indexes.append((y + 1) * width + x) }
+        return indexes
+    }
+
+    private func pixelMatchesColorRange(
+        index: Int,
+        pixels: [UInt8],
+        bytesPerRow: Int,
+        width: Int,
+        targets: [NSColor],
+        tolerance: CGFloat
+    ) -> Bool {
+        let x = index % width
+        let y = index / width
+        let pixelOffset = y * bytesPerRow + x * 4
+        guard pixels[pixelOffset + 3] > 8 else { return false }
+        return targets.containsColorRangeMatch(
+            red: CGFloat(pixels[pixelOffset]) / 255,
+            green: CGFloat(pixels[pixelOffset + 1]) / 255,
+            blue: CGFloat(pixels[pixelOffset + 2]) / 255,
+            tolerance: tolerance
+        )
+    }
+
+    private func selectionAlphaPlaneMask(width: Int, height: Int) -> ImageEditorSelectionMask? {
+        guard let cgImage = cgImage(forProposedRect: nil, context: nil, hints: nil) else { return nil }
+        let bytesPerPixel = 4
+        let bytesPerRow = width * bytesPerPixel
+        var pixels = [UInt8](repeating: 0, count: bytesPerRow * height)
+
+        guard let context = CGContext(
+            data: &pixels,
+            width: width,
+            height: height,
+            bitsPerComponent: 8,
+            bytesPerRow: bytesPerRow,
+            space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ) else { return nil }
+
+        context.interpolationQuality = .none
+        context.translateBy(x: 0, y: CGFloat(height))
+        context.scaleBy(x: 1, y: -1)
+        context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
+
+        var alpha = [UInt8](repeating: 0, count: width * height)
+        for y in 0..<height {
+            for x in 0..<width {
+                let offset = y * bytesPerRow + x * bytesPerPixel
+                alpha[y * width + x] = pixels[offset + 3]
+            }
+        }
+        return ImageEditorSelectionMask(width: width, height: height, alpha: alpha)
+    }
+
     func alphaSelection(threshold: UInt8) -> ImageEditorSelection? {
         guard let cgImage = cgImage(forProposedRect: nil, context: nil, hints: nil) else { return nil }
         let width = max(1, cgImage.width)

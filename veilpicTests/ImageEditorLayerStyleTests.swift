@@ -1,0 +1,687 @@
+//
+//  ImageEditorLayerStyleTests.swift
+//  veilpicTests
+//
+//  Created by Codex on 2026/7/9.
+//
+
+import AppKit
+import Testing
+@testable import musepic
+
+@MainActor
+@Suite(.serialized)
+struct ImageEditorLayerStyleTests {
+    @Test func imageEditorCopiesPastesAndClearsLayerStyleAcrossEditableSelection() async throws {
+        let canvasSize = NSSize(width: 32, height: 24)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: solidImage(color: .black, size: canvasSize)
+        ) { _ in }
+
+        viewModel.addLayer()
+        let sourceID = try #require(viewModel.document.selectedLayerID)
+        viewModel.foregroundColor = .systemYellow
+        viewModel.toggleSelectedLayerStroke()
+        viewModel.setSelectedLayerStrokeWidth(11)
+        viewModel.setSelectedLayerStrokePosition(.inside)
+        viewModel.setSelectedLayerStrokeOpacity(0.4)
+        viewModel.toggleSelectedLayerShadow()
+        viewModel.setSelectedLayerShadowDistance(17)
+        viewModel.setSelectedLayerShadowAngle(30)
+        let sourceIndex = try #require(viewModel.document.layers.firstIndex { $0.id == sourceID })
+        let sourceStyle = viewModel.document.layers[sourceIndex].style
+
+        #expect(viewModel.canCopySelectedLayerStyle)
+        viewModel.copySelectedLayerStyle()
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.layerStyleCopied"))
+
+        viewModel.addLayer()
+        let editableTargetID = try #require(viewModel.document.selectedLayerID)
+        viewModel.addLayer()
+        let lockedTargetID = try #require(viewModel.document.selectedLayerID)
+        let lockedTargetIndex = try #require(viewModel.document.layers.firstIndex { $0.id == lockedTargetID })
+        viewModel.document.layers[lockedTargetIndex].isLocked = true
+
+        viewModel.document.selectedLayerID = editableTargetID
+        viewModel.document.selectedLayerIDs = [editableTargetID, lockedTargetID]
+
+        #expect(viewModel.canPasteLayerStyleToSelectedLayers)
+        viewModel.pasteLayerStyleToSelectedLayers()
+
+        let editableIndex = try #require(viewModel.document.layers.firstIndex { $0.id == editableTargetID })
+        let lockedIndexAfterPaste = try #require(viewModel.document.layers.firstIndex { $0.id == lockedTargetID })
+        let pastedStyle = viewModel.document.layers[editableIndex].style
+        let lockedStyle = viewModel.document.layers[lockedIndexAfterPaste].style
+
+        #expect(pastedStyle.strokeEnabled)
+        #expect(pastedStyle.strokeWidth == sourceStyle.strokeWidth)
+        #expect(pastedStyle.strokePosition == sourceStyle.strokePosition)
+        #expect(pastedStyle.strokeOpacity == sourceStyle.strokeOpacity)
+        #expect(pastedStyle.shadowEnabled)
+        #expect(pastedStyle.shadowDistance == sourceStyle.shadowDistance)
+        #expect(pastedStyle.shadowAngle == sourceStyle.shadowAngle)
+        #expect(!lockedStyle.hasEffects)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStylePaste"))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerStylePasted", 1))
+
+        #expect(viewModel.canClearSelectedLayerStyles)
+        viewModel.clearSelectedLayerStyles()
+
+        let clearedEditableIndex = try #require(viewModel.document.layers.firstIndex { $0.id == editableTargetID })
+        let lockedIndexAfterClear = try #require(viewModel.document.layers.firstIndex { $0.id == lockedTargetID })
+        #expect(!viewModel.document.layers[clearedEditableIndex].style.hasEffects)
+        #expect(!viewModel.document.layers[lockedIndexAfterClear].style.hasEffects)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStyleClear"))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerStyleCleared", 1))
+    }
+
+    @Test func imageEditorBlendIfUnderlyingHidesLayerOverBackdropLuminanceOutsideRange() async throws {
+        let canvasSize = NSSize(width: 16, height: 8)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: horizontalGrayscaleImage(size: canvasSize)
+        ) { _ in }
+
+        viewModel.addLayer()
+        viewModel.replaceSelectedLayerImageForTesting(
+            solidImage(color: .systemRed, size: canvasSize),
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+        viewModel.setSelectedLayerBlendIfUnderlyingBlack(0.5)
+        viewModel.commitSelectedLayerBlendIfChange()
+
+        let darkBackdrop = try #require(viewModel.currentImage.color(at: CGPoint(x: 2, y: 4))?.usingColorSpace(.deviceRGB))
+        let brightBackdrop = try #require(viewModel.currentImage.color(at: CGPoint(x: 14, y: 4))?.usingColorSpace(.deviceRGB))
+        let layer = try #require(viewModel.document.selectedLayer)
+
+        #expect(darkBackdrop.redComponent < 0.25)
+        #expect(darkBackdrop.greenComponent < 0.25)
+        #expect(darkBackdrop.blueComponent < 0.25)
+        #expect(brightBackdrop.redComponent > 0.75)
+        #expect(brightBackdrop.greenComponent < 0.25)
+        #expect(brightBackdrop.blueComponent < 0.25)
+        #expect(layer.blendIfUnderlyingBlack == 0.5)
+        #expect(layer.blendIfUnderlyingWhite == 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerBlendIf"))
+    }
+
+    @Test func imageEditorBlendIfHidesSourceLuminanceOutsideSelectedRange() async throws {
+        let canvasSize = NSSize(width: 16, height: 8)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: solidImage(color: .systemBlue, size: canvasSize)
+        ) { _ in }
+
+        viewModel.addLayer()
+        viewModel.replaceSelectedLayerImageForTesting(
+            horizontalRedGradientImage(size: canvasSize),
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+        viewModel.setSelectedLayerBlendIfSourceBlack(0.5)
+        viewModel.commitSelectedLayerBlendIfChange()
+
+        let darkSide = try #require(viewModel.currentImage.color(at: CGPoint(x: 2, y: 4))?.usingColorSpace(.deviceRGB))
+        let brightSide = try #require(viewModel.currentImage.color(at: CGPoint(x: 14, y: 4))?.usingColorSpace(.deviceRGB))
+        let layer = try #require(viewModel.document.selectedLayer)
+
+        #expect(darkSide.blueComponent > 0.75)
+        #expect(darkSide.redComponent < 0.25)
+        #expect(brightSide.redComponent > 0.75)
+        #expect(brightSide.blueComponent < 0.25)
+        #expect(layer.blendIfSourceBlack == 0.5)
+        #expect(layer.blendIfSourceWhite == 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerBlendIf"))
+    }
+
+    @Test func imageEditorDissolveBlendModeDithersLayerOpacityDeterministically() async throws {
+        let canvasSize = NSSize(width: 16, height: 16)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: solidImage(color: .systemBlue, size: canvasSize)
+        ) { _ in }
+
+        viewModel.addLayer()
+        viewModel.replaceSelectedLayerImageForTesting(
+            solidImage(color: .systemRed, size: canvasSize),
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+        viewModel.setSelectedLayerBlendMode(.dissolve)
+        viewModel.setSelectedLayerOpacity(0.5)
+
+        let firstComposite = viewModel.currentImage
+        let secondComposite = viewModel.currentImage
+        var redPixels = 0
+        var bluePixels = 0
+        var blendedPixels = 0
+
+        for y in 0..<Int(canvasSize.height) {
+            for x in 0..<Int(canvasSize.width) {
+                let point = CGPoint(x: x, y: y)
+                let firstColor = try #require(firstComposite.color(at: point)?.usingColorSpace(.deviceRGB))
+                let secondColor = try #require(secondComposite.color(at: point)?.usingColorSpace(.deviceRGB))
+                #expect(abs(firstColor.redComponent - secondColor.redComponent) < 0.01)
+                #expect(abs(firstColor.greenComponent - secondColor.greenComponent) < 0.01)
+                #expect(abs(firstColor.blueComponent - secondColor.blueComponent) < 0.01)
+
+                if firstColor.redComponent > 0.8 && firstColor.blueComponent < 0.25 {
+                    redPixels += 1
+                } else if firstColor.blueComponent > 0.8 && firstColor.redComponent < 0.25 {
+                    bluePixels += 1
+                } else {
+                    blendedPixels += 1
+                }
+            }
+        }
+
+        #expect(redPixels > 80)
+        #expect(bluePixels > 80)
+        #expect(blendedPixels == 0)
+        #expect(viewModel.selectedLayerBlendMode == .dissolve)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerBlendMode"))
+    }
+
+    @Test func imageEditorColorOverlayIsNonDestructiveAndBakesOnMerge() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let baseImage = solidImage(color: .systemBlue, size: canvasSize)
+        let layerImage = centerRectImage(size: canvasSize, color: .systemGreen)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: baseImage) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(layerImage, historyTitle: L10n.text("imageEditor.history.brush"))
+
+        let layerPixelsBeforeStyle = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+        viewModel.foregroundColor = .systemRed
+        viewModel.setSelectedLayerColorOverlayOpacity(1)
+
+        let layerPixelsAfterStyle = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+        let compositedOverlay = try #require(viewModel.currentImage.color(at: CGPoint(x: 40, y: 30))?.usingColorSpace(.deviceRGB))
+        #expect(layerPixelsAfterStyle == layerPixelsBeforeStyle)
+        #expect(viewModel.selectedLayerHasColorOverlay)
+        #expect(compositedOverlay.redComponent > 0.75)
+        #expect(compositedOverlay.greenComponent < 0.25)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStyle"))
+
+        viewModel.mergeSelectedLayerDown()
+
+        let mergedLayer = try #require(viewModel.document.selectedLayer)
+        let bakedOverlay = try #require(mergedLayer.image.color(at: CGPoint(x: 40, y: 30))?.usingColorSpace(.deviceRGB))
+        #expect(!mergedLayer.hasLayerEffects)
+        #expect(bakedOverlay.redComponent > 0.75)
+        #expect(bakedOverlay.greenComponent < 0.25)
+    }
+
+    @Test func imageEditorColorOverlayRemainsVisibleWhenFillOpacityIsZero() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let baseImage = solidImage(color: .systemBlue, size: canvasSize)
+        let layerImage = centerRectImage(size: canvasSize, color: .systemGreen)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: baseImage) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(layerImage, historyTitle: L10n.text("imageEditor.history.brush"))
+
+        viewModel.foregroundColor = .systemRed
+        viewModel.setSelectedLayerColorOverlayOpacity(1)
+        viewModel.setSelectedLayerFillOpacity(0)
+
+        let center = try #require(viewModel.currentImage.color(at: CGPoint(x: 40, y: 30))?.usingColorSpace(.deviceRGB))
+        #expect(center.redComponent > 0.75)
+        #expect(center.blueComponent < 0.35)
+    }
+
+    @Test func imageEditorDropShadowRemainsVisibleWhenFillOpacityIsZero() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let baseImage = solidImage(color: .systemBlue, size: canvasSize)
+        let layerImage = centerRectImage(size: canvasSize, color: .systemGreen)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: baseImage) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(layerImage, historyTitle: L10n.text("imageEditor.history.brush"))
+        let layerPixelsBeforeStyle = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+
+        viewModel.setSelectedLayerShadowOpacity(1)
+        viewModel.setSelectedLayerShadowBlur(0)
+        viewModel.setSelectedLayerShadowSpread(0)
+        viewModel.setSelectedLayerShadowDistance(12)
+        viewModel.setSelectedLayerShadowAngle(0)
+        viewModel.setSelectedLayerFillOpacity(0)
+
+        let styledLayer = try #require(viewModel.document.selectedLayer)
+        let layerPixelsAfterStyle = try #require(styledLayer.image.qingtuPNGData())
+        let hiddenFill = try #require(viewModel.currentImage.color(at: CGPoint(x: 26, y: 30))?.usingColorSpace(.deviceRGB))
+        let visibleShadow = try #require(viewModel.currentImage.color(at: CGPoint(x: 64, y: 30))?.usingColorSpace(.deviceRGB))
+
+        #expect(styledLayer.style.shadowEnabled)
+        #expect(styledLayer.fillOpacity == 0)
+        #expect(layerPixelsAfterStyle == layerPixelsBeforeStyle)
+        #expect(hiddenFill.blueComponent > 0.75)
+        #expect(hiddenFill.greenComponent < 0.25)
+        #expect(visibleShadow.blueComponent < 0.35)
+        #expect(visibleShadow.redComponent < 0.25)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerFillOpacity"))
+    }
+
+    @Test func imageEditorDropShadowSpreadExpandsShadowBeforeBlur() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let baseImage = solidImage(color: .systemBlue, size: canvasSize)
+        let layerImage = centerRectImage(size: canvasSize, color: .systemGreen)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: baseImage) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(layerImage, historyTitle: L10n.text("imageEditor.history.brush"))
+        let layerPixelsBeforeStyle = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+        let outsideBeforeSpread = try #require(viewModel.currentImage.color(at: CGPoint(x: 21, y: 30))?.usingColorSpace(.deviceRGB))
+
+        viewModel.setSelectedLayerShadowOpacity(1)
+        viewModel.setSelectedLayerShadowBlur(0)
+        viewModel.setSelectedLayerShadowOffsetX(0)
+        viewModel.setSelectedLayerShadowOffsetY(0)
+        viewModel.setSelectedLayerShadowSpread(6)
+
+        let styledLayer = try #require(viewModel.document.selectedLayer)
+        let layerPixelsAfterStyle = try #require(styledLayer.image.qingtuPNGData())
+        let outsideAfterSpread = try #require(viewModel.currentImage.color(at: CGPoint(x: 21, y: 30))?.usingColorSpace(.deviceRGB))
+        #expect(styledLayer.style.shadowEnabled)
+        #expect(styledLayer.style.shadowSpread == 6)
+        #expect(layerPixelsAfterStyle == layerPixelsBeforeStyle)
+        #expect(outsideBeforeSpread.blueComponent > 0.75)
+        #expect(outsideAfterSpread.blueComponent < 0.35)
+        #expect(outsideAfterSpread.redComponent < 0.25)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStyle"))
+    }
+
+    @Test func imageEditorDropShadowAngleAndDistanceMoveShadowDirectionally() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let baseImage = solidImage(color: .systemBlue, size: canvasSize)
+        let layerImage = centerRectImage(size: canvasSize, color: .systemGreen)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: baseImage) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(layerImage, historyTitle: L10n.text("imageEditor.history.brush"))
+        let layerPixelsBeforeStyle = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+
+        viewModel.setSelectedLayerShadowOpacity(1)
+        viewModel.setSelectedLayerShadowBlur(0)
+        viewModel.setSelectedLayerShadowSpread(0)
+        viewModel.setSelectedLayerShadowDistance(12)
+        viewModel.setSelectedLayerShadowAngle(0)
+
+        let styledLayer = try #require(viewModel.document.selectedLayer)
+        let layerPixelsAfterStyle = try #require(styledLayer.image.qingtuPNGData())
+        let rightShadow = try #require(viewModel.currentImage.color(at: CGPoint(x: 64, y: 30))?.usingColorSpace(.deviceRGB))
+        let leftOutside = try #require(viewModel.currentImage.color(at: CGPoint(x: 20, y: 30))?.usingColorSpace(.deviceRGB))
+        #expect(styledLayer.style.shadowEnabled)
+        #expect(styledLayer.style.shadowDistance == 12)
+        #expect(styledLayer.style.shadowAngle == 0)
+        #expect(abs(styledLayer.style.shadowOffset.width - 12) < 0.001)
+        #expect(abs(styledLayer.style.shadowOffset.height) < 0.001)
+        #expect(layerPixelsAfterStyle == layerPixelsBeforeStyle)
+        #expect(rightShadow.blueComponent < 0.35)
+        #expect(rightShadow.redComponent < 0.25)
+        #expect(leftOutside.blueComponent > 0.75)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStyle"))
+    }
+
+    @Test func imageEditorGlobalLightDrivesLinkedShadowAngles() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: solidImage(color: .systemBlue, size: canvasSize)
+        ) { _ in }
+
+        viewModel.addLayer()
+        let firstID = try #require(viewModel.document.selectedLayerID)
+        viewModel.setSelectedLayerShadowDistance(12)
+        viewModel.setSelectedLayerShadowAngle(30)
+
+        viewModel.addLayer()
+        let secondID = try #require(viewModel.document.selectedLayerID)
+        let secondIndex = try #require(viewModel.document.layers.firstIndex { $0.id == secondID })
+        viewModel.document.layers[secondIndex].style.shadowEnabled = true
+        viewModel.document.layers[secondIndex].style.shadowUsesGlobalLight = true
+        viewModel.document.layers[secondIndex].style.shadowDistance = 8
+        viewModel.document.layers[secondIndex].style.shadowAngle = -45
+
+        #expect(viewModel.document.globalLightAngle == 30)
+        #expect(viewModel.document.layers[secondIndex].style.resolvedShadowAngle(globalLightAngle: viewModel.document.globalLightAngle) == 30)
+
+        viewModel.document.selectedLayerID = firstID
+        viewModel.document.selectedLayerIDs = [firstID]
+        viewModel.setSelectedLayerShadowAngle(-60)
+        let firstIndex = try #require(viewModel.document.layers.firstIndex { $0.id == firstID })
+
+        #expect(viewModel.document.globalLightAngle == -60)
+        #expect(viewModel.document.layers[firstIndex].style.resolvedShadowAngle(globalLightAngle: viewModel.document.globalLightAngle) == -60)
+        #expect(viewModel.document.layers[secondIndex].style.resolvedShadowAngle(globalLightAngle: viewModel.document.globalLightAngle) == -60)
+
+        viewModel.setSelectedLayerShadowUsesGlobalLight(false)
+        viewModel.setSelectedLayerShadowAngle(15)
+
+        #expect(viewModel.document.globalLightAngle == -60)
+        #expect(!viewModel.document.layers[firstIndex].style.shadowUsesGlobalLight)
+        #expect(viewModel.document.layers[firstIndex].style.resolvedShadowAngle(globalLightAngle: viewModel.document.globalLightAngle) == 15)
+        #expect(viewModel.document.layers[secondIndex].style.resolvedShadowAngle(globalLightAngle: viewModel.document.globalLightAngle) == -60)
+    }
+
+    @Test func imageEditorGlobalLightDrivesLinkedBevelAngles() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: solidImage(color: .systemBlue, size: canvasSize)
+        ) { _ in }
+
+        viewModel.addLayer()
+        let firstID = try #require(viewModel.document.selectedLayerID)
+        viewModel.setSelectedLayerBevelSize(8)
+        viewModel.setSelectedLayerBevelAngle(45)
+
+        viewModel.addLayer()
+        let secondID = try #require(viewModel.document.selectedLayerID)
+        let secondIndex = try #require(viewModel.document.layers.firstIndex { $0.id == secondID })
+        viewModel.document.layers[secondIndex].style.bevelEnabled = true
+        viewModel.document.layers[secondIndex].style.bevelUsesGlobalLight = true
+        viewModel.document.layers[secondIndex].style.bevelAngle = -45
+
+        #expect(viewModel.document.globalLightAngle == 45)
+        #expect(viewModel.document.layers[secondIndex].style.resolvedBevelAngle(globalLightAngle: viewModel.document.globalLightAngle) == 45)
+
+        viewModel.document.selectedLayerID = firstID
+        viewModel.document.selectedLayerIDs = [firstID]
+        viewModel.setSelectedLayerBevelAngle(-75)
+        let firstIndex = try #require(viewModel.document.layers.firstIndex { $0.id == firstID })
+
+        #expect(viewModel.document.globalLightAngle == -75)
+        #expect(viewModel.document.layers[firstIndex].style.resolvedBevelAngle(globalLightAngle: viewModel.document.globalLightAngle) == -75)
+        #expect(viewModel.document.layers[secondIndex].style.resolvedBevelAngle(globalLightAngle: viewModel.document.globalLightAngle) == -75)
+
+        viewModel.setSelectedLayerBevelUsesGlobalLight(false)
+        viewModel.setSelectedLayerBevelAngle(20)
+
+        #expect(viewModel.document.globalLightAngle == -75)
+        #expect(!viewModel.document.layers[firstIndex].style.bevelUsesGlobalLight)
+        #expect(viewModel.document.layers[firstIndex].style.resolvedBevelAngle(globalLightAngle: viewModel.document.globalLightAngle) == 20)
+        #expect(viewModel.document.layers[secondIndex].style.resolvedBevelAngle(globalLightAngle: viewModel.document.globalLightAngle) == -75)
+    }
+
+    @Test func imageEditorDropShadowColorUsesForegroundColor() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let baseImage = solidImage(color: .systemBlue, size: canvasSize)
+        let layerImage = centerRectImage(size: canvasSize, color: .systemGreen)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: baseImage) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(layerImage, historyTitle: L10n.text("imageEditor.history.brush"))
+        let layerPixelsBeforeStyle = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+
+        viewModel.foregroundColor = .systemRed
+        viewModel.setSelectedLayerShadowColorFromForeground()
+        viewModel.setSelectedLayerShadowOpacity(1)
+        viewModel.setSelectedLayerShadowBlur(0)
+        viewModel.setSelectedLayerShadowSpread(0)
+        viewModel.setSelectedLayerShadowDistance(12)
+        viewModel.setSelectedLayerShadowAngle(0)
+
+        let styledLayer = try #require(viewModel.document.selectedLayer)
+        let layerPixelsAfterStyle = try #require(styledLayer.image.qingtuPNGData())
+        let shadowColor = try #require(styledLayer.style.shadowColor.usingColorSpace(.deviceRGB))
+        let rightShadow = try #require(viewModel.currentImage.color(at: CGPoint(x: 64, y: 30))?.usingColorSpace(.deviceRGB))
+        #expect(styledLayer.style.shadowEnabled)
+        #expect(shadowColor.redComponent > 0.75)
+        #expect(layerPixelsAfterStyle == layerPixelsBeforeStyle)
+        #expect(rightShadow.redComponent > 0.75)
+        #expect(rightShadow.greenComponent < 0.35)
+        #expect(rightShadow.blueComponent < 0.35)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStyle"))
+    }
+
+    @Test func imageEditorInsideStrokeStaysInsideLayerAlpha() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let baseImage = solidImage(color: .systemBlue, size: canvasSize)
+        let layerImage = centerRectImage(size: canvasSize, color: .systemGreen)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: baseImage) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(layerImage, historyTitle: L10n.text("imageEditor.history.brush"))
+        let layerPixelsBeforeStyle = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+
+        viewModel.setSelectedLayerStrokeWidth(6)
+        viewModel.setSelectedLayerStrokePosition(.inside)
+        viewModel.setSelectedLayerFillOpacity(0)
+
+        let styledLayer = try #require(viewModel.document.selectedLayer)
+        let layerPixelsAfterStyle = try #require(styledLayer.image.qingtuPNGData())
+        let outside = try #require(viewModel.currentImage.color(at: CGPoint(x: 21, y: 30))?.usingColorSpace(.deviceRGB))
+        let edge = try #require(viewModel.currentImage.color(at: CGPoint(x: 25, y: 30))?.usingColorSpace(.deviceRGB))
+        let center = try #require(viewModel.currentImage.color(at: CGPoint(x: 40, y: 30))?.usingColorSpace(.deviceRGB))
+
+        #expect(styledLayer.style.strokeEnabled)
+        #expect(styledLayer.style.strokePosition == .inside)
+        #expect(layerPixelsAfterStyle == layerPixelsBeforeStyle)
+        #expect(outside.blueComponent > 0.75)
+        #expect(outside.redComponent < 0.25)
+        #expect(edge.redComponent > 0.75)
+        #expect(edge.greenComponent > 0.75)
+        #expect(edge.blueComponent > 0.75)
+        #expect(center.blueComponent > 0.75)
+        #expect(center.greenComponent < 0.25)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerFillOpacity"))
+    }
+
+    @Test func imageEditorStrokeOpacityBlendsStrokeIndependentlyFromFill() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let baseImage = solidImage(color: .systemBlue, size: canvasSize)
+        let layerImage = centerRectImage(size: canvasSize, color: .systemGreen)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: baseImage) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(layerImage, historyTitle: L10n.text("imageEditor.history.brush"))
+        let layerPixelsBeforeStyle = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+
+        viewModel.setSelectedLayerStrokeWidth(6)
+        viewModel.setSelectedLayerStrokePosition(.inside)
+        viewModel.setSelectedLayerStrokeOpacity(0.5)
+        viewModel.setSelectedLayerFillOpacity(0)
+
+        let styledLayer = try #require(viewModel.document.selectedLayer)
+        let layerPixelsAfterStyle = try #require(styledLayer.image.qingtuPNGData())
+        let edge = try #require(viewModel.currentImage.color(at: CGPoint(x: 25, y: 30))?.usingColorSpace(.deviceRGB))
+        let center = try #require(viewModel.currentImage.color(at: CGPoint(x: 40, y: 30))?.usingColorSpace(.deviceRGB))
+
+        #expect(styledLayer.style.strokeEnabled)
+        #expect(styledLayer.style.strokeOpacity == 0.5)
+        #expect(layerPixelsAfterStyle == layerPixelsBeforeStyle)
+        #expect(edge.redComponent > 0.35)
+        #expect(edge.greenComponent > 0.35)
+        #expect(edge.blueComponent > 0.75)
+        #expect(edge.redComponent < 0.75)
+        #expect(edge.greenComponent < 0.75)
+        #expect(center.blueComponent > 0.75)
+        #expect(center.redComponent < 0.25)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerFillOpacity"))
+    }
+
+    @Test func imageEditorStrokeColorUsesForegroundColor() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let baseImage = solidImage(color: .systemBlue, size: canvasSize)
+        let layerImage = centerRectImage(size: canvasSize, color: .systemGreen)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: baseImage) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(layerImage, historyTitle: L10n.text("imageEditor.history.brush"))
+        let layerPixelsBeforeStyle = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+
+        viewModel.setSelectedLayerFillOpacity(0)
+        viewModel.setSelectedLayerStrokeWidth(6)
+        viewModel.setSelectedLayerStrokePosition(.inside)
+        viewModel.foregroundColor = .systemRed
+        viewModel.setSelectedLayerStrokeColorFromForeground()
+
+        let styledLayer = try #require(viewModel.document.selectedLayer)
+        let layerPixelsAfterStyle = try #require(styledLayer.image.qingtuPNGData())
+        let strokeColor = try #require(styledLayer.style.strokeColor.usingColorSpace(.deviceRGB))
+        let edge = try #require(viewModel.currentImage.color(at: CGPoint(x: 25, y: 30))?.usingColorSpace(.deviceRGB))
+        let center = try #require(viewModel.currentImage.color(at: CGPoint(x: 40, y: 30))?.usingColorSpace(.deviceRGB))
+
+        #expect(styledLayer.style.strokeEnabled)
+        #expect(strokeColor.redComponent > 0.75)
+        #expect(layerPixelsAfterStyle == layerPixelsBeforeStyle)
+        #expect(edge.redComponent > 0.75)
+        #expect(edge.greenComponent < 0.35)
+        #expect(edge.blueComponent < 0.35)
+        #expect(center.blueComponent > 0.75)
+        #expect(center.redComponent < 0.25)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStyle"))
+    }
+
+    @Test func imageEditorBevelIsNonDestructiveAndUpdatesStyleParameters() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let baseImage = solidImage(color: .systemBlue, size: canvasSize)
+        let layerImage = centerRectImage(size: canvasSize, color: .systemGreen)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: baseImage) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(layerImage, historyTitle: L10n.text("imageEditor.history.brush"))
+        let layerPixelsBeforeStyle = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+        let compositedBeforeStyle = try #require(viewModel.currentImage.qingtuPNGData())
+
+        viewModel.setSelectedLayerBevelSize(8)
+        viewModel.setSelectedLayerBevelOpacity(0.8)
+
+        let styledLayer = try #require(viewModel.document.selectedLayer)
+        let layerPixelsAfterStyle = try #require(styledLayer.image.qingtuPNGData())
+        let compositedAfterStyle = try #require(viewModel.currentImage.qingtuPNGData())
+        #expect(styledLayer.style.bevelEnabled)
+        #expect(styledLayer.style.bevelSize == 8)
+        #expect(styledLayer.style.bevelOpacity == 0.8)
+        #expect(layerPixelsAfterStyle == layerPixelsBeforeStyle)
+        #expect(compositedAfterStyle != compositedBeforeStyle)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStyle"))
+    }
+
+    @Test func imageEditorInnerShadowIsNonDestructiveAndUpdatesStyleParameters() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let baseImage = solidImage(color: .systemBlue, size: canvasSize)
+        let layerImage = centerRectImage(size: canvasSize, color: .systemGreen)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: baseImage) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(layerImage, historyTitle: L10n.text("imageEditor.history.brush"))
+        let layerPixelsBeforeStyle = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+        let compositedBeforeStyle = try #require(viewModel.currentImage.qingtuPNGData())
+
+        viewModel.foregroundColor = .black
+        viewModel.setSelectedLayerInnerShadowOpacity(0.75)
+        viewModel.setSelectedLayerInnerShadowBlur(9)
+        viewModel.setSelectedLayerInnerShadowDistance(11)
+        viewModel.setSelectedLayerInnerShadowAngle(-30)
+
+        let styledLayer = try #require(viewModel.document.selectedLayer)
+        let layerPixelsAfterStyle = try #require(styledLayer.image.qingtuPNGData())
+        let compositedAfterStyle = try #require(viewModel.currentImage.qingtuPNGData())
+        #expect(styledLayer.style.innerShadowEnabled)
+        #expect(styledLayer.style.innerShadowOpacity == 0.75)
+        #expect(styledLayer.style.innerShadowBlur == 9)
+        #expect(styledLayer.style.innerShadowDistance == 11)
+        #expect(styledLayer.style.innerShadowAngle == -30)
+        #expect(layerPixelsAfterStyle == layerPixelsBeforeStyle)
+        #expect(compositedAfterStyle != compositedBeforeStyle)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStyle"))
+    }
+
+    @Test func imageEditorGradientOverlayIsNonDestructiveAndUpdatesStyleParameters() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let baseImage = solidImage(color: .systemBlue, size: canvasSize)
+        let layerImage = centerRectImage(size: canvasSize, color: .systemGreen)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: baseImage) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(layerImage, historyTitle: L10n.text("imageEditor.history.brush"))
+        let layerPixelsBeforeStyle = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+        let compositedBeforeStyle = try #require(viewModel.currentImage.qingtuPNGData())
+
+        viewModel.foregroundColor = .systemRed
+        viewModel.backgroundColor = .systemYellow
+        viewModel.setSelectedLayerGradientOverlayOpacity(1)
+        viewModel.setSelectedLayerGradientOverlayAngle(45)
+
+        let styledLayer = try #require(viewModel.document.selectedLayer)
+        let layerPixelsAfterStyle = try #require(styledLayer.image.qingtuPNGData())
+        let compositedAfterStyle = try #require(viewModel.currentImage.qingtuPNGData())
+        #expect(styledLayer.style.gradientOverlayEnabled)
+        #expect(styledLayer.style.gradientOverlayOpacity == 1)
+        #expect(styledLayer.style.gradientOverlayAngle == 45)
+        #expect(layerPixelsAfterStyle == layerPixelsBeforeStyle)
+        #expect(compositedAfterStyle != compositedBeforeStyle)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStyle"))
+    }
+
+    @Test func imageEditorPatternOverlayIsNonDestructiveAndRemainsVisibleWithZeroFill() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let baseImage = solidImage(color: .systemBlue, size: canvasSize)
+        let layerImage = centerRectImage(size: canvasSize, color: .systemGreen)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: baseImage) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(layerImage, historyTitle: L10n.text("imageEditor.history.brush"))
+        let layerPixelsBeforeStyle = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+        let compositedBeforeStyle = try #require(viewModel.currentImage.qingtuPNGData())
+
+        viewModel.foregroundColor = .white
+        viewModel.setSelectedLayerPatternOverlayKind(.diagonalStripes)
+        viewModel.setSelectedLayerPatternOverlayOpacity(0.9)
+        viewModel.setSelectedLayerPatternOverlayScale(18)
+        viewModel.setSelectedLayerFillOpacity(0)
+
+        let styledLayer = try #require(viewModel.document.selectedLayer)
+        let layerPixelsAfterStyle = try #require(styledLayer.image.qingtuPNGData())
+        let compositedAfterStyle = try #require(viewModel.currentImage.qingtuPNGData())
+        #expect(styledLayer.style.patternOverlayEnabled)
+        #expect(styledLayer.style.patternOverlayKind == .diagonalStripes)
+        #expect(styledLayer.style.patternOverlayOpacity == 0.9)
+        #expect(styledLayer.style.patternOverlayScale == 18)
+        #expect(layerPixelsAfterStyle == layerPixelsBeforeStyle)
+        #expect(compositedAfterStyle != compositedBeforeStyle)
+    }
+
+    @Test func imageEditorSatinIsNonDestructiveAndUpdatesStyleParameters() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let baseImage = solidImage(color: .systemBlue, size: canvasSize)
+        let layerImage = centerRectImage(size: canvasSize, color: .systemGreen)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: baseImage) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(layerImage, historyTitle: L10n.text("imageEditor.history.brush"))
+        let layerPixelsBeforeStyle = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+        let compositedBeforeStyle = try #require(viewModel.currentImage.qingtuPNGData())
+
+        viewModel.foregroundColor = .black
+        viewModel.setSelectedLayerSatinOpacity(0.8)
+        viewModel.setSelectedLayerSatinDistance(12)
+        viewModel.setSelectedLayerSatinSize(5)
+        viewModel.setSelectedLayerSatinAngle(45)
+
+        let styledLayer = try #require(viewModel.document.selectedLayer)
+        let layerPixelsAfterStyle = try #require(styledLayer.image.qingtuPNGData())
+        let compositedAfterStyle = try #require(viewModel.currentImage.qingtuPNGData())
+        #expect(styledLayer.style.satinEnabled)
+        #expect(styledLayer.style.satinOpacity == 0.8)
+        #expect(styledLayer.style.satinDistance == 12)
+        #expect(styledLayer.style.satinSize == 5)
+        #expect(styledLayer.style.satinAngle == 45)
+        #expect(layerPixelsAfterStyle == layerPixelsBeforeStyle)
+        #expect(compositedAfterStyle != compositedBeforeStyle)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStyle"))
+    }
+
+    private func solidImage(color: NSColor, size: NSSize) -> NSImage {
+        NSImage.rendered(size: size) { rect in
+            color.setFill()
+            rect.fill()
+        } ?? NSImage.transparent(size: size)
+    }
+
+    private func centerRectImage(size: NSSize, color: NSColor) -> NSImage {
+        NSImage.rendered(size: size) { rect in
+            NSColor.clear.setFill()
+            rect.fill()
+            color.setFill()
+            CGRect(x: 24, y: 18, width: 32, height: 24).fill()
+        } ?? NSImage.transparent(size: size)
+    }
+
+    private func horizontalRedGradientImage(size: NSSize) -> NSImage {
+        NSImage.rendered(size: size) { rect in
+            NSColor.clear.setFill()
+            rect.fill()
+            for x in 0..<Int(size.width) {
+                let component = CGFloat(x) / max(1, size.width - 1)
+                NSColor(calibratedRed: component, green: 0, blue: 0, alpha: 1).setFill()
+                CGRect(x: CGFloat(x), y: 0, width: 1, height: size.height).fill()
+            }
+        } ?? NSImage.transparent(size: size)
+    }
+
+    private func horizontalGrayscaleImage(size: NSSize) -> NSImage {
+        NSImage.rendered(size: size) { rect in
+            NSColor.clear.setFill()
+            rect.fill()
+            for x in 0..<Int(size.width) {
+                let component = CGFloat(x) / max(1, size.width - 1)
+                NSColor(calibratedWhite: component, alpha: 1).setFill()
+                CGRect(x: CGFloat(x), y: 0, width: 1, height: size.height).fill()
+            }
+        } ?? NSImage.transparent(size: size)
+    }
+}
