@@ -54,6 +54,9 @@ extension NSImage {
         if kind == .vignette {
             return vignetted(intensity: clamped)
         }
+        if kind == .wave {
+            return waved(intensity: clamped, settings: settings)
+        }
         if kind == .liquifyPush {
             return liquifyPushed(intensity: clamped, settings: settings)
         }
@@ -110,6 +113,8 @@ extension NSImage {
             return oilPainted(intensity: clamped)
         case .vignette:
             return vignetted(intensity: clamped)
+        case .wave:
+            return waved(intensity: clamped, settings: settings)
         case .liquifyPush:
             return liquifyPushed(intensity: clamped, settings: settings)
         case .liquifyTwirl:
@@ -544,6 +549,27 @@ extension NSImage {
             return Self.samplePixel(
                 x: sourceX,
                 y: sourceY,
+                width: width,
+                height: height,
+                pixels: pixels,
+                bytesPerRow: bytesPerRow,
+                bytesPerPixel: bytesPerPixel
+            )
+        }
+    }
+
+    private func waved(intensity: Double, settings: ImageEditorFilterSettings) -> NSImage? {
+        let clampedIntensity = max(0, min(1, intensity))
+        guard clampedIntensity > 0 else { return self }
+        let normalizedSettings = settings.normalized()
+        return pixelSampledFromBuffer { x, y, width, height, pixels, bytesPerRow, bytesPerPixel in
+            let cycles = 1 + normalizedSettings.waveFrequency * 5
+            let maxShift = min(Double(width), Double(height)) * 0.18 * clampedIntensity
+            let phase = Double(y) / Double(max(height - 1, 1)) * cycles * Double.pi * 2
+            let sourceX = Double(x) - sin(phase) * normalizedSettings.waveAmplitude * maxShift
+            return Self.samplePixel(
+                x: sourceX,
+                y: Double(y),
                 width: width,
                 height: height,
                 pixels: pixels,

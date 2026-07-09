@@ -736,6 +736,65 @@ struct ImageEditorFilterTests {
         #expect(restoredFilter.normalizedSettings.liquifyBulgeAmount == -1)
     }
 
+    @Test func imageEditorWaveFilterLayerAndSmartFilterWarpHorizontalPixels() async throws {
+        let canvasSize = NSSize(width: 48, height: 48)
+        let sourceImage = splitColorImage(size: canvasSize, left: .systemRed, right: .systemBlue)
+        let positiveWavePoint = CGPoint(x: 24, y: 12)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: sourceImage) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(sourceImage, historyTitle: L10n.text("imageEditor.history.brush"))
+        let baseLayerID = try #require(viewModel.document.selectedLayerID)
+        let basePixelsBefore = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+        let sampleBefore = try #require(viewModel.currentImage.color(at: positiveWavePoint)?.usingColorSpace(.deviceRGB))
+
+        viewModel.selectedFilter = .wave
+        viewModel.filterIntensity = 1
+        viewModel.filterWaveAmplitude = 1
+        viewModel.filterWaveFrequency = 0
+        viewModel.addFilterLayer()
+
+        let filterLayer = try #require(viewModel.document.selectedLayer)
+        let wavedSample = try #require(viewModel.currentImage.color(at: positiveWavePoint)?.usingColorSpace(.deviceRGB))
+        #expect(filterLayer.isFilter)
+        #expect(filterLayer.filter?.kind == .wave)
+        #expect(filterLayer.filterSettings.normalized().waveAmplitude == 1)
+        #expect(filterLayer.filterSettings.normalized().waveFrequency == 0)
+        #expect(viewModel.document.layers.first { $0.id == baseLayerID }?.image.qingtuPNGData() == basePixelsBefore)
+        #expect(sampleBefore.blueComponent > sampleBefore.redComponent + 0.4)
+        #expect(wavedSample.redComponent > wavedSample.blueComponent + 0.25)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerFilterNew"))
+
+        let negativeWavePoint = CGPoint(x: 23, y: 12)
+        let smartViewModel = ImageEditorViewModel(sourceName: "source.png", image: sourceImage) { _ in }
+        smartViewModel.replaceSelectedLayerImageForTesting(sourceImage, historyTitle: L10n.text("imageEditor.history.brush"))
+        let smartBasePixelsBefore = try #require(smartViewModel.document.selectedLayer?.image.qingtuPNGData())
+        let smartSampleBefore = try #require(smartViewModel.currentImage.color(at: negativeWavePoint)?.usingColorSpace(.deviceRGB))
+        smartViewModel.selectedFilter = .wave
+        smartViewModel.filterIntensity = 1
+        smartViewModel.filterWaveAmplitude = -1
+        smartViewModel.filterWaveFrequency = 0
+        smartViewModel.addSmartFilterToSelectedLayer()
+
+        let smartLayer = try #require(smartViewModel.document.selectedLayer)
+        let smartFilter = try #require(smartLayer.smartFilters.first)
+        let smartSampleAfter = try #require(smartViewModel.currentImage.color(at: negativeWavePoint)?.usingColorSpace(.deviceRGB))
+        #expect(smartFilter.kind == .wave)
+        #expect(smartFilter.normalizedSettings.waveAmplitude == -1)
+        #expect(smartFilter.normalizedSettings.waveFrequency == 0)
+        #expect(smartLayer.image.qingtuPNGData() == smartBasePixelsBefore)
+        #expect(smartSampleBefore.redComponent > smartSampleBefore.blueComponent + 0.4)
+        #expect(smartSampleAfter.blueComponent > smartSampleAfter.redComponent + 0.25)
+        #expect(smartViewModel.smartFilterLabel(smartFilter) == L10n.format("imageEditor.properties.smartFilterWaveItem", smartFilter.kind.title, 100, -100, 0))
+        #expect(smartViewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterAdd"))
+
+        let project = try ImageEditorProjectDocument(document: smartViewModel.document)
+        let restoredDocument = try project.restoredDocument()
+        let restoredLayer = try #require(restoredDocument.layers.first { $0.id == smartLayer.id })
+        let restoredFilter = try #require(restoredLayer.smartFilters.first)
+        #expect(restoredFilter.kind == .wave)
+        #expect(restoredFilter.normalizedSettings.waveAmplitude == -1)
+        #expect(restoredFilter.normalizedSettings.waveFrequency == 0)
+    }
+
     private func solidImage(size: NSSize, color: NSColor) -> NSImage {
         NSImage.rendered(size: size) { rect in
             color.setFill()

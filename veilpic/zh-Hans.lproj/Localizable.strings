@@ -463,6 +463,7 @@
 "imageEditor.filter.maximum" = "最大值";
 "imageEditor.filter.oilPaint" = "油画";
 "imageEditor.filter.vignette" = "暗角";
+"imageEditor.filter.wave" = "波浪";
 "imageEditor.filter.liquifyPush" = "液化推移";
 "imageEditor.filter.liquifyTwirl" = "液化旋转";
 "imageEditor.filter.liquifyPuckerBloat" = "液化收缩/膨胀";
@@ -477,6 +478,10 @@
 "imageEditor.filter.liquifyTwirlValue" = "%d";
 "imageEditor.filter.liquifyBulgeAmount" = "收缩/膨胀";
 "imageEditor.filter.liquifyBulgeValue" = "%d";
+"imageEditor.filter.waveAmplitude" = "振幅";
+"imageEditor.filter.waveAmplitudeValue" = "%d";
+"imageEditor.filter.waveFrequency" = "频率";
+"imageEditor.filter.waveFrequencyValue" = "%d";
 "imageEditor.shape.rectangle" = "矩形";
 "imageEditor.shape.ellipse" = "椭圆";
 "imageEditor.shape.path" = "路径";
@@ -502,6 +507,7 @@
 "imageEditor.properties.smartFilterLiquifyPushItem" = "%@ %d%% · X %d · Y %d";
 "imageEditor.properties.smartFilterLiquifyTwirlItem" = "%@ %d%% · 旋转 %d";
 "imageEditor.properties.smartFilterLiquifyPuckerBloatItem" = "%@ %d%% · 收缩/膨胀 %d";
+"imageEditor.properties.smartFilterWaveItem" = "%@ %d%% · 振幅 %d · 频率 %d";
 "imageEditor.properties.smartFilterDisabled" = "%@（已关闭）";
 "imageEditor.properties.smartFilterSeparator" = " · ";
 "imageEditor.properties.textPlaceholder" = "输入要添加的文字";

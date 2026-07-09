@@ -463,6 +463,7 @@
 "imageEditor.filter.maximum" = "明るさの最大値";
 "imageEditor.filter.oilPaint" = "油彩";
 "imageEditor.filter.vignette" = "周辺光量";
+"imageEditor.filter.wave" = "波形";
 "imageEditor.filter.liquifyPush" = "ゆがみプッシュ";
 "imageEditor.filter.liquifyTwirl" = "ゆがみ回転";
 "imageEditor.filter.liquifyPuckerBloat" = "ゆがみ収縮/膨張";
@@ -477,6 +478,10 @@
 "imageEditor.filter.liquifyTwirlValue" = "%d";
 "imageEditor.filter.liquifyBulgeAmount" = "収縮/膨張";
 "imageEditor.filter.liquifyBulgeValue" = "%d";
+"imageEditor.filter.waveAmplitude" = "振幅";
+"imageEditor.filter.waveAmplitudeValue" = "%d";
+"imageEditor.filter.waveFrequency" = "周波数";
+"imageEditor.filter.waveFrequencyValue" = "%d";
 "imageEditor.shape.rectangle" = "長方形";
 "imageEditor.shape.ellipse" = "楕円";
 "imageEditor.shape.path" = "パス";
@@ -502,6 +507,7 @@
 "imageEditor.properties.smartFilterLiquifyPushItem" = "%@ %d%% · X %d · Y %d";
 "imageEditor.properties.smartFilterLiquifyTwirlItem" = "%@ %d%% · 回転 %d";
 "imageEditor.properties.smartFilterLiquifyPuckerBloatItem" = "%@ %d%% · 収縮/膨張 %d";
+"imageEditor.properties.smartFilterWaveItem" = "%@ %d%% · 振幅 %d · 周波数 %d";
 "imageEditor.properties.smartFilterDisabled" = "%@（オフ）";
 "imageEditor.properties.smartFilterSeparator" = "・";
 "imageEditor.properties.textPlaceholder" = "追加する文字";

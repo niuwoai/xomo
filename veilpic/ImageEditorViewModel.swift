@@ -164,6 +164,8 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var filterLiquifyPushY: Double = 0
     @Published var filterLiquifyTwirlAngle: Double = 0.5
     @Published var filterLiquifyBulgeAmount: Double = 0.5
+    @Published var filterWaveAmplitude: Double = 0.5
+    @Published var filterWaveFrequency: Double = 0.25
     @Published var selectedChannelPreview: ImageEditorChannelPreview = .composite
     @Published var isEditingLayerMask: Bool = false
     @Published var pendingPenPathPoints: [CGPoint] = []
@@ -494,6 +496,18 @@ final class ImageEditorViewModel: ObservableObject {
                 filter.kind.title,
                 Int((filter.normalizedIntensity * 100).rounded()),
                 Int((settings.liquifyBulgeAmount * 100).rounded())
+            )
+            guard !filter.isEnabled else { return title }
+            return L10n.format("imageEditor.properties.smartFilterDisabled", title)
+        }
+        if filter.kind == .wave {
+            let settings = filter.normalizedSettings
+            let title = L10n.format(
+                "imageEditor.properties.smartFilterWaveItem",
+                filter.kind.title,
+                Int((filter.normalizedIntensity * 100).rounded()),
+                Int((settings.waveAmplitude * 100).rounded()),
+                Int((settings.waveFrequency * 100).rounded())
             )
             guard !filter.isEnabled else { return title }
             return L10n.format("imageEditor.properties.smartFilterDisabled", title)
@@ -2697,7 +2711,9 @@ final class ImageEditorViewModel: ObservableObject {
             liquifyPushX: filterLiquifyPushX,
             liquifyPushY: filterLiquifyPushY,
             liquifyTwirlAngle: filterLiquifyTwirlAngle,
-            liquifyBulgeAmount: filterLiquifyBulgeAmount
+            liquifyBulgeAmount: filterLiquifyBulgeAmount,
+            waveAmplitude: filterWaveAmplitude,
+            waveFrequency: filterWaveFrequency
         ).normalized()
     }
 
@@ -3940,6 +3956,8 @@ final class ImageEditorViewModel: ObservableObject {
         filterLiquifyPushY = normalized.liquifyPushY
         filterLiquifyTwirlAngle = normalized.liquifyTwirlAngle
         filterLiquifyBulgeAmount = normalized.liquifyBulgeAmount
+        filterWaveAmplitude = normalized.waveAmplitude
+        filterWaveFrequency = normalized.waveFrequency
     }
 
     private func syncSolidColorFillControlsFromSelection() {

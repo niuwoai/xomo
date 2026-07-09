@@ -2069,6 +2069,28 @@ struct ImageEditorView: View {
                             .frame(width: 44, alignment: .trailing)
                     }
                 }
+                if viewModel.selectedFilter == .wave {
+                    HStack {
+                        Text(L10n.text("imageEditor.filter.waveAmplitude"))
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                        Slider(value: $viewModel.filterWaveAmplitude, in: -1...1, step: 0.05)
+                        Text(L10n.format("imageEditor.filter.waveAmplitudeValue", Int((viewModel.filterWaveAmplitude * 100).rounded())))
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+                            .frame(width: 44, alignment: .trailing)
+                    }
+                    HStack {
+                        Text(L10n.text("imageEditor.filter.waveFrequency"))
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                        Slider(value: $viewModel.filterWaveFrequency, in: 0...1, step: 0.05)
+                        Text(L10n.format("imageEditor.filter.waveFrequencyValue", Int((viewModel.filterWaveFrequency * 100).rounded())))
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+                            .frame(width: 44, alignment: .trailing)
+                    }
+                }
                 Text(viewModel.selectedLayerSmartFilterText)
                     .font(.system(size: 10, weight: .medium))
                     .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))

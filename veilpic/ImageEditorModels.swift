@@ -1233,6 +1233,7 @@ enum ImageEditorFilter: String, CaseIterable, Identifiable {
     case maximum
     case oilPaint
     case vignette
+    case wave
     case liquifyPush
     case liquifyTwirl
     case liquifyPuckerBloat
@@ -1267,6 +1268,8 @@ struct ImageEditorFilterSettings: Equatable, Codable {
     var liquifyPushY: Double = 0
     var liquifyTwirlAngle: Double = 0.5
     var liquifyBulgeAmount: Double = 0.5
+    var waveAmplitude: Double = 0.5
+    var waveFrequency: Double = 0.25
 
     init(
         unsharpRadius: Double = 1,
@@ -1274,7 +1277,9 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         liquifyPushX: Double = 0.25,
         liquifyPushY: Double = 0,
         liquifyTwirlAngle: Double = 0.5,
-        liquifyBulgeAmount: Double = 0.5
+        liquifyBulgeAmount: Double = 0.5,
+        waveAmplitude: Double = 0.5,
+        waveFrequency: Double = 0.25
     ) {
         self.unsharpRadius = unsharpRadius
         self.unsharpThreshold = unsharpThreshold
@@ -1282,6 +1287,8 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         self.liquifyPushY = liquifyPushY
         self.liquifyTwirlAngle = liquifyTwirlAngle
         self.liquifyBulgeAmount = liquifyBulgeAmount
+        self.waveAmplitude = waveAmplitude
+        self.waveFrequency = waveFrequency
     }
 
     init(from decoder: Decoder) throws {
@@ -1292,6 +1299,8 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         liquifyPushY = try container.decodeIfPresent(Double.self, forKey: .liquifyPushY) ?? 0
         liquifyTwirlAngle = try container.decodeIfPresent(Double.self, forKey: .liquifyTwirlAngle) ?? 0.5
         liquifyBulgeAmount = try container.decodeIfPresent(Double.self, forKey: .liquifyBulgeAmount) ?? 0.5
+        waveAmplitude = try container.decodeIfPresent(Double.self, forKey: .waveAmplitude) ?? 0.5
+        waveFrequency = try container.decodeIfPresent(Double.self, forKey: .waveFrequency) ?? 0.25
     }
 
     func encode(to encoder: Encoder) throws {
@@ -1302,6 +1311,8 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         try container.encode(liquifyPushY, forKey: .liquifyPushY)
         try container.encode(liquifyTwirlAngle, forKey: .liquifyTwirlAngle)
         try container.encode(liquifyBulgeAmount, forKey: .liquifyBulgeAmount)
+        try container.encode(waveAmplitude, forKey: .waveAmplitude)
+        try container.encode(waveFrequency, forKey: .waveFrequency)
     }
 
     func normalized() -> ImageEditorFilterSettings {
@@ -1311,7 +1322,9 @@ struct ImageEditorFilterSettings: Equatable, Codable {
             liquifyPushX: max(-1, min(1, liquifyPushX)),
             liquifyPushY: max(-1, min(1, liquifyPushY)),
             liquifyTwirlAngle: max(-1, min(1, liquifyTwirlAngle)),
-            liquifyBulgeAmount: max(-1, min(1, liquifyBulgeAmount))
+            liquifyBulgeAmount: max(-1, min(1, liquifyBulgeAmount)),
+            waveAmplitude: max(-1, min(1, waveAmplitude)),
+            waveFrequency: max(0, min(1, waveFrequency))
         )
     }
 
@@ -1322,6 +1335,8 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         case liquifyPushY
         case liquifyTwirlAngle
         case liquifyBulgeAmount
+        case waveAmplitude
+        case waveFrequency
     }
 }
 

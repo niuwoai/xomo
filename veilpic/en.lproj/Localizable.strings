@@ -463,6 +463,7 @@
 "imageEditor.filter.maximum" = "Maximum";
 "imageEditor.filter.oilPaint" = "Oil Paint";
 "imageEditor.filter.vignette" = "Vignette";
+"imageEditor.filter.wave" = "Wave";
 "imageEditor.filter.liquifyPush" = "Liquify Push";
 "imageEditor.filter.liquifyTwirl" = "Liquify Twirl";
 "imageEditor.filter.liquifyPuckerBloat" = "Liquify Pucker/Bloat";
@@ -477,6 +478,10 @@
 "imageEditor.filter.liquifyTwirlValue" = "%d";
 "imageEditor.filter.liquifyBulgeAmount" = "Pucker/Bloat";
 "imageEditor.filter.liquifyBulgeValue" = "%d";
+"imageEditor.filter.waveAmplitude" = "Amplitude";
+"imageEditor.filter.waveAmplitudeValue" = "%d";
+"imageEditor.filter.waveFrequency" = "Frequency";
+"imageEditor.filter.waveFrequencyValue" = "%d";
 "imageEditor.shape.rectangle" = "Rectangle";
 "imageEditor.shape.ellipse" = "Ellipse";
 "imageEditor.shape.path" = "Path";
@@ -502,6 +507,7 @@
 "imageEditor.properties.smartFilterLiquifyPushItem" = "%@ %d%% · X %d · Y %d";
 "imageEditor.properties.smartFilterLiquifyTwirlItem" = "%@ %d%% · Twirl %d";
 "imageEditor.properties.smartFilterLiquifyPuckerBloatItem" = "%@ %d%% · Pucker/Bloat %d";
+"imageEditor.properties.smartFilterWaveItem" = "%@ %d%% · Amp %d · Freq %d";
 "imageEditor.properties.smartFilterDisabled" = "%@ (off)";
 "imageEditor.properties.smartFilterSeparator" = " · ";
 "imageEditor.properties.textPlaceholder" = "Text to add";
