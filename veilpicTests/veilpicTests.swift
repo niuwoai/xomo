@@ -451,6 +451,34 @@ struct veilpicTests {
     }
 
     @MainActor
+    @Test func imageEditorCanSelectLockedAndUnlockedLayers() async throws {
+        let image = testImage(color: .systemCyan, size: NSSize(width: 80, height: 60))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let unlockedLayer = ImageEditorLayer.blank(name: "Unlocked", size: image.size)
+        var lockedLayer = ImageEditorLayer.blank(name: "Locked", size: image.size)
+        lockedLayer.isLocked = true
+        var lockedGroup = ImageEditorLayer.group(name: "Locked Group", size: image.size)
+        lockedGroup.isLocked = true
+        var childLayer = ImageEditorLayer.blank(name: "Group Child", size: image.size)
+        childLayer.groupID = lockedGroup.id
+        viewModel.document.layers = [unlockedLayer, lockedLayer, childLayer, lockedGroup]
+        viewModel.document.selectedLayerID = unlockedLayer.id
+        viewModel.document.selectedLayerIDs = [unlockedLayer.id]
+
+        #expect(viewModel.canSelectLockedLayers)
+        viewModel.selectLockedLayers()
+        #expect(viewModel.document.selectedLayerIDs == [lockedLayer.id, childLayer.id, lockedGroup.id])
+        #expect(viewModel.document.selectedLayerID == lockedGroup.id)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerSelectLocked", 3))
+
+        #expect(viewModel.canSelectUnlockedLayers)
+        viewModel.selectUnlockedLayers()
+        #expect(viewModel.document.selectedLayerIDs == [unlockedLayer.id])
+        #expect(viewModel.document.selectedLayerID == unlockedLayer.id)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerSelectUnlocked", 1))
+    }
+
+    @MainActor
     @Test func imageEditorSelectedLayersMoveToStackEdgesPreservesOrderAndUndo() async throws {
         let image = testImage(color: .systemBlue, size: NSSize(width: 80, height: 60))
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }

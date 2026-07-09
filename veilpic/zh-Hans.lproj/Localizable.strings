@@ -1176,6 +1176,8 @@
 "imageEditor.status.layerSelectAll" = "已选择全部 %d 个图层";
 "imageEditor.status.layerSelectVisible" = "已选择 %d 个可见图层";
 "imageEditor.status.layerSelectHidden" = "已选择 %d 个隐藏图层";
+"imageEditor.status.layerSelectLocked" = "已选择 %d 个锁定图层";
+"imageEditor.status.layerSelectUnlocked" = "已选择 %d 个未锁定图层";
 "imageEditor.status.layerSelectSameKind" = "已选择 %d 个同类图层：%@";
 "imageEditor.status.layerSelectSimilar" = "已选择 %d 个相似图层：%@ · %@";
 "imageEditor.status.layerSelectSameBlendMode" = "已选择 %d 个相同混合模式图层：%@";
@@ -1407,6 +1409,8 @@
 "imageEditor.action.layerSelectAll" = "选择全部图层";
 "imageEditor.action.layerSelectVisible" = "选择可见图层";
 "imageEditor.action.layerSelectHidden" = "选择隐藏图层";
+"imageEditor.action.layerSelectLocked" = "选择锁定图层";
+"imageEditor.action.layerSelectUnlocked" = "选择未锁定图层";
 "imageEditor.action.layerSelectSameKind" = "选择同类图层";
 "imageEditor.action.layerSelectSimilar" = "选择相似图层";
 "imageEditor.action.layerSelectSameBlendMode" = "选择相同混合模式图层";

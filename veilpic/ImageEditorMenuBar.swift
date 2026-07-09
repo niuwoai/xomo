@@ -213,6 +213,14 @@ extension ImageEditorView {
             viewModel.selectHiddenLayers()
         }
         .disabled(!viewModel.canSelectHiddenLayers)
+        Button(L10n.text("imageEditor.action.layerSelectLocked")) {
+            viewModel.selectLockedLayers()
+        }
+        .disabled(!viewModel.canSelectLockedLayers)
+        Button(L10n.text("imageEditor.action.layerSelectUnlocked")) {
+            viewModel.selectUnlockedLayers()
+        }
+        .disabled(!viewModel.canSelectUnlockedLayers)
         Button(L10n.text("imageEditor.action.layerSelectSameKind")) {
             viewModel.selectLayersWithSameKind()
         }

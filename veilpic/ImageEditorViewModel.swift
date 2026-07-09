@@ -601,6 +601,14 @@ final class ImageEditorViewModel: ObservableObject {
         document.layers.contains { !document.isEffectivelyVisible($0) }
     }
 
+    var canSelectLockedLayers: Bool {
+        document.layers.contains { document.isEffectivelyLocked($0) }
+    }
+
+    var canSelectUnlockedLayers: Bool {
+        document.layers.contains { !document.isEffectivelyLocked($0) }
+    }
+
     var canSelectLayersWithSameKind: Bool {
         document.selectedLayer != nil
     }
@@ -1191,6 +1199,16 @@ final class ImageEditorViewModel: ObservableObject {
     func selectHiddenLayers() {
         let layerIDs = Set(document.layers.filter { !document.isEffectivelyVisible($0) }.map(\.id))
         selectLayerIDs(layerIDs, statusKey: "imageEditor.status.layerSelectHidden")
+    }
+
+    func selectLockedLayers() {
+        let layerIDs = Set(document.layers.filter { document.isEffectivelyLocked($0) }.map(\.id))
+        selectLayerIDs(layerIDs, statusKey: "imageEditor.status.layerSelectLocked")
+    }
+
+    func selectUnlockedLayers() {
+        let layerIDs = Set(document.layers.filter { !document.isEffectivelyLocked($0) }.map(\.id))
+        selectLayerIDs(layerIDs, statusKey: "imageEditor.status.layerSelectUnlocked")
     }
 
     func selectLayersWithSameKind() {

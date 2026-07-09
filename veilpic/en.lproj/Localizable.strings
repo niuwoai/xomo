@@ -1176,6 +1176,8 @@
 "imageEditor.status.layerSelectAll" = "All %d layers selected";
 "imageEditor.status.layerSelectVisible" = "%d visible layers selected";
 "imageEditor.status.layerSelectHidden" = "%d hidden layers selected";
+"imageEditor.status.layerSelectLocked" = "%d locked layers selected";
+"imageEditor.status.layerSelectUnlocked" = "%d unlocked layers selected";
 "imageEditor.status.layerSelectSameKind" = "%d layers of the same kind selected: %@";
 "imageEditor.status.layerSelectSimilar" = "%d similar layers selected: %@ · %@";
 "imageEditor.status.layerSelectSameBlendMode" = "%d layers with the same blend mode selected: %@";
@@ -1407,6 +1409,8 @@
 "imageEditor.action.layerSelectAll" = "Select All Layers";
 "imageEditor.action.layerSelectVisible" = "Select Visible Layers";
 "imageEditor.action.layerSelectHidden" = "Select Hidden Layers";
+"imageEditor.action.layerSelectLocked" = "Select Locked Layers";
+"imageEditor.action.layerSelectUnlocked" = "Select Unlocked Layers";
 "imageEditor.action.layerSelectSameKind" = "Select Same Kind Layers";
 "imageEditor.action.layerSelectSimilar" = "Select Similar Layers";
 "imageEditor.action.layerSelectSameBlendMode" = "Select Same Blend Mode Layers";
