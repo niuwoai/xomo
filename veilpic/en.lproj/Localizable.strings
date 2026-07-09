@@ -466,6 +466,7 @@
 "imageEditor.filter.offset" = "Offset";
 "imageEditor.filter.wave" = "Wave";
 "imageEditor.filter.ripple" = "Ripple";
+"imageEditor.filter.pinch" = "Pinch";
 "imageEditor.filter.liquifyPush" = "Liquify Push";
 "imageEditor.filter.liquifyTwirl" = "Liquify Twirl";
 "imageEditor.filter.liquifyPuckerBloat" = "Liquify Pucker/Bloat";
@@ -491,6 +492,8 @@
 "imageEditor.filter.rippleAmountValue" = "%d";
 "imageEditor.filter.rippleFrequency" = "Frequency";
 "imageEditor.filter.rippleFrequencyValue" = "%d";
+"imageEditor.filter.pinchAmount" = "Amount";
+"imageEditor.filter.pinchAmountValue" = "%d";
 "imageEditor.shape.rectangle" = "Rectangle";
 "imageEditor.shape.ellipse" = "Ellipse";
 "imageEditor.shape.path" = "Path";
@@ -519,6 +522,7 @@
 "imageEditor.properties.smartFilterWaveItem" = "%@ %d%% · Amp %d · Freq %d";
 "imageEditor.properties.smartFilterOffsetItem" = "%@ %d%% · X %d · Y %d";
 "imageEditor.properties.smartFilterRippleItem" = "%@ %d%% · Amount %d · Freq %d";
+"imageEditor.properties.smartFilterPinchItem" = "%@ %d%% · Amount %d";
 "imageEditor.properties.smartFilterDisabled" = "%@ (off)";
 "imageEditor.properties.smartFilterSeparator" = " · ";
 "imageEditor.properties.textPlaceholder" = "Text to add";

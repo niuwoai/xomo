@@ -466,6 +466,7 @@
 "imageEditor.filter.offset" = "オフセット";
 "imageEditor.filter.wave" = "波形";
 "imageEditor.filter.ripple" = "波紋";
+"imageEditor.filter.pinch" = "ピンチ";
 "imageEditor.filter.liquifyPush" = "ゆがみプッシュ";
 "imageEditor.filter.liquifyTwirl" = "ゆがみ回転";
 "imageEditor.filter.liquifyPuckerBloat" = "ゆがみ収縮/膨張";
@@ -491,6 +492,8 @@
 "imageEditor.filter.rippleAmountValue" = "%d";
 "imageEditor.filter.rippleFrequency" = "周波数";
 "imageEditor.filter.rippleFrequencyValue" = "%d";
+"imageEditor.filter.pinchAmount" = "量";
+"imageEditor.filter.pinchAmountValue" = "%d";
 "imageEditor.shape.rectangle" = "長方形";
 "imageEditor.shape.ellipse" = "楕円";
 "imageEditor.shape.path" = "パス";
@@ -519,6 +522,7 @@
 "imageEditor.properties.smartFilterWaveItem" = "%@ %d%% · 振幅 %d · 周波数 %d";
 "imageEditor.properties.smartFilterOffsetItem" = "%@ %d%% · X %d · Y %d";
 "imageEditor.properties.smartFilterRippleItem" = "%@ %d%% · 量 %d · 周波数 %d";
+"imageEditor.properties.smartFilterPinchItem" = "%@ %d%% · 量 %d";
 "imageEditor.properties.smartFilterDisabled" = "%@（オフ）";
 "imageEditor.properties.smartFilterSeparator" = "・";
 "imageEditor.properties.textPlaceholder" = "追加する文字";

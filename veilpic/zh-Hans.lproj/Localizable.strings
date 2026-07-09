@@ -466,6 +466,7 @@
 "imageEditor.filter.offset" = "位移";
 "imageEditor.filter.wave" = "波浪";
 "imageEditor.filter.ripple" = "波纹";
+"imageEditor.filter.pinch" = "挤压";
 "imageEditor.filter.liquifyPush" = "液化推移";
 "imageEditor.filter.liquifyTwirl" = "液化旋转";
 "imageEditor.filter.liquifyPuckerBloat" = "液化收缩/膨胀";
@@ -491,6 +492,8 @@
 "imageEditor.filter.rippleAmountValue" = "%d";
 "imageEditor.filter.rippleFrequency" = "频率";
 "imageEditor.filter.rippleFrequencyValue" = "%d";
+"imageEditor.filter.pinchAmount" = "数量";
+"imageEditor.filter.pinchAmountValue" = "%d";
 "imageEditor.shape.rectangle" = "矩形";
 "imageEditor.shape.ellipse" = "椭圆";
 "imageEditor.shape.path" = "路径";
@@ -519,6 +522,7 @@
 "imageEditor.properties.smartFilterWaveItem" = "%@ %d%% · 振幅 %d · 频率 %d";
 "imageEditor.properties.smartFilterOffsetItem" = "%@ %d%% · X %d · Y %d";
 "imageEditor.properties.smartFilterRippleItem" = "%@ %d%% · 数量 %d · 频率 %d";
+"imageEditor.properties.smartFilterPinchItem" = "%@ %d%% · 数量 %d";
 "imageEditor.properties.smartFilterDisabled" = "%@（已关闭）";
 "imageEditor.properties.smartFilterSeparator" = " · ";
 "imageEditor.properties.textPlaceholder" = "输入要添加的文字";
