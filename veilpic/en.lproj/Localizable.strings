@@ -626,6 +626,7 @@
 "imageEditor.channel.alphaChannelName" = "Alpha Channel %d";
 "imageEditor.channel.alphaChannelCopyName" = "%@ copy";
 "imageEditor.channel.alphaChannelFromMaskName" = "Mask Alpha Channel %d";
+"imageEditor.channel.alphaChannelFromChannelName" = "%@ Alpha Channel";
 "imageEditor.channel.alphaNamePlaceholder" = "Alpha channel name";
 "imageEditor.photoFilter.preset" = "Filter";
 "imageEditor.photoFilter.preset.warming85" = "Warming Filter 85";
@@ -1599,6 +1600,8 @@
 "imageEditor.action.channelLoadSelection" = "Load %@ channel as selection";
 "imageEditor.action.channelSaveSelection" = "Save Selection as Alpha Channel";
 "imageEditor.action.channelSaveLayerMask" = "Save Layer Mask as Alpha Channel";
+"imageEditor.action.channelSaveCurrentAsAlpha" = "Save current preview channel as alpha channel";
+"imageEditor.action.channelSaveAsAlpha" = "Save %@ as alpha channel";
 "imageEditor.action.alphaChannelSelect" = "Preview and select alpha channel";
 "imageEditor.action.alphaChannelLoadSelection" = "Load %@ as selection";
 "imageEditor.action.alphaChannelUpdate" = "Update %@ from current selection";
@@ -1624,6 +1627,7 @@
 "imageEditor.status.alphaChannelSelected" = "Previewing %@";
 "imageEditor.status.alphaChannelSaved" = "Saved as alpha channel";
 "imageEditor.status.alphaChannelFromMask" = "Saved current layer mask as alpha channel";
+"imageEditor.status.alphaChannelFromChannel" = "Saved %@ as alpha channel";
 "imageEditor.status.alphaChannelFromMaskFailed" = "Current layer has no mask to save";
 "imageEditor.status.alphaChannelLoaded" = "Loaded %@ as selection";
 "imageEditor.status.alphaChannelUpdated" = "Updated %@ from current selection";
@@ -1639,6 +1643,7 @@
 "imageEditor.history.selectionFromChannel" = "Load Channel Selection";
 "imageEditor.history.alphaChannelSave" = "Save Alpha Channel";
 "imageEditor.history.alphaChannelFromMask" = "Save Alpha Channel from Layer Mask";
+"imageEditor.history.alphaChannelFromChannel" = "Save Alpha Channel from Channel";
 "imageEditor.history.alphaChannelLoad" = "Load Alpha Channel Selection";
 "imageEditor.history.alphaChannelUpdate" = "Update Alpha Channel";
 "imageEditor.history.alphaChannelApplyToMask" = "Apply Alpha Channel as Layer Mask";

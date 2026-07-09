@@ -62,6 +62,11 @@ extension ImageEditorViewModel {
         return layer.mask != nil
     }
 
+    var canSaveSelectedChannelAsAlphaChannel: Bool {
+        guard let mask = currentImage.channelSelectionMask(selectedChannelPreview) else { return false }
+        return mask.selectedBounds(in: document.canvasSize) != nil
+    }
+
     var canApplyAlphaChannelToSelectedLayerMask: Bool {
         guard selectedLayerCount == 1,
               let layer = document.selectedLayer
@@ -177,6 +182,31 @@ extension ImageEditorViewModel {
         selectedAlphaChannelID = channel.id
         appendHistory(L10n.text("imageEditor.history.alphaChannelFromMask"))
         statusText = L10n.text("imageEditor.status.alphaChannelFromMask")
+    }
+
+    func saveSelectedChannelAsAlphaChannel() {
+        saveChannelAsAlphaChannel(selectedChannelPreview)
+    }
+
+    func saveChannelAsAlphaChannel(_ channelPreview: ImageEditorChannelPreview) {
+        guard let mask = currentImage.channelSelectionMask(channelPreview),
+              mask.selectedBounds(in: document.canvasSize) != nil
+        else {
+            statusText = L10n.format("imageEditor.status.channelSelectionEmpty", channelPreview.title)
+            return
+        }
+
+        pushUndo()
+        let channel = ImageEditorAlphaChannel(
+            name: uniqueAlphaChannelName(
+                L10n.format("imageEditor.channel.alphaChannelFromChannelName", channelPreview.title)
+            ),
+            mask: mask
+        )
+        document.alphaChannels.append(channel)
+        selectedAlphaChannelID = channel.id
+        appendHistory(L10n.text("imageEditor.history.alphaChannelFromChannel"))
+        statusText = L10n.format("imageEditor.status.alphaChannelFromChannel", channelPreview.title)
     }
 
     func selectAlphaChannel(_ id: UUID) {
@@ -527,6 +557,13 @@ extension NSImage {
     }
 
     func channelSelection(_ channel: ImageEditorChannelPreview, canvasSize: CGSize) -> ImageEditorSelection? {
+        guard let mask = channelSelectionMask(channel),
+              let bounds = mask.selectedBounds(in: canvasSize)
+        else { return nil }
+        return .raster(mask: mask, bounds: bounds)
+    }
+
+    func channelSelectionMask(_ channel: ImageEditorChannelPreview) -> ImageEditorSelectionMask? {
         guard let cgImage = cgImage(forProposedRect: nil, context: nil, hints: nil) else { return nil }
 
         let width = max(1, cgImage.width)
@@ -572,9 +609,7 @@ extension NSImage {
             }
         }
 
-        let mask = ImageEditorSelectionMask(width: width, height: height, alpha: alpha)
-        guard let bounds = mask.selectedBounds(in: canvasSize) else { return nil }
-        return .raster(mask: mask, bounds: bounds)
+        return ImageEditorSelectionMask(width: width, height: height, alpha: alpha)
     }
 
     private static func luminance(red: UInt8, green: UInt8, blue: UInt8) -> UInt8 {

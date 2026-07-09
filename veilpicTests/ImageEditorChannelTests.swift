@@ -261,6 +261,22 @@ struct ImageEditorChannelTests {
         #expect(maskAlpha(mask, x: 1, y: 0) == 255)
     }
 
+    @Test func selectedPreviewChannelCanSaveAsAlphaChannel() async throws {
+        let viewModel = ImageEditorViewModel(sourceName: "split.png", image: splitChannelImage()) { _ in }
+        viewModel.selectChannelPreview(.green)
+
+        #expect(viewModel.canSaveSelectedChannelAsAlphaChannel)
+        viewModel.saveSelectedChannelAsAlphaChannel()
+
+        let channel = try #require(viewModel.document.alphaChannels.first)
+        #expect(channel.name == L10n.format("imageEditor.channel.alphaChannelFromChannelName", ImageEditorChannelPreview.green.title))
+        #expect(viewModel.selectedAlphaChannelID == channel.id)
+        #expect(maskAlpha(channel.mask, x: 0, y: 0) == 0)
+        #expect(maskAlpha(channel.mask, x: 1, y: 0) == 255)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelFromChannel", ImageEditorChannelPreview.green.title))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelFromChannel"))
+    }
+
     @Test func alphaChannelsCanSaveLoadAndDeleteSelection() async throws {
         let viewModel = ImageEditorViewModel(sourceName: "split.png", image: splitChannelImage()) { _ in }
 

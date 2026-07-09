@@ -910,6 +910,10 @@ extension ImageEditorView {
             viewModel.saveSelectedLayerMaskAsAlphaChannel()
         }
         .disabled(!viewModel.canSaveSelectedLayerMaskAsAlphaChannel)
+        Button(L10n.text("imageEditor.action.channelSaveCurrentAsAlpha")) {
+            viewModel.saveSelectedChannelAsAlphaChannel()
+        }
+        .disabled(!viewModel.canSaveSelectedChannelAsAlphaChannel)
         Divider()
         Button(L10n.text("imageEditor.action.alphaChannelLoadSelectedSelection")) {
             viewModel.loadSelectionFromSelectedAlphaChannel()

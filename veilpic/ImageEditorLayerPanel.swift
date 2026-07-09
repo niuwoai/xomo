@@ -152,6 +152,16 @@ extension ImageEditorView {
             }
             .buttonStyle(EditorIconButtonStyle(isSelected: false))
             .help(L10n.format("imageEditor.action.channelLoadSelection", channel.title))
+
+            Button {
+                viewModel.saveChannelAsAlphaChannel(channel)
+            } label: {
+                Image(systemName: "square.and.arrow.down")
+                    .font(.system(size: 12, weight: .semibold))
+                    .frame(width: 24, height: 28)
+            }
+            .buttonStyle(EditorIconButtonStyle(isSelected: false))
+            .help(L10n.format("imageEditor.action.channelSaveAsAlpha", channel.title))
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 6)
