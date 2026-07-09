@@ -1970,6 +1970,19 @@ struct ImageEditorView: View {
                             .disabled(!viewModel.canToggleSelectedPathClosed)
                         }
                         HStack {
+                            Button(L10n.text("imageEditor.action.pathSubpathPrevious")) {
+                                viewModel.selectPreviousPathSubpath()
+                            }
+                            .buttonStyle(EditorTextButtonStyle())
+                            .disabled(!viewModel.canSelectAdjacentPathSubpath)
+
+                            Button(L10n.text("imageEditor.action.pathSubpathNext")) {
+                                viewModel.selectNextPathSubpath()
+                            }
+                            .buttonStyle(EditorTextButtonStyle())
+                            .disabled(!viewModel.canSelectAdjacentPathSubpath)
+                        }
+                        HStack {
                             Button(L10n.text("imageEditor.action.pathReverse")) {
                                 viewModel.reverseSelectedPathDirection()
                             }

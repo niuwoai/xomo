@@ -994,6 +994,7 @@
 "imageEditor.status.pathAnchorMoved" = "パスアンカーを移動しました";
 "imageEditor.status.pathAnchorInserted" = "パスアンカーを挿入しました";
 "imageEditor.status.pathAnchorDeleted" = "パスアンカーを削除しました";
+"imageEditor.status.pathSubpathSelected" = "パスサブパスを選択：%d / %d";
 "imageEditor.status.pathSubpathMoved" = "パスサブパスを移動しました";
 "imageEditor.status.pathSubpathDeleted" = "パスサブパスを削除しました";
 "imageEditor.status.pathHandlesSmoothed" = "パスハンドルを追加しました";
@@ -1213,6 +1214,8 @@
 "imageEditor.action.pathAnchorSymmetric" = "ハンドル対称";
 "imageEditor.action.pathAnchorInsert" = "アンカー挿入";
 "imageEditor.action.pathAnchorDelete" = "アンカー削除";
+"imageEditor.action.pathSubpathPrevious" = "前のサブパス";
+"imageEditor.action.pathSubpathNext" = "次のサブパス";
 "imageEditor.action.pathSubpathDelete" = "サブパス削除";
 "imageEditor.action.pathSubpathNudgeLeft" = "左へ";
 "imageEditor.action.pathSubpathNudgeRight" = "右へ";

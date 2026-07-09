@@ -614,6 +614,46 @@ struct ImageEditorVectorLayerTests {
         #expect(viewModel.statusText == L10n.text("imageEditor.status.pathSubpathMoved"))
     }
 
+    @Test func imageEditorCyclesCompoundPathSubpathSelection() async throws {
+        let canvasSize = NSSize(width: 24, height: 16)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        var alpha = [UInt8](repeating: 0, count: 24 * 16)
+        for y in 2..<8 {
+            for x in 2..<7 {
+                alpha[y * 24 + x] = UInt8.max
+            }
+        }
+        for y in 9..<14 {
+            for x in 14..<22 {
+                alpha[y * 24 + x] = UInt8.max
+            }
+        }
+        let mask = ImageEditorSelectionMask(width: 24, height: 16, alpha: alpha)
+        let bounds = try #require(mask.selectedBounds(in: canvasSize))
+        viewModel.document.selection = .raster(mask: mask, bounds: bounds)
+        viewModel.createPathFromSelection()
+
+        #expect(viewModel.canSelectAdjacentPathSubpath)
+        #expect(viewModel.selectedPathSubpathIndex == 0)
+        #expect(viewModel.selectedPathAnchorIndex == 0)
+
+        viewModel.selectNextPathSubpath()
+        #expect(viewModel.selectedPathSubpathIndex == 1)
+        #expect(viewModel.selectedPathAnchorIndex == 0)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.pathSubpathSelected", 2, 2))
+
+        viewModel.selectNextPathSubpath()
+        #expect(viewModel.selectedPathSubpathIndex == 0)
+        #expect(viewModel.selectedPathAnchorIndex == 0)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.pathSubpathSelected", 1, 2))
+
+        viewModel.selectPreviousPathSubpath()
+        #expect(viewModel.selectedPathSubpathIndex == 1)
+        #expect(viewModel.selectedPathAnchorIndex == 0)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.pathSubpathSelected", 2, 2))
+    }
+
     @Test func imageEditorDeletesSelectedPathAnchorAndOpensSmallClosedPath() async throws {
         let canvasSize = NSSize(width: 120, height: 90)
         let image = testBitmapImage(size: canvasSize, background: .black)

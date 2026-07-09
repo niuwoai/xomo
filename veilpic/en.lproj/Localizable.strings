@@ -994,6 +994,7 @@
 "imageEditor.status.pathAnchorMoved" = "Path anchor moved";
 "imageEditor.status.pathAnchorInserted" = "Path anchor inserted";
 "imageEditor.status.pathAnchorDeleted" = "Path anchor deleted";
+"imageEditor.status.pathSubpathSelected" = "Path subpath selected: %d / %d";
 "imageEditor.status.pathSubpathMoved" = "Path subpath moved";
 "imageEditor.status.pathSubpathDeleted" = "Path subpath deleted";
 "imageEditor.status.pathHandlesSmoothed" = "Path handles added";
@@ -1213,6 +1214,8 @@
 "imageEditor.action.pathAnchorSymmetric" = "Symmetric Handles";
 "imageEditor.action.pathAnchorInsert" = "Insert Anchor";
 "imageEditor.action.pathAnchorDelete" = "Delete Anchor";
+"imageEditor.action.pathSubpathPrevious" = "Previous Subpath";
+"imageEditor.action.pathSubpathNext" = "Next Subpath";
 "imageEditor.action.pathSubpathDelete" = "Delete Subpath";
 "imageEditor.action.pathSubpathNudgeLeft" = "Left";
 "imageEditor.action.pathSubpathNudgeRight" = "Right";

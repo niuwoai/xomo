@@ -125,6 +125,22 @@ extension ImageEditorViewModel {
         selectedPathControlRole = .anchor
     }
 
+    var canSelectAdjacentPathSubpath: Bool {
+        guard selectedLayerCount == 1,
+              let content = document.selectedLayer?.shapeContent,
+              content.kind == .path
+        else { return false }
+        return content.allEditablePathSubpaths.count > 1
+    }
+
+    func selectNextPathSubpath() {
+        selectAdjacentPathSubpath(offset: 1)
+    }
+
+    func selectPreviousPathSubpath() {
+        selectAdjacentPathSubpath(offset: -1)
+    }
+
     func smoothSelectedPathAnchor() {
         guard let index = selectedPathAnchorIndex,
               let layerIndex = document.selectedLayerIndex,
@@ -1091,6 +1107,20 @@ extension ImageEditorViewModel {
         return references.firstIndex {
             $0.subpathIndex == selectedPathSubpathIndex && $0.anchorIndex == selectedPathAnchorIndex
         }
+    }
+
+    private func selectAdjacentPathSubpath(offset: Int) {
+        guard let content = document.selectedLayer?.shapeContent,
+              content.kind == .path
+        else { return }
+        let subpaths = content.allEditablePathSubpaths
+        guard subpaths.count > 1 else { return }
+        let currentIndex = subpaths.indices.contains(selectedPathSubpathIndex) ? selectedPathSubpathIndex : 0
+        let nextIndex = (currentIndex + offset + subpaths.count) % subpaths.count
+        selectedPathSubpathIndex = nextIndex
+        selectedPathAnchorIndex = subpaths[nextIndex].isEmpty ? nil : 0
+        selectedPathControlRole = .anchor
+        statusText = L10n.format("imageEditor.status.pathSubpathSelected", nextIndex + 1, subpaths.count)
     }
 
     private func pathPixelTargetIndex(below sourceIndex: Int) -> Int? {
