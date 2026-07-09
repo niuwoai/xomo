@@ -162,6 +162,14 @@ extension ImageEditorViewModel {
         Double(document.selectedLayer?.style.innerShadowBlur ?? 8)
     }
 
+    var selectedLayerInnerShadowChoke: Double {
+        Double(document.selectedLayer?.style.innerShadowChoke ?? 0)
+    }
+
+    var selectedLayerInnerShadowNoise: Double {
+        Double(document.selectedLayer?.style.innerShadowNoise ?? 0)
+    }
+
     var selectedLayerInnerShadowDistance: Double {
         Double(document.selectedLayer?.style.innerShadowDistance ?? 7)
     }
@@ -274,6 +282,10 @@ extension ImageEditorViewModel {
 
     var selectedLayerBevelUsesGlobalLight: Bool {
         document.selectedLayer?.style.bevelUsesGlobalLight == true
+    }
+
+    var selectedLayerBevelDirection: ImageEditorBevelDirection {
+        document.selectedLayer?.style.bevelDirection ?? .up
     }
 
     func toggleSelectedLayerStroke() {
@@ -589,6 +601,22 @@ extension ImageEditorViewModel {
         }
     }
 
+    func setSelectedLayerInnerShadowChoke(_ choke: Double) {
+        updateSelectedLayerStyle {
+            $0.innerShadowEnabled = true
+            $0.innerShadowColor = innerShadowColor()
+            $0.innerShadowChoke = max(0, min(24, CGFloat(choke)))
+        }
+    }
+
+    func setSelectedLayerInnerShadowNoise(_ noise: Double) {
+        updateSelectedLayerStyle {
+            $0.innerShadowEnabled = true
+            $0.innerShadowColor = innerShadowColor()
+            $0.innerShadowNoise = max(0, min(1, CGFloat(noise)))
+        }
+    }
+
     func setSelectedLayerInnerShadowDistance(_ distance: Double) {
         updateSelectedLayerStyle {
             $0.innerShadowEnabled = true
@@ -829,6 +857,13 @@ extension ImageEditorViewModel {
             let resolvedAngle = $0.resolvedBevelAngle(globalLightAngle: document.globalLightAngle)
             $0.bevelUsesGlobalLight = enabled
             $0.bevelAngle = enabled ? document.globalLightAngle : resolvedAngle
+        }
+    }
+
+    func setSelectedLayerBevelDirection(_ direction: ImageEditorBevelDirection) {
+        updateSelectedLayerStyle {
+            $0.bevelEnabled = true
+            $0.bevelDirection = direction
         }
     }
 

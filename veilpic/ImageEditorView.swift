@@ -1080,6 +1080,22 @@ struct ImageEditorView: View {
         }
     }
 
+    private var selectedLayerInnerShadowChokeBinding: Binding<Double> {
+        Binding {
+            viewModel.selectedLayerInnerShadowChoke
+        } set: { value in
+            viewModel.setSelectedLayerInnerShadowChoke(value)
+        }
+    }
+
+    private var selectedLayerInnerShadowNoiseBinding: Binding<Double> {
+        Binding {
+            viewModel.selectedLayerInnerShadowNoise
+        } set: { value in
+            viewModel.setSelectedLayerInnerShadowNoise(value)
+        }
+    }
+
     private var selectedLayerInnerShadowDistanceBinding: Binding<Double> {
         Binding {
             viewModel.selectedLayerInnerShadowDistance
@@ -1301,6 +1317,14 @@ struct ImageEditorView: View {
             viewModel.selectedLayerBevelUsesGlobalLight
         } set: { value in
             viewModel.setSelectedLayerBevelUsesGlobalLight(value)
+        }
+    }
+
+    private var selectedLayerBevelDirectionBinding: Binding<ImageEditorBevelDirection> {
+        Binding {
+            viewModel.selectedLayerBevelDirection
+        } set: { value in
+            viewModel.setSelectedLayerBevelDirection(value)
         }
     }
 
@@ -2465,10 +2489,24 @@ struct ImageEditorView: View {
                         step: 1
                     )
                     Stepper(
+                        L10n.format("imageEditor.properties.innerShadowChokeValue", Int(viewModel.selectedLayerInnerShadowChoke.rounded())),
+                        value: selectedLayerInnerShadowChokeBinding,
+                        in: 0...24,
+                        step: 1
+                    )
+                }
+                HStack {
+                    Stepper(
                         L10n.format("imageEditor.properties.innerShadowDistanceValue", Int(viewModel.selectedLayerInnerShadowDistance.rounded())),
                         value: selectedLayerInnerShadowDistanceBinding,
                         in: 0...48,
                         step: 1
+                    )
+                    Stepper(
+                        L10n.format("imageEditor.properties.innerShadowNoiseValue", Int((viewModel.selectedLayerInnerShadowNoise * 100).rounded())),
+                        value: selectedLayerInnerShadowNoiseBinding,
+                        in: 0...1,
+                        step: 0.05
                     )
                 }
                 Stepper(
@@ -2633,6 +2671,12 @@ struct ImageEditorView: View {
                 }
                 Toggle(L10n.text("imageEditor.properties.bevelUseGlobalLight"), isOn: selectedLayerBevelUsesGlobalLightBinding)
                     .toggleStyle(.checkbox)
+                Picker(L10n.text("imageEditor.properties.bevelDirection"), selection: selectedLayerBevelDirectionBinding) {
+                    ForEach(ImageEditorBevelDirection.allCases) { direction in
+                        Text(direction.title).tag(direction)
+                    }
+                }
+                .pickerStyle(.segmented)
                 Stepper(
                     L10n.format("imageEditor.properties.bevelAngleValue", Int(viewModel.selectedLayerBevelAngle.rounded())),
                     value: selectedLayerBevelAngleBinding,

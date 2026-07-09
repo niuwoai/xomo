@@ -702,7 +702,9 @@
 "imageEditor.properties.shadowOffsetYValue" = "Y: %d";
 "imageEditor.properties.innerShadowOpacityValue" = "Inner Shadow Opacity: %d%%";
 "imageEditor.properties.innerShadowBlurValue" = "Inner Shadow Blur: %d px";
+"imageEditor.properties.innerShadowChokeValue" = "Inner Shadow Choke: %d px";
 "imageEditor.properties.innerShadowDistanceValue" = "Inner Shadow Distance: %d px";
+"imageEditor.properties.innerShadowNoiseValue" = "Inner Shadow Noise: %d%%";
 "imageEditor.properties.innerShadowAngleValue" = "Inner Shadow Angle: %d°";
 "imageEditor.properties.innerShadowUseGlobalLight" = "Use Global Light for Inner Shadow";
 "imageEditor.properties.outerGlowOpacityValue" = "Outer Glow Opacity: %d%%";
@@ -731,6 +733,9 @@
 "imageEditor.properties.bevelSizeValue" = "Bevel Size: %d px";
 "imageEditor.properties.bevelOpacityValue" = "Bevel Opacity: %d%%";
 "imageEditor.properties.bevelUseGlobalLight" = "Use Global Light for Bevel";
+"imageEditor.properties.bevelDirection" = "Bevel Direction";
+"imageEditor.bevelDirection.up" = "Up";
+"imageEditor.bevelDirection.down" = "Down";
 "imageEditor.properties.bevelAngleValue" = "Bevel Angle: %d°";
 "imageEditor.layer.background" = "Background";
 "imageEditor.layer.unlockedBackground" = "Layer 0";

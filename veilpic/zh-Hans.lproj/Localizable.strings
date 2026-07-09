@@ -702,7 +702,9 @@
 "imageEditor.properties.shadowOffsetYValue" = "Y：%d";
 "imageEditor.properties.innerShadowOpacityValue" = "内阴影不透明度：%d%%";
 "imageEditor.properties.innerShadowBlurValue" = "内阴影模糊：%d px";
+"imageEditor.properties.innerShadowChokeValue" = "内阴影阻塞：%d px";
 "imageEditor.properties.innerShadowDistanceValue" = "内阴影距离：%d px";
+"imageEditor.properties.innerShadowNoiseValue" = "内阴影噪点：%d%%";
 "imageEditor.properties.innerShadowAngleValue" = "内阴影角度：%d°";
 "imageEditor.properties.innerShadowUseGlobalLight" = "内阴影使用全局光";
 "imageEditor.properties.outerGlowOpacityValue" = "外发光不透明度：%d%%";
@@ -731,6 +733,9 @@
 "imageEditor.properties.bevelSizeValue" = "斜面大小：%d px";
 "imageEditor.properties.bevelOpacityValue" = "斜面不透明度：%d%%";
 "imageEditor.properties.bevelUseGlobalLight" = "斜面使用全局光";
+"imageEditor.properties.bevelDirection" = "斜面方向";
+"imageEditor.bevelDirection.up" = "上";
+"imageEditor.bevelDirection.down" = "下";
 "imageEditor.properties.bevelAngleValue" = "斜面角度：%d°";
 "imageEditor.layer.background" = "背景";
 "imageEditor.layer.unlockedBackground" = "图层 0";

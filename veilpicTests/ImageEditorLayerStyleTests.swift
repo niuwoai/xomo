@@ -790,6 +790,10 @@ struct ImageEditorLayerStyleTests {
 
         viewModel.setSelectedLayerBevelSize(8)
         viewModel.setSelectedLayerBevelOpacity(0.8)
+        viewModel.setSelectedLayerBevelAngle(45)
+        viewModel.setSelectedLayerBevelDirection(.up)
+        let upBevelData = try #require(viewModel.currentImage.qingtuPNGData())
+        viewModel.setSelectedLayerBevelDirection(.down)
 
         let styledLayer = try #require(viewModel.document.selectedLayer)
         let layerPixelsAfterStyle = try #require(styledLayer.image.qingtuPNGData())
@@ -797,9 +801,18 @@ struct ImageEditorLayerStyleTests {
         #expect(styledLayer.style.bevelEnabled)
         #expect(styledLayer.style.bevelSize == 8)
         #expect(styledLayer.style.bevelOpacity == 0.8)
+        #expect(styledLayer.style.bevelDirection == .down)
+        #expect(viewModel.selectedLayerBevelDirection == .down)
         #expect(layerPixelsAfterStyle == layerPixelsBeforeStyle)
         #expect(compositedAfterStyle != compositedBeforeStyle)
+        #expect(compositedAfterStyle != upBevelData)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStyle"))
+
+        let project = try ImageEditorProjectDocument(document: viewModel.document)
+        let restoredDocument = try project.restoredDocument()
+        let restoredLayer = try #require(restoredDocument.layers.first { $0.id == styledLayer.id })
+        #expect(restoredLayer.style.bevelEnabled)
+        #expect(restoredLayer.style.bevelDirection == .down)
     }
 
     @Test func imageEditorInnerShadowIsNonDestructiveAndUpdatesStyleParameters() async throws {
@@ -828,6 +841,47 @@ struct ImageEditorLayerStyleTests {
         #expect(layerPixelsAfterStyle == layerPixelsBeforeStyle)
         #expect(compositedAfterStyle != compositedBeforeStyle)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStyle"))
+    }
+
+    @Test func imageEditorInnerShadowChokeAndNoiseRoundTripProjectState() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let baseImage = solidImage(color: .systemBlue, size: canvasSize)
+        let layerImage = centerRectImage(size: canvasSize, color: .systemGreen)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: baseImage) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(layerImage, historyTitle: L10n.text("imageEditor.history.brush"))
+        let layerPixelsBeforeStyle = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+
+        viewModel.foregroundColor = .black
+        viewModel.setSelectedLayerInnerShadowOpacity(1)
+        viewModel.setSelectedLayerInnerShadowBlur(0)
+        viewModel.setSelectedLayerInnerShadowDistance(12)
+        viewModel.setSelectedLayerInnerShadowAngle(0)
+        viewModel.setSelectedLayerInnerShadowChoke(0)
+        viewModel.setSelectedLayerInnerShadowNoise(0)
+        let smoothShadowData = try #require(viewModel.currentImage.qingtuPNGData())
+
+        viewModel.setSelectedLayerInnerShadowChoke(8)
+        viewModel.setSelectedLayerInnerShadowNoise(1)
+
+        let styledLayer = try #require(viewModel.document.selectedLayer)
+        let layerPixelsAfterStyle = try #require(styledLayer.image.qingtuPNGData())
+        let noisyShadowData = try #require(viewModel.currentImage.qingtuPNGData())
+
+        #expect(styledLayer.style.innerShadowEnabled)
+        #expect(styledLayer.style.innerShadowChoke == 8)
+        #expect(styledLayer.style.innerShadowNoise == 1)
+        #expect(viewModel.selectedLayerInnerShadowChoke == 8)
+        #expect(viewModel.selectedLayerInnerShadowNoise == 1)
+        #expect(layerPixelsAfterStyle == layerPixelsBeforeStyle)
+        #expect(noisyShadowData != smoothShadowData)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStyle"))
+
+        let project = try ImageEditorProjectDocument(document: viewModel.document)
+        let restoredDocument = try project.restoredDocument()
+        let restoredLayer = try #require(restoredDocument.layers.first { $0.id == styledLayer.id })
+        #expect(restoredLayer.style.innerShadowEnabled)
+        #expect(restoredLayer.style.innerShadowChoke == 8)
+        #expect(restoredLayer.style.innerShadowNoise == 1)
     }
 
     @Test func imageEditorGradientOverlayIsNonDestructiveAndUpdatesStyleParameters() async throws {

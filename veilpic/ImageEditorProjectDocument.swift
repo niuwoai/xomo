@@ -615,6 +615,8 @@ struct ImageEditorProjectLayerStyle: Codable, Equatable {
     var innerShadowColor: ImageEditorProjectColor
     var innerShadowOpacity: CGFloat
     var innerShadowBlur: CGFloat
+    var innerShadowChoke: CGFloat?
+    var innerShadowNoise: CGFloat?
     var innerShadowDistance: CGFloat
     var innerShadowAngle: CGFloat
     var innerShadowUsesGlobalLight: Bool?
@@ -659,6 +661,7 @@ struct ImageEditorProjectLayerStyle: Codable, Equatable {
     var bevelSize: CGFloat
     var bevelAngle: CGFloat?
     var bevelUsesGlobalLight: Bool?
+    var bevelDirection: ImageEditorBevelDirection?
 
     init(style: ImageEditorLayerStyle) {
         strokeEnabled = style.strokeEnabled
@@ -688,6 +691,8 @@ struct ImageEditorProjectLayerStyle: Codable, Equatable {
         innerShadowColor = ImageEditorProjectColor(color: style.innerShadowColor)
         innerShadowOpacity = style.innerShadowOpacity
         innerShadowBlur = style.innerShadowBlur
+        innerShadowChoke = style.innerShadowChoke
+        innerShadowNoise = style.innerShadowNoise
         innerShadowDistance = style.innerShadowDistance
         innerShadowAngle = style.innerShadowAngle
         innerShadowUsesGlobalLight = style.innerShadowUsesGlobalLight
@@ -732,6 +737,7 @@ struct ImageEditorProjectLayerStyle: Codable, Equatable {
         bevelSize = style.bevelSize
         bevelAngle = style.bevelAngle
         bevelUsesGlobalLight = style.bevelUsesGlobalLight
+        bevelDirection = style.bevelDirection
     }
 
     var layerStyle: ImageEditorLayerStyle {
@@ -765,6 +771,8 @@ struct ImageEditorProjectLayerStyle: Codable, Equatable {
             innerShadowColor: innerShadowColor.nsColor,
             innerShadowOpacity: innerShadowOpacity,
             innerShadowBlur: innerShadowBlur,
+            innerShadowChoke: max(0, min(24, innerShadowChoke ?? 0)),
+            innerShadowNoise: max(0, min(1, innerShadowNoise ?? 0)),
             innerShadowDistance: innerShadowDistance,
             innerShadowAngle: innerShadowAngle,
             innerShadowUsesGlobalLight: innerShadowUsesGlobalLight ?? true,
@@ -808,7 +816,8 @@ struct ImageEditorProjectLayerStyle: Codable, Equatable {
             bevelOpacity: bevelOpacity,
             bevelSize: bevelSize,
             bevelAngle: max(-180, min(180, bevelAngle ?? -45)),
-            bevelUsesGlobalLight: bevelUsesGlobalLight ?? true
+            bevelUsesGlobalLight: bevelUsesGlobalLight ?? true,
+            bevelDirection: bevelDirection ?? .up
         )
     }
 }

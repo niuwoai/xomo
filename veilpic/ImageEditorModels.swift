@@ -1468,6 +1468,17 @@ enum ImageEditorInnerGlowSource: String, CaseIterable, Identifiable, Codable {
     }
 }
 
+enum ImageEditorBevelDirection: String, CaseIterable, Identifiable, Codable {
+    case up
+    case down
+
+    var id: String { rawValue }
+
+    var title: String {
+        L10n.text("imageEditor.bevelDirection.\(rawValue)")
+    }
+}
+
 struct ImageEditorLayerStyle {
     var strokeEnabled = false
     var strokeColor = NSColor.white
@@ -1496,6 +1507,8 @@ struct ImageEditorLayerStyle {
     var innerShadowColor = NSColor.black
     var innerShadowOpacity: CGFloat = 0.35
     var innerShadowBlur: CGFloat = 8
+    var innerShadowChoke: CGFloat = 0
+    var innerShadowNoise: CGFloat = 0
     var innerShadowDistance: CGFloat = 7
     var innerShadowAngle: CGFloat = -45
     var innerShadowUsesGlobalLight = true
@@ -1540,6 +1553,7 @@ struct ImageEditorLayerStyle {
     var bevelSize: CGFloat = 4
     var bevelAngle: CGFloat = -45
     var bevelUsesGlobalLight = true
+    var bevelDirection = ImageEditorBevelDirection.up
 
     var hasEffects: Bool {
         strokeEnabled
@@ -2595,9 +2609,11 @@ struct ImageEditorLayer: Identifiable {
                 let radians = style.resolvedInnerShadowAngle(globalLightAngle: globalLightAngle) * .pi / 180
                 let distance = max(0, style.innerShadowDistance)
                 let offset = CGSize(width: cos(radians) * distance, height: sin(radians) * distance)
-                let innerShadowImage = baseImage.alphaTinted(
+                let rawInnerShadowImage = baseImage.alphaTinted(
                     color: style.innerShadowColor.withAlphaComponent(style.innerShadowOpacity)
                 )
+                let innerShadowImage = rawInnerShadowImage.shadowNoised(amount: style.innerShadowNoise) ?? rawInnerShadowImage
+                let choke = max(0, Int(style.innerShadowChoke.rounded()))
                 let innerShadowCanvas = NSImage.rendered(size: outputSize) { _ in
                     innerShadowImage.draw(
                         in: contentRect.offsetBy(dx: offset.width, dy: offset.height),
@@ -2605,6 +2621,24 @@ struct ImageEditorLayer: Identifiable {
                         operation: .sourceOver,
                         fraction: 1
                     )
+                    if choke > 0 {
+                        let directions = 24
+                        for radius in 1...choke {
+                            for step in 0..<directions {
+                                let angle = CGFloat(step) / CGFloat(directions) * .pi * 2
+                                let expansion = CGSize(width: cos(angle) * CGFloat(radius), height: sin(angle) * CGFloat(radius))
+                                innerShadowImage.draw(
+                                    in: contentRect.offsetBy(
+                                        dx: offset.width + expansion.width,
+                                        dy: offset.height + expansion.height
+                                    ),
+                                    from: CGRect(origin: .zero, size: innerShadowImage.size),
+                                    operation: .sourceOver,
+                                    fraction: 1
+                                )
+                            }
+                        }
+                    }
                     baseImage.draw(
                         in: contentRect,
                         from: CGRect(origin: .zero, size: baseImage.size),
@@ -2740,15 +2774,21 @@ struct ImageEditorLayer: Identifiable {
                 let shadowImage = baseImage.alphaTinted(
                     color: style.bevelShadowColor.withAlphaComponent(style.bevelOpacity)
                 )
+                let highlightOffset = style.bevelDirection == .up
+                    ? CGSize(width: -bevelOffset.width, height: -bevelOffset.height)
+                    : bevelOffset
+                let shadowOffset = style.bevelDirection == .up
+                    ? bevelOffset
+                    : CGSize(width: -bevelOffset.width, height: -bevelOffset.height)
                 let bevelCanvas = NSImage.rendered(size: outputSize) { _ in
                     highlightImage.draw(
-                        in: contentRect.offsetBy(dx: -bevelOffset.width, dy: -bevelOffset.height),
+                        in: contentRect.offsetBy(dx: highlightOffset.width, dy: highlightOffset.height),
                         from: CGRect(origin: .zero, size: highlightImage.size),
                         operation: .sourceOver,
                         fraction: 1
                     )
                     shadowImage.draw(
-                        in: contentRect.offsetBy(dx: bevelOffset.width, dy: bevelOffset.height),
+                        in: contentRect.offsetBy(dx: shadowOffset.width, dy: shadowOffset.height),
                         from: CGRect(origin: .zero, size: shadowImage.size),
                         operation: .sourceOver,
                         fraction: 1
