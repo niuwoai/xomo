@@ -627,6 +627,63 @@ struct ImageEditorFilterTests {
         #expect(restoredFilter.normalizedSettings.liquifyPushY == 0)
     }
 
+    @Test func imageEditorLiquifyTwirlFilterLayerAndSmartFilterAreNonDestructive() async throws {
+        let canvasSize = NSSize(width: 48, height: 48)
+        let sourceImage = quadrantImage(
+            size: canvasSize,
+            topLeft: .systemRed,
+            topRight: .systemBlue,
+            bottomLeft: .systemGreen,
+            bottomRight: .systemYellow
+        )
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: sourceImage) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(sourceImage, historyTitle: L10n.text("imageEditor.history.brush"))
+        let baseLayerID = try #require(viewModel.document.selectedLayerID)
+        let basePixelsBefore = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+        let samplePoint = CGPoint(x: 24, y: 12)
+        let sampleBefore = try #require(viewModel.currentImage.color(at: samplePoint)?.usingColorSpace(.deviceRGB))
+
+        viewModel.selectedFilter = .liquifyTwirl
+        viewModel.filterIntensity = 1
+        viewModel.filterLiquifyTwirlAngle = 1
+        viewModel.addFilterLayer()
+
+        let filterLayer = try #require(viewModel.document.selectedLayer)
+        let sampleAfter = try #require(viewModel.currentImage.color(at: samplePoint)?.usingColorSpace(.deviceRGB))
+        #expect(filterLayer.isFilter)
+        #expect(filterLayer.filter?.kind == .liquifyTwirl)
+        #expect(filterLayer.filterSettings.normalized().liquifyTwirlAngle == 1)
+        #expect(viewModel.document.layers.first { $0.id == baseLayerID }?.image.qingtuPNGData() == basePixelsBefore)
+        #expect(sampleBefore.blueComponent > sampleBefore.redComponent + 0.4)
+        #expect(sampleAfter.redComponent > sampleAfter.blueComponent + 0.25)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerFilterNew"))
+
+        let smartViewModel = ImageEditorViewModel(sourceName: "source.png", image: sourceImage) { _ in }
+        smartViewModel.replaceSelectedLayerImageForTesting(sourceImage, historyTitle: L10n.text("imageEditor.history.brush"))
+        let smartBasePixelsBefore = try #require(smartViewModel.document.selectedLayer?.image.qingtuPNGData())
+        smartViewModel.selectedFilter = .liquifyTwirl
+        smartViewModel.filterIntensity = 1
+        smartViewModel.filterLiquifyTwirlAngle = 1
+        smartViewModel.addSmartFilterToSelectedLayer()
+
+        let smartLayer = try #require(smartViewModel.document.selectedLayer)
+        let smartFilter = try #require(smartLayer.smartFilters.first)
+        let smartSampleAfter = try #require(smartViewModel.currentImage.color(at: samplePoint)?.usingColorSpace(.deviceRGB))
+        #expect(smartFilter.kind == .liquifyTwirl)
+        #expect(smartFilter.normalizedSettings.liquifyTwirlAngle == 1)
+        #expect(smartLayer.image.qingtuPNGData() == smartBasePixelsBefore)
+        #expect(smartSampleAfter.redComponent > smartSampleAfter.blueComponent + 0.25)
+        #expect(smartViewModel.smartFilterLabel(smartFilter) == L10n.format("imageEditor.properties.smartFilterLiquifyTwirlItem", smartFilter.kind.title, 100, 100))
+        #expect(smartViewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterAdd"))
+
+        let project = try ImageEditorProjectDocument(document: smartViewModel.document)
+        let restoredDocument = try project.restoredDocument()
+        let restoredLayer = try #require(restoredDocument.layers.first { $0.id == smartLayer.id })
+        let restoredFilter = try #require(restoredLayer.smartFilters.first)
+        #expect(restoredFilter.kind == .liquifyTwirl)
+        #expect(restoredFilter.normalizedSettings.liquifyTwirlAngle == 1)
+    }
+
     private func solidImage(size: NSSize, color: NSColor) -> NSImage {
         NSImage.rendered(size: size) { rect in
             color.setFill()
@@ -640,6 +697,27 @@ struct ImageEditorFilterTests {
             CGRect(x: rect.minX, y: rect.minY, width: rect.width / 2, height: rect.height).fill()
             right.setFill()
             CGRect(x: rect.midX, y: rect.minY, width: rect.width / 2, height: rect.height).fill()
+        } ?? NSImage.transparent(size: size)
+    }
+
+    private func quadrantImage(
+        size: NSSize,
+        topLeft: NSColor,
+        topRight: NSColor,
+        bottomLeft: NSColor,
+        bottomRight: NSColor
+    ) -> NSImage {
+        NSImage.rendered(size: size) { rect in
+            let halfWidth = rect.width / 2
+            let halfHeight = rect.height / 2
+            topLeft.setFill()
+            CGRect(x: rect.minX, y: rect.minY, width: halfWidth, height: halfHeight).fill()
+            topRight.setFill()
+            CGRect(x: rect.midX, y: rect.minY, width: halfWidth, height: halfHeight).fill()
+            bottomLeft.setFill()
+            CGRect(x: rect.minX, y: rect.midY, width: halfWidth, height: halfHeight).fill()
+            bottomRight.setFill()
+            CGRect(x: rect.midX, y: rect.midY, width: halfWidth, height: halfHeight).fill()
         } ?? NSImage.transparent(size: size)
     }
 

@@ -2045,6 +2045,18 @@ struct ImageEditorView: View {
                             .frame(width: 44, alignment: .trailing)
                     }
                 }
+                if viewModel.selectedFilter == .liquifyTwirl {
+                    HStack {
+                        Text(L10n.text("imageEditor.filter.liquifyTwirlAngle"))
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                        Slider(value: $viewModel.filterLiquifyTwirlAngle, in: -1...1, step: 0.05)
+                        Text(L10n.format("imageEditor.filter.liquifyTwirlValue", Int((viewModel.filterLiquifyTwirlAngle * 100).rounded())))
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+                            .frame(width: 44, alignment: .trailing)
+                    }
+                }
                 Text(viewModel.selectedLayerSmartFilterText)
                     .font(.system(size: 10, weight: .medium))
                     .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))

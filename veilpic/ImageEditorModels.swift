@@ -1234,6 +1234,7 @@ enum ImageEditorFilter: String, CaseIterable, Identifiable {
     case oilPaint
     case vignette
     case liquifyPush
+    case liquifyTwirl
 
     var id: String { rawValue }
 
@@ -1263,17 +1264,20 @@ struct ImageEditorFilterSettings: Equatable, Codable {
     var unsharpThreshold: Double = 0
     var liquifyPushX: Double = 0.25
     var liquifyPushY: Double = 0
+    var liquifyTwirlAngle: Double = 0.5
 
     init(
         unsharpRadius: Double = 1,
         unsharpThreshold: Double = 0,
         liquifyPushX: Double = 0.25,
-        liquifyPushY: Double = 0
+        liquifyPushY: Double = 0,
+        liquifyTwirlAngle: Double = 0.5
     ) {
         self.unsharpRadius = unsharpRadius
         self.unsharpThreshold = unsharpThreshold
         self.liquifyPushX = liquifyPushX
         self.liquifyPushY = liquifyPushY
+        self.liquifyTwirlAngle = liquifyTwirlAngle
     }
 
     init(from decoder: Decoder) throws {
@@ -1282,6 +1286,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         unsharpThreshold = try container.decodeIfPresent(Double.self, forKey: .unsharpThreshold) ?? 0
         liquifyPushX = try container.decodeIfPresent(Double.self, forKey: .liquifyPushX) ?? 0.25
         liquifyPushY = try container.decodeIfPresent(Double.self, forKey: .liquifyPushY) ?? 0
+        liquifyTwirlAngle = try container.decodeIfPresent(Double.self, forKey: .liquifyTwirlAngle) ?? 0.5
     }
 
     func encode(to encoder: Encoder) throws {
@@ -1290,6 +1295,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         try container.encode(unsharpThreshold, forKey: .unsharpThreshold)
         try container.encode(liquifyPushX, forKey: .liquifyPushX)
         try container.encode(liquifyPushY, forKey: .liquifyPushY)
+        try container.encode(liquifyTwirlAngle, forKey: .liquifyTwirlAngle)
     }
 
     func normalized() -> ImageEditorFilterSettings {
@@ -1297,7 +1303,8 @@ struct ImageEditorFilterSettings: Equatable, Codable {
             unsharpRadius: max(0.5, min(5, unsharpRadius)),
             unsharpThreshold: max(0, min(1, unsharpThreshold)),
             liquifyPushX: max(-1, min(1, liquifyPushX)),
-            liquifyPushY: max(-1, min(1, liquifyPushY))
+            liquifyPushY: max(-1, min(1, liquifyPushY)),
+            liquifyTwirlAngle: max(-1, min(1, liquifyTwirlAngle))
         )
     }
 
@@ -1306,6 +1313,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         case unsharpThreshold
         case liquifyPushX
         case liquifyPushY
+        case liquifyTwirlAngle
     }
 }
 

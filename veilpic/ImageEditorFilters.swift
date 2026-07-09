@@ -57,6 +57,9 @@ extension NSImage {
         if kind == .liquifyPush {
             return liquifyPushed(intensity: clamped, settings: settings)
         }
+        if kind == .liquifyTwirl {
+            return liquifyTwirled(intensity: clamped, settings: settings)
+        }
 
         guard let ciImage = ciImageForEditing() else { return nil }
         let output: CIImage?
@@ -106,6 +109,8 @@ extension NSImage {
             return vignetted(intensity: clamped)
         case .liquifyPush:
             return liquifyPushed(intensity: clamped, settings: settings)
+        case .liquifyTwirl:
+            return liquifyTwirled(intensity: clamped, settings: settings)
         }
 
         guard let output,
@@ -531,6 +536,46 @@ extension NSImage {
             let maxShift = radius * 0.42 * clampedIntensity
             let sourceX = Double(x) - normalizedSettings.liquifyPushX * maxShift * falloff
             let sourceY = Double(y) - normalizedSettings.liquifyPushY * maxShift * falloff
+            return Self.samplePixel(
+                x: sourceX,
+                y: sourceY,
+                width: width,
+                height: height,
+                pixels: pixels,
+                bytesPerRow: bytesPerRow,
+                bytesPerPixel: bytesPerPixel
+            )
+        }
+    }
+
+    private func liquifyTwirled(intensity: Double, settings: ImageEditorFilterSettings) -> NSImage? {
+        let clampedIntensity = max(0, min(1, intensity))
+        guard clampedIntensity > 0 else { return self }
+        let normalizedSettings = settings.normalized()
+        return pixelSampledFromBuffer { x, y, width, height, pixels, bytesPerRow, bytesPerPixel in
+            let centerX = Double(max(width - 1, 1)) / 2
+            let centerY = Double(max(height - 1, 1)) / 2
+            let radius = max(2, min(Double(width), Double(height)) * 0.45)
+            let dx = Double(x) - centerX
+            let dy = Double(y) - centerY
+            let distance = hypot(dx, dy)
+            guard distance < radius, distance > 0.001 else {
+                return Self.samplePixel(
+                    x: Double(x),
+                    y: Double(y),
+                    width: width,
+                    height: height,
+                    pixels: pixels,
+                    bytesPerRow: bytesPerRow,
+                    bytesPerPixel: bytesPerPixel
+                )
+            }
+
+            let falloff = pow(1 - distance / radius, 2)
+            let twist = normalizedSettings.liquifyTwirlAngle * Double.pi * 1.5 * clampedIntensity * falloff
+            let sourceAngle = atan2(dy, dx) - twist
+            let sourceX = centerX + cos(sourceAngle) * distance
+            let sourceY = centerY + sin(sourceAngle) * distance
             return Self.samplePixel(
                 x: sourceX,
                 y: sourceY,

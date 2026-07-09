@@ -464,6 +464,7 @@
 "imageEditor.filter.oilPaint" = "Oil Paint";
 "imageEditor.filter.vignette" = "Vignette";
 "imageEditor.filter.liquifyPush" = "Liquify Push";
+"imageEditor.filter.liquifyTwirl" = "Liquify Twirl";
 "imageEditor.filter.unsharpRadius" = "Radius";
 "imageEditor.filter.unsharpRadiusValue" = "%@ px";
 "imageEditor.filter.unsharpThreshold" = "Threshold";
@@ -471,6 +472,8 @@
 "imageEditor.filter.liquifyPushX" = "Push X";
 "imageEditor.filter.liquifyPushY" = "Push Y";
 "imageEditor.filter.liquifyPushValue" = "%d";
+"imageEditor.filter.liquifyTwirlAngle" = "Twirl";
+"imageEditor.filter.liquifyTwirlValue" = "%d";
 "imageEditor.shape.rectangle" = "Rectangle";
 "imageEditor.shape.ellipse" = "Ellipse";
 "imageEditor.shape.path" = "Path";
@@ -494,6 +497,7 @@
 "imageEditor.properties.smartFilterItem" = "%@ %d%%";
 "imageEditor.properties.smartFilterUnsharpItem" = "%@ %d%% · Radius %@ · Threshold %d";
 "imageEditor.properties.smartFilterLiquifyPushItem" = "%@ %d%% · X %d · Y %d";
+"imageEditor.properties.smartFilterLiquifyTwirlItem" = "%@ %d%% · Twirl %d";
 "imageEditor.properties.smartFilterDisabled" = "%@ (off)";
 "imageEditor.properties.smartFilterSeparator" = " · ";
 "imageEditor.properties.textPlaceholder" = "Text to add";
