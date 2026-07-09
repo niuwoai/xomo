@@ -124,6 +124,14 @@ extension ImageEditorViewModel {
         selectedAlphaChannel != nil
     }
 
+    var canFillSelectedAlphaChannelWhite: Bool {
+        selectedAlphaChannel != nil
+    }
+
+    var canClearSelectedAlphaChannel: Bool {
+        selectedAlphaChannel != nil
+    }
+
     var canThresholdSelectedAlphaChannel: Bool {
         selectedAlphaChannel != nil
     }
@@ -362,6 +370,16 @@ extension ImageEditorViewModel {
         invertAlphaChannel(selectedAlphaChannelID)
     }
 
+    func fillSelectedAlphaChannelWhite() {
+        guard let selectedAlphaChannelID else { return }
+        fillAlphaChannelWhite(selectedAlphaChannelID)
+    }
+
+    func clearSelectedAlphaChannel() {
+        guard let selectedAlphaChannelID else { return }
+        clearAlphaChannel(selectedAlphaChannelID)
+    }
+
     func thresholdSelectedAlphaChannel() {
         guard let selectedAlphaChannelID else { return }
         thresholdAlphaChannel(selectedAlphaChannelID)
@@ -517,6 +535,24 @@ extension ImageEditorViewModel {
         selectedAlphaChannelID = id
         appendHistory(L10n.text("imageEditor.history.alphaChannelInvert"))
         statusText = L10n.format("imageEditor.status.alphaChannelInverted", document.alphaChannels[index].name)
+    }
+
+    func fillAlphaChannelWhite(_ id: UUID) {
+        replaceAlphaChannelAlpha(
+            id,
+            with: UInt8.max,
+            historyKey: "imageEditor.history.alphaChannelFillWhite",
+            statusKey: "imageEditor.status.alphaChannelFilledWhite"
+        )
+    }
+
+    func clearAlphaChannel(_ id: UUID) {
+        replaceAlphaChannelAlpha(
+            id,
+            with: 0,
+            historyKey: "imageEditor.history.alphaChannelClear",
+            statusKey: "imageEditor.status.alphaChannelCleared"
+        )
     }
 
     func thresholdAlphaChannel(_ id: UUID, cutoff: UInt8 = 127) {
@@ -850,6 +886,23 @@ extension ImageEditorViewModel {
             historyKey: "imageEditor.history.alphaChannelSelectionIntersect",
             statusKey: "imageEditor.status.alphaChannelSelectionIntersected"
         )
+    }
+
+    private func replaceAlphaChannelAlpha(
+        _ id: UUID,
+        with value: UInt8,
+        historyKey: String,
+        statusKey: String
+    ) {
+        guard let index = document.alphaChannels.firstIndex(where: { $0.id == id }) else { return }
+        let mask = document.alphaChannels[index].mask
+        let count = max(0, mask.width * mask.height)
+
+        pushUndo()
+        document.alphaChannels[index].mask.alpha = [UInt8](repeating: value, count: count)
+        selectedAlphaChannelID = id
+        appendHistory(L10n.text(historyKey))
+        statusText = L10n.format(statusKey, document.alphaChannels[index].name)
     }
 
     private func combineAlphaChannelWithCurrentSelection(

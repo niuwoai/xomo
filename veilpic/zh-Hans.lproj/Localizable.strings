@@ -1612,6 +1612,8 @@
 "imageEditor.action.alphaChannelApplyToMask" = "将 %@ 应用为当前图层蒙版";
 "imageEditor.action.alphaChannelDuplicate" = "复制 %@";
 "imageEditor.action.alphaChannelInvert" = "反相 %@";
+"imageEditor.action.alphaChannelFillWhite" = "用白色填满 %@";
+"imageEditor.action.alphaChannelClear" = "清空 %@ 为黑色";
 "imageEditor.action.alphaChannelThreshold" = "阈值化 %@";
 "imageEditor.action.alphaChannelFeather" = "羽化 %@";
 "imageEditor.action.alphaChannelExpand" = "扩展 %@";
@@ -1640,6 +1642,8 @@
 "imageEditor.action.alphaChannelApplySelectedToMask" = "将选中 Alpha 通道应用为当前图层蒙版";
 "imageEditor.action.alphaChannelDuplicateSelected" = "复制选中 Alpha 通道";
 "imageEditor.action.alphaChannelInvertSelected" = "反相选中 Alpha 通道";
+"imageEditor.action.alphaChannelFillWhiteSelected" = "用白色填满选中 Alpha 通道";
+"imageEditor.action.alphaChannelClearSelected" = "清空选中 Alpha 通道为黑色";
 "imageEditor.action.alphaChannelThresholdSelected" = "阈值化选中 Alpha 通道";
 "imageEditor.action.alphaChannelFeatherSelected" = "羽化选中 Alpha 通道";
 "imageEditor.action.alphaChannelExpandSelected" = "扩展选中 Alpha 通道";
@@ -1679,6 +1683,8 @@
 "imageEditor.status.alphaChannelApplyToMask" = "已将 %@ 应用为当前图层蒙版";
 "imageEditor.status.alphaChannelDuplicated" = "已复制为 %@";
 "imageEditor.status.alphaChannelInverted" = "已反相 %@";
+"imageEditor.status.alphaChannelFilledWhite" = "已用白色填满 %@";
+"imageEditor.status.alphaChannelCleared" = "已清空 %@ 为黑色";
 "imageEditor.status.alphaChannelThresholded" = "已阈值化 %@";
 "imageEditor.status.alphaChannelFeathered" = "已羽化 %@（%d px）";
 "imageEditor.status.alphaChannelExpanded" = "已扩展 %@（%d px）";
@@ -1712,6 +1718,8 @@
 "imageEditor.history.alphaChannelApplyToMask" = "应用 Alpha 通道为图层蒙版";
 "imageEditor.history.alphaChannelDuplicate" = "复制 Alpha 通道";
 "imageEditor.history.alphaChannelInvert" = "反相 Alpha 通道";
+"imageEditor.history.alphaChannelFillWhite" = "用白色填满 Alpha 通道";
+"imageEditor.history.alphaChannelClear" = "清空 Alpha 通道为黑色";
 "imageEditor.history.alphaChannelThreshold" = "阈值化 Alpha 通道";
 "imageEditor.history.alphaChannelFeather" = "羽化 Alpha 通道";
 "imageEditor.history.alphaChannelExpand" = "扩展 Alpha 通道";

@@ -1612,6 +1612,8 @@
 "imageEditor.action.alphaChannelApplyToMask" = "%@ を現在のレイヤーマスクとして適用";
 "imageEditor.action.alphaChannelDuplicate" = "%@ を複製";
 "imageEditor.action.alphaChannelInvert" = "%@ を反転";
+"imageEditor.action.alphaChannelFillWhite" = "%@ を白で塗りつぶす";
+"imageEditor.action.alphaChannelClear" = "%@ を黒にクリア";
 "imageEditor.action.alphaChannelThreshold" = "%@ をしきい値化";
 "imageEditor.action.alphaChannelFeather" = "%@ をぼかして羽化";
 "imageEditor.action.alphaChannelExpand" = "%@ を拡張";
@@ -1640,6 +1642,8 @@
 "imageEditor.action.alphaChannelApplySelectedToMask" = "選択中の Alpha チャンネルを現在のレイヤーマスクとして適用";
 "imageEditor.action.alphaChannelDuplicateSelected" = "選択中の Alpha チャンネルを複製";
 "imageEditor.action.alphaChannelInvertSelected" = "選択中の Alpha チャンネルを反転";
+"imageEditor.action.alphaChannelFillWhiteSelected" = "選択中の Alpha チャンネルを白で塗りつぶす";
+"imageEditor.action.alphaChannelClearSelected" = "選択中の Alpha チャンネルを黒にクリア";
 "imageEditor.action.alphaChannelThresholdSelected" = "選択中の Alpha チャンネルをしきい値化";
 "imageEditor.action.alphaChannelFeatherSelected" = "選択中の Alpha チャンネルを羽化";
 "imageEditor.action.alphaChannelExpandSelected" = "選択中の Alpha チャンネルを拡張";
@@ -1679,6 +1683,8 @@
 "imageEditor.status.alphaChannelApplyToMask" = "%@ を現在のレイヤーマスクとして適用しました";
 "imageEditor.status.alphaChannelDuplicated" = "%@ として複製しました";
 "imageEditor.status.alphaChannelInverted" = "%@ を反転しました";
+"imageEditor.status.alphaChannelFilledWhite" = "%@ を白で塗りつぶしました";
+"imageEditor.status.alphaChannelCleared" = "%@ を黒にクリアしました";
 "imageEditor.status.alphaChannelThresholded" = "%@ をしきい値化しました";
 "imageEditor.status.alphaChannelFeathered" = "%@ を羽化しました（%d px）";
 "imageEditor.status.alphaChannelExpanded" = "%@ を拡張しました（%d px）";
@@ -1712,6 +1718,8 @@
 "imageEditor.history.alphaChannelApplyToMask" = "Alpha チャンネルをレイヤーマスクとして適用";
 "imageEditor.history.alphaChannelDuplicate" = "Alpha チャンネルを複製";
 "imageEditor.history.alphaChannelInvert" = "Alpha チャンネルを反転";
+"imageEditor.history.alphaChannelFillWhite" = "Alpha チャンネルを白で塗りつぶす";
+"imageEditor.history.alphaChannelClear" = "Alpha チャンネルを黒にクリア";
 "imageEditor.history.alphaChannelThreshold" = "Alpha チャンネルをしきい値化";
 "imageEditor.history.alphaChannelFeather" = "Alpha チャンネルを羽化";
 "imageEditor.history.alphaChannelExpand" = "Alpha チャンネルを拡張";

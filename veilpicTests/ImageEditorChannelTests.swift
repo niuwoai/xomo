@@ -76,9 +76,24 @@ struct ImageEditorChannelTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelBlank"))
         #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelBlank", channel.name))
 
+        viewModel.fillSelectedAlphaChannelWhite()
+        let filledChannel = try #require(viewModel.document.alphaChannels.first)
+        #expect(filledChannel.mask.alpha.allSatisfy { $0 == UInt8.max })
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelFillWhite"))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelFilledWhite", filledChannel.name))
+
+        viewModel.loadSelectionFromSelectedAlphaChannel()
+        let filledSelection = try #require(viewModel.document.selection?.rasterMask)
+        #expect(filledSelection.alpha.allSatisfy { $0 == UInt8.max })
+
+        viewModel.clearSelectedAlphaChannel()
+        let clearedChannel = try #require(viewModel.document.alphaChannels.first)
+        #expect(clearedChannel.mask.alpha.allSatisfy { $0 == 0 })
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelClear"))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelCleared", clearedChannel.name))
+
         viewModel.loadSelectionFromSelectedAlphaChannel()
 
-        #expect(viewModel.document.selection == nil)
         #expect(viewModel.statusText == L10n.text("imageEditor.status.alphaChannelSelectionEmpty"))
     }
 

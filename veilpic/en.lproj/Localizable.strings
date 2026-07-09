@@ -1612,6 +1612,8 @@
 "imageEditor.action.alphaChannelApplyToMask" = "Apply %@ as current layer mask";
 "imageEditor.action.alphaChannelDuplicate" = "Duplicate %@";
 "imageEditor.action.alphaChannelInvert" = "Invert %@";
+"imageEditor.action.alphaChannelFillWhite" = "Fill %@ with white";
+"imageEditor.action.alphaChannelClear" = "Clear %@ to black";
 "imageEditor.action.alphaChannelThreshold" = "Threshold %@";
 "imageEditor.action.alphaChannelFeather" = "Feather %@";
 "imageEditor.action.alphaChannelExpand" = "Expand %@";
@@ -1640,6 +1642,8 @@
 "imageEditor.action.alphaChannelApplySelectedToMask" = "Apply selected alpha channel as current layer mask";
 "imageEditor.action.alphaChannelDuplicateSelected" = "Duplicate selected alpha channel";
 "imageEditor.action.alphaChannelInvertSelected" = "Invert selected alpha channel";
+"imageEditor.action.alphaChannelFillWhiteSelected" = "Fill selected alpha channel with white";
+"imageEditor.action.alphaChannelClearSelected" = "Clear selected alpha channel to black";
 "imageEditor.action.alphaChannelThresholdSelected" = "Threshold selected alpha channel";
 "imageEditor.action.alphaChannelFeatherSelected" = "Feather selected alpha channel";
 "imageEditor.action.alphaChannelExpandSelected" = "Expand selected alpha channel";
@@ -1679,6 +1683,8 @@
 "imageEditor.status.alphaChannelApplyToMask" = "Applied %@ as current layer mask";
 "imageEditor.status.alphaChannelDuplicated" = "Duplicated as %@";
 "imageEditor.status.alphaChannelInverted" = "Inverted %@";
+"imageEditor.status.alphaChannelFilledWhite" = "Filled %@ with white";
+"imageEditor.status.alphaChannelCleared" = "Cleared %@ to black";
 "imageEditor.status.alphaChannelThresholded" = "Thresholded %@";
 "imageEditor.status.alphaChannelFeathered" = "Feathered %@ (%d px)";
 "imageEditor.status.alphaChannelExpanded" = "Expanded %@ (%d px)";
@@ -1712,6 +1718,8 @@
 "imageEditor.history.alphaChannelApplyToMask" = "Apply Alpha Channel as Layer Mask";
 "imageEditor.history.alphaChannelDuplicate" = "Duplicate Alpha Channel";
 "imageEditor.history.alphaChannelInvert" = "Invert Alpha Channel";
+"imageEditor.history.alphaChannelFillWhite" = "Fill Alpha Channel with White";
+"imageEditor.history.alphaChannelClear" = "Clear Alpha Channel to Black";
 "imageEditor.history.alphaChannelThreshold" = "Threshold Alpha Channel";
 "imageEditor.history.alphaChannelFeather" = "Feather Alpha Channel";
 "imageEditor.history.alphaChannelExpand" = "Expand Alpha Channel";

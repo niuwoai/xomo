@@ -315,6 +315,26 @@ extension ImageEditorView {
             .help(L10n.format("imageEditor.action.alphaChannelInvert", channel.name))
 
             Button {
+                viewModel.fillAlphaChannelWhite(channel.id)
+            } label: {
+                Image(systemName: "square.fill")
+                    .font(.system(size: 12, weight: .semibold))
+                    .frame(width: 24, height: 28)
+            }
+            .buttonStyle(EditorIconButtonStyle(isSelected: false))
+            .help(L10n.format("imageEditor.action.alphaChannelFillWhite", channel.name))
+
+            Button {
+                viewModel.clearAlphaChannel(channel.id)
+            } label: {
+                Image(systemName: "square")
+                    .font(.system(size: 12, weight: .semibold))
+                    .frame(width: 24, height: 28)
+            }
+            .buttonStyle(EditorIconButtonStyle(isSelected: false))
+            .help(L10n.format("imageEditor.action.alphaChannelClear", channel.name))
+
+            Button {
                 viewModel.thresholdAlphaChannel(channel.id)
             } label: {
                 Image(systemName: "circle.righthalf.filled")

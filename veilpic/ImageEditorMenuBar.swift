@@ -952,6 +952,14 @@ extension ImageEditorView {
             viewModel.invertSelectedAlphaChannel()
         }
         .disabled(!viewModel.canInvertSelectedAlphaChannel)
+        Button(L10n.text("imageEditor.action.alphaChannelFillWhiteSelected")) {
+            viewModel.fillSelectedAlphaChannelWhite()
+        }
+        .disabled(!viewModel.canFillSelectedAlphaChannelWhite)
+        Button(L10n.text("imageEditor.action.alphaChannelClearSelected")) {
+            viewModel.clearSelectedAlphaChannel()
+        }
+        .disabled(!viewModel.canClearSelectedAlphaChannel)
         Button(L10n.text("imageEditor.action.alphaChannelThresholdSelected")) {
             viewModel.thresholdSelectedAlphaChannel()
         }
