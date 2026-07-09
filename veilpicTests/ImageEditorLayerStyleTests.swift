@@ -1024,23 +1024,45 @@ struct ImageEditorLayerStyleTests {
         let layerPixelsBeforeStyle = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
         let compositedBeforeStyle = try #require(viewModel.currentImage.qingtuPNGData())
 
+        viewModel.foregroundColor = .systemRed
+        viewModel.setSelectedLayerSatinColorFromForeground()
         viewModel.foregroundColor = .black
         viewModel.setSelectedLayerSatinOpacity(0.8)
         viewModel.setSelectedLayerSatinDistance(12)
         viewModel.setSelectedLayerSatinSize(5)
         viewModel.setSelectedLayerSatinAngle(45)
+        viewModel.setSelectedLayerSatinContour(.linear)
+        let linearSatinData = try #require(viewModel.currentImage.qingtuPNGData())
+        viewModel.setSelectedLayerSatinContour(.ring)
+        let contouredSatinData = try #require(viewModel.currentImage.qingtuPNGData())
+        viewModel.setSelectedLayerSatinInvert(true)
 
         let styledLayer = try #require(viewModel.document.selectedLayer)
         let layerPixelsAfterStyle = try #require(styledLayer.image.qingtuPNGData())
         let compositedAfterStyle = try #require(viewModel.currentImage.qingtuPNGData())
+        let satinColor = try #require(styledLayer.style.satinColor.usingColorSpace(.deviceRGB))
         #expect(styledLayer.style.satinEnabled)
+        #expect(satinColor.redComponent > 0.85)
+        #expect(satinColor.greenComponent < 0.30)
         #expect(styledLayer.style.satinOpacity == 0.8)
         #expect(styledLayer.style.satinDistance == 12)
         #expect(styledLayer.style.satinSize == 5)
         #expect(styledLayer.style.satinAngle == 45)
+        #expect(styledLayer.style.satinInvert)
+        #expect(styledLayer.style.satinContour == .ring)
+        #expect(viewModel.selectedLayerSatinInvert)
+        #expect(viewModel.selectedLayerSatinContour == .ring)
         #expect(layerPixelsAfterStyle == layerPixelsBeforeStyle)
         #expect(compositedAfterStyle != compositedBeforeStyle)
+        #expect(contouredSatinData != linearSatinData)
+        #expect(compositedAfterStyle != contouredSatinData)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStyle"))
+
+        let project = try ImageEditorProjectDocument(document: viewModel.document)
+        let restoredDocument = try project.restoredDocument()
+        let restoredLayer = try #require(restoredDocument.layers.first { $0.id == styledLayer.id })
+        #expect(restoredLayer.style.satinInvert)
+        #expect(restoredLayer.style.satinContour == .ring)
     }
 
     private func solidImage(color: NSColor, size: NSSize) -> NSImage {

@@ -1505,6 +1505,59 @@ struct veilpicTests {
     }
 
     @MainActor
+    @Test func imageEditorContentAwareFillsSelectionAndRespectsTransparentPixelLock() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let image = testImage(color: .systemBlue, size: canvasSize)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let blemishRect = CGRect(x: 32, y: 22, width: 16, height: 16)
+        let blemishImage = testBitmapImage(
+            size: canvasSize,
+            background: .systemGreen,
+            fills: [(rect: blemishRect, color: .black)]
+        )
+
+        viewModel.replaceSelectedLayerImageForTesting(blemishImage, historyTitle: L10n.text("imageEditor.history.brush"))
+        viewModel.createRectSelection(from: CGPoint(x: 32, y: 22), to: CGPoint(x: 48, y: 38))
+        let beforeFill = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+        let blemishBefore = try #require(viewModel.document.selectedLayer?.image.color(at: CGPoint(x: 40, y: 30))?.usingColorSpace(.deviceRGB))
+
+        #expect(viewModel.canEditSelectionPixels)
+        viewModel.contentAwareFillSelection()
+
+        let filledLayer = try #require(viewModel.document.selectedLayer)
+        let filledData = try #require(filledLayer.image.qingtuPNGData())
+        let filledCenter = try #require(filledLayer.image.color(at: CGPoint(x: 40, y: 30))?.usingColorSpace(.deviceRGB))
+        let outsideSelection = try #require(filledLayer.image.color(at: CGPoint(x: 12, y: 12))?.usingColorSpace(.deviceRGB))
+
+        #expect(blemishBefore.redComponent < 0.1)
+        #expect(filledData != beforeFill)
+        #expect(filledCenter.greenComponent > 0.65)
+        #expect(filledCenter.redComponent < 0.25)
+        #expect(outsideSelection.greenComponent > 0.65)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionContentAwareFill"))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionContentAwareFilled"))
+
+        viewModel.undo()
+        let restoredCenter = try #require(viewModel.document.selectedLayer?.image.color(at: CGPoint(x: 40, y: 30))?.usingColorSpace(.deviceRGB))
+        #expect(restoredCenter.redComponent < 0.1)
+
+        let transparentBlemishImage = testBitmapImage(
+            size: canvasSize,
+            background: .systemGreen,
+            fills: [(rect: blemishRect, color: .clear)]
+        )
+        viewModel.replaceSelectedLayerImageForTesting(transparentBlemishImage, historyTitle: L10n.text("imageEditor.history.brush"))
+        viewModel.createRectSelection(from: CGPoint(x: 32, y: 22), to: CGPoint(x: 48, y: 38))
+        if let index = viewModel.document.selectedLayerIndex {
+            viewModel.document.layers[index].locksTransparentPixels = true
+        }
+        viewModel.contentAwareFillSelection()
+
+        let lockedCenter = try #require(viewModel.document.selectedLayer?.image.color(at: CGPoint(x: 40, y: 30))?.usingColorSpace(.deviceRGB))
+        #expect(lockedCenter.alphaComponent < 0.1)
+    }
+
+    @MainActor
     @Test func imageEditorBlendModeChangesCompositedOutput() async throws {
         let image = testImage(color: .systemBlue, size: NSSize(width: 80, height: 60))
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
@@ -2693,6 +2746,9 @@ struct veilpicTests {
         viewModel.setSelectedLayerInnerGlowChoke(5)
         viewModel.setSelectedLayerInnerGlowNoise(0.45)
         viewModel.setSelectedLayerInnerGlowSource(.center)
+        viewModel.setSelectedLayerSatinOpacity(0.5)
+        viewModel.setSelectedLayerSatinContour(.ring)
+        viewModel.setSelectedLayerSatinInvert(true)
         let styledLayer = try #require(viewModel.document.selectedLayer)
 
         #expect(styledLayer.style.strokeEnabled)
@@ -2720,6 +2776,9 @@ struct veilpicTests {
         #expect(styledLayer.style.innerGlowChoke == 5)
         #expect(styledLayer.style.innerGlowNoise == 0.45)
         #expect(styledLayer.style.innerGlowSource == .center)
+        #expect(styledLayer.style.satinOpacity == 0.5)
+        #expect(styledLayer.style.satinContour == .ring)
+        #expect(styledLayer.style.satinInvert)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStyle"))
 
         viewModel.toggleLayerLock(selectedID)
@@ -2734,6 +2793,8 @@ struct veilpicTests {
         viewModel.setSelectedLayerInnerGlowChoke(10)
         viewModel.setSelectedLayerInnerGlowNoise(0.95)
         viewModel.setSelectedLayerInnerGlowSource(.edge)
+        viewModel.setSelectedLayerSatinContour(.cone)
+        viewModel.setSelectedLayerSatinInvert(false)
 
         #expect(viewModel.document.selectedLayer?.style.strokeWidth == 9)
         #expect(viewModel.document.selectedLayer?.style.shadowContour == .soft)
@@ -2746,6 +2807,8 @@ struct veilpicTests {
         #expect(viewModel.document.selectedLayer?.style.innerGlowChoke == 5)
         #expect(viewModel.document.selectedLayer?.style.innerGlowNoise == 0.45)
         #expect(viewModel.document.selectedLayer?.style.innerGlowSource == .center)
+        #expect(viewModel.document.selectedLayer?.style.satinContour == .ring)
+        #expect(viewModel.document.selectedLayer?.style.satinInvert == true)
         #expect(viewModel.statusText == L10n.text("imageEditor.status.layerLocked"))
     }
 

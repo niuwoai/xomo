@@ -728,6 +728,10 @@
 "imageEditor.properties.patternOverlayScaleValue" = "Pattern Scale: %d px";
 "imageEditor.properties.satinOpacityValue" = "Satin Opacity: %d%%";
 "imageEditor.properties.satinDistanceValue" = "Satin Distance: %d px";
+"imageEditor.properties.satinColor" = "Satin Color";
+"imageEditor.action.satinColorFromForeground" = "Use Foreground";
+"imageEditor.properties.satinInvert" = "Invert Satin";
+"imageEditor.properties.satinContour" = "Satin Contour";
 "imageEditor.properties.satinSizeValue" = "Satin Size: %d px";
 "imageEditor.properties.satinAngleValue" = "Satin Angle: %d°";
 "imageEditor.properties.bevelSizeValue" = "Bevel Size: %d px";
@@ -1051,6 +1055,7 @@
 "imageEditor.history.selectionSaved" = "Save Selection";
 "imageEditor.history.selectionRestored" = "Restore Selection";
 "imageEditor.history.selectionFill" = "Fill Selection";
+"imageEditor.history.selectionContentAwareFill" = "Content-Aware Fill Selection";
 "imageEditor.history.selectionStroke" = "Stroke Selection";
 "imageEditor.history.selectionCopyLayer" = "Layer via Copy";
 "imageEditor.history.selectionCopyMergedLayer" = "Layer via Merged Copy";
@@ -1194,6 +1199,7 @@
 "imageEditor.status.selectionSaved" = "Selection saved";
 "imageEditor.status.selectionRestored" = "Saved selection restored";
 "imageEditor.status.selectionFilled" = "Selection filled";
+"imageEditor.status.selectionContentAwareFilled" = "Selection content-aware filled";
 "imageEditor.status.selectionStroked" = "Selection stroked";
 "imageEditor.status.selectionCopiedToLayer" = "Selection copied to a new layer";
 "imageEditor.status.selectionCopiedMergedToLayer" = "Merged visible content copied to a new layer";
@@ -1484,6 +1490,7 @@
 "imageEditor.action.fillSelectionHoles" = "Fill Selection Holes";
 "imageEditor.action.removeSelectionSpeckles" = "Remove Selection Speckles";
 "imageEditor.action.fillSelection" = "Fill Selection";
+"imageEditor.action.contentAwareFillSelection" = "Content-Aware Fill";
 "imageEditor.action.strokeSelection" = "Stroke Selection";
 "imageEditor.action.selectionCopyLayer" = "Layer via Copy";
 "imageEditor.action.selectionCopyMergedLayer" = "Layer via Merged Copy";

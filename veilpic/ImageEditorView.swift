@@ -1312,6 +1312,22 @@ struct ImageEditorView: View {
         }
     }
 
+    private var selectedLayerSatinInvertBinding: Binding<Bool> {
+        Binding {
+            viewModel.selectedLayerSatinInvert
+        } set: { value in
+            viewModel.setSelectedLayerSatinInvert(value)
+        }
+    }
+
+    private var selectedLayerSatinContourBinding: Binding<ImageEditorLayerEffectContour> {
+        Binding {
+            viewModel.selectedLayerSatinContour
+        } set: { value in
+            viewModel.setSelectedLayerSatinContour(value)
+        }
+    }
+
     private var selectedLayerBevelSizeBinding: Binding<Double> {
         Binding {
             viewModel.selectedLayerBevelSize
@@ -1904,6 +1920,11 @@ struct ImageEditorView: View {
                         if viewModel.hasSelection {
                             Button(L10n.text("imageEditor.action.fillSelection")) {
                                 viewModel.fillSelection()
+                            }
+                            .buttonStyle(EditorTextButtonStyle())
+                            .disabled(!viewModel.canEditSelectionPixels)
+                            Button(L10n.text("imageEditor.action.contentAwareFillSelection")) {
+                                viewModel.contentAwareFillSelection()
                             }
                             .buttonStyle(EditorTextButtonStyle())
                             .disabled(!viewModel.canEditSelectionPixels)
@@ -2691,6 +2712,30 @@ struct ImageEditorView: View {
                         step: 1
                     )
                 }
+                HStack(spacing: 8) {
+                    Text(L10n.text("imageEditor.properties.satinColor"))
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(Color(nsColor: viewModel.selectedLayerSatinColor))
+                        .frame(width: 20, height: 14)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 4)
+                                .stroke(Color(nsColor: ImageEditorTheme.border), lineWidth: 1)
+                        )
+                    Spacer(minLength: 4)
+                    Button(L10n.text("imageEditor.action.satinColorFromForeground")) {
+                        viewModel.setSelectedLayerSatinColorFromForeground()
+                    }
+                    .buttonStyle(EditorTextButtonStyle())
+                }
+                Toggle(L10n.text("imageEditor.properties.satinInvert"), isOn: selectedLayerSatinInvertBinding)
+                Picker(L10n.text("imageEditor.properties.satinContour"), selection: selectedLayerSatinContourBinding) {
+                    ForEach(ImageEditorLayerEffectContour.allCases) { contour in
+                        Text(contour.title).tag(contour)
+                    }
+                }
+                .pickerStyle(.menu)
                 HStack {
                     Stepper(
                         L10n.format("imageEditor.properties.satinSizeValue", Int(viewModel.selectedLayerSatinSize.rounded())),

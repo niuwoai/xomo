@@ -115,6 +115,10 @@ extension ImageEditorView {
             viewModel.fillSelection()
         }
         .disabled(!viewModel.canEditSelectionPixels)
+        Button(L10n.text("imageEditor.action.contentAwareFillSelection")) {
+            viewModel.contentAwareFillSelection()
+        }
+        .disabled(!viewModel.canEditSelectionPixels)
         Button(L10n.text("imageEditor.action.strokeSelection")) {
             viewModel.strokeSelection()
         }

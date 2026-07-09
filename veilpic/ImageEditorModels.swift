@@ -1579,6 +1579,8 @@ struct ImageEditorLayerStyle {
     var satinDistance: CGFloat = 8
     var satinSize: CGFloat = 6
     var satinAngle: CGFloat = 19
+    var satinInvert = false
+    var satinContour = ImageEditorLayerEffectContour.linear
     var bevelEnabled = false
     var bevelHighlightColor = NSColor.white
     var bevelShadowColor = NSColor.black
@@ -2791,7 +2793,27 @@ struct ImageEditorLayer: Identifiable {
                     )
                 } ?? NSImage(size: outputSize)
                 let softenedSatin = satinCanvas.blurred(radius: style.satinSize) ?? satinCanvas
-                softenedSatin.draw(
+                let contouredSatin = softenedSatin.applyingEffectContour(style.satinContour) ?? softenedSatin
+                let baseSatinMask = NSImage.rendered(size: outputSize) { _ in
+                    baseImage.draw(
+                        in: contentRect,
+                        from: CGRect(origin: .zero, size: baseImage.size),
+                        operation: .sourceOver,
+                        fraction: 1
+                    )
+                }
+                let satinOutput: NSImage
+                if style.satinInvert,
+                   let baseMask = baseSatinMask,
+                   let inverted = contouredSatin.invertedAlphaTinted(
+                       within: baseMask,
+                       color: style.satinColor.withAlphaComponent(style.satinOpacity)
+                   ) {
+                    satinOutput = inverted
+                } else {
+                    satinOutput = contouredSatin
+                }
+                satinOutput.draw(
                     in: CGRect(origin: .zero, size: outputSize),
                     from: CGRect(origin: .zero, size: outputSize),
                     operation: .multiply,
@@ -3889,6 +3911,89 @@ private extension NSImage {
                 bytesPerRow: bytesPerRow,
                 space: CGColorSpaceCreateDeviceRGB(),
                 bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue),
+                provider: provider,
+                decode: nil,
+                shouldInterpolate: false,
+                intent: .defaultIntent
+              )
+        else { return nil }
+
+        return NSImage(cgImage: output, size: size)
+    }
+
+    func invertedAlphaTinted(within mask: NSImage, color: NSColor) -> NSImage? {
+        guard let effectCGImage = cgImage(forProposedRect: nil, context: nil, hints: nil),
+              let maskCGImage = mask.cgImage(forProposedRect: nil, context: nil, hints: nil)
+        else { return nil }
+
+        let width = max(1, effectCGImage.width)
+        let height = max(1, effectCGImage.height)
+        guard maskCGImage.width == width, maskCGImage.height == height else { return nil }
+
+        let bytesPerPixel = 4
+        let bytesPerRow = width * bytesPerPixel
+        var effectPixels = [UInt8](repeating: 0, count: bytesPerRow * height)
+        var maskPixels = [UInt8](repeating: 0, count: bytesPerRow * height)
+        let colorSpace = CGColorSpaceCreateDeviceRGB()
+        let bitmapInfo = CGImageAlphaInfo.premultipliedLast.rawValue
+
+        guard let effectContext = CGContext(
+            data: &effectPixels,
+            width: width,
+            height: height,
+            bitsPerComponent: 8,
+            bytesPerRow: bytesPerRow,
+            space: colorSpace,
+            bitmapInfo: bitmapInfo
+        ),
+              let maskContext = CGContext(
+                data: &maskPixels,
+                width: width,
+                height: height,
+                bitsPerComponent: 8,
+                bytesPerRow: bytesPerRow,
+                space: colorSpace,
+                bitmapInfo: bitmapInfo
+              )
+        else { return nil }
+
+        for context in [effectContext, maskContext] {
+            context.interpolationQuality = .none
+            context.translateBy(x: 0, y: CGFloat(height))
+            context.scaleBy(x: 1, y: -1)
+        }
+        effectContext.draw(effectCGImage, in: CGRect(x: 0, y: 0, width: width, height: height))
+        maskContext.draw(maskCGImage, in: CGRect(x: 0, y: 0, width: width, height: height))
+
+        let tint = color.usingColorSpace(.deviceRGB) ?? color
+        let tintAlpha = max(0, min(1, tint.alphaComponent))
+        var outputPixels = [UInt8](repeating: 0, count: bytesPerRow * height)
+        for y in 0..<height {
+            for x in 0..<width {
+                let offset = y * bytesPerRow + x * bytesPerPixel
+                let maskAlpha = CGFloat(maskPixels[offset + 3]) / 255
+                guard maskAlpha > 0 else { continue }
+
+                let effectAlpha = CGFloat(effectPixels[offset + 3]) / 255
+                let outputAlpha = max(0, min(1, maskAlpha - min(maskAlpha, effectAlpha))) * tintAlpha
+                guard outputAlpha > 0 else { continue }
+
+                outputPixels[offset] = UInt8(max(0, min(255, (tint.redComponent * outputAlpha * 255).rounded())))
+                outputPixels[offset + 1] = UInt8(max(0, min(255, (tint.greenComponent * outputAlpha * 255).rounded())))
+                outputPixels[offset + 2] = UInt8(max(0, min(255, (tint.blueComponent * outputAlpha * 255).rounded())))
+                outputPixels[offset + 3] = UInt8(max(0, min(255, (outputAlpha * 255).rounded())))
+            }
+        }
+
+        guard let provider = CGDataProvider(data: Data(outputPixels) as CFData),
+              let output = CGImage(
+                width: width,
+                height: height,
+                bitsPerComponent: 8,
+                bitsPerPixel: 32,
+                bytesPerRow: bytesPerRow,
+                space: colorSpace,
+                bitmapInfo: CGBitmapInfo(rawValue: bitmapInfo),
                 provider: provider,
                 decode: nil,
                 shouldInterpolate: false,

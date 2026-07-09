@@ -267,6 +267,10 @@ extension ImageEditorViewModel {
         Double(document.selectedLayer?.style.satinOpacity ?? 0.35)
     }
 
+    var selectedLayerSatinColor: NSColor {
+        document.selectedLayer?.style.satinColor ?? .black
+    }
+
     var selectedLayerSatinDistance: Double {
         Double(document.selectedLayer?.style.satinDistance ?? 8)
     }
@@ -277,6 +281,14 @@ extension ImageEditorViewModel {
 
     var selectedLayerSatinAngle: Double {
         Double(document.selectedLayer?.style.satinAngle ?? 19)
+    }
+
+    var selectedLayerSatinInvert: Bool {
+        document.selectedLayer?.style.satinInvert == true
+    }
+
+    var selectedLayerSatinContour: ImageEditorLayerEffectContour {
+        document.selectedLayer?.style.satinContour ?? .linear
     }
 
     var selectedLayerBevelSize: Double {
@@ -361,7 +373,9 @@ extension ImageEditorViewModel {
     func toggleSelectedLayerSatin() {
         toggleSelectedLayerStyleEffect(historyKey: "imageEditor.history.layerSatin") {
             $0.satinEnabled.toggle()
-            $0.satinColor = satinColor()
+            if $0.satinEnabled {
+                $0.satinColor = satinColor()
+            }
         }
     }
 
@@ -826,34 +840,75 @@ extension ImageEditorViewModel {
     }
 
     func setSelectedLayerSatinOpacity(_ opacity: Double) {
+        let defaultColor = satinColor()
         updateSelectedLayerStyle {
+            if !$0.satinEnabled {
+                $0.satinColor = defaultColor
+            }
             $0.satinEnabled = true
-            $0.satinColor = satinColor()
             $0.satinOpacity = max(0.05, min(1, CGFloat(opacity)))
         }
     }
 
-    func setSelectedLayerSatinDistance(_ distance: Double) {
+    func setSelectedLayerSatinColorFromForeground() {
         updateSelectedLayerStyle {
             $0.satinEnabled = true
             $0.satinColor = satinColor()
+        }
+    }
+
+    func setSelectedLayerSatinDistance(_ distance: Double) {
+        let defaultColor = satinColor()
+        updateSelectedLayerStyle {
+            if !$0.satinEnabled {
+                $0.satinColor = defaultColor
+            }
+            $0.satinEnabled = true
             $0.satinDistance = max(1, min(48, CGFloat(distance)))
         }
     }
 
     func setSelectedLayerSatinSize(_ size: Double) {
+        let defaultColor = satinColor()
         updateSelectedLayerStyle {
+            if !$0.satinEnabled {
+                $0.satinColor = defaultColor
+            }
             $0.satinEnabled = true
-            $0.satinColor = satinColor()
             $0.satinSize = max(0, min(40, CGFloat(size)))
         }
     }
 
     func setSelectedLayerSatinAngle(_ angle: Double) {
+        let defaultColor = satinColor()
         updateSelectedLayerStyle {
+            if !$0.satinEnabled {
+                $0.satinColor = defaultColor
+            }
             $0.satinEnabled = true
-            $0.satinColor = satinColor()
             $0.satinAngle = CGFloat(angle).truncatingRemainder(dividingBy: 360)
+        }
+    }
+
+    func setSelectedLayerSatinInvert(_ enabled: Bool) {
+        let defaultColor = satinColor()
+        updateSelectedLayerStyle {
+            if !$0.satinEnabled {
+                $0.satinColor = defaultColor
+            }
+            $0.satinEnabled = true
+            $0.satinInvert = enabled
+        }
+    }
+
+    func setSelectedLayerSatinContour(_ contour: ImageEditorLayerEffectContour) {
+        let defaultColor = satinColor()
+        updateSelectedLayerStyle {
+            if !$0.satinEnabled {
+                $0.satinColor = defaultColor
+            }
+            $0.satinEnabled = true
+            $0.satinContour = contour
         }
     }
 

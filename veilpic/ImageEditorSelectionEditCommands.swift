@@ -111,6 +111,34 @@ extension ImageEditorViewModel {
         statusText = L10n.text("imageEditor.status.selectionStroked")
     }
 
+    func contentAwareFillSelection() {
+        guard let selection = document.selection else {
+            statusText = L10n.text("imageEditor.status.noSelection")
+            return
+        }
+        guard canEditSelectionPixels,
+              let index = document.selectedLayerIndex,
+              let output = document.layers[index].image.contentAwareFilled(
+                selection: selection,
+                layerFrame: document.layers[index].frame,
+                canvasSize: document.canvasSize,
+                feather: feather
+              )
+        else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+
+        pushUndo()
+        let layer = document.layers[index]
+        let protectedOutput = document.isEffectivelyTransparencyLocked(layer)
+            ? (output.preservingAlpha(from: layer.image) ?? output)
+            : output
+        document.layers[index].image = protectedOutput.normalizedBitmapImage()
+        appendHistory(L10n.text("imageEditor.history.selectionContentAwareFill"))
+        statusText = L10n.text("imageEditor.status.selectionContentAwareFilled")
+    }
+
     func copySelectionToNewLayer() {
         guard let selection = document.selection else {
             statusText = L10n.text("imageEditor.status.noSelection")
@@ -403,6 +431,64 @@ private extension NSImage {
         }
     }
 
+    func contentAwareFilled(
+        selection: ImageEditorSelection,
+        layerFrame: CGRect,
+        canvasSize: CGSize,
+        feather: CGFloat
+    ) -> NSImage? {
+        guard let selectionMask = selection.layerMask(
+            layerFrame: layerFrame,
+            layerSize: size,
+            canvasSize: canvasSize,
+            feather: feather
+        ) else { return nil }
+
+        let width = max(1, Int(size.width.rounded()))
+        let height = max(1, Int(size.height.rounded()))
+        guard var pixels = rgbaPixels(width: width, height: height),
+              let mask = selectionMask.alphaMask(width: width, height: height)
+        else { return nil }
+
+        let selectedAlpha = mask.alpha
+        guard selectedAlpha.contains(where: { $0 > 0 }) else { return nil }
+        guard let fallback = contentAwareFallbackColor(pixels: pixels, mask: selectedAlpha, width: width, height: height) else {
+            return nil
+        }
+
+        let sourcePixels = pixels
+        let bytesPerPixel = 4
+        let bytesPerRow = width * bytesPerPixel
+        let maxRadius = max(8, min(48, max(width, height) / 4))
+
+        for y in 0..<height {
+            for x in 0..<width {
+                let pixelIndex = y * width + x
+                let maskAlpha = CGFloat(selectedAlpha[pixelIndex]) / 255
+                guard maskAlpha > 0 else { continue }
+
+                let replacement = contentAwareColor(
+                    x: x,
+                    y: y,
+                    pixels: sourcePixels,
+                    mask: selectedAlpha,
+                    width: width,
+                    height: height,
+                    maxRadius: maxRadius,
+                    fallback: fallback
+                )
+                let offset = y * bytesPerRow + x * bytesPerPixel
+                let inverseAlpha = 1 - maskAlpha
+                pixels[offset] = blendedByte(original: pixels[offset], replacement: replacement.red, alpha: maskAlpha, inverseAlpha: inverseAlpha)
+                pixels[offset + 1] = blendedByte(original: pixels[offset + 1], replacement: replacement.green, alpha: maskAlpha, inverseAlpha: inverseAlpha)
+                pixels[offset + 2] = blendedByte(original: pixels[offset + 2], replacement: replacement.blue, alpha: maskAlpha, inverseAlpha: inverseAlpha)
+                pixels[offset + 3] = blendedByte(original: pixels[offset + 3], replacement: replacement.alpha, alpha: maskAlpha, inverseAlpha: inverseAlpha)
+            }
+        }
+
+        return NSImage.rgbaImage(width: width, height: height, pixels: pixels, size: size)
+    }
+
     func cleared(
         selection: ImageEditorSelection,
         layerFrame: CGRect,
@@ -425,6 +511,153 @@ private extension NSImage {
                 fraction: 1
             )
         }
+    }
+
+    private func contentAwareFallbackColor(
+        pixels: [UInt8],
+        mask: [UInt8],
+        width: Int,
+        height: Int
+    ) -> ContentAwareColor? {
+        let bytesPerPixel = 4
+        let bytesPerRow = width * bytesPerPixel
+        var red: CGFloat = 0
+        var green: CGFloat = 0
+        var blue: CGFloat = 0
+        var alpha: CGFloat = 0
+        var count: CGFloat = 0
+
+        for y in 0..<height {
+            for x in 0..<width {
+                let pixelIndex = y * width + x
+                let offset = y * bytesPerRow + x * bytesPerPixel
+                guard mask[pixelIndex] == 0,
+                      pixels[offset + 3] > 0
+                else { continue }
+                red += CGFloat(pixels[offset])
+                green += CGFloat(pixels[offset + 1])
+                blue += CGFloat(pixels[offset + 2])
+                alpha += CGFloat(pixels[offset + 3])
+                count += 1
+            }
+        }
+
+        guard count > 0 else { return nil }
+        return ContentAwareColor(red: red / count, green: green / count, blue: blue / count, alpha: alpha / count)
+    }
+
+    private func contentAwareColor(
+        x: Int,
+        y: Int,
+        pixels: [UInt8],
+        mask: [UInt8],
+        width: Int,
+        height: Int,
+        maxRadius: Int,
+        fallback: ContentAwareColor
+    ) -> ContentAwareColor {
+        let bytesPerPixel = 4
+        let bytesPerRow = width * bytesPerPixel
+        var red: CGFloat = 0
+        var green: CGFloat = 0
+        var blue: CGFloat = 0
+        var alpha: CGFloat = 0
+        var weightTotal: CGFloat = 0
+        var sampleCount = 0
+
+        for radius in 1...maxRadius {
+            let minX = max(0, x - radius)
+            let maxX = min(width - 1, x + radius)
+            let minY = max(0, y - radius)
+            let maxY = min(height - 1, y + radius)
+
+            for sampleY in minY...maxY {
+                for sampleX in minX...maxX {
+                    guard sampleX == minX || sampleX == maxX || sampleY == minY || sampleY == maxY else { continue }
+                    let sampleIndex = sampleY * width + sampleX
+                    let offset = sampleY * bytesPerRow + sampleX * bytesPerPixel
+                    guard mask[sampleIndex] == 0,
+                          pixels[offset + 3] > 0
+                    else { continue }
+
+                    let dx = CGFloat(sampleX - x)
+                    let dy = CGFloat(sampleY - y)
+                    let weight = 1 / max(1, dx * dx + dy * dy)
+                    red += CGFloat(pixels[offset]) * weight
+                    green += CGFloat(pixels[offset + 1]) * weight
+                    blue += CGFloat(pixels[offset + 2]) * weight
+                    alpha += CGFloat(pixels[offset + 3]) * weight
+                    weightTotal += weight
+                    sampleCount += 1
+                }
+            }
+
+            if sampleCount >= 12 {
+                break
+            }
+        }
+
+        guard weightTotal > 0 else { return fallback }
+        return ContentAwareColor(red: red / weightTotal, green: green / weightTotal, blue: blue / weightTotal, alpha: alpha / weightTotal)
+    }
+
+    private func rgbaPixels(width: Int, height: Int) -> [UInt8]? {
+        let bytesPerPixel = 4
+        let bytesPerRow = width * bytesPerPixel
+        var pixels = [UInt8](repeating: 0, count: bytesPerRow * height)
+        guard let cgImage = cgImage(forProposedRect: nil, context: nil, hints: nil),
+              let context = CGContext(
+                data: &pixels,
+                width: width,
+                height: height,
+                bitsPerComponent: 8,
+                bytesPerRow: bytesPerRow,
+                space: CGColorSpaceCreateDeviceRGB(),
+                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+              )
+        else { return nil }
+
+        context.interpolationQuality = .none
+        context.translateBy(x: 0, y: CGFloat(height))
+        context.scaleBy(x: 1, y: -1)
+        context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
+        return pixels
+    }
+
+    private func blendedByte(original: UInt8, replacement: CGFloat, alpha: CGFloat, inverseAlpha: CGFloat) -> UInt8 {
+        UInt8(max(0, min(255, (CGFloat(original) * inverseAlpha + replacement * alpha).rounded())))
+    }
+}
+
+private struct ContentAwareColor {
+    var red: CGFloat
+    var green: CGFloat
+    var blue: CGFloat
+    var alpha: CGFloat
+}
+
+private extension NSImage {
+    static func rgbaImage(width: Int, height: Int, pixels: [UInt8], size: CGSize) -> NSImage? {
+        let bytesPerPixel = 4
+        let bytesPerRow = width * bytesPerPixel
+        guard pixels.count == bytesPerRow * height,
+              let provider = CGDataProvider(data: Data(pixels) as CFData),
+              let output = CGImage(
+                width: width,
+                height: height,
+                bitsPerComponent: 8,
+                bitsPerPixel: 32,
+                bytesPerRow: bytesPerRow,
+                space: CGColorSpaceCreateDeviceRGB(),
+                bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue),
+                provider: provider,
+                decode: nil,
+                shouldInterpolate: false,
+                intent: .defaultIntent
+              )
+        else { return nil }
+
+        return NSImage(cgImage: output, size: size)
     }
 }
 

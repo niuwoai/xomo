@@ -728,6 +728,10 @@
 "imageEditor.properties.patternOverlayScaleValue" = "パターンスケール：%d px";
 "imageEditor.properties.satinOpacityValue" = "サテン不透明度：%d%%";
 "imageEditor.properties.satinDistanceValue" = "サテン距離：%d px";
+"imageEditor.properties.satinColor" = "サテンカラー";
+"imageEditor.action.satinColorFromForeground" = "前景色を使用";
+"imageEditor.properties.satinInvert" = "サテンを反転";
+"imageEditor.properties.satinContour" = "サテン輪郭";
 "imageEditor.properties.satinSizeValue" = "サテンサイズ：%d px";
 "imageEditor.properties.satinAngleValue" = "サテン角度：%d°";
 "imageEditor.properties.bevelSizeValue" = "ベベルサイズ：%d px";
@@ -1051,6 +1055,7 @@
 "imageEditor.history.selectionSaved" = "選択範囲を保存";
 "imageEditor.history.selectionRestored" = "選択範囲を復元";
 "imageEditor.history.selectionFill" = "選択範囲を塗りつぶし";
+"imageEditor.history.selectionContentAwareFill" = "選択範囲をコンテンツに応じて塗りつぶし";
 "imageEditor.history.selectionStroke" = "選択範囲を境界線描画";
 "imageEditor.history.selectionCopyLayer" = "コピーして新規レイヤー";
 "imageEditor.history.selectionCopyMergedLayer" = "結合コピーで新規レイヤー";
@@ -1194,6 +1199,7 @@
 "imageEditor.status.selectionSaved" = "選択範囲を保存しました";
 "imageEditor.status.selectionRestored" = "保存した選択範囲を復元しました";
 "imageEditor.status.selectionFilled" = "現在の選択範囲を塗りつぶしました";
+"imageEditor.status.selectionContentAwareFilled" = "現在の選択範囲をコンテンツに応じて塗りつぶしました";
 "imageEditor.status.selectionStroked" = "現在の選択範囲に境界線を描画しました";
 "imageEditor.status.selectionCopiedToLayer" = "選択範囲の内容を新規レイヤーへコピーしました";
 "imageEditor.status.selectionCopiedMergedToLayer" = "表示中の結合内容を新規レイヤーへコピーしました";
@@ -1484,6 +1490,7 @@
 "imageEditor.action.fillSelectionHoles" = "選択範囲の穴を埋める";
 "imageEditor.action.removeSelectionSpeckles" = "選択範囲のノイズを削除";
 "imageEditor.action.fillSelection" = "選択範囲を塗りつぶし";
+"imageEditor.action.contentAwareFillSelection" = "コンテンツに応じた塗りつぶし";
 "imageEditor.action.strokeSelection" = "選択範囲に境界線";
 "imageEditor.action.selectionCopyLayer" = "コピーしてレイヤー";
 "imageEditor.action.selectionCopyMergedLayer" = "結合コピーでレイヤー";

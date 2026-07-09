@@ -657,6 +657,8 @@ struct ImageEditorProjectLayerStyle: Codable, Equatable {
     var satinDistance: CGFloat
     var satinSize: CGFloat
     var satinAngle: CGFloat
+    var satinInvert: Bool?
+    var satinContour: ImageEditorLayerEffectContour?
     var bevelEnabled: Bool
     var bevelHighlightColor: ImageEditorProjectColor
     var bevelShadowColor: ImageEditorProjectColor
@@ -737,6 +739,8 @@ struct ImageEditorProjectLayerStyle: Codable, Equatable {
         satinDistance = style.satinDistance
         satinSize = style.satinSize
         satinAngle = style.satinAngle
+        satinInvert = style.satinInvert
+        satinContour = style.satinContour
         bevelEnabled = style.bevelEnabled
         bevelHighlightColor = ImageEditorProjectColor(color: style.bevelHighlightColor)
         bevelShadowColor = ImageEditorProjectColor(color: style.bevelShadowColor)
@@ -821,6 +825,8 @@ struct ImageEditorProjectLayerStyle: Codable, Equatable {
             satinDistance: satinDistance,
             satinSize: satinSize,
             satinAngle: satinAngle,
+            satinInvert: satinInvert ?? false,
+            satinContour: satinContour ?? .linear,
             bevelEnabled: bevelEnabled,
             bevelHighlightColor: bevelHighlightColor.nsColor,
             bevelShadowColor: bevelShadowColor.nsColor,
