@@ -319,6 +319,7 @@
 "imageEditor.defaultSourceName" = "图片";
 "imageEditor.menu.file" = "文件";
 "imageEditor.menu.edit" = "编辑";
+"imageEditor.menu.edit.historySnapshots" = "历史快照";
 "imageEditor.menu.image" = "图像";
 "imageEditor.menu.layer" = "图层";
 "imageEditor.menu.select" = "选择";
@@ -902,6 +903,7 @@
 "imageEditor.history.summary" = "%d 个状态 · 撤销 %d · 重做 %d";
 "imageEditor.history.snapshots" = "快照";
 "imageEditor.history.snapshotName" = "快照 %d";
+"imageEditor.history.snapshotCopyName" = "%@ 副本";
 "imageEditor.history.snapshotNamePlaceholder" = "快照名称";
 "imageEditor.history.undo" = "撤销";
 "imageEditor.history.redo" = "重做";
@@ -1277,6 +1279,8 @@
 "imageEditor.status.selectionInverted" = "已反选选区";
 "imageEditor.status.historyCleared" = "已清理历史记录，当前画面已作为新的起点";
 "imageEditor.status.historySnapshotCreated" = "已创建历史快照“%@”";
+"imageEditor.status.historySnapshotSelected" = "已选择历史快照“%@”";
+"imageEditor.status.historySnapshotDuplicated" = "已复制历史快照“%@”";
 "imageEditor.status.historySnapshotRenamed" = "历史快照已重命名为“%@”";
 "imageEditor.status.historySnapshotRestored" = "已恢复历史快照“%@”";
 "imageEditor.status.historySnapshotDeleted" = "已删除历史快照“%@”";
@@ -1582,6 +1586,12 @@
 "imageEditor.action.historyRestore" = "恢复到这个历史状态";
 "imageEditor.action.historyClear" = "清理历史记录";
 "imageEditor.action.historySnapshotCreate" = "创建历史快照";
+"imageEditor.action.historySnapshotSelect" = "选择历史快照";
+"imageEditor.action.historySnapshotRestoreSelected" = "恢复选中的历史快照";
+"imageEditor.action.historySnapshotDuplicate" = "复制选中的历史快照";
+"imageEditor.action.historySnapshotDeleteSelected" = "删除选中的历史快照";
+"imageEditor.action.historySnapshotPrevious" = "上一个历史快照";
+"imageEditor.action.historySnapshotNext" = "下一个历史快照";
 "imageEditor.action.historySnapshotRestore" = "恢复快照 %@";
 "imageEditor.action.historySnapshotDelete" = "删除快照 %@";
 "imageEditor.action.channelPreview" = "预览 %@ 通道";

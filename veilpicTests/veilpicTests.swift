@@ -285,6 +285,57 @@ struct veilpicTests {
     }
 
     @MainActor
+    @Test func imageEditorHistorySnapshotMenuCommandsSelectDuplicateRestoreAndDelete() async throws {
+        let image = testImage(color: .systemIndigo, size: NSSize(width: 96, height: 72))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.addLayer()
+        let detailID = try #require(viewModel.document.selectedLayerID)
+
+        viewModel.createHistorySnapshot()
+        let visibleSnapshotID = try #require(viewModel.selectedHistorySnapshotID)
+        let visibleSnapshotName = try #require(viewModel.namedHistorySnapshots.first { $0.id == visibleSnapshotID }?.name)
+        #expect(viewModel.canRestoreSelectedHistorySnapshot)
+        #expect(!viewModel.canSelectPreviousHistorySnapshot)
+        #expect(!viewModel.canSelectNextHistorySnapshot)
+
+        viewModel.toggleLayerVisibility(detailID)
+        viewModel.createHistorySnapshot()
+        let hiddenSnapshotID = try #require(viewModel.selectedHistorySnapshotID)
+        let hiddenSnapshotName = try #require(viewModel.namedHistorySnapshots.first { $0.id == hiddenSnapshotID }?.name)
+        #expect(viewModel.canSelectPreviousHistorySnapshot)
+        #expect(!viewModel.canSelectNextHistorySnapshot)
+
+        viewModel.selectPreviousHistorySnapshot()
+        #expect(viewModel.selectedHistorySnapshotID == visibleSnapshotID)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.historySnapshotSelected", visibleSnapshotName))
+
+        viewModel.selectNextHistorySnapshot()
+        #expect(viewModel.selectedHistorySnapshotID == hiddenSnapshotID)
+
+        viewModel.duplicateSelectedHistorySnapshot()
+        let duplicatedSnapshotID = try #require(viewModel.selectedHistorySnapshotID)
+        let duplicatedSnapshotName = L10n.format("imageEditor.history.snapshotCopyName", hiddenSnapshotName)
+        #expect(viewModel.namedHistorySnapshots.count == 3)
+        #expect(viewModel.namedHistorySnapshots.first { $0.id == duplicatedSnapshotID }?.name == duplicatedSnapshotName)
+        #expect(viewModel.canDuplicateSelectedHistorySnapshot)
+        #expect(viewModel.canDeleteSelectedHistorySnapshot)
+
+        viewModel.toggleLayerVisibility(detailID)
+        #expect(viewModel.document.layers.first { $0.id == detailID }?.isVisible == true)
+
+        viewModel.restoreSelectedHistorySnapshot()
+        #expect(viewModel.selectedHistorySnapshotID == duplicatedSnapshotID)
+        #expect(viewModel.document.layers.first { $0.id == detailID }?.isVisible == false)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.snapshotRestore"))
+
+        viewModel.deleteSelectedHistorySnapshot()
+        #expect(viewModel.namedHistorySnapshots.count == 2)
+        #expect(viewModel.selectedHistorySnapshotID == hiddenSnapshotID)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.historySnapshotDeleted", duplicatedSnapshotName))
+    }
+
+    @MainActor
     @Test func imageEditorVisibleLayerRowsCanFilterByNameKindLabelStateAndAttribute() async throws {
         let image = testImage(color: .systemTeal, size: NSSize(width: 96, height: 72))
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }

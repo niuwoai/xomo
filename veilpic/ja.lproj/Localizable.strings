@@ -319,6 +319,7 @@
 "imageEditor.defaultSourceName" = "画像";
 "imageEditor.menu.file" = "ファイル";
 "imageEditor.menu.edit" = "編集";
+"imageEditor.menu.edit.historySnapshots" = "履歴スナップショット";
 "imageEditor.menu.image" = "画像";
 "imageEditor.menu.layer" = "レイヤー";
 "imageEditor.menu.select" = "選択";
@@ -902,6 +903,7 @@
 "imageEditor.history.summary" = "%d 件の状態 · 取り消し %d · やり直し %d";
 "imageEditor.history.snapshots" = "スナップショット";
 "imageEditor.history.snapshotName" = "スナップショット %d";
+"imageEditor.history.snapshotCopyName" = "%@ のコピー";
 "imageEditor.history.snapshotNamePlaceholder" = "スナップショット名";
 "imageEditor.history.undo" = "取り消し";
 "imageEditor.history.redo" = "やり直し";
@@ -1277,6 +1279,8 @@
 "imageEditor.status.selectionInverted" = "選択範囲を反転しました";
 "imageEditor.status.historyCleared" = "履歴を消去し、現在の画像を新しい開始状態にしました";
 "imageEditor.status.historySnapshotCreated" = "履歴スナップショット「%@」を作成しました";
+"imageEditor.status.historySnapshotSelected" = "履歴スナップショット「%@」を選択しました";
+"imageEditor.status.historySnapshotDuplicated" = "履歴スナップショット「%@」を複製しました";
 "imageEditor.status.historySnapshotRenamed" = "履歴スナップショット名を「%@」に変更しました";
 "imageEditor.status.historySnapshotRestored" = "履歴スナップショット「%@」を復元しました";
 "imageEditor.status.historySnapshotDeleted" = "履歴スナップショット「%@」を削除しました";
@@ -1582,6 +1586,12 @@
 "imageEditor.action.historyRestore" = "この履歴状態へ戻す";
 "imageEditor.action.historyClear" = "履歴状態を消去";
 "imageEditor.action.historySnapshotCreate" = "履歴スナップショットを作成";
+"imageEditor.action.historySnapshotSelect" = "履歴スナップショットを選択";
+"imageEditor.action.historySnapshotRestoreSelected" = "選択中の履歴スナップショットを復元";
+"imageEditor.action.historySnapshotDuplicate" = "選択中の履歴スナップショットを複製";
+"imageEditor.action.historySnapshotDeleteSelected" = "選択中の履歴スナップショットを削除";
+"imageEditor.action.historySnapshotPrevious" = "前の履歴スナップショット";
+"imageEditor.action.historySnapshotNext" = "次の履歴スナップショット";
 "imageEditor.action.historySnapshotRestore" = "スナップショット %@ を復元";
 "imageEditor.action.historySnapshotDelete" = "スナップショット %@ を削除";
 "imageEditor.action.channelPreview" = "%@ チャンネルをプレビュー";

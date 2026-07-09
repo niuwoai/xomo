@@ -319,6 +319,7 @@
 "imageEditor.defaultSourceName" = "Image";
 "imageEditor.menu.file" = "File";
 "imageEditor.menu.edit" = "Edit";
+"imageEditor.menu.edit.historySnapshots" = "History Snapshots";
 "imageEditor.menu.image" = "Image";
 "imageEditor.menu.layer" = "Layer";
 "imageEditor.menu.select" = "Select";
@@ -902,6 +903,7 @@
 "imageEditor.history.summary" = "%d states · Undo %d · Redo %d";
 "imageEditor.history.snapshots" = "Snapshots";
 "imageEditor.history.snapshotName" = "Snapshot %d";
+"imageEditor.history.snapshotCopyName" = "%@ Copy";
 "imageEditor.history.snapshotNamePlaceholder" = "Snapshot name";
 "imageEditor.history.undo" = "Undo";
 "imageEditor.history.redo" = "Redo";
@@ -1277,6 +1279,8 @@
 "imageEditor.status.selectionInverted" = "Selection inverted";
 "imageEditor.status.historyCleared" = "History cleared; the current image is now the new starting state";
 "imageEditor.status.historySnapshotCreated" = "History snapshot “%@” created";
+"imageEditor.status.historySnapshotSelected" = "Selected history snapshot “%@”";
+"imageEditor.status.historySnapshotDuplicated" = "Duplicated history snapshot “%@”";
 "imageEditor.status.historySnapshotRenamed" = "History snapshot renamed to “%@”";
 "imageEditor.status.historySnapshotRestored" = "Restored history snapshot “%@”";
 "imageEditor.status.historySnapshotDeleted" = "History snapshot “%@” deleted";
@@ -1582,6 +1586,12 @@
 "imageEditor.action.historyRestore" = "Restore to this history state";
 "imageEditor.action.historyClear" = "Clear history states";
 "imageEditor.action.historySnapshotCreate" = "Create history snapshot";
+"imageEditor.action.historySnapshotSelect" = "Select history snapshot";
+"imageEditor.action.historySnapshotRestoreSelected" = "Restore selected history snapshot";
+"imageEditor.action.historySnapshotDuplicate" = "Duplicate selected history snapshot";
+"imageEditor.action.historySnapshotDeleteSelected" = "Delete selected history snapshot";
+"imageEditor.action.historySnapshotPrevious" = "Previous History Snapshot";
+"imageEditor.action.historySnapshotNext" = "Next History Snapshot";
 "imageEditor.action.historySnapshotRestore" = "Restore snapshot %@";
 "imageEditor.action.historySnapshotDelete" = "Delete snapshot %@";
 "imageEditor.action.channelPreview" = "Preview %@ channel";

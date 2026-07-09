@@ -186,6 +186,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var exportSettings = ImageEditorExportSettings()
     @Published var isExportSheetPresented = false
     @Published var namedHistorySnapshots: [ImageEditorHistorySnapshot] = []
+    @Published var selectedHistorySnapshotID: UUID?
 
     var undoStack: [ImageEditorDocument] = []
     var redoStack: [ImageEditorDocument] = []
@@ -247,6 +248,31 @@ final class ImageEditorViewModel: ObservableObject {
             undoStack.count,
             redoStack.count
         )
+    }
+
+    var selectedHistorySnapshot: ImageEditorHistorySnapshot? {
+        guard let selectedHistorySnapshotID else { return nil }
+        return namedHistorySnapshots.first { $0.id == selectedHistorySnapshotID }
+    }
+
+    var canRestoreSelectedHistorySnapshot: Bool {
+        selectedHistorySnapshot != nil
+    }
+
+    var canDuplicateSelectedHistorySnapshot: Bool {
+        selectedHistorySnapshot != nil
+    }
+
+    var canDeleteSelectedHistorySnapshot: Bool {
+        selectedHistorySnapshot != nil
+    }
+
+    var canSelectPreviousHistorySnapshot: Bool {
+        selectedHistorySnapshotIndex.map { $0 > 0 } ?? false
+    }
+
+    var canSelectNextHistorySnapshot: Bool {
+        selectedHistorySnapshotIndex.map { $0 < namedHistorySnapshots.count - 1 } ?? false
     }
 
     var zoomText: String {
@@ -1025,7 +1051,9 @@ final class ImageEditorViewModel: ObservableObject {
         let name = uniqueHistorySnapshotName(
             L10n.format("imageEditor.history.snapshotName", namedHistorySnapshots.count + 1)
         )
-        namedHistorySnapshots.append(ImageEditorHistorySnapshot(name: name, document: document))
+        let snapshot = ImageEditorHistorySnapshot(name: name, document: document)
+        namedHistorySnapshots.append(snapshot)
+        selectedHistorySnapshotID = snapshot.id
         statusText = L10n.format("imageEditor.status.historySnapshotCreated", name)
     }
 
@@ -1039,6 +1067,7 @@ final class ImageEditorViewModel: ObservableObject {
         guard namedHistorySnapshots[index].name != trimmedName else { return }
 
         namedHistorySnapshots[index].name = uniqueHistorySnapshotName(trimmedName, excluding: id)
+        selectedHistorySnapshotID = id
         statusText = L10n.format("imageEditor.status.historySnapshotRenamed", namedHistorySnapshots[index].name)
     }
 
@@ -1052,15 +1081,62 @@ final class ImageEditorViewModel: ObservableObject {
         syncFilterControlsFromSelection()
         syncTextControlsFromSelection()
         syncShapeControlsFromSelection()
+        selectedHistorySnapshotID = id
         appendHistory(L10n.text("imageEditor.history.snapshotRestore"))
         statusText = L10n.format("imageEditor.status.historySnapshotRestored", snapshot.name)
+    }
+
+    func restoreSelectedHistorySnapshot() {
+        guard let selectedHistorySnapshot else { return }
+        restoreHistorySnapshot(selectedHistorySnapshot.id)
+    }
+
+    func duplicateSelectedHistorySnapshot() {
+        guard let selectedHistorySnapshot else { return }
+        var duplicated = selectedHistorySnapshot
+        duplicated.id = UUID()
+        duplicated.name = uniqueHistorySnapshotName(
+            L10n.format("imageEditor.history.snapshotCopyName", selectedHistorySnapshot.name)
+        )
+        if let selectedIndex = selectedHistorySnapshotIndex {
+            namedHistorySnapshots.insert(duplicated, at: selectedIndex + 1)
+        } else {
+            namedHistorySnapshots.append(duplicated)
+        }
+        selectedHistorySnapshotID = duplicated.id
+        statusText = L10n.format("imageEditor.status.historySnapshotDuplicated", duplicated.name)
     }
 
     func deleteHistorySnapshot(_ id: UUID) {
         guard let index = namedHistorySnapshots.firstIndex(where: { $0.id == id }) else { return }
         let name = namedHistorySnapshots[index].name
         namedHistorySnapshots.remove(at: index)
+        if selectedHistorySnapshotID == id {
+            let fallbackIndex = min(index, namedHistorySnapshots.count - 1)
+            selectedHistorySnapshotID = fallbackIndex >= 0 ? namedHistorySnapshots[fallbackIndex].id : nil
+        }
         statusText = L10n.format("imageEditor.status.historySnapshotDeleted", name)
+    }
+
+    func deleteSelectedHistorySnapshot() {
+        guard let selectedHistorySnapshot else { return }
+        deleteHistorySnapshot(selectedHistorySnapshot.id)
+    }
+
+    func selectHistorySnapshot(_ id: UUID) {
+        guard let snapshot = namedHistorySnapshots.first(where: { $0.id == id }) else { return }
+        selectedHistorySnapshotID = id
+        statusText = L10n.format("imageEditor.status.historySnapshotSelected", snapshot.name)
+    }
+
+    func selectPreviousHistorySnapshot() {
+        guard canSelectPreviousHistorySnapshot, let selectedHistorySnapshotIndex else { return }
+        selectHistorySnapshot(namedHistorySnapshots[selectedHistorySnapshotIndex - 1].id)
+    }
+
+    func selectNextHistorySnapshot() {
+        guard canSelectNextHistorySnapshot, let selectedHistorySnapshotIndex else { return }
+        selectHistorySnapshot(namedHistorySnapshots[selectedHistorySnapshotIndex + 1].id)
     }
 
     func clearHistoryStates() {
@@ -4089,6 +4165,11 @@ final class ImageEditorViewModel: ObservableObject {
             suffix += 1
         }
         return "\(baseName) \(suffix)"
+    }
+
+    private var selectedHistorySnapshotIndex: Int? {
+        guard let selectedHistorySnapshotID else { return nil }
+        return namedHistorySnapshots.firstIndex { $0.id == selectedHistorySnapshotID }
     }
 
     private func ensureSelectedLayer() {

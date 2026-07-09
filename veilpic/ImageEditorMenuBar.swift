@@ -90,6 +90,11 @@ extension ImageEditorView {
         }
         .disabled(!viewModel.canRedo)
         Divider()
+        historySnapshotMenu
+        Button(L10n.text("imageEditor.action.historyClear")) {
+            viewModel.clearHistoryStates()
+        }
+        Divider()
         Button(L10n.text("imageEditor.action.copySelectionClipboard")) {
             viewModel.copySelectionToClipboard()
         }
@@ -106,10 +111,6 @@ extension ImageEditorView {
             viewModel.pasteClipboardIntoSelectionAsLayer()
         }
         .disabled(!viewModel.canPasteClipboardImageIntoSelection)
-        Divider()
-        Button(L10n.text("imageEditor.action.historyClear")) {
-            viewModel.clearHistoryStates()
-        }
         Divider()
         Button(L10n.text("imageEditor.action.fillSelection")) {
             viewModel.fillSelection()
@@ -139,6 +140,37 @@ extension ImageEditorView {
             viewModel.clearSelectionPixels()
         }
         .disabled(!viewModel.canEditSelectionPixels)
+    }
+
+    @ViewBuilder
+    private var historySnapshotMenu: some View {
+        Menu(L10n.text("imageEditor.menu.edit.historySnapshots")) {
+            Button(L10n.text("imageEditor.action.historySnapshotCreate")) {
+                viewModel.createHistorySnapshot()
+            }
+            Divider()
+            Button(L10n.text("imageEditor.action.historySnapshotRestoreSelected")) {
+                viewModel.restoreSelectedHistorySnapshot()
+            }
+            .disabled(!viewModel.canRestoreSelectedHistorySnapshot)
+            Button(L10n.text("imageEditor.action.historySnapshotDuplicate")) {
+                viewModel.duplicateSelectedHistorySnapshot()
+            }
+            .disabled(!viewModel.canDuplicateSelectedHistorySnapshot)
+            Button(L10n.text("imageEditor.action.historySnapshotDeleteSelected")) {
+                viewModel.deleteSelectedHistorySnapshot()
+            }
+            .disabled(!viewModel.canDeleteSelectedHistorySnapshot)
+            Divider()
+            Button(L10n.text("imageEditor.action.historySnapshotPrevious")) {
+                viewModel.selectPreviousHistorySnapshot()
+            }
+            .disabled(!viewModel.canSelectPreviousHistorySnapshot)
+            Button(L10n.text("imageEditor.action.historySnapshotNext")) {
+                viewModel.selectNextHistorySnapshot()
+            }
+            .disabled(!viewModel.canSelectNextHistorySnapshot)
+        }
     }
 
     @ViewBuilder

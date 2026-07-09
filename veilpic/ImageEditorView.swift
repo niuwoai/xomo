@@ -722,11 +722,18 @@ struct ImageEditorView: View {
     }
 
     private func historySnapshotRow(_ snapshot: ImageEditorHistorySnapshot) -> some View {
-        HStack(spacing: 6) {
-            Image(systemName: "camera.filters")
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(Color(nsColor: ImageEditorTheme.selected))
-                .frame(width: 16)
+        let isSelected = viewModel.selectedHistorySnapshotID == snapshot.id
+        return HStack(spacing: 6) {
+            Button {
+                viewModel.selectHistorySnapshot(snapshot.id)
+            } label: {
+                Image(systemName: isSelected ? "checkmark.camera.fill" : "camera.filters")
+                    .font(.system(size: 12, weight: .semibold))
+                    .frame(width: 16)
+                    .foregroundStyle(Color(nsColor: isSelected ? ImageEditorTheme.selected : ImageEditorTheme.mutedText))
+            }
+            .buttonStyle(.plain)
+            .help(L10n.text("imageEditor.action.historySnapshotSelect"))
 
             TextField(
                 L10n.text("imageEditor.history.snapshotNamePlaceholder"),
@@ -765,7 +772,7 @@ struct ImageEditorView: View {
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 5)
-        .background(Color.white.opacity(0.04))
+        .background(isSelected ? Color(nsColor: ImageEditorTheme.selected).opacity(0.22) : Color.white.opacity(0.04))
         .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
     }
 
