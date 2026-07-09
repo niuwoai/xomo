@@ -1622,6 +1622,10 @@
 "imageEditor.action.alphaChannelRotate180" = "%@ を 180° 回転";
 "imageEditor.action.alphaChannelScaleUp" = "%@ を 200% に拡大";
 "imageEditor.action.alphaChannelScaleDown" = "%@ を 50% に縮小";
+"imageEditor.action.alphaChannelMoveLeft" = "%@ を左へ移動";
+"imageEditor.action.alphaChannelMoveRight" = "%@ を右へ移動";
+"imageEditor.action.alphaChannelMoveUp" = "%@ を上へ移動";
+"imageEditor.action.alphaChannelMoveDown" = "%@ を下へ移動";
 "imageEditor.action.alphaChannelDelete" = "%@ を削除";
 "imageEditor.action.alphaChannelLoadSelectedSelection" = "選択中の Alpha チャンネルを選択範囲として読み込み";
 "imageEditor.action.alphaChannelUpdateSelected" = "現在の選択範囲で選択中の Alpha チャンネルを更新";
@@ -1642,6 +1646,10 @@
 "imageEditor.action.alphaChannelRotate180Selected" = "選択中の Alpha チャンネルを 180° 回転";
 "imageEditor.action.alphaChannelScaleUpSelected" = "選択中の Alpha チャンネルを 200% に拡大";
 "imageEditor.action.alphaChannelScaleDownSelected" = "選択中の Alpha チャンネルを 50% に縮小";
+"imageEditor.action.alphaChannelMoveLeftSelected" = "選択中の Alpha チャンネルを左へ移動";
+"imageEditor.action.alphaChannelMoveRightSelected" = "選択中の Alpha チャンネルを右へ移動";
+"imageEditor.action.alphaChannelMoveUpSelected" = "選択中の Alpha チャンネルを上へ移動";
+"imageEditor.action.alphaChannelMoveDownSelected" = "選択中の Alpha チャンネルを下へ移動";
 "imageEditor.action.alphaChannelDeleteSelected" = "選択中の Alpha チャンネルを削除";
 "imageEditor.action.alphaChannelPrevious" = "前の Alpha チャンネル";
 "imageEditor.action.alphaChannelNext" = "次の Alpha チャンネル";
@@ -1672,6 +1680,7 @@
 "imageEditor.status.alphaChannelRotated180" = "%@ を 180° 回転しました";
 "imageEditor.status.alphaChannelScaledUp" = "%@ を 200% に拡大しました";
 "imageEditor.status.alphaChannelScaledDown" = "%@ を 50% に縮小しました";
+"imageEditor.status.alphaChannelMoved" = "%@ を移動しました X:%d Y:%d px";
 "imageEditor.status.alphaChannelRenamed" = "Alpha チャンネル名を変更しました";
 "imageEditor.status.alphaChannelNameInvalid" = "Alpha チャンネル名は空にできません";
 "imageEditor.status.alphaChannelDeleted" = "Alpha チャンネルを削除しました";
@@ -1699,6 +1708,7 @@
 "imageEditor.history.alphaChannelRotate180" = "Alpha チャンネルを 180° 回転";
 "imageEditor.history.alphaChannelScaleUp" = "Alpha チャンネルを 200% に拡大";
 "imageEditor.history.alphaChannelScaleDown" = "Alpha チャンネルを 50% に縮小";
+"imageEditor.history.alphaChannelMove" = "Alpha チャンネルを移動";
 "imageEditor.history.alphaChannelRename" = "Alpha チャンネル名を変更";
 "imageEditor.history.alphaChannelDelete" = "Alpha チャンネルを削除";
 "imageEditor.action.layerCompNew" = "レイヤーコンプを保存";

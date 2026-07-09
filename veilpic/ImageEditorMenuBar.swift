@@ -992,6 +992,23 @@ extension ImageEditorView {
             viewModel.scaleSelectedAlphaChannelDown()
         }
         .disabled(!viewModel.canScaleSelectedAlphaChannelDown)
+        Divider()
+        Button(L10n.text("imageEditor.action.alphaChannelMoveLeftSelected")) {
+            viewModel.moveSelectedAlphaChannelLeft()
+        }
+        .disabled(!viewModel.canMoveSelectedAlphaChannelLeft)
+        Button(L10n.text("imageEditor.action.alphaChannelMoveRightSelected")) {
+            viewModel.moveSelectedAlphaChannelRight()
+        }
+        .disabled(!viewModel.canMoveSelectedAlphaChannelRight)
+        Button(L10n.text("imageEditor.action.alphaChannelMoveUpSelected")) {
+            viewModel.moveSelectedAlphaChannelUp()
+        }
+        .disabled(!viewModel.canMoveSelectedAlphaChannelUp)
+        Button(L10n.text("imageEditor.action.alphaChannelMoveDownSelected")) {
+            viewModel.moveSelectedAlphaChannelDown()
+        }
+        .disabled(!viewModel.canMoveSelectedAlphaChannelDown)
         Button(L10n.text("imageEditor.action.alphaChannelDeleteSelected")) {
             viewModel.deleteSelectedAlphaChannel()
         }

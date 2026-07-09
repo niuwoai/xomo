@@ -724,6 +724,40 @@ struct ImageEditorChannelTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelScaleDown"))
     }
 
+    @Test func alphaChannelsCanMoveMasksByModifyAmount() async throws {
+        let canvasSize = NSSize(width: 8, height: 6)
+        let image = NSImage.rendered(size: canvasSize) { rect in
+            NSColor.systemBlue.setFill()
+            rect.fill()
+        } ?? NSImage(size: canvasSize)
+        let viewModel = ImageEditorViewModel(sourceName: "move-alpha.png", image: image) { _ in }
+        var alpha = [UInt8](repeating: 0, count: Int(canvasSize.width * canvasSize.height))
+        alpha[1 * 8 + 1] = 255
+        alpha[1 * 8 + 2] = 255
+        let channel = ImageEditorAlphaChannel(
+            name: "Move Alpha",
+            mask: ImageEditorSelectionMask(width: 8, height: 6, alpha: alpha)
+        )
+        viewModel.document.alphaChannels = [channel]
+        viewModel.selectAlphaChannel(channel.id)
+        viewModel.selectionModifyAmount = 2
+
+        #expect(viewModel.canMoveSelectedAlphaChannelRight)
+        viewModel.moveSelectedAlphaChannelRight()
+        viewModel.selectionModifyAmount = 1
+
+        #expect(viewModel.canMoveSelectedAlphaChannelUp)
+        viewModel.moveSelectedAlphaChannelUp()
+
+        let movedMask = try #require(viewModel.selectedAlphaChannel?.mask)
+        #expect(maskAlpha(movedMask, x: 1, y: 1) == 0)
+        #expect(maskAlpha(movedMask, x: 2, y: 1) == 0)
+        #expect(maskAlpha(movedMask, x: 3, y: 2) == 255)
+        #expect(maskAlpha(movedMask, x: 4, y: 2) == 255)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelMoved", "Move Alpha", 0, 1))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelMove"))
+    }
+
     @Test func alphaChannelsRoundTripWithLayerMasks() async throws {
         let viewModel = ImageEditorViewModel(sourceName: "split.png", image: splitChannelImage()) { _ in }
 

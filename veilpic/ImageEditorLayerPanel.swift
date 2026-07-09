@@ -407,6 +407,46 @@ extension ImageEditorView {
             .help(L10n.format("imageEditor.action.alphaChannelScaleDown", channel.name))
 
             Button {
+                viewModel.moveAlphaChannelLeft(channel.id)
+            } label: {
+                Image(systemName: "arrow.left")
+                    .font(.system(size: 12, weight: .semibold))
+                    .frame(width: 24, height: 28)
+            }
+            .buttonStyle(EditorIconButtonStyle(isSelected: false))
+            .help(L10n.format("imageEditor.action.alphaChannelMoveLeft", channel.name))
+
+            Button {
+                viewModel.moveAlphaChannelRight(channel.id)
+            } label: {
+                Image(systemName: "arrow.right")
+                    .font(.system(size: 12, weight: .semibold))
+                    .frame(width: 24, height: 28)
+            }
+            .buttonStyle(EditorIconButtonStyle(isSelected: false))
+            .help(L10n.format("imageEditor.action.alphaChannelMoveRight", channel.name))
+
+            Button {
+                viewModel.moveAlphaChannelUp(channel.id)
+            } label: {
+                Image(systemName: "arrow.up")
+                    .font(.system(size: 12, weight: .semibold))
+                    .frame(width: 24, height: 28)
+            }
+            .buttonStyle(EditorIconButtonStyle(isSelected: false))
+            .help(L10n.format("imageEditor.action.alphaChannelMoveUp", channel.name))
+
+            Button {
+                viewModel.moveAlphaChannelDown(channel.id)
+            } label: {
+                Image(systemName: "arrow.down")
+                    .font(.system(size: 12, weight: .semibold))
+                    .frame(width: 24, height: 28)
+            }
+            .buttonStyle(EditorIconButtonStyle(isSelected: false))
+            .help(L10n.format("imageEditor.action.alphaChannelMoveDown", channel.name))
+
+            Button {
                 viewModel.deleteAlphaChannel(channel.id)
             } label: {
                 Image(systemName: "trash")

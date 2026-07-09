@@ -164,6 +164,22 @@ extension ImageEditorViewModel {
         selectedAlphaChannel != nil
     }
 
+    var canMoveSelectedAlphaChannelLeft: Bool {
+        selectedAlphaChannel != nil
+    }
+
+    var canMoveSelectedAlphaChannelRight: Bool {
+        selectedAlphaChannel != nil
+    }
+
+    var canMoveSelectedAlphaChannelUp: Bool {
+        selectedAlphaChannel != nil
+    }
+
+    var canMoveSelectedAlphaChannelDown: Bool {
+        selectedAlphaChannel != nil
+    }
+
     var canDeleteSelectedAlphaChannel: Bool {
         selectedAlphaChannel != nil
     }
@@ -357,6 +373,26 @@ extension ImageEditorViewModel {
     func scaleSelectedAlphaChannelDown() {
         guard let selectedAlphaChannelID else { return }
         scaleAlphaChannelDown(selectedAlphaChannelID)
+    }
+
+    func moveSelectedAlphaChannelLeft() {
+        guard let selectedAlphaChannelID else { return }
+        moveAlphaChannelLeft(selectedAlphaChannelID)
+    }
+
+    func moveSelectedAlphaChannelRight() {
+        guard let selectedAlphaChannelID else { return }
+        moveAlphaChannelRight(selectedAlphaChannelID)
+    }
+
+    func moveSelectedAlphaChannelUp() {
+        guard let selectedAlphaChannelID else { return }
+        moveAlphaChannelUp(selectedAlphaChannelID)
+    }
+
+    func moveSelectedAlphaChannelDown() {
+        guard let selectedAlphaChannelID else { return }
+        moveAlphaChannelDown(selectedAlphaChannelID)
     }
 
     func deleteSelectedAlphaChannel() {
@@ -606,6 +642,22 @@ extension ImageEditorViewModel {
         )
     }
 
+    func moveAlphaChannelLeft(_ id: UUID) {
+        moveAlphaChannel(id, by: CGSize(width: -alphaChannelMoveAmount, height: 0))
+    }
+
+    func moveAlphaChannelRight(_ id: UUID) {
+        moveAlphaChannel(id, by: CGSize(width: alphaChannelMoveAmount, height: 0))
+    }
+
+    func moveAlphaChannelUp(_ id: UUID) {
+        moveAlphaChannel(id, by: CGSize(width: 0, height: alphaChannelMoveAmount))
+    }
+
+    func moveAlphaChannelDown(_ id: UUID) {
+        moveAlphaChannel(id, by: CGSize(width: 0, height: -alphaChannelMoveAmount))
+    }
+
     private func rotateAlphaChannel(_ id: UUID, clockwiseTurns: Int, historyKey: String, statusKey: String) {
         guard let index = document.alphaChannels.firstIndex(where: { $0.id == id }) else { return }
         guard let rotatedMask = document.alphaChannels[index].mask.rotatedQuarterTurns(clockwiseTurns) else {
@@ -632,6 +684,29 @@ extension ImageEditorViewModel {
         selectedAlphaChannelID = id
         appendHistory(L10n.text(historyKey))
         statusText = L10n.format(statusKey, document.alphaChannels[index].name)
+    }
+
+    private var alphaChannelMoveAmount: CGFloat {
+        CGFloat(max(1, min(512, Int(selectionModifyAmount.rounded()))))
+    }
+
+    private func moveAlphaChannel(_ id: UUID, by delta: CGSize) {
+        guard let index = document.alphaChannels.firstIndex(where: { $0.id == id }) else { return }
+        guard let movedMask = document.alphaChannels[index].mask.translated(by: delta, canvasSize: document.canvasSize) else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+
+        pushUndo()
+        document.alphaChannels[index].mask = movedMask
+        selectedAlphaChannelID = id
+        appendHistory(L10n.text("imageEditor.history.alphaChannelMove"))
+        statusText = L10n.format(
+            "imageEditor.status.alphaChannelMoved",
+            document.alphaChannels[index].name,
+            Int(delta.width.rounded()),
+            Int(delta.height.rounded())
+        )
     }
 
     private func morphAlphaChannel(
