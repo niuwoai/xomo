@@ -956,6 +956,10 @@ extension ImageEditorView {
             viewModel.smoothSelectedAlphaChannel()
         }
         .disabled(!viewModel.canSmoothSelectedAlphaChannel)
+        Button(L10n.text("imageEditor.action.alphaChannelFillHolesSelected")) {
+            viewModel.fillHolesSelectedAlphaChannel()
+        }
+        .disabled(!viewModel.canFillHolesSelectedAlphaChannel)
         Button(L10n.text("imageEditor.action.alphaChannelDeleteSelected")) {
             viewModel.deleteSelectedAlphaChannel()
         }

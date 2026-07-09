@@ -511,6 +511,34 @@ struct ImageEditorChannelTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelSmooth"))
     }
 
+    @Test func alphaChannelsCanFillMaskHoles() async throws {
+        let viewModel = ImageEditorViewModel(sourceName: "split.png", image: splitChannelImage()) { _ in }
+        let holedMask = ImageEditorSelectionMask(
+            width: 5,
+            height: 5,
+            alpha: [
+                0, 0, 0, 0, 0,
+                0, 255, 255, 255, 0,
+                0, 255, 0, 255, 0,
+                0, 255, 255, 255, 0,
+                0, 0, 0, 0, 0
+            ]
+        )
+        let channel = ImageEditorAlphaChannel(name: "Ring", mask: holedMask)
+        viewModel.document.alphaChannels = [channel]
+        viewModel.selectAlphaChannel(channel.id)
+
+        #expect(viewModel.canFillHolesSelectedAlphaChannel)
+        viewModel.fillHolesSelectedAlphaChannel()
+
+        let filledChannel = try #require(viewModel.selectedAlphaChannel)
+        #expect(maskAlpha(filledChannel.mask, x: 2, y: 2) == 255)
+        #expect(maskAlpha(filledChannel.mask, x: 0, y: 0) == 0)
+        #expect(maskAlpha(filledChannel.mask, x: 4, y: 4) == 0)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelFilledHoles", "Ring"))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelFillHoles"))
+    }
+
     @Test func alphaChannelsRoundTripWithLayerMasks() async throws {
         let viewModel = ImageEditorViewModel(sourceName: "split.png", image: splitChannelImage()) { _ in }
 

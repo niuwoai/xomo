@@ -1613,6 +1613,7 @@
 "imageEditor.action.alphaChannelExpand" = "%@ を拡張";
 "imageEditor.action.alphaChannelContract" = "%@ を縮小";
 "imageEditor.action.alphaChannelSmooth" = "%@ を滑らかにする";
+"imageEditor.action.alphaChannelFillHoles" = "%@ の穴を埋める";
 "imageEditor.action.alphaChannelDelete" = "%@ を削除";
 "imageEditor.action.alphaChannelLoadSelectedSelection" = "選択中の Alpha チャンネルを選択範囲として読み込み";
 "imageEditor.action.alphaChannelUpdateSelected" = "現在の選択範囲で選択中の Alpha チャンネルを更新";
@@ -1624,6 +1625,7 @@
 "imageEditor.action.alphaChannelExpandSelected" = "選択中の Alpha チャンネルを拡張";
 "imageEditor.action.alphaChannelContractSelected" = "選択中の Alpha チャンネルを縮小";
 "imageEditor.action.alphaChannelSmoothSelected" = "選択中の Alpha チャンネルを滑らかにする";
+"imageEditor.action.alphaChannelFillHolesSelected" = "選択中の Alpha チャンネルの穴を埋める";
 "imageEditor.action.alphaChannelDeleteSelected" = "選択中の Alpha チャンネルを削除";
 "imageEditor.action.alphaChannelPrevious" = "前の Alpha チャンネル";
 "imageEditor.action.alphaChannelNext" = "次の Alpha チャンネル";
@@ -1645,6 +1647,7 @@
 "imageEditor.status.alphaChannelExpanded" = "%@ を拡張しました（%d px）";
 "imageEditor.status.alphaChannelContracted" = "%@ を縮小しました（%d px）";
 "imageEditor.status.alphaChannelSmoothed" = "%@ を滑らかにしました（%d px）";
+"imageEditor.status.alphaChannelFilledHoles" = "%@ の穴を埋めました";
 "imageEditor.status.alphaChannelRenamed" = "Alpha チャンネル名を変更しました";
 "imageEditor.status.alphaChannelNameInvalid" = "Alpha チャンネル名は空にできません";
 "imageEditor.status.alphaChannelDeleted" = "Alpha チャンネルを削除しました";
@@ -1663,6 +1666,7 @@
 "imageEditor.history.alphaChannelExpand" = "Alpha チャンネルを拡張";
 "imageEditor.history.alphaChannelContract" = "Alpha チャンネルを縮小";
 "imageEditor.history.alphaChannelSmooth" = "Alpha チャンネルを滑らかにする";
+"imageEditor.history.alphaChannelFillHoles" = "Alpha チャンネルの穴を埋める";
 "imageEditor.history.alphaChannelRename" = "Alpha チャンネル名を変更";
 "imageEditor.history.alphaChannelDelete" = "Alpha チャンネルを削除";
 "imageEditor.action.layerCompNew" = "レイヤーコンプを保存";

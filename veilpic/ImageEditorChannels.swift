@@ -128,6 +128,10 @@ extension ImageEditorViewModel {
         selectedAlphaChannel != nil
     }
 
+    var canFillHolesSelectedAlphaChannel: Bool {
+        selectedAlphaChannel != nil
+    }
+
     var canDeleteSelectedAlphaChannel: Bool {
         selectedAlphaChannel != nil
     }
@@ -278,6 +282,11 @@ extension ImageEditorViewModel {
         smoothAlphaChannel(selectedAlphaChannelID)
     }
 
+    func fillHolesSelectedAlphaChannel() {
+        guard let selectedAlphaChannelID else { return }
+        fillHolesAlphaChannel(selectedAlphaChannelID)
+    }
+
     func deleteSelectedAlphaChannel() {
         guard let selectedAlphaChannelID else { return }
         deleteAlphaChannel(selectedAlphaChannelID)
@@ -409,6 +418,23 @@ extension ImageEditorViewModel {
             "imageEditor.status.alphaChannelSmoothed",
             document.alphaChannels[index].name,
             effectiveRadius
+        )
+    }
+
+    func fillHolesAlphaChannel(_ id: UUID) {
+        guard let index = document.alphaChannels.firstIndex(where: { $0.id == id }) else { return }
+        guard let filledMask = document.alphaChannels[index].mask.filledHoles() else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+
+        pushUndo()
+        document.alphaChannels[index].mask = filledMask
+        selectedAlphaChannelID = id
+        appendHistory(L10n.text("imageEditor.history.alphaChannelFillHoles"))
+        statusText = L10n.format(
+            "imageEditor.status.alphaChannelFilledHoles",
+            document.alphaChannels[index].name
         )
     }
 
