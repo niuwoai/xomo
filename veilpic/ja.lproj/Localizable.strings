@@ -467,6 +467,7 @@
 "imageEditor.filter.wave" = "波形";
 "imageEditor.filter.ripple" = "波紋";
 "imageEditor.filter.pinch" = "ピンチ";
+"imageEditor.filter.spherize" = "球面化";
 "imageEditor.filter.liquifyPush" = "ゆがみプッシュ";
 "imageEditor.filter.liquifyTwirl" = "ゆがみ回転";
 "imageEditor.filter.liquifyPuckerBloat" = "ゆがみ収縮/膨張";
@@ -494,6 +495,8 @@
 "imageEditor.filter.rippleFrequencyValue" = "%d";
 "imageEditor.filter.pinchAmount" = "量";
 "imageEditor.filter.pinchAmountValue" = "%d";
+"imageEditor.filter.spherizeAmount" = "量";
+"imageEditor.filter.spherizeAmountValue" = "%d";
 "imageEditor.shape.rectangle" = "長方形";
 "imageEditor.shape.ellipse" = "楕円";
 "imageEditor.shape.path" = "パス";
@@ -523,6 +526,7 @@
 "imageEditor.properties.smartFilterOffsetItem" = "%@ %d%% · X %d · Y %d";
 "imageEditor.properties.smartFilterRippleItem" = "%@ %d%% · 量 %d · 周波数 %d";
 "imageEditor.properties.smartFilterPinchItem" = "%@ %d%% · 量 %d";
+"imageEditor.properties.smartFilterSpherizeItem" = "%@ %d%% · 量 %d";
 "imageEditor.properties.smartFilterDisabled" = "%@（オフ）";
 "imageEditor.properties.smartFilterSeparator" = "・";
 "imageEditor.properties.textPlaceholder" = "追加する文字";
@@ -1170,6 +1174,8 @@
 "imageEditor.status.layerTransparentPixelsLockSelected" = "選択レイヤーの透明ピクセルをロックしました";
 "imageEditor.status.layerTransparentPixelsUnlockSelected" = "選択レイヤーの透明ピクセルロックを解除しました";
 "imageEditor.status.layerSelectAll" = "%d 個すべてのレイヤーを選択しました";
+"imageEditor.status.layerSelectSameKind" = "同じ種類のレイヤーを %d 個選択しました：%@";
+"imageEditor.status.layerSelectSameLabelColor" = "同じカラーラベルのレイヤーを %d 個選択しました：%@";
 "imageEditor.status.layerSelectionInverted" = "レイヤー選択を反転しました。現在 %d 個を選択中";
 "imageEditor.status.layerSelectionCleared" = "レイヤー選択を解除しました";
 "imageEditor.status.layerNameInvalid" = "レイヤー名は空にできません";
@@ -1395,6 +1401,8 @@
 "imageEditor.action.layerFromBackground" = "背景からレイヤーを作成";
 "imageEditor.action.backgroundFromLayer" = "レイヤーから背景を作成";
 "imageEditor.action.layerSelectAll" = "すべてのレイヤーを選択";
+"imageEditor.action.layerSelectSameKind" = "同じ種類のレイヤーを選択";
+"imageEditor.action.layerSelectSameLabelColor" = "同じカラーラベルのレイヤーを選択";
 "imageEditor.action.layerSelectionInvert" = "レイヤー選択を反転";
 "imageEditor.action.layerSelectionClear" = "レイヤー選択を解除";
 "imageEditor.action.layerLink" = "選択レイヤーをリンク";

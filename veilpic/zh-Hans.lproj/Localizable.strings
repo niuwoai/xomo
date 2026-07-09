@@ -467,6 +467,7 @@
 "imageEditor.filter.wave" = "波浪";
 "imageEditor.filter.ripple" = "波纹";
 "imageEditor.filter.pinch" = "挤压";
+"imageEditor.filter.spherize" = "球面化";
 "imageEditor.filter.liquifyPush" = "液化推移";
 "imageEditor.filter.liquifyTwirl" = "液化旋转";
 "imageEditor.filter.liquifyPuckerBloat" = "液化收缩/膨胀";
@@ -494,6 +495,8 @@
 "imageEditor.filter.rippleFrequencyValue" = "%d";
 "imageEditor.filter.pinchAmount" = "数量";
 "imageEditor.filter.pinchAmountValue" = "%d";
+"imageEditor.filter.spherizeAmount" = "数量";
+"imageEditor.filter.spherizeAmountValue" = "%d";
 "imageEditor.shape.rectangle" = "矩形";
 "imageEditor.shape.ellipse" = "椭圆";
 "imageEditor.shape.path" = "路径";
@@ -523,6 +526,7 @@
 "imageEditor.properties.smartFilterOffsetItem" = "%@ %d%% · X %d · Y %d";
 "imageEditor.properties.smartFilterRippleItem" = "%@ %d%% · 数量 %d · 频率 %d";
 "imageEditor.properties.smartFilterPinchItem" = "%@ %d%% · 数量 %d";
+"imageEditor.properties.smartFilterSpherizeItem" = "%@ %d%% · 数量 %d";
 "imageEditor.properties.smartFilterDisabled" = "%@（已关闭）";
 "imageEditor.properties.smartFilterSeparator" = " · ";
 "imageEditor.properties.textPlaceholder" = "输入要添加的文字";
@@ -1170,6 +1174,8 @@
 "imageEditor.status.layerTransparentPixelsLockSelected" = "已锁定所选图层透明像素";
 "imageEditor.status.layerTransparentPixelsUnlockSelected" = "已解锁所选图层透明像素";
 "imageEditor.status.layerSelectAll" = "已选择全部 %d 个图层";
+"imageEditor.status.layerSelectSameKind" = "已选择 %d 个同类图层：%@";
+"imageEditor.status.layerSelectSameLabelColor" = "已选择 %d 个同色标签图层：%@";
 "imageEditor.status.layerSelectionInverted" = "已反选图层，当前选择 %d 个图层";
 "imageEditor.status.layerSelectionCleared" = "已清除图层选择";
 "imageEditor.status.layerNameInvalid" = "图层名称不能为空";
@@ -1395,6 +1401,8 @@
 "imageEditor.action.layerFromBackground" = "从背景新建图层";
 "imageEditor.action.backgroundFromLayer" = "从图层新建背景";
 "imageEditor.action.layerSelectAll" = "选择全部图层";
+"imageEditor.action.layerSelectSameKind" = "选择同类图层";
+"imageEditor.action.layerSelectSameLabelColor" = "选择同色标签图层";
 "imageEditor.action.layerSelectionInvert" = "反选图层";
 "imageEditor.action.layerSelectionClear" = "清除图层选择";
 "imageEditor.action.layerLink" = "链接所选图层";

@@ -1237,6 +1237,7 @@ enum ImageEditorFilter: String, CaseIterable, Identifiable {
     case wave
     case ripple
     case pinch
+    case spherize
     case liquifyPush
     case liquifyTwirl
     case liquifyPuckerBloat
@@ -1278,6 +1279,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
     var rippleAmount: Double = 0.5
     var rippleFrequency: Double = 0.25
     var pinchAmount: Double = 0.5
+    var spherizeAmount: Double = 0.5
 
     init(
         unsharpRadius: Double = 1,
@@ -1292,7 +1294,8 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         waveFrequency: Double = 0.25,
         rippleAmount: Double = 0.5,
         rippleFrequency: Double = 0.25,
-        pinchAmount: Double = 0.5
+        pinchAmount: Double = 0.5,
+        spherizeAmount: Double = 0.5
     ) {
         self.unsharpRadius = unsharpRadius
         self.unsharpThreshold = unsharpThreshold
@@ -1307,6 +1310,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         self.rippleAmount = rippleAmount
         self.rippleFrequency = rippleFrequency
         self.pinchAmount = pinchAmount
+        self.spherizeAmount = spherizeAmount
     }
 
     init(from decoder: Decoder) throws {
@@ -1324,6 +1328,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         rippleAmount = try container.decodeIfPresent(Double.self, forKey: .rippleAmount) ?? 0.5
         rippleFrequency = try container.decodeIfPresent(Double.self, forKey: .rippleFrequency) ?? 0.25
         pinchAmount = try container.decodeIfPresent(Double.self, forKey: .pinchAmount) ?? 0.5
+        spherizeAmount = try container.decodeIfPresent(Double.self, forKey: .spherizeAmount) ?? 0.5
     }
 
     func encode(to encoder: Encoder) throws {
@@ -1341,6 +1346,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         try container.encode(rippleAmount, forKey: .rippleAmount)
         try container.encode(rippleFrequency, forKey: .rippleFrequency)
         try container.encode(pinchAmount, forKey: .pinchAmount)
+        try container.encode(spherizeAmount, forKey: .spherizeAmount)
     }
 
     func normalized() -> ImageEditorFilterSettings {
@@ -1357,7 +1363,8 @@ struct ImageEditorFilterSettings: Equatable, Codable {
             waveFrequency: max(0, min(1, waveFrequency)),
             rippleAmount: max(-1, min(1, rippleAmount)),
             rippleFrequency: max(0, min(1, rippleFrequency)),
-            pinchAmount: max(-1, min(1, pinchAmount))
+            pinchAmount: max(-1, min(1, pinchAmount)),
+            spherizeAmount: max(-1, min(1, spherizeAmount))
         )
     }
 
@@ -1375,6 +1382,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         case rippleAmount
         case rippleFrequency
         case pinchAmount
+        case spherizeAmount
     }
 }
 

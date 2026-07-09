@@ -205,6 +205,14 @@ extension ImageEditorView {
             viewModel.selectAllLayers()
         }
         .disabled(!viewModel.canSelectAllLayers)
+        Button(L10n.text("imageEditor.action.layerSelectSameKind")) {
+            viewModel.selectLayersWithSameKind()
+        }
+        .disabled(!viewModel.canSelectLayersWithSameKind)
+        Button(L10n.text("imageEditor.action.layerSelectSameLabelColor")) {
+            viewModel.selectLayersWithSameLabelColor()
+        }
+        .disabled(!viewModel.canSelectLayersWithSameLabelColor)
         Button(L10n.text("imageEditor.action.layerSelectionInvert")) {
             viewModel.invertLayerSelection()
         }

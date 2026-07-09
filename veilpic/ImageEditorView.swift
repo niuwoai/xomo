@@ -2147,6 +2147,18 @@ struct ImageEditorView: View {
                             .frame(width: 44, alignment: .trailing)
                     }
                 }
+                if viewModel.selectedFilter == .spherize {
+                    HStack {
+                        Text(L10n.text("imageEditor.filter.spherizeAmount"))
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                        Slider(value: $viewModel.filterSpherizeAmount, in: -1...1, step: 0.05)
+                        Text(L10n.format("imageEditor.filter.spherizeAmountValue", Int((viewModel.filterSpherizeAmount * 100).rounded())))
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+                            .frame(width: 44, alignment: .trailing)
+                    }
+                }
                 Text(viewModel.selectedLayerSmartFilterText)
                     .font(.system(size: 10, weight: .medium))
                     .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))

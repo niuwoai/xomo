@@ -171,6 +171,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var filterRippleAmount: Double = 0.5
     @Published var filterRippleFrequency: Double = 0.25
     @Published var filterPinchAmount: Double = 0.5
+    @Published var filterSpherizeAmount: Double = 0.5
     @Published var selectedChannelPreview: ImageEditorChannelPreview = .composite
     @Published var isEditingLayerMask: Bool = false
     @Published var pendingPenPathPoints: [CGPoint] = []
@@ -552,6 +553,17 @@ final class ImageEditorViewModel: ObservableObject {
             guard !filter.isEnabled else { return title }
             return L10n.format("imageEditor.properties.smartFilterDisabled", title)
         }
+        if filter.kind == .spherize {
+            let settings = filter.normalizedSettings
+            let title = L10n.format(
+                "imageEditor.properties.smartFilterSpherizeItem",
+                filter.kind.title,
+                Int((filter.normalizedIntensity * 100).rounded()),
+                Int((settings.spherizeAmount * 100).rounded())
+            )
+            guard !filter.isEnabled else { return title }
+            return L10n.format("imageEditor.properties.smartFilterDisabled", title)
+        }
         let title = L10n.format(
             "imageEditor.properties.smartFilterItem",
             filter.kind.title,
@@ -579,6 +591,14 @@ final class ImageEditorViewModel: ObservableObject {
 
     var canInvertLayerSelection: Bool {
         !document.layers.isEmpty
+    }
+
+    var canSelectLayersWithSameKind: Bool {
+        document.selectedLayer != nil
+    }
+
+    var canSelectLayersWithSameLabelColor: Bool {
+        document.selectedLayer?.labelColor != nil
     }
 
     var canSetSelectedLayerLabelColor: Bool {
@@ -1145,6 +1165,37 @@ final class ImageEditorViewModel: ObservableObject {
         statusText = document.selectedLayerIDs.isEmpty
             ? L10n.text("imageEditor.status.layerSelectionCleared")
             : L10n.format("imageEditor.status.layerSelectionInverted", document.selectedLayerIDs.count)
+    }
+
+    func selectLayersWithSameKind() {
+        guard let selectedLayer = document.selectedLayer else { return }
+        let selectedKind = layerKindFilter(for: selectedLayer)
+        let layerIDs = Set(document.layers.filter { selectedKind.matches($0) }.map(\.id))
+        guard !layerIDs.isEmpty else { return }
+        document.selectedLayerIDs = layerIDs
+        document.selectedLayerID = topmostSelectedLayerID()
+        isEditingLayerMask = false
+        syncControlsFromLayerSelection()
+        statusText = L10n.format(
+            "imageEditor.status.layerSelectSameKind",
+            layerIDs.count,
+            selectedKind.title
+        )
+    }
+
+    func selectLayersWithSameLabelColor() {
+        guard let labelColor = document.selectedLayer?.labelColor else { return }
+        let layerIDs = Set(document.layers.filter { $0.labelColor == labelColor }.map(\.id))
+        guard !layerIDs.isEmpty else { return }
+        document.selectedLayerIDs = layerIDs
+        document.selectedLayerID = topmostSelectedLayerID()
+        isEditingLayerMask = false
+        syncControlsFromLayerSelection()
+        statusText = L10n.format(
+            "imageEditor.status.layerSelectSameLabelColor",
+            layerIDs.count,
+            labelColor.title
+        )
     }
 
     func addLayer() {
@@ -2758,7 +2809,8 @@ final class ImageEditorViewModel: ObservableObject {
             waveFrequency: filterWaveFrequency,
             rippleAmount: filterRippleAmount,
             rippleFrequency: filterRippleFrequency,
-            pinchAmount: filterPinchAmount
+            pinchAmount: filterPinchAmount,
+            spherizeAmount: filterSpherizeAmount
         ).normalized()
     }
 
@@ -3544,6 +3596,19 @@ final class ImageEditorViewModel: ObservableObject {
         document.layers.reversed().first { document.selectedLayerIDs.contains($0.id) }?.id
     }
 
+    private func layerKindFilter(for layer: ImageEditorLayer) -> ImageEditorLayerKindFilter {
+        if layer.isText { return .text }
+        if layer.isShape { return .shape }
+        if layer.isAdjustment { return .adjustment }
+        if layer.isFilter { return .filter }
+        if layer.isSolidColorFill { return .solidColorFill }
+        if layer.isPatternFill { return .patternFill }
+        if layer.isGradientFill { return .gradientFill }
+        if layer.isSmartObject { return .smartObject }
+        if layer.isGroup { return .group }
+        return .pixel
+    }
+
     private enum LayerStackBoundary {
         case top
         case bottom
@@ -4008,6 +4073,7 @@ final class ImageEditorViewModel: ObservableObject {
         filterRippleAmount = normalized.rippleAmount
         filterRippleFrequency = normalized.rippleFrequency
         filterPinchAmount = normalized.pinchAmount
+        filterSpherizeAmount = normalized.spherizeAmount
     }
 
     private func syncSolidColorFillControlsFromSelection() {

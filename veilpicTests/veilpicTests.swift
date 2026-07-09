@@ -324,6 +324,64 @@ struct veilpicTests {
     }
 
     @MainActor
+    @Test func imageEditorCanSelectLayersBySameKindOrLabelColor() async throws {
+        let image = testImage(color: .systemTeal, size: NSSize(width: 96, height: 72))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        var titleLayer = ImageEditorLayer.text(
+            name: "Title",
+            origin: CGPoint(x: 8, y: 10),
+            content: ImageEditorTextContent(
+                text: "Title",
+                color: .white,
+                fontSize: 18,
+                point: CGPoint(x: 2, y: 2)
+            )
+        )
+        titleLayer.labelColor = .green
+        let captionLayer = ImageEditorLayer.text(
+            name: "Caption",
+            origin: CGPoint(x: 16, y: 28),
+            content: ImageEditorTextContent(
+                text: "Caption",
+                color: .white,
+                fontSize: 12,
+                point: CGPoint(x: 2, y: 2)
+            )
+        )
+        var shapeLayer = ImageEditorLayer.shape(
+            name: "Badge",
+            frame: CGRect(x: 12, y: 12, width: 24, height: 24),
+            content: ImageEditorShapeContent(
+                kind: .ellipse,
+                fillColor: .systemBlue,
+                fillOpacity: 1,
+                strokeColor: .white,
+                strokeWidth: 2,
+                strokeOpacity: 1
+            )
+        )
+        shapeLayer.labelColor = .green
+        viewModel.document.layers.append(contentsOf: [titleLayer, captionLayer, shapeLayer])
+
+        viewModel.selectLayer(titleLayer.id)
+        #expect(viewModel.canSelectLayersWithSameKind)
+        viewModel.selectLayersWithSameKind()
+        #expect(viewModel.document.selectedLayerIDs == [titleLayer.id, captionLayer.id])
+        #expect(viewModel.document.selectedLayerID == captionLayer.id)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerSelectSameKind", 2, ImageEditorLayerKindFilter.text.title))
+
+        viewModel.selectLayer(titleLayer.id)
+        #expect(viewModel.canSelectLayersWithSameLabelColor)
+        viewModel.selectLayersWithSameLabelColor()
+        #expect(viewModel.document.selectedLayerIDs == [titleLayer.id, shapeLayer.id])
+        #expect(viewModel.document.selectedLayerID == shapeLayer.id)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerSelectSameLabelColor", 2, ImageEditorLayerLabelColor.green.title))
+
+        viewModel.selectLayer(captionLayer.id)
+        #expect(!viewModel.canSelectLayersWithSameLabelColor)
+    }
+
+    @MainActor
     @Test func imageEditorSelectedLayersMoveToStackEdgesPreservesOrderAndUndo() async throws {
         let image = testImage(color: .systemBlue, size: NSSize(width: 80, height: 60))
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }

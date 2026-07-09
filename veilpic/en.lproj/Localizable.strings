@@ -467,6 +467,7 @@
 "imageEditor.filter.wave" = "Wave";
 "imageEditor.filter.ripple" = "Ripple";
 "imageEditor.filter.pinch" = "Pinch";
+"imageEditor.filter.spherize" = "Spherize";
 "imageEditor.filter.liquifyPush" = "Liquify Push";
 "imageEditor.filter.liquifyTwirl" = "Liquify Twirl";
 "imageEditor.filter.liquifyPuckerBloat" = "Liquify Pucker/Bloat";
@@ -494,6 +495,8 @@
 "imageEditor.filter.rippleFrequencyValue" = "%d";
 "imageEditor.filter.pinchAmount" = "Amount";
 "imageEditor.filter.pinchAmountValue" = "%d";
+"imageEditor.filter.spherizeAmount" = "Amount";
+"imageEditor.filter.spherizeAmountValue" = "%d";
 "imageEditor.shape.rectangle" = "Rectangle";
 "imageEditor.shape.ellipse" = "Ellipse";
 "imageEditor.shape.path" = "Path";
@@ -523,6 +526,7 @@
 "imageEditor.properties.smartFilterOffsetItem" = "%@ %d%% · X %d · Y %d";
 "imageEditor.properties.smartFilterRippleItem" = "%@ %d%% · Amount %d · Freq %d";
 "imageEditor.properties.smartFilterPinchItem" = "%@ %d%% · Amount %d";
+"imageEditor.properties.smartFilterSpherizeItem" = "%@ %d%% · Amount %d";
 "imageEditor.properties.smartFilterDisabled" = "%@ (off)";
 "imageEditor.properties.smartFilterSeparator" = " · ";
 "imageEditor.properties.textPlaceholder" = "Text to add";
@@ -1170,6 +1174,8 @@
 "imageEditor.status.layerTransparentPixelsLockSelected" = "Selected transparent pixels locked";
 "imageEditor.status.layerTransparentPixelsUnlockSelected" = "Selected transparent pixels unlocked";
 "imageEditor.status.layerSelectAll" = "All %d layers selected";
+"imageEditor.status.layerSelectSameKind" = "%d layers of the same kind selected: %@";
+"imageEditor.status.layerSelectSameLabelColor" = "%d layers with the same color label selected: %@";
 "imageEditor.status.layerSelectionInverted" = "Layer selection inverted; %d layers selected";
 "imageEditor.status.layerSelectionCleared" = "Layer selection cleared";
 "imageEditor.status.layerNameInvalid" = "Layer name cannot be empty";
@@ -1395,6 +1401,8 @@
 "imageEditor.action.layerFromBackground" = "Layer From Background";
 "imageEditor.action.backgroundFromLayer" = "Background From Layer";
 "imageEditor.action.layerSelectAll" = "Select All Layers";
+"imageEditor.action.layerSelectSameKind" = "Select Same Kind Layers";
+"imageEditor.action.layerSelectSameLabelColor" = "Select Same Color Label Layers";
 "imageEditor.action.layerSelectionInvert" = "Invert Layer Selection";
 "imageEditor.action.layerSelectionClear" = "Clear Layer Selection";
 "imageEditor.action.layerLink" = "Link selected layers";
