@@ -139,6 +139,39 @@ extension ImageEditorViewModel {
         statusText = L10n.text("imageEditor.status.selectionContentAwareFilled")
     }
 
+    func patchSelection(from start: CGPoint?, to end: CGPoint?) {
+        guard let selection = document.selection else {
+            statusText = L10n.text("imageEditor.status.noSelection")
+            return
+        }
+        guard let start, let end else { return }
+        let offset = CGSize(width: end.x - start.x, height: end.y - start.y)
+        guard hypot(offset.width, offset.height) >= 1 else { return }
+        guard canEditSelectionPixels,
+              let index = document.selectedLayerIndex,
+              let output = document.layers[index].image.patched(
+                selection: selection,
+                layerFrame: document.layers[index].frame,
+                canvasSize: document.canvasSize,
+                offsetInCanvas: offset,
+                opacity: opacity,
+                feather: feather
+              )
+        else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+
+        pushUndo()
+        let layer = document.layers[index]
+        let protectedOutput = document.isEffectivelyTransparencyLocked(layer)
+            ? (output.preservingAlpha(from: layer.image) ?? output)
+            : output
+        document.layers[index].image = protectedOutput.normalizedBitmapImage()
+        appendHistory(L10n.text("imageEditor.history.selectionPatch"))
+        statusText = L10n.text("imageEditor.status.selectionPatched")
+    }
+
     func copySelectionToNewLayer() {
         guard let selection = document.selection else {
             statusText = L10n.text("imageEditor.status.noSelection")
@@ -483,6 +516,66 @@ private extension NSImage {
                 pixels[offset + 1] = blendedByte(original: pixels[offset + 1], replacement: replacement.green, alpha: maskAlpha, inverseAlpha: inverseAlpha)
                 pixels[offset + 2] = blendedByte(original: pixels[offset + 2], replacement: replacement.blue, alpha: maskAlpha, inverseAlpha: inverseAlpha)
                 pixels[offset + 3] = blendedByte(original: pixels[offset + 3], replacement: replacement.alpha, alpha: maskAlpha, inverseAlpha: inverseAlpha)
+            }
+        }
+
+        return NSImage.rgbaImage(width: width, height: height, pixels: pixels, size: size)
+    }
+
+    func patched(
+        selection: ImageEditorSelection,
+        layerFrame: CGRect,
+        canvasSize: CGSize,
+        offsetInCanvas: CGSize,
+        opacity: CGFloat,
+        feather: CGFloat
+    ) -> NSImage? {
+        guard layerFrame.width > 0,
+              layerFrame.height > 0,
+              let selectionMask = selection.layerMask(
+                layerFrame: layerFrame,
+                layerSize: size,
+                canvasSize: canvasSize,
+                feather: feather
+              )
+        else { return nil }
+
+        let width = max(1, Int(size.width.rounded()))
+        let height = max(1, Int(size.height.rounded()))
+        guard var pixels = rgbaPixels(width: width, height: height),
+              let mask = selectionMask.alphaMask(width: width, height: height)
+        else { return nil }
+
+        let selectedAlpha = mask.alpha
+        guard selectedAlpha.contains(where: { $0 > 0 }) else { return nil }
+        let sourcePixels = pixels
+        let bytesPerPixel = 4
+        let bytesPerRow = width * bytesPerPixel
+        let sourceDeltaX = Int((offsetInCanvas.width * CGFloat(width) / layerFrame.width).rounded())
+        let sourceDeltaY = Int((offsetInCanvas.height * CGFloat(height) / layerFrame.height).rounded())
+        let normalizedOpacity = max(0, min(1, opacity))
+
+        for y in 0..<height {
+            for x in 0..<width {
+                let pixelIndex = y * width + x
+                let maskAlpha = CGFloat(selectedAlpha[pixelIndex]) / 255 * normalizedOpacity
+                guard maskAlpha > 0 else { continue }
+
+                let sourceX = x + sourceDeltaX
+                let sourceY = y + sourceDeltaY
+                guard sourceX >= 0,
+                      sourceX < width,
+                      sourceY >= 0,
+                      sourceY < height
+                else { continue }
+
+                let offset = y * bytesPerRow + x * bytesPerPixel
+                let sourceOffset = sourceY * bytesPerRow + sourceX * bytesPerPixel
+                let inverseAlpha = 1 - maskAlpha
+                pixels[offset] = blendedByte(original: pixels[offset], replacement: CGFloat(sourcePixels[sourceOffset]), alpha: maskAlpha, inverseAlpha: inverseAlpha)
+                pixels[offset + 1] = blendedByte(original: pixels[offset + 1], replacement: CGFloat(sourcePixels[sourceOffset + 1]), alpha: maskAlpha, inverseAlpha: inverseAlpha)
+                pixels[offset + 2] = blendedByte(original: pixels[offset + 2], replacement: CGFloat(sourcePixels[sourceOffset + 2]), alpha: maskAlpha, inverseAlpha: inverseAlpha)
+                pixels[offset + 3] = blendedByte(original: pixels[offset + 3], replacement: CGFloat(sourcePixels[sourceOffset + 3]), alpha: maskAlpha, inverseAlpha: inverseAlpha)
             }
         }
 

@@ -1558,6 +1558,65 @@ struct veilpicTests {
     }
 
     @MainActor
+    @Test func imageEditorPatchToolSamplesDraggedSelectionOffset() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let image = testImage(color: .systemBlue, size: canvasSize)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let blemishRect = CGRect(x: 32, y: 22, width: 16, height: 16)
+        let sampleRect = CGRect(x: 12, y: 22, width: 16, height: 16)
+        let patchSource = testBitmapImage(
+            size: canvasSize,
+            background: .systemGreen,
+            fills: [
+                (rect: sampleRect, color: .systemRed),
+                (rect: blemishRect, color: .black)
+            ]
+        )
+
+        viewModel.replaceSelectedLayerImageForTesting(patchSource, historyTitle: L10n.text("imageEditor.history.brush"))
+        viewModel.createRectSelection(from: CGPoint(x: 32, y: 22), to: CGPoint(x: 48, y: 38))
+        let beforePatch = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+        let blemishBefore = try #require(viewModel.document.selectedLayer?.image.color(at: CGPoint(x: 40, y: 30))?.usingColorSpace(.deviceRGB))
+
+        viewModel.patchSelection(from: CGPoint(x: 40, y: 30), to: CGPoint(x: 20, y: 30))
+
+        let patchedLayer = try #require(viewModel.document.selectedLayer)
+        let patchedData = try #require(patchedLayer.image.qingtuPNGData())
+        let patchedCenter = try #require(patchedLayer.image.color(at: CGPoint(x: 40, y: 30))?.usingColorSpace(.deviceRGB))
+        let untouchedOutside = try #require(patchedLayer.image.color(at: CGPoint(x: 70, y: 50))?.usingColorSpace(.deviceRGB))
+
+        #expect(blemishBefore.redComponent < 0.1)
+        #expect(patchedData != beforePatch)
+        #expect(patchedCenter.redComponent > 0.75)
+        #expect(patchedCenter.greenComponent < 0.35)
+        #expect(untouchedOutside.greenComponent > 0.65)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionPatch"))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionPatched"))
+
+        viewModel.undo()
+        let restoredCenter = try #require(viewModel.document.selectedLayer?.image.color(at: CGPoint(x: 40, y: 30))?.usingColorSpace(.deviceRGB))
+        #expect(restoredCenter.redComponent < 0.1)
+
+        let transparentPatchSource = testBitmapImage(
+            size: canvasSize,
+            background: .systemGreen,
+            fills: [
+                (rect: sampleRect, color: .systemRed),
+                (rect: blemishRect, color: .clear)
+            ]
+        )
+        viewModel.replaceSelectedLayerImageForTesting(transparentPatchSource, historyTitle: L10n.text("imageEditor.history.brush"))
+        viewModel.createRectSelection(from: CGPoint(x: 32, y: 22), to: CGPoint(x: 48, y: 38))
+        if let index = viewModel.document.selectedLayerIndex {
+            viewModel.document.layers[index].locksTransparentPixels = true
+        }
+        viewModel.patchSelection(from: CGPoint(x: 40, y: 30), to: CGPoint(x: 20, y: 30))
+
+        let lockedCenter = try #require(viewModel.document.selectedLayer?.image.color(at: CGPoint(x: 40, y: 30))?.usingColorSpace(.deviceRGB))
+        #expect(lockedCenter.alphaComponent < 0.1)
+    }
+
+    @MainActor
     @Test func imageEditorBlendModeChangesCompositedOutput() async throws {
         let image = testImage(color: .systemBlue, size: NSSize(width: 80, height: 60))
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
