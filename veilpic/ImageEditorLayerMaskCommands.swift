@@ -34,6 +34,28 @@ fileprivate enum ImageEditorLayerMaskSelectionCombination {
             "imageEditor.status.layerMaskIntersectSelection"
         }
     }
+
+    var selectedHistoryKey: String {
+        switch self {
+        case .reveal:
+            "imageEditor.history.layerMaskRevealSelectionSelected"
+        case .hide:
+            "imageEditor.history.layerMaskHideSelectionFromMaskSelected"
+        case .intersect:
+            "imageEditor.history.layerMaskIntersectSelectionSelected"
+        }
+    }
+
+    var selectedStatusKey: String {
+        switch self {
+        case .reveal:
+            "imageEditor.status.layerMaskRevealSelectionSelected"
+        case .hide:
+            "imageEditor.status.layerMaskHideSelectionFromMaskSelected"
+        case .intersect:
+            "imageEditor.status.layerMaskIntersectSelectionSelected"
+        }
+    }
 }
 
 @MainActor
@@ -104,11 +126,8 @@ extension ImageEditorViewModel {
     }
 
     var canCombineLayerMaskWithSelection: Bool {
-        guard selectedLayerCount == 1,
-              hasSelection,
-              let layer = document.selectedLayer
-        else { return false }
-        return !document.isEffectivelyLocked(layer) && layer.mask != nil
+        guard let selection = document.selection else { return false }
+        return !layerMaskSelectionCombinationOperations(selection, combination: .reveal).isEmpty
     }
 
     var canLoadSelectionFromVectorMask: Bool {
@@ -637,22 +656,49 @@ extension ImageEditorViewModel {
     }
 
     private func combineLayerMaskWithSelection(_ combination: ImageEditorLayerMaskSelectionCombination) {
-        guard canCombineLayerMaskWithSelection,
-              let selection = document.selection,
-              let index = document.selectedLayerIndex,
-              let mask = document.layers[index].mask,
-              let selectionMask = selectionMaskForLayer(selection, layer: document.layers[index]),
-              let output = mask.combinedAlphaMask(with: selectionMask, combination: combination)
-        else {
+        guard let selection = document.selection else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+
+        let operations = layerMaskSelectionCombinationOperations(selection, combination: combination)
+        guard !operations.isEmpty else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
 
         pushUndo()
-        document.layers[index].mask = output
+        for operation in operations {
+            document.layers[operation.index].mask = operation.mask
+        }
         isEditingLayerMask = true
-        appendHistory(L10n.text(combination.historyKey))
-        statusText = L10n.text(combination.statusKey)
+
+        if operations.count == 1 {
+            appendHistory(L10n.text(combination.historyKey))
+            statusText = L10n.text(combination.statusKey)
+        } else {
+            appendHistory(L10n.text(combination.selectedHistoryKey))
+            statusText = L10n.format(combination.selectedStatusKey, operations.count)
+        }
+    }
+
+    private func layerMaskSelectionCombinationOperations(
+        _ selection: ImageEditorSelection,
+        combination: ImageEditorLayerMaskSelectionCombination
+    ) -> [(index: Int, mask: NSImage)] {
+        let selectedIDs = document.selectedLayerIDs.isEmpty
+            ? Set(document.selectedLayerID.map { [$0] } ?? [])
+            : document.selectedLayerIDs
+        return document.layers.indices.compactMap { index in
+            let layer = document.layers[index]
+            guard selectedIDs.contains(layer.id),
+                  !document.isEffectivelyLocked(layer),
+                  let mask = layer.mask,
+                  let selectionMask = selectionMaskForLayer(selection, layer: layer),
+                  let output = mask.combinedAlphaMask(with: selectionMask, combination: combination)
+            else { return nil }
+            return (index, output)
+        }
     }
 
     private func selectionMaskForLayer(_ selection: ImageEditorSelection, layer: ImageEditorLayer) -> NSImage? {

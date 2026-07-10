@@ -3187,6 +3187,58 @@ struct veilpicTests {
     }
 
     @MainActor
+    @Test func imageEditorRevealsSelectionOnMultipleLayerMasksAndSkipsLockedLayers() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        var firstLayer = ImageEditorLayer.blank(name: "First Masked", size: canvasSize)
+        firstLayer.mask = testBitmapImage(size: canvasSize, background: .clear)
+
+        var secondLayer = ImageEditorLayer.blank(name: "Second Masked", size: canvasSize)
+        secondLayer.mask = testBitmapImage(size: canvasSize, background: .clear)
+
+        var lockedLayer = ImageEditorLayer.blank(name: "Locked Masked", size: canvasSize)
+        lockedLayer.mask = testBitmapImage(size: canvasSize, background: .clear)
+        lockedLayer.isLocked = true
+
+        let firstLayerID = firstLayer.id
+        let secondLayerID = secondLayer.id
+        let lockedLayerID = lockedLayer.id
+        viewModel.document.layers = [viewModel.document.layers[0], firstLayer, secondLayer, lockedLayer]
+        viewModel.document.selectedLayerID = secondLayerID
+        viewModel.document.selectedLayerIDs = [firstLayerID, secondLayerID, lockedLayerID]
+        viewModel.createRectSelection(from: CGPoint(x: 0, y: 0), to: CGPoint(x: 30, y: 30))
+
+        #expect(viewModel.canCombineLayerMaskWithSelection)
+        viewModel.revealSelectionOnLayerMask()
+
+        let revealedFirst = try #require(viewModel.document.layers.first { $0.id == firstLayerID })
+        let revealedSecond = try #require(viewModel.document.layers.first { $0.id == secondLayerID })
+        let skippedLockedLayer = try #require(viewModel.document.layers.first { $0.id == lockedLayerID })
+        let firstMask = try #require(revealedFirst.mask?.alphaMask(width: 80, height: 60))
+        let secondMask = try #require(revealedSecond.mask?.alphaMask(width: 80, height: 60))
+        let lockedMask = try #require(skippedLockedLayer.mask?.alphaMask(width: 80, height: 60))
+        #expect(maskAlpha(firstMask, x: 10, y: 10) == 255)
+        #expect(maskAlpha(secondMask, x: 10, y: 10) == 255)
+        #expect(maskAlpha(lockedMask, x: 10, y: 10) == 0)
+        #expect(skippedLockedLayer.isLocked)
+        #expect(viewModel.document.selectedLayerIDs == [firstLayerID, secondLayerID, lockedLayerID])
+        #expect(viewModel.document.selectedLayerID == secondLayerID)
+        #expect(viewModel.isEditingLayerMask)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerMaskRevealSelectionSelected"))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerMaskRevealSelectionSelected", 2))
+
+        viewModel.undo()
+        let restoredFirst = try #require(viewModel.document.layers.first { $0.id == firstLayerID })
+        let restoredSecond = try #require(viewModel.document.layers.first { $0.id == secondLayerID })
+        let restoredFirstMask = try #require(restoredFirst.mask?.alphaMask(width: 80, height: 60))
+        let restoredSecondMask = try #require(restoredSecond.mask?.alphaMask(width: 80, height: 60))
+        #expect(maskAlpha(restoredFirstMask, x: 10, y: 10) == 0)
+        #expect(maskAlpha(restoredSecondMask, x: 10, y: 10) == 0)
+    }
+
+    @MainActor
     @Test func imageEditorCopiesPrimaryLayerMaskToSelectedLayers() async throws {
         let canvasSize = NSSize(width: 80, height: 60)
         let image = testImage(color: .systemBlue, size: canvasSize)

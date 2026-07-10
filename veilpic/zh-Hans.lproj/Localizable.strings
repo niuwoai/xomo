@@ -1037,6 +1037,9 @@
 "imageEditor.history.layerMaskRevealSelection" = "蒙版显示选区";
 "imageEditor.history.layerMaskHideSelectionFromMask" = "蒙版隐藏选区";
 "imageEditor.history.layerMaskIntersectSelection" = "蒙版与选区相交";
+"imageEditor.history.layerMaskRevealSelectionSelected" = "所选蒙版显示选区";
+"imageEditor.history.layerMaskHideSelectionFromMaskSelected" = "所选蒙版隐藏选区";
+"imageEditor.history.layerMaskIntersectSelectionSelected" = "所选蒙版与选区相交";
 "imageEditor.history.layerMaskEnable" = "启用图层蒙版";
 "imageEditor.history.layerMaskDisable" = "停用图层蒙版";
 "imageEditor.history.layerMaskEnableSelected" = "启用所选图层蒙版";
@@ -1339,6 +1342,9 @@
 "imageEditor.status.layerMaskRevealSelection" = "已在图层蒙版中显示当前选区";
 "imageEditor.status.layerMaskHideSelectionFromMask" = "已从图层蒙版中隐藏当前选区";
 "imageEditor.status.layerMaskIntersectSelection" = "已将图层蒙版限制到当前选区";
+"imageEditor.status.layerMaskRevealSelectionSelected" = "已在 %d 个图层蒙版中显示当前选区";
+"imageEditor.status.layerMaskHideSelectionFromMaskSelected" = "已从 %d 个图层蒙版中隐藏当前选区";
+"imageEditor.status.layerMaskIntersectSelectionSelected" = "已将 %d 个图层蒙版限制到当前选区";
 "imageEditor.status.layerMaskEnabled" = "已启用当前图层蒙版";
 "imageEditor.status.layerMaskDisabled" = "已停用当前图层蒙版";
 "imageEditor.status.layerMaskEnabledSelected" = "已启用 %d 个图层蒙版";

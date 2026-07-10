@@ -1037,6 +1037,9 @@
 "imageEditor.history.layerMaskRevealSelection" = "Reveal Selection on Layer Mask";
 "imageEditor.history.layerMaskHideSelectionFromMask" = "Hide Selection on Layer Mask";
 "imageEditor.history.layerMaskIntersectSelection" = "Intersect Layer Mask with Selection";
+"imageEditor.history.layerMaskRevealSelectionSelected" = "Reveal Selection on Selected Layer Masks";
+"imageEditor.history.layerMaskHideSelectionFromMaskSelected" = "Hide Selection on Selected Layer Masks";
+"imageEditor.history.layerMaskIntersectSelectionSelected" = "Intersect Selected Layer Masks with Selection";
 "imageEditor.history.layerMaskEnable" = "Enable Layer Mask";
 "imageEditor.history.layerMaskDisable" = "Disable Layer Mask";
 "imageEditor.history.layerMaskEnableSelected" = "Enable Selected Layer Masks";
@@ -1339,6 +1342,9 @@
 "imageEditor.status.layerMaskRevealSelection" = "Current selection revealed on the layer mask";
 "imageEditor.status.layerMaskHideSelectionFromMask" = "Current selection hidden on the layer mask";
 "imageEditor.status.layerMaskIntersectSelection" = "Layer mask limited to the current selection";
+"imageEditor.status.layerMaskRevealSelectionSelected" = "Current selection revealed on %d layer masks";
+"imageEditor.status.layerMaskHideSelectionFromMaskSelected" = "Current selection hidden on %d layer masks";
+"imageEditor.status.layerMaskIntersectSelectionSelected" = "%d layer masks limited to the current selection";
 "imageEditor.status.layerMaskEnabled" = "Current layer mask enabled";
 "imageEditor.status.layerMaskDisabled" = "Current layer mask disabled";
 "imageEditor.status.layerMaskEnabledSelected" = "%d layer masks enabled";
