@@ -373,6 +373,7 @@
 "imageEditor.action.autoColor" = "自动颜色";
 "imageEditor.action.cropCenter" = "中心裁剪";
 "imageEditor.action.trimTransparentPixels" = "裁切透明像素";
+"imageEditor.action.revealAll" = "显示全部";
 "imageEditor.action.addText" = "添加文字";
 "imageEditor.action.gradient" = "叠加渐变";
 "imageEditor.action.rotate" = "旋转";
@@ -927,6 +928,7 @@
 "imageEditor.history.flipVertical" = "垂直翻转";
 "imageEditor.history.crop" = "裁剪";
 "imageEditor.history.trim" = "裁切透明像素";
+"imageEditor.history.revealAll" = "显示全部";
 "imageEditor.history.gradient" = "渐变";
 "imageEditor.history.text" = "文字";
 "imageEditor.history.erase" = "擦除";
@@ -1925,6 +1927,7 @@
 "imageEditor.status.resizeInvalid" = "请输入 8 到 12000 px 之间的有效尺寸";
 "imageEditor.status.trimNoVisiblePixels" = "没有可裁切的可见像素";
 "imageEditor.status.trimNoTransparentEdges" = "画布边缘没有透明像素可裁切";
+"imageEditor.status.revealAllNoHiddenPixels" = "没有画布外的可见图层内容";
 "imageEditor.canvasAnchor.topLeft" = "左上";
 "imageEditor.canvasAnchor.top" = "上";
 "imageEditor.canvasAnchor.topRight" = "右上";

@@ -201,6 +201,10 @@ extension ImageEditorView {
         Button(L10n.text("imageEditor.action.trimTransparentPixels")) {
             viewModel.trimTransparentPixels()
         }
+        Button(L10n.text("imageEditor.action.revealAll")) {
+            viewModel.revealAllLayers()
+        }
+        .disabled(!viewModel.canRevealAllLayers)
         Button(L10n.text("imageEditor.action.rotateClockwise")) {
             viewModel.rotateClockwise()
         }

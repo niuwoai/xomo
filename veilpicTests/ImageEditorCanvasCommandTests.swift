@@ -201,6 +201,57 @@ struct ImageEditorCanvasCommandTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.trim"))
     }
 
+    @Test
+    func revealAllExpandsCanvasToVisibleLayerBounds() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: testImage(color: .systemBlue, size: NSSize(width: 100, height: 80))
+        ) { _ in }
+        var leftLayer = ImageEditorLayer.blank(name: "Left", size: CGSize(width: 20, height: 16))
+        leftLayer.image = NSImage.opaqueMask(size: CGSize(width: 20, height: 16))
+        leftLayer.frame = CGRect(x: -10, y: 12, width: 20, height: 16)
+        var rightLayer = ImageEditorLayer.blank(name: "Right", size: CGSize(width: 30, height: 20))
+        rightLayer.image = NSImage.opaqueMask(size: CGSize(width: 30, height: 20))
+        rightLayer.frame = CGRect(x: 90, y: 70, width: 30, height: 20)
+        var hiddenLayer = ImageEditorLayer.blank(name: "Hidden", size: CGSize(width: 30, height: 20))
+        hiddenLayer.frame = CGRect(x: -40, y: 10, width: 30, height: 20)
+        hiddenLayer.isVisible = false
+        viewModel.document.layers.append(contentsOf: [leftLayer, rightLayer, hiddenLayer])
+        viewModel.document.selection = .rectangle(CGRect(x: 6, y: 14, width: 10, height: 8))
+        viewModel.document.savedSelection = .rectangle(CGRect(x: 12, y: 18, width: 8, height: 6))
+        viewModel.document.alphaChannels = [
+            ImageEditorAlphaChannel(
+                name: "Reveal Alpha",
+                mask: sparseMask(width: 100, height: 80, points: [CGPoint(x: 6, y: 16), CGPoint(x: 99, y: 79)])
+            )
+        ]
+        viewModel.document.guides = [
+            ImageEditorGuide(orientation: .vertical, position: 4),
+            ImageEditorGuide(orientation: .horizontal, position: 20)
+        ]
+
+        #expect(viewModel.canRevealAllLayers)
+        viewModel.revealAllLayers()
+
+        let revealedAlpha = try #require(viewModel.document.alphaChannels.first?.mask)
+        #expect(viewModel.document.canvasSize == CGSize(width: 130, height: 90))
+        #expect(viewModel.document.layers[0].frame == CGRect(x: 10, y: 0, width: 100, height: 80))
+        #expect(viewModel.document.layers[1].frame == CGRect(x: 0, y: 12, width: 20, height: 16))
+        #expect(viewModel.document.layers[2].frame == CGRect(x: 100, y: 70, width: 30, height: 20))
+        #expect(viewModel.document.layers[3].frame == CGRect(x: -30, y: 10, width: 30, height: 20))
+        #expect(viewModel.document.selection?.points.first == CGPoint(x: 16, y: 14))
+        #expect(viewModel.document.savedSelection?.points.first == CGPoint(x: 22, y: 18))
+        #expect(revealedAlpha.width == 130)
+        #expect(revealedAlpha.height == 90)
+        #expect(revealedAlpha.alpha[16 * 130 + 16] == 255)
+        #expect(revealedAlpha.alpha[79 * 130 + 109] == 255)
+        #expect(viewModel.document.guides.contains { $0.orientation == .vertical && $0.position == 14 })
+        #expect(viewModel.document.guides.contains { $0.orientation == .horizontal && $0.position == 20 })
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.revealAll"))
+        #expect(!viewModel.canRevealAllLayers)
+        #expect(viewModel.canUndo)
+    }
+
     private func testImage(color: NSColor, size: NSSize) -> NSImage {
         let image = NSImage(size: size)
         image.lockFocus()

@@ -178,6 +178,55 @@ extension ImageEditorViewModel {
         crop(to: trimRect, historyTitle: L10n.text("imageEditor.history.trim"))
     }
 
+    var canRevealAllLayers: Bool {
+        revealAllCanvasRect() != nil
+    }
+
+    func revealAllLayers() {
+        guard let revealRect = revealAllCanvasRect(),
+              let targetSize = normalizedEditorSize(revealRect.size)
+        else {
+            statusText = L10n.text("imageEditor.status.revealAllNoHiddenPixels")
+            return
+        }
+
+        let originalSize = document.canvasSize
+        let offset = CGSize(width: -revealRect.minX, height: -revealRect.minY)
+        let transformedLayers = document.layers.map { layer in
+            layer.offsetForCanvasSize(
+                oldCanvasSize: originalSize,
+                newCanvasSize: targetSize,
+                offset: offset
+            )
+        }
+        let transformedGuides = offsetGuides(by: offset, targetCanvasSize: targetSize)
+
+        pushUndo()
+        document.canvasSize = targetSize
+        document.layers = transformedLayers
+        document.guides = transformedGuides
+        document.selection = document.selection?.offsetForCanvasResize(
+            oldCanvasSize: originalSize,
+            newCanvasSize: targetSize,
+            offset: offset
+        )
+        document.savedSelection = document.savedSelection?.offsetForCanvasResize(
+            oldCanvasSize: originalSize,
+            newCanvasSize: targetSize,
+            offset: offset
+        )
+        document.alphaChannels = document.alphaChannels.map { channel in
+            ImageEditorAlphaChannel(
+                id: channel.id,
+                name: channel.name,
+                mask: channel.mask.canvasResized(to: targetSize, oldCanvasSize: originalSize, offset: offset)
+            )
+        }
+        canvasOffset = .zero
+        syncSizeControlsFromDocument()
+        appendHistory(L10n.text("imageEditor.history.revealAll"))
+    }
+
     func crop(to rect: CGRect) {
         crop(to: rect, historyTitle: L10n.text("imageEditor.history.crop"))
     }
@@ -237,6 +286,22 @@ extension ImageEditorViewModel {
         let height = CGFloat(size.height.rounded())
         guard width >= 8, height >= 8, width <= 12_000, height <= 12_000 else { return nil }
         return CGSize(width: width, height: height)
+    }
+
+    private func revealAllCanvasRect() -> CGRect? {
+        let canvasBounds = CGRect(origin: .zero, size: document.canvasSize).integral
+        let contentBounds = document.layers
+            .filter { document.shouldComposite($0) }
+            .map { $0.renderedCompositingFrame(globalLightAngle: document.globalLightAngle).standardized.integral }
+            .filter { $0.width > 0.1 && $0.height > 0.1 }
+            .reduce(nil) { bounds, frame -> CGRect? in
+                bounds?.union(frame) ?? frame
+            }
+
+        guard let contentBounds else { return nil }
+        let revealRect = canvasBounds.union(contentBounds).integral
+        guard revealRect.width > canvasBounds.width || revealRect.height > canvasBounds.height else { return nil }
+        return revealRect
     }
 }
 
