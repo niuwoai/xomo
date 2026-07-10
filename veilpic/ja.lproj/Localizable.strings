@@ -324,6 +324,11 @@
 "imageEditor.menu.layer" = "レイヤー";
 "imageEditor.menu.select" = "選択";
 "imageEditor.menu.filter" = "フィルター";
+"imageEditor.menu.filter.blur" = "ぼかし";
+"imageEditor.menu.filter.sharpen" = "シャープ";
+"imageEditor.menu.filter.noise" = "ノイズ";
+"imageEditor.menu.filter.pixelate" = "ピクセレート";
+"imageEditor.menu.filter.other" = "その他";
 "imageEditor.menu.view" = "表示";
 "imageEditor.menu.window" = "ウィンドウ";
 "imageEditor.menu.layer.lock" = "ロック";
@@ -1368,6 +1373,7 @@
 "imageEditor.status.invert" = "現在のレイヤーを反転しました";
 "imageEditor.status.invertSelected" = "%d個のレイヤーを反転しました";
 "imageEditor.status.adjustmentReady" = "%@ の調整を準備しました";
+"imageEditor.status.filterReady" = "%@ フィルターを準備しました";
 "imageEditor.status.adjustmentSelected" = "%@ を%d個のレイヤーに適用しました";
 "imageEditor.status.operationFailed" = "操作に失敗しました";
 "imageEditor.status.layerLocked" = "選択中のレイヤーは編集できません";

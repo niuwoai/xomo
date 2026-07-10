@@ -1264,6 +1264,47 @@ extension ImageEditorView {
         .keyboardShortcut("f", modifiers: [.command])
         .disabled(!viewModel.canApplySelectedFilter)
         Divider()
+        Menu(L10n.text("imageEditor.menu.filter.blur")) {
+            Button(ImageEditorFilter.gaussianBlur.title) {
+                viewModel.selectFilter(.gaussianBlur)
+            }
+            Button(ImageEditorFilter.motionBlur.title) {
+                viewModel.selectFilter(.motionBlur)
+            }
+        }
+        Menu(L10n.text("imageEditor.menu.filter.sharpen")) {
+            Button(ImageEditorFilter.sharpen.title) {
+                viewModel.selectFilter(.sharpen)
+            }
+            Button(ImageEditorFilter.unsharpMask.title) {
+                viewModel.selectFilter(.unsharpMask)
+            }
+        }
+        Menu(L10n.text("imageEditor.menu.filter.noise")) {
+            Button(ImageEditorFilter.addNoise.title) {
+                viewModel.selectFilter(.addNoise)
+            }
+            Button(ImageEditorFilter.median.title) {
+                viewModel.selectFilter(.median)
+            }
+        }
+        Menu(L10n.text("imageEditor.menu.filter.pixelate")) {
+            Button(ImageEditorFilter.pixelate.title) {
+                viewModel.selectFilter(.pixelate)
+            }
+        }
+        Menu(L10n.text("imageEditor.menu.filter.other")) {
+            Button(ImageEditorFilter.highPass.title) {
+                viewModel.selectFilter(.highPass)
+            }
+            Button(ImageEditorFilter.minimum.title) {
+                viewModel.selectFilter(.minimum)
+            }
+            Button(ImageEditorFilter.maximum.title) {
+                viewModel.selectFilter(.maximum)
+            }
+        }
+        Divider()
         Button(L10n.text("imageEditor.action.autoLevels")) {
             viewModel.autoLevelsSelectedLayer()
         }

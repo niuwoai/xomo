@@ -324,6 +324,11 @@
 "imageEditor.menu.layer" = "图层";
 "imageEditor.menu.select" = "选择";
 "imageEditor.menu.filter" = "滤镜";
+"imageEditor.menu.filter.blur" = "模糊";
+"imageEditor.menu.filter.sharpen" = "锐化";
+"imageEditor.menu.filter.noise" = "杂色";
+"imageEditor.menu.filter.pixelate" = "像素化";
+"imageEditor.menu.filter.other" = "其它";
 "imageEditor.menu.view" = "视图";
 "imageEditor.menu.window" = "窗口";
 "imageEditor.menu.layer.lock" = "锁定";
@@ -1368,6 +1373,7 @@
 "imageEditor.status.invert" = "已将当前图层反相";
 "imageEditor.status.invertSelected" = "已将 %d 个图层反相";
 "imageEditor.status.adjustmentReady" = "已准备 %@ 调整";
+"imageEditor.status.filterReady" = "已准备 %@ 滤镜";
 "imageEditor.status.adjustmentSelected" = "已将 %@ 应用到 %d 个图层";
 "imageEditor.status.operationFailed" = "操作失败";
 "imageEditor.status.layerLocked" = "当前图层不可编辑";

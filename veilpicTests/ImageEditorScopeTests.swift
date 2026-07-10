@@ -258,6 +258,22 @@ struct ImageEditorScopeTests {
     }
 
     @MainActor
+    @Test func classicFilterMenuSelectionsPreparePropertiesPanel() {
+        let image = NSImage(size: NSSize(width: 80, height: 60))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.isPropertiesPanelVisible = false
+        viewModel.selectFilter(.unsharpMask)
+
+        #expect(viewModel.selectedFilter == .unsharpMask)
+        #expect(viewModel.isPropertiesPanelVisible)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.filterReady", ImageEditorFilter.unsharpMask.title))
+
+        viewModel.selectFilter(.gaussianBlur)
+        #expect(viewModel.selectedFilter == .gaussianBlur)
+    }
+
+    @MainActor
     @Test func classicBrushSizeShortcutsClampAndUpdateOptionsStatus() {
         let image = NSImage(size: NSSize(width: 80, height: 60))
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
@@ -728,6 +744,19 @@ struct ImageEditorScopeTests {
         #expect(filterMenuSource.contains("viewModel.applySelectedFilter()"))
         #expect(filterMenuSource.contains(".keyboardShortcut(\"f\", modifiers: [.command])"))
         #expect(filterMenuSource.contains("viewModel.canApplySelectedFilter"))
+        #expect(filterMenuSource.contains("imageEditor.menu.filter.blur"))
+        #expect(filterMenuSource.contains("viewModel.selectFilter(.gaussianBlur)"))
+        #expect(filterMenuSource.contains("viewModel.selectFilter(.motionBlur)"))
+        #expect(filterMenuSource.contains("imageEditor.menu.filter.sharpen"))
+        #expect(filterMenuSource.contains("viewModel.selectFilter(.sharpen)"))
+        #expect(filterMenuSource.contains("viewModel.selectFilter(.unsharpMask)"))
+        #expect(filterMenuSource.contains("imageEditor.menu.filter.noise"))
+        #expect(filterMenuSource.contains("viewModel.selectFilter(.addNoise)"))
+        #expect(filterMenuSource.contains("viewModel.selectFilter(.median)"))
+        #expect(filterMenuSource.contains("imageEditor.menu.filter.pixelate"))
+        #expect(filterMenuSource.contains("viewModel.selectFilter(.pixelate)"))
+        #expect(filterMenuSource.contains("imageEditor.menu.filter.other"))
+        #expect(filterMenuSource.contains("viewModel.selectFilter(.highPass)"))
     }
 
     @Test func editMenuExposesClassicEditingShortcuts() throws {

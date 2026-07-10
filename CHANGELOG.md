@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.424.0 - 2026-07-10
+
+### Added
+- 图片编辑器新增 Filter 菜单经典滤镜分类入口：Blur、Sharpen、Noise、Pixelate 和 Other 可直接选择已有轻量滤镜并打开属性面板。
+
 ## 1.423.0 - 2026-07-10
 
 ### Added

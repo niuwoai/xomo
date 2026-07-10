@@ -3254,6 +3254,12 @@ final class ImageEditorViewModel: ObservableObject {
         statusText = L10n.format("imageEditor.status.adjustmentReady", adjustment.title)
     }
 
+    func selectFilter(_ filter: ImageEditorFilter) {
+        selectedFilter = filter
+        isPropertiesPanelVisible = true
+        statusText = L10n.format("imageEditor.status.filterReady", filter.title)
+    }
+
     func applyAdjustment() {
         let title = selectedAdjustment.title
         let indices = editableSelectedLayerIndices()

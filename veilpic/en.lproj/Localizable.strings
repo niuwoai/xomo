@@ -324,6 +324,11 @@
 "imageEditor.menu.layer" = "Layer";
 "imageEditor.menu.select" = "Select";
 "imageEditor.menu.filter" = "Filter";
+"imageEditor.menu.filter.blur" = "Blur";
+"imageEditor.menu.filter.sharpen" = "Sharpen";
+"imageEditor.menu.filter.noise" = "Noise";
+"imageEditor.menu.filter.pixelate" = "Pixelate";
+"imageEditor.menu.filter.other" = "Other";
 "imageEditor.menu.view" = "View";
 "imageEditor.menu.window" = "Window";
 "imageEditor.menu.layer.lock" = "Lock";
@@ -1368,6 +1373,7 @@
 "imageEditor.status.invert" = "Current layer inverted";
 "imageEditor.status.invertSelected" = "Inverted %d layers";
 "imageEditor.status.adjustmentReady" = "%@ adjustment ready";
+"imageEditor.status.filterReady" = "%@ filter ready";
 "imageEditor.status.adjustmentSelected" = "Applied %@ to %d layers";
 "imageEditor.status.operationFailed" = "Operation failed";
 "imageEditor.status.layerLocked" = "The selected layer cannot be edited";
