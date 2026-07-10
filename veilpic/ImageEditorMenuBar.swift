@@ -1014,15 +1014,6 @@ extension ImageEditorView {
             }
         }
         .disabled(!viewModel.hasSelection)
-        Divider()
-        Button(L10n.text("imageEditor.action.saveSelection")) {
-            viewModel.saveCurrentSelection()
-        }
-        .disabled(!viewModel.hasSelection)
-        Button(L10n.text("imageEditor.action.restoreSelection")) {
-            viewModel.restoreSavedSelection()
-        }
-        .disabled(!viewModel.hasSavedSelection)
     }
 
     @ViewBuilder

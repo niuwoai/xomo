@@ -326,6 +326,7 @@ struct ImageEditorScopeTests {
             source[selectMenuStart.upperBound...].range(of: "private var alphaChannelMenu: some View")
         )
         let selectMenuSource = source[selectMenuStart.lowerBound..<nextMenuStart.lowerBound]
+        let selectMenuText = String(selectMenuSource)
 
         #expect(selectMenuSource.contains("imageEditor.action.saveSelection"))
         #expect(selectMenuSource.contains("viewModel.saveCurrentSelection()"))
@@ -333,6 +334,8 @@ struct ImageEditorScopeTests {
         #expect(selectMenuSource.contains("imageEditor.action.restoreSelection"))
         #expect(selectMenuSource.contains("viewModel.restoreSavedSelection()"))
         #expect(selectMenuSource.contains("viewModel.hasSavedSelection"))
+        #expect(selectMenuText.components(separatedBy: "imageEditor.action.saveSelection").count == 2)
+        #expect(selectMenuText.components(separatedBy: "imageEditor.action.restoreSelection").count == 2)
     }
 
     private static func repositoryRoot() -> URL {
