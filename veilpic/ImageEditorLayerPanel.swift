@@ -973,6 +973,18 @@ extension ImageEditorView {
                 .disabled(!viewModel.canAlignSelectedLayersToCanvas)
             layerActionButton(systemImage: "rectangle.bottomhalf.filled", helpKey: "imageEditor.action.layerAlignCanvasBottom") { viewModel.alignSelectedLayersToCanvas(.bottom) }
                 .disabled(!viewModel.canAlignSelectedLayersToCanvas)
+            layerActionButton(systemImage: "rectangle.dashed", helpKey: "imageEditor.action.layerAlignSelectionLeft") { viewModel.alignSelectedLayersToSelection(.left) }
+                .disabled(!viewModel.canAlignSelectedLayersToSelection)
+            layerActionButton(systemImage: "rectangle.dashed", helpKey: "imageEditor.action.layerAlignSelectionHorizontalCenter") { viewModel.alignSelectedLayersToSelection(.horizontalCenter) }
+                .disabled(!viewModel.canAlignSelectedLayersToSelection)
+            layerActionButton(systemImage: "rectangle.dashed", helpKey: "imageEditor.action.layerAlignSelectionRight") { viewModel.alignSelectedLayersToSelection(.right) }
+                .disabled(!viewModel.canAlignSelectedLayersToSelection)
+            layerActionButton(systemImage: "rectangle.dashed", helpKey: "imageEditor.action.layerAlignSelectionTop") { viewModel.alignSelectedLayersToSelection(.top) }
+                .disabled(!viewModel.canAlignSelectedLayersToSelection)
+            layerActionButton(systemImage: "rectangle.dashed", helpKey: "imageEditor.action.layerAlignSelectionVerticalCenter") { viewModel.alignSelectedLayersToSelection(.verticalCenter) }
+                .disabled(!viewModel.canAlignSelectedLayersToSelection)
+            layerActionButton(systemImage: "rectangle.dashed", helpKey: "imageEditor.action.layerAlignSelectionBottom") { viewModel.alignSelectedLayersToSelection(.bottom) }
+                .disabled(!viewModel.canAlignSelectedLayersToSelection)
             layerActionButton(systemImage: "distribute.horizontal.left", helpKey: "imageEditor.action.layerDistributeLeft") { viewModel.distributeSelectedLayers(.left) }
                 .disabled(!viewModel.canDistributeSelectedLayers)
             layerActionButton(systemImage: "arrow.left.and.right", helpKey: "imageEditor.action.layerDistributeHorizontalCenter") { viewModel.distributeSelectedLayers(.horizontalCenter) }

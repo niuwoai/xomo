@@ -1114,6 +1114,52 @@ struct veilpicTests {
     }
 
     @MainActor
+    @Test func imageEditorAlignsSelectedLayersToSelectionIncludingGroups() async throws {
+        let image = testImage(color: .systemBlue, size: NSSize(width: 180, height: 140))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        viewModel.document.selection = .rectangle(CGRect(x: 30, y: 20, width: 90, height: 70))
+
+        viewModel.addLayer()
+        let firstID = try #require(viewModel.document.selectedLayerID)
+        viewModel.document.layers[try #require(viewModel.document.layers.firstIndex { $0.id == firstID })].frame = CGRect(x: 8, y: 10, width: 30, height: 20)
+        #expect(viewModel.canAlignSelectedLayersToSelection)
+        viewModel.alignSelectedLayersToSelection(.horizontalCenter)
+        var firstIndex = try #require(viewModel.document.layers.firstIndex { $0.id == firstID })
+        #expect(viewModel.document.layers[firstIndex].frame.midX == 75)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerAlignSelection"))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.layerAlignedToSelection"))
+
+        viewModel.addLayer()
+        let secondID = try #require(viewModel.document.selectedLayerID)
+        viewModel.document.layers[try #require(viewModel.document.layers.firstIndex { $0.id == secondID })].frame = CGRect(x: 80, y: 30, width: 20, height: 30)
+        viewModel.selectLayer(firstID)
+        viewModel.selectLayer(secondID, extendingSelection: true)
+        viewModel.alignSelectedLayersToSelection(.left)
+        firstIndex = try #require(viewModel.document.layers.firstIndex { $0.id == firstID })
+        var secondIndex = try #require(viewModel.document.layers.firstIndex { $0.id == secondID })
+        #expect(viewModel.document.layers[firstIndex].frame.minX == 30)
+        #expect(viewModel.document.layers[secondIndex].frame.minX == 30)
+
+        viewModel.document.layers[firstIndex].frame = CGRect(x: 20, y: 15, width: 30, height: 20)
+        viewModel.document.layers[secondIndex].frame = CGRect(x: 70, y: 35, width: 20, height: 30)
+        viewModel.groupSelectedLayer()
+        let groupID = try #require(viewModel.document.selectedLayerID)
+        #expect(viewModel.canAlignSelectedLayersToSelection)
+        viewModel.alignSelectedLayersToSelection(.bottom)
+
+        firstIndex = try #require(viewModel.document.layers.firstIndex { $0.id == firstID })
+        secondIndex = try #require(viewModel.document.layers.firstIndex { $0.id == secondID })
+        #expect(viewModel.document.layers[firstIndex].frame.minY == 20)
+        #expect(viewModel.document.layers[secondIndex].frame.minY == 20)
+        #expect(viewModel.document.selectedLayerID == groupID)
+
+        viewModel.document.selection = nil
+        #expect(!viewModel.canAlignSelectedLayersToSelection)
+        viewModel.alignSelectedLayersToSelection(.right)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.noSelection"))
+    }
+
+    @MainActor
     @Test func imageEditorDistributesSelectedLayersByEdgesAndCenters() async throws {
         let image = testImage(color: .systemBlue, size: NSSize(width: 180, height: 140))
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }

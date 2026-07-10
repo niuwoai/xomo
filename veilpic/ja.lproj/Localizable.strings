@@ -965,6 +965,7 @@
 "imageEditor.history.layerTranslate" = "レイヤー内容を移動";
 "imageEditor.history.layerAlign" = "レイヤーを整列";
 "imageEditor.history.layerAlignCanvas" = "レイヤーをキャンバスに整列";
+"imageEditor.history.layerAlignSelection" = "レイヤーを選択範囲に整列";
 "imageEditor.history.layerDistribute" = "レイヤーを分布";
 "imageEditor.history.layerDistributeSpacing" = "レイヤー間隔を分布";
 "imageEditor.history.layerScale" = "レイヤーを拡大縮小";
@@ -1184,6 +1185,7 @@
 "imageEditor.status.operationFailed" = "操作に失敗しました";
 "imageEditor.status.layerLocked" = "選択中のレイヤーは編集できません";
 "imageEditor.status.layerAlignedToCanvas" = "レイヤーをキャンバスに整列しました";
+"imageEditor.status.layerAlignedToSelection" = "レイヤーを選択範囲に整列しました";
 "imageEditor.status.layerSpacingDistributed" = "レイヤー間隔を分布しました";
 "imageEditor.status.layerLockSelected" = "選択レイヤーをロックしました";
 "imageEditor.status.layerUnlockSelected" = "選択レイヤーのロックを解除しました";
@@ -1474,6 +1476,12 @@
 "imageEditor.action.layerAlignCanvasTop" = "キャンバス上に整列";
 "imageEditor.action.layerAlignCanvasVerticalCenter" = "キャンバス垂直方向中央に整列";
 "imageEditor.action.layerAlignCanvasBottom" = "キャンバス下に整列";
+"imageEditor.action.layerAlignSelectionLeft" = "選択範囲の左に整列";
+"imageEditor.action.layerAlignSelectionHorizontalCenter" = "選択範囲の水平方向中央に整列";
+"imageEditor.action.layerAlignSelectionRight" = "選択範囲の右に整列";
+"imageEditor.action.layerAlignSelectionTop" = "選択範囲の上に整列";
+"imageEditor.action.layerAlignSelectionVerticalCenter" = "選択範囲の垂直方向中央に整列";
+"imageEditor.action.layerAlignSelectionBottom" = "選択範囲の下に整列";
 "imageEditor.action.layerDistributeLeft" = "左端でレイヤーを分布";
 "imageEditor.action.layerDistributeHorizontalCenter" = "レイヤーを水平方向に分布";
 "imageEditor.action.layerDistributeRight" = "右端でレイヤーを分布";

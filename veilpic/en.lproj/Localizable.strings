@@ -965,6 +965,7 @@
 "imageEditor.history.layerTranslate" = "Move Layer Pixels";
 "imageEditor.history.layerAlign" = "Align Layers";
 "imageEditor.history.layerAlignCanvas" = "Align Layers to Canvas";
+"imageEditor.history.layerAlignSelection" = "Align Layers to Selection";
 "imageEditor.history.layerDistribute" = "Distribute Layers";
 "imageEditor.history.layerDistributeSpacing" = "Distribute Layer Spacing";
 "imageEditor.history.layerScale" = "Scale Layer";
@@ -1184,6 +1185,7 @@
 "imageEditor.status.operationFailed" = "Operation failed";
 "imageEditor.status.layerLocked" = "The selected layer cannot be edited";
 "imageEditor.status.layerAlignedToCanvas" = "Aligned layers to canvas";
+"imageEditor.status.layerAlignedToSelection" = "Aligned layers to selection";
 "imageEditor.status.layerSpacingDistributed" = "Distributed layer spacing";
 "imageEditor.status.layerLockSelected" = "Selected layers locked";
 "imageEditor.status.layerUnlockSelected" = "Selected layers unlocked";
@@ -1474,6 +1476,12 @@
 "imageEditor.action.layerAlignCanvasTop" = "Align layers to canvas top";
 "imageEditor.action.layerAlignCanvasVerticalCenter" = "Align layers to canvas vertical center";
 "imageEditor.action.layerAlignCanvasBottom" = "Align layers to canvas bottom";
+"imageEditor.action.layerAlignSelectionLeft" = "Align layers to selection left";
+"imageEditor.action.layerAlignSelectionHorizontalCenter" = "Align layers to selection horizontal center";
+"imageEditor.action.layerAlignSelectionRight" = "Align layers to selection right";
+"imageEditor.action.layerAlignSelectionTop" = "Align layers to selection top";
+"imageEditor.action.layerAlignSelectionVerticalCenter" = "Align layers to selection vertical center";
+"imageEditor.action.layerAlignSelectionBottom" = "Align layers to selection bottom";
 "imageEditor.action.layerDistributeLeft" = "Distribute layers by left edges";
 "imageEditor.action.layerDistributeHorizontalCenter" = "Distribute layers by horizontal centers";
 "imageEditor.action.layerDistributeRight" = "Distribute layers by right edges";

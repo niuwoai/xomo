@@ -8,7 +8,7 @@
 import Foundation
 
 enum AppVersion {
-    static let current = "1.321.0"
+    static let current = "1.322.0"
 }
 
 enum StorageCredentialMode: String, CaseIterable, Identifiable, Codable, Sendable {

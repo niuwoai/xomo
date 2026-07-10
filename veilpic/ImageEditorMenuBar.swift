@@ -598,6 +598,31 @@ extension ImageEditorView {
             }
             .disabled(!viewModel.canAlignSelectedLayersToCanvas)
             Divider()
+            Button(L10n.text("imageEditor.action.layerAlignSelectionLeft")) {
+                viewModel.alignSelectedLayersToSelection(.left)
+            }
+            .disabled(!viewModel.canAlignSelectedLayersToSelection)
+            Button(L10n.text("imageEditor.action.layerAlignSelectionHorizontalCenter")) {
+                viewModel.alignSelectedLayersToSelection(.horizontalCenter)
+            }
+            .disabled(!viewModel.canAlignSelectedLayersToSelection)
+            Button(L10n.text("imageEditor.action.layerAlignSelectionRight")) {
+                viewModel.alignSelectedLayersToSelection(.right)
+            }
+            .disabled(!viewModel.canAlignSelectedLayersToSelection)
+            Button(L10n.text("imageEditor.action.layerAlignSelectionTop")) {
+                viewModel.alignSelectedLayersToSelection(.top)
+            }
+            .disabled(!viewModel.canAlignSelectedLayersToSelection)
+            Button(L10n.text("imageEditor.action.layerAlignSelectionVerticalCenter")) {
+                viewModel.alignSelectedLayersToSelection(.verticalCenter)
+            }
+            .disabled(!viewModel.canAlignSelectedLayersToSelection)
+            Button(L10n.text("imageEditor.action.layerAlignSelectionBottom")) {
+                viewModel.alignSelectedLayersToSelection(.bottom)
+            }
+            .disabled(!viewModel.canAlignSelectedLayersToSelection)
+            Divider()
             Button(L10n.text("imageEditor.action.layerDistributeLeft")) {
                 viewModel.distributeSelectedLayers(.left)
             }
@@ -632,7 +657,7 @@ extension ImageEditorView {
             }
             .disabled(!viewModel.canDistributeSelectedLayers)
         }
-        .disabled(!viewModel.canAlignSelectedLayers && !viewModel.canAlignSelectedLayersToCanvas && !viewModel.canDistributeSelectedLayers)
+        .disabled(!viewModel.canAlignSelectedLayers && !viewModel.canAlignSelectedLayersToCanvas && !viewModel.canAlignSelectedLayersToSelection && !viewModel.canDistributeSelectedLayers)
     }
 
     @ViewBuilder

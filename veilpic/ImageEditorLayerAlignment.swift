@@ -41,6 +41,10 @@ extension ImageEditorViewModel {
         !editableTransformLayerIndices().isEmpty
     }
 
+    var canAlignSelectedLayersToSelection: Bool {
+        !editableTransformLayerIndices().isEmpty && selectionAlignmentTargetBounds() != nil
+    }
+
     var canDistributeSelectedLayers: Bool {
         editableTransformLayerIndices().count >= 3
     }
@@ -135,6 +139,19 @@ extension ImageEditorViewModel {
         statusText = L10n.text("imageEditor.status.layerAlignedToCanvas")
     }
 
+    func alignSelectedLayersToSelection(_ alignment: ImageEditorLayerAlignment) {
+        guard let targetBounds = selectionAlignmentTargetBounds() else {
+            statusText = L10n.text("imageEditor.status.noSelection")
+            return
+        }
+        alignSelectedLayers(
+            alignment,
+            to: targetBounds,
+            historyTitle: L10n.text("imageEditor.history.layerAlignSelection"),
+            status: L10n.text("imageEditor.status.layerAlignedToSelection")
+        )
+    }
+
     func distributeSelectedLayers(_ distribution: ImageEditorLayerDistribution) {
         let indices = editableTransformLayerIndices()
         guard indices.count >= 3 else {
@@ -224,6 +241,63 @@ extension ImageEditorViewModel {
         }
         appendHistory(L10n.text("imageEditor.history.layerDistributeSpacing"))
         statusText = L10n.text("imageEditor.status.layerSpacingDistributed")
+    }
+
+    private func alignSelectedLayers(
+        _ alignment: ImageEditorLayerAlignment,
+        to targetBounds: CGRect,
+        historyTitle: String,
+        status: String
+    ) {
+        let indices = editableTransformLayerIndices()
+        guard !indices.isEmpty else {
+            statusText = L10n.text("imageEditor.status.layerLocked")
+            return
+        }
+
+        var alignedFrames: [UUID: CGRect] = [:]
+        for index in indices {
+            let layer = document.layers[index]
+            var frame = layer.frame.standardized
+            switch alignment {
+            case .left:
+                frame.origin.x = targetBounds.minX
+            case .horizontalCenter:
+                frame.origin.x = targetBounds.midX - frame.width / 2
+            case .right:
+                frame.origin.x = targetBounds.maxX - frame.width
+            case .top:
+                frame.origin.y = targetBounds.maxY - frame.height
+            case .verticalCenter:
+                frame.origin.y = targetBounds.midY - frame.height / 2
+            case .bottom:
+                frame.origin.y = targetBounds.minY
+            }
+            alignedFrames[layer.id] = frame
+        }
+
+        guard alignedFrames.contains(where: { item in
+            guard let current = document.layers.first(where: { $0.id == item.key })?.frame.standardized else { return false }
+            return current != item.value
+        }) else { return }
+
+        pushUndo()
+        for index in document.layers.indices {
+            let id = document.layers[index].id
+            if let frame = alignedFrames[id] {
+                document.layers[index].frame = frame
+            }
+        }
+        appendHistory(historyTitle)
+        statusText = status
+    }
+
+    private func selectionAlignmentTargetBounds() -> CGRect? {
+        guard let selection = document.selection else { return nil }
+        let canvasRect = CGRect(origin: .zero, size: document.canvasSize)
+        let bounds = selection.bounds.standardized.intersection(canvasRect)
+        guard !bounds.isNull, bounds.width > 0.1, bounds.height > 0.1 else { return nil }
+        return bounds
     }
 }
 
