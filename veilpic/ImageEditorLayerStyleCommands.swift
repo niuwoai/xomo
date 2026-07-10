@@ -51,14 +51,12 @@ extension ImageEditorViewModel {
     }
 
     var canCopySelectedLayerStyle: Bool {
-        guard selectedLayerCount == 1,
-              let layer = document.selectedLayer
-        else { return false }
+        guard let layer = document.selectedLayer else { return false }
         return canCopyLayerStyle(layer)
     }
 
     var canPasteLayerStyleToSelectedLayers: Bool {
-        copiedLayerStyle != nil && !selectedLayerStyleTargetIndices().isEmpty
+        copiedLayerStyle != nil && !selectedLayerStylePasteTargetIndices().isEmpty
     }
 
     var canClearSelectedLayerStyles: Bool {
@@ -390,6 +388,7 @@ extension ImageEditorViewModel {
             return
         }
         copiedLayerStyle = style
+        copiedLayerStyleSourceID = document.selectedLayerID
         statusText = L10n.text("imageEditor.status.layerStyleCopied")
     }
 
@@ -398,7 +397,7 @@ extension ImageEditorViewModel {
             statusText = L10n.text("imageEditor.status.layerStyleClipboardEmpty")
             return
         }
-        let targetIndices = selectedLayerStyleTargetIndices()
+        let targetIndices = selectedLayerStylePasteTargetIndices()
         guard !targetIndices.isEmpty else {
             statusText = L10n.text("imageEditor.status.layerLocked")
             return
@@ -1020,6 +1019,12 @@ extension ImageEditorViewModel {
         document.layers.indices.filter { index in
             document.selectedLayerIDs.contains(document.layers[index].id)
                 && canEditLayerStyle(document.layers[index])
+        }
+    }
+
+    private func selectedLayerStylePasteTargetIndices() -> [Int] {
+        selectedLayerStyleTargetIndices().filter { index in
+            document.layers[index].id != copiedLayerStyleSourceID
         }
     }
 

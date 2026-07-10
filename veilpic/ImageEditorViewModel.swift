@@ -208,6 +208,7 @@ final class ImageEditorViewModel: ObservableObject {
     var rotatingStartAngleDegrees: CGFloat = 0
     var rotatingLayerDidChange = false
     var copiedLayerStyle: ImageEditorLayerStyle?
+    var copiedLayerStyleSourceID: UUID?
     private let onApply: (NSImage) -> Void
 
     init(sourceName: String, image: NSImage, onApply: @escaping (NSImage) -> Void) {

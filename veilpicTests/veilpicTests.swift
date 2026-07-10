@@ -4519,6 +4519,51 @@ struct veilpicTests {
     }
 
     @MainActor
+    @Test func imageEditorCopiesPrimaryLayerStyleAcrossMultiSelectionWithoutRestylingSource() async throws {
+        let image = testImage(color: .systemBlue, size: NSSize(width: 80, height: 60))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let sourceID = try #require(viewModel.document.selectedLayerID)
+
+        viewModel.toggleSelectedLayerStroke()
+        viewModel.setSelectedLayerStrokeWidth(9)
+        viewModel.toggleSelectedLayerOuterGlow()
+        let sourceStrokeWidth = try #require(viewModel.document.selectedLayer?.style.strokeWidth)
+        let sourceOuterGlowOpacity = try #require(viewModel.document.selectedLayer?.style.outerGlowOpacity)
+
+        viewModel.addLayer()
+        let targetID = try #require(viewModel.document.selectedLayerID)
+        viewModel.addLayer()
+        let lockedID = try #require(viewModel.document.selectedLayerID)
+        let sourceIndex = try #require(viewModel.document.layers.firstIndex { $0.id == sourceID })
+        let targetIndex = try #require(viewModel.document.layers.firstIndex { $0.id == targetID })
+        let lockedIndex = try #require(viewModel.document.layers.firstIndex { $0.id == lockedID })
+        viewModel.document.layers[lockedIndex].isLocked = true
+        viewModel.document.selectedLayerID = sourceID
+        viewModel.document.selectedLayerIDs = [sourceID, targetID, lockedID]
+
+        #expect(viewModel.canCopySelectedLayerStyle)
+        viewModel.copySelectedLayerStyle()
+        #expect(viewModel.copiedLayerStyleSourceID == sourceID)
+        #expect(viewModel.canPasteLayerStyleToSelectedLayers)
+        viewModel.pasteLayerStyleToSelectedLayers()
+
+        #expect(viewModel.document.layers[targetIndex].style.strokeEnabled)
+        #expect(viewModel.document.layers[targetIndex].style.strokeWidth == sourceStrokeWidth)
+        #expect(viewModel.document.layers[targetIndex].style.outerGlowEnabled)
+        #expect(viewModel.document.layers[targetIndex].style.outerGlowOpacity == sourceOuterGlowOpacity)
+        #expect(!viewModel.document.layers[lockedIndex].style.hasEffects)
+        #expect(viewModel.document.selectedLayer?.style.strokeWidth == sourceStrokeWidth)
+        #expect(viewModel.document.selectedLayer?.style.outerGlowEnabled == true)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStylePaste"))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerStylePasted", 1))
+
+        viewModel.undo()
+        #expect(!viewModel.document.layers[targetIndex].style.hasEffects)
+        #expect(viewModel.document.layers[sourceIndex].style.strokeWidth == sourceStrokeWidth)
+        #expect(viewModel.document.layers[sourceIndex].style.outerGlowEnabled)
+    }
+
+    @MainActor
     @Test func imageEditorLayerFillOpacityFadesContentButKeepsLayerStyleVisible() async throws {
         let canvasSize = NSSize(width: 80, height: 60)
         let image = testImage(color: .systemBlue, size: canvasSize)
