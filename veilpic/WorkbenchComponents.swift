@@ -231,23 +231,6 @@ struct WorkbenchPreviewCard: View {
                         .truncationMode(.middle)
                 }
                 Spacer()
-                Button {
-                    onEdit?()
-                } label: {
-                    Image(systemName: "pencil.and.outline")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(canEdit ? AppTheme.accent : Color.secondary)
-                        .frame(width: 32, height: 32)
-                        .background(Color.white.opacity(canEdit ? 0.72 : 0.36))
-                        .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
-                        .overlay {
-                            RoundedRectangle(cornerRadius: 9, style: .continuous)
-                                .strokeBorder(AppTheme.hairline, lineWidth: 1)
-                        }
-                }
-                .buttonStyle(PressableWorkbenchButtonStyle())
-                .disabled(!canEdit)
-                .help(L10n.text("workbench.preview.edit"))
             }
 
             ZStack {
@@ -263,6 +246,15 @@ struct WorkbenchPreviewCard: View {
                     ProgressView()
                         .controlSize(.small)
                 }
+
+                VStack {
+                    HStack {
+                        Spacer()
+                        editButton
+                    }
+                    Spacer()
+                }
+                .padding(10)
             }
             .frame(maxWidth: .infinity)
             .frame(height: 188)
@@ -278,6 +270,28 @@ struct WorkbenchPreviewCard: View {
 
     private var canEdit: Bool {
         imageData != nil && onEdit != nil
+    }
+
+    private var editButton: some View {
+        Button {
+            onEdit?()
+        } label: {
+            Image(systemName: "pencil.and.outline")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(canEdit ? AppTheme.accent : Color.secondary)
+                .frame(width: 32, height: 32)
+                .background(Color.white.opacity(canEdit ? 0.82 : 0.46))
+                .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 9, style: .continuous)
+                        .strokeBorder(AppTheme.hairline, lineWidth: 1)
+                }
+                .shadow(color: AppTheme.cardShadow.opacity(0.32), radius: 5, x: 0, y: 2)
+        }
+        .buttonStyle(PressableWorkbenchButtonStyle())
+        .disabled(!canEdit)
+        .help(L10n.text("workbench.preview.edit"))
+        .accessibilityLabel(L10n.text("workbench.preview.edit"))
     }
 }
 
