@@ -67,7 +67,6 @@ struct ImageEditorView: View {
         .background(opacityShortcutButtons)
         .background(colorShortcutButtons)
         .background(nudgeShortcutButtons)
-        .background(selectionEditShortcutButtons)
         .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
         .onAppear {
             syncLayerNameDraft()
@@ -312,36 +311,6 @@ struct ImageEditorView: View {
         }
         .keyboardShortcut(key, modifiers: modifiers)
         .accessibilityHidden(true)
-    }
-
-    private var selectionEditShortcutButtons: some View {
-        Group {
-            Button {
-                viewModel.clearSelectionPixels()
-            } label: {
-                EmptyView()
-            }
-            .keyboardShortcut(.delete, modifiers: [])
-            .accessibilityHidden(true)
-
-            Button {
-                viewModel.fillSelection()
-            } label: {
-                EmptyView()
-            }
-            .keyboardShortcut(.delete, modifiers: [.option])
-            .accessibilityHidden(true)
-
-            Button {
-                viewModel.fillSelectionWithBackgroundColor()
-            } label: {
-                EmptyView()
-            }
-            .keyboardShortcut(.delete, modifiers: [.command])
-            .accessibilityHidden(true)
-        }
-        .frame(width: 0, height: 0)
-        .opacity(0)
     }
 
     private var colorChips: some View {

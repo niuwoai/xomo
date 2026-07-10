@@ -1827,6 +1827,7 @@
 "imageEditor.action.fillSelectionHoles" = "Fill Selection Holes";
 "imageEditor.action.removeSelectionSpeckles" = "Remove Selection Speckles";
 "imageEditor.action.fillSelection" = "Fill Selection";
+"imageEditor.action.fillSelectionBackground" = "Fill with Background Color";
 "imageEditor.action.contentAwareFillSelection" = "Content-Aware Fill";
 "imageEditor.action.strokeSelection" = "Stroke Selection";
 "imageEditor.action.selectionCopyLayer" = "Layer via Copy";

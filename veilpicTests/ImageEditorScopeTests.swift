@@ -212,18 +212,8 @@ struct ImageEditorScopeTests {
         #expect(nudgeShortcutSource.contains("nudgeShortcutButton(.leftArrow, delta: CGSize(width: -10, height: 0), modifiers: [.shift])"))
         #expect(nudgeShortcutSource.contains("viewModel.nudgeSelectionOrSelectedLayer(by: delta)"))
 
-        let selectionEditShortcutStart = try #require(source.range(of: "private var selectionEditShortcutButtons: some View"))
-        let selectionEditShortcutEnd = try #require(
-            source[selectionEditShortcutStart.upperBound...].range(of: "private var colorChips: some View")
-        )
-        let selectionEditShortcutSource = source[selectionEditShortcutStart.lowerBound..<selectionEditShortcutEnd.lowerBound]
-
-        #expect(selectionEditShortcutSource.contains("viewModel.clearSelectionPixels()"))
-        #expect(selectionEditShortcutSource.contains(".keyboardShortcut(.delete, modifiers: [])"))
-        #expect(selectionEditShortcutSource.contains("viewModel.fillSelection()"))
-        #expect(selectionEditShortcutSource.contains(".keyboardShortcut(.delete, modifiers: [.option])"))
-        #expect(selectionEditShortcutSource.contains("viewModel.fillSelectionWithBackgroundColor()"))
-        #expect(selectionEditShortcutSource.contains(".keyboardShortcut(.delete, modifiers: [.command])"))
+        #expect(!source.contains("private var selectionEditShortcutButtons: some View"))
+        #expect(!source.contains(".background(selectionEditShortcutButtons)"))
     }
 
     @MainActor
@@ -672,6 +662,12 @@ struct ImageEditorScopeTests {
         #expect(editMenuSource.contains(".keyboardShortcut(\"v\", modifiers: [.command])"))
         #expect(editMenuSource.contains("viewModel.pasteClipboardIntoSelectionAsLayer()"))
         #expect(editMenuSource.contains(".keyboardShortcut(\"v\", modifiers: [.command, .shift])"))
+        #expect(editMenuSource.contains("viewModel.fillSelection()"))
+        #expect(editMenuSource.contains(".keyboardShortcut(.delete, modifiers: [.option])"))
+        #expect(editMenuSource.contains("viewModel.fillSelectionWithBackgroundColor()"))
+        #expect(editMenuSource.contains(".keyboardShortcut(.delete, modifiers: [.command])"))
+        #expect(editMenuSource.contains("viewModel.clearSelectionPixels()"))
+        #expect(editMenuSource.contains(".keyboardShortcut(.delete, modifiers: [])"))
     }
 
     @Test func selectMenuExposesSavedSelectionCommandsInPhotoshopStyleLocation() throws {

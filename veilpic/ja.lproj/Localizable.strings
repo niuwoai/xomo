@@ -1827,6 +1827,7 @@
 "imageEditor.action.fillSelectionHoles" = "選択範囲の穴を埋める";
 "imageEditor.action.removeSelectionSpeckles" = "選択範囲のノイズを削除";
 "imageEditor.action.fillSelection" = "選択範囲を塗りつぶし";
+"imageEditor.action.fillSelectionBackground" = "背景色で選択範囲を塗りつぶし";
 "imageEditor.action.contentAwareFillSelection" = "コンテンツに応じた塗りつぶし";
 "imageEditor.action.strokeSelection" = "選択範囲に境界線";
 "imageEditor.action.selectionCopyLayer" = "コピーしてレイヤー";

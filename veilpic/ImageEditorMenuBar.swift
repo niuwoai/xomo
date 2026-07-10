@@ -121,6 +121,12 @@ extension ImageEditorView {
         Button(L10n.text("imageEditor.action.fillSelection")) {
             viewModel.fillSelection()
         }
+        .keyboardShortcut(.delete, modifiers: [.option])
+        .disabled(!viewModel.canEditSelectionPixels)
+        Button(L10n.text("imageEditor.action.fillSelectionBackground")) {
+            viewModel.fillSelectionWithBackgroundColor()
+        }
+        .keyboardShortcut(.delete, modifiers: [.command])
         .disabled(!viewModel.canEditSelectionPixels)
         Button(L10n.text("imageEditor.action.contentAwareFillSelection")) {
             viewModel.contentAwareFillSelection()
@@ -145,6 +151,7 @@ extension ImageEditorView {
         Button(L10n.text("imageEditor.action.clearSelectionPixels")) {
             viewModel.clearSelectionPixels()
         }
+        .keyboardShortcut(.delete, modifiers: [])
         .disabled(!viewModel.canEditSelectionPixels)
     }
 

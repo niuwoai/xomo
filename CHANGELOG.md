@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.408.0 - 2026-07-10
+
+### Added
+- 图片编辑器在 Edit 菜单中公开 `Delete` 清除选区像素、`Option + Delete` 前景色填充和 `Command + Delete` 背景色填充，补齐经典可见菜单入口。
+
 ## 1.407.0 - 2026-07-10
 
 ### Changed
