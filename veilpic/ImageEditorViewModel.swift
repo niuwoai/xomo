@@ -2932,17 +2932,19 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func updateSelectedSolidColorFillLayer() {
-        guard let index = document.selectedLayerIndex,
-              document.layers[index].isSolidColorFill,
-              !document.isEffectivelyPixelsLocked(document.layers[index])
-        else {
+        let indices = selectedLayerIndices.filter { document.layers[$0].isSolidColorFill && !document.isEffectivelyPixelsLocked(document.layers[$0]) }
+        guard !indices.isEmpty else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
+        let content = currentSolidColorFillContent()
         pushUndo()
-        document.layers[index].kind = .solidColorFill(currentSolidColorFillContent())
-        document.layers[index].name = L10n.text("imageEditor.layer.solidColorFillName")
-        appendHistory(L10n.text("imageEditor.history.layerSolidColorFillUpdate"))
+        for index in indices {
+            document.layers[index].kind = .solidColorFill(content)
+            document.layers[index].name = L10n.text("imageEditor.layer.solidColorFillName")
+        }
+        appendHistory(L10n.text(indices.count == 1 ? "imageEditor.history.layerSolidColorFillUpdate" : "imageEditor.history.layerSolidColorFillUpdateSelected"))
+        if indices.count > 1 { statusText = L10n.format("imageEditor.status.layerSolidColorFillUpdatedSelected", indices.count) }
     }
 
     func addPatternFillLayer() {
@@ -2961,17 +2963,19 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func updateSelectedPatternFillLayer() {
-        guard let index = document.selectedLayerIndex,
-              document.layers[index].isPatternFill,
-              !document.isEffectivelyPixelsLocked(document.layers[index])
-        else {
+        let indices = selectedLayerIndices.filter { document.layers[$0].isPatternFill && !document.isEffectivelyPixelsLocked(document.layers[$0]) }
+        guard !indices.isEmpty else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
+        let content = currentPatternFillContent()
         pushUndo()
-        document.layers[index].kind = .patternFill(currentPatternFillContent())
-        document.layers[index].name = L10n.text("imageEditor.layer.patternFillName")
-        appendHistory(L10n.text("imageEditor.history.layerPatternFillUpdate"))
+        for index in indices {
+            document.layers[index].kind = .patternFill(content)
+            document.layers[index].name = L10n.text("imageEditor.layer.patternFillName")
+        }
+        appendHistory(L10n.text(indices.count == 1 ? "imageEditor.history.layerPatternFillUpdate" : "imageEditor.history.layerPatternFillUpdateSelected"))
+        if indices.count > 1 { statusText = L10n.format("imageEditor.status.layerPatternFillUpdatedSelected", indices.count) }
     }
 
     func addGradientFillLayer() {
@@ -2990,17 +2994,19 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func updateSelectedGradientFillLayer() {
-        guard let index = document.selectedLayerIndex,
-              document.layers[index].isGradientFill,
-              !document.isEffectivelyPixelsLocked(document.layers[index])
-        else {
+        let indices = selectedLayerIndices.filter { document.layers[$0].isGradientFill && !document.isEffectivelyPixelsLocked(document.layers[$0]) }
+        guard !indices.isEmpty else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
+        let content = currentGradientFillContent()
         pushUndo()
-        document.layers[index].kind = .gradientFill(currentGradientFillContent())
-        document.layers[index].name = L10n.text("imageEditor.layer.gradientFillName")
-        appendHistory(L10n.text("imageEditor.history.layerGradientFillUpdate"))
+        for index in indices {
+            document.layers[index].kind = .gradientFill(content)
+            document.layers[index].name = L10n.text("imageEditor.layer.gradientFillName")
+        }
+        appendHistory(L10n.text(indices.count == 1 ? "imageEditor.history.layerGradientFillUpdate" : "imageEditor.history.layerGradientFillUpdateSelected"))
+        if indices.count > 1 { statusText = L10n.format("imageEditor.status.layerGradientFillUpdatedSelected", indices.count) }
     }
 
     func addSmartFilterToSelectedLayer() {

@@ -1041,6 +1041,192 @@ struct ImageEditorAdjustmentTests {
         #expect(try #require(layer(lockedID, in: viewModel)).adjustment?.amount == 0.40)
     }
 
+    @Test func imageEditorBatchUpdatesSelectedSolidColorFillLayersAndSkipsLockedOrIneligibleLayers() async throws {
+        let canvasSize = NSSize(width: 48, height: 32)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: bitmapImage(size: canvasSize, background: .black)) { _ in }
+        let baseLayerID = try #require(viewModel.document.selectedLayerID)
+
+        viewModel.solidColorFillRed = 0.10
+        viewModel.solidColorFillGreen = 0.20
+        viewModel.solidColorFillBlue = 0.30
+        viewModel.addSolidColorFillLayer()
+        let firstID = try #require(viewModel.document.selectedLayerID)
+
+        viewModel.solidColorFillRed = 0.20
+        viewModel.solidColorFillGreen = 0.30
+        viewModel.solidColorFillBlue = 0.40
+        viewModel.addSolidColorFillLayer()
+        let secondID = try #require(viewModel.document.selectedLayerID)
+
+        viewModel.solidColorFillRed = 0.30
+        viewModel.solidColorFillGreen = 0.40
+        viewModel.solidColorFillBlue = 0.50
+        viewModel.addSolidColorFillLayer()
+        let lockedID = try #require(viewModel.document.selectedLayerID)
+        viewModel.toggleLayerLock(lockedID)
+
+        viewModel.selectLayer(firstID)
+        viewModel.selectLayer(secondID, extendingSelection: true)
+        viewModel.selectLayer(lockedID, extendingSelection: true)
+        viewModel.selectLayer(baseLayerID, extendingSelection: true)
+
+        viewModel.solidColorFillRed = 0.80
+        viewModel.solidColorFillGreen = 0.15
+        viewModel.solidColorFillBlue = 0.05
+        viewModel.updateSelectedSolidColorFillLayer()
+
+        let first = try #require(layer(firstID, in: viewModel)?.solidColorFillContent?.normalized())
+        let second = try #require(layer(secondID, in: viewModel)?.solidColorFillContent?.normalized())
+        let locked = try #require(layer(lockedID, in: viewModel)?.solidColorFillContent?.normalized())
+        #expect(first.red == 0.80)
+        #expect(first.green == 0.15)
+        #expect(first.blue == 0.05)
+        #expect(second.red == 0.80)
+        #expect(second.green == 0.15)
+        #expect(second.blue == 0.05)
+        #expect(locked.red == 0.30)
+        #expect(locked.green == 0.40)
+        #expect(locked.blue == 0.50)
+        #expect(try #require(layer(baseLayerID, in: viewModel)).isSolidColorFill == false)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSolidColorFillUpdateSelected"))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerSolidColorFillUpdatedSelected", 2))
+
+        viewModel.undo()
+
+        #expect(try #require(layer(firstID, in: viewModel)?.solidColorFillContent?.normalized()).red == 0.10)
+        #expect(try #require(layer(secondID, in: viewModel)?.solidColorFillContent?.normalized()).red == 0.20)
+        #expect(try #require(layer(lockedID, in: viewModel)?.solidColorFillContent?.normalized()).red == 0.30)
+    }
+
+    @Test func imageEditorBatchUpdatesSelectedPatternFillLayersAndSkipsLockedOrIneligibleLayers() async throws {
+        let canvasSize = NSSize(width: 48, height: 32)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: bitmapImage(size: canvasSize, background: .black)) { _ in }
+        let baseLayerID = try #require(viewModel.document.selectedLayerID)
+
+        viewModel.selectedPatternFillKind = .checkerboard
+        viewModel.patternFillOpacity = 0.20
+        viewModel.patternFillScale = 10
+        viewModel.addPatternFillLayer()
+        let firstID = try #require(viewModel.document.selectedLayerID)
+
+        viewModel.selectedPatternFillKind = .dots
+        viewModel.patternFillOpacity = 0.30
+        viewModel.patternFillScale = 12
+        viewModel.addPatternFillLayer()
+        let secondID = try #require(viewModel.document.selectedLayerID)
+
+        viewModel.selectedPatternFillKind = .diagonalStripes
+        viewModel.patternFillOpacity = 0.40
+        viewModel.patternFillScale = 14
+        viewModel.addPatternFillLayer()
+        let lockedID = try #require(viewModel.document.selectedLayerID)
+        viewModel.toggleLayerLock(lockedID)
+
+        viewModel.selectLayer(firstID)
+        viewModel.selectLayer(secondID, extendingSelection: true)
+        viewModel.selectLayer(lockedID, extendingSelection: true)
+        viewModel.selectLayer(baseLayerID, extendingSelection: true)
+
+        viewModel.selectedPatternFillKind = .diagonalStripes
+        viewModel.patternFillRed = 0.70
+        viewModel.patternFillGreen = 0.10
+        viewModel.patternFillBlue = 0.80
+        viewModel.patternFillOpacity = 0.65
+        viewModel.patternFillScale = 22
+        viewModel.updateSelectedPatternFillLayer()
+
+        let first = try #require(layer(firstID, in: viewModel)?.patternFillContent?.normalized())
+        let second = try #require(layer(secondID, in: viewModel)?.patternFillContent?.normalized())
+        let locked = try #require(layer(lockedID, in: viewModel)?.patternFillContent?.normalized())
+        #expect(first.kind == .diagonalStripes)
+        #expect(first.red == 0.70)
+        #expect(first.opacity == 0.65)
+        #expect(first.scale == 22)
+        #expect(second.kind == .diagonalStripes)
+        #expect(second.blue == 0.80)
+        #expect(second.scale == 22)
+        #expect(locked.kind == .diagonalStripes)
+        #expect(locked.opacity == 0.40)
+        #expect(locked.scale == 14)
+        #expect(try #require(layer(baseLayerID, in: viewModel)).isPatternFill == false)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerPatternFillUpdateSelected"))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerPatternFillUpdatedSelected", 2))
+
+        viewModel.undo()
+
+        #expect(try #require(layer(firstID, in: viewModel)?.patternFillContent?.normalized()).kind == .checkerboard)
+        #expect(try #require(layer(secondID, in: viewModel)?.patternFillContent?.normalized()).kind == .dots)
+        #expect(try #require(layer(lockedID, in: viewModel)?.patternFillContent?.normalized()).opacity == 0.40)
+    }
+
+    @Test func imageEditorBatchUpdatesSelectedGradientFillLayersAndSkipsLockedOrIneligibleLayers() async throws {
+        let canvasSize = NSSize(width: 48, height: 32)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: bitmapImage(size: canvasSize, background: .black)) { _ in }
+        let baseLayerID = try #require(viewModel.document.selectedLayerID)
+
+        viewModel.selectedGradientFillPreset = .blackWhite
+        viewModel.selectedGradientFillStyle = .linear
+        viewModel.gradientFillScale = 1
+        viewModel.addGradientFillLayer()
+        let firstID = try #require(viewModel.document.selectedLayerID)
+
+        viewModel.selectedGradientFillPreset = .sunset
+        viewModel.selectedGradientFillStyle = .radial
+        viewModel.gradientFillScale = 1.25
+        viewModel.addGradientFillLayer()
+        let secondID = try #require(viewModel.document.selectedLayerID)
+
+        viewModel.selectedGradientFillPreset = .purpleTeal
+        viewModel.selectedGradientFillStyle = .diamond
+        viewModel.gradientFillScale = 1.5
+        viewModel.addGradientFillLayer()
+        let lockedID = try #require(viewModel.document.selectedLayerID)
+        viewModel.toggleLayerLock(lockedID)
+
+        viewModel.selectLayer(firstID)
+        viewModel.selectLayer(secondID, extendingSelection: true)
+        viewModel.selectLayer(lockedID, extendingSelection: true)
+        viewModel.selectLayer(baseLayerID, extendingSelection: true)
+
+        viewModel.selectedGradientFillPreset = .custom
+        viewModel.selectedGradientFillStyle = .reflected
+        viewModel.gradientFillReverse = true
+        viewModel.gradientFillAngle = 35
+        viewModel.gradientFillScale = 2
+        viewModel.gradientFillStartRed = 0.90
+        viewModel.gradientFillStartGreen = 0.10
+        viewModel.gradientFillStartBlue = 0.20
+        viewModel.gradientFillEndRed = 0.05
+        viewModel.gradientFillEndGreen = 0.65
+        viewModel.gradientFillEndBlue = 0.95
+        viewModel.updateSelectedGradientFillLayer()
+
+        let first = try #require(layer(firstID, in: viewModel)?.gradientFillContent?.normalized())
+        let second = try #require(layer(secondID, in: viewModel)?.gradientFillContent?.normalized())
+        let locked = try #require(layer(lockedID, in: viewModel)?.gradientFillContent?.normalized())
+        #expect(first.preset == .custom)
+        #expect(first.style == .reflected)
+        #expect(first.reverse)
+        #expect(first.angle == 35)
+        #expect(first.scale == 2)
+        #expect(first.startRed == 0.90)
+        #expect(second.preset == .custom)
+        #expect(second.style == .reflected)
+        #expect(second.endBlue == 0.95)
+        #expect(locked.preset == .purpleTeal)
+        #expect(locked.style == .diamond)
+        #expect(locked.scale == 1.5)
+        #expect(try #require(layer(baseLayerID, in: viewModel)).isGradientFill == false)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerGradientFillUpdateSelected"))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerGradientFillUpdatedSelected", 2))
+
+        viewModel.undo()
+
+        #expect(try #require(layer(firstID, in: viewModel)?.gradientFillContent?.normalized()).preset == .blackWhite)
+        #expect(try #require(layer(secondID, in: viewModel)?.gradientFillContent?.normalized()).preset == .sunset)
+        #expect(try #require(layer(lockedID, in: viewModel)?.gradientFillContent?.normalized()).preset == .purpleTeal)
+    }
+
     private func bitmapImage(
         size: NSSize,
         background: NSColor,

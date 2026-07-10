@@ -1067,10 +1067,13 @@
 "imageEditor.history.layerFilterNew" = "New Filter Layer";
 "imageEditor.history.layerSolidColorFillNew" = "New Solid Color Fill Layer";
 "imageEditor.history.layerSolidColorFillUpdate" = "Update Solid Color Fill Layer";
+"imageEditor.history.layerSolidColorFillUpdateSelected" = "Update Selected Solid Color Fill Layers";
 "imageEditor.history.layerPatternFillNew" = "New Pattern Fill Layer";
 "imageEditor.history.layerPatternFillUpdate" = "Update Pattern Fill Layer";
+"imageEditor.history.layerPatternFillUpdateSelected" = "Update Selected Pattern Fill Layers";
 "imageEditor.history.layerGradientFillNew" = "New Gradient Fill Layer";
 "imageEditor.history.layerGradientFillUpdate" = "Update Gradient Fill Layer";
+"imageEditor.history.layerGradientFillUpdateSelected" = "Update Selected Gradient Fill Layers";
 "imageEditor.history.layerFilterUpdate" = "Update Filter Layer";
 "imageEditor.history.layerFilterUpdateSelected" = "Update Selected Filter Layers";
 "imageEditor.history.layerSmartFilterAdd" = "Add Smart Filter";
@@ -1418,6 +1421,9 @@
 "imageEditor.status.layerStyleUpdated" = "Layer style updated";
 "imageEditor.status.layerAdjustmentUpdatedSelected" = "Updated %d adjustment layers";
 "imageEditor.status.layerFilterUpdatedSelected" = "Updated %d filter layers";
+"imageEditor.status.layerSolidColorFillUpdatedSelected" = "Updated %d solid color fill layers";
+"imageEditor.status.layerPatternFillUpdatedSelected" = "Updated %d pattern fill layers";
+"imageEditor.status.layerGradientFillUpdatedSelected" = "Updated %d gradient fill layers";
 "imageEditor.status.globalLight" = "Global light angle set to %d°";
 "imageEditor.status.layerLinkNeedsSelection" = "Select at least two layers to link";
 "imageEditor.status.layerNoLinks" = "Selected layers are not linked";

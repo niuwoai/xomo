@@ -1067,10 +1067,13 @@
 "imageEditor.history.layerFilterNew" = "新建滤镜图层";
 "imageEditor.history.layerSolidColorFillNew" = "新建纯色填充图层";
 "imageEditor.history.layerSolidColorFillUpdate" = "更新纯色填充图层";
+"imageEditor.history.layerSolidColorFillUpdateSelected" = "更新所选纯色填充图层";
 "imageEditor.history.layerPatternFillNew" = "新建图案填充图层";
 "imageEditor.history.layerPatternFillUpdate" = "更新图案填充图层";
+"imageEditor.history.layerPatternFillUpdateSelected" = "更新所选图案填充图层";
 "imageEditor.history.layerGradientFillNew" = "新建渐变填充图层";
 "imageEditor.history.layerGradientFillUpdate" = "更新渐变填充图层";
+"imageEditor.history.layerGradientFillUpdateSelected" = "更新所选渐变填充图层";
 "imageEditor.history.layerFilterUpdate" = "更新滤镜图层";
 "imageEditor.history.layerFilterUpdateSelected" = "更新所选滤镜图层";
 "imageEditor.history.layerSmartFilterAdd" = "添加智能滤镜";
@@ -1418,6 +1421,9 @@
 "imageEditor.status.layerStyleUpdated" = "已更新图层样式";
 "imageEditor.status.layerAdjustmentUpdatedSelected" = "已更新 %d 个调整图层";
 "imageEditor.status.layerFilterUpdatedSelected" = "已更新 %d 个滤镜图层";
+"imageEditor.status.layerSolidColorFillUpdatedSelected" = "已更新 %d 个纯色填充图层";
+"imageEditor.status.layerPatternFillUpdatedSelected" = "已更新 %d 个图案填充图层";
+"imageEditor.status.layerGradientFillUpdatedSelected" = "已更新 %d 个渐变填充图层";
 "imageEditor.status.globalLight" = "全局光角度已设为 %d°";
 "imageEditor.status.layerLinkNeedsSelection" = "请至少选择两个图层进行链接";
 "imageEditor.status.layerNoLinks" = "所选图层没有链接关系";

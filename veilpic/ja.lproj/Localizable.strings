@@ -1067,10 +1067,13 @@
 "imageEditor.history.layerFilterNew" = "フィルターレイヤーを作成";
 "imageEditor.history.layerSolidColorFillNew" = "べた塗りレイヤーを作成";
 "imageEditor.history.layerSolidColorFillUpdate" = "べた塗りレイヤーを更新";
+"imageEditor.history.layerSolidColorFillUpdateSelected" = "選択べた塗りレイヤーを更新";
 "imageEditor.history.layerPatternFillNew" = "パターン塗りレイヤーを作成";
 "imageEditor.history.layerPatternFillUpdate" = "パターン塗りレイヤーを更新";
+"imageEditor.history.layerPatternFillUpdateSelected" = "選択パターン塗りレイヤーを更新";
 "imageEditor.history.layerGradientFillNew" = "グラデーション塗りレイヤーを作成";
 "imageEditor.history.layerGradientFillUpdate" = "グラデーション塗りレイヤーを更新";
+"imageEditor.history.layerGradientFillUpdateSelected" = "選択グラデーション塗りレイヤーを更新";
 "imageEditor.history.layerFilterUpdate" = "フィルターレイヤーを更新";
 "imageEditor.history.layerFilterUpdateSelected" = "選択フィルターレイヤーを更新";
 "imageEditor.history.layerSmartFilterAdd" = "スマートフィルターを追加";
@@ -1418,6 +1421,9 @@
 "imageEditor.status.layerStyleUpdated" = "レイヤースタイルを更新しました";
 "imageEditor.status.layerAdjustmentUpdatedSelected" = "%d個の調整レイヤーを更新しました";
 "imageEditor.status.layerFilterUpdatedSelected" = "%d個のフィルターレイヤーを更新しました";
+"imageEditor.status.layerSolidColorFillUpdatedSelected" = "%d個のべた塗りレイヤーを更新しました";
+"imageEditor.status.layerPatternFillUpdatedSelected" = "%d個のパターン塗りレイヤーを更新しました";
+"imageEditor.status.layerGradientFillUpdatedSelected" = "%d個のグラデーション塗りレイヤーを更新しました";
 "imageEditor.status.globalLight" = "グローバルライト角度を %d° に設定しました";
 "imageEditor.status.layerLinkNeedsSelection" = "リンクするには 2 つ以上のレイヤーを選択してください";
 "imageEditor.status.layerNoLinks" = "選択中のレイヤーにリンクはありません";
