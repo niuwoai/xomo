@@ -392,7 +392,7 @@ struct ImageEditorProjectDocumentTests {
             image: testImage(color: .blue, size: canvasSize)
         ) { _ in }
 
-        var group = ImageEditorLayer.group(name: "Multiply Group", size: canvasSize)
+        let group = ImageEditorLayer.group(name: "Multiply Group", size: canvasSize)
         var child = ImageEditorLayer.blank(name: "Red Multiply", size: canvasSize)
         child.image = testImage(color: .red, size: canvasSize)
         child.blendMode = .multiply
