@@ -795,6 +795,7 @@
 "imageEditor.layer.background" = "背景";
 "imageEditor.layer.unlockedBackground" = "レイヤー 0";
 "imageEditor.layer.edit" = "編集レイヤー";
+"imageEditor.layer.alphaChannelName" = "%@ レイヤー";
 "imageEditor.layer.newName" = "レイヤー %d";
 "imageEditor.layer.groupName" = "グループ %d";
 "imageEditor.layer.visibleStampName" = "表示レイヤーをスタンプ";
@@ -1612,6 +1613,7 @@
 "imageEditor.action.alphaChannelSelectionSubtract" = "%@ から現在の選択範囲を削除";
 "imageEditor.action.alphaChannelSelectionIntersect" = "%@ と現在の選択範囲を交差";
 "imageEditor.action.alphaChannelApplyToMask" = "%@ を現在のレイヤーマスクとして適用";
+"imageEditor.action.alphaChannelLayer" = "%@ からレイヤーを作成";
 "imageEditor.action.alphaChannelDuplicate" = "%@ を複製";
 "imageEditor.action.alphaChannelInvert" = "%@ を反転";
 "imageEditor.action.alphaChannelFillWhite" = "%@ を白で塗りつぶす";
@@ -1642,6 +1644,7 @@
 "imageEditor.action.alphaChannelSelectionSubtractSelected" = "選択中の Alpha チャンネルから現在の選択範囲を削除";
 "imageEditor.action.alphaChannelSelectionIntersectSelected" = "選択中の Alpha チャンネルと現在の選択範囲を交差";
 "imageEditor.action.alphaChannelApplySelectedToMask" = "選択中の Alpha チャンネルを現在のレイヤーマスクとして適用";
+"imageEditor.action.alphaChannelLayerSelected" = "選択中の Alpha チャンネルからレイヤーを作成";
 "imageEditor.action.alphaChannelDuplicateSelected" = "選択中の Alpha チャンネルを複製";
 "imageEditor.action.alphaChannelInvertSelected" = "選択中の Alpha チャンネルを反転";
 "imageEditor.action.alphaChannelFillWhiteSelected" = "選択中の Alpha チャンネルを白で塗りつぶす";
@@ -1685,6 +1688,7 @@
 "imageEditor.status.alphaChannelSelectionSubtracted" = "%@ から現在の選択範囲を削除しました";
 "imageEditor.status.alphaChannelSelectionIntersected" = "%@ と現在の選択範囲を交差しました";
 "imageEditor.status.alphaChannelApplyToMask" = "%@ を現在のレイヤーマスクとして適用しました";
+"imageEditor.status.alphaChannelLayer" = "%@ からレイヤーを作成しました";
 "imageEditor.status.alphaChannelDuplicated" = "%@ として複製しました";
 "imageEditor.status.alphaChannelInverted" = "%@ を反転しました";
 "imageEditor.status.alphaChannelFilledWhite" = "%@ を白で塗りつぶしました";
@@ -1721,6 +1725,7 @@
 "imageEditor.history.alphaChannelSelectionSubtract" = "Alpha チャンネルから選択範囲を削除";
 "imageEditor.history.alphaChannelSelectionIntersect" = "Alpha チャンネルと選択範囲を交差";
 "imageEditor.history.alphaChannelApplyToMask" = "Alpha チャンネルをレイヤーマスクとして適用";
+"imageEditor.history.alphaChannelLayer" = "Alpha チャンネルからレイヤーを作成";
 "imageEditor.history.alphaChannelDuplicate" = "Alpha チャンネルを複製";
 "imageEditor.history.alphaChannelInvert" = "Alpha チャンネルを反転";
 "imageEditor.history.alphaChannelFillWhite" = "Alpha チャンネルを白で塗りつぶす";

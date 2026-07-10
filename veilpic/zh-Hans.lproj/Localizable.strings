@@ -795,6 +795,7 @@
 "imageEditor.layer.background" = "背景";
 "imageEditor.layer.unlockedBackground" = "图层 0";
 "imageEditor.layer.edit" = "编辑图层";
+"imageEditor.layer.alphaChannelName" = "%@ 图层";
 "imageEditor.layer.newName" = "图层 %d";
 "imageEditor.layer.groupName" = "组 %d";
 "imageEditor.layer.visibleStampName" = "盖印可见图层";
@@ -1612,6 +1613,7 @@
 "imageEditor.action.alphaChannelSelectionSubtract" = "从 %@ 减去当前选区";
 "imageEditor.action.alphaChannelSelectionIntersect" = "%@ 与当前选区相交";
 "imageEditor.action.alphaChannelApplyToMask" = "将 %@ 应用为当前图层蒙版";
+"imageEditor.action.alphaChannelLayer" = "从 %@ 创建图层";
 "imageEditor.action.alphaChannelDuplicate" = "复制 %@";
 "imageEditor.action.alphaChannelInvert" = "反相 %@";
 "imageEditor.action.alphaChannelFillWhite" = "用白色填满 %@";
@@ -1642,6 +1644,7 @@
 "imageEditor.action.alphaChannelSelectionSubtractSelected" = "从选中 Alpha 通道减去当前选区";
 "imageEditor.action.alphaChannelSelectionIntersectSelected" = "选中 Alpha 通道与当前选区相交";
 "imageEditor.action.alphaChannelApplySelectedToMask" = "将选中 Alpha 通道应用为当前图层蒙版";
+"imageEditor.action.alphaChannelLayerSelected" = "从选中 Alpha 通道创建图层";
 "imageEditor.action.alphaChannelDuplicateSelected" = "复制选中 Alpha 通道";
 "imageEditor.action.alphaChannelInvertSelected" = "反相选中 Alpha 通道";
 "imageEditor.action.alphaChannelFillWhiteSelected" = "用白色填满选中 Alpha 通道";
@@ -1685,6 +1688,7 @@
 "imageEditor.status.alphaChannelSelectionSubtracted" = "已从 %@ 减去当前选区";
 "imageEditor.status.alphaChannelSelectionIntersected" = "已让 %@ 与当前选区相交";
 "imageEditor.status.alphaChannelApplyToMask" = "已将 %@ 应用为当前图层蒙版";
+"imageEditor.status.alphaChannelLayer" = "已从 %@ 创建图层";
 "imageEditor.status.alphaChannelDuplicated" = "已复制为 %@";
 "imageEditor.status.alphaChannelInverted" = "已反相 %@";
 "imageEditor.status.alphaChannelFilledWhite" = "已用白色填满 %@";
@@ -1721,6 +1725,7 @@
 "imageEditor.history.alphaChannelSelectionSubtract" = "从 Alpha 通道减去选区";
 "imageEditor.history.alphaChannelSelectionIntersect" = "Alpha 通道与选区相交";
 "imageEditor.history.alphaChannelApplyToMask" = "应用 Alpha 通道为图层蒙版";
+"imageEditor.history.alphaChannelLayer" = "从 Alpha 通道创建图层";
 "imageEditor.history.alphaChannelDuplicate" = "复制 Alpha 通道";
 "imageEditor.history.alphaChannelInvert" = "反相 Alpha 通道";
 "imageEditor.history.alphaChannelFillWhite" = "用白色填满 Alpha 通道";

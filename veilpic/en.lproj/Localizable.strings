@@ -795,6 +795,7 @@
 "imageEditor.layer.background" = "Background";
 "imageEditor.layer.unlockedBackground" = "Layer 0";
 "imageEditor.layer.edit" = "Edit Layer";
+"imageEditor.layer.alphaChannelName" = "%@ Layer";
 "imageEditor.layer.newName" = "Layer %d";
 "imageEditor.layer.groupName" = "Group %d";
 "imageEditor.layer.visibleStampName" = "Visible Stamp";
@@ -1612,6 +1613,7 @@
 "imageEditor.action.alphaChannelSelectionSubtract" = "Subtract current selection from %@";
 "imageEditor.action.alphaChannelSelectionIntersect" = "Intersect %@ with current selection";
 "imageEditor.action.alphaChannelApplyToMask" = "Apply %@ as current layer mask";
+"imageEditor.action.alphaChannelLayer" = "Create layer from %@";
 "imageEditor.action.alphaChannelDuplicate" = "Duplicate %@";
 "imageEditor.action.alphaChannelInvert" = "Invert %@";
 "imageEditor.action.alphaChannelFillWhite" = "Fill %@ with white";
@@ -1642,6 +1644,7 @@
 "imageEditor.action.alphaChannelSelectionSubtractSelected" = "Subtract current selection from selected alpha channel";
 "imageEditor.action.alphaChannelSelectionIntersectSelected" = "Intersect selected alpha channel with current selection";
 "imageEditor.action.alphaChannelApplySelectedToMask" = "Apply selected alpha channel as current layer mask";
+"imageEditor.action.alphaChannelLayerSelected" = "Create layer from selected alpha channel";
 "imageEditor.action.alphaChannelDuplicateSelected" = "Duplicate selected alpha channel";
 "imageEditor.action.alphaChannelInvertSelected" = "Invert selected alpha channel";
 "imageEditor.action.alphaChannelFillWhiteSelected" = "Fill selected alpha channel with white";
@@ -1685,6 +1688,7 @@
 "imageEditor.status.alphaChannelSelectionSubtracted" = "Subtracted current selection from %@";
 "imageEditor.status.alphaChannelSelectionIntersected" = "Intersected %@ with current selection";
 "imageEditor.status.alphaChannelApplyToMask" = "Applied %@ as current layer mask";
+"imageEditor.status.alphaChannelLayer" = "Created layer from %@";
 "imageEditor.status.alphaChannelDuplicated" = "Duplicated as %@";
 "imageEditor.status.alphaChannelInverted" = "Inverted %@";
 "imageEditor.status.alphaChannelFilledWhite" = "Filled %@ with white";
@@ -1721,6 +1725,7 @@
 "imageEditor.history.alphaChannelSelectionSubtract" = "Subtract Selection from Alpha Channel";
 "imageEditor.history.alphaChannelSelectionIntersect" = "Intersect Alpha Channel with Selection";
 "imageEditor.history.alphaChannelApplyToMask" = "Apply Alpha Channel as Layer Mask";
+"imageEditor.history.alphaChannelLayer" = "Create Layer from Alpha Channel";
 "imageEditor.history.alphaChannelDuplicate" = "Duplicate Alpha Channel";
 "imageEditor.history.alphaChannelInvert" = "Invert Alpha Channel";
 "imageEditor.history.alphaChannelFillWhite" = "Fill Alpha Channel with White";

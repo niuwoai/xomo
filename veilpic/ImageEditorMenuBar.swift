@@ -948,6 +948,10 @@ extension ImageEditorView {
         }
         .disabled(!viewModel.canApplySelectedAlphaChannelToLayerMask)
         Divider()
+        Button(L10n.text("imageEditor.action.alphaChannelLayerSelected")) {
+            viewModel.createLayerFromSelectedAlphaChannel()
+        }
+        .disabled(!viewModel.canCreateLayerFromSelectedAlphaChannel)
         Button(L10n.text("imageEditor.action.alphaChannelDuplicateSelected")) {
             viewModel.duplicateSelectedAlphaChannel()
         }

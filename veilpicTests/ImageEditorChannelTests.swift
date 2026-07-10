@@ -879,6 +879,41 @@ struct ImageEditorChannelTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelMove"))
     }
 
+    @Test func alphaChannelCanCreateGrayscalePixelLayer() async throws {
+        let viewModel = ImageEditorViewModel(sourceName: "alpha-layer.png", image: splitChannelImage()) { _ in }
+        let layerCount = viewModel.document.layers.count
+        let channel = ImageEditorAlphaChannel(
+            name: "Stencil",
+            mask: ImageEditorSelectionMask(width: 2, height: 1, alpha: [0, 255])
+        )
+        viewModel.document.alphaChannels = [channel]
+        viewModel.selectAlphaChannel(channel.id)
+
+        #expect(viewModel.canCreateLayerFromSelectedAlphaChannel)
+        viewModel.createLayerFromSelectedAlphaChannel()
+
+        #expect(viewModel.document.layers.count == layerCount + 1)
+        let layer = try #require(viewModel.document.selectedLayer)
+        #expect(layer.name == L10n.format("imageEditor.layer.alphaChannelName", channel.name))
+        #expect(!layer.isGroup)
+        #expect(!layer.isAdjustment)
+        #expect(!layer.isFilter)
+        #expect(viewModel.document.selectedLayerIDs == [layer.id])
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.alphaChannelLayer"))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.alphaChannelLayer", channel.name))
+
+        let black = try #require(layer.image.color(at: CGPoint(x: 0.5, y: 0.5))?.usingColorSpace(.deviceRGB))
+        let white = try #require(layer.image.color(at: CGPoint(x: 1.5, y: 0.5))?.usingColorSpace(.deviceRGB))
+        #expect(approximately(black.redComponent, 0, tolerance: 0.02))
+        #expect(approximately(black.greenComponent, 0, tolerance: 0.02))
+        #expect(approximately(black.blueComponent, 0, tolerance: 0.02))
+        #expect(approximately(black.alphaComponent, 1, tolerance: 0.02))
+        #expect(approximately(white.redComponent, 1, tolerance: 0.02))
+        #expect(approximately(white.greenComponent, 1, tolerance: 0.02))
+        #expect(approximately(white.blueComponent, 1, tolerance: 0.02))
+        #expect(approximately(white.alphaComponent, 1, tolerance: 0.02))
+    }
+
     @Test func selectedLayerTransparencyCanSaveAsAlphaChannel() async throws {
         let viewModel = ImageEditorViewModel(sourceName: "layer-alpha.png", image: alphaTestImage()) { _ in }
 

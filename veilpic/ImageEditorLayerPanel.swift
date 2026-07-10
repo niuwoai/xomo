@@ -310,6 +310,16 @@ extension ImageEditorView {
             .help(L10n.format("imageEditor.action.alphaChannelApplyToMask", channel.name))
 
             Button {
+                viewModel.createLayerFromAlphaChannel(channel.id)
+            } label: {
+                Image(systemName: "square.stack.3d.up")
+                    .font(.system(size: 12, weight: .semibold))
+                    .frame(width: 24, height: 28)
+            }
+            .buttonStyle(EditorIconButtonStyle(isSelected: false))
+            .help(L10n.format("imageEditor.action.alphaChannelLayer", channel.name))
+
+            Button {
                 viewModel.duplicateAlphaChannel(channel.id)
             } label: {
                 Image(systemName: "doc.on.doc")

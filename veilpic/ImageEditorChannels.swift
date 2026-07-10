@@ -123,6 +123,10 @@ extension ImageEditorViewModel {
         selectedAlphaChannel != nil && canApplyAlphaChannelToSelectedLayerMask
     }
 
+    var canCreateLayerFromSelectedAlphaChannel: Bool {
+        selectedAlphaChannel != nil
+    }
+
     var canDuplicateSelectedAlphaChannel: Bool {
         selectedAlphaChannel != nil
     }
@@ -388,6 +392,11 @@ extension ImageEditorViewModel {
     func applySelectedAlphaChannelToSelectedLayerMask() {
         guard let selectedAlphaChannelID else { return }
         applyAlphaChannelToSelectedLayerMask(selectedAlphaChannelID)
+    }
+
+    func createLayerFromSelectedAlphaChannel() {
+        guard let selectedAlphaChannelID else { return }
+        createLayerFromAlphaChannel(selectedAlphaChannelID)
     }
 
     func duplicateSelectedAlphaChannel() {
@@ -982,6 +991,28 @@ extension ImageEditorViewModel {
         statusText = L10n.format("imageEditor.status.alphaChannelApplyToMask", channel.name)
     }
 
+    func createLayerFromAlphaChannel(_ id: UUID) {
+        guard let channel = document.alphaChannels.first(where: { $0.id == id }) else { return }
+
+        var layer = ImageEditorLayer.blank(
+            name: L10n.format("imageEditor.layer.alphaChannelName", channel.name),
+            size: document.canvasSize
+        )
+        layer.image = channel.mask.grayscalePreviewImage(targetSize: document.canvasSize)
+        let insertionContext = alphaChannelLayerInsertionContext()
+        layer.groupID = insertionContext.parentGroupID
+
+        pushUndo()
+        document.layers.insert(layer, at: insertionContext.index)
+        expandAlphaChannelLayerParentIfNeeded(insertionContext.parentGroupID)
+        document.selectedLayerID = layer.id
+        document.selectedLayerIDs = [layer.id]
+        isEditingLayerMask = false
+        selectedAlphaChannelID = id
+        appendHistory(L10n.text("imageEditor.history.alphaChannelLayer"))
+        statusText = L10n.format("imageEditor.status.alphaChannelLayer", channel.name)
+    }
+
     func loadSelectionFromAlphaChannel(_ id: UUID) {
         guard let channel = document.alphaChannels.first(where: { $0.id == id }),
               let bounds = channel.mask.selectedBounds(in: document.canvasSize)
@@ -1024,6 +1055,36 @@ extension ImageEditorViewModel {
     private var selectedAlphaChannelIndex: Int? {
         guard let selectedAlphaChannelID else { return nil }
         return document.alphaChannels.firstIndex { $0.id == selectedAlphaChannelID }
+    }
+
+    private struct AlphaChannelLayerInsertionContext {
+        var parentGroupID: UUID?
+        var index: Int
+    }
+
+    private func alphaChannelLayerInsertionContext() -> AlphaChannelLayerInsertionContext {
+        guard let selectedLayerID = document.selectedLayerID,
+              let selectedIndex = document.layers.firstIndex(where: { $0.id == selectedLayerID })
+        else {
+            return AlphaChannelLayerInsertionContext(parentGroupID: nil, index: document.layers.count)
+        }
+
+        let selectedLayer = document.layers[selectedIndex]
+        if selectedLayer.isGroup {
+            return AlphaChannelLayerInsertionContext(parentGroupID: selectedLayer.id, index: selectedIndex)
+        }
+
+        return AlphaChannelLayerInsertionContext(
+            parentGroupID: selectedLayer.groupID,
+            index: min(selectedIndex + 1, document.layers.count)
+        )
+    }
+
+    private func expandAlphaChannelLayerParentIfNeeded(_ groupID: UUID?) {
+        guard let groupID,
+              let groupIndex = document.layers.firstIndex(where: { $0.id == groupID && $0.isGroup })
+        else { return }
+        document.layers[groupIndex].isGroupExpanded = true
     }
 
     private func uniqueAlphaChannelName(_ baseName: String) -> String {
