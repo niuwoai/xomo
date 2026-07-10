@@ -147,6 +147,134 @@ struct ImageEditorVectorLayerTests {
         #expect(try #require(viewModel.document.selectedLayer?.shapeContent).kind == .rectangle)
     }
 
+    @Test func imageEditorBatchUpdatesSelectedTextLayersAndSkipsLockedOrIneligibleLayers() async throws {
+        let canvasSize = NSSize(width: 140, height: 90)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let pixelLayerID = try #require(viewModel.document.selectedLayerID)
+
+        viewModel.textValue = "Alpha"
+        viewModel.textSize = 18
+        viewModel.foregroundColor = .white
+        viewModel.addText(at: CGPoint(x: 10, y: 12))
+        let firstID = try #require(viewModel.document.selectedLayerID)
+
+        viewModel.textValue = "Beta"
+        viewModel.textSize = 20
+        viewModel.foregroundColor = .systemYellow
+        viewModel.addText(at: CGPoint(x: 42, y: 24))
+        let secondID = try #require(viewModel.document.selectedLayerID)
+
+        viewModel.textValue = "Locked"
+        viewModel.textSize = 14
+        viewModel.addText(at: CGPoint(x: 70, y: 48))
+        let lockedID = try #require(viewModel.document.selectedLayerID)
+        let lockedIndex = try #require(viewModel.document.layers.firstIndex { $0.id == lockedID })
+        viewModel.document.layers[lockedIndex].locksPixels = true
+
+        let firstBefore = try #require(viewModel.document.layers.first { $0.id == firstID }?.textContent)
+        let secondBefore = try #require(viewModel.document.layers.first { $0.id == secondID }?.textContent)
+        let lockedBefore = try #require(viewModel.document.layers.first { $0.id == lockedID }?.textContent)
+        let pixelBefore = try #require(viewModel.document.layers.first { $0.id == pixelLayerID }?.image.qingtuPNGData())
+
+        viewModel.document.selectedLayerID = firstID
+        viewModel.document.selectedLayerIDs = [firstID, secondID, lockedID, pixelLayerID]
+        viewModel.textValue = "Shared"
+        viewModel.textSize = 32
+        viewModel.textBold = true
+        viewModel.textItalic = true
+        viewModel.textCharacterSpacing = 3
+        viewModel.textLineSpacing = 7
+        viewModel.textBoxWidth = 88
+        viewModel.selectedTextAlignment = .center
+        viewModel.foregroundColor = .systemPink
+        viewModel.updateSelectedTextLayer()
+
+        let firstAfter = try #require(viewModel.document.layers.first { $0.id == firstID }?.textContent)
+        let secondAfter = try #require(viewModel.document.layers.first { $0.id == secondID }?.textContent)
+        let lockedAfter = try #require(viewModel.document.layers.first { $0.id == lockedID }?.textContent)
+
+        #expect(firstAfter.text == firstBefore.text)
+        #expect(secondAfter.text == secondBefore.text)
+        #expect(firstAfter.fontSize == 32)
+        #expect(secondAfter.fontSize == 32)
+        #expect(firstAfter.isBold && secondAfter.isBold)
+        #expect(firstAfter.isItalic && secondAfter.isItalic)
+        #expect(firstAfter.characterSpacing == 3)
+        #expect(secondAfter.lineSpacing == 7)
+        #expect(firstAfter.boxWidth == 88)
+        #expect(secondAfter.alignment == .center)
+        #expect(lockedAfter.text == lockedBefore.text)
+        #expect(lockedAfter.fontSize == lockedBefore.fontSize)
+        #expect(viewModel.document.layers.first { $0.id == pixelLayerID }?.image.qingtuPNGData() == pixelBefore)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerTextUpdateSelected"))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerTextUpdatedSelected", 2))
+
+        viewModel.undo()
+        #expect(try #require(viewModel.document.layers.first { $0.id == firstID }?.textContent).fontSize == firstBefore.fontSize)
+        #expect(try #require(viewModel.document.layers.first { $0.id == secondID }?.textContent).fontSize == secondBefore.fontSize)
+    }
+
+    @Test func imageEditorBatchUpdatesSelectedShapeLayersAndSkipsLockedOrIneligibleLayers() async throws {
+        let canvasSize = NSSize(width: 140, height: 90)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let pixelLayerID = try #require(viewModel.document.selectedLayerID)
+
+        viewModel.foregroundColor = .systemRed
+        viewModel.brushSize = 10
+        viewModel.opacity = 0.5
+        viewModel.drawShape(from: CGPoint(x: 10, y: 10), to: CGPoint(x: 48, y: 40), ellipse: false)
+        let rectangleID = try #require(viewModel.document.selectedLayerID)
+
+        viewModel.foregroundColor = .systemBlue
+        viewModel.brushSize = 12
+        viewModel.opacity = 0.6
+        viewModel.drawShape(from: CGPoint(x: 54, y: 12), to: CGPoint(x: 96, y: 50), ellipse: true)
+        let ellipseID = try #require(viewModel.document.selectedLayerID)
+
+        viewModel.foregroundColor = .systemOrange
+        viewModel.drawShape(from: CGPoint(x: 22, y: 52), to: CGPoint(x: 62, y: 82), ellipse: false)
+        let lockedID = try #require(viewModel.document.selectedLayerID)
+        let lockedIndex = try #require(viewModel.document.layers.firstIndex { $0.id == lockedID })
+        viewModel.document.layers[lockedIndex].locksPixels = true
+
+        let rectangleBefore = try #require(viewModel.document.layers.first { $0.id == rectangleID }?.shapeContent)
+        let ellipseBefore = try #require(viewModel.document.layers.first { $0.id == ellipseID }?.shapeContent)
+        let lockedBefore = try #require(viewModel.document.layers.first { $0.id == lockedID }?.shapeContent)
+        let pixelBefore = try #require(viewModel.document.layers.first { $0.id == pixelLayerID }?.image.qingtuPNGData())
+
+        viewModel.document.selectedLayerID = rectangleID
+        viewModel.document.selectedLayerIDs = [rectangleID, ellipseID, lockedID, pixelLayerID]
+        viewModel.foregroundColor = .systemGreen
+        viewModel.brushSize = 28
+        viewModel.opacity = 0.85
+        viewModel.updateSelectedShapeLayer()
+
+        let rectangleAfter = try #require(viewModel.document.layers.first { $0.id == rectangleID }?.shapeContent)
+        let ellipseAfter = try #require(viewModel.document.layers.first { $0.id == ellipseID }?.shapeContent)
+        let lockedAfter = try #require(viewModel.document.layers.first { $0.id == lockedID }?.shapeContent)
+        let rectangleColor = rectangleAfter.fillColor.usingColorSpace(.deviceRGB)
+        let ellipseColor = ellipseAfter.fillColor.usingColorSpace(.deviceRGB)
+
+        #expect(rectangleAfter.kind == rectangleBefore.kind)
+        #expect(ellipseAfter.kind == ellipseBefore.kind)
+        #expect(rectangleColor?.greenComponent ?? 0 > 0.45)
+        #expect(ellipseColor?.greenComponent ?? 0 > 0.45)
+        #expect(rectangleAfter.strokeWidth > rectangleBefore.strokeWidth)
+        #expect(ellipseAfter.strokeWidth > ellipseBefore.strokeWidth)
+        #expect(abs(rectangleAfter.fillOpacity - 0.85) < 0.001)
+        #expect(abs(ellipseAfter.strokeOpacity - 0.85) < 0.001)
+        #expect(lockedAfter.strokeWidth == lockedBefore.strokeWidth)
+        #expect(viewModel.document.layers.first { $0.id == pixelLayerID }?.image.qingtuPNGData() == pixelBefore)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerShapeUpdateSelected"))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerShapeUpdatedSelected", 2))
+
+        viewModel.undo()
+        #expect(try #require(viewModel.document.layers.first { $0.id == rectangleID }?.shapeContent).strokeWidth == rectangleBefore.strokeWidth)
+        #expect(try #require(viewModel.document.layers.first { $0.id == ellipseID }?.shapeContent).strokeWidth == ellipseBefore.strokeWidth)
+    }
+
     @Test func imageEditorPenToolCreatesEditablePathShapeLayer() async throws {
         let canvasSize = NSSize(width: 140, height: 100)
         let image = testBitmapImage(size: canvasSize, background: .black)

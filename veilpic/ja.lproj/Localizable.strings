@@ -1084,8 +1084,10 @@
 "imageEditor.history.layerSmartFilterClear" = "スマートフィルターをクリア";
 "imageEditor.history.layerTextNew" = "文字レイヤーを作成";
 "imageEditor.history.layerTextUpdate" = "文字レイヤーを更新";
+"imageEditor.history.layerTextUpdateSelected" = "選択文字レイヤーを更新";
 "imageEditor.history.layerShapeNew" = "シェイプレイヤーを作成";
 "imageEditor.history.layerShapeUpdate" = "シェイプレイヤーを更新";
+"imageEditor.history.layerShapeUpdateSelected" = "選択シェイプレイヤーを更新";
 "imageEditor.history.pathAnchorMove" = "パスアンカーを移動";
 "imageEditor.history.pathAnchorInsert" = "パスアンカーを挿入";
 "imageEditor.history.pathAnchorDelete" = "パスアンカーを削除";
@@ -1424,6 +1426,8 @@
 "imageEditor.status.layerSolidColorFillUpdatedSelected" = "%d個のべた塗りレイヤーを更新しました";
 "imageEditor.status.layerPatternFillUpdatedSelected" = "%d個のパターン塗りレイヤーを更新しました";
 "imageEditor.status.layerGradientFillUpdatedSelected" = "%d個のグラデーション塗りレイヤーを更新しました";
+"imageEditor.status.layerTextUpdatedSelected" = "%d個の文字レイヤーを更新しました";
+"imageEditor.status.layerShapeUpdatedSelected" = "%d個のシェイプレイヤーを更新しました";
 "imageEditor.status.globalLight" = "グローバルライト角度を %d° に設定しました";
 "imageEditor.status.layerLinkNeedsSelection" = "リンクするには 2 つ以上のレイヤーを選択してください";
 "imageEditor.status.layerNoLinks" = "選択中のレイヤーにリンクはありません";

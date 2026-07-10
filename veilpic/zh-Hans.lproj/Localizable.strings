@@ -1084,8 +1084,10 @@
 "imageEditor.history.layerSmartFilterClear" = "清空智能滤镜";
 "imageEditor.history.layerTextNew" = "新建文字图层";
 "imageEditor.history.layerTextUpdate" = "更新文字图层";
+"imageEditor.history.layerTextUpdateSelected" = "更新所选文字图层";
 "imageEditor.history.layerShapeNew" = "新建形状图层";
 "imageEditor.history.layerShapeUpdate" = "更新形状图层";
+"imageEditor.history.layerShapeUpdateSelected" = "更新所选形状图层";
 "imageEditor.history.pathAnchorMove" = "移动路径锚点";
 "imageEditor.history.pathAnchorInsert" = "插入路径锚点";
 "imageEditor.history.pathAnchorDelete" = "删除路径锚点";
@@ -1424,6 +1426,8 @@
 "imageEditor.status.layerSolidColorFillUpdatedSelected" = "已更新 %d 个纯色填充图层";
 "imageEditor.status.layerPatternFillUpdatedSelected" = "已更新 %d 个图案填充图层";
 "imageEditor.status.layerGradientFillUpdatedSelected" = "已更新 %d 个渐变填充图层";
+"imageEditor.status.layerTextUpdatedSelected" = "已更新 %d 个文字图层";
+"imageEditor.status.layerShapeUpdatedSelected" = "已更新 %d 个形状图层";
 "imageEditor.status.globalLight" = "全局光角度已设为 %d°";
 "imageEditor.status.layerLinkNeedsSelection" = "请至少选择两个图层进行链接";
 "imageEditor.status.layerNoLinks" = "所选图层没有链接关系";

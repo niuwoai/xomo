@@ -1084,8 +1084,10 @@
 "imageEditor.history.layerSmartFilterClear" = "Clear Smart Filters";
 "imageEditor.history.layerTextNew" = "New Text Layer";
 "imageEditor.history.layerTextUpdate" = "Update Text Layer";
+"imageEditor.history.layerTextUpdateSelected" = "Update Selected Text Layers";
 "imageEditor.history.layerShapeNew" = "New Shape Layer";
 "imageEditor.history.layerShapeUpdate" = "Update Shape Layer";
+"imageEditor.history.layerShapeUpdateSelected" = "Update Selected Shape Layers";
 "imageEditor.history.pathAnchorMove" = "Move Path Anchor";
 "imageEditor.history.pathAnchorInsert" = "Insert Path Anchor";
 "imageEditor.history.pathAnchorDelete" = "Delete Path Anchor";
@@ -1424,6 +1426,8 @@
 "imageEditor.status.layerSolidColorFillUpdatedSelected" = "Updated %d solid color fill layers";
 "imageEditor.status.layerPatternFillUpdatedSelected" = "Updated %d pattern fill layers";
 "imageEditor.status.layerGradientFillUpdatedSelected" = "Updated %d gradient fill layers";
+"imageEditor.status.layerTextUpdatedSelected" = "Updated %d text layers";
+"imageEditor.status.layerShapeUpdatedSelected" = "Updated %d shape layers";
 "imageEditor.status.globalLight" = "Global light angle set to %d°";
 "imageEditor.status.layerLinkNeedsSelection" = "Select at least two layers to link";
 "imageEditor.status.layerNoLinks" = "Selected layers are not linked";

@@ -2519,33 +2519,44 @@ final class ImageEditorViewModel: ObservableObject {
             statusText = L10n.text("imageEditor.status.textEmpty")
             return
         }
-        guard let index = document.selectedLayerIndex,
-              var content = document.layers[index].textContent,
-              !document.isEffectivelyPixelsLocked(document.layers[index])
-        else {
+        let indices = selectedLayerIndices.filter { document.layers[$0].isText && !document.isEffectivelyPixelsLocked(document.layers[$0]) }
+        guard !indices.isEmpty else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
+        let updatesTextContent = indices.count == 1
+        let color = foregroundColor
+        let fontSize = CGFloat(clampedTextSize(textSize))
+        let characterSpacing = CGFloat(clampedTextCharacterSpacing(textCharacterSpacing))
+        let lineSpacing = CGFloat(clampedTextLineSpacing(textLineSpacing))
+        let boxWidth = CGFloat(clampedTextBoxWidth(textBoxWidth))
+        let alignment = selectedTextAlignment
         pushUndo()
-        content.text = text
-        content.color = foregroundColor
-        content.fontSize = CGFloat(clampedTextSize(textSize))
-        content.point = CGPoint(x: ImageEditorTextContent.drawingPadding, y: ImageEditorTextContent.drawingPadding)
-        content.isBold = textBold
-        content.isItalic = textItalic
-        content.characterSpacing = CGFloat(clampedTextCharacterSpacing(textCharacterSpacing))
-        content.lineSpacing = CGFloat(clampedTextLineSpacing(textLineSpacing))
-        content.boxWidth = CGFloat(clampedTextBoxWidth(textBoxWidth))
-        content.alignment = selectedTextAlignment
-        let layerSize = content.layerSize()
-        if let mask = document.layers[index].mask, mask.size != layerSize {
-            document.layers[index].mask = mask.resized(to: layerSize)
+        for index in indices {
+            guard var content = document.layers[index].textContent else { continue }
+            if updatesTextContent {
+                content.text = text
+            }
+            content.color = color
+            content.fontSize = fontSize
+            content.point = CGPoint(x: ImageEditorTextContent.drawingPadding, y: ImageEditorTextContent.drawingPadding)
+            content.isBold = textBold
+            content.isItalic = textItalic
+            content.characterSpacing = characterSpacing
+            content.lineSpacing = lineSpacing
+            content.boxWidth = boxWidth
+            content.alignment = alignment
+            let layerSize = content.layerSize()
+            if let mask = document.layers[index].mask, mask.size != layerSize {
+                document.layers[index].mask = mask.resized(to: layerSize)
+            }
+            document.layers[index].image = NSImage.transparent(size: layerSize)
+            document.layers[index].frame.size = layerSize
+            document.layers[index].kind = .text(content)
+            document.layers[index].name = L10n.format("imageEditor.layer.textName", textLayerNameFragment(content.text))
         }
-        document.layers[index].image = NSImage.transparent(size: layerSize)
-        document.layers[index].frame.size = layerSize
-        document.layers[index].kind = .text(content)
-        document.layers[index].name = L10n.format("imageEditor.layer.textName", textLayerNameFragment(text))
-        appendHistory(L10n.text("imageEditor.history.layerTextUpdate"))
+        appendHistory(L10n.text(indices.count == 1 ? "imageEditor.history.layerTextUpdate" : "imageEditor.history.layerTextUpdateSelected"))
+        if indices.count > 1 { statusText = L10n.format("imageEditor.status.layerTextUpdatedSelected", indices.count) }
     }
 
     func drawBrush(points: [CGPoint], erase: Bool = false) {
@@ -2793,22 +2804,28 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func updateSelectedShapeLayer() {
-        guard let index = document.selectedLayerIndex,
-              var shapeContent = document.layers[index].shapeContent,
-              !document.isEffectivelyPixelsLocked(document.layers[index])
-        else {
+        let indices = selectedLayerIndices.filter { document.layers[$0].isShape && !document.isEffectivelyPixelsLocked(document.layers[$0]) }
+        guard !indices.isEmpty else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
+        let fillColor = foregroundColor
+        let fillOpacity = opacity
+        let strokeOpacity = min(1, max(0.15, opacity))
+        let strokeWidth = max(1, min(96, brushSize * 0.35))
         pushUndo()
-        shapeContent.fillColor = foregroundColor
-        shapeContent.fillOpacity = opacity
-        shapeContent.strokeColor = foregroundColor
-        shapeContent.strokeOpacity = min(1, max(0.15, opacity))
-        shapeContent.strokeWidth = max(1, min(96, brushSize * 0.35))
-        document.layers[index].kind = .shape(shapeContent.normalized(size: document.layers[index].image.size))
-        document.layers[index].name = L10n.format("imageEditor.layer.shapeName", shapeContent.kind.title)
-        appendHistory(L10n.text("imageEditor.history.layerShapeUpdate"))
+        for index in indices {
+            guard var shapeContent = document.layers[index].shapeContent else { continue }
+            shapeContent.fillColor = fillColor
+            shapeContent.fillOpacity = fillOpacity
+            shapeContent.strokeColor = fillColor
+            shapeContent.strokeOpacity = strokeOpacity
+            shapeContent.strokeWidth = strokeWidth
+            document.layers[index].kind = .shape(shapeContent.normalized(size: document.layers[index].image.size))
+            document.layers[index].name = L10n.format("imageEditor.layer.shapeName", shapeContent.kind.title)
+        }
+        appendHistory(L10n.text(indices.count == 1 ? "imageEditor.history.layerShapeUpdate" : "imageEditor.history.layerShapeUpdateSelected"))
+        if indices.count > 1 { statusText = L10n.format("imageEditor.status.layerShapeUpdatedSelected", indices.count) }
     }
 
     func sampleColor(at point: CGPoint) {
