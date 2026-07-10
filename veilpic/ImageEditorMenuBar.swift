@@ -1293,6 +1293,31 @@ extension ImageEditorView {
                 viewModel.selectFilter(.pixelate)
             }
         }
+        Menu(L10n.text("imageEditor.menu.filter.stylize")) {
+            Button(ImageEditorFilter.emboss.title) {
+                viewModel.selectFilter(.emboss)
+            }
+            Button(ImageEditorFilter.findEdges.title) {
+                viewModel.selectFilter(.findEdges)
+            }
+        }
+        Menu(L10n.text("imageEditor.menu.filter.distort")) {
+            Button(ImageEditorFilter.offset.title) {
+                viewModel.selectFilter(.offset)
+            }
+            Button(ImageEditorFilter.wave.title) {
+                viewModel.selectFilter(.wave)
+            }
+            Button(ImageEditorFilter.ripple.title) {
+                viewModel.selectFilter(.ripple)
+            }
+            Button(ImageEditorFilter.pinch.title) {
+                viewModel.selectFilter(.pinch)
+            }
+            Button(ImageEditorFilter.spherize.title) {
+                viewModel.selectFilter(.spherize)
+            }
+        }
         Menu(L10n.text("imageEditor.menu.filter.other")) {
             Button(ImageEditorFilter.highPass.title) {
                 viewModel.selectFilter(.highPass)

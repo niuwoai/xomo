@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.425.0 - 2026-07-10
+
+### Added
+- 图片编辑器 Filter 菜单继续补齐 Photoshop 7 风格分类入口：Stylize 提供 Emboss / Find Edges，Distort 提供 Offset / Wave / Ripple / Pinch / Spherize。
+
 ## 1.424.0 - 2026-07-10
 
 ### Added
