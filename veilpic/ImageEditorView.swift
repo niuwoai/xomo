@@ -1189,6 +1189,14 @@ struct ImageEditorView: View {
         }
     }
 
+    private var selectedLayerSatinColorBinding: Binding<Color> {
+        Binding {
+            Color(nsColor: viewModel.selectedLayerSatinColor)
+        } set: { value in
+            viewModel.setSelectedLayerSatinColor(NSColor(value))
+        }
+    }
+
     private var selectedLayerStrokePositionBinding: Binding<ImageEditorStrokePosition> {
         Binding {
             viewModel.selectedLayerStrokePosition
@@ -3157,13 +3165,9 @@ struct ImageEditorView: View {
                     Text(L10n.text("imageEditor.properties.satinColor"))
                         .font(.system(size: 10, weight: .medium))
                         .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
-                    RoundedRectangle(cornerRadius: 4)
-                        .fill(Color(nsColor: viewModel.selectedLayerSatinColor))
-                        .frame(width: 20, height: 14)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 4)
-                                .stroke(Color(nsColor: ImageEditorTheme.border), lineWidth: 1)
-                        )
+                    ColorPicker("", selection: selectedLayerSatinColorBinding, supportsOpacity: false)
+                        .labelsHidden()
+                        .frame(width: 24, height: 18)
                     Spacer(minLength: 4)
                     Button(L10n.text("imageEditor.action.satinColorFromForeground")) {
                         viewModel.setSelectedLayerSatinColorFromForeground()

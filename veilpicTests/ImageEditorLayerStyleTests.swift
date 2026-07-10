@@ -1079,8 +1079,7 @@ struct ImageEditorLayerStyleTests {
         let layerPixelsBeforeStyle = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
         let compositedBeforeStyle = try #require(viewModel.currentImage.qingtuPNGData())
 
-        viewModel.foregroundColor = .systemRed
-        viewModel.setSelectedLayerSatinColorFromForeground()
+        viewModel.setSelectedLayerSatinColor(.systemRed)
         viewModel.foregroundColor = .black
         viewModel.setSelectedLayerSatinOpacity(0.8)
         viewModel.setSelectedLayerSatinDistance(12)

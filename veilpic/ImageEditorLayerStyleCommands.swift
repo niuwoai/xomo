@@ -911,6 +911,13 @@ extension ImageEditorViewModel {
         }
     }
 
+    func setSelectedLayerSatinColor(_ color: NSColor) {
+        updateSelectedLayerStyle {
+            $0.satinEnabled = true
+            $0.satinColor = color.usingColorSpace(.sRGB) ?? color
+        }
+    }
+
     func setSelectedLayerSatinDistance(_ distance: Double) {
         let defaultColor = satinColor()
         updateSelectedLayerStyle {
