@@ -1043,6 +1043,8 @@
 "imageEditor.history.layerMaskDisableSelected" = "停用所选图层蒙版";
 "imageEditor.history.layerMaskLink" = "链接图层蒙版";
 "imageEditor.history.layerMaskUnlink" = "取消链接图层蒙版";
+"imageEditor.history.layerMaskLinkSelected" = "链接所选图层蒙版";
+"imageEditor.history.layerMaskUnlinkSelected" = "取消链接所选图层蒙版";
 "imageEditor.history.layerMaskDelete" = "删除图层蒙版";
 "imageEditor.history.layerMaskDeleteSelected" = "删除所选图层蒙版";
 "imageEditor.history.layerMaskHide" = "蒙版隐藏";
@@ -1335,6 +1337,8 @@
 "imageEditor.status.layerMaskDisabledSelected" = "已停用 %d 个图层蒙版";
 "imageEditor.status.layerMaskLinked" = "当前图层蒙版会跟随图层内容移动";
 "imageEditor.status.layerMaskUnlinked" = "当前图层蒙版已独立于图层内容移动";
+"imageEditor.status.layerMaskLinkedSelected" = "已将 %d 个图层蒙版链接到图层内容";
+"imageEditor.status.layerMaskUnlinkedSelected" = "已将 %d 个图层蒙版取消链接";
 "imageEditor.status.layerMaskSelection" = "已从图层蒙版载入选区";
 "imageEditor.status.layerMaskSelectionFailed" = "请先选择带图层蒙版的图层";
 "imageEditor.status.vectorMaskSelection" = "已从矢量蒙版载入选区";

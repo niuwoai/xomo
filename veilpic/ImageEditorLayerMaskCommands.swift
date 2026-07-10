@@ -84,10 +84,7 @@ extension ImageEditorViewModel {
     }
 
     var canToggleLayerMaskLinked: Bool {
-        guard selectedLayerCount == 1,
-              let layer = document.selectedLayer
-        else { return false }
-        return !document.isEffectivelyLocked(layer) && (layer.mask != nil || layer.vectorMask != nil)
+        !layerMaskToggleLinkedIndices().isEmpty
     }
 
     var canToggleVectorMaskEnabled: Bool {
@@ -441,23 +438,38 @@ extension ImageEditorViewModel {
     }
 
     func toggleLayerMaskLinked() {
-        guard canToggleLayerMaskLinked,
-              let index = document.selectedLayerIndex
-        else {
+        let indices = layerMaskToggleLinkedIndices()
+        guard !indices.isEmpty else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
 
+        let linksMasks = !indices.contains { document.layers[$0].isMaskLinked }
+        let changedIndices = indices.filter { document.layers[$0].isMaskLinked != linksMasks }
         pushUndo()
-        document.layers[index].isMaskLinked.toggle()
-        appendHistory(
-            document.layers[index].isMaskLinked
-                ? L10n.text("imageEditor.history.layerMaskLink")
-                : L10n.text("imageEditor.history.layerMaskUnlink")
-        )
-        statusText = document.layers[index].isMaskLinked
-            ? L10n.text("imageEditor.status.layerMaskLinked")
-            : L10n.text("imageEditor.status.layerMaskUnlinked")
+        for index in changedIndices {
+            document.layers[index].isMaskLinked = linksMasks
+        }
+
+        if indices.count == 1 {
+            appendHistory(
+                linksMasks
+                    ? L10n.text("imageEditor.history.layerMaskLink")
+                    : L10n.text("imageEditor.history.layerMaskUnlink")
+            )
+            statusText = linksMasks
+                ? L10n.text("imageEditor.status.layerMaskLinked")
+                : L10n.text("imageEditor.status.layerMaskUnlinked")
+        } else {
+            appendHistory(
+                linksMasks
+                    ? L10n.text("imageEditor.history.layerMaskLinkSelected")
+                    : L10n.text("imageEditor.history.layerMaskUnlinkSelected")
+            )
+            statusText = linksMasks
+                ? L10n.format("imageEditor.status.layerMaskLinkedSelected", changedIndices.count)
+                : L10n.format("imageEditor.status.layerMaskUnlinkedSelected", changedIndices.count)
+        }
     }
 
     func toggleVectorMaskEnabled() {
@@ -526,6 +538,18 @@ extension ImageEditorViewModel {
             return selectedIDs.contains(layer.id)
                 && !document.isEffectivelyLocked(layer)
                 && layer.mask != nil
+        }
+    }
+
+    private func layerMaskToggleLinkedIndices() -> [Int] {
+        let selectedIDs = document.selectedLayerIDs.isEmpty
+            ? Set(document.selectedLayerID.map { [$0] } ?? [])
+            : document.selectedLayerIDs
+        return document.layers.indices.filter { index in
+            let layer = document.layers[index]
+            return selectedIDs.contains(layer.id)
+                && !document.isEffectivelyLocked(layer)
+                && (layer.mask != nil || layer.vectorMask != nil)
         }
     }
 

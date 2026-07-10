@@ -1043,6 +1043,8 @@
 "imageEditor.history.layerMaskDisableSelected" = "選択レイヤーマスクを無効化";
 "imageEditor.history.layerMaskLink" = "レイヤーマスクをリンク";
 "imageEditor.history.layerMaskUnlink" = "レイヤーマスクのリンクを解除";
+"imageEditor.history.layerMaskLinkSelected" = "選択レイヤーマスクをリンク";
+"imageEditor.history.layerMaskUnlinkSelected" = "選択レイヤーマスクのリンクを解除";
 "imageEditor.history.layerMaskDelete" = "レイヤーマスクを削除";
 "imageEditor.history.layerMaskDeleteSelected" = "選択レイヤーマスクを削除";
 "imageEditor.history.layerMaskHide" = "マスクで隠す";
@@ -1335,6 +1337,8 @@
 "imageEditor.status.layerMaskDisabledSelected" = "%d個のレイヤーマスクを無効にしました";
 "imageEditor.status.layerMaskLinked" = "現在のレイヤーマスクはレイヤー内容に追従して移動します";
 "imageEditor.status.layerMaskUnlinked" = "現在のレイヤーマスクはレイヤー内容と独立して移動します";
+"imageEditor.status.layerMaskLinkedSelected" = "%d個のレイヤーマスクをレイヤー内容にリンクしました";
+"imageEditor.status.layerMaskUnlinkedSelected" = "%d個のレイヤーマスクのリンクを解除しました";
 "imageEditor.status.layerMaskSelection" = "レイヤーマスクから選択範囲を読み込みました";
 "imageEditor.status.layerMaskSelectionFailed" = "レイヤーマスク付きのレイヤーを選択してください";
 "imageEditor.status.vectorMaskSelection" = "ベクターマスクから選択範囲を読み込みました";

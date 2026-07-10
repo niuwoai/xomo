@@ -2865,6 +2865,75 @@ struct veilpicTests {
     }
 
     @MainActor
+    @Test func imageEditorTogglesMultipleSelectedLayerMaskLinksAndSkipsLockedLayers() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        var rasterLayer = ImageEditorLayer.blank(name: "Raster Masked", size: canvasSize)
+        rasterLayer.mask = NSImage.opaqueMask(size: canvasSize)
+
+        var vectorLayer = ImageEditorLayer.blank(name: "Vector Masked", size: canvasSize)
+        let anchors = [
+            ImageEditorPathAnchor(point: CGPoint(x: 20, y: 12)),
+            ImageEditorPathAnchor(point: CGPoint(x: 60, y: 12)),
+            ImageEditorPathAnchor(point: CGPoint(x: 60, y: 48)),
+            ImageEditorPathAnchor(point: CGPoint(x: 20, y: 48))
+        ]
+        vectorLayer.vectorMask = ImageEditorShapeContent(
+            kind: .path,
+            fillColor: .white,
+            fillOpacity: 1,
+            strokeColor: .white,
+            strokeWidth: 1,
+            strokeOpacity: 0,
+            pathPoints: anchors.map(\.point),
+            pathAnchors: anchors,
+            isPathClosed: true
+        )
+
+        var lockedLayer = ImageEditorLayer.blank(name: "Locked Masked", size: canvasSize)
+        lockedLayer.mask = NSImage.opaqueMask(size: canvasSize)
+        lockedLayer.isLocked = true
+
+        let rasterLayerID = rasterLayer.id
+        let vectorLayerID = vectorLayer.id
+        let lockedLayerID = lockedLayer.id
+        viewModel.document.layers = [viewModel.document.layers[0], rasterLayer, vectorLayer, lockedLayer]
+        viewModel.document.selectedLayerID = vectorLayerID
+        viewModel.document.selectedLayerIDs = [rasterLayerID, vectorLayerID, lockedLayerID]
+
+        #expect(viewModel.canToggleLayerMaskLinked)
+        viewModel.toggleLayerMaskLinked()
+
+        let unlinkedRaster = try #require(viewModel.document.layers.first { $0.id == rasterLayerID })
+        let unlinkedVector = try #require(viewModel.document.layers.first { $0.id == vectorLayerID })
+        let skippedLockedLayer = try #require(viewModel.document.layers.first { $0.id == lockedLayerID })
+        #expect(!unlinkedRaster.isMaskLinked)
+        #expect(!unlinkedVector.isMaskLinked)
+        #expect(skippedLockedLayer.isMaskLinked)
+        #expect(skippedLockedLayer.isLocked)
+        #expect(viewModel.document.selectedLayerIDs == [rasterLayerID, vectorLayerID, lockedLayerID])
+        #expect(viewModel.document.selectedLayerID == vectorLayerID)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerMaskUnlinkSelected"))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerMaskUnlinkedSelected", 2))
+
+        viewModel.toggleLayerMaskLinked()
+        let linkedRaster = try #require(viewModel.document.layers.first { $0.id == rasterLayerID })
+        let linkedVector = try #require(viewModel.document.layers.first { $0.id == vectorLayerID })
+        #expect(linkedRaster.isMaskLinked)
+        #expect(linkedVector.isMaskLinked)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerMaskLinkSelected"))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerMaskLinkedSelected", 2))
+
+        viewModel.undo()
+        let restoredRaster = try #require(viewModel.document.layers.first { $0.id == rasterLayerID })
+        let restoredVector = try #require(viewModel.document.layers.first { $0.id == vectorLayerID })
+        #expect(!restoredRaster.isMaskLinked)
+        #expect(!restoredVector.isMaskLinked)
+    }
+
+    @MainActor
     @Test func imageEditorCombinesExistingLayerMaskWithCurrentSelection() async throws {
         let canvasSize = NSSize(width: 80, height: 60)
         let image = testImage(color: .systemBlue, size: canvasSize)

@@ -1043,6 +1043,8 @@
 "imageEditor.history.layerMaskDisableSelected" = "Disable Selected Layer Masks";
 "imageEditor.history.layerMaskLink" = "Link Layer Mask";
 "imageEditor.history.layerMaskUnlink" = "Unlink Layer Mask";
+"imageEditor.history.layerMaskLinkSelected" = "Link Selected Layer Masks";
+"imageEditor.history.layerMaskUnlinkSelected" = "Unlink Selected Layer Masks";
 "imageEditor.history.layerMaskDelete" = "Delete Layer Mask";
 "imageEditor.history.layerMaskDeleteSelected" = "Delete Selected Layer Masks";
 "imageEditor.history.layerMaskHide" = "Mask Hide";
@@ -1335,6 +1337,8 @@
 "imageEditor.status.layerMaskDisabledSelected" = "%d layer masks disabled";
 "imageEditor.status.layerMaskLinked" = "Current layer mask moves with the layer contents";
 "imageEditor.status.layerMaskUnlinked" = "Current layer mask moves independently from layer contents";
+"imageEditor.status.layerMaskLinkedSelected" = "%d layer masks linked to layer contents";
+"imageEditor.status.layerMaskUnlinkedSelected" = "%d layer masks unlinked from layer contents";
 "imageEditor.status.layerMaskSelection" = "Selection loaded from layer mask";
 "imageEditor.status.layerMaskSelectionFailed" = "Select a layer with a layer mask first";
 "imageEditor.status.vectorMaskSelection" = "Selection loaded from vector mask";
