@@ -1041,6 +1041,7 @@
 "imageEditor.history.layerMaskLink" = "Link Layer Mask";
 "imageEditor.history.layerMaskUnlink" = "Unlink Layer Mask";
 "imageEditor.history.layerMaskDelete" = "Delete Layer Mask";
+"imageEditor.history.layerMaskDeleteSelected" = "Delete Selected Layer Masks";
 "imageEditor.history.layerMaskHide" = "Mask Hide";
 "imageEditor.history.layerMaskReveal" = "Mask Reveal";
 "imageEditor.history.layerMaskGradient" = "Mask Gradient";
@@ -1318,6 +1319,8 @@
 "imageEditor.status.layerMaskHideSelection" = "Hide-selection layer mask created";
 "imageEditor.status.layerMaskApplied" = "Layer mask applied to layer contents";
 "imageEditor.status.layerMaskAppliedSelected" = "%d layer masks applied to layer contents";
+"imageEditor.status.layerMaskDeleted" = "Layer mask deleted";
+"imageEditor.status.layerMaskDeletedSelected" = "%d layer masks deleted";
 "imageEditor.status.layerMaskInverted" = "Current layer mask inverted";
 "imageEditor.status.layerMaskRevealSelection" = "Current selection revealed on the layer mask";
 "imageEditor.status.layerMaskHideSelectionFromMask" = "Current selection hidden on the layer mask";
@@ -1545,7 +1548,7 @@
 "imageEditor.action.layerTransparencyLoadSelection" = "Load Selection from Layer Transparency";
 "imageEditor.action.layerMaskCopyToSelected" = "Copy Mask to Selected Layers";
 "imageEditor.action.layerMaskApply" = "Apply Layer Masks";
-"imageEditor.action.layerMaskDelete" = "Delete Layer Mask";
+"imageEditor.action.layerMaskDelete" = "Delete Layer Masks";
 "imageEditor.action.vectorMaskLoadSelection" = "Load Selection from Vector Mask";
 "imageEditor.action.layerScaleDown" = "Scale Layer Down";
 "imageEditor.action.layerScaleUp" = "Scale Layer Up";

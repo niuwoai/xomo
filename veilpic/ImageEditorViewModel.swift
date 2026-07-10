@@ -783,8 +783,7 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     var canDeleteLayerMask: Bool {
-        guard let layer = document.selectedLayer else { return false }
-        return !document.isEffectivelyLocked(layer) && layer.mask != nil
+        !layerMaskDeleteIndices().isEmpty
     }
 
     var selection: ImageEditorSelection? {
@@ -2385,15 +2384,25 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func deleteLayerMask() {
-        guard canDeleteLayerMask, let index = document.selectedLayerIndex else { return }
+        let indices = layerMaskDeleteIndices()
+        guard !indices.isEmpty else { return }
         pushUndo()
-        document.layers[index].mask = nil
-        document.layers[index].isMaskEnabled = true
-        document.layers[index].isMaskLinked = true
-        document.layers[index].maskDensity = 1
-        document.layers[index].maskFeather = 0
-        isEditingLayerMask = false
-        appendHistory(L10n.text("imageEditor.history.layerMaskDelete"))
+        for index in indices {
+            document.layers[index].mask = nil
+            document.layers[index].isMaskEnabled = true
+            document.layers[index].isMaskLinked = true
+            document.layers[index].maskDensity = 1
+            document.layers[index].maskFeather = 0
+        }
+        isEditingLayerMask = document.selectedLayer?.mask != nil
+
+        if indices.count == 1 {
+            appendHistory(L10n.text("imageEditor.history.layerMaskDelete"))
+            statusText = L10n.text("imageEditor.status.layerMaskDeleted")
+        } else {
+            appendHistory(L10n.text("imageEditor.history.layerMaskDeleteSelected"))
+            statusText = L10n.format("imageEditor.status.layerMaskDeletedSelected", indices.count)
+        }
     }
 
     func editLayerPixels() {
@@ -3972,6 +3981,18 @@ final class ImageEditorViewModel: ObservableObject {
 
     private var selectedLayerIndices: [Int] {
         document.layers.indices.filter { document.selectedLayerIDs.contains(document.layers[$0].id) }
+    }
+
+    private func layerMaskDeleteIndices() -> [Int] {
+        let selectedIDs = document.selectedLayerIDs.isEmpty
+            ? Set(document.selectedLayerID.map { [$0] } ?? [])
+            : document.selectedLayerIDs
+        return document.layers.indices.filter { index in
+            let layer = document.layers[index]
+            return selectedIDs.contains(layer.id)
+                && !document.isEffectivelyLocked(layer)
+                && layer.mask != nil
+        }
     }
 
     private func topmostSelectedLayerID() -> UUID? {

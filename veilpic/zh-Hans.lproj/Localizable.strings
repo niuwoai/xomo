@@ -1041,6 +1041,7 @@
 "imageEditor.history.layerMaskLink" = "链接图层蒙版";
 "imageEditor.history.layerMaskUnlink" = "取消链接图层蒙版";
 "imageEditor.history.layerMaskDelete" = "删除图层蒙版";
+"imageEditor.history.layerMaskDeleteSelected" = "删除所选图层蒙版";
 "imageEditor.history.layerMaskHide" = "蒙版隐藏";
 "imageEditor.history.layerMaskReveal" = "蒙版恢复";
 "imageEditor.history.layerMaskGradient" = "蒙版渐变";
@@ -1318,6 +1319,8 @@
 "imageEditor.status.layerMaskHideSelection" = "已创建隐藏选区图层蒙版";
 "imageEditor.status.layerMaskApplied" = "已将图层蒙版应用到图层内容";
 "imageEditor.status.layerMaskAppliedSelected" = "已将 %d 个图层蒙版应用到图层内容";
+"imageEditor.status.layerMaskDeleted" = "已删除图层蒙版";
+"imageEditor.status.layerMaskDeletedSelected" = "已删除 %d 个图层蒙版";
 "imageEditor.status.layerMaskInverted" = "已反相当前图层蒙版";
 "imageEditor.status.layerMaskRevealSelection" = "已在图层蒙版中显示当前选区";
 "imageEditor.status.layerMaskHideSelectionFromMask" = "已从图层蒙版中隐藏当前选区";
@@ -1545,7 +1548,7 @@
 "imageEditor.action.layerTransparencyLoadSelection" = "从图层透明度载入选区";
 "imageEditor.action.layerMaskCopyToSelected" = "复制蒙版到所选图层";
 "imageEditor.action.layerMaskApply" = "应用所选图层蒙版";
-"imageEditor.action.layerMaskDelete" = "删除图层蒙版";
+"imageEditor.action.layerMaskDelete" = "删除所选图层蒙版";
 "imageEditor.action.vectorMaskLoadSelection" = "从矢量蒙版载入选区";
 "imageEditor.action.layerScaleDown" = "缩小图层";
 "imageEditor.action.layerScaleUp" = "放大图层";
