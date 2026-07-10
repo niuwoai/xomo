@@ -13,6 +13,13 @@ import AppKit
 @Suite(.serialized)
 struct veilpicTests {
 
+    @Test func imageEditorChannelSaveAvailabilityUsesDocumentGeometry() async throws {
+        let image = NSImage(size: NSSize(width: 8, height: 6))
+        let viewModel = ImageEditorViewModel(sourceName: "test", image: image) { _ in }
+
+        #expect(viewModel.canSaveSelectedChannelAsAlphaChannel)
+    }
+
     @Test func example() async throws {
         // Write your test here and use APIs like `#expect(...)` to check expected conditions.
         // Swift Testing Documentation

@@ -95,6 +95,8 @@ struct ImageEditorView: View {
             Label(viewModel.selectedTool.title, systemImage: viewModel.selectedTool.symbolName)
                 .font(.system(size: 12, weight: .semibold))
                 .frame(width: 132, alignment: .leading)
+                .accessibilityIdentifier("image-editor-selected-tool")
+                .accessibilityValue(viewModel.selectedTool.rawValue)
 
             if viewModel.selectedTool.supportsSelectionMode {
                 selectionModePicker
@@ -179,6 +181,8 @@ struct ImageEditorView: View {
                 }
                 .buttonStyle(EditorIconButtonStyle(isSelected: viewModel.selectedTool == tool))
                 .help(tool.title)
+                .accessibilityIdentifier("image-editor-tool-\(tool.rawValue)")
+                .accessibilityValue(viewModel.selectedTool == tool ? "selected" : "available")
             }
 
             Spacer()
@@ -358,6 +362,7 @@ struct ImageEditorView: View {
                 }
                 .contentShape(Rectangle())
                 .gesture(canvasGesture(in: geometry.size))
+                .accessibilityIdentifier("image-editor-canvas")
                 .simultaneousGesture(
                     MagnifyGesture()
                         .onChanged { value in
@@ -778,6 +783,7 @@ struct ImageEditorView: View {
         }
         .frame(width: 316)
         .background(Color(nsColor: ImageEditorTheme.panel))
+        .accessibilityIdentifier("image-editor-right-dock")
     }
 
     private var navigatorPanel: some View {
@@ -802,6 +808,7 @@ struct ImageEditorView: View {
             .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
         }
         .frame(height: 262)
+        .accessibilityIdentifier("image-editor-navigator-panel")
     }
 
     private func histogramView(summary: ImageEditorHistogramSummary) -> some View {
@@ -1957,7 +1964,8 @@ struct ImageEditorView: View {
 
     @ViewBuilder
     private func layerTransformOverlay(in size: CGSize) -> some View {
-        if viewModel.document.areExtrasVisible,
+        if viewModel.selectedTool == .move,
+           viewModel.document.areExtrasVisible,
            viewModel.document.areTransformControlsVisible,
            let layerFrame = viewModel.selectedLayerTransformFrame {
             let rect = viewRect(from: layerFrame, in: size)
@@ -3328,6 +3336,7 @@ struct ImageEditorView: View {
                 }
             }
         }
+        .accessibilityIdentifier("image-editor-properties-panel")
     }
 
     private var levelsControls: some View {

@@ -74,8 +74,9 @@ extension ImageEditorViewModel {
     }
 
     var canSaveSelectedChannelAsAlphaChannel: Bool {
-        guard let mask = currentImage.channelSelectionMask(selectedChannelPreview) else { return false }
-        return mask.selectedBounds(in: document.canvasSize) != nil
+        // This value is read while SwiftUI builds the Select menu. Rendering a full
+        // composite image here can recursively trigger more menu layout work.
+        document.canvasSize.width > 0 && document.canvasSize.height > 0
     }
 
     var canApplyAlphaChannelToSelectedLayerMask: Bool {
