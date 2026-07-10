@@ -322,6 +322,10 @@ extension ImageEditorViewModel {
         moveSelection(by: CGSize(width: 0, height: -selectionMoveAmount))
     }
 
+    func nudgeSelection(by delta: CGSize) {
+        moveSelection(by: delta)
+    }
+
     func centerSelectionHorizontally() {
         centerSelection(horizontal: true, vertical: false)
     }

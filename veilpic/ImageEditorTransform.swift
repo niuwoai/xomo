@@ -93,6 +93,17 @@ extension ImageEditorViewModel {
         statusText = L10n.text("imageEditor.status.layerMoved")
     }
 
+    func nudgeSelectionOrSelectedLayer(by delta: CGSize) {
+        if hasSelection {
+            nudgeSelection(by: delta)
+            return
+        }
+
+        beginMovingSelectedLayer()
+        moveSelectedLayer(by: delta)
+        finishMovingSelectedLayer()
+    }
+
     func finishMovingSelectedLayer() {
         guard !movingLayerIDs.isEmpty else { return }
         if movingLayerDidChange {

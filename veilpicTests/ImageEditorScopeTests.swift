@@ -198,6 +198,19 @@ struct ImageEditorScopeTests {
         #expect(colorShortcutSource.contains(".keyboardShortcut(\"d\", modifiers: [])"))
         #expect(colorShortcutSource.contains("viewModel.swapForegroundBackgroundColors()"))
         #expect(colorShortcutSource.contains(".keyboardShortcut(\"x\", modifiers: [])"))
+
+        let nudgeShortcutStart = try #require(source.range(of: "private var nudgeShortcutButtons: some View"))
+        let nudgeShortcutEnd = try #require(
+            source[nudgeShortcutStart.upperBound...].range(of: "private var colorChips: some View")
+        )
+        let nudgeShortcutSource = source[nudgeShortcutStart.lowerBound..<nudgeShortcutEnd.lowerBound]
+
+        #expect(nudgeShortcutSource.contains("nudgeShortcutButton(.leftArrow, delta: CGSize(width: -1, height: 0), modifiers: [])"))
+        #expect(nudgeShortcutSource.contains("nudgeShortcutButton(.rightArrow, delta: CGSize(width: 1, height: 0), modifiers: [])"))
+        #expect(nudgeShortcutSource.contains("nudgeShortcutButton(.upArrow, delta: CGSize(width: 0, height: 1), modifiers: [])"))
+        #expect(nudgeShortcutSource.contains("nudgeShortcutButton(.downArrow, delta: CGSize(width: 0, height: -1), modifiers: [])"))
+        #expect(nudgeShortcutSource.contains("nudgeShortcutButton(.leftArrow, delta: CGSize(width: -10, height: 0), modifiers: [.shift])"))
+        #expect(nudgeShortcutSource.contains("viewModel.nudgeSelectionOrSelectedLayer(by: delta)"))
     }
 
     @MainActor
@@ -304,6 +317,37 @@ struct ImageEditorScopeTests {
         #expect(viewModel.foregroundColor == .white)
         #expect(viewModel.backgroundColor == .black)
         #expect(viewModel.statusText == L10n.text("imageEditor.status.colorSwapForegroundBackground"))
+    }
+
+    @MainActor
+    @Test func classicArrowNudgeShortcutsMoveSelectionBeforeLayer() {
+        let image = NSImage(size: NSSize(width: 80, height: 60))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.document.selection = .rectangle(CGRect(x: 10, y: 12, width: 20, height: 18))
+        viewModel.nudgeSelectionOrSelectedLayer(by: CGSize(width: 1, height: 0))
+        #expect(viewModel.document.selection?.bounds == CGRect(x: 11, y: 12, width: 20, height: 18))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionMove"))
+
+        viewModel.nudgeSelectionOrSelectedLayer(by: CGSize(width: 0, height: 10))
+        #expect(viewModel.document.selection?.bounds == CGRect(x: 11, y: 22, width: 20, height: 18))
+    }
+
+    @MainActor
+    @Test func classicArrowNudgeShortcutsMoveSelectedLayerWithoutSelection() {
+        let image = NSImage(size: NSSize(width: 80, height: 60))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        viewModel.addLayer()
+
+        let selectedLayerID = viewModel.document.selectedLayerID
+        let originalFrame = try? #require(viewModel.document.layers.first { $0.id == selectedLayerID }?.frame)
+
+        viewModel.nudgeSelectionOrSelectedLayer(by: CGSize(width: -10, height: 0))
+        let movedFrame = viewModel.document.layers.first { $0.id == selectedLayerID }?.frame
+
+        #expect(movedFrame?.origin.x == (originalFrame?.origin.x ?? 0) - 10)
+        #expect(movedFrame?.origin.y == originalFrame?.origin.y)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerTranslate"))
     }
 
     @MainActor

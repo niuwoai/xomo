@@ -66,6 +66,7 @@ struct ImageEditorView: View {
         .background(brushShortcutButtons)
         .background(opacityShortcutButtons)
         .background(colorShortcutButtons)
+        .background(nudgeShortcutButtons)
         .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
         .onAppear {
             syncLayerNameDraft()
@@ -285,6 +286,31 @@ struct ImageEditorView: View {
         }
         .frame(width: 0, height: 0)
         .opacity(0)
+    }
+
+    private var nudgeShortcutButtons: some View {
+        Group {
+            nudgeShortcutButton(.leftArrow, delta: CGSize(width: -1, height: 0), modifiers: [])
+            nudgeShortcutButton(.rightArrow, delta: CGSize(width: 1, height: 0), modifiers: [])
+            nudgeShortcutButton(.upArrow, delta: CGSize(width: 0, height: 1), modifiers: [])
+            nudgeShortcutButton(.downArrow, delta: CGSize(width: 0, height: -1), modifiers: [])
+            nudgeShortcutButton(.leftArrow, delta: CGSize(width: -10, height: 0), modifiers: [.shift])
+            nudgeShortcutButton(.rightArrow, delta: CGSize(width: 10, height: 0), modifiers: [.shift])
+            nudgeShortcutButton(.upArrow, delta: CGSize(width: 0, height: 10), modifiers: [.shift])
+            nudgeShortcutButton(.downArrow, delta: CGSize(width: 0, height: -10), modifiers: [.shift])
+        }
+        .frame(width: 0, height: 0)
+        .opacity(0)
+    }
+
+    private func nudgeShortcutButton(_ key: KeyEquivalent, delta: CGSize, modifiers: EventModifiers) -> some View {
+        Button {
+            viewModel.nudgeSelectionOrSelectedLayer(by: delta)
+        } label: {
+            EmptyView()
+        }
+        .keyboardShortcut(key, modifiers: modifiers)
+        .accessibilityHidden(true)
     }
 
     private var colorChips: some View {
