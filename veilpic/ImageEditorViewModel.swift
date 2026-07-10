@@ -61,6 +61,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var isHistoryPanelVisible = true
     @Published var isLayersPanelVisible = true
     @Published var isPropertiesPanelVisible = true
+    @Published var isStatusBarVisible = true
     @Published var pointerText: String = "X: 0 Y: 0"
     @Published var textValue: String = ""
     @Published var textSize: Double = 32
@@ -1157,6 +1158,7 @@ final class ImageEditorViewModel: ObservableObject {
         isHistoryPanelVisible = true
         isLayersPanelVisible = true
         isPropertiesPanelVisible = true
+        isStatusBarVisible = true
         statusText = L10n.text("imageEditor.status.workspaceDefaultRestored")
     }
 
@@ -1178,6 +1180,11 @@ final class ImageEditorViewModel: ObservableObject {
         isLayersPanelVisible = shouldShow
         isPropertiesPanelVisible = shouldShow
         statusText = L10n.text(shouldShow ? "imageEditor.status.rightDockPanelsShown" : "imageEditor.status.rightDockPanelsHidden")
+    }
+
+    func toggleStatusBarVisibility() {
+        isStatusBarVisible.toggle()
+        statusText = L10n.text(isStatusBarVisible ? "imageEditor.status.statusBarShown" : "imageEditor.status.statusBarHidden")
     }
 
     func toggleNavigatorPanelVisibility() {

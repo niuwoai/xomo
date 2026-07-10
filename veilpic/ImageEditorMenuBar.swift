@@ -1294,6 +1294,9 @@ extension ImageEditorView {
             viewModel.toggleRightDockVisibility()
         }
         .keyboardShortcut(.tab, modifiers: [.shift])
+        Button(L10n.text(viewModel.isStatusBarVisible ? "imageEditor.action.statusBarHide" : "imageEditor.action.statusBarShow")) {
+            viewModel.toggleStatusBarVisibility()
+        }
         Divider()
         toolsActionsMenu
         optionsActionsMenu

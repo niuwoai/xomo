@@ -56,7 +56,9 @@ struct ImageEditorView: View {
                 }
             }
 
-            statusBar
+            if viewModel.isStatusBarVisible {
+                statusBar
+            }
         }
         .frame(minWidth: 1160, minHeight: 720)
         .background(Color(nsColor: ImageEditorTheme.window))

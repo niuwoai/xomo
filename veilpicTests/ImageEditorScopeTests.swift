@@ -407,6 +407,9 @@ struct ImageEditorScopeTests {
         #expect(windowMenuSource.contains("imageEditor.action.rightDockShowPanels"))
         #expect(windowMenuSource.contains("viewModel.toggleRightDockVisibility()"))
         #expect(windowMenuSource.contains(".keyboardShortcut(.tab, modifiers: [.shift])"))
+        #expect(windowMenuSource.contains("imageEditor.action.statusBarHide"))
+        #expect(windowMenuSource.contains("imageEditor.action.statusBarShow"))
+        #expect(windowMenuSource.contains("viewModel.toggleStatusBarVisibility()"))
     }
 
     @Test func windowMenuExposesNavigatorPanelActionsInPhotoshopStyleLocation() throws {
@@ -580,6 +583,16 @@ struct ImageEditorScopeTests {
         #expect(source.contains("if viewModel.isPropertiesPanelVisible"))
     }
 
+    @Test func editorChromeConditionallyRendersStatusBar() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("if viewModel.isStatusBarVisible"))
+        #expect(source.contains("statusBar"))
+    }
+
     @MainActor
     @Test func toolsAndOptionsPanelActionsReuseExistingToolSettings() throws {
         let image = NSImage(size: NSSize(width: 16, height: 16))
@@ -710,10 +723,12 @@ struct ImageEditorScopeTests {
         viewModel.toggleHistoryPanelVisibility()
         viewModel.toggleLayersPanelVisibility()
         viewModel.togglePropertiesPanelVisibility()
+        viewModel.toggleStatusBarVisibility()
 
         #expect(!viewModel.areToolsPanelVisible)
         #expect(!viewModel.isOptionsBarVisible)
         #expect(!viewModel.isRightDockVisible)
+        #expect(!viewModel.isStatusBarVisible)
 
         viewModel.resetDefaultWorkspace()
 
@@ -724,7 +739,26 @@ struct ImageEditorScopeTests {
         #expect(viewModel.isLayersPanelVisible)
         #expect(viewModel.isPropertiesPanelVisible)
         #expect(viewModel.isRightDockVisible)
+        #expect(viewModel.isStatusBarVisible)
         #expect(viewModel.statusText == L10n.text("imageEditor.status.workspaceDefaultRestored"))
+    }
+
+    @MainActor
+    @Test func statusBarVisibilityDefaultsOnAndCanToggle() throws {
+        let image = NSImage(size: NSSize(width: 16, height: 16))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        #expect(viewModel.isStatusBarVisible)
+
+        viewModel.toggleStatusBarVisibility()
+
+        #expect(!viewModel.isStatusBarVisible)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.statusBarHidden"))
+
+        viewModel.toggleStatusBarVisibility()
+
+        #expect(viewModel.isStatusBarVisible)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.statusBarShown"))
     }
 
     @MainActor

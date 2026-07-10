@@ -373,6 +373,8 @@
 "imageEditor.action.workspaceShowPanels" = "Show Workspace Panels";
 "imageEditor.action.rightDockHidePanels" = "Hide Right Dock Panels";
 "imageEditor.action.rightDockShowPanels" = "Show Right Dock Panels";
+"imageEditor.action.statusBarHide" = "Hide Status Bar";
+"imageEditor.action.statusBarShow" = "Show Status Bar";
 "imageEditor.action.toolsShowPanel" = "Show Tools Panel";
 "imageEditor.action.toolsHidePanel" = "Hide Tools Panel";
 "imageEditor.action.toolsShowPanelVisibility" = "Show Tools Panel";
@@ -1284,6 +1286,8 @@
 "imageEditor.status.workspacePanelsHidden" = "Workspace panels hidden";
 "imageEditor.status.rightDockPanelsShown" = "Right dock panels shown";
 "imageEditor.status.rightDockPanelsHidden" = "Right dock panels hidden";
+"imageEditor.status.statusBarShown" = "Status bar shown";
+"imageEditor.status.statusBarHidden" = "Status bar hidden";
 "imageEditor.status.zoomActualPixels" = "Viewing at actual pixels";
 "imageEditor.status.zoomFitOnScreen" = "Fit on screen";
 "imageEditor.status.exported" = "Exported %@";
