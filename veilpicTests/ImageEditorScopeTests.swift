@@ -312,6 +312,34 @@ struct ImageEditorScopeTests {
     }
 
     @MainActor
+    @Test func layerStyleColorSettersUpdateStrokeAndShadowColors() {
+        let image = NSImage(size: NSSize(width: 40, height: 30))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.setSelectedLayerStrokeColor(NSColor(srgbRed: 1, green: 0, blue: 0, alpha: 1))
+        let stroke = viewModel.selectedLayerStrokeColor.usingColorSpace(.sRGB)
+        #expect((stroke?.redComponent ?? 0) > 0.9)
+        #expect((stroke?.greenComponent ?? 1) < 0.1)
+        #expect((stroke?.blueComponent ?? 1) < 0.1)
+
+        viewModel.setSelectedLayerShadowColor(NSColor(srgbRed: 0, green: 0, blue: 1, alpha: 1))
+        let shadow = viewModel.selectedLayerShadowColor.usingColorSpace(.sRGB)
+        #expect((shadow?.blueComponent ?? 0) > 0.9)
+        #expect((shadow?.redComponent ?? 1) < 0.1)
+    }
+
+    @Test func layerStylePanelUsesColorPickersForStrokeAndShadow() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        #expect(source.contains("ColorPicker(\"\", selection: selectedLayerStrokeColorBinding, supportsOpacity: false)"))
+        #expect(source.contains("ColorPicker(\"\", selection: selectedLayerShadowColorBinding, supportsOpacity: false)"))
+        #expect(source.contains("viewModel.setSelectedLayerStrokeColor(NSColor(value))"))
+        #expect(source.contains("viewModel.setSelectedLayerShadowColor(NSColor(value))"))
+    }
+
+    @MainActor
     @Test func classicFilterMenuSelectionsPreparePropertiesPanel() {
         let image = NSImage(size: NSSize(width: 80, height: 60))
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }

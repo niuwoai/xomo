@@ -473,6 +473,14 @@ extension ImageEditorViewModel {
         }
     }
 
+    func setSelectedLayerStrokeColor(_ color: NSColor) {
+        updateSelectedLayerStyle {
+            $0.strokeEnabled = true
+            $0.strokeFillType = .color
+            $0.strokeColor = color.usingColorSpace(.sRGB) ?? color
+        }
+    }
+
     func setSelectedLayerStrokeGradientStyle(_ style: ImageEditorGradientFillStyle) {
         updateSelectedLayerStyle {
             $0.strokeEnabled = true
@@ -522,6 +530,13 @@ extension ImageEditorViewModel {
         updateSelectedLayerStyle {
             $0.shadowEnabled = true
             $0.shadowColor = shadowColor()
+        }
+    }
+
+    func setSelectedLayerShadowColor(_ color: NSColor) {
+        updateSelectedLayerStyle {
+            $0.shadowEnabled = true
+            $0.shadowColor = color.usingColorSpace(.sRGB) ?? color
         }
     }
 

@@ -1140,6 +1140,22 @@ struct ImageEditorView: View {
         }
     }
 
+    private var selectedLayerStrokeColorBinding: Binding<Color> {
+        Binding {
+            Color(nsColor: viewModel.selectedLayerStrokeColor)
+        } set: { value in
+            viewModel.setSelectedLayerStrokeColor(NSColor(value))
+        }
+    }
+
+    private var selectedLayerShadowColorBinding: Binding<Color> {
+        Binding {
+            Color(nsColor: viewModel.selectedLayerShadowColor)
+        } set: { value in
+            viewModel.setSelectedLayerShadowColor(NSColor(value))
+        }
+    }
+
     private var selectedLayerStrokePositionBinding: Binding<ImageEditorStrokePosition> {
         Binding {
             viewModel.selectedLayerStrokePosition
@@ -2784,13 +2800,9 @@ struct ImageEditorView: View {
                         Text(L10n.text("imageEditor.properties.strokeColor"))
                             .font(.system(size: 10, weight: .medium))
                             .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(Color(nsColor: viewModel.selectedLayerStrokeColor))
-                            .frame(width: 20, height: 14)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 4)
-                                    .stroke(Color(nsColor: ImageEditorTheme.border), lineWidth: 1)
-                            )
+                        ColorPicker("", selection: selectedLayerStrokeColorBinding, supportsOpacity: false)
+                            .labelsHidden()
+                            .frame(width: 32)
                         Spacer(minLength: 4)
                         Button(L10n.text("imageEditor.action.strokeColorFromForeground")) {
                             viewModel.setSelectedLayerStrokeColorFromForeground()
@@ -2834,13 +2846,9 @@ struct ImageEditorView: View {
                     Text(L10n.text("imageEditor.properties.shadowColor"))
                         .font(.system(size: 10, weight: .medium))
                         .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
-                    RoundedRectangle(cornerRadius: 4)
-                        .fill(Color(nsColor: viewModel.selectedLayerShadowColor))
-                        .frame(width: 20, height: 14)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 4)
-                                .stroke(Color(nsColor: ImageEditorTheme.border), lineWidth: 1)
-                        )
+                    ColorPicker("", selection: selectedLayerShadowColorBinding, supportsOpacity: false)
+                        .labelsHidden()
+                        .frame(width: 32)
                     Spacer(minLength: 4)
                     Button(L10n.text("imageEditor.action.shadowColorFromForeground")) {
                         viewModel.setSelectedLayerShadowColorFromForeground()
