@@ -637,6 +637,55 @@ struct ImageEditorScopeTests {
         #expect(viewModel.paragraphPanelSummaryText.contains("320"))
     }
 
+    @Test func windowMenuExposesStylesPanelActionsInPhotoshopStyleLocation() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
+            encoding: .utf8
+        )
+        let stylesMenuStart = try #require(source.range(of: "private var stylesActionsMenu: some View"))
+        let nextMenuStart = try #require(
+            source[stylesMenuStart.upperBound...].range(of: "private var layerActionsMenu: some View")
+        )
+        let stylesMenuSource = source[stylesMenuStart.lowerBound..<nextMenuStart.lowerBound]
+
+        #expect(stylesMenuSource.contains("imageEditor.menu.window.styles"))
+        #expect(stylesMenuSource.contains("imageEditor.action.stylesShowPanel"))
+        #expect(stylesMenuSource.contains("viewModel.stylesPanelSummaryText"))
+        #expect(stylesMenuSource.contains("layerStyleActionItems"))
+        #expect(source.contains("viewModel.copySelectedLayerStyle()"))
+        #expect(source.contains("viewModel.pasteLayerStyleToSelectedLayers()"))
+        #expect(source.contains("viewModel.clearSelectedLayerStyles()"))
+        #expect(source.contains("viewModel.toggleSelectedLayerStroke()"))
+        #expect(source.contains("viewModel.toggleSelectedLayerShadow()"))
+        #expect(source.contains("viewModel.toggleSelectedLayerInnerShadow()"))
+        #expect(source.contains("viewModel.toggleSelectedLayerOuterGlow()"))
+        #expect(source.contains("viewModel.toggleSelectedLayerInnerGlow()"))
+        #expect(source.contains("viewModel.toggleSelectedLayerColorOverlay()"))
+        #expect(source.contains("viewModel.toggleSelectedLayerGradientOverlay()"))
+        #expect(source.contains("viewModel.toggleSelectedLayerPatternOverlay()"))
+        #expect(source.contains("viewModel.toggleSelectedLayerSatin()"))
+        #expect(source.contains("viewModel.toggleSelectedLayerBevel()"))
+    }
+
+    @MainActor
+    @Test func stylesPanelSummaryReusesExistingLayerStyleState() throws {
+        let image = NSImage(size: NSSize(width: 16, height: 16))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.addLayer()
+        viewModel.renameSelectedLayer(to: "Badge")
+
+        #expect(viewModel.stylesPanelSummaryText.contains("Badge"))
+        #expect(viewModel.stylesPanelSummaryText.contains(L10n.text("imageEditor.stylesPanel.noEffects")))
+
+        viewModel.toggleSelectedLayerStroke()
+        viewModel.toggleSelectedLayerShadow()
+
+        #expect(viewModel.stylesPanelSummaryText.contains("Badge"))
+        #expect(viewModel.stylesPanelSummaryText.contains(L10n.text("imageEditor.action.layerStroke")))
+        #expect(viewModel.stylesPanelSummaryText.contains(L10n.text("imageEditor.action.layerShadow")))
+    }
+
     @Test func windowMenuExposesLayerPanelActionsInPhotoshopStyleLocation() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),

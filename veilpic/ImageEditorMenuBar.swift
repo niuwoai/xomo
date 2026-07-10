@@ -688,60 +688,65 @@ extension ImageEditorView {
     @ViewBuilder
     private var layerStyleMenu: some View {
         Menu(L10n.text("imageEditor.menu.layer.style")) {
-            Button(L10n.text("imageEditor.action.layerStyleCopy")) {
-                viewModel.copySelectedLayerStyle()
-            }
-            .disabled(!viewModel.canCopySelectedLayerStyle)
-            Button(L10n.text("imageEditor.action.layerStylePaste")) {
-                viewModel.pasteLayerStyleToSelectedLayers()
-            }
-            .disabled(!viewModel.canPasteLayerStyleToSelectedLayers)
-            Button(L10n.text("imageEditor.action.layerStyleClear")) {
-                viewModel.clearSelectedLayerStyles()
-            }
-            .disabled(!viewModel.canClearSelectedLayerStyles)
-            Divider()
-            Button(L10n.text("imageEditor.action.layerStroke")) {
-                viewModel.toggleSelectedLayerStroke()
-            }
-            .disabled(!viewModel.canEditSelectedLayerStyle)
-            Button(L10n.text("imageEditor.action.layerShadow")) {
-                viewModel.toggleSelectedLayerShadow()
-            }
-            .disabled(!viewModel.canEditSelectedLayerStyle)
-            Button(L10n.text("imageEditor.action.layerInnerShadow")) {
-                viewModel.toggleSelectedLayerInnerShadow()
-            }
-            .disabled(!viewModel.canEditSelectedLayerStyle)
-            Button(L10n.text("imageEditor.action.layerOuterGlow")) {
-                viewModel.toggleSelectedLayerOuterGlow()
-            }
-            .disabled(!viewModel.canEditSelectedLayerStyle)
-            Button(L10n.text("imageEditor.action.layerInnerGlow")) {
-                viewModel.toggleSelectedLayerInnerGlow()
-            }
-            .disabled(!viewModel.canEditSelectedLayerStyle)
-            Button(L10n.text("imageEditor.action.layerColorOverlay")) {
-                viewModel.toggleSelectedLayerColorOverlay()
-            }
-            .disabled(!viewModel.canEditSelectedLayerStyle)
-            Button(L10n.text("imageEditor.action.layerGradientOverlay")) {
-                viewModel.toggleSelectedLayerGradientOverlay()
-            }
-            .disabled(!viewModel.canEditSelectedLayerStyle)
-            Button(L10n.text("imageEditor.action.layerPatternOverlay")) {
-                viewModel.toggleSelectedLayerPatternOverlay()
-            }
-            .disabled(!viewModel.canEditSelectedLayerStyle)
-            Button(L10n.text("imageEditor.action.layerSatin")) {
-                viewModel.toggleSelectedLayerSatin()
-            }
-            .disabled(!viewModel.canEditSelectedLayerStyle)
-            Button(L10n.text("imageEditor.action.layerBevel")) {
-                viewModel.toggleSelectedLayerBevel()
-            }
-            .disabled(!viewModel.canEditSelectedLayerStyle)
+            layerStyleActionItems
         }
+    }
+
+    @ViewBuilder
+    private var layerStyleActionItems: some View {
+        Button(L10n.text("imageEditor.action.layerStyleCopy")) {
+            viewModel.copySelectedLayerStyle()
+        }
+        .disabled(!viewModel.canCopySelectedLayerStyle)
+        Button(L10n.text("imageEditor.action.layerStylePaste")) {
+            viewModel.pasteLayerStyleToSelectedLayers()
+        }
+        .disabled(!viewModel.canPasteLayerStyleToSelectedLayers)
+        Button(L10n.text("imageEditor.action.layerStyleClear")) {
+            viewModel.clearSelectedLayerStyles()
+        }
+        .disabled(!viewModel.canClearSelectedLayerStyles)
+        Divider()
+        Button(L10n.text("imageEditor.action.layerStroke")) {
+            viewModel.toggleSelectedLayerStroke()
+        }
+        .disabled(!viewModel.canEditSelectedLayerStyle)
+        Button(L10n.text("imageEditor.action.layerShadow")) {
+            viewModel.toggleSelectedLayerShadow()
+        }
+        .disabled(!viewModel.canEditSelectedLayerStyle)
+        Button(L10n.text("imageEditor.action.layerInnerShadow")) {
+            viewModel.toggleSelectedLayerInnerShadow()
+        }
+        .disabled(!viewModel.canEditSelectedLayerStyle)
+        Button(L10n.text("imageEditor.action.layerOuterGlow")) {
+            viewModel.toggleSelectedLayerOuterGlow()
+        }
+        .disabled(!viewModel.canEditSelectedLayerStyle)
+        Button(L10n.text("imageEditor.action.layerInnerGlow")) {
+            viewModel.toggleSelectedLayerInnerGlow()
+        }
+        .disabled(!viewModel.canEditSelectedLayerStyle)
+        Button(L10n.text("imageEditor.action.layerColorOverlay")) {
+            viewModel.toggleSelectedLayerColorOverlay()
+        }
+        .disabled(!viewModel.canEditSelectedLayerStyle)
+        Button(L10n.text("imageEditor.action.layerGradientOverlay")) {
+            viewModel.toggleSelectedLayerGradientOverlay()
+        }
+        .disabled(!viewModel.canEditSelectedLayerStyle)
+        Button(L10n.text("imageEditor.action.layerPatternOverlay")) {
+            viewModel.toggleSelectedLayerPatternOverlay()
+        }
+        .disabled(!viewModel.canEditSelectedLayerStyle)
+        Button(L10n.text("imageEditor.action.layerSatin")) {
+            viewModel.toggleSelectedLayerSatin()
+        }
+        .disabled(!viewModel.canEditSelectedLayerStyle)
+        Button(L10n.text("imageEditor.action.layerBevel")) {
+            viewModel.toggleSelectedLayerBevel()
+        }
+        .disabled(!viewModel.canEditSelectedLayerStyle)
     }
 
     @ViewBuilder
@@ -1285,6 +1290,7 @@ extension ImageEditorView {
         brushesActionsMenu
         characterActionsMenu
         paragraphActionsMenu
+        stylesActionsMenu
         Divider()
         layerActionsMenu
         channelActionsMenu
@@ -1454,6 +1460,17 @@ extension ImageEditorView {
                 viewModel.updateSelectedTextLayer()
             }
             .disabled(!viewModel.selectedLayerIsText)
+        }
+    }
+
+    @ViewBuilder
+    private var stylesActionsMenu: some View {
+        Menu(L10n.text("imageEditor.menu.window.styles")) {
+            Button(L10n.text("imageEditor.action.stylesShowPanel")) {
+                viewModel.statusText = viewModel.stylesPanelSummaryText
+            }
+            Divider()
+            layerStyleActionItems
         }
     }
 

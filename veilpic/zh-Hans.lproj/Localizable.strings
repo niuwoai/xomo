@@ -352,6 +352,7 @@
 "imageEditor.menu.window.brushes.presets" = "大小预设";
 "imageEditor.menu.window.character" = "字符面板";
 "imageEditor.menu.window.paragraph" = "段落面板";
+"imageEditor.menu.window.styles" = "样式面板";
 "imageEditor.menu.window.layers" = "图层面板";
 "imageEditor.menu.window.channels" = "通道面板";
 "imageEditor.menu.window.layerComps" = "图层复合面板";
@@ -375,6 +376,7 @@
 "imageEditor.action.characterToggleBold" = "切换粗体";
 "imageEditor.action.characterToggleItalic" = "切换斜体";
 "imageEditor.action.paragraphShowPanel" = "显示段落面板";
+"imageEditor.action.stylesShowPanel" = "显示样式面板";
 "imageEditor.action.layersShowPanel" = "显示图层面板";
 "imageEditor.action.layerCompsShowPanel" = "显示图层复合面板";
 "imageEditor.action.historyShowPanel" = "显示历史记录面板";
@@ -1233,6 +1235,9 @@
 "imageEditor.characterPanel.emptyText" = "未输入";
 "imageEditor.characterPanel.enabled" = "开";
 "imageEditor.characterPanel.disabled" = "关";
+"imageEditor.status.stylesPanelSummary" = "图层：%@ | 样式：%@";
+"imageEditor.status.stylesPanelNoLayer" = "未选择图层";
+"imageEditor.stylesPanel.noEffects" = "无";
 "imageEditor.status.propertiesVisible" = "属性面板已在右侧显示";
 "imageEditor.status.zoomActualPixels" = "已按实际像素显示";
 "imageEditor.status.zoomFitOnScreen" = "已适合窗口显示";

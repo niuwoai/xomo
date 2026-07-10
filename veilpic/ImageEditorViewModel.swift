@@ -1023,6 +1023,17 @@ final class ImageEditorViewModel: ObservableObject {
         )
     }
 
+    var stylesPanelSummaryText: String {
+        guard let layer = document.selectedLayer else {
+            return L10n.text("imageEditor.status.stylesPanelNoLayer")
+        }
+        let names = enabledStyleEffectNames(for: layer.style)
+        let summary = names.isEmpty
+            ? L10n.text("imageEditor.stylesPanel.noEffects")
+            : names.joined(separator: ", ")
+        return L10n.format("imageEditor.status.stylesPanelSummary", layer.name, summary)
+    }
+
     var brushPanelTools: [ImageEditorTool] {
         [.brush, .eraser, .cloneStamp, .dodge, .burn, .blur, .sharpen, .smudge, .healingBrush]
     }
@@ -1083,6 +1094,21 @@ final class ImageEditorViewModel: ObservableObject {
     func selectParagraphAlignment(_ alignment: ImageEditorTextAlignment) {
         selectedTextAlignment = alignment
         statusText = paragraphPanelSummaryText
+    }
+
+    private func enabledStyleEffectNames(for style: ImageEditorLayerStyle) -> [String] {
+        var names: [String] = []
+        if style.strokeEnabled { names.append(L10n.text("imageEditor.action.layerStroke")) }
+        if style.shadowEnabled { names.append(L10n.text("imageEditor.action.layerShadow")) }
+        if style.innerShadowEnabled { names.append(L10n.text("imageEditor.action.layerInnerShadow")) }
+        if style.outerGlowEnabled { names.append(L10n.text("imageEditor.action.layerOuterGlow")) }
+        if style.innerGlowEnabled { names.append(L10n.text("imageEditor.action.layerInnerGlow")) }
+        if style.colorOverlayEnabled { names.append(L10n.text("imageEditor.action.layerColorOverlay")) }
+        if style.gradientOverlayEnabled { names.append(L10n.text("imageEditor.action.layerGradientOverlay")) }
+        if style.patternOverlayEnabled { names.append(L10n.text("imageEditor.action.layerPatternOverlay")) }
+        if style.satinEnabled { names.append(L10n.text("imageEditor.action.layerSatin")) }
+        if style.bevelEnabled { names.append(L10n.text("imageEditor.action.layerBevel")) }
+        return names
     }
 
     private func rgbText(for nsColor: NSColor) -> String {

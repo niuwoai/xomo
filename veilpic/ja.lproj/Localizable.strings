@@ -352,6 +352,7 @@
 "imageEditor.menu.window.brushes.presets" = "サイズプリセット";
 "imageEditor.menu.window.character" = "文字パネル";
 "imageEditor.menu.window.paragraph" = "段落パネル";
+"imageEditor.menu.window.styles" = "スタイルパネル";
 "imageEditor.menu.window.layers" = "レイヤーパネル";
 "imageEditor.menu.window.channels" = "チャンネルパネル";
 "imageEditor.menu.window.layerComps" = "レイヤーコンプパネル";
@@ -375,6 +376,7 @@
 "imageEditor.action.characterToggleBold" = "太字を切り替え";
 "imageEditor.action.characterToggleItalic" = "斜体を切り替え";
 "imageEditor.action.paragraphShowPanel" = "段落パネルを表示";
+"imageEditor.action.stylesShowPanel" = "スタイルパネルを表示";
 "imageEditor.action.layersShowPanel" = "レイヤーパネルを表示";
 "imageEditor.action.layerCompsShowPanel" = "レイヤーコンプパネルを表示";
 "imageEditor.action.historyShowPanel" = "履歴パネルを表示";
@@ -1233,6 +1235,9 @@
 "imageEditor.characterPanel.emptyText" = "未入力";
 "imageEditor.characterPanel.enabled" = "オン";
 "imageEditor.characterPanel.disabled" = "オフ";
+"imageEditor.status.stylesPanelSummary" = "レイヤー：%@ | スタイル：%@";
+"imageEditor.status.stylesPanelNoLayer" = "レイヤーが選択されていません";
+"imageEditor.stylesPanel.noEffects" = "なし";
 "imageEditor.status.propertiesVisible" = "プロパティパネルは右側に表示されています";
 "imageEditor.status.zoomActualPixels" = "実際のピクセルで表示しています";
 "imageEditor.status.zoomFitOnScreen" = "画面に合わせました";

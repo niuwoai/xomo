@@ -352,6 +352,7 @@
 "imageEditor.menu.window.brushes.presets" = "Size Presets";
 "imageEditor.menu.window.character" = "Character Panel";
 "imageEditor.menu.window.paragraph" = "Paragraph Panel";
+"imageEditor.menu.window.styles" = "Styles Panel";
 "imageEditor.menu.window.layers" = "Layers Panel";
 "imageEditor.menu.window.channels" = "Channels Panel";
 "imageEditor.menu.window.layerComps" = "Layer Comps Panel";
@@ -375,6 +376,7 @@
 "imageEditor.action.characterToggleBold" = "Toggle Bold";
 "imageEditor.action.characterToggleItalic" = "Toggle Italic";
 "imageEditor.action.paragraphShowPanel" = "Show Paragraph Panel";
+"imageEditor.action.stylesShowPanel" = "Show Styles Panel";
 "imageEditor.action.layersShowPanel" = "Show Layers Panel";
 "imageEditor.action.layerCompsShowPanel" = "Show Layer Comps Panel";
 "imageEditor.action.historyShowPanel" = "Show History Panel";
@@ -1233,6 +1235,9 @@
 "imageEditor.characterPanel.emptyText" = "No text";
 "imageEditor.characterPanel.enabled" = "On";
 "imageEditor.characterPanel.disabled" = "Off";
+"imageEditor.status.stylesPanelSummary" = "Layer: %@ | Styles: %@";
+"imageEditor.status.stylesPanelNoLayer" = "No layer selected";
+"imageEditor.stylesPanel.noEffects" = "None";
 "imageEditor.status.propertiesVisible" = "The Properties panel is already visible on the right";
 "imageEditor.status.zoomActualPixels" = "Viewing at actual pixels";
 "imageEditor.status.zoomFitOnScreen" = "Fit on screen";
