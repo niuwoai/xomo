@@ -977,14 +977,7 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     var canMakeSelectedSmartObjectUnique: Bool {
-        guard selectedLayerCount == 1,
-              let layer = document.selectedLayer,
-              let content = layer.smartObjectContent,
-              !document.isEffectivelyPixelsLocked(layer)
-        else { return false }
-        return document.layers.contains { otherLayer in
-            otherLayer.id != layer.id && otherLayer.smartObjectContent?.sourceID == content.sourceID
-        }
+        !smartObjectUniqueTargetIndices().isEmpty
     }
 
     var colorText: String {
@@ -1810,24 +1803,31 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func makeSelectedSmartObjectUnique() {
-        guard canMakeSelectedSmartObjectUnique,
-              let index = document.selectedLayerIndex,
-              let content = document.layers[index].smartObjectContent
-        else {
+        let indices = smartObjectUniqueTargetIndices()
+        guard !indices.isEmpty else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
 
         pushUndo()
-        document.layers[index].kind = .smartObject(
-            ImageEditorSmartObjectContent(
-                sourceName: content.sourceName,
-                originalSize: content.originalSize,
-                sourceID: UUID()
+        for index in indices {
+            guard let content = document.layers[index].smartObjectContent else { continue }
+            document.layers[index].kind = .smartObject(
+                ImageEditorSmartObjectContent(
+                    sourceName: content.sourceName,
+                    originalSize: content.originalSize,
+                    sourceID: UUID()
+                )
             )
-        )
-        appendHistory(L10n.text("imageEditor.history.layerSmartObjectMakeUnique"))
-        statusText = L10n.text("imageEditor.status.layerSmartObjectMadeUnique")
+        }
+
+        if indices.count == 1 {
+            appendHistory(L10n.text("imageEditor.history.layerSmartObjectMakeUnique"))
+            statusText = L10n.text("imageEditor.status.layerSmartObjectMadeUnique")
+        } else {
+            appendHistory(L10n.text("imageEditor.history.layerSmartObjectMakeUniqueSelected"))
+            statusText = L10n.format("imageEditor.status.layerSmartObjectMadeUniqueSelected", indices.count)
+        }
     }
 
     func renameSelectedLayer(to proposedName: String) {
@@ -3989,6 +3989,22 @@ final class ImageEditorViewModel: ObservableObject {
 
     private var selectedLayerIndices: [Int] {
         document.layers.indices.filter { document.selectedLayerIDs.contains(document.layers[$0].id) }
+    }
+
+    private func smartObjectUniqueTargetIndices() -> [Int] {
+        let selectedIDs = document.selectedLayerIDs.isEmpty
+            ? Set(document.selectedLayerID.map { [$0] } ?? [])
+            : document.selectedLayerIDs
+        return document.layers.indices.filter { index in
+            let layer = document.layers[index]
+            guard selectedIDs.contains(layer.id),
+                  let content = layer.smartObjectContent,
+                  !document.isEffectivelyPixelsLocked(layer)
+            else { return false }
+            return document.layers.contains { otherLayer in
+                otherLayer.id != layer.id && otherLayer.smartObjectContent?.sourceID == content.sourceID
+            }
+        }
     }
 
     var layerMaskAddIndices: [Int] {

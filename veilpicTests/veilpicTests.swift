@@ -3692,6 +3692,42 @@ struct veilpicTests {
     }
 
     @MainActor
+    @Test func imageEditorMakesMultipleSelectedSmartObjectInstancesUnique() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let image = testBitmapImage(size: canvasSize, background: .systemPink)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.convertSelectedLayerToSmartObject()
+        let firstID = try #require(viewModel.document.selectedLayerID)
+        viewModel.duplicateSelectedLayer()
+        let secondID = try #require(viewModel.document.selectedLayerID)
+        viewModel.duplicateSelectedLayer()
+        let thirdID = try #require(viewModel.document.selectedLayerID)
+        let sharedSourceID = try #require(viewModel.document.selectedLayer?.smartObjectContent?.sourceID)
+        viewModel.document.selectedLayerID = thirdID
+        viewModel.document.selectedLayerIDs = [firstID, secondID, thirdID]
+
+        #expect(viewModel.canMakeSelectedSmartObjectUnique)
+        viewModel.makeSelectedSmartObjectUnique()
+
+        let uniqueSourceIDs = Set(viewModel.document.layers.compactMap { layer in
+            [firstID, secondID, thirdID].contains(layer.id) ? layer.smartObjectContent?.sourceID : nil
+        })
+        #expect(uniqueSourceIDs.count == 3)
+        #expect(!uniqueSourceIDs.contains(sharedSourceID))
+        #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, thirdID])
+        #expect(viewModel.document.selectedLayerID == thirdID)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartObjectMakeUniqueSelected"))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerSmartObjectMadeUniqueSelected", 3))
+
+        viewModel.undo()
+        let restoredSourceIDs = Set(viewModel.document.layers.compactMap { layer in
+            [firstID, secondID, thirdID].contains(layer.id) ? layer.smartObjectContent?.sourceID : nil
+        })
+        #expect(restoredSourceIDs == [sharedSourceID])
+    }
+
+    @MainActor
     @Test func imageEditorCanLoadSelectionFromGroupTransparency() async throws {
         let canvasSize = NSSize(width: 90, height: 70)
         let image = testBitmapImage(size: canvasSize, background: .clear)

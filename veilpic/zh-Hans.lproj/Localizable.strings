@@ -954,6 +954,7 @@
 "imageEditor.history.layerSmartObject" = "转换为智能对象";
 "imageEditor.history.layerSmartObjectReplace" = "替换智能对象内容";
 "imageEditor.history.layerSmartObjectMakeUnique" = "智能对象实例独立化";
+"imageEditor.history.layerSmartObjectMakeUniqueSelected" = "所选智能对象实例独立化";
 "imageEditor.history.layerSmartObjectResetTransform" = "重置智能对象变换";
 "imageEditor.history.layerRasterize" = "栅格化图层";
 "imageEditor.history.layerRasterizeSelected" = "栅格化所选图层";
@@ -1243,6 +1244,7 @@
 "imageEditor.status.layerSmartObjectInstancesReplaced" = "已替换 %d 个智能对象实例内容：%@";
 "imageEditor.status.layerSmartObjectReplaceFailed" = "替换智能对象内容失败";
 "imageEditor.status.layerSmartObjectMadeUnique" = "已让当前智能对象实例独立";
+"imageEditor.status.layerSmartObjectMadeUniqueSelected" = "已让 %d 个智能对象实例独立";
 "imageEditor.status.layerSmartObjectTransformReset" = "已重置智能对象变换";
 "imageEditor.status.layerImportFailed" = "导入图片失败";
 "imageEditor.status.layerRasterized" = "已栅格化当前图层";
