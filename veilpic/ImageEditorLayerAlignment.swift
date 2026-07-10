@@ -26,6 +26,11 @@ enum ImageEditorLayerDistribution {
     case bottom
 }
 
+enum ImageEditorLayerSpacingDistribution {
+    case horizontal
+    case vertical
+}
+
 @MainActor
 extension ImageEditorViewModel {
     var canAlignSelectedLayers: Bool {
@@ -172,6 +177,54 @@ extension ImageEditorViewModel {
         }
         appendHistory(L10n.text("imageEditor.history.layerDistribute"))
     }
+
+    func distributeSelectedLayerSpacing(_ distribution: ImageEditorLayerSpacingDistribution) {
+        let indices = editableTransformLayerIndices()
+        guard indices.count >= 3 else {
+            statusText = L10n.text("imageEditor.status.layerLocked")
+            return
+        }
+
+        let sortedLayers = indices
+            .map { document.layers[$0] }
+            .sorted { lhs, rhs in
+                distribution.sortValue(for: lhs.frame.standardized) < distribution.sortValue(for: rhs.frame.standardized)
+            }
+
+        guard let bounds = transformFrame(for: indices) else { return }
+        let totalLength = sortedLayers.reduce(CGFloat.zero) { partialResult, layer in
+            partialResult + distribution.length(of: layer.frame.standardized)
+        }
+        let availableLength = distribution.length(of: bounds)
+        let spacing = (availableLength - totalLength) / CGFloat(sortedLayers.count - 1)
+
+        var cursor = distribution.minimum(of: sortedLayers[0].frame.standardized)
+        var distributedFrames: [UUID: CGRect] = [:]
+        for offset in 0..<sortedLayers.count {
+            let layer = sortedLayers[offset]
+            var frame = layer.frame.standardized
+            if offset > 0 && offset < sortedLayers.count - 1 {
+                distribution.apply(origin: cursor, to: &frame)
+                distributedFrames[layer.id] = frame
+            }
+            cursor += distribution.length(of: frame) + spacing
+        }
+
+        guard distributedFrames.contains(where: { item in
+            guard let current = document.layers.first(where: { $0.id == item.key })?.frame.standardized else { return false }
+            return current != item.value
+        }) else { return }
+
+        pushUndo()
+        for index in document.layers.indices {
+            let id = document.layers[index].id
+            if let frame = distributedFrames[id] {
+                document.layers[index].frame = frame
+            }
+        }
+        appendHistory(L10n.text("imageEditor.history.layerDistributeSpacing"))
+        statusText = L10n.text("imageEditor.status.layerSpacingDistributed")
+    }
 }
 
 private extension ImageEditorLayerDistribution {
@@ -206,6 +259,44 @@ private extension ImageEditorLayerDistribution {
             frame.origin.y = anchor - frame.height / 2
         case .bottom:
             frame.origin.y = anchor
+        }
+    }
+}
+
+private extension ImageEditorLayerSpacingDistribution {
+    func sortValue(for frame: CGRect) -> CGFloat {
+        switch self {
+        case .horizontal:
+            frame.minX
+        case .vertical:
+            frame.minY
+        }
+    }
+
+    func minimum(of frame: CGRect) -> CGFloat {
+        switch self {
+        case .horizontal:
+            frame.minX
+        case .vertical:
+            frame.minY
+        }
+    }
+
+    func length(of frame: CGRect) -> CGFloat {
+        switch self {
+        case .horizontal:
+            frame.width
+        case .vertical:
+            frame.height
+        }
+    }
+
+    func apply(origin: CGFloat, to frame: inout CGRect) {
+        switch self {
+        case .horizontal:
+            frame.origin.x = origin
+        case .vertical:
+            frame.origin.y = origin
         }
     }
 }

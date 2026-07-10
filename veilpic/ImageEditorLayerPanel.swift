@@ -985,6 +985,10 @@ extension ImageEditorView {
                 .disabled(!viewModel.canDistributeSelectedLayers)
             layerActionButton(systemImage: "distribute.vertical.bottom", helpKey: "imageEditor.action.layerDistributeBottom") { viewModel.distributeSelectedLayers(.bottom) }
                 .disabled(!viewModel.canDistributeSelectedLayers)
+            layerActionButton(systemImage: "rectangle.split.3x1", helpKey: "imageEditor.action.layerDistributeHorizontalSpacing") { viewModel.distributeSelectedLayerSpacing(.horizontal) }
+                .disabled(!viewModel.canDistributeSelectedLayers)
+            layerActionButton(systemImage: "rectangle.split.1x3", helpKey: "imageEditor.action.layerDistributeVerticalSpacing") { viewModel.distributeSelectedLayerSpacing(.vertical) }
+                .disabled(!viewModel.canDistributeSelectedLayers)
         }
     }
 

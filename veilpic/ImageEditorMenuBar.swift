@@ -622,8 +622,17 @@ extension ImageEditorView {
                 viewModel.distributeSelectedLayers(.bottom)
             }
             .disabled(!viewModel.canDistributeSelectedLayers)
+            Divider()
+            Button(L10n.text("imageEditor.action.layerDistributeHorizontalSpacing")) {
+                viewModel.distributeSelectedLayerSpacing(.horizontal)
+            }
+            .disabled(!viewModel.canDistributeSelectedLayers)
+            Button(L10n.text("imageEditor.action.layerDistributeVerticalSpacing")) {
+                viewModel.distributeSelectedLayerSpacing(.vertical)
+            }
+            .disabled(!viewModel.canDistributeSelectedLayers)
         }
-        .disabled(!viewModel.canAlignSelectedLayers && !viewModel.canAlignSelectedLayersToCanvas)
+        .disabled(!viewModel.canAlignSelectedLayers && !viewModel.canAlignSelectedLayersToCanvas && !viewModel.canDistributeSelectedLayers)
     }
 
     @ViewBuilder

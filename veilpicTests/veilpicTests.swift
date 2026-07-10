@@ -1185,6 +1185,57 @@ struct veilpicTests {
     }
 
     @MainActor
+    @Test func imageEditorDistributesSelectedLayerSpacing() async throws {
+        let image = testImage(color: .systemBlue, size: NSSize(width: 200, height: 160))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.addLayer()
+        let firstID = try #require(viewModel.document.selectedLayerID)
+        viewModel.addLayer()
+        let secondID = try #require(viewModel.document.selectedLayerID)
+        viewModel.addLayer()
+        let thirdID = try #require(viewModel.document.selectedLayerID)
+
+        viewModel.selectLayer(firstID)
+        viewModel.selectLayer(secondID, extendingSelection: true)
+        viewModel.selectLayer(thirdID, extendingSelection: true)
+        #expect(viewModel.canDistributeSelectedLayers)
+
+        func setFrames(
+            first: CGRect = CGRect(x: 10, y: 10, width: 20, height: 10),
+            second: CGRect = CGRect(x: 60, y: 50, width: 30, height: 20),
+            third: CGRect = CGRect(x: 150, y: 130, width: 10, height: 30)
+        ) throws {
+            viewModel.document.layers[try #require(viewModel.document.layers.firstIndex { $0.id == firstID })].frame = first
+            viewModel.document.layers[try #require(viewModel.document.layers.firstIndex { $0.id == secondID })].frame = second
+            viewModel.document.layers[try #require(viewModel.document.layers.firstIndex { $0.id == thirdID })].frame = third
+        }
+
+        try setFrames()
+        viewModel.distributeSelectedLayerSpacing(.horizontal)
+        var firstFrame = try #require(viewModel.document.layers.first { $0.id == firstID }?.frame.standardized)
+        var secondFrame = try #require(viewModel.document.layers.first { $0.id == secondID }?.frame.standardized)
+        var thirdFrame = try #require(viewModel.document.layers.first { $0.id == thirdID }?.frame.standardized)
+        #expect(firstFrame.minX == 10)
+        #expect(secondFrame.minX == 75)
+        #expect(thirdFrame.minX == 150)
+        #expect(secondFrame.minX - firstFrame.maxX == thirdFrame.minX - secondFrame.maxX)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerDistributeSpacing"))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.layerSpacingDistributed"))
+
+        try setFrames()
+        viewModel.distributeSelectedLayerSpacing(.vertical)
+        firstFrame = try #require(viewModel.document.layers.first { $0.id == firstID }?.frame.standardized)
+        secondFrame = try #require(viewModel.document.layers.first { $0.id == secondID }?.frame.standardized)
+        thirdFrame = try #require(viewModel.document.layers.first { $0.id == thirdID }?.frame.standardized)
+        #expect(firstFrame.minY == 10)
+        #expect(secondFrame.minY == 65)
+        #expect(thirdFrame.minY == 130)
+        #expect(secondFrame.minY - firstFrame.maxY == thirdFrame.minY - secondFrame.maxY)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerDistributeSpacing"))
+    }
+
+    @MainActor
     @Test func imageEditorImportImageCreatesCenteredScaledLayerAndUndoRestores() async throws {
         let canvas = testImage(color: .systemBlue, size: NSSize(width: 80, height: 60))
         let imported = testImage(color: .systemPink, size: NSSize(width: 160, height: 120))
