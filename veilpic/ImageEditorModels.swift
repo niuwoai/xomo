@@ -74,6 +74,7 @@ enum ImageEditorTool: String, CaseIterable, Identifiable {
     case cloneStamp
     case dodge
     case burn
+    case sponge
     case blur
     case sharpen
     case smudge
@@ -119,6 +120,8 @@ enum ImageEditorTool: String, CaseIterable, Identifiable {
             "sun.max"
         case .burn:
             "flame"
+        case .sponge:
+            "circle.lefthalf.filled"
         case .blur:
             "drop"
         case .sharpen:
@@ -168,7 +171,7 @@ enum ImageEditorTool: String, CaseIterable, Identifiable {
         ImageEditorToolShortcutGroup(key: "e", tools: [.eraser]),
         ImageEditorToolShortcutGroup(key: "s", tools: [.cloneStamp]),
         ImageEditorToolShortcutGroup(key: "j", tools: [.healingBrush, .patchTool]),
-        ImageEditorToolShortcutGroup(key: "o", tools: [.dodge, .burn]),
+        ImageEditorToolShortcutGroup(key: "o", tools: [.dodge, .burn, .sponge]),
         ImageEditorToolShortcutGroup(key: "r", tools: [.blur, .sharpen, .smudge]),
         ImageEditorToolShortcutGroup(key: "g", tools: [.paintBucket, .gradient]),
         ImageEditorToolShortcutGroup(key: "i", tools: [.eyedropper]),

@@ -499,6 +499,7 @@
 "imageEditor.tool.cloneStamp" = "仿制图章";
 "imageEditor.tool.dodge" = "减淡";
 "imageEditor.tool.burn" = "加深";
+"imageEditor.tool.sponge" = "海绵";
 "imageEditor.tool.blur" = "模糊";
 "imageEditor.tool.sharpen" = "锐化";
 "imageEditor.tool.smudge" = "涂抹";
@@ -1021,6 +1022,7 @@
 "imageEditor.history.cloneStamp" = "仿制图章";
 "imageEditor.history.dodge" = "减淡";
 "imageEditor.history.burn" = "加深";
+"imageEditor.history.sponge" = "海绵";
 "imageEditor.history.blur" = "模糊";
 "imageEditor.history.sharpen" = "锐化";
 "imageEditor.history.smudge" = "涂抹";
@@ -1575,6 +1577,7 @@
 "imageEditor.status.cloneStamped" = "已应用仿制图章";
 "imageEditor.status.dodgeApplied" = "已应用减淡";
 "imageEditor.status.burnApplied" = "已应用加深";
+"imageEditor.status.spongeApplied" = "已应用海绵";
 "imageEditor.status.blurApplied" = "已应用局部模糊";
 "imageEditor.status.sharpenApplied" = "已应用局部锐化";
 "imageEditor.status.smudgeApplied" = "已应用涂抹";

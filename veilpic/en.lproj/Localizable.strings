@@ -499,6 +499,7 @@
 "imageEditor.tool.cloneStamp" = "Clone Stamp";
 "imageEditor.tool.dodge" = "Dodge";
 "imageEditor.tool.burn" = "Burn";
+"imageEditor.tool.sponge" = "Sponge";
 "imageEditor.tool.blur" = "Blur";
 "imageEditor.tool.sharpen" = "Sharpen";
 "imageEditor.tool.smudge" = "Smudge";
@@ -1021,6 +1022,7 @@
 "imageEditor.history.cloneStamp" = "Clone Stamp";
 "imageEditor.history.dodge" = "Dodge";
 "imageEditor.history.burn" = "Burn";
+"imageEditor.history.sponge" = "Sponge";
 "imageEditor.history.blur" = "Blur";
 "imageEditor.history.sharpen" = "Sharpen";
 "imageEditor.history.smudge" = "Smudge";
@@ -1575,6 +1577,7 @@
 "imageEditor.status.cloneStamped" = "Clone stamp applied";
 "imageEditor.status.dodgeApplied" = "Dodge applied";
 "imageEditor.status.burnApplied" = "Burn applied";
+"imageEditor.status.spongeApplied" = "Sponge applied";
 "imageEditor.status.blurApplied" = "Local blur applied";
 "imageEditor.status.sharpenApplied" = "Local sharpen applied";
 "imageEditor.status.smudgeApplied" = "Smudge applied";

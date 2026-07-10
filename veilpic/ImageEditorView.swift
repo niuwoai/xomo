@@ -583,7 +583,7 @@ struct ImageEditorView: View {
                         }
                         lastMoveImagePoint = imagePoint
                     }
-                case .brush, .eraser, .cloneStamp, .dodge, .burn, .blur, .sharpen, .smudge, .healingBrush:
+                case .brush, .eraser, .cloneStamp, .dodge, .burn, .sponge, .blur, .sharpen, .smudge, .healingBrush:
                     if let imagePoint {
                         dragPoints.append(imagePoint)
                     }
@@ -639,6 +639,8 @@ struct ImageEditorView: View {
                     viewModel.toneBrush(points: dragPoints, burn: false)
                 case .burn:
                     viewModel.toneBrush(points: dragPoints, burn: true)
+                case .sponge:
+                    viewModel.spongeBrush(points: dragPoints)
                 case .blur:
                     viewModel.blurBrush(points: dragPoints)
                 case .sharpen:

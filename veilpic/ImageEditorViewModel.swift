@@ -3164,6 +3164,34 @@ final class ImageEditorViewModel: ObservableObject {
             : L10n.text("imageEditor.status.dodgeApplied")
     }
 
+    func spongeBrush(points: [CGPoint]) {
+        guard points.count > 1 else { return }
+        guard !isEditingLayerMask else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+        guard let layer = editableSelectedLayer() else {
+            statusText = L10n.text("imageEditor.status.layerLocked")
+            return
+        }
+        let sourceImage = layer.image.normalizedBitmapImage()
+        guard let output = sourceImage.withSpongeBrush(
+            points: points,
+            width: brushSize,
+            opacity: opacity
+        ) else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+
+        replaceSelectedLayerPixels(
+            output,
+            historyTitle: L10n.text("imageEditor.history.sponge"),
+            resetFrame: false
+        )
+        statusText = L10n.text("imageEditor.status.spongeApplied")
+    }
+
     func blurBrush(points: [CGPoint]) {
         guard points.count > 1 else { return }
         guard !isEditingLayerMask else {

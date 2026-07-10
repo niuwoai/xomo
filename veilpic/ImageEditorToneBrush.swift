@@ -28,6 +28,25 @@ extension NSImage {
         return toneAdjusted(mask: strokeMask, opacity: opacity, burn: burn)
     }
 
+    func withSpongeBrush(points: [CGPoint], width: CGFloat, opacity: CGFloat) -> NSImage? {
+        guard let first = points.first else { return nil }
+        let path = NSBezierPath()
+        path.lineJoinStyle = .round
+        path.lineCapStyle = .round
+        path.lineWidth = max(1, width)
+        path.move(to: first)
+        for point in points.dropFirst() {
+            path.line(to: point)
+        }
+
+        guard let strokeMask = NSImage.rendered(size: size, actions: { _ in
+            NSColor.white.setStroke()
+            path.stroke()
+        }) else { return nil }
+
+        return saturationAdjusted(mask: strokeMask, opacity: opacity)
+    }
+
     func withBlurBrush(points: [CGPoint], width: CGFloat, opacity: CGFloat, radius: CGFloat) -> NSImage? {
         guard let blurredSource = blurred(radius: max(0.5, radius)) else { return nil }
         return mixingBrushSource(blurredSource, points: points, width: width, opacity: opacity)
@@ -164,6 +183,42 @@ extension NSImage {
                         : value + (255 - value) * strength
                     sourcePixels[offset + channel] = UInt8(max(0, min(255, adjusted.rounded())))
                 }
+            }
+        }
+
+        return NSImage.fromRGBA(
+            pixels: sourcePixels,
+            width: width,
+            height: height,
+            bytesPerRow: bytesPerRow,
+            size: size
+        )
+    }
+
+    private func saturationAdjusted(mask: NSImage, opacity: CGFloat) -> NSImage? {
+        let width = max(1, Int(size.width.rounded()))
+        let height = max(1, Int(size.height.rounded()))
+        let bytesPerPixel = 4
+        let bytesPerRow = width * bytesPerPixel
+        guard var sourcePixels = rgbaPixels(width: width, height: height, bytesPerRow: bytesPerRow),
+              let maskPixels = mask.rgbaPixels(width: width, height: height, bytesPerRow: bytesPerRow)
+        else { return nil }
+
+        let clampedOpacity = max(0, min(1, opacity))
+        for y in 0..<height {
+            for x in 0..<width {
+                let offset = y * bytesPerRow + x * bytesPerPixel
+                let strength = CGFloat(maskPixels[offset + 3]) / 255 * clampedOpacity * 0.9
+                guard strength > 0 else { continue }
+
+                let red = CGFloat(sourcePixels[offset])
+                let green = CGFloat(sourcePixels[offset + 1])
+                let blue = CGFloat(sourcePixels[offset + 2])
+                let luminance = red * 0.2126 + green * 0.7152 + blue * 0.0722
+                let multiplier = 1 + strength
+                sourcePixels[offset] = UInt8(max(0, min(255, (luminance + (red - luminance) * multiplier).rounded())))
+                sourcePixels[offset + 1] = UInt8(max(0, min(255, (luminance + (green - luminance) * multiplier).rounded())))
+                sourcePixels[offset + 2] = UInt8(max(0, min(255, (luminance + (blue - luminance) * multiplier).rounded())))
             }
         }
 
