@@ -362,8 +362,7 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     var canEditSelectedLayerBlendIf: Bool {
-        guard let layer = document.selectedLayer else { return false }
-        return canSetLayerBlendIf(layer)
+        selectedLayerIndices.contains { canSetLayerBlendIf(document.layers[$0]) }
     }
 
     var selectedLayerMaskDensity: Double {
@@ -2113,39 +2112,67 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func setSelectedLayerBlendIfSourceBlack(_ value: Double) {
-        guard let index = document.selectedLayerIndex,
-              canSetLayerBlendIf(document.layers[index])
-        else { return }
-        let white = document.layers[index].blendIfSourceWhite
-        document.layers[index].blendIfSourceBlack = min(max(0, value), white)
-        updateStatus()
+        let indices = selectedLayerBlendIfTargetIndices()
+        guard !indices.isEmpty else { return }
+        var didChange = false
+        for index in indices {
+            let white = document.layers[index].blendIfSourceWhite
+            let nextValue = min(max(0, value), white)
+            guard document.layers[index].blendIfSourceBlack != nextValue else { continue }
+            document.layers[index].blendIfSourceBlack = nextValue
+            didChange = true
+        }
+        if didChange {
+            updateStatus()
+        }
     }
 
     func setSelectedLayerBlendIfSourceWhite(_ value: Double) {
-        guard let index = document.selectedLayerIndex,
-              canSetLayerBlendIf(document.layers[index])
-        else { return }
-        let black = document.layers[index].blendIfSourceBlack
-        document.layers[index].blendIfSourceWhite = max(black, min(1, value))
-        updateStatus()
+        let indices = selectedLayerBlendIfTargetIndices()
+        guard !indices.isEmpty else { return }
+        var didChange = false
+        for index in indices {
+            let black = document.layers[index].blendIfSourceBlack
+            let nextValue = max(black, min(1, value))
+            guard document.layers[index].blendIfSourceWhite != nextValue else { continue }
+            document.layers[index].blendIfSourceWhite = nextValue
+            didChange = true
+        }
+        if didChange {
+            updateStatus()
+        }
     }
 
     func setSelectedLayerBlendIfUnderlyingBlack(_ value: Double) {
-        guard let index = document.selectedLayerIndex,
-              canSetLayerBlendIf(document.layers[index])
-        else { return }
-        let white = document.layers[index].blendIfUnderlyingWhite
-        document.layers[index].blendIfUnderlyingBlack = min(max(0, value), white)
-        updateStatus()
+        let indices = selectedLayerBlendIfTargetIndices()
+        guard !indices.isEmpty else { return }
+        var didChange = false
+        for index in indices {
+            let white = document.layers[index].blendIfUnderlyingWhite
+            let nextValue = min(max(0, value), white)
+            guard document.layers[index].blendIfUnderlyingBlack != nextValue else { continue }
+            document.layers[index].blendIfUnderlyingBlack = nextValue
+            didChange = true
+        }
+        if didChange {
+            updateStatus()
+        }
     }
 
     func setSelectedLayerBlendIfUnderlyingWhite(_ value: Double) {
-        guard let index = document.selectedLayerIndex,
-              canSetLayerBlendIf(document.layers[index])
-        else { return }
-        let black = document.layers[index].blendIfUnderlyingBlack
-        document.layers[index].blendIfUnderlyingWhite = max(black, min(1, value))
-        updateStatus()
+        let indices = selectedLayerBlendIfTargetIndices()
+        guard !indices.isEmpty else { return }
+        var didChange = false
+        for index in indices {
+            let black = document.layers[index].blendIfUnderlyingBlack
+            let nextValue = max(black, min(1, value))
+            guard document.layers[index].blendIfUnderlyingWhite != nextValue else { continue }
+            document.layers[index].blendIfUnderlyingWhite = nextValue
+            didChange = true
+        }
+        if didChange {
+            updateStatus()
+        }
     }
 
     func setSelectedLayerMaskDensity(_ density: Double) {
@@ -3659,6 +3686,10 @@ final class ImageEditorViewModel: ObservableObject {
 
     private func selectedLayerFillOpacityTargetIndices() -> [Int] {
         selectedLayerIndices.filter { canSetLayerFillOpacity(document.layers[$0]) }
+    }
+
+    private func selectedLayerBlendIfTargetIndices() -> [Int] {
+        selectedLayerIndices.filter { canSetLayerBlendIf(document.layers[$0]) }
     }
 
     private func selectedLayerBlendModeTargetIndices(for blendMode: ImageEditorBlendMode) -> [Int] {
