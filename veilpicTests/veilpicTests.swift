@@ -3656,6 +3656,49 @@ struct veilpicTests {
     }
 
     @MainActor
+    @Test func imageEditorCanShowAndHideSelectedLayersInBatch() async throws {
+        let image = testImage(color: .systemIndigo, size: NSSize(width: 160, height: 120))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let backgroundID = try #require(viewModel.document.layers.first?.id)
+
+        viewModel.addLayer()
+        let firstID = try #require(viewModel.document.selectedLayerID)
+        viewModel.addLayer()
+        let secondID = try #require(viewModel.document.selectedLayerID)
+
+        viewModel.selectLayer(firstID)
+        viewModel.selectLayer(secondID, extendingSelection: true)
+
+        #expect(viewModel.canHideSelectedLayers)
+        #expect(!viewModel.canShowSelectedLayers)
+        viewModel.hideSelectedLayers()
+
+        #expect(isLayerVisible(backgroundID, in: viewModel))
+        #expect(!isLayerVisible(firstID, in: viewModel))
+        #expect(!isLayerVisible(secondID, in: viewModel))
+        #expect(!viewModel.canHideSelectedLayers)
+        #expect(viewModel.canShowSelectedLayers)
+        #expect(viewModel.document.selectedLayerIDs == Set([firstID, secondID]))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerHideSelected"))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerHideSelected", 2))
+
+        viewModel.showSelectedLayers()
+
+        #expect(isLayerVisible(firstID, in: viewModel))
+        #expect(isLayerVisible(secondID, in: viewModel))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerShowSelected"))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerShowSelected", 2))
+
+        viewModel.undo()
+        #expect(!isLayerVisible(firstID, in: viewModel))
+        #expect(!isLayerVisible(secondID, in: viewModel))
+
+        viewModel.undo()
+        #expect(isLayerVisible(firstID, in: viewModel))
+        #expect(isLayerVisible(secondID, in: viewModel))
+    }
+
+    @MainActor
     @Test func imageEditorMultiSelectTransformsLayersTogether() async throws {
         let canvasSize = NSSize(width: 160, height: 120)
         let image = testBitmapImage(size: canvasSize, background: .black)

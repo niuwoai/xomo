@@ -689,6 +689,14 @@ final class ImageEditorViewModel: ObservableObject {
         document.layers.contains { !$0.isVisible }
     }
 
+    var canShowSelectedLayers: Bool {
+        selectedLayerIndices.contains { !document.layers[$0].isVisible }
+    }
+
+    var canHideSelectedLayers: Bool {
+        selectedLayerIndices.contains { document.layers[$0].isVisible }
+    }
+
     var visibleLayerRows: [ImageEditorLayer] {
         document.layers.reversed().filter { layer in
             document.ancestorGroups(for: layer).allSatisfy(\.isGroupExpanded)
@@ -1887,6 +1895,14 @@ final class ImageEditorViewModel: ObservableObject {
         }
         appendHistory(L10n.text("imageEditor.history.layerShowAll"))
         statusText = L10n.text("imageEditor.status.layerShowAll")
+    }
+
+    func showSelectedLayers() {
+        setSelectedLayersVisibility(true)
+    }
+
+    func hideSelectedLayers() {
+        setSelectedLayersVisibility(false)
     }
 
     func toggleLayerGroupExpansion(_ id: UUID) {
@@ -3987,6 +4003,24 @@ final class ImageEditorViewModel: ObservableObject {
         }
         visibleIDs.formUnion(ancestorIDs)
         return visibleIDs
+    }
+
+    private func setSelectedLayersVisibility(_ isVisible: Bool) {
+        let indices = selectedLayerIndices.filter { document.layers[$0].isVisible != isVisible }
+        guard !indices.isEmpty else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+
+        pushUndo()
+        for index in indices {
+            document.layers[index].isVisible = isVisible
+        }
+        appendHistory(L10n.text(isVisible ? "imageEditor.history.layerShowSelected" : "imageEditor.history.layerHideSelected"))
+        statusText = L10n.format(
+            isVisible ? "imageEditor.status.layerShowSelected" : "imageEditor.status.layerHideSelected",
+            indices.count
+        )
     }
 
     private func selectedLayerClippingCreationIndices() -> [Int] {

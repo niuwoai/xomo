@@ -979,6 +979,10 @@ extension ImageEditorView {
         Group {
             layerActionButton(systemImage: "trash", helpKey: "imageEditor.action.layerDelete") { viewModel.deleteSelectedLayer() }
                 .disabled(!viewModel.canDeleteLayer)
+            layerActionButton(systemImage: "eye", helpKey: "imageEditor.action.layerShowSelected") { viewModel.showSelectedLayers() }
+                .disabled(!viewModel.canShowSelectedLayers)
+            layerActionButton(systemImage: "eye.slash", helpKey: "imageEditor.action.layerHideSelected") { viewModel.hideSelectedLayers() }
+                .disabled(!viewModel.canHideSelectedLayers)
             layerActionButton(systemImage: "arrow.up.to.line", helpKey: "imageEditor.action.layerTop") { viewModel.moveSelectedLayerToTop() }
                 .disabled(!viewModel.canMoveSelectedLayerToTop)
             layerActionButton(systemImage: "arrow.up", helpKey: "imageEditor.action.layerUp") { viewModel.moveSelectedLayerUp() }

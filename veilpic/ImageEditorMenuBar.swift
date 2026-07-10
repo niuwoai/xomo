@@ -376,6 +376,14 @@ extension ImageEditorView {
             viewModel.isolateSelectedLayers()
         }
         .disabled(!viewModel.canIsolateSelectedLayers)
+        Button(L10n.text("imageEditor.action.layerShowSelected")) {
+            viewModel.showSelectedLayers()
+        }
+        .disabled(!viewModel.canShowSelectedLayers)
+        Button(L10n.text("imageEditor.action.layerHideSelected")) {
+            viewModel.hideSelectedLayers()
+        }
+        .disabled(!viewModel.canHideSelectedLayers)
         Button(L10n.text("imageEditor.action.layerShowAll")) {
             viewModel.showAllLayers()
         }
