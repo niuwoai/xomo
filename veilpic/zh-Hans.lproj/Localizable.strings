@@ -426,6 +426,7 @@
 "imageEditor.action.projectSave" = "保存项目";
 "imageEditor.action.undo" = "撤销";
 "imageEditor.action.cloneSourcePick" = "设置图章取样点";
+"imageEditor.action.colorSamplerClear" = "清除取样点";
 "imageEditor.action.redo" = "重做";
 "imageEditor.export.title" = "导出图像";
 "imageEditor.export.format" = "格式";
@@ -1381,6 +1382,7 @@
 "imageEditor.status.pathFromSelectionFailed" = "请先建立有效的非反相选区";
 "imageEditor.status.colorSampled" = "已取样前景色";
 "imageEditor.status.colorSamplerAdded" = "已添加颜色取样点 %d";
+"imageEditor.status.colorSamplerCleared" = "已清除颜色取样点";
 "imageEditor.status.gradientApplied" = "已应用拖拽渐变";
 "imageEditor.status.adjustmentFailed" = "调整失败";
 "imageEditor.status.filter" = "已应用 %@";

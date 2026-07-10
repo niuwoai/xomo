@@ -118,6 +118,14 @@ struct ImageEditorView: View {
                 .help(L10n.text("imageEditor.action.cloneSourcePick"))
             }
 
+            if viewModel.selectedTool == .colorSampler {
+                Button(L10n.text("imageEditor.action.colorSamplerClear")) {
+                    viewModel.clearColorSamplers()
+                }
+                .buttonStyle(EditorTextButtonStyle())
+                .disabled(viewModel.colorSamplerPoints.isEmpty)
+            }
+
             Spacer()
 
             Button {

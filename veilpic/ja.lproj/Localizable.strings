@@ -426,6 +426,7 @@
 "imageEditor.action.projectSave" = "プロジェクトを保存";
 "imageEditor.action.undo" = "取り消す";
 "imageEditor.action.cloneSourcePick" = "スタンプのサンプル元を設定";
+"imageEditor.action.colorSamplerClear" = "サンプルを消去";
 "imageEditor.action.redo" = "やり直す";
 "imageEditor.export.title" = "画像を書き出し";
 "imageEditor.export.format" = "形式";
@@ -1381,6 +1382,7 @@
 "imageEditor.status.pathFromSelectionFailed" = "有効で反転していない選択範囲を先に作成してください";
 "imageEditor.status.colorSampled" = "前景色を取得しました";
 "imageEditor.status.colorSamplerAdded" = "カラーサンプラー %d を追加しました";
+"imageEditor.status.colorSamplerCleared" = "カラーサンプラーを消去しました";
 "imageEditor.status.gradientApplied" = "ドラッグしたグラデを適用しました";
 "imageEditor.status.adjustmentFailed" = "調整に失敗しました";
 "imageEditor.status.filter" = "%@ を適用しました";

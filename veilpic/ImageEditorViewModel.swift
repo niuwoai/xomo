@@ -3422,6 +3422,12 @@ final class ImageEditorViewModel: ObservableObject {
         statusText = L10n.format("imageEditor.status.colorSamplerAdded", colorSamplerPoints.count)
     }
 
+    func clearColorSamplers() {
+        guard !colorSamplerPoints.isEmpty else { return }
+        colorSamplerPoints.removeAll()
+        statusText = L10n.text("imageEditor.status.colorSamplerCleared")
+    }
+
     func selectAdjustment(_ adjustment: ImageEditorAdjustment) {
         selectedAdjustment = adjustment
         isPropertiesPanelVisible = true

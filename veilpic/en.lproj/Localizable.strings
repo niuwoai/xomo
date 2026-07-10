@@ -426,6 +426,7 @@
 "imageEditor.action.projectSave" = "Save Project";
 "imageEditor.action.undo" = "Undo";
 "imageEditor.action.cloneSourcePick" = "Set Clone Source";
+"imageEditor.action.colorSamplerClear" = "Clear Samples";
 "imageEditor.action.redo" = "Redo";
 "imageEditor.export.title" = "Export Image";
 "imageEditor.export.format" = "Format";
@@ -1381,6 +1382,7 @@
 "imageEditor.status.pathFromSelectionFailed" = "Create a valid non-inverted selection first";
 "imageEditor.status.colorSampled" = "Foreground color sampled";
 "imageEditor.status.colorSamplerAdded" = "Color sampler %d added";
+"imageEditor.status.colorSamplerCleared" = "Color samplers cleared";
 "imageEditor.status.gradientApplied" = "Gradient applied from drag";
 "imageEditor.status.adjustmentFailed" = "Adjustment failed";
 "imageEditor.status.filter" = "%@ applied";
