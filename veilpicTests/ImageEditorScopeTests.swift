@@ -187,6 +187,17 @@ struct ImageEditorScopeTests {
         #expect(opacityShortcutSource.contains("ForEach([1, 2, 3, 4, 5, 6, 7, 8, 9, 0], id: \\.self)"))
         #expect(opacityShortcutSource.contains("viewModel.applyOpacityShortcutDigit(digit)"))
         #expect(opacityShortcutSource.contains(".keyboardShortcut(KeyEquivalent(Character(String(digit))), modifiers: [])"))
+
+        let colorShortcutStart = try #require(source.range(of: "private var colorShortcutButtons: some View"))
+        let colorShortcutEnd = try #require(
+            source[colorShortcutStart.upperBound...].range(of: "private var colorChips: some View")
+        )
+        let colorShortcutSource = source[colorShortcutStart.lowerBound..<colorShortcutEnd.lowerBound]
+
+        #expect(colorShortcutSource.contains("viewModel.resetForegroundBackgroundColors()"))
+        #expect(colorShortcutSource.contains(".keyboardShortcut(\"d\", modifiers: [])"))
+        #expect(colorShortcutSource.contains("viewModel.swapForegroundBackgroundColors()"))
+        #expect(colorShortcutSource.contains(".keyboardShortcut(\"x\", modifiers: [])"))
     }
 
     @MainActor
@@ -275,6 +286,24 @@ struct ImageEditorScopeTests {
 
         viewModel.applyOpacityShortcutDigit(0)
         #expect(viewModel.opacity == 1)
+    }
+
+    @MainActor
+    @Test func classicForegroundBackgroundShortcutsReuseExistingColorActions() {
+        let image = NSImage(size: NSSize(width: 80, height: 60))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.foregroundColor = .systemRed
+        viewModel.backgroundColor = .systemBlue
+        viewModel.resetForegroundBackgroundColors()
+        #expect(viewModel.foregroundColor == .black)
+        #expect(viewModel.backgroundColor == .white)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.colorDefaultForegroundBackground"))
+
+        viewModel.swapForegroundBackgroundColors()
+        #expect(viewModel.foregroundColor == .white)
+        #expect(viewModel.backgroundColor == .black)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.colorSwapForegroundBackground"))
     }
 
     @MainActor

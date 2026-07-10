@@ -65,6 +65,7 @@ struct ImageEditorView: View {
         .background(toolShortcutButtons)
         .background(brushShortcutButtons)
         .background(opacityShortcutButtons)
+        .background(colorShortcutButtons)
         .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
         .onAppear {
             syncLayerNameDraft()
@@ -259,6 +260,28 @@ struct ImageEditorView: View {
                 .keyboardShortcut(KeyEquivalent(Character(String(digit))), modifiers: [])
                 .accessibilityHidden(true)
             }
+        }
+        .frame(width: 0, height: 0)
+        .opacity(0)
+    }
+
+    private var colorShortcutButtons: some View {
+        Group {
+            Button {
+                viewModel.resetForegroundBackgroundColors()
+            } label: {
+                EmptyView()
+            }
+            .keyboardShortcut("d", modifiers: [])
+            .accessibilityHidden(true)
+
+            Button {
+                viewModel.swapForegroundBackgroundColors()
+            } label: {
+                EmptyView()
+            }
+            .keyboardShortcut("x", modifiers: [])
+            .accessibilityHidden(true)
         }
         .frame(width: 0, height: 0)
         .opacity(0)
