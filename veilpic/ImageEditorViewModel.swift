@@ -358,8 +358,7 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     var canEditSelectedLayerFillOpacity: Bool {
-        guard let layer = document.selectedLayer else { return false }
-        return canSetLayerFillOpacity(layer)
+        selectedLayerIndices.contains { canSetLayerFillOpacity(document.layers[$0]) }
     }
 
     var canEditSelectedLayerBlendIf: Bool {
@@ -390,8 +389,10 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     var selectedLayerBlendModes: [ImageEditorBlendMode] {
-        guard let layer = document.selectedLayer else { return [.normal] }
-        return ImageEditorBlendMode.allCases.filter { layer.isGroup || $0 != .passThrough }
+        let indices = selectedLayerIndices
+        guard !indices.isEmpty else { return [.normal] }
+        let canUsePassThrough = indices.allSatisfy { document.layers[$0].isGroup }
+        return ImageEditorBlendMode.allCases.filter { canUsePassThrough || $0 != .passThrough }
     }
 
     var selectedLayerName: String {
@@ -2092,18 +2093,22 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func setSelectedLayerOpacity(_ opacity: Double) {
-        guard let index = document.selectedLayerIndex,
-              !document.isEffectivelyLocked(document.layers[index])
-        else { return }
-        document.layers[index].opacity = max(0, min(1, opacity))
+        let normalizedOpacity = max(0, min(1, opacity))
+        let indices = selectedLayerOpacityTargetIndices().filter { document.layers[$0].opacity != normalizedOpacity }
+        guard !indices.isEmpty else { return }
+        for index in indices {
+            document.layers[index].opacity = normalizedOpacity
+        }
         updateStatus()
     }
 
     func setSelectedLayerFillOpacity(_ fillOpacity: Double) {
-        guard let index = document.selectedLayerIndex,
-              canSetLayerFillOpacity(document.layers[index])
-        else { return }
-        document.layers[index].fillOpacity = max(0, min(1, fillOpacity))
+        let normalizedOpacity = max(0, min(1, fillOpacity))
+        let indices = selectedLayerFillOpacityTargetIndices().filter { document.layers[$0].fillOpacity != normalizedOpacity }
+        guard !indices.isEmpty else { return }
+        for index in indices {
+            document.layers[index].fillOpacity = normalizedOpacity
+        }
         updateStatus()
     }
 
@@ -2160,15 +2165,12 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func setSelectedLayerBlendMode(_ blendMode: ImageEditorBlendMode) {
-        guard let index = document.selectedLayerIndex,
-              !document.layers[index].isAdjustment,
-              !document.layers[index].isFilter,
-              !document.isEffectivelyLocked(document.layers[index]),
-              document.layers[index].isGroup || blendMode != .passThrough,
-              document.layers[index].blendMode != blendMode
-        else { return }
+        let indices = selectedLayerBlendModeTargetIndices(for: blendMode).filter { document.layers[$0].blendMode != blendMode }
+        guard !indices.isEmpty else { return }
         pushUndo()
-        document.layers[index].blendMode = blendMode
+        for index in indices {
+            document.layers[index].blendMode = blendMode
+        }
         appendHistory(L10n.text("imageEditor.history.layerBlendMode"))
     }
 
@@ -3649,6 +3651,27 @@ final class ImageEditorViewModel: ObservableObject {
             && !layer.isAdjustment
             && !layer.isFilter
             && !document.isEffectivelyLocked(layer)
+    }
+
+    private func selectedLayerOpacityTargetIndices() -> [Int] {
+        selectedLayerIndices.filter { !document.isEffectivelyLocked(document.layers[$0]) }
+    }
+
+    private func selectedLayerFillOpacityTargetIndices() -> [Int] {
+        selectedLayerIndices.filter { canSetLayerFillOpacity(document.layers[$0]) }
+    }
+
+    private func selectedLayerBlendModeTargetIndices(for blendMode: ImageEditorBlendMode) -> [Int] {
+        selectedLayerIndices.filter { index in
+            canSetLayerBlendMode(document.layers[index], to: blendMode)
+        }
+    }
+
+    private func canSetLayerBlendMode(_ layer: ImageEditorLayer, to blendMode: ImageEditorBlendMode) -> Bool {
+        !layer.isAdjustment
+            && !layer.isFilter
+            && !document.isEffectivelyLocked(layer)
+            && (layer.isGroup || blendMode != .passThrough)
     }
 
     private func groupMemberIndices(for groupID: UUID) -> [Int] {
