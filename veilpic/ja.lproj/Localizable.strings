@@ -799,6 +799,7 @@
 "imageEditor.layer.newName" = "レイヤー %d";
 "imageEditor.layer.groupName" = "グループ %d";
 "imageEditor.layer.visibleStampName" = "表示レイヤーをスタンプ";
+"imageEditor.layer.selectedStampName" = "選択レイヤーをスタンプ";
 "imageEditor.layer.selectedMergedName" = "選択レイヤーを結合";
 "imageEditor.layer.visibleMergedName" = "表示レイヤーを結合";
 "imageEditor.layer.flattenedName" = "画像を統合";
@@ -1004,6 +1005,7 @@
 "imageEditor.history.layerMergeSelected" = "選択レイヤーを結合";
 "imageEditor.history.layerMergeVisible" = "表示レイヤーを結合";
 "imageEditor.history.layerStampVisible" = "表示レイヤーをスタンプ";
+"imageEditor.history.layerStampSelected" = "選択レイヤーをスタンプ";
 "imageEditor.history.layerFlatten" = "画像を統合";
 "imageEditor.history.layerLock" = "レイヤーのロック切替";
 "imageEditor.history.layerLockSelected" = "選択レイヤーをロック";
@@ -1213,6 +1215,7 @@
 "imageEditor.status.layerRasterized" = "レイヤーをラスタライズしました";
 "imageEditor.status.layerMergeSelected" = "選択中のレイヤーを結合しました";
 "imageEditor.status.layerMergeVisible" = "表示中のレイヤーを結合しました";
+"imageEditor.status.layerStampSelected" = "選択中のレイヤーを新規ピクセルレイヤーへスタンプしました";
 "imageEditor.status.layerFlattened" = "画像を単一のピクセルレイヤーに統合しました";
 "imageEditor.status.layerFromBackground" = "背景を通常レイヤーとしてロック解除しました";
 "imageEditor.status.backgroundFromLayer" = "選択中のレイヤーを背景に変換しました";
@@ -1475,6 +1478,7 @@
 "imageEditor.action.layerMergeSelected" = "選択レイヤーを結合";
 "imageEditor.action.layerMergeVisible" = "表示レイヤーを結合";
 "imageEditor.action.layerStampVisible" = "表示レイヤーをスタンプ";
+"imageEditor.action.layerStampSelected" = "選択レイヤーをスタンプ";
 "imageEditor.action.layerFlatten" = "画像を統合";
 "imageEditor.action.layerVisibility" = "レイヤーを表示/非表示";
 "imageEditor.action.layerLock" = "レイヤーをロック";

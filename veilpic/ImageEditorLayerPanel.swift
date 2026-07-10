@@ -1000,6 +1000,8 @@ extension ImageEditorView {
                 .disabled(!viewModel.canMergeVisibleLayers)
             layerActionButton(systemImage: "square.stack.3d.up.fill", helpKey: "imageEditor.action.layerStampVisible") { viewModel.stampVisibleLayers() }
                 .disabled(!viewModel.canStampVisibleLayers)
+            layerActionButton(systemImage: "square.stack.3d.up", helpKey: "imageEditor.action.layerStampSelected") { viewModel.stampSelectedLayers() }
+                .disabled(!viewModel.canStampSelectedLayers)
             layerActionButton(systemImage: "rectangle.fill", helpKey: "imageEditor.action.layerFlatten") { viewModel.flattenImage() }
                 .disabled(!viewModel.canFlattenImage)
         }

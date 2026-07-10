@@ -799,6 +799,7 @@
 "imageEditor.layer.newName" = "Layer %d";
 "imageEditor.layer.groupName" = "Group %d";
 "imageEditor.layer.visibleStampName" = "Visible Stamp";
+"imageEditor.layer.selectedStampName" = "Selected Stamp";
 "imageEditor.layer.selectedMergedName" = "Merged Selected";
 "imageEditor.layer.visibleMergedName" = "Merged Visible";
 "imageEditor.layer.flattenedName" = "Flattened Image";
@@ -1004,6 +1005,7 @@
 "imageEditor.history.layerMergeSelected" = "Merge Selected Layers";
 "imageEditor.history.layerMergeVisible" = "Merge Visible Layers";
 "imageEditor.history.layerStampVisible" = "Stamp Visible Layers";
+"imageEditor.history.layerStampSelected" = "Stamp Selected Layers";
 "imageEditor.history.layerFlatten" = "Flatten Image";
 "imageEditor.history.layerLock" = "Toggle Layer Lock";
 "imageEditor.history.layerLockSelected" = "Lock Selected Layers";
@@ -1213,6 +1215,7 @@
 "imageEditor.status.layerRasterized" = "Layer rasterized";
 "imageEditor.status.layerMergeSelected" = "Selected layers merged";
 "imageEditor.status.layerMergeVisible" = "Visible layers merged";
+"imageEditor.status.layerStampSelected" = "Selected layers stamped into a new pixel layer";
 "imageEditor.status.layerFlattened" = "Image flattened into one pixel layer";
 "imageEditor.status.layerFromBackground" = "Background unlocked as a normal layer";
 "imageEditor.status.backgroundFromLayer" = "Selected layer converted to background";
@@ -1475,6 +1478,7 @@
 "imageEditor.action.layerMergeSelected" = "Merge Selected Layers";
 "imageEditor.action.layerMergeVisible" = "Merge Visible Layers";
 "imageEditor.action.layerStampVisible" = "Stamp Visible Layers";
+"imageEditor.action.layerStampSelected" = "Stamp Selected Layers";
 "imageEditor.action.layerFlatten" = "Flatten Image";
 "imageEditor.action.layerVisibility" = "Show / Hide Layer";
 "imageEditor.action.layerLock" = "Lock Layer";

@@ -402,6 +402,10 @@ extension ImageEditorView {
             viewModel.stampVisibleLayers()
         }
         .disabled(!viewModel.canStampVisibleLayers)
+        Button(L10n.text("imageEditor.action.layerStampSelected")) {
+            viewModel.stampSelectedLayers()
+        }
+        .disabled(!viewModel.canStampSelectedLayers)
         Button(L10n.text("imageEditor.action.layerMergeVisible")) {
             viewModel.mergeVisibleLayers()
         }

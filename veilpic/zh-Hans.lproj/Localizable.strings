@@ -799,6 +799,7 @@
 "imageEditor.layer.newName" = "图层 %d";
 "imageEditor.layer.groupName" = "组 %d";
 "imageEditor.layer.visibleStampName" = "盖印可见图层";
+"imageEditor.layer.selectedStampName" = "盖印所选图层";
 "imageEditor.layer.selectedMergedName" = "合并所选图层";
 "imageEditor.layer.visibleMergedName" = "合并可见图层";
 "imageEditor.layer.flattenedName" = "扁平化图像";
@@ -1004,6 +1005,7 @@
 "imageEditor.history.layerMergeSelected" = "合并所选图层";
 "imageEditor.history.layerMergeVisible" = "合并可见图层";
 "imageEditor.history.layerStampVisible" = "盖印可见图层";
+"imageEditor.history.layerStampSelected" = "盖印所选图层";
 "imageEditor.history.layerFlatten" = "扁平化图像";
 "imageEditor.history.layerLock" = "切换图层锁定";
 "imageEditor.history.layerLockSelected" = "锁定所选图层";
@@ -1213,6 +1215,7 @@
 "imageEditor.status.layerRasterized" = "已栅格化当前图层";
 "imageEditor.status.layerMergeSelected" = "已合并所选图层";
 "imageEditor.status.layerMergeVisible" = "已合并所有可见图层";
+"imageEditor.status.layerStampSelected" = "已将所选图层盖印为新的像素层";
 "imageEditor.status.layerFlattened" = "已将图像扁平化为单一像素图层";
 "imageEditor.status.layerFromBackground" = "已将背景解锁为普通图层";
 "imageEditor.status.backgroundFromLayer" = "已将当前图层设为背景";
@@ -1475,6 +1478,7 @@
 "imageEditor.action.layerMergeSelected" = "合并所选图层";
 "imageEditor.action.layerMergeVisible" = "合并可见图层";
 "imageEditor.action.layerStampVisible" = "盖印可见图层";
+"imageEditor.action.layerStampSelected" = "盖印所选图层";
 "imageEditor.action.layerFlatten" = "扁平化图像";
 "imageEditor.action.layerVisibility" = "显示/隐藏图层";
 "imageEditor.action.layerLock" = "锁定图层";

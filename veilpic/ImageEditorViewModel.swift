@@ -859,6 +859,14 @@ final class ImageEditorViewModel: ObservableObject {
         }
     }
 
+    var canStampSelectedLayers: Bool {
+        let sourceIDs = selectedStampLayerIDs
+        guard !sourceIDs.isEmpty else { return false }
+        return document.layers.contains { layer in
+            sourceIDs.contains(layer.id) && document.shouldComposite(layer)
+        }
+    }
+
     var canGroupSelectedLayer: Bool {
         let indices = selectedLayerIndices
         guard !indices.isEmpty else { return false }
@@ -2329,6 +2337,35 @@ final class ImageEditorViewModel: ObservableObject {
         document.selectedLayerIDs = [layer.id]
         isEditingLayerMask = false
         appendHistory(L10n.text("imageEditor.history.layerStampVisible"))
+    }
+
+    func stampSelectedLayers() {
+        let sourceIDs = selectedStampLayerIDs
+        guard canStampSelectedLayers else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+
+        pushUndo()
+        var layer = ImageEditorLayer.blank(
+            name: L10n.text("imageEditor.layer.selectedStampName"),
+            size: document.canvasSize
+        )
+        let insertionContext = selectedStampInsertionContext()
+        layer.image = document.compositedImage(includingOnly: sourceIDs).normalizedBitmapImage()
+        layer.frame = CGRect(origin: .zero, size: document.canvasSize)
+        layer.opacity = 1
+        layer.fillOpacity = 1
+        layer.blendMode = .normal
+        layer.groupID = insertionContext.parentGroupID
+        layer.isClippingMask = false
+        document.layers.insert(layer, at: insertionContext.index)
+        expandGroupIfNeeded(insertionContext.parentGroupID)
+        document.selectedLayerID = layer.id
+        document.selectedLayerIDs = [layer.id]
+        isEditingLayerMask = false
+        statusText = L10n.text("imageEditor.status.layerStampSelected")
+        appendHistory(L10n.text("imageEditor.history.layerStampSelected"))
     }
 
     func addLayerMask() {
@@ -3980,6 +4017,31 @@ final class ImageEditorViewModel: ObservableObject {
             parentGroupID: selectedLayer.groupID,
             index: min(selectedIndex + 1, document.layers.count)
         )
+    }
+
+    private var selectedStampLayerIDs: Set<UUID> {
+        var sourceIDs = document.selectedLayerIDs
+        let selectedGroupIDs = selectedLayerIndices.compactMap { index in
+            document.layers[index].isGroup ? document.layers[index].id : nil
+        }
+
+        for groupID in selectedGroupIDs {
+            sourceIDs.formUnion(groupDescendantIDs(for: groupID))
+        }
+
+        return sourceIDs
+    }
+
+    private func selectedStampInsertionContext() -> NewLayerInsertionContext {
+        let selectedRoots = document.layers.enumerated().filter { _, layer in
+            document.selectedLayerIDs.contains(layer.id)
+        }
+        let parentIDs = Set(selectedRoots.map { _, layer in layer.groupID })
+        let parentGroupID = parentIDs.count == 1 ? parentIDs.first ?? nil : nil
+        let insertionIndex = selectedRoots.map(\.offset).max().map { min($0 + 1, document.layers.count) }
+            ?? document.layers.count
+
+        return NewLayerInsertionContext(parentGroupID: parentGroupID, index: insertionIndex)
     }
 
     private func expandGroupIfNeeded(_ groupID: UUID?) {

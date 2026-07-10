@@ -2169,6 +2169,58 @@ struct veilpicTests {
     }
 
     @MainActor
+    @Test func imageEditorStampSelectedCreatesMergedCopyAndPreservesSourceLayers() async throws {
+        let image = testImage(color: .systemBlue, size: NSSize(width: 80, height: 60))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        let firstLayerID = try #require(viewModel.document.selectedLayerID)
+        viewModel.foregroundColor = .systemPink
+        viewModel.brushSize = 44
+        viewModel.drawBrush(points: [CGPoint(x: 0, y: 0), CGPoint(x: 80, y: 60)])
+
+        viewModel.addLayer()
+        let secondLayerID = try #require(viewModel.document.selectedLayerID)
+        viewModel.foregroundColor = .systemYellow
+        viewModel.brushSize = 28
+        viewModel.drawBrush(points: [CGPoint(x: 10, y: 10), CGPoint(x: 70, y: 50)])
+
+        viewModel.addLayer()
+        let unselectedLayerID = try #require(viewModel.document.selectedLayerID)
+        viewModel.foregroundColor = .systemGreen
+        viewModel.brushSize = 22
+        viewModel.drawBrush(points: [CGPoint(x: 72, y: 8), CGPoint(x: 76, y: 12)])
+
+        viewModel.selectLayer(firstLayerID)
+        viewModel.selectLayer(secondLayerID, extendingSelection: true)
+
+        let layerCountBeforeStamp = viewModel.document.layers.count
+        let compositedBeforeStamp = try #require(viewModel.currentImage.qingtuPNGData())
+        let selectedCompositeBeforeStamp = try #require(
+            viewModel.document.compositedImage(includingOnly: [firstLayerID, secondLayerID]).qingtuPNGData()
+        )
+
+        #expect(viewModel.canStampSelectedLayers)
+        viewModel.stampSelectedLayers()
+
+        let stampLayer = try #require(viewModel.document.selectedLayer)
+        #expect(viewModel.document.layers.count == layerCountBeforeStamp + 1)
+        #expect(stampLayer.name == L10n.text("imageEditor.layer.selectedStampName"))
+        #expect(stampLayer.image.qingtuPNGData() == selectedCompositeBeforeStamp)
+        #expect(viewModel.document.layers.contains { $0.id == firstLayerID })
+        #expect(viewModel.document.layers.contains { $0.id == secondLayerID })
+        #expect(viewModel.document.layers.contains { $0.id == unselectedLayerID })
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStampSelected"))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.layerStampSelected"))
+
+        viewModel.undo()
+        #expect(viewModel.document.layers.count == layerCountBeforeStamp)
+        #expect(viewModel.document.layers.contains { $0.id == firstLayerID })
+        #expect(viewModel.document.layers.contains { $0.id == secondLayerID })
+        #expect(viewModel.document.layers.contains { $0.id == unselectedLayerID })
+        #expect(try #require(viewModel.currentImage.qingtuPNGData()) == compositedBeforeStamp)
+    }
+
+    @MainActor
     @Test func imageEditorMergeVisibleKeepsHiddenLayersAndUndoRestoresStack() async throws {
         let image = testImage(color: .systemBlue, size: NSSize(width: 80, height: 60))
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
