@@ -161,6 +161,46 @@ struct ImageEditorCanvasCommandTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.rotate180"))
     }
 
+    @Test
+    func trimTransparentPixelsCropsToVisibleAlphaBounds() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: NSImage.transparent(size: NSSize(width: 100, height: 80))
+        ) { _ in }
+        let layerIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[layerIndex].frame = CGRect(x: 30, y: 22, width: 20, height: 16)
+        viewModel.document.layers[layerIndex].image = NSImage.opaqueMask(size: CGSize(width: 20, height: 16))
+        viewModel.document.selection = .rectangle(CGRect(x: 34, y: 26, width: 8, height: 6))
+        viewModel.document.savedSelection = .rectangle(CGRect(x: 38, y: 30, width: 6, height: 4))
+        viewModel.document.alphaChannels = [
+            ImageEditorAlphaChannel(
+                name: "Trim Alpha",
+                mask: sparseMask(width: 100, height: 80, points: [CGPoint(x: 35, y: 27), CGPoint(x: 90, y: 70)])
+            )
+        ]
+        viewModel.document.guides = [
+            ImageEditorGuide(orientation: .vertical, position: 30),
+            ImageEditorGuide(orientation: .horizontal, position: 22),
+            ImageEditorGuide(orientation: .vertical, position: 90)
+        ]
+
+        viewModel.trimTransparentPixels()
+
+        let trimmedAlpha = try #require(viewModel.document.alphaChannels.first?.mask)
+        #expect(viewModel.document.canvasSize == CGSize(width: 20, height: 16))
+        #expect(viewModel.document.layers[layerIndex].frame == CGRect(x: 0, y: 0, width: 20, height: 16))
+        #expect(viewModel.document.selection?.points.first == CGPoint(x: 4, y: 4))
+        #expect(viewModel.document.savedSelection?.points.first == CGPoint(x: 8, y: 8))
+        #expect(trimmedAlpha.width == 20)
+        #expect(trimmedAlpha.height == 16)
+        #expect(trimmedAlpha.alpha[5 * 20 + 5] == 255)
+        #expect(trimmedAlpha.alpha.filter { $0 == 255 }.count == 1)
+        #expect(viewModel.document.guides.count == 2)
+        #expect(viewModel.document.guides.contains { $0.orientation == .vertical && $0.position == 0 })
+        #expect(viewModel.document.guides.contains { $0.orientation == .horizontal && $0.position == 0 })
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.trim"))
+    }
+
     private func testImage(color: NSColor, size: NSSize) -> NSImage {
         let image = NSImage(size: size)
         image.lockFocus()

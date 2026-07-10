@@ -372,6 +372,7 @@
 "imageEditor.action.autoContrast" = "Auto Contrast";
 "imageEditor.action.autoColor" = "Auto Color";
 "imageEditor.action.cropCenter" = "Center Crop";
+"imageEditor.action.trimTransparentPixels" = "Trim Transparent Pixels";
 "imageEditor.action.addText" = "Add Text";
 "imageEditor.action.gradient" = "Add Gradient";
 "imageEditor.action.rotate" = "Rotate";
@@ -925,6 +926,7 @@
 "imageEditor.history.flipHorizontal" = "Flip Horizontal";
 "imageEditor.history.flipVertical" = "Flip Vertical";
 "imageEditor.history.crop" = "Crop";
+"imageEditor.history.trim" = "Trim";
 "imageEditor.history.gradient" = "Gradient";
 "imageEditor.history.text" = "Text";
 "imageEditor.history.erase" = "Erase";
@@ -1921,6 +1923,8 @@
 "imageEditor.history.imageResize" = "Resize Image";
 "imageEditor.history.canvasResize" = "Resize Canvas";
 "imageEditor.status.resizeInvalid" = "Enter a valid size between 8 and 12000 px";
+"imageEditor.status.trimNoVisiblePixels" = "No visible pixels to trim";
+"imageEditor.status.trimNoTransparentEdges" = "No transparent edge pixels to trim";
 "imageEditor.canvasAnchor.topLeft" = "Top Left";
 "imageEditor.canvasAnchor.top" = "Top";
 "imageEditor.canvasAnchor.topRight" = "Top Right";

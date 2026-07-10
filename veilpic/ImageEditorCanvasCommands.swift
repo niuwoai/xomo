@@ -158,7 +158,31 @@ extension ImageEditorViewModel {
         crop(to: cropRect)
     }
 
+    func trimTransparentPixels() {
+        let width = max(1, Int(document.canvasSize.width.rounded()))
+        let height = max(1, Int(document.canvasSize.height.rounded()))
+        guard let alphaMask = document.compositedImage.alphaMask(width: width, height: height),
+              let bounds = alphaMask.selectedBounds(in: document.canvasSize)
+        else {
+            statusText = L10n.text("imageEditor.status.trimNoVisiblePixels")
+            return
+        }
+
+        let canvasBounds = CGRect(origin: .zero, size: document.canvasSize)
+        let trimRect = bounds.integral.intersection(canvasBounds)
+        guard trimRect.width < document.canvasSize.width || trimRect.height < document.canvasSize.height else {
+            statusText = L10n.text("imageEditor.status.trimNoTransparentEdges")
+            return
+        }
+
+        crop(to: trimRect, historyTitle: L10n.text("imageEditor.history.trim"))
+    }
+
     func crop(to rect: CGRect) {
+        crop(to: rect, historyTitle: L10n.text("imageEditor.history.crop"))
+    }
+
+    private func crop(to rect: CGRect, historyTitle: String) {
         let originalSize = document.canvasSize
         let bounded = rect.standardized
             .intersection(CGRect(origin: .zero, size: originalSize))
@@ -205,7 +229,7 @@ extension ImageEditorViewModel {
         }
         canvasOffset = .zero
         syncSizeControlsFromDocument()
-        appendHistory(L10n.text("imageEditor.history.crop"))
+        appendHistory(historyTitle)
     }
 
     private func normalizedEditorSize(_ size: CGSize) -> CGSize? {

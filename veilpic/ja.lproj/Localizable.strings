@@ -372,6 +372,7 @@
 "imageEditor.action.autoContrast" = "自動コントラスト";
 "imageEditor.action.autoColor" = "自動カラー補正";
 "imageEditor.action.cropCenter" = "中央を切り抜き";
+"imageEditor.action.trimTransparentPixels" = "透明ピクセルをトリミング";
 "imageEditor.action.addText" = "文字を追加";
 "imageEditor.action.gradient" = "グラデを重ねる";
 "imageEditor.action.rotate" = "回転";
@@ -925,6 +926,7 @@
 "imageEditor.history.flipHorizontal" = "左右反転";
 "imageEditor.history.flipVertical" = "上下反転";
 "imageEditor.history.crop" = "切り抜き";
+"imageEditor.history.trim" = "トリミング";
 "imageEditor.history.gradient" = "グラデ";
 "imageEditor.history.text" = "文字";
 "imageEditor.history.erase" = "消去";
@@ -1921,6 +1923,8 @@
 "imageEditor.history.imageResize" = "画像サイズを変更";
 "imageEditor.history.canvasResize" = "カンバスサイズを変更";
 "imageEditor.status.resizeInvalid" = "8 から 12000 px の有効なサイズを入力してください";
+"imageEditor.status.trimNoVisiblePixels" = "トリミングできる表示ピクセルがありません";
+"imageEditor.status.trimNoTransparentEdges" = "カンバス端にトリミングできる透明ピクセルがありません";
 "imageEditor.canvasAnchor.topLeft" = "左上";
 "imageEditor.canvasAnchor.top" = "上";
 "imageEditor.canvasAnchor.topRight" = "右上";

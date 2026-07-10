@@ -198,6 +198,9 @@ extension ImageEditorView {
         Button(L10n.text("imageEditor.action.cropCenter")) {
             viewModel.cropCenter()
         }
+        Button(L10n.text("imageEditor.action.trimTransparentPixels")) {
+            viewModel.trimTransparentPixels()
+        }
         Button(L10n.text("imageEditor.action.rotateClockwise")) {
             viewModel.rotateClockwise()
         }
