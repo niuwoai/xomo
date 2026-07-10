@@ -2631,6 +2631,73 @@ struct veilpicTests {
     }
 
     @MainActor
+    @Test func imageEditorAppliesMultipleSelectedLayerMasksAndSkipsLockedLayers() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        var firstLayer = ImageEditorLayer.blank(name: "First Masked", size: canvasSize)
+        firstLayer.image = testBitmapImage(size: canvasSize, background: .systemPink)
+        firstLayer.mask = testBitmapImage(
+            size: canvasSize,
+            background: .clear,
+            fills: [(CGRect(x: 0, y: 0, width: 40, height: 60), .white)]
+        )
+
+        var secondLayer = ImageEditorLayer.blank(name: "Second Masked", size: canvasSize)
+        secondLayer.image = testBitmapImage(size: canvasSize, background: .systemGreen)
+        secondLayer.mask = testBitmapImage(
+            size: canvasSize,
+            background: .clear,
+            fills: [(CGRect(x: 40, y: 0, width: 40, height: 60), .white)]
+        )
+
+        var lockedLayer = ImageEditorLayer.blank(name: "Locked Masked", size: canvasSize)
+        lockedLayer.image = testBitmapImage(size: canvasSize, background: .systemBlue)
+        lockedLayer.mask = testBitmapImage(
+            size: canvasSize,
+            background: .clear,
+            fills: [(CGRect(x: 20, y: 20, width: 40, height: 20), .white)]
+        )
+        lockedLayer.isLocked = true
+
+        let firstLayerID = firstLayer.id
+        let secondLayerID = secondLayer.id
+        let lockedLayerID = lockedLayer.id
+        viewModel.document.layers = [viewModel.document.layers[0], firstLayer, secondLayer, lockedLayer]
+        viewModel.document.selectedLayerID = secondLayerID
+        viewModel.document.selectedLayerIDs = [firstLayerID, secondLayerID, lockedLayerID]
+        let compositedBeforeApply = try #require(viewModel.currentImage.qingtuPNGData())
+
+        #expect(viewModel.canApplyLayerMask)
+        viewModel.applyLayerMask()
+
+        let appliedFirst = try #require(viewModel.document.layers.first { $0.id == firstLayerID })
+        let appliedSecond = try #require(viewModel.document.layers.first { $0.id == secondLayerID })
+        let skippedLockedLayer = try #require(viewModel.document.layers.first { $0.id == lockedLayerID })
+
+        #expect(appliedFirst.mask == nil)
+        #expect(appliedFirst.maskDensity == 1)
+        #expect(appliedFirst.maskFeather == 0)
+        #expect(appliedSecond.mask == nil)
+        #expect(appliedSecond.maskDensity == 1)
+        #expect(appliedSecond.maskFeather == 0)
+        #expect(skippedLockedLayer.mask != nil)
+        #expect(skippedLockedLayer.isLocked)
+        #expect(viewModel.document.selectedLayerIDs == [firstLayerID, secondLayerID, lockedLayerID])
+        #expect(viewModel.document.selectedLayerID == secondLayerID)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerMaskApplySelected"))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerMaskAppliedSelected", 2))
+        #expect(try #require(viewModel.currentImage.qingtuPNGData()) == compositedBeforeApply)
+
+        viewModel.undo()
+        let restoredFirst = try #require(viewModel.document.layers.first { $0.id == firstLayerID })
+        let restoredSecond = try #require(viewModel.document.layers.first { $0.id == secondLayerID })
+        #expect(restoredFirst.mask != nil)
+        #expect(restoredSecond.mask != nil)
+    }
+
+    @MainActor
     @Test func imageEditorCombinesExistingLayerMaskWithCurrentSelection() async throws {
         let canvasSize = NSSize(width: 80, height: 60)
         let image = testImage(color: .systemBlue, size: canvasSize)

@@ -1030,6 +1030,7 @@
 "imageEditor.history.layerMaskHideAll" = "すべて隠すレイヤーマスクを追加";
 "imageEditor.history.layerMaskHideSelection" = "選択範囲を隠すレイヤーマスクを追加";
 "imageEditor.history.layerMaskApply" = "レイヤーマスクを適用";
+"imageEditor.history.layerMaskApplySelected" = "選択レイヤーマスクを適用";
 "imageEditor.history.layerMaskInvert" = "レイヤーマスクを反転";
 "imageEditor.history.layerMaskCopy" = "レイヤーマスクをコピー";
 "imageEditor.history.layerMaskRevealSelection" = "レイヤーマスクで選択範囲を表示";
@@ -1316,6 +1317,7 @@
 "imageEditor.status.layerMaskHideAll" = "すべて隠すレイヤーマスクを作成しました";
 "imageEditor.status.layerMaskHideSelection" = "選択範囲を隠すレイヤーマスクを作成しました";
 "imageEditor.status.layerMaskApplied" = "レイヤーマスクをレイヤー内容に適用しました";
+"imageEditor.status.layerMaskAppliedSelected" = "%d個のレイヤーマスクをレイヤー内容に適用しました";
 "imageEditor.status.layerMaskInverted" = "現在のレイヤーマスクを反転しました";
 "imageEditor.status.layerMaskRevealSelection" = "現在の選択範囲をレイヤーマスクで表示しました";
 "imageEditor.status.layerMaskHideSelectionFromMask" = "現在の選択範囲をレイヤーマスクで隠しました";
@@ -1542,7 +1544,7 @@
 "imageEditor.action.layerMaskLoadSelection" = "レイヤーマスクから選択範囲を読み込み";
 "imageEditor.action.layerTransparencyLoadSelection" = "レイヤー透明度から選択範囲を読み込み";
 "imageEditor.action.layerMaskCopyToSelected" = "マスクを選択レイヤーへコピー";
-"imageEditor.action.layerMaskApply" = "レイヤーマスクを適用";
+"imageEditor.action.layerMaskApply" = "選択レイヤーマスクを適用";
 "imageEditor.action.layerMaskDelete" = "レイヤーマスクを削除";
 "imageEditor.action.vectorMaskLoadSelection" = "ベクターマスクから選択範囲を読み込み";
 "imageEditor.action.layerScaleDown" = "レイヤーを縮小";

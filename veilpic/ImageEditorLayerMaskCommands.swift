@@ -72,14 +72,7 @@ extension ImageEditorViewModel {
     }
 
     var canApplyLayerMask: Bool {
-        guard selectedLayerCount == 1,
-              let layer = document.selectedLayer
-        else { return false }
-        return !layer.isGroup
-            && !layer.isAdjustment
-            && !layer.isFilter
-            && !document.isEffectivelyPixelsLocked(layer)
-            && (layer.mask != nil || layer.vectorMask != nil)
+        !layerMaskApplyIndices().isEmpty
     }
 
     var canInvertLayerMask: Bool {
@@ -328,30 +321,25 @@ extension ImageEditorViewModel {
     }
 
     func applyLayerMask() {
-        guard canApplyLayerMask,
-              let index = document.selectedLayerIndex
-        else {
+        let indices = layerMaskApplyIndices()
+        guard !indices.isEmpty else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
-        let sourceImage = document.layers[index].contentImage
-        let output = document.layers[index].effectiveMask.flatMap { sourceImage.applyingAlphaMask($0) } ?? sourceImage
 
         pushUndo()
-        document.layers[index].image = output.normalizedBitmapImage()
-        document.layers[index].mask = nil
-        document.layers[index].vectorMask = nil
-        document.layers[index].isMaskEnabled = true
-        document.layers[index].isMaskLinked = true
-        document.layers[index].isVectorMaskEnabled = true
-        document.layers[index].maskDensity = 1
-        document.layers[index].maskFeather = 0
-        if document.layers[index].isText {
-            document.layers[index].kind = .pixel
+        for index in indices {
+            applyLayerMask(at: index)
         }
         isEditingLayerMask = false
-        appendHistory(L10n.text("imageEditor.history.layerMaskApply"))
-        statusText = L10n.text("imageEditor.status.layerMaskApplied")
+
+        if indices.count == 1 {
+            appendHistory(L10n.text("imageEditor.history.layerMaskApply"))
+            statusText = L10n.text("imageEditor.status.layerMaskApplied")
+        } else {
+            appendHistory(L10n.text("imageEditor.history.layerMaskApplySelected"))
+            statusText = L10n.format("imageEditor.status.layerMaskAppliedSelected", indices.count)
+        }
     }
 
     func invertLayerMask() {
@@ -488,6 +476,41 @@ extension ImageEditorViewModel {
         document.layers[index].isVectorMaskEnabled = true
         appendHistory(L10n.text("imageEditor.history.vectorMaskDelete"))
         statusText = L10n.text("imageEditor.status.vectorMaskDeleted")
+    }
+
+    private func layerMaskApplyIndices() -> [Int] {
+        let selectedIDs = document.selectedLayerIDs.isEmpty
+            ? Set(document.selectedLayerID.map { [$0] } ?? [])
+            : document.selectedLayerIDs
+        return document.layers.indices.filter { index in
+            selectedIDs.contains(document.layers[index].id)
+                && canApplyMask(to: document.layers[index])
+        }
+    }
+
+    private func canApplyMask(to layer: ImageEditorLayer) -> Bool {
+        !layer.isGroup
+            && !layer.isAdjustment
+            && !layer.isFilter
+            && !document.isEffectivelyPixelsLocked(layer)
+            && (layer.mask != nil || layer.vectorMask != nil)
+    }
+
+    private func applyLayerMask(at index: Int) {
+        let sourceImage = document.layers[index].contentImage
+        let output = document.layers[index].effectiveMask.flatMap { sourceImage.applyingAlphaMask($0) } ?? sourceImage
+
+        document.layers[index].image = output.normalizedBitmapImage()
+        document.layers[index].mask = nil
+        document.layers[index].vectorMask = nil
+        document.layers[index].isMaskEnabled = true
+        document.layers[index].isMaskLinked = true
+        document.layers[index].isVectorMaskEnabled = true
+        document.layers[index].maskDensity = 1
+        document.layers[index].maskFeather = 0
+        if document.layers[index].isText {
+            document.layers[index].kind = .pixel
+        }
     }
 
     private func combineLayerMaskWithSelection(_ combination: ImageEditorLayerMaskSelectionCombination) {
