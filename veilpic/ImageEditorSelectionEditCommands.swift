@@ -41,6 +41,18 @@ extension ImageEditorViewModel {
         canCopyMergedToClipboard
     }
 
+    var canDuplicateSelectionOrSelectedLayer: Bool {
+        hasSelection ? canCopySelectionToNewLayer : canDuplicateSelectedLayer
+    }
+
+    func duplicateSelectionOrSelectedLayer() {
+        if hasSelection {
+            copySelectionToNewLayer()
+        } else {
+            duplicateSelectedLayer()
+        }
+    }
+
     func fillSelection() {
         fillSelection(with: foregroundColor)
     }

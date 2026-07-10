@@ -239,10 +239,10 @@ extension ImageEditorView {
         }
         .keyboardShortcut("n", modifiers: [.command, .shift])
         Button(L10n.text("imageEditor.action.layerDuplicate")) {
-            viewModel.duplicateSelectedLayer()
+            viewModel.duplicateSelectionOrSelectedLayer()
         }
         .keyboardShortcut("j", modifiers: [.command])
-        .disabled(!viewModel.canDuplicateSelectedLayer)
+        .disabled(!viewModel.canDuplicateSelectionOrSelectedLayer)
         Button(L10n.text("imageEditor.action.selectionCopyLayer")) {
             viewModel.copySelectionToNewLayer()
         }

@@ -615,8 +615,9 @@ struct ImageEditorScopeTests {
 
         #expect(layerMenuSource.contains("viewModel.addLayer()"))
         #expect(layerMenuSource.contains(".keyboardShortcut(\"n\", modifiers: [.command, .shift])"))
-        #expect(layerMenuSource.contains("viewModel.duplicateSelectedLayer()"))
+        #expect(layerMenuSource.contains("viewModel.duplicateSelectionOrSelectedLayer()"))
         #expect(layerMenuSource.contains(".keyboardShortcut(\"j\", modifiers: [.command])"))
+        #expect(layerMenuSource.contains("viewModel.canDuplicateSelectionOrSelectedLayer"))
         #expect(layerMenuSource.contains("viewModel.groupSelectedLayer()"))
         #expect(layerMenuSource.contains(".keyboardShortcut(\"g\", modifiers: [.command])"))
         #expect(layerMenuSource.contains("viewModel.ungroupSelectedLayers()"))
