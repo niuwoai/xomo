@@ -24,6 +24,81 @@ struct ImageEditorSelectionOperationTests {
         #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionAll"))
     }
 
+    @Test func imageEditorBatchEditsSelectionPixelsAcrossSelectedPixelLayersAndSkipsLockedOrIneligibleLayers() async throws {
+        let canvasSize = NSSize(width: 24, height: 18)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: solidImage(color: .black, size: canvasSize)) { _ in }
+        let firstID = try #require(viewModel.document.selectedLayerID)
+
+        viewModel.addLayer()
+        let secondID = try #require(viewModel.document.selectedLayerID)
+        let secondIndex = try #require(viewModel.document.layers.firstIndex { $0.id == secondID })
+        viewModel.document.layers[secondIndex].image = solidImage(color: .black, size: canvasSize)
+
+        viewModel.addLayer()
+        let lockedID = try #require(viewModel.document.selectedLayerID)
+        let lockedIndex = try #require(viewModel.document.layers.firstIndex { $0.id == lockedID })
+        viewModel.document.layers[lockedIndex].image = solidImage(color: .black, size: canvasSize)
+        viewModel.document.layers[lockedIndex].locksPixels = true
+
+        viewModel.textValue = "Label"
+        viewModel.foregroundColor = .white
+        viewModel.addText(at: CGPoint(x: 2, y: 2))
+        let textID = try #require(viewModel.document.selectedLayerID)
+
+        let firstBefore = try #require(viewModel.document.layers.first { $0.id == firstID }?.image.qingtuPNGData())
+        let secondBefore = try #require(viewModel.document.layers.first { $0.id == secondID }?.image.qingtuPNGData())
+        let lockedBefore = try #require(viewModel.document.layers.first { $0.id == lockedID }?.image.qingtuPNGData())
+        let textBefore = try #require(viewModel.document.layers.first { $0.id == textID }?.textContent)
+
+        viewModel.createRectSelection(from: CGPoint(x: 4, y: 4), to: CGPoint(x: 12, y: 12))
+        viewModel.document.selectedLayerID = secondID
+        viewModel.document.selectedLayerIDs = [firstID, secondID, lockedID, textID]
+        viewModel.foregroundColor = .systemRed
+        viewModel.opacity = 1
+
+        #expect(viewModel.canEditSelectionPixels)
+        viewModel.fillSelection()
+
+        let firstFilled = try #require(viewModel.document.layers.first { $0.id == firstID }?.image.color(at: CGPoint(x: 6, y: 6))?.usingColorSpace(.deviceRGB))
+        let secondFilled = try #require(viewModel.document.layers.first { $0.id == secondID }?.image.color(at: CGPoint(x: 6, y: 6))?.usingColorSpace(.deviceRGB))
+        let lockedAfterFill = try #require(viewModel.document.layers.first { $0.id == lockedID })
+        let textAfterFill = try #require(viewModel.document.layers.first { $0.id == textID })
+
+        #expect(firstFilled.redComponent > 0.75)
+        #expect(secondFilled.redComponent > 0.75)
+        #expect(lockedAfterFill.image.qingtuPNGData() == lockedBefore)
+        #expect(textAfterFill.textContent?.text == textBefore.text)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionFillSelected"))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.selectionFilledSelected", 2))
+
+        viewModel.undo()
+        #expect(try #require(viewModel.document.layers.first { $0.id == firstID }?.image.qingtuPNGData()) == firstBefore)
+        #expect(try #require(viewModel.document.layers.first { $0.id == secondID }?.image.qingtuPNGData()) == secondBefore)
+
+        viewModel.foregroundColor = .white
+        viewModel.brushSize = 2
+        viewModel.strokeSelection()
+
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionStrokeSelected"))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.selectionStrokedSelected", 2))
+
+        viewModel.undo()
+        viewModel.clearSelectionPixels()
+
+        let firstCleared = viewModel.document.layers.first { $0.id == firstID }?.image.color(at: CGPoint(x: 6, y: 6))
+        let secondCleared = viewModel.document.layers.first { $0.id == secondID }?.image.color(at: CGPoint(x: 6, y: 6))
+        #expect((firstCleared?.alphaComponent ?? 1) < 0.05)
+        #expect((secondCleared?.alphaComponent ?? 1) < 0.05)
+        #expect(try #require(viewModel.document.layers.first { $0.id == lockedID }?.image.qingtuPNGData()) == lockedBefore)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionClearPixelsSelected"))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.selectionPixelsClearedSelected", 2))
+
+        viewModel.undo()
+        viewModel.document.selectedLayerID = textID
+        viewModel.document.selectedLayerIDs = [textID, lockedID]
+        #expect(!viewModel.canEditSelectionPixels)
+    }
+
     @Test func imageEditorExpandsAndContractsSelectionMask() async throws {
         let canvasSize = NSSize(width: 40, height: 30)
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: testImage(size: canvasSize)) { _ in }
@@ -377,6 +452,13 @@ struct ImageEditorSelectionOperationTests {
     private func testImage(size: NSSize) -> NSImage {
         NSImage.rendered(size: size) { rect in
             NSColor.systemBlue.setFill()
+            rect.fill()
+        } ?? NSImage.transparent(size: size)
+    }
+
+    private func solidImage(color: NSColor, size: NSSize) -> NSImage {
+        NSImage.rendered(size: size) { rect in
+            color.setFill()
             rect.fill()
         } ?? NSImage.transparent(size: size)
     }

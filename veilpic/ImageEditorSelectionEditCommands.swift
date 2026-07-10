@@ -11,16 +11,7 @@ import Foundation
 @MainActor
 extension ImageEditorViewModel {
     var canEditSelectionPixels: Bool {
-        guard selectedLayerCount == 1,
-              hasSelection,
-              let layer = document.selectedLayer
-        else { return false }
-        return !isEditingLayerMask
-            && !layer.isGroup
-            && !layer.isAdjustment
-            && !layer.isFilter
-            && !layer.isText
-            && !document.isEffectivelyPixelsLocked(layer)
+        !editableSelectionPixelLayerIndices().isEmpty
     }
 
     var canCopySelectionToNewLayer: Bool {
@@ -55,29 +46,24 @@ extension ImageEditorViewModel {
             statusText = L10n.text("imageEditor.status.noSelection")
             return
         }
-        guard canEditSelectionPixels,
-              let index = document.selectedLayerIndex,
-              let output = document.layers[index].image.filled(
+        applySelectionPixelEdit(
+            historyKey: "imageEditor.history.selectionFill",
+            selectedHistoryKey: "imageEditor.history.selectionFillSelected",
+            statusKey: "imageEditor.status.selectionFilled",
+            selectedStatusKey: "imageEditor.status.selectionFilledSelected"
+        ) { layer in
+            guard let output = layer.image.filled(
                 selection: selection,
-                layerFrame: document.layers[index].frame,
+                layerFrame: layer.frame,
                 canvasSize: document.canvasSize,
                 color: foregroundColor,
                 opacity: opacity,
                 feather: feather
-              )
-        else {
-            statusText = L10n.text("imageEditor.status.operationFailed")
-            return
+            ) else { return nil }
+            return document.isEffectivelyTransparencyLocked(layer)
+                ? (output.preservingAlpha(from: layer.image) ?? output)
+                : output
         }
-
-        pushUndo()
-        let layer = document.layers[index]
-        let protectedOutput = document.isEffectivelyTransparencyLocked(layer)
-            ? (output.preservingAlpha(from: layer.image) ?? output)
-            : output
-        document.layers[index].image = protectedOutput.normalizedBitmapImage()
-        appendHistory(L10n.text("imageEditor.history.selectionFill"))
-        statusText = L10n.text("imageEditor.status.selectionFilled")
     }
 
     func strokeSelection() {
@@ -85,30 +71,25 @@ extension ImageEditorViewModel {
             statusText = L10n.text("imageEditor.status.noSelection")
             return
         }
-        guard canEditSelectionPixels,
-              let index = document.selectedLayerIndex,
-              let output = document.layers[index].image.stroked(
+        applySelectionPixelEdit(
+            historyKey: "imageEditor.history.selectionStroke",
+            selectedHistoryKey: "imageEditor.history.selectionStrokeSelected",
+            statusKey: "imageEditor.status.selectionStroked",
+            selectedStatusKey: "imageEditor.status.selectionStrokedSelected"
+        ) { layer in
+            guard let output = layer.image.stroked(
                 selection: selection,
-                layerFrame: document.layers[index].frame,
+                layerFrame: layer.frame,
                 canvasSize: document.canvasSize,
                 color: foregroundColor,
                 width: max(1, brushSize),
                 opacity: opacity,
                 feather: feather
-              )
-        else {
-            statusText = L10n.text("imageEditor.status.operationFailed")
-            return
+            ) else { return nil }
+            return document.isEffectivelyTransparencyLocked(layer)
+                ? (output.preservingAlpha(from: layer.image) ?? output)
+                : output
         }
-
-        pushUndo()
-        let layer = document.layers[index]
-        let protectedOutput = document.isEffectivelyTransparencyLocked(layer)
-            ? (output.preservingAlpha(from: layer.image) ?? output)
-            : output
-        document.layers[index].image = protectedOutput.normalizedBitmapImage()
-        appendHistory(L10n.text("imageEditor.history.selectionStroke"))
-        statusText = L10n.text("imageEditor.status.selectionStroked")
     }
 
     func contentAwareFillSelection() {
@@ -116,27 +97,22 @@ extension ImageEditorViewModel {
             statusText = L10n.text("imageEditor.status.noSelection")
             return
         }
-        guard canEditSelectionPixels,
-              let index = document.selectedLayerIndex,
-              let output = document.layers[index].image.contentAwareFilled(
+        applySelectionPixelEdit(
+            historyKey: "imageEditor.history.selectionContentAwareFill",
+            selectedHistoryKey: "imageEditor.history.selectionContentAwareFillSelected",
+            statusKey: "imageEditor.status.selectionContentAwareFilled",
+            selectedStatusKey: "imageEditor.status.selectionContentAwareFilledSelected"
+        ) { layer in
+            guard let output = layer.image.contentAwareFilled(
                 selection: selection,
-                layerFrame: document.layers[index].frame,
+                layerFrame: layer.frame,
                 canvasSize: document.canvasSize,
                 feather: feather
-              )
-        else {
-            statusText = L10n.text("imageEditor.status.operationFailed")
-            return
+            ) else { return nil }
+            return document.isEffectivelyTransparencyLocked(layer)
+                ? (output.preservingAlpha(from: layer.image) ?? output)
+                : output
         }
-
-        pushUndo()
-        let layer = document.layers[index]
-        let protectedOutput = document.isEffectivelyTransparencyLocked(layer)
-            ? (output.preservingAlpha(from: layer.image) ?? output)
-            : output
-        document.layers[index].image = protectedOutput.normalizedBitmapImage()
-        appendHistory(L10n.text("imageEditor.history.selectionContentAwareFill"))
-        statusText = L10n.text("imageEditor.status.selectionContentAwareFilled")
     }
 
     func patchSelection(from start: CGPoint?, to end: CGPoint?) {
@@ -215,23 +191,19 @@ extension ImageEditorViewModel {
             statusText = L10n.text("imageEditor.status.noSelection")
             return
         }
-        guard canEditSelectionPixels,
-              let index = document.selectedLayerIndex,
-              let output = document.layers[index].image.cleared(
+        applySelectionPixelEdit(
+            historyKey: "imageEditor.history.selectionClearPixels",
+            selectedHistoryKey: "imageEditor.history.selectionClearPixelsSelected",
+            statusKey: "imageEditor.status.selectionPixelsCleared",
+            selectedStatusKey: "imageEditor.status.selectionPixelsClearedSelected"
+        ) { layer in
+            layer.image.cleared(
                 selection: selection,
-                layerFrame: document.layers[index].frame,
+                layerFrame: layer.frame,
                 canvasSize: document.canvasSize,
                 feather: feather
-              )
-        else {
-            statusText = L10n.text("imageEditor.status.operationFailed")
-            return
+            )
         }
-
-        pushUndo()
-        document.layers[index].image = output.normalizedBitmapImage()
-        appendHistory(L10n.text("imageEditor.history.selectionClearPixels"))
-        statusText = L10n.text("imageEditor.status.selectionPixelsCleared")
     }
 
     func cutSelectionToNewLayer() {
@@ -380,6 +352,45 @@ extension ImageEditorViewModel {
         isEditingLayerMask = false
         appendHistory(L10n.text("imageEditor.history.selectionCopyMergedLayer"))
         statusText = L10n.text("imageEditor.status.selectionCopiedMergedToLayer")
+    }
+
+    private func editableSelectionPixelLayerIndices() -> [Int] {
+        guard hasSelection, !isEditingLayerMask else { return [] }
+        let selectedIDs = document.selectedLayerIDs.isEmpty
+            ? Set(document.selectedLayerID.map { [$0] } ?? [])
+            : document.selectedLayerIDs
+        return document.layers.indices.filter { index in
+            let layer = document.layers[index]
+            return selectedIDs.contains(layer.id)
+                && layer.kind.isPixel
+                && !document.isEffectivelyPixelsLocked(layer)
+        }
+    }
+
+    private func applySelectionPixelEdit(
+        historyKey: String,
+        selectedHistoryKey: String,
+        statusKey: String,
+        selectedStatusKey: String,
+        render: (ImageEditorLayer) -> NSImage?
+    ) {
+        let edits = editableSelectionPixelLayerIndices().compactMap { index -> (Int, NSImage)? in
+            guard let output = render(document.layers[index]) else { return nil }
+            return (index, output.normalizedBitmapImage())
+        }
+        guard !edits.isEmpty else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+
+        pushUndo()
+        for (index, image) in edits {
+            document.layers[index].image = image
+        }
+        appendHistory(L10n.text(edits.count == 1 ? historyKey : selectedHistoryKey))
+        statusText = edits.count == 1
+            ? L10n.text(statusKey)
+            : L10n.format(selectedStatusKey, edits.count)
     }
 }
 
