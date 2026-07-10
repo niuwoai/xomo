@@ -854,6 +854,8 @@
 "imageEditor.properties.colorOverlayOpacityValue" = "カラーオーバーレイ不透明度：%d%%";
 "imageEditor.properties.gradientOverlayOpacityValue" = "グラデーションオーバーレイ不透明度：%d%%";
 "imageEditor.properties.gradientOverlayStyle" = "グラデーションオーバーレイスタイル";
+"imageEditor.properties.gradientOverlayStartColor" = "グラデーション開始色";
+"imageEditor.properties.gradientOverlayEndColor" = "グラデーション終了色";
 "imageEditor.properties.gradientOverlayScaleValue" = "グラデーションオーバーレイスケール：%d%%";
 "imageEditor.properties.gradientOverlayAngleValue" = "グラデーション角度：%d°";
 "imageEditor.properties.patternOverlayKind" = "パターン";

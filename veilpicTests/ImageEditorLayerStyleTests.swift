@@ -1013,6 +1013,10 @@ struct ImageEditorLayerStyleTests {
         viewModel.foregroundColor = .systemRed
         viewModel.backgroundColor = .systemBlue
         viewModel.setSelectedLayerGradientOverlayOpacity(1)
+        viewModel.setSelectedLayerGradientOverlayStartColor(.systemRed)
+        viewModel.setSelectedLayerGradientOverlayEndColor(.systemBlue)
+        viewModel.foregroundColor = .systemGreen
+        viewModel.backgroundColor = .systemYellow
         viewModel.setSelectedLayerGradientOverlayStyle(.radial)
         viewModel.setSelectedLayerGradientOverlayScale(2)
         viewModel.setSelectedLayerGradientOverlayAngle(45)
@@ -1027,6 +1031,12 @@ struct ImageEditorLayerStyleTests {
         #expect(styledLayer.style.gradientOverlayStyle == .radial)
         #expect(styledLayer.style.gradientOverlayScale == 2)
         #expect(styledLayer.style.gradientOverlayAngle == 45)
+        let startColor = try #require(styledLayer.style.gradientOverlayStartColor.usingColorSpace(.deviceRGB))
+        let endColor = try #require(styledLayer.style.gradientOverlayEndColor.usingColorSpace(.deviceRGB))
+        #expect(startColor.redComponent > 0.85)
+        #expect(startColor.greenComponent < 0.3)
+        #expect(endColor.blueComponent > 0.85)
+        #expect(endColor.redComponent < 0.3)
         #expect(viewModel.selectedLayerGradientOverlayStyle == .radial)
         #expect(viewModel.selectedLayerGradientOverlayScale == 2)
         #expect(layerPixelsAfterStyle == layerPixelsBeforeStyle)
@@ -1038,6 +1048,10 @@ struct ImageEditorLayerStyleTests {
         let project = try ImageEditorProjectDocument(document: viewModel.document)
         let restoredDocument = try project.restoredDocument()
         let restoredLayer = try #require(restoredDocument.layers.first { $0.id == styledLayer.id })
+        let restoredStartColor = try #require(restoredLayer.style.gradientOverlayStartColor.usingColorSpace(.deviceRGB))
+        let restoredEndColor = try #require(restoredLayer.style.gradientOverlayEndColor.usingColorSpace(.deviceRGB))
+        #expect(restoredStartColor.redComponent > 0.85)
+        #expect(restoredEndColor.blueComponent > 0.85)
         #expect(restoredLayer.style.gradientOverlayEnabled)
         #expect(restoredLayer.style.gradientOverlayStyle == .radial)
         #expect(restoredLayer.style.gradientOverlayScale == 2)

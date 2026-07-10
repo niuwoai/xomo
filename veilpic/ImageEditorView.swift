@@ -1189,6 +1189,22 @@ struct ImageEditorView: View {
         }
     }
 
+    private var selectedLayerGradientOverlayStartColorBinding: Binding<Color> {
+        Binding {
+            Color(nsColor: viewModel.selectedLayerGradientOverlayStartColor)
+        } set: { value in
+            viewModel.setSelectedLayerGradientOverlayStartColor(NSColor(value))
+        }
+    }
+
+    private var selectedLayerGradientOverlayEndColorBinding: Binding<Color> {
+        Binding {
+            Color(nsColor: viewModel.selectedLayerGradientOverlayEndColor)
+        } set: { value in
+            viewModel.setSelectedLayerGradientOverlayEndColor(NSColor(value))
+        }
+    }
+
     private var selectedLayerSatinColorBinding: Binding<Color> {
         Binding {
             Color(nsColor: viewModel.selectedLayerSatinColor)
@@ -3107,6 +3123,24 @@ struct ImageEditorView: View {
                     }
                 }
                 .pickerStyle(.menu)
+                HStack(spacing: 8) {
+                    Text(L10n.text("imageEditor.properties.gradientOverlayStartColor"))
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                    ColorPicker("", selection: selectedLayerGradientOverlayStartColorBinding, supportsOpacity: false)
+                        .labelsHidden()
+                        .frame(width: 32)
+                    Spacer(minLength: 4)
+                }
+                HStack(spacing: 8) {
+                    Text(L10n.text("imageEditor.properties.gradientOverlayEndColor"))
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                    ColorPicker("", selection: selectedLayerGradientOverlayEndColorBinding, supportsOpacity: false)
+                        .labelsHidden()
+                        .frame(width: 32)
+                    Spacer(minLength: 4)
+                }
                 HStack {
                     Stepper(
                         L10n.format("imageEditor.properties.gradientOverlayOpacityValue", Int((viewModel.selectedLayerGradientOverlayOpacity * 100).rounded())),

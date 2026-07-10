@@ -246,6 +246,14 @@ extension ImageEditorViewModel {
         Double(document.selectedLayer?.style.gradientOverlayOpacity ?? 0.55)
     }
 
+    var selectedLayerGradientOverlayStartColor: NSColor {
+        document.selectedLayer?.style.gradientOverlayStartColor ?? .systemRed
+    }
+
+    var selectedLayerGradientOverlayEndColor: NSColor {
+        document.selectedLayer?.style.gradientOverlayEndColor ?? .white
+    }
+
     var selectedLayerGradientOverlayStyle: ImageEditorGradientFillStyle {
         document.selectedLayer?.style.gradientOverlayStyle ?? .linear
     }
@@ -365,8 +373,10 @@ extension ImageEditorViewModel {
     func toggleSelectedLayerGradientOverlay() {
         toggleSelectedLayerStyleEffect(historyKey: "imageEditor.history.layerGradientOverlay") {
             $0.gradientOverlayEnabled.toggle()
-            $0.gradientOverlayStartColor = foregroundColor
-            $0.gradientOverlayEndColor = gradientOverlayEndColor()
+            if $0.gradientOverlayEnabled {
+                $0.gradientOverlayStartColor = foregroundColor
+                $0.gradientOverlayEndColor = gradientOverlayEndColor()
+            }
         }
     }
 
@@ -835,36 +845,46 @@ extension ImageEditorViewModel {
 
     func setSelectedLayerGradientOverlayOpacity(_ opacity: Double) {
         updateSelectedLayerStyle {
+            setGradientOverlayDefaultColorsIfNeeded(style: &$0)
             $0.gradientOverlayEnabled = true
-            $0.gradientOverlayStartColor = foregroundColor
-            $0.gradientOverlayEndColor = gradientOverlayEndColor()
             $0.gradientOverlayOpacity = max(0.05, min(1, CGFloat(opacity)))
+        }
+    }
+
+    func setSelectedLayerGradientOverlayStartColor(_ color: NSColor) {
+        updateSelectedLayerStyle {
+            $0.gradientOverlayEnabled = true
+            $0.gradientOverlayStartColor = color.usingColorSpace(.sRGB) ?? color
+        }
+    }
+
+    func setSelectedLayerGradientOverlayEndColor(_ color: NSColor) {
+        updateSelectedLayerStyle {
+            $0.gradientOverlayEnabled = true
+            $0.gradientOverlayEndColor = color.usingColorSpace(.sRGB) ?? color
         }
     }
 
     func setSelectedLayerGradientOverlayStyle(_ style: ImageEditorGradientFillStyle) {
         updateSelectedLayerStyle {
+            setGradientOverlayDefaultColorsIfNeeded(style: &$0)
             $0.gradientOverlayEnabled = true
-            $0.gradientOverlayStartColor = foregroundColor
-            $0.gradientOverlayEndColor = gradientOverlayEndColor()
             $0.gradientOverlayStyle = style
         }
     }
 
     func setSelectedLayerGradientOverlayScale(_ scale: Double) {
         updateSelectedLayerStyle {
+            setGradientOverlayDefaultColorsIfNeeded(style: &$0)
             $0.gradientOverlayEnabled = true
-            $0.gradientOverlayStartColor = foregroundColor
-            $0.gradientOverlayEndColor = gradientOverlayEndColor()
             $0.gradientOverlayScale = max(0.25, min(4, CGFloat(scale)))
         }
     }
 
     func setSelectedLayerGradientOverlayAngle(_ angle: Double) {
         updateSelectedLayerStyle {
+            setGradientOverlayDefaultColorsIfNeeded(style: &$0)
             $0.gradientOverlayEnabled = true
-            $0.gradientOverlayStartColor = foregroundColor
-            $0.gradientOverlayEndColor = gradientOverlayEndColor()
             $0.gradientOverlayAngle = CGFloat(angle).truncatingRemainder(dividingBy: 360)
         }
     }
@@ -1097,6 +1117,12 @@ extension ImageEditorViewModel {
         let color = backgroundColor.usingColorSpace(.deviceRGB) ?? backgroundColor
         guard color.alphaComponent > 0.01 else { return .white }
         return backgroundColor
+    }
+
+    private func setGradientOverlayDefaultColorsIfNeeded(style: inout ImageEditorLayerStyle) {
+        guard !style.gradientOverlayEnabled else { return }
+        style.gradientOverlayStartColor = foregroundColor
+        style.gradientOverlayEndColor = gradientOverlayEndColor()
     }
 
     private func patternOverlayColor() -> NSColor {
