@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.411.0 - 2026-07-10
+
+### Added
+- 图片编辑器新增 Image 菜单经典尺寸快捷键：`Option + Command + I` 调整图像尺寸、`Option + Command + C` 调整画布尺寸。
+
 ## 1.410.0 - 2026-07-10
 
 ### Added

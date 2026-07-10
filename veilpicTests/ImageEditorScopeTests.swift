@@ -639,6 +639,23 @@ struct ImageEditorScopeTests {
         #expect(orderMenuSource.contains(".keyboardShortcut(\"[\", modifiers: [.command, .shift])"))
     }
 
+    @Test func imageMenuExposesClassicSizeShortcuts() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
+            encoding: .utf8
+        )
+        let imageMenuStart = try #require(source.range(of: "private var imageMenu: some View"))
+        let nextMenuStart = try #require(
+            source[imageMenuStart.upperBound...].range(of: "private var layerMenu: some View")
+        )
+        let imageMenuSource = source[imageMenuStart.lowerBound..<nextMenuStart.lowerBound]
+
+        #expect(imageMenuSource.contains("viewModel.resizeImageToControlSize()"))
+        #expect(imageMenuSource.contains(".keyboardShortcut(\"i\", modifiers: [.command, .option])"))
+        #expect(imageMenuSource.contains("viewModel.resizeCanvasToControlSize()"))
+        #expect(imageMenuSource.contains(".keyboardShortcut(\"c\", modifiers: [.command, .option])"))
+    }
+
     @Test func editMenuExposesClassicEditingShortcuts() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),

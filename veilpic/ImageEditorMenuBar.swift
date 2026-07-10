@@ -200,9 +200,11 @@ extension ImageEditorView {
         Button(L10n.text("imageEditor.action.imageResize")) {
             viewModel.resizeImageToControlSize()
         }
+        .keyboardShortcut("i", modifiers: [.command, .option])
         Button(L10n.text("imageEditor.action.canvasResize")) {
             viewModel.resizeCanvasToControlSize()
         }
+        .keyboardShortcut("c", modifiers: [.command, .option])
         Divider()
         Button(L10n.text("imageEditor.action.autoLevels")) {
             viewModel.autoLevelsSelectedLayer()
