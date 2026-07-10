@@ -1282,6 +1282,9 @@ extension ImageEditorView {
 
     @ViewBuilder
     private var windowMenu: some View {
+        toolsActionsMenu
+        optionsActionsMenu
+        Divider()
         navigatorActionsMenu
         infoActionsMenu
         histogramActionsMenu
@@ -1301,6 +1304,59 @@ extension ImageEditorView {
         pathActionsMenu
         Divider()
         propertiesActionsMenu
+    }
+
+    @ViewBuilder
+    private var toolsActionsMenu: some View {
+        Menu(L10n.text("imageEditor.menu.window.tools")) {
+            Button(L10n.text("imageEditor.action.toolsShowPanel")) {
+                viewModel.statusText = viewModel.toolsPanelSummaryText
+            }
+            Divider()
+            ForEach(viewModel.toolsPanelTools) { tool in
+                Button(tool.title) {
+                    viewModel.selectToolsPanelTool(tool)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var optionsActionsMenu: some View {
+        Menu(L10n.text("imageEditor.menu.window.options")) {
+            Button(L10n.text("imageEditor.action.optionsShowPanel")) {
+                viewModel.statusText = viewModel.optionsPanelSummaryText
+            }
+            Divider()
+            Menu(L10n.text("imageEditor.menu.window.options.selectionMode")) {
+                ForEach(ImageEditorSelectionMode.allCases) { mode in
+                    Button(mode.title) {
+                        viewModel.applyOptionsSelectionMode(mode)
+                    }
+                }
+            }
+            Menu(L10n.text("imageEditor.menu.window.options.size")) {
+                ForEach([1, 4, 12, 24, 48, 96], id: \.self) { size in
+                    Button(L10n.format("imageEditor.option.sizePreset", size)) {
+                        viewModel.applyOptionsBrushSizePreset(size)
+                    }
+                }
+            }
+            Menu(L10n.text("imageEditor.menu.window.options.opacity")) {
+                ForEach([25, 50, 75, 100], id: \.self) { percent in
+                    Button(L10n.format("imageEditor.option.percentPreset", percent)) {
+                        viewModel.applyOptionsOpacityPreset(percent)
+                    }
+                }
+            }
+            Menu(L10n.text("imageEditor.menu.window.options.hardness")) {
+                ForEach([0, 25, 50, 75, 100], id: \.self) { percent in
+                    Button(L10n.format("imageEditor.option.percentPreset", percent)) {
+                        viewModel.applyOptionsHardnessPreset(percent)
+                    }
+                }
+            }
+        }
     }
 
     @ViewBuilder

@@ -340,6 +340,12 @@
 "imageEditor.menu.view.zoomOut" = "Zoom Out";
 "imageEditor.menu.view.actualPixels" = "Actual Pixels";
 "imageEditor.menu.view.fit" = "Fit on Screen";
+"imageEditor.menu.window.tools" = "Tools Panel";
+"imageEditor.menu.window.options" = "Options Bar";
+"imageEditor.menu.window.options.selectionMode" = "Selection Mode";
+"imageEditor.menu.window.options.size" = "Size Presets";
+"imageEditor.menu.window.options.opacity" = "Opacity Presets";
+"imageEditor.menu.window.options.hardness" = "Hardness Presets";
 "imageEditor.menu.window.navigator" = "Navigator Panel";
 "imageEditor.menu.window.info" = "Info Panel";
 "imageEditor.menu.window.histogram" = "Histogram Panel";
@@ -362,6 +368,8 @@
 "imageEditor.menu.window.channels.preview" = "Preview Channels";
 "imageEditor.menu.window.channels.selection" = "Load Channel as Selection";
 "imageEditor.menu.window.channels.alpha" = "Alpha Channels";
+"imageEditor.action.toolsShowPanel" = "Show Tools Panel";
+"imageEditor.action.optionsShowPanel" = "Show Options Bar";
 "imageEditor.action.navigatorShowPanel" = "Show Navigator Panel";
 "imageEditor.action.infoShowPanel" = "Show Info Panel";
 "imageEditor.action.histogramShowPanel" = "Show Histogram Panel";
@@ -1220,6 +1228,11 @@
 "imageEditor.history.autoColorSelected" = "Auto Color Selected Layers";
 "imageEditor.history.adjustmentSelected" = "Apply %@ to Selected Layers";
 "imageEditor.status.ready" = "%@ · %@ · Ready";
+"imageEditor.status.toolsPanelSummary" = "Current tool: %@ | Available tools: %d";
+"imageEditor.status.toolsPanelToolSelected" = "%@ selected: %@";
+"imageEditor.status.optionsPanelSummary" = "Tool: %@ | Selection: %@ | Size: %d px | Opacity: %d%% | Hardness: %d%% | Feather: %d px | Tolerance: %d%%";
+"imageEditor.option.sizePreset" = "%d px";
+"imageEditor.option.percentPreset" = "%d%%";
 "imageEditor.status.colorPanelSummary" = "Foreground: %@ | Background: %@";
 "imageEditor.status.colorDefaultForegroundBackground" = "Foreground and background colors reset to black and white";
 "imageEditor.status.colorSwapForegroundBackground" = "Foreground and background colors swapped";

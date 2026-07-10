@@ -985,6 +985,27 @@ final class ImageEditorViewModel: ObservableObject {
         L10n.format("imageEditor.status.colorPanelSummary", colorText, backgroundColorText)
     }
 
+    var toolsPanelSummaryText: String {
+        L10n.format(
+            "imageEditor.status.toolsPanelSummary",
+            selectedTool.title,
+            ImageEditorTool.allCases.count
+        )
+    }
+
+    var optionsPanelSummaryText: String {
+        L10n.format(
+            "imageEditor.status.optionsPanelSummary",
+            selectedTool.title,
+            selectionMode.compactTitle,
+            Int(brushSize.rounded()),
+            Int((opacity * 100).rounded()),
+            Int((hardness * 100).rounded()),
+            Int(feather.rounded()),
+            Int((tolerance * 100).rounded())
+        )
+    }
+
     var swatchesPanelSummaryText: String {
         let names = ImageEditorColorSwatch.defaultPalette
             .map(\.title)
@@ -1038,6 +1059,10 @@ final class ImageEditorViewModel: ObservableObject {
         [.brush, .eraser, .cloneStamp, .dodge, .burn, .blur, .sharpen, .smudge, .healingBrush]
     }
 
+    var toolsPanelTools: [ImageEditorTool] {
+        ImageEditorTool.allCases
+    }
+
     func resetForegroundBackgroundColors() {
         foregroundColor = .black
         backgroundColor = .white
@@ -1071,9 +1096,34 @@ final class ImageEditorViewModel: ObservableObject {
         statusText = L10n.format("imageEditor.status.brushToolSelected", tool.title, brushesPanelSummaryText)
     }
 
+    func selectToolsPanelTool(_ tool: ImageEditorTool) {
+        selectTool(tool)
+        statusText = L10n.format("imageEditor.status.toolsPanelToolSelected", tool.title, optionsPanelSummaryText)
+    }
+
     func applyBrushPreset(_ preset: ImageEditorBrushPreset) {
         brushSize = max(1, min(96, preset.size))
         statusText = L10n.format("imageEditor.status.brushPresetApplied", preset.title, brushesPanelSummaryText)
+    }
+
+    func applyOptionsSelectionMode(_ mode: ImageEditorSelectionMode) {
+        selectionMode = mode
+        statusText = optionsPanelSummaryText
+    }
+
+    func applyOptionsBrushSizePreset(_ size: Int) {
+        brushSize = CGFloat(max(1, min(96, size)))
+        statusText = optionsPanelSummaryText
+    }
+
+    func applyOptionsOpacityPreset(_ percent: Int) {
+        opacity = CGFloat(max(5, min(100, percent))) / 100
+        statusText = optionsPanelSummaryText
+    }
+
+    func applyOptionsHardnessPreset(_ percent: Int) {
+        hardness = CGFloat(max(0, min(100, percent))) / 100
+        statusText = optionsPanelSummaryText
     }
 
     func selectCharacterPanelTool() {

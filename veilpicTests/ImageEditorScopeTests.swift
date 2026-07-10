@@ -493,6 +493,63 @@ struct ImageEditorScopeTests {
         #expect(viewModel.statusText == L10n.text("imageEditor.status.colorEyedropperReady"))
     }
 
+    @Test func windowMenuExposesToolsAndOptionsPanelActionsInPhotoshopStyleLocation() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
+            encoding: .utf8
+        )
+        let toolsMenuStart = try #require(source.range(of: "private var toolsActionsMenu: some View"))
+        let optionsMenuStart = try #require(
+            source[toolsMenuStart.upperBound...].range(of: "private var optionsActionsMenu: some View")
+        )
+        let nextMenuStart = try #require(
+            source[optionsMenuStart.upperBound...].range(of: "private var navigatorActionsMenu: some View")
+        )
+        let toolOptionsSource = source[toolsMenuStart.lowerBound..<nextMenuStart.lowerBound]
+
+        #expect(toolOptionsSource.contains("imageEditor.menu.window.tools"))
+        #expect(toolOptionsSource.contains("imageEditor.action.toolsShowPanel"))
+        #expect(toolOptionsSource.contains("viewModel.toolsPanelSummaryText"))
+        #expect(toolOptionsSource.contains("viewModel.toolsPanelTools"))
+        #expect(toolOptionsSource.contains("viewModel.selectToolsPanelTool(tool)"))
+        #expect(toolOptionsSource.contains("imageEditor.menu.window.options"))
+        #expect(toolOptionsSource.contains("imageEditor.action.optionsShowPanel"))
+        #expect(toolOptionsSource.contains("viewModel.optionsPanelSummaryText"))
+        #expect(toolOptionsSource.contains("ImageEditorSelectionMode.allCases"))
+        #expect(toolOptionsSource.contains("viewModel.applyOptionsSelectionMode(mode)"))
+        #expect(toolOptionsSource.contains("viewModel.applyOptionsBrushSizePreset(size)"))
+        #expect(toolOptionsSource.contains("viewModel.applyOptionsOpacityPreset(percent)"))
+        #expect(toolOptionsSource.contains("viewModel.applyOptionsHardnessPreset(percent)"))
+    }
+
+    @MainActor
+    @Test func toolsAndOptionsPanelActionsReuseExistingToolSettings() throws {
+        let image = NSImage(size: NSSize(width: 16, height: 16))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.selectToolsPanelTool(.magicWand)
+
+        #expect(viewModel.selectedTool == .magicWand)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.toolsPanelToolSelected", ImageEditorTool.magicWand.title, viewModel.optionsPanelSummaryText))
+        #expect(viewModel.toolsPanelSummaryText.contains(ImageEditorTool.magicWand.title))
+        #expect(viewModel.toolsPanelTools.count == ImageEditorTool.allCases.count)
+
+        viewModel.applyOptionsSelectionMode(.add)
+        viewModel.applyOptionsBrushSizePreset(48)
+        viewModel.applyOptionsOpacityPreset(75)
+        viewModel.applyOptionsHardnessPreset(25)
+
+        #expect(viewModel.selectionMode == .add)
+        #expect(Int(viewModel.brushSize.rounded()) == 48)
+        #expect(Int((viewModel.opacity * 100).rounded()) == 75)
+        #expect(Int((viewModel.hardness * 100).rounded()) == 25)
+        #expect(viewModel.statusText == viewModel.optionsPanelSummaryText)
+        #expect(viewModel.optionsPanelSummaryText.contains(ImageEditorTool.magicWand.title))
+        #expect(viewModel.optionsPanelSummaryText.contains("48"))
+        #expect(viewModel.optionsPanelSummaryText.contains("75"))
+        #expect(viewModel.optionsPanelSummaryText.contains("25"))
+    }
+
     @Test func windowMenuExposesSwatchesPanelActionsInPhotoshopStyleLocation() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),

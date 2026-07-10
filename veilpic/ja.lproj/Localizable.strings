@@ -340,6 +340,12 @@
 "imageEditor.menu.view.zoomOut" = "ズームアウト";
 "imageEditor.menu.view.actualPixels" = "実際のピクセル";
 "imageEditor.menu.view.fit" = "画面に合わせる";
+"imageEditor.menu.window.tools" = "ツールパネル";
+"imageEditor.menu.window.options" = "オプションバー";
+"imageEditor.menu.window.options.selectionMode" = "選択モード";
+"imageEditor.menu.window.options.size" = "サイズプリセット";
+"imageEditor.menu.window.options.opacity" = "不透明度プリセット";
+"imageEditor.menu.window.options.hardness" = "硬さプリセット";
 "imageEditor.menu.window.navigator" = "ナビゲーターパネル";
 "imageEditor.menu.window.info" = "情報パネル";
 "imageEditor.menu.window.histogram" = "ヒストグラムパネル";
@@ -362,6 +368,8 @@
 "imageEditor.menu.window.channels.preview" = "チャンネルをプレビュー";
 "imageEditor.menu.window.channels.selection" = "チャンネルを選択範囲として読み込み";
 "imageEditor.menu.window.channels.alpha" = "Alpha チャンネル";
+"imageEditor.action.toolsShowPanel" = "ツールパネルを表示";
+"imageEditor.action.optionsShowPanel" = "オプションバーを表示";
 "imageEditor.action.navigatorShowPanel" = "ナビゲーターパネルを表示";
 "imageEditor.action.infoShowPanel" = "情報パネルを表示";
 "imageEditor.action.histogramShowPanel" = "ヒストグラムパネルを表示";
@@ -1220,6 +1228,11 @@
 "imageEditor.history.autoColorSelected" = "選択レイヤーを自動カラー補正";
 "imageEditor.history.adjustmentSelected" = "%@ を選択レイヤーに適用";
 "imageEditor.status.ready" = "%@ · %@ · 準備完了";
+"imageEditor.status.toolsPanelSummary" = "現在のツール：%@ | 利用可能なツール：%d";
+"imageEditor.status.toolsPanelToolSelected" = "%@を選択しました：%@";
+"imageEditor.status.optionsPanelSummary" = "ツール：%@ | 選択：%@ | サイズ：%d px | 不透明度：%d%% | 硬さ：%d%% | ぼかし：%d px | 許容値：%d%%";
+"imageEditor.option.sizePreset" = "%d px";
+"imageEditor.option.percentPreset" = "%d%%";
 "imageEditor.status.colorPanelSummary" = "描画色：%@ | 背景色：%@";
 "imageEditor.status.colorDefaultForegroundBackground" = "描画色と背景色を白黒に戻しました";
 "imageEditor.status.colorSwapForegroundBackground" = "描画色と背景色を入れ替えました";

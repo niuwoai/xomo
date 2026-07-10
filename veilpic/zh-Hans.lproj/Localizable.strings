@@ -340,6 +340,12 @@
 "imageEditor.menu.view.zoomOut" = "缩小";
 "imageEditor.menu.view.actualPixels" = "实际像素";
 "imageEditor.menu.view.fit" = "适合窗口";
+"imageEditor.menu.window.tools" = "工具面板";
+"imageEditor.menu.window.options" = "选项栏";
+"imageEditor.menu.window.options.selectionMode" = "选区模式";
+"imageEditor.menu.window.options.size" = "大小预设";
+"imageEditor.menu.window.options.opacity" = "不透明度预设";
+"imageEditor.menu.window.options.hardness" = "硬度预设";
 "imageEditor.menu.window.navigator" = "导航器面板";
 "imageEditor.menu.window.info" = "信息面板";
 "imageEditor.menu.window.histogram" = "直方图面板";
@@ -362,6 +368,8 @@
 "imageEditor.menu.window.channels.preview" = "预览通道";
 "imageEditor.menu.window.channels.selection" = "从通道载入选区";
 "imageEditor.menu.window.channels.alpha" = "Alpha 通道";
+"imageEditor.action.toolsShowPanel" = "显示工具面板";
+"imageEditor.action.optionsShowPanel" = "显示选项栏";
 "imageEditor.action.navigatorShowPanel" = "显示导航器面板";
 "imageEditor.action.infoShowPanel" = "显示信息面板";
 "imageEditor.action.histogramShowPanel" = "显示直方图面板";
@@ -1220,6 +1228,11 @@
 "imageEditor.history.autoColorSelected" = "自动校正所选图层颜色";
 "imageEditor.history.adjustmentSelected" = "将 %@ 应用到所选图层";
 "imageEditor.status.ready" = "%@ · %@ · 就绪";
+"imageEditor.status.toolsPanelSummary" = "当前工具：%@ | 可用工具：%d";
+"imageEditor.status.toolsPanelToolSelected" = "已选择%@：%@";
+"imageEditor.status.optionsPanelSummary" = "工具：%@ | 选区：%@ | 大小：%d px | 不透明度：%d%% | 硬度：%d%% | 羽化：%d px | 容差：%d%%";
+"imageEditor.option.sizePreset" = "%d px";
+"imageEditor.option.percentPreset" = "%d%%";
 "imageEditor.status.colorPanelSummary" = "前景色：%@ | 背景色：%@";
 "imageEditor.status.colorDefaultForegroundBackground" = "前景色和背景色已恢复为黑白";
 "imageEditor.status.colorSwapForegroundBackground" = "已交换前景色和背景色";
