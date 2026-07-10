@@ -36,6 +36,19 @@ struct ImageEditorColorSwatch: Identifiable {
     }
 }
 
+struct ImageEditorBrushPreset: Identifiable {
+    let id: String
+    let size: CGFloat
+
+    var title: String {
+        L10n.format("imageEditor.brushPreset.size", Int(size.rounded()))
+    }
+
+    static let defaultPresets: [ImageEditorBrushPreset] = [3, 9, 18, 36, 72].map { size in
+        ImageEditorBrushPreset(id: "\(size)-px", size: CGFloat(size))
+    }
+}
+
 enum ImageEditorTool: String, CaseIterable, Identifiable {
     case move
     case marquee

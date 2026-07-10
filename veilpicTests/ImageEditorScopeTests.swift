@@ -533,6 +533,48 @@ struct ImageEditorScopeTests {
         #expect(viewModel.swatchesPanelSummaryText.contains(blue.title))
     }
 
+    @Test func windowMenuExposesBrushesPanelActionsInPhotoshopStyleLocation() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
+            encoding: .utf8
+        )
+        let brushesMenuStart = try #require(source.range(of: "private var brushesActionsMenu: some View"))
+        let nextMenuStart = try #require(
+            source[brushesMenuStart.upperBound...].range(of: "private var layerActionsMenu: some View")
+        )
+        let brushesMenuSource = source[brushesMenuStart.lowerBound..<nextMenuStart.lowerBound]
+
+        #expect(brushesMenuSource.contains("imageEditor.menu.window.brushes"))
+        #expect(brushesMenuSource.contains("imageEditor.action.brushesShowPanel"))
+        #expect(brushesMenuSource.contains("viewModel.brushesPanelSummaryText"))
+        #expect(brushesMenuSource.contains("imageEditor.menu.window.brushes.tools"))
+        #expect(brushesMenuSource.contains("viewModel.selectBrushPanelTool(tool)"))
+        #expect(brushesMenuSource.contains("imageEditor.menu.window.brushes.presets"))
+        #expect(brushesMenuSource.contains("viewModel.applyBrushPreset(preset)"))
+    }
+
+    @MainActor
+    @Test func brushesPanelActionsReuseExistingBrushSettings() throws {
+        let image = NSImage(size: NSSize(width: 16, height: 16))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let preset = try #require(ImageEditorBrushPreset.defaultPresets.first { $0.size == 36 })
+
+        viewModel.opacity = 0.55
+        viewModel.hardness = 0.35
+        viewModel.selectBrushPanelTool(.smudge)
+
+        #expect(viewModel.selectedTool == .smudge)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.brushToolSelected", ImageEditorTool.smudge.title, viewModel.brushesPanelSummaryText))
+        #expect(viewModel.brushesPanelSummaryText.contains(ImageEditorTool.smudge.title))
+        #expect(viewModel.brushesPanelSummaryText.contains("55"))
+        #expect(viewModel.brushesPanelSummaryText.contains("35"))
+
+        viewModel.applyBrushPreset(preset)
+
+        #expect(Int(viewModel.brushSize.rounded()) == 36)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.brushPresetApplied", preset.title, viewModel.brushesPanelSummaryText))
+    }
+
     @Test func windowMenuExposesLayerPanelActionsInPhotoshopStyleLocation() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),

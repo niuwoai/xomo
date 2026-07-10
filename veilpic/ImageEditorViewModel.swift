@@ -992,6 +992,20 @@ final class ImageEditorViewModel: ObservableObject {
         return L10n.format("imageEditor.status.swatchesPanelSummary", names)
     }
 
+    var brushesPanelSummaryText: String {
+        L10n.format(
+            "imageEditor.status.brushesPanelSummary",
+            selectedTool.title,
+            Int(brushSize.rounded()),
+            Int((opacity * 100).rounded()),
+            Int((hardness * 100).rounded())
+        )
+    }
+
+    var brushPanelTools: [ImageEditorTool] {
+        [.brush, .eraser, .cloneStamp, .dodge, .burn, .blur, .sharpen, .smudge, .healingBrush]
+    }
+
     func resetForegroundBackgroundColors() {
         foregroundColor = .black
         backgroundColor = .white
@@ -1018,6 +1032,16 @@ final class ImageEditorViewModel: ObservableObject {
     func applySwatchToBackground(_ swatch: ImageEditorColorSwatch) {
         backgroundColor = swatch.color
         statusText = L10n.format("imageEditor.status.swatchBackgroundApplied", swatch.title, backgroundColorText)
+    }
+
+    func selectBrushPanelTool(_ tool: ImageEditorTool) {
+        selectTool(tool)
+        statusText = L10n.format("imageEditor.status.brushToolSelected", tool.title, brushesPanelSummaryText)
+    }
+
+    func applyBrushPreset(_ preset: ImageEditorBrushPreset) {
+        brushSize = max(1, min(96, preset.size))
+        statusText = L10n.format("imageEditor.status.brushPresetApplied", preset.title, brushesPanelSummaryText)
     }
 
     private func rgbText(for nsColor: NSColor) -> String {

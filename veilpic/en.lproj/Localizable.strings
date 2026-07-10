@@ -347,6 +347,9 @@
 "imageEditor.menu.window.swatches" = "Swatches Panel";
 "imageEditor.menu.window.swatches.foreground" = "Set Foreground";
 "imageEditor.menu.window.swatches.background" = "Set Background";
+"imageEditor.menu.window.brushes" = "Brushes Panel";
+"imageEditor.menu.window.brushes.tools" = "Brush Tools";
+"imageEditor.menu.window.brushes.presets" = "Size Presets";
 "imageEditor.menu.window.layers" = "Layers Panel";
 "imageEditor.menu.window.channels" = "Channels Panel";
 "imageEditor.menu.window.layerComps" = "Layer Comps Panel";
@@ -364,6 +367,7 @@
 "imageEditor.action.colorSwapForegroundBackground" = "Swap Foreground/Background";
 "imageEditor.action.colorUseEyedropper" = "Use Eyedropper";
 "imageEditor.action.swatchesShowPanel" = "Show Swatches Panel";
+"imageEditor.action.brushesShowPanel" = "Show Brushes Panel";
 "imageEditor.action.layersShowPanel" = "Show Layers Panel";
 "imageEditor.action.layerCompsShowPanel" = "Show Layer Comps Panel";
 "imageEditor.action.historyShowPanel" = "Show History Panel";
@@ -1214,6 +1218,9 @@
 "imageEditor.status.swatchesPanelSummary" = "Default swatches: %@";
 "imageEditor.status.swatchForegroundApplied" = "Foreground set to %@ (%@)";
 "imageEditor.status.swatchBackgroundApplied" = "Background set to %@ (%@)";
+"imageEditor.status.brushesPanelSummary" = "Tool: %@ | Size: %d px | Opacity: %d%% | Hardness: %d%%";
+"imageEditor.status.brushToolSelected" = "%@ selected: %@";
+"imageEditor.status.brushPresetApplied" = "%@ applied: %@";
 "imageEditor.status.propertiesVisible" = "The Properties panel is already visible on the right";
 "imageEditor.status.zoomActualPixels" = "Viewing at actual pixels";
 "imageEditor.status.zoomFitOnScreen" = "Fit on screen";
@@ -1240,6 +1247,7 @@
 "imageEditor.swatch.cyan" = "Cyan";
 "imageEditor.swatch.blue" = "Blue";
 "imageEditor.swatch.magenta" = "Magenta";
+"imageEditor.brushPreset.size" = "%d px";
 "imageEditor.status.penPointAdded" = "Path anchors: %d";
 "imageEditor.status.penNeedsPoints" = "Add at least two anchors to create a path";
 "imageEditor.status.penClosed" = "Closed path shape created";

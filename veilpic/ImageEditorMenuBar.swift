@@ -1282,6 +1282,7 @@ extension ImageEditorView {
         histogramActionsMenu
         colorActionsMenu
         swatchesActionsMenu
+        brushesActionsMenu
         Divider()
         layerActionsMenu
         channelActionsMenu
@@ -1377,6 +1378,30 @@ extension ImageEditorView {
                 ForEach(ImageEditorColorSwatch.defaultPalette) { swatch in
                     Button(swatch.title) {
                         viewModel.applySwatchToBackground(swatch)
+                    }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var brushesActionsMenu: some View {
+        Menu(L10n.text("imageEditor.menu.window.brushes")) {
+            Button(L10n.text("imageEditor.action.brushesShowPanel")) {
+                viewModel.statusText = viewModel.brushesPanelSummaryText
+            }
+            Divider()
+            Menu(L10n.text("imageEditor.menu.window.brushes.tools")) {
+                ForEach(viewModel.brushPanelTools) { tool in
+                    Button(tool.title) {
+                        viewModel.selectBrushPanelTool(tool)
+                    }
+                }
+            }
+            Menu(L10n.text("imageEditor.menu.window.brushes.presets")) {
+                ForEach(ImageEditorBrushPreset.defaultPresets) { preset in
+                    Button(preset.title) {
+                        viewModel.applyBrushPreset(preset)
                     }
                 }
             }
