@@ -263,24 +263,39 @@ struct ImageEditorScopeTests {
         let image = NSImage(size: NSSize(width: 80, height: 60))
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
 
+        let viewport = CGSize(width: 800, height: 600)
+        let center = CGPoint(x: 400, y: 300)
         viewModel.zoom = 1
+        viewModel.canvasOffset = .zero
 
-        viewModel.magnifyCanvas(2)
+        // Zoom anchored at the viewport center leaves the pan offset unchanged.
+        viewModel.magnifyCanvas(2, at: center, viewportSize: viewport)
         #expect(abs(viewModel.zoom - 2) < 0.0001)
+        #expect(abs(viewModel.canvasOffset.width) < 0.0001)
+        #expect(abs(viewModel.canvasOffset.height) < 0.0001)
 
-        // Subsequent updates in the same gesture stay anchored to the gesture-start zoom.
-        viewModel.magnifyCanvas(3)
+        // Subsequent updates in the same gesture stay anchored to the gesture-start state.
+        viewModel.magnifyCanvas(3, at: center, viewportSize: viewport)
         #expect(abs(viewModel.zoom - 3) < 0.0001)
 
         // Clamped to the shared upper bound.
-        viewModel.magnifyCanvas(100)
+        viewModel.magnifyCanvas(100, at: center, viewportSize: viewport)
         #expect(abs(viewModel.zoom - 8) < 0.0001)
-
         viewModel.endCanvasMagnify()
 
         // A new gesture re-anchors to the current zoom, and clamps to the lower bound.
-        viewModel.magnifyCanvas(0.0001)
+        viewModel.magnifyCanvas(0.0001, at: center, viewportSize: viewport)
         #expect(abs(viewModel.zoom - 0.08) < 0.0001)
+        viewModel.endCanvasMagnify()
+
+        // Zooming anchored off-center shifts the pan offset so the anchor point stays put.
+        viewModel.zoom = 1
+        viewModel.canvasOffset = .zero
+        viewModel.magnifyCanvas(2, at: CGPoint(x: 600, y: 300), viewportSize: viewport)
+        #expect(abs(viewModel.zoom - 2) < 0.0001)
+        // deltaOffset.x = (1 - 2) * (600 - 400) = -200
+        #expect(abs(viewModel.canvasOffset.width + 200) < 0.0001)
+        #expect(abs(viewModel.canvasOffset.height) < 0.0001)
         viewModel.endCanvasMagnify()
     }
 
@@ -290,7 +305,9 @@ struct ImageEditorScopeTests {
             encoding: .utf8
         )
         #expect(source.contains("MagnifyGesture()"))
-        #expect(source.contains("viewModel.magnifyCanvas(value.magnification)"))
+        #expect(source.contains("viewModel.magnifyCanvas("))
+        #expect(source.contains("at: value.startLocation"))
+        #expect(source.contains("viewportSize: geometry.size"))
         #expect(source.contains("viewModel.endCanvasMagnify()"))
     }
 

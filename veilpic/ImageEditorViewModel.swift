@@ -37,6 +37,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var canvasViewportSize: CGSize = .zero
     @Published var canvasOffset: CGSize = .zero
     private var magnifyBaseZoom: CGFloat?
+    private var magnifyBaseOffset: CGSize?
     @Published var brushSize: CGFloat = 18
     @Published var opacity: CGFloat = 1
     @Published var hardness: CGFloat = 0.8
@@ -1313,21 +1314,37 @@ final class ImageEditorViewModel: ObservableObject {
         zoom = max(zoom / 1.2, 0.08)
     }
 
-    func magnifyCanvas(_ magnification: CGFloat) {
+    func magnifyCanvas(_ magnification: CGFloat, at location: CGPoint, viewportSize: CGSize) {
         guard magnification.isFinite, magnification > 0 else { return }
-        let base: CGFloat
-        if let anchor = magnifyBaseZoom {
-            base = anchor
+        let baseZoom: CGFloat
+        let baseOffset: CGSize
+        if let anchorZoom = magnifyBaseZoom, let anchorOffset = magnifyBaseOffset {
+            baseZoom = anchorZoom
+            baseOffset = anchorOffset
         } else {
-            base = zoom
+            baseZoom = zoom
+            baseOffset = canvasOffset
             magnifyBaseZoom = zoom
+            magnifyBaseOffset = canvasOffset
         }
-        zoom = min(max(base * magnification, 0.08), 8)
+        let newZoom = min(max(baseZoom * magnification, 0.08), 8)
+        let scaleRatio = baseZoom > 0 ? newZoom / baseZoom : 1
+        // Keep the image point under `location` fixed while zooming (anchor-at-cursor).
+        if viewportSize.width > 0, viewportSize.height > 0, scaleRatio != 1 {
+            let centerX = viewportSize.width / 2 + baseOffset.width
+            let centerY = viewportSize.height / 2 + baseOffset.height
+            canvasOffset = CGSize(
+                width: baseOffset.width + (1 - scaleRatio) * (location.x - centerX),
+                height: baseOffset.height + (1 - scaleRatio) * (location.y - centerY)
+            )
+        }
+        zoom = newZoom
         statusText = L10n.format("imageEditor.status.zoom", zoomText)
     }
 
     func endCanvasMagnify() {
         magnifyBaseZoom = nil
+        magnifyBaseOffset = nil
     }
 
     func zoomActualPixels() {

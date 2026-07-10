@@ -357,7 +357,11 @@ struct ImageEditorView: View {
                 .simultaneousGesture(
                     MagnifyGesture()
                         .onChanged { value in
-                            viewModel.magnifyCanvas(value.magnification)
+                            viewModel.magnifyCanvas(
+                                value.magnification,
+                                at: value.startLocation,
+                                viewportSize: geometry.size
+                            )
                         }
                         .onEnded { _ in
                             viewModel.endCanvasMagnify()
