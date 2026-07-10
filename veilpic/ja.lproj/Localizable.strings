@@ -369,6 +369,8 @@
 "imageEditor.menu.window.channels.selection" = "チャンネルを選択範囲として読み込み";
 "imageEditor.menu.window.channels.alpha" = "Alpha チャンネル";
 "imageEditor.action.workspaceResetDefault" = "初期ワークスペースに戻す";
+"imageEditor.action.workspaceHidePanels" = "ワークスペースパネルを隠す";
+"imageEditor.action.workspaceShowPanels" = "ワークスペースパネルを表示";
 "imageEditor.action.toolsShowPanel" = "ツールパネルを表示";
 "imageEditor.action.toolsHidePanel" = "ツールパネルを隠す";
 "imageEditor.action.toolsShowPanelVisibility" = "ツールパネルを表示";
@@ -1276,6 +1278,8 @@
 "imageEditor.status.propertiesPanelShown" = "プロパティパネルを表示しました";
 "imageEditor.status.propertiesPanelHidden" = "プロパティパネルを隠しました";
 "imageEditor.status.workspaceDefaultRestored" = "初期ワークスペースに戻しました";
+"imageEditor.status.workspacePanelsShown" = "ワークスペースパネルを表示しました";
+"imageEditor.status.workspacePanelsHidden" = "ワークスペースパネルを隠しました";
 "imageEditor.status.zoomActualPixels" = "実際のピクセルで表示しています";
 "imageEditor.status.zoomFitOnScreen" = "画面に合わせました";
 "imageEditor.status.exported" = "%@ を書き出しました";

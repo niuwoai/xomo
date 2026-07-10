@@ -369,6 +369,8 @@
 "imageEditor.menu.window.channels.selection" = "从通道载入选区";
 "imageEditor.menu.window.channels.alpha" = "Alpha 通道";
 "imageEditor.action.workspaceResetDefault" = "恢复默认工作区";
+"imageEditor.action.workspaceHidePanels" = "隐藏工作区面板";
+"imageEditor.action.workspaceShowPanels" = "显示工作区面板";
 "imageEditor.action.toolsShowPanel" = "显示工具面板";
 "imageEditor.action.toolsHidePanel" = "隐藏工具面板";
 "imageEditor.action.toolsShowPanelVisibility" = "显示工具面板";
@@ -1276,6 +1278,8 @@
 "imageEditor.status.propertiesPanelShown" = "属性面板已显示";
 "imageEditor.status.propertiesPanelHidden" = "属性面板已隐藏";
 "imageEditor.status.workspaceDefaultRestored" = "默认工作区已恢复";
+"imageEditor.status.workspacePanelsShown" = "工作区面板已显示";
+"imageEditor.status.workspacePanelsHidden" = "工作区面板已隐藏";
 "imageEditor.status.zoomActualPixels" = "已按实际像素显示";
 "imageEditor.status.zoomFitOnScreen" = "已适合窗口显示";
 "imageEditor.status.exported" = "已导出 %@";

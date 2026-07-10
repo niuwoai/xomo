@@ -1073,6 +1073,10 @@ final class ImageEditorViewModel: ObservableObject {
         isNavigatorPanelVisible || isHistoryPanelVisible || isLayersPanelVisible || isPropertiesPanelVisible
     }
 
+    var isWorkspaceChromeVisible: Bool {
+        areToolsPanelVisible || isOptionsBarVisible || isRightDockVisible
+    }
+
     func resetForegroundBackgroundColors() {
         foregroundColor = .black
         backgroundColor = .white
@@ -1154,6 +1158,17 @@ final class ImageEditorViewModel: ObservableObject {
         isLayersPanelVisible = true
         isPropertiesPanelVisible = true
         statusText = L10n.text("imageEditor.status.workspaceDefaultRestored")
+    }
+
+    func toggleWorkspaceChromeVisibility() {
+        let shouldShow = !isWorkspaceChromeVisible
+        areToolsPanelVisible = shouldShow
+        isOptionsBarVisible = shouldShow
+        isNavigatorPanelVisible = shouldShow
+        isHistoryPanelVisible = shouldShow
+        isLayersPanelVisible = shouldShow
+        isPropertiesPanelVisible = shouldShow
+        statusText = L10n.text(shouldShow ? "imageEditor.status.workspacePanelsShown" : "imageEditor.status.workspacePanelsHidden")
     }
 
     func toggleNavigatorPanelVisibility() {

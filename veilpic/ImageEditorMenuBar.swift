@@ -1286,6 +1286,9 @@ extension ImageEditorView {
             viewModel.resetDefaultWorkspace()
             selectedLayerPanelTab = .layers
         }
+        Button(L10n.text(viewModel.isWorkspaceChromeVisible ? "imageEditor.action.workspaceHidePanels" : "imageEditor.action.workspaceShowPanels")) {
+            viewModel.toggleWorkspaceChromeVisibility()
+        }
         Divider()
         toolsActionsMenu
         optionsActionsMenu
