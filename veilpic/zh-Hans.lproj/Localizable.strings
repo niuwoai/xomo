@@ -1060,6 +1060,7 @@
 "imageEditor.history.selectionFromLayerMask" = "从图层蒙版载入选区";
 "imageEditor.history.selectionFromSelectedLayerMasks" = "从所选图层蒙版载入选区";
 "imageEditor.history.selectionFromVectorMask" = "从矢量蒙版载入选区";
+"imageEditor.history.selectionFromSelectedVectorMasks" = "从所选矢量蒙版载入选区";
 "imageEditor.history.layerFilterNew" = "新建滤镜图层";
 "imageEditor.history.layerSolidColorFillNew" = "新建纯色填充图层";
 "imageEditor.history.layerSolidColorFillUpdate" = "更新纯色填充图层";
@@ -1368,6 +1369,7 @@
 "imageEditor.status.layerMaskSelectionSelected" = "已从 %d 个图层蒙版载入选区";
 "imageEditor.status.layerMaskSelectionFailed" = "请先选择带图层蒙版的图层";
 "imageEditor.status.vectorMaskSelection" = "已从矢量蒙版载入选区";
+"imageEditor.status.vectorMaskSelectionSelected" = "已从 %d 个矢量蒙版载入选区";
 "imageEditor.status.vectorMaskSelectionFailed" = "请先选择带闭合矢量蒙版的图层";
 "imageEditor.status.cloneSourceSet" = "已设置仿制图章取样点";
 "imageEditor.status.cloneSourceMissing" = "请先按住 Option 点击画布设置仿制图章取样点";

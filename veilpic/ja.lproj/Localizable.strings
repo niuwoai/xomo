@@ -1060,6 +1060,7 @@
 "imageEditor.history.selectionFromLayerMask" = "レイヤーマスクから選択範囲を読み込み";
 "imageEditor.history.selectionFromSelectedLayerMasks" = "選択レイヤーマスクから選択範囲を読み込み";
 "imageEditor.history.selectionFromVectorMask" = "ベクターマスクから選択範囲を読み込み";
+"imageEditor.history.selectionFromSelectedVectorMasks" = "選択ベクターマスクから選択範囲を読み込み";
 "imageEditor.history.layerFilterNew" = "フィルターレイヤーを作成";
 "imageEditor.history.layerSolidColorFillNew" = "べた塗りレイヤーを作成";
 "imageEditor.history.layerSolidColorFillUpdate" = "べた塗りレイヤーを更新";
@@ -1368,6 +1369,7 @@
 "imageEditor.status.layerMaskSelectionSelected" = "%d個のレイヤーマスクから選択範囲を読み込みました";
 "imageEditor.status.layerMaskSelectionFailed" = "レイヤーマスク付きのレイヤーを選択してください";
 "imageEditor.status.vectorMaskSelection" = "ベクターマスクから選択範囲を読み込みました";
+"imageEditor.status.vectorMaskSelectionSelected" = "%d個のベクターマスクから選択範囲を読み込みました";
 "imageEditor.status.vectorMaskSelectionFailed" = "閉じたベクターマスク付きのレイヤーを選択してください";
 "imageEditor.status.cloneSourceSet" = "コピースタンプのサンプル元を設定しました";
 "imageEditor.status.cloneSourceMissing" = "先に Option キーを押しながらキャンバスをクリックしてサンプル元を設定してください";

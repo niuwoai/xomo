@@ -122,12 +122,7 @@ extension ImageEditorViewModel {
     }
 
     var canLoadSelectionFromVectorMask: Bool {
-        guard selectedLayerCount == 1,
-              let vectorMask = document.selectedLayer?.vectorMask
-        else { return false }
-        return vectorMask.kind == .path
-            && vectorMask.isPathClosed
-            && vectorMask.editablePathAnchors.count >= 3
+        !vectorMaskSelections().isEmpty
     }
 
     func addLayerMaskFromSelection() {
@@ -411,18 +406,20 @@ extension ImageEditorViewModel {
     }
 
     func loadSelectionFromVectorMask() {
-        guard canLoadSelectionFromVectorMask,
-              let layer = document.selectedLayer,
-              let vectorMask = layer.vectorMask,
-              let selection = selectionFromVectorMask(vectorMask, layer: layer)
-        else {
+        let selections = vectorMaskSelections()
+        guard let selection = combinedMaskSelections(selections) else {
             statusText = L10n.text("imageEditor.status.vectorMaskSelectionFailed")
             return
         }
 
-        applyMaskSelection(selection, historyKey: "imageEditor.history.selectionFromVectorMask")
+        let historyKey = selections.count == 1
+            ? "imageEditor.history.selectionFromVectorMask"
+            : "imageEditor.history.selectionFromSelectedVectorMasks"
+        applyMaskSelection(selection, historyKey: historyKey)
         if document.selection != nil {
-            statusText = L10n.text("imageEditor.status.vectorMaskSelection")
+            statusText = selections.count == 1
+                ? L10n.text("imageEditor.status.vectorMaskSelection")
+                : L10n.format("imageEditor.status.vectorMaskSelectionSelected", selections.count)
         }
     }
 
@@ -769,6 +766,21 @@ extension ImageEditorViewModel {
                   let mask = layer.mask
             else { return nil }
             return selectionFromLayerMask(mask, layer: layer)
+        }
+    }
+
+    private func vectorMaskSelections() -> [ImageEditorSelection] {
+        let selectedIDs = document.selectedLayerIDs.isEmpty
+            ? Set(document.selectedLayerID.map { [$0] } ?? [])
+            : document.selectedLayerIDs
+        return document.layers.compactMap { layer in
+            guard selectedIDs.contains(layer.id),
+                  let vectorMask = layer.vectorMask,
+                  vectorMask.kind == .path,
+                  vectorMask.isPathClosed,
+                  vectorMask.editablePathAnchors.count >= 3
+            else { return nil }
+            return selectionFromVectorMask(vectorMask, layer: layer)
         }
     }
 

@@ -3603,6 +3603,55 @@ struct veilpicTests {
     }
 
     @MainActor
+    @Test func imageEditorLoadsCombinedSelectionFromMultipleVectorMasks() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        func vectorMask(_ points: [CGPoint]) -> ImageEditorShapeContent {
+            ImageEditorShapeContent(
+                kind: .path,
+                fillColor: .white,
+                fillOpacity: 1,
+                strokeColor: .white,
+                strokeWidth: 1,
+                strokeOpacity: 0,
+                pathPoints: points,
+                isPathClosed: true
+            )
+        }
+
+        var firstLayer = ImageEditorLayer.blank(name: "First Vector", size: canvasSize)
+        firstLayer.vectorMask = vectorMask([
+            CGPoint(x: 0, y: 0), CGPoint(x: 20, y: 0), CGPoint(x: 20, y: 60), CGPoint(x: 0, y: 60)
+        ])
+        var secondLayer = ImageEditorLayer.blank(name: "Second Vector", size: canvasSize)
+        secondLayer.vectorMask = vectorMask([
+            CGPoint(x: 60, y: 0), CGPoint(x: 80, y: 0), CGPoint(x: 80, y: 60), CGPoint(x: 60, y: 60)
+        ])
+
+        let firstLayerID = firstLayer.id
+        let secondLayerID = secondLayer.id
+        viewModel.document.layers = [viewModel.document.layers[0], firstLayer, secondLayer]
+        viewModel.document.selectedLayerID = secondLayerID
+        viewModel.document.selectedLayerIDs = [firstLayerID, secondLayerID]
+
+        #expect(viewModel.canLoadSelectionFromVectorMask)
+        viewModel.loadSelectionFromVectorMask()
+
+        let selection = try #require(viewModel.document.selection)
+        let mask = try #require(selection.rasterMask)
+        #expect(maskAlpha(mask, x: 10, y: 30) == 255)
+        #expect(maskAlpha(mask, x: 40, y: 30) == 0)
+        #expect(maskAlpha(mask, x: 70, y: 30) == 255)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionFromSelectedVectorMasks"))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.vectorMaskSelectionSelected", 2))
+
+        viewModel.undo()
+        #expect(viewModel.document.selection == nil)
+    }
+
+    @MainActor
     @Test func imageEditorCanLoadSelectionFromGroupTransparency() async throws {
         let canvasSize = NSSize(width: 90, height: 70)
         let image = testBitmapImage(size: canvasSize, background: .clear)

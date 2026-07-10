@@ -1060,6 +1060,7 @@
 "imageEditor.history.selectionFromLayerMask" = "Load Selection from Layer Mask";
 "imageEditor.history.selectionFromSelectedLayerMasks" = "Load Selection from Selected Layer Masks";
 "imageEditor.history.selectionFromVectorMask" = "Load Selection from Vector Mask";
+"imageEditor.history.selectionFromSelectedVectorMasks" = "Load Selection from Selected Vector Masks";
 "imageEditor.history.layerFilterNew" = "New Filter Layer";
 "imageEditor.history.layerSolidColorFillNew" = "New Solid Color Fill Layer";
 "imageEditor.history.layerSolidColorFillUpdate" = "Update Solid Color Fill Layer";
@@ -1368,6 +1369,7 @@
 "imageEditor.status.layerMaskSelectionSelected" = "Selection loaded from %d layer masks";
 "imageEditor.status.layerMaskSelectionFailed" = "Select a layer with a layer mask first";
 "imageEditor.status.vectorMaskSelection" = "Selection loaded from vector mask";
+"imageEditor.status.vectorMaskSelectionSelected" = "Selection loaded from %d vector masks";
 "imageEditor.status.vectorMaskSelectionFailed" = "Select a layer with a closed vector mask first";
 "imageEditor.status.cloneSourceSet" = "Clone stamp source set";
 "imageEditor.status.cloneSourceMissing" = "Option-click the canvas to set a clone stamp source first";
