@@ -235,6 +235,14 @@ extension ImageEditorView {
             viewModel.duplicateSelectedLayer()
         }
         .disabled(!viewModel.canDuplicateSelectedLayer)
+        Button(L10n.text("imageEditor.action.selectionCopyLayer")) {
+            viewModel.copySelectionToNewLayer()
+        }
+        .disabled(!viewModel.canCopySelectionToNewLayer)
+        Button(L10n.text("imageEditor.action.selectionCutLayer")) {
+            viewModel.cutSelectionToNewLayer()
+        }
+        .disabled(!viewModel.canCutSelectionToNewLayer)
         Button(L10n.text("imageEditor.action.layerDelete")) {
             viewModel.deleteSelectedLayer()
         }

@@ -297,6 +297,25 @@ struct ImageEditorScopeTests {
         }
     }
 
+    @Test func layerMenuExposesSelectionLayerCommandsInPhotoshopStyleLocation() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
+            encoding: .utf8
+        )
+        let layerMenuStart = try #require(source.range(of: "private var layerMenu: some View"))
+        let nextMenuStart = try #require(
+            source[layerMenuStart.upperBound...].range(of: "private var layerSelectAttributeMenu: some View")
+        )
+        let layerMenuSource = source[layerMenuStart.lowerBound..<nextMenuStart.lowerBound]
+
+        #expect(layerMenuSource.contains("imageEditor.action.selectionCopyLayer"))
+        #expect(layerMenuSource.contains("viewModel.copySelectionToNewLayer()"))
+        #expect(layerMenuSource.contains("viewModel.canCopySelectionToNewLayer"))
+        #expect(layerMenuSource.contains("imageEditor.action.selectionCutLayer"))
+        #expect(layerMenuSource.contains("viewModel.cutSelectionToNewLayer()"))
+        #expect(layerMenuSource.contains("viewModel.canCutSelectionToNewLayer"))
+    }
+
     private static func repositoryRoot() -> URL {
         URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
