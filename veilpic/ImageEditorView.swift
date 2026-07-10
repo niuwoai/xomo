@@ -212,6 +212,14 @@ struct ImageEditorView: View {
 
     private var toolShortcutButtons: some View {
         Group {
+            Button {
+                viewModel.clearColorSamplers()
+            } label: {
+                EmptyView()
+            }
+            .keyboardShortcut("x", modifiers: [.option])
+            .accessibilityHidden(true)
+
             ForEach(ImageEditorTool.classicShortcutGroups) { group in
                 Button {
                     viewModel.selectClassicToolShortcut(group.key)
