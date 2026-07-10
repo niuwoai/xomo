@@ -316,6 +316,7 @@
 "variant.webp.title" = "WebP";
 "workbench.preview.edit" = "编辑图片";
 "imageEditor.window.title" = "图片编辑器";
+"imageEditor.developmentSampleName" = "开发测试画布";
 "imageEditor.defaultSourceName" = "图片";
 "imageEditor.menu.file" = "文件";
 "imageEditor.menu.edit" = "编辑";

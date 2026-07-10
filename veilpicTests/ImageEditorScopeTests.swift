@@ -252,6 +252,37 @@ struct ImageEditorScopeTests {
         #expect(viewModel.selectedTool == .rectangle)
     }
 
+    @Test func developmentLaunchOpensEditorOnlyForNormalDebugAppProcess() {
+        #expect(
+            ImageEditorDevelopmentLaunch.shouldOpenEditor(
+                isDebugBuild: true,
+                environment: [:],
+                isRunningXCTest: false
+            )
+        )
+        #expect(
+            !ImageEditorDevelopmentLaunch.shouldOpenEditor(
+                isDebugBuild: false,
+                environment: [:],
+                isRunningXCTest: false
+            )
+        )
+        #expect(
+            !ImageEditorDevelopmentLaunch.shouldOpenEditor(
+                isDebugBuild: true,
+                environment: ["XCTestConfigurationFilePath": "test.xctestconfiguration"],
+                isRunningXCTest: false
+            )
+        )
+        #expect(
+            !ImageEditorDevelopmentLaunch.shouldOpenEditor(
+                isDebugBuild: true,
+                environment: [:],
+                isRunningXCTest: true
+            )
+        )
+    }
+
     @MainActor
     @Test func classicAdjustmentShortcutsPreparePropertiesPanel() {
         let image = NSImage(size: NSSize(width: 80, height: 60))

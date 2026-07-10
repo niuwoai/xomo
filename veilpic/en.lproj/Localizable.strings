@@ -316,6 +316,7 @@
 "variant.webp.title" = "WebP";
 "workbench.preview.edit" = "Edit image";
 "imageEditor.window.title" = "Image Editor";
+"imageEditor.developmentSampleName" = "Development Test Canvas";
 "imageEditor.defaultSourceName" = "Image";
 "imageEditor.menu.file" = "File";
 "imageEditor.menu.edit" = "Edit";

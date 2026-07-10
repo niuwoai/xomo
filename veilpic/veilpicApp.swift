@@ -48,6 +48,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         DockVisibilitySettings.shared.applyActivationPolicy()
         GlobalScreenshotShortcutManager.shared.setup(viewModel: .shared)
 
+#if DEBUG
+        if ImageEditorDevelopmentLaunch.shouldOpenEditor {
+            DispatchQueue.main.async {
+                ImageEditorWindowPresenter.shared.openDevelopmentSample()
+            }
+            return
+        }
+#endif
+
         guard LaunchGuide.shouldOpenSettings(profile: MenuBarUploadViewModel.shared.profile) else {
             return
         }
@@ -65,6 +74,30 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         return true
+    }
+}
+
+enum ImageEditorDevelopmentLaunch {
+    static var shouldOpenEditor: Bool {
+#if DEBUG
+        shouldOpenEditor(
+            isDebugBuild: true,
+            environment: ProcessInfo.processInfo.environment,
+            isRunningXCTest: NSClassFromString("XCTestCase") != nil
+        )
+#else
+        false
+#endif
+    }
+
+    static func shouldOpenEditor(
+        isDebugBuild: Bool,
+        environment: [String: String],
+        isRunningXCTest: Bool
+    ) -> Bool {
+        isDebugBuild
+            && environment["XCTestConfigurationFilePath"] == nil
+            && !isRunningXCTest
     }
 }
 
@@ -196,6 +229,32 @@ final class ImageEditorWindowPresenter: NSObject, NSWindowDelegate {
         self.window = window
         show(window)
     }
+
+#if DEBUG
+    func openDevelopmentSample() {
+        open(
+            image: developmentSampleImage(),
+            sourceName: L10n.text("imageEditor.developmentSampleName")
+        ) { _ in }
+    }
+
+    private func developmentSampleImage() -> NSImage {
+        let size = NSSize(width: 1600, height: 1000)
+        return NSImage.rendered(size: size) { rect in
+            NSColor(srgbRed: 0.08, green: 0.10, blue: 0.14, alpha: 1).setFill()
+            rect.fill()
+
+            NSColor(srgbRed: 0.12, green: 0.45, blue: 0.86, alpha: 1).setFill()
+            CGRect(x: 110, y: 120, width: 620, height: 680).fill()
+
+            NSColor(srgbRed: 0.96, green: 0.58, blue: 0.20, alpha: 1).setFill()
+            NSBezierPath(ovalIn: CGRect(x: 760, y: 280, width: 520, height: 520)).fill()
+
+            NSColor(srgbRed: 0.92, green: 0.94, blue: 0.98, alpha: 1).setFill()
+            CGRect(x: 860, y: 120, width: 520, height: 110).fill()
+        } ?? NSImage.transparent(size: size)
+    }
+#endif
 
     private func show(_ window: NSWindow) {
         NSApplication.shared.activate(ignoringOtherApps: true)
