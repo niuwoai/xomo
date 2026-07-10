@@ -213,14 +213,17 @@ extension ImageEditorView {
         Button(L10n.text("imageEditor.action.autoLevels")) {
             viewModel.autoLevelsSelectedLayer()
         }
+        .keyboardShortcut("l", modifiers: [.command, .shift])
         .disabled(!viewModel.canAutoLevelsSelectedLayer)
         Button(L10n.text("imageEditor.action.autoContrast")) {
             viewModel.autoContrastSelectedLayer()
         }
+        .keyboardShortcut("l", modifiers: [.command, .shift, .option])
         .disabled(!viewModel.canAutoContrastSelectedLayer)
         Button(L10n.text("imageEditor.action.autoColor")) {
             viewModel.autoColorSelectedLayer()
         }
+        .keyboardShortcut("b", modifiers: [.command, .shift])
         .disabled(!viewModel.canAutoColorSelectedLayer)
         Divider()
         Button(L10n.text("imageEditor.action.cropCenter")) {

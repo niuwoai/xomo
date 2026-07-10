@@ -675,6 +675,12 @@ struct ImageEditorScopeTests {
         #expect(imageMenuSource.contains(".keyboardShortcut(\"i\", modifiers: [.command, .option])"))
         #expect(imageMenuSource.contains("viewModel.resizeCanvasToControlSize()"))
         #expect(imageMenuSource.contains(".keyboardShortcut(\"c\", modifiers: [.command, .option])"))
+        #expect(imageMenuSource.contains("viewModel.autoLevelsSelectedLayer()"))
+        #expect(imageMenuSource.contains(".keyboardShortcut(\"l\", modifiers: [.command, .shift])"))
+        #expect(imageMenuSource.contains("viewModel.autoContrastSelectedLayer()"))
+        #expect(imageMenuSource.contains(".keyboardShortcut(\"l\", modifiers: [.command, .shift, .option])"))
+        #expect(imageMenuSource.contains("viewModel.autoColorSelectedLayer()"))
+        #expect(imageMenuSource.contains(".keyboardShortcut(\"b\", modifiers: [.command, .shift])"))
     }
 
     @Test func editMenuExposesClassicEditingShortcuts() throws {

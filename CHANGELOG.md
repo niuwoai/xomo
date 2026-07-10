@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.416.0 - 2026-07-10
+
+### Added
+- 图片编辑器新增 Image 菜单经典自动校正快捷键：`Shift + Command + L` 自动色阶、`Option + Shift + Command + L` 自动对比度、`Shift + Command + B` 自动颜色。
+
 ## 1.415.0 - 2026-07-10
 
 ### Added
