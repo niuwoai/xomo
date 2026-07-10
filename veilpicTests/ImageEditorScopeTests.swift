@@ -242,6 +242,22 @@ struct ImageEditorScopeTests {
     }
 
     @MainActor
+    @Test func classicAdjustmentShortcutsPreparePropertiesPanel() {
+        let image = NSImage(size: NSSize(width: 80, height: 60))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.isPropertiesPanelVisible = false
+        viewModel.selectAdjustment(.levels)
+
+        #expect(viewModel.selectedAdjustment == .levels)
+        #expect(viewModel.isPropertiesPanelVisible)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.adjustmentReady", ImageEditorAdjustment.levels.title))
+
+        viewModel.selectAdjustment(.hueSaturation)
+        #expect(viewModel.selectedAdjustment == .hueSaturation)
+    }
+
+    @MainActor
     @Test func classicBrushSizeShortcutsClampAndUpdateOptionsStatus() {
         let image = NSImage(size: NSSize(width: 80, height: 60))
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
@@ -675,6 +691,14 @@ struct ImageEditorScopeTests {
         #expect(imageMenuSource.contains(".keyboardShortcut(\"i\", modifiers: [.command, .option])"))
         #expect(imageMenuSource.contains("viewModel.resizeCanvasToControlSize()"))
         #expect(imageMenuSource.contains(".keyboardShortcut(\"c\", modifiers: [.command, .option])"))
+        #expect(imageMenuSource.contains("viewModel.selectAdjustment(.levels)"))
+        #expect(imageMenuSource.contains(".keyboardShortcut(\"l\", modifiers: [.command])"))
+        #expect(imageMenuSource.contains("viewModel.selectAdjustment(.curves)"))
+        #expect(imageMenuSource.contains(".keyboardShortcut(\"m\", modifiers: [.command])"))
+        #expect(imageMenuSource.contains("viewModel.selectAdjustment(.colorBalance)"))
+        #expect(imageMenuSource.contains(".keyboardShortcut(\"b\", modifiers: [.command])"))
+        #expect(imageMenuSource.contains("viewModel.selectAdjustment(.hueSaturation)"))
+        #expect(imageMenuSource.contains(".keyboardShortcut(\"u\", modifiers: [.command])"))
         #expect(imageMenuSource.contains("viewModel.autoLevelsSelectedLayer()"))
         #expect(imageMenuSource.contains(".keyboardShortcut(\"l\", modifiers: [.command, .shift])"))
         #expect(imageMenuSource.contains("viewModel.autoContrastSelectedLayer()"))

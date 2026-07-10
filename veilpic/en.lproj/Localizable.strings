@@ -1352,6 +1352,7 @@
 "imageEditor.status.autoLevelsSelected" = "Auto-corrected levels for %d layers";
 "imageEditor.status.autoContrastSelected" = "Auto-corrected contrast for %d layers";
 "imageEditor.status.autoColorSelected" = "Auto-corrected color for %d layers";
+"imageEditor.status.adjustmentReady" = "%@ adjustment ready";
 "imageEditor.status.adjustmentSelected" = "Applied %@ to %d layers";
 "imageEditor.status.operationFailed" = "Operation failed";
 "imageEditor.status.layerLocked" = "The selected layer cannot be edited";

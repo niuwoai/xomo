@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.420.0 - 2026-07-10
+
+### Added
+- 图片编辑器新增 Image 菜单经典调整快捷入口：`Command + L` 色阶、`Command + M` 曲线、`Command + B` 色彩平衡、`Command + U` 色相/饱和度。
+
 ## 1.419.0 - 2026-07-10
 
 ### Added

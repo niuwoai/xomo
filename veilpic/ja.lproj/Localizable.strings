@@ -1352,6 +1352,7 @@
 "imageEditor.status.autoLevelsSelected" = "%d個のレイヤーのレベルを自動補正しました";
 "imageEditor.status.autoContrastSelected" = "%d個のレイヤーのコントラストを自動補正しました";
 "imageEditor.status.autoColorSelected" = "%d個のレイヤーのカラーを自動補正しました";
+"imageEditor.status.adjustmentReady" = "%@ の調整を準備しました";
 "imageEditor.status.adjustmentSelected" = "%@ を%d個のレイヤーに適用しました";
 "imageEditor.status.operationFailed" = "操作に失敗しました";
 "imageEditor.status.layerLocked" = "選択中のレイヤーは編集できません";

@@ -1352,6 +1352,7 @@
 "imageEditor.status.autoLevelsSelected" = "已自动校正 %d 个图层的色阶";
 "imageEditor.status.autoContrastSelected" = "已自动校正 %d 个图层的对比度";
 "imageEditor.status.autoColorSelected" = "已自动校正 %d 个图层的颜色";
+"imageEditor.status.adjustmentReady" = "已准备 %@ 调整";
 "imageEditor.status.adjustmentSelected" = "已将 %@ 应用到 %d 个图层";
 "imageEditor.status.operationFailed" = "操作失败";
 "imageEditor.status.layerLocked" = "当前图层不可编辑";

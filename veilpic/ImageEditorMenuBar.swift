@@ -210,6 +210,23 @@ extension ImageEditorView {
         }
         .keyboardShortcut("c", modifiers: [.command, .option])
         Divider()
+        Button(ImageEditorAdjustment.levels.title) {
+            viewModel.selectAdjustment(.levels)
+        }
+        .keyboardShortcut("l", modifiers: [.command])
+        Button(ImageEditorAdjustment.curves.title) {
+            viewModel.selectAdjustment(.curves)
+        }
+        .keyboardShortcut("m", modifiers: [.command])
+        Button(ImageEditorAdjustment.colorBalance.title) {
+            viewModel.selectAdjustment(.colorBalance)
+        }
+        .keyboardShortcut("b", modifiers: [.command])
+        Button(ImageEditorAdjustment.hueSaturation.title) {
+            viewModel.selectAdjustment(.hueSaturation)
+        }
+        .keyboardShortcut("u", modifiers: [.command])
+        Divider()
         Button(L10n.text("imageEditor.action.autoLevels")) {
             viewModel.autoLevelsSelectedLayer()
         }
