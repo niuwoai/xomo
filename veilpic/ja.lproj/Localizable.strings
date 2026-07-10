@@ -1158,6 +1158,7 @@
 "imageEditor.history.autoLevelsSelected" = "選択レイヤーを自動レベル補正";
 "imageEditor.history.autoContrastSelected" = "選択レイヤーを自動コントラスト";
 "imageEditor.history.autoColorSelected" = "選択レイヤーを自動カラー補正";
+"imageEditor.history.adjustmentSelected" = "%@ を選択レイヤーに適用";
 "imageEditor.status.ready" = "%@ · %@ · 準備完了";
 "imageEditor.status.toolSoon" = "このツールは今後のバージョンで対応します";
 "imageEditor.status.menuSoon" = "メニュー機能は今後追加します";
@@ -1213,6 +1214,7 @@
 "imageEditor.status.autoLevelsSelected" = "%d個のレイヤーのレベルを自動補正しました";
 "imageEditor.status.autoContrastSelected" = "%d個のレイヤーのコントラストを自動補正しました";
 "imageEditor.status.autoColorSelected" = "%d個のレイヤーのカラーを自動補正しました";
+"imageEditor.status.adjustmentSelected" = "%@ を%d個のレイヤーに適用しました";
 "imageEditor.status.operationFailed" = "操作に失敗しました";
 "imageEditor.status.layerLocked" = "選択中のレイヤーは編集できません";
 "imageEditor.status.layerAlignedToCanvas" = "レイヤーをキャンバスに整列しました";

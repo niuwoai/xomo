@@ -2819,15 +2819,37 @@ final class ImageEditorViewModel: ObservableObject {
 
     func applyAdjustment() {
         let title = selectedAdjustment.title
-        guard let output = adjustedImage(
-            kind: selectedAdjustment,
-            amount: adjustmentValue,
-            settings: currentAdjustmentSettings()
-        ) else {
+        let indices = editableSelectedLayerIndices()
+        let settings = currentAdjustmentSettings()
+        let outputs = indices.reduce(into: [Int: NSImage]()) { result, index in
+            if let image = document.layers[index].image.adjusted(
+                kind: selectedAdjustment,
+                amount: adjustmentValue,
+                settings: settings
+            ) {
+                result[index] = image
+            }
+        }
+        guard !indices.isEmpty, outputs.count == indices.count else {
             statusText = L10n.text("imageEditor.status.adjustmentFailed")
             return
         }
-        replaceSelectedLayerImage(output, historyTitle: title)
+
+        pushUndo()
+        for index in indices {
+            guard let normalized = outputs[index]?.normalizedBitmapImage() else { continue }
+            let original = document.layers[index].image
+            let clipped = clippedToSelection(original: original, output: normalized)
+            document.layers[index].image = document.isEffectivelyTransparencyLocked(document.layers[index])
+                ? (clipped.preservingAlpha(from: original) ?? clipped)
+                : clipped
+        }
+        if indices.count == 1 {
+            appendHistory(title)
+        } else {
+            appendHistory(L10n.format("imageEditor.history.adjustmentSelected", title))
+            statusText = L10n.format("imageEditor.status.adjustmentSelected", title, indices.count)
+        }
         resetAdjustmentControls()
     }
 

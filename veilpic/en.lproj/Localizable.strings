@@ -1158,6 +1158,7 @@
 "imageEditor.history.autoLevelsSelected" = "Auto Levels Selected Layers";
 "imageEditor.history.autoContrastSelected" = "Auto Contrast Selected Layers";
 "imageEditor.history.autoColorSelected" = "Auto Color Selected Layers";
+"imageEditor.history.adjustmentSelected" = "Apply %@ to Selected Layers";
 "imageEditor.status.ready" = "%@ · %@ · Ready";
 "imageEditor.status.toolSoon" = "This tool will be supported in a later version";
 "imageEditor.status.menuSoon" = "Menu actions will be filled in later";
@@ -1213,6 +1214,7 @@
 "imageEditor.status.autoLevelsSelected" = "Auto-corrected levels for %d layers";
 "imageEditor.status.autoContrastSelected" = "Auto-corrected contrast for %d layers";
 "imageEditor.status.autoColorSelected" = "Auto-corrected color for %d layers";
+"imageEditor.status.adjustmentSelected" = "Applied %@ to %d layers";
 "imageEditor.status.operationFailed" = "Operation failed";
 "imageEditor.status.layerLocked" = "The selected layer cannot be edited";
 "imageEditor.status.layerAlignedToCanvas" = "Aligned layers to canvas";
