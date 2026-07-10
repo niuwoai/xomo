@@ -1285,13 +1285,50 @@ extension ImageEditorView {
             selectedLayerPanelTab = .comps
         }
         Divider()
+        historyActionsMenu
+        Divider()
         pathActionsMenu
         Divider()
         Button(L10n.text("imageEditor.menu.window.properties")) {
             viewModel.statusText = L10n.text("imageEditor.status.propertiesVisible")
         }
-        Button(L10n.text("imageEditor.menu.window.history")) {
-            viewModel.statusText = viewModel.historyStateSummary
+    }
+
+    @ViewBuilder
+    private var historyActionsMenu: some View {
+        Menu(L10n.text("imageEditor.menu.window.history")) {
+            Button(L10n.text("imageEditor.action.historyShowPanel")) {
+                viewModel.statusText = viewModel.historyStateSummary
+            }
+            Divider()
+            Button(L10n.text("imageEditor.action.historySnapshotCreate")) {
+                viewModel.createHistorySnapshot()
+            }
+            Button(L10n.text("imageEditor.action.historySnapshotRestoreSelected")) {
+                viewModel.restoreSelectedHistorySnapshot()
+            }
+            .disabled(!viewModel.canRestoreSelectedHistorySnapshot)
+            Button(L10n.text("imageEditor.action.historySnapshotDuplicate")) {
+                viewModel.duplicateSelectedHistorySnapshot()
+            }
+            .disabled(!viewModel.canDuplicateSelectedHistorySnapshot)
+            Button(L10n.text("imageEditor.action.historySnapshotDeleteSelected")) {
+                viewModel.deleteSelectedHistorySnapshot()
+            }
+            .disabled(!viewModel.canDeleteSelectedHistorySnapshot)
+            Divider()
+            Button(L10n.text("imageEditor.action.historySnapshotPrevious")) {
+                viewModel.selectPreviousHistorySnapshot()
+            }
+            .disabled(!viewModel.canSelectPreviousHistorySnapshot)
+            Button(L10n.text("imageEditor.action.historySnapshotNext")) {
+                viewModel.selectNextHistorySnapshot()
+            }
+            .disabled(!viewModel.canSelectNextHistorySnapshot)
+            Divider()
+            Button(L10n.text("imageEditor.action.historyClear")) {
+                viewModel.clearHistoryStates()
+            }
         }
     }
 

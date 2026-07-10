@@ -384,6 +384,41 @@ struct ImageEditorScopeTests {
         #expect(channelMenuSource.contains("viewModel.canDeleteSelectedAlphaChannel"))
     }
 
+    @Test func windowMenuExposesHistoryPanelActionsInPhotoshopStyleLocation() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
+            encoding: .utf8
+        )
+        let historyMenuStart = try #require(source.range(of: "private var historyActionsMenu: some View"))
+        let nextMenuStart = try #require(
+            source[historyMenuStart.upperBound...].range(of: "private var channelActionsMenu: some View")
+        )
+        let historyMenuSource = source[historyMenuStart.lowerBound..<nextMenuStart.lowerBound]
+
+        #expect(historyMenuSource.contains("imageEditor.menu.window.history"))
+        #expect(historyMenuSource.contains("imageEditor.action.historyShowPanel"))
+        #expect(historyMenuSource.contains("viewModel.historyStateSummary"))
+        #expect(historyMenuSource.contains("imageEditor.action.historySnapshotCreate"))
+        #expect(historyMenuSource.contains("viewModel.createHistorySnapshot()"))
+        #expect(historyMenuSource.contains("imageEditor.action.historySnapshotRestoreSelected"))
+        #expect(historyMenuSource.contains("viewModel.restoreSelectedHistorySnapshot()"))
+        #expect(historyMenuSource.contains("viewModel.canRestoreSelectedHistorySnapshot"))
+        #expect(historyMenuSource.contains("imageEditor.action.historySnapshotDuplicate"))
+        #expect(historyMenuSource.contains("viewModel.duplicateSelectedHistorySnapshot()"))
+        #expect(historyMenuSource.contains("viewModel.canDuplicateSelectedHistorySnapshot"))
+        #expect(historyMenuSource.contains("imageEditor.action.historySnapshotDeleteSelected"))
+        #expect(historyMenuSource.contains("viewModel.deleteSelectedHistorySnapshot()"))
+        #expect(historyMenuSource.contains("viewModel.canDeleteSelectedHistorySnapshot"))
+        #expect(historyMenuSource.contains("imageEditor.action.historySnapshotPrevious"))
+        #expect(historyMenuSource.contains("viewModel.selectPreviousHistorySnapshot()"))
+        #expect(historyMenuSource.contains("viewModel.canSelectPreviousHistorySnapshot"))
+        #expect(historyMenuSource.contains("imageEditor.action.historySnapshotNext"))
+        #expect(historyMenuSource.contains("viewModel.selectNextHistorySnapshot()"))
+        #expect(historyMenuSource.contains("viewModel.canSelectNextHistorySnapshot"))
+        #expect(historyMenuSource.contains("imageEditor.action.historyClear"))
+        #expect(historyMenuSource.contains("viewModel.clearHistoryStates()"))
+    }
+
     @Test func windowMenuExposesPathPanelActionsInPhotoshopStyleLocation() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),

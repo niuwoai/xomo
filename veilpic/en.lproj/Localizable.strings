@@ -349,6 +349,7 @@
 "imageEditor.menu.window.channels.preview" = "Preview Channels";
 "imageEditor.menu.window.channels.selection" = "Load Channel as Selection";
 "imageEditor.menu.window.channels.alpha" = "Alpha Channels";
+"imageEditor.action.historyShowPanel" = "Show History Panel";
 "imageEditor.action.channelsShowPanel" = "Show Channels Panel";
 "imageEditor.action.cancel" = "Cancel";
 "imageEditor.action.apply" = "Apply to Preview";
