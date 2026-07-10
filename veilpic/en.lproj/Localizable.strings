@@ -956,6 +956,7 @@
 "imageEditor.history.layerSmartObjectMakeUnique" = "Make Smart Object Unique";
 "imageEditor.history.layerSmartObjectMakeUniqueSelected" = "Make Selected Smart Objects Unique";
 "imageEditor.history.layerSmartObjectResetTransform" = "Reset Smart Object Transform";
+"imageEditor.history.layerSmartObjectResetTransformSelected" = "Reset Selected Smart Object Transforms";
 "imageEditor.history.layerRasterize" = "Rasterize Layer";
 "imageEditor.history.layerRasterizeSelected" = "Rasterize Selected Layers";
 "imageEditor.history.layerRename" = "Rename Layer";
@@ -1246,6 +1247,7 @@
 "imageEditor.status.layerSmartObjectMadeUnique" = "Made the current Smart Object instance unique";
 "imageEditor.status.layerSmartObjectMadeUniqueSelected" = "Made %d Smart Object instances unique";
 "imageEditor.status.layerSmartObjectTransformReset" = "Reset Smart Object transform";
+"imageEditor.status.layerSmartObjectTransformResetSelected" = "Reset %d Smart Object transforms";
 "imageEditor.status.layerImportFailed" = "Failed to import image";
 "imageEditor.status.layerRasterized" = "Layer rasterized";
 "imageEditor.status.layerRasterizedSelected" = "%d layers rasterized";

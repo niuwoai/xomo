@@ -3728,6 +3728,57 @@ struct veilpicTests {
     }
 
     @MainActor
+    @Test func imageEditorResetsMultipleSelectedSmartObjectTransformsAndSkipsLockedLayers() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let image = testBitmapImage(size: canvasSize, background: .systemPink)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.convertSelectedLayerToSmartObject()
+        let firstID = try #require(viewModel.document.selectedLayerID)
+        viewModel.duplicateSelectedLayer()
+        let secondID = try #require(viewModel.document.selectedLayerID)
+        viewModel.duplicateSelectedLayer()
+        let thirdID = try #require(viewModel.document.selectedLayerID)
+
+        let firstIndex = try #require(viewModel.document.layers.firstIndex { $0.id == firstID })
+        let secondIndex = try #require(viewModel.document.layers.firstIndex { $0.id == secondID })
+        let thirdIndex = try #require(viewModel.document.layers.firstIndex { $0.id == thirdID })
+        let originalSize = try #require(viewModel.document.layers[firstIndex].smartObjectContent?.originalSize)
+        let firstFrame = CGRect(x: 4, y: 6, width: 32, height: 18)
+        let secondFrame = CGRect(x: 42, y: 20, width: 20, height: 28)
+        let thirdFrame = CGRect(x: 16, y: 34, width: 12, height: 10)
+        viewModel.document.layers[firstIndex].frame = firstFrame
+        viewModel.document.layers[secondIndex].frame = secondFrame
+        viewModel.document.layers[thirdIndex].frame = thirdFrame
+        viewModel.document.layers[secondIndex].locksPosition = true
+        viewModel.document.selectedLayerID = thirdID
+        viewModel.document.selectedLayerIDs = [firstID, secondID, thirdID]
+
+        #expect(viewModel.canResetSelectedSmartObjectTransform)
+        viewModel.resetSelectedSmartObjectTransform()
+
+        let resetFirstFrame = viewModel.document.layers[firstIndex].frame
+        let lockedSecondFrame = viewModel.document.layers[secondIndex].frame
+        let resetThirdFrame = viewModel.document.layers[thirdIndex].frame
+        #expect(resetFirstFrame.size == originalSize)
+        #expect(resetFirstFrame.midX == firstFrame.midX)
+        #expect(resetFirstFrame.midY == firstFrame.midY)
+        #expect(lockedSecondFrame == secondFrame)
+        #expect(resetThirdFrame.size == originalSize)
+        #expect(resetThirdFrame.midX == thirdFrame.midX)
+        #expect(resetThirdFrame.midY == thirdFrame.midY)
+        #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, thirdID])
+        #expect(viewModel.document.selectedLayerID == thirdID)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartObjectResetTransformSelected"))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerSmartObjectTransformResetSelected", 2))
+
+        viewModel.undo()
+        #expect(viewModel.document.layers[firstIndex].frame == firstFrame)
+        #expect(viewModel.document.layers[secondIndex].frame == secondFrame)
+        #expect(viewModel.document.layers[thirdIndex].frame == thirdFrame)
+    }
+
+    @MainActor
     @Test func imageEditorCanLoadSelectionFromGroupTransparency() async throws {
         let canvasSize = NSSize(width: 90, height: 70)
         let image = testBitmapImage(size: canvasSize, background: .clear)

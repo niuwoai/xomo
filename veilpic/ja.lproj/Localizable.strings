@@ -956,6 +956,7 @@
 "imageEditor.history.layerSmartObjectMakeUnique" = "スマートオブジェクトインスタンスを独立化";
 "imageEditor.history.layerSmartObjectMakeUniqueSelected" = "選択スマートオブジェクトを独立化";
 "imageEditor.history.layerSmartObjectResetTransform" = "スマートオブジェクトの変形をリセット";
+"imageEditor.history.layerSmartObjectResetTransformSelected" = "選択スマートオブジェクトの変形をリセット";
 "imageEditor.history.layerRasterize" = "レイヤーをラスタライズ";
 "imageEditor.history.layerRasterizeSelected" = "選択レイヤーをラスタライズ";
 "imageEditor.history.layerRename" = "レイヤー名を変更";
@@ -1246,6 +1247,7 @@
 "imageEditor.status.layerSmartObjectMadeUnique" = "現在のスマートオブジェクトインスタンスを独立化しました";
 "imageEditor.status.layerSmartObjectMadeUniqueSelected" = "%d個のスマートオブジェクトインスタンスを独立化しました";
 "imageEditor.status.layerSmartObjectTransformReset" = "スマートオブジェクトの変形をリセットしました";
+"imageEditor.status.layerSmartObjectTransformResetSelected" = "%d個のスマートオブジェクトの変形をリセットしました";
 "imageEditor.status.layerImportFailed" = "画像の読み込みに失敗しました";
 "imageEditor.status.layerRasterized" = "レイヤーをラスタライズしました";
 "imageEditor.status.layerRasterizedSelected" = "%d個のレイヤーをラスタライズしました";

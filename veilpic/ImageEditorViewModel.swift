@@ -968,12 +968,7 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     var canResetSelectedSmartObjectTransform: Bool {
-        guard selectedLayerCount == 1,
-              let layer = document.selectedLayer,
-              layer.isSmartObject,
-              !document.isEffectivelyPositionLocked(layer)
-        else { return false }
-        return true
+        !smartObjectResetTransformTargetIndices().isEmpty
     }
 
     var canMakeSelectedSmartObjectUnique: Bool {
@@ -1776,30 +1771,35 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func resetSelectedSmartObjectTransform() {
-        guard canResetSelectedSmartObjectTransform,
-              let index = document.selectedLayerIndex,
-              let content = document.layers[index].smartObjectContent
-        else {
+        let indices = smartObjectResetTransformTargetIndices()
+        guard !indices.isEmpty else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
 
-        let currentFrame = document.layers[index].frame.standardized
-        let resetSize = CGSize(
-            width: max(1, content.originalSize.width),
-            height: max(1, content.originalSize.height)
-        )
-        let resetFrame = CGRect(
-            x: currentFrame.midX - resetSize.width / 2,
-            y: currentFrame.midY - resetSize.height / 2,
-            width: resetSize.width,
-            height: resetSize.height
-        )
-
         pushUndo()
-        document.layers[index].frame = resetFrame
-        appendHistory(L10n.text("imageEditor.history.layerSmartObjectResetTransform"))
-        statusText = L10n.text("imageEditor.status.layerSmartObjectTransformReset")
+        for index in indices {
+            guard let content = document.layers[index].smartObjectContent else { continue }
+            let currentFrame = document.layers[index].frame.standardized
+            let resetSize = CGSize(
+                width: max(1, content.originalSize.width),
+                height: max(1, content.originalSize.height)
+            )
+            document.layers[index].frame = CGRect(
+                x: currentFrame.midX - resetSize.width / 2,
+                y: currentFrame.midY - resetSize.height / 2,
+                width: resetSize.width,
+                height: resetSize.height
+            )
+        }
+
+        if indices.count == 1 {
+            appendHistory(L10n.text("imageEditor.history.layerSmartObjectResetTransform"))
+            statusText = L10n.text("imageEditor.status.layerSmartObjectTransformReset")
+        } else {
+            appendHistory(L10n.text("imageEditor.history.layerSmartObjectResetTransformSelected"))
+            statusText = L10n.format("imageEditor.status.layerSmartObjectTransformResetSelected", indices.count)
+        }
     }
 
     func makeSelectedSmartObjectUnique() {
@@ -4004,6 +4004,18 @@ final class ImageEditorViewModel: ObservableObject {
             return document.layers.contains { otherLayer in
                 otherLayer.id != layer.id && otherLayer.smartObjectContent?.sourceID == content.sourceID
             }
+        }
+    }
+
+    private func smartObjectResetTransformTargetIndices() -> [Int] {
+        let selectedIDs = document.selectedLayerIDs.isEmpty
+            ? Set(document.selectedLayerID.map { [$0] } ?? [])
+            : document.selectedLayerIDs
+        return document.layers.indices.filter { index in
+            let layer = document.layers[index]
+            return selectedIDs.contains(layer.id)
+                && layer.smartObjectContent != nil
+                && !document.isEffectivelyPositionLocked(layer)
         }
     }
 
