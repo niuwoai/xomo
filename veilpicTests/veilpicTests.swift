@@ -4941,6 +4941,41 @@ struct veilpicTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionIntersect"))
     }
 
+    @MainActor
+    @Test func imageEditorCanCenterSelectionOnCanvasAxes() async throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: testImage(color: .white, size: NSSize(width: 80, height: 60))
+        ) { _ in }
+
+        viewModel.createRectSelection(from: CGPoint(x: 5, y: 10), to: CGPoint(x: 25, y: 30))
+        viewModel.centerSelectionHorizontally()
+        let horizontallyCentered = try #require(viewModel.document.selection)
+        #expect(abs(horizontallyCentered.bounds.midX - 40) < 1.5)
+        #expect(abs(horizontallyCentered.bounds.midY - 20) < 1.5)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionCenterHorizontal"))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionCenteredHorizontal"))
+
+        viewModel.createRectSelection(from: CGPoint(x: 5, y: 8), to: CGPoint(x: 25, y: 28))
+        viewModel.centerSelectionVertically()
+        let verticallyCentered = try #require(viewModel.document.selection)
+        #expect(abs(verticallyCentered.bounds.midX - 15) < 1.5)
+        #expect(abs(verticallyCentered.bounds.midY - 30) < 1.5)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionCenterVertical"))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionCenteredVertical"))
+
+        viewModel.createRectSelection(from: CGPoint(x: 5, y: 8), to: CGPoint(x: 25, y: 28))
+        viewModel.centerSelectionInCanvas()
+        let canvasCentered = try #require(viewModel.document.selection)
+        let centeredMask = try #require(canvasCentered.rasterMask)
+        #expect(abs(canvasCentered.bounds.midX - 40) < 1.5)
+        #expect(abs(canvasCentered.bounds.midY - 30) < 1.5)
+        #expect(maskAlpha(centeredMask, x: 40, y: 30) == 255)
+        #expect(maskAlpha(centeredMask, x: 10, y: 12) == 0)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionCenterCanvas"))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionCenteredCanvas"))
+    }
+
     private func testImage(color: NSColor, size: NSSize) -> NSImage {
         let image = NSImage(size: size)
         image.lockFocus()

@@ -875,6 +875,16 @@ extension ImageEditorView {
                 viewModel.moveSelectionDown()
             }
             Divider()
+            Button(L10n.text("imageEditor.action.selectionCenterHorizontal")) {
+                viewModel.centerSelectionHorizontally()
+            }
+            Button(L10n.text("imageEditor.action.selectionCenterVertical")) {
+                viewModel.centerSelectionVertically()
+            }
+            Button(L10n.text("imageEditor.action.selectionCenterCanvas")) {
+                viewModel.centerSelectionInCanvas()
+            }
+            Divider()
             Button(L10n.text("imageEditor.action.selectionFlipHorizontal")) {
                 viewModel.flipSelectionHorizontal()
             }

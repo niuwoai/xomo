@@ -1926,6 +1926,20 @@ struct ImageEditorView: View {
                             }
                             .buttonStyle(EditorTextButtonStyle())
                         }
+                        HStack {
+                            Button(L10n.text("imageEditor.action.selectionCenterHorizontal")) {
+                                viewModel.centerSelectionHorizontally()
+                            }
+                            .buttonStyle(EditorTextButtonStyle())
+                            Button(L10n.text("imageEditor.action.selectionCenterVertical")) {
+                                viewModel.centerSelectionVertically()
+                            }
+                            .buttonStyle(EditorTextButtonStyle())
+                            Button(L10n.text("imageEditor.action.selectionCenterCanvas")) {
+                                viewModel.centerSelectionInCanvas()
+                            }
+                            .buttonStyle(EditorTextButtonStyle())
+                        }
                     }
                     HStack {
                         if viewModel.hasSelection {

@@ -308,6 +308,18 @@ extension ImageEditorViewModel {
         moveSelection(by: CGSize(width: 0, height: -selectionMoveAmount))
     }
 
+    func centerSelectionHorizontally() {
+        centerSelection(horizontal: true, vertical: false)
+    }
+
+    func centerSelectionVertically() {
+        centerSelection(horizontal: false, vertical: true)
+    }
+
+    func centerSelectionInCanvas() {
+        centerSelection(horizontal: true, vertical: true)
+    }
+
     func flipSelectionHorizontal() {
         flipSelection(horizontal: true)
     }
@@ -374,6 +386,45 @@ extension ImageEditorViewModel {
             Int(delta.width.rounded()),
             Int(delta.height.rounded())
         )
+    }
+
+    private func centerSelection(horizontal: Bool, vertical: Bool) {
+        guard let selection = document.selection else {
+            statusText = L10n.text("imageEditor.status.noSelection")
+            return
+        }
+
+        let bounds = selection.bounds
+        let canvasBounds = CGRect(origin: .zero, size: document.canvasSize)
+        let delta = CGSize(
+            width: horizontal ? canvasBounds.midX - bounds.midX : 0,
+            height: vertical ? canvasBounds.midY - bounds.midY : 0
+        )
+        guard let modified = selection.translated(by: delta, canvasSize: document.canvasSize) else {
+            statusText = L10n.text("imageEditor.status.selectionEmpty")
+            return
+        }
+
+        let historyKey: String
+        let statusKey: String
+        switch (horizontal, vertical) {
+        case (true, true):
+            historyKey = "imageEditor.history.selectionCenterCanvas"
+            statusKey = "imageEditor.status.selectionCenteredCanvas"
+        case (true, false):
+            historyKey = "imageEditor.history.selectionCenterHorizontal"
+            statusKey = "imageEditor.status.selectionCenteredHorizontal"
+        case (false, true):
+            historyKey = "imageEditor.history.selectionCenterVertical"
+            statusKey = "imageEditor.status.selectionCenteredVertical"
+        case (false, false):
+            return
+        }
+
+        pushUndo()
+        document.selection = modified
+        appendHistory(L10n.text(historyKey))
+        statusText = L10n.text(statusKey)
     }
 
     private func flipSelection(horizontal: Bool) {

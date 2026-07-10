@@ -1109,6 +1109,9 @@
 "imageEditor.history.selectionScaleUp" = "選択範囲を拡大";
 "imageEditor.history.selectionScaleDown" = "選択範囲を縮小";
 "imageEditor.history.selectionFitCanvas" = "選択範囲をキャンバスに合わせる";
+"imageEditor.history.selectionCenterHorizontal" = "選択範囲を水平方向に中央揃え";
+"imageEditor.history.selectionCenterVertical" = "選択範囲を垂直方向に中央揃え";
+"imageEditor.history.selectionCenterCanvas" = "選択範囲をキャンバス中央へ";
 "imageEditor.history.selectionSaved" = "選択範囲を保存";
 "imageEditor.history.selectionRestored" = "選択範囲を復元";
 "imageEditor.history.selectionFill" = "選択範囲を塗りつぶし";
@@ -1254,6 +1257,9 @@
 "imageEditor.status.selectionScaledUp" = "選択範囲を 200% に拡大しました";
 "imageEditor.status.selectionScaledDown" = "選択範囲を 50% に縮小しました";
 "imageEditor.status.selectionFitCanvas" = "選択範囲をキャンバスに合わせました";
+"imageEditor.status.selectionCenteredHorizontal" = "選択範囲を水平方向に中央揃えしました";
+"imageEditor.status.selectionCenteredVertical" = "選択範囲を垂直方向に中央揃えしました";
+"imageEditor.status.selectionCenteredCanvas" = "選択範囲をキャンバス中央へ移動しました";
 "imageEditor.status.pathSelectionFailed" = "閉じたパスシェイプレイヤーを選択してください";
 "imageEditor.status.pathVectorMask" = "パスをベクターマスクとして適用しました";
 "imageEditor.status.pathVectorMaskFailed" = "閉じたパスを編集可能な対象レイヤーの上に置いてください";
@@ -1564,6 +1570,9 @@
 "imageEditor.action.selectionScaleUp" = "200% に拡大";
 "imageEditor.action.selectionScaleDown" = "50% に縮小";
 "imageEditor.action.selectionFitCanvas" = "キャンバスに合わせる";
+"imageEditor.action.selectionCenterHorizontal" = "水平方向に中央";
+"imageEditor.action.selectionCenterVertical" = "垂直方向に中央";
+"imageEditor.action.selectionCenterCanvas" = "キャンバス中央へ";
 "imageEditor.colorRange.title" = "カラー範囲";
 "imageEditor.colorRange.sourcePreview" = "ソース";
 "imageEditor.colorRange.selectionPreview" = "選択プレビュー";

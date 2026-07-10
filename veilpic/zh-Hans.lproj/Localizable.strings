@@ -1109,6 +1109,9 @@
 "imageEditor.history.selectionScaleUp" = "放大选区";
 "imageEditor.history.selectionScaleDown" = "缩小选区";
 "imageEditor.history.selectionFitCanvas" = "选区适配画布";
+"imageEditor.history.selectionCenterHorizontal" = "水平居中选区";
+"imageEditor.history.selectionCenterVertical" = "垂直居中选区";
+"imageEditor.history.selectionCenterCanvas" = "居中选区到画布";
 "imageEditor.history.selectionSaved" = "保存选区";
 "imageEditor.history.selectionRestored" = "恢复选区";
 "imageEditor.history.selectionFill" = "填充选区";
@@ -1254,6 +1257,9 @@
 "imageEditor.status.selectionScaledUp" = "已放大选区到 200%";
 "imageEditor.status.selectionScaledDown" = "已缩小选区到 50%";
 "imageEditor.status.selectionFitCanvas" = "已将选区适配到画布";
+"imageEditor.status.selectionCenteredHorizontal" = "已将选区水平居中";
+"imageEditor.status.selectionCenteredVertical" = "已将选区垂直居中";
+"imageEditor.status.selectionCenteredCanvas" = "已将选区居中到画布";
 "imageEditor.status.pathSelectionFailed" = "请先选择闭合路径形状图层";
 "imageEditor.status.pathVectorMask" = "已将路径应用为矢量蒙版";
 "imageEditor.status.pathVectorMaskFailed" = "请先把闭合路径放在可编辑目标图层上方";
@@ -1564,6 +1570,9 @@
 "imageEditor.action.selectionScaleUp" = "放大到 200%";
 "imageEditor.action.selectionScaleDown" = "缩小到 50%";
 "imageEditor.action.selectionFitCanvas" = "适配到画布";
+"imageEditor.action.selectionCenterHorizontal" = "水平居中";
+"imageEditor.action.selectionCenterVertical" = "垂直居中";
+"imageEditor.action.selectionCenterCanvas" = "居中到画布";
 "imageEditor.colorRange.title" = "颜色范围";
 "imageEditor.colorRange.sourcePreview" = "源图";
 "imageEditor.colorRange.selectionPreview" = "选区预览";

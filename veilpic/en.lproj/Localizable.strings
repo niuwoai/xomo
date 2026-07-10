@@ -1109,6 +1109,9 @@
 "imageEditor.history.selectionScaleUp" = "Scale Selection Up";
 "imageEditor.history.selectionScaleDown" = "Scale Selection Down";
 "imageEditor.history.selectionFitCanvas" = "Fit Selection to Canvas";
+"imageEditor.history.selectionCenterHorizontal" = "Center Selection Horizontally";
+"imageEditor.history.selectionCenterVertical" = "Center Selection Vertically";
+"imageEditor.history.selectionCenterCanvas" = "Center Selection on Canvas";
 "imageEditor.history.selectionSaved" = "Save Selection";
 "imageEditor.history.selectionRestored" = "Restore Selection";
 "imageEditor.history.selectionFill" = "Fill Selection";
@@ -1254,6 +1257,9 @@
 "imageEditor.status.selectionScaledUp" = "Selection scaled to 200%";
 "imageEditor.status.selectionScaledDown" = "Selection scaled to 50%";
 "imageEditor.status.selectionFitCanvas" = "Selection fitted to canvas";
+"imageEditor.status.selectionCenteredHorizontal" = "Selection centered horizontally";
+"imageEditor.status.selectionCenteredVertical" = "Selection centered vertically";
+"imageEditor.status.selectionCenteredCanvas" = "Selection centered on canvas";
 "imageEditor.status.pathSelectionFailed" = "Select a closed path shape layer first";
 "imageEditor.status.pathVectorMask" = "Path applied as vector mask";
 "imageEditor.status.pathVectorMaskFailed" = "Place a closed path above an editable target layer first";
@@ -1564,6 +1570,9 @@
 "imageEditor.action.selectionScaleUp" = "Scale to 200%";
 "imageEditor.action.selectionScaleDown" = "Scale to 50%";
 "imageEditor.action.selectionFitCanvas" = "Fit to Canvas";
+"imageEditor.action.selectionCenterHorizontal" = "Center Horizontal";
+"imageEditor.action.selectionCenterVertical" = "Center Vertical";
+"imageEditor.action.selectionCenterCanvas" = "Center on Canvas";
 "imageEditor.colorRange.title" = "Color Range";
 "imageEditor.colorRange.sourcePreview" = "Source";
 "imageEditor.colorRange.selectionPreview" = "Selection Preview";
