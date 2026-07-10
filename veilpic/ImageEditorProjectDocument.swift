@@ -68,6 +68,7 @@ struct ImageEditorProjectDocument: Codable {
     var globalLightAngle: CGFloat?
     var historyTitles: [String]
 
+    @MainActor
     init(document: ImageEditorDocument) throws {
         formatVersion = Self.formatVersion
         appVersion = AppVersion.current
@@ -219,10 +220,12 @@ struct ImageEditorProjectLayer: Codable {
     var isClippingMask: Bool
     var labelColor: ImageEditorLayerLabelColor?
 
+    @MainActor
     init(layer: ImageEditorLayer) throws {
         try self.init(layer: layer, sharedSmartObjectSourceIDs: [])
     }
 
+    @MainActor
     init(layer: ImageEditorLayer, sharedSmartObjectSourceIDs: Set<UUID>) throws {
         let shouldUseSharedSmartObjectSource = layer.smartObjectContent
             .map { sharedSmartObjectSourceIDs.contains($0.sourceID) } ?? false

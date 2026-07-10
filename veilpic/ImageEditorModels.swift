@@ -3510,6 +3510,7 @@ struct ImageEditorLayerComp: Identifiable, Equatable, Codable {
         createdAt = try container.decodeIfPresent(Date.self, forKey: .createdAt) ?? Date()
     }
 
+    @MainActor
     static func capture(name: String, document: ImageEditorDocument) -> ImageEditorLayerComp {
         ImageEditorLayerComp(
             name: name,

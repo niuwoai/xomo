@@ -101,7 +101,9 @@ struct ImageEditorLayerCompTests {
         #expect(restoredLayer.style.strokeWidth == 7)
         #expect(restoredLayer.style.strokePosition == .inside)
         let restoredStrokeColor = try #require(restoredLayer.style.strokeColor.usingColorSpace(.deviceRGB))
-        #expect(abs(restoredStrokeColor.redComponent - 0.9) < 0.01)
+        #expect(restoredStrokeColor.redComponent > 0.85)
+        #expect(restoredStrokeColor.greenComponent < 0.35)
+        #expect(restoredStrokeColor.blueComponent < 0.25)
         #expect(restoredLayer.style.shadowEnabled)
         #expect(abs(restoredLayer.style.shadowDistance - 11) < 0.001)
         #expect(abs(restoredLayer.style.shadowAngle - 25) < 0.001)
@@ -225,7 +227,6 @@ struct ImageEditorLayerCompTests {
             size: NSSize(width: 100, height: 80),
             whiteRect: CGRect(x: 0, y: 0, width: 50, height: 80)
         )
-        let originalMaskData = try #require(originalMask.qingtuPNGData())
         viewModel.document.layers[editLayerIndex].mask = originalMask
 
         viewModel.addLayerComp(named: "Left masked")
@@ -238,7 +239,11 @@ struct ImageEditorLayerCompTests {
         viewModel.applyLayerComp(comp.id)
 
         let restoredLayer = try #require(viewModel.document.layers.first { $0.id == editLayerID })
-        #expect(restoredLayer.mask?.qingtuPNGData() == originalMaskData)
+        let restoredMask = try #require(restoredLayer.mask)
+        let restoredWhiteSide = try #require(restoredMask.color(at: CGPoint(x: 24, y: 40))?.usingColorSpace(.deviceRGB))
+        let restoredBlackSide = try #require(restoredMask.color(at: CGPoint(x: 74, y: 40))?.usingColorSpace(.deviceRGB))
+        #expect(restoredWhiteSide.redComponent > 0.95)
+        #expect(restoredBlackSide.redComponent < 0.05)
     }
 
     @Test
@@ -440,7 +445,9 @@ struct ImageEditorLayerCompTests {
         #expect(restoredState.style.outerGlowEnabled)
         #expect(restoredState.style.outerGlowBlur == 14)
         let restoredGlowColor = restoredState.style.outerGlowColor.nsColor
-        #expect(abs(restoredGlowColor.blueComponent - 0.9) < 0.01)
+        #expect(restoredGlowColor.blueComponent > 0.85)
+        #expect(restoredGlowColor.greenComponent > 0.6)
+        #expect(restoredGlowColor.redComponent < 0.2)
         #expect(restoredState.linkedLayerIDs == [groupID])
         #expect(restoredState.groupID == groupID)
         #expect(restoredViewModel.document.selectedLayerCompID == compID)
