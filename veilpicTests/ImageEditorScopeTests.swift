@@ -419,6 +419,42 @@ struct ImageEditorScopeTests {
         #expect(historyMenuSource.contains("viewModel.clearHistoryStates()"))
     }
 
+    @Test func windowMenuExposesLayerCompPanelActionsInPhotoshopStyleLocation() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
+            encoding: .utf8
+        )
+        let layerCompMenuStart = try #require(source.range(of: "private var layerCompActionsMenu: some View"))
+        let nextMenuStart = try #require(
+            source[layerCompMenuStart.upperBound...].range(of: "private var historyActionsMenu: some View")
+        )
+        let layerCompMenuSource = source[layerCompMenuStart.lowerBound..<nextMenuStart.lowerBound]
+
+        #expect(layerCompMenuSource.contains("imageEditor.menu.window.layerComps"))
+        #expect(layerCompMenuSource.contains("imageEditor.action.layerCompsShowPanel"))
+        #expect(layerCompMenuSource.contains("selectedLayerPanelTab = .comps"))
+        #expect(layerCompMenuSource.contains("imageEditor.action.layerCompNew"))
+        #expect(layerCompMenuSource.contains("viewModel.addLayerComp()"))
+        #expect(layerCompMenuSource.contains("imageEditor.action.layerCompApply"))
+        #expect(layerCompMenuSource.contains("viewModel.applySelectedLayerComp()"))
+        #expect(layerCompMenuSource.contains("viewModel.canApplySelectedLayerComp"))
+        #expect(layerCompMenuSource.contains("imageEditor.action.layerCompUpdate"))
+        #expect(layerCompMenuSource.contains("viewModel.updateSelectedLayerComp()"))
+        #expect(layerCompMenuSource.contains("viewModel.canUpdateSelectedLayerComp"))
+        #expect(layerCompMenuSource.contains("imageEditor.action.layerCompDuplicate"))
+        #expect(layerCompMenuSource.contains("viewModel.duplicateSelectedLayerComp()"))
+        #expect(layerCompMenuSource.contains("viewModel.canDuplicateSelectedLayerComp"))
+        #expect(layerCompMenuSource.contains("imageEditor.action.layerCompDelete"))
+        #expect(layerCompMenuSource.contains("viewModel.deleteSelectedLayerComp()"))
+        #expect(layerCompMenuSource.contains("viewModel.canDeleteSelectedLayerComp"))
+        #expect(layerCompMenuSource.contains("imageEditor.action.layerCompPrevious"))
+        #expect(layerCompMenuSource.contains("viewModel.selectPreviousLayerComp()"))
+        #expect(layerCompMenuSource.contains("viewModel.canSelectPreviousLayerComp"))
+        #expect(layerCompMenuSource.contains("imageEditor.action.layerCompNext"))
+        #expect(layerCompMenuSource.contains("viewModel.selectNextLayerComp()"))
+        #expect(layerCompMenuSource.contains("viewModel.canSelectNextLayerComp"))
+    }
+
     @Test func windowMenuExposesPathPanelActionsInPhotoshopStyleLocation() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),

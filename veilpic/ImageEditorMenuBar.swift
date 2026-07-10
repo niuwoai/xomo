@@ -1281,9 +1281,7 @@ extension ImageEditorView {
             selectedLayerPanelTab = .layers
         }
         channelActionsMenu
-        Button(L10n.text("imageEditor.menu.window.layerComps")) {
-            selectedLayerPanelTab = .comps
-        }
+        layerCompActionsMenu
         Divider()
         historyActionsMenu
         Divider()
@@ -1291,6 +1289,51 @@ extension ImageEditorView {
         Divider()
         Button(L10n.text("imageEditor.menu.window.properties")) {
             viewModel.statusText = L10n.text("imageEditor.status.propertiesVisible")
+        }
+    }
+
+    @ViewBuilder
+    private var layerCompActionsMenu: some View {
+        Menu(L10n.text("imageEditor.menu.window.layerComps")) {
+            Button(L10n.text("imageEditor.action.layerCompsShowPanel")) {
+                selectedLayerPanelTab = .comps
+            }
+            Divider()
+            Button(L10n.text("imageEditor.action.layerCompNew")) {
+                selectedLayerPanelTab = .comps
+                viewModel.addLayerComp()
+            }
+            Button(L10n.text("imageEditor.action.layerCompApply")) {
+                selectedLayerPanelTab = .comps
+                viewModel.applySelectedLayerComp()
+            }
+            .disabled(!viewModel.canApplySelectedLayerComp)
+            Button(L10n.text("imageEditor.action.layerCompUpdate")) {
+                selectedLayerPanelTab = .comps
+                viewModel.updateSelectedLayerComp()
+            }
+            .disabled(!viewModel.canUpdateSelectedLayerComp)
+            Button(L10n.text("imageEditor.action.layerCompDuplicate")) {
+                selectedLayerPanelTab = .comps
+                viewModel.duplicateSelectedLayerComp()
+            }
+            .disabled(!viewModel.canDuplicateSelectedLayerComp)
+            Button(L10n.text("imageEditor.action.layerCompDelete")) {
+                selectedLayerPanelTab = .comps
+                viewModel.deleteSelectedLayerComp()
+            }
+            .disabled(!viewModel.canDeleteSelectedLayerComp)
+            Divider()
+            Button(L10n.text("imageEditor.action.layerCompPrevious")) {
+                selectedLayerPanelTab = .comps
+                viewModel.selectPreviousLayerComp()
+            }
+            .disabled(!viewModel.canSelectPreviousLayerComp)
+            Button(L10n.text("imageEditor.action.layerCompNext")) {
+                selectedLayerPanelTab = .comps
+                viewModel.selectNextLayerComp()
+            }
+            .disabled(!viewModel.canSelectNextLayerComp)
         }
     }
 
