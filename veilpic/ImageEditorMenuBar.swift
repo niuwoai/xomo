@@ -250,6 +250,7 @@ extension ImageEditorView {
         Button(L10n.text("imageEditor.action.selectionCutLayer")) {
             viewModel.cutSelectionToNewLayer()
         }
+        .keyboardShortcut("j", modifiers: [.command, .shift])
         .disabled(!viewModel.canCutSelectionToNewLayer)
         Button(L10n.text("imageEditor.action.layerDelete")) {
             viewModel.deleteSelectedLayer()

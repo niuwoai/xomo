@@ -598,6 +598,7 @@ struct ImageEditorScopeTests {
         #expect(layerMenuSource.contains("viewModel.canCopySelectionToNewLayer"))
         #expect(layerMenuSource.contains("imageEditor.action.selectionCutLayer"))
         #expect(layerMenuSource.contains("viewModel.cutSelectionToNewLayer()"))
+        #expect(layerMenuSource.contains(".keyboardShortcut(\"j\", modifiers: [.command, .shift])"))
         #expect(layerMenuSource.contains("viewModel.canCutSelectionToNewLayer"))
     }
 
