@@ -573,6 +573,31 @@ extension ImageEditorView {
                 viewModel.alignSelectedLayers(.bottom)
             }
             Divider()
+            Button(L10n.text("imageEditor.action.layerAlignCanvasLeft")) {
+                viewModel.alignSelectedLayersToCanvas(.left)
+            }
+            .disabled(!viewModel.canAlignSelectedLayersToCanvas)
+            Button(L10n.text("imageEditor.action.layerAlignCanvasHorizontalCenter")) {
+                viewModel.alignSelectedLayersToCanvas(.horizontalCenter)
+            }
+            .disabled(!viewModel.canAlignSelectedLayersToCanvas)
+            Button(L10n.text("imageEditor.action.layerAlignCanvasRight")) {
+                viewModel.alignSelectedLayersToCanvas(.right)
+            }
+            .disabled(!viewModel.canAlignSelectedLayersToCanvas)
+            Button(L10n.text("imageEditor.action.layerAlignCanvasTop")) {
+                viewModel.alignSelectedLayersToCanvas(.top)
+            }
+            .disabled(!viewModel.canAlignSelectedLayersToCanvas)
+            Button(L10n.text("imageEditor.action.layerAlignCanvasVerticalCenter")) {
+                viewModel.alignSelectedLayersToCanvas(.verticalCenter)
+            }
+            .disabled(!viewModel.canAlignSelectedLayersToCanvas)
+            Button(L10n.text("imageEditor.action.layerAlignCanvasBottom")) {
+                viewModel.alignSelectedLayersToCanvas(.bottom)
+            }
+            .disabled(!viewModel.canAlignSelectedLayersToCanvas)
+            Divider()
             Button(L10n.text("imageEditor.action.layerDistributeLeft")) {
                 viewModel.distributeSelectedLayers(.left)
             }
@@ -598,7 +623,7 @@ extension ImageEditorView {
             }
             .disabled(!viewModel.canDistributeSelectedLayers)
         }
-        .disabled(!viewModel.canAlignSelectedLayers)
+        .disabled(!viewModel.canAlignSelectedLayers && !viewModel.canAlignSelectedLayersToCanvas)
     }
 
     @ViewBuilder

@@ -964,6 +964,7 @@
 "imageEditor.history.layerMoveToBottom" = "图层置底";
 "imageEditor.history.layerTranslate" = "移动图层内容";
 "imageEditor.history.layerAlign" = "对齐图层";
+"imageEditor.history.layerAlignCanvas" = "对齐图层到画布";
 "imageEditor.history.layerDistribute" = "分布图层";
 "imageEditor.history.layerScale" = "缩放图层";
 "imageEditor.history.layerResize" = "拖拽缩放图层";
@@ -1181,6 +1182,7 @@
 "imageEditor.status.autoColor" = "已自动校正当前图层颜色";
 "imageEditor.status.operationFailed" = "操作失败";
 "imageEditor.status.layerLocked" = "当前图层不可编辑";
+"imageEditor.status.layerAlignedToCanvas" = "已将图层对齐到画布";
 "imageEditor.status.layerLockSelected" = "已锁定所选图层";
 "imageEditor.status.layerUnlockSelected" = "已解锁所选图层";
 "imageEditor.status.layerPixelsLockSelected" = "已锁定所选图层像素";
@@ -1464,6 +1466,12 @@
 "imageEditor.action.layerAlignTop" = "顶端对齐图层";
 "imageEditor.action.layerAlignVerticalCenter" = "垂直居中对齐图层";
 "imageEditor.action.layerAlignBottom" = "底端对齐图层";
+"imageEditor.action.layerAlignCanvasLeft" = "对齐到画布左侧";
+"imageEditor.action.layerAlignCanvasHorizontalCenter" = "对齐到画布水平中心";
+"imageEditor.action.layerAlignCanvasRight" = "对齐到画布右侧";
+"imageEditor.action.layerAlignCanvasTop" = "对齐到画布顶端";
+"imageEditor.action.layerAlignCanvasVerticalCenter" = "对齐到画布垂直中心";
+"imageEditor.action.layerAlignCanvasBottom" = "对齐到画布底端";
 "imageEditor.action.layerDistributeLeft" = "按左边缘分布图层";
 "imageEditor.action.layerDistributeHorizontalCenter" = "水平分布图层";
 "imageEditor.action.layerDistributeRight" = "按右边缘分布图层";

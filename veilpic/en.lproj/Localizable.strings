@@ -964,6 +964,7 @@
 "imageEditor.history.layerMoveToBottom" = "Move Layer to Bottom";
 "imageEditor.history.layerTranslate" = "Move Layer Pixels";
 "imageEditor.history.layerAlign" = "Align Layers";
+"imageEditor.history.layerAlignCanvas" = "Align Layers to Canvas";
 "imageEditor.history.layerDistribute" = "Distribute Layers";
 "imageEditor.history.layerScale" = "Scale Layer";
 "imageEditor.history.layerResize" = "Drag Resize Layer";
@@ -1181,6 +1182,7 @@
 "imageEditor.status.autoColor" = "Current layer color auto-corrected";
 "imageEditor.status.operationFailed" = "Operation failed";
 "imageEditor.status.layerLocked" = "The selected layer cannot be edited";
+"imageEditor.status.layerAlignedToCanvas" = "Aligned layers to canvas";
 "imageEditor.status.layerLockSelected" = "Selected layers locked";
 "imageEditor.status.layerUnlockSelected" = "Selected layers unlocked";
 "imageEditor.status.layerPixelsLockSelected" = "Selected layer pixels locked";
@@ -1464,6 +1466,12 @@
 "imageEditor.action.layerAlignTop" = "Align layers top";
 "imageEditor.action.layerAlignVerticalCenter" = "Align layers to vertical center";
 "imageEditor.action.layerAlignBottom" = "Align layers bottom";
+"imageEditor.action.layerAlignCanvasLeft" = "Align layers to canvas left";
+"imageEditor.action.layerAlignCanvasHorizontalCenter" = "Align layers to canvas horizontal center";
+"imageEditor.action.layerAlignCanvasRight" = "Align layers to canvas right";
+"imageEditor.action.layerAlignCanvasTop" = "Align layers to canvas top";
+"imageEditor.action.layerAlignCanvasVerticalCenter" = "Align layers to canvas vertical center";
+"imageEditor.action.layerAlignCanvasBottom" = "Align layers to canvas bottom";
 "imageEditor.action.layerDistributeLeft" = "Distribute layers by left edges";
 "imageEditor.action.layerDistributeHorizontalCenter" = "Distribute layers by horizontal centers";
 "imageEditor.action.layerDistributeRight" = "Distribute layers by right edges";

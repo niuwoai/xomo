@@ -1073,6 +1073,47 @@ struct veilpicTests {
     }
 
     @MainActor
+    @Test func imageEditorAlignsSelectedLayersToCanvasIncludingGroups() async throws {
+        let image = testImage(color: .systemBlue, size: NSSize(width: 160, height: 120))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.addLayer()
+        let firstID = try #require(viewModel.document.selectedLayerID)
+        viewModel.document.layers[try #require(viewModel.document.layers.firstIndex { $0.id == firstID })].frame = CGRect(x: 12, y: 14, width: 30, height: 20)
+        #expect(viewModel.canAlignSelectedLayersToCanvas)
+        viewModel.alignSelectedLayersToCanvas(.horizontalCenter)
+        var firstIndex = try #require(viewModel.document.layers.firstIndex { $0.id == firstID })
+        #expect(viewModel.document.layers[firstIndex].frame.midX == 80)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerAlignCanvas"))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.layerAlignedToCanvas"))
+
+        viewModel.addLayer()
+        let secondID = try #require(viewModel.document.selectedLayerID)
+        viewModel.document.layers[try #require(viewModel.document.layers.firstIndex { $0.id == secondID })].frame = CGRect(x: 70, y: 30, width: 20, height: 30)
+        viewModel.selectLayer(firstID)
+        viewModel.selectLayer(secondID, extendingSelection: true)
+        viewModel.alignSelectedLayersToCanvas(.right)
+        firstIndex = try #require(viewModel.document.layers.firstIndex { $0.id == firstID })
+        var secondIndex = try #require(viewModel.document.layers.firstIndex { $0.id == secondID })
+        #expect(viewModel.document.layers[firstIndex].frame.maxX == 160)
+        #expect(viewModel.document.layers[secondIndex].frame.maxX == 160)
+
+        viewModel.document.layers[firstIndex].frame = CGRect(x: 20, y: 15, width: 30, height: 20)
+        viewModel.document.layers[secondIndex].frame = CGRect(x: 70, y: 35, width: 20, height: 30)
+        viewModel.groupSelectedLayer()
+        let groupID = try #require(viewModel.document.selectedLayerID)
+        #expect(viewModel.document.selectedLayer?.isGroup == true)
+        #expect(viewModel.canAlignSelectedLayersToCanvas)
+        viewModel.alignSelectedLayersToCanvas(.top)
+
+        firstIndex = try #require(viewModel.document.layers.firstIndex { $0.id == firstID })
+        secondIndex = try #require(viewModel.document.layers.firstIndex { $0.id == secondID })
+        #expect(viewModel.document.layers[firstIndex].frame.maxY == 120)
+        #expect(viewModel.document.layers[secondIndex].frame.maxY == 120)
+        #expect(viewModel.document.selectedLayerID == groupID)
+    }
+
+    @MainActor
     @Test func imageEditorDistributesSelectedLayersByEdgesAndCenters() async throws {
         let image = testImage(color: .systemBlue, size: NSSize(width: 180, height: 140))
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
