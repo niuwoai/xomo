@@ -1893,7 +1893,8 @@ struct ImageEditorLayerStyle {
         switch strokeFillType {
         case .color:
             return NSImage.rendered(size: size) { rect in
-                strokeColor.withAlphaComponent(strokeOpacity).setFill()
+                let color = strokeColor.usingColorSpace(.deviceRGB) ?? .white
+                color.withAlphaComponent(strokeOpacity).setFill()
                 rect.fill()
             } ?? NSImage.transparent(size: size)
         case .gradient:
