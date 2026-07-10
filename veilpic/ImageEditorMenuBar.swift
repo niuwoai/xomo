@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import AppKit
 
 extension ImageEditorView {
     var menuBar: some View {
@@ -1460,6 +1461,7 @@ extension ImageEditorView {
             Button(L10n.text("imageEditor.action.infoShowPanel")) {
                 viewModel.statusText = "\(viewModel.pointerText) | \(viewModel.sizeText) | \(viewModel.colorText)"
             }
+            .keyboardShortcut(KeyEquivalent(Character(UnicodeScalar(NSF8FunctionKey)!)), modifiers: [])
         }
     }
 
@@ -1610,6 +1612,7 @@ extension ImageEditorView {
                 viewModel.isLayersPanelVisible = true
                 selectedLayerPanelTab = .layers
             }
+            .keyboardShortcut(KeyEquivalent(Character(UnicodeScalar(NSF7FunctionKey)!)), modifiers: [])
             Button(L10n.text(viewModel.isLayersPanelVisible ? "imageEditor.action.layersHidePanel" : "imageEditor.action.layersShowPanelVisibility")) {
                 viewModel.toggleLayersPanelVisibility()
             }

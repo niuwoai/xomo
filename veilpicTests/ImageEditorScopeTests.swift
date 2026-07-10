@@ -895,6 +895,7 @@ struct ImageEditorScopeTests {
 
         #expect(infoMenuSource.contains("imageEditor.menu.window.info"))
         #expect(infoMenuSource.contains("imageEditor.action.infoShowPanel"))
+        #expect(infoMenuSource.contains("KeyEquivalent(Character(UnicodeScalar(NSF8FunctionKey)!))"))
         #expect(infoMenuSource.contains("viewModel.pointerText"))
         #expect(infoMenuSource.contains("viewModel.sizeText"))
         #expect(infoMenuSource.contains("viewModel.colorText"))
@@ -1442,6 +1443,7 @@ struct ImageEditorScopeTests {
         #expect(layerMenuSource.contains("imageEditor.menu.window.layers"))
         #expect(layerMenuSource.contains("imageEditor.action.layersShowPanel"))
         #expect(layerMenuSource.contains("viewModel.isLayersPanelVisible = true"))
+        #expect(layerMenuSource.contains("KeyEquivalent(Character(UnicodeScalar(NSF7FunctionKey)!))"))
         #expect(layerMenuSource.contains("imageEditor.action.layersHidePanel"))
         #expect(layerMenuSource.contains("imageEditor.action.layersShowPanelVisibility"))
         #expect(layerMenuSource.contains("viewModel.toggleLayersPanelVisibility()"))
