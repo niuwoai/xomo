@@ -385,6 +385,22 @@ struct ImageEditorScopeTests {
         #expect(channelMenuSource.contains("viewModel.canDeleteSelectedAlphaChannel"))
     }
 
+    @Test func windowMenuExposesDefaultWorkspaceResetInPhotoshopStyleLocation() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
+            encoding: .utf8
+        )
+        let windowMenuStart = try #require(source.range(of: "private var windowMenu: some View"))
+        let nextMenuStart = try #require(
+            source[windowMenuStart.upperBound...].range(of: "private var toolsActionsMenu: some View")
+        )
+        let windowMenuSource = source[windowMenuStart.lowerBound..<nextMenuStart.lowerBound]
+
+        #expect(windowMenuSource.contains("imageEditor.action.workspaceResetDefault"))
+        #expect(windowMenuSource.contains("viewModel.resetDefaultWorkspace()"))
+        #expect(windowMenuSource.contains("selectedLayerPanelTab = .layers"))
+    }
+
     @Test func windowMenuExposesNavigatorPanelActionsInPhotoshopStyleLocation() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
@@ -640,6 +656,34 @@ struct ImageEditorScopeTests {
 
         #expect(viewModel.isRightDockVisible)
         #expect(viewModel.statusText == L10n.text("imageEditor.status.propertiesPanelShown"))
+    }
+
+    @MainActor
+    @Test func defaultWorkspaceResetRestoresAllEditorChromePanels() throws {
+        let image = NSImage(size: NSSize(width: 16, height: 16))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.toggleToolsPanelVisibility()
+        viewModel.toggleOptionsBarVisibility()
+        viewModel.toggleNavigatorPanelVisibility()
+        viewModel.toggleHistoryPanelVisibility()
+        viewModel.toggleLayersPanelVisibility()
+        viewModel.togglePropertiesPanelVisibility()
+
+        #expect(!viewModel.areToolsPanelVisible)
+        #expect(!viewModel.isOptionsBarVisible)
+        #expect(!viewModel.isRightDockVisible)
+
+        viewModel.resetDefaultWorkspace()
+
+        #expect(viewModel.areToolsPanelVisible)
+        #expect(viewModel.isOptionsBarVisible)
+        #expect(viewModel.isNavigatorPanelVisible)
+        #expect(viewModel.isHistoryPanelVisible)
+        #expect(viewModel.isLayersPanelVisible)
+        #expect(viewModel.isPropertiesPanelVisible)
+        #expect(viewModel.isRightDockVisible)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.workspaceDefaultRestored"))
     }
 
     @Test func windowMenuExposesSwatchesPanelActionsInPhotoshopStyleLocation() throws {

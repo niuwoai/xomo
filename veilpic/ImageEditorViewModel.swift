@@ -1146,6 +1146,16 @@ final class ImageEditorViewModel: ObservableObject {
         statusText = L10n.text(isOptionsBarVisible ? "imageEditor.status.optionsBarShown" : "imageEditor.status.optionsBarHidden")
     }
 
+    func resetDefaultWorkspace() {
+        areToolsPanelVisible = true
+        isOptionsBarVisible = true
+        isNavigatorPanelVisible = true
+        isHistoryPanelVisible = true
+        isLayersPanelVisible = true
+        isPropertiesPanelVisible = true
+        statusText = L10n.text("imageEditor.status.workspaceDefaultRestored")
+    }
+
     func toggleNavigatorPanelVisibility() {
         isNavigatorPanelVisible.toggle()
         statusText = L10n.text(isNavigatorPanelVisible ? "imageEditor.status.navigatorPanelShown" : "imageEditor.status.navigatorPanelHidden")

@@ -1282,6 +1282,11 @@ extension ImageEditorView {
 
     @ViewBuilder
     private var windowMenu: some View {
+        Button(L10n.text("imageEditor.action.workspaceResetDefault")) {
+            viewModel.resetDefaultWorkspace()
+            selectedLayerPanelTab = .layers
+        }
+        Divider()
         toolsActionsMenu
         optionsActionsMenu
         Divider()
