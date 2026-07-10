@@ -1280,9 +1280,11 @@ extension ImageEditorView {
         Button(L10n.text("imageEditor.action.rulersVisible")) {
             viewModel.toggleRulersVisible()
         }
+        .keyboardShortcut("r", modifiers: [.command])
         Button(L10n.text("imageEditor.action.guidesVisible")) {
             viewModel.toggleGuidesVisible()
         }
+        .keyboardShortcut(";", modifiers: [.command])
         Button(L10n.text("imageEditor.action.guidesSnap")) {
             viewModel.toggleGuideSnapping()
         }
@@ -1298,6 +1300,7 @@ extension ImageEditorView {
         Button(L10n.text("imageEditor.action.gridVisible")) {
             viewModel.toggleGridVisible()
         }
+        .keyboardShortcut("'", modifiers: [.command])
         Button(L10n.text("imageEditor.action.gridSnap")) {
             viewModel.toggleGridSnapping()
         }

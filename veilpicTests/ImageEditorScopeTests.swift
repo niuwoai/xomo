@@ -848,6 +848,12 @@ struct ImageEditorScopeTests {
         )
         let viewMenuSource = source[viewMenuStart.lowerBound..<nextMenuStart.lowerBound]
 
+        #expect(viewMenuSource.contains("viewModel.toggleRulersVisible()"))
+        #expect(viewMenuSource.contains(".keyboardShortcut(\"r\", modifiers: [.command])"))
+        #expect(viewMenuSource.contains("viewModel.toggleGuidesVisible()"))
+        #expect(viewMenuSource.contains(".keyboardShortcut(\";\", modifiers: [.command])"))
+        #expect(viewMenuSource.contains("viewModel.toggleGridVisible()"))
+        #expect(viewMenuSource.contains(".keyboardShortcut(\"'\", modifiers: [.command])"))
         #expect(viewMenuSource.contains("viewModel.zoomIn()"))
         #expect(viewMenuSource.contains(".keyboardShortcut(\"+\", modifiers: [.command])"))
         #expect(viewMenuSource.contains("viewModel.zoomOut()"))
