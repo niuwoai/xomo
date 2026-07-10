@@ -62,6 +62,7 @@ struct ImageEditorView: View {
         }
         .frame(minWidth: 1160, minHeight: 720)
         .background(Color(nsColor: ImageEditorTheme.window))
+        .background(toolShortcutButtons)
         .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
         .onAppear {
             syncLayerNameDraft()
@@ -169,7 +170,6 @@ struct ImageEditorView: View {
                         .frame(width: 34, height: 34)
                 }
                 .buttonStyle(EditorIconButtonStyle(isSelected: viewModel.selectedTool == tool))
-                .modifier(ImageEditorToolShortcutModifier(shortcut: tool.classicShortcutKey))
                 .help(tool.title)
             }
 
@@ -180,6 +180,32 @@ struct ImageEditorView: View {
         .frame(width: 56)
         .padding(.vertical, 8)
         .background(Color(nsColor: ImageEditorTheme.chrome))
+    }
+
+    private var toolShortcutButtons: some View {
+        Group {
+            ForEach(ImageEditorTool.classicShortcutGroups) { group in
+                Button {
+                    viewModel.selectClassicToolShortcut(group.key)
+                } label: {
+                    EmptyView()
+                }
+                .keyboardShortcut(KeyEquivalent(group.key), modifiers: [])
+                .accessibilityHidden(true)
+
+                if group.tools.count > 1 {
+                    Button {
+                        viewModel.cycleClassicToolShortcut(group.key)
+                    } label: {
+                        EmptyView()
+                    }
+                    .keyboardShortcut(KeyEquivalent(group.key), modifiers: [.shift])
+                    .accessibilityHidden(true)
+                }
+            }
+        }
+        .frame(width: 0, height: 0)
+        .opacity(0)
     }
 
     private var colorChips: some View {
@@ -3841,19 +3867,6 @@ struct ImageEditorView: View {
 
     func closeWindow() {
         NSApplication.shared.keyWindow?.close()
-    }
-}
-
-private struct ImageEditorToolShortcutModifier: ViewModifier {
-    let shortcut: Character?
-
-    @ViewBuilder
-    func body(content: Content) -> some View {
-        if let shortcut {
-            content.keyboardShortcut(KeyEquivalent(shortcut), modifiers: [])
-        } else {
-            content
-        }
     }
 }
 

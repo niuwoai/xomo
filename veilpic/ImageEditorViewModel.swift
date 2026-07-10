@@ -1256,6 +1256,27 @@ final class ImageEditorViewModel: ObservableObject {
         }
     }
 
+    func selectClassicToolShortcut(_ key: Character) {
+        guard let group = ImageEditorTool.classicShortcutGroup(for: key) else { return }
+        selectTool(group.primaryTool)
+    }
+
+    func cycleClassicToolShortcut(_ key: Character) {
+        guard let group = ImageEditorTool.classicShortcutGroup(for: key) else { return }
+        guard group.tools.count > 1 else {
+            selectTool(group.primaryTool)
+            return
+        }
+        guard let currentIndex = group.tools.firstIndex(of: selectedTool) else {
+            selectTool(group.primaryTool)
+            return
+        }
+        let nextIndex = group.tools.index(after: currentIndex) == group.tools.endIndex
+            ? group.tools.startIndex
+            : group.tools.index(after: currentIndex)
+        selectTool(group.tools[nextIndex])
+    }
+
     func zoomIn() {
         zoom = min(zoom * 1.2, 8)
     }

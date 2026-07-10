@@ -128,9 +128,14 @@ struct ImageEditorScopeTests {
         #expect(shortcuts["smudge"] == nil)
         #expect(shortcuts["healingBrush"] == nil)
         #expect(shortcuts["patchTool"] == nil)
+        #expect(ImageEditorTool.classicShortcutGroup(for: "g")?.tools == [.paintBucket, .gradient])
+        #expect(ImageEditorTool.classicShortcutGroup(for: "o")?.tools == [.dodge, .burn])
+        #expect(ImageEditorTool.classicShortcutGroup(for: "u")?.tools == [.rectangle, .ellipse])
+        #expect(ImageEditorTool.paintBucket.isClassicShortcutPrimary)
+        #expect(!ImageEditorTool.gradient.isClassicShortcutPrimary)
     }
 
-    @Test func toolRailAppliesClassicToolShortcutsToToolButtons() throws {
+    @Test func editorRegistersClassicToolShortcutButtonsWithoutDuplicatingToolRailShortcuts() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
             encoding: .utf8
@@ -143,7 +148,45 @@ struct ImageEditorScopeTests {
 
         #expect(toolRailSource.contains("ForEach(ImageEditorTool.allCases)"))
         #expect(toolRailSource.contains("viewModel.selectTool(tool)"))
-        #expect(toolRailSource.contains("ImageEditorToolShortcutModifier(shortcut: tool.classicShortcutKey)"))
+        #expect(!toolRailSource.contains("keyboardShortcut"))
+        #expect(!toolRailSource.contains("ImageEditorToolShortcutModifier"))
+
+        let shortcutButtonsStart = try #require(source.range(of: "private var toolShortcutButtons: some View"))
+        let shortcutButtonsEnd = try #require(
+            source[shortcutButtonsStart.upperBound...].range(of: "private var colorChips: some View")
+        )
+        let shortcutButtonsSource = source[shortcutButtonsStart.lowerBound..<shortcutButtonsEnd.lowerBound]
+
+        #expect(shortcutButtonsSource.contains("ForEach(ImageEditorTool.classicShortcutGroups)"))
+        #expect(shortcutButtonsSource.contains("viewModel.selectClassicToolShortcut(group.key)"))
+        #expect(shortcutButtonsSource.contains(".keyboardShortcut(KeyEquivalent(group.key), modifiers: [])"))
+        #expect(shortcutButtonsSource.contains("viewModel.cycleClassicToolShortcut(group.key)"))
+        #expect(shortcutButtonsSource.contains(".keyboardShortcut(KeyEquivalent(group.key), modifiers: [.shift])"))
+    }
+
+    @MainActor
+    @Test func classicToolShortcutsSelectPrimaryToolAndCycleGroupedTools() {
+        let image = NSImage(size: NSSize(width: 80, height: 60))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.selectClassicToolShortcut("g")
+        #expect(viewModel.selectedTool == .paintBucket)
+
+        viewModel.cycleClassicToolShortcut("g")
+        #expect(viewModel.selectedTool == .gradient)
+
+        viewModel.cycleClassicToolShortcut("g")
+        #expect(viewModel.selectedTool == .paintBucket)
+
+        viewModel.selectClassicToolShortcut("o")
+        #expect(viewModel.selectedTool == .dodge)
+
+        viewModel.cycleClassicToolShortcut("o")
+        #expect(viewModel.selectedTool == .burn)
+
+        viewModel.selectTool(.brush)
+        viewModel.cycleClassicToolShortcut("u")
+        #expect(viewModel.selectedTool == .rectangle)
     }
 
     @MainActor

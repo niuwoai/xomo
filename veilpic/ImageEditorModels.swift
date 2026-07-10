@@ -49,6 +49,19 @@ struct ImageEditorBrushPreset: Identifiable {
     }
 }
 
+struct ImageEditorToolShortcutGroup: Identifiable, Equatable {
+    let key: Character
+    let tools: [ImageEditorTool]
+
+    var id: String {
+        String(key)
+    }
+
+    var primaryTool: ImageEditorTool {
+        tools[0]
+    }
+}
+
 enum ImageEditorTool: String, CaseIterable, Identifiable {
     case move
     case marquee
@@ -135,42 +148,34 @@ enum ImageEditorTool: String, CaseIterable, Identifiable {
     }
 
     var classicShortcutKey: Character? {
-        switch self {
-        case .move:
-            "v"
-        case .marquee:
-            "m"
-        case .lasso:
-            "l"
-        case .magicWand:
-            "w"
-        case .crop:
-            "c"
-        case .brush:
-            "b"
-        case .eraser:
-            "e"
-        case .cloneStamp:
-            "s"
-        case .dodge, .burn:
-            "o"
-        case .paintBucket, .gradient:
-            "g"
-        case .eyedropper:
-            "i"
-        case .text:
-            "t"
-        case .rectangle, .ellipse:
-            "u"
-        case .pen:
-            "p"
-        case .hand:
-            "h"
-        case .zoom:
-            "z"
-        case .blur, .sharpen, .smudge, .healingBrush, .patchTool:
-            nil
-        }
+        Self.classicShortcutGroups.first { $0.tools.contains(self) }?.key
+    }
+
+    var isClassicShortcutPrimary: Bool {
+        Self.classicShortcutGroups.first { $0.tools.contains(self) }?.primaryTool == self
+    }
+
+    static let classicShortcutGroups: [ImageEditorToolShortcutGroup] = [
+        ImageEditorToolShortcutGroup(key: "v", tools: [.move]),
+        ImageEditorToolShortcutGroup(key: "m", tools: [.marquee]),
+        ImageEditorToolShortcutGroup(key: "l", tools: [.lasso]),
+        ImageEditorToolShortcutGroup(key: "w", tools: [.magicWand]),
+        ImageEditorToolShortcutGroup(key: "c", tools: [.crop]),
+        ImageEditorToolShortcutGroup(key: "b", tools: [.brush]),
+        ImageEditorToolShortcutGroup(key: "e", tools: [.eraser]),
+        ImageEditorToolShortcutGroup(key: "s", tools: [.cloneStamp]),
+        ImageEditorToolShortcutGroup(key: "o", tools: [.dodge, .burn]),
+        ImageEditorToolShortcutGroup(key: "g", tools: [.paintBucket, .gradient]),
+        ImageEditorToolShortcutGroup(key: "i", tools: [.eyedropper]),
+        ImageEditorToolShortcutGroup(key: "t", tools: [.text]),
+        ImageEditorToolShortcutGroup(key: "u", tools: [.rectangle, .ellipse]),
+        ImageEditorToolShortcutGroup(key: "p", tools: [.pen]),
+        ImageEditorToolShortcutGroup(key: "h", tools: [.hand]),
+        ImageEditorToolShortcutGroup(key: "z", tools: [.zoom])
+    ]
+
+    static func classicShortcutGroup(for key: Character) -> ImageEditorToolShortcutGroup? {
+        classicShortcutGroups.first { $0.key == Character(String(key).lowercased()) }
     }
 
     var supportsSelectionMode: Bool {
