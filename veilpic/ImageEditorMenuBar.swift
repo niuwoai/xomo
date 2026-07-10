@@ -1268,6 +1268,7 @@ extension ImageEditorView {
         Button(L10n.text("imageEditor.action.transformControlsVisible")) {
             viewModel.toggleTransformControlsVisible()
         }
+        .keyboardShortcut("t", modifiers: [.command])
         Button(L10n.text("imageEditor.action.gridVisible")) {
             viewModel.toggleGridVisible()
         }

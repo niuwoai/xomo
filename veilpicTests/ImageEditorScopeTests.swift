@@ -808,6 +808,8 @@ struct ImageEditorScopeTests {
         #expect(viewMenuSource.contains(".keyboardShortcut(\"1\", modifiers: [.command])"))
         #expect(viewMenuSource.contains("viewModel.fitZoom()"))
         #expect(viewMenuSource.contains(".keyboardShortcut(\"0\", modifiers: [.command])"))
+        #expect(viewMenuSource.contains("viewModel.toggleTransformControlsVisible()"))
+        #expect(viewMenuSource.contains(".keyboardShortcut(\"t\", modifiers: [.command])"))
     }
 
     @Test func windowMenuExposesNavigatorPanelActionsInPhotoshopStyleLocation() throws {
