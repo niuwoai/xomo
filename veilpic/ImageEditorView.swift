@@ -680,43 +680,38 @@ struct ImageEditorView: View {
     }
 
     private func fittedImageRect(in size: CGSize) -> CGRect {
-        let imageSize = viewModel.currentImage.size
-        let baseScale = min(size.width / max(imageSize.width, 1), size.height / max(imageSize.height, 1)) * 0.74
-        let scale = max(0.01, baseScale * viewModel.zoom)
-        let displaySize = CGSize(width: imageSize.width * scale, height: imageSize.height * scale)
-        return CGRect(
-            x: (size.width - displaySize.width) / 2 + viewModel.canvasOffset.width,
-            y: (size.height - displaySize.height) / 2 + viewModel.canvasOffset.height,
-            width: displaySize.width,
-            height: displaySize.height
+        ImageEditorCanvasGeometry.fittedImageRect(
+            canvasSize: viewModel.document.canvasSize,
+            viewportSize: size,
+            zoom: viewModel.zoom,
+            canvasOffset: viewModel.canvasOffset
         )
     }
 
     private func imagePoint(from viewPoint: CGPoint, in size: CGSize) -> CGPoint? {
         let rect = fittedImageRect(in: size)
-        guard rect.contains(viewPoint), rect.width > 0, rect.height > 0 else { return nil }
-        let imageSize = viewModel.currentImage.size
-        return CGPoint(
-            x: (viewPoint.x - rect.minX) / rect.width * imageSize.width,
-            y: (rect.maxY - viewPoint.y) / rect.height * imageSize.height
+        return ImageEditorCanvasGeometry.imagePoint(
+            from: viewPoint,
+            imageRect: rect,
+            canvasSize: viewModel.document.canvasSize
         )
     }
 
     private func unboundedImagePoint(from viewPoint: CGPoint, in size: CGSize) -> CGPoint {
         let rect = fittedImageRect(in: size)
-        let imageSize = viewModel.currentImage.size
-        return CGPoint(
-            x: (viewPoint.x - rect.minX) / max(rect.width, 1) * imageSize.width,
-            y: (rect.maxY - viewPoint.y) / max(rect.height, 1) * imageSize.height
+        return ImageEditorCanvasGeometry.unboundedImagePoint(
+            from: viewPoint,
+            imageRect: rect,
+            canvasSize: viewModel.document.canvasSize
         )
     }
 
     private func viewPoint(from imagePoint: CGPoint, in size: CGSize) -> CGPoint {
         let rect = fittedImageRect(in: size)
-        let imageSize = viewModel.currentImage.size
-        return CGPoint(
-            x: rect.minX + imagePoint.x / max(imageSize.width, 1) * rect.width,
-            y: rect.maxY - imagePoint.y / max(imageSize.height, 1) * rect.height
+        return ImageEditorCanvasGeometry.viewPoint(
+            from: imagePoint,
+            imageRect: rect,
+            canvasSize: viewModel.document.canvasSize
         )
     }
 
@@ -1974,13 +1969,10 @@ struct ImageEditorView: View {
     }
 
     private func viewRect(from imageRect: CGRect, in size: CGSize) -> CGRect {
-        let minPoint = viewPoint(from: CGPoint(x: imageRect.minX, y: imageRect.minY), in: size)
-        let maxPoint = viewPoint(from: CGPoint(x: imageRect.maxX, y: imageRect.maxY), in: size)
-        return CGRect(
-            x: min(minPoint.x, maxPoint.x),
-            y: min(minPoint.y, maxPoint.y),
-            width: abs(maxPoint.x - minPoint.x),
-            height: abs(maxPoint.y - minPoint.y)
+        ImageEditorCanvasGeometry.viewRect(
+            from: imageRect,
+            imageRect: fittedImageRect(in: size),
+            canvasSize: viewModel.document.canvasSize
         )
     }
 
