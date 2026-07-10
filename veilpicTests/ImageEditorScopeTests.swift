@@ -316,6 +316,25 @@ struct ImageEditorScopeTests {
         #expect(layerMenuSource.contains("viewModel.canCutSelectionToNewLayer"))
     }
 
+    @Test func selectMenuExposesSavedSelectionCommandsInPhotoshopStyleLocation() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
+            encoding: .utf8
+        )
+        let selectMenuStart = try #require(source.range(of: "private var selectMenu: some View"))
+        let nextMenuStart = try #require(
+            source[selectMenuStart.upperBound...].range(of: "private var alphaChannelMenu: some View")
+        )
+        let selectMenuSource = source[selectMenuStart.lowerBound..<nextMenuStart.lowerBound]
+
+        #expect(selectMenuSource.contains("imageEditor.action.saveSelection"))
+        #expect(selectMenuSource.contains("viewModel.saveCurrentSelection()"))
+        #expect(selectMenuSource.contains("viewModel.hasSelection"))
+        #expect(selectMenuSource.contains("imageEditor.action.restoreSelection"))
+        #expect(selectMenuSource.contains("viewModel.restoreSavedSelection()"))
+        #expect(selectMenuSource.contains("viewModel.hasSavedSelection"))
+    }
+
     private static func repositoryRoot() -> URL {
         URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()

@@ -925,6 +925,15 @@ extension ImageEditorView {
             alphaChannelMenu
         }
         Divider()
+        Button(L10n.text("imageEditor.action.saveSelection")) {
+            viewModel.saveCurrentSelection()
+        }
+        .disabled(!viewModel.hasSelection)
+        Button(L10n.text("imageEditor.action.restoreSelection")) {
+            viewModel.restoreSavedSelection()
+        }
+        .disabled(!viewModel.hasSavedSelection)
+        Divider()
         Button(L10n.text("imageEditor.action.expandSelection")) {
             viewModel.expandSelection()
         }
