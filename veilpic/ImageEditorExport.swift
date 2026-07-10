@@ -46,6 +46,7 @@ enum ImageEditorExportFormat: String, CaseIterable, Identifiable {
 enum ImageEditorExportScope: String, CaseIterable, Identifiable {
     case composited
     case selectedLayer
+    case selectedLayers
 
     var id: String { rawValue }
 
@@ -77,8 +78,19 @@ extension ImageEditorViewModel {
         return !layer.isGroup && !layer.isAdjustment && !layer.isFilter
     }
 
+    var canExportSelectedLayers: Bool {
+        let selectedIDs = document.selectedLayerIDs
+        guard !selectedIDs.isEmpty else { return false }
+        return document.layers.contains { layer in
+            document.shouldComposite(layer) && isLayer(layer, includedIn: selectedIDs)
+        }
+    }
+
     func openExportPanel() {
         if exportSettings.scope == .selectedLayer, !canExportSelectedLayer {
+            exportSettings.scope = .composited
+        }
+        if exportSettings.scope == .selectedLayers, !canExportSelectedLayers {
             exportSettings.scope = .composited
         }
         isExportSheetPresented = true
@@ -139,6 +151,9 @@ extension ImageEditorViewModel {
         if normalized.scope == .selectedLayer, !canExportSelectedLayer {
             normalized.scope = .composited
         }
+        if normalized.scope == .selectedLayers, !canExportSelectedLayers {
+            normalized.scope = .composited
+        }
         return normalized
     }
 
@@ -148,6 +163,8 @@ extension ImageEditorViewModel {
             document.compositedImage
         case .selectedLayer:
             selectedLayerExportImage() ?? document.compositedImage
+        case .selectedLayers:
+            selectedLayersExportImage() ?? document.compositedImage
         }
     }
 
@@ -177,11 +194,29 @@ extension ImageEditorViewModel {
         }
     }
 
+    private func selectedLayersExportImage() -> NSImage? {
+        guard canExportSelectedLayers else { return nil }
+        return document.compositedImage(includingOnly: document.selectedLayerIDs)
+    }
+
     private func exportFilename(settings: ImageEditorExportSettings) -> String {
         let base = (document.sourceName as NSString).deletingPathExtension
         let cleaned = base.trimmingCharacters(in: .whitespacesAndNewlines)
-        let suffix = settings.scope == .selectedLayer ? "layer" : "edited"
+        let suffix: String
+        switch settings.scope {
+        case .composited:
+            suffix = "edited"
+        case .selectedLayer:
+            suffix = "layer"
+        case .selectedLayers:
+            suffix = "selected-layers"
+        }
         return "\((cleaned.isEmpty ? "image" : cleaned))-\(suffix).\(settings.format.filenameExtension)"
+    }
+
+    private func isLayer(_ layer: ImageEditorLayer, includedIn includedLayerIDs: Set<UUID>) -> Bool {
+        includedLayerIDs.contains(layer.id)
+            || document.ancestorGroups(for: layer).contains { includedLayerIDs.contains($0.id) }
     }
 }
 

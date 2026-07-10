@@ -360,6 +360,7 @@
 "imageEditor.export.scope" = "範囲";
 "imageEditor.export.scope.composited" = "合成画像";
 "imageEditor.export.scope.selectedLayer" = "現在のレイヤー";
+"imageEditor.export.scope.selectedLayers" = "選択レイヤー";
 "imageEditor.export.scaleValue" = "倍率：%.2gx";
 "imageEditor.export.quality" = "品質";
 "imageEditor.export.qualityValue" = "%d%%";

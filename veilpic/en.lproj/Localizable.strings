@@ -360,6 +360,7 @@
 "imageEditor.export.scope" = "Scope";
 "imageEditor.export.scope.composited" = "Composite";
 "imageEditor.export.scope.selectedLayer" = "Current Layer";
+"imageEditor.export.scope.selectedLayers" = "Selected Layers";
 "imageEditor.export.scaleValue" = "Scale: %.2gx";
 "imageEditor.export.quality" = "Quality";
 "imageEditor.export.qualityValue" = "%d%%";

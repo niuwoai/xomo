@@ -37,7 +37,7 @@ struct ImageEditorExportPanel: View {
                     ForEach(ImageEditorExportScope.allCases) { scope in
                         Text(scope.title)
                             .tag(scope)
-                            .disabled(scope == .selectedLayer && !viewModel.canExportSelectedLayer)
+                            .disabled(isScopeDisabled(scope))
                     }
                 }
                 .pickerStyle(.segmented)
@@ -99,6 +99,17 @@ struct ImageEditorExportPanel: View {
             get: { viewModel.exportSettings.scope },
             set: { viewModel.exportSettings.scope = $0 }
         )
+    }
+
+    private func isScopeDisabled(_ scope: ImageEditorExportScope) -> Bool {
+        switch scope {
+        case .composited:
+            false
+        case .selectedLayer:
+            !viewModel.canExportSelectedLayer
+        case .selectedLayers:
+            !viewModel.canExportSelectedLayers
+        }
     }
 
     private var scaleBinding: Binding<Double> {

@@ -4770,6 +4770,7 @@ struct veilpicTests {
         let image = testImage(color: .systemBlue, size: NSSize(width: 80, height: 60))
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
         let editIndex = try #require(viewModel.document.selectedLayerIndex)
+        let firstLayerID = viewModel.document.layers[editIndex].id
         viewModel.document.layers[editIndex].image = testBitmapImage(
             size: image.size,
             background: .clear,
@@ -4789,6 +4790,43 @@ struct veilpicTests {
         #expect(layerPNG.size == NSSize(width: 160, height: 120))
         #expect(inside.redComponent > 0.8)
         #expect(outside.alphaComponent < 0.1)
+
+        viewModel.addLayer()
+        let secondLayerID = try #require(viewModel.document.selectedLayerID)
+        viewModel.document.layers[try #require(viewModel.document.selectedLayerIndex)].image = testBitmapImage(
+            size: image.size,
+            background: .clear,
+            fills: [(CGRect(x: 50, y: 20, width: 12, height: 12), .systemYellow)]
+        )
+        viewModel.addLayer()
+        let unselectedLayerID = try #require(viewModel.document.selectedLayerID)
+        viewModel.document.layers[try #require(viewModel.document.selectedLayerIndex)].image = testBitmapImage(
+            size: image.size,
+            background: .clear,
+            fills: [(CGRect(x: 66, y: 6, width: 8, height: 8), .systemGreen)]
+        )
+
+        viewModel.selectLayer(firstLayerID)
+        viewModel.selectLayer(secondLayerID, extendingSelection: true)
+        #expect(viewModel.canExportSelectedLayers)
+        #expect(!viewModel.document.selectedLayerIDs.contains(unselectedLayerID))
+
+        let selectedLayersPNGData = try #require(viewModel.exportData(settings: ImageEditorExportSettings(
+            format: .png,
+            scope: .selectedLayers,
+            scale: 1,
+            quality: 0.9
+        )))
+        let selectedLayersPNG = try #require(NSImage(data: selectedLayersPNGData))
+        let selectedPink = try #require(selectedLayersPNG.color(at: CGPoint(x: 25, y: 25))?.usingColorSpace(.deviceRGB))
+        let selectedYellow = try #require(selectedLayersPNG.color(at: CGPoint(x: 55, y: 25))?.usingColorSpace(.deviceRGB))
+        let selectedGreenSpot = try #require(selectedLayersPNG.color(at: CGPoint(x: 70, y: 10))?.usingColorSpace(.deviceRGB))
+
+        #expect(selectedLayersPNG.size == NSSize(width: 80, height: 60))
+        #expect(selectedPink.redComponent > 0.8)
+        #expect(selectedYellow.redComponent > 0.8)
+        #expect(selectedYellow.greenComponent > 0.7)
+        #expect(selectedGreenSpot.alphaComponent < 0.1)
 
         let jpegData = try #require(viewModel.exportData(settings: ImageEditorExportSettings(
             format: .jpeg,

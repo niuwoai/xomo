@@ -360,6 +360,7 @@
 "imageEditor.export.scope" = "范围";
 "imageEditor.export.scope.composited" = "合成图像";
 "imageEditor.export.scope.selectedLayer" = "当前图层";
+"imageEditor.export.scope.selectedLayers" = "所选图层";
 "imageEditor.export.scaleValue" = "倍率：%.2gx";
 "imageEditor.export.quality" = "质量";
 "imageEditor.export.qualityValue" = "%d%%";
