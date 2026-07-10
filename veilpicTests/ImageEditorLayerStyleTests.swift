@@ -12,6 +12,61 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct ImageEditorLayerStyleTests {
+    @Test func imageEditorBatchEditsLayerStyleEffectsAcrossEditableSelection() async throws {
+        let canvasSize = NSSize(width: 32, height: 24)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: solidImage(color: .black, size: canvasSize)
+        ) { _ in }
+
+        viewModel.addLayer()
+        let firstID = try #require(viewModel.document.selectedLayerID)
+        viewModel.addLayer()
+        let secondID = try #require(viewModel.document.selectedLayerID)
+        viewModel.addLayer()
+        let lockedID = try #require(viewModel.document.selectedLayerID)
+        viewModel.toggleLayerLock(lockedID)
+        viewModel.addLayerGroup()
+        let groupID = try #require(viewModel.document.selectedLayerID)
+
+        viewModel.selectLayer(firstID)
+        viewModel.selectLayer(secondID, extendingSelection: true)
+        viewModel.selectLayer(lockedID, extendingSelection: true)
+        viewModel.selectLayer(groupID, extendingSelection: true)
+
+        #expect(viewModel.canEditSelectedLayerStyle)
+        viewModel.toggleSelectedLayerStroke()
+        viewModel.setSelectedLayerStrokeWidth(9)
+        viewModel.setSelectedLayerStrokeOpacity(0.45)
+        viewModel.toggleSelectedLayerShadow()
+        viewModel.setSelectedLayerShadowDistance(14)
+        viewModel.setSelectedLayerShadowAngle(35)
+
+        let first = try #require(layer(firstID, in: viewModel))
+        let second = try #require(layer(secondID, in: viewModel))
+        let locked = try #require(layer(lockedID, in: viewModel))
+        let group = try #require(layer(groupID, in: viewModel))
+
+        #expect(first.style.strokeEnabled)
+        #expect(first.style.strokeWidth == 9)
+        #expect(first.style.strokeOpacity == 0.45)
+        #expect(first.style.shadowEnabled)
+        #expect(first.style.shadowDistance == 14)
+        #expect(first.style.shadowAngle == 35)
+        #expect(second.style.strokeEnabled)
+        #expect(second.style.strokeWidth == 9)
+        #expect(second.style.strokeOpacity == 0.45)
+        #expect(second.style.shadowEnabled)
+        #expect(second.style.shadowDistance == 14)
+        #expect(second.style.shadowAngle == 35)
+        #expect(!locked.style.hasEffects)
+        #expect(!group.style.hasEffects)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStyle"))
+
+        viewModel.selectLayer(groupID)
+        #expect(!viewModel.canEditSelectedLayerStyle)
+    }
+
     @Test func imageEditorCopiesPastesAndClearsLayerStyleAcrossEditableSelection() async throws {
         let canvasSize = NSSize(width: 32, height: 24)
         let viewModel = ImageEditorViewModel(
@@ -1070,6 +1125,10 @@ struct ImageEditorLayerStyleTests {
             color.setFill()
             rect.fill()
         } ?? NSImage.transparent(size: size)
+    }
+
+    private func layer(_ id: UUID, in viewModel: ImageEditorViewModel) -> ImageEditorLayer? {
+        viewModel.document.layers.first { $0.id == id }
     }
 
     private func centerRectImage(size: NSSize, color: NSColor) -> NSImage {

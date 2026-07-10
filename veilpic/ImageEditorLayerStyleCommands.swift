@@ -66,10 +66,7 @@ extension ImageEditorViewModel {
     }
 
     var canEditSelectedLayerStyle: Bool {
-        guard selectedLayerCount == 1,
-              let layer = document.selectedLayer
-        else { return false }
-        return canEditLayerStyle(layer)
+        !selectedLayerStyleTargetIndices().isEmpty
     }
 
     var selectedLayerStrokeWidth: Double {
@@ -981,24 +978,28 @@ extension ImageEditorViewModel {
         historyKey: String,
         mutate: (inout ImageEditorLayerStyle) -> Void
     ) {
-        guard let index = document.selectedLayerIndex else { return }
-        guard canEditLayerStyle(document.layers[index]) else {
+        let targetIndices = selectedLayerStyleTargetIndices()
+        guard !targetIndices.isEmpty else {
             statusText = L10n.text("imageEditor.status.layerLocked")
             return
         }
         pushUndo()
-        mutate(&document.layers[index].style)
+        for index in targetIndices {
+            mutate(&document.layers[index].style)
+        }
         appendHistory(L10n.text(historyKey))
     }
 
     private func updateSelectedLayerStyle(_ mutate: (inout ImageEditorLayerStyle) -> Void) {
-        guard let index = document.selectedLayerIndex else { return }
-        guard canEditLayerStyle(document.layers[index]) else {
+        let targetIndices = selectedLayerStyleTargetIndices()
+        guard !targetIndices.isEmpty else {
             statusText = L10n.text("imageEditor.status.layerLocked")
             return
         }
         pushUndo()
-        mutate(&document.layers[index].style)
+        for index in targetIndices {
+            mutate(&document.layers[index].style)
+        }
         appendHistory(L10n.text("imageEditor.history.layerStyle"))
     }
 
