@@ -1473,6 +1473,76 @@ struct veilpicTests {
     }
 
     @MainActor
+    @Test func imageEditorRasterizesMultipleSelectedLayersAndSkipsLockedLayers() async throws {
+        let canvasSize = NSSize(width: 90, height: 64)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        var firstLayer = ImageEditorLayer.blank(name: "First Filtered", size: canvasSize)
+        firstLayer.image = testBitmapImage(
+            size: canvasSize,
+            background: .clear,
+            fills: [(CGRect(x: 12, y: 14, width: 28, height: 26), .systemPink)]
+        )
+        firstLayer.smartFilters = [ImageEditorSmartFilter(kind: .gaussianBlur, intensity: 0.4)]
+
+        var secondLayer = ImageEditorLayer.blank(name: "Second Styled", size: canvasSize)
+        secondLayer.image = testBitmapImage(
+            size: canvasSize,
+            background: .clear,
+            fills: [(CGRect(x: 42, y: 20, width: 26, height: 24), .systemGreen)]
+        )
+        secondLayer.style.strokeEnabled = true
+        secondLayer.style.strokeWidth = 4
+        secondLayer.style.strokeColor = .white
+
+        var lockedLayer = ImageEditorLayer.blank(name: "Locked Filtered", size: canvasSize)
+        lockedLayer.image = testBitmapImage(
+            size: canvasSize,
+            background: .clear,
+            fills: [(CGRect(x: 28, y: 8, width: 18, height: 18), .systemBlue)]
+        )
+        lockedLayer.smartFilters = [ImageEditorSmartFilter(kind: .sharpen, intensity: 0.3)]
+        lockedLayer.isLocked = true
+
+        let firstLayerID = firstLayer.id
+        let secondLayerID = secondLayer.id
+        let lockedLayerID = lockedLayer.id
+        viewModel.document.layers = [viewModel.document.layers[0], firstLayer, secondLayer, lockedLayer]
+        viewModel.document.selectedLayerID = secondLayerID
+        viewModel.document.selectedLayerIDs = [firstLayerID, secondLayerID, lockedLayerID]
+        let compositedBeforeRasterize = try #require(viewModel.currentImage.qingtuPNGData())
+
+        #expect(viewModel.canRasterizeSelectedLayer)
+        viewModel.rasterizeSelectedLayer()
+
+        let rasterizedFirst = try #require(viewModel.document.layers.first { $0.id == firstLayerID })
+        let rasterizedSecond = try #require(viewModel.document.layers.first { $0.id == secondLayerID })
+        let skippedLockedLayer = try #require(viewModel.document.layers.first { $0.id == lockedLayerID })
+
+        #expect(rasterizedFirst.kind.isPixel)
+        #expect(rasterizedFirst.smartFilters.isEmpty)
+        #expect(rasterizedFirst.name == L10n.format("imageEditor.layer.rasterizedName", "First Filtered"))
+        #expect(rasterizedSecond.kind.isPixel)
+        #expect(!rasterizedSecond.hasLayerEffects)
+        #expect(rasterizedSecond.name == L10n.format("imageEditor.layer.rasterizedName", "Second Styled"))
+        #expect(skippedLockedLayer.isLocked)
+        #expect(skippedLockedLayer.hasSmartFilters)
+        #expect(skippedLockedLayer.name == "Locked Filtered")
+        #expect(viewModel.document.selectedLayerIDs == [firstLayerID, secondLayerID, lockedLayerID])
+        #expect(viewModel.document.selectedLayerID == secondLayerID)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerRasterizeSelected"))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerRasterizedSelected", 2))
+        #expect(try #require(viewModel.currentImage.qingtuPNGData()) == compositedBeforeRasterize)
+
+        viewModel.undo()
+        let restoredFirst = try #require(viewModel.document.layers.first { $0.id == firstLayerID })
+        let restoredSecond = try #require(viewModel.document.layers.first { $0.id == secondLayerID })
+        #expect(restoredFirst.hasSmartFilters)
+        #expect(restoredSecond.hasLayerEffects)
+    }
+
+    @MainActor
     @Test func imageEditorSmartObjectDuplicatesShareReplacedSource() async throws {
         let canvasSize = NSSize(width: 120, height: 80)
         let image = testBitmapImage(size: canvasSize, background: .black)

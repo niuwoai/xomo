@@ -956,6 +956,7 @@
 "imageEditor.history.layerSmartObjectMakeUnique" = "智能对象实例独立化";
 "imageEditor.history.layerSmartObjectResetTransform" = "重置智能对象变换";
 "imageEditor.history.layerRasterize" = "栅格化图层";
+"imageEditor.history.layerRasterizeSelected" = "栅格化所选图层";
 "imageEditor.history.layerRename" = "重命名图层";
 "imageEditor.history.layerLabelColor" = "设置图层颜色标签";
 "imageEditor.history.layerDelete" = "删除图层";
@@ -1223,6 +1224,7 @@
 "imageEditor.status.layerSmartObjectTransformReset" = "已重置智能对象变换";
 "imageEditor.status.layerImportFailed" = "导入图片失败";
 "imageEditor.status.layerRasterized" = "已栅格化当前图层";
+"imageEditor.status.layerRasterizedSelected" = "已栅格化 %d 个图层";
 "imageEditor.status.layerMergeSelected" = "已合并所选图层";
 "imageEditor.status.layerMergeVisible" = "已合并所有可见图层";
 "imageEditor.status.layerStampSelected" = "已将所选图层盖印为新的像素层";
@@ -1495,7 +1497,7 @@
 "imageEditor.action.layerSmartObjectReplace" = "替换智能对象内容";
 "imageEditor.action.layerSmartObjectMakeUnique" = "让智能对象实例独立";
 "imageEditor.action.layerSmartObjectResetTransform" = "重置智能对象变换";
-"imageEditor.action.layerRasterize" = "栅格化当前图层";
+"imageEditor.action.layerRasterize" = "栅格化所选图层";
 "imageEditor.action.layerDelete" = "删除图层";
 "imageEditor.action.layerTop" = "置顶图层";
 "imageEditor.action.layerUp" = "上移图层";

@@ -956,6 +956,7 @@
 "imageEditor.history.layerSmartObjectMakeUnique" = "スマートオブジェクトインスタンスを独立化";
 "imageEditor.history.layerSmartObjectResetTransform" = "スマートオブジェクトの変形をリセット";
 "imageEditor.history.layerRasterize" = "レイヤーをラスタライズ";
+"imageEditor.history.layerRasterizeSelected" = "選択レイヤーをラスタライズ";
 "imageEditor.history.layerRename" = "レイヤー名を変更";
 "imageEditor.history.layerLabelColor" = "レイヤーカラーラベルを設定";
 "imageEditor.history.layerDelete" = "レイヤーを削除";
@@ -1223,6 +1224,7 @@
 "imageEditor.status.layerSmartObjectTransformReset" = "スマートオブジェクトの変形をリセットしました";
 "imageEditor.status.layerImportFailed" = "画像の読み込みに失敗しました";
 "imageEditor.status.layerRasterized" = "レイヤーをラスタライズしました";
+"imageEditor.status.layerRasterizedSelected" = "%d個のレイヤーをラスタライズしました";
 "imageEditor.status.layerMergeSelected" = "選択中のレイヤーを結合しました";
 "imageEditor.status.layerMergeVisible" = "表示中のレイヤーを結合しました";
 "imageEditor.status.layerStampSelected" = "選択中のレイヤーを新規ピクセルレイヤーへスタンプしました";

@@ -956,6 +956,7 @@
 "imageEditor.history.layerSmartObjectMakeUnique" = "Make Smart Object Unique";
 "imageEditor.history.layerSmartObjectResetTransform" = "Reset Smart Object Transform";
 "imageEditor.history.layerRasterize" = "Rasterize Layer";
+"imageEditor.history.layerRasterizeSelected" = "Rasterize Selected Layers";
 "imageEditor.history.layerRename" = "Rename Layer";
 "imageEditor.history.layerLabelColor" = "Set Layer Color Label";
 "imageEditor.history.layerDelete" = "Delete Layer";
@@ -1223,6 +1224,7 @@
 "imageEditor.status.layerSmartObjectTransformReset" = "Reset Smart Object transform";
 "imageEditor.status.layerImportFailed" = "Failed to import image";
 "imageEditor.status.layerRasterized" = "Layer rasterized";
+"imageEditor.status.layerRasterizedSelected" = "%d layers rasterized";
 "imageEditor.status.layerMergeSelected" = "Selected layers merged";
 "imageEditor.status.layerMergeVisible" = "Visible layers merged";
 "imageEditor.status.layerStampSelected" = "Selected layers stamped into a new pixel layer";
@@ -1495,7 +1497,7 @@
 "imageEditor.action.layerSmartObjectReplace" = "Replace Smart Object Contents";
 "imageEditor.action.layerSmartObjectMakeUnique" = "Make Smart Object Unique";
 "imageEditor.action.layerSmartObjectResetTransform" = "Reset Smart Object Transform";
-"imageEditor.action.layerRasterize" = "Rasterize Selected Layer";
+"imageEditor.action.layerRasterize" = "Rasterize Selected Layers";
 "imageEditor.action.layerDelete" = "Delete Layer";
 "imageEditor.action.layerTop" = "Move Layer to Top";
 "imageEditor.action.layerUp" = "Move Layer Up";
