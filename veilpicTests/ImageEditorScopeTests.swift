@@ -162,6 +162,33 @@ struct ImageEditorScopeTests {
         #expect(overview.contains("后续工作重点约束在整理、稳定和易用性上"))
     }
 
+    @Test func editorNoLongerCarriesComingSoonToolPlaceholders() throws {
+        let blockedKeys = [
+            "imageEditor.tool.soon",
+            "imageEditor.status.toolSoon",
+            "imageEditor.status.menuSoon",
+            "imageEditor.status.exportSoon"
+        ]
+        let sourceFiles = [
+            "veilpic/ImageEditorModels.swift",
+            "veilpic/ImageEditorView.swift",
+            "veilpic/ImageEditorViewModel.swift",
+            "veilpic/zh-Hans.lproj/Localizable.strings",
+            "veilpic/en.lproj/Localizable.strings",
+            "veilpic/ja.lproj/Localizable.strings"
+        ]
+
+        for relativePath in sourceFiles {
+            let source = try String(
+                contentsOf: Self.repositoryRoot().appendingPathComponent(relativePath),
+                encoding: .utf8
+            )
+            for key in blockedKeys {
+                #expect(!source.contains(key))
+            }
+        }
+    }
+
     private static func repositoryRoot() -> URL {
         URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()

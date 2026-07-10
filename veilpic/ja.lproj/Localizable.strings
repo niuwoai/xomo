@@ -430,7 +430,6 @@
 "imageEditor.tool.pen" = "ペン";
 "imageEditor.tool.hand" = "手のひら";
 "imageEditor.tool.zoom" = "ズーム";
-"imageEditor.tool.soon" = "%@ は今後対応";
 "imageEditor.adjustment.brightness" = "明るさ";
 "imageEditor.adjustment.contrast" = "コントラスト";
 "imageEditor.adjustment.brightnessContrast" = "明るさ・コントラスト";
@@ -1171,10 +1170,7 @@
 "imageEditor.history.autoColorSelected" = "選択レイヤーを自動カラー補正";
 "imageEditor.history.adjustmentSelected" = "%@ を選択レイヤーに適用";
 "imageEditor.status.ready" = "%@ · %@ · 準備完了";
-"imageEditor.status.toolSoon" = "このツールは今後のバージョンで対応します";
-"imageEditor.status.menuSoon" = "メニュー機能は今後追加します";
 "imageEditor.status.propertiesVisible" = "プロパティパネルは右側に表示されています";
-"imageEditor.status.exportSoon" = "書き出し設定は今後追加します。今はプレビューへ適用してから保存してください。";
 "imageEditor.status.exported" = "%@ を書き出しました";
 "imageEditor.status.exportFailed" = "書き出しに失敗しました";
 "imageEditor.status.exportFailedWithReason" = "書き出しに失敗しました：%@";

@@ -430,7 +430,6 @@
 "imageEditor.tool.pen" = "Pen";
 "imageEditor.tool.hand" = "Hand";
 "imageEditor.tool.zoom" = "Zoom";
-"imageEditor.tool.soon" = "%@ coming later";
 "imageEditor.adjustment.brightness" = "Brightness";
 "imageEditor.adjustment.contrast" = "Contrast";
 "imageEditor.adjustment.brightnessContrast" = "Brightness/Contrast";
@@ -1171,10 +1170,7 @@
 "imageEditor.history.autoColorSelected" = "Auto Color Selected Layers";
 "imageEditor.history.adjustmentSelected" = "Apply %@ to Selected Layers";
 "imageEditor.status.ready" = "%@ · %@ · Ready";
-"imageEditor.status.toolSoon" = "This tool will be supported in a later version";
-"imageEditor.status.menuSoon" = "Menu actions will be filled in later";
 "imageEditor.status.propertiesVisible" = "The Properties panel is already visible on the right";
-"imageEditor.status.exportSoon" = "Export options are coming later. Apply to Preview, then save from the workbench for now.";
 "imageEditor.status.exported" = "Exported %@";
 "imageEditor.status.exportFailed" = "Export failed";
 "imageEditor.status.exportFailedWithReason" = "Export failed: %@";

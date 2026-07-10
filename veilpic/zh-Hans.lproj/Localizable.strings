@@ -430,7 +430,6 @@
 "imageEditor.tool.pen" = "钢笔";
 "imageEditor.tool.hand" = "抓手";
 "imageEditor.tool.zoom" = "缩放";
-"imageEditor.tool.soon" = "%@ 后续支持";
 "imageEditor.adjustment.brightness" = "亮度";
 "imageEditor.adjustment.contrast" = "对比度";
 "imageEditor.adjustment.brightnessContrast" = "亮度/对比度";
@@ -1171,10 +1170,7 @@
 "imageEditor.history.autoColorSelected" = "自动校正所选图层颜色";
 "imageEditor.history.adjustmentSelected" = "将 %@ 应用到所选图层";
 "imageEditor.status.ready" = "%@ · %@ · 就绪";
-"imageEditor.status.toolSoon" = "这个工具会在后续版本支持";
-"imageEditor.status.menuSoon" = "菜单功能会在后续版本补齐";
 "imageEditor.status.propertiesVisible" = "属性面板已在右侧显示";
-"imageEditor.status.exportSoon" = "导出面板会在后续版本补齐，请先使用应用到预览后的保存功能";
 "imageEditor.status.exported" = "已导出 %@";
 "imageEditor.status.exportFailed" = "导出失败";
 "imageEditor.status.exportFailedWithReason" = "导出失败：%@";

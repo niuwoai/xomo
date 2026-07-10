@@ -978,9 +978,7 @@ final class ImageEditorViewModel: ObservableObject {
 
     func selectTool(_ tool: ImageEditorTool) {
         selectedTool = tool
-        if !tool.isImplemented {
-            statusText = L10n.text("imageEditor.status.toolSoon")
-        } else if tool == .pen, pendingPenPathPoints.isEmpty {
+        if tool == .pen, pendingPenPathPoints.isEmpty {
             statusText = L10n.text("imageEditor.status.penReady")
         } else {
             updateStatus()

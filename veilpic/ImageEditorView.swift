@@ -159,10 +159,9 @@ struct ImageEditorView: View {
                     Image(systemName: tool.symbolName)
                         .font(.system(size: 16, weight: .semibold))
                         .frame(width: 34, height: 34)
-                        .opacity(tool.isImplemented ? 1 : 0.46)
                 }
                 .buttonStyle(EditorIconButtonStyle(isSelected: viewModel.selectedTool == tool))
-                .help(tool.isImplemented ? tool.title : L10n.format("imageEditor.tool.soon", tool.title))
+                .help(tool.title)
             }
 
             Spacer()

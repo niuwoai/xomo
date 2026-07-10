@@ -94,13 +94,6 @@ enum ImageEditorTool: String, CaseIterable, Identifiable {
         }
     }
 
-    var isImplemented: Bool {
-        switch self {
-        case .move, .marquee, .lasso, .magicWand, .crop, .brush, .eraser, .cloneStamp, .dodge, .burn, .blur, .sharpen, .smudge, .healingBrush, .patchTool, .paintBucket, .gradient, .eyedropper, .text, .rectangle, .ellipse, .pen, .hand, .zoom:
-            true
-        }
-    }
-
     var supportsSelectionMode: Bool {
         switch self {
         case .marquee, .lasso, .magicWand:
