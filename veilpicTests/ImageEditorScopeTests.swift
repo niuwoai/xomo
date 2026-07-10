@@ -761,6 +761,8 @@ struct ImageEditorScopeTests {
         #expect(selectMenuSource.contains(".keyboardShortcut(\"d\", modifiers: [.command, .shift])"))
         #expect(selectMenuSource.contains("viewModel.invertSelection()"))
         #expect(selectMenuSource.contains(".keyboardShortcut(\"i\", modifiers: [.command, .shift])"))
+        #expect(selectMenuSource.contains("viewModel.featherSelection()"))
+        #expect(selectMenuSource.contains(".keyboardShortcut(\"d\", modifiers: [.command, .option])"))
     }
 
     @Test func windowMenuExposesChannelPanelActionsInPhotoshopStyleLocation() throws {

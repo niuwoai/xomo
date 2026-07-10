@@ -997,6 +997,7 @@ extension ImageEditorView {
         Button(L10n.text("imageEditor.action.featherSelection")) {
             viewModel.featherSelection()
         }
+        .keyboardShortcut("d", modifiers: [.command, .option])
         .disabled(!viewModel.hasSelection)
         Button(L10n.text("imageEditor.action.borderSelection")) {
             viewModel.borderSelection()

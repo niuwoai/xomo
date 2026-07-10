@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.418.0 - 2026-07-10
+
+### Added
+- 图片编辑器新增 Select 菜单经典羽化快捷键：`Option + Command + D` 执行 Feather Selection。
+
 ## 1.417.0 - 2026-07-10
 
 ### Added
