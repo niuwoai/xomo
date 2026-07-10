@@ -2750,6 +2750,68 @@ struct veilpicTests {
     }
 
     @MainActor
+    @Test func imageEditorInvertsMultipleSelectedLayerMasksAndSkipsLockedLayers() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        var firstLayer = ImageEditorLayer.blank(name: "First Masked", size: canvasSize)
+        firstLayer.mask = testBitmapImage(
+            size: canvasSize,
+            background: .clear,
+            fills: [(CGRect(x: 0, y: 0, width: 40, height: 60), .white)]
+        )
+
+        var secondLayer = ImageEditorLayer.blank(name: "Second Masked", size: canvasSize)
+        secondLayer.mask = testBitmapImage(
+            size: canvasSize,
+            background: .clear,
+            fills: [(CGRect(x: 40, y: 0, width: 40, height: 60), .white)]
+        )
+
+        var lockedLayer = ImageEditorLayer.blank(name: "Locked Masked", size: canvasSize)
+        lockedLayer.mask = testBitmapImage(
+            size: canvasSize,
+            background: .clear,
+            fills: [(CGRect(x: 20, y: 20, width: 40, height: 20), .white)]
+        )
+        lockedLayer.isLocked = true
+
+        let firstLayerID = firstLayer.id
+        let secondLayerID = secondLayer.id
+        let lockedLayerID = lockedLayer.id
+        let lockedMaskData = try #require(lockedLayer.mask?.qingtuPNGData())
+        viewModel.document.layers = [viewModel.document.layers[0], firstLayer, secondLayer, lockedLayer]
+        viewModel.document.selectedLayerID = secondLayerID
+        viewModel.document.selectedLayerIDs = [firstLayerID, secondLayerID, lockedLayerID]
+        let firstMaskData = try #require(firstLayer.mask?.qingtuPNGData())
+        let secondMaskData = try #require(secondLayer.mask?.qingtuPNGData())
+
+        #expect(viewModel.canInvertLayerMask)
+        viewModel.invertLayerMask()
+
+        let invertedFirst = try #require(viewModel.document.layers.first { $0.id == firstLayerID })
+        let invertedSecond = try #require(viewModel.document.layers.first { $0.id == secondLayerID })
+        let skippedLockedLayer = try #require(viewModel.document.layers.first { $0.id == lockedLayerID })
+
+        #expect(try #require(invertedFirst.mask?.qingtuPNGData()) != firstMaskData)
+        #expect(try #require(invertedSecond.mask?.qingtuPNGData()) != secondMaskData)
+        #expect(try #require(skippedLockedLayer.mask?.qingtuPNGData()) == lockedMaskData)
+        #expect(skippedLockedLayer.isLocked)
+        #expect(viewModel.document.selectedLayerIDs == [firstLayerID, secondLayerID, lockedLayerID])
+        #expect(viewModel.document.selectedLayerID == secondLayerID)
+        #expect(viewModel.isEditingLayerMask)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerMaskInvertSelected"))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerMaskInvertedSelected", 2))
+
+        viewModel.undo()
+        let restoredFirst = try #require(viewModel.document.layers.first { $0.id == firstLayerID })
+        let restoredSecond = try #require(viewModel.document.layers.first { $0.id == secondLayerID })
+        #expect(try #require(restoredFirst.mask?.qingtuPNGData()) == firstMaskData)
+        #expect(try #require(restoredSecond.mask?.qingtuPNGData()) == secondMaskData)
+    }
+
+    @MainActor
     @Test func imageEditorCombinesExistingLayerMaskWithCurrentSelection() async throws {
         let canvasSize = NSSize(width: 80, height: 60)
         let image = testImage(color: .systemBlue, size: canvasSize)

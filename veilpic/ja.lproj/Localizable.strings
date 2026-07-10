@@ -1032,6 +1032,7 @@
 "imageEditor.history.layerMaskApply" = "レイヤーマスクを適用";
 "imageEditor.history.layerMaskApplySelected" = "選択レイヤーマスクを適用";
 "imageEditor.history.layerMaskInvert" = "レイヤーマスクを反転";
+"imageEditor.history.layerMaskInvertSelected" = "選択レイヤーマスクを反転";
 "imageEditor.history.layerMaskCopy" = "レイヤーマスクをコピー";
 "imageEditor.history.layerMaskRevealSelection" = "レイヤーマスクで選択範囲を表示";
 "imageEditor.history.layerMaskHideSelectionFromMask" = "レイヤーマスクで選択範囲を隠す";
@@ -1322,6 +1323,7 @@
 "imageEditor.status.layerMaskDeleted" = "レイヤーマスクを削除しました";
 "imageEditor.status.layerMaskDeletedSelected" = "%d個のレイヤーマスクを削除しました";
 "imageEditor.status.layerMaskInverted" = "現在のレイヤーマスクを反転しました";
+"imageEditor.status.layerMaskInvertedSelected" = "%d個のレイヤーマスクを反転しました";
 "imageEditor.status.layerMaskRevealSelection" = "現在の選択範囲をレイヤーマスクで表示しました";
 "imageEditor.status.layerMaskHideSelectionFromMask" = "現在の選択範囲をレイヤーマスクで隠しました";
 "imageEditor.status.layerMaskIntersectSelection" = "レイヤーマスクを現在の選択範囲に制限しました";
@@ -1540,7 +1542,7 @@
 "imageEditor.action.layerMaskLinkToggle" = "レイヤーマスクのリンク / 解除";
 "imageEditor.action.layerMaskLinked" = "レイヤーマスクはリンク済み";
 "imageEditor.action.layerMaskUnlinked" = "レイヤーマスクはリンク解除済み";
-"imageEditor.action.layerMaskInvert" = "レイヤーマスクを反転";
+"imageEditor.action.layerMaskInvert" = "選択レイヤーマスクを反転";
 "imageEditor.action.layerMaskRevealSelection" = "現在の選択範囲を表示";
 "imageEditor.action.layerMaskHideSelectionFromMask" = "現在の選択範囲を隠す";
 "imageEditor.action.layerMaskIntersectSelection" = "現在の選択範囲と交差";

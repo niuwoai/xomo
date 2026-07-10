@@ -1032,6 +1032,7 @@
 "imageEditor.history.layerMaskApply" = "Apply Layer Mask";
 "imageEditor.history.layerMaskApplySelected" = "Apply Selected Layer Masks";
 "imageEditor.history.layerMaskInvert" = "Invert Layer Mask";
+"imageEditor.history.layerMaskInvertSelected" = "Invert Selected Layer Masks";
 "imageEditor.history.layerMaskCopy" = "Copy Layer Mask";
 "imageEditor.history.layerMaskRevealSelection" = "Reveal Selection on Layer Mask";
 "imageEditor.history.layerMaskHideSelectionFromMask" = "Hide Selection on Layer Mask";
@@ -1322,6 +1323,7 @@
 "imageEditor.status.layerMaskDeleted" = "Layer mask deleted";
 "imageEditor.status.layerMaskDeletedSelected" = "%d layer masks deleted";
 "imageEditor.status.layerMaskInverted" = "Current layer mask inverted";
+"imageEditor.status.layerMaskInvertedSelected" = "%d layer masks inverted";
 "imageEditor.status.layerMaskRevealSelection" = "Current selection revealed on the layer mask";
 "imageEditor.status.layerMaskHideSelectionFromMask" = "Current selection hidden on the layer mask";
 "imageEditor.status.layerMaskIntersectSelection" = "Layer mask limited to the current selection";
@@ -1540,7 +1542,7 @@
 "imageEditor.action.layerMaskLinkToggle" = "Link / Unlink Layer Mask";
 "imageEditor.action.layerMaskLinked" = "Layer mask linked";
 "imageEditor.action.layerMaskUnlinked" = "Layer mask unlinked";
-"imageEditor.action.layerMaskInvert" = "Invert Layer Mask";
+"imageEditor.action.layerMaskInvert" = "Invert Layer Masks";
 "imageEditor.action.layerMaskRevealSelection" = "Reveal Current Selection";
 "imageEditor.action.layerMaskHideSelectionFromMask" = "Hide Current Selection";
 "imageEditor.action.layerMaskIntersectSelection" = "Intersect with Current Selection";

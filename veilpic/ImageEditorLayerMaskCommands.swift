@@ -76,10 +76,7 @@ extension ImageEditorViewModel {
     }
 
     var canInvertLayerMask: Bool {
-        guard selectedLayerCount == 1,
-              let layer = document.selectedLayer
-        else { return false }
-        return !document.isEffectivelyLocked(layer) && layer.mask != nil
+        !layerMaskInvertIndices().isEmpty
     }
 
     var canToggleLayerMaskEnabled: Bool {
@@ -343,20 +340,28 @@ extension ImageEditorViewModel {
     }
 
     func invertLayerMask() {
-        guard canInvertLayerMask,
-              let index = document.selectedLayerIndex,
-              let mask = document.layers[index].mask,
-              let inverted = mask.invertedAlphaMask()
-        else {
+        let indices = layerMaskInvertIndices()
+        guard !indices.isEmpty else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
 
         pushUndo()
-        document.layers[index].mask = inverted
+        for index in indices {
+            guard let mask = document.layers[index].mask,
+                  let inverted = mask.invertedAlphaMask()
+            else { continue }
+            document.layers[index].mask = inverted
+        }
         isEditingLayerMask = true
-        appendHistory(L10n.text("imageEditor.history.layerMaskInvert"))
-        statusText = L10n.text("imageEditor.status.layerMaskInverted")
+
+        if indices.count == 1 {
+            appendHistory(L10n.text("imageEditor.history.layerMaskInvert"))
+            statusText = L10n.text("imageEditor.status.layerMaskInverted")
+        } else {
+            appendHistory(L10n.text("imageEditor.history.layerMaskInvertSelected"))
+            statusText = L10n.format("imageEditor.status.layerMaskInvertedSelected", indices.count)
+        }
     }
 
     func revealSelectionOnLayerMask() {
@@ -485,6 +490,18 @@ extension ImageEditorViewModel {
         return document.layers.indices.filter { index in
             selectedIDs.contains(document.layers[index].id)
                 && canApplyMask(to: document.layers[index])
+        }
+    }
+
+    private func layerMaskInvertIndices() -> [Int] {
+        let selectedIDs = document.selectedLayerIDs.isEmpty
+            ? Set(document.selectedLayerID.map { [$0] } ?? [])
+            : document.selectedLayerIDs
+        return document.layers.indices.filter { index in
+            let layer = document.layers[index]
+            return selectedIDs.contains(layer.id)
+                && !document.isEffectivelyLocked(layer)
+                && layer.mask?.invertedAlphaMask() != nil
         }
     }
 
