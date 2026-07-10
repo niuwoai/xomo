@@ -432,6 +432,7 @@
 "imageEditor.action.autoLevels" = "自动色阶";
 "imageEditor.action.autoContrast" = "自动对比度";
 "imageEditor.action.autoColor" = "自动颜色";
+"imageEditor.action.desaturate" = "去色";
 "imageEditor.action.cropCenter" = "中心裁剪";
 "imageEditor.action.cropSelection" = "裁剪到选区";
 "imageEditor.action.trimTransparentPixels" = "裁切透明像素";
@@ -1244,6 +1245,8 @@
 "imageEditor.history.autoLevelsSelected" = "自动校正所选图层色阶";
 "imageEditor.history.autoContrastSelected" = "自动校正所选图层对比度";
 "imageEditor.history.autoColorSelected" = "自动校正所选图层颜色";
+"imageEditor.history.desaturate" = "去色";
+"imageEditor.history.desaturateSelected" = "去色所选图层";
 "imageEditor.history.adjustmentSelected" = "将 %@ 应用到所选图层";
 "imageEditor.status.ready" = "%@ · %@ · 就绪";
 "imageEditor.status.toolsPanelSummary" = "当前工具：%@ | 可用工具：%d";
@@ -1352,6 +1355,8 @@
 "imageEditor.status.autoLevelsSelected" = "已自动校正 %d 个图层的色阶";
 "imageEditor.status.autoContrastSelected" = "已自动校正 %d 个图层的对比度";
 "imageEditor.status.autoColorSelected" = "已自动校正 %d 个图层的颜色";
+"imageEditor.status.desaturate" = "已将当前图层去色";
+"imageEditor.status.desaturateSelected" = "已将 %d 个图层去色";
 "imageEditor.status.adjustmentReady" = "已准备 %@ 调整";
 "imageEditor.status.adjustmentSelected" = "已将 %@ 应用到 %d 个图层";
 "imageEditor.status.operationFailed" = "操作失败";

@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.421.0 - 2026-07-10
+
+### Added
+- 图片编辑器新增 Image 菜单经典去色命令：`Shift + Command + U` 对当前可编辑图层或所选图层执行 Desaturate。
+
 ## 1.420.0 - 2026-07-10
 
 ### Added

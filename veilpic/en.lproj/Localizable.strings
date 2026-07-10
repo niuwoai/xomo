@@ -432,6 +432,7 @@
 "imageEditor.action.autoLevels" = "Auto Levels";
 "imageEditor.action.autoContrast" = "Auto Contrast";
 "imageEditor.action.autoColor" = "Auto Color";
+"imageEditor.action.desaturate" = "Desaturate";
 "imageEditor.action.cropCenter" = "Center Crop";
 "imageEditor.action.cropSelection" = "Crop to Selection";
 "imageEditor.action.trimTransparentPixels" = "Trim Transparent Pixels";
@@ -1244,6 +1245,8 @@
 "imageEditor.history.autoLevelsSelected" = "Auto Levels Selected Layers";
 "imageEditor.history.autoContrastSelected" = "Auto Contrast Selected Layers";
 "imageEditor.history.autoColorSelected" = "Auto Color Selected Layers";
+"imageEditor.history.desaturate" = "Desaturate";
+"imageEditor.history.desaturateSelected" = "Desaturate Selected Layers";
 "imageEditor.history.adjustmentSelected" = "Apply %@ to Selected Layers";
 "imageEditor.status.ready" = "%@ · %@ · Ready";
 "imageEditor.status.toolsPanelSummary" = "Current tool: %@ | Available tools: %d";
@@ -1352,6 +1355,8 @@
 "imageEditor.status.autoLevelsSelected" = "Auto-corrected levels for %d layers";
 "imageEditor.status.autoContrastSelected" = "Auto-corrected contrast for %d layers";
 "imageEditor.status.autoColorSelected" = "Auto-corrected color for %d layers";
+"imageEditor.status.desaturate" = "Current layer desaturated";
+"imageEditor.status.desaturateSelected" = "Desaturated %d layers";
 "imageEditor.status.adjustmentReady" = "%@ adjustment ready";
 "imageEditor.status.adjustmentSelected" = "Applied %@ to %d layers";
 "imageEditor.status.operationFailed" = "Operation failed";

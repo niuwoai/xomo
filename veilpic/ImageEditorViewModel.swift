@@ -484,6 +484,10 @@ final class ImageEditorViewModel: ObservableObject {
         canAutoLevelsSelectedLayer
     }
 
+    var canDesaturateSelectedLayer: Bool {
+        canAutoLevelsSelectedLayer
+    }
+
     var selectedLayerSmartFilters: [ImageEditorSmartFilter] {
         document.selectedLayer?.smartFilters ?? []
     }
@@ -3288,6 +3292,16 @@ final class ImageEditorViewModel: ObservableObject {
 
     func autoColorSelectedLayer() {
         applyAutoCorrection({ $0.autoColored() }, history: "imageEditor.history.autoColor", selectedHistory: "imageEditor.history.autoColorSelected", status: "imageEditor.status.autoColor", selectedStatus: "imageEditor.status.autoColorSelected")
+    }
+
+    func desaturateSelectedLayer() {
+        applyAutoCorrection(
+            { $0.adjusted(kind: .saturation, amount: -1) },
+            history: "imageEditor.history.desaturate",
+            selectedHistory: "imageEditor.history.desaturateSelected",
+            status: "imageEditor.status.desaturate",
+            selectedStatus: "imageEditor.status.desaturateSelected"
+        )
     }
 
     func addAdjustmentLayer() {

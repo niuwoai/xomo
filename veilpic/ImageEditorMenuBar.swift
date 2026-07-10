@@ -226,6 +226,11 @@ extension ImageEditorView {
             viewModel.selectAdjustment(.hueSaturation)
         }
         .keyboardShortcut("u", modifiers: [.command])
+        Button(L10n.text("imageEditor.action.desaturate")) {
+            viewModel.desaturateSelectedLayer()
+        }
+        .keyboardShortcut("u", modifiers: [.command, .shift])
+        .disabled(!viewModel.canDesaturateSelectedLayer)
         Divider()
         Button(L10n.text("imageEditor.action.autoLevels")) {
             viewModel.autoLevelsSelectedLayer()
