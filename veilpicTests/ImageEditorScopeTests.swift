@@ -211,6 +211,15 @@ struct ImageEditorScopeTests {
         #expect(nudgeShortcutSource.contains("nudgeShortcutButton(.downArrow, delta: CGSize(width: 0, height: -1), modifiers: [])"))
         #expect(nudgeShortcutSource.contains("nudgeShortcutButton(.leftArrow, delta: CGSize(width: -10, height: 0), modifiers: [.shift])"))
         #expect(nudgeShortcutSource.contains("viewModel.nudgeSelectionOrSelectedLayer(by: delta)"))
+
+        let selectionEditShortcutStart = try #require(source.range(of: "private var selectionEditShortcutButtons: some View"))
+        let selectionEditShortcutEnd = try #require(
+            source[selectionEditShortcutStart.upperBound...].range(of: "private var colorChips: some View")
+        )
+        let selectionEditShortcutSource = source[selectionEditShortcutStart.lowerBound..<selectionEditShortcutEnd.lowerBound]
+
+        #expect(selectionEditShortcutSource.contains("viewModel.clearSelectionPixels()"))
+        #expect(selectionEditShortcutSource.contains(".keyboardShortcut(.delete, modifiers: [])"))
     }
 
     @MainActor
@@ -348,6 +357,25 @@ struct ImageEditorScopeTests {
         #expect(movedFrame?.origin.x == (originalFrame?.origin.x ?? 0) - 10)
         #expect(movedFrame?.origin.y == originalFrame?.origin.y)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerTranslate"))
+    }
+
+    @MainActor
+    @Test func classicDeleteShortcutClearsSelectionPixelsThroughExistingCommand() throws {
+        let image = try #require(NSImage.rendered(size: NSSize(width: 80, height: 60)) { rect in
+            NSColor.systemRed.setFill()
+            rect.fill()
+        })
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        viewModel.convertBackgroundToLayer()
+        viewModel.document.selection = ImageEditorSelection.rectangle(CGRect(x: 10, y: 10, width: 20, height: 20))
+
+        viewModel.clearSelectionPixels()
+
+        let clearedColor = viewModel.document.selectedLayer?.image.color(at: CGPoint(x: 15, y: 15))
+        let retainedColor = viewModel.document.selectedLayer?.image.color(at: CGPoint(x: 2, y: 2))
+        #expect((clearedColor?.alphaComponent ?? 1) < 0.05)
+        #expect((retainedColor?.alphaComponent ?? 0) > 0.95)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionClearPixelsSelected"))
     }
 
     @MainActor
