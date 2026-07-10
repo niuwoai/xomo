@@ -134,6 +134,45 @@ enum ImageEditorTool: String, CaseIterable, Identifiable {
         }
     }
 
+    var classicShortcutKey: Character? {
+        switch self {
+        case .move:
+            "v"
+        case .marquee:
+            "m"
+        case .lasso:
+            "l"
+        case .magicWand:
+            "w"
+        case .crop:
+            "c"
+        case .brush:
+            "b"
+        case .eraser:
+            "e"
+        case .cloneStamp:
+            "s"
+        case .dodge, .burn:
+            "o"
+        case .paintBucket, .gradient:
+            "g"
+        case .eyedropper:
+            "i"
+        case .text:
+            "t"
+        case .rectangle, .ellipse:
+            "u"
+        case .pen:
+            "p"
+        case .hand:
+            "h"
+        case .zoom:
+            "z"
+        case .blur, .sharpen, .smudge, .healingBrush, .patchTool:
+            nil
+        }
+    }
+
     var supportsSelectionMode: Bool {
         switch self {
         case .marquee, .lasso, .magicWand:

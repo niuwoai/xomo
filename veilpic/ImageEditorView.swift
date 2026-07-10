@@ -169,6 +169,7 @@ struct ImageEditorView: View {
                         .frame(width: 34, height: 34)
                 }
                 .buttonStyle(EditorIconButtonStyle(isSelected: viewModel.selectedTool == tool))
+                .modifier(ImageEditorToolShortcutModifier(shortcut: tool.classicShortcutKey))
                 .help(tool.title)
             }
 
@@ -3840,6 +3841,19 @@ struct ImageEditorView: View {
 
     func closeWindow() {
         NSApplication.shared.keyWindow?.close()
+    }
+}
+
+private struct ImageEditorToolShortcutModifier: ViewModifier {
+    let shortcut: Character?
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        if let shortcut {
+            content.keyboardShortcut(KeyEquivalent(shortcut), modifiers: [])
+        } else {
+            content
+        }
     }
 }
 

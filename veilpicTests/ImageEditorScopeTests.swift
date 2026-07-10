@@ -97,6 +97,55 @@ struct ImageEditorScopeTests {
         )
     }
 
+    @Test func imageEditorToolsExposeClassicPhotoshopShortcuts() {
+        let shortcuts = Dictionary(
+            uniqueKeysWithValues: ImageEditorTool.allCases.compactMap { tool in
+                tool.classicShortcutKey.map { (tool.rawValue, String($0)) }
+            }
+        )
+
+        #expect(shortcuts["move"] == "v")
+        #expect(shortcuts["marquee"] == "m")
+        #expect(shortcuts["lasso"] == "l")
+        #expect(shortcuts["magicWand"] == "w")
+        #expect(shortcuts["crop"] == "c")
+        #expect(shortcuts["brush"] == "b")
+        #expect(shortcuts["eraser"] == "e")
+        #expect(shortcuts["cloneStamp"] == "s")
+        #expect(shortcuts["dodge"] == "o")
+        #expect(shortcuts["burn"] == "o")
+        #expect(shortcuts["paintBucket"] == "g")
+        #expect(shortcuts["gradient"] == "g")
+        #expect(shortcuts["eyedropper"] == "i")
+        #expect(shortcuts["text"] == "t")
+        #expect(shortcuts["rectangle"] == "u")
+        #expect(shortcuts["ellipse"] == "u")
+        #expect(shortcuts["pen"] == "p")
+        #expect(shortcuts["hand"] == "h")
+        #expect(shortcuts["zoom"] == "z")
+        #expect(shortcuts["blur"] == nil)
+        #expect(shortcuts["sharpen"] == nil)
+        #expect(shortcuts["smudge"] == nil)
+        #expect(shortcuts["healingBrush"] == nil)
+        #expect(shortcuts["patchTool"] == nil)
+    }
+
+    @Test func toolRailAppliesClassicToolShortcutsToToolButtons() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let toolRailStart = try #require(source.range(of: "private var toolRail: some View"))
+        let nextSectionStart = try #require(
+            source[toolRailStart.upperBound...].range(of: "private var colorChips: some View")
+        )
+        let toolRailSource = source[toolRailStart.lowerBound..<nextSectionStart.lowerBound]
+
+        #expect(toolRailSource.contains("ForEach(ImageEditorTool.allCases)"))
+        #expect(toolRailSource.contains("viewModel.selectTool(tool)"))
+        #expect(toolRailSource.contains("ImageEditorToolShortcutModifier(shortcut: tool.classicShortcutKey)"))
+    }
+
     @MainActor
     @Test func imageEditorActualPixelsZoomUsesLastCanvasViewport() {
         let image = NSImage(size: NSSize(width: 100, height: 50))
