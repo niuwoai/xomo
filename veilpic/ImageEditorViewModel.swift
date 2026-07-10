@@ -55,6 +55,8 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var cloneSourcePoint: CGPoint?
     @Published var reselectableSelection: ImageEditorSelection?
     @Published var statusText: String = ""
+    @Published var areToolsPanelVisible = true
+    @Published var isOptionsBarVisible = true
     @Published var pointerText: String = "X: 0 Y: 0"
     @Published var textValue: String = ""
     @Published var textSize: Double = 32
@@ -1101,6 +1103,11 @@ final class ImageEditorViewModel: ObservableObject {
         statusText = L10n.format("imageEditor.status.toolsPanelToolSelected", tool.title, optionsPanelSummaryText)
     }
 
+    func toggleToolsPanelVisibility() {
+        areToolsPanelVisible.toggle()
+        statusText = L10n.text(areToolsPanelVisible ? "imageEditor.status.toolsPanelShown" : "imageEditor.status.toolsPanelHidden")
+    }
+
     func applyBrushPreset(_ preset: ImageEditorBrushPreset) {
         brushSize = max(1, min(96, preset.size))
         statusText = L10n.format("imageEditor.status.brushPresetApplied", preset.title, brushesPanelSummaryText)
@@ -1124,6 +1131,11 @@ final class ImageEditorViewModel: ObservableObject {
     func applyOptionsHardnessPreset(_ percent: Int) {
         hardness = CGFloat(max(0, min(100, percent))) / 100
         statusText = optionsPanelSummaryText
+    }
+
+    func toggleOptionsBarVisibility() {
+        isOptionsBarVisible.toggle()
+        statusText = L10n.text(isOptionsBarVisible ? "imageEditor.status.optionsBarShown" : "imageEditor.status.optionsBarHidden")
     }
 
     func selectCharacterPanelTool() {

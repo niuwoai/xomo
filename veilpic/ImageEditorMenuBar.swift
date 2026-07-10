@@ -1312,6 +1312,9 @@ extension ImageEditorView {
             Button(L10n.text("imageEditor.action.toolsShowPanel")) {
                 viewModel.statusText = viewModel.toolsPanelSummaryText
             }
+            Button(L10n.text(viewModel.areToolsPanelVisible ? "imageEditor.action.toolsHidePanel" : "imageEditor.action.toolsShowPanelVisibility")) {
+                viewModel.toggleToolsPanelVisibility()
+            }
             Divider()
             ForEach(viewModel.toolsPanelTools) { tool in
                 Button(tool.title) {
@@ -1326,6 +1329,9 @@ extension ImageEditorView {
         Menu(L10n.text("imageEditor.menu.window.options")) {
             Button(L10n.text("imageEditor.action.optionsShowPanel")) {
                 viewModel.statusText = viewModel.optionsPanelSummaryText
+            }
+            Button(L10n.text(viewModel.isOptionsBarVisible ? "imageEditor.action.optionsHideBar" : "imageEditor.action.optionsShowBar")) {
+                viewModel.toggleOptionsBarVisibility()
             }
             Divider()
             Menu(L10n.text("imageEditor.menu.window.options.selectionMode")) {

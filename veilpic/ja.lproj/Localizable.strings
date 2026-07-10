@@ -369,7 +369,11 @@
 "imageEditor.menu.window.channels.selection" = "チャンネルを選択範囲として読み込み";
 "imageEditor.menu.window.channels.alpha" = "Alpha チャンネル";
 "imageEditor.action.toolsShowPanel" = "ツールパネルを表示";
+"imageEditor.action.toolsHidePanel" = "ツールパネルを隠す";
+"imageEditor.action.toolsShowPanelVisibility" = "ツールパネルを表示";
 "imageEditor.action.optionsShowPanel" = "オプションバーを表示";
+"imageEditor.action.optionsHideBar" = "オプションバーを隠す";
+"imageEditor.action.optionsShowBar" = "オプションバーを表示";
 "imageEditor.action.navigatorShowPanel" = "ナビゲーターパネルを表示";
 "imageEditor.action.infoShowPanel" = "情報パネルを表示";
 "imageEditor.action.histogramShowPanel" = "ヒストグラムパネルを表示";
@@ -1230,7 +1234,11 @@
 "imageEditor.status.ready" = "%@ · %@ · 準備完了";
 "imageEditor.status.toolsPanelSummary" = "現在のツール：%@ | 利用可能なツール：%d";
 "imageEditor.status.toolsPanelToolSelected" = "%@を選択しました：%@";
+"imageEditor.status.toolsPanelShown" = "ツールパネルを表示しました";
+"imageEditor.status.toolsPanelHidden" = "ツールパネルを隠しました";
 "imageEditor.status.optionsPanelSummary" = "ツール：%@ | 選択：%@ | サイズ：%d px | 不透明度：%d%% | 硬さ：%d%% | ぼかし：%d px | 許容値：%d%%";
+"imageEditor.status.optionsBarShown" = "オプションバーを表示しました";
+"imageEditor.status.optionsBarHidden" = "オプションバーを隠しました";
 "imageEditor.option.sizePreset" = "%d px";
 "imageEditor.option.percentPreset" = "%d%%";
 "imageEditor.status.colorPanelSummary" = "描画色：%@ | 背景色：%@";

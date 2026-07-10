@@ -509,17 +509,33 @@ struct ImageEditorScopeTests {
 
         #expect(toolOptionsSource.contains("imageEditor.menu.window.tools"))
         #expect(toolOptionsSource.contains("imageEditor.action.toolsShowPanel"))
+        #expect(toolOptionsSource.contains("imageEditor.action.toolsHidePanel"))
+        #expect(toolOptionsSource.contains("imageEditor.action.toolsShowPanelVisibility"))
         #expect(toolOptionsSource.contains("viewModel.toolsPanelSummaryText"))
+        #expect(toolOptionsSource.contains("viewModel.toggleToolsPanelVisibility()"))
         #expect(toolOptionsSource.contains("viewModel.toolsPanelTools"))
         #expect(toolOptionsSource.contains("viewModel.selectToolsPanelTool(tool)"))
         #expect(toolOptionsSource.contains("imageEditor.menu.window.options"))
         #expect(toolOptionsSource.contains("imageEditor.action.optionsShowPanel"))
+        #expect(toolOptionsSource.contains("imageEditor.action.optionsHideBar"))
+        #expect(toolOptionsSource.contains("imageEditor.action.optionsShowBar"))
         #expect(toolOptionsSource.contains("viewModel.optionsPanelSummaryText"))
+        #expect(toolOptionsSource.contains("viewModel.toggleOptionsBarVisibility()"))
         #expect(toolOptionsSource.contains("ImageEditorSelectionMode.allCases"))
         #expect(toolOptionsSource.contains("viewModel.applyOptionsSelectionMode(mode)"))
         #expect(toolOptionsSource.contains("viewModel.applyOptionsBrushSizePreset(size)"))
         #expect(toolOptionsSource.contains("viewModel.applyOptionsOpacityPreset(percent)"))
         #expect(toolOptionsSource.contains("viewModel.applyOptionsHardnessPreset(percent)"))
+    }
+
+    @Test func editorChromeConditionallyRendersToolsAndOptionsPanels() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("if viewModel.isOptionsBarVisible"))
+        #expect(source.contains("if viewModel.areToolsPanelVisible"))
     }
 
     @MainActor
@@ -548,6 +564,35 @@ struct ImageEditorScopeTests {
         #expect(viewModel.optionsPanelSummaryText.contains("48"))
         #expect(viewModel.optionsPanelSummaryText.contains("75"))
         #expect(viewModel.optionsPanelSummaryText.contains("25"))
+    }
+
+    @MainActor
+    @Test func toolsAndOptionsPanelVisibilityDefaultsOnAndCanToggle() throws {
+        let image = NSImage(size: NSSize(width: 16, height: 16))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        #expect(viewModel.areToolsPanelVisible)
+        #expect(viewModel.isOptionsBarVisible)
+
+        viewModel.toggleToolsPanelVisibility()
+
+        #expect(!viewModel.areToolsPanelVisible)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.toolsPanelHidden"))
+
+        viewModel.toggleToolsPanelVisibility()
+
+        #expect(viewModel.areToolsPanelVisible)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.toolsPanelShown"))
+
+        viewModel.toggleOptionsBarVisibility()
+
+        #expect(!viewModel.isOptionsBarVisible)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.optionsBarHidden"))
+
+        viewModel.toggleOptionsBarVisibility()
+
+        #expect(viewModel.isOptionsBarVisible)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.optionsBarShown"))
     }
 
     @Test func windowMenuExposesSwatchesPanelActionsInPhotoshopStyleLocation() throws {

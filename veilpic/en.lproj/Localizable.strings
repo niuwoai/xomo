@@ -369,7 +369,11 @@
 "imageEditor.menu.window.channels.selection" = "Load Channel as Selection";
 "imageEditor.menu.window.channels.alpha" = "Alpha Channels";
 "imageEditor.action.toolsShowPanel" = "Show Tools Panel";
+"imageEditor.action.toolsHidePanel" = "Hide Tools Panel";
+"imageEditor.action.toolsShowPanelVisibility" = "Show Tools Panel";
 "imageEditor.action.optionsShowPanel" = "Show Options Bar";
+"imageEditor.action.optionsHideBar" = "Hide Options Bar";
+"imageEditor.action.optionsShowBar" = "Show Options Bar";
 "imageEditor.action.navigatorShowPanel" = "Show Navigator Panel";
 "imageEditor.action.infoShowPanel" = "Show Info Panel";
 "imageEditor.action.histogramShowPanel" = "Show Histogram Panel";
@@ -1230,7 +1234,11 @@
 "imageEditor.status.ready" = "%@ · %@ · Ready";
 "imageEditor.status.toolsPanelSummary" = "Current tool: %@ | Available tools: %d";
 "imageEditor.status.toolsPanelToolSelected" = "%@ selected: %@";
+"imageEditor.status.toolsPanelShown" = "Tools panel shown";
+"imageEditor.status.toolsPanelHidden" = "Tools panel hidden";
 "imageEditor.status.optionsPanelSummary" = "Tool: %@ | Selection: %@ | Size: %d px | Opacity: %d%% | Hardness: %d%% | Feather: %d px | Tolerance: %d%%";
+"imageEditor.status.optionsBarShown" = "Options bar shown";
+"imageEditor.status.optionsBarHidden" = "Options bar hidden";
 "imageEditor.option.sizePreset" = "%d px";
 "imageEditor.option.percentPreset" = "%d%%";
 "imageEditor.status.colorPanelSummary" = "Foreground: %@ | Background: %@";

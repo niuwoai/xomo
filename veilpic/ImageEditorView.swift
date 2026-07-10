@@ -39,12 +39,16 @@ struct ImageEditorView: View {
     var body: some View {
         VStack(spacing: 0) {
             menuBar
-            optionBar
-            Divider().overlay(editorBorder)
+            if viewModel.isOptionsBarVisible {
+                optionBar
+                Divider().overlay(editorBorder)
+            }
 
             HStack(spacing: 0) {
-                toolRail
-                Divider().overlay(editorBorder)
+                if viewModel.areToolsPanelVisible {
+                    toolRail
+                    Divider().overlay(editorBorder)
+                }
                 canvasWorkspace
                 Divider().overlay(editorBorder)
                 rightDock
