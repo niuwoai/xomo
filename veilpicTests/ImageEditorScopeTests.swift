@@ -163,16 +163,20 @@ struct ImageEditorScopeTests {
         #expect(shortcutButtonsSource.contains("viewModel.cycleClassicToolShortcut(group.key)"))
         #expect(shortcutButtonsSource.contains(".keyboardShortcut(KeyEquivalent(group.key), modifiers: [.shift])"))
 
-        let brushSizeShortcutStart = try #require(source.range(of: "private var brushSizeShortcutButtons: some View"))
-        let brushSizeShortcutEnd = try #require(
-            source[brushSizeShortcutStart.upperBound...].range(of: "private var colorChips: some View")
+        let brushShortcutStart = try #require(source.range(of: "private var brushShortcutButtons: some View"))
+        let brushShortcutEnd = try #require(
+            source[brushShortcutStart.upperBound...].range(of: "private var colorChips: some View")
         )
-        let brushSizeShortcutSource = source[brushSizeShortcutStart.lowerBound..<brushSizeShortcutEnd.lowerBound]
+        let brushShortcutSource = source[brushShortcutStart.lowerBound..<brushShortcutEnd.lowerBound]
 
-        #expect(brushSizeShortcutSource.contains("viewModel.adjustBrushSizeShortcut(by: -1)"))
-        #expect(brushSizeShortcutSource.contains(".keyboardShortcut(\"[\", modifiers: [])"))
-        #expect(brushSizeShortcutSource.contains("viewModel.adjustBrushSizeShortcut(by: 1)"))
-        #expect(brushSizeShortcutSource.contains(".keyboardShortcut(\"]\", modifiers: [])"))
+        #expect(brushShortcutSource.contains("viewModel.adjustBrushSizeShortcut(by: -1)"))
+        #expect(brushShortcutSource.contains(".keyboardShortcut(\"[\", modifiers: [])"))
+        #expect(brushShortcutSource.contains("viewModel.adjustBrushSizeShortcut(by: 1)"))
+        #expect(brushShortcutSource.contains(".keyboardShortcut(\"]\", modifiers: [])"))
+        #expect(brushShortcutSource.contains("viewModel.adjustBrushHardnessShortcut(by: -0.25)"))
+        #expect(brushShortcutSource.contains(".keyboardShortcut(\"[\", modifiers: [.shift])"))
+        #expect(brushShortcutSource.contains("viewModel.adjustBrushHardnessShortcut(by: 0.25)"))
+        #expect(brushShortcutSource.contains(".keyboardShortcut(\"]\", modifiers: [.shift])"))
     }
 
     @MainActor
@@ -220,6 +224,28 @@ struct ImageEditorScopeTests {
         viewModel.brushSize = 96
         viewModel.adjustBrushSizeShortcut(by: 1)
         #expect(viewModel.brushSize == 96)
+    }
+
+    @MainActor
+    @Test func classicBrushHardnessShortcutsClampAndUpdateOptionsStatus() {
+        let image = NSImage(size: NSSize(width: 80, height: 60))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.hardness = 0.5
+        viewModel.adjustBrushHardnessShortcut(by: 0.25)
+        #expect(viewModel.hardness == 0.75)
+        #expect(viewModel.statusText == viewModel.optionsPanelSummaryText)
+
+        viewModel.adjustBrushHardnessShortcut(by: -0.5)
+        #expect(viewModel.hardness == 0.25)
+
+        viewModel.hardness = 0
+        viewModel.adjustBrushHardnessShortcut(by: -0.25)
+        #expect(viewModel.hardness == 0)
+
+        viewModel.hardness = 1
+        viewModel.adjustBrushHardnessShortcut(by: 0.25)
+        #expect(viewModel.hardness == 1)
     }
 
     @MainActor

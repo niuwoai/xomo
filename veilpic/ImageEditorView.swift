@@ -63,7 +63,7 @@ struct ImageEditorView: View {
         .frame(minWidth: 1160, minHeight: 720)
         .background(Color(nsColor: ImageEditorTheme.window))
         .background(toolShortcutButtons)
-        .background(brushSizeShortcutButtons)
+        .background(brushShortcutButtons)
         .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
         .onAppear {
             syncLayerNameDraft()
@@ -209,7 +209,7 @@ struct ImageEditorView: View {
         .opacity(0)
     }
 
-    private var brushSizeShortcutButtons: some View {
+    private var brushShortcutButtons: some View {
         Group {
             Button {
                 viewModel.adjustBrushSizeShortcut(by: -1)
@@ -225,6 +225,22 @@ struct ImageEditorView: View {
                 EmptyView()
             }
             .keyboardShortcut("]", modifiers: [])
+            .accessibilityHidden(true)
+
+            Button {
+                viewModel.adjustBrushHardnessShortcut(by: -0.25)
+            } label: {
+                EmptyView()
+            }
+            .keyboardShortcut("[", modifiers: [.shift])
+            .accessibilityHidden(true)
+
+            Button {
+                viewModel.adjustBrushHardnessShortcut(by: 0.25)
+            } label: {
+                EmptyView()
+            }
+            .keyboardShortcut("]", modifiers: [.shift])
             .accessibilityHidden(true)
         }
         .frame(width: 0, height: 0)
