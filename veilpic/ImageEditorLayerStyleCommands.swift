@@ -111,6 +111,18 @@ extension ImageEditorViewModel {
         document.selectedLayer?.style.shadowColor ?? .black
     }
 
+    var selectedLayerOuterGlowColor: NSColor {
+        document.selectedLayer?.style.outerGlowColor ?? .systemYellow
+    }
+
+    var selectedLayerInnerGlowColor: NSColor {
+        document.selectedLayer?.style.innerGlowColor ?? .systemCyan
+    }
+
+    var selectedLayerColorOverlayColor: NSColor {
+        document.selectedLayer?.style.colorOverlayColor ?? .systemRed
+    }
+
     var selectedLayerShadowBlur: Double {
         Double(document.selectedLayer?.style.shadowBlur ?? 8)
     }
@@ -537,6 +549,27 @@ extension ImageEditorViewModel {
         updateSelectedLayerStyle {
             $0.shadowEnabled = true
             $0.shadowColor = color.usingColorSpace(.sRGB) ?? color
+        }
+    }
+
+    func setSelectedLayerOuterGlowColor(_ color: NSColor) {
+        updateSelectedLayerStyle {
+            $0.outerGlowEnabled = true
+            $0.outerGlowColor = color.usingColorSpace(.sRGB) ?? color
+        }
+    }
+
+    func setSelectedLayerInnerGlowColor(_ color: NSColor) {
+        updateSelectedLayerStyle {
+            $0.innerGlowEnabled = true
+            $0.innerGlowColor = color.usingColorSpace(.sRGB) ?? color
+        }
+    }
+
+    func setSelectedLayerColorOverlayColor(_ color: NSColor) {
+        updateSelectedLayerStyle {
+            $0.colorOverlayEnabled = true
+            $0.colorOverlayColor = color.usingColorSpace(.sRGB) ?? color
         }
     }
 

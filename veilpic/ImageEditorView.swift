@@ -367,6 +367,15 @@ struct ImageEditorView: View {
                             viewModel.endCanvasMagnify()
                         }
                 )
+                .overlay(
+                    ScrollWheelZoomView { factor, location, viewportSize in
+                        // 每个离散滚轮 tick 独立锚定当前状态：复用捏合缩放的锚定数学，
+                        // 立即结束一次缩放会话，避免下一次滚动沿用上一次的基准而叠加错位。
+                        viewModel.magnifyCanvas(factor, at: location, viewportSize: viewportSize)
+                        viewModel.endCanvasMagnify()
+                    }
+                    .allowsHitTesting(false)
+                )
                 .onHover { inside in
                     if !inside {
                         viewModel.updatePointer(nil)
@@ -1153,6 +1162,30 @@ struct ImageEditorView: View {
             Color(nsColor: viewModel.selectedLayerShadowColor)
         } set: { value in
             viewModel.setSelectedLayerShadowColor(NSColor(value))
+        }
+    }
+
+    private var selectedLayerOuterGlowColorBinding: Binding<Color> {
+        Binding {
+            Color(nsColor: viewModel.selectedLayerOuterGlowColor)
+        } set: { value in
+            viewModel.setSelectedLayerOuterGlowColor(NSColor(value))
+        }
+    }
+
+    private var selectedLayerInnerGlowColorBinding: Binding<Color> {
+        Binding {
+            Color(nsColor: viewModel.selectedLayerInnerGlowColor)
+        } set: { value in
+            viewModel.setSelectedLayerInnerGlowColor(NSColor(value))
+        }
+    }
+
+    private var selectedLayerColorOverlayColorBinding: Binding<Color> {
+        Binding {
+            Color(nsColor: viewModel.selectedLayerColorOverlayColor)
+        } set: { value in
+            viewModel.setSelectedLayerColorOverlayColor(NSColor(value))
         }
     }
 
@@ -2969,6 +3002,15 @@ struct ImageEditorView: View {
                     in: 0.05...1,
                     step: 0.05
                 )
+                HStack(spacing: 8) {
+                    Text(L10n.text("imageEditor.properties.outerGlowColor"))
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                    ColorPicker("", selection: selectedLayerOuterGlowColorBinding, supportsOpacity: false)
+                        .labelsHidden()
+                        .frame(width: 32)
+                    Spacer(minLength: 4)
+                }
                 HStack {
                     Stepper(
                         L10n.format("imageEditor.properties.outerGlowBlurValue", Int(viewModel.selectedLayerOuterGlowBlur.rounded())),
@@ -3001,6 +3043,15 @@ struct ImageEditorView: View {
                     in: 0.05...1,
                     step: 0.05
                 )
+                HStack(spacing: 8) {
+                    Text(L10n.text("imageEditor.properties.innerGlowColor"))
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                    ColorPicker("", selection: selectedLayerInnerGlowColorBinding, supportsOpacity: false)
+                        .labelsHidden()
+                        .frame(width: 32)
+                    Spacer(minLength: 4)
+                }
                 HStack {
                     Stepper(
                         L10n.format("imageEditor.properties.innerGlowBlurValue", Int(viewModel.selectedLayerInnerGlowBlur.rounded())),
@@ -3033,6 +3084,15 @@ struct ImageEditorView: View {
                     in: 0.05...1,
                     step: 0.05
                 )
+                HStack(spacing: 8) {
+                    Text(L10n.text("imageEditor.properties.colorOverlayColor"))
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                    ColorPicker("", selection: selectedLayerColorOverlayColorBinding, supportsOpacity: false)
+                        .labelsHidden()
+                        .frame(width: 32)
+                    Spacer(minLength: 4)
+                }
                 Picker(L10n.text("imageEditor.properties.gradientOverlayStyle"), selection: selectedLayerGradientOverlayStyleBinding) {
                     ForEach(ImageEditorGradientFillStyle.allCases) { style in
                         Text(style.title).tag(style)

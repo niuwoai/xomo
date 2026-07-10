@@ -1,6 +1,6 @@
 # 轻图产品概览
 
-> 最后更新：2026-07-10 | 当前版本：v1.434.0
+> 最后更新：2026-07-10 | 当前版本：v1.435.0
 
 ## 产品定位
 
@@ -165,6 +165,8 @@ v1.433.0-rc1 修复独立图片编辑器的坐标换算性能问题：画布布�
 - 1.432.0 起，Filter 菜单新增 Artistic 分类(Oil Paint)并把 Vignette 接入 Distort，让引擎支持的每个滤镜都在菜单可达；同时新增滤镜菜单完整性测试遍历所有滤镜 case，防止后续漏挂菜单。
 - 1.433.0 起，画布捏合缩放升级为光标锚定缩放，以手势落点为锚点缩放并联动平移偏移，缩放时锚点在画布中保持不动；锚定数学为纯函数并有单元测试覆盖，鼠标滚轮缩放另行跟进。
 - 1.434.0 起，图层样式属性面板为描边色、投影色提供内联取色器，可直接选色实时预览，保留“使用前景色”快捷按钮;后续可继续为发光/叠加/光泽/斜面等样式色补取色器。
+- 1.435.0 起，外发光、内发光和颜色叠加也提供内联取色器，这三种效果的颜色不再是写死的默认值，可直接选色实时预览;光泽(satin)、渐变叠加双色和斜面浮雕高光/阴影色留待后续。
+- 1.435.0 起，画布补齐 ⌘ / ⌥ + 鼠标滚轮缩放，兑现 1.433.0 预留的“鼠标滚轮缩放另行跟进”：复用同一套 `magnifyCanvas(_:at:viewportSize:)` 光标锚定数学，围绕光标缩放；滚轮通过限定在编辑器窗口和画布视口的透明 AppKit 承载视图 + 本地 scrollWheel 监听实现，对点击透明，不影响画布点击、绘制与拖拽平移。
 - 点击“应用到预览”后，编辑结果会成为新的工作台原图，后续保存、复制图片和上传都使用编辑后的图片；点击取消不会修改当前工作台。
 
 后续可配置：
@@ -214,3 +216,22 @@ v1.433.0-rc1 修复独立图片编辑器的坐标换算性能问题：画布布�
 - 为 iPhone、iPad、MacBook 后处理模板替换更精细的本地设备框资产。
 - 增加 provider 连接测试、Bucket 列表读取和路径写入权限检查。
 - 增加真实云端集成测试；测试凭据必须通过本地环境变量注入，不得提交到仓库。
+
+## 测试运行注意事项（veilpicTests 并行不稳定）
+
+`veilpicTests` 里大量像素 / 渲染类测试依赖 AppKit **进程级**的绘图与颜色机制（`NSGraphicsContext` / `lockFocus` 焦点栈 / `NSColor` 命名(calibrated)色彩空间注册表）。这块状态**不是并发安全**的：Swift Testing 默认并行执行时，多个渲染测试同时访问它会互相踩踏——CoreGraphics 会狂刷 `Bad colorspace name NSNamedColorSpace`，渲染结果错乱，于是出现「单独跑能过、整套并行就红」的现象。
+
+已排查确认（重要，避免走弯路）：
+
+- 该现象是**并发**导致，但污染源同时存在于**产品渲染代码和测试辅助代码**（`NSColor(calibratedRed:)`、`NSBitmapImageRep.setColor`、`usingColorSpace(.deviceRGB)` 等），仅靠产品侧加锁无法根治。
+- 在当前 Xcode / Swift Testing 版本下，`@Suite(.serialized)`（含套件级与统一串行根套件）**并不能真正串行化执行**；`-parallel-testing-enabled NO` 只作用于 XCTest 的多进程 worker，管不到 Swift Testing 的进程内并行。
+- **每个测试放进各自独立的进程运行即可稳定全绿**（进程之间内存隔离，不共享上述全局状态）。已验证：作为套件并行会 16/23 失败的 `ImageEditorAdjustmentTests`，逐测试独立进程运行为 23/23 全绿。
+
+因此运行完整测试请使用 `scripts/run_tests_isolated.rb`（逐测试独立 `xcodebuild` 进程，输出 JSON + Markdown 报告）：
+
+```
+ruby scripts/run_tests_isolated.rb            # 串行，最稳（默认）
+ruby scripts/run_tests_isolated.rb --jobs 4   # 多个独立进程并行加速（各进程仍只跑一个测试，安全）
+```
+
+后续如要恢复「直接 `xcodebuild test` 整套并行也全绿」，需要把产品与测试两侧的渲染 / 取色统一迁移到显式 `sRGB/deviceRGB` 的 `CGColorSpace` + `CGContext`，弃用 `NSColor` calibrated/named 颜色与 `lockFocus`，属于较大改造，暂列为待办。

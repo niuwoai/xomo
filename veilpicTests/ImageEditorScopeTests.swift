@@ -312,6 +312,54 @@ struct ImageEditorScopeTests {
     }
 
     @MainActor
+    @Test func canvasScrollWheelZoomComposesDiscreteTicksAnchoredAtCursor() {
+        // 鼠标滚轮的离散语义：每个 tick 调 magnifyCanvas 后立即 endCanvasMagnify，
+        // 让下一次 tick 基于当前状态叠加，而不是沿用上一次的手势基准。
+        let image = NSImage(size: NSSize(width: 80, height: 60))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let viewport = CGSize(width: 800, height: 600)
+        // 偏离视口中心，且 y 偏上，用于检测坐标系是否被上下翻转。
+        let anchor = CGPoint(x: 600, y: 200)
+        viewModel.zoom = 1
+        viewModel.canvasOffset = .zero
+
+        func contentCenter() -> CGPoint {
+            CGPoint(
+                x: viewport.width / 2 + viewModel.canvasOffset.width,
+                y: viewport.height / 2 + viewModel.canvasOffset.height
+            )
+        }
+
+        // 第一个 tick：放大 1.5，锚点内容保持不动（x、y 不变量同时成立即证明不翻转）。
+        let centerBefore1 = contentCenter()
+        viewModel.magnifyCanvas(1.5, at: anchor, viewportSize: viewport)
+        viewModel.endCanvasMagnify()
+        #expect(abs(viewModel.zoom - 1.5) < 0.0001)
+        let centerAfter1 = contentCenter()
+        #expect(abs((anchor.x - centerAfter1.x) - 1.5 * (anchor.x - centerBefore1.x)) < 0.0001)
+        #expect(abs((anchor.y - centerAfter1.y) - 1.5 * (anchor.y - centerBefore1.y)) < 0.0001)
+
+        // 第二个 tick：基于当前状态相乘叠加到 3，而非沿用上一次基准。
+        let centerBefore2 = contentCenter()
+        viewModel.magnifyCanvas(2, at: anchor, viewportSize: viewport)
+        viewModel.endCanvasMagnify()
+        #expect(abs(viewModel.zoom - 3) < 0.0001)
+        let centerAfter2 = contentCenter()
+        #expect(abs((anchor.x - centerAfter2.x) - 2 * (anchor.x - centerBefore2.x)) < 0.0001)
+        #expect(abs((anchor.y - centerAfter2.y) - 2 * (anchor.y - centerBefore2.y)) < 0.0001)
+    }
+
+    @Test func canvasWorkspaceWiresScrollWheelZoomToViewModel() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        #expect(source.contains("ScrollWheelZoomView"))
+        #expect(source.contains("viewModel.magnifyCanvas(factor, at: location, viewportSize: viewportSize)"))
+        #expect(source.contains("viewModel.endCanvasMagnify()"))
+    }
+
+    @MainActor
     @Test func layerStyleColorSettersUpdateStrokeAndShadowColors() {
         let image = NSImage(size: NSSize(width: 40, height: 30))
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
@@ -326,6 +374,23 @@ struct ImageEditorScopeTests {
         let shadow = viewModel.selectedLayerShadowColor.usingColorSpace(.sRGB)
         #expect((shadow?.blueComponent ?? 0) > 0.9)
         #expect((shadow?.redComponent ?? 1) < 0.1)
+
+        viewModel.setSelectedLayerOuterGlowColor(NSColor(srgbRed: 0, green: 1, blue: 0, alpha: 1))
+        let outerGlow = viewModel.selectedLayerOuterGlowColor.usingColorSpace(.sRGB)
+        #expect((outerGlow?.greenComponent ?? 0) > 0.9)
+        #expect((outerGlow?.redComponent ?? 1) < 0.1)
+
+        viewModel.setSelectedLayerInnerGlowColor(NSColor(srgbRed: 1, green: 0, blue: 1, alpha: 1))
+        let innerGlow = viewModel.selectedLayerInnerGlowColor.usingColorSpace(.sRGB)
+        #expect((innerGlow?.redComponent ?? 0) > 0.9)
+        #expect((innerGlow?.blueComponent ?? 0) > 0.9)
+        #expect((innerGlow?.greenComponent ?? 1) < 0.1)
+
+        viewModel.setSelectedLayerColorOverlayColor(NSColor(srgbRed: 1, green: 1, blue: 0, alpha: 1))
+        let overlay = viewModel.selectedLayerColorOverlayColor.usingColorSpace(.sRGB)
+        #expect((overlay?.redComponent ?? 0) > 0.9)
+        #expect((overlay?.greenComponent ?? 0) > 0.9)
+        #expect((overlay?.blueComponent ?? 1) < 0.1)
     }
 
     @Test func layerStylePanelUsesColorPickersForStrokeAndShadow() throws {
@@ -335,8 +400,14 @@ struct ImageEditorScopeTests {
         )
         #expect(source.contains("ColorPicker(\"\", selection: selectedLayerStrokeColorBinding, supportsOpacity: false)"))
         #expect(source.contains("ColorPicker(\"\", selection: selectedLayerShadowColorBinding, supportsOpacity: false)"))
+        #expect(source.contains("ColorPicker(\"\", selection: selectedLayerOuterGlowColorBinding, supportsOpacity: false)"))
+        #expect(source.contains("ColorPicker(\"\", selection: selectedLayerInnerGlowColorBinding, supportsOpacity: false)"))
+        #expect(source.contains("ColorPicker(\"\", selection: selectedLayerColorOverlayColorBinding, supportsOpacity: false)"))
         #expect(source.contains("viewModel.setSelectedLayerStrokeColor(NSColor(value))"))
         #expect(source.contains("viewModel.setSelectedLayerShadowColor(NSColor(value))"))
+        #expect(source.contains("viewModel.setSelectedLayerOuterGlowColor(NSColor(value))"))
+        #expect(source.contains("viewModel.setSelectedLayerInnerGlowColor(NSColor(value))"))
+        #expect(source.contains("viewModel.setSelectedLayerColorOverlayColor(NSColor(value))"))
     }
 
     @MainActor

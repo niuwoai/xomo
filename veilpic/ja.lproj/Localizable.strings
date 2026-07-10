@@ -820,6 +820,9 @@
 "imageEditor.properties.strokePatternScaleValue" = "境界線パターンスケール：%d px";
 "imageEditor.properties.shadowOpacityValue" = "影の不透明度：%d%%";
 "imageEditor.properties.shadowColor" = "影の色";
+"imageEditor.properties.outerGlowColor" = "外側の光彩の色";
+"imageEditor.properties.innerGlowColor" = "内側の光彩の色";
+"imageEditor.properties.colorOverlayColor" = "オーバーレイの色";
 "imageEditor.action.shadowColorFromForeground" = "前景色を使用";
 "imageEditor.properties.shadowBlurValue" = "影のぼかし：%d px";
 "imageEditor.properties.shadowSpreadValue" = "影のスプレッド：%d px";

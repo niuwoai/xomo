@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.435.0 - 2026-07-10
+
+### Added
+- 图片编辑器图层样式属性面板为外发光、内发光和颜色叠加新增内联取色器：此前这三种效果的颜色是写死的默认值（黄/青/红）无法调整，现在可直接选取任意颜色并实时预览。
+
+- 图片编辑器画布新增 ⌘ / ⌥ + 鼠标滚轮缩放：复用已有触控板捏合缩放的 `magnifyCanvas(_:at:viewportSize:)` 锚定数学，缩放围绕光标位置锚定；每个离散滚轮 tick 结束一次缩放会话，保证连续滚动正确叠加。滚轮缩放通过透明的 AppKit 承载视图 + 本地 `scrollWheel` 监听实现，作用域严格限制在编辑器窗口且光标落在画布视口内，避免主窗口误触发；捕获层对点击完全透明，不影响画布点击、绘制和拖拽平移。
+
+### Tooling / Tests
+- 新增 `scripts/run_tests_isolated.rb`：逐测试独立 `xcodebuild` 进程运行 `veilpicTests`，规避 Swift Testing 并行时踩坏 AppKit 进程级绘图 / 命名色彩空间状态导致的像素测试假失败，输出 JSON + Markdown 报告，支持 `--jobs`、`--filter`、`--skip-build`、`--fail-fast`。详见 `product-overview.md` 的「测试运行注意事项」。
+
 ## 1.434.0 - 2026-07-10
 
 ### Added

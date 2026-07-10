@@ -820,6 +820,9 @@
 "imageEditor.properties.strokePatternScaleValue" = "描边图案缩放：%d px";
 "imageEditor.properties.shadowOpacityValue" = "投影不透明度：%d%%";
 "imageEditor.properties.shadowColor" = "投影颜色";
+"imageEditor.properties.outerGlowColor" = "外发光颜色";
+"imageEditor.properties.innerGlowColor" = "内发光颜色";
+"imageEditor.properties.colorOverlayColor" = "叠加颜色";
 "imageEditor.action.shadowColorFromForeground" = "使用前景色";
 "imageEditor.properties.shadowBlurValue" = "投影模糊：%d px";
 "imageEditor.properties.shadowSpreadValue" = "投影扩展：%d px";

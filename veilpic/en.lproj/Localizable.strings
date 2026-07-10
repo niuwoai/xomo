@@ -820,6 +820,9 @@
 "imageEditor.properties.strokePatternScaleValue" = "Stroke Pattern Scale: %d px";
 "imageEditor.properties.shadowOpacityValue" = "Shadow Opacity: %d%%";
 "imageEditor.properties.shadowColor" = "Shadow Color";
+"imageEditor.properties.outerGlowColor" = "Outer Glow Color";
+"imageEditor.properties.innerGlowColor" = "Inner Glow Color";
+"imageEditor.properties.colorOverlayColor" = "Overlay Color";
 "imageEditor.action.shadowColorFromForeground" = "Use Foreground";
 "imageEditor.properties.shadowBlurValue" = "Shadow Blur: %d px";
 "imageEditor.properties.shadowSpreadValue" = "Shadow Spread: %d px";
