@@ -1028,9 +1028,11 @@
 "imageEditor.history.layerMaskAdd" = "レイヤーマスクを追加";
 "imageEditor.history.layerMaskAddSelected" = "選択レイヤーにレイヤーマスクを追加";
 "imageEditor.history.layerMaskFromSelection" = "選択範囲からレイヤーマスクを追加";
+"imageEditor.history.layerMaskFromSelectionSelected" = "選択範囲から選択レイヤーにマスクを追加";
 "imageEditor.history.layerMaskHideAll" = "すべて隠すレイヤーマスクを追加";
 "imageEditor.history.layerMaskHideAllSelected" = "選択レイヤーにすべて隠すマスクを追加";
 "imageEditor.history.layerMaskHideSelection" = "選択範囲を隠すレイヤーマスクを追加";
+"imageEditor.history.layerMaskHideSelectionSelected" = "選択レイヤーに選択範囲を隠すマスクを追加";
 "imageEditor.history.layerMaskApply" = "レイヤーマスクを適用";
 "imageEditor.history.layerMaskApplySelected" = "選択レイヤーマスクを適用";
 "imageEditor.history.layerMaskInvert" = "レイヤーマスクを反転";
@@ -1333,10 +1335,12 @@
 "imageEditor.status.historySnapshotNameInvalid" = "スナップショット名は空にできません";
 "imageEditor.status.noLayerMask" = "選択中のレイヤーにマスクがありません";
 "imageEditor.status.layerMaskFromSelection" = "現在の選択範囲からレイヤーマスクを作成しました";
+"imageEditor.status.layerMaskFromSelectionSelected" = "現在の選択範囲から%d個のレイヤーにマスクを作成しました";
 "imageEditor.status.layerMaskHideAll" = "すべて隠すレイヤーマスクを作成しました";
 "imageEditor.status.layerMaskAddedSelected" = "%d個のレイヤーマスクを追加しました";
 "imageEditor.status.layerMaskHideAllSelected" = "%d個のすべて隠すレイヤーマスクを追加しました";
 "imageEditor.status.layerMaskHideSelection" = "選択範囲を隠すレイヤーマスクを作成しました";
+"imageEditor.status.layerMaskHideSelectionSelected" = "%d個の選択範囲を隠すレイヤーマスクを作成しました";
 "imageEditor.status.layerMaskApplied" = "レイヤーマスクをレイヤー内容に適用しました";
 "imageEditor.status.layerMaskAppliedSelected" = "%d個のレイヤーマスクをレイヤー内容に適用しました";
 "imageEditor.status.layerMaskDeleted" = "レイヤーマスクを削除しました";

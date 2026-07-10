@@ -61,11 +61,8 @@ fileprivate enum ImageEditorLayerMaskSelectionCombination {
 @MainActor
 extension ImageEditorViewModel {
     var canCreateLayerMaskFromSelection: Bool {
-        guard selectedLayerCount == 1,
-              hasSelection,
-              let layer = document.selectedLayer
-        else { return false }
-        return !document.isEffectivelyLocked(layer) && layer.mask == nil
+        guard let selection = document.selection else { return false }
+        return !layerMaskCreationOperations(selection, hidingSelection: false).isEmpty
     }
 
     var canCreateVectorMaskFromSelection: Bool {
@@ -144,23 +141,29 @@ extension ImageEditorViewModel {
             statusText = L10n.text("imageEditor.status.noSelection")
             return
         }
-        guard canCreateLayerMaskFromSelection,
-              let index = document.selectedLayerIndex,
-              let mask = selectionMaskForLayer(selection, layer: document.layers[index])
-        else {
+        let operations = layerMaskCreationOperations(selection, hidingSelection: false)
+        guard !operations.isEmpty else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
 
         pushUndo()
-        document.layers[index].mask = mask
-        document.layers[index].isMaskEnabled = true
-        document.layers[index].isMaskLinked = true
-        document.layers[index].maskDensity = 1
-        document.layers[index].maskFeather = 0
+        for operation in operations {
+            document.layers[operation.index].mask = operation.mask
+            document.layers[operation.index].isMaskEnabled = true
+            document.layers[operation.index].isMaskLinked = true
+            document.layers[operation.index].maskDensity = 1
+            document.layers[operation.index].maskFeather = 0
+        }
         isEditingLayerMask = true
-        appendHistory(L10n.text("imageEditor.history.layerMaskFromSelection"))
-        statusText = L10n.text("imageEditor.status.layerMaskFromSelection")
+
+        if operations.count == 1 {
+            appendHistory(L10n.text("imageEditor.history.layerMaskFromSelection"))
+            statusText = L10n.text("imageEditor.status.layerMaskFromSelection")
+        } else {
+            appendHistory(L10n.text("imageEditor.history.layerMaskFromSelectionSelected"))
+            statusText = L10n.format("imageEditor.status.layerMaskFromSelectionSelected", operations.count)
+        }
     }
 
     func addVectorMaskFromSelection() {
@@ -216,24 +219,29 @@ extension ImageEditorViewModel {
             statusText = L10n.text("imageEditor.status.noSelection")
             return
         }
-        guard canCreateLayerMaskFromSelection,
-              let index = document.selectedLayerIndex,
-              let selectionMask = selectionMaskForLayer(selection, layer: document.layers[index]),
-              let invertedMask = selectionMask.invertedAlphaMask()
-        else {
+        let operations = layerMaskCreationOperations(selection, hidingSelection: true)
+        guard !operations.isEmpty else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
 
         pushUndo()
-        document.layers[index].mask = invertedMask
-        document.layers[index].isMaskEnabled = true
-        document.layers[index].isMaskLinked = true
-        document.layers[index].maskDensity = 1
-        document.layers[index].maskFeather = 0
+        for operation in operations {
+            document.layers[operation.index].mask = operation.mask
+            document.layers[operation.index].isMaskEnabled = true
+            document.layers[operation.index].isMaskLinked = true
+            document.layers[operation.index].maskDensity = 1
+            document.layers[operation.index].maskFeather = 0
+        }
         isEditingLayerMask = true
-        appendHistory(L10n.text("imageEditor.history.layerMaskHideSelection"))
-        statusText = L10n.text("imageEditor.status.layerMaskHideSelection")
+
+        if operations.count == 1 {
+            appendHistory(L10n.text("imageEditor.history.layerMaskHideSelection"))
+            statusText = L10n.text("imageEditor.status.layerMaskHideSelection")
+        } else {
+            appendHistory(L10n.text("imageEditor.history.layerMaskHideSelectionSelected"))
+            statusText = L10n.format("imageEditor.status.layerMaskHideSelectionSelected", operations.count)
+        }
     }
 
     func copyLayerMaskToSelectedLayers() {
@@ -705,6 +713,26 @@ extension ImageEditorViewModel {
                   let output = mask.combinedAlphaMask(with: selectionMask, combination: combination)
             else { return nil }
             return (index, output)
+        }
+    }
+
+    private func layerMaskCreationOperations(
+        _ selection: ImageEditorSelection,
+        hidingSelection: Bool
+    ) -> [(index: Int, mask: NSImage)] {
+        let selectedIDs = document.selectedLayerIDs.isEmpty
+            ? Set(document.selectedLayerID.map { [$0] } ?? [])
+            : document.selectedLayerIDs
+        return document.layers.indices.compactMap { index in
+            let layer = document.layers[index]
+            guard selectedIDs.contains(layer.id),
+                  !document.isEffectivelyLocked(layer),
+                  layer.mask == nil,
+                  let selectionMask = selectionMaskForLayer(selection, layer: layer)
+            else { return nil }
+            let mask = hidingSelection ? selectionMask.invertedAlphaMask() : selectionMask
+            guard let mask else { return nil }
+            return (index, mask)
         }
     }
 

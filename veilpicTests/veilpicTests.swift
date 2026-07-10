@@ -3301,6 +3301,67 @@ struct veilpicTests {
     }
 
     @MainActor
+    @Test func imageEditorCreatesLayerMasksFromSelectionOnMultipleSelectedLayers() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        let firstLayer = ImageEditorLayer.blank(name: "First Layer", size: canvasSize)
+        let secondLayer = ImageEditorLayer.blank(name: "Second Layer", size: canvasSize)
+        var existingMaskLayer = ImageEditorLayer.blank(name: "Existing Mask", size: canvasSize)
+        existingMaskLayer.mask = NSImage.opaqueMask(size: canvasSize)
+        var lockedLayer = ImageEditorLayer.blank(name: "Locked Layer", size: canvasSize)
+        lockedLayer.isLocked = true
+
+        let firstLayerID = firstLayer.id
+        let secondLayerID = secondLayer.id
+        let existingMaskLayerID = existingMaskLayer.id
+        let lockedLayerID = lockedLayer.id
+        viewModel.document.layers = [viewModel.document.layers[0], firstLayer, secondLayer, existingMaskLayer, lockedLayer]
+        viewModel.document.selectedLayerID = secondLayerID
+        viewModel.document.selectedLayerIDs = [firstLayerID, secondLayerID, existingMaskLayerID, lockedLayerID]
+        viewModel.createRectSelection(from: CGPoint(x: 0, y: 0), to: CGPoint(x: 30, y: 30))
+
+        #expect(viewModel.canCreateLayerMaskFromSelection)
+        viewModel.addLayerMaskFromSelection()
+
+        let selectedFirst = try #require(viewModel.document.layers.first { $0.id == firstLayerID })
+        let selectedSecond = try #require(viewModel.document.layers.first { $0.id == secondLayerID })
+        let existingMask = try #require(viewModel.document.layers.first { $0.id == existingMaskLayerID })
+        let skippedLockedLayer = try #require(viewModel.document.layers.first { $0.id == lockedLayerID })
+        let firstMask = try #require(selectedFirst.mask?.alphaMask(width: 80, height: 60))
+        let secondMask = try #require(selectedSecond.mask?.alphaMask(width: 80, height: 60))
+        let existingAlpha = try #require(existingMask.mask?.alphaMask(width: 80, height: 60))
+        #expect(maskAlpha(firstMask, x: 10, y: 10) == 255)
+        #expect(maskAlpha(firstMask, x: 50, y: 10) == 0)
+        #expect(maskAlpha(secondMask, x: 10, y: 10) == 255)
+        #expect(maskAlpha(existingAlpha, x: 50, y: 10) == 255)
+        #expect(skippedLockedLayer.mask == nil)
+        #expect(skippedLockedLayer.isLocked)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerMaskFromSelectionSelected"))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerMaskFromSelectionSelected", 2))
+
+        viewModel.undo()
+        #expect(viewModel.document.layers.first { $0.id == firstLayerID }?.mask == nil)
+        #expect(viewModel.document.layers.first { $0.id == secondLayerID }?.mask == nil)
+
+        viewModel.addLayerMaskHidingSelection()
+        let hiddenFirst = try #require(viewModel.document.layers.first { $0.id == firstLayerID })
+        let hiddenSecond = try #require(viewModel.document.layers.first { $0.id == secondLayerID })
+        let hiddenFirstMask = try #require(hiddenFirst.mask?.alphaMask(width: 80, height: 60))
+        let hiddenSecondMask = try #require(hiddenSecond.mask?.alphaMask(width: 80, height: 60))
+        #expect(maskAlpha(hiddenFirstMask, x: 10, y: 10) == 0)
+        #expect(maskAlpha(hiddenFirstMask, x: 50, y: 10) == 255)
+        #expect(maskAlpha(hiddenSecondMask, x: 10, y: 10) == 0)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerMaskHideSelectionSelected"))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerMaskHideSelectionSelected", 2))
+
+        viewModel.undo()
+        #expect(viewModel.document.layers.first { $0.id == firstLayerID }?.mask == nil)
+        #expect(viewModel.document.layers.first { $0.id == secondLayerID }?.mask == nil)
+    }
+
+    @MainActor
     @Test func imageEditorCopiesPrimaryLayerMaskToSelectedLayers() async throws {
         let canvasSize = NSSize(width: 80, height: 60)
         let image = testImage(color: .systemBlue, size: canvasSize)
