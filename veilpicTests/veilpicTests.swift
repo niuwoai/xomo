@@ -3652,6 +3652,46 @@ struct veilpicTests {
     }
 
     @MainActor
+    @Test func imageEditorLoadsCombinedSelectionFromMultipleLayerTransparencies() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let image = testBitmapImage(size: canvasSize, background: .clear)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        var firstLayer = ImageEditorLayer.blank(name: "First Layer", size: canvasSize)
+        firstLayer.image = testBitmapImage(
+            size: canvasSize,
+            background: .clear,
+            fills: [(CGRect(x: 0, y: 0, width: 20, height: 60), .systemPink)]
+        )
+        var secondLayer = ImageEditorLayer.blank(name: "Second Layer", size: canvasSize)
+        secondLayer.image = testBitmapImage(
+            size: canvasSize,
+            background: .clear,
+            fills: [(CGRect(x: 60, y: 0, width: 20, height: 60), .systemGreen)]
+        )
+
+        let firstLayerID = firstLayer.id
+        let secondLayerID = secondLayer.id
+        viewModel.document.layers = [viewModel.document.layers[0], firstLayer, secondLayer]
+        viewModel.document.selectedLayerID = secondLayerID
+        viewModel.document.selectedLayerIDs = [firstLayerID, secondLayerID]
+
+        #expect(viewModel.canLoadSelectionFromLayerTransparency)
+        viewModel.loadSelectionFromLayerTransparency()
+
+        let selection = try #require(viewModel.document.selection)
+        let mask = try #require(selection.rasterMask)
+        #expect(maskAlpha(mask, x: 10, y: 30) == 255)
+        #expect(maskAlpha(mask, x: 40, y: 30) == 0)
+        #expect(maskAlpha(mask, x: 70, y: 30) == 255)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionFromSelectedLayers"))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.selectionFromSelectedLayers", 2))
+
+        viewModel.undo()
+        #expect(viewModel.document.selection == nil)
+    }
+
+    @MainActor
     @Test func imageEditorCanLoadSelectionFromGroupTransparency() async throws {
         let canvasSize = NSSize(width: 90, height: 70)
         let image = testBitmapImage(size: canvasSize, background: .clear)

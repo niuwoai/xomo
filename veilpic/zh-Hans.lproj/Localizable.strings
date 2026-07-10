@@ -1121,6 +1121,7 @@
 "imageEditor.history.selectionSubtract" = "从选区减去";
 "imageEditor.history.selectionIntersect" = "与选区相交";
 "imageEditor.history.selectionFromLayer" = "从图层载入选区";
+"imageEditor.history.selectionFromSelectedLayers" = "从所选图层载入选区";
 "imageEditor.history.selectionFromPath" = "从路径载入选区";
 "imageEditor.history.selectionColorRange" = "颜色范围选区";
 "imageEditor.history.selectionSimilar" = "选取相似颜色";
@@ -1268,6 +1269,7 @@
 "imageEditor.status.selectionSpecklesRemoved" = "已删除不超过 %d px 的选区噪点";
 "imageEditor.status.selectionEmpty" = "选区结果为空";
 "imageEditor.status.selectionFromLayer" = "已从当前图层透明度载入选区";
+"imageEditor.status.selectionFromSelectedLayers" = "已从 %d 个图层透明度载入选区";
 "imageEditor.status.selectionFromLayerFailed" = "当前图层没有可载入的透明度选区";
 "imageEditor.status.selectionFromPath" = "已从当前路径载入选区";
 "imageEditor.status.selectionColorRangePanel" = "正在调整颜色范围选区";

@@ -1121,6 +1121,7 @@
 "imageEditor.history.selectionSubtract" = "Subtract from Selection";
 "imageEditor.history.selectionIntersect" = "Intersect Selection";
 "imageEditor.history.selectionFromLayer" = "Load Selection from Layer";
+"imageEditor.history.selectionFromSelectedLayers" = "Load Selection from Selected Layers";
 "imageEditor.history.selectionFromPath" = "Load Selection from Path";
 "imageEditor.history.selectionColorRange" = "Color Range Selection";
 "imageEditor.history.selectionSimilar" = "Select Similar Colors";
@@ -1268,6 +1269,7 @@
 "imageEditor.status.selectionSpecklesRemoved" = "Selection speckles up to %d px removed";
 "imageEditor.status.selectionEmpty" = "Selection result is empty";
 "imageEditor.status.selectionFromLayer" = "Selection loaded from current layer transparency";
+"imageEditor.status.selectionFromSelectedLayers" = "Selection loaded from %d layer transparencies";
 "imageEditor.status.selectionFromLayerFailed" = "The current layer has no transparency selection to load";
 "imageEditor.status.selectionFromPath" = "Selection loaded from current path";
 "imageEditor.status.selectionColorRangePanel" = "Adjusting color range selection";

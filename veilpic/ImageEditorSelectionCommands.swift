@@ -11,10 +11,7 @@ import Foundation
 @MainActor
 extension ImageEditorViewModel {
     var canLoadSelectionFromLayerTransparency: Bool {
-        guard selectedLayerCount == 1,
-              let layer = document.selectedLayer
-        else { return false }
-        return !layer.isAdjustment && !layer.isFilter
+        !layerTransparencySelections().isEmpty
     }
 
     var hasSavedSelection: Bool {
@@ -37,15 +34,19 @@ extension ImageEditorViewModel {
     }
 
     func loadSelectionFromLayerTransparency() {
-        guard canLoadSelectionFromLayerTransparency,
-              let index = document.selectedLayerIndex,
-              let selection = transparencySelection(forLayerAt: index)
-        else {
+        let selections = layerTransparencySelections()
+        guard let selection = combinedTransparencySelections(selections) else {
             statusText = L10n.text("imageEditor.status.selectionFromLayerFailed")
             return
         }
 
-        applySelectionCandidate(selection, replaceHistoryKey: "imageEditor.history.selectionFromLayer")
+        let historyKey = selections.count == 1
+            ? "imageEditor.history.selectionFromLayer"
+            : "imageEditor.history.selectionFromSelectedLayers"
+        applySelectionCandidate(selection, replaceHistoryKey: historyKey)
+        if document.selection != nil, selections.count > 1 {
+            statusText = L10n.format("imageEditor.status.selectionFromSelectedLayers", selections.count)
+        }
     }
 
     func saveCurrentSelection() {
@@ -540,6 +541,33 @@ extension ImageEditorViewModel {
             }
         }) else { return nil }
         return image.alphaSelection(threshold: 8)
+    }
+
+    private func layerTransparencySelections() -> [ImageEditorSelection] {
+        let selectedIDs = document.selectedLayerIDs.isEmpty
+            ? Set(document.selectedLayerID.map { [$0] } ?? [])
+            : document.selectedLayerIDs
+        return document.layers.indices.compactMap { index in
+            let layer = document.layers[index]
+            guard selectedIDs.contains(layer.id),
+                  !layer.isAdjustment,
+                  !layer.isFilter
+            else { return nil }
+            return transparencySelection(forLayerAt: index)
+        }
+    }
+
+    private func combinedTransparencySelections(
+        _ selections: [ImageEditorSelection]
+    ) -> ImageEditorSelection? {
+        selections.reduce(nil) { current, candidate in
+            ImageEditorSelection.combined(
+                current: current,
+                candidate: candidate,
+                mode: .add,
+                canvasSize: document.canvasSize
+            )
+        }
     }
 
     private func colorRangeSamples(from selection: ImageEditorSelection) -> [NSColor] {
