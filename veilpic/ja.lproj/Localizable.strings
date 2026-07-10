@@ -330,6 +330,7 @@
 "imageEditor.menu.filter.pixelate" = "ピクセレート";
 "imageEditor.menu.filter.stylize" = "表現手法";
 "imageEditor.menu.filter.distort" = "変形";
+"imageEditor.menu.filter.liquify" = "ゆがみ";
 "imageEditor.menu.filter.other" = "その他";
 "imageEditor.menu.view" = "表示";
 "imageEditor.menu.window" = "ウィンドウ";

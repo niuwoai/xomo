@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.427.0 - 2026-07-10
+
+### Added
+- 图片编辑器 Filter 菜单新增 Liquify 分类入口：Push、Twirl 和 Pucker/Bloat 可直接选择已有液化滤镜并打开属性面板准备参数。
+
 ## 1.426.0 - 2026-07-10
 
 ### Added

@@ -330,6 +330,7 @@
 "imageEditor.menu.filter.pixelate" = "Pixelate";
 "imageEditor.menu.filter.stylize" = "Stylize";
 "imageEditor.menu.filter.distort" = "Distort";
+"imageEditor.menu.filter.liquify" = "Liquify";
 "imageEditor.menu.filter.other" = "Other";
 "imageEditor.menu.view" = "View";
 "imageEditor.menu.window" = "Window";

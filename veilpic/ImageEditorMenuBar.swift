@@ -1323,6 +1323,17 @@ extension ImageEditorView {
                 viewModel.selectFilter(.spherize)
             }
         }
+        Menu(L10n.text("imageEditor.menu.filter.liquify")) {
+            Button(ImageEditorFilter.liquifyPush.title) {
+                viewModel.selectFilter(.liquifyPush)
+            }
+            Button(ImageEditorFilter.liquifyTwirl.title) {
+                viewModel.selectFilter(.liquifyTwirl)
+            }
+            Button(ImageEditorFilter.liquifyPuckerBloat.title) {
+                viewModel.selectFilter(.liquifyPuckerBloat)
+            }
+        }
         Menu(L10n.text("imageEditor.menu.filter.other")) {
             Button(ImageEditorFilter.highPass.title) {
                 viewModel.selectFilter(.highPass)

@@ -764,6 +764,10 @@ struct ImageEditorScopeTests {
         #expect(filterMenuSource.contains("viewModel.selectFilter(.ripple)"))
         #expect(filterMenuSource.contains("viewModel.selectFilter(.pinch)"))
         #expect(filterMenuSource.contains("viewModel.selectFilter(.spherize)"))
+        #expect(filterMenuSource.contains("imageEditor.menu.filter.liquify"))
+        #expect(filterMenuSource.contains("viewModel.selectFilter(.liquifyPush)"))
+        #expect(filterMenuSource.contains("viewModel.selectFilter(.liquifyTwirl)"))
+        #expect(filterMenuSource.contains("viewModel.selectFilter(.liquifyPuckerBloat)"))
         #expect(filterMenuSource.contains("imageEditor.menu.filter.other"))
         #expect(filterMenuSource.contains("viewModel.selectFilter(.highPass)"))
     }

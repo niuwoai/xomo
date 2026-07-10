@@ -330,6 +330,7 @@
 "imageEditor.menu.filter.pixelate" = "像素化";
 "imageEditor.menu.filter.stylize" = "风格化";
 "imageEditor.menu.filter.distort" = "扭曲";
+"imageEditor.menu.filter.liquify" = "液化";
 "imageEditor.menu.filter.other" = "其它";
 "imageEditor.menu.view" = "视图";
 "imageEditor.menu.window" = "窗口";
