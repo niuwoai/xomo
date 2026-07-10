@@ -1039,6 +1039,8 @@
 "imageEditor.history.layerMaskIntersectSelection" = "蒙版与选区相交";
 "imageEditor.history.layerMaskEnable" = "启用图层蒙版";
 "imageEditor.history.layerMaskDisable" = "停用图层蒙版";
+"imageEditor.history.layerMaskEnableSelected" = "启用所选图层蒙版";
+"imageEditor.history.layerMaskDisableSelected" = "停用所选图层蒙版";
 "imageEditor.history.layerMaskLink" = "链接图层蒙版";
 "imageEditor.history.layerMaskUnlink" = "取消链接图层蒙版";
 "imageEditor.history.layerMaskDelete" = "删除图层蒙版";
@@ -1329,6 +1331,8 @@
 "imageEditor.status.layerMaskIntersectSelection" = "已将图层蒙版限制到当前选区";
 "imageEditor.status.layerMaskEnabled" = "已启用当前图层蒙版";
 "imageEditor.status.layerMaskDisabled" = "已停用当前图层蒙版";
+"imageEditor.status.layerMaskEnabledSelected" = "已启用 %d 个图层蒙版";
+"imageEditor.status.layerMaskDisabledSelected" = "已停用 %d 个图层蒙版";
 "imageEditor.status.layerMaskLinked" = "当前图层蒙版会跟随图层内容移动";
 "imageEditor.status.layerMaskUnlinked" = "当前图层蒙版已独立于图层内容移动";
 "imageEditor.status.layerMaskSelection" = "已从图层蒙版载入选区";

@@ -2812,6 +2812,59 @@ struct veilpicTests {
     }
 
     @MainActor
+    @Test func imageEditorTogglesMultipleSelectedLayerMasksAndSkipsLockedLayers() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        var firstLayer = ImageEditorLayer.blank(name: "First Masked", size: canvasSize)
+        firstLayer.mask = NSImage.opaqueMask(size: canvasSize)
+
+        var secondLayer = ImageEditorLayer.blank(name: "Second Masked", size: canvasSize)
+        secondLayer.mask = NSImage.opaqueMask(size: canvasSize)
+
+        var lockedLayer = ImageEditorLayer.blank(name: "Locked Masked", size: canvasSize)
+        lockedLayer.mask = NSImage.opaqueMask(size: canvasSize)
+        lockedLayer.isLocked = true
+
+        let firstLayerID = firstLayer.id
+        let secondLayerID = secondLayer.id
+        let lockedLayerID = lockedLayer.id
+        viewModel.document.layers = [viewModel.document.layers[0], firstLayer, secondLayer, lockedLayer]
+        viewModel.document.selectedLayerID = secondLayerID
+        viewModel.document.selectedLayerIDs = [firstLayerID, secondLayerID, lockedLayerID]
+
+        #expect(viewModel.canToggleLayerMaskEnabled)
+        viewModel.toggleLayerMaskEnabled()
+
+        let disabledFirst = try #require(viewModel.document.layers.first { $0.id == firstLayerID })
+        let disabledSecond = try #require(viewModel.document.layers.first { $0.id == secondLayerID })
+        let skippedLockedLayer = try #require(viewModel.document.layers.first { $0.id == lockedLayerID })
+        #expect(!disabledFirst.isMaskEnabled)
+        #expect(!disabledSecond.isMaskEnabled)
+        #expect(skippedLockedLayer.isMaskEnabled)
+        #expect(skippedLockedLayer.isLocked)
+        #expect(viewModel.document.selectedLayerIDs == [firstLayerID, secondLayerID, lockedLayerID])
+        #expect(viewModel.document.selectedLayerID == secondLayerID)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerMaskDisableSelected"))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerMaskDisabledSelected", 2))
+
+        viewModel.toggleLayerMaskEnabled()
+        let enabledFirst = try #require(viewModel.document.layers.first { $0.id == firstLayerID })
+        let enabledSecond = try #require(viewModel.document.layers.first { $0.id == secondLayerID })
+        #expect(enabledFirst.isMaskEnabled)
+        #expect(enabledSecond.isMaskEnabled)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerMaskEnableSelected"))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerMaskEnabledSelected", 2))
+
+        viewModel.undo()
+        let restoredFirst = try #require(viewModel.document.layers.first { $0.id == firstLayerID })
+        let restoredSecond = try #require(viewModel.document.layers.first { $0.id == secondLayerID })
+        #expect(!restoredFirst.isMaskEnabled)
+        #expect(!restoredSecond.isMaskEnabled)
+    }
+
+    @MainActor
     @Test func imageEditorCombinesExistingLayerMaskWithCurrentSelection() async throws {
         let canvasSize = NSSize(width: 80, height: 60)
         let image = testImage(color: .systemBlue, size: canvasSize)

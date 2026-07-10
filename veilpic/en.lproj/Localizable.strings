@@ -1039,6 +1039,8 @@
 "imageEditor.history.layerMaskIntersectSelection" = "Intersect Layer Mask with Selection";
 "imageEditor.history.layerMaskEnable" = "Enable Layer Mask";
 "imageEditor.history.layerMaskDisable" = "Disable Layer Mask";
+"imageEditor.history.layerMaskEnableSelected" = "Enable Selected Layer Masks";
+"imageEditor.history.layerMaskDisableSelected" = "Disable Selected Layer Masks";
 "imageEditor.history.layerMaskLink" = "Link Layer Mask";
 "imageEditor.history.layerMaskUnlink" = "Unlink Layer Mask";
 "imageEditor.history.layerMaskDelete" = "Delete Layer Mask";
@@ -1329,6 +1331,8 @@
 "imageEditor.status.layerMaskIntersectSelection" = "Layer mask limited to the current selection";
 "imageEditor.status.layerMaskEnabled" = "Current layer mask enabled";
 "imageEditor.status.layerMaskDisabled" = "Current layer mask disabled";
+"imageEditor.status.layerMaskEnabledSelected" = "%d layer masks enabled";
+"imageEditor.status.layerMaskDisabledSelected" = "%d layer masks disabled";
 "imageEditor.status.layerMaskLinked" = "Current layer mask moves with the layer contents";
 "imageEditor.status.layerMaskUnlinked" = "Current layer mask moves independently from layer contents";
 "imageEditor.status.layerMaskSelection" = "Selection loaded from layer mask";
