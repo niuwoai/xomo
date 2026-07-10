@@ -12,6 +12,84 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct ImageEditorFilterTests {
+    @Test func imageEditorBatchAddsUpdatesAndClearsSmartFiltersAcrossEditableSelection() async throws {
+        let canvasSize = NSSize(width: 32, height: 24)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: solidImage(size: canvasSize, color: .black)
+        ) { _ in }
+
+        viewModel.addLayer()
+        let firstID = try #require(viewModel.document.selectedLayerID)
+        viewModel.addLayer()
+        let secondID = try #require(viewModel.document.selectedLayerID)
+        viewModel.addLayer()
+        let lockedID = try #require(viewModel.document.selectedLayerID)
+        viewModel.toggleLayerLock(lockedID)
+        viewModel.addLayerGroup()
+        let groupID = try #require(viewModel.document.selectedLayerID)
+
+        viewModel.selectLayer(firstID)
+        viewModel.selectLayer(secondID, extendingSelection: true)
+        viewModel.selectLayer(lockedID, extendingSelection: true)
+        viewModel.selectLayer(groupID, extendingSelection: true)
+
+        #expect(viewModel.canAddSmartFilterToSelectedLayer)
+        viewModel.selectedFilter = .gaussianBlur
+        viewModel.filterIntensity = 0.35
+        viewModel.addSmartFilterToSelectedLayer()
+
+        var first = try #require(layer(firstID, in: viewModel))
+        var second = try #require(layer(secondID, in: viewModel))
+        var locked = try #require(layer(lockedID, in: viewModel))
+        var group = try #require(layer(groupID, in: viewModel))
+        #expect(first.smartFilters.count == 1)
+        #expect(first.smartFilters.first?.kind == .gaussianBlur)
+        #expect(first.smartFilters.first?.intensity == 0.35)
+        #expect(second.smartFilters.count == 1)
+        #expect(second.smartFilters.first?.kind == .gaussianBlur)
+        #expect(second.smartFilters.first?.intensity == 0.35)
+        #expect(locked.smartFilters.isEmpty)
+        #expect(group.smartFilters.isEmpty)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterAdd"))
+
+        #expect(viewModel.canUpdateLastSmartFilterOnSelectedLayer)
+        viewModel.selectedFilter = .pixelate
+        viewModel.filterIntensity = 0.8
+        viewModel.updateLastSmartFilterOnSelectedLayer()
+
+        first = try #require(layer(firstID, in: viewModel))
+        second = try #require(layer(secondID, in: viewModel))
+        locked = try #require(layer(lockedID, in: viewModel))
+        group = try #require(layer(groupID, in: viewModel))
+        #expect(first.smartFilters.count == 1)
+        #expect(first.smartFilters.first?.kind == .pixelate)
+        #expect(first.smartFilters.first?.intensity == 0.8)
+        #expect(first.smartFilters.first?.isEnabled == true)
+        #expect(second.smartFilters.count == 1)
+        #expect(second.smartFilters.first?.kind == .pixelate)
+        #expect(second.smartFilters.first?.intensity == 0.8)
+        #expect(second.smartFilters.first?.isEnabled == true)
+        #expect(locked.smartFilters.isEmpty)
+        #expect(group.smartFilters.isEmpty)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterUpdate"))
+
+        #expect(viewModel.canClearSmartFiltersFromSelectedLayer)
+        viewModel.clearSmartFiltersFromSelectedLayer()
+
+        first = try #require(layer(firstID, in: viewModel))
+        second = try #require(layer(secondID, in: viewModel))
+        locked = try #require(layer(lockedID, in: viewModel))
+        group = try #require(layer(groupID, in: viewModel))
+        #expect(first.smartFilters.isEmpty)
+        #expect(second.smartFilters.isEmpty)
+        #expect(locked.smartFilters.isEmpty)
+        #expect(group.smartFilters.isEmpty)
+        #expect(!viewModel.canUpdateLastSmartFilterOnSelectedLayer)
+        #expect(!viewModel.canClearSmartFiltersFromSelectedLayer)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterClear"))
+    }
+
     @Test func imageEditorUnsharpMaskFilterLayerAndSmartFilterAreNonDestructive() async throws {
         let canvasSize = NSSize(width: 48, height: 48)
         let sourceImage = softEdgeImage(size: canvasSize)
@@ -1024,6 +1102,10 @@ struct ImageEditorFilterTests {
             color.setFill()
             rect.fill()
         } ?? NSImage.transparent(size: size)
+    }
+
+    private func layer(_ id: UUID, in viewModel: ImageEditorViewModel) -> ImageEditorLayer? {
+        viewModel.document.layers.first { $0.id == id }
     }
 
     private func splitColorImage(size: NSSize, left: NSColor, right: NSColor) -> NSImage {

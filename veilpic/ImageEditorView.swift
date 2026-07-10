@@ -2221,11 +2221,13 @@ struct ImageEditorView: View {
                     }
                     .buttonStyle(EditorTextButtonStyle())
                     .disabled(!viewModel.canAddSmartFilterToSelectedLayer)
-                    if viewModel.selectedLayerHasSmartFilters {
+                    if viewModel.canUpdateLastSmartFilterOnSelectedLayer {
                         Button(L10n.text("imageEditor.action.layerSmartFilterUpdate")) {
                             viewModel.updateLastSmartFilterOnSelectedLayer()
                         }
                         .buttonStyle(EditorTextButtonStyle())
+                    }
+                    if viewModel.canClearSmartFiltersFromSelectedLayer {
                         Button(L10n.text("imageEditor.action.layerSmartFilterClear")) {
                             viewModel.clearSmartFiltersFromSelectedLayer()
                         }

@@ -354,7 +354,7 @@ extension ImageEditorView {
         Button(L10n.text("imageEditor.action.layerSmartFilterClear")) {
             viewModel.clearSmartFiltersFromSelectedLayer()
         }
-        .disabled(!viewModel.selectedLayerHasSmartFilters)
+        .disabled(!viewModel.canClearSmartFiltersFromSelectedLayer)
         Divider()
         Button(L10n.text("imageEditor.action.layerRasterize")) {
             viewModel.rasterizeSelectedLayer()
@@ -1109,7 +1109,7 @@ extension ImageEditorView {
         Button(L10n.text("imageEditor.action.layerSmartFilterUpdate")) {
             viewModel.updateLastSmartFilterOnSelectedLayer()
         }
-        .disabled(!viewModel.selectedLayerHasSmartFilters)
+        .disabled(!viewModel.canUpdateLastSmartFilterOnSelectedLayer)
     }
 
     @ViewBuilder

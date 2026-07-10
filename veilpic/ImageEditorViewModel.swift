@@ -937,11 +937,15 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     var canAddSmartFilterToSelectedLayer: Bool {
-        guard selectedLayerCount == 1,
-              let layer = document.selectedLayer,
-              !document.isEffectivelyPixelsLocked(layer)
-        else { return false }
-        return !layer.isGroup && !layer.isAdjustment && !layer.isFilter
+        !selectedLayerSmartFilterTargetIndices().isEmpty
+    }
+
+    var canUpdateLastSmartFilterOnSelectedLayer: Bool {
+        !selectedLayerSmartFilterUpdateTargetIndices().isEmpty
+    }
+
+    var canClearSmartFiltersFromSelectedLayer: Bool {
+        !selectedLayerSmartFilterClearTargetIndices().isEmpty
     }
 
     var canConvertSelectedLayerToSmartObject: Bool {
@@ -2962,41 +2966,43 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func addSmartFilterToSelectedLayer() {
-        guard canAddSmartFilterToSelectedLayer,
-              let index = document.selectedLayerIndex
-        else {
+        let targetIndices = selectedLayerSmartFilterTargetIndices()
+        guard !targetIndices.isEmpty else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
         pushUndo()
-        let smartFilter = ImageEditorSmartFilter(
-            kind: selectedFilter,
-            intensity: filterIntensity,
-            settings: currentFilterSettings()
-        )
-        document.layers[index].smartFilters.append(smartFilter)
+        for index in targetIndices {
+            let smartFilter = ImageEditorSmartFilter(
+                kind: selectedFilter,
+                intensity: filterIntensity,
+                settings: currentFilterSettings()
+            )
+            document.layers[index].smartFilters.append(smartFilter)
+        }
         appendHistory(L10n.text("imageEditor.history.layerSmartFilterAdd"))
     }
 
     func updateLastSmartFilterOnSelectedLayer() {
-        guard canAddSmartFilterToSelectedLayer,
-              let index = document.selectedLayerIndex,
-              let lastIndex = document.layers[index].smartFilters.indices.last
-        else {
+        let targetIndices = selectedLayerSmartFilterUpdateTargetIndices()
+        guard !targetIndices.isEmpty else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
         pushUndo()
-        document.layers[index].smartFilters[lastIndex].kind = selectedFilter
-        document.layers[index].smartFilters[lastIndex].intensity = filterIntensity
-        document.layers[index].smartFilters[lastIndex].settings = currentFilterSettings()
-        document.layers[index].smartFilters[lastIndex].isEnabled = true
+        for index in targetIndices {
+            guard let lastIndex = document.layers[index].smartFilters.indices.last else { continue }
+            document.layers[index].smartFilters[lastIndex].kind = selectedFilter
+            document.layers[index].smartFilters[lastIndex].intensity = filterIntensity
+            document.layers[index].smartFilters[lastIndex].settings = currentFilterSettings()
+            document.layers[index].smartFilters[lastIndex].isEnabled = true
+        }
         appendHistory(L10n.text("imageEditor.history.layerSmartFilterUpdate"))
     }
 
     func updateSmartFilterOnSelectedLayer(_ filterID: UUID) {
-        guard canAddSmartFilterToSelectedLayer,
-              let (layerIndex, filterIndex) = selectedSmartFilterIndex(filterID)
+        guard let (layerIndex, filterIndex) = selectedSmartFilterIndex(filterID),
+              canEditSmartFilters(on: document.layers[layerIndex])
         else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
@@ -3010,8 +3016,8 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func toggleSmartFilterOnSelectedLayer(_ filterID: UUID) {
-        guard canAddSmartFilterToSelectedLayer,
-              let (layerIndex, filterIndex) = selectedSmartFilterIndex(filterID)
+        guard let (layerIndex, filterIndex) = selectedSmartFilterIndex(filterID),
+              canEditSmartFilters(on: document.layers[layerIndex])
         else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
@@ -3022,8 +3028,8 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func removeSmartFilterFromSelectedLayer(_ filterID: UUID) {
-        guard canAddSmartFilterToSelectedLayer,
-              let (layerIndex, filterIndex) = selectedSmartFilterIndex(filterID)
+        guard let (layerIndex, filterIndex) = selectedSmartFilterIndex(filterID),
+              canEditSmartFilters(on: document.layers[layerIndex])
         else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
@@ -3035,8 +3041,8 @@ final class ImageEditorViewModel: ObservableObject {
 
     func moveSmartFilterOnSelectedLayer(_ filterID: UUID, offset: Int) {
         guard offset != 0,
-              canAddSmartFilterToSelectedLayer,
-              let (layerIndex, filterIndex) = selectedSmartFilterIndex(filterID)
+              let (layerIndex, filterIndex) = selectedSmartFilterIndex(filterID),
+              canEditSmartFilters(on: document.layers[layerIndex])
         else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
@@ -3050,12 +3056,12 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func clearSmartFiltersFromSelectedLayer() {
-        guard canAddSmartFilterToSelectedLayer,
-              let index = document.selectedLayerIndex,
-              !document.layers[index].smartFilters.isEmpty
-        else { return }
+        let targetIndices = selectedLayerSmartFilterClearTargetIndices()
+        guard !targetIndices.isEmpty else { return }
         pushUndo()
-        document.layers[index].smartFilters.removeAll()
+        for index in targetIndices {
+            document.layers[index].smartFilters.removeAll()
+        }
         appendHistory(L10n.text("imageEditor.history.layerSmartFilterClear"))
     }
 
@@ -3692,6 +3698,13 @@ final class ImageEditorViewModel: ObservableObject {
         layer.mask != nil && !document.isEffectivelyLocked(layer)
     }
 
+    private func canEditSmartFilters(on layer: ImageEditorLayer) -> Bool {
+        !layer.isGroup
+            && !layer.isAdjustment
+            && !layer.isFilter
+            && !document.isEffectivelyPixelsLocked(layer)
+    }
+
     private func selectedLayerOpacityTargetIndices() -> [Int] {
         selectedLayerIndices.filter { !document.isEffectivelyLocked(document.layers[$0]) }
     }
@@ -3706,6 +3719,18 @@ final class ImageEditorViewModel: ObservableObject {
 
     private func selectedLayerMaskPropertyTargetIndices() -> [Int] {
         selectedLayerIndices.filter { canSetLayerMaskProperties(document.layers[$0]) }
+    }
+
+    private func selectedLayerSmartFilterTargetIndices() -> [Int] {
+        selectedLayerIndices.filter { canEditSmartFilters(on: document.layers[$0]) }
+    }
+
+    private func selectedLayerSmartFilterUpdateTargetIndices() -> [Int] {
+        selectedLayerSmartFilterTargetIndices().filter { !document.layers[$0].smartFilters.isEmpty }
+    }
+
+    private func selectedLayerSmartFilterClearTargetIndices() -> [Int] {
+        selectedLayerSmartFilterUpdateTargetIndices()
     }
 
     private func selectedLayerBlendModeTargetIndices(for blendMode: ImageEditorBlendMode) -> [Int] {
