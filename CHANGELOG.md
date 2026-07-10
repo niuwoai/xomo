@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.431.0 - 2026-07-10
+
+### Added
+- 图片编辑器补齐经典 `J` 工具快捷键组：修复画笔（Healing Brush）与修补工具（Patch）共享 `J`，按 `Shift + J` 在两者间循环，与 Photoshop 7 工具键位一致。
+
 ## 1.430.0 - 2026-07-10
 
 ### Added
