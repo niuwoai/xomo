@@ -123,13 +123,14 @@ struct ImageEditorScopeTests {
         #expect(shortcuts["pen"] == "p")
         #expect(shortcuts["hand"] == "h")
         #expect(shortcuts["zoom"] == "z")
-        #expect(shortcuts["blur"] == nil)
-        #expect(shortcuts["sharpen"] == nil)
-        #expect(shortcuts["smudge"] == nil)
+        #expect(shortcuts["blur"] == "r")
+        #expect(shortcuts["sharpen"] == "r")
+        #expect(shortcuts["smudge"] == "r")
         #expect(shortcuts["healingBrush"] == "j")
         #expect(shortcuts["patchTool"] == "j")
         #expect(ImageEditorTool.classicShortcutGroup(for: "g")?.tools == [.paintBucket, .gradient])
         #expect(ImageEditorTool.classicShortcutGroup(for: "o")?.tools == [.dodge, .burn])
+        #expect(ImageEditorTool.classicShortcutGroup(for: "r")?.tools == [.blur, .sharpen, .smudge])
         #expect(ImageEditorTool.classicShortcutGroup(for: "u")?.tools == [.rectangle, .ellipse])
         #expect(ImageEditorTool.classicShortcutGroup(for: "j")?.tools == [.healingBrush, .patchTool])
         #expect(ImageEditorTool.paintBucket.isClassicShortcutPrimary)
@@ -236,6 +237,15 @@ struct ImageEditorScopeTests {
 
         viewModel.cycleClassicToolShortcut("o")
         #expect(viewModel.selectedTool == .burn)
+
+        viewModel.selectClassicToolShortcut("r")
+        #expect(viewModel.selectedTool == .blur)
+
+        viewModel.cycleClassicToolShortcut("r")
+        #expect(viewModel.selectedTool == .sharpen)
+
+        viewModel.cycleClassicToolShortcut("r")
+        #expect(viewModel.selectedTool == .smudge)
 
         viewModel.selectTool(.brush)
         viewModel.cycleClassicToolShortcut("u")

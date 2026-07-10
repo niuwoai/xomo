@@ -166,6 +166,7 @@ enum ImageEditorTool: String, CaseIterable, Identifiable {
         ImageEditorToolShortcutGroup(key: "s", tools: [.cloneStamp]),
         ImageEditorToolShortcutGroup(key: "j", tools: [.healingBrush, .patchTool]),
         ImageEditorToolShortcutGroup(key: "o", tools: [.dodge, .burn]),
+        ImageEditorToolShortcutGroup(key: "r", tools: [.blur, .sharpen, .smudge]),
         ImageEditorToolShortcutGroup(key: "g", tools: [.paintBucket, .gradient]),
         ImageEditorToolShortcutGroup(key: "i", tools: [.eyedropper]),
         ImageEditorToolShortcutGroup(key: "t", tools: [.text]),
