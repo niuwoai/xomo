@@ -1151,6 +1151,11 @@ final class ImageEditorViewModel: ObservableObject {
         statusText = optionsPanelSummaryText
     }
 
+    func applyOpacityShortcutDigit(_ digit: Int) {
+        let percent = digit == 0 ? 100 : max(1, min(9, digit)) * 10
+        applyOptionsOpacityPreset(percent)
+    }
+
     func applyOptionsHardnessPreset(_ percent: Int) {
         hardness = CGFloat(max(0, min(100, percent))) / 100
         statusText = optionsPanelSummaryText

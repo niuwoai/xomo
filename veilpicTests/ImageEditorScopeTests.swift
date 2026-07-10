@@ -177,6 +177,16 @@ struct ImageEditorScopeTests {
         #expect(brushShortcutSource.contains(".keyboardShortcut(\"[\", modifiers: [.shift])"))
         #expect(brushShortcutSource.contains("viewModel.adjustBrushHardnessShortcut(by: 0.25)"))
         #expect(brushShortcutSource.contains(".keyboardShortcut(\"]\", modifiers: [.shift])"))
+
+        let opacityShortcutStart = try #require(source.range(of: "private var opacityShortcutButtons: some View"))
+        let opacityShortcutEnd = try #require(
+            source[opacityShortcutStart.upperBound...].range(of: "private var colorChips: some View")
+        )
+        let opacityShortcutSource = source[opacityShortcutStart.lowerBound..<opacityShortcutEnd.lowerBound]
+
+        #expect(opacityShortcutSource.contains("ForEach([1, 2, 3, 4, 5, 6, 7, 8, 9, 0], id: \\.self)"))
+        #expect(opacityShortcutSource.contains("viewModel.applyOpacityShortcutDigit(digit)"))
+        #expect(opacityShortcutSource.contains(".keyboardShortcut(KeyEquivalent(Character(String(digit))), modifiers: [])"))
     }
 
     @MainActor
@@ -246,6 +256,25 @@ struct ImageEditorScopeTests {
         viewModel.hardness = 1
         viewModel.adjustBrushHardnessShortcut(by: 0.25)
         #expect(viewModel.hardness == 1)
+    }
+
+    @MainActor
+    @Test func classicOpacityDigitShortcutsApplyPhotoshopStylePresets() {
+        let image = NSImage(size: NSSize(width: 80, height: 60))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.applyOpacityShortcutDigit(1)
+        #expect(viewModel.opacity == 0.1)
+        #expect(viewModel.statusText == viewModel.optionsPanelSummaryText)
+
+        viewModel.applyOpacityShortcutDigit(5)
+        #expect(viewModel.opacity == 0.5)
+
+        viewModel.applyOpacityShortcutDigit(9)
+        #expect(viewModel.opacity == 0.9)
+
+        viewModel.applyOpacityShortcutDigit(0)
+        #expect(viewModel.opacity == 1)
     }
 
     @MainActor

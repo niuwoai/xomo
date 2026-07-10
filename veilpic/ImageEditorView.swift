@@ -64,6 +64,7 @@ struct ImageEditorView: View {
         .background(Color(nsColor: ImageEditorTheme.window))
         .background(toolShortcutButtons)
         .background(brushShortcutButtons)
+        .background(opacityShortcutButtons)
         .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
         .onAppear {
             syncLayerNameDraft()
@@ -242,6 +243,22 @@ struct ImageEditorView: View {
             }
             .keyboardShortcut("]", modifiers: [.shift])
             .accessibilityHidden(true)
+        }
+        .frame(width: 0, height: 0)
+        .opacity(0)
+    }
+
+    private var opacityShortcutButtons: some View {
+        Group {
+            ForEach([1, 2, 3, 4, 5, 6, 7, 8, 9, 0], id: \.self) { digit in
+                Button {
+                    viewModel.applyOpacityShortcutDigit(digit)
+                } label: {
+                    EmptyView()
+                }
+                .keyboardShortcut(KeyEquivalent(Character(String(digit))), modifiers: [])
+                .accessibilityHidden(true)
+            }
         }
         .frame(width: 0, height: 0)
         .opacity(0)
