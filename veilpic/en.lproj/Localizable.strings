@@ -1088,6 +1088,8 @@
 "imageEditor.history.pathFromSelection" = "Create Path from Selection";
 "imageEditor.history.vectorMaskEnable" = "Enable Vector Mask";
 "imageEditor.history.vectorMaskDisable" = "Disable Vector Mask";
+"imageEditor.history.vectorMaskEnableSelected" = "Enable Selected Vector Masks";
+"imageEditor.history.vectorMaskDisableSelected" = "Disable Selected Vector Masks";
 "imageEditor.history.vectorMaskCopy" = "Copy Vector Mask";
 "imageEditor.history.vectorMaskDelete" = "Delete Vector Mask";
 "imageEditor.history.vectorMaskEditPath" = "Edit Vector Mask Path";
@@ -1280,6 +1282,8 @@
 "imageEditor.status.pathVectorMaskFailed" = "Place a closed path above an editable target layer first";
 "imageEditor.status.vectorMaskEnabled" = "Vector mask enabled";
 "imageEditor.status.vectorMaskDisabled" = "Vector mask disabled";
+"imageEditor.status.vectorMaskEnabledSelected" = "%d vector masks enabled";
+"imageEditor.status.vectorMaskDisabledSelected" = "%d vector masks disabled";
 "imageEditor.status.vectorMaskCopied" = "Vector mask copied to %d layers";
 "imageEditor.status.vectorMaskDeleted" = "Vector mask deleted";
 "imageEditor.status.vectorMaskEditPath" = "Vector mask extracted as editable path";

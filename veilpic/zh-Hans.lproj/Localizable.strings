@@ -1088,6 +1088,8 @@
 "imageEditor.history.pathFromSelection" = "从选区创建路径";
 "imageEditor.history.vectorMaskEnable" = "启用矢量蒙版";
 "imageEditor.history.vectorMaskDisable" = "停用矢量蒙版";
+"imageEditor.history.vectorMaskEnableSelected" = "启用所选矢量蒙版";
+"imageEditor.history.vectorMaskDisableSelected" = "停用所选矢量蒙版";
 "imageEditor.history.vectorMaskCopy" = "复制矢量蒙版";
 "imageEditor.history.vectorMaskDelete" = "删除矢量蒙版";
 "imageEditor.history.vectorMaskEditPath" = "编辑矢量蒙版路径";
@@ -1280,6 +1282,8 @@
 "imageEditor.status.pathVectorMaskFailed" = "请先把闭合路径放在可编辑目标图层上方";
 "imageEditor.status.vectorMaskEnabled" = "已启用矢量蒙版";
 "imageEditor.status.vectorMaskDisabled" = "已停用矢量蒙版";
+"imageEditor.status.vectorMaskEnabledSelected" = "已启用 %d 个矢量蒙版";
+"imageEditor.status.vectorMaskDisabledSelected" = "已停用 %d 个矢量蒙版";
 "imageEditor.status.vectorMaskCopied" = "已将矢量蒙版复制到 %d 个图层";
 "imageEditor.status.vectorMaskDeleted" = "已删除矢量蒙版";
 "imageEditor.status.vectorMaskEditPath" = "已将矢量蒙版抽出为可编辑路径";

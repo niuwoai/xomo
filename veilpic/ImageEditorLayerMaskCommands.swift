@@ -88,10 +88,7 @@ extension ImageEditorViewModel {
     }
 
     var canToggleVectorMaskEnabled: Bool {
-        guard selectedLayerCount == 1,
-              let layer = document.selectedLayer
-        else { return false }
-        return !document.isEffectivelyLocked(layer) && layer.vectorMask != nil
+        !vectorMaskToggleEnabledIndices().isEmpty
     }
 
     var canDeleteVectorMask: Bool {
@@ -473,23 +470,38 @@ extension ImageEditorViewModel {
     }
 
     func toggleVectorMaskEnabled() {
-        guard canToggleVectorMaskEnabled,
-              let index = document.selectedLayerIndex
-        else {
+        let indices = vectorMaskToggleEnabledIndices()
+        guard !indices.isEmpty else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
 
+        let enablesMasks = !indices.contains { document.layers[$0].isVectorMaskEnabled }
+        let changedIndices = indices.filter { document.layers[$0].isVectorMaskEnabled != enablesMasks }
         pushUndo()
-        document.layers[index].isVectorMaskEnabled.toggle()
-        appendHistory(
-            document.layers[index].isVectorMaskEnabled
-                ? L10n.text("imageEditor.history.vectorMaskEnable")
-                : L10n.text("imageEditor.history.vectorMaskDisable")
-        )
-        statusText = document.layers[index].isVectorMaskEnabled
-            ? L10n.text("imageEditor.status.vectorMaskEnabled")
-            : L10n.text("imageEditor.status.vectorMaskDisabled")
+        for index in changedIndices {
+            document.layers[index].isVectorMaskEnabled = enablesMasks
+        }
+
+        if indices.count == 1 {
+            appendHistory(
+                enablesMasks
+                    ? L10n.text("imageEditor.history.vectorMaskEnable")
+                    : L10n.text("imageEditor.history.vectorMaskDisable")
+            )
+            statusText = enablesMasks
+                ? L10n.text("imageEditor.status.vectorMaskEnabled")
+                : L10n.text("imageEditor.status.vectorMaskDisabled")
+        } else {
+            appendHistory(
+                enablesMasks
+                    ? L10n.text("imageEditor.history.vectorMaskEnableSelected")
+                    : L10n.text("imageEditor.history.vectorMaskDisableSelected")
+            )
+            statusText = enablesMasks
+                ? L10n.format("imageEditor.status.vectorMaskEnabledSelected", changedIndices.count)
+                : L10n.format("imageEditor.status.vectorMaskDisabledSelected", changedIndices.count)
+        }
     }
 
     func deleteVectorMask() {
@@ -550,6 +562,18 @@ extension ImageEditorViewModel {
             return selectedIDs.contains(layer.id)
                 && !document.isEffectivelyLocked(layer)
                 && (layer.mask != nil || layer.vectorMask != nil)
+        }
+    }
+
+    private func vectorMaskToggleEnabledIndices() -> [Int] {
+        let selectedIDs = document.selectedLayerIDs.isEmpty
+            ? Set(document.selectedLayerID.map { [$0] } ?? [])
+            : document.selectedLayerIDs
+        return document.layers.indices.filter { index in
+            let layer = document.layers[index]
+            return selectedIDs.contains(layer.id)
+                && !document.isEffectivelyLocked(layer)
+                && layer.vectorMask != nil
         }
     }
 
