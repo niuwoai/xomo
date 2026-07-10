@@ -338,6 +338,7 @@
 "imageEditor.menu.select.transform" = "選択範囲を変形";
 "imageEditor.menu.view.zoomIn" = "ズームイン";
 "imageEditor.menu.view.zoomOut" = "ズームアウト";
+"imageEditor.menu.view.actualPixels" = "実際のピクセル";
 "imageEditor.menu.view.fit" = "画面に合わせる";
 "imageEditor.menu.window.layers" = "レイヤーパネル";
 "imageEditor.menu.window.channels" = "チャンネルパネル";
@@ -1171,6 +1172,7 @@
 "imageEditor.history.adjustmentSelected" = "%@ を選択レイヤーに適用";
 "imageEditor.status.ready" = "%@ · %@ · 準備完了";
 "imageEditor.status.propertiesVisible" = "プロパティパネルは右側に表示されています";
+"imageEditor.status.zoomActualPixels" = "実際のピクセルで表示しています";
 "imageEditor.status.exported" = "%@ を書き出しました";
 "imageEditor.status.exportFailed" = "書き出しに失敗しました";
 "imageEditor.status.exportFailedWithReason" = "書き出しに失敗しました：%@";

@@ -5,8 +5,9 @@
 //  Created by Codex on 2026/7/10.
 //
 
-import Foundation
 import Testing
+import AppKit
+import Foundation
 @testable import musepic
 
 struct ImageEditorScopeTests {
@@ -94,6 +95,28 @@ struct ImageEditorScopeTests {
                 "liquifyPuckerBloat"
             ]
         )
+    }
+
+    @MainActor
+    @Test func imageEditorActualPixelsZoomUsesLastCanvasViewport() {
+        let image = NSImage(size: NSSize(width: 100, height: 50))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let viewportSize = CGSize(width: 400, height: 200)
+        let expectedZoom = 1 / (min(viewportSize.width / image.size.width, viewportSize.height / image.size.height) * 0.74)
+
+        viewModel.updateCanvasViewportSize(viewportSize)
+        viewModel.zoom = 2
+        viewModel.canvasOffset = CGSize(width: 24, height: -12)
+        viewModel.zoomActualPixels()
+
+        #expect(abs(viewModel.zoom - expectedZoom) < 0.0001)
+        #expect(viewModel.canvasOffset == .zero)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.zoomActualPixels"))
+
+        viewModel.fitZoom()
+
+        #expect(viewModel.zoom == 1)
+        #expect(viewModel.canvasOffset == .zero)
     }
 
     @Test func imageEditorDoesNotGrowIntoHeavyExpansionCategories() {

@@ -219,6 +219,12 @@ struct ImageEditorView: View {
                         viewModel.updatePointer(nil)
                     }
                 }
+                .onAppear {
+                    viewModel.updateCanvasViewportSize(geometry.size)
+                }
+                .onChange(of: geometry.size) { _, newSize in
+                    viewModel.updateCanvasViewportSize(newSize)
+                }
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

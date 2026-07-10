@@ -34,6 +34,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var document: ImageEditorDocument
     @Published var selectedTool: ImageEditorTool = .move
     @Published var zoom: CGFloat = 1
+    @Published var canvasViewportSize: CGSize = .zero
     @Published var canvasOffset: CGSize = .zero
     @Published var brushSize: CGFloat = 18
     @Published var opacity: CGFloat = 1
@@ -993,9 +994,46 @@ final class ImageEditorViewModel: ObservableObject {
         zoom = max(zoom / 1.2, 0.08)
     }
 
+    func zoomActualPixels() {
+        guard let targetZoom = actualPixelsZoomFactor(for: canvasViewportSize) else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+        zoom = targetZoom
+        canvasOffset = .zero
+        statusText = L10n.text("imageEditor.status.zoomActualPixels")
+    }
+
     func fitZoom() {
         zoom = 1
         canvasOffset = .zero
+    }
+
+    func updateCanvasViewportSize(_ size: CGSize) {
+        guard size.width.isFinite,
+              size.height.isFinite,
+              size.width > 0,
+              size.height > 0
+        else { return }
+        guard abs(canvasViewportSize.width - size.width) > 0.5 ||
+              abs(canvasViewportSize.height - size.height) > 0.5
+        else { return }
+        canvasViewportSize = size
+    }
+
+    func actualPixelsZoomFactor(for viewportSize: CGSize) -> CGFloat? {
+        let imageSize = currentImage.size
+        guard imageSize.width > 0,
+              imageSize.height > 0,
+              viewportSize.width > 0,
+              viewportSize.height > 0
+        else { return nil }
+        let baseScale = min(
+            viewportSize.width / max(imageSize.width, 1),
+            viewportSize.height / max(imageSize.height, 1)
+        ) * 0.74
+        guard baseScale.isFinite, baseScale > 0 else { return nil }
+        return min(max(1 / baseScale, 0.08), 8)
     }
 
     func nudgeCanvas(by translation: CGSize) {

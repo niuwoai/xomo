@@ -1224,6 +1224,9 @@ extension ImageEditorView {
         Button(L10n.text("imageEditor.menu.view.zoomOut")) {
             viewModel.zoomOut()
         }
+        Button(L10n.text("imageEditor.menu.view.actualPixels")) {
+            viewModel.zoomActualPixels()
+        }
         Button(L10n.text("imageEditor.menu.view.fit")) {
             viewModel.fitZoom()
         }

@@ -338,6 +338,7 @@
 "imageEditor.menu.select.transform" = "Transform Selection";
 "imageEditor.menu.view.zoomIn" = "Zoom In";
 "imageEditor.menu.view.zoomOut" = "Zoom Out";
+"imageEditor.menu.view.actualPixels" = "Actual Pixels";
 "imageEditor.menu.view.fit" = "Fit on Screen";
 "imageEditor.menu.window.layers" = "Layers Panel";
 "imageEditor.menu.window.channels" = "Channels Panel";
@@ -1171,6 +1172,7 @@
 "imageEditor.history.adjustmentSelected" = "Apply %@ to Selected Layers";
 "imageEditor.status.ready" = "%@ · %@ · Ready";
 "imageEditor.status.propertiesVisible" = "The Properties panel is already visible on the right";
+"imageEditor.status.zoomActualPixels" = "Viewing at actual pixels";
 "imageEditor.status.exported" = "Exported %@";
 "imageEditor.status.exportFailed" = "Export failed";
 "imageEditor.status.exportFailedWithReason" = "Export failed: %@";

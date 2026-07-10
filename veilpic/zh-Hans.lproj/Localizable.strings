@@ -338,6 +338,7 @@
 "imageEditor.menu.select.transform" = "变换选区";
 "imageEditor.menu.view.zoomIn" = "放大";
 "imageEditor.menu.view.zoomOut" = "缩小";
+"imageEditor.menu.view.actualPixels" = "实际像素";
 "imageEditor.menu.view.fit" = "适合窗口";
 "imageEditor.menu.window.layers" = "图层面板";
 "imageEditor.menu.window.channels" = "通道面板";
@@ -1171,6 +1172,7 @@
 "imageEditor.history.adjustmentSelected" = "将 %@ 应用到所选图层";
 "imageEditor.status.ready" = "%@ · %@ · 就绪";
 "imageEditor.status.propertiesVisible" = "属性面板已在右侧显示";
+"imageEditor.status.zoomActualPixels" = "已按实际像素显示";
 "imageEditor.status.exported" = "已导出 %@";
 "imageEditor.status.exportFailed" = "导出失败";
 "imageEditor.status.exportFailedWithReason" = "导出失败：%@";
