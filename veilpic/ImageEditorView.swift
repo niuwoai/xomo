@@ -901,6 +901,15 @@ struct ImageEditorView: View {
             )
             .toggleStyle(.checkbox)
 
+            Toggle(
+                L10n.text("imageEditor.action.selectionEdgesVisible"),
+                isOn: Binding(
+                    get: { viewModel.document.areSelectionEdgesVisible },
+                    set: { _ in viewModel.toggleSelectionEdgesVisible() }
+                )
+            )
+            .toggleStyle(.checkbox)
+
             HStack(spacing: 6) {
                 Button(L10n.text("imageEditor.action.guideVerticalCenter")) {
                     viewModel.addVerticalGuideAtCanvasCenter()
@@ -1641,7 +1650,8 @@ struct ImageEditorView: View {
     @ViewBuilder
     private func selectionOverlay(in size: CGSize) -> some View {
         let activeLasso = viewModel.selectedTool == .lasso && dragPoints.count > 1
-        if let selection = viewModel.selection ?? (activeLasso ? ImageEditorSelection.polygon(dragPoints) : nil) {
+        let activeSelection = viewModel.document.areSelectionEdgesVisible ? viewModel.selection : nil
+        if let selection = activeSelection ?? (activeLasso ? ImageEditorSelection.polygon(dragPoints) : nil) {
             Canvas { context, _ in
                 let converted = selection.points.map { viewPoint(from: $0, in: size) }
                 guard let first = converted.first else { return }

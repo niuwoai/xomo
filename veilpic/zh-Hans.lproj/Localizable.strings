@@ -1927,6 +1927,7 @@
 "imageEditor.action.rulersVisible" = "显示标尺";
 "imageEditor.action.guidesVisible" = "显示参考线";
 "imageEditor.action.guidesSnap" = "吸附到参考线";
+"imageEditor.action.selectionEdgesVisible" = "显示选区边缘";
 "imageEditor.action.gridVisible" = "显示网格";
 "imageEditor.action.gridSnap" = "吸附到网格";
 "imageEditor.action.guideVerticalCenter" = "垂直中线";
@@ -1940,6 +1941,7 @@
 "imageEditor.history.guidesClear" = "清理参考线";
 "imageEditor.history.guidesVisibility" = "切换参考线显示";
 "imageEditor.history.guidesSnapping" = "切换参考线吸附";
+"imageEditor.history.selectionEdgesVisibility" = "切换选区边缘显示";
 "imageEditor.history.gridVisibility" = "切换网格显示";
 "imageEditor.history.gridSnapping" = "切换网格吸附";
 "imageEditor.status.guideAdded" = "已添加参考线";
@@ -1953,6 +1955,8 @@
 "imageEditor.status.guidesHidden" = "已隐藏参考线";
 "imageEditor.status.guidesSnappingOn" = "已开启参考线吸附";
 "imageEditor.status.guidesSnappingOff" = "已关闭参考线吸附";
+"imageEditor.status.selectionEdgesVisible" = "已显示选区边缘";
+"imageEditor.status.selectionEdgesHidden" = "已隐藏选区边缘";
 "imageEditor.status.gridVisible" = "已显示网格";
 "imageEditor.status.gridHidden" = "已隐藏网格";
 "imageEditor.status.gridSnappingOn" = "已开启网格吸附";

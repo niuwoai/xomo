@@ -119,6 +119,28 @@ struct ImageEditorScopeTests {
         #expect(viewModel.canvasOffset == .zero)
     }
 
+    @MainActor
+    @Test func imageEditorCanHideSelectionEdgesWithoutClearingSelection() {
+        let image = NSImage(size: NSSize(width: 80, height: 60))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.createRectSelection(from: CGPoint(x: 10, y: 12), to: CGPoint(x: 42, y: 36))
+        let selection = viewModel.document.selection
+
+        viewModel.toggleSelectionEdgesVisible()
+
+        #expect(viewModel.document.selection == selection)
+        #expect(!viewModel.document.areSelectionEdgesVisible)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionEdgesVisibility"))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionEdgesHidden"))
+
+        viewModel.toggleSelectionEdgesVisible()
+
+        #expect(viewModel.document.selection == selection)
+        #expect(viewModel.document.areSelectionEdgesVisible)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionEdgesVisible"))
+    }
+
     @Test func imageEditorDoesNotGrowIntoHeavyExpansionCategories() {
         let blockedFragments = [
             "3d",

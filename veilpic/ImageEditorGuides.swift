@@ -85,6 +85,17 @@ extension ImageEditorViewModel {
         )
     }
 
+    func toggleSelectionEdgesVisible() {
+        pushUndo()
+        document.areSelectionEdgesVisible.toggle()
+        appendHistory(L10n.text("imageEditor.history.selectionEdgesVisibility"))
+        statusText = L10n.text(
+            document.areSelectionEdgesVisible
+                ? "imageEditor.status.selectionEdgesVisible"
+                : "imageEditor.status.selectionEdgesHidden"
+        )
+    }
+
     func toggleGridVisible() {
         pushUndo()
         document.isGridVisible.toggle()
