@@ -412,6 +412,27 @@ struct ImageEditorScopeTests {
         #expect(windowMenuSource.contains("viewModel.toggleStatusBarVisibility()"))
     }
 
+    @Test func viewMenuExposesClassicZoomShortcuts() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
+            encoding: .utf8
+        )
+        let viewMenuStart = try #require(source.range(of: "private var viewMenu: some View"))
+        let nextMenuStart = try #require(
+            source[viewMenuStart.upperBound...].range(of: "private var windowMenu: some View")
+        )
+        let viewMenuSource = source[viewMenuStart.lowerBound..<nextMenuStart.lowerBound]
+
+        #expect(viewMenuSource.contains("viewModel.zoomIn()"))
+        #expect(viewMenuSource.contains(".keyboardShortcut(\"+\", modifiers: [.command])"))
+        #expect(viewMenuSource.contains("viewModel.zoomOut()"))
+        #expect(viewMenuSource.contains(".keyboardShortcut(\"-\", modifiers: [.command])"))
+        #expect(viewMenuSource.contains("viewModel.zoomActualPixels()"))
+        #expect(viewMenuSource.contains(".keyboardShortcut(\"1\", modifiers: [.command])"))
+        #expect(viewMenuSource.contains("viewModel.fitZoom()"))
+        #expect(viewMenuSource.contains(".keyboardShortcut(\"0\", modifiers: [.command])"))
+    }
+
     @Test func windowMenuExposesNavigatorPanelActionsInPhotoshopStyleLocation() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),

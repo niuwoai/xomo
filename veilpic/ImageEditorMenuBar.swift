@@ -1269,15 +1269,19 @@ extension ImageEditorView {
         Button(L10n.text("imageEditor.menu.view.zoomIn")) {
             viewModel.zoomIn()
         }
+        .keyboardShortcut("+", modifiers: [.command])
         Button(L10n.text("imageEditor.menu.view.zoomOut")) {
             viewModel.zoomOut()
         }
+        .keyboardShortcut("-", modifiers: [.command])
         Button(L10n.text("imageEditor.menu.view.actualPixels")) {
             viewModel.zoomActualPixels()
         }
+        .keyboardShortcut("1", modifiers: [.command])
         Button(L10n.text("imageEditor.menu.view.fit")) {
             viewModel.fitZoom()
         }
+        .keyboardShortcut("0", modifiers: [.command])
     }
 
     @ViewBuilder
