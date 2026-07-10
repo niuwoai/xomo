@@ -814,12 +814,34 @@ struct ImageEditorScopeTests {
         #expect(filterMenuSource.contains("viewModel.selectFilter(.ripple)"))
         #expect(filterMenuSource.contains("viewModel.selectFilter(.pinch)"))
         #expect(filterMenuSource.contains("viewModel.selectFilter(.spherize)"))
+        #expect(filterMenuSource.contains("viewModel.selectFilter(.vignette)"))
+        #expect(filterMenuSource.contains("imageEditor.menu.filter.artistic"))
+        #expect(filterMenuSource.contains("viewModel.selectFilter(.oilPaint)"))
         #expect(filterMenuSource.contains("imageEditor.menu.filter.liquify"))
         #expect(filterMenuSource.contains("viewModel.selectFilter(.liquifyPush)"))
         #expect(filterMenuSource.contains("viewModel.selectFilter(.liquifyTwirl)"))
         #expect(filterMenuSource.contains("viewModel.selectFilter(.liquifyPuckerBloat)"))
         #expect(filterMenuSource.contains("imageEditor.menu.filter.other"))
         #expect(filterMenuSource.contains("viewModel.selectFilter(.highPass)"))
+    }
+
+    @Test func filterMenuExposesEveryFilterCase() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
+            encoding: .utf8
+        )
+        let filterMenuStart = try #require(source.range(of: "private var filterMenu: some View"))
+        let nextMenuStart = try #require(
+            source[filterMenuStart.upperBound...].range(of: "private var viewMenu: some View")
+        )
+        let filterMenuSource = source[filterMenuStart.lowerBound..<nextMenuStart.lowerBound]
+
+        for filter in ImageEditorFilter.allCases {
+            #expect(
+                filterMenuSource.contains("viewModel.selectFilter(.\(filter.rawValue))"),
+                "Filter \(filter.rawValue) is missing a menu entry"
+            )
+        }
     }
 
     @Test func editMenuExposesClassicEditingShortcuts() throws {

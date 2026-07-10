@@ -1361,6 +1361,14 @@ extension ImageEditorView {
             Button(ImageEditorFilter.spherize.title) {
                 viewModel.selectFilter(.spherize)
             }
+            Button(ImageEditorFilter.vignette.title) {
+                viewModel.selectFilter(.vignette)
+            }
+        }
+        Menu(L10n.text("imageEditor.menu.filter.artistic")) {
+            Button(ImageEditorFilter.oilPaint.title) {
+                viewModel.selectFilter(.oilPaint)
+            }
         }
         Menu(L10n.text("imageEditor.menu.filter.liquify")) {
             Button(ImageEditorFilter.liquifyPush.title) {

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.432.0 - 2026-07-10
+
+### Added
+- 图片编辑器 Filter 菜单新增 Artistic 分类(Oil Paint),并把 Vignette 接入 Distort 分类;至此引擎支持的每一个滤镜都在菜单中有入口。
+- 新增滤镜菜单完整性测试,遍历所有 `ImageEditorFilter` case 断言其均有菜单入口,防止后续新增滤镜漏挂菜单。
+
 ## 1.431.0 - 2026-07-10
 
 ### Added
