@@ -50,8 +50,10 @@ struct ImageEditorView: View {
                     Divider().overlay(editorBorder)
                 }
                 canvasWorkspace
-                Divider().overlay(editorBorder)
-                rightDock
+                if viewModel.isRightDockVisible {
+                    Divider().overlay(editorBorder)
+                    rightDock
+                }
             }
 
             statusBar
@@ -597,13 +599,27 @@ struct ImageEditorView: View {
 
     private var rightDock: some View {
         VStack(spacing: 0) {
-            navigatorPanel
-            Divider().overlay(editorBorder)
-            historyPanel
-            Divider().overlay(editorBorder)
-            layersPanel
-            Divider().overlay(editorBorder)
-            propertiesPanel
+            if viewModel.isNavigatorPanelVisible {
+                navigatorPanel
+            }
+            if viewModel.isNavigatorPanelVisible && (viewModel.isHistoryPanelVisible || viewModel.isLayersPanelVisible || viewModel.isPropertiesPanelVisible) {
+                Divider().overlay(editorBorder)
+            }
+            if viewModel.isHistoryPanelVisible {
+                historyPanel
+            }
+            if viewModel.isHistoryPanelVisible && (viewModel.isLayersPanelVisible || viewModel.isPropertiesPanelVisible) {
+                Divider().overlay(editorBorder)
+            }
+            if viewModel.isLayersPanelVisible {
+                layersPanel
+            }
+            if viewModel.isLayersPanelVisible && viewModel.isPropertiesPanelVisible {
+                Divider().overlay(editorBorder)
+            }
+            if viewModel.isPropertiesPanelVisible {
+                propertiesPanel
+            }
         }
         .frame(width: 316)
         .background(Color(nsColor: ImageEditorTheme.panel))

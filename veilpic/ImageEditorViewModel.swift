@@ -57,6 +57,10 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var statusText: String = ""
     @Published var areToolsPanelVisible = true
     @Published var isOptionsBarVisible = true
+    @Published var isNavigatorPanelVisible = true
+    @Published var isHistoryPanelVisible = true
+    @Published var isLayersPanelVisible = true
+    @Published var isPropertiesPanelVisible = true
     @Published var pointerText: String = "X: 0 Y: 0"
     @Published var textValue: String = ""
     @Published var textSize: Double = 32
@@ -1065,6 +1069,10 @@ final class ImageEditorViewModel: ObservableObject {
         ImageEditorTool.allCases
     }
 
+    var isRightDockVisible: Bool {
+        isNavigatorPanelVisible || isHistoryPanelVisible || isLayersPanelVisible || isPropertiesPanelVisible
+    }
+
     func resetForegroundBackgroundColors() {
         foregroundColor = .black
         backgroundColor = .white
@@ -1136,6 +1144,26 @@ final class ImageEditorViewModel: ObservableObject {
     func toggleOptionsBarVisibility() {
         isOptionsBarVisible.toggle()
         statusText = L10n.text(isOptionsBarVisible ? "imageEditor.status.optionsBarShown" : "imageEditor.status.optionsBarHidden")
+    }
+
+    func toggleNavigatorPanelVisibility() {
+        isNavigatorPanelVisible.toggle()
+        statusText = L10n.text(isNavigatorPanelVisible ? "imageEditor.status.navigatorPanelShown" : "imageEditor.status.navigatorPanelHidden")
+    }
+
+    func toggleHistoryPanelVisibility() {
+        isHistoryPanelVisible.toggle()
+        statusText = L10n.text(isHistoryPanelVisible ? "imageEditor.status.historyPanelShown" : "imageEditor.status.historyPanelHidden")
+    }
+
+    func toggleLayersPanelVisibility() {
+        isLayersPanelVisible.toggle()
+        statusText = L10n.text(isLayersPanelVisible ? "imageEditor.status.layersPanelShown" : "imageEditor.status.layersPanelHidden")
+    }
+
+    func togglePropertiesPanelVisibility() {
+        isPropertiesPanelVisible.toggle()
+        statusText = L10n.text(isPropertiesPanelVisible ? "imageEditor.status.propertiesPanelShown" : "imageEditor.status.propertiesPanelHidden")
     }
 
     func selectCharacterPanelTool() {

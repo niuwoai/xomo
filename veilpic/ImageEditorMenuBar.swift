@@ -1369,7 +1369,11 @@ extension ImageEditorView {
     private var navigatorActionsMenu: some View {
         Menu(L10n.text("imageEditor.menu.window.navigator")) {
             Button(L10n.text("imageEditor.action.navigatorShowPanel")) {
+                viewModel.isNavigatorPanelVisible = true
                 viewModel.statusText = viewModel.sizeText
+            }
+            Button(L10n.text(viewModel.isNavigatorPanelVisible ? "imageEditor.action.navigatorHidePanel" : "imageEditor.action.navigatorShowPanelVisibility")) {
+                viewModel.toggleNavigatorPanelVisibility()
             }
             Divider()
             Button(L10n.text("imageEditor.menu.view.zoomIn")) {
@@ -1540,7 +1544,11 @@ extension ImageEditorView {
     private var layerActionsMenu: some View {
         Menu(L10n.text("imageEditor.menu.window.layers")) {
             Button(L10n.text("imageEditor.action.layersShowPanel")) {
+                viewModel.isLayersPanelVisible = true
                 selectedLayerPanelTab = .layers
+            }
+            Button(L10n.text(viewModel.isLayersPanelVisible ? "imageEditor.action.layersHidePanel" : "imageEditor.action.layersShowPanelVisibility")) {
+                viewModel.toggleLayersPanelVisibility()
             }
             Divider()
             Button(L10n.text("imageEditor.action.layerNew")) {
@@ -1585,6 +1593,7 @@ extension ImageEditorView {
     private var layerCompActionsMenu: some View {
         Menu(L10n.text("imageEditor.menu.window.layerComps")) {
             Button(L10n.text("imageEditor.action.layerCompsShowPanel")) {
+                viewModel.isLayersPanelVisible = true
                 selectedLayerPanelTab = .comps
             }
             Divider()
@@ -1630,7 +1639,11 @@ extension ImageEditorView {
     private var historyActionsMenu: some View {
         Menu(L10n.text("imageEditor.menu.window.history")) {
             Button(L10n.text("imageEditor.action.historyShowPanel")) {
+                viewModel.isHistoryPanelVisible = true
                 viewModel.statusText = viewModel.historyStateSummary
+            }
+            Button(L10n.text(viewModel.isHistoryPanelVisible ? "imageEditor.action.historyHidePanel" : "imageEditor.action.historyShowPanelVisibility")) {
+                viewModel.toggleHistoryPanelVisibility()
             }
             Divider()
             Button(L10n.text("imageEditor.action.historySnapshotCreate")) {
@@ -1668,7 +1681,11 @@ extension ImageEditorView {
     private var propertiesActionsMenu: some View {
         Menu(L10n.text("imageEditor.menu.window.properties")) {
             Button(L10n.text("imageEditor.action.propertiesShowPanel")) {
+                viewModel.isPropertiesPanelVisible = true
                 viewModel.statusText = L10n.text("imageEditor.status.propertiesVisible")
+            }
+            Button(L10n.text(viewModel.isPropertiesPanelVisible ? "imageEditor.action.propertiesHidePanel" : "imageEditor.action.propertiesShowPanelVisibility")) {
+                viewModel.togglePropertiesPanelVisibility()
             }
             Divider()
             Button(L10n.text("imageEditor.action.applyAdjustment")) {
@@ -1708,6 +1725,7 @@ extension ImageEditorView {
     private var channelActionsMenu: some View {
         Menu(L10n.text("imageEditor.menu.window.channels")) {
             Button(L10n.text("imageEditor.action.channelsShowPanel")) {
+                viewModel.isLayersPanelVisible = true
                 selectedLayerPanelTab = .channels
             }
             Divider()

@@ -351,6 +351,7 @@ struct ImageEditorScopeTests {
 
         #expect(channelMenuSource.contains("imageEditor.menu.window.channels"))
         #expect(channelMenuSource.contains("imageEditor.action.channelsShowPanel"))
+        #expect(channelMenuSource.contains("viewModel.isLayersPanelVisible = true"))
         #expect(channelMenuSource.contains("selectedLayerPanelTab = .channels"))
         #expect(channelMenuSource.contains("imageEditor.menu.window.channels.preview"))
         #expect(channelMenuSource.contains("ImageEditorChannelPreview.allCases"))
@@ -397,6 +398,10 @@ struct ImageEditorScopeTests {
 
         #expect(navigatorMenuSource.contains("imageEditor.menu.window.navigator"))
         #expect(navigatorMenuSource.contains("imageEditor.action.navigatorShowPanel"))
+        #expect(navigatorMenuSource.contains("viewModel.isNavigatorPanelVisible = true"))
+        #expect(navigatorMenuSource.contains("imageEditor.action.navigatorHidePanel"))
+        #expect(navigatorMenuSource.contains("imageEditor.action.navigatorShowPanelVisibility"))
+        #expect(navigatorMenuSource.contains("viewModel.toggleNavigatorPanelVisibility()"))
         #expect(navigatorMenuSource.contains("viewModel.sizeText"))
         #expect(navigatorMenuSource.contains("imageEditor.menu.view.zoomIn"))
         #expect(navigatorMenuSource.contains("viewModel.zoomIn()"))
@@ -538,6 +543,19 @@ struct ImageEditorScopeTests {
         #expect(source.contains("if viewModel.areToolsPanelVisible"))
     }
 
+    @Test func editorChromeConditionallyRendersRightDockPanels() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("if viewModel.isRightDockVisible"))
+        #expect(source.contains("if viewModel.isNavigatorPanelVisible"))
+        #expect(source.contains("if viewModel.isHistoryPanelVisible"))
+        #expect(source.contains("if viewModel.isLayersPanelVisible"))
+        #expect(source.contains("if viewModel.isPropertiesPanelVisible"))
+    }
+
     @MainActor
     @Test func toolsAndOptionsPanelActionsReuseExistingToolSettings() throws {
         let image = NSImage(size: NSSize(width: 16, height: 16))
@@ -593,6 +611,35 @@ struct ImageEditorScopeTests {
 
         #expect(viewModel.isOptionsBarVisible)
         #expect(viewModel.statusText == L10n.text("imageEditor.status.optionsBarShown"))
+    }
+
+    @MainActor
+    @Test func rightDockPanelVisibilityDefaultsOnAndCanToggle() throws {
+        let image = NSImage(size: NSSize(width: 16, height: 16))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        #expect(viewModel.isNavigatorPanelVisible)
+        #expect(viewModel.isHistoryPanelVisible)
+        #expect(viewModel.isLayersPanelVisible)
+        #expect(viewModel.isPropertiesPanelVisible)
+        #expect(viewModel.isRightDockVisible)
+
+        viewModel.toggleNavigatorPanelVisibility()
+        viewModel.toggleHistoryPanelVisibility()
+        viewModel.toggleLayersPanelVisibility()
+        viewModel.togglePropertiesPanelVisibility()
+
+        #expect(!viewModel.isNavigatorPanelVisible)
+        #expect(!viewModel.isHistoryPanelVisible)
+        #expect(!viewModel.isLayersPanelVisible)
+        #expect(!viewModel.isPropertiesPanelVisible)
+        #expect(!viewModel.isRightDockVisible)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.propertiesPanelHidden"))
+
+        viewModel.togglePropertiesPanelVisibility()
+
+        #expect(viewModel.isRightDockVisible)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.propertiesPanelShown"))
     }
 
     @Test func windowMenuExposesSwatchesPanelActionsInPhotoshopStyleLocation() throws {
@@ -801,6 +848,10 @@ struct ImageEditorScopeTests {
 
         #expect(layerMenuSource.contains("imageEditor.menu.window.layers"))
         #expect(layerMenuSource.contains("imageEditor.action.layersShowPanel"))
+        #expect(layerMenuSource.contains("viewModel.isLayersPanelVisible = true"))
+        #expect(layerMenuSource.contains("imageEditor.action.layersHidePanel"))
+        #expect(layerMenuSource.contains("imageEditor.action.layersShowPanelVisibility"))
+        #expect(layerMenuSource.contains("viewModel.toggleLayersPanelVisibility()"))
         #expect(layerMenuSource.contains("selectedLayerPanelTab = .layers"))
         #expect(layerMenuSource.contains("imageEditor.action.layerNew"))
         #expect(layerMenuSource.contains("viewModel.addLayer()"))
@@ -836,6 +887,10 @@ struct ImageEditorScopeTests {
 
         #expect(historyMenuSource.contains("imageEditor.menu.window.history"))
         #expect(historyMenuSource.contains("imageEditor.action.historyShowPanel"))
+        #expect(historyMenuSource.contains("viewModel.isHistoryPanelVisible = true"))
+        #expect(historyMenuSource.contains("imageEditor.action.historyHidePanel"))
+        #expect(historyMenuSource.contains("imageEditor.action.historyShowPanelVisibility"))
+        #expect(historyMenuSource.contains("viewModel.toggleHistoryPanelVisibility()"))
         #expect(historyMenuSource.contains("viewModel.historyStateSummary"))
         #expect(historyMenuSource.contains("imageEditor.action.historySnapshotCreate"))
         #expect(historyMenuSource.contains("viewModel.createHistorySnapshot()"))
@@ -871,6 +926,10 @@ struct ImageEditorScopeTests {
 
         #expect(propertiesMenuSource.contains("imageEditor.menu.window.properties"))
         #expect(propertiesMenuSource.contains("imageEditor.action.propertiesShowPanel"))
+        #expect(propertiesMenuSource.contains("viewModel.isPropertiesPanelVisible = true"))
+        #expect(propertiesMenuSource.contains("imageEditor.action.propertiesHidePanel"))
+        #expect(propertiesMenuSource.contains("imageEditor.action.propertiesShowPanelVisibility"))
+        #expect(propertiesMenuSource.contains("viewModel.togglePropertiesPanelVisibility()"))
         #expect(propertiesMenuSource.contains("imageEditor.status.propertiesVisible"))
         #expect(propertiesMenuSource.contains("imageEditor.action.applyAdjustment"))
         #expect(propertiesMenuSource.contains("viewModel.applyAdjustment()"))
@@ -907,6 +966,7 @@ struct ImageEditorScopeTests {
 
         #expect(layerCompMenuSource.contains("imageEditor.menu.window.layerComps"))
         #expect(layerCompMenuSource.contains("imageEditor.action.layerCompsShowPanel"))
+        #expect(layerCompMenuSource.contains("viewModel.isLayersPanelVisible = true"))
         #expect(layerCompMenuSource.contains("selectedLayerPanelTab = .comps"))
         #expect(layerCompMenuSource.contains("imageEditor.action.layerCompNew"))
         #expect(layerCompMenuSource.contains("viewModel.addLayerComp()"))

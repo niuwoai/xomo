@@ -375,6 +375,8 @@
 "imageEditor.action.optionsHideBar" = "Hide Options Bar";
 "imageEditor.action.optionsShowBar" = "Show Options Bar";
 "imageEditor.action.navigatorShowPanel" = "Show Navigator Panel";
+"imageEditor.action.navigatorHidePanel" = "Hide Navigator Panel";
+"imageEditor.action.navigatorShowPanelVisibility" = "Show Navigator Panel";
 "imageEditor.action.infoShowPanel" = "Show Info Panel";
 "imageEditor.action.histogramShowPanel" = "Show Histogram Panel";
 "imageEditor.action.colorShowPanel" = "Show Color Panel";
@@ -390,8 +392,12 @@
 "imageEditor.action.paragraphShowPanel" = "Show Paragraph Panel";
 "imageEditor.action.stylesShowPanel" = "Show Styles Panel";
 "imageEditor.action.layersShowPanel" = "Show Layers Panel";
+"imageEditor.action.layersHidePanel" = "Hide Layers Panel";
+"imageEditor.action.layersShowPanelVisibility" = "Show Layers Panel";
 "imageEditor.action.layerCompsShowPanel" = "Show Layer Comps Panel";
 "imageEditor.action.historyShowPanel" = "Show History Panel";
+"imageEditor.action.historyHidePanel" = "Hide History Panel";
+"imageEditor.action.historyShowPanelVisibility" = "Show History Panel";
 "imageEditor.action.channelsShowPanel" = "Show Channels Panel";
 "imageEditor.action.cancel" = "Cancel";
 "imageEditor.action.apply" = "Apply to Preview";
@@ -1260,6 +1266,14 @@
 "imageEditor.status.stylesPanelNoLayer" = "No layer selected";
 "imageEditor.stylesPanel.noEffects" = "None";
 "imageEditor.status.propertiesVisible" = "The Properties panel is already visible on the right";
+"imageEditor.status.navigatorPanelShown" = "Navigator panel shown";
+"imageEditor.status.navigatorPanelHidden" = "Navigator panel hidden";
+"imageEditor.status.historyPanelShown" = "History panel shown";
+"imageEditor.status.historyPanelHidden" = "History panel hidden";
+"imageEditor.status.layersPanelShown" = "Layers panel shown";
+"imageEditor.status.layersPanelHidden" = "Layers panel hidden";
+"imageEditor.status.propertiesPanelShown" = "Properties panel shown";
+"imageEditor.status.propertiesPanelHidden" = "Properties panel hidden";
 "imageEditor.status.zoomActualPixels" = "Viewing at actual pixels";
 "imageEditor.status.zoomFitOnScreen" = "Fit on screen";
 "imageEditor.status.exported" = "Exported %@";
@@ -1565,6 +1579,8 @@
 "imageEditor.action.layerGroupCollapse" = "Collapse layer group";
 "imageEditor.action.layerGroupExpand" = "Expand layer group";
 "imageEditor.action.propertiesShowPanel" = "Show Properties Panel";
+"imageEditor.action.propertiesHidePanel" = "Hide Properties Panel";
+"imageEditor.action.propertiesShowPanelVisibility" = "Show Properties Panel";
 "imageEditor.action.layerAdjustmentNew" = "New Adjustment Layer";
 "imageEditor.action.layerAdjustmentUpdate" = "Update Adjustment Layer";
 "imageEditor.action.layerFilterNew" = "New Filter Layer";

@@ -375,6 +375,8 @@
 "imageEditor.action.optionsHideBar" = "隐藏选项栏";
 "imageEditor.action.optionsShowBar" = "显示选项栏";
 "imageEditor.action.navigatorShowPanel" = "显示导航器面板";
+"imageEditor.action.navigatorHidePanel" = "隐藏导航器面板";
+"imageEditor.action.navigatorShowPanelVisibility" = "显示导航器面板";
 "imageEditor.action.infoShowPanel" = "显示信息面板";
 "imageEditor.action.histogramShowPanel" = "显示直方图面板";
 "imageEditor.action.colorShowPanel" = "显示颜色面板";
@@ -390,8 +392,12 @@
 "imageEditor.action.paragraphShowPanel" = "显示段落面板";
 "imageEditor.action.stylesShowPanel" = "显示样式面板";
 "imageEditor.action.layersShowPanel" = "显示图层面板";
+"imageEditor.action.layersHidePanel" = "隐藏图层面板";
+"imageEditor.action.layersShowPanelVisibility" = "显示图层面板";
 "imageEditor.action.layerCompsShowPanel" = "显示图层复合面板";
 "imageEditor.action.historyShowPanel" = "显示历史记录面板";
+"imageEditor.action.historyHidePanel" = "隐藏历史记录面板";
+"imageEditor.action.historyShowPanelVisibility" = "显示历史记录面板";
 "imageEditor.action.channelsShowPanel" = "显示通道面板";
 "imageEditor.action.cancel" = "取消";
 "imageEditor.action.apply" = "应用到预览";
@@ -1260,6 +1266,14 @@
 "imageEditor.status.stylesPanelNoLayer" = "未选择图层";
 "imageEditor.stylesPanel.noEffects" = "无";
 "imageEditor.status.propertiesVisible" = "属性面板已在右侧显示";
+"imageEditor.status.navigatorPanelShown" = "导航器面板已显示";
+"imageEditor.status.navigatorPanelHidden" = "导航器面板已隐藏";
+"imageEditor.status.historyPanelShown" = "历史记录面板已显示";
+"imageEditor.status.historyPanelHidden" = "历史记录面板已隐藏";
+"imageEditor.status.layersPanelShown" = "图层面板已显示";
+"imageEditor.status.layersPanelHidden" = "图层面板已隐藏";
+"imageEditor.status.propertiesPanelShown" = "属性面板已显示";
+"imageEditor.status.propertiesPanelHidden" = "属性面板已隐藏";
 "imageEditor.status.zoomActualPixels" = "已按实际像素显示";
 "imageEditor.status.zoomFitOnScreen" = "已适合窗口显示";
 "imageEditor.status.exported" = "已导出 %@";
@@ -1565,6 +1579,8 @@
 "imageEditor.action.layerGroupCollapse" = "折叠图层组";
 "imageEditor.action.layerGroupExpand" = "展开图层组";
 "imageEditor.action.propertiesShowPanel" = "显示属性面板";
+"imageEditor.action.propertiesHidePanel" = "隐藏属性面板";
+"imageEditor.action.propertiesShowPanelVisibility" = "显示属性面板";
 "imageEditor.action.layerAdjustmentNew" = "新建调整图层";
 "imageEditor.action.layerAdjustmentUpdate" = "更新调整图层";
 "imageEditor.action.layerFilterNew" = "新建滤镜图层";

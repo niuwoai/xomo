@@ -375,6 +375,8 @@
 "imageEditor.action.optionsHideBar" = "オプションバーを隠す";
 "imageEditor.action.optionsShowBar" = "オプションバーを表示";
 "imageEditor.action.navigatorShowPanel" = "ナビゲーターパネルを表示";
+"imageEditor.action.navigatorHidePanel" = "ナビゲーターパネルを隠す";
+"imageEditor.action.navigatorShowPanelVisibility" = "ナビゲーターパネルを表示";
 "imageEditor.action.infoShowPanel" = "情報パネルを表示";
 "imageEditor.action.histogramShowPanel" = "ヒストグラムパネルを表示";
 "imageEditor.action.colorShowPanel" = "カラーパネルを表示";
@@ -390,8 +392,12 @@
 "imageEditor.action.paragraphShowPanel" = "段落パネルを表示";
 "imageEditor.action.stylesShowPanel" = "スタイルパネルを表示";
 "imageEditor.action.layersShowPanel" = "レイヤーパネルを表示";
+"imageEditor.action.layersHidePanel" = "レイヤーパネルを隠す";
+"imageEditor.action.layersShowPanelVisibility" = "レイヤーパネルを表示";
 "imageEditor.action.layerCompsShowPanel" = "レイヤーコンプパネルを表示";
 "imageEditor.action.historyShowPanel" = "履歴パネルを表示";
+"imageEditor.action.historyHidePanel" = "履歴パネルを隠す";
+"imageEditor.action.historyShowPanelVisibility" = "履歴パネルを表示";
 "imageEditor.action.channelsShowPanel" = "チャンネルパネルを表示";
 "imageEditor.action.cancel" = "キャンセル";
 "imageEditor.action.apply" = "プレビューへ適用";
@@ -1260,6 +1266,14 @@
 "imageEditor.status.stylesPanelNoLayer" = "レイヤーが選択されていません";
 "imageEditor.stylesPanel.noEffects" = "なし";
 "imageEditor.status.propertiesVisible" = "プロパティパネルは右側に表示されています";
+"imageEditor.status.navigatorPanelShown" = "ナビゲーターパネルを表示しました";
+"imageEditor.status.navigatorPanelHidden" = "ナビゲーターパネルを隠しました";
+"imageEditor.status.historyPanelShown" = "履歴パネルを表示しました";
+"imageEditor.status.historyPanelHidden" = "履歴パネルを隠しました";
+"imageEditor.status.layersPanelShown" = "レイヤーパネルを表示しました";
+"imageEditor.status.layersPanelHidden" = "レイヤーパネルを隠しました";
+"imageEditor.status.propertiesPanelShown" = "プロパティパネルを表示しました";
+"imageEditor.status.propertiesPanelHidden" = "プロパティパネルを隠しました";
 "imageEditor.status.zoomActualPixels" = "実際のピクセルで表示しています";
 "imageEditor.status.zoomFitOnScreen" = "画面に合わせました";
 "imageEditor.status.exported" = "%@ を書き出しました";
@@ -1565,6 +1579,8 @@
 "imageEditor.action.layerGroupCollapse" = "レイヤーグループを折りたたむ";
 "imageEditor.action.layerGroupExpand" = "レイヤーグループを展開";
 "imageEditor.action.propertiesShowPanel" = "プロパティパネルを表示";
+"imageEditor.action.propertiesHidePanel" = "プロパティパネルを隠す";
+"imageEditor.action.propertiesShowPanelVisibility" = "プロパティパネルを表示";
 "imageEditor.action.layerAdjustmentNew" = "調整レイヤーを作成";
 "imageEditor.action.layerAdjustmentUpdate" = "調整レイヤーを更新";
 "imageEditor.action.layerFilterNew" = "フィルターレイヤーを作成";

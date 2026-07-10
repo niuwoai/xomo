@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.387.0 - 2026-07-10
+
+### Added
+- 图片编辑器 Window 菜单新增 Navigator、History、Layers/Channels/Layer Comps 与 Properties 右侧 dock 面板的显示/隐藏控制，默认保持现有面板可见，全部隐藏时自动收起右侧 dock。
+
 ## 1.386.0 - 2026-07-10
 
 ### Added
