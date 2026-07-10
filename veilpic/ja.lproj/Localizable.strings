@@ -1488,6 +1488,7 @@
 "imageEditor.action.layerLabelNone" = "カラーラベルなし";
 "imageEditor.action.layerGroupCollapse" = "レイヤーグループを折りたたむ";
 "imageEditor.action.layerGroupExpand" = "レイヤーグループを展開";
+"imageEditor.action.propertiesShowPanel" = "プロパティパネルを表示";
 "imageEditor.action.layerAdjustmentNew" = "調整レイヤーを作成";
 "imageEditor.action.layerAdjustmentUpdate" = "調整レイヤーを更新";
 "imageEditor.action.layerFilterNew" = "フィルターレイヤーを作成";

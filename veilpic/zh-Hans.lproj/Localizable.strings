@@ -1488,6 +1488,7 @@
 "imageEditor.action.layerLabelNone" = "无颜色标签";
 "imageEditor.action.layerGroupCollapse" = "折叠图层组";
 "imageEditor.action.layerGroupExpand" = "展开图层组";
+"imageEditor.action.propertiesShowPanel" = "显示属性面板";
 "imageEditor.action.layerAdjustmentNew" = "新建调整图层";
 "imageEditor.action.layerAdjustmentUpdate" = "更新调整图层";
 "imageEditor.action.layerFilterNew" = "新建滤镜图层";

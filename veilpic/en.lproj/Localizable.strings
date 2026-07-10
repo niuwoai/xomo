@@ -1488,6 +1488,7 @@
 "imageEditor.action.layerLabelNone" = "No color label";
 "imageEditor.action.layerGroupCollapse" = "Collapse layer group";
 "imageEditor.action.layerGroupExpand" = "Expand layer group";
+"imageEditor.action.propertiesShowPanel" = "Show Properties Panel";
 "imageEditor.action.layerAdjustmentNew" = "New Adjustment Layer";
 "imageEditor.action.layerAdjustmentUpdate" = "Update Adjustment Layer";
 "imageEditor.action.layerFilterNew" = "New Filter Layer";

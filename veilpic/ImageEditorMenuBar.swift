@@ -1287,9 +1287,7 @@ extension ImageEditorView {
         Divider()
         pathActionsMenu
         Divider()
-        Button(L10n.text("imageEditor.menu.window.properties")) {
-            viewModel.statusText = L10n.text("imageEditor.status.propertiesVisible")
-        }
+        propertiesActionsMenu
     }
 
     @ViewBuilder
@@ -1438,6 +1436,46 @@ extension ImageEditorView {
             Divider()
             Button(L10n.text("imageEditor.action.historyClear")) {
                 viewModel.clearHistoryStates()
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var propertiesActionsMenu: some View {
+        Menu(L10n.text("imageEditor.menu.window.properties")) {
+            Button(L10n.text("imageEditor.action.propertiesShowPanel")) {
+                viewModel.statusText = L10n.text("imageEditor.status.propertiesVisible")
+            }
+            Divider()
+            Button(L10n.text("imageEditor.action.applyAdjustment")) {
+                viewModel.applyAdjustment()
+            }
+            Button(L10n.text("imageEditor.action.layerAdjustmentNew")) {
+                viewModel.addAdjustmentLayer()
+            }
+            Button(L10n.text("imageEditor.action.layerAdjustmentUpdate")) {
+                viewModel.updateSelectedAdjustmentLayer()
+            }
+            .disabled(!viewModel.selectedLayerIsAdjustment)
+            Divider()
+            Button(L10n.text("imageEditor.action.layerFilterNew")) {
+                viewModel.addFilterLayer()
+            }
+            Button(L10n.text("imageEditor.action.layerFilterUpdate")) {
+                viewModel.updateSelectedFilterLayer()
+            }
+            .disabled(!viewModel.selectedLayerIsFilter)
+            Button(L10n.text("imageEditor.action.layerSmartFilterAdd")) {
+                viewModel.addSmartFilterToSelectedLayer()
+            }
+            .disabled(!viewModel.canAddSmartFilterToSelectedLayer)
+            Button(L10n.text("imageEditor.action.layerSmartFilterUpdate")) {
+                viewModel.updateLastSmartFilterOnSelectedLayer()
+            }
+            .disabled(!viewModel.canUpdateLastSmartFilterOnSelectedLayer)
+            Divider()
+            Button(L10n.text("imageEditor.action.addText")) {
+                viewModel.addText()
             }
         }
     }

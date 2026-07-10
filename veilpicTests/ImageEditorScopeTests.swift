@@ -478,6 +478,42 @@ struct ImageEditorScopeTests {
         #expect(historyMenuSource.contains("viewModel.clearHistoryStates()"))
     }
 
+    @Test func windowMenuExposesPropertiesPanelActionsInPhotoshopStyleLocation() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
+            encoding: .utf8
+        )
+        let propertiesMenuStart = try #require(source.range(of: "private var propertiesActionsMenu: some View"))
+        let nextMenuStart = try #require(
+            source[propertiesMenuStart.upperBound...].range(of: "private var channelActionsMenu: some View")
+        )
+        let propertiesMenuSource = source[propertiesMenuStart.lowerBound..<nextMenuStart.lowerBound]
+
+        #expect(propertiesMenuSource.contains("imageEditor.menu.window.properties"))
+        #expect(propertiesMenuSource.contains("imageEditor.action.propertiesShowPanel"))
+        #expect(propertiesMenuSource.contains("imageEditor.status.propertiesVisible"))
+        #expect(propertiesMenuSource.contains("imageEditor.action.applyAdjustment"))
+        #expect(propertiesMenuSource.contains("viewModel.applyAdjustment()"))
+        #expect(propertiesMenuSource.contains("imageEditor.action.layerAdjustmentNew"))
+        #expect(propertiesMenuSource.contains("viewModel.addAdjustmentLayer()"))
+        #expect(propertiesMenuSource.contains("imageEditor.action.layerAdjustmentUpdate"))
+        #expect(propertiesMenuSource.contains("viewModel.updateSelectedAdjustmentLayer()"))
+        #expect(propertiesMenuSource.contains("viewModel.selectedLayerIsAdjustment"))
+        #expect(propertiesMenuSource.contains("imageEditor.action.layerFilterNew"))
+        #expect(propertiesMenuSource.contains("viewModel.addFilterLayer()"))
+        #expect(propertiesMenuSource.contains("imageEditor.action.layerFilterUpdate"))
+        #expect(propertiesMenuSource.contains("viewModel.updateSelectedFilterLayer()"))
+        #expect(propertiesMenuSource.contains("viewModel.selectedLayerIsFilter"))
+        #expect(propertiesMenuSource.contains("imageEditor.action.layerSmartFilterAdd"))
+        #expect(propertiesMenuSource.contains("viewModel.addSmartFilterToSelectedLayer()"))
+        #expect(propertiesMenuSource.contains("viewModel.canAddSmartFilterToSelectedLayer"))
+        #expect(propertiesMenuSource.contains("imageEditor.action.layerSmartFilterUpdate"))
+        #expect(propertiesMenuSource.contains("viewModel.updateLastSmartFilterOnSelectedLayer()"))
+        #expect(propertiesMenuSource.contains("viewModel.canUpdateLastSmartFilterOnSelectedLayer"))
+        #expect(propertiesMenuSource.contains("imageEditor.action.addText"))
+        #expect(propertiesMenuSource.contains("viewModel.addText()"))
+    }
+
     @Test func windowMenuExposesLayerCompPanelActionsInPhotoshopStyleLocation() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
