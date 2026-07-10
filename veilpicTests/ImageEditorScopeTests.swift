@@ -316,6 +316,52 @@ struct ImageEditorScopeTests {
         #expect(layerMenuSource.contains("viewModel.canCutSelectionToNewLayer"))
     }
 
+    @Test func layerMenuExposesClassicLayerShortcuts() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
+            encoding: .utf8
+        )
+        let layerMenuStart = try #require(source.range(of: "private var layerMenu: some View"))
+        let nextMenuStart = try #require(
+            source[layerMenuStart.upperBound...].range(of: "private var layerSelectAttributeMenu: some View")
+        )
+        let layerMenuSource = source[layerMenuStart.lowerBound..<nextMenuStart.lowerBound]
+
+        #expect(layerMenuSource.contains("viewModel.addLayer()"))
+        #expect(layerMenuSource.contains(".keyboardShortcut(\"n\", modifiers: [.command, .shift])"))
+        #expect(layerMenuSource.contains("viewModel.duplicateSelectedLayer()"))
+        #expect(layerMenuSource.contains(".keyboardShortcut(\"j\", modifiers: [.command])"))
+        #expect(layerMenuSource.contains("viewModel.groupSelectedLayer()"))
+        #expect(layerMenuSource.contains(".keyboardShortcut(\"g\", modifiers: [.command])"))
+        #expect(layerMenuSource.contains("viewModel.ungroupSelectedLayers()"))
+        #expect(layerMenuSource.contains(".keyboardShortcut(\"g\", modifiers: [.command, .shift])"))
+        #expect(layerMenuSource.contains("viewModel.mergeSelectedLayerDown()"))
+        #expect(layerMenuSource.contains(".keyboardShortcut(\"e\", modifiers: [.command])"))
+        #expect(layerMenuSource.contains("viewModel.mergeVisibleLayers()"))
+        #expect(layerMenuSource.contains(".keyboardShortcut(\"e\", modifiers: [.command, .shift])"))
+    }
+
+    @Test func layerOrderMenuExposesClassicLayerOrderShortcuts() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
+            encoding: .utf8
+        )
+        let orderMenuStart = try #require(source.range(of: "private var layerOrderMenu: some View"))
+        let nextMenuStart = try #require(
+            source[orderMenuStart.upperBound...].range(of: "private var layerTransformMenu: some View")
+        )
+        let orderMenuSource = source[orderMenuStart.lowerBound..<nextMenuStart.lowerBound]
+
+        #expect(orderMenuSource.contains("viewModel.moveSelectedLayerToTop()"))
+        #expect(orderMenuSource.contains(".keyboardShortcut(\"]\", modifiers: [.command, .shift])"))
+        #expect(orderMenuSource.contains("viewModel.moveSelectedLayerUp()"))
+        #expect(orderMenuSource.contains(".keyboardShortcut(\"]\", modifiers: [.command])"))
+        #expect(orderMenuSource.contains("viewModel.moveSelectedLayerDown()"))
+        #expect(orderMenuSource.contains(".keyboardShortcut(\"[\", modifiers: [.command])"))
+        #expect(orderMenuSource.contains("viewModel.moveSelectedLayerToBottom()"))
+        #expect(orderMenuSource.contains(".keyboardShortcut(\"[\", modifiers: [.command, .shift])"))
+    }
+
     @Test func editMenuExposesClassicEditingShortcuts() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),

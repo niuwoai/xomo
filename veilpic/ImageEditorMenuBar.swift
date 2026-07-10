@@ -237,9 +237,11 @@ extension ImageEditorView {
         Button(L10n.text("imageEditor.action.layerNew")) {
             viewModel.addLayer()
         }
+        .keyboardShortcut("n", modifiers: [.command, .shift])
         Button(L10n.text("imageEditor.action.layerDuplicate")) {
             viewModel.duplicateSelectedLayer()
         }
+        .keyboardShortcut("j", modifiers: [.command])
         .disabled(!viewModel.canDuplicateSelectedLayer)
         Button(L10n.text("imageEditor.action.selectionCopyLayer")) {
             viewModel.copySelectionToNewLayer()
@@ -334,6 +336,7 @@ extension ImageEditorView {
         Button(L10n.text("imageEditor.action.layerGroupSelected")) {
             viewModel.groupSelectedLayer()
         }
+        .keyboardShortcut("g", modifiers: [.command])
         .disabled(!viewModel.canGroupSelectedLayer)
         Button(L10n.text("imageEditor.action.layerSelectGroupMembers")) {
             viewModel.selectSelectedGroupMembers()
@@ -354,6 +357,7 @@ extension ImageEditorView {
         Button(L10n.text("imageEditor.action.layerUngroup")) {
             viewModel.ungroupSelectedLayers()
         }
+        .keyboardShortcut("g", modifiers: [.command, .shift])
         .disabled(!viewModel.canUngroupSelectedLayers)
         Divider()
         layerOrderMenu
@@ -424,6 +428,7 @@ extension ImageEditorView {
         Button(L10n.text("imageEditor.action.layerMergeDown")) {
             viewModel.mergeSelectedLayerDown()
         }
+        .keyboardShortcut("e", modifiers: [.command])
         .disabled(!viewModel.canMergeSelectedLayerDown)
         Button(L10n.text("imageEditor.action.layerMergeSelected")) {
             viewModel.mergeSelectedLayers()
@@ -440,6 +445,7 @@ extension ImageEditorView {
         Button(L10n.text("imageEditor.action.layerMergeVisible")) {
             viewModel.mergeVisibleLayers()
         }
+        .keyboardShortcut("e", modifiers: [.command, .shift])
         .disabled(!viewModel.canMergeVisibleLayers)
         Button(L10n.text("imageEditor.action.layerFlatten")) {
             viewModel.flattenImage()
@@ -516,18 +522,22 @@ extension ImageEditorView {
             Button(L10n.text("imageEditor.action.layerTop")) {
                 viewModel.moveSelectedLayerToTop()
             }
+            .keyboardShortcut("]", modifiers: [.command, .shift])
             .disabled(!viewModel.canMoveSelectedLayerToTop)
             Button(L10n.text("imageEditor.action.layerUp")) {
                 viewModel.moveSelectedLayerUp()
             }
+            .keyboardShortcut("]", modifiers: [.command])
             .disabled(!viewModel.canMoveSelectedLayerUp)
             Button(L10n.text("imageEditor.action.layerDown")) {
                 viewModel.moveSelectedLayerDown()
             }
+            .keyboardShortcut("[", modifiers: [.command])
             .disabled(!viewModel.canMoveSelectedLayerDown)
             Button(L10n.text("imageEditor.action.layerBottom")) {
                 viewModel.moveSelectedLayerToBottom()
             }
+            .keyboardShortcut("[", modifiers: [.command, .shift])
             .disabled(!viewModel.canMoveSelectedLayerToBottom)
         }
     }
