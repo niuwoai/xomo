@@ -1104,6 +1104,7 @@
 "imageEditor.history.vectorMaskRasterize" = "栅格化矢量蒙版";
 "imageEditor.history.vectorMaskRasterizeSelected" = "栅格化所选矢量蒙版";
 "imageEditor.history.vectorMaskFromSelection" = "从选区添加矢量蒙版";
+"imageEditor.history.vectorMaskFromSelectionSelected" = "从选区向所选图层添加矢量蒙版";
 "imageEditor.history.selection" = "建立选区";
 "imageEditor.history.magicSelection" = "魔棒选区";
 "imageEditor.history.selectionAll" = "全选";
@@ -1302,6 +1303,7 @@
 "imageEditor.status.vectorMaskRasterizeFailed" = "请先选择已启用的闭合矢量蒙版";
 "imageEditor.status.vectorMaskEditFailed" = "请先选择带矢量蒙版且可编辑的图层";
 "imageEditor.status.vectorMaskFromSelection" = "已从当前选区创建矢量蒙版";
+"imageEditor.status.vectorMaskFromSelectionSelected" = "已从当前选区在 %d 个图层上创建矢量蒙版";
 "imageEditor.status.vectorMaskFromSelectionFailed" = "当前选区不能创建矢量蒙版";
 "imageEditor.status.layerClippingMaskCreatedSelected" = "已为 %d 个所选图层创建剪贴蒙版";
 "imageEditor.status.layerClippingMaskReleasedSelected" = "已释放 %d 个所选剪贴蒙版";

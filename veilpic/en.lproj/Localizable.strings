@@ -1104,6 +1104,7 @@
 "imageEditor.history.vectorMaskRasterize" = "Rasterize Vector Mask";
 "imageEditor.history.vectorMaskRasterizeSelected" = "Rasterize Selected Vector Masks";
 "imageEditor.history.vectorMaskFromSelection" = "Add Vector Mask from Selection";
+"imageEditor.history.vectorMaskFromSelectionSelected" = "Add Vector Masks from Selection to Selected Layers";
 "imageEditor.history.selection" = "Make Selection";
 "imageEditor.history.magicSelection" = "Magic Wand Selection";
 "imageEditor.history.selectionAll" = "Select All";
@@ -1302,6 +1303,7 @@
 "imageEditor.status.vectorMaskRasterizeFailed" = "Select an enabled closed vector mask first";
 "imageEditor.status.vectorMaskEditFailed" = "Select an editable layer with a vector mask first";
 "imageEditor.status.vectorMaskFromSelection" = "Vector mask created from the current selection";
+"imageEditor.status.vectorMaskFromSelectionSelected" = "Vector masks created from the current selection on %d layers";
 "imageEditor.status.vectorMaskFromSelectionFailed" = "Current selection cannot create a vector mask";
 "imageEditor.status.layerClippingMaskCreatedSelected" = "Created clipping masks for %d selected layers";
 "imageEditor.status.layerClippingMaskReleasedSelected" = "Released %d selected clipping masks";
@@ -1474,7 +1476,7 @@
 "imageEditor.action.vectorMaskCopyToSelected" = "Copy Vector Mask to Selected Layers";
 "imageEditor.action.vectorMaskDelete" = "Delete Vector Masks";
 "imageEditor.action.vectorMaskRasterize" = "Rasterize Vector Masks";
-"imageEditor.action.vectorMaskFromSelection" = "Add Vector Mask from Selection";
+"imageEditor.action.vectorMaskFromSelection" = "Add Vector Masks from Selection";
 "imageEditor.action.vectorMaskSelect" = "Select vector mask layer";
 "imageEditor.action.vectorMaskEditPath" = "Edit Vector Mask Path";
 "imageEditor.action.layerDuplicate" = "Duplicate Layer";

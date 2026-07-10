@@ -66,14 +66,8 @@ extension ImageEditorViewModel {
     }
 
     var canCreateVectorMaskFromSelection: Bool {
-        guard selectedLayerCount == 1,
-              let selection = document.selection,
-              !selection.isInverted,
-              let layer = document.selectedLayer
-        else { return false }
-        return !document.isEffectivelyLocked(layer)
-            && layer.vectorMask == nil
-            && selection.points.count >= 3
+        guard let selection = document.selection else { return false }
+        return !vectorMaskCreationOperations(selection).isEmpty
     }
 
     var canCopyLayerMaskToSelectedLayers: Bool {
@@ -171,20 +165,26 @@ extension ImageEditorViewModel {
             statusText = L10n.text("imageEditor.status.noSelection")
             return
         }
-        guard canCreateVectorMaskFromSelection,
-              let index = document.selectedLayerIndex,
-              let vectorMask = vectorMaskContent(from: selection, layer: document.layers[index])
-        else {
+        let operations = vectorMaskCreationOperations(selection)
+        guard !operations.isEmpty else {
             statusText = L10n.text("imageEditor.status.vectorMaskFromSelectionFailed")
             return
         }
 
         pushUndo()
-        document.layers[index].vectorMask = vectorMask
-        document.layers[index].isVectorMaskEnabled = true
+        for operation in operations {
+            document.layers[operation.index].vectorMask = operation.vectorMask
+            document.layers[operation.index].isVectorMaskEnabled = true
+        }
         isEditingLayerMask = false
-        appendHistory(L10n.text("imageEditor.history.vectorMaskFromSelection"))
-        statusText = L10n.text("imageEditor.status.vectorMaskFromSelection")
+
+        if operations.count == 1 {
+            appendHistory(L10n.text("imageEditor.history.vectorMaskFromSelection"))
+            statusText = L10n.text("imageEditor.status.vectorMaskFromSelection")
+        } else {
+            appendHistory(L10n.text("imageEditor.history.vectorMaskFromSelectionSelected"))
+            statusText = L10n.format("imageEditor.status.vectorMaskFromSelectionSelected", operations.count)
+        }
     }
 
     func addLayerMaskHidingAll() {
@@ -807,6 +807,24 @@ extension ImageEditorViewModel {
             pathAnchors: anchors,
             isPathClosed: true
         ).normalized(size: maskSize(for: layer))
+    }
+
+    private func vectorMaskCreationOperations(
+        _ selection: ImageEditorSelection
+    ) -> [(index: Int, vectorMask: ImageEditorShapeContent)] {
+        guard !selection.isInverted, selection.points.count >= 3 else { return [] }
+        let selectedIDs = document.selectedLayerIDs.isEmpty
+            ? Set(document.selectedLayerID.map { [$0] } ?? [])
+            : document.selectedLayerIDs
+        return document.layers.indices.compactMap { index in
+            let layer = document.layers[index]
+            guard selectedIDs.contains(layer.id),
+                  !document.isEffectivelyLocked(layer),
+                  layer.vectorMask == nil,
+                  let vectorMask = vectorMaskContent(from: selection, layer: layer)
+            else { return nil }
+            return (index, vectorMask)
+        }
     }
 
     private func canvasToMaskPoint(_ point: CGPoint, layer: ImageEditorLayer) -> CGPoint {

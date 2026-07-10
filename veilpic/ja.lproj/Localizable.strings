@@ -1104,6 +1104,7 @@
 "imageEditor.history.vectorMaskRasterize" = "ベクターマスクをラスタライズ";
 "imageEditor.history.vectorMaskRasterizeSelected" = "選択ベクターマスクをラスタライズ";
 "imageEditor.history.vectorMaskFromSelection" = "選択範囲からベクターマスクを追加";
+"imageEditor.history.vectorMaskFromSelectionSelected" = "選択範囲から選択レイヤーにベクターマスクを追加";
 "imageEditor.history.selection" = "選択範囲を作成";
 "imageEditor.history.magicSelection" = "自動選択";
 "imageEditor.history.selectionAll" = "すべてを選択";
@@ -1302,6 +1303,7 @@
 "imageEditor.status.vectorMaskRasterizeFailed" = "有効な閉じたベクターマスクを選択してください";
 "imageEditor.status.vectorMaskEditFailed" = "ベクターマスク付きの編集可能なレイヤーを選択してください";
 "imageEditor.status.vectorMaskFromSelection" = "現在の選択範囲からベクターマスクを作成しました";
+"imageEditor.status.vectorMaskFromSelectionSelected" = "現在の選択範囲から%d個のレイヤーにベクターマスクを作成しました";
 "imageEditor.status.vectorMaskFromSelectionFailed" = "現在の選択範囲からベクターマスクを作成できません";
 "imageEditor.status.layerClippingMaskCreatedSelected" = "%d 個の選択レイヤーにクリッピングマスクを作成しました";
 "imageEditor.status.layerClippingMaskReleasedSelected" = "%d 個の選択クリッピングマスクを解除しました";

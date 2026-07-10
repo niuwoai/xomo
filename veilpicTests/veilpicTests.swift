@@ -3362,6 +3362,63 @@ struct veilpicTests {
     }
 
     @MainActor
+    @Test func imageEditorCreatesVectorMasksFromSelectionOnMultipleSelectedLayers() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        let firstLayer = ImageEditorLayer.blank(name: "First Layer", size: canvasSize)
+        let secondLayer = ImageEditorLayer.blank(name: "Second Layer", size: canvasSize)
+        var existingVectorLayer = ImageEditorLayer.blank(name: "Existing Vector", size: canvasSize)
+        existingVectorLayer.vectorMask = ImageEditorShapeContent(
+            kind: .path,
+            fillColor: .white,
+            fillOpacity: 1,
+            strokeColor: .white,
+            strokeWidth: 1,
+            strokeOpacity: 0,
+            pathPoints: [CGPoint(x: 1, y: 1), CGPoint(x: 2, y: 1), CGPoint(x: 1, y: 2)],
+            isPathClosed: true
+        )
+        var lockedLayer = ImageEditorLayer.blank(name: "Locked Layer", size: canvasSize)
+        lockedLayer.isLocked = true
+
+        let firstLayerID = firstLayer.id
+        let secondLayerID = secondLayer.id
+        let existingVectorLayerID = existingVectorLayer.id
+        let lockedLayerID = lockedLayer.id
+        viewModel.document.layers = [viewModel.document.layers[0], firstLayer, secondLayer, existingVectorLayer, lockedLayer]
+        viewModel.document.selectedLayerID = secondLayerID
+        viewModel.document.selectedLayerIDs = [firstLayerID, secondLayerID, existingVectorLayerID, lockedLayerID]
+        viewModel.createRectSelection(from: CGPoint(x: 0, y: 0), to: CGPoint(x: 30, y: 30))
+
+        #expect(viewModel.canCreateVectorMaskFromSelection)
+        viewModel.addVectorMaskFromSelection()
+
+        let createdFirst = try #require(viewModel.document.layers.first { $0.id == firstLayerID })
+        let createdSecond = try #require(viewModel.document.layers.first { $0.id == secondLayerID })
+        let existingVector = try #require(viewModel.document.layers.first { $0.id == existingVectorLayerID })
+        let skippedLockedLayer = try #require(viewModel.document.layers.first { $0.id == lockedLayerID })
+        #expect(createdFirst.vectorMask?.isPathClosed == true)
+        #expect(createdFirst.vectorMask?.editablePathAnchors.count == 4)
+        #expect(createdSecond.vectorMask?.isPathClosed == true)
+        #expect(createdSecond.vectorMask?.editablePathAnchors.count == 4)
+        #expect(existingVector.vectorMask?.editablePathAnchors.count == 3)
+        #expect(skippedLockedLayer.vectorMask == nil)
+        #expect(skippedLockedLayer.isLocked)
+        #expect(viewModel.document.selectedLayerIDs == [firstLayerID, secondLayerID, existingVectorLayerID, lockedLayerID])
+        #expect(viewModel.document.selectedLayerID == secondLayerID)
+        #expect(!viewModel.isEditingLayerMask)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.vectorMaskFromSelectionSelected"))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.vectorMaskFromSelectionSelected", 2))
+
+        viewModel.undo()
+        #expect(viewModel.document.layers.first { $0.id == firstLayerID }?.vectorMask == nil)
+        #expect(viewModel.document.layers.first { $0.id == secondLayerID }?.vectorMask == nil)
+        #expect(viewModel.document.layers.first { $0.id == existingVectorLayerID }?.vectorMask?.editablePathAnchors.count == 3)
+    }
+
+    @MainActor
     @Test func imageEditorCopiesPrimaryLayerMaskToSelectedLayers() async throws {
         let canvasSize = NSSize(width: 80, height: 60)
         let image = testImage(color: .systemBlue, size: canvasSize)
