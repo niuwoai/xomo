@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.404.0 - 2026-07-10
+
+### Added
+- 图片编辑器新增 `Option + Delete` 前景色填充选区、`Command + Delete` 背景色填充选区快捷键，贴近 Photoshop 7.0 的经典键盘工作流。
+
 ## 1.403.0 - 2026-07-10
 
 ### Added

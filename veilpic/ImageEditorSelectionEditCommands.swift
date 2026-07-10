@@ -42,6 +42,14 @@ extension ImageEditorViewModel {
     }
 
     func fillSelection() {
+        fillSelection(with: foregroundColor)
+    }
+
+    func fillSelectionWithBackgroundColor() {
+        fillSelection(with: backgroundColor)
+    }
+
+    private func fillSelection(with color: NSColor) {
         guard let selection = document.selection else {
             statusText = L10n.text("imageEditor.status.noSelection")
             return
@@ -56,7 +64,7 @@ extension ImageEditorViewModel {
                 selection: selection,
                 layerFrame: layer.frame,
                 canvasSize: document.canvasSize,
-                color: foregroundColor,
+                color: color,
                 opacity: opacity,
                 feather: feather
             ) else { return nil }

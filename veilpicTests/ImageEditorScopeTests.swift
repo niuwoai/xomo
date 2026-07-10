@@ -220,6 +220,10 @@ struct ImageEditorScopeTests {
 
         #expect(selectionEditShortcutSource.contains("viewModel.clearSelectionPixels()"))
         #expect(selectionEditShortcutSource.contains(".keyboardShortcut(.delete, modifiers: [])"))
+        #expect(selectionEditShortcutSource.contains("viewModel.fillSelection()"))
+        #expect(selectionEditShortcutSource.contains(".keyboardShortcut(.delete, modifiers: [.option])"))
+        #expect(selectionEditShortcutSource.contains("viewModel.fillSelectionWithBackgroundColor()"))
+        #expect(selectionEditShortcutSource.contains(".keyboardShortcut(.delete, modifiers: [.command])"))
     }
 
     @MainActor

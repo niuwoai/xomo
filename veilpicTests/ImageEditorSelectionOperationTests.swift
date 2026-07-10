@@ -50,6 +50,25 @@ struct ImageEditorSelectionOperationTests {
         #expect(viewModel.canReselectSelection)
     }
 
+    @Test func imageEditorCanFillSelectionWithBackgroundColorShortcutCommand() async throws {
+        let canvasSize = NSSize(width: 40, height: 30)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: solidImage(color: .systemRed, size: canvasSize)) { _ in }
+
+        viewModel.convertBackgroundToLayer()
+        viewModel.backgroundColor = .systemBlue
+        viewModel.document.selection = ImageEditorSelection.rectangle(CGRect(x: 6, y: 4, width: 16, height: 12))
+
+        viewModel.fillSelectionWithBackgroundColor()
+
+        let filledPixel = try #require(viewModel.document.selectedLayer?.image.color(at: CGPoint(x: 8, y: 6))?.usingColorSpace(.deviceRGB))
+        let retainedPixel = try #require(viewModel.document.selectedLayer?.image.color(at: CGPoint(x: 2, y: 2))?.usingColorSpace(.deviceRGB))
+        #expect(filledPixel.blueComponent > 0.75)
+        #expect(filledPixel.redComponent < 0.25)
+        #expect(retainedPixel.redComponent > 0.75)
+        #expect(retainedPixel.blueComponent < 0.25)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionFillSelected"))
+    }
+
     @Test func imageEditorBatchEditsSelectionPixelsAcrossSelectedPixelLayersAndSkipsLockedOrIneligibleLayers() async throws {
         let canvasSize = NSSize(width: 24, height: 18)
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: solidImage(color: .black, size: canvasSize)) { _ in }

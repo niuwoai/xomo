@@ -323,6 +323,22 @@ struct ImageEditorView: View {
             }
             .keyboardShortcut(.delete, modifiers: [])
             .accessibilityHidden(true)
+
+            Button {
+                viewModel.fillSelection()
+            } label: {
+                EmptyView()
+            }
+            .keyboardShortcut(.delete, modifiers: [.option])
+            .accessibilityHidden(true)
+
+            Button {
+                viewModel.fillSelectionWithBackgroundColor()
+            } label: {
+                EmptyView()
+            }
+            .keyboardShortcut(.delete, modifiers: [.command])
+            .accessibilityHidden(true)
         }
         .frame(width: 0, height: 0)
         .opacity(0)
