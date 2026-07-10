@@ -2483,7 +2483,7 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func rotateClockwise() {
-        transformCanvas(historyTitle: L10n.text("imageEditor.history.rotate")) { layer, canvasSize in
+        transformCanvas(historyTitle: L10n.text("imageEditor.history.rotateClockwise")) { layer, canvasSize in
             guard let rotated = layer.image.rotatedClockwise() else { return nil }
             var output = layer
             output.image = rotated
@@ -2500,6 +2500,44 @@ final class ImageEditorViewModel: ObservableObject {
         } canvasSize: { size in
             CGSize(width: size.height, height: size.width)
         }
+    }
+
+    func rotateCounterclockwise() {
+        transformCanvas(historyTitle: L10n.text("imageEditor.history.rotateCounterclockwise")) { layer, canvasSize in
+            guard let rotated = layer.image.rotated(degrees: -90) else { return nil }
+            var output = layer
+            output.image = rotated
+            output.frame = CGRect(
+                x: layer.frame.minY,
+                y: canvasSize.width - layer.frame.maxX,
+                width: layer.frame.height,
+                height: layer.frame.width
+            )
+            if let mask = layer.mask {
+                output.mask = mask.rotated(degrees: -90)
+            }
+            return output
+        } canvasSize: { size in
+            CGSize(width: size.height, height: size.width)
+        }
+    }
+
+    func rotate180() {
+        transformCanvas(historyTitle: L10n.text("imageEditor.history.rotate180")) { layer, canvasSize in
+            guard let rotated = layer.image.rotated(degrees: 180) else { return nil }
+            var output = layer
+            output.image = rotated
+            output.frame = CGRect(
+                x: canvasSize.width - layer.frame.maxX,
+                y: canvasSize.height - layer.frame.maxY,
+                width: layer.frame.width,
+                height: layer.frame.height
+            )
+            if let mask = layer.mask {
+                output.mask = mask.rotated(degrees: 180)
+            }
+            return output
+        } canvasSize: { $0 }
     }
 
     func flipHorizontal() {

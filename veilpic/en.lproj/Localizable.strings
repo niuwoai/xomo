@@ -375,6 +375,9 @@
 "imageEditor.action.addText" = "Add Text";
 "imageEditor.action.gradient" = "Add Gradient";
 "imageEditor.action.rotate" = "Rotate";
+"imageEditor.action.rotateClockwise" = "Rotate 90° CW";
+"imageEditor.action.rotateCounterclockwise" = "Rotate 90° CCW";
+"imageEditor.action.rotate180" = "Rotate 180°";
 "imageEditor.action.flipH" = "Flip H";
 "imageEditor.action.flipV" = "Flip V";
 "imageEditor.option.size" = "Size";
@@ -916,6 +919,9 @@
 "imageEditor.history.revert" = "Restore History State";
 "imageEditor.history.snapshotRestore" = "Restore History Snapshot";
 "imageEditor.history.rotate" = "Rotate 90°";
+"imageEditor.history.rotateClockwise" = "Rotate 90° CW";
+"imageEditor.history.rotateCounterclockwise" = "Rotate 90° CCW";
+"imageEditor.history.rotate180" = "Rotate 180°";
 "imageEditor.history.flipHorizontal" = "Flip Horizontal";
 "imageEditor.history.flipVertical" = "Flip Vertical";
 "imageEditor.history.crop" = "Crop";

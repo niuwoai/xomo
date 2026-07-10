@@ -375,6 +375,9 @@
 "imageEditor.action.addText" = "文字を追加";
 "imageEditor.action.gradient" = "グラデを重ねる";
 "imageEditor.action.rotate" = "回転";
+"imageEditor.action.rotateClockwise" = "時計回りに 90°回転";
+"imageEditor.action.rotateCounterclockwise" = "反時計回りに 90°回転";
+"imageEditor.action.rotate180" = "180°回転";
 "imageEditor.action.flipH" = "左右反転";
 "imageEditor.action.flipV" = "上下反転";
 "imageEditor.option.size" = "サイズ";
@@ -916,6 +919,9 @@
 "imageEditor.history.revert" = "履歴状態へ戻す";
 "imageEditor.history.snapshotRestore" = "履歴スナップショットを復元";
 "imageEditor.history.rotate" = "90°回転";
+"imageEditor.history.rotateClockwise" = "時計回りに 90°回転";
+"imageEditor.history.rotateCounterclockwise" = "反時計回りに 90°回転";
+"imageEditor.history.rotate180" = "180°回転";
 "imageEditor.history.flipHorizontal" = "左右反転";
 "imageEditor.history.flipVertical" = "上下反転";
 "imageEditor.history.crop" = "切り抜き";

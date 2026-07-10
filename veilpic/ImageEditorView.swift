@@ -3005,7 +3005,7 @@ struct ImageEditorView: View {
                     Button {
                         viewModel.rotateClockwise()
                     } label: {
-                        Label(L10n.text("imageEditor.action.rotate"), systemImage: "rotate.right")
+                        Label(L10n.text("imageEditor.action.rotateClockwise"), systemImage: "rotate.right")
                     }
                     .buttonStyle(EditorTextButtonStyle())
 

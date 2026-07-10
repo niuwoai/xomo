@@ -198,8 +198,14 @@ extension ImageEditorView {
         Button(L10n.text("imageEditor.action.cropCenter")) {
             viewModel.cropCenter()
         }
-        Button(L10n.text("imageEditor.action.rotate")) {
+        Button(L10n.text("imageEditor.action.rotateClockwise")) {
             viewModel.rotateClockwise()
+        }
+        Button(L10n.text("imageEditor.action.rotateCounterclockwise")) {
+            viewModel.rotateCounterclockwise()
+        }
+        Button(L10n.text("imageEditor.action.rotate180")) {
+            viewModel.rotate180()
         }
         Button(L10n.text("imageEditor.action.flipH")) {
             viewModel.flipHorizontal()

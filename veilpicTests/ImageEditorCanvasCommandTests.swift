@@ -136,6 +136,31 @@ struct ImageEditorCanvasCommandTests {
         #expect(viewModel.canUndo)
     }
 
+    @Test
+    func canvasRotationCommandsTransformLayerFramesAndHistory() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: testImage(color: .systemPurple, size: NSSize(width: 100, height: 80))
+        ) { _ in }
+        let layerIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[layerIndex].frame = CGRect(x: 10, y: 12, width: 20, height: 16)
+        viewModel.document.layers[layerIndex].image = NSImage.transparent(size: CGSize(width: 20, height: 16))
+        viewModel.document.layers[layerIndex].mask = NSImage.opaqueMask(size: CGSize(width: 20, height: 16))
+
+        viewModel.rotateCounterclockwise()
+
+        #expect(viewModel.document.canvasSize == CGSize(width: 80, height: 100))
+        #expect(viewModel.document.layers[layerIndex].frame == CGRect(x: 12, y: 70, width: 16, height: 20))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.rotateCounterclockwise"))
+
+        viewModel.undo()
+        viewModel.rotate180()
+
+        #expect(viewModel.document.canvasSize == CGSize(width: 100, height: 80))
+        #expect(viewModel.document.layers[layerIndex].frame == CGRect(x: 70, y: 52, width: 20, height: 16))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.rotate180"))
+    }
+
     private func testImage(color: NSColor, size: NSSize) -> NSImage {
         let image = NSImage(size: size)
         image.lockFocus()

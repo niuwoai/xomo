@@ -375,6 +375,9 @@
 "imageEditor.action.addText" = "添加文字";
 "imageEditor.action.gradient" = "叠加渐变";
 "imageEditor.action.rotate" = "旋转";
+"imageEditor.action.rotateClockwise" = "顺时针旋转 90°";
+"imageEditor.action.rotateCounterclockwise" = "逆时针旋转 90°";
+"imageEditor.action.rotate180" = "旋转 180°";
 "imageEditor.action.flipH" = "水平翻转";
 "imageEditor.action.flipV" = "垂直翻转";
 "imageEditor.option.size" = "大小";
@@ -916,6 +919,9 @@
 "imageEditor.history.revert" = "回到历史状态";
 "imageEditor.history.snapshotRestore" = "恢复历史快照";
 "imageEditor.history.rotate" = "旋转 90°";
+"imageEditor.history.rotateClockwise" = "顺时针旋转 90°";
+"imageEditor.history.rotateCounterclockwise" = "逆时针旋转 90°";
+"imageEditor.history.rotate180" = "旋转 180°";
 "imageEditor.history.flipHorizontal" = "水平翻转";
 "imageEditor.history.flipVertical" = "垂直翻转";
 "imageEditor.history.crop" = "裁剪";
