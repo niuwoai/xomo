@@ -1289,6 +1289,7 @@ extension ImageEditorView {
         Button(L10n.text(viewModel.isWorkspaceChromeVisible ? "imageEditor.action.workspaceHidePanels" : "imageEditor.action.workspaceShowPanels")) {
             viewModel.toggleWorkspaceChromeVisibility()
         }
+        .keyboardShortcut(.tab, modifiers: [])
         Divider()
         toolsActionsMenu
         optionsActionsMenu

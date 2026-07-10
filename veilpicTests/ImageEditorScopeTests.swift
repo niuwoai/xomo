@@ -402,6 +402,7 @@ struct ImageEditorScopeTests {
         #expect(windowMenuSource.contains("imageEditor.action.workspaceHidePanels"))
         #expect(windowMenuSource.contains("imageEditor.action.workspaceShowPanels"))
         #expect(windowMenuSource.contains("viewModel.toggleWorkspaceChromeVisibility()"))
+        #expect(windowMenuSource.contains(".keyboardShortcut(.tab, modifiers: [])"))
     }
 
     @Test func windowMenuExposesNavigatorPanelActionsInPhotoshopStyleLocation() throws {
