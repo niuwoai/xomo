@@ -59,6 +59,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var foregroundColor: NSColor = .systemRed
     @Published var backgroundColor: NSColor = .clear
     @Published var cloneSourcePoint: CGPoint?
+    @Published private(set) var isSettingCloneSource = false
     @Published var reselectableSelection: ImageEditorSelection?
     @Published var statusText: String = ""
     @Published var areToolsPanelVisible = true
@@ -3089,9 +3090,15 @@ final class ImageEditorViewModel: ObservableObject {
 
     func setCloneSource(at point: CGPoint?) {
         cloneSourcePoint = point
+        isSettingCloneSource = false
         statusText = point == nil
             ? L10n.text("imageEditor.status.cloneSourceMissing")
             : L10n.text("imageEditor.status.cloneSourceSet")
+    }
+
+    func beginSettingCloneSource() {
+        isSettingCloneSource = true
+        statusText = L10n.text("imageEditor.status.cloneSourcePending")
     }
 
     func cloneStamp(points: [CGPoint]) {

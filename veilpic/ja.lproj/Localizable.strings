@@ -425,6 +425,7 @@
 "imageEditor.action.projectOpen" = "プロジェクトを開く";
 "imageEditor.action.projectSave" = "プロジェクトを保存";
 "imageEditor.action.undo" = "取り消す";
+"imageEditor.action.cloneSourcePick" = "スタンプのサンプル元を設定";
 "imageEditor.action.redo" = "やり直す";
 "imageEditor.export.title" = "画像を書き出し";
 "imageEditor.export.format" = "形式";
@@ -1575,6 +1576,7 @@
 "imageEditor.status.vectorMaskSelectionSelected" = "%d個のベクターマスクから選択範囲を読み込みました";
 "imageEditor.status.vectorMaskSelectionFailed" = "閉じたベクターマスク付きのレイヤーを選択してください";
 "imageEditor.status.cloneSourceSet" = "コピースタンプのサンプル元を設定しました";
+"imageEditor.status.cloneSourcePending" = "キャンバスをクリックしてコピースタンプのサンプル元を設定してください";
 "imageEditor.status.cloneSourceMissing" = "先に Option キーを押しながらキャンバスをクリックしてサンプル元を設定してください";
 "imageEditor.status.cloneStamped" = "コピースタンプを適用しました";
 "imageEditor.status.dodgeApplied" = "覆い焼きを適用しました";

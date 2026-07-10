@@ -425,6 +425,7 @@
 "imageEditor.action.projectOpen" = "Open Project";
 "imageEditor.action.projectSave" = "Save Project";
 "imageEditor.action.undo" = "Undo";
+"imageEditor.action.cloneSourcePick" = "Set Clone Source";
 "imageEditor.action.redo" = "Redo";
 "imageEditor.export.title" = "Export Image";
 "imageEditor.export.format" = "Format";
@@ -1575,6 +1576,7 @@
 "imageEditor.status.vectorMaskSelectionSelected" = "Selection loaded from %d vector masks";
 "imageEditor.status.vectorMaskSelectionFailed" = "Select a layer with a closed vector mask first";
 "imageEditor.status.cloneSourceSet" = "Clone stamp source set";
+"imageEditor.status.cloneSourcePending" = "Click the canvas to set the clone stamp source";
 "imageEditor.status.cloneSourceMissing" = "Option-click the canvas to set a clone stamp source first";
 "imageEditor.status.cloneStamped" = "Clone stamp applied";
 "imageEditor.status.dodgeApplied" = "Dodge applied";

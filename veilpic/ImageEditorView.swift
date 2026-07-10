@@ -110,6 +110,14 @@ struct ImageEditorView: View {
                 optionSlider(titleKey: "imageEditor.option.tolerance", value: $viewModel.tolerance, range: 0...1, step: 0.02, suffix: "")
             }
 
+            if viewModel.selectedTool == .cloneStamp {
+                Button(L10n.text("imageEditor.action.cloneSourcePick")) {
+                    viewModel.beginSettingCloneSource()
+                }
+                .buttonStyle(EditorTextButtonStyle())
+                .help(L10n.text("imageEditor.action.cloneSourcePick"))
+            }
+
             Spacer()
 
             Button {
@@ -630,7 +638,7 @@ struct ImageEditorView: View {
                 case .eraser:
                     viewModel.drawBrush(points: dragPoints, erase: true)
                 case .cloneStamp:
-                    if NSEvent.modifierFlags.contains(.option), let imagePoint {
+                    if viewModel.isSettingCloneSource || NSEvent.modifierFlags.contains(.option), let imagePoint {
                         viewModel.setCloneSource(at: imagePoint)
                     } else {
                         viewModel.cloneStamp(points: dragPoints)
