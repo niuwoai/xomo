@@ -219,10 +219,8 @@ extension ImageEditorViewModel {
     }
 
     func replaceSelectedSmartObjectContents(_ image: NSImage, sourceName: String) {
-        guard canReplaceSelectedSmartObjectContents,
-              let index = document.selectedLayerIndex,
-              let selectedContent = document.layers[index].smartObjectContent
-        else {
+        let sourceIDs = smartObjectReplacementTargetSourceIDs()
+        guard !sourceIDs.isEmpty else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
@@ -238,14 +236,14 @@ extension ImageEditorViewModel {
         var replacedCount = 0
         for layerIndex in document.layers.indices {
             guard let content = document.layers[layerIndex].smartObjectContent,
-                  content.sourceID == selectedContent.sourceID
+                  sourceIDs.contains(content.sourceID)
             else { continue }
             document.layers[layerIndex].image = normalized
             document.layers[layerIndex].kind = .smartObject(
                 ImageEditorSmartObjectContent(
                     sourceName: cleanSourceName,
                     originalSize: normalized.size,
-                    sourceID: selectedContent.sourceID
+                    sourceID: content.sourceID
                 )
             )
             replacedCount += 1

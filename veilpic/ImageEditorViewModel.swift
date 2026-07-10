@@ -959,12 +959,7 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     var canReplaceSelectedSmartObjectContents: Bool {
-        guard selectedLayerCount == 1,
-              let layer = document.selectedLayer,
-              layer.isSmartObject,
-              !document.isEffectivelyPixelsLocked(layer)
-        else { return false }
-        return true
+        !smartObjectReplacementTargetSourceIDs().isEmpty
     }
 
     var canResetSelectedSmartObjectTransform: Bool {
@@ -4005,6 +4000,19 @@ final class ImageEditorViewModel: ObservableObject {
                 otherLayer.id != layer.id && otherLayer.smartObjectContent?.sourceID == content.sourceID
             }
         }
+    }
+
+    func smartObjectReplacementTargetSourceIDs() -> Set<UUID> {
+        let selectedIDs = document.selectedLayerIDs.isEmpty
+            ? Set(document.selectedLayerID.map { [$0] } ?? [])
+            : document.selectedLayerIDs
+        return Set(document.layers.compactMap { layer in
+            guard selectedIDs.contains(layer.id),
+                  let content = layer.smartObjectContent,
+                  !document.isEffectivelyPixelsLocked(layer)
+            else { return nil }
+            return content.sourceID
+        })
     }
 
     private func smartObjectResetTransformTargetIndices() -> [Int] {

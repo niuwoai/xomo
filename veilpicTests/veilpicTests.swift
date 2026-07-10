@@ -3779,6 +3779,56 @@ struct veilpicTests {
     }
 
     @MainActor
+    @Test func imageEditorReplacesMultipleSelectedSmartObjectSourcesAndSkipsLockedLayers() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let image = testBitmapImage(size: canvasSize, background: .systemPink)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.convertSelectedLayerToSmartObject()
+        let firstID = try #require(viewModel.document.selectedLayerID)
+        viewModel.duplicateSelectedLayer()
+        let secondID = try #require(viewModel.document.selectedLayerID)
+        viewModel.makeSelectedSmartObjectUnique()
+        viewModel.selectLayer(firstID)
+        viewModel.duplicateSelectedLayer()
+        let thirdID = try #require(viewModel.document.selectedLayerID)
+        viewModel.makeSelectedSmartObjectUnique()
+
+        let firstIndex = try #require(viewModel.document.layers.firstIndex { $0.id == firstID })
+        let secondIndex = try #require(viewModel.document.layers.firstIndex { $0.id == secondID })
+        let thirdIndex = try #require(viewModel.document.layers.firstIndex { $0.id == thirdID })
+        let firstSourceID = try #require(viewModel.document.layers[firstIndex].smartObjectContent?.sourceID)
+        let secondSourceID = try #require(viewModel.document.layers[secondIndex].smartObjectContent?.sourceID)
+        let thirdSourceID = try #require(viewModel.document.layers[thirdIndex].smartObjectContent?.sourceID)
+        let lockedImageData = try #require(viewModel.document.layers[secondIndex].image.qingtuPNGData())
+        viewModel.document.layers[secondIndex].locksPixels = true
+        viewModel.document.selectedLayerID = thirdID
+        viewModel.document.selectedLayerIDs = [firstID, secondID, thirdID]
+
+        let replacement = testBitmapImage(size: NSSize(width: 24, height: 16), background: .systemTeal)
+        #expect(viewModel.canReplaceSelectedSmartObjectContents)
+        viewModel.replaceSelectedSmartObjectContents(replacement, sourceName: " batch.logo.png ")
+
+        #expect(viewModel.document.layers[firstIndex].smartObjectContent?.sourceID == firstSourceID)
+        #expect(viewModel.document.layers[secondIndex].smartObjectContent?.sourceID == secondSourceID)
+        #expect(viewModel.document.layers[thirdIndex].smartObjectContent?.sourceID == thirdSourceID)
+        #expect(viewModel.document.layers[firstIndex].image.size == replacement.size)
+        #expect(viewModel.document.layers[thirdIndex].image.size == replacement.size)
+        #expect(viewModel.document.layers[firstIndex].smartObjectContent?.sourceName == "batch.logo")
+        #expect(viewModel.document.layers[thirdIndex].smartObjectContent?.sourceName == "batch.logo")
+        #expect(viewModel.document.layers[secondIndex].image.qingtuPNGData() == lockedImageData)
+        #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, thirdID])
+        #expect(viewModel.document.selectedLayerID == thirdID)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartObjectReplace"))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerSmartObjectInstancesReplaced", 2, "batch.logo"))
+
+        viewModel.undo()
+        #expect(viewModel.document.layers[firstIndex].image.qingtuPNGData() == lockedImageData)
+        #expect(viewModel.document.layers[secondIndex].image.qingtuPNGData() == lockedImageData)
+        #expect(viewModel.document.layers[thirdIndex].image.qingtuPNGData() == lockedImageData)
+    }
+
+    @MainActor
     @Test func imageEditorCanLoadSelectionFromGroupTransparency() async throws {
         let canvasSize = NSSize(width: 90, height: 70)
         let image = testBitmapImage(size: canvasSize, background: .clear)
