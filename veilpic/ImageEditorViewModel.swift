@@ -778,8 +778,7 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     var canAddLayerMask: Bool {
-        guard let layer = document.selectedLayer else { return false }
-        return !document.isEffectivelyLocked(layer) && layer.mask == nil
+        !layerMaskAddIndices.isEmpty
     }
 
     var canDeleteLayerMask: Bool {
@@ -2368,19 +2367,28 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func addLayerMask() {
-        guard canAddLayerMask, let index = document.selectedLayerIndex else {
+        let indices = layerMaskAddIndices
+        guard !indices.isEmpty else {
             statusText = L10n.text("imageEditor.status.layerLocked")
             return
         }
         pushUndo()
-        document.layers[index].mask = NSImage.opaqueMask(size: maskSize(for: document.layers[index]))
-        document.layers[index].isMaskEnabled = true
-        document.layers[index].isMaskLinked = true
-        document.layers[index].isVectorMaskEnabled = true
-        document.layers[index].maskDensity = 1
-        document.layers[index].maskFeather = 0
+        for index in indices {
+            document.layers[index].mask = NSImage.opaqueMask(size: maskSize(for: document.layers[index]))
+            document.layers[index].isMaskEnabled = true
+            document.layers[index].isMaskLinked = true
+            document.layers[index].isVectorMaskEnabled = true
+            document.layers[index].maskDensity = 1
+            document.layers[index].maskFeather = 0
+        }
         isEditingLayerMask = true
-        appendHistory(L10n.text("imageEditor.history.layerMaskAdd"))
+
+        if indices.count == 1 {
+            appendHistory(L10n.text("imageEditor.history.layerMaskAdd"))
+        } else {
+            appendHistory(L10n.text("imageEditor.history.layerMaskAddSelected"))
+            statusText = L10n.format("imageEditor.status.layerMaskAddedSelected", indices.count)
+        }
     }
 
     func deleteLayerMask() {
@@ -3981,6 +3989,18 @@ final class ImageEditorViewModel: ObservableObject {
 
     private var selectedLayerIndices: [Int] {
         document.layers.indices.filter { document.selectedLayerIDs.contains(document.layers[$0].id) }
+    }
+
+    var layerMaskAddIndices: [Int] {
+        let selectedIDs = document.selectedLayerIDs.isEmpty
+            ? Set(document.selectedLayerID.map { [$0] } ?? [])
+            : document.selectedLayerIDs
+        return document.layers.indices.filter { index in
+            let layer = document.layers[index]
+            return selectedIDs.contains(layer.id)
+                && !document.isEffectivelyLocked(layer)
+                && layer.mask == nil
+        }
     }
 
     private func layerMaskDeleteIndices() -> [Int] {

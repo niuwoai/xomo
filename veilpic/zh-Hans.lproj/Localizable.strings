@@ -1026,8 +1026,10 @@
 "imageEditor.history.layerTransparentPixelsUnlockSelected" = "解锁所选图层透明像素";
 "imageEditor.history.layerBlendMode" = "调整图层混合模式";
 "imageEditor.history.layerMaskAdd" = "添加图层蒙版";
+"imageEditor.history.layerMaskAddSelected" = "向所选图层添加蒙版";
 "imageEditor.history.layerMaskFromSelection" = "从选区添加图层蒙版";
 "imageEditor.history.layerMaskHideAll" = "添加隐藏全部图层蒙版";
+"imageEditor.history.layerMaskHideAllSelected" = "向所选图层添加隐藏全部蒙版";
 "imageEditor.history.layerMaskHideSelection" = "添加隐藏选区图层蒙版";
 "imageEditor.history.layerMaskApply" = "应用图层蒙版";
 "imageEditor.history.layerMaskApplySelected" = "应用所选图层蒙版";
@@ -1332,6 +1334,8 @@
 "imageEditor.status.noLayerMask" = "当前图层没有蒙版";
 "imageEditor.status.layerMaskFromSelection" = "已从当前选区创建图层蒙版";
 "imageEditor.status.layerMaskHideAll" = "已创建隐藏全部图层蒙版";
+"imageEditor.status.layerMaskAddedSelected" = "已添加 %d 个图层蒙版";
+"imageEditor.status.layerMaskHideAllSelected" = "已添加 %d 个隐藏全部图层蒙版";
 "imageEditor.status.layerMaskHideSelection" = "已创建隐藏选区图层蒙版";
 "imageEditor.status.layerMaskApplied" = "已将图层蒙版应用到图层内容";
 "imageEditor.status.layerMaskAppliedSelected" = "已将 %d 个图层蒙版应用到图层内容";

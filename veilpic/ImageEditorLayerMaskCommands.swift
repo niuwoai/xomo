@@ -185,23 +185,30 @@ extension ImageEditorViewModel {
     }
 
     func addLayerMaskHidingAll() {
-        guard canAddLayerMask,
-              let index = document.selectedLayerIndex
-        else {
+        let indices = layerMaskAddIndices
+        guard !indices.isEmpty else {
             statusText = L10n.text("imageEditor.status.layerLocked")
             return
         }
 
         pushUndo()
-        document.layers[index].mask = NSImage.transparent(size: maskSize(for: document.layers[index]))
-        document.layers[index].isMaskEnabled = true
-        document.layers[index].isMaskLinked = true
-        document.layers[index].isVectorMaskEnabled = true
-        document.layers[index].maskDensity = 1
-        document.layers[index].maskFeather = 0
+        for index in indices {
+            document.layers[index].mask = NSImage.transparent(size: maskSize(for: document.layers[index]))
+            document.layers[index].isMaskEnabled = true
+            document.layers[index].isMaskLinked = true
+            document.layers[index].isVectorMaskEnabled = true
+            document.layers[index].maskDensity = 1
+            document.layers[index].maskFeather = 0
+        }
         isEditingLayerMask = true
-        appendHistory(L10n.text("imageEditor.history.layerMaskHideAll"))
-        statusText = L10n.text("imageEditor.status.layerMaskHideAll")
+
+        if indices.count == 1 {
+            appendHistory(L10n.text("imageEditor.history.layerMaskHideAll"))
+            statusText = L10n.text("imageEditor.status.layerMaskHideAll")
+        } else {
+            appendHistory(L10n.text("imageEditor.history.layerMaskHideAllSelected"))
+            statusText = L10n.format("imageEditor.status.layerMaskHideAllSelected", indices.count)
+        }
     }
 
     func addLayerMaskHidingSelection() {

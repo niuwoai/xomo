@@ -3239,6 +3239,68 @@ struct veilpicTests {
     }
 
     @MainActor
+    @Test func imageEditorAddsLayerMasksToMultipleSelectedLayersAndSkipsLockedLayers() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        let firstLayer = ImageEditorLayer.blank(name: "First Layer", size: canvasSize)
+        var vectorLayer = ImageEditorLayer.blank(name: "Vector Layer", size: canvasSize)
+        vectorLayer.vectorMask = ImageEditorShapeContent(
+            kind: .path,
+            fillColor: .white,
+            fillOpacity: 1,
+            strokeColor: .white,
+            strokeWidth: 1,
+            strokeOpacity: 0,
+            pathPoints: [CGPoint(x: 20, y: 12), CGPoint(x: 60, y: 12), CGPoint(x: 20, y: 48)],
+            isPathClosed: true
+        )
+        var lockedLayer = ImageEditorLayer.blank(name: "Locked Layer", size: canvasSize)
+        lockedLayer.isLocked = true
+
+        let firstLayerID = firstLayer.id
+        let vectorLayerID = vectorLayer.id
+        let lockedLayerID = lockedLayer.id
+        viewModel.document.layers = [viewModel.document.layers[0], firstLayer, vectorLayer, lockedLayer]
+        viewModel.document.selectedLayerID = vectorLayerID
+        viewModel.document.selectedLayerIDs = [firstLayerID, vectorLayerID, lockedLayerID]
+
+        #expect(viewModel.canAddLayerMask)
+        viewModel.addLayerMask()
+
+        let addedFirst = try #require(viewModel.document.layers.first { $0.id == firstLayerID })
+        let addedVector = try #require(viewModel.document.layers.first { $0.id == vectorLayerID })
+        let skippedLockedLayer = try #require(viewModel.document.layers.first { $0.id == lockedLayerID })
+        #expect(addedFirst.mask != nil)
+        #expect(addedVector.mask != nil)
+        #expect(addedVector.vectorMask != nil)
+        #expect(skippedLockedLayer.mask == nil)
+        #expect(skippedLockedLayer.isLocked)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerMaskAddSelected"))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerMaskAddedSelected", 2))
+
+        viewModel.undo()
+        #expect(viewModel.document.layers.first { $0.id == firstLayerID }?.mask == nil)
+        #expect(viewModel.document.layers.first { $0.id == vectorLayerID }?.mask == nil)
+
+        viewModel.addLayerMaskHidingAll()
+        let hiddenFirst = try #require(viewModel.document.layers.first { $0.id == firstLayerID })
+        let hiddenVector = try #require(viewModel.document.layers.first { $0.id == vectorLayerID })
+        let hiddenFirstMask = try #require(hiddenFirst.mask?.alphaMask(width: 80, height: 60))
+        let hiddenVectorMask = try #require(hiddenVector.mask?.alphaMask(width: 80, height: 60))
+        #expect(maskAlpha(hiddenFirstMask, x: 10, y: 10) == 0)
+        #expect(maskAlpha(hiddenVectorMask, x: 10, y: 10) == 0)
+        #expect(hiddenVector.vectorMask != nil)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerMaskHideAllSelected"))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerMaskHideAllSelected", 2))
+
+        viewModel.undo()
+        #expect(viewModel.document.layers.first { $0.id == firstLayerID }?.mask == nil)
+        #expect(viewModel.document.layers.first { $0.id == vectorLayerID }?.mask == nil)
+    }
+
+    @MainActor
     @Test func imageEditorCopiesPrimaryLayerMaskToSelectedLayers() async throws {
         let canvasSize = NSSize(width: 80, height: 60)
         let image = testImage(color: .systemBlue, size: canvasSize)

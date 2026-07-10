@@ -1026,8 +1026,10 @@
 "imageEditor.history.layerTransparentPixelsUnlockSelected" = "Unlock Selected Transparent Pixels";
 "imageEditor.history.layerBlendMode" = "Layer Blend Mode";
 "imageEditor.history.layerMaskAdd" = "Add Layer Mask";
+"imageEditor.history.layerMaskAddSelected" = "Add Layer Masks to Selected Layers";
 "imageEditor.history.layerMaskFromSelection" = "Add Layer Mask from Selection";
 "imageEditor.history.layerMaskHideAll" = "Add Hide-All Layer Mask";
+"imageEditor.history.layerMaskHideAllSelected" = "Add Hide-All Layer Masks to Selected Layers";
 "imageEditor.history.layerMaskHideSelection" = "Add Hide-Selection Layer Mask";
 "imageEditor.history.layerMaskApply" = "Apply Layer Mask";
 "imageEditor.history.layerMaskApplySelected" = "Apply Selected Layer Masks";
@@ -1332,6 +1334,8 @@
 "imageEditor.status.noLayerMask" = "The selected layer has no mask";
 "imageEditor.status.layerMaskFromSelection" = "Layer mask created from the current selection";
 "imageEditor.status.layerMaskHideAll" = "Hide-all layer mask created";
+"imageEditor.status.layerMaskAddedSelected" = "%d layer masks added";
+"imageEditor.status.layerMaskHideAllSelected" = "%d hide-all layer masks added";
 "imageEditor.status.layerMaskHideSelection" = "Hide-selection layer mask created";
 "imageEditor.status.layerMaskApplied" = "Layer mask applied to layer contents";
 "imageEditor.status.layerMaskAppliedSelected" = "%d layer masks applied to layer contents";
@@ -1555,8 +1559,8 @@
 "imageEditor.action.layerTransparentUnlock" = "Unlock Transparent Pixels";
 "imageEditor.action.layerTransparentPixelsLockSelected" = "Lock Transparent Pixels";
 "imageEditor.action.layerTransparentPixelsUnlockSelected" = "Unlock Transparent Pixels";
-"imageEditor.action.layerMaskAdd" = "Add Layer Mask";
-"imageEditor.action.layerMaskHideAll" = "Add Hide-All Mask";
+"imageEditor.action.layerMaskAdd" = "Add Layer Masks";
+"imageEditor.action.layerMaskHideAll" = "Add Hide-All Masks";
 "imageEditor.action.layerMaskFromSelection" = "Add Mask from Selection";
 "imageEditor.action.layerMaskHideSelection" = "Add Hide-Selection Mask";
 "imageEditor.action.layerMaskEdit" = "Edit Layer Mask";
