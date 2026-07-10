@@ -933,6 +933,7 @@ struct ImageEditorScopeTests {
 
         #expect(colorMenuSource.contains("imageEditor.menu.window.color"))
         #expect(colorMenuSource.contains("imageEditor.action.colorShowPanel"))
+        #expect(colorMenuSource.contains("KeyEquivalent(Character(UnicodeScalar(NSF6FunctionKey)!))"))
         #expect(colorMenuSource.contains("viewModel.colorPanelSummaryText"))
         #expect(colorMenuSource.contains("imageEditor.action.colorDefaultForegroundBackground"))
         #expect(colorMenuSource.contains("viewModel.resetForegroundBackgroundColors()"))
@@ -1289,6 +1290,7 @@ struct ImageEditorScopeTests {
 
         #expect(brushesMenuSource.contains("imageEditor.menu.window.brushes"))
         #expect(brushesMenuSource.contains("imageEditor.action.brushesShowPanel"))
+        #expect(brushesMenuSource.contains("KeyEquivalent(Character(UnicodeScalar(NSF5FunctionKey)!))"))
         #expect(brushesMenuSource.contains("viewModel.brushesPanelSummaryText"))
         #expect(brushesMenuSource.contains("imageEditor.menu.window.brushes.tools"))
         #expect(brushesMenuSource.contains("viewModel.selectBrushPanelTool(tool)"))

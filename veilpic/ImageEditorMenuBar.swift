@@ -1485,6 +1485,7 @@ extension ImageEditorView {
             Button(L10n.text("imageEditor.action.colorShowPanel")) {
                 viewModel.statusText = viewModel.colorPanelSummaryText
             }
+            .keyboardShortcut(KeyEquivalent(Character(UnicodeScalar(NSF6FunctionKey)!)), modifiers: [])
             Divider()
             Button(L10n.text("imageEditor.action.colorDefaultForegroundBackground")) {
                 viewModel.resetForegroundBackgroundColors()
@@ -1529,6 +1530,7 @@ extension ImageEditorView {
             Button(L10n.text("imageEditor.action.brushesShowPanel")) {
                 viewModel.statusText = viewModel.brushesPanelSummaryText
             }
+            .keyboardShortcut(KeyEquivalent(Character(UnicodeScalar(NSF5FunctionKey)!)), modifiers: [])
             Divider()
             Menu(L10n.text("imageEditor.menu.window.brushes.tools")) {
                 ForEach(viewModel.brushPanelTools) { tool in
