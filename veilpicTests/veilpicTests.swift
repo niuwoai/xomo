@@ -2748,6 +2748,59 @@ struct veilpicTests {
     }
 
     @MainActor
+    @Test func imageEditorCanLoadSelectionFromGroupTransparency() async throws {
+        let canvasSize = NSSize(width: 90, height: 70)
+        let image = testBitmapImage(size: canvasSize, background: .clear)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        var group = ImageEditorLayer.group(name: "Artwork Group", size: canvasSize)
+        group.opacity = 0.8
+        let groupID = group.id
+
+        var leftLayer = ImageEditorLayer.blank(name: "Left Shape", size: canvasSize)
+        leftLayer.groupID = groupID
+        leftLayer.image = testBitmapImage(
+            size: canvasSize,
+            background: .clear,
+            fills: [(rect: CGRect(x: 10, y: 12, width: 22, height: 18), color: .systemPink)]
+        )
+
+        var rightLayer = ImageEditorLayer.blank(name: "Right Shape", size: canvasSize)
+        rightLayer.groupID = groupID
+        rightLayer.image = testBitmapImage(
+            size: canvasSize,
+            background: .clear,
+            fills: [(rect: CGRect(x: 58, y: 38, width: 18, height: 16), color: .systemGreen)]
+        )
+
+        viewModel.document.layers = [
+            ImageEditorLayer.background(image: image),
+            group,
+            leftLayer,
+            rightLayer
+        ]
+        viewModel.document.selectedLayerID = groupID
+        viewModel.document.selectedLayerIDs = [groupID]
+        viewModel.document.selection = nil
+
+        #expect(viewModel.canLoadSelectionFromLayerTransparency)
+        viewModel.loadSelectionFromLayerTransparency()
+
+        let selection = try #require(viewModel.document.selection)
+        let mask = try #require(selection.rasterMask)
+        let bounds = try #require(mask.selectedBounds(in: canvasSize))
+        #expect(bounds.minX <= 11)
+        #expect(bounds.minY <= 13)
+        #expect(bounds.maxX >= 75)
+        #expect(bounds.maxY >= 53)
+        #expect(maskAlpha(mask, x: 18, y: 20) == 255)
+        #expect(maskAlpha(mask, x: 66, y: 46) == 255)
+        #expect(maskAlpha(mask, x: 44, y: 34) == 0)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionFromLayer"))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionCreated"))
+    }
+
+    @MainActor
     @Test func imageEditorCanCreateHideAllAndHideSelectionLayerMasks() async throws {
         let canvasSize = NSSize(width: 80, height: 60)
         let image = testImage(color: .systemBlue, size: canvasSize)

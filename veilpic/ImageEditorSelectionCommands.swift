@@ -14,7 +14,7 @@ extension ImageEditorViewModel {
         guard selectedLayerCount == 1,
               let layer = document.selectedLayer
         else { return false }
-        return !layer.isGroup && !layer.isAdjustment && !layer.isFilter
+        return !layer.isAdjustment && !layer.isFilter
     }
 
     var hasSavedSelection: Bool {
@@ -516,6 +516,10 @@ extension ImageEditorViewModel {
     private func transparencySelection(forLayerAt index: Int) -> ImageEditorSelection? {
         guard document.layers.indices.contains(index) else { return nil }
         let layer = document.layers[index]
+        if layer.isGroup {
+            return document.compositedImage(includingOnly: [layer.id]).alphaSelection(threshold: 8)
+        }
+
         guard let image = NSImage.rendered(size: document.canvasSize, actions: { _ in
             if layer.isClippingMask,
                let clippedImage = document.clippedCompositingImage(forLayerAt: index) {
