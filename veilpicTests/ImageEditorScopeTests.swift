@@ -662,6 +662,9 @@ struct ImageEditorScopeTests {
         #expect(editMenuSource.contains(".keyboardShortcut(\"v\", modifiers: [.command])"))
         #expect(editMenuSource.contains("viewModel.pasteClipboardIntoSelectionAsLayer()"))
         #expect(editMenuSource.contains(".keyboardShortcut(\"v\", modifiers: [.command, .shift])"))
+        #expect(editMenuSource.contains("imageEditor.action.freeTransform"))
+        #expect(editMenuSource.contains("viewModel.toggleTransformControlsVisible()"))
+        #expect(editMenuSource.contains(".keyboardShortcut(\"t\", modifiers: [.command])"))
         #expect(editMenuSource.contains("viewModel.fillSelection()"))
         #expect(editMenuSource.contains(".keyboardShortcut(.delete, modifiers: [.option])"))
         #expect(editMenuSource.contains("viewModel.fillSelectionWithBackgroundColor()"))
@@ -807,7 +810,7 @@ struct ImageEditorScopeTests {
         #expect(viewMenuSource.contains("viewModel.fitZoom()"))
         #expect(viewMenuSource.contains(".keyboardShortcut(\"0\", modifiers: [.command])"))
         #expect(viewMenuSource.contains("viewModel.toggleTransformControlsVisible()"))
-        #expect(viewMenuSource.contains(".keyboardShortcut(\"t\", modifiers: [.command])"))
+        #expect(!viewMenuSource.contains(".keyboardShortcut(\"t\", modifiers: [.command])"))
     }
 
     @Test func windowMenuExposesNavigatorPanelActionsInPhotoshopStyleLocation() throws {

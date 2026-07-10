@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.409.0 - 2026-07-10
+
+### Changed
+- 图片编辑器将 `Command + T` 的可见入口调整到 Edit > Free Transform，View 菜单仍保留变换控制框显示开关但不再占用快捷键。
+
 ## 1.408.0 - 2026-07-10
 
 ### Added

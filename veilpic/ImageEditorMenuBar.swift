@@ -117,6 +117,10 @@ extension ImageEditorView {
         }
         .keyboardShortcut("v", modifiers: [.command, .shift])
         .disabled(!viewModel.canPasteClipboardImageIntoSelection)
+        Button(L10n.text("imageEditor.action.freeTransform")) {
+            viewModel.toggleTransformControlsVisible()
+        }
+        .keyboardShortcut("t", modifiers: [.command])
         Divider()
         Button(L10n.text("imageEditor.action.fillSelection")) {
             viewModel.fillSelection()
@@ -1276,7 +1280,6 @@ extension ImageEditorView {
         Button(L10n.text("imageEditor.action.transformControlsVisible")) {
             viewModel.toggleTransformControlsVisible()
         }
-        .keyboardShortcut("t", modifiers: [.command])
         Button(L10n.text("imageEditor.action.gridVisible")) {
             viewModel.toggleGridVisible()
         }

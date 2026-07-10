@@ -1837,6 +1837,7 @@
 "imageEditor.action.copyMergedClipboard" = "复制合并图像";
 "imageEditor.action.pasteClipboardLayer" = "粘贴为图层";
 "imageEditor.action.pasteClipboardIntoSelection" = "粘贴到选区";
+"imageEditor.action.freeTransform" = "自由变换";
 "imageEditor.action.clearSelectionPixels" = "清除选区像素";
 "imageEditor.action.saveSelection" = "保存选区";
 "imageEditor.action.restoreSelection" = "恢复选区";

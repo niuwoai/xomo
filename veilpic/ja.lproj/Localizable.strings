@@ -1837,6 +1837,7 @@
 "imageEditor.action.copyMergedClipboard" = "結合部分をコピー";
 "imageEditor.action.pasteClipboardLayer" = "レイヤーとしてペースト";
 "imageEditor.action.pasteClipboardIntoSelection" = "選択範囲内へペースト";
+"imageEditor.action.freeTransform" = "自由変形";
 "imageEditor.action.clearSelectionPixels" = "選択ピクセルを消去";
 "imageEditor.action.saveSelection" = "選択範囲を保存";
 "imageEditor.action.restoreSelection" = "選択範囲を復元";
