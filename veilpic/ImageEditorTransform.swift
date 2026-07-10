@@ -62,10 +62,10 @@ extension ImageEditorViewModel {
         movingLayerDidChange = false
     }
 
-    func moveSelectedLayer(by delta: CGSize) {
+    func moveSelectedLayer(by delta: CGSize, snapping: Bool = false) {
         guard !movingLayerIDs.isEmpty else { return }
         guard abs(delta.width) >= 0.1 || abs(delta.height) >= 0.1 else { return }
-        let adjustedDelta = snappedMoveDelta(delta, movingLayerIDs: movingLayerIDs)
+        let adjustedDelta = snapping ? snappedMoveDelta(delta, movingLayerIDs: movingLayerIDs) : delta
         guard abs(adjustedDelta.width) >= 0.1 || abs(adjustedDelta.height) >= 0.1 else { return }
         for index in document.layers.indices where movingLayerIDs.contains(document.layers[index].id) {
             let originalFrame = document.layers[index].frame.standardized

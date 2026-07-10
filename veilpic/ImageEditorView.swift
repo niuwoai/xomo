@@ -632,7 +632,8 @@ struct ImageEditorView: View {
                                 by: CGSize(
                                     width: imagePoint.x - lastMoveImagePoint.x,
                                     height: imagePoint.y - lastMoveImagePoint.y
-                                )
+                                ),
+                                snapping: true
                             )
                         } else {
                             viewModel.beginMovingSelectedLayer()
