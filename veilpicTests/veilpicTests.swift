@@ -80,6 +80,39 @@ struct veilpicTests {
     }
 
     @MainActor
+    @Test func imageEditorCachesRenderedImagesUntilDocumentChanges() async throws {
+        let image = testImage(color: .systemBlue, size: NSSize(width: 80, height: 60))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        let firstCanvas = viewModel.currentImage
+        let secondCanvas = viewModel.currentImage
+        let firstPreview = viewModel.previewImage
+        let secondPreview = viewModel.previewImage
+        let firstHistogram = viewModel.histogramSummary
+        let secondHistogram = viewModel.histogramSummary
+
+        #expect(firstCanvas === secondCanvas)
+        #expect(firstPreview === secondPreview)
+        #expect(firstHistogram == secondHistogram)
+
+        viewModel.zoom = 1.5
+        viewModel.isNavigatorPanelVisible = false
+        #expect(viewModel.currentImage === firstCanvas)
+        #expect(viewModel.previewImage === firstPreview)
+
+        let firstTransparencySelectionAvailability = viewModel.canLoadSelectionFromLayerTransparency
+        #expect(viewModel.cachedLayerTransparencySelectionAvailability == firstTransparencySelectionAvailability)
+
+        let editableLayerIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[editableLayerIndex].opacity = 0.5
+        #expect(viewModel.cachedLayerTransparencySelectionAvailability == nil)
+
+        let updatedCanvas = viewModel.currentImage
+        #expect(updatedCanvas !== firstCanvas)
+        #expect(updatedCanvas === viewModel.currentImage)
+    }
+
+    @MainActor
     @Test func imageEditorBrushChangesSelectedLayerOnly() async throws {
         let image = testImage(color: .systemBlue, size: NSSize(width: 80, height: 60))
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }

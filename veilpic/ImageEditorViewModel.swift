@@ -31,7 +31,11 @@ private struct ImageEditorSmartObjectConversionPlan {
 
 @MainActor
 final class ImageEditorViewModel: ObservableObject {
-    @Published var document: ImageEditorDocument
+    @Published var document: ImageEditorDocument {
+        didSet {
+            invalidateRenderedImageCaches()
+        }
+    }
     @Published var selectedTool: ImageEditorTool = .move
     @Published var zoom: CGFloat = 1
     @Published var canvasViewportSize: CGSize = .zero
@@ -201,6 +205,14 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var namedHistorySnapshots: [ImageEditorHistorySnapshot] = []
     @Published var selectedHistorySnapshotID: UUID?
 
+    // SwiftUI reads these values from several panels in one render pass. Keep all
+    // pixel work behind one document-scoped cache rather than recompositing per view.
+    private var cachedCurrentImage: NSImage?
+    private var cachedChannelPreviewImages: [String: NSImage] = [:]
+    private var cachedAlphaChannelPreviewImages: [UUID: NSImage] = [:]
+    private var cachedHistogramSummary: ImageEditorHistogramSummary?
+    var cachedLayerTransparencySelectionAvailability: Bool?
+
     var undoStack: [ImageEditorDocument] = []
     var redoStack: [ImageEditorDocument] = []
     var historySnapshots: [UUID: ImageEditorDocument] = [:]
@@ -239,18 +251,31 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     var currentImage: NSImage {
-        document.compositedImage
+        if let cachedCurrentImage {
+            return cachedCurrentImage
+        }
+
+        let image = document.compositedImage
+        cachedCurrentImage = image
+        return image
     }
 
     var previewImage: NSImage {
         if let previewedAlphaChannel {
             return alphaChannelPreviewImage(previewedAlphaChannel)
         }
-        return currentImage.channelPreview(selectedChannelPreview)
+        return channelPreviewImage(for: selectedChannelPreview)
     }
 
     func channelPreviewImage(for channel: ImageEditorChannelPreview) -> NSImage {
-        currentImage.channelPreview(channel)
+        let key = channel.rawValue
+        if let image = cachedChannelPreviewImages[key] {
+            return image
+        }
+
+        let image = currentImage.channelPreview(channel)
+        cachedChannelPreviewImages[key] = image
+        return image
     }
 
     func selectChannelPreview(_ channel: ImageEditorChannelPreview) {
@@ -311,7 +336,13 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     var histogramSummary: ImageEditorHistogramSummary {
-        currentImage.histogramSummary()
+        if let cachedHistogramSummary {
+            return cachedHistogramSummary
+        }
+
+        let summary = currentImage.histogramSummary()
+        cachedHistogramSummary = summary
+        return summary
     }
 
     var histogramAverageText: String {
@@ -5295,6 +5326,24 @@ final class ImageEditorViewModel: ObservableObject {
 
     func updateStatus() {
         statusText = L10n.format("imageEditor.status.ready", sizeText, zoomText)
+    }
+
+    func cachedAlphaChannelPreviewImage(_ channel: ImageEditorAlphaChannel) -> NSImage {
+        if let image = cachedAlphaChannelPreviewImages[channel.id] {
+            return image
+        }
+
+        let image = channel.mask.grayscalePreviewImage(targetSize: document.canvasSize)
+        cachedAlphaChannelPreviewImages[channel.id] = image
+        return image
+    }
+
+    private func invalidateRenderedImageCaches() {
+        cachedCurrentImage = nil
+        cachedChannelPreviewImages.removeAll(keepingCapacity: true)
+        cachedAlphaChannelPreviewImages.removeAll(keepingCapacity: true)
+        cachedHistogramSummary = nil
+        cachedLayerTransparencySelectionAvailability = nil
     }
 
 }

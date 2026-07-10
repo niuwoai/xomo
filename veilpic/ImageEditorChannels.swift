@@ -1049,7 +1049,7 @@ extension ImageEditorViewModel {
     }
 
     func alphaChannelPreviewImage(_ channel: ImageEditorAlphaChannel) -> NSImage {
-        channel.mask.grayscalePreviewImage(targetSize: document.canvasSize)
+        cachedAlphaChannelPreviewImage(channel)
     }
 
     private var selectedAlphaChannelIndex: Int? {

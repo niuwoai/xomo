@@ -11,7 +11,13 @@ import Foundation
 @MainActor
 extension ImageEditorViewModel {
     var canLoadSelectionFromLayerTransparency: Bool {
-        !layerTransparencySelections().isEmpty
+        if let cachedLayerTransparencySelectionAvailability {
+            return cachedLayerTransparencySelectionAvailability
+        }
+
+        let isAvailable = !layerTransparencySelections().isEmpty
+        cachedLayerTransparencySelectionAvailability = isAvailable
+        return isAvailable
     }
 
     var hasSavedSelection: Bool {
