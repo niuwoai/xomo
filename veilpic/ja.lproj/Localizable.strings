@@ -510,6 +510,7 @@
 "imageEditor.tool.paintBucket" = "塗りつぶし";
 "imageEditor.tool.gradient" = "グラデ";
 "imageEditor.tool.eyedropper" = "スポイト";
+"imageEditor.tool.colorSampler" = "カラーサンプラー";
 "imageEditor.tool.text" = "文字";
 "imageEditor.tool.rectangle" = "矩形";
 "imageEditor.tool.ellipse" = "楕円";
@@ -1379,6 +1380,7 @@
 "imageEditor.status.pathContoursFromSelection" = "現在の選択範囲から %d 個の輪郭を含む複合パスを作成しました";
 "imageEditor.status.pathFromSelectionFailed" = "有効で反転していない選択範囲を先に作成してください";
 "imageEditor.status.colorSampled" = "前景色を取得しました";
+"imageEditor.status.colorSamplerAdded" = "カラーサンプラー %d を追加しました";
 "imageEditor.status.gradientApplied" = "ドラッグしたグラデを適用しました";
 "imageEditor.status.adjustmentFailed" = "調整に失敗しました";
 "imageEditor.status.filter" = "%@ を適用しました";

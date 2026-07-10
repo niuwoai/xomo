@@ -510,6 +510,7 @@
 "imageEditor.tool.paintBucket" = "Paint Bucket";
 "imageEditor.tool.gradient" = "Gradient";
 "imageEditor.tool.eyedropper" = "Eyedropper";
+"imageEditor.tool.colorSampler" = "Color Sampler";
 "imageEditor.tool.text" = "Text";
 "imageEditor.tool.rectangle" = "Rectangle";
 "imageEditor.tool.ellipse" = "Ellipse";
@@ -1379,6 +1380,7 @@
 "imageEditor.status.pathContoursFromSelection" = "Compound path created from the current selection with %d contours";
 "imageEditor.status.pathFromSelectionFailed" = "Create a valid non-inverted selection first";
 "imageEditor.status.colorSampled" = "Foreground color sampled";
+"imageEditor.status.colorSamplerAdded" = "Color sampler %d added";
 "imageEditor.status.gradientApplied" = "Gradient applied from drag";
 "imageEditor.status.adjustmentFailed" = "Adjustment failed";
 "imageEditor.status.filter" = "%@ applied";

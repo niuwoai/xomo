@@ -60,6 +60,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var backgroundColor: NSColor = .clear
     @Published var cloneSourcePoint: CGPoint?
     @Published private(set) var isSettingCloneSource = false
+    @Published private(set) var colorSamplerPoints: [ImageEditorColorSamplerPoint] = []
     @Published var reselectableSelection: ImageEditorSelection?
     @Published var statusText: String = ""
     @Published var areToolsPanelVisible = true
@@ -3412,6 +3413,13 @@ final class ImageEditorViewModel: ObservableObject {
         guard let color = document.compositedImage.color(at: point) else { return }
         foregroundColor = color
         statusText = L10n.text("imageEditor.status.colorSampled")
+    }
+
+    func addColorSampler(at point: CGPoint) {
+        guard let color = document.compositedImage.color(at: point) else { return }
+        let sample = ImageEditorColorSamplerPoint(point: point, color: color)
+        colorSamplerPoints = Array((colorSamplerPoints + [sample]).suffix(4))
+        statusText = L10n.format("imageEditor.status.colorSamplerAdded", colorSamplerPoints.count)
     }
 
     func selectAdjustment(_ adjustment: ImageEditorAdjustment) {

@@ -84,6 +84,7 @@ enum ImageEditorTool: String, CaseIterable, Identifiable {
     case paintBucket
     case gradient
     case eyedropper
+    case colorSampler
     case text
     case rectangle
     case ellipse
@@ -141,6 +142,8 @@ enum ImageEditorTool: String, CaseIterable, Identifiable {
             "square.lefthalf.filled"
         case .eyedropper:
             "eyedropper"
+        case .colorSampler:
+            "scope"
         case .text:
             "textformat"
         case .rectangle:
@@ -177,7 +180,7 @@ enum ImageEditorTool: String, CaseIterable, Identifiable {
         ImageEditorToolShortcutGroup(key: "o", tools: [.dodge, .burn, .sponge]),
         ImageEditorToolShortcutGroup(key: "r", tools: [.blur, .sharpen, .smudge]),
         ImageEditorToolShortcutGroup(key: "g", tools: [.paintBucket, .gradient]),
-        ImageEditorToolShortcutGroup(key: "i", tools: [.eyedropper]),
+        ImageEditorToolShortcutGroup(key: "i", tools: [.eyedropper, .colorSampler]),
         ImageEditorToolShortcutGroup(key: "t", tools: [.text]),
         ImageEditorToolShortcutGroup(key: "u", tools: [.rectangle, .ellipse]),
         ImageEditorToolShortcutGroup(key: "p", tools: [.pen]),
@@ -206,6 +209,12 @@ enum ImageEditorTool: String, CaseIterable, Identifiable {
             false
         }
     }
+}
+
+struct ImageEditorColorSamplerPoint: Identifiable {
+    let id = UUID()
+    let point: CGPoint
+    let color: NSColor
 }
 
 enum ImageEditorSelectionMode: String, CaseIterable, Identifiable {

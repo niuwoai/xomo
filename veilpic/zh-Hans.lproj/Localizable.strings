@@ -510,6 +510,7 @@
 "imageEditor.tool.paintBucket" = "油漆桶";
 "imageEditor.tool.gradient" = "渐变";
 "imageEditor.tool.eyedropper" = "吸管";
+"imageEditor.tool.colorSampler" = "颜色取样器";
 "imageEditor.tool.text" = "文字";
 "imageEditor.tool.rectangle" = "矩形";
 "imageEditor.tool.ellipse" = "椭圆";
@@ -1379,6 +1380,7 @@
 "imageEditor.status.pathContoursFromSelection" = "已从当前选区创建包含 %d 个轮廓的复合路径";
 "imageEditor.status.pathFromSelectionFailed" = "请先建立有效的非反相选区";
 "imageEditor.status.colorSampled" = "已取样前景色";
+"imageEditor.status.colorSamplerAdded" = "已添加颜色取样点 %d";
 "imageEditor.status.gradientApplied" = "已应用拖拽渐变";
 "imageEditor.status.adjustmentFailed" = "调整失败";
 "imageEditor.status.filter" = "已应用 %@";

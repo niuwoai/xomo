@@ -364,6 +364,7 @@ struct ImageEditorView: View {
                     guideOverlay(in: geometry.size)
                     guideInteractionOverlay(in: geometry.size)
                     selectionOverlay(in: geometry.size)
+                    colorSamplerOverlay(in: geometry.size)
                     layerTransformOverlay(in: geometry.size)
                     dragOverlay(in: geometry.size)
                     rulerOverlay(in: geometry.size)
@@ -563,6 +564,22 @@ struct ImageEditorView: View {
         }
     }
 
+    @ViewBuilder
+    private func colorSamplerOverlay(in size: CGSize) -> some View {
+        ForEach(Array(viewModel.colorSamplerPoints.enumerated()), id: \.element.id) { index, sample in
+            let point = viewPoint(from: sample.point, in: size)
+            Text("\(index + 1)")
+                .font(.system(size: 10, weight: .bold))
+                .foregroundStyle(.white)
+                .frame(width: 18, height: 18)
+                .background(Color(nsColor: sample.color).opacity(0.92))
+                .clipShape(Circle())
+                .overlay(Circle().stroke(Color.black.opacity(0.7), lineWidth: 1))
+                .position(point)
+                .allowsHitTesting(false)
+        }
+    }
+
     private func canvasGesture(in size: CGSize) -> some Gesture {
         DragGesture(minimumDistance: 0)
             .onChanged { value in
@@ -692,6 +709,10 @@ struct ImageEditorView: View {
                 case .eyedropper:
                     if let imagePoint {
                         viewModel.sampleColor(at: imagePoint)
+                    }
+                case .colorSampler:
+                    if let imagePoint {
+                        viewModel.addColorSampler(at: imagePoint)
                     }
                 case .gradient:
                     viewModel.drawGradient(from: dragStart, to: imagePoint)
