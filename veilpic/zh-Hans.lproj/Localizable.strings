@@ -343,6 +343,7 @@
 "imageEditor.menu.window.navigator" = "导航器面板";
 "imageEditor.menu.window.info" = "信息面板";
 "imageEditor.menu.window.histogram" = "直方图面板";
+"imageEditor.menu.window.color" = "颜色面板";
 "imageEditor.menu.window.layers" = "图层面板";
 "imageEditor.menu.window.channels" = "通道面板";
 "imageEditor.menu.window.layerComps" = "图层复合面板";
@@ -355,6 +356,10 @@
 "imageEditor.action.navigatorShowPanel" = "显示导航器面板";
 "imageEditor.action.infoShowPanel" = "显示信息面板";
 "imageEditor.action.histogramShowPanel" = "显示直方图面板";
+"imageEditor.action.colorShowPanel" = "显示颜色面板";
+"imageEditor.action.colorDefaultForegroundBackground" = "默认前景/背景色";
+"imageEditor.action.colorSwapForegroundBackground" = "交换前景/背景色";
+"imageEditor.action.colorUseEyedropper" = "使用吸管";
 "imageEditor.action.layersShowPanel" = "显示图层面板";
 "imageEditor.action.layerCompsShowPanel" = "显示图层复合面板";
 "imageEditor.action.historyShowPanel" = "显示历史记录面板";
@@ -1198,6 +1203,10 @@
 "imageEditor.history.autoColorSelected" = "自动校正所选图层颜色";
 "imageEditor.history.adjustmentSelected" = "将 %@ 应用到所选图层";
 "imageEditor.status.ready" = "%@ · %@ · 就绪";
+"imageEditor.status.colorPanelSummary" = "前景色：%@ | 背景色：%@";
+"imageEditor.status.colorDefaultForegroundBackground" = "前景色和背景色已恢复为黑白";
+"imageEditor.status.colorSwapForegroundBackground" = "已交换前景色和背景色";
+"imageEditor.status.colorEyedropperReady" = "已切换到吸管工具，可取样颜色";
 "imageEditor.status.propertiesVisible" = "属性面板已在右侧显示";
 "imageEditor.status.zoomActualPixels" = "已按实际像素显示";
 "imageEditor.status.zoomFitOnScreen" = "已适合窗口显示";

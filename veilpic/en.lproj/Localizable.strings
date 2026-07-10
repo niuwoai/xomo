@@ -343,6 +343,7 @@
 "imageEditor.menu.window.navigator" = "Navigator Panel";
 "imageEditor.menu.window.info" = "Info Panel";
 "imageEditor.menu.window.histogram" = "Histogram Panel";
+"imageEditor.menu.window.color" = "Color Panel";
 "imageEditor.menu.window.layers" = "Layers Panel";
 "imageEditor.menu.window.channels" = "Channels Panel";
 "imageEditor.menu.window.layerComps" = "Layer Comps Panel";
@@ -355,6 +356,10 @@
 "imageEditor.action.navigatorShowPanel" = "Show Navigator Panel";
 "imageEditor.action.infoShowPanel" = "Show Info Panel";
 "imageEditor.action.histogramShowPanel" = "Show Histogram Panel";
+"imageEditor.action.colorShowPanel" = "Show Color Panel";
+"imageEditor.action.colorDefaultForegroundBackground" = "Default Foreground/Background";
+"imageEditor.action.colorSwapForegroundBackground" = "Swap Foreground/Background";
+"imageEditor.action.colorUseEyedropper" = "Use Eyedropper";
 "imageEditor.action.layersShowPanel" = "Show Layers Panel";
 "imageEditor.action.layerCompsShowPanel" = "Show Layer Comps Panel";
 "imageEditor.action.historyShowPanel" = "Show History Panel";
@@ -1198,6 +1203,10 @@
 "imageEditor.history.autoColorSelected" = "Auto Color Selected Layers";
 "imageEditor.history.adjustmentSelected" = "Apply %@ to Selected Layers";
 "imageEditor.status.ready" = "%@ · %@ · Ready";
+"imageEditor.status.colorPanelSummary" = "Foreground: %@ | Background: %@";
+"imageEditor.status.colorDefaultForegroundBackground" = "Foreground and background colors reset to black and white";
+"imageEditor.status.colorSwapForegroundBackground" = "Foreground and background colors swapped";
+"imageEditor.status.colorEyedropperReady" = "Eyedropper selected for color sampling";
 "imageEditor.status.propertiesVisible" = "The Properties panel is already visible on the right";
 "imageEditor.status.zoomActualPixels" = "Viewing at actual pixels";
 "imageEditor.status.zoomFitOnScreen" = "Fit on screen";

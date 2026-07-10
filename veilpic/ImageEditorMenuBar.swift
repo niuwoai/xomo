@@ -1280,6 +1280,7 @@ extension ImageEditorView {
         navigatorActionsMenu
         infoActionsMenu
         histogramActionsMenu
+        colorActionsMenu
         Divider()
         layerActionsMenu
         channelActionsMenu
@@ -1333,6 +1334,26 @@ extension ImageEditorView {
                     viewModel.histogramLuminanceText(for: summary),
                     viewModel.histogramClippingText(for: summary)
                 ].joined(separator: " | ")
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var colorActionsMenu: some View {
+        Menu(L10n.text("imageEditor.menu.window.color")) {
+            Button(L10n.text("imageEditor.action.colorShowPanel")) {
+                viewModel.statusText = viewModel.colorPanelSummaryText
+            }
+            Divider()
+            Button(L10n.text("imageEditor.action.colorDefaultForegroundBackground")) {
+                viewModel.resetForegroundBackgroundColors()
+            }
+            Button(L10n.text("imageEditor.action.colorSwapForegroundBackground")) {
+                viewModel.swapForegroundBackgroundColors()
+            }
+            Divider()
+            Button(L10n.text("imageEditor.action.colorUseEyedropper")) {
+                viewModel.selectEyedropperForColorSampling()
             }
         }
     }

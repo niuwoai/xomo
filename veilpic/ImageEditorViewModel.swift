@@ -974,7 +974,37 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     var colorText: String {
-        let color = foregroundColor.usingColorSpace(.deviceRGB) ?? foregroundColor
+        rgbText(for: foregroundColor)
+    }
+
+    var backgroundColorText: String {
+        rgbText(for: backgroundColor)
+    }
+
+    var colorPanelSummaryText: String {
+        L10n.format("imageEditor.status.colorPanelSummary", colorText, backgroundColorText)
+    }
+
+    func resetForegroundBackgroundColors() {
+        foregroundColor = .black
+        backgroundColor = .white
+        statusText = L10n.text("imageEditor.status.colorDefaultForegroundBackground")
+    }
+
+    func swapForegroundBackgroundColors() {
+        let previousForeground = foregroundColor
+        foregroundColor = backgroundColor
+        backgroundColor = previousForeground
+        statusText = L10n.text("imageEditor.status.colorSwapForegroundBackground")
+    }
+
+    func selectEyedropperForColorSampling() {
+        selectTool(.eyedropper)
+        statusText = L10n.text("imageEditor.status.colorEyedropperReady")
+    }
+
+    private func rgbText(for nsColor: NSColor) -> String {
+        let color = nsColor.usingColorSpace(.deviceRGB) ?? nsColor
         return "R \(Int((color.redComponent * 255).rounded()))  G \(Int((color.greenComponent * 255).rounded()))  B \(Int((color.blueComponent * 255).rounded()))"
     }
 

@@ -445,6 +445,54 @@ struct ImageEditorScopeTests {
         #expect(histogramMenuSource.contains("viewModel.histogramClippingText(for: summary)"))
     }
 
+    @Test func windowMenuExposesColorPanelActionsInPhotoshopStyleLocation() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
+            encoding: .utf8
+        )
+        let colorMenuStart = try #require(source.range(of: "private var colorActionsMenu: some View"))
+        let nextMenuStart = try #require(
+            source[colorMenuStart.upperBound...].range(of: "private var layerActionsMenu: some View")
+        )
+        let colorMenuSource = source[colorMenuStart.lowerBound..<nextMenuStart.lowerBound]
+
+        #expect(colorMenuSource.contains("imageEditor.menu.window.color"))
+        #expect(colorMenuSource.contains("imageEditor.action.colorShowPanel"))
+        #expect(colorMenuSource.contains("viewModel.colorPanelSummaryText"))
+        #expect(colorMenuSource.contains("imageEditor.action.colorDefaultForegroundBackground"))
+        #expect(colorMenuSource.contains("viewModel.resetForegroundBackgroundColors()"))
+        #expect(colorMenuSource.contains("imageEditor.action.colorSwapForegroundBackground"))
+        #expect(colorMenuSource.contains("viewModel.swapForegroundBackgroundColors()"))
+        #expect(colorMenuSource.contains("imageEditor.action.colorUseEyedropper"))
+        #expect(colorMenuSource.contains("viewModel.selectEyedropperForColorSampling()"))
+    }
+
+    @MainActor
+    @Test func colorPanelActionsReuseExistingForegroundBackgroundState() throws {
+        let image = NSImage(size: NSSize(width: 16, height: 16))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.foregroundColor = .systemBlue
+        viewModel.backgroundColor = .systemYellow
+        viewModel.swapForegroundBackgroundColors()
+
+        #expect(Self.deviceRGBComponents(viewModel.foregroundColor) == Self.deviceRGBComponents(.systemYellow))
+        #expect(Self.deviceRGBComponents(viewModel.backgroundColor) == Self.deviceRGBComponents(.systemBlue))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.colorSwapForegroundBackground"))
+
+        viewModel.resetForegroundBackgroundColors()
+
+        #expect(Self.deviceRGBComponents(viewModel.foregroundColor) == Self.deviceRGBComponents(.black))
+        #expect(Self.deviceRGBComponents(viewModel.backgroundColor) == Self.deviceRGBComponents(.white))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.colorDefaultForegroundBackground"))
+
+        viewModel.selectTool(.brush)
+        viewModel.selectEyedropperForColorSampling()
+
+        #expect(viewModel.selectedTool == .eyedropper)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.colorEyedropperReady"))
+    }
+
     @Test func windowMenuExposesLayerPanelActionsInPhotoshopStyleLocation() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
@@ -620,5 +668,15 @@ struct ImageEditorScopeTests {
         URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
             .deletingLastPathComponent()
+    }
+
+    private static func deviceRGBComponents(_ color: NSColor) -> [Int] {
+        let deviceColor = color.usingColorSpace(.deviceRGB) ?? color
+        return [
+            Int((deviceColor.redComponent * 255).rounded()),
+            Int((deviceColor.greenComponent * 255).rounded()),
+            Int((deviceColor.blueComponent * 255).rounded()),
+            Int((deviceColor.alphaComponent * 255).rounded())
+        ]
     }
 }
