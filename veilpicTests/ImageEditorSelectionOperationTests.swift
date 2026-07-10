@@ -69,6 +69,26 @@ struct ImageEditorSelectionOperationTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionFillSelected"))
     }
 
+    @Test func imageEditorCommandXCanCutSelectionToClipboard() async throws {
+        let canvasSize = NSSize(width: 40, height: 30)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: solidImage(color: .systemRed, size: canvasSize)) { _ in }
+
+        viewModel.convertBackgroundToLayer()
+        viewModel.document.selection = ImageEditorSelection.rectangle(CGRect(x: 6, y: 4, width: 16, height: 12))
+
+        #expect(viewModel.canCutSelectionToClipboard)
+        viewModel.cutSelectionToClipboard()
+
+        let cutPixel = try #require(viewModel.document.selectedLayer?.image.color(at: CGPoint(x: 8, y: 6))?.usingColorSpace(.deviceRGB))
+        let retainedPixel = try #require(viewModel.document.selectedLayer?.image.color(at: CGPoint(x: 2, y: 2))?.usingColorSpace(.deviceRGB))
+
+        #expect(cutPixel.alphaComponent < 0.05)
+        #expect(retainedPixel.redComponent > 0.75)
+        #expect(retainedPixel.alphaComponent > 0.95)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionCutClipboard"))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionCutToClipboard"))
+    }
+
     @Test func imageEditorCommandJUsesLayerViaCopyWhenSelectionExists() async throws {
         let canvasSize = NSSize(width: 40, height: 30)
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: solidImage(color: .systemRed, size: canvasSize)) { _ in }

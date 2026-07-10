@@ -1233,6 +1233,7 @@
 "imageEditor.history.selectionCopyLayer" = "Layer via Copy";
 "imageEditor.history.selectionCopyMergedLayer" = "Layer via Merged Copy";
 "imageEditor.history.selectionCutLayer" = "Layer via Cut";
+"imageEditor.history.selectionCutClipboard" = "Cut Selection";
 "imageEditor.history.selectionClearPixels" = "Clear Selection Pixels";
 "imageEditor.history.selectionClearPixelsSelected" = "Clear Selection Pixels on Selected Layers";
 "imageEditor.history.selectionInverted" = "Invert Selection";
@@ -1475,6 +1476,7 @@
 "imageEditor.status.selectionCutToLayer" = "Selection cut to a new layer";
 "imageEditor.status.selectionCopiedToClipboard" = "Selection image copied to Clipboard";
 "imageEditor.status.selectionCopyToClipboardFailed" = "Failed to copy selection image to Clipboard";
+"imageEditor.status.selectionCutToClipboard" = "Selection cut to Clipboard";
 "imageEditor.status.copyMergedToClipboard" = "Merged visible image copied to Clipboard";
 "imageEditor.status.copyMergedToClipboardFailed" = "Failed to copy merged visible image to Clipboard";
 "imageEditor.status.clipboardImageMissing" = "There is no pasteable image on Clipboard";
@@ -1833,6 +1835,7 @@
 "imageEditor.action.selectionCopyLayer" = "Layer via Copy";
 "imageEditor.action.selectionCopyMergedLayer" = "Layer via Merged Copy";
 "imageEditor.action.selectionCutLayer" = "Layer via Cut";
+"imageEditor.action.cutSelectionClipboard" = "Cut Selection to Clipboard";
 "imageEditor.action.copySelectionClipboard" = "Copy Selection to Clipboard";
 "imageEditor.action.copyMergedClipboard" = "Copy Merged";
 "imageEditor.action.pasteClipboardLayer" = "Paste as Layer";

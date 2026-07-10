@@ -33,6 +33,10 @@ extension ImageEditorViewModel {
         canCopySelectionToNewLayer
     }
 
+    var canCutSelectionToClipboard: Bool {
+        canCopySelectionToClipboard && canEditSelectionPixels
+    }
+
     var canCopyMergedToClipboard: Bool {
         document.canvasSize.width > 0 && document.canvasSize.height > 0
     }
@@ -296,6 +300,47 @@ extension ImageEditorViewModel {
         statusText = didCopy
             ? L10n.text("imageEditor.status.selectionCopiedToClipboard")
             : L10n.text("imageEditor.status.selectionCopyToClipboardFailed")
+    }
+
+    func cutSelectionToClipboard() {
+        guard let selection = document.selection else {
+            statusText = L10n.text("imageEditor.status.noSelection")
+            return
+        }
+        guard canCutSelectionToClipboard,
+              let index = document.selectedLayerIndex,
+              let clippedImage = document.layers[index].visibleImage.copied(
+                selection: selection,
+                layerFrame: document.layers[index].frame,
+                canvasSize: document.canvasSize,
+                feather: feather
+              )
+        else {
+            statusText = L10n.text("imageEditor.status.selectionCopyToClipboardFailed")
+            return
+        }
+
+        let sourceLayer = document.layers[index]
+        let didCopy = ClipboardImageWriter.copy(
+            clippedImage.normalizedBitmapImage(),
+            preferredFileName: "\(sourceLayer.name)-selection.png"
+        )
+        guard didCopy,
+              let output = sourceLayer.image.cleared(
+                selection: selection,
+                layerFrame: sourceLayer.frame,
+                canvasSize: document.canvasSize,
+                feather: feather
+              )
+        else {
+            statusText = L10n.text("imageEditor.status.selectionCopyToClipboardFailed")
+            return
+        }
+
+        pushUndo()
+        document.layers[index].image = output.normalizedBitmapImage()
+        appendHistory(L10n.text("imageEditor.history.selectionCutClipboard"))
+        statusText = L10n.text("imageEditor.status.selectionCutToClipboard")
     }
 
     func copyMergedToClipboard() {

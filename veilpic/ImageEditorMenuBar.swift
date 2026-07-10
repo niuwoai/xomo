@@ -97,6 +97,11 @@ extension ImageEditorView {
             viewModel.clearHistoryStates()
         }
         Divider()
+        Button(L10n.text("imageEditor.action.cutSelectionClipboard")) {
+            viewModel.cutSelectionToClipboard()
+        }
+        .keyboardShortcut("x", modifiers: [.command])
+        .disabled(!viewModel.canCutSelectionToClipboard)
         Button(L10n.text("imageEditor.action.copySelectionClipboard")) {
             viewModel.copySelectionToClipboard()
         }
