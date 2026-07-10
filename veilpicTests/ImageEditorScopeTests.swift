@@ -370,7 +370,7 @@ struct ImageEditorScopeTests {
     }
 
     @MainActor
-    @Test func layerStyleColorSettersUpdateStrokeAndShadowColors() {
+    @Test func layerStyleColorSettersUpdateEveryEditableEffectColor() {
         let image = NSImage(size: NSSize(width: 40, height: 30))
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
 
@@ -401,9 +401,34 @@ struct ImageEditorScopeTests {
         #expect((overlay?.redComponent ?? 0) > 0.9)
         #expect((overlay?.greenComponent ?? 0) > 0.9)
         #expect((overlay?.blueComponent ?? 1) < 0.1)
+
+        viewModel.setSelectedLayerSatinColor(NSColor(srgbRed: 0, green: 1, blue: 1, alpha: 1))
+        let satin = viewModel.selectedLayerSatinColor.usingColorSpace(.sRGB)
+        #expect((satin?.greenComponent ?? 0) > 0.9)
+        #expect((satin?.blueComponent ?? 0) > 0.9)
+        #expect((satin?.redComponent ?? 1) < 0.1)
+
+        viewModel.setSelectedLayerGradientOverlayStartColor(NSColor(srgbRed: 1, green: 0, blue: 0, alpha: 1))
+        viewModel.setSelectedLayerGradientOverlayEndColor(NSColor(srgbRed: 0, green: 0, blue: 1, alpha: 1))
+        let gradientStart = viewModel.selectedLayerGradientOverlayStartColor.usingColorSpace(.sRGB)
+        let gradientEnd = viewModel.selectedLayerGradientOverlayEndColor.usingColorSpace(.sRGB)
+        #expect((gradientStart?.redComponent ?? 0) > 0.9)
+        #expect((gradientStart?.blueComponent ?? 1) < 0.1)
+        #expect((gradientEnd?.blueComponent ?? 0) > 0.9)
+        #expect((gradientEnd?.redComponent ?? 1) < 0.1)
+
+        viewModel.setSelectedLayerBevelHighlightColor(NSColor(srgbRed: 1, green: 0, blue: 1, alpha: 1))
+        viewModel.setSelectedLayerBevelShadowColor(NSColor(srgbRed: 0, green: 1, blue: 0, alpha: 1))
+        let bevelHighlight = viewModel.selectedLayerBevelHighlightColor.usingColorSpace(.sRGB)
+        let bevelShadow = viewModel.selectedLayerBevelShadowColor.usingColorSpace(.sRGB)
+        #expect((bevelHighlight?.redComponent ?? 0) > 0.9)
+        #expect((bevelHighlight?.blueComponent ?? 0) > 0.9)
+        #expect((bevelHighlight?.greenComponent ?? 1) < 0.1)
+        #expect((bevelShadow?.greenComponent ?? 0) > 0.9)
+        #expect((bevelShadow?.redComponent ?? 1) < 0.1)
     }
 
-    @Test func layerStylePanelUsesColorPickersForStrokeAndShadow() throws {
+    @Test func layerStylePanelUsesColorPickersForEveryEditableEffectColor() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
             encoding: .utf8
@@ -413,11 +438,21 @@ struct ImageEditorScopeTests {
         #expect(source.contains("ColorPicker(\"\", selection: selectedLayerOuterGlowColorBinding, supportsOpacity: false)"))
         #expect(source.contains("ColorPicker(\"\", selection: selectedLayerInnerGlowColorBinding, supportsOpacity: false)"))
         #expect(source.contains("ColorPicker(\"\", selection: selectedLayerColorOverlayColorBinding, supportsOpacity: false)"))
+        #expect(source.contains("ColorPicker(\"\", selection: selectedLayerSatinColorBinding, supportsOpacity: false)"))
+        #expect(source.contains("ColorPicker(\"\", selection: selectedLayerGradientOverlayStartColorBinding, supportsOpacity: false)"))
+        #expect(source.contains("ColorPicker(\"\", selection: selectedLayerGradientOverlayEndColorBinding, supportsOpacity: false)"))
+        #expect(source.contains("ColorPicker(\"\", selection: selectedLayerBevelHighlightColorBinding, supportsOpacity: false)"))
+        #expect(source.contains("ColorPicker(\"\", selection: selectedLayerBevelShadowColorBinding, supportsOpacity: false)"))
         #expect(source.contains("viewModel.setSelectedLayerStrokeColor(NSColor(value))"))
         #expect(source.contains("viewModel.setSelectedLayerShadowColor(NSColor(value))"))
         #expect(source.contains("viewModel.setSelectedLayerOuterGlowColor(NSColor(value))"))
         #expect(source.contains("viewModel.setSelectedLayerInnerGlowColor(NSColor(value))"))
         #expect(source.contains("viewModel.setSelectedLayerColorOverlayColor(NSColor(value))"))
+        #expect(source.contains("viewModel.setSelectedLayerSatinColor(NSColor(value))"))
+        #expect(source.contains("viewModel.setSelectedLayerGradientOverlayStartColor(NSColor(value))"))
+        #expect(source.contains("viewModel.setSelectedLayerGradientOverlayEndColor(NSColor(value))"))
+        #expect(source.contains("viewModel.setSelectedLayerBevelHighlightColor(NSColor(value))"))
+        #expect(source.contains("viewModel.setSelectedLayerBevelShadowColor(NSColor(value))"))
     }
 
     @MainActor
