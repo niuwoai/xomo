@@ -119,6 +119,36 @@ struct ImageEditorScopeTests {
         }
     }
 
+    @Test func editorSourceDoesNotIntroduceHeavyExpansionEntryPoints() throws {
+        let blockedFragments = [
+            "plugin",
+            "generative",
+            "neural",
+            "cameraRaw",
+            "backgroundRemoval",
+            "backgroundMatting",
+            "aiCutout",
+            "smartCutout",
+            "segmentationModel",
+            "threeDimensional",
+            "threeD"
+        ]
+        let editorFiles = try FileManager.default.contentsOfDirectory(
+            at: Self.repositoryRoot().appendingPathComponent("veilpic"),
+            includingPropertiesForKeys: nil
+        )
+        .filter { url in
+            url.pathExtension == "swift" && url.lastPathComponent.hasPrefix("ImageEditor")
+        }
+
+        for file in editorFiles {
+            let source = try String(contentsOf: file, encoding: .utf8)
+            for fragment in blockedFragments {
+                #expect(source.range(of: fragment, options: [.caseInsensitive]) == nil)
+            }
+        }
+    }
+
     @Test func productOverviewDocumentsPreserveAndDoNotExpandEditorScope() throws {
         let overview = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("product-overview.md"),
