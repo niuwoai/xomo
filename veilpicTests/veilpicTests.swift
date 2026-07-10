@@ -3563,6 +3563,46 @@ struct veilpicTests {
     }
 
     @MainActor
+    @Test func imageEditorLoadsCombinedSelectionFromMultipleLayerMasks() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        var firstLayer = ImageEditorLayer.blank(name: "First Mask", size: canvasSize)
+        firstLayer.mask = testBitmapImage(
+            size: canvasSize,
+            background: .clear,
+            fills: [(CGRect(x: 0, y: 0, width: 20, height: 60), .white)]
+        )
+        var secondLayer = ImageEditorLayer.blank(name: "Second Mask", size: canvasSize)
+        secondLayer.mask = testBitmapImage(
+            size: canvasSize,
+            background: .clear,
+            fills: [(CGRect(x: 60, y: 0, width: 20, height: 60), .white)]
+        )
+
+        let firstLayerID = firstLayer.id
+        let secondLayerID = secondLayer.id
+        viewModel.document.layers = [viewModel.document.layers[0], firstLayer, secondLayer]
+        viewModel.document.selectedLayerID = secondLayerID
+        viewModel.document.selectedLayerIDs = [firstLayerID, secondLayerID]
+
+        #expect(viewModel.canLoadSelectionFromLayerMask)
+        viewModel.loadSelectionFromLayerMask()
+
+        let selection = try #require(viewModel.document.selection)
+        let mask = try #require(selection.rasterMask)
+        #expect(maskAlpha(mask, x: 10, y: 30) == 255)
+        #expect(maskAlpha(mask, x: 40, y: 30) == 0)
+        #expect(maskAlpha(mask, x: 70, y: 30) == 255)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionFromSelectedLayerMasks"))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerMaskSelectionSelected", 2))
+
+        viewModel.undo()
+        #expect(viewModel.document.selection == nil)
+    }
+
+    @MainActor
     @Test func imageEditorCanLoadSelectionFromGroupTransparency() async throws {
         let canvasSize = NSSize(width: 90, height: 70)
         let image = testBitmapImage(size: canvasSize, background: .clear)

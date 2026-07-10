@@ -113,7 +113,7 @@ extension ImageEditorViewModel {
     }
 
     var canLoadSelectionFromLayerMask: Bool {
-        selectedLayerCount == 1 && document.selectedLayer?.mask != nil
+        !layerMaskSelections().isEmpty
     }
 
     var canCombineLayerMaskWithSelection: Bool {
@@ -393,18 +393,20 @@ extension ImageEditorViewModel {
     }
 
     func loadSelectionFromLayerMask() {
-        guard canLoadSelectionFromLayerMask,
-              let layer = document.selectedLayer,
-              let mask = layer.mask,
-              let selection = selectionFromLayerMask(mask, layer: layer)
-        else {
+        let selections = layerMaskSelections()
+        guard let selection = combinedMaskSelections(selections) else {
             statusText = L10n.text("imageEditor.status.layerMaskSelectionFailed")
             return
         }
 
-        applyMaskSelection(selection, historyKey: "imageEditor.history.selectionFromLayerMask")
+        let historyKey = selections.count == 1
+            ? "imageEditor.history.selectionFromLayerMask"
+            : "imageEditor.history.selectionFromSelectedLayerMasks"
+        applyMaskSelection(selection, historyKey: historyKey)
         if document.selection != nil {
-            statusText = L10n.text("imageEditor.status.layerMaskSelection")
+            statusText = selections.count == 1
+                ? L10n.text("imageEditor.status.layerMaskSelection")
+                : L10n.format("imageEditor.status.layerMaskSelectionSelected", selections.count)
         }
     }
 
@@ -754,6 +756,31 @@ extension ImageEditorViewModel {
                 from: layer.frame,
                 operation: .copy,
                 fraction: 1
+            )
+        }
+    }
+
+    private func layerMaskSelections() -> [ImageEditorSelection] {
+        let selectedIDs = document.selectedLayerIDs.isEmpty
+            ? Set(document.selectedLayerID.map { [$0] } ?? [])
+            : document.selectedLayerIDs
+        return document.layers.compactMap { layer in
+            guard selectedIDs.contains(layer.id),
+                  let mask = layer.mask
+            else { return nil }
+            return selectionFromLayerMask(mask, layer: layer)
+        }
+    }
+
+    private func combinedMaskSelections(
+        _ selections: [ImageEditorSelection]
+    ) -> ImageEditorSelection? {
+        selections.reduce(nil) { current, candidate in
+            ImageEditorSelection.combined(
+                current: current,
+                candidate: candidate,
+                mode: .add,
+                canvasSize: document.canvasSize
             )
         }
     }

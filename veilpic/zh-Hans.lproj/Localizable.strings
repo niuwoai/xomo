@@ -1058,6 +1058,7 @@
 "imageEditor.history.layerMaskReveal" = "蒙版恢复";
 "imageEditor.history.layerMaskGradient" = "蒙版渐变";
 "imageEditor.history.selectionFromLayerMask" = "从图层蒙版载入选区";
+"imageEditor.history.selectionFromSelectedLayerMasks" = "从所选图层蒙版载入选区";
 "imageEditor.history.selectionFromVectorMask" = "从矢量蒙版载入选区";
 "imageEditor.history.layerFilterNew" = "新建滤镜图层";
 "imageEditor.history.layerSolidColorFillNew" = "新建纯色填充图层";
@@ -1364,6 +1365,7 @@
 "imageEditor.status.layerMaskLinkedSelected" = "已将 %d 个图层蒙版链接到图层内容";
 "imageEditor.status.layerMaskUnlinkedSelected" = "已将 %d 个图层蒙版取消链接";
 "imageEditor.status.layerMaskSelection" = "已从图层蒙版载入选区";
+"imageEditor.status.layerMaskSelectionSelected" = "已从 %d 个图层蒙版载入选区";
 "imageEditor.status.layerMaskSelectionFailed" = "请先选择带图层蒙版的图层";
 "imageEditor.status.vectorMaskSelection" = "已从矢量蒙版载入选区";
 "imageEditor.status.vectorMaskSelectionFailed" = "请先选择带闭合矢量蒙版的图层";

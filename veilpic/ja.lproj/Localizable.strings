@@ -1058,6 +1058,7 @@
 "imageEditor.history.layerMaskReveal" = "マスクを戻す";
 "imageEditor.history.layerMaskGradient" = "マスクグラデ";
 "imageEditor.history.selectionFromLayerMask" = "レイヤーマスクから選択範囲を読み込み";
+"imageEditor.history.selectionFromSelectedLayerMasks" = "選択レイヤーマスクから選択範囲を読み込み";
 "imageEditor.history.selectionFromVectorMask" = "ベクターマスクから選択範囲を読み込み";
 "imageEditor.history.layerFilterNew" = "フィルターレイヤーを作成";
 "imageEditor.history.layerSolidColorFillNew" = "べた塗りレイヤーを作成";
@@ -1364,6 +1365,7 @@
 "imageEditor.status.layerMaskLinkedSelected" = "%d個のレイヤーマスクをレイヤー内容にリンクしました";
 "imageEditor.status.layerMaskUnlinkedSelected" = "%d個のレイヤーマスクのリンクを解除しました";
 "imageEditor.status.layerMaskSelection" = "レイヤーマスクから選択範囲を読み込みました";
+"imageEditor.status.layerMaskSelectionSelected" = "%d個のレイヤーマスクから選択範囲を読み込みました";
 "imageEditor.status.layerMaskSelectionFailed" = "レイヤーマスク付きのレイヤーを選択してください";
 "imageEditor.status.vectorMaskSelection" = "ベクターマスクから選択範囲を読み込みました";
 "imageEditor.status.vectorMaskSelectionFailed" = "閉じたベクターマスク付きのレイヤーを選択してください";
