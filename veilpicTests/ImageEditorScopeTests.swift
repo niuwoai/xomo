@@ -316,6 +316,31 @@ struct ImageEditorScopeTests {
         #expect(layerMenuSource.contains("viewModel.canCutSelectionToNewLayer"))
     }
 
+    @Test func editMenuExposesClassicEditingShortcuts() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
+            encoding: .utf8
+        )
+        let editMenuStart = try #require(source.range(of: "private var editMenu: some View"))
+        let nextMenuStart = try #require(
+            source[editMenuStart.upperBound...].range(of: "private var historySnapshotMenu: some View")
+        )
+        let editMenuSource = source[editMenuStart.lowerBound..<nextMenuStart.lowerBound]
+
+        #expect(editMenuSource.contains("viewModel.undo()"))
+        #expect(editMenuSource.contains(".keyboardShortcut(\"z\", modifiers: [.command])"))
+        #expect(editMenuSource.contains("viewModel.redo()"))
+        #expect(editMenuSource.contains(".keyboardShortcut(\"z\", modifiers: [.command, .shift])"))
+        #expect(editMenuSource.contains("viewModel.copySelectionToClipboard()"))
+        #expect(editMenuSource.contains(".keyboardShortcut(\"c\", modifiers: [.command])"))
+        #expect(editMenuSource.contains("viewModel.copyMergedToClipboard()"))
+        #expect(editMenuSource.contains(".keyboardShortcut(\"c\", modifiers: [.command, .shift])"))
+        #expect(editMenuSource.contains("viewModel.pasteClipboardAsLayer()"))
+        #expect(editMenuSource.contains(".keyboardShortcut(\"v\", modifiers: [.command])"))
+        #expect(editMenuSource.contains("viewModel.pasteClipboardIntoSelectionAsLayer()"))
+        #expect(editMenuSource.contains(".keyboardShortcut(\"v\", modifiers: [.command, .shift])"))
+    }
+
     @Test func selectMenuExposesSavedSelectionCommandsInPhotoshopStyleLocation() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
@@ -336,6 +361,27 @@ struct ImageEditorScopeTests {
         #expect(selectMenuSource.contains("viewModel.hasSavedSelection"))
         #expect(selectMenuText.components(separatedBy: "imageEditor.action.saveSelection").count == 2)
         #expect(selectMenuText.components(separatedBy: "imageEditor.action.restoreSelection").count == 2)
+    }
+
+    @Test func selectMenuExposesClassicSelectionShortcuts() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
+            encoding: .utf8
+        )
+        let selectMenuStart = try #require(source.range(of: "private var selectMenu: some View"))
+        let nextMenuStart = try #require(
+            source[selectMenuStart.upperBound...].range(of: "private var alphaChannelMenu: some View")
+        )
+        let selectMenuSource = source[selectMenuStart.lowerBound..<nextMenuStart.lowerBound]
+
+        #expect(selectMenuSource.contains("viewModel.selectAll()"))
+        #expect(selectMenuSource.contains(".keyboardShortcut(\"a\", modifiers: [.command])"))
+        #expect(selectMenuSource.contains("viewModel.clearSelection()"))
+        #expect(selectMenuSource.contains(".keyboardShortcut(\"d\", modifiers: [.command])"))
+        #expect(selectMenuSource.contains("viewModel.reselectSelection()"))
+        #expect(selectMenuSource.contains(".keyboardShortcut(\"d\", modifiers: [.command, .shift])"))
+        #expect(selectMenuSource.contains("viewModel.invertSelection()"))
+        #expect(selectMenuSource.contains(".keyboardShortcut(\"i\", modifiers: [.command, .shift])"))
     }
 
     @Test func windowMenuExposesChannelPanelActionsInPhotoshopStyleLocation() throws {

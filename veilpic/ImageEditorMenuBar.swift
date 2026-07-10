@@ -84,10 +84,12 @@ extension ImageEditorView {
         Button(L10n.text("imageEditor.action.undo")) {
             viewModel.undo()
         }
+        .keyboardShortcut("z", modifiers: [.command])
         .disabled(!viewModel.canUndo)
         Button(L10n.text("imageEditor.action.redo")) {
             viewModel.redo()
         }
+        .keyboardShortcut("z", modifiers: [.command, .shift])
         .disabled(!viewModel.canRedo)
         Divider()
         historySnapshotMenu
@@ -98,18 +100,22 @@ extension ImageEditorView {
         Button(L10n.text("imageEditor.action.copySelectionClipboard")) {
             viewModel.copySelectionToClipboard()
         }
+        .keyboardShortcut("c", modifiers: [.command])
         .disabled(!viewModel.canCopySelectionToClipboard)
         Button(L10n.text("imageEditor.action.copyMergedClipboard")) {
             viewModel.copyMergedToClipboard()
         }
+        .keyboardShortcut("c", modifiers: [.command, .shift])
         .disabled(!viewModel.canCopyMergedToClipboard)
         Button(L10n.text("imageEditor.action.pasteClipboardLayer")) {
             viewModel.pasteClipboardAsLayer()
         }
+        .keyboardShortcut("v", modifiers: [.command])
         .disabled(!viewModel.canPasteClipboardImage)
         Button(L10n.text("imageEditor.action.pasteClipboardIntoSelection")) {
             viewModel.pasteClipboardIntoSelectionAsLayer()
         }
+        .keyboardShortcut("v", modifiers: [.command, .shift])
         .disabled(!viewModel.canPasteClipboardImageIntoSelection)
         Divider()
         Button(L10n.text("imageEditor.action.fillSelection")) {
@@ -889,17 +895,21 @@ extension ImageEditorView {
         Button(L10n.text("imageEditor.action.selectAll")) {
             viewModel.selectAll()
         }
+        .keyboardShortcut("a", modifiers: [.command])
         Button(L10n.text("imageEditor.action.clearSelection")) {
             viewModel.clearSelection()
         }
+        .keyboardShortcut("d", modifiers: [.command])
         .disabled(!viewModel.hasSelection)
         Button(L10n.text("imageEditor.action.reselectSelection")) {
             viewModel.reselectSelection()
         }
+        .keyboardShortcut("d", modifiers: [.command, .shift])
         .disabled(!viewModel.canReselectSelection)
         Button(L10n.text("imageEditor.action.invertSelection")) {
             viewModel.invertSelection()
         }
+        .keyboardShortcut("i", modifiers: [.command, .shift])
         .disabled(!viewModel.hasSelection)
         Divider()
         Button(L10n.text("imageEditor.action.selectionFromLayer")) {
