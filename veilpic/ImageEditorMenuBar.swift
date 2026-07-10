@@ -456,6 +456,7 @@ extension ImageEditorView {
         Button(L10n.text("imageEditor.action.layerStampVisible")) {
             viewModel.stampVisibleLayers()
         }
+        .keyboardShortcut("e", modifiers: [.command, .shift, .option])
         .disabled(!viewModel.canStampVisibleLayers)
         Button(L10n.text("imageEditor.action.layerStampSelected")) {
             viewModel.stampSelectedLayers()

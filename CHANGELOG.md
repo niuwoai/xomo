@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.412.0 - 2026-07-10
+
+### Added
+- 图片编辑器新增 Layer 菜单经典盖印可见快捷键：`Option + Shift + Command + E` 直接执行 Stamp Visible。
+
 ## 1.411.0 - 2026-07-10
 
 ### Added

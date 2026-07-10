@@ -616,6 +616,8 @@ struct ImageEditorScopeTests {
         #expect(layerMenuSource.contains(".keyboardShortcut(\"e\", modifiers: [.command])"))
         #expect(layerMenuSource.contains("viewModel.mergeVisibleLayers()"))
         #expect(layerMenuSource.contains(".keyboardShortcut(\"e\", modifiers: [.command, .shift])"))
+        #expect(layerMenuSource.contains("viewModel.stampVisibleLayers()"))
+        #expect(layerMenuSource.contains(".keyboardShortcut(\"e\", modifiers: [.command, .shift, .option])"))
     }
 
     @Test func layerOrderMenuExposesClassicLayerOrderShortcuts() throws {
