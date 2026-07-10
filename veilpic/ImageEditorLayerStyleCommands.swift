@@ -380,6 +380,16 @@ extension ImageEditorViewModel {
         }
     }
 
+    func showLayerStyleBlendingOptions() {
+        guard canEditSelectedLayerStyle else {
+            statusText = L10n.text("imageEditor.status.layerLocked")
+            return
+        }
+
+        isPropertiesPanelVisible = true
+        statusText = L10n.text("imageEditor.status.layerStyleReady")
+    }
+
     func copySelectedLayerStyle() {
         guard canCopySelectedLayerStyle,
               let style = document.selectedLayer?.style

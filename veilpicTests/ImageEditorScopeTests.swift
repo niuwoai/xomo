@@ -1500,6 +1500,8 @@ struct ImageEditorScopeTests {
         #expect(stylesMenuSource.contains("imageEditor.action.stylesShowPanel"))
         #expect(stylesMenuSource.contains("viewModel.stylesPanelSummaryText"))
         #expect(stylesMenuSource.contains("layerStyleActionItems"))
+        #expect(source.contains("imageEditor.action.layerStyleBlendingOptions"))
+        #expect(source.contains("viewModel.showLayerStyleBlendingOptions()"))
         #expect(source.contains("viewModel.copySelectedLayerStyle()"))
         #expect(source.contains("viewModel.pasteLayerStyleToSelectedLayers()"))
         #expect(source.contains("viewModel.clearSelectedLayerStyles()"))
@@ -1513,6 +1515,18 @@ struct ImageEditorScopeTests {
         #expect(source.contains("viewModel.toggleSelectedLayerPatternOverlay()"))
         #expect(source.contains("viewModel.toggleSelectedLayerSatin()"))
         #expect(source.contains("viewModel.toggleSelectedLayerBevel()"))
+    }
+
+    @MainActor
+    @Test func layerStyleBlendingOptionsPreparePropertiesPanel() {
+        let image = NSImage(size: NSSize(width: 80, height: 60))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.isPropertiesPanelVisible = false
+        viewModel.showLayerStyleBlendingOptions()
+
+        #expect(viewModel.isPropertiesPanelVisible)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.layerStyleReady"))
     }
 
     @MainActor

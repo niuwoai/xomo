@@ -764,6 +764,11 @@ extension ImageEditorView {
 
     @ViewBuilder
     private var layerStyleActionItems: some View {
+        Button(L10n.text("imageEditor.action.layerStyleBlendingOptions")) {
+            viewModel.showLayerStyleBlendingOptions()
+        }
+        .disabled(!viewModel.canEditSelectedLayerStyle)
+        Divider()
         Button(L10n.text("imageEditor.action.layerStyleCopy")) {
             viewModel.copySelectedLayerStyle()
         }

@@ -1583,6 +1583,7 @@
 "imageEditor.status.layerStyleClipboardEmpty" = "先にレイヤースタイルをコピーしてください";
 "imageEditor.status.layerStylePasted" = "%d 個のレイヤーへレイヤースタイルをペーストしました";
 "imageEditor.status.layerStyleCleared" = "%d 個のレイヤースタイルをクリアしました";
+"imageEditor.status.layerStyleReady" = "レイヤースタイルオプションを準備しました";
 "imageEditor.status.layerStyleUpdated" = "レイヤースタイルを更新しました";
 "imageEditor.status.layerAdjustmentUpdatedSelected" = "%d個の調整レイヤーを更新しました";
 "imageEditor.status.layerFilterUpdatedSelected" = "%d個のフィルターレイヤーを更新しました";
@@ -1798,6 +1799,7 @@
 "imageEditor.action.layerFitSelection" = "選択範囲に合わせる";
 "imageEditor.action.layerFillSelection" = "選択範囲を塗りつぶす";
 "imageEditor.action.layerTrimTransparentPixels" = "透明ピクセルをトリミング";
+"imageEditor.action.layerStyleBlendingOptions" = "描画オプション...";
 "imageEditor.action.layerStyleCopy" = "レイヤースタイルをコピー";
 "imageEditor.action.layerStylePaste" = "レイヤースタイルをペースト";
 "imageEditor.action.layerStyleClear" = "レイヤースタイルをクリア";

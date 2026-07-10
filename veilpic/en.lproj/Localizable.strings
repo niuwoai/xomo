@@ -1583,6 +1583,7 @@
 "imageEditor.status.layerStyleClipboardEmpty" = "Copy a layer style first";
 "imageEditor.status.layerStylePasted" = "Layer style pasted to %d layers";
 "imageEditor.status.layerStyleCleared" = "Layer style cleared from %d layers";
+"imageEditor.status.layerStyleReady" = "Layer style options ready";
 "imageEditor.status.layerStyleUpdated" = "Layer style updated";
 "imageEditor.status.layerAdjustmentUpdatedSelected" = "Updated %d adjustment layers";
 "imageEditor.status.layerFilterUpdatedSelected" = "Updated %d filter layers";
@@ -1798,6 +1799,7 @@
 "imageEditor.action.layerFitSelection" = "Fit to Selection";
 "imageEditor.action.layerFillSelection" = "Fill Selection";
 "imageEditor.action.layerTrimTransparentPixels" = "Trim Transparent Pixels";
+"imageEditor.action.layerStyleBlendingOptions" = "Blending Options...";
 "imageEditor.action.layerStyleCopy" = "Copy Layer Style";
 "imageEditor.action.layerStylePaste" = "Paste Layer Style";
 "imageEditor.action.layerStyleClear" = "Clear Layer Style";

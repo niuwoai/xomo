@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.426.0 - 2026-07-10
+
+### Added
+- 图片编辑器 Layer > Layer Style 新增 Photoshop 7 风格 Blending Options 入口，可直接打开属性面板准备编辑当前图层样式。
+
 ## 1.425.0 - 2026-07-10
 
 ### Added
