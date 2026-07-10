@@ -493,6 +493,46 @@ struct ImageEditorScopeTests {
         #expect(viewModel.statusText == L10n.text("imageEditor.status.colorEyedropperReady"))
     }
 
+    @Test func windowMenuExposesSwatchesPanelActionsInPhotoshopStyleLocation() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
+            encoding: .utf8
+        )
+        let swatchesMenuStart = try #require(source.range(of: "private var swatchesActionsMenu: some View"))
+        let nextMenuStart = try #require(
+            source[swatchesMenuStart.upperBound...].range(of: "private var layerActionsMenu: some View")
+        )
+        let swatchesMenuSource = source[swatchesMenuStart.lowerBound..<nextMenuStart.lowerBound]
+
+        #expect(swatchesMenuSource.contains("imageEditor.menu.window.swatches"))
+        #expect(swatchesMenuSource.contains("imageEditor.action.swatchesShowPanel"))
+        #expect(swatchesMenuSource.contains("viewModel.swatchesPanelSummaryText"))
+        #expect(swatchesMenuSource.contains("imageEditor.menu.window.swatches.foreground"))
+        #expect(swatchesMenuSource.contains("viewModel.applySwatchToForeground(swatch)"))
+        #expect(swatchesMenuSource.contains("imageEditor.menu.window.swatches.background"))
+        #expect(swatchesMenuSource.contains("viewModel.applySwatchToBackground(swatch)"))
+    }
+
+    @MainActor
+    @Test func swatchesPanelActionsApplyDefaultPaletteToForegroundAndBackground() throws {
+        let image = NSImage(size: NSSize(width: 16, height: 16))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let red = try #require(ImageEditorColorSwatch.defaultPalette.first { $0.id == "red" })
+        let blue = try #require(ImageEditorColorSwatch.defaultPalette.first { $0.id == "blue" })
+
+        viewModel.applySwatchToForeground(red)
+
+        #expect(Self.deviceRGBComponents(viewModel.foregroundColor) == Self.deviceRGBComponents(red.color))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.swatchForegroundApplied", red.title, viewModel.colorText))
+
+        viewModel.applySwatchToBackground(blue)
+
+        #expect(Self.deviceRGBComponents(viewModel.backgroundColor) == Self.deviceRGBComponents(blue.color))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.swatchBackgroundApplied", blue.title, viewModel.backgroundColorText))
+        #expect(viewModel.swatchesPanelSummaryText.contains(red.title))
+        #expect(viewModel.swatchesPanelSummaryText.contains(blue.title))
+    }
+
     @Test func windowMenuExposesLayerPanelActionsInPhotoshopStyleLocation() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),

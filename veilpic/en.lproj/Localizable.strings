@@ -344,6 +344,9 @@
 "imageEditor.menu.window.info" = "Info Panel";
 "imageEditor.menu.window.histogram" = "Histogram Panel";
 "imageEditor.menu.window.color" = "Color Panel";
+"imageEditor.menu.window.swatches" = "Swatches Panel";
+"imageEditor.menu.window.swatches.foreground" = "Set Foreground";
+"imageEditor.menu.window.swatches.background" = "Set Background";
 "imageEditor.menu.window.layers" = "Layers Panel";
 "imageEditor.menu.window.channels" = "Channels Panel";
 "imageEditor.menu.window.layerComps" = "Layer Comps Panel";
@@ -360,6 +363,7 @@
 "imageEditor.action.colorDefaultForegroundBackground" = "Default Foreground/Background";
 "imageEditor.action.colorSwapForegroundBackground" = "Swap Foreground/Background";
 "imageEditor.action.colorUseEyedropper" = "Use Eyedropper";
+"imageEditor.action.swatchesShowPanel" = "Show Swatches Panel";
 "imageEditor.action.layersShowPanel" = "Show Layers Panel";
 "imageEditor.action.layerCompsShowPanel" = "Show Layer Comps Panel";
 "imageEditor.action.historyShowPanel" = "Show History Panel";
@@ -1207,6 +1211,9 @@
 "imageEditor.status.colorDefaultForegroundBackground" = "Foreground and background colors reset to black and white";
 "imageEditor.status.colorSwapForegroundBackground" = "Foreground and background colors swapped";
 "imageEditor.status.colorEyedropperReady" = "Eyedropper selected for color sampling";
+"imageEditor.status.swatchesPanelSummary" = "Default swatches: %@";
+"imageEditor.status.swatchForegroundApplied" = "Foreground set to %@ (%@)";
+"imageEditor.status.swatchBackgroundApplied" = "Background set to %@ (%@)";
 "imageEditor.status.propertiesVisible" = "The Properties panel is already visible on the right";
 "imageEditor.status.zoomActualPixels" = "Viewing at actual pixels";
 "imageEditor.status.zoomFitOnScreen" = "Fit on screen";
@@ -1223,6 +1230,16 @@
 "imageEditor.project.error.emptyDocument" = "The project file has no recoverable layers";
 "imageEditor.status.textEmpty" = "Enter text in the Properties panel first";
 "imageEditor.status.penReady" = "Click the canvas to add path anchors";
+"imageEditor.swatch.black" = "Black";
+"imageEditor.swatch.white" = "White";
+"imageEditor.swatch.gray" = "Gray";
+"imageEditor.swatch.red" = "Red";
+"imageEditor.swatch.orange" = "Orange";
+"imageEditor.swatch.yellow" = "Yellow";
+"imageEditor.swatch.green" = "Green";
+"imageEditor.swatch.cyan" = "Cyan";
+"imageEditor.swatch.blue" = "Blue";
+"imageEditor.swatch.magenta" = "Magenta";
 "imageEditor.status.penPointAdded" = "Path anchors: %d";
 "imageEditor.status.penNeedsPoints" = "Add at least two anchors to create a path";
 "imageEditor.status.penClosed" = "Closed path shape created";

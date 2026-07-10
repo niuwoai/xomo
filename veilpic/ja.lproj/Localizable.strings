@@ -344,6 +344,9 @@
 "imageEditor.menu.window.info" = "情報パネル";
 "imageEditor.menu.window.histogram" = "ヒストグラムパネル";
 "imageEditor.menu.window.color" = "カラーパネル";
+"imageEditor.menu.window.swatches" = "スウォッチパネル";
+"imageEditor.menu.window.swatches.foreground" = "描画色に設定";
+"imageEditor.menu.window.swatches.background" = "背景色に設定";
 "imageEditor.menu.window.layers" = "レイヤーパネル";
 "imageEditor.menu.window.channels" = "チャンネルパネル";
 "imageEditor.menu.window.layerComps" = "レイヤーコンプパネル";
@@ -360,6 +363,7 @@
 "imageEditor.action.colorDefaultForegroundBackground" = "描画色/背景色を初期化";
 "imageEditor.action.colorSwapForegroundBackground" = "描画色/背景色を入れ替え";
 "imageEditor.action.colorUseEyedropper" = "スポイトを使用";
+"imageEditor.action.swatchesShowPanel" = "スウォッチパネルを表示";
 "imageEditor.action.layersShowPanel" = "レイヤーパネルを表示";
 "imageEditor.action.layerCompsShowPanel" = "レイヤーコンプパネルを表示";
 "imageEditor.action.historyShowPanel" = "履歴パネルを表示";
@@ -1207,6 +1211,9 @@
 "imageEditor.status.colorDefaultForegroundBackground" = "描画色と背景色を白黒に戻しました";
 "imageEditor.status.colorSwapForegroundBackground" = "描画色と背景色を入れ替えました";
 "imageEditor.status.colorEyedropperReady" = "スポイトでカラーを取得できます";
+"imageEditor.status.swatchesPanelSummary" = "標準スウォッチ：%@";
+"imageEditor.status.swatchForegroundApplied" = "描画色を%@に設定しました（%@）";
+"imageEditor.status.swatchBackgroundApplied" = "背景色を%@に設定しました（%@）";
 "imageEditor.status.propertiesVisible" = "プロパティパネルは右側に表示されています";
 "imageEditor.status.zoomActualPixels" = "実際のピクセルで表示しています";
 "imageEditor.status.zoomFitOnScreen" = "画面に合わせました";
@@ -1223,6 +1230,16 @@
 "imageEditor.project.error.emptyDocument" = "復元できるレイヤーがプロジェクト内にありません";
 "imageEditor.status.textEmpty" = "先にプロパティで文字を入力してください";
 "imageEditor.status.penReady" = "キャンバスをクリックしてパスのアンカーを追加";
+"imageEditor.swatch.black" = "黒";
+"imageEditor.swatch.white" = "白";
+"imageEditor.swatch.gray" = "グレー";
+"imageEditor.swatch.red" = "赤";
+"imageEditor.swatch.orange" = "オレンジ";
+"imageEditor.swatch.yellow" = "黄";
+"imageEditor.swatch.green" = "緑";
+"imageEditor.swatch.cyan" = "シアン";
+"imageEditor.swatch.blue" = "青";
+"imageEditor.swatch.magenta" = "マゼンタ";
 "imageEditor.status.penPointAdded" = "パスのアンカー：%d";
 "imageEditor.status.penNeedsPoints" = "パス作成には少なくとも2つのアンカーが必要です";
 "imageEditor.status.penClosed" = "閉じたパスシェイプを作成しました";

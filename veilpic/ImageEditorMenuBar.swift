@@ -1281,6 +1281,7 @@ extension ImageEditorView {
         infoActionsMenu
         histogramActionsMenu
         colorActionsMenu
+        swatchesActionsMenu
         Divider()
         layerActionsMenu
         channelActionsMenu
@@ -1354,6 +1355,30 @@ extension ImageEditorView {
             Divider()
             Button(L10n.text("imageEditor.action.colorUseEyedropper")) {
                 viewModel.selectEyedropperForColorSampling()
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var swatchesActionsMenu: some View {
+        Menu(L10n.text("imageEditor.menu.window.swatches")) {
+            Button(L10n.text("imageEditor.action.swatchesShowPanel")) {
+                viewModel.statusText = viewModel.swatchesPanelSummaryText
+            }
+            Divider()
+            Menu(L10n.text("imageEditor.menu.window.swatches.foreground")) {
+                ForEach(ImageEditorColorSwatch.defaultPalette) { swatch in
+                    Button(swatch.title) {
+                        viewModel.applySwatchToForeground(swatch)
+                    }
+                }
+            }
+            Menu(L10n.text("imageEditor.menu.window.swatches.background")) {
+                ForEach(ImageEditorColorSwatch.defaultPalette) { swatch in
+                    Button(swatch.title) {
+                        viewModel.applySwatchToBackground(swatch)
+                    }
+                }
             }
         }
     }

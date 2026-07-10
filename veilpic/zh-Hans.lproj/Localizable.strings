@@ -344,6 +344,9 @@
 "imageEditor.menu.window.info" = "信息面板";
 "imageEditor.menu.window.histogram" = "直方图面板";
 "imageEditor.menu.window.color" = "颜色面板";
+"imageEditor.menu.window.swatches" = "色板面板";
+"imageEditor.menu.window.swatches.foreground" = "设置前景色";
+"imageEditor.menu.window.swatches.background" = "设置背景色";
 "imageEditor.menu.window.layers" = "图层面板";
 "imageEditor.menu.window.channels" = "通道面板";
 "imageEditor.menu.window.layerComps" = "图层复合面板";
@@ -360,6 +363,7 @@
 "imageEditor.action.colorDefaultForegroundBackground" = "默认前景/背景色";
 "imageEditor.action.colorSwapForegroundBackground" = "交换前景/背景色";
 "imageEditor.action.colorUseEyedropper" = "使用吸管";
+"imageEditor.action.swatchesShowPanel" = "显示色板面板";
 "imageEditor.action.layersShowPanel" = "显示图层面板";
 "imageEditor.action.layerCompsShowPanel" = "显示图层复合面板";
 "imageEditor.action.historyShowPanel" = "显示历史记录面板";
@@ -1207,6 +1211,9 @@
 "imageEditor.status.colorDefaultForegroundBackground" = "前景色和背景色已恢复为黑白";
 "imageEditor.status.colorSwapForegroundBackground" = "已交换前景色和背景色";
 "imageEditor.status.colorEyedropperReady" = "已切换到吸管工具，可取样颜色";
+"imageEditor.status.swatchesPanelSummary" = "默认色板：%@";
+"imageEditor.status.swatchForegroundApplied" = "前景色已设为%@（%@）";
+"imageEditor.status.swatchBackgroundApplied" = "背景色已设为%@（%@）";
 "imageEditor.status.propertiesVisible" = "属性面板已在右侧显示";
 "imageEditor.status.zoomActualPixels" = "已按实际像素显示";
 "imageEditor.status.zoomFitOnScreen" = "已适合窗口显示";
@@ -1223,6 +1230,16 @@
 "imageEditor.project.error.emptyDocument" = "项目文件没有可恢复的图层";
 "imageEditor.status.textEmpty" = "请先在属性面板输入文字";
 "imageEditor.status.penReady" = "点击画布添加路径锚点";
+"imageEditor.swatch.black" = "黑色";
+"imageEditor.swatch.white" = "白色";
+"imageEditor.swatch.gray" = "灰色";
+"imageEditor.swatch.red" = "红色";
+"imageEditor.swatch.orange" = "橙色";
+"imageEditor.swatch.yellow" = "黄色";
+"imageEditor.swatch.green" = "绿色";
+"imageEditor.swatch.cyan" = "青色";
+"imageEditor.swatch.blue" = "蓝色";
+"imageEditor.swatch.magenta" = "洋红";
 "imageEditor.status.penPointAdded" = "已添加路径锚点：%d";
 "imageEditor.status.penNeedsPoints" = "至少需要两个锚点才能生成路径";
 "imageEditor.status.penClosed" = "已创建闭合路径形状";

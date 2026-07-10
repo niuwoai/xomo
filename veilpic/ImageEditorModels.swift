@@ -9,6 +9,33 @@ import AppKit
 import Foundation
 import simd
 
+struct ImageEditorColorSwatch: Identifiable {
+    let id: String
+    let nameKey: String
+    let color: NSColor
+
+    var title: String {
+        L10n.text(nameKey)
+    }
+
+    static let defaultPalette: [ImageEditorColorSwatch] = [
+        ImageEditorColorSwatch(id: "black", nameKey: "imageEditor.swatch.black", color: rgb(0, 0, 0)),
+        ImageEditorColorSwatch(id: "white", nameKey: "imageEditor.swatch.white", color: rgb(255, 255, 255)),
+        ImageEditorColorSwatch(id: "gray", nameKey: "imageEditor.swatch.gray", color: rgb(128, 128, 128)),
+        ImageEditorColorSwatch(id: "red", nameKey: "imageEditor.swatch.red", color: rgb(255, 0, 0)),
+        ImageEditorColorSwatch(id: "orange", nameKey: "imageEditor.swatch.orange", color: rgb(255, 128, 0)),
+        ImageEditorColorSwatch(id: "yellow", nameKey: "imageEditor.swatch.yellow", color: rgb(255, 230, 0)),
+        ImageEditorColorSwatch(id: "green", nameKey: "imageEditor.swatch.green", color: rgb(0, 170, 70)),
+        ImageEditorColorSwatch(id: "cyan", nameKey: "imageEditor.swatch.cyan", color: rgb(0, 190, 210)),
+        ImageEditorColorSwatch(id: "blue", nameKey: "imageEditor.swatch.blue", color: rgb(0, 92, 255)),
+        ImageEditorColorSwatch(id: "magenta", nameKey: "imageEditor.swatch.magenta", color: rgb(210, 0, 180))
+    ]
+
+    private static func rgb(_ red: CGFloat, _ green: CGFloat, _ blue: CGFloat) -> NSColor {
+        NSColor(deviceRed: red / 255, green: green / 255, blue: blue / 255, alpha: 1)
+    }
+}
+
 enum ImageEditorTool: String, CaseIterable, Identifiable {
     case move
     case marquee

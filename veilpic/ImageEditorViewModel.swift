@@ -985,6 +985,13 @@ final class ImageEditorViewModel: ObservableObject {
         L10n.format("imageEditor.status.colorPanelSummary", colorText, backgroundColorText)
     }
 
+    var swatchesPanelSummaryText: String {
+        let names = ImageEditorColorSwatch.defaultPalette
+            .map(\.title)
+            .joined(separator: ", ")
+        return L10n.format("imageEditor.status.swatchesPanelSummary", names)
+    }
+
     func resetForegroundBackgroundColors() {
         foregroundColor = .black
         backgroundColor = .white
@@ -1001,6 +1008,16 @@ final class ImageEditorViewModel: ObservableObject {
     func selectEyedropperForColorSampling() {
         selectTool(.eyedropper)
         statusText = L10n.text("imageEditor.status.colorEyedropperReady")
+    }
+
+    func applySwatchToForeground(_ swatch: ImageEditorColorSwatch) {
+        foregroundColor = swatch.color
+        statusText = L10n.format("imageEditor.status.swatchForegroundApplied", swatch.title, colorText)
+    }
+
+    func applySwatchToBackground(_ swatch: ImageEditorColorSwatch) {
+        backgroundColor = swatch.color
+        statusText = L10n.format("imageEditor.status.swatchBackgroundApplied", swatch.title, backgroundColorText)
     }
 
     private func rgbText(for nsColor: NSColor) -> String {
