@@ -919,6 +919,15 @@ struct ImageEditorView: View {
             )
             .toggleStyle(.checkbox)
 
+            Toggle(
+                L10n.text("imageEditor.action.transformControlsVisible"),
+                isOn: Binding(
+                    get: { viewModel.document.areTransformControlsVisible },
+                    set: { _ in viewModel.toggleTransformControlsVisible() }
+                )
+            )
+            .toggleStyle(.checkbox)
+
             HStack(spacing: 6) {
                 Button(L10n.text("imageEditor.action.guideVerticalCenter")) {
                     viewModel.addVerticalGuideAtCanvasCenter()
@@ -1684,7 +1693,9 @@ struct ImageEditorView: View {
 
     @ViewBuilder
     private func layerTransformOverlay(in size: CGSize) -> some View {
-        if let layerFrame = viewModel.selectedLayerTransformFrame {
+        if viewModel.document.areExtrasVisible,
+           viewModel.document.areTransformControlsVisible,
+           let layerFrame = viewModel.selectedLayerTransformFrame {
             let rect = viewRect(from: layerFrame, in: size)
             Rectangle()
                 .stroke(Color(nsColor: ImageEditorTheme.selected), style: StrokeStyle(lineWidth: 1.6, dash: [7, 4]))

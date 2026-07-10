@@ -1929,6 +1929,7 @@
 "imageEditor.action.guidesVisible" = "ガイドを表示";
 "imageEditor.action.guidesSnap" = "ガイドにスナップ";
 "imageEditor.action.selectionEdgesVisible" = "選択範囲の境界を表示";
+"imageEditor.action.transformControlsVisible" = "変形コントロールを表示";
 "imageEditor.action.gridVisible" = "グリッドを表示";
 "imageEditor.action.gridSnap" = "グリッドにスナップ";
 "imageEditor.action.guideVerticalCenter" = "垂直中央";
@@ -1944,6 +1945,7 @@
 "imageEditor.history.guidesVisibility" = "ガイド表示を切り替え";
 "imageEditor.history.guidesSnapping" = "ガイドスナップを切り替え";
 "imageEditor.history.selectionEdgesVisibility" = "選択範囲の境界表示を切り替え";
+"imageEditor.history.transformControlsVisibility" = "変形コントロール表示を切り替え";
 "imageEditor.history.gridVisibility" = "グリッド表示を切り替え";
 "imageEditor.history.gridSnapping" = "グリッドスナップを切り替え";
 "imageEditor.status.guideAdded" = "ガイドを追加しました";
@@ -1961,6 +1963,8 @@
 "imageEditor.status.guidesSnappingOff" = "ガイドスナップを無効にしました";
 "imageEditor.status.selectionEdgesVisible" = "選択範囲の境界を表示しました";
 "imageEditor.status.selectionEdgesHidden" = "選択範囲の境界を非表示にしました";
+"imageEditor.status.transformControlsVisible" = "変形コントロールを表示しました";
+"imageEditor.status.transformControlsHidden" = "変形コントロールを非表示にしました";
 "imageEditor.status.gridVisible" = "グリッドを表示しました";
 "imageEditor.status.gridHidden" = "グリッドを非表示にしました";
 "imageEditor.status.gridSnappingOn" = "グリッドスナップを有効にしました";

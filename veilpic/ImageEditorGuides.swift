@@ -108,6 +108,17 @@ extension ImageEditorViewModel {
         )
     }
 
+    func toggleTransformControlsVisible() {
+        pushUndo()
+        document.areTransformControlsVisible.toggle()
+        appendHistory(L10n.text("imageEditor.history.transformControlsVisibility"))
+        statusText = L10n.text(
+            document.areTransformControlsVisible
+                ? "imageEditor.status.transformControlsVisible"
+                : "imageEditor.status.transformControlsHidden"
+        )
+    }
+
     func toggleGridVisible() {
         pushUndo()
         document.isGridVisible.toggle()

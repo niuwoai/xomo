@@ -1212,6 +1212,9 @@ extension ImageEditorView {
         Button(L10n.text("imageEditor.action.selectionEdgesVisible")) {
             viewModel.toggleSelectionEdgesVisible()
         }
+        Button(L10n.text("imageEditor.action.transformControlsVisible")) {
+            viewModel.toggleTransformControlsVisible()
+        }
         Button(L10n.text("imageEditor.action.gridVisible")) {
             viewModel.toggleGridVisible()
         }

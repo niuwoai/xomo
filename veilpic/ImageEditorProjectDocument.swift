@@ -64,6 +64,7 @@ struct ImageEditorProjectDocument: Codable {
     var areRulersVisible: Bool?
     var isGuideSnappingEnabled: Bool?
     var areSelectionEdgesVisible: Bool?
+    var areTransformControlsVisible: Bool?
     var isGridVisible: Bool?
     var isGridSnappingEnabled: Bool?
     var gridSpacing: CGFloat?
@@ -97,6 +98,7 @@ struct ImageEditorProjectDocument: Codable {
         areRulersVisible = document.areRulersVisible
         isGuideSnappingEnabled = document.isGuideSnappingEnabled
         areSelectionEdgesVisible = document.areSelectionEdgesVisible
+        areTransformControlsVisible = document.areTransformControlsVisible
         isGridVisible = document.isGridVisible
         isGridSnappingEnabled = document.isGridSnappingEnabled
         gridSpacing = document.gridSpacing
@@ -159,6 +161,7 @@ struct ImageEditorProjectDocument: Codable {
         document.areRulersVisible = areRulersVisible ?? true
         document.isGuideSnappingEnabled = isGuideSnappingEnabled ?? true
         document.areSelectionEdgesVisible = areSelectionEdgesVisible ?? true
+        document.areTransformControlsVisible = areTransformControlsVisible ?? true
         document.isGridVisible = isGridVisible ?? false
         document.isGridSnappingEnabled = isGridSnappingEnabled ?? false
         document.gridSpacing = max(4, min(512, gridSpacing ?? 32))

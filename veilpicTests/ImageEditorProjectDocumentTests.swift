@@ -206,6 +206,7 @@ struct ImageEditorProjectDocumentTests {
         viewModel.document.selectedLayerIDs = [pixelLayer.id, textLayer.id]
         viewModel.document.areExtrasVisible = false
         viewModel.document.areSelectionEdgesVisible = false
+        viewModel.document.areTransformControlsVisible = false
         viewModel.document.isGridVisible = true
         viewModel.document.isGridSnappingEnabled = true
         viewModel.document.gridSpacing = 40
@@ -240,6 +241,7 @@ struct ImageEditorProjectDocumentTests {
         #expect(restoredViewModel.document.selectedLayerIDs.contains(textLayer.id))
         #expect(!restoredViewModel.document.areExtrasVisible)
         #expect(!restoredViewModel.document.areSelectionEdgesVisible)
+        #expect(!restoredViewModel.document.areTransformControlsVisible)
         #expect(restoredViewModel.document.isGridVisible)
         #expect(restoredViewModel.document.isGridSnappingEnabled)
         #expect(restoredViewModel.document.gridSpacing == 40)

@@ -3581,6 +3581,7 @@ struct ImageEditorDocument {
     var areRulersVisible: Bool
     var isGuideSnappingEnabled: Bool
     var areSelectionEdgesVisible: Bool
+    var areTransformControlsVisible: Bool
     var isGridVisible: Bool
     var isGridSnappingEnabled: Bool
     var gridSpacing: CGFloat
@@ -3609,6 +3610,7 @@ struct ImageEditorDocument {
         areRulersVisible = true
         isGuideSnappingEnabled = true
         areSelectionEdgesVisible = true
+        areTransformControlsVisible = true
         isGridVisible = false
         isGridSnappingEnabled = false
         gridSpacing = 32

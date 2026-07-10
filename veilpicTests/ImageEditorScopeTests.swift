@@ -169,6 +169,26 @@ struct ImageEditorScopeTests {
         #expect(viewModel.document.selection == selection)
     }
 
+    @MainActor
+    @Test func imageEditorCanHideTransformControlsWithoutChangingSelectedLayerFrame() throws {
+        let image = NSImage(size: NSSize(width: 80, height: 60))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let selectedFrame = try #require(viewModel.selectedLayerTransformFrame)
+
+        viewModel.toggleTransformControlsVisible()
+
+        #expect(!viewModel.document.areTransformControlsVisible)
+        #expect(viewModel.selectedLayerTransformFrame == selectedFrame)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.transformControlsVisibility"))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.transformControlsHidden"))
+
+        viewModel.toggleTransformControlsVisible()
+
+        #expect(viewModel.document.areTransformControlsVisible)
+        #expect(viewModel.selectedLayerTransformFrame == selectedFrame)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.transformControlsVisible"))
+    }
+
     @Test func imageEditorDoesNotGrowIntoHeavyExpansionCategories() {
         let blockedFragments = [
             "3d",
