@@ -1213,6 +1213,22 @@ struct ImageEditorView: View {
         }
     }
 
+    private var selectedLayerBevelHighlightColorBinding: Binding<Color> {
+        Binding {
+            Color(nsColor: viewModel.selectedLayerBevelHighlightColor)
+        } set: { value in
+            viewModel.setSelectedLayerBevelHighlightColor(NSColor(value))
+        }
+    }
+
+    private var selectedLayerBevelShadowColorBinding: Binding<Color> {
+        Binding {
+            Color(nsColor: viewModel.selectedLayerBevelShadowColor)
+        } set: { value in
+            viewModel.setSelectedLayerBevelShadowColor(NSColor(value))
+        }
+    }
+
     private var selectedLayerStrokePositionBinding: Binding<ImageEditorStrokePosition> {
         Binding {
             viewModel.selectedLayerStrokePosition
@@ -3242,6 +3258,24 @@ struct ImageEditorView: View {
                         in: 0.05...1,
                         step: 0.05
                     )
+                }
+                HStack(spacing: 8) {
+                    Text(L10n.text("imageEditor.properties.bevelHighlightColor"))
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                    ColorPicker("", selection: selectedLayerBevelHighlightColorBinding, supportsOpacity: false)
+                        .labelsHidden()
+                        .frame(width: 32)
+                    Spacer(minLength: 4)
+                }
+                HStack(spacing: 8) {
+                    Text(L10n.text("imageEditor.properties.bevelShadowColor"))
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                    ColorPicker("", selection: selectedLayerBevelShadowColorBinding, supportsOpacity: false)
+                        .labelsHidden()
+                        .frame(width: 32)
+                    Spacer(minLength: 4)
                 }
                 Stepper(
                     L10n.format("imageEditor.properties.bevelSoftenValue", Int(viewModel.selectedLayerBevelSoften.rounded())),

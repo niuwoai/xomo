@@ -901,6 +901,8 @@ struct ImageEditorLayerStyleTests {
 
         viewModel.setSelectedLayerBevelSize(8)
         viewModel.setSelectedLayerBevelOpacity(0.8)
+        viewModel.setSelectedLayerBevelHighlightColor(.systemRed)
+        viewModel.setSelectedLayerBevelShadowColor(.systemBlue)
         viewModel.setSelectedLayerBevelAngle(45)
         viewModel.setSelectedLayerBevelDirection(.up)
         let upBevelData = try #require(viewModel.currentImage.qingtuPNGData())
@@ -916,6 +918,12 @@ struct ImageEditorLayerStyleTests {
         #expect(styledLayer.style.bevelOpacity == 0.8)
         #expect(styledLayer.style.bevelDirection == .down)
         #expect(styledLayer.style.bevelSoften == 4)
+        let bevelHighlightColor = try #require(styledLayer.style.bevelHighlightColor.usingColorSpace(.deviceRGB))
+        let bevelShadowColor = try #require(styledLayer.style.bevelShadowColor.usingColorSpace(.deviceRGB))
+        #expect(bevelHighlightColor.redComponent > 0.85)
+        #expect(bevelHighlightColor.greenComponent < 0.3)
+        #expect(bevelShadowColor.blueComponent > 0.85)
+        #expect(bevelShadowColor.redComponent < 0.3)
         #expect(viewModel.selectedLayerBevelDirection == .down)
         #expect(viewModel.selectedLayerBevelSoften == 4)
         #expect(layerPixelsAfterStyle == layerPixelsBeforeStyle)
@@ -930,6 +938,10 @@ struct ImageEditorLayerStyleTests {
         #expect(restoredLayer.style.bevelEnabled)
         #expect(restoredLayer.style.bevelDirection == .down)
         #expect(restoredLayer.style.bevelSoften == 4)
+        let restoredHighlightColor = try #require(restoredLayer.style.bevelHighlightColor.usingColorSpace(.deviceRGB))
+        let restoredShadowColor = try #require(restoredLayer.style.bevelShadowColor.usingColorSpace(.deviceRGB))
+        #expect(restoredHighlightColor.redComponent > 0.85)
+        #expect(restoredShadowColor.blueComponent > 0.85)
     }
 
     @Test func imageEditorInnerShadowIsNonDestructiveAndUpdatesStyleParameters() async throws {

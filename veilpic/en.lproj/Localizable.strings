@@ -871,6 +871,8 @@
 "imageEditor.properties.satinAngleValue" = "Satin Angle: %d°";
 "imageEditor.properties.bevelSizeValue" = "Bevel Size: %d px";
 "imageEditor.properties.bevelOpacityValue" = "Bevel Opacity: %d%%";
+"imageEditor.properties.bevelHighlightColor" = "Bevel Highlight Color";
+"imageEditor.properties.bevelShadowColor" = "Bevel Shadow Color";
 "imageEditor.properties.bevelSoftenValue" = "Bevel Soften: %d px";
 "imageEditor.properties.bevelUseGlobalLight" = "Use Global Light for Bevel";
 "imageEditor.properties.bevelDirection" = "Bevel Direction";

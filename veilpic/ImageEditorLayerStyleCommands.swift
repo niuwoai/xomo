@@ -314,6 +314,14 @@ extension ImageEditorViewModel {
         Double(document.selectedLayer?.style.bevelOpacity ?? 0.38)
     }
 
+    var selectedLayerBevelHighlightColor: NSColor {
+        document.selectedLayer?.style.bevelHighlightColor ?? .white
+    }
+
+    var selectedLayerBevelShadowColor: NSColor {
+        document.selectedLayer?.style.bevelShadowColor ?? .black
+    }
+
     var selectedLayerBevelSoften: Double {
         Double(document.selectedLayer?.style.bevelSoften ?? 0)
     }
@@ -1004,6 +1012,20 @@ extension ImageEditorViewModel {
         updateSelectedLayerStyle {
             $0.bevelEnabled = true
             $0.bevelOpacity = max(0.05, min(1, CGFloat(opacity)))
+        }
+    }
+
+    func setSelectedLayerBevelHighlightColor(_ color: NSColor) {
+        updateSelectedLayerStyle {
+            $0.bevelEnabled = true
+            $0.bevelHighlightColor = color.usingColorSpace(.sRGB) ?? color
+        }
+    }
+
+    func setSelectedLayerBevelShadowColor(_ color: NSColor) {
+        updateSelectedLayerStyle {
+            $0.bevelEnabled = true
+            $0.bevelShadowColor = color.usingColorSpace(.sRGB) ?? color
         }
     }
 

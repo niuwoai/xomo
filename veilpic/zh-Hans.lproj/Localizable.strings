@@ -871,6 +871,8 @@
 "imageEditor.properties.satinAngleValue" = "光泽角度：%d°";
 "imageEditor.properties.bevelSizeValue" = "斜面大小：%d px";
 "imageEditor.properties.bevelOpacityValue" = "斜面不透明度：%d%%";
+"imageEditor.properties.bevelHighlightColor" = "斜面高光颜色";
+"imageEditor.properties.bevelShadowColor" = "斜面阴影颜色";
 "imageEditor.properties.bevelSoftenValue" = "斜面柔化：%d px";
 "imageEditor.properties.bevelUseGlobalLight" = "斜面使用全局光";
 "imageEditor.properties.bevelDirection" = "斜面方向";

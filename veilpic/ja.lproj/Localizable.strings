@@ -871,6 +871,8 @@
 "imageEditor.properties.satinAngleValue" = "サテン角度：%d°";
 "imageEditor.properties.bevelSizeValue" = "ベベルサイズ：%d px";
 "imageEditor.properties.bevelOpacityValue" = "ベベル不透明度：%d%%";
+"imageEditor.properties.bevelHighlightColor" = "ベベルハイライトカラー";
+"imageEditor.properties.bevelShadowColor" = "ベベルシャドウカラー";
 "imageEditor.properties.bevelSoftenValue" = "ベベルソフト：%d px";
 "imageEditor.properties.bevelUseGlobalLight" = "ベベルにグローバルライトを使用";
 "imageEditor.properties.bevelDirection" = "ベベル方向";
