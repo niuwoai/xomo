@@ -1258,6 +1258,12 @@ extension ImageEditorView {
 
     @ViewBuilder
     private var filterMenu: some View {
+        Button(L10n.text("imageEditor.action.lastFilter")) {
+            viewModel.applySelectedFilter()
+        }
+        .keyboardShortcut("f", modifiers: [.command])
+        .disabled(!viewModel.canApplySelectedFilter)
+        Divider()
         Button(L10n.text("imageEditor.action.autoLevels")) {
             viewModel.autoLevelsSelectedLayer()
         }

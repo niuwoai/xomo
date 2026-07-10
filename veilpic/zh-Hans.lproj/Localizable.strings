@@ -429,6 +429,7 @@
 "imageEditor.export.outputSize" = "输出尺寸";
 "imageEditor.export.saveAs" = "另存为";
 "imageEditor.action.applyAdjustment" = "应用调整";
+"imageEditor.action.lastFilter" = "上次滤镜";
 "imageEditor.action.autoLevels" = "自动色阶";
 "imageEditor.action.autoContrast" = "自动对比度";
 "imageEditor.action.autoColor" = "自动颜色";
@@ -1250,6 +1251,8 @@
 "imageEditor.history.invert" = "反相";
 "imageEditor.history.invertSelected" = "反相所选图层";
 "imageEditor.history.adjustmentSelected" = "将 %@ 应用到所选图层";
+"imageEditor.history.filter" = "%@";
+"imageEditor.history.filterSelected" = "将 %@ 应用到所选图层";
 "imageEditor.status.ready" = "%@ · %@ · 就绪";
 "imageEditor.status.toolsPanelSummary" = "当前工具：%@ | 可用工具：%d";
 "imageEditor.status.toolsPanelToolSelected" = "已选择%@：%@";
@@ -1351,6 +1354,9 @@
 "imageEditor.status.colorSampled" = "已取样前景色";
 "imageEditor.status.gradientApplied" = "已应用拖拽渐变";
 "imageEditor.status.adjustmentFailed" = "调整失败";
+"imageEditor.status.filter" = "已应用 %@";
+"imageEditor.status.filterFailed" = "滤镜失败";
+"imageEditor.status.filterSelected" = "已将 %@ 应用到 %d 个图层";
 "imageEditor.status.autoLevels" = "已自动校正当前图层色阶";
 "imageEditor.status.autoContrast" = "已自动校正当前图层对比度";
 "imageEditor.status.autoColor" = "已自动校正当前图层颜色";

@@ -492,6 +492,10 @@ final class ImageEditorViewModel: ObservableObject {
         canAutoLevelsSelectedLayer
     }
 
+    var canApplySelectedFilter: Bool {
+        canAutoLevelsSelectedLayer
+    }
+
     var selectedLayerSmartFilters: [ImageEditorSmartFilter] {
         document.selectedLayer?.smartFilters ?? []
     }
@@ -3284,6 +3288,42 @@ final class ImageEditorViewModel: ObservableObject {
             statusText = L10n.format("imageEditor.status.adjustmentSelected", title, indices.count)
         }
         resetAdjustmentControls()
+    }
+
+    func applySelectedFilter() {
+        let title = selectedFilter.title
+        let indices = editableSelectedLayerIndices()
+        let settings = currentFilterSettings()
+        let outputs = indices.reduce(into: [Int: NSImage]()) { result, index in
+            if let image = document.layers[index].image.filtered(
+                kind: selectedFilter,
+                intensity: filterIntensity,
+                settings: settings
+            ) {
+                result[index] = image
+            }
+        }
+        guard !indices.isEmpty, outputs.count == indices.count else {
+            statusText = L10n.text("imageEditor.status.filterFailed")
+            return
+        }
+
+        pushUndo()
+        for index in indices {
+            guard let normalized = outputs[index]?.normalizedBitmapImage() else { continue }
+            let original = document.layers[index].image
+            let clipped = clippedToSelection(original: original, output: normalized)
+            document.layers[index].image = document.isEffectivelyTransparencyLocked(document.layers[index])
+                ? (clipped.preservingAlpha(from: original) ?? clipped)
+                : clipped
+        }
+        if indices.count == 1 {
+            appendHistory(L10n.format("imageEditor.history.filter", title))
+            statusText = L10n.format("imageEditor.status.filter", title)
+        } else {
+            appendHistory(L10n.format("imageEditor.history.filterSelected", title))
+            statusText = L10n.format("imageEditor.status.filterSelected", title, indices.count)
+        }
     }
 
     func autoLevelsSelectedLayer() {

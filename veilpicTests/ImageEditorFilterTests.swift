@@ -12,6 +12,28 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct ImageEditorFilterTests {
+    @Test func imageEditorAppliesCurrentFilterWithClassicLastFilterCommand() throws {
+        let canvasSize = NSSize(width: 48, height: 32)
+        let sourceImage = solidImage(size: canvasSize, color: NSColor(calibratedWhite: 0.5, alpha: 1))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: sourceImage) { _ in }
+
+        let beforeA = try #require(viewModel.currentImage.color(at: CGPoint(x: 12, y: 16))?.usingColorSpace(.deviceRGB))
+        let beforeB = try #require(viewModel.currentImage.color(at: CGPoint(x: 13, y: 16))?.usingColorSpace(.deviceRGB))
+
+        #expect(viewModel.canApplySelectedFilter)
+        viewModel.selectedFilter = .addNoise
+        viewModel.filterIntensity = 0.8
+        viewModel.applySelectedFilter()
+
+        let afterA = try #require(viewModel.currentImage.color(at: CGPoint(x: 12, y: 16))?.usingColorSpace(.deviceRGB))
+        let afterB = try #require(viewModel.currentImage.color(at: CGPoint(x: 13, y: 16))?.usingColorSpace(.deviceRGB))
+
+        #expect(abs(beforeA.redComponent - beforeB.redComponent) < 0.002)
+        #expect(abs(afterA.redComponent - afterB.redComponent) > 0.02)
+        #expect(viewModel.document.history.last?.title == L10n.format("imageEditor.history.filter", ImageEditorFilter.addNoise.title))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.filter", ImageEditorFilter.addNoise.title))
+    }
+
     @Test func imageEditorBatchAddsUpdatesAndClearsSmartFiltersAcrossEditableSelection() async throws {
         let canvasSize = NSSize(width: 32, height: 24)
         let viewModel = ImageEditorViewModel(

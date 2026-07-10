@@ -429,6 +429,7 @@
 "imageEditor.export.outputSize" = "出力サイズ";
 "imageEditor.export.saveAs" = "別名で保存";
 "imageEditor.action.applyAdjustment" = "調整を適用";
+"imageEditor.action.lastFilter" = "最後のフィルター";
 "imageEditor.action.autoLevels" = "自動レベル補正";
 "imageEditor.action.autoContrast" = "自動コントラスト";
 "imageEditor.action.autoColor" = "自動カラー補正";
@@ -1250,6 +1251,8 @@
 "imageEditor.history.invert" = "反転";
 "imageEditor.history.invertSelected" = "選択レイヤーを反転";
 "imageEditor.history.adjustmentSelected" = "%@ を選択レイヤーに適用";
+"imageEditor.history.filter" = "%@";
+"imageEditor.history.filterSelected" = "%@ を選択レイヤーに適用";
 "imageEditor.status.ready" = "%@ · %@ · 準備完了";
 "imageEditor.status.toolsPanelSummary" = "現在のツール：%@ | 利用可能なツール：%d";
 "imageEditor.status.toolsPanelToolSelected" = "%@を選択しました：%@";
@@ -1351,6 +1354,9 @@
 "imageEditor.status.colorSampled" = "前景色を取得しました";
 "imageEditor.status.gradientApplied" = "ドラッグしたグラデを適用しました";
 "imageEditor.status.adjustmentFailed" = "調整に失敗しました";
+"imageEditor.status.filter" = "%@ を適用しました";
+"imageEditor.status.filterFailed" = "フィルターに失敗しました";
+"imageEditor.status.filterSelected" = "%@ を%d個のレイヤーに適用しました";
 "imageEditor.status.autoLevels" = "現在のレイヤーのレベルを自動補正しました";
 "imageEditor.status.autoContrast" = "現在のレイヤーのコントラストを自動補正しました";
 "imageEditor.status.autoColor" = "現在のレイヤーのカラーを自動補正しました";

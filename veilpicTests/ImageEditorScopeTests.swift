@@ -713,6 +713,23 @@ struct ImageEditorScopeTests {
         #expect(imageMenuSource.contains(".keyboardShortcut(\"b\", modifiers: [.command, .shift])"))
     }
 
+    @Test func filterMenuExposesClassicLastFilterShortcut() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
+            encoding: .utf8
+        )
+        let filterMenuStart = try #require(source.range(of: "private var filterMenu: some View"))
+        let nextMenuStart = try #require(
+            source[filterMenuStart.upperBound...].range(of: "private var viewMenu: some View")
+        )
+        let filterMenuSource = source[filterMenuStart.lowerBound..<nextMenuStart.lowerBound]
+
+        #expect(filterMenuSource.contains("imageEditor.action.lastFilter"))
+        #expect(filterMenuSource.contains("viewModel.applySelectedFilter()"))
+        #expect(filterMenuSource.contains(".keyboardShortcut(\"f\", modifiers: [.command])"))
+        #expect(filterMenuSource.contains("viewModel.canApplySelectedFilter"))
+    }
+
     @Test func editMenuExposesClassicEditingShortcuts() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),

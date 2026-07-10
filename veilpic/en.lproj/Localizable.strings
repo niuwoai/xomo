@@ -429,6 +429,7 @@
 "imageEditor.export.outputSize" = "Output Size";
 "imageEditor.export.saveAs" = "Save As";
 "imageEditor.action.applyAdjustment" = "Apply Adjustment";
+"imageEditor.action.lastFilter" = "Last Filter";
 "imageEditor.action.autoLevels" = "Auto Levels";
 "imageEditor.action.autoContrast" = "Auto Contrast";
 "imageEditor.action.autoColor" = "Auto Color";
@@ -1250,6 +1251,8 @@
 "imageEditor.history.invert" = "Invert";
 "imageEditor.history.invertSelected" = "Invert Selected Layers";
 "imageEditor.history.adjustmentSelected" = "Apply %@ to Selected Layers";
+"imageEditor.history.filter" = "%@";
+"imageEditor.history.filterSelected" = "%@ on Selected Layers";
 "imageEditor.status.ready" = "%@ · %@ · Ready";
 "imageEditor.status.toolsPanelSummary" = "Current tool: %@ | Available tools: %d";
 "imageEditor.status.toolsPanelToolSelected" = "%@ selected: %@";
@@ -1351,6 +1354,9 @@
 "imageEditor.status.colorSampled" = "Foreground color sampled";
 "imageEditor.status.gradientApplied" = "Gradient applied from drag";
 "imageEditor.status.adjustmentFailed" = "Adjustment failed";
+"imageEditor.status.filter" = "%@ applied";
+"imageEditor.status.filterFailed" = "Filter failed";
+"imageEditor.status.filterSelected" = "%@ applied to %d layers";
 "imageEditor.status.autoLevels" = "Current layer levels auto-corrected";
 "imageEditor.status.autoContrast" = "Current layer contrast auto-corrected";
 "imageEditor.status.autoColor" = "Current layer color auto-corrected";
