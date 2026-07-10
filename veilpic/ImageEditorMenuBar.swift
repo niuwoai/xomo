@@ -198,6 +198,10 @@ extension ImageEditorView {
         Button(L10n.text("imageEditor.action.cropCenter")) {
             viewModel.cropCenter()
         }
+        Button(L10n.text("imageEditor.action.cropSelection")) {
+            viewModel.cropToSelection()
+        }
+        .disabled(!viewModel.canCropToSelection)
         Button(L10n.text("imageEditor.action.trimTransparentPixels")) {
             viewModel.trimTransparentPixels()
         }

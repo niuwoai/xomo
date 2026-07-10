@@ -137,6 +137,51 @@ struct ImageEditorCanvasCommandTests {
     }
 
     @Test
+    func cropToSelectionUsesSelectionBoundsAndPreservesCanvasState() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: testImage(color: .systemGreen, size: NSSize(width: 100, height: 80))
+        ) { _ in }
+        let layerIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[layerIndex].frame = CGRect(x: 30, y: 22, width: 20, height: 16)
+        viewModel.document.layers[layerIndex].image = NSImage.transparent(size: CGSize(width: 20, height: 16))
+        viewModel.document.layers[layerIndex].mask = NSImage.opaqueMask(size: CGSize(width: 100, height: 80))
+        viewModel.document.selection = .rectangle(CGRect(x: 20, y: 10, width: 50, height: 40))
+        viewModel.document.savedSelection = .rectangle(CGRect(x: 42, y: 28, width: 10, height: 8))
+        viewModel.document.alphaChannels = [
+            ImageEditorAlphaChannel(
+                name: "Selection Crop Alpha",
+                mask: sparseMask(width: 100, height: 80, points: [CGPoint(x: 26, y: 16), CGPoint(x: 90, y: 70)])
+            )
+        ]
+        viewModel.document.guides = [
+            ImageEditorGuide(orientation: .vertical, position: 25),
+            ImageEditorGuide(orientation: .horizontal, position: 15),
+            ImageEditorGuide(orientation: .vertical, position: 90)
+        ]
+
+        #expect(viewModel.canCropToSelection)
+        viewModel.cropToSelection()
+
+        let croppedAlpha = try #require(viewModel.document.alphaChannels.first?.mask)
+        #expect(viewModel.document.canvasSize == CGSize(width: 50, height: 40))
+        #expect(viewModel.document.layers[layerIndex].frame == CGRect(x: 10, y: 12, width: 20, height: 16))
+        #expect(viewModel.document.layers[layerIndex].mask?.size == CGSize(width: 50, height: 40))
+        #expect(viewModel.document.selection?.points.first == CGPoint(x: 0, y: 0))
+        #expect(viewModel.document.savedSelection?.points.first == CGPoint(x: 22, y: 18))
+        #expect(croppedAlpha.width == 50)
+        #expect(croppedAlpha.height == 40)
+        #expect(croppedAlpha.alpha[6 * 50 + 6] == 255)
+        #expect(croppedAlpha.alpha.filter { $0 == 255 }.count == 1)
+        #expect(viewModel.document.guides.count == 2)
+        #expect(viewModel.document.guides.contains { $0.orientation == .vertical && $0.position == 5 })
+        #expect(viewModel.document.guides.contains { $0.orientation == .horizontal && $0.position == 5 })
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.cropSelection"))
+        #expect(!viewModel.canCropToSelection)
+        #expect(viewModel.canUndo)
+    }
+
+    @Test
     func canvasRotationCommandsTransformLayerFramesAndHistory() throws {
         let viewModel = ImageEditorViewModel(
             sourceName: "source.png",

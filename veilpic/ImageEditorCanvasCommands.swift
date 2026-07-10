@@ -158,6 +158,23 @@ extension ImageEditorViewModel {
         crop(to: cropRect)
     }
 
+    var canCropToSelection: Bool {
+        cropSelectionRect() != nil
+    }
+
+    func cropToSelection() {
+        guard document.selection != nil else {
+            statusText = L10n.text("imageEditor.status.noSelection")
+            return
+        }
+        guard let cropRect = cropSelectionRect() else {
+            statusText = L10n.text("imageEditor.status.cropSelectionInvalid")
+            return
+        }
+
+        crop(to: cropRect, historyTitle: L10n.text("imageEditor.history.cropSelection"))
+    }
+
     func trimTransparentPixels() {
         let width = max(1, Int(document.canvasSize.width.rounded()))
         let height = max(1, Int(document.canvasSize.height.rounded()))
@@ -302,6 +319,17 @@ extension ImageEditorViewModel {
         let revealRect = canvasBounds.union(contentBounds).integral
         guard revealRect.width > canvasBounds.width || revealRect.height > canvasBounds.height else { return nil }
         return revealRect
+    }
+
+    private func cropSelectionRect() -> CGRect? {
+        guard let selection = document.selection else { return nil }
+        let canvasBounds = CGRect(origin: .zero, size: document.canvasSize)
+        let rect = selection.bounds.standardized.intersection(canvasBounds).integral
+        guard rect.width >= 8,
+              rect.height >= 8,
+              rect.width < canvasBounds.width || rect.height < canvasBounds.height
+        else { return nil }
+        return rect
     }
 }
 
