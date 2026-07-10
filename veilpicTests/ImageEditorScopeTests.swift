@@ -403,6 +403,10 @@ struct ImageEditorScopeTests {
         #expect(windowMenuSource.contains("imageEditor.action.workspaceShowPanels"))
         #expect(windowMenuSource.contains("viewModel.toggleWorkspaceChromeVisibility()"))
         #expect(windowMenuSource.contains(".keyboardShortcut(.tab, modifiers: [])"))
+        #expect(windowMenuSource.contains("imageEditor.action.rightDockHidePanels"))
+        #expect(windowMenuSource.contains("imageEditor.action.rightDockShowPanels"))
+        #expect(windowMenuSource.contains("viewModel.toggleRightDockVisibility()"))
+        #expect(windowMenuSource.contains(".keyboardShortcut(.tab, modifiers: [.shift])"))
     }
 
     @Test func windowMenuExposesNavigatorPanelActionsInPhotoshopStyleLocation() throws {
@@ -660,6 +664,39 @@ struct ImageEditorScopeTests {
 
         #expect(viewModel.isRightDockVisible)
         #expect(viewModel.statusText == L10n.text("imageEditor.status.propertiesPanelShown"))
+    }
+
+    @MainActor
+    @Test func rightDockTogglePreservesToolsAndOptionsPanels() throws {
+        let image = NSImage(size: NSSize(width: 16, height: 16))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        #expect(viewModel.areToolsPanelVisible)
+        #expect(viewModel.isOptionsBarVisible)
+        #expect(viewModel.isRightDockVisible)
+
+        viewModel.toggleRightDockVisibility()
+
+        #expect(viewModel.areToolsPanelVisible)
+        #expect(viewModel.isOptionsBarVisible)
+        #expect(!viewModel.isNavigatorPanelVisible)
+        #expect(!viewModel.isHistoryPanelVisible)
+        #expect(!viewModel.isLayersPanelVisible)
+        #expect(!viewModel.isPropertiesPanelVisible)
+        #expect(!viewModel.isRightDockVisible)
+        #expect(viewModel.isWorkspaceChromeVisible)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.rightDockPanelsHidden"))
+
+        viewModel.toggleRightDockVisibility()
+
+        #expect(viewModel.areToolsPanelVisible)
+        #expect(viewModel.isOptionsBarVisible)
+        #expect(viewModel.isNavigatorPanelVisible)
+        #expect(viewModel.isHistoryPanelVisible)
+        #expect(viewModel.isLayersPanelVisible)
+        #expect(viewModel.isPropertiesPanelVisible)
+        #expect(viewModel.isRightDockVisible)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.rightDockPanelsShown"))
     }
 
     @MainActor

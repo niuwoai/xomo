@@ -371,6 +371,8 @@
 "imageEditor.action.workspaceResetDefault" = "初期ワークスペースに戻す";
 "imageEditor.action.workspaceHidePanels" = "ワークスペースパネルを隠す";
 "imageEditor.action.workspaceShowPanels" = "ワークスペースパネルを表示";
+"imageEditor.action.rightDockHidePanels" = "右側パネルを隠す";
+"imageEditor.action.rightDockShowPanels" = "右側パネルを表示";
 "imageEditor.action.toolsShowPanel" = "ツールパネルを表示";
 "imageEditor.action.toolsHidePanel" = "ツールパネルを隠す";
 "imageEditor.action.toolsShowPanelVisibility" = "ツールパネルを表示";
@@ -1280,6 +1282,8 @@
 "imageEditor.status.workspaceDefaultRestored" = "初期ワークスペースに戻しました";
 "imageEditor.status.workspacePanelsShown" = "ワークスペースパネルを表示しました";
 "imageEditor.status.workspacePanelsHidden" = "ワークスペースパネルを隠しました";
+"imageEditor.status.rightDockPanelsShown" = "右側パネルを表示しました";
+"imageEditor.status.rightDockPanelsHidden" = "右側パネルを隠しました";
 "imageEditor.status.zoomActualPixels" = "実際のピクセルで表示しています";
 "imageEditor.status.zoomFitOnScreen" = "画面に合わせました";
 "imageEditor.status.exported" = "%@ を書き出しました";

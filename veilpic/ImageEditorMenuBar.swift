@@ -1290,6 +1290,10 @@ extension ImageEditorView {
             viewModel.toggleWorkspaceChromeVisibility()
         }
         .keyboardShortcut(.tab, modifiers: [])
+        Button(L10n.text(viewModel.isRightDockVisible ? "imageEditor.action.rightDockHidePanels" : "imageEditor.action.rightDockShowPanels")) {
+            viewModel.toggleRightDockVisibility()
+        }
+        .keyboardShortcut(.tab, modifiers: [.shift])
         Divider()
         toolsActionsMenu
         optionsActionsMenu

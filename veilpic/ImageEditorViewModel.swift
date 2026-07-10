@@ -1171,6 +1171,15 @@ final class ImageEditorViewModel: ObservableObject {
         statusText = L10n.text(shouldShow ? "imageEditor.status.workspacePanelsShown" : "imageEditor.status.workspacePanelsHidden")
     }
 
+    func toggleRightDockVisibility() {
+        let shouldShow = !isRightDockVisible
+        isNavigatorPanelVisible = shouldShow
+        isHistoryPanelVisible = shouldShow
+        isLayersPanelVisible = shouldShow
+        isPropertiesPanelVisible = shouldShow
+        statusText = L10n.text(shouldShow ? "imageEditor.status.rightDockPanelsShown" : "imageEditor.status.rightDockPanelsHidden")
+    }
+
     func toggleNavigatorPanelVisibility() {
         isNavigatorPanelVisible.toggle()
         statusText = L10n.text(isNavigatorPanelVisible ? "imageEditor.status.navigatorPanelShown" : "imageEditor.status.navigatorPanelHidden")
