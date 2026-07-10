@@ -346,6 +346,10 @@
 "imageEditor.menu.window.properties" = "プロパティパネル";
 "imageEditor.menu.window.history" = "履歴";
 "imageEditor.menu.window.paths" = "パスパネル";
+"imageEditor.menu.window.channels.preview" = "チャンネルをプレビュー";
+"imageEditor.menu.window.channels.selection" = "チャンネルを選択範囲として読み込み";
+"imageEditor.menu.window.channels.alpha" = "Alpha チャンネル";
+"imageEditor.action.channelsShowPanel" = "チャンネルパネルを表示";
 "imageEditor.action.cancel" = "キャンセル";
 "imageEditor.action.apply" = "プレビューへ適用";
 "imageEditor.action.export" = "書き出し";

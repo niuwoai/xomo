@@ -1280,9 +1280,7 @@ extension ImageEditorView {
         Button(L10n.text("imageEditor.menu.window.layers")) {
             selectedLayerPanelTab = .layers
         }
-        Button(L10n.text("imageEditor.menu.window.channels")) {
-            selectedLayerPanelTab = .channels
-        }
+        channelActionsMenu
         Button(L10n.text("imageEditor.menu.window.layerComps")) {
             selectedLayerPanelTab = .comps
         }
@@ -1294,6 +1292,97 @@ extension ImageEditorView {
         }
         Button(L10n.text("imageEditor.menu.window.history")) {
             viewModel.statusText = viewModel.historyStateSummary
+        }
+    }
+
+    @ViewBuilder
+    private var channelActionsMenu: some View {
+        Menu(L10n.text("imageEditor.menu.window.channels")) {
+            Button(L10n.text("imageEditor.action.channelsShowPanel")) {
+                selectedLayerPanelTab = .channels
+            }
+            Divider()
+            Menu(L10n.text("imageEditor.menu.window.channels.preview")) {
+                ForEach(ImageEditorChannelPreview.allCases) { channel in
+                    Button(channel.title) {
+                        selectedLayerPanelTab = .channels
+                        viewModel.selectChannelPreview(channel)
+                    }
+                }
+            }
+            Menu(L10n.text("imageEditor.menu.window.channels.selection")) {
+                ForEach(ImageEditorChannelPreview.allCases) { channel in
+                    Button(L10n.format("imageEditor.action.channelLoadSelection", channel.title)) {
+                        selectedLayerPanelTab = .channels
+                        viewModel.selectChannelPreview(channel)
+                        viewModel.loadSelectionFromChannel(channel)
+                    }
+                }
+            }
+            Menu(L10n.text("imageEditor.menu.window.channels.alpha")) {
+                Button(L10n.text("imageEditor.action.alphaChannelBlank")) {
+                    selectedLayerPanelTab = .channels
+                    viewModel.createBlankAlphaChannel()
+                }
+                .disabled(!viewModel.canCreateBlankAlphaChannel)
+                Button(L10n.text("imageEditor.action.channelSaveSelection")) {
+                    selectedLayerPanelTab = .channels
+                    viewModel.saveSelectionAsAlphaChannel()
+                }
+                .disabled(!viewModel.canSaveSelectionAsAlphaChannel)
+                Button(L10n.text("imageEditor.action.channelSaveLayerMask")) {
+                    selectedLayerPanelTab = .channels
+                    viewModel.saveSelectedLayerMaskAsAlphaChannel()
+                }
+                .disabled(!viewModel.canSaveSelectedLayerMaskAsAlphaChannel)
+                Button(L10n.text("imageEditor.action.channelSaveLayerTransparency")) {
+                    selectedLayerPanelTab = .channels
+                    viewModel.saveSelectedLayerTransparencyAsAlphaChannel()
+                }
+                .disabled(!viewModel.canSaveSelectedLayerTransparencyAsAlphaChannel)
+                Divider()
+                Button(L10n.text("imageEditor.action.channelSaveCurrentAsAlpha")) {
+                    selectedLayerPanelTab = .channels
+                    viewModel.saveSelectedChannelAsAlphaChannel()
+                }
+                .disabled(!viewModel.canSaveSelectedChannelAsAlphaChannel)
+            }
+            Divider()
+            Button(L10n.text("imageEditor.action.alphaChannelLoadSelectedSelection")) {
+                selectedLayerPanelTab = .channels
+                viewModel.loadSelectionFromSelectedAlphaChannel()
+            }
+            .disabled(!viewModel.canLoadSelectedAlphaChannelSelection)
+            Button(L10n.text("imageEditor.action.alphaChannelUpdateSelected")) {
+                selectedLayerPanelTab = .channels
+                viewModel.updateSelectedAlphaChannelFromSelection()
+            }
+            .disabled(!viewModel.canUpdateSelectedAlphaChannelFromSelection)
+            Button(L10n.text("imageEditor.action.alphaChannelApplySelectedToMask")) {
+                selectedLayerPanelTab = .channels
+                viewModel.applySelectedAlphaChannelToSelectedLayerMask()
+            }
+            .disabled(!viewModel.canApplySelectedAlphaChannelToLayerMask)
+            Button(L10n.text("imageEditor.action.alphaChannelLayerSelected")) {
+                selectedLayerPanelTab = .channels
+                viewModel.createLayerFromSelectedAlphaChannel()
+            }
+            .disabled(!viewModel.canCreateLayerFromSelectedAlphaChannel)
+            Button(L10n.text("imageEditor.action.alphaChannelDuplicateSelected")) {
+                selectedLayerPanelTab = .channels
+                viewModel.duplicateSelectedAlphaChannel()
+            }
+            .disabled(!viewModel.canDuplicateSelectedAlphaChannel)
+            Button(L10n.text("imageEditor.action.alphaChannelInvertSelected")) {
+                selectedLayerPanelTab = .channels
+                viewModel.invertSelectedAlphaChannel()
+            }
+            .disabled(!viewModel.canInvertSelectedAlphaChannel)
+            Button(L10n.text("imageEditor.action.alphaChannelDeleteSelected")) {
+                selectedLayerPanelTab = .channels
+                viewModel.deleteSelectedAlphaChannel()
+            }
+            .disabled(!viewModel.canDeleteSelectedAlphaChannel)
         }
     }
 

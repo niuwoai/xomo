@@ -346,6 +346,10 @@
 "imageEditor.menu.window.properties" = "Properties Panel";
 "imageEditor.menu.window.history" = "History";
 "imageEditor.menu.window.paths" = "Paths Panel";
+"imageEditor.menu.window.channels.preview" = "Preview Channels";
+"imageEditor.menu.window.channels.selection" = "Load Channel as Selection";
+"imageEditor.menu.window.channels.alpha" = "Alpha Channels";
+"imageEditor.action.channelsShowPanel" = "Show Channels Panel";
 "imageEditor.action.cancel" = "Cancel";
 "imageEditor.action.apply" = "Apply to Preview";
 "imageEditor.action.export" = "Export";

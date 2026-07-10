@@ -338,6 +338,52 @@ struct ImageEditorScopeTests {
         #expect(selectMenuText.components(separatedBy: "imageEditor.action.restoreSelection").count == 2)
     }
 
+    @Test func windowMenuExposesChannelPanelActionsInPhotoshopStyleLocation() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
+            encoding: .utf8
+        )
+        let channelMenuStart = try #require(source.range(of: "private var channelActionsMenu: some View"))
+        let nextMenuStart = try #require(
+            source[channelMenuStart.upperBound...].range(of: "private var pathActionsMenu: some View")
+        )
+        let channelMenuSource = source[channelMenuStart.lowerBound..<nextMenuStart.lowerBound]
+
+        #expect(channelMenuSource.contains("imageEditor.menu.window.channels"))
+        #expect(channelMenuSource.contains("imageEditor.action.channelsShowPanel"))
+        #expect(channelMenuSource.contains("selectedLayerPanelTab = .channels"))
+        #expect(channelMenuSource.contains("imageEditor.menu.window.channels.preview"))
+        #expect(channelMenuSource.contains("ImageEditorChannelPreview.allCases"))
+        #expect(channelMenuSource.contains("viewModel.selectChannelPreview(channel)"))
+        #expect(channelMenuSource.contains("imageEditor.menu.window.channels.selection"))
+        #expect(channelMenuSource.contains("viewModel.loadSelectionFromChannel(channel)"))
+        #expect(channelMenuSource.contains("imageEditor.menu.window.channels.alpha"))
+        #expect(channelMenuSource.contains("imageEditor.action.alphaChannelBlank"))
+        #expect(channelMenuSource.contains("viewModel.createBlankAlphaChannel()"))
+        #expect(channelMenuSource.contains("viewModel.canCreateBlankAlphaChannel"))
+        #expect(channelMenuSource.contains("imageEditor.action.channelSaveSelection"))
+        #expect(channelMenuSource.contains("viewModel.saveSelectionAsAlphaChannel()"))
+        #expect(channelMenuSource.contains("viewModel.canSaveSelectionAsAlphaChannel"))
+        #expect(channelMenuSource.contains("imageEditor.action.channelSaveLayerMask"))
+        #expect(channelMenuSource.contains("viewModel.saveSelectedLayerMaskAsAlphaChannel()"))
+        #expect(channelMenuSource.contains("viewModel.canSaveSelectedLayerMaskAsAlphaChannel"))
+        #expect(channelMenuSource.contains("imageEditor.action.channelSaveLayerTransparency"))
+        #expect(channelMenuSource.contains("viewModel.saveSelectedLayerTransparencyAsAlphaChannel()"))
+        #expect(channelMenuSource.contains("viewModel.canSaveSelectedLayerTransparencyAsAlphaChannel"))
+        #expect(channelMenuSource.contains("imageEditor.action.channelSaveCurrentAsAlpha"))
+        #expect(channelMenuSource.contains("viewModel.saveSelectedChannelAsAlphaChannel()"))
+        #expect(channelMenuSource.contains("viewModel.canSaveSelectedChannelAsAlphaChannel"))
+        #expect(channelMenuSource.contains("imageEditor.action.alphaChannelLoadSelectedSelection"))
+        #expect(channelMenuSource.contains("viewModel.loadSelectionFromSelectedAlphaChannel()"))
+        #expect(channelMenuSource.contains("viewModel.canLoadSelectedAlphaChannelSelection"))
+        #expect(channelMenuSource.contains("imageEditor.action.alphaChannelApplySelectedToMask"))
+        #expect(channelMenuSource.contains("viewModel.applySelectedAlphaChannelToSelectedLayerMask()"))
+        #expect(channelMenuSource.contains("viewModel.canApplySelectedAlphaChannelToLayerMask"))
+        #expect(channelMenuSource.contains("imageEditor.action.alphaChannelDeleteSelected"))
+        #expect(channelMenuSource.contains("viewModel.deleteSelectedAlphaChannel()"))
+        #expect(channelMenuSource.contains("viewModel.canDeleteSelectedAlphaChannel"))
+    }
+
     @Test func windowMenuExposesPathPanelActionsInPhotoshopStyleLocation() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
