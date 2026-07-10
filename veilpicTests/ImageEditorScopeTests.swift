@@ -118,4 +118,23 @@ struct ImageEditorScopeTests {
             }
         }
     }
+
+    @Test func productOverviewDocumentsPreserveAndDoNotExpandEditorScope() throws {
+        let overview = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("product-overview.md"),
+            encoding: .utf8
+        )
+
+        #expect(overview.contains("编辑器目标收敛为轻量 Photoshop 7.0 风格"))
+        #expect(overview.contains("现有能力和 UI 组件不做删减"))
+        #expect(overview.contains("不再追求完整 Photopea 级别能力"))
+        #expect(overview.contains("暂不扩展精细化 AI 抠图、3D、插件系统、复杂云端 PSD 协作等重型功能"))
+        #expect(overview.contains("后续工作重点约束在整理、稳定和易用性上"))
+    }
+
+    private static func repositoryRoot() -> URL {
+        URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+    }
 }
