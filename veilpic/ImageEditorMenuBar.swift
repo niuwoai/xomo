@@ -863,6 +863,10 @@ extension ImageEditorView {
             viewModel.clearSelection()
         }
         .disabled(!viewModel.hasSelection)
+        Button(L10n.text("imageEditor.action.reselectSelection")) {
+            viewModel.reselectSelection()
+        }
+        .disabled(!viewModel.canReselectSelection)
         Button(L10n.text("imageEditor.action.invertSelection")) {
             viewModel.invertSelection()
         }
@@ -984,6 +988,7 @@ extension ImageEditorView {
         Button(L10n.text("imageEditor.action.restoreSelection")) {
             viewModel.restoreSavedSelection()
         }
+        .disabled(!viewModel.hasSavedSelection)
     }
 
     @ViewBuilder

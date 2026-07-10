@@ -53,6 +53,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var foregroundColor: NSColor = .systemRed
     @Published var backgroundColor: NSColor = .clear
     @Published var cloneSourcePoint: CGPoint?
+    @Published var reselectableSelection: ImageEditorSelection?
     @Published var statusText: String = ""
     @Published var pointerText: String = "X: 0 Y: 0"
     @Published var textValue: String = ""
@@ -1197,10 +1198,12 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func clearSelection() {
-        guard document.selection != nil else { return }
+        guard let selection = document.selection else { return }
         pushUndo()
+        reselectableSelection = selection
         document.selection = nil
         appendHistory(L10n.text("imageEditor.history.selectionCleared"))
+        statusText = L10n.text("imageEditor.status.selectionCleared")
     }
 
     func invertSelection() {

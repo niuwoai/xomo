@@ -1149,6 +1149,7 @@
 "imageEditor.history.selectionCenterCanvas" = "選択範囲をキャンバス中央へ";
 "imageEditor.history.selectionSaved" = "選択範囲を保存";
 "imageEditor.history.selectionRestored" = "選択範囲を復元";
+"imageEditor.history.selectionReselected" = "選択範囲を再選択";
 "imageEditor.history.selectionFill" = "選択範囲を塗りつぶし";
 "imageEditor.history.selectionFillSelected" = "選択レイヤーの選択範囲を塗りつぶし";
 "imageEditor.history.selectionContentAwareFill" = "選択範囲をコンテンツに応じて塗りつぶし";
@@ -1334,6 +1335,7 @@
 "imageEditor.status.layerClippingMaskReleasedSelected" = "%d 個の選択クリッピングマスクを解除しました";
 "imageEditor.status.selectionSaved" = "選択範囲を保存しました";
 "imageEditor.status.selectionRestored" = "保存した選択範囲を復元しました";
+"imageEditor.status.selectionReselected" = "前回の選択範囲を再選択しました";
 "imageEditor.status.selectionFilled" = "現在の選択範囲を塗りつぶしました";
 "imageEditor.status.selectionFilledSelected" = "%d個のレイヤーで現在の選択範囲を塗りつぶしました";
 "imageEditor.status.selectionContentAwareFilled" = "現在の選択範囲をコンテンツに応じて塗りつぶしました";
@@ -1355,6 +1357,8 @@
 "imageEditor.status.selectionPixelsClearedSelected" = "%d個のレイヤーで選択範囲内のピクセルを消去しました";
 "imageEditor.status.noSelection" = "現在の選択範囲がありません";
 "imageEditor.status.noSavedSelection" = "保存された選択範囲がありません";
+"imageEditor.status.noReselectSelection" = "再選択できる選択範囲がありません";
+"imageEditor.status.selectionCleared" = "現在の選択範囲を解除しました";
 "imageEditor.status.selectionInverted" = "選択範囲を反転しました";
 "imageEditor.status.historyCleared" = "履歴を消去し、現在の画像を新しい開始状態にしました";
 "imageEditor.status.historySnapshotCreated" = "履歴スナップショット「%@」を作成しました";
@@ -1705,6 +1709,7 @@
 "imageEditor.action.clearSelectionPixels" = "選択ピクセルを消去";
 "imageEditor.action.saveSelection" = "選択範囲を保存";
 "imageEditor.action.restoreSelection" = "選択範囲を復元";
+"imageEditor.action.reselectSelection" = "再選択";
 "imageEditor.action.invertSelection" = "反転";
 "imageEditor.action.clearSelection" = "選択解除";
 "imageEditor.action.historyRestore" = "この履歴状態へ戻す";

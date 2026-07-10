@@ -1149,6 +1149,7 @@
 "imageEditor.history.selectionCenterCanvas" = "居中选区到画布";
 "imageEditor.history.selectionSaved" = "保存选区";
 "imageEditor.history.selectionRestored" = "恢复选区";
+"imageEditor.history.selectionReselected" = "重新选择选区";
 "imageEditor.history.selectionFill" = "填充选区";
 "imageEditor.history.selectionFillSelected" = "填充所选图层选区";
 "imageEditor.history.selectionContentAwareFill" = "内容感知填充选区";
@@ -1334,6 +1335,7 @@
 "imageEditor.status.layerClippingMaskReleasedSelected" = "已释放 %d 个所选剪贴蒙版";
 "imageEditor.status.selectionSaved" = "已保存当前选区";
 "imageEditor.status.selectionRestored" = "已恢复保存的选区";
+"imageEditor.status.selectionReselected" = "已重新选择上一次选区";
 "imageEditor.status.selectionFilled" = "已填充当前选区";
 "imageEditor.status.selectionFilledSelected" = "已在 %d 个图层中填充当前选区";
 "imageEditor.status.selectionContentAwareFilled" = "已对当前选区执行内容感知填充";
@@ -1355,6 +1357,8 @@
 "imageEditor.status.selectionPixelsClearedSelected" = "已清除 %d 个图层中的选区像素";
 "imageEditor.status.noSelection" = "当前没有选区";
 "imageEditor.status.noSavedSelection" = "没有已保存的选区";
+"imageEditor.status.noReselectSelection" = "没有可重新选择的选区";
+"imageEditor.status.selectionCleared" = "已清除当前选区";
 "imageEditor.status.selectionInverted" = "已反选选区";
 "imageEditor.status.historyCleared" = "已清理历史记录，当前画面已作为新的起点";
 "imageEditor.status.historySnapshotCreated" = "已创建历史快照“%@”";
@@ -1705,6 +1709,7 @@
 "imageEditor.action.clearSelectionPixels" = "清除选区像素";
 "imageEditor.action.saveSelection" = "保存选区";
 "imageEditor.action.restoreSelection" = "恢复选区";
+"imageEditor.action.reselectSelection" = "重新选择";
 "imageEditor.action.invertSelection" = "反选";
 "imageEditor.action.clearSelection" = "清除选区";
 "imageEditor.action.historyRestore" = "恢复到这个历史状态";

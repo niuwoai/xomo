@@ -1149,6 +1149,7 @@
 "imageEditor.history.selectionCenterCanvas" = "Center Selection on Canvas";
 "imageEditor.history.selectionSaved" = "Save Selection";
 "imageEditor.history.selectionRestored" = "Restore Selection";
+"imageEditor.history.selectionReselected" = "Reselect Selection";
 "imageEditor.history.selectionFill" = "Fill Selection";
 "imageEditor.history.selectionFillSelected" = "Fill Selection on Selected Layers";
 "imageEditor.history.selectionContentAwareFill" = "Content-Aware Fill Selection";
@@ -1334,6 +1335,7 @@
 "imageEditor.status.layerClippingMaskReleasedSelected" = "Released %d selected clipping masks";
 "imageEditor.status.selectionSaved" = "Selection saved";
 "imageEditor.status.selectionRestored" = "Saved selection restored";
+"imageEditor.status.selectionReselected" = "Previous selection reselected";
 "imageEditor.status.selectionFilled" = "Selection filled";
 "imageEditor.status.selectionFilledSelected" = "Selection filled on %d layers";
 "imageEditor.status.selectionContentAwareFilled" = "Selection content-aware filled";
@@ -1355,6 +1357,8 @@
 "imageEditor.status.selectionPixelsClearedSelected" = "Selection pixels cleared on %d layers";
 "imageEditor.status.noSelection" = "There is no active selection";
 "imageEditor.status.noSavedSelection" = "There is no saved selection";
+"imageEditor.status.noReselectSelection" = "There is no previous selection to reselect";
+"imageEditor.status.selectionCleared" = "Selection cleared";
 "imageEditor.status.selectionInverted" = "Selection inverted";
 "imageEditor.status.historyCleared" = "History cleared; the current image is now the new starting state";
 "imageEditor.status.historySnapshotCreated" = "History snapshot “%@” created";
@@ -1705,6 +1709,7 @@
 "imageEditor.action.clearSelectionPixels" = "Clear Pixels";
 "imageEditor.action.saveSelection" = "Save Selection";
 "imageEditor.action.restoreSelection" = "Restore Selection";
+"imageEditor.action.reselectSelection" = "Reselect";
 "imageEditor.action.invertSelection" = "Invert";
 "imageEditor.action.clearSelection" = "Clear Selection";
 "imageEditor.action.historyRestore" = "Restore to this history state";

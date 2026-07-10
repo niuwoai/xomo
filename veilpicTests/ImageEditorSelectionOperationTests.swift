@@ -24,6 +24,32 @@ struct ImageEditorSelectionOperationTests {
         #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionAll"))
     }
 
+    @Test func imageEditorCanReselectLastClearedSelection() async throws {
+        let canvasSize = NSSize(width: 40, height: 30)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: testImage(size: canvasSize)) { _ in }
+
+        viewModel.createRectSelection(from: CGPoint(x: 6, y: 4), to: CGPoint(x: 24, y: 18))
+        let originalSelection = try #require(viewModel.document.selection)
+
+        viewModel.clearSelection()
+
+        #expect(viewModel.document.selection == nil)
+        #expect(viewModel.canReselectSelection)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionCleared"))
+
+        viewModel.reselectSelection()
+
+        #expect(viewModel.document.selection == originalSelection)
+        #expect(!viewModel.canReselectSelection)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionReselected"))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionReselected"))
+
+        viewModel.undo()
+
+        #expect(viewModel.document.selection == nil)
+        #expect(viewModel.canReselectSelection)
+    }
+
     @Test func imageEditorBatchEditsSelectionPixelsAcrossSelectedPixelLayersAndSkipsLockedOrIneligibleLayers() async throws {
         let canvasSize = NSSize(width: 24, height: 18)
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: solidImage(color: .black, size: canvasSize)) { _ in }

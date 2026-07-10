@@ -1999,6 +1999,11 @@ struct ImageEditorView: View {
                             }
                             .buttonStyle(EditorTextButtonStyle())
                         }
+                        Button(L10n.text("imageEditor.action.reselectSelection")) {
+                            viewModel.reselectSelection()
+                        }
+                        .buttonStyle(EditorTextButtonStyle())
+                        .disabled(!viewModel.canReselectSelection)
                         Button(L10n.text("imageEditor.action.restoreSelection")) {
                             viewModel.restoreSavedSelection()
                         }

@@ -18,6 +18,10 @@ extension ImageEditorViewModel {
         document.savedSelection != nil
     }
 
+    var canReselectSelection: Bool {
+        reselectableSelection != nil && document.selection == nil
+    }
+
     var canSelectSimilarColors: Bool {
         hasSelection
     }
@@ -59,6 +63,18 @@ extension ImageEditorViewModel {
         document.savedSelection = selection
         appendHistory(L10n.text("imageEditor.history.selectionSaved"))
         statusText = L10n.text("imageEditor.status.selectionSaved")
+    }
+
+    func reselectSelection() {
+        guard let selection = reselectableSelection else {
+            statusText = L10n.text("imageEditor.status.noReselectSelection")
+            return
+        }
+
+        pushUndo()
+        document.selection = selection
+        appendHistory(L10n.text("imageEditor.history.selectionReselected"))
+        statusText = L10n.text("imageEditor.status.selectionReselected")
     }
 
     func restoreSavedSelection() {
