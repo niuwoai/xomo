@@ -92,10 +92,7 @@ extension ImageEditorViewModel {
     }
 
     var canDeleteVectorMask: Bool {
-        guard selectedLayerCount == 1,
-              let layer = document.selectedLayer
-        else { return false }
-        return !document.isEffectivelyLocked(layer) && layer.vectorMask != nil
+        !vectorMaskDeleteIndices().isEmpty
     }
 
     var canRasterizeSelectedVectorMask: Bool {
@@ -505,18 +502,25 @@ extension ImageEditorViewModel {
     }
 
     func deleteVectorMask() {
-        guard canDeleteVectorMask,
-              let index = document.selectedLayerIndex
-        else {
+        let indices = vectorMaskDeleteIndices()
+        guard !indices.isEmpty else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
 
         pushUndo()
-        document.layers[index].vectorMask = nil
-        document.layers[index].isVectorMaskEnabled = true
-        appendHistory(L10n.text("imageEditor.history.vectorMaskDelete"))
-        statusText = L10n.text("imageEditor.status.vectorMaskDeleted")
+        for index in indices {
+            document.layers[index].vectorMask = nil
+            document.layers[index].isVectorMaskEnabled = true
+        }
+
+        if indices.count == 1 {
+            appendHistory(L10n.text("imageEditor.history.vectorMaskDelete"))
+            statusText = L10n.text("imageEditor.status.vectorMaskDeleted")
+        } else {
+            appendHistory(L10n.text("imageEditor.history.vectorMaskDeleteSelected"))
+            statusText = L10n.format("imageEditor.status.vectorMaskDeletedSelected", indices.count)
+        }
     }
 
     private func layerMaskApplyIndices() -> [Int] {
@@ -566,6 +570,18 @@ extension ImageEditorViewModel {
     }
 
     private func vectorMaskToggleEnabledIndices() -> [Int] {
+        let selectedIDs = document.selectedLayerIDs.isEmpty
+            ? Set(document.selectedLayerID.map { [$0] } ?? [])
+            : document.selectedLayerIDs
+        return document.layers.indices.filter { index in
+            let layer = document.layers[index]
+            return selectedIDs.contains(layer.id)
+                && !document.isEffectivelyLocked(layer)
+                && layer.vectorMask != nil
+        }
+    }
+
+    private func vectorMaskDeleteIndices() -> [Int] {
         let selectedIDs = document.selectedLayerIDs.isEmpty
             ? Set(document.selectedLayerID.map { [$0] } ?? [])
             : document.selectedLayerIDs

@@ -3004,6 +3004,74 @@ struct veilpicTests {
     }
 
     @MainActor
+    @Test func imageEditorDeletesMultipleSelectedVectorMasksAndSkipsLockedLayers() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let anchors = [
+            ImageEditorPathAnchor(point: CGPoint(x: 20, y: 12)),
+            ImageEditorPathAnchor(point: CGPoint(x: 60, y: 12)),
+            ImageEditorPathAnchor(point: CGPoint(x: 60, y: 48)),
+            ImageEditorPathAnchor(point: CGPoint(x: 20, y: 48))
+        ]
+
+        func vectorMaskedLayer(named name: String) -> ImageEditorLayer {
+            var layer = ImageEditorLayer.blank(name: name, size: canvasSize)
+            layer.mask = NSImage.opaqueMask(size: canvasSize)
+            layer.vectorMask = ImageEditorShapeContent(
+                kind: .path,
+                fillColor: .white,
+                fillOpacity: 1,
+                strokeColor: .white,
+                strokeWidth: 1,
+                strokeOpacity: 0,
+                pathPoints: anchors.map(\.point),
+                pathAnchors: anchors,
+                isPathClosed: true
+            )
+            return layer
+        }
+
+        let firstLayer = vectorMaskedLayer(named: "First Vector Mask")
+        let secondLayer = vectorMaskedLayer(named: "Second Vector Mask")
+        var lockedLayer = vectorMaskedLayer(named: "Locked Vector Mask")
+        lockedLayer.isLocked = true
+
+        let firstLayerID = firstLayer.id
+        let secondLayerID = secondLayer.id
+        let lockedLayerID = lockedLayer.id
+        viewModel.document.layers = [viewModel.document.layers[0], firstLayer, secondLayer, lockedLayer]
+        viewModel.document.selectedLayerID = secondLayerID
+        viewModel.document.selectedLayerIDs = [firstLayerID, secondLayerID, lockedLayerID]
+
+        #expect(viewModel.canDeleteVectorMask)
+        viewModel.deleteVectorMask()
+
+        let deletedFirst = try #require(viewModel.document.layers.first { $0.id == firstLayerID })
+        let deletedSecond = try #require(viewModel.document.layers.first { $0.id == secondLayerID })
+        let skippedLockedLayer = try #require(viewModel.document.layers.first { $0.id == lockedLayerID })
+        #expect(deletedFirst.vectorMask == nil)
+        #expect(deletedFirst.mask != nil)
+        #expect(deletedFirst.isVectorMaskEnabled)
+        #expect(deletedSecond.vectorMask == nil)
+        #expect(deletedSecond.mask != nil)
+        #expect(deletedSecond.isVectorMaskEnabled)
+        #expect(skippedLockedLayer.vectorMask != nil)
+        #expect(skippedLockedLayer.mask != nil)
+        #expect(skippedLockedLayer.isLocked)
+        #expect(viewModel.document.selectedLayerIDs == [firstLayerID, secondLayerID, lockedLayerID])
+        #expect(viewModel.document.selectedLayerID == secondLayerID)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.vectorMaskDeleteSelected"))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.vectorMaskDeletedSelected", 2))
+
+        viewModel.undo()
+        let restoredFirst = try #require(viewModel.document.layers.first { $0.id == firstLayerID })
+        let restoredSecond = try #require(viewModel.document.layers.first { $0.id == secondLayerID })
+        #expect(restoredFirst.vectorMask != nil)
+        #expect(restoredSecond.vectorMask != nil)
+    }
+
+    @MainActor
     @Test func imageEditorCombinesExistingLayerMaskWithCurrentSelection() async throws {
         let canvasSize = NSSize(width: 80, height: 60)
         let image = testImage(color: .systemBlue, size: canvasSize)
