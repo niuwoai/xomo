@@ -58,9 +58,11 @@ extension ImageEditorView {
         Button(L10n.text("imageEditor.action.projectOpen")) {
             viewModel.openProjectDocument()
         }
+        .keyboardShortcut("o", modifiers: [.command])
         Button(L10n.text("imageEditor.action.projectSave")) {
             viewModel.saveProjectDocument()
         }
+        .keyboardShortcut("s", modifiers: [.command])
         Divider()
         Button(L10n.text("imageEditor.action.layerImport")) {
             viewModel.chooseImageLayerFile()
@@ -68,6 +70,7 @@ extension ImageEditorView {
         Button(L10n.text("imageEditor.action.export")) {
             viewModel.openExportPanel()
         }
+        .keyboardShortcut("s", modifiers: [.command, .shift, .option])
         Divider()
         Button(L10n.text("imageEditor.action.apply")) {
             viewModel.applyAndClose {

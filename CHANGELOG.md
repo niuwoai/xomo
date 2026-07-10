@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.413.0 - 2026-07-10
+
+### Added
+- 图片编辑器新增 File 菜单经典快捷键：`Command + O` 打开项目、`Command + S` 保存项目、`Option + Shift + Command + S` 打开导出面板。
+
 ## 1.412.0 - 2026-07-10
 
 ### Added

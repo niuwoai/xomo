@@ -572,6 +572,25 @@ struct ImageEditorScopeTests {
         }
     }
 
+    @Test func fileMenuExposesClassicProjectAndExportShortcuts() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
+            encoding: .utf8
+        )
+        let fileMenuStart = try #require(source.range(of: "private var fileMenu: some View"))
+        let nextMenuStart = try #require(
+            source[fileMenuStart.upperBound...].range(of: "private var editMenu: some View")
+        )
+        let fileMenuSource = source[fileMenuStart.lowerBound..<nextMenuStart.lowerBound]
+
+        #expect(fileMenuSource.contains("viewModel.openProjectDocument()"))
+        #expect(fileMenuSource.contains(".keyboardShortcut(\"o\", modifiers: [.command])"))
+        #expect(fileMenuSource.contains("viewModel.saveProjectDocument()"))
+        #expect(fileMenuSource.contains(".keyboardShortcut(\"s\", modifiers: [.command])"))
+        #expect(fileMenuSource.contains("viewModel.openExportPanel()"))
+        #expect(fileMenuSource.contains(".keyboardShortcut(\"s\", modifiers: [.command, .shift, .option])"))
+    }
+
     @Test func layerMenuExposesSelectionLayerCommandsInPhotoshopStyleLocation() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
