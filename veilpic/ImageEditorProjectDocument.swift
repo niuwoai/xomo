@@ -61,6 +61,7 @@ struct ImageEditorProjectDocument: Codable {
     var guides: [ImageEditorGuide]?
     var areExtrasVisible: Bool?
     var areGuidesVisible: Bool?
+    var areGuidesLocked: Bool?
     var areRulersVisible: Bool?
     var isGuideSnappingEnabled: Bool?
     var areSelectionEdgesVisible: Bool?
@@ -95,6 +96,7 @@ struct ImageEditorProjectDocument: Codable {
         guides = document.guides
         areExtrasVisible = document.areExtrasVisible
         areGuidesVisible = document.areGuidesVisible
+        areGuidesLocked = document.areGuidesLocked
         areRulersVisible = document.areRulersVisible
         isGuideSnappingEnabled = document.isGuideSnappingEnabled
         areSelectionEdgesVisible = document.areSelectionEdgesVisible
@@ -158,6 +160,7 @@ struct ImageEditorProjectDocument: Codable {
         }
         document.areExtrasVisible = areExtrasVisible ?? true
         document.areGuidesVisible = areGuidesVisible ?? true
+        document.areGuidesLocked = areGuidesLocked ?? false
         document.areRulersVisible = areRulersVisible ?? true
         document.isGuideSnappingEnabled = isGuideSnappingEnabled ?? true
         document.areSelectionEdgesVisible = areSelectionEdgesVisible ?? true

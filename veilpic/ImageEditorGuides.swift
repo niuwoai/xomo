@@ -97,6 +97,17 @@ extension ImageEditorViewModel {
         )
     }
 
+    func toggleGuidesLocked() {
+        pushUndo()
+        document.areGuidesLocked.toggle()
+        appendHistory(L10n.text("imageEditor.history.guidesLocking"))
+        statusText = L10n.text(
+            document.areGuidesLocked
+                ? "imageEditor.status.guidesLocked"
+                : "imageEditor.status.guidesUnlocked"
+        )
+    }
+
     func toggleSelectionEdgesVisible() {
         pushUndo()
         document.areSelectionEdgesVisible.toggle()
@@ -153,6 +164,10 @@ extension ImageEditorViewModel {
 
     func beginMovingGuide(_ id: UUID) {
         guard movingGuideID == nil else { return }
+        guard !document.areGuidesLocked else {
+            statusText = L10n.text("imageEditor.status.guidesLocked")
+            return
+        }
         guard document.guides.contains(where: { $0.id == id }) else { return }
         pushUndo()
         movingGuideID = id

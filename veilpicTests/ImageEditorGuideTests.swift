@@ -169,6 +169,7 @@ struct ImageEditorGuideTests {
         viewModel.toggleGuidesVisible()
         viewModel.toggleRulersVisible()
         viewModel.toggleGuideSnapping()
+        viewModel.toggleGuidesLocked()
         viewModel.document.isGridVisible = true
         viewModel.document.isGridSnappingEnabled = true
         viewModel.document.gridSpacing = 24
@@ -188,9 +189,41 @@ struct ImageEditorGuideTests {
         #expect(!restoredViewModel.document.areGuidesVisible)
         #expect(!restoredViewModel.document.areRulersVisible)
         #expect(!restoredViewModel.document.isGuideSnappingEnabled)
+        #expect(restoredViewModel.document.areGuidesLocked)
         #expect(restoredViewModel.document.isGridVisible)
         #expect(restoredViewModel.document.isGridSnappingEnabled)
         #expect(restoredViewModel.document.gridSpacing == 24)
+    }
+
+    @Test
+    func lockingGuidesPreventsAccidentalMovesWithoutRemovingGuides() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: testImage(color: .systemOrange, size: NSSize(width: 100, height: 80))
+        ) { _ in }
+        viewModel.addGuide(.vertical, at: 25)
+        let guideID = try #require(viewModel.document.guides.first?.id)
+        let historyCountBeforeLock = viewModel.document.history.count
+
+        viewModel.toggleGuidesLocked()
+        viewModel.beginMovingGuide(guideID)
+        viewModel.moveGuide(guideID, to: 44)
+        viewModel.finishMovingGuide()
+
+        #expect(viewModel.document.areGuidesLocked)
+        #expect(viewModel.document.guides.first?.position == 25)
+        #expect(viewModel.document.guides.count == 1)
+        #expect(viewModel.document.history.count == historyCountBeforeLock + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.guidesLocking"))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.guidesLocked"))
+
+        viewModel.toggleGuidesLocked()
+        viewModel.beginMovingGuide(guideID)
+        viewModel.moveGuide(guideID, to: 44)
+        viewModel.finishMovingGuide()
+
+        #expect(!viewModel.document.areGuidesLocked)
+        #expect(viewModel.document.guides.first?.position == 44)
     }
 
     @Test

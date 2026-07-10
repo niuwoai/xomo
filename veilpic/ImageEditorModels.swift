@@ -3578,6 +3578,7 @@ struct ImageEditorDocument {
     var guides: [ImageEditorGuide]
     var areExtrasVisible: Bool
     var areGuidesVisible: Bool
+    var areGuidesLocked: Bool
     var areRulersVisible: Bool
     var isGuideSnappingEnabled: Bool
     var areSelectionEdgesVisible: Bool
@@ -3607,6 +3608,7 @@ struct ImageEditorDocument {
         guides = []
         areExtrasVisible = true
         areGuidesVisible = true
+        areGuidesLocked = false
         areRulersVisible = true
         isGuideSnappingEnabled = true
         areSelectionEdgesVisible = true

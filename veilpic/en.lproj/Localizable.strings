@@ -1928,6 +1928,7 @@
 "imageEditor.action.rulersVisible" = "Show rulers";
 "imageEditor.action.guidesVisible" = "Show guides";
 "imageEditor.action.guidesSnap" = "Snap to guides";
+"imageEditor.action.guidesLocked" = "Lock guides";
 "imageEditor.action.selectionEdgesVisible" = "Show selection edges";
 "imageEditor.action.transformControlsVisible" = "Show transform controls";
 "imageEditor.action.gridVisible" = "Show grid";
@@ -1944,6 +1945,7 @@
 "imageEditor.history.guidesClear" = "Clear Guides";
 "imageEditor.history.guidesVisibility" = "Toggle Guide Visibility";
 "imageEditor.history.guidesSnapping" = "Toggle Guide Snapping";
+"imageEditor.history.guidesLocking" = "Toggle Guide Lock";
 "imageEditor.history.selectionEdgesVisibility" = "Toggle Selection Edge Visibility";
 "imageEditor.history.transformControlsVisibility" = "Toggle Transform Control Visibility";
 "imageEditor.history.gridVisibility" = "Toggle Grid Visibility";
@@ -1961,6 +1963,8 @@
 "imageEditor.status.guidesHidden" = "Guides hidden";
 "imageEditor.status.guidesSnappingOn" = "Guide snapping enabled";
 "imageEditor.status.guidesSnappingOff" = "Guide snapping disabled";
+"imageEditor.status.guidesLocked" = "Guides locked";
+"imageEditor.status.guidesUnlocked" = "Guides unlocked";
 "imageEditor.status.selectionEdgesVisible" = "Selection edges visible";
 "imageEditor.status.selectionEdgesHidden" = "Selection edges hidden";
 "imageEditor.status.transformControlsVisible" = "Transform controls visible";

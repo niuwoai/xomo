@@ -911,6 +911,15 @@ struct ImageEditorView: View {
             .toggleStyle(.checkbox)
 
             Toggle(
+                L10n.text("imageEditor.action.guidesLocked"),
+                isOn: Binding(
+                    get: { viewModel.document.areGuidesLocked },
+                    set: { _ in viewModel.toggleGuidesLocked() }
+                )
+            )
+            .toggleStyle(.checkbox)
+
+            Toggle(
                 L10n.text("imageEditor.action.selectionEdgesVisible"),
                 isOn: Binding(
                     get: { viewModel.document.areSelectionEdgesVisible },
@@ -1496,7 +1505,7 @@ struct ImageEditorView: View {
 
     @ViewBuilder
     private func guideInteractionOverlay(in size: CGSize) -> some View {
-        if viewModel.document.areExtrasVisible && viewModel.document.areGuidesVisible {
+        if viewModel.document.areExtrasVisible && viewModel.document.areGuidesVisible && !viewModel.document.areGuidesLocked {
             let rect = fittedImageRect(in: size)
             ZStack {
                 ForEach(viewModel.document.guides) { guide in
