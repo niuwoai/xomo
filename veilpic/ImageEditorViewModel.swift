@@ -1006,8 +1006,13 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func fitZoom() {
-        zoom = 1
+        guard let targetZoom = fitZoomFactor(for: canvasViewportSize) else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+        zoom = targetZoom
         canvasOffset = .zero
+        statusText = L10n.text("imageEditor.status.zoomFitOnScreen")
     }
 
     func updateCanvasViewportSize(_ size: CGSize) {
@@ -1035,6 +1040,21 @@ final class ImageEditorViewModel: ObservableObject {
         ) * 0.74
         guard baseScale.isFinite, baseScale > 0 else { return nil }
         return min(max(1 / baseScale, 0.08), 8)
+    }
+
+    func fitZoomFactor(for viewportSize: CGSize) -> CGFloat? {
+        let imageSize = currentImage.size
+        guard imageSize.width > 0,
+              imageSize.height > 0,
+              viewportSize.width > 0,
+              viewportSize.height > 0
+        else { return nil }
+        let baseScale = min(
+            viewportSize.width / max(imageSize.width, 1),
+            viewportSize.height / max(imageSize.height, 1)
+        ) * 0.74
+        guard baseScale.isFinite, baseScale > 0 else { return nil }
+        return 1
     }
 
     func nudgeCanvas(by translation: CGSize) {

@@ -1174,6 +1174,7 @@
 "imageEditor.status.ready" = "%@ · %@ · 準備完了";
 "imageEditor.status.propertiesVisible" = "プロパティパネルは右側に表示されています";
 "imageEditor.status.zoomActualPixels" = "実際のピクセルで表示しています";
+"imageEditor.status.zoomFitOnScreen" = "画面に合わせました";
 "imageEditor.status.exported" = "%@ を書き出しました";
 "imageEditor.status.exportFailed" = "書き出しに失敗しました";
 "imageEditor.status.exportFailedWithReason" = "書き出しに失敗しました：%@";

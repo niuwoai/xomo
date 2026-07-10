@@ -1174,6 +1174,7 @@
 "imageEditor.status.ready" = "%@ · %@ · Ready";
 "imageEditor.status.propertiesVisible" = "The Properties panel is already visible on the right";
 "imageEditor.status.zoomActualPixels" = "Viewing at actual pixels";
+"imageEditor.status.zoomFitOnScreen" = "Fit on screen";
 "imageEditor.status.exported" = "Exported %@";
 "imageEditor.status.exportFailed" = "Export failed";
 "imageEditor.status.exportFailedWithReason" = "Export failed: %@";

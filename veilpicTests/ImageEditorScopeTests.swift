@@ -117,6 +117,21 @@ struct ImageEditorScopeTests {
 
         #expect(viewModel.zoom == 1)
         #expect(viewModel.canvasOffset == .zero)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.zoomFitOnScreen"))
+    }
+
+    @MainActor
+    @Test func imageEditorFitOnScreenRequiresAUsableCanvasViewport() {
+        let image = NSImage(size: NSSize(width: 100, height: 50))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        viewModel.zoom = 2
+        viewModel.canvasOffset = CGSize(width: 12, height: 8)
+
+        viewModel.fitZoom()
+
+        #expect(viewModel.zoom == 2)
+        #expect(viewModel.canvasOffset == CGSize(width: 12, height: 8))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.operationFailed"))
     }
 
     @MainActor
