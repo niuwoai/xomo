@@ -1308,6 +1308,7 @@
 "imageEditor.status.statusBarHidden" = "Status bar hidden";
 "imageEditor.status.zoomActualPixels" = "Viewing at actual pixels";
 "imageEditor.status.zoomFitOnScreen" = "Fit on screen";
+"imageEditor.status.zoom" = "Zoom %@";
 "imageEditor.status.exported" = "Exported %@";
 "imageEditor.status.exportFailed" = "Export failed";
 "imageEditor.status.exportFailedWithReason" = "Export failed: %@";

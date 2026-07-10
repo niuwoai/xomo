@@ -258,6 +258,42 @@ struct ImageEditorScopeTests {
     }
 
     @MainActor
+    @Test func canvasMagnifyGestureZoomsAndClampsWithinBounds() {
+        let image = NSImage(size: NSSize(width: 80, height: 60))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.zoom = 1
+
+        viewModel.magnifyCanvas(2)
+        #expect(abs(viewModel.zoom - 2) < 0.0001)
+
+        // Subsequent updates in the same gesture stay anchored to the gesture-start zoom.
+        viewModel.magnifyCanvas(3)
+        #expect(abs(viewModel.zoom - 3) < 0.0001)
+
+        // Clamped to the shared upper bound.
+        viewModel.magnifyCanvas(100)
+        #expect(abs(viewModel.zoom - 8) < 0.0001)
+
+        viewModel.endCanvasMagnify()
+
+        // A new gesture re-anchors to the current zoom, and clamps to the lower bound.
+        viewModel.magnifyCanvas(0.0001)
+        #expect(abs(viewModel.zoom - 0.08) < 0.0001)
+        viewModel.endCanvasMagnify()
+    }
+
+    @Test func canvasWorkspaceWiresMagnifyGestureToViewModel() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        #expect(source.contains("MagnifyGesture()"))
+        #expect(source.contains("viewModel.magnifyCanvas(value.magnification)"))
+        #expect(source.contains("viewModel.endCanvasMagnify()"))
+    }
+
+    @MainActor
     @Test func classicFilterMenuSelectionsPreparePropertiesPanel() {
         let image = NSImage(size: NSSize(width: 80, height: 60))
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }

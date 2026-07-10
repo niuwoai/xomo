@@ -1308,6 +1308,7 @@
 "imageEditor.status.statusBarHidden" = "状态栏已隐藏";
 "imageEditor.status.zoomActualPixels" = "已按实际像素显示";
 "imageEditor.status.zoomFitOnScreen" = "已适合窗口显示";
+"imageEditor.status.zoom" = "缩放 %@";
 "imageEditor.status.exported" = "已导出 %@";
 "imageEditor.status.exportFailed" = "导出失败";
 "imageEditor.status.exportFailedWithReason" = "导出失败：%@";

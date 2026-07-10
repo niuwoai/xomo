@@ -354,6 +354,15 @@ struct ImageEditorView: View {
                 }
                 .contentShape(Rectangle())
                 .gesture(canvasGesture(in: geometry.size))
+                .simultaneousGesture(
+                    MagnifyGesture()
+                        .onChanged { value in
+                            viewModel.magnifyCanvas(value.magnification)
+                        }
+                        .onEnded { _ in
+                            viewModel.endCanvasMagnify()
+                        }
+                )
                 .onHover { inside in
                     if !inside {
                         viewModel.updatePointer(nil)

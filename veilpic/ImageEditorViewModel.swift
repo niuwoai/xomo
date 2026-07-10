@@ -36,6 +36,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var zoom: CGFloat = 1
     @Published var canvasViewportSize: CGSize = .zero
     @Published var canvasOffset: CGSize = .zero
+    private var magnifyBaseZoom: CGFloat?
     @Published var brushSize: CGFloat = 18
     @Published var opacity: CGFloat = 1
     @Published var hardness: CGFloat = 0.8
@@ -1310,6 +1311,23 @@ final class ImageEditorViewModel: ObservableObject {
 
     func zoomOut() {
         zoom = max(zoom / 1.2, 0.08)
+    }
+
+    func magnifyCanvas(_ magnification: CGFloat) {
+        guard magnification.isFinite, magnification > 0 else { return }
+        let base: CGFloat
+        if let anchor = magnifyBaseZoom {
+            base = anchor
+        } else {
+            base = zoom
+            magnifyBaseZoom = zoom
+        }
+        zoom = min(max(base * magnification, 0.08), 8)
+        statusText = L10n.format("imageEditor.status.zoom", zoomText)
+    }
+
+    func endCanvasMagnify() {
+        magnifyBaseZoom = nil
     }
 
     func zoomActualPixels() {
