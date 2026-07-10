@@ -1283,6 +1283,8 @@ extension ImageEditorView {
         colorActionsMenu
         swatchesActionsMenu
         brushesActionsMenu
+        characterActionsMenu
+        paragraphActionsMenu
         Divider()
         layerActionsMenu
         channelActionsMenu
@@ -1405,6 +1407,53 @@ extension ImageEditorView {
                     }
                 }
             }
+        }
+    }
+
+    @ViewBuilder
+    private var characterActionsMenu: some View {
+        Menu(L10n.text("imageEditor.menu.window.character")) {
+            Button(L10n.text("imageEditor.action.characterShowPanel")) {
+                viewModel.statusText = viewModel.characterPanelSummaryText
+            }
+            Divider()
+            Button(L10n.text("imageEditor.action.characterSelectTextTool")) {
+                viewModel.selectCharacterPanelTool()
+            }
+            Button(L10n.text("imageEditor.action.characterToggleBold")) {
+                viewModel.toggleCharacterBold()
+            }
+            Button(L10n.text("imageEditor.action.characterToggleItalic")) {
+                viewModel.toggleCharacterItalic()
+            }
+            Divider()
+            Button(L10n.text("imageEditor.action.layerTextNew")) {
+                viewModel.addText()
+            }
+            Button(L10n.text("imageEditor.action.layerTextUpdate")) {
+                viewModel.updateSelectedTextLayer()
+            }
+            .disabled(!viewModel.selectedLayerIsText)
+        }
+    }
+
+    @ViewBuilder
+    private var paragraphActionsMenu: some View {
+        Menu(L10n.text("imageEditor.menu.window.paragraph")) {
+            Button(L10n.text("imageEditor.action.paragraphShowPanel")) {
+                viewModel.statusText = viewModel.paragraphPanelSummaryText
+            }
+            Divider()
+            ForEach(ImageEditorTextAlignment.allCases) { alignment in
+                Button(alignment.title) {
+                    viewModel.selectParagraphAlignment(alignment)
+                }
+            }
+            Divider()
+            Button(L10n.text("imageEditor.action.layerTextUpdate")) {
+                viewModel.updateSelectedTextLayer()
+            }
+            .disabled(!viewModel.selectedLayerIsText)
         }
     }
 

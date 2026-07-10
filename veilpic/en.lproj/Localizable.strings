@@ -350,6 +350,8 @@
 "imageEditor.menu.window.brushes" = "Brushes Panel";
 "imageEditor.menu.window.brushes.tools" = "Brush Tools";
 "imageEditor.menu.window.brushes.presets" = "Size Presets";
+"imageEditor.menu.window.character" = "Character Panel";
+"imageEditor.menu.window.paragraph" = "Paragraph Panel";
 "imageEditor.menu.window.layers" = "Layers Panel";
 "imageEditor.menu.window.channels" = "Channels Panel";
 "imageEditor.menu.window.layerComps" = "Layer Comps Panel";
@@ -368,6 +370,11 @@
 "imageEditor.action.colorUseEyedropper" = "Use Eyedropper";
 "imageEditor.action.swatchesShowPanel" = "Show Swatches Panel";
 "imageEditor.action.brushesShowPanel" = "Show Brushes Panel";
+"imageEditor.action.characterShowPanel" = "Show Character Panel";
+"imageEditor.action.characterSelectTextTool" = "Use Type Tool";
+"imageEditor.action.characterToggleBold" = "Toggle Bold";
+"imageEditor.action.characterToggleItalic" = "Toggle Italic";
+"imageEditor.action.paragraphShowPanel" = "Show Paragraph Panel";
 "imageEditor.action.layersShowPanel" = "Show Layers Panel";
 "imageEditor.action.layerCompsShowPanel" = "Show Layer Comps Panel";
 "imageEditor.action.historyShowPanel" = "Show History Panel";
@@ -1221,6 +1228,11 @@
 "imageEditor.status.brushesPanelSummary" = "Tool: %@ | Size: %d px | Opacity: %d%% | Hardness: %d%%";
 "imageEditor.status.brushToolSelected" = "%@ selected: %@";
 "imageEditor.status.brushPresetApplied" = "%@ applied: %@";
+"imageEditor.status.characterPanelSummary" = "Text: %@ | Size: %d px | Bold: %@ | Italic: %@ | Tracking: %d | Leading: %d";
+"imageEditor.status.paragraphPanelSummary" = "Alignment: %@ | Text box width: %d px";
+"imageEditor.characterPanel.emptyText" = "No text";
+"imageEditor.characterPanel.enabled" = "On";
+"imageEditor.characterPanel.disabled" = "Off";
 "imageEditor.status.propertiesVisible" = "The Properties panel is already visible on the right";
 "imageEditor.status.zoomActualPixels" = "Viewing at actual pixels";
 "imageEditor.status.zoomFitOnScreen" = "Fit on screen";

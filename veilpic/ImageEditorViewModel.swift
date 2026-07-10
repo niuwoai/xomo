@@ -1002,6 +1002,27 @@ final class ImageEditorViewModel: ObservableObject {
         )
     }
 
+    var characterPanelSummaryText: String {
+        let previewText = textValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        return L10n.format(
+            "imageEditor.status.characterPanelSummary",
+            previewText.isEmpty ? L10n.text("imageEditor.characterPanel.emptyText") : previewText,
+            Int(clampedTextSize(textSize).rounded()),
+            textBold ? L10n.text("imageEditor.characterPanel.enabled") : L10n.text("imageEditor.characterPanel.disabled"),
+            textItalic ? L10n.text("imageEditor.characterPanel.enabled") : L10n.text("imageEditor.characterPanel.disabled"),
+            Int(clampedTextCharacterSpacing(textCharacterSpacing).rounded()),
+            Int(clampedTextLineSpacing(textLineSpacing).rounded())
+        )
+    }
+
+    var paragraphPanelSummaryText: String {
+        L10n.format(
+            "imageEditor.status.paragraphPanelSummary",
+            selectedTextAlignment.title,
+            Int(clampedTextBoxWidth(textBoxWidth).rounded())
+        )
+    }
+
     var brushPanelTools: [ImageEditorTool] {
         [.brush, .eraser, .cloneStamp, .dodge, .burn, .blur, .sharpen, .smudge, .healingBrush]
     }
@@ -1042,6 +1063,26 @@ final class ImageEditorViewModel: ObservableObject {
     func applyBrushPreset(_ preset: ImageEditorBrushPreset) {
         brushSize = max(1, min(96, preset.size))
         statusText = L10n.format("imageEditor.status.brushPresetApplied", preset.title, brushesPanelSummaryText)
+    }
+
+    func selectCharacterPanelTool() {
+        selectTool(.text)
+        statusText = characterPanelSummaryText
+    }
+
+    func toggleCharacterBold() {
+        textBold.toggle()
+        statusText = characterPanelSummaryText
+    }
+
+    func toggleCharacterItalic() {
+        textItalic.toggle()
+        statusText = characterPanelSummaryText
+    }
+
+    func selectParagraphAlignment(_ alignment: ImageEditorTextAlignment) {
+        selectedTextAlignment = alignment
+        statusText = paragraphPanelSummaryText
     }
 
     private func rgbText(for nsColor: NSColor) -> String {

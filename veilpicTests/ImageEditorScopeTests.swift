@@ -575,6 +575,68 @@ struct ImageEditorScopeTests {
         #expect(viewModel.statusText == L10n.format("imageEditor.status.brushPresetApplied", preset.title, viewModel.brushesPanelSummaryText))
     }
 
+    @Test func windowMenuExposesCharacterParagraphPanelActionsInPhotoshopStyleLocation() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
+            encoding: .utf8
+        )
+        let characterMenuStart = try #require(source.range(of: "private var characterActionsMenu: some View"))
+        let paragraphMenuStart = try #require(
+            source[characterMenuStart.upperBound...].range(of: "private var paragraphActionsMenu: some View")
+        )
+        let nextMenuStart = try #require(
+            source[paragraphMenuStart.upperBound...].range(of: "private var layerActionsMenu: some View")
+        )
+        let textPanelSource = source[characterMenuStart.lowerBound..<nextMenuStart.lowerBound]
+
+        #expect(textPanelSource.contains("imageEditor.menu.window.character"))
+        #expect(textPanelSource.contains("imageEditor.action.characterShowPanel"))
+        #expect(textPanelSource.contains("viewModel.characterPanelSummaryText"))
+        #expect(textPanelSource.contains("viewModel.selectCharacterPanelTool()"))
+        #expect(textPanelSource.contains("viewModel.toggleCharacterBold()"))
+        #expect(textPanelSource.contains("viewModel.toggleCharacterItalic()"))
+        #expect(textPanelSource.contains("imageEditor.menu.window.paragraph"))
+        #expect(textPanelSource.contains("imageEditor.action.paragraphShowPanel"))
+        #expect(textPanelSource.contains("viewModel.paragraphPanelSummaryText"))
+        #expect(textPanelSource.contains("ImageEditorTextAlignment.allCases"))
+        #expect(textPanelSource.contains("viewModel.selectParagraphAlignment(alignment)"))
+    }
+
+    @MainActor
+    @Test func characterAndParagraphPanelActionsReuseExistingTextSettings() throws {
+        let image = NSImage(size: NSSize(width: 16, height: 16))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.textValue = "Caption"
+        viewModel.textSize = 48
+        viewModel.textCharacterSpacing = 4
+        viewModel.textLineSpacing = 12
+        viewModel.textBoxWidth = 320
+        viewModel.selectCharacterPanelTool()
+
+        #expect(viewModel.selectedTool == .text)
+        #expect(viewModel.statusText == viewModel.characterPanelSummaryText)
+        #expect(viewModel.characterPanelSummaryText.contains("Caption"))
+        #expect(viewModel.characterPanelSummaryText.contains("48"))
+        #expect(viewModel.characterPanelSummaryText.contains("4"))
+        #expect(viewModel.characterPanelSummaryText.contains("12"))
+
+        viewModel.toggleCharacterBold()
+        viewModel.toggleCharacterItalic()
+
+        #expect(viewModel.textBold)
+        #expect(viewModel.textItalic)
+        #expect(viewModel.statusText == viewModel.characterPanelSummaryText)
+        #expect(viewModel.characterPanelSummaryText.contains(L10n.text("imageEditor.characterPanel.enabled")))
+
+        viewModel.selectParagraphAlignment(.center)
+
+        #expect(viewModel.selectedTextAlignment == .center)
+        #expect(viewModel.statusText == viewModel.paragraphPanelSummaryText)
+        #expect(viewModel.paragraphPanelSummaryText.contains(ImageEditorTextAlignment.center.title))
+        #expect(viewModel.paragraphPanelSummaryText.contains("320"))
+    }
+
     @Test func windowMenuExposesLayerPanelActionsInPhotoshopStyleLocation() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),

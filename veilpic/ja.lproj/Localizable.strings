@@ -350,6 +350,8 @@
 "imageEditor.menu.window.brushes" = "ブラシパネル";
 "imageEditor.menu.window.brushes.tools" = "ブラシツール";
 "imageEditor.menu.window.brushes.presets" = "サイズプリセット";
+"imageEditor.menu.window.character" = "文字パネル";
+"imageEditor.menu.window.paragraph" = "段落パネル";
 "imageEditor.menu.window.layers" = "レイヤーパネル";
 "imageEditor.menu.window.channels" = "チャンネルパネル";
 "imageEditor.menu.window.layerComps" = "レイヤーコンプパネル";
@@ -368,6 +370,11 @@
 "imageEditor.action.colorUseEyedropper" = "スポイトを使用";
 "imageEditor.action.swatchesShowPanel" = "スウォッチパネルを表示";
 "imageEditor.action.brushesShowPanel" = "ブラシパネルを表示";
+"imageEditor.action.characterShowPanel" = "文字パネルを表示";
+"imageEditor.action.characterSelectTextTool" = "文字ツールを使用";
+"imageEditor.action.characterToggleBold" = "太字を切り替え";
+"imageEditor.action.characterToggleItalic" = "斜体を切り替え";
+"imageEditor.action.paragraphShowPanel" = "段落パネルを表示";
 "imageEditor.action.layersShowPanel" = "レイヤーパネルを表示";
 "imageEditor.action.layerCompsShowPanel" = "レイヤーコンプパネルを表示";
 "imageEditor.action.historyShowPanel" = "履歴パネルを表示";
@@ -1221,6 +1228,11 @@
 "imageEditor.status.brushesPanelSummary" = "ツール：%@ | サイズ：%d px | 不透明度：%d%% | 硬さ：%d%%";
 "imageEditor.status.brushToolSelected" = "%@を選択しました：%@";
 "imageEditor.status.brushPresetApplied" = "%@を適用しました：%@";
+"imageEditor.status.characterPanelSummary" = "テキスト：%@ | サイズ：%d px | 太字：%@ | 斜体：%@ | 字間：%d | 行間：%d";
+"imageEditor.status.paragraphPanelSummary" = "配置：%@ | テキストボックス幅：%d px";
+"imageEditor.characterPanel.emptyText" = "未入力";
+"imageEditor.characterPanel.enabled" = "オン";
+"imageEditor.characterPanel.disabled" = "オフ";
 "imageEditor.status.propertiesVisible" = "プロパティパネルは右側に表示されています";
 "imageEditor.status.zoomActualPixels" = "実際のピクセルで表示しています";
 "imageEditor.status.zoomFitOnScreen" = "画面に合わせました";
