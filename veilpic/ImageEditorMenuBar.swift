@@ -1279,9 +1279,7 @@ extension ImageEditorView {
     private var windowMenu: some View {
         navigatorActionsMenu
         Divider()
-        Button(L10n.text("imageEditor.menu.window.layers")) {
-            selectedLayerPanelTab = .layers
-        }
+        layerActionsMenu
         channelActionsMenu
         layerCompActionsMenu
         Divider()
@@ -1313,6 +1311,51 @@ extension ImageEditorView {
             Button(L10n.text("imageEditor.menu.view.fit")) {
                 viewModel.fitZoom()
             }
+        }
+    }
+
+    @ViewBuilder
+    private var layerActionsMenu: some View {
+        Menu(L10n.text("imageEditor.menu.window.layers")) {
+            Button(L10n.text("imageEditor.action.layersShowPanel")) {
+                selectedLayerPanelTab = .layers
+            }
+            Divider()
+            Button(L10n.text("imageEditor.action.layerNew")) {
+                selectedLayerPanelTab = .layers
+                viewModel.addLayer()
+            }
+            Button(L10n.text("imageEditor.action.layerDuplicate")) {
+                selectedLayerPanelTab = .layers
+                viewModel.duplicateSelectedLayer()
+            }
+            .disabled(!viewModel.canDuplicateSelectedLayer)
+            Button(L10n.text("imageEditor.action.layerDelete")) {
+                selectedLayerPanelTab = .layers
+                viewModel.deleteSelectedLayer()
+            }
+            .disabled(!viewModel.canDeleteLayer)
+            Divider()
+            Button(L10n.text("imageEditor.action.layerGroupNew")) {
+                selectedLayerPanelTab = .layers
+                viewModel.addLayerGroup()
+            }
+            Button(L10n.text("imageEditor.action.layerGroupSelected")) {
+                selectedLayerPanelTab = .layers
+                viewModel.groupSelectedLayer()
+            }
+            .disabled(!viewModel.canGroupSelectedLayer)
+            Divider()
+            Button(L10n.text("imageEditor.action.layerMergeDown")) {
+                selectedLayerPanelTab = .layers
+                viewModel.mergeSelectedLayerDown()
+            }
+            .disabled(!viewModel.canMergeSelectedLayerDown)
+            Button(L10n.text("imageEditor.action.layerFlatten")) {
+                selectedLayerPanelTab = .layers
+                viewModel.flattenImage()
+            }
+            .disabled(!viewModel.canFlattenImage)
         }
     }
 

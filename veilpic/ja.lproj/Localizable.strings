@@ -351,6 +351,7 @@
 "imageEditor.menu.window.channels.selection" = "チャンネルを選択範囲として読み込み";
 "imageEditor.menu.window.channels.alpha" = "Alpha チャンネル";
 "imageEditor.action.navigatorShowPanel" = "ナビゲーターパネルを表示";
+"imageEditor.action.layersShowPanel" = "レイヤーパネルを表示";
 "imageEditor.action.layerCompsShowPanel" = "レイヤーコンプパネルを表示";
 "imageEditor.action.historyShowPanel" = "履歴パネルを表示";
 "imageEditor.action.channelsShowPanel" = "チャンネルパネルを表示";

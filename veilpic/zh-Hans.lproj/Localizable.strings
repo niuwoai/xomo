@@ -351,6 +351,7 @@
 "imageEditor.menu.window.channels.selection" = "从通道载入选区";
 "imageEditor.menu.window.channels.alpha" = "Alpha 通道";
 "imageEditor.action.navigatorShowPanel" = "显示导航器面板";
+"imageEditor.action.layersShowPanel" = "显示图层面板";
 "imageEditor.action.layerCompsShowPanel" = "显示图层复合面板";
 "imageEditor.action.historyShowPanel" = "显示历史记录面板";
 "imageEditor.action.channelsShowPanel" = "显示通道面板";

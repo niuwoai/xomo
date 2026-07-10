@@ -408,6 +408,41 @@ struct ImageEditorScopeTests {
         #expect(navigatorMenuSource.contains("viewModel.fitZoom()"))
     }
 
+    @Test func windowMenuExposesLayerPanelActionsInPhotoshopStyleLocation() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
+            encoding: .utf8
+        )
+        let layerMenuStart = try #require(source.range(of: "private var layerActionsMenu: some View"))
+        let nextMenuStart = try #require(
+            source[layerMenuStart.upperBound...].range(of: "private var layerCompActionsMenu: some View")
+        )
+        let layerMenuSource = source[layerMenuStart.lowerBound..<nextMenuStart.lowerBound]
+
+        #expect(layerMenuSource.contains("imageEditor.menu.window.layers"))
+        #expect(layerMenuSource.contains("imageEditor.action.layersShowPanel"))
+        #expect(layerMenuSource.contains("selectedLayerPanelTab = .layers"))
+        #expect(layerMenuSource.contains("imageEditor.action.layerNew"))
+        #expect(layerMenuSource.contains("viewModel.addLayer()"))
+        #expect(layerMenuSource.contains("imageEditor.action.layerDuplicate"))
+        #expect(layerMenuSource.contains("viewModel.duplicateSelectedLayer()"))
+        #expect(layerMenuSource.contains("viewModel.canDuplicateSelectedLayer"))
+        #expect(layerMenuSource.contains("imageEditor.action.layerDelete"))
+        #expect(layerMenuSource.contains("viewModel.deleteSelectedLayer()"))
+        #expect(layerMenuSource.contains("viewModel.canDeleteLayer"))
+        #expect(layerMenuSource.contains("imageEditor.action.layerGroupNew"))
+        #expect(layerMenuSource.contains("viewModel.addLayerGroup()"))
+        #expect(layerMenuSource.contains("imageEditor.action.layerGroupSelected"))
+        #expect(layerMenuSource.contains("viewModel.groupSelectedLayer()"))
+        #expect(layerMenuSource.contains("viewModel.canGroupSelectedLayer"))
+        #expect(layerMenuSource.contains("imageEditor.action.layerMergeDown"))
+        #expect(layerMenuSource.contains("viewModel.mergeSelectedLayerDown()"))
+        #expect(layerMenuSource.contains("viewModel.canMergeSelectedLayerDown"))
+        #expect(layerMenuSource.contains("imageEditor.action.layerFlatten"))
+        #expect(layerMenuSource.contains("viewModel.flattenImage()"))
+        #expect(layerMenuSource.contains("viewModel.canFlattenImage"))
+    }
+
     @Test func windowMenuExposesHistoryPanelActionsInPhotoshopStyleLocation() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
