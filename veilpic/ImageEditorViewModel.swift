@@ -3416,10 +3416,27 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func addColorSampler(at point: CGPoint) {
-        guard let color = document.compositedImage.color(at: point) else { return }
+        guard let color = averagedColorSample(at: point) else { return }
         let sample = ImageEditorColorSamplerPoint(point: point, color: color)
         colorSamplerPoints = Array((colorSamplerPoints + [sample]).suffix(4))
         statusText = L10n.format("imageEditor.status.colorSamplerAdded", colorSamplerPoints.count)
+    }
+
+    private func averagedColorSample(at point: CGPoint) -> NSColor? {
+        let offsets: [CGFloat] = [-1, 0, 1]
+        let colors = offsets.flatMap { yOffset in
+            offsets.compactMap { xOffset in
+                document.compositedImage.color(at: CGPoint(x: point.x + xOffset, y: point.y + yOffset))?.usingColorSpace(.deviceRGB)
+            }
+        }
+        guard !colors.isEmpty else { return nil }
+        let divisor = CGFloat(colors.count)
+        return NSColor(
+            deviceRed: colors.reduce(0) { $0 + $1.redComponent } / divisor,
+            green: colors.reduce(0) { $0 + $1.greenComponent } / divisor,
+            blue: colors.reduce(0) { $0 + $1.blueComponent } / divisor,
+            alpha: colors.reduce(0) { $0 + $1.alphaComponent } / divisor
+        )
     }
 
     func clearColorSamplers() {
