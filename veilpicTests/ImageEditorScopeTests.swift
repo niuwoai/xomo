@@ -734,6 +734,12 @@ struct ImageEditorScopeTests {
         #expect(imageMenuSource.contains("viewModel.selectAdjustment(.gradientMap)"))
         #expect(imageMenuSource.contains("viewModel.selectAdjustment(.posterize)"))
         #expect(imageMenuSource.contains("viewModel.selectAdjustment(.threshold)"))
+        #expect(imageMenuSource.contains("viewModel.selectAdjustment(.exposure)"))
+        #expect(imageMenuSource.contains("viewModel.selectAdjustment(.vibrance)"))
+        #expect(imageMenuSource.contains("viewModel.selectAdjustment(.shadowsHighlights)"))
+        #expect(imageMenuSource.contains("viewModel.selectAdjustment(.blackWhite)"))
+        #expect(imageMenuSource.contains("viewModel.selectAdjustment(.photoFilter)"))
+        #expect(imageMenuSource.contains("viewModel.selectAdjustment(.colorLookup)"))
     }
 
     @Test func filterMenuExposesClassicLastFilterShortcut() throws {

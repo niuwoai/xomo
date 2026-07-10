@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.429.0 - 2026-07-10
+
+### Added
+- 图片编辑器 Image > Adjustments 子菜单补齐经典调整项：Exposure、Vibrance、Shadows/Highlights、Black & White、Photo Filter 和 Color Lookup 可直接选择并打开属性面板准备参数。
+
 ## 1.428.0 - 2026-07-10
 
 ### Added

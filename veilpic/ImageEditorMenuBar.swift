@@ -255,6 +255,25 @@ extension ImageEditorView {
             Button(ImageEditorAdjustment.threshold.title) {
                 viewModel.selectAdjustment(.threshold)
             }
+            Divider()
+            Button(ImageEditorAdjustment.exposure.title) {
+                viewModel.selectAdjustment(.exposure)
+            }
+            Button(ImageEditorAdjustment.vibrance.title) {
+                viewModel.selectAdjustment(.vibrance)
+            }
+            Button(ImageEditorAdjustment.shadowsHighlights.title) {
+                viewModel.selectAdjustment(.shadowsHighlights)
+            }
+            Button(ImageEditorAdjustment.blackWhite.title) {
+                viewModel.selectAdjustment(.blackWhite)
+            }
+            Button(ImageEditorAdjustment.photoFilter.title) {
+                viewModel.selectAdjustment(.photoFilter)
+            }
+            Button(ImageEditorAdjustment.colorLookup.title) {
+                viewModel.selectAdjustment(.colorLookup)
+            }
         }
         Divider()
         Button(L10n.text("imageEditor.action.autoLevels")) {
