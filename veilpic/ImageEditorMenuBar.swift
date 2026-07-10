@@ -810,6 +810,10 @@ extension ImageEditorView {
                 viewModel.loadSelectionFromLayerMask()
             }
             .disabled(!viewModel.canLoadSelectionFromLayerMask)
+            Button(L10n.text("imageEditor.action.layerTransparencyLoadSelection")) {
+                viewModel.loadSelectionFromLayerTransparency()
+            }
+            .disabled(!viewModel.canLoadSelectionFromLayerTransparency)
             Button(L10n.text("imageEditor.action.layerMaskCopyToSelected")) {
                 viewModel.copyLayerMaskToSelectedLayers()
             }

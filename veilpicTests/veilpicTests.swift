@@ -2674,6 +2674,45 @@ struct veilpicTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionFromLayerMask"))
         #expect(viewModel.statusText == L10n.text("imageEditor.status.layerMaskSelection"))
 
+        let maskedLayerID = try #require(viewModel.document.selectedLayerID)
+        viewModel.addLayer()
+        let transparentLayerID = try #require(viewModel.document.selectedLayerID)
+        let transparentLayerIndex = try #require(viewModel.document.layers.firstIndex { $0.id == transparentLayerID })
+        viewModel.document.layers[transparentLayerIndex].image = testBitmapImage(
+            size: NSSize(width: 20, height: 10),
+            background: .clear,
+            fills: [(rect: CGRect(x: 5, y: 2, width: 10, height: 6), color: .systemPink)]
+        )
+        viewModel.document.layers[transparentLayerIndex].frame = CGRect(x: 30, y: 20, width: 20, height: 10)
+        viewModel.document.selection = nil
+
+        #expect(viewModel.canLoadSelectionFromLayerTransparency)
+        viewModel.loadSelectionFromLayerTransparency()
+
+        let transparencySelection = try #require(viewModel.document.selection)
+        let transparencyMask = try #require(transparencySelection.rasterMask)
+        let transparencyBounds = try #require(transparencyMask.selectedBounds(in: canvasSize))
+        #expect(abs(transparencyBounds.minX - 35) < 1)
+        #expect(abs(transparencyBounds.minY - 22) < 1)
+        #expect(abs(transparencyBounds.maxX - 45) < 1)
+        #expect(abs(transparencyBounds.maxY - 28) < 1)
+        #expect(maskAlpha(transparencyMask, x: 40, y: 25) == 255)
+        #expect(maskAlpha(transparencyMask, x: 50, y: 25) == 0)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionFromLayer"))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionCreated"))
+
+        viewModel.createRectSelection(from: CGPoint(x: 40, y: 20), to: CGPoint(x: 60, y: 30))
+        viewModel.selectionMode = .intersect
+        viewModel.loadSelectionFromLayerTransparency()
+        viewModel.selectionMode = .replace
+
+        let intersectedTransparencySelection = try #require(viewModel.document.selection)
+        let intersectedTransparencyMask = try #require(intersectedTransparencySelection.rasterMask)
+        #expect(maskAlpha(intersectedTransparencyMask, x: 42, y: 25) == 255)
+        #expect(maskAlpha(intersectedTransparencyMask, x: 37, y: 25) == 0)
+        #expect(viewModel.document.history.last?.title == L10n.text(ImageEditorSelectionMode.intersect.historyKey))
+
+        viewModel.selectLayer(maskedLayerID)
         let anchors = [
             ImageEditorPathAnchor(point: CGPoint(x: 10, y: 8)),
             ImageEditorPathAnchor(point: CGPoint(x: 32, y: 8)),

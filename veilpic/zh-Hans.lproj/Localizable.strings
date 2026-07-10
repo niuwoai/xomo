@@ -1538,6 +1538,7 @@
 "imageEditor.action.layerMaskHideSelectionFromMask" = "隐藏当前选区";
 "imageEditor.action.layerMaskIntersectSelection" = "与当前选区相交";
 "imageEditor.action.layerMaskLoadSelection" = "从图层蒙版载入选区";
+"imageEditor.action.layerTransparencyLoadSelection" = "从图层透明度载入选区";
 "imageEditor.action.layerMaskCopyToSelected" = "复制蒙版到所选图层";
 "imageEditor.action.layerMaskApply" = "应用图层蒙版";
 "imageEditor.action.layerMaskDelete" = "删除图层蒙版";

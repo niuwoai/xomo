@@ -45,10 +45,7 @@ extension ImageEditorViewModel {
             return
         }
 
-        pushUndo()
-        document.selection = selection
-        appendHistory(L10n.text("imageEditor.history.selectionFromLayer"))
-        statusText = L10n.text("imageEditor.status.selectionFromLayer")
+        applySelectionCandidate(selection, replaceHistoryKey: "imageEditor.history.selectionFromLayer")
     }
 
     func saveCurrentSelection() {

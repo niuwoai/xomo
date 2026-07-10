@@ -1092,6 +1092,8 @@ extension ImageEditorView {
                 .disabled(!viewModel.canInvertLayerMask)
             layerActionButton(systemImage: "rectangle.dashed", helpKey: "imageEditor.action.layerMaskLoadSelection") { viewModel.loadSelectionFromLayerMask() }
                 .disabled(!viewModel.canLoadSelectionFromLayerMask)
+            layerActionButton(systemImage: "square.dashed", helpKey: "imageEditor.action.layerTransparencyLoadSelection") { viewModel.loadSelectionFromLayerTransparency() }
+                .disabled(!viewModel.canLoadSelectionFromLayerTransparency)
             layerActionButton(systemImage: "checkmark.square", helpKey: "imageEditor.action.layerMaskApply") { viewModel.applyLayerMask() }
                 .disabled(!viewModel.canApplyLayerMask)
             layerActionButton(systemImage: "xmark.square", helpKey: "imageEditor.action.layerMaskDelete") { viewModel.deleteLayerMask() }

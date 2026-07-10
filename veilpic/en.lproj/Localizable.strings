@@ -1538,6 +1538,7 @@
 "imageEditor.action.layerMaskHideSelectionFromMask" = "Hide Current Selection";
 "imageEditor.action.layerMaskIntersectSelection" = "Intersect with Current Selection";
 "imageEditor.action.layerMaskLoadSelection" = "Load Selection from Layer Mask";
+"imageEditor.action.layerTransparencyLoadSelection" = "Load Selection from Layer Transparency";
 "imageEditor.action.layerMaskCopyToSelected" = "Copy Mask to Selected Layers";
 "imageEditor.action.layerMaskApply" = "Apply Layer Mask";
 "imageEditor.action.layerMaskDelete" = "Delete Layer Mask";
