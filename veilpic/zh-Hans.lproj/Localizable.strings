@@ -505,6 +505,7 @@
 "imageEditor.tool.smudge" = "涂抹";
 "imageEditor.tool.healingBrush" = "修复画笔";
 "imageEditor.tool.patchTool" = "修补";
+"imageEditor.tool.redEye" = "红眼";
 "imageEditor.tool.paintBucket" = "油漆桶";
 "imageEditor.tool.gradient" = "渐变";
 "imageEditor.tool.eyedropper" = "吸管";
@@ -1028,6 +1029,7 @@
 "imageEditor.history.smudge" = "涂抹";
 "imageEditor.history.healingBrush" = "修复画笔";
 "imageEditor.history.quickSelection" = "快速选择";
+"imageEditor.history.redEye" = "红眼";
 "imageEditor.history.paintBucket" = "油漆桶填充";
 "imageEditor.history.ellipse" = "椭圆";
 "imageEditor.history.rectangle" = "矩形";
@@ -1578,6 +1580,7 @@
 "imageEditor.status.dodgeApplied" = "已应用减淡";
 "imageEditor.status.burnApplied" = "已应用加深";
 "imageEditor.status.spongeApplied" = "已应用海绵";
+"imageEditor.status.redEyeApplied" = "已消除红眼";
 "imageEditor.status.blurApplied" = "已应用局部模糊";
 "imageEditor.status.sharpenApplied" = "已应用局部锐化";
 "imageEditor.status.smudgeApplied" = "已应用涂抹";

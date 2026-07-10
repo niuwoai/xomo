@@ -80,6 +80,7 @@ enum ImageEditorTool: String, CaseIterable, Identifiable {
     case smudge
     case healingBrush
     case patchTool
+    case redEye
     case paintBucket
     case gradient
     case eyedropper
@@ -132,6 +133,8 @@ enum ImageEditorTool: String, CaseIterable, Identifiable {
             "bandage"
         case .patchTool:
             "square.dashed"
+        case .redEye:
+            "eye"
         case .paintBucket:
             "paintbucket.fill"
         case .gradient:
@@ -170,7 +173,7 @@ enum ImageEditorTool: String, CaseIterable, Identifiable {
         ImageEditorToolShortcutGroup(key: "b", tools: [.brush]),
         ImageEditorToolShortcutGroup(key: "e", tools: [.eraser]),
         ImageEditorToolShortcutGroup(key: "s", tools: [.cloneStamp]),
-        ImageEditorToolShortcutGroup(key: "j", tools: [.healingBrush, .patchTool]),
+        ImageEditorToolShortcutGroup(key: "j", tools: [.healingBrush, .patchTool, .redEye]),
         ImageEditorToolShortcutGroup(key: "o", tools: [.dodge, .burn, .sponge]),
         ImageEditorToolShortcutGroup(key: "r", tools: [.blur, .sharpen, .smudge]),
         ImageEditorToolShortcutGroup(key: "g", tools: [.paintBucket, .gradient]),

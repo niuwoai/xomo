@@ -505,6 +505,7 @@
 "imageEditor.tool.smudge" = "Smudge";
 "imageEditor.tool.healingBrush" = "Healing Brush";
 "imageEditor.tool.patchTool" = "Patch";
+"imageEditor.tool.redEye" = "Red Eye";
 "imageEditor.tool.paintBucket" = "Paint Bucket";
 "imageEditor.tool.gradient" = "Gradient";
 "imageEditor.tool.eyedropper" = "Eyedropper";
@@ -1028,6 +1029,7 @@
 "imageEditor.history.smudge" = "Smudge";
 "imageEditor.history.healingBrush" = "Healing Brush";
 "imageEditor.history.quickSelection" = "Quick Selection";
+"imageEditor.history.redEye" = "Red Eye";
 "imageEditor.history.paintBucket" = "Paint Bucket Fill";
 "imageEditor.history.ellipse" = "Ellipse";
 "imageEditor.history.rectangle" = "Rectangle";
@@ -1578,6 +1580,7 @@
 "imageEditor.status.dodgeApplied" = "Dodge applied";
 "imageEditor.status.burnApplied" = "Burn applied";
 "imageEditor.status.spongeApplied" = "Sponge applied";
+"imageEditor.status.redEyeApplied" = "Red eye reduced";
 "imageEditor.status.blurApplied" = "Local blur applied";
 "imageEditor.status.sharpenApplied" = "Local sharpen applied";
 "imageEditor.status.smudgeApplied" = "Smudge applied";

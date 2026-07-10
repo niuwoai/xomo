@@ -505,6 +505,7 @@
 "imageEditor.tool.smudge" = "指先";
 "imageEditor.tool.healingBrush" = "修復ブラシ";
 "imageEditor.tool.patchTool" = "パッチ";
+"imageEditor.tool.redEye" = "赤目補正";
 "imageEditor.tool.paintBucket" = "塗りつぶし";
 "imageEditor.tool.gradient" = "グラデ";
 "imageEditor.tool.eyedropper" = "スポイト";
@@ -1028,6 +1029,7 @@
 "imageEditor.history.smudge" = "指先";
 "imageEditor.history.healingBrush" = "修復ブラシ";
 "imageEditor.history.quickSelection" = "クイック選択";
+"imageEditor.history.redEye" = "赤目補正";
 "imageEditor.history.paintBucket" = "塗りつぶし";
 "imageEditor.history.ellipse" = "楕円";
 "imageEditor.history.rectangle" = "矩形";
@@ -1578,6 +1580,7 @@
 "imageEditor.status.dodgeApplied" = "覆い焼きを適用しました";
 "imageEditor.status.burnApplied" = "焼き込みを適用しました";
 "imageEditor.status.spongeApplied" = "スポンジを適用しました";
+"imageEditor.status.redEyeApplied" = "赤目を補正しました";
 "imageEditor.status.blurApplied" = "局所ぼかしを適用しました";
 "imageEditor.status.sharpenApplied" = "局所シャープを適用しました";
 "imageEditor.status.smudgeApplied" = "指先ツールを適用しました";

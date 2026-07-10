@@ -651,6 +651,8 @@ struct ImageEditorView: View {
                     viewModel.healingBrush(points: dragPoints)
                 case .patchTool:
                     viewModel.patchSelection(from: dragStart, to: imagePoint)
+                case .redEye:
+                    viewModel.reduceRedEye(at: imagePoint)
                 case .paintBucket:
                     viewModel.paintBucketFill(at: imagePoint)
                 case .rectangle:

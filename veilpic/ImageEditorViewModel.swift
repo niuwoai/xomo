@@ -3308,6 +3308,34 @@ final class ImageEditorViewModel: ObservableObject {
         statusText = L10n.text("imageEditor.status.healingApplied")
     }
 
+    func reduceRedEye(at point: CGPoint?) {
+        guard let point else { return }
+        guard !isEditingLayerMask else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+        guard let layer = editableSelectedLayer() else {
+            statusText = L10n.text("imageEditor.status.layerLocked")
+            return
+        }
+        let sourceImage = layer.image.normalizedBitmapImage()
+        guard let output = sourceImage.withRedEyeReduction(
+            at: point,
+            radius: brushSize,
+            opacity: opacity
+        ) else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+
+        replaceSelectedLayerPixels(
+            output,
+            historyTitle: L10n.text("imageEditor.history.redEye"),
+            resetFrame: false
+        )
+        statusText = L10n.text("imageEditor.status.redEyeApplied")
+    }
+
     func paintBucketFill(at point: CGPoint?) {
         guard let point else { return }
         guard !isEditingLayerMask else {
