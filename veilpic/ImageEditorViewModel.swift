@@ -464,7 +464,7 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     var canAutoLevelsSelectedLayer: Bool {
-        !isEditingLayerMask && editableSelectedLayer() != nil
+        !editableSelectedLayerIndices().isEmpty
     }
 
     var canAutoContrastSelectedLayer: Bool {
@@ -2832,51 +2832,15 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func autoLevelsSelectedLayer() {
-        guard canAutoLevelsSelectedLayer,
-              let layer = editableSelectedLayer(),
-              let output = layer.image.autoLeveled()
-        else {
-            statusText = L10n.text("imageEditor.status.adjustmentFailed")
-            return
-        }
-        replaceSelectedLayerPixels(
-            output,
-            historyTitle: L10n.text("imageEditor.history.autoLevels"),
-            resetFrame: false
-        )
-        statusText = L10n.text("imageEditor.status.autoLevels")
+        applyAutoCorrection({ $0.autoLeveled() }, history: "imageEditor.history.autoLevels", selectedHistory: "imageEditor.history.autoLevelsSelected", status: "imageEditor.status.autoLevels", selectedStatus: "imageEditor.status.autoLevelsSelected")
     }
 
     func autoContrastSelectedLayer() {
-        guard canAutoContrastSelectedLayer,
-              let layer = editableSelectedLayer(),
-              let output = layer.image.autoContrasted()
-        else {
-            statusText = L10n.text("imageEditor.status.adjustmentFailed")
-            return
-        }
-        replaceSelectedLayerPixels(
-            output,
-            historyTitle: L10n.text("imageEditor.history.autoContrast"),
-            resetFrame: false
-        )
-        statusText = L10n.text("imageEditor.status.autoContrast")
+        applyAutoCorrection({ $0.autoContrasted() }, history: "imageEditor.history.autoContrast", selectedHistory: "imageEditor.history.autoContrastSelected", status: "imageEditor.status.autoContrast", selectedStatus: "imageEditor.status.autoContrastSelected")
     }
 
     func autoColorSelectedLayer() {
-        guard canAutoColorSelectedLayer,
-              let layer = editableSelectedLayer(),
-              let output = layer.image.autoColored()
-        else {
-            statusText = L10n.text("imageEditor.status.adjustmentFailed")
-            return
-        }
-        replaceSelectedLayerPixels(
-            output,
-            historyTitle: L10n.text("imageEditor.history.autoColor"),
-            resetFrame: false
-        )
-        statusText = L10n.text("imageEditor.status.autoColor")
+        applyAutoCorrection({ $0.autoColored() }, history: "imageEditor.history.autoColor", selectedHistory: "imageEditor.history.autoColorSelected", status: "imageEditor.status.autoColor", selectedStatus: "imageEditor.status.autoColorSelected")
     }
 
     func addAdjustmentLayer() {
@@ -3525,6 +3489,31 @@ final class ImageEditorViewModel: ObservableObject {
         guard let index = document.selectedLayerIndex else { return nil }
         let layer = document.layers[index]
         return layer.isGroup || layer.isAdjustment || layer.isFilter || layer.isSolidColorFill || layer.isPatternFill || layer.isGradientFill || layer.isText || layer.isShape || document.isEffectivelyPixelsLocked(layer) ? nil : layer
+    }
+
+    private func editableSelectedLayerIndices() -> [Int] {
+        guard !isEditingLayerMask else { return [] }
+        return selectedLayerIndices.filter { index in
+            let layer = document.layers[index]
+            return !layer.isGroup && !layer.isAdjustment && !layer.isFilter && !layer.isSolidColorFill && !layer.isPatternFill && !layer.isGradientFill && !layer.isText && !layer.isShape && !document.isEffectivelyPixelsLocked(layer)
+        }
+    }
+
+    private func applyAutoCorrection(_ transform: (NSImage) -> NSImage?, history: String, selectedHistory: String, status: String, selectedStatus: String) {
+        let indices = editableSelectedLayerIndices()
+        let outputs = indices.reduce(into: [Int: NSImage]()) { result, index in
+            if let image = transform(document.layers[index].image) { result[index] = image }
+        }
+        guard !indices.isEmpty, outputs.count == indices.count else { statusText = L10n.text("imageEditor.status.adjustmentFailed"); return }
+        pushUndo()
+        for index in indices {
+            guard let normalized = outputs[index]?.normalizedBitmapImage() else { continue }
+            let original = document.layers[index].image
+            let clipped = clippedToSelection(original: original, output: normalized)
+            document.layers[index].image = document.isEffectivelyTransparencyLocked(document.layers[index]) ? (clipped.preservingAlpha(from: original) ?? clipped) : clipped
+        }
+        if indices.count == 1 { appendHistory(L10n.text(history)); statusText = L10n.text(status) }
+        else { appendHistory(L10n.text(selectedHistory)); statusText = L10n.format(selectedStatus, indices.count) }
     }
 
     private func smartObjectConversionCandidate() -> ImageEditorSmartObjectConversionCandidate? {

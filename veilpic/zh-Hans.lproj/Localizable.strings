@@ -1155,6 +1155,9 @@
 "imageEditor.history.autoLevels" = "自动色阶";
 "imageEditor.history.autoContrast" = "自动对比度";
 "imageEditor.history.autoColor" = "自动颜色";
+"imageEditor.history.autoLevelsSelected" = "自动校正所选图层色阶";
+"imageEditor.history.autoContrastSelected" = "自动校正所选图层对比度";
+"imageEditor.history.autoColorSelected" = "自动校正所选图层颜色";
 "imageEditor.status.ready" = "%@ · %@ · 就绪";
 "imageEditor.status.toolSoon" = "这个工具会在后续版本支持";
 "imageEditor.status.menuSoon" = "菜单功能会在后续版本补齐";
@@ -1207,6 +1210,9 @@
 "imageEditor.status.autoLevels" = "已自动校正当前图层色阶";
 "imageEditor.status.autoContrast" = "已自动校正当前图层对比度";
 "imageEditor.status.autoColor" = "已自动校正当前图层颜色";
+"imageEditor.status.autoLevelsSelected" = "已自动校正 %d 个图层的色阶";
+"imageEditor.status.autoContrastSelected" = "已自动校正 %d 个图层的对比度";
+"imageEditor.status.autoColorSelected" = "已自动校正 %d 个图层的颜色";
 "imageEditor.status.operationFailed" = "操作失败";
 "imageEditor.status.layerLocked" = "当前图层不可编辑";
 "imageEditor.status.layerAlignedToCanvas" = "已将图层对齐到画布";

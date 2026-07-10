@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.345.0 - 2026-07-10
+
+### Added
+- Auto Levels、Auto Contrast 和 Auto Color 支持批量处理所选可编辑像素图层，并自动跳过锁定或不适用图层。
+
 ## 1.344.0 - 2026-07-10
 
 ### Added
