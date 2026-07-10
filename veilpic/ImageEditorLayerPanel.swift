@@ -926,6 +926,7 @@ extension ImageEditorView {
                 layerActionButton(systemImage: "xmark.square", helpKey: "imageEditor.action.layerSelectionClear") { viewModel.clearLayerSelection() }
                     .disabled(!viewModel.canClearLayerSelection)
                 layerActionButton(systemImage: "doc.on.doc", helpKey: "imageEditor.action.layerDuplicate") { viewModel.duplicateSelectedLayer() }
+                    .disabled(!viewModel.canDuplicateSelectedLayer)
                 layerActionButton(systemImage: "eye.circle", helpKey: "imageEditor.action.layerIsolateSelected") { viewModel.isolateSelectedLayers() }
                     .disabled(!viewModel.canIsolateSelectedLayers)
                 layerActionButton(systemImage: "eye", helpKey: "imageEditor.action.layerShowAll") { viewModel.showAllLayers() }

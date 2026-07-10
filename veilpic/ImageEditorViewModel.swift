@@ -1702,6 +1702,10 @@ final class ImageEditorViewModel: ObservableObject {
         appendHistory(L10n.text("imageEditor.history.layerUngroup"))
     }
 
+    var canDuplicateSelectedLayer: Bool {
+        !duplicateSourceLayerIndices().isEmpty
+    }
+
     func duplicateSelectedLayer() {
         let sourceIndices = duplicateSourceLayerIndices()
         guard !sourceIndices.isEmpty else { return }
@@ -1720,9 +1724,7 @@ final class ImageEditorViewModel: ObservableObject {
             layer.id = UUID()
             layer.linkedLayerIDs = []
             layer.name = L10n.format("imageEditor.layer.copyName", layer.name)
-            if layer.isGroup {
-                idMap[originalLayer.id] = layer.id
-            }
+            idMap[originalLayer.id] = layer.id
             duplicatedIDs.append(layer.id)
             duplicatedLayers.append(layer)
         }
@@ -1733,10 +1735,16 @@ final class ImageEditorViewModel: ObservableObject {
                let duplicatedGroupID = idMap[groupID] {
                 duplicatedLayers[index].groupID = duplicatedGroupID
             }
+
+            let sourceIndex = sourceIndices[index]
+            let sourceLinks = document.layers[sourceIndex].linkedLayerIDs
+            duplicatedLayers[index].linkedLayerIDs = Set(sourceLinks.compactMap { idMap[$0] })
+                .subtracting([duplicatedLayers[index].id])
         }
 
         let insertionIndex = min((sourceIndices.last ?? (document.layers.count - 1)) + 1, document.layers.count)
         document.layers.insert(contentsOf: duplicatedLayers, at: insertionIndex)
+        normalizeLayerLinks()
         let duplicatedIDSet = Set(duplicatedIDs)
         document.selectedLayerID = duplicatedLayers.reversed().first { duplicatedIDSet.contains($0.id) }?.id
         document.selectedLayerIDs = duplicatedIDSet

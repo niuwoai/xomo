@@ -217,6 +217,7 @@ extension ImageEditorView {
         Button(L10n.text("imageEditor.action.layerDuplicate")) {
             viewModel.duplicateSelectedLayer()
         }
+        .disabled(!viewModel.canDuplicateSelectedLayer)
         Button(L10n.text("imageEditor.action.layerDelete")) {
             viewModel.deleteSelectedLayer()
         }
