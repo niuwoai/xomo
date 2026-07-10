@@ -492,6 +492,7 @@
 "imageEditor.tool.marquee" = "矩形選択";
 "imageEditor.tool.lasso" = "なげなわ";
 "imageEditor.tool.magicWand" = "自動選択";
+"imageEditor.tool.quickSelection" = "クイック選択";
 "imageEditor.tool.crop" = "切り抜き";
 "imageEditor.tool.brush" = "ブラシ";
 "imageEditor.tool.eraser" = "消しゴム";
@@ -1024,6 +1025,7 @@
 "imageEditor.history.sharpen" = "シャープ";
 "imageEditor.history.smudge" = "指先";
 "imageEditor.history.healingBrush" = "修復ブラシ";
+"imageEditor.history.quickSelection" = "クイック選択";
 "imageEditor.history.paintBucket" = "塗りつぶし";
 "imageEditor.history.ellipse" = "楕円";
 "imageEditor.history.rectangle" = "矩形";

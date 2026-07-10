@@ -492,6 +492,7 @@
 "imageEditor.tool.marquee" = "Marquee";
 "imageEditor.tool.lasso" = "Lasso";
 "imageEditor.tool.magicWand" = "Magic Wand";
+"imageEditor.tool.quickSelection" = "Quick Selection";
 "imageEditor.tool.crop" = "Crop";
 "imageEditor.tool.brush" = "Brush";
 "imageEditor.tool.eraser" = "Eraser";
@@ -1024,6 +1025,7 @@
 "imageEditor.history.sharpen" = "Sharpen";
 "imageEditor.history.smudge" = "Smudge";
 "imageEditor.history.healingBrush" = "Healing Brush";
+"imageEditor.history.quickSelection" = "Quick Selection";
 "imageEditor.history.paintBucket" = "Paint Bucket Fill";
 "imageEditor.history.ellipse" = "Ellipse";
 "imageEditor.history.rectangle" = "Rectangle";

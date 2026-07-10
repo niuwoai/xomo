@@ -601,7 +601,7 @@ struct ImageEditorView: View {
                     } else {
                         isMovingPathAnchor = viewModel.beginMovingPathAnchor(at: imagePoint)
                     }
-                case .lasso:
+                case .lasso, .quickSelection:
                     if let imagePoint {
                         dragPoints.append(imagePoint)
                     }
@@ -623,6 +623,8 @@ struct ImageEditorView: View {
                     viewModel.createLassoSelection(points: dragPoints)
                 case .magicWand:
                     viewModel.createMagicSelection(at: imagePoint)
+                case .quickSelection:
+                    viewModel.createQuickSelection(points: dragPoints)
                 case .brush:
                     viewModel.drawBrush(points: dragPoints)
                 case .eraser:

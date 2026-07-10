@@ -67,6 +67,7 @@ enum ImageEditorTool: String, CaseIterable, Identifiable {
     case marquee
     case lasso
     case magicWand
+    case quickSelection
     case crop
     case brush
     case eraser
@@ -104,6 +105,8 @@ enum ImageEditorTool: String, CaseIterable, Identifiable {
             "lasso"
         case .magicWand:
             "wand.and.stars"
+        case .quickSelection:
+            "paintbrush.pointed"
         case .crop:
             "crop"
         case .brush:
@@ -159,7 +162,7 @@ enum ImageEditorTool: String, CaseIterable, Identifiable {
         ImageEditorToolShortcutGroup(key: "v", tools: [.move]),
         ImageEditorToolShortcutGroup(key: "m", tools: [.marquee]),
         ImageEditorToolShortcutGroup(key: "l", tools: [.lasso]),
-        ImageEditorToolShortcutGroup(key: "w", tools: [.magicWand]),
+        ImageEditorToolShortcutGroup(key: "w", tools: [.magicWand, .quickSelection]),
         ImageEditorToolShortcutGroup(key: "c", tools: [.crop]),
         ImageEditorToolShortcutGroup(key: "b", tools: [.brush]),
         ImageEditorToolShortcutGroup(key: "e", tools: [.eraser]),
@@ -182,7 +185,7 @@ enum ImageEditorTool: String, CaseIterable, Identifiable {
 
     var supportsSelectionMode: Bool {
         switch self {
-        case .marquee, .lasso, .magicWand:
+        case .marquee, .lasso, .magicWand, .quickSelection:
             true
         default:
             false

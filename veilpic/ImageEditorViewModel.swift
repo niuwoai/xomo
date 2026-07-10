@@ -1651,6 +1651,35 @@ final class ImageEditorViewModel: ObservableObject {
         applySelectionCandidate(selection, replaceHistoryKey: "imageEditor.history.magicSelection")
     }
 
+    func createQuickSelection(points: [CGPoint]) {
+        let canvasBounds = CGRect(origin: .zero, size: document.canvasSize)
+        let minimumDistance = max(8, brushSize * 0.65)
+        let maximumSamples = 18
+        var sampledPoints: [CGPoint] = []
+
+        for point in points where canvasBounds.contains(point) {
+            guard sampledPoints.count < maximumSamples else { break }
+            guard sampledPoints.last.map({ hypot($0.x - point.x, $0.y - point.y) >= minimumDistance }) ?? true else { continue }
+            sampledPoints.append(point)
+        }
+
+        guard !sampledPoints.isEmpty else { return }
+
+        var combinedSelection: ImageEditorSelection?
+        for point in sampledPoints {
+            guard let candidate = magicSelection(at: point) else { continue }
+            combinedSelection = ImageEditorSelection.combined(
+                current: combinedSelection,
+                candidate: candidate,
+                mode: .add,
+                canvasSize: document.canvasSize
+            )
+        }
+
+        guard let combinedSelection else { return }
+        applySelectionCandidate(combinedSelection, replaceHistoryKey: "imageEditor.history.quickSelection")
+    }
+
     func applySelectionCandidate(_ selection: ImageEditorSelection, replaceHistoryKey: String) {
         let existingSelection = document.selection
         guard existingSelection != nil || selectionMode == .replace || selectionMode == .add else {

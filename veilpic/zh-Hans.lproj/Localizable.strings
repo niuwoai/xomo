@@ -492,6 +492,7 @@
 "imageEditor.tool.marquee" = "矩形选区";
 "imageEditor.tool.lasso" = "套索";
 "imageEditor.tool.magicWand" = "魔棒";
+"imageEditor.tool.quickSelection" = "快速选择";
 "imageEditor.tool.crop" = "裁剪";
 "imageEditor.tool.brush" = "画笔";
 "imageEditor.tool.eraser" = "橡皮擦";
@@ -1024,6 +1025,7 @@
 "imageEditor.history.sharpen" = "锐化";
 "imageEditor.history.smudge" = "涂抹";
 "imageEditor.history.healingBrush" = "修复画笔";
+"imageEditor.history.quickSelection" = "快速选择";
 "imageEditor.history.paintBucket" = "油漆桶填充";
 "imageEditor.history.ellipse" = "椭圆";
 "imageEditor.history.rectangle" = "矩形";
