@@ -727,6 +727,13 @@ struct ImageEditorScopeTests {
         #expect(imageMenuSource.contains(".keyboardShortcut(\"l\", modifiers: [.command, .shift, .option])"))
         #expect(imageMenuSource.contains("viewModel.autoColorSelectedLayer()"))
         #expect(imageMenuSource.contains(".keyboardShortcut(\"b\", modifiers: [.command, .shift])"))
+        #expect(imageMenuSource.contains("imageEditor.menu.image.adjustments"))
+        #expect(imageMenuSource.contains("viewModel.selectAdjustment(.brightnessContrast)"))
+        #expect(imageMenuSource.contains("viewModel.selectAdjustment(.channelMixer)"))
+        #expect(imageMenuSource.contains("viewModel.selectAdjustment(.selectiveColor)"))
+        #expect(imageMenuSource.contains("viewModel.selectAdjustment(.gradientMap)"))
+        #expect(imageMenuSource.contains("viewModel.selectAdjustment(.posterize)"))
+        #expect(imageMenuSource.contains("viewModel.selectAdjustment(.threshold)"))
     }
 
     @Test func filterMenuExposesClassicLastFilterShortcut() throws {

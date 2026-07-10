@@ -321,6 +321,7 @@
 "imageEditor.menu.edit" = "Edit";
 "imageEditor.menu.edit.historySnapshots" = "History Snapshots";
 "imageEditor.menu.image" = "Image";
+"imageEditor.menu.image.adjustments" = "Adjustments";
 "imageEditor.menu.layer" = "Layer";
 "imageEditor.menu.select" = "Select";
 "imageEditor.menu.filter" = "Filter";

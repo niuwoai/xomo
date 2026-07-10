@@ -1,6 +1,6 @@
 # 轻图产品概览
 
-> 最后更新：2026-07-10 | 当前版本：v1.427.0
+> 最后更新：2026-07-10 | 当前版本：v1.428.0
 
 ## 产品定位
 
@@ -156,6 +156,7 @@
 - 1.425.0 起，Filter 菜单继续补齐 Stylize 与 Distort 分类，把已有 Emboss、Find Edges、Offset、Wave、Ripple、Pinch、Spherize 滤镜接入经典菜单入口。
 - 1.426.0 起，Layer > Layer Style 提供 Blending Options 入口，可从经典菜单直接打开属性面板编辑当前图层样式。
 - 1.427.0 起，Filter 菜单补齐 Liquify 分类，把已有 Liquify Push、Twirl、Pucker/Bloat 液化滤镜接入经典菜单入口，点击后打开属性面板准备参数。
+- 1.428.0 起，Image 菜单新增经典 Adjustments 子菜单，把已有 Brightness/Contrast、Channel Mixer、Selective Color、Gradient Map、Posterize、Threshold 调整接入经典菜单入口，点击后打开属性面板准备参数。
 - 点击“应用到预览”后，编辑结果会成为新的工作台原图，后续保存、复制图片和上传都使用编辑后的图片；点击取消不会修改当前工作台。
 
 后续可配置：

@@ -236,6 +236,26 @@ extension ImageEditorView {
         }
         .keyboardShortcut("i", modifiers: [.command])
         .disabled(!viewModel.canInvertSelectedLayer)
+        Menu(L10n.text("imageEditor.menu.image.adjustments")) {
+            Button(ImageEditorAdjustment.brightnessContrast.title) {
+                viewModel.selectAdjustment(.brightnessContrast)
+            }
+            Button(ImageEditorAdjustment.channelMixer.title) {
+                viewModel.selectAdjustment(.channelMixer)
+            }
+            Button(ImageEditorAdjustment.selectiveColor.title) {
+                viewModel.selectAdjustment(.selectiveColor)
+            }
+            Button(ImageEditorAdjustment.gradientMap.title) {
+                viewModel.selectAdjustment(.gradientMap)
+            }
+            Button(ImageEditorAdjustment.posterize.title) {
+                viewModel.selectAdjustment(.posterize)
+            }
+            Button(ImageEditorAdjustment.threshold.title) {
+                viewModel.selectAdjustment(.threshold)
+            }
+        }
         Divider()
         Button(L10n.text("imageEditor.action.autoLevels")) {
             viewModel.autoLevelsSelectedLayer()

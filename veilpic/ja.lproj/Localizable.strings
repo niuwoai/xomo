@@ -321,6 +321,7 @@
 "imageEditor.menu.edit" = "編集";
 "imageEditor.menu.edit.historySnapshots" = "履歴スナップショット";
 "imageEditor.menu.image" = "画像";
+"imageEditor.menu.image.adjustments" = "色調補正";
 "imageEditor.menu.layer" = "レイヤー";
 "imageEditor.menu.select" = "選択";
 "imageEditor.menu.filter" = "フィルター";

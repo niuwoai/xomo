@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.428.0 - 2026-07-10
+
+### Added
+- 图片编辑器 Image 菜单新增经典 Adjustments 子菜单：Brightness/Contrast、Channel Mixer、Selective Color、Gradient Map、Posterize 和 Threshold 可直接选择已有调整并打开属性面板准备参数。
+
 ## 1.427.0 - 2026-07-10
 
 ### Added

@@ -321,6 +321,7 @@
 "imageEditor.menu.edit" = "编辑";
 "imageEditor.menu.edit.historySnapshots" = "历史快照";
 "imageEditor.menu.image" = "图像";
+"imageEditor.menu.image.adjustments" = "调整";
 "imageEditor.menu.layer" = "图层";
 "imageEditor.menu.select" = "选择";
 "imageEditor.menu.filter" = "滤镜";
