@@ -10,6 +10,7 @@ import Testing
 
 struct LocalizationResourceTests {
     private static let supportedLocalizationIDs: Set<String> = ["zh-Hans", "en", "ja"]
+    private static let supportedStringTables: Set<String> = ["InfoPlist.strings", "Localizable.strings"]
 
     @Test func appShipsOnlyChineseEnglishAndJapaneseLocalizations() throws {
         let paths = try Self.repositoryPaths()
@@ -46,6 +47,22 @@ struct LocalizationResourceTests {
 
                 #expect(localizedKeys == referenceKeys)
             }
+        }
+    }
+
+    @Test func supportedLocalizationDirectoriesShipOnlyTrackedStringTables() throws {
+        let paths = try Self.repositoryPaths()
+
+        for localizationID in Self.supportedLocalizationIDs {
+            let directory = paths.appDirectory.appendingPathComponent("\(localizationID).lproj", isDirectory: true)
+            let filenames = try FileManager.default.contentsOfDirectory(
+                at: directory,
+                includingPropertiesForKeys: nil
+            )
+                .filter { $0.pathExtension == "strings" }
+                .map(\.lastPathComponent)
+
+            #expect(Set(filenames) == Self.supportedStringTables)
         }
     }
 

@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.373.0 - 2026-07-10
+
+### Changed
+- 本地化资源测试进一步锁定仅发布简体中文、英文、日文三种语言，并要求每个语言目录只包含已跟踪的 `Localizable.strings` 与 `InfoPlist.strings`。
+
 ## 1.372.0 - 2026-07-10
 
 ### Added
