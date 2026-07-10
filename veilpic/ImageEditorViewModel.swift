@@ -1136,6 +1136,11 @@ final class ImageEditorViewModel: ObservableObject {
         statusText = optionsPanelSummaryText
     }
 
+    func adjustBrushSizeShortcut(by delta: CGFloat) {
+        brushSize = max(1, min(96, brushSize + delta))
+        statusText = optionsPanelSummaryText
+    }
+
     func applyOptionsOpacityPreset(_ percent: Int) {
         opacity = CGFloat(max(5, min(100, percent))) / 100
         statusText = optionsPanelSummaryText

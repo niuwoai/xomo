@@ -162,6 +162,17 @@ struct ImageEditorScopeTests {
         #expect(shortcutButtonsSource.contains(".keyboardShortcut(KeyEquivalent(group.key), modifiers: [])"))
         #expect(shortcutButtonsSource.contains("viewModel.cycleClassicToolShortcut(group.key)"))
         #expect(shortcutButtonsSource.contains(".keyboardShortcut(KeyEquivalent(group.key), modifiers: [.shift])"))
+
+        let brushSizeShortcutStart = try #require(source.range(of: "private var brushSizeShortcutButtons: some View"))
+        let brushSizeShortcutEnd = try #require(
+            source[brushSizeShortcutStart.upperBound...].range(of: "private var colorChips: some View")
+        )
+        let brushSizeShortcutSource = source[brushSizeShortcutStart.lowerBound..<brushSizeShortcutEnd.lowerBound]
+
+        #expect(brushSizeShortcutSource.contains("viewModel.adjustBrushSizeShortcut(by: -1)"))
+        #expect(brushSizeShortcutSource.contains(".keyboardShortcut(\"[\", modifiers: [])"))
+        #expect(brushSizeShortcutSource.contains("viewModel.adjustBrushSizeShortcut(by: 1)"))
+        #expect(brushSizeShortcutSource.contains(".keyboardShortcut(\"]\", modifiers: [])"))
     }
 
     @MainActor
@@ -187,6 +198,28 @@ struct ImageEditorScopeTests {
         viewModel.selectTool(.brush)
         viewModel.cycleClassicToolShortcut("u")
         #expect(viewModel.selectedTool == .rectangle)
+    }
+
+    @MainActor
+    @Test func classicBrushSizeShortcutsClampAndUpdateOptionsStatus() {
+        let image = NSImage(size: NSSize(width: 80, height: 60))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.brushSize = 18
+        viewModel.adjustBrushSizeShortcut(by: 1)
+        #expect(viewModel.brushSize == 19)
+        #expect(viewModel.statusText == viewModel.optionsPanelSummaryText)
+
+        viewModel.adjustBrushSizeShortcut(by: -2)
+        #expect(viewModel.brushSize == 17)
+
+        viewModel.brushSize = 1
+        viewModel.adjustBrushSizeShortcut(by: -1)
+        #expect(viewModel.brushSize == 1)
+
+        viewModel.brushSize = 96
+        viewModel.adjustBrushSizeShortcut(by: 1)
+        #expect(viewModel.brushSize == 96)
     }
 
     @MainActor
