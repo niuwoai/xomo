@@ -1289,9 +1289,11 @@ extension ImageEditorView {
         Button(L10n.text("imageEditor.action.guidesSnap")) {
             viewModel.toggleGuideSnapping()
         }
+        .keyboardShortcut(";", modifiers: [.command, .shift])
         Button(L10n.text("imageEditor.action.guidesLocked")) {
             viewModel.toggleGuidesLocked()
         }
+        .keyboardShortcut(";", modifiers: [.command, .option])
         Button(L10n.text("imageEditor.action.selectionEdgesVisible")) {
             viewModel.toggleSelectionEdgesVisible()
         }

@@ -1,6 +1,6 @@
 # 轻图产品概览
 
-> 最后更新：2026-07-10 | 当前版本：v1.418.0
+> 最后更新：2026-07-10 | 当前版本：v1.419.0
 
 ## 产品定位
 
@@ -147,6 +147,7 @@
 - 1.416.0 起，Image 菜单支持 `Shift + Command + L` 自动色阶、`Option + Shift + Command + L` 自动对比度、`Shift + Command + B` 自动颜色。
 - 1.417.0 起，View 菜单支持 `Command + R` 显示标尺、`Command + ;` 显示参考线、`Command + '` 显示网格。
 - 1.418.0 起，Select 菜单支持 `Option + Command + D` 羽化当前选区，补齐 Photoshop 7 风格的 Feather 入口。
+- 1.419.0 起，View 菜单支持 `Shift + Command + ;` 开关参考线吸附、`Option + Command + ;` 锁定或解锁参考线。
 - 点击“应用到预览”后，编辑结果会成为新的工作台原图，后续保存、复制图片和上传都使用编辑后的图片；点击取消不会修改当前工作台。
 
 后续可配置：
