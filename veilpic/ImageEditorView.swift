@@ -600,7 +600,7 @@ struct ImageEditorView: View {
 
     private func colorSamplerLabel(index: Int, color: NSColor) -> String {
         let rgb = color.usingColorSpace(.deviceRGB) ?? color
-        return "\(index)  R\(Int((rgb.redComponent * 255).rounded())) G\(Int((rgb.greenComponent * 255).rounded())) B\(Int((rgb.blueComponent * 255).rounded()))"
+        return "\(index)  R\(Int((rgb.redComponent * 255).rounded())) G\(Int((rgb.greenComponent * 255).rounded())) B\(Int((rgb.blueComponent * 255).rounded())) A\(Int((rgb.alphaComponent * 255).rounded()))"
     }
 
     private func canvasGesture(in size: CGSize) -> some Gesture {
