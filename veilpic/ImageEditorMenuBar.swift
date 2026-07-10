@@ -231,6 +231,11 @@ extension ImageEditorView {
         }
         .keyboardShortcut("u", modifiers: [.command, .shift])
         .disabled(!viewModel.canDesaturateSelectedLayer)
+        Button(ImageEditorAdjustment.invert.title) {
+            viewModel.invertSelectedLayer()
+        }
+        .keyboardShortcut("i", modifiers: [.command])
+        .disabled(!viewModel.canInvertSelectedLayer)
         Divider()
         Button(L10n.text("imageEditor.action.autoLevels")) {
             viewModel.autoLevelsSelectedLayer()

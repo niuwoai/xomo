@@ -1247,6 +1247,8 @@
 "imageEditor.history.autoColorSelected" = "Auto Color Selected Layers";
 "imageEditor.history.desaturate" = "Desaturate";
 "imageEditor.history.desaturateSelected" = "Desaturate Selected Layers";
+"imageEditor.history.invert" = "Invert";
+"imageEditor.history.invertSelected" = "Invert Selected Layers";
 "imageEditor.history.adjustmentSelected" = "Apply %@ to Selected Layers";
 "imageEditor.status.ready" = "%@ · %@ · Ready";
 "imageEditor.status.toolsPanelSummary" = "Current tool: %@ | Available tools: %d";
@@ -1357,6 +1359,8 @@
 "imageEditor.status.autoColorSelected" = "Auto-corrected color for %d layers";
 "imageEditor.status.desaturate" = "Current layer desaturated";
 "imageEditor.status.desaturateSelected" = "Desaturated %d layers";
+"imageEditor.status.invert" = "Current layer inverted";
+"imageEditor.status.invertSelected" = "Inverted %d layers";
 "imageEditor.status.adjustmentReady" = "%@ adjustment ready";
 "imageEditor.status.adjustmentSelected" = "Applied %@ to %d layers";
 "imageEditor.status.operationFailed" = "Operation failed";

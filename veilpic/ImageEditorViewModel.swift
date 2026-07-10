@@ -488,6 +488,10 @@ final class ImageEditorViewModel: ObservableObject {
         canAutoLevelsSelectedLayer
     }
 
+    var canInvertSelectedLayer: Bool {
+        canAutoLevelsSelectedLayer
+    }
+
     var selectedLayerSmartFilters: [ImageEditorSmartFilter] {
         document.selectedLayer?.smartFilters ?? []
     }
@@ -3301,6 +3305,16 @@ final class ImageEditorViewModel: ObservableObject {
             selectedHistory: "imageEditor.history.desaturateSelected",
             status: "imageEditor.status.desaturate",
             selectedStatus: "imageEditor.status.desaturateSelected"
+        )
+    }
+
+    func invertSelectedLayer() {
+        applyAutoCorrection(
+            { $0.adjusted(kind: .invert, amount: 0) },
+            history: "imageEditor.history.invert",
+            selectedHistory: "imageEditor.history.invertSelected",
+            status: "imageEditor.status.invert",
+            selectedStatus: "imageEditor.status.invertSelected"
         )
     }
 

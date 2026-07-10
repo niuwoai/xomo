@@ -33,6 +33,25 @@ struct ImageEditorAdjustmentTests {
         #expect(viewModel.statusText == L10n.text("imageEditor.status.desaturate"))
     }
 
+    @Test func imageEditorInvertsSelectedLayerWithClassicCommand() throws {
+        let canvasSize = NSSize(width: 20, height: 20)
+        let sourceImage = bitmapImage(
+            size: canvasSize,
+            background: NSColor(calibratedRed: 0.20, green: 0.65, blue: 0.90, alpha: 1)
+        )
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: sourceImage) { _ in }
+
+        let before = try #require(viewModel.currentImage.color(at: CGPoint(x: 10, y: 10))?.usingColorSpace(.deviceRGB))
+        viewModel.invertSelectedLayer()
+        let after = try #require(viewModel.currentImage.color(at: CGPoint(x: 10, y: 10))?.usingColorSpace(.deviceRGB))
+
+        #expect(abs(after.redComponent - (1 - before.redComponent)) < 0.04)
+        #expect(abs(after.greenComponent - (1 - before.greenComponent)) < 0.04)
+        #expect(abs(after.blueComponent - (1 - before.blueComponent)) < 0.04)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.invert"))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.invert"))
+    }
+
     @Test func imageEditorPatternFillLayerRendersSmartFiltersAndRoundTripsProjectState() async throws {
         let canvasSize = NSSize(width: 60, height: 40)
         let sourceImage = bitmapImage(size: canvasSize, background: .black)

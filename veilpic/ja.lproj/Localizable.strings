@@ -1247,6 +1247,8 @@
 "imageEditor.history.autoColorSelected" = "選択レイヤーを自動カラー補正";
 "imageEditor.history.desaturate" = "彩度を下げる";
 "imageEditor.history.desaturateSelected" = "選択レイヤーの彩度を下げる";
+"imageEditor.history.invert" = "反転";
+"imageEditor.history.invertSelected" = "選択レイヤーを反転";
 "imageEditor.history.adjustmentSelected" = "%@ を選択レイヤーに適用";
 "imageEditor.status.ready" = "%@ · %@ · 準備完了";
 "imageEditor.status.toolsPanelSummary" = "現在のツール：%@ | 利用可能なツール：%d";
@@ -1357,6 +1359,8 @@
 "imageEditor.status.autoColorSelected" = "%d個のレイヤーのカラーを自動補正しました";
 "imageEditor.status.desaturate" = "現在のレイヤーの彩度を下げました";
 "imageEditor.status.desaturateSelected" = "%d個のレイヤーの彩度を下げました";
+"imageEditor.status.invert" = "現在のレイヤーを反転しました";
+"imageEditor.status.invertSelected" = "%d個のレイヤーを反転しました";
 "imageEditor.status.adjustmentReady" = "%@ の調整を準備しました";
 "imageEditor.status.adjustmentSelected" = "%@ を%d個のレイヤーに適用しました";
 "imageEditor.status.operationFailed" = "操作に失敗しました";
