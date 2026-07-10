@@ -585,7 +585,22 @@ struct ImageEditorView: View {
                 .overlay(Circle().stroke(Color.black.opacity(0.7), lineWidth: 1))
                 .position(point)
                 .allowsHitTesting(false)
+
+            Text(colorSamplerLabel(index: index + 1, color: sample.color))
+                .font(.system(size: 10, weight: .medium).monospacedDigit())
+                .foregroundStyle(.white)
+                .padding(.horizontal, 5)
+                .padding(.vertical, 3)
+                .background(Color.black.opacity(0.68))
+                .clipShape(RoundedRectangle(cornerRadius: 3, style: .continuous))
+                .position(x: point.x + 54, y: point.y - 14)
+                .allowsHitTesting(false)
         }
+    }
+
+    private func colorSamplerLabel(index: Int, color: NSColor) -> String {
+        let rgb = color.usingColorSpace(.deviceRGB) ?? color
+        return "\(index)  R\(Int((rgb.redComponent * 255).rounded())) G\(Int((rgb.greenComponent * 255).rounded())) B\(Int((rgb.blueComponent * 255).rounded()))"
     }
 
     private func canvasGesture(in size: CGSize) -> some Gesture {
