@@ -345,6 +345,7 @@
 "imageEditor.menu.window.layerComps" = "レイヤーコンプパネル";
 "imageEditor.menu.window.properties" = "プロパティパネル";
 "imageEditor.menu.window.history" = "履歴";
+"imageEditor.menu.window.paths" = "パスパネル";
 "imageEditor.action.cancel" = "キャンセル";
 "imageEditor.action.apply" = "プレビューへ適用";
 "imageEditor.action.export" = "書き出し";

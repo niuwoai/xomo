@@ -345,6 +345,7 @@
 "imageEditor.menu.window.layerComps" = "图层复合面板";
 "imageEditor.menu.window.properties" = "属性面板";
 "imageEditor.menu.window.history" = "历史记录";
+"imageEditor.menu.window.paths" = "路径面板";
 "imageEditor.action.cancel" = "取消";
 "imageEditor.action.apply" = "应用到预览";
 "imageEditor.action.export" = "导出";

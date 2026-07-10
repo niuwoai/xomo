@@ -1287,11 +1287,39 @@ extension ImageEditorView {
             selectedLayerPanelTab = .comps
         }
         Divider()
+        pathActionsMenu
+        Divider()
         Button(L10n.text("imageEditor.menu.window.properties")) {
             viewModel.statusText = L10n.text("imageEditor.status.propertiesVisible")
         }
         Button(L10n.text("imageEditor.menu.window.history")) {
             viewModel.statusText = viewModel.historyStateSummary
+        }
+    }
+
+    @ViewBuilder
+    private var pathActionsMenu: some View {
+        Menu(L10n.text("imageEditor.menu.window.paths")) {
+            Button(L10n.text("imageEditor.action.pathStroke")) {
+                viewModel.strokeSelectedPathToPixelLayer()
+            }
+            .disabled(!viewModel.canStrokeSelectedPathToPixelLayer)
+            Button(L10n.text("imageEditor.action.pathFill")) {
+                viewModel.fillSelectedPathToPixelLayer()
+            }
+            .disabled(!viewModel.canFillSelectedPathToPixelLayer)
+            Button(L10n.text("imageEditor.action.pathSelection")) {
+                viewModel.loadSelectionFromSelectedPath()
+            }
+            .disabled(!viewModel.canLoadSelectionFromSelectedPath)
+            Button(L10n.text("imageEditor.action.pathVectorMask")) {
+                viewModel.applySelectedPathAsVectorMask()
+            }
+            .disabled(!viewModel.canApplySelectedPathAsVectorMask)
+            Button(L10n.text("imageEditor.action.pathLayerMask")) {
+                viewModel.applySelectedPathAsLayerMask()
+            }
+            .disabled(!viewModel.canApplySelectedPathAsLayerMask)
         }
     }
 }

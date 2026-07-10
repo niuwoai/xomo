@@ -345,6 +345,7 @@
 "imageEditor.menu.window.layerComps" = "Layer Comps Panel";
 "imageEditor.menu.window.properties" = "Properties Panel";
 "imageEditor.menu.window.history" = "History";
+"imageEditor.menu.window.paths" = "Paths Panel";
 "imageEditor.action.cancel" = "Cancel";
 "imageEditor.action.apply" = "Apply to Preview";
 "imageEditor.action.export" = "Export";

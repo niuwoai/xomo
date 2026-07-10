@@ -338,6 +338,35 @@ struct ImageEditorScopeTests {
         #expect(selectMenuText.components(separatedBy: "imageEditor.action.restoreSelection").count == 2)
     }
 
+    @Test func windowMenuExposesPathPanelActionsInPhotoshopStyleLocation() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
+            encoding: .utf8
+        )
+        let pathMenuStart = try #require(source.range(of: "private var pathActionsMenu: some View"))
+        let nextBrace = try #require(
+            source[pathMenuStart.upperBound...].range(of: "\n    }\n}")
+        )
+        let pathMenuSource = source[pathMenuStart.lowerBound..<nextBrace.upperBound]
+
+        #expect(pathMenuSource.contains("imageEditor.menu.window.paths"))
+        #expect(pathMenuSource.contains("imageEditor.action.pathStroke"))
+        #expect(pathMenuSource.contains("viewModel.strokeSelectedPathToPixelLayer()"))
+        #expect(pathMenuSource.contains("viewModel.canStrokeSelectedPathToPixelLayer"))
+        #expect(pathMenuSource.contains("imageEditor.action.pathFill"))
+        #expect(pathMenuSource.contains("viewModel.fillSelectedPathToPixelLayer()"))
+        #expect(pathMenuSource.contains("viewModel.canFillSelectedPathToPixelLayer"))
+        #expect(pathMenuSource.contains("imageEditor.action.pathSelection"))
+        #expect(pathMenuSource.contains("viewModel.loadSelectionFromSelectedPath()"))
+        #expect(pathMenuSource.contains("viewModel.canLoadSelectionFromSelectedPath"))
+        #expect(pathMenuSource.contains("imageEditor.action.pathVectorMask"))
+        #expect(pathMenuSource.contains("viewModel.applySelectedPathAsVectorMask()"))
+        #expect(pathMenuSource.contains("viewModel.canApplySelectedPathAsVectorMask"))
+        #expect(pathMenuSource.contains("imageEditor.action.pathLayerMask"))
+        #expect(pathMenuSource.contains("viewModel.applySelectedPathAsLayerMask()"))
+        #expect(pathMenuSource.contains("viewModel.canApplySelectedPathAsLayerMask"))
+    }
+
     private static func repositoryRoot() -> URL {
         URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
