@@ -384,6 +384,30 @@ struct ImageEditorScopeTests {
         #expect(channelMenuSource.contains("viewModel.canDeleteSelectedAlphaChannel"))
     }
 
+    @Test func windowMenuExposesNavigatorPanelActionsInPhotoshopStyleLocation() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
+            encoding: .utf8
+        )
+        let navigatorMenuStart = try #require(source.range(of: "private var navigatorActionsMenu: some View"))
+        let nextMenuStart = try #require(
+            source[navigatorMenuStart.upperBound...].range(of: "private var layerCompActionsMenu: some View")
+        )
+        let navigatorMenuSource = source[navigatorMenuStart.lowerBound..<nextMenuStart.lowerBound]
+
+        #expect(navigatorMenuSource.contains("imageEditor.menu.window.navigator"))
+        #expect(navigatorMenuSource.contains("imageEditor.action.navigatorShowPanel"))
+        #expect(navigatorMenuSource.contains("viewModel.sizeText"))
+        #expect(navigatorMenuSource.contains("imageEditor.menu.view.zoomIn"))
+        #expect(navigatorMenuSource.contains("viewModel.zoomIn()"))
+        #expect(navigatorMenuSource.contains("imageEditor.menu.view.zoomOut"))
+        #expect(navigatorMenuSource.contains("viewModel.zoomOut()"))
+        #expect(navigatorMenuSource.contains("imageEditor.menu.view.actualPixels"))
+        #expect(navigatorMenuSource.contains("viewModel.zoomActualPixels()"))
+        #expect(navigatorMenuSource.contains("imageEditor.menu.view.fit"))
+        #expect(navigatorMenuSource.contains("viewModel.fitZoom()"))
+    }
+
     @Test func windowMenuExposesHistoryPanelActionsInPhotoshopStyleLocation() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),

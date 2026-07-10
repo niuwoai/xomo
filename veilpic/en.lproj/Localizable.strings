@@ -340,6 +340,7 @@
 "imageEditor.menu.view.zoomOut" = "Zoom Out";
 "imageEditor.menu.view.actualPixels" = "Actual Pixels";
 "imageEditor.menu.view.fit" = "Fit on Screen";
+"imageEditor.menu.window.navigator" = "Navigator Panel";
 "imageEditor.menu.window.layers" = "Layers Panel";
 "imageEditor.menu.window.channels" = "Channels Panel";
 "imageEditor.menu.window.layerComps" = "Layer Comps Panel";
@@ -349,6 +350,7 @@
 "imageEditor.menu.window.channels.preview" = "Preview Channels";
 "imageEditor.menu.window.channels.selection" = "Load Channel as Selection";
 "imageEditor.menu.window.channels.alpha" = "Alpha Channels";
+"imageEditor.action.navigatorShowPanel" = "Show Navigator Panel";
 "imageEditor.action.layerCompsShowPanel" = "Show Layer Comps Panel";
 "imageEditor.action.historyShowPanel" = "Show History Panel";
 "imageEditor.action.channelsShowPanel" = "Show Channels Panel";

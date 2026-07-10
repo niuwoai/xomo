@@ -340,6 +340,7 @@
 "imageEditor.menu.view.zoomOut" = "缩小";
 "imageEditor.menu.view.actualPixels" = "实际像素";
 "imageEditor.menu.view.fit" = "适合窗口";
+"imageEditor.menu.window.navigator" = "导航器面板";
 "imageEditor.menu.window.layers" = "图层面板";
 "imageEditor.menu.window.channels" = "通道面板";
 "imageEditor.menu.window.layerComps" = "图层复合面板";
@@ -349,6 +350,7 @@
 "imageEditor.menu.window.channels.preview" = "预览通道";
 "imageEditor.menu.window.channels.selection" = "从通道载入选区";
 "imageEditor.menu.window.channels.alpha" = "Alpha 通道";
+"imageEditor.action.navigatorShowPanel" = "显示导航器面板";
 "imageEditor.action.layerCompsShowPanel" = "显示图层复合面板";
 "imageEditor.action.historyShowPanel" = "显示历史记录面板";
 "imageEditor.action.channelsShowPanel" = "显示通道面板";

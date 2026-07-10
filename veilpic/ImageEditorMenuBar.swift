@@ -1277,6 +1277,8 @@ extension ImageEditorView {
 
     @ViewBuilder
     private var windowMenu: some View {
+        navigatorActionsMenu
+        Divider()
         Button(L10n.text("imageEditor.menu.window.layers")) {
             selectedLayerPanelTab = .layers
         }
@@ -1289,6 +1291,28 @@ extension ImageEditorView {
         Divider()
         Button(L10n.text("imageEditor.menu.window.properties")) {
             viewModel.statusText = L10n.text("imageEditor.status.propertiesVisible")
+        }
+    }
+
+    @ViewBuilder
+    private var navigatorActionsMenu: some View {
+        Menu(L10n.text("imageEditor.menu.window.navigator")) {
+            Button(L10n.text("imageEditor.action.navigatorShowPanel")) {
+                viewModel.statusText = viewModel.sizeText
+            }
+            Divider()
+            Button(L10n.text("imageEditor.menu.view.zoomIn")) {
+                viewModel.zoomIn()
+            }
+            Button(L10n.text("imageEditor.menu.view.zoomOut")) {
+                viewModel.zoomOut()
+            }
+            Button(L10n.text("imageEditor.menu.view.actualPixels")) {
+                viewModel.zoomActualPixels()
+            }
+            Button(L10n.text("imageEditor.menu.view.fit")) {
+                viewModel.fitZoom()
+            }
         }
     }
 
