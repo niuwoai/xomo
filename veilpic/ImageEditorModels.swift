@@ -3576,6 +3576,7 @@ struct ImageEditorDocument {
     var layerComps: [ImageEditorLayerComp]
     var selectedLayerCompID: UUID?
     var guides: [ImageEditorGuide]
+    var areExtrasVisible: Bool
     var areGuidesVisible: Bool
     var areRulersVisible: Bool
     var isGuideSnappingEnabled: Bool
@@ -3603,6 +3604,7 @@ struct ImageEditorDocument {
         layerComps = []
         selectedLayerCompID = nil
         guides = []
+        areExtrasVisible = true
         areGuidesVisible = true
         areRulersVisible = true
         isGuideSnappingEnabled = true

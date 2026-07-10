@@ -204,6 +204,7 @@ struct ImageEditorProjectDocumentTests {
         viewModel.document.layers.append(groupLayer)
         viewModel.document.selectedLayerID = textLayer.id
         viewModel.document.selectedLayerIDs = [pixelLayer.id, textLayer.id]
+        viewModel.document.areExtrasVisible = false
         viewModel.document.areSelectionEdgesVisible = false
         viewModel.document.isGridVisible = true
         viewModel.document.isGridSnappingEnabled = true
@@ -237,6 +238,7 @@ struct ImageEditorProjectDocumentTests {
         #expect(restoredViewModel.document.selectedLayerID == textLayer.id)
         #expect(restoredViewModel.document.selectedLayerIDs.contains(pixelLayer.id))
         #expect(restoredViewModel.document.selectedLayerIDs.contains(textLayer.id))
+        #expect(!restoredViewModel.document.areExtrasVisible)
         #expect(!restoredViewModel.document.areSelectionEdgesVisible)
         #expect(restoredViewModel.document.isGridVisible)
         #expect(restoredViewModel.document.isGridSnappingEnabled)

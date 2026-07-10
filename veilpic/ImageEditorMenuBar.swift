@@ -1196,6 +1196,10 @@ extension ImageEditorView {
 
     @ViewBuilder
     private var viewMenu: some View {
+        Button(L10n.text("imageEditor.action.extrasVisible")) {
+            viewModel.toggleExtrasVisible()
+        }
+        Divider()
         Button(L10n.text("imageEditor.action.rulersVisible")) {
             viewModel.toggleRulersVisible()
         }

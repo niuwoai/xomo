@@ -1924,6 +1924,7 @@
 "imageEditor.canvasAnchor.bottom" = "下";
 "imageEditor.canvasAnchor.bottomRight" = "右下";
 "imageEditor.properties.guides" = "ガイド";
+"imageEditor.action.extrasVisible" = "エクストラを表示";
 "imageEditor.action.rulersVisible" = "ルーラーを表示";
 "imageEditor.action.guidesVisible" = "ガイドを表示";
 "imageEditor.action.guidesSnap" = "ガイドにスナップ";
@@ -1937,6 +1938,7 @@
 "imageEditor.history.guideAdd" = "ガイドを追加";
 "imageEditor.history.guideMove" = "ガイドを移動";
 "imageEditor.history.guideDelete" = "ガイドを削除";
+"imageEditor.history.extrasVisibility" = "エクストラ表示を切り替え";
 "imageEditor.history.rulersVisibility" = "ルーラー表示を切り替え";
 "imageEditor.history.guidesClear" = "ガイドをクリア";
 "imageEditor.history.guidesVisibility" = "ガイド表示を切り替え";
@@ -1947,6 +1949,8 @@
 "imageEditor.status.guideAdded" = "ガイドを追加しました";
 "imageEditor.status.guideMoved" = "ガイドを移動しました";
 "imageEditor.status.guideDeleted" = "ガイドを削除しました";
+"imageEditor.status.extrasVisible" = "エクストラを表示しました";
+"imageEditor.status.extrasHidden" = "エクストラを非表示にしました";
 "imageEditor.status.rulersVisible" = "ルーラーを表示しました";
 "imageEditor.status.rulersHidden" = "ルーラーを非表示にしました";
 "imageEditor.status.noGuides" = "ガイドはありません";

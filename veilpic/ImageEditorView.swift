@@ -875,6 +875,15 @@ struct ImageEditorView: View {
                 .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
 
             Toggle(
+                L10n.text("imageEditor.action.extrasVisible"),
+                isOn: Binding(
+                    get: { viewModel.document.areExtrasVisible },
+                    set: { _ in viewModel.toggleExtrasVisible() }
+                )
+            )
+            .toggleStyle(.checkbox)
+
+            Toggle(
                 L10n.text("imageEditor.action.rulersVisible"),
                 isOn: Binding(
                     get: { viewModel.document.areRulersVisible },
@@ -1418,7 +1427,7 @@ struct ImageEditorView: View {
 
     @ViewBuilder
     private func gridOverlay(in size: CGSize) -> some View {
-        if viewModel.document.isGridVisible {
+        if viewModel.document.areExtrasVisible && viewModel.document.isGridVisible {
             Canvas { context, _ in
                 let canvasSize = viewModel.document.canvasSize
                 let spacing = max(4, min(512, viewModel.document.gridSpacing))
@@ -1451,7 +1460,7 @@ struct ImageEditorView: View {
 
     private func guideOverlay(in size: CGSize) -> some View {
         Canvas { context, _ in
-            if viewModel.document.areGuidesVisible {
+            if viewModel.document.areExtrasVisible && viewModel.document.areGuidesVisible {
                 for guide in viewModel.document.guides {
                     context.stroke(
                         guidePath(orientation: guide.orientation, position: guide.position, in: size),
@@ -1478,7 +1487,7 @@ struct ImageEditorView: View {
 
     @ViewBuilder
     private func guideInteractionOverlay(in size: CGSize) -> some View {
-        if viewModel.document.areGuidesVisible {
+        if viewModel.document.areExtrasVisible && viewModel.document.areGuidesVisible {
             let rect = fittedImageRect(in: size)
             ZStack {
                 ForEach(viewModel.document.guides) { guide in
@@ -1650,7 +1659,9 @@ struct ImageEditorView: View {
     @ViewBuilder
     private func selectionOverlay(in size: CGSize) -> some View {
         let activeLasso = viewModel.selectedTool == .lasso && dragPoints.count > 1
-        let activeSelection = viewModel.document.areSelectionEdgesVisible ? viewModel.selection : nil
+        let activeSelection = viewModel.document.areExtrasVisible && viewModel.document.areSelectionEdgesVisible
+            ? viewModel.selection
+            : nil
         if let selection = activeSelection ?? (activeLasso ? ImageEditorSelection.polygon(dragPoints) : nil) {
             Canvas { context, _ in
                 let converted = selection.points.map { viewPoint(from: $0, in: size) }

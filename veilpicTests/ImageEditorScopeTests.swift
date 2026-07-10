@@ -141,6 +141,34 @@ struct ImageEditorScopeTests {
         #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionEdgesVisible"))
     }
 
+    @MainActor
+    @Test func imageEditorCanHideExtrasWithoutChangingUnderlyingGuidesGridOrSelection() {
+        let image = NSImage(size: NSSize(width: 80, height: 60))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.addVerticalGuideAtCanvasCenter()
+        viewModel.document.isGridVisible = true
+        viewModel.createRectSelection(from: CGPoint(x: 10, y: 12), to: CGPoint(x: 42, y: 36))
+        let selection = viewModel.document.selection
+
+        viewModel.toggleExtrasVisible()
+
+        #expect(!viewModel.document.areExtrasVisible)
+        #expect(viewModel.document.areGuidesVisible)
+        #expect(viewModel.document.isGridVisible)
+        #expect(viewModel.document.areSelectionEdgesVisible)
+        #expect(viewModel.document.selection == selection)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.extrasVisibility"))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.extrasHidden"))
+
+        viewModel.toggleGridSnapping()
+
+        #expect(viewModel.document.areExtrasVisible)
+        #expect(viewModel.document.isGridSnappingEnabled)
+        #expect(viewModel.document.isGridVisible)
+        #expect(viewModel.document.selection == selection)
+    }
+
     @Test func imageEditorDoesNotGrowIntoHeavyExpansionCategories() {
         let blockedFragments = [
             "3d",

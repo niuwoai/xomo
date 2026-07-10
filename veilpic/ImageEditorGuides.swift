@@ -27,6 +27,7 @@ extension ImageEditorViewModel {
                 position: clampedPosition
             )
         )
+        document.areExtrasVisible = true
         document.areGuidesVisible = true
         document.areRulersVisible = true
         appendHistory(L10n.text("imageEditor.history.guideAdd"))
@@ -74,6 +75,17 @@ extension ImageEditorViewModel {
         )
     }
 
+    func toggleExtrasVisible() {
+        pushUndo()
+        document.areExtrasVisible.toggle()
+        appendHistory(L10n.text("imageEditor.history.extrasVisibility"))
+        statusText = L10n.text(
+            document.areExtrasVisible
+                ? "imageEditor.status.extrasVisible"
+                : "imageEditor.status.extrasHidden"
+        )
+    }
+
     func toggleGuideSnapping() {
         pushUndo()
         document.isGuideSnappingEnabled.toggle()
@@ -111,6 +123,7 @@ extension ImageEditorViewModel {
         pushUndo()
         document.isGridSnappingEnabled.toggle()
         if document.isGridSnappingEnabled {
+            document.areExtrasVisible = true
             document.isGridVisible = true
         }
         appendHistory(L10n.text("imageEditor.history.gridSnapping"))

@@ -59,6 +59,7 @@ struct ImageEditorProjectDocument: Codable {
     var layerComps: [ImageEditorLayerComp]?
     var selectedLayerCompID: UUID?
     var guides: [ImageEditorGuide]?
+    var areExtrasVisible: Bool?
     var areGuidesVisible: Bool?
     var areRulersVisible: Bool?
     var isGuideSnappingEnabled: Bool?
@@ -91,6 +92,7 @@ struct ImageEditorProjectDocument: Codable {
         layerComps = document.layerComps
         selectedLayerCompID = document.selectedLayerCompID
         guides = document.guides
+        areExtrasVisible = document.areExtrasVisible
         areGuidesVisible = document.areGuidesVisible
         areRulersVisible = document.areRulersVisible
         isGuideSnappingEnabled = document.isGuideSnappingEnabled
@@ -152,6 +154,7 @@ struct ImageEditorProjectDocument: Codable {
             guard guide.position >= 0, guide.position <= upperBound else { return nil }
             return guide
         }
+        document.areExtrasVisible = areExtrasVisible ?? true
         document.areGuidesVisible = areGuidesVisible ?? true
         document.areRulersVisible = areRulersVisible ?? true
         document.isGuideSnappingEnabled = isGuideSnappingEnabled ?? true

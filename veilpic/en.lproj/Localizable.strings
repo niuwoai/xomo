@@ -1924,6 +1924,7 @@
 "imageEditor.canvasAnchor.bottom" = "Bottom";
 "imageEditor.canvasAnchor.bottomRight" = "Bottom Right";
 "imageEditor.properties.guides" = "Guides";
+"imageEditor.action.extrasVisible" = "Show extras";
 "imageEditor.action.rulersVisible" = "Show rulers";
 "imageEditor.action.guidesVisible" = "Show guides";
 "imageEditor.action.guidesSnap" = "Snap to guides";
@@ -1937,6 +1938,7 @@
 "imageEditor.history.guideAdd" = "Add Guide";
 "imageEditor.history.guideMove" = "Move Guide";
 "imageEditor.history.guideDelete" = "Delete Guide";
+"imageEditor.history.extrasVisibility" = "Toggle Extras Visibility";
 "imageEditor.history.rulersVisibility" = "Toggle Ruler Visibility";
 "imageEditor.history.guidesClear" = "Clear Guides";
 "imageEditor.history.guidesVisibility" = "Toggle Guide Visibility";
@@ -1947,6 +1949,8 @@
 "imageEditor.status.guideAdded" = "Guide added";
 "imageEditor.status.guideMoved" = "Guide moved";
 "imageEditor.status.guideDeleted" = "Guide deleted";
+"imageEditor.status.extrasVisible" = "Extras visible";
+"imageEditor.status.extrasHidden" = "Extras hidden";
 "imageEditor.status.rulersVisible" = "Rulers visible";
 "imageEditor.status.rulersHidden" = "Rulers hidden";
 "imageEditor.status.noGuides" = "There are no guides";

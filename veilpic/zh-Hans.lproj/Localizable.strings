@@ -1924,6 +1924,7 @@
 "imageEditor.canvasAnchor.bottom" = "下";
 "imageEditor.canvasAnchor.bottomRight" = "右下";
 "imageEditor.properties.guides" = "参考线";
+"imageEditor.action.extrasVisible" = "显示额外辅助";
 "imageEditor.action.rulersVisible" = "显示标尺";
 "imageEditor.action.guidesVisible" = "显示参考线";
 "imageEditor.action.guidesSnap" = "吸附到参考线";
@@ -1937,6 +1938,7 @@
 "imageEditor.history.guideAdd" = "添加参考线";
 "imageEditor.history.guideMove" = "移动参考线";
 "imageEditor.history.guideDelete" = "删除参考线";
+"imageEditor.history.extrasVisibility" = "切换额外辅助显示";
 "imageEditor.history.rulersVisibility" = "切换标尺显示";
 "imageEditor.history.guidesClear" = "清理参考线";
 "imageEditor.history.guidesVisibility" = "切换参考线显示";
@@ -1947,6 +1949,8 @@
 "imageEditor.status.guideAdded" = "已添加参考线";
 "imageEditor.status.guideMoved" = "已移动参考线";
 "imageEditor.status.guideDeleted" = "已删除参考线";
+"imageEditor.status.extrasVisible" = "已显示额外辅助";
+"imageEditor.status.extrasHidden" = "已隐藏额外辅助";
 "imageEditor.status.rulersVisible" = "已显示标尺";
 "imageEditor.status.rulersHidden" = "已隐藏标尺";
 "imageEditor.status.noGuides" = "当前没有参考线";
