@@ -391,7 +391,7 @@ struct ImageEditorScopeTests {
         )
         let navigatorMenuStart = try #require(source.range(of: "private var navigatorActionsMenu: some View"))
         let nextMenuStart = try #require(
-            source[navigatorMenuStart.upperBound...].range(of: "private var layerCompActionsMenu: some View")
+            source[navigatorMenuStart.upperBound...].range(of: "private var infoActionsMenu: some View")
         )
         let navigatorMenuSource = source[navigatorMenuStart.lowerBound..<nextMenuStart.lowerBound]
 
@@ -406,6 +406,43 @@ struct ImageEditorScopeTests {
         #expect(navigatorMenuSource.contains("viewModel.zoomActualPixels()"))
         #expect(navigatorMenuSource.contains("imageEditor.menu.view.fit"))
         #expect(navigatorMenuSource.contains("viewModel.fitZoom()"))
+    }
+
+    @Test func windowMenuExposesInfoPanelActionsInPhotoshopStyleLocation() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
+            encoding: .utf8
+        )
+        let infoMenuStart = try #require(source.range(of: "private var infoActionsMenu: some View"))
+        let nextMenuStart = try #require(
+            source[infoMenuStart.upperBound...].range(of: "private var histogramActionsMenu: some View")
+        )
+        let infoMenuSource = source[infoMenuStart.lowerBound..<nextMenuStart.lowerBound]
+
+        #expect(infoMenuSource.contains("imageEditor.menu.window.info"))
+        #expect(infoMenuSource.contains("imageEditor.action.infoShowPanel"))
+        #expect(infoMenuSource.contains("viewModel.pointerText"))
+        #expect(infoMenuSource.contains("viewModel.sizeText"))
+        #expect(infoMenuSource.contains("viewModel.colorText"))
+    }
+
+    @Test func windowMenuExposesHistogramPanelActionsInPhotoshopStyleLocation() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
+            encoding: .utf8
+        )
+        let histogramMenuStart = try #require(source.range(of: "private var histogramActionsMenu: some View"))
+        let nextMenuStart = try #require(
+            source[histogramMenuStart.upperBound...].range(of: "private var layerActionsMenu: some View")
+        )
+        let histogramMenuSource = source[histogramMenuStart.lowerBound..<nextMenuStart.lowerBound]
+
+        #expect(histogramMenuSource.contains("imageEditor.menu.window.histogram"))
+        #expect(histogramMenuSource.contains("imageEditor.action.histogramShowPanel"))
+        #expect(histogramMenuSource.contains("viewModel.histogramSummary"))
+        #expect(histogramMenuSource.contains("viewModel.histogramAverageText(for: summary)"))
+        #expect(histogramMenuSource.contains("viewModel.histogramLuminanceText(for: summary)"))
+        #expect(histogramMenuSource.contains("viewModel.histogramClippingText(for: summary)"))
     }
 
     @Test func windowMenuExposesLayerPanelActionsInPhotoshopStyleLocation() throws {

@@ -1278,6 +1278,8 @@ extension ImageEditorView {
     @ViewBuilder
     private var windowMenu: some View {
         navigatorActionsMenu
+        infoActionsMenu
+        histogramActionsMenu
         Divider()
         layerActionsMenu
         channelActionsMenu
@@ -1308,6 +1310,29 @@ extension ImageEditorView {
             }
             Button(L10n.text("imageEditor.menu.view.fit")) {
                 viewModel.fitZoom()
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var infoActionsMenu: some View {
+        Menu(L10n.text("imageEditor.menu.window.info")) {
+            Button(L10n.text("imageEditor.action.infoShowPanel")) {
+                viewModel.statusText = "\(viewModel.pointerText) | \(viewModel.sizeText) | \(viewModel.colorText)"
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var histogramActionsMenu: some View {
+        Menu(L10n.text("imageEditor.menu.window.histogram")) {
+            Button(L10n.text("imageEditor.action.histogramShowPanel")) {
+                let summary = viewModel.histogramSummary
+                viewModel.statusText = [
+                    viewModel.histogramAverageText(for: summary),
+                    viewModel.histogramLuminanceText(for: summary),
+                    viewModel.histogramClippingText(for: summary)
+                ].joined(separator: " | ")
             }
         }
     }
