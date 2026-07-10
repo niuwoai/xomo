@@ -2883,18 +2883,20 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func updateSelectedAdjustmentLayer() {
-        guard let index = document.selectedLayerIndex,
-              document.layers[index].isAdjustment,
-              !document.isEffectivelyPixelsLocked(document.layers[index])
-        else {
+        let indices = selectedLayerIndices.filter { document.layers[$0].isAdjustment && !document.isEffectivelyPixelsLocked(document.layers[$0]) }
+        guard !indices.isEmpty else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
+        let settings = currentAdjustmentSettings()
         pushUndo()
-        document.layers[index].kind = .adjustment(selectedAdjustment, adjustmentValue)
-        document.layers[index].adjustmentSettings = currentAdjustmentSettings()
-        document.layers[index].name = L10n.format("imageEditor.layer.adjustmentName", selectedAdjustment.title)
-        appendHistory(L10n.text("imageEditor.history.layerAdjustmentUpdate"))
+        for index in indices {
+            document.layers[index].kind = .adjustment(selectedAdjustment, adjustmentValue)
+            document.layers[index].adjustmentSettings = settings
+            document.layers[index].name = L10n.format("imageEditor.layer.adjustmentName", selectedAdjustment.title)
+        }
+        appendHistory(L10n.text(indices.count == 1 ? "imageEditor.history.layerAdjustmentUpdate" : "imageEditor.history.layerAdjustmentUpdateSelected"))
+        if indices.count > 1 { statusText = L10n.format("imageEditor.status.layerAdjustmentUpdatedSelected", indices.count) }
     }
 
     func addFilterLayer() {
@@ -3110,18 +3112,20 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func updateSelectedFilterLayer() {
-        guard let index = document.selectedLayerIndex,
-              document.layers[index].isFilter,
-              !document.isEffectivelyPixelsLocked(document.layers[index])
-        else {
+        let indices = selectedLayerIndices.filter { document.layers[$0].isFilter && !document.isEffectivelyPixelsLocked(document.layers[$0]) }
+        guard !indices.isEmpty else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
+        let settings = currentFilterSettings()
         pushUndo()
-        document.layers[index].kind = .filter(selectedFilter, filterIntensity)
-        document.layers[index].filterSettings = currentFilterSettings()
-        document.layers[index].name = L10n.format("imageEditor.layer.filterName", selectedFilter.title)
-        appendHistory(L10n.text("imageEditor.history.layerFilterUpdate"))
+        for index in indices {
+            document.layers[index].kind = .filter(selectedFilter, filterIntensity)
+            document.layers[index].filterSettings = settings
+            document.layers[index].name = L10n.format("imageEditor.layer.filterName", selectedFilter.title)
+        }
+        appendHistory(L10n.text(indices.count == 1 ? "imageEditor.history.layerFilterUpdate" : "imageEditor.history.layerFilterUpdateSelected"))
+        if indices.count > 1 { statusText = L10n.format("imageEditor.status.layerFilterUpdatedSelected", indices.count) }
     }
 
     private func currentFilterSettings() -> ImageEditorFilterSettings {

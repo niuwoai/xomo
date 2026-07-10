@@ -9,6 +9,7 @@ xcuserdata/
 # Xcode build artifacts
 build/
 DerivedData/
+.derivedData*/
 *.xcodeproj/project.xcworkspace/xcuserdata/
 *.xcodeproj/xcuserdata/
 *.xcworkspace/xcuserdata/

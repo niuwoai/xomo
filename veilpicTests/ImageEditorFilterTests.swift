@@ -1097,6 +1097,67 @@ struct ImageEditorFilterTests {
         #expect(restoredFilter.normalizedSettings.spherizeAmount == -1)
     }
 
+    @Test func imageEditorBatchUpdatesSelectedFilterLayersAndSkipsLockedOrIneligibleLayers() async throws {
+        let canvasSize = NSSize(width: 48, height: 32)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: solidImage(size: canvasSize, color: .systemBlue)
+        ) { _ in }
+        let baseLayerID = try #require(viewModel.document.selectedLayerID)
+
+        viewModel.selectedFilter = .gaussianBlur
+        viewModel.filterIntensity = 0.20
+        viewModel.addFilterLayer()
+        let firstID = try #require(viewModel.document.selectedLayerID)
+
+        viewModel.selectedFilter = .gaussianBlur
+        viewModel.filterIntensity = 0.30
+        viewModel.addFilterLayer()
+        let secondID = try #require(viewModel.document.selectedLayerID)
+
+        viewModel.selectedFilter = .gaussianBlur
+        viewModel.filterIntensity = 0.40
+        viewModel.addFilterLayer()
+        let lockedID = try #require(viewModel.document.selectedLayerID)
+        viewModel.toggleLayerLock(lockedID)
+
+        viewModel.selectLayer(firstID)
+        viewModel.selectLayer(secondID, extendingSelection: true)
+        viewModel.selectLayer(lockedID, extendingSelection: true)
+        viewModel.selectLayer(baseLayerID, extendingSelection: true)
+
+        viewModel.selectedFilter = .unsharpMask
+        viewModel.filterIntensity = 0.75
+        viewModel.filterUnsharpRadius = 2.5
+        viewModel.filterUnsharpThreshold = 0.30
+        viewModel.updateSelectedFilterLayer()
+
+        let first = try #require(layer(firstID, in: viewModel))
+        let second = try #require(layer(secondID, in: viewModel))
+        let locked = try #require(layer(lockedID, in: viewModel))
+        let base = try #require(layer(baseLayerID, in: viewModel))
+
+        #expect(first.filter?.kind == .unsharpMask)
+        #expect(first.filter?.intensity == 0.75)
+        #expect(first.filterSettings.normalized().unsharpRadius == 2.5)
+        #expect(first.filterSettings.normalized().unsharpThreshold == 0.30)
+        #expect(second.filter?.kind == .unsharpMask)
+        #expect(second.filterSettings.normalized().unsharpRadius == 2.5)
+        #expect(locked.filter?.kind == .gaussianBlur)
+        #expect(locked.filter?.intensity == 0.40)
+        #expect(!base.isFilter)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerFilterUpdateSelected"))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerFilterUpdatedSelected", 2))
+
+        viewModel.undo()
+
+        #expect(try #require(layer(firstID, in: viewModel)).filter?.kind == .gaussianBlur)
+        #expect(try #require(layer(firstID, in: viewModel)).filter?.intensity == 0.20)
+        #expect(try #require(layer(secondID, in: viewModel)).filter?.kind == .gaussianBlur)
+        #expect(try #require(layer(secondID, in: viewModel)).filter?.intensity == 0.30)
+        #expect(try #require(layer(lockedID, in: viewModel)).filter?.intensity == 0.40)
+    }
+
     private func solidImage(size: NSSize, color: NSColor) -> NSImage {
         NSImage.rendered(size: size) { rect in
             color.setFill()

@@ -942,6 +942,7 @@
 "imageEditor.history.layerUngroup" = "Ungroup Layers";
 "imageEditor.history.layerAdjustmentNew" = "New Adjustment Layer";
 "imageEditor.history.layerAdjustmentUpdate" = "Update Adjustment Layer";
+"imageEditor.history.layerAdjustmentUpdateSelected" = "Update Selected Adjustment Layers";
 "imageEditor.history.layerDuplicate" = "Duplicate Layer";
 "imageEditor.history.layerFromBackground" = "Layer From Background";
 "imageEditor.history.backgroundFromLayer" = "Background From Layer";
@@ -1071,6 +1072,7 @@
 "imageEditor.history.layerGradientFillNew" = "New Gradient Fill Layer";
 "imageEditor.history.layerGradientFillUpdate" = "Update Gradient Fill Layer";
 "imageEditor.history.layerFilterUpdate" = "Update Filter Layer";
+"imageEditor.history.layerFilterUpdateSelected" = "Update Selected Filter Layers";
 "imageEditor.history.layerSmartFilterAdd" = "Add Smart Filter";
 "imageEditor.history.layerSmartFilterUpdate" = "Update Smart Filter";
 "imageEditor.history.layerSmartFilterToggle" = "Toggle Smart Filter";
@@ -1414,6 +1416,8 @@
 "imageEditor.status.layerStylePasted" = "Layer style pasted to %d layers";
 "imageEditor.status.layerStyleCleared" = "Layer style cleared from %d layers";
 "imageEditor.status.layerStyleUpdated" = "Layer style updated";
+"imageEditor.status.layerAdjustmentUpdatedSelected" = "Updated %d adjustment layers";
+"imageEditor.status.layerFilterUpdatedSelected" = "Updated %d filter layers";
 "imageEditor.status.globalLight" = "Global light angle set to %d°";
 "imageEditor.status.layerLinkNeedsSelection" = "Select at least two layers to link";
 "imageEditor.status.layerNoLinks" = "Selected layers are not linked";

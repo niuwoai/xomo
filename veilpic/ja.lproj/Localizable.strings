@@ -942,6 +942,7 @@
 "imageEditor.history.layerUngroup" = "レイヤーグループを解除";
 "imageEditor.history.layerAdjustmentNew" = "調整レイヤーを作成";
 "imageEditor.history.layerAdjustmentUpdate" = "調整レイヤーを更新";
+"imageEditor.history.layerAdjustmentUpdateSelected" = "選択調整レイヤーを更新";
 "imageEditor.history.layerDuplicate" = "レイヤーを複製";
 "imageEditor.history.layerFromBackground" = "背景からレイヤーを作成";
 "imageEditor.history.backgroundFromLayer" = "レイヤーから背景を作成";
@@ -1071,6 +1072,7 @@
 "imageEditor.history.layerGradientFillNew" = "グラデーション塗りレイヤーを作成";
 "imageEditor.history.layerGradientFillUpdate" = "グラデーション塗りレイヤーを更新";
 "imageEditor.history.layerFilterUpdate" = "フィルターレイヤーを更新";
+"imageEditor.history.layerFilterUpdateSelected" = "選択フィルターレイヤーを更新";
 "imageEditor.history.layerSmartFilterAdd" = "スマートフィルターを追加";
 "imageEditor.history.layerSmartFilterUpdate" = "スマートフィルターを更新";
 "imageEditor.history.layerSmartFilterToggle" = "スマートフィルターを切り替え";
@@ -1414,6 +1416,8 @@
 "imageEditor.status.layerStylePasted" = "%d 個のレイヤーへレイヤースタイルをペーストしました";
 "imageEditor.status.layerStyleCleared" = "%d 個のレイヤースタイルをクリアしました";
 "imageEditor.status.layerStyleUpdated" = "レイヤースタイルを更新しました";
+"imageEditor.status.layerAdjustmentUpdatedSelected" = "%d個の調整レイヤーを更新しました";
+"imageEditor.status.layerFilterUpdatedSelected" = "%d個のフィルターレイヤーを更新しました";
 "imageEditor.status.globalLight" = "グローバルライト角度を %d° に設定しました";
 "imageEditor.status.layerLinkNeedsSelection" = "リンクするには 2 つ以上のレイヤーを選択してください";
 "imageEditor.status.layerNoLinks" = "選択中のレイヤーにリンクはありません";

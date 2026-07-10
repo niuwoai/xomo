@@ -942,6 +942,7 @@
 "imageEditor.history.layerUngroup" = "解散图层组";
 "imageEditor.history.layerAdjustmentNew" = "新建调整图层";
 "imageEditor.history.layerAdjustmentUpdate" = "更新调整图层";
+"imageEditor.history.layerAdjustmentUpdateSelected" = "更新所选调整图层";
 "imageEditor.history.layerDuplicate" = "复制图层";
 "imageEditor.history.layerFromBackground" = "从背景新建图层";
 "imageEditor.history.backgroundFromLayer" = "从图层新建背景";
@@ -1071,6 +1072,7 @@
 "imageEditor.history.layerGradientFillNew" = "新建渐变填充图层";
 "imageEditor.history.layerGradientFillUpdate" = "更新渐变填充图层";
 "imageEditor.history.layerFilterUpdate" = "更新滤镜图层";
+"imageEditor.history.layerFilterUpdateSelected" = "更新所选滤镜图层";
 "imageEditor.history.layerSmartFilterAdd" = "添加智能滤镜";
 "imageEditor.history.layerSmartFilterUpdate" = "更新智能滤镜";
 "imageEditor.history.layerSmartFilterToggle" = "切换智能滤镜";
@@ -1414,6 +1416,8 @@
 "imageEditor.status.layerStylePasted" = "已将图层样式粘贴到 %d 个图层";
 "imageEditor.status.layerStyleCleared" = "已清除 %d 个图层的样式";
 "imageEditor.status.layerStyleUpdated" = "已更新图层样式";
+"imageEditor.status.layerAdjustmentUpdatedSelected" = "已更新 %d 个调整图层";
+"imageEditor.status.layerFilterUpdatedSelected" = "已更新 %d 个滤镜图层";
 "imageEditor.status.globalLight" = "全局光角度已设为 %d°";
 "imageEditor.status.layerLinkNeedsSelection" = "请至少选择两个图层进行链接";
 "imageEditor.status.layerNoLinks" = "所选图层没有链接关系";

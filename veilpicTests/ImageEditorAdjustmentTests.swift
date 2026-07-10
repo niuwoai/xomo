@@ -981,6 +981,66 @@ struct ImageEditorAdjustmentTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerAdjustmentNew"))
     }
 
+    @Test func imageEditorBatchUpdatesSelectedAdjustmentLayersAndSkipsLockedOrIneligibleLayers() async throws {
+        let canvasSize = NSSize(width: 48, height: 32)
+        let sourceImage = bitmapImage(size: canvasSize, background: .systemBlue)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: sourceImage) { _ in }
+        let baseLayerID = try #require(viewModel.document.selectedLayerID)
+
+        viewModel.selectedAdjustment = .brightnessContrast
+        viewModel.adjustmentValue = 0.20
+        viewModel.addAdjustmentLayer()
+        let firstID = try #require(viewModel.document.selectedLayerID)
+
+        viewModel.selectedAdjustment = .brightnessContrast
+        viewModel.adjustmentValue = 0.30
+        viewModel.addAdjustmentLayer()
+        let secondID = try #require(viewModel.document.selectedLayerID)
+
+        viewModel.selectedAdjustment = .brightnessContrast
+        viewModel.adjustmentValue = 0.40
+        viewModel.addAdjustmentLayer()
+        let lockedID = try #require(viewModel.document.selectedLayerID)
+        viewModel.toggleLayerLock(lockedID)
+
+        viewModel.selectLayer(firstID)
+        viewModel.selectLayer(secondID, extendingSelection: true)
+        viewModel.selectLayer(lockedID, extendingSelection: true)
+        viewModel.selectLayer(baseLayerID, extendingSelection: true)
+
+        viewModel.selectedAdjustment = .hueSaturation
+        viewModel.adjustmentValue = 0.65
+        viewModel.hueSaturationHue = 45
+        viewModel.hueSaturationSaturation = 0.25
+        viewModel.hueSaturationLightness = -0.10
+        viewModel.updateSelectedAdjustmentLayer()
+
+        let first = try #require(layer(firstID, in: viewModel))
+        let second = try #require(layer(secondID, in: viewModel))
+        let locked = try #require(layer(lockedID, in: viewModel))
+        let base = try #require(layer(baseLayerID, in: viewModel))
+
+        #expect(first.adjustment?.kind == .hueSaturation)
+        #expect(first.adjustment?.amount == 0.65)
+        #expect(first.adjustmentSettings.normalized().hueSaturationHue == 45)
+        #expect(first.adjustmentSettings.normalized().hueSaturationSaturation == 0.25)
+        #expect(second.adjustment?.kind == .hueSaturation)
+        #expect(second.adjustmentSettings.normalized().hueSaturationLightness == -0.10)
+        #expect(locked.adjustment?.kind == .brightnessContrast)
+        #expect(locked.adjustment?.amount == 0.40)
+        #expect(!base.isAdjustment)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerAdjustmentUpdateSelected"))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerAdjustmentUpdatedSelected", 2))
+
+        viewModel.undo()
+
+        #expect(try #require(layer(firstID, in: viewModel)).adjustment?.kind == .brightnessContrast)
+        #expect(try #require(layer(firstID, in: viewModel)).adjustment?.amount == 0.20)
+        #expect(try #require(layer(secondID, in: viewModel)).adjustment?.kind == .brightnessContrast)
+        #expect(try #require(layer(secondID, in: viewModel)).adjustment?.amount == 0.30)
+        #expect(try #require(layer(lockedID, in: viewModel)).adjustment?.amount == 0.40)
+    }
+
     private func bitmapImage(
         size: NSSize,
         background: NSColor,
@@ -1029,5 +1089,9 @@ struct ImageEditorAdjustmentTests {
             return (maximum - minimum) / max(0.0001, 2 - maximum - minimum)
         }
         return (maximum - minimum) / max(0.0001, maximum + minimum)
+    }
+
+    private func layer(_ id: UUID, in viewModel: ImageEditorViewModel) -> ImageEditorLayer? {
+        viewModel.document.layers.first { $0.id == id }
     }
 }
