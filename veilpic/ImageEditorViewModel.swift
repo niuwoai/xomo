@@ -376,10 +376,7 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     var canEditSelectedLayerMaskProperties: Bool {
-        guard selectedLayerCount == 1,
-              let layer = document.selectedLayer
-        else { return false }
-        return layer.mask != nil && !document.isEffectivelyLocked(layer)
+        selectedLayerIndices.contains { canSetLayerMaskProperties(document.layers[$0]) }
     }
 
     var selectedLayerBlendMode: ImageEditorBlendMode {
@@ -777,8 +774,7 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     var selectedLayerHasMask: Bool {
-        guard let layer = document.selectedLayer else { return false }
-        return layer.mask != nil
+        selectedLayerIndices.contains { document.layers[$0].mask != nil }
     }
 
     var canAddLayerMask: Bool {
@@ -2176,18 +2172,22 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func setSelectedLayerMaskDensity(_ density: Double) {
-        guard let index = document.selectedLayerIndex,
-              canEditSelectedLayerMaskProperties
-        else { return }
-        document.layers[index].maskDensity = max(0, min(1, density))
+        let normalizedDensity = max(0, min(1, density))
+        let indices = selectedLayerMaskPropertyTargetIndices().filter { document.layers[$0].maskDensity != normalizedDensity }
+        guard !indices.isEmpty else { return }
+        for index in indices {
+            document.layers[index].maskDensity = normalizedDensity
+        }
         updateStatus()
     }
 
     func setSelectedLayerMaskFeather(_ feather: Double) {
-        guard let index = document.selectedLayerIndex,
-              canEditSelectedLayerMaskProperties
-        else { return }
-        document.layers[index].maskFeather = max(0, min(80, feather))
+        let normalizedFeather = max(0, min(80, feather))
+        let indices = selectedLayerMaskPropertyTargetIndices().filter { document.layers[$0].maskFeather != normalizedFeather }
+        guard !indices.isEmpty else { return }
+        for index in indices {
+            document.layers[index].maskFeather = normalizedFeather
+        }
         updateStatus()
     }
 
@@ -3680,6 +3680,10 @@ final class ImageEditorViewModel: ObservableObject {
             && !document.isEffectivelyLocked(layer)
     }
 
+    private func canSetLayerMaskProperties(_ layer: ImageEditorLayer) -> Bool {
+        layer.mask != nil && !document.isEffectivelyLocked(layer)
+    }
+
     private func selectedLayerOpacityTargetIndices() -> [Int] {
         selectedLayerIndices.filter { !document.isEffectivelyLocked(document.layers[$0]) }
     }
@@ -3690,6 +3694,10 @@ final class ImageEditorViewModel: ObservableObject {
 
     private func selectedLayerBlendIfTargetIndices() -> [Int] {
         selectedLayerIndices.filter { canSetLayerBlendIf(document.layers[$0]) }
+    }
+
+    private func selectedLayerMaskPropertyTargetIndices() -> [Int] {
+        selectedLayerIndices.filter { canSetLayerMaskProperties(document.layers[$0]) }
     }
 
     private func selectedLayerBlendModeTargetIndices(for blendMode: ImageEditorBlendMode) -> [Int] {
