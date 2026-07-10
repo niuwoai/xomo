@@ -96,15 +96,7 @@ extension ImageEditorViewModel {
     }
 
     var canRasterizeSelectedVectorMask: Bool {
-        guard selectedLayerCount == 1,
-              let layer = document.selectedLayer,
-              let vectorMask = layer.vectorMask
-        else { return false }
-        return !document.isEffectivelyLocked(layer)
-            && layer.isVectorMaskEnabled
-            && vectorMask.kind == .path
-            && vectorMask.isPathClosed
-            && vectorMask.editablePathAnchors.count >= 3
+        !vectorMaskRasterizeOperations().isEmpty
     }
 
     var canLoadSelectionFromLayerMask: Bool {
@@ -280,29 +272,31 @@ extension ImageEditorViewModel {
     }
 
     func rasterizeSelectedVectorMask() {
-        guard canRasterizeSelectedVectorMask,
-              let index = document.selectedLayerIndex,
-              let vectorMask = document.layers[index].vectorMask,
-              let vectorMaskImage = renderedVectorMask(vectorMask, layer: document.layers[index])
-        else {
+        let operations = vectorMaskRasterizeOperations()
+        guard !operations.isEmpty else {
             statusText = L10n.text("imageEditor.status.vectorMaskRasterizeFailed")
             return
         }
 
-        let layer = document.layers[index]
-        let outputMask = layer.effectiveMask ?? vectorMaskImage
-
         pushUndo()
-        document.layers[index].mask = outputMask.normalizedBitmapImage()
-        document.layers[index].vectorMask = nil
-        document.layers[index].isMaskEnabled = true
-        document.layers[index].isMaskLinked = true
-        document.layers[index].isVectorMaskEnabled = true
-        document.layers[index].maskDensity = 1
-        document.layers[index].maskFeather = 0
+        for operation in operations {
+            document.layers[operation.index].mask = operation.mask
+            document.layers[operation.index].vectorMask = nil
+            document.layers[operation.index].isMaskEnabled = true
+            document.layers[operation.index].isMaskLinked = true
+            document.layers[operation.index].isVectorMaskEnabled = true
+            document.layers[operation.index].maskDensity = 1
+            document.layers[operation.index].maskFeather = 0
+        }
         isEditingLayerMask = true
-        appendHistory(L10n.text("imageEditor.history.vectorMaskRasterize"))
-        statusText = L10n.text("imageEditor.status.vectorMaskRasterized")
+
+        if operations.count == 1 {
+            appendHistory(L10n.text("imageEditor.history.vectorMaskRasterize"))
+            statusText = L10n.text("imageEditor.status.vectorMaskRasterized")
+        } else {
+            appendHistory(L10n.text("imageEditor.history.vectorMaskRasterizeSelected"))
+            statusText = L10n.format("imageEditor.status.vectorMaskRasterizedSelected", operations.count)
+        }
     }
 
     func applyLayerMask() {
@@ -591,6 +585,30 @@ extension ImageEditorViewModel {
                 && !document.isEffectivelyLocked(layer)
                 && layer.vectorMask != nil
         }
+    }
+
+    private func vectorMaskRasterizeOperations() -> [(index: Int, mask: NSImage)] {
+        let selectedIDs = document.selectedLayerIDs.isEmpty
+            ? Set(document.selectedLayerID.map { [$0] } ?? [])
+            : document.selectedLayerIDs
+        return document.layers.indices.compactMap { index in
+            let layer = document.layers[index]
+            guard selectedIDs.contains(layer.id),
+                  canRasterizeVectorMask(layer),
+                  let vectorMask = layer.vectorMask,
+                  let vectorMaskImage = renderedVectorMask(vectorMask, layer: layer)
+            else { return nil }
+            return (index, (layer.effectiveMask ?? vectorMaskImage).normalizedBitmapImage())
+        }
+    }
+
+    private func canRasterizeVectorMask(_ layer: ImageEditorLayer) -> Bool {
+        guard let vectorMask = layer.vectorMask else { return false }
+        return !document.isEffectivelyLocked(layer)
+            && layer.isVectorMaskEnabled
+            && vectorMask.kind == .path
+            && vectorMask.isPathClosed
+            && vectorMask.editablePathAnchors.count >= 3
     }
 
     private func canApplyMask(to layer: ImageEditorLayer) -> Bool {

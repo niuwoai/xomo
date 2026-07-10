@@ -1095,6 +1095,7 @@
 "imageEditor.history.vectorMaskDeleteSelected" = "選択ベクターマスクを削除";
 "imageEditor.history.vectorMaskEditPath" = "ベクターマスクパスを編集";
 "imageEditor.history.vectorMaskRasterize" = "ベクターマスクをラスタライズ";
+"imageEditor.history.vectorMaskRasterizeSelected" = "選択ベクターマスクをラスタライズ";
 "imageEditor.history.vectorMaskFromSelection" = "選択範囲からベクターマスクを追加";
 "imageEditor.history.selection" = "選択範囲を作成";
 "imageEditor.history.magicSelection" = "自動選択";
@@ -1290,6 +1291,7 @@
 "imageEditor.status.vectorMaskDeletedSelected" = "%d個のベクターマスクを削除しました";
 "imageEditor.status.vectorMaskEditPath" = "ベクターマスクを編集可能なパスにしました";
 "imageEditor.status.vectorMaskRasterized" = "ベクターマスクをレイヤーマスクにラスタライズしました";
+"imageEditor.status.vectorMaskRasterizedSelected" = "%d個のベクターマスクをレイヤーマスクにラスタライズしました";
 "imageEditor.status.vectorMaskRasterizeFailed" = "有効な閉じたベクターマスクを選択してください";
 "imageEditor.status.vectorMaskEditFailed" = "ベクターマスク付きの編集可能なレイヤーを選択してください";
 "imageEditor.status.vectorMaskFromSelection" = "現在の選択範囲からベクターマスクを作成しました";
@@ -1457,7 +1459,7 @@
 "imageEditor.action.vectorMaskToggle" = "ベクターマスクを切り替え";
 "imageEditor.action.vectorMaskCopyToSelected" = "ベクターマスクを選択レイヤーへコピー";
 "imageEditor.action.vectorMaskDelete" = "選択ベクターマスクを削除";
-"imageEditor.action.vectorMaskRasterize" = "ベクターマスクをラスタライズ";
+"imageEditor.action.vectorMaskRasterize" = "選択ベクターマスクをラスタライズ";
 "imageEditor.action.vectorMaskFromSelection" = "選択範囲からベクターマスクを追加";
 "imageEditor.action.vectorMaskSelect" = "ベクターマスクレイヤーを選択";
 "imageEditor.action.vectorMaskEditPath" = "ベクターマスクパスを編集";

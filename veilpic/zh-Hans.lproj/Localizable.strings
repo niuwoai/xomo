@@ -1095,6 +1095,7 @@
 "imageEditor.history.vectorMaskDeleteSelected" = "删除所选矢量蒙版";
 "imageEditor.history.vectorMaskEditPath" = "编辑矢量蒙版路径";
 "imageEditor.history.vectorMaskRasterize" = "栅格化矢量蒙版";
+"imageEditor.history.vectorMaskRasterizeSelected" = "栅格化所选矢量蒙版";
 "imageEditor.history.vectorMaskFromSelection" = "从选区添加矢量蒙版";
 "imageEditor.history.selection" = "建立选区";
 "imageEditor.history.magicSelection" = "魔棒选区";
@@ -1290,6 +1291,7 @@
 "imageEditor.status.vectorMaskDeletedSelected" = "已删除 %d 个矢量蒙版";
 "imageEditor.status.vectorMaskEditPath" = "已将矢量蒙版抽出为可编辑路径";
 "imageEditor.status.vectorMaskRasterized" = "已将矢量蒙版栅格化为图层蒙版";
+"imageEditor.status.vectorMaskRasterizedSelected" = "已将 %d 个矢量蒙版栅格化为图层蒙版";
 "imageEditor.status.vectorMaskRasterizeFailed" = "请先选择已启用的闭合矢量蒙版";
 "imageEditor.status.vectorMaskEditFailed" = "请先选择带矢量蒙版且可编辑的图层";
 "imageEditor.status.vectorMaskFromSelection" = "已从当前选区创建矢量蒙版";
@@ -1457,7 +1459,7 @@
 "imageEditor.action.vectorMaskToggle" = "切换矢量蒙版";
 "imageEditor.action.vectorMaskCopyToSelected" = "复制矢量蒙版到所选图层";
 "imageEditor.action.vectorMaskDelete" = "删除所选矢量蒙版";
-"imageEditor.action.vectorMaskRasterize" = "栅格化矢量蒙版";
+"imageEditor.action.vectorMaskRasterize" = "栅格化所选矢量蒙版";
 "imageEditor.action.vectorMaskFromSelection" = "从选区添加矢量蒙版";
 "imageEditor.action.vectorMaskSelect" = "选择矢量蒙版图层";
 "imageEditor.action.vectorMaskEditPath" = "编辑矢量蒙版路径";
