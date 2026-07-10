@@ -7,6 +7,7 @@
 
 import AppKit
 import SwiftUI
+import UniformTypeIdentifiers
 
 final class RegionScreenshotCapture: NSObject, NSWindowDelegate {
     static let shared = RegionScreenshotCapture()
@@ -195,7 +196,7 @@ final class RegionScreenshotCapture: NSObject, NSWindowDelegate {
 
     private func save(_ image: NSImage) {
         let panel = NSSavePanel()
-        panel.allowedFileTypes = ["png"]
+        panel.allowedContentTypes = [.png]
         panel.nameFieldStringValue = "musepic_Annotated_\(Int(Date().timeIntervalSince1970)).png"
 
         guard panel.runModal() == .OK, let url = panel.url else {
@@ -310,10 +311,10 @@ private struct RegionCaptureOverlayView: View {
                     completeFromDoubleClick()
                 }
         )
-        .onChange(of: activeTextID) { _ in
+        .onChange(of: activeTextID) { _, _ in
             focusTextEditorIfNeeded()
         }
-        .onChange(of: selectedTool) { _ in
+        .onChange(of: selectedTool) { _, _ in
             finishTextEditing()
         }
     }
