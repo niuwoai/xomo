@@ -230,6 +230,14 @@ final class ImageEditorViewModel: ObservableObject {
         updateStatus()
     }
 
+    init(document: ImageEditorDocument, onApply: @escaping (NSImage) -> Void) {
+        self.document = document
+        self.onApply = onApply
+        syncSizeControlsFromDocument()
+        recordCurrentHistorySnapshot()
+        updateStatus()
+    }
+
     var currentImage: NSImage {
         document.compositedImage
     }

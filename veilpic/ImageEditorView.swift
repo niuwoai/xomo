@@ -36,6 +36,10 @@ struct ImageEditorView: View {
         _viewModel = StateObject(wrappedValue: ImageEditorViewModel(sourceName: sourceName, image: image, onApply: onApply))
     }
 
+    init(viewModel: ImageEditorViewModel) {
+        _viewModel = StateObject(wrappedValue: viewModel)
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             menuBar

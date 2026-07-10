@@ -317,6 +317,7 @@
 "workbench.preview.edit" = "画像を編集";
 "imageEditor.window.title" = "画像エディタ";
 "imageEditor.developmentSampleName" = "開発テストキャンバス";
+"imageEditor.developmentSampleLayerName" = "編集可能なサンプルシェイプ";
 "imageEditor.defaultSourceName" = "画像";
 "imageEditor.menu.file" = "ファイル";
 "imageEditor.menu.edit" = "編集";

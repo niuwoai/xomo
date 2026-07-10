@@ -207,6 +207,10 @@ final class ImageEditorWindowPresenter: NSObject, NSWindowDelegate {
 
     func open(image: NSImage, sourceName: String, onApply: @escaping (NSImage) -> Void) {
         let rootView = ImageEditorView(sourceName: sourceName, image: image, onApply: onApply)
+        present(rootView: rootView)
+    }
+
+    private func present(rootView: ImageEditorView) {
         let hostingController = NSHostingController(rootView: rootView)
 
         if let window {
@@ -232,18 +236,22 @@ final class ImageEditorWindowPresenter: NSObject, NSWindowDelegate {
 
 #if DEBUG
     func openDevelopmentSample() {
-        open(
-            image: developmentSampleImage(),
-            sourceName: L10n.text("imageEditor.developmentSampleName")
-        ) { _ in }
+        let sourceName = L10n.text("imageEditor.developmentSampleName")
+        let viewModel = ImageEditorViewModel(
+            document: developmentSampleDocument(sourceName: sourceName),
+            onApply: { _ in }
+        )
+        present(rootView: ImageEditorView(viewModel: viewModel))
     }
 
-    private func developmentSampleImage() -> NSImage {
+    private func developmentSampleDocument(sourceName: String) -> ImageEditorDocument {
         let size = NSSize(width: 1600, height: 1000)
-        return NSImage.rendered(size: size) { rect in
+        let background = NSImage.rendered(size: size) { rect in
             NSColor(srgbRed: 0.08, green: 0.10, blue: 0.14, alpha: 1).setFill()
             rect.fill()
+        } ?? NSImage.transparent(size: size)
 
+        let editableShapes = NSImage.rendered(size: size) { _ in
             NSColor(srgbRed: 0.12, green: 0.45, blue: 0.86, alpha: 1).setFill()
             CGRect(x: 110, y: 120, width: 620, height: 680).fill()
 
@@ -253,6 +261,12 @@ final class ImageEditorWindowPresenter: NSObject, NSWindowDelegate {
             NSColor(srgbRed: 0.92, green: 0.94, blue: 0.98, alpha: 1).setFill()
             CGRect(x: 860, y: 120, width: 520, height: 110).fill()
         } ?? NSImage.transparent(size: size)
+
+        var document = ImageEditorDocument(sourceName: sourceName, image: background)
+        guard let layerIndex = document.selectedLayerIndex else { return document }
+        document.layers[layerIndex].name = L10n.text("imageEditor.developmentSampleLayerName")
+        document.layers[layerIndex].image = editableShapes
+        return document
     }
 #endif
 

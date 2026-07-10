@@ -284,6 +284,22 @@ struct ImageEditorScopeTests {
     }
 
     @MainActor
+    @Test func imageEditorCanStartFromPreparedDocumentForDevelopmentSamples() throws {
+        let sourceName = "development.png"
+        let image = NSImage.transparent(size: NSSize(width: 80, height: 60))
+        var document = ImageEditorDocument(sourceName: sourceName, image: image)
+        let selectedLayerID = try #require(document.selectedLayerID)
+        let selectedLayerIndex = try #require(document.selectedLayerIndex)
+        document.layers[selectedLayerIndex].name = "Prepared sample"
+
+        let viewModel = ImageEditorViewModel(document: document) { _ in }
+
+        #expect(viewModel.document.sourceName == sourceName)
+        #expect(viewModel.document.selectedLayerID == selectedLayerID)
+        #expect(viewModel.selectedLayerName == "Prepared sample")
+    }
+
+    @MainActor
     @Test func classicAdjustmentShortcutsPreparePropertiesPanel() {
         let image = NSImage(size: NSSize(width: 80, height: 60))
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }

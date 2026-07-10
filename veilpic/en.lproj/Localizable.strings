@@ -317,6 +317,7 @@
 "workbench.preview.edit" = "Edit image";
 "imageEditor.window.title" = "Image Editor";
 "imageEditor.developmentSampleName" = "Development Test Canvas";
+"imageEditor.developmentSampleLayerName" = "Editable Sample Shapes";
 "imageEditor.defaultSourceName" = "Image";
 "imageEditor.menu.file" = "File";
 "imageEditor.menu.edit" = "Edit";
