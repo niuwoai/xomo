@@ -264,6 +264,23 @@ struct ImageEditorScopeTests {
         #expect(!source.contains("StorageSettingsView"))
     }
 
+    @Test func xomoSourceTreeDoesNotRetainTrayCaptureOrUploadModules() {
+        let sourceDirectory = Self.repositoryRoot().appendingPathComponent("veilpic")
+        let retiredModules = [
+            "MenuBarUploadViewModel.swift",
+            "ScreenshotShortcuts.swift",
+            "ScreenshotCaptureCoordinator.swift",
+            "RegionScreenshotCapture.swift",
+            "ObjectStorageUploader.swift",
+            "StorageProfileStore.swift",
+            "UploadHistoryStore.swift"
+        ]
+
+        for module in retiredModules {
+            #expect(!FileManager.default.fileExists(atPath: sourceDirectory.appendingPathComponent(module).path))
+        }
+    }
+
     @MainActor
     @Test func imageEditorCanStartFromPreparedDocumentForDevelopmentSamples() throws {
         let sourceName = "development.png"
