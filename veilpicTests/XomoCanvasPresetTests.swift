@@ -42,5 +42,6 @@ struct XomoCanvasPresetTests {
         #expect(viewModel.document.gridSpacing == 8)
         #expect(viewModel.zoom == 1)
         #expect(viewModel.document.layers.count == 2)
+        #expect(viewModel.exportSettings.scale == 3)
     }
 }

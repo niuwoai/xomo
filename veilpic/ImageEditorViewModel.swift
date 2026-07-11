@@ -301,6 +301,7 @@ final class ImageEditorViewModel: ObservableObject {
 
         document = newDocument
         cachedCurrentImage = canvas
+        exportSettings.scale = Double(draft.clampedExportScale)
         undoStack.removeAll()
         redoStack.removeAll()
         historySnapshots.removeAll()
