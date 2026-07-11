@@ -2280,7 +2280,7 @@
 "xomo.leftSidebar.tools" = "Tools";
 "xomo.leftSidebar.components" = "Components";
 "xomo.componentLibrary.title" = "Component Library";
-"xomo.componentLibrary.subtitle" = "Click or drag a Button or Input to create editable layers now; other core components will arrive one by one.";
+"xomo.componentLibrary.subtitle" = "Click or drag a Button, Input, or Card to create editable layers now; other core components will arrive one by one.";
 "xomo.componentLibrary.nextStep" = "Core components are groups with background shapes and text layers, so editing copy, color, or structure never creates an uneditable screenshot.";
 "xomo.componentLibrary.dragOrInsert" = "Click to insert or drag onto the canvas";
 "xomo.componentLibrary.comingSoon" = "Coming soon";
@@ -2290,6 +2290,10 @@
 "xomo.component.input.title" = "Input";
 "xomo.component.input.defaultPlaceholder" = "Enter text";
 "xomo.component.input.backgroundLayer" = "Input Background";
+"xomo.component.card.title" = "Card";
+"xomo.component.card.defaultTitle" = "Card title";
+"xomo.component.card.defaultBody" = "Add an editable supporting description here.";
+"xomo.component.card.backgroundLayer" = "Card Background";
 "xomo.component.history.insert" = "Insert button component";
 "xomo.component.status.inserted" = "Inserted component: %@";
 "xomo.componentPreview.button" = "Button";

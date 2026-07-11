@@ -2280,7 +2280,7 @@
 "xomo.leftSidebar.tools" = "ツール";
 "xomo.leftSidebar.components" = "コンポーネント";
 "xomo.componentLibrary.title" = "コンポーネントライブラリ";
-"xomo.componentLibrary.subtitle" = "ボタンまたは入力欄をクリックまたはドラッグすると編集可能なレイヤーを作成できます。ほかの基本コンポーネントも順次追加します。";
+"xomo.componentLibrary.subtitle" = "ボタン、入力欄、カードをクリックまたはドラッグすると編集可能なレイヤーを作成できます。ほかの基本コンポーネントも順次追加します。";
 "xomo.componentLibrary.nextStep" = "基本コンポーネントは背景図形とテキストを含むグループです。文言・色・構造を変更しても編集できないスクリーンショットにはなりません。";
 "xomo.componentLibrary.dragOrInsert" = "クリックして挿入、またはキャンバスへドラッグ";
 "xomo.componentLibrary.comingSoon" = "準備中";
@@ -2290,6 +2290,10 @@
 "xomo.component.input.title" = "入力欄";
 "xomo.component.input.defaultPlaceholder" = "内容を入力";
 "xomo.component.input.backgroundLayer" = "入力欄の背景";
+"xomo.component.card.title" = "カード";
+"xomo.component.card.defaultTitle" = "カードの見出し";
+"xomo.component.card.defaultBody" = "ここに編集可能な説明文を入力します。";
+"xomo.component.card.backgroundLayer" = "カード背景";
 "xomo.component.history.insert" = "ボタンコンポーネントを挿入";
 "xomo.component.status.inserted" = "コンポーネントを挿入：%@";
 "xomo.componentPreview.button" = "ボタン";

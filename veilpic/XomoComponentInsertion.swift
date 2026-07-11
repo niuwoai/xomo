@@ -29,9 +29,27 @@ private enum XomoInputComponentStyle {
     static let textColor = NSColor(deviceWhite: 0.48, alpha: 1)
 }
 
+private enum XomoCardComponentStyle {
+    static let minimumWidth: CGFloat = 240
+    static let maximumWidth: CGFloat = 360
+    static let widthRatio: CGFloat = 0.32
+    static let height: CGFloat = 168
+    static let titleFontSize: CGFloat = 18
+    static let bodyFontSize: CGFloat = 14
+    static let horizontalInset: CGFloat = 18
+    static let titleTopInset: CGFloat = 20
+    static let bodyTopInset: CGFloat = 64
+    static let fillColor = NSColor(deviceWhite: 0.98, alpha: 1)
+    static let strokeColor = NSColor(deviceWhite: 0.80, alpha: 1)
+    static let strokeWidth: CGFloat = 1
+    static let titleColor = NSColor(deviceWhite: 0.12, alpha: 1)
+    static let bodyColor = NSColor(deviceWhite: 0.42, alpha: 1)
+}
+
 enum XomoComponentKind: String, CaseIterable, Identifiable {
     case button
     case input
+    case card
 
     var id: String { rawValue }
 
@@ -47,6 +65,8 @@ extension ImageEditorViewModel {
             insertXomoButton(at: proposedOrigin)
         case .input:
             insertXomoInput(at: proposedOrigin)
+        case .card:
+            insertXomoCard(at: proposedOrigin)
         }
     }
 
@@ -169,6 +189,80 @@ extension ImageEditorViewModel {
 
         let insertionIndex = min((document.selectedLayerIndex ?? (document.layers.count - 1)) + 1, document.layers.count)
         document.layers.insert(contentsOf: [background, text, group], at: insertionIndex)
+        document.selectedLayerID = group.id
+        document.selectedLayerIDs = [group.id]
+        isEditingLayerMask = false
+        appendHistory(L10n.text("xomo.component.history.insert"))
+        statusText = L10n.format("xomo.component.status.inserted", group.name)
+    }
+
+    private func insertXomoCard(at proposedOrigin: CGPoint?) {
+        let canvasSize = document.canvasSize
+        let cardSize = CGSize(
+            width: min(
+                XomoCardComponentStyle.maximumWidth,
+                max(XomoCardComponentStyle.minimumWidth, canvasSize.width * XomoCardComponentStyle.widthRatio)
+            ),
+            height: XomoCardComponentStyle.height
+        )
+        let defaultOrigin = CGPoint(
+            x: (canvasSize.width - cardSize.width) * 0.5,
+            y: (canvasSize.height - cardSize.height) * 0.5
+        )
+        let origin = clampedComponentOrigin(proposedOrigin ?? defaultOrigin, componentSize: cardSize)
+        let cardFrame = CGRect(origin: origin, size: cardSize)
+        let title = L10n.text("xomo.component.card.defaultTitle")
+        let body = L10n.text("xomo.component.card.defaultBody")
+        let titleContent = ImageEditorTextContent(
+            text: title,
+            color: XomoCardComponentStyle.titleColor,
+            fontSize: XomoCardComponentStyle.titleFontSize,
+            point: CGPoint(x: ImageEditorTextContent.drawingPadding, y: ImageEditorTextContent.drawingPadding),
+            isBold: true,
+            alignment: .left
+        )
+        let bodyContent = ImageEditorTextContent(
+            text: body,
+            color: XomoCardComponentStyle.bodyColor,
+            fontSize: XomoCardComponentStyle.bodyFontSize,
+            point: CGPoint(x: ImageEditorTextContent.drawingPadding, y: ImageEditorTextContent.drawingPadding),
+            alignment: .left
+        )
+
+        pushUndo()
+        var group = ImageEditorLayer.group(name: L10n.text("xomo.component.card.title"), size: canvasSize)
+        group.blendMode = .passThrough
+
+        var background = ImageEditorLayer.shape(
+            name: L10n.text("xomo.component.card.backgroundLayer"),
+            frame: cardFrame,
+            content: ImageEditorShapeContent(
+                kind: .rectangle,
+                fillColor: XomoCardComponentStyle.fillColor,
+                fillOpacity: 1,
+                strokeColor: XomoCardComponentStyle.strokeColor,
+                strokeWidth: XomoCardComponentStyle.strokeWidth,
+                strokeOpacity: 1
+            )
+        )
+        background.groupID = group.id
+
+        var titleLayer = ImageEditorLayer.text(
+            name: L10n.format("imageEditor.layer.textName", title),
+            origin: CGPoint(x: cardFrame.minX + XomoCardComponentStyle.horizontalInset, y: cardFrame.minY + XomoCardComponentStyle.titleTopInset),
+            content: titleContent
+        )
+        titleLayer.groupID = group.id
+
+        var bodyLayer = ImageEditorLayer.text(
+            name: L10n.format("imageEditor.layer.textName", body),
+            origin: CGPoint(x: cardFrame.minX + XomoCardComponentStyle.horizontalInset, y: cardFrame.minY + XomoCardComponentStyle.bodyTopInset),
+            content: bodyContent
+        )
+        bodyLayer.groupID = group.id
+
+        let insertionIndex = min((document.selectedLayerIndex ?? (document.layers.count - 1)) + 1, document.layers.count)
+        document.layers.insert(contentsOf: [background, bodyLayer, titleLayer, group], at: insertionIndex)
         document.selectedLayerID = group.id
         document.selectedLayerIDs = [group.id]
         isEditingLayerMask = false
