@@ -454,6 +454,12 @@
 "imageEditor.export.scope.composited" = "Composite";
 "imageEditor.export.scope.selectedLayer" = "Current Layer";
 "imageEditor.export.scope.selectedLayers" = "Selected Layers";
+"imageEditor.export.namingRule" = "File name";
+"imageEditor.export.namingRule.sourceName" = "Document name";
+"imageEditor.export.namingRule.sourceAndScope" = "Document name + scope";
+"imageEditor.export.namingRule.sourceScopeAndScale" = "Document name + scope + scale";
+"imageEditor.export.batchScales" = "Also export";
+"imageEditor.export.batchScaleValue" = "%.0gx";
 "imageEditor.export.scaleValue" = "Scale: %.2gx";
 "imageEditor.export.quality" = "Quality";
 "imageEditor.export.qualityValue" = "%d%%";
@@ -1386,6 +1392,7 @@
 "imageEditor.status.exportFailed" = "Export failed";
 "imageEditor.status.exportFailedWithReason" = "Export failed: %@";
 "imageEditor.status.exportWebPUnsupported" = "This system cannot write WebP files";
+"imageEditor.status.exportedBatch" = "Exported %ld variants to %@";
 "imageEditor.status.exportSVGRequiresVector" = "SVG export requires a pure vector canvas without raster layers, masks, filters, or effects";
 "imageEditor.status.projectOpened" = "Project opened: %@";
 "imageEditor.status.projectSaved" = "Project saved: %@";

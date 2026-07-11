@@ -454,6 +454,12 @@
 "imageEditor.export.scope.composited" = "合成图像";
 "imageEditor.export.scope.selectedLayer" = "当前图层";
 "imageEditor.export.scope.selectedLayers" = "所选图层";
+"imageEditor.export.namingRule" = "文件名";
+"imageEditor.export.namingRule.sourceName" = "仅文档名";
+"imageEditor.export.namingRule.sourceAndScope" = "文档名 + 范围";
+"imageEditor.export.namingRule.sourceScopeAndScale" = "文档名 + 范围 + 倍率";
+"imageEditor.export.batchScales" = "同时导出";
+"imageEditor.export.batchScaleValue" = "%.0gx";
 "imageEditor.export.scaleValue" = "倍率：%.2gx";
 "imageEditor.export.quality" = "质量";
 "imageEditor.export.qualityValue" = "%d%%";
@@ -1386,6 +1392,7 @@
 "imageEditor.status.exportFailed" = "导出失败";
 "imageEditor.status.exportFailedWithReason" = "导出失败：%@";
 "imageEditor.status.exportWebPUnsupported" = "当前系统不支持写入 WebP";
+"imageEditor.status.exportedBatch" = "已向 %@ 导出 %ld 个倍率版本";
 "imageEditor.status.exportSVGRequiresVector" = "SVG 仅支持没有位图图层、蒙版、滤镜或图层特效的纯矢量画布";
 "imageEditor.status.projectOpened" = "已打开项目：%@";
 "imageEditor.status.projectSaved" = "已保存项目：%@";

@@ -70,10 +70,26 @@ enum ImageEditorExportScope: String, CaseIterable, Identifiable {
     }
 }
 
+enum ImageEditorExportNamingRule: String, CaseIterable, Identifiable {
+    case sourceName
+    case sourceAndScope
+    case sourceScopeAndScale
+
+    var id: String { rawValue }
+
+    var title: String {
+        L10n.text("imageEditor.export.namingRule.\(rawValue)")
+    }
+}
+
 struct ImageEditorExportSettings: Equatable {
+    static let batchScalePresets: [Double] = [1, 2, 3]
+
     var format: ImageEditorExportFormat = .png
     var scope: ImageEditorExportScope = .composited
     var scale: Double = 1
+    var batchScales: Set<Double> = []
+    var namingRule: ImageEditorExportNamingRule = .sourceScopeAndScale
     var quality: Double = 0.9
 
     var usesQuality: Bool {
@@ -156,6 +172,18 @@ extension ImageEditorViewModel {
         }
     }
 
+    func exportFilenames(settings: ImageEditorExportSettings) -> [String] {
+        let normalized = normalizedExportSettings(settings)
+        let scales = exportScales(for: normalized)
+        return scales.map { scale in
+            exportFilename(
+                settings: normalized,
+                scale: scale,
+                includesScaleSuffix: scales.count > 1
+            )
+        }
+    }
+
     func runExport() {
         let settings = normalizedExportSettings(exportSettings)
         exportSettings = settings
@@ -172,17 +200,32 @@ extension ImageEditorViewModel {
         let panel = NSSavePanel()
         panel.allowedContentTypes = [settings.format.contentType]
         panel.canCreateDirectories = true
-        panel.nameFieldStringValue = exportFilename(settings: settings)
+        panel.nameFieldStringValue = exportFilename(
+            settings: settings,
+            scale: settings.scale,
+            includesScaleSuffix: false
+        )
         panel.begin { [weak self] response in
             Task { @MainActor in
                 guard let self, response == .OK, let url = panel.url else { return }
-                guard let data = self.exportData(settings: settings) else {
-                    self.statusText = L10n.text("imageEditor.status.exportFailed")
-                    return
-                }
                 do {
-                    try data.write(to: url, options: .atomic)
-                    self.statusText = L10n.format("imageEditor.status.exported", url.lastPathComponent)
+                    let scales = self.exportScales(for: settings)
+                    for scale in scales {
+                        var variantSettings = settings
+                        variantSettings.scale = scale
+                        variantSettings.batchScales = []
+                        guard let data = self.exportData(settings: variantSettings) else {
+                            self.statusText = L10n.text("imageEditor.status.exportFailed")
+                            return
+                        }
+                        let destination = scales.count == 1
+                            ? url
+                            : self.batchExportURL(from: url, scale: scale, format: settings.format)
+                        try data.write(to: destination, options: .atomic)
+                    }
+                    self.statusText = scales.count == 1
+                        ? L10n.format("imageEditor.status.exported", url.lastPathComponent)
+                        : L10n.format("imageEditor.status.exportedBatch", scales.count, url.deletingLastPathComponent().lastPathComponent)
                     self.isExportSheetPresented = false
                 } catch {
                     self.statusText = L10n.format("imageEditor.status.exportFailedWithReason", error.localizedDescription)
@@ -201,6 +244,9 @@ extension ImageEditorViewModel {
             normalized.scale = 1
         }
         normalized.scale = min(4, max(0.25, normalized.scale))
+        normalized.batchScales = Set(normalized.batchScales.filter { scale in
+            ImageEditorExportSettings.batchScalePresets.contains(scale)
+        })
         normalized.quality = min(1, max(0.1, normalized.quality))
         if normalized.scope == .selectedLayer, !canExportSelectedLayer {
             normalized.scope = .composited
@@ -253,19 +299,53 @@ extension ImageEditorViewModel {
         return document.compositedImage(includingOnly: document.selectedLayerIDs)
     }
 
-    private func exportFilename(settings: ImageEditorExportSettings) -> String {
+    private func exportScales(for settings: ImageEditorExportSettings) -> [Double] {
+        guard settings.usesScale else { return [1] }
+        return Set([settings.scale] + settings.batchScales).sorted()
+    }
+
+    private func exportFilename(
+        settings: ImageEditorExportSettings,
+        scale: Double,
+        includesScaleSuffix: Bool
+    ) -> String {
         let base = (document.sourceName as NSString).deletingPathExtension
         let cleaned = base.trimmingCharacters(in: .whitespacesAndNewlines)
-        let suffix: String
+        let sourceName = cleaned.isEmpty ? "image" : cleaned
+        let scopeSuffix: String
         switch settings.scope {
         case .composited:
-            suffix = "edited"
+            scopeSuffix = "edited"
         case .selectedLayer:
-            suffix = "layer"
+            scopeSuffix = "layer"
         case .selectedLayers:
-            suffix = "selected-layers"
+            scopeSuffix = "selected-layers"
         }
-        return "\((cleaned.isEmpty ? "image" : cleaned))-\(suffix).\(settings.format.filenameExtension)"
+        let name: String
+        switch settings.namingRule {
+        case .sourceName:
+            name = sourceName
+        case .sourceAndScope, .sourceScopeAndScale:
+            name = "\(sourceName)-\(scopeSuffix)"
+        }
+        let scaleSuffix = includesScaleSuffix && settings.usesScale ? "@\(exportScaleLabel(scale))" : ""
+        return "\(name)\(scaleSuffix).\(settings.format.filenameExtension)"
+    }
+
+    private func batchExportURL(
+        from url: URL,
+        scale: Double,
+        format: ImageEditorExportFormat
+    ) -> URL {
+        let baseName = (url.lastPathComponent as NSString).deletingPathExtension
+        let filename = "\(baseName)@\(exportScaleLabel(scale)).\(format.filenameExtension)"
+        return url.deletingLastPathComponent().appendingPathComponent(filename)
+    }
+
+    private func exportScaleLabel(_ scale: Double) -> String {
+        scale.rounded() == scale
+            ? "\(Int(scale))x"
+            : "\(String(format: "%.2f", locale: Locale(identifier: "en_US_POSIX"), scale))x"
     }
 
     private func isLayer(_ layer: ImageEditorLayer, includedIn includedLayerIDs: Set<UUID>) -> Bool {

@@ -64,4 +64,40 @@ struct ImageEditorExportFormatTests {
         #expect(renderedPDF.size == rasterImage.size)
         #expect(renderedPDF.nonTransparentPixelBounds() != nil)
     }
+
+    @Test func exportNamingRulesSupportBatchScaleVariants() {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "landing.png",
+            image: NSImage.transparent(size: CGSize(width: 120, height: 80))
+        ) { _ in }
+        let batchSettings = ImageEditorExportSettings(
+            format: .png,
+            scope: .composited,
+            scale: 1,
+            batchScales: [2, 3],
+            namingRule: .sourceScopeAndScale
+        )
+
+        #expect(viewModel.exportFilenames(settings: batchSettings) == [
+            "landing-edited@1x.png",
+            "landing-edited@2x.png",
+            "landing-edited@3x.png"
+        ])
+
+        let sourceOnly = ImageEditorExportSettings(
+            format: .png,
+            scope: .composited,
+            scale: 1,
+            namingRule: .sourceName
+        )
+        #expect(viewModel.exportFilenames(settings: sourceOnly) == ["landing.png"])
+
+        let pdfSettings = ImageEditorExportSettings(
+            format: .pdf,
+            scope: .composited,
+            scale: 1,
+            batchScales: [2, 3]
+        )
+        #expect(viewModel.exportFilenames(settings: pdfSettings) == ["landing-edited.pdf"])
+    }
 }

@@ -454,6 +454,12 @@
 "imageEditor.export.scope.composited" = "合成画像";
 "imageEditor.export.scope.selectedLayer" = "現在のレイヤー";
 "imageEditor.export.scope.selectedLayers" = "選択レイヤー";
+"imageEditor.export.namingRule" = "ファイル名";
+"imageEditor.export.namingRule.sourceName" = "書類名のみ";
+"imageEditor.export.namingRule.sourceAndScope" = "書類名 + 範囲";
+"imageEditor.export.namingRule.sourceScopeAndScale" = "書類名 + 範囲 + 倍率";
+"imageEditor.export.batchScales" = "同時に書き出す";
+"imageEditor.export.batchScaleValue" = "%.0gx";
 "imageEditor.export.scaleValue" = "倍率：%.2gx";
 "imageEditor.export.quality" = "品質";
 "imageEditor.export.qualityValue" = "%d%%";
@@ -1386,6 +1392,7 @@
 "imageEditor.status.exportFailed" = "書き出しに失敗しました";
 "imageEditor.status.exportFailedWithReason" = "書き出しに失敗しました：%@";
 "imageEditor.status.exportWebPUnsupported" = "このシステムでは WebP を書き出せません";
+"imageEditor.status.exportedBatch" = "%2$@ に %1$ld 種類の倍率を書き出しました";
 "imageEditor.status.exportSVGRequiresVector" = "SVG は、ラスター画像、マスク、フィルター、レイヤー効果を含まない純粋なベクターキャンバスでのみ書き出せます";
 "imageEditor.status.projectOpened" = "プロジェクトを開きました：%@";
 "imageEditor.status.projectSaved" = "プロジェクトを保存しました：%@";

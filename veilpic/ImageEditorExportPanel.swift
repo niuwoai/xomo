@@ -44,6 +44,13 @@ struct ImageEditorExportPanel: View {
                 }
                 .pickerStyle(.segmented)
 
+                Picker(L10n.text("imageEditor.export.namingRule"), selection: namingRuleBinding) {
+                    ForEach(ImageEditorExportNamingRule.allCases) { rule in
+                        Text(rule.title).tag(rule)
+                    }
+                }
+                .pickerStyle(.menu)
+
                 if viewModel.exportSettings.usesScale {
                     Stepper(
                         L10n.format("imageEditor.export.scaleValue", viewModel.exportSettings.scale),
@@ -51,6 +58,21 @@ struct ImageEditorExportPanel: View {
                         in: 0.25...4,
                         step: 0.25
                     )
+
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(L10n.text("imageEditor.export.batchScales"))
+                            .font(.system(size: 12, weight: .semibold))
+                        HStack(spacing: 10) {
+                            ForEach(ImageEditorExportSettings.batchScalePresets, id: \.self) { scale in
+                                Toggle(
+                                    L10n.format("imageEditor.export.batchScaleValue", scale),
+                                    isOn: batchScaleBinding(for: scale)
+                                )
+                                .toggleStyle(.checkbox)
+                                .font(.system(size: 12))
+                            }
+                        }
+                    }
                 }
 
                 if viewModel.exportSettings.usesQuality {
@@ -111,6 +133,13 @@ struct ImageEditorExportPanel: View {
         )
     }
 
+    private var namingRuleBinding: Binding<ImageEditorExportNamingRule> {
+        Binding(
+            get: { viewModel.exportSettings.namingRule },
+            set: { viewModel.exportSettings.namingRule = $0 }
+        )
+    }
+
     private func isScopeDisabled(_ scope: ImageEditorExportScope) -> Bool {
         switch scope {
         case .composited:
@@ -137,6 +166,19 @@ struct ImageEditorExportPanel: View {
         Binding(
             get: { viewModel.exportSettings.quality },
             set: { viewModel.exportSettings.quality = $0 }
+        )
+    }
+
+    private func batchScaleBinding(for scale: Double) -> Binding<Bool> {
+        Binding(
+            get: { viewModel.exportSettings.batchScales.contains(scale) },
+            set: { isEnabled in
+                if isEnabled {
+                    viewModel.exportSettings.batchScales.insert(scale)
+                } else {
+                    viewModel.exportSettings.batchScales.remove(scale)
+                }
+            }
         )
     }
 }
