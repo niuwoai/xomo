@@ -2404,3 +2404,7 @@
 "xomo.componentPreview.image" = "Image";
 "xomo.componentPreview.avatar" = "Avatar";
 "xomo.componentPreview.icon" = "Icon";
+"xomo.theme.picker" = "Component theme";
+"xomo.theme.native" = "Xomo Native";
+"xomo.theme.softMobile" = "Soft Mobile";
+"xomo.theme.denseAdmin" = "Dense Admin";

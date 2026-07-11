@@ -39,12 +39,12 @@ private enum XomoButtonVariant: Equatable {
         }
     }
 
-    var fillColor: NSColor {
+    func fillColor(tokens: XomoComponentThemeTokens) -> NSColor {
         switch self {
         case .primary, .icon:
-            NSColor(deviceRed: 0.20, green: 0.48, blue: 0.95, alpha: 1)
+            tokens.accent
         case .secondary:
-            .white
+            tokens.surface
         case .ghost:
             .clear
         }
@@ -54,12 +54,12 @@ private enum XomoButtonVariant: Equatable {
         self == .ghost ? 0 : 1
     }
 
-    var strokeColor: NSColor {
+    func strokeColor(tokens: XomoComponentThemeTokens) -> NSColor {
         switch self {
         case .primary, .icon:
-            NSColor(deviceRed: 0.16, green: 0.39, blue: 0.78, alpha: 1)
+            tokens.accentBorder
         case .secondary, .ghost:
-            NSColor(deviceRed: 0.20, green: 0.48, blue: 0.95, alpha: 1)
+            tokens.accent
         }
     }
 
@@ -67,12 +67,12 @@ private enum XomoButtonVariant: Equatable {
         self == .ghost ? 0 : 1
     }
 
-    var labelColor: NSColor {
+    func labelColor(tokens: XomoComponentThemeTokens) -> NSColor {
         switch self {
         case .primary, .icon:
-            .white
+            tokens.onAccent
         case .secondary, .ghost:
-            NSColor(deviceRed: 0.20, green: 0.48, blue: 0.95, alpha: 1)
+            tokens.accent
         }
     }
 }
@@ -299,6 +299,7 @@ extension ImageEditorViewModel {
 
     private func insertXomoButton(_ variant: XomoButtonVariant, at proposedOrigin: CGPoint?) {
         let canvasSize = document.canvasSize
+        let tokens = xomoComponentTheme.tokens
         let buttonSize = variant.size ?? CGSize(
             width: min(
                 XomoButtonComponentStyle.maximumWidth,
@@ -316,7 +317,7 @@ extension ImageEditorViewModel {
         let label = L10n.text("xomo.component.\(component.rawValue).defaultLabel")
         let labelContent = ImageEditorTextContent(
             text: label,
-            color: variant.labelColor,
+            color: variant.labelColor(tokens: tokens),
             fontSize: XomoButtonComponentStyle.labelFontSize,
             point: CGPoint(x: ImageEditorTextContent.drawingPadding, y: ImageEditorTextContent.drawingPadding),
             isBold: true,
@@ -337,9 +338,9 @@ extension ImageEditorViewModel {
             frame: buttonFrame,
             content: ImageEditorShapeContent(
                 kind: .rectangle,
-                fillColor: variant.fillColor,
+                fillColor: variant.fillColor(tokens: tokens),
                 fillOpacity: variant.fillOpacity,
-                strokeColor: variant.strokeColor,
+                strokeColor: variant.strokeColor(tokens: tokens),
                 strokeWidth: XomoButtonComponentStyle.strokeWidth,
                 strokeOpacity: variant.strokeOpacity
             )

@@ -76,6 +76,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var statusText: String = ""
     @Published var areToolsPanelVisible = true
     @Published var selectedLeftSidebarTab: XomoLeftSidebarTab = .tools
+    @Published var xomoComponentTheme: XomoComponentTheme = .native
     @Published var isOptionsBarVisible = true
     @Published var isNavigatorPanelVisible = true
     @Published var isHistoryPanelVisible = true

@@ -2404,3 +2404,7 @@
 "xomo.componentPreview.image" = "画像";
 "xomo.componentPreview.avatar" = "アバター";
 "xomo.componentPreview.icon" = "アイコン";
+"xomo.theme.picker" = "コンポーネントテーマ";
+"xomo.theme.native" = "Xomo ネイティブ";
+"xomo.theme.softMobile" = "ソフトモバイル";
+"xomo.theme.denseAdmin" = "高密度管理画面";

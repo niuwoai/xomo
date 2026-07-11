@@ -2404,3 +2404,7 @@
 "xomo.componentPreview.image" = "图片";
 "xomo.componentPreview.avatar" = "头像";
 "xomo.componentPreview.icon" = "图标";
+"xomo.theme.picker" = "组件主题";
+"xomo.theme.native" = "像界原生";
+"xomo.theme.softMobile" = "柔和移动端";
+"xomo.theme.denseAdmin" = "高密度后台";

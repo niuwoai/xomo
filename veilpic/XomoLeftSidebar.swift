@@ -87,6 +87,15 @@ struct XomoComponentLibraryPanel: View {
                     .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
                     .fixedSize(horizontal: false, vertical: true)
 
+                Picker(L10n.text("xomo.theme.picker"), selection: $viewModel.xomoComponentTheme) {
+                    ForEach(XomoComponentTheme.allCases) { theme in
+                        Text(theme.title).tag(theme)
+                    }
+                }
+                .labelsHidden()
+                .pickerStyle(.menu)
+                .accessibilityIdentifier("xomo-component-theme-picker")
+
                 LazyVGrid(
                     columns: Array(repeating: GridItem(.flexible(minimum: 72), spacing: 8), count: 2),
                     spacing: 8

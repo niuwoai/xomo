@@ -37,6 +37,29 @@ struct XomoLeftSidebarTests {
         ])
     }
 
+    @Test func componentThemesExposeThreeOriginalTokenSets() {
+        #expect(XomoComponentTheme.allCases == [.native, .softMobile, .denseAdmin])
+        #expect(!XomoComponentTheme.native.tokens.accent.isEqual(XomoComponentTheme.softMobile.tokens.accent))
+        #expect(!XomoComponentTheme.softMobile.tokens.accent.isEqual(XomoComponentTheme.denseAdmin.tokens.accent))
+        #expect(XomoComponentTheme.softMobile.tokens.cornerRadius > XomoComponentTheme.native.tokens.cornerRadius)
+        #expect(XomoComponentTheme.denseAdmin.tokens.cornerRadius < XomoComponentTheme.native.tokens.cornerRadius)
+    }
+
+    @Test func primaryButtonUsesSelectedComponentThemeTokens() throws {
+        for theme in XomoComponentTheme.allCases {
+            let image = NSImage.transparent(size: CGSize(width: 640, height: 480))
+            let viewModel = ImageEditorViewModel(sourceName: "source", image: image) { _ in }
+            viewModel.xomoComponentTheme = theme
+
+            viewModel.insertXomoComponent(.button, at: CGPoint(x: 40, y: 60))
+
+            let group = try #require(viewModel.document.selectedLayer)
+            let background = try #require(viewModel.document.layers.first { $0.groupID == group.id && $0.isShape })
+            #expect(background.shapeContent?.fillColor.isEqual(theme.tokens.accent) == true)
+            #expect(background.shapeContent?.strokeColor.isEqual(theme.tokens.accentBorder) == true)
+        }
+    }
+
     @Test func switchingSidebarDoesNotChangeSelectedTool() {
         let image = NSImage.transparent(size: CGSize(width: 20, height: 20))
         let viewModel = ImageEditorViewModel(sourceName: "source", image: image) { _ in }
