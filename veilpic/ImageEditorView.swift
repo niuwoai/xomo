@@ -75,6 +75,10 @@ struct ImageEditorView: View {
         .background(opacityShortcutButtons)
         .background(colorShortcutButtons)
         .background(nudgeShortcutButtons)
+        .overlay(alignment: .bottom) {
+            selectedToolHint
+                .padding(.bottom, viewModel.isStatusBarVisible ? 4 : 8)
+        }
         .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
         .onAppear {
             syncLayerNameDraft()
@@ -220,6 +224,29 @@ struct ImageEditorView: View {
         .frame(width: 108)
         .padding(.vertical, 8)
         .background(Color(nsColor: ImageEditorTheme.chrome))
+    }
+
+    private var selectedToolHint: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Label(viewModel.selectedTool.title, systemImage: viewModel.selectedTool.symbolName)
+                .font(.system(size: 11, weight: .semibold))
+            Text(viewModel.selectedTool.helpText)
+                .font(.system(size: 11, weight: .regular))
+                .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                .lineLimit(1)
+        }
+        .frame(minWidth: 230, maxWidth: 440, alignment: .leading)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 7)
+        .background(Color(nsColor: ImageEditorTheme.panelRaised).opacity(0.96), in: RoundedRectangle(cornerRadius: 6))
+        .overlay {
+            RoundedRectangle(cornerRadius: 6)
+                .stroke(editorBorder, lineWidth: 1)
+        }
+        .shadow(color: .black.opacity(0.28), radius: 6, x: 0, y: 2)
+        .allowsHitTesting(false)
+        .accessibilityIdentifier("image-editor-selected-tool-hint")
+        .accessibilityValue(viewModel.selectedTool.rawValue)
     }
 
     private var toolShortcutButtons: some View {
