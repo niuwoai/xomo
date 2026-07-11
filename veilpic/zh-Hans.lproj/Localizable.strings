@@ -2296,6 +2296,9 @@
 "xomo.component.card.backgroundLayer" = "卡片背景";
 "xomo.component.image.title" = "图片";
 "xomo.component.image.placeholderLayer" = "图片占位图";
+"xomo.component.avatar.title" = "头像";
+"xomo.component.avatar.backgroundLayer" = "头像背景";
+"xomo.component.avatar.defaultInitials" = "X";
 "xomo.component.history.insert" = "插入按钮组件";
 "xomo.component.status.inserted" = "已插入组件：%@";
 "xomo.componentPreview.button" = "按钮";

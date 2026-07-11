@@ -11,7 +11,7 @@ struct XomoLeftSidebarTests {
     }
 
     @Test func componentLibraryExposesEditableStarterComponents() {
-        #expect(XomoComponentKind.allCases == [.button, .input, .card, .image])
+        #expect(XomoComponentKind.allCases == [.button, .input, .card, .image, .avatar])
     }
 
     @Test func switchingSidebarDoesNotChangeSelectedTool() {
@@ -154,5 +154,36 @@ struct XomoLeftSidebarTests {
         #expect(children.count == 1)
         #expect(children[0].kind.isPixel)
         #expect(children[0].image.cgImage(forProposedRect: nil, context: nil, hints: nil) != nil)
+    }
+
+    @Test func insertingAvatarCreatesEditableShapeAndInitialsLayers() throws {
+        let image = NSImage.transparent(size: CGSize(width: 640, height: 480))
+        let viewModel = ImageEditorViewModel(sourceName: "source", image: image) { _ in }
+
+        viewModel.insertXomoComponent(.avatar, at: CGPoint(x: 40, y: 60))
+
+        let group = try #require(viewModel.document.selectedLayer)
+        #expect(group.isGroup)
+        #expect(group.name == XomoComponentKind.avatar.title)
+        let children = viewModel.document.layers.filter { $0.groupID == group.id }
+        #expect(children.count == 2)
+        #expect(children.contains(where: { $0.isShape && $0.shapeContent?.kind == .ellipse }))
+        #expect(children.contains(where: { $0.isText && $0.textContent?.text == L10n.text("xomo.component.avatar.defaultInitials") }))
+        #expect(viewModel.canUndo)
+    }
+
+    @Test func avatarComponentRoundTripRetainsEditableChildren() throws {
+        let image = NSImage.transparent(size: CGSize(width: 640, height: 480))
+        let viewModel = ImageEditorViewModel(sourceName: "source", image: image) { _ in }
+        viewModel.insertXomoComponent(.avatar, at: CGPoint(x: 40, y: 60))
+
+        let project = try ImageEditorProjectDocument(document: viewModel.document)
+        let restored = try project.restoredDocument()
+        let group = try #require(restored.layers.first(where: { $0.isGroup && $0.name == XomoComponentKind.avatar.title }))
+        let children = restored.layers.filter { $0.groupID == group.id }
+
+        #expect(children.count == 2)
+        #expect(children.contains(where: { $0.isShape && $0.shapeContent?.kind == .ellipse }))
+        #expect(children.contains(where: { $0.isText }))
     }
 }

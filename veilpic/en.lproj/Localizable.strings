@@ -2296,6 +2296,9 @@
 "xomo.component.card.backgroundLayer" = "Card Background";
 "xomo.component.image.title" = "Image";
 "xomo.component.image.placeholderLayer" = "Image Placeholder";
+"xomo.component.avatar.title" = "Avatar";
+"xomo.component.avatar.backgroundLayer" = "Avatar Background";
+"xomo.component.avatar.defaultInitials" = "X";
 "xomo.component.history.insert" = "Insert button component";
 "xomo.component.status.inserted" = "Inserted component: %@";
 "xomo.componentPreview.button" = "Button";

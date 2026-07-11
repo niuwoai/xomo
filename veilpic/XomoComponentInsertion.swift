@@ -53,11 +53,20 @@ private enum XomoImageComponentStyle {
     static let aspectRatio: CGFloat = 16 / 10
 }
 
+private enum XomoAvatarComponentStyle {
+    static let diameter: CGFloat = 96
+    static let labelFontSize: CGFloat = 32
+    static let fillColor = NSColor(deviceRed: 0.20, green: 0.48, blue: 0.95, alpha: 1)
+    static let strokeColor = NSColor(deviceRed: 0.16, green: 0.39, blue: 0.78, alpha: 1)
+    static let strokeWidth: CGFloat = 1
+}
+
 enum XomoComponentKind: String, CaseIterable, Identifiable {
     case button
     case input
     case card
     case image
+    case avatar
 
     var id: String { rawValue }
 
@@ -77,6 +86,8 @@ extension ImageEditorViewModel {
             insertXomoCard(at: proposedOrigin)
         case .image:
             insertXomoImage(at: proposedOrigin)
+        case .avatar:
+            insertXomoAvatar(at: proposedOrigin)
         }
     }
 
@@ -311,6 +322,63 @@ extension ImageEditorViewModel {
 
         let insertionIndex = min((document.selectedLayerIndex ?? (document.layers.count - 1)) + 1, document.layers.count)
         document.layers.insert(contentsOf: [imageLayer, group], at: insertionIndex)
+        document.selectedLayerID = group.id
+        document.selectedLayerIDs = [group.id]
+        isEditingLayerMask = false
+        appendHistory(L10n.text("xomo.component.history.insert"))
+        statusText = L10n.format("xomo.component.status.inserted", group.name)
+    }
+
+    private func insertXomoAvatar(at proposedOrigin: CGPoint?) {
+        let avatarSize = CGSize(width: XomoAvatarComponentStyle.diameter, height: XomoAvatarComponentStyle.diameter)
+        let defaultOrigin = CGPoint(
+            x: (document.canvasSize.width - avatarSize.width) * 0.5,
+            y: (document.canvasSize.height - avatarSize.height) * 0.5
+        )
+        let origin = clampedComponentOrigin(proposedOrigin ?? defaultOrigin, componentSize: avatarSize)
+        let avatarFrame = CGRect(origin: origin, size: avatarSize)
+        let initials = L10n.text("xomo.component.avatar.defaultInitials")
+        let initialsContent = ImageEditorTextContent(
+            text: initials,
+            color: .white,
+            fontSize: XomoAvatarComponentStyle.labelFontSize,
+            point: CGPoint(x: ImageEditorTextContent.drawingPadding, y: ImageEditorTextContent.drawingPadding),
+            isBold: true,
+            alignment: .center
+        )
+        let initialsSize = initialsContent.layerSize()
+        let initialsOrigin = CGPoint(
+            x: avatarFrame.midX - initialsSize.width * 0.5,
+            y: avatarFrame.midY - initialsSize.height * 0.5
+        )
+
+        pushUndo()
+        var group = ImageEditorLayer.group(name: L10n.text("xomo.component.avatar.title"), size: document.canvasSize)
+        group.blendMode = .passThrough
+
+        var background = ImageEditorLayer.shape(
+            name: L10n.text("xomo.component.avatar.backgroundLayer"),
+            frame: avatarFrame,
+            content: ImageEditorShapeContent(
+                kind: .ellipse,
+                fillColor: XomoAvatarComponentStyle.fillColor,
+                fillOpacity: 1,
+                strokeColor: XomoAvatarComponentStyle.strokeColor,
+                strokeWidth: XomoAvatarComponentStyle.strokeWidth,
+                strokeOpacity: 1
+            )
+        )
+        background.groupID = group.id
+
+        var initialsLayer = ImageEditorLayer.text(
+            name: L10n.format("imageEditor.layer.textName", initials),
+            origin: initialsOrigin,
+            content: initialsContent
+        )
+        initialsLayer.groupID = group.id
+
+        let insertionIndex = min((document.selectedLayerIndex ?? (document.layers.count - 1)) + 1, document.layers.count)
+        document.layers.insert(contentsOf: [background, initialsLayer, group], at: insertionIndex)
         document.selectedLayerID = group.id
         document.selectedLayerIDs = [group.id]
         isEditingLayerMask = false
