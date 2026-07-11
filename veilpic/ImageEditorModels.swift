@@ -98,6 +98,10 @@ enum ImageEditorTool: String, CaseIterable, Identifiable {
         L10n.text("imageEditor.tool.\(rawValue)")
     }
 
+    var helpText: String {
+        L10n.text("imageEditor.tool.\(rawValue).help")
+    }
+
     var symbolName: String {
         switch self {
         case .move:

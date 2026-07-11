@@ -207,7 +207,7 @@ struct ImageEditorView: View {
                         .frame(maxWidth: .infinity, minHeight: 34)
                         .contentShape(Rectangle())
                         .buttonStyle(EditorIconButtonStyle(isSelected: viewModel.selectedTool == tool))
-                        .help(tool.title)
+                        .help(tool.helpText)
                         .accessibilityIdentifier("image-editor-tool-\(tool.rawValue)")
                         .accessibilityValue(viewModel.selectedTool == tool ? "selected" : "available")
                     }
