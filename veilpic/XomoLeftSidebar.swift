@@ -33,7 +33,7 @@ private struct XomoComponentLibraryPreviewItem: Identifiable {
 
     static let starterItems: [Self] = [
         Self(id: "button", titleKey: "xomo.componentPreview.button", symbolName: "rectangle.inset.filled", component: .button),
-        Self(id: "input", titleKey: "xomo.componentPreview.input", symbolName: "text.cursor", component: nil),
+        Self(id: "input", titleKey: "xomo.componentPreview.input", symbolName: "text.cursor", component: .input),
         Self(id: "card", titleKey: "xomo.componentPreview.card", symbolName: "rectangle.on.rectangle", component: nil),
         Self(id: "image", titleKey: "xomo.componentPreview.image", symbolName: "photo", component: nil),
         Self(id: "avatar", titleKey: "xomo.componentPreview.avatar", symbolName: "person.crop.circle", component: nil),
