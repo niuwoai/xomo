@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.5.0-rc5 - 2026-07-12
+
+### Fixed
+- 同步 Xcode 产品、单元测试与 UI 测试 target 的 `MARKETING_VERSION` 至 `2.5.0-rc5`，与应用内版本号保持一致，避免安装包显示旧的 `rc1`。
+
 ## 2.5.0-rc4 - 2026-07-12
 
 ### Changed
