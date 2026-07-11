@@ -62,7 +62,7 @@ struct ImageEditorView: View {
 
             HStack(spacing: 0) {
                 if viewModel.areToolsPanelVisible {
-                    toolRail
+                    leftSidebar
                         .fixedSize(horizontal: true, vertical: false)
                         .layoutPriority(2)
                     Divider().overlay(editorBorder)
@@ -302,25 +302,61 @@ struct ImageEditorView: View {
         return "\(Int(value.rounded()))\(suffix)"
     }
 
+    private var leftSidebar: some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 4) {
+                ForEach(XomoLeftSidebarTab.allCases) { tab in
+                    Button {
+                        viewModel.selectLeftSidebarTab(tab)
+                    } label: {
+                        Label(tab.title, systemImage: tab.symbolName)
+                            .font(.system(size: 11, weight: .semibold))
+                            .frame(maxWidth: .infinity, minHeight: 30)
+                    }
+                    .buttonStyle(EditorIconButtonStyle(isSelected: viewModel.selectedLeftSidebarTab == tab))
+                    .focusable(false)
+                    .accessibilityIdentifier("xomo-left-sidebar-tab-\(tab.rawValue)")
+                    .accessibilityValue(viewModel.selectedLeftSidebarTab == tab ? "selected" : "available")
+                }
+            }
+            .padding(6)
+
+            Divider().overlay(editorBorder)
+
+            Group {
+                switch viewModel.selectedLeftSidebarTab {
+                case .tools:
+                    toolRail
+                case .components:
+                    XomoComponentLibraryPanel()
+                }
+            }
+            .frame(maxHeight: .infinity)
+        }
+        .frame(width: 220)
+        .background(Color(nsColor: ImageEditorTheme.chrome))
+        .accessibilityIdentifier("xomo-left-sidebar")
+    }
+
     private var toolRail: some View {
         VStack(spacing: 8) {
             ScrollView(.vertical, showsIndicators: false) {
                 LazyVGrid(
-                    columns: Array(repeating: GridItem(.fixed(30), spacing: 2), count: 2),
-                    spacing: 2
+                    columns: Array(repeating: GridItem(.fixed(30), spacing: 2), count: 6),
+                    spacing: 4
                 ) {
                     ForEach(ImageEditorTool.allCases) { tool in
                         toolRailItem(tool)
                     }
                 }
-                .frame(width: 62)
+                .frame(width: 200)
             }
 
+            Divider().overlay(editorBorder)
             colorChips
         }
-        .frame(width: 80)
+        .frame(width: 220)
         .padding(.vertical, 8)
-        .background(Color(nsColor: ImageEditorTheme.chrome))
     }
 
     @ViewBuilder

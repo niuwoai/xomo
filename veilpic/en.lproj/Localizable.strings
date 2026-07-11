@@ -2277,3 +2277,14 @@
 "xomo.canvasPreset.socialSquare.title" = "Square Post";
 "xomo.canvasPreset.socialPortrait.title" = "Portrait Post";
 "xomo.canvasPreset.socialBanner.title" = "Banner";
+"xomo.leftSidebar.tools" = "Tools";
+"xomo.leftSidebar.components" = "Components";
+"xomo.componentLibrary.title" = "Component Library";
+"xomo.componentLibrary.subtitle" = "Browse editable component categories first; direct canvas insertion arrives in the next small version.";
+"xomo.componentLibrary.nextStep" = "Buttons, inputs, and cards will insert as text, shapes, images, and groups—not uneditable screenshots.";
+"xomo.componentPreview.button" = "Button";
+"xomo.componentPreview.input" = "Input";
+"xomo.componentPreview.card" = "Card";
+"xomo.componentPreview.image" = "Image";
+"xomo.componentPreview.avatar" = "Avatar";
+"xomo.componentPreview.icon" = "Icon";

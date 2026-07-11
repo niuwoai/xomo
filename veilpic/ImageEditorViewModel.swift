@@ -75,6 +75,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var reselectableSelection: ImageEditorSelection?
     @Published var statusText: String = ""
     @Published var areToolsPanelVisible = true
+    @Published var selectedLeftSidebarTab: XomoLeftSidebarTab = .tools
     @Published var isOptionsBarVisible = true
     @Published var isNavigatorPanelVisible = true
     @Published var isHistoryPanelVisible = true
@@ -1450,6 +1451,10 @@ final class ImageEditorViewModel: ObservableObject {
         } else {
             updateStatus()
         }
+    }
+
+    func selectLeftSidebarTab(_ tab: XomoLeftSidebarTab) {
+        selectedLeftSidebarTab = tab
     }
 
     func selectClassicToolShortcut(_ key: Character) {

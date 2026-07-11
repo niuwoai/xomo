@@ -2277,3 +2277,14 @@
 "xomo.canvasPreset.socialSquare.title" = "正方形投稿";
 "xomo.canvasPreset.socialPortrait.title" = "縦長投稿";
 "xomo.canvasPreset.socialBanner.title" = "バナー";
+"xomo.leftSidebar.tools" = "ツール";
+"xomo.leftSidebar.components" = "コンポーネント";
+"xomo.componentLibrary.title" = "コンポーネントライブラリ";
+"xomo.componentLibrary.subtitle" = "まず編集可能なコンポーネントの分類を確認できます。キャンバスへの直接挿入は次の小バージョンで追加します。";
+"xomo.componentLibrary.nextStep" = "ボタン、入力欄、カードは、編集できないスクリーンショットではなく、テキスト・図形・画像・グループとして挿入されます。";
+"xomo.componentPreview.button" = "ボタン";
+"xomo.componentPreview.input" = "入力欄";
+"xomo.componentPreview.card" = "カード";
+"xomo.componentPreview.image" = "画像";
+"xomo.componentPreview.avatar" = "アバター";
+"xomo.componentPreview.icon" = "アイコン";
