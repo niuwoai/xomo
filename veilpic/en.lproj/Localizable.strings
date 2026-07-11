@@ -439,6 +439,8 @@
 "imageEditor.export.format.png" = "PNG";
 "imageEditor.export.format.jpeg" = "JPEG";
 "imageEditor.export.format.webp" = "WebP";
+"imageEditor.export.format.pdf" = "PDF";
+"imageEditor.export.format.svg" = "SVG (Vector)";
 "imageEditor.export.format.psd" = "PSD";
 "imageEditor.psd.error.invalid" = "The PSD file structure is invalid.";
 "imageEditor.psd.error.unsupportedDocument" = "This PSD color mode, bit depth, or size is not supported yet.";
@@ -1384,6 +1386,7 @@
 "imageEditor.status.exportFailed" = "Export failed";
 "imageEditor.status.exportFailedWithReason" = "Export failed: %@";
 "imageEditor.status.exportWebPUnsupported" = "This system cannot write WebP files";
+"imageEditor.status.exportSVGRequiresVector" = "SVG export requires a pure vector canvas without raster layers, masks, filters, or effects";
 "imageEditor.status.projectOpened" = "Project opened: %@";
 "imageEditor.status.projectSaved" = "Project saved: %@";
 "imageEditor.status.projectOpenFailedWithReason" = "Open project failed: %@";

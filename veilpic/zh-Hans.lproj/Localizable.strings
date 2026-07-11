@@ -439,6 +439,8 @@
 "imageEditor.export.format.png" = "PNG";
 "imageEditor.export.format.jpeg" = "JPEG";
 "imageEditor.export.format.webp" = "WebP";
+"imageEditor.export.format.pdf" = "PDF";
+"imageEditor.export.format.svg" = "SVG（矢量）";
 "imageEditor.export.format.psd" = "PSD";
 "imageEditor.psd.error.invalid" = "PSD 文件结构无效。";
 "imageEditor.psd.error.unsupportedDocument" = "暂不支持此 PSD 的色彩模式、位深或尺寸。";
@@ -1384,6 +1386,7 @@
 "imageEditor.status.exportFailed" = "导出失败";
 "imageEditor.status.exportFailedWithReason" = "导出失败：%@";
 "imageEditor.status.exportWebPUnsupported" = "当前系统不支持写入 WebP";
+"imageEditor.status.exportSVGRequiresVector" = "SVG 仅支持没有位图图层、蒙版、滤镜或图层特效的纯矢量画布";
 "imageEditor.status.projectOpened" = "已打开项目：%@";
 "imageEditor.status.projectSaved" = "已保存项目：%@";
 "imageEditor.status.projectOpenFailedWithReason" = "打开项目失败：%@";

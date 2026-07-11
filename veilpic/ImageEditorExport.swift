@@ -13,6 +13,8 @@ enum ImageEditorExportFormat: String, CaseIterable, Identifiable {
     case png
     case jpeg
     case webp
+    case pdf
+    case svg
     case psd
 
     var id: String { rawValue }
@@ -29,6 +31,10 @@ enum ImageEditorExportFormat: String, CaseIterable, Identifiable {
             "jpg"
         case .webp:
             "webp"
+        case .pdf:
+            "pdf"
+        case .svg:
+            "svg"
         case .psd:
             "psd"
         }
@@ -42,6 +48,10 @@ enum ImageEditorExportFormat: String, CaseIterable, Identifiable {
             .jpeg
         case .webp:
             .webP
+        case .pdf:
+            .pdf
+        case .svg:
+            UTType(filenameExtension: "svg") ?? .xml
         case .psd:
             ImageEditorPSDCodec.contentType
         }
@@ -71,14 +81,20 @@ struct ImageEditorExportSettings: Equatable {
     }
 
     var usesScale: Bool {
-        format != .psd
+        switch format {
+        case .png, .jpeg, .webp:
+            true
+        case .pdf, .svg, .psd:
+            false
+        }
     }
 }
 
 @MainActor
 extension ImageEditorViewModel {
     var exportSizeText: String {
-        let size = exportImage(for: exportSettings.scope).size.scaled(by: exportSettings.scale)
+        let scale = exportSettings.usesScale ? exportSettings.scale : 1
+        let size = exportImage(for: exportSettings.scope).size.scaled(by: scale)
         return "\(Int(size.width.rounded())) x \(Int(size.height.rounded())) px"
     }
 
@@ -95,7 +111,18 @@ extension ImageEditorViewModel {
         }
     }
 
+    var canExportSVG: Bool {
+        svgExportLayers != nil
+    }
+
     func openExportPanel() {
+        if exportSettings.format == .svg, !canExportSVG {
+            exportSettings.format = .png
+        }
+        if exportSettings.format == .svg {
+            exportSettings.scope = .composited
+            exportSettings.scale = 1
+        }
         if exportSettings.scope == .selectedLayer, !canExportSelectedLayer {
             exportSettings.scope = .composited
         }
@@ -110,15 +137,20 @@ extension ImageEditorViewModel {
     }
 
     func exportData(settings: ImageEditorExportSettings) -> Data? {
-        let image = exportImage(for: normalizedExportSettings(settings).scope)
-        let scaled = image.scaled(by: settings.scale)
-        switch settings.format {
+        let normalized = normalizedExportSettings(settings)
+        let image = exportImage(for: normalized.scope)
+        let scaled = image.scaled(by: normalized.scale)
+        switch normalized.format {
         case .png:
             return scaled.qingtuPNGData()
         case .jpeg:
-            return scaled.flattened(on: .white).bitmapData(type: .jpeg, quality: settings.quality)
+            return scaled.flattened(on: .white).bitmapData(type: .jpeg, quality: normalized.quality)
         case .webp:
-            return scaled.bitmapData(typeIdentifier: UTType.webP.identifier, quality: settings.quality)
+            return scaled.bitmapData(typeIdentifier: UTType.webP.identifier, quality: normalized.quality)
+        case .pdf:
+            return image.pdfData()
+        case .svg:
+            return svgData()
         case .psd:
             return try? ImageEditorPSDCodec.encode(document: document)
         }
@@ -130,6 +162,10 @@ extension ImageEditorViewModel {
 
         guard settings.format != .webp || NSImage.canWriteImage(typeIdentifier: UTType.webP.identifier) else {
             statusText = L10n.text("imageEditor.status.exportWebPUnsupported")
+            return
+        }
+        guard settings.format != .svg || canExportSVG else {
+            statusText = L10n.text("imageEditor.status.exportSVGRequiresVector")
             return
         }
 
@@ -157,8 +193,11 @@ extension ImageEditorViewModel {
 
     private func normalizedExportSettings(_ settings: ImageEditorExportSettings) -> ImageEditorExportSettings {
         var normalized = settings
-        if normalized.format == .psd {
+        if normalized.format == .psd || normalized.format == .svg {
             normalized.scope = .composited
+            normalized.scale = 1
+        }
+        if normalized.format == .pdf {
             normalized.scale = 1
         }
         normalized.scale = min(4, max(0.25, normalized.scale))
@@ -233,6 +272,169 @@ extension ImageEditorViewModel {
         includedLayerIDs.contains(layer.id)
             || document.ancestorGroups(for: layer).contains { includedLayerIDs.contains($0.id) }
     }
+
+    private var svgExportLayers: [ImageEditorLayer]? {
+        let visibleLayers = document.layers.filter(document.shouldComposite)
+        for layer in visibleLayers {
+            guard canSerializeAsSVG(layer) else { return nil }
+        }
+        return visibleLayers.filter { layer in
+            switch layer.kind {
+            case .text, .shape:
+                true
+            default:
+                false
+            }
+        }
+    }
+
+    private func canSerializeAsSVG(_ layer: ImageEditorLayer) -> Bool {
+        guard layer.blendMode == .normal,
+              layer.opacity > 0,
+              layer.fillOpacity == 1,
+              !layer.style.hasEffects,
+              layer.mask == nil,
+              layer.vectorMask == nil,
+              !layer.isClippingMask,
+              layer.smartFilters.isEmpty,
+              layer.blendIfSourceBlack == 0,
+              layer.blendIfSourceWhite == 1,
+              layer.blendIfUnderlyingBlack == 0,
+              layer.blendIfUnderlyingWhite == 1
+        else { return false }
+
+        switch layer.kind {
+        case .text, .shape:
+            return true
+        case .pixel:
+            return layer.image.nonTransparentPixelBounds() == nil
+        default:
+            return false
+        }
+    }
+
+    private func svgData() -> Data? {
+        guard let layers = svgExportLayers else { return nil }
+        let size = document.canvasSize
+        var elements: [String] = []
+        elements.reserveCapacity(layers.count)
+        for layer in layers {
+            switch layer.kind {
+            case let .shape(content):
+                elements.append(svgShape(content, layer: layer))
+            case let .text(content):
+                elements.append(svgText(content, layer: layer))
+            default:
+                continue
+            }
+        }
+        let source = [
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
+            "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"\(svgNumber(size.width))\" height=\"\(svgNumber(size.height))\" viewBox=\"0 0 \(svgNumber(size.width)) \(svgNumber(size.height))\">",
+            elements.joined(separator: "\n"),
+            "</svg>"
+        ].joined(separator: "\n")
+        return source.data(using: .utf8)
+    }
+
+    private func svgShape(_ content: ImageEditorShapeContent, layer: ImageEditorLayer) -> String {
+        let normalized = content.normalized(size: layer.image.size)
+        let attributes = svgPaintAttributes(content: normalized, layer: layer)
+        switch normalized.kind {
+        case .rectangle:
+            let inset = normalized.strokeWidth / 2
+            let frame = layer.frame.insetBy(dx: inset, dy: inset)
+            return "<rect x=\"\(svgNumber(frame.minX))\" y=\"\(svgNumber(frame.minY))\" width=\"\(svgNumber(frame.width))\" height=\"\(svgNumber(frame.height))\" \(attributes) />"
+        case .ellipse:
+            return "<ellipse cx=\"\(svgNumber(layer.frame.midX))\" cy=\"\(svgNumber(layer.frame.midY))\" rx=\"\(svgNumber(max(0, layer.frame.width - normalized.strokeWidth) / 2))\" ry=\"\(svgNumber(max(0, layer.frame.height - normalized.strokeWidth) / 2))\" \(attributes) />"
+        case .path:
+            return "<path d=\"\(svgPathData(content: normalized, layer: layer))\" \(attributes) />"
+        }
+    }
+
+    private func svgText(_ content: ImageEditorTextContent, layer: ImageEditorLayer) -> String {
+        let color = svgColor(content.color)
+        let fontStyle = content.isItalic ? " font-style=\"italic\"" : ""
+        let fontWeight = content.isBold ? "bold" : "600"
+        let anchor: String
+        let x: CGFloat
+        switch content.alignment {
+        case .left:
+            anchor = "start"
+            x = layer.frame.minX + content.point.x + ImageEditorTextContent.drawingPadding
+        case .center:
+            anchor = "middle"
+            x = layer.frame.minX + max(content.boxWidth, layer.frame.width) / 2
+        case .right:
+            anchor = "end"
+            x = layer.frame.maxX - ImageEditorTextContent.drawingPadding
+        }
+        let y = layer.frame.minY + content.point.y + content.fontSize
+        let lineHeight = content.fontSize + max(0, content.lineSpacing)
+        let lines = content.text.components(separatedBy: .newlines)
+        let tspans = lines.enumerated().map { index, line in
+            let verticalOffset = index == 0 ? "0" : svgNumber(lineHeight)
+            return "<tspan x=\"\(svgNumber(x))\" dy=\"\(verticalOffset)\">\(svgEscaped(line))</tspan>"
+        }.joined()
+        return "<text x=\"\(svgNumber(x))\" y=\"\(svgNumber(y))\" text-anchor=\"\(anchor)\" font-family=\"-apple-system, BlinkMacSystemFont, sans-serif\" font-size=\"\(svgNumber(content.fontSize))\" font-weight=\"\(fontWeight)\" letter-spacing=\"\(svgNumber(content.characterSpacing))\" fill=\"\(color.hex)\" fill-opacity=\"\(svgNumber(color.alpha * layer.opacity))\"\(fontStyle)>\(tspans)</text>"
+    }
+
+    private func svgPathData(content: ImageEditorShapeContent, layer: ImageEditorLayer) -> String {
+        content.allEditablePathSubpaths.compactMap { anchors in
+            guard let first = anchors.first else { return nil }
+            var commands = ["M \(svgPoint(first.point, layer: layer))"]
+            for index in anchors.indices.dropFirst() {
+                let previous = anchors[index - 1]
+                let current = anchors[index]
+                if previous.outControl != nil || current.inControl != nil {
+                    commands.append("C \(svgPoint(previous.outControl ?? previous.point, layer: layer)) \(svgPoint(current.inControl ?? current.point, layer: layer)) \(svgPoint(current.point, layer: layer))")
+                } else {
+                    commands.append("L \(svgPoint(current.point, layer: layer))")
+                }
+            }
+            if content.isPathClosed, anchors.count > 2 {
+                let last = anchors[anchors.count - 1]
+                if last.outControl != nil || first.inControl != nil {
+                    commands.append("C \(svgPoint(last.outControl ?? last.point, layer: layer)) \(svgPoint(first.inControl ?? first.point, layer: layer)) \(svgPoint(first.point, layer: layer))")
+                }
+                commands.append("Z")
+            }
+            return commands.joined(separator: " ")
+        }.joined(separator: " ")
+    }
+
+    private func svgPaintAttributes(content: ImageEditorShapeContent, layer: ImageEditorLayer) -> String {
+        let fill = svgColor(content.fillColor)
+        let stroke = svgColor(content.strokeColor)
+        let fillValue = content.kind == .path && !content.isPathClosed ? "none" : fill.hex
+        return "fill=\"\(fillValue)\" fill-opacity=\"\(svgNumber(fill.alpha * content.fillOpacity * layer.opacity))\" stroke=\"\(stroke.hex)\" stroke-opacity=\"\(svgNumber(stroke.alpha * content.strokeOpacity * layer.opacity))\" stroke-width=\"\(svgNumber(content.strokeWidth))\" stroke-linejoin=\"round\" stroke-linecap=\"round\""
+    }
+
+    private func svgPoint(_ point: CGPoint, layer: ImageEditorLayer) -> String {
+        let x = layer.frame.minX + point.x / max(layer.image.size.width, 1) * layer.frame.width
+        let y = layer.frame.minY + point.y / max(layer.image.size.height, 1) * layer.frame.height
+        return "\(svgNumber(x)) \(svgNumber(y))"
+    }
+
+    private func svgColor(_ color: NSColor) -> (hex: String, alpha: CGFloat) {
+        let converted = color.usingColorSpace(.sRGB) ?? color
+        let red = Int((converted.redComponent * 255).rounded())
+        let green = Int((converted.greenComponent * 255).rounded())
+        let blue = Int((converted.blueComponent * 255).rounded())
+        return (String(format: "#%02X%02X%02X", red, green, blue), converted.alphaComponent)
+    }
+
+    private func svgNumber(_ value: CGFloat) -> String {
+        String(format: "%.3f", locale: Locale(identifier: "en_US_POSIX"), value)
+            .replacingOccurrences(of: ".000", with: "")
+    }
+
+    private func svgEscaped(_ value: String) -> String {
+        value
+            .replacingOccurrences(of: "&", with: "&amp;")
+            .replacingOccurrences(of: "<", with: "&lt;")
+            .replacingOccurrences(of: ">", with: "&gt;")
+    }
 }
 
 private extension CGSize {
@@ -274,6 +476,33 @@ private extension NSImage {
                 fraction: 1
             )
         } ?? self
+    }
+
+    func pdfData() -> Data? {
+        let output = NSMutableData()
+        guard let consumer = CGDataConsumer(data: output),
+              size.width > 0,
+              size.height > 0
+        else { return nil }
+        var mediaBox = CGRect(origin: .zero, size: size)
+        guard let context = CGContext(consumer: consumer, mediaBox: &mediaBox, nil) else { return nil }
+        context.beginPDFPage(nil)
+        context.saveGState()
+        context.translateBy(x: 0, y: size.height)
+        context.scaleBy(x: 1, y: -1)
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = NSGraphicsContext(cgContext: context, flipped: true)
+        draw(
+            in: CGRect(origin: .zero, size: size),
+            from: CGRect(origin: .zero, size: size),
+            operation: .sourceOver,
+            fraction: 1
+        )
+        NSGraphicsContext.restoreGraphicsState()
+        context.restoreGState()
+        context.endPDFPage()
+        context.closePDF()
+        return output as Data
     }
 
     func bitmapData(type: NSBitmapImageRep.FileType, quality: Double) -> Data? {

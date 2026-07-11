@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.5.0-rc2 - 2026-07-12
+
+### Added
+- 导出面板新增 PDF 与纯矢量 SVG：PDF 可稳定封装混合画布的合成结果；SVG 直接写出形状、路径和文字，绝不把位图伪装为 SVG。
+
+### Changed
+- SVG 只在没有实际位图、蒙版、滤镜、裁切、非普通混合和图层特效的画布上可选；不满足条件时明确拒绝导出。
+
+### Tests
+- 新增 `ImageEditorExportFormatTests` 2/2，通过纯矢量 SVG 结构与混合画布 PDF/SVG 边界测试。
+
 ## 2.5.0-rc1 - 2026-07-12
 
 ### Added

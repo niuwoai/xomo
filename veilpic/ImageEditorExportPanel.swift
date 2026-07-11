@@ -28,10 +28,12 @@ struct ImageEditorExportPanel: View {
             VStack(alignment: .leading, spacing: 10) {
                 Picker(L10n.text("imageEditor.export.format"), selection: formatBinding) {
                     ForEach(ImageEditorExportFormat.allCases) { format in
-                        Text(format.title).tag(format)
+                        Text(format.title)
+                            .tag(format)
+                            .disabled(format == .svg && !viewModel.canExportSVG)
                     }
                 }
-                .pickerStyle(.segmented)
+                .pickerStyle(.menu)
 
                 Picker(L10n.text("imageEditor.export.scope"), selection: scopeBinding) {
                     ForEach(ImageEditorExportScope.allCases) { scope in
@@ -92,7 +94,13 @@ struct ImageEditorExportPanel: View {
     private var formatBinding: Binding<ImageEditorExportFormat> {
         Binding(
             get: { viewModel.exportSettings.format },
-            set: { viewModel.exportSettings.format = $0 }
+            set: { format in
+                viewModel.exportSettings.format = format
+                if format == .svg {
+                    viewModel.exportSettings.scope = .composited
+                    viewModel.exportSettings.scale = 1
+                }
+            }
         )
     }
 
@@ -108,9 +116,13 @@ struct ImageEditorExportPanel: View {
         case .composited:
             false
         case .selectedLayer:
-            viewModel.exportSettings.format == .psd || !viewModel.canExportSelectedLayer
+            viewModel.exportSettings.format == .psd
+                || viewModel.exportSettings.format == .svg
+                || !viewModel.canExportSelectedLayer
         case .selectedLayers:
-            viewModel.exportSettings.format == .psd || !viewModel.canExportSelectedLayers
+            viewModel.exportSettings.format == .psd
+                || viewModel.exportSettings.format == .svg
+                || !viewModel.canExportSelectedLayers
         }
     }
 

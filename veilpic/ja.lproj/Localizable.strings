@@ -439,6 +439,8 @@
 "imageEditor.export.format.png" = "PNG";
 "imageEditor.export.format.jpeg" = "JPEG";
 "imageEditor.export.format.webp" = "WebP";
+"imageEditor.export.format.pdf" = "PDF";
+"imageEditor.export.format.svg" = "SVG（ベクター）";
 "imageEditor.export.format.psd" = "PSD";
 "imageEditor.psd.error.invalid" = "PSD ファイルの構造が無効です。";
 "imageEditor.psd.error.unsupportedDocument" = "この PSD のカラーモード、ビット深度、またはサイズはまだ対応していません。";
@@ -1384,6 +1386,7 @@
 "imageEditor.status.exportFailed" = "書き出しに失敗しました";
 "imageEditor.status.exportFailedWithReason" = "書き出しに失敗しました：%@";
 "imageEditor.status.exportWebPUnsupported" = "このシステムでは WebP を書き出せません";
+"imageEditor.status.exportSVGRequiresVector" = "SVG は、ラスター画像、マスク、フィルター、レイヤー効果を含まない純粋なベクターキャンバスでのみ書き出せます";
 "imageEditor.status.projectOpened" = "プロジェクトを開きました：%@";
 "imageEditor.status.projectSaved" = "プロジェクトを保存しました：%@";
 "imageEditor.status.projectOpenFailedWithReason" = "プロジェクトを開けませんでした：%@";
