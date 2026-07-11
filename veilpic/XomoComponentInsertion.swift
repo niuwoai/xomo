@@ -784,6 +784,7 @@ extension ImageEditorViewModel {
 
     private func insertXomoSideNavigation(at proposedOrigin: CGPoint?) {
         let component = XomoComponentKind.sideNavigation
+        let tokens = xomoComponentTheme.tokens
         let frame = componentFrame(
             proposedOrigin,
             size: CGSize(
@@ -816,9 +817,9 @@ extension ImageEditorViewModel {
             ),
             content: ImageEditorShapeContent(
                 kind: .rectangle,
-                fillColor: XomoNavigationComponentStyle.selectedFillColor,
+                fillColor: tokens.accent,
                 fillOpacity: 1,
-                strokeColor: XomoNavigationComponentStyle.selectedFillColor,
+                strokeColor: tokens.accentBorder,
                 strokeWidth: XomoNavigationComponentStyle.strokeWidth,
                 strokeOpacity: 1
             )
