@@ -190,28 +190,34 @@ struct ImageEditorView: View {
     }
 
     private var toolRail: some View {
-        VStack(spacing: 5) {
-            ForEach(ImageEditorTool.allCases) { tool in
-                Button {
-                    viewModel.selectTool(tool)
-                } label: {
-                    Image(systemName: tool.symbolName)
-                        .font(.system(size: 16, weight: .semibold))
+        VStack(spacing: 8) {
+            ScrollView(.vertical, showsIndicators: false) {
+                LazyVGrid(
+                    columns: Array(repeating: GridItem(.flexible(minimum: 34), spacing: 4), count: 2),
+                    spacing: 4
+                ) {
+                    ForEach(ImageEditorTool.allCases) { tool in
+                        Button {
+                            viewModel.selectTool(tool)
+                        } label: {
+                            Image(systemName: tool.symbolName)
+                                .font(.system(size: 15, weight: .semibold))
+                                .frame(maxWidth: .infinity, minHeight: 34)
+                        }
                         .frame(maxWidth: .infinity, minHeight: 34)
+                        .contentShape(Rectangle())
+                        .buttonStyle(EditorIconButtonStyle(isSelected: viewModel.selectedTool == tool))
+                        .help(tool.title)
+                        .accessibilityIdentifier("image-editor-tool-\(tool.rawValue)")
+                        .accessibilityValue(viewModel.selectedTool == tool ? "selected" : "available")
+                    }
                 }
-                .frame(width: 48, height: 34)
-                .contentShape(Rectangle())
-                .buttonStyle(EditorIconButtonStyle(isSelected: viewModel.selectedTool == tool))
-                .help(tool.title)
-                .accessibilityIdentifier("image-editor-tool-\(tool.rawValue)")
-                .accessibilityValue(viewModel.selectedTool == tool ? "selected" : "available")
+                .padding(.horizontal, 6)
             }
-
-            Spacer()
 
             colorChips
         }
-        .frame(width: 56)
+        .frame(width: 108)
         .padding(.vertical, 8)
         .background(Color(nsColor: ImageEditorTheme.chrome))
     }
