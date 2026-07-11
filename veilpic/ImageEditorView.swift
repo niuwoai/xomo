@@ -31,6 +31,10 @@ struct ImageEditorView: View {
     @State var historySnapshotNameDrafts: [UUID: String] = [:]
     @State var selectedLayerPanelTab: ImageEditorLayerPanelTab = .layers
     @State var targetedLayerDropTarget: ImageEditorLayerDropTarget?
+    @State private var isNavigatorDockExpanded = false
+    @State private var isHistoryDockExpanded = false
+    @State private var isFiltersDockExpanded = false
+    @State private var isPropertiesDockExpanded = false
 
     init(sourceName: String, image: NSImage, onApply: @escaping (NSImage) -> Void) {
         _viewModel = StateObject(wrappedValue: ImageEditorViewModel(sourceName: sourceName, image: image, onApply: onApply))
@@ -193,8 +197,10 @@ struct ImageEditorView: View {
                 } label: {
                     Image(systemName: tool.symbolName)
                         .font(.system(size: 16, weight: .semibold))
-                        .frame(width: 34, height: 34)
+                        .frame(maxWidth: .infinity, minHeight: 34)
                 }
+                .frame(width: 48, height: 34)
+                .contentShape(Rectangle())
                 .buttonStyle(EditorIconButtonStyle(isSelected: viewModel.selectedTool == tool))
                 .help(tool.title)
                 .accessibilityIdentifier("image-editor-tool-\(tool.rawValue)")
@@ -826,36 +832,66 @@ struct ImageEditorView: View {
 
     private var rightDock: some View {
         VStack(spacing: 0) {
-            if viewModel.isNavigatorPanelVisible {
-                navigatorPanel
-            }
-            if viewModel.isNavigatorPanelVisible && (viewModel.isHistoryPanelVisible || viewModel.isLayersPanelVisible || viewModel.isPropertiesPanelVisible) {
-                Divider().overlay(editorBorder)
-            }
-            if viewModel.isHistoryPanelVisible {
-                historyPanel
-            }
-            if viewModel.isHistoryPanelVisible && (viewModel.isLayersPanelVisible || viewModel.isPropertiesPanelVisible) {
-                Divider().overlay(editorBorder)
-            }
             if viewModel.isLayersPanelVisible {
                 layersPanel
             }
-            if viewModel.isLayersPanelVisible && viewModel.isPropertiesPanelVisible {
+            if viewModel.isLayersPanelVisible && (viewModel.isNavigatorPanelVisible || viewModel.isHistoryPanelVisible || viewModel.isPropertiesPanelVisible) {
                 Divider().overlay(editorBorder)
             }
-            if viewModel.isPropertiesPanelVisible {
-                propertiesPanel
+
+            ScrollView {
+                LazyVStack(spacing: 8) {
+                    if viewModel.isNavigatorPanelVisible {
+                        EditorDockDisclosure(
+                            title: L10n.text("imageEditor.panel.navigator"),
+                            systemImage: "scope",
+                            isExpanded: $isNavigatorDockExpanded
+                        ) {
+                            navigatorPanel(showsTitle: false)
+                        }
+                    }
+
+                    if viewModel.isHistoryPanelVisible {
+                        EditorDockDisclosure(
+                            title: L10n.text("imageEditor.panel.history"),
+                            systemImage: "clock",
+                            isExpanded: $isHistoryDockExpanded
+                        ) {
+                            historyPanel(showsTitle: false)
+                        }
+                    }
+
+                    if viewModel.isPropertiesPanelVisible {
+                        EditorDockDisclosure(
+                            title: L10n.text("imageEditor.properties.filter"),
+                            systemImage: "camera.filters",
+                            isExpanded: $isFiltersDockExpanded
+                        ) {
+                            filtersQuickPanel
+                        }
+                    }
+
+                    if viewModel.isPropertiesPanelVisible {
+                        EditorDockDisclosure(
+                            title: L10n.text("imageEditor.panel.properties"),
+                            systemImage: "slider.horizontal.3",
+                            isExpanded: $isPropertiesDockExpanded
+                        ) {
+                            propertiesPanel(showsTitle: false)
+                        }
+                    }
+                }
+                .padding(8)
             }
         }
-        .frame(width: 316)
+        .frame(width: 332)
         .background(Color(nsColor: ImageEditorTheme.panel))
         .accessibilityIdentifier("image-editor-right-dock")
     }
 
-    private var navigatorPanel: some View {
+    private func navigatorPanel(showsTitle: Bool = true) -> some View {
         let histogramSummary = viewModel.histogramSummary
-        return EditorPanel(title: L10n.text("imageEditor.panel.navigator")) {
+        return EditorPanel(title: L10n.text("imageEditor.panel.navigator"), showsTitle: showsTitle) {
             VStack(alignment: .leading, spacing: 8) {
                 Image(nsImage: viewModel.previewImage)
                     .resizable()
@@ -874,7 +910,7 @@ struct ImageEditorView: View {
             .font(.system(size: 11, weight: .medium).monospacedDigit())
             .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
         }
-        .frame(height: 262)
+        .frame(height: showsTitle ? 262 : 226)
         .accessibilityIdentifier("image-editor-navigator-panel")
     }
 
@@ -909,8 +945,8 @@ struct ImageEditorView: View {
         }
     }
 
-    private var historyPanel: some View {
-        EditorPanel(title: L10n.text("imageEditor.panel.history")) {
+    private func historyPanel(showsTitle: Bool = true) -> some View {
+        EditorPanel(title: L10n.text("imageEditor.panel.history"), showsTitle: showsTitle) {
             VStack(spacing: 6) {
                 HStack(spacing: 8) {
                     Label(viewModel.historyStateSummary, systemImage: "clock")
@@ -972,7 +1008,45 @@ struct ImageEditorView: View {
                 }
             }
         }
-        .frame(height: 164)
+        .frame(height: showsTitle ? 164 : 142)
+    }
+
+    private var filtersQuickPanel: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Picker(L10n.text("imageEditor.properties.filter"), selection: $viewModel.selectedFilter) {
+                ForEach(ImageEditorFilter.allCases) { filter in
+                    Text(filter.title).tag(filter)
+                }
+            }
+            .pickerStyle(.menu)
+
+            HStack(spacing: 8) {
+                Text("\(Int((viewModel.filterIntensity * 100).rounded()))%")
+                    .font(.system(size: 11, weight: .semibold).monospacedDigit())
+                    .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                    .frame(width: 36, alignment: .leading)
+                Slider(value: $viewModel.filterIntensity, in: 0...1, step: 0.05)
+            }
+
+            HStack(spacing: 8) {
+                Button(L10n.text("imageEditor.action.applyFilter")) {
+                    viewModel.applySelectedFilter()
+                }
+                .buttonStyle(EditorPrimaryButtonStyle())
+
+                Button(L10n.text("imageEditor.action.layerFilterNew")) {
+                    viewModel.addFilterLayer()
+                }
+                .buttonStyle(EditorTextButtonStyle())
+
+                Button(L10n.text("imageEditor.action.layerSmartFilterAdd")) {
+                    viewModel.addSmartFilterToSelectedLayer()
+                }
+                .buttonStyle(EditorTextButtonStyle())
+                .disabled(!viewModel.canAddSmartFilterToSelectedLayer)
+            }
+        }
+        .padding(10)
     }
 
     private func historySnapshotRow(_ snapshot: ImageEditorHistorySnapshot) -> some View {
@@ -2169,8 +2243,8 @@ struct ImageEditorView: View {
         CGPoint(x: rect.midX, y: rect.minY - 32)
     }
 
-    private var propertiesPanel: some View {
-        EditorPanel(title: L10n.text("imageEditor.panel.properties")) {
+    private func propertiesPanel(showsTitle: Bool = true) -> some View {
+        EditorPanel(title: L10n.text("imageEditor.panel.properties"), showsTitle: showsTitle) {
             VStack(alignment: .leading, spacing: 10) {
                 Text(L10n.text("imageEditor.properties.layerName"))
                     .font(.system(size: 11, weight: .bold))
@@ -4212,23 +4286,88 @@ struct DisabledMaskSlash: View {
 
 struct EditorPanel<Content: View>: View {
     let title: String
+    let showsTitle: Bool
     @ViewBuilder let content: Content
+
+    init(title: String, showsTitle: Bool = true, @ViewBuilder content: () -> Content) {
+        self.title = title
+        self.showsTitle = showsTitle
+        self.content = content()
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text(title)
-                .font(.system(size: 13, weight: .bold))
-                .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 8)
-                .background(Color(nsColor: ImageEditorTheme.chrome))
+            if showsTitle {
+                Text(title)
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 8)
+                    .background(Color(nsColor: ImageEditorTheme.chrome))
+            }
 
             content
                 .padding(.horizontal, 10)
                 .padding(.bottom, 10)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    }
+}
+
+struct EditorDockDisclosure<Content: View>: View {
+    let title: String
+    let systemImage: String
+    @Binding var isExpanded: Bool
+    @ViewBuilder let content: Content
+
+    init(
+        title: String,
+        systemImage: String,
+        isExpanded: Binding<Bool>,
+        @ViewBuilder content: () -> Content
+    ) {
+        self.title = title
+        self.systemImage = systemImage
+        _isExpanded = isExpanded
+        self.content = content()
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            Button {
+                isExpanded.toggle()
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: systemImage)
+                        .font(.system(size: 12, weight: .semibold))
+                        .frame(width: 18)
+                    Text(title)
+                        .font(.system(size: 12, weight: .bold))
+                    Spacer(minLength: 0)
+                    Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
+                        .font(.system(size: 11, weight: .bold))
+                }
+                .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+                .padding(.horizontal, 10)
+                .frame(height: 34)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("image-editor-dock-section-\(title)")
+            .accessibilityValue(isExpanded ? "expanded" : "collapsed")
+
+            if isExpanded {
+                Divider().overlay(Color(nsColor: ImageEditorTheme.border))
+                content
+            }
+        }
+        .background(Color(nsColor: ImageEditorTheme.panelRaised).opacity(0.48))
+        .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 5, style: .continuous)
+                .stroke(Color(nsColor: ImageEditorTheme.border).opacity(0.75), lineWidth: 1)
+        }
     }
 }
 
