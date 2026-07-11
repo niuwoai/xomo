@@ -9,11 +9,17 @@ import AppKit
 import CoreGraphics
 
 extension ImageEditorViewModel {
+    func isPenCloseCandidate(at point: CGPoint?) -> Bool {
+        guard pendingPenPathPoints.count >= 3,
+              let point,
+              let first = pendingPenPathPoints.first
+        else { return false }
+        return distance(from: point, to: first) <= penCloseDistance
+    }
+
     func addPenPoint(_ point: CGPoint?) {
         guard let point else { return }
-        if pendingPenPathPoints.count >= 3,
-           let first = pendingPenPathPoints.first,
-           distance(from: point, to: first) <= penCloseDistance {
+        if isPenCloseCandidate(at: point) {
             finishPenPath(closed: true)
             return
         }

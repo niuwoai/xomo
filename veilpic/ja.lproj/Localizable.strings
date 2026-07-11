@@ -316,8 +316,9 @@
 "variant.webp.title" = "WebP";
 "workbench.preview.edit" = "画像を編集";
 "imageEditor.window.title" = "画像エディタ";
-"imageEditor.developmentSampleName" = "開発テストキャンバス";
-"imageEditor.developmentSampleLayerName" = "編集可能なサンプルシェイプ";
+"imageEditor.developmentSampleName" = "名称未設定キャンバス";
+"imageEditor.developmentSampleLayerName" = "レイヤー 1";
+"imageEditor.startup.loading" = "画像エディタを開いています…";
 "imageEditor.defaultSourceName" = "画像";
 "imageEditor.menu.file" = "ファイル";
 "imageEditor.menu.edit" = "編集";
@@ -402,6 +403,9 @@
 "imageEditor.action.colorDefaultForegroundBackground" = "描画色/背景色を初期化";
 "imageEditor.action.colorSwapForegroundBackground" = "描画色/背景色を入れ替え";
 "imageEditor.action.colorUseEyedropper" = "スポイトを使用";
+"imageEditor.action.colorSampleScreenForeground" = "画面から描画色を取得";
+"imageEditor.action.colorSampleScreenBackground" = "画面から背景色を取得";
+"imageEditor.action.preview" = "プレビュー";
 "imageEditor.action.swatchesShowPanel" = "スウォッチパネルを表示";
 "imageEditor.action.brushesShowPanel" = "ブラシパネルを表示";
 "imageEditor.action.characterShowPanel" = "文字パネルを表示";
@@ -419,6 +423,8 @@
 "imageEditor.action.historyShowPanelVisibility" = "履歴パネルを表示";
 "imageEditor.action.channelsShowPanel" = "チャンネルパネルを表示";
 "imageEditor.action.cancel" = "キャンセル";
+"imageEditor.action.cropConfirm" = "切り抜きを確定";
+"imageEditor.action.cropCancel" = "切り抜きをキャンセル";
 "imageEditor.action.apply" = "プレビューへ適用";
 "imageEditor.action.export" = "書き出し";
 "imageEditor.action.applySelection" = "選択範囲を適用";
@@ -433,6 +439,15 @@
 "imageEditor.export.format.png" = "PNG";
 "imageEditor.export.format.jpeg" = "JPEG";
 "imageEditor.export.format.webp" = "WebP";
+"imageEditor.export.format.psd" = "PSD";
+"imageEditor.psd.error.invalid" = "PSD ファイルの構造が無効です。";
+"imageEditor.psd.error.unsupportedDocument" = "この PSD のカラーモード、ビット深度、またはサイズはまだ対応していません。";
+"imageEditor.psd.error.unsupportedCompression" = "この PSD のレイヤー圧縮方式はまだ対応していません。";
+"imageEditor.psd.error.imageEncodingFailed" = "レイヤーを PSD ピクセルデータとしてエンコードできません。";
+"imageEditor.history.psdOpen" = "PSD を開く";
+"imageEditor.history.psdOpenFlattened" = "PSD を合成画像として開く";
+"imageEditor.status.psdOpened" = "PSD を開きました：%@";
+"imageEditor.status.psdOpenedFlattened" = "未対応のレイヤー機能があるため、合成画像として開きました：%@";
 "imageEditor.export.scope" = "範囲";
 "imageEditor.export.scope.composited" = "合成画像";
 "imageEditor.export.scope.selectedLayer" = "現在のレイヤー";
@@ -443,6 +458,7 @@
 "imageEditor.export.outputSize" = "出力サイズ";
 "imageEditor.export.saveAs" = "別名で保存";
 "imageEditor.action.applyAdjustment" = "調整を適用";
+"imageEditor.action.applyFilter" = "フィルターを適用";
 "imageEditor.action.lastFilter" = "最後のフィルター";
 "imageEditor.action.autoLevels" = "自動レベル補正";
 "imageEditor.action.autoContrast" = "自動コントラスト";
@@ -492,6 +508,11 @@
 "imageEditor.selectionMode.intersect.short" = "共通";
 "imageEditor.tool.move" = "移動";
 "imageEditor.tool.marquee" = "矩形選択";
+"imageEditor.option.marqueeShape" = "選択範囲の形状を選択";
+"imageEditor.marqueeShape.rectangle" = "長方形";
+"imageEditor.marqueeShape.square" = "正方形";
+"imageEditor.marqueeShape.ellipse" = "楕円";
+"imageEditor.marqueeShape.circle" = "円";
 "imageEditor.tool.lasso" = "なげなわ";
 "imageEditor.tool.magicWand" = "自動選択";
 "imageEditor.tool.quickSelection" = "クイック選択";
@@ -523,7 +544,7 @@
 "imageEditor.tool.lasso.help" = "なげなわ：輪郭に沿って自由に選択範囲を描きます。";
 "imageEditor.tool.magicWand.help" = "自動選択：近い色の連続した領域を選択します。";
 "imageEditor.tool.quickSelection.help" = "クイック選択：類似ピクセルをブラシでなぞって選択範囲を広げます。";
-"imageEditor.tool.crop.help" = "切り抜き：枠をドラッグして必要な画像領域を残します。";
+"imageEditor.tool.crop.help" = "切り抜き：範囲をドラッグでプレビューしてから、確定またはキャンセルします。";
 "imageEditor.tool.brush.help" = "ブラシ：現在編集できるレイヤーに前景色で描画します。";
 "imageEditor.tool.eraser.help" = "消しゴム：現在編集できるレイヤーからピクセルを消去します。";
 "imageEditor.tool.cloneStamp.help" = "コピースタンプ：サンプル元のピクセルを筆跡へ複製します。";
@@ -964,6 +985,7 @@
 "imageEditor.layer.selectionCount" = "%d 個のレイヤーを選択中";
 "imageEditor.layer.searchPlaceholder" = "レイヤーを検索";
 "imageEditor.layer.searchEmpty" = "一致するレイヤーはありません";
+"imageEditor.layer.advancedControls" = "詳細レイヤー設定";
 "imageEditor.layer.label.red" = "赤";
 "imageEditor.layer.label.orange" = "オレンジ";
 "imageEditor.layer.label.yellow" = "黄";
@@ -1323,6 +1345,8 @@
 "imageEditor.status.colorDefaultForegroundBackground" = "描画色と背景色を白黒に戻しました";
 "imageEditor.status.colorSwapForegroundBackground" = "描画色と背景色を入れ替えました";
 "imageEditor.status.colorEyedropperReady" = "スポイトでカラーを取得できます";
+"imageEditor.status.colorScreenSampledForeground" = "画面から描画色を取得しました";
+"imageEditor.status.colorScreenSampledBackground" = "画面から背景色を取得しました";
 "imageEditor.status.swatchesPanelSummary" = "標準スウォッチ：%@";
 "imageEditor.status.swatchForegroundApplied" = "描画色を%@に設定しました（%@）";
 "imageEditor.status.swatchBackgroundApplied" = "背景色を%@に設定しました（%@）";
@@ -1842,6 +1866,9 @@
 "imageEditor.action.layerScaleUp" = "レイヤーを拡大";
 "imageEditor.action.layerResizeHandle" = "ドラッグしてレイヤーを拡大縮小。Shift で比率を固定";
 "imageEditor.action.layerRotateHandle" = "ドラッグしてレイヤーを回転。Shift で 15° ごとにスナップ";
+"imageEditor.action.layerMore" = "その他のレイヤー操作";
+"imageEditor.action.layerMoreOpenMenu" = "その他のコマンドは上部の「レイヤー」メニューへ";
+"imageEditor.status.layerMoreOpenMenu" = "すべてのレイヤーコマンドは上部の「レイヤー」メニューにあります。";
 "imageEditor.action.layerRotateLeft" = "レイヤーを左回転";
 "imageEditor.action.layerRotateRight" = "レイヤーを右回転";
 "imageEditor.action.layerRotate90Left" = "反時計回りに 90° 回転";
@@ -1948,6 +1975,7 @@
 "imageEditor.action.channelSaveCurrentAsAlpha" = "現在のプレビューチャンネルを Alpha チャンネルとして保存";
 "imageEditor.action.channelSaveAsAlpha" = "%@ を Alpha チャンネルとして保存";
 "imageEditor.action.alphaChannelSelect" = "Alpha チャンネルをプレビューして選択";
+"imageEditor.action.alphaChannelMore" = "%@ のその他の操作";
 "imageEditor.action.alphaChannelLoadSelection" = "%@ を選択範囲として読み込み";
 "imageEditor.action.alphaChannelUpdate" = "現在の選択範囲で %@ を更新";
 "imageEditor.action.alphaChannelSelectionAdd" = "現在の選択範囲を %@ に追加";
@@ -2215,3 +2243,6 @@
 "imageEditor.layerEffectContour.cone" = "コーン";
 "imageEditor.layerEffectContour.ring" = "リング";
 "action.done" = "完了";
+"imageEditor.action.historySelect" = "この履歴ステップを選択";
+"imageEditor.status.historyEntrySelected" = "履歴ステップを選択しました：%@";
+"imageEditor.status.historyTruncated" = "選択したステップ以降の操作を %d 件削除しました";

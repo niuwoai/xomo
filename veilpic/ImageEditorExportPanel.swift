@@ -42,12 +42,14 @@ struct ImageEditorExportPanel: View {
                 }
                 .pickerStyle(.segmented)
 
-                Stepper(
-                    L10n.format("imageEditor.export.scaleValue", viewModel.exportSettings.scale),
-                    value: scaleBinding,
-                    in: 0.25...4,
-                    step: 0.25
-                )
+                if viewModel.exportSettings.usesScale {
+                    Stepper(
+                        L10n.format("imageEditor.export.scaleValue", viewModel.exportSettings.scale),
+                        value: scaleBinding,
+                        in: 0.25...4,
+                        step: 0.25
+                    )
+                }
 
                 if viewModel.exportSettings.usesQuality {
                     HStack {
@@ -106,9 +108,9 @@ struct ImageEditorExportPanel: View {
         case .composited:
             false
         case .selectedLayer:
-            !viewModel.canExportSelectedLayer
+            viewModel.exportSettings.format == .psd || !viewModel.canExportSelectedLayer
         case .selectedLayers:
-            !viewModel.canExportSelectedLayers
+            viewModel.exportSettings.format == .psd || !viewModel.canExportSelectedLayers
         }
     }
 

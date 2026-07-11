@@ -24,7 +24,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		5C64E7382FBCBBFB00FCD09D /* QPic.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = QPic.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		5C64E7382FBCBBFB00FCD09D /* Xomo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Xomo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5C64E7472FBCBBFC00FCD09D /* veilpicTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = veilpicTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		5C64E7512FBCBBFC00FCD09D /* veilpicUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = veilpicUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -85,7 +85,7 @@
 		5C64E7392FBCBBFB00FCD09D /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				5C64E7382FBCBBFB00FCD09D /* QPic.app */,
+				5C64E7382FBCBBFB00FCD09D /* Xomo.app */,
 				5C64E7472FBCBBFC00FCD09D /* veilpicTests.xctest */,
 				5C64E7512FBCBBFC00FCD09D /* veilpicUITests.xctest */,
 			);
@@ -102,6 +102,7 @@
 				5C64E7342FBCBBFB00FCD09D /* Sources */,
 				5C64E7352FBCBBFB00FCD09D /* Frameworks */,
 				5C64E7362FBCBBFB00FCD09D /* Resources */,
+				F1E000012026071100000001 /* Ad-hoc Sign Debug Product */,
 			);
 			buildRules = (
 			);
@@ -114,7 +115,7 @@
 			packageProductDependencies = (
 			);
 			productName = veilpic;
-			productReference = 5C64E7382FBCBBFB00FCD09D /* QPic.app */;
+			productReference = 5C64E7382FBCBBFB00FCD09D /* Xomo.app */;
 			productType = "com.apple.product-type.application";
 		};
 		5C64E7462FBCBBFC00FCD09D /* veilpicTests */ = {
@@ -124,6 +125,7 @@
 				5C64E7432FBCBBFC00FCD09D /* Sources */,
 				5C64E7442FBCBBFC00FCD09D /* Frameworks */,
 				5C64E7452FBCBBFC00FCD09D /* Resources */,
+				F1E000022026071100000001 /* Ad-hoc Sign Debug Product */,
 			);
 			buildRules = (
 			);
@@ -147,6 +149,7 @@
 				5C64E74D2FBCBBFC00FCD09D /* Sources */,
 				5C64E74E2FBCBBFC00FCD09D /* Frameworks */,
 				5C64E74F2FBCBBFC00FCD09D /* Resources */,
+				F1E000032026071100000001 /* Ad-hoc Sign Debug Product */,
 			);
 			buildRules = (
 			);
@@ -231,6 +234,58 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		F1E000012026071100000001 /* Ad-hoc Sign Debug Product */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/scripts/adhoc_sign_debug_product.sh",
+				"$(SRCROOT)/veilpic/Debug.entitlements",
+			);
+			name = "Ad-hoc Sign Debug Product";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/bash;
+			shellScript = "\"${SRCROOT}/scripts/adhoc_sign_debug_product.sh\"\n";
+		};
+		F1E000022026071100000001 /* Ad-hoc Sign Debug Product */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/scripts/adhoc_sign_debug_product.sh",
+			);
+			name = "Ad-hoc Sign Debug Product";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/bash;
+			shellScript = "\"${SRCROOT}/scripts/adhoc_sign_debug_product.sh\"\n";
+		};
+		F1E000032026071100000001 /* Ad-hoc Sign Debug Product */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/scripts/adhoc_sign_debug_product.sh",
+			);
+			name = "Ad-hoc Sign Debug Product";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/bash;
+			shellScript = "\"${SRCROOT}/scripts/adhoc_sign_debug_product.sh\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		5C64E7342FBCBBFB00FCD09D /* Sources */ = {
@@ -395,7 +450,8 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = ZH2S7D6PL6;
@@ -406,22 +462,23 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readwrite;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = QPic;
-				INFOPLIST_KEY_CFBundleName = QPic;
+				INFOPLIST_KEY_CFBundleDisplayName = Xomo;
+				INFOPLIST_KEY_CFBundleName = Xomo;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.456.0;
-				PRODUCT_BUNDLE_IDENTIFIER = im.some.veilpic;
-				PRODUCT_NAME = QPic;
+				MARKETING_VERSION = 1.457.0-rc26;
+				PRODUCT_BUNDLE_IDENTIFIER = im.some.xomo;
+				PRODUCT_NAME = Xomo;
 				PRODUCT_MODULE_NAME = musepic;
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 			};
@@ -443,16 +500,16 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readwrite;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = QPic;
-				INFOPLIST_KEY_CFBundleName = QPic;
+				INFOPLIST_KEY_CFBundleDisplayName = Xomo;
+				INFOPLIST_KEY_CFBundleName = Xomo;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.456.0;
-				PRODUCT_BUNDLE_IDENTIFIER = im.some.veilpic;
-				PRODUCT_NAME = QPic;
+				MARKETING_VERSION = 1.457.0-rc26;
+				PRODUCT_BUNDLE_IDENTIFIER = im.some.xomo;
+				PRODUCT_NAME = Xomo;
 				PRODUCT_MODULE_NAME = musepic;
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -468,20 +525,21 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = ZH2S7D6PL6;
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 26.3;
-				MARKETING_VERSION = 1.456.0;
-				PRODUCT_BUNDLE_IDENTIFIER = im.some.veilpicTests;
+				MARKETING_VERSION = 1.457.0-rc26;
+				PRODUCT_BUNDLE_IDENTIFIER = im.some.xomoTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/QPic.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/QPic";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Xomo.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Xomo";
 			};
 			name = Debug;
 		};
@@ -494,27 +552,28 @@
 				DEVELOPMENT_TEAM = ZH2S7D6PL6;
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 26.3;
-				MARKETING_VERSION = 1.456.0;
-				PRODUCT_BUNDLE_IDENTIFIER = im.some.veilpicTests;
+				MARKETING_VERSION = 1.457.0-rc26;
+				PRODUCT_BUNDLE_IDENTIFIER = im.some.xomoTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/QPic.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/QPic";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Xomo.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Xomo";
 			};
 			name = Release;
 		};
 		5C64E7622FBCBBFC00FCD09D /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = ZH2S7D6PL6;
 				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.456.0;
-				PRODUCT_BUNDLE_IDENTIFIER = im.some.veilpicUITests;
+				MARKETING_VERSION = 1.457.0-rc26;
+				PRODUCT_BUNDLE_IDENTIFIER = im.some.xomoUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -532,8 +591,8 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = ZH2S7D6PL6;
 				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.456.0;
-				PRODUCT_BUNDLE_IDENTIFIER = im.some.veilpicUITests;
+				MARKETING_VERSION = 1.457.0-rc26;
+				PRODUCT_BUNDLE_IDENTIFIER = im.some.xomoUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;

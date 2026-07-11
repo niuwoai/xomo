@@ -31,12 +31,22 @@ private struct ImageEditorSmartObjectConversionPlan {
 
 @MainActor
 final class ImageEditorViewModel: ObservableObject {
+    static let minimumZoom: CGFloat = 0.08
+    static let maximumZoom: CGFloat = 8
+
+    private var preservesRenderedImageCachesForNextDocumentMutation = false
+
     @Published var document: ImageEditorDocument {
         didSet {
+            if preservesRenderedImageCachesForNextDocumentMutation {
+                preservesRenderedImageCachesForNextDocumentMutation = false
+                return
+            }
             invalidateRenderedImageCaches()
         }
     }
     @Published var selectedTool: ImageEditorTool = .move
+    @Published var marqueeShape: ImageEditorMarqueeShape = .rectangle
     @Published var zoom: CGFloat = 1
     @Published var canvasViewportSize: CGSize = .zero
     @Published var canvasOffset: CGSize = .zero
@@ -56,8 +66,9 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var colorRangeSampleMode: ImageEditorColorRangeSampleMode = .replace
     @Published var colorRangeTolerance: CGFloat = 0.22
     @Published var colorRangeInverted = false
-    @Published var foregroundColor: NSColor = .systemRed
-    @Published var backgroundColor: NSColor = .clear
+    @Published var foregroundColor: NSColor = .black
+    @Published var backgroundColor: NSColor = .white
+    private var screenColorSampler: NSColorSampler?
     @Published var cloneSourcePoint: CGPoint?
     @Published private(set) var isSettingCloneSource = false
     @Published private(set) var colorSamplerPoints: [ImageEditorColorSamplerPoint] = []
@@ -206,14 +217,19 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var isExportSheetPresented = false
     @Published var namedHistorySnapshots: [ImageEditorHistorySnapshot] = []
     @Published var selectedHistorySnapshotID: UUID?
+    @Published var selectedHistoryEntryID: UUID?
 
     // SwiftUI reads these values from several panels in one render pass. Keep all
     // pixel work behind one document-scoped cache rather than recompositing per view.
     private var cachedCurrentImage: NSImage?
     private var cachedChannelPreviewImages: [String: NSImage] = [:]
     private var cachedAlphaChannelPreviewImages: [UUID: NSImage] = [:]
+    private var cachedChannelThumbnailImages: [String: NSImage] = [:]
+    private var cachedAlphaChannelThumbnailImages: [UUID: NSImage] = [:]
     private var cachedHistogramSummary: ImageEditorHistogramSummary?
     var cachedLayerTransparencySelectionAvailability: Bool?
+    var cachedLayerTransformContentFrames: [UUID: CGRect] = [:]
+    var cachedEmptyTransformLayerIDs = Set<UUID>()
 
     var undoStack: [ImageEditorDocument] = []
     var redoStack: [ImageEditorDocument] = []
@@ -237,16 +253,22 @@ final class ImageEditorViewModel: ObservableObject {
     private let onApply: (NSImage) -> Void
 
     init(sourceName: String, image: NSImage, onApply: @escaping (NSImage) -> Void) {
-        document = ImageEditorDocument(sourceName: sourceName, image: image.normalizedBitmapImage())
+        document = ImageEditorDocument(sourceName: sourceName, image: image)
         self.onApply = onApply
+        cachedCurrentImage = document.layers.first?.image
         syncSizeControlsFromDocument()
         recordCurrentHistorySnapshot()
         updateStatus()
     }
 
-    init(document: ImageEditorDocument, onApply: @escaping (NSImage) -> Void) {
+    init(
+        document: ImageEditorDocument,
+        initialCompositeImage: NSImage? = nil,
+        onApply: @escaping (NSImage) -> Void
+    ) {
         self.document = document
         self.onApply = onApply
+        cachedCurrentImage = initialCompositeImage
         syncSizeControlsFromDocument()
         recordCurrentHistorySnapshot()
         updateStatus()
@@ -280,6 +302,29 @@ final class ImageEditorViewModel: ObservableObject {
         return image
     }
 
+    func channelThumbnailImage(for channel: ImageEditorChannelPreview) -> NSImage {
+        let key = channel.rawValue
+        if let image = cachedChannelThumbnailImages[key] {
+            return image
+        }
+
+        let image = currentImage
+            .thumbnailImage(targetSize: Self.channelThumbnailSize)
+            .channelPreview(channel)
+        cachedChannelThumbnailImages[key] = image
+        return image
+    }
+
+    func alphaChannelThumbnailImage(_ channel: ImageEditorAlphaChannel) -> NSImage {
+        if let image = cachedAlphaChannelThumbnailImages[channel.id] {
+            return image
+        }
+
+        let image = channel.mask.grayscaleThumbnailImage(targetSize: Self.channelThumbnailSize)
+        cachedAlphaChannelThumbnailImages[channel.id] = image
+        return image
+    }
+
     func selectChannelPreview(_ channel: ImageEditorChannelPreview) {
         selectedChannelPreview = channel
         previewedAlphaChannelID = nil
@@ -301,6 +346,14 @@ final class ImageEditorViewModel: ObservableObject {
             undoStack.count,
             redoStack.count
         )
+    }
+
+    var canTruncateSelectedHistory: Bool {
+        guard let selectedHistoryEntryID,
+              let index = document.history.firstIndex(where: { $0.id == selectedHistoryEntryID }),
+              index > 0
+        else { return false }
+        return historySnapshots[document.history[index - 1].id] != nil
     }
 
     var selectedHistorySnapshot: ImageEditorHistorySnapshot? {
@@ -1151,6 +1204,42 @@ final class ImageEditorViewModel: ObservableObject {
         statusText = L10n.text("imageEditor.status.colorEyedropperReady")
     }
 
+    func sampleScreenColorForForeground() {
+        let sampler = NSColorSampler()
+        screenColorSampler = sampler
+        sampler.show { [weak self] color in
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                self.screenColorSampler = nil
+                guard let color else { return }
+                self.applyScreenSampledForegroundColor(color)
+            }
+        }
+    }
+
+    func sampleScreenColorForBackground() {
+        let sampler = NSColorSampler()
+        screenColorSampler = sampler
+        sampler.show { [weak self] color in
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                self.screenColorSampler = nil
+                guard let color else { return }
+                self.applyScreenSampledBackgroundColor(color)
+            }
+        }
+    }
+
+    func applyScreenSampledForegroundColor(_ color: NSColor) {
+        foregroundColor = color
+        statusText = L10n.text("imageEditor.status.colorScreenSampledForeground")
+    }
+
+    func applyScreenSampledBackgroundColor(_ color: NSColor) {
+        backgroundColor = color
+        statusText = L10n.text("imageEditor.status.colorScreenSampledBackground")
+    }
+
     func applySwatchToForeground(_ swatch: ImageEditorColorSwatch) {
         foregroundColor = swatch.color
         statusText = L10n.format("imageEditor.status.swatchForegroundApplied", swatch.title, colorText)
@@ -1348,15 +1437,23 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func zoomIn() {
-        zoom = min(zoom * 1.2, 8)
+        setZoom(zoom * 1.2)
     }
 
     func zoomOut() {
-        zoom = max(zoom / 1.2, 0.08)
+        setZoom(zoom / 1.2)
+    }
+
+    func setZoom(_ requestedZoom: CGFloat) {
+        guard requestedZoom.isFinite else { return }
+        ensureToolsPanelVisibleForZoom()
+        zoom = min(max(requestedZoom, Self.minimumZoom), Self.maximumZoom)
+        statusText = L10n.format("imageEditor.status.zoom", zoomText)
     }
 
     func magnifyCanvas(_ magnification: CGFloat, at location: CGPoint, viewportSize: CGSize) {
         guard magnification.isFinite, magnification > 0 else { return }
+        ensureToolsPanelVisibleForZoom()
         let baseZoom: CGFloat
         let baseOffset: CGSize
         if let anchorZoom = magnifyBaseZoom, let anchorOffset = magnifyBaseOffset {
@@ -1368,7 +1465,7 @@ final class ImageEditorViewModel: ObservableObject {
             magnifyBaseZoom = zoom
             magnifyBaseOffset = canvasOffset
         }
-        let newZoom = min(max(baseZoom * magnification, 0.08), 8)
+        let newZoom = min(max(baseZoom * magnification, Self.minimumZoom), Self.maximumZoom)
         let scaleRatio = baseZoom > 0 ? newZoom / baseZoom : 1
         // Keep the image point under `location` fixed while zooming (anchor-at-cursor).
         if viewportSize.width > 0, viewportSize.height > 0, scaleRatio != 1 {
@@ -1389,6 +1486,7 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func zoomActualPixels() {
+        ensureToolsPanelVisibleForZoom()
         guard let targetZoom = actualPixelsZoomFactor(for: canvasViewportSize) else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
@@ -1399,6 +1497,7 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func fitZoom() {
+        ensureToolsPanelVisibleForZoom()
         guard let targetZoom = fitZoomFactor(for: canvasViewportSize) else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
@@ -1406,6 +1505,12 @@ final class ImageEditorViewModel: ObservableObject {
         zoom = targetZoom
         canvasOffset = .zero
         statusText = L10n.text("imageEditor.status.zoomFitOnScreen")
+    }
+
+    private func ensureToolsPanelVisibleForZoom() {
+        if !areToolsPanelVisible {
+            areToolsPanelVisible = true
+        }
     }
 
     func updateCanvasViewportSize(_ size: CGSize) {
@@ -1432,7 +1537,7 @@ final class ImageEditorViewModel: ObservableObject {
             viewportSize.height / max(imageSize.height, 1)
         ) * 0.74
         guard baseScale.isFinite, baseScale > 0 else { return nil }
-        return min(max(1 / baseScale, 0.08), 8)
+        return min(max(1 / baseScale, Self.minimumZoom), Self.maximumZoom)
     }
 
     func fitZoomFactor(for viewportSize: CGSize) -> CGFloat? {
@@ -1467,6 +1572,7 @@ final class ImageEditorViewModel: ObservableObject {
         guard let previous = undoStack.popLast() else { return }
         redoStack.append(document)
         document = previous
+        selectedHistoryEntryID = document.history.last?.id
         ensureSelectedLayer()
         syncAdjustmentControlsFromSelection()
         syncFilterControlsFromSelection()
@@ -1479,6 +1585,7 @@ final class ImageEditorViewModel: ObservableObject {
         guard let next = redoStack.popLast() else { return }
         undoStack.append(document)
         document = next
+        selectedHistoryEntryID = document.history.last?.id
         ensureSelectedLayer()
         syncAdjustmentControlsFromSelection()
         syncFilterControlsFromSelection()
@@ -1501,11 +1608,45 @@ final class ImageEditorViewModel: ObservableObject {
         appendHistory(L10n.text("imageEditor.history.revert"))
     }
 
+    func selectHistoryEntry(_ id: UUID) {
+        guard let entry = document.history.first(where: { $0.id == id }) else { return }
+        selectedHistoryEntryID = id
+        statusText = L10n.format("imageEditor.status.historyEntrySelected", entry.title)
+    }
+
+    func truncateSelectedHistory() {
+        guard let selectedHistoryEntryID else { return }
+        truncateHistory(from: selectedHistoryEntryID)
+    }
+
+    func truncateHistory(from id: UUID) {
+        guard let index = document.history.firstIndex(where: { $0.id == id }),
+              index > 0,
+              let previousDocument = historySnapshots[document.history[index - 1].id]
+        else { return }
+
+        let removedCount = document.history.count - index
+        pushUndo()
+        document = previousDocument
+        selectedHistoryEntryID = document.history.last?.id
+        ensureSelectedLayer()
+        syncAdjustmentControlsFromSelection()
+        syncFilterControlsFromSelection()
+        syncTextControlsFromSelection()
+        syncShapeControlsFromSelection()
+        updateStatus()
+        statusText = L10n.format("imageEditor.status.historyTruncated", removedCount)
+    }
+
     func createHistorySnapshot() {
         let name = uniqueHistorySnapshotName(
             L10n.format("imageEditor.history.snapshotName", namedHistorySnapshots.count + 1)
         )
-        let snapshot = ImageEditorHistorySnapshot(name: name, document: document)
+        let snapshot = ImageEditorHistorySnapshot(
+            name: name,
+            document: document,
+            renderedImage: currentImage
+        )
         namedHistorySnapshots.append(snapshot)
         selectedHistorySnapshotID = snapshot.id
         statusText = L10n.format("imageEditor.status.historySnapshotCreated", name)
@@ -1537,6 +1678,7 @@ final class ImageEditorViewModel: ObservableObject {
         syncShapeControlsFromSelection()
         selectedHistorySnapshotID = id
         appendHistory(L10n.text("imageEditor.history.snapshotRestore"))
+        cachedCurrentImage = snapshot.renderedImage
         statusText = L10n.format("imageEditor.status.historySnapshotRestored", snapshot.name)
     }
 
@@ -1627,15 +1769,48 @@ final class ImageEditorViewModel: ObservableObject {
         statusText = L10n.text("imageEditor.status.selectionInverted")
     }
 
-    func createRectSelection(from start: CGPoint, to end: CGPoint) {
-        let rect = CGRect(
-            x: min(start.x, end.x),
-            y: min(start.y, end.y),
-            width: abs(end.x - start.x),
-            height: abs(end.y - start.y)
+    func selectMarqueeShape(_ shape: ImageEditorMarqueeShape) {
+        marqueeShape = shape
+        selectTool(.marquee)
+    }
+
+    func marqueeSelectionRect(from start: CGPoint, to end: CGPoint) -> CGRect {
+        let adjustedEnd: CGPoint
+        if marqueeShape.hasFixedAspectRatio {
+            let side = min(abs(end.x - start.x), abs(end.y - start.y))
+            adjustedEnd = CGPoint(
+                x: start.x + (end.x >= start.x ? side : -side),
+                y: start.y + (end.y >= start.y ? side : -side)
+            )
+        } else {
+            adjustedEnd = end
+        }
+        return CGRect(
+            x: min(start.x, adjustedEnd.x),
+            y: min(start.y, adjustedEnd.y),
+            width: abs(adjustedEnd.x - start.x),
+            height: abs(adjustedEnd.y - start.y)
         ).intersection(CGRect(origin: .zero, size: document.canvasSize))
+    }
+
+    func createMarqueeSelection(from start: CGPoint, to end: CGPoint) {
+        let rect = marqueeSelectionRect(from: start, to: end)
         guard rect.width > 2, rect.height > 2 else { return }
-        applySelectionCandidate(.rectangle(rect), replaceHistoryKey: "imageEditor.history.selection")
+        let selection: ImageEditorSelection?
+        if marqueeShape.isEllipse {
+            selection = ImageEditorSelection.ellipse(rect)
+        } else {
+            selection = .rectangle(rect)
+        }
+        guard let selection else { return }
+        applySelectionCandidate(selection, replaceHistoryKey: "imageEditor.history.selection")
+    }
+
+    func createRectSelection(from start: CGPoint, to end: CGPoint) {
+        let previousShape = marqueeShape
+        marqueeShape = .rectangle
+        createMarqueeSelection(from: start, to: end)
+        marqueeShape = previousShape
     }
 
     func createLassoSelection(points: [CGPoint]) {
@@ -1697,7 +1872,9 @@ final class ImageEditorViewModel: ObservableObject {
         )
 
         pushUndo()
-        document.selection = nextSelection
+        mutateDocumentWithoutInvalidatingRenderedImageCaches { document in
+            document.selection = nextSelection
+        }
         let historyKey = selectionMode == .replace ? replaceHistoryKey : selectionMode.historyKey
         appendHistory(L10n.text(historyKey))
         statusText = nextSelection == nil
@@ -3084,9 +3261,26 @@ final class ImageEditorViewModel: ObservableObject {
             paintSelectedLayerMask(points: points, reveal: erase)
             return
         }
-        transformSelectedLayer(historyTitle: erase ? L10n.text("imageEditor.history.erase") : L10n.text("imageEditor.history.brush")) { image in
-            image.withStroke(points: points, color: foregroundColor, width: brushSize, opacity: opacity, erase: erase)
+        guard let layer = editableSelectedLayer() else {
+            statusText = L10n.text("imageEditor.status.layerLocked")
+            return
         }
+        let localPoints = rasterLocalPoints(points, layer: layer)
+        guard let output = layer.image.withStroke(
+            points: localPoints,
+            color: foregroundColor,
+            width: rasterLocalBrushWidth(brushSize, layer: layer),
+            opacity: opacity,
+            erase: erase
+        ) else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+        replaceSelectedLayerRenderedPixels(
+            output,
+            historyTitle: erase ? L10n.text("imageEditor.history.erase") : L10n.text("imageEditor.history.brush"),
+            resetFrame: false
+        )
     }
 
     func setCloneSource(at point: CGPoint?) {
@@ -3117,23 +3311,26 @@ final class ImageEditorViewModel: ObservableObject {
             return
         }
 
+        let localPoints = rasterLocalPoints(points, layer: layer)
+        let localSourcePoint = rasterLocalPoint(sourcePoint, layer: layer)
+        let localDestinationStart = rasterLocalPoint(destinationStart, layer: layer)
         let sourceOffset = CGSize(
-            width: sourcePoint.x - destinationStart.x,
-            height: sourcePoint.y - destinationStart.y
+            width: localSourcePoint.x - localDestinationStart.x,
+            height: localSourcePoint.y - localDestinationStart.y
         )
         let sourceImage = layer.image.normalizedBitmapImage()
         guard let output = sourceImage.withCloneStamp(
-            points: points,
+            points: localPoints,
             sourceOffset: sourceOffset,
             sourceImage: sourceImage,
-            width: brushSize,
+            width: rasterLocalBrushWidth(brushSize, layer: layer),
             opacity: opacity
         ) else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
 
-        replaceSelectedLayerPixels(
+        replaceSelectedLayerRenderedPixels(
             output,
             historyTitle: L10n.text("imageEditor.history.cloneStamp"),
             resetFrame: false
@@ -3152,9 +3349,10 @@ final class ImageEditorViewModel: ObservableObject {
             return
         }
         let sourceImage = layer.image.normalizedBitmapImage()
+        let localPoints = rasterLocalPoints(points, layer: layer)
         guard let output = sourceImage.withToneBrush(
-            points: points,
-            width: brushSize,
+            points: localPoints,
+            width: rasterLocalBrushWidth(brushSize, layer: layer),
             opacity: opacity,
             burn: burn
         ) else {
@@ -3162,7 +3360,7 @@ final class ImageEditorViewModel: ObservableObject {
             return
         }
 
-        replaceSelectedLayerPixels(
+        replaceSelectedLayerRenderedPixels(
             output,
             historyTitle: burn ? L10n.text("imageEditor.history.burn") : L10n.text("imageEditor.history.dodge"),
             resetFrame: false
@@ -3183,16 +3381,17 @@ final class ImageEditorViewModel: ObservableObject {
             return
         }
         let sourceImage = layer.image.normalizedBitmapImage()
+        let localPoints = rasterLocalPoints(points, layer: layer)
         guard let output = sourceImage.withSpongeBrush(
-            points: points,
-            width: brushSize,
+            points: localPoints,
+            width: rasterLocalBrushWidth(brushSize, layer: layer),
             opacity: opacity
         ) else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
 
-        replaceSelectedLayerPixels(
+        replaceSelectedLayerRenderedPixels(
             output,
             historyTitle: L10n.text("imageEditor.history.sponge"),
             resetFrame: false
@@ -3211,10 +3410,11 @@ final class ImageEditorViewModel: ObservableObject {
             return
         }
         let sourceImage = layer.image.normalizedBitmapImage()
-        let radius = max(1, min(18, brushSize * 0.35))
+        let localBrushWidth = rasterLocalBrushWidth(brushSize, layer: layer)
+        let radius = max(1, min(18, localBrushWidth * 0.35))
         guard let output = sourceImage.withBlurBrush(
-            points: points,
-            width: brushSize,
+            points: rasterLocalPoints(points, layer: layer),
+            width: localBrushWidth,
             opacity: opacity,
             radius: radius
         ) else {
@@ -3222,7 +3422,7 @@ final class ImageEditorViewModel: ObservableObject {
             return
         }
 
-        replaceSelectedLayerPixels(
+        replaceSelectedLayerRenderedPixels(
             output,
             historyTitle: L10n.text("imageEditor.history.blur"),
             resetFrame: false
@@ -3243,8 +3443,8 @@ final class ImageEditorViewModel: ObservableObject {
         let sourceImage = layer.image.normalizedBitmapImage()
         let intensity = max(0.35, min(1, opacity))
         guard let output = sourceImage.withSharpenBrush(
-            points: points,
-            width: brushSize,
+            points: rasterLocalPoints(points, layer: layer),
+            width: rasterLocalBrushWidth(brushSize, layer: layer),
             opacity: opacity,
             intensity: intensity
         ) else {
@@ -3252,7 +3452,7 @@ final class ImageEditorViewModel: ObservableObject {
             return
         }
 
-        replaceSelectedLayerPixels(
+        replaceSelectedLayerRenderedPixels(
             output,
             historyTitle: L10n.text("imageEditor.history.sharpen"),
             resetFrame: false
@@ -3272,15 +3472,15 @@ final class ImageEditorViewModel: ObservableObject {
         }
         let sourceImage = layer.image.normalizedBitmapImage()
         guard let output = sourceImage.withSmudgeBrush(
-            points: points,
-            width: brushSize,
+            points: rasterLocalPoints(points, layer: layer),
+            width: rasterLocalBrushWidth(brushSize, layer: layer),
             opacity: opacity
         ) else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
 
-        replaceSelectedLayerPixels(
+        replaceSelectedLayerRenderedPixels(
             output,
             historyTitle: L10n.text("imageEditor.history.smudge"),
             resetFrame: false
@@ -3300,15 +3500,15 @@ final class ImageEditorViewModel: ObservableObject {
         }
         let sourceImage = layer.image.normalizedBitmapImage()
         guard let output = sourceImage.withHealingBrush(
-            points: points,
-            width: brushSize,
+            points: rasterLocalPoints(points, layer: layer),
+            width: rasterLocalBrushWidth(brushSize, layer: layer),
             opacity: opacity
         ) else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
 
-        replaceSelectedLayerPixels(
+        replaceSelectedLayerRenderedPixels(
             output,
             historyTitle: L10n.text("imageEditor.history.healingBrush"),
             resetFrame: false
@@ -3328,8 +3528,8 @@ final class ImageEditorViewModel: ObservableObject {
         }
         let sourceImage = layer.image.normalizedBitmapImage()
         guard let output = sourceImage.withRedEyeReduction(
-            at: point,
-            radius: brushSize,
+            at: rasterLocalPoint(point, layer: layer),
+            radius: rasterLocalBrushWidth(brushSize, layer: layer),
             opacity: opacity
         ) else {
             statusText = L10n.text("imageEditor.status.operationFailed")
@@ -3356,7 +3556,7 @@ final class ImageEditorViewModel: ObservableObject {
         }
         let sourceImage = layer.image.normalizedBitmapImage()
         guard let output = sourceImage.withPaintBucketFill(
-            at: point,
+            at: rasterLocalPoint(point, layer: layer),
             color: foregroundColor,
             opacity: opacity,
             tolerance: tolerance
@@ -3479,7 +3679,11 @@ final class ImageEditorViewModel: ObservableObject {
         for index in indices {
             guard let normalized = outputs[index]?.normalizedBitmapImage() else { continue }
             let original = document.layers[index].image
-            let clipped = clippedToSelection(original: original, output: normalized)
+            let clipped = clippedToSelection(
+                original: original,
+                output: normalized,
+                layerFrame: document.layers[index].frame
+            )
             document.layers[index].image = document.isEffectivelyTransparencyLocked(document.layers[index])
                 ? (clipped.preservingAlpha(from: original) ?? clipped)
                 : clipped
@@ -3515,7 +3719,11 @@ final class ImageEditorViewModel: ObservableObject {
         for index in indices {
             guard let normalized = outputs[index]?.normalizedBitmapImage() else { continue }
             let original = document.layers[index].image
-            let clipped = clippedToSelection(original: original, output: normalized)
+            let clipped = clippedToSelection(
+                original: original,
+                output: normalized,
+                layerFrame: document.layers[index].frame
+            )
             document.layers[index].image = document.isEffectivelyTransparencyLocked(document.layers[index])
                 ? (clipped.preservingAlpha(from: original) ?? clipped)
                 : clipped
@@ -3883,7 +4091,21 @@ final class ImageEditorViewModel: ObservableObject {
         replaceSelectedLayerPixels(image, historyTitle: historyTitle, resetFrame: true)
     }
 
-    private func replaceSelectedLayerPixels(_ image: NSImage, historyTitle: String, resetFrame: Bool) {
+    private func replaceSelectedLayerRenderedPixels(_ image: NSImage, historyTitle: String, resetFrame: Bool) {
+        replaceSelectedLayerPixels(
+            image,
+            historyTitle: historyTitle,
+            resetFrame: resetFrame,
+            isRenderedBitmap: true
+        )
+    }
+
+    private func replaceSelectedLayerPixels(
+        _ image: NSImage,
+        historyTitle: String,
+        resetFrame: Bool,
+        isRenderedBitmap: Bool = false
+    ) {
         guard let index = document.selectedLayerIndex else { return }
         guard !document.isEffectivelyPixelsLocked(document.layers[index]) else {
             statusText = L10n.text("imageEditor.status.layerLocked")
@@ -3891,8 +4113,12 @@ final class ImageEditorViewModel: ObservableObject {
         }
         pushUndo()
         let original = document.layers[index].image
-        let normalized = image.normalizedBitmapImage()
-        let clippedOutput = clippedToSelection(original: original, output: normalized)
+        let normalized = isRenderedBitmap ? image : image.normalizedBitmapImage()
+        let clippedOutput = clippedToSelection(
+            original: original,
+            output: normalized,
+            layerFrame: document.layers[index].frame
+        )
         let output = document.isEffectivelyTransparencyLocked(document.layers[index])
             ? (clippedOutput.preservingAlpha(from: original) ?? clippedOutput)
             : clippedOutput
@@ -3920,13 +4146,23 @@ final class ImageEditorViewModel: ObservableObject {
             isEditingLayerMask = false
             return
         }
-        guard let updated = mask.withMaskStroke(points: points, width: brushSize, opacity: opacity, reveal: reveal) else {
+        let layer = document.layers[index]
+        let maskFrame = layer.isGroup ? CGRect(origin: .zero, size: document.canvasSize) : layer.frame
+        var maskLayer = layer
+        maskLayer.image = mask
+        maskLayer.frame = maskFrame
+        guard let updated = mask.withMaskStroke(
+            points: rasterLocalPoints(points, layer: maskLayer),
+            width: rasterLocalBrushWidth(brushSize, layer: maskLayer),
+            opacity: opacity,
+            reveal: reveal
+        ) else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
 
         pushUndo()
-        document.layers[index].mask = clippedToSelection(original: mask, output: updated)
+        document.layers[index].mask = clippedToSelection(original: mask, output: updated, layerFrame: maskFrame)
         appendHistory(reveal ? L10n.text("imageEditor.history.layerMaskReveal") : L10n.text("imageEditor.history.layerMaskHide"))
     }
 
@@ -3934,9 +4170,13 @@ final class ImageEditorViewModel: ObservableObject {
         layer.isGroup ? document.canvasSize : layer.image.size
     }
 
-    private func clippedToSelection(original: NSImage, output: NSImage) -> NSImage {
+    private func clippedToSelection(original: NSImage, output: NSImage, layerFrame: CGRect) -> NSImage {
         guard let selection = document.selection else { return output }
-        guard let mask = selectionMask(for: selection, size: original.size) else { return output }
+        guard let mask = selectionMask(
+            for: selection,
+            layerFrame: layerFrame,
+            layerSize: original.size
+        ) else { return output }
         let maskedOutput = NSImage.rendered(size: original.size) { _ in
             output.draw(
                 in: CGRect(origin: .zero, size: output.size),
@@ -3968,34 +4208,65 @@ final class ImageEditorViewModel: ObservableObject {
         } ?? output
     }
 
-    private func selectionMask(for selection: ImageEditorSelection, size: CGSize) -> NSImage? {
+    private func selectionMask(
+        for selection: ImageEditorSelection,
+        layerFrame: CGRect,
+        layerSize: CGSize
+    ) -> NSImage? {
+        let canvasSize = document.canvasSize
+        let canvasMask: NSImage?
         if let rasterMask = selection.rasterMask,
            let image = NSImage.selectionMaskImage(
             rasterMask,
             inverted: selection.isInverted,
-            targetSize: size
+            targetSize: canvasSize
            ) {
-            guard feather > 0 else { return image }
-            return image.blurred(radius: feather) ?? image
-        }
-        let hardMask = NSImage.rendered(size: size) { rect in
-            let path = selection.path()
-            if selection.isInverted {
-                NSColor.white.setFill()
-                rect.fill()
-                guard let context = NSGraphicsContext.current?.cgContext else { return }
-                context.saveGState()
-                context.setBlendMode(.clear)
-                NSColor.clear.setFill()
-                path.fill()
-                context.restoreGState()
-            } else {
-                NSColor.white.setFill()
-                path.fill()
+            canvasMask = feather > 0 ? (image.blurred(radius: feather) ?? image) : image
+        } else {
+            let hardMask = NSImage.rendered(size: canvasSize) { rect in
+                let path = selection.path()
+                if selection.isInverted {
+                    NSColor.white.setFill()
+                    rect.fill()
+                    guard let context = NSGraphicsContext.current?.cgContext else { return }
+                    context.saveGState()
+                    context.setBlendMode(.clear)
+                    NSColor.clear.setFill()
+                    path.fill()
+                    context.restoreGState()
+                } else {
+                    NSColor.white.setFill()
+                    path.fill()
+                }
             }
+            canvasMask = feather > 0 ? (hardMask?.blurred(radius: feather) ?? hardMask) : hardMask
         }
-        guard let hardMask, feather > 0 else { return hardMask }
-        return hardMask.blurred(radius: feather) ?? hardMask
+        guard let canvasMask else { return nil }
+        return NSImage.rendered(size: layerSize) { _ in
+            canvasMask.draw(
+                in: CGRect(origin: .zero, size: layerSize),
+                from: layerFrame,
+                operation: .copy,
+                fraction: 1
+            )
+        }
+    }
+
+    private func rasterLocalPoints(_ points: [CGPoint], layer: ImageEditorLayer) -> [CGPoint] {
+        points.map { rasterLocalPoint($0, layer: layer) }
+    }
+
+    private func rasterLocalPoint(_ point: CGPoint, layer: ImageEditorLayer) -> CGPoint {
+        CGPoint(
+            x: (point.x - layer.frame.minX) / max(layer.frame.width, 1) * layer.image.size.width,
+            y: (point.y - layer.frame.minY) / max(layer.frame.height, 1) * layer.image.size.height
+        )
+    }
+
+    private func rasterLocalBrushWidth(_ width: CGFloat, layer: ImageEditorLayer) -> CGFloat {
+        let scaleX = layer.image.size.width / max(layer.frame.width, 1)
+        let scaleY = layer.image.size.height / max(layer.frame.height, 1)
+        return width * sqrt(max(0.0001, scaleX * scaleY))
     }
 
     private func adjustedImage(
@@ -4237,7 +4508,11 @@ final class ImageEditorViewModel: ObservableObject {
         for index in indices {
             guard let normalized = outputs[index]?.normalizedBitmapImage() else { continue }
             let original = document.layers[index].image
-            let clipped = clippedToSelection(original: original, output: normalized)
+            let clipped = clippedToSelection(
+                original: original,
+                output: normalized,
+                layerFrame: document.layers[index].frame
+            )
             document.layers[index].image = document.isEffectivelyTransparencyLocked(document.layers[index]) ? (clipped.preservingAlpha(from: original) ?? clipped) : clipped
         }
         if indices.count == 1 { appendHistory(L10n.text(history)); statusText = L10n.text(status) }
@@ -5134,14 +5409,25 @@ final class ImageEditorViewModel: ObservableObject {
 
     func appendHistory(_ title: String) {
         let entry = ImageEditorHistoryEntry(title: title)
-        document.history.append(entry)
+        mutateDocumentWithoutInvalidatingRenderedImageCaches { document in
+            document.history.append(entry)
+        }
         historySnapshots[entry.id] = document
+        selectedHistoryEntryID = entry.id
         updateStatus()
+    }
+
+    private func mutateDocumentWithoutInvalidatingRenderedImageCaches(
+        _ mutation: (inout ImageEditorDocument) -> Void
+    ) {
+        preservesRenderedImageCachesForNextDocumentMutation = true
+        mutation(&document)
     }
 
     private func recordCurrentHistorySnapshot() {
         guard let entry = document.history.last else { return }
         historySnapshots[entry.id] = document
+        selectedHistoryEntryID = entry.id
     }
 
     private func uniqueHistorySnapshotName(_ baseName: String, excluding id: UUID? = nil) -> String {
@@ -5465,9 +5751,15 @@ final class ImageEditorViewModel: ObservableObject {
         cachedCurrentImage = nil
         cachedChannelPreviewImages.removeAll(keepingCapacity: true)
         cachedAlphaChannelPreviewImages.removeAll(keepingCapacity: true)
+        cachedChannelThumbnailImages.removeAll(keepingCapacity: true)
+        cachedAlphaChannelThumbnailImages.removeAll(keepingCapacity: true)
         cachedHistogramSummary = nil
         cachedLayerTransparencySelectionAvailability = nil
+        cachedLayerTransformContentFrames.removeAll(keepingCapacity: true)
+        cachedEmptyTransformLayerIDs.removeAll(keepingCapacity: true)
     }
+
+    private static let channelThumbnailSize = CGSize(width: 84, height: 56)
 
 }
 

@@ -12,6 +12,43 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct ImageEditorSelectionOperationTests {
+    @Test func imageEditorCreatesFixedAspectMarqueeShapes() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: testImage(size: canvasSize)) { _ in }
+
+        viewModel.selectMarqueeShape(.square)
+        viewModel.createMarqueeSelection(from: CGPoint(x: 10, y: 8), to: CGPoint(x: 42, y: 28))
+
+        var selection = try #require(viewModel.document.selection)
+        #expect(selection.bounds == CGRect(x: 10, y: 8, width: 20, height: 20))
+        #expect(!selection.isPolygon)
+
+        viewModel.selectMarqueeShape(.circle)
+        viewModel.createMarqueeSelection(from: CGPoint(x: 50, y: 40), to: CGPoint(x: 24, y: 12))
+
+        selection = try #require(viewModel.document.selection)
+        #expect(abs(selection.bounds.width - selection.bounds.height) < 0.001)
+        #expect(selection.bounds == CGRect(x: 24, y: 14, width: 26, height: 26))
+        #expect(selection.isPolygon)
+        #expect(selection.points.count == 64)
+    }
+
+    @Test func imageEditorCreatesEllipseMarqueeWithExpectedBounds() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: testImage(size: canvasSize)) { _ in }
+
+        viewModel.selectMarqueeShape(.ellipse)
+        viewModel.createMarqueeSelection(from: CGPoint(x: 8, y: 6), to: CGPoint(x: 56, y: 30))
+
+        let selection = try #require(viewModel.document.selection)
+        #expect(abs(selection.bounds.minX - 8) < 0.001)
+        #expect(abs(selection.bounds.minY - 6) < 0.001)
+        #expect(abs(selection.bounds.width - 48) < 0.001)
+        #expect(abs(selection.bounds.height - 24) < 0.001)
+        #expect(selection.contains(CGPoint(x: 32, y: 18)))
+        #expect(!selection.contains(CGPoint(x: 8, y: 6)))
+    }
+
     @Test func imageEditorSelectAllCoversCanvas() async throws {
         let canvasSize = NSSize(width: 40, height: 30)
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: testImage(size: canvasSize)) { _ in }

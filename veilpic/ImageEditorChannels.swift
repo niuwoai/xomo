@@ -51,8 +51,10 @@ enum ImageEditorLayerPanelTab: String, CaseIterable, Identifiable {
 @MainActor
 extension ImageEditorViewModel {
     var canSaveSelectionAsAlphaChannel: Bool {
-        guard let mask = document.selection?.rasterizedMask(canvasSize: document.canvasSize) else { return false }
-        return mask.selectedBounds(in: document.canvasSize) != nil
+        // SwiftUI reads this while rebuilding menus after every selection change.
+        // A selection object is only created after its bounds are proven non-empty,
+        // so rasterizing the entire canvas here adds latency without improving validity.
+        document.selection != nil
     }
 
     var canCreateBlankAlphaChannel: Bool {
@@ -1310,6 +1312,59 @@ extension NSImage {
 }
 
 extension ImageEditorSelectionMask {
+    func grayscaleThumbnailImage(targetSize: CGSize) -> NSImage {
+        guard width > 0,
+              height > 0,
+              alpha.count == width * height
+        else {
+            return NSImage(size: targetSize)
+        }
+
+        let outputWidth = max(1, Int(targetSize.width.rounded()))
+        let outputHeight = max(1, Int(targetSize.height.rounded()))
+        let scale = min(CGFloat(outputWidth) / CGFloat(width), CGFloat(outputHeight) / CGFloat(height))
+        let drawWidth = max(1, Int((CGFloat(width) * scale).rounded()))
+        let drawHeight = max(1, Int((CGFloat(height) * scale).rounded()))
+        let originX = (outputWidth - drawWidth) / 2
+        let originY = (outputHeight - drawHeight) / 2
+        let bytesPerPixel = 4
+        let bytesPerRow = outputWidth * bytesPerPixel
+        var pixels = [UInt8](repeating: 0, count: bytesPerRow * outputHeight)
+
+        for outputY in 0..<drawHeight {
+            let sourceY = min(height - 1, Int(CGFloat(outputY) / scale))
+            for outputX in 0..<drawWidth {
+                let sourceX = min(width - 1, Int(CGFloat(outputX) / scale))
+                let value = alpha[sourceY * width + sourceX]
+                let offset = (originY + outputY) * bytesPerRow + (originX + outputX) * bytesPerPixel
+                pixels[offset] = value
+                pixels[offset + 1] = value
+                pixels[offset + 2] = value
+                pixels[offset + 3] = UInt8.max
+            }
+        }
+
+        guard let provider = CGDataProvider(data: Data(pixels) as CFData),
+              let output = CGImage(
+                width: outputWidth,
+                height: outputHeight,
+                bitsPerComponent: 8,
+                bitsPerPixel: 32,
+                bytesPerRow: bytesPerRow,
+                space: CGColorSpaceCreateDeviceRGB(),
+                bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue),
+                provider: provider,
+                decode: nil,
+                shouldInterpolate: false,
+                intent: .defaultIntent
+              )
+        else {
+            return NSImage(size: targetSize)
+        }
+
+        return NSImage(cgImage: output, size: targetSize)
+    }
+
     func grayscalePreviewImage(targetSize: CGSize) -> NSImage {
         guard width > 0, height > 0, alpha.count == width * height else {
             return NSImage(size: targetSize)

@@ -40,6 +40,7 @@ SCHEME      = 'veilpic'
 DESTINATION = 'platform=macOS'
 TEST_TARGET = 'veilpicTests'
 TESTS_DIR   = File.join(__dir__, '..', TEST_TARGET)
+DERIVED_DATA_PATH = '/tmp/veilpic-isolated-tests'
 
 options = {
   jobs: 1,
@@ -94,6 +95,9 @@ def base_xcodebuild_args
     '-project', PROJECT,
     '-scheme', SCHEME,
     '-destination', DESTINATION,
+    '-derivedDataPath', DERIVED_DATA_PATH,
+    'QPIC_SKIP_ADHOC_SIGN=YES',
+    'ENABLE_USER_SCRIPT_SANDBOXING=NO',
   ]
 end
 

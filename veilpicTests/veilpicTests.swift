@@ -6257,6 +6257,21 @@ struct veilpicTests {
         #expect(outsideSelection.alphaComponent < 0.1)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.gradient"))
 
+        let verticalViewModel = ImageEditorViewModel(
+            sourceName: "vertical.png",
+            image: testImage(color: .clear, size: NSSize(width: 80, height: 60))
+        ) { _ in }
+        verticalViewModel.foregroundColor = .systemRed
+        verticalViewModel.backgroundColor = .systemBlue
+        verticalViewModel.opacity = 1
+        verticalViewModel.createRectSelection(from: CGPoint(x: 0, y: 0), to: CGPoint(x: 80, y: 30))
+        verticalViewModel.drawGradient(from: CGPoint(x: 0, y: 0), to: CGPoint(x: 80, y: 0))
+
+        let selectedTop = try #require(verticalViewModel.document.selectedLayer?.image.color(at: CGPoint(x: 40, y: 10)))
+        let unselectedBottom = try #require(verticalViewModel.document.selectedLayer?.image.color(at: CGPoint(x: 40, y: 50)))
+        #expect(selectedTop.alphaComponent > 0.8)
+        #expect(unselectedBottom.alphaComponent < 0.1)
+
         viewModel.undo()
         let restored = try #require(viewModel.document.layers[editIndex].image.color(at: CGPoint(x: 3, y: 30))?.usingColorSpace(.deviceRGB))
         #expect(restored.alphaComponent < 0.1)
@@ -6274,6 +6289,60 @@ struct veilpicTests {
         #expect(maskStart.alphaComponent > 0.85)
         #expect(maskEnd.alphaComponent < 0.2)
         #expect(maskViewModel.document.history.last?.title == L10n.text("imageEditor.history.layerMaskGradient"))
+    }
+
+    @MainActor
+    @Test func imageEditorRasterBrushAndEraserMapCanvasPointsIntoMovedScaledLayer() async throws {
+        let image = testImage(color: .clear, size: NSSize(width: 80, height: 60))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let index = try #require(viewModel.document.selectedLayerIndex)
+        let layerFrame = CGRect(x: 20, y: 10, width: 40, height: 30)
+        viewModel.document.layers[index].frame = layerFrame
+        viewModel.foregroundColor = .systemRed
+        viewModel.brushSize = 4
+        viewModel.opacity = 1
+
+        viewModel.drawBrush(points: [CGPoint(x: 30, y: 25), CGPoint(x: 50, y: 25)])
+
+        let painted = try #require(viewModel.document.layers[index].image.color(at: CGPoint(x: 40, y: 30)))
+        #expect(painted.alphaComponent > 0.8)
+        #expect(viewModel.document.layers[index].frame == layerFrame)
+
+        viewModel.drawBrush(
+            points: [CGPoint(x: 38, y: 25), CGPoint(x: 42, y: 25)],
+            erase: true
+        )
+        let erased = try #require(viewModel.document.layers[index].image.color(at: CGPoint(x: 40, y: 30)))
+        #expect(erased.alphaComponent < 0.1)
+        #expect(viewModel.document.layers[index].frame == layerFrame)
+    }
+
+    @MainActor
+    @Test func imageEditorCanvasCursorsTrackBrushDiameterAndPenCloseState() async throws {
+        let smallBrush = ImageEditorCanvasCursor.cursor(for: .brush, brushDiameter: 10)
+        let largeBrush = ImageEditorCanvasCursor.cursor(for: .brush, brushDiameter: 80)
+        #expect(largeBrush.image.size.width > smallBrush.image.size.width + 50)
+        #expect(abs(largeBrush.hotSpot.x - largeBrush.image.size.width / 2) < 0.5)
+        #expect(abs(largeBrush.hotSpot.y - largeBrush.image.size.height / 2) < 0.5)
+
+        let openPen = ImageEditorCanvasCursor.cursor(for: .pen, brushDiameter: 18, penIsClosing: false)
+        let closingPen = ImageEditorCanvasCursor.cursor(for: .pen, brushDiameter: 18, penIsClosing: true)
+        #expect(openPen.hotSpot == NSPoint(x: 6, y: 30))
+        #expect(closingPen.hotSpot == openPen.hotSpot)
+        #expect(openPen.image.tiffRepresentation != closingPen.image.tiffRepresentation)
+
+        let viewModel = ImageEditorViewModel(
+            sourceName: "pen.png",
+            image: testImage(color: .clear, size: NSSize(width: 80, height: 60))
+        ) { _ in }
+        viewModel.brushSize = 18
+        viewModel.pendingPenPathPoints = [
+            CGPoint(x: 12, y: 12),
+            CGPoint(x: 60, y: 12),
+            CGPoint(x: 60, y: 48)
+        ]
+        #expect(viewModel.isPenCloseCandidate(at: CGPoint(x: 16, y: 15)))
+        #expect(!viewModel.isPenCloseCandidate(at: CGPoint(x: 34, y: 30)))
     }
 
     @MainActor

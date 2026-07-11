@@ -422,10 +422,27 @@ extension ImageEditorViewModel {
 
     func transformFrame(for indices: [Int]) -> CGRect? {
         indices
-            .map { document.layers[$0].frame.standardized }
+            .compactMap { transformContentFrame(forLayerAt: $0) }
             .reduce(nil) { bounds, frame in
                 bounds?.union(frame) ?? frame
             }
+    }
+
+    private func transformContentFrame(forLayerAt index: Int) -> CGRect? {
+        let layer = document.layers[index]
+        if let cached = cachedLayerTransformContentFrames[layer.id] {
+            return cached
+        }
+        if cachedEmptyTransformLayerIDs.contains(layer.id) {
+            return nil
+        }
+        guard let localBounds = layer.image.nonTransparentPixelBounds(alphaThreshold: 0) else {
+            cachedEmptyTransformLayerIDs.insert(layer.id)
+            return nil
+        }
+        let contentFrame = layer.frame.frameMappingLocalRect(localBounds, imageSize: layer.image.size)
+        cachedLayerTransformContentFrames[layer.id] = contentFrame
+        return contentFrame
     }
 
     func applyRotation(

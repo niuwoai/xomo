@@ -283,6 +283,29 @@ struct ImageEditorScopeTests {
         )
     }
 
+    @Test func developmentLaunchBuildsEditorWithoutBlockingStartupPlaceholder() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/veilpicApp.swift"),
+            encoding: .utf8
+        )
+        let launchStart = try #require(source.range(of: "func openDevelopmentSample()"))
+        let helperStart = try #require(
+            source[launchStart.upperBound...].range(of: "private func presentDevelopmentSampleEditor()")
+        )
+        let launchSource = source[launchStart.lowerBound..<helperStart.lowerBound]
+
+        #expect(launchSource.contains("presentDevelopmentSampleEditor()"))
+        #expect(!source.contains("ImageEditorStartupView"))
+        #expect(!source.contains("ProgressView(L10n.text(\"imageEditor.startup.loading\"))"))
+
+        let appLaunchStart = try #require(source.range(of: "func applicationDidFinishLaunching"))
+        let appLaunchEnd = try #require(source[appLaunchStart.upperBound...].range(of: "func applicationWillTerminate"))
+        let appLaunchSource = source[appLaunchStart.lowerBound..<appLaunchEnd.lowerBound]
+        let editorLaunch = try #require(appLaunchSource.range(of: "ImageEditorWindowPresenter.shared.openDevelopmentSample()"))
+        let shortcutSetup = try #require(appLaunchSource.range(of: "GlobalScreenshotShortcutManager.shared.setup(viewModel: .shared)"))
+        #expect(editorLaunch.lowerBound < shortcutSetup.lowerBound)
+    }
+
     @MainActor
     @Test func imageEditorCanStartFromPreparedDocumentForDevelopmentSamples() throws {
         let sourceName = "development.png"
@@ -600,6 +623,78 @@ struct ImageEditorScopeTests {
     }
 
     @MainActor
+    @Test func creatingReplacementSelectionPreservesRenderedPreviewCache() {
+        let image = NSImage(size: NSSize(width: 320, height: 200))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let previewBeforeSelection = viewModel.previewImage
+
+        viewModel.selectionMode = .replace
+        viewModel.createRectSelection(
+            from: CGPoint(x: 20, y: 30),
+            to: CGPoint(x: 180, y: 140)
+        )
+
+        #expect(viewModel.document.selection?.bounds == CGRect(x: 20, y: 30, width: 160, height: 110))
+        #expect(viewModel.canSaveSelectionAsAlphaChannel)
+        #expect(viewModel.previewImage === previewBeforeSelection)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionCreated"))
+    }
+
+    @Test func transparentCanvasUsesLightGrayAndWhiteCheckerboard() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let checkerboardStart = try #require(source.range(of: "private var checkerboard: some View"))
+        let checkerboardEnd = try #require(
+            source[checkerboardStart.upperBound...].range(of: "private func dragOverlay")
+        )
+        let checkerboardSource = source[checkerboardStart.lowerBound..<checkerboardEnd.lowerBound]
+
+        #expect(checkerboardSource.contains("let square: CGFloat = 12"))
+        #expect(checkerboardSource.contains("calibratedWhite: 0.94"))
+        #expect(checkerboardSource.contains("calibratedWhite: 0.72"))
+        #expect(checkerboardSource.contains("(row + col).isMultiple(of: 2) ? light : dark"))
+    }
+
+    @MainActor
+    @Test func screenColorSamplerResultsUpdateTheirRequestedColorTarget() {
+        let image = NSImage(size: NSSize(width: 80, height: 60))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        let foreground = NSColor(calibratedRed: 0.18, green: 0.42, blue: 0.76, alpha: 1)
+        viewModel.applyScreenSampledForegroundColor(foreground)
+        #expect(Self.deviceRGBComponents(viewModel.foregroundColor) == Self.deviceRGBComponents(foreground))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.colorScreenSampledForeground"))
+
+        let background = NSColor(calibratedRed: 0.86, green: 0.34, blue: 0.12, alpha: 1)
+        viewModel.applyScreenSampledBackgroundColor(background)
+        #expect(Self.deviceRGBComponents(viewModel.backgroundColor) == Self.deviceRGBComponents(background))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.colorScreenSampledBackground"))
+    }
+
+    @Test func compactToolRailExposesPreviewAndScreenColorControls() throws {
+        let viewSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let menuSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
+            encoding: .utf8
+        )
+
+        #expect(viewSource.contains("GridItem(.fixed(30), spacing: 2)"))
+        #expect(viewSource.contains(".frame(width: 80)"))
+        #expect(viewSource.contains("viewModel.sampleScreenColorForForeground"))
+        #expect(viewSource.contains("viewModel.sampleScreenColorForBackground"))
+        #expect(viewSource.contains("image-editor-color-swap"))
+        #expect(viewSource.contains(".onHover { isHovered = $0 }"))
+        #expect(viewSource.contains(".focusable(false)"))
+        #expect(menuSource.contains("Button(L10n.text(\"imageEditor.action.preview\"))"))
+        #expect(menuSource.contains(".accessibilityLabel(L10n.text(\"imageEditor.action.apply\"))"))
+    }
+
+    @MainActor
     @Test func classicArrowNudgeShortcutsMoveSelectionBeforeLayer() {
         let image = NSImage(size: NSSize(width: 80, height: 60))
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
@@ -684,6 +779,111 @@ struct ImageEditorScopeTests {
         #expect(viewModel.zoom == 2)
         #expect(viewModel.canvasOffset == CGSize(width: 12, height: 8))
         #expect(viewModel.statusText == L10n.text("imageEditor.status.operationFailed"))
+    }
+
+    @MainActor
+    @Test func persistentZoomControlClampsAndReportsDirectZoomChanges() {
+        let image = NSImage(size: NSSize(width: 100, height: 50))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.setZoom(2.5)
+        #expect(viewModel.zoom == 2.5)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.zoom", "250%"))
+
+        viewModel.setZoom(20)
+        #expect(viewModel.zoom == 8)
+
+        viewModel.setZoom(0.001)
+        #expect(viewModel.zoom == 0.08)
+    }
+
+    @MainActor
+    @Test func everyZoomEntryPointRestoresTheLeftToolRail() {
+        let image = NSImage(size: NSSize(width: 100, height: 50))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        viewModel.updateCanvasViewportSize(CGSize(width: 600, height: 400))
+
+        viewModel.areToolsPanelVisible = false
+        viewModel.setZoom(2)
+        #expect(viewModel.areToolsPanelVisible)
+
+        viewModel.areToolsPanelVisible = false
+        viewModel.magnifyCanvas(1.2, at: CGPoint(x: 300, y: 200), viewportSize: CGSize(width: 600, height: 400))
+        viewModel.endCanvasMagnify()
+        #expect(viewModel.areToolsPanelVisible)
+
+        viewModel.areToolsPanelVisible = false
+        viewModel.fitZoom()
+        #expect(viewModel.areToolsPanelVisible)
+
+        viewModel.areToolsPanelVisible = false
+        viewModel.zoomActualPixels()
+        #expect(viewModel.areToolsPanelVisible)
+    }
+
+    @Test func editorSidebarsStayFixedWhileCanvasOwnsFlexibleWidth() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("toolRail\n                        .fixedSize(horizontal: true, vertical: false)"))
+        #expect(source.contains("canvasWorkspace\n                    .frame(minWidth: 0)"))
+        #expect(source.contains("rightDock\n                        .fixedSize(horizontal: true, vertical: false)"))
+
+        let dockStart = try #require(source.range(of: "private var rightDock: some View"))
+        let dockEnd = try #require(source[dockStart.upperBound...].range(of: "private func navigatorPanel"))
+        let dockSource = source[dockStart.lowerBound..<dockEnd.lowerBound]
+        #expect(dockSource.contains("VStack(spacing: 8)"))
+        #expect(!dockSource.contains("LazyVStack"))
+        #expect(dockSource.contains(".frame(width: 348)"))
+        #expect(dockSource.contains(".clipped()"))
+
+        let filterStart = try #require(source.range(of: "private var filtersQuickPanel: some View"))
+        let filterEnd = try #require(source[filterStart.upperBound...].range(of: "private func historySnapshotRow"))
+        let filterSource = source[filterStart.lowerBound..<filterEnd.lowerBound]
+        #expect(filterSource.contains("Text(L10n.text(\"imageEditor.action.applyFilter\"))"))
+        #expect(filterSource.contains(".lineLimit(1)"))
+        #expect(filterSource.contains("VStack(spacing: 8)"))
+        #expect(filterSource.contains("HStack(spacing: 8)"))
+    }
+
+    @Test func documentTabExposesPersistentZoomControls() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let tabStart = try #require(source.range(of: "private var documentTab: some View"))
+        let tabEnd = try #require(
+            source[tabStart.upperBound...].range(of: "private var checkerboard: some View")
+        )
+        let tabSource = source[tabStart.lowerBound..<tabEnd.lowerBound]
+
+        #expect(tabSource.contains("image-editor-zoom-out"))
+        #expect(tabSource.contains("image-editor-zoom-slider"))
+        #expect(tabSource.contains("image-editor-zoom-in"))
+        #expect(tabSource.contains("image-editor-zoom-fit"))
+        #expect(tabSource.contains("private var zoomSliderBinding: Binding<Double>"))
+        #expect(tabSource.contains("ImageEditorViewModel.maximumZoom / ImageEditorViewModel.minimumZoom"))
+    }
+
+    @Test func alternateZoomShortcutsSupportOptionPlusAndMinus() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let shortcutStart = try #require(source.range(of: "private var alternateZoomShortcutButtons: some View"))
+        let shortcutEnd = try #require(
+            source[shortcutStart.upperBound...].range(of: "private var nudgeShortcutButtons: some View")
+        )
+        let shortcutSource = source[shortcutStart.lowerBound..<shortcutEnd.lowerBound]
+
+        #expect(source.contains(".background(alternateZoomShortcutButtons)"))
+        #expect(shortcutSource.contains("viewModel.zoomOut()"))
+        #expect(shortcutSource.contains(".keyboardShortcut(\"-\", modifiers: [.option])"))
+        #expect(shortcutSource.contains("viewModel.zoomIn()"))
+        #expect(shortcutSource.contains(".keyboardShortcut(\"+\", modifiers: [.option])"))
+        #expect(shortcutSource.contains(".keyboardShortcut(\"=\", modifiers: [.option])"))
     }
 
     @MainActor
@@ -1412,6 +1612,72 @@ struct ImageEditorScopeTests {
         #expect(source.contains("if viewModel.isHistoryPanelVisible"))
         #expect(source.contains("if viewModel.isLayersPanelVisible"))
         #expect(source.contains("if viewModel.isPropertiesPanelVisible"))
+    }
+
+    @Test func layersDockUsesTheSharedDisclosureLayout() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let dockStart = try #require(source.range(of: "private var rightDock: some View"))
+        let nextSectionStart = try #require(
+            source[dockStart.upperBound...].range(of: "private func navigatorPanel")
+        )
+        let dockSource = source[dockStart.lowerBound..<nextSectionStart.lowerBound]
+
+        #expect(source.contains("@State private var isLayersDockExpanded = true"))
+        #expect(source.contains("@State private var isNavigatorDockExpanded = true"))
+        #expect(dockSource.contains("ScrollView"))
+        #expect(dockSource.contains("title: L10n.text(\"imageEditor.panel.layersChannels\")"))
+        #expect(dockSource.contains("isExpanded: $isLayersDockExpanded"))
+        #expect(dockSource.contains("layersPanel(showsTitle: false)"))
+    }
+
+    @Test func layerListExposesDirectSelectionVisibilityAndDragReordering() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorLayerPanel.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains(".accessibilityIdentifier(\"image-editor-layer-list\")"))
+        #expect(source.contains("layerDragHandle(layer)"))
+        #expect(source.contains(".gesture(layerReorderGesture(layer))"))
+        #expect(source.contains("viewModel.moveLayerIDs(sourceIDs, toDropTarget: target)"))
+        #expect(source.contains("NSItemProvider(object: layer.id.uuidString as NSString)"))
+        #expect(source.contains("ImageEditorLayerDropDelegate"))
+        #expect(source.contains("UTType.plainText"))
+        #expect(source.contains("viewModel.toggleLayerVisibility(layer.id)"))
+        #expect(source.contains("viewModel.selectLayer("))
+        #expect(source.contains("layerNameEditor(layer)"))
+        #expect(source.contains("Text(layer.name)"))
+        #expect(source.contains("image-editor-layer-row-\\(layer.id.uuidString)"))
+        #expect(source.contains("image-editor-layer-visibility-\\(layer.id.uuidString)"))
+        #expect(source.contains(".frame(minHeight: 150, maxHeight: .infinity)"))
+        #expect(source.contains("layerAdvancedControlsDisclosure"))
+        #expect(source.contains("image-editor-layer-advanced-controls"))
+
+        let rowsPosition = try #require(source.range(of: "layerRows"))
+        let advancedPosition = try #require(source.range(of: "layerAdvancedControlsDisclosure"))
+        #expect(rowsPosition.lowerBound < advancedPosition.lowerBound)
+    }
+
+    @Test func channelsPanelKeepsRowsBoundedAndUsesCachedThumbnails() throws {
+        let panelSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorLayerPanel.swift"),
+            encoding: .utf8
+        )
+        let viewModelSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorViewModel.swift"),
+            encoding: .utf8
+        )
+
+        #expect(panelSource.contains("viewModel.channelThumbnailImage(for: channel)"))
+        #expect(panelSource.contains("viewModel.alphaChannelThumbnailImage(channel)"))
+        #expect(panelSource.contains("alphaChannelActionsMenu(channel)"))
+        #expect(panelSource.contains(".frame(maxWidth: .infinity, alignment: .leading)"))
+        #expect(viewModelSource.contains("private var cachedChannelThumbnailImages"))
+        #expect(viewModelSource.contains("private var cachedAlphaChannelThumbnailImages"))
+        #expect(viewModelSource.contains("Self.channelThumbnailSize"))
     }
 
     @Test func editorChromeConditionallyRendersStatusBar() throws {

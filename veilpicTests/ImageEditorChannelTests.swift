@@ -60,6 +60,24 @@ struct ImageEditorChannelTests {
         #expect(try #require(viewModel.currentImage.qingtuPNGData()) == compositeData)
     }
 
+    @Test func channelPanelThumbnailsUseSmallCachedImages() throws {
+        let viewModel = ImageEditorViewModel(sourceName: "thumbnails.png", image: splitChannelImage()) { _ in }
+
+        let redThumbnail = viewModel.channelThumbnailImage(for: .red)
+        let cachedRedThumbnail = viewModel.channelThumbnailImage(for: .red)
+
+        #expect(redThumbnail.size == CGSize(width: 84, height: 56))
+        #expect(redThumbnail === cachedRedThumbnail)
+
+        viewModel.createBlankAlphaChannel()
+        let alphaChannel = try #require(viewModel.document.alphaChannels.first)
+        let alphaThumbnail = viewModel.alphaChannelThumbnailImage(alphaChannel)
+        let cachedAlphaThumbnail = viewModel.alphaChannelThumbnailImage(alphaChannel)
+
+        #expect(alphaThumbnail.size == CGSize(width: 84, height: 56))
+        #expect(alphaThumbnail === cachedAlphaThumbnail)
+    }
+
     @Test func blankAlphaChannelStartsEmptyAndSelected() async throws {
         let viewModel = ImageEditorViewModel(sourceName: "blank-alpha.png", image: splitChannelImage()) { _ in }
 

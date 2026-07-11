@@ -44,7 +44,7 @@ enum ImageEditorCanvasGeometry {
 
         return CGPoint(
             x: (viewPoint.x - imageRect.minX) / imageRect.width * canvasSize.width,
-            y: (imageRect.maxY - viewPoint.y) / imageRect.height * canvasSize.height
+            y: (viewPoint.y - imageRect.minY) / imageRect.height * canvasSize.height
         )
     }
 
@@ -55,7 +55,7 @@ enum ImageEditorCanvasGeometry {
     ) -> CGPoint {
         CGPoint(
             x: (viewPoint.x - imageRect.minX) / max(imageRect.width, 1) * canvasSize.width,
-            y: (imageRect.maxY - viewPoint.y) / max(imageRect.height, 1) * canvasSize.height
+            y: (viewPoint.y - imageRect.minY) / max(imageRect.height, 1) * canvasSize.height
         )
     }
 
@@ -66,7 +66,7 @@ enum ImageEditorCanvasGeometry {
     ) -> CGPoint {
         CGPoint(
             x: imageRect.minX + imagePoint.x / max(canvasSize.width, 1) * imageRect.width,
-            y: imageRect.maxY - imagePoint.y / max(canvasSize.height, 1) * imageRect.height
+            y: imageRect.minY + imagePoint.y / max(canvasSize.height, 1) * imageRect.height
         )
     }
 

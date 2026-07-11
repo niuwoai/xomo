@@ -8,11 +8,15 @@
 import AppKit
 import SwiftUI
 
+private let imageEditorRightDockWidth: CGFloat = 384
+private let imageEditorCanvasToolbarHeight: CGFloat = 42
+
 struct ImageEditorView: View {
     @StateObject var viewModel: ImageEditorViewModel
     @State private var dragPoints: [CGPoint] = []
     @State private var dragStart: CGPoint?
     @State private var dragEnd: CGPoint?
+    @State private var pendingCropRect: CGRect?
     @State private var lastPanTranslation: CGSize = .zero
     @State private var lastMoveImagePoint: CGPoint?
     @State private var activeResizeHandle: ImageEditorLayerResizeHandle?
@@ -20,7 +24,6 @@ struct ImageEditorView: View {
     @State private var isMovingPathAnchor = false
     @State private var activeGuideDrag: ImageEditorGuideDrag?
     @State private var layerNameDraft = ""
-    @State var layerNameDrafts: [UUID: String] = [:]
     @State var layerSearchQuery = ""
     @State var selectedLayerKindFilter: ImageEditorLayerKindFilter = .all
     @State var selectedLayerLabelFilter: ImageEditorLayerLabelColor?
@@ -31,10 +34,15 @@ struct ImageEditorView: View {
     @State var historySnapshotNameDrafts: [UUID: String] = [:]
     @State var selectedLayerPanelTab: ImageEditorLayerPanelTab = .layers
     @State var targetedLayerDropTarget: ImageEditorLayerDropTarget?
+    @State var isLayerAdvancedControlsExpanded = false
+    @State private var isLayersDockExpanded = true
     @State private var isNavigatorDockExpanded = false
     @State private var isHistoryDockExpanded = false
     @State private var isFiltersDockExpanded = false
     @State private var isPropertiesDockExpanded = false
+    @State private var isRightDockMounted = false
+    @State private var isPointerInsideCanvas = false
+    @State private var hoverViewPoint: CGPoint?
 
     init(sourceName: String, image: NSImage, onApply: @escaping (NSImage) -> Void) {
         _viewModel = StateObject(wrappedValue: ImageEditorViewModel(sourceName: sourceName, image: image, onApply: onApply))
@@ -55,12 +63,19 @@ struct ImageEditorView: View {
             HStack(spacing: 0) {
                 if viewModel.areToolsPanelVisible {
                     toolRail
+                        .fixedSize(horizontal: true, vertical: false)
+                        .layoutPriority(2)
                     Divider().overlay(editorBorder)
                 }
                 canvasWorkspace
-                if viewModel.isRightDockVisible {
+                    .frame(minWidth: 0)
+                    .clipped()
+                    .layoutPriority(0)
+                if viewModel.isRightDockVisible && isRightDockMounted {
                     Divider().overlay(editorBorder)
                     rightDock
+                        .fixedSize(horizontal: true, vertical: false)
+                        .layoutPriority(2)
                 }
             }
 
@@ -69,12 +84,28 @@ struct ImageEditorView: View {
             }
         }
         .frame(minWidth: 1160, minHeight: 720)
+        .accessibilityHidden(ImageEditorComputerUseQA.usesScreenshotOnlyAccessibilityTree)
         .background(Color(nsColor: ImageEditorTheme.window))
         .background(toolShortcutButtons)
         .background(brushShortcutButtons)
         .background(opacityShortcutButtons)
         .background(colorShortcutButtons)
+        .background(alternateZoomShortcutButtons)
         .background(nudgeShortcutButtons)
+        .background(
+            ImageEditorKeyboardShortcutMonitor(
+                perform: performKeyboardShortcut,
+                deleteSelectedHistory: {
+                    guard viewModel.isHistoryPanelVisible,
+                          isHistoryDockExpanded,
+                          viewModel.canTruncateSelectedHistory
+                    else { return false }
+                    viewModel.truncateSelectedHistory()
+                    return true
+                }
+            )
+            .allowsHitTesting(false)
+        )
         .overlay(alignment: .bottom) {
             selectedToolHint
                 .padding(.bottom, viewModel.isStatusBarVisible ? 4 : 8)
@@ -83,6 +114,10 @@ struct ImageEditorView: View {
         .onAppear {
             syncLayerNameDraft()
             viewModel.syncSizeControlsFromDocument()
+            guard !isRightDockMounted else { return }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
+                isRightDockMounted = true
+            }
         }
         .onChange(of: viewModel.document.selectedLayerID) { _, _ in
             syncLayerNameDraft()
@@ -110,10 +145,35 @@ struct ImageEditorView: View {
                 selectionModePicker
             }
 
-            optionSlider(titleKey: "imageEditor.option.size", value: $viewModel.brushSize, range: 1...96, step: 1, suffix: "px")
-            optionSlider(titleKey: "imageEditor.option.opacity", value: $viewModel.opacity, range: 0.05...1, step: 0.05, suffix: "")
-            optionSlider(titleKey: "imageEditor.option.hardness", value: $viewModel.hardness, range: 0...1, step: 0.05, suffix: "")
-            optionSlider(titleKey: "imageEditor.option.feather", value: $viewModel.feather, range: 0...40, step: 1, suffix: "px")
+            if viewModel.selectedTool == .marquee {
+                marqueeShapePicker
+            }
+
+            if viewModel.selectedTool == .text {
+                TextField(L10n.text("imageEditor.properties.textPlaceholder"), text: $viewModel.textValue)
+                    .textFieldStyle(.roundedBorder)
+                    .frame(width: 220)
+                    .accessibilityIdentifier("image-editor-text-content")
+                Stepper(
+                    L10n.format("imageEditor.properties.textSizeValue", Int(viewModel.textSize.rounded())),
+                    value: $viewModel.textSize,
+                    in: 6...240,
+                    step: 1
+                )
+                .fixedSize()
+                .focusable(false)
+            } else {
+                if usesBrushOptions {
+                    optionSlider(titleKey: "imageEditor.option.size", value: $viewModel.brushSize, range: 1...96, step: 1, suffix: "px")
+                    optionSlider(titleKey: "imageEditor.option.hardness", value: $viewModel.hardness, range: 0...1, step: 0.05, suffix: "")
+                }
+                if usesOpacityOption {
+                    optionSlider(titleKey: "imageEditor.option.opacity", value: $viewModel.opacity, range: 0.05...1, step: 0.05, suffix: "")
+                }
+                if viewModel.selectedTool.supportsSelectionMode {
+                    optionSlider(titleKey: "imageEditor.option.feather", value: $viewModel.feather, range: 0...40, step: 1, suffix: "px")
+                }
+            }
             if viewModel.selectedTool.supportsTolerance {
                 optionSlider(titleKey: "imageEditor.option.tolerance", value: $viewModel.tolerance, range: 0...1, step: 0.02, suffix: "")
             }
@@ -123,6 +183,7 @@ struct ImageEditorView: View {
                     viewModel.beginSettingCloneSource()
                 }
                 .buttonStyle(EditorTextButtonStyle())
+                .focusable(false)
                 .help(L10n.text("imageEditor.action.cloneSourcePick"))
             }
 
@@ -131,6 +192,7 @@ struct ImageEditorView: View {
                     viewModel.clearColorSamplers()
                 }
                 .buttonStyle(EditorTextButtonStyle())
+                .focusable(false)
                 .disabled(viewModel.colorSamplerPoints.isEmpty)
             }
 
@@ -142,6 +204,7 @@ struct ImageEditorView: View {
                 Image(systemName: "arrow.uturn.backward")
             }
             .buttonStyle(EditorIconButtonStyle(isSelected: false))
+            .focusable(false)
             .disabled(!viewModel.canUndo)
             .help(L10n.text("imageEditor.action.undo"))
 
@@ -151,12 +214,33 @@ struct ImageEditorView: View {
                 Image(systemName: "arrow.uturn.forward")
             }
             .buttonStyle(EditorIconButtonStyle(isSelected: false))
+            .focusable(false)
             .disabled(!viewModel.canRedo)
             .help(L10n.text("imageEditor.action.redo"))
         }
         .frame(height: 48)
         .padding(.horizontal, 12)
         .background(Color(nsColor: ImageEditorTheme.panel))
+    }
+
+    private var usesBrushOptions: Bool {
+        switch viewModel.selectedTool {
+        case .brush, .eraser, .cloneStamp, .dodge, .burn, .sponge, .blur, .sharpen,
+             .smudge, .healingBrush, .quickSelection:
+            true
+        default:
+            false
+        }
+    }
+
+    private var usesOpacityOption: Bool {
+        switch viewModel.selectedTool {
+        case .brush, .eraser, .cloneStamp, .dodge, .burn, .sponge, .blur, .sharpen,
+             .smudge, .healingBrush, .paintBucket, .gradient, .rectangle, .ellipse:
+            true
+        default:
+            false
+        }
     }
 
     private var selectionModePicker: some View {
@@ -169,8 +253,30 @@ struct ImageEditorView: View {
         }
         .labelsHidden()
         .pickerStyle(.segmented)
+        .focusable(false)
         .frame(width: 226)
         .help(L10n.text("imageEditor.option.selectionMode"))
+    }
+
+    private var marqueeShapePicker: some View {
+        Menu {
+            ForEach(ImageEditorMarqueeShape.allCases) { shape in
+                Button {
+                    viewModel.selectMarqueeShape(shape)
+                } label: {
+                    Label(shape.title, systemImage: shape.symbolName)
+                }
+            }
+        } label: {
+            Label(viewModel.marqueeShape.title, systemImage: viewModel.marqueeShape.symbolName)
+                .frame(minWidth: 88, alignment: .leading)
+        }
+        .menuStyle(.borderlessButton)
+        .focusable(false)
+        .fixedSize()
+        .help(L10n.text("imageEditor.option.marqueeShape"))
+        .accessibilityIdentifier("image-editor-marquee-shape")
+        .accessibilityValue(viewModel.marqueeShape.rawValue)
     }
 
     private func optionSlider(titleKey: String, value: Binding<CGFloat>, range: ClosedRange<CGFloat>, step: CGFloat, suffix: String) -> some View {
@@ -197,33 +303,76 @@ struct ImageEditorView: View {
         VStack(spacing: 8) {
             ScrollView(.vertical, showsIndicators: false) {
                 LazyVGrid(
-                    columns: Array(repeating: GridItem(.flexible(minimum: 34), spacing: 4), count: 2),
-                    spacing: 4
+                    columns: Array(repeating: GridItem(.fixed(30), spacing: 2), count: 2),
+                    spacing: 2
                 ) {
                     ForEach(ImageEditorTool.allCases) { tool in
-                        Button {
-                            viewModel.selectTool(tool)
-                        } label: {
-                            Image(systemName: tool.symbolName)
-                                .font(.system(size: 15, weight: .semibold))
-                                .frame(maxWidth: .infinity, minHeight: 34)
-                        }
-                        .frame(maxWidth: .infinity, minHeight: 34)
-                        .contentShape(Rectangle())
-                        .buttonStyle(EditorIconButtonStyle(isSelected: viewModel.selectedTool == tool))
-                        .help(tool.helpText)
-                        .accessibilityIdentifier("image-editor-tool-\(tool.rawValue)")
-                        .accessibilityValue(viewModel.selectedTool == tool ? "selected" : "available")
+                        toolRailItem(tool)
                     }
                 }
-                .padding(.horizontal, 6)
+                .frame(width: 62)
             }
 
             colorChips
         }
-        .frame(width: 108)
+        .frame(width: 80)
         .padding(.vertical, 8)
         .background(Color(nsColor: ImageEditorTheme.chrome))
+    }
+
+    @ViewBuilder
+    private func toolRailItem(_ tool: ImageEditorTool) -> some View {
+        if tool == .marquee {
+            Menu {
+                ForEach(ImageEditorMarqueeShape.allCases) { shape in
+                    Button {
+                        viewModel.selectMarqueeShape(shape)
+                    } label: {
+                        Label(shape.title, systemImage: shape.symbolName)
+                    }
+                }
+            } label: {
+                ZStack(alignment: .bottomTrailing) {
+                    Image(systemName: viewModel.marqueeShape.symbolName)
+                        .font(.system(size: 15, weight: .semibold))
+                        .frame(width: 30, height: 30)
+                    Image(systemName: "triangle.fill")
+                        .font(.system(size: 5))
+                        .rotationEffect(.degrees(180))
+                        .padding(2)
+                }
+            }
+            .menuStyle(.borderlessButton)
+            .focusable(false)
+            .frame(width: 30, height: 30)
+            .background(
+                RoundedRectangle(cornerRadius: 5, style: .continuous)
+                    .fill(viewModel.selectedTool == tool ? Color(nsColor: ImageEditorTheme.selected).opacity(0.22) : .clear)
+            )
+            .help(L10n.text("imageEditor.option.marqueeShape"))
+            .accessibilityIdentifier("image-editor-tool-marquee")
+            .accessibilityValue(viewModel.marqueeShape.rawValue)
+        } else {
+            Button {
+                viewModel.selectTool(tool)
+            } label: {
+                if tool == .paintBucket {
+                    ImageEditorPaintBucketSymbol()
+                        .frame(width: 30, height: 30)
+                } else {
+                    Image(systemName: tool.symbolName)
+                        .font(.system(size: 15, weight: .semibold))
+                        .frame(width: 30, height: 30)
+                }
+            }
+            .frame(width: 30, height: 30)
+            .contentShape(Rectangle())
+            .buttonStyle(EditorIconButtonStyle(isSelected: viewModel.selectedTool == tool))
+            .focusable(false)
+            .help(tool.helpText)
+            .accessibilityIdentifier("image-editor-tool-\(tool.rawValue)")
+            .accessibilityValue(viewModel.selectedTool == tool ? "selected" : "available")
+        }
     }
 
     private var selectedToolHint: some View {
@@ -359,16 +508,46 @@ struct ImageEditorView: View {
         .opacity(0)
     }
 
+    private var alternateZoomShortcutButtons: some View {
+        Group {
+            Button {
+                viewModel.zoomOut()
+            } label: {
+                EmptyView()
+            }
+            .keyboardShortcut("-", modifiers: [.option])
+            .accessibilityHidden(true)
+
+            Button {
+                viewModel.zoomIn()
+            } label: {
+                EmptyView()
+            }
+            .keyboardShortcut("+", modifiers: [.option])
+            .accessibilityHidden(true)
+
+            Button {
+                viewModel.zoomIn()
+            } label: {
+                EmptyView()
+            }
+            .keyboardShortcut("=", modifiers: [.option])
+            .accessibilityHidden(true)
+        }
+        .frame(width: 0, height: 0)
+        .opacity(0)
+    }
+
     private var nudgeShortcutButtons: some View {
         Group {
             nudgeShortcutButton(.leftArrow, delta: CGSize(width: -1, height: 0), modifiers: [])
             nudgeShortcutButton(.rightArrow, delta: CGSize(width: 1, height: 0), modifiers: [])
-            nudgeShortcutButton(.upArrow, delta: CGSize(width: 0, height: 1), modifiers: [])
-            nudgeShortcutButton(.downArrow, delta: CGSize(width: 0, height: -1), modifiers: [])
+            nudgeShortcutButton(.upArrow, delta: CGSize(width: 0, height: -1), modifiers: [])
+            nudgeShortcutButton(.downArrow, delta: CGSize(width: 0, height: 1), modifiers: [])
             nudgeShortcutButton(.leftArrow, delta: CGSize(width: -10, height: 0), modifiers: [.shift])
             nudgeShortcutButton(.rightArrow, delta: CGSize(width: 10, height: 0), modifiers: [.shift])
-            nudgeShortcutButton(.upArrow, delta: CGSize(width: 0, height: 10), modifiers: [.shift])
-            nudgeShortcutButton(.downArrow, delta: CGSize(width: 0, height: -10), modifiers: [.shift])
+            nudgeShortcutButton(.upArrow, delta: CGSize(width: 0, height: -10), modifiers: [.shift])
+            nudgeShortcutButton(.downArrow, delta: CGSize(width: 0, height: 10), modifiers: [.shift])
         }
         .frame(width: 0, height: 0)
         .opacity(0)
@@ -384,25 +563,144 @@ struct ImageEditorView: View {
         .accessibilityHidden(true)
     }
 
+    private func performKeyboardShortcut(_ action: ImageEditorKeyboardShortcutAction) {
+        switch action {
+        case .openProject: viewModel.openProjectDocument()
+        case .saveProject: viewModel.saveProjectDocument()
+        case .export: viewModel.openExportPanel()
+        case .undo: viewModel.undo()
+        case .redo: viewModel.redo()
+        case .cutSelectionClipboard: viewModel.cutSelectionToClipboard()
+        case .copySelectionClipboard: viewModel.copySelectionToClipboard()
+        case .copyMergedClipboard: viewModel.copyMergedToClipboard()
+        case .pasteClipboardLayer: viewModel.pasteClipboardAsLayer()
+        case .pasteClipboardIntoSelection: viewModel.pasteClipboardIntoSelectionAsLayer()
+        case .toggleTransformControls: viewModel.toggleTransformControlsVisible()
+        case .fillSelection: viewModel.fillSelection()
+        case .fillSelectionBackground: viewModel.fillSelectionWithBackgroundColor()
+        case .clearSelectionPixels: viewModel.clearSelectionPixels()
+        case .resizeImage: viewModel.resizeImageToControlSize()
+        case .resizeCanvas: viewModel.resizeCanvasToControlSize()
+        case .levels: viewModel.selectAdjustment(.levels)
+        case .curves: viewModel.selectAdjustment(.curves)
+        case .colorBalance: viewModel.selectAdjustment(.colorBalance)
+        case .hueSaturation: viewModel.selectAdjustment(.hueSaturation)
+        case .desaturate: viewModel.desaturateSelectedLayer()
+        case .invertPixels: viewModel.invertSelectedLayer()
+        case .autoLevels: viewModel.autoLevelsSelectedLayer()
+        case .autoContrast: viewModel.autoContrastSelectedLayer()
+        case .autoColor: viewModel.autoColorSelectedLayer()
+        case .newLayer: viewModel.addLayer()
+        case .duplicateSelectionOrLayer: viewModel.duplicateSelectionOrSelectedLayer()
+        case .cutSelectionToLayer: viewModel.cutSelectionToNewLayer()
+        case .groupSelectedLayer: viewModel.groupSelectedLayer()
+        case .ungroupSelectedLayers: viewModel.ungroupSelectedLayers()
+        case .mergeDown: viewModel.mergeSelectedLayerDown()
+        case .stampVisible: viewModel.stampVisibleLayers()
+        case .mergeVisible: viewModel.mergeVisibleLayers()
+        case .layerTop: viewModel.moveSelectedLayerToTop()
+        case .layerUp: viewModel.moveSelectedLayerUp()
+        case .layerDown: viewModel.moveSelectedLayerDown()
+        case .layerBottom: viewModel.moveSelectedLayerToBottom()
+        case .selectAll: viewModel.selectAll()
+        case .clearSelection: viewModel.clearSelection()
+        case .reselectSelection: viewModel.reselectSelection()
+        case .invertSelection: viewModel.invertSelection()
+        case .featherSelection: viewModel.featherSelection()
+        case .applyLastFilter: viewModel.applySelectedFilter()
+        case .toggleRulers: viewModel.toggleRulersVisible()
+        case .toggleGuides: viewModel.toggleGuidesVisible()
+        case .toggleGuideSnapping: viewModel.toggleGuideSnapping()
+        case .toggleGuidesLocked: viewModel.toggleGuidesLocked()
+        case .toggleGrid: viewModel.toggleGridVisible()
+        case .zoomIn: viewModel.zoomIn()
+        case .zoomOut: viewModel.zoomOut()
+        case .actualPixels: viewModel.zoomActualPixels()
+        case .fitOnScreen: viewModel.fitZoom()
+        case .toggleWorkspaceChrome: viewModel.toggleWorkspaceChromeVisibility()
+        case .toggleRightDock: viewModel.toggleRightDockVisibility()
+        case .showInfoSummary:
+            viewModel.statusText = "\(viewModel.pointerText) | \(viewModel.sizeText) | \(viewModel.colorText)"
+        case .showColorSummary: viewModel.statusText = viewModel.colorPanelSummaryText
+        case .showBrushSummary: viewModel.statusText = viewModel.brushesPanelSummaryText
+        case .showLayersPanel:
+            viewModel.isLayersPanelVisible = true
+            selectedLayerPanelTab = .layers
+        }
+    }
+
     private var colorChips: some View {
         ZStack(alignment: .topLeading) {
-            Color(nsColor: viewModel.backgroundColor)
-                .frame(width: 24, height: 24)
-                .overlay(Rectangle().stroke(Color.white.opacity(0.6), lineWidth: 1))
+            colorChip(
+                color: viewModel.backgroundColor,
+                action: viewModel.sampleScreenColorForBackground,
+                accessibilityIdentifier: "image-editor-background-color-sampler",
+                accessibilityLabelKey: "imageEditor.action.colorSampleScreenBackground"
+            )
                 .offset(x: 11, y: 11)
 
-            Color(nsColor: viewModel.foregroundColor)
-                .frame(width: 24, height: 24)
-                .overlay(Rectangle().stroke(Color.white.opacity(0.86), lineWidth: 1))
+            colorChip(
+                color: viewModel.foregroundColor,
+                action: viewModel.sampleScreenColorForForeground,
+                accessibilityIdentifier: "image-editor-foreground-color-sampler",
+                accessibilityLabelKey: "imageEditor.action.colorSampleScreenForeground"
+            )
+
+            Button {
+                viewModel.swapForegroundBackgroundColors()
+            } label: {
+                Image(systemName: "arrow.left.arrow.right")
+                    .font(.system(size: 10, weight: .bold))
+                    .frame(width: 18, height: 18)
+            }
+            .buttonStyle(EditorIconButtonStyle(isSelected: false))
+            .focusable(false)
+            .help(L10n.text("imageEditor.action.colorSwapForegroundBackground"))
+            .accessibilityIdentifier("image-editor-color-swap")
+            .accessibilityLabel(L10n.text("imageEditor.action.colorSwapForegroundBackground"))
+            .offset(x: 29, y: -2)
         }
-        .frame(width: 40, height: 40)
+        .frame(width: 50, height: 42)
         .padding(.bottom, 2)
+    }
+
+    private func colorChip(
+        color: NSColor,
+        action: @escaping () -> Void,
+        accessibilityIdentifier: String,
+        accessibilityLabelKey: String
+    ) -> some View {
+        Button(action: action) {
+            Color(nsColor: color)
+                .frame(width: 26, height: 26)
+                .overlay {
+                    Rectangle()
+                        .strokeBorder(Color.white.opacity(0.92), lineWidth: 1)
+                }
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .focusable(false)
+        .help(L10n.text(accessibilityLabelKey))
+        .accessibilityIdentifier(accessibilityIdentifier)
+        .accessibilityLabel(L10n.text(accessibilityLabelKey))
     }
 
     private var canvasWorkspace: some View {
         VStack(spacing: 0) {
+            Color.clear
+                .frame(height: imageEditorCanvasToolbarHeight)
+            canvasSurface
+        }
+        .overlay(alignment: .top) {
             documentTab
-            GeometryReader { geometry in
+                .zIndex(1)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private var canvasSurface: some View {
+        GeometryReader { geometry in
                 ZStack {
                     Color(nsColor: ImageEditorTheme.window)
                     checkerboard
@@ -449,10 +747,49 @@ struct ImageEditorView: View {
                     }
                     .allowsHitTesting(false)
                 )
-                .onHover { inside in
-                    if !inside {
+                .overlay {
+                    let imageRect = fittedImageRect(in: geometry.size)
+                    let displayScale = imageRect.width / max(viewModel.document.canvasSize.width, 1)
+                    ImageEditorCursorRectView(
+                        cursor: ImageEditorCanvasCursor.cursor(
+                            for: viewModel.selectedTool,
+                            brushDiameter: viewModel.brushSize * displayScale
+                        )
+                    )
+                    .allowsHitTesting(false)
+                }
+                .onContinuousHover { phase in
+                    switch phase {
+                    case .active(let location):
+                        isPointerInsideCanvas = true
+                        hoverViewPoint = location
+                        updateCanvasCursor(at: location, in: geometry.size)
+                    case .ended:
+                        isPointerInsideCanvas = false
+                        hoverViewPoint = nil
                         viewModel.updatePointer(nil)
+                        NSCursor.arrow.set()
                     }
+                }
+                .onChange(of: viewModel.selectedTool) { _, tool in
+                    if tool != .crop {
+                        pendingCropRect = nil
+                    }
+                    guard isPointerInsideCanvas else { return }
+                    guard let hoverViewPoint else { return }
+                    updateCanvasCursor(at: hoverViewPoint, in: geometry.size)
+                }
+                .onChange(of: viewModel.brushSize) { _, _ in
+                    guard isPointerInsideCanvas, let hoverViewPoint else { return }
+                    updateCanvasCursor(at: hoverViewPoint, in: geometry.size)
+                }
+                .onChange(of: viewModel.zoom) { _, _ in
+                    guard isPointerInsideCanvas, let hoverViewPoint else { return }
+                    updateCanvasCursor(at: hoverViewPoint, in: geometry.size)
+                }
+                .onDisappear {
+                    isPointerInsideCanvas = false
+                    NSCursor.arrow.set()
                 }
                 .onAppear {
                     viewModel.updateCanvasViewportSize(geometry.size)
@@ -460,9 +797,7 @@ struct ImageEditorView: View {
                 .onChange(of: geometry.size) { _, newSize in
                     viewModel.updateCanvasViewportSize(newSize)
                 }
-            }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private var documentTab: some View {
@@ -475,21 +810,100 @@ struct ImageEditorView: View {
                 .frame(height: 32)
                 .background(Color(nsColor: ImageEditorTheme.panelRaised))
                 .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
+            if let pendingCropRect {
+                HStack(spacing: 4) {
+                    Button {
+                        viewModel.crop(to: pendingCropRect)
+                        self.pendingCropRect = nil
+                    } label: {
+                        Image(systemName: "checkmark")
+                            .frame(width: 24, height: 24)
+                    }
+                    .buttonStyle(EditorIconButtonStyle(isSelected: true))
+                    .help(L10n.text("imageEditor.action.cropConfirm"))
+                    .accessibilityIdentifier("image-editor-crop-confirm")
+
+                    Button {
+                        self.pendingCropRect = nil
+                    } label: {
+                        Image(systemName: "xmark")
+                            .frame(width: 24, height: 24)
+                    }
+                    .buttonStyle(EditorIconButtonStyle(isSelected: false))
+                    .help(L10n.text("imageEditor.action.cropCancel"))
+                    .accessibilityIdentifier("image-editor-crop-cancel")
+                }
+                .padding(.horizontal, 4)
+                .frame(height: 32)
+                .background(Color(nsColor: ImageEditorTheme.panelRaised))
+                .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
+            }
             Spacer()
+            Button {
+                viewModel.zoomOut()
+            } label: {
+                Image(systemName: "minus.magnifyingglass")
+                    .frame(width: 24, height: 24)
+            }
+            .buttonStyle(EditorIconButtonStyle(isSelected: false))
+            .focusable(false)
+            .help(L10n.text("imageEditor.menu.view.zoomOut"))
+            .accessibilityIdentifier("image-editor-zoom-out")
+
+            Slider(value: zoomSliderBinding, in: 0...1)
+                .frame(width: 120)
+                .focusable(false)
+                .help(L10n.text("imageEditor.tool.zoom.help"))
+                .accessibilityIdentifier("image-editor-zoom-slider")
+
             Text(viewModel.zoomText)
                 .font(.system(size: 11, weight: .medium).monospacedDigit())
                 .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                .frame(width: 42, alignment: .trailing)
+
+            Button {
+                viewModel.zoomIn()
+            } label: {
+                Image(systemName: "plus.magnifyingglass")
+                    .frame(width: 24, height: 24)
+            }
+            .buttonStyle(EditorIconButtonStyle(isSelected: false))
+            .focusable(false)
+            .help(L10n.text("imageEditor.menu.view.zoomIn"))
+            .accessibilityIdentifier("image-editor-zoom-in")
+
+            Button {
+                viewModel.fitZoom()
+            } label: {
+                Image(systemName: "arrow.up.left.and.arrow.down.right")
+                    .frame(width: 24, height: 24)
+            }
+            .buttonStyle(EditorIconButtonStyle(isSelected: false))
+            .focusable(false)
+            .help(L10n.text("imageEditor.menu.view.fit"))
+            .accessibilityIdentifier("image-editor-zoom-fit")
         }
-        .frame(height: 42)
+        .frame(height: imageEditorCanvasToolbarHeight)
         .padding(.horizontal, 12)
         .background(Color(nsColor: ImageEditorTheme.window))
     }
 
+    private var zoomSliderBinding: Binding<Double> {
+        let minimumZoom = Double(ImageEditorViewModel.minimumZoom)
+        let zoomRangeRatio = Double(ImageEditorViewModel.maximumZoom / ImageEditorViewModel.minimumZoom)
+        return Binding {
+            log(max(minimumZoom, Double(viewModel.zoom)) / minimumZoom) / log(zoomRangeRatio)
+        } set: { sliderValue in
+            let clampedValue = min(max(sliderValue, 0), 1)
+            viewModel.setZoom(CGFloat(minimumZoom * pow(zoomRangeRatio, clampedValue)))
+        }
+    }
+
     private var checkerboard: some View {
         Canvas { context, size in
-            let square: CGFloat = 14
-            let light = Color(nsColor: NSColor(calibratedWhite: 0.78, alpha: 1))
-            let dark = Color(nsColor: NSColor(calibratedWhite: 0.58, alpha: 1))
+            let square: CGFloat = 12
+            let light = Color(nsColor: NSColor(calibratedWhite: 0.94, alpha: 1))
+            let dark = Color(nsColor: NSColor(calibratedWhite: 0.72, alpha: 1))
             var y: CGFloat = 0
             var row = 0
             while y < size.height {
@@ -594,19 +1008,33 @@ struct ImageEditorView: View {
         }
 
         if let dragStart, let dragEnd, shouldShowDragRect {
-            let start = viewPoint(from: dragStart, in: size)
-            let end = viewPoint(from: dragEnd, in: size)
-            let rect = CGRect(
-                x: min(start.x, end.x),
-                y: min(start.y, end.y),
-                width: abs(end.x - start.x),
-                height: abs(end.y - start.y)
-            )
-            Rectangle()
+            let imageRect = viewModel.selectedTool == .marquee
+                ? viewModel.marqueeSelectionRect(from: dragStart, to: dragEnd)
+                : CGRect(
+                    x: min(dragStart.x, dragEnd.x),
+                    y: min(dragStart.y, dragEnd.y),
+                    width: abs(dragEnd.x - dragStart.x),
+                    height: abs(dragEnd.y - dragStart.y)
+                )
+            let rect = viewRect(from: imageRect, in: size)
+            let shape = viewModel.selectedTool == .marquee && viewModel.marqueeShape.isEllipse
+                ? AnyShape(Ellipse())
+                : AnyShape(Rectangle())
+            shape
                 .stroke(Color(nsColor: ImageEditorTheme.selected), style: StrokeStyle(lineWidth: 1.5, dash: [6, 4]))
-                .background(Color(nsColor: ImageEditorTheme.selected).opacity(0.12))
+                .background(shape.fill(Color(nsColor: ImageEditorTheme.selected).opacity(0.12)))
                 .frame(width: rect.width, height: rect.height)
                 .position(x: rect.midX, y: rect.midY)
+        }
+
+        if let pendingCropRect {
+            let rect = viewRect(from: pendingCropRect, in: size)
+            Rectangle()
+                .stroke(Color(nsColor: ImageEditorTheme.selected), style: StrokeStyle(lineWidth: 1.5, dash: [6, 4]))
+                .background(Rectangle().fill(Color(nsColor: ImageEditorTheme.selected).opacity(0.10)))
+                .frame(width: rect.width, height: rect.height)
+                .position(x: rect.midX, y: rect.midY)
+                .allowsHitTesting(false)
         }
     }
 
@@ -684,6 +1112,9 @@ struct ImageEditorView: View {
                         dragPoints.append(imagePoint)
                     }
                 case .crop, .marquee, .rectangle, .ellipse, .gradient, .patchTool:
+                    if viewModel.selectedTool == .crop, dragStart == nil {
+                        pendingCropRect = nil
+                    }
                     if dragStart == nil {
                         dragStart = imagePoint
                     }
@@ -713,7 +1144,7 @@ struct ImageEditorView: View {
                     viewModel.finishMovingSelectedLayer()
                 case .marquee:
                     if let dragStart, let imagePoint {
-                        viewModel.createRectSelection(from: dragStart, to: imagePoint)
+                        viewModel.createMarqueeSelection(from: dragStart, to: imagePoint)
                     }
                 case .lasso:
                     viewModel.createLassoSelection(points: dragPoints)
@@ -773,7 +1204,9 @@ struct ImageEditorView: View {
                             width: abs(imagePoint.x - dragStart.x),
                             height: abs(imagePoint.y - dragStart.y)
                         )
-                        viewModel.crop(to: rect)
+                        if rect.width > 3, rect.height > 3 {
+                            pendingCropRect = rect
+                        }
                     }
                 case .text:
                     viewModel.addText(at: imagePoint)
@@ -810,6 +1243,18 @@ struct ImageEditorView: View {
             zoom: viewModel.zoom,
             canvasOffset: viewModel.canvasOffset
         )
+    }
+
+    private func updateCanvasCursor(at viewPoint: CGPoint, in size: CGSize) {
+        let canvasPoint = imagePoint(from: viewPoint, in: size)
+        viewModel.updatePointer(canvasPoint)
+        let imageRect = fittedImageRect(in: size)
+        let displayScale = imageRect.width / max(viewModel.document.canvasSize.width, 1)
+        ImageEditorCanvasCursor.cursor(
+            for: viewModel.selectedTool,
+            brushDiameter: viewModel.brushSize * displayScale,
+            penIsClosing: viewModel.selectedTool == .pen && viewModel.isPenCloseCandidate(at: canvasPoint)
+        ).set()
     }
 
     private func imagePoint(from viewPoint: CGPoint, in size: CGSize) -> CGPoint? {
@@ -864,60 +1309,63 @@ struct ImageEditorView: View {
     }
 
     private var rightDock: some View {
-        VStack(spacing: 0) {
-            if viewModel.isLayersPanelVisible {
-                layersPanel
-            }
-            if viewModel.isLayersPanelVisible && (viewModel.isNavigatorPanelVisible || viewModel.isHistoryPanelVisible || viewModel.isPropertiesPanelVisible) {
-                Divider().overlay(editorBorder)
-            }
-
-            ScrollView {
-                LazyVStack(spacing: 8) {
-                    if viewModel.isNavigatorPanelVisible {
-                        EditorDockDisclosure(
-                            title: L10n.text("imageEditor.panel.navigator"),
-                            systemImage: "scope",
-                            isExpanded: $isNavigatorDockExpanded
-                        ) {
-                            navigatorPanel(showsTitle: false)
-                        }
-                    }
-
-                    if viewModel.isHistoryPanelVisible {
-                        EditorDockDisclosure(
-                            title: L10n.text("imageEditor.panel.history"),
-                            systemImage: "clock",
-                            isExpanded: $isHistoryDockExpanded
-                        ) {
-                            historyPanel(showsTitle: false)
-                        }
-                    }
-
-                    if viewModel.isPropertiesPanelVisible {
-                        EditorDockDisclosure(
-                            title: L10n.text("imageEditor.properties.filter"),
-                            systemImage: "camera.filters",
-                            isExpanded: $isFiltersDockExpanded
-                        ) {
-                            filtersQuickPanel
-                        }
-                    }
-
-                    if viewModel.isPropertiesPanelVisible {
-                        EditorDockDisclosure(
-                            title: L10n.text("imageEditor.panel.properties"),
-                            systemImage: "slider.horizontal.3",
-                            isExpanded: $isPropertiesDockExpanded
-                        ) {
-                            propertiesPanel(showsTitle: false)
-                        }
+        ScrollView {
+            VStack(spacing: 8) {
+                if viewModel.isLayersPanelVisible {
+                    EditorDockDisclosure(
+                        title: L10n.text("imageEditor.panel.layersChannels"),
+                        systemImage: "square.3.layers.3d",
+                        isExpanded: $isLayersDockExpanded
+                    ) {
+                        layersPanel(showsTitle: false)
                     }
                 }
-                .padding(8)
+
+                if viewModel.isNavigatorPanelVisible {
+                    EditorDockDisclosure(
+                        title: L10n.text("imageEditor.panel.navigator"),
+                        systemImage: "scope",
+                        isExpanded: $isNavigatorDockExpanded
+                    ) {
+                        navigatorPanel(showsTitle: false)
+                    }
+                }
+
+                if viewModel.isHistoryPanelVisible {
+                    EditorDockDisclosure(
+                        title: L10n.text("imageEditor.panel.history"),
+                        systemImage: "clock",
+                        isExpanded: $isHistoryDockExpanded
+                    ) {
+                        historyPanel(showsTitle: false)
+                    }
+                }
+
+                if viewModel.isPropertiesPanelVisible {
+                    EditorDockDisclosure(
+                        title: L10n.text("imageEditor.properties.filter"),
+                        systemImage: "camera.filters",
+                        isExpanded: $isFiltersDockExpanded
+                    ) {
+                        filtersQuickPanel
+                    }
+                }
+
+                if viewModel.isPropertiesPanelVisible {
+                    EditorDockDisclosure(
+                        title: L10n.text("imageEditor.panel.properties"),
+                        systemImage: "slider.horizontal.3",
+                        isExpanded: $isPropertiesDockExpanded
+                    ) {
+                        propertiesPanel(showsTitle: false)
+                    }
+                }
             }
+            .frame(maxWidth: .infinity, alignment: .topLeading)
+            .padding(8)
         }
-        .frame(width: 332)
+        .frame(width: imageEditorRightDockWidth)
+        .clipped()
         .background(Color(nsColor: ImageEditorTheme.panel))
         .accessibilityIdentifier("image-editor-right-dock")
     }
@@ -1023,21 +1471,40 @@ struct ImageEditorView: View {
                         }
 
                         ForEach(viewModel.document.history) { entry in
-                            Button {
-                                viewModel.restoreHistoryEntry(entry.id)
-                            } label: {
-                                Label(entry.title, systemImage: historyIconName(for: entry))
-                                    .font(.system(size: 12, weight: .medium))
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 6)
-                                    .background(historyRowBackground(for: entry))
-                                    .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+                            HStack(spacing: 4) {
+                                Button {
+                                    viewModel.selectHistoryEntry(entry.id)
+                                } label: {
+                                    Label(entry.title, systemImage: historyIconName(for: entry))
+                                        .font(.system(size: 12, weight: .medium))
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 6)
+                                }
+                                .buttonStyle(.plain)
+                                .help(L10n.text("imageEditor.action.historySelect"))
+                                .accessibilityIdentifier("image-editor-history-entry-\(entry.id)")
+
+                                Button {
+                                    viewModel.restoreHistoryEntry(entry.id)
+                                } label: {
+                                    Image(systemName: "arrow.uturn.backward.circle")
+                                        .font(.system(size: 11, weight: .semibold))
+                                        .frame(width: 22, height: 22)
+                                }
+                                .buttonStyle(EditorIconButtonStyle(isSelected: false))
+                                .focusable(false)
+                                .disabled(viewModel.document.history.last?.id == entry.id)
+                                .help(L10n.text("imageEditor.action.historyRestore"))
+                                .accessibilityIdentifier("image-editor-history-restore-\(entry.id)")
                             }
-                            .buttonStyle(.plain)
-                            .help(L10n.text("imageEditor.action.historyRestore"))
+                            .background(historyRowBackground(for: entry))
+                            .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
                         }
                     }
+                }
+                .onDeleteCommand {
+                    viewModel.truncateSelectedHistory()
                 }
             }
         }
@@ -1061,22 +1528,38 @@ struct ImageEditorView: View {
                 Slider(value: $viewModel.filterIntensity, in: 0...1, step: 0.05)
             }
 
-            HStack(spacing: 8) {
-                Button(L10n.text("imageEditor.action.applyFilter")) {
+            VStack(spacing: 8) {
+                Button {
                     viewModel.applySelectedFilter()
+                } label: {
+                    Text(L10n.text("imageEditor.action.applyFilter"))
+                        .lineLimit(1)
+                        .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(EditorPrimaryButtonStyle())
 
-                Button(L10n.text("imageEditor.action.layerFilterNew")) {
-                    viewModel.addFilterLayer()
-                }
-                .buttonStyle(EditorTextButtonStyle())
+                HStack(spacing: 8) {
+                    Button {
+                        viewModel.addFilterLayer()
+                    } label: {
+                        Text(L10n.text("imageEditor.action.layerFilterNew"))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.82)
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(EditorTextButtonStyle())
 
-                Button(L10n.text("imageEditor.action.layerSmartFilterAdd")) {
-                    viewModel.addSmartFilterToSelectedLayer()
+                    Button {
+                        viewModel.addSmartFilterToSelectedLayer()
+                    } label: {
+                        Text(L10n.text("imageEditor.action.layerSmartFilterAdd"))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.82)
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(EditorTextButtonStyle())
+                    .disabled(!viewModel.canAddSmartFilterToSelectedLayer)
                 }
-                .buttonStyle(EditorTextButtonStyle())
-                .disabled(!viewModel.canAddSmartFilterToSelectedLayer)
             }
         }
         .padding(10)
@@ -1142,7 +1625,7 @@ struct ImageEditorView: View {
     }
 
     private func historyRowBackground(for entry: ImageEditorHistoryEntry) -> Color {
-        viewModel.document.history.last?.id == entry.id
+        viewModel.selectedHistoryEntryID == entry.id
             ? Color(nsColor: ImageEditorTheme.selected).opacity(0.32)
             : Color.white.opacity(0.04)
     }
@@ -2217,7 +2700,12 @@ struct ImageEditorView: View {
                     Circle()
                         .stroke(Color(nsColor: ImageEditorTheme.selected), lineWidth: 1.6)
                 )
-                .frame(width: 14, height: 14)
+                .overlay {
+                    Image(systemName: "arrow.clockwise")
+                        .font(.system(size: 8, weight: .bold))
+                        .foregroundStyle(Color(nsColor: ImageEditorTheme.selected))
+                }
+                .frame(width: 16, height: 16)
                 .position(handlePoint)
                 .contentShape(Rectangle())
                 .gesture(
@@ -2273,7 +2761,7 @@ struct ImageEditorView: View {
     }
 
     private func rotateHandleViewPoint(in rect: CGRect) -> CGPoint {
-        CGPoint(x: rect.midX, y: rect.minY - 32)
+        CGPoint(x: rect.midX, y: rect.minY - 24)
     }
 
     private func propertiesPanel(showsTitle: Bool = true) -> some View {
@@ -4307,6 +4795,467 @@ struct ImageEditorView: View {
     }
 }
 
+enum ImageEditorCanvasCursor {
+    private static var cursorCache: [String: NSCursor] = [:]
+
+    static func cursor(
+        for tool: ImageEditorTool,
+        brushDiameter: CGFloat,
+        penIsClosing: Bool = false
+    ) -> NSCursor {
+        switch tool {
+        case .move:
+            return .arrow
+        case .hand:
+            return .openHand
+        case .text:
+            return .iBeam
+        case .brush, .eraser, .quickSelection, .cloneStamp, .dodge, .burn, .sponge,
+             .blur, .sharpen, .smudge, .healingBrush, .redEye:
+            return brushCursor(diameter: brushDiameter, symbolName: tool.symbolName)
+        case .pen:
+            return penCursor(isClosing: penIsClosing)
+        case .marquee, .lasso, .magicWand, .crop, .patchTool, .paintBucket, .gradient,
+             .eyedropper, .colorSampler, .rectangle, .ellipse, .zoom:
+            return precisionCursor(symbolName: tool.symbolName)
+        }
+    }
+
+    private static func brushCursor(diameter requestedDiameter: CGFloat, symbolName: String) -> NSCursor {
+        let diameter = max(3, min(256, requestedDiameter.rounded()))
+        let cacheKey = "brush:\(symbolName):\(Int(diameter))"
+        if let cachedCursor = cursorCache[cacheKey] {
+            return cachedCursor
+        }
+        let side = max(30, diameter + 16)
+        let cursorSize = NSSize(width: side, height: side)
+        let image = NSImage(size: cursorSize)
+        image.lockFocus()
+        let center = NSPoint(x: side / 2, y: side / 2)
+        let ringRect = NSRect(
+            x: center.x - diameter / 2,
+            y: center.y - diameter / 2,
+            width: diameter,
+            height: diameter
+        )
+        let ring = NSBezierPath(ovalIn: ringRect)
+        NSColor.black.withAlphaComponent(0.88).setStroke()
+        ring.lineWidth = 3.5
+        ring.stroke()
+        NSColor.white.withAlphaComponent(0.96).setStroke()
+        ring.lineWidth = 1.75
+        ring.stroke()
+
+        let crossSize: CGFloat = diameter >= 10 ? 3.5 : 2.5
+        let cross = NSBezierPath()
+        cross.move(to: NSPoint(x: center.x - crossSize, y: center.y))
+        cross.line(to: NSPoint(x: center.x + crossSize, y: center.y))
+        cross.move(to: NSPoint(x: center.x, y: center.y - crossSize))
+        cross.line(to: NSPoint(x: center.x, y: center.y + crossSize))
+        NSColor.black.withAlphaComponent(0.9).setStroke()
+        cross.lineWidth = 2.5
+        cross.stroke()
+        NSColor.white.setStroke()
+        cross.lineWidth = 1
+        cross.stroke()
+
+        drawSymbolBadge(
+            named: symbolName,
+            origin: NSPoint(
+                x: min(max(center.x + diameter / 2 - 4, 1), side - 18),
+                y: min(max(center.y - diameter / 2 - 8, 1), side - 18)
+            )
+        )
+        image.unlockFocus()
+        return cache(
+            NSCursor(image: image, hotSpot: NSPoint(x: center.x, y: side - center.y)),
+            for: cacheKey
+        )
+    }
+
+    private static func precisionCursor(symbolName: String) -> NSCursor {
+        let cacheKey = "precision:\(symbolName)"
+        if let cachedCursor = cursorCache[cacheKey] {
+            return cachedCursor
+        }
+        let side: CGFloat = 34
+        let image = NSImage(size: NSSize(width: side, height: side))
+        image.lockFocus()
+        let center = NSPoint(x: 10, y: 10)
+        let cross = NSBezierPath()
+        cross.move(to: NSPoint(x: center.x - 7, y: center.y))
+        cross.line(to: NSPoint(x: center.x + 7, y: center.y))
+        cross.move(to: NSPoint(x: center.x, y: center.y - 7))
+        cross.line(to: NSPoint(x: center.x, y: center.y + 7))
+        NSColor.black.withAlphaComponent(0.92).setStroke()
+        cross.lineWidth = 3
+        cross.stroke()
+        NSColor.white.setStroke()
+        cross.lineWidth = 1.25
+        cross.stroke()
+        drawSymbolBadge(named: symbolName, origin: NSPoint(x: 17, y: 17))
+        image.unlockFocus()
+        return cache(
+            NSCursor(image: image, hotSpot: NSPoint(x: center.x, y: side - center.y)),
+            for: cacheKey
+        )
+    }
+
+    private static func penCursor(isClosing: Bool) -> NSCursor {
+        let cacheKey = "pen:\(isClosing)"
+        if let cachedCursor = cursorCache[cacheKey] {
+            return cachedCursor
+        }
+        let side: CGFloat = 36
+        let image = NSImage(size: NSSize(width: side, height: side))
+        image.lockFocus()
+
+        let nib = NSBezierPath()
+        nib.move(to: NSPoint(x: 6, y: 6))
+        nib.line(to: NSPoint(x: 11, y: 17))
+        nib.line(to: NSPoint(x: 25, y: 31))
+        nib.line(to: NSPoint(x: 31, y: 25))
+        nib.line(to: NSPoint(x: 17, y: 11))
+        nib.close()
+        NSColor.black.withAlphaComponent(0.94).setStroke()
+        NSColor.white.withAlphaComponent(0.98).setFill()
+        nib.lineWidth = 3.5
+        nib.stroke()
+        nib.fill()
+
+        let slit = NSBezierPath()
+        slit.move(to: NSPoint(x: 7, y: 7))
+        slit.line(to: NSPoint(x: 18, y: 18))
+        slit.lineWidth = 1.7
+        NSColor.black.setStroke()
+        slit.stroke()
+        NSColor.black.setFill()
+        NSBezierPath(ovalIn: NSRect(x: 16, y: 16, width: 4, height: 4)).fill()
+
+        if isClosing {
+            let closeRing = NSBezierPath(ovalIn: NSRect(x: 0.5, y: 0.5, width: 11, height: 11))
+            NSColor.black.withAlphaComponent(0.95).setStroke()
+            closeRing.lineWidth = 3.5
+            closeRing.stroke()
+            NSColor.white.setStroke()
+            closeRing.lineWidth = 1.75
+            closeRing.stroke()
+        }
+
+        image.unlockFocus()
+        return cache(NSCursor(image: image, hotSpot: NSPoint(x: 6, y: side - 6)), for: cacheKey)
+    }
+
+    private static func cache(_ cursor: NSCursor, for key: String) -> NSCursor {
+        if cursorCache.count >= 256 {
+            cursorCache.removeAll(keepingCapacity: true)
+        }
+        cursorCache[key] = cursor
+        return cursor
+    }
+
+    private static func drawSymbolBadge(named symbolName: String, origin: NSPoint) {
+        let badgeRect = NSRect(origin: origin, size: NSSize(width: 17, height: 17))
+        NSColor.white.withAlphaComponent(0.96).setFill()
+        NSBezierPath(roundedRect: badgeRect, xRadius: 3, yRadius: 3).fill()
+        NSColor.black.withAlphaComponent(0.90).setStroke()
+        let border = NSBezierPath(roundedRect: badgeRect, xRadius: 3, yRadius: 3)
+        border.lineWidth = 1.25
+        border.stroke()
+        let configuration = NSImage.SymbolConfiguration(pointSize: 10, weight: .semibold)
+        guard let symbol = NSImage(systemSymbolName: symbolName, accessibilityDescription: nil)?
+            .withSymbolConfiguration(configuration)
+        else { return }
+        symbol.draw(in: badgeRect.insetBy(dx: 3, dy: 3), from: .zero, operation: .sourceOver, fraction: 1)
+    }
+}
+
+struct ImageEditorCursorRectView: NSViewRepresentable {
+    let cursor: NSCursor
+
+    func makeNSView(context: Context) -> CursorRectNSView {
+        CursorRectNSView(cursor: cursor)
+    }
+
+    func updateNSView(_ nsView: CursorRectNSView, context: Context) {
+        nsView.cursor = cursor
+    }
+}
+
+final class CursorRectNSView: NSView {
+    var cursor: NSCursor {
+        didSet {
+            guard cursor !== oldValue else { return }
+            window?.invalidateCursorRects(for: self)
+        }
+    }
+
+    init(cursor: NSCursor) {
+        self.cursor = cursor
+        super.init(frame: .zero)
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        window?.invalidateCursorRects(for: self)
+    }
+
+    override func resetCursorRects() {
+        addCursorRect(bounds, cursor: cursor)
+    }
+
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        nil
+    }
+}
+
+enum ImageEditorKeyboardShortcutAction: Equatable {
+    case openProject
+    case saveProject
+    case export
+    case cutSelectionClipboard
+    case copySelectionClipboard
+    case copyMergedClipboard
+    case pasteClipboardLayer
+    case pasteClipboardIntoSelection
+    case toggleTransformControls
+    case fillSelection
+    case fillSelectionBackground
+    case clearSelectionPixels
+    case resizeImage
+    case resizeCanvas
+    case levels
+    case curves
+    case colorBalance
+    case hueSaturation
+    case desaturate
+    case invertPixels
+    case autoLevels
+    case autoContrast
+    case autoColor
+    case newLayer
+    case duplicateSelectionOrLayer
+    case cutSelectionToLayer
+    case groupSelectedLayer
+    case ungroupSelectedLayers
+    case mergeDown
+    case stampVisible
+    case mergeVisible
+    case layerTop
+    case layerUp
+    case layerDown
+    case layerBottom
+    case selectAll
+    case clearSelection
+    case reselectSelection
+    case invertSelection
+    case featherSelection
+    case applyLastFilter
+    case toggleRulers
+    case toggleGuides
+    case toggleGuideSnapping
+    case toggleGuidesLocked
+    case toggleGrid
+    case zoomIn
+    case zoomOut
+    case actualPixels
+    case fitOnScreen
+    case toggleWorkspaceChrome
+    case toggleRightDock
+    case showInfoSummary
+    case showColorSummary
+    case showBrushSummary
+    case showLayersPanel
+    case undo
+    case redo
+
+    static func resolve(
+        charactersIgnoringModifiers: String?,
+        modifierFlags: NSEvent.ModifierFlags,
+        keyCode: UInt16? = nil
+    ) -> ImageEditorKeyboardShortcutAction? {
+        let key = charactersIgnoringModifiers?.lowercased() ?? ""
+        let relevantFlags = modifierFlags.intersection([.command, .option, .shift, .control])
+
+        if keyCode == 51 || keyCode == 117 {
+            if relevantFlags.isEmpty { return .clearSelectionPixels }
+            if relevantFlags == [.option] { return .fillSelection }
+            if relevantFlags == [.command] { return .fillSelectionBackground }
+            return nil
+        }
+
+        if keyCode == 48 {
+            if relevantFlags.isEmpty { return .toggleWorkspaceChrome }
+            if relevantFlags == [.shift] { return .toggleRightDock }
+            return nil
+        }
+
+        if relevantFlags.isEmpty {
+            switch keyCode {
+            case 96: return .showBrushSummary
+            case 97: return .showColorSummary
+            case 98: return .showLayersPanel
+            case 100: return .showInfoSummary
+            default: break
+            }
+        }
+
+        if key == "z", relevantFlags == [.option] { return .undo }
+        if key == "o", relevantFlags == [.command] { return .openProject }
+        if key == "s", relevantFlags == [.command] { return .saveProject }
+        if key == "s", relevantFlags == [.command, .option, .shift] { return .export }
+        if key == "z", relevantFlags == [.command] { return .undo }
+        if key == "z", relevantFlags == [.command, .shift] { return .redo }
+        if key == "x", relevantFlags == [.command] { return .cutSelectionClipboard }
+        if key == "c", relevantFlags == [.command] { return .copySelectionClipboard }
+        if key == "c", relevantFlags == [.command, .shift] { return .copyMergedClipboard }
+        if key == "v", relevantFlags == [.command] { return .pasteClipboardLayer }
+        if key == "v", relevantFlags == [.command, .shift] { return .pasteClipboardIntoSelection }
+        if key == "t", relevantFlags == [.command] { return .toggleTransformControls }
+        if key == "i", relevantFlags == [.command, .option] { return .resizeImage }
+        if key == "c", relevantFlags == [.command, .option] { return .resizeCanvas }
+        if key == "l", relevantFlags == [.command] { return .levels }
+        if key == "m", relevantFlags == [.command] { return .curves }
+        if key == "b", relevantFlags == [.command] { return .colorBalance }
+        if key == "u", relevantFlags == [.command] { return .hueSaturation }
+        if key == "u", relevantFlags == [.command, .shift] { return .desaturate }
+        if key == "i", relevantFlags == [.command] { return .invertPixels }
+        if key == "l", relevantFlags == [.command, .shift] { return .autoLevels }
+        if key == "l", relevantFlags == [.command, .option, .shift] { return .autoContrast }
+        if key == "b", relevantFlags == [.command, .shift] { return .autoColor }
+        if key == "n", relevantFlags == [.command, .shift] { return .newLayer }
+        if key == "j", relevantFlags == [.command] { return .duplicateSelectionOrLayer }
+        if key == "j", relevantFlags == [.command, .shift] { return .cutSelectionToLayer }
+        if key == "g", relevantFlags == [.command] { return .groupSelectedLayer }
+        if key == "g", relevantFlags == [.command, .shift] { return .ungroupSelectedLayers }
+        if key == "e", relevantFlags == [.command] { return .mergeDown }
+        if key == "e", relevantFlags == [.command, .option, .shift] { return .stampVisible }
+        if key == "e", relevantFlags == [.command, .shift] { return .mergeVisible }
+        if key == "]", relevantFlags == [.command, .shift] { return .layerTop }
+        if key == "]", relevantFlags == [.command] { return .layerUp }
+        if key == "[", relevantFlags == [.command] { return .layerDown }
+        if key == "[", relevantFlags == [.command, .shift] { return .layerBottom }
+        if key == "a", relevantFlags == [.command] { return .selectAll }
+        if key == "d", relevantFlags == [.command] { return .clearSelection }
+        if key == "d", relevantFlags == [.command, .shift] { return .reselectSelection }
+        if key == "i", relevantFlags == [.command, .shift] { return .invertSelection }
+        if key == "d", relevantFlags == [.command, .option] { return .featherSelection }
+        if key == "f", relevantFlags == [.command] { return .applyLastFilter }
+        if key == "r", relevantFlags == [.command] { return .toggleRulers }
+        if key == ";", relevantFlags == [.command] { return .toggleGuides }
+        if key == ";", relevantFlags == [.command, .shift] { return .toggleGuideSnapping }
+        if key == ";", relevantFlags == [.command, .option] { return .toggleGuidesLocked }
+        if key == "'", relevantFlags == [.command] { return .toggleGrid }
+        if (key == "+" || key == "="), relevantFlags == [.command] || relevantFlags == [.command, .shift] { return .zoomIn }
+        if key == "-", relevantFlags == [.command] { return .zoomOut }
+        if key == "1", relevantFlags == [.command] { return .actualPixels }
+        if key == "0", relevantFlags == [.command] { return .fitOnScreen }
+        return nil
+    }
+}
+
+struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
+    let perform: (ImageEditorKeyboardShortcutAction) -> Void
+    let deleteSelectedHistory: () -> Bool
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(
+            perform: perform,
+            deleteSelectedHistory: deleteSelectedHistory
+        )
+    }
+
+    func makeNSView(context: Context) -> KeyboardShortcutMonitorNSView {
+        KeyboardShortcutMonitorNSView(coordinator: context.coordinator)
+    }
+
+    func updateNSView(_ nsView: KeyboardShortcutMonitorNSView, context: Context) {
+        context.coordinator.perform = perform
+        context.coordinator.deleteSelectedHistory = deleteSelectedHistory
+    }
+
+    final class Coordinator {
+        weak var window: NSWindow?
+        var perform: (ImageEditorKeyboardShortcutAction) -> Void
+        var deleteSelectedHistory: () -> Bool
+        private var eventMonitor: Any?
+
+        init(
+            perform: @escaping (ImageEditorKeyboardShortcutAction) -> Void,
+            deleteSelectedHistory: @escaping () -> Bool
+        ) {
+            self.perform = perform
+            self.deleteSelectedHistory = deleteSelectedHistory
+            eventMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+                self?.handle(event) ?? event
+            }
+        }
+
+        deinit {
+            if let eventMonitor {
+                NSEvent.removeMonitor(eventMonitor)
+            }
+        }
+
+        private func handle(_ event: NSEvent) -> NSEvent? {
+            guard event.window === window else { return event }
+            let relevantFlags = event.modifierFlags.intersection([.command, .option, .shift, .control])
+            let isDelete = event.keyCode == 51 || event.keyCode == 117
+            if isDelete, relevantFlags.isEmpty, deleteSelectedHistory() {
+                return nil
+            }
+
+            if let action = ImageEditorKeyboardShortcutAction.resolve(
+                charactersIgnoringModifiers: event.charactersIgnoringModifiers,
+                modifierFlags: event.modifierFlags,
+                keyCode: event.keyCode
+            ) {
+                perform(action)
+                return nil
+            }
+            return event
+        }
+    }
+}
+
+final class KeyboardShortcutMonitorNSView: NSView {
+    private weak var coordinator: ImageEditorKeyboardShortcutMonitor.Coordinator?
+
+    init(coordinator: ImageEditorKeyboardShortcutMonitor.Coordinator) {
+        self.coordinator = coordinator
+        super.init(frame: .zero)
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        coordinator?.window = window
+    }
+
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        nil
+    }
+}
+
+enum ImageEditorComputerUseQA {
+    static var usesScreenshotOnlyAccessibilityTree: Bool {
+#if COMPUTER_USE_QA
+        true
+#else
+        false
+#endif
+    }
+}
+
 struct DisabledMaskSlash: View {
     var body: some View {
         Rectangle()
@@ -4344,7 +5293,7 @@ struct EditorPanel<Content: View>: View {
                 .padding(.horizontal, 10)
                 .padding(.bottom, 10)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .frame(maxWidth: .infinity, alignment: .topLeading)
     }
 }
 
@@ -4393,14 +5342,18 @@ struct EditorDockDisclosure<Content: View>: View {
             if isExpanded {
                 Divider().overlay(Color(nsColor: ImageEditorTheme.border))
                 content
+                    .frame(maxWidth: .infinity, alignment: .topLeading)
+                    .clipped()
             }
         }
         .background(Color(nsColor: ImageEditorTheme.panelRaised).opacity(0.48))
+        .frame(maxWidth: .infinity, alignment: .topLeading)
         .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: 5, style: .continuous)
                 .stroke(Color(nsColor: ImageEditorTheme.border).opacity(0.75), lineWidth: 1)
         }
+        .frame(maxWidth: .infinity, alignment: .topLeading)
     }
 }
 
@@ -4408,47 +5361,83 @@ struct EditorIconButtonStyle: ButtonStyle {
     let isSelected: Bool
 
     func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .foregroundStyle(isSelected ? .white : Color(nsColor: ImageEditorTheme.text))
-            .background(isSelected ? Color(nsColor: ImageEditorTheme.selected) : Color.clear)
-            .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: 5, style: .continuous)
-                    .strokeBorder(isSelected ? Color.white.opacity(0.16) : Color.clear, lineWidth: 1)
-            }
-            .opacity(configuration.isPressed ? 0.72 : 1)
+        EditorButtonSurface(
+            label: configuration.label,
+            isPressed: configuration.isPressed,
+            foreground: isSelected ? .white : Color(nsColor: ImageEditorTheme.text),
+            normalBackground: isSelected ? Color(nsColor: ImageEditorTheme.selected) : .clear,
+            hoverBackground: isSelected
+                ? Color(nsColor: ImageEditorTheme.selected).opacity(0.84)
+                : Color(nsColor: ImageEditorTheme.selected).opacity(0.20),
+            pressedBackground: Color(nsColor: ImageEditorTheme.selected).opacity(isSelected ? 0.68 : 0.38),
+            border: isSelected ? Color.white.opacity(0.16) : Color.clear
+        )
     }
 }
 
 struct EditorTextButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(.system(size: 12, weight: .semibold))
-            .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
-            .padding(.horizontal, 10)
-            .frame(height: 28)
-            .background(Color(nsColor: ImageEditorTheme.panelRaised).opacity(configuration.isPressed ? 0.65 : 1))
-            .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: 5, style: .continuous)
-                    .strokeBorder(Color(nsColor: ImageEditorTheme.border).opacity(0.8), lineWidth: 1)
-            }
+        EditorButtonSurface(
+            label: configuration.label
+                .font(.system(size: 12, weight: .semibold))
+                .padding(.horizontal, 10)
+                .frame(height: 28),
+            isPressed: configuration.isPressed,
+            foreground: Color(nsColor: ImageEditorTheme.text),
+            normalBackground: Color(nsColor: ImageEditorTheme.panelRaised),
+            hoverBackground: Color(nsColor: ImageEditorTheme.selected).opacity(0.26),
+            pressedBackground: Color(nsColor: ImageEditorTheme.selected).opacity(0.42),
+            border: Color(nsColor: ImageEditorTheme.border).opacity(0.8)
+        )
     }
 }
 
 struct EditorPrimaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(.system(size: 12, weight: .bold))
-            .foregroundStyle(.white)
-            .padding(.horizontal, 12)
-            .frame(height: 30)
-            .background(Color(nsColor: ImageEditorTheme.selected).opacity(configuration.isPressed ? 0.72 : 1))
+        EditorButtonSurface(
+            label: configuration.label
+                .font(.system(size: 12, weight: .bold))
+                .padding(.horizontal, 12)
+                .frame(height: 30),
+            isPressed: configuration.isPressed,
+            foreground: .white,
+            normalBackground: Color(nsColor: ImageEditorTheme.selected),
+            hoverBackground: Color(nsColor: ImageEditorTheme.selected).opacity(0.84),
+            pressedBackground: Color(nsColor: ImageEditorTheme.selected).opacity(0.66),
+            border: Color.white.opacity(0.18)
+        )
+    }
+}
+
+private struct EditorButtonSurface<Label: View>: View {
+    let label: Label
+    let isPressed: Bool
+    let foreground: Color
+    let normalBackground: Color
+    let hoverBackground: Color
+    let pressedBackground: Color
+    let border: Color
+    @State private var isHovered = false
+
+    private var background: Color {
+        if isPressed {
+            return pressedBackground
+        }
+        return isHovered ? hoverBackground : normalBackground
+    }
+
+    var body: some View {
+        label
+            .foregroundStyle(foreground)
+            .background(background)
             .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
             .overlay {
                 RoundedRectangle(cornerRadius: 5, style: .continuous)
-                    .strokeBorder(Color.white.opacity(0.18), lineWidth: 1)
+                    .strokeBorder(border, lineWidth: 1)
             }
+            .contentShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
+            .onHover { isHovered = $0 }
+            .focusable(false)
     }
 }
 

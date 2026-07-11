@@ -276,11 +276,7 @@ extension ImageEditorViewModel {
         document.canvasSize = targetSize
         document.layers = transformedLayers
         document.guides = transformedGuides
-        document.selection = document.selection?.offsetForCanvasResize(
-            oldCanvasSize: originalSize,
-            newCanvasSize: targetSize,
-            offset: offset
-        )
+        document.selection = .fullCanvas(size: targetSize)
         document.savedSelection = document.savedSelection?.offsetForCanvasResize(
             oldCanvasSize: originalSize,
             newCanvasSize: targetSize,

@@ -132,8 +132,14 @@ private extension NSImage {
         feather: CGFloat,
         replacesExistingPixels: Bool = false
     ) -> NSImage? {
-        let start = CGPoint(x: canvasStart.x - layerFrame.minX, y: canvasStart.y - layerFrame.minY)
-        let end = CGPoint(x: canvasEnd.x - layerFrame.minX, y: canvasEnd.y - layerFrame.minY)
+        let start = CGPoint(
+            x: (canvasStart.x - layerFrame.minX) / max(layerFrame.width, 1) * size.width,
+            y: (canvasStart.y - layerFrame.minY) / max(layerFrame.height, 1) * size.height
+        )
+        let end = CGPoint(
+            x: (canvasEnd.x - layerFrame.minX) / max(layerFrame.width, 1) * size.width,
+            y: (canvasEnd.y - layerFrame.minY) / max(layerFrame.height, 1) * size.height
+        )
         guard let gradientImage = NSImage.rendered(size: size, actions: { rect in
             guard let context = NSGraphicsContext.current?.cgContext,
                   let gradient = CGGradient(

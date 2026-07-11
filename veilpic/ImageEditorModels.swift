@@ -113,7 +113,7 @@ enum ImageEditorTool: String, CaseIterable, Identifiable {
         case .magicWand:
             "wand.and.stars"
         case .quickSelection:
-            "paintbrush.pointed"
+            "circle.dashed.inset.filled"
         case .crop:
             "crop"
         case .brush:
@@ -141,7 +141,7 @@ enum ImageEditorTool: String, CaseIterable, Identifiable {
         case .redEye:
             "eye"
         case .paintBucket:
-            "paintbucket.fill"
+            "paintpalette.fill"
         case .gradient:
             "square.lefthalf.filled"
         case .eyedropper:
@@ -155,7 +155,7 @@ enum ImageEditorTool: String, CaseIterable, Identifiable {
         case .ellipse:
             "circle"
         case .pen:
-            "pencil.tip"
+            "point.topleft.down.curvedto.point.bottomright.up"
         case .hand:
             "hand.draw"
         case .zoom:
@@ -212,6 +212,40 @@ enum ImageEditorTool: String, CaseIterable, Identifiable {
         default:
             false
         }
+    }
+}
+
+enum ImageEditorMarqueeShape: String, CaseIterable, Identifiable {
+    case rectangle
+    case square
+    case ellipse
+    case circle
+
+    var id: String { rawValue }
+
+    var title: String {
+        L10n.text("imageEditor.marqueeShape.\(rawValue)")
+    }
+
+    var symbolName: String {
+        switch self {
+        case .rectangle:
+            "rectangle.dashed"
+        case .square:
+            "square.dashed"
+        case .ellipse:
+            "oval"
+        case .circle:
+            "circle.dashed"
+        }
+    }
+
+    var isEllipse: Bool {
+        self == .ellipse || self == .circle
+    }
+
+    var hasFixedAspectRatio: Bool {
+        self == .square || self == .circle
     }
 }
 
@@ -291,6 +325,23 @@ struct ImageEditorSelection: Equatable, Codable {
     static func polygon(_ points: [CGPoint]) -> ImageEditorSelection? {
         guard points.count >= 3 else { return nil }
         return ImageEditorSelection(points: points, isPolygon: true, isInverted: false, rasterMask: nil)
+    }
+
+    static func ellipse(_ rect: CGRect, segmentCount: Int = 64) -> ImageEditorSelection? {
+        let normalized = rect.standardized
+        guard normalized.width > 0, normalized.height > 0 else { return nil }
+        let segments = max(16, segmentCount)
+        let center = CGPoint(x: normalized.midX, y: normalized.midY)
+        let radiusX = normalized.width / 2
+        let radiusY = normalized.height / 2
+        let points = (0..<segments).map { index in
+            let angle = CGFloat(index) / CGFloat(segments) * 2 * .pi
+            return CGPoint(
+                x: center.x + cos(angle) * radiusX,
+                y: center.y + sin(angle) * radiusY
+            )
+        }
+        return polygon(points)
     }
 
     static func raster(mask: ImageEditorSelectionMask, bounds: CGRect) -> ImageEditorSelection {
@@ -3381,6 +3432,7 @@ struct ImageEditorHistorySnapshot: Identifiable {
     var name: String
     let createdAt = Date()
     var document: ImageEditorDocument
+    var renderedImage: NSImage
 }
 
 struct ImageEditorLayerCompLayerState: Equatable, Codable {
@@ -3981,9 +4033,15 @@ struct ImageEditorDocument {
     }
 
     private func canvasImage(for image: NSImage, frame: CGRect) -> NSImage {
-        NSImage.rendered(size: canvasSize) { _ in
+        let appKitFrame = CGRect(
+            x: frame.minX,
+            y: canvasSize.height - frame.maxY,
+            width: frame.width,
+            height: frame.height
+        )
+    return NSImage.rendered(size: canvasSize) { _ in
             image.draw(
-                in: frame,
+                in: appKitFrame,
                 from: CGRect(origin: .zero, size: image.size),
                 operation: .copy,
                 fraction: 1

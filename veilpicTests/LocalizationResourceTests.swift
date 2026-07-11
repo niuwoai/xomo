@@ -66,6 +66,25 @@ struct LocalizationResourceTests {
         }
     }
 
+    @Test func filterApplyActionIsLocalizedInEverySupportedLanguage() throws {
+        let paths = try Self.repositoryPaths()
+        let expectedValues = [
+            "zh-Hans": "应用滤镜",
+            "en": "Apply Filter",
+            "ja": "フィルターを適用"
+        ]
+
+        for (localizationID, expectedValue) in expectedValues {
+            let strings = try Self.stringTable(
+                tableName: "Localizable",
+                localizationID: localizationID,
+                appDirectory: paths.appDirectory
+            )
+
+            #expect(strings["imageEditor.action.applyFilter"] == expectedValue)
+        }
+    }
+
     private static func knownRegions(in projectText: String) -> Set<String> {
         guard let start = projectText.range(of: "knownRegions = (") else { return [] }
         let remaining = projectText[start.upperBound...]
@@ -88,11 +107,22 @@ struct LocalizationResourceTests {
         localizationID: String,
         appDirectory: URL
     ) throws -> Set<String> {
+        Set(try stringTable(
+            tableName: tableName,
+            localizationID: localizationID,
+            appDirectory: appDirectory
+        ).keys)
+    }
+
+    private static func stringTable(
+        tableName: String,
+        localizationID: String,
+        appDirectory: URL
+    ) throws -> [String: String] {
         let tableURL = appDirectory
             .appendingPathComponent("\(localizationID).lproj", isDirectory: true)
             .appendingPathComponent("\(tableName).strings")
-        let dictionary = try #require(NSDictionary(contentsOf: tableURL) as? [String: String])
-        return Set(dictionary.keys)
+        return try #require(NSDictionary(contentsOf: tableURL) as? [String: String])
     }
 
     private static func repositoryPaths() throws -> (appDirectory: URL, projectFile: URL) {

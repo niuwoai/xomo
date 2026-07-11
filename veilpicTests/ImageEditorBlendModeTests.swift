@@ -111,6 +111,68 @@ struct ImageEditorBlendModeTests {
         #expect(abs(subtract.blueComponent - 0.60) < 0.02)
     }
 
+    @Test func blendingPreservesTopToBottomImageOrientation() throws {
+        let size = NSSize(width: 8, height: 8)
+        let source = try #require(NSImage.rendered(size: size) { rect in
+            NSColor.systemRed.setFill()
+            CGRect(x: rect.minX, y: rect.midY, width: rect.width, height: rect.height / 2).fill()
+            NSColor.systemBlue.setFill()
+            CGRect(x: rect.minX, y: rect.minY, width: rect.width, height: rect.height / 2).fill()
+        })
+        let transparent = NSImage.transparent(size: size)
+        let output = try #require(source.blended(with: transparent, mode: .normal, opacity: 1))
+        let secondOutput = try #require(output.blended(with: transparent, mode: .normal, opacity: 1))
+
+        let sourceTop = try #require(source.color(at: CGPoint(x: 4, y: 1))?.usingColorSpace(.deviceRGB))
+        let sourceBottom = try #require(source.color(at: CGPoint(x: 4, y: 6))?.usingColorSpace(.deviceRGB))
+        let outputTop = try #require(output.color(at: CGPoint(x: 4, y: 1))?.usingColorSpace(.deviceRGB))
+        let outputBottom = try #require(output.color(at: CGPoint(x: 4, y: 6))?.usingColorSpace(.deviceRGB))
+        let secondOutputTop = try #require(secondOutput.color(at: CGPoint(x: 4, y: 1))?.usingColorSpace(.deviceRGB))
+        let secondOutputBottom = try #require(secondOutput.color(at: CGPoint(x: 4, y: 6))?.usingColorSpace(.deviceRGB))
+
+        #expect(outputTop.redComponent == sourceTop.redComponent)
+        #expect(outputTop.blueComponent == sourceTop.blueComponent)
+        #expect(outputBottom.redComponent == sourceBottom.redComponent)
+        #expect(outputBottom.blueComponent == sourceBottom.blueComponent)
+        #expect(secondOutputTop.redComponent == sourceTop.redComponent)
+        #expect(secondOutputTop.blueComponent == sourceTop.blueComponent)
+        #expect(secondOutputBottom.redComponent == sourceBottom.redComponent)
+        #expect(secondOutputBottom.blueComponent == sourceBottom.blueComponent)
+    }
+
+    @Test func addingShapeLayersDoesNotFlipExistingComposite() throws {
+        let size = NSSize(width: 40, height: 30)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "blank.png",
+            image: NSImage.transparent(size: size)
+        ) { _ in }
+        viewModel.foregroundColor = .systemBlue
+        viewModel.backgroundColor = .systemCyan
+        viewModel.drawGradient(from: CGPoint(x: 20, y: 0), to: CGPoint(x: 20, y: 30))
+
+        let beforeTop = try #require(viewModel.currentImage.color(at: CGPoint(x: 5, y: 3))?.usingColorSpace(.deviceRGB))
+        let beforeMiddle = try #require(viewModel.currentImage.color(at: CGPoint(x: 5, y: 15))?.usingColorSpace(.deviceRGB))
+
+        viewModel.foregroundColor = .systemOrange
+        viewModel.drawShape(from: CGPoint(x: 0, y: 24), to: CGPoint(x: 40, y: 30), ellipse: false)
+        let afterRectangleTop = try #require(viewModel.currentImage.color(at: CGPoint(x: 5, y: 3))?.usingColorSpace(.deviceRGB))
+        let afterRectangleMiddle = try #require(viewModel.currentImage.color(at: CGPoint(x: 5, y: 15))?.usingColorSpace(.deviceRGB))
+
+        viewModel.foregroundColor = .systemYellow
+        viewModel.drawShape(from: CGPoint(x: 30, y: 2), to: CGPoint(x: 38, y: 10), ellipse: true)
+        let afterEllipseTop = try #require(viewModel.currentImage.color(at: CGPoint(x: 5, y: 3))?.usingColorSpace(.deviceRGB))
+        let afterEllipseMiddle = try #require(viewModel.currentImage.color(at: CGPoint(x: 5, y: 15))?.usingColorSpace(.deviceRGB))
+
+        #expect(afterRectangleTop.redComponent == beforeTop.redComponent)
+        #expect(afterRectangleTop.blueComponent == beforeTop.blueComponent)
+        #expect(afterRectangleMiddle.greenComponent == beforeMiddle.greenComponent)
+        #expect(afterRectangleMiddle.blueComponent == beforeMiddle.blueComponent)
+        #expect(afterEllipseTop.redComponent == beforeTop.redComponent)
+        #expect(afterEllipseTop.blueComponent == beforeTop.blueComponent)
+        #expect(afterEllipseMiddle.greenComponent == beforeMiddle.greenComponent)
+        #expect(afterEllipseMiddle.blueComponent == beforeMiddle.blueComponent)
+    }
+
     private func solidImage(size: NSSize, color: NSColor) -> NSImage {
         let image = NSImage(size: size)
         image.lockFocus()

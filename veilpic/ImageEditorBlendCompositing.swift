@@ -220,7 +220,7 @@ extension NSImage {
         let bytesPerPixel = 4
         let bytesPerRow = width * bytesPerPixel
         var pixels = [UInt8](repeating: 0, count: bytesPerRow * height)
-        guard let cgImage = cgImage(forProposedRect: nil, context: nil, hints: nil),
+        guard let sourceCGImage = cgImage(forProposedRect: nil, context: nil, hints: nil),
               let context = CGContext(
                 data: &pixels,
                 width: width,
@@ -233,9 +233,7 @@ extension NSImage {
         else { return nil }
 
         context.interpolationQuality = .none
-        context.translateBy(x: 0, y: CGFloat(height))
-        context.scaleBy(x: 1, y: -1)
-        context.draw(cgImage, in: CGRect(origin: .zero, size: targetSize))
+        context.draw(sourceCGImage, in: CGRect(origin: .zero, size: targetSize))
         return pixels
     }
 

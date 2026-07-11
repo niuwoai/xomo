@@ -1,4 +1,4 @@
-"app.name" = "轻图";
+"app.name" = "像界";
 "app.version" = "版本 %@";
 "annotation.tool.ellipse" = "椭圆";
 "annotation.tool.pen" = "画笔";
@@ -52,7 +52,7 @@
 "feedback.screenshot.copied.title" = "截图已复制";
 "feedback.screenshot.copyFailed.message" = "截图已进入工作台，但写入系统剪贴板失败。可以稍后用“复制图片”重试。";
 "feedback.screenshot.copyFailed.title" = "截图复制失败";
-"feedback.screenshot.permission.message" = "请在系统设置中允许轻图录制屏幕，授权后再重试。";
+"feedback.screenshot.permission.message" = "请在系统设置中允许像界录制屏幕，授权后再重试。";
 "feedback.screenshot.permission.title" = "需要屏幕录制权限";
 "feedback.screenshot.region.planned.message" = "区域截图会进入工作台，可继续标注、后处理、保存、上传或复制。";
 "feedback.screenshot.region.planned.title" = "区域截图已可用";
@@ -144,7 +144,7 @@
 "onboarding.step.config.done" = "连接信息已完整，可以开始上传。";
 "onboarding.step.config.missing" = "补齐必填项：%@。";
 "onboarding.step.config.title" = "填写配置";
-"onboarding.step.menubar.message" = "之后点击菜单栏里的轻图图标，拖图或读取剪贴板即可上传。";
+"onboarding.step.menubar.message" = "之后点击菜单栏里的像界图标，拖图或读取剪贴板即可上传。";
 "onboarding.step.menubar.title" = "回到菜单栏";
 "onboarding.step.storage.message" = "选择 OSS / S3 或兼容服务，准备 bucket、endpoint 和访问密钥。";
 "onboarding.step.storage.title" = "准备存储";
@@ -189,10 +189,10 @@
 "settings.autoCopy.note" = "默认上传成功后复制压缩图 URL；你也可以关闭自动复制，或改为复制其他版本。";
 "settings.autoCopy.title" = "上传成功后自动复制 URL";
 "settings.autoCopy.variant" = "自动复制版本";
-"settings.dockVisibility.note" = "默认开启。轻图主要以菜单栏托盘的形态使用，隐藏 Dock 图标可让窗口列表更清爽。关闭后会在 Dock 显示图标，并可从 Dock 调出主窗口。";
+"settings.dockVisibility.note" = "默认开启。像界主要以菜单栏托盘的形态使用，隐藏 Dock 图标可让窗口列表更清爽。关闭后会在 Dock 显示图标，并可从 Dock 调出主窗口。";
 "settings.dockVisibility.title" = "隐藏 Dock 图标";
 "settings.launchAtLogin.error" = "无法更新开机自动启动：%@";
-"settings.launchAtLogin.note" = "开启后，轻图会在你登录 macOS 后自动启动，并停留在菜单栏。";
+"settings.launchAtLogin.note" = "开启后，像界会在你登录 macOS 后自动启动，并停留在菜单栏。";
 "settings.launchAtLogin.title" = "开机自动启动";
 "settings.provider" = "存储后端";
 "settings.screenshotBehavior" = "截图行为";
@@ -205,10 +205,10 @@
 "settings.shortcut.region" = "区域截图";
 "settings.shortcut.reset" = "恢复默认";
 "settings.subtitle" = "配置 OSS / S3 等对象存储；之后从菜单栏图标快速上传图片。";
-"settings.title" = "轻图设置";
-"settings.title.onboarding" = "开始使用轻图";
+"settings.title" = "像界设置";
+"settings.title.onboarding" = "开始使用像界";
 "settings.uploadBehavior" = "上传行为";
-"settings.usage.message" = "配置完成后，轻图会留在菜单栏。点击菜单栏图标即可拖拽图片、读取剪贴板、复制上传链接；设置也可以随时从托盘面板打开。";
+"settings.usage.message" = "配置完成后，像界会留在菜单栏。点击菜单栏图标即可拖拽图片、读取剪贴板、复制上传链接；设置也可以随时从托盘面板打开。";
 "settings.usage.title" = "使用方式";
 "source.clipboard" = "剪贴板";
 "source.drop" = "拖拽图片";
@@ -251,7 +251,7 @@
 "status.upload.failed" = "上传失败";
 "status.uploadedVariants" = "已上传 %d 个版本";
 "status.uploadingVariants" = "正在上传 %d 个版本...";
-"upload.configPrompt.message" = "轻图需要 OSS / S3 等存储信息，配置后就能从菜单栏快速上传。";
+"upload.configPrompt.message" = "像界需要 OSS / S3 等存储信息，配置后就能从菜单栏快速上传。";
 "upload.configPrompt.title" = "先配置对象存储";
 "upload.drop.idle" = "拖拽图片到这里";
 "upload.drop.message" = "可拖拽、选择图片或选择目录；上传成功后默认复制压缩图 URL。";
@@ -316,8 +316,9 @@
 "variant.webp.title" = "WebP";
 "workbench.preview.edit" = "编辑图片";
 "imageEditor.window.title" = "图片编辑器";
-"imageEditor.developmentSampleName" = "开发测试画布";
-"imageEditor.developmentSampleLayerName" = "可编辑示例形状";
+"imageEditor.developmentSampleName" = "未命名画布";
+"imageEditor.developmentSampleLayerName" = "图层 1";
+"imageEditor.startup.loading" = "正在打开图片编辑器…";
 "imageEditor.defaultSourceName" = "图片";
 "imageEditor.menu.file" = "文件";
 "imageEditor.menu.edit" = "编辑";
@@ -402,6 +403,9 @@
 "imageEditor.action.colorDefaultForegroundBackground" = "默认前景/背景色";
 "imageEditor.action.colorSwapForegroundBackground" = "交换前景/背景色";
 "imageEditor.action.colorUseEyedropper" = "使用吸管";
+"imageEditor.action.colorSampleScreenForeground" = "从屏幕拾取前景色";
+"imageEditor.action.colorSampleScreenBackground" = "从屏幕拾取背景色";
+"imageEditor.action.preview" = "预览";
 "imageEditor.action.swatchesShowPanel" = "显示色板面板";
 "imageEditor.action.brushesShowPanel" = "显示画笔面板";
 "imageEditor.action.characterShowPanel" = "显示字符面板";
@@ -419,6 +423,8 @@
 "imageEditor.action.historyShowPanelVisibility" = "显示历史记录面板";
 "imageEditor.action.channelsShowPanel" = "显示通道面板";
 "imageEditor.action.cancel" = "取消";
+"imageEditor.action.cropConfirm" = "确认裁剪";
+"imageEditor.action.cropCancel" = "取消裁剪";
 "imageEditor.action.apply" = "应用到预览";
 "imageEditor.action.export" = "导出";
 "imageEditor.action.applySelection" = "应用选区";
@@ -433,6 +439,15 @@
 "imageEditor.export.format.png" = "PNG";
 "imageEditor.export.format.jpeg" = "JPEG";
 "imageEditor.export.format.webp" = "WebP";
+"imageEditor.export.format.psd" = "PSD";
+"imageEditor.psd.error.invalid" = "PSD 文件结构无效。";
+"imageEditor.psd.error.unsupportedDocument" = "暂不支持此 PSD 的色彩模式、位深或尺寸。";
+"imageEditor.psd.error.unsupportedCompression" = "暂不支持此 PSD 使用的图层压缩方式。";
+"imageEditor.psd.error.imageEncodingFailed" = "无法将图层编码为 PSD 像素数据。";
+"imageEditor.history.psdOpen" = "打开 PSD";
+"imageEditor.history.psdOpenFlattened" = "以合成图打开 PSD";
+"imageEditor.status.psdOpened" = "已打开 PSD：%@";
+"imageEditor.status.psdOpenedFlattened" = "该 PSD 使用了暂不支持的图层特性，已以合成图打开：%@";
 "imageEditor.export.scope" = "范围";
 "imageEditor.export.scope.composited" = "合成图像";
 "imageEditor.export.scope.selectedLayer" = "当前图层";
@@ -443,6 +458,7 @@
 "imageEditor.export.outputSize" = "输出尺寸";
 "imageEditor.export.saveAs" = "另存为";
 "imageEditor.action.applyAdjustment" = "应用调整";
+"imageEditor.action.applyFilter" = "应用滤镜";
 "imageEditor.action.lastFilter" = "上次滤镜";
 "imageEditor.action.autoLevels" = "自动色阶";
 "imageEditor.action.autoContrast" = "自动对比度";
@@ -492,6 +508,11 @@
 "imageEditor.selectionMode.intersect.short" = "相交";
 "imageEditor.tool.move" = "移动";
 "imageEditor.tool.marquee" = "矩形选区";
+"imageEditor.option.marqueeShape" = "选择选区形状";
+"imageEditor.marqueeShape.rectangle" = "矩形";
+"imageEditor.marqueeShape.square" = "正方形";
+"imageEditor.marqueeShape.ellipse" = "椭圆";
+"imageEditor.marqueeShape.circle" = "圆形";
 "imageEditor.tool.lasso" = "套索";
 "imageEditor.tool.magicWand" = "魔棒";
 "imageEditor.tool.quickSelection" = "快速选择";
@@ -523,7 +544,7 @@
 "imageEditor.tool.lasso.help" = "套索：沿轮廓自由绘制选区。";
 "imageEditor.tool.magicWand.help" = "魔棒：按颜色相近程度选择连续区域。";
 "imageEditor.tool.quickSelection.help" = "快速选择：用笔触扩展相似像素的选区。";
-"imageEditor.tool.crop.help" = "裁剪：拖拽裁剪框，保留需要的画面区域。";
+"imageEditor.tool.crop.help" = "裁剪：拖拽预览裁剪范围，再确认或取消。";
 "imageEditor.tool.brush.help" = "画笔：用前景色在当前可编辑图层上绘制。";
 "imageEditor.tool.eraser.help" = "橡皮擦：擦除当前可编辑图层上的像素。";
 "imageEditor.tool.cloneStamp.help" = "仿制图章：从取样源复制像素到笔触位置。";
@@ -964,6 +985,7 @@
 "imageEditor.layer.selectionCount" = "已选择 %d 个图层";
 "imageEditor.layer.searchPlaceholder" = "搜索图层";
 "imageEditor.layer.searchEmpty" = "没有匹配的图层";
+"imageEditor.layer.advancedControls" = "高级图层设置";
 "imageEditor.layer.label.red" = "红色";
 "imageEditor.layer.label.orange" = "橙色";
 "imageEditor.layer.label.yellow" = "黄色";
@@ -1323,6 +1345,8 @@
 "imageEditor.status.colorDefaultForegroundBackground" = "前景色和背景色已恢复为黑白";
 "imageEditor.status.colorSwapForegroundBackground" = "已交换前景色和背景色";
 "imageEditor.status.colorEyedropperReady" = "已切换到吸管工具，可取样颜色";
+"imageEditor.status.colorScreenSampledForeground" = "已从屏幕拾取前景色";
+"imageEditor.status.colorScreenSampledBackground" = "已从屏幕拾取背景色";
 "imageEditor.status.swatchesPanelSummary" = "默认色板：%@";
 "imageEditor.status.swatchForegroundApplied" = "前景色已设为%@（%@）";
 "imageEditor.status.swatchBackgroundApplied" = "背景色已设为%@（%@）";
@@ -1842,6 +1866,9 @@
 "imageEditor.action.layerScaleUp" = "放大图层";
 "imageEditor.action.layerResizeHandle" = "拖拽缩放图层，按住 Shift 等比缩放";
 "imageEditor.action.layerRotateHandle" = "拖拽旋转图层，按住 Shift 吸附 15°";
+"imageEditor.action.layerMore" = "更多图层操作";
+"imageEditor.action.layerMoreOpenMenu" = "更多命令请使用顶部“图层”菜单";
+"imageEditor.status.layerMoreOpenMenu" = "完整图层命令位于顶部“图层”菜单";
 "imageEditor.action.layerRotateLeft" = "左旋图层";
 "imageEditor.action.layerRotateRight" = "右旋图层";
 "imageEditor.action.layerRotate90Left" = "逆时针旋转 90°";
@@ -1948,6 +1975,7 @@
 "imageEditor.action.channelSaveCurrentAsAlpha" = "保存当前预览通道为 Alpha 通道";
 "imageEditor.action.channelSaveAsAlpha" = "保存 %@ 为 Alpha 通道";
 "imageEditor.action.alphaChannelSelect" = "预览并选择 Alpha 通道";
+"imageEditor.action.alphaChannelMore" = "%@ 的更多操作";
 "imageEditor.action.alphaChannelLoadSelection" = "将 %@ 载入为选区";
 "imageEditor.action.alphaChannelUpdate" = "用当前选区更新 %@";
 "imageEditor.action.alphaChannelSelectionAdd" = "把当前选区添加到 %@";
@@ -2198,12 +2226,12 @@
 "feedback.imageEditorUnavailable.message" = "请先放入一张图片并等待后处理预览生成。";
 "feedback.imageEditorApplied.title" = "已应用编辑";
 "feedback.imageEditorApplied.message" = "编辑后的图片已成为新的工作台原图，后续保存、复制和上传都会使用它。";
-"about.menuItem" = "关于轻图";
+"about.menuItem" = "关于像界";
 "about.windowTitle" = "关于 %@";
 "about.versionFormat" = "版本 %@";
-"about.summary" = "截图、图片编辑、上传分享都归到轻图这一处。";
+"about.summary" = "截图、图片编辑、上传分享都归到像界这一处。";
 "about.authorHomepage" = "作者主页 · 83d.me";
-"about.productPage" = "轻图产品页";
+"about.productPage" = "像界产品页";
 "about.unknownVersion" = "未知版本";
 "about.copyright" = "© %d rocky.x";
 "imageEditor.properties.shadowContour" = "投影等高线";
@@ -2215,3 +2243,6 @@
 "imageEditor.layerEffectContour.cone" = "锥形";
 "imageEditor.layerEffectContour.ring" = "环形";
 "action.done" = "完成";
+"imageEditor.action.historySelect" = "选择这一步历史";
+"imageEditor.status.historyEntrySelected" = "已选择历史步骤：%@";
+"imageEditor.status.historyTruncated" = "已删除选中步骤及其后的操作，共 %d 步";

@@ -14,6 +14,9 @@ final class DockVisibilitySettings: ObservableObject {
     static let shared = DockVisibilitySettings()
 
     private static let hideDockIconKey = "veilpic.dock.hideIcon.v1"
+    // Keep the app discoverable while the image editor is under active usability testing.
+    // The saved preference remains intact so this temporary policy can be lifted later.
+    private static let temporarilyKeepDockIconVisible = true
 
     @Published var hideDockIcon: Bool {
         didSet {
@@ -34,7 +37,9 @@ final class DockVisibilitySettings: ObservableObject {
     }
 
     func applyActivationPolicy() {
-        let targetPolicy: NSApplication.ActivationPolicy = hideDockIcon ? .accessory : .regular
+        let targetPolicy: NSApplication.ActivationPolicy = Self.temporarilyKeepDockIconVisible || !hideDockIcon
+            ? .regular
+            : .accessory
         guard NSApp.activationPolicy() != targetPolicy else { return }
         NSApp.setActivationPolicy(targetPolicy)
 

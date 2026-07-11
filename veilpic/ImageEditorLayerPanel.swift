@@ -7,20 +7,23 @@
 
 import AppKit
 import SwiftUI
+import UniformTypeIdentifiers
+
+private let imageEditorLayerRowDragStride: CGFloat = 66
 
 extension ImageEditorView {
-    var layersPanel: some View {
-        EditorPanel(title: L10n.text("imageEditor.panel.layersChannels")) {
+    func layersPanel(showsTitle: Bool = true) -> some View {
+        EditorPanel(title: L10n.text("imageEditor.panel.layersChannels"), showsTitle: showsTitle) {
             VStack(spacing: 8) {
                 layerPanelTabs
                 if selectedLayerPanelTab == .layers {
-                    layerOpacityControls
-                    layerMaskControls
-                    layerActionToolbar
                     layerSearchField
-                    layerKindFilterBar
+                    layerActionToolbar
                     selectedLayerCountLabel
                     layerRows
+                        .frame(minHeight: 150, maxHeight: .infinity)
+                        .layoutPriority(1)
+                    layerAdvancedControlsDisclosure
                 } else {
                     ScrollView {
                         if selectedLayerPanelTab == .channels {
@@ -29,11 +32,52 @@ extension ImageEditorView {
                             layerCompsPanelContent
                         }
                     }
-                    .frame(maxHeight: .infinity, alignment: .top)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                 }
             }
+            .frame(maxWidth: .infinity, alignment: .topLeading)
         }
-        .frame(height: 348)
+        .frame(maxWidth: .infinity)
+        .frame(height: 420)
+    }
+
+    private var layerAdvancedControlsDisclosure: some View {
+        VStack(spacing: 6) {
+            Button {
+                isLayerAdvancedControlsExpanded.toggle()
+            } label: {
+                HStack(spacing: 7) {
+                    Image(systemName: "slider.horizontal.3")
+                        .font(.system(size: 11, weight: .semibold))
+                    Text(L10n.text("imageEditor.layer.advancedControls"))
+                        .font(.system(size: 11, weight: .bold))
+                    Spacer(minLength: 0)
+                    Image(systemName: isLayerAdvancedControlsExpanded ? "chevron.down" : "chevron.right")
+                        .font(.system(size: 10, weight: .bold))
+                }
+                .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+                .padding(.horizontal, 8)
+                .frame(height: 28)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .focusable(false)
+            .accessibilityIdentifier("image-editor-layer-advanced-controls")
+            .accessibilityValue(isLayerAdvancedControlsExpanded ? "expanded" : "collapsed")
+
+            if isLayerAdvancedControlsExpanded {
+                ScrollView {
+                    VStack(spacing: 8) {
+                        layerOpacityControls
+                        layerMaskControls
+                        layerKindFilterBar
+                    }
+                }
+                .frame(maxHeight: 112)
+            }
+        }
+        .background(Color(nsColor: ImageEditorTheme.panelRaised).opacity(0.38))
+        .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
     }
 
     private var layerPanelTabs: some View {
@@ -156,7 +200,7 @@ extension ImageEditorView {
                         .frame(width: 18)
                         .foregroundStyle(Color(nsColor: isSelected ? ImageEditorTheme.selected : ImageEditorTheme.mutedText))
 
-                    Image(nsImage: viewModel.channelPreviewImage(for: channel))
+                    Image(nsImage: viewModel.channelThumbnailImage(for: channel))
                         .resizable()
                         .scaledToFill()
                         .frame(width: 42, height: 28)
@@ -176,6 +220,7 @@ extension ImageEditorView {
                 }
             }
             .buttonStyle(.plain)
+            .frame(maxWidth: .infinity, alignment: .leading)
             .help(L10n.format("imageEditor.action.channelPreview", channel.title))
 
             Button {
@@ -202,9 +247,190 @@ extension ImageEditorView {
         .padding(.vertical, 6)
         .background(isSelected ? Color(nsColor: ImageEditorTheme.selected).opacity(0.28) : Color.white.opacity(0.04))
         .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func alphaChannelRow(_ channel: ImageEditorAlphaChannel) -> some View {
+        let isSelected = viewModel.selectedAlphaChannelID == channel.id
+        return HStack(spacing: 6) {
+            Button {
+                viewModel.selectAlphaChannel(channel.id)
+            } label: {
+                Image(systemName: isSelected ? "checkmark.square.fill" : "square.dashed")
+                    .font(.system(size: 13, weight: .semibold))
+                    .frame(width: 18)
+                    .foregroundStyle(Color(nsColor: isSelected ? ImageEditorTheme.selected : ImageEditorTheme.mutedText))
+            }
+            .buttonStyle(.plain)
+            .help(L10n.text("imageEditor.action.alphaChannelSelect"))
+
+            Image(nsImage: viewModel.alphaChannelThumbnailImage(channel))
+                .resizable()
+                .scaledToFill()
+                .frame(width: 42, height: 28)
+                .clipped()
+                .background(Color.black.opacity(0.22))
+                .clipShape(RoundedRectangle(cornerRadius: 3, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 3, style: .continuous)
+                        .stroke(Color.white.opacity(0.18), lineWidth: 1)
+                )
+
+            TextField(
+                L10n.text("imageEditor.channel.alphaNamePlaceholder"),
+                text: alphaChannelNameBinding(channel)
+            )
+            .textFieldStyle(.plain)
+            .font(.system(size: 12, weight: .semibold))
+            .lineLimit(1)
+            .frame(minWidth: 0, maxWidth: .infinity)
+            .onSubmit {
+                commitAlphaChannelNameDraft(channel)
+            }
+            .onAppear {
+                syncAlphaChannelNameDraft(channel)
+            }
+            .onChange(of: channel.name) { _, _ in
+                syncAlphaChannelNameDraft(channel)
+            }
+
+            alphaChannelActionsMenu(channel)
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 6)
+        .background(isSelected ? Color(nsColor: ImageEditorTheme.selected).opacity(0.28) : Color.white.opacity(0.04))
+        .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func alphaChannelActionsMenu(_ channel: ImageEditorAlphaChannel) -> some View {
+        Menu {
+            alphaChannelMenuAction("imageEditor.action.alphaChannelLoadSelection", systemImage: "circle.dashed", channel: channel) {
+                viewModel.loadSelectionFromAlphaChannel(channel.id)
+            }
+            alphaChannelMenuAction("imageEditor.action.alphaChannelUpdate", systemImage: "arrow.triangle.2.circlepath", channel: channel, isDisabled: !viewModel.canSaveSelectionAsAlphaChannel) {
+                viewModel.updateAlphaChannelFromSelection(channel.id)
+            }
+            alphaChannelMenuAction("imageEditor.action.alphaChannelSelectionAdd", systemImage: "plus.square", channel: channel, isDisabled: !viewModel.canSaveSelectionAsAlphaChannel) {
+                viewModel.addSelectionToAlphaChannel(channel.id)
+            }
+            alphaChannelMenuAction("imageEditor.action.alphaChannelSelectionSubtract", systemImage: "minus.square", channel: channel, isDisabled: !viewModel.canSaveSelectionAsAlphaChannel) {
+                viewModel.subtractSelectionFromAlphaChannel(channel.id)
+            }
+            alphaChannelMenuAction("imageEditor.action.alphaChannelSelectionIntersect", systemImage: "square.grid.2x2", channel: channel, isDisabled: !viewModel.canSaveSelectionAsAlphaChannel) {
+                viewModel.intersectSelectionWithAlphaChannel(channel.id)
+            }
+
+            Divider()
+
+            alphaChannelMenuAction("imageEditor.action.alphaChannelApplyToMask", systemImage: "rectangle.badge.checkmark", channel: channel, isDisabled: !viewModel.canApplyAlphaChannelToSelectedLayerMask) {
+                viewModel.applyAlphaChannelToSelectedLayerMask(channel.id)
+            }
+            alphaChannelMenuAction("imageEditor.action.alphaChannelLayer", systemImage: "square.stack.3d.up", channel: channel) {
+                viewModel.createLayerFromAlphaChannel(channel.id)
+            }
+            alphaChannelMenuAction("imageEditor.action.alphaChannelDuplicate", systemImage: "doc.on.doc", channel: channel) {
+                viewModel.duplicateAlphaChannel(channel.id)
+            }
+            alphaChannelMenuAction("imageEditor.action.alphaChannelInvert", systemImage: "circle.lefthalf.filled", channel: channel) {
+                viewModel.invertAlphaChannel(channel.id)
+            }
+            alphaChannelMenuAction("imageEditor.action.alphaChannelFillWhite", systemImage: "square.fill", channel: channel) {
+                viewModel.fillAlphaChannelWhite(channel.id)
+            }
+            alphaChannelMenuAction("imageEditor.action.alphaChannelClear", systemImage: "square", channel: channel) {
+                viewModel.clearAlphaChannel(channel.id)
+            }
+            alphaChannelMenuAction("imageEditor.action.alphaChannelThreshold", systemImage: "circle.righthalf.filled", channel: channel) {
+                viewModel.thresholdAlphaChannel(channel.id)
+            }
+            alphaChannelMenuAction("imageEditor.action.alphaChannelFeather", systemImage: "circle.dotted", channel: channel) {
+                viewModel.featherAlphaChannel(channel.id)
+            }
+            alphaChannelMenuAction("imageEditor.action.alphaChannelExpand", systemImage: "arrow.up.left.and.arrow.down.right", channel: channel) {
+                viewModel.expandAlphaChannel(channel.id)
+            }
+            alphaChannelMenuAction("imageEditor.action.alphaChannelContract", systemImage: "arrow.down.right.and.arrow.up.left", channel: channel) {
+                viewModel.contractAlphaChannel(channel.id)
+            }
+            alphaChannelMenuAction("imageEditor.action.alphaChannelSmooth", systemImage: "sparkles", channel: channel) {
+                viewModel.smoothAlphaChannel(channel.id)
+            }
+            alphaChannelMenuAction("imageEditor.action.alphaChannelFillHoles", systemImage: "circle.fill", channel: channel) {
+                viewModel.fillHolesAlphaChannel(channel.id)
+            }
+            alphaChannelMenuAction("imageEditor.action.alphaChannelRemoveSpeckles", systemImage: "eraser", channel: channel) {
+                viewModel.removeSpecklesAlphaChannel(channel.id)
+            }
+
+            Divider()
+
+            alphaChannelMenuAction("imageEditor.action.alphaChannelFlipHorizontal", systemImage: "arrow.left.and.right", channel: channel) {
+                viewModel.flipAlphaChannelHorizontal(channel.id)
+            }
+            alphaChannelMenuAction("imageEditor.action.alphaChannelFlipVertical", systemImage: "arrow.up.and.down", channel: channel) {
+                viewModel.flipAlphaChannelVertical(channel.id)
+            }
+            alphaChannelMenuAction("imageEditor.action.alphaChannelRotateCounterclockwise", systemImage: "rotate.left", channel: channel) {
+                viewModel.rotateAlphaChannelCounterclockwise(channel.id)
+            }
+            alphaChannelMenuAction("imageEditor.action.alphaChannelRotateClockwise", systemImage: "rotate.right", channel: channel) {
+                viewModel.rotateAlphaChannelClockwise(channel.id)
+            }
+            alphaChannelMenuAction("imageEditor.action.alphaChannelRotate180", systemImage: "arrow.triangle.2.circlepath", channel: channel) {
+                viewModel.rotateAlphaChannel180(channel.id)
+            }
+            alphaChannelMenuAction("imageEditor.action.alphaChannelScaleUp", systemImage: "plus.magnifyingglass", channel: channel) {
+                viewModel.scaleAlphaChannelUp(channel.id)
+            }
+            alphaChannelMenuAction("imageEditor.action.alphaChannelScaleDown", systemImage: "minus.magnifyingglass", channel: channel) {
+                viewModel.scaleAlphaChannelDown(channel.id)
+            }
+            alphaChannelMenuAction("imageEditor.action.alphaChannelFitCanvas", systemImage: "viewfinder", channel: channel) {
+                viewModel.fitAlphaChannelToCanvas(channel.id)
+            }
+            alphaChannelMenuAction("imageEditor.action.alphaChannelMoveLeft", systemImage: "arrow.left", channel: channel) {
+                viewModel.moveAlphaChannelLeft(channel.id)
+            }
+            alphaChannelMenuAction("imageEditor.action.alphaChannelMoveRight", systemImage: "arrow.right", channel: channel) {
+                viewModel.moveAlphaChannelRight(channel.id)
+            }
+            alphaChannelMenuAction("imageEditor.action.alphaChannelMoveUp", systemImage: "arrow.up", channel: channel) {
+                viewModel.moveAlphaChannelUp(channel.id)
+            }
+            alphaChannelMenuAction("imageEditor.action.alphaChannelMoveDown", systemImage: "arrow.down", channel: channel) {
+                viewModel.moveAlphaChannelDown(channel.id)
+            }
+
+            Divider()
+
+            alphaChannelMenuAction("imageEditor.action.alphaChannelDelete", systemImage: "trash", channel: channel) {
+                viewModel.deleteAlphaChannel(channel.id)
+            }
+        } label: {
+            Image(systemName: "ellipsis.circle")
+                .font(.system(size: 13, weight: .semibold))
+                .frame(width: 28, height: 28)
+        }
+        .menuStyle(.borderlessButton)
+        .help(L10n.format("imageEditor.action.alphaChannelMore", channel.name))
+        .accessibilityLabel(L10n.format("imageEditor.action.alphaChannelMore", channel.name))
+    }
+
+    private func alphaChannelMenuAction(
+        _ titleKey: String,
+        systemImage: String,
+        channel: ImageEditorAlphaChannel,
+        isDisabled: Bool = false,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            Label(L10n.format(titleKey, channel.name), systemImage: systemImage)
+        }
+        .disabled(isDisabled)
+    }
+
+    private func legacyAlphaChannelRow(_ channel: ImageEditorAlphaChannel) -> some View {
         let isSelected = viewModel.selectedAlphaChannelID == channel.id
         return HStack(spacing: 6) {
             Button {
@@ -898,58 +1124,55 @@ extension ImageEditorView {
     }
 
     private var layerActionToolbar: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 6) {
-                layerActionButton(systemImage: "plus", helpKey: "imageEditor.action.layerNew") { viewModel.addLayer() }
-                layerActionButton(systemImage: "photo.badge.plus", helpKey: "imageEditor.action.layerImport") { viewModel.chooseImageLayerFile() }
-                layerActionButton(systemImage: "cube", helpKey: "imageEditor.action.layerSmartObject") { viewModel.convertSelectedLayerToSmartObject() }
-                    .disabled(!viewModel.canConvertSelectedLayerToSmartObject)
-                layerActionButton(systemImage: "arrow.triangle.2.circlepath", helpKey: "imageEditor.action.layerSmartObjectReplace") { viewModel.chooseSmartObjectReplacementFile() }
-                    .disabled(!viewModel.canReplaceSelectedSmartObjectContents)
-                layerActionButton(systemImage: "link.slash", helpKey: "imageEditor.action.layerSmartObjectMakeUnique") { viewModel.makeSelectedSmartObjectUnique() }
-                    .disabled(!viewModel.canMakeSelectedSmartObjectUnique)
-                layerActionButton(systemImage: "arrow.counterclockwise", helpKey: "imageEditor.action.layerSmartObjectResetTransform") { viewModel.resetSelectedSmartObjectTransform() }
-                    .disabled(!viewModel.canResetSelectedSmartObjectTransform)
-                layerActionButton(systemImage: "square.grid.3x3.fill", helpKey: "imageEditor.action.layerRasterize") { viewModel.rasterizeSelectedLayer() }
-                    .disabled(!viewModel.canRasterizeSelectedLayer)
-                layerActionButton(systemImage: "folder.badge.plus", helpKey: "imageEditor.action.layerGroupNew") { viewModel.addLayerGroup() }
-                layerActionButton(systemImage: "rectangle.stack.badge.plus", helpKey: "imageEditor.action.layerGroupSelected") { viewModel.groupSelectedLayer() }
-                    .disabled(!viewModel.canGroupSelectedLayer)
-                layerActionButton(systemImage: "list.bullet.indent", helpKey: "imageEditor.action.layerSelectGroupMembers") { viewModel.selectSelectedGroupMembers() }
-                    .disabled(!viewModel.canSelectSelectedGroupMembers)
-                layerLabelColorMenu
-                layerActionButton(systemImage: "increase.indent", helpKey: "imageEditor.action.layerMoveIntoGroup") { viewModel.moveSelectedLayersIntoGroup() }
-                    .disabled(!viewModel.canMoveSelectedLayersIntoGroup)
-                layerActionButton(systemImage: "decrease.indent", helpKey: "imageEditor.action.layerMoveOutOfGroup") { viewModel.moveSelectedLayersOutOfGroup() }
-                    .disabled(!viewModel.canMoveSelectedLayersOutOfGroup)
-                layerActionButton(systemImage: "folder.badge.minus", helpKey: "imageEditor.action.layerUngroup") { viewModel.ungroupSelectedLayers() }
-                    .disabled(!viewModel.canUngroupSelectedLayers)
-                layerActionButton(systemImage: "checklist", helpKey: "imageEditor.action.layerSelectAll") { viewModel.selectAllLayers() }
-                    .disabled(!viewModel.canSelectAllLayers)
-                layerActionButton(systemImage: "arrow.triangle.2.circlepath", helpKey: "imageEditor.action.layerSelectionInvert") { viewModel.invertLayerSelection() }
-                    .disabled(!viewModel.canInvertLayerSelection)
-                layerActionButton(systemImage: "xmark.square", helpKey: "imageEditor.action.layerSelectionClear") { viewModel.clearLayerSelection() }
-                    .disabled(!viewModel.canClearLayerSelection)
-                layerActionButton(systemImage: "doc.on.doc", helpKey: "imageEditor.action.layerDuplicate") { viewModel.duplicateSelectedLayer() }
-                    .disabled(!viewModel.canDuplicateSelectedLayer)
-                layerActionButton(systemImage: "eye.circle", helpKey: "imageEditor.action.layerIsolateSelected") { viewModel.isolateSelectedLayers() }
-                    .disabled(!viewModel.canIsolateSelectedLayers)
-                layerActionButton(systemImage: "eye", helpKey: "imageEditor.action.layerShowAll") { viewModel.showAllLayers() }
-                    .disabled(!viewModel.canShowAllLayers)
-                layerActionButton(systemImage: "link", helpKey: "imageEditor.action.layerLink") { viewModel.linkSelectedLayers() }
-                    .disabled(!viewModel.canLinkSelectedLayers)
-                layerActionButton(systemImage: "link.circle", helpKey: "imageEditor.action.layerSelectLinked") { viewModel.selectLinkedLayers() }
-                    .disabled(!viewModel.canSelectLinkedLayers)
-                layerActionButton(systemImage: "link.slash", helpKey: "imageEditor.action.layerUnlink") { viewModel.unlinkSelectedLayers() }
-                    .disabled(!viewModel.canUnlinkSelectedLayers)
-                layerActionButton(systemImage: "xmark.circle", helpKey: "imageEditor.action.layerUnlinkAll") { viewModel.unlinkAllLayers() }
-                    .disabled(!viewModel.canUnlinkAllLayers)
-                layerAlignmentButtons
-                layerOrderingButtons
-                layerMaskActionButtons
-                layerEffectButtons
-            }
+        HStack(spacing: 6) {
+            layerActionButton(systemImage: "plus", helpKey: "imageEditor.action.layerNew") { viewModel.addLayer() }
+            layerActionButton(systemImage: "photo.badge.plus", helpKey: "imageEditor.action.layerImport") { viewModel.chooseImageLayerFile() }
+            layerActionButton(systemImage: "folder.badge.plus", helpKey: "imageEditor.action.layerGroupNew") { viewModel.addLayerGroup() }
+            layerActionButton(systemImage: "doc.on.doc", helpKey: "imageEditor.action.layerDuplicate") { viewModel.duplicateSelectedLayer() }
+                .disabled(!viewModel.canDuplicateSelectedLayer)
+            layerActionButton(systemImage: "arrow.up", helpKey: "imageEditor.action.layerUp") { viewModel.moveSelectedLayerUp() }
+                .disabled(!viewModel.canMoveSelectedLayerUp)
+            layerActionButton(systemImage: "arrow.down", helpKey: "imageEditor.action.layerDown") { viewModel.moveSelectedLayerDown() }
+                .disabled(!viewModel.canMoveSelectedLayerDown)
+            layerActionButton(systemImage: "circle.dashed", helpKey: "imageEditor.action.layerMaskAdd") { viewModel.addLayerMask() }
+                .disabled(!viewModel.canAddLayerMask)
+            layerActionButton(systemImage: "trash", helpKey: "imageEditor.action.layerDelete") { viewModel.deleteSelectedLayer() }
+                .disabled(!viewModel.canDeleteLayer)
+            layerMoreActionsMenu
         }
+    }
+
+    private var layerMoreActionsMenu: some View {
+        Menu {
+            Button(L10n.text("imageEditor.action.layerGroupSelected")) { viewModel.groupSelectedLayer() }
+                .disabled(!viewModel.canGroupSelectedLayer)
+            Button(L10n.text("imageEditor.action.layerUngroup")) { viewModel.ungroupSelectedLayers() }
+                .disabled(!viewModel.canUngroupSelectedLayers)
+            Divider()
+            Button(L10n.text("imageEditor.action.layerSmartObject")) { viewModel.convertSelectedLayerToSmartObject() }
+                .disabled(!viewModel.canConvertSelectedLayerToSmartObject)
+            Button(L10n.text("imageEditor.action.layerRasterize")) { viewModel.rasterizeSelectedLayer() }
+                .disabled(!viewModel.canRasterizeSelectedLayer)
+            Divider()
+            Button(L10n.text("imageEditor.action.layerMergeDown")) { viewModel.mergeSelectedLayerDown() }
+                .disabled(!viewModel.canMergeSelectedLayerDown)
+            Button(L10n.text("imageEditor.action.layerMergeSelected")) { viewModel.mergeSelectedLayers() }
+                .disabled(!viewModel.canMergeSelectedLayers)
+            Button(L10n.text("imageEditor.action.layerFlatten")) { viewModel.flattenImage() }
+                .disabled(!viewModel.canFlattenImage)
+            Divider()
+            layerLabelColorMenu
+            Button(L10n.text("imageEditor.action.layerMoreOpenMenu")) {
+                viewModel.statusText = L10n.text("imageEditor.status.layerMoreOpenMenu")
+            }
+        } label: {
+            Image(systemName: "ellipsis")
+                .font(.system(size: 12, weight: .bold))
+                .frame(width: 24, height: 24)
+        }
+        .buttonStyle(EditorIconButtonStyle(isSelected: false))
+        .help(L10n.text("imageEditor.action.layerMore"))
+        .accessibilityIdentifier("image-editor-layer-more-actions")
     }
 
     private var layerAlignmentButtons: some View {
@@ -1288,6 +1511,7 @@ extension ImageEditorView {
                 }
             }
         }
+        .accessibilityIdentifier("image-editor-layer-list")
     }
 
     private func layerActionButton(systemImage: String, helpKey: String, isSelected: Bool = false, action: @escaping () -> Void) -> some View {
@@ -1305,31 +1529,106 @@ extension ImageEditorView {
         return VStack(spacing: 2) {
             layerDropBand(layer, placement: .above)
 
-            HStack(spacing: 8) {
+            HStack(spacing: 6) {
                 if indentation > 0 {
                     Spacer().frame(width: indentation)
                 }
-                layerGroupDisclosure(layer)
                 layerVisibilityButton(layer)
+                layerDragHandle(layer)
+                layerGroupDisclosure(layer)
                 layerContentButton(layer)
                 layerLockButton(layer)
             }
-            .padding(8)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 8)
             .background(layerRowBackground(layer))
             .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
-            .draggable(layer.id.uuidString)
-            .dropDestination(for: String.self) { items, _ in
-                guard layer.isGroup else { return false }
-                return handleLayerDrop(items, on: layer, placement: .insideGroup)
-            } isTargeted: { isTargeted in
-                targetedLayerDropTarget = isTargeted && layer.isGroup
-                    ? ImageEditorLayerDropTarget(layerID: layer.id, placement: .insideGroup)
-                    : nil
+            .onDrag {
+                viewModel.selectLayer(layer.id)
+                return NSItemProvider(object: layer.id.uuidString as NSString)
             }
+            .onDrop(
+                of: [UTType.plainText],
+                delegate: ImageEditorLayerDropDelegate(
+                    onTargetChange: { isTargeted, location in
+                        targetedLayerDropTarget = isTargeted
+                            ? ImageEditorLayerDropTarget(
+                                layerID: layer.id,
+                                placement: layerRowDropPlacement(layer, location: location)
+                            )
+                            : nil
+                    },
+                    onDrop: { sourceID, location in
+                        _ = handleLayerDrop(
+                            [sourceID],
+                            on: layer,
+                            placement: layerRowDropPlacement(layer, location: location)
+                        )
+                    }
+                )
+            )
             .help(layer.isGroup ? L10n.text("imageEditor.action.layerDropInsideGroup") : L10n.text("imageEditor.action.layerDragReorder"))
+            .accessibilityElement(children: .contain)
+            .accessibilityLabel(layer.name)
+            .accessibilityIdentifier("image-editor-layer-row-\(layer.id.uuidString)")
 
             layerDropBand(layer, placement: .below)
         }
+    }
+
+    private func layerRowDropPlacement(_ layer: ImageEditorLayer, location: CGPoint) -> ImageEditorLayerDropPlacement {
+        if layer.isGroup {
+            return .insideGroup
+        }
+        return location.y < 22 ? .above : .below
+    }
+
+    private func layerDragHandle(_ layer: ImageEditorLayer) -> some View {
+        Image(systemName: "line.3.horizontal")
+            .font(.system(size: 10, weight: .bold))
+            .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+            .frame(width: 12, height: 22)
+            .contentShape(Rectangle())
+            .gesture(layerReorderGesture(layer))
+            .accessibilityLabel(L10n.text("imageEditor.action.layerDragReorder"))
+            .accessibilityIdentifier("image-editor-layer-drag-handle-\(layer.id.uuidString)")
+    }
+
+    private func layerReorderGesture(_ layer: ImageEditorLayer) -> some Gesture {
+        DragGesture(minimumDistance: 4)
+            .onChanged { value in
+                if !viewModel.isLayerSelected(layer.id) {
+                    viewModel.selectLayer(layer.id)
+                }
+                targetedLayerDropTarget = layerDragTarget(
+                    for: layer,
+                    verticalTranslation: value.translation.height
+                )
+            }
+            .onEnded { value in
+                defer { targetedLayerDropTarget = nil }
+                guard let target = layerDragTarget(
+                    for: layer,
+                    verticalTranslation: value.translation.height
+                ) else { return }
+                let sourceIDs = viewModel.layerDragSourceIDs(for: layer.id)
+                _ = viewModel.moveLayerIDs(sourceIDs, toDropTarget: target)
+            }
+    }
+
+    private func layerDragTarget(
+        for layer: ImageEditorLayer,
+        verticalTranslation: CGFloat
+    ) -> ImageEditorLayerDropTarget? {
+        let rows = filteredVisibleLayerRows
+        guard let sourceIndex = rows.firstIndex(where: { $0.id == layer.id }) else { return nil }
+        let step = Int((verticalTranslation / imageEditorLayerRowDragStride).rounded())
+        guard step != 0 else { return nil }
+        let targetIndex = min(max(sourceIndex + step, rows.startIndex), rows.index(before: rows.endIndex))
+        guard targetIndex != sourceIndex else { return nil }
+        let targetLayer = rows[targetIndex]
+        let placement: ImageEditorLayerDropPlacement = targetIndex > sourceIndex ? .below : .above
+        return ImageEditorLayerDropTarget(layerID: targetLayer.id, placement: placement)
     }
 
     private func layerRowBackground(_ layer: ImageEditorLayer) -> Color {
@@ -1345,11 +1644,17 @@ extension ImageEditorView {
             .fill(isTargeted ? Color(nsColor: ImageEditorTheme.selected) : Color.clear)
             .frame(height: 6)
             .clipShape(RoundedRectangle(cornerRadius: 3, style: .continuous))
-            .dropDestination(for: String.self) { items, _ in
-                handleLayerDrop(items, on: layer, placement: placement)
-            } isTargeted: { isTargeted in
-                targetedLayerDropTarget = isTargeted ? target : nil
-            }
+            .onDrop(
+                of: [UTType.plainText],
+                delegate: ImageEditorLayerDropDelegate(
+                    onTargetChange: { isTargeted, _ in
+                        targetedLayerDropTarget = isTargeted ? target : nil
+                    },
+                    onDrop: { sourceID, _ in
+                        _ = handleLayerDrop([sourceID], on: layer, placement: placement)
+                    }
+                )
+            )
             .help(L10n.text(placement == .above ? "imageEditor.action.layerDropAbove" : "imageEditor.action.layerDropBelow"))
     }
 
@@ -1376,6 +1681,7 @@ extension ImageEditorView {
                     .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
             }
             .buttonStyle(.plain)
+            .focusable(false)
             .help(L10n.text(layer.isGroupExpanded ? "imageEditor.action.layerGroupCollapse" : "imageEditor.action.layerGroupExpand"))
         } else {
             Spacer().frame(width: 14)
@@ -1390,7 +1696,10 @@ extension ImageEditorView {
                 .frame(width: 18, height: 22)
         }
         .buttonStyle(.plain)
+        .focusable(false)
         .help(L10n.text("imageEditor.action.layerVisibility"))
+        .accessibilityLabel(L10n.text("imageEditor.action.layerVisibility"))
+        .accessibilityIdentifier("image-editor-layer-visibility-\(layer.id.uuidString)")
     }
 
     private func layerContentButton(_ layer: ImageEditorLayer) -> some View {
@@ -1399,28 +1708,16 @@ extension ImageEditorView {
             layerThumbnail(layer)
             layerRasterMaskThumbnail(layer)
             layerVectorMaskThumbnail(layer)
-            TextField(
-                L10n.text("imageEditor.properties.layerNamePlaceholder"),
-                text: layerNameBinding(layer)
-            )
-            .textFieldStyle(.plain)
-            .font(.system(size: 12, weight: .semibold))
-            .lineLimit(1)
-            .onSubmit {
-                commitLayerNameDraft(layer)
-            }
-            .onAppear {
-                syncLayerNameDraft(layer)
-            }
-            .onChange(of: layer.name) { _, _ in
-                syncLayerNameDraft(layer)
-            }
+            layerNameEditor(layer)
             Spacer()
             layerBadges(layer)
             layerLockToggles(layer)
             Text("\(Int((layer.opacity * 100).rounded()))%")
                 .font(.system(size: 11, weight: .medium).monospacedDigit())
                 .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                .lineLimit(1)
+                .fixedSize(horizontal: true, vertical: false)
+                .frame(minWidth: 32, alignment: .trailing)
         }
         .contentShape(Rectangle())
         .onTapGesture {
@@ -1433,23 +1730,13 @@ extension ImageEditorView {
         }
     }
 
-    private func layerNameBinding(_ layer: ImageEditorLayer) -> Binding<String> {
-        Binding {
-            layerNameDrafts[layer.id] ?? layer.name
-        } set: { value in
-            layerNameDrafts[layer.id] = value
-        }
-    }
-
-    private func syncLayerNameDraft(_ layer: ImageEditorLayer) {
-        layerNameDrafts[layer.id] = layer.name
-    }
-
-    private func commitLayerNameDraft(_ layer: ImageEditorLayer) {
-        guard let proposedName = layerNameDrafts[layer.id] else { return }
-        viewModel.selectLayer(layer.id)
-        viewModel.renameSelectedLayer(to: proposedName)
-        layerNameDrafts[layer.id] = viewModel.document.layers.first { $0.id == layer.id }?.name ?? layer.name
+    @ViewBuilder
+    private func layerNameEditor(_ layer: ImageEditorLayer) -> some View {
+        Text(layer.name)
+            .font(.system(size: 12, weight: .semibold))
+            .lineLimit(1)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
     }
 
     @ViewBuilder
@@ -1766,5 +2053,45 @@ extension ImageEditorView {
         } set: { value in
             viewModel.setSelectedLayerBlendMode(value)
         }
+    }
+}
+
+private struct ImageEditorLayerDropDelegate: DropDelegate {
+    let onTargetChange: (Bool, CGPoint) -> Void
+    let onDrop: (String, CGPoint) -> Void
+
+    func validateDrop(info: DropInfo) -> Bool {
+        info.hasItemsConforming(to: [UTType.plainText])
+    }
+
+    func dropEntered(info: DropInfo) {
+        onTargetChange(true, info.location)
+    }
+
+    func dropExited(info: DropInfo) {
+        onTargetChange(false, info.location)
+    }
+
+    func dropUpdated(info: DropInfo) -> DropProposal? {
+        onTargetChange(true, info.location)
+        return DropProposal(operation: .move)
+    }
+
+    func performDrop(info: DropInfo) -> Bool {
+        guard let provider = info.itemProviders(for: [UTType.plainText]).first
+        else {
+            onTargetChange(false, info.location)
+            return false
+        }
+
+        let location = info.location
+        provider.loadObject(ofClass: NSString.self) { object, _ in
+            guard let sourceID = object as? NSString else { return }
+            DispatchQueue.main.async {
+                onTargetChange(false, location)
+                onDrop(sourceID as String, location)
+            }
+        }
+        return true
     }
 }

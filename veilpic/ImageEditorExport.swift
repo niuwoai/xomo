@@ -13,6 +13,7 @@ enum ImageEditorExportFormat: String, CaseIterable, Identifiable {
     case png
     case jpeg
     case webp
+    case psd
 
     var id: String { rawValue }
 
@@ -28,6 +29,8 @@ enum ImageEditorExportFormat: String, CaseIterable, Identifiable {
             "jpg"
         case .webp:
             "webp"
+        case .psd:
+            "psd"
         }
     }
 
@@ -39,6 +42,8 @@ enum ImageEditorExportFormat: String, CaseIterable, Identifiable {
             .jpeg
         case .webp:
             .webP
+        case .psd:
+            ImageEditorPSDCodec.contentType
         }
     }
 }
@@ -62,7 +67,11 @@ struct ImageEditorExportSettings: Equatable {
     var quality: Double = 0.9
 
     var usesQuality: Bool {
-        format != .png
+        format == .jpeg || format == .webp
+    }
+
+    var usesScale: Bool {
+        format != .psd
     }
 }
 
@@ -110,6 +119,8 @@ extension ImageEditorViewModel {
             return scaled.flattened(on: .white).bitmapData(type: .jpeg, quality: settings.quality)
         case .webp:
             return scaled.bitmapData(typeIdentifier: UTType.webP.identifier, quality: settings.quality)
+        case .psd:
+            return try? ImageEditorPSDCodec.encode(document: document)
         }
     }
 
@@ -146,6 +157,10 @@ extension ImageEditorViewModel {
 
     private func normalizedExportSettings(_ settings: ImageEditorExportSettings) -> ImageEditorExportSettings {
         var normalized = settings
+        if normalized.format == .psd {
+            normalized.scope = .composited
+            normalized.scale = 1
+        }
         normalized.scale = min(4, max(0.25, normalized.scale))
         normalized.quality = min(1, max(0.1, normalized.quality))
         if normalized.scope == .selectedLayer, !canExportSelectedLayer {

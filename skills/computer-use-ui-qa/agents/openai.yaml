@@ -1,0 +1,4 @@
+interface:
+  display_name: "Computer Use UI QA"
+  short_description: "通过截图、点击、滚动和复截图验收并修正桌面应用界面"
+  default_prompt: "Use $computer-use-ui-qa to inspect this desktop UI through screenshots and interactions, fix issues, and verify the result."

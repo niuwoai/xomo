@@ -12,20 +12,28 @@ extension ImageEditorView {
     var menuBar: some View {
         HStack(spacing: 14) {
             Menu(L10n.text("imageEditor.menu.file")) { fileMenu }
+                .focusable(false)
                 .accessibilityIdentifier("image-editor-menu-file")
             Menu(L10n.text("imageEditor.menu.edit")) { editMenu }
+                .focusable(false)
                 .accessibilityIdentifier("image-editor-menu-edit")
             Menu(L10n.text("imageEditor.menu.image")) { imageMenu }
+                .focusable(false)
                 .accessibilityIdentifier("image-editor-menu-image")
             Menu(L10n.text("imageEditor.menu.layer")) { layerMenu }
+                .focusable(false)
                 .accessibilityIdentifier("image-editor-menu-layer")
             Menu(L10n.text("imageEditor.menu.select")) { selectMenu }
+                .focusable(false)
                 .accessibilityIdentifier("image-editor-menu-select")
             Menu(L10n.text("imageEditor.menu.filter")) { filterMenu }
+                .focusable(false)
                 .accessibilityIdentifier("image-editor-menu-filter")
             Menu(L10n.text("imageEditor.menu.view")) { viewMenu }
+                .focusable(false)
                 .accessibilityIdentifier("image-editor-menu-view")
             Menu(L10n.text("imageEditor.menu.window")) { windowMenu }
+                .focusable(false)
                 .accessibilityIdentifier("image-editor-menu-window")
 
             Spacer()
@@ -34,32 +42,38 @@ extension ImageEditorView {
                 viewModel.openProjectDocument()
             }
             .buttonStyle(EditorTextButtonStyle())
+            .focusable(false)
             .accessibilityIdentifier("image-editor-action-project-open")
 
             Button(L10n.text("imageEditor.action.projectSave")) {
                 viewModel.saveProjectDocument()
             }
             .buttonStyle(EditorTextButtonStyle())
+            .focusable(false)
             .accessibilityIdentifier("image-editor-action-project-save")
 
             Button(L10n.text("imageEditor.action.cancel")) {
                 closeWindow()
             }
             .buttonStyle(EditorTextButtonStyle())
+            .focusable(false)
             .accessibilityIdentifier("image-editor-action-cancel")
 
-            Button(L10n.text("imageEditor.action.apply")) {
+            Button(L10n.text("imageEditor.action.preview")) {
                 viewModel.applyAndClose {
                     closeWindow()
                 }
             }
             .buttonStyle(EditorPrimaryButtonStyle())
+            .focusable(false)
             .accessibilityIdentifier("image-editor-action-apply")
+            .accessibilityLabel(L10n.text("imageEditor.action.apply"))
 
             Button(L10n.text("imageEditor.action.export")) {
                 viewModel.openExportPanel()
             }
             .buttonStyle(EditorTextButtonStyle())
+            .focusable(false)
             .accessibilityIdentifier("image-editor-action-export")
         }
         .frame(height: 42)

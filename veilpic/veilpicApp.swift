@@ -6,6 +6,7 @@
 //
 
 import AppKit
+import OSLog
 import SwiftUI
 
 @main
@@ -46,16 +47,19 @@ enum SettingsPresentationMode {
 final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         DockVisibilitySettings.shared.applyActivationPolicy()
-        GlobalScreenshotShortcutManager.shared.setup(viewModel: .shared)
 
 #if DEBUG
         if ImageEditorDevelopmentLaunch.shouldOpenEditor {
+            ImageEditorDevelopmentStartupMetrics.record("applicationDidFinishLaunching")
+            ImageEditorWindowPresenter.shared.openDevelopmentSample()
             DispatchQueue.main.async {
-                ImageEditorWindowPresenter.shared.openDevelopmentSample()
+                GlobalScreenshotShortcutManager.shared.setup(viewModel: .shared)
             }
             return
         }
 #endif
+
+        GlobalScreenshotShortcutManager.shared.setup(viewModel: .shared)
 
         guard LaunchGuide.shouldOpenSettings(profile: MenuBarUploadViewModel.shared.profile) else {
             return
@@ -210,11 +214,17 @@ final class ImageEditorWindowPresenter: NSObject, NSWindowDelegate {
         present(rootView: rootView)
     }
 
-    private func present(rootView: ImageEditorView) {
+    private func present<Content: View>(rootView: Content) {
         let hostingController = NSHostingController(rootView: rootView)
+#if DEBUG
+        ImageEditorDevelopmentStartupMetrics.record("hostingControllerBuilt")
+#endif
 
         if let window {
             window.contentViewController = hostingController
+#if DEBUG
+            ImageEditorDevelopmentStartupMetrics.record("windowContentAssigned")
+#endif
             show(window)
             return
         }
@@ -236,36 +246,33 @@ final class ImageEditorWindowPresenter: NSObject, NSWindowDelegate {
 
 #if DEBUG
     func openDevelopmentSample() {
+        presentDevelopmentSampleEditor()
+    }
+
+    private func presentDevelopmentSampleEditor() {
+        ImageEditorDevelopmentStartupMetrics.record("editorConstructionStarted")
         let sourceName = L10n.text("imageEditor.developmentSampleName")
+        let document = developmentSampleDocument(sourceName: sourceName)
+        ImageEditorDevelopmentStartupMetrics.record("sampleDocumentBuilt")
         let viewModel = ImageEditorViewModel(
-            document: developmentSampleDocument(sourceName: sourceName),
+            document: document,
+            initialCompositeImage: document.layers.first?.image,
             onApply: { _ in }
         )
+        ImageEditorDevelopmentStartupMetrics.record("viewModelBuilt")
+        _ = viewModel.currentImage
+        ImageEditorDevelopmentStartupMetrics.record("firstCompositeBuilt")
         present(rootView: ImageEditorView(viewModel: viewModel))
+        ImageEditorDevelopmentStartupMetrics.record("editorWindowDisplayed")
     }
 
     private func developmentSampleDocument(sourceName: String) -> ImageEditorDocument {
-        let size = NSSize(width: 1600, height: 1000)
-        let background = NSImage.rendered(size: size) { rect in
-            NSColor(srgbRed: 0.08, green: 0.10, blue: 0.14, alpha: 1).setFill()
-            rect.fill()
-        } ?? NSImage.transparent(size: size)
-
-        let editableShapes = NSImage.rendered(size: size) { _ in
-            NSColor(srgbRed: 0.12, green: 0.45, blue: 0.86, alpha: 1).setFill()
-            CGRect(x: 110, y: 120, width: 620, height: 680).fill()
-
-            NSColor(srgbRed: 0.96, green: 0.58, blue: 0.20, alpha: 1).setFill()
-            NSBezierPath(ovalIn: CGRect(x: 760, y: 280, width: 520, height: 520)).fill()
-
-            NSColor(srgbRed: 0.92, green: 0.94, blue: 0.98, alpha: 1).setFill()
-            CGRect(x: 860, y: 120, width: 520, height: 110).fill()
-        } ?? NSImage.transparent(size: size)
+        let size = NSSize(width: 960, height: 600)
+        let background = NSImage.transparent(size: size)
 
         var document = ImageEditorDocument(sourceName: sourceName, image: background)
         guard let layerIndex = document.selectedLayerIndex else { return document }
         document.layers[layerIndex].name = L10n.text("imageEditor.developmentSampleLayerName")
-        document.layers[layerIndex].image = editableShapes
         return document
     }
 #endif
@@ -275,6 +282,19 @@ final class ImageEditorWindowPresenter: NSObject, NSWindowDelegate {
         window.makeKeyAndOrderFront(nil)
     }
 }
+
+#if DEBUG
+private enum ImageEditorDevelopmentStartupMetrics {
+    private static let logger = Logger(subsystem: "im.some.xomo", category: "DebugStartup")
+    private static let startedAt = ProcessInfo.processInfo.systemUptime
+
+    static func record(_ phase: String) {
+        let elapsedMilliseconds = Int((ProcessInfo.processInfo.systemUptime - startedAt) * 1_000)
+        logger.notice("phase=\(phase, privacy: .public) elapsed_ms=\(elapsedMilliseconds, privacy: .public)")
+    }
+}
+
+#endif
 
 enum LaunchGuide {
     private static let settingsSeenKey = "veilpic.launchGuide.settingsSeen.v1"

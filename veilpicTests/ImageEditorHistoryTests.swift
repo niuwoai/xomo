@@ -10,6 +10,7 @@ import Testing
 @testable import musepic
 
 @MainActor
+@Suite(.serialized)
 struct ImageEditorHistoryTests {
     @Test
     func clearHistoryKeepsCurrentStateAndDropsUndoRedoSnapshots() throws {
@@ -82,12 +83,147 @@ struct ImageEditorHistoryTests {
         #expect(viewModel.statusText == L10n.format("imageEditor.status.historySnapshotDeleted", "Clean Base"))
     }
 
+    @Test
+    func deletingSelectedHistoryStepTruncatesThatStepAndLaterOperations() throws {
+        let image = testImage(color: .systemBlue, size: NSSize(width: 80, height: 60))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.foregroundColor = .systemPink
+        viewModel.drawBrush(points: [CGPoint(x: 8, y: 8), CGPoint(x: 34, y: 24)])
+        let firstStrokeData = try #require(viewModel.currentImage.qingtuPNGData())
+
+        viewModel.foregroundColor = .systemGreen
+        viewModel.drawBrush(points: [CGPoint(x: 40, y: 30), CGPoint(x: 72, y: 52)])
+        let secondStrokeData = try #require(viewModel.currentImage.qingtuPNGData())
+        let originalHistoryCount = viewModel.document.history.count
+        let selectedEntry = try #require(viewModel.document.history.last)
+
+        viewModel.selectHistoryEntry(selectedEntry.id)
+        #expect(viewModel.canTruncateSelectedHistory)
+        viewModel.truncateSelectedHistory()
+
+        #expect(viewModel.currentImage.qingtuPNGData() == firstStrokeData)
+        #expect(viewModel.document.history.count == originalHistoryCount - 1)
+        #expect(viewModel.selectedHistoryEntryID == viewModel.document.history.last?.id)
+        #expect(viewModel.canUndo)
+
+        viewModel.undo()
+        #expect(viewModel.currentImage.qingtuPNGData() == secondStrokeData)
+        #expect(viewModel.document.history.count == originalHistoryCount)
+    }
+
+    @Test
+    func cropSelectsTheEntireNewCanvas() throws {
+        let image = testImage(color: .systemBlue, size: NSSize(width: 100, height: 80))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        viewModel.document.selection = .rectangle(CGRect(x: 2, y: 3, width: 18, height: 16))
+
+        viewModel.crop(to: CGRect(x: 20, y: 10, width: 60, height: 50))
+
+        #expect(viewModel.document.canvasSize == CGSize(width: 60, height: 50))
+        let selection = try #require(viewModel.document.selection)
+        #expect(selection == .fullCanvas(size: CGSize(width: 60, height: 50)))
+    }
+
+    @Test
+    func editorWindowResolvesEveryDeclaredMenuShortcut() {
+        let command = NSEvent.ModifierFlags.command
+        let option = NSEvent.ModifierFlags.option
+        let shift = NSEvent.ModifierFlags.shift
+        let cases: [(String, NSEvent.ModifierFlags, UInt16?, ImageEditorKeyboardShortcutAction)] = [
+            ("o", command, nil, .openProject),
+            ("s", command, nil, .saveProject),
+            ("s", [command, option, shift], nil, .export),
+            ("z", command, nil, .undo),
+            ("z", option, nil, .undo),
+            ("z", [command, shift], nil, .redo),
+            ("x", command, nil, .cutSelectionClipboard),
+            ("c", command, nil, .copySelectionClipboard),
+            ("c", [command, shift], nil, .copyMergedClipboard),
+            ("v", command, nil, .pasteClipboardLayer),
+            ("v", [command, shift], nil, .pasteClipboardIntoSelection),
+            ("t", command, nil, .toggleTransformControls),
+            ("", option, 51, .fillSelection),
+            ("", command, 51, .fillSelectionBackground),
+            ("", [], 51, .clearSelectionPixels),
+            ("i", [command, option], nil, .resizeImage),
+            ("c", [command, option], nil, .resizeCanvas),
+            ("l", command, nil, .levels),
+            ("m", command, nil, .curves),
+            ("b", command, nil, .colorBalance),
+            ("u", command, nil, .hueSaturation),
+            ("u", [command, shift], nil, .desaturate),
+            ("i", command, nil, .invertPixels),
+            ("l", [command, shift], nil, .autoLevels),
+            ("l", [command, option, shift], nil, .autoContrast),
+            ("b", [command, shift], nil, .autoColor),
+            ("n", [command, shift], nil, .newLayer),
+            ("j", command, nil, .duplicateSelectionOrLayer),
+            ("j", [command, shift], nil, .cutSelectionToLayer),
+            ("g", command, nil, .groupSelectedLayer),
+            ("g", [command, shift], nil, .ungroupSelectedLayers),
+            ("e", command, nil, .mergeDown),
+            ("e", [command, option, shift], nil, .stampVisible),
+            ("e", [command, shift], nil, .mergeVisible),
+            ("]", [command, shift], nil, .layerTop),
+            ("]", command, nil, .layerUp),
+            ("[", command, nil, .layerDown),
+            ("[", [command, shift], nil, .layerBottom),
+            ("a", command, nil, .selectAll),
+            ("d", command, nil, .clearSelection),
+            ("d", [command, shift], nil, .reselectSelection),
+            ("i", [command, shift], nil, .invertSelection),
+            ("d", [command, option], nil, .featherSelection),
+            ("f", command, nil, .applyLastFilter),
+            ("r", command, nil, .toggleRulers),
+            (";", command, nil, .toggleGuides),
+            (";", [command, shift], nil, .toggleGuideSnapping),
+            (";", [command, option], nil, .toggleGuidesLocked),
+            ("'", command, nil, .toggleGrid),
+            ("=", [command, shift], nil, .zoomIn),
+            ("-", command, nil, .zoomOut),
+            ("1", command, nil, .actualPixels),
+            ("0", command, nil, .fitOnScreen),
+            ("", [], 48, .toggleWorkspaceChrome),
+            ("", shift, 48, .toggleRightDock),
+            ("", [], 96, .showBrushSummary),
+            ("", [], 97, .showColorSummary),
+            ("", [], 98, .showLayersPanel),
+            ("", [], 100, .showInfoSummary),
+        ]
+
+        for (key, flags, keyCode, expected) in cases {
+            #expect(
+                ImageEditorKeyboardShortcutAction.resolve(
+                    charactersIgnoringModifiers: key,
+                    modifierFlags: flags,
+                    keyCode: keyCode
+                ) == expected
+            )
+        }
+
+        #expect(
+            ImageEditorKeyboardShortcutAction.resolve(
+                charactersIgnoringModifiers: "a",
+                modifierFlags: []
+            ) == nil
+        )
+    }
+
     private func testImage(color: NSColor, size: NSSize) -> NSImage {
-        let image = NSImage(size: size)
-        image.lockFocus()
-        color.setFill()
-        NSRect(origin: .zero, size: size).fill()
-        image.unlockFocus()
-        return image
+        let width = max(1, Int(size.width.rounded()))
+        let height = max(1, Int(size.height.rounded()))
+        let context = CGContext(
+            data: nil,
+            width: width,
+            height: height,
+            bitsPerComponent: 8,
+            bytesPerRow: width * 4,
+            space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        )!
+        context.setFillColor(color.usingColorSpace(.deviceRGB)?.cgColor ?? NSColor.black.cgColor)
+        context.fill(CGRect(origin: .zero, size: size))
+        return NSImage(cgImage: context.makeImage()!, size: size)
     }
 }

@@ -25,7 +25,7 @@ struct ImageEditorCanvasGeometryTests {
         assertEqual(imageRect, CGRect(x: 150, y: 105, width: 740, height: 370))
 
         let imagePoint = try #require(ImageEditorCanvasGeometry.imagePoint(
-            from: CGPoint(x: 224, y: 438),
+            from: CGPoint(x: 224, y: 142),
             imageRect: imageRect,
             canvasSize: canvasSize
         ))
@@ -36,7 +36,7 @@ struct ImageEditorCanvasGeometryTests {
             imageRect: imageRect,
             canvasSize: canvasSize
         )
-        assertEqual(viewRect, CGRect(x: 224, y: 327, width: 222, height: 111))
+        assertEqual(viewRect, CGRect(x: 224, y: 142, width: 222, height: 111))
     }
 
     private func assertEqual(

@@ -933,7 +933,7 @@ extension ImageEditorViewModel {
 
     func openProjectDocument() {
         let panel = NSOpenPanel()
-        panel.allowedContentTypes = [Self.projectContentType, .json]
+        panel.allowedContentTypes = [Self.projectContentType, .json, ImageEditorPSDCodec.contentType]
         panel.allowsMultipleSelection = false
         panel.canChooseDirectories = false
         panel.canChooseFiles = true
@@ -943,9 +943,24 @@ extension ImageEditorViewModel {
                 guard let self, response == .OK, let url = panel.url else { return }
                 do {
                     let data = try Data(contentsOf: url)
-                    try self.loadProjectData(data)
-                    self.appendHistory(L10n.text("imageEditor.history.projectOpen"))
-                    self.statusText = L10n.format("imageEditor.status.projectOpened", url.lastPathComponent)
+                    if url.pathExtension.lowercased() == "psd" {
+                        do {
+                            self.document = try ImageEditorPSDCodec.decode(data, sourceName: url.lastPathComponent)
+                            self.resetAfterExternalDocumentOpen()
+                            self.appendHistory(L10n.text("imageEditor.history.psdOpen"))
+                            self.statusText = L10n.format("imageEditor.status.psdOpened", url.lastPathComponent)
+                        } catch {
+                            guard let flattened = NSImage(contentsOf: url) else { throw error }
+                            self.document = ImageEditorDocument(sourceName: url.lastPathComponent, image: flattened)
+                            self.resetAfterExternalDocumentOpen()
+                            self.appendHistory(L10n.text("imageEditor.history.psdOpenFlattened"))
+                            self.statusText = L10n.format("imageEditor.status.psdOpenedFlattened", url.lastPathComponent)
+                        }
+                    } else {
+                        try self.loadProjectData(data)
+                        self.appendHistory(L10n.text("imageEditor.history.projectOpen"))
+                        self.statusText = L10n.format("imageEditor.status.projectOpened", url.lastPathComponent)
+                    }
                 } catch {
                     self.statusText = L10n.format(
                         "imageEditor.status.projectOpenFailedWithReason",
@@ -954,6 +969,16 @@ extension ImageEditorViewModel {
                 }
             }
         }
+    }
+
+    private func resetAfterExternalDocumentOpen() {
+        undoStack.removeAll()
+        redoStack.removeAll()
+        historySnapshots.removeAll()
+        document.history.forEach { entry in historySnapshots[entry.id] = document }
+        selectedTool = .move
+        selectedChannelPreview = .composite
+        isEditingLayerMask = false
     }
 
     private func projectFilename() -> String {
