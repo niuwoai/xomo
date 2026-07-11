@@ -2299,6 +2299,8 @@
 "xomo.component.avatar.title" = "アバター";
 "xomo.component.avatar.backgroundLayer" = "アバター背景";
 "xomo.component.avatar.defaultInitials" = "X";
+"xomo.component.icon.title" = "アイコン";
+"xomo.component.icon.starLayer" = "星形パス";
 "xomo.component.history.insert" = "ボタンコンポーネントを挿入";
 "xomo.component.status.inserted" = "コンポーネントを挿入：%@";
 "xomo.componentPreview.button" = "ボタン";

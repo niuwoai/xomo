@@ -61,12 +61,32 @@ private enum XomoAvatarComponentStyle {
     static let strokeWidth: CGFloat = 1
 }
 
+private enum XomoIconComponentStyle {
+    static let size: CGFloat = 64
+    static let fillColor = NSColor(deviceRed: 0.96, green: 0.65, blue: 0.14, alpha: 1)
+    static let strokeColor = NSColor(deviceRed: 0.83, green: 0.49, blue: 0.07, alpha: 1)
+    static let strokeWidth: CGFloat = 1
+    static let starPoints: [CGPoint] = [
+        CGPoint(x: 32, y: 2),
+        CGPoint(x: 39, y: 23),
+        CGPoint(x: 62, y: 23),
+        CGPoint(x: 43, y: 37),
+        CGPoint(x: 50, y: 60),
+        CGPoint(x: 32, y: 46),
+        CGPoint(x: 14, y: 60),
+        CGPoint(x: 21, y: 37),
+        CGPoint(x: 2, y: 23),
+        CGPoint(x: 25, y: 23)
+    ]
+}
+
 enum XomoComponentKind: String, CaseIterable, Identifiable {
     case button
     case input
     case card
     case image
     case avatar
+    case icon
 
     var id: String { rawValue }
 
@@ -88,6 +108,8 @@ extension ImageEditorViewModel {
             insertXomoImage(at: proposedOrigin)
         case .avatar:
             insertXomoAvatar(at: proposedOrigin)
+        case .icon:
+            insertXomoIcon(at: proposedOrigin)
         }
     }
 
@@ -379,6 +401,43 @@ extension ImageEditorViewModel {
 
         let insertionIndex = min((document.selectedLayerIndex ?? (document.layers.count - 1)) + 1, document.layers.count)
         document.layers.insert(contentsOf: [background, initialsLayer, group], at: insertionIndex)
+        document.selectedLayerID = group.id
+        document.selectedLayerIDs = [group.id]
+        isEditingLayerMask = false
+        appendHistory(L10n.text("xomo.component.history.insert"))
+        statusText = L10n.format("xomo.component.status.inserted", group.name)
+    }
+
+    private func insertXomoIcon(at proposedOrigin: CGPoint?) {
+        let iconSize = CGSize(width: XomoIconComponentStyle.size, height: XomoIconComponentStyle.size)
+        let defaultOrigin = CGPoint(
+            x: (document.canvasSize.width - iconSize.width) * 0.5,
+            y: (document.canvasSize.height - iconSize.height) * 0.5
+        )
+        let origin = clampedComponentOrigin(proposedOrigin ?? defaultOrigin, componentSize: iconSize)
+
+        pushUndo()
+        var group = ImageEditorLayer.group(name: L10n.text("xomo.component.icon.title"), size: document.canvasSize)
+        group.blendMode = .passThrough
+
+        var pathLayer = ImageEditorLayer.shape(
+            name: L10n.text("xomo.component.icon.starLayer"),
+            frame: CGRect(origin: origin, size: iconSize),
+            content: ImageEditorShapeContent(
+                kind: .path,
+                fillColor: XomoIconComponentStyle.fillColor,
+                fillOpacity: 1,
+                strokeColor: XomoIconComponentStyle.strokeColor,
+                strokeWidth: XomoIconComponentStyle.strokeWidth,
+                strokeOpacity: 1,
+                pathPoints: XomoIconComponentStyle.starPoints,
+                isPathClosed: true
+            )
+        )
+        pathLayer.groupID = group.id
+
+        let insertionIndex = min((document.selectedLayerIndex ?? (document.layers.count - 1)) + 1, document.layers.count)
+        document.layers.insert(contentsOf: [pathLayer, group], at: insertionIndex)
         document.selectedLayerID = group.id
         document.selectedLayerIDs = [group.id]
         isEditingLayerMask = false

@@ -2299,6 +2299,8 @@
 "xomo.component.avatar.title" = "头像";
 "xomo.component.avatar.backgroundLayer" = "头像背景";
 "xomo.component.avatar.defaultInitials" = "X";
+"xomo.component.icon.title" = "图标";
+"xomo.component.icon.starLayer" = "星形路径";
 "xomo.component.history.insert" = "插入按钮组件";
 "xomo.component.status.inserted" = "已插入组件：%@";
 "xomo.componentPreview.button" = "按钮";

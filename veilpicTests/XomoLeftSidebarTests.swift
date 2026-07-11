@@ -11,7 +11,7 @@ struct XomoLeftSidebarTests {
     }
 
     @Test func componentLibraryExposesEditableStarterComponents() {
-        #expect(XomoComponentKind.allCases == [.button, .input, .card, .image, .avatar])
+        #expect(XomoComponentKind.allCases == [.button, .input, .card, .image, .avatar, .icon])
     }
 
     @Test func switchingSidebarDoesNotChangeSelectedTool() {
@@ -185,5 +185,40 @@ struct XomoLeftSidebarTests {
         #expect(children.count == 2)
         #expect(children.contains(where: { $0.isShape && $0.shapeContent?.kind == .ellipse }))
         #expect(children.contains(where: { $0.isText }))
+    }
+
+    @Test func insertingIconCreatesEditableStarPathLayer() throws {
+        let image = NSImage.transparent(size: CGSize(width: 640, height: 480))
+        let viewModel = ImageEditorViewModel(sourceName: "source", image: image) { _ in }
+
+        viewModel.insertXomoComponent(.icon, at: CGPoint(x: 40, y: 60))
+
+        let group = try #require(viewModel.document.selectedLayer)
+        #expect(group.isGroup)
+        #expect(group.name == XomoComponentKind.icon.title)
+        let children = viewModel.document.layers.filter { $0.groupID == group.id }
+        let star = try #require(children.first)
+        #expect(children.count == 1)
+        #expect(star.isShape)
+        #expect(star.shapeContent?.kind == .path)
+        #expect(star.shapeContent?.editablePathAnchors.count == 10)
+        #expect(viewModel.canUndo)
+    }
+
+    @Test func iconComponentRoundTripRetainsEditablePathLayer() throws {
+        let image = NSImage.transparent(size: CGSize(width: 640, height: 480))
+        let viewModel = ImageEditorViewModel(sourceName: "source", image: image) { _ in }
+        viewModel.insertXomoComponent(.icon, at: CGPoint(x: 40, y: 60))
+
+        let project = try ImageEditorProjectDocument(document: viewModel.document)
+        let restored = try project.restoredDocument()
+        let group = try #require(restored.layers.first(where: { $0.isGroup && $0.name == XomoComponentKind.icon.title }))
+        let children = restored.layers.filter { $0.groupID == group.id }
+        let star = try #require(children.first)
+
+        #expect(children.count == 1)
+        #expect(star.isShape)
+        #expect(star.shapeContent?.kind == .path)
+        #expect(star.shapeContent?.editablePathAnchors.count == 10)
     }
 }

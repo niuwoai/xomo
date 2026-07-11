@@ -37,7 +37,7 @@ private struct XomoComponentLibraryPreviewItem: Identifiable {
         Self(id: "card", titleKey: "xomo.componentPreview.card", symbolName: "rectangle.on.rectangle", component: .card),
         Self(id: "image", titleKey: "xomo.componentPreview.image", symbolName: "photo", component: .image),
         Self(id: "avatar", titleKey: "xomo.componentPreview.avatar", symbolName: "person.crop.circle", component: .avatar),
-        Self(id: "icon", titleKey: "xomo.componentPreview.icon", symbolName: "sparkles", component: nil)
+        Self(id: "icon", titleKey: "xomo.componentPreview.icon", symbolName: "sparkles", component: .icon)
     ]
 }
 

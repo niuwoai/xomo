@@ -2299,6 +2299,8 @@
 "xomo.component.avatar.title" = "Avatar";
 "xomo.component.avatar.backgroundLayer" = "Avatar Background";
 "xomo.component.avatar.defaultInitials" = "X";
+"xomo.component.icon.title" = "Icon";
+"xomo.component.icon.starLayer" = "Star Path";
 "xomo.component.history.insert" = "Insert button component";
 "xomo.component.status.inserted" = "Inserted component: %@";
 "xomo.componentPreview.button" = "Button";
