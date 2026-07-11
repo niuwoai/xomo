@@ -9,12 +9,31 @@ import Foundation
 enum XomoComponentTheme: String, CaseIterable, Codable, Identifiable {
     case native
     case softMobile
+    case socialContent
+    case glassmorphism
     case denseAdmin
+    case chakraUI
+    case radixThemes
 
     var id: String { rawValue }
 
     var title: String {
         L10n.text("xomo.theme.\(rawValue)")
+    }
+
+    var librarySource: XomoComponentLibrarySource {
+        switch self {
+        case .native, .softMobile, .socialContent, .glassmorphism, .denseAdmin:
+            .xomoOriginal
+        case .chakraUI:
+            .chakraUI
+        case .radixThemes:
+            .radixThemes
+        }
+    }
+
+    var libraryTitle: String {
+        L10n.format("xomo.theme.libraryTitle", librarySource.title, title)
     }
 
     var tokens: XomoComponentThemeTokens {
@@ -45,6 +64,32 @@ enum XomoComponentTheme: String, CaseIterable, Codable, Identifiable {
                 cornerRadius: 16,
                 spacing: 12
             )
+        case .socialContent:
+            XomoComponentThemeTokens(
+                accent: NSColor(deviceRed: 0.93, green: 0.27, blue: 0.40, alpha: 1),
+                accentBorder: NSColor(deviceRed: 0.72, green: 0.12, blue: 0.25, alpha: 1),
+                surface: NSColor(deviceRed: 1.0, green: 0.98, blue: 0.97, alpha: 1),
+                subtleSurface: NSColor(deviceRed: 1.0, green: 0.91, blue: 0.92, alpha: 1),
+                border: NSColor(deviceRed: 0.96, green: 0.73, blue: 0.76, alpha: 1),
+                primaryText: NSColor(deviceRed: 0.20, green: 0.08, blue: 0.12, alpha: 1),
+                secondaryText: NSColor(deviceRed: 0.48, green: 0.24, blue: 0.29, alpha: 1),
+                onAccent: .white,
+                cornerRadius: 20,
+                spacing: 12
+            )
+        case .glassmorphism:
+            XomoComponentThemeTokens(
+                accent: NSColor(deviceRed: 0.39, green: 0.78, blue: 1.0, alpha: 1),
+                accentBorder: NSColor(deviceRed: 0.65, green: 0.87, blue: 1.0, alpha: 1),
+                surface: NSColor(deviceRed: 0.10, green: 0.15, blue: 0.29, alpha: 0.72),
+                subtleSurface: NSColor(deviceRed: 0.22, green: 0.30, blue: 0.49, alpha: 0.56),
+                border: NSColor(deviceRed: 0.73, green: 0.87, blue: 1.0, alpha: 0.50),
+                primaryText: NSColor(deviceRed: 0.96, green: 0.98, blue: 1.0, alpha: 1),
+                secondaryText: NSColor(deviceRed: 0.76, green: 0.85, blue: 0.96, alpha: 1),
+                onAccent: NSColor(deviceRed: 0.04, green: 0.11, blue: 0.20, alpha: 1),
+                cornerRadius: 18,
+                spacing: 14
+            )
         case .denseAdmin:
             XomoComponentThemeTokens(
                 accent: NSColor(deviceRed: 0.03, green: 0.58, blue: 0.47, alpha: 1),
@@ -58,7 +103,49 @@ enum XomoComponentTheme: String, CaseIterable, Codable, Identifiable {
                 cornerRadius: 4,
                 spacing: 6
             )
+        case .chakraUI:
+            XomoComponentThemeTokens(
+                accent: NSColor(deviceRed: 0.13, green: 0.58, blue: 0.60, alpha: 1),
+                accentBorder: NSColor(deviceRed: 0.10, green: 0.45, blue: 0.47, alpha: 1),
+                surface: .white,
+                subtleSurface: NSColor(deviceRed: 0.93, green: 0.98, blue: 0.98, alpha: 1),
+                border: NSColor(deviceRed: 0.82, green: 0.87, blue: 0.88, alpha: 1),
+                primaryText: NSColor(deviceRed: 0.10, green: 0.12, blue: 0.15, alpha: 1),
+                secondaryText: NSColor(deviceRed: 0.35, green: 0.40, blue: 0.43, alpha: 1),
+                onAccent: .white,
+                cornerRadius: 6,
+                spacing: 8
+            )
+        case .radixThemes:
+            XomoComponentThemeTokens(
+                accent: NSColor(deviceRed: 0.24, green: 0.39, blue: 0.87, alpha: 1),
+                accentBorder: NSColor(deviceRed: 0.18, green: 0.29, blue: 0.66, alpha: 1),
+                surface: NSColor(deviceRed: 0.99, green: 0.99, blue: 1.0, alpha: 1),
+                subtleSurface: NSColor(deviceRed: 0.94, green: 0.95, blue: 0.99, alpha: 1),
+                border: NSColor(deviceRed: 0.80, green: 0.83, blue: 0.93, alpha: 1),
+                primaryText: NSColor(deviceRed: 0.10, green: 0.12, blue: 0.19, alpha: 1),
+                secondaryText: NSColor(deviceRed: 0.35, green: 0.39, blue: 0.49, alpha: 1),
+                onAccent: .white,
+                cornerRadius: 8,
+                spacing: 8
+            )
         }
+    }
+}
+
+enum XomoComponentLibrarySource: String, CaseIterable, Identifiable {
+    case xomoOriginal
+    case chakraUI
+    case radixThemes
+
+    var id: String { rawValue }
+
+    var title: String {
+        L10n.text("xomo.librarySource.\(rawValue)")
+    }
+
+    var attribution: String {
+        L10n.text("xomo.librarySource.\(rawValue).attribution")
     }
 }
 
@@ -90,7 +177,11 @@ struct XomoComponentInstance: Codable, Equatable {
 enum XomoThemeSample: CaseIterable, Identifiable {
     case nativeWorkspace
     case softMobileProfile
+    case socialContentFeed
+    case glassmorphismDashboard
     case denseAdminSettings
+    case chakraForm
+    case radixSettings
 
     var id: String { rawValue }
 
@@ -98,7 +189,11 @@ enum XomoThemeSample: CaseIterable, Identifiable {
         switch self {
         case .nativeWorkspace: "nativeWorkspace"
         case .softMobileProfile: "softMobileProfile"
+        case .socialContentFeed: "socialContentFeed"
+        case .glassmorphismDashboard: "glassmorphismDashboard"
         case .denseAdminSettings: "denseAdminSettings"
+        case .chakraForm: "chakraForm"
+        case .radixSettings: "radixSettings"
         }
     }
 
@@ -106,7 +201,11 @@ enum XomoThemeSample: CaseIterable, Identifiable {
         switch self {
         case .nativeWorkspace: .native
         case .softMobileProfile: .softMobile
+        case .socialContentFeed: .socialContent
+        case .glassmorphismDashboard: .glassmorphism
         case .denseAdminSettings: .denseAdmin
+        case .chakraForm: .chakraUI
+        case .radixSettings: .radixThemes
         }
     }
 
@@ -118,7 +217,11 @@ enum XomoThemeSample: CaseIterable, Identifiable {
         switch theme {
         case .native: .nativeWorkspace
         case .softMobile: .softMobileProfile
+        case .socialContent: .socialContentFeed
+        case .glassmorphism: .glassmorphismDashboard
         case .denseAdmin: .denseAdminSettings
+        case .chakraUI: .chakraForm
+        case .radixThemes: .radixSettings
         }
     }
 }

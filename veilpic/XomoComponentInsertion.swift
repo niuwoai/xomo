@@ -264,14 +264,7 @@ enum XomoComponentKind: String, CaseIterable, Identifiable, Codable {
     }
 
     var supportsThemeApplication: Bool {
-        switch self {
-        case .button, .secondaryButton, .ghostButton, .iconButton,
-             .input, .searchInput, .textArea, .selectInput,
-             .card:
-            true
-        default:
-            false
-        }
+        true
     }
 }
 
@@ -520,6 +513,7 @@ extension ImageEditorViewModel {
 
     private func insertXomoToggle(at proposedOrigin: CGPoint?) {
         let component = XomoComponentKind.toggle
+        let tokens = xomoComponentTheme.tokens
         let frame = componentFrame(
             proposedOrigin,
             size: XomoSelectionComponentStyle.toggleSize
@@ -536,9 +530,9 @@ extension ImageEditorViewModel {
             frame: frame,
             content: ImageEditorShapeContent(
                 kind: .ellipse,
-                fillColor: XomoSelectionComponentStyle.fillColor,
+                fillColor: tokens.accent,
                 fillOpacity: 1,
-                strokeColor: XomoSelectionComponentStyle.strokeColor,
+                strokeColor: tokens.accentBorder,
                 strokeWidth: XomoSelectionComponentStyle.strokeWidth,
                 strokeOpacity: 1
             )
@@ -549,9 +543,9 @@ extension ImageEditorViewModel {
             frame: knobFrame,
             content: ImageEditorShapeContent(
                 kind: .ellipse,
-                fillColor: .white,
+                fillColor: tokens.onAccent,
                 fillOpacity: 1,
-                strokeColor: .white,
+                strokeColor: tokens.onAccent,
                 strokeWidth: XomoSelectionComponentStyle.strokeWidth,
                 strokeOpacity: 1
             )
@@ -562,10 +556,11 @@ extension ImageEditorViewModel {
 
     private func insertXomoCheckbox(at proposedOrigin: CGPoint?) {
         let component = XomoComponentKind.checkbox
+        let tokens = xomoComponentTheme.tokens
         let label = L10n.text("xomo.component.checkbox.defaultLabel")
         let labelContent = ImageEditorTextContent(
             text: label,
-            color: XomoSelectionComponentStyle.mutedTextColor,
+            color: tokens.secondaryText,
             fontSize: XomoSelectionComponentStyle.labelFontSize,
             point: CGPoint(x: ImageEditorTextContent.drawingPadding, y: ImageEditorTextContent.drawingPadding),
             alignment: .left
@@ -588,9 +583,9 @@ extension ImageEditorViewModel {
             frame: boxFrame,
             content: ImageEditorShapeContent(
                 kind: .rectangle,
-                fillColor: XomoSelectionComponentStyle.fillColor,
+                fillColor: tokens.surface,
                 fillOpacity: 1,
-                strokeColor: XomoSelectionComponentStyle.strokeColor,
+                strokeColor: tokens.border,
                 strokeWidth: XomoSelectionComponentStyle.strokeWidth,
                 strokeOpacity: 1
             )
@@ -607,11 +602,12 @@ extension ImageEditorViewModel {
 
     private func insertXomoTag(at proposedOrigin: CGPoint?) {
         let component = XomoComponentKind.tag
+        let tokens = xomoComponentTheme.tokens
         let frame = componentFrame(proposedOrigin, size: XomoSelectionComponentStyle.tagSize)
         let label = L10n.text("xomo.component.tag.defaultLabel")
         let labelContent = ImageEditorTextContent(
             text: label,
-            color: XomoSelectionComponentStyle.mutedTextColor,
+            color: tokens.secondaryText,
             fontSize: XomoSelectionComponentStyle.labelFontSize,
             point: CGPoint(x: ImageEditorTextContent.drawingPadding, y: ImageEditorTextContent.drawingPadding),
             alignment: .center
@@ -623,9 +619,9 @@ extension ImageEditorViewModel {
             frame: frame,
             content: ImageEditorShapeContent(
                 kind: .rectangle,
-                fillColor: XomoSelectionComponentStyle.mutedFillColor,
+                fillColor: tokens.subtleSurface,
                 fillOpacity: 1,
-                strokeColor: XomoSelectionComponentStyle.mutedFillColor,
+                strokeColor: tokens.border,
                 strokeWidth: XomoSelectionComponentStyle.strokeWidth,
                 strokeOpacity: 1
             )
@@ -642,6 +638,7 @@ extension ImageEditorViewModel {
 
     private func insertXomoBadge(at proposedOrigin: CGPoint?) {
         let component = XomoComponentKind.badge
+        let tokens = xomoComponentTheme.tokens
         let size = CGSize(
             width: XomoSelectionComponentStyle.badgeDiameter,
             height: XomoSelectionComponentStyle.badgeDiameter
@@ -650,7 +647,7 @@ extension ImageEditorViewModel {
         let value = L10n.text("xomo.component.badge.defaultValue")
         let valueContent = ImageEditorTextContent(
             text: value,
-            color: .white,
+            color: tokens.onAccent,
             fontSize: XomoSelectionComponentStyle.labelFontSize,
             point: CGPoint(x: ImageEditorTextContent.drawingPadding, y: ImageEditorTextContent.drawingPadding),
             isBold: true,
@@ -663,9 +660,9 @@ extension ImageEditorViewModel {
             frame: frame,
             content: ImageEditorShapeContent(
                 kind: .ellipse,
-                fillColor: XomoSelectionComponentStyle.fillColor,
+                fillColor: tokens.accent,
                 fillOpacity: 1,
-                strokeColor: XomoSelectionComponentStyle.strokeColor,
+                strokeColor: tokens.accentBorder,
                 strokeWidth: XomoSelectionComponentStyle.strokeWidth,
                 strokeOpacity: 1
             )
@@ -889,14 +886,15 @@ extension ImageEditorViewModel {
     }
 
     private func navigationBackground(name: String, frame: CGRect, groupID: UUID) -> ImageEditorLayer {
+        let tokens = xomoComponentTheme.tokens
         var background = ImageEditorLayer.shape(
             name: name,
             frame: frame,
             content: ImageEditorShapeContent(
                 kind: .rectangle,
-                fillColor: XomoNavigationComponentStyle.fillColor,
+                fillColor: tokens.surface,
                 fillOpacity: 1,
-                strokeColor: XomoNavigationComponentStyle.strokeColor,
+                strokeColor: tokens.border,
                 strokeWidth: XomoNavigationComponentStyle.strokeWidth,
                 strokeOpacity: 1
             )
@@ -914,12 +912,13 @@ extension ImageEditorViewModel {
         isBold: Bool = false,
         groupID: UUID
     ) -> ImageEditorLayer {
+        let tokens = xomoComponentTheme.tokens
         var layer = ImageEditorLayer.text(
             name: name,
             origin: origin,
             content: ImageEditorTextContent(
                 text: text,
-                color: color,
+                color: resolvedXomoComponentTextColor(color, tokens: tokens),
                 fontSize: fontSize,
                 point: CGPoint(x: ImageEditorTextContent.drawingPadding, y: ImageEditorTextContent.drawingPadding),
                 isBold: isBold,
@@ -928,6 +927,13 @@ extension ImageEditorViewModel {
         )
         layer.groupID = groupID
         return layer
+    }
+
+    private func resolvedXomoComponentTextColor(_ color: NSColor, tokens: XomoComponentThemeTokens) -> NSColor {
+        if color.isEqual(NSColor.white) { return tokens.onAccent }
+        if color.isEqual(XomoNavigationComponentStyle.titleColor) { return tokens.primaryText }
+        if color.isEqual(XomoNavigationComponentStyle.selectedFillColor) { return tokens.accent }
+        return tokens.secondaryText
     }
 
     private func insertXomoCarouselCard(at proposedOrigin: CGPoint?) {
@@ -974,6 +980,7 @@ extension ImageEditorViewModel {
 
     private func insertXomoEmptyState(at proposedOrigin: CGPoint?) {
         let component = XomoComponentKind.emptyState
+        let tokens = xomoComponentTheme.tokens
         let frame = componentFrame(proposedOrigin, size: XomoContentComponentStyle.emptyStateSize)
         let iconFrame = CGRect(
             x: frame.midX - XomoContentComponentStyle.emptyStateIconDiameter * 0.5,
@@ -992,9 +999,9 @@ extension ImageEditorViewModel {
             frame: iconFrame,
             content: ImageEditorShapeContent(
                 kind: .ellipse,
-                fillColor: XomoContentComponentStyle.iconFillColor,
+                fillColor: tokens.accent,
                 fillOpacity: 1,
-                strokeColor: XomoContentComponentStyle.iconFillColor,
+                strokeColor: tokens.accentBorder,
                 strokeWidth: XomoNavigationComponentStyle.strokeWidth,
                 strokeOpacity: 1
             )
@@ -1025,6 +1032,7 @@ extension ImageEditorViewModel {
     }
 
     private func carouselDots(in frame: CGRect, groupID: UUID) -> [ImageEditorLayer] {
+        let tokens = xomoComponentTheme.tokens
         let dotDiameter: CGFloat = 6
         let dotGap: CGFloat = 7
         let totalWidth = dotDiameter * 3 + dotGap * 2
@@ -1039,7 +1047,7 @@ extension ImageEditorViewModel {
                 ),
                 content: ImageEditorShapeContent(
                     kind: .ellipse,
-                    fillColor: index == 0 ? XomoNavigationComponentStyle.selectedFillColor : XomoNavigationComponentStyle.strokeColor,
+                    fillColor: index == 0 ? tokens.accent : tokens.border,
                     fillOpacity: 1,
                     strokeColor: .clear,
                     strokeWidth: XomoNavigationComponentStyle.strokeWidth,
@@ -1178,6 +1186,7 @@ extension ImageEditorViewModel {
     }
 
     private func insertXomoAvatar(at proposedOrigin: CGPoint?) {
+        let tokens = xomoComponentTheme.tokens
         let avatarSize = CGSize(width: XomoAvatarComponentStyle.diameter, height: XomoAvatarComponentStyle.diameter)
         let defaultOrigin = CGPoint(
             x: (document.canvasSize.width - avatarSize.width) * 0.5,
@@ -1188,7 +1197,7 @@ extension ImageEditorViewModel {
         let initials = L10n.text("xomo.component.avatar.defaultInitials")
         let initialsContent = ImageEditorTextContent(
             text: initials,
-            color: .white,
+            color: tokens.onAccent,
             fontSize: XomoAvatarComponentStyle.labelFontSize,
             point: CGPoint(x: ImageEditorTextContent.drawingPadding, y: ImageEditorTextContent.drawingPadding),
             isBold: true,
@@ -1210,9 +1219,9 @@ extension ImageEditorViewModel {
             frame: avatarFrame,
             content: ImageEditorShapeContent(
                 kind: .ellipse,
-                fillColor: XomoAvatarComponentStyle.fillColor,
+                fillColor: tokens.accent,
                 fillOpacity: 1,
-                strokeColor: XomoAvatarComponentStyle.strokeColor,
+                strokeColor: tokens.accentBorder,
                 strokeWidth: XomoAvatarComponentStyle.strokeWidth,
                 strokeOpacity: 1
             )
@@ -1236,6 +1245,7 @@ extension ImageEditorViewModel {
     }
 
     private func insertXomoIcon(at proposedOrigin: CGPoint?) {
+        let tokens = xomoComponentTheme.tokens
         let iconSize = CGSize(width: XomoIconComponentStyle.size, height: XomoIconComponentStyle.size)
         let defaultOrigin = CGPoint(
             x: (document.canvasSize.width - iconSize.width) * 0.5,
@@ -1253,9 +1263,9 @@ extension ImageEditorViewModel {
             frame: CGRect(origin: origin, size: iconSize),
             content: ImageEditorShapeContent(
                 kind: .path,
-                fillColor: XomoIconComponentStyle.fillColor,
+                fillColor: tokens.accent,
                 fillOpacity: 1,
-                strokeColor: XomoIconComponentStyle.strokeColor,
+                strokeColor: tokens.accentBorder,
                 strokeWidth: XomoIconComponentStyle.strokeWidth,
                 strokeOpacity: 1,
                 pathPoints: XomoIconComponentStyle.starPoints,
@@ -1574,6 +1584,24 @@ extension ImageEditorViewModel {
                 XomoThemeSampleItem(component: .button, relativeOrigin: CGPoint(x: 0.15, y: 0.66)),
                 XomoThemeSampleItem(component: .secondaryButton, relativeOrigin: CGPoint(x: 0.15, y: 0.76))
             ]
+        case .socialContentFeed:
+            [
+                XomoThemeSampleItem(component: .topNavigation, relativeOrigin: CGPoint(x: 0, y: 0)),
+                XomoThemeSampleItem(component: .avatar, relativeOrigin: CGPoint(x: 0.10, y: 0.18)),
+                XomoThemeSampleItem(component: .carouselCard, relativeOrigin: CGPoint(x: 0.18, y: 0.16)),
+                XomoThemeSampleItem(component: .tabBar, relativeOrigin: CGPoint(x: 0.18, y: 0.54)),
+                XomoThemeSampleItem(component: .tag, relativeOrigin: CGPoint(x: 0.22, y: 0.66)),
+                XomoThemeSampleItem(component: .button, relativeOrigin: CGPoint(x: 0.48, y: 0.64))
+            ]
+        case .glassmorphismDashboard:
+            [
+                XomoThemeSampleItem(component: .topNavigation, relativeOrigin: CGPoint(x: 0, y: 0)),
+                XomoThemeSampleItem(component: .card, relativeOrigin: CGPoint(x: 0.17, y: 0.18)),
+                XomoThemeSampleItem(component: .card, relativeOrigin: CGPoint(x: 0.52, y: 0.18)),
+                XomoThemeSampleItem(component: .searchInput, relativeOrigin: CGPoint(x: 0.22, y: 0.48)),
+                XomoThemeSampleItem(component: .toggle, relativeOrigin: CGPoint(x: 0.62, y: 0.51)),
+                XomoThemeSampleItem(component: .button, relativeOrigin: CGPoint(x: 0.40, y: 0.66))
+            ]
         case .denseAdminSettings:
             [
                 XomoThemeSampleItem(component: .topNavigation, relativeOrigin: CGPoint(x: 0, y: 0)),
@@ -1582,6 +1610,24 @@ extension ImageEditorViewModel {
                 XomoThemeSampleItem(component: .searchInput, relativeOrigin: CGPoint(x: 0.38, y: 0.39)),
                 XomoThemeSampleItem(component: .selectInput, relativeOrigin: CGPoint(x: 0.38, y: 0.51)),
                 XomoThemeSampleItem(component: .button, relativeOrigin: CGPoint(x: 0.38, y: 0.63))
+            ]
+        case .chakraForm:
+            [
+                XomoThemeSampleItem(component: .card, relativeOrigin: CGPoint(x: 0.28, y: 0.12)),
+                XomoThemeSampleItem(component: .input, relativeOrigin: CGPoint(x: 0.34, y: 0.32)),
+                XomoThemeSampleItem(component: .selectInput, relativeOrigin: CGPoint(x: 0.34, y: 0.44)),
+                XomoThemeSampleItem(component: .checkbox, relativeOrigin: CGPoint(x: 0.34, y: 0.57)),
+                XomoThemeSampleItem(component: .tag, relativeOrigin: CGPoint(x: 0.34, y: 0.66)),
+                XomoThemeSampleItem(component: .button, relativeOrigin: CGPoint(x: 0.50, y: 0.64))
+            ]
+        case .radixSettings:
+            [
+                XomoThemeSampleItem(component: .topNavigation, relativeOrigin: CGPoint(x: 0, y: 0)),
+                XomoThemeSampleItem(component: .card, relativeOrigin: CGPoint(x: 0.24, y: 0.16)),
+                XomoThemeSampleItem(component: .listRow, relativeOrigin: CGPoint(x: 0.30, y: 0.38)),
+                XomoThemeSampleItem(component: .selectInput, relativeOrigin: CGPoint(x: 0.33, y: 0.52)),
+                XomoThemeSampleItem(component: .toggle, relativeOrigin: CGPoint(x: 0.62, y: 0.55)),
+                XomoThemeSampleItem(component: .secondaryButton, relativeOrigin: CGPoint(x: 0.44, y: 0.68))
             ]
         }
     }
@@ -1619,7 +1665,11 @@ extension ImageEditorViewModel {
                 updateXomoText(&layer, color: textContent.isBold ? tokens.primaryText : tokens.secondaryText)
             }
         default:
-            break
+            if layer.isShape {
+                updateXomoShape(&layer, fillColor: tokens.subtleSurface, strokeColor: tokens.border)
+            } else if let textContent = layer.textContent {
+                updateXomoText(&layer, color: textContent.isBold ? tokens.primaryText : tokens.secondaryText)
+            }
         }
     }
 

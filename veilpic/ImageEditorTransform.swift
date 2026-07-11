@@ -60,6 +60,7 @@ extension ImageEditorViewModel {
         pushUndo()
         movingLayerIDs = Set(indices.map { document.layers[$0].id })
         movingLayerDidChange = false
+        activeAlignmentGuides = []
     }
 
     func moveSelectedLayer(by delta: CGSize, snapping: Bool = false) {
@@ -114,6 +115,7 @@ extension ImageEditorViewModel {
         }
         movingLayerIDs = []
         movingLayerDidChange = false
+        activeAlignmentGuides = []
     }
 
     func beginResizingSelectedLayer(handle: ImageEditorLayerResizeHandle) {

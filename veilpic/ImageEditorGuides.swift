@@ -210,17 +210,24 @@ extension ImageEditorViewModel {
         let threshold = max(1, 8 / max(zoom, 0.01))
         let snapGuides = guideSnapPositions(excluding: movingLayerIDs)
         guard !snapGuides.vertical.isEmpty || !snapGuides.horizontal.isEmpty else { return delta }
-        let correctionX = guideCorrection(
+        let horizontalSnap = nearestMoveAlignment(
             candidates: [proposedFrame.minX, proposedFrame.midX, proposedFrame.maxX],
-            guides: snapGuides.vertical,
+            positions: snapGuides.vertical,
             threshold: threshold
         )
-        let correctionY = guideCorrection(
+        let verticalSnap = nearestMoveAlignment(
             candidates: [proposedFrame.minY, proposedFrame.midY, proposedFrame.maxY],
-            guides: snapGuides.horizontal,
+            positions: snapGuides.horizontal,
             threshold: threshold
         )
-        return CGSize(width: delta.width + correctionX, height: delta.height + correctionY)
+        activeAlignmentGuides = [
+            horizontalSnap.map { ImageEditorAlignmentGuide(orientation: .vertical, position: $0.position) },
+            verticalSnap.map { ImageEditorAlignmentGuide(orientation: .horizontal, position: $0.position) }
+        ].compactMap { $0 }
+        return CGSize(
+            width: delta.width + (horizontalSnap?.correction ?? 0),
+            height: delta.height + (verticalSnap?.correction ?? 0)
+        )
     }
 
     func snappedResizeFrame(
@@ -342,22 +349,26 @@ extension ImageEditorViewModel {
         return min(max(0, position.rounded()), max(0, upperBound.rounded()))
     }
 
-    private func guideCorrection(candidates: [CGFloat], guides: [CGFloat], threshold: CGFloat) -> CGFloat {
-        var bestCorrection: CGFloat = 0
+    private func nearestMoveAlignment(
+        candidates: [CGFloat],
+        positions: [CGFloat],
+        threshold: CGFloat
+    ) -> ImageEditorMoveAlignment? {
+        var bestAlignment: ImageEditorMoveAlignment?
         var bestDistance = threshold
 
         for candidate in candidates {
-            for guide in guides {
-                let correction = guide - candidate
+            for position in positions {
+                let correction = position - candidate
                 let distance = abs(correction)
                 if distance <= bestDistance {
                     bestDistance = distance
-                    bestCorrection = correction
+                    bestAlignment = ImageEditorMoveAlignment(position: position, correction: correction)
                 }
             }
         }
 
-        return bestCorrection
+        return bestAlignment
     }
 
     private func guideSnapPositions(excluding excludedLayerIDs: Set<UUID>) -> ImageEditorGuideSnapPositions {
@@ -368,8 +379,19 @@ extension ImageEditorViewModel {
             vertical.append(contentsOf: document.guides.filter { $0.orientation == .vertical }.map(\.position))
             horizontal.append(contentsOf: document.guides.filter { $0.orientation == .horizontal }.map(\.position))
 
+            let excludedGroupIDs = Set(document.layers.compactMap { layer in
+                excludedLayerIDs.contains(layer.id) && layer.isGroup ? layer.id : nil
+            })
+            let componentGroupFrames = xomoComponentGuideFrames(excluding: excludedGroupIDs)
+            for frame in componentGroupFrames.values {
+                vertical.append(contentsOf: [frame.minX, frame.midX, frame.maxX])
+                horizontal.append(contentsOf: [frame.minY, frame.midY, frame.maxY])
+            }
+
             for layer in document.layers {
                 guard !excludedLayerIDs.contains(layer.id),
+                      !excludedGroupIDs.contains(layer.groupID ?? UUID()),
+                      componentGroupFrames[layer.groupID ?? UUID()] == nil,
                       !layer.isGroup,
                       !layer.isAdjustment,
                       !layer.isFilter,
@@ -392,6 +414,21 @@ extension ImageEditorViewModel {
             vertical: uniqueRoundedPositions(vertical),
             horizontal: uniqueRoundedPositions(horizontal)
         )
+    }
+
+    private func xomoComponentGuideFrames(excluding excludedGroupIDs: Set<UUID>) -> [UUID: CGRect] {
+        document.layers.reduce(into: [:]) { frames, layer in
+            guard let groupID = layer.groupID,
+                  !excludedGroupIDs.contains(groupID),
+                  document.isEffectivelyVisible(layer),
+                  let group = document.layers.first(where: { $0.id == groupID }),
+                  group.xomoComponentInstance != nil
+            else { return }
+
+            let frame = layer.frame.standardized
+            guard frame.width > 0.1, frame.height > 0.1 else { return }
+            frames[groupID] = frames[groupID]?.union(frame) ?? frame
+        }
     }
 
     private func gridSnapPositions(limit: CGFloat) -> [CGFloat] {
@@ -476,6 +513,18 @@ private struct ImageEditorGuideSnap {
 private struct ImageEditorGuideSnapPositions {
     var vertical: [CGFloat]
     var horizontal: [CGFloat]
+}
+
+struct ImageEditorAlignmentGuide: Identifiable, Equatable {
+    let orientation: ImageEditorGuideOrientation
+    let position: CGFloat
+
+    var id: String { "\(orientation.rawValue)-\(position.rounded())" }
+}
+
+private struct ImageEditorMoveAlignment {
+    let position: CGFloat
+    let correction: CGFloat
 }
 
 private extension CGRect {

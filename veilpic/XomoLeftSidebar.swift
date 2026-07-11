@@ -89,12 +89,18 @@ struct XomoComponentLibraryPanel: View {
 
                 Picker(L10n.text("xomo.theme.picker"), selection: $viewModel.xomoComponentTheme) {
                     ForEach(XomoComponentTheme.allCases) { theme in
-                        Text(theme.title).tag(theme)
+                        Text(theme.libraryTitle).tag(theme)
                     }
                 }
                 .labelsHidden()
                 .pickerStyle(.menu)
                 .accessibilityIdentifier("xomo-component-theme-picker")
+
+                Text(viewModel.xomoComponentTheme.librarySource.attribution)
+                    .font(.system(size: 10))
+                    .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("xomo-component-theme-attribution")
 
                 HStack(spacing: 6) {
                     Button(L10n.text("xomo.theme.apply")) {

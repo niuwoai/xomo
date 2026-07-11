@@ -4577,11 +4577,15 @@ private extension NSImage {
 
 struct ImageEditorTheme {
     static let window = NSColor(calibratedWhite: 0.11, alpha: 1)
-    static let chrome = NSColor(calibratedWhite: 0.18, alpha: 1)
+    static let chrome = NSColor(calibratedRed: 0.105, green: 0.118, blue: 0.145, alpha: 1)
     static let panel = NSColor(calibratedWhite: 0.23, alpha: 1)
     static let panelRaised = NSColor(calibratedWhite: 0.29, alpha: 1)
     static let border = NSColor(calibratedWhite: 0.38, alpha: 1)
     static let selected = NSColor(calibratedRed: 0.25, green: 0.48, blue: 0.78, alpha: 1)
     static let text = NSColor(calibratedWhite: 0.92, alpha: 1)
     static let mutedText = NSColor(calibratedWhite: 0.68, alpha: 1)
+    static let menuText = NSColor(calibratedRed: 0.84, green: 0.88, blue: 0.94, alpha: 1)
+    static let menuMutedText = NSColor(calibratedRed: 0.63, green: 0.68, blue: 0.77, alpha: 1)
+    static let exportAccent = NSColor(calibratedRed: 0.18, green: 0.66, blue: 0.95, alpha: 1)
+    static let exportAccentPressed = NSColor(calibratedRed: 0.12, green: 0.49, blue: 0.79, alpha: 1)
 }

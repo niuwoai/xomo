@@ -37,12 +37,19 @@ struct XomoLeftSidebarTests {
         ])
     }
 
-    @Test func componentThemesExposeThreeOriginalTokenSets() {
-        #expect(XomoComponentTheme.allCases == [.native, .softMobile, .denseAdmin])
+    @Test func componentThemesExposeOriginalAndAttributedReferenceTokenSets() {
+        #expect(XomoComponentTheme.allCases == [
+            .native, .softMobile, .socialContent, .glassmorphism, .denseAdmin, .chakraUI, .radixThemes
+        ])
+        #expect(XomoComponentTheme.allCases.filter { $0.librarySource == .xomoOriginal }.count == 5)
+        #expect(XomoComponentTheme.chakraUI.librarySource == .chakraUI)
+        #expect(XomoComponentTheme.radixThemes.librarySource == .radixThemes)
         #expect(!XomoComponentTheme.native.tokens.accent.isEqual(XomoComponentTheme.softMobile.tokens.accent))
         #expect(!XomoComponentTheme.softMobile.tokens.accent.isEqual(XomoComponentTheme.denseAdmin.tokens.accent))
         #expect(XomoComponentTheme.softMobile.tokens.cornerRadius > XomoComponentTheme.native.tokens.cornerRadius)
         #expect(XomoComponentTheme.denseAdmin.tokens.cornerRadius < XomoComponentTheme.native.tokens.cornerRadius)
+        #expect(XomoComponentTheme.glassmorphism.tokens.surface.alphaComponent < 1)
+        #expect(XomoComponentKind.allCases.allSatisfy(\.supportsThemeApplication))
     }
 
     @Test func primaryButtonUsesSelectedComponentThemeTokens() throws {
@@ -151,7 +158,11 @@ struct XomoLeftSidebarTests {
         let expectedComponents: [XomoThemeSample: Set<XomoComponentKind>] = [
             .nativeWorkspace: [.topNavigation, .sideNavigation, .card, .input, .selectInput, .button],
             .softMobileProfile: [.avatar, .card, .input, .searchInput, .button, .secondaryButton],
-            .denseAdminSettings: [.topNavigation, .sideNavigation, .card, .searchInput, .selectInput, .button]
+            .socialContentFeed: [.topNavigation, .avatar, .carouselCard, .tabBar, .tag, .button],
+            .glassmorphismDashboard: [.topNavigation, .card, .searchInput, .toggle, .button],
+            .denseAdminSettings: [.topNavigation, .sideNavigation, .card, .searchInput, .selectInput, .button],
+            .chakraForm: [.card, .input, .selectInput, .checkbox, .tag, .button],
+            .radixSettings: [.topNavigation, .card, .listRow, .selectInput, .toggle, .secondaryButton]
         ]
 
         for sample in XomoThemeSample.allCases {

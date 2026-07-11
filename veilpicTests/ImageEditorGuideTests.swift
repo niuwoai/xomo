@@ -54,6 +54,32 @@ struct ImageEditorGuideTests {
     }
 
     @Test
+    func movingLayerExposesComponentAlignmentGuidesUntilTheMoveFinishes() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: testImage(color: .systemBlue, size: NSSize(width: 140, height: 100))
+        ) { _ in }
+        let layerIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[layerIndex].frame = CGRect(x: 10, y: 12, width: 20, height: 16)
+        var targetLayer = ImageEditorLayer.blank(name: "Target", size: CGSize(width: 30, height: 24))
+        targetLayer.frame = CGRect(x: 60, y: 42, width: 30, height: 24)
+        viewModel.document.layers.append(targetLayer)
+
+        viewModel.beginMovingSelectedLayer()
+        viewModel.moveSelectedLayer(by: CGSize(width: 27, height: 29))
+
+        #expect(viewModel.activeAlignmentGuides.contains {
+            $0.orientation == .vertical && $0.position == targetLayer.frame.minX
+        })
+        #expect(viewModel.activeAlignmentGuides.contains {
+            $0.orientation == .horizontal && $0.position == targetLayer.frame.minY
+        })
+
+        viewModel.finishMovingSelectedLayer()
+        #expect(viewModel.activeAlignmentGuides.isEmpty)
+    }
+
+    @Test
     func movingLayerSnapsToGridWhenGuideSnappingIsDisabled() throws {
         let viewModel = ImageEditorViewModel(
             sourceName: "source.png",

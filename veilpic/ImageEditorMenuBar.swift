@@ -11,28 +11,28 @@ import AppKit
 extension ImageEditorView {
     var menuBar: some View {
         HStack(spacing: 14) {
-            Menu(L10n.text("imageEditor.menu.file")) { fileMenu }
+            Menu { fileMenu } label: { editorMenuLabel("imageEditor.menu.file") }
                 .focusable(false)
                 .accessibilityIdentifier("image-editor-menu-file")
-            Menu(L10n.text("imageEditor.menu.edit")) { editMenu }
+            Menu { editMenu } label: { editorMenuLabel("imageEditor.menu.edit") }
                 .focusable(false)
                 .accessibilityIdentifier("image-editor-menu-edit")
-            Menu(L10n.text("imageEditor.menu.image")) { imageMenu }
+            Menu { imageMenu } label: { editorMenuLabel("imageEditor.menu.image") }
                 .focusable(false)
                 .accessibilityIdentifier("image-editor-menu-image")
-            Menu(L10n.text("imageEditor.menu.layer")) { layerMenu }
+            Menu { layerMenu } label: { editorMenuLabel("imageEditor.menu.layer") }
                 .focusable(false)
                 .accessibilityIdentifier("image-editor-menu-layer")
-            Menu(L10n.text("imageEditor.menu.select")) { selectMenu }
+            Menu { selectMenu } label: { editorMenuLabel("imageEditor.menu.select") }
                 .focusable(false)
                 .accessibilityIdentifier("image-editor-menu-select")
-            Menu(L10n.text("imageEditor.menu.filter")) { filterMenu }
+            Menu { filterMenu } label: { editorMenuLabel("imageEditor.menu.filter") }
                 .focusable(false)
                 .accessibilityIdentifier("image-editor-menu-filter")
-            Menu(L10n.text("imageEditor.menu.view")) { viewMenu }
+            Menu { viewMenu } label: { editorMenuLabel("imageEditor.menu.view") }
                 .focusable(false)
                 .accessibilityIdentifier("image-editor-menu-view")
-            Menu(L10n.text("imageEditor.menu.window")) { windowMenu }
+            Menu { windowMenu } label: { editorMenuLabel("imageEditor.menu.window") }
                 .focusable(false)
                 .accessibilityIdentifier("image-editor-menu-window")
 
@@ -41,21 +41,21 @@ extension ImageEditorView {
             Button(L10n.text("imageEditor.action.projectOpen")) {
                 viewModel.openProjectDocument()
             }
-            .buttonStyle(EditorTextButtonStyle())
+            .buttonStyle(EditorMenuActionButtonStyle())
             .focusable(false)
             .accessibilityIdentifier("image-editor-action-project-open")
 
             Button(L10n.text("imageEditor.action.projectSave")) {
                 viewModel.saveProjectDocument()
             }
-            .buttonStyle(EditorTextButtonStyle())
+            .buttonStyle(EditorMenuActionButtonStyle())
             .focusable(false)
             .accessibilityIdentifier("image-editor-action-project-save")
 
             Button(L10n.text("imageEditor.action.cancel")) {
                 closeWindow()
             }
-            .buttonStyle(EditorTextButtonStyle())
+            .buttonStyle(EditorMenuSecondaryButtonStyle())
             .focusable(false)
             .accessibilityIdentifier("image-editor-action-cancel")
 
@@ -64,7 +64,7 @@ extension ImageEditorView {
                     closeWindow()
                 }
             }
-            .buttonStyle(EditorPrimaryButtonStyle())
+            .buttonStyle(EditorMenuPreviewButtonStyle())
             .focusable(false)
             .accessibilityIdentifier("image-editor-action-apply")
             .accessibilityLabel(L10n.text("imageEditor.action.apply"))
@@ -72,13 +72,26 @@ extension ImageEditorView {
             Button(L10n.text("imageEditor.action.export")) {
                 viewModel.openExportPanel()
             }
-            .buttonStyle(EditorTextButtonStyle())
+            .buttonStyle(EditorExportButtonStyle())
             .focusable(false)
             .accessibilityIdentifier("image-editor-action-export")
         }
         .frame(height: 42)
         .padding(.horizontal, 14)
         .background(Color(nsColor: ImageEditorTheme.chrome))
+    }
+
+    private func editorMenuLabel(_ key: String) -> some View {
+        HStack(spacing: 5) {
+            Text(L10n.text(key))
+            Image(systemName: "chevron.down")
+                .font(.system(size: 8, weight: .bold))
+        }
+        .font(.system(size: 12, weight: .semibold))
+        .foregroundStyle(Color(nsColor: ImageEditorTheme.menuText))
+        .padding(.horizontal, 6)
+        .frame(height: 28)
+        .contentShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
     }
 
     @ViewBuilder
@@ -2107,5 +2120,88 @@ extension ImageEditorView {
             }
             .disabled(!viewModel.canApplySelectedPathAsLayerMask)
         }
+    }
+}
+
+private struct EditorMenuActionButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        EditorMenuButtonSurface(
+            label: configuration.label,
+            isPressed: configuration.isPressed,
+            foreground: Color(nsColor: ImageEditorTheme.menuText),
+            normalBackground: Color.white.opacity(0.075),
+            hoverBackground: Color.white.opacity(0.14),
+            pressedBackground: Color(nsColor: ImageEditorTheme.selected).opacity(0.56),
+            border: Color.white.opacity(0.11)
+        )
+    }
+}
+
+private struct EditorMenuSecondaryButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        EditorMenuButtonSurface(
+            label: configuration.label,
+            isPressed: configuration.isPressed,
+            foreground: Color(nsColor: ImageEditorTheme.menuMutedText),
+            normalBackground: Color.white.opacity(0.035),
+            hoverBackground: Color.white.opacity(0.095),
+            pressedBackground: Color.white.opacity(0.15),
+            border: Color.white.opacity(0.08)
+        )
+    }
+}
+
+private struct EditorMenuPreviewButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        EditorMenuButtonSurface(
+            label: configuration.label,
+            isPressed: configuration.isPressed,
+            foreground: Color(nsColor: ImageEditorTheme.menuText),
+            normalBackground: Color(nsColor: ImageEditorTheme.selected).opacity(0.70),
+            hoverBackground: Color(nsColor: ImageEditorTheme.selected).opacity(0.88),
+            pressedBackground: Color(nsColor: ImageEditorTheme.selected).opacity(0.54),
+            border: Color.white.opacity(0.18)
+        )
+    }
+}
+
+private struct EditorExportButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        EditorMenuButtonSurface(
+            label: configuration.label,
+            isPressed: configuration.isPressed,
+            foreground: .white,
+            normalBackground: Color(nsColor: ImageEditorTheme.exportAccent),
+            hoverBackground: Color(nsColor: ImageEditorTheme.exportAccent).opacity(0.86),
+            pressedBackground: Color(nsColor: ImageEditorTheme.exportAccentPressed),
+            border: Color.white.opacity(0.22)
+        )
+    }
+}
+
+private struct EditorMenuButtonSurface<Label: View>: View {
+    let label: Label
+    let isPressed: Bool
+    let foreground: Color
+    let normalBackground: Color
+    let hoverBackground: Color
+    let pressedBackground: Color
+    let border: Color
+    @State private var isHovered = false
+
+    var body: some View {
+        label
+            .font(.system(size: 12, weight: .semibold))
+            .padding(.horizontal, 11)
+            .frame(height: 28)
+            .foregroundStyle(foreground)
+            .background(isPressed ? pressedBackground : (isHovered ? hoverBackground : normalBackground))
+            .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .strokeBorder(border, lineWidth: 1)
+            }
+            .onHover { isHovered = $0 }
+            .focusable(false)
     }
 }

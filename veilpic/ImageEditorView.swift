@@ -10,6 +10,8 @@ import SwiftUI
 
 private let imageEditorRightDockWidth: CGFloat = 384
 private let imageEditorCanvasToolbarHeight: CGFloat = 42
+private let imageEditorToolRailWidth: CGFloat = 84
+private let imageEditorComponentLibraryWidth: CGFloat = 220
 
 struct ImageEditorView: View {
     @StateObject var viewModel: ImageEditorViewModel
@@ -333,7 +335,7 @@ struct ImageEditorView: View {
             }
             .frame(maxHeight: .infinity)
         }
-        .frame(width: 220)
+        .frame(width: viewModel.selectedLeftSidebarTab == .tools ? imageEditorToolRailWidth : imageEditorComponentLibraryWidth)
         .background(Color(nsColor: ImageEditorTheme.chrome))
         .accessibilityIdentifier("xomo-left-sidebar")
     }
@@ -342,20 +344,20 @@ struct ImageEditorView: View {
         VStack(spacing: 8) {
             ScrollView(.vertical, showsIndicators: false) {
                 LazyVGrid(
-                    columns: Array(repeating: GridItem(.fixed(30), spacing: 2), count: 6),
+                    columns: Array(repeating: GridItem(.fixed(30), spacing: 4), count: 2),
                     spacing: 4
                 ) {
                     ForEach(ImageEditorTool.allCases) { tool in
                         toolRailItem(tool)
                     }
                 }
-                .frame(width: 200)
+                .frame(width: 64)
             }
 
             Divider().overlay(editorBorder)
             colorChips
         }
-        .frame(width: 220)
+        .frame(width: imageEditorToolRailWidth)
         .padding(.vertical, 8)
     }
 
@@ -2462,6 +2464,14 @@ struct ImageEditorView: View {
                     ),
                     with: .color(.yellow.opacity(0.9)),
                     style: StrokeStyle(lineWidth: 1.4, dash: [3, 3])
+                )
+            }
+
+            for guide in viewModel.activeAlignmentGuides {
+                context.stroke(
+                    guidePath(orientation: guide.orientation, position: guide.position, in: size),
+                    with: .color(Color(nsColor: ImageEditorTheme.selected).opacity(0.96)),
+                    style: StrokeStyle(lineWidth: 1.5, dash: [4, 3])
                 )
             }
         }
