@@ -11,7 +11,7 @@ struct XomoLeftSidebarTests {
     }
 
     @Test func componentLibraryExposesEditableStarterComponents() {
-        #expect(XomoComponentKind.allCases == [.button, .input, .card])
+        #expect(XomoComponentKind.allCases == [.button, .input, .card, .image])
     }
 
     @Test func switchingSidebarDoesNotChangeSelectedTool() {
@@ -122,5 +122,37 @@ struct XomoLeftSidebarTests {
         #expect(children.count == 3)
         #expect(children.contains(where: { $0.isShape }))
         #expect(children.filter { $0.isText }.count == 2)
+    }
+
+    @Test func insertingImageCreatesEditablePixelLayerInGroup() throws {
+        let image = NSImage.transparent(size: CGSize(width: 640, height: 480))
+        let viewModel = ImageEditorViewModel(sourceName: "source", image: image) { _ in }
+
+        viewModel.insertXomoComponent(.image, at: CGPoint(x: 40, y: 60))
+
+        let group = try #require(viewModel.document.selectedLayer)
+        #expect(group.isGroup)
+        #expect(group.name == XomoComponentKind.image.title)
+        let children = viewModel.document.layers.filter { $0.groupID == group.id }
+        #expect(children.count == 1)
+        #expect(children[0].kind.isPixel)
+        #expect(children[0].name == L10n.text("xomo.component.image.placeholderLayer"))
+        #expect(children[0].image.cgImage(forProposedRect: nil, context: nil, hints: nil) != nil)
+        #expect(viewModel.canUndo)
+    }
+
+    @Test func imageComponentRoundTripRetainsEditablePixelLayer() throws {
+        let image = NSImage.transparent(size: CGSize(width: 640, height: 480))
+        let viewModel = ImageEditorViewModel(sourceName: "source", image: image) { _ in }
+        viewModel.insertXomoComponent(.image, at: CGPoint(x: 40, y: 60))
+
+        let project = try ImageEditorProjectDocument(document: viewModel.document)
+        let restored = try project.restoredDocument()
+        let group = try #require(restored.layers.first(where: { $0.isGroup && $0.name == XomoComponentKind.image.title }))
+        let children = restored.layers.filter { $0.groupID == group.id }
+
+        #expect(children.count == 1)
+        #expect(children[0].kind.isPixel)
+        #expect(children[0].image.cgImage(forProposedRect: nil, context: nil, hints: nil) != nil)
     }
 }

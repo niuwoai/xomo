@@ -46,10 +46,18 @@ private enum XomoCardComponentStyle {
     static let bodyColor = NSColor(deviceWhite: 0.42, alpha: 1)
 }
 
+private enum XomoImageComponentStyle {
+    static let minimumWidth: CGFloat = 240
+    static let maximumWidth: CGFloat = 360
+    static let widthRatio: CGFloat = 0.32
+    static let aspectRatio: CGFloat = 16 / 10
+}
+
 enum XomoComponentKind: String, CaseIterable, Identifiable {
     case button
     case input
     case card
+    case image
 
     var id: String { rawValue }
 
@@ -67,6 +75,8 @@ extension ImageEditorViewModel {
             insertXomoInput(at: proposedOrigin)
         case .card:
             insertXomoCard(at: proposedOrigin)
+        case .image:
+            insertXomoImage(at: proposedOrigin)
         }
     }
 
@@ -268,6 +278,66 @@ extension ImageEditorViewModel {
         isEditingLayerMask = false
         appendHistory(L10n.text("xomo.component.history.insert"))
         statusText = L10n.format("xomo.component.status.inserted", group.name)
+    }
+
+    private func insertXomoImage(at proposedOrigin: CGPoint?) {
+        let canvasSize = document.canvasSize
+        let width = min(
+            XomoImageComponentStyle.maximumWidth,
+            max(XomoImageComponentStyle.minimumWidth, canvasSize.width * XomoImageComponentStyle.widthRatio)
+        )
+        let imageSize = CGSize(width: width, height: width / XomoImageComponentStyle.aspectRatio)
+        let defaultOrigin = CGPoint(
+            x: (canvasSize.width - imageSize.width) * 0.5,
+            y: (canvasSize.height - imageSize.height) * 0.5
+        )
+        let origin = clampedComponentOrigin(proposedOrigin ?? defaultOrigin, componentSize: imageSize)
+
+        pushUndo()
+        var group = ImageEditorLayer.group(name: L10n.text("xomo.component.image.title"), size: canvasSize)
+        group.blendMode = .passThrough
+
+        var imageLayer = ImageEditorLayer(
+            name: L10n.text("xomo.component.image.placeholderLayer"),
+            image: imagePlaceholderImage(size: imageSize),
+            mask: nil,
+            frame: CGRect(origin: origin, size: imageSize),
+            isVisible: true,
+            opacity: 1,
+            blendMode: .normal,
+            isLocked: false
+        )
+        imageLayer.groupID = group.id
+
+        let insertionIndex = min((document.selectedLayerIndex ?? (document.layers.count - 1)) + 1, document.layers.count)
+        document.layers.insert(contentsOf: [imageLayer, group], at: insertionIndex)
+        document.selectedLayerID = group.id
+        document.selectedLayerIDs = [group.id]
+        isEditingLayerMask = false
+        appendHistory(L10n.text("xomo.component.history.insert"))
+        statusText = L10n.format("xomo.component.status.inserted", group.name)
+    }
+
+    private func imagePlaceholderImage(size: CGSize) -> NSImage {
+        let start = NSColor(deviceRed: 0.14, green: 0.37, blue: 0.78, alpha: 1)
+        let end = NSColor(deviceRed: 0.49, green: 0.16, blue: 0.73, alpha: 1)
+        return NSImage.rendered(size: size) { rect in
+            NSGradient(starting: start, ending: end)?.draw(in: rect, angle: -35)
+            NSColor.white.withAlphaComponent(0.16).setFill()
+            NSBezierPath(ovalIn: CGRect(
+                x: rect.width * 0.55,
+                y: rect.height * 0.12,
+                width: rect.width * 0.46,
+                height: rect.width * 0.46
+            )).fill()
+            NSColor.white.withAlphaComponent(0.24).setFill()
+            NSBezierPath(ovalIn: CGRect(
+                x: rect.width * 0.08,
+                y: rect.height * 0.50,
+                width: rect.width * 0.25,
+                height: rect.width * 0.25
+            )).fill()
+        } ?? NSImage.transparent(size: size)
     }
 
     private func clampedComponentOrigin(_ origin: CGPoint, componentSize: CGSize) -> CGPoint {

@@ -2280,7 +2280,7 @@
 "xomo.leftSidebar.tools" = "工具";
 "xomo.leftSidebar.components" = "组件库";
 "xomo.componentLibrary.title" = "组件库";
-"xomo.componentLibrary.subtitle" = "点击或拖入按钮、输入框、卡片，立即生成可编辑图层；其它基础组件会逐个加入。";
+"xomo.componentLibrary.subtitle" = "点击或拖入按钮、输入框、卡片、图片，立即生成可编辑图层；其它基础组件会逐个加入。";
 "xomo.componentLibrary.nextStep" = "基础组件由组、背景形状和文字图层组成；修改文案、颜色或图层结构不会变成不可编辑截图。";
 "xomo.componentLibrary.dragOrInsert" = "点击插入，或拖入画布";
 "xomo.componentLibrary.comingSoon" = "准备中";
@@ -2294,6 +2294,8 @@
 "xomo.component.card.defaultTitle" = "卡片标题";
 "xomo.component.card.defaultBody" = "这里填写一段可编辑的说明文字。";
 "xomo.component.card.backgroundLayer" = "卡片背景";
+"xomo.component.image.title" = "图片";
+"xomo.component.image.placeholderLayer" = "图片占位图";
 "xomo.component.history.insert" = "插入按钮组件";
 "xomo.component.status.inserted" = "已插入组件：%@";
 "xomo.componentPreview.button" = "按钮";
