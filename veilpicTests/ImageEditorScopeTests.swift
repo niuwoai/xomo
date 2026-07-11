@@ -252,58 +252,16 @@ struct ImageEditorScopeTests {
         #expect(viewModel.selectedTool == .rectangle)
     }
 
-    @Test func developmentLaunchOpensEditorOnlyForNormalDebugAppProcess() {
-        #expect(
-            ImageEditorDevelopmentLaunch.shouldOpenEditor(
-                isDebugBuild: true,
-                environment: [:],
-                isRunningXCTest: false
-            )
-        )
-        #expect(
-            !ImageEditorDevelopmentLaunch.shouldOpenEditor(
-                isDebugBuild: false,
-                environment: [:],
-                isRunningXCTest: false
-            )
-        )
-        #expect(
-            !ImageEditorDevelopmentLaunch.shouldOpenEditor(
-                isDebugBuild: true,
-                environment: ["XCTestConfigurationFilePath": "test.xctestconfiguration"],
-                isRunningXCTest: false
-            )
-        )
-        #expect(
-            !ImageEditorDevelopmentLaunch.shouldOpenEditor(
-                isDebugBuild: true,
-                environment: [:],
-                isRunningXCTest: true
-            )
-        )
-    }
-
-    @Test func developmentLaunchBuildsEditorWithoutBlockingStartupPlaceholder() throws {
+    @Test func xomoApplicationOpensEditorWorkspaceWithoutMenuBarOrScreenshotStartup() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/veilpicApp.swift"),
             encoding: .utf8
         )
-        let launchStart = try #require(source.range(of: "func openDevelopmentSample()"))
-        let helperStart = try #require(
-            source[launchStart.upperBound...].range(of: "private func presentDevelopmentSampleEditor()")
-        )
-        let launchSource = source[launchStart.lowerBound..<helperStart.lowerBound]
-
-        #expect(launchSource.contains("presentDevelopmentSampleEditor()"))
-        #expect(!source.contains("ImageEditorStartupView"))
-        #expect(!source.contains("ProgressView(L10n.text(\"imageEditor.startup.loading\"))"))
-
-        let appLaunchStart = try #require(source.range(of: "func applicationDidFinishLaunching"))
-        let appLaunchEnd = try #require(source[appLaunchStart.upperBound...].range(of: "func applicationWillTerminate"))
-        let appLaunchSource = source[appLaunchStart.lowerBound..<appLaunchEnd.lowerBound]
-        let editorLaunch = try #require(appLaunchSource.range(of: "ImageEditorWindowPresenter.shared.openDevelopmentSample()"))
-        let shortcutSetup = try #require(appLaunchSource.range(of: "GlobalScreenshotShortcutManager.shared.setup(viewModel: .shared)"))
-        #expect(editorLaunch.lowerBound < shortcutSetup.lowerBound)
+        #expect(source.contains("WindowGroup"))
+        #expect(source.contains("XomoEditorWorkspaceView()"))
+        #expect(!source.contains("MenuBarExtra"))
+        #expect(!source.contains("GlobalScreenshotShortcutManager"))
+        #expect(!source.contains("StorageSettingsView"))
     }
 
     @MainActor

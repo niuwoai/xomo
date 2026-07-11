@@ -7,6 +7,11 @@
 
 import AppKit
 import SwiftUI
+
+enum SettingsPresentationMode {
+    case onboarding
+    case settings
+}
 import UniformTypeIdentifiers
 
 struct ContentView: View {
