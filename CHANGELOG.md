@@ -5,6 +5,9 @@
 ### Removed
 - 删除 Xomo 内部已无调用方的对象存储配置、上传阶段、历史记录、变体与反馈数据模型，完成旧 QPic 工作流在 Xomo 的代码边界清理。
 
+### Tests
+- 干净 Debug `xcodebuild build` 成功；Computer Use 验证当前构建可启动、创建图层、缩放并导出 1440×900 PNG。
+
 ## 2.0.0-rc2 - 2026-07-12
 
 ### Removed
