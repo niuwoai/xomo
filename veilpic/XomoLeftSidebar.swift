@@ -59,6 +59,11 @@ private struct XomoComponentLibraryPreviewItem: Identifiable {
         Self(id: "tabBar", titleKey: "xomo.componentPreview.tabBar", symbolName: "rectangle.3.group", component: .tabBar)
     ]
 
+    static let contentItems: [Self] = [
+        Self(id: "carouselCard", titleKey: "xomo.componentPreview.carouselCard", symbolName: "rectangle.stack", component: .carouselCard),
+        Self(id: "emptyState", titleKey: "xomo.componentPreview.emptyState", symbolName: "tray", component: .emptyState)
+    ]
+
     static let foundationItems: [Self] = [
         Self(id: "card", titleKey: "xomo.componentPreview.card", symbolName: "rectangle.on.rectangle", component: .card),
         Self(id: "image", titleKey: "xomo.componentPreview.image", symbolName: "photo", component: .image),
@@ -100,6 +105,19 @@ struct XomoComponentLibraryPanel: View {
                     spacing: 8
                 ) {
                     ForEach(XomoComponentLibraryPreviewItem.formItems) { item in
+                        componentPreview(item)
+                    }
+                }
+
+                Text(L10n.text("xomo.componentLibrary.contentSection"))
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+
+                LazyVGrid(
+                    columns: Array(repeating: GridItem(.flexible(minimum: 72), spacing: 8), count: 2),
+                    spacing: 8
+                ) {
+                    ForEach(XomoComponentLibraryPreviewItem.contentItems) { item in
                         componentPreview(item)
                     }
                 }

@@ -154,6 +154,17 @@ private enum XomoNavigationComponentStyle {
     static let strokeWidth: CGFloat = 1
 }
 
+private enum XomoContentComponentStyle {
+    static let carouselHeight: CGFloat = 220
+    static let carouselImageHeight: CGFloat = 150
+    static let emptyStateSize = CGSize(width: 280, height: 180)
+    static let emptyStateIconDiameter: CGFloat = 44
+    static let titleFontSize: CGFloat = 17
+    static let bodyFontSize: CGFloat = 13
+    static let inset: CGFloat = 18
+    static let iconFillColor = NSColor(deviceRed: 0.20, green: 0.48, blue: 0.95, alpha: 1)
+}
+
 private enum XomoCardComponentStyle {
     static let minimumWidth: CGFloat = 240
     static let maximumWidth: CGFloat = 360
@@ -222,6 +233,8 @@ enum XomoComponentKind: String, CaseIterable, Identifiable {
     case topNavigation
     case sideNavigation
     case tabBar
+    case carouselCard
+    case emptyState
     case card
     case image
     case avatar
@@ -269,6 +282,10 @@ extension ImageEditorViewModel {
             insertXomoSideNavigation(at: proposedOrigin)
         case .tabBar:
             insertXomoTabBar(at: proposedOrigin)
+        case .carouselCard:
+            insertXomoCarouselCard(at: proposedOrigin)
+        case .emptyState:
+            insertXomoEmptyState(at: proposedOrigin)
         case .card:
             insertXomoCard(at: proposedOrigin)
         case .image:
@@ -867,6 +884,138 @@ extension ImageEditorViewModel {
         )
         layer.groupID = groupID
         return layer
+    }
+
+    private func insertXomoCarouselCard(at proposedOrigin: CGPoint?) {
+        let component = XomoComponentKind.carouselCard
+        let frame = componentFrame(
+            proposedOrigin,
+            size: CGSize(width: navigationWidth(), height: XomoContentComponentStyle.carouselHeight)
+        )
+        let imageFrame = CGRect(
+            x: frame.minX,
+            y: frame.minY,
+            width: frame.width,
+            height: XomoContentComponentStyle.carouselImageHeight
+        )
+        let group = beginComponentGroup(component)
+        let background = navigationBackground(
+            name: L10n.text("xomo.component.carouselCard.backgroundLayer"),
+            frame: frame,
+            groupID: group.id
+        )
+        var image = ImageEditorLayer(
+            name: L10n.text("xomo.component.carouselCard.imageLayer"),
+            image: imagePlaceholderImage(size: imageFrame.size),
+            mask: nil,
+            frame: imageFrame,
+            isVisible: true,
+            opacity: 1,
+            blendMode: .normal,
+            isLocked: false
+        )
+        image.groupID = group.id
+        let title = componentTextLayer(
+            L10n.text("xomo.component.carouselCard.defaultTitle"),
+            name: L10n.text("xomo.component.carouselCard.titleLayer"),
+            color: XomoNavigationComponentStyle.titleColor,
+            fontSize: XomoContentComponentStyle.titleFontSize,
+            origin: CGPoint(x: frame.minX + XomoContentComponentStyle.inset, y: imageFrame.maxY + 13),
+            isBold: true,
+            groupID: group.id
+        )
+        let dots = carouselDots(in: frame, groupID: group.id)
+        finishComponentInsertion(group: group, children: [background, image, title] + dots)
+    }
+
+    private func insertXomoEmptyState(at proposedOrigin: CGPoint?) {
+        let component = XomoComponentKind.emptyState
+        let frame = componentFrame(proposedOrigin, size: XomoContentComponentStyle.emptyStateSize)
+        let iconFrame = CGRect(
+            x: frame.midX - XomoContentComponentStyle.emptyStateIconDiameter * 0.5,
+            y: frame.minY + 24,
+            width: XomoContentComponentStyle.emptyStateIconDiameter,
+            height: XomoContentComponentStyle.emptyStateIconDiameter
+        )
+        let group = beginComponentGroup(component)
+        let background = navigationBackground(
+            name: L10n.text("xomo.component.emptyState.backgroundLayer"),
+            frame: frame,
+            groupID: group.id
+        )
+        var icon = ImageEditorLayer.shape(
+            name: L10n.text("xomo.component.emptyState.iconLayer"),
+            frame: iconFrame,
+            content: ImageEditorShapeContent(
+                kind: .ellipse,
+                fillColor: XomoContentComponentStyle.iconFillColor,
+                fillOpacity: 1,
+                strokeColor: XomoContentComponentStyle.iconFillColor,
+                strokeWidth: XomoNavigationComponentStyle.strokeWidth,
+                strokeOpacity: 1
+            )
+        )
+        icon.groupID = group.id
+        let title = L10n.text("xomo.component.emptyState.defaultTitle")
+        let body = L10n.text("xomo.component.emptyState.defaultBody")
+        let titleSize = componentTextSize(title, fontSize: XomoContentComponentStyle.titleFontSize, isBold: true)
+        let bodySize = componentTextSize(body, fontSize: XomoContentComponentStyle.bodyFontSize)
+        let titleLayer = componentTextLayer(
+            title,
+            name: L10n.text("xomo.component.emptyState.titleLayer"),
+            color: XomoNavigationComponentStyle.titleColor,
+            fontSize: XomoContentComponentStyle.titleFontSize,
+            origin: CGPoint(x: frame.midX - titleSize.width * 0.5, y: frame.minY + 84),
+            isBold: true,
+            groupID: group.id
+        )
+        let bodyLayer = componentTextLayer(
+            body,
+            name: L10n.text("xomo.component.emptyState.bodyLayer"),
+            color: XomoNavigationComponentStyle.detailColor,
+            fontSize: XomoContentComponentStyle.bodyFontSize,
+            origin: CGPoint(x: frame.midX - bodySize.width * 0.5, y: frame.minY + 116),
+            groupID: group.id
+        )
+        finishComponentInsertion(group: group, children: [background, icon, titleLayer, bodyLayer])
+    }
+
+    private func carouselDots(in frame: CGRect, groupID: UUID) -> [ImageEditorLayer] {
+        let dotDiameter: CGFloat = 6
+        let dotGap: CGFloat = 7
+        let totalWidth = dotDiameter * 3 + dotGap * 2
+        return (0..<3).map { index in
+            var dot = ImageEditorLayer.shape(
+                name: L10n.format("xomo.component.carouselCard.dotLayer", index + 1),
+                frame: CGRect(
+                    x: frame.midX - totalWidth * 0.5 + CGFloat(index) * (dotDiameter + dotGap),
+                    y: frame.maxY - 14,
+                    width: dotDiameter,
+                    height: dotDiameter
+                ),
+                content: ImageEditorShapeContent(
+                    kind: .ellipse,
+                    fillColor: index == 0 ? XomoNavigationComponentStyle.selectedFillColor : XomoNavigationComponentStyle.strokeColor,
+                    fillOpacity: 1,
+                    strokeColor: .clear,
+                    strokeWidth: XomoNavigationComponentStyle.strokeWidth,
+                    strokeOpacity: 0
+                )
+            )
+            dot.groupID = groupID
+            return dot
+        }
+    }
+
+    private func componentTextSize(_ text: String, fontSize: CGFloat, isBold: Bool = false) -> CGSize {
+        ImageEditorTextContent(
+            text: text,
+            color: .black,
+            fontSize: fontSize,
+            point: CGPoint(x: ImageEditorTextContent.drawingPadding, y: ImageEditorTextContent.drawingPadding),
+            isBold: isBold,
+            alignment: .left
+        ).layerSize()
     }
 
     private func insertXomoCard(at proposedOrigin: CGPoint?) {

@@ -2284,6 +2284,7 @@
 "xomo.componentLibrary.formSection" = "表单控件";
 "xomo.componentLibrary.selectionSection" = "选择与标记";
 "xomo.componentLibrary.navigationSection" = "导航与列表";
+"xomo.componentLibrary.contentSection" = "内容模块";
 "xomo.componentLibrary.foundationSection" = "基础组件";
 "xomo.componentLibrary.nextStep" = "基础组件由组、背景形状和文字图层组成；修改文案、颜色或图层结构不会变成不可编辑截图。";
 "xomo.componentLibrary.dragOrInsert" = "点击插入，或拖入画布";
@@ -2355,6 +2356,19 @@
 "xomo.component.tabBar.defaultThirdItem" = "设置";
 "xomo.component.tabBar.backgroundLayer" = "Tab 栏背景";
 "xomo.component.tabBar.itemLayer" = "第 %d 个 Tab";
+"xomo.component.carouselCard.title" = "轮播卡片";
+"xomo.component.carouselCard.defaultTitle" = "轮播标题";
+"xomo.component.carouselCard.backgroundLayer" = "轮播卡片背景";
+"xomo.component.carouselCard.imageLayer" = "轮播图片占位图";
+"xomo.component.carouselCard.titleLayer" = "轮播标题文字";
+"xomo.component.carouselCard.dotLayer" = "第 %d 个轮播指示点";
+"xomo.component.emptyState.title" = "空状态";
+"xomo.component.emptyState.defaultTitle" = "这里还没有内容";
+"xomo.component.emptyState.defaultBody" = "从组件库添加一个元素开始";
+"xomo.component.emptyState.backgroundLayer" = "空状态背景";
+"xomo.component.emptyState.iconLayer" = "空状态图标";
+"xomo.component.emptyState.titleLayer" = "空状态标题";
+"xomo.component.emptyState.bodyLayer" = "空状态说明";
 "xomo.component.card.title" = "卡片";
 "xomo.component.card.defaultTitle" = "卡片标题";
 "xomo.component.card.defaultBody" = "这里填写一段可编辑的说明文字。";
@@ -2384,6 +2398,8 @@
 "xomo.componentPreview.topNavigation" = "顶部导航";
 "xomo.componentPreview.sideNavigation" = "侧边导航";
 "xomo.componentPreview.tabBar" = "Tab 栏";
+"xomo.componentPreview.carouselCard" = "轮播卡片";
+"xomo.componentPreview.emptyState" = "空状态";
 "xomo.componentPreview.card" = "卡片";
 "xomo.componentPreview.image" = "图片";
 "xomo.componentPreview.avatar" = "头像";

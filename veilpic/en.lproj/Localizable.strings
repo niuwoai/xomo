@@ -2284,6 +2284,7 @@
 "xomo.componentLibrary.formSection" = "Form Controls";
 "xomo.componentLibrary.selectionSection" = "Selection & Status";
 "xomo.componentLibrary.navigationSection" = "Navigation & Lists";
+"xomo.componentLibrary.contentSection" = "Content Blocks";
 "xomo.componentLibrary.foundationSection" = "Foundation Components";
 "xomo.componentLibrary.nextStep" = "Core components are groups with background shapes and text layers, so editing copy, color, or structure never creates an uneditable screenshot.";
 "xomo.componentLibrary.dragOrInsert" = "Click to insert or drag onto the canvas";
@@ -2355,6 +2356,19 @@
 "xomo.component.tabBar.defaultThirdItem" = "Settings";
 "xomo.component.tabBar.backgroundLayer" = "Tab Bar Background";
 "xomo.component.tabBar.itemLayer" = "Tab %d";
+"xomo.component.carouselCard.title" = "Carousel Card";
+"xomo.component.carouselCard.defaultTitle" = "Carousel title";
+"xomo.component.carouselCard.backgroundLayer" = "Carousel Card Background";
+"xomo.component.carouselCard.imageLayer" = "Carousel Image Placeholder";
+"xomo.component.carouselCard.titleLayer" = "Carousel Title";
+"xomo.component.carouselCard.dotLayer" = "Carousel Dot %d";
+"xomo.component.emptyState.title" = "Empty State";
+"xomo.component.emptyState.defaultTitle" = "Nothing here yet";
+"xomo.component.emptyState.defaultBody" = "Start by adding an item from the library";
+"xomo.component.emptyState.backgroundLayer" = "Empty State Background";
+"xomo.component.emptyState.iconLayer" = "Empty State Icon";
+"xomo.component.emptyState.titleLayer" = "Empty State Title";
+"xomo.component.emptyState.bodyLayer" = "Empty State Description";
 "xomo.component.card.title" = "Card";
 "xomo.component.card.defaultTitle" = "Card title";
 "xomo.component.card.defaultBody" = "Add an editable supporting description here.";
@@ -2384,6 +2398,8 @@
 "xomo.componentPreview.topNavigation" = "Top Navigation";
 "xomo.componentPreview.sideNavigation" = "Side Navigation";
 "xomo.componentPreview.tabBar" = "Tab Bar";
+"xomo.componentPreview.carouselCard" = "Carousel";
+"xomo.componentPreview.emptyState" = "Empty State";
 "xomo.componentPreview.card" = "Card";
 "xomo.componentPreview.image" = "Image";
 "xomo.componentPreview.avatar" = "Avatar";

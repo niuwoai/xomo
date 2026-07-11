@@ -2284,6 +2284,7 @@
 "xomo.componentLibrary.formSection" = "フォーム";
 "xomo.componentLibrary.selectionSection" = "選択と状態";
 "xomo.componentLibrary.navigationSection" = "ナビゲーションとリスト";
+"xomo.componentLibrary.contentSection" = "コンテンツブロック";
 "xomo.componentLibrary.foundationSection" = "基本コンポーネント";
 "xomo.componentLibrary.nextStep" = "基本コンポーネントは背景図形とテキストを含むグループです。文言・色・構造を変更しても編集できないスクリーンショットにはなりません。";
 "xomo.componentLibrary.dragOrInsert" = "クリックして挿入、またはキャンバスへドラッグ";
@@ -2355,6 +2356,19 @@
 "xomo.component.tabBar.defaultThirdItem" = "設定";
 "xomo.component.tabBar.backgroundLayer" = "タブバー背景";
 "xomo.component.tabBar.itemLayer" = "タブ %d";
+"xomo.component.carouselCard.title" = "カルーセルカード";
+"xomo.component.carouselCard.defaultTitle" = "カルーセルタイトル";
+"xomo.component.carouselCard.backgroundLayer" = "カルーセルカード背景";
+"xomo.component.carouselCard.imageLayer" = "カルーセル画像プレースホルダー";
+"xomo.component.carouselCard.titleLayer" = "カルーセルタイトル文字";
+"xomo.component.carouselCard.dotLayer" = "カルーセルドット %d";
+"xomo.component.emptyState.title" = "空の状態";
+"xomo.component.emptyState.defaultTitle" = "まだ内容がありません";
+"xomo.component.emptyState.defaultBody" = "ライブラリから要素を追加して始めましょう";
+"xomo.component.emptyState.backgroundLayer" = "空状態背景";
+"xomo.component.emptyState.iconLayer" = "空状態アイコン";
+"xomo.component.emptyState.titleLayer" = "空状態タイトル";
+"xomo.component.emptyState.bodyLayer" = "空状態説明";
 "xomo.component.card.title" = "カード";
 "xomo.component.card.defaultTitle" = "カードの見出し";
 "xomo.component.card.defaultBody" = "ここに編集可能な説明文を入力します。";
@@ -2384,6 +2398,8 @@
 "xomo.componentPreview.topNavigation" = "上部ナビ";
 "xomo.componentPreview.sideNavigation" = "サイドナビ";
 "xomo.componentPreview.tabBar" = "タブバー";
+"xomo.componentPreview.carouselCard" = "カルーセル";
+"xomo.componentPreview.emptyState" = "空の状態";
 "xomo.componentPreview.card" = "カード";
 "xomo.componentPreview.image" = "画像";
 "xomo.componentPreview.avatar" = "アバター";

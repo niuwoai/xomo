@@ -28,6 +28,8 @@ struct XomoLeftSidebarTests {
             .topNavigation,
             .sideNavigation,
             .tabBar,
+            .carouselCard,
+            .emptyState,
             .card,
             .image,
             .avatar,
@@ -197,6 +199,90 @@ struct XomoLeftSidebarTests {
             #expect(children.count >= item.minimumChildCount)
             #expect(children.contains(where: { $0.isShape }))
             #expect(children.contains(where: { $0.isText }))
+        }
+    }
+
+    @Test func contentComponentsCreateEditableGroupedLayers() throws {
+        let components: [(component: XomoComponentKind, minimumChildCount: Int)] = [
+            (.carouselCard, 6),
+            (.emptyState, 4)
+        ]
+
+        for item in components {
+            let image = NSImage.transparent(size: CGSize(width: 640, height: 480))
+            let viewModel = ImageEditorViewModel(sourceName: "source", image: image) { _ in }
+
+            viewModel.insertXomoComponent(item.component, at: CGPoint(x: 40, y: 60))
+
+            let group = try #require(viewModel.document.selectedLayer)
+            let children = viewModel.document.layers.filter { $0.groupID == group.id }
+            #expect(group.isGroup)
+            #expect(group.name == item.component.title)
+            #expect(children.count >= item.minimumChildCount)
+            #expect(children.contains(where: { $0.isShape }))
+            #expect(children.contains(where: { $0.isText }))
+        }
+    }
+
+    @Test func mobileLoginCompositionRoundTripsSixEditableComponents() throws {
+        let image = NSImage.transparent(size: CGSize(width: 390, height: 844))
+        let viewModel = ImageEditorViewModel(sourceName: "mobile-login", image: image) { _ in }
+        let components: [(XomoComponentKind, CGPoint)] = [
+            (.avatar, CGPoint(x: 165, y: 72)),
+            (.input, CGPoint(x: 32, y: 188)),
+            (.checkbox, CGPoint(x: 32, y: 254)),
+            (.button, CGPoint(x: 32, y: 302)),
+            (.secondaryButton, CGPoint(x: 32, y: 366)),
+            (.tag, CGPoint(x: 152, y: 438))
+        ]
+
+        components.forEach { component, origin in
+            viewModel.insertXomoComponent(component, at: origin)
+        }
+
+        let insertedGroups = viewModel.document.layers.filter { $0.isGroup }
+        #expect(insertedGroups.count == components.count)
+        #expect(viewModel.canUndo)
+        viewModel.undo()
+        #expect(viewModel.document.layers.filter { $0.isGroup }.count == components.count - 1)
+        viewModel.redo()
+        #expect(viewModel.document.layers.filter { $0.isGroup }.count == components.count)
+
+        let restored = try ImageEditorProjectDocument(document: viewModel.document).restoredDocument()
+        let restoredNames = Set(restored.layers.filter { $0.isGroup }.map(\.name))
+        #expect(restored.layers.filter { $0.isGroup }.count == components.count)
+        for component in components.map(\.0) {
+            #expect(restoredNames.contains(component.title))
+        }
+    }
+
+    @Test func webSettingsCompositionRoundTripsSixEditableComponents() throws {
+        let image = NSImage.transparent(size: CGSize(width: 1440, height: 900))
+        let viewModel = ImageEditorViewModel(sourceName: "web-settings", image: image) { _ in }
+        let components: [(XomoComponentKind, CGPoint)] = [
+            (.topNavigation, CGPoint(x: 0, y: 0)),
+            (.sideNavigation, CGPoint(x: 0, y: 64)),
+            (.card, CGPoint(x: 288, y: 132)),
+            (.selectInput, CGPoint(x: 336, y: 246)),
+            (.toggle, CGPoint(x: 336, y: 328)),
+            (.button, CGPoint(x: 336, y: 404))
+        ]
+
+        components.forEach { component, origin in
+            viewModel.insertXomoComponent(component, at: origin)
+        }
+
+        let insertedGroups = viewModel.document.layers.filter { $0.isGroup }
+        #expect(insertedGroups.count == components.count)
+        #expect(insertedGroups.allSatisfy { group in
+            viewModel.document.layers.contains { $0.groupID == group.id }
+        })
+
+        let restored = try ImageEditorProjectDocument(document: viewModel.document).restoredDocument()
+        let restoredGroups = restored.layers.filter { $0.isGroup }
+        #expect(restoredGroups.count == components.count)
+        for component in components.map(\.0) {
+            #expect(restoredGroups.contains { $0.name == component.title })
         }
     }
 
