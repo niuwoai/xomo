@@ -169,6 +169,45 @@ struct XomoLeftSidebarTests {
         }
     }
 
+    @Test func componentMasterSyncsLinkedInstancesAndKeepsDetachedInstanceIndependent() throws {
+        let image = NSImage.transparent(size: CGSize(width: 640, height: 480))
+        let viewModel = ImageEditorViewModel(sourceName: "instances", image: image) { _ in }
+
+        viewModel.xomoComponentTheme = .native
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 40, y: 60))
+        let master = try #require(viewModel.document.selectedLayer)
+        viewModel.setSelectedXomoComponentAsMaster()
+
+        viewModel.xomoComponentTheme = .denseAdmin
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 40, y: 150))
+        let linked = try #require(viewModel.document.selectedLayer)
+        viewModel.linkSelectedXomoComponentsToMaster()
+
+        viewModel.xomoComponentTheme = .denseAdmin
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 40, y: 240))
+        let detached = try #require(viewModel.document.selectedLayer)
+        viewModel.linkSelectedXomoComponentsToMaster()
+        viewModel.detachSelectedXomoComponentInstances()
+
+        viewModel.selectLayer(master.id)
+        viewModel.xomoComponentTheme = .softMobile
+        viewModel.applyXomoThemeToSelectedComponent()
+        viewModel.syncSelectedXomoComponentMaster()
+
+        let masterLayer = try #require(viewModel.document.layers.first { $0.id == master.id })
+        let linkedLayer = try #require(viewModel.document.layers.first { $0.id == linked.id })
+        let detachedLayer = try #require(viewModel.document.layers.first { $0.id == detached.id })
+        #expect(masterLayer.xomoComponentInstance?.masterID == master.id)
+        #expect(linkedLayer.xomoComponentInstance?.masterID == master.id)
+        #expect(linkedLayer.xomoComponentInstance?.theme == .softMobile)
+        #expect(detachedLayer.xomoComponentInstance?.masterID == nil)
+        #expect(detachedLayer.xomoComponentInstance?.theme == .native)
+
+        let restored = try ImageEditorProjectDocument(document: viewModel.document).restoredDocument()
+        #expect(restored.layers.first { $0.id == linked.id }?.xomoComponentInstance?.masterID == master.id)
+        #expect(restored.layers.first { $0.id == detached.id }?.xomoComponentInstance?.masterID == nil)
+    }
+
     @Test func switchingSidebarDoesNotChangeSelectedTool() {
         let image = NSImage.transparent(size: CGSize(width: 20, height: 20))
         let viewModel = ImageEditorViewModel(sourceName: "source", image: image) { _ in }

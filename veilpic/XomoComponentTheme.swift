@@ -78,6 +78,13 @@ struct XomoComponentThemeTokens {
 struct XomoComponentInstance: Codable, Equatable {
     var kind: XomoComponentKind
     var theme: XomoComponentTheme
+    var masterID: UUID?
+
+    init(kind: XomoComponentKind, theme: XomoComponentTheme, masterID: UUID? = nil) {
+        self.kind = kind
+        self.theme = theme
+        self.masterID = masterID
+    }
 }
 
 enum XomoThemeSample: CaseIterable, Identifiable {

@@ -124,6 +124,52 @@ struct XomoComponentLibraryPanel: View {
                 .focusable(false)
                 .accessibilityIdentifier("xomo-component-theme-sample-insert")
 
+                Divider().overlay(Color(nsColor: ImageEditorTheme.border))
+
+                Text(L10n.text("xomo.instance.title"))
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+
+                HStack(spacing: 6) {
+                    Button(L10n.text("xomo.instance.makeMaster")) {
+                        viewModel.setSelectedXomoComponentAsMaster()
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                    .focusable(false)
+                    .disabled(!viewModel.canSetSelectedXomoComponentAsMaster)
+                    .accessibilityIdentifier("xomo-component-instance-make-master")
+
+                    Button(L10n.text("xomo.instance.link")) {
+                        viewModel.linkSelectedXomoComponentsToMaster()
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                    .focusable(false)
+                    .disabled(!viewModel.canLinkSelectedXomoComponentsToMaster)
+                    .accessibilityIdentifier("xomo-component-instance-link")
+                }
+
+                HStack(spacing: 6) {
+                    Button(L10n.text("xomo.instance.sync")) {
+                        viewModel.syncSelectedXomoComponentMaster()
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                    .focusable(false)
+                    .disabled(!viewModel.canSyncSelectedXomoComponentMaster)
+                    .accessibilityIdentifier("xomo-component-instance-sync")
+
+                    Button(L10n.text("xomo.instance.detach")) {
+                        viewModel.detachSelectedXomoComponentInstances()
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                    .focusable(false)
+                    .disabled(!viewModel.canDetachSelectedXomoComponentInstances)
+                    .accessibilityIdentifier("xomo-component-instance-detach")
+                }
+
                 LazyVGrid(
                     columns: Array(repeating: GridItem(.flexible(minimum: 72), spacing: 8), count: 2),
                     spacing: 8

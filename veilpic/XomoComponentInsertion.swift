@@ -1313,7 +1313,8 @@ extension ImageEditorViewModel {
         }
         document.layers[groupIndex].xomoComponentInstance = XomoComponentInstance(
             kind: component,
-            theme: xomoComponentTheme
+            theme: xomoComponentTheme,
+            masterID: document.layers[groupIndex].xomoComponentInstance?.masterID
         )
         appendHistory(L10n.text("xomo.theme.history.apply"))
         statusText = L10n.format("xomo.theme.status.applied", component.title, xomoComponentTheme.title)
@@ -1348,6 +1349,135 @@ extension ImageEditorViewModel {
         )
     }
 
+    var canSetSelectedXomoComponentAsMaster: Bool {
+        guard let groupIndex = selectedXomoComponentGroupIndex(),
+              let component = xomoComponentKind(for: document.layers[groupIndex])
+        else {
+            return false
+        }
+        return component.supportsThemeApplication
+    }
+
+    var canLinkSelectedXomoComponentsToMaster: Bool {
+        guard let component = selectedXomoComponentGroupKind(),
+              let masterIndex = xomoMasterComponentGroupIndex(for: component)
+        else {
+            return false
+        }
+        return selectedXomoComponentGroupIndices().contains { $0 != masterIndex }
+    }
+
+    var canSyncSelectedXomoComponentMaster: Bool {
+        guard let groupIndex = selectedXomoComponentGroupIndex(),
+              let masterIndex = xomoMasterComponentGroupIndex(for: groupIndex)
+        else {
+            return false
+        }
+        let masterID = document.layers[masterIndex].id
+        return document.layers.contains { $0.xomoComponentInstance?.masterID == masterID && $0.id != masterID }
+    }
+
+    var canDetachSelectedXomoComponentInstances: Bool {
+        selectedXomoComponentGroupIndices().contains { index in
+            guard let masterID = document.layers[index].xomoComponentInstance?.masterID else { return false }
+            return masterID != document.layers[index].id
+        }
+    }
+
+    func setSelectedXomoComponentAsMaster() {
+        guard let groupIndex = selectedXomoComponentGroupIndex(),
+              let component = xomoComponentKind(for: document.layers[groupIndex]),
+              component.supportsThemeApplication
+        else {
+            statusText = L10n.text("xomo.instance.status.noApplicableComponent")
+            return
+        }
+
+        let groupID = document.layers[groupIndex].id
+        pushUndo()
+        document.layers[groupIndex].xomoComponentInstance = XomoComponentInstance(
+            kind: component,
+            theme: document.layers[groupIndex].xomoComponentInstance?.theme ?? xomoComponentTheme,
+            masterID: groupID
+        )
+        xomoActiveMasterID = groupID
+        appendHistory(L10n.text("xomo.instance.history.makeMaster"))
+        statusText = L10n.format("xomo.instance.status.masterSet", component.title)
+    }
+
+    func linkSelectedXomoComponentsToMaster() {
+        guard let component = selectedXomoComponentGroupKind(),
+              let masterIndex = xomoMasterComponentGroupIndex(for: component)
+        else {
+            statusText = L10n.text("xomo.instance.status.noMaster")
+            return
+        }
+
+        let masterID = document.layers[masterIndex].id
+        let masterTheme = document.layers[masterIndex].xomoComponentInstance?.theme ?? xomoComponentTheme
+        let targetIndices = selectedXomoComponentGroupIndices().filter { $0 != masterIndex }
+        guard !targetIndices.isEmpty else {
+            statusText = L10n.text("xomo.instance.status.noLinkTarget")
+            return
+        }
+
+        pushUndo()
+        for targetIndex in targetIndices {
+            applyXomoThemeToComponentGroup(targetIndex, component: component, theme: masterTheme)
+            document.layers[targetIndex].xomoComponentInstance?.masterID = masterID
+        }
+        xomoActiveMasterID = masterID
+        appendHistory(L10n.text("xomo.instance.history.link"))
+        statusText = L10n.format("xomo.instance.status.linked", targetIndices.count, component.title)
+    }
+
+    func syncSelectedXomoComponentMaster() {
+        guard let groupIndex = selectedXomoComponentGroupIndex(),
+              let masterIndex = xomoMasterComponentGroupIndex(for: groupIndex),
+              let component = xomoComponentKind(for: document.layers[masterIndex])
+        else {
+            statusText = L10n.text("xomo.instance.status.noMaster")
+            return
+        }
+
+        let masterID = document.layers[masterIndex].id
+        let masterTheme = document.layers[masterIndex].xomoComponentInstance?.theme ?? xomoComponentTheme
+        let instanceIndices = document.layers.indices.filter {
+            document.layers[$0].id != masterID && document.layers[$0].xomoComponentInstance?.masterID == masterID
+        }
+        guard !instanceIndices.isEmpty else {
+            statusText = L10n.text("xomo.instance.status.noLinkedInstances")
+            return
+        }
+
+        pushUndo()
+        for instanceIndex in instanceIndices {
+            applyXomoThemeToComponentGroup(instanceIndex, component: component, theme: masterTheme)
+            document.layers[instanceIndex].xomoComponentInstance?.masterID = masterID
+        }
+        xomoActiveMasterID = masterID
+        appendHistory(L10n.text("xomo.instance.history.sync"))
+        statusText = L10n.format("xomo.instance.status.synced", instanceIndices.count, component.title)
+    }
+
+    func detachSelectedXomoComponentInstances() {
+        let targetIndices = selectedXomoComponentGroupIndices().filter {
+            guard let masterID = document.layers[$0].xomoComponentInstance?.masterID else { return false }
+            return masterID != document.layers[$0].id
+        }
+        guard !targetIndices.isEmpty else {
+            statusText = L10n.text("xomo.instance.status.noDetachTarget")
+            return
+        }
+
+        pushUndo()
+        for targetIndex in targetIndices {
+            document.layers[targetIndex].xomoComponentInstance?.masterID = nil
+        }
+        appendHistory(L10n.text("xomo.instance.history.detach"))
+        statusText = L10n.format("xomo.instance.status.detached", targetIndices.count)
+    }
+
     private func selectedXomoComponentGroupIndex() -> Int? {
         guard let selectedLayerID = document.selectedLayerID,
               let selectedIndex = document.layers.firstIndex(where: { $0.id == selectedLayerID })
@@ -1362,6 +1492,59 @@ extension ImageEditorViewModel {
         return document.layers.firstIndex { layer in
             layer.id == groupID && xomoComponentKind(for: layer) != nil
         }
+    }
+
+    private func selectedXomoComponentGroupIndices() -> [Int] {
+        let groupIDs = Set(document.selectedLayerIDs.compactMap { selectedLayerID -> UUID? in
+            guard let selectedLayer = document.layers.first(where: { $0.id == selectedLayerID }) else { return nil }
+            return selectedLayer.isGroup ? selectedLayer.id : selectedLayer.groupID
+        })
+        return document.layers.indices.filter { groupIDs.contains(document.layers[$0].id) && xomoComponentKind(for: document.layers[$0]) != nil }
+    }
+
+    private func selectedXomoComponentGroupKind() -> XomoComponentKind? {
+        let groupIndices = selectedXomoComponentGroupIndices()
+        guard let firstIndex = groupIndices.first,
+              groupIndices.allSatisfy({ xomoComponentKind(for: document.layers[$0]) == xomoComponentKind(for: document.layers[firstIndex]) })
+        else {
+            return nil
+        }
+        return xomoComponentKind(for: document.layers[firstIndex])
+    }
+
+    private func xomoMasterComponentGroupIndex(for component: XomoComponentKind) -> Int? {
+        if let activeMasterID = xomoActiveMasterID,
+           let activeIndex = document.layers.firstIndex(where: { $0.id == activeMasterID }),
+           document.layers[activeIndex].xomoComponentInstance?.masterID == activeMasterID,
+           xomoComponentKind(for: document.layers[activeIndex]) == component {
+            return activeIndex
+        }
+        return document.layers.firstIndex { layer in
+            layer.xomoComponentInstance?.masterID == layer.id && xomoComponentKind(for: layer) == component
+        }
+    }
+
+    private func xomoMasterComponentGroupIndex(for groupIndex: Int) -> Int? {
+        guard let masterID = document.layers[groupIndex].xomoComponentInstance?.masterID else { return nil }
+        if masterID == document.layers[groupIndex].id { return groupIndex }
+        return document.layers.firstIndex { $0.id == masterID && $0.xomoComponentInstance?.masterID == masterID }
+    }
+
+    private func applyXomoThemeToComponentGroup(
+        _ groupIndex: Int,
+        component: XomoComponentKind,
+        theme: XomoComponentTheme
+    ) {
+        let groupID = document.layers[groupIndex].id
+        for layerIndex in document.layers.indices where document.layers[layerIndex].groupID == groupID {
+            guard !document.layers[layerIndex].isXomoThemeOverride else { continue }
+            applyXomoTheme(theme.tokens, to: &document.layers[layerIndex], component: component)
+        }
+        document.layers[groupIndex].xomoComponentInstance = XomoComponentInstance(
+            kind: component,
+            theme: theme,
+            masterID: document.layers[groupIndex].xomoComponentInstance?.masterID
+        )
     }
 
     private func xomoComponentKind(for group: ImageEditorLayer) -> XomoComponentKind? {
