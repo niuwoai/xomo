@@ -26,9 +26,23 @@ if [[ ! -d "${product_path}" ]]; then
 fi
 
 if [[ "${WRAPPER_EXTENSION}" == "${app_extension}" ]]; then
-  "${codesign_binary}" --force --deep --sign - --entitlements "${entitlements_path}" "${product_path}"
+  shopt -s nullglob
+  test_bundles=("${product_path}"/Contents/PlugIns/*.xctest)
+  if (( ${#test_bundles[@]} > 0 )); then
+    # XCTest has already copied test bundles into its host. Xcode and the test
+    # target own their signing; signing the host at this point invalidates that
+    # transient assembly before the runner can launch it.
+    exit 0
+  fi
+fi
+
+if [[ "${WRAPPER_EXTENSION}" == "${app_extension}" ]]; then
+  # XCTest copies its .xctest bundle into the host app before this phase.  Do
+  # not deep-sign the host: codesign rejects that transient test plug-in as an
+  # app subcomponent. The test target signs the bundle in its own phase.
+  "${codesign_binary}" --force --sign - --entitlements "${entitlements_path}" "${product_path}"
 else
   "${codesign_binary}" --force --deep --sign - "${product_path}"
 fi
 
-"${codesign_binary}" --verify --deep --strict "${product_path}"
+"${codesign_binary}" --verify --strict "${product_path}"

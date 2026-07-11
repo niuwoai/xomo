@@ -1,6 +1,6 @@
 # 像界（Xomo）产品概览
 
-> 最后更新：2026-07-12 | 当前版本：v2.5.0-rc6
+> 最后更新：2026-07-12 | 当前版本：v2.5.0-rc9
 
 ## 产品定位
 
@@ -67,6 +67,12 @@ v2.5.0-rc4 完成阶段 5 的 Computer Use 验收：以 1440×1024 网页画布�
 v2.5.0-rc5 修正发布元数据：Xcode 的应用、单元测试和 UI 测试 target 与应用内 `AppVersion` 统一使用 `2.5.0-rc5`，确保安装后的系统版本信息不再滞后。
 
 v2.5.0-rc6 扩展 UI 组件库为五套像界原创风格包（柔和安卓、社交内容、玻璃拟态、高密度后台、极简 SaaS）和两套明确来源的原生参考包（Chakra UI、Radix Themes）。每个页面示例都由可编辑的组件组和子图层构成，而非截图；拖动组件可对相邻组件的边缘与中心自动吸附，并即时显示对齐引导线。顶部菜单将普通操作、预览与导出用冷色层级区分，工具 Tab 恢复为 Photoshop 式双列图标轨道。完整许可与来源见 [XOMO_COMPONENT_LIBRARY_MANIFEST.md](XOMO_COMPONENT_LIBRARY_MANIFEST.md) 与 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+
+v2.5.0-rc7 修正 Debug 测试宿主的 ad-hoc 签名边界：应用自身不再深度重签 XCTest 临时嵌入的 `.xctest`，避免测试在代码签名阶段中止；测试 bundle 仍由其所属 target 单独签名。
+
+v2.5.0-rc8 进一步将含 XCTest 临时 bundle 的测试宿主完全交还给 Xcode 和测试 target 签名，避免宿主签名脚本在 bundle 已组装后再次触碰它。
+
+v2.5.0-rc9 修正组件库测试与 Swift Testing 断言宏的兼容性，令定向测试可以继续执行新的多风格组件和对齐引导线断言。
 
 v1.457.0-rc26 将品牌基础信息迁移为“像界 / Xomo”：应用在简体中文环境显示为“像界”，其他当前本地化显示为 Xomo；主 Bundle ID 为 `im.some.xomo`，从而可与 QPic 独立安装。
 

@@ -49,7 +49,8 @@ struct XomoLeftSidebarTests {
         #expect(XomoComponentTheme.softMobile.tokens.cornerRadius > XomoComponentTheme.native.tokens.cornerRadius)
         #expect(XomoComponentTheme.denseAdmin.tokens.cornerRadius < XomoComponentTheme.native.tokens.cornerRadius)
         #expect(XomoComponentTheme.glassmorphism.tokens.surface.alphaComponent < 1)
-        #expect(XomoComponentKind.allCases.allSatisfy(\.supportsThemeApplication))
+        let everyComponentSupportsThemes = XomoComponentKind.allCases.allSatisfy(\.supportsThemeApplication)
+        #expect(everyComponentSupportsThemes)
     }
 
     @Test func primaryButtonUsesSelectedComponentThemeTokens() throws {
