@@ -21,10 +21,15 @@ extension ImageEditorView {
                     layerKindFilterBar
                     selectedLayerCountLabel
                     layerRows
-                } else if selectedLayerPanelTab == .channels {
-                    channelsPanelContent
                 } else {
-                    layerCompsPanelContent
+                    ScrollView {
+                        if selectedLayerPanelTab == .channels {
+                            channelsPanelContent
+                        } else {
+                            layerCompsPanelContent
+                        }
+                    }
+                    .frame(maxHeight: .infinity, alignment: .top)
                 }
             }
         }
