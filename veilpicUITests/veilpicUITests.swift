@@ -34,6 +34,31 @@ final class veilpicUITests: XCTestCase {
     }
 
     @MainActor
+    func testDraggingButtonFromLibraryCreatesEditableLayerGroup() throws {
+        let app = XCUIApplication()
+        app.launchArguments += ["-AppleLanguages", "(zh-Hans)", "-AppleLocale", "zh_CN"]
+        app.launch()
+
+        let componentsTab = app.buttons["组件库"]
+        XCTAssertTrue(componentsTab.waitForExistence(timeout: 5))
+        componentsTab.tap()
+
+        let buttonComponent = app.buttons.matching(identifier: "xomo-component-library-item-button").firstMatch
+        let canvas = app.descendants(matching: .any)
+            .matching(identifier: "image-editor-canvas")
+            .firstMatch
+        XCTAssertTrue(buttonComponent.waitForExistence(timeout: 5))
+        XCTAssertTrue(canvas.waitForExistence(timeout: 5))
+
+        buttonComponent.press(forDuration: 0.4, thenDragTo: canvas)
+
+        let insertedStatus = app.staticTexts
+            .matching(NSPredicate(format: "value CONTAINS %@", "已插入组件：按钮"))
+            .firstMatch
+        XCTAssertTrue(insertedStatus.waitForExistence(timeout: 5))
+    }
+
+    @MainActor
     func testLaunchPerformance() throws {
         // This measures how long it takes to launch your application.
         measure(metrics: [XCTApplicationLaunchMetric()]) {
