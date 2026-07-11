@@ -131,6 +131,9 @@ struct ImageEditorView: View {
         .sheet(isPresented: $viewModel.isColorRangeSheetPresented) {
             ImageEditorColorRangePanel(viewModel: viewModel)
         }
+        .sheet(isPresented: $viewModel.isNewCanvasSheetPresented) {
+            XomoNewCanvasSheet(viewModel: viewModel)
+        }
     }
 
     private var optionBar: some View {

@@ -215,6 +215,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var selectedCanvasAnchor: ImageEditorCanvasAnchor = .center
     @Published var exportSettings = ImageEditorExportSettings()
     @Published var isExportSheetPresented = false
+    @Published var isNewCanvasSheetPresented = false
     @Published var namedHistorySnapshots: [ImageEditorHistorySnapshot] = []
     @Published var selectedHistorySnapshotID: UUID?
     @Published var selectedHistoryEntryID: UUID?
@@ -282,6 +283,40 @@ final class ImageEditorViewModel: ObservableObject {
         let image = document.compositedImage
         cachedCurrentImage = image
         return image
+    }
+
+    func createCanvas(from draft: XomoCanvasDraft) {
+        let canvasSize = draft.canvasSize
+        let canvas = NSImage.rendered(size: canvasSize) { rect in
+            draft.background.color.setFill()
+            rect.fill()
+        } ?? NSImage.transparent(size: canvasSize)
+        var newDocument = ImageEditorDocument(
+            sourceName: L10n.text("xomo.newCanvas.untitledName"),
+            image: canvas
+        )
+        newDocument.isGridVisible = true
+        newDocument.isGridSnappingEnabled = true
+        newDocument.gridSpacing = XomoCanvasDraft.defaultGridSpacing
+
+        document = newDocument
+        cachedCurrentImage = canvas
+        undoStack.removeAll()
+        redoStack.removeAll()
+        historySnapshots.removeAll()
+        namedHistorySnapshots.removeAll()
+        selectedHistorySnapshotID = nil
+        selectedHistoryEntryID = nil
+        zoom = 1
+        canvasOffset = .zero
+        syncSizeControlsFromDocument()
+        recordCurrentHistorySnapshot()
+        statusText = L10n.format(
+            "xomo.newCanvas.createdStatus",
+            Int(canvasSize.width),
+            Int(canvasSize.height),
+            draft.clampedExportScale
+        )
     }
 
     var previewImage: NSImage {

@@ -83,6 +83,10 @@ extension ImageEditorView {
 
     @ViewBuilder
     private var fileMenu: some View {
+        Button(L10n.text("imageEditor.action.canvasNew")) {
+            viewModel.isNewCanvasSheetPresented = true
+        }
+        .keyboardShortcut("n", modifiers: [.command])
         Button(L10n.text("imageEditor.action.projectOpen")) {
             viewModel.openProjectDocument()
         }
