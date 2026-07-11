@@ -2280,7 +2280,8 @@
 "xomo.leftSidebar.tools" = "工具";
 "xomo.leftSidebar.components" = "组件库";
 "xomo.componentLibrary.title" = "组件库";
-"xomo.componentLibrary.subtitle" = "点击或拖入组件，立即生成可编辑图层；按钮家族支持主、次、幽灵和图标四种层级。";
+"xomo.componentLibrary.subtitle" = "点击或拖入组件，立即生成可编辑图层；按钮与表单控件均保留可修改的结构。";
+"xomo.componentLibrary.formSection" = "表单控件";
 "xomo.componentLibrary.foundationSection" = "基础组件";
 "xomo.componentLibrary.nextStep" = "基础组件由组、背景形状和文字图层组成；修改文案、颜色或图层结构不会变成不可编辑截图。";
 "xomo.componentLibrary.dragOrInsert" = "点击插入，或拖入画布";
@@ -2300,6 +2301,17 @@
 "xomo.component.input.title" = "输入框";
 "xomo.component.input.defaultPlaceholder" = "请输入内容";
 "xomo.component.input.backgroundLayer" = "输入框背景";
+"xomo.component.searchInput.title" = "搜索框";
+"xomo.component.searchInput.defaultPlaceholder" = "搜索";
+"xomo.component.searchInput.backgroundLayer" = "搜索框背景";
+"xomo.component.searchInput.leadingAccessoryLayer" = "搜索图标";
+"xomo.component.textArea.title" = "文本域";
+"xomo.component.textArea.defaultPlaceholder" = "请输入详细内容";
+"xomo.component.textArea.backgroundLayer" = "文本域背景";
+"xomo.component.selectInput.title" = "选择框";
+"xomo.component.selectInput.defaultPlaceholder" = "请选择";
+"xomo.component.selectInput.backgroundLayer" = "选择框背景";
+"xomo.component.selectInput.trailingAccessoryLayer" = "展开图标";
 "xomo.component.card.title" = "卡片";
 "xomo.component.card.defaultTitle" = "卡片标题";
 "xomo.component.card.defaultBody" = "这里填写一段可编辑的说明文字。";
@@ -2318,6 +2330,9 @@
 "xomo.componentPreview.ghostButton" = "幽灵按钮";
 "xomo.componentPreview.iconButton" = "图标按钮";
 "xomo.componentPreview.input" = "输入框";
+"xomo.componentPreview.searchInput" = "搜索框";
+"xomo.componentPreview.textArea" = "文本域";
+"xomo.componentPreview.selectInput" = "选择框";
 "xomo.componentPreview.card" = "卡片";
 "xomo.componentPreview.image" = "图片";
 "xomo.componentPreview.avatar" = "头像";

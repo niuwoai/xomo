@@ -89,6 +89,37 @@ private enum XomoInputComponentStyle {
     static let textColor = NSColor(deviceWhite: 0.48, alpha: 1)
 }
 
+private enum XomoInputVariant: Equatable {
+    case standard
+    case search
+    case textArea
+    case select
+
+    var component: XomoComponentKind {
+        switch self {
+        case .standard: .input
+        case .search: .searchInput
+        case .textArea: .textArea
+        case .select: .selectInput
+        }
+    }
+
+    var height: CGFloat {
+        switch self {
+        case .textArea: 112
+        case .standard, .search, .select: XomoInputComponentStyle.height
+        }
+    }
+
+    var leadingAccessory: String? {
+        self == .search ? "⌕" : nil
+    }
+
+    var trailingAccessory: String? {
+        self == .select ? "⌄" : nil
+    }
+}
+
 private enum XomoCardComponentStyle {
     static let minimumWidth: CGFloat = 240
     static let maximumWidth: CGFloat = 360
@@ -146,6 +177,9 @@ enum XomoComponentKind: String, CaseIterable, Identifiable {
     case ghostButton
     case iconButton
     case input
+    case searchInput
+    case textArea
+    case selectInput
     case card
     case image
     case avatar
@@ -170,7 +204,13 @@ extension ImageEditorViewModel {
         case .iconButton:
             insertXomoButton(.icon, at: proposedOrigin)
         case .input:
-            insertXomoInput(at: proposedOrigin)
+            insertXomoInput(.standard, at: proposedOrigin)
+        case .searchInput:
+            insertXomoInput(.search, at: proposedOrigin)
+        case .textArea:
+            insertXomoInput(.textArea, at: proposedOrigin)
+        case .selectInput:
+            insertXomoInput(.select, at: proposedOrigin)
         case .card:
             insertXomoCard(at: proposedOrigin)
         case .image:
@@ -247,14 +287,14 @@ extension ImageEditorViewModel {
         statusText = L10n.format("xomo.component.status.inserted", group.name)
     }
 
-    private func insertXomoInput(at proposedOrigin: CGPoint?) {
+    private func insertXomoInput(_ variant: XomoInputVariant, at proposedOrigin: CGPoint?) {
         let canvasSize = document.canvasSize
         let inputSize = CGSize(
             width: min(
                 XomoInputComponentStyle.maximumWidth,
                 max(XomoInputComponentStyle.minimumWidth, canvasSize.width * XomoInputComponentStyle.widthRatio)
             ),
-            height: XomoInputComponentStyle.height
+            height: variant.height
         )
         let defaultOrigin = CGPoint(
             x: (canvasSize.width - inputSize.width) * 0.5,
@@ -262,7 +302,8 @@ extension ImageEditorViewModel {
         )
         let origin = clampedComponentOrigin(proposedOrigin ?? defaultOrigin, componentSize: inputSize)
         let inputFrame = CGRect(origin: origin, size: inputSize)
-        let placeholder = L10n.text("xomo.component.input.defaultPlaceholder")
+        let component = variant.component
+        let placeholder = L10n.text("xomo.component.\(component.rawValue).defaultPlaceholder")
         let placeholderContent = ImageEditorTextContent(
             text: placeholder,
             color: XomoInputComponentStyle.textColor,
@@ -270,17 +311,22 @@ extension ImageEditorViewModel {
             point: CGPoint(x: ImageEditorTextContent.drawingPadding, y: ImageEditorTextContent.drawingPadding),
             alignment: .left
         )
+        let leadingInset = variant.leadingAccessory == nil
+            ? ImageEditorTextContent.drawingPadding
+            : ImageEditorTextContent.drawingPadding * 3
         let textOrigin = CGPoint(
-            x: inputFrame.minX + ImageEditorTextContent.drawingPadding,
-            y: inputFrame.midY - placeholderContent.layerSize().height * 0.5
+            x: inputFrame.minX + leadingInset,
+            y: variant == .textArea
+                ? inputFrame.minY + ImageEditorTextContent.drawingPadding
+                : inputFrame.midY - placeholderContent.layerSize().height * 0.5
         )
 
         pushUndo()
-        var group = ImageEditorLayer.group(name: L10n.text("xomo.component.input.title"), size: canvasSize)
+        var group = ImageEditorLayer.group(name: component.title, size: canvasSize)
         group.blendMode = .passThrough
 
         var background = ImageEditorLayer.shape(
-            name: L10n.text("xomo.component.input.backgroundLayer"),
+            name: L10n.text("xomo.component.\(component.rawValue).backgroundLayer"),
             frame: inputFrame,
             content: ImageEditorShapeContent(
                 kind: .rectangle,
@@ -300,13 +346,58 @@ extension ImageEditorViewModel {
         )
         text.groupID = group.id
 
+        var children = [background, text]
+        if let leadingAccessory = variant.leadingAccessory {
+            children.append(inputAccessoryLayer(
+                leadingAccessory,
+                name: L10n.text("xomo.component.searchInput.leadingAccessoryLayer"),
+                origin: CGPoint(
+                    x: inputFrame.minX + ImageEditorTextContent.drawingPadding,
+                    y: inputFrame.midY - XomoInputComponentStyle.labelFontSize * 0.5
+                ),
+                groupID: group.id
+            ))
+        }
+        if let trailingAccessory = variant.trailingAccessory {
+            children.append(inputAccessoryLayer(
+                trailingAccessory,
+                name: L10n.text("xomo.component.selectInput.trailingAccessoryLayer"),
+                origin: CGPoint(
+                    x: inputFrame.maxX - XomoInputComponentStyle.labelFontSize * 2,
+                    y: inputFrame.midY - XomoInputComponentStyle.labelFontSize * 0.5
+                ),
+                groupID: group.id
+            ))
+        }
+
         let insertionIndex = min((document.selectedLayerIndex ?? (document.layers.count - 1)) + 1, document.layers.count)
-        document.layers.insert(contentsOf: [background, text, group], at: insertionIndex)
+        document.layers.insert(contentsOf: children + [group], at: insertionIndex)
         document.selectedLayerID = group.id
         document.selectedLayerIDs = [group.id]
         isEditingLayerMask = false
         appendHistory(L10n.text("xomo.component.history.insert"))
         statusText = L10n.format("xomo.component.status.inserted", group.name)
+    }
+
+    private func inputAccessoryLayer(
+        _ symbol: String,
+        name: String,
+        origin: CGPoint,
+        groupID: UUID
+    ) -> ImageEditorLayer {
+        var layer = ImageEditorLayer.text(
+            name: name,
+            origin: origin,
+            content: ImageEditorTextContent(
+                text: symbol,
+                color: XomoInputComponentStyle.textColor,
+                fontSize: XomoInputComponentStyle.labelFontSize,
+                point: CGPoint(x: ImageEditorTextContent.drawingPadding, y: ImageEditorTextContent.drawingPadding),
+                alignment: .left
+            )
+        )
+        layer.groupID = groupID
+        return layer
     }
 
     private func insertXomoCard(at proposedOrigin: CGPoint?) {

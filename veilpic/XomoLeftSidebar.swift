@@ -38,8 +38,14 @@ private struct XomoComponentLibraryPreviewItem: Identifiable {
         Self(id: "iconButton", titleKey: "xomo.componentPreview.iconButton", symbolName: "plus.circle", component: .iconButton)
     ]
 
-    static let foundationItems: [Self] = [
+    static let formItems: [Self] = [
         Self(id: "input", titleKey: "xomo.componentPreview.input", symbolName: "text.cursor", component: .input),
+        Self(id: "searchInput", titleKey: "xomo.componentPreview.searchInput", symbolName: "magnifyingglass", component: .searchInput),
+        Self(id: "textArea", titleKey: "xomo.componentPreview.textArea", symbolName: "text.alignleft", component: .textArea),
+        Self(id: "selectInput", titleKey: "xomo.componentPreview.selectInput", symbolName: "chevron.up.chevron.down", component: .selectInput)
+    ]
+
+    static let foundationItems: [Self] = [
         Self(id: "card", titleKey: "xomo.componentPreview.card", symbolName: "rectangle.on.rectangle", component: .card),
         Self(id: "image", titleKey: "xomo.componentPreview.image", symbolName: "photo", component: .image),
         Self(id: "avatar", titleKey: "xomo.componentPreview.avatar", symbolName: "person.crop.circle", component: .avatar),
@@ -67,6 +73,19 @@ struct XomoComponentLibraryPanel: View {
                     spacing: 8
                 ) {
                     ForEach(XomoComponentLibraryPreviewItem.buttonFamilyItems) { item in
+                        componentPreview(item)
+                    }
+                }
+
+                Text(L10n.text("xomo.componentLibrary.formSection"))
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+
+                LazyVGrid(
+                    columns: Array(repeating: GridItem(.flexible(minimum: 72), spacing: 8), count: 2),
+                    spacing: 8
+                ) {
+                    ForEach(XomoComponentLibraryPreviewItem.formItems) { item in
                         componentPreview(item)
                     }
                 }

@@ -2280,7 +2280,8 @@
 "xomo.leftSidebar.tools" = "Tools";
 "xomo.leftSidebar.components" = "Components";
 "xomo.componentLibrary.title" = "Component Library";
-"xomo.componentLibrary.subtitle" = "Click or drag a component to create editable layers; the button family includes primary, secondary, ghost, and icon hierarchy.";
+"xomo.componentLibrary.subtitle" = "Click or drag a component to create editable layers; button and form controls retain their editable structure.";
+"xomo.componentLibrary.formSection" = "Form Controls";
 "xomo.componentLibrary.foundationSection" = "Foundation Components";
 "xomo.componentLibrary.nextStep" = "Core components are groups with background shapes and text layers, so editing copy, color, or structure never creates an uneditable screenshot.";
 "xomo.componentLibrary.dragOrInsert" = "Click to insert or drag onto the canvas";
@@ -2300,6 +2301,17 @@
 "xomo.component.input.title" = "Input";
 "xomo.component.input.defaultPlaceholder" = "Enter text";
 "xomo.component.input.backgroundLayer" = "Input Background";
+"xomo.component.searchInput.title" = "Search Input";
+"xomo.component.searchInput.defaultPlaceholder" = "Search";
+"xomo.component.searchInput.backgroundLayer" = "Search Input Background";
+"xomo.component.searchInput.leadingAccessoryLayer" = "Search Icon";
+"xomo.component.textArea.title" = "Text Area";
+"xomo.component.textArea.defaultPlaceholder" = "Enter details";
+"xomo.component.textArea.backgroundLayer" = "Text Area Background";
+"xomo.component.selectInput.title" = "Select Input";
+"xomo.component.selectInput.defaultPlaceholder" = "Select an option";
+"xomo.component.selectInput.backgroundLayer" = "Select Input Background";
+"xomo.component.selectInput.trailingAccessoryLayer" = "Disclosure Icon";
 "xomo.component.card.title" = "Card";
 "xomo.component.card.defaultTitle" = "Card title";
 "xomo.component.card.defaultBody" = "Add an editable supporting description here.";
@@ -2318,6 +2330,9 @@
 "xomo.componentPreview.ghostButton" = "Ghost";
 "xomo.componentPreview.iconButton" = "Icon Button";
 "xomo.componentPreview.input" = "Input";
+"xomo.componentPreview.searchInput" = "Search";
+"xomo.componentPreview.textArea" = "Text Area";
+"xomo.componentPreview.selectInput" = "Select";
 "xomo.componentPreview.card" = "Card";
 "xomo.componentPreview.image" = "Image";
 "xomo.componentPreview.avatar" = "Avatar";

@@ -17,6 +17,9 @@ struct XomoLeftSidebarTests {
             .ghostButton,
             .iconButton,
             .input,
+            .searchInput,
+            .textArea,
+            .selectInput,
             .card,
             .image,
             .avatar,
@@ -117,6 +120,29 @@ struct XomoLeftSidebarTests {
         #expect(children.count == 2)
         #expect(children.contains(where: { $0.isShape }))
         #expect(children.contains(where: { $0.isText }))
+    }
+
+    @Test func formInputVariantsCreateEditableGroupedLayers() throws {
+        let variants: [(component: XomoComponentKind, childCount: Int)] = [
+            (.searchInput, 3),
+            (.textArea, 2),
+            (.selectInput, 3)
+        ]
+
+        for variant in variants {
+            let image = NSImage.transparent(size: CGSize(width: 640, height: 480))
+            let viewModel = ImageEditorViewModel(sourceName: "source", image: image) { _ in }
+
+            viewModel.insertXomoComponent(variant.component, at: CGPoint(x: 40, y: 60))
+
+            let group = try #require(viewModel.document.selectedLayer)
+            let children = viewModel.document.layers.filter { $0.groupID == group.id }
+            #expect(group.isGroup)
+            #expect(group.name == variant.component.title)
+            #expect(children.count == variant.childCount)
+            #expect(children.contains(where: { $0.isShape }))
+            #expect(children.contains(where: { $0.isText }))
+        }
     }
 
     @Test func insertingCardCreatesEditableGroupedLayers() throws {

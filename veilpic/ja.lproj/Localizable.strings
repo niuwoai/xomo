@@ -2280,7 +2280,8 @@
 "xomo.leftSidebar.tools" = "ツール";
 "xomo.leftSidebar.components" = "コンポーネント";
 "xomo.componentLibrary.title" = "コンポーネントライブラリ";
-"xomo.componentLibrary.subtitle" = "コンポーネントをクリックまたはドラッグして編集可能なレイヤーを作成します。ボタンは主・副・ゴースト・アイコンの4階層です。";
+"xomo.componentLibrary.subtitle" = "コンポーネントをクリックまたはドラッグして編集可能なレイヤーを作成します。ボタンとフォームは編集可能な構造を保持します。";
+"xomo.componentLibrary.formSection" = "フォーム";
 "xomo.componentLibrary.foundationSection" = "基本コンポーネント";
 "xomo.componentLibrary.nextStep" = "基本コンポーネントは背景図形とテキストを含むグループです。文言・色・構造を変更しても編集できないスクリーンショットにはなりません。";
 "xomo.componentLibrary.dragOrInsert" = "クリックして挿入、またはキャンバスへドラッグ";
@@ -2300,6 +2301,17 @@
 "xomo.component.input.title" = "入力欄";
 "xomo.component.input.defaultPlaceholder" = "内容を入力";
 "xomo.component.input.backgroundLayer" = "入力欄の背景";
+"xomo.component.searchInput.title" = "検索欄";
+"xomo.component.searchInput.defaultPlaceholder" = "検索";
+"xomo.component.searchInput.backgroundLayer" = "検索欄の背景";
+"xomo.component.searchInput.leadingAccessoryLayer" = "検索アイコン";
+"xomo.component.textArea.title" = "テキストエリア";
+"xomo.component.textArea.defaultPlaceholder" = "詳細を入力";
+"xomo.component.textArea.backgroundLayer" = "テキストエリア背景";
+"xomo.component.selectInput.title" = "選択欄";
+"xomo.component.selectInput.defaultPlaceholder" = "選択してください";
+"xomo.component.selectInput.backgroundLayer" = "選択欄の背景";
+"xomo.component.selectInput.trailingAccessoryLayer" = "展開アイコン";
 "xomo.component.card.title" = "カード";
 "xomo.component.card.defaultTitle" = "カードの見出し";
 "xomo.component.card.defaultBody" = "ここに編集可能な説明文を入力します。";
@@ -2318,6 +2330,9 @@
 "xomo.componentPreview.ghostButton" = "ゴースト";
 "xomo.componentPreview.iconButton" = "アイコンボタン";
 "xomo.componentPreview.input" = "入力欄";
+"xomo.componentPreview.searchInput" = "検索";
+"xomo.componentPreview.textArea" = "テキストエリア";
+"xomo.componentPreview.selectInput" = "選択欄";
 "xomo.componentPreview.card" = "カード";
 "xomo.componentPreview.image" = "画像";
 "xomo.componentPreview.avatar" = "アバター";
