@@ -52,6 +52,13 @@ private struct XomoComponentLibraryPreviewItem: Identifiable {
         Self(id: "badge", titleKey: "xomo.componentPreview.badge", symbolName: "circlebadge", component: .badge)
     ]
 
+    static let navigationItems: [Self] = [
+        Self(id: "listRow", titleKey: "xomo.componentPreview.listRow", symbolName: "list.bullet", component: .listRow),
+        Self(id: "topNavigation", titleKey: "xomo.componentPreview.topNavigation", symbolName: "rectangle.topthird.inset.filled", component: .topNavigation),
+        Self(id: "sideNavigation", titleKey: "xomo.componentPreview.sideNavigation", symbolName: "rectangle.lefthalf.inset.filled", component: .sideNavigation),
+        Self(id: "tabBar", titleKey: "xomo.componentPreview.tabBar", symbolName: "rectangle.3.group", component: .tabBar)
+    ]
+
     static let foundationItems: [Self] = [
         Self(id: "card", titleKey: "xomo.componentPreview.card", symbolName: "rectangle.on.rectangle", component: .card),
         Self(id: "image", titleKey: "xomo.componentPreview.image", symbolName: "photo", component: .image),
@@ -93,6 +100,19 @@ struct XomoComponentLibraryPanel: View {
                     spacing: 8
                 ) {
                     ForEach(XomoComponentLibraryPreviewItem.formItems) { item in
+                        componentPreview(item)
+                    }
+                }
+
+                Text(L10n.text("xomo.componentLibrary.navigationSection"))
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+
+                LazyVGrid(
+                    columns: Array(repeating: GridItem(.flexible(minimum: 72), spacing: 8), count: 2),
+                    spacing: 8
+                ) {
+                    ForEach(XomoComponentLibraryPreviewItem.navigationItems) { item in
                         componentPreview(item)
                     }
                 }

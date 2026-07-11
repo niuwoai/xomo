@@ -24,6 +24,10 @@ struct XomoLeftSidebarTests {
             .checkbox,
             .tag,
             .badge,
+            .listRow,
+            .topNavigation,
+            .sideNavigation,
+            .tabBar,
             .card,
             .image,
             .avatar,
@@ -169,6 +173,30 @@ struct XomoLeftSidebarTests {
             #expect(group.name == item.component.title)
             #expect(children.count == item.childCount)
             #expect(children.contains(where: { $0.isShape }))
+        }
+    }
+
+    @Test func navigationComponentsCreateEditableGroupedLayers() throws {
+        let components: [(component: XomoComponentKind, minimumChildCount: Int)] = [
+            (.listRow, 3),
+            (.topNavigation, 4),
+            (.sideNavigation, 5),
+            (.tabBar, 4)
+        ]
+
+        for item in components {
+            let image = NSImage.transparent(size: CGSize(width: 640, height: 480))
+            let viewModel = ImageEditorViewModel(sourceName: "source", image: image) { _ in }
+
+            viewModel.insertXomoComponent(item.component, at: CGPoint(x: 40, y: 60))
+
+            let group = try #require(viewModel.document.selectedLayer)
+            let children = viewModel.document.layers.filter { $0.groupID == group.id }
+            #expect(group.isGroup)
+            #expect(group.name == item.component.title)
+            #expect(children.count >= item.minimumChildCount)
+            #expect(children.contains(where: { $0.isShape }))
+            #expect(children.contains(where: { $0.isText }))
         }
     }
 

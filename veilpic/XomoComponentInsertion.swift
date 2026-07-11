@@ -134,6 +134,26 @@ private enum XomoSelectionComponentStyle {
     static let strokeWidth: CGFloat = 1
 }
 
+private enum XomoNavigationComponentStyle {
+    static let minimumWidth: CGFloat = 260
+    static let maximumWidth: CGFloat = 420
+    static let widthRatio: CGFloat = 0.38
+    static let topNavigationHeight: CGFloat = 56
+    static let sideNavigationWidth: CGFloat = 200
+    static let sideNavigationHeight: CGFloat = 220
+    static let tabBarHeight: CGFloat = 44
+    static let listRowHeight: CGFloat = 64
+    static let titleFontSize: CGFloat = 15
+    static let detailFontSize: CGFloat = 12
+    static let inset: CGFloat = 16
+    static let fillColor = NSColor(deviceWhite: 0.98, alpha: 1)
+    static let selectedFillColor = NSColor(deviceRed: 0.20, green: 0.48, blue: 0.95, alpha: 1)
+    static let strokeColor = NSColor(deviceWhite: 0.80, alpha: 1)
+    static let titleColor = NSColor(deviceWhite: 0.16, alpha: 1)
+    static let detailColor = NSColor(deviceWhite: 0.45, alpha: 1)
+    static let strokeWidth: CGFloat = 1
+}
+
 private enum XomoCardComponentStyle {
     static let minimumWidth: CGFloat = 240
     static let maximumWidth: CGFloat = 360
@@ -198,6 +218,10 @@ enum XomoComponentKind: String, CaseIterable, Identifiable {
     case checkbox
     case tag
     case badge
+    case listRow
+    case topNavigation
+    case sideNavigation
+    case tabBar
     case card
     case image
     case avatar
@@ -237,6 +261,14 @@ extension ImageEditorViewModel {
             insertXomoTag(at: proposedOrigin)
         case .badge:
             insertXomoBadge(at: proposedOrigin)
+        case .listRow:
+            insertXomoListRow(at: proposedOrigin)
+        case .topNavigation:
+            insertXomoTopNavigation(at: proposedOrigin)
+        case .sideNavigation:
+            insertXomoSideNavigation(at: proposedOrigin)
+        case .tabBar:
+            insertXomoTabBar(at: proposedOrigin)
         case .card:
             insertXomoCard(at: proposedOrigin)
         case .image:
@@ -615,6 +647,226 @@ extension ImageEditorViewModel {
         isEditingLayerMask = false
         appendHistory(L10n.text("xomo.component.history.insert"))
         statusText = L10n.format("xomo.component.status.inserted", group.name)
+    }
+
+    private func insertXomoListRow(at proposedOrigin: CGPoint?) {
+        let component = XomoComponentKind.listRow
+        let frame = componentFrame(
+            proposedOrigin,
+            size: CGSize(width: navigationWidth(), height: XomoNavigationComponentStyle.listRowHeight)
+        )
+        let title = L10n.text("xomo.component.listRow.defaultTitle")
+        let detail = L10n.text("xomo.component.listRow.defaultDetail")
+        let group = beginComponentGroup(component)
+        var background = navigationBackground(
+            name: L10n.text("xomo.component.listRow.backgroundLayer"),
+            frame: frame,
+            groupID: group.id
+        )
+        background.groupID = group.id
+        let titleLayer = componentTextLayer(
+            title,
+            name: L10n.text("xomo.component.listRow.titleLayer"),
+            color: XomoNavigationComponentStyle.titleColor,
+            fontSize: XomoNavigationComponentStyle.titleFontSize,
+            origin: CGPoint(x: frame.minX + XomoNavigationComponentStyle.inset, y: frame.minY + 10),
+            isBold: true,
+            groupID: group.id
+        )
+        let detailLayer = componentTextLayer(
+            detail,
+            name: L10n.text("xomo.component.listRow.detailLayer"),
+            color: XomoNavigationComponentStyle.detailColor,
+            fontSize: XomoNavigationComponentStyle.detailFontSize,
+            origin: CGPoint(x: frame.minX + XomoNavigationComponentStyle.inset, y: frame.minY + 33),
+            groupID: group.id
+        )
+        finishComponentInsertion(group: group, children: [background, titleLayer, detailLayer])
+    }
+
+    private func insertXomoTopNavigation(at proposedOrigin: CGPoint?) {
+        let component = XomoComponentKind.topNavigation
+        let frame = componentFrame(
+            proposedOrigin,
+            size: CGSize(width: navigationWidth(), height: XomoNavigationComponentStyle.topNavigationHeight)
+        )
+        let group = beginComponentGroup(component)
+        let background = navigationBackground(
+            name: L10n.text("xomo.component.topNavigation.backgroundLayer"),
+            frame: frame,
+            groupID: group.id
+        )
+        let brand = componentTextLayer(
+            L10n.text("xomo.component.topNavigation.defaultBrand"),
+            name: L10n.text("xomo.component.topNavigation.brandLayer"),
+            color: XomoNavigationComponentStyle.titleColor,
+            fontSize: XomoNavigationComponentStyle.titleFontSize,
+            origin: CGPoint(x: frame.minX + XomoNavigationComponentStyle.inset, y: frame.midY - 11),
+            isBold: true,
+            groupID: group.id
+        )
+        let firstItem = componentTextLayer(
+            L10n.text("xomo.component.topNavigation.defaultFirstItem"),
+            name: L10n.text("xomo.component.topNavigation.firstItemLayer"),
+            color: XomoNavigationComponentStyle.detailColor,
+            fontSize: XomoNavigationComponentStyle.titleFontSize,
+            origin: CGPoint(x: frame.maxX - 126, y: frame.midY - 11),
+            groupID: group.id
+        )
+        let secondItem = componentTextLayer(
+            L10n.text("xomo.component.topNavigation.defaultSecondItem"),
+            name: L10n.text("xomo.component.topNavigation.secondItemLayer"),
+            color: XomoNavigationComponentStyle.detailColor,
+            fontSize: XomoNavigationComponentStyle.titleFontSize,
+            origin: CGPoint(x: frame.maxX - 66, y: frame.midY - 11),
+            groupID: group.id
+        )
+        finishComponentInsertion(group: group, children: [background, brand, firstItem, secondItem])
+    }
+
+    private func insertXomoSideNavigation(at proposedOrigin: CGPoint?) {
+        let component = XomoComponentKind.sideNavigation
+        let frame = componentFrame(
+            proposedOrigin,
+            size: CGSize(
+                width: XomoNavigationComponentStyle.sideNavigationWidth,
+                height: XomoNavigationComponentStyle.sideNavigationHeight
+            )
+        )
+        let group = beginComponentGroup(component)
+        let background = navigationBackground(
+            name: L10n.text("xomo.component.sideNavigation.backgroundLayer"),
+            frame: frame,
+            groupID: group.id
+        )
+        let title = componentTextLayer(
+            L10n.text("xomo.component.sideNavigation.defaultTitle"),
+            name: L10n.text("xomo.component.sideNavigation.titleLayer"),
+            color: XomoNavigationComponentStyle.titleColor,
+            fontSize: XomoNavigationComponentStyle.titleFontSize,
+            origin: CGPoint(x: frame.minX + XomoNavigationComponentStyle.inset, y: frame.minY + 16),
+            isBold: true,
+            groupID: group.id
+        )
+        var selectedItemBackground = ImageEditorLayer.shape(
+            name: L10n.text("xomo.component.sideNavigation.selectedItemBackgroundLayer"),
+            frame: CGRect(
+                x: frame.minX + 8,
+                y: frame.minY + 56,
+                width: frame.width - 16,
+                height: 32
+            ),
+            content: ImageEditorShapeContent(
+                kind: .rectangle,
+                fillColor: XomoNavigationComponentStyle.selectedFillColor,
+                fillOpacity: 1,
+                strokeColor: XomoNavigationComponentStyle.selectedFillColor,
+                strokeWidth: XomoNavigationComponentStyle.strokeWidth,
+                strokeOpacity: 1
+            )
+        )
+        selectedItemBackground.groupID = group.id
+        let firstItem = componentTextLayer(
+            L10n.text("xomo.component.sideNavigation.defaultFirstItem"),
+            name: L10n.text("xomo.component.sideNavigation.firstItemLayer"),
+            color: .white,
+            fontSize: XomoNavigationComponentStyle.titleFontSize,
+            origin: CGPoint(x: frame.minX + XomoNavigationComponentStyle.inset, y: frame.minY + 70),
+            groupID: group.id
+        )
+        let secondItem = componentTextLayer(
+            L10n.text("xomo.component.sideNavigation.defaultSecondItem"),
+            name: L10n.text("xomo.component.sideNavigation.secondItemLayer"),
+            color: XomoNavigationComponentStyle.detailColor,
+            fontSize: XomoNavigationComponentStyle.titleFontSize,
+            origin: CGPoint(x: frame.minX + XomoNavigationComponentStyle.inset, y: frame.minY + 112),
+            groupID: group.id
+        )
+        finishComponentInsertion(group: group, children: [background, title, selectedItemBackground, firstItem, secondItem])
+    }
+
+    private func insertXomoTabBar(at proposedOrigin: CGPoint?) {
+        let component = XomoComponentKind.tabBar
+        let frame = componentFrame(
+            proposedOrigin,
+            size: CGSize(width: navigationWidth(), height: XomoNavigationComponentStyle.tabBarHeight)
+        )
+        let group = beginComponentGroup(component)
+        let background = navigationBackground(
+            name: L10n.text("xomo.component.tabBar.backgroundLayer"),
+            frame: frame,
+            groupID: group.id
+        )
+        let names = [
+            L10n.text("xomo.component.tabBar.defaultFirstItem"),
+            L10n.text("xomo.component.tabBar.defaultSecondItem"),
+            L10n.text("xomo.component.tabBar.defaultThirdItem")
+        ]
+        let itemWidth = frame.width / CGFloat(names.count)
+        let itemLayers = names.enumerated().map { index, name in
+            componentTextLayer(
+                name,
+                name: L10n.format("xomo.component.tabBar.itemLayer", index + 1),
+                color: index == 0 ? XomoNavigationComponentStyle.selectedFillColor : XomoNavigationComponentStyle.detailColor,
+                fontSize: XomoNavigationComponentStyle.titleFontSize,
+                origin: CGPoint(
+                    x: frame.minX + itemWidth * CGFloat(index) + XomoNavigationComponentStyle.inset,
+                    y: frame.midY - 11
+                ),
+                isBold: index == 0,
+                groupID: group.id
+            )
+        }
+        finishComponentInsertion(group: group, children: [background] + itemLayers)
+    }
+
+    private func navigationWidth() -> CGFloat {
+        min(
+            XomoNavigationComponentStyle.maximumWidth,
+            max(XomoNavigationComponentStyle.minimumWidth, document.canvasSize.width * XomoNavigationComponentStyle.widthRatio)
+        )
+    }
+
+    private func navigationBackground(name: String, frame: CGRect, groupID: UUID) -> ImageEditorLayer {
+        var background = ImageEditorLayer.shape(
+            name: name,
+            frame: frame,
+            content: ImageEditorShapeContent(
+                kind: .rectangle,
+                fillColor: XomoNavigationComponentStyle.fillColor,
+                fillOpacity: 1,
+                strokeColor: XomoNavigationComponentStyle.strokeColor,
+                strokeWidth: XomoNavigationComponentStyle.strokeWidth,
+                strokeOpacity: 1
+            )
+        )
+        background.groupID = groupID
+        return background
+    }
+
+    private func componentTextLayer(
+        _ text: String,
+        name: String,
+        color: NSColor,
+        fontSize: CGFloat,
+        origin: CGPoint,
+        isBold: Bool = false,
+        groupID: UUID
+    ) -> ImageEditorLayer {
+        var layer = ImageEditorLayer.text(
+            name: name,
+            origin: origin,
+            content: ImageEditorTextContent(
+                text: text,
+                color: color,
+                fontSize: fontSize,
+                point: CGPoint(x: ImageEditorTextContent.drawingPadding, y: ImageEditorTextContent.drawingPadding),
+                isBold: isBold,
+                alignment: .left
+            )
+        )
+        layer.groupID = groupID
+        return layer
     }
 
     private func insertXomoCard(at proposedOrigin: CGPoint?) {
