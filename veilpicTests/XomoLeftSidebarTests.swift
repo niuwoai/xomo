@@ -78,6 +78,74 @@ struct XomoLeftSidebarTests {
         }
     }
 
+    @Test func applyingThemeToExistingButtonPreservesMarkedLocalOverrideAndRoundTrips() throws {
+        let image = NSImage.transparent(size: CGSize(width: 640, height: 480))
+        let viewModel = ImageEditorViewModel(sourceName: "source", image: image) { _ in }
+        viewModel.xomoComponentTheme = .native
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 40, y: 60))
+
+        let group = try #require(viewModel.document.selectedLayer)
+        let background = try #require(viewModel.document.layers.first { $0.groupID == group.id && $0.isShape })
+        viewModel.selectLayer(background.id)
+        viewModel.toggleXomoThemeOverrideForSelectedLayers()
+        #expect(viewModel.document.layers.first { $0.id == background.id }?.isXomoThemeOverride == true)
+
+        viewModel.selectLayer(group.id)
+        viewModel.xomoComponentTheme = .softMobile
+        viewModel.applyXomoThemeToSelectedComponent()
+
+        let retainedBackground = try #require(viewModel.document.layers.first { $0.id == background.id })
+        let updatedGroup = try #require(viewModel.document.layers.first { $0.id == group.id })
+        #expect(retainedBackground.shapeContent?.fillColor.isEqual(XomoComponentTheme.native.tokens.accent) == true)
+        #expect(updatedGroup.xomoComponentInstance?.theme == .softMobile)
+
+        let restored = try ImageEditorProjectDocument(document: viewModel.document).restoredDocument()
+        let restoredGroup = try #require(restored.layers.first { $0.id == group.id })
+        let restoredBackground = try #require(restored.layers.first { $0.id == background.id })
+        #expect(restoredGroup.xomoComponentInstance == XomoComponentInstance(kind: .button, theme: .softMobile))
+        #expect(restoredBackground.isXomoThemeOverride)
+        #expect(
+            restoredBackground.shapeContent.map { ImageEditorProjectColor(color: $0.fillColor) }
+                == ImageEditorProjectColor(color: XomoComponentTheme.native.tokens.accent)
+        )
+    }
+
+    @Test func applyingThemeToExistingInputAndCardUpdatesTokens() throws {
+        let image = NSImage.transparent(size: CGSize(width: 640, height: 480))
+        let viewModel = ImageEditorViewModel(sourceName: "source", image: image) { _ in }
+
+        for component in [XomoComponentKind.input, .card] {
+            viewModel.xomoComponentTheme = .native
+            viewModel.insertXomoComponent(component, at: CGPoint(x: 40, y: 60))
+            let group = try #require(viewModel.document.selectedLayer)
+            viewModel.xomoComponentTheme = .denseAdmin
+            viewModel.applyXomoThemeToSelectedComponent()
+
+            let children = viewModel.document.layers.filter { $0.groupID == group.id }
+            let background = try #require(children.first { $0.isShape })
+            #expect(background.shapeContent?.fillColor.isEqual(XomoComponentTheme.denseAdmin.tokens.surface) == true)
+            #expect(background.shapeContent?.strokeColor.isEqual(XomoComponentTheme.denseAdmin.tokens.border) == true)
+            #expect(viewModel.document.layers.first { $0.id == group.id }?.xomoComponentInstance?.theme == .denseAdmin)
+        }
+    }
+
+    @Test func applyingThemeMigratesPreviouslyInsertedComponentWithoutThemeMetadata() throws {
+        let image = NSImage.transparent(size: CGSize(width: 640, height: 480))
+        let viewModel = ImageEditorViewModel(sourceName: "source", image: image) { _ in }
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 40, y: 60))
+
+        let group = try #require(viewModel.document.selectedLayer)
+        let groupIndex = try #require(viewModel.document.layers.firstIndex { $0.id == group.id })
+        viewModel.document.layers[groupIndex].xomoComponentInstance = nil
+        viewModel.xomoComponentTheme = .denseAdmin
+        viewModel.applyXomoThemeToSelectedComponent()
+
+        let migratedGroup = try #require(viewModel.document.layers.first { $0.id == group.id })
+        let background = try #require(viewModel.document.layers.first { $0.groupID == group.id && $0.isShape })
+        #expect(migratedGroup.xomoComponentInstance == XomoComponentInstance(kind: .button, theme: .denseAdmin))
+        #expect(background.shapeContent?.fillColor.isEqual(XomoComponentTheme.denseAdmin.tokens.accent) == true)
+    }
+
     @Test func switchingSidebarDoesNotChangeSelectedTool() {
         let image = NSImage.transparent(size: CGSize(width: 20, height: 20))
         let viewModel = ImageEditorViewModel(sourceName: "source", image: image) { _ in }

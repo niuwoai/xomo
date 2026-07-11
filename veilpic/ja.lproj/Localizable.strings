@@ -2408,3 +2408,13 @@
 "xomo.theme.native" = "Xomo ネイティブ";
 "xomo.theme.softMobile" = "ソフトモバイル";
 "xomo.theme.denseAdmin" = "高密度管理画面";
+"xomo.theme.apply" = "選択項目に適用";
+"xomo.theme.keepLocal" = "ローカルスタイルを保持";
+"xomo.theme.history.apply" = "コンポーネントテーマを適用";
+"xomo.theme.history.overrideKeep" = "ローカルテーマ上書きを保持";
+"xomo.theme.history.overrideClear" = "ローカルテーマ上書きを解除";
+"xomo.theme.status.noApplicableComponent" = "先にテーマ対応コンポーネントを選択してください";
+"xomo.theme.status.noOverrideLayer" = "先にコンポーネントの子レイヤーを選択してください";
+"xomo.theme.status.applied" = "%@ に %@ テーマを適用しました";
+"xomo.theme.status.overrideKept" = "%d 個のレイヤーでローカルスタイルを保持しました";
+"xomo.theme.status.overrideCleared" = "%d 個のレイヤーのローカルスタイルを解除しました";

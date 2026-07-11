@@ -74,3 +74,8 @@ struct XomoComponentThemeTokens {
     let cornerRadius: CGFloat
     let spacing: CGFloat
 }
+
+struct XomoComponentInstance: Codable, Equatable {
+    var kind: XomoComponentKind
+    var theme: XomoComponentTheme
+}

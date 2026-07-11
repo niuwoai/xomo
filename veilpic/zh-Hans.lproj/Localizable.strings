@@ -2408,3 +2408,13 @@
 "xomo.theme.native" = "像界原生";
 "xomo.theme.softMobile" = "柔和移动端";
 "xomo.theme.denseAdmin" = "高密度后台";
+"xomo.theme.apply" = "应用到所选组件";
+"xomo.theme.keepLocal" = "保留局部样式";
+"xomo.theme.history.apply" = "应用组件主题";
+"xomo.theme.history.overrideKeep" = "保留局部主题覆写";
+"xomo.theme.history.overrideClear" = "清除局部主题覆写";
+"xomo.theme.status.noApplicableComponent" = "请先选择可换肤的组件";
+"xomo.theme.status.noOverrideLayer" = "请先选择组件内的子图层";
+"xomo.theme.status.applied" = "已将 %@ 应用为 %@ 主题";
+"xomo.theme.status.overrideKept" = "已保留 %d 个图层的局部样式";
+"xomo.theme.status.overrideCleared" = "已清除 %d 个图层的局部样式";

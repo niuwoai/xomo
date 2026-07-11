@@ -2408,3 +2408,13 @@
 "xomo.theme.native" = "Xomo Native";
 "xomo.theme.softMobile" = "Soft Mobile";
 "xomo.theme.denseAdmin" = "Dense Admin";
+"xomo.theme.apply" = "Apply to selected";
+"xomo.theme.keepLocal" = "Keep local style";
+"xomo.theme.history.apply" = "Apply component theme";
+"xomo.theme.history.overrideKeep" = "Keep local theme override";
+"xomo.theme.history.overrideClear" = "Clear local theme override";
+"xomo.theme.status.noApplicableComponent" = "Select a themed component first";
+"xomo.theme.status.noOverrideLayer" = "Select a component sublayer first";
+"xomo.theme.status.applied" = "Applied %@ theme to %@";
+"xomo.theme.status.overrideKept" = "Kept local style on %d layer(s)";
+"xomo.theme.status.overrideCleared" = "Cleared local style on %d layer(s)";

@@ -21,6 +21,21 @@ private enum XomoButtonVariant: Equatable {
     case ghost
     case icon
 
+    init(component: XomoComponentKind) {
+        switch component {
+        case .button:
+            self = .primary
+        case .secondaryButton:
+            self = .secondary
+        case .ghostButton:
+            self = .ghost
+        case .iconButton:
+            self = .icon
+        default:
+            self = .primary
+        }
+    }
+
     var component: XomoComponentKind {
         switch self {
         case .primary: .button
@@ -213,7 +228,7 @@ private enum XomoIconComponentStyle {
     ]
 }
 
-enum XomoComponentKind: String, CaseIterable, Identifiable {
+enum XomoComponentKind: String, CaseIterable, Identifiable, Codable {
     case button
     case secondaryButton
     case ghostButton
@@ -241,6 +256,17 @@ enum XomoComponentKind: String, CaseIterable, Identifiable {
 
     var title: String {
         L10n.text("xomo.component.\(rawValue).title")
+    }
+
+    var supportsThemeApplication: Bool {
+        switch self {
+        case .button, .secondaryButton, .ghostButton, .iconButton,
+             .input, .searchInput, .textArea, .selectInput,
+             .card:
+            true
+        default:
+            false
+        }
     }
 }
 
@@ -329,6 +355,7 @@ extension ImageEditorViewModel {
         pushUndo()
         var group = ImageEditorLayer.group(name: component.title, size: canvasSize)
         group.blendMode = .passThrough
+        group.xomoComponentInstance = XomoComponentInstance(kind: component, theme: xomoComponentTheme)
 
         var background = ImageEditorLayer.shape(
             name: L10n.text("xomo.component.\(component.rawValue).backgroundLayer"),
@@ -398,6 +425,7 @@ extension ImageEditorViewModel {
         pushUndo()
         var group = ImageEditorLayer.group(name: component.title, size: canvasSize)
         group.blendMode = .passThrough
+        group.xomoComponentInstance = XomoComponentInstance(kind: component, theme: xomoComponentTheme)
 
         var background = ImageEditorLayer.shape(
             name: L10n.text("xomo.component.\(component.rawValue).backgroundLayer"),
@@ -655,6 +683,7 @@ extension ImageEditorViewModel {
         pushUndo()
         var group = ImageEditorLayer.group(name: component.title, size: document.canvasSize)
         group.blendMode = .passThrough
+        group.xomoComponentInstance = XomoComponentInstance(kind: component, theme: xomoComponentTheme)
         return group
     }
 
@@ -1057,6 +1086,7 @@ extension ImageEditorViewModel {
         pushUndo()
         var group = ImageEditorLayer.group(name: L10n.text("xomo.component.card.title"), size: canvasSize)
         group.blendMode = .passThrough
+        group.xomoComponentInstance = XomoComponentInstance(kind: .card, theme: xomoComponentTheme)
 
         var background = ImageEditorLayer.shape(
             name: L10n.text("xomo.component.card.backgroundLayer"),
@@ -1111,6 +1141,7 @@ extension ImageEditorViewModel {
         pushUndo()
         var group = ImageEditorLayer.group(name: L10n.text("xomo.component.image.title"), size: canvasSize)
         group.blendMode = .passThrough
+        group.xomoComponentInstance = XomoComponentInstance(kind: .image, theme: xomoComponentTheme)
 
         var imageLayer = ImageEditorLayer(
             name: L10n.text("xomo.component.image.placeholderLayer"),
@@ -1159,6 +1190,7 @@ extension ImageEditorViewModel {
         pushUndo()
         var group = ImageEditorLayer.group(name: L10n.text("xomo.component.avatar.title"), size: document.canvasSize)
         group.blendMode = .passThrough
+        group.xomoComponentInstance = XomoComponentInstance(kind: .avatar, theme: xomoComponentTheme)
 
         var background = ImageEditorLayer.shape(
             name: L10n.text("xomo.component.avatar.backgroundLayer"),
@@ -1201,6 +1233,7 @@ extension ImageEditorViewModel {
         pushUndo()
         var group = ImageEditorLayer.group(name: L10n.text("xomo.component.icon.title"), size: document.canvasSize)
         group.blendMode = .passThrough
+        group.xomoComponentInstance = XomoComponentInstance(kind: .icon, theme: xomoComponentTheme)
 
         var pathLayer = ImageEditorLayer.shape(
             name: L10n.text("xomo.component.icon.starLayer"),
@@ -1225,6 +1258,147 @@ extension ImageEditorViewModel {
         isEditingLayerMask = false
         appendHistory(L10n.text("xomo.component.history.insert"))
         statusText = L10n.format("xomo.component.status.inserted", group.name)
+    }
+
+    var canApplyXomoThemeToSelectedComponent: Bool {
+        guard let groupIndex = selectedXomoComponentGroupIndex(),
+              let component = xomoComponentKind(for: document.layers[groupIndex])
+        else {
+            return false
+        }
+        return component.supportsThemeApplication
+    }
+
+    var canToggleSelectedXomoThemeOverride: Bool {
+        document.selectedLayerIDs.contains { layerID in
+            guard let layerIndex = document.layers.firstIndex(where: { $0.id == layerID }),
+                  !document.layers[layerIndex].isGroup,
+                  let groupID = document.layers[layerIndex].groupID,
+                  let group = document.layers.first(where: { $0.id == groupID })
+            else {
+                return false
+            }
+            return xomoComponentKind(for: group)?.supportsThemeApplication == true
+        }
+    }
+
+    func applyXomoThemeToSelectedComponent() {
+        guard let groupIndex = selectedXomoComponentGroupIndex(),
+              let component = xomoComponentKind(for: document.layers[groupIndex]),
+              component.supportsThemeApplication
+        else {
+            statusText = L10n.text("xomo.theme.status.noApplicableComponent")
+            return
+        }
+
+        let groupID = document.layers[groupIndex].id
+        let tokens = xomoComponentTheme.tokens
+        pushUndo()
+        for layerIndex in document.layers.indices where document.layers[layerIndex].groupID == groupID {
+            guard !document.layers[layerIndex].isXomoThemeOverride else { continue }
+            applyXomoTheme(tokens, to: &document.layers[layerIndex], component: component)
+        }
+        document.layers[groupIndex].xomoComponentInstance = XomoComponentInstance(
+            kind: component,
+            theme: xomoComponentTheme
+        )
+        appendHistory(L10n.text("xomo.theme.history.apply"))
+        statusText = L10n.format("xomo.theme.status.applied", component.title, xomoComponentTheme.title)
+    }
+
+    func toggleXomoThemeOverrideForSelectedLayers() {
+        let selectedIndices = document.layers.indices.filter { document.selectedLayerIDs.contains(document.layers[$0].id) }
+        let eligibleIndices = selectedIndices.filter { index in
+            let layer = document.layers[index]
+            guard !layer.isGroup,
+                  let groupID = layer.groupID,
+                  let group = document.layers.first(where: { $0.id == groupID })
+            else {
+                return false
+            }
+            return xomoComponentKind(for: group)?.supportsThemeApplication == true
+        }
+        guard !eligibleIndices.isEmpty else {
+            statusText = L10n.text("xomo.theme.status.noOverrideLayer")
+            return
+        }
+
+        let shouldEnable = eligibleIndices.contains { !document.layers[$0].isXomoThemeOverride }
+        pushUndo()
+        for index in eligibleIndices {
+            document.layers[index].isXomoThemeOverride = shouldEnable
+        }
+        appendHistory(L10n.text(shouldEnable ? "xomo.theme.history.overrideKeep" : "xomo.theme.history.overrideClear"))
+        statusText = L10n.format(
+            shouldEnable ? "xomo.theme.status.overrideKept" : "xomo.theme.status.overrideCleared",
+            eligibleIndices.count
+        )
+    }
+
+    private func selectedXomoComponentGroupIndex() -> Int? {
+        guard let selectedLayerID = document.selectedLayerID,
+              let selectedIndex = document.layers.firstIndex(where: { $0.id == selectedLayerID })
+        else {
+            return nil
+        }
+        let selectedLayer = document.layers[selectedIndex]
+        if selectedLayer.isGroup {
+            return xomoComponentKind(for: selectedLayer) == nil ? nil : selectedIndex
+        }
+        guard let groupID = selectedLayer.groupID else { return nil }
+        return document.layers.firstIndex { layer in
+            layer.id == groupID && xomoComponentKind(for: layer) != nil
+        }
+    }
+
+    private func xomoComponentKind(for group: ImageEditorLayer) -> XomoComponentKind? {
+        if let kind = group.xomoComponentInstance?.kind {
+            return kind
+        }
+        return XomoComponentKind.allCases.first { $0.title == group.name }
+    }
+
+    private func applyXomoTheme(
+        _ tokens: XomoComponentThemeTokens,
+        to layer: inout ImageEditorLayer,
+        component: XomoComponentKind
+    ) {
+        switch component {
+        case .button, .secondaryButton, .ghostButton, .iconButton:
+            let variant = XomoButtonVariant(component: component)
+            if layer.isShape {
+                updateXomoShape(&layer, fillColor: variant.fillColor(tokens: tokens), strokeColor: variant.strokeColor(tokens: tokens))
+            } else if layer.isText {
+                updateXomoText(&layer, color: variant.labelColor(tokens: tokens))
+            }
+        case .input, .searchInput, .textArea, .selectInput:
+            if layer.isShape {
+                updateXomoShape(&layer, fillColor: tokens.surface, strokeColor: tokens.border)
+            } else if layer.isText {
+                updateXomoText(&layer, color: tokens.secondaryText)
+            }
+        case .card:
+            if layer.isShape {
+                updateXomoShape(&layer, fillColor: tokens.surface, strokeColor: tokens.border)
+            } else if let textContent = layer.textContent {
+                updateXomoText(&layer, color: textContent.isBold ? tokens.primaryText : tokens.secondaryText)
+            }
+        default:
+            break
+        }
+    }
+
+    private func updateXomoShape(_ layer: inout ImageEditorLayer, fillColor: NSColor, strokeColor: NSColor) {
+        guard var content = layer.shapeContent else { return }
+        content.fillColor = fillColor
+        content.strokeColor = strokeColor
+        layer.kind = .shape(content)
+    }
+
+    private func updateXomoText(_ layer: inout ImageEditorLayer, color: NSColor) {
+        guard var content = layer.textContent else { return }
+        content.color = color
+        layer.kind = .text(content)
     }
 
     private func imagePlaceholderImage(size: CGSize) -> NSImage {

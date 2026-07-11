@@ -2298,6 +2298,8 @@ struct ImageEditorLayer: Identifiable {
     var isGroupExpanded = true
     var isClippingMask = false
     var labelColor: ImageEditorLayerLabelColor?
+    var xomoComponentInstance: XomoComponentInstance?
+    var isXomoThemeOverride = false
 
     static func background(image: NSImage) -> ImageEditorLayer {
         ImageEditorLayer(

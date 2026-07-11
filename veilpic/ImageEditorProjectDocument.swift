@@ -234,6 +234,8 @@ struct ImageEditorProjectLayer: Codable {
     var isGroupExpanded: Bool
     var isClippingMask: Bool
     var labelColor: ImageEditorLayerLabelColor?
+    var xomoComponentInstance: XomoComponentInstance?
+    var isXomoThemeOverride: Bool?
 
     @MainActor
     init(layer: ImageEditorLayer) throws {
@@ -285,6 +287,8 @@ struct ImageEditorProjectLayer: Codable {
         isGroupExpanded = layer.isGroupExpanded
         isClippingMask = layer.isClippingMask
         labelColor = layer.labelColor
+        xomoComponentInstance = layer.xomoComponentInstance
+        isXomoThemeOverride = layer.isXomoThemeOverride
     }
 
     func restoredLayer(smartObjectSourceData: [UUID: Data] = [:]) throws -> ImageEditorLayer {
@@ -329,6 +333,8 @@ struct ImageEditorProjectLayer: Codable {
         layer.isGroupExpanded = isGroupExpanded
         layer.isClippingMask = isClippingMask
         layer.labelColor = labelColor
+        layer.xomoComponentInstance = xomoComponentInstance
+        layer.isXomoThemeOverride = isXomoThemeOverride ?? false
         return layer
     }
 

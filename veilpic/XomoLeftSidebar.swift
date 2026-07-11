@@ -96,6 +96,26 @@ struct XomoComponentLibraryPanel: View {
                 .pickerStyle(.menu)
                 .accessibilityIdentifier("xomo-component-theme-picker")
 
+                HStack(spacing: 6) {
+                    Button(L10n.text("xomo.theme.apply")) {
+                        viewModel.applyXomoThemeToSelectedComponent()
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                    .focusable(false)
+                    .disabled(!viewModel.canApplyXomoThemeToSelectedComponent)
+                    .accessibilityIdentifier("xomo-component-theme-apply")
+
+                    Button(L10n.text("xomo.theme.keepLocal")) {
+                        viewModel.toggleXomoThemeOverrideForSelectedLayers()
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                    .focusable(false)
+                    .disabled(!viewModel.canToggleSelectedXomoThemeOverride)
+                    .accessibilityIdentifier("xomo-component-theme-keep-local")
+                }
+
                 LazyVGrid(
                     columns: Array(repeating: GridItem(.flexible(minimum: 72), spacing: 8), count: 2),
                     spacing: 8
