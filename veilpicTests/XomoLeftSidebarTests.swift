@@ -60,6 +60,24 @@ struct XomoLeftSidebarTests {
         }
     }
 
+    @Test func inputsAndCardsUseSelectedComponentThemeTokens() throws {
+        for theme in XomoComponentTheme.allCases {
+            let image = NSImage.transparent(size: CGSize(width: 640, height: 480))
+            let viewModel = ImageEditorViewModel(sourceName: "source", image: image) { _ in }
+            viewModel.xomoComponentTheme = theme
+
+            for component in [XomoComponentKind.input, .card] {
+                viewModel.insertXomoComponent(component, at: CGPoint(x: 40, y: 60))
+                let group = try #require(viewModel.document.selectedLayer)
+                let background = try #require(viewModel.document.layers.first { $0.groupID == group.id && $0.isShape })
+                let texts = viewModel.document.layers.filter { $0.groupID == group.id && $0.isText }
+                #expect(background.shapeContent?.fillColor.isEqual(theme.tokens.surface) == true)
+                #expect(background.shapeContent?.strokeColor.isEqual(theme.tokens.border) == true)
+                #expect(texts.contains { $0.textContent?.color.isEqual(theme.tokens.secondaryText) == true })
+            }
+        }
+    }
+
     @Test func switchingSidebarDoesNotChangeSelectedTool() {
         let image = NSImage.transparent(size: CGSize(width: 20, height: 20))
         let viewModel = ImageEditorViewModel(sourceName: "source", image: image) { _ in }

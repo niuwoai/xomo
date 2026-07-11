@@ -83,10 +83,7 @@ private enum XomoInputComponentStyle {
     static let widthRatio: CGFloat = 0.26
     static let height: CGFloat = 44
     static let labelFontSize: CGFloat = 15
-    static let fillColor = NSColor.white
-    static let strokeColor = NSColor(deviceWhite: 0.72, alpha: 1)
     static let strokeWidth: CGFloat = 1
-    static let textColor = NSColor(deviceWhite: 0.48, alpha: 1)
 }
 
 private enum XomoInputVariant: Equatable {
@@ -365,6 +362,7 @@ extension ImageEditorViewModel {
 
     private func insertXomoInput(_ variant: XomoInputVariant, at proposedOrigin: CGPoint?) {
         let canvasSize = document.canvasSize
+        let tokens = xomoComponentTheme.tokens
         let inputSize = CGSize(
             width: min(
                 XomoInputComponentStyle.maximumWidth,
@@ -382,7 +380,7 @@ extension ImageEditorViewModel {
         let placeholder = L10n.text("xomo.component.\(component.rawValue).defaultPlaceholder")
         let placeholderContent = ImageEditorTextContent(
             text: placeholder,
-            color: XomoInputComponentStyle.textColor,
+            color: tokens.secondaryText,
             fontSize: XomoInputComponentStyle.labelFontSize,
             point: CGPoint(x: ImageEditorTextContent.drawingPadding, y: ImageEditorTextContent.drawingPadding),
             alignment: .left
@@ -406,9 +404,9 @@ extension ImageEditorViewModel {
             frame: inputFrame,
             content: ImageEditorShapeContent(
                 kind: .rectangle,
-                fillColor: XomoInputComponentStyle.fillColor,
+                fillColor: tokens.surface,
                 fillOpacity: 1,
-                strokeColor: XomoInputComponentStyle.strokeColor,
+                strokeColor: tokens.border,
                 strokeWidth: XomoInputComponentStyle.strokeWidth,
                 strokeOpacity: 1
             )
@@ -431,6 +429,7 @@ extension ImageEditorViewModel {
                     x: inputFrame.minX + ImageEditorTextContent.drawingPadding,
                     y: inputFrame.midY - XomoInputComponentStyle.labelFontSize * 0.5
                 ),
+                color: tokens.secondaryText,
                 groupID: group.id
             ))
         }
@@ -442,6 +441,7 @@ extension ImageEditorViewModel {
                     x: inputFrame.maxX - XomoInputComponentStyle.labelFontSize * 2,
                     y: inputFrame.midY - XomoInputComponentStyle.labelFontSize * 0.5
                 ),
+                color: tokens.secondaryText,
                 groupID: group.id
             ))
         }
@@ -459,6 +459,7 @@ extension ImageEditorViewModel {
         _ symbol: String,
         name: String,
         origin: CGPoint,
+        color: NSColor,
         groupID: UUID
     ) -> ImageEditorLayer {
         var layer = ImageEditorLayer.text(
@@ -466,7 +467,7 @@ extension ImageEditorViewModel {
             origin: origin,
             content: ImageEditorTextContent(
                 text: symbol,
-                color: XomoInputComponentStyle.textColor,
+                color: color,
                 fontSize: XomoInputComponentStyle.labelFontSize,
                 point: CGPoint(x: ImageEditorTextContent.drawingPadding, y: ImageEditorTextContent.drawingPadding),
                 alignment: .left
@@ -1021,6 +1022,7 @@ extension ImageEditorViewModel {
 
     private func insertXomoCard(at proposedOrigin: CGPoint?) {
         let canvasSize = document.canvasSize
+        let tokens = xomoComponentTheme.tokens
         let cardSize = CGSize(
             width: min(
                 XomoCardComponentStyle.maximumWidth,
@@ -1038,7 +1040,7 @@ extension ImageEditorViewModel {
         let body = L10n.text("xomo.component.card.defaultBody")
         let titleContent = ImageEditorTextContent(
             text: title,
-            color: XomoCardComponentStyle.titleColor,
+            color: tokens.primaryText,
             fontSize: XomoCardComponentStyle.titleFontSize,
             point: CGPoint(x: ImageEditorTextContent.drawingPadding, y: ImageEditorTextContent.drawingPadding),
             isBold: true,
@@ -1046,7 +1048,7 @@ extension ImageEditorViewModel {
         )
         let bodyContent = ImageEditorTextContent(
             text: body,
-            color: XomoCardComponentStyle.bodyColor,
+            color: tokens.secondaryText,
             fontSize: XomoCardComponentStyle.bodyFontSize,
             point: CGPoint(x: ImageEditorTextContent.drawingPadding, y: ImageEditorTextContent.drawingPadding),
             alignment: .left
@@ -1061,9 +1063,9 @@ extension ImageEditorViewModel {
             frame: cardFrame,
             content: ImageEditorShapeContent(
                 kind: .rectangle,
-                fillColor: XomoCardComponentStyle.fillColor,
+                fillColor: tokens.surface,
                 fillOpacity: 1,
-                strokeColor: XomoCardComponentStyle.strokeColor,
+                strokeColor: tokens.border,
                 strokeWidth: XomoCardComponentStyle.strokeWidth,
                 strokeOpacity: 1
             )
