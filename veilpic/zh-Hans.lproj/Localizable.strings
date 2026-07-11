@@ -2282,6 +2282,7 @@
 "xomo.componentLibrary.title" = "组件库";
 "xomo.componentLibrary.subtitle" = "点击或拖入组件，立即生成可编辑图层；按钮与表单控件均保留可修改的结构。";
 "xomo.componentLibrary.formSection" = "表单控件";
+"xomo.componentLibrary.selectionSection" = "选择与标记";
 "xomo.componentLibrary.foundationSection" = "基础组件";
 "xomo.componentLibrary.nextStep" = "基础组件由组、背景形状和文字图层组成；修改文案、颜色或图层结构不会变成不可编辑截图。";
 "xomo.componentLibrary.dragOrInsert" = "点击插入，或拖入画布";
@@ -2312,6 +2313,18 @@
 "xomo.component.selectInput.defaultPlaceholder" = "请选择";
 "xomo.component.selectInput.backgroundLayer" = "选择框背景";
 "xomo.component.selectInput.trailingAccessoryLayer" = "展开图标";
+"xomo.component.toggle.title" = "开关";
+"xomo.component.toggle.backgroundLayer" = "开关背景";
+"xomo.component.toggle.knobLayer" = "开关圆点";
+"xomo.component.checkbox.title" = "复选框";
+"xomo.component.checkbox.defaultLabel" = "已勾选";
+"xomo.component.checkbox.boxLayer" = "复选框方块";
+"xomo.component.tag.title" = "标签";
+"xomo.component.tag.defaultLabel" = "标签";
+"xomo.component.tag.backgroundLayer" = "标签背景";
+"xomo.component.badge.title" = "徽标";
+"xomo.component.badge.defaultValue" = "3";
+"xomo.component.badge.backgroundLayer" = "徽标背景";
 "xomo.component.card.title" = "卡片";
 "xomo.component.card.defaultTitle" = "卡片标题";
 "xomo.component.card.defaultBody" = "这里填写一段可编辑的说明文字。";
@@ -2333,6 +2346,10 @@
 "xomo.componentPreview.searchInput" = "搜索框";
 "xomo.componentPreview.textArea" = "文本域";
 "xomo.componentPreview.selectInput" = "选择框";
+"xomo.componentPreview.toggle" = "开关";
+"xomo.componentPreview.checkbox" = "复选框";
+"xomo.componentPreview.tag" = "标签";
+"xomo.componentPreview.badge" = "徽标";
 "xomo.componentPreview.card" = "卡片";
 "xomo.componentPreview.image" = "图片";
 "xomo.componentPreview.avatar" = "头像";

@@ -45,6 +45,13 @@ private struct XomoComponentLibraryPreviewItem: Identifiable {
         Self(id: "selectInput", titleKey: "xomo.componentPreview.selectInput", symbolName: "chevron.up.chevron.down", component: .selectInput)
     ]
 
+    static let selectionItems: [Self] = [
+        Self(id: "toggle", titleKey: "xomo.componentPreview.toggle", symbolName: "switch.2", component: .toggle),
+        Self(id: "checkbox", titleKey: "xomo.componentPreview.checkbox", symbolName: "checkmark.square", component: .checkbox),
+        Self(id: "tag", titleKey: "xomo.componentPreview.tag", symbolName: "tag", component: .tag),
+        Self(id: "badge", titleKey: "xomo.componentPreview.badge", symbolName: "circlebadge", component: .badge)
+    ]
+
     static let foundationItems: [Self] = [
         Self(id: "card", titleKey: "xomo.componentPreview.card", symbolName: "rectangle.on.rectangle", component: .card),
         Self(id: "image", titleKey: "xomo.componentPreview.image", symbolName: "photo", component: .image),
@@ -86,6 +93,19 @@ struct XomoComponentLibraryPanel: View {
                     spacing: 8
                 ) {
                     ForEach(XomoComponentLibraryPreviewItem.formItems) { item in
+                        componentPreview(item)
+                    }
+                }
+
+                Text(L10n.text("xomo.componentLibrary.selectionSection"))
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+
+                LazyVGrid(
+                    columns: Array(repeating: GridItem(.flexible(minimum: 72), spacing: 8), count: 2),
+                    spacing: 8
+                ) {
+                    ForEach(XomoComponentLibraryPreviewItem.selectionItems) { item in
                         componentPreview(item)
                     }
                 }

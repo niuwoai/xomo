@@ -2282,6 +2282,7 @@
 "xomo.componentLibrary.title" = "Component Library";
 "xomo.componentLibrary.subtitle" = "Click or drag a component to create editable layers; button and form controls retain their editable structure.";
 "xomo.componentLibrary.formSection" = "Form Controls";
+"xomo.componentLibrary.selectionSection" = "Selection & Status";
 "xomo.componentLibrary.foundationSection" = "Foundation Components";
 "xomo.componentLibrary.nextStep" = "Core components are groups with background shapes and text layers, so editing copy, color, or structure never creates an uneditable screenshot.";
 "xomo.componentLibrary.dragOrInsert" = "Click to insert or drag onto the canvas";
@@ -2312,6 +2313,18 @@
 "xomo.component.selectInput.defaultPlaceholder" = "Select an option";
 "xomo.component.selectInput.backgroundLayer" = "Select Input Background";
 "xomo.component.selectInput.trailingAccessoryLayer" = "Disclosure Icon";
+"xomo.component.toggle.title" = "Toggle";
+"xomo.component.toggle.backgroundLayer" = "Toggle Background";
+"xomo.component.toggle.knobLayer" = "Toggle Knob";
+"xomo.component.checkbox.title" = "Checkbox";
+"xomo.component.checkbox.defaultLabel" = "Checked";
+"xomo.component.checkbox.boxLayer" = "Checkbox Box";
+"xomo.component.tag.title" = "Tag";
+"xomo.component.tag.defaultLabel" = "Tag";
+"xomo.component.tag.backgroundLayer" = "Tag Background";
+"xomo.component.badge.title" = "Badge";
+"xomo.component.badge.defaultValue" = "3";
+"xomo.component.badge.backgroundLayer" = "Badge Background";
 "xomo.component.card.title" = "Card";
 "xomo.component.card.defaultTitle" = "Card title";
 "xomo.component.card.defaultBody" = "Add an editable supporting description here.";
@@ -2333,6 +2346,10 @@
 "xomo.componentPreview.searchInput" = "Search";
 "xomo.componentPreview.textArea" = "Text Area";
 "xomo.componentPreview.selectInput" = "Select";
+"xomo.componentPreview.toggle" = "Toggle";
+"xomo.componentPreview.checkbox" = "Checkbox";
+"xomo.componentPreview.tag" = "Tag";
+"xomo.componentPreview.badge" = "Badge";
 "xomo.componentPreview.card" = "Card";
 "xomo.componentPreview.image" = "Image";
 "xomo.componentPreview.avatar" = "Avatar";

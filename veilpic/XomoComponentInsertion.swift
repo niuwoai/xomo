@@ -120,6 +120,20 @@ private enum XomoInputVariant: Equatable {
     }
 }
 
+private enum XomoSelectionComponentStyle {
+    static let toggleSize = CGSize(width: 52, height: 28)
+    static let toggleKnobDiameter: CGFloat = 22
+    static let checkboxSize: CGFloat = 20
+    static let tagSize = CGSize(width: 96, height: 28)
+    static let badgeDiameter: CGFloat = 28
+    static let labelFontSize: CGFloat = 14
+    static let fillColor = NSColor(deviceRed: 0.20, green: 0.48, blue: 0.95, alpha: 1)
+    static let strokeColor = NSColor(deviceRed: 0.16, green: 0.39, blue: 0.78, alpha: 1)
+    static let mutedFillColor = NSColor(deviceWhite: 0.94, alpha: 1)
+    static let mutedTextColor = NSColor(deviceWhite: 0.26, alpha: 1)
+    static let strokeWidth: CGFloat = 1
+}
+
 private enum XomoCardComponentStyle {
     static let minimumWidth: CGFloat = 240
     static let maximumWidth: CGFloat = 360
@@ -180,6 +194,10 @@ enum XomoComponentKind: String, CaseIterable, Identifiable {
     case searchInput
     case textArea
     case selectInput
+    case toggle
+    case checkbox
+    case tag
+    case badge
     case card
     case image
     case avatar
@@ -211,6 +229,14 @@ extension ImageEditorViewModel {
             insertXomoInput(.textArea, at: proposedOrigin)
         case .selectInput:
             insertXomoInput(.select, at: proposedOrigin)
+        case .toggle:
+            insertXomoToggle(at: proposedOrigin)
+        case .checkbox:
+            insertXomoCheckbox(at: proposedOrigin)
+        case .tag:
+            insertXomoTag(at: proposedOrigin)
+        case .badge:
+            insertXomoBadge(at: proposedOrigin)
         case .card:
             insertXomoCard(at: proposedOrigin)
         case .image:
@@ -398,6 +424,197 @@ extension ImageEditorViewModel {
         )
         layer.groupID = groupID
         return layer
+    }
+
+    private func insertXomoToggle(at proposedOrigin: CGPoint?) {
+        let component = XomoComponentKind.toggle
+        let frame = componentFrame(
+            proposedOrigin,
+            size: XomoSelectionComponentStyle.toggleSize
+        )
+        let knobFrame = CGRect(
+            x: frame.maxX - XomoSelectionComponentStyle.toggleKnobDiameter - 3,
+            y: frame.midY - XomoSelectionComponentStyle.toggleKnobDiameter * 0.5,
+            width: XomoSelectionComponentStyle.toggleKnobDiameter,
+            height: XomoSelectionComponentStyle.toggleKnobDiameter
+        )
+        let group = beginComponentGroup(component)
+        var background = ImageEditorLayer.shape(
+            name: L10n.text("xomo.component.toggle.backgroundLayer"),
+            frame: frame,
+            content: ImageEditorShapeContent(
+                kind: .ellipse,
+                fillColor: XomoSelectionComponentStyle.fillColor,
+                fillOpacity: 1,
+                strokeColor: XomoSelectionComponentStyle.strokeColor,
+                strokeWidth: XomoSelectionComponentStyle.strokeWidth,
+                strokeOpacity: 1
+            )
+        )
+        background.groupID = group.id
+        var knob = ImageEditorLayer.shape(
+            name: L10n.text("xomo.component.toggle.knobLayer"),
+            frame: knobFrame,
+            content: ImageEditorShapeContent(
+                kind: .ellipse,
+                fillColor: .white,
+                fillOpacity: 1,
+                strokeColor: .white,
+                strokeWidth: XomoSelectionComponentStyle.strokeWidth,
+                strokeOpacity: 1
+            )
+        )
+        knob.groupID = group.id
+        finishComponentInsertion(group: group, children: [background, knob])
+    }
+
+    private func insertXomoCheckbox(at proposedOrigin: CGPoint?) {
+        let component = XomoComponentKind.checkbox
+        let label = L10n.text("xomo.component.checkbox.defaultLabel")
+        let labelContent = ImageEditorTextContent(
+            text: label,
+            color: XomoSelectionComponentStyle.mutedTextColor,
+            fontSize: XomoSelectionComponentStyle.labelFontSize,
+            point: CGPoint(x: ImageEditorTextContent.drawingPadding, y: ImageEditorTextContent.drawingPadding),
+            alignment: .left
+        )
+        let labelSize = labelContent.layerSize()
+        let componentSize = CGSize(
+            width: XomoSelectionComponentStyle.checkboxSize + labelSize.width + 8,
+            height: max(XomoSelectionComponentStyle.checkboxSize, labelSize.height)
+        )
+        let frame = componentFrame(proposedOrigin, size: componentSize)
+        let boxFrame = CGRect(
+            x: frame.minX,
+            y: frame.midY - XomoSelectionComponentStyle.checkboxSize * 0.5,
+            width: XomoSelectionComponentStyle.checkboxSize,
+            height: XomoSelectionComponentStyle.checkboxSize
+        )
+        let group = beginComponentGroup(component)
+        var box = ImageEditorLayer.shape(
+            name: L10n.text("xomo.component.checkbox.boxLayer"),
+            frame: boxFrame,
+            content: ImageEditorShapeContent(
+                kind: .rectangle,
+                fillColor: XomoSelectionComponentStyle.fillColor,
+                fillOpacity: 1,
+                strokeColor: XomoSelectionComponentStyle.strokeColor,
+                strokeWidth: XomoSelectionComponentStyle.strokeWidth,
+                strokeOpacity: 1
+            )
+        )
+        box.groupID = group.id
+        var text = ImageEditorLayer.text(
+            name: L10n.format("imageEditor.layer.textName", label),
+            origin: CGPoint(x: boxFrame.maxX + 8, y: frame.midY - labelSize.height * 0.5),
+            content: labelContent
+        )
+        text.groupID = group.id
+        finishComponentInsertion(group: group, children: [box, text])
+    }
+
+    private func insertXomoTag(at proposedOrigin: CGPoint?) {
+        let component = XomoComponentKind.tag
+        let frame = componentFrame(proposedOrigin, size: XomoSelectionComponentStyle.tagSize)
+        let label = L10n.text("xomo.component.tag.defaultLabel")
+        let labelContent = ImageEditorTextContent(
+            text: label,
+            color: XomoSelectionComponentStyle.mutedTextColor,
+            fontSize: XomoSelectionComponentStyle.labelFontSize,
+            point: CGPoint(x: ImageEditorTextContent.drawingPadding, y: ImageEditorTextContent.drawingPadding),
+            alignment: .center
+        )
+        let labelSize = labelContent.layerSize()
+        let group = beginComponentGroup(component)
+        var background = ImageEditorLayer.shape(
+            name: L10n.text("xomo.component.tag.backgroundLayer"),
+            frame: frame,
+            content: ImageEditorShapeContent(
+                kind: .rectangle,
+                fillColor: XomoSelectionComponentStyle.mutedFillColor,
+                fillOpacity: 1,
+                strokeColor: XomoSelectionComponentStyle.mutedFillColor,
+                strokeWidth: XomoSelectionComponentStyle.strokeWidth,
+                strokeOpacity: 1
+            )
+        )
+        background.groupID = group.id
+        var text = ImageEditorLayer.text(
+            name: L10n.format("imageEditor.layer.textName", label),
+            origin: CGPoint(x: frame.midX - labelSize.width * 0.5, y: frame.midY - labelSize.height * 0.5),
+            content: labelContent
+        )
+        text.groupID = group.id
+        finishComponentInsertion(group: group, children: [background, text])
+    }
+
+    private func insertXomoBadge(at proposedOrigin: CGPoint?) {
+        let component = XomoComponentKind.badge
+        let size = CGSize(
+            width: XomoSelectionComponentStyle.badgeDiameter,
+            height: XomoSelectionComponentStyle.badgeDiameter
+        )
+        let frame = componentFrame(proposedOrigin, size: size)
+        let value = L10n.text("xomo.component.badge.defaultValue")
+        let valueContent = ImageEditorTextContent(
+            text: value,
+            color: .white,
+            fontSize: XomoSelectionComponentStyle.labelFontSize,
+            point: CGPoint(x: ImageEditorTextContent.drawingPadding, y: ImageEditorTextContent.drawingPadding),
+            isBold: true,
+            alignment: .center
+        )
+        let valueSize = valueContent.layerSize()
+        let group = beginComponentGroup(component)
+        var background = ImageEditorLayer.shape(
+            name: L10n.text("xomo.component.badge.backgroundLayer"),
+            frame: frame,
+            content: ImageEditorShapeContent(
+                kind: .ellipse,
+                fillColor: XomoSelectionComponentStyle.fillColor,
+                fillOpacity: 1,
+                strokeColor: XomoSelectionComponentStyle.strokeColor,
+                strokeWidth: XomoSelectionComponentStyle.strokeWidth,
+                strokeOpacity: 1
+            )
+        )
+        background.groupID = group.id
+        var text = ImageEditorLayer.text(
+            name: L10n.format("imageEditor.layer.textName", value),
+            origin: CGPoint(x: frame.midX - valueSize.width * 0.5, y: frame.midY - valueSize.height * 0.5),
+            content: valueContent
+        )
+        text.groupID = group.id
+        finishComponentInsertion(group: group, children: [background, text])
+    }
+
+    private func componentFrame(_ proposedOrigin: CGPoint?, size: CGSize) -> CGRect {
+        let canvasSize = document.canvasSize
+        let defaultOrigin = CGPoint(
+            x: (canvasSize.width - size.width) * 0.5,
+            y: (canvasSize.height - size.height) * 0.5
+        )
+        return CGRect(
+            origin: clampedComponentOrigin(proposedOrigin ?? defaultOrigin, componentSize: size),
+            size: size
+        )
+    }
+
+    private func beginComponentGroup(_ component: XomoComponentKind) -> ImageEditorLayer {
+        pushUndo()
+        var group = ImageEditorLayer.group(name: component.title, size: document.canvasSize)
+        group.blendMode = .passThrough
+        return group
+    }
+
+    private func finishComponentInsertion(group: ImageEditorLayer, children: [ImageEditorLayer]) {
+        let insertionIndex = min((document.selectedLayerIndex ?? (document.layers.count - 1)) + 1, document.layers.count)
+        document.layers.insert(contentsOf: children + [group], at: insertionIndex)
+        document.selectedLayerID = group.id
+        document.selectedLayerIDs = [group.id]
+        isEditingLayerMask = false
+        appendHistory(L10n.text("xomo.component.history.insert"))
+        statusText = L10n.format("xomo.component.status.inserted", group.name)
     }
 
     private func insertXomoCard(at proposedOrigin: CGPoint?) {

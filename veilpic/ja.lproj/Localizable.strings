@@ -2282,6 +2282,7 @@
 "xomo.componentLibrary.title" = "コンポーネントライブラリ";
 "xomo.componentLibrary.subtitle" = "コンポーネントをクリックまたはドラッグして編集可能なレイヤーを作成します。ボタンとフォームは編集可能な構造を保持します。";
 "xomo.componentLibrary.formSection" = "フォーム";
+"xomo.componentLibrary.selectionSection" = "選択と状態";
 "xomo.componentLibrary.foundationSection" = "基本コンポーネント";
 "xomo.componentLibrary.nextStep" = "基本コンポーネントは背景図形とテキストを含むグループです。文言・色・構造を変更しても編集できないスクリーンショットにはなりません。";
 "xomo.componentLibrary.dragOrInsert" = "クリックして挿入、またはキャンバスへドラッグ";
@@ -2312,6 +2313,18 @@
 "xomo.component.selectInput.defaultPlaceholder" = "選択してください";
 "xomo.component.selectInput.backgroundLayer" = "選択欄の背景";
 "xomo.component.selectInput.trailingAccessoryLayer" = "展開アイコン";
+"xomo.component.toggle.title" = "トグル";
+"xomo.component.toggle.backgroundLayer" = "トグル背景";
+"xomo.component.toggle.knobLayer" = "トグルノブ";
+"xomo.component.checkbox.title" = "チェックボックス";
+"xomo.component.checkbox.defaultLabel" = "選択済み";
+"xomo.component.checkbox.boxLayer" = "チェックボックス枠";
+"xomo.component.tag.title" = "タグ";
+"xomo.component.tag.defaultLabel" = "タグ";
+"xomo.component.tag.backgroundLayer" = "タグ背景";
+"xomo.component.badge.title" = "バッジ";
+"xomo.component.badge.defaultValue" = "3";
+"xomo.component.badge.backgroundLayer" = "バッジ背景";
 "xomo.component.card.title" = "カード";
 "xomo.component.card.defaultTitle" = "カードの見出し";
 "xomo.component.card.defaultBody" = "ここに編集可能な説明文を入力します。";
@@ -2333,6 +2346,10 @@
 "xomo.componentPreview.searchInput" = "検索";
 "xomo.componentPreview.textArea" = "テキストエリア";
 "xomo.componentPreview.selectInput" = "選択欄";
+"xomo.componentPreview.toggle" = "トグル";
+"xomo.componentPreview.checkbox" = "チェックボックス";
+"xomo.componentPreview.tag" = "タグ";
+"xomo.componentPreview.badge" = "バッジ";
 "xomo.componentPreview.card" = "カード";
 "xomo.componentPreview.image" = "画像";
 "xomo.componentPreview.avatar" = "アバター";
