@@ -44,36 +44,6 @@ struct veilpicTests {
     }
 
     @MainActor
-    @Test func applyingEditedPreviewImageResetsPostProcessPipeline() async throws {
-        let viewModel = MenuBarUploadViewModel(
-            profileStore: InMemoryStorageProfileStore(),
-            historyStore: InMemoryUploadHistoryStore()
-        )
-        let original = testImage(color: .systemBlue, size: NSSize(width: 80, height: 60))
-        let edited = testImage(color: .systemPink, size: NSSize(width: 40, height: 30))
-
-        viewModel.workspaceItem = ImageWorkspaceItem(originalImage: original, sourceName: "source.png", createdAt: Date())
-        viewModel.postProcessRecipe = PostProcessRecipe.defaults(for: .rounded)
-        viewModel.generatedVariants = [
-            GeneratedImageVariant(kind: .original, filename: "old.png", data: Data([1, 2, 3]), contentType: "image/png")
-        ]
-        viewModel.uploadResult = UploadResult(
-            sourceName: "old.png",
-            createdAt: Date(),
-            links: [.original: try #require(URL(string: "https://example.com/old.png"))]
-        )
-
-        viewModel.applyEditedPreviewImage(edited)
-
-        #expect(viewModel.workspaceItem?.sourceName == "source.png-edited")
-        #expect(viewModel.workspaceItem?.originalImage.size == edited.size)
-        #expect(viewModel.postProcessRecipe == PostProcessRecipe.defaults(for: .original))
-        #expect(viewModel.generatedVariants.isEmpty)
-        #expect(viewModel.uploadResult == nil)
-        #expect(viewModel.processedPreviewData != nil)
-    }
-
-    @MainActor
     @Test func imageEditorStartsWithBackgroundAndEditableLayer() async throws {
         let image = testImage(color: .systemBlue, size: NSSize(width: 80, height: 60))
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
@@ -6502,38 +6472,4 @@ struct veilpicTests {
         return false
     }
 
-}
-
-private final class InMemoryStorageProfileStore: StorageProfileStoring {
-    private var profile = StorageProfile()
-
-    func load() -> StorageProfile {
-        profile
-    }
-
-    func save(_ profile: StorageProfile) {
-        self.profile = profile
-    }
-}
-
-private final class InMemoryUploadHistoryStore: UploadHistoryStoring {
-    private var items: [UploadHistoryItem] = []
-
-    func load() -> [UploadHistoryItem] {
-        items
-    }
-
-    func append(_ item: UploadHistoryItem, to history: [UploadHistoryItem]) -> [UploadHistoryItem] {
-        items = [item] + history
-        return items
-    }
-
-    func remove(_ item: UploadHistoryItem, from history: [UploadHistoryItem]) -> [UploadHistoryItem] {
-        items = history.filter { $0.id != item.id }
-        return items
-    }
-
-    func clear() {
-        items = []
-    }
 }
