@@ -328,7 +328,7 @@ struct ImageEditorView: View {
                 case .tools:
                     toolRail
                 case .components:
-                    XomoComponentLibraryPanel()
+                    XomoComponentLibraryPanel(viewModel: viewModel)
                 }
             }
             .frame(maxHeight: .infinity)
@@ -763,6 +763,13 @@ struct ImageEditorView: View {
                 }
                 .contentShape(Rectangle())
                 .gesture(canvasGesture(in: geometry.size))
+                .dropDestination(for: String.self) { components, location in
+                    guard let rawValue = components.first,
+                          let component = XomoComponentKind(rawValue: rawValue)
+                    else { return false }
+                    viewModel.insertXomoComponent(component, at: imagePoint(from: location, in: geometry.size))
+                    return true
+                }
                 .accessibilityIdentifier("image-editor-canvas")
                 .simultaneousGesture(
                     MagnifyGesture()
