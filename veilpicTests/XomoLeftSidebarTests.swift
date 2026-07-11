@@ -11,7 +11,17 @@ struct XomoLeftSidebarTests {
     }
 
     @Test func componentLibraryExposesEditableStarterComponents() {
-        #expect(XomoComponentKind.allCases == [.button, .input, .card, .image, .avatar, .icon])
+        #expect(XomoComponentKind.allCases == [
+            .button,
+            .secondaryButton,
+            .ghostButton,
+            .iconButton,
+            .input,
+            .card,
+            .image,
+            .avatar,
+            .icon
+        ])
     }
 
     @Test func switchingSidebarDoesNotChangeSelectedTool() {
@@ -59,6 +69,23 @@ struct XomoLeftSidebarTests {
         #expect(children.count == 2)
         #expect(children.contains(where: { $0.isShape }))
         #expect(children.contains(where: { $0.isText }))
+    }
+
+    @Test func buttonVariantsCreateEditableGroupedLayers() throws {
+        for component in [XomoComponentKind.secondaryButton, .ghostButton, .iconButton] {
+            let image = NSImage.transparent(size: CGSize(width: 640, height: 480))
+            let viewModel = ImageEditorViewModel(sourceName: "source", image: image) { _ in }
+
+            viewModel.insertXomoComponent(component, at: CGPoint(x: 40, y: 60))
+
+            let group = try #require(viewModel.document.selectedLayer)
+            let children = viewModel.document.layers.filter { $0.groupID == group.id }
+            #expect(group.isGroup)
+            #expect(group.name == component.title)
+            #expect(children.count == 2)
+            #expect(children.contains(where: { $0.isShape }))
+            #expect(children.contains(where: { $0.isText }))
+        }
     }
 
     @Test func insertingInputCreatesEditableGroupedLayers() throws {

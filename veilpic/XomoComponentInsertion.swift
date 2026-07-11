@@ -12,9 +12,69 @@ private enum XomoButtonComponentStyle {
     static let widthRatio: CGFloat = 0.18
     static let height: CGFloat = 44
     static let labelFontSize: CGFloat = 15
-    static let fillColor = NSColor(deviceRed: 0.20, green: 0.48, blue: 0.95, alpha: 1)
-    static let strokeColor = NSColor(deviceRed: 0.16, green: 0.39, blue: 0.78, alpha: 1)
     static let strokeWidth: CGFloat = 1
+}
+
+private enum XomoButtonVariant: Equatable {
+    case primary
+    case secondary
+    case ghost
+    case icon
+
+    var component: XomoComponentKind {
+        switch self {
+        case .primary: .button
+        case .secondary: .secondaryButton
+        case .ghost: .ghostButton
+        case .icon: .iconButton
+        }
+    }
+
+    var size: CGSize? {
+        switch self {
+        case .icon:
+            CGSize(width: XomoButtonComponentStyle.height, height: XomoButtonComponentStyle.height)
+        case .primary, .secondary, .ghost:
+            nil
+        }
+    }
+
+    var fillColor: NSColor {
+        switch self {
+        case .primary, .icon:
+            NSColor(deviceRed: 0.20, green: 0.48, blue: 0.95, alpha: 1)
+        case .secondary:
+            .white
+        case .ghost:
+            .clear
+        }
+    }
+
+    var fillOpacity: CGFloat {
+        self == .ghost ? 0 : 1
+    }
+
+    var strokeColor: NSColor {
+        switch self {
+        case .primary, .icon:
+            NSColor(deviceRed: 0.16, green: 0.39, blue: 0.78, alpha: 1)
+        case .secondary, .ghost:
+            NSColor(deviceRed: 0.20, green: 0.48, blue: 0.95, alpha: 1)
+        }
+    }
+
+    var strokeOpacity: CGFloat {
+        self == .ghost ? 0 : 1
+    }
+
+    var labelColor: NSColor {
+        switch self {
+        case .primary, .icon:
+            .white
+        case .secondary, .ghost:
+            NSColor(deviceRed: 0.20, green: 0.48, blue: 0.95, alpha: 1)
+        }
+    }
 }
 
 private enum XomoInputComponentStyle {
@@ -82,6 +142,9 @@ private enum XomoIconComponentStyle {
 
 enum XomoComponentKind: String, CaseIterable, Identifiable {
     case button
+    case secondaryButton
+    case ghostButton
+    case iconButton
     case input
     case card
     case image
@@ -99,7 +162,13 @@ extension ImageEditorViewModel {
     func insertXomoComponent(_ component: XomoComponentKind, at proposedOrigin: CGPoint? = nil) {
         switch component {
         case .button:
-            insertXomoButton(at: proposedOrigin)
+            insertXomoButton(.primary, at: proposedOrigin)
+        case .secondaryButton:
+            insertXomoButton(.secondary, at: proposedOrigin)
+        case .ghostButton:
+            insertXomoButton(.ghost, at: proposedOrigin)
+        case .iconButton:
+            insertXomoButton(.icon, at: proposedOrigin)
         case .input:
             insertXomoInput(at: proposedOrigin)
         case .card:
@@ -113,9 +182,9 @@ extension ImageEditorViewModel {
         }
     }
 
-    private func insertXomoButton(at proposedOrigin: CGPoint?) {
+    private func insertXomoButton(_ variant: XomoButtonVariant, at proposedOrigin: CGPoint?) {
         let canvasSize = document.canvasSize
-        let buttonSize = CGSize(
+        let buttonSize = variant.size ?? CGSize(
             width: min(
                 XomoButtonComponentStyle.maximumWidth,
                 max(XomoButtonComponentStyle.minimumWidth, canvasSize.width * XomoButtonComponentStyle.widthRatio)
@@ -128,10 +197,11 @@ extension ImageEditorViewModel {
         )
         let origin = clampedComponentOrigin(proposedOrigin ?? defaultOrigin, componentSize: buttonSize)
         let buttonFrame = CGRect(origin: origin, size: buttonSize)
-        let label = L10n.text("xomo.component.button.defaultLabel")
+        let component = variant.component
+        let label = L10n.text("xomo.component.\(component.rawValue).defaultLabel")
         let labelContent = ImageEditorTextContent(
             text: label,
-            color: .white,
+            color: variant.labelColor,
             fontSize: XomoButtonComponentStyle.labelFontSize,
             point: CGPoint(x: ImageEditorTextContent.drawingPadding, y: ImageEditorTextContent.drawingPadding),
             isBold: true,
@@ -144,19 +214,19 @@ extension ImageEditorViewModel {
         )
 
         pushUndo()
-        var group = ImageEditorLayer.group(name: L10n.text("xomo.component.button.title"), size: canvasSize)
+        var group = ImageEditorLayer.group(name: component.title, size: canvasSize)
         group.blendMode = .passThrough
 
         var background = ImageEditorLayer.shape(
-            name: L10n.text("xomo.component.button.backgroundLayer"),
+            name: L10n.text("xomo.component.\(component.rawValue).backgroundLayer"),
             frame: buttonFrame,
             content: ImageEditorShapeContent(
                 kind: .rectangle,
-                fillColor: XomoButtonComponentStyle.fillColor,
-                fillOpacity: 1,
-                strokeColor: XomoButtonComponentStyle.strokeColor,
+                fillColor: variant.fillColor,
+                fillOpacity: variant.fillOpacity,
+                strokeColor: variant.strokeColor,
                 strokeWidth: XomoButtonComponentStyle.strokeWidth,
-                strokeOpacity: 1
+                strokeOpacity: variant.strokeOpacity
             )
         )
         background.groupID = group.id

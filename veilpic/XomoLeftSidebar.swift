@@ -31,8 +31,14 @@ private struct XomoComponentLibraryPreviewItem: Identifiable {
     let symbolName: String
     let component: XomoComponentKind?
 
-    static let starterItems: [Self] = [
+    static let buttonFamilyItems: [Self] = [
         Self(id: "button", titleKey: "xomo.componentPreview.button", symbolName: "rectangle.inset.filled", component: .button),
+        Self(id: "secondaryButton", titleKey: "xomo.componentPreview.secondaryButton", symbolName: "rectangle", component: .secondaryButton),
+        Self(id: "ghostButton", titleKey: "xomo.componentPreview.ghostButton", symbolName: "text.badge.plus", component: .ghostButton),
+        Self(id: "iconButton", titleKey: "xomo.componentPreview.iconButton", symbolName: "plus.circle", component: .iconButton)
+    ]
+
+    static let foundationItems: [Self] = [
         Self(id: "input", titleKey: "xomo.componentPreview.input", symbolName: "text.cursor", component: .input),
         Self(id: "card", titleKey: "xomo.componentPreview.card", symbolName: "rectangle.on.rectangle", component: .card),
         Self(id: "image", titleKey: "xomo.componentPreview.image", symbolName: "photo", component: .image),
@@ -60,7 +66,20 @@ struct XomoComponentLibraryPanel: View {
                     columns: Array(repeating: GridItem(.flexible(minimum: 72), spacing: 8), count: 2),
                     spacing: 8
                 ) {
-                    ForEach(XomoComponentLibraryPreviewItem.starterItems) { item in
+                    ForEach(XomoComponentLibraryPreviewItem.buttonFamilyItems) { item in
+                        componentPreview(item)
+                    }
+                }
+
+                Text(L10n.text("xomo.componentLibrary.foundationSection"))
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+
+                LazyVGrid(
+                    columns: Array(repeating: GridItem(.flexible(minimum: 72), spacing: 8), count: 2),
+                    spacing: 8
+                ) {
+                    ForEach(XomoComponentLibraryPreviewItem.foundationItems) { item in
                         componentPreview(item)
                     }
                 }
