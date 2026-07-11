@@ -1,7 +1,7 @@
 import AppKit
 import Foundation
 
-enum XomoCanvasPreset: String, CaseIterable, Identifiable {
+enum XomoCanvasPreset: String, CaseIterable, Identifiable, Codable {
     case phonePortrait
     case phoneLandscape
     case tabletPortrait
@@ -104,7 +104,7 @@ enum XomoCanvasPresetCategory: String, CaseIterable, Identifiable {
     }
 }
 
-enum XomoCanvasBackground: String, CaseIterable, Identifiable {
+enum XomoCanvasBackground: String, CaseIterable, Identifiable, Codable {
     case white
     case transparent
 
@@ -159,5 +159,19 @@ struct XomoCanvasDraft: Equatable {
         width = Double(preset.logicalSize.width)
         height = Double(preset.logicalSize.height)
         exportScale = preset.defaultExportScale
+    }
+}
+
+struct XomoDesignCanvasMetadata: Codable, Equatable {
+    var preset: XomoCanvasPreset?
+    var exportScale: Int
+    var suggestedMargin: CGFloat
+    var background: XomoCanvasBackground
+
+    init(draft: XomoCanvasDraft) {
+        preset = draft.canvasSize == draft.selectedPreset.logicalSize ? draft.selectedPreset : nil
+        exportScale = draft.clampedExportScale
+        suggestedMargin = draft.selectedPreset.suggestedMargin
+        background = draft.background
     }
 }

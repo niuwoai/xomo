@@ -43,7 +43,7 @@ enum ImageEditorProjectDocumentError: LocalizedError {
 
 struct ImageEditorProjectDocument: Codable {
     static let fileExtension = "qpicproject"
-    static let formatVersion = 4
+    static let formatVersion = 5
 
     var formatVersion: Int
     var appVersion: String
@@ -69,6 +69,7 @@ struct ImageEditorProjectDocument: Codable {
     var isGridVisible: Bool?
     var isGridSnappingEnabled: Bool?
     var gridSpacing: CGFloat?
+    var designCanvasMetadata: XomoDesignCanvasMetadata?
     var globalLightAngle: CGFloat?
     var historyTitles: [String]
 
@@ -104,6 +105,7 @@ struct ImageEditorProjectDocument: Codable {
         isGridVisible = document.isGridVisible
         isGridSnappingEnabled = document.isGridSnappingEnabled
         gridSpacing = document.gridSpacing
+        designCanvasMetadata = document.designCanvasMetadata
         globalLightAngle = document.globalLightAngle
         historyTitles = document.history.map(\.title)
     }
@@ -168,6 +170,7 @@ struct ImageEditorProjectDocument: Codable {
         document.isGridVisible = isGridVisible ?? false
         document.isGridSnappingEnabled = isGridSnappingEnabled ?? false
         document.gridSpacing = max(4, min(512, gridSpacing ?? 32))
+        document.designCanvasMetadata = designCanvasMetadata
         document.globalLightAngle = max(-180, min(180, globalLightAngle ?? -45))
         document.history = historyTitles.isEmpty
             ? [ImageEditorHistoryEntry(title: L10n.text("imageEditor.history.projectOpen"))]
@@ -896,6 +899,9 @@ extension ImageEditorViewModel {
         let decoder = JSONDecoder()
         let project = try decoder.decode(ImageEditorProjectDocument.self, from: data)
         document = try project.restoredDocument()
+        if let metadata = document.designCanvasMetadata {
+            exportSettings.scale = Double(metadata.exportScale)
+        }
         undoStack.removeAll()
         redoStack.removeAll()
         historySnapshots.removeAll()

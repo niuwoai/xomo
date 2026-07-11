@@ -3747,6 +3747,7 @@ struct ImageEditorDocument {
     var isGridVisible: Bool
     var isGridSnappingEnabled: Bool
     var gridSpacing: CGFloat
+    var designCanvasMetadata: XomoDesignCanvasMetadata?
     var globalLightAngle: CGFloat
     var history: [ImageEditorHistoryEntry]
 
@@ -3777,6 +3778,7 @@ struct ImageEditorDocument {
         isGridVisible = false
         isGridSnappingEnabled = false
         gridSpacing = 32
+        designCanvasMetadata = nil
         globalLightAngle = -45
         self.history = [
             ImageEditorHistoryEntry(title: L10n.text("imageEditor.history.open"))

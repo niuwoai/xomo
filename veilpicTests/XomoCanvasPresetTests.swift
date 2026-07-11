@@ -43,5 +43,27 @@ struct XomoCanvasPresetTests {
         #expect(viewModel.zoom == 1)
         #expect(viewModel.document.layers.count == 2)
         #expect(viewModel.exportSettings.scale == 3)
+        #expect(viewModel.document.designCanvasMetadata?.preset == .phonePortrait)
+        #expect(viewModel.document.designCanvasMetadata?.exportScale == 3)
+    }
+
+    @MainActor
+    @Test func projectRoundTripPreservesDesignCanvasMetadata() throws {
+        let image = NSImage.transparent(size: CGSize(width: 20, height: 20))
+        let viewModel = ImageEditorViewModel(sourceName: "source", image: image) { _ in }
+        var draft = XomoCanvasDraft(preset: .socialBanner)
+        draft.background = .transparent
+        viewModel.createCanvas(from: draft)
+
+        let project = try ImageEditorProjectDocument(document: viewModel.document)
+        let restored = try project.restoredDocument()
+
+        #expect(restored.canvasSize == CGSize(width: 1500, height: 500))
+        #expect(restored.isGridVisible)
+        #expect(restored.isGridSnappingEnabled)
+        #expect(restored.gridSpacing == 8)
+        #expect(restored.designCanvasMetadata?.preset == .socialBanner)
+        #expect(restored.designCanvasMetadata?.background == .transparent)
+        #expect(restored.designCanvasMetadata?.exportScale == 1)
     }
 }

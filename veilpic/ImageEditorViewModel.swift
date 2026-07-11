@@ -298,6 +298,7 @@ final class ImageEditorViewModel: ObservableObject {
         newDocument.isGridVisible = true
         newDocument.isGridSnappingEnabled = true
         newDocument.gridSpacing = XomoCanvasDraft.defaultGridSpacing
+        newDocument.designCanvasMetadata = XomoDesignCanvasMetadata(draft: draft)
 
         document = newDocument
         cachedCurrentImage = canvas
