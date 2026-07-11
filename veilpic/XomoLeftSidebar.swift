@@ -116,6 +116,14 @@ struct XomoComponentLibraryPanel: View {
                     .accessibilityIdentifier("xomo-component-theme-keep-local")
                 }
 
+                Button(L10n.text("xomo.themeSample.insert")) {
+                    viewModel.insertXomoThemeSample()
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+                .focusable(false)
+                .accessibilityIdentifier("xomo-component-theme-sample-insert")
+
                 LazyVGrid(
                     columns: Array(repeating: GridItem(.flexible(minimum: 72), spacing: 8), count: 2),
                     spacing: 8

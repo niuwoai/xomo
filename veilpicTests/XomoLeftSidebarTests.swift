@@ -146,6 +146,29 @@ struct XomoLeftSidebarTests {
         #expect(background.shapeContent?.fillColor.isEqual(XomoComponentTheme.denseAdmin.tokens.accent) == true)
     }
 
+    @Test func eachThemeCanInsertAnEditablePageSample() throws {
+        let image = NSImage.transparent(size: CGSize(width: 1440, height: 900))
+        let expectedComponents: [XomoThemeSample: Set<XomoComponentKind>] = [
+            .nativeWorkspace: [.topNavigation, .sideNavigation, .card, .input, .selectInput, .button],
+            .softMobileProfile: [.avatar, .card, .input, .searchInput, .button, .secondaryButton],
+            .denseAdminSettings: [.topNavigation, .sideNavigation, .card, .searchInput, .selectInput, .button]
+        ]
+
+        for sample in XomoThemeSample.allCases {
+            let viewModel = ImageEditorViewModel(sourceName: sample.rawValue, image: image) { _ in }
+            viewModel.xomoComponentTheme = sample.theme
+            viewModel.insertXomoThemeSample()
+
+            let groups = viewModel.document.layers.filter { $0.isGroup }
+            #expect(groups.count == 6)
+            #expect(Set(groups.compactMap(\.xomoComponentInstance?.kind)) == expectedComponents[sample])
+            #expect(groups.allSatisfy { $0.xomoComponentInstance?.theme == sample.theme })
+            #expect(groups.allSatisfy { group in
+                viewModel.document.layers.contains { $0.groupID == group.id }
+            })
+        }
+    }
+
     @Test func switchingSidebarDoesNotChangeSelectedTool() {
         let image = NSImage.transparent(size: CGSize(width: 20, height: 20))
         let viewModel = ImageEditorViewModel(sourceName: "source", image: image) { _ in }

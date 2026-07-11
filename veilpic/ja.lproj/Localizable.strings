@@ -2418,3 +2418,8 @@
 "xomo.theme.status.applied" = "%@ に %@ テーマを適用しました";
 "xomo.theme.status.overrideKept" = "%d 個のレイヤーでローカルスタイルを保持しました";
 "xomo.theme.status.overrideCleared" = "%d 個のレイヤーのローカルスタイルを解除しました";
+"xomo.themeSample.insert" = "現在のテーマのページ例を挿入";
+"xomo.themeSample.nativeWorkspace" = "ネイティブワークスペース";
+"xomo.themeSample.softMobileProfile" = "ソフトモバイルプロフィール";
+"xomo.themeSample.denseAdminSettings" = "高密度管理設定";
+"xomo.themeSample.status.inserted" = "%@ ページ例を挿入しました";

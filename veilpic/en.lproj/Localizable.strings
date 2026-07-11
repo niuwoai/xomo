@@ -2418,3 +2418,8 @@
 "xomo.theme.status.applied" = "Applied %@ theme to %@";
 "xomo.theme.status.overrideKept" = "Kept local style on %d layer(s)";
 "xomo.theme.status.overrideCleared" = "Cleared local style on %d layer(s)";
+"xomo.themeSample.insert" = "Insert theme page sample";
+"xomo.themeSample.nativeWorkspace" = "Native workspace";
+"xomo.themeSample.softMobileProfile" = "Soft mobile profile";
+"xomo.themeSample.denseAdminSettings" = "Dense admin settings";
+"xomo.themeSample.status.inserted" = "Inserted %@ page sample";

@@ -79,3 +79,39 @@ struct XomoComponentInstance: Codable, Equatable {
     var kind: XomoComponentKind
     var theme: XomoComponentTheme
 }
+
+enum XomoThemeSample: CaseIterable, Identifiable {
+    case nativeWorkspace
+    case softMobileProfile
+    case denseAdminSettings
+
+    var id: String { rawValue }
+
+    var rawValue: String {
+        switch self {
+        case .nativeWorkspace: "nativeWorkspace"
+        case .softMobileProfile: "softMobileProfile"
+        case .denseAdminSettings: "denseAdminSettings"
+        }
+    }
+
+    var theme: XomoComponentTheme {
+        switch self {
+        case .nativeWorkspace: .native
+        case .softMobileProfile: .softMobile
+        case .denseAdminSettings: .denseAdmin
+        }
+    }
+
+    var title: String {
+        L10n.text("xomo.themeSample.\(rawValue)")
+    }
+
+    static func sample(for theme: XomoComponentTheme) -> Self {
+        switch theme {
+        case .native: .nativeWorkspace
+        case .softMobile: .softMobileProfile
+        case .denseAdmin: .denseAdminSettings
+        }
+    }
+}

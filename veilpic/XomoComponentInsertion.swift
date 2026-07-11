@@ -15,6 +15,11 @@ private enum XomoButtonComponentStyle {
     static let strokeWidth: CGFloat = 1
 }
 
+private struct XomoThemeSampleItem {
+    let component: XomoComponentKind
+    let relativeOrigin: CGPoint
+}
+
 private enum XomoButtonVariant: Equatable {
     case primary
     case secondary
@@ -271,6 +276,14 @@ enum XomoComponentKind: String, CaseIterable, Identifiable, Codable {
 }
 
 extension ImageEditorViewModel {
+    func insertXomoThemeSample() {
+        let sample = XomoThemeSample.sample(for: xomoComponentTheme)
+        xomoThemeSampleItems(for: sample).forEach { item in
+            insertXomoComponent(item.component, at: xomoThemeSampleOrigin(for: item.relativeOrigin))
+        }
+        statusText = L10n.format("xomo.themeSample.status.inserted", sample.title)
+    }
+
     func insertXomoComponent(_ component: XomoComponentKind, at proposedOrigin: CGPoint? = nil) {
         switch component {
         case .button:
@@ -1356,6 +1369,45 @@ extension ImageEditorViewModel {
             return kind
         }
         return XomoComponentKind.allCases.first { $0.title == group.name }
+    }
+
+    private func xomoThemeSampleItems(for sample: XomoThemeSample) -> [XomoThemeSampleItem] {
+        switch sample {
+        case .nativeWorkspace:
+            [
+                XomoThemeSampleItem(component: .topNavigation, relativeOrigin: CGPoint(x: 0, y: 0)),
+                XomoThemeSampleItem(component: .sideNavigation, relativeOrigin: CGPoint(x: 0, y: 0.08)),
+                XomoThemeSampleItem(component: .card, relativeOrigin: CGPoint(x: 0.34, y: 0.18)),
+                XomoThemeSampleItem(component: .input, relativeOrigin: CGPoint(x: 0.38, y: 0.43)),
+                XomoThemeSampleItem(component: .selectInput, relativeOrigin: CGPoint(x: 0.38, y: 0.55)),
+                XomoThemeSampleItem(component: .button, relativeOrigin: CGPoint(x: 0.38, y: 0.67))
+            ]
+        case .softMobileProfile:
+            [
+                XomoThemeSampleItem(component: .avatar, relativeOrigin: CGPoint(x: 0.42, y: 0.08)),
+                XomoThemeSampleItem(component: .card, relativeOrigin: CGPoint(x: 0.14, y: 0.22)),
+                XomoThemeSampleItem(component: .input, relativeOrigin: CGPoint(x: 0.15, y: 0.43)),
+                XomoThemeSampleItem(component: .searchInput, relativeOrigin: CGPoint(x: 0.15, y: 0.54)),
+                XomoThemeSampleItem(component: .button, relativeOrigin: CGPoint(x: 0.15, y: 0.66)),
+                XomoThemeSampleItem(component: .secondaryButton, relativeOrigin: CGPoint(x: 0.15, y: 0.76))
+            ]
+        case .denseAdminSettings:
+            [
+                XomoThemeSampleItem(component: .topNavigation, relativeOrigin: CGPoint(x: 0, y: 0)),
+                XomoThemeSampleItem(component: .sideNavigation, relativeOrigin: CGPoint(x: 0, y: 0.08)),
+                XomoThemeSampleItem(component: .card, relativeOrigin: CGPoint(x: 0.34, y: 0.15)),
+                XomoThemeSampleItem(component: .searchInput, relativeOrigin: CGPoint(x: 0.38, y: 0.39)),
+                XomoThemeSampleItem(component: .selectInput, relativeOrigin: CGPoint(x: 0.38, y: 0.51)),
+                XomoThemeSampleItem(component: .button, relativeOrigin: CGPoint(x: 0.38, y: 0.63))
+            ]
+        }
+    }
+
+    private func xomoThemeSampleOrigin(for relativeOrigin: CGPoint) -> CGPoint {
+        CGPoint(
+            x: document.canvasSize.width * relativeOrigin.x,
+            y: document.canvasSize.height * relativeOrigin.y
+        )
     }
 
     private func applyXomoTheme(

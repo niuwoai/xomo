@@ -2418,3 +2418,8 @@
 "xomo.theme.status.applied" = "已将 %@ 应用为 %@ 主题";
 "xomo.theme.status.overrideKept" = "已保留 %d 个图层的局部样式";
 "xomo.theme.status.overrideCleared" = "已清除 %d 个图层的局部样式";
+"xomo.themeSample.insert" = "插入当前主题页面示例";
+"xomo.themeSample.nativeWorkspace" = "原生工作台";
+"xomo.themeSample.softMobileProfile" = "柔和移动端个人页";
+"xomo.themeSample.denseAdminSettings" = "高密度后台设置页";
+"xomo.themeSample.status.inserted" = "已插入“%@”页面示例";
