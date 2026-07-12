@@ -73,7 +73,8 @@ extension ImageEditorSelection {
     func quickMaskOverlayImage(
         canvasSize: CGSize,
         color: NSColor = .systemRed,
-        opacity: CGFloat = 0.45
+        opacity: CGFloat = 0.5,
+        target: ImageEditorQuickMaskOverlayTarget = .maskedAreas
     ) -> NSImage? {
         guard let mask = rasterizedMask(canvasSize: canvasSize),
               mask.alpha.count == mask.width * mask.height,
@@ -86,7 +87,10 @@ extension ImageEditorSelection {
         var pixels = [UInt8](repeating: 0, count: bytesPerRow * mask.height)
 
         for index in mask.alpha.indices {
-            let overlayAlpha = CGFloat(UInt8.max - mask.alpha[index]) / CGFloat(UInt8.max) * clampedOpacity
+            let sourceAlpha = target == .maskedAreas
+                ? UInt8.max - mask.alpha[index]
+                : mask.alpha[index]
+            let overlayAlpha = CGFloat(sourceAlpha) / CGFloat(UInt8.max) * clampedOpacity
             let alphaByte = UInt8((overlayAlpha * CGFloat(UInt8.max)).rounded())
             let offset = index * bytesPerPixel
             pixels[offset] = UInt8((rgb.redComponent * CGFloat(alphaByte)).rounded())

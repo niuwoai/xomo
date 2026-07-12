@@ -2479,3 +2479,11 @@
 "xomo.instance.status.linked" = "%d 個の %@ インスタンスをリンクしました";
 "xomo.instance.status.synced" = "%d 個の %@ インスタンスを同期しました";
 "xomo.instance.status.detached" = "%d 個のコンポーネントインスタンスを分離しました";
+"imageEditor.action.quickMaskOptions" = "クイックマスクオプション";
+"imageEditor.quickMask.optionsTitle" = "クイックマスクオプション";
+"imageEditor.quickMask.targetLabel" = "カラー表示";
+"imageEditor.quickMask.target.maskedAreas" = "マスク領域";
+"imageEditor.quickMask.target.selectedAreas" = "選択領域";
+"imageEditor.quickMask.color" = "カラー";
+"imageEditor.quickMask.opacity" = "不透明度";
+"imageEditor.status.quickMaskOptionsUpdated" = "クイックマスクの表示オプションを更新しました";

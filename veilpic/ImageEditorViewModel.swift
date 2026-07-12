@@ -62,6 +62,9 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var selectionMode: ImageEditorSelectionMode = .replace
     @Published var isQuickMaskMode = false
     @Published private(set) var quickMaskOverlayImage: NSImage?
+    @Published private(set) var quickMaskOverlayTarget: ImageEditorQuickMaskOverlayTarget
+    @Published private(set) var quickMaskOverlayColor: NSColor
+    @Published private(set) var quickMaskOverlayOpacity: CGFloat
     @Published var isColorRangeSheetPresented = false
     @Published var colorRangeColor: NSColor = .systemRed
     @Published var colorRangeIncludeColors: [NSColor] = [.systemRed]
@@ -277,10 +280,21 @@ final class ImageEditorViewModel: ObservableObject {
     var copiedLayerStyle: ImageEditorLayerStyle?
     var copiedLayerStyleSourceID: UUID?
     private let onApply: (NSImage) -> Void
+    private let workspacePreferencesDefaults: UserDefaults
 
-    init(sourceName: String, image: NSImage, onApply: @escaping (NSImage) -> Void) {
+    init(
+        sourceName: String,
+        image: NSImage,
+        preferencesDefaults: UserDefaults = .standard,
+        onApply: @escaping (NSImage) -> Void
+    ) {
+        let quickMaskPreferences = ImageEditorQuickMaskPreferences.load(from: preferencesDefaults)
         document = ImageEditorDocument(sourceName: sourceName, image: image)
         self.onApply = onApply
+        workspacePreferencesDefaults = preferencesDefaults
+        quickMaskOverlayTarget = quickMaskPreferences.target
+        quickMaskOverlayColor = quickMaskPreferences.color.nsColor
+        quickMaskOverlayOpacity = CGFloat(quickMaskPreferences.opacity)
         cachedCurrentImage = document.layers.first?.image
         syncSizeControlsFromDocument()
         recordCurrentHistorySnapshot()
@@ -290,10 +304,16 @@ final class ImageEditorViewModel: ObservableObject {
     init(
         document: ImageEditorDocument,
         initialCompositeImage: NSImage? = nil,
+        preferencesDefaults: UserDefaults = .standard,
         onApply: @escaping (NSImage) -> Void
     ) {
+        let quickMaskPreferences = ImageEditorQuickMaskPreferences.load(from: preferencesDefaults)
         self.document = document
         self.onApply = onApply
+        workspacePreferencesDefaults = preferencesDefaults
+        quickMaskOverlayTarget = quickMaskPreferences.target
+        quickMaskOverlayColor = quickMaskPreferences.color.nsColor
+        quickMaskOverlayOpacity = CGFloat(quickMaskPreferences.opacity)
         cachedCurrentImage = initialCompositeImage
         syncSizeControlsFromDocument()
         recordCurrentHistorySnapshot()
@@ -1845,12 +1865,56 @@ final class ImageEditorViewModel: ObservableObject {
         )
     }
 
+    func setQuickMaskOverlayTarget(_ target: ImageEditorQuickMaskOverlayTarget) {
+        guard quickMaskOverlayTarget != target else { return }
+        quickMaskOverlayTarget = target
+        persistQuickMaskPreferences()
+        refreshQuickMaskOverlay()
+        statusText = L10n.text("imageEditor.status.quickMaskOptionsUpdated")
+    }
+
+    func setQuickMaskOverlayColor(_ color: NSColor) {
+        let normalizedColor = ImageEditorProjectColor(color: color).nsColor
+        guard quickMaskOverlayColor != normalizedColor else { return }
+        quickMaskOverlayColor = normalizedColor
+        persistQuickMaskPreferences()
+        refreshQuickMaskOverlay()
+        statusText = L10n.text("imageEditor.status.quickMaskOptionsUpdated")
+    }
+
+    func setQuickMaskOverlayOpacity(_ opacity: CGFloat) {
+        let normalizedOpacity = CGFloat(
+            max(
+                ImageEditorQuickMaskPreferences.minimumOpacity,
+                min(ImageEditorQuickMaskPreferences.maximumOpacity, Double(opacity))
+            )
+        )
+        guard quickMaskOverlayOpacity != normalizedOpacity else { return }
+        quickMaskOverlayOpacity = normalizedOpacity
+        persistQuickMaskPreferences()
+        refreshQuickMaskOverlay()
+        statusText = L10n.text("imageEditor.status.quickMaskOptionsUpdated")
+    }
+
+    private func persistQuickMaskPreferences() {
+        ImageEditorQuickMaskPreferences(
+            target: quickMaskOverlayTarget,
+            color: ImageEditorProjectColor(color: quickMaskOverlayColor),
+            opacity: Double(quickMaskOverlayOpacity)
+        ).save(to: workspacePreferencesDefaults)
+    }
+
     private func refreshQuickMaskOverlay() {
         guard isQuickMaskMode, let selection = document.selection else {
             quickMaskOverlayImage = nil
             return
         }
-        quickMaskOverlayImage = selection.quickMaskOverlayImage(canvasSize: document.canvasSize)
+        quickMaskOverlayImage = selection.quickMaskOverlayImage(
+            canvasSize: document.canvasSize,
+            color: quickMaskOverlayColor,
+            opacity: quickMaskOverlayOpacity,
+            target: quickMaskOverlayTarget
+        )
     }
 
     func invertSelection() {
