@@ -230,6 +230,29 @@ struct XomoAutomationTests {
         #expect(viewModel.cloneStampSampleSource == .allVisible)
     }
 
+    @Test func registryConfiguresHealingBrushSourceAndSamplingOptions() {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("setHealingSource"),
+                "x": .number(21),
+                "y": .number(34),
+                "aligned": .bool(false),
+                "sampleSource": .string("currentAndBelow")
+            ]
+        ))
+
+        #expect(response.ok)
+        #expect(viewModel.healingSourcePoint == CGPoint(x: 21, y: 34))
+        #expect(!viewModel.isHealingBrushAligned)
+        #expect(viewModel.healingBrushSampleSource == .currentAndBelow)
+    }
+
     private func request(
         operation: String,
         name: String? = nil,

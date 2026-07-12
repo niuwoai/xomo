@@ -209,39 +209,25 @@ struct ImageEditorView: View {
             }
 
             if viewModel.selectedTool == .cloneStamp {
-                Toggle(
-                    L10n.text("imageEditor.option.cloneAligned"),
-                    isOn: $viewModel.isCloneStampAligned
-                )
-                .toggleStyle(.checkbox)
-                .focusable(false)
-                .xomoFocusEffectDisabled()
-                .accessibilityIdentifier("image-editor-clone-aligned")
-
-                Picker(
-                    L10n.text("imageEditor.option.cloneSampleSource"),
-                    selection: $viewModel.cloneStampSampleSource
+                sampledBrushOptions(
+                    isAligned: $viewModel.isCloneStampAligned,
+                    sampleSource: $viewModel.cloneStampSampleSource,
+                    sourceActionKey: "imageEditor.action.cloneSourcePick",
+                    identifierPrefix: "image-editor-clone"
                 ) {
-                    ForEach(ImageEditorCloneSampleSource.allCases) { source in
-                        Text(source.title).tag(source)
-                    }
-                }
-                .labelsHidden()
-                .pickerStyle(.menu)
-                .environment(\.colorScheme, .dark)
-                .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
-                .frame(width: 150)
-                .focusable(false)
-                .xomoFocusEffectDisabled()
-                .accessibilityLabel(L10n.text("imageEditor.option.cloneSampleSource"))
-                .accessibilityIdentifier("image-editor-clone-sample-source")
-
-                Button(L10n.text("imageEditor.action.cloneSourcePick")) {
                     viewModel.beginSettingCloneSource()
                 }
-                .buttonStyle(EditorTextButtonStyle())
-                .focusable(false)
-                .help(L10n.text("imageEditor.action.cloneSourcePick"))
+            }
+
+            if viewModel.selectedTool == .healingBrush {
+                sampledBrushOptions(
+                    isAligned: $viewModel.isHealingBrushAligned,
+                    sampleSource: $viewModel.healingBrushSampleSource,
+                    sourceActionKey: "imageEditor.action.healingSourcePick",
+                    identifierPrefix: "image-editor-healing"
+                ) {
+                    viewModel.beginSettingHealingSource()
+                }
             }
 
             if viewModel.selectedTool == .colorSampler {
@@ -313,6 +299,42 @@ struct ImageEditorView: View {
         .focusable(false)
         .frame(width: 226)
         .help(L10n.text("imageEditor.option.selectionMode"))
+    }
+
+    @ViewBuilder
+    private func sampledBrushOptions(
+        isAligned: Binding<Bool>,
+        sampleSource: Binding<ImageEditorCloneSampleSource>,
+        sourceActionKey: String,
+        identifierPrefix: String,
+        beginSettingSource: @escaping () -> Void
+    ) -> some View {
+        Toggle(L10n.text("imageEditor.option.cloneAligned"), isOn: isAligned)
+            .toggleStyle(.checkbox)
+            .focusable(false)
+            .xomoFocusEffectDisabled()
+            .accessibilityIdentifier("\(identifierPrefix)-aligned")
+
+        Picker(L10n.text("imageEditor.option.cloneSampleSource"), selection: sampleSource) {
+            ForEach(ImageEditorCloneSampleSource.allCases) { source in
+                Text(source.title).tag(source)
+            }
+        }
+        .labelsHidden()
+        .pickerStyle(.menu)
+        .environment(\.colorScheme, .dark)
+        .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+        .frame(width: 150)
+        .focusable(false)
+        .xomoFocusEffectDisabled()
+        .accessibilityLabel(L10n.text("imageEditor.option.cloneSampleSource"))
+        .accessibilityIdentifier("\(identifierPrefix)-sample-source")
+
+        Button(L10n.text(sourceActionKey), action: beginSettingSource)
+            .buttonStyle(EditorTextButtonStyle())
+            .focusable(false)
+            .xomoFocusEffectDisabled()
+            .help(L10n.text(sourceActionKey))
     }
 
     private var marqueeShapePicker: some View {
@@ -956,6 +978,7 @@ struct ImageEditorView: View {
                     quickMaskOverlay(in: geometry.size)
                     selectionOverlay(in: geometry.size)
                     colorSamplerOverlay(in: geometry.size)
+                    sampledBrushSourceOverlay(in: geometry.size)
                     layerTransformOverlay(in: geometry.size)
                     dragOverlay(in: geometry.size)
                     rulerOverlay(in: geometry.size)
@@ -1337,6 +1360,39 @@ struct ImageEditorView: View {
         return "\(index)  R\(Int((rgb.redComponent * 255).rounded())) G\(Int((rgb.greenComponent * 255).rounded())) B\(Int((rgb.blueComponent * 255).rounded())) A\(Int((rgb.alphaComponent * 255).rounded()))"
     }
 
+    @ViewBuilder
+    private func sampledBrushSourceOverlay(in size: CGSize) -> some View {
+        if let sourcePoint = sampledBrushSourcePoint {
+            let point = viewPoint(from: sourcePoint, in: size)
+            ZStack {
+                Circle()
+                    .stroke(Color.white.opacity(0.92), lineWidth: 1)
+                    .frame(width: 15, height: 15)
+                Rectangle()
+                    .fill(Color.white.opacity(0.92))
+                    .frame(width: 21, height: 1)
+                Rectangle()
+                    .fill(Color.white.opacity(0.92))
+                    .frame(width: 1, height: 21)
+            }
+            .shadow(color: .black.opacity(0.85), radius: 1)
+            .position(point)
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+        }
+    }
+
+    private var sampledBrushSourcePoint: CGPoint? {
+        switch viewModel.selectedTool {
+        case .cloneStamp:
+            return viewModel.cloneSourcePoint
+        case .healingBrush:
+            return viewModel.healingSourcePoint
+        default:
+            return nil
+        }
+    }
+
     private func canvasGesture(in size: CGSize) -> some Gesture {
         DragGesture(minimumDistance: 0)
             .onChanged { value in
@@ -1468,7 +1524,12 @@ struct ImageEditorView: View {
                 case .smudge:
                     viewModel.smudgeBrush(points: dragPoints)
                 case .healingBrush:
-                    viewModel.healingBrush(points: dragPoints)
+                    if viewModel.isSettingHealingSource || NSEvent.modifierFlags.contains(.option),
+                       let endImagePoint {
+                        viewModel.setHealingSource(at: endImagePoint)
+                    } else {
+                        viewModel.healingBrush(points: dragPoints)
+                    }
                 case .patchTool:
                     viewModel.patchSelection(from: dragStart, to: endImagePoint)
                 case .redEye:

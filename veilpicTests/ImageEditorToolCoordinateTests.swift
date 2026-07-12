@@ -200,6 +200,7 @@ struct ImageEditorToolCoordinateTests {
         let healing = editableViewModel(image: blemish)
         healing.brushSize = 14
         healing.opacity = 1
+        healing.setHealingSource(at: CGPoint(x: 16, y: 14))
         healing.healingBrush(points: [CGPoint(x: 38, y: 14), CGPoint(x: 50, y: 14)])
         let healedTop = try color(healing, at: CGPoint(x: 44, y: 14))
         let healingMirror = try color(healing, at: CGPoint(x: 44, y: 58))

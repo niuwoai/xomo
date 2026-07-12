@@ -20,7 +20,7 @@ enum ImageEditorCloneSampleSource: String, CaseIterable, Identifiable {
     }
 }
 
-struct ImageEditorCloneStampOffsetResolution: Equatable {
+struct ImageEditorSampledBrushOffsetResolution: Equatable {
     var canvasOffset: CGSize
     var nextAlignedOffset: CGSize?
 
@@ -29,43 +29,44 @@ struct ImageEditorCloneStampOffsetResolution: Equatable {
         destinationStart: CGPoint,
         isAligned: Bool,
         alignedOffset: CGSize?
-    ) -> ImageEditorCloneStampOffsetResolution {
+    ) -> ImageEditorSampledBrushOffsetResolution {
         let initialOffset = CGSize(
             width: sourcePoint.x - destinationStart.x,
             height: sourcePoint.y - destinationStart.y
         )
         let resolvedOffset = isAligned ? (alignedOffset ?? initialOffset) : initialOffset
-        return ImageEditorCloneStampOffsetResolution(
+        return ImageEditorSampledBrushOffsetResolution(
             canvasOffset: resolvedOffset,
             nextAlignedOffset: isAligned ? resolvedOffset : nil
         )
     }
 }
 
-struct ImageEditorCloneStampSamplingInput {
+struct ImageEditorSampledBrushInput {
     var image: NSImage
     var localOffset: CGSize
 }
 
 @MainActor
 extension ImageEditorViewModel {
-    func cloneStampSamplingInput(
+    func sampledBrushInput(
         for layer: ImageEditorLayer,
-        canvasOffset: CGSize
-    ) -> ImageEditorCloneStampSamplingInput? {
-        switch cloneStampSampleSource {
+        canvasOffset: CGSize,
+        sampleSource: ImageEditorCloneSampleSource
+    ) -> ImageEditorSampledBrushInput? {
+        switch sampleSource {
         case .currentLayer:
             let localOffset = CGSize(
                 width: canvasOffset.width / max(layer.frame.width, 1) * layer.image.size.width,
                 height: canvasOffset.height / max(layer.frame.height, 1) * layer.image.size.height
             )
-            return ImageEditorCloneStampSamplingInput(
+            return ImageEditorSampledBrushInput(
                 image: layer.image.normalizedBitmapImage(),
                 localOffset: localOffset
             )
         case .currentAndBelow, .allVisible:
             let sourceCanvas: NSImage
-            if cloneStampSampleSource == .currentAndBelow {
+            if sampleSource == .currentAndBelow {
                 guard let selectedIndex = document.selectedLayerIndex else { return nil }
                 let includedIDs = Set(document.layers.prefix(selectedIndex + 1).map(\.id))
                 sourceCanvas = document.compositedImage(includingOnly: includedIDs)
@@ -84,7 +85,7 @@ extension ImageEditorViewModel {
                     fraction: 1
                 )
             }) else { return nil }
-            return ImageEditorCloneStampSamplingInput(
+            return ImageEditorSampledBrushInput(
                 image: localImage.normalizedBitmapImage(),
                 localOffset: .zero
             )

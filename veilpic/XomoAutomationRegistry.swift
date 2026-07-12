@@ -1318,6 +1318,19 @@ final class XomoAutomationRegistry {
                 viewModel.cloneStampSampleSource = sampleSource
             }
         }
+        if action == "setHealingSource" || action == "healing" {
+            if let aligned = arguments["aligned"]?.boolValue {
+                viewModel.isHealingBrushAligned = aligned
+            }
+            if let source = arguments["sampleSource"]?.stringValue {
+                guard let sampleSource = ImageEditorCloneSampleSource(rawValue: source) else {
+                    throw XomoAutomationCallError.invalidArgument(
+                        "Healing sampleSource must be currentLayer, currentAndBelow, or allVisible"
+                    )
+                }
+                viewModel.healingBrushSampleSource = sampleSource
+            }
+        }
         if action == "paintBucket" {
             viewModel.paintBucketFill(at: try requiredPoint(arguments))
             return
@@ -1328,6 +1341,10 @@ final class XomoAutomationRegistry {
         }
         if action == "setCloneSource" {
             viewModel.setCloneSource(at: try requiredPoint(arguments))
+            return
+        }
+        if action == "setHealingSource" {
+            viewModel.setHealingSource(at: try requiredPoint(arguments))
             return
         }
         let points = try requiredPoints("points", in: arguments)
@@ -1871,14 +1888,14 @@ private extension XomoAutomationRegistry {
         ], required: ["points"]),
         tool("xomo.paint.gradient", "Paint a gradient between exactly two canvas points.", ["points": pointsSchema], required: ["points"]),
         tool("xomo.paint.special", "Use clone, tone, sponge, blur, sharpen, smudge, healing, red-eye, or paint-bucket tools.", [
-            "action": XomoAutomationSchema.string(description: "Paint action", values: ["setCloneSource", "cloneStamp", "dodge", "burn", "sponge", "blur", "sharpen", "smudge", "healing", "redEye", "paintBucket"]),
+            "action": XomoAutomationSchema.string(description: "Paint action", values: ["setCloneSource", "cloneStamp", "setHealingSource", "healing", "dodge", "burn", "sponge", "blur", "sharpen", "smudge", "redEye", "paintBucket"]),
             "points": pointsSchema,
             "x": XomoAutomationSchema.number(description: "Canvas x coordinate for point actions"),
             "y": XomoAutomationSchema.number(description: "Canvas y coordinate for point actions"),
             "size": XomoAutomationSchema.number(description: "Brush diameter"),
             "opacity": XomoAutomationSchema.number(description: "Brush opacity"),
-            "aligned": XomoAutomationSchema.boolean(description: "Keep the clone source offset aligned across strokes"),
-            "sampleSource": XomoAutomationSchema.string(description: "Clone sampling layer range", values: ["currentLayer", "currentAndBelow", "allVisible"])
+            "aligned": XomoAutomationSchema.boolean(description: "Keep the clone or healing source offset aligned across strokes"),
+            "sampleSource": XomoAutomationSchema.string(description: "Clone or healing sampling layer range", values: ["currentLayer", "currentAndBelow", "allVisible"])
         ], required: ["action"]),
         tool("xomo.shape.create", "Create an editable rectangle or ellipse shape layer.", [
             "kind": XomoAutomationSchema.string(description: "Shape kind", values: ["rectangle", "ellipse"]),

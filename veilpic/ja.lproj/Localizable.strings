@@ -2492,3 +2492,7 @@
 "imageEditor.cloneSampleSource.currentLayer" = "現在のレイヤー";
 "imageEditor.cloneSampleSource.currentAndBelow" = "現在以下";
 "imageEditor.cloneSampleSource.allVisible" = "すべての表示レイヤー";
+"imageEditor.action.healingSourcePick" = "修復ソースを設定";
+"imageEditor.status.healingSourceMissing" = "Option キーを押しながらクリックするか、修復ソースを設定してください";
+"imageEditor.status.healingSourceSet" = "修復ソースを設定しました";
+"imageEditor.status.healingSourcePending" = "キャンバスをクリックして修復ソースを設定してください";

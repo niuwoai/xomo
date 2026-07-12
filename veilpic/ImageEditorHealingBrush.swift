@@ -9,53 +9,56 @@ import AppKit
 import Foundation
 
 extension NSImage {
-    func withHealingBrush(points: [CGPoint], width: CGFloat, opacity: CGFloat) -> NSImage? {
+    func withHealingBrush(
+        points: [CGPoint],
+        sourceOffset: CGSize,
+        sourceImage: NSImage,
+        targetContextImage: NSImage,
+        width: CGFloat,
+        opacity: CGFloat,
+        hardness: CGFloat
+    ) -> NSImage? {
         guard points.count > 1 else { return nil }
-        guard let mask = healingStrokeMask(points: points, width: width) else { return nil }
-
         let pixelWidth = max(1, Int(size.width.rounded()))
         let pixelHeight = max(1, Int(size.height.rounded()))
-        let bytesPerPixel = 4
-        let bytesPerRow = pixelWidth * bytesPerPixel
-        guard var sourcePixels = healingRGBAPixels(width: pixelWidth, height: pixelHeight, bytesPerRow: bytesPerRow),
-              let maskPixels = mask.healingRGBAPixels(width: pixelWidth, height: pixelHeight, bytesPerRow: bytesPerRow)
-        else {
-            return nil
-        }
+        let bytesPerRow = pixelWidth * ImageEditorHealingBrushKernel.bytesPerPixel
+        guard let targetPixels = healingRGBAPixels(
+            width: pixelWidth,
+            height: pixelHeight,
+            bytesPerRow: bytesPerRow
+        ),
+        let sourcePixels = sourceImage.healingRGBAPixels(
+            width: pixelWidth,
+            height: pixelHeight,
+            bytesPerRow: bytesPerRow
+        ),
+        let targetContextPixels = targetContextImage.healingRGBAPixels(
+            width: pixelWidth,
+            height: pixelHeight,
+            bytesPerRow: bytesPerRow
+        ) else { return nil }
 
-        let maskAlpha = maskPixels.enumerated().compactMap { index, value -> UInt8? in
-            index % bytesPerPixel == 3 ? value : nil
-        }
-        let sampleOffsets = HealingBrushSampler.offsets(for: width)
-        let clampedOpacity = max(0, min(1, opacity))
-
-        for y in 0..<pixelHeight {
-            for x in 0..<pixelWidth {
-                let offset = y * bytesPerRow + x * bytesPerPixel
-                let strength = CGFloat(maskPixels[offset + 3]) / 255 * clampedOpacity
-                guard strength > 0 else { continue }
-
-                guard let sample = HealingBrushSampler.averageColor(
-                    aroundX: x,
-                    y: y,
-                    pixels: sourcePixels,
-                    maskAlpha: maskAlpha,
-                    width: pixelWidth,
-                    height: pixelHeight,
-                    bytesPerRow: bytesPerRow,
-                    offsets: sampleOffsets
-                ) else {
-                    continue
-                }
-
-                sourcePixels[offset] = HealingBrushSampler.blend(sourcePixels[offset], toward: sample.red, strength: strength)
-                sourcePixels[offset + 1] = HealingBrushSampler.blend(sourcePixels[offset + 1], toward: sample.green, strength: strength)
-                sourcePixels[offset + 2] = HealingBrushSampler.blend(sourcePixels[offset + 2], toward: sample.blue, strength: strength)
-            }
-        }
-
+        let maskAlpha = ImageEditorHealingBrushKernel.strokeAlpha(
+            width: pixelWidth,
+            height: pixelHeight,
+            points: points,
+            diameter: width,
+            hardness: hardness
+        )
+        let outputPixels = ImageEditorHealingBrushKernel.heal(
+            targetPixels: targetPixels,
+            targetContextPixels: targetContextPixels,
+            sourcePixels: sourcePixels,
+            maskAlpha: maskAlpha,
+            width: pixelWidth,
+            height: pixelHeight,
+            sourceOffset: sourceOffset,
+            destinationReference: ImageEditorHealingBrushKernel.strokeCenter(points),
+            brushDiameter: width,
+            opacity: opacity
+        )
         return NSImage.healingImage(
-            pixels: sourcePixels,
+            pixels: outputPixels,
             width: pixelWidth,
             height: pixelHeight,
             bytesPerRow: bytesPerRow,
@@ -63,26 +66,7 @@ extension NSImage {
         )
     }
 
-    private func healingStrokeMask(points: [CGPoint], width: CGFloat) -> NSImage? {
-        guard let first = points.first else { return nil }
-        let path = NSBezierPath()
-        path.lineJoinStyle = .round
-        path.lineCapStyle = .round
-        path.lineWidth = max(1, width)
-        path.move(to: first)
-        for point in points.dropFirst() {
-            path.line(to: point)
-        }
-
-        return NSImage.rendered(size: size) { _ in
-            NSGraphicsContext.current?.withImageEditorTopLeftCoordinates(height: size.height) {
-                NSColor.white.setStroke()
-                path.stroke()
-            }
-        }
-    }
-
-    private func healingRGBAPixels(width: Int, height: Int, bytesPerRow: Int) -> [UInt8]? {
+    fileprivate func healingRGBAPixels(width: Int, height: Int, bytesPerRow: Int) -> [UInt8]? {
         var pixels = [UInt8](repeating: 0, count: bytesPerRow * height)
         guard let cgImage = cgImage(forProposedRect: nil, context: nil, hints: nil),
               let context = CGContext(
@@ -94,10 +78,7 @@ extension NSImage {
                 space: CGColorSpaceCreateDeviceRGB(),
                 bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
               )
-        else {
-            return nil
-        }
-
+        else { return nil }
         context.interpolationQuality = .none
         context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
         return pixels
@@ -121,9 +102,7 @@ extension NSImage {
             bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
         ),
         let cgImage = context.makeImage()
-        else {
-            return nil
-        }
+        else { return nil }
 
         let image = NSImage(size: size)
         image.addRepresentation(NSBitmapImageRep(cgImage: cgImage))
@@ -131,75 +110,229 @@ extension NSImage {
     }
 }
 
-private struct HealingBrushColor {
-    let red: UInt8
-    let green: UInt8
-    let blue: UInt8
+struct ImageEditorHealingBrushColor: Equatable {
+    var red: CGFloat
+    var green: CGFloat
+    var blue: CGFloat
 }
 
-private enum HealingBrushSampler {
-    static func offsets(for brushWidth: CGFloat) -> [CGPoint] {
-        let innerRadius = max(2, Int((brushWidth * 0.55).rounded()))
-        let outerRadius = max(innerRadius + 2, Int((brushWidth * 1.45).rounded()))
-        let step = max(1, outerRadius / 18)
-        var offsets: [CGPoint] = []
+enum ImageEditorHealingBrushKernel {
+    static let bytesPerPixel = 4
 
-        for y in stride(from: -outerRadius, through: outerRadius, by: step) {
-            for x in stride(from: -outerRadius, through: outerRadius, by: step) {
-                let distanceSquared = x * x + y * y
-                guard distanceSquared >= innerRadius * innerRadius,
-                      distanceSquared <= outerRadius * outerRadius
-                else {
-                    continue
+    static func strokeAlpha(
+        width: Int,
+        height: Int,
+        points: [CGPoint],
+        diameter: CGFloat,
+        hardness: CGFloat
+    ) -> [UInt8] {
+        guard width > 0, height > 0, points.count > 1 else { return [] }
+        let radius = max(0.5, diameter / 2)
+        let innerRadius = radius * max(0, min(1, hardness))
+        var alpha = [UInt8](repeating: 0, count: width * height)
+
+        for (start, end) in zip(points, points.dropFirst()) {
+            let minX = max(0, Int(floor(min(start.x, end.x) - radius)))
+            let maxX = min(width - 1, Int(ceil(max(start.x, end.x) + radius)))
+            let minY = max(0, Int(floor(min(start.y, end.y) - radius)))
+            let maxY = min(height - 1, Int(ceil(max(start.y, end.y) + radius)))
+            guard minX <= maxX, minY <= maxY else { continue }
+
+            for y in minY...maxY {
+                for x in minX...maxX {
+                    let distance = distanceToSegment(
+                        point: CGPoint(x: CGFloat(x) + 0.5, y: CGFloat(y) + 0.5),
+                        start: start,
+                        end: end
+                    )
+                    let coverage = softCoverage(
+                        distance: distance,
+                        innerRadius: innerRadius,
+                        outerRadius: radius
+                    )
+                    let index = y * width + x
+                    alpha[index] = max(alpha[index], UInt8((coverage * 255).rounded()))
                 }
-                offsets.append(CGPoint(x: x, y: y))
             }
         }
-
-        return offsets
+        return alpha
     }
 
-    static func averageColor(
-        aroundX x: Int,
-        y: Int,
-        pixels: [UInt8],
+    static func heal(
+        targetPixels: [UInt8],
+        targetContextPixels: [UInt8],
+        sourcePixels: [UInt8],
         maskAlpha: [UInt8],
         width: Int,
         height: Int,
-        bytesPerRow: Int,
-        offsets: [CGPoint]
-    ) -> HealingBrushColor? {
-        var redTotal = 0
-        var greenTotal = 0
-        var blueTotal = 0
-        var count = 0
+        sourceOffset: CGSize,
+        destinationReference: CGPoint,
+        brushDiameter: CGFloat,
+        opacity: CGFloat
+    ) -> [UInt8] {
+        guard targetPixels.count == width * height * bytesPerPixel,
+              targetContextPixels.count == targetPixels.count,
+              sourcePixels.count == targetPixels.count,
+              maskAlpha.count == width * height
+        else { return targetPixels }
 
-        for offset in offsets {
-            let sampleX = x + Int(offset.x)
-            let sampleY = y + Int(offset.y)
-            guard sampleX >= 0, sampleY >= 0, sampleX < width, sampleY < height else { continue }
-            let maskIndex = sampleY * width + sampleX
-            guard maskAlpha[maskIndex] == 0 else { continue }
+        let sourceStart = CGPoint(
+            x: destinationReference.x + sourceOffset.width,
+            y: destinationReference.y + sourceOffset.height
+        )
+        let referenceRadius = max(2, Int((brushDiameter * 0.9).rounded()))
+        let targetReference = averageColor(
+            pixels: targetContextPixels,
+            width: width,
+            height: height,
+            center: destinationReference,
+            innerRadius: max(1, Int((brushDiameter * 0.55).rounded())),
+            outerRadius: referenceRadius
+        )
+        let sourceReference = averageColor(
+            pixels: sourcePixels,
+            width: width,
+            height: height,
+            center: sourceStart,
+            innerRadius: max(1, Int((brushDiameter * 0.55).rounded())),
+            outerRadius: referenceRadius
+        )
+        let colorDelta = ImageEditorHealingBrushColor(
+            red: (targetReference?.red ?? 0) - (sourceReference?.red ?? 0),
+            green: (targetReference?.green ?? 0) - (sourceReference?.green ?? 0),
+            blue: (targetReference?.blue ?? 0) - (sourceReference?.blue ?? 0)
+        )
 
-            let pixelOffset = sampleY * bytesPerRow + sampleX * 4
-            redTotal += Int(pixels[pixelOffset])
-            greenTotal += Int(pixels[pixelOffset + 1])
-            blueTotal += Int(pixels[pixelOffset + 2])
-            count += 1
+        let clampedOpacity = max(0, min(1, opacity))
+        let offsetX = Int(sourceOffset.width.rounded())
+        let offsetY = Int(sourceOffset.height.rounded())
+        var output = targetPixels
+
+        for y in 0..<height {
+            for x in 0..<width {
+                let maskIndex = y * width + x
+                let strength = CGFloat(maskAlpha[maskIndex]) / 255 * clampedOpacity
+                guard strength > 0 else { continue }
+                let sourceX = x + offsetX
+                let sourceY = y + offsetY
+                guard sourceX >= 0, sourceY >= 0, sourceX < width, sourceY < height else { continue }
+
+                let targetOffset = maskIndex * bytesPerPixel
+                let sourcePixelOffset = (sourceY * width + sourceX) * bytesPerPixel
+                let sourceAlpha = CGFloat(sourcePixels[sourcePixelOffset + 3]) / 255
+                guard sourceAlpha > 0 else { continue }
+                let effectiveSourceAlpha = sourceAlpha * strength
+                let targetAlpha = CGFloat(targetPixels[targetOffset + 3]) / 255
+                let remainingTarget = 1 - effectiveSourceAlpha
+                let outputAlpha = effectiveSourceAlpha + targetAlpha * remainingTarget
+
+                for channel in 0..<3 {
+                    let sourcePremultiplied = CGFloat(sourcePixels[sourcePixelOffset + channel]) / 255
+                    let sourceStraight = sourcePremultiplied / max(sourceAlpha, 0.0001)
+                    let delta: CGFloat
+                    switch channel {
+                    case 0: delta = colorDelta.red
+                    case 1: delta = colorDelta.green
+                    default: delta = colorDelta.blue
+                    }
+                    let adjustedSource = max(0, min(1, sourceStraight + delta))
+                    let targetPremultiplied = CGFloat(targetPixels[targetOffset + channel]) / 255
+                    let outputPremultiplied = adjustedSource * effectiveSourceAlpha
+                        + targetPremultiplied * remainingTarget
+                    output[targetOffset + channel] = byte(outputPremultiplied)
+                }
+                output[targetOffset + 3] = byte(outputAlpha)
+            }
         }
+        return output
+    }
 
-        guard count > 0 else { return nil }
-        return HealingBrushColor(
-            red: UInt8(redTotal / count),
-            green: UInt8(greenTotal / count),
-            blue: UInt8(blueTotal / count)
+    static func strokeCenter(_ points: [CGPoint]) -> CGPoint {
+        guard let first = points.first else { return .zero }
+        var minX = first.x
+        var maxX = first.x
+        var minY = first.y
+        var maxY = first.y
+        for point in points.dropFirst() {
+            minX = min(minX, point.x)
+            maxX = max(maxX, point.x)
+            minY = min(minY, point.y)
+            maxY = max(maxY, point.y)
+        }
+        return CGPoint(x: (minX + maxX) / 2, y: (minY + maxY) / 2)
+    }
+
+    static func averageColor(
+        pixels: [UInt8],
+        width: Int,
+        height: Int,
+        center: CGPoint,
+        innerRadius: Int,
+        outerRadius: Int
+    ) -> ImageEditorHealingBrushColor? {
+        let centerX = Int(center.x.rounded())
+        let centerY = Int(center.y.rounded())
+        var red: CGFloat = 0
+        var green: CGFloat = 0
+        var blue: CGFloat = 0
+        var weight: CGFloat = 0
+        let innerSquared = innerRadius * innerRadius
+        let outerSquared = outerRadius * outerRadius
+
+        for yOffset in -outerRadius...outerRadius {
+            for xOffset in -outerRadius...outerRadius {
+                let distanceSquared = xOffset * xOffset + yOffset * yOffset
+                guard distanceSquared >= innerSquared, distanceSquared <= outerSquared else { continue }
+                let x = centerX + xOffset
+                let y = centerY + yOffset
+                guard x >= 0, y >= 0, x < width, y < height else { continue }
+                let offset = (y * width + x) * bytesPerPixel
+                let alpha = CGFloat(pixels[offset + 3]) / 255
+                guard alpha > 0 else { continue }
+                red += CGFloat(pixels[offset]) / 255 / alpha
+                green += CGFloat(pixels[offset + 1]) / 255 / alpha
+                blue += CGFloat(pixels[offset + 2]) / 255 / alpha
+                weight += 1
+            }
+        }
+        guard weight > 0 else { return nil }
+        return ImageEditorHealingBrushColor(
+            red: red / weight,
+            green: green / weight,
+            blue: blue / weight
         )
     }
 
-    static func blend(_ source: UInt8, toward target: UInt8, strength: CGFloat) -> UInt8 {
-        let sourceValue = CGFloat(source)
-        let targetValue = CGFloat(target)
-        let blended = sourceValue + (targetValue - sourceValue) * max(0, min(1, strength))
-        return UInt8(max(0, min(255, blended.rounded())))
+    private static func softCoverage(
+        distance: CGFloat,
+        innerRadius: CGFloat,
+        outerRadius: CGFloat
+    ) -> CGFloat {
+        guard distance < outerRadius else { return 0 }
+        guard distance > innerRadius else { return 1 }
+        let span = max(0.0001, outerRadius - innerRadius)
+        let linear = max(0, min(1, (outerRadius - distance) / span))
+        return linear * linear * (3 - 2 * linear)
+    }
+
+    private static func distanceToSegment(
+        point: CGPoint,
+        start: CGPoint,
+        end: CGPoint
+    ) -> CGFloat {
+        let deltaX = end.x - start.x
+        let deltaY = end.y - start.y
+        let lengthSquared = deltaX * deltaX + deltaY * deltaY
+        guard lengthSquared > 0.0001 else {
+            return hypot(point.x - start.x, point.y - start.y)
+        }
+        let projection = ((point.x - start.x) * deltaX + (point.y - start.y) * deltaY) / lengthSquared
+        let clamped = max(0, min(1, projection))
+        let nearest = CGPoint(x: start.x + deltaX * clamped, y: start.y + deltaY * clamped)
+        return hypot(point.x - nearest.x, point.y - nearest.y)
+    }
+
+    private static func byte(_ value: CGFloat) -> UInt8 {
+        UInt8(max(0, min(255, (value * 255).rounded())))
     }
 }

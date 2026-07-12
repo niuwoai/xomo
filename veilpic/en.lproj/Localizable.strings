@@ -2492,3 +2492,7 @@
 "imageEditor.cloneSampleSource.currentLayer" = "Current Layer";
 "imageEditor.cloneSampleSource.currentAndBelow" = "Current & Below";
 "imageEditor.cloneSampleSource.allVisible" = "All Visible Layers";
+"imageEditor.action.healingSourcePick" = "Set Healing Source";
+"imageEditor.status.healingSourceMissing" = "Option-click or set a healing source first";
+"imageEditor.status.healingSourceSet" = "Healing source set";
+"imageEditor.status.healingSourcePending" = "Click the canvas to set the healing source";

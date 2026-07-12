@@ -13,7 +13,7 @@ import Testing
 @Suite(.serialized)
 struct ImageEditorCloneStampSamplingTests {
     @Test func offsetResolutionKeepsOrResetsTheSourceOffset() {
-        let firstAligned = ImageEditorCloneStampOffsetResolution.resolve(
+        let firstAligned = ImageEditorSampledBrushOffsetResolution.resolve(
             sourcePoint: CGPoint(x: 10, y: 12),
             destinationStart: CGPoint(x: 50, y: 20),
             isAligned: true,
@@ -22,7 +22,7 @@ struct ImageEditorCloneStampSamplingTests {
         #expect(firstAligned.canvasOffset == CGSize(width: -40, height: -8))
         #expect(firstAligned.nextAlignedOffset == firstAligned.canvasOffset)
 
-        let nextAligned = ImageEditorCloneStampOffsetResolution.resolve(
+        let nextAligned = ImageEditorSampledBrushOffsetResolution.resolve(
             sourcePoint: CGPoint(x: 10, y: 12),
             destinationStart: CGPoint(x: 70, y: 20),
             isAligned: true,
@@ -30,7 +30,7 @@ struct ImageEditorCloneStampSamplingTests {
         )
         #expect(nextAligned.canvasOffset == CGSize(width: -40, height: -8))
 
-        let nonAligned = ImageEditorCloneStampOffsetResolution.resolve(
+        let nonAligned = ImageEditorSampledBrushOffsetResolution.resolve(
             sourcePoint: CGPoint(x: 10, y: 12),
             destinationStart: CGPoint(x: 70, y: 20),
             isAligned: false,

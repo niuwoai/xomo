@@ -91,7 +91,7 @@ enum XomoToolCatalog {
         ("xomo.color.reset", "Reset foreground and background colors."),
         ("xomo.paint.stroke", "Paint a brush or eraser stroke from canvas points."),
         ("xomo.paint.gradient", "Paint a gradient between canvas points."),
-        ("xomo.paint.special", "Use clone with aligned and layer-range sampling options, tone, sponge, blur, sharpen, smudge, healing, red-eye, and paint-bucket tools."),
+        ("xomo.paint.special", "Use clone or healing with explicit source, aligned, and layer-range sampling options, plus tone, sponge, blur, sharpen, smudge, red-eye, and paint-bucket tools."),
         ("xomo.shape.create", "Create an editable rectangle or ellipse."),
         ("xomo.shape.get", "Inspect the selected editable shape layer."),
         ("xomo.shape.update", "Update the selected editable shape layer."),
