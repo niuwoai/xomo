@@ -202,14 +202,23 @@ extension ImageEditorViewModel {
     func snappedMoveDelta(_ delta: CGSize, movingLayerIDs: Set<UUID>) -> CGSize {
         guard document.isGuideSnappingEnabled || document.isGridSnappingEnabled,
               abs(delta.width) >= 0.1 || abs(delta.height) >= 0.1
-        else { return delta }
+        else {
+            activeAlignmentGuides = []
+            return delta
+        }
 
         let indices = document.layers.indices.filter { movingLayerIDs.contains(document.layers[$0].id) }
-        guard let currentFrame = transformFrame(for: Array(indices)) else { return delta }
+        guard let currentFrame = movingObjectPreviewFrame ?? transformFrame(for: Array(indices)) else {
+            activeAlignmentGuides = []
+            return delta
+        }
         let proposedFrame = currentFrame.offsetBy(dx: delta.width, dy: delta.height)
         let threshold = max(1, 8 / max(zoom, 0.01))
         let snapGuides = guideSnapPositions(excluding: movingLayerIDs)
-        guard !snapGuides.vertical.isEmpty || !snapGuides.horizontal.isEmpty else { return delta }
+        guard !snapGuides.vertical.isEmpty || !snapGuides.horizontal.isEmpty else {
+            activeAlignmentGuides = []
+            return delta
+        }
         let horizontalSnap = nearestMoveAlignment(
             candidates: [proposedFrame.minX, proposedFrame.midX, proposedFrame.maxX],
             positions: snapGuides.vertical,

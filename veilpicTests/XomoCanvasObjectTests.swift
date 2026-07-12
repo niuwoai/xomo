@@ -67,9 +67,69 @@ struct XomoCanvasObjectTests {
         let preview = try #require(viewModel.movingObjectPreviewFrame)
         #expect(preview.minX == initialFrame.minX + 18)
         #expect(preview.minY == initialFrame.minY + 12)
+        #expect(viewModel.selectedLayerTransformFrame == initialFrame)
 
         viewModel.finishMovingSelectedLayer()
         #expect(viewModel.movingObjectPreviewFrame == nil)
+        #expect(viewModel.selectedLayerTransformFrame?.minX == initialFrame.minX + 18)
+        #expect(viewModel.selectedLayerTransformFrame?.minY == initialFrame.minY + 12)
+    }
+
+    @Test func repeatedDragUpdatesAccumulateInThePreviewBeforeCommit() throws {
+        let viewModel = makeViewModel()
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))
+        let initialFrame = try #require(viewModel.selectedLayerTransformFrame)
+
+        viewModel.beginMovingSelectedLayer()
+        viewModel.moveSelectedLayer(by: CGSize(width: 4, height: 3), snapping: false)
+        viewModel.moveSelectedLayer(by: CGSize(width: 6, height: 2), snapping: false)
+
+        #expect(viewModel.movingObjectPreviewFrame?.minX == initialFrame.minX + 10)
+        #expect(viewModel.movingObjectPreviewFrame?.minY == initialFrame.minY + 5)
+        #expect(viewModel.selectedLayerTransformFrame == initialFrame)
+
+        viewModel.finishMovingSelectedLayer()
+        #expect(viewModel.selectedLayerTransformFrame?.minX == initialFrame.minX + 10)
+        #expect(viewModel.selectedLayerTransformFrame?.minY == initialFrame.minY + 5)
+    }
+
+    @Test func selectingAnotherObjectKeepsTheCompositeImageCache() throws {
+        let viewModel = makeViewModel()
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))
+        let objectID = try #require(viewModel.document.selectedLayerID)
+        let cachedImage = viewModel.currentImage
+        let backgroundID = try #require(viewModel.document.layers.first?.id)
+
+        viewModel.selectLayer(backgroundID)
+        viewModel.selectLayer(objectID)
+
+        #expect(viewModel.currentImage === cachedImage)
+    }
+
+    @Test func objectPreviewSnapsBeforeTheRealLayersCommit() throws {
+        let viewModel = makeViewModel()
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))
+        let initialFrame = try #require(viewModel.selectedLayerTransformFrame)
+        let initialChildFrames = Dictionary(uniqueKeysWithValues: viewModel.document.layers.compactMap { layer in
+            layer.groupID == viewModel.document.selectedLayerID ? (layer.id, layer.frame) : nil
+        })
+        viewModel.addGuide(.vertical, at: initialFrame.maxX + 20)
+
+        viewModel.beginMovingSelectedLayer()
+        viewModel.moveSelectedLayer(by: CGSize(width: 18, height: 0), snapping: true)
+
+        #expect(viewModel.movingObjectPreviewFrame?.maxX == initialFrame.maxX + 20)
+        #expect(viewModel.activeAlignmentGuides.contains {
+            $0.orientation == .vertical && $0.position == initialFrame.maxX + 20
+        })
+        for layer in viewModel.document.layers {
+            if let initialChildFrame = initialChildFrames[layer.id] {
+                #expect(layer.frame == initialChildFrame)
+            }
+        }
+
+        viewModel.finishMovingSelectedLayer()
+        #expect(viewModel.selectedXomoObjectFrame?.maxX == initialFrame.maxX + 20)
     }
 
     private func makeViewModel() -> ImageEditorViewModel {

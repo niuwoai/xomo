@@ -597,6 +597,10 @@ struct ImageEditorView: View {
             nudgeShortcutButton(.rightArrow, delta: CGSize(width: 1, height: 0), modifiers: [])
             nudgeShortcutButton(.upArrow, delta: CGSize(width: 0, height: -1), modifiers: [])
             nudgeShortcutButton(.downArrow, delta: CGSize(width: 0, height: 1), modifiers: [])
+            nudgeShortcutButton(.leftArrow, delta: CGSize(width: -5, height: 0), modifiers: [.option])
+            nudgeShortcutButton(.rightArrow, delta: CGSize(width: 5, height: 0), modifiers: [.option])
+            nudgeShortcutButton(.upArrow, delta: CGSize(width: 0, height: -5), modifiers: [.option])
+            nudgeShortcutButton(.downArrow, delta: CGSize(width: 0, height: 5), modifiers: [.option])
             nudgeShortcutButton(.leftArrow, delta: CGSize(width: -10, height: 0), modifiers: [.shift])
             nudgeShortcutButton(.rightArrow, delta: CGSize(width: 10, height: 0), modifiers: [.shift])
             nudgeShortcutButton(.upArrow, delta: CGSize(width: 0, height: -10), modifiers: [.shift])
@@ -2690,24 +2694,33 @@ struct ImageEditorView: View {
 
     @ViewBuilder
     private func layerTransformOverlay(in size: CGSize) -> some View {
-        if viewModel.selectedTool == .move,
-           viewModel.document.areExtrasVisible,
-           viewModel.document.areTransformControlsVisible,
+        if (viewModel.selectedTool == .move || viewModel.hasSelectedXomoObject),
+           (viewModel.document.areExtrasVisible || viewModel.hasSelectedXomoObject),
+           (viewModel.document.areTransformControlsVisible || viewModel.hasSelectedXomoObject),
            let layerFrame = viewModel.movingObjectPreviewFrame ?? viewModel.selectedLayerTransformFrame {
             let rect = viewRect(from: layerFrame, in: size)
             Rectangle()
-                .stroke(Color(nsColor: ImageEditorTheme.selected), style: StrokeStyle(lineWidth: 1.6, dash: [7, 4]))
+                .stroke(
+                    viewModel.hasSelectedXomoObject
+                        ? Color.gray.opacity(viewModel.movingObjectPreviewFrame == nil ? 0.62 : 0.78)
+                        : Color(nsColor: ImageEditorTheme.selected),
+                    style: StrokeStyle(lineWidth: 1.25, dash: [6, 4])
+                )
                 .frame(width: max(1, rect.width), height: max(1, rect.height))
                 .position(x: rect.midX, y: rect.midY)
                 .allowsHitTesting(false)
 
-            if viewModel.canResizeSelectedLayer {
+            if viewModel.selectedTool == .move,
+               viewModel.document.areTransformControlsVisible,
+               viewModel.canResizeSelectedLayer {
                 ForEach(ImageEditorLayerResizeHandle.allCases) { handle in
                     resizeHandleView(handle: handle, in: rect, canvasSize: size)
                 }
             }
 
-            if viewModel.canRotateSelectedLayer {
+            if viewModel.selectedTool == .move,
+               viewModel.document.areTransformControlsVisible,
+               viewModel.canRotateSelectedLayer {
                 rotateHandleView(in: rect, canvasSize: size)
             }
         }

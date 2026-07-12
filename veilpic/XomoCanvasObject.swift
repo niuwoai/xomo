@@ -15,6 +15,18 @@ private struct XomoCanvasObject {
 
 @MainActor
 extension ImageEditorViewModel {
+    var hasSelectedXomoObject: Bool {
+        guard let selectedLayer = document.selectedLayer else { return false }
+        return selectedLayer.isGroup && selectedLayer.xomoComponentInstance != nil
+    }
+
+    var selectedXomoObjectFrame: CGRect? {
+        guard hasSelectedXomoObject,
+              let selectedGroupID = document.selectedLayerID
+        else { return nil }
+        return xomoCanvasObjects().first { $0.groupID == selectedGroupID }?.frame
+    }
+
     func selectXomoObject(at point: CGPoint) -> Bool {
         guard let object = xomoCanvasObjects()
             .sorted(by: { $0.frontIndex > $1.frontIndex })

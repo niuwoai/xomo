@@ -240,6 +240,7 @@ final class ImageEditorViewModel: ObservableObject {
     var historySnapshots: [UUID: ImageEditorDocument] = [:]
     var movingLayerIDs = Set<UUID>()
     var movingLayerDidChange = false
+    var movingOriginalTransformFrame: CGRect?
     @Published var movingObjectPreviewFrame: CGRect?
     @Published var activeAlignmentGuides: [ImageEditorAlignmentGuide] = []
     var movingGuideID: UUID?
@@ -1939,14 +1940,18 @@ final class ImageEditorViewModel: ObservableObject {
     func selectLayer(_ id: UUID, editingMask: Bool = false, extendingSelection: Bool = false) {
         guard document.layers.contains(where: { $0.id == id }) else { return }
         if extendingSelection && !editingMask {
-            if document.selectedLayerIDs.contains(id), document.selectedLayerIDs.count > 1 {
-                document.selectedLayerIDs.remove(id)
-                if document.selectedLayerID == id {
-                    document.selectedLayerID = topmostSelectedLayerID()
+            mutateDocumentWithoutInvalidatingRenderedImageCaches { document in
+                if document.selectedLayerIDs.contains(id), document.selectedLayerIDs.count > 1 {
+                    document.selectedLayerIDs.remove(id)
+                    if document.selectedLayerID == id {
+                        document.selectedLayerID = document.layers.reversed().first {
+                            document.selectedLayerIDs.contains($0.id)
+                        }?.id
+                    }
+                } else {
+                    document.selectedLayerIDs.insert(id)
+                    document.selectedLayerID = id
                 }
-            } else {
-                document.selectedLayerIDs.insert(id)
-                document.selectedLayerID = id
             }
             isEditingLayerMask = false
             syncAdjustmentControlsFromSelection()
@@ -1957,8 +1962,10 @@ final class ImageEditorViewModel: ObservableObject {
             return
         }
 
-        document.selectedLayerID = id
-        document.selectedLayerIDs = [id]
+        mutateDocumentWithoutInvalidatingRenderedImageCaches { document in
+            document.selectedLayerID = id
+            document.selectedLayerIDs = [id]
+        }
         isEditingLayerMask = editingMask && (document.selectedLayer?.mask != nil)
         syncAdjustmentControlsFromSelection()
         syncFilterControlsFromSelection()

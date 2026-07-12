@@ -12,6 +12,9 @@ import Foundation
 extension ImageEditorViewModel {
     var selectedLayerTransformFrame: CGRect? {
         guard !isEditingLayerMask else { return nil }
+        if let selectedXomoObjectFrame {
+            return selectedXomoObjectFrame
+        }
         return transformFrame(for: selectedTransformableLayerIndices)
     }
 
@@ -53,14 +56,17 @@ extension ImageEditorViewModel {
     func beginMovingSelectedLayer() {
         guard movingLayerIDs.isEmpty else { return }
         let indices = editableTransformLayerIndices()
-        guard !indices.isEmpty else {
+        guard !indices.isEmpty,
+              let transformFrame = selectedXomoObjectFrame ?? transformFrame(for: indices)
+        else {
             statusText = L10n.text("imageEditor.status.layerLocked")
             return
         }
         pushUndo()
         movingLayerIDs = Set(indices.map { document.layers[$0].id })
         movingLayerDidChange = false
-        movingObjectPreviewFrame = transformFrame(for: indices)
+        movingOriginalTransformFrame = transformFrame
+        movingObjectPreviewFrame = transformFrame
         activeAlignmentGuides = []
     }
 
@@ -70,28 +76,6 @@ extension ImageEditorViewModel {
         let adjustedDelta = snapping ? snappedMoveDelta(delta, movingLayerIDs: movingLayerIDs) : delta
         guard abs(adjustedDelta.width) >= 0.1 || abs(adjustedDelta.height) >= 0.1 else { return }
         movingObjectPreviewFrame = movingObjectPreviewFrame?.offsetBy(dx: adjustedDelta.width, dy: adjustedDelta.height)
-        for index in document.layers.indices where movingLayerIDs.contains(document.layers[index].id) {
-            let originalFrame = document.layers[index].frame.standardized
-            document.layers[index].frame.origin.x += adjustedDelta.width
-            document.layers[index].frame.origin.y += adjustedDelta.height
-            if !document.layers[index].isMaskLinked {
-                if let mask = document.layers[index].mask,
-                   let shiftedMask = mask.offsetMask(
-                    by: CGSize(width: -adjustedDelta.width, height: -adjustedDelta.height)
-                   ) {
-                    document.layers[index].mask = shiftedMask
-                }
-                if let vectorMask = document.layers[index].vectorMask {
-                    let localDelta = CGSize(
-                        width: -adjustedDelta.width / max(originalFrame.width, 1)
-                            * max(document.layers[index].image.size.width, 1),
-                        height: -adjustedDelta.height / max(originalFrame.height, 1)
-                            * max(document.layers[index].image.size.height, 1)
-                    )
-                    document.layers[index].vectorMask = vectorMask.offsetPath(by: localDelta)
-                }
-            }
-        }
         movingLayerDidChange = true
         statusText = L10n.text("imageEditor.status.layerMoved")
     }
@@ -109,7 +93,15 @@ extension ImageEditorViewModel {
 
     func finishMovingSelectedLayer() {
         guard !movingLayerIDs.isEmpty else { return }
-        if movingLayerDidChange {
+        if movingLayerDidChange,
+           let originalTransformFrame = movingOriginalTransformFrame,
+           let previewFrame = movingObjectPreviewFrame {
+            commitMovingSelectedLayers(
+                by: CGSize(
+                    width: previewFrame.minX - originalTransformFrame.minX,
+                    height: previewFrame.minY - originalTransformFrame.minY
+                )
+            )
             appendHistory(L10n.text("imageEditor.history.layerTranslate"))
         } else {
             _ = undoStack.popLast()
@@ -117,8 +109,34 @@ extension ImageEditorViewModel {
         }
         movingLayerIDs = []
         movingLayerDidChange = false
+        movingOriginalTransformFrame = nil
         movingObjectPreviewFrame = nil
         activeAlignmentGuides = []
+    }
+
+    private func commitMovingSelectedLayers(by delta: CGSize) {
+        var nextDocument = document
+        for index in nextDocument.layers.indices where movingLayerIDs.contains(nextDocument.layers[index].id) {
+            let originalFrame = nextDocument.layers[index].frame.standardized
+            nextDocument.layers[index].frame.origin.x += delta.width
+            nextDocument.layers[index].frame.origin.y += delta.height
+            guard !nextDocument.layers[index].isMaskLinked else { continue }
+
+            if let mask = nextDocument.layers[index].mask,
+               let shiftedMask = mask.offsetMask(by: CGSize(width: -delta.width, height: -delta.height)) {
+                nextDocument.layers[index].mask = shiftedMask
+            }
+            if let vectorMask = nextDocument.layers[index].vectorMask {
+                let localDelta = CGSize(
+                    width: -delta.width / max(originalFrame.width, 1)
+                        * max(nextDocument.layers[index].image.size.width, 1),
+                    height: -delta.height / max(originalFrame.height, 1)
+                        * max(nextDocument.layers[index].image.size.height, 1)
+                )
+                nextDocument.layers[index].vectorMask = vectorMask.offsetPath(by: localDelta)
+            }
+        }
+        document = nextDocument
     }
 
     func beginResizingSelectedLayer(handle: ImageEditorLayerResizeHandle) {
