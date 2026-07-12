@@ -3366,6 +3366,10 @@ final class ImageEditorViewModel: ObservableObject {
 
     func drawBrush(points: [CGPoint], erase: Bool = false) {
         guard points.count > 1 else { return }
+        if isQuickMaskMode {
+            paintQuickMask(points: points, reveal: erase)
+            return
+        }
         if isEditingLayerMask {
             paintSelectedLayerMask(points: points, reveal: erase)
             return
@@ -3389,6 +3393,39 @@ final class ImageEditorViewModel: ObservableObject {
             output,
             historyTitle: erase ? L10n.text("imageEditor.history.erase") : L10n.text("imageEditor.history.brush"),
             resetFrame: false
+        )
+    }
+
+    private func paintQuickMask(points: [CGPoint], reveal: Bool) {
+        guard let selection = document.selection,
+              let currentMask = selection.rasterizedMask(canvasSize: document.canvasSize),
+              let updatedMask = currentMask.paintedByQuickMaskStroke(
+                points: points,
+                canvasSize: document.canvasSize,
+                diameter: brushSize,
+                opacity: opacity,
+                reveal: reveal
+              )
+        else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+
+        let bounds = updatedMask.selectedBounds(in: document.canvasSize)
+            ?? CGRect(origin: .zero, size: document.canvasSize)
+        pushUndo()
+        document.selection = .raster(mask: updatedMask, bounds: bounds)
+        appendHistory(
+            L10n.text(
+                reveal
+                    ? "imageEditor.history.quickMaskReveal"
+                    : "imageEditor.history.quickMaskHide"
+            )
+        )
+        statusText = L10n.text(
+            reveal
+                ? "imageEditor.status.quickMaskRevealed"
+                : "imageEditor.status.quickMaskHidden"
         )
     }
 

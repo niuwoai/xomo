@@ -92,6 +92,89 @@ struct ImageEditorSelectionOperationTests {
         #expect(viewModel.quickMaskOverlayImage == nil)
     }
 
+    @Test func quickMaskBrushAndEraserEditSelectionWithUndoAndRedo() throws {
+        let canvasSize = NSSize(width: 32, height: 24)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: testImage(size: canvasSize)) { _ in }
+        let originalLayerData = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+
+        viewModel.createRectSelection(from: CGPoint(x: 4, y: 4), to: CGPoint(x: 28, y: 20))
+        viewModel.brushSize = 6
+        viewModel.opacity = 1
+        viewModel.toggleQuickMaskMode()
+        viewModel.drawBrush(points: [CGPoint(x: 10, y: 12), CGPoint(x: 22, y: 12)])
+
+        var selection = try #require(viewModel.document.selection)
+        var mask = try #require(selection.rasterMask)
+        #expect(maskAlpha(mask, x: 16, y: 12) == 0)
+        #expect(maskAlpha(mask, x: 16, y: 6) == 255)
+        #expect(maskAlpha(mask, x: 1, y: 1) == 0)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.quickMaskHide"))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.quickMaskHidden"))
+        #expect(try #require(viewModel.document.selectedLayer?.image.qingtuPNGData()) == originalLayerData)
+
+        viewModel.undo()
+        selection = try #require(viewModel.document.selection)
+        mask = try #require(selection.rasterizedMask(canvasSize: canvasSize))
+        #expect(maskAlpha(mask, x: 16, y: 12) == 255)
+        #expect(viewModel.isQuickMaskMode)
+        #expect((viewModel.quickMaskOverlayImage?.color(at: CGPoint(x: 16, y: 12))?.alphaComponent ?? 0) < 0.05)
+
+        viewModel.redo()
+        selection = try #require(viewModel.document.selection)
+        mask = try #require(selection.rasterMask)
+        #expect(maskAlpha(mask, x: 16, y: 12) == 0)
+        #expect((viewModel.quickMaskOverlayImage?.color(at: CGPoint(x: 16, y: 12))?.alphaComponent ?? 0) > 0.4)
+
+        viewModel.drawBrush(
+            points: [CGPoint(x: 10, y: 12), CGPoint(x: 22, y: 12)],
+            erase: true
+        )
+        selection = try #require(viewModel.document.selection)
+        mask = try #require(selection.rasterMask)
+        #expect(maskAlpha(mask, x: 16, y: 12) == 255)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.quickMaskReveal"))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.quickMaskRevealed"))
+
+        viewModel.toggleQuickMaskMode()
+        #expect(!viewModel.isQuickMaskMode)
+        #expect(viewModel.document.selection?.rasterMask != nil)
+    }
+
+    @Test func quickMaskStrokeHonorsOpacityAndBrushDiameter() throws {
+        let width = 16
+        let height = 16
+        let fullMask = ImageEditorSelectionMask(
+            width: width,
+            height: height,
+            alpha: [UInt8](repeating: .max, count: width * height)
+        )
+
+        let hidden = try #require(
+            fullMask.paintedByQuickMaskStroke(
+                points: [CGPoint(x: 5, y: 8), CGPoint(x: 11, y: 8)],
+                canvasSize: CGSize(width: width, height: height),
+                diameter: 4,
+                opacity: 0.5,
+                reveal: false
+            )
+        )
+        #expect(maskAlpha(hidden, x: 8, y: 8) >= 126)
+        #expect(maskAlpha(hidden, x: 8, y: 8) <= 129)
+        #expect(maskAlpha(hidden, x: 8, y: 12) == 255)
+
+        let revealed = try #require(
+            hidden.paintedByQuickMaskStroke(
+                points: [CGPoint(x: 5, y: 8), CGPoint(x: 11, y: 8)],
+                canvasSize: CGSize(width: width, height: height),
+                diameter: 4,
+                opacity: 0.5,
+                reveal: true
+            )
+        )
+        #expect(maskAlpha(revealed, x: 8, y: 8) >= 190)
+        #expect(maskAlpha(revealed, x: 8, y: 8) <= 193)
+    }
+
     @Test func imageEditorCanReselectLastClearedSelection() async throws {
         let canvasSize = NSSize(width: 40, height: 30)
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: testImage(size: canvasSize)) { _ in }

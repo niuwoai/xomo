@@ -1328,6 +1328,8 @@
 "imageEditor.history.selectionClearPixelsSelected" = "Clear Selection Pixels on Selected Layers";
 "imageEditor.history.selectionInverted" = "Invert Selection";
 "imageEditor.history.selectionCleared" = "Clear Selection";
+"imageEditor.history.quickMaskHide" = "Paint Quick Mask";
+"imageEditor.history.quickMaskReveal" = "Erase Quick Mask";
 "imageEditor.history.autoLevels" = "Auto Levels";
 "imageEditor.history.autoContrast" = "Auto Contrast";
 "imageEditor.history.autoColor" = "Auto Color";
@@ -1603,6 +1605,8 @@
 "imageEditor.status.quickMaskEnabled" = "Quick Mask enabled; unselected areas are shown in red";
 "imageEditor.status.quickMaskDisabled" = "Quick Mask disabled";
 "imageEditor.status.quickMaskNeedsSelection" = "Create a selection before entering Quick Mask";
+"imageEditor.status.quickMaskHidden" = "Painted the Quick Mask and removed pixels from the selection";
+"imageEditor.status.quickMaskRevealed" = "Erased the Quick Mask and restored pixels to the selection";
 "imageEditor.status.selectionInverted" = "Selection inverted";
 "imageEditor.status.historyCleared" = "History cleared; the current image is now the new starting state";
 "imageEditor.status.historySnapshotCreated" = "History snapshot “%@” created";
