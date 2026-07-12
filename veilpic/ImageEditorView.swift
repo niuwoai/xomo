@@ -306,21 +306,24 @@ struct ImageEditorView: View {
 
     private var leftSidebar: some View {
         VStack(spacing: 0) {
-            HStack(spacing: 4) {
+            HStack(spacing: 6) {
                 ForEach(XomoLeftSidebarTab.allCases) { tab in
                     Button {
                         viewModel.selectLeftSidebarTab(tab)
                     } label: {
-                        Label(tab.title, systemImage: tab.symbolName)
-                            .font(.system(size: 11, weight: .semibold))
-                            .frame(maxWidth: .infinity, minHeight: 30)
+                        Image(systemName: tab.symbolName)
+                            .font(.system(size: 13, weight: .semibold))
+                            .frame(width: 30, height: 30)
                     }
                     .buttonStyle(EditorIconButtonStyle(isSelected: viewModel.selectedLeftSidebarTab == tab))
                     .focusable(false)
+                    .help(tab.title)
+                    .accessibilityLabel(tab.title)
                     .accessibilityIdentifier("xomo-left-sidebar-tab-\(tab.rawValue)")
                     .accessibilityValue(viewModel.selectedLeftSidebarTab == tab ? "selected" : "available")
                 }
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
             .padding(6)
 
             Divider().overlay(editorBorder)
