@@ -200,6 +200,10 @@ struct ImageEditorView: View {
                 if usesOpacityOption {
                     optionSlider(titleKey: "imageEditor.option.opacity", value: $viewModel.opacity, range: 0.05...1, step: 0.05, suffix: "")
                 }
+                if usesBrushDynamicsOptions {
+                    optionSlider(titleKey: "imageEditor.option.flow", value: $viewModel.brushFlow, range: 1...100, step: 1, suffix: "%")
+                    optionSlider(titleKey: "imageEditor.option.spacing", value: $viewModel.brushSpacing, range: 1...200, step: 1, suffix: "%")
+                }
                 if viewModel.selectedTool.supportsSelectionMode {
                     optionSlider(titleKey: "imageEditor.option.feather", value: $viewModel.feather, range: 0...40, step: 1, suffix: "px")
                 }
@@ -286,6 +290,10 @@ struct ImageEditorView: View {
         }
     }
 
+    private var usesBrushDynamicsOptions: Bool {
+        viewModel.selectedTool == .brush || viewModel.selectedTool == .eraser
+    }
+
     private var selectionModePicker: some View {
         Picker(L10n.text("imageEditor.option.selectionMode"), selection: $viewModel.selectionMode) {
             ForEach(ImageEditorSelectionMode.allCases) { mode in
@@ -365,6 +373,8 @@ struct ImageEditorView: View {
                 .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
             Slider(value: value, in: range, step: step)
                 .frame(width: 92)
+                .focusable(false)
+                .xomoFocusEffectDisabled()
             Text(sliderText(value.wrappedValue, suffix: suffix))
                 .font(.system(size: 11, weight: .medium).monospacedDigit())
                 .frame(width: suffix.isEmpty ? 28 : 42, alignment: .leading)

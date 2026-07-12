@@ -57,6 +57,8 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var brushSize: CGFloat = 18
     @Published var opacity: CGFloat = 1
     @Published var hardness: CGFloat = 0.8
+    @Published var brushFlow: CGFloat = 100
+    @Published var brushSpacing: CGFloat = 25
     @Published var feather: CGFloat = 0
     @Published var selectionModifyAmount: CGFloat = 4
     @Published var tolerance: CGFloat = 0.22
@@ -3488,11 +3490,16 @@ final class ImageEditorViewModel: ObservableObject {
             return
         }
         let localPoints = rasterLocalPoints(points, layer: layer)
-        guard let output = layer.image.withStroke(
+        guard let output = layer.image.withBrushStroke(
             points: localPoints,
             color: foregroundColor,
-            width: rasterLocalBrushWidth(brushSize, layer: layer),
-            opacity: opacity,
+            settings: ImageEditorBrushStrokeSettings(
+                diameter: rasterLocalBrushWidth(brushSize, layer: layer),
+                hardness: hardness,
+                opacity: opacity,
+                flow: brushFlow / 100,
+                spacing: brushSpacing / 100
+            ),
             erase: erase
         ) else {
             statusText = L10n.text("imageEditor.status.operationFailed")
@@ -3513,6 +3520,9 @@ final class ImageEditorViewModel: ObservableObject {
                 canvasSize: document.canvasSize,
                 diameter: brushSize,
                 opacity: opacity,
+                hardness: hardness,
+                flow: brushFlow / 100,
+                spacing: brushSpacing / 100,
                 reveal: reveal
               )
         else {
@@ -4454,6 +4464,9 @@ final class ImageEditorViewModel: ObservableObject {
             points: rasterLocalPoints(points, layer: maskLayer),
             width: rasterLocalBrushWidth(brushSize, layer: maskLayer),
             opacity: opacity,
+            hardness: hardness,
+            flow: brushFlow / 100,
+            spacing: brushSpacing / 100,
             reveal: reveal
         ) else {
             statusText = L10n.text("imageEditor.status.operationFailed")
@@ -6143,33 +6156,6 @@ extension NSImage {
         }
     }
 
-    func withStroke(points: [CGPoint], color: NSColor, width: CGFloat, opacity: CGFloat, erase: Bool) -> NSImage? {
-        rendered(size: size) { _ in
-            draw(in: CGRect(origin: .zero, size: size), from: CGRect(origin: .zero, size: size), operation: .copy, fraction: 1)
-            guard let first = points.first else { return }
-            let path = NSBezierPath()
-            path.lineJoinStyle = .round
-            path.lineCapStyle = .round
-            path.lineWidth = width
-            path.move(to: first)
-            for point in points.dropFirst() {
-                path.line(to: point)
-            }
-            NSGraphicsContext.current?.withImageEditorTopLeftCoordinates(height: size.height) {
-                if erase, let context = NSGraphicsContext.current?.cgContext {
-                    context.saveGState()
-                    context.setBlendMode(.clear)
-                    NSColor.clear.setStroke()
-                    path.stroke()
-                    context.restoreGState()
-                } else {
-                    color.withAlphaComponent(opacity).setStroke()
-                    path.stroke()
-                }
-            }
-        }
-    }
-
     func withCloneStamp(
         points: [CGPoint],
         sourceOffset: CGSize,
@@ -6240,31 +6226,27 @@ extension NSImage {
         }
     }
 
-    func withMaskStroke(points: [CGPoint], width: CGFloat, opacity: CGFloat, reveal: Bool) -> NSImage? {
-        rendered(size: size) { _ in
-            draw(in: CGRect(origin: .zero, size: size), from: CGRect(origin: .zero, size: size), operation: .copy, fraction: 1)
-            guard let first = points.first else { return }
-            let path = NSBezierPath()
-            path.lineJoinStyle = .round
-            path.lineCapStyle = .round
-            path.lineWidth = width
-            path.move(to: first)
-            for point in points.dropFirst() {
-                path.line(to: point)
-            }
-            NSGraphicsContext.current?.withImageEditorTopLeftCoordinates(height: size.height) {
-                if reveal {
-                    NSColor.white.withAlphaComponent(opacity).setStroke()
-                    path.stroke()
-                } else if let context = NSGraphicsContext.current?.cgContext {
-                    context.saveGState()
-                    context.setBlendMode(.clear)
-                    NSColor.clear.setStroke()
-                    path.stroke()
-                    context.restoreGState()
-                }
-            }
-        }
+    func withMaskStroke(
+        points: [CGPoint],
+        width: CGFloat,
+        opacity: CGFloat,
+        hardness: CGFloat = 1,
+        flow: CGFloat = 1,
+        spacing: CGFloat = 0.25,
+        reveal: Bool
+    ) -> NSImage? {
+        withBrushStroke(
+            points: points,
+            color: .white,
+            settings: ImageEditorBrushStrokeSettings(
+                diameter: width,
+                hardness: hardness,
+                opacity: opacity,
+                flow: flow,
+                spacing: spacing
+            ),
+            erase: !reveal
+        )
     }
 
     func withShape(rect: CGRect, color: NSColor, width: CGFloat, opacity: CGFloat, ellipse: Bool) -> NSImage? {
