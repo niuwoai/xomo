@@ -59,6 +59,26 @@ enum ImageEditorCanvasGeometry {
         )
     }
 
+    static func boundedImagePoint(
+        from viewPoint: CGPoint,
+        imageRect: CGRect,
+        canvasSize: CGSize
+    ) -> CGPoint {
+        let point = unboundedImagePoint(
+            from: viewPoint,
+            imageRect: imageRect,
+            canvasSize: canvasSize
+        )
+        return boundedCanvasPoint(point, canvasSize: canvasSize)
+    }
+
+    static func boundedCanvasPoint(_ point: CGPoint, canvasSize: CGSize) -> CGPoint {
+        CGPoint(
+            x: min(max(0, point.x), max(0, canvasSize.width)),
+            y: min(max(0, point.y), max(0, canvasSize.height))
+        )
+    }
+
     static func viewPoint(
         from imagePoint: CGPoint,
         imageRect: CGRect,

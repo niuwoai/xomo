@@ -1343,7 +1343,14 @@ struct ImageEditorView: View {
                     if let pointerImagePoint {
                         dragPoints.append(pointerImagePoint)
                     }
-                case .crop, .marquee, .rectangle, .ellipse, .gradient, .patchTool:
+                case .marquee:
+                    if dragStart == nil {
+                        dragStart = pointerImagePoint
+                    }
+                    if dragStart != nil {
+                        dragEnd = boundedImagePoint(from: value.location, in: size)
+                    }
+                case .crop, .rectangle, .ellipse, .gradient, .patchTool:
                     if viewModel.selectedTool == .crop, dragStart == nil {
                         pendingCropRect = nil
                     }
@@ -1360,7 +1367,15 @@ struct ImageEditorView: View {
                     } else {
                         isMovingPathAnchor = viewModel.beginMovingPathAnchor(at: pointerImagePoint)
                     }
-                case .lasso, .quickSelection:
+                case .lasso:
+                    if dragPoints.isEmpty {
+                        if let pointerImagePoint {
+                            dragPoints.append(pointerImagePoint)
+                        }
+                    } else {
+                        dragPoints.append(boundedImagePoint(from: value.location, in: size))
+                    }
+                case .quickSelection:
                     if let pointerImagePoint {
                         dragPoints.append(pointerImagePoint)
                     }
@@ -1388,10 +1403,16 @@ struct ImageEditorView: View {
                     }
                     viewModel.finishMovingSelectedLayer()
                 case .marquee:
-                    if let dragStart, let endImagePoint {
-                        viewModel.createMarqueeSelection(from: dragStart, to: endImagePoint)
+                    if let dragStart {
+                        viewModel.createMarqueeSelection(
+                            from: dragStart,
+                            to: boundedImagePoint(from: value.location, in: size)
+                        )
                     }
                 case .lasso:
+                    if !dragPoints.isEmpty {
+                        dragPoints.append(boundedImagePoint(from: value.location, in: size))
+                    }
                     viewModel.createLassoSelection(points: dragPoints)
                 case .magicWand:
                     viewModel.createMagicSelection(at: endImagePoint)
@@ -1645,6 +1666,15 @@ struct ImageEditorView: View {
     private func unboundedImagePoint(from viewPoint: CGPoint, in size: CGSize) -> CGPoint {
         let rect = fittedImageRect(in: size)
         return ImageEditorCanvasGeometry.unboundedImagePoint(
+            from: viewPoint,
+            imageRect: rect,
+            canvasSize: viewModel.document.canvasSize
+        )
+    }
+
+    private func boundedImagePoint(from viewPoint: CGPoint, in size: CGSize) -> CGPoint {
+        let rect = fittedImageRect(in: size)
+        return ImageEditorCanvasGeometry.boundedImagePoint(
             from: viewPoint,
             imageRect: rect,
             canvasSize: viewModel.document.canvasSize
@@ -2998,17 +3028,23 @@ struct ImageEditorView: View {
             let activeSelection = viewModel.document.areExtrasVisible && viewModel.document.areSelectionEdgesVisible
                 ? viewModel.selection
                 : nil
-            if let selection = activeSelection ?? (activeLasso ? ImageEditorSelection.polygon(dragPoints) : nil) {
+            let edgeGeometry = activeSelection != nil
+                ? viewModel.selectionEdgeGeometry
+                : (activeLasso ? ImageEditorSelection.polygon(dragPoints).map {
+                    ImageEditorSelectionEdgeGeometry.make(
+                        selection: $0,
+                        canvasSize: viewModel.document.canvasSize
+                    )
+                } : nil)
+            if let edgeGeometry {
                 Canvas { context, _ in
-                    let converted = selection.points.map { viewPoint(from: $0, in: size) }
-                    guard let first = converted.first else { return }
                     var path = Path()
-                    path.move(to: first)
-                    for point in converted.dropFirst() {
-                        path.addLine(to: point)
-                    }
-                    if selection.isPolygon || converted.count == 4 {
-                        path.closeSubpath()
+                    for contour in edgeGeometry.contours {
+                        guard let first = contour.first else { continue }
+                        path.move(to: viewPoint(from: first, in: size))
+                        for point in contour.dropFirst() {
+                            path.addLine(to: viewPoint(from: point, in: size))
+                        }
                     }
                     let stroke = StrokeStyle(lineWidth: 1.4, dash: [5, 4])
                     context.stroke(path, with: .color(Color.white.opacity(0.92)), style: stroke)
