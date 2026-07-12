@@ -97,6 +97,9 @@ struct ImageEditorView: View {
         .background(
             ImageEditorKeyboardShortcutMonitor(
                 perform: performKeyboardShortcut,
+                deleteSelectedObject: {
+                    viewModel.deleteSelectedXomoObjectIfNeeded()
+                },
                 deleteSelectedHistory: {
                     guard viewModel.isHistoryPanelVisible,
                           isHistoryDockExpanded,
@@ -1154,6 +1157,7 @@ struct ImageEditorView: View {
                                 snapping: true
                             )
                         } else {
+                            _ = viewModel.selectXomoObject(at: imagePoint)
                             viewModel.beginMovingSelectedLayer()
                         }
                         lastMoveImagePoint = imagePoint
@@ -2683,7 +2687,7 @@ struct ImageEditorView: View {
         if viewModel.selectedTool == .move,
            viewModel.document.areExtrasVisible,
            viewModel.document.areTransformControlsVisible,
-           let layerFrame = viewModel.selectedLayerTransformFrame {
+           let layerFrame = viewModel.movingObjectPreviewFrame ?? viewModel.selectedLayerTransformFrame {
             let rect = viewRect(from: layerFrame, in: size)
             Rectangle()
                 .stroke(Color(nsColor: ImageEditorTheme.selected), style: StrokeStyle(lineWidth: 1.6, dash: [7, 4]))
@@ -5220,11 +5224,13 @@ enum ImageEditorKeyboardShortcutAction: Equatable {
 
 struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
     let perform: (ImageEditorKeyboardShortcutAction) -> Void
+    let deleteSelectedObject: () -> Bool
     let deleteSelectedHistory: () -> Bool
 
     func makeCoordinator() -> Coordinator {
         Coordinator(
             perform: perform,
+            deleteSelectedObject: deleteSelectedObject,
             deleteSelectedHistory: deleteSelectedHistory
         )
     }
@@ -5235,20 +5241,24 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
 
     func updateNSView(_ nsView: KeyboardShortcutMonitorNSView, context: Context) {
         context.coordinator.perform = perform
+        context.coordinator.deleteSelectedObject = deleteSelectedObject
         context.coordinator.deleteSelectedHistory = deleteSelectedHistory
     }
 
     final class Coordinator {
         weak var window: NSWindow?
         var perform: (ImageEditorKeyboardShortcutAction) -> Void
+        var deleteSelectedObject: () -> Bool
         var deleteSelectedHistory: () -> Bool
         private var eventMonitor: Any?
 
         init(
             perform: @escaping (ImageEditorKeyboardShortcutAction) -> Void,
+            deleteSelectedObject: @escaping () -> Bool,
             deleteSelectedHistory: @escaping () -> Bool
         ) {
             self.perform = perform
+            self.deleteSelectedObject = deleteSelectedObject
             self.deleteSelectedHistory = deleteSelectedHistory
             eventMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
                 self?.handle(event) ?? event
@@ -5265,6 +5275,9 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
             guard event.window === window else { return event }
             let relevantFlags = event.modifierFlags.intersection([.command, .option, .shift, .control])
             let isDelete = event.keyCode == 51 || event.keyCode == 117
+            if isDelete, relevantFlags.isEmpty, deleteSelectedObject() {
+                return nil
+            }
             if isDelete, relevantFlags.isEmpty, deleteSelectedHistory() {
                 return nil
             }

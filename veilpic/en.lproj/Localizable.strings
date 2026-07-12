@@ -2448,6 +2448,8 @@
 "xomo.themeSample.chakraForm" = "Chakra UI form reference";
 "xomo.themeSample.radixSettings" = "Radix Themes settings reference";
 "xomo.themeSample.status.inserted" = "Inserted %@ page sample";
+"xomo.object.status.selected" = "Selected object: %@";
+"xomo.object.status.deleted" = "Deleted object: %@";
 "xomo.instance.title" = "Component instances";
 "xomo.instance.makeMaster" = "Set as master";
 "xomo.instance.link" = "Link selected";

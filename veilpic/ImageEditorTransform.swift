@@ -60,6 +60,7 @@ extension ImageEditorViewModel {
         pushUndo()
         movingLayerIDs = Set(indices.map { document.layers[$0].id })
         movingLayerDidChange = false
+        movingObjectPreviewFrame = transformFrame(for: indices)
         activeAlignmentGuides = []
     }
 
@@ -68,6 +69,7 @@ extension ImageEditorViewModel {
         guard abs(delta.width) >= 0.1 || abs(delta.height) >= 0.1 else { return }
         let adjustedDelta = snapping ? snappedMoveDelta(delta, movingLayerIDs: movingLayerIDs) : delta
         guard abs(adjustedDelta.width) >= 0.1 || abs(adjustedDelta.height) >= 0.1 else { return }
+        movingObjectPreviewFrame = movingObjectPreviewFrame?.offsetBy(dx: adjustedDelta.width, dy: adjustedDelta.height)
         for index in document.layers.indices where movingLayerIDs.contains(document.layers[index].id) {
             let originalFrame = document.layers[index].frame.standardized
             document.layers[index].frame.origin.x += adjustedDelta.width
@@ -115,6 +117,7 @@ extension ImageEditorViewModel {
         }
         movingLayerIDs = []
         movingLayerDidChange = false
+        movingObjectPreviewFrame = nil
         activeAlignmentGuides = []
     }
 

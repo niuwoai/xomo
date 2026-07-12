@@ -240,6 +240,7 @@ final class ImageEditorViewModel: ObservableObject {
     var historySnapshots: [UUID: ImageEditorDocument] = [:]
     var movingLayerIDs = Set<UUID>()
     var movingLayerDidChange = false
+    @Published var movingObjectPreviewFrame: CGRect?
     @Published var activeAlignmentGuides: [ImageEditorAlignmentGuide] = []
     var movingGuideID: UUID?
     var movingGuideDidChange = false

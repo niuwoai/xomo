@@ -2448,6 +2448,8 @@
 "xomo.themeSample.chakraForm" = "Chakra UI フォーム参照";
 "xomo.themeSample.radixSettings" = "Radix Themes 設定参照";
 "xomo.themeSample.status.inserted" = "%@ ページ例を挿入しました";
+"xomo.object.status.selected" = "オブジェクトを選択しました：%@";
+"xomo.object.status.deleted" = "オブジェクトを削除しました：%@";
 "xomo.instance.title" = "コンポーネントインスタンス";
 "xomo.instance.makeMaster" = "マスターに設定";
 "xomo.instance.link" = "選択項目をリンク";
