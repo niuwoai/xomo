@@ -4,6 +4,16 @@ import Testing
 
 @MainActor
 struct XomoCanvasObjectTests {
+    @Test func canvasDragTranslationMapsViewPixelsToImagePixels() {
+        let imageDelta = ImageEditorCanvasDragGeometry.imageDelta(
+            from: CGSize(width: 75, height: 40),
+            canvasSize: CGSize(width: 1_440, height: 900),
+            imageRect: CGRect(x: 120, y: 80, width: 720, height: 450)
+        )
+
+        #expect(imageDelta == CGSize(width: 150, height: 80))
+    }
+
     @Test func textToolCanSelectEditableTextInsideAComponent() throws {
         let viewModel = makeViewModel()
         viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))

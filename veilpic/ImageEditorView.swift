@@ -13,6 +13,20 @@ private let imageEditorCanvasToolbarHeight: CGFloat = 42
 private let imageEditorToolRailWidth: CGFloat = 84
 private let imageEditorComponentLibraryWidth: CGFloat = 220
 
+enum ImageEditorCanvasDragGeometry {
+    static func imageDelta(
+        from viewDelta: CGSize,
+        canvasSize: CGSize,
+        imageRect: CGRect
+    ) -> CGSize {
+        guard imageRect.width > 0, imageRect.height > 0 else { return .zero }
+        return CGSize(
+            width: viewDelta.width * canvasSize.width / imageRect.width,
+            height: viewDelta.height * canvasSize.height / imageRect.height
+        )
+    }
+}
+
 struct ImageEditorView: View {
     @StateObject var viewModel: ImageEditorViewModel
     @State private var dragPoints: [CGPoint] = []
@@ -22,7 +36,8 @@ struct ImageEditorView: View {
     @State private var lastPanTranslation: CGSize = .zero
     @State private var isSpacebarPanning = false
     @State private var isCanvasPanGestureActive = false
-    @State private var lastMoveImagePoint: CGPoint?
+    @State private var lastMoveTranslation: CGSize = .zero
+    @State private var isObjectMoveGestureActive = false
     @State private var activeResizeHandle: ImageEditorLayerResizeHandle?
     @State private var isRotatingLayer = false
     @State private var isMovingPathAnchor = false
@@ -1189,69 +1204,54 @@ struct ImageEditorView: View {
             .onChanged { value in
                 if isCanvasPanGestureActive || viewModel.selectedTool == .hand || isSpacebarPanning {
                     isCanvasPanGestureActive = true
-                    let delta = CGSize(
-                        width: value.translation.width - lastPanTranslation.width,
-                        height: value.translation.height - lastPanTranslation.height
-                    )
-                    viewModel.nudgeCanvas(by: delta)
-                    lastPanTranslation = value.translation
+                    updateCanvasPan(translation: value.translation)
                     NSCursor.closedHand.set()
                     return
                 }
 
-                let imagePoint = imagePoint(from: value.location, in: size)
-                viewModel.updatePointer(imagePoint)
+                let pointerImagePoint = imagePoint(from: value.location, in: size)
+                viewModel.updatePointer(pointerImagePoint)
 
                 switch viewModel.selectedTool {
                 case .move:
-                    if let imagePoint {
-                        if let lastMoveImagePoint {
-                            viewModel.moveSelectedLayer(
-                                by: CGSize(
-                                    width: imagePoint.x - lastMoveImagePoint.x,
-                                    height: imagePoint.y - lastMoveImagePoint.y
-                                ),
-                                snapping: true
-                            )
-                        } else {
-                            guard viewModel.selectXomoObject(at: imagePoint) else {
-                                isCanvasPanGestureActive = true
-                                lastPanTranslation = value.translation
-                                NSCursor.closedHand.set()
-                                return
-                            }
-                            viewModel.beginMovingSelectedLayer()
+                    if !isObjectMoveGestureActive {
+                        let pressedImagePoint = imagePoint(from: value.startLocation, in: size)
+                        guard let pressedImagePoint,
+                              viewModel.selectXomoObject(at: pressedImagePoint)
+                        else {
+                            isCanvasPanGestureActive = true
+                            updateCanvasPan(translation: value.translation)
+                            NSCursor.closedHand.set()
+                            return
                         }
-                        lastMoveImagePoint = imagePoint
-                    } else {
-                        isCanvasPanGestureActive = true
-                        lastPanTranslation = value.translation
-                        NSCursor.closedHand.set()
+                        viewModel.beginMovingSelectedLayer()
+                        isObjectMoveGestureActive = true
                     }
+                    updateObjectMove(translation: value.translation, in: size)
                 case .brush, .eraser, .cloneStamp, .dodge, .burn, .sponge, .blur, .sharpen, .smudge, .healingBrush:
-                    if let imagePoint {
-                        dragPoints.append(imagePoint)
+                    if let pointerImagePoint {
+                        dragPoints.append(pointerImagePoint)
                     }
                 case .crop, .marquee, .rectangle, .ellipse, .gradient, .patchTool:
                     if viewModel.selectedTool == .crop, dragStart == nil {
                         pendingCropRect = nil
                     }
                     if dragStart == nil {
-                        dragStart = imagePoint
+                        dragStart = pointerImagePoint
                     }
-                    dragEnd = imagePoint
+                    dragEnd = pointerImagePoint
                 case .pen:
                     guard viewModel.pendingPenPathPoints.isEmpty,
                           viewModel.canEditSelectedPathAnchors
                     else { break }
                     if isMovingPathAnchor {
-                        viewModel.moveSelectedPathAnchor(to: imagePoint)
+                        viewModel.moveSelectedPathAnchor(to: pointerImagePoint)
                     } else {
-                        isMovingPathAnchor = viewModel.beginMovingPathAnchor(at: imagePoint)
+                        isMovingPathAnchor = viewModel.beginMovingPathAnchor(at: pointerImagePoint)
                     }
                 case .lasso, .quickSelection:
-                    if let imagePoint {
-                        dragPoints.append(imagePoint)
+                    if let pointerImagePoint {
+                        dragPoints.append(pointerImagePoint)
                     }
                 default:
                     break
@@ -1259,6 +1259,7 @@ struct ImageEditorView: View {
             }
             .onEnded { value in
                 if isCanvasPanGestureActive {
+                    updateCanvasPan(translation: value.translation)
                     isCanvasPanGestureActive = false
                     lastPanTranslation = .zero
                     if isPointerInsideCanvas {
@@ -1267,19 +1268,22 @@ struct ImageEditorView: View {
                     return
                 }
 
-                let imagePoint = imagePoint(from: value.location, in: size)
+                let endImagePoint = imagePoint(from: value.location, in: size)
 
                 switch viewModel.selectedTool {
                 case .move:
+                    if isObjectMoveGestureActive {
+                        updateObjectMove(translation: value.translation, in: size)
+                    }
                     viewModel.finishMovingSelectedLayer()
                 case .marquee:
-                    if let dragStart, let imagePoint {
-                        viewModel.createMarqueeSelection(from: dragStart, to: imagePoint)
+                    if let dragStart, let endImagePoint {
+                        viewModel.createMarqueeSelection(from: dragStart, to: endImagePoint)
                     }
                 case .lasso:
                     viewModel.createLassoSelection(points: dragPoints)
                 case .magicWand:
-                    viewModel.createMagicSelection(at: imagePoint)
+                    viewModel.createMagicSelection(at: endImagePoint)
                 case .quickSelection:
                     viewModel.createQuickSelection(points: dragPoints)
                 case .brush:
@@ -1287,8 +1291,8 @@ struct ImageEditorView: View {
                 case .eraser:
                     viewModel.drawBrush(points: dragPoints, erase: true)
                 case .cloneStamp:
-                    if viewModel.isSettingCloneSource || NSEvent.modifierFlags.contains(.option), let imagePoint {
-                        viewModel.setCloneSource(at: imagePoint)
+                    if viewModel.isSettingCloneSource || NSEvent.modifierFlags.contains(.option), let endImagePoint {
+                        viewModel.setCloneSource(at: endImagePoint)
                     } else {
                         viewModel.cloneStamp(points: dragPoints)
                     }
@@ -1307,49 +1311,49 @@ struct ImageEditorView: View {
                 case .healingBrush:
                     viewModel.healingBrush(points: dragPoints)
                 case .patchTool:
-                    viewModel.patchSelection(from: dragStart, to: imagePoint)
+                    viewModel.patchSelection(from: dragStart, to: endImagePoint)
                 case .redEye:
-                    viewModel.reduceRedEye(at: imagePoint)
+                    viewModel.reduceRedEye(at: endImagePoint)
                 case .paintBucket:
-                    viewModel.paintBucketFill(at: imagePoint)
+                    viewModel.paintBucketFill(at: endImagePoint)
                 case .rectangle:
-                    if let dragStart, let imagePoint {
-                        viewModel.drawShape(from: dragStart, to: imagePoint, ellipse: false)
+                    if let dragStart, let endImagePoint {
+                        viewModel.drawShape(from: dragStart, to: endImagePoint, ellipse: false)
                     }
                 case .ellipse:
-                    if let dragStart, let imagePoint {
-                        viewModel.drawShape(from: dragStart, to: imagePoint, ellipse: true)
+                    if let dragStart, let endImagePoint {
+                        viewModel.drawShape(from: dragStart, to: endImagePoint, ellipse: true)
                     }
                 case .pen:
                     if isMovingPathAnchor {
                         viewModel.finishMovingPathAnchor()
                     } else {
-                        viewModel.addPenPoint(imagePoint)
+                        viewModel.addPenPoint(endImagePoint)
                     }
                 case .crop:
-                    if let dragStart, let imagePoint {
+                    if let dragStart, let endImagePoint {
                         let rect = CGRect(
-                            x: min(dragStart.x, imagePoint.x),
-                            y: min(dragStart.y, imagePoint.y),
-                            width: abs(imagePoint.x - dragStart.x),
-                            height: abs(imagePoint.y - dragStart.y)
+                            x: min(dragStart.x, endImagePoint.x),
+                            y: min(dragStart.y, endImagePoint.y),
+                            width: abs(endImagePoint.x - dragStart.x),
+                            height: abs(endImagePoint.y - dragStart.y)
                         )
                         if rect.width > 3, rect.height > 3 {
                             pendingCropRect = rect
                         }
                     }
                 case .text:
-                    beginCanvasTextEditing(at: imagePoint)
+                    beginCanvasTextEditing(at: endImagePoint)
                 case .eyedropper:
-                    if let imagePoint {
-                        viewModel.sampleColor(at: imagePoint)
+                    if let endImagePoint {
+                        viewModel.sampleColor(at: endImagePoint)
                     }
                 case .colorSampler:
-                    if let imagePoint {
-                        viewModel.addColorSampler(at: imagePoint)
+                    if let endImagePoint {
+                        viewModel.addColorSampler(at: endImagePoint)
                     }
                 case .gradient:
-                    viewModel.drawGradient(from: dragStart, to: imagePoint)
+                    viewModel.drawGradient(from: dragStart, to: endImagePoint)
                 case .zoom:
                     viewModel.zoomIn()
                 default:
@@ -1360,10 +1364,38 @@ struct ImageEditorView: View {
                 dragStart = nil
                 dragEnd = nil
                 lastPanTranslation = .zero
-                lastMoveImagePoint = nil
+                lastMoveTranslation = .zero
+                isObjectMoveGestureActive = false
                 isMovingPathAnchor = false
                 activeResizeHandle = nil
             }
+    }
+
+    private func updateCanvasPan(translation: CGSize) {
+        let delta = CGSize(
+            width: translation.width - lastPanTranslation.width,
+            height: translation.height - lastPanTranslation.height
+        )
+        viewModel.nudgeCanvas(by: delta)
+        lastPanTranslation = translation
+    }
+
+    private func updateObjectMove(translation: CGSize, in size: CGSize) {
+        let imageRect = fittedImageRect(in: size)
+        guard imageRect.width > 0, imageRect.height > 0 else { return }
+        let viewDelta = CGSize(
+            width: translation.width - lastMoveTranslation.width,
+            height: translation.height - lastMoveTranslation.height
+        )
+        viewModel.moveSelectedLayer(
+            by: ImageEditorCanvasDragGeometry.imageDelta(
+                from: viewDelta,
+                canvasSize: viewModel.document.canvasSize,
+                imageRect: imageRect
+            ),
+            snapping: true
+        )
+        lastMoveTranslation = translation
     }
 
     private func fontFamilyPicker(width: CGFloat? = nil) -> some View {
@@ -2871,7 +2903,8 @@ struct ImageEditorView: View {
                 xomoObjectSelectionOutline(
                     kind: componentKind,
                     rect: rect,
-                    isMoving: viewModel.movingObjectPreviewFrame != nil
+                    isMoving: viewModel.movingObjectPreviewFrame != nil,
+                    canvasSize: size
                 )
             } else {
                 Rectangle()
@@ -2903,7 +2936,8 @@ struct ImageEditorView: View {
     private func xomoObjectSelectionOutline(
         kind: XomoComponentKind,
         rect: CGRect,
-        isMoving: Bool
+        isMoving: Bool,
+        canvasSize: CGSize
     ) -> some View {
         let shape: AnyShape
         switch kind {
@@ -2926,7 +2960,26 @@ struct ImageEditorView: View {
             .shadow(color: accent.opacity(isMoving ? 0.10 : 0.24), radius: isMoving ? 2 : 5)
             .frame(width: max(1, rect.width), height: max(1, rect.height))
             .position(x: rect.midX, y: rect.midY)
-            .allowsHitTesting(false)
+            .contentShape(shape)
+            .gesture(selectedObjectMoveGesture(in: canvasSize))
+    }
+
+    private func selectedObjectMoveGesture(in canvasSize: CGSize) -> some Gesture {
+        DragGesture(minimumDistance: 1)
+            .onChanged { value in
+                if !isObjectMoveGestureActive {
+                    lastMoveTranslation = .zero
+                    viewModel.beginMovingSelectedLayer()
+                    isObjectMoveGestureActive = true
+                }
+                updateObjectMove(translation: value.translation, in: canvasSize)
+            }
+            .onEnded { value in
+                updateObjectMove(translation: value.translation, in: canvasSize)
+                viewModel.finishMovingSelectedLayer()
+                lastMoveTranslation = .zero
+                isObjectMoveGestureActive = false
+            }
     }
 
     private func resizeHandleView(
