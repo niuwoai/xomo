@@ -86,6 +86,15 @@ final class ImageEditorViewModel: ObservableObject {
     }
     @Published var cloneStampSampleSource: ImageEditorCloneSampleSource = .currentLayer
     @Published private(set) var isSettingCloneSource = false
+    @Published var healingSourcePoint: CGPoint?
+    @Published var isHealingBrushAligned = true {
+        didSet {
+            guard isHealingBrushAligned != oldValue else { return }
+            healingBrushAlignedCanvasOffset = nil
+        }
+    }
+    @Published var healingBrushSampleSource: ImageEditorCloneSampleSource = .currentLayer
+    @Published private(set) var isSettingHealingSource = false
     @Published private(set) var colorSamplerPoints: [ImageEditorColorSamplerPoint] = []
     @Published var reselectableSelection: ImageEditorSelection?
     @Published var statusText: String = ""
@@ -289,6 +298,7 @@ final class ImageEditorViewModel: ObservableObject {
     var copiedLayerStyle: ImageEditorLayerStyle?
     var copiedLayerStyleSourceID: UUID?
     private var cloneStampAlignedCanvasOffset: CGSize?
+    private var healingBrushAlignedCanvasOffset: CGSize?
     private let onApply: (NSImage) -> Void
     private let workspacePreferencesDefaults: UserDefaults
     private var selectionEdgeGeometrySource: ImageEditorSelection?
@@ -3557,15 +3567,16 @@ final class ImageEditorViewModel: ObservableObject {
             return
         }
 
-        let offsetResolution = ImageEditorCloneStampOffsetResolution.resolve(
+        let offsetResolution = ImageEditorSampledBrushOffsetResolution.resolve(
             sourcePoint: sourcePoint,
             destinationStart: destinationStart,
             isAligned: isCloneStampAligned,
             alignedOffset: cloneStampAlignedCanvasOffset
         )
-        guard let samplingInput = cloneStampSamplingInput(
+        guard let samplingInput = sampledBrushInput(
             for: layer,
-            canvasOffset: offsetResolution.canvasOffset
+            canvasOffset: offsetResolution.canvasOffset,
+            sampleSource: cloneStampSampleSource
         ),
               let output = layer.image.normalizedBitmapImage().withCloneStamp(
             points: rasterLocalPoints(points, layer: layer),
@@ -3743,19 +3754,44 @@ final class ImageEditorViewModel: ObservableObject {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
+        guard let sourcePoint = healingSourcePoint, let destinationStart = points.first else {
+            statusText = L10n.text("imageEditor.status.healingSourceMissing")
+            return
+        }
         guard let layer = editableSelectedLayer() else {
             statusText = L10n.text("imageEditor.status.layerLocked")
             return
         }
-        let sourceImage = layer.image.normalizedBitmapImage()
-        guard let output = sourceImage.withHealingBrush(
+
+        let offsetResolution = ImageEditorSampledBrushOffsetResolution.resolve(
+            sourcePoint: sourcePoint,
+            destinationStart: destinationStart,
+            isAligned: isHealingBrushAligned,
+            alignedOffset: healingBrushAlignedCanvasOffset
+        )
+        guard let samplingInput = sampledBrushInput(
+            for: layer,
+            canvasOffset: offsetResolution.canvasOffset,
+            sampleSource: healingBrushSampleSource
+        ),
+        let targetContext = sampledBrushInput(
+            for: layer,
+            canvasOffset: .zero,
+            sampleSource: healingBrushSampleSource
+        ),
+        let output = layer.image.normalizedBitmapImage().withHealingBrush(
             points: rasterLocalPoints(points, layer: layer),
+            sourceOffset: samplingInput.localOffset,
+            sourceImage: samplingInput.image,
+            targetContextImage: targetContext.image,
             width: rasterLocalBrushWidth(brushSize, layer: layer),
-            opacity: opacity
+            opacity: opacity,
+            hardness: hardness
         ) else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
+        healingBrushAlignedCanvasOffset = offsetResolution.nextAlignedOffset
 
         replaceSelectedLayerRenderedPixels(
             output,
@@ -3763,6 +3799,20 @@ final class ImageEditorViewModel: ObservableObject {
             resetFrame: false
         )
         statusText = L10n.text("imageEditor.status.healingApplied")
+    }
+
+    func setHealingSource(at point: CGPoint?) {
+        healingSourcePoint = point
+        healingBrushAlignedCanvasOffset = nil
+        isSettingHealingSource = false
+        statusText = point == nil
+            ? L10n.text("imageEditor.status.healingSourceMissing")
+            : L10n.text("imageEditor.status.healingSourceSet")
+    }
+
+    func beginSettingHealingSource() {
+        isSettingHealingSource = true
+        statusText = L10n.text("imageEditor.status.healingSourcePending")
     }
 
     func reduceRedEye(at point: CGPoint?) {

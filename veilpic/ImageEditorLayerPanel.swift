@@ -11,6 +11,10 @@ import UniformTypeIdentifiers
 
 private let imageEditorLayerRowDragStride: CGFloat = 66
 
+enum ImageEditorLayerPanelTabAppearance {
+    static let foregroundColor = ImageEditorTheme.text
+}
+
 extension ImageEditorView {
     func layersPanel(showsTitle: Bool = true) -> some View {
         EditorPanel(title: L10n.text("imageEditor.panel.layersChannels"), showsTitle: showsTitle) {
@@ -81,16 +85,35 @@ extension ImageEditorView {
     }
 
     private var layerPanelTabs: some View {
-        Picker("", selection: $selectedLayerPanelTab) {
+        HStack(spacing: 2) {
             ForEach(ImageEditorLayerPanelTab.allCases) { tab in
-                Text(tab.title).tag(tab)
+                Button {
+                    selectedLayerPanelTab = tab
+                } label: {
+                    Text(tab.title)
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(Color(nsColor: ImageEditorLayerPanelTabAppearance.foregroundColor))
+                        .padding(.horizontal, 10)
+                        .frame(height: 24)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .focusable(false)
+                .xomoFocusEffectDisabled()
+                .background(
+                    selectedLayerPanelTab == tab
+                        ? Color.accentColor.opacity(0.82)
+                        : Color.white.opacity(0.07)
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
+                .accessibilityIdentifier("image-editor-layer-panel-tab-\(tab.rawValue)")
+                .accessibilityAddTraits(selectedLayerPanelTab == tab ? .isSelected : [])
             }
         }
-        .labelsHidden()
-        .pickerStyle(.segmented)
-        .environment(\.colorScheme, .dark)
-        .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
-        .focusable(false)
+        .padding(2)
+        .background(Color.black.opacity(0.16))
+        .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
+        .frame(maxWidth: .infinity, alignment: .center)
     }
 
     private var channelsPanelContent: some View {

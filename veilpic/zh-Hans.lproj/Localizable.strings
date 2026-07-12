@@ -2492,3 +2492,7 @@
 "imageEditor.cloneSampleSource.currentLayer" = "当前图层";
 "imageEditor.cloneSampleSource.currentAndBelow" = "当前及以下图层";
 "imageEditor.cloneSampleSource.allVisible" = "所有可见图层";
+"imageEditor.action.healingSourcePick" = "设置修复源";
+"imageEditor.status.healingSourceMissing" = "请先按住 Option 点击或设置修复源";
+"imageEditor.status.healingSourceSet" = "已设置修复源";
+"imageEditor.status.healingSourcePending" = "请在画布上点击以设置修复源";
