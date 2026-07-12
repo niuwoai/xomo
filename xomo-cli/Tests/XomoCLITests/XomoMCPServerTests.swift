@@ -24,7 +24,7 @@ struct XomoMCPServerTests {
         ]))
         let result = try #require(response["result"] as? [String: Any])
         let tools = try #require(result["tools"] as? [[String: Any]])
-        #expect(tools.count == 104)
+        #expect(tools.count == 105)
         #expect(tools.contains { $0["name"] as? String == "xomo.layer.list" })
         #expect(tools.contains { $0["name"] as? String == "xomo.channel.action" })
         #expect(tools.contains { $0["name"] as? String == "xomo.clipboard.action" })

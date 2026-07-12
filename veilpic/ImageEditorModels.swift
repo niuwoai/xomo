@@ -36,16 +36,85 @@ struct ImageEditorColorSwatch: Identifiable {
     }
 }
 
-struct ImageEditorBrushPreset: Identifiable {
+struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
     let id: String
+    let name: String?
     let size: CGFloat
+    let hardness: CGFloat
+    let flow: CGFloat
+    let spacing: CGFloat
+    let pressureControlsSize: Bool
+    let pressureControlsFlow: Bool
+    let pressureSensitivity: CGFloat
+    let isBuiltIn: Bool
+
+    init(
+        id: String,
+        name: String? = nil,
+        size: CGFloat,
+        hardness: CGFloat = 0.8,
+        flow: CGFloat = 100,
+        spacing: CGFloat = 25,
+        pressureControlsSize: Bool = true,
+        pressureControlsFlow: Bool = true,
+        pressureSensitivity: CGFloat = 50,
+        isBuiltIn: Bool = false
+    ) {
+        self.id = id
+        self.name = name
+        self.size = size
+        self.hardness = hardness
+        self.flow = flow
+        self.spacing = spacing
+        self.pressureControlsSize = pressureControlsSize
+        self.pressureControlsFlow = pressureControlsFlow
+        self.pressureSensitivity = pressureSensitivity
+        self.isBuiltIn = isBuiltIn
+    }
 
     var title: String {
-        L10n.format("imageEditor.brushPreset.size", Int(size.rounded()))
+        name ?? L10n.format("imageEditor.brushPreset.size", Int(size.rounded()))
+    }
+
+    var normalizedCustomPreset: ImageEditorBrushPreset {
+        let trimmedName = name?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let normalizedName = (trimmedName?.isEmpty == false ? trimmedName : nil)
+            ?? L10n.text("imageEditor.brushPreset.untitled")
+        return ImageEditorBrushPreset(
+            id: id.isEmpty ? UUID().uuidString : id,
+            name: String(normalizedName.prefix(80)),
+            size: max(1, min(96, size)),
+            hardness: max(0, min(1, hardness)),
+            flow: max(1, min(100, flow)),
+            spacing: max(1, min(200, spacing)),
+            pressureControlsSize: pressureControlsSize,
+            pressureControlsFlow: pressureControlsFlow,
+            pressureSensitivity: max(0, min(100, pressureSensitivity)),
+            isBuiltIn: false
+        )
+    }
+
+    func matches(
+        size: CGFloat,
+        hardness: CGFloat,
+        flow: CGFloat,
+        spacing: CGFloat,
+        pressureControlsSize: Bool,
+        pressureControlsFlow: Bool,
+        pressureSensitivity: CGFloat
+    ) -> Bool {
+        let tolerance = CGFloat(0.0001)
+        return abs(self.size - size) < tolerance
+            && abs(self.hardness - hardness) < tolerance
+            && abs(self.flow - flow) < tolerance
+            && abs(self.spacing - spacing) < tolerance
+            && self.pressureControlsSize == pressureControlsSize
+            && self.pressureControlsFlow == pressureControlsFlow
+            && abs(self.pressureSensitivity - pressureSensitivity) < tolerance
     }
 
     static let defaultPresets: [ImageEditorBrushPreset] = [3, 9, 18, 36, 72].map { size in
-        ImageEditorBrushPreset(id: "\(size)-px", size: CGFloat(size))
+        ImageEditorBrushPreset(id: "built-in-\(size)-px", size: CGFloat(size), isBuiltIn: true)
     }
 }
 

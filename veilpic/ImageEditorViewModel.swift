@@ -62,6 +62,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var brushPressureControlsSize = true
     @Published var brushPressureControlsFlow = true
     @Published var brushPressureSensitivity: CGFloat = 50
+    @Published private(set) var customBrushPresets: [ImageEditorBrushPreset] = []
     @Published var feather: CGFloat = 0
     @Published var selectionModifyAmount: CGFloat = 4
     @Published var tolerance: CGFloat = 0.22
@@ -317,6 +318,7 @@ final class ImageEditorViewModel: ObservableObject {
     ) {
         let quickMaskPreferences = ImageEditorQuickMaskPreferences.load(from: preferencesDefaults)
         let brushDynamicsPreferences = ImageEditorBrushDynamicsPreferences.load(from: preferencesDefaults)
+        let brushPresetPreferences = ImageEditorBrushPresetPreferences.load(from: preferencesDefaults)
         document = ImageEditorDocument(sourceName: sourceName, image: image)
         self.onApply = onApply
         workspacePreferencesDefaults = preferencesDefaults
@@ -326,6 +328,7 @@ final class ImageEditorViewModel: ObservableObject {
         brushPressureControlsSize = brushDynamicsPreferences.pressureControlsSize
         brushPressureControlsFlow = brushDynamicsPreferences.pressureControlsFlow
         brushPressureSensitivity = CGFloat(brushDynamicsPreferences.pressureSensitivity)
+        customBrushPresets = brushPresetPreferences.presets
         cachedCurrentImage = document.layers.first?.image
         refreshSelectionEdgeGeometry()
         syncSizeControlsFromDocument()
@@ -341,6 +344,7 @@ final class ImageEditorViewModel: ObservableObject {
     ) {
         let quickMaskPreferences = ImageEditorQuickMaskPreferences.load(from: preferencesDefaults)
         let brushDynamicsPreferences = ImageEditorBrushDynamicsPreferences.load(from: preferencesDefaults)
+        let brushPresetPreferences = ImageEditorBrushPresetPreferences.load(from: preferencesDefaults)
         self.document = document
         self.onApply = onApply
         workspacePreferencesDefaults = preferencesDefaults
@@ -350,6 +354,7 @@ final class ImageEditorViewModel: ObservableObject {
         brushPressureControlsSize = brushDynamicsPreferences.pressureControlsSize
         brushPressureControlsFlow = brushDynamicsPreferences.pressureControlsFlow
         brushPressureSensitivity = CGFloat(brushDynamicsPreferences.pressureSensitivity)
+        customBrushPresets = brushPresetPreferences.presets
         cachedCurrentImage = initialCompositeImage
         refreshSelectionEdgeGeometry()
         syncSizeControlsFromDocument()
@@ -1257,6 +1262,27 @@ final class ImageEditorViewModel: ObservableObject {
         )
     }
 
+    var brushPresets: [ImageEditorBrushPreset] {
+        ImageEditorBrushPreset.defaultPresets + customBrushPresets
+    }
+
+    var activeBrushPreset: ImageEditorBrushPreset? {
+        customBrushPresets.first(where: brushPresetMatchesCurrentSettings)
+            ?? ImageEditorBrushPreset.defaultPresets.first(where: brushPresetMatchesCurrentSettings)
+    }
+
+    private func brushPresetMatchesCurrentSettings(_ preset: ImageEditorBrushPreset) -> Bool {
+        preset.matches(
+            size: brushSize,
+            hardness: hardness,
+            flow: brushFlow,
+            spacing: brushSpacing,
+            pressureControlsSize: brushPressureControlsSize,
+            pressureControlsFlow: brushPressureControlsFlow,
+            pressureSensitivity: brushPressureSensitivity
+        )
+    }
+
     var characterPanelSummaryText: String {
         let previewText = textValue.trimmingCharacters(in: .whitespacesAndNewlines)
         return L10n.format(
@@ -1386,7 +1412,57 @@ final class ImageEditorViewModel: ObservableObject {
 
     func applyBrushPreset(_ preset: ImageEditorBrushPreset) {
         brushSize = max(1, min(96, preset.size))
+        hardness = max(0, min(1, preset.hardness))
+        brushFlow = max(1, min(100, preset.flow))
+        brushSpacing = max(1, min(200, preset.spacing))
+        brushPressureControlsSize = preset.pressureControlsSize
+        brushPressureControlsFlow = preset.pressureControlsFlow
+        brushPressureSensitivity = max(0, min(100, preset.pressureSensitivity))
+        persistBrushDynamicsPreferences()
         statusText = L10n.format("imageEditor.status.brushPresetApplied", preset.title, brushesPanelSummaryText)
+    }
+
+    @discardableResult
+    func createBrushPresetFromCurrentSettings() -> ImageEditorBrushPreset? {
+        guard customBrushPresets.count < ImageEditorBrushPresetPreferences.maximumPresetCount else {
+            statusText = L10n.format(
+                "imageEditor.status.brushPresetLimitReached",
+                ImageEditorBrushPresetPreferences.maximumPresetCount
+            )
+            return nil
+        }
+
+        let existingNames = Set(customBrushPresets.compactMap(\.name))
+        var sequence = customBrushPresets.count + 1
+        var name = L10n.format("imageEditor.brushPreset.customName", sequence)
+        while existingNames.contains(name) {
+            sequence += 1
+            name = L10n.format("imageEditor.brushPreset.customName", sequence)
+        }
+        let preset = ImageEditorBrushPreset(
+            id: UUID().uuidString,
+            name: name,
+            size: brushSize,
+            hardness: hardness,
+            flow: brushFlow,
+            spacing: brushSpacing,
+            pressureControlsSize: brushPressureControlsSize,
+            pressureControlsFlow: brushPressureControlsFlow,
+            pressureSensitivity: brushPressureSensitivity
+        ).normalizedCustomPreset
+        customBrushPresets.append(preset)
+        persistBrushPresetPreferences()
+        statusText = L10n.format("imageEditor.status.brushPresetCreated", preset.title)
+        return preset
+    }
+
+    func deleteBrushPreset(_ preset: ImageEditorBrushPreset) {
+        guard !preset.isBuiltIn,
+              let index = customBrushPresets.firstIndex(where: { $0.id == preset.id })
+        else { return }
+        let removed = customBrushPresets.remove(at: index)
+        persistBrushPresetPreferences()
+        statusText = L10n.format("imageEditor.status.brushPresetDeleted", removed.title)
     }
 
     func applyOptionsSelectionMode(_ mode: ImageEditorSelectionMode) {
@@ -1947,6 +2023,11 @@ final class ImageEditorViewModel: ObservableObject {
             pressureControlsFlow: brushPressureControlsFlow,
             pressureSensitivity: Double(brushPressureSensitivity)
         ).save(to: workspacePreferencesDefaults)
+    }
+
+    private func persistBrushPresetPreferences() {
+        ImageEditorBrushPresetPreferences(presets: customBrushPresets)
+            .save(to: workspacePreferencesDefaults)
     }
 
     func setBrushPressureControlsSize(_ isEnabled: Bool) {

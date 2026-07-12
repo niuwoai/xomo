@@ -1951,7 +1951,30 @@ struct ImageEditorScopeTests {
         #expect(brushesMenuSource.contains("imageEditor.menu.window.brushes.tools"))
         #expect(brushesMenuSource.contains("viewModel.selectBrushPanelTool(tool)"))
         #expect(brushesMenuSource.contains("imageEditor.menu.window.brushes.presets"))
+        #expect(brushesMenuSource.contains("ForEach(viewModel.brushPresets)"))
         #expect(brushesMenuSource.contains("viewModel.applyBrushPreset(preset)"))
+        #expect(brushesMenuSource.contains("viewModel.createBrushPresetFromCurrentSettings()"))
+        #expect(brushesMenuSource.contains("viewModel.deleteBrushPreset(activePreset)"))
+    }
+
+    @Test func brushAndEraserOptionsExposeNonFocusablePresetManagement() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let menuStart = try #require(source.range(of: "private var brushPresetMenu: some View"))
+        let pressureStart = try #require(
+            source[menuStart.upperBound...].range(of: "private var brushPressureMenu: some View")
+        )
+        let menuSource = source[menuStart.lowerBound..<pressureStart.lowerBound]
+
+        #expect(source.contains("if usesBrushDynamicsOptions {\n                    brushPresetMenu"))
+        #expect(menuSource.contains("ForEach(viewModel.brushPresets)"))
+        #expect(menuSource.contains("viewModel.activeBrushPreset?.id == preset.id"))
+        #expect(menuSource.contains("viewModel.createBrushPresetFromCurrentSettings()"))
+        #expect(menuSource.contains("viewModel.deleteBrushPreset(activePreset)"))
+        #expect(menuSource.contains(".focusable(false)"))
+        #expect(menuSource.contains("image-editor-brush-preset-menu"))
     }
 
     @MainActor
