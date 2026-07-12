@@ -1600,6 +1600,9 @@
 "imageEditor.status.noSavedSelection" = "保存された選択範囲がありません";
 "imageEditor.status.noReselectSelection" = "再選択できる選択範囲がありません";
 "imageEditor.status.selectionCleared" = "現在の選択範囲を解除しました";
+"imageEditor.status.quickMaskEnabled" = "クイックマスクを有効にしました。未選択領域を赤で表示します";
+"imageEditor.status.quickMaskDisabled" = "クイックマスクを無効にしました";
+"imageEditor.status.quickMaskNeedsSelection" = "クイックマスクを有効にする前に選択範囲を作成してください";
 "imageEditor.status.selectionInverted" = "選択範囲を反転しました";
 "imageEditor.status.historyCleared" = "履歴を消去し、現在の画像を新しい開始状態にしました";
 "imageEditor.status.historySnapshotCreated" = "履歴スナップショット「%@」を作成しました";
@@ -1947,6 +1950,7 @@
 "imageEditor.action.featherSelection" = "選択範囲をぼかす";
 "imageEditor.action.borderSelection" = "選択範囲を境界線化";
 "imageEditor.action.smoothSelection" = "選択範囲を滑らかにする";
+"imageEditor.action.quickMask" = "クイックマスクモード";
 "imageEditor.action.fillSelectionHoles" = "選択範囲の穴を埋める";
 "imageEditor.action.removeSelectionSpeckles" = "選択範囲のノイズを削除";
 "imageEditor.action.fillSelection" = "選択範囲を塗りつぶし";

@@ -389,9 +389,26 @@ struct ImageEditorView: View {
 
             Divider().overlay(editorBorder)
             colorChips
+            quickMaskButton
         }
         .frame(width: imageEditorToolRailWidth)
         .padding(.vertical, 8)
+    }
+
+    private var quickMaskButton: some View {
+        Button {
+            viewModel.toggleQuickMaskMode()
+        } label: {
+            Image(systemName: "circle.inset.filled")
+                .font(.system(size: 15, weight: .semibold))
+                .frame(width: 30, height: 30)
+        }
+        .buttonStyle(EditorIconButtonStyle(isSelected: viewModel.isQuickMaskMode))
+        .focusable(false)
+        .xomoFocusEffectDisabled()
+        .help(L10n.text("imageEditor.action.quickMask"))
+        .accessibilityIdentifier("image-editor-quick-mask")
+        .accessibilityValue(viewModel.isQuickMaskMode ? "selected" : "available")
     }
 
     @ViewBuilder
@@ -707,6 +724,7 @@ struct ImageEditorView: View {
         case .reselectSelection: viewModel.reselectSelection()
         case .invertSelection: viewModel.invertSelection()
         case .featherSelection: viewModel.featherSelection()
+        case .toggleQuickMask: viewModel.toggleQuickMaskMode()
         case .applyLastFilter: viewModel.applySelectedFilter()
         case .toggleRulers: viewModel.toggleRulersVisible()
         case .toggleGuides: viewModel.toggleGuidesVisible()
@@ -816,6 +834,7 @@ struct ImageEditorView: View {
                     gridOverlay(in: geometry.size)
                     guideOverlay(in: geometry.size)
                     guideInteractionOverlay(in: geometry.size)
+                    quickMaskOverlay(in: geometry.size)
                     selectionOverlay(in: geometry.size)
                     colorSamplerOverlay(in: geometry.size)
                     layerTransformOverlay(in: geometry.size)
@@ -2867,28 +2886,44 @@ struct ImageEditorView: View {
     }
 
     @ViewBuilder
+    private func quickMaskOverlay(in size: CGSize) -> some View {
+        if let overlayImage = viewModel.quickMaskOverlayImage {
+            let imageRect = fittedImageRect(in: size)
+            Image(nsImage: overlayImage)
+                .resizable()
+                .interpolation(.none)
+                .frame(width: imageRect.width, height: imageRect.height)
+                .position(x: imageRect.midX, y: imageRect.midY)
+                .allowsHitTesting(false)
+                .accessibilityHidden(true)
+        }
+    }
+
+    @ViewBuilder
     private func selectionOverlay(in size: CGSize) -> some View {
-        let activeLasso = viewModel.selectedTool == .lasso && dragPoints.count > 1
-        let activeSelection = viewModel.document.areExtrasVisible && viewModel.document.areSelectionEdgesVisible
-            ? viewModel.selection
-            : nil
-        if let selection = activeSelection ?? (activeLasso ? ImageEditorSelection.polygon(dragPoints) : nil) {
-            Canvas { context, _ in
-                let converted = selection.points.map { viewPoint(from: $0, in: size) }
-                guard let first = converted.first else { return }
-                var path = Path()
-                path.move(to: first)
-                for point in converted.dropFirst() {
-                    path.addLine(to: point)
+        if !viewModel.isQuickMaskMode {
+            let activeLasso = viewModel.selectedTool == .lasso && dragPoints.count > 1
+            let activeSelection = viewModel.document.areExtrasVisible && viewModel.document.areSelectionEdgesVisible
+                ? viewModel.selection
+                : nil
+            if let selection = activeSelection ?? (activeLasso ? ImageEditorSelection.polygon(dragPoints) : nil) {
+                Canvas { context, _ in
+                    let converted = selection.points.map { viewPoint(from: $0, in: size) }
+                    guard let first = converted.first else { return }
+                    var path = Path()
+                    path.move(to: first)
+                    for point in converted.dropFirst() {
+                        path.addLine(to: point)
+                    }
+                    if selection.isPolygon || converted.count == 4 {
+                        path.closeSubpath()
+                    }
+                    let stroke = StrokeStyle(lineWidth: 1.4, dash: [5, 4])
+                    context.stroke(path, with: .color(Color.white.opacity(0.92)), style: stroke)
+                    context.stroke(path, with: .color(Color(nsColor: ImageEditorTheme.selected).opacity(0.9)), style: StrokeStyle(lineWidth: 1.4, dash: [5, 4], dashPhase: 4))
                 }
-                if selection.isPolygon || converted.count == 4 {
-                    path.closeSubpath()
-                }
-                let stroke = StrokeStyle(lineWidth: 1.4, dash: [5, 4])
-                context.stroke(path, with: .color(Color.white.opacity(0.92)), style: stroke)
-                context.stroke(path, with: .color(Color(nsColor: ImageEditorTheme.selected).opacity(0.9)), style: StrokeStyle(lineWidth: 1.4, dash: [5, 4], dashPhase: 4))
+                .allowsHitTesting(false)
             }
-            .allowsHitTesting(false)
         }
     }
 
@@ -5438,6 +5473,7 @@ enum ImageEditorKeyboardShortcutAction: Equatable {
     case reselectSelection
     case invertSelection
     case featherSelection
+    case toggleQuickMask
     case applyLastFilter
     case toggleRulers
     case toggleGuides
@@ -5528,6 +5564,7 @@ enum ImageEditorKeyboardShortcutAction: Equatable {
         if key == "d", relevantFlags == [.command, .shift] { return .reselectSelection }
         if key == "i", relevantFlags == [.command, .shift] { return .invertSelection }
         if key == "d", relevantFlags == [.command, .option] { return .featherSelection }
+        if key == "q", relevantFlags.isEmpty { return .toggleQuickMask }
         if key == "f", relevantFlags == [.command] { return .applyLastFilter }
         if key == "r", relevantFlags == [.command] { return .toggleRulers }
         if key == ";", relevantFlags == [.command] { return .toggleGuides }
@@ -5636,6 +5673,9 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
                 modifierFlags: event.modifierFlags,
                 keyCode: event.keyCode
             ) {
+                if action == .toggleQuickMask, isTextInputActive {
+                    return event
+                }
                 perform(action)
                 return nil
             }

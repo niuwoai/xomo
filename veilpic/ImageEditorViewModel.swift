@@ -38,6 +38,7 @@ final class ImageEditorViewModel: ObservableObject {
 
     @Published var document: ImageEditorDocument {
         didSet {
+            refreshQuickMaskOverlay()
             if preservesRenderedImageCachesForNextDocumentMutation {
                 preservesRenderedImageCachesForNextDocumentMutation = false
                 return
@@ -59,6 +60,8 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var selectionModifyAmount: CGFloat = 4
     @Published var tolerance: CGFloat = 0.22
     @Published var selectionMode: ImageEditorSelectionMode = .replace
+    @Published var isQuickMaskMode = false
+    @Published private(set) var quickMaskOverlayImage: NSImage?
     @Published var isColorRangeSheetPresented = false
     @Published var colorRangeColor: NSColor = .systemRed
     @Published var colorRangeIncludeColors: [NSColor] = [.systemRed]
@@ -1820,8 +1823,34 @@ final class ImageEditorViewModel: ObservableObject {
         pushUndo()
         reselectableSelection = selection
         document.selection = nil
+        isQuickMaskMode = false
         appendHistory(L10n.text("imageEditor.history.selectionCleared"))
         statusText = L10n.text("imageEditor.status.selectionCleared")
+    }
+
+    func toggleQuickMaskMode() {
+        guard hasSelection else {
+            isQuickMaskMode = false
+            quickMaskOverlayImage = nil
+            statusText = L10n.text("imageEditor.status.quickMaskNeedsSelection")
+            return
+        }
+
+        isQuickMaskMode.toggle()
+        refreshQuickMaskOverlay()
+        statusText = L10n.text(
+            isQuickMaskMode
+                ? "imageEditor.status.quickMaskEnabled"
+                : "imageEditor.status.quickMaskDisabled"
+        )
+    }
+
+    private func refreshQuickMaskOverlay() {
+        guard isQuickMaskMode, let selection = document.selection else {
+            quickMaskOverlayImage = nil
+            return
+        }
+        quickMaskOverlayImage = selection.quickMaskOverlayImage(canvasSize: document.canvasSize)
     }
 
     func invertSelection() {

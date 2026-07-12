@@ -1071,6 +1071,11 @@ extension ImageEditorView {
         }
         .keyboardShortcut("i", modifiers: [.command, .shift])
         .disabled(!viewModel.hasSelection)
+        Button(L10n.text("imageEditor.action.quickMask")) {
+            viewModel.toggleQuickMaskMode()
+        }
+        .keyboardShortcut("q", modifiers: [])
+        .disabled(!viewModel.hasSelection)
         Divider()
         Button(L10n.text("imageEditor.action.selectionFromLayer")) {
             viewModel.loadSelectionFromLayerTransparency()

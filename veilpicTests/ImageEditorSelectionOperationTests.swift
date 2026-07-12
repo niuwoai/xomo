@@ -61,6 +61,37 @@ struct ImageEditorSelectionOperationTests {
         #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionAll"))
     }
 
+    @Test func quickMaskShowsUnselectedAreaAndUsesQShortcut() throws {
+        let canvasSize = NSSize(width: 8, height: 6)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: testImage(size: canvasSize)) { _ in }
+
+        viewModel.toggleQuickMaskMode()
+        #expect(!viewModel.isQuickMaskMode)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.quickMaskNeedsSelection"))
+
+        viewModel.createRectSelection(from: CGPoint(x: 2, y: 1), to: CGPoint(x: 6, y: 4))
+        viewModel.toggleQuickMaskMode()
+
+        #expect(viewModel.isQuickMaskMode)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.quickMaskEnabled"))
+        let overlay = try #require(viewModel.quickMaskOverlayImage)
+        let unselectedColor = try #require(overlay.color(at: CGPoint(x: 0, y: 0))?.usingColorSpace(.deviceRGB))
+        let selectedAlpha = overlay.color(at: CGPoint(x: 3, y: 2))?.alphaComponent ?? 0
+        #expect(unselectedColor.redComponent > 0.9)
+        #expect(unselectedColor.alphaComponent > 0.4)
+        #expect(selectedAlpha < 0.05)
+        #expect(
+            ImageEditorKeyboardShortcutAction.resolve(
+                charactersIgnoringModifiers: "q",
+                modifierFlags: []
+            ) == .toggleQuickMask
+        )
+
+        viewModel.clearSelection()
+        #expect(!viewModel.isQuickMaskMode)
+        #expect(viewModel.quickMaskOverlayImage == nil)
+    }
+
     @Test func imageEditorCanReselectLastClearedSelection() async throws {
         let canvasSize = NSSize(width: 40, height: 30)
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: testImage(size: canvasSize)) { _ in }

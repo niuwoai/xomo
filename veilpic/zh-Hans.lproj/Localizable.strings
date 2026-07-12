@@ -1600,6 +1600,9 @@
 "imageEditor.status.noSavedSelection" = "没有已保存的选区";
 "imageEditor.status.noReselectSelection" = "没有可重新选择的选区";
 "imageEditor.status.selectionCleared" = "已清除当前选区";
+"imageEditor.status.quickMaskEnabled" = "已进入快速蒙版，未选区域显示为红色";
+"imageEditor.status.quickMaskDisabled" = "已退出快速蒙版";
+"imageEditor.status.quickMaskNeedsSelection" = "请先创建选区，再进入快速蒙版";
 "imageEditor.status.selectionInverted" = "已反选选区";
 "imageEditor.status.historyCleared" = "已清理历史记录，当前画面已作为新的起点";
 "imageEditor.status.historySnapshotCreated" = "已创建历史快照“%@”";
@@ -1947,6 +1950,7 @@
 "imageEditor.action.featherSelection" = "羽化选区";
 "imageEditor.action.borderSelection" = "边界选区";
 "imageEditor.action.smoothSelection" = "平滑选区";
+"imageEditor.action.quickMask" = "快速蒙版模式";
 "imageEditor.action.fillSelectionHoles" = "填充选区孔洞";
 "imageEditor.action.removeSelectionSpeckles" = "删除选区噪点";
 "imageEditor.action.fillSelection" = "填充选区";
