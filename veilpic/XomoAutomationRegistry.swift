@@ -1305,6 +1305,19 @@ final class XomoAutomationRegistry {
         let action = try requiredString("action", in: arguments)
         if let size = arguments["size"]?.doubleValue { viewModel.brushSize = size }
         if let opacity = arguments["opacity"]?.doubleValue { viewModel.opacity = opacity }
+        if action == "setCloneSource" || action == "cloneStamp" {
+            if let aligned = arguments["aligned"]?.boolValue {
+                viewModel.isCloneStampAligned = aligned
+            }
+            if let source = arguments["sampleSource"]?.stringValue {
+                guard let sampleSource = ImageEditorCloneSampleSource(rawValue: source) else {
+                    throw XomoAutomationCallError.invalidArgument(
+                        "Clone sampleSource must be currentLayer, currentAndBelow, or allVisible"
+                    )
+                }
+                viewModel.cloneStampSampleSource = sampleSource
+            }
+        }
         if action == "paintBucket" {
             viewModel.paintBucketFill(at: try requiredPoint(arguments))
             return
@@ -1863,7 +1876,9 @@ private extension XomoAutomationRegistry {
             "x": XomoAutomationSchema.number(description: "Canvas x coordinate for point actions"),
             "y": XomoAutomationSchema.number(description: "Canvas y coordinate for point actions"),
             "size": XomoAutomationSchema.number(description: "Brush diameter"),
-            "opacity": XomoAutomationSchema.number(description: "Brush opacity")
+            "opacity": XomoAutomationSchema.number(description: "Brush opacity"),
+            "aligned": XomoAutomationSchema.boolean(description: "Keep the clone source offset aligned across strokes"),
+            "sampleSource": XomoAutomationSchema.string(description: "Clone sampling layer range", values: ["currentLayer", "currentAndBelow", "allVisible"])
         ], required: ["action"]),
         tool("xomo.shape.create", "Create an editable rectangle or ellipse shape layer.", [
             "kind": XomoAutomationSchema.string(description: "Shape kind", values: ["rectangle", "ellipse"]),

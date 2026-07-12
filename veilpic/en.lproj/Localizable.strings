@@ -2487,3 +2487,8 @@
 "imageEditor.quickMask.color" = "Color";
 "imageEditor.quickMask.opacity" = "Opacity";
 "imageEditor.status.quickMaskOptionsUpdated" = "Quick Mask display options updated";
+"imageEditor.option.cloneAligned" = "Aligned";
+"imageEditor.option.cloneSampleSource" = "Sample";
+"imageEditor.cloneSampleSource.currentLayer" = "Current Layer";
+"imageEditor.cloneSampleSource.currentAndBelow" = "Current & Below";
+"imageEditor.cloneSampleSource.allVisible" = "All Visible Layers";

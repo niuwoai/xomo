@@ -2487,3 +2487,8 @@
 "imageEditor.quickMask.color" = "颜色";
 "imageEditor.quickMask.opacity" = "不透明度";
 "imageEditor.status.quickMaskOptionsUpdated" = "已更新快速蒙版显示选项";
+"imageEditor.option.cloneAligned" = "对齐";
+"imageEditor.option.cloneSampleSource" = "样本";
+"imageEditor.cloneSampleSource.currentLayer" = "当前图层";
+"imageEditor.cloneSampleSource.currentAndBelow" = "当前及以下图层";
+"imageEditor.cloneSampleSource.allVisible" = "所有可见图层";
