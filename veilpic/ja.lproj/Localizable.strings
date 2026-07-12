@@ -503,6 +503,11 @@
 "imageEditor.option.hardness" = "硬さ";
 "imageEditor.option.flow" = "流量";
 "imageEditor.option.spacing" = "間隔";
+"imageEditor.option.pressure" = "筆圧";
+"imageEditor.option.pressureSize" = "サイズを制御";
+"imageEditor.option.pressureFlow" = "流量を制御";
+"imageEditor.option.pressureSensitivity" = "感度";
+"imageEditor.option.pressureHelp" = "ペンの筆圧でブラシサイズと流量を制御します";
 "imageEditor.option.feather" = "ぼかし";
 "imageEditor.option.tolerance" = "許容値";
 "imageEditor.option.selectionModifyAmount" = "拡張/縮小";

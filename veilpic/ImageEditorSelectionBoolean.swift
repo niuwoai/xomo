@@ -235,20 +235,48 @@ extension ImageEditorSelectionMask {
         spacing: CGFloat = 0.25,
         reveal: Bool
     ) -> ImageEditorSelectionMask? {
+        paintedByQuickMaskStroke(
+            samples: points.map { ImageEditorBrushStrokeSample(point: $0) },
+            canvasSize: canvasSize,
+            diameter: diameter,
+            opacity: opacity,
+            hardness: hardness,
+            flow: flow,
+            spacing: spacing,
+            reveal: reveal
+        )
+    }
+
+    func paintedByQuickMaskStroke(
+        samples: [ImageEditorBrushStrokeSample],
+        canvasSize: CGSize,
+        diameter: CGFloat,
+        opacity: CGFloat,
+        hardness: CGFloat = 1,
+        flow: CGFloat = 1,
+        spacing: CGFloat = 0.25,
+        pressureControlsSize: Bool = false,
+        pressureControlsFlow: Bool = false,
+        pressureSensitivity: CGFloat = 0.5,
+        reveal: Bool
+    ) -> ImageEditorSelectionMask? {
         guard width > 0,
               height > 0,
               alpha.count == width * height,
               canvasSize.width > 0,
               canvasSize.height > 0,
-              points.count > 1,
+              !samples.isEmpty,
               let coverage = quickMaskStrokeCoverage(
-                points: points,
+                samples: samples,
                 canvasSize: canvasSize,
                 diameter: diameter,
                 opacity: opacity,
                 hardness: hardness,
                 flow: flow,
-                spacing: spacing
+                spacing: spacing,
+                pressureControlsSize: pressureControlsSize,
+                pressureControlsFlow: pressureControlsFlow,
+                pressureSensitivity: pressureSensitivity
               )
         else { return nil }
 
@@ -265,31 +293,42 @@ extension ImageEditorSelectionMask {
     }
 
     private func quickMaskStrokeCoverage(
-        points: [CGPoint],
+        samples: [ImageEditorBrushStrokeSample],
         canvasSize: CGSize,
         diameter: CGFloat,
         opacity: CGFloat,
         hardness: CGFloat,
         flow: CGFloat,
-        spacing: CGFloat
+        spacing: CGFloat,
+        pressureControlsSize: Bool,
+        pressureControlsFlow: Bool,
+        pressureSensitivity: CGFloat
     ) -> [UInt8]? {
-        guard points.count > 1 else { return nil }
+        guard !samples.isEmpty else { return nil }
         let scaleX = CGFloat(width) / canvasSize.width
         let scaleY = CGFloat(height) / canvasSize.height
-        let scaledPoints = points.map { CGPoint(x: $0.x * scaleX, y: $0.y * scaleY) }
+        let scaledSamples = samples.map {
+            ImageEditorBrushStrokeSample(
+                point: CGPoint(x: $0.point.x * scaleX, y: $0.point.y * scaleY),
+                pressure: $0.pressure
+            )
+        }
         let scaledDiameter = max(1, diameter * (scaleX + scaleY) / 2)
         let settings = ImageEditorBrushStrokeSettings(
             diameter: scaledDiameter,
             hardness: hardness,
             opacity: opacity,
             flow: flow,
-            spacing: spacing
+            spacing: spacing,
+            pressureControlsSize: pressureControlsSize,
+            pressureControlsFlow: pressureControlsFlow,
+            pressureSensitivity: pressureSensitivity
         )
         return ImageEditorBrushStrokeKernel.coverage(
             width: width,
             height: height,
-            centers: ImageEditorBrushStrokeKernel.stampCenters(
-                points: scaledPoints,
+            stamps: ImageEditorBrushStrokeKernel.stampSamples(
+                samples: scaledSamples,
                 diameter: scaledDiameter,
                 spacing: spacing
             ),

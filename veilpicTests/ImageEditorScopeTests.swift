@@ -370,6 +370,28 @@ struct ImageEditorScopeTests {
         #expect(source.contains("viewModel.endCanvasMagnify()"))
     }
 
+    @Test func canvasPublishesItsAutomationIdentifierAsAnAccessibilityContainer() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let identifier = try #require(
+            source.range(of: ".accessibilityIdentifier(\"image-editor-canvas\")")
+        )
+        let prefix = source[..<identifier.lowerBound].suffix(240)
+
+        #expect(prefix.contains(".accessibilityElement(children: .contain)"))
+    }
+
+    @Test func workspaceDoesNotOverrideChildAutomationIdentifiers() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/XomoEditorWorkspaceView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(!source.contains(".accessibilityIdentifier(\"xomo-editor-workspace\")"))
+    }
+
     @MainActor
     @Test func canvasScrollWheelZoomComposesDiscreteTicksAnchoredAtCursor() {
         // 鼠标滚轮的离散语义：每个 tick 调 magnifyCanvas 后立即 endCanvasMagnify，

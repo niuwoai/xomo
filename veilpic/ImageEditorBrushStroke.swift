@@ -8,12 +8,45 @@
 import AppKit
 import Foundation
 
+struct ImageEditorBrushStrokeSample: Equatable {
+    var point: CGPoint
+    var pressure: CGFloat?
+
+    init(point: CGPoint, pressure: CGFloat? = nil) {
+        self.point = point
+        self.pressure = pressure
+    }
+}
+
 struct ImageEditorBrushStrokeSettings: Equatable {
     var diameter: CGFloat
     var hardness: CGFloat
     var opacity: CGFloat
     var flow: CGFloat
     var spacing: CGFloat
+    var pressureControlsSize: Bool
+    var pressureControlsFlow: Bool
+    var pressureSensitivity: CGFloat
+
+    init(
+        diameter: CGFloat,
+        hardness: CGFloat,
+        opacity: CGFloat,
+        flow: CGFloat,
+        spacing: CGFloat,
+        pressureControlsSize: Bool = false,
+        pressureControlsFlow: Bool = false,
+        pressureSensitivity: CGFloat = 0.5
+    ) {
+        self.diameter = diameter
+        self.hardness = hardness
+        self.opacity = opacity
+        self.flow = flow
+        self.spacing = spacing
+        self.pressureControlsSize = pressureControlsSize
+        self.pressureControlsFlow = pressureControlsFlow
+        self.pressureSensitivity = pressureSensitivity
+    }
 
     var normalized: ImageEditorBrushStrokeSettings {
         ImageEditorBrushStrokeSettings(
@@ -21,7 +54,10 @@ struct ImageEditorBrushStrokeSettings: Equatable {
             hardness: max(0, min(1, hardness)),
             opacity: max(0, min(1, opacity)),
             flow: max(0.01, min(1, flow)),
-            spacing: max(0.01, min(2, spacing))
+            spacing: max(0.01, min(2, spacing)),
+            pressureControlsSize: pressureControlsSize,
+            pressureControlsFlow: pressureControlsFlow,
+            pressureSensitivity: max(0, min(1, pressureSensitivity))
         )
     }
 }
@@ -34,34 +70,55 @@ enum ImageEditorBrushStrokeKernel {
         diameter: CGFloat,
         spacing: CGFloat
     ) -> [CGPoint] {
-        guard let first = points.first else { return [] }
+        stampSamples(
+            samples: points.map { ImageEditorBrushStrokeSample(point: $0) },
+            diameter: diameter,
+            spacing: spacing
+        ).map(\.point)
+    }
+
+    static func stampSamples(
+        samples: [ImageEditorBrushStrokeSample],
+        diameter: CGFloat,
+        spacing: CGFloat
+    ) -> [ImageEditorBrushStrokeSample] {
+        let normalizedSamples = normalizedPressureSamples(samples)
+        guard let first = normalizedSamples.first else { return [] }
         let step = max(0.5, max(1, diameter) * max(0.01, min(2, spacing)))
-        var centers = [first]
+        var stamps = [first]
         var distanceUntilNextStamp = step
 
-        for (start, end) in zip(points, points.dropFirst()) {
-            let deltaX = end.x - start.x
-            let deltaY = end.y - start.y
+        for (start, end) in zip(normalizedSamples, normalizedSamples.dropFirst()) {
+            let deltaX = end.point.x - start.point.x
+            let deltaY = end.point.y - start.point.y
             let segmentLength = hypot(deltaX, deltaY)
             guard segmentLength > 0.0001 else { continue }
 
             while distanceUntilNextStamp <= segmentLength {
                 let progress = distanceUntilNextStamp / segmentLength
-                centers.append(CGPoint(
-                    x: start.x + deltaX * progress,
-                    y: start.y + deltaY * progress
+                let startPressure = start.pressure ?? 1
+                let endPressure = end.pressure ?? startPressure
+                stamps.append(ImageEditorBrushStrokeSample(
+                    point: CGPoint(
+                        x: start.point.x + deltaX * progress,
+                        y: start.point.y + deltaY * progress
+                    ),
+                    pressure: startPressure + (endPressure - startPressure) * progress
                 ))
                 distanceUntilNextStamp += step
             }
             distanceUntilNextStamp -= segmentLength
         }
 
-        if let lastPoint = points.last,
-           let lastCenter = centers.last,
-           hypot(lastPoint.x - lastCenter.x, lastPoint.y - lastCenter.y) > step * 0.5 {
-            centers.append(lastPoint)
+        if let lastSample = normalizedSamples.last,
+           let lastStamp = stamps.last,
+           hypot(
+            lastSample.point.x - lastStamp.point.x,
+            lastSample.point.y - lastStamp.point.y
+           ) > step * 0.5 {
+            stamps.append(lastSample)
         }
-        return centers
+        return stamps
     }
 
     static func coverage(
@@ -70,24 +127,44 @@ enum ImageEditorBrushStrokeKernel {
         centers: [CGPoint],
         settings: ImageEditorBrushStrokeSettings
     ) -> [UInt8] {
-        guard width > 0, height > 0, !centers.isEmpty else { return [] }
+        coverage(
+            width: width,
+            height: height,
+            stamps: centers.map { ImageEditorBrushStrokeSample(point: $0, pressure: 1) },
+            settings: settings
+        )
+    }
+
+    static func coverage(
+        width: Int,
+        height: Int,
+        stamps: [ImageEditorBrushStrokeSample],
+        settings: ImageEditorBrushStrokeSettings
+    ) -> [UInt8] {
+        guard width > 0, height > 0, !stamps.isEmpty else { return [] }
         let settings = settings.normalized
-        let radius = settings.diameter / 2
-        let innerRadius = radius * settings.hardness
         var accumulated = [CGFloat](repeating: 0, count: width * height)
 
-        for center in centers {
-            let minX = max(0, Int(floor(center.x - radius - 1)))
-            let maxX = min(width - 1, Int(ceil(center.x + radius + 1)))
-            let minY = max(0, Int(floor(center.y - radius - 1)))
-            let maxY = min(height - 1, Int(ceil(center.y + radius + 1)))
+        for stamp in stamps {
+            let mappedPressure = mappedPressure(
+                stamp.pressure ?? 1,
+                sensitivity: settings.pressureSensitivity
+            )
+            let diameterScale = settings.pressureControlsSize ? mappedPressure : 1
+            let flowScale = settings.pressureControlsFlow ? mappedPressure : 1
+            let radius = max(1, settings.diameter * diameterScale) / 2
+            let innerRadius = radius * settings.hardness
+            let minX = max(0, Int(floor(stamp.point.x - radius - 1)))
+            let maxX = min(width - 1, Int(ceil(stamp.point.x + radius + 1)))
+            let minY = max(0, Int(floor(stamp.point.y - radius - 1)))
+            let maxY = min(height - 1, Int(ceil(stamp.point.y + radius + 1)))
             guard minX <= maxX, minY <= maxY else { continue }
 
             for y in minY...maxY {
                 for x in minX...maxX {
                     let distance = hypot(
-                        CGFloat(x) + 0.5 - center.x,
-                        CGFloat(y) + 0.5 - center.y
+                        CGFloat(x) + 0.5 - stamp.point.x,
+                        CGFloat(y) + 0.5 - stamp.point.y
                     )
                     let stampCoverage = radialCoverage(
                         distance: distance,
@@ -96,7 +173,7 @@ enum ImageEditorBrushStrokeKernel {
                     )
                     guard stampCoverage > 0 else { continue }
                     let index = y * width + x
-                    let deposited = stampCoverage * settings.flow
+                    let deposited = stampCoverage * settings.flow * flowScale
                     accumulated[index] = min(
                         settings.opacity,
                         accumulated[index] + (1 - accumulated[index]) * deposited
@@ -106,6 +183,14 @@ enum ImageEditorBrushStrokeKernel {
         }
 
         return accumulated.map { UInt8(($0 * 255).rounded()) }
+    }
+
+    static func mappedPressure(_ pressure: CGFloat, sensitivity: CGFloat) -> CGFloat {
+        let normalizedPressure = max(0, min(1, pressure))
+        let normalizedSensitivity = max(0, min(1, sensitivity))
+        let exponent = pow(4, 0.5 - normalizedSensitivity)
+        let curved = pow(normalizedPressure, exponent)
+        return 0.05 + curved * 0.95
     }
 
     static func composite(
@@ -162,6 +247,19 @@ enum ImageEditorBrushStrokeKernel {
     private static func byte(_ value: CGFloat) -> UInt8 {
         UInt8(max(0, min(255, (value * 255).rounded())))
     }
+
+    private static func normalizedPressureSamples(
+        _ samples: [ImageEditorBrushStrokeSample]
+    ) -> [ImageEditorBrushStrokeSample] {
+        let firstKnownPressure = samples.compactMap(\.pressure).first.map { max(0, min(1, $0)) } ?? 1
+        var previousPressure = firstKnownPressure
+        return samples.map { sample in
+            if let pressure = sample.pressure {
+                previousPressure = max(0, min(1, pressure))
+            }
+            return ImageEditorBrushStrokeSample(point: sample.point, pressure: previousPressure)
+        }
+    }
 }
 
 extension NSImage {
@@ -171,7 +269,21 @@ extension NSImage {
         settings: ImageEditorBrushStrokeSettings,
         erase: Bool
     ) -> NSImage? {
-        guard !points.isEmpty else { return nil }
+        withBrushStroke(
+            samples: points.map { ImageEditorBrushStrokeSample(point: $0) },
+            color: color,
+            settings: settings,
+            erase: erase
+        )
+    }
+
+    func withBrushStroke(
+        samples: [ImageEditorBrushStrokeSample],
+        color: NSColor,
+        settings: ImageEditorBrushStrokeSettings,
+        erase: Bool
+    ) -> NSImage? {
+        guard !samples.isEmpty else { return nil }
         let pixelWidth = max(1, Int(size.width.rounded()))
         let pixelHeight = max(1, Int(size.height.rounded()))
         let bytesPerRow = pixelWidth * ImageEditorBrushStrokeKernel.bytesPerPixel
@@ -191,15 +303,15 @@ extension NSImage {
         context.draw(cgImage, in: CGRect(x: 0, y: 0, width: pixelWidth, height: pixelHeight))
 
         let normalized = settings.normalized
-        let centers = ImageEditorBrushStrokeKernel.stampCenters(
-            points: points,
+        let stamps = ImageEditorBrushStrokeKernel.stampSamples(
+            samples: samples,
             diameter: normalized.diameter,
             spacing: normalized.spacing
         )
         let strokeCoverage = ImageEditorBrushStrokeKernel.coverage(
             width: pixelWidth,
             height: pixelHeight,
-            centers: centers,
+            stamps: stamps,
             settings: normalized
         )
         var outputPixels = ImageEditorBrushStrokeKernel.composite(

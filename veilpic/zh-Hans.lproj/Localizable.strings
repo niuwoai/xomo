@@ -503,6 +503,11 @@
 "imageEditor.option.hardness" = "硬度";
 "imageEditor.option.flow" = "流量";
 "imageEditor.option.spacing" = "间距";
+"imageEditor.option.pressure" = "笔压";
+"imageEditor.option.pressureSize" = "控制大小";
+"imageEditor.option.pressureFlow" = "控制流量";
+"imageEditor.option.pressureSensitivity" = "灵敏度";
+"imageEditor.option.pressureHelp" = "使用数位笔压力控制画笔大小和流量";
 "imageEditor.option.feather" = "羽化";
 "imageEditor.option.tolerance" = "容差";
 "imageEditor.option.selectionModifyAmount" = "扩缩";

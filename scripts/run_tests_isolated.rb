@@ -22,6 +22,7 @@
 #   ruby scripts/run_tests_isolated.rb --jobs 4        # 4 个独立进程并行（更快）
 #   ruby scripts/run_tests_isolated.rb --filter Filter # 只跑名字含 Filter 的测试
 #   ruby scripts/run_tests_isolated.rb --skip-build    # 复用上次 build-for-testing 产物
+#   XOMO_DERIVED_DATA_PATH=/tmp/xomo-tests ruby scripts/run_tests_isolated.rb --skip-build
 #
 # 说明：
 #   - 每个测试跑一次独立 xcodebuild，慢，但结果确定、可全绿，适合 CI。
@@ -40,7 +41,7 @@ SCHEME      = 'veilpic'
 DESTINATION = 'platform=macOS'
 TEST_TARGET = 'veilpicTests'
 TESTS_DIR   = File.join(__dir__, '..', TEST_TARGET)
-DERIVED_DATA_PATH = '/tmp/veilpic-isolated-tests'
+DERIVED_DATA_PATH = ENV.fetch('XOMO_DERIVED_DATA_PATH', '/tmp/veilpic-isolated-tests')
 
 options = {
   jobs: 1,
@@ -115,9 +116,13 @@ end
 # 运行单个测试；返回 result Hash
 def run_one(test, logs_dir)
   identifier = "#{TEST_TARGET}/#{test[:suite]}/#{test[:method]}"
+  result_bundle_path = File.join(logs_dir, "#{test[:suite]}.#{test[:method]}.xcresult")
+  FileUtils.rm_rf(result_bundle_path)
   args = base_xcodebuild_args + [
     'test-without-building',
     "-only-testing:#{identifier}",
+    '-resultBundlePath', result_bundle_path,
+    '-enableCodeCoverage', 'NO',
   ]
   started = Time.now
   out, status = Open3.capture2e(*args)
