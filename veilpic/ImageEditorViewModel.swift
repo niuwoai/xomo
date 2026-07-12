@@ -38,6 +38,7 @@ final class ImageEditorViewModel: ObservableObject {
 
     @Published var document: ImageEditorDocument {
         didSet {
+            refreshSelectionEdgeGeometry()
             refreshQuickMaskOverlay()
             if preservesRenderedImageCachesForNextDocumentMutation {
                 preservesRenderedImageCachesForNextDocumentMutation = false
@@ -62,6 +63,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var selectionMode: ImageEditorSelectionMode = .replace
     @Published var isQuickMaskMode = false
     @Published private(set) var quickMaskOverlayImage: NSImage?
+    @Published private(set) var selectionEdgeGeometry: ImageEditorSelectionEdgeGeometry?
     @Published private(set) var quickMaskOverlayTarget: ImageEditorQuickMaskOverlayTarget
     @Published private(set) var quickMaskOverlayColor: NSColor
     @Published private(set) var quickMaskOverlayOpacity: CGFloat
@@ -281,6 +283,8 @@ final class ImageEditorViewModel: ObservableObject {
     var copiedLayerStyleSourceID: UUID?
     private let onApply: (NSImage) -> Void
     private let workspacePreferencesDefaults: UserDefaults
+    private var selectionEdgeGeometrySource: ImageEditorSelection?
+    private var selectionEdgeGeometryCanvasSize: CGSize = .zero
 
     init(
         sourceName: String,
@@ -296,6 +300,7 @@ final class ImageEditorViewModel: ObservableObject {
         quickMaskOverlayColor = quickMaskPreferences.color.nsColor
         quickMaskOverlayOpacity = CGFloat(quickMaskPreferences.opacity)
         cachedCurrentImage = document.layers.first?.image
+        refreshSelectionEdgeGeometry()
         syncSizeControlsFromDocument()
         recordCurrentHistorySnapshot()
         updateStatus()
@@ -315,6 +320,7 @@ final class ImageEditorViewModel: ObservableObject {
         quickMaskOverlayColor = quickMaskPreferences.color.nsColor
         quickMaskOverlayOpacity = CGFloat(quickMaskPreferences.opacity)
         cachedCurrentImage = initialCompositeImage
+        refreshSelectionEdgeGeometry()
         syncSizeControlsFromDocument()
         recordCurrentHistorySnapshot()
         updateStatus()
@@ -1904,6 +1910,19 @@ final class ImageEditorViewModel: ObservableObject {
         ).save(to: workspacePreferencesDefaults)
     }
 
+    private func refreshSelectionEdgeGeometry() {
+        let selection = document.selection
+        let canvasSize = document.canvasSize
+        guard selection != selectionEdgeGeometrySource || canvasSize != selectionEdgeGeometryCanvasSize else {
+            return
+        }
+        selectionEdgeGeometrySource = selection
+        selectionEdgeGeometryCanvasSize = canvasSize
+        selectionEdgeGeometry = selection.map {
+            ImageEditorSelectionEdgeGeometry.make(selection: $0, canvasSize: canvasSize)
+        }
+    }
+
     private func refreshQuickMaskOverlay() {
         guard isQuickMaskMode, let selection = document.selection else {
             quickMaskOverlayImage = nil
@@ -1931,21 +1950,29 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func marqueeSelectionRect(from start: CGPoint, to end: CGPoint) -> CGRect {
+        let boundedStart = ImageEditorCanvasGeometry.boundedCanvasPoint(
+            start,
+            canvasSize: document.canvasSize
+        )
+        let boundedEnd = ImageEditorCanvasGeometry.boundedCanvasPoint(
+            end,
+            canvasSize: document.canvasSize
+        )
         let adjustedEnd: CGPoint
         if marqueeShape.hasFixedAspectRatio {
-            let side = min(abs(end.x - start.x), abs(end.y - start.y))
+            let side = min(abs(boundedEnd.x - boundedStart.x), abs(boundedEnd.y - boundedStart.y))
             adjustedEnd = CGPoint(
-                x: start.x + (end.x >= start.x ? side : -side),
-                y: start.y + (end.y >= start.y ? side : -side)
+                x: boundedStart.x + (boundedEnd.x >= boundedStart.x ? side : -side),
+                y: boundedStart.y + (boundedEnd.y >= boundedStart.y ? side : -side)
             )
         } else {
-            adjustedEnd = end
+            adjustedEnd = boundedEnd
         }
         return CGRect(
-            x: min(start.x, adjustedEnd.x),
-            y: min(start.y, adjustedEnd.y),
-            width: abs(adjustedEnd.x - start.x),
-            height: abs(adjustedEnd.y - start.y)
+            x: min(boundedStart.x, adjustedEnd.x),
+            y: min(boundedStart.y, adjustedEnd.y),
+            width: abs(adjustedEnd.x - boundedStart.x),
+            height: abs(adjustedEnd.y - boundedStart.y)
         ).intersection(CGRect(origin: .zero, size: document.canvasSize))
     }
 
@@ -1970,8 +1997,8 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func createLassoSelection(points: [CGPoint]) {
-        let boundedPoints = points.filter { point in
-            CGRect(origin: .zero, size: document.canvasSize).contains(point)
+        let boundedPoints = points.map { point in
+            ImageEditorCanvasGeometry.boundedCanvasPoint(point, canvasSize: document.canvasSize)
         }
         guard let selection = ImageEditorSelection.polygon(boundedPoints) else { return }
         applySelectionCandidate(selection, replaceHistoryKey: "imageEditor.history.selection")
