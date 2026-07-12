@@ -202,6 +202,7 @@ struct ImageEditorView: View {
                     optionSlider(titleKey: "imageEditor.option.opacity", value: $viewModel.opacity, range: 0.05...1, step: 0.05, suffix: "")
                 }
                 if usesBrushDynamicsOptions {
+                    brushPresetMenu
                     optionSlider(titleKey: "imageEditor.option.flow", value: $viewModel.brushFlow, range: 1...100, step: 1, suffix: "%")
                     optionSlider(titleKey: "imageEditor.option.spacing", value: $viewModel.brushSpacing, range: 1...200, step: 1, suffix: "%")
                     brushPressureMenu
@@ -294,6 +295,46 @@ struct ImageEditorView: View {
 
     private var usesBrushDynamicsOptions: Bool {
         viewModel.selectedTool == .brush || viewModel.selectedTool == .eraser
+    }
+
+    private var brushPresetMenu: some View {
+        Menu {
+            ForEach(viewModel.brushPresets) { preset in
+                Button {
+                    viewModel.applyBrushPreset(preset)
+                } label: {
+                    if viewModel.activeBrushPreset?.id == preset.id {
+                        Label(preset.title, systemImage: "checkmark")
+                    } else {
+                        Text(preset.title)
+                    }
+                }
+            }
+            Divider()
+            Button {
+                viewModel.createBrushPresetFromCurrentSettings()
+            } label: {
+                Label(L10n.text("imageEditor.action.brushPresetCreate"), systemImage: "plus")
+            }
+            if let activePreset = viewModel.activeBrushPreset, !activePreset.isBuiltIn {
+                Button(role: .destructive) {
+                    viewModel.deleteBrushPreset(activePreset)
+                } label: {
+                    Label(L10n.text("imageEditor.action.brushPresetDelete"), systemImage: "trash")
+                }
+            }
+        } label: {
+            Label(
+                viewModel.activeBrushPreset?.title ?? L10n.text("imageEditor.option.brushPreset"),
+                systemImage: "paintbrush.pointed"
+            )
+            .font(.system(size: 11, weight: .semibold))
+        }
+        .menuStyle(.borderlessButton)
+        .fixedSize()
+        .focusable(false)
+        .help(L10n.text("imageEditor.help.brushPreset"))
+        .accessibilityIdentifier("image-editor-brush-preset-menu")
     }
 
     private var brushPressureMenu: some View {

@@ -368,7 +368,7 @@
 "imageEditor.menu.window.swatches.background" = "设置背景色";
 "imageEditor.menu.window.brushes" = "画笔面板";
 "imageEditor.menu.window.brushes.tools" = "笔刷工具";
-"imageEditor.menu.window.brushes.presets" = "大小预设";
+"imageEditor.menu.window.brushes.presets" = "画笔预设";
 "imageEditor.menu.window.character" = "字符面板";
 "imageEditor.menu.window.paragraph" = "段落面板";
 "imageEditor.menu.window.styles" = "样式面板";
@@ -508,6 +508,10 @@
 "imageEditor.option.pressureFlow" = "控制流量";
 "imageEditor.option.pressureSensitivity" = "灵敏度";
 "imageEditor.option.pressureHelp" = "使用数位笔压力控制画笔大小和流量";
+"imageEditor.option.brushPreset" = "画笔预设";
+"imageEditor.help.brushPreset" = "选择预设，或保存当前画笔设置";
+"imageEditor.action.brushPresetCreate" = "从当前设置新建预设";
+"imageEditor.action.brushPresetDelete" = "删除当前自定义预设";
 "imageEditor.option.feather" = "羽化";
 "imageEditor.option.tolerance" = "容差";
 "imageEditor.option.selectionModifyAmount" = "扩缩";
@@ -1372,6 +1376,9 @@
 "imageEditor.status.brushesPanelSummary" = "工具：%@ | 大小：%d px | 不透明度：%d%% | 硬度：%d%%";
 "imageEditor.status.brushToolSelected" = "已选择%@：%@";
 "imageEditor.status.brushPresetApplied" = "已应用%@：%@";
+"imageEditor.status.brushPresetCreated" = "已创建画笔预设：%@";
+"imageEditor.status.brushPresetDeleted" = "已删除画笔预设：%@";
+"imageEditor.status.brushPresetLimitReached" = "最多只能保存 %d 个自定义画笔预设";
 "imageEditor.status.characterPanelSummary" = "文字：%@ | 字号：%d px | 粗体：%@ | 斜体：%@ | 字距：%d | 行距：%d";
 "imageEditor.status.paragraphPanelSummary" = "对齐：%@ | 文本框宽度：%d px";
 "imageEditor.characterPanel.emptyText" = "未输入";
@@ -1425,6 +1432,8 @@
 "imageEditor.swatch.blue" = "蓝色";
 "imageEditor.swatch.magenta" = "洋红";
 "imageEditor.brushPreset.size" = "%d px";
+"imageEditor.brushPreset.customName" = "自定义画笔 %d";
+"imageEditor.brushPreset.untitled" = "未命名画笔";
 "imageEditor.status.penPointAdded" = "已添加路径锚点：%d";
 "imageEditor.status.penNeedsPoints" = "至少需要两个锚点才能生成路径";
 "imageEditor.status.penClosed" = "已创建闭合路径形状";

@@ -15,7 +15,7 @@ struct XomoAutomationTests {
             Issue.record("Expected tool array")
             return
         }
-        #expect(tools.count == 104)
+        #expect(tools.count == 105)
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.layer.list")
@@ -35,6 +35,10 @@ struct XomoAutomationTests {
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.layer_comp.action")
+        })
+        #expect(tools.contains { tool in
+            guard case .object(let value) = tool else { return false }
+            return value["name"] == .string("xomo.brush.preset")
         })
     }
 
@@ -291,6 +295,51 @@ struct XomoAutomationTests {
         #expect(viewModel.brushPressureControlsFlow)
         #expect(viewModel.brushPressureSensitivity == 72)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.brush"))
+    }
+
+    @Test func registryCreatesListsAppliesAndDeletesPersistedBrushPresets() throws {
+        let suiteName = "XomoAutomationTests.presets.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName) ?? .standard
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let viewModel = makeViewModel(preferencesDefaults: defaults)
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        viewModel.brushSize = 41
+        viewModel.hardness = 0.45
+        viewModel.brushFlow = 63
+        viewModel.brushSpacing = 77
+
+        let create = registry.execute(request(
+            operation: "call",
+            name: "xomo.brush.preset",
+            arguments: ["action": .string("create")]
+        ))
+        #expect(create.ok)
+        let created = try #require(create.result?.arrayValue?.last?.objectValue)
+        let id = try #require(created["id"]?.stringValue)
+        #expect(created["builtIn"] == .bool(false))
+        #expect(created["active"] == .bool(true))
+
+        viewModel.brushSize = 9
+        let apply = registry.execute(request(
+            operation: "call",
+            name: "xomo.brush.preset",
+            arguments: ["action": .string("apply"), "id": .string(id)]
+        ))
+        #expect(apply.ok)
+        #expect(viewModel.brushSize == 41)
+        #expect(viewModel.hardness == 0.45)
+        #expect(viewModel.brushFlow == 63)
+        #expect(viewModel.brushSpacing == 77)
+
+        let delete = registry.execute(request(
+            operation: "call",
+            name: "xomo.brush.preset",
+            arguments: ["action": .string("delete"), "id": .string(id)]
+        ))
+        #expect(delete.ok)
+        #expect(viewModel.customBrushPresets.isEmpty)
+        #expect(delete.result?.arrayValue?.count == ImageEditorBrushPreset.defaultPresets.count)
     }
 
     private func request(

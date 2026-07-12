@@ -1768,9 +1768,24 @@ extension ImageEditorView {
                 }
             }
             Menu(L10n.text("imageEditor.menu.window.brushes.presets")) {
-                ForEach(ImageEditorBrushPreset.defaultPresets) { preset in
-                    Button(preset.title) {
+                ForEach(viewModel.brushPresets) { preset in
+                    Button {
                         viewModel.applyBrushPreset(preset)
+                    } label: {
+                        if viewModel.activeBrushPreset?.id == preset.id {
+                            Label(preset.title, systemImage: "checkmark")
+                        } else {
+                            Text(preset.title)
+                        }
+                    }
+                }
+                Divider()
+                Button(L10n.text("imageEditor.action.brushPresetCreate")) {
+                    viewModel.createBrushPresetFromCurrentSettings()
+                }
+                if let activePreset = viewModel.activeBrushPreset, !activePreset.isBuiltIn {
+                    Button(L10n.text("imageEditor.action.brushPresetDelete"), role: .destructive) {
+                        viewModel.deleteBrushPreset(activePreset)
                     }
                 }
             }

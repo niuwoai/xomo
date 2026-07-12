@@ -368,7 +368,7 @@
 "imageEditor.menu.window.swatches.background" = "背景色に設定";
 "imageEditor.menu.window.brushes" = "ブラシパネル";
 "imageEditor.menu.window.brushes.tools" = "ブラシツール";
-"imageEditor.menu.window.brushes.presets" = "サイズプリセット";
+"imageEditor.menu.window.brushes.presets" = "ブラシプリセット";
 "imageEditor.menu.window.character" = "文字パネル";
 "imageEditor.menu.window.paragraph" = "段落パネル";
 "imageEditor.menu.window.styles" = "スタイルパネル";
@@ -508,6 +508,10 @@
 "imageEditor.option.pressureFlow" = "流量を制御";
 "imageEditor.option.pressureSensitivity" = "感度";
 "imageEditor.option.pressureHelp" = "ペンの筆圧でブラシサイズと流量を制御します";
+"imageEditor.option.brushPreset" = "ブラシプリセット";
+"imageEditor.help.brushPreset" = "プリセットを選択するか、現在のブラシ設定を保存します";
+"imageEditor.action.brushPresetCreate" = "現在の設定からプリセットを作成";
+"imageEditor.action.brushPresetDelete" = "現在のカスタムプリセットを削除";
 "imageEditor.option.feather" = "ぼかし";
 "imageEditor.option.tolerance" = "許容値";
 "imageEditor.option.selectionModifyAmount" = "拡張/縮小";
@@ -1372,6 +1376,9 @@
 "imageEditor.status.brushesPanelSummary" = "ツール：%@ | サイズ：%d px | 不透明度：%d%% | 硬さ：%d%%";
 "imageEditor.status.brushToolSelected" = "%@を選択しました：%@";
 "imageEditor.status.brushPresetApplied" = "%@を適用しました：%@";
+"imageEditor.status.brushPresetCreated" = "ブラシプリセットを作成しました：%@";
+"imageEditor.status.brushPresetDeleted" = "ブラシプリセットを削除しました：%@";
+"imageEditor.status.brushPresetLimitReached" = "カスタムブラシプリセットは最大%d件まで保存できます";
 "imageEditor.status.characterPanelSummary" = "テキスト：%@ | サイズ：%d px | 太字：%@ | 斜体：%@ | 字間：%d | 行間：%d";
 "imageEditor.status.paragraphPanelSummary" = "配置：%@ | テキストボックス幅：%d px";
 "imageEditor.characterPanel.emptyText" = "未入力";
@@ -1425,6 +1432,8 @@
 "imageEditor.swatch.blue" = "青";
 "imageEditor.swatch.magenta" = "マゼンタ";
 "imageEditor.brushPreset.size" = "%d px";
+"imageEditor.brushPreset.customName" = "カスタムブラシ %d";
+"imageEditor.brushPreset.untitled" = "名称未設定ブラシ";
 "imageEditor.status.penPointAdded" = "パスのアンカー：%d";
 "imageEditor.status.penNeedsPoints" = "パス作成には少なくとも2つのアンカーが必要です";
 "imageEditor.status.penClosed" = "閉じたパスシェイプを作成しました";

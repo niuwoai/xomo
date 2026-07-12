@@ -368,7 +368,7 @@
 "imageEditor.menu.window.swatches.background" = "Set Background";
 "imageEditor.menu.window.brushes" = "Brushes Panel";
 "imageEditor.menu.window.brushes.tools" = "Brush Tools";
-"imageEditor.menu.window.brushes.presets" = "Size Presets";
+"imageEditor.menu.window.brushes.presets" = "Brush Presets";
 "imageEditor.menu.window.character" = "Character Panel";
 "imageEditor.menu.window.paragraph" = "Paragraph Panel";
 "imageEditor.menu.window.styles" = "Styles Panel";
@@ -508,6 +508,10 @@
 "imageEditor.option.pressureFlow" = "Control Flow";
 "imageEditor.option.pressureSensitivity" = "Sensitivity";
 "imageEditor.option.pressureHelp" = "Use pen pressure to control brush size and flow";
+"imageEditor.option.brushPreset" = "Brush Presets";
+"imageEditor.help.brushPreset" = "Choose a preset or save the current brush settings";
+"imageEditor.action.brushPresetCreate" = "Create Preset from Current Settings";
+"imageEditor.action.brushPresetDelete" = "Delete Current Custom Preset";
 "imageEditor.option.feather" = "Feather";
 "imageEditor.option.tolerance" = "Tolerance";
 "imageEditor.option.selectionModifyAmount" = "Grow/Shrink";
@@ -1372,6 +1376,9 @@
 "imageEditor.status.brushesPanelSummary" = "Tool: %@ | Size: %d px | Opacity: %d%% | Hardness: %d%%";
 "imageEditor.status.brushToolSelected" = "%@ selected: %@";
 "imageEditor.status.brushPresetApplied" = "%@ applied: %@";
+"imageEditor.status.brushPresetCreated" = "Brush preset created: %@";
+"imageEditor.status.brushPresetDeleted" = "Brush preset deleted: %@";
+"imageEditor.status.brushPresetLimitReached" = "You can save up to %d custom brush presets";
 "imageEditor.status.characterPanelSummary" = "Text: %@ | Size: %d px | Bold: %@ | Italic: %@ | Tracking: %d | Leading: %d";
 "imageEditor.status.paragraphPanelSummary" = "Alignment: %@ | Text box width: %d px";
 "imageEditor.characterPanel.emptyText" = "No text";
@@ -1425,6 +1432,8 @@
 "imageEditor.swatch.blue" = "Blue";
 "imageEditor.swatch.magenta" = "Magenta";
 "imageEditor.brushPreset.size" = "%d px";
+"imageEditor.brushPreset.customName" = "Custom Brush %d";
+"imageEditor.brushPreset.untitled" = "Untitled Brush";
 "imageEditor.status.penPointAdded" = "Path anchors: %d";
 "imageEditor.status.penNeedsPoints" = "Add at least two anchors to create a path";
 "imageEditor.status.penClosed" = "Closed path shape created";

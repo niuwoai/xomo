@@ -42,3 +42,37 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
         defaults.set(data, forKey: Self.storageKey)
     }
 }
+
+struct ImageEditorBrushPresetPreferences: Codable, Equatable {
+    static let storageKey = "im.some.xomo.imageEditor.customBrushPresets"
+    static let maximumPresetCount = 100
+
+    var presets: [ImageEditorBrushPreset]
+
+    var normalized: ImageEditorBrushPresetPreferences {
+        var seenIDs = Set<String>()
+        let normalizedPresets = presets.compactMap { preset -> ImageEditorBrushPreset? in
+            let normalized = preset.normalizedCustomPreset
+            guard seenIDs.insert(normalized.id).inserted else { return nil }
+            return normalized
+        }
+        return ImageEditorBrushPresetPreferences(
+            presets: Array(normalizedPresets.prefix(Self.maximumPresetCount))
+        )
+    }
+
+    static func load(from defaults: UserDefaults) -> ImageEditorBrushPresetPreferences {
+        guard let data = defaults.data(forKey: storageKey),
+              let preferences = try? JSONDecoder().decode(
+                ImageEditorBrushPresetPreferences.self,
+                from: data
+              )
+        else { return ImageEditorBrushPresetPreferences(presets: []) }
+        return preferences.normalized
+    }
+
+    func save(to defaults: UserDefaults) {
+        guard let data = try? JSONEncoder().encode(normalized) else { return }
+        defaults.set(data, forKey: Self.storageKey)
+    }
+}

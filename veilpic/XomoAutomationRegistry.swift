@@ -275,6 +275,8 @@ final class XomoAutomationRegistry {
             viewModel.swapForegroundBackgroundColors()
         case "xomo.color.reset":
             viewModel.resetForegroundBackgroundColors()
+        case "xomo.brush.preset":
+            return try brushPresetAction(arguments, viewModel: viewModel)
         case "xomo.paint.stroke":
             try paintStroke(arguments, viewModel: viewModel)
         case "xomo.paint.gradient":
@@ -541,6 +543,54 @@ final class XomoAutomationRegistry {
             "foreground": colorJSON(viewModel.foregroundColor),
             "background": colorJSON(viewModel.backgroundColor)
         ])
+    }
+
+    private func brushPresetAction(
+        _ arguments: [String: XomoJSONValue],
+        viewModel: ImageEditorViewModel
+    ) throws -> XomoJSONValue {
+        let action = arguments["action"]?.stringValue ?? "list"
+        switch action {
+        case "list":
+            break
+        case "create":
+            guard viewModel.createBrushPresetFromCurrentSettings() != nil else {
+                throw XomoAutomationCallError.invalidArgument("Custom brush preset limit reached")
+            }
+        case "apply":
+            let id = try requiredString("id", in: arguments)
+            guard let preset = viewModel.brushPresets.first(where: { $0.id == id }) else {
+                throw XomoAutomationCallError.notFound("Brush preset \(id)")
+            }
+            viewModel.applyBrushPreset(preset)
+        case "delete":
+            let id = try requiredString("id", in: arguments)
+            guard let preset = viewModel.customBrushPresets.first(where: { $0.id == id }) else {
+                throw XomoAutomationCallError.notFound("Custom brush preset \(id)")
+            }
+            viewModel.deleteBrushPreset(preset)
+        default:
+            throw XomoAutomationCallError.invalidArgument("Unknown brush preset action: \(action)")
+        }
+        return brushPresetsResult(viewModel)
+    }
+
+    private func brushPresetsResult(_ viewModel: ImageEditorViewModel) -> XomoJSONValue {
+        .array(viewModel.brushPresets.map { preset in
+            .object([
+                "id": .string(preset.id),
+                "title": .string(preset.title),
+                "builtIn": .bool(preset.isBuiltIn),
+                "active": .bool(viewModel.activeBrushPreset?.id == preset.id),
+                "size": .number(Double(preset.size)),
+                "hardness": .number(Double(preset.hardness)),
+                "flow": .number(Double(preset.flow)),
+                "spacing": .number(Double(preset.spacing)),
+                "pressureSize": .bool(preset.pressureControlsSize),
+                "pressureFlow": .bool(preset.pressureControlsFlow),
+                "pressureSensitivity": .number(Double(preset.pressureSensitivity))
+            ])
+        })
     }
 
     private func pathResult(_ viewModel: ImageEditorViewModel) -> XomoJSONValue {
@@ -1925,6 +1975,10 @@ private extension XomoAutomationRegistry {
         ], required: ["red", "green", "blue"]),
         tool("xomo.color.swap", "Swap foreground and background colors."),
         tool("xomo.color.reset", "Reset foreground to black and background to white."),
+        tool("xomo.brush.preset", "List, create, apply, or delete persisted brush presets.", [
+            "action": XomoAutomationSchema.string(description: "Brush preset action", values: ["list", "create", "apply", "delete"]),
+            "id": XomoAutomationSchema.string(description: "Preset identifier for apply or delete")
+        ]),
         tool("xomo.paint.stroke", "Paint a brush or eraser stroke from canvas points.", [
             "tool": XomoAutomationSchema.string(description: "Stroke tool", values: ["brush", "eraser"]),
             "points": pointsSchema,
