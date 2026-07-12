@@ -5994,6 +5994,10 @@ struct EditorPanel<Content: View>: View {
     }
 }
 
+enum ImageEditorDockDisclosureAppearance {
+    static let foregroundColor = ImageEditorTheme.text
+}
+
 struct EditorDockDisclosure<Content: View>: View {
     let title: String
     let systemImage: String
@@ -6021,13 +6025,15 @@ struct EditorDockDisclosure<Content: View>: View {
                     Image(systemName: systemImage)
                         .font(.system(size: 12, weight: .semibold))
                         .frame(width: 18)
+                        .foregroundStyle(Color(nsColor: ImageEditorDockDisclosureAppearance.foregroundColor))
                     Text(title)
                         .font(.system(size: 12, weight: .bold))
+                        .foregroundStyle(Color(nsColor: ImageEditorDockDisclosureAppearance.foregroundColor))
                     Spacer(minLength: 0)
                     Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
                         .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(Color(nsColor: ImageEditorDockDisclosureAppearance.foregroundColor))
                 }
-                .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
                 .padding(.horizontal, 10)
                 .frame(height: 34)
                 .contentShape(Rectangle())
