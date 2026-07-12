@@ -209,6 +209,33 @@ struct ImageEditorView: View {
             }
 
             if viewModel.selectedTool == .cloneStamp {
+                Toggle(
+                    L10n.text("imageEditor.option.cloneAligned"),
+                    isOn: $viewModel.isCloneStampAligned
+                )
+                .toggleStyle(.checkbox)
+                .focusable(false)
+                .xomoFocusEffectDisabled()
+                .accessibilityIdentifier("image-editor-clone-aligned")
+
+                Picker(
+                    L10n.text("imageEditor.option.cloneSampleSource"),
+                    selection: $viewModel.cloneStampSampleSource
+                ) {
+                    ForEach(ImageEditorCloneSampleSource.allCases) { source in
+                        Text(source.title).tag(source)
+                    }
+                }
+                .labelsHidden()
+                .pickerStyle(.menu)
+                .environment(\.colorScheme, .dark)
+                .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+                .frame(width: 150)
+                .focusable(false)
+                .xomoFocusEffectDisabled()
+                .accessibilityLabel(L10n.text("imageEditor.option.cloneSampleSource"))
+                .accessibilityIdentifier("image-editor-clone-sample-source")
+
                 Button(L10n.text("imageEditor.action.cloneSourcePick")) {
                     viewModel.beginSettingCloneSource()
                 }

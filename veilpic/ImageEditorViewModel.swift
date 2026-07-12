@@ -78,6 +78,13 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var backgroundColor: NSColor = .white
     private var screenColorSampler: NSColorSampler?
     @Published var cloneSourcePoint: CGPoint?
+    @Published var isCloneStampAligned = true {
+        didSet {
+            guard isCloneStampAligned != oldValue else { return }
+            cloneStampAlignedCanvasOffset = nil
+        }
+    }
+    @Published var cloneStampSampleSource: ImageEditorCloneSampleSource = .currentLayer
     @Published private(set) var isSettingCloneSource = false
     @Published private(set) var colorSamplerPoints: [ImageEditorColorSamplerPoint] = []
     @Published var reselectableSelection: ImageEditorSelection?
@@ -281,6 +288,7 @@ final class ImageEditorViewModel: ObservableObject {
     var rotatingLayerDidChange = false
     var copiedLayerStyle: ImageEditorLayerStyle?
     var copiedLayerStyleSourceID: UUID?
+    private var cloneStampAlignedCanvasOffset: CGSize?
     private let onApply: (NSImage) -> Void
     private let workspacePreferencesDefaults: UserDefaults
     private var selectionEdgeGeometrySource: ImageEditorSelection?
@@ -3522,6 +3530,7 @@ final class ImageEditorViewModel: ObservableObject {
 
     func setCloneSource(at point: CGPoint?) {
         cloneSourcePoint = point
+        cloneStampAlignedCanvasOffset = nil
         isSettingCloneSource = false
         statusText = point == nil
             ? L10n.text("imageEditor.status.cloneSourceMissing")
@@ -3548,24 +3557,27 @@ final class ImageEditorViewModel: ObservableObject {
             return
         }
 
-        let localPoints = rasterLocalPoints(points, layer: layer)
-        let localSourcePoint = rasterLocalPoint(sourcePoint, layer: layer)
-        let localDestinationStart = rasterLocalPoint(destinationStart, layer: layer)
-        let sourceOffset = CGSize(
-            width: localSourcePoint.x - localDestinationStart.x,
-            height: localSourcePoint.y - localDestinationStart.y
+        let offsetResolution = ImageEditorCloneStampOffsetResolution.resolve(
+            sourcePoint: sourcePoint,
+            destinationStart: destinationStart,
+            isAligned: isCloneStampAligned,
+            alignedOffset: cloneStampAlignedCanvasOffset
         )
-        let sourceImage = layer.image.normalizedBitmapImage()
-        guard let output = sourceImage.withCloneStamp(
-            points: localPoints,
-            sourceOffset: sourceOffset,
-            sourceImage: sourceImage,
+        guard let samplingInput = cloneStampSamplingInput(
+            for: layer,
+            canvasOffset: offsetResolution.canvasOffset
+        ),
+              let output = layer.image.normalizedBitmapImage().withCloneStamp(
+            points: rasterLocalPoints(points, layer: layer),
+            sourceOffset: samplingInput.localOffset,
+            sourceImage: samplingInput.image,
             width: rasterLocalBrushWidth(brushSize, layer: layer),
             opacity: opacity
         ) else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
+        cloneStampAlignedCanvasOffset = offsetResolution.nextAlignedOffset
 
         replaceSelectedLayerRenderedPixels(
             output,

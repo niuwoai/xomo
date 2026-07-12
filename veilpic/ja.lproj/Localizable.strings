@@ -2487,3 +2487,8 @@
 "imageEditor.quickMask.color" = "カラー";
 "imageEditor.quickMask.opacity" = "不透明度";
 "imageEditor.status.quickMaskOptionsUpdated" = "クイックマスクの表示オプションを更新しました";
+"imageEditor.option.cloneAligned" = "整列";
+"imageEditor.option.cloneSampleSource" = "サンプル";
+"imageEditor.cloneSampleSource.currentLayer" = "現在のレイヤー";
+"imageEditor.cloneSampleSource.currentAndBelow" = "現在以下";
+"imageEditor.cloneSampleSource.allVisible" = "すべての表示レイヤー";

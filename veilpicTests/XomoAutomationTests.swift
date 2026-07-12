@@ -207,6 +207,29 @@ struct XomoAutomationTests {
         #expect(viewModel.document.selectedLayer?.textContent?.isBold == true)
     }
 
+    @Test func registryConfiguresCloneStampSamplingOptions() {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("setCloneSource"),
+                "x": .number(12),
+                "y": .number(18),
+                "aligned": .bool(false),
+                "sampleSource": .string("allVisible")
+            ]
+        ))
+
+        #expect(response.ok)
+        #expect(viewModel.cloneSourcePoint == CGPoint(x: 12, y: 18))
+        #expect(!viewModel.isCloneStampAligned)
+        #expect(viewModel.cloneStampSampleSource == .allVisible)
+    }
+
     private func request(
         operation: String,
         name: String? = nil,
