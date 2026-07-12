@@ -12,35 +12,35 @@ extension ImageEditorView {
     var menuBar: some View {
         HStack(spacing: 14) {
             Menu { fileMenu } label: { editorMenuLabel("imageEditor.menu.file") }
-                .tint(Color(nsColor: ImageEditorTheme.menuText))
+                .buttonStyle(.plain)
                 .focusable(false)
                 .accessibilityIdentifier("image-editor-menu-file")
             Menu { editMenu } label: { editorMenuLabel("imageEditor.menu.edit") }
-                .tint(Color(nsColor: ImageEditorTheme.menuText))
+                .buttonStyle(.plain)
                 .focusable(false)
                 .accessibilityIdentifier("image-editor-menu-edit")
             Menu { imageMenu } label: { editorMenuLabel("imageEditor.menu.image") }
-                .tint(Color(nsColor: ImageEditorTheme.menuText))
+                .buttonStyle(.plain)
                 .focusable(false)
                 .accessibilityIdentifier("image-editor-menu-image")
             Menu { layerMenu } label: { editorMenuLabel("imageEditor.menu.layer") }
-                .tint(Color(nsColor: ImageEditorTheme.menuText))
+                .buttonStyle(.plain)
                 .focusable(false)
                 .accessibilityIdentifier("image-editor-menu-layer")
             Menu { selectMenu } label: { editorMenuLabel("imageEditor.menu.select") }
-                .tint(Color(nsColor: ImageEditorTheme.menuText))
+                .buttonStyle(.plain)
                 .focusable(false)
                 .accessibilityIdentifier("image-editor-menu-select")
             Menu { filterMenu } label: { editorMenuLabel("imageEditor.menu.filter") }
-                .tint(Color(nsColor: ImageEditorTheme.menuText))
+                .buttonStyle(.plain)
                 .focusable(false)
                 .accessibilityIdentifier("image-editor-menu-filter")
             Menu { viewMenu } label: { editorMenuLabel("imageEditor.menu.view") }
-                .tint(Color(nsColor: ImageEditorTheme.menuText))
+                .buttonStyle(.plain)
                 .focusable(false)
                 .accessibilityIdentifier("image-editor-menu-view")
             Menu { windowMenu } label: { editorMenuLabel("imageEditor.menu.window") }
-                .tint(Color(nsColor: ImageEditorTheme.menuText))
+                .buttonStyle(.plain)
                 .focusable(false)
                 .accessibilityIdentifier("image-editor-menu-window")
 
@@ -96,7 +96,7 @@ extension ImageEditorView {
                 .font(.system(size: 8, weight: .bold))
         }
         .font(.system(size: 12, weight: .semibold))
-        .foregroundStyle(Color(nsColor: ImageEditorTheme.menuText))
+        .foregroundColor(Color(nsColor: ImageEditorTheme.menuText))
         .padding(.horizontal, 6)
         .frame(height: 28)
         .contentShape(RoundedRectangle(cornerRadius: 5, style: .continuous))

@@ -315,6 +315,12 @@ struct ImageEditorView: View {
                         viewModel.selectLeftSidebarTab(tab)
                     } label: {
                         Image(systemName: tab.symbolName)
+                            .symbolRenderingMode(.monochrome)
+                            .foregroundColor(
+                                viewModel.selectedLeftSidebarTab == tab
+                                    ? .white
+                                    : Color(nsColor: ImageEditorTheme.text)
+                            )
                             .font(.system(size: 13, weight: .semibold))
                             .frame(width: 30, height: 30)
                     }

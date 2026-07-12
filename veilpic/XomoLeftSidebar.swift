@@ -87,14 +87,39 @@ struct XomoComponentLibraryPanel: View {
                     .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
                     .fixedSize(horizontal: false, vertical: true)
 
-                Picker(L10n.text("xomo.theme.picker"), selection: $viewModel.xomoComponentTheme) {
+                Menu {
                     ForEach(XomoComponentTheme.allCases) { theme in
-                        Text(theme.libraryTitle).tag(theme)
+                        Button(theme.libraryTitle) {
+                            viewModel.xomoComponentTheme = theme
+                        }
                     }
+                } label: {
+                    HStack(spacing: 6) {
+                        Text(viewModel.xomoComponentTheme.libraryTitle)
+                            .lineLimit(1)
+                        Spacer(minLength: 0)
+                        Image(systemName: "chevron.up.chevron.down")
+                            .font(.system(size: 9, weight: .bold))
+                    }
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundColor(Color(nsColor: ImageEditorTheme.text))
+                    .padding(.horizontal, 8)
+                    .frame(maxWidth: .infinity, minHeight: 28, alignment: .leading)
+                    .background(
+                        Color(nsColor: ImageEditorTheme.window).opacity(0.68),
+                        in: RoundedRectangle(cornerRadius: 5, style: .continuous)
+                    )
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 5, style: .continuous)
+                            .stroke(Color(nsColor: ImageEditorTheme.border).opacity(0.9), lineWidth: 1)
+                    }
+                    .contentShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
                 }
-                .labelsHidden()
-                .pickerStyle(.menu)
+                .buttonStyle(.plain)
+                .focusable(false)
                 .accessibilityIdentifier("xomo-component-theme-picker")
+                .accessibilityLabel(L10n.text("xomo.theme.picker"))
+                .accessibilityValue(viewModel.xomoComponentTheme.libraryTitle)
 
                 Text(viewModel.xomoComponentTheme.librarySource.attribution)
                     .font(.system(size: 10))
