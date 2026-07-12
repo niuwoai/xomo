@@ -2479,3 +2479,11 @@
 "xomo.instance.status.linked" = "已链接 %d 个 %@ 实例";
 "xomo.instance.status.synced" = "已同步 %d 个 %@ 实例";
 "xomo.instance.status.detached" = "已脱离 %d 个组件实例";
+"imageEditor.action.quickMaskOptions" = "快速蒙版选项";
+"imageEditor.quickMask.optionsTitle" = "快速蒙版选项";
+"imageEditor.quickMask.targetLabel" = "颜色表示";
+"imageEditor.quickMask.target.maskedAreas" = "被蒙版区域";
+"imageEditor.quickMask.target.selectedAreas" = "选中区域";
+"imageEditor.quickMask.color" = "颜色";
+"imageEditor.quickMask.opacity" = "不透明度";
+"imageEditor.status.quickMaskOptionsUpdated" = "已更新快速蒙版显示选项";

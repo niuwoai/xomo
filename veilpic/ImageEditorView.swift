@@ -63,6 +63,7 @@ struct ImageEditorView: View {
     @State private var isPointerInsideCanvas = false
     @State private var hoverViewPoint: CGPoint?
     @State private var isMarqueeShapePopoverPresented = false
+    @State private var isQuickMaskOptionsPresented = false
     @State private var canvasTextEditingOrigin: CGPoint?
     @State private var canvasTextEditingLayerID: UUID?
     @FocusState private var isCanvasTextEditorFocused: Bool
@@ -389,10 +390,31 @@ struct ImageEditorView: View {
 
             Divider().overlay(editorBorder)
             colorChips
-            quickMaskButton
+            quickMaskControls
         }
         .frame(width: imageEditorToolRailWidth)
         .padding(.vertical, 8)
+    }
+
+    private var quickMaskControls: some View {
+        HStack(spacing: 4) {
+            quickMaskButton
+            Button {
+                isQuickMaskOptionsPresented.toggle()
+            } label: {
+                Image(systemName: "slider.horizontal.3")
+                    .font(.system(size: 13, weight: .semibold))
+                    .frame(width: 30, height: 30)
+            }
+            .buttonStyle(EditorIconButtonStyle(isSelected: isQuickMaskOptionsPresented))
+            .focusable(false)
+            .xomoFocusEffectDisabled()
+            .help(L10n.text("imageEditor.action.quickMaskOptions"))
+            .accessibilityIdentifier("image-editor-quick-mask-options")
+            .popover(isPresented: $isQuickMaskOptionsPresented, arrowEdge: .trailing) {
+                quickMaskOptionsPopover
+            }
+        }
     }
 
     private var quickMaskButton: some View {
@@ -409,6 +431,76 @@ struct ImageEditorView: View {
         .help(L10n.text("imageEditor.action.quickMask"))
         .accessibilityIdentifier("image-editor-quick-mask")
         .accessibilityValue(viewModel.isQuickMaskMode ? "selected" : "available")
+    }
+
+    private var quickMaskOptionsPopover: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(L10n.text("imageEditor.quickMask.optionsTitle"))
+                .font(.system(size: 13, weight: .semibold))
+
+            Text(L10n.text("imageEditor.quickMask.targetLabel"))
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+
+            HStack(spacing: 6) {
+                ForEach(ImageEditorQuickMaskOverlayTarget.allCases) { target in
+                    Button(target.title) {
+                        viewModel.setQuickMaskOverlayTarget(target)
+                    }
+                    .buttonStyle(EditorSegmentButtonStyle(isSelected: viewModel.quickMaskOverlayTarget == target))
+                    .focusable(false)
+                    .xomoFocusEffectDisabled()
+                }
+            }
+
+            HStack {
+                Text(L10n.text("imageEditor.quickMask.color"))
+                Spacer()
+                ColorPicker("", selection: quickMaskOverlayColorBinding, supportsOpacity: false)
+                    .labelsHidden()
+                    .focusable(false)
+                    .xomoFocusEffectDisabled()
+            }
+
+            VStack(alignment: .leading, spacing: 5) {
+                HStack {
+                    Text(L10n.text("imageEditor.quickMask.opacity"))
+                    Spacer()
+                    Text("\(Int((viewModel.quickMaskOverlayOpacity * 100).rounded()))%")
+                        .monospacedDigit()
+                }
+                Slider(
+                    value: quickMaskOverlayOpacityBinding,
+                    in: CGFloat(ImageEditorQuickMaskPreferences.minimumOpacity)...CGFloat(ImageEditorQuickMaskPreferences.maximumOpacity),
+                    step: 0.05
+                )
+                .focusable(false)
+                .xomoFocusEffectDisabled()
+            }
+        }
+        .font(.system(size: 12))
+        .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+        .padding(12)
+        .frame(width: 260)
+        .background(Color(nsColor: ImageEditorTheme.panelRaised))
+        .focusable(false)
+        .xomoFocusEffectDisabled()
+    }
+
+    private var quickMaskOverlayColorBinding: Binding<Color> {
+        Binding {
+            Color(nsColor: viewModel.quickMaskOverlayColor)
+        } set: { value in
+            viewModel.setQuickMaskOverlayColor(NSColor(value))
+        }
+    }
+
+    private var quickMaskOverlayOpacityBinding: Binding<CGFloat> {
+        Binding {
+            viewModel.quickMaskOverlayOpacity
+        } set: { value in
+            viewModel.setQuickMaskOverlayOpacity(value)
+        }
     }
 
     @ViewBuilder
@@ -5886,6 +5978,27 @@ struct EditorTextButtonStyle: ButtonStyle {
             normalBackground: Color(nsColor: ImageEditorTheme.panelRaised),
             hoverBackground: Color(nsColor: ImageEditorTheme.selected).opacity(0.26),
             pressedBackground: Color(nsColor: ImageEditorTheme.selected).opacity(0.42),
+            border: Color(nsColor: ImageEditorTheme.border).opacity(0.8)
+        )
+    }
+}
+
+struct EditorSegmentButtonStyle: ButtonStyle {
+    let isSelected: Bool
+
+    func makeBody(configuration: Configuration) -> some View {
+        EditorButtonSurface(
+            label: configuration.label
+                .font(.system(size: 11, weight: .semibold))
+                .padding(.horizontal, 8)
+                .frame(height: 26),
+            isPressed: configuration.isPressed,
+            foreground: isSelected ? .white : Color(nsColor: ImageEditorTheme.text),
+            normalBackground: isSelected
+                ? Color(nsColor: ImageEditorTheme.selected)
+                : Color(nsColor: ImageEditorTheme.chrome),
+            hoverBackground: Color(nsColor: ImageEditorTheme.selected).opacity(isSelected ? 0.82 : 0.26),
+            pressedBackground: Color(nsColor: ImageEditorTheme.selected).opacity(0.58),
             border: Color(nsColor: ImageEditorTheme.border).opacity(0.8)
         )
     }

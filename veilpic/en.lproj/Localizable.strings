@@ -2479,3 +2479,11 @@
 "xomo.instance.status.linked" = "Linked %d %@ instance(s)";
 "xomo.instance.status.synced" = "Synced %d %@ instance(s)";
 "xomo.instance.status.detached" = "Detached %d component instance(s)";
+"imageEditor.action.quickMaskOptions" = "Quick Mask Options";
+"imageEditor.quickMask.optionsTitle" = "Quick Mask Options";
+"imageEditor.quickMask.targetLabel" = "Color Indicates";
+"imageEditor.quickMask.target.maskedAreas" = "Masked Areas";
+"imageEditor.quickMask.target.selectedAreas" = "Selected Areas";
+"imageEditor.quickMask.color" = "Color";
+"imageEditor.quickMask.opacity" = "Opacity";
+"imageEditor.status.quickMaskOptionsUpdated" = "Quick Mask display options updated";
