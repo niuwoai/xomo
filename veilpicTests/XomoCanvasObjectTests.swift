@@ -56,6 +56,25 @@ struct XomoCanvasObjectTests {
         #expect(viewModel.document.selectedLayerID != firstObject.id)
     }
 
+    @Test func switchingObjectsUpdatesKindAndBoundsImmediately() throws {
+        let viewModel = makeViewModel()
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 40, y: 60))
+        let buttonID = try #require(viewModel.document.selectedLayerID)
+        let buttonFrame = try #require(viewModel.selectedXomoObjectFrame)
+        viewModel.insertXomoComponent(.avatar, at: CGPoint(x: 420, y: 260))
+        let avatarID = try #require(viewModel.document.selectedLayerID)
+
+        #expect(viewModel.selectXomoObject(at: CGPoint(x: buttonFrame.midX, y: buttonFrame.midY)))
+        #expect(viewModel.document.selectedLayerID == buttonID)
+        #expect(viewModel.selectedXomoObjectKind == .button)
+        #expect(viewModel.selectedXomoObjectFrame == buttonFrame)
+
+        #expect(viewModel.selectXomoObject(at: CGPoint(x: 468, y: 308)))
+        #expect(viewModel.document.selectedLayerID == avatarID)
+        #expect(viewModel.selectedXomoObjectKind == .avatar)
+        #expect(viewModel.selectedXomoObjectFrame == CGRect(x: 420, y: 260, width: 96, height: 96))
+    }
+
     @Test func coveredComponentDoesNotClaimTheClick() throws {
         let viewModel = makeViewModel()
         viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))

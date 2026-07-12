@@ -23,6 +23,34 @@ struct XomoLeftSidebarTests {
         }
     }
 
+    @Test func componentDropCentersThePreviewAtThePointerAndClampsToCanvasEdges() {
+        let canvasSize = CGSize(width: 1_000, height: 800)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "component-drop-origin",
+            image: NSImage.transparent(size: canvasSize)
+        ) { _ in }
+
+        for component in XomoComponentKind.allCases {
+            let size = viewModel.xomoComponentSize(component)
+            let centered = viewModel.xomoComponentDropOrigin(
+                component,
+                centeredAt: CGPoint(x: 500, y: 400)
+            )
+            #expect(abs(centered.x + size.width * 0.5 - 500) < 0.01)
+            #expect(abs(centered.y + size.height * 0.5 - 400) < 0.01)
+
+            let topLeft = viewModel.xomoComponentDropOrigin(component, centeredAt: .zero)
+            #expect(topLeft == .zero)
+
+            let bottomRight = viewModel.xomoComponentDropOrigin(
+                component,
+                centeredAt: CGPoint(x: canvasSize.width, y: canvasSize.height)
+            )
+            #expect(abs(bottomRight.x - (canvasSize.width - size.width)) < 0.01)
+            #expect(abs(bottomRight.y - (canvasSize.height - size.height)) < 0.01)
+        }
+    }
+
     @Test func sidebarHasToolsAndComponentsTabs() {
         #expect(XomoLeftSidebarTab.allCases == [.tools, .components])
         #expect(XomoLeftSidebarTab.tools.symbolName == "wrench.and.screwdriver")

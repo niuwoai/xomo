@@ -186,6 +186,7 @@ private struct XomoComponentDragPreview: View {
 
 struct XomoComponentLibraryPanel: View {
     @ObservedObject var viewModel: ImageEditorViewModel
+    @State private var pendingComponentSelection: XomoComponentKind?
 
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
@@ -403,7 +404,13 @@ struct XomoComponentLibraryPanel: View {
         Group {
             if let component = item.component {
                 Button {
-                    viewModel.insertXomoComponent(component)
+                    pendingComponentSelection = component
+                    DispatchQueue.main.async {
+                        viewModel.insertXomoComponent(component)
+                        if pendingComponentSelection == component {
+                            pendingComponentSelection = nil
+                        }
+                    }
                 } label: {
                     componentPreviewLabel(item, isAvailable: true)
                 }
@@ -427,7 +434,8 @@ struct XomoComponentLibraryPanel: View {
     }
 
     private func componentPreviewLabel(_ item: XomoComponentLibraryPreviewItem, isAvailable: Bool) -> some View {
-        VStack(spacing: 6) {
+        let isSelected = item.component == (pendingComponentSelection ?? viewModel.selectedXomoObjectKind)
+        return VStack(spacing: 6) {
             if let component = item.component {
                 XomoComponentThumbnail(kind: component, tokens: viewModel.xomoComponentTheme.tokens)
             } else {
@@ -447,10 +455,25 @@ struct XomoComponentLibraryPanel: View {
         }
         .padding(7)
         .frame(maxWidth: .infinity, minHeight: 78)
-        .background(Color(nsColor: ImageEditorTheme.panelRaised), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+        .background(
+            isSelected
+                ? Color(nsColor: ImageEditorTheme.selected).opacity(0.22)
+                : Color(nsColor: ImageEditorTheme.panelRaised),
+            in: RoundedRectangle(cornerRadius: 7, style: .continuous)
+        )
         .overlay {
             RoundedRectangle(cornerRadius: 7, style: .continuous)
-                .stroke(Color(nsColor: ImageEditorTheme.border), lineWidth: 1)
+                .stroke(
+                    isSelected
+                        ? Color(nsColor: ImageEditorTheme.selected).opacity(0.92)
+                        : Color(nsColor: ImageEditorTheme.border),
+                    lineWidth: isSelected ? 1.5 : 1
+                )
         }
+        .shadow(
+            color: isSelected ? Color(nsColor: ImageEditorTheme.selected).opacity(0.24) : .clear,
+            radius: isSelected ? 5 : 0
+        )
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }

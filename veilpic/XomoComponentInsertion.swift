@@ -418,6 +418,20 @@ extension ImageEditorViewModel {
         )
     }
 
+    func xomoComponentDropOrigin(
+        _ component: XomoComponentKind,
+        centeredAt canvasPoint: CGPoint
+    ) -> CGPoint {
+        let componentSize = xomoComponentSize(component)
+        return clampedComponentOrigin(
+            CGPoint(
+                x: canvasPoint.x - componentSize.width * 0.5,
+                y: canvasPoint.y - componentSize.height * 0.5
+            ),
+            componentSize: componentSize
+        )
+    }
+
     private func insertXomoButton(_ variant: XomoButtonVariant, at proposedOrigin: CGPoint?) {
         let canvasSize = document.canvasSize
         let tokens = xomoComponentTheme.tokens

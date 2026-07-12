@@ -1955,6 +1955,13 @@ final class ImageEditorViewModel: ObservableObject {
 
     func selectLayer(_ id: UUID, editingMask: Bool = false, extendingSelection: Bool = false) {
         guard document.layers.contains(where: { $0.id == id }) else { return }
+        let shouldEditMask = editingMask && (document.layers.first { $0.id == id }?.mask != nil)
+        if !extendingSelection,
+           document.selectedLayerID == id,
+           document.selectedLayerIDs == [id],
+           isEditingLayerMask == shouldEditMask {
+            return
+        }
         if extendingSelection && !editingMask {
             mutateDocumentWithoutInvalidatingRenderedImageCaches { document in
                 if document.selectedLayerIDs.contains(id), document.selectedLayerIDs.count > 1 {
@@ -1982,7 +1989,9 @@ final class ImageEditorViewModel: ObservableObject {
             document.selectedLayerID = id
             document.selectedLayerIDs = [id]
         }
-        isEditingLayerMask = editingMask && (document.selectedLayer?.mask != nil)
+        if isEditingLayerMask != shouldEditMask {
+            isEditingLayerMask = shouldEditMask
+        }
         syncAdjustmentControlsFromSelection()
         syncFilterControlsFromSelection()
         syncTextControlsFromSelection()
@@ -5720,9 +5729,15 @@ final class ImageEditorViewModel: ObservableObject {
               content.kind == .path,
               content.allEditablePathSubpaths.contains(where: { !$0.isEmpty })
         else {
-            selectedPathSubpathIndex = 0
-            selectedPathAnchorIndex = nil
-            selectedPathControlRole = .anchor
+            if selectedPathSubpathIndex != 0 {
+                selectedPathSubpathIndex = 0
+            }
+            if selectedPathAnchorIndex != nil {
+                selectedPathAnchorIndex = nil
+            }
+            if selectedPathControlRole != .anchor {
+                selectedPathControlRole = .anchor
+            }
             return
         }
         let subpaths = content.allEditablePathSubpaths

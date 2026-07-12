@@ -20,6 +20,8 @@ struct ImageEditorView: View {
     @State private var dragEnd: CGPoint?
     @State private var pendingCropRect: CGRect?
     @State private var lastPanTranslation: CGSize = .zero
+    @State private var isSpacebarPanning = false
+    @State private var isCanvasPanGestureActive = false
     @State private var lastMoveImagePoint: CGPoint?
     @State private var activeResizeHandle: ImageEditorLayerResizeHandle?
     @State private var isRotatingLayer = false
@@ -111,6 +113,9 @@ struct ImageEditorView: View {
                     else { return false }
                     viewModel.truncateSelectedHistory()
                     return true
+                },
+                setSpacebarPanning: { isPressed in
+                    isSpacebarPanning = isPressed
                 }
             )
             .allowsHitTesting(false)
@@ -809,9 +814,13 @@ struct ImageEditorView: View {
                 .xomoCanvasPlatformInteractions(
                     onDrop: { components, location in
                         guard let rawValue = components.first,
-                              let component = XomoComponentKind(rawValue: rawValue)
+                              let component = XomoComponentKind(rawValue: rawValue),
+                              let canvasPoint = imagePoint(from: location, in: geometry.size)
                         else { return false }
-                        viewModel.insertXomoComponent(component, at: imagePoint(from: location, in: geometry.size))
+                        viewModel.insertXomoComponent(
+                            component,
+                            at: viewModel.xomoComponentDropOrigin(component, centeredAt: canvasPoint)
+                        )
                         return true
                     },
                     onMagnifyChanged: { magnification, location in
@@ -849,8 +858,9 @@ struct ImageEditorView: View {
                     let displayScale = imageRect.width / max(viewModel.document.canvasSize.width, 1)
                     ImageEditorCursorRectView(
                         cursor: ImageEditorCanvasCursor.cursor(
-                            for: viewModel.selectedTool,
-                            brushDiameter: viewModel.brushSize * displayScale
+                            for: canvasCursorTool,
+                            brushDiameter: viewModel.brushSize * displayScale,
+                            handIsDragging: isCanvasPanGestureActive
                         )
                     )
                     .allowsHitTesting(false)
@@ -867,6 +877,10 @@ struct ImageEditorView: View {
                     updateCanvasCursor(at: hoverViewPoint, in: geometry.size)
                 }
                 .onChange(of: viewModel.brushSize) { _ in
+                    guard isPointerInsideCanvas, let hoverViewPoint else { return }
+                    updateCanvasCursor(at: hoverViewPoint, in: geometry.size)
+                }
+                .onChange(of: isSpacebarPanning) { _ in
                     guard isPointerInsideCanvas, let hoverViewPoint else { return }
                     updateCanvasCursor(at: hoverViewPoint, in: geometry.size)
                 }
@@ -1173,17 +1187,22 @@ struct ImageEditorView: View {
     private func canvasGesture(in size: CGSize) -> some Gesture {
         DragGesture(minimumDistance: 0)
             .onChanged { value in
-                let imagePoint = imagePoint(from: value.location, in: size)
-                viewModel.updatePointer(imagePoint)
-
-                switch viewModel.selectedTool {
-                case .hand:
+                if isCanvasPanGestureActive || viewModel.selectedTool == .hand || isSpacebarPanning {
+                    isCanvasPanGestureActive = true
                     let delta = CGSize(
                         width: value.translation.width - lastPanTranslation.width,
                         height: value.translation.height - lastPanTranslation.height
                     )
                     viewModel.nudgeCanvas(by: delta)
                     lastPanTranslation = value.translation
+                    NSCursor.closedHand.set()
+                    return
+                }
+
+                let imagePoint = imagePoint(from: value.location, in: size)
+                viewModel.updatePointer(imagePoint)
+
+                switch viewModel.selectedTool {
                 case .move:
                     if let imagePoint {
                         if let lastMoveImagePoint {
@@ -1195,10 +1214,19 @@ struct ImageEditorView: View {
                                 snapping: true
                             )
                         } else {
-                            _ = viewModel.selectXomoObject(at: imagePoint)
+                            guard viewModel.selectXomoObject(at: imagePoint) else {
+                                isCanvasPanGestureActive = true
+                                lastPanTranslation = value.translation
+                                NSCursor.closedHand.set()
+                                return
+                            }
                             viewModel.beginMovingSelectedLayer()
                         }
                         lastMoveImagePoint = imagePoint
+                    } else {
+                        isCanvasPanGestureActive = true
+                        lastPanTranslation = value.translation
+                        NSCursor.closedHand.set()
                     }
                 case .brush, .eraser, .cloneStamp, .dodge, .burn, .sponge, .blur, .sharpen, .smudge, .healingBrush:
                     if let imagePoint {
@@ -1230,6 +1258,15 @@ struct ImageEditorView: View {
                 }
             }
             .onEnded { value in
+                if isCanvasPanGestureActive {
+                    isCanvasPanGestureActive = false
+                    lastPanTranslation = .zero
+                    if isPointerInsideCanvas {
+                        updateCanvasCursor(at: value.location, in: size)
+                    }
+                    return
+                }
+
                 let imagePoint = imagePoint(from: value.location, in: size)
 
                 switch viewModel.selectedTool {
@@ -1442,10 +1479,15 @@ struct ImageEditorView: View {
         let imageRect = fittedImageRect(in: size)
         let displayScale = imageRect.width / max(viewModel.document.canvasSize.width, 1)
         ImageEditorCanvasCursor.cursor(
-            for: viewModel.selectedTool,
+            for: canvasCursorTool,
             brushDiameter: viewModel.brushSize * displayScale,
-            penIsClosing: viewModel.selectedTool == .pen && viewModel.isPenCloseCandidate(at: canvasPoint)
+            penIsClosing: viewModel.selectedTool == .pen && viewModel.isPenCloseCandidate(at: canvasPoint),
+            handIsDragging: isCanvasPanGestureActive
         ).set()
+    }
+
+    private var canvasCursorTool: ImageEditorTool {
+        isSpacebarPanning || isCanvasPanGestureActive ? .hand : viewModel.selectedTool
     }
 
     private func imagePoint(from viewPoint: CGPoint, in size: CGSize) -> CGPoint? {
@@ -2825,16 +2867,22 @@ struct ImageEditorView: View {
            (viewModel.document.areTransformControlsVisible || viewModel.hasSelectedXomoObject),
            let layerFrame = viewModel.movingObjectPreviewFrame ?? viewModel.selectedLayerTransformFrame {
             let rect = viewRect(from: layerFrame, in: size)
-            Rectangle()
-                .stroke(
-                    viewModel.hasSelectedXomoObject
-                        ? Color.gray.opacity(viewModel.movingObjectPreviewFrame == nil ? 0.62 : 0.78)
-                        : Color(nsColor: ImageEditorTheme.selected),
-                    style: StrokeStyle(lineWidth: 1.25, dash: [6, 4])
+            if let componentKind = viewModel.selectedXomoObjectKind {
+                xomoObjectSelectionOutline(
+                    kind: componentKind,
+                    rect: rect,
+                    isMoving: viewModel.movingObjectPreviewFrame != nil
                 )
-                .frame(width: max(1, rect.width), height: max(1, rect.height))
-                .position(x: rect.midX, y: rect.midY)
-                .allowsHitTesting(false)
+            } else {
+                Rectangle()
+                    .stroke(
+                        Color(nsColor: ImageEditorTheme.selected),
+                        style: StrokeStyle(lineWidth: 1.25, dash: [6, 4])
+                    )
+                    .frame(width: max(1, rect.width), height: max(1, rect.height))
+                    .position(x: rect.midX, y: rect.midY)
+                    .allowsHitTesting(false)
+            }
 
             if viewModel.selectedTool == .move,
                viewModel.document.areTransformControlsVisible,
@@ -2850,6 +2898,35 @@ struct ImageEditorView: View {
                 rotateHandleView(in: rect, canvasSize: size)
             }
         }
+    }
+
+    private func xomoObjectSelectionOutline(
+        kind: XomoComponentKind,
+        rect: CGRect,
+        isMoving: Bool
+    ) -> some View {
+        let shape: AnyShape
+        switch kind {
+        case .avatar, .badge:
+            shape = AnyShape(Circle())
+        case .toggle, .tag:
+            shape = AnyShape(Capsule())
+        default:
+            shape = AnyShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
+        }
+        let accent = Color(nsColor: ImageEditorTheme.selected)
+        return shape
+            .fill(accent.opacity(isMoving ? 0.08 : 0.055))
+            .overlay {
+                shape.stroke(
+                    Color.gray.opacity(isMoving ? 0.82 : 0.72),
+                    style: StrokeStyle(lineWidth: isMoving ? 1.5 : 1.25, dash: [6, 4])
+                )
+            }
+            .shadow(color: accent.opacity(isMoving ? 0.10 : 0.24), radius: isMoving ? 2 : 5)
+            .frame(width: max(1, rect.width), height: max(1, rect.height))
+            .position(x: rect.midX, y: rect.midY)
+            .allowsHitTesting(false)
     }
 
     private func resizeHandleView(
@@ -5053,13 +5130,14 @@ enum ImageEditorCanvasCursor {
     static func cursor(
         for tool: ImageEditorTool,
         brushDiameter: CGFloat,
-        penIsClosing: Bool = false
+        penIsClosing: Bool = false,
+        handIsDragging: Bool = false
     ) -> NSCursor {
         switch tool {
         case .move:
             return .arrow
         case .hand:
-            return .openHand
+            return handIsDragging ? .closedHand : .openHand
         case .text:
             return .iBeam
         case .brush, .eraser, .quickSelection, .cloneStamp, .dodge, .burn, .sponge,
@@ -5415,12 +5493,14 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
     let perform: (ImageEditorKeyboardShortcutAction) -> Void
     let deleteSelectedObject: () -> Bool
     let deleteSelectedHistory: () -> Bool
+    let setSpacebarPanning: (Bool) -> Void
 
     func makeCoordinator() -> Coordinator {
         Coordinator(
             perform: perform,
             deleteSelectedObject: deleteSelectedObject,
-            deleteSelectedHistory: deleteSelectedHistory
+            deleteSelectedHistory: deleteSelectedHistory,
+            setSpacebarPanning: setSpacebarPanning
         )
     }
 
@@ -5432,6 +5512,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
         context.coordinator.perform = perform
         context.coordinator.deleteSelectedObject = deleteSelectedObject
         context.coordinator.deleteSelectedHistory = deleteSelectedHistory
+        context.coordinator.setSpacebarPanning = setSpacebarPanning
     }
 
     final class Coordinator {
@@ -5439,18 +5520,30 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
         var perform: (ImageEditorKeyboardShortcutAction) -> Void
         var deleteSelectedObject: () -> Bool
         var deleteSelectedHistory: () -> Bool
+        var setSpacebarPanning: (Bool) -> Void
         private var eventMonitor: Any?
+        private var appDeactivateObserver: Any?
+        private var isSpacebarPanning = false
 
         init(
             perform: @escaping (ImageEditorKeyboardShortcutAction) -> Void,
             deleteSelectedObject: @escaping () -> Bool,
-            deleteSelectedHistory: @escaping () -> Bool
+            deleteSelectedHistory: @escaping () -> Bool,
+            setSpacebarPanning: @escaping (Bool) -> Void
         ) {
             self.perform = perform
             self.deleteSelectedObject = deleteSelectedObject
             self.deleteSelectedHistory = deleteSelectedHistory
-            eventMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            self.setSpacebarPanning = setSpacebarPanning
+            eventMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .keyUp]) { [weak self] event in
                 self?.handle(event) ?? event
+            }
+            appDeactivateObserver = NotificationCenter.default.addObserver(
+                forName: NSApplication.didResignActiveNotification,
+                object: nil,
+                queue: .main
+            ) { [weak self] _ in
+                self?.stopSpacebarPanning()
             }
         }
 
@@ -5458,11 +5551,25 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
             if let eventMonitor {
                 NSEvent.removeMonitor(eventMonitor)
             }
+            if let appDeactivateObserver {
+                NotificationCenter.default.removeObserver(appDeactivateObserver)
+            }
         }
 
         private func handle(_ event: NSEvent) -> NSEvent? {
             guard event.window === window else { return event }
             let relevantFlags = event.modifierFlags.intersection([.command, .option, .shift, .control])
+            if event.keyCode == 49, relevantFlags.isEmpty {
+                if event.type == .keyUp, isSpacebarPanning {
+                    stopSpacebarPanning()
+                    return nil
+                }
+                if event.type == .keyDown, !isTextInputActive {
+                    isSpacebarPanning = true
+                    setSpacebarPanning(true)
+                    return nil
+                }
+            }
             let isDelete = event.keyCode == 51 || event.keyCode == 117
             if isDelete, relevantFlags.isEmpty, deleteSelectedObject() {
                 return nil
@@ -5480,6 +5587,16 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
                 return nil
             }
             return event
+        }
+
+        private var isTextInputActive: Bool {
+            window?.firstResponder is NSTextView || window?.firstResponder is NSTextField
+        }
+
+        private func stopSpacebarPanning() {
+            guard isSpacebarPanning else { return }
+            isSpacebarPanning = false
+            setSpacebarPanning(false)
         }
     }
 }

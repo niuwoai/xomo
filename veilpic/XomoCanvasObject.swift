@@ -16,15 +16,28 @@ private struct XomoCanvasObject {
 @MainActor
 extension ImageEditorViewModel {
     var hasSelectedXomoObject: Bool {
-        guard let selectedLayer = document.selectedLayer else { return false }
-        return selectedLayer.isGroup && selectedLayer.xomoComponentInstance != nil
+        selectedXomoObjectKind != nil
+    }
+
+    var selectedXomoObjectKind: XomoComponentKind? {
+        guard let selectedLayer = document.selectedLayer,
+              selectedLayer.isGroup
+        else { return nil }
+        return selectedLayer.xomoComponentInstance?.kind
     }
 
     var selectedXomoObjectFrame: CGRect? {
         guard hasSelectedXomoObject,
               let selectedGroupID = document.selectedLayerID
         else { return nil }
-        return xomoCanvasObjects().first { $0.groupID == selectedGroupID }?.frame
+        return document.layers.lazy
+            .filter { layer in
+                layer.groupID == selectedGroupID && self.document.isEffectivelyVisible(layer)
+            }
+            .map { $0.frame.standardized }
+            .reduce(nil) { bounds, frame in
+                bounds?.union(frame) ?? frame
+            }
     }
 
     func selectXomoObject(at point: CGPoint) -> Bool {
@@ -68,26 +81,34 @@ extension ImageEditorViewModel {
     }
 
     private func xomoCanvasObjects() -> [XomoCanvasObject] {
-        document.layers.enumerated().compactMap { groupIndex, group in
-            guard group.isGroup,
-                  let instance = group.xomoComponentInstance,
-                  document.isEffectivelyVisible(group)
-            else { return nil }
+        let groups = document.layers.enumerated().reduce(into: [UUID: (kind: XomoComponentKind, index: Int)]()) { result, item in
+            let (index, layer) = item
+            guard layer.isGroup,
+                  let instance = layer.xomoComponentInstance,
+                  document.isEffectivelyVisible(layer)
+            else { return }
+            result[layer.id] = (instance.kind, index)
+        }
+        var boundsByGroupID: [UUID: CGRect] = [:]
+        var frontIndexByGroupID: [UUID: Int] = [:]
 
-            let children = document.layers.enumerated().filter { _, layer in
-                layer.groupID == group.id && document.isEffectivelyVisible(layer)
-            }
-            guard let frame = children
-                .map({ $0.element.frame.standardized })
-                .reduce(nil, { partial, frame in partial?.union(frame) ?? frame })
-            else { return nil }
+        for (index, layer) in document.layers.enumerated() {
+            guard let groupID = layer.groupID,
+                  groups[groupID] != nil,
+                  document.isEffectivelyVisible(layer)
+            else { continue }
+            let frame = layer.frame.standardized
+            boundsByGroupID[groupID] = boundsByGroupID[groupID]?.union(frame) ?? frame
+            frontIndexByGroupID[groupID] = max(frontIndexByGroupID[groupID] ?? index, index)
+        }
 
-            let frontIndex = max(groupIndex, children.map(\.offset).max() ?? groupIndex)
+        return groups.compactMap { groupID, group in
+            guard let frame = boundsByGroupID[groupID] else { return nil }
             return XomoCanvasObject(
-                groupID: group.id,
-                kind: instance.kind,
+                groupID: groupID,
+                kind: group.kind,
                 frame: frame,
-                frontIndex: frontIndex
+                frontIndex: max(group.index, frontIndexByGroupID[groupID] ?? group.index)
             )
         }
     }

@@ -6387,6 +6387,26 @@ struct veilpicTests {
     }
 
     @MainActor
+    @Test func imageEditorHandCursorAndCanvasPanUseDirectViewportMovement() async throws {
+        let openHand = ImageEditorCanvasCursor.cursor(for: .hand, brushDiameter: 18)
+        let closedHand = ImageEditorCanvasCursor.cursor(
+            for: .hand,
+            brushDiameter: 18,
+            handIsDragging: true
+        )
+        #expect(openHand === NSCursor.openHand)
+        #expect(closedHand === NSCursor.closedHand)
+
+        let viewModel = ImageEditorViewModel(
+            sourceName: "pan.png",
+            image: testImage(color: .clear, size: NSSize(width: 80, height: 60))
+        ) { _ in }
+        viewModel.canvasOffset = CGSize(width: 12, height: -8)
+        viewModel.nudgeCanvas(by: CGSize(width: 45, height: 30))
+        #expect(viewModel.canvasOffset == CGSize(width: 57, height: 22))
+    }
+
+    @MainActor
     @Test func imageEditorMagicWandSelectsContiguousRegionOnly() async throws {
         let image = testBitmapImage(
             size: NSSize(width: 80, height: 60),
