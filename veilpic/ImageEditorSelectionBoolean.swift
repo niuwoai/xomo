@@ -221,6 +221,109 @@ extension ImageEditorSelection {
 }
 
 extension ImageEditorSelectionMask {
+    func paintedByQuickMaskStroke(
+        points: [CGPoint],
+        canvasSize: CGSize,
+        diameter: CGFloat,
+        opacity: CGFloat,
+        reveal: Bool
+    ) -> ImageEditorSelectionMask? {
+        guard width > 0,
+              height > 0,
+              alpha.count == width * height,
+              canvasSize.width > 0,
+              canvasSize.height > 0,
+              points.count > 1,
+              let coverage = quickMaskStrokeCoverage(
+                points: points,
+                canvasSize: canvasSize,
+                diameter: diameter,
+                opacity: opacity
+              )
+        else { return nil }
+
+        var output = alpha
+        for index in output.indices where coverage[index] > 0 {
+            let current = CGFloat(alpha[index]) / CGFloat(UInt8.max)
+            let amount = CGFloat(coverage[index]) / CGFloat(UInt8.max)
+            let updated = reveal
+                ? current + (1 - current) * amount
+                : current * (1 - amount)
+            output[index] = UInt8((max(0, min(1, updated)) * CGFloat(UInt8.max)).rounded())
+        }
+        return ImageEditorSelectionMask(width: width, height: height, alpha: output)
+    }
+
+    private func quickMaskStrokeCoverage(
+        points: [CGPoint],
+        canvasSize: CGSize,
+        diameter: CGFloat,
+        opacity: CGFloat
+    ) -> [UInt8]? {
+        guard points.count > 1 else { return nil }
+        let scaleX = CGFloat(width) / canvasSize.width
+        let scaleY = CGFloat(height) / canvasSize.height
+        let scaledPoints = points.map { CGPoint(x: $0.x * scaleX, y: $0.y * scaleY) }
+        let radius = max(0.5, diameter * (scaleX + scaleY) * 0.25)
+        let clampedOpacity = max(0, min(1, opacity))
+        var coverage = [UInt8](repeating: 0, count: alpha.count)
+
+        for (start, end) in zip(scaledPoints, scaledPoints.dropFirst()) {
+            accumulateQuickMaskCoverage(
+                from: start,
+                to: end,
+                radius: radius,
+                opacity: clampedOpacity,
+                coverage: &coverage
+            )
+        }
+        return coverage
+    }
+
+    private func accumulateQuickMaskCoverage(
+        from start: CGPoint,
+        to end: CGPoint,
+        radius: CGFloat,
+        opacity: CGFloat,
+        coverage: inout [UInt8]
+    ) {
+        let minX = max(0, Int(floor(min(start.x, end.x) - radius - 1)))
+        let maxX = min(width - 1, Int(ceil(max(start.x, end.x) + radius + 1)))
+        let minY = max(0, Int(floor(min(start.y, end.y) - radius - 1)))
+        let maxY = min(height - 1, Int(ceil(max(start.y, end.y) + radius + 1)))
+        guard minX <= maxX, minY <= maxY else { return }
+
+        let segment = CGPoint(x: end.x - start.x, y: end.y - start.y)
+        let squaredLength = segment.x * segment.x + segment.y * segment.y
+        for y in minY...maxY {
+            for x in minX...maxX {
+                let pixelCenter = CGPoint(x: CGFloat(x) + 0.5, y: CGFloat(y) + 0.5)
+                let projection = quickMaskProjection(
+                    pixelCenter: pixelCenter,
+                    start: start,
+                    segment: segment,
+                    squaredLength: squaredLength
+                )
+                let closest = CGPoint(x: start.x + segment.x * projection, y: start.y + segment.y * projection)
+                let distance = hypot(pixelCenter.x - closest.x, pixelCenter.y - closest.y)
+                let amount = max(0, min(1, radius + 0.5 - distance)) * opacity
+                let index = y * width + x
+                coverage[index] = max(coverage[index], UInt8((amount * CGFloat(UInt8.max)).rounded()))
+            }
+        }
+    }
+
+    private func quickMaskProjection(
+        pixelCenter: CGPoint,
+        start: CGPoint,
+        segment: CGPoint,
+        squaredLength: CGFloat
+    ) -> CGFloat {
+        guard squaredLength > 0 else { return 0 }
+        let relative = CGPoint(x: pixelCenter.x - start.x, y: pixelCenter.y - start.y)
+        return max(0, min(1, (relative.x * segment.x + relative.y * segment.y) / squaredLength))
+    }
+
     func combined(with other: ImageEditorSelectionMask, mode: ImageEditorSelectionMode) -> ImageEditorSelectionMask? {
         guard width == other.width, height == other.height, alpha.count == other.alpha.count else { return nil }
 
