@@ -253,6 +253,37 @@ struct XomoAutomationTests {
         #expect(viewModel.healingBrushSampleSource == .currentAndBelow)
     }
 
+    @Test func registryConfiguresBrushFlowSpacingAndHardness() {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.stroke",
+            arguments: [
+                "tool": .string("brush"),
+                "points": .array([
+                    .object(["x": .number(12), "y": .number(18)]),
+                    .object(["x": .number(52), "y": .number(18)])
+                ]),
+                "size": .number(14),
+                "opacity": .number(0.75),
+                "hardness": .number(0.35),
+                "flow": .number(17),
+                "spacing": .number(140)
+            ]
+        ))
+
+        #expect(response.ok)
+        #expect(viewModel.brushSize == 14)
+        #expect(viewModel.opacity == 0.75)
+        #expect(viewModel.hardness == 0.35)
+        #expect(viewModel.brushFlow == 17)
+        #expect(viewModel.brushSpacing == 140)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.brush"))
+    }
+
     private func request(
         operation: String,
         name: String? = nil,

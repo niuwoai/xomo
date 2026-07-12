@@ -230,6 +230,9 @@ extension ImageEditorSelectionMask {
         canvasSize: CGSize,
         diameter: CGFloat,
         opacity: CGFloat,
+        hardness: CGFloat = 1,
+        flow: CGFloat = 1,
+        spacing: CGFloat = 0.25,
         reveal: Bool
     ) -> ImageEditorSelectionMask? {
         guard width > 0,
@@ -242,7 +245,10 @@ extension ImageEditorSelectionMask {
                 points: points,
                 canvasSize: canvasSize,
                 diameter: diameter,
-                opacity: opacity
+                opacity: opacity,
+                hardness: hardness,
+                flow: flow,
+                spacing: spacing
               )
         else { return nil }
 
@@ -262,70 +268,33 @@ extension ImageEditorSelectionMask {
         points: [CGPoint],
         canvasSize: CGSize,
         diameter: CGFloat,
-        opacity: CGFloat
+        opacity: CGFloat,
+        hardness: CGFloat,
+        flow: CGFloat,
+        spacing: CGFloat
     ) -> [UInt8]? {
         guard points.count > 1 else { return nil }
         let scaleX = CGFloat(width) / canvasSize.width
         let scaleY = CGFloat(height) / canvasSize.height
         let scaledPoints = points.map { CGPoint(x: $0.x * scaleX, y: $0.y * scaleY) }
-        let radius = max(0.5, diameter * (scaleX + scaleY) * 0.25)
-        let clampedOpacity = max(0, min(1, opacity))
-        var coverage = [UInt8](repeating: 0, count: alpha.count)
-
-        for (start, end) in zip(scaledPoints, scaledPoints.dropFirst()) {
-            accumulateQuickMaskCoverage(
-                from: start,
-                to: end,
-                radius: radius,
-                opacity: clampedOpacity,
-                coverage: &coverage
-            )
-        }
-        return coverage
-    }
-
-    private func accumulateQuickMaskCoverage(
-        from start: CGPoint,
-        to end: CGPoint,
-        radius: CGFloat,
-        opacity: CGFloat,
-        coverage: inout [UInt8]
-    ) {
-        let minX = max(0, Int(floor(min(start.x, end.x) - radius - 1)))
-        let maxX = min(width - 1, Int(ceil(max(start.x, end.x) + radius + 1)))
-        let minY = max(0, Int(floor(min(start.y, end.y) - radius - 1)))
-        let maxY = min(height - 1, Int(ceil(max(start.y, end.y) + radius + 1)))
-        guard minX <= maxX, minY <= maxY else { return }
-
-        let segment = CGPoint(x: end.x - start.x, y: end.y - start.y)
-        let squaredLength = segment.x * segment.x + segment.y * segment.y
-        for y in minY...maxY {
-            for x in minX...maxX {
-                let pixelCenter = CGPoint(x: CGFloat(x) + 0.5, y: CGFloat(y) + 0.5)
-                let projection = quickMaskProjection(
-                    pixelCenter: pixelCenter,
-                    start: start,
-                    segment: segment,
-                    squaredLength: squaredLength
-                )
-                let closest = CGPoint(x: start.x + segment.x * projection, y: start.y + segment.y * projection)
-                let distance = hypot(pixelCenter.x - closest.x, pixelCenter.y - closest.y)
-                let amount = max(0, min(1, radius + 0.5 - distance)) * opacity
-                let index = y * width + x
-                coverage[index] = max(coverage[index], UInt8((amount * CGFloat(UInt8.max)).rounded()))
-            }
-        }
-    }
-
-    private func quickMaskProjection(
-        pixelCenter: CGPoint,
-        start: CGPoint,
-        segment: CGPoint,
-        squaredLength: CGFloat
-    ) -> CGFloat {
-        guard squaredLength > 0 else { return 0 }
-        let relative = CGPoint(x: pixelCenter.x - start.x, y: pixelCenter.y - start.y)
-        return max(0, min(1, (relative.x * segment.x + relative.y * segment.y) / squaredLength))
+        let scaledDiameter = max(1, diameter * (scaleX + scaleY) / 2)
+        let settings = ImageEditorBrushStrokeSettings(
+            diameter: scaledDiameter,
+            hardness: hardness,
+            opacity: opacity,
+            flow: flow,
+            spacing: spacing
+        )
+        return ImageEditorBrushStrokeKernel.coverage(
+            width: width,
+            height: height,
+            centers: ImageEditorBrushStrokeKernel.stampCenters(
+                points: scaledPoints,
+                diameter: scaledDiameter,
+                spacing: spacing
+            ),
+            settings: settings
+        )
     }
 
     func combined(with other: ImageEditorSelectionMask, mode: ImageEditorSelectionMode) -> ImageEditorSelectionMask? {

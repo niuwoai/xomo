@@ -1291,6 +1291,15 @@ final class XomoAutomationRegistry {
         let tool = arguments["tool"]?.stringValue ?? "brush"
         if let size = arguments["size"]?.doubleValue { viewModel.brushSize = size }
         if let opacity = arguments["opacity"]?.doubleValue { viewModel.opacity = opacity }
+        if let hardness = arguments["hardness"]?.doubleValue {
+            viewModel.hardness = max(0, min(1, hardness))
+        }
+        if let flow = arguments["flow"]?.doubleValue {
+            viewModel.brushFlow = max(1, min(100, flow))
+        }
+        if let spacing = arguments["spacing"]?.doubleValue {
+            viewModel.brushSpacing = max(1, min(200, spacing))
+        }
         switch tool {
         case "brush": viewModel.drawBrush(points: try requiredPoints("points", in: arguments))
         case "eraser": viewModel.drawBrush(points: try requiredPoints("points", in: arguments), erase: true)
@@ -1884,7 +1893,10 @@ private extension XomoAutomationRegistry {
             "tool": XomoAutomationSchema.string(description: "Stroke tool", values: ["brush", "eraser"]),
             "points": pointsSchema,
             "size": XomoAutomationSchema.number(description: "Brush diameter in pixels"),
-            "opacity": XomoAutomationSchema.number(description: "Opacity from 0 to 1")
+            "opacity": XomoAutomationSchema.number(description: "Stroke opacity cap from 0 to 1"),
+            "hardness": XomoAutomationSchema.number(description: "Edge hardness from 0 to 1"),
+            "flow": XomoAutomationSchema.number(description: "Per-stamp flow from 1 to 100 percent"),
+            "spacing": XomoAutomationSchema.number(description: "Stamp spacing from 1 to 200 percent of brush diameter")
         ], required: ["points"]),
         tool("xomo.paint.gradient", "Paint a gradient between exactly two canvas points.", ["points": pointsSchema], required: ["points"]),
         tool("xomo.paint.special", "Use clone, tone, sponge, blur, sharpen, smudge, healing, red-eye, or paint-bucket tools.", [

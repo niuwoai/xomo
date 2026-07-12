@@ -501,6 +501,8 @@
 "imageEditor.option.maskDensity" = "マスク濃度";
 "imageEditor.option.maskFeather" = "マスクぼかし";
 "imageEditor.option.hardness" = "硬さ";
+"imageEditor.option.flow" = "流量";
+"imageEditor.option.spacing" = "間隔";
 "imageEditor.option.feather" = "ぼかし";
 "imageEditor.option.tolerance" = "許容値";
 "imageEditor.option.selectionModifyAmount" = "拡張/縮小";

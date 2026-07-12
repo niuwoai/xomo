@@ -501,6 +501,8 @@
 "imageEditor.option.maskDensity" = "蒙版密度";
 "imageEditor.option.maskFeather" = "蒙版羽化";
 "imageEditor.option.hardness" = "硬度";
+"imageEditor.option.flow" = "流量";
+"imageEditor.option.spacing" = "间距";
 "imageEditor.option.feather" = "羽化";
 "imageEditor.option.tolerance" = "容差";
 "imageEditor.option.selectionModifyAmount" = "扩缩";
