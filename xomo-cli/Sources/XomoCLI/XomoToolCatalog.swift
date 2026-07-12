@@ -89,7 +89,7 @@ enum XomoToolCatalog {
         ("xomo.color.set", "Set foreground or background color."),
         ("xomo.color.swap", "Swap foreground and background colors."),
         ("xomo.color.reset", "Reset foreground and background colors."),
-        ("xomo.paint.stroke", "Paint a brush or eraser stroke with size, hardness, opacity, flow, and spacing controls."),
+        ("xomo.paint.stroke", "Paint a pressure-aware brush or eraser stroke with size, hardness, opacity, flow, spacing, and pressure-curve controls."),
         ("xomo.paint.gradient", "Paint a gradient between canvas points."),
         ("xomo.paint.special", "Use clone or healing with explicit source, aligned, and layer-range sampling options, plus tone, sponge, blur, sharpen, smudge, red-eye, and paint-bucket tools."),
         ("xomo.shape.create", "Create an editable rectangle or ellipse."),

@@ -503,6 +503,11 @@
 "imageEditor.option.hardness" = "Hardness";
 "imageEditor.option.flow" = "Flow";
 "imageEditor.option.spacing" = "Spacing";
+"imageEditor.option.pressure" = "Pressure";
+"imageEditor.option.pressureSize" = "Control Size";
+"imageEditor.option.pressureFlow" = "Control Flow";
+"imageEditor.option.pressureSensitivity" = "Sensitivity";
+"imageEditor.option.pressureHelp" = "Use pen pressure to control brush size and flow";
 "imageEditor.option.feather" = "Feather";
 "imageEditor.option.tolerance" = "Tolerance";
 "imageEditor.option.selectionModifyAmount" = "Grow/Shrink";

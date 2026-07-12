@@ -253,8 +253,11 @@ struct XomoAutomationTests {
         #expect(viewModel.healingBrushSampleSource == .currentAndBelow)
     }
 
-    @Test func registryConfiguresBrushFlowSpacingAndHardness() {
-        let viewModel = makeViewModel()
+    @Test func registryConfiguresBrushFlowSpacingHardnessAndPressure() {
+        let suiteName = "XomoAutomationTests.pressure.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName) ?? .standard
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let viewModel = makeViewModel(preferencesDefaults: defaults)
         let registry = XomoAutomationRegistry.shared
         registry.register(viewModel)
 
@@ -264,14 +267,17 @@ struct XomoAutomationTests {
             arguments: [
                 "tool": .string("brush"),
                 "points": .array([
-                    .object(["x": .number(12), "y": .number(18)]),
-                    .object(["x": .number(52), "y": .number(18)])
+                    .object(["x": .number(12), "y": .number(18), "pressure": .number(0.2)]),
+                    .object(["x": .number(52), "y": .number(18), "pressure": .number(1)])
                 ]),
                 "size": .number(14),
                 "opacity": .number(0.75),
                 "hardness": .number(0.35),
                 "flow": .number(17),
-                "spacing": .number(140)
+                "spacing": .number(140),
+                "pressureSize": .bool(false),
+                "pressureFlow": .bool(true),
+                "pressureSensitivity": .number(72)
             ]
         ))
 
@@ -281,6 +287,9 @@ struct XomoAutomationTests {
         #expect(viewModel.hardness == 0.35)
         #expect(viewModel.brushFlow == 17)
         #expect(viewModel.brushSpacing == 140)
+        #expect(!viewModel.brushPressureControlsSize)
+        #expect(viewModel.brushPressureControlsFlow)
+        #expect(viewModel.brushPressureSensitivity == 72)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.brush"))
     }
 
@@ -297,10 +306,13 @@ struct XomoAutomationTests {
         )
     }
 
-    private func makeViewModel() -> ImageEditorViewModel {
+    private func makeViewModel(
+        preferencesDefaults: UserDefaults = .standard
+    ) -> ImageEditorViewModel {
         ImageEditorViewModel(
             sourceName: "automation",
-            image: NSImage.transparent(size: CGSize(width: 320, height: 240))
+            image: NSImage.transparent(size: CGSize(width: 320, height: 240)),
+            preferencesDefaults: preferencesDefaults
         ) { _ in }
     }
 }

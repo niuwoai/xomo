@@ -30,6 +30,7 @@ enum ImageEditorCanvasDragGeometry {
 struct ImageEditorView: View {
     @StateObject var viewModel: ImageEditorViewModel
     @State private var dragPoints: [CGPoint] = []
+    @State private var brushStrokeSamples: [ImageEditorBrushStrokeSample] = []
     @State private var dragStart: CGPoint?
     @State private var dragEnd: CGPoint?
     @State private var pendingCropRect: CGRect?
@@ -203,6 +204,7 @@ struct ImageEditorView: View {
                 if usesBrushDynamicsOptions {
                     optionSlider(titleKey: "imageEditor.option.flow", value: $viewModel.brushFlow, range: 1...100, step: 1, suffix: "%")
                     optionSlider(titleKey: "imageEditor.option.spacing", value: $viewModel.brushSpacing, range: 1...200, step: 1, suffix: "%")
+                    brushPressureMenu
                 }
                 if viewModel.selectedTool.supportsSelectionMode {
                     optionSlider(titleKey: "imageEditor.option.feather", value: $viewModel.feather, range: 0...40, step: 1, suffix: "px")
@@ -292,6 +294,46 @@ struct ImageEditorView: View {
 
     private var usesBrushDynamicsOptions: Bool {
         viewModel.selectedTool == .brush || viewModel.selectedTool == .eraser
+    }
+
+    private var brushPressureMenu: some View {
+        Menu {
+            Toggle(
+                L10n.text("imageEditor.option.pressureSize"),
+                isOn: Binding(
+                    get: { viewModel.brushPressureControlsSize },
+                    set: { viewModel.setBrushPressureControlsSize($0) }
+                )
+            )
+            Toggle(
+                L10n.text("imageEditor.option.pressureFlow"),
+                isOn: Binding(
+                    get: { viewModel.brushPressureControlsFlow },
+                    set: { viewModel.setBrushPressureControlsFlow($0) }
+                )
+            )
+            Picker(
+                L10n.text("imageEditor.option.pressureSensitivity"),
+                selection: Binding(
+                    get: { viewModel.brushPressureSensitivity },
+                    set: { viewModel.setBrushPressureSensitivity($0) }
+                )
+            ) {
+                ForEach([CGFloat(0), 25, 50, 75, 100], id: \.self) { sensitivity in
+                    Text("\(Int(sensitivity))%")
+                        .tag(sensitivity)
+                }
+            }
+        } label: {
+            Label(L10n.text("imageEditor.option.pressure"), systemImage: "scribble.variable")
+                .font(.system(size: 11, weight: .semibold))
+        }
+        .menuStyle(.borderlessButton)
+        .fixedSize()
+        .focusable(false)
+        .xomoFocusEffectDisabled()
+        .help(L10n.text("imageEditor.option.pressureHelp"))
+        .accessibilityIdentifier("image-editor-brush-pressure-menu")
     }
 
     private var selectionModePicker: some View {
@@ -996,6 +1038,7 @@ struct ImageEditorView: View {
                 }
                 .contentShape(Rectangle())
                 .gesture(canvasGesture(in: geometry.size))
+                .accessibilityElement(children: .contain)
                 .accessibilityIdentifier("image-editor-canvas")
                 .xomoCanvasPlatformInteractions(
                     onDrop: { components, location in
@@ -1432,7 +1475,14 @@ struct ImageEditorView: View {
                         isObjectMoveGestureActive = true
                     }
                     updateObjectMove(translation: value.translation, in: size)
-                case .brush, .eraser, .cloneStamp, .dodge, .burn, .sponge, .blur, .sharpen, .smudge, .healingBrush:
+                case .brush, .eraser:
+                    if let pointerImagePoint {
+                        brushStrokeSamples.append(ImageEditorBrushStrokeSample(
+                            point: pointerImagePoint,
+                            pressure: ImageEditorBrushPressureInput.pressure(from: NSApp.currentEvent)
+                        ))
+                    }
+                case .cloneStamp, .dodge, .burn, .sponge, .blur, .sharpen, .smudge, .healingBrush:
                     if let pointerImagePoint {
                         dragPoints.append(pointerImagePoint)
                     }
@@ -1512,9 +1562,9 @@ struct ImageEditorView: View {
                 case .quickSelection:
                     viewModel.createQuickSelection(points: dragPoints)
                 case .brush:
-                    viewModel.drawBrush(points: dragPoints)
+                    viewModel.drawBrush(samples: brushStrokeSamples)
                 case .eraser:
-                    viewModel.drawBrush(points: dragPoints, erase: true)
+                    viewModel.drawBrush(samples: brushStrokeSamples, erase: true)
                 case .cloneStamp:
                     if viewModel.isSettingCloneSource || NSEvent.modifierFlags.contains(.option), let endImagePoint {
                         viewModel.setCloneSource(at: endImagePoint)
@@ -1591,6 +1641,7 @@ struct ImageEditorView: View {
                 }
 
                 dragPoints = []
+                brushStrokeSamples = []
                 dragStart = nil
                 dragEnd = nil
                 lastPanTranslation = .zero

@@ -149,6 +149,121 @@ struct ImageEditorBrushStrokeTests {
         #expect(hard[edge] > soft[edge])
     }
 
+    @Test func pressureCurveRespondsToSensitivityAndClampsInput() {
+        let lowSensitivity = ImageEditorBrushStrokeKernel.mappedPressure(0.25, sensitivity: 0)
+        let neutral = ImageEditorBrushStrokeKernel.mappedPressure(0.25, sensitivity: 0.5)
+        let highSensitivity = ImageEditorBrushStrokeKernel.mappedPressure(0.25, sensitivity: 1)
+
+        #expect(lowSensitivity < neutral)
+        #expect(neutral < highSensitivity)
+        #expect(ImageEditorBrushStrokeKernel.mappedPressure(-1, sensitivity: 0.5) == 0.05)
+        #expect(ImageEditorBrushStrokeKernel.mappedPressure(2, sensitivity: 0.5) == 1)
+    }
+
+    @Test func resamplingInterpolatesPressureAlongThePointerPath() throws {
+        let stamps = ImageEditorBrushStrokeKernel.stampSamples(
+            samples: [
+                ImageEditorBrushStrokeSample(point: CGPoint(x: 0, y: 10), pressure: 0.2),
+                ImageEditorBrushStrokeSample(point: CGPoint(x: 20, y: 10), pressure: 1)
+            ],
+            diameter: 10,
+            spacing: 0.5
+        )
+
+        #expect(stamps.map(\.point.x) == [0, 5, 10, 15, 20])
+        #expect(abs((try #require(stamps[2].pressure)) - 0.6) < 0.0001)
+    }
+
+    @Test func pressureCanControlDiameterAndFlowIndependently() {
+        let stamps = [
+            ImageEditorBrushStrokeSample(point: CGPoint(x: 15, y: 20), pressure: 0.2),
+            ImageEditorBrushStrokeSample(point: CGPoint(x: 55, y: 20), pressure: 1)
+        ]
+        let sizeSettings = ImageEditorBrushStrokeSettings(
+            diameter: 20,
+            hardness: 1,
+            opacity: 1,
+            flow: 1,
+            spacing: 0.25,
+            pressureControlsSize: true,
+            pressureControlsFlow: false,
+            pressureSensitivity: 0.5
+        )
+        let sized = ImageEditorBrushStrokeKernel.coverage(
+            width: 80,
+            height: 40,
+            stamps: stamps,
+            settings: sizeSettings
+        )
+        let lowPressureOuterPixel = 20 * 80 + 21
+        let fullPressureOuterPixel = 20 * 80 + 61
+        #expect(sized[lowPressureOuterPixel] == 0)
+        #expect(sized[fullPressureOuterPixel] > 200)
+
+        var flowSettings = sizeSettings
+        flowSettings.pressureControlsSize = false
+        flowSettings.pressureControlsFlow = true
+        flowSettings.flow = 0.8
+        let flowed = ImageEditorBrushStrokeKernel.coverage(
+            width: 80,
+            height: 40,
+            stamps: stamps,
+            settings: flowSettings
+        )
+        #expect(flowed[20 * 80 + 15] < flowed[20 * 80 + 55])
+        #expect(flowed[20 * 80 + 55] == UInt8((0.8 * 255).rounded()))
+    }
+
+    @Test func missingPressureFallsBackToFullPressureWithoutChangingMouseStrokes() {
+        let settings = ImageEditorBrushStrokeSettings(
+            diameter: 12,
+            hardness: 0.8,
+            opacity: 0.75,
+            flow: 0.4,
+            spacing: 0.25,
+            pressureControlsSize: true,
+            pressureControlsFlow: true
+        )
+        let mouseStamps = ImageEditorBrushStrokeKernel.stampSamples(
+            samples: [
+                ImageEditorBrushStrokeSample(point: CGPoint(x: 8, y: 12)),
+                ImageEditorBrushStrokeSample(point: CGPoint(x: 40, y: 12))
+            ],
+            diameter: settings.diameter,
+            spacing: settings.spacing
+        )
+        let explicitFullPressure = mouseStamps.map {
+            ImageEditorBrushStrokeSample(point: $0.point, pressure: 1)
+        }
+
+        #expect(ImageEditorBrushStrokeKernel.coverage(
+            width: 48,
+            height: 24,
+            stamps: mouseStamps,
+            settings: settings
+        ) == ImageEditorBrushStrokeKernel.coverage(
+            width: 48,
+            height: 24,
+            stamps: explicitFullPressure,
+            settings: settings
+        ))
+    }
+
+    @Test func pressureInputRejectsOrdinaryMouseValuesAndClampsSupportedDevices() {
+        #expect(ImageEditorBrushPressureInput.normalizedPressure(
+            rawPressure: 0,
+            supportsPressure: false
+        ) == nil)
+        #expect(ImageEditorBrushPressureInput.normalizedPressure(
+            rawPressure: -0.2,
+            supportsPressure: true
+        ) == 0)
+        #expect(ImageEditorBrushPressureInput.normalizedPressure(
+            rawPressure: 1.3,
+            supportsPressure: true
+        ) == 1)
+    }
+
     @Test func viewModelBrushUsesFlowSpacingSelectionAndHistory() throws {
         let size = CGSize(width: 80, height: 30)
         let viewModel = ImageEditorViewModel(
@@ -176,6 +291,36 @@ struct ImageEditorBrushStrokeTests {
 
         viewModel.undo()
         let undone = try #require(viewModel.document.selectedLayer?.image.color(at: CGPoint(x: 10, y: 15)))
+        #expect(undone.alphaComponent < 0.03)
+    }
+
+    @Test func viewModelPressureStrokeSupportsSingleStampHistoryAndUndo() throws {
+        let size = CGSize(width: 80, height: 40)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "pressure.png",
+            image: NSImage.transparent(size: size)
+        ) { _ in }
+        viewModel.foregroundColor = .systemBlue
+        viewModel.brushSize = 20
+        viewModel.hardness = 1
+        viewModel.opacity = 1
+        viewModel.brushFlow = 100
+        viewModel.brushPressureControlsSize = true
+        viewModel.brushPressureControlsFlow = true
+        viewModel.brushPressureSensitivity = 50
+
+        viewModel.drawBrush(samples: [
+            ImageEditorBrushStrokeSample(point: CGPoint(x: 20, y: 20), pressure: 0.25)
+        ])
+
+        let center = try #require(viewModel.document.selectedLayer?.image.color(at: CGPoint(x: 20, y: 20)))
+        let outsideSmallTip = try #require(viewModel.document.selectedLayer?.image.color(at: CGPoint(x: 27, y: 20)))
+        #expect(center.alphaComponent > 0.25 && center.alphaComponent < 0.35)
+        #expect(outsideSmallTip.alphaComponent < 0.03)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.brush"))
+
+        viewModel.undo()
+        let undone = try #require(viewModel.document.selectedLayer?.image.color(at: CGPoint(x: 20, y: 20)))
         #expect(undone.alphaComponent < 0.03)
     }
 
@@ -220,6 +365,52 @@ struct ImageEditorBrushStrokeTests {
 
         #expect(firstStamp.alphaComponent > 0.75 && firstStamp.alphaComponent < 0.85)
         #expect(gap.alphaComponent > 0.97)
+    }
+
+    @Test func quickMaskAndLayerMaskSharePressureDynamics() throws {
+        let samples = [
+            ImageEditorBrushStrokeSample(point: CGPoint(x: 15, y: 15), pressure: 0.2),
+            ImageEditorBrushStrokeSample(point: CGPoint(x: 55, y: 15), pressure: 1)
+        ]
+        let selectionMask = ImageEditorSelectionMask(
+            width: 70,
+            height: 30,
+            alpha: [UInt8](repeating: .max, count: 70 * 30)
+        )
+        let quickMask = try #require(selectionMask.paintedByQuickMaskStroke(
+            samples: samples,
+            canvasSize: CGSize(width: 70, height: 30),
+            diameter: 12,
+            opacity: 1,
+            hardness: 1,
+            flow: 1,
+            spacing: 2,
+            pressureControlsSize: true,
+            pressureControlsFlow: true,
+            pressureSensitivity: 0.5,
+            reveal: false
+        ))
+        #expect(quickMask.alpha[15 * 70 + 15] > quickMask.alpha[15 * 70 + 55])
+
+        let sourceMask = NSImage.rendered(size: CGSize(width: 70, height: 30)) { rect in
+            NSColor.white.setFill()
+            rect.fill()
+        } ?? NSImage.transparent(size: CGSize(width: 70, height: 30))
+        let layerMask = try #require(sourceMask.withMaskStroke(
+            samples: samples,
+            width: 12,
+            opacity: 1,
+            hardness: 1,
+            flow: 1,
+            spacing: 2,
+            pressureControlsSize: true,
+            pressureControlsFlow: true,
+            pressureSensitivity: 0.5,
+            reveal: false
+        ))
+        let lowPressure = try #require(layerMask.color(at: CGPoint(x: 15, y: 15)))
+        let fullPressure = try #require(layerMask.color(at: CGPoint(x: 55, y: 15)))
+        #expect(lowPressure.alphaComponent > fullPressure.alphaComponent)
     }
 
     @Test func brushStrokeRespectsTransparentPixelLock() throws {

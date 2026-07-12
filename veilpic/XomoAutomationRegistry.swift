@@ -1300,9 +1300,19 @@ final class XomoAutomationRegistry {
         if let spacing = arguments["spacing"]?.doubleValue {
             viewModel.brushSpacing = max(1, min(200, spacing))
         }
+        if let pressureSize = arguments["pressureSize"]?.boolValue {
+            viewModel.setBrushPressureControlsSize(pressureSize)
+        }
+        if let pressureFlow = arguments["pressureFlow"]?.boolValue {
+            viewModel.setBrushPressureControlsFlow(pressureFlow)
+        }
+        if let pressureSensitivity = arguments["pressureSensitivity"]?.doubleValue {
+            viewModel.setBrushPressureSensitivity(CGFloat(pressureSensitivity))
+        }
+        let samples = try requiredBrushSamples("points", in: arguments)
         switch tool {
-        case "brush": viewModel.drawBrush(points: try requiredPoints("points", in: arguments))
-        case "eraser": viewModel.drawBrush(points: try requiredPoints("points", in: arguments), erase: true)
+        case "brush": viewModel.drawBrush(samples: samples)
+        case "eraser": viewModel.drawBrush(samples: samples, erase: true)
         default: throw XomoAutomationCallError.invalidArgument("Stroke tool must be brush or eraser")
         }
     }
@@ -1634,6 +1644,32 @@ final class XomoAutomationRegistry {
         return points
     }
 
+    private func requiredBrushSamples(
+        _ key: String,
+        in arguments: [String: XomoJSONValue]
+    ) throws -> [ImageEditorBrushStrokeSample] {
+        guard let values = arguments[key]?.arrayValue else {
+            throw XomoAutomationCallError.invalidArgument("Missing point array: \(key)")
+        }
+        let samples = try values.map { value -> ImageEditorBrushStrokeSample in
+            guard let object = value.objectValue,
+                  let x = object["x"]?.doubleValue,
+                  let y = object["y"]?.doubleValue
+            else { throw XomoAutomationCallError.invalidArgument("Each point needs numeric x and y") }
+            let pressure = object["pressure"]?.doubleValue.map {
+                CGFloat(max(0, min(1, $0)))
+            }
+            return ImageEditorBrushStrokeSample(
+                point: CGPoint(x: x, y: y),
+                pressure: pressure
+            )
+        }
+        guard !samples.isEmpty else {
+            throw XomoAutomationCallError.invalidArgument("Point array cannot be empty")
+        }
+        return samples
+    }
+
     private func colorJSON(_ color: NSColor) -> XomoJSONValue {
         let rgb = color.usingColorSpace(.deviceRGB) ?? color
         return .object([
@@ -1896,7 +1932,10 @@ private extension XomoAutomationRegistry {
             "opacity": XomoAutomationSchema.number(description: "Stroke opacity cap from 0 to 1"),
             "hardness": XomoAutomationSchema.number(description: "Edge hardness from 0 to 1"),
             "flow": XomoAutomationSchema.number(description: "Per-stamp flow from 1 to 100 percent"),
-            "spacing": XomoAutomationSchema.number(description: "Stamp spacing from 1 to 200 percent of brush diameter")
+            "spacing": XomoAutomationSchema.number(description: "Stamp spacing from 1 to 200 percent of brush diameter"),
+            "pressureSize": XomoAutomationSchema.boolean(description: "Use point pressure to control brush diameter"),
+            "pressureFlow": XomoAutomationSchema.boolean(description: "Use point pressure to control per-stamp flow"),
+            "pressureSensitivity": XomoAutomationSchema.number(description: "Pressure curve sensitivity from 0 to 100")
         ], required: ["points"]),
         tool("xomo.paint.gradient", "Paint a gradient between exactly two canvas points.", ["points": pointsSchema], required: ["points"]),
         tool("xomo.paint.special", "Use clone, tone, sponge, blur, sharpen, smudge, healing, red-eye, or paint-bucket tools.", [
@@ -2034,7 +2073,8 @@ private extension XomoAutomationRegistry {
     ]
     static let pointProperties = [
         "x": XomoAutomationSchema.number(description: "Canvas x coordinate"),
-        "y": XomoAutomationSchema.number(description: "Canvas y coordinate")
+        "y": XomoAutomationSchema.number(description: "Canvas y coordinate"),
+        "pressure": XomoAutomationSchema.number(description: "Optional normalized pen pressure from 0 to 1")
     ]
     static let pointsSchema: XomoJSONValue = .object([
         "type": .string("array"),

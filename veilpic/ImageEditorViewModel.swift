@@ -59,6 +59,9 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var hardness: CGFloat = 0.8
     @Published var brushFlow: CGFloat = 100
     @Published var brushSpacing: CGFloat = 25
+    @Published var brushPressureControlsSize = true
+    @Published var brushPressureControlsFlow = true
+    @Published var brushPressureSensitivity: CGFloat = 50
     @Published var feather: CGFloat = 0
     @Published var selectionModifyAmount: CGFloat = 4
     @Published var tolerance: CGFloat = 0.22
@@ -313,12 +316,16 @@ final class ImageEditorViewModel: ObservableObject {
         onApply: @escaping (NSImage) -> Void
     ) {
         let quickMaskPreferences = ImageEditorQuickMaskPreferences.load(from: preferencesDefaults)
+        let brushDynamicsPreferences = ImageEditorBrushDynamicsPreferences.load(from: preferencesDefaults)
         document = ImageEditorDocument(sourceName: sourceName, image: image)
         self.onApply = onApply
         workspacePreferencesDefaults = preferencesDefaults
         quickMaskOverlayTarget = quickMaskPreferences.target
         quickMaskOverlayColor = quickMaskPreferences.color.nsColor
         quickMaskOverlayOpacity = CGFloat(quickMaskPreferences.opacity)
+        brushPressureControlsSize = brushDynamicsPreferences.pressureControlsSize
+        brushPressureControlsFlow = brushDynamicsPreferences.pressureControlsFlow
+        brushPressureSensitivity = CGFloat(brushDynamicsPreferences.pressureSensitivity)
         cachedCurrentImage = document.layers.first?.image
         refreshSelectionEdgeGeometry()
         syncSizeControlsFromDocument()
@@ -333,12 +340,16 @@ final class ImageEditorViewModel: ObservableObject {
         onApply: @escaping (NSImage) -> Void
     ) {
         let quickMaskPreferences = ImageEditorQuickMaskPreferences.load(from: preferencesDefaults)
+        let brushDynamicsPreferences = ImageEditorBrushDynamicsPreferences.load(from: preferencesDefaults)
         self.document = document
         self.onApply = onApply
         workspacePreferencesDefaults = preferencesDefaults
         quickMaskOverlayTarget = quickMaskPreferences.target
         quickMaskOverlayColor = quickMaskPreferences.color.nsColor
         quickMaskOverlayOpacity = CGFloat(quickMaskPreferences.opacity)
+        brushPressureControlsSize = brushDynamicsPreferences.pressureControlsSize
+        brushPressureControlsFlow = brushDynamicsPreferences.pressureControlsFlow
+        brushPressureSensitivity = CGFloat(brushDynamicsPreferences.pressureSensitivity)
         cachedCurrentImage = initialCompositeImage
         refreshSelectionEdgeGeometry()
         syncSizeControlsFromDocument()
@@ -1930,6 +1941,33 @@ final class ImageEditorViewModel: ObservableObject {
         ).save(to: workspacePreferencesDefaults)
     }
 
+    private func persistBrushDynamicsPreferences() {
+        ImageEditorBrushDynamicsPreferences(
+            pressureControlsSize: brushPressureControlsSize,
+            pressureControlsFlow: brushPressureControlsFlow,
+            pressureSensitivity: Double(brushPressureSensitivity)
+        ).save(to: workspacePreferencesDefaults)
+    }
+
+    func setBrushPressureControlsSize(_ isEnabled: Bool) {
+        guard brushPressureControlsSize != isEnabled else { return }
+        brushPressureControlsSize = isEnabled
+        persistBrushDynamicsPreferences()
+    }
+
+    func setBrushPressureControlsFlow(_ isEnabled: Bool) {
+        guard brushPressureControlsFlow != isEnabled else { return }
+        brushPressureControlsFlow = isEnabled
+        persistBrushDynamicsPreferences()
+    }
+
+    func setBrushPressureSensitivity(_ sensitivity: CGFloat) {
+        let normalized = max(0, min(100, sensitivity))
+        guard brushPressureSensitivity != normalized else { return }
+        brushPressureSensitivity = normalized
+        persistBrushDynamicsPreferences()
+    }
+
     private func refreshSelectionEdgeGeometry() {
         let selection = document.selection
         let canvasSize = document.canvasSize
@@ -3476,29 +3514,39 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func drawBrush(points: [CGPoint], erase: Bool = false) {
-        guard points.count > 1 else { return }
+        drawBrush(
+            samples: points.map { ImageEditorBrushStrokeSample(point: $0) },
+            erase: erase
+        )
+    }
+
+    func drawBrush(samples: [ImageEditorBrushStrokeSample], erase: Bool = false) {
+        guard !samples.isEmpty else { return }
         if isQuickMaskMode {
-            paintQuickMask(points: points, reveal: erase)
+            paintQuickMask(samples: samples, reveal: erase)
             return
         }
         if isEditingLayerMask {
-            paintSelectedLayerMask(points: points, reveal: erase)
+            paintSelectedLayerMask(samples: samples, reveal: erase)
             return
         }
         guard let layer = editableSelectedLayer() else {
             statusText = L10n.text("imageEditor.status.layerLocked")
             return
         }
-        let localPoints = rasterLocalPoints(points, layer: layer)
+        let localSamples = rasterLocalSamples(samples, layer: layer)
         guard let output = layer.image.withBrushStroke(
-            points: localPoints,
+            samples: localSamples,
             color: foregroundColor,
             settings: ImageEditorBrushStrokeSettings(
                 diameter: rasterLocalBrushWidth(brushSize, layer: layer),
                 hardness: hardness,
                 opacity: opacity,
                 flow: brushFlow / 100,
-                spacing: brushSpacing / 100
+                spacing: brushSpacing / 100,
+                pressureControlsSize: brushPressureControlsSize,
+                pressureControlsFlow: brushPressureControlsFlow,
+                pressureSensitivity: brushPressureSensitivity / 100
             ),
             erase: erase
         ) else {
@@ -3512,17 +3560,20 @@ final class ImageEditorViewModel: ObservableObject {
         )
     }
 
-    private func paintQuickMask(points: [CGPoint], reveal: Bool) {
+    private func paintQuickMask(samples: [ImageEditorBrushStrokeSample], reveal: Bool) {
         guard let selection = document.selection,
               let currentMask = selection.rasterizedMask(canvasSize: document.canvasSize),
               let updatedMask = currentMask.paintedByQuickMaskStroke(
-                points: points,
+                samples: samples,
                 canvasSize: document.canvasSize,
                 diameter: brushSize,
                 opacity: opacity,
                 hardness: hardness,
                 flow: brushFlow / 100,
                 spacing: brushSpacing / 100,
+                pressureControlsSize: brushPressureControlsSize,
+                pressureControlsFlow: brushPressureControlsFlow,
+                pressureSensitivity: brushPressureSensitivity / 100,
                 reveal: reveal
               )
         else {
@@ -4444,7 +4495,7 @@ final class ImageEditorViewModel: ObservableObject {
     }
     #endif
 
-    private func paintSelectedLayerMask(points: [CGPoint], reveal: Bool) {
+    private func paintSelectedLayerMask(samples: [ImageEditorBrushStrokeSample], reveal: Bool) {
         guard let index = document.selectedLayerIndex else { return }
         guard !document.isEffectivelyLocked(document.layers[index]) else {
             statusText = L10n.text("imageEditor.status.layerLocked")
@@ -4461,12 +4512,15 @@ final class ImageEditorViewModel: ObservableObject {
         maskLayer.image = mask
         maskLayer.frame = maskFrame
         guard let updated = mask.withMaskStroke(
-            points: rasterLocalPoints(points, layer: maskLayer),
+            samples: rasterLocalSamples(samples, layer: maskLayer),
             width: rasterLocalBrushWidth(brushSize, layer: maskLayer),
             opacity: opacity,
             hardness: hardness,
             flow: brushFlow / 100,
             spacing: brushSpacing / 100,
+            pressureControlsSize: brushPressureControlsSize,
+            pressureControlsFlow: brushPressureControlsFlow,
+            pressureSensitivity: brushPressureSensitivity / 100,
             reveal: reveal
         ) else {
             statusText = L10n.text("imageEditor.status.operationFailed")
@@ -4570,6 +4624,18 @@ final class ImageEditorViewModel: ObservableObject {
 
     private func rasterLocalPoints(_ points: [CGPoint], layer: ImageEditorLayer) -> [CGPoint] {
         points.map { rasterLocalPoint($0, layer: layer) }
+    }
+
+    private func rasterLocalSamples(
+        _ samples: [ImageEditorBrushStrokeSample],
+        layer: ImageEditorLayer
+    ) -> [ImageEditorBrushStrokeSample] {
+        samples.map {
+            ImageEditorBrushStrokeSample(
+                point: rasterLocalPoint($0.point, layer: layer),
+                pressure: $0.pressure
+            )
+        }
     }
 
     private func rasterLocalPoint(_ point: CGPoint, layer: ImageEditorLayer) -> CGPoint {
@@ -6235,15 +6301,41 @@ extension NSImage {
         spacing: CGFloat = 0.25,
         reveal: Bool
     ) -> NSImage? {
+        withMaskStroke(
+            samples: points.map { ImageEditorBrushStrokeSample(point: $0) },
+            width: width,
+            opacity: opacity,
+            hardness: hardness,
+            flow: flow,
+            spacing: spacing,
+            reveal: reveal
+        )
+    }
+
+    func withMaskStroke(
+        samples: [ImageEditorBrushStrokeSample],
+        width: CGFloat,
+        opacity: CGFloat,
+        hardness: CGFloat = 1,
+        flow: CGFloat = 1,
+        spacing: CGFloat = 0.25,
+        pressureControlsSize: Bool = false,
+        pressureControlsFlow: Bool = false,
+        pressureSensitivity: CGFloat = 0.5,
+        reveal: Bool
+    ) -> NSImage? {
         withBrushStroke(
-            points: points,
+            samples: samples,
             color: .white,
             settings: ImageEditorBrushStrokeSettings(
                 diameter: width,
                 hardness: hardness,
                 opacity: opacity,
                 flow: flow,
-                spacing: spacing
+                spacing: spacing,
+                pressureControlsSize: pressureControlsSize,
+                pressureControlsFlow: pressureControlsFlow,
+                pressureSensitivity: pressureSensitivity
             ),
             erase: !reveal
         )
