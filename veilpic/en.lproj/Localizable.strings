@@ -1600,6 +1600,9 @@
 "imageEditor.status.noSavedSelection" = "There is no saved selection";
 "imageEditor.status.noReselectSelection" = "There is no previous selection to reselect";
 "imageEditor.status.selectionCleared" = "Selection cleared";
+"imageEditor.status.quickMaskEnabled" = "Quick Mask enabled; unselected areas are shown in red";
+"imageEditor.status.quickMaskDisabled" = "Quick Mask disabled";
+"imageEditor.status.quickMaskNeedsSelection" = "Create a selection before entering Quick Mask";
 "imageEditor.status.selectionInverted" = "Selection inverted";
 "imageEditor.status.historyCleared" = "History cleared; the current image is now the new starting state";
 "imageEditor.status.historySnapshotCreated" = "History snapshot “%@” created";
@@ -1947,6 +1950,7 @@
 "imageEditor.action.featherSelection" = "Feather Selection";
 "imageEditor.action.borderSelection" = "Border Selection";
 "imageEditor.action.smoothSelection" = "Smooth Selection";
+"imageEditor.action.quickMask" = "Quick Mask Mode";
 "imageEditor.action.fillSelectionHoles" = "Fill Selection Holes";
 "imageEditor.action.removeSelectionSpeckles" = "Remove Selection Speckles";
 "imageEditor.action.fillSelection" = "Fill Selection";

@@ -70,6 +70,52 @@ extension ImageEditorSelection {
         return image?.alphaPlaneMask(width: width, height: height)
     }
 
+    func quickMaskOverlayImage(
+        canvasSize: CGSize,
+        color: NSColor = .systemRed,
+        opacity: CGFloat = 0.45
+    ) -> NSImage? {
+        guard let mask = rasterizedMask(canvasSize: canvasSize),
+              mask.alpha.count == mask.width * mask.height,
+              let rgb = color.usingColorSpace(.deviceRGB)
+        else { return nil }
+
+        let clampedOpacity = max(0, min(1, opacity))
+        let bytesPerPixel = 4
+        let bytesPerRow = mask.width * bytesPerPixel
+        var pixels = [UInt8](repeating: 0, count: bytesPerRow * mask.height)
+
+        for index in mask.alpha.indices {
+            let overlayAlpha = CGFloat(UInt8.max - mask.alpha[index]) / CGFloat(UInt8.max) * clampedOpacity
+            let alphaByte = UInt8((overlayAlpha * CGFloat(UInt8.max)).rounded())
+            let offset = index * bytesPerPixel
+            pixels[offset] = UInt8((rgb.redComponent * CGFloat(alphaByte)).rounded())
+            pixels[offset + 1] = UInt8((rgb.greenComponent * CGFloat(alphaByte)).rounded())
+            pixels[offset + 2] = UInt8((rgb.blueComponent * CGFloat(alphaByte)).rounded())
+            pixels[offset + 3] = alphaByte
+        }
+
+        guard let provider = CGDataProvider(data: Data(pixels) as CFData),
+              let cgImage = CGImage(
+                width: mask.width,
+                height: mask.height,
+                bitsPerComponent: 8,
+                bitsPerPixel: 32,
+                bytesPerRow: bytesPerRow,
+                space: CGColorSpaceCreateDeviceRGB(),
+                bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue),
+                provider: provider,
+                decode: nil,
+                shouldInterpolate: false,
+                intent: .defaultIntent
+              )
+        else { return nil }
+
+        let image = NSImage(size: canvasSize)
+        image.addRepresentation(NSBitmapImageRep(cgImage: cgImage))
+        return image
+    }
+
     func expanded(by radius: Int, canvasSize: CGSize) -> ImageEditorSelection? {
         guard radius > 0 else { return self }
         guard let mask = rasterizedMask(canvasSize: canvasSize),
