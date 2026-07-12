@@ -12,6 +12,42 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct ImageEditorVectorLayerTests {
+    @Test func imageEditorTextLayerRendersUprightInAppKitCoordinates() throws {
+        let content = ImageEditorTextContent(
+            text: "L",
+            color: .white,
+            fontSize: 48,
+            point: CGPoint(x: ImageEditorTextContent.drawingPadding, y: ImageEditorTextContent.drawingPadding),
+            isBold: true
+        )
+        let layer = ImageEditorLayer.text(name: "Orientation", origin: .zero, content: content)
+        let drawingRect = content.drawingRect(in: layer.image.size)
+        let appKitDrawingRect = CGRect(
+            x: drawingRect.minX,
+            y: layer.image.size.height - drawingRect.maxY,
+            width: drawingRect.width,
+            height: drawingRect.height
+        )
+        let expectedUpright = try #require(NSImage.rendered(size: layer.image.size) { _ in
+            content.attributedString.draw(
+                with: appKitDrawingRect,
+                options: [.usesLineFragmentOrigin, .usesFontLeading]
+            )
+        })
+        let verticallyFlipped = try #require(NSImage.rendered(size: layer.image.size) { _ in
+            NSGraphicsContext.current?.withImageEditorTopLeftCoordinates(height: layer.image.size.height) {
+                content.attributedString.draw(
+                    with: drawingRect,
+                    options: [.usesLineFragmentOrigin, .usesFontLeading]
+                )
+            }
+        })
+
+        let renderedData = try #require(layer.contentImage.qingtuPNGData())
+        #expect(renderedData == expectedUpright.qingtuPNGData())
+        #expect(renderedData != verticallyFlipped.qingtuPNGData())
+    }
+
     @Test func imageEditorTextLayerIsEditableAndCanMergeDown() async throws {
         let canvasSize = NSSize(width: 120, height: 80)
         let image = testBitmapImage(size: canvasSize, background: .black)

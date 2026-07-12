@@ -2006,10 +2006,12 @@ enum ImageEditorTextAlignment: String, CaseIterable, Identifiable {
 
 struct ImageEditorTextContent {
     static let drawingPadding: CGFloat = 4
+    static let systemFontFamilyName = NSFont.systemFont(ofSize: NSFont.systemFontSize).familyName ?? "System"
 
     var text: String
     var color: NSColor
     var fontSize: CGFloat
+    var fontFamilyName: String = Self.systemFontFamilyName
     var point: CGPoint
     var isBold = false
     var isItalic = false
@@ -2019,9 +2021,22 @@ struct ImageEditorTextContent {
     var alignment: ImageEditorTextAlignment = .left
 
     var font: NSFont {
-        let baseFont = NSFont.systemFont(ofSize: max(6, fontSize), weight: isBold ? .bold : .semibold)
-        guard isItalic else { return baseFont }
-        return NSFontManager.shared.convert(baseFont, toHaveTrait: .italicFontMask)
+        let size = max(6, fontSize)
+        var traits: NSFontTraitMask = []
+        if isBold { traits.insert(.boldFontMask) }
+        if isItalic { traits.insert(.italicFontMask) }
+        let familyFont = fontFamilyName == Self.systemFontFamilyName ? nil : NSFontManager.shared.font(
+            withFamily: fontFamilyName,
+            traits: traits,
+            weight: isBold ? 9 : 5,
+            size: size
+        )
+        if let familyFont {
+            return familyFont
+        }
+        let fallback = NSFont.systemFont(ofSize: size, weight: isBold ? .bold : .regular)
+        guard isItalic else { return fallback }
+        return NSFontManager.shared.convert(fallback, toHaveTrait: .italicFontMask)
     }
 
     var paragraphStyle: NSParagraphStyle {
@@ -2176,25 +2191,27 @@ struct ImageEditorShapeContent {
     func renderedImage(size: CGSize) -> NSImage {
         let normalized = normalized(size: size)
         return NSImage.rendered(size: size) { rect in
-            let path: NSBezierPath
-            if normalized.kind == .path {
-                path = normalized.pathBezierPath()
-            } else {
-                let inset = normalized.strokeWidth / 2
-                let shapeRect = rect.insetBy(dx: inset, dy: inset)
-                path = normalized.kind == .ellipse
-                    ? NSBezierPath(ovalIn: shapeRect)
-                    : NSBezierPath(rect: shapeRect)
+            NSGraphicsContext.current?.withImageEditorTopLeftCoordinates(height: size.height) {
+                let path: NSBezierPath
+                if normalized.kind == .path {
+                    path = normalized.pathBezierPath()
+                } else {
+                    let inset = normalized.strokeWidth / 2
+                    let shapeRect = rect.insetBy(dx: inset, dy: inset)
+                    path = normalized.kind == .ellipse
+                        ? NSBezierPath(ovalIn: shapeRect)
+                        : NSBezierPath(rect: shapeRect)
+                }
+                if normalized.kind != .path || normalized.isPathClosed {
+                    normalized.fillColor.withAlphaComponent(normalized.fillOpacity).setFill()
+                    path.fill()
+                }
+                path.lineJoinStyle = .round
+                path.lineCapStyle = .round
+                path.lineWidth = normalized.strokeWidth
+                normalized.strokeColor.withAlphaComponent(normalized.strokeOpacity).setStroke()
+                path.stroke()
             }
-            if normalized.kind != .path || normalized.isPathClosed {
-                normalized.fillColor.withAlphaComponent(normalized.fillOpacity).setFill()
-                path.fill()
-            }
-            path.lineJoinStyle = .round
-            path.lineCapStyle = .round
-            path.lineWidth = normalized.strokeWidth
-            normalized.strokeColor.withAlphaComponent(normalized.strokeOpacity).setStroke()
-            path.stroke()
         } ?? NSImage.transparent(size: size)
     }
 
@@ -2719,8 +2736,10 @@ struct ImageEditorLayer: Identifiable {
               vectorMask.editablePathAnchors.count >= 3
         else { return nil }
         return NSImage.rendered(size: image.size) { _ in
-            NSColor.white.setFill()
-            vectorMask.pathBezierPath().fill()
+            NSGraphicsContext.current?.withImageEditorTopLeftCoordinates(height: image.size.height) {
+                NSColor.white.setFill()
+                vectorMask.pathBezierPath().fill()
+            }
         }
     }
 
@@ -2728,8 +2747,15 @@ struct ImageEditorLayer: Identifiable {
         let baseImage: NSImage
         if let textContent {
             baseImage = NSImage.rendered(size: image.size) { _ in
+                let drawingRect = textContent.drawingRect(in: image.size)
+                let appKitDrawingRect = CGRect(
+                    x: drawingRect.minX,
+                    y: image.size.height - drawingRect.maxY,
+                    width: drawingRect.width,
+                    height: drawingRect.height
+                )
                 textContent.attributedString.draw(
-                    with: textContent.drawingRect(in: image.size),
+                    with: appKitDrawingRect,
                     options: [.usesLineFragmentOrigin, .usesFontLeading]
                 )
             } ?? image
@@ -4043,7 +4069,7 @@ struct ImageEditorDocument {
             width: frame.width,
             height: frame.height
         )
-    return NSImage.rendered(size: canvasSize) { _ in
+        return NSImage.rendered(size: canvasSize) { _ in
             image.draw(
                 in: appKitFrame,
                 from: CGRect(origin: .zero, size: image.size),
@@ -4192,8 +4218,6 @@ private extension NSImage {
         ) else { return nil }
 
         context.interpolationQuality = .none
-        context.translateBy(x: 0, y: CGFloat(height))
-        context.scaleBy(x: 1, y: -1)
         context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
 
         for y in 0..<height {
@@ -4267,8 +4291,6 @@ private extension NSImage {
 
         for context in [effectContext, maskContext] {
             context.interpolationQuality = .none
-            context.translateBy(x: 0, y: CGFloat(height))
-            context.scaleBy(x: 1, y: -1)
         }
         effectContext.draw(effectCGImage, in: CGRect(x: 0, y: 0, width: width, height: height))
         maskContext.draw(maskCGImage, in: CGRect(x: 0, y: 0, width: width, height: height))
@@ -4335,8 +4357,6 @@ private extension NSImage {
         ) else { return nil }
 
         context.interpolationQuality = .none
-        context.translateBy(x: 0, y: CGFloat(height))
-        context.scaleBy(x: 1, y: -1)
         context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
 
         for y in 0..<height {
@@ -4549,8 +4569,6 @@ private extension NSImage {
         ) else { return nil }
 
         context.interpolationQuality = .none
-        context.translateBy(x: 0, y: CGFloat(height))
-        context.scaleBy(x: 1, y: -1)
         context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
 
         var alpha = [UInt8](repeating: 0, count: width * height)

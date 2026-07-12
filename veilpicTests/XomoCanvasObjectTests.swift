@@ -4,6 +4,31 @@ import Testing
 
 @MainActor
 struct XomoCanvasObjectTests {
+    @Test func textToolCanSelectEditableTextInsideAComponent() throws {
+        let viewModel = makeViewModel()
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))
+        let group = try #require(viewModel.document.selectedLayer)
+        let textLayer = try #require(viewModel.document.layers.first { $0.groupID == group.id && $0.isText })
+
+        #expect(viewModel.selectEditableTextLayer(at: CGPoint(x: textLayer.frame.midX, y: textLayer.frame.midY)))
+        #expect(viewModel.document.selectedLayerID == textLayer.id)
+        #expect(viewModel.document.selectedLayer?.textContent != nil)
+    }
+
+    @Test func textHitTestingCanExcludeTheJustCommittedLayer() throws {
+        let viewModel = makeViewModel()
+        viewModel.textValue = "First"
+        viewModel.addText(at: CGPoint(x: 80, y: 90))
+        let committedLayer = try #require(viewModel.document.selectedLayer)
+        let pointInsideCommittedFrame = CGPoint(
+            x: committedLayer.frame.midX,
+            y: committedLayer.frame.midY
+        )
+
+        #expect(viewModel.selectEditableTextLayer(at: pointInsideCommittedFrame))
+        #expect(!viewModel.selectEditableTextLayer(at: pointInsideCommittedFrame, excluding: committedLayer.id))
+    }
+
     @Test func clickingAnUncoveredComponentSelectsItsObjectGroup() throws {
         let viewModel = makeViewModel()
         let origin = CGPoint(x: 80, y: 90)

@@ -88,6 +88,9 @@ extension ImageEditorView {
         }
         .labelsHidden()
         .pickerStyle(.segmented)
+        .environment(\.colorScheme, .dark)
+        .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+        .focusable(false)
     }
 
     private var channelsPanelContent: some View {
@@ -290,7 +293,7 @@ extension ImageEditorView {
             .onAppear {
                 syncAlphaChannelNameDraft(channel)
             }
-            .onChange(of: channel.name) { _, _ in
+            .onChange(of: channel.name) { _ in
                 syncAlphaChannelNameDraft(channel)
             }
 
@@ -469,7 +472,7 @@ extension ImageEditorView {
             .onAppear {
                 syncAlphaChannelNameDraft(channel)
             }
-            .onChange(of: channel.name) { _, _ in
+            .onChange(of: channel.name) { _ in
                 syncAlphaChannelNameDraft(channel)
             }
 
@@ -881,7 +884,7 @@ extension ImageEditorView {
                 .onAppear {
                     syncLayerCompNameDraft(comp)
                 }
-                .onChange(of: comp.name) { _, _ in
+                .onChange(of: comp.name) { _ in
                     syncLayerCompNameDraft(comp)
                 }
 

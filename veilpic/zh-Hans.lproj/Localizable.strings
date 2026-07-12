@@ -679,6 +679,8 @@
 "imageEditor.properties.smartFilterDisabled" = "%@（已关闭）";
 "imageEditor.properties.smartFilterSeparator" = " · ";
 "imageEditor.properties.textPlaceholder" = "输入要添加的文字";
+"imageEditor.properties.fontFamily" = "字体";
+"imageEditor.fontFamily.system" = "系统字体";
 "imageEditor.properties.textSizeValue" = "文字字号：%d px";
 "imageEditor.properties.textAlignment" = "文字对齐";
 "imageEditor.properties.textBold" = "粗体";
@@ -1820,6 +1822,7 @@
 "imageEditor.action.layerDistributeHorizontalSpacing" = "均分水平间距";
 "imageEditor.action.layerDistributeVerticalSpacing" = "均分垂直间距";
 "imageEditor.action.layerImport" = "导入图片为图层";
+"imageEditor.action.fileImport" = "导入文件…";
 "imageEditor.action.layerSmartObject" = "转换为智能对象";
 "imageEditor.action.layerSmartObjectReplace" = "替换智能对象内容";
 "imageEditor.action.layerSmartObjectMakeUnique" = "让智能对象实例独立";

@@ -787,8 +787,6 @@ private extension NSImage {
         else { return nil }
 
         context.interpolationQuality = .none
-        context.translateBy(x: 0, y: CGFloat(height))
-        context.scaleBy(x: 1, y: -1)
         context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
         return pixels
     }
@@ -887,15 +885,19 @@ private extension ImageEditorSelection {
             if isInverted {
                 NSColor.white.setFill()
                 rect.fill()
-                guard let context = NSGraphicsContext.current?.cgContext else { return }
-                context.saveGState()
-                context.setBlendMode(.clear)
-                NSColor.clear.setFill()
-                maskPath.fill()
-                context.restoreGState()
+                NSGraphicsContext.current?.withImageEditorTopLeftCoordinates(height: size.height) {
+                    guard let context = NSGraphicsContext.current?.cgContext else { return }
+                    context.saveGState()
+                    context.setBlendMode(.clear)
+                    NSColor.clear.setFill()
+                    maskPath.fill()
+                    context.restoreGState()
+                }
             } else {
-                NSColor.white.setFill()
-                maskPath.fill()
+                NSGraphicsContext.current?.withImageEditorTopLeftCoordinates(height: size.height) {
+                    NSColor.white.setFill()
+                    maskPath.fill()
+                }
             }
         }
         guard let hardMask, feather > 0 else { return hardMask }
@@ -908,8 +910,10 @@ private extension ImageEditorSelection {
             strokePath.lineJoinStyle = .miter
             strokePath.lineCapStyle = .butt
             strokePath.lineWidth = max(1, width)
-            color.withAlphaComponent(opacity).setStroke()
-            strokePath.stroke()
+            NSGraphicsContext.current?.withImageEditorTopLeftCoordinates(height: size.height) {
+                color.withAlphaComponent(opacity).setStroke()
+                strokePath.stroke()
+            }
         }
         guard let strokeImage, feather > 0 else { return strokeImage }
         return strokeImage.blurred(radius: feather) ?? strokeImage

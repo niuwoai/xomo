@@ -87,12 +87,28 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var pointerText: String = "X: 0 Y: 0"
     @Published var textValue: String = ""
     @Published var textSize: Double = 32
+    @Published var selectedFontFamilyName: String = ImageEditorTextContent.systemFontFamilyName
     @Published var textBold: Bool = false
     @Published var textItalic: Bool = false
     @Published var textCharacterSpacing: Double = 0
     @Published var textLineSpacing: Double = 0
     @Published var textBoxWidth: Double = 0
     @Published var selectedTextAlignment: ImageEditorTextAlignment = .left
+
+    var availableFontFamilyNames: [String] {
+        let families = NSFontManager.shared.availableFontFamilies.sorted {
+            $0.localizedCaseInsensitiveCompare($1) == .orderedAscending
+        }
+        return families.contains(ImageEditorTextContent.systemFontFamilyName)
+            ? families
+            : [ImageEditorTextContent.systemFontFamilyName] + families
+    }
+
+    func fontFamilyDisplayName(_ familyName: String) -> String {
+        familyName == ImageEditorTextContent.systemFontFamilyName
+            ? L10n.text("imageEditor.fontFamily.system")
+            : familyName
+    }
     @Published var selectedAdjustment: ImageEditorAdjustment = .brightness
     @Published var adjustmentValue: Double = 0
     @Published var levelsBlackPoint: Double = 0
@@ -3239,6 +3255,7 @@ final class ImageEditorViewModel: ObservableObject {
             text: text,
             color: foregroundColor,
             fontSize: CGFloat(clampedTextSize(textSize)),
+            fontFamilyName: selectedFontFamilyName,
             point: CGPoint(x: ImageEditorTextContent.drawingPadding, y: ImageEditorTextContent.drawingPadding),
             isBold: textBold,
             isItalic: textItalic,
@@ -3288,6 +3305,7 @@ final class ImageEditorViewModel: ObservableObject {
             }
             content.color = color
             content.fontSize = fontSize
+            content.fontFamilyName = selectedFontFamilyName
             content.point = CGPoint(x: ImageEditorTextContent.drawingPadding, y: ImageEditorTextContent.drawingPadding)
             content.isBold = textBold
             content.isItalic = textItalic
@@ -4281,15 +4299,19 @@ final class ImageEditorViewModel: ObservableObject {
                 if selection.isInverted {
                     NSColor.white.setFill()
                     rect.fill()
-                    guard let context = NSGraphicsContext.current?.cgContext else { return }
-                    context.saveGState()
-                    context.setBlendMode(.clear)
-                    NSColor.clear.setFill()
-                    path.fill()
-                    context.restoreGState()
+                    NSGraphicsContext.current?.withImageEditorTopLeftCoordinates(height: canvasSize.height) {
+                        guard let context = NSGraphicsContext.current?.cgContext else { return }
+                        context.saveGState()
+                        context.setBlendMode(.clear)
+                        NSColor.clear.setFill()
+                        path.fill()
+                        context.restoreGState()
+                    }
                 } else {
-                    NSColor.white.setFill()
-                    path.fill()
+                    NSGraphicsContext.current?.withImageEditorTopLeftCoordinates(height: canvasSize.height) {
+                        NSColor.white.setFill()
+                        path.fill()
+                    }
                 }
             }
             canvasMask = feather > 0 ? (hardMask?.blurred(radius: feather) ?? hardMask) : hardMask
@@ -5676,6 +5698,7 @@ final class ImageEditorViewModel: ObservableObject {
         guard let content = document.selectedLayer?.textContent else { return }
         textValue = content.text
         textSize = Double(content.fontSize)
+        selectedFontFamilyName = content.fontFamilyName
         foregroundColor = content.color
         textBold = content.isBold
         textItalic = content.isItalic
@@ -5898,15 +5921,17 @@ extension NSImage {
             for point in points.dropFirst() {
                 path.line(to: point)
             }
-            if erase, let context = NSGraphicsContext.current?.cgContext {
-                context.saveGState()
-                context.setBlendMode(.clear)
-                NSColor.clear.setStroke()
-                path.stroke()
-                context.restoreGState()
-            } else {
-                color.withAlphaComponent(opacity).setStroke()
-                path.stroke()
+            NSGraphicsContext.current?.withImageEditorTopLeftCoordinates(height: size.height) {
+                if erase, let context = NSGraphicsContext.current?.cgContext {
+                    context.saveGState()
+                    context.setBlendMode(.clear)
+                    NSColor.clear.setStroke()
+                    path.stroke()
+                    context.restoreGState()
+                } else {
+                    color.withAlphaComponent(opacity).setStroke()
+                    path.stroke()
+                }
             }
         }
     }
@@ -5932,7 +5957,7 @@ extension NSImage {
             sourceImage.draw(
                 in: CGRect(
                     x: -sourceOffset.width,
-                    y: -sourceOffset.height,
+                    y: sourceOffset.height,
                     width: sourceImage.size.width,
                     height: sourceImage.size.height
                 ),
@@ -5942,8 +5967,10 @@ extension NSImage {
             )
         }
         let strokeMask = NSImage.rendered(size: size) { _ in
-            NSColor.white.setStroke()
-            path.stroke()
+            NSGraphicsContext.current?.withImageEditorTopLeftCoordinates(height: size.height) {
+                NSColor.white.setStroke()
+                path.stroke()
+            }
         }
         guard let shiftedSource, let strokeMask else { return nil }
 
@@ -5991,15 +6018,17 @@ extension NSImage {
             for point in points.dropFirst() {
                 path.line(to: point)
             }
-            if reveal {
-                NSColor.white.withAlphaComponent(opacity).setStroke()
-                path.stroke()
-            } else if let context = NSGraphicsContext.current?.cgContext {
-                context.saveGState()
-                context.setBlendMode(.clear)
-                NSColor.clear.setStroke()
-                path.stroke()
-                context.restoreGState()
+            NSGraphicsContext.current?.withImageEditorTopLeftCoordinates(height: size.height) {
+                if reveal {
+                    NSColor.white.withAlphaComponent(opacity).setStroke()
+                    path.stroke()
+                } else if let context = NSGraphicsContext.current?.cgContext {
+                    context.saveGState()
+                    context.setBlendMode(.clear)
+                    NSColor.clear.setStroke()
+                    path.stroke()
+                    context.restoreGState()
+                }
             }
         }
     }
@@ -6007,10 +6036,12 @@ extension NSImage {
     func withShape(rect: CGRect, color: NSColor, width: CGFloat, opacity: CGFloat, ellipse: Bool) -> NSImage? {
         rendered(size: size) { _ in
             draw(in: CGRect(origin: .zero, size: size), from: CGRect(origin: .zero, size: size), operation: .copy, fraction: 1)
-            let path = ellipse ? NSBezierPath(ovalIn: rect) : NSBezierPath(rect: rect)
-            path.lineWidth = width
-            color.withAlphaComponent(opacity).setStroke()
-            path.stroke()
+            NSGraphicsContext.current?.withImageEditorTopLeftCoordinates(height: size.height) {
+                let path = ellipse ? NSBezierPath(ovalIn: rect) : NSBezierPath(rect: rect)
+                path.lineWidth = width
+                color.withAlphaComponent(opacity).setStroke()
+                path.stroke()
+            }
         }
     }
 
@@ -6021,7 +6052,9 @@ extension NSImage {
                 .font: NSFont.systemFont(ofSize: max(18, min(size.width, size.height) * 0.055), weight: .semibold),
                 .foregroundColor: color.withAlphaComponent(opacity)
             ]
-            text.draw(at: point, withAttributes: attributes)
+            NSGraphicsContext.current?.withImageEditorTopLeftCoordinates(height: size.height) {
+                text.draw(at: point, withAttributes: attributes)
+            }
         }
     }
 
@@ -6082,8 +6115,6 @@ extension NSImage {
         ) else { return nil }
 
         context.interpolationQuality = .none
-        context.translateBy(x: 0, y: CGFloat(cgImage.height))
-        context.scaleBy(x: 1, y: -1)
         context.draw(cgImage, in: CGRect(x: 0, y: 0, width: cgImage.width, height: cgImage.height))
 
         let offset = y * bytesPerRow + x * bytesPerPixel
@@ -6146,5 +6177,15 @@ extension NSImage {
 
     private func rendered(size outputSize: CGSize, actions: (CGRect) -> Void) -> NSImage? {
         Self.rendered(size: outputSize, actions: actions)
+    }
+}
+
+extension NSGraphicsContext {
+    func withImageEditorTopLeftCoordinates(height: CGFloat, actions: () -> Void) {
+        saveGraphicsState()
+        cgContext.translateBy(x: 0, y: height)
+        cgContext.scaleBy(x: 1, y: -1)
+        actions()
+        restoreGraphicsState()
     }
 }

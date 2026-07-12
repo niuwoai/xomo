@@ -72,13 +72,94 @@ enum AppTheme {
 // MARK: - 视图修饰器
 
 extension View {
+    @ViewBuilder
+    func xomoFocusEffectDisabled() -> some View {
+        if #available(macOS 14.0, *) {
+            focusEffectDisabled()
+        } else {
+            self
+        }
+    }
+
+    @ViewBuilder
+    func xomoScrollContentBackgroundHidden() -> some View {
+        if #available(macOS 13.0, *) {
+            scrollContentBackground(.hidden)
+        } else {
+            self
+        }
+    }
+
+    @ViewBuilder
+    func xomoDraggable(_ payload: String) -> some View {
+        if #available(macOS 13.0, *) {
+            draggable(payload)
+        } else {
+            self
+        }
+    }
+
+    @ViewBuilder
+    func xomoDraggable<Preview: View>(
+        _ payload: String,
+        @ViewBuilder preview: () -> Preview
+    ) -> some View {
+        if #available(macOS 13.0, *) {
+            draggable(payload, preview: preview)
+        } else {
+            self
+        }
+    }
+
+    @ViewBuilder
+    func xomoCanvasPlatformInteractions(
+        onDrop: @escaping ([String], CGPoint) -> Bool,
+        onMagnifyChanged: @escaping (CGFloat, CGPoint?) -> Void,
+        onMagnifyEnded: @escaping () -> Void,
+        onHoverChanged: @escaping (Bool, CGPoint?) -> Void
+    ) -> some View {
+        if #available(macOS 14.0, *) {
+            dropDestination(for: String.self, action: onDrop)
+                .simultaneousGesture(
+                    MagnifyGesture()
+                        .onChanged { value in
+                            onMagnifyChanged(value.magnification, value.startLocation)
+                        }
+                        .onEnded { _ in onMagnifyEnded() }
+                )
+                .onContinuousHover { phase in
+                    switch phase {
+                    case .active(let location):
+                        onHoverChanged(true, location)
+                    case .ended:
+                        onHoverChanged(false, nil)
+                    }
+                }
+        } else if #available(macOS 13.0, *) {
+            dropDestination(for: String.self, action: onDrop)
+                .simultaneousGesture(
+                    MagnificationGesture()
+                        .onChanged { value in onMagnifyChanged(value, nil) }
+                        .onEnded { _ in onMagnifyEnded() }
+                )
+                .onHover { isInside in onHoverChanged(isInside, nil) }
+        } else {
+            simultaneousGesture(
+                MagnificationGesture()
+                    .onChanged { value in onMagnifyChanged(value, nil) }
+                    .onEnded { _ in onMagnifyEnded() }
+            )
+            .onHover { isInside in onHoverChanged(isInside, nil) }
+        }
+    }
+
     /// 给视图铺上「海盐晨蓝」窗口渐变背景，并锁定浅色配色。
     func themedWindowBackground() -> some View {
         self
             .background(AppTheme.windowBackground.ignoresSafeArea())
             .tint(AppTheme.accent)
             .preferredColorScheme(.light)
-            .focusEffectDisabled() // 全局去掉焦点环，任何控件都不出现 focus 状态
+            .xomoFocusEffectDisabled() // 全局去掉焦点环，macOS 13 使用系统兼容降级
     }
 
     /// 白瓷卡片：半透明填充 + 发丝描边 + 轻柔投影。

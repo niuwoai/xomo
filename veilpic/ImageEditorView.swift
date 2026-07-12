@@ -45,6 +45,10 @@ struct ImageEditorView: View {
     @State private var isRightDockMounted = false
     @State private var isPointerInsideCanvas = false
     @State private var hoverViewPoint: CGPoint?
+    @State private var isMarqueeShapePopoverPresented = false
+    @State private var canvasTextEditingOrigin: CGPoint?
+    @State private var canvasTextEditingLayerID: UUID?
+    @FocusState private var isCanvasTextEditorFocused: Bool
 
     init(sourceName: String, image: NSImage, onApply: @escaping (NSImage) -> Void) {
         _viewModel = StateObject(wrappedValue: ImageEditorViewModel(sourceName: sourceName, image: image, onApply: onApply))
@@ -124,10 +128,10 @@ struct ImageEditorView: View {
                 isRightDockMounted = true
             }
         }
-        .onChange(of: viewModel.document.selectedLayerID) { _, _ in
+        .onChange(of: viewModel.document.selectedLayerID) { _ in
             syncLayerNameDraft()
         }
-        .onChange(of: viewModel.selectedLayerName) { _, _ in
+        .onChange(of: viewModel.selectedLayerName) { _ in
             syncLayerNameDraft()
         }
         .sheet(isPresented: $viewModel.isExportSheetPresented) {
@@ -158,10 +162,7 @@ struct ImageEditorView: View {
             }
 
             if viewModel.selectedTool == .text {
-                TextField(L10n.text("imageEditor.properties.textPlaceholder"), text: $viewModel.textValue)
-                    .textFieldStyle(.roundedBorder)
-                    .frame(width: 220)
-                    .accessibilityIdentifier("image-editor-text-content")
+                fontFamilyPicker(width: 190)
                 Stepper(
                     L10n.format("imageEditor.properties.textSizeValue", Int(viewModel.textSize.rounded())),
                     value: $viewModel.textSize,
@@ -376,32 +377,53 @@ struct ImageEditorView: View {
     @ViewBuilder
     private func toolRailItem(_ tool: ImageEditorTool) -> some View {
         if tool == .marquee {
-            Menu {
-                ForEach(ImageEditorMarqueeShape.allCases) { shape in
-                    Button {
-                        viewModel.selectMarqueeShape(shape)
-                    } label: {
-                        Label(shape.title, systemImage: shape.symbolName)
-                    }
-                }
-            } label: {
-                ZStack(alignment: .bottomTrailing) {
-                    Image(systemName: viewModel.marqueeShape.symbolName)
-                        .font(.system(size: 15, weight: .semibold))
+            ZStack(alignment: .bottomTrailing) {
+                Button {
+                    viewModel.selectTool(tool)
+                } label: {
+                    ImageEditorMarqueeToolSymbol(shape: viewModel.marqueeShape)
                         .frame(width: 30, height: 30)
-                    Image(systemName: "triangle.fill")
-                        .font(.system(size: 5))
-                        .rotationEffect(.degrees(180))
-                        .padding(2)
+                }
+                .frame(width: 30, height: 30)
+                .contentShape(Rectangle())
+                .buttonStyle(EditorIconButtonStyle(isSelected: viewModel.selectedTool == tool))
+                .focusable(false)
+                .xomoFocusEffectDisabled()
+
+                Color.clear
+                .frame(width: 11, height: 11)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    isMarqueeShapePopoverPresented.toggle()
+                }
+                .focusable(false)
+                .xomoFocusEffectDisabled()
+                .padding(1)
+                .accessibilityLabel(L10n.text("imageEditor.option.marqueeShape"))
+                .accessibilityAddTraits(.isButton)
+                .accessibilityAction {
+                    isMarqueeShapePopoverPresented.toggle()
+                }
+                .popover(isPresented: $isMarqueeShapePopoverPresented, arrowEdge: .trailing) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        ForEach(ImageEditorMarqueeShape.allCases) { shape in
+                            EditorMarqueeShapeActionRow(
+                                shape: shape,
+                                isSelected: viewModel.marqueeShape == shape
+                            ) {
+                                viewModel.selectMarqueeShape(shape)
+                                isMarqueeShapePopoverPresented = false
+                            }
+                        }
+                    }
+                    .padding(8)
+                    .frame(width: 150)
+                    .background(Color(nsColor: ImageEditorTheme.panelRaised))
+                    .focusable(false)
+                    .xomoFocusEffectDisabled()
                 }
             }
-            .menuStyle(.borderlessButton)
-            .focusable(false)
             .frame(width: 30, height: 30)
-            .background(
-                RoundedRectangle(cornerRadius: 5, style: .continuous)
-                    .fill(viewModel.selectedTool == tool ? Color(nsColor: ImageEditorTheme.selected).opacity(0.22) : .clear)
-            )
             .help(L10n.text("imageEditor.option.marqueeShape"))
             .accessibilityIdentifier("image-editor-tool-marquee")
             .accessibilityValue(viewModel.marqueeShape.rawValue)
@@ -422,6 +444,7 @@ struct ImageEditorView: View {
             .contentShape(Rectangle())
             .buttonStyle(EditorIconButtonStyle(isSelected: viewModel.selectedTool == tool))
             .focusable(false)
+            .xomoFocusEffectDisabled()
             .help(tool.helpText)
             .accessibilityIdentifier("image-editor-tool-\(tool.rawValue)")
             .accessibilityValue(viewModel.selectedTool == tool ? "selected" : "available")
@@ -778,29 +801,39 @@ struct ImageEditorView: View {
                     layerTransformOverlay(in: geometry.size)
                     dragOverlay(in: geometry.size)
                     rulerOverlay(in: geometry.size)
+                    canvasTextEditingOverlay(in: geometry.size)
                 }
                 .contentShape(Rectangle())
                 .gesture(canvasGesture(in: geometry.size))
-                .dropDestination(for: String.self) { components, location in
-                    guard let rawValue = components.first,
-                          let component = XomoComponentKind(rawValue: rawValue)
-                    else { return false }
-                    viewModel.insertXomoComponent(component, at: imagePoint(from: location, in: geometry.size))
-                    return true
-                }
                 .accessibilityIdentifier("image-editor-canvas")
-                .simultaneousGesture(
-                    MagnifyGesture()
-                        .onChanged { value in
-                            viewModel.magnifyCanvas(
-                                value.magnification,
-                                at: value.startLocation,
-                                viewportSize: geometry.size
-                            )
+                .xomoCanvasPlatformInteractions(
+                    onDrop: { components, location in
+                        guard let rawValue = components.first,
+                              let component = XomoComponentKind(rawValue: rawValue)
+                        else { return false }
+                        viewModel.insertXomoComponent(component, at: imagePoint(from: location, in: geometry.size))
+                        return true
+                    },
+                    onMagnifyChanged: { magnification, location in
+                        viewModel.magnifyCanvas(
+                            magnification,
+                            at: location ?? CGPoint(x: geometry.size.width / 2, y: geometry.size.height / 2),
+                            viewportSize: geometry.size
+                        )
+                    },
+                    onMagnifyEnded: {
+                        viewModel.endCanvasMagnify()
+                    },
+                    onHoverChanged: { isInside, location in
+                        isPointerInsideCanvas = isInside
+                        hoverViewPoint = location
+                        if let location {
+                            updateCanvasCursor(at: location, in: geometry.size)
+                        } else if !isInside {
+                            viewModel.updatePointer(nil)
+                            NSCursor.arrow.set()
                         }
-                        .onEnded { _ in
-                            viewModel.endCanvasMagnify()
-                        }
+                    }
                 )
                 .overlay(
                     ScrollWheelZoomView { factor, location, viewportSize in
@@ -822,32 +855,22 @@ struct ImageEditorView: View {
                     )
                     .allowsHitTesting(false)
                 }
-                .onContinuousHover { phase in
-                    switch phase {
-                    case .active(let location):
-                        isPointerInsideCanvas = true
-                        hoverViewPoint = location
-                        updateCanvasCursor(at: location, in: geometry.size)
-                    case .ended:
-                        isPointerInsideCanvas = false
-                        hoverViewPoint = nil
-                        viewModel.updatePointer(nil)
-                        NSCursor.arrow.set()
-                    }
-                }
-                .onChange(of: viewModel.selectedTool) { _, tool in
+                .onChange(of: viewModel.selectedTool) { tool in
                     if tool != .crop {
                         pendingCropRect = nil
+                    }
+                    if tool != .text {
+                        cancelCanvasTextEditing()
                     }
                     guard isPointerInsideCanvas else { return }
                     guard let hoverViewPoint else { return }
                     updateCanvasCursor(at: hoverViewPoint, in: geometry.size)
                 }
-                .onChange(of: viewModel.brushSize) { _, _ in
+                .onChange(of: viewModel.brushSize) { _ in
                     guard isPointerInsideCanvas, let hoverViewPoint else { return }
                     updateCanvasCursor(at: hoverViewPoint, in: geometry.size)
                 }
-                .onChange(of: viewModel.zoom) { _, _ in
+                .onChange(of: viewModel.zoom) { _ in
                     guard isPointerInsideCanvas, let hoverViewPoint else { return }
                     updateCanvasCursor(at: hoverViewPoint, in: geometry.size)
                 }
@@ -858,7 +881,7 @@ struct ImageEditorView: View {
                 .onAppear {
                     viewModel.updateCanvasViewportSize(geometry.size)
                 }
-                .onChange(of: geometry.size) { _, newSize in
+                .onChange(of: geometry.size) { newSize in
                     viewModel.updateCanvasViewportSize(newSize)
                 }
         }
@@ -1081,12 +1104,17 @@ struct ImageEditorView: View {
                     height: abs(dragEnd.y - dragStart.y)
                 )
             let rect = viewRect(from: imageRect, in: size)
-            let shape = viewModel.selectedTool == .marquee && viewModel.marqueeShape.isEllipse
-                ? AnyShape(Ellipse())
-                : AnyShape(Rectangle())
-            shape
-                .stroke(Color(nsColor: ImageEditorTheme.selected), style: StrokeStyle(lineWidth: 1.5, dash: [6, 4]))
-                .background(shape.fill(Color(nsColor: ImageEditorTheme.selected).opacity(0.12)))
+            Group {
+                if viewModel.selectedTool == .marquee && viewModel.marqueeShape.isEllipse {
+                    Ellipse()
+                        .stroke(Color(nsColor: ImageEditorTheme.selected), style: StrokeStyle(lineWidth: 1.5, dash: [6, 4]))
+                        .background(Ellipse().fill(Color(nsColor: ImageEditorTheme.selected).opacity(0.12)))
+                } else {
+                    Rectangle()
+                        .stroke(Color(nsColor: ImageEditorTheme.selected), style: StrokeStyle(lineWidth: 1.5, dash: [6, 4]))
+                        .background(Rectangle().fill(Color(nsColor: ImageEditorTheme.selected).opacity(0.12)))
+                }
+            }
                 .frame(width: rect.width, height: rect.height)
                 .position(x: rect.midX, y: rect.midY)
         }
@@ -1274,7 +1302,7 @@ struct ImageEditorView: View {
                         }
                     }
                 case .text:
-                    viewModel.addText(at: imagePoint)
+                    beginCanvasTextEditing(at: imagePoint)
                 case .eyedropper:
                     if let imagePoint {
                         viewModel.sampleColor(at: imagePoint)
@@ -1299,6 +1327,104 @@ struct ImageEditorView: View {
                 isMovingPathAnchor = false
                 activeResizeHandle = nil
             }
+    }
+
+    private func fontFamilyPicker(width: CGFloat? = nil) -> some View {
+        Picker(L10n.text("imageEditor.properties.fontFamily"), selection: $viewModel.selectedFontFamilyName) {
+            ForEach(viewModel.availableFontFamilyNames, id: \.self) { family in
+                Text(viewModel.fontFamilyDisplayName(family)).tag(family)
+            }
+        }
+        .labelsHidden()
+        .environment(\.colorScheme, .dark)
+        .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+        .frame(width: width)
+        .focusable(false)
+        .accessibilityLabel(L10n.text("imageEditor.properties.fontFamily"))
+        .accessibilityIdentifier("image-editor-font-family")
+    }
+
+    @ViewBuilder
+    private func canvasTextEditingOverlay(in size: CGSize) -> some View {
+        if let origin = canvasTextEditingOrigin {
+            let imageRect = fittedImageRect(in: size)
+            let displayScale = imageRect.width / max(viewModel.document.canvasSize.width, 1)
+            let selectedFrame = canvasTextEditingLayerID.flatMap { id in
+                viewModel.document.layers.first(where: { $0.id == id })?.frame
+            }
+            let editorWidth = max(160, (selectedFrame?.width ?? max(240, CGFloat(viewModel.textBoxWidth))) * displayScale)
+            let editorHeight = max(64, (selectedFrame?.height ?? 72) * displayScale)
+            let position = viewPoint(from: origin, in: size)
+
+            VStack(alignment: .trailing, spacing: 4) {
+                TextEditor(text: $viewModel.textValue)
+                    .font(.custom(viewModel.selectedFontFamilyName, size: max(6, viewModel.textSize * displayScale)))
+                    .foregroundStyle(Color(nsColor: viewModel.foregroundColor))
+                    .xomoScrollContentBackgroundHidden()
+                    .padding(2)
+                    .frame(width: editorWidth, height: editorHeight)
+                    .background(Color(nsColor: ImageEditorTheme.panelRaised).opacity(0.16))
+                    .overlay {
+                        Rectangle()
+                            .stroke(Color.gray.opacity(0.78), style: StrokeStyle(lineWidth: 1, dash: [4, 3]))
+                    }
+                    .focused($isCanvasTextEditorFocused)
+                    .accessibilityIdentifier("image-editor-canvas-text-editor")
+
+                HStack(spacing: 4) {
+                    Button { cancelCanvasTextEditing() } label: {
+                        Image(systemName: "xmark")
+                    }
+                    Button { commitCanvasTextEditing() } label: {
+                        Image(systemName: "checkmark")
+                    }
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.mini)
+            }
+            .position(x: position.x + editorWidth / 2, y: position.y + editorHeight / 2)
+            .zIndex(20)
+        }
+    }
+
+    private func beginCanvasTextEditing(at point: CGPoint?) {
+        guard let point else { return }
+        var excludedLayerID: UUID?
+        if canvasTextEditingOrigin != nil {
+            commitCanvasTextEditing()
+            excludedLayerID = viewModel.document.selectedLayerID
+        }
+        startCanvasTextEditing(at: point, excluding: excludedLayerID)
+    }
+
+    private func startCanvasTextEditing(at point: CGPoint, excluding excludedLayerID: UUID? = nil) {
+        if viewModel.selectEditableTextLayer(at: point, excluding: excludedLayerID),
+           let layer = viewModel.document.selectedLayer {
+            canvasTextEditingLayerID = layer.id
+            canvasTextEditingOrigin = layer.frame.origin
+        } else {
+            viewModel.textValue = ""
+            canvasTextEditingLayerID = nil
+            canvasTextEditingOrigin = point
+        }
+        DispatchQueue.main.async { isCanvasTextEditorFocused = true }
+    }
+
+    private func commitCanvasTextEditing() {
+        if canvasTextEditingLayerID != nil {
+            viewModel.updateSelectedTextLayer()
+        } else {
+            viewModel.addText(at: canvasTextEditingOrigin)
+        }
+        canvasTextEditingOrigin = nil
+        canvasTextEditingLayerID = nil
+        isCanvasTextEditorFocused = false
+    }
+
+    private func cancelCanvasTextEditing() {
+        canvasTextEditingOrigin = nil
+        canvasTextEditingLayerID = nil
+        isCanvasTextEditorFocused = false
     }
 
     private func fittedImageRect(in size: CGSize) -> CGRect {
@@ -1657,7 +1783,7 @@ struct ImageEditorView: View {
             .onAppear {
                 syncHistorySnapshotNameDraft(snapshot)
             }
-            .onChange(of: snapshot.name) { _, _ in
+            .onChange(of: snapshot.name) { _ in
                 syncHistorySnapshotNameDraft(snapshot)
             }
 
@@ -3308,6 +3434,7 @@ struct ImageEditorView: View {
 
                 TextField(L10n.text("imageEditor.properties.textPlaceholder"), text: $viewModel.textValue)
                     .textFieldStyle(.roundedBorder)
+                fontFamilyPicker()
                 Stepper(
                     L10n.format("imageEditor.properties.textSizeValue", Int(viewModel.textSize.rounded())),
                     value: $viewModel.textSize,
@@ -4241,7 +4368,7 @@ struct ImageEditorView: View {
                 .toggleStyle(.checkbox)
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
-                .onChange(of: viewModel.channelMixerMonochrome) { _, isMonochrome in
+                .onChange(of: viewModel.channelMixerMonochrome) { isMonochrome in
                     viewModel.selectedChannelMixerOutput = isMonochrome ? .monochrome : .red
                 }
             if viewModel.channelMixerMonochrome {
@@ -4877,6 +5004,49 @@ struct ImageEditorView: View {
     }
 }
 
+private struct EditorMarqueeShapeActionRow: View {
+    let shape: ImageEditorMarqueeShape
+    let isSelected: Bool
+    let action: () -> Void
+
+    @State private var isHovered = false
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: shape.symbolName)
+                .frame(width: 16)
+            Text(shape.title)
+            Spacer(minLength: 4)
+            if isSelected {
+                Image(systemName: "checkmark")
+                    .font(.system(size: 10, weight: .semibold))
+            }
+        }
+        .font(.system(size: 12, weight: .semibold))
+        .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+        .padding(.horizontal, 10)
+        .frame(maxWidth: .infinity, minHeight: 28, alignment: .leading)
+        .background(
+            isHovered
+                ? Color(nsColor: ImageEditorTheme.selected).opacity(0.20)
+                : Color.clear
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
+        .contentShape(Rectangle())
+        .onHover { isHovered = $0 }
+        .onTapGesture(perform: action)
+        .focusable(false)
+        .xomoFocusEffectDisabled()
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(shape.title)
+        .accessibilityValue(isSelected ? "selected" : "available")
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAction {
+            action()
+        }
+    }
+}
+
 enum ImageEditorCanvasCursor {
     private static var cursorCache: [String: NSCursor] = [:]
 
@@ -5445,6 +5615,34 @@ struct EditorDockDisclosure<Content: View>: View {
                 .stroke(Color(nsColor: ImageEditorTheme.border).opacity(0.75), lineWidth: 1)
         }
         .frame(maxWidth: .infinity, alignment: .topLeading)
+    }
+}
+
+private struct ImageEditorMarqueeToolSymbol: View {
+    let shape: ImageEditorMarqueeShape
+
+    var body: some View {
+        Canvas { context, _ in
+            let iconColor = Color.white.opacity(0.94)
+            let iconRect = CGRect(x: 6.5, y: 7.5, width: 16, height: 12)
+            let outline = shape.isEllipse
+                ? Path(ellipseIn: iconRect)
+                : Path(roundedRect: iconRect, cornerRadius: 1)
+            context.stroke(
+                outline,
+                with: .color(iconColor),
+                style: StrokeStyle(lineWidth: 1.5, dash: [2.5, 2])
+            )
+
+            var indicator = Path()
+            indicator.move(to: CGPoint(x: 23, y: 22))
+            indicator.addLine(to: CGPoint(x: 27, y: 22))
+            indicator.addLine(to: CGPoint(x: 25, y: 25))
+            indicator.closeSubpath()
+            context.fill(indicator, with: .color(iconColor))
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
     }
 }
 

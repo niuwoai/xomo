@@ -1,0 +1,59 @@
+{
+  "generated_at": "2026-07-11 21:52:32 +0800",
+  "total": 5,
+  "passed": 5,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorHistoryTests",
+      "method": "clearHistoryKeepsCurrentStateAndDropsUndoRedoSnapshots",
+      "identifier": "veilpicTests/ImageEditorHistoryTests/clearHistoryKeepsCurrentStateAndDropsUndoRedoSnapshots",
+      "file": "ImageEditorHistoryTests.swift",
+      "passed": true,
+      "duration": 4.435,
+      "issues": [],
+      "log": "ImageEditorHistoryTests.clearHistoryKeepsCurrentStateAndDropsUndoRedoSnapshots.log"
+    },
+    {
+      "suite": "ImageEditorHistoryTests",
+      "method": "cropSelectsTheEntireNewCanvas",
+      "identifier": "veilpicTests/ImageEditorHistoryTests/cropSelectsTheEntireNewCanvas",
+      "file": "ImageEditorHistoryTests.swift",
+      "passed": true,
+      "duration": 4.475,
+      "issues": [],
+      "log": "ImageEditorHistoryTests.cropSelectsTheEntireNewCanvas.log"
+    },
+    {
+      "suite": "ImageEditorHistoryTests",
+      "method": "deletingSelectedHistoryStepTruncatesThatStepAndLaterOperations",
+      "identifier": "veilpicTests/ImageEditorHistoryTests/deletingSelectedHistoryStepTruncatesThatStepAndLaterOperations",
+      "file": "ImageEditorHistoryTests.swift",
+      "passed": true,
+      "duration": 4.62,
+      "issues": [],
+      "log": "ImageEditorHistoryTests.deletingSelectedHistoryStepTruncatesThatStepAndLaterOperations.log"
+    },
+    {
+      "suite": "ImageEditorHistoryTests",
+      "method": "editorWindowResolvesEveryDeclaredMenuShortcut",
+      "identifier": "veilpicTests/ImageEditorHistoryTests/editorWindowResolvesEveryDeclaredMenuShortcut",
+      "file": "ImageEditorHistoryTests.swift",
+      "passed": true,
+      "duration": 4.436,
+      "issues": [],
+      "log": "ImageEditorHistoryTests.editorWindowResolvesEveryDeclaredMenuShortcut.log"
+    },
+    {
+      "suite": "ImageEditorHistoryTests",
+      "method": "namedHistorySnapshotsRestoreDocumentStateAndSurviveHistoryClear",
+      "identifier": "veilpicTests/ImageEditorHistoryTests/namedHistorySnapshotsRestoreDocumentStateAndSurviveHistoryClear",
+      "file": "ImageEditorHistoryTests.swift",
+      "passed": true,
+      "duration": 4.524,
+      "issues": [],
+      "log": "ImageEditorHistoryTests.namedHistorySnapshotsRestoreDocumentStateAndSurviveHistoryClear.log"
+    }
+  ]
+}

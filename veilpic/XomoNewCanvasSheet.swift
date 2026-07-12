@@ -41,16 +41,8 @@ struct XomoNewCanvasSheet: View {
             Divider()
 
             HStack(spacing: 12) {
-                LabeledContent(L10n.text("xomo.newCanvas.width")) {
-                    TextField("", value: $draft.width, format: .number.precision(.fractionLength(0)))
-                        .frame(width: 82)
-                        .textFieldStyle(.roundedBorder)
-                }
-                LabeledContent(L10n.text("xomo.newCanvas.height")) {
-                    TextField("", value: $draft.height, format: .number.precision(.fractionLength(0)))
-                        .frame(width: 82)
-                        .textFieldStyle(.roundedBorder)
-                }
+                dimensionField("xomo.newCanvas.width", value: $draft.width)
+                dimensionField("xomo.newCanvas.height", value: $draft.height)
                 Picker(L10n.text("xomo.newCanvas.background"), selection: $draft.background) {
                     ForEach(XomoCanvasBackground.allCases) { background in
                         Text(background.title).tag(background)
@@ -84,6 +76,15 @@ struct XomoNewCanvasSheet: View {
         .padding(22)
         .frame(width: 650, height: 680)
         .accessibilityIdentifier("xomo-new-canvas-sheet")
+    }
+
+    private func dimensionField(_ titleKey: String, value: Binding<Double>) -> some View {
+        HStack(spacing: 6) {
+            Text(L10n.text(titleKey))
+            TextField("", value: value, format: .number.precision(.fractionLength(0)))
+                .frame(width: 82)
+                .textFieldStyle(.roundedBorder)
+        }
     }
 
     private func presetButton(_ preset: XomoCanvasPreset) -> some View {

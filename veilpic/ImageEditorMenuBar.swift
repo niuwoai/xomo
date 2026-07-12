@@ -117,7 +117,7 @@ extension ImageEditorView {
         }
         .keyboardShortcut("s", modifiers: [.command])
         Divider()
-        Button(L10n.text("imageEditor.action.layerImport")) {
+        Button(L10n.text("imageEditor.action.fileImport")) {
             viewModel.chooseImageLayerFile()
         }
         Button(L10n.text("imageEditor.action.export")) {

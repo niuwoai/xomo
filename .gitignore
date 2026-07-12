@@ -16,6 +16,7 @@ DerivedData/
 
 # Swift Package Manager / CocoaPods build
 .swiftpm/
+.build/
 Pods/
 *.hmap
 *.ipa
@@ -23,6 +24,7 @@ Pods/
 *.dSYM
 
 # Archives & exports
+dist/
 *.xcarchive
 *.app
 

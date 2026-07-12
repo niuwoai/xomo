@@ -533,6 +533,7 @@ struct ImageEditorProjectTextContent: Equatable, Codable {
     var text: String
     var color: ImageEditorProjectColor
     var fontSize: CGFloat
+    var fontFamilyName: String?
     var point: CGPoint
     var isBold: Bool
     var isItalic: Bool
@@ -545,6 +546,7 @@ struct ImageEditorProjectTextContent: Equatable, Codable {
         text = content.text
         color = ImageEditorProjectColor(color: content.color)
         fontSize = content.fontSize
+        fontFamilyName = content.fontFamilyName
         point = content.point
         isBold = content.isBold
         isItalic = content.isItalic
@@ -559,6 +561,7 @@ struct ImageEditorProjectTextContent: Equatable, Codable {
             text: text,
             color: color.nsColor,
             fontSize: fontSize,
+            fontFamilyName: fontFamilyName ?? ImageEditorTextContent.systemFontFamilyName,
             point: point,
             isBold: isBold,
             isItalic: isItalic,

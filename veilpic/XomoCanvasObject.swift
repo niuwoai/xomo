@@ -40,6 +40,21 @@ extension ImageEditorViewModel {
         return true
     }
 
+    /// 文字工具优先命中最上方可见文字层。组件中的文字也是普通文字层，
+    /// 因而可以从组件组自动切换到具体文字层并直接编辑。
+    func selectEditableTextLayer(at point: CGPoint, excluding excludedLayerID: UUID? = nil) -> Bool {
+        guard let layer = document.layers.reversed().first(where: { layer in
+            layer.isText
+                && layer.id != excludedLayerID
+                && document.isEffectivelyVisible(layer)
+                && !document.isEffectivelyPixelsLocked(layer)
+                && layer.frame.standardized.insetBy(dx: -4, dy: -4).contains(point)
+        }) else { return false }
+
+        selectLayer(layer.id)
+        return true
+    }
+
     func deleteSelectedXomoObjectIfNeeded() -> Bool {
         guard let selected = document.selectedLayer,
               selected.isGroup,

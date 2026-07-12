@@ -5,15 +5,17 @@
 //  Created by rocky on 2026/5/19.
 //
 
+import AppKit
 import SwiftUI
 
 @main
 struct veilpicApp: App {
+    @NSApplicationDelegateAdaptor(XomoApplicationDelegate.self) private var applicationDelegate
+
     var body: some Scene {
         WindowGroup {
             XomoEditorWorkspaceView()
         }
-        .defaultSize(width: 1440, height: 900)
         .commands {
             CommandGroup(replacing: .appInfo) {
                 Button(L10n.text("about.menuItem")) {
@@ -21,5 +23,13 @@ struct veilpicApp: App {
                 }
             }
         }
+    }
+}
+
+
+@MainActor
+final class XomoApplicationDelegate: NSObject, NSApplicationDelegate {
+    func applicationWillTerminate(_ notification: Notification) {
+        XomoAutomationServer.shared.stop()
     }
 }

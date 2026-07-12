@@ -4,6 +4,25 @@ import Testing
 
 @MainActor
 struct XomoLeftSidebarTests {
+    @Test func componentDragPreviewUsesTheExactCanvasDisplaySize() {
+        let canvasSize = CGSize(width: 1_000, height: 800)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "component-drag-preview",
+            image: NSImage.transparent(size: canvasSize)
+        ) { _ in }
+        viewModel.canvasViewportSize = canvasSize
+        viewModel.zoom = 1
+
+        let expectedScale: CGFloat = 0.74
+        for component in XomoComponentKind.allCases {
+            let componentSize = viewModel.xomoComponentSize(component)
+            let previewSize = viewModel.xomoComponentDragPreviewSize(component)
+
+            #expect(abs(previewSize.width - componentSize.width * expectedScale) < 0.01)
+            #expect(abs(previewSize.height - componentSize.height * expectedScale) < 0.01)
+        }
+    }
+
     @Test func sidebarHasToolsAndComponentsTabs() {
         #expect(XomoLeftSidebarTab.allCases == [.tools, .components])
         #expect(XomoLeftSidebarTab.tools.symbolName == "wrench.and.screwdriver")

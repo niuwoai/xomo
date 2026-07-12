@@ -1369,6 +1369,50 @@ struct veilpicTests {
     }
 
     @MainActor
+    @Test func imageEditorPastesClipboardImageDataAsANewLayer() throws {
+        let canvas = testImage(color: .systemBlue, size: NSSize(width: 80, height: 60))
+        let clipboardImage = testImage(color: .systemOrange, size: NSSize(width: 32, height: 24))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: canvas) { _ in }
+        let originalLayerCount = viewModel.document.layers.count
+        let pasteboard = NSPasteboard(name: NSPasteboard.Name("xomo-tests.clipboard-image"))
+        pasteboard.clearContents()
+        #expect(pasteboard.writeObjects([clipboardImage]))
+
+        viewModel.pasteClipboardAsLayer(from: pasteboard)
+
+        #expect(viewModel.document.layers.count == originalLayerCount + 1)
+        #expect(viewModel.document.selectedLayer?.image.size == clipboardImage.size)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.clipboardPasteLayer"))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.clipboardPastedToLayer"))
+        pasteboard.clearContents()
+    }
+
+    @MainActor
+    @Test func imageEditorPastesFinderPNGFileAsANewLayer() throws {
+        let canvas = testImage(color: .systemBlue, size: NSSize(width: 80, height: 60))
+        let clipboardImage = testImage(color: .systemGreen, size: NSSize(width: 36, height: 28))
+        let imageData = try #require(clipboardImage.qingtuPNGData())
+        let imageURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+            .appendingPathExtension("png")
+        try imageData.write(to: imageURL)
+        defer { try? FileManager.default.removeItem(at: imageURL) }
+
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: canvas) { _ in }
+        let originalLayerCount = viewModel.document.layers.count
+        let pasteboard = NSPasteboard(name: NSPasteboard.Name("xomo-tests.finder-image-file"))
+        pasteboard.clearContents()
+        #expect(pasteboard.writeObjects([imageURL as NSURL]))
+
+        viewModel.pasteClipboardAsLayer(from: pasteboard)
+
+        #expect(viewModel.document.layers.count == originalLayerCount + 1)
+        #expect(viewModel.document.selectedLayer?.image.size == clipboardImage.size)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.clipboardPastedToLayer"))
+        pasteboard.clearContents()
+    }
+
+    @MainActor
     @Test func imageEditorRasterizeTextLayerBakesStyleAndUndoRestoresEditableText() async throws {
         let canvasSize = NSSize(width: 120, height: 80)
         let image = testBitmapImage(size: canvasSize, background: .black)
@@ -6259,6 +6303,33 @@ struct veilpicTests {
         #expect(maskStart.alphaComponent > 0.85)
         #expect(maskEnd.alphaComponent < 0.2)
         #expect(maskViewModel.document.history.last?.title == L10n.text("imageEditor.history.layerMaskGradient"))
+    }
+
+    @MainActor
+    @Test func imageEditorGradientSelectionUsesTopLeftCanvasCoordinates() async throws {
+        let canvasSize = NSSize(width: 120, height: 90)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "top-left-gradient.png",
+            image: testImage(color: .clear, size: canvasSize)
+        ) { _ in }
+
+        viewModel.foregroundColor = .systemRed
+        viewModel.backgroundColor = .systemBlue
+        viewModel.opacity = 1
+        viewModel.createRectSelection(
+            from: CGPoint(x: 10, y: 15),
+            to: CGPoint(x: 55, y: 42)
+        )
+        viewModel.drawGradient(from: CGPoint(x: 10, y: 0), to: CGPoint(x: 55, y: 0))
+
+        let gradientImage = try #require(viewModel.document.selectedLayer?.image)
+        let selectedTop = try #require(gradientImage.color(at: CGPoint(x: 25, y: 25)))
+        let verticallyMirrored = try #require(gradientImage.color(at: CGPoint(x: 25, y: 65)))
+        let outsideSelection = try #require(gradientImage.color(at: CGPoint(x: 25, y: 55)))
+
+        #expect(selectedTop.alphaComponent > 0.8)
+        #expect(verticallyMirrored.alphaComponent < 0.1)
+        #expect(outsideSelection.alphaComponent < 0.1)
     }
 
     @MainActor

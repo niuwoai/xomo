@@ -112,8 +112,6 @@ extension NSImage {
         ) else { return nil }
 
         context.interpolationQuality = .none
-        context.translateBy(x: 0, y: CGFloat(height))
-        context.scaleBy(x: 1, y: -1)
         context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
 
         var minimum = [UInt8](repeating: UInt8.max, count: 3)
@@ -186,8 +184,6 @@ extension NSImage {
         ) else { return nil }
 
         context.interpolationQuality = .none
-        context.translateBy(x: 0, y: CGFloat(height))
-        context.scaleBy(x: 1, y: -1)
         context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
 
         var minimum = 1.0
@@ -261,8 +257,6 @@ extension NSImage {
         ) else { return nil }
 
         context.interpolationQuality = .none
-        context.translateBy(x: 0, y: CGFloat(height))
-        context.scaleBy(x: 1, y: -1)
         context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
 
         var totals = [Double](repeating: 0, count: 3)
@@ -340,8 +334,6 @@ extension NSImage {
             else { return nil }
 
             context.interpolationQuality = .none
-            context.translateBy(x: 0, y: CGFloat(height))
-            context.scaleBy(x: 1, y: -1)
             context.draw(cgImage, in: CGRect(origin: .zero, size: targetSize))
             return pixels
         }
@@ -1298,8 +1290,6 @@ extension NSImage {
         ) else { return nil }
 
         context.interpolationQuality = .none
-        context.translateBy(x: 0, y: CGFloat(height))
-        context.scaleBy(x: 1, y: -1)
         context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
 
         for y in 0..<height {

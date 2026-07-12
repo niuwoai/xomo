@@ -813,15 +813,19 @@ extension ImageEditorViewModel {
             if selection.isInverted {
                 NSColor.white.setFill()
                 rect.fill()
-                guard let context = NSGraphicsContext.current?.cgContext else { return }
-                context.saveGState()
-                context.setBlendMode(.clear)
-                NSColor.clear.setFill()
-                path.fill()
-                context.restoreGState()
+                NSGraphicsContext.current?.withImageEditorTopLeftCoordinates(height: document.canvasSize.height) {
+                    guard let context = NSGraphicsContext.current?.cgContext else { return }
+                    context.saveGState()
+                    context.setBlendMode(.clear)
+                    NSColor.clear.setFill()
+                    path.fill()
+                    context.restoreGState()
+                }
             } else {
-                NSColor.white.setFill()
-                path.fill()
+                NSGraphicsContext.current?.withImageEditorTopLeftCoordinates(height: document.canvasSize.height) {
+                    NSColor.white.setFill()
+                    path.fill()
+                }
             }
         }
         guard let hardMask, feather > 0 else { return hardMask }
@@ -1048,8 +1052,6 @@ extension NSImage {
         ) else { return nil }
 
         context.interpolationQuality = .none
-        context.translateBy(x: 0, y: CGFloat(height))
-        context.scaleBy(x: 1, y: -1)
         context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
 
         var alpha = [UInt8](repeating: 0, count: width * height)

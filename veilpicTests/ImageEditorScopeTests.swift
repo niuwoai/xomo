@@ -1045,6 +1045,8 @@ struct ImageEditorScopeTests {
         #expect(fileMenuSource.contains(".keyboardShortcut(\"s\", modifiers: [.command])"))
         #expect(fileMenuSource.contains("viewModel.openExportPanel()"))
         #expect(fileMenuSource.contains(".keyboardShortcut(\"s\", modifiers: [.command, .shift, .option])"))
+        #expect(fileMenuSource.contains("imageEditor.action.fileImport"))
+        #expect(fileMenuSource.contains("viewModel.chooseImageLayerFile()"))
     }
 
     @Test func layerMenuExposesSelectionLayerCommandsInPhotoshopStyleLocation() throws {
@@ -2260,6 +2262,29 @@ struct ImageEditorScopeTests {
         #expect(pathMenuSource.contains("imageEditor.action.pathLayerMask"))
         #expect(pathMenuSource.contains("viewModel.applySelectedPathAsLayerMask()"))
         #expect(pathMenuSource.contains("viewModel.canApplySelectedPathAsLayerMask"))
+    }
+
+    @Test func deploymentTargetsRemainCompatibleWithMacOS13() throws {
+        let repositoryRoot = Self.repositoryRoot()
+        let project = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic.xcodeproj/project.pbxproj"),
+            encoding: .utf8
+        )
+        let package = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("xomo-cli/Package.swift"),
+            encoding: .utf8
+        )
+        let theme = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/Theme.swift"),
+            encoding: .utf8
+        )
+
+        #expect(project.contains("MACOSX_DEPLOYMENT_TARGET = 13.0;"))
+        #expect(!project.contains("MACOSX_DEPLOYMENT_TARGET = 12"))
+        #expect(!project.contains("MACOSX_DEPLOYMENT_TARGET = 26"))
+        #expect(package.contains("platforms: [.macOS(.v13)]"))
+        #expect(theme.contains("if #available(macOS 13.0, *)"))
+        #expect(theme.contains("if #available(macOS 14.0, *)"))
     }
 
     private static func repositoryRoot() -> URL {

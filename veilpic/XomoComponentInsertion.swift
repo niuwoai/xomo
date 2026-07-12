@@ -326,16 +326,102 @@ extension ImageEditorViewModel {
         }
     }
 
+    func xomoComponentSize(_ component: XomoComponentKind) -> CGSize {
+        let canvasWidth = document.canvasSize.width
+        let buttonWidth = min(
+            XomoButtonComponentStyle.maximumWidth,
+            max(XomoButtonComponentStyle.minimumWidth, canvasWidth * XomoButtonComponentStyle.widthRatio)
+        )
+        let inputWidth = min(
+            XomoInputComponentStyle.maximumWidth,
+            max(XomoInputComponentStyle.minimumWidth, canvasWidth * XomoInputComponentStyle.widthRatio)
+        )
+        let cardWidth = min(
+            XomoCardComponentStyle.maximumWidth,
+            max(XomoCardComponentStyle.minimumWidth, canvasWidth * XomoCardComponentStyle.widthRatio)
+        )
+        let imageWidth = min(
+            XomoImageComponentStyle.maximumWidth,
+            max(XomoImageComponentStyle.minimumWidth, canvasWidth * XomoImageComponentStyle.widthRatio)
+        )
+
+        switch component {
+        case .button, .secondaryButton, .ghostButton:
+            return CGSize(width: buttonWidth, height: XomoButtonComponentStyle.height)
+        case .iconButton:
+            return CGSize(width: XomoButtonComponentStyle.height, height: XomoButtonComponentStyle.height)
+        case .input, .searchInput, .selectInput:
+            return CGSize(width: inputWidth, height: XomoInputComponentStyle.height)
+        case .textArea:
+            return CGSize(width: inputWidth, height: XomoInputVariant.textArea.height)
+        case .toggle:
+            return XomoSelectionComponentStyle.toggleSize
+        case .checkbox:
+            let labelSize = componentTextSize(
+                L10n.text("xomo.component.checkbox.defaultLabel"),
+                fontSize: XomoSelectionComponentStyle.labelFontSize
+            )
+            return CGSize(
+                width: XomoSelectionComponentStyle.checkboxSize + labelSize.width + 8,
+                height: max(XomoSelectionComponentStyle.checkboxSize, labelSize.height)
+            )
+        case .tag:
+            return XomoSelectionComponentStyle.tagSize
+        case .badge:
+            return CGSize(
+                width: XomoSelectionComponentStyle.badgeDiameter,
+                height: XomoSelectionComponentStyle.badgeDiameter
+            )
+        case .listRow:
+            return CGSize(width: navigationWidth(), height: XomoNavigationComponentStyle.listRowHeight)
+        case .topNavigation:
+            return CGSize(width: navigationWidth(), height: XomoNavigationComponentStyle.topNavigationHeight)
+        case .sideNavigation:
+            return CGSize(
+                width: XomoNavigationComponentStyle.sideNavigationWidth,
+                height: XomoNavigationComponentStyle.sideNavigationHeight
+            )
+        case .tabBar:
+            return CGSize(width: navigationWidth(), height: XomoNavigationComponentStyle.tabBarHeight)
+        case .carouselCard:
+            return CGSize(width: navigationWidth(), height: XomoContentComponentStyle.carouselHeight)
+        case .emptyState:
+            return XomoContentComponentStyle.emptyStateSize
+        case .card:
+            return CGSize(width: cardWidth, height: XomoCardComponentStyle.height)
+        case .image:
+            return CGSize(width: imageWidth, height: imageWidth / XomoImageComponentStyle.aspectRatio)
+        case .avatar:
+            return CGSize(width: XomoAvatarComponentStyle.diameter, height: XomoAvatarComponentStyle.diameter)
+        case .icon:
+            return CGSize(width: XomoIconComponentStyle.size, height: XomoIconComponentStyle.size)
+        }
+    }
+
+    func xomoComponentDragPreviewSize(_ component: XomoComponentKind) -> CGSize {
+        let componentSize = xomoComponentSize(component)
+        let viewportSize = canvasViewportSize
+        guard viewportSize.width > 0, viewportSize.height > 0 else {
+            return componentSize
+        }
+
+        let imageRect = ImageEditorCanvasGeometry.fittedImageRect(
+            canvasSize: document.canvasSize,
+            viewportSize: viewportSize,
+            zoom: zoom,
+            canvasOffset: canvasOffset
+        )
+        let displayScale = imageRect.width / max(document.canvasSize.width, 1)
+        return CGSize(
+            width: max(1, componentSize.width * displayScale),
+            height: max(1, componentSize.height * displayScale)
+        )
+    }
+
     private func insertXomoButton(_ variant: XomoButtonVariant, at proposedOrigin: CGPoint?) {
         let canvasSize = document.canvasSize
         let tokens = xomoComponentTheme.tokens
-        let buttonSize = variant.size ?? CGSize(
-            width: min(
-                XomoButtonComponentStyle.maximumWidth,
-                max(XomoButtonComponentStyle.minimumWidth, canvasSize.width * XomoButtonComponentStyle.widthRatio)
-            ),
-            height: XomoButtonComponentStyle.height
-        )
+        let buttonSize = xomoComponentSize(variant.component)
         let defaultOrigin = CGPoint(
             x: (canvasSize.width - buttonSize.width) * 0.5,
             y: (canvasSize.height - buttonSize.height) * 0.5
@@ -396,13 +482,7 @@ extension ImageEditorViewModel {
     private func insertXomoInput(_ variant: XomoInputVariant, at proposedOrigin: CGPoint?) {
         let canvasSize = document.canvasSize
         let tokens = xomoComponentTheme.tokens
-        let inputSize = CGSize(
-            width: min(
-                XomoInputComponentStyle.maximumWidth,
-                max(XomoInputComponentStyle.minimumWidth, canvasSize.width * XomoInputComponentStyle.widthRatio)
-            ),
-            height: variant.height
-        )
+        let inputSize = xomoComponentSize(variant.component)
         let defaultOrigin = CGPoint(
             x: (canvasSize.width - inputSize.width) * 0.5,
             y: (canvasSize.height - inputSize.height) * 0.5
@@ -516,7 +596,7 @@ extension ImageEditorViewModel {
         let tokens = xomoComponentTheme.tokens
         let frame = componentFrame(
             proposedOrigin,
-            size: XomoSelectionComponentStyle.toggleSize
+            size: xomoComponentSize(component)
         )
         let knobFrame = CGRect(
             x: frame.maxX - XomoSelectionComponentStyle.toggleKnobDiameter - 3,
@@ -566,10 +646,7 @@ extension ImageEditorViewModel {
             alignment: .left
         )
         let labelSize = labelContent.layerSize()
-        let componentSize = CGSize(
-            width: XomoSelectionComponentStyle.checkboxSize + labelSize.width + 8,
-            height: max(XomoSelectionComponentStyle.checkboxSize, labelSize.height)
-        )
+        let componentSize = xomoComponentSize(component)
         let frame = componentFrame(proposedOrigin, size: componentSize)
         let boxFrame = CGRect(
             x: frame.minX,
@@ -603,7 +680,7 @@ extension ImageEditorViewModel {
     private func insertXomoTag(at proposedOrigin: CGPoint?) {
         let component = XomoComponentKind.tag
         let tokens = xomoComponentTheme.tokens
-        let frame = componentFrame(proposedOrigin, size: XomoSelectionComponentStyle.tagSize)
+        let frame = componentFrame(proposedOrigin, size: xomoComponentSize(component))
         let label = L10n.text("xomo.component.tag.defaultLabel")
         let labelContent = ImageEditorTextContent(
             text: label,
@@ -639,10 +716,7 @@ extension ImageEditorViewModel {
     private func insertXomoBadge(at proposedOrigin: CGPoint?) {
         let component = XomoComponentKind.badge
         let tokens = xomoComponentTheme.tokens
-        let size = CGSize(
-            width: XomoSelectionComponentStyle.badgeDiameter,
-            height: XomoSelectionComponentStyle.badgeDiameter
-        )
+        let size = xomoComponentSize(component)
         let frame = componentFrame(proposedOrigin, size: size)
         let value = L10n.text("xomo.component.badge.defaultValue")
         let valueContent = ImageEditorTextContent(
@@ -711,7 +785,7 @@ extension ImageEditorViewModel {
         let component = XomoComponentKind.listRow
         let frame = componentFrame(
             proposedOrigin,
-            size: CGSize(width: navigationWidth(), height: XomoNavigationComponentStyle.listRowHeight)
+            size: xomoComponentSize(component)
         )
         let title = L10n.text("xomo.component.listRow.defaultTitle")
         let detail = L10n.text("xomo.component.listRow.defaultDetail")
@@ -746,7 +820,7 @@ extension ImageEditorViewModel {
         let component = XomoComponentKind.topNavigation
         let frame = componentFrame(
             proposedOrigin,
-            size: CGSize(width: navigationWidth(), height: XomoNavigationComponentStyle.topNavigationHeight)
+            size: xomoComponentSize(component)
         )
         let group = beginComponentGroup(component)
         let background = navigationBackground(
@@ -787,10 +861,7 @@ extension ImageEditorViewModel {
         let tokens = xomoComponentTheme.tokens
         let frame = componentFrame(
             proposedOrigin,
-            size: CGSize(
-                width: XomoNavigationComponentStyle.sideNavigationWidth,
-                height: XomoNavigationComponentStyle.sideNavigationHeight
-            )
+            size: xomoComponentSize(component)
         )
         let group = beginComponentGroup(component)
         let background = navigationBackground(
@@ -848,7 +919,7 @@ extension ImageEditorViewModel {
         let component = XomoComponentKind.tabBar
         let frame = componentFrame(
             proposedOrigin,
-            size: CGSize(width: navigationWidth(), height: XomoNavigationComponentStyle.tabBarHeight)
+            size: xomoComponentSize(component)
         )
         let group = beginComponentGroup(component)
         let background = navigationBackground(
@@ -941,7 +1012,7 @@ extension ImageEditorViewModel {
         let component = XomoComponentKind.carouselCard
         let frame = componentFrame(
             proposedOrigin,
-            size: CGSize(width: navigationWidth(), height: XomoContentComponentStyle.carouselHeight)
+            size: xomoComponentSize(component)
         )
         let imageFrame = CGRect(
             x: frame.minX,
@@ -982,7 +1053,7 @@ extension ImageEditorViewModel {
     private func insertXomoEmptyState(at proposedOrigin: CGPoint?) {
         let component = XomoComponentKind.emptyState
         let tokens = xomoComponentTheme.tokens
-        let frame = componentFrame(proposedOrigin, size: XomoContentComponentStyle.emptyStateSize)
+        let frame = componentFrame(proposedOrigin, size: xomoComponentSize(component))
         let iconFrame = CGRect(
             x: frame.midX - XomoContentComponentStyle.emptyStateIconDiameter * 0.5,
             y: frame.minY + 24,
@@ -1074,13 +1145,7 @@ extension ImageEditorViewModel {
     private func insertXomoCard(at proposedOrigin: CGPoint?) {
         let canvasSize = document.canvasSize
         let tokens = xomoComponentTheme.tokens
-        let cardSize = CGSize(
-            width: min(
-                XomoCardComponentStyle.maximumWidth,
-                max(XomoCardComponentStyle.minimumWidth, canvasSize.width * XomoCardComponentStyle.widthRatio)
-            ),
-            height: XomoCardComponentStyle.height
-        )
+        let cardSize = xomoComponentSize(.card)
         let defaultOrigin = CGPoint(
             x: (canvasSize.width - cardSize.width) * 0.5,
             y: (canvasSize.height - cardSize.height) * 0.5
@@ -1149,11 +1214,7 @@ extension ImageEditorViewModel {
 
     private func insertXomoImage(at proposedOrigin: CGPoint?) {
         let canvasSize = document.canvasSize
-        let width = min(
-            XomoImageComponentStyle.maximumWidth,
-            max(XomoImageComponentStyle.minimumWidth, canvasSize.width * XomoImageComponentStyle.widthRatio)
-        )
-        let imageSize = CGSize(width: width, height: width / XomoImageComponentStyle.aspectRatio)
+        let imageSize = xomoComponentSize(.image)
         let defaultOrigin = CGPoint(
             x: (canvasSize.width - imageSize.width) * 0.5,
             y: (canvasSize.height - imageSize.height) * 0.5
@@ -1188,7 +1249,7 @@ extension ImageEditorViewModel {
 
     private func insertXomoAvatar(at proposedOrigin: CGPoint?) {
         let tokens = xomoComponentTheme.tokens
-        let avatarSize = CGSize(width: XomoAvatarComponentStyle.diameter, height: XomoAvatarComponentStyle.diameter)
+        let avatarSize = xomoComponentSize(.avatar)
         let defaultOrigin = CGPoint(
             x: (document.canvasSize.width - avatarSize.width) * 0.5,
             y: (document.canvasSize.height - avatarSize.height) * 0.5
@@ -1247,7 +1308,7 @@ extension ImageEditorViewModel {
 
     private func insertXomoIcon(at proposedOrigin: CGPoint?) {
         let tokens = xomoComponentTheme.tokens
-        let iconSize = CGSize(width: XomoIconComponentStyle.size, height: XomoIconComponentStyle.size)
+        let iconSize = xomoComponentSize(.icon)
         let defaultOrigin = CGPoint(
             x: (document.canvasSize.width - iconSize.width) * 0.5,
             y: (document.canvasSize.height - iconSize.height) * 0.5

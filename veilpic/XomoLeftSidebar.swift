@@ -72,6 +72,118 @@ private struct XomoComponentLibraryPreviewItem: Identifiable {
     ]
 }
 
+private struct XomoComponentThumbnail: View {
+    let kind: XomoComponentKind
+    let tokens: XomoComponentThemeTokens
+    var displaySize: CGSize? = nil
+
+    private var radius: CGFloat { min(10, max(2, tokens.cornerRadius * 0.55)) }
+
+    var body: some View {
+        ZStack {
+            switch kind {
+            case .button, .secondaryButton, .ghostButton:
+                RoundedRectangle(cornerRadius: radius)
+                    .fill(kind == .button ? Color(nsColor: tokens.accent) : Color(nsColor: tokens.surface))
+                    .overlay(RoundedRectangle(cornerRadius: radius).stroke(Color(nsColor: kind == .ghostButton ? .clear : tokens.accentBorder), lineWidth: 1))
+                Capsule().fill(Color(nsColor: kind == .button ? tokens.onAccent : tokens.primaryText)).frame(width: 30, height: 3)
+            case .iconButton:
+                RoundedRectangle(cornerRadius: radius).fill(Color(nsColor: tokens.accent)).frame(width: 30, height: 30)
+                Image(systemName: "plus").foregroundStyle(Color(nsColor: tokens.onAccent)).font(.system(size: 11, weight: .bold))
+            case .input, .searchInput, .textArea, .selectInput:
+                RoundedRectangle(cornerRadius: radius).fill(Color(nsColor: tokens.surface))
+                    .overlay(RoundedRectangle(cornerRadius: radius).stroke(Color(nsColor: tokens.border), lineWidth: 1))
+                HStack(spacing: 5) {
+                    if kind == .searchInput { Image(systemName: "magnifyingglass").font(.system(size: 8)) }
+                    Capsule().fill(Color(nsColor: tokens.secondaryText).opacity(0.72)).frame(width: 34, height: 3)
+                    Spacer()
+                    if kind == .selectInput { Image(systemName: "chevron.down").font(.system(size: 7, weight: .bold)) }
+                }.foregroundStyle(Color(nsColor: tokens.secondaryText)).padding(8)
+            case .toggle:
+                Capsule().fill(Color(nsColor: tokens.accent)).frame(width: 42, height: 22)
+                    .overlay(Circle().fill(Color(nsColor: tokens.onAccent)).frame(width: 17, height: 17).offset(x: 9))
+            case .checkbox:
+                HStack(spacing: 6) {
+                    RoundedRectangle(cornerRadius: 3).fill(Color(nsColor: tokens.accent)).frame(width: 18, height: 18)
+                        .overlay(Image(systemName: "checkmark").font(.system(size: 8, weight: .bold)).foregroundStyle(Color(nsColor: tokens.onAccent)))
+                    Capsule().fill(Color(nsColor: tokens.primaryText)).frame(width: 28, height: 3)
+                }
+            case .tag, .badge:
+                Capsule().fill(Color(nsColor: tokens.subtleSurface)).overlay(Capsule().stroke(Color(nsColor: tokens.border), lineWidth: 1))
+                    .frame(width: kind == .badge ? 30 : 58, height: 24)
+            case .card, .carouselCard, .emptyState:
+                RoundedRectangle(cornerRadius: radius).fill(Color(nsColor: tokens.surface))
+                    .overlay(RoundedRectangle(cornerRadius: radius).stroke(Color(nsColor: tokens.border), lineWidth: 1))
+                    .overlay(alignment: .topLeading) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            RoundedRectangle(cornerRadius: 2).fill(Color(nsColor: tokens.accent).opacity(0.65)).frame(height: kind == .carouselCard ? 16 : 7)
+                            Capsule().fill(Color(nsColor: tokens.primaryText)).frame(width: 34, height: 3)
+                            Capsule().fill(Color(nsColor: tokens.secondaryText)).frame(width: 48, height: 3)
+                        }.padding(6)
+                    }
+            case .listRow, .topNavigation, .sideNavigation, .tabBar:
+                RoundedRectangle(cornerRadius: radius).fill(Color(nsColor: tokens.surface))
+                    .overlay(alignment: kind == .sideNavigation ? .leading : .center) {
+                        HStack(spacing: 6) {
+                            ForEach(0..<3, id: \.self) { index in
+                                Capsule().fill(Color(nsColor: index == 0 ? tokens.accent : tokens.secondaryText).opacity(index == 0 ? 1 : 0.55))
+                                    .frame(width: index == 0 ? 24 : 14, height: 4)
+                            }
+                        }.padding(7)
+                    }
+            case .image:
+                RoundedRectangle(cornerRadius: radius).fill(LinearGradient(colors: [Color(nsColor: tokens.accent), Color(nsColor: tokens.subtleSurface)], startPoint: .topLeading, endPoint: .bottomTrailing))
+                    .overlay(Image(systemName: "photo").foregroundStyle(Color(nsColor: tokens.onAccent)))
+            case .avatar:
+                Circle().fill(Color(nsColor: tokens.accent)).overlay(Image(systemName: "person.fill").foregroundStyle(Color(nsColor: tokens.onAccent)))
+                    .frame(width: 34, height: 34)
+            case .icon:
+                Image(systemName: "sparkles").font(.system(size: 25, weight: .semibold)).foregroundStyle(Color(nsColor: tokens.accent))
+            }
+        }
+        .xomoComponentThumbnailFrame(displaySize)
+    }
+}
+
+private extension View {
+    @ViewBuilder
+    func xomoComponentThumbnailFrame(_ displaySize: CGSize?) -> some View {
+        if let displaySize {
+            frame(width: displaySize.width, height: displaySize.height)
+        } else {
+            frame(maxWidth: .infinity, minHeight: 38, maxHeight: 38)
+        }
+    }
+}
+
+private struct XomoComponentDragPreview: View {
+    let kind: XomoComponentKind
+    let tokens: XomoComponentThemeTokens
+    let displaySize: CGSize
+
+    var body: some View {
+        XomoComponentThumbnail(kind: kind, tokens: tokens, displaySize: displaySize)
+            .overlay {
+                outline
+            }
+            .frame(width: displaySize.width, height: displaySize.height)
+    }
+
+    @ViewBuilder
+    private var outline: some View {
+        let stroke = StrokeStyle(lineWidth: 1, dash: [5, 4])
+        switch kind {
+        case .avatar, .badge:
+            Circle().stroke(Color.gray.opacity(0.74), style: stroke)
+        case .toggle, .tag:
+            Capsule().stroke(Color.gray.opacity(0.74), style: stroke)
+        default:
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                .stroke(Color.gray.opacity(0.74), style: stroke)
+        }
+    }
+}
+
 struct XomoComponentLibraryPanel: View {
     @ObservedObject var viewModel: ImageEditorViewModel
 
@@ -297,7 +409,13 @@ struct XomoComponentLibraryPanel: View {
                 }
                 .buttonStyle(.plain)
                 .focusable(false)
-                .draggable(component.rawValue)
+                .xomoDraggable(component.rawValue) {
+                    XomoComponentDragPreview(
+                        kind: component,
+                        tokens: viewModel.xomoComponentTheme.tokens,
+                        displaySize: viewModel.xomoComponentDragPreviewSize(component)
+                    )
+                }
                 .accessibilityIdentifier("xomo-component-library-item-\(component.rawValue)")
                 .help(L10n.text("xomo.componentLibrary.dragOrInsert"))
             } else {
@@ -309,10 +427,15 @@ struct XomoComponentLibraryPanel: View {
     }
 
     private func componentPreviewLabel(_ item: XomoComponentLibraryPreviewItem, isAvailable: Bool) -> some View {
-        VStack(spacing: 7) {
-            Image(systemName: item.symbolName)
-                .font(.system(size: 18, weight: .semibold))
-                .foregroundStyle(Color(nsColor: isAvailable ? ImageEditorTheme.selected : ImageEditorTheme.mutedText))
+        VStack(spacing: 6) {
+            if let component = item.component {
+                XomoComponentThumbnail(kind: component, tokens: viewModel.xomoComponentTheme.tokens)
+            } else {
+                Image(systemName: item.symbolName)
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                    .frame(height: 38)
+            }
             Text(L10n.text(item.titleKey))
                 .font(.system(size: 11, weight: .medium))
                 .lineLimit(1)
@@ -322,7 +445,8 @@ struct XomoComponentLibraryPanel: View {
                     .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
             }
         }
-        .frame(maxWidth: .infinity, minHeight: 72)
+        .padding(7)
+        .frame(maxWidth: .infinity, minHeight: 78)
         .background(Color(nsColor: ImageEditorTheme.panelRaised), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: 7, style: .continuous)

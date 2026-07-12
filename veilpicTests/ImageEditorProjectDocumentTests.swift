@@ -11,6 +11,25 @@ import Testing
 
 @MainActor
 struct ImageEditorProjectDocumentTests {
+    @Test func textFontFamilyRoundTripsAndLegacyPayloadUsesSystemFont() throws {
+        let content = ImageEditorTextContent(
+            text: "Typography",
+            color: .white,
+            fontSize: 28,
+            fontFamilyName: "Helvetica",
+            point: CGPoint(x: 4, y: 4)
+        )
+        let encoded = try JSONEncoder().encode(ImageEditorProjectTextContent(content: content))
+        let restored = try JSONDecoder().decode(ImageEditorProjectTextContent.self, from: encoded)
+        #expect(restored.textContent.fontFamilyName == "Helvetica")
+
+        var legacyObject = try #require(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
+        legacyObject.removeValue(forKey: "fontFamilyName")
+        let legacy = try JSONSerialization.data(withJSONObject: legacyObject)
+        let legacyContent = try JSONDecoder().decode(ImageEditorProjectTextContent.self, from: legacy)
+        #expect(legacyContent.textContent.fontFamilyName == ImageEditorTextContent.systemFontFamilyName)
+    }
+
     @Test
     func adjustmentSettingsDecodeLegacyPayloadWithMissingNewFields() throws {
         let legacyPayload = Data(
@@ -365,7 +384,10 @@ struct ImageEditorProjectDocumentTests {
             $0.smartObjectContent?.sourceID == firstInstance.smartObjectContent?.sourceID
         })
         #expect(restoredSmartObjects.allSatisfy { $0.image.size == logoImage.size })
-        #expect(Set(restoredSmartObjects.map(\.frame)) == Set([firstInstance.frame, secondInstance.frame]))
+        let restoredFrames = restoredSmartObjects.map(\.frame)
+        #expect(restoredFrames.count == 2)
+        #expect(restoredFrames.contains(firstInstance.frame))
+        #expect(restoredFrames.contains(secondInstance.frame))
     }
 
     @Test

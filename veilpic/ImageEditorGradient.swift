@@ -151,7 +151,14 @@ private extension NSImage {
                     locations: [0, 1]
                   )
             else { return }
-            context.drawLinearGradient(gradient, start: start, end: end, options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
+            NSGraphicsContext.current?.withImageEditorTopLeftCoordinates(height: size.height) {
+                context.drawLinearGradient(
+                    gradient,
+                    start: start,
+                    end: end,
+                    options: [.drawsBeforeStartLocation, .drawsAfterEndLocation]
+                )
+            }
             _ = rect
         }) else { return nil }
 
@@ -230,20 +237,21 @@ private extension ImageEditorSelection {
         }
 
         let hardMask = NSImage.rendered(size: size) { rect in
-            let maskPath = self.path()
+            guard let context = NSGraphicsContext.current?.cgContext else { return }
+            let maskPath = path()
+
             if isInverted {
                 NSColor.white.setFill()
                 rect.fill()
-                guard let context = NSGraphicsContext.current?.cgContext else { return }
-                context.saveGState()
-                context.setBlendMode(.clear)
-                NSColor.clear.setFill()
-                maskPath.fill()
-                context.restoreGState()
-            } else {
-                NSColor.white.setFill()
-                maskPath.fill()
             }
+
+            context.saveGState()
+            context.translateBy(x: 0, y: size.height)
+            context.scaleBy(x: 1, y: -1)
+            context.setBlendMode(isInverted ? .clear : .normal)
+            (isInverted ? NSColor.clear : NSColor.white).setFill()
+            maskPath.fill()
+            context.restoreGState()
         }
         guard let hardMask, feather > 0 else { return hardMask }
         return hardMask.blurred(radius: feather) ?? hardMask

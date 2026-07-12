@@ -679,6 +679,8 @@
 "imageEditor.properties.smartFilterDisabled" = "%@ (off)";
 "imageEditor.properties.smartFilterSeparator" = " · ";
 "imageEditor.properties.textPlaceholder" = "Text to add";
+"imageEditor.properties.fontFamily" = "Font";
+"imageEditor.fontFamily.system" = "System Font";
 "imageEditor.properties.textSizeValue" = "Text Size: %d px";
 "imageEditor.properties.textAlignment" = "Text Alignment";
 "imageEditor.properties.textBold" = "Bold";
@@ -1820,6 +1822,7 @@
 "imageEditor.action.layerDistributeHorizontalSpacing" = "Distribute horizontal spacing";
 "imageEditor.action.layerDistributeVerticalSpacing" = "Distribute vertical spacing";
 "imageEditor.action.layerImport" = "Import Image as Layer";
+"imageEditor.action.fileImport" = "Import File…";
 "imageEditor.action.layerSmartObject" = "Convert to Smart Object";
 "imageEditor.action.layerSmartObjectReplace" = "Replace Smart Object Contents";
 "imageEditor.action.layerSmartObjectMakeUnique" = "Make Smart Objects Unique";

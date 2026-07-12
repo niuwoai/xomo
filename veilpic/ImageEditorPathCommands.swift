@@ -1552,8 +1552,10 @@ extension ImageEditorViewModel {
                 operation: .copy,
                 fraction: 1
             )
-            foregroundColor.withAlphaComponent(max(0, min(1, opacity))).setFill()
-            path.fill()
+            NSGraphicsContext.current?.withImageEditorTopLeftCoordinates(height: targetLayer.image.size.height) {
+                foregroundColor.withAlphaComponent(max(0, min(1, opacity))).setFill()
+                path.fill()
+            }
         }
     }
 
@@ -1595,8 +1597,10 @@ extension ImageEditorViewModel {
                 operation: .copy,
                 fraction: 1
             )
-            foregroundColor.withAlphaComponent(max(0, min(1, opacity))).setStroke()
-            path.stroke()
+            NSGraphicsContext.current?.withImageEditorTopLeftCoordinates(height: targetLayer.image.size.height) {
+                foregroundColor.withAlphaComponent(max(0, min(1, opacity))).setStroke()
+                path.stroke()
+            }
         }
     }
 
@@ -1781,8 +1785,10 @@ extension ImageEditorViewModel {
         path.transform(using: transform)
 
         guard let maskImage = NSImage.rendered(size: canvasSize, actions: { _ in
-            NSColor.white.setFill()
-            path.fill()
+            NSGraphicsContext.current?.withImageEditorTopLeftCoordinates(height: canvasSize.height) {
+                NSColor.white.setFill()
+                path.fill()
+            }
         }),
             let mask = maskImage.pathAlphaMask(width: width, height: height),
             let bounds = mask.selectedBounds(in: document.canvasSize)
@@ -1819,8 +1825,6 @@ private extension NSImage {
         ) else { return nil }
 
         context.interpolationQuality = .none
-        context.translateBy(x: 0, y: CGFloat(height))
-        context.scaleBy(x: 1, y: -1)
         context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
 
         var alpha = [UInt8](repeating: 0, count: width * height)

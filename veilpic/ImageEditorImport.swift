@@ -11,9 +11,7 @@ import UniformTypeIdentifiers
 @MainActor
 extension ImageEditorViewModel {
     var canPasteClipboardImage: Bool {
-        let pasteboard = NSPasteboard.general
-        return pasteboard.canReadObject(forClasses: [NSImage.self], options: nil)
-            || pasteboard.availableType(from: [.png, .tiff]) != nil
+        NSPasteboard.general.readImage() != nil
     }
 
     var canPasteClipboardImageIntoSelection: Bool {
@@ -22,11 +20,11 @@ extension ImageEditorViewModel {
 
     func chooseImageLayerFile() {
         let panel = NSOpenPanel()
-        panel.allowedContentTypes = [.image]
+        panel.allowedContentTypes = [.png, .jpeg]
         panel.allowsMultipleSelection = false
         panel.canChooseDirectories = false
         panel.canChooseFiles = true
-        panel.prompt = L10n.text("imageEditor.action.layerImport")
+        panel.prompt = L10n.text("imageEditor.action.fileImport")
         panel.begin { [weak self] response in
             Task { @MainActor in
                 guard let self, response == .OK, let url = panel.url else { return }
@@ -97,8 +95,8 @@ extension ImageEditorViewModel {
         return true
     }
 
-    func pasteClipboardAsLayer() {
-        guard let image = NSPasteboard.general.readImage() else {
+    func pasteClipboardAsLayer(from pasteboard: NSPasteboard = .general) {
+        guard let image = pasteboard.readImage() else {
             statusText = L10n.text("imageEditor.status.clipboardImageMissing")
             return
         }
@@ -111,12 +109,12 @@ extension ImageEditorViewModel {
         )
     }
 
-    func pasteClipboardIntoSelectionAsLayer() {
+    func pasteClipboardIntoSelectionAsLayer(from pasteboard: NSPasteboard = .general) {
         guard document.selection != nil else {
             statusText = L10n.text("imageEditor.status.noSelection")
             return
         }
-        guard let image = NSPasteboard.general.readImage() else {
+        guard let image = pasteboard.readImage() else {
             statusText = L10n.text("imageEditor.status.clipboardImageMissing")
             return
         }

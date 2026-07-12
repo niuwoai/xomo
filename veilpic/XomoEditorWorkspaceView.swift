@@ -27,5 +27,12 @@ struct XomoEditorWorkspaceView: View {
     var body: some View {
         ImageEditorView(viewModel: viewModel)
             .accessibilityIdentifier("xomo-editor-workspace")
+            .onAppear {
+                XomoAutomationRegistry.shared.register(viewModel)
+                XomoAutomationServer.shared.start()
+            }
+            .onDisappear {
+                XomoAutomationRegistry.shared.unregister(viewModel)
+            }
     }
 }

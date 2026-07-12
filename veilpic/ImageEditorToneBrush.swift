@@ -21,8 +21,10 @@ extension NSImage {
         }
 
         guard let strokeMask = NSImage.rendered(size: size, actions: { _ in
-            NSColor.white.setStroke()
-            path.stroke()
+            NSGraphicsContext.current?.withImageEditorTopLeftCoordinates(height: size.height) {
+                NSColor.white.setStroke()
+                path.stroke()
+            }
         }) else { return nil }
 
         return toneAdjusted(mask: strokeMask, opacity: opacity, burn: burn)
@@ -40,8 +42,10 @@ extension NSImage {
         }
 
         guard let strokeMask = NSImage.rendered(size: size, actions: { _ in
-            NSColor.white.setStroke()
-            path.stroke()
+            NSGraphicsContext.current?.withImageEditorTopLeftCoordinates(height: size.height) {
+                NSColor.white.setStroke()
+                path.stroke()
+            }
         }) else { return nil }
 
         return saturationAdjusted(mask: strokeMask, opacity: opacity)
@@ -70,31 +74,54 @@ extension NSImage {
             guard abs(delta.width) > 0.1 || abs(delta.height) > 0.1 else { continue }
 
             let sourceSnapshot = output
-            guard let nextOutput = NSImage.rendered(size: size, actions: { _ in
+            let path = NSBezierPath()
+            path.lineJoinStyle = .round
+            path.lineCapStyle = .round
+            path.lineWidth = lineWidth
+            path.move(to: previous)
+            path.line(to: current)
+
+            guard let strokeMask = NSImage.rendered(size: size, actions: { _ in
+                NSGraphicsContext.current?.withImageEditorTopLeftCoordinates(height: size.height) {
+                    NSColor.white.setStroke()
+                    path.stroke()
+                }
+            }),
+            let shiftedSource = NSImage.rendered(size: size, actions: { _ in
+                sourceSnapshot.draw(
+                    in: CGRect(x: delta.width, y: -delta.height, width: size.width, height: size.height),
+                    from: CGRect(origin: .zero, size: sourceSnapshot.size),
+                    operation: .copy,
+                    fraction: 1
+                )
+            }),
+            let clippedSource = NSImage.rendered(size: size, actions: { rect in
+                shiftedSource.draw(
+                    in: rect,
+                    from: CGRect(origin: .zero, size: shiftedSource.size),
+                    operation: .copy,
+                    fraction: 1
+                )
+                strokeMask.draw(
+                    in: rect,
+                    from: CGRect(origin: .zero, size: strokeMask.size),
+                    operation: .destinationIn,
+                    fraction: 1
+                )
+            }),
+            let nextOutput = NSImage.rendered(size: size, actions: { rect in
                 output.draw(
-                    in: CGRect(origin: .zero, size: size),
+                    in: rect,
                     from: CGRect(origin: .zero, size: output.size),
                     operation: .copy,
                     fraction: 1
                 )
-
-                let path = NSBezierPath()
-                path.lineJoinStyle = .round
-                path.lineCapStyle = .round
-                path.lineWidth = lineWidth
-                path.move(to: previous)
-                path.line(to: current)
-
-                guard let context = NSGraphicsContext.current?.cgContext else { return }
-                context.saveGState()
-                path.addClip()
-                sourceSnapshot.draw(
-                    in: CGRect(x: delta.width, y: delta.height, width: size.width, height: size.height),
-                    from: CGRect(origin: .zero, size: sourceSnapshot.size),
+                clippedSource.draw(
+                    in: rect,
+                    from: CGRect(origin: .zero, size: clippedSource.size),
                     operation: .sourceOver,
                     fraction: clampedOpacity
                 )
-                context.restoreGState()
             }) else {
                 return nil
             }
@@ -116,8 +143,10 @@ extension NSImage {
         }
 
         guard let strokeMask = NSImage.rendered(size: size, actions: { _ in
-                NSColor.white.setStroke()
-                path.stroke()
+                NSGraphicsContext.current?.withImageEditorTopLeftCoordinates(height: size.height) {
+                    NSColor.white.setStroke()
+                    path.stroke()
+                }
               })
         else {
             return nil
@@ -248,8 +277,6 @@ extension NSImage {
         }
 
         context.interpolationQuality = .none
-        context.translateBy(x: 0, y: CGFloat(height))
-        context.scaleBy(x: 1, y: -1)
         context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
         return pixels
     }
