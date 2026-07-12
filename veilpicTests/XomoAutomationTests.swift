@@ -342,6 +342,35 @@ struct XomoAutomationTests {
         #expect(delete.result?.arrayValue?.count == ImageEditorBrushPreset.defaultPresets.count)
     }
 
+    @Test func registryRunsDestinationPatchWithFeatherThroughSpecialPaintTool() {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        viewModel.createRectSelection(from: CGPoint(x: 10, y: 10), to: CGPoint(x: 30, y: 30))
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("patch"),
+                "mode": .string("destination"),
+                "feather": .number(4),
+                "opacity": .number(0.75),
+                "points": .array([
+                    .object(["x": .number(20), "y": .number(20)]),
+                    .object(["x": .number(50), "y": .number(20)])
+                ])
+            ]
+        ))
+
+        #expect(response.ok)
+        #expect(viewModel.patchMode == .destination)
+        #expect(viewModel.feather == 4)
+        #expect(viewModel.opacity == 0.75)
+        #expect(viewModel.document.selection?.bounds == CGRect(x: 40, y: 10, width: 20, height: 20))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionPatch"))
+    }
+
     private func request(
         operation: String,
         name: String? = nil,

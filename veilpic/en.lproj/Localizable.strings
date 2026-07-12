@@ -508,6 +508,9 @@
 "imageEditor.option.pressureFlow" = "Control Flow";
 "imageEditor.option.pressureSensitivity" = "Sensitivity";
 "imageEditor.option.pressureHelp" = "Use pen pressure to control brush size and flow";
+"imageEditor.option.patchMode" = "Patch Mode";
+"imageEditor.patchMode.source" = "Source";
+"imageEditor.patchMode.destination" = "Destination";
 "imageEditor.option.brushPreset" = "Brush Presets";
 "imageEditor.help.brushPreset" = "Choose a preset or save the current brush settings";
 "imageEditor.action.brushPresetCreate" = "Create Preset from Current Settings";
@@ -574,7 +577,7 @@
 "imageEditor.tool.sharpen.help" = "Sharpen: enhance edge detail in the brushed area.";
 "imageEditor.tool.smudge.help" = "Smudge: push pixels under the brush like a finger.";
 "imageEditor.tool.healingBrush.help" = "Healing Brush: repair blemishes with nearby texture.";
-"imageEditor.tool.patchTool.help" = "Patch: select a blemish, then drag it onto clean texture.";
+"imageEditor.tool.patchTool.help" = "Patch: outline an area, then drag in Source or Destination mode with a live preview.";
 "imageEditor.tool.redEye.help" = "Red Eye: click a red pupil to reduce red while preserving brightness.";
 "imageEditor.tool.paintBucket.help" = "Paint Bucket: fill neighboring similar pixels with the foreground color.";
 "imageEditor.tool.gradient.help" = "Gradient: drag to fill a foreground-to-background color gradient.";
@@ -1599,6 +1602,9 @@
 "imageEditor.status.selectionContentAwareFilled" = "Selection content-aware filled";
 "imageEditor.status.selectionContentAwareFilledSelected" = "Selection content-aware filled on %d layers";
 "imageEditor.status.selectionPatched" = "Selection patched from the dragged sample area";
+"imageEditor.status.patchSelectionReady" = "Patch selection ready; drag from inside the selection";
+"imageEditor.status.selectionPatchedSource" = "Original selection patched from the clean dragged sample";
+"imageEditor.status.selectionPatchedDestination" = "Original selection texture patched onto the dragged destination";
 "imageEditor.status.selectionStroked" = "Selection stroked";
 "imageEditor.status.selectionStrokedSelected" = "Selection stroked on %d layers";
 "imageEditor.status.selectionCopiedToLayer" = "Selection copied to a new layer";

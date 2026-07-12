@@ -1977,6 +1977,27 @@ struct ImageEditorScopeTests {
         #expect(menuSource.contains("image-editor-brush-preset-menu"))
     }
 
+    @Test func patchToolExposesModesAndWiresTwoPhaseLivePreviewInteraction() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let pickerStart = try #require(source.range(of: "private var patchModePicker: some View"))
+        let pickerEnd = try #require(
+            source[pickerStart.upperBound...].range(of: "private func sampledBrushOptions")
+        )
+        let pickerSource = source[pickerStart.lowerBound..<pickerEnd.lowerBound]
+
+        #expect(pickerSource.contains("ForEach(ImageEditorPatchMode.allCases)"))
+        #expect(pickerSource.contains(".focusable(false)"))
+        #expect(pickerSource.contains("image-editor-patch-mode"))
+        #expect(source.contains("viewModel.canBeginPatch(at: pointerImagePoint)"))
+        #expect(source.contains("viewModel.createPatchSelection(points: dragPoints)"))
+        #expect(source.contains("patchPreviewImage = viewModel.patchPreviewImage("))
+        #expect(source.contains("if viewModel.selectedTool == .patchTool, let patchPreviewImage"))
+        #expect(source.contains("viewModel.patchSelection(from: dragStart, to: endImagePoint)"))
+    }
+
     @MainActor
     @Test func brushesPanelActionsReuseExistingBrushSettings() throws {
         let image = NSImage(size: NSSize(width: 16, height: 16))

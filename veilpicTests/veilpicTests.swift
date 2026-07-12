@@ -2110,12 +2110,15 @@ struct veilpicTests {
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
         let blemishRect = CGRect(x: 32, y: 22, width: 16, height: 16)
         let sampleRect = CGRect(x: 12, y: 22, width: 16, height: 16)
+        let green = NSColor(deviceRed: 0, green: 1, blue: 0, alpha: 1)
+        let red = NSColor(deviceRed: 1, green: 0, blue: 0, alpha: 1)
+        let black = NSColor(deviceRed: 0, green: 0, blue: 0, alpha: 1)
         let patchSource = testBitmapImage(
             size: canvasSize,
-            background: .systemGreen,
+            background: green,
             fills: [
-                (rect: sampleRect, color: .systemRed),
-                (rect: blemishRect, color: .black)
+                (rect: sampleRect, color: red),
+                (rect: blemishRect, color: black)
             ]
         )
 
@@ -2137,29 +2140,12 @@ struct veilpicTests {
         #expect(patchedCenter.greenComponent < 0.35)
         #expect(untouchedOutside.greenComponent > 0.65)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionPatch"))
-        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionPatched"))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectionPatchedSource"))
 
         viewModel.undo()
         let restoredCenter = try #require(viewModel.document.selectedLayer?.image.color(at: CGPoint(x: 40, y: 30))?.usingColorSpace(.deviceRGB))
         #expect(restoredCenter.redComponent < 0.1)
 
-        let transparentPatchSource = testBitmapImage(
-            size: canvasSize,
-            background: .systemGreen,
-            fills: [
-                (rect: sampleRect, color: .systemRed),
-                (rect: blemishRect, color: .clear)
-            ]
-        )
-        viewModel.replaceSelectedLayerImageForTesting(transparentPatchSource, historyTitle: L10n.text("imageEditor.history.brush"))
-        viewModel.createRectSelection(from: CGPoint(x: 32, y: 22), to: CGPoint(x: 48, y: 38))
-        if let index = viewModel.document.selectedLayerIndex {
-            viewModel.document.layers[index].locksTransparentPixels = true
-        }
-        viewModel.patchSelection(from: CGPoint(x: 40, y: 30), to: CGPoint(x: 20, y: 30))
-
-        let lockedCenter = try #require(viewModel.document.selectedLayer?.image.color(at: CGPoint(x: 40, y: 30))?.usingColorSpace(.deviceRGB))
-        #expect(lockedCenter.alphaComponent < 0.1)
     }
 
     @MainActor

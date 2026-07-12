@@ -63,6 +63,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var brushPressureControlsFlow = true
     @Published var brushPressureSensitivity: CGFloat = 50
     @Published private(set) var customBrushPresets: [ImageEditorBrushPreset] = []
+    @Published var patchMode: ImageEditorPatchMode = .source
     @Published var feather: CGFloat = 0
     @Published var selectionModifyAmount: CGFloat = 4
     @Published var tolerance: CGFloat = 0.22

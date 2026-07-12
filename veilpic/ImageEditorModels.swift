@@ -354,6 +354,17 @@ enum ImageEditorSelectionMode: String, CaseIterable, Identifiable {
     }
 }
 
+enum ImageEditorPatchMode: String, CaseIterable, Identifiable {
+    case source
+    case destination
+
+    var id: String { rawValue }
+
+    var title: String {
+        L10n.text("imageEditor.patchMode.\(rawValue)")
+    }
+}
+
 struct ImageEditorSelectionMask: Equatable, Codable {
     var width: Int
     var height: Int
