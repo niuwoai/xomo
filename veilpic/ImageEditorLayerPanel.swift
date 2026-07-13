@@ -1174,6 +1174,14 @@ extension ImageEditorView {
                 .disabled(!viewModel.canGroupSelectedLayer)
             Button(L10n.text("imageEditor.action.layerUngroup")) { viewModel.ungroupSelectedLayers() }
                 .disabled(!viewModel.canUngroupSelectedLayers)
+            Button(L10n.text("imageEditor.action.layerGroupsExpandSelected")) {
+                viewModel.expandSelectedLayerGroups()
+            }
+            .disabled(!viewModel.canExpandSelectedLayerGroups)
+            Button(L10n.text("imageEditor.action.layerGroupsCollapseSelected")) {
+                viewModel.collapseSelectedLayerGroups()
+            }
+            .disabled(!viewModel.canCollapseSelectedLayerGroups)
             Divider()
             Button(L10n.text("imageEditor.action.layerSmartObject")) { viewModel.convertSelectedLayerToSmartObject() }
                 .disabled(!viewModel.canConvertSelectedLayerToSmartObject)
@@ -1699,7 +1707,10 @@ extension ImageEditorView {
     private func layerGroupDisclosure(_ layer: ImageEditorLayer) -> some View {
         if layer.isGroup {
             Button {
-                viewModel.toggleLayerGroupExpansion(layer.id)
+                viewModel.toggleLayerGroupExpansion(
+                    layer.id,
+                    recursively: NSEvent.modifierFlags.contains(.option)
+                )
             } label: {
                 Image(systemName: layer.isGroupExpanded ? "chevron.down" : "chevron.right")
                     .font(.system(size: 10, weight: .bold))
@@ -1708,7 +1719,11 @@ extension ImageEditorView {
             }
             .buttonStyle(.plain)
             .focusable(false)
-            .help(L10n.text(layer.isGroupExpanded ? "imageEditor.action.layerGroupCollapse" : "imageEditor.action.layerGroupExpand"))
+            .help(L10n.text(
+                layer.isGroupExpanded
+                    ? "imageEditor.action.layerGroupCollapseBranchHint"
+                    : "imageEditor.action.layerGroupExpandBranchHint"
+            ))
         } else {
             Spacer().frame(width: 14)
         }

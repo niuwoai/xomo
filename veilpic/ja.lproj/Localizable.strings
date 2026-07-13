@@ -1744,6 +1744,8 @@
 "imageEditor.status.layerGroupTargetMissing" = "選択範囲の上に移動先にできるグループがありません";
 "imageEditor.status.layerNotInGroup" = "選択中のレイヤーはグループ内にありません";
 "imageEditor.status.layerReordered" = "レイヤースタックを並べ替えました";
+"imageEditor.status.layerGroupsExpanded" = "%d 個のレイヤーグループを展開しました";
+"imageEditor.status.layerGroupsCollapsed" = "%d 個のレイヤーグループを折りたたみました";
 "imageEditor.action.layerNew" = "新規レイヤー";
 "imageEditor.action.layerRename" = "名前変更";
 "imageEditor.action.layerGroupNew" = "新規レイヤーグループ";
@@ -1762,6 +1764,10 @@
 "imageEditor.action.layerLabelNone" = "カラーラベルなし";
 "imageEditor.action.layerGroupCollapse" = "レイヤーグループを折りたたむ";
 "imageEditor.action.layerGroupExpand" = "レイヤーグループを展開";
+"imageEditor.action.layerGroupCollapseBranchHint" = "レイヤーグループを折りたたむ；Option クリックで入れ子グループもすべて折りたたむ";
+"imageEditor.action.layerGroupExpandBranchHint" = "レイヤーグループを展開；Option クリックで入れ子グループもすべて展開";
+"imageEditor.action.layerGroupsExpandSelected" = "選択したレイヤーグループを展開";
+"imageEditor.action.layerGroupsCollapseSelected" = "選択したレイヤーグループを折りたたむ";
 "imageEditor.action.propertiesShowPanel" = "プロパティパネルを表示";
 "imageEditor.action.propertiesHidePanel" = "プロパティパネルを隠す";
 "imageEditor.action.propertiesShowPanelVisibility" = "プロパティパネルを表示";

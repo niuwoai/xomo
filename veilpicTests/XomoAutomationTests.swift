@@ -408,6 +408,36 @@ struct XomoAutomationTests {
         #expect(delete.result?.arrayValue?.count == ImageEditorBrushPreset.defaultPresets.count)
     }
 
+    @Test func registryRecursivelyExpandsAndCollapsesSelectedLayerGroups() {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        var parent = ImageEditorLayer.group(name: "Parent", size: viewModel.document.canvasSize)
+        var child = ImageEditorLayer.group(name: "Child", size: viewModel.document.canvasSize)
+        child.groupID = parent.id
+        parent.isGroupExpanded = true
+        child.isGroupExpanded = true
+        viewModel.document.layers = [child, parent]
+        viewModel.document.selectedLayerID = parent.id
+        viewModel.document.selectedLayerIDs = [parent.id]
+        registry.register(viewModel)
+
+        let collapse = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.action",
+            arguments: ["action": .string("collapseSelectedGroups")]
+        ))
+        #expect(collapse.ok)
+        #expect(viewModel.document.layers.allSatisfy { layer in !layer.isGroupExpanded })
+
+        let expand = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.action",
+            arguments: ["action": .string("expandSelectedGroups")]
+        ))
+        #expect(expand.ok)
+        #expect(viewModel.document.layers.allSatisfy { layer in layer.isGroupExpanded })
+    }
+
     @Test func registryRunsDestinationPatchWithFeatherThroughSpecialPaintTool() {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

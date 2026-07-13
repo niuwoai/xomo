@@ -1170,6 +1170,8 @@ final class XomoAutomationRegistry {
         case "layerToBackground": viewModel.convertSelectedLayerToBackground()
         case "moveIntoGroup": viewModel.moveSelectedLayersIntoGroup()
         case "moveOutOfGroup": viewModel.moveSelectedLayersOutOfGroup()
+        case "expandSelectedGroups": viewModel.expandSelectedLayerGroups()
+        case "collapseSelectedGroups": viewModel.collapseSelectedLayerGroups()
         case "createClippingMasks": viewModel.createClippingMasksForSelectedLayers()
         case "releaseClippingMasks": viewModel.releaseSelectedClippingMasks()
         case "toggleClippingMask": viewModel.toggleSelectedLayerClippingMask()
@@ -1935,8 +1937,8 @@ private extension XomoAutomationRegistry {
             "label": XomoAutomationSchema.string(description: "Layer label color", values: ImageEditorLayerLabelColor.allCases.map(\.rawValue)),
             "action": XomoAutomationSchema.string(description: "Visibility action", values: ["isolate", "showAll", "showSelected", "hideSelected"])
         ], required: ["property"]),
-        tool("xomo.layer.action", "Run background conversion, group movement, clipping, and selected-layer stamping commands.", [
-            "action": XomoAutomationSchema.string(description: "Layer action", values: ["backgroundToLayer", "layerToBackground", "moveIntoGroup", "moveOutOfGroup", "createClippingMasks", "releaseClippingMasks", "toggleClippingMask", "stampSelected"])
+        tool("xomo.layer.action", "Run background conversion, recursive group expansion, group movement, clipping, and selected-layer stamping commands.", [
+            "action": XomoAutomationSchema.string(description: "Layer action", values: ["backgroundToLayer", "layerToBackground", "moveIntoGroup", "moveOutOfGroup", "expandSelectedGroups", "collapseSelectedGroups", "createClippingMasks", "releaseClippingMasks", "toggleClippingMask", "stampSelected"])
         ], required: ["action"]),
         tool("xomo.layer_comp.list", "List saved layer composition states."),
         tool("xomo.layer_comp.action", "Create, select, apply, update, rename, duplicate, or delete layer comps.", [

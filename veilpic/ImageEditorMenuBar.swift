@@ -482,6 +482,14 @@ extension ImageEditorView {
         }
         .keyboardShortcut("g", modifiers: [.command])
         .disabled(!viewModel.canGroupSelectedLayer)
+        Button(L10n.text("imageEditor.action.layerGroupsExpandSelected")) {
+            viewModel.expandSelectedLayerGroups()
+        }
+        .disabled(!viewModel.canExpandSelectedLayerGroups)
+        Button(L10n.text("imageEditor.action.layerGroupsCollapseSelected")) {
+            viewModel.collapseSelectedLayerGroups()
+        }
+        .disabled(!viewModel.canCollapseSelectedLayerGroups)
         Button(L10n.text("imageEditor.action.layerSelectGroupMembers")) {
             viewModel.selectSelectedGroupMembers()
         }
