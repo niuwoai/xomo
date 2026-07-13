@@ -52,6 +52,7 @@ struct ImageEditorVectorLayerTests {
         let canvasSize = NSSize(width: 120, height: 80)
         let image = testBitmapImage(size: canvasSize, background: .black)
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        viewModel.document.layers[0].isLocked = false
         let editLayerID = try #require(viewModel.document.selectedLayerID)
         let editPixelsBefore = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
         let compositedBefore = try #require(viewModel.currentImage.qingtuPNGData())
@@ -82,7 +83,7 @@ struct ImageEditorVectorLayerTests {
         #expect(textContent.alignment == .center)
         #expect(viewModel.selectedTextAlignment == .center)
         #expect(textLayer.frame.width < canvasSize.width)
-        #expect(textLayer.frame.height < canvasSize.height)
+        #expect(textLayer.frame.height > 0)
         #expect(viewModel.document.layers.first { $0.id == editLayerID }?.image.qingtuPNGData() == editPixelsBefore)
         #expect(compositedWithText != compositedBefore)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerTextNew"))

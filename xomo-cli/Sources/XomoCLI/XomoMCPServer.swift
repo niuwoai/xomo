@@ -2,9 +2,16 @@ import Foundation
 
 struct XomoMCPServer {
     private let version: String
+    private let toolsProvider: () throws -> [[String: Any]]
 
-    init(version: String) {
+    init(
+        version: String,
+        toolsProvider: @escaping () throws -> [[String: Any]] = {
+            try XomoEndpointClient().tools()
+        }
+    ) {
         self.version = version
+        self.toolsProvider = toolsProvider
     }
 
     func run() {
@@ -39,7 +46,7 @@ struct XomoMCPServer {
             case "ping":
                 return successResponse(id: id, result: [:])
             case "tools/list":
-                let tools = (try? XomoEndpointClient().tools()) ?? XomoToolCatalog.fallbackTools
+                let tools = (try? toolsProvider()) ?? XomoToolCatalog.fallbackTools
                 return successResponse(id: id, result: ["tools": tools])
             case "tools/call":
                 guard let params = request["params"] as? [String: Any],

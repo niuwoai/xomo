@@ -1202,6 +1202,7 @@
 "imageEditor.history.layerMaskDensity" = "レイヤーマスク濃度";
 "imageEditor.history.layerMaskFeather" = "レイヤーマスクぼかし";
 "imageEditor.history.layerMergeDown" = "下のレイヤーと結合";
+"imageEditor.history.layerMergeGroup" = "グループを結合";
 "imageEditor.history.layerMergeSelected" = "選択レイヤーを結合";
 "imageEditor.history.layerMergeVisible" = "表示レイヤーを結合";
 "imageEditor.history.layerStampVisible" = "表示レイヤーをスタンプ";
@@ -1551,6 +1552,7 @@
 "imageEditor.status.layerRasterized" = "レイヤーをラスタライズしました";
 "imageEditor.status.layerRasterizedSelected" = "%d個のレイヤーをラスタライズしました";
 "imageEditor.status.layerMergeSelected" = "選択中のレイヤーを結合しました";
+"imageEditor.status.layerMergeGroup" = "レイヤーグループをピクセルレイヤーに結合しました";
 "imageEditor.status.layerMergeVisible" = "表示中のレイヤーを結合しました";
 "imageEditor.status.layerStampSelected" = "選択中のレイヤーを新規ピクセルレイヤーへスタンプしました";
 "imageEditor.status.layerFlattened" = "画像を単一のピクセルレイヤーに統合しました";
@@ -1896,6 +1898,7 @@
 "imageEditor.action.layerDown" = "レイヤーを下へ";
 "imageEditor.action.layerBottom" = "レイヤーを最背面へ";
 "imageEditor.action.layerMergeDown" = "下のレイヤーと結合";
+"imageEditor.action.layerMergeGroup" = "グループを結合";
 "imageEditor.action.layerMergeSelected" = "選択レイヤーを結合";
 "imageEditor.action.layerMergeVisible" = "表示レイヤーを結合";
 "imageEditor.action.layerStampVisible" = "表示レイヤーをスタンプ";

@@ -2189,7 +2189,7 @@ struct ImageEditorScopeTests {
         #expect(layerMenuSource.contains("imageEditor.action.layerGroupSelected"))
         #expect(layerMenuSource.contains("viewModel.groupSelectedLayer()"))
         #expect(layerMenuSource.contains("viewModel.canGroupSelectedLayer"))
-        #expect(layerMenuSource.contains("imageEditor.action.layerMergeDown"))
+        #expect(layerMenuSource.contains("viewModel.mergeDownActionTitleKey"))
         #expect(layerMenuSource.contains("viewModel.mergeSelectedLayerDown()"))
         #expect(layerMenuSource.contains("viewModel.canMergeSelectedLayerDown"))
         #expect(layerMenuSource.contains("imageEditor.action.layerFlatten"))

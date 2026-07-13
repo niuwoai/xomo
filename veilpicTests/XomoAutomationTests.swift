@@ -15,7 +15,7 @@ struct XomoAutomationTests {
             Issue.record("Expected tool array")
             return
         }
-        #expect(tools.count == 107)
+        #expect(tools.count == 108)
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.layer.list")
@@ -496,6 +496,30 @@ struct XomoAutomationTests {
         #expect(viewModel.document.layers.map(\.id) == [locked.id, bottom.id, top.id])
         #expect(viewModel.document.selectedLayerIDs == [locked.id, bottom.id, top.id])
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerUngroup"))
+    }
+
+    @Test func registryMergesSelectedSiblingLayersWhilePreservingLockedSelection() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        let bottom = ImageEditorLayer.blank(name: "Bottom", size: viewModel.document.canvasSize)
+        var locked = ImageEditorLayer.blank(name: "Locked", size: viewModel.document.canvasSize)
+        let top = ImageEditorLayer.blank(name: "Top", size: viewModel.document.canvasSize)
+        locked.isLocked = true
+        viewModel.document.layers = [bottom, locked, top]
+        viewModel.document.selectedLayerID = top.id
+        viewModel.document.selectedLayerIDs = [bottom.id, locked.id, top.id]
+        registry.register(viewModel)
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.merge_selected"
+        ))
+
+        #expect(response.ok)
+        #expect(viewModel.document.layers.count == 2)
+        #expect(viewModel.document.layers.last?.id == locked.id)
+        #expect(viewModel.document.selectedLayerIDs.contains(locked.id))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerMergeSelected"))
     }
 
     @Test func registryMovesLayerSubtreesIntoAndOutOfGroupsAtVisibleBoundaries() throws {

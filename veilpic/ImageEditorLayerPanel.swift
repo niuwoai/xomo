@@ -1192,7 +1192,7 @@ extension ImageEditorView {
             Button(L10n.text("imageEditor.action.layerRasterize")) { viewModel.rasterizeSelectedLayer() }
                 .disabled(!viewModel.canRasterizeSelectedLayer)
             Divider()
-            Button(L10n.text("imageEditor.action.layerMergeDown")) { viewModel.mergeSelectedLayerDown() }
+            Button(L10n.text(viewModel.mergeDownActionTitleKey)) { viewModel.mergeSelectedLayerDown() }
                 .disabled(!viewModel.canMergeSelectedLayerDown)
             Button(L10n.text("imageEditor.action.layerMergeSelected")) { viewModel.mergeSelectedLayers() }
                 .disabled(!viewModel.canMergeSelectedLayers)
@@ -1294,7 +1294,7 @@ extension ImageEditorView {
                 viewModel.moveSelectedLayerToBottom(inVisibleOrder: filteredVisibleLayerRowIDs)
             }
             .disabled(!viewModel.canMoveSelectedLayerToBottom(inVisibleOrder: filteredVisibleLayerRowIDs))
-            layerActionButton(systemImage: "square.stack.3d.down.right", helpKey: "imageEditor.action.layerMergeDown") { viewModel.mergeSelectedLayerDown() }
+            layerActionButton(systemImage: "square.stack.3d.down.right", helpKey: viewModel.mergeDownActionTitleKey) { viewModel.mergeSelectedLayerDown() }
                 .disabled(!viewModel.canMergeSelectedLayerDown)
             layerActionButton(systemImage: "square.stack.3d.down.right.fill", helpKey: "imageEditor.action.layerMergeSelected") { viewModel.mergeSelectedLayers() }
                 .disabled(!viewModel.canMergeSelectedLayers)

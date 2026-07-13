@@ -1066,56 +1066,7 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     var canMergeSelectedLayerDown: Bool {
-        guard selectedLayerCount == 1,
-              let index = document.selectedLayerIndex,
-              index > 0
-        else { return false }
-        let layer = document.layers[index]
-        let lower = document.layers[index - 1]
-        if layer.isAdjustment {
-            return !lower.isGroup
-                && !lower.isAdjustment
-                && !lower.isFilter
-                && !lower.isSolidColorFill
-                && !lower.isPatternFill
-                && !lower.isGradientFill
-                && !document.isEffectivelyLocked(layer)
-                && !document.isEffectivelyPixelsLocked(lower)
-        }
-        if layer.isFilter {
-            return !lower.isGroup
-                && !lower.isAdjustment
-                && !lower.isFilter
-                && !lower.isSolidColorFill
-                && !lower.isPatternFill
-                && !lower.isGradientFill
-                && !document.isEffectivelyLocked(layer)
-                && !document.isEffectivelyPixelsLocked(lower)
-        }
-        if layer.isSolidColorFill || layer.isPatternFill || layer.isGradientFill {
-            return !lower.isGroup
-                && !lower.isAdjustment
-                && !lower.isFilter
-                && !lower.isSolidColorFill
-                && !lower.isPatternFill
-                && !lower.isGradientFill
-                && !document.isEffectivelyLocked(layer)
-                && !document.isEffectivelyPixelsLocked(lower)
-        }
-        return !layer.isGroup
-            && !layer.isAdjustment
-            && !layer.isFilter
-            && !layer.isSolidColorFill
-            && !layer.isPatternFill
-            && !layer.isGradientFill
-            && !lower.isGroup
-            && !lower.isAdjustment
-            && !lower.isFilter
-            && !lower.isSolidColorFill
-            && !lower.isPatternFill
-            && !lower.isGradientFill
-            && !document.isEffectivelyPixelsLocked(layer)
-            && !document.isEffectivelyPixelsLocked(lower)
+        hierarchyMergeDownPlan != nil
     }
 
     var canStampVisibleLayers: Bool {
@@ -3376,38 +3327,45 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func mergeSelectedLayerDown() {
-        guard canMergeSelectedLayerDown, let index = document.selectedLayerIndex else { return }
-        pushUndo()
-        if document.layers[index].isAdjustment {
-            guard let merged = mergedAdjustmentLayer(lowerIndex: index - 1, adjustmentIndex: index) else { return }
-            document.layers[index - 1] = merged
-            document.layers.remove(at: index)
-            normalizeClippingMasks()
-            document.selectedLayerID = merged.id
-            document.selectedLayerIDs = [merged.id]
-            isEditingLayerMask = false
-            appendHistory(L10n.text("imageEditor.history.layerMergeDown"))
+        guard let sourcePlan = hierarchyMergeDownPlan,
+              let selectedIndex = document.layers.firstIndex(where: {
+                $0.id == sourcePlan.primarySourceLayerID
+              })
+        else { return }
+
+        if sourcePlan.kind == .group {
+            let group = document.layers[selectedIndex]
+            let merged = flattenedLayer(
+                name: group.name,
+                image: document.compositedImage(includingOnly: sourcePlan.sourceLayerIDs)
+            )
+            applyHierarchyMerge(
+                sourcePlan,
+                mergedLayer: merged,
+                historyKey: "imageEditor.history.layerMergeGroup",
+                statusKey: "imageEditor.status.layerMergeGroup"
+            )
             return
         }
-        if document.layers[index].isFilter {
-            guard let merged = mergedFilterLayer(lowerIndex: index - 1, filterIndex: index) else { return }
-            document.layers[index - 1] = merged
-            document.layers.remove(at: index)
-            normalizeClippingMasks()
-            document.selectedLayerID = merged.id
-            document.selectedLayerIDs = [merged.id]
-            isEditingLayerMask = false
-            appendHistory(L10n.text("imageEditor.history.layerMergeDown"))
-            return
+
+        guard let lowerSourceLayerID = sourcePlan.lowerSourceLayerID,
+              let lowerIndex = document.layers.firstIndex(where: { $0.id == lowerSourceLayerID })
+        else { return }
+        let selectedLayer = document.layers[selectedIndex]
+        let merged: ImageEditorLayer?
+        if selectedLayer.isAdjustment {
+            merged = mergedAdjustmentLayer(lowerIndex: lowerIndex, adjustmentIndex: selectedIndex)
+        } else if selectedLayer.isFilter {
+            merged = mergedFilterLayer(lowerIndex: lowerIndex, filterIndex: selectedIndex)
+        } else {
+            merged = mergedLayer(lowerIndex: lowerIndex, upperIndex: selectedIndex)
         }
-        guard let merged = mergedLayer(lowerIndex: index - 1, upperIndex: index) else { return }
-        document.layers[index - 1] = merged
-        document.layers.remove(at: index)
-        normalizeClippingMasks()
-        document.selectedLayerID = merged.id
-        document.selectedLayerIDs = [merged.id]
-        isEditingLayerMask = false
-        appendHistory(L10n.text("imageEditor.history.layerMergeDown"))
+        guard let merged else { return }
+        applyHierarchyMerge(
+            sourcePlan,
+            mergedLayer: merged,
+            historyKey: "imageEditor.history.layerMergeDown"
+        )
     }
 
     func stampVisibleLayers() {
@@ -5734,7 +5692,7 @@ final class ImageEditorViewModel: ObservableObject {
         }
     }
 
-    private func mergedAdjustmentLayer(lowerIndex: Int, adjustmentIndex: Int) -> ImageEditorLayer? {
+    func mergedAdjustmentLayer(lowerIndex: Int, adjustmentIndex: Int) -> ImageEditorLayer? {
         guard document.layers.indices.contains(lowerIndex),
               document.layers.indices.contains(adjustmentIndex),
               let adjustment = document.layers[adjustmentIndex].adjustment
@@ -5772,7 +5730,7 @@ final class ImageEditorViewModel: ObservableObject {
         return merged
     }
 
-    private func mergedFilterLayer(lowerIndex: Int, filterIndex: Int) -> ImageEditorLayer? {
+    func mergedFilterLayer(lowerIndex: Int, filterIndex: Int) -> ImageEditorLayer? {
         guard document.layers.indices.contains(lowerIndex),
               document.layers.indices.contains(filterIndex),
               let filter = document.layers[filterIndex].filter
@@ -5809,7 +5767,7 @@ final class ImageEditorViewModel: ObservableObject {
         return merged
     }
 
-    private func mergedLayer(lowerIndex: Int, upperIndex: Int) -> ImageEditorLayer? {
+    func mergedLayer(lowerIndex: Int, upperIndex: Int) -> ImageEditorLayer? {
         guard document.layers.indices.contains(lowerIndex),
               document.layers.indices.contains(upperIndex)
         else { return nil }

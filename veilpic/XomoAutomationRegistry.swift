@@ -137,6 +137,8 @@ final class XomoAutomationRegistry {
             viewModel.ungroupSelectedLayers()
         case "xomo.layer.merge_down":
             viewModel.mergeSelectedLayerDown()
+        case "xomo.layer.merge_selected":
+            viewModel.mergeSelectedLayers()
         case "xomo.layer.merge_visible":
             viewModel.mergeVisibleLayers()
         case "xomo.layer.stamp_visible":
@@ -1900,7 +1902,8 @@ private extension XomoAutomationRegistry {
         ], required: ["direction"]),
         tool("xomo.layer.group", "Group selected editable sibling subtrees while leaving locked items in place."),
         tool("xomo.layer.ungroup", "Ungroup selected editable groups while preserving unaffected selection."),
-        tool("xomo.layer.merge_down", "Merge the selected layer down."),
+        tool("xomo.layer.merge_down", "Merge the selected visible layer into its adjacent lower pixel sibling, or flatten the selected group subtree."),
+        tool("xomo.layer.merge_selected", "Merge editable selected sibling subtrees while preserving locked selections."),
         tool("xomo.layer.merge_visible", "Merge all visible layers."),
         tool("xomo.layer.stamp_visible", "Create a stamped layer from visible content."),
         tool("xomo.layer.transform", "Scale, rotate, flip, fit, trim, or rasterize selected layers.", [
