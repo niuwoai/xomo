@@ -1424,7 +1424,7 @@ struct veilpicTests {
     }
 
     @MainActor
-    @Test func imageEditorRasterizeTextLayerBakesStyleAndUndoRestoresEditableText() async throws {
+    @Test func imageEditorRasterizeTextLayerPreservesStyleAndUndoRestoresEditableText() async throws {
         let canvasSize = NSSize(width: 120, height: 80)
         let image = testBitmapImage(size: canvasSize, background: .black)
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
@@ -1437,7 +1437,7 @@ struct veilpicTests {
 
         let textLayer = try #require(viewModel.document.selectedLayer)
         let textFrame = textLayer.frame
-        let expectedRasterFrame = textLayer.compositingFrame
+        let layerName = textLayer.name
         let compositedBeforeRasterize = try #require(viewModel.currentImage.qingtuPNGData())
 
         #expect(viewModel.canRasterizeSelectedLayer)
@@ -1446,11 +1446,11 @@ struct veilpicTests {
         let rasterizedLayer = try #require(viewModel.document.selectedLayer)
         #expect(!rasterizedLayer.isText)
         #expect(rasterizedLayer.mask == nil)
-        #expect(!rasterizedLayer.hasLayerEffects)
+        #expect(rasterizedLayer.hasLayerEffects)
         #expect(!rasterizedLayer.isAdjustment)
         #expect(!rasterizedLayer.isFilter)
-        #expect(rasterizedLayer.frame == expectedRasterFrame)
-        #expect(rasterizedLayer.frame.width >= textFrame.width)
+        #expect(rasterizedLayer.frame == textFrame)
+        #expect(rasterizedLayer.name == layerName)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerRasterize"))
         #expect(try #require(viewModel.currentImage.qingtuPNGData()) == compositedBeforeRasterize)
 
@@ -1551,11 +1551,17 @@ struct veilpicTests {
         )
         firstLayer.smartFilters = [ImageEditorSmartFilter(kind: .gaussianBlur, intensity: 0.4)]
 
-        var secondLayer = ImageEditorLayer.blank(name: "Second Styled", size: canvasSize)
-        secondLayer.image = testBitmapImage(
-            size: canvasSize,
-            background: .clear,
-            fills: [(CGRect(x: 42, y: 20, width: 26, height: 24), .systemGreen)]
+        var secondLayer = ImageEditorLayer.shape(
+            name: "Second Styled",
+            frame: CGRect(x: 42, y: 20, width: 26, height: 24),
+            content: ImageEditorShapeContent(
+                kind: .rectangle,
+                fillColor: .systemGreen,
+                fillOpacity: 1,
+                strokeColor: .clear,
+                strokeWidth: 1,
+                strokeOpacity: 0
+            )
         )
         secondLayer.style.strokeEnabled = true
         secondLayer.style.strokeWidth = 4
@@ -1587,10 +1593,10 @@ struct veilpicTests {
 
         #expect(rasterizedFirst.kind.isPixel)
         #expect(rasterizedFirst.smartFilters.isEmpty)
-        #expect(rasterizedFirst.name == L10n.format("imageEditor.layer.rasterizedName", "First Filtered"))
+        #expect(rasterizedFirst.name == "First Filtered")
         #expect(rasterizedSecond.kind.isPixel)
-        #expect(!rasterizedSecond.hasLayerEffects)
-        #expect(rasterizedSecond.name == L10n.format("imageEditor.layer.rasterizedName", "Second Styled"))
+        #expect(rasterizedSecond.hasLayerEffects)
+        #expect(rasterizedSecond.name == "Second Styled")
         #expect(skippedLockedLayer.isLocked)
         #expect(skippedLockedLayer.hasSmartFilters)
         #expect(skippedLockedLayer.name == "Locked Filtered")

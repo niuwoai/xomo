@@ -15,7 +15,7 @@ struct XomoAutomationTests {
             Issue.record("Expected tool array")
             return
         }
-        #expect(tools.count == 110)
+        #expect(tools.count == 111)
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.layer.list")
@@ -47,6 +47,10 @@ struct XomoAutomationTests {
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.text.fitBox")
+        })
+        #expect(tools.contains { tool in
+            guard case .object(let value) = tool else { return false }
+            return value["name"] == .string("xomo.layer.rasterize")
         })
     }
 
@@ -479,6 +483,31 @@ struct XomoAutomationTests {
         #expect(viewModel.document.layers.first?.isLocked == true)
         #expect(viewModel.document.layers.first?.name == L10n.text("imageEditor.layer.background"))
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.backgroundFromLayer"))
+    }
+
+    @Test func registryRasterizesOnlyTheRequestedLayerContentTarget() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        viewModel.textValue = "MCP Type"
+        viewModel.textSize = 24
+        viewModel.addText(at: CGPoint(x: 20, y: 18))
+        let textIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[textIndex].name = "MCP Headline"
+        viewModel.document.layers[textIndex].style.strokeEnabled = true
+        registry.register(viewModel)
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.rasterize",
+            arguments: ["target": .string("type")]
+        ))
+
+        #expect(response.ok)
+        let rasterized = try #require(viewModel.document.selectedLayer)
+        #expect(rasterized.kind.isPixel)
+        #expect(rasterized.name == "MCP Headline")
+        #expect(rasterized.hasLayerEffects)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerRasterize"))
     }
 
     @Test func registryReordersCollapsedGroupsAsVisibleSubtrees() {

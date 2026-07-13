@@ -7,14 +7,45 @@
 
 import AppKit
 
+enum ImageEditorRasterizeTarget: String, CaseIterable, Identifiable {
+    case type
+    case shape
+    case fillContent
+    case vectorMask
+    case smartObject
+    case layer
+
+    var id: String { rawValue }
+
+    var actionTitleKey: String {
+        "imageEditor.action.layerRasterize.\(rawValue)"
+    }
+}
+
 @MainActor
 extension ImageEditorViewModel {
     var canRasterizeSelectedLayer: Bool {
-        !rasterizableSelectedLayerIndices().isEmpty
+        canRasterizeSelectedLayers(.layer)
+    }
+
+    func canRasterizeSelectedLayers(_ target: ImageEditorRasterizeTarget) -> Bool {
+        if target == .vectorMask {
+            return canRasterizeSelectedVectorMask
+        }
+        return !rasterizableSelectedLayerIndices(for: target).isEmpty
     }
 
     func rasterizeSelectedLayer() {
-        let indices = rasterizableSelectedLayerIndices()
+        rasterizeSelectedLayers(.layer)
+    }
+
+    func rasterizeSelectedLayers(_ target: ImageEditorRasterizeTarget) {
+        if target == .vectorMask {
+            rasterizeSelectedVectorMask()
+            return
+        }
+
+        let indices = rasterizableSelectedLayerIndices(for: target)
         guard !indices.isEmpty else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
@@ -22,7 +53,7 @@ extension ImageEditorViewModel {
 
         pushUndo()
         for index in indices {
-            rasterizeLayer(at: index)
+            document.layers[index] = rasterizedLayer(document.layers[index], target: target)
         }
         isEditingLayerMask = false
 
@@ -35,44 +66,206 @@ extension ImageEditorViewModel {
         }
     }
 
-    private func rasterizableSelectedLayerIndices() -> [Int] {
-        document.layers.indices.filter { index in
-            document.selectedLayerIDs.contains(document.layers[index].id)
-                && isLayerRasterizable(document.layers[index])
+    private func rasterizableSelectedLayerIndices(for target: ImageEditorRasterizeTarget) -> [Int] {
+        let selectedIDs = document.selectedLayerIDs.isEmpty
+            ? Set(document.selectedLayerID.map { [$0] } ?? [])
+            : document.selectedLayerIDs
+        return document.layers.indices.filter { index in
+            selectedIDs.contains(document.layers[index].id)
+                && isLayerRasterizable(document.layers[index], target: target)
         }
     }
 
-    private func isLayerRasterizable(_ layer: ImageEditorLayer) -> Bool {
+    private func isLayerRasterizable(
+        _ layer: ImageEditorLayer,
+        target: ImageEditorRasterizeTarget
+    ) -> Bool {
         guard !layer.isGroup,
               !layer.isAdjustment,
               !layer.isFilter,
-              !layer.isClippingMask,
               !document.isEffectivelyPixelsLocked(layer)
         else { return false }
 
-        return layer.isText
-            || layer.isShape
-            || layer.isSmartObject
-            || layer.hasSmartFilters
-            || layer.mask != nil
-            || layer.vectorMask != nil
-            || layer.hasLayerEffects
+        switch target {
+        case .type:
+            return layer.isText
+        case .shape:
+            return layer.isShape
+        case .fillContent:
+            return layer.isShape || isGeneratedFillLayer(layer)
+        case .vectorMask:
+            return canRasterizeVectorMaskContent(layer)
+        case .smartObject:
+            return layer.isSmartObject
+        case .layer:
+            return layer.isText
+                || layer.isShape
+                || isGeneratedFillLayer(layer)
+                || layer.isSmartObject
+                || layer.hasSmartFilters
+                || canRasterizeVectorMaskContent(layer)
+        }
     }
 
-    private func rasterizeLayer(at index: Int) {
-        let source = document.layers[index]
-        document.layers[index].name = L10n.format("imageEditor.layer.rasterizedName", source.name)
-        document.layers[index].image = source
-            .renderedCompositingImage(globalLightAngle: document.globalLightAngle)
-            .normalizedBitmapImage()
-        document.layers[index].frame = source.renderedCompositingFrame(globalLightAngle: document.globalLightAngle)
-        document.layers[index].mask = nil
-        document.layers[index].vectorMask = nil
-        document.layers[index].isVectorMaskEnabled = true
-        document.layers[index].style = ImageEditorLayerStyle()
-        document.layers[index].smartFilters = []
-        document.layers[index].fillOpacity = 1
-        document.layers[index].kind = .pixel
-        document.layers[index].isClippingMask = false
+    private func rasterizedLayer(
+        _ source: ImageEditorLayer,
+        target: ImageEditorRasterizeTarget
+    ) -> ImageEditorLayer {
+        var output = source
+        switch target {
+        case .type, .shape:
+            output.image = baseContentImage(for: source).normalizedBitmapImage()
+            output.kind = .pixel
+        case .fillContent:
+            output.image = baseContentImage(for: source).normalizedBitmapImage()
+            output.kind = .pixel
+            if source.isShape,
+               output.vectorMask == nil,
+               let shape = source.shapeContent {
+                output.vectorMask = editableVectorMask(from: shape, size: output.image.size)
+                output.isVectorMaskEnabled = true
+            }
+        case .smartObject:
+            output = rasterizedSmartObject(source)
+        case .layer:
+            if source.isSmartObject {
+                output = rasterizedSmartObject(source)
+            } else if source.isText || source.isShape || isGeneratedFillLayer(source) || source.hasSmartFilters {
+                output.image = source.contentImage.normalizedBitmapImage()
+                output.kind = .pixel
+                output.smartFilters = []
+            }
+            rasterizeVectorMaskContent(in: &output)
+        case .vectorMask:
+            rasterizeVectorMaskContent(in: &output)
+        }
+        return output
+    }
+
+    private func baseContentImage(for layer: ImageEditorLayer) -> NSImage {
+        var source = layer
+        source.smartFilters = []
+        return source.contentImage
+    }
+
+    private func rasterizedSmartObject(_ source: ImageEditorLayer) -> ImageEditorLayer {
+        var output = source
+        let frame = source.frame.standardized
+        let targetSize = CGSize(
+            width: max(1, frame.width.rounded()),
+            height: max(1, frame.height.rounded())
+        )
+        let originalSize = source.image.size
+        output.image = (source.contentImage.resized(to: targetSize) ?? source.contentImage).normalizedBitmapImage()
+        output.mask = source.mask?.resized(to: targetSize)?.normalizedBitmapImage()
+        output.vectorMask = source.vectorMask.map {
+            scaledVectorMask($0, from: originalSize, to: targetSize)
+        }
+        output.kind = .pixel
+        output.smartFilters = []
+        return output
+    }
+
+    private func rasterizeVectorMaskContent(in layer: inout ImageEditorLayer) {
+        guard canRasterizeVectorMaskContent(layer),
+              let mask = layer.effectiveMask
+        else { return }
+        layer.mask = mask.normalizedBitmapImage()
+        layer.vectorMask = nil
+        layer.isMaskEnabled = true
+        layer.isMaskLinked = true
+        layer.isVectorMaskEnabled = true
+        layer.maskDensity = 1
+        layer.maskFeather = 0
+    }
+
+    private func canRasterizeVectorMaskContent(_ layer: ImageEditorLayer) -> Bool {
+        guard let vectorMask = layer.vectorMask else { return false }
+        return layer.isVectorMaskEnabled
+            && (layer.mask == nil || layer.isMaskEnabled)
+            && vectorMask.kind == .path
+            && vectorMask.isPathClosed
+            && vectorMask.editablePathAnchors.count >= 3
+    }
+
+    private func isGeneratedFillLayer(_ layer: ImageEditorLayer) -> Bool {
+        layer.isSolidColorFill || layer.isPatternFill || layer.isGradientFill
+    }
+
+    private func editableVectorMask(
+        from shape: ImageEditorShapeContent,
+        size: CGSize
+    ) -> ImageEditorShapeContent {
+        let normalized = shape.normalized(size: size)
+        if normalized.kind == .path {
+            var path = normalized
+            path.fillColor = .white
+            path.fillOpacity = 1
+            path.strokeColor = .white
+            path.strokeWidth = 1
+            path.strokeOpacity = 0
+            return path
+        }
+
+        let inset = normalized.strokeWidth / 2
+        let bounds = CGRect(origin: .zero, size: size).insetBy(dx: inset, dy: inset)
+        let points: [CGPoint]
+        if normalized.kind == .ellipse {
+            let segmentCount = 64
+            points = (0..<segmentCount).map { index in
+                let angle = CGFloat(index) / CGFloat(segmentCount) * .pi * 2
+                return CGPoint(
+                    x: bounds.midX + cos(angle) * bounds.width / 2,
+                    y: bounds.midY + sin(angle) * bounds.height / 2
+                )
+            }
+        } else {
+            points = [
+                CGPoint(x: bounds.minX, y: bounds.minY),
+                CGPoint(x: bounds.maxX, y: bounds.minY),
+                CGPoint(x: bounds.maxX, y: bounds.maxY),
+                CGPoint(x: bounds.minX, y: bounds.maxY)
+            ]
+        }
+        return ImageEditorShapeContent(
+            kind: .path,
+            fillColor: .white,
+            fillOpacity: 1,
+            strokeColor: .white,
+            strokeWidth: 1,
+            strokeOpacity: 0,
+            pathPoints: points,
+            pathAnchors: points.map { ImageEditorPathAnchor(point: $0) },
+            isPathClosed: true
+        ).normalized(size: size)
+    }
+
+    private func scaledVectorMask(
+        _ source: ImageEditorShapeContent,
+        from sourceSize: CGSize,
+        to targetSize: CGSize
+    ) -> ImageEditorShapeContent {
+        let scaleX = targetSize.width / max(1, sourceSize.width)
+        let scaleY = targetSize.height / max(1, sourceSize.height)
+        let averageScale = (scaleX + scaleY) / 2
+        func scalePoint(_ point: CGPoint) -> CGPoint {
+            CGPoint(x: point.x * scaleX, y: point.y * scaleY)
+        }
+        func scaleAnchor(_ anchor: ImageEditorPathAnchor) -> ImageEditorPathAnchor {
+            ImageEditorPathAnchor(
+                point: scalePoint(anchor.point),
+                inControl: anchor.inControl.map { scalePoint($0) },
+                outControl: anchor.outControl.map { scalePoint($0) }
+            )
+        }
+
+        var output = source
+        output.strokeWidth = max(ImageEditorShapeContent.minimumStrokeWidth, source.strokeWidth * averageScale)
+        output.pathPoints = source.pathPoints.map { scalePoint($0) }
+        output.pathAnchors = source.pathAnchors.map { scaleAnchor($0) }
+        output.pathSubpaths = source.pathSubpaths.map { anchors in
+            anchors.map { scaleAnchor($0) }
+        }
+        return output.normalized(size: targetSize)
     }
 }

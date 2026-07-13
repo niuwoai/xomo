@@ -149,6 +149,8 @@ final class XomoAutomationRegistry {
             viewModel.flattenImage()
         case "xomo.layer.transform":
             try layerTransform(arguments, viewModel: viewModel)
+        case "xomo.layer.rasterize":
+            try rasterizeLayerContent(arguments, viewModel: viewModel)
         case "xomo.layer.align":
             try layerAlignment(arguments, viewModel: viewModel)
         case "xomo.layer.style":
@@ -890,6 +892,17 @@ final class XomoAutomationRegistry {
         case "rasterize": viewModel.rasterizeSelectedLayer()
         default: throw XomoAutomationCallError.invalidArgument("Unknown layer transform action")
         }
+    }
+
+    private func rasterizeLayerContent(
+        _ arguments: [String: XomoJSONValue],
+        viewModel: ImageEditorViewModel
+    ) throws {
+        let rawValue = try requiredString("target", in: arguments)
+        guard let target = ImageEditorRasterizeTarget(rawValue: rawValue) else {
+            throw XomoAutomationCallError.invalidArgument("Unknown rasterize target: \(rawValue)")
+        }
+        viewModel.rasterizeSelectedLayers(target)
     }
 
     private func layerAlignment(
@@ -1916,6 +1929,12 @@ private extension XomoAutomationRegistry {
             "action": XomoAutomationSchema.string(description: "Transform action", values: ["scale", "rotate", "rotateLeft90", "rotateRight90", "rotate180", "flipHorizontal", "flipVertical", "fitCanvas", "fillCanvas", "fitSelection", "fillSelection", "trimTransparent", "rasterize"]),
             "value": XomoAutomationSchema.number(description: "Scale factor or rotation degrees")
         ], required: ["action"]),
+        tool("xomo.layer.rasterize", "Rasterize type, shape, fill content, vector masks, Smart Objects, or all vector data on selected layers.", [
+            "target": XomoAutomationSchema.string(
+                description: "Rasterize target",
+                values: ImageEditorRasterizeTarget.allCases.map(\.rawValue)
+            )
+        ], required: ["target"]),
         tool("xomo.layer.align", "Align or distribute selected layers against their bounds, canvas, or pixel selection.", [
             "action": XomoAutomationSchema.string(description: "Layout action", values: ["align", "distribute", "distributeSpacing"]),
             "mode": XomoAutomationSchema.string(description: "Alignment or distribution mode", values: ["left", "horizontalCenter", "right", "top", "verticalCenter", "bottom", "horizontal", "vertical"]),

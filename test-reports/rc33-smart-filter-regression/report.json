@@ -1,0 +1,19 @@
+{
+  "generated_at": "2026-07-14 03:44:25 +0800",
+  "total": 1,
+  "passed": 1,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "veilpicTests",
+      "method": "imageEditorSmartFilterStackIsNonDestructiveAndBakesOnRasterizeAndMerge",
+      "identifier": "veilpicTests/veilpicTests/imageEditorSmartFilterStackIsNonDestructiveAndBakesOnRasterizeAndMerge",
+      "file": "veilpicTests.swift",
+      "passed": true,
+      "duration": 3.296,
+      "issues": [],
+      "log": "veilpicTests.imageEditorSmartFilterStackIsNonDestructiveAndBakesOnRasterizeAndMerge.log"
+    }
+  ]
+}

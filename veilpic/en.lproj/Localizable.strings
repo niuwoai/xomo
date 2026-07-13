@@ -1891,7 +1891,13 @@
 "imageEditor.action.layerSmartObjectReplace" = "Replace Smart Object Contents";
 "imageEditor.action.layerSmartObjectMakeUnique" = "Make Smart Objects Unique";
 "imageEditor.action.layerSmartObjectResetTransform" = "Reset Smart Object Transform";
-"imageEditor.action.layerRasterize" = "Rasterize Selected Layers";
+"imageEditor.action.layerRasterize" = "Rasterize";
+"imageEditor.action.layerRasterize.type" = "Type";
+"imageEditor.action.layerRasterize.shape" = "Shape";
+"imageEditor.action.layerRasterize.fillContent" = "Fill Content";
+"imageEditor.action.layerRasterize.vectorMask" = "Vector Mask";
+"imageEditor.action.layerRasterize.smartObject" = "Smart Object";
+"imageEditor.action.layerRasterize.layer" = "Layer";
 "imageEditor.action.layerDelete" = "Delete Layer";
 "imageEditor.action.layerTop" = "Move Layer to Top";
 "imageEditor.action.layerUp" = "Move Layer Up";

@@ -639,6 +639,7 @@ extension ImageEditorViewModel {
         guard let vectorMask = layer.vectorMask else { return false }
         return !document.isEffectivelyLocked(layer)
             && layer.isVectorMaskEnabled
+            && (layer.mask == nil || layer.isMaskEnabled)
             && vectorMask.kind == .path
             && vectorMask.isPathClosed
             && vectorMask.editablePathAnchors.count >= 3

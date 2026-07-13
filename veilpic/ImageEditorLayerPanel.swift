@@ -1221,8 +1221,14 @@ extension ImageEditorView {
             Divider()
             Button(L10n.text("imageEditor.action.layerSmartObject")) { viewModel.convertSelectedLayerToSmartObject() }
                 .disabled(!viewModel.canConvertSelectedLayerToSmartObject)
-            Button(L10n.text("imageEditor.action.layerRasterize")) { viewModel.rasterizeSelectedLayer() }
-                .disabled(!viewModel.canRasterizeSelectedLayer)
+            Menu(L10n.text("imageEditor.action.layerRasterize")) {
+                ForEach(ImageEditorRasterizeTarget.allCases) { target in
+                    Button(L10n.text(target.actionTitleKey)) {
+                        viewModel.rasterizeSelectedLayers(target)
+                    }
+                    .disabled(!viewModel.canRasterizeSelectedLayers(target))
+                }
+            }
             Divider()
             Button(L10n.text(viewModel.mergeDownActionTitleKey)) { viewModel.mergeSelectedLayerDown() }
                 .disabled(!viewModel.canMergeSelectedLayerDown)

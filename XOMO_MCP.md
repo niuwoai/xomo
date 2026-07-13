@@ -1,6 +1,6 @@
 # Xomo MCP 与 CLI
 
-> 当前版本：v2.12.0-rc32
+> 当前版本：v2.12.0-rc33
 
 ## 架构
 
@@ -61,7 +61,7 @@ MCP 服务器实现 `initialize`、`ping`、`tools/list` 和 `tools/call`。当 
 
 ## 当前工具范围
 
-- 共 110 个 MCP 工具；同类细粒度操作通过带严格枚举参数的 action 工具组织。
+- 共 111 个 MCP 工具；同类细粒度操作通过带严格枚举参数的 action 工具组织。
 - App 与文档状态
 - 预设或自定义画布创建、可编辑文字/形状检查与更新、点文字 / 固定宽高段落文字创建和转换、文字框所需高度、溢出诊断与适合内容 / 仅扩高操作，以及详细调整、滤镜和图层样式参数
 - 完整 `qpicproject` 项目导入导出，以及 PNG/JPEG/WebP 等图像图层导入
@@ -79,6 +79,8 @@ MCP 服务器实现 `initialize`、`ping`、`tools/list` 和 `tools/call`。当 
 - 图像尺寸、画布尺寸、裁切、缩放、参考线与网格
 - 22 类可编辑 UI 组件与七套主题
 - PNG、JPEG、WebP、PDF、SVG、PSD 渲染导出
+
+`xomo.layer.rasterize` 的 `target` 接受 `type`、`shape`、`fillContent`、`vectorMask`、`smartObject` 或 `layer`。命令只转换所选目标：图层名称、图层样式、栅格蒙版与剪贴关系保持不变；文字和形状目标不烘焙仍可编辑的智能滤镜，智能对象目标则按当前显示尺寸烘焙变换与滤镜。多选会跳过锁定或类型不匹配的图层，并把整批转换记为一个 History/Undo 步骤。
 
 `xomo.layer.order` 的 `direction` 接受 `top`、`up`、`down`、`bottom`。自动化没有图层面板的临时搜索上下文，因此按当前展开/折叠状态下的完整可见层级排序；折叠组会作为完整子树移动，整次调用只产生一个 History/Undo 步骤。
 

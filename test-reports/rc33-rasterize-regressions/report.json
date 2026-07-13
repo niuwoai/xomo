@@ -1,0 +1,49 @@
+{
+  "generated_at": "2026-07-14 03:43:47 +0800",
+  "total": 4,
+  "passed": 4,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorVectorLayerTests",
+      "method": "imageEditorRasterizesSelectedVectorMaskToLayerMask",
+      "identifier": "veilpicTests/ImageEditorVectorLayerTests/imageEditorRasterizesSelectedVectorMaskToLayerMask",
+      "file": "ImageEditorVectorLayerTests.swift",
+      "passed": true,
+      "duration": 3.266,
+      "issues": [],
+      "log": "ImageEditorVectorLayerTests.imageEditorRasterizesSelectedVectorMaskToLayerMask.log"
+    },
+    {
+      "suite": "veilpicTests",
+      "method": "imageEditorRasterizeTextLayerPreservesStyleAndUndoRestoresEditableText",
+      "identifier": "veilpicTests/veilpicTests/imageEditorRasterizeTextLayerPreservesStyleAndUndoRestoresEditableText",
+      "file": "veilpicTests.swift",
+      "passed": true,
+      "duration": 3.213,
+      "issues": [],
+      "log": "veilpicTests.imageEditorRasterizeTextLayerPreservesStyleAndUndoRestoresEditableText.log"
+    },
+    {
+      "suite": "veilpicTests",
+      "method": "imageEditorRasterizesMultipleSelectedLayersAndSkipsLockedLayers",
+      "identifier": "veilpicTests/veilpicTests/imageEditorRasterizesMultipleSelectedLayersAndSkipsLockedLayers",
+      "file": "veilpicTests.swift",
+      "passed": true,
+      "duration": 3.309,
+      "issues": [],
+      "log": "veilpicTests.imageEditorRasterizesMultipleSelectedLayersAndSkipsLockedLayers.log"
+    },
+    {
+      "suite": "veilpicTests",
+      "method": "imageEditorRasterizesMultipleSelectedVectorMasksAndSkipsLockedLayers",
+      "identifier": "veilpicTests/veilpicTests/imageEditorRasterizesMultipleSelectedVectorMasksAndSkipsLockedLayers",
+      "file": "veilpicTests.swift",
+      "passed": true,
+      "duration": 3.784,
+      "issues": [],
+      "log": "veilpicTests.imageEditorRasterizesMultipleSelectedVectorMasksAndSkipsLockedLayers.log"
+    }
+  ]
+}

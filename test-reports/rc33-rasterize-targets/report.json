@@ -1,0 +1,79 @@
+{
+  "generated_at": "2026-07-14 03:45:03 +0800",
+  "total": 7,
+  "passed": 7,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorRasterizeTargetTests",
+      "method": "fillContentRasterizationHandlesGeneratedLayersInOneUndoAndSkipsLocks",
+      "identifier": "veilpicTests/ImageEditorRasterizeTargetTests/fillContentRasterizationHandlesGeneratedLayersInOneUndoAndSkipsLocks",
+      "file": "ImageEditorRasterizeTargetTests.swift",
+      "passed": true,
+      "duration": 3.385,
+      "issues": [],
+      "log": "ImageEditorRasterizeTargetTests.fillContentRasterizationHandlesGeneratedLayersInOneUndoAndSkipsLocks.log"
+    },
+    {
+      "suite": "ImageEditorRasterizeTargetTests",
+      "method": "fillContentRasterizationLeavesAnEditableVectorMaskOnShapeLayers",
+      "identifier": "veilpicTests/ImageEditorRasterizeTargetTests/fillContentRasterizationLeavesAnEditableVectorMaskOnShapeLayers",
+      "file": "ImageEditorRasterizeTargetTests.swift",
+      "passed": true,
+      "duration": 3.498,
+      "issues": [],
+      "log": "ImageEditorRasterizeTargetTests.fillContentRasterizationLeavesAnEditableVectorMaskOnShapeLayers.log"
+    },
+    {
+      "suite": "ImageEditorRasterizeTargetTests",
+      "method": "layerRasterizationIgnoresPixelStylesButConvertsVectorDataAndPreservesClipping",
+      "identifier": "veilpicTests/ImageEditorRasterizeTargetTests/layerRasterizationIgnoresPixelStylesButConvertsVectorDataAndPreservesClipping",
+      "file": "ImageEditorRasterizeTargetTests.swift",
+      "passed": true,
+      "duration": 3.453,
+      "issues": [],
+      "log": "ImageEditorRasterizeTargetTests.layerRasterizationIgnoresPixelStylesButConvertsVectorDataAndPreservesClipping.log"
+    },
+    {
+      "suite": "ImageEditorRasterizeTargetTests",
+      "method": "shapeRasterizationOnlyConvertsShapeContentAndKeepsOtherLayerData",
+      "identifier": "veilpicTests/ImageEditorRasterizeTargetTests/shapeRasterizationOnlyConvertsShapeContentAndKeepsOtherLayerData",
+      "file": "ImageEditorRasterizeTargetTests.swift",
+      "passed": true,
+      "duration": 3.215,
+      "issues": [],
+      "log": "ImageEditorRasterizeTargetTests.shapeRasterizationOnlyConvertsShapeContentAndKeepsOtherLayerData.log"
+    },
+    {
+      "suite": "ImageEditorRasterizeTargetTests",
+      "method": "smartObjectRasterizationBakesTransformAndFiltersButPreservesLayerProperties",
+      "identifier": "veilpicTests/ImageEditorRasterizeTargetTests/smartObjectRasterizationBakesTransformAndFiltersButPreservesLayerProperties",
+      "file": "ImageEditorRasterizeTargetTests.swift",
+      "passed": true,
+      "duration": 3.496,
+      "issues": [],
+      "log": "ImageEditorRasterizeTargetTests.smartObjectRasterizationBakesTransformAndFiltersButPreservesLayerProperties.log"
+    },
+    {
+      "suite": "ImageEditorRasterizeTargetTests",
+      "method": "typeRasterizationPreservesNameMasksEffectsFiltersClippingAndUndo",
+      "identifier": "veilpicTests/ImageEditorRasterizeTargetTests/typeRasterizationPreservesNameMasksEffectsFiltersClippingAndUndo",
+      "file": "ImageEditorRasterizeTargetTests.swift",
+      "passed": true,
+      "duration": 3.621,
+      "issues": [],
+      "log": "ImageEditorRasterizeTargetTests.typeRasterizationPreservesNameMasksEffectsFiltersClippingAndUndo.log"
+    },
+    {
+      "suite": "ImageEditorRasterizeTargetTests",
+      "method": "vectorMaskRasterizationRefusesToDiscardADisabledRasterMask",
+      "identifier": "veilpicTests/ImageEditorRasterizeTargetTests/vectorMaskRasterizationRefusesToDiscardADisabledRasterMask",
+      "file": "ImageEditorRasterizeTargetTests.swift",
+      "passed": true,
+      "duration": 3.484,
+      "issues": [],
+      "log": "ImageEditorRasterizeTargetTests.vectorMaskRasterizationRefusesToDiscardADisabledRasterMask.log"
+    }
+  ]
+}

@@ -1891,7 +1891,13 @@
 "imageEditor.action.layerSmartObjectReplace" = "スマートオブジェクトの内容を置換";
 "imageEditor.action.layerSmartObjectMakeUnique" = "スマートオブジェクトを独立化";
 "imageEditor.action.layerSmartObjectResetTransform" = "スマートオブジェクトの変形をリセット";
-"imageEditor.action.layerRasterize" = "選択レイヤーをラスタライズ";
+"imageEditor.action.layerRasterize" = "ラスタライズ";
+"imageEditor.action.layerRasterize.type" = "テキスト";
+"imageEditor.action.layerRasterize.shape" = "シェイプ";
+"imageEditor.action.layerRasterize.fillContent" = "塗りつぶし内容";
+"imageEditor.action.layerRasterize.vectorMask" = "ベクトルマスク";
+"imageEditor.action.layerRasterize.smartObject" = "スマートオブジェクト";
+"imageEditor.action.layerRasterize.layer" = "レイヤー";
 "imageEditor.action.layerDelete" = "レイヤーを削除";
 "imageEditor.action.layerTop" = "レイヤーを最前面へ";
 "imageEditor.action.layerUp" = "レイヤーを上へ";

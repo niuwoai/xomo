@@ -45,6 +45,7 @@ enum XomoToolCatalog {
         ("xomo.layer.stamp_selected", "Create a stamped layer from selected layer subtrees."),
         ("xomo.layer.flatten", "Flatten visible content onto an opaque locked background and discard hidden layers."),
         ("xomo.layer.transform", "Scale, rotate, flip, fit, trim, or rasterize selected layers."),
+        ("xomo.layer.rasterize", "Rasterize type, shape, fill content, vector masks, Smart Objects, or complete selected layers."),
         ("xomo.layer.align", "Align or distribute selected layers."),
         ("xomo.layer.style", "Copy, paste, or clear layer styles."),
         ("xomo.layer.style_settings", "Set detailed layer style properties."),
