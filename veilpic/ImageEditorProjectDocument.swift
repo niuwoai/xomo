@@ -633,6 +633,8 @@ struct ImageEditorProjectShapeContent: Equatable, Codable {
 }
 
 struct ImageEditorProjectLayerStyle: Codable, Equatable {
+    var effectsEnabled: Bool?
+    var effectScale: CGFloat?
     var strokeEnabled: Bool
     var strokeColor: ImageEditorProjectColor
     var strokeWidth: CGFloat
@@ -715,6 +717,8 @@ struct ImageEditorProjectLayerStyle: Codable, Equatable {
     var bevelDirection: ImageEditorBevelDirection?
 
     init(style: ImageEditorLayerStyle) {
+        effectsEnabled = style.effectsEnabled
+        effectScale = style.effectScale
         strokeEnabled = style.strokeEnabled
         strokeColor = ImageEditorProjectColor(color: style.strokeColor)
         strokeWidth = style.strokeWidth
@@ -801,6 +805,8 @@ struct ImageEditorProjectLayerStyle: Codable, Equatable {
         let resolvedShadowDistance = max(0, min(80, shadowDistance ?? ImageEditorLayerStyle.shadowDistance(from: shadowOffset)))
         let resolvedShadowAngle = max(-180, min(180, shadowAngle ?? ImageEditorLayerStyle.shadowAngle(from: shadowOffset)))
         return ImageEditorLayerStyle(
+            effectsEnabled: effectsEnabled ?? true,
+            effectScale: max(0.01, min(10, effectScale ?? 1)),
             strokeEnabled: strokeEnabled,
             strokeColor: strokeColor.nsColor,
             strokeWidth: strokeWidth,

@@ -60,11 +60,38 @@ extension ImageEditorViewModel {
     }
 
     var canClearSelectedLayerStyles: Bool {
-        selectedLayerStyleTargetIndices().contains { document.layers[$0].style.hasEffects }
+        selectedLayerStyleTargetIndices().contains { document.layers[$0].style.hasConfiguredEffects }
     }
 
     var canEditSelectedLayerStyle: Bool {
         !selectedLayerStyleTargetIndices().isEmpty
+    }
+
+    var canToggleSelectedLayerEffects: Bool {
+        !selectedLayerEffectVisibilityTargetIndices().isEmpty
+    }
+
+    var selectedLayerEffectsAreVisible: Bool {
+        let targetIndices = selectedLayerEffectVisibilityTargetIndices()
+        return !targetIndices.isEmpty
+            && targetIndices.allSatisfy { document.layers[$0].style.effectsEnabled }
+    }
+
+    var canHideAllLayerEffects: Bool {
+        document.layers.contains { $0.style.hasConfiguredEffects && $0.style.effectsEnabled }
+    }
+
+    var canShowAllLayerEffects: Bool {
+        document.layers.contains { $0.style.hasConfiguredEffects && !$0.style.effectsEnabled }
+    }
+
+    var canScaleSelectedLayerEffects: Bool {
+        !selectedLayerEffectScaleTargetIndices().isEmpty
+    }
+
+    var selectedLayerEffectScale: Double {
+        guard let index = selectedLayerEffectVisibilityTargetIndices().first else { return 100 }
+        return Double(document.layers[index].style.effectScale) * 100
     }
 
     var selectedLayerStrokeWidth: Double {
@@ -420,6 +447,15 @@ extension ImageEditorViewModel {
         statusText = L10n.text("imageEditor.status.layerStyleReady")
     }
 
+    func showLayerEffectScaleOptions() {
+        guard canScaleSelectedLayerEffects else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+        isPropertiesPanelVisible = true
+        statusText = L10n.text("imageEditor.status.layerEffectsScaleReady")
+    }
+
     func copySelectedLayerStyle() {
         guard canCopySelectedLayerStyle,
               let style = document.selectedLayer?.style
@@ -452,7 +488,7 @@ extension ImageEditorViewModel {
     }
 
     func clearSelectedLayerStyles() {
-        let targetIndices = selectedLayerStyleTargetIndices().filter { document.layers[$0].style.hasEffects }
+        let targetIndices = selectedLayerStyleTargetIndices().filter { document.layers[$0].style.hasConfiguredEffects }
         guard !targetIndices.isEmpty else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
@@ -464,6 +500,83 @@ extension ImageEditorViewModel {
         }
         appendHistory(L10n.text("imageEditor.history.layerStyleClear"))
         statusText = L10n.format("imageEditor.status.layerStyleCleared", targetIndices.count)
+    }
+
+    func toggleSelectedLayerEffects() {
+        let targetIndices = selectedLayerEffectVisibilityTargetIndices()
+        guard !targetIndices.isEmpty else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+        let shouldEnable = !targetIndices.contains { document.layers[$0].style.effectsEnabled }
+        if shouldEnable {
+            showSelectedLayerEffects()
+        } else {
+            hideSelectedLayerEffects()
+        }
+    }
+
+    func hideSelectedLayerEffects() {
+        setLayerEffectsEnabled(
+            false,
+            indices: selectedLayerEffectVisibilityTargetIndices(),
+            historyKey: "imageEditor.history.layerEffectsHideSelected",
+            statusKey: "imageEditor.status.layerEffectsHiddenSelected"
+        )
+    }
+
+    func showSelectedLayerEffects() {
+        setLayerEffectsEnabled(
+            true,
+            indices: selectedLayerEffectVisibilityTargetIndices(),
+            historyKey: "imageEditor.history.layerEffectsShowSelected",
+            statusKey: "imageEditor.status.layerEffectsShownSelected"
+        )
+    }
+
+    func hideAllLayerEffects() {
+        setAllLayerEffectsEnabled(
+            false,
+            historyKey: "imageEditor.history.layerEffectsHideAll",
+            statusKey: "imageEditor.status.layerEffectsHiddenAll"
+        )
+    }
+
+    func showAllLayerEffects() {
+        setAllLayerEffectsEnabled(
+            true,
+            historyKey: "imageEditor.history.layerEffectsShowAll",
+            statusKey: "imageEditor.status.layerEffectsShownAll"
+        )
+    }
+
+    func setSelectedLayerEffectScale(_ percentage: Double) {
+        guard percentage.isFinite else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+        let targetIndices = selectedLayerEffectScaleTargetIndices()
+        guard !targetIndices.isEmpty else {
+            statusText = L10n.text("imageEditor.status.layerLocked")
+            return
+        }
+        let normalizedPercentage = max(1, min(1_000, percentage))
+        let normalizedScale = CGFloat(normalizedPercentage / 100)
+        guard targetIndices.contains(where: {
+            abs(document.layers[$0].style.effectScale - normalizedScale) > 0.0001
+        }) else { return }
+
+        pushUndo()
+        for index in targetIndices {
+            document.layers[index].style.effectScale = normalizedScale
+        }
+        let roundedPercentage = Int(normalizedPercentage.rounded())
+        appendHistory(L10n.text("imageEditor.history.layerEffectsScale"))
+        statusText = L10n.format(
+            "imageEditor.status.layerEffectsScaled",
+            targetIndices.count,
+            roundedPercentage
+        )
     }
 
     func setSelectedLayerStrokeWidth(_ width: Double) {
@@ -1133,6 +1246,56 @@ extension ImageEditorViewModel {
         selectedLayerStyleTargetIndices().filter { index in
             document.layers[index].id != copiedLayerStyleSourceID
         }
+    }
+
+    private func selectedLayerEffectVisibilityTargetIndices() -> [Int] {
+        document.layers.indices.filter { index in
+            document.selectedLayerIDs.contains(document.layers[index].id)
+                && document.layers[index].style.hasConfiguredEffects
+        }
+    }
+
+    private func selectedLayerEffectScaleTargetIndices() -> [Int] {
+        selectedLayerStyleTargetIndices().filter { index in
+            document.layers[index].style.hasConfiguredEffects
+        }
+    }
+
+    private func setAllLayerEffectsEnabled(
+        _ enabled: Bool,
+        historyKey: String,
+        statusKey: String
+    ) {
+        let targetIndices = document.layers.indices.filter { index in
+            document.layers[index].style.hasConfiguredEffects
+                && document.layers[index].style.effectsEnabled != enabled
+        }
+        guard !targetIndices.isEmpty else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+        setLayerEffectsEnabled(
+            enabled,
+            indices: targetIndices,
+            historyKey: historyKey,
+            statusKey: statusKey
+        )
+    }
+
+    private func setLayerEffectsEnabled(
+        _ enabled: Bool,
+        indices: [Int],
+        historyKey: String,
+        statusKey: String
+    ) {
+        let changedIndices = indices.filter { document.layers[$0].style.effectsEnabled != enabled }
+        guard !changedIndices.isEmpty else { return }
+        pushUndo()
+        for index in changedIndices {
+            document.layers[index].style.effectsEnabled = enabled
+        }
+        appendHistory(L10n.text(historyKey))
+        statusText = L10n.format(statusKey, changedIndices.count)
     }
 
     private func gradientOverlayEndColor() -> NSColor {

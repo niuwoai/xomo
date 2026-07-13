@@ -1877,6 +1877,8 @@ enum ImageEditorLayerEffectContour: String, CaseIterable, Identifiable, Codable 
 }
 
 struct ImageEditorLayerStyle {
+    var effectsEnabled = true
+    var effectScale: CGFloat = 1
     var strokeEnabled = false
     var strokeColor = NSColor.white
     var strokeWidth: CGFloat = 3
@@ -1958,7 +1960,7 @@ struct ImageEditorLayerStyle {
     var bevelUsesGlobalLight = true
     var bevelDirection = ImageEditorBevelDirection.up
 
-    var hasEffects: Bool {
+    var hasConfiguredEffects: Bool {
         strokeEnabled
             || shadowEnabled
             || innerShadowEnabled
@@ -1971,19 +1973,52 @@ struct ImageEditorLayerStyle {
             || bevelEnabled
     }
 
+    var hasEffects: Bool {
+        effectsEnabled && hasConfiguredEffects
+    }
+
+    func resolvedForRendering() -> ImageEditorLayerStyle {
+        let scale = max(0.01, min(10, effectScale))
+        guard abs(scale - 1) > 0.0001 else { return self }
+
+        var style = self
+        style.effectScale = 1
+        style.strokeWidth *= scale
+        style.strokePatternScale *= scale
+        style.shadowBlur *= scale
+        style.shadowSpread *= scale
+        style.shadowDistance *= scale
+        style.shadowOffset = CGSize(width: shadowOffset.width * scale, height: shadowOffset.height * scale)
+        style.innerShadowBlur *= scale
+        style.innerShadowChoke *= scale
+        style.innerShadowDistance *= scale
+        style.outerGlowBlur *= scale
+        style.outerGlowSpread *= scale
+        style.innerGlowBlur *= scale
+        style.innerGlowChoke *= scale
+        style.gradientOverlayScale *= scale
+        style.patternOverlayScale *= scale
+        style.satinDistance *= scale
+        style.satinSize *= scale
+        style.bevelSize *= scale
+        style.bevelSoften *= scale
+        return style
+    }
+
     var padding: CGFloat {
         padding(globalLightAngle: nil)
     }
 
     func padding(globalLightAngle: CGFloat?) -> CGFloat {
+        let style = resolvedForRendering()
         guard hasEffects else { return 0 }
-        let strokePadding = strokeEnabled ? ceil(strokeWidth * strokePosition.paddingScale) : 0
-        let effectiveShadowOffset = resolvedShadowOffset(globalLightAngle: globalLightAngle)
-        let shadowPadding = shadowEnabled
-            ? shadowBlur * 2 + shadowSpread + max(abs(effectiveShadowOffset.width), abs(effectiveShadowOffset.height))
+        let strokePadding = style.strokeEnabled ? ceil(style.strokeWidth * style.strokePosition.paddingScale) : 0
+        let effectiveShadowOffset = style.resolvedShadowOffset(globalLightAngle: globalLightAngle)
+        let shadowPadding = style.shadowEnabled
+            ? style.shadowBlur * 2 + style.shadowSpread + max(abs(effectiveShadowOffset.width), abs(effectiveShadowOffset.height))
             : 0
-        let outerGlowPadding = outerGlowEnabled
-            ? outerGlowBlur * 2 + outerGlowSpread
+        let outerGlowPadding = style.outerGlowEnabled
+            ? style.outerGlowBlur * 2 + style.outerGlowSpread
             : 0
         return ceil(max(strokePadding, shadowPadding, outerGlowPadding) + 2)
     }
@@ -2920,7 +2955,7 @@ struct ImageEditorLayer: Identifiable {
     }
 
     var hasLayerEffects: Bool {
-        style.hasEffects
+        style.hasConfiguredEffects
     }
 
     var compositingImage: NSImage {
@@ -2928,6 +2963,16 @@ struct ImageEditorLayer: Identifiable {
     }
 
     func renderedCompositingImage(globalLightAngle: CGFloat?) -> NSImage {
+        renderedCompositingImage(
+            globalLightAngle: globalLightAngle,
+            style: style.resolvedForRendering()
+        )
+    }
+
+    private func renderedCompositingImage(
+        globalLightAngle: CGFloat?,
+        style: ImageEditorLayerStyle
+    ) -> NSImage {
         let baseImage = visibleImage.applyingBlendIfSourceRange(
             black: blendIfSourceBlack,
             white: blendIfSourceWhite
@@ -2937,7 +2982,7 @@ struct ImageEditorLayer: Identifiable {
             guard normalizedFillOpacity < 1 else { return baseImage }
             return baseImage.withOpacity(normalizedFillOpacity) ?? baseImage
         }
-        let padding = style.padding
+        let padding = style.padding(globalLightAngle: globalLightAngle)
         let outputSize = CGSize(
             width: baseImage.size.width + padding * 2,
             height: baseImage.size.height + padding * 2
@@ -3554,7 +3599,7 @@ enum ImageEditorLayerAttributeFilter: String, CaseIterable, Identifiable {
         case .masked:
             return layer.mask != nil || layer.vectorMask != nil
         case .styled:
-            return layer.style.hasEffects
+            return layer.style.hasConfiguredEffects
         case .clipping:
             return layer.isClippingMask
         case .linked:

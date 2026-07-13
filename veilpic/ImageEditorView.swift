@@ -2162,7 +2162,7 @@ struct ImageEditorView: View {
     private func historyPanel(showsTitle: Bool = true) -> some View {
         EditorPanel(title: L10n.text("imageEditor.panel.history"), showsTitle: showsTitle) {
             VStack(spacing: 6) {
-                HStack(spacing: 8) {
+                VStack(alignment: .leading, spacing: 6) {
                     Label(viewModel.historyStateSummary, systemImage: "clock")
                         .font(.system(size: 10, weight: .semibold))
                         .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
@@ -2540,6 +2540,14 @@ struct ImageEditorView: View {
     private func commitLayerNameDraft() {
         viewModel.renameSelectedLayer(to: layerNameDraft)
         syncLayerNameDraft()
+    }
+
+    private var selectedLayerEffectScaleBinding: Binding<Double> {
+        Binding {
+            viewModel.selectedLayerEffectScale
+        } set: { value in
+            viewModel.setSelectedLayerEffectScale(value)
+        }
     }
 
     private var selectedLayerStrokeWidthBinding: Binding<Double> {
@@ -4450,6 +4458,34 @@ struct ImageEditorView: View {
                 Text(L10n.text("imageEditor.properties.layerStyle"))
                     .font(.system(size: 11, weight: .bold))
                     .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+
+                HStack(spacing: 8) {
+                    Button {
+                        viewModel.toggleSelectedLayerEffects()
+                    } label: {
+                        Label(
+                            L10n.text(
+                                viewModel.selectedLayerEffectsAreVisible
+                                    ? "imageEditor.action.layerEffectsHideSelected"
+                                    : "imageEditor.action.layerEffectsShowSelected"
+                            ),
+                            systemImage: viewModel.selectedLayerEffectsAreVisible ? "eye" : "eye.slash"
+                        )
+                    }
+                    .buttonStyle(EditorTextButtonStyle())
+                    .disabled(!viewModel.canToggleSelectedLayerEffects)
+
+                    Stepper(
+                        L10n.format(
+                            "imageEditor.properties.layerEffectScaleValue",
+                            Int(viewModel.selectedLayerEffectScale.rounded())
+                        ),
+                        value: selectedLayerEffectScaleBinding,
+                        in: 1...1_000,
+                        step: 5
+                    )
+                    .disabled(!viewModel.canScaleSelectedLayerEffects)
+                }
 
                 Stepper(
                     L10n.format("imageEditor.properties.strokeWidthValue", Int(viewModel.selectedLayerStrokeWidth.rounded())),

@@ -1234,6 +1234,20 @@ extension ImageEditorView {
                     .disabled(!viewModel.canRasterizeSelectedLayers(target))
                 }
             }
+            Button(
+                L10n.text(
+                    viewModel.selectedLayerEffectsAreVisible
+                        ? "imageEditor.action.layerEffectsHideSelected"
+                        : "imageEditor.action.layerEffectsShowSelected"
+                )
+            ) {
+                viewModel.toggleSelectedLayerEffects()
+            }
+            .disabled(!viewModel.canToggleSelectedLayerEffects)
+            Button(L10n.text("imageEditor.action.layerEffectsScale")) {
+                viewModel.showLayerEffectScaleOptions()
+            }
+            .disabled(!viewModel.canScaleSelectedLayerEffects)
             Divider()
             Button(L10n.text(viewModel.mergeDownActionTitleKey)) { viewModel.mergeSelectedLayerDown() }
                 .disabled(!viewModel.canMergeSelectedLayerDown)
@@ -2009,6 +2023,14 @@ extension ImageEditorView {
                     .padding(.vertical, 1)
                     .background(Color(nsColor: ImageEditorTheme.selected).opacity(0.6))
                     .clipShape(RoundedRectangle(cornerRadius: 3, style: .continuous))
+                    .opacity(layer.style.effectsEnabled ? 1 : 0.42)
+                    .help(
+                        L10n.text(
+                            layer.style.effectsEnabled
+                                ? "imageEditor.action.layerEffectsHideSelected"
+                                : "imageEditor.action.layerEffectsShowSelected"
+                        )
+                    )
             }
         }
     }

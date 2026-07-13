@@ -457,8 +457,11 @@ private extension ImageEditorLayerStyle {
         style.strokeWidth *= scale
         style.strokePatternScale *= scale
         style.shadowBlur *= scale
+        style.shadowSpread *= scale
+        style.shadowDistance *= scale
         style.shadowOffset = CGSize(width: shadowOffset.width * scale, height: shadowOffset.height * scale)
         style.innerShadowBlur *= scale
+        style.innerShadowChoke *= scale
         style.innerShadowDistance *= scale
         style.outerGlowBlur *= scale
         style.outerGlowSpread *= scale
@@ -468,6 +471,7 @@ private extension ImageEditorLayerStyle {
         style.satinDistance *= scale
         style.satinSize *= scale
         style.bevelSize *= scale
+        style.bevelSoften *= scale
         return style
     }
 }

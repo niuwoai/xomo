@@ -1,0 +1,89 @@
+{
+  "generated_at": "2026-07-14 04:41:28 +0800",
+  "total": 8,
+  "passed": 8,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorProjectDocumentTests",
+      "method": "adjustmentSettingsDecodeLegacyPayloadWithMissingNewFields",
+      "identifier": "veilpicTests/ImageEditorProjectDocumentTests/adjustmentSettingsDecodeLegacyPayloadWithMissingNewFields",
+      "file": "ImageEditorProjectDocumentTests.swift",
+      "passed": true,
+      "duration": 3.208,
+      "issues": [],
+      "log": "ImageEditorProjectDocumentTests.adjustmentSettingsDecodeLegacyPayloadWithMissingNewFields.log"
+    },
+    {
+      "suite": "ImageEditorProjectDocumentTests",
+      "method": "gradientFillLayerRendersAndRoundTripsThroughProjectDocument",
+      "identifier": "veilpicTests/ImageEditorProjectDocumentTests/gradientFillLayerRendersAndRoundTripsThroughProjectDocument",
+      "file": "ImageEditorProjectDocumentTests.swift",
+      "passed": true,
+      "duration": 3.717,
+      "issues": [],
+      "log": "ImageEditorProjectDocumentTests.gradientFillLayerRendersAndRoundTripsThroughProjectDocument.log"
+    },
+    {
+      "suite": "ImageEditorProjectDocumentTests",
+      "method": "layerGroupPassThroughKeepsChildBlendingAgainstBackdrop",
+      "identifier": "veilpicTests/ImageEditorProjectDocumentTests/layerGroupPassThroughKeepsChildBlendingAgainstBackdrop",
+      "file": "ImageEditorProjectDocumentTests.swift",
+      "passed": true,
+      "duration": 3.362,
+      "issues": [],
+      "log": "ImageEditorProjectDocumentTests.layerGroupPassThroughKeepsChildBlendingAgainstBackdrop.log"
+    },
+    {
+      "suite": "ImageEditorProjectDocumentTests",
+      "method": "projectDocumentMigratesLegacyNormalGroupsToPassThrough",
+      "identifier": "veilpicTests/ImageEditorProjectDocumentTests/projectDocumentMigratesLegacyNormalGroupsToPassThrough",
+      "file": "ImageEditorProjectDocumentTests.swift",
+      "passed": true,
+      "duration": 3.305,
+      "issues": [],
+      "log": "ImageEditorProjectDocumentTests.projectDocumentMigratesLegacyNormalGroupsToPassThrough.log"
+    },
+    {
+      "suite": "ImageEditorProjectDocumentTests",
+      "method": "projectDocumentRestoresLegacySmartObjectLayerImageData",
+      "identifier": "veilpicTests/ImageEditorProjectDocumentTests/projectDocumentRestoresLegacySmartObjectLayerImageData",
+      "file": "ImageEditorProjectDocumentTests.swift",
+      "passed": true,
+      "duration": 3.322,
+      "issues": [],
+      "log": "ImageEditorProjectDocumentTests.projectDocumentRestoresLegacySmartObjectLayerImageData.log"
+    },
+    {
+      "suite": "ImageEditorProjectDocumentTests",
+      "method": "projectDocumentRoundTripsEditableLayerState",
+      "identifier": "veilpicTests/ImageEditorProjectDocumentTests/projectDocumentRoundTripsEditableLayerState",
+      "file": "ImageEditorProjectDocumentTests.swift",
+      "passed": true,
+      "duration": 3.538,
+      "issues": [],
+      "log": "ImageEditorProjectDocumentTests.projectDocumentRoundTripsEditableLayerState.log"
+    },
+    {
+      "suite": "ImageEditorProjectDocumentTests",
+      "method": "projectDocumentStoresSmartObjectSourceOnceForSharedInstances",
+      "identifier": "veilpicTests/ImageEditorProjectDocumentTests/projectDocumentStoresSmartObjectSourceOnceForSharedInstances",
+      "file": "ImageEditorProjectDocumentTests.swift",
+      "passed": true,
+      "duration": 3.195,
+      "issues": [],
+      "log": "ImageEditorProjectDocumentTests.projectDocumentStoresSmartObjectSourceOnceForSharedInstances.log"
+    },
+    {
+      "suite": "ImageEditorProjectDocumentTests",
+      "method": "textFontFamilyRoundTripsAndLegacyPayloadUsesSystemFont",
+      "identifier": "veilpicTests/ImageEditorProjectDocumentTests/textFontFamilyRoundTripsAndLegacyPayloadUsesSystemFont",
+      "file": "ImageEditorProjectDocumentTests.swift",
+      "passed": true,
+      "duration": 3.158,
+      "issues": [],
+      "log": "ImageEditorProjectDocumentTests.textFontFamilyRoundTripsAndLegacyPayloadUsesSystemFont.log"
+    }
+  ]
+}
