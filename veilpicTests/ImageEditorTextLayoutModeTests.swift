@@ -57,12 +57,14 @@ struct ImageEditorTextLayoutModeTests {
         let viewModel = editor()
         viewModel.textValue = "Paragraph text wraps automatically across its box."
         viewModel.textBoxWidth = 92
+        viewModel.textBoxHeight = 64
         viewModel.selectedTextAlignment = .right
         viewModel.addText(at: CGPoint(x: 26, y: 30))
 
         let before = try #require(viewModel.document.selectedLayer)
         let beforeContent = try #require(before.textContent)
         #expect(beforeContent.layoutMode == .paragraph)
+        #expect(beforeContent.boxHeight == 64)
 
         viewModel.convertSelectedTextLayers(to: .point)
 
@@ -70,6 +72,7 @@ struct ImageEditorTextLayoutModeTests {
         let convertedContent = try #require(converted.textContent)
         #expect(converted.frame.origin == before.frame.origin)
         #expect(convertedContent.layoutMode == .point)
+        #expect(convertedContent.boxHeight == 0)
         #expect(convertedContent.text == beforeContent.text)
         #expect(convertedContent.alignment == .right)
         #expect(converted.frame.width > before.frame.width)
@@ -112,7 +115,7 @@ struct ImageEditorTextLayoutModeTests {
         #expect(try #require(text(paragraphID, in: viewModel)).boxWidth == 110)
     }
 
-    @Test func projectRoundTripRetainsPointAndParagraphModesWithoutNewFormatFields() throws {
+    @Test func projectRoundTripRetainsPointAndParagraphModes() throws {
         let point = ImageEditorProjectTextContent(content: textContent("Point"))
         var paragraphContent = textContent("Paragraph")
         paragraphContent.boxWidth = 144

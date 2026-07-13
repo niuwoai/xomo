@@ -2089,6 +2089,7 @@ enum ImageEditorTextAlignment: String, CaseIterable, Identifiable {
 
 struct ImageEditorTextContent {
     static let drawingPadding: CGFloat = 4
+    static let maximumBoxDimension: CGFloat = 12_000
     static let systemFontFamilyName = NSFont.systemFont(ofSize: NSFont.systemFontSize).familyName ?? "System"
 
     var text: String
@@ -2103,6 +2104,7 @@ struct ImageEditorTextContent {
     var characterSpacing: CGFloat = 0
     var lineSpacing: CGFloat = 0
     var boxWidth: CGFloat = 0
+    var boxHeight: CGFloat = 0
     var alignment: ImageEditorTextAlignment = .left
     var leftIndent: CGFloat = 0
     var rightIndent: CGFloat = 0
@@ -2164,7 +2166,10 @@ struct ImageEditorTextContent {
                 with: CGSize(width: max(1, boxWidth), height: CGFloat.greatestFiniteMagnitude),
                 options: [.usesLineFragmentOrigin, .usesFontLeading]
             )
-            measured = CGSize(width: max(boxWidth, ceil(bounding.width)), height: ceil(bounding.height))
+            measured = CGSize(
+                width: max(boxWidth, ceil(bounding.width)),
+                height: boxHeight > 0 ? boxHeight : ceil(bounding.height)
+            )
         } else {
             let lines = text.components(separatedBy: .newlines)
             let lineSizes = lines.map { (($0.isEmpty ? " " : $0) as NSString).size(withAttributes: attributes) }

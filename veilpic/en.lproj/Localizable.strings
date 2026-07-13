@@ -706,6 +706,7 @@
 "imageEditor.properties.textCharacterSpacingValue" = "Tracking: %d px";
 "imageEditor.properties.textLineSpacingValue" = "Leading: %d px";
 "imageEditor.properties.textBoxWidthValue" = "Text Box: %d px";
+"imageEditor.properties.textBoxHeightValue" = "Text Box Height: %d px";
 "imageEditor.properties.textLeftIndentValue" = "Left Indent: %d px";
 "imageEditor.properties.textRightIndentValue" = "Right Indent: %d px";
 "imageEditor.properties.textFirstLineIndentValue" = "First-Line Indent: %d px";
@@ -1395,7 +1396,7 @@
 "imageEditor.status.brushPresetDeleted" = "Brush preset deleted: %@";
 "imageEditor.status.brushPresetLimitReached" = "You can save up to %d custom brush presets";
 "imageEditor.status.characterPanelSummary" = "Text: %@ | Size: %d px | Bold: %@ | Italic: %@ | Underline: %@ | Strikethrough: %@ | Tracking: %d | Leading: %d";
-"imageEditor.status.paragraphPanelSummary" = "Alignment: %@ | Text box width: %d px | Left indent: %d px | Right indent: %d px | First-line indent: %d px";
+"imageEditor.status.paragraphPanelSummary" = "Alignment: %@ | Text box: %d × %d px | Left indent: %d px | Right indent: %d px | First-line indent: %d px";
 "imageEditor.status.textConvertedToPoint" = "Converted %d text layer(s) to point text";
 "imageEditor.status.textConvertedToParagraph" = "Converted %d text layer(s) to paragraph text";
 "imageEditor.characterPanel.emptyText" = "No text";

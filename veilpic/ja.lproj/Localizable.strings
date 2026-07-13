@@ -706,6 +706,7 @@
 "imageEditor.properties.textCharacterSpacingValue" = "字間：%d px";
 "imageEditor.properties.textLineSpacingValue" = "行間：%d px";
 "imageEditor.properties.textBoxWidthValue" = "テキスト枠：%d px";
+"imageEditor.properties.textBoxHeightValue" = "テキスト枠の高さ：%d px";
 "imageEditor.properties.textLeftIndentValue" = "左インデント：%d px";
 "imageEditor.properties.textRightIndentValue" = "右インデント：%d px";
 "imageEditor.properties.textFirstLineIndentValue" = "最初の行のインデント：%d px";
@@ -1395,7 +1396,7 @@
 "imageEditor.status.brushPresetDeleted" = "ブラシプリセットを削除しました：%@";
 "imageEditor.status.brushPresetLimitReached" = "カスタムブラシプリセットは最大%d件まで保存できます";
 "imageEditor.status.characterPanelSummary" = "テキスト：%@ | サイズ：%d px | 太字：%@ | 斜体：%@ | 下線：%@ | 取り消し線：%@ | 字間：%d | 行間：%d";
-"imageEditor.status.paragraphPanelSummary" = "配置：%@ | テキストボックス幅：%d px | 左インデント：%d px | 右インデント：%d px | 最初の行：%d px";
+"imageEditor.status.paragraphPanelSummary" = "配置：%@ | テキスト枠：%d × %d px | 左インデント：%d px | 右インデント：%d px | 最初の行：%d px";
 "imageEditor.status.textConvertedToPoint" = "%d 個の文字レイヤーをポイントテキストに変換しました";
 "imageEditor.status.textConvertedToParagraph" = "%d 個の文字レイヤーを段落テキストに変換しました";
 "imageEditor.characterPanel.emptyText" = "未入力";

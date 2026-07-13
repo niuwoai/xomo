@@ -204,8 +204,15 @@ struct XomoAutomationTests {
         #expect(registry.execute(request(
             operation: "call",
             name: "xomo.text.create",
-            arguments: ["text": .string("Hello"), "fontSize": .number(24)]
+            arguments: [
+                "text": .string("Hello"),
+                "fontSize": .number(24),
+                "boxWidth": .number(180),
+                "boxHeight": .number(96)
+            ]
         )).ok)
+        #expect(viewModel.document.selectedLayer?.textContent?.boxWidth == 180)
+        #expect(viewModel.document.selectedLayer?.textContent?.boxHeight == 96)
         #expect(registry.execute(request(
             operation: "call",
             name: "xomo.text.update",
@@ -217,7 +224,8 @@ struct XomoAutomationTests {
                 "alignment": .string("justified"),
                 "leftIndent": .number(24),
                 "rightIndent": .number(16),
-                "firstLineIndent": .number(12)
+                "firstLineIndent": .number(12),
+                "boxHeight": .number(112)
             ]
         )).ok)
         #expect(viewModel.document.selectedLayer?.textContent?.text == "Hello MCP")
@@ -228,6 +236,7 @@ struct XomoAutomationTests {
         #expect(viewModel.document.selectedLayer?.textContent?.leftIndent == 24)
         #expect(viewModel.document.selectedLayer?.textContent?.rightIndent == 16)
         #expect(viewModel.document.selectedLayer?.textContent?.firstLineIndent == 12)
+        #expect(viewModel.document.selectedLayer?.textContent?.boxHeight == 112)
         #expect(registry.execute(request(
             operation: "call",
             name: "xomo.text.convert",
@@ -241,6 +250,7 @@ struct XomoAutomationTests {
             return
         }
         #expect(inspectedText["layoutMode"] == .string("paragraph"))
+        #expect(inspectedText["boxHeight"] == .number(112))
     }
 
     @Test func registryConfiguresCloneStampSamplingOptions() {

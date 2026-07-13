@@ -305,6 +305,8 @@ final class XomoAutomationRegistry {
         case "xomo.text.create":
             viewModel.textValue = try requiredString("text", in: arguments)
             if let fontSize = arguments["fontSize"]?.doubleValue { viewModel.textSize = fontSize }
+            viewModel.textBoxWidth = arguments["boxWidth"]?.doubleValue ?? 0
+            viewModel.textBoxHeight = arguments["boxHeight"]?.doubleValue ?? 0
             viewModel.addText(at: optionalPoint(arguments))
         case "xomo.text.get":
             return textResult(viewModel)
@@ -648,6 +650,7 @@ final class XomoAutomationRegistry {
             "characterSpacing": .number(content.characterSpacing),
             "lineSpacing": .number(content.lineSpacing),
             "boxWidth": .number(content.boxWidth),
+            "boxHeight": .number(content.boxHeight),
             "layoutMode": .string(content.layoutMode.rawValue),
             "alignment": .string(content.alignment.rawValue),
             "leftIndent": .number(content.leftIndent),
@@ -673,6 +676,7 @@ final class XomoAutomationRegistry {
         viewModel.textCharacterSpacing = arguments["characterSpacing"]?.doubleValue ?? content.characterSpacing
         viewModel.textLineSpacing = arguments["lineSpacing"]?.doubleValue ?? content.lineSpacing
         viewModel.textBoxWidth = arguments["boxWidth"]?.doubleValue ?? content.boxWidth
+        viewModel.textBoxHeight = arguments["boxHeight"]?.doubleValue ?? content.boxHeight
         viewModel.textLeftIndent = arguments["leftIndent"]?.doubleValue ?? content.leftIndent
         viewModel.textRightIndent = arguments["rightIndent"]?.doubleValue ?? content.rightIndent
         viewModel.textFirstLineIndent = arguments["firstLineIndent"]?.doubleValue ?? content.firstLineIndent
@@ -2048,6 +2052,8 @@ private extension XomoAutomationRegistry {
         tool("xomo.text.create", "Create an editable text layer.", [
             "text": XomoAutomationSchema.string(description: "Text content"),
             "fontSize": XomoAutomationSchema.number(description: "Font size in points"),
+            "boxWidth": XomoAutomationSchema.number(description: "Optional paragraph text box width"),
+            "boxHeight": XomoAutomationSchema.number(description: "Optional fixed paragraph text box height"),
             "x": XomoAutomationSchema.number(description: "Optional canvas x position"),
             "y": XomoAutomationSchema.number(description: "Optional canvas y position")
         ], required: ["text"]),
@@ -2062,6 +2068,7 @@ private extension XomoAutomationRegistry {
             "characterSpacing": XomoAutomationSchema.number(description: "Character spacing"),
             "lineSpacing": XomoAutomationSchema.number(description: "Line spacing"),
             "boxWidth": XomoAutomationSchema.number(description: "Text box width, zero for auto"),
+            "boxHeight": XomoAutomationSchema.number(description: "Fixed text box height, zero for auto"),
             "alignment": XomoAutomationSchema.string(description: "Paragraph alignment", values: ImageEditorTextAlignment.allCases.map(\.rawValue)),
             "leftIndent": XomoAutomationSchema.number(description: "Paragraph left indent"),
             "rightIndent": XomoAutomationSchema.number(description: "Paragraph right indent"),

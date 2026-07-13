@@ -50,10 +50,12 @@ extension ImageEditorViewModel {
         for index in indices {
             guard var content = document.layers[index].textContent else { continue }
             content.boxWidth = layoutMode == .paragraph ? content.widthForParagraphConversion() : 0
+            content.boxHeight = 0
             resizeTextLayer(at: index, for: content)
         }
         if let content = document.selectedLayer?.textContent {
             textBoxWidth = Double(content.boxWidth)
+            textBoxHeight = Double(content.boxHeight)
         }
         appendHistory(L10n.text(historyKey(for: layoutMode)))
         statusText = L10n.format(statusKey(for: layoutMode), indices.count)

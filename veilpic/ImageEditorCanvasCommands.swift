@@ -418,6 +418,9 @@ private extension ImageEditorTextContent {
         if content.boxWidth > 0 {
             content.boxWidth = max(1, boxWidth * scaleX)
         }
+        if content.boxHeight > 0 {
+            content.boxHeight = max(1, boxHeight * scaleY)
+        }
         return content
     }
 }

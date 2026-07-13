@@ -70,6 +70,7 @@ struct ImageEditorView: View {
     @State private var isQuickMaskOptionsPresented = false
     @State private var canvasTextEditingOrigin: CGPoint?
     @State private var canvasTextEditingLayerID: UUID?
+    @State private var canvasTextEditingFrame: CGRect?
     @FocusState private var isCanvasTextEditorFocused: Bool
 
     init(sourceName: String, image: NSImage, onApply: @escaping (NSImage) -> Void) {
@@ -1481,7 +1482,7 @@ struct ImageEditorView: View {
 
     private var shouldShowDragRect: Bool {
         switch viewModel.selectedTool {
-        case .crop, .marquee, .rectangle, .ellipse:
+        case .crop, .marquee, .rectangle, .ellipse, .text:
             true
         default:
             false
@@ -1607,6 +1608,13 @@ struct ImageEditorView: View {
                         dragStart = pointerImagePoint
                     }
                     dragEnd = pointerImagePoint
+                case .text:
+                    if dragStart == nil {
+                        dragStart = imagePoint(from: value.startLocation, in: size)
+                    }
+                    if dragStart != nil {
+                        dragEnd = boundedImagePoint(from: value.location, in: size)
+                    }
                 case .patchTool:
                     let boundedPoint = boundedImagePoint(from: value.location, in: size)
                     if dragStart == nil, dragPoints.isEmpty {
@@ -1759,7 +1767,15 @@ struct ImageEditorView: View {
                         }
                     }
                 case .text:
-                    beginCanvasTextEditing(at: endImagePoint)
+                    if let paragraphRect = ImageEditorTextBoxGeometry.paragraphRect(
+                        from: dragStart,
+                        to: dragEnd,
+                        viewTranslation: value.translation
+                    ) {
+                        beginCanvasParagraphTextEditing(in: paragraphRect)
+                    } else {
+                        beginCanvasTextEditing(at: endImagePoint)
+                    }
                 case .eyedropper:
                     if let endImagePoint {
                         viewModel.sampleColor(at: endImagePoint)
@@ -1841,8 +1857,10 @@ struct ImageEditorView: View {
             let selectedFrame = canvasTextEditingLayerID.flatMap { id in
                 viewModel.document.layers.first(where: { $0.id == id })?.frame
             }
-            let editorWidth = max(160, (selectedFrame?.width ?? max(240, CGFloat(viewModel.textBoxWidth))) * displayScale)
-            let editorHeight = max(64, (selectedFrame?.height ?? 72) * displayScale)
+            let editorWidth = canvasTextEditingFrame.map { max(24, $0.width * displayScale) }
+                ?? max(160, (selectedFrame?.width ?? max(240, CGFloat(viewModel.textBoxWidth))) * displayScale)
+            let editorHeight = canvasTextEditingFrame.map { max(24, $0.height * displayScale) }
+                ?? max(64, (selectedFrame?.height ?? 72) * displayScale)
             let position = viewPoint(from: origin, in: size)
 
             VStack(alignment: .trailing, spacing: 4) {
@@ -1886,15 +1904,33 @@ struct ImageEditorView: View {
         startCanvasTextEditing(at: point, excluding: excludedLayerID)
     }
 
+    private func beginCanvasParagraphTextEditing(in frame: CGRect) {
+        if canvasTextEditingOrigin != nil {
+            commitCanvasTextEditing()
+        }
+        let contentSize = ImageEditorTextBoxGeometry.contentSize(for: frame)
+        viewModel.textValue = ""
+        viewModel.textBoxWidth = Double(contentSize.width)
+        viewModel.textBoxHeight = Double(contentSize.height)
+        canvasTextEditingLayerID = nil
+        canvasTextEditingOrigin = frame.origin
+        canvasTextEditingFrame = frame
+        DispatchQueue.main.async { isCanvasTextEditorFocused = true }
+    }
+
     private func startCanvasTextEditing(at point: CGPoint, excluding excludedLayerID: UUID? = nil) {
         if viewModel.selectEditableTextLayer(at: point, excluding: excludedLayerID),
            let layer = viewModel.document.selectedLayer {
             canvasTextEditingLayerID = layer.id
             canvasTextEditingOrigin = layer.frame.origin
+            canvasTextEditingFrame = nil
         } else {
             viewModel.textValue = ""
+            viewModel.textBoxWidth = 0
+            viewModel.textBoxHeight = 0
             canvasTextEditingLayerID = nil
             canvasTextEditingOrigin = point
+            canvasTextEditingFrame = nil
         }
         DispatchQueue.main.async { isCanvasTextEditorFocused = true }
     }
@@ -1907,12 +1943,14 @@ struct ImageEditorView: View {
         }
         canvasTextEditingOrigin = nil
         canvasTextEditingLayerID = nil
+        canvasTextEditingFrame = nil
         isCanvasTextEditorFocused = false
     }
 
     private func cancelCanvasTextEditing() {
         canvasTextEditingOrigin = nil
         canvasTextEditingLayerID = nil
+        canvasTextEditingFrame = nil
         isCanvasTextEditorFocused = false
     }
 
@@ -4068,7 +4106,13 @@ struct ImageEditorView: View {
                 Stepper(
                     L10n.format("imageEditor.properties.textBoxWidthValue", Int(viewModel.textBoxWidth.rounded())),
                     value: $viewModel.textBoxWidth,
-                    in: 0...1600,
+                    in: 0...Double(ImageEditorTextContent.maximumBoxDimension),
+                    step: 8
+                )
+                Stepper(
+                    L10n.format("imageEditor.properties.textBoxHeightValue", Int(viewModel.textBoxHeight.rounded())),
+                    value: $viewModel.textBoxHeight,
+                    in: 0...Double(ImageEditorTextContent.maximumBoxDimension),
                     step: 8
                 )
                 HStack {
