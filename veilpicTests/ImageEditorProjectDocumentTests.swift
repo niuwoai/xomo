@@ -366,7 +366,7 @@ struct ImageEditorProjectDocumentTests {
 
         let project = try ImageEditorProjectDocument(document: viewModel.document)
         let sharedSource = try #require(project.smartObjectSources?.first)
-        #expect(project.formatVersion == 4)
+        #expect(project.formatVersion == ImageEditorProjectDocument.formatVersion)
         #expect(project.smartObjectSources?.count == 1)
         #expect(sharedSource.sourceID == firstInstance.smartObjectContent?.sourceID)
 

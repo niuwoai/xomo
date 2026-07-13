@@ -637,6 +637,8 @@ final class XomoAutomationRegistry {
             "fontSize": .number(content.fontSize),
             "bold": .bool(content.isBold),
             "italic": .bool(content.isItalic),
+            "underline": .bool(content.isUnderlined),
+            "strikethrough": .bool(content.isStruckThrough),
             "characterSpacing": .number(content.characterSpacing),
             "lineSpacing": .number(content.lineSpacing),
             "boxWidth": .number(content.boxWidth),
@@ -656,6 +658,8 @@ final class XomoAutomationRegistry {
         viewModel.textSize = arguments["fontSize"]?.doubleValue ?? content.fontSize
         viewModel.textBold = arguments["bold"]?.boolValue ?? content.isBold
         viewModel.textItalic = arguments["italic"]?.boolValue ?? content.isItalic
+        viewModel.textUnderlined = arguments["underline"]?.boolValue ?? content.isUnderlined
+        viewModel.textStruckThrough = arguments["strikethrough"]?.boolValue ?? content.isStruckThrough
         viewModel.textCharacterSpacing = arguments["characterSpacing"]?.doubleValue ?? content.characterSpacing
         viewModel.textLineSpacing = arguments["lineSpacing"]?.doubleValue ?? content.lineSpacing
         viewModel.textBoxWidth = arguments["boxWidth"]?.doubleValue ?? content.boxWidth
@@ -2040,6 +2044,8 @@ private extension XomoAutomationRegistry {
             "fontSize": XomoAutomationSchema.number(description: "Font size"),
             "bold": XomoAutomationSchema.boolean(description: "Bold style"),
             "italic": XomoAutomationSchema.boolean(description: "Italic style"),
+            "underline": XomoAutomationSchema.boolean(description: "Underline style"),
+            "strikethrough": XomoAutomationSchema.boolean(description: "Strikethrough style"),
             "characterSpacing": XomoAutomationSchema.number(description: "Character spacing"),
             "lineSpacing": XomoAutomationSchema.number(description: "Line spacing"),
             "boxWidth": XomoAutomationSchema.number(description: "Text box width, zero for auto"),

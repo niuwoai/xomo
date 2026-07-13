@@ -4031,11 +4031,23 @@ struct ImageEditorView: View {
                     }
                 }
                 .pickerStyle(.segmented)
-                HStack {
-                    Toggle(L10n.text("imageEditor.properties.textBold"), isOn: $viewModel.textBold)
-                        .toggleStyle(.checkbox)
-                    Toggle(L10n.text("imageEditor.properties.textItalic"), isOn: $viewModel.textItalic)
-                        .toggleStyle(.checkbox)
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Toggle(L10n.text("imageEditor.properties.textBold"), isOn: $viewModel.textBold)
+                            .toggleStyle(.checkbox)
+                            .focusable(false)
+                        Toggle(L10n.text("imageEditor.properties.textItalic"), isOn: $viewModel.textItalic)
+                            .toggleStyle(.checkbox)
+                            .focusable(false)
+                    }
+                    HStack {
+                        Toggle(L10n.text("imageEditor.properties.textUnderline"), isOn: $viewModel.textUnderlined)
+                            .toggleStyle(.checkbox)
+                            .focusable(false)
+                        Toggle(L10n.text("imageEditor.properties.textStrikethrough"), isOn: $viewModel.textStruckThrough)
+                            .toggleStyle(.checkbox)
+                            .focusable(false)
+                    }
                 }
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))

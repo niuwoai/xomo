@@ -121,6 +121,8 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var selectedFontFamilyName: String = ImageEditorTextContent.systemFontFamilyName
     @Published var textBold: Bool = false
     @Published var textItalic: Bool = false
+    @Published var textUnderlined: Bool = false
+    @Published var textStruckThrough: Bool = false
     @Published var textCharacterSpacing: Double = 0
     @Published var textLineSpacing: Double = 0
     @Published var textBoxWidth: Double = 0
@@ -1293,6 +1295,8 @@ final class ImageEditorViewModel: ObservableObject {
             Int(clampedTextSize(textSize).rounded()),
             textBold ? L10n.text("imageEditor.characterPanel.enabled") : L10n.text("imageEditor.characterPanel.disabled"),
             textItalic ? L10n.text("imageEditor.characterPanel.enabled") : L10n.text("imageEditor.characterPanel.disabled"),
+            textUnderlined ? L10n.text("imageEditor.characterPanel.enabled") : L10n.text("imageEditor.characterPanel.disabled"),
+            textStruckThrough ? L10n.text("imageEditor.characterPanel.enabled") : L10n.text("imageEditor.characterPanel.disabled"),
             Int(clampedTextCharacterSpacing(textCharacterSpacing).rounded()),
             Int(clampedTextLineSpacing(textLineSpacing).rounded())
         )
@@ -1575,6 +1579,16 @@ final class ImageEditorViewModel: ObservableObject {
 
     func toggleCharacterItalic() {
         textItalic.toggle()
+        statusText = characterPanelSummaryText
+    }
+
+    func toggleCharacterUnderline() {
+        textUnderlined.toggle()
+        statusText = characterPanelSummaryText
+    }
+
+    func toggleCharacterStrikethrough() {
+        textStruckThrough.toggle()
         statusText = characterPanelSummaryText
     }
 
@@ -3669,6 +3683,8 @@ final class ImageEditorViewModel: ObservableObject {
             point: CGPoint(x: ImageEditorTextContent.drawingPadding, y: ImageEditorTextContent.drawingPadding),
             isBold: textBold,
             isItalic: textItalic,
+            isUnderlined: textUnderlined,
+            isStruckThrough: textStruckThrough,
             characterSpacing: CGFloat(clampedTextCharacterSpacing(textCharacterSpacing)),
             lineSpacing: CGFloat(clampedTextLineSpacing(textLineSpacing)),
             boxWidth: CGFloat(clampedTextBoxWidth(textBoxWidth)),
@@ -3719,6 +3735,8 @@ final class ImageEditorViewModel: ObservableObject {
             content.point = CGPoint(x: ImageEditorTextContent.drawingPadding, y: ImageEditorTextContent.drawingPadding)
             content.isBold = textBold
             content.isItalic = textItalic
+            content.isUnderlined = textUnderlined
+            content.isStruckThrough = textStruckThrough
             content.characterSpacing = characterSpacing
             content.lineSpacing = lineSpacing
             content.boxWidth = boxWidth
@@ -6265,6 +6283,8 @@ final class ImageEditorViewModel: ObservableObject {
         foregroundColor = content.color
         textBold = content.isBold
         textItalic = content.isItalic
+        textUnderlined = content.isUnderlined
+        textStruckThrough = content.isStruckThrough
         textCharacterSpacing = Double(content.characterSpacing)
         textLineSpacing = Double(content.lineSpacing)
         textBoxWidth = Double(content.boxWidth)

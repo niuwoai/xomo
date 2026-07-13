@@ -2040,6 +2040,8 @@ struct ImageEditorScopeTests {
         #expect(textPanelSource.contains("viewModel.selectCharacterPanelTool()"))
         #expect(textPanelSource.contains("viewModel.toggleCharacterBold()"))
         #expect(textPanelSource.contains("viewModel.toggleCharacterItalic()"))
+        #expect(textPanelSource.contains("viewModel.toggleCharacterUnderline()"))
+        #expect(textPanelSource.contains("viewModel.toggleCharacterStrikethrough()"))
         #expect(textPanelSource.contains("imageEditor.menu.window.paragraph"))
         #expect(textPanelSource.contains("imageEditor.action.paragraphShowPanel"))
         #expect(textPanelSource.contains("viewModel.paragraphPanelSummaryText"))
@@ -2068,9 +2070,13 @@ struct ImageEditorScopeTests {
 
         viewModel.toggleCharacterBold()
         viewModel.toggleCharacterItalic()
+        viewModel.toggleCharacterUnderline()
+        viewModel.toggleCharacterStrikethrough()
 
         #expect(viewModel.textBold)
         #expect(viewModel.textItalic)
+        #expect(viewModel.textUnderlined)
+        #expect(viewModel.textStruckThrough)
         #expect(viewModel.statusText == viewModel.characterPanelSummaryText)
         #expect(viewModel.characterPanelSummaryText.contains(L10n.text("imageEditor.characterPanel.enabled")))
 

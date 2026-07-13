@@ -537,6 +537,8 @@ struct ImageEditorProjectTextContent: Equatable, Codable {
     var point: CGPoint
     var isBold: Bool
     var isItalic: Bool
+    var isUnderlined: Bool?
+    var isStruckThrough: Bool?
     var characterSpacing: CGFloat
     var lineSpacing: CGFloat
     var boxWidth: CGFloat
@@ -550,6 +552,8 @@ struct ImageEditorProjectTextContent: Equatable, Codable {
         point = content.point
         isBold = content.isBold
         isItalic = content.isItalic
+        isUnderlined = content.isUnderlined
+        isStruckThrough = content.isStruckThrough
         characterSpacing = content.characterSpacing
         lineSpacing = content.lineSpacing
         boxWidth = content.boxWidth
@@ -565,6 +569,8 @@ struct ImageEditorProjectTextContent: Equatable, Codable {
             point: point,
             isBold: isBold,
             isItalic: isItalic,
+            isUnderlined: isUnderlined ?? false,
+            isStruckThrough: isStruckThrough ?? false,
             characterSpacing: characterSpacing,
             lineSpacing: lineSpacing,
             boxWidth: boxWidth,
