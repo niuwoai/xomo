@@ -1152,14 +1152,21 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     var canMoveSelectedLayersIntoGroup: Bool {
-        let indices = movableSelectedLayerIndicesForHierarchyChange()
-        return !indices.isEmpty && groupTargetForMovingSelectionIntoGroup() != nil
+        ImageEditorLayerHierarchyMovement.moveIntoGroupPlan(
+            layers: document.layers,
+            selectedIDs: document.selectedLayerIDs,
+            primarySelectionID: document.selectedLayerID,
+            isEffectivelyLocked: { document.isEffectivelyLocked($0) }
+        ) != nil
     }
 
     var canMoveSelectedLayersOutOfGroup: Bool {
-        let indices = movableSelectedLayerIndicesForHierarchyChange()
-        guard !indices.isEmpty else { return false }
-        return indices.allSatisfy { document.layers[$0].groupID != nil }
+        ImageEditorLayerHierarchyMovement.moveOutOfGroupsPlan(
+            layers: document.layers,
+            selectedIDs: document.selectedLayerIDs,
+            primarySelectionID: document.selectedLayerID,
+            isEffectivelyLocked: { document.isEffectivelyLocked($0) }
+        ) != nil
     }
 
     var canUngroupSelectedLayers: Bool {
@@ -2629,48 +2636,43 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func moveSelectedLayersIntoGroup() {
-        guard let targetGroupID = groupTargetForMovingSelectionIntoGroup() else {
+        guard let plan = ImageEditorLayerHierarchyMovement.moveIntoGroupPlan(
+            layers: document.layers,
+            selectedIDs: document.selectedLayerIDs,
+            primarySelectionID: document.selectedLayerID,
+            isEffectivelyLocked: { document.isEffectivelyLocked($0) }
+        ) else {
             statusText = L10n.text("imageEditor.status.layerGroupTargetMissing")
             return
         }
-        let indices = movableSelectedLayerIndicesForHierarchyChange()
-        guard !indices.isEmpty else { return }
+
         pushUndo()
-        for index in indices {
-            document.layers[index].groupID = targetGroupID
-        }
-        if let targetIndex = document.layers.firstIndex(where: { $0.id == targetGroupID }) {
-            document.layers[targetIndex].isGroupExpanded = true
-        }
+        document.layers = plan.layers
         normalizeClippingMasks()
-        document.selectedLayerID = document.layers.reversed().first { document.selectedLayerIDs.contains($0.id) }?.id
+        document.selectedLayerIDs = plan.selectedLayerIDs
+        document.selectedLayerID = plan.primarySelectionID
+        layerSelectionAnchorID = plan.primarySelectionID
         isEditingLayerMask = false
         appendHistory(L10n.text("imageEditor.history.layerMoveIntoGroup"))
     }
 
     func moveSelectedLayersOutOfGroup() {
-        let indices = movableSelectedLayerIndicesForHierarchyChange()
-        guard !indices.isEmpty,
-              indices.allSatisfy({ document.layers[$0].groupID != nil })
-        else {
+        guard let plan = ImageEditorLayerHierarchyMovement.moveOutOfGroupsPlan(
+            layers: document.layers,
+            selectedIDs: document.selectedLayerIDs,
+            primarySelectionID: document.selectedLayerID,
+            isEffectivelyLocked: { document.isEffectivelyLocked($0) }
+        ) else {
             statusText = L10n.text("imageEditor.status.layerNotInGroup")
             return
         }
-        let replacementParents: [UUID: UUID?] = Dictionary(uniqueKeysWithValues: indices.map { index in
-            let layer = document.layers[index]
-            let replacementParentID = layer.groupID.flatMap { parentID in
-                document.layers.first { $0.id == parentID && $0.isGroup }?.groupID
-            }
-            return (layer.id, replacementParentID)
-        })
 
         pushUndo()
-        for index in indices {
-            let layerID = document.layers[index].id
-            document.layers[index].groupID = replacementParents[layerID] ?? nil
-        }
+        document.layers = plan.layers
         normalizeClippingMasks()
-        document.selectedLayerID = document.layers.reversed().first { document.selectedLayerIDs.contains($0.id) }?.id
+        document.selectedLayerIDs = plan.selectedLayerIDs
+        document.selectedLayerID = plan.primarySelectionID
+        layerSelectionAnchorID = plan.primarySelectionID
         isEditingLayerMask = false
         appendHistory(L10n.text("imageEditor.history.layerMoveOutOfGroup"))
     }
@@ -5449,51 +5451,6 @@ final class ImageEditorViewModel: ObservableObject {
             expandedIDs.formUnion(groupDescendantIDs(for: document.layers[index].id))
         }
         return expandedIDs
-    }
-
-    private func movableSelectedLayerIndicesForHierarchyChange() -> [Int] {
-        let selectedGroupIDs = Set(selectedLayerIndices.compactMap { index in
-            let layer = document.layers[index]
-            return layer.isGroup ? layer.id : nil
-        })
-        let selectedGroupDescendantIDs = selectedGroupIDs.reduce(into: Set<UUID>()) { result, groupID in
-            result.formUnion(groupDescendantIDs(for: groupID))
-        }
-        return selectedLayerIndices.filter { index in
-            let layer = document.layers[index]
-            return !selectedGroupDescendantIDs.contains(layer.id)
-                && !document.isEffectivelyLocked(layer)
-        }
-    }
-
-    private func groupTargetForMovingSelectionIntoGroup() -> UUID? {
-        let indices = movableSelectedLayerIndicesForHierarchyChange()
-        guard let firstIndex = indices.first,
-              let topIndex = indices.max()
-        else { return nil }
-        let parentID = document.layers[firstIndex].groupID
-        guard indices.allSatisfy({ document.layers[$0].groupID == parentID }) else { return nil }
-
-        let movingIDs = Set(indices.map { document.layers[$0].id })
-        let movingDescendantIDs = movingIDs.reduce(into: Set<UUID>()) { result, layerID in
-            guard let layer = document.layers.first(where: { $0.id == layerID }),
-                  layer.isGroup
-            else { return }
-            result.formUnion(groupDescendantIDs(for: layer.id))
-        }
-
-        guard topIndex + 1 < document.layers.count else { return nil }
-        for candidateIndex in (topIndex + 1)..<document.layers.count {
-            let candidate = document.layers[candidateIndex]
-            guard candidate.isGroup,
-                  candidate.groupID == parentID,
-                  !movingIDs.contains(candidate.id),
-                  !movingDescendantIDs.contains(candidate.id),
-                  !document.isEffectivelyLocked(candidate)
-            else { continue }
-            return candidate.id
-        }
-        return nil
     }
 
     private func selectedLayerGroupBranchIDs() -> Set<UUID> {

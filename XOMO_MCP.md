@@ -1,6 +1,6 @@
 # Xomo MCP 与 CLI
 
-> 当前版本：v2.12.0-rc23
+> 当前版本：v2.12.0-rc24
 
 ## 架构
 
@@ -83,6 +83,8 @@ MCP 服务器实现 `initialize`、`ping`、`tools/list` 和 `tools/call`。当 
 `xomo.layer.order` 的 `direction` 接受 `top`、`up`、`down`、`bottom`。自动化没有图层面板的临时搜索上下文，因此按当前展开/折叠状态下的完整可见层级排序；折叠组会作为完整子树移动，整次调用只产生一个 History/Undo 步骤。
 
 `xomo.layer.group` 会把所选可编辑项目整理为连续图层子树：锁定项留在原位置并保持选中，显式选中的组内后代会提升为新组的直接成员，未选中的后代分支保持原结构。`xomo.layer.ungroup` 可一次处理嵌套所选组，跳过锁定组并保留无关选择；两者均只产生一个 History/Undo 步骤。
+
+`xomo.layer.action` 的 `moveIntoGroup` 会寻找选择上方同层级的下一个可编辑组，并把可编辑所选根及完整组子树连续放到该组顶部；`moveOutOfGroup` 则把每个子树放到各自原父组的正上方，可一次处理多个嵌套父组。锁定选择保持原位，两种操作都保留选择并只增加一个 History/Undo 步骤。
 
 ## 边界
 
