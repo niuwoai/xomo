@@ -1,0 +1,69 @@
+{
+  "generated_at": "2026-07-14 04:43:32 +0800",
+  "total": 6,
+  "passed": 6,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorRasterizeStyleAndApplyMaskTests",
+      "method": "applyLayerMaskRemovesOnlyRasterMaskAndPreservesVectorMaskAndLayerAppearance",
+      "identifier": "veilpicTests/ImageEditorRasterizeStyleAndApplyMaskTests/applyLayerMaskRemovesOnlyRasterMaskAndPreservesVectorMaskAndLayerAppearance",
+      "file": "ImageEditorRasterizeStyleAndApplyMaskTests.swift",
+      "passed": true,
+      "duration": 3.314,
+      "issues": [],
+      "log": "ImageEditorRasterizeStyleAndApplyMaskTests.applyLayerMaskRemovesOnlyRasterMaskAndPreservesVectorMaskAndLayerAppearance.log"
+    },
+    {
+      "suite": "ImageEditorRasterizeStyleAndApplyMaskTests",
+      "method": "applyVectorMaskRemovesOnlyVectorMaskAndPreservesRasterMaskAndLayerAppearance",
+      "identifier": "veilpicTests/ImageEditorRasterizeStyleAndApplyMaskTests/applyVectorMaskRemovesOnlyVectorMaskAndPreservesRasterMaskAndLayerAppearance",
+      "file": "ImageEditorRasterizeStyleAndApplyMaskTests.swift",
+      "passed": true,
+      "duration": 3.267,
+      "issues": [],
+      "log": "ImageEditorRasterizeStyleAndApplyMaskTests.applyVectorMaskRemovesOnlyVectorMaskAndPreservesRasterMaskAndLayerAppearance.log"
+    },
+    {
+      "suite": "ImageEditorRasterizeStyleAndApplyMaskTests",
+      "method": "applyingDisabledMasksRemovesOnlyTheRequestedInactiveMask",
+      "identifier": "veilpicTests/ImageEditorRasterizeStyleAndApplyMaskTests/applyingDisabledMasksRemovesOnlyTheRequestedInactiveMask",
+      "file": "ImageEditorRasterizeStyleAndApplyMaskTests.swift",
+      "passed": true,
+      "duration": 3.198,
+      "issues": [],
+      "log": "ImageEditorRasterizeStyleAndApplyMaskTests.applyingDisabledMasksRemovesOnlyTheRequestedInactiveMask.log"
+    },
+    {
+      "suite": "ImageEditorRasterizeStyleAndApplyMaskTests",
+      "method": "applyingMasksIsUnavailableForSmartObjectsAndDoesNotMutateHistory",
+      "identifier": "veilpicTests/ImageEditorRasterizeStyleAndApplyMaskTests/applyingMasksIsUnavailableForSmartObjectsAndDoesNotMutateHistory",
+      "file": "ImageEditorRasterizeStyleAndApplyMaskTests.swift",
+      "passed": true,
+      "duration": 3.269,
+      "issues": [],
+      "log": "ImageEditorRasterizeStyleAndApplyMaskTests.applyingMasksIsUnavailableForSmartObjectsAndDoesNotMutateHistory.log"
+    },
+    {
+      "suite": "ImageEditorRasterizeStyleAndApplyMaskTests",
+      "method": "rasterizeLayerStyleBakesPreBlendAppearanceAndPreservesOuterCompositing",
+      "identifier": "veilpicTests/ImageEditorRasterizeStyleAndApplyMaskTests/rasterizeLayerStyleBakesPreBlendAppearanceAndPreservesOuterCompositing",
+      "file": "ImageEditorRasterizeStyleAndApplyMaskTests.swift",
+      "passed": true,
+      "duration": 3.561,
+      "issues": [],
+      "log": "ImageEditorRasterizeStyleAndApplyMaskTests.rasterizeLayerStyleBakesPreBlendAppearanceAndPreservesOuterCompositing.log"
+    },
+    {
+      "suite": "ImageEditorRasterizeStyleAndApplyMaskTests",
+      "method": "rasterizeLayerStyleHandlesEditableSelectionInOneUndoAndSkipsLocks",
+      "identifier": "veilpicTests/ImageEditorRasterizeStyleAndApplyMaskTests/rasterizeLayerStyleHandlesEditableSelectionInOneUndoAndSkipsLocks",
+      "file": "ImageEditorRasterizeStyleAndApplyMaskTests.swift",
+      "passed": true,
+      "duration": 3.383,
+      "issues": [],
+      "log": "ImageEditorRasterizeStyleAndApplyMaskTests.rasterizeLayerStyleHandlesEditableSelectionInOneUndoAndSkipsLocks.log"
+    }
+  ]
+}

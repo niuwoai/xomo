@@ -1188,6 +1188,11 @@
 "imageEditor.history.globalLight" = "Adjust Global Light";
 "imageEditor.history.layerStylePaste" = "Paste Layer Style";
 "imageEditor.history.layerStyleClear" = "Clear Layer Style";
+"imageEditor.history.layerEffectsHideSelected" = "Hide Selected Layer Effects";
+"imageEditor.history.layerEffectsShowSelected" = "Show Selected Layer Effects";
+"imageEditor.history.layerEffectsHideAll" = "Hide All Layer Effects";
+"imageEditor.history.layerEffectsShowAll" = "Show All Layer Effects";
+"imageEditor.history.layerEffectsScale" = "Scale Layer Effects";
 "imageEditor.history.layerStyleRasterize" = "Rasterize Layer Style";
 "imageEditor.history.layerStyleRasterizeSelected" = "Rasterize Selected Layer Styles";
 "imageEditor.history.layerClippingMask" = "Toggle Clipping Mask";
@@ -1738,6 +1743,12 @@
 "imageEditor.status.layerStyleCleared" = "Layer style cleared from %d layers";
 "imageEditor.status.layerStyleReady" = "Layer style options ready";
 "imageEditor.status.layerStyleUpdated" = "Layer style updated";
+"imageEditor.status.layerEffectsHiddenSelected" = "Effects hidden on %d selected layers";
+"imageEditor.status.layerEffectsShownSelected" = "Effects shown on %d selected layers";
+"imageEditor.status.layerEffectsHiddenAll" = "All layer effects hidden on %d layers";
+"imageEditor.status.layerEffectsShownAll" = "All layer effects shown on %d layers";
+"imageEditor.status.layerEffectsScaled" = "Effects on %d layers scaled to %d%%";
+"imageEditor.status.layerEffectsScaleReady" = "Adjust the layer effect scale in the Properties panel";
 "imageEditor.status.layerAdjustmentUpdatedSelected" = "Updated %d adjustment layers";
 "imageEditor.status.layerFilterUpdatedSelected" = "Updated %d filter layers";
 "imageEditor.status.layerSolidColorFillUpdatedSelected" = "Updated %d solid color fill layers";
@@ -1979,6 +1990,12 @@
 "imageEditor.action.layerStyleCopy" = "Copy Layer Style";
 "imageEditor.action.layerStylePaste" = "Paste Layer Style";
 "imageEditor.action.layerStyleClear" = "Clear Layer Style";
+"imageEditor.action.layerEffectsHideSelected" = "Hide Selected Layer Effects";
+"imageEditor.action.layerEffectsShowSelected" = "Show Selected Layer Effects";
+"imageEditor.action.layerEffectsHideAll" = "Hide All Effects";
+"imageEditor.action.layerEffectsShowAll" = "Show All Effects";
+"imageEditor.action.layerEffectsScale" = "Scale Effects…";
+"imageEditor.properties.layerEffectScaleValue" = "Effect Scale: %d%%";
 "imageEditor.action.layerStroke" = "Layer Stroke";
 "imageEditor.action.layerShadow" = "Layer Drop Shadow";
 "imageEditor.action.layerInnerShadow" = "Layer Inner Shadow";

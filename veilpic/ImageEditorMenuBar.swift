@@ -885,6 +885,27 @@ extension ImageEditorView {
         }
         .disabled(!viewModel.canClearSelectedLayerStyles)
         Divider()
+        Button(L10n.text("imageEditor.action.layerEffectsHideSelected")) {
+            viewModel.hideSelectedLayerEffects()
+        }
+        .disabled(!viewModel.canToggleSelectedLayerEffects || !viewModel.selectedLayerEffectsAreVisible)
+        Button(L10n.text("imageEditor.action.layerEffectsShowSelected")) {
+            viewModel.showSelectedLayerEffects()
+        }
+        .disabled(!viewModel.canToggleSelectedLayerEffects || viewModel.selectedLayerEffectsAreVisible)
+        Button(L10n.text("imageEditor.action.layerEffectsHideAll")) {
+            viewModel.hideAllLayerEffects()
+        }
+        .disabled(!viewModel.canHideAllLayerEffects)
+        Button(L10n.text("imageEditor.action.layerEffectsShowAll")) {
+            viewModel.showAllLayerEffects()
+        }
+        .disabled(!viewModel.canShowAllLayerEffects)
+        Button(L10n.text("imageEditor.action.layerEffectsScale")) {
+            viewModel.showLayerEffectScaleOptions()
+        }
+        .disabled(!viewModel.canScaleSelectedLayerEffects)
+        Divider()
         Button(L10n.text("imageEditor.action.layerStroke")) {
             viewModel.toggleSelectedLayerStroke()
         }

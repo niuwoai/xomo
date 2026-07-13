@@ -562,6 +562,45 @@ struct XomoAutomationTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.vectorMaskApply"))
     }
 
+    @Test func registryScalesAndTemporarilyHidesLayerEffectsWithoutClearingThem() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        let index = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[index].style.shadowEnabled = true
+        viewModel.document.layers[index].style.shadowBlur = 7
+        registry.register(viewModel)
+
+        let scale = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("effectScale"),
+                "value": .number(200)
+            ]
+        ))
+        #expect(scale.ok)
+        #expect(viewModel.document.layers[index].style.effectScale == 2)
+        #expect(viewModel.document.layers[index].style.shadowBlur == 7)
+
+        let hide = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style",
+            arguments: ["action": .string("hideSelected")]
+        ))
+        #expect(hide.ok)
+        #expect(!viewModel.document.layers[index].style.effectsEnabled)
+        #expect(viewModel.document.layers[index].style.shadowEnabled)
+
+        let show = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style",
+            arguments: ["action": .string("showAll")]
+        ))
+        #expect(show.ok)
+        #expect(viewModel.document.layers[index].style.effectsEnabled)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerEffectsShowAll"))
+    }
+
     @Test func registryReordersCollapsedGroupsAsVisibleSubtrees() {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

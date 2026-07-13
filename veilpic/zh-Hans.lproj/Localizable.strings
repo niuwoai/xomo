@@ -1188,6 +1188,11 @@
 "imageEditor.history.globalLight" = "调整全局光";
 "imageEditor.history.layerStylePaste" = "粘贴图层样式";
 "imageEditor.history.layerStyleClear" = "清除图层样式";
+"imageEditor.history.layerEffectsHideSelected" = "隐藏所选图层效果";
+"imageEditor.history.layerEffectsShowSelected" = "显示所选图层效果";
+"imageEditor.history.layerEffectsHideAll" = "隐藏全部图层效果";
+"imageEditor.history.layerEffectsShowAll" = "显示全部图层效果";
+"imageEditor.history.layerEffectsScale" = "缩放图层效果";
 "imageEditor.history.layerStyleRasterize" = "栅格化图层样式";
 "imageEditor.history.layerStyleRasterizeSelected" = "栅格化所选图层样式";
 "imageEditor.history.layerClippingMask" = "切换剪贴蒙版";
@@ -1738,6 +1743,12 @@
 "imageEditor.status.layerStyleCleared" = "已清除 %d 个图层的样式";
 "imageEditor.status.layerStyleReady" = "已准备图层样式选项";
 "imageEditor.status.layerStyleUpdated" = "已更新图层样式";
+"imageEditor.status.layerEffectsHiddenSelected" = "已隐藏 %d 个所选图层的效果";
+"imageEditor.status.layerEffectsShownSelected" = "已显示 %d 个所选图层的效果";
+"imageEditor.status.layerEffectsHiddenAll" = "已隐藏全部图层效果（%d 个图层）";
+"imageEditor.status.layerEffectsShownAll" = "已显示全部图层效果（%d 个图层）";
+"imageEditor.status.layerEffectsScaled" = "已将 %d 个图层的效果缩放为 %d%%";
+"imageEditor.status.layerEffectsScaleReady" = "请在属性面板调整图层效果缩放比例";
 "imageEditor.status.layerAdjustmentUpdatedSelected" = "已更新 %d 个调整图层";
 "imageEditor.status.layerFilterUpdatedSelected" = "已更新 %d 个滤镜图层";
 "imageEditor.status.layerSolidColorFillUpdatedSelected" = "已更新 %d 个纯色填充图层";
@@ -1979,6 +1990,12 @@
 "imageEditor.action.layerStyleCopy" = "复制图层样式";
 "imageEditor.action.layerStylePaste" = "粘贴图层样式";
 "imageEditor.action.layerStyleClear" = "清除图层样式";
+"imageEditor.action.layerEffectsHideSelected" = "隐藏所选图层效果";
+"imageEditor.action.layerEffectsShowSelected" = "显示所选图层效果";
+"imageEditor.action.layerEffectsHideAll" = "隐藏全部效果";
+"imageEditor.action.layerEffectsShowAll" = "显示全部效果";
+"imageEditor.action.layerEffectsScale" = "缩放效果…";
+"imageEditor.properties.layerEffectScaleValue" = "效果缩放：%d%%";
 "imageEditor.action.layerStroke" = "图层描边";
 "imageEditor.action.layerShadow" = "图层投影";
 "imageEditor.action.layerInnerShadow" = "图层内阴影";

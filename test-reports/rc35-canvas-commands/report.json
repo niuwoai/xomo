@@ -1,0 +1,79 @@
+{
+  "generated_at": "2026-07-14 04:42:04 +0800",
+  "total": 7,
+  "passed": 7,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorCanvasCommandTests",
+      "method": "canvasResizeOffsetsLayersSelectionsAndChannelsWithoutResamplingLayerPixels",
+      "identifier": "veilpicTests/ImageEditorCanvasCommandTests/canvasResizeOffsetsLayersSelectionsAndChannelsWithoutResamplingLayerPixels",
+      "file": "ImageEditorCanvasCommandTests.swift",
+      "passed": true,
+      "duration": 3.68,
+      "issues": [],
+      "log": "ImageEditorCanvasCommandTests.canvasResizeOffsetsLayersSelectionsAndChannelsWithoutResamplingLayerPixels.log"
+    },
+    {
+      "suite": "ImageEditorCanvasCommandTests",
+      "method": "canvasRotationCommandsTransformLayerFramesAndHistory",
+      "identifier": "veilpicTests/ImageEditorCanvasCommandTests/canvasRotationCommandsTransformLayerFramesAndHistory",
+      "file": "ImageEditorCanvasCommandTests.swift",
+      "passed": true,
+      "duration": 3.306,
+      "issues": [],
+      "log": "ImageEditorCanvasCommandTests.canvasRotationCommandsTransformLayerFramesAndHistory.log"
+    },
+    {
+      "suite": "ImageEditorCanvasCommandTests",
+      "method": "cropOffsetsLayersSelectionsChannelsAndGuidesIntoNewCanvasSpace",
+      "identifier": "veilpicTests/ImageEditorCanvasCommandTests/cropOffsetsLayersSelectionsChannelsAndGuidesIntoNewCanvasSpace",
+      "file": "ImageEditorCanvasCommandTests.swift",
+      "passed": true,
+      "duration": 3.858,
+      "issues": [],
+      "log": "ImageEditorCanvasCommandTests.cropOffsetsLayersSelectionsChannelsAndGuidesIntoNewCanvasSpace.log"
+    },
+    {
+      "suite": "ImageEditorCanvasCommandTests",
+      "method": "cropToSelectionUsesSelectionBoundsAndPreservesCanvasState",
+      "identifier": "veilpicTests/ImageEditorCanvasCommandTests/cropToSelectionUsesSelectionBoundsAndPreservesCanvasState",
+      "file": "ImageEditorCanvasCommandTests.swift",
+      "passed": true,
+      "duration": 3.427,
+      "issues": [],
+      "log": "ImageEditorCanvasCommandTests.cropToSelectionUsesSelectionBoundsAndPreservesCanvasState.log"
+    },
+    {
+      "suite": "ImageEditorCanvasCommandTests",
+      "method": "imageResizeScalesLayersSelectionsAndChannels",
+      "identifier": "veilpicTests/ImageEditorCanvasCommandTests/imageResizeScalesLayersSelectionsAndChannels",
+      "file": "ImageEditorCanvasCommandTests.swift",
+      "passed": true,
+      "duration": 3.636,
+      "issues": [],
+      "log": "ImageEditorCanvasCommandTests.imageResizeScalesLayersSelectionsAndChannels.log"
+    },
+    {
+      "suite": "ImageEditorCanvasCommandTests",
+      "method": "revealAllExpandsCanvasToVisibleLayerBounds",
+      "identifier": "veilpicTests/ImageEditorCanvasCommandTests/revealAllExpandsCanvasToVisibleLayerBounds",
+      "file": "ImageEditorCanvasCommandTests.swift",
+      "passed": true,
+      "duration": 4.096,
+      "issues": [],
+      "log": "ImageEditorCanvasCommandTests.revealAllExpandsCanvasToVisibleLayerBounds.log"
+    },
+    {
+      "suite": "ImageEditorCanvasCommandTests",
+      "method": "trimTransparentPixelsCropsToVisibleAlphaBounds",
+      "identifier": "veilpicTests/ImageEditorCanvasCommandTests/trimTransparentPixelsCropsToVisibleAlphaBounds",
+      "file": "ImageEditorCanvasCommandTests.swift",
+      "passed": true,
+      "duration": 3.442,
+      "issues": [],
+      "log": "ImageEditorCanvasCommandTests.trimTransparentPixelsCropsToVisibleAlphaBounds.log"
+    }
+  ]
+}

@@ -1188,6 +1188,11 @@
 "imageEditor.history.globalLight" = "グローバルライトを調整";
 "imageEditor.history.layerStylePaste" = "レイヤースタイルをペースト";
 "imageEditor.history.layerStyleClear" = "レイヤースタイルをクリア";
+"imageEditor.history.layerEffectsHideSelected" = "選択レイヤー効果を非表示";
+"imageEditor.history.layerEffectsShowSelected" = "選択レイヤー効果を表示";
+"imageEditor.history.layerEffectsHideAll" = "すべてのレイヤー効果を非表示";
+"imageEditor.history.layerEffectsShowAll" = "すべてのレイヤー効果を表示";
+"imageEditor.history.layerEffectsScale" = "レイヤー効果を拡大・縮小";
 "imageEditor.history.layerStyleRasterize" = "レイヤースタイルをラスタライズ";
 "imageEditor.history.layerStyleRasterizeSelected" = "選択レイヤースタイルをラスタライズ";
 "imageEditor.history.layerClippingMask" = "クリッピングマスクを切り替え";
@@ -1738,6 +1743,12 @@
 "imageEditor.status.layerStyleCleared" = "%d 個のレイヤースタイルをクリアしました";
 "imageEditor.status.layerStyleReady" = "レイヤースタイルオプションを準備しました";
 "imageEditor.status.layerStyleUpdated" = "レイヤースタイルを更新しました";
+"imageEditor.status.layerEffectsHiddenSelected" = "選択した %d 個のレイヤー効果を非表示にしました";
+"imageEditor.status.layerEffectsShownSelected" = "選択した %d 個のレイヤー効果を表示しました";
+"imageEditor.status.layerEffectsHiddenAll" = "%d 個のレイヤー効果をすべて非表示にしました";
+"imageEditor.status.layerEffectsShownAll" = "%d 個のレイヤー効果をすべて表示しました";
+"imageEditor.status.layerEffectsScaled" = "%d 個のレイヤー効果を %d%% に拡大・縮小しました";
+"imageEditor.status.layerEffectsScaleReady" = "プロパティパネルでレイヤー効果の倍率を調整してください";
 "imageEditor.status.layerAdjustmentUpdatedSelected" = "%d個の調整レイヤーを更新しました";
 "imageEditor.status.layerFilterUpdatedSelected" = "%d個のフィルターレイヤーを更新しました";
 "imageEditor.status.layerSolidColorFillUpdatedSelected" = "%d個のべた塗りレイヤーを更新しました";
@@ -1979,6 +1990,12 @@
 "imageEditor.action.layerStyleCopy" = "レイヤースタイルをコピー";
 "imageEditor.action.layerStylePaste" = "レイヤースタイルをペースト";
 "imageEditor.action.layerStyleClear" = "レイヤースタイルをクリア";
+"imageEditor.action.layerEffectsHideSelected" = "選択レイヤー効果を非表示";
+"imageEditor.action.layerEffectsShowSelected" = "選択レイヤー効果を表示";
+"imageEditor.action.layerEffectsHideAll" = "すべての効果を非表示";
+"imageEditor.action.layerEffectsShowAll" = "すべての効果を表示";
+"imageEditor.action.layerEffectsScale" = "効果を拡大・縮小…";
+"imageEditor.properties.layerEffectScaleValue" = "効果の倍率：%d%%";
 "imageEditor.action.layerStroke" = "レイヤー境界線";
 "imageEditor.action.layerShadow" = "レイヤードロップシャドウ";
 "imageEditor.action.layerInnerShadow" = "レイヤー内側シャドウ";
