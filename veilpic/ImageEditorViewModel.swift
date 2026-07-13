@@ -1129,15 +1129,11 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     var canGroupSelectedLayer: Bool {
-        let indices = selectedLayerIndices
-        guard !indices.isEmpty else { return false }
-        let selectedLayers = indices.map { document.layers[$0] }
-        let parentIDs = Set(selectedLayers.map(\.groupID))
-        guard parentIDs.count == 1 else { return false }
-        return indices.allSatisfy { index in
-            let layer = document.layers[index]
-            return !document.isEffectivelyLocked(layer)
-        }
+        ImageEditorLayerHierarchyGrouping.groupableRootIDs(
+            in: document.layers,
+            selectedIDs: document.selectedLayerIDs,
+            isEffectivelyLocked: { document.isEffectivelyLocked($0) }
+        ) != nil
     }
 
     var canSelectSelectedGroupMembers: Bool {
@@ -1167,10 +1163,11 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     var canUngroupSelectedLayers: Bool {
-        selectedLayerIndices.contains { index in
-            let layer = document.layers[index]
-            return layer.isGroup && !document.isEffectivelyLocked(layer)
-        }
+        !ImageEditorLayerHierarchyGrouping.ungroupableGroupIDs(
+            in: document.layers,
+            selectedIDs: document.selectedLayerIDs,
+            isEffectivelyLocked: { document.isEffectivelyLocked($0) }
+        ).isEmpty
     }
 
     var canMoveSelectedLayerUp: Bool {
@@ -2576,22 +2573,24 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func groupSelectedLayer() {
-        let indices = selectedLayerIndices
-        guard canGroupSelectedLayer, let insertionIndex = indices.last else { return }
-        pushUndo()
         let groupNumber = document.layers.filter(\.isGroup).count + 1
-        var group = ImageEditorLayer.group(
+        let group = ImageEditorLayer.group(
             name: L10n.format("imageEditor.layer.groupName", groupNumber),
             size: document.canvasSize
         )
-        group.groupID = document.layers[indices[0]].groupID
-        for index in indices {
-            document.layers[index].groupID = group.id
-        }
-        document.layers.insert(group, at: insertionIndex + 1)
+        guard let plan = ImageEditorLayerHierarchyGrouping.groupingPlan(
+            layers: document.layers,
+            selectedIDs: document.selectedLayerIDs,
+            group: group,
+            isEffectivelyLocked: { document.isEffectivelyLocked($0) }
+        ) else { return }
+
+        pushUndo()
+        document.layers = plan.layers
         normalizeClippingMasks()
-        document.selectedLayerID = group.id
-        document.selectedLayerIDs = [group.id]
+        document.selectedLayerIDs = plan.selectedLayerIDs
+        document.selectedLayerID = plan.primarySelectionID
+        layerSelectionAnchorID = plan.primarySelectionID
         isEditingLayerMask = false
         appendHistory(L10n.text("imageEditor.history.layerGroupSelected"))
     }
@@ -2685,27 +2684,23 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func ungroupSelectedLayers() {
-        let groupIDs = selectedUnlockedGroupIDs()
-        guard !groupIDs.isEmpty else { return }
+        guard let plan = ImageEditorLayerHierarchyGrouping.ungroupingPlan(
+            layers: document.layers,
+            selectedIDs: document.selectedLayerIDs,
+            primarySelectionID: document.selectedLayerID,
+            isEffectivelyLocked: { document.isEffectivelyLocked($0) }
+        ) else { return }
+
         pushUndo()
-        let memberIDs = Set(document.layers.filter { layer in
-            layer.groupID.map(groupIDs.contains) == true
-        }.map(\.id))
-        let replacementParents = groupReplacementParents(forRemoving: groupIDs)
-        for index in document.layers.indices {
-            guard let groupID = document.layers[index].groupID,
-                  groupIDs.contains(groupID)
-            else { continue }
-            document.layers[index].groupID = replacementParents[groupID] ?? nil
-        }
-        document.layers.removeAll { groupIDs.contains($0.id) }
+        document.layers = plan.layers
         normalizeLayerLinks()
         normalizeClippingMasks()
-        document.selectedLayerIDs = memberIDs
-        document.selectedLayerID = document.layers.reversed().first { memberIDs.contains($0.id) }?.id ?? document.layers.last?.id
+        document.selectedLayerIDs = plan.selectedLayerIDs
+        document.selectedLayerID = plan.primarySelectionID ?? document.layers.last?.id
         if document.selectedLayerIDs.isEmpty, let selectedLayerID = document.selectedLayerID {
             document.selectedLayerIDs = [selectedLayerID]
         }
+        layerSelectionAnchorID = document.selectedLayerID
         isEditingLayerMask = false
         appendHistory(L10n.text("imageEditor.history.layerUngroup"))
     }
@@ -5501,14 +5496,6 @@ final class ImageEditorViewModel: ObservableObject {
         return nil
     }
 
-    private func selectedUnlockedGroupIDs() -> Set<UUID> {
-        Set(selectedLayerIndices.compactMap { index in
-            let layer = document.layers[index]
-            guard layer.isGroup, !document.isEffectivelyLocked(layer) else { return nil }
-            return layer.id
-        })
-    }
-
     private func selectedLayerGroupBranchIDs() -> Set<UUID> {
         selectedLayerIndices.reduce(into: Set<UUID>()) { result, index in
             let layer = document.layers[index]
@@ -5773,22 +5760,6 @@ final class ImageEditorViewModel: ObservableObject {
             }
         }
         return deletionIDs
-    }
-
-    private func groupReplacementParents(forRemoving groupIDs: Set<UUID>) -> [UUID: UUID?] {
-        var replacements: [UUID: UUID?] = [:]
-        for groupID in groupIDs {
-            var parentID = document.layers.first { $0.id == groupID }?.groupID
-            var visitedIDs = Set<UUID>([groupID])
-            while let candidateID = parentID,
-                  groupIDs.contains(candidateID),
-                  !visitedIDs.contains(candidateID) {
-                visitedIDs.insert(candidateID)
-                parentID = document.layers.first { $0.id == candidateID }?.groupID
-            }
-            replacements[groupID] = parentID
-        }
-        return replacements
     }
 
     private func clippingBaseExists(below index: Int, groupID: UUID?) -> Bool {

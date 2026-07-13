@@ -464,6 +464,40 @@ struct XomoAutomationTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerMove"))
     }
 
+    @Test func registryGroupsAndUngroupsHierarchyWhileSkippingLockedSelection() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        let bottom = ImageEditorLayer.blank(name: "Bottom", size: viewModel.document.canvasSize)
+        var locked = ImageEditorLayer.blank(name: "Locked", size: viewModel.document.canvasSize)
+        let top = ImageEditorLayer.blank(name: "Top", size: viewModel.document.canvasSize)
+        locked.isLocked = true
+        viewModel.document.layers = [bottom, locked, top]
+        viewModel.document.selectedLayerID = top.id
+        viewModel.document.selectedLayerIDs = [bottom.id, locked.id, top.id]
+        registry.register(viewModel)
+
+        let groupResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.group"
+        ))
+
+        #expect(groupResponse.ok)
+        let groupID = try #require(viewModel.document.selectedLayerID)
+        #expect(viewModel.document.layers.map(\.id) == [locked.id, bottom.id, top.id, groupID])
+        #expect(viewModel.document.selectedLayerIDs == [locked.id, groupID])
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerGroupSelected"))
+
+        let ungroupResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.ungroup"
+        ))
+
+        #expect(ungroupResponse.ok)
+        #expect(viewModel.document.layers.map(\.id) == [locked.id, bottom.id, top.id])
+        #expect(viewModel.document.selectedLayerIDs == [locked.id, bottom.id, top.id])
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerUngroup"))
+    }
+
     @Test func registryRunsDestinationPatchWithFeatherThroughSpecialPaintTool() {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared
