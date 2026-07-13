@@ -310,6 +310,12 @@ final class XomoAutomationRegistry {
             return textResult(viewModel)
         case "xomo.text.update":
             try updateText(arguments, viewModel: viewModel)
+        case "xomo.text.convert":
+            let rawValue = try requiredString("mode", in: arguments)
+            guard let layoutMode = ImageEditorTextLayoutMode(rawValue: rawValue) else {
+                throw XomoAutomationCallError.invalidArgument("Unknown text layout mode: \(rawValue)")
+            }
+            viewModel.convertSelectedTextLayers(to: layoutMode)
         case "xomo.mask.action":
             try maskAction(arguments, viewModel: viewModel)
         case "xomo.path.get":
@@ -642,6 +648,7 @@ final class XomoAutomationRegistry {
             "characterSpacing": .number(content.characterSpacing),
             "lineSpacing": .number(content.lineSpacing),
             "boxWidth": .number(content.boxWidth),
+            "layoutMode": .string(content.layoutMode.rawValue),
             "alignment": .string(content.alignment.rawValue),
             "leftIndent": .number(content.leftIndent),
             "rightIndent": .number(content.rightIndent),
@@ -2060,6 +2067,9 @@ private extension XomoAutomationRegistry {
             "rightIndent": XomoAutomationSchema.number(description: "Paragraph right indent"),
             "firstLineIndent": XomoAutomationSchema.number(description: "First-line indent relative to the left indent")
         ]),
+        tool("xomo.text.convert", "Convert selected editable text layers between point and paragraph text.", [
+            "mode": XomoAutomationSchema.string(description: "Target text layout mode", values: ImageEditorTextLayoutMode.allCases.map(\.rawValue))
+        ], required: ["mode"]),
         tool("xomo.mask.action", "Create, edit, copy, apply, rasterize, or delete raster and vector masks.", [
             "action": XomoAutomationSchema.string(description: "Mask action", values: ["addRevealAll", "addFromSelection", "addHideAll", "addHideSelection", "delete", "apply", "invert", "revealSelection", "hideSelection", "intersectSelection", "loadSelection", "copyToSelected", "toggleEnabled", "toggleLinked", "addVectorFromSelection", "copyVectorToSelected", "rasterizeVector", "loadVectorSelection", "toggleVectorEnabled", "deleteVector"])
         ], required: ["action"]),

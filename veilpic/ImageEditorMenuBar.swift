@@ -1838,6 +1838,15 @@ extension ImageEditorView {
                 }
             }
             Divider()
+            Button(L10n.text("imageEditor.action.textConvertToPoint")) {
+                viewModel.convertSelectedTextLayers(to: .point)
+            }
+            .disabled(!viewModel.canConvertSelectedTextToPoint)
+            Button(L10n.text("imageEditor.action.textConvertToParagraph")) {
+                viewModel.convertSelectedTextLayers(to: .paragraph)
+            }
+            .disabled(!viewModel.canConvertSelectedTextToParagraph)
+            Divider()
             Button(L10n.text("imageEditor.action.layerTextUpdate")) {
                 viewModel.updateSelectedTextLayer()
             }

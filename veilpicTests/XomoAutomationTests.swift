@@ -15,7 +15,7 @@ struct XomoAutomationTests {
             Issue.record("Expected tool array")
             return
         }
-        #expect(tools.count == 105)
+        #expect(tools.count == 106)
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.layer.list")
@@ -39,6 +39,10 @@ struct XomoAutomationTests {
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.brush.preset")
+        })
+        #expect(tools.contains { tool in
+            guard case .object(let value) = tool else { return false }
+            return value["name"] == .string("xomo.text.convert")
         })
     }
 
@@ -224,6 +228,19 @@ struct XomoAutomationTests {
         #expect(viewModel.document.selectedLayer?.textContent?.leftIndent == 24)
         #expect(viewModel.document.selectedLayer?.textContent?.rightIndent == 16)
         #expect(viewModel.document.selectedLayer?.textContent?.firstLineIndent == 12)
+        #expect(registry.execute(request(
+            operation: "call",
+            name: "xomo.text.convert",
+            arguments: ["mode": .string("paragraph")]
+        )).ok)
+        #expect(viewModel.document.selectedLayer?.textContent?.layoutMode == .paragraph)
+
+        let inspectResponse = registry.execute(request(operation: "call", name: "xomo.text.get"))
+        guard case .object(let inspectedText) = inspectResponse.result else {
+            Issue.record("Expected text result")
+            return
+        }
+        #expect(inspectedText["layoutMode"] == .string("paragraph"))
     }
 
     @Test func registryConfiguresCloneStampSamplingOptions() {
