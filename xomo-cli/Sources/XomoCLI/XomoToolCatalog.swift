@@ -42,6 +42,8 @@ enum XomoToolCatalog {
         ("xomo.layer.merge_selected", "Merge editable selected sibling subtrees while preserving locked selections."),
         ("xomo.layer.merge_visible", "Merge all visible layers."),
         ("xomo.layer.stamp_visible", "Create a stamped layer from visible content."),
+        ("xomo.layer.stamp_selected", "Create a stamped layer from selected layer subtrees."),
+        ("xomo.layer.flatten", "Flatten visible content onto an opaque locked background and discard hidden layers."),
         ("xomo.layer.transform", "Scale, rotate, flip, fit, trim, or rasterize selected layers."),
         ("xomo.layer.align", "Align or distribute selected layers."),
         ("xomo.layer.style", "Copy, paste, or clear layer styles."),

@@ -1,0 +1,19 @@
+{
+  "generated_at": "2026-07-13 21:01:16 +0800",
+  "total": 1,
+  "passed": 1,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "veilpicTests",
+      "method": "imageEditorMergeVisibleKeepsHiddenLayersAndUndoRestoresStack",
+      "identifier": "veilpicTests/veilpicTests/imageEditorMergeVisibleKeepsHiddenLayersAndUndoRestoresStack",
+      "file": "veilpicTests.swift",
+      "passed": true,
+      "duration": 2.923,
+      "issues": [],
+      "log": "veilpicTests.imageEditorMergeVisibleKeepsHiddenLayersAndUndoRestoresStack.log"
+    }
+  ]
+}

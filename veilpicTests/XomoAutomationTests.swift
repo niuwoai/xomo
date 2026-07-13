@@ -15,7 +15,7 @@ struct XomoAutomationTests {
             Issue.record("Expected tool array")
             return
         }
-        #expect(tools.count == 108)
+        #expect(tools.count == 110)
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.layer.list")
@@ -520,6 +520,39 @@ struct XomoAutomationTests {
         #expect(viewModel.document.layers.last?.id == locked.id)
         #expect(viewModel.document.selectedLayerIDs.contains(locked.id))
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerMergeSelected"))
+    }
+
+    @Test func registryStampsSelectedLayersAndFlattensToALockedBackground() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        let lower = ImageEditorLayer.blank(name: "Lower", size: viewModel.document.canvasSize)
+        let upper = ImageEditorLayer.blank(name: "Upper", size: viewModel.document.canvasSize)
+        viewModel.document.layers = [lower, upper]
+        viewModel.document.selectedLayerID = upper.id
+        viewModel.document.selectedLayerIDs = [lower.id, upper.id]
+        registry.register(viewModel)
+
+        let stampResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.stamp_selected"
+        ))
+
+        #expect(stampResponse.ok)
+        #expect(viewModel.document.layers.count == 3)
+        #expect(viewModel.document.selectedLayer?.name == L10n.text("imageEditor.layer.selectedStampName"))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStampSelected"))
+
+        let flattenResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.flatten"
+        ))
+
+        #expect(flattenResponse.ok)
+        let background = try #require(viewModel.document.selectedLayer)
+        #expect(viewModel.document.layers.count == 1)
+        #expect(background.name == L10n.text("imageEditor.layer.background"))
+        #expect(background.isLocked)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerFlatten"))
     }
 
     @Test func registryMovesLayerSubtreesIntoAndOutOfGroupsAtVisibleBoundaries() throws {

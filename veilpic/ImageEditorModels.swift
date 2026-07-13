@@ -3943,6 +3943,18 @@ struct ImageEditorDocument {
         compositedImage(includingOnly: Optional(includedLayerIDs))
     }
 
+    func compositedImage(
+        includingOnly includedLayerIDs: Set<UUID>,
+        within parentGroupID: UUID?
+    ) -> NSImage {
+        guard let parentGroupID,
+              let parentGroup = layers.first(where: { $0.id == parentGroupID && $0.isGroup })
+        else {
+            return compositedImage(includingOnly: includedLayerIDs)
+        }
+        return isolatedGroupCanvas(for: parentGroup, includedLayerIDs: includedLayerIDs)
+    }
+
     private func compositedImage(includingOnly includedLayerIDs: Set<UUID>?) -> NSImage {
         var canvas = NSImage.transparent(size: canvasSize)
         for index in layers.indices {

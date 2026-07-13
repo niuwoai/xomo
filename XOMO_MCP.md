@@ -1,6 +1,6 @@
 # Xomo MCP 与 CLI
 
-> 当前版本：v2.12.0-rc28
+> 当前版本：v2.12.0-rc29
 
 ## 架构
 
@@ -61,7 +61,7 @@ MCP 服务器实现 `initialize`、`ping`、`tools/list` 和 `tools/call`。当 
 
 ## 当前工具范围
 
-- 共 108 个 MCP 工具；同类细粒度操作通过带严格枚举参数的 action 工具组织。
+- 共 110 个 MCP 工具；同类细粒度操作通过带严格枚举参数的 action 工具组织。
 - App 与文档状态
 - 预设或自定义画布创建、可编辑文字/形状检查与更新、点文字 / 固定宽高段落文字创建和转换、文字框所需高度、溢出诊断与适合内容 / 仅扩高操作，以及详细调整、滤镜和图层样式参数
 - 完整 `qpicproject` 项目导入导出，以及 PNG/JPEG/WebP 等图像图层导入
@@ -85,6 +85,8 @@ MCP 服务器实现 `initialize`、`ping`、`tools/list` 和 `tools/call`。当 
 `xomo.layer.group` 会把所选可编辑项目整理为连续图层子树：锁定项留在原位置并保持选中，显式选中的组内后代会提升为新组的直接成员，未选中的后代分支保持原结构。`xomo.layer.ungroup` 可一次处理嵌套所选组，跳过锁定组并保留无关选择；两者均只产生一个 History/Undo 步骤。
 
 `xomo.layer.action` 的 `moveIntoGroup` 会寻找选择上方同层级的下一个可编辑组，并把可编辑所选根及完整组子树连续放到该组顶部；`moveOutOfGroup` 则把每个子树放到各自原父组的正上方，可一次处理多个嵌套父组。锁定选择保持原位，两种操作都保留选择并只增加一个 History/Undo 步骤。
+
+`xomo.layer.merge_visible`、`xomo.layer.stamp_visible`、`xomo.layer.stamp_selected` 与 `xomo.layer.flatten` 共用 App 内的层级合成入口：不会切开图层组，盖印保留源结构，合并可见保留隐藏子树，拼合会输出白色不透明且锁定的背景层。
 
 `xomo.layer.duplicate` 会把显式选择按原父级分簇，并复制所选组的完整嵌套子树。同父级副本保持原相对顺序，不同父组分别在各自边界落位；父组 ID、显式选择、主选择和副本内部链接使用统一的新 ID 映射。剪贴链副本优先绑定副本基底，复制基底不会改变原链，孤立剪贴副本会转为普通图层；整次调用只增加一个 History/Undo 步骤。
 

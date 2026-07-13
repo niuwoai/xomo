@@ -31,43 +31,30 @@ extension ImageEditorViewModel {
     }
 
     func mergeVisibleLayers() {
-        let sourceIDs = mergeVisibleLayerIDs
+        let sourceIDs = Set(mergeVisibleLayerIDs)
         guard sourceIDs.count > 1 else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
 
-        pushUndo()
-        let flattenedImage = document.compositedImage
-        var mergedLayer = flattenedLayer(
+        let mergedLayer = flattenedLayer(
             name: L10n.text("imageEditor.layer.visibleMergedName"),
-            image: flattenedImage
+            image: document.compositedImage
         )
-        let firstSourceIndex = document.layers.firstIndex { sourceIDs.contains($0.id) } ?? 0
-        let sourceIDSet = Set(sourceIDs)
-        var mergedWasInserted = false
-        var nextLayers: [ImageEditorLayer] = []
-
-        for (index, layer) in document.layers.enumerated() {
-            if index == firstSourceIndex {
-                nextLayers.append(mergedLayer)
-                mergedWasInserted = true
-            }
-            guard !sourceIDSet.contains(layer.id) else { continue }
-            nextLayers.append(layer)
+        guard let resultPlan = ImageEditorLayerCompositeHierarchy.applyingMergeVisible(
+            layers: document.layers,
+            sourceLayerIDs: sourceIDs,
+            mergedLayer: mergedLayer,
+            isEffectivelyVisible: { document.isEffectivelyVisible($0) }
+        ) else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
         }
 
-        if !mergedWasInserted {
-            nextLayers.append(mergedLayer)
-        }
-
-        nextLayers = removingEmptyVisibleGroups(from: nextLayers)
-        if let index = nextLayers.firstIndex(where: { $0.id == mergedLayer.id }) {
-            mergedLayer = nextLayers[index]
-        }
-        document.layers = nextLayers
-        document.selectedLayerID = mergedLayer.id
-        document.selectedLayerIDs = [mergedLayer.id]
+        pushUndo()
+        document.layers = resultPlan.layers
+        document.selectedLayerID = resultPlan.primarySelectionID
+        document.selectedLayerIDs = [resultPlan.primarySelectionID]
         isEditingLayerMask = false
         appendHistory(L10n.text("imageEditor.history.layerMergeVisible"))
         statusText = L10n.text("imageEditor.status.layerMergeVisible")
@@ -105,13 +92,11 @@ extension ImageEditorViewModel {
         }
 
         pushUndo()
-        let flattened = flattenedLayer(
-            name: L10n.text("imageEditor.layer.flattenedName"),
-            image: document.compositedImage
-        )
-        document.layers = [flattened]
-        document.selectedLayerID = flattened.id
-        document.selectedLayerIDs = [flattened.id]
+        let whiteComposite = opaqueWhiteComposite(document.compositedImage)
+        let background = ImageEditorLayer.background(image: whiteComposite)
+        document.layers = [background]
+        document.selectedLayerID = background.id
+        document.selectedLayerIDs = [background.id]
         isEditingLayerMask = false
         appendHistory(L10n.text("imageEditor.history.layerFlatten"))
         statusText = L10n.text("imageEditor.status.layerFlattened")
@@ -187,14 +172,17 @@ extension ImageEditorViewModel {
         return layer
     }
 
-    private func removingEmptyVisibleGroups(from layers: [ImageEditorLayer]) -> [ImageEditorLayer] {
-        layers.filter { layer in
-            guard layer.isGroup,
-                  layer.isVisible,
-                  !layers.contains(where: { $0.groupID == layer.id })
-            else { return true }
-            return false
-        }
+    private func opaqueWhiteComposite(_ image: NSImage) -> NSImage {
+        NSImage.rendered(size: document.canvasSize) { _ in
+            NSColor.white.setFill()
+            NSBezierPath(rect: CGRect(origin: .zero, size: document.canvasSize)).fill()
+            image.draw(
+                in: CGRect(origin: .zero, size: document.canvasSize),
+                from: CGRect(origin: .zero, size: image.size),
+                operation: .sourceOver,
+                fraction: 1
+            )
+        }?.normalizedBitmapImage() ?? image.normalizedBitmapImage()
     }
 
 }
