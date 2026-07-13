@@ -116,6 +116,13 @@ struct ImageEditorLayerStylePresetMenu: View {
                     Label(L10n.text("imageEditor.action.layerStylePresetDelete"), systemImage: "trash")
                 }
             }
+
+            Divider()
+            Button {
+                viewModel.isLayerStylePresetManagerPresented = true
+            } label: {
+                Label(L10n.text("imageEditor.action.layerStylePresetManage"), systemImage: "slider.horizontal.3")
+            }
         } label: {
             Label(
                 viewModel.activeLayerStylePreset?.title

@@ -177,6 +177,9 @@ struct ImageEditorView: View {
         .sheet(isPresented: $viewModel.isNewCanvasSheetPresented) {
             XomoNewCanvasSheet(viewModel: viewModel)
         }
+        .sheet(isPresented: $viewModel.isLayerStylePresetManagerPresented) {
+            ImageEditorLayerStylePresetManager(viewModel: viewModel)
+        }
     }
 
     private var optionBar: some View {

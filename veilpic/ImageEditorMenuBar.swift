@@ -981,6 +981,11 @@ extension ImageEditorView {
                 viewModel.deleteLayerStylePreset(activePreset)
             }
         }
+
+        Divider()
+        Button(L10n.text("imageEditor.action.layerStylePresetManage")) {
+            viewModel.isLayerStylePresetManagerPresented = true
+        }
     }
 
     @ViewBuilder
