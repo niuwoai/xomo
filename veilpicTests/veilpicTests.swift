@@ -130,6 +130,9 @@ struct veilpicTests {
         #expect(unlockedBackground.name == L10n.text("imageEditor.layer.background"))
         #expect(unlockedBackground.isLocked)
 
+        viewModel.selectLayer(backgroundID)
+        viewModel.convertBackgroundToLayer()
+
         viewModel.addLayer()
         let layerID = try #require(viewModel.document.selectedLayerID)
         let layerIndex = try #require(viewModel.document.layers.firstIndex { $0.id == layerID })

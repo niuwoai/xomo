@@ -438,6 +438,49 @@ struct XomoAutomationTests {
         #expect(viewModel.document.layers.allSatisfy { layer in layer.isGroupExpanded })
     }
 
+    @Test func registryUsesTheSameSingleBackgroundConversionRulesAsTheEditor() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        let backgroundID = try #require(viewModel.document.layers.first?.id)
+        let regularLayerID = try #require(viewModel.document.selectedLayerID)
+        let initialLayerIDs = viewModel.document.layers.map(\.id)
+        let initialHistoryCount = viewModel.document.history.count
+
+        let rejected = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.action",
+            arguments: ["action": .string("layerToBackground")]
+        ))
+
+        #expect(rejected.ok)
+        #expect(viewModel.document.layers.map(\.id) == initialLayerIDs)
+        #expect(viewModel.document.history.count == initialHistoryCount)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.operationFailed"))
+
+        viewModel.selectLayer(backgroundID)
+        let unlock = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.action",
+            arguments: ["action": .string("backgroundToLayer")]
+        ))
+        #expect(unlock.ok)
+        #expect(!viewModel.document.layers[0].isLocked)
+
+        viewModel.selectLayer(regularLayerID)
+        let convert = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.action",
+            arguments: ["action": .string("layerToBackground")]
+        ))
+
+        #expect(convert.ok)
+        #expect(viewModel.document.layers.first?.id == regularLayerID)
+        #expect(viewModel.document.layers.first?.isLocked == true)
+        #expect(viewModel.document.layers.first?.name == L10n.text("imageEditor.layer.background"))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.backgroundFromLayer"))
+    }
+
     @Test func registryReordersCollapsedGroupsAsVisibleSubtrees() {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

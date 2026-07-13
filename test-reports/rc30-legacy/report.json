@@ -1,0 +1,19 @@
+{
+  "generated_at": "2026-07-13 21:21:13 +0800",
+  "total": 1,
+  "passed": 1,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "veilpicTests",
+      "method": "imageEditorConvertsBackgroundAndLayerBothWays",
+      "identifier": "veilpicTests/veilpicTests/imageEditorConvertsBackgroundAndLayerBothWays",
+      "file": "veilpicTests.swift",
+      "passed": true,
+      "duration": 4.145,
+      "issues": [],
+      "log": "veilpicTests.imageEditorConvertsBackgroundAndLayerBothWays.log"
+    }
+  ]
+}

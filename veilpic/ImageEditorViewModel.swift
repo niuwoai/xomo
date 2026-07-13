@@ -2465,7 +2465,8 @@ final class ImageEditorViewModel: ObservableObject {
     var canConvertSelectedLayerToBackground: Bool {
         guard selectedLayerCount == 1,
               let index = document.selectedLayerIndex,
-              !isBackgroundLayer(at: index)
+              !isBackgroundLayer(at: index),
+              !hasBackgroundLayer
         else { return false }
         let layer = document.layers[index]
         return !layer.isGroup && !layer.isAdjustment && !layer.isFilter
@@ -2502,11 +2503,16 @@ final class ImageEditorViewModel: ObservableObject {
         }
 
         pushUndo()
+        let sourceLayer = document.layers[index]
         var backgroundLayer = ImageEditorLayer.background(image: backgroundImage)
-        backgroundLayer.id = document.layers[index].id
+        backgroundLayer.id = sourceLayer.id
+        backgroundLayer.isVisible = sourceLayer.isVisible
         backgroundLayer.linkedLayerIDs = []
-        backgroundLayer.labelColor = document.layers[index].labelColor
+        backgroundLayer.labelColor = sourceLayer.labelColor
         document.layers.remove(at: index)
+        for survivorIndex in document.layers.indices {
+            document.layers[survivorIndex].linkedLayerIDs.remove(sourceLayer.id)
+        }
         document.layers.insert(backgroundLayer, at: 0)
         normalizeClippingMasks()
         document.selectedLayerID = backgroundLayer.id
@@ -5483,19 +5489,38 @@ final class ImageEditorViewModel: ObservableObject {
             && layer.name == L10n.text("imageEditor.layer.background")
     }
 
+    private var hasBackgroundLayer: Bool {
+        document.layers.indices.contains { isBackgroundLayer(at: $0) }
+    }
+
     private func backgroundImage(from layer: ImageEditorLayer) -> NSImage? {
         let fillColor = (backgroundColor.usingColorSpace(.deviceRGB) ?? backgroundColor).withAlphaComponent(1)
         let layerImage = layer.renderedCompositingImage(globalLightAngle: document.globalLightAngle)
-        return NSImage.rendered(size: document.canvasSize) { rect in
+        guard let solidCanvas = NSImage.rendered(size: document.canvasSize, actions: { rect in
             fillColor.setFill()
             rect.fill()
+        })?.normalizedBitmapImage(),
+              let layerCanvas = NSImage.rendered(size: document.canvasSize, actions: { _ in
             layerImage.draw(
                 in: layer.renderedCompositingFrame(globalLightAngle: document.globalLightAngle),
                 from: CGRect(origin: .zero, size: layerImage.size),
                 operation: .sourceOver,
                 fraction: 1
             )
-        }?.normalizedBitmapImage()
+        })?.normalizedBitmapImage()
+        else { return nil }
+
+        let blendIfCanvas = layerCanvas.applyingBlendIfUnderlyingRange(
+            black: layer.blendIfUnderlyingBlack,
+            white: layer.blendIfUnderlyingWhite,
+            backdrop: solidCanvas
+        ) ?? layerCanvas
+        let blendMode = layer.blendMode == .passThrough ? ImageEditorBlendMode.normal : layer.blendMode
+        return solidCanvas.blended(
+            with: blendIfCanvas,
+            mode: blendMode,
+            opacity: layer.opacity
+        )?.normalizedBitmapImage()
     }
 
     private var selectedLayerIndices: [Int] {
