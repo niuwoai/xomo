@@ -2065,6 +2065,7 @@ enum ImageEditorTextAlignment: String, CaseIterable, Identifiable {
     case left
     case center
     case right
+    case justified
 
     var id: String { rawValue }
 
@@ -2080,6 +2081,8 @@ enum ImageEditorTextAlignment: String, CaseIterable, Identifiable {
             return .center
         case .right:
             return .right
+        case .justified:
+            return .justified
         }
     }
 }
@@ -2101,6 +2104,9 @@ struct ImageEditorTextContent {
     var lineSpacing: CGFloat = 0
     var boxWidth: CGFloat = 0
     var alignment: ImageEditorTextAlignment = .left
+    var leftIndent: CGFloat = 0
+    var rightIndent: CGFloat = 0
+    var firstLineIndent: CGFloat = 0
 
     var font: NSFont {
         let size = max(6, fontSize)
@@ -2125,6 +2131,9 @@ struct ImageEditorTextContent {
         let style = NSMutableParagraphStyle()
         style.alignment = alignment.nsTextAlignment
         style.lineSpacing = max(0, lineSpacing)
+        style.headIndent = max(0, leftIndent)
+        style.firstLineHeadIndent = max(0, leftIndent + firstLineIndent)
+        style.tailIndent = rightIndent > 0 ? -rightIndent : 0
         return style
     }
 

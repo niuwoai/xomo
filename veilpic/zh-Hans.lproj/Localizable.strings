@@ -706,6 +706,9 @@
 "imageEditor.properties.textCharacterSpacingValue" = "字距：%d px";
 "imageEditor.properties.textLineSpacingValue" = "行距：%d px";
 "imageEditor.properties.textBoxWidthValue" = "文本框：%d px";
+"imageEditor.properties.textLeftIndentValue" = "左缩进：%d px";
+"imageEditor.properties.textRightIndentValue" = "右缩进：%d px";
+"imageEditor.properties.textFirstLineIndentValue" = "首行缩进：%d px";
 "imageEditor.properties.pathAnchors" = "路径锚点";
 "imageEditor.properties.pathAnchorXValue" = "X：%d px";
 "imageEditor.properties.pathAnchorYValue" = "Y：%d px";
@@ -739,6 +742,7 @@
 "imageEditor.textAlignment.left" = "左";
 "imageEditor.textAlignment.center" = "中";
 "imageEditor.textAlignment.right" = "右";
+"imageEditor.textAlignment.justified" = "两端";
 "imageEditor.levels.blackPoint" = "黑场";
 "imageEditor.levels.gamma" = "中间调";
 "imageEditor.levels.whitePoint" = "白场";
@@ -1387,7 +1391,7 @@
 "imageEditor.status.brushPresetDeleted" = "已删除画笔预设：%@";
 "imageEditor.status.brushPresetLimitReached" = "最多只能保存 %d 个自定义画笔预设";
 "imageEditor.status.characterPanelSummary" = "文字：%@ | 字号：%d px | 粗体：%@ | 斜体：%@ | 下划线：%@ | 删除线：%@ | 字距：%d | 行距：%d";
-"imageEditor.status.paragraphPanelSummary" = "对齐：%@ | 文本框宽度：%d px";
+"imageEditor.status.paragraphPanelSummary" = "对齐：%@ | 文本框宽度：%d px | 左缩进：%d px | 右缩进：%d px | 首行缩进：%d px";
 "imageEditor.characterPanel.emptyText" = "未输入";
 "imageEditor.characterPanel.enabled" = "开";
 "imageEditor.characterPanel.disabled" = "关";

@@ -4071,6 +4071,26 @@ struct ImageEditorView: View {
                     in: 0...1600,
                     step: 8
                 )
+                HStack {
+                    Stepper(
+                        L10n.format("imageEditor.properties.textLeftIndentValue", Int(viewModel.textLeftIndent.rounded())),
+                        value: $viewModel.textLeftIndent,
+                        in: 0...800,
+                        step: 4
+                    )
+                    Stepper(
+                        L10n.format("imageEditor.properties.textRightIndentValue", Int(viewModel.textRightIndent.rounded())),
+                        value: $viewModel.textRightIndent,
+                        in: 0...800,
+                        step: 4
+                    )
+                }
+                Stepper(
+                    L10n.format("imageEditor.properties.textFirstLineIndentValue", Int(viewModel.textFirstLineIndent.rounded())),
+                    value: $viewModel.textFirstLineIndent,
+                    in: -800...800,
+                    step: 4
+                )
                 if viewModel.canEditSelectedPathAnchors {
                     VStack(alignment: .leading, spacing: 6) {
                         Text(L10n.text("imageEditor.properties.pathAnchors"))

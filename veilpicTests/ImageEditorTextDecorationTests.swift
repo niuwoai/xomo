@@ -39,7 +39,7 @@ struct ImageEditorTextDecorationTests {
         plain.isStruckThrough = true
         let decoratedLayer = ImageEditorLayer.text(name: "Decorated", origin: .zero, content: plain)
 
-        #expect(try #require(plainLayer.contentImage.qingtuPNGData()) != decoratedLayer.contentImage.qingtuPNGData())
+        #expect(plainLayer.contentImage.qingtuPNGData() != decoratedLayer.contentImage.qingtuPNGData())
     }
 
     @Test func newAndExistingTextLayersRoundTripDecorationControlsThroughUndo() throws {
