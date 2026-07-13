@@ -1891,7 +1891,13 @@
 "imageEditor.action.layerSmartObjectReplace" = "替换智能对象内容";
 "imageEditor.action.layerSmartObjectMakeUnique" = "让智能对象实例独立";
 "imageEditor.action.layerSmartObjectResetTransform" = "重置智能对象变换";
-"imageEditor.action.layerRasterize" = "栅格化所选图层";
+"imageEditor.action.layerRasterize" = "栅格化";
+"imageEditor.action.layerRasterize.type" = "文字";
+"imageEditor.action.layerRasterize.shape" = "形状";
+"imageEditor.action.layerRasterize.fillContent" = "填充内容";
+"imageEditor.action.layerRasterize.vectorMask" = "矢量蒙版";
+"imageEditor.action.layerRasterize.smartObject" = "智能对象";
+"imageEditor.action.layerRasterize.layer" = "图层";
 "imageEditor.action.layerDelete" = "删除图层";
 "imageEditor.action.layerTop" = "置顶图层";
 "imageEditor.action.layerUp" = "上移图层";

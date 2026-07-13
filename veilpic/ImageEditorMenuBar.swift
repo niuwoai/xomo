@@ -543,10 +543,14 @@ extension ImageEditorView {
         }
         .disabled(!viewModel.canClearSmartFiltersFromSelectedLayer)
         Divider()
-        Button(L10n.text("imageEditor.action.layerRasterize")) {
-            viewModel.rasterizeSelectedLayer()
+        Menu(L10n.text("imageEditor.action.layerRasterize")) {
+            ForEach(ImageEditorRasterizeTarget.allCases) { target in
+                Button(L10n.text(target.actionTitleKey)) {
+                    viewModel.rasterizeSelectedLayers(target)
+                }
+                .disabled(!viewModel.canRasterizeSelectedLayers(target))
+            }
         }
-        .disabled(!viewModel.canRasterizeSelectedLayer)
         Button(L10n.text("imageEditor.action.layerClippingMask")) {
             viewModel.toggleSelectedLayerClippingMask()
         }
