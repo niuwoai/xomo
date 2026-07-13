@@ -58,6 +58,11 @@ fileprivate enum ImageEditorLayerMaskSelectionCombination {
     }
 }
 
+fileprivate enum ImageEditorMaskApplicationTarget: Equatable {
+    case raster
+    case vector
+}
+
 @MainActor
 extension ImageEditorViewModel {
     var canCreateLayerMaskFromSelection: Bool {
@@ -85,7 +90,11 @@ extension ImageEditorViewModel {
     }
 
     var canApplyLayerMask: Bool {
-        !layerMaskApplyIndices().isEmpty
+        !maskApplyIndices(target: .raster).isEmpty
+    }
+
+    var canApplyVectorMask: Bool {
+        !maskApplyIndices(target: .vector).isEmpty
     }
 
     var canInvertLayerMask: Bool {
@@ -329,7 +338,15 @@ extension ImageEditorViewModel {
     }
 
     func applyLayerMask() {
-        let indices = layerMaskApplyIndices()
+        applyMasks(target: .raster)
+    }
+
+    func applyVectorMask() {
+        applyMasks(target: .vector)
+    }
+
+    private func applyMasks(target: ImageEditorMaskApplicationTarget) {
+        let indices = maskApplyIndices(target: target)
         guard !indices.isEmpty else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
@@ -337,16 +354,28 @@ extension ImageEditorViewModel {
 
         pushUndo()
         for index in indices {
-            applyLayerMask(at: index)
+            applyMask(at: index, target: target)
         }
-        isEditingLayerMask = false
+        if target == .raster || document.selectedLayer?.mask == nil {
+            isEditingLayerMask = false
+        }
 
-        if indices.count == 1 {
-            appendHistory(L10n.text("imageEditor.history.layerMaskApply"))
-            statusText = L10n.text("imageEditor.status.layerMaskApplied")
+        if target == .raster {
+            if indices.count == 1 {
+                appendHistory(L10n.text("imageEditor.history.layerMaskApply"))
+                statusText = L10n.text("imageEditor.status.layerMaskApplied")
+            } else {
+                appendHistory(L10n.text("imageEditor.history.layerMaskApplySelected"))
+                statusText = L10n.format("imageEditor.status.layerMaskAppliedSelected", indices.count)
+            }
         } else {
-            appendHistory(L10n.text("imageEditor.history.layerMaskApplySelected"))
-            statusText = L10n.format("imageEditor.status.layerMaskAppliedSelected", indices.count)
+            if indices.count == 1 {
+                appendHistory(L10n.text("imageEditor.history.vectorMaskApply"))
+                statusText = L10n.text("imageEditor.status.vectorMaskApplied")
+            } else {
+                appendHistory(L10n.text("imageEditor.history.vectorMaskApplySelected"))
+                statusText = L10n.format("imageEditor.status.vectorMaskAppliedSelected", indices.count)
+            }
         }
     }
 
@@ -550,13 +579,13 @@ extension ImageEditorViewModel {
         }
     }
 
-    private func layerMaskApplyIndices() -> [Int] {
+    private func maskApplyIndices(target: ImageEditorMaskApplicationTarget) -> [Int] {
         let selectedIDs = document.selectedLayerIDs.isEmpty
             ? Set(document.selectedLayerID.map { [$0] } ?? [])
             : document.selectedLayerIDs
         return document.layers.indices.filter { index in
             selectedIDs.contains(document.layers[index].id)
-                && canApplyMask(to: document.layers[index])
+                && canApplyMask(to: document.layers[index], target: target)
         }
     }
 
@@ -645,28 +674,57 @@ extension ImageEditorViewModel {
             && vectorMask.editablePathAnchors.count >= 3
     }
 
-    private func canApplyMask(to layer: ImageEditorLayer) -> Bool {
-        !layer.isGroup
-            && !layer.isAdjustment
-            && !layer.isFilter
-            && !document.isEffectivelyPixelsLocked(layer)
-            && (layer.mask != nil || layer.vectorMask != nil)
+    private func canApplyMask(
+        to layer: ImageEditorLayer,
+        target: ImageEditorMaskApplicationTarget
+    ) -> Bool {
+        guard !layer.isGroup,
+              !layer.isAdjustment,
+              !layer.isFilter,
+              !layer.isSmartObject,
+              !document.isEffectivelyPixelsLocked(layer)
+        else { return false }
+
+        switch target {
+        case .raster:
+            return layer.mask != nil
+        case .vector:
+            guard let vectorMask = layer.vectorMask else { return false }
+            return !layer.isVectorMaskEnabled
+                || renderedVectorMask(vectorMask, layer: layer) != nil
+        }
     }
 
-    private func applyLayerMask(at index: Int) {
-        let sourceImage = document.layers[index].contentImage
-        let output = document.layers[index].effectiveMask.flatMap { sourceImage.applyingAlphaMask($0) } ?? sourceImage
+    private func applyMask(at index: Int, target: ImageEditorMaskApplicationTarget) {
+        let layer = document.layers[index]
+        let shouldBakeMask: Bool
+        let mask: NSImage?
+        switch target {
+        case .raster:
+            shouldBakeMask = layer.isMaskEnabled
+            mask = layer.effectiveRasterMask
+        case .vector:
+            shouldBakeMask = layer.isVectorMaskEnabled
+            mask = shouldBakeMask
+                ? layer.vectorMask.flatMap { renderedVectorMask($0, layer: layer) }
+                : nil
+        }
 
-        document.layers[index].image = output.normalizedBitmapImage()
-        document.layers[index].mask = nil
-        document.layers[index].vectorMask = nil
-        document.layers[index].isMaskEnabled = true
-        document.layers[index].isMaskLinked = true
-        document.layers[index].isVectorMaskEnabled = true
-        document.layers[index].maskDensity = 1
-        document.layers[index].maskFeather = 0
-        if document.layers[index].isText {
+        if shouldBakeMask, let mask {
+            let sourceImage = layer.contentImage
+            document.layers[index].image = (sourceImage.applyingAlphaMask(mask) ?? sourceImage).normalizedBitmapImage()
             document.layers[index].kind = .pixel
+            document.layers[index].smartFilters = []
+        }
+
+        if target == .raster {
+            document.layers[index].mask = nil
+            document.layers[index].isMaskEnabled = true
+            document.layers[index].maskDensity = 1
+            document.layers[index].maskFeather = 0
+        } else {
+            document.layers[index].vectorMask = nil
+            document.layers[index].isVectorMaskEnabled = true
         }
     }
 
@@ -965,8 +1023,10 @@ extension ImageEditorViewModel {
               vectorMask.editablePathAnchors.count >= 3
         else { return nil }
         return NSImage.rendered(size: maskSize(for: layer)) { _ in
-            NSColor.white.setFill()
-            vectorMask.normalized(size: maskSize(for: layer)).pathBezierPath().fill()
+            NSGraphicsContext.current?.withImageEditorTopLeftCoordinates(height: maskSize(for: layer).height) {
+                NSColor.white.setFill()
+                vectorMask.normalized(size: maskSize(for: layer)).pathBezierPath().fill()
+            }
         }
     }
 

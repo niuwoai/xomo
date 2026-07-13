@@ -510,6 +510,58 @@ struct XomoAutomationTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerRasterize"))
     }
 
+    @Test func registryRasterizesLayerStylesAndAppliesOnlyVectorMasks() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        viewModel.textValue = "Styled MCP"
+        viewModel.addText(at: CGPoint(x: 18, y: 16))
+        let textIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[textIndex].style.strokeEnabled = true
+        viewModel.document.layers[textIndex].style.strokeWidth = 3
+        registry.register(viewModel)
+
+        let rasterize = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.rasterize",
+            arguments: ["target": .string("layerStyle")]
+        ))
+
+        #expect(rasterize.ok)
+        let styledRaster = try #require(viewModel.document.selectedLayer)
+        #expect(styledRaster.kind.isPixel)
+        #expect(!styledRaster.hasLayerEffects)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStyleRasterize"))
+
+        let points = [
+            CGPoint(x: 2, y: 2),
+            CGPoint(x: styledRaster.image.size.width - 2, y: 3),
+            CGPoint(x: styledRaster.image.size.width / 2, y: styledRaster.image.size.height - 2)
+        ]
+        viewModel.document.layers[textIndex].mask = NSImage.transparent(size: styledRaster.image.size)
+        viewModel.document.layers[textIndex].vectorMask = ImageEditorShapeContent(
+            kind: .path,
+            fillColor: .white,
+            fillOpacity: 1,
+            strokeColor: .white,
+            strokeWidth: 1,
+            strokeOpacity: 0,
+            pathPoints: points,
+            pathAnchors: points.map { ImageEditorPathAnchor(point: $0) },
+            isPathClosed: true
+        )
+
+        let applyVector = registry.execute(request(
+            operation: "call",
+            name: "xomo.mask.action",
+            arguments: ["action": .string("applyVector")]
+        ))
+
+        #expect(applyVector.ok)
+        #expect(viewModel.document.selectedLayer?.vectorMask == nil)
+        #expect(viewModel.document.selectedLayer?.mask != nil)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.vectorMaskApply"))
+    }
+
     @Test func registryReordersCollapsedGroupsAsVisibleSubtrees() {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

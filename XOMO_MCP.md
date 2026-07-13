@@ -1,6 +1,6 @@
 # Xomo MCP 与 CLI
 
-> 当前版本：v2.12.0-rc33
+> 当前版本：v2.12.0-rc34
 
 ## 架构
 
@@ -80,7 +80,9 @@ MCP 服务器实现 `initialize`、`ping`、`tools/list` 和 `tools/call`。当 
 - 22 类可编辑 UI 组件与七套主题
 - PNG、JPEG、WebP、PDF、SVG、PSD 渲染导出
 
-`xomo.layer.rasterize` 的 `target` 接受 `type`、`shape`、`fillContent`、`vectorMask`、`smartObject` 或 `layer`。命令只转换所选目标：图层名称、图层样式、栅格蒙版与剪贴关系保持不变；文字和形状目标不烘焙仍可编辑的智能滤镜，智能对象目标则按当前显示尺寸烘焙变换与滤镜。多选会跳过锁定或类型不匹配的图层，并把整批转换记为一个 History/Undo 步骤。
+`xomo.layer.rasterize` 的 `target` 接受 `type`、`shape`、`fillContent`、`vectorMask`、`smartObject`、`layerStyle` 或 `layer`。普通内容目标只转换所选内容；`layerStyle` 会把样式以及位于样式之前的蒙版、智能滤镜、填充透明度和本图层 Blend If 烘焙为像素，但保留名称、层级、图层不透明度、混合模式、下层 Blend If 与剪贴关系。多选会跳过锁定或类型不匹配的图层，并把整批转换记为一个 History/Undo 步骤。
+
+`xomo.mask.action` 的 `apply` 只永久应用栅格图层蒙版，`applyVector` 只永久应用矢量蒙版，`rasterizeVector` 则把矢量蒙版转换成仍可编辑的栅格图层蒙版。三者不会再互相冒名顶替；智能对象须先通过 `xomo.layer.rasterize` 的 `smartObject` 目标转成像素层，才能永久应用蒙版。
 
 `xomo.layer.order` 的 `direction` 接受 `top`、`up`、`down`、`bottom`。自动化没有图层面板的临时搜索上下文，因此按当前展开/折叠状态下的完整可见层级排序；折叠组会作为完整子树移动，整次调用只产生一个 History/Undo 步骤。
 

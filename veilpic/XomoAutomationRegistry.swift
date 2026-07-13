@@ -1513,6 +1513,7 @@ final class XomoAutomationRegistry {
         case "toggleLinked": viewModel.toggleLayerMaskLinked()
         case "addVectorFromSelection": viewModel.addVectorMaskFromSelection()
         case "copyVectorToSelected": viewModel.copyVectorMaskToSelectedLayers()
+        case "applyVector": viewModel.applyVectorMask()
         case "rasterizeVector": viewModel.rasterizeSelectedVectorMask()
         case "loadVectorSelection": viewModel.loadSelectionFromVectorMask()
         case "toggleVectorEnabled": viewModel.toggleVectorMaskEnabled()
@@ -1929,7 +1930,7 @@ private extension XomoAutomationRegistry {
             "action": XomoAutomationSchema.string(description: "Transform action", values: ["scale", "rotate", "rotateLeft90", "rotateRight90", "rotate180", "flipHorizontal", "flipVertical", "fitCanvas", "fillCanvas", "fitSelection", "fillSelection", "trimTransparent", "rasterize"]),
             "value": XomoAutomationSchema.number(description: "Scale factor or rotation degrees")
         ], required: ["action"]),
-        tool("xomo.layer.rasterize", "Rasterize type, shape, fill content, vector masks, Smart Objects, or all vector data on selected layers.", [
+        tool("xomo.layer.rasterize", "Rasterize type, shape, fill content, vector masks, Smart Objects, layer styles, or all vector data on selected layers.", [
             "target": XomoAutomationSchema.string(
                 description: "Rasterize target",
                 values: ImageEditorRasterizeTarget.allCases.map(\.rawValue)
@@ -2119,7 +2120,7 @@ private extension XomoAutomationRegistry {
             "mode": XomoAutomationSchema.string(description: "Text box fit mode", values: ImageEditorTextBoxFitMode.allCases.map(\.rawValue))
         ], required: ["mode"]),
         tool("xomo.mask.action", "Create, edit, copy, apply, rasterize, or delete raster and vector masks.", [
-            "action": XomoAutomationSchema.string(description: "Mask action", values: ["addRevealAll", "addFromSelection", "addHideAll", "addHideSelection", "delete", "apply", "invert", "revealSelection", "hideSelection", "intersectSelection", "loadSelection", "copyToSelected", "toggleEnabled", "toggleLinked", "addVectorFromSelection", "copyVectorToSelected", "rasterizeVector", "loadVectorSelection", "toggleVectorEnabled", "deleteVector"])
+            "action": XomoAutomationSchema.string(description: "Mask action", values: ["addRevealAll", "addFromSelection", "addHideAll", "addHideSelection", "delete", "apply", "invert", "revealSelection", "hideSelection", "intersectSelection", "loadSelection", "copyToSelected", "toggleEnabled", "toggleLinked", "addVectorFromSelection", "copyVectorToSelected", "applyVector", "rasterizeVector", "loadVectorSelection", "toggleVectorEnabled", "deleteVector"])
         ], required: ["action"]),
         tool("xomo.path.get", "Inspect anchors, control handles, subpaths, closure, and active path selection."),
         tool("xomo.path.action", "Create and edit vector paths, anchors, subpaths, masks, fills, and strokes.", [

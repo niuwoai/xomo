@@ -2826,8 +2826,12 @@ struct ImageEditorLayer: Identifiable {
         vectorMaskImage()?.thumbnailImage(targetSize: size)
     }
 
+    var effectiveRasterMask: NSImage? {
+        isMaskEnabled ? mask?.processedLayerMask(density: maskDensity, feather: maskFeather) : nil
+    }
+
     var effectiveMask: NSImage? {
-        let rasterMask = isMaskEnabled ? mask?.processedLayerMask(density: maskDensity, feather: maskFeather) : nil
+        let rasterMask = effectiveRasterMask
         let vectorMask = isVectorMaskEnabled ? vectorMaskImage() : nil
         switch (rasterMask, vectorMask) {
         case let (.some(rasterMask), .some(vectorMask)):

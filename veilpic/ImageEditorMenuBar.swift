@@ -1051,6 +1051,10 @@ extension ImageEditorView {
                 viewModel.copyVectorMaskToSelectedLayers()
             }
             .disabled(!viewModel.canCopyVectorMaskToSelectedLayers)
+            Button(L10n.text("imageEditor.action.vectorMaskApply")) {
+                viewModel.applyVectorMask()
+            }
+            .disabled(!viewModel.canApplyVectorMask)
             Button(L10n.text("imageEditor.action.vectorMaskRasterize")) {
                 viewModel.rasterizeSelectedVectorMask()
             }

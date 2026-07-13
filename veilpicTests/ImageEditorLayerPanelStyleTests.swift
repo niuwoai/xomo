@@ -57,6 +57,18 @@ struct ImageEditorLayerPanelStyleTests {
         #expect((color?.blueComponent ?? 0) > 0.99)
     }
 
+    @Test func layerSearchFieldUsesReadableLightTextAndPlaceholder() {
+        let textColor = ImageEditorLayerSearchAppearance.textColor.usingColorSpace(.deviceRGB)
+        let placeholderColor = ImageEditorLayerSearchAppearance.placeholderColor.usingColorSpace(.deviceRGB)
+
+        #expect((textColor?.redComponent ?? 0) > 0.9)
+        #expect((textColor?.greenComponent ?? 0) > 0.9)
+        #expect((textColor?.blueComponent ?? 0) > 0.9)
+        #expect((placeholderColor?.redComponent ?? 0) > 0.7)
+        #expect((placeholderColor?.greenComponent ?? 0) > 0.7)
+        #expect((placeholderColor?.blueComponent ?? 0) > 0.7)
+    }
+
     @Test func dockDisclosureAppliesLightTextToEveryVisibleLabel() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
