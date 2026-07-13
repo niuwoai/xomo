@@ -1174,19 +1174,19 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     var canMoveSelectedLayerUp: Bool {
-        canMoveSelectedLayers(direction: 1)
+        canMoveSelectedLayerUp(inVisibleOrder: visibleLayerRows.map(\.id))
     }
 
     var canMoveSelectedLayerDown: Bool {
-        canMoveSelectedLayers(direction: -1)
+        canMoveSelectedLayerDown(inVisibleOrder: visibleLayerRows.map(\.id))
     }
 
     var canMoveSelectedLayerToTop: Bool {
-        canMoveSelectedLayers(to: .top)
+        canMoveSelectedLayerToTop(inVisibleOrder: visibleLayerRows.map(\.id))
     }
 
     var canMoveSelectedLayerToBottom: Bool {
-        canMoveSelectedLayers(to: .bottom)
+        canMoveSelectedLayerToBottom(inVisibleOrder: visibleLayerRows.map(\.id))
     }
 
     var canToggleSelectedLayerClippingMask: Bool {
@@ -2684,59 +2684,6 @@ final class ImageEditorViewModel: ObservableObject {
         return [layerID]
     }
 
-    @discardableResult
-    func moveLayerIDs(_ sourceIDs: Set<UUID>, toDropTarget target: ImageEditorLayerDropTarget) -> Bool {
-        guard let targetLayer = document.layers.first(where: { $0.id == target.layerID }) else { return false }
-        guard target.placement != .insideGroup || targetLayer.isGroup else { return false }
-
-        let rootSourceIDs = movableRootLayerIDs(for: sourceIDs)
-        guard !rootSourceIDs.isEmpty else { return false }
-
-        let movingBlockIDs = movingLayerBlockIDs(for: rootSourceIDs)
-        guard !movingBlockIDs.contains(target.layerID) else { return false }
-
-        let nextParentID: UUID? = target.placement == .insideGroup ? target.layerID : targetLayer.groupID
-        guard canMoveLayerRoots(rootSourceIDs, toParent: nextParentID) else { return false }
-
-        var movingLayers = document.layers.filter { movingBlockIDs.contains($0.id) }
-        for index in movingLayers.indices where rootSourceIDs.contains(movingLayers[index].id) {
-            movingLayers[index].groupID = nextParentID
-        }
-
-        var remainingLayers = document.layers.filter { !movingBlockIDs.contains($0.id) }
-        guard let targetIndex = remainingLayers.firstIndex(where: { $0.id == target.layerID }) else { return false }
-        let insertionIndex: Int
-        switch target.placement {
-        case .above:
-            insertionIndex = targetIndex + 1
-        case .below, .insideGroup:
-            insertionIndex = targetIndex
-        }
-
-        guard wouldChangeLayerOrderOrParent(movingLayers, remainingLayers: remainingLayers, insertionIndex: insertionIndex) else {
-            return false
-        }
-
-        pushUndo()
-        remainingLayers.insert(contentsOf: movingLayers, at: insertionIndex)
-        document.layers = remainingLayers
-        expandGroupIfNeeded(nextParentID)
-        normalizeClippingMasks()
-
-        let retainedSelectionIDs = sourceIDs.intersection(movingBlockIDs)
-        document.selectedLayerIDs = retainedSelectionIDs.isEmpty ? rootSourceIDs : retainedSelectionIDs
-        if let selectedLayerID = document.selectedLayerID,
-           document.selectedLayerIDs.contains(selectedLayerID) {
-            // Keep the primary selection when it moved with the dragged block.
-        } else {
-            document.selectedLayerID = document.layers.reversed().first { document.selectedLayerIDs.contains($0.id) }?.id
-        }
-        isEditingLayerMask = false
-        appendHistory(L10n.text("imageEditor.history.layerReorder"))
-        statusText = L10n.text("imageEditor.status.layerReordered")
-        return true
-    }
-
     func ungroupSelectedLayers() {
         let groupIDs = selectedUnlockedGroupIDs()
         guard !groupIDs.isEmpty else { return }
@@ -2922,22 +2869,6 @@ final class ImageEditorViewModel: ObservableObject {
         document.selectedLayerIDs = document.selectedLayerID.map { Set([$0]) } ?? []
         isEditingLayerMask = false
         appendHistory(L10n.text("imageEditor.history.layerDelete"))
-    }
-
-    func moveSelectedLayerUp() {
-        moveSelectedLayers(direction: 1)
-    }
-
-    func moveSelectedLayerDown() {
-        moveSelectedLayers(direction: -1)
-    }
-
-    func moveSelectedLayerToTop() {
-        moveSelectedLayers(to: .top)
-    }
-
-    func moveSelectedLayerToBottom() {
-        moveSelectedLayers(to: .bottom)
     }
 
     func toggleLayerVisibility(_ id: UUID, applyingToSelection: Bool = false) {
@@ -5517,69 +5448,6 @@ final class ImageEditorViewModel: ObservableObject {
         return descendantIDs
     }
 
-    private func movableRootLayerIDs(for sourceIDs: Set<UUID>) -> Set<UUID> {
-        let existingSourceIDs = sourceIDs.filter { id in
-            document.layers.contains { $0.id == id }
-        }
-        let selectedGroupIDs = Set(document.layers.compactMap { layer in
-            existingSourceIDs.contains(layer.id) && layer.isGroup ? layer.id : nil
-        })
-        let selectedGroupDescendantIDs = selectedGroupIDs.reduce(into: Set<UUID>()) { result, groupID in
-            result.formUnion(groupDescendantIDs(for: groupID))
-        }
-
-        return Set(document.layers.compactMap { layer in
-            guard existingSourceIDs.contains(layer.id),
-                  !selectedGroupDescendantIDs.contains(layer.id),
-                  !document.isEffectivelyLocked(layer)
-            else { return nil }
-            return layer.id
-        })
-    }
-
-    private func movingLayerBlockIDs(for rootSourceIDs: Set<UUID>) -> Set<UUID> {
-        rootSourceIDs.reduce(into: rootSourceIDs) { result, layerID in
-            guard let layer = document.layers.first(where: { $0.id == layerID }),
-                  layer.isGroup
-            else { return }
-            result.formUnion(groupDescendantIDs(for: layer.id))
-        }
-    }
-
-    private func canMoveLayerRoots(_ rootSourceIDs: Set<UUID>, toParent parentID: UUID?) -> Bool {
-        guard let parentID else { return true }
-        guard let parentLayer = document.layers.first(where: { $0.id == parentID && $0.isGroup }),
-              !document.isEffectivelyLocked(parentLayer)
-        else { return false }
-
-        for rootID in rootSourceIDs {
-            guard let rootLayer = document.layers.first(where: { $0.id == rootID }) else { return false }
-            if rootID == parentID {
-                return false
-            }
-            if rootLayer.isGroup, groupDescendantIDs(for: rootLayer.id).contains(parentID) {
-                return false
-            }
-        }
-        return true
-    }
-
-    private func wouldChangeLayerOrderOrParent(
-        _ movingLayers: [ImageEditorLayer],
-        remainingLayers: [ImageEditorLayer],
-        insertionIndex: Int
-    ) -> Bool {
-        var reorderedLayers = remainingLayers
-        reorderedLayers.insert(contentsOf: movingLayers, at: insertionIndex)
-        guard reorderedLayers.map(\.id) == document.layers.map(\.id) else { return true }
-        for layer in movingLayers {
-            guard let currentLayer = document.layers.first(where: { $0.id == layer.id }),
-                  currentLayer.groupID == layer.groupID
-            else { return true }
-        }
-        return false
-    }
-
     func layerIDsExpandingGroups(_ ids: Set<UUID>) -> Set<UUID> {
         var expandedIDs = ids
         for index in document.layers.indices where ids.contains(document.layers[index].id) && document.layers[index].isGroup {
@@ -5837,11 +5705,6 @@ final class ImageEditorViewModel: ObservableObject {
         return .pixel
     }
 
-    private enum LayerStackBoundary {
-        case top
-        case bottom
-    }
-
     private struct NewLayerInsertionContext {
         var parentGroupID: UUID?
         var index: Int
@@ -5928,65 +5791,6 @@ final class ImageEditorViewModel: ObservableObject {
         return replacements
     }
 
-    private func canMoveSelectedLayers(direction: Int) -> Bool {
-        let selectedIDs = document.selectedLayerIDs
-        guard !selectedIDs.isEmpty else { return false }
-        for index in document.layers.indices where selectedIDs.contains(document.layers[index].id) {
-            let targetIndex = index + direction
-            guard document.layers.indices.contains(targetIndex) else { continue }
-            if !selectedIDs.contains(document.layers[targetIndex].id) {
-                return true
-            }
-        }
-        return false
-    }
-
-    private func moveSelectedLayers(direction: Int) {
-        guard direction == 1 || direction == -1, canMoveSelectedLayers(direction: direction) else { return }
-        pushUndo()
-        let selectedIDs = document.selectedLayerIDs
-        let indices: [Int] = direction > 0
-            ? Array(document.layers.indices.reversed())
-            : Array(document.layers.indices)
-        for index in indices where selectedIDs.contains(document.layers[index].id) {
-            let targetIndex = index + direction
-            guard document.layers.indices.contains(targetIndex),
-                  !selectedIDs.contains(document.layers[targetIndex].id)
-            else { continue }
-            document.layers.swapAt(index, targetIndex)
-        }
-        normalizeClippingMasks()
-        appendHistory(L10n.text("imageEditor.history.layerMove"))
-    }
-
-    private func canMoveSelectedLayers(to boundary: LayerStackBoundary) -> Bool {
-        guard !document.selectedLayerIDs.isEmpty else { return false }
-        return reorderedLayers(movingSelectionTo: boundary).map(\.id) != document.layers.map(\.id)
-    }
-
-    private func moveSelectedLayers(to boundary: LayerStackBoundary) {
-        guard canMoveSelectedLayers(to: boundary) else { return }
-        pushUndo()
-        document.layers = reorderedLayers(movingSelectionTo: boundary)
-        normalizeClippingMasks()
-        let historyKey = boundary == .top
-            ? "imageEditor.history.layerMoveToTop"
-            : "imageEditor.history.layerMoveToBottom"
-        appendHistory(L10n.text(historyKey))
-    }
-
-    private func reorderedLayers(movingSelectionTo boundary: LayerStackBoundary) -> [ImageEditorLayer] {
-        let selectedIDs = document.selectedLayerIDs
-        let selectedLayers = document.layers.filter { selectedIDs.contains($0.id) }
-        let remainingLayers = document.layers.filter { !selectedIDs.contains($0.id) }
-        switch boundary {
-        case .top:
-            return remainingLayers + selectedLayers
-        case .bottom:
-            return selectedLayers + remainingLayers
-        }
-    }
-
     private func clippingBaseExists(below index: Int, groupID: UUID?) -> Bool {
         document.hasClippingBase(below: index, groupID: groupID)
     }
@@ -6043,7 +5847,7 @@ final class ImageEditorViewModel: ObservableObject {
         }
     }
 
-    private func normalizeClippingMasks() {
+    func normalizeClippingMasks() {
         for index in document.layers.indices where document.layers[index].isClippingMask {
             if document.clippingBaseIndex(forLayerAt: index) == nil {
                 document.layers[index].isClippingMask = false

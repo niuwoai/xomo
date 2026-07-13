@@ -1130,13 +1130,13 @@ struct ImageEditorScopeTests {
         )
         let orderMenuSource = source[orderMenuStart.lowerBound..<nextMenuStart.lowerBound]
 
-        #expect(orderMenuSource.contains("viewModel.moveSelectedLayerToTop()"))
+        #expect(orderMenuSource.contains("viewModel.moveSelectedLayerToTop(inVisibleOrder: filteredVisibleLayerRowIDs)"))
         #expect(orderMenuSource.contains(".keyboardShortcut(\"]\", modifiers: [.command, .shift])"))
-        #expect(orderMenuSource.contains("viewModel.moveSelectedLayerUp()"))
+        #expect(orderMenuSource.contains("viewModel.moveSelectedLayerUp(inVisibleOrder: filteredVisibleLayerRowIDs)"))
         #expect(orderMenuSource.contains(".keyboardShortcut(\"]\", modifiers: [.command])"))
-        #expect(orderMenuSource.contains("viewModel.moveSelectedLayerDown()"))
+        #expect(orderMenuSource.contains("viewModel.moveSelectedLayerDown(inVisibleOrder: filteredVisibleLayerRowIDs)"))
         #expect(orderMenuSource.contains(".keyboardShortcut(\"[\", modifiers: [.command])"))
-        #expect(orderMenuSource.contains("viewModel.moveSelectedLayerToBottom()"))
+        #expect(orderMenuSource.contains("viewModel.moveSelectedLayerToBottom(inVisibleOrder: filteredVisibleLayerRowIDs)"))
         #expect(orderMenuSource.contains(".keyboardShortcut(\"[\", modifiers: [.command, .shift])"))
     }
 

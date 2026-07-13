@@ -1895,8 +1895,8 @@ private extension XomoAutomationRegistry {
             "mode": XomoAutomationSchema.string(description: "Blend mode", values: ImageEditorBlendMode.allCases.map(\.rawValue))
         ], required: ["mode"]),
         tool("xomo.layer.nudge", "Move the active selection or selected layers by a canvas delta.", pointDeltaProperties, required: ["dx", "dy"]),
-        tool("xomo.layer.order", "Move selected layers in the stack.", [
-            "direction": XomoAutomationSchema.string(description: "Stack direction", values: ["top", "up", "down", "bottom"])
+        tool("xomo.layer.order", "Move selected layer subtrees in the current visible hierarchy order.", [
+            "direction": XomoAutomationSchema.string(description: "Visible stack direction", values: ["top", "up", "down", "bottom"])
         ], required: ["direction"]),
         tool("xomo.layer.group", "Group selected layers."),
         tool("xomo.layer.ungroup", "Ungroup selected groups."),
