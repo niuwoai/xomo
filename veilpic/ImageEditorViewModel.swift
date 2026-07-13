@@ -273,6 +273,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var exportSettings = ImageEditorExportSettings()
     @Published var isExportSheetPresented = false
     @Published var isNewCanvasSheetPresented = false
+    @Published var isLayerStylePresetManagerPresented = false
     @Published var namedHistorySnapshots: [ImageEditorHistorySnapshot] = []
     @Published var selectedHistorySnapshotID: UUID?
     @Published var selectedHistoryEntryID: UUID?

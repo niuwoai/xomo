@@ -662,6 +662,80 @@ struct XomoAutomationTests {
         #expect(reopened.customLayerStylePresets.isEmpty)
     }
 
+    @Test func registryRenamesMovesExportsAndImportsLayerStylePresetLibraries() throws {
+        let suiteName = "XomoAutomationTests.layerStylePresetManager.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName) ?? .standard
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let viewModel = makeViewModel(preferencesDefaults: defaults)
+        let registry = XomoAutomationRegistry.shared
+        let index = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[index].style.strokeEnabled = true
+        viewModel.document.layers[index].style.strokeWidth = 3
+        let first = try #require(viewModel.createLayerStylePresetFromSelectedLayer(name: "First"))
+        viewModel.document.layers[index].style.strokeWidth = 8
+        let second = try #require(viewModel.createLayerStylePresetFromSelectedLayer(name: "Second"))
+        registry.register(viewModel)
+
+        let rename = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style",
+            arguments: [
+                "action": .string("presetRename"),
+                "id": .string(first.id),
+                "name": .string("Renamed")
+            ]
+        ))
+        #expect(rename.ok)
+        #expect(rename.result?.arrayValue?.first?.objectValue?["title"] == .string("Renamed"))
+
+        let move = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style",
+            arguments: [
+                "action": .string("presetMove"),
+                "id": .string(second.id),
+                "direction": .string("top")
+            ]
+        ))
+        #expect(move.ok)
+        #expect(move.result?.arrayValue?.first?.objectValue?["id"] == .string(second.id))
+
+        let fileURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("xomo-preset-manager-\(UUID().uuidString)")
+            .appendingPathExtension("xomostyles")
+        defer { try? FileManager.default.removeItem(at: fileURL) }
+        let export = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style",
+            arguments: [
+                "action": .string("presetExport"),
+                "path": .string(fileURL.path)
+            ]
+        ))
+        #expect(export.ok)
+        #expect(FileManager.default.fileExists(atPath: fileURL.path))
+
+        viewModel.deleteLayerStylePreset(first)
+        viewModel.deleteLayerStylePreset(second)
+        #expect(viewModel.customLayerStylePresets.isEmpty)
+
+        let importResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style",
+            arguments: [
+                "action": .string("presetImport"),
+                "path": .string(fileURL.path)
+            ]
+        ))
+        #expect(importResponse.ok)
+        let imported = try #require(importResponse.result?.arrayValue)
+        #expect(imported.map { $0.objectValue?["title"]?.stringValue } == ["Second", "Renamed"])
+        #expect(imported[0].objectValue?["id"] != .string(second.id))
+        #expect(imported[1].objectValue?["id"] != .string(first.id))
+        #expect(viewModel.customLayerStylePresets[0].layerStyle.strokeWidth == 8)
+        #expect(viewModel.customLayerStylePresets[1].layerStyle.strokeWidth == 3)
+    }
+
     @Test func registryReordersCollapsedGroupsAsVisibleSubtrees() {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared
