@@ -508,6 +508,9 @@
 "imageEditor.option.pressureFlow" = "控制流量";
 "imageEditor.option.pressureSensitivity" = "灵敏度";
 "imageEditor.option.pressureHelp" = "使用数位笔压力控制画笔大小和流量";
+"imageEditor.option.patchMode" = "修补模式";
+"imageEditor.patchMode.source" = "源";
+"imageEditor.patchMode.destination" = "目标";
 "imageEditor.option.brushPreset" = "画笔预设";
 "imageEditor.help.brushPreset" = "选择预设，或保存当前画笔设置";
 "imageEditor.action.brushPresetCreate" = "从当前设置新建预设";
@@ -574,7 +577,7 @@
 "imageEditor.tool.sharpen.help" = "锐化：增强笔触覆盖区域的边缘细节。";
 "imageEditor.tool.smudge.help" = "涂抹：像手指一样推开笔触覆盖的像素。";
 "imageEditor.tool.healingBrush.help" = "修复画笔：用相邻纹理修复瑕疵。";
-"imageEditor.tool.patchTool.help" = "修补：圈选瑕疵区域后拖到干净纹理上。";
+"imageEditor.tool.patchTool.help" = "修补：圈出区域后，在源或目标模式下拖拽并预览修补结果。";
 "imageEditor.tool.redEye.help" = "红眼：点击红色瞳孔，降低红色并保留亮度。";
 "imageEditor.tool.paintBucket.help" = "油漆桶：向相邻的相似像素区域填充前景色。";
 "imageEditor.tool.gradient.help" = "渐变：拖拽以填充前景色到背景色的渐变。";
@@ -1599,6 +1602,9 @@
 "imageEditor.status.selectionContentAwareFilled" = "已对当前选区执行内容感知填充";
 "imageEditor.status.selectionContentAwareFilledSelected" = "已在 %d 个图层中执行内容感知填充";
 "imageEditor.status.selectionPatched" = "已从拖拽取样区域修补当前选区";
+"imageEditor.status.patchSelectionReady" = "修补选区已就绪，请从选区内拖拽";
+"imageEditor.status.selectionPatchedSource" = "已用拖拽到的干净纹理修补原选区";
+"imageEditor.status.selectionPatchedDestination" = "已将原选区纹理修补到拖拽目标";
 "imageEditor.status.selectionStroked" = "已描边当前选区";
 "imageEditor.status.selectionStrokedSelected" = "已在 %d 个图层中描边当前选区";
 "imageEditor.status.selectionCopiedToLayer" = "已将选区内容复制到新图层";

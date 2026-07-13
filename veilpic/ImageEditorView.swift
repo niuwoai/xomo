@@ -33,6 +33,9 @@ struct ImageEditorView: View {
     @State private var brushStrokeSamples: [ImageEditorBrushStrokeSample] = []
     @State private var dragStart: CGPoint?
     @State private var dragEnd: CGPoint?
+    @State private var patchPreviewImage: NSImage?
+    @State private var isDrawingPatchSelection = false
+    @State private var lastPatchPreviewUpdateTime: TimeInterval = 0
     @State private var pendingCropRect: CGRect?
     @State private var lastPanTranslation: CGSize = .zero
     @State private var isSpacebarPanning = false
@@ -156,6 +159,14 @@ struct ImageEditorView: View {
         .onChange(of: viewModel.selectedLayerName) { _ in
             syncLayerNameDraft()
         }
+        .onChange(of: viewModel.selectedTool) { _ in
+            patchPreviewImage = nil
+            isDrawingPatchSelection = false
+            lastPatchPreviewUpdateTime = 0
+            dragStart = nil
+            dragEnd = nil
+            dragPoints = []
+        }
         .sheet(isPresented: $viewModel.isExportSheetPresented) {
             ImageEditorExportPanel(viewModel: viewModel)
         }
@@ -183,6 +194,10 @@ struct ImageEditorView: View {
                 marqueeShapePicker
             }
 
+            if viewModel.selectedTool == .patchTool {
+                patchModePicker
+            }
+
             if viewModel.selectedTool == .text {
                 fontFamilyPicker(width: 190)
                 Stepper(
@@ -208,6 +223,9 @@ struct ImageEditorView: View {
                     brushPressureMenu
                 }
                 if viewModel.selectedTool.supportsSelectionMode {
+                    optionSlider(titleKey: "imageEditor.option.feather", value: $viewModel.feather, range: 0...40, step: 1, suffix: "px")
+                }
+                if viewModel.selectedTool == .patchTool {
                     optionSlider(titleKey: "imageEditor.option.feather", value: $viewModel.feather, range: 0...40, step: 1, suffix: "px")
                 }
             }
@@ -286,7 +304,7 @@ struct ImageEditorView: View {
     private var usesOpacityOption: Bool {
         switch viewModel.selectedTool {
         case .brush, .eraser, .cloneStamp, .dodge, .burn, .sponge, .blur, .sharpen,
-             .smudge, .healingBrush, .paintBucket, .gradient, .rectangle, .ellipse:
+             .smudge, .healingBrush, .patchTool, .paintBucket, .gradient, .rectangle, .ellipse:
             true
         default:
             false
@@ -390,6 +408,20 @@ struct ImageEditorView: View {
         .focusable(false)
         .frame(width: 226)
         .help(L10n.text("imageEditor.option.selectionMode"))
+    }
+
+    private var patchModePicker: some View {
+        Picker(L10n.text("imageEditor.option.patchMode"), selection: $viewModel.patchMode) {
+            ForEach(ImageEditorPatchMode.allCases) { mode in
+                Text(mode.title).tag(mode)
+            }
+        }
+        .labelsHidden()
+        .pickerStyle(.segmented)
+        .focusable(false)
+        .frame(width: 150)
+        .help(L10n.text("imageEditor.option.patchMode"))
+        .accessibilityIdentifier("image-editor-patch-mode")
     }
 
     @ViewBuilder
@@ -1065,6 +1097,15 @@ struct ImageEditorView: View {
                         .position(x: fittedImageRect(in: geometry.size).midX, y: fittedImageRect(in: geometry.size).midY)
                         .shadow(color: .black.opacity(0.46), radius: 12, x: 0, y: 8)
 
+                    if viewModel.selectedTool == .patchTool, let patchPreviewImage {
+                        Image(nsImage: patchPreviewImage)
+                            .resizable()
+                            .frame(width: fittedImageRect(in: geometry.size).width, height: fittedImageRect(in: geometry.size).height)
+                            .position(x: fittedImageRect(in: geometry.size).midX, y: fittedImageRect(in: geometry.size).midY)
+                            .allowsHitTesting(false)
+                            .accessibilityHidden(true)
+                    }
+
                     gridOverlay(in: geometry.size)
                     guideOverlay(in: geometry.size)
                     guideInteractionOverlay(in: geometry.size)
@@ -1374,6 +1415,30 @@ struct ImageEditorView: View {
                 context.stroke(path, with: .color(Color(nsColor: ImageEditorTheme.selected).opacity(0.9)), style: StrokeStyle(lineWidth: 2, dash: [7, 5], dashPhase: 6))
                 context.fill(Path(ellipseIn: CGRect(x: start.x - 4, y: start.y - 4, width: 8, height: 8)), with: .color(Color.white.opacity(0.92)))
                 context.fill(Path(ellipseIn: CGRect(x: end.x - 4, y: end.y - 4, width: 8, height: 8)), with: .color(Color(nsColor: ImageEditorTheme.selected).opacity(0.92)))
+
+                if viewModel.selectedTool == .patchTool,
+                   let edgeGeometry = viewModel.selectionEdgeGeometry {
+                    let delta = CGSize(width: dragEnd.x - dragStart.x, height: dragEnd.y - dragStart.y)
+                    var translatedPath = Path()
+                    for contour in edgeGeometry.contours {
+                        guard let first = contour.first else { continue }
+                        translatedPath.move(to: viewPoint(
+                            from: CGPoint(x: first.x + delta.width, y: first.y + delta.height),
+                            in: size
+                        ))
+                        for point in contour.dropFirst() {
+                            translatedPath.addLine(to: viewPoint(
+                                from: CGPoint(x: point.x + delta.width, y: point.y + delta.height),
+                                in: size
+                            ))
+                        }
+                    }
+                    context.stroke(
+                        translatedPath,
+                        with: .color(Color.gray.opacity(0.9)),
+                        style: StrokeStyle(lineWidth: 1.5, dash: [6, 4])
+                    )
+                }
             }
             .allowsHitTesting(false)
         }
@@ -1534,7 +1599,7 @@ struct ImageEditorView: View {
                     if dragStart != nil {
                         dragEnd = boundedImagePoint(from: value.location, in: size)
                     }
-                case .crop, .rectangle, .ellipse, .gradient, .patchTool:
+                case .crop, .rectangle, .ellipse, .gradient:
                     if viewModel.selectedTool == .crop, dragStart == nil {
                         pendingCropRect = nil
                     }
@@ -1542,6 +1607,31 @@ struct ImageEditorView: View {
                         dragStart = pointerImagePoint
                     }
                     dragEnd = pointerImagePoint
+                case .patchTool:
+                    let boundedPoint = boundedImagePoint(from: value.location, in: size)
+                    if dragStart == nil, dragPoints.isEmpty {
+                        if viewModel.canBeginPatch(at: pointerImagePoint) {
+                            dragStart = pointerImagePoint
+                            dragEnd = pointerImagePoint
+                            isDrawingPatchSelection = false
+                        } else {
+                            isDrawingPatchSelection = true
+                            dragPoints = [boundedPoint]
+                        }
+                    }
+                    if isDrawingPatchSelection {
+                        dragPoints.append(boundedPoint)
+                    } else if dragStart != nil {
+                        dragEnd = pointerImagePoint
+                        let updateTime = ProcessInfo.processInfo.systemUptime
+                        if patchPreviewImage == nil || updateTime - lastPatchPreviewUpdateTime >= 1.0 / 30.0 {
+                            patchPreviewImage = viewModel.patchPreviewImage(
+                                from: dragStart,
+                                to: pointerImagePoint
+                            )
+                            lastPatchPreviewUpdateTime = updateTime
+                        }
+                    }
                 case .pen:
                     guard viewModel.pendingPenPathPoints.isEmpty,
                           viewModel.canEditSelectedPathAnchors
@@ -1632,7 +1722,12 @@ struct ImageEditorView: View {
                         viewModel.healingBrush(points: dragPoints)
                     }
                 case .patchTool:
-                    viewModel.patchSelection(from: dragStart, to: endImagePoint)
+                    if isDrawingPatchSelection {
+                        dragPoints.append(boundedImagePoint(from: value.location, in: size))
+                        viewModel.createPatchSelection(points: dragPoints)
+                    } else {
+                        viewModel.patchSelection(from: dragStart, to: endImagePoint)
+                    }
                 case .redEye:
                     viewModel.reduceRedEye(at: endImagePoint)
                 case .paintBucket:
@@ -1685,6 +1780,9 @@ struct ImageEditorView: View {
                 brushStrokeSamples = []
                 dragStart = nil
                 dragEnd = nil
+                patchPreviewImage = nil
+                isDrawingPatchSelection = false
+                lastPatchPreviewUpdateTime = 0
                 lastPanTranslation = .zero
                 lastMoveTranslation = .zero
                 isObjectMoveGestureActive = false
@@ -3214,7 +3312,10 @@ struct ImageEditorView: View {
     @ViewBuilder
     private func selectionOverlay(in size: CGSize) -> some View {
         if !viewModel.isQuickMaskMode {
-            let activeLasso = viewModel.selectedTool == .lasso && dragPoints.count > 1
+            let activeLasso = (
+                viewModel.selectedTool == .lasso
+                    || (viewModel.selectedTool == .patchTool && isDrawingPatchSelection)
+            ) && dragPoints.count > 1
             let activeSelection = viewModel.document.areExtrasVisible && viewModel.document.areSelectionEdgesVisible
                 ? viewModel.selection
                 : nil

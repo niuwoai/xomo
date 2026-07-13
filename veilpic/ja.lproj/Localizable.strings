@@ -508,6 +508,9 @@
 "imageEditor.option.pressureFlow" = "流量を制御";
 "imageEditor.option.pressureSensitivity" = "感度";
 "imageEditor.option.pressureHelp" = "ペンの筆圧でブラシサイズと流量を制御します";
+"imageEditor.option.patchMode" = "パッチモード";
+"imageEditor.patchMode.source" = "ソース";
+"imageEditor.patchMode.destination" = "適用先";
 "imageEditor.option.brushPreset" = "ブラシプリセット";
 "imageEditor.help.brushPreset" = "プリセットを選択するか、現在のブラシ設定を保存します";
 "imageEditor.action.brushPresetCreate" = "現在の設定からプリセットを作成";
@@ -574,7 +577,7 @@
 "imageEditor.tool.sharpen.help" = "シャープ：なぞった領域のエッジの細部を強調します。";
 "imageEditor.tool.smudge.help" = "指先：指のように筆跡下のピクセルを押し広げます。";
 "imageEditor.tool.healingBrush.help" = "修復ブラシ：周囲のテクスチャで傷を修復します。";
-"imageEditor.tool.patchTool.help" = "パッチ：傷を選択し、きれいなテクスチャへドラッグします。";
+"imageEditor.tool.patchTool.help" = "パッチ：範囲を囲み、ソースまたは適用先モードでプレビューしながらドラッグします。";
 "imageEditor.tool.redEye.help" = "赤目補正：赤い瞳孔をクリックして、明るさを保ちながら赤みを抑えます。";
 "imageEditor.tool.paintBucket.help" = "塗りつぶし：隣接する類似ピクセルを前景色で塗りつぶします。";
 "imageEditor.tool.gradient.help" = "グラデ：ドラッグして前景色から背景色のグラデーションを描きます。";
@@ -1599,6 +1602,9 @@
 "imageEditor.status.selectionContentAwareFilled" = "現在の選択範囲をコンテンツに応じて塗りつぶしました";
 "imageEditor.status.selectionContentAwareFilledSelected" = "%d個のレイヤーで現在の選択範囲をコンテンツに応じて塗りつぶしました";
 "imageEditor.status.selectionPatched" = "ドラッグしたサンプル領域から現在の選択範囲にパッチを適用しました";
+"imageEditor.status.patchSelectionReady" = "パッチ選択範囲の準備ができました。選択範囲内からドラッグしてください";
+"imageEditor.status.selectionPatchedSource" = "ドラッグ先のきれいなテクスチャで元の選択範囲を修復しました";
+"imageEditor.status.selectionPatchedDestination" = "元の選択範囲のテクスチャをドラッグ先へ適用しました";
 "imageEditor.status.selectionStroked" = "現在の選択範囲に境界線を描画しました";
 "imageEditor.status.selectionStrokedSelected" = "%d個のレイヤーで現在の選択範囲に境界線を描画しました";
 "imageEditor.status.selectionCopiedToLayer" = "選択範囲の内容を新規レイヤーへコピーしました";

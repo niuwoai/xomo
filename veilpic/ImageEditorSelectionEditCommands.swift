@@ -8,6 +8,12 @@
 import AppKit
 import Foundation
 
+private struct ImageEditorPatchEditResult {
+    let layerIndex: Int
+    let image: NSImage
+    let resultingSelection: ImageEditorSelection
+}
+
 @MainActor
 extension ImageEditorViewModel {
     var canEditSelectionPixels: Bool {
@@ -139,37 +145,109 @@ extension ImageEditorViewModel {
         }
     }
 
+    func createPatchSelection(points: [CGPoint]) {
+        let previousMode = selectionMode
+        let previousSelection = document.selection
+        selectionMode = .replace
+        createLassoSelection(points: points)
+        selectionMode = previousMode
+        if document.selection != previousSelection {
+            statusText = L10n.text("imageEditor.status.patchSelectionReady")
+        }
+    }
+
+    func canBeginPatch(at point: CGPoint?) -> Bool {
+        guard let point,
+              point.x >= 0,
+              point.y >= 0,
+              point.x < document.canvasSize.width,
+              point.y < document.canvasSize.height,
+              let mask = document.selection?.rasterizedMask(canvasSize: document.canvasSize),
+              mask.width > 0,
+              mask.height > 0,
+              mask.alpha.count == mask.width * mask.height
+        else { return false }
+        let x = min(mask.width - 1, max(0, Int(point.x / max(document.canvasSize.width, 1) * CGFloat(mask.width))))
+        let y = min(mask.height - 1, max(0, Int(point.y / max(document.canvasSize.height, 1) * CGFloat(mask.height))))
+        return mask.alpha[y * mask.width + x] > 0
+    }
+
+    func patchPreviewImage(from start: CGPoint?, to end: CGPoint?) -> NSImage? {
+        guard let result = patchEditResult(from: start, to: end) else { return nil }
+        var previewDocument = document
+        previewDocument.layers[result.layerIndex].image = result.image
+        return previewDocument.compositedImage
+    }
+
     func patchSelection(from start: CGPoint?, to end: CGPoint?) {
-        guard let selection = document.selection else {
+        guard document.selection != nil else {
             statusText = L10n.text("imageEditor.status.noSelection")
             return
         }
-        guard let start, let end else { return }
-        let offset = CGSize(width: end.x - start.x, height: end.y - start.y)
-        guard hypot(offset.width, offset.height) >= 1 else { return }
-        guard canEditSelectionPixels,
-              let index = document.selectedLayerIndex,
-              let output = document.layers[index].image.patched(
-                selection: selection,
-                layerFrame: document.layers[index].frame,
-                canvasSize: document.canvasSize,
-                offsetInCanvas: offset,
-                opacity: opacity,
-                feather: feather
-              )
-        else {
+        guard let start, let end,
+              hypot(end.x - start.x, end.y - start.y) >= 1
+        else { return }
+        guard let result = patchEditResult(from: start, to: end) else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
 
         pushUndo()
+        document.layers[result.layerIndex].image = result.image
+        document.selection = result.resultingSelection
+        appendHistory(L10n.text("imageEditor.history.selectionPatch"))
+        statusText = L10n.text(
+            patchMode == .source
+                ? "imageEditor.status.selectionPatchedSource"
+                : "imageEditor.status.selectionPatchedDestination"
+        )
+    }
+
+    private func patchEditResult(
+        from start: CGPoint?,
+        to end: CGPoint?
+    ) -> ImageEditorPatchEditResult? {
+        guard let selection = document.selection,
+              let start,
+              let end,
+              canEditSelectionPixels,
+              let index = document.selectedLayerIndex
+        else { return nil }
+        let dragOffset = CGSize(width: end.x - start.x, height: end.y - start.y)
+        guard hypot(dragOffset.width, dragOffset.height) >= 1 else { return nil }
+
+        let targetSelection: ImageEditorSelection
+        let sampleOffset: CGSize
+        switch patchMode {
+        case .source:
+            targetSelection = selection
+            sampleOffset = dragOffset
+        case .destination:
+            guard let translated = selection.patchTranslated(
+                by: dragOffset,
+                canvasSize: document.canvasSize
+            ) else { return nil }
+            targetSelection = translated
+            sampleOffset = CGSize(width: -dragOffset.width, height: -dragOffset.height)
+        }
+
         let layer = document.layers[index]
+        guard let output = layer.image.patched(
+            selection: targetSelection,
+            layerFrame: layer.frame,
+            canvasSize: document.canvasSize,
+            offsetInCanvas: sampleOffset,
+            opacity: opacity,
+            feather: feather
+        ) else { return nil }
         let protectedOutput = document.isEffectivelyTransparencyLocked(layer)
             ? (output.preservingAlpha(from: layer.image) ?? output)
             : output
-        document.layers[index].image = protectedOutput.normalizedBitmapImage()
-        appendHistory(L10n.text("imageEditor.history.selectionPatch"))
-        statusText = L10n.text("imageEditor.status.selectionPatched")
+        return ImageEditorPatchEditResult(
+            layerIndex: index,
+            image: protectedOutput.normalizedBitmapImage(),
+            resultingSelection: targetSelection
+        )
     }
 
     func copySelectionToNewLayer() {
@@ -829,6 +907,22 @@ private extension NSImage {
 }
 
 private extension ImageEditorSelection {
+    func patchTranslated(by delta: CGSize, canvasSize: CGSize) -> ImageEditorSelection? {
+        guard rasterMask == nil else {
+            return translated(by: delta, canvasSize: canvasSize)
+        }
+        let translatedPoints = points.map {
+            CGPoint(x: $0.x + delta.width, y: $0.y + delta.height)
+        }
+        guard translatedPoints.count >= 3 else { return nil }
+        return ImageEditorSelection(
+            points: translatedPoints,
+            isPolygon: isPolygon,
+            isInverted: isInverted,
+            rasterMask: nil
+        )
+    }
+
     func layerMask(layerFrame: CGRect, layerSize: CGSize, canvasSize: CGSize, feather: CGFloat) -> NSImage? {
         guard layerSize.width > 0,
               layerSize.height > 0,
