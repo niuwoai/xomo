@@ -301,6 +301,7 @@ final class ImageEditorViewModel: ObservableObject {
     var movingPathAnchorDidChange = false
     var resizingLayerIDs = Set<UUID>()
     var resizingOriginalFrames: [UUID: CGRect] = [:]
+    var resizingOriginalParagraphTextContents: [UUID: ImageEditorTextContent] = [:]
     var resizingOriginalTransformFrame: CGRect?
     var resizingLayerDidChange = false
     var rotatingLayerIDs = Set<UUID>()

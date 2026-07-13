@@ -52,6 +52,42 @@ struct ImageEditorTextBoxCreationTests {
         #expect(automaticSize.height < fixedSize.height)
     }
 
+    @Test func paragraphContentReportsOverflowAgainstItsFixedHeight() {
+        var content = textContent("One two three four five six seven eight nine ten")
+        content.boxWidth = 72
+        content.boxHeight = 18
+
+        #expect(content.requiredParagraphHeight > content.boxHeight)
+        #expect(content.hasOverflow)
+
+        content.boxHeight = content.requiredParagraphHeight
+        #expect(!content.hasOverflow)
+
+        content.boxHeight = 0
+        #expect(!content.hasOverflow)
+    }
+
+    @Test func resizeGeometryKeepsTheOppositeTextBoxEdgesFixed() {
+        let original = CGRect(x: 20, y: 30, width: 108, height: 68)
+
+        let right = ImageEditorTextBoxGeometry.normalizedResizeFrame(
+            CGRect(x: 20, y: 30, width: 143.2, height: 68),
+            originalFrame: original,
+            handle: .right
+        )
+        #expect(right == CGRect(x: 20, y: 30, width: 144, height: 68))
+
+        let bottomLeft = ImageEditorTextBoxGeometry.normalizedResizeFrame(
+            CGRect(x: 4.2, y: 12.4, width: 123.8, height: 85.6),
+            originalFrame: original,
+            handle: .bottomLeft
+        )
+        #expect(bottomLeft.maxX == original.maxX)
+        #expect(bottomLeft.maxY == original.maxY)
+        #expect(bottomLeft.width == 124)
+        #expect(bottomLeft.height == 86)
+    }
+
     @Test func creatingAndUpdatingFixedTextBoxPreservesDimensionsAndUndo() throws {
         let viewModel = editor()
         viewModel.textValue = "Dragged paragraph"
@@ -71,6 +107,97 @@ struct ImageEditorTextBoxCreationTests {
         viewModel.undo()
         #expect(viewModel.document.selectedLayer?.frame == created.frame)
         #expect(viewModel.document.selectedLayer?.textContent?.boxHeight == 68)
+    }
+
+    @Test func dragResizeChangesParagraphContainerWithoutScalingTypeAndUndoRestores() throws {
+        let viewModel = editor()
+        viewModel.textValue = "A paragraph that wraps across several lines"
+        viewModel.textSize = 22
+        viewModel.textBoxWidth = 100
+        viewModel.textBoxHeight = 44
+        viewModel.addText(at: CGPoint(x: 24, y: 30))
+        viewModel.toggleGuideSnapping()
+
+        let originalLayer = try #require(viewModel.document.selectedLayer)
+        let originalFrame = originalLayer.frame
+        #expect(viewModel.selectedLayerTransformFrame == originalFrame)
+
+        viewModel.beginResizingSelectedLayer(handle: .topRight)
+        viewModel.resizeSelectedLayer(
+            to: CGPoint(x: originalFrame.maxX + 36, y: originalFrame.maxY + 28),
+            handle: .topRight,
+            preservingAspectRatio: true
+        )
+        viewModel.finishResizingSelectedLayer()
+
+        let resized = try #require(viewModel.document.selectedLayer)
+        let resizedContent = try #require(resized.textContent)
+        #expect(resized.frame == CGRect(
+            x: originalFrame.minX,
+            y: originalFrame.minY,
+            width: originalFrame.width + 36,
+            height: originalFrame.height + 28
+        ))
+        #expect(resizedContent.boxWidth == 136)
+        #expect(resizedContent.boxHeight == 72)
+        #expect(resizedContent.fontSize == 22)
+        #expect(resized.image.size == resized.frame.size)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.textBoxResize"))
+
+        viewModel.undo()
+        #expect(viewModel.document.selectedLayer?.frame == originalFrame)
+        #expect(viewModel.document.selectedLayer?.textContent?.boxWidth == 100)
+        #expect(viewModel.document.selectedLayer?.textContent?.boxHeight == 44)
+        #expect(viewModel.document.selectedLayer?.textContent?.fontSize == 22)
+    }
+
+    @Test func selectedParagraphOverflowStateTracksTextBoxResize() {
+        let viewModel = editor()
+        viewModel.textValue = "One two three four five six seven eight nine ten eleven twelve"
+        viewModel.textBoxWidth = 72
+        viewModel.textBoxHeight = 16
+        viewModel.addText(at: CGPoint(x: 20, y: 24))
+        #expect(viewModel.selectedTextBoxHasOverflow)
+
+        let originalFrame = viewModel.document.selectedLayer?.frame ?? .zero
+        let requiredHeight = viewModel.document.selectedLayer?.textContent?.requiredParagraphHeight ?? 1
+        viewModel.toggleGuideSnapping()
+        viewModel.beginResizingSelectedLayer(handle: .top)
+        viewModel.resizeSelectedLayer(
+            to: CGPoint(
+                x: originalFrame.midX,
+                y: originalFrame.minY + requiredHeight + ImageEditorTextContent.drawingPadding * 2 + 12
+            ),
+            handle: .top
+        )
+        viewModel.finishResizingSelectedLayer()
+
+        #expect(!viewModel.selectedTextBoxHasOverflow)
+    }
+
+    @Test func pointTextStillUsesTheExistingLayerScalePath() throws {
+        let viewModel = editor()
+        viewModel.textValue = "Point text"
+        viewModel.textSize = 22
+        viewModel.textBoxWidth = 0
+        viewModel.textBoxHeight = 0
+        viewModel.addText(at: CGPoint(x: 18, y: 22))
+        viewModel.toggleGuideSnapping()
+
+        let originalFrame = try #require(viewModel.selectedLayerTransformFrame)
+        viewModel.beginResizingSelectedLayer(handle: .right)
+        viewModel.resizeSelectedLayer(
+            to: CGPoint(x: originalFrame.maxX + 30, y: originalFrame.midY),
+            handle: .right,
+            preservingAspectRatio: true
+        )
+        viewModel.finishResizingSelectedLayer()
+
+        let resizedFrame = try #require(viewModel.selectedLayerTransformFrame)
+        #expect(resizedFrame.width == originalFrame.width + 30)
+        #expect(abs(resizedFrame.width / resizedFrame.height - originalFrame.width / originalFrame.height) < 0.001)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerResize"))
+        #expect(viewModel.document.selectedLayer?.textContent?.layoutMode == .point)
     }
 
     @Test func projectRoundTripKeepsFixedHeightAndLegacyPayloadDefaultsToAutoHeight() throws {
@@ -115,6 +242,8 @@ struct ImageEditorTextBoxCreationTests {
         #expect(source.contains("ImageEditorTextBoxGeometry.paragraphRect("))
         #expect(source.contains("beginCanvasParagraphTextEditing(in: paragraphRect)"))
         #expect(source.contains("canvasTextEditingFrame = frame"))
+        #expect(source.contains("textBoxOverflowOverlay(in: geometry.size)"))
+        #expect(source.contains("image-editor-text-box-overflow"))
     }
 
     private func editor() -> ImageEditorViewModel {

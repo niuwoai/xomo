@@ -251,6 +251,8 @@ struct XomoAutomationTests {
         }
         #expect(inspectedText["layoutMode"] == .string("paragraph"))
         #expect(inspectedText["boxHeight"] == .number(112))
+        #expect(inspectedText["requiredBoxHeight"] != nil)
+        #expect(inspectedText["hasOverflow"] != nil)
     }
 
     @Test func registryConfiguresCloneStampSamplingOptions() {

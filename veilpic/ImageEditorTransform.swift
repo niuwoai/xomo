@@ -154,6 +154,13 @@ extension ImageEditorViewModel {
         resizingOriginalFrames = indices.reduce(into: [:]) { frames, index in
             frames[document.layers[index].id] = document.layers[index].frame.standardized
         }
+        resizingOriginalParagraphTextContents = [:]
+        if indices.count == 1,
+           let index = indices.first,
+           let content = document.layers[index].textContent,
+           content.layoutMode == .paragraph {
+            resizingOriginalParagraphTextContents[document.layers[index].id] = content
+        }
         resizingOriginalTransformFrame = transformFrame
         resizingLayerDidChange = false
     }
@@ -166,33 +173,55 @@ extension ImageEditorViewModel {
         guard !resizingLayerIDs.isEmpty,
               let originalFrame = resizingOriginalTransformFrame
         else { return }
+        let resizesParagraphTextBox = resizingOriginalParagraphTextContents.count == 1
+        let shouldPreserveAspectRatio = preservingAspectRatio && !resizesParagraphTextBox
         let resizedFrame = frameByDragging(
             handle: handle,
             from: originalFrame,
             to: point,
-            preservingAspectRatio: preservingAspectRatio
+            preservingAspectRatio: shouldPreserveAspectRatio
         )
         let snappedFrame = snappedResizeFrame(
             resizedFrame,
             originalFrame: originalFrame,
             handle: handle,
-            preservingAspectRatio: preservingAspectRatio
+            preservingAspectRatio: shouldPreserveAspectRatio
         )
-        guard applyResizedTransformFrame(snappedFrame, originalTransformFrame: originalFrame) else { return }
+        let changed: Bool
+        if resizesParagraphTextBox {
+            let normalizedFrame = ImageEditorTextBoxGeometry.normalizedResizeFrame(
+                snappedFrame,
+                originalFrame: originalFrame,
+                handle: handle
+            )
+            changed = applyResizedParagraphTextBoxFrame(normalizedFrame)
+        } else {
+            changed = applyResizedTransformFrame(snappedFrame, originalTransformFrame: originalFrame)
+        }
+        guard changed else { return }
         resizingLayerDidChange = true
-        statusText = L10n.text("imageEditor.status.layerResized")
+        statusText = L10n.text(
+            resizesParagraphTextBox
+                ? "imageEditor.status.textBoxResized"
+                : "imageEditor.status.layerResized"
+        )
     }
 
     func finishResizingSelectedLayer() {
         guard !resizingLayerIDs.isEmpty else { return }
         if resizingLayerDidChange {
-            appendHistory(L10n.text("imageEditor.history.layerResize"))
+            appendHistory(L10n.text(
+                resizingOriginalParagraphTextContents.isEmpty
+                    ? "imageEditor.history.layerResize"
+                    : "imageEditor.history.textBoxResize"
+            ))
         } else {
             _ = undoStack.popLast()
             updateStatus()
         }
         resizingLayerIDs = []
         resizingOriginalFrames = [:]
+        resizingOriginalParagraphTextContents = [:]
         resizingOriginalTransformFrame = nil
         resizingLayerDidChange = false
     }
@@ -453,19 +482,49 @@ extension ImageEditorViewModel {
 
     private func transformContentFrame(forLayerAt index: Int) -> CGRect? {
         let layer = document.layers[index]
+        if layer.textContent?.layoutMode == .paragraph {
+            return layer.frame.standardized
+        }
         if let cached = cachedLayerTransformContentFrames[layer.id] {
             return cached
         }
         if cachedEmptyTransformLayerIDs.contains(layer.id) {
             return nil
         }
-        guard let localBounds = layer.image.nonTransparentPixelBounds(alphaThreshold: 0) else {
+        let transformImage = layer.textContent == nil ? layer.image : layer.contentImage
+        guard let localBounds = transformImage.nonTransparentPixelBounds(alphaThreshold: 0) else {
             cachedEmptyTransformLayerIDs.insert(layer.id)
             return nil
         }
-        let contentFrame = layer.frame.frameMappingLocalRect(localBounds, imageSize: layer.image.size)
+        let contentFrame = layer.frame.frameMappingLocalRect(localBounds, imageSize: transformImage.size)
         cachedLayerTransformContentFrames[layer.id] = contentFrame
         return contentFrame
+    }
+
+    private func applyResizedParagraphTextBoxFrame(_ targetFrame: CGRect) -> Bool {
+        guard let entry = resizingOriginalParagraphTextContents.first,
+              let index = document.layers.firstIndex(where: { $0.id == entry.key })
+        else { return false }
+        let currentFrame = document.layers[index].frame.standardized
+        guard abs(targetFrame.width - currentFrame.width) >= 0.1
+                || abs(targetFrame.height - currentFrame.height) >= 0.1
+                || abs(targetFrame.minX - currentFrame.minX) >= 0.1
+                || abs(targetFrame.minY - currentFrame.minY) >= 0.1
+        else { return false }
+
+        var content = entry.value
+        let contentSize = ImageEditorTextBoxGeometry.contentSize(for: targetFrame)
+        content.boxWidth = contentSize.width
+        content.boxHeight = contentSize.height
+        if let mask = document.layers[index].mask, mask.size != targetFrame.size {
+            document.layers[index].mask = mask.resized(to: targetFrame.size)
+        }
+        document.layers[index].image = NSImage.transparent(size: targetFrame.size)
+        document.layers[index].frame = targetFrame
+        document.layers[index].kind = .text(content)
+        textBoxWidth = Double(content.boxWidth)
+        textBoxHeight = Double(content.boxHeight)
+        return true
     }
 
     func applyRotation(

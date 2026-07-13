@@ -707,6 +707,7 @@
 "imageEditor.properties.textLineSpacingValue" = "Leading: %d px";
 "imageEditor.properties.textBoxWidthValue" = "Text Box: %d px";
 "imageEditor.properties.textBoxHeightValue" = "Text Box Height: %d px";
+"imageEditor.properties.textBoxOverflow" = "Text exceeds the text box";
 "imageEditor.properties.textLeftIndentValue" = "Left Indent: %d px";
 "imageEditor.properties.textRightIndentValue" = "Right Indent: %d px";
 "imageEditor.properties.textFirstLineIndentValue" = "First-Line Indent: %d px";
@@ -1162,6 +1163,7 @@
 "imageEditor.history.layerDistributeSpacing" = "Distribute Layer Spacing";
 "imageEditor.history.layerScale" = "Scale Layer";
 "imageEditor.history.layerResize" = "Drag Resize Layer";
+"imageEditor.history.textBoxResize" = "Resize Text Box";
 "imageEditor.history.layerRotate" = "Rotate Layer";
 "imageEditor.history.layerFlipHorizontal" = "Flip Layer Horizontal";
 "imageEditor.history.layerFlipVertical" = "Flip Layer Vertical";
@@ -1705,6 +1707,7 @@
 "imageEditor.status.editingMask" = "Editing layer mask: brush hides, eraser restores";
 "imageEditor.status.layerMoved" = "Selected layer moved";
 "imageEditor.status.layerResized" = "Selected layer resized";
+"imageEditor.status.textBoxResized" = "Text box resized without scaling the type";
 "imageEditor.status.layerRotated" = "Selected layer rotated";
 "imageEditor.status.layerFlipHorizontal" = "Selected layer flipped horizontally";
 "imageEditor.status.layerFlipVertical" = "Selected layer flipped vertically";
