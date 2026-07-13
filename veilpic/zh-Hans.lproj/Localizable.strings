@@ -743,6 +743,8 @@
 "imageEditor.textAlignment.center" = "中";
 "imageEditor.textAlignment.right" = "右";
 "imageEditor.textAlignment.justified" = "两端";
+"imageEditor.textLayoutMode.point" = "点文字";
+"imageEditor.textLayoutMode.paragraph" = "段落文字";
 "imageEditor.levels.blackPoint" = "黑场";
 "imageEditor.levels.gamma" = "中间调";
 "imageEditor.levels.whitePoint" = "白场";
@@ -1270,6 +1272,8 @@
 "imageEditor.history.layerTextNew" = "新建文字图层";
 "imageEditor.history.layerTextUpdate" = "更新文字图层";
 "imageEditor.history.layerTextUpdateSelected" = "更新所选文字图层";
+"imageEditor.history.textConvertToPoint" = "转换为点文字";
+"imageEditor.history.textConvertToParagraph" = "转换为段落文字";
 "imageEditor.history.layerShapeNew" = "新建形状图层";
 "imageEditor.history.layerShapeUpdate" = "更新形状图层";
 "imageEditor.history.layerShapeUpdateSelected" = "更新所选形状图层";
@@ -1392,6 +1396,8 @@
 "imageEditor.status.brushPresetLimitReached" = "最多只能保存 %d 个自定义画笔预设";
 "imageEditor.status.characterPanelSummary" = "文字：%@ | 字号：%d px | 粗体：%@ | 斜体：%@ | 下划线：%@ | 删除线：%@ | 字距：%d | 行距：%d";
 "imageEditor.status.paragraphPanelSummary" = "对齐：%@ | 文本框宽度：%d px | 左缩进：%d px | 右缩进：%d px | 首行缩进：%d px";
+"imageEditor.status.textConvertedToPoint" = "已将 %d 个文字图层转换为点文字";
+"imageEditor.status.textConvertedToParagraph" = "已将 %d 个文字图层转换为段落文字";
 "imageEditor.characterPanel.emptyText" = "未输入";
 "imageEditor.characterPanel.enabled" = "开";
 "imageEditor.characterPanel.disabled" = "关";
@@ -1772,6 +1778,8 @@
 "imageEditor.action.layerSmartFilterClear" = "清空智能滤镜";
 "imageEditor.action.layerTextNew" = "新建文字图层";
 "imageEditor.action.layerTextUpdate" = "更新文字图层";
+"imageEditor.action.textConvertToPoint" = "转换为点文字";
+"imageEditor.action.textConvertToParagraph" = "转换为段落文字";
 "imageEditor.action.layerShapeUpdate" = "更新形状";
 "imageEditor.action.penFinishOpen" = "开放路径";
 "imageEditor.action.penFinishClosed" = "闭合路径";

@@ -743,6 +743,8 @@
 "imageEditor.textAlignment.center" = "中央";
 "imageEditor.textAlignment.right" = "右";
 "imageEditor.textAlignment.justified" = "両端";
+"imageEditor.textLayoutMode.point" = "ポイントテキスト";
+"imageEditor.textLayoutMode.paragraph" = "段落テキスト";
 "imageEditor.levels.blackPoint" = "黒点";
 "imageEditor.levels.gamma" = "中間調";
 "imageEditor.levels.whitePoint" = "白点";
@@ -1270,6 +1272,8 @@
 "imageEditor.history.layerTextNew" = "文字レイヤーを作成";
 "imageEditor.history.layerTextUpdate" = "文字レイヤーを更新";
 "imageEditor.history.layerTextUpdateSelected" = "選択文字レイヤーを更新";
+"imageEditor.history.textConvertToPoint" = "ポイントテキストに変換";
+"imageEditor.history.textConvertToParagraph" = "段落テキストに変換";
 "imageEditor.history.layerShapeNew" = "シェイプレイヤーを作成";
 "imageEditor.history.layerShapeUpdate" = "シェイプレイヤーを更新";
 "imageEditor.history.layerShapeUpdateSelected" = "選択シェイプレイヤーを更新";
@@ -1392,6 +1396,8 @@
 "imageEditor.status.brushPresetLimitReached" = "カスタムブラシプリセットは最大%d件まで保存できます";
 "imageEditor.status.characterPanelSummary" = "テキスト：%@ | サイズ：%d px | 太字：%@ | 斜体：%@ | 下線：%@ | 取り消し線：%@ | 字間：%d | 行間：%d";
 "imageEditor.status.paragraphPanelSummary" = "配置：%@ | テキストボックス幅：%d px | 左インデント：%d px | 右インデント：%d px | 最初の行：%d px";
+"imageEditor.status.textConvertedToPoint" = "%d 個の文字レイヤーをポイントテキストに変換しました";
+"imageEditor.status.textConvertedToParagraph" = "%d 個の文字レイヤーを段落テキストに変換しました";
 "imageEditor.characterPanel.emptyText" = "未入力";
 "imageEditor.characterPanel.enabled" = "オン";
 "imageEditor.characterPanel.disabled" = "オフ";
@@ -1772,6 +1778,8 @@
 "imageEditor.action.layerSmartFilterClear" = "スマートフィルターをクリア";
 "imageEditor.action.layerTextNew" = "文字レイヤーを作成";
 "imageEditor.action.layerTextUpdate" = "文字レイヤーを更新";
+"imageEditor.action.textConvertToPoint" = "ポイントテキストに変換";
+"imageEditor.action.textConvertToParagraph" = "段落テキストに変換";
 "imageEditor.action.layerShapeUpdate" = "シェイプを更新";
 "imageEditor.action.penFinishOpen" = "開いたパス";
 "imageEditor.action.penFinishClosed" = "閉じたパス";

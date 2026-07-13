@@ -4072,6 +4072,21 @@ struct ImageEditorView: View {
                     step: 8
                 )
                 HStack {
+                    Button(L10n.text("imageEditor.action.textConvertToPoint")) {
+                        viewModel.convertSelectedTextLayers(to: .point)
+                    }
+                    .buttonStyle(EditorTextButtonStyle())
+                    .focusable(false)
+                    .disabled(!viewModel.canConvertSelectedTextToPoint)
+
+                    Button(L10n.text("imageEditor.action.textConvertToParagraph")) {
+                        viewModel.convertSelectedTextLayers(to: .paragraph)
+                    }
+                    .buttonStyle(EditorTextButtonStyle())
+                    .focusable(false)
+                    .disabled(!viewModel.canConvertSelectedTextToParagraph)
+                }
+                HStack {
                     Stepper(
                         L10n.format("imageEditor.properties.textLeftIndentValue", Int(viewModel.textLeftIndent.rounded())),
                         value: $viewModel.textLeftIndent,

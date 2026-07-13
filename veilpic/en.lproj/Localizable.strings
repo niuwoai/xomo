@@ -743,6 +743,8 @@
 "imageEditor.textAlignment.center" = "Center";
 "imageEditor.textAlignment.right" = "Right";
 "imageEditor.textAlignment.justified" = "Justify";
+"imageEditor.textLayoutMode.point" = "Point Text";
+"imageEditor.textLayoutMode.paragraph" = "Paragraph Text";
 "imageEditor.levels.blackPoint" = "Black point";
 "imageEditor.levels.gamma" = "Midtones";
 "imageEditor.levels.whitePoint" = "White point";
@@ -1270,6 +1272,8 @@
 "imageEditor.history.layerTextNew" = "New Text Layer";
 "imageEditor.history.layerTextUpdate" = "Update Text Layer";
 "imageEditor.history.layerTextUpdateSelected" = "Update Selected Text Layers";
+"imageEditor.history.textConvertToPoint" = "Convert to Point Text";
+"imageEditor.history.textConvertToParagraph" = "Convert to Paragraph Text";
 "imageEditor.history.layerShapeNew" = "New Shape Layer";
 "imageEditor.history.layerShapeUpdate" = "Update Shape Layer";
 "imageEditor.history.layerShapeUpdateSelected" = "Update Selected Shape Layers";
@@ -1392,6 +1396,8 @@
 "imageEditor.status.brushPresetLimitReached" = "You can save up to %d custom brush presets";
 "imageEditor.status.characterPanelSummary" = "Text: %@ | Size: %d px | Bold: %@ | Italic: %@ | Underline: %@ | Strikethrough: %@ | Tracking: %d | Leading: %d";
 "imageEditor.status.paragraphPanelSummary" = "Alignment: %@ | Text box width: %d px | Left indent: %d px | Right indent: %d px | First-line indent: %d px";
+"imageEditor.status.textConvertedToPoint" = "Converted %d text layer(s) to point text";
+"imageEditor.status.textConvertedToParagraph" = "Converted %d text layer(s) to paragraph text";
 "imageEditor.characterPanel.emptyText" = "No text";
 "imageEditor.characterPanel.enabled" = "On";
 "imageEditor.characterPanel.disabled" = "Off";
@@ -1772,6 +1778,8 @@
 "imageEditor.action.layerSmartFilterClear" = "Clear Smart Filters";
 "imageEditor.action.layerTextNew" = "New Text Layer";
 "imageEditor.action.layerTextUpdate" = "Update Text Layer";
+"imageEditor.action.textConvertToPoint" = "Convert to Point Text";
+"imageEditor.action.textConvertToParagraph" = "Convert to Paragraph Text";
 "imageEditor.action.layerShapeUpdate" = "Update Shape";
 "imageEditor.action.penFinishOpen" = "Open Path";
 "imageEditor.action.penFinishClosed" = "Closed Path";
