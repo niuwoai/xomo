@@ -31,6 +31,15 @@ struct ImageEditorLayerPanelStyleTests {
         #expect((color?.blueComponent ?? 0) > 0.85)
     }
 
+    @Test func layerPanelTitleUsesReadableLightText() {
+        let color = EditorPanelTitleAppearance.foregroundColor.usingColorSpace(.deviceRGB)
+
+        #expect(color != nil)
+        #expect((color?.redComponent ?? 0) > 0.85)
+        #expect((color?.greenComponent ?? 0) > 0.85)
+        #expect((color?.blueComponent ?? 0) > 0.85)
+    }
+
     @Test func dockDisclosureAppliesLightTextToEveryVisibleLabel() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),

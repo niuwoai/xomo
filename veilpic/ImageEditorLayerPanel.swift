@@ -92,7 +92,7 @@ extension ImageEditorView {
                 } label: {
                     Text(tab.title)
                         .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(Color(nsColor: ImageEditorLayerPanelTabAppearance.foregroundColor))
+                        .foregroundColor(Color(nsColor: ImageEditorLayerPanelTabAppearance.foregroundColor))
                         .padding(.horizontal, 10)
                         .frame(height: 24)
                         .contentShape(Rectangle())
@@ -1716,7 +1716,7 @@ extension ImageEditorView {
 
     private func layerVisibilityButton(_ layer: ImageEditorLayer) -> some View {
         Button {
-            viewModel.toggleLayerVisibility(layer.id)
+            viewModel.toggleLayerVisibility(layer.id, applyingToSelection: true)
         } label: {
             Image(systemName: layer.isVisible ? "eye" : "eye.slash")
                 .frame(width: 18, height: 22)
@@ -1945,21 +1945,21 @@ extension ImageEditorView {
                 helpKey: layer.locksPixels ? "imageEditor.action.layerPixelsUnlock" : "imageEditor.action.layerPixelsLock",
                 isEnabled: canTogglePixelsLock(for: layer)
             ) {
-                viewModel.toggleLayerPixelsLock(layer.id)
+                viewModel.toggleLayerPixelsLock(layer.id, applyingToSelection: true)
             }
             layerSmallToggle(
                 systemImage: layer.locksPosition ? "arrow.up.left.and.arrow.down.right.circle.fill" : "arrow.up.left.and.arrow.down.right.circle",
                 helpKey: layer.locksPosition ? "imageEditor.action.layerPositionUnlock" : "imageEditor.action.layerPositionLock",
                 isEnabled: canTogglePositionLock(for: layer)
             ) {
-                viewModel.toggleLayerPositionLock(layer.id)
+                viewModel.toggleLayerPositionLock(layer.id, applyingToSelection: true)
             }
             layerSmallToggle(
                 systemImage: layer.locksTransparentPixels ? "square.split.2x2.fill" : "square.split.2x2",
                 helpKey: layer.locksTransparentPixels ? "imageEditor.action.layerTransparentUnlock" : "imageEditor.action.layerTransparentLock",
                 isEnabled: canToggleTransparentPixelsLock(for: layer)
             ) {
-                viewModel.toggleLayerTransparentPixelsLock(layer.id)
+                viewModel.toggleLayerTransparentPixelsLock(layer.id, applyingToSelection: true)
             }
         }
     }
@@ -1979,7 +1979,7 @@ extension ImageEditorView {
 
     private func layerLockButton(_ layer: ImageEditorLayer) -> some View {
         Button {
-            viewModel.toggleLayerLock(layer.id)
+            viewModel.toggleLayerLock(layer.id, applyingToSelection: true)
         } label: {
             Image(systemName: layer.isLocked ? "lock.fill" : "lock.open")
                 .font(.system(size: 10, weight: .bold))

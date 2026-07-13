@@ -6156,6 +6156,10 @@ struct DisabledMaskSlash: View {
     }
 }
 
+enum EditorPanelTitleAppearance {
+    static let foregroundColor = ImageEditorTheme.text
+}
+
 struct EditorPanel<Content: View>: View {
     let title: String
     let showsTitle: Bool
@@ -6172,7 +6176,7 @@ struct EditorPanel<Content: View>: View {
             if showsTitle {
                 Text(title)
                     .font(.system(size: 13, weight: .bold))
-                    .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+                    .foregroundColor(Color(nsColor: EditorPanelTitleAppearance.foregroundColor))
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 8)

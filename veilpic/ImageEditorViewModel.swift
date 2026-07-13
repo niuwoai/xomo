@@ -2905,11 +2905,34 @@ final class ImageEditorViewModel: ObservableObject {
         moveSelectedLayers(to: .bottom)
     }
 
-    func toggleLayerVisibility(_ id: UUID) {
+    func toggleLayerVisibility(_ id: UUID, applyingToSelection: Bool = false) {
         guard let index = document.layers.firstIndex(where: { $0.id == id }) else { return }
+        let targetVisibility = !document.layers[index].isVisible
+        let targetIndices = layerRowPropertyTargetIndices(
+            clickedLayerID: id,
+            applyingToSelection: applyingToSelection
+        )
+        let changedIndices = targetIndices.filter { document.layers[$0].isVisible != targetVisibility }
+        guard !changedIndices.isEmpty else { return }
         pushUndo()
-        document.layers[index].isVisible.toggle()
-        appendHistory(L10n.text("imageEditor.history.layerVisibility"))
+        for targetIndex in changedIndices {
+            document.layers[targetIndex].isVisible = targetVisibility
+        }
+        if targetIndices.count > 1 {
+            appendHistory(L10n.text(
+                targetVisibility
+                    ? "imageEditor.history.layerShowSelected"
+                    : "imageEditor.history.layerHideSelected"
+            ))
+            statusText = L10n.format(
+                targetVisibility
+                    ? "imageEditor.status.layerShowSelected"
+                    : "imageEditor.status.layerHideSelected",
+                targetIndices.count
+            )
+        } else {
+            appendHistory(L10n.text("imageEditor.history.layerVisibility"))
+        }
     }
 
     func isolateSelectedLayers() {
@@ -2962,14 +2985,36 @@ final class ImageEditorViewModel: ObservableObject {
         }
     }
 
-    func toggleLayerLock(_ id: UUID) {
+    func toggleLayerLock(_ id: UUID, applyingToSelection: Bool = false) {
         guard let index = document.layers.firstIndex(where: { $0.id == id }) else { return }
+        let targetLock = !document.layers[index].isLocked
+        let targetIndices = layerRowPropertyTargetIndices(
+            clickedLayerID: id,
+            applyingToSelection: applyingToSelection
+        )
+        let changedIndices = targetIndices.filter { document.layers[$0].isLocked != targetLock }
+        guard !changedIndices.isEmpty else { return }
         pushUndo()
-        document.layers[index].isLocked.toggle()
-        if document.layers[index].isLocked, document.layers[index].id == document.selectedLayerID {
+        for targetIndex in changedIndices {
+            document.layers[targetIndex].isLocked = targetLock
+        }
+        if targetLock, targetIndices.contains(where: { document.layers[$0].id == document.selectedLayerID }) {
             isEditingLayerMask = false
         }
-        appendHistory(L10n.text("imageEditor.history.layerLock"))
+        if targetIndices.count > 1 {
+            appendHistory(L10n.text(
+                targetLock
+                    ? "imageEditor.history.layerLockSelected"
+                    : "imageEditor.history.layerUnlockSelected"
+            ))
+            statusText = L10n.text(
+                targetLock
+                    ? "imageEditor.status.layerLockSelected"
+                    : "imageEditor.status.layerUnlockSelected"
+            )
+        } else {
+            appendHistory(L10n.text("imageEditor.history.layerLock"))
+        }
     }
 
     var canLockSelectedLayers: Bool {
@@ -3085,37 +3130,97 @@ final class ImageEditorViewModel: ObservableObject {
         )
     }
 
-    func toggleLayerTransparentPixelsLock(_ id: UUID) {
+    func toggleLayerTransparentPixelsLock(_ id: UUID, applyingToSelection: Bool = false) {
         guard let index = document.layers.firstIndex(where: { $0.id == id }) else { return }
         guard canToggleTransparentPixelsLock(for: document.layers[index]) else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
+        let targetLock = !document.layers[index].locksTransparentPixels
+        let targetIndices = layerRowPropertyTargetIndices(
+            clickedLayerID: id,
+            applyingToSelection: applyingToSelection
+        )
+        let changedIndices = targetIndices.filter { targetIndex in
+            canToggleTransparentPixelsLock(for: document.layers[targetIndex])
+                && document.layers[targetIndex].locksTransparentPixels != targetLock
+        }
+        guard !changedIndices.isEmpty else { return }
         pushUndo()
-        document.layers[index].locksTransparentPixels.toggle()
-        appendHistory(L10n.text("imageEditor.history.layerTransparentPixelsLock"))
+        for targetIndex in changedIndices {
+            document.layers[targetIndex].locksTransparentPixels = targetLock
+        }
+        appendLayerRowLockHistory(
+            isBatch: targetIndices.count > 1,
+            isLocked: targetLock,
+            singleHistoryKey: "imageEditor.history.layerTransparentPixelsLock",
+            selectedLockHistoryKey: "imageEditor.history.layerTransparentPixelsLockSelected",
+            selectedUnlockHistoryKey: "imageEditor.history.layerTransparentPixelsUnlockSelected",
+            selectedLockStatusKey: "imageEditor.status.layerTransparentPixelsLockSelected",
+            selectedUnlockStatusKey: "imageEditor.status.layerTransparentPixelsUnlockSelected"
+        )
     }
 
-    func toggleLayerPixelsLock(_ id: UUID) {
+    func toggleLayerPixelsLock(_ id: UUID, applyingToSelection: Bool = false) {
         guard let index = document.layers.firstIndex(where: { $0.id == id }) else { return }
         guard canTogglePixelsLock(for: document.layers[index]) else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
+        let targetLock = !document.layers[index].locksPixels
+        let targetIndices = layerRowPropertyTargetIndices(
+            clickedLayerID: id,
+            applyingToSelection: applyingToSelection
+        )
+        let changedIndices = targetIndices.filter { targetIndex in
+            canTogglePixelsLock(for: document.layers[targetIndex])
+                && document.layers[targetIndex].locksPixels != targetLock
+        }
+        guard !changedIndices.isEmpty else { return }
         pushUndo()
-        document.layers[index].locksPixels.toggle()
-        appendHistory(L10n.text("imageEditor.history.layerPixelsLock"))
+        for targetIndex in changedIndices {
+            document.layers[targetIndex].locksPixels = targetLock
+        }
+        appendLayerRowLockHistory(
+            isBatch: targetIndices.count > 1,
+            isLocked: targetLock,
+            singleHistoryKey: "imageEditor.history.layerPixelsLock",
+            selectedLockHistoryKey: "imageEditor.history.layerPixelsLockSelected",
+            selectedUnlockHistoryKey: "imageEditor.history.layerPixelsUnlockSelected",
+            selectedLockStatusKey: "imageEditor.status.layerPixelsLockSelected",
+            selectedUnlockStatusKey: "imageEditor.status.layerPixelsUnlockSelected"
+        )
     }
 
-    func toggleLayerPositionLock(_ id: UUID) {
+    func toggleLayerPositionLock(_ id: UUID, applyingToSelection: Bool = false) {
         guard let index = document.layers.firstIndex(where: { $0.id == id }) else { return }
         guard canTogglePositionLock(for: document.layers[index]) else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
+        let targetLock = !document.layers[index].locksPosition
+        let targetIndices = layerRowPropertyTargetIndices(
+            clickedLayerID: id,
+            applyingToSelection: applyingToSelection
+        )
+        let changedIndices = targetIndices.filter { targetIndex in
+            canTogglePositionLock(for: document.layers[targetIndex])
+                && document.layers[targetIndex].locksPosition != targetLock
+        }
+        guard !changedIndices.isEmpty else { return }
         pushUndo()
-        document.layers[index].locksPosition.toggle()
-        appendHistory(L10n.text("imageEditor.history.layerPositionLock"))
+        for targetIndex in changedIndices {
+            document.layers[targetIndex].locksPosition = targetLock
+        }
+        appendLayerRowLockHistory(
+            isBatch: targetIndices.count > 1,
+            isLocked: targetLock,
+            singleHistoryKey: "imageEditor.history.layerPositionLock",
+            selectedLockHistoryKey: "imageEditor.history.layerPositionLockSelected",
+            selectedUnlockHistoryKey: "imageEditor.history.layerPositionUnlockSelected",
+            selectedLockStatusKey: "imageEditor.status.layerPositionLockSelected",
+            selectedUnlockStatusKey: "imageEditor.status.layerPositionUnlockSelected"
+        )
     }
 
     func setSelectedLayersLabelColor(_ labelColor: ImageEditorLayerLabelColor?) {
@@ -5220,6 +5325,39 @@ final class ImageEditorViewModel: ObservableObject {
         }
         appendHistory(L10n.text(historyKey))
         statusText = L10n.text(statusKey)
+    }
+
+    private func layerRowPropertyTargetIndices(
+        clickedLayerID: UUID,
+        applyingToSelection: Bool
+    ) -> [Int] {
+        guard let clickedIndex = document.layers.firstIndex(where: { $0.id == clickedLayerID }) else {
+            return []
+        }
+        guard applyingToSelection,
+              document.selectedLayerIDs.contains(clickedLayerID),
+              document.selectedLayerIDs.count > 1
+        else {
+            return [clickedIndex]
+        }
+        return selectedLayerIndices
+    }
+
+    private func appendLayerRowLockHistory(
+        isBatch: Bool,
+        isLocked: Bool,
+        singleHistoryKey: String,
+        selectedLockHistoryKey: String,
+        selectedUnlockHistoryKey: String,
+        selectedLockStatusKey: String,
+        selectedUnlockStatusKey: String
+    ) {
+        guard isBatch else {
+            appendHistory(L10n.text(singleHistoryKey))
+            return
+        }
+        appendHistory(L10n.text(isLocked ? selectedLockHistoryKey : selectedUnlockHistoryKey))
+        statusText = L10n.text(isLocked ? selectedLockStatusKey : selectedUnlockStatusKey)
     }
 
     private func canSetLayerFillOpacity(_ layer: ImageEditorLayer) -> Bool {
