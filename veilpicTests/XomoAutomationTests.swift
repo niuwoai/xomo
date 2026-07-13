@@ -584,6 +584,32 @@ struct XomoAutomationTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerDuplicate"))
     }
 
+    @Test func registryDeletesUnlockedLayerSubtreesAndPreservesLockedSelection() {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        var child = ImageEditorLayer.blank(name: "Child", size: viewModel.document.canvasSize)
+        let selectedGroup = ImageEditorLayer.group(name: "Selected Group", size: viewModel.document.canvasSize)
+        var locked = ImageEditorLayer.blank(name: "Locked", size: viewModel.document.canvasSize)
+        let survivor = ImageEditorLayer.blank(name: "Survivor", size: viewModel.document.canvasSize)
+        child.groupID = selectedGroup.id
+        locked.isLocked = true
+        viewModel.document.layers = [locked, child, selectedGroup, survivor]
+        viewModel.document.selectedLayerIDs = [locked.id, selectedGroup.id]
+        viewModel.document.selectedLayerID = selectedGroup.id
+        registry.register(viewModel)
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.delete"
+        ))
+
+        #expect(response.ok)
+        #expect(viewModel.document.layers.map(\.id) == [locked.id, survivor.id])
+        #expect(viewModel.document.selectedLayerIDs == [locked.id])
+        #expect(viewModel.document.selectedLayerID == locked.id)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerDelete"))
+    }
+
     @Test func registryRunsDestinationPatchWithFeatherThroughSpecialPaintTool() {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

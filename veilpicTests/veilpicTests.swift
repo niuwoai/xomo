@@ -708,11 +708,19 @@ struct veilpicTests {
         viewModel.addLayer()
         let firstID = try #require(viewModel.document.selectedLayerID)
         let firstIndex = try #require(viewModel.document.layers.firstIndex { $0.id == firstID })
+        viewModel.document.layers[firstIndex].image = testImage(
+            color: .systemRed,
+            size: NSSize(width: 20, height: 10)
+        )
         viewModel.document.layers[firstIndex].frame = CGRect(x: 10, y: 10, width: 20, height: 10)
 
         viewModel.addLayer()
         let secondID = try #require(viewModel.document.selectedLayerID)
         let secondIndex = try #require(viewModel.document.layers.firstIndex { $0.id == secondID })
+        viewModel.document.layers[secondIndex].image = testImage(
+            color: .systemGreen,
+            size: NSSize(width: 10, height: 10)
+        )
         viewModel.document.layers[secondIndex].frame = CGRect(x: 50, y: 30, width: 10, height: 10)
 
         viewModel.selectLayer(firstID)

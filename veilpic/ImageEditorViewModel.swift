@@ -1057,7 +1057,11 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     var canDeleteLayer: Bool {
-        let deletionIDs = deletionIDsForCurrentSelection()
+        let deletionIDs = ImageEditorLayerHierarchyDeletion.deletableLayerIDs(
+            in: document.layers,
+            selectedIDs: document.selectedLayerIDs,
+            isEffectivelyLocked: { document.isEffectivelyLocked($0) }
+        )
         return !deletionIDs.isEmpty && document.layers.count - deletionIDs.count >= 1
     }
 
@@ -2828,19 +2832,21 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func deleteSelectedLayer() {
-        let deletionIDs = deletionIDsForCurrentSelection()
-        guard canDeleteLayer, !deletionIDs.isEmpty else { return }
-        let fallbackIndex = document.selectedLayerIndex ?? 0
+        guard let plan = ImageEditorLayerHierarchyDeletion.deletionPlan(
+            layers: document.layers,
+            selectedIDs: document.selectedLayerIDs,
+            primarySelectionID: document.selectedLayerID,
+            visibleLayerIDs: visibleLayerRows.map(\.id),
+            isEffectivelyLocked: { document.isEffectivelyLocked($0) },
+            isEffectivelyVisible: { document.isEffectivelyVisible($0) }
+        ) else { return }
         pushUndo()
-        document.layers.removeAll { deletionIDs.contains($0.id) }
-        normalizeLayerLinks()
-        normalizeClippingMasks()
-        let nextIndex = min(max(0, fallbackIndex - 1), max(0, document.layers.count - 1))
-        document.selectedLayerID = document.layers.indices.contains(nextIndex)
-            ? document.layers[nextIndex].id
-            : document.layers.last?.id
-        document.selectedLayerIDs = document.selectedLayerID.map { Set([$0]) } ?? []
+        document.layers = plan.layers
+        document.selectedLayerIDs = plan.selectedLayerIDs
+        document.selectedLayerID = plan.primarySelectionID
+        layerSelectionAnchorID = plan.primarySelectionID
         isEditingLayerMask = false
+        syncControlsFromLayerSelection()
         appendHistory(L10n.text("imageEditor.history.layerDelete"))
     }
 
@@ -5662,21 +5668,6 @@ final class ImageEditorViewModel: ObservableObject {
               let groupIndex = document.layers.firstIndex(where: { $0.id == groupID && $0.isGroup })
         else { return }
         document.layers[groupIndex].isGroupExpanded = true
-    }
-
-    private func deletionIDsForCurrentSelection() -> Set<UUID> {
-        var deletionIDs = Set<UUID>()
-        for index in selectedLayerIndices {
-            let layer = document.layers[index]
-            if layer.isGroup {
-                guard !document.isEffectivelyLocked(layer) else { continue }
-                deletionIDs.insert(layer.id)
-                deletionIDs.formUnion(groupDescendantIDs(for: layer.id))
-            } else if !document.isEffectivelyLocked(layer) {
-                deletionIDs.insert(layer.id)
-            }
-        }
-        return deletionIDs
     }
 
     private func clippingBaseExists(below index: Int, groupID: UUID?) -> Bool {

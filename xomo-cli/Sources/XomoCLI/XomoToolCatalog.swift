@@ -27,7 +27,7 @@ enum XomoToolCatalog {
         ("xomo.layer.list", "List layers, hierarchy, bounds, visibility, locks, opacity, and blend mode."),
         ("xomo.layer.select", "Select a layer by UUID."),
         ("xomo.layer.create", "Create a pixel, group, text, adjustment, filter, or fill layer."),
-        ("xomo.layer.delete", "Delete selected layers."),
+        ("xomo.layer.delete", "Delete unlocked selected layer roots as complete subtrees and preserve a visible selection fallback."),
         ("xomo.layer.duplicate", "Duplicate selected layer roots as hierarchy-safe subtrees within their original parents."),
         ("xomo.layer.rename", "Rename the primary selected layer."),
         ("xomo.layer.set_visibility", "Set layer visibility."),
