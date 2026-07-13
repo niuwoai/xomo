@@ -1,6 +1,6 @@
 # Xomo MCP 与 CLI
 
-> 当前版本：v2.12.0-rc40
+> 当前版本：v2.12.0-rc41
 
 ## 架构
 
@@ -89,6 +89,8 @@ MCP 服务器实现 `initialize`、`ping`、`tools/list` 和 `tools/call`。当 
 `xomo.layer.style` 的 `presetRename` 使用 `id` 与 `name` 重命名，`presetMove` 使用 `id` 与 `direction=top|up|down|bottom` 排序；`presetExport path=<本地 .xomostyles 路径>` 导出全部预设，附带 `id` 时仅导出该项，`presetImport path=<路径>` 导入版本化样式库。导入项会获得新的本机 ID，并按名称与完整样式去重；管理和文件操作均不进入文档 History。
 
 `xomo.layer.style` 的 `presetCatalog` 返回 6 个稳定 ID 的内置经典样式，结果中的 `builtIn=true` 表示只读内置项；`presetApply id=<内置或自定义 ID>` 可直接应用任一来源，`presetDuplicate id=<ID>` 会把完整样式复制成可重命名、排序和导出的自定义项。图形界面的样式菜单与管理器使用相同目录，并由真实图层效果合成器生成缩略图。
+
+`xomo.layer.style` 的 `presetFavorite id=<ID> favorite=<true|false>` 切换内置或自定义预设的收藏状态，`presetFavorites` 与 `presetRecent` 分别返回收藏列表和最多 8 项、最新优先的最近使用列表；目录项同时包含 `favorite`、`recent` 标记。收藏与最近记录跨会话保存但不进入文档 History，删除自定义预设会同步移除失效记录。
 
 `xomo.mask.action` 的 `apply` 只永久应用栅格图层蒙版，`applyVector` 只永久应用矢量蒙版，`rasterizeVector` 则把矢量蒙版转换成仍可编辑的栅格图层蒙版。三者不会再互相冒名顶替；智能对象须先通过 `xomo.layer.rasterize` 的 `smartObject` 目标转成像素层，才能永久应用蒙版。
 

@@ -705,6 +705,55 @@ struct XomoAutomationTests {
         #expect(viewModel.document.history.count == historyCount)
     }
 
+    @Test func registryFavoritesAndListsRecentLayerStylePresets() throws {
+        let suiteName = "XomoAutomationTests.layerStylePresetUsage.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName) ?? .standard
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let viewModel = makeViewModel(preferencesDefaults: defaults)
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        let id = try #require(viewModel.builtInLayerStylePresets.first?.id)
+
+        let favorite = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style",
+            arguments: [
+                "action": .string("presetFavorite"),
+                "id": .string(id),
+                "favorite": .bool(true)
+            ]
+        ))
+        #expect(favorite.ok)
+        #expect(favorite.result?.arrayValue?.first?.objectValue?["id"] == .string(id))
+        #expect(favorite.result?.arrayValue?.first?.objectValue?["favorite"] == .bool(true))
+
+        let apply = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style",
+            arguments: ["action": .string("presetApply"), "id": .string(id)]
+        ))
+        #expect(apply.ok)
+
+        let reopened = makeViewModel(preferencesDefaults: defaults)
+        registry.register(reopened)
+        let favorites = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style",
+            arguments: ["action": .string("presetFavorites")]
+        ))
+        let recent = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style",
+            arguments: ["action": .string("presetRecent")]
+        ))
+
+        #expect(favorites.ok)
+        #expect(favorites.result?.arrayValue?.first?.objectValue?["id"] == .string(id))
+        #expect(recent.ok)
+        #expect(recent.result?.arrayValue?.first?.objectValue?["id"] == .string(id))
+        #expect(recent.result?.arrayValue?.first?.objectValue?["recent"] == .bool(true))
+    }
+
     @Test func registryRenamesMovesExportsAndImportsLayerStylePresetLibraries() throws {
         let suiteName = "XomoAutomationTests.layerStylePresetManager.\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suiteName) ?? .standard

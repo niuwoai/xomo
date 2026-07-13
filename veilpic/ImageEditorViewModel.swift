@@ -64,6 +64,8 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var brushPressureSensitivity: CGFloat = 50
     @Published private(set) var customBrushPresets: [ImageEditorBrushPreset] = []
     @Published var customLayerStylePresets: [ImageEditorLayerStylePreset] = []
+    @Published var favoriteLayerStylePresetIDs: [String] = []
+    @Published var recentLayerStylePresetIDs: [String] = []
     @Published var patchMode: ImageEditorPatchMode = .source
     @Published var feather: CGFloat = 0
     @Published var selectionModifyAmount: CGFloat = 4
@@ -331,6 +333,9 @@ final class ImageEditorViewModel: ObservableObject {
         let brushDynamicsPreferences = ImageEditorBrushDynamicsPreferences.load(from: preferencesDefaults)
         let brushPresetPreferences = ImageEditorBrushPresetPreferences.load(from: preferencesDefaults)
         let layerStylePresetPreferences = ImageEditorLayerStylePresetPreferences.load(from: preferencesDefaults)
+        let layerStylePresetUsagePreferences = ImageEditorLayerStylePresetUsagePreferences.load(
+            from: preferencesDefaults
+        )
         document = ImageEditorDocument(sourceName: sourceName, image: image)
         self.onApply = onApply
         workspacePreferencesDefaults = preferencesDefaults
@@ -342,6 +347,13 @@ final class ImageEditorViewModel: ObservableObject {
         brushPressureSensitivity = CGFloat(brushDynamicsPreferences.pressureSensitivity)
         customBrushPresets = brushPresetPreferences.presets
         customLayerStylePresets = layerStylePresetPreferences.presets
+        let knownPresetIDs = Set(
+            ImageEditorLayerStyleBuiltInPresetCatalog.presets.map(\.id)
+                + customLayerStylePresets.map(\.id)
+        )
+        let prunedUsage = layerStylePresetUsagePreferences.pruned(to: knownPresetIDs)
+        favoriteLayerStylePresetIDs = prunedUsage.favoriteIDs
+        recentLayerStylePresetIDs = prunedUsage.recentIDs
         cachedCurrentImage = document.layers.first?.image
         refreshSelectionEdgeGeometry()
         syncSizeControlsFromDocument()
@@ -359,6 +371,9 @@ final class ImageEditorViewModel: ObservableObject {
         let brushDynamicsPreferences = ImageEditorBrushDynamicsPreferences.load(from: preferencesDefaults)
         let brushPresetPreferences = ImageEditorBrushPresetPreferences.load(from: preferencesDefaults)
         let layerStylePresetPreferences = ImageEditorLayerStylePresetPreferences.load(from: preferencesDefaults)
+        let layerStylePresetUsagePreferences = ImageEditorLayerStylePresetUsagePreferences.load(
+            from: preferencesDefaults
+        )
         self.document = document
         self.onApply = onApply
         workspacePreferencesDefaults = preferencesDefaults
@@ -370,6 +385,13 @@ final class ImageEditorViewModel: ObservableObject {
         brushPressureSensitivity = CGFloat(brushDynamicsPreferences.pressureSensitivity)
         customBrushPresets = brushPresetPreferences.presets
         customLayerStylePresets = layerStylePresetPreferences.presets
+        let knownPresetIDs = Set(
+            ImageEditorLayerStyleBuiltInPresetCatalog.presets.map(\.id)
+                + customLayerStylePresets.map(\.id)
+        )
+        let prunedUsage = layerStylePresetUsagePreferences.pruned(to: knownPresetIDs)
+        favoriteLayerStylePresetIDs = prunedUsage.favoriteIDs
+        recentLayerStylePresetIDs = prunedUsage.recentIDs
         cachedCurrentImage = initialCompositeImage
         refreshSelectionEdgeGeometry()
         syncSizeControlsFromDocument()
@@ -2034,6 +2056,13 @@ final class ImageEditorViewModel: ObservableObject {
     func persistLayerStylePresetPreferences() {
         ImageEditorLayerStylePresetPreferences(presets: customLayerStylePresets)
             .save(to: workspacePreferencesDefaults)
+    }
+
+    func persistLayerStylePresetUsagePreferences() {
+        ImageEditorLayerStylePresetUsagePreferences(
+            favoriteIDs: favoriteLayerStylePresetIDs,
+            recentIDs: recentLayerStylePresetIDs
+        ).save(to: workspacePreferencesDefaults)
     }
 
     func setBrushPressureControlsSize(_ isEnabled: Bool) {

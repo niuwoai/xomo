@@ -91,6 +91,22 @@ struct ImageEditorLayerStylePresetMenu: View {
 
     var body: some View {
         Menu {
+            if !viewModel.favoriteLayerStylePresets.isEmpty {
+                Section(L10n.text("imageEditor.layerStylePreset.favoriteSection")) {
+                    ForEach(viewModel.favoriteLayerStylePresets) { preset in
+                        presetButton(preset)
+                    }
+                }
+            }
+
+            if !viewModel.recentLayerStylePresets.isEmpty {
+                Section(L10n.text("imageEditor.layerStylePreset.recentSection")) {
+                    ForEach(viewModel.recentLayerStylePresets) { preset in
+                        presetButton(preset)
+                    }
+                }
+            }
+
             Section(L10n.text("imageEditor.layerStylePreset.builtInSection")) {
                 ForEach(viewModel.builtInLayerStylePresets) { preset in
                     presetButton(preset)
@@ -149,6 +165,9 @@ struct ImageEditorLayerStylePresetMenu: View {
             HStack(spacing: 6) {
                 ImageEditorLayerStylePresetThumbnail(preset: preset, width: 24, height: 16)
                 Text(preset.title)
+                if viewModel.isFavoriteLayerStylePreset(id: preset.id) {
+                    Image(systemName: "star.fill")
+                }
                 if viewModel.activeLayerStylePreset?.id == preset.id {
                     Image(systemName: "checkmark")
                 }

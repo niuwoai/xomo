@@ -981,6 +981,10 @@ final class XomoAutomationRegistry {
             break
         case "presetCatalog":
             resultPresets = viewModel.builtInLayerStylePresets
+        case "presetFavorites":
+            resultPresets = viewModel.favoriteLayerStylePresets
+        case "presetRecent":
+            resultPresets = viewModel.recentLayerStylePresets
         case "presetCreate":
             let preset = viewModel.createLayerStylePresetFromSelectedLayer(
                 name: arguments["name"]?.stringValue
@@ -1004,6 +1008,13 @@ final class XomoAutomationRegistry {
             guard viewModel.duplicateLayerStylePresetToCustom(preset) != nil else {
                 throw XomoAutomationCallError.invalidArgument("The custom layer style preset limit was reached")
             }
+        case "presetFavorite":
+            let id = try requiredString("id", in: arguments)
+            let isFavorite = try requiredBool("favorite", in: arguments)
+            guard viewModel.setLayerStylePresetFavorite(id: id, isFavorite: isFavorite) else {
+                throw XomoAutomationCallError.notFound("Layer style preset \(id)")
+            }
+            resultPresets = viewModel.favoriteLayerStylePresets
         case "presetDelete":
             let id = try requiredString("id", in: arguments)
             guard let preset = viewModel.customLayerStylePresets.first(where: { $0.id == id }) else {
@@ -1062,6 +1073,8 @@ final class XomoAutomationRegistry {
                 "title": .string(preset.title),
                 "builtIn": .bool(preset.isBuiltIn),
                 "active": .bool(viewModel.activeLayerStylePreset?.id == preset.id),
+                "favorite": .bool(viewModel.isFavoriteLayerStylePreset(id: preset.id)),
+                "recent": .bool(viewModel.recentLayerStylePresetIDs.contains(preset.id)),
                 "effectsEnabled": .bool(style.effectsEnabled),
                 "effectScale": .number(Double(style.effectScale * 100)),
                 "effects": .array(layerStyleEffectNames(style).map(XomoJSONValue.string))
@@ -2063,8 +2076,9 @@ private extension XomoAutomationRegistry {
             "target": XomoAutomationSchema.string(description: "Alignment target", values: ["selectionBounds", "canvas", "pixelSelection"])
         ], required: ["action", "mode"]),
         tool("xomo.layer.style", "Copy, paste, clear, hide, show, browse built-in styles, or manage portable persisted complete layer style presets.", [
-            "action": XomoAutomationSchema.string(description: "Layer style action", values: ["copy", "paste", "clear", "hideSelected", "showSelected", "hideAll", "showAll", "presetList", "presetCatalog", "presetCreate", "presetApply", "presetDuplicate", "presetDelete", "presetRename", "presetMove", "presetImport", "presetExport"]),
-            "id": XomoAutomationSchema.string(description: "Layer style preset ID for apply, duplicate, delete, rename, move, or selected export"),
+            "action": XomoAutomationSchema.string(description: "Layer style action", values: ["copy", "paste", "clear", "hideSelected", "showSelected", "hideAll", "showAll", "presetList", "presetCatalog", "presetFavorites", "presetRecent", "presetCreate", "presetApply", "presetDuplicate", "presetFavorite", "presetDelete", "presetRename", "presetMove", "presetImport", "presetExport"]),
+            "id": XomoAutomationSchema.string(description: "Layer style preset ID for apply, duplicate, favorite, delete, rename, move, or selected export"),
+            "favorite": XomoAutomationSchema.boolean(description: "Whether presetFavorite should add or remove the preset from favorites"),
             "name": XomoAutomationSchema.string(description: "Custom preset name when creating or renaming"),
             "direction": XomoAutomationSchema.string(description: "Preset ordering direction", values: ImageEditorLayerStylePresetMoveDirection.allCases.map(\.rawValue)),
             "path": XomoAutomationSchema.string(description: "Local .xomostyles path for preset import or export")

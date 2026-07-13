@@ -1,0 +1,249 @@
+{
+  "generated_at": "2026-07-14 07:29:23 +0800",
+  "total": 24,
+  "passed": 24,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorLayerStylePresetManagerTests",
+      "method": "importFillsRemainingCapacityAndReportsEverySkippedPreset",
+      "identifier": "veilpicTests/ImageEditorLayerStylePresetManagerTests/importFillsRemainingCapacityAndReportsEverySkippedPreset",
+      "file": "ImageEditorLayerStylePresetManagerTests.swift",
+      "passed": true,
+      "duration": 2.932,
+      "issues": [],
+      "log": "ImageEditorLayerStylePresetManagerTests.importFillsRemainingCapacityAndReportsEverySkippedPreset.log"
+    },
+    {
+      "suite": "ImageEditorLayerStylePresetManagerTests",
+      "method": "importRejectsUnsupportedOrOversizedLibrariesWithoutMutation",
+      "identifier": "veilpicTests/ImageEditorLayerStylePresetManagerTests/importRejectsUnsupportedOrOversizedLibrariesWithoutMutation",
+      "file": "ImageEditorLayerStylePresetManagerTests.swift",
+      "passed": true,
+      "duration": 2.85,
+      "issues": [],
+      "log": "ImageEditorLayerStylePresetManagerTests.importRejectsUnsupportedOrOversizedLibrariesWithoutMutation.log"
+    },
+    {
+      "suite": "ImageEditorLayerStylePresetManagerTests",
+      "method": "portableLibraryRoundTripsOrderStylesAndCreatesFreshIDs",
+      "identifier": "veilpicTests/ImageEditorLayerStylePresetManagerTests/portableLibraryRoundTripsOrderStylesAndCreatesFreshIDs",
+      "file": "ImageEditorLayerStylePresetManagerTests.swift",
+      "passed": true,
+      "duration": 2.883,
+      "issues": [],
+      "log": "ImageEditorLayerStylePresetManagerTests.portableLibraryRoundTripsOrderStylesAndCreatesFreshIDs.log"
+    },
+    {
+      "suite": "ImageEditorLayerStylePresetManagerTests",
+      "method": "presetManagerUIAndAutomationShareBusinessCommands",
+      "identifier": "veilpicTests/ImageEditorLayerStylePresetManagerTests/presetManagerUIAndAutomationShareBusinessCommands",
+      "file": "ImageEditorLayerStylePresetManagerTests.swift",
+      "passed": true,
+      "duration": 2.91,
+      "issues": [],
+      "log": "ImageEditorLayerStylePresetManagerTests.presetManagerUIAndAutomationShareBusinessCommands.log"
+    },
+    {
+      "suite": "ImageEditorLayerStylePresetManagerTests",
+      "method": "renameRejectsBlankAndMoveRejectsUnknownPresetWithoutMutation",
+      "identifier": "veilpicTests/ImageEditorLayerStylePresetManagerTests/renameRejectsBlankAndMoveRejectsUnknownPresetWithoutMutation",
+      "file": "ImageEditorLayerStylePresetManagerTests.swift",
+      "passed": true,
+      "duration": 2.781,
+      "issues": [],
+      "log": "ImageEditorLayerStylePresetManagerTests.renameRejectsBlankAndMoveRejectsUnknownPresetWithoutMutation.log"
+    },
+    {
+      "suite": "ImageEditorLayerStylePresetManagerTests",
+      "method": "renamingAndReorderingPresetsPersistWithoutChangingDocumentHistory",
+      "identifier": "veilpicTests/ImageEditorLayerStylePresetManagerTests/renamingAndReorderingPresetsPersistWithoutChangingDocumentHistory",
+      "file": "ImageEditorLayerStylePresetManagerTests.swift",
+      "passed": true,
+      "duration": 4.072,
+      "issues": [],
+      "log": "ImageEditorLayerStylePresetManagerTests.renamingAndReorderingPresetsPersistWithoutChangingDocumentHistory.log"
+    },
+    {
+      "suite": "ImageEditorLayerStylePresetQueryTests",
+      "method": "presetManagerConnectsSearchScopeAndStableAccessibilityIdentifiers",
+      "identifier": "veilpicTests/ImageEditorLayerStylePresetQueryTests/presetManagerConnectsSearchScopeAndStableAccessibilityIdentifiers",
+      "file": "ImageEditorLayerStylePresetQueryTests.swift",
+      "passed": true,
+      "duration": 2.8,
+      "issues": [],
+      "log": "ImageEditorLayerStylePresetQueryTests.presetManagerConnectsSearchScopeAndStableAccessibilityIdentifiers.log"
+    },
+    {
+      "suite": "ImageEditorLayerStylePresetQueryTests",
+      "method": "queryMatchesCaseAndDiacriticsWithoutChangingSourceOrder",
+      "identifier": "veilpicTests/ImageEditorLayerStylePresetQueryTests/queryMatchesCaseAndDiacriticsWithoutChangingSourceOrder",
+      "file": "ImageEditorLayerStylePresetQueryTests.swift",
+      "passed": true,
+      "duration": 2.88,
+      "issues": [],
+      "log": "ImageEditorLayerStylePresetQueryTests.queryMatchesCaseAndDiacriticsWithoutChangingSourceOrder.log"
+    },
+    {
+      "suite": "ImageEditorLayerStylePresetQueryTests",
+      "method": "queryRepairsSelectionOnlyWhenCurrentPresetIsHidden",
+      "identifier": "veilpicTests/ImageEditorLayerStylePresetQueryTests/queryRepairsSelectionOnlyWhenCurrentPresetIsHidden",
+      "file": "ImageEditorLayerStylePresetQueryTests.swift",
+      "passed": true,
+      "duration": 2.842,
+      "issues": [],
+      "log": "ImageEditorLayerStylePresetQueryTests.queryRepairsSelectionOnlyWhenCurrentPresetIsHidden.log"
+    },
+    {
+      "suite": "ImageEditorLayerStylePresetQueryTests",
+      "method": "sourceScopeSeparatesBuiltInAndCustomPresets",
+      "identifier": "veilpicTests/ImageEditorLayerStylePresetQueryTests/sourceScopeSeparatesBuiltInAndCustomPresets",
+      "file": "ImageEditorLayerStylePresetQueryTests.swift",
+      "passed": true,
+      "duration": 2.801,
+      "issues": [],
+      "log": "ImageEditorLayerStylePresetQueryTests.sourceScopeSeparatesBuiltInAndCustomPresets.log"
+    },
+    {
+      "suite": "ImageEditorLayerStylePresetTests",
+      "method": "applyingPresetUpdatesEditableSelectionInOneUndoAndSkipsLocks",
+      "identifier": "veilpicTests/ImageEditorLayerStylePresetTests/applyingPresetUpdatesEditableSelectionInOneUndoAndSkipsLocks",
+      "file": "ImageEditorLayerStylePresetTests.swift",
+      "passed": true,
+      "duration": 2.863,
+      "issues": [],
+      "log": "ImageEditorLayerStylePresetTests.applyingPresetUpdatesEditableSelectionInOneUndoAndSkipsLocks.log"
+    },
+    {
+      "suite": "ImageEditorLayerStylePresetTests",
+      "method": "creatingPresetPersistsCompleteStyleAndReloadsAcrossEditors",
+      "identifier": "veilpicTests/ImageEditorLayerStylePresetTests/creatingPresetPersistsCompleteStyleAndReloadsAcrossEditors",
+      "file": "ImageEditorLayerStylePresetTests.swift",
+      "passed": true,
+      "duration": 2.774,
+      "issues": [],
+      "log": "ImageEditorLayerStylePresetTests.creatingPresetPersistsCompleteStyleAndReloadsAcrossEditors.log"
+    },
+    {
+      "suite": "ImageEditorLayerStylePresetTests",
+      "method": "deletingPresetPersistsWithoutChangingDocumentHistory",
+      "identifier": "veilpicTests/ImageEditorLayerStylePresetTests/deletingPresetPersistsWithoutChangingDocumentHistory",
+      "file": "ImageEditorLayerStylePresetTests.swift",
+      "passed": true,
+      "duration": 3.021,
+      "issues": [],
+      "log": "ImageEditorLayerStylePresetTests.deletingPresetPersistsWithoutChangingDocumentHistory.log"
+    },
+    {
+      "suite": "ImageEditorLayerStylePresetTests",
+      "method": "presetPreferencesNormalizeNamesDeduplicateIDsAndLimitCount",
+      "identifier": "veilpicTests/ImageEditorLayerStylePresetTests/presetPreferencesNormalizeNamesDeduplicateIDsAndLimitCount",
+      "file": "ImageEditorLayerStylePresetTests.swift",
+      "passed": true,
+      "duration": 2.933,
+      "issues": [],
+      "log": "ImageEditorLayerStylePresetTests.presetPreferencesNormalizeNamesDeduplicateIDsAndLimitCount.log"
+    },
+    {
+      "suite": "ImageEditorLayerStylePresetTests",
+      "method": "presetUIAndAutomationUseSharedViewModelCommands",
+      "identifier": "veilpicTests/ImageEditorLayerStylePresetTests/presetUIAndAutomationUseSharedViewModelCommands",
+      "file": "ImageEditorLayerStylePresetTests.swift",
+      "passed": true,
+      "duration": 2.882,
+      "issues": [],
+      "log": "ImageEditorLayerStylePresetTests.presetUIAndAutomationUseSharedViewModelCommands.log"
+    },
+    {
+      "suite": "ImageEditorLayerStylePresetUsageTests",
+      "method": "favoritesPersistWithoutHistoryAndDeletingCustomPresetPrunesUsage",
+      "identifier": "veilpicTests/ImageEditorLayerStylePresetUsageTests/favoritesPersistWithoutHistoryAndDeletingCustomPresetPrunesUsage",
+      "file": "ImageEditorLayerStylePresetUsageTests.swift",
+      "passed": true,
+      "duration": 2.911,
+      "issues": [],
+      "log": "ImageEditorLayerStylePresetUsageTests.favoritesPersistWithoutHistoryAndDeletingCustomPresetPrunesUsage.log"
+    },
+    {
+      "suite": "ImageEditorLayerStylePresetUsageTests",
+      "method": "managerMenuAndAutomationExposeFavoritesAndRecentUsage",
+      "identifier": "veilpicTests/ImageEditorLayerStylePresetUsageTests/managerMenuAndAutomationExposeFavoritesAndRecentUsage",
+      "file": "ImageEditorLayerStylePresetUsageTests.swift",
+      "passed": true,
+      "duration": 2.852,
+      "issues": [],
+      "log": "ImageEditorLayerStylePresetUsageTests.managerMenuAndAutomationExposeFavoritesAndRecentUsage.log"
+    },
+    {
+      "suite": "ImageEditorLayerStylePresetUsageTests",
+      "method": "queryFiltersFavoritesAndOrdersRecentResultsByUsage",
+      "identifier": "veilpicTests/ImageEditorLayerStylePresetUsageTests/queryFiltersFavoritesAndOrdersRecentResultsByUsage",
+      "file": "ImageEditorLayerStylePresetUsageTests.swift",
+      "passed": true,
+      "duration": 2.882,
+      "issues": [],
+      "log": "ImageEditorLayerStylePresetUsageTests.queryFiltersFavoritesAndOrdersRecentResultsByUsage.log"
+    },
+    {
+      "suite": "ImageEditorLayerStylePresetUsageTests",
+      "method": "recentUsageIsDeduplicatedCappedAndMostRecentFirst",
+      "identifier": "veilpicTests/ImageEditorLayerStylePresetUsageTests/recentUsageIsDeduplicatedCappedAndMostRecentFirst",
+      "file": "ImageEditorLayerStylePresetUsageTests.swift",
+      "passed": true,
+      "duration": 2.807,
+      "issues": [],
+      "log": "ImageEditorLayerStylePresetUsageTests.recentUsageIsDeduplicatedCappedAndMostRecentFirst.log"
+    },
+    {
+      "suite": "ImageEditorLayerStylePresetUsageTests",
+      "method": "usagePreferencesNormalizeAndRoundTripFavoriteAndRecentIDs",
+      "identifier": "veilpicTests/ImageEditorLayerStylePresetUsageTests/usagePreferencesNormalizeAndRoundTripFavoriteAndRecentIDs",
+      "file": "ImageEditorLayerStylePresetUsageTests.swift",
+      "passed": true,
+      "duration": 2.838,
+      "issues": [],
+      "log": "ImageEditorLayerStylePresetUsageTests.usagePreferencesNormalizeAndRoundTripFavoriteAndRecentIDs.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registryCreatesAppliesListsAndDeletesPersistedLayerStylePresets",
+      "identifier": "veilpicTests/XomoAutomationTests/registryCreatesAppliesListsAndDeletesPersistedLayerStylePresets",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 2.836,
+      "issues": [],
+      "log": "XomoAutomationTests.registryCreatesAppliesListsAndDeletesPersistedLayerStylePresets.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registryFavoritesAndListsRecentLayerStylePresets",
+      "identifier": "veilpicTests/XomoAutomationTests/registryFavoritesAndListsRecentLayerStylePresets",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 2.886,
+      "issues": [],
+      "log": "XomoAutomationTests.registryFavoritesAndListsRecentLayerStylePresets.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registryListsAppliesAndDuplicatesBuiltInLayerStylePresets",
+      "identifier": "veilpicTests/XomoAutomationTests/registryListsAppliesAndDuplicatesBuiltInLayerStylePresets",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 2.822,
+      "issues": [],
+      "log": "XomoAutomationTests.registryListsAppliesAndDuplicatesBuiltInLayerStylePresets.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registryRenamesMovesExportsAndImportsLayerStylePresetLibraries",
+      "identifier": "veilpicTests/XomoAutomationTests/registryRenamesMovesExportsAndImportsLayerStylePresetLibraries",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 2.845,
+      "issues": [],
+      "log": "XomoAutomationTests.registryRenamesMovesExportsAndImportsLayerStylePresetLibraries.log"
+    }
+  ]
+}

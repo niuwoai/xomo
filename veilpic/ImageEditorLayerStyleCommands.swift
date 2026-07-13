@@ -550,6 +550,9 @@ extension ImageEditorViewModel {
     }
 
     func applyLayerStylePreset(_ preset: ImageEditorLayerStylePreset) {
+        if canApplyLayerStylePreset {
+            recordLayerStylePresetUse(id: preset.id)
+        }
         let targetIndices = selectedLayerStyleTargetIndices().filter { index in
             !preset.matches(document.layers[index].style)
         }
@@ -579,6 +582,7 @@ extension ImageEditorViewModel {
         }
         let removed = customLayerStylePresets.remove(at: index)
         persistLayerStylePresetPreferences()
+        removeLayerStylePresetUsage(id: removed.id)
         statusText = L10n.format("imageEditor.status.layerStylePresetDeleted", removed.title)
     }
 

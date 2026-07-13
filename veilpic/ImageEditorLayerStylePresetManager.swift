@@ -278,9 +278,16 @@ struct ImageEditorLayerStylePresetManager: View {
     @State private var nameDraft = ""
     @State private var searchText = ""
     @State private var scope = ImageEditorLayerStylePresetScope.all
+    @State private var collection = ImageEditorLayerStylePresetCollection.all
 
     private var query: ImageEditorLayerStylePresetQuery {
-        ImageEditorLayerStylePresetQuery(searchText: searchText, scope: scope)
+        ImageEditorLayerStylePresetQuery(
+            searchText: searchText,
+            scope: scope,
+            collection: collection,
+            favoriteIDs: Set(viewModel.favoriteLayerStylePresetIDs),
+            recentIDs: viewModel.recentLayerStylePresetIDs
+        )
     }
 
     private var filteredPresets: [ImageEditorLayerStylePreset] {
@@ -345,8 +352,11 @@ struct ImageEditorLayerStylePresetManager: View {
         .onAppear(perform: selectInitialPreset)
         .onChange(of: selectedPresetID) { _ in syncNameDraft() }
         .onChange(of: viewModel.customLayerStylePresets) { _ in repairSelection() }
+        .onChange(of: viewModel.favoriteLayerStylePresetIDs) { _ in repairSelection() }
+        .onChange(of: viewModel.recentLayerStylePresetIDs) { _ in repairSelection() }
         .onChange(of: searchText) { _ in repairSelection() }
         .onChange(of: scope) { _ in repairSelection() }
+        .onChange(of: collection) { _ in repairSelection() }
     }
 
     private var presetList: some View {
@@ -376,20 +386,39 @@ struct ImageEditorLayerStylePresetManager: View {
             .focusable(false)
             .accessibilityIdentifier("image-editor-layer-style-preset-scope")
 
+            Picker(
+                L10n.text("imageEditor.layerStylePreset.collectionLabel"),
+                selection: $collection
+            ) {
+                ForEach(ImageEditorLayerStylePresetCollection.allCases) { option in
+                    Label(option.title, systemImage: option.symbolName)
+                        .labelStyle(.iconOnly)
+                        .tag(option)
+                        .help(option.title)
+                }
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .focusable(false)
+            .accessibilityIdentifier("image-editor-layer-style-preset-collection")
+
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 5) {
                     if filteredPresets.isEmpty {
-                        Text(L10n.text(
-                            scope == .custom
-                                && searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                                && viewModel.customLayerStylePresets.isEmpty
-                                ? "imageEditor.layerStylePreset.empty"
-                                : "imageEditor.layerStylePreset.noResults"
-                        ))
+                        Text(L10n.text(emptyListMessageKey))
                             .font(.system(size: 11))
                             .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(10)
+                    } else if collection != .all {
+                        presetSectionTitle(
+                            collection == .favorites
+                                ? "imageEditor.layerStylePreset.favoriteSection"
+                                : "imageEditor.layerStylePreset.recentSection"
+                        )
+                        ForEach(filteredPresets) { preset in
+                            presetRow(preset)
+                        }
                     } else {
                         if !filteredBuiltInPresets.isEmpty {
                             presetSectionTitle("imageEditor.layerStylePreset.builtInSection")
@@ -460,6 +489,24 @@ struct ImageEditorLayerStylePresetManager: View {
                 Spacer(minLength: 0)
 
                 HStack {
+                    Button {
+                        viewModel.setLayerStylePresetFavorite(
+                            id: preset.id,
+                            isFavorite: !viewModel.isFavoriteLayerStylePreset(id: preset.id)
+                        )
+                    } label: {
+                        Label(
+                            L10n.text(
+                                viewModel.isFavoriteLayerStylePreset(id: preset.id)
+                                    ? "imageEditor.action.layerStylePresetUnfavorite"
+                                    : "imageEditor.action.layerStylePresetFavorite"
+                            ),
+                            systemImage: viewModel.isFavoriteLayerStylePreset(id: preset.id)
+                                ? "star.fill"
+                                : "star"
+                        )
+                    }
+                    .focusable(false)
                     Button(L10n.text("imageEditor.action.layerStylePresetApply")) {
                         viewModel.applyLayerStylePreset(preset)
                     }
@@ -508,31 +555,70 @@ struct ImageEditorLayerStylePresetManager: View {
     }
 
     private func presetRow(_ preset: ImageEditorLayerStylePreset) -> some View {
-        Button {
-            selectedPresetID = preset.id
-        } label: {
-            HStack(spacing: 8) {
-                ImageEditorLayerStylePresetThumbnail(preset: preset, width: 40, height: 26)
-                Text(preset.title)
-                    .lineLimit(1)
-                Spacer(minLength: 0)
-                if viewModel.activeLayerStylePreset?.id == preset.id {
-                    Image(systemName: "checkmark")
+        HStack(spacing: 4) {
+            Button {
+                selectedPresetID = preset.id
+            } label: {
+                HStack(spacing: 8) {
+                    ImageEditorLayerStylePresetThumbnail(preset: preset, width: 40, height: 26)
+                    Text(preset.title)
+                        .lineLimit(1)
+                    Spacer(minLength: 0)
+                    if viewModel.activeLayerStylePreset?.id == preset.id {
+                        Image(systemName: "checkmark")
+                    }
                 }
+                .contentShape(Rectangle())
             }
-            .font(.system(size: 11, weight: .semibold))
-            .padding(.horizontal, 8)
-            .frame(height: 34)
-            .contentShape(Rectangle())
+            .buttonStyle(.plain)
+            .focusable(false)
+
+            Button {
+                viewModel.setLayerStylePresetFavorite(
+                    id: preset.id,
+                    isFavorite: !viewModel.isFavoriteLayerStylePreset(id: preset.id)
+                )
+            } label: {
+                Image(systemName: viewModel.isFavoriteLayerStylePreset(id: preset.id) ? "star.fill" : "star")
+                    .foregroundStyle(
+                        viewModel.isFavoriteLayerStylePreset(id: preset.id)
+                            ? Color.yellow.opacity(0.9)
+                            : Color(nsColor: ImageEditorTheme.mutedText)
+                    )
+            }
+            .buttonStyle(.plain)
+            .focusable(false)
+            .help(L10n.text(
+                viewModel.isFavoriteLayerStylePreset(id: preset.id)
+                    ? "imageEditor.action.layerStylePresetUnfavorite"
+                    : "imageEditor.action.layerStylePresetFavorite"
+            ))
+            .accessibilityIdentifier("image-editor-layer-style-preset-favorite-\(preset.id)")
         }
-        .buttonStyle(.plain)
-        .focusable(false)
+        .font(.system(size: 11, weight: .semibold))
+        .padding(.horizontal, 8)
+        .frame(height: 34)
         .background(
             selectedPresetID == preset.id
                 ? Color.accentColor.opacity(0.72)
                 : Color.white.opacity(0.05)
         )
         .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
+    }
+
+    private var emptyListMessageKey: String {
+        let hasSearch = !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        if hasSearch { return "imageEditor.layerStylePreset.noResults" }
+        switch collection {
+        case .favorites:
+            return "imageEditor.layerStylePreset.noFavorites"
+        case .recent:
+            return "imageEditor.layerStylePreset.noRecent"
+        case .all:
+            return scope == .custom && viewModel.customLayerStylePresets.isEmpty
+                ? "imageEditor.layerStylePreset.empty"
+                : "imageEditor.layerStylePreset.noResults"
+        }
     }
 
     private func customPresetControls(index: Int) -> some View {
