@@ -534,6 +534,56 @@ struct XomoAutomationTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerMoveOutOfGroup"))
     }
 
+    @Test func registryDuplicatesLayerSubtreesInsideTheirOriginalParents() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        var child = ImageEditorLayer.blank(name: "Child", size: viewModel.document.canvasSize)
+        let selectedGroup = ImageEditorLayer.group(name: "Selected Group", size: viewModel.document.canvasSize)
+        var peer = ImageEditorLayer.blank(name: "Peer", size: viewModel.document.canvasSize)
+        let peerGroup = ImageEditorLayer.group(name: "Peer Group", size: viewModel.document.canvasSize)
+        child.groupID = selectedGroup.id
+        peer.groupID = peerGroup.id
+        child.linkedLayerIDs = [peer.id]
+        peer.linkedLayerIDs = [child.id]
+        viewModel.document.layers = [child, selectedGroup, peer, peerGroup]
+        viewModel.document.selectedLayerIDs = [selectedGroup.id, peer.id]
+        viewModel.document.selectedLayerID = peer.id
+        registry.register(viewModel)
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.duplicate"
+        ))
+
+        #expect(response.ok)
+        let groupCopy = try #require(viewModel.document.layers.first {
+            $0.id != selectedGroup.id
+                && $0.name == L10n.format("imageEditor.layer.copyName", selectedGroup.name)
+        })
+        let childCopy = try #require(viewModel.document.layers.first {
+            $0.id != child.id && $0.groupID == groupCopy.id
+        })
+        let peerCopy = try #require(viewModel.document.layers.first {
+            $0.id != peer.id
+                && $0.name == L10n.format("imageEditor.layer.copyName", peer.name)
+        })
+        #expect(viewModel.document.layers.map(\.id) == [
+            child.id,
+            selectedGroup.id,
+            childCopy.id,
+            groupCopy.id,
+            peer.id,
+            peerCopy.id,
+            peerGroup.id
+        ])
+        #expect(childCopy.name == child.name)
+        #expect(childCopy.linkedLayerIDs == Set([peerCopy.id]))
+        #expect(peerCopy.linkedLayerIDs == Set([childCopy.id]))
+        #expect(viewModel.document.selectedLayerIDs == Set([groupCopy.id, peerCopy.id]))
+        #expect(viewModel.document.selectedLayerID == peerCopy.id)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerDuplicate"))
+    }
+
     @Test func registryRunsDestinationPatchWithFeatherThroughSpecialPaintTool() {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared
