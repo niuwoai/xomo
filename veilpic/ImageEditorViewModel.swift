@@ -2708,51 +2708,27 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     var canDuplicateSelectedLayer: Bool {
-        !duplicateSourceLayerIndices().isEmpty
+        !ImageEditorLayerHierarchyDuplication.duplicableRootIDs(
+            in: document.layers,
+            selectedIDs: document.selectedLayerIDs
+        ).isEmpty
     }
 
     func duplicateSelectedLayer() {
-        let sourceIndices = duplicateSourceLayerIndices()
-        guard !sourceIndices.isEmpty else { return }
+        guard let plan = ImageEditorLayerHierarchyDuplication.duplicationPlan(
+            layers: document.layers,
+            selectedIDs: document.selectedLayerIDs,
+            primarySelectionID: document.selectedLayerID,
+            duplicateName: { L10n.format("imageEditor.layer.copyName", $0) },
+            isEffectivelyVisible: { document.isEffectivelyVisible($0) }
+        ) else { return }
+
         pushUndo()
-        var duplicatedLayers: [ImageEditorLayer] = []
-        var duplicatedIDs: [UUID] = []
-        var idMap: [UUID: UUID] = [:]
-        let selectedGroupIDs = Set(selectedLayerIndices.compactMap { index in
-            let layer = document.layers[index]
-            return layer.isGroup ? layer.id : nil
-        })
-
-        for index in sourceIndices {
-            let originalLayer = document.layers[index]
-            var layer = originalLayer
-            layer.id = UUID()
-            layer.linkedLayerIDs = []
-            layer.name = L10n.format("imageEditor.layer.copyName", layer.name)
-            idMap[originalLayer.id] = layer.id
-            duplicatedIDs.append(layer.id)
-            duplicatedLayers.append(layer)
-        }
-
-        for index in duplicatedLayers.indices {
-            if let groupID = duplicatedLayers[index].groupID,
-               (selectedGroupIDs.contains(groupID) || idMap[groupID] != nil),
-               let duplicatedGroupID = idMap[groupID] {
-                duplicatedLayers[index].groupID = duplicatedGroupID
-            }
-
-            let sourceIndex = sourceIndices[index]
-            let sourceLinks = document.layers[sourceIndex].linkedLayerIDs
-            duplicatedLayers[index].linkedLayerIDs = Set(sourceLinks.compactMap { idMap[$0] })
-                .subtracting([duplicatedLayers[index].id])
-        }
-
-        let insertionIndex = min((sourceIndices.last ?? (document.layers.count - 1)) + 1, document.layers.count)
-        document.layers.insert(contentsOf: duplicatedLayers, at: insertionIndex)
+        document.layers = plan.layers
         normalizeLayerLinks()
-        let duplicatedIDSet = Set(duplicatedIDs)
-        document.selectedLayerID = duplicatedLayers.reversed().first { duplicatedIDSet.contains($0.id) }?.id
-        document.selectedLayerIDs = duplicatedIDSet
+        document.selectedLayerIDs = plan.selectedLayerIDs
+        document.selectedLayerID = plan.primarySelectionID
+        layerSelectionAnchorID = plan.primarySelectionID
         isEditingLayerMask = false
         appendHistory(L10n.text("imageEditor.history.layerDuplicate"))
     }
@@ -5545,22 +5521,6 @@ final class ImageEditorViewModel: ObservableObject {
                 fraction: 1
             )
         }?.normalizedBitmapImage()
-    }
-
-    private func duplicateSourceLayerIndices() -> [Int] {
-        let selectedIDs = document.selectedLayerIDs
-        let selectedGroupIDs = Set(selectedLayerIndices.compactMap { index in
-            let layer = document.layers[index]
-            return layer.isGroup ? layer.id : nil
-        })
-        let descendantIDs = selectedGroupIDs.reduce(into: Set<UUID>()) { result, groupID in
-            result.formUnion(groupDescendantIDs(for: groupID))
-        }
-        return document.layers.indices.filter { index in
-            let layer = document.layers[index]
-            return selectedIDs.contains(layer.id)
-                || descendantIDs.contains(layer.id)
-        }
     }
 
     private var selectedLayerIndices: [Int] {

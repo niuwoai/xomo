@@ -28,7 +28,7 @@ enum XomoToolCatalog {
         ("xomo.layer.select", "Select a layer by UUID."),
         ("xomo.layer.create", "Create a pixel, group, text, adjustment, filter, or fill layer."),
         ("xomo.layer.delete", "Delete selected layers."),
-        ("xomo.layer.duplicate", "Duplicate selected layers."),
+        ("xomo.layer.duplicate", "Duplicate selected layer roots as hierarchy-safe subtrees within their original parents."),
         ("xomo.layer.rename", "Rename the primary selected layer."),
         ("xomo.layer.set_visibility", "Set layer visibility."),
         ("xomo.layer.set_lock", "Set the full lock state of a layer."),
