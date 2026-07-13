@@ -871,6 +871,9 @@ extension ImageEditorView {
             viewModel.showLayerStyleBlendingOptions()
         }
         .disabled(!viewModel.canEditSelectedLayerStyle)
+        Menu(L10n.text("imageEditor.menu.layer.stylePresets")) {
+            layerStylePresetItems
+        }
         Divider()
         Button(L10n.text("imageEditor.action.layerStyleCopy")) {
             viewModel.copySelectedLayerStyle()
@@ -946,6 +949,38 @@ extension ImageEditorView {
             viewModel.toggleSelectedLayerBevel()
         }
         .disabled(!viewModel.canEditSelectedLayerStyle)
+    }
+
+    @ViewBuilder
+    private var layerStylePresetItems: some View {
+        if viewModel.customLayerStylePresets.isEmpty {
+            Text(L10n.text("imageEditor.layerStylePreset.empty"))
+        } else {
+            ForEach(viewModel.customLayerStylePresets) { preset in
+                Button {
+                    viewModel.applyLayerStylePreset(preset)
+                } label: {
+                    if viewModel.activeLayerStylePreset?.id == preset.id {
+                        Label(preset.title, systemImage: "checkmark")
+                    } else {
+                        Text(preset.title)
+                    }
+                }
+                .disabled(!viewModel.canApplyLayerStylePreset)
+            }
+        }
+
+        Divider()
+        Button(L10n.text("imageEditor.action.layerStylePresetCreate")) {
+            viewModel.createLayerStylePresetFromSelectedLayer()
+        }
+        .disabled(!viewModel.canCreateLayerStylePreset)
+
+        if let activePreset = viewModel.activeLayerStylePreset {
+            Button(L10n.text("imageEditor.action.layerStylePresetDelete"), role: .destructive) {
+                viewModel.deleteLayerStylePreset(activePreset)
+            }
+        }
     }
 
     @ViewBuilder

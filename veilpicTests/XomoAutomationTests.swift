@@ -601,6 +601,67 @@ struct XomoAutomationTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerEffectsShowAll"))
     }
 
+    @Test func registryCreatesAppliesListsAndDeletesPersistedLayerStylePresets() throws {
+        let suiteName = "XomoAutomationTests.layerStylePresets.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName) ?? .standard
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let viewModel = makeViewModel(preferencesDefaults: defaults)
+        let registry = XomoAutomationRegistry.shared
+        let index = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[index].style.strokeEnabled = true
+        viewModel.document.layers[index].style.strokeWidth = 8
+        viewModel.document.layers[index].style.outerGlowEnabled = true
+        viewModel.document.layers[index].style.effectScale = 1.5
+        registry.register(viewModel)
+
+        let create = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style",
+            arguments: [
+                "action": .string("presetCreate"),
+                "name": .string("MCP Neon")
+            ]
+        ))
+        #expect(create.ok)
+        let created = try #require(create.result?.arrayValue?.first?.objectValue)
+        let id = try #require(created["id"]?.stringValue)
+        #expect(created["title"] == .string("MCP Neon"))
+        #expect(created["active"] == .bool(true))
+        #expect(created["effectScale"] == .number(150))
+
+        viewModel.clearSelectedLayerStyles()
+        let apply = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style",
+            arguments: ["action": .string("presetApply"), "id": .string(id)]
+        ))
+        #expect(apply.ok)
+        #expect(viewModel.document.layers[index].style.strokeEnabled)
+        #expect(viewModel.document.layers[index].style.strokeWidth == 8)
+        #expect(viewModel.document.layers[index].style.outerGlowEnabled)
+        #expect(viewModel.document.layers[index].style.effectScale == 1.5)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStylePresetApply"))
+
+        let reopened = makeViewModel(preferencesDefaults: defaults)
+        registry.register(reopened)
+        let list = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style",
+            arguments: ["action": .string("presetList")]
+        ))
+        #expect(list.ok)
+        #expect(list.result?.arrayValue?.first?.objectValue?["id"] == .string(id))
+
+        let delete = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style",
+            arguments: ["action": .string("presetDelete"), "id": .string(id)]
+        ))
+        #expect(delete.ok)
+        #expect(delete.result?.arrayValue?.isEmpty == true)
+        #expect(reopened.customLayerStylePresets.isEmpty)
+    }
+
     @Test func registryReordersCollapsedGroupsAsVisibleSubtrees() {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

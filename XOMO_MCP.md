@@ -1,6 +1,6 @@
 # Xomo MCP 与 CLI
 
-> 当前版本：v2.12.0-rc35
+> 当前版本：v2.12.0-rc36
 
 ## 架构
 
@@ -82,7 +82,9 @@ MCP 服务器实现 `initialize`、`ping`、`tools/list` 和 `tools/call`。当 
 
 `xomo.layer.rasterize` 的 `target` 接受 `type`、`shape`、`fillContent`、`vectorMask`、`smartObject`、`layerStyle` 或 `layer`。普通内容目标只转换所选内容；`layerStyle` 会把样式以及位于样式之前的蒙版、智能滤镜、填充透明度和本图层 Blend If 烘焙为像素，但保留名称、层级、图层不透明度、混合模式、下层 Blend If 与剪贴关系。多选会跳过锁定或类型不匹配的图层，并把整批转换记为一个 History/Undo 步骤。
 
-`xomo.layerStyle.action` 新增 `hideSelected`、`showSelected`、`hideAll` 与 `showAll`，用于临时隐藏或恢复效果而不清除样式配置；`xomo.layerStyle.setting property=effectScale value=<1...1000>` 以百分比设置所选未锁定样式层的绝对效果比例。显隐与缩放分别进入一个 History/Undo 步骤，旧项目缺少字段时按显示与 100% 读取。
+`xomo.layer.style` 的 `hideSelected`、`showSelected`、`hideAll` 与 `showAll` 动作用于临时隐藏或恢复效果而不清除样式配置；`xomo.layer.style_settings property=effectScale value=<1...1000>` 以百分比设置所选未锁定样式层的绝对效果比例。显隐与缩放分别进入一个 History/Undo 步骤，旧项目缺少字段时按显示与 100% 读取。
+
+`xomo.layer.style` 的 `presetList`、`presetCreate`、`presetApply` 与 `presetDelete` 动作管理跨会话自定义样式预设；创建时可传 `name`，应用或删除时传返回的 `id`。返回值包含预设 ID、标题、是否匹配当前图层、效果缩放百分比和启用的效果清单。应用到多选时跳过锁定或不支持样式的图层并只记录一个 History/Undo 步骤，创建和删除则只修改工作区预设。
 
 `xomo.mask.action` 的 `apply` 只永久应用栅格图层蒙版，`applyVector` 只永久应用矢量蒙版，`rasterizeVector` 则把矢量蒙版转换成仍可编辑的栅格图层蒙版。三者不会再互相冒名顶替；智能对象须先通过 `xomo.layer.rasterize` 的 `smartObject` 目标转成像素层，才能永久应用蒙版。
 

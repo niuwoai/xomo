@@ -346,6 +346,7 @@
 "imageEditor.menu.layer.align" = "对齐";
 "imageEditor.menu.layer.mask" = "图层蒙版";
 "imageEditor.menu.layer.style" = "图层样式";
+"imageEditor.menu.layer.stylePresets" = "样式预设";
 "imageEditor.menu.layer.comps" = "图层复合";
 "imageEditor.menu.select.alphaChannels" = "Alpha 通道";
 "imageEditor.menu.select.transform" = "变换选区";
@@ -895,6 +896,11 @@
 "imageEditor.patternFill.scale" = "缩放";
 "imageEditor.patternFill.scaleValue" = "%d px";
 "imageEditor.properties.layerStyle" = "图层样式";
+"imageEditor.option.layerStylePreset" = "样式预设";
+"imageEditor.help.layerStylePreset" = "应用预设，或保存当前图层的完整样式";
+"imageEditor.layerStylePreset.empty" = "尚无自定义样式预设";
+"imageEditor.layerStylePreset.untitled" = "未命名样式";
+"imageEditor.layerStylePreset.customName" = "自定义样式 %d";
 "imageEditor.properties.strokeWidthValue" = "描边：%d px";
 "imageEditor.properties.strokePosition" = "描边位置";
 "imageEditor.strokePosition.outside" = "外侧";
@@ -1187,6 +1193,7 @@
 "imageEditor.history.layerStyle" = "调整图层样式";
 "imageEditor.history.globalLight" = "调整全局光";
 "imageEditor.history.layerStylePaste" = "粘贴图层样式";
+"imageEditor.history.layerStylePresetApply" = "应用图层样式预设";
 "imageEditor.history.layerStyleClear" = "清除图层样式";
 "imageEditor.history.layerEffectsHideSelected" = "隐藏所选图层效果";
 "imageEditor.history.layerEffectsShowSelected" = "显示所选图层效果";
@@ -1740,6 +1747,12 @@
 "imageEditor.status.layerStyleCopied" = "已复制当前图层样式";
 "imageEditor.status.layerStyleClipboardEmpty" = "请先复制一个图层样式";
 "imageEditor.status.layerStylePasted" = "已将图层样式粘贴到 %d 个图层";
+"imageEditor.status.layerStylePresetLimitReached" = "最多只能保存 %d 个自定义样式预设";
+"imageEditor.status.layerStylePresetRequiresStyle" = "当前图层没有可保存的图层效果";
+"imageEditor.status.layerStylePresetCreated" = "已创建样式预设：%@";
+"imageEditor.status.layerStylePresetAlreadyApplied" = "已经应用样式预设：%@";
+"imageEditor.status.layerStylePresetApplied" = "已将%@应用到 %d 个图层";
+"imageEditor.status.layerStylePresetDeleted" = "已删除样式预设：%@";
 "imageEditor.status.layerStyleCleared" = "已清除 %d 个图层的样式";
 "imageEditor.status.layerStyleReady" = "已准备图层样式选项";
 "imageEditor.status.layerStyleUpdated" = "已更新图层样式";
@@ -1988,6 +2001,8 @@
 "imageEditor.action.layerTrimTransparentPixels" = "裁切透明像素";
 "imageEditor.action.layerStyleBlendingOptions" = "混合选项...";
 "imageEditor.action.layerStyleCopy" = "复制图层样式";
+"imageEditor.action.layerStylePresetCreate" = "从当前图层新建样式预设";
+"imageEditor.action.layerStylePresetDelete" = "删除当前样式预设";
 "imageEditor.action.layerStylePaste" = "粘贴图层样式";
 "imageEditor.action.layerStyleClear" = "清除图层样式";
 "imageEditor.action.layerEffectsHideSelected" = "隐藏所选图层效果";
