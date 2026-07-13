@@ -49,6 +49,69 @@ struct ImageEditorSelectionOperationTests {
         #expect(!selection.contains(CGPoint(x: 8, y: 6)))
     }
 
+    @Test func imageEditorSelectionAddKeepsAsymmetricMarqueeYCoordinate() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: testImage(size: canvasSize)) { _ in }
+
+        viewModel.selectMarqueeShape(.rectangle)
+        viewModel.createMarqueeSelection(from: CGPoint(x: 5, y: 8), to: CGPoint(x: 22, y: 18))
+
+        viewModel.selectionMode = .add
+        viewModel.selectMarqueeShape(.circle)
+        viewModel.createMarqueeSelection(from: CGPoint(x: 40, y: 36), to: CGPoint(x: 58, y: 54))
+
+        let selection = try #require(viewModel.document.selection)
+        let mask = try #require(selection.rasterMask)
+        #expect(maskAlpha(mask, x: 10, y: 12) == 255)
+        #expect(maskAlpha(mask, x: 49, y: 45) == 255)
+        #expect(maskAlpha(mask, x: 49, y: 15) == 0)
+        #expect(selection.bounds.minY < 9)
+        #expect(selection.bounds.maxY > 53)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionAdd"))
+    }
+
+    @Test func imageEditorSelectionSubtractKeepsRasterAndVectorMasksInTheSameRowOrder() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: testImage(size: canvasSize)) { _ in }
+
+        viewModel.createRectSelection(from: CGPoint(x: 5, y: 6), to: CGPoint(x: 30, y: 24))
+        viewModel.selectionMode = .add
+        viewModel.createRectSelection(from: CGPoint(x: 40, y: 36), to: CGPoint(x: 65, y: 55))
+        #expect(viewModel.document.selection?.rasterMask != nil)
+
+        viewModel.selectionMode = .subtract
+        viewModel.createRectSelection(from: CGPoint(x: 42, y: 44), to: CGPoint(x: 64, y: 55))
+
+        let selection = try #require(viewModel.document.selection)
+        let mask = try #require(selection.rasterMask)
+        #expect(maskAlpha(mask, x: 10, y: 12) == 255)
+        #expect(maskAlpha(mask, x: 50, y: 40) == 255)
+        #expect(maskAlpha(mask, x: 50, y: 50) == 0)
+        #expect(maskAlpha(mask, x: 50, y: 10) == 0)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionSubtract"))
+    }
+
+    @Test func imageEditorSelectionIntersectKeepsAnAsymmetricRasterRegionAtItsCanvasPosition() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: testImage(size: canvasSize)) { _ in }
+
+        viewModel.createRectSelection(from: CGPoint(x: 10, y: 6), to: CGPoint(x: 70, y: 20))
+        viewModel.selectionMode = .add
+        viewModel.createRectSelection(from: CGPoint(x: 10, y: 40), to: CGPoint(x: 70, y: 54))
+
+        viewModel.selectionMode = .intersect
+        viewModel.selectMarqueeShape(.ellipse)
+        viewModel.createMarqueeSelection(from: CGPoint(x: 30, y: 42), to: CGPoint(x: 50, y: 52))
+
+        let selection = try #require(viewModel.document.selection)
+        let mask = try #require(selection.rasterMask)
+        #expect(maskAlpha(mask, x: 40, y: 47) == 255)
+        #expect(maskAlpha(mask, x: 40, y: 13) == 0)
+        #expect(selection.bounds.minY >= 42)
+        #expect(selection.bounds.maxY <= 52)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionIntersect"))
+    }
+
     @Test func imageEditorSelectAllCoversCanvas() async throws {
         let canvasSize = NSSize(width: 40, height: 30)
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: testImage(size: canvasSize)) { _ in }

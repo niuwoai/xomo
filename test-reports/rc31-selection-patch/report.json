@@ -1,0 +1,19 @@
+{
+  "generated_at": "2026-07-14 03:17:24 +0800",
+  "total": 1,
+  "passed": 1,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorPatchToolTests",
+      "method": "patchToolCanCreateAReplacementLassoBeforeDragging",
+      "identifier": "veilpicTests/ImageEditorPatchToolTests/patchToolCanCreateAReplacementLassoBeforeDragging",
+      "file": "ImageEditorPatchToolTests.swift",
+      "passed": true,
+      "duration": 4.098,
+      "issues": [],
+      "log": "ImageEditorPatchToolTests.patchToolCanCreateAReplacementLassoBeforeDragging.log"
+    }
+  ]
+}
