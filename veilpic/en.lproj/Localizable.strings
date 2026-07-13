@@ -930,6 +930,16 @@
 "imageEditor.layerStylePreset.scope.custom" = "Custom";
 "imageEditor.layerStylePreset.noResults" = "No matching style presets";
 "imageEditor.layerStylePreset.showingCount" = "Showing %d / %d";
+"imageEditor.layerStylePreset.collectionLabel" = "Preset Collection";
+"imageEditor.layerStylePreset.collection.all" = "All Presets";
+"imageEditor.layerStylePreset.collection.favorites" = "Favorites";
+"imageEditor.layerStylePreset.collection.recent" = "Recently Used";
+"imageEditor.layerStylePreset.favoriteSection" = "Favorite Styles";
+"imageEditor.layerStylePreset.recentSection" = "Recently Used";
+"imageEditor.layerStylePreset.noFavorites" = "No favorite style presets yet";
+"imageEditor.layerStylePreset.noRecent" = "No recently used style presets yet";
+"imageEditor.action.layerStylePresetFavorite" = "Favorite Style Preset";
+"imageEditor.action.layerStylePresetUnfavorite" = "Remove Style Preset from Favorites";
 "imageEditor.properties.strokeWidthValue" = "Stroke: %d px";
 "imageEditor.properties.strokePosition" = "Stroke Position";
 "imageEditor.strokePosition.outside" = "Outside";
@@ -1785,6 +1795,8 @@
 "imageEditor.status.layerStylePresetMissing" = "The requested style preset was not found";
 "imageEditor.status.layerStylePresetNameRequired" = "A style preset name is required";
 "imageEditor.status.layerStylePresetAlreadyNamed" = "Style preset name is unchanged: %@";
+"imageEditor.status.layerStylePresetFavorited" = "Favorited style preset: %@";
+"imageEditor.status.layerStylePresetUnfavorited" = "Removed style preset from favorites: %@";
 "imageEditor.status.layerStylePresetRenamed" = "Style preset renamed: %@";
 "imageEditor.status.layerStylePresetMoved" = "Style preset order updated: %@";
 "imageEditor.status.layerStylePresetImported" = "Imported %d style presets and skipped %d";

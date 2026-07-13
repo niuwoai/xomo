@@ -930,6 +930,16 @@
 "imageEditor.layerStylePreset.scope.custom" = "カスタム";
 "imageEditor.layerStylePreset.noResults" = "一致するスタイルプリセットはありません";
 "imageEditor.layerStylePreset.showingCount" = "%d / %d を表示";
+"imageEditor.layerStylePreset.collectionLabel" = "プリセットコレクション";
+"imageEditor.layerStylePreset.collection.all" = "すべてのプリセット";
+"imageEditor.layerStylePreset.collection.favorites" = "お気に入り";
+"imageEditor.layerStylePreset.collection.recent" = "最近使用";
+"imageEditor.layerStylePreset.favoriteSection" = "お気に入りのスタイル";
+"imageEditor.layerStylePreset.recentSection" = "最近使用";
+"imageEditor.layerStylePreset.noFavorites" = "お気に入りのスタイルプリセットはまだありません";
+"imageEditor.layerStylePreset.noRecent" = "最近使用したスタイルプリセットはまだありません";
+"imageEditor.action.layerStylePresetFavorite" = "スタイルプリセットをお気に入りに追加";
+"imageEditor.action.layerStylePresetUnfavorite" = "スタイルプリセットをお気に入りから削除";
 "imageEditor.properties.strokeWidthValue" = "境界線：%d px";
 "imageEditor.properties.strokePosition" = "境界線の位置";
 "imageEditor.strokePosition.outside" = "外側";
@@ -1785,6 +1795,8 @@
 "imageEditor.status.layerStylePresetMissing" = "指定したスタイルプリセットが見つかりません";
 "imageEditor.status.layerStylePresetNameRequired" = "スタイルプリセット名を入力してください";
 "imageEditor.status.layerStylePresetAlreadyNamed" = "スタイルプリセット名は変更されていません：%@";
+"imageEditor.status.layerStylePresetFavorited" = "スタイルプリセットをお気に入りに追加しました：%@";
+"imageEditor.status.layerStylePresetUnfavorited" = "スタイルプリセットをお気に入りから削除しました：%@";
 "imageEditor.status.layerStylePresetRenamed" = "スタイルプリセット名を変更しました：%@";
 "imageEditor.status.layerStylePresetMoved" = "スタイルプリセットの順序を変更しました：%@";
 "imageEditor.status.layerStylePresetImported" = "%d個のスタイルプリセットを読み込み、%d個をスキップしました";

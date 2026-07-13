@@ -930,6 +930,16 @@
 "imageEditor.layerStylePreset.scope.custom" = "自定义";
 "imageEditor.layerStylePreset.noResults" = "没有匹配的样式预设";
 "imageEditor.layerStylePreset.showingCount" = "显示 %d / %d";
+"imageEditor.layerStylePreset.collectionLabel" = "预设集合";
+"imageEditor.layerStylePreset.collection.all" = "全部预设";
+"imageEditor.layerStylePreset.collection.favorites" = "收藏";
+"imageEditor.layerStylePreset.collection.recent" = "最近使用";
+"imageEditor.layerStylePreset.favoriteSection" = "收藏的样式";
+"imageEditor.layerStylePreset.recentSection" = "最近使用";
+"imageEditor.layerStylePreset.noFavorites" = "尚无收藏的样式预设";
+"imageEditor.layerStylePreset.noRecent" = "尚无最近使用的样式预设";
+"imageEditor.action.layerStylePresetFavorite" = "收藏样式预设";
+"imageEditor.action.layerStylePresetUnfavorite" = "取消收藏样式预设";
 "imageEditor.properties.strokeWidthValue" = "描边：%d px";
 "imageEditor.properties.strokePosition" = "描边位置";
 "imageEditor.strokePosition.outside" = "外侧";
@@ -1785,6 +1795,8 @@
 "imageEditor.status.layerStylePresetMissing" = "找不到指定的样式预设";
 "imageEditor.status.layerStylePresetNameRequired" = "样式预设名称不能为空";
 "imageEditor.status.layerStylePresetAlreadyNamed" = "样式预设名称未变化：%@";
+"imageEditor.status.layerStylePresetFavorited" = "已收藏样式预设：%@";
+"imageEditor.status.layerStylePresetUnfavorited" = "已取消收藏样式预设：%@";
 "imageEditor.status.layerStylePresetRenamed" = "已重命名样式预设：%@";
 "imageEditor.status.layerStylePresetMoved" = "已调整样式预设顺序：%@";
 "imageEditor.status.layerStylePresetImported" = "已导入 %d 个样式预设，跳过 %d 个";
