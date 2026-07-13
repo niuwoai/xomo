@@ -31,6 +31,11 @@ enum ImageEditorLayerPanelTabAppearance {
     }
 }
 
+enum ImageEditorLayerSearchAppearance {
+    static let textColor = NSColor(calibratedWhite: 0.92, alpha: 1)
+    static let placeholderColor = NSColor(calibratedWhite: 0.72, alpha: 1)
+}
+
 struct ImageEditorLayerPanelTabLabel: NSViewRepresentable {
     let title: String
     let isSelected: Bool
@@ -1418,6 +1423,8 @@ extension ImageEditorView {
                 viewModel.toggleVectorMaskEnabled()
             }
             .disabled(!viewModel.canToggleVectorMaskEnabled)
+            layerActionButton(systemImage: "checkmark.square.fill", helpKey: "imageEditor.action.vectorMaskApply") { viewModel.applyVectorMask() }
+                .disabled(!viewModel.canApplyVectorMask)
             layerActionButton(systemImage: "square.grid.3x3", helpKey: "imageEditor.action.vectorMaskRasterize") { viewModel.rasterizeSelectedVectorMask() }
                 .disabled(!viewModel.canRasterizeSelectedVectorMask)
             layerActionButton(systemImage: "xmark.square.fill", helpKey: "imageEditor.action.vectorMaskDelete") { viewModel.deleteVectorMask() }
@@ -1474,9 +1481,15 @@ extension ImageEditorView {
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
 
-            TextField(L10n.text("imageEditor.layer.searchPlaceholder"), text: $layerSearchQuery)
+            TextField(
+                L10n.text("imageEditor.layer.searchPlaceholder"),
+                text: $layerSearchQuery,
+                prompt: Text(L10n.text("imageEditor.layer.searchPlaceholder"))
+                    .foregroundColor(Color(nsColor: ImageEditorLayerSearchAppearance.placeholderColor))
+            )
                 .textFieldStyle(.plain)
                 .font(.system(size: 11, weight: .medium))
+                .foregroundColor(Color(nsColor: ImageEditorLayerSearchAppearance.textColor))
 
             if !layerSearchQuery.isEmpty {
                 Button {

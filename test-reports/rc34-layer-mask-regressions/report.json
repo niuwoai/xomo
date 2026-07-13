@@ -1,0 +1,29 @@
+{
+  "generated_at": "2026-07-14 04:07:05 +0800",
+  "total": 2,
+  "passed": 2,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "veilpicTests",
+      "method": "imageEditorLayerMaskDensityAndFeatherAreNonDestructiveUntilApplied",
+      "identifier": "veilpicTests/veilpicTests/imageEditorLayerMaskDensityAndFeatherAreNonDestructiveUntilApplied",
+      "file": "veilpicTests.swift",
+      "passed": true,
+      "duration": 3.392,
+      "issues": [],
+      "log": "veilpicTests.imageEditorLayerMaskDensityAndFeatherAreNonDestructiveUntilApplied.log"
+    },
+    {
+      "suite": "veilpicTests",
+      "method": "imageEditorLayerMaskHidesAndRestoresCompositedPixels",
+      "identifier": "veilpicTests/veilpicTests/imageEditorLayerMaskHidesAndRestoresCompositedPixels",
+      "file": "veilpicTests.swift",
+      "passed": true,
+      "duration": 3.562,
+      "issues": [],
+      "log": "veilpicTests.imageEditorLayerMaskHidesAndRestoresCompositedPixels.log"
+    }
+  ]
+}

@@ -13,6 +13,7 @@ enum ImageEditorRasterizeTarget: String, CaseIterable, Identifiable {
     case fillContent
     case vectorMask
     case smartObject
+    case layerStyle
     case layer
 
     var id: String { rawValue }
@@ -57,13 +58,7 @@ extension ImageEditorViewModel {
         }
         isEditingLayerMask = false
 
-        if indices.count == 1 {
-            appendHistory(L10n.text("imageEditor.history.layerRasterize"))
-            statusText = L10n.text("imageEditor.status.layerRasterized")
-        } else {
-            appendHistory(L10n.text("imageEditor.history.layerRasterizeSelected"))
-            statusText = L10n.format("imageEditor.status.layerRasterizedSelected", indices.count)
-        }
+        recordRasterizationResult(target: target, count: indices.count)
     }
 
     private func rasterizableSelectedLayerIndices(for target: ImageEditorRasterizeTarget) -> [Int] {
@@ -97,6 +92,8 @@ extension ImageEditorViewModel {
             return canRasterizeVectorMaskContent(layer)
         case .smartObject:
             return layer.isSmartObject
+        case .layerStyle:
+            return layer.hasLayerEffects
         case .layer:
             return layer.isText
                 || layer.isShape
@@ -127,6 +124,8 @@ extension ImageEditorViewModel {
             }
         case .smartObject:
             output = rasterizedSmartObject(source)
+        case .layerStyle:
+            output = rasterizedLayerStyle(source)
         case .layer:
             if source.isSmartObject {
                 output = rasterizedSmartObject(source)
@@ -140,6 +139,27 @@ extension ImageEditorViewModel {
             rasterizeVectorMaskContent(in: &output)
         }
         return output
+    }
+
+    private func recordRasterizationResult(target: ImageEditorRasterizeTarget, count: Int) {
+        if target == .layerStyle {
+            if count == 1 {
+                appendHistory(L10n.text("imageEditor.history.layerStyleRasterize"))
+                statusText = L10n.text("imageEditor.status.layerStyleRasterized")
+            } else {
+                appendHistory(L10n.text("imageEditor.history.layerStyleRasterizeSelected"))
+                statusText = L10n.format("imageEditor.status.layerStyleRasterizedSelected", count)
+            }
+            return
+        }
+
+        if count == 1 {
+            appendHistory(L10n.text("imageEditor.history.layerRasterize"))
+            statusText = L10n.text("imageEditor.status.layerRasterized")
+        } else {
+            appendHistory(L10n.text("imageEditor.history.layerRasterizeSelected"))
+            statusText = L10n.format("imageEditor.status.layerRasterizedSelected", count)
+        }
     }
 
     private func baseContentImage(for layer: ImageEditorLayer) -> NSImage {
@@ -163,6 +183,30 @@ extension ImageEditorViewModel {
         }
         output.kind = .pixel
         output.smartFilters = []
+        return output
+    }
+
+    private func rasterizedLayerStyle(_ source: ImageEditorLayer) -> ImageEditorLayer {
+        var output = source
+        // These inputs are evaluated before layer effects, so they must be baked with the style.
+        // Layer opacity, blend mode, underlying Blend If, and clipping remain outer compositing state.
+        output.image = source
+            .renderedCompositingImage(globalLightAngle: document.globalLightAngle)
+            .normalizedBitmapImage()
+        output.frame = source.renderedCompositingFrame(globalLightAngle: document.globalLightAngle)
+        output.mask = nil
+        output.vectorMask = nil
+        output.isMaskEnabled = true
+        output.isMaskLinked = true
+        output.maskDensity = 1
+        output.maskFeather = 0
+        output.isVectorMaskEnabled = true
+        output.style = ImageEditorLayerStyle()
+        output.smartFilters = []
+        output.fillOpacity = 1
+        output.blendIfSourceBlack = 0
+        output.blendIfSourceWhite = 1
+        output.kind = .pixel
         return output
     }
 

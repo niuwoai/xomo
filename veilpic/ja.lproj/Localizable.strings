@@ -1188,6 +1188,8 @@
 "imageEditor.history.globalLight" = "グローバルライトを調整";
 "imageEditor.history.layerStylePaste" = "レイヤースタイルをペースト";
 "imageEditor.history.layerStyleClear" = "レイヤースタイルをクリア";
+"imageEditor.history.layerStyleRasterize" = "レイヤースタイルをラスタライズ";
+"imageEditor.history.layerStyleRasterizeSelected" = "選択レイヤースタイルをラスタライズ";
 "imageEditor.history.layerClippingMask" = "クリッピングマスクを切り替え";
 "imageEditor.history.layerClippingMaskCreateSelected" = "選択レイヤーのクリッピングマスクを作成";
 "imageEditor.history.layerClippingMaskReleaseSelected" = "選択クリッピングマスクを解除";
@@ -1231,6 +1233,8 @@
 "imageEditor.history.layerMaskHideSelectionSelected" = "選択レイヤーに選択範囲を隠すマスクを追加";
 "imageEditor.history.layerMaskApply" = "レイヤーマスクを適用";
 "imageEditor.history.layerMaskApplySelected" = "選択レイヤーマスクを適用";
+"imageEditor.history.vectorMaskApply" = "ベクターマスクを適用";
+"imageEditor.history.vectorMaskApplySelected" = "選択ベクターマスクを適用";
 "imageEditor.history.layerMaskInvert" = "レイヤーマスクを反転";
 "imageEditor.history.layerMaskInvertSelected" = "選択レイヤーマスクを反転";
 "imageEditor.history.layerMaskCopy" = "レイヤーマスクをコピー";
@@ -1551,6 +1555,8 @@
 "imageEditor.status.layerImportFailed" = "画像の読み込みに失敗しました";
 "imageEditor.status.layerRasterized" = "レイヤーをラスタライズしました";
 "imageEditor.status.layerRasterizedSelected" = "%d個のレイヤーをラスタライズしました";
+"imageEditor.status.layerStyleRasterized" = "レイヤースタイルをラスタライズしました";
+"imageEditor.status.layerStyleRasterizedSelected" = "%d個のレイヤースタイルをラスタライズしました";
 "imageEditor.status.layerMergeSelected" = "選択中のレイヤーを結合しました";
 "imageEditor.status.layerMergeGroup" = "レイヤーグループをピクセルレイヤーに結合しました";
 "imageEditor.status.layerMergeVisible" = "表示中のレイヤーを結合しました";
@@ -1610,6 +1616,8 @@
 "imageEditor.status.vectorMaskRasterized" = "ベクターマスクをレイヤーマスクにラスタライズしました";
 "imageEditor.status.vectorMaskRasterizedSelected" = "%d個のベクターマスクをレイヤーマスクにラスタライズしました";
 "imageEditor.status.vectorMaskRasterizeFailed" = "有効な閉じたベクターマスクを選択してください";
+"imageEditor.status.vectorMaskApplied" = "ベクターマスクを適用しました";
+"imageEditor.status.vectorMaskAppliedSelected" = "%d個のベクターマスクを適用しました";
 "imageEditor.status.vectorMaskEditFailed" = "ベクターマスク付きの編集可能なレイヤーを選択してください";
 "imageEditor.status.vectorMaskFromSelection" = "現在の選択範囲からベクターマスクを作成しました";
 "imageEditor.status.vectorMaskFromSelectionSelected" = "現在の選択範囲から%d個のレイヤーにベクターマスクを作成しました";
@@ -1897,6 +1905,7 @@
 "imageEditor.action.layerRasterize.fillContent" = "塗りつぶし内容";
 "imageEditor.action.layerRasterize.vectorMask" = "ベクトルマスク";
 "imageEditor.action.layerRasterize.smartObject" = "スマートオブジェクト";
+"imageEditor.action.layerRasterize.layerStyle" = "レイヤースタイル";
 "imageEditor.action.layerRasterize.layer" = "レイヤー";
 "imageEditor.action.layerDelete" = "レイヤーを削除";
 "imageEditor.action.layerTop" = "レイヤーを最前面へ";
@@ -1944,6 +1953,7 @@
 "imageEditor.action.layerTransparencyLoadSelection" = "レイヤー透明度から選択範囲を読み込み";
 "imageEditor.action.layerMaskCopyToSelected" = "マスクを選択レイヤーへコピー";
 "imageEditor.action.layerMaskApply" = "選択レイヤーマスクを適用";
+"imageEditor.action.vectorMaskApply" = "選択ベクターマスクを適用";
 "imageEditor.action.layerMaskDelete" = "選択レイヤーマスクを削除";
 "imageEditor.action.vectorMaskLoadSelection" = "ベクターマスクから選択範囲を読み込み";
 "imageEditor.action.layerScaleDown" = "レイヤーを縮小";

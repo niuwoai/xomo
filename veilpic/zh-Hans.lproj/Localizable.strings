@@ -1188,6 +1188,8 @@
 "imageEditor.history.globalLight" = "调整全局光";
 "imageEditor.history.layerStylePaste" = "粘贴图层样式";
 "imageEditor.history.layerStyleClear" = "清除图层样式";
+"imageEditor.history.layerStyleRasterize" = "栅格化图层样式";
+"imageEditor.history.layerStyleRasterizeSelected" = "栅格化所选图层样式";
 "imageEditor.history.layerClippingMask" = "切换剪贴蒙版";
 "imageEditor.history.layerClippingMaskCreateSelected" = "创建所选图层剪贴蒙版";
 "imageEditor.history.layerClippingMaskReleaseSelected" = "释放所选剪贴蒙版";
@@ -1231,6 +1233,8 @@
 "imageEditor.history.layerMaskHideSelectionSelected" = "向所选图层添加隐藏选区蒙版";
 "imageEditor.history.layerMaskApply" = "应用图层蒙版";
 "imageEditor.history.layerMaskApplySelected" = "应用所选图层蒙版";
+"imageEditor.history.vectorMaskApply" = "应用矢量蒙版";
+"imageEditor.history.vectorMaskApplySelected" = "应用所选矢量蒙版";
 "imageEditor.history.layerMaskInvert" = "反相图层蒙版";
 "imageEditor.history.layerMaskInvertSelected" = "反相所选图层蒙版";
 "imageEditor.history.layerMaskCopy" = "复制图层蒙版";
@@ -1551,6 +1555,8 @@
 "imageEditor.status.layerImportFailed" = "导入图片失败";
 "imageEditor.status.layerRasterized" = "已栅格化当前图层";
 "imageEditor.status.layerRasterizedSelected" = "已栅格化 %d 个图层";
+"imageEditor.status.layerStyleRasterized" = "已栅格化当前图层样式";
+"imageEditor.status.layerStyleRasterizedSelected" = "已栅格化 %d 个图层样式";
 "imageEditor.status.layerMergeSelected" = "已合并所选图层";
 "imageEditor.status.layerMergeGroup" = "已将图层组合并为像素层";
 "imageEditor.status.layerMergeVisible" = "已合并所有可见图层";
@@ -1610,6 +1616,8 @@
 "imageEditor.status.vectorMaskRasterized" = "已将矢量蒙版栅格化为图层蒙版";
 "imageEditor.status.vectorMaskRasterizedSelected" = "已将 %d 个矢量蒙版栅格化为图层蒙版";
 "imageEditor.status.vectorMaskRasterizeFailed" = "请先选择已启用的闭合矢量蒙版";
+"imageEditor.status.vectorMaskApplied" = "已应用当前矢量蒙版";
+"imageEditor.status.vectorMaskAppliedSelected" = "已应用 %d 个矢量蒙版";
 "imageEditor.status.vectorMaskEditFailed" = "请先选择带矢量蒙版且可编辑的图层";
 "imageEditor.status.vectorMaskFromSelection" = "已从当前选区创建矢量蒙版";
 "imageEditor.status.vectorMaskFromSelectionSelected" = "已从当前选区在 %d 个图层上创建矢量蒙版";
@@ -1897,6 +1905,7 @@
 "imageEditor.action.layerRasterize.fillContent" = "填充内容";
 "imageEditor.action.layerRasterize.vectorMask" = "矢量蒙版";
 "imageEditor.action.layerRasterize.smartObject" = "智能对象";
+"imageEditor.action.layerRasterize.layerStyle" = "图层样式";
 "imageEditor.action.layerRasterize.layer" = "图层";
 "imageEditor.action.layerDelete" = "删除图层";
 "imageEditor.action.layerTop" = "置顶图层";
@@ -1944,6 +1953,7 @@
 "imageEditor.action.layerTransparencyLoadSelection" = "从图层透明度载入选区";
 "imageEditor.action.layerMaskCopyToSelected" = "复制蒙版到所选图层";
 "imageEditor.action.layerMaskApply" = "应用所选图层蒙版";
+"imageEditor.action.vectorMaskApply" = "应用所选矢量蒙版";
 "imageEditor.action.layerMaskDelete" = "删除所选图层蒙版";
 "imageEditor.action.vectorMaskLoadSelection" = "从矢量蒙版载入选区";
 "imageEditor.action.layerScaleDown" = "缩小图层";

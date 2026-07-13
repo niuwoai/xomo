@@ -1188,6 +1188,8 @@
 "imageEditor.history.globalLight" = "Adjust Global Light";
 "imageEditor.history.layerStylePaste" = "Paste Layer Style";
 "imageEditor.history.layerStyleClear" = "Clear Layer Style";
+"imageEditor.history.layerStyleRasterize" = "Rasterize Layer Style";
+"imageEditor.history.layerStyleRasterizeSelected" = "Rasterize Selected Layer Styles";
 "imageEditor.history.layerClippingMask" = "Toggle Clipping Mask";
 "imageEditor.history.layerClippingMaskCreateSelected" = "Create Selected Clipping Masks";
 "imageEditor.history.layerClippingMaskReleaseSelected" = "Release Selected Clipping Masks";
@@ -1231,6 +1233,8 @@
 "imageEditor.history.layerMaskHideSelectionSelected" = "Add Hide-Selection Layer Masks to Selected Layers";
 "imageEditor.history.layerMaskApply" = "Apply Layer Mask";
 "imageEditor.history.layerMaskApplySelected" = "Apply Selected Layer Masks";
+"imageEditor.history.vectorMaskApply" = "Apply Vector Mask";
+"imageEditor.history.vectorMaskApplySelected" = "Apply Selected Vector Masks";
 "imageEditor.history.layerMaskInvert" = "Invert Layer Mask";
 "imageEditor.history.layerMaskInvertSelected" = "Invert Selected Layer Masks";
 "imageEditor.history.layerMaskCopy" = "Copy Layer Mask";
@@ -1551,6 +1555,8 @@
 "imageEditor.status.layerImportFailed" = "Failed to import image";
 "imageEditor.status.layerRasterized" = "Layer rasterized";
 "imageEditor.status.layerRasterizedSelected" = "%d layers rasterized";
+"imageEditor.status.layerStyleRasterized" = "Layer style rasterized";
+"imageEditor.status.layerStyleRasterizedSelected" = "%d layer styles rasterized";
 "imageEditor.status.layerMergeSelected" = "Selected layers merged";
 "imageEditor.status.layerMergeGroup" = "Layer group merged into a pixel layer";
 "imageEditor.status.layerMergeVisible" = "Visible layers merged";
@@ -1610,6 +1616,8 @@
 "imageEditor.status.vectorMaskRasterized" = "Vector mask rasterized to a layer mask";
 "imageEditor.status.vectorMaskRasterizedSelected" = "%d vector masks rasterized to layer masks";
 "imageEditor.status.vectorMaskRasterizeFailed" = "Select an enabled closed vector mask first";
+"imageEditor.status.vectorMaskApplied" = "Vector mask applied";
+"imageEditor.status.vectorMaskAppliedSelected" = "%d vector masks applied";
 "imageEditor.status.vectorMaskEditFailed" = "Select an editable layer with a vector mask first";
 "imageEditor.status.vectorMaskFromSelection" = "Vector mask created from the current selection";
 "imageEditor.status.vectorMaskFromSelectionSelected" = "Vector masks created from the current selection on %d layers";
@@ -1897,6 +1905,7 @@
 "imageEditor.action.layerRasterize.fillContent" = "Fill Content";
 "imageEditor.action.layerRasterize.vectorMask" = "Vector Mask";
 "imageEditor.action.layerRasterize.smartObject" = "Smart Object";
+"imageEditor.action.layerRasterize.layerStyle" = "Layer Style";
 "imageEditor.action.layerRasterize.layer" = "Layer";
 "imageEditor.action.layerDelete" = "Delete Layer";
 "imageEditor.action.layerTop" = "Move Layer to Top";
@@ -1944,6 +1953,7 @@
 "imageEditor.action.layerTransparencyLoadSelection" = "Load Selection from Layer Transparency";
 "imageEditor.action.layerMaskCopyToSelected" = "Copy Mask to Selected Layers";
 "imageEditor.action.layerMaskApply" = "Apply Layer Masks";
+"imageEditor.action.vectorMaskApply" = "Apply Vector Masks";
 "imageEditor.action.layerMaskDelete" = "Delete Layer Masks";
 "imageEditor.action.vectorMaskLoadSelection" = "Load Selection from Vector Mask";
 "imageEditor.action.layerScaleDown" = "Scale Layer Down";
