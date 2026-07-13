@@ -412,6 +412,8 @@
 "imageEditor.action.characterSelectTextTool" = "Use Type Tool";
 "imageEditor.action.characterToggleBold" = "Toggle Bold";
 "imageEditor.action.characterToggleItalic" = "Toggle Italic";
+"imageEditor.action.characterToggleUnderline" = "Toggle Underline";
+"imageEditor.action.characterToggleStrikethrough" = "Toggle Strikethrough";
 "imageEditor.action.paragraphShowPanel" = "Show Paragraph Panel";
 "imageEditor.action.stylesShowPanel" = "Show Styles Panel";
 "imageEditor.action.layersShowPanel" = "Show Layers Panel";
@@ -699,6 +701,8 @@
 "imageEditor.properties.textAlignment" = "Text Alignment";
 "imageEditor.properties.textBold" = "Bold";
 "imageEditor.properties.textItalic" = "Italic";
+"imageEditor.properties.textUnderline" = "Underline";
+"imageEditor.properties.textStrikethrough" = "Strikethrough";
 "imageEditor.properties.textCharacterSpacingValue" = "Tracking: %d px";
 "imageEditor.properties.textLineSpacingValue" = "Leading: %d px";
 "imageEditor.properties.textBoxWidthValue" = "Text Box: %d px";
@@ -1382,7 +1386,7 @@
 "imageEditor.status.brushPresetCreated" = "Brush preset created: %@";
 "imageEditor.status.brushPresetDeleted" = "Brush preset deleted: %@";
 "imageEditor.status.brushPresetLimitReached" = "You can save up to %d custom brush presets";
-"imageEditor.status.characterPanelSummary" = "Text: %@ | Size: %d px | Bold: %@ | Italic: %@ | Tracking: %d | Leading: %d";
+"imageEditor.status.characterPanelSummary" = "Text: %@ | Size: %d px | Bold: %@ | Italic: %@ | Underline: %@ | Strikethrough: %@ | Tracking: %d | Leading: %d";
 "imageEditor.status.paragraphPanelSummary" = "Alignment: %@ | Text box width: %d px";
 "imageEditor.characterPanel.emptyText" = "No text";
 "imageEditor.characterPanel.enabled" = "On";

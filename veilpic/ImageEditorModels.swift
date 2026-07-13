@@ -2095,6 +2095,8 @@ struct ImageEditorTextContent {
     var point: CGPoint
     var isBold = false
     var isItalic = false
+    var isUnderlined = false
+    var isStruckThrough = false
     var characterSpacing: CGFloat = 0
     var lineSpacing: CGFloat = 0
     var boxWidth: CGFloat = 0
@@ -2127,12 +2129,19 @@ struct ImageEditorTextContent {
     }
 
     var attributes: [NSAttributedString.Key: Any] {
-        [
+        var result: [NSAttributedString.Key: Any] = [
             .font: font,
             .foregroundColor: color,
             .kern: characterSpacing,
             .paragraphStyle: paragraphStyle
         ]
+        if isUnderlined {
+            result[.underlineStyle] = NSUnderlineStyle.single.rawValue
+        }
+        if isStruckThrough {
+            result[.strikethroughStyle] = NSUnderlineStyle.single.rawValue
+        }
+        return result
     }
 
     var attributedString: NSAttributedString {

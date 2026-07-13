@@ -412,6 +412,8 @@
 "imageEditor.action.characterSelectTextTool" = "使用文字工具";
 "imageEditor.action.characterToggleBold" = "切换粗体";
 "imageEditor.action.characterToggleItalic" = "切换斜体";
+"imageEditor.action.characterToggleUnderline" = "切换下划线";
+"imageEditor.action.characterToggleStrikethrough" = "切换删除线";
 "imageEditor.action.paragraphShowPanel" = "显示段落面板";
 "imageEditor.action.stylesShowPanel" = "显示样式面板";
 "imageEditor.action.layersShowPanel" = "显示图层面板";
@@ -699,6 +701,8 @@
 "imageEditor.properties.textAlignment" = "文字对齐";
 "imageEditor.properties.textBold" = "粗体";
 "imageEditor.properties.textItalic" = "斜体";
+"imageEditor.properties.textUnderline" = "下划线";
+"imageEditor.properties.textStrikethrough" = "删除线";
 "imageEditor.properties.textCharacterSpacingValue" = "字距：%d px";
 "imageEditor.properties.textLineSpacingValue" = "行距：%d px";
 "imageEditor.properties.textBoxWidthValue" = "文本框：%d px";
@@ -1382,7 +1386,7 @@
 "imageEditor.status.brushPresetCreated" = "已创建画笔预设：%@";
 "imageEditor.status.brushPresetDeleted" = "已删除画笔预设：%@";
 "imageEditor.status.brushPresetLimitReached" = "最多只能保存 %d 个自定义画笔预设";
-"imageEditor.status.characterPanelSummary" = "文字：%@ | 字号：%d px | 粗体：%@ | 斜体：%@ | 字距：%d | 行距：%d";
+"imageEditor.status.characterPanelSummary" = "文字：%@ | 字号：%d px | 粗体：%@ | 斜体：%@ | 下划线：%@ | 删除线：%@ | 字距：%d | 行距：%d";
 "imageEditor.status.paragraphPanelSummary" = "对齐：%@ | 文本框宽度：%d px";
 "imageEditor.characterPanel.emptyText" = "未输入";
 "imageEditor.characterPanel.enabled" = "开";

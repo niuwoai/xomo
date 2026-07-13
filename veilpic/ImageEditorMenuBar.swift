@@ -1808,6 +1808,12 @@ extension ImageEditorView {
             Button(L10n.text("imageEditor.action.characterToggleItalic")) {
                 viewModel.toggleCharacterItalic()
             }
+            Button(L10n.text("imageEditor.action.characterToggleUnderline")) {
+                viewModel.toggleCharacterUnderline()
+            }
+            Button(L10n.text("imageEditor.action.characterToggleStrikethrough")) {
+                viewModel.toggleCharacterStrikethrough()
+            }
             Divider()
             Button(L10n.text("imageEditor.action.layerTextNew")) {
                 viewModel.addText()

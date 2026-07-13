@@ -205,10 +205,17 @@ struct XomoAutomationTests {
         #expect(registry.execute(request(
             operation: "call",
             name: "xomo.text.update",
-            arguments: ["text": .string("Hello MCP"), "bold": .bool(true)]
+            arguments: [
+                "text": .string("Hello MCP"),
+                "bold": .bool(true),
+                "underline": .bool(true),
+                "strikethrough": .bool(true)
+            ]
         )).ok)
         #expect(viewModel.document.selectedLayer?.textContent?.text == "Hello MCP")
         #expect(viewModel.document.selectedLayer?.textContent?.isBold == true)
+        #expect(viewModel.document.selectedLayer?.textContent?.isUnderlined == true)
+        #expect(viewModel.document.selectedLayer?.textContent?.isStruckThrough == true)
     }
 
     @Test func registryConfiguresCloneStampSamplingOptions() {
