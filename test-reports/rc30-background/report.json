@@ -1,0 +1,79 @@
+{
+  "generated_at": "2026-07-13 21:19:08 +0800",
+  "total": 7,
+  "passed": 7,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorBackgroundLayerConversionTests",
+      "method": "backgroundToLayerUnlocksEveryLockWithoutChangingIdentityPixelsOrLinks",
+      "identifier": "veilpicTests/ImageEditorBackgroundLayerConversionTests/backgroundToLayerUnlocksEveryLockWithoutChangingIdentityPixelsOrLinks",
+      "file": "ImageEditorBackgroundLayerConversionTests.swift",
+      "passed": true,
+      "duration": 5.894,
+      "issues": [],
+      "log": "ImageEditorBackgroundLayerConversionTests.backgroundToLayerUnlocksEveryLockWithoutChangingIdentityPixelsOrLinks.log"
+    },
+    {
+      "suite": "ImageEditorBackgroundLayerConversionTests",
+      "method": "hiddenLayerRemainsHiddenWhenItBecomesTheBackground",
+      "identifier": "veilpicTests/ImageEditorBackgroundLayerConversionTests/hiddenLayerRemainsHiddenWhenItBecomesTheBackground",
+      "file": "ImageEditorBackgroundLayerConversionTests.swift",
+      "passed": true,
+      "duration": 4.574,
+      "issues": [],
+      "log": "ImageEditorBackgroundLayerConversionTests.hiddenLayerRemainsHiddenWhenItBecomesTheBackground.log"
+    },
+    {
+      "suite": "ImageEditorBackgroundLayerConversionTests",
+      "method": "layerToBackgroundBakesOpacityAndFillsTransparentCanvasWithTheBackgroundColor",
+      "identifier": "veilpicTests/ImageEditorBackgroundLayerConversionTests/layerToBackgroundBakesOpacityAndFillsTransparentCanvasWithTheBackgroundColor",
+      "file": "ImageEditorBackgroundLayerConversionTests.swift",
+      "passed": true,
+      "duration": 4.229,
+      "issues": [],
+      "log": "ImageEditorBackgroundLayerConversionTests.layerToBackgroundBakesOpacityAndFillsTransparentCanvasWithTheBackgroundColor.log"
+    },
+    {
+      "suite": "ImageEditorBackgroundLayerConversionTests",
+      "method": "layerToBackgroundClearsLinksOnBothSidesAndReleasesAnOrphanedClip",
+      "identifier": "veilpicTests/ImageEditorBackgroundLayerConversionTests/layerToBackgroundClearsLinksOnBothSidesAndReleasesAnOrphanedClip",
+      "file": "ImageEditorBackgroundLayerConversionTests.swift",
+      "passed": true,
+      "duration": 3.567,
+      "issues": [],
+      "log": "ImageEditorBackgroundLayerConversionTests.layerToBackgroundClearsLinksOnBothSidesAndReleasesAnOrphanedClip.log"
+    },
+    {
+      "suite": "ImageEditorBackgroundLayerConversionTests",
+      "method": "nestedLayerBecomesTheRootBackgroundWithoutDisturbingTheRemainingGroup",
+      "identifier": "veilpicTests/ImageEditorBackgroundLayerConversionTests/nestedLayerBecomesTheRootBackgroundWithoutDisturbingTheRemainingGroup",
+      "file": "ImageEditorBackgroundLayerConversionTests.swift",
+      "passed": true,
+      "duration": 3.309,
+      "issues": [],
+      "log": "ImageEditorBackgroundLayerConversionTests.nestedLayerBecomesTheRootBackgroundWithoutDisturbingTheRemainingGroup.log"
+    },
+    {
+      "suite": "ImageEditorBackgroundLayerConversionTests",
+      "method": "nonPixelLayerBecomesAPlainBackgroundWithItsAppearanceBaked",
+      "identifier": "veilpicTests/ImageEditorBackgroundLayerConversionTests/nonPixelLayerBecomesAPlainBackgroundWithItsAppearanceBaked",
+      "file": "ImageEditorBackgroundLayerConversionTests.swift",
+      "passed": true,
+      "duration": 3.676,
+      "issues": [],
+      "log": "ImageEditorBackgroundLayerConversionTests.nonPixelLayerBecomesAPlainBackgroundWithItsAppearanceBaked.log"
+    },
+    {
+      "suite": "ImageEditorBackgroundLayerConversionTests",
+      "method": "regularLayerCannotBecomeBackgroundUntilTheExistingBackgroundIsConverted",
+      "identifier": "veilpicTests/ImageEditorBackgroundLayerConversionTests/regularLayerCannotBecomeBackgroundUntilTheExistingBackgroundIsConverted",
+      "file": "ImageEditorBackgroundLayerConversionTests.swift",
+      "passed": true,
+      "duration": 9.218,
+      "issues": [],
+      "log": "ImageEditorBackgroundLayerConversionTests.regularLayerCannotBecomeBackgroundUntilTheExistingBackgroundIsConverted.log"
+    }
+  ]
+}
