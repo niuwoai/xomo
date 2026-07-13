@@ -1885,7 +1885,7 @@ private extension XomoAutomationRegistry {
             "x": XomoAutomationSchema.number(description: "Optional canvas x position"),
             "y": XomoAutomationSchema.number(description: "Optional canvas y position")
         ]),
-        tool("xomo.layer.delete", "Delete the selected layer or selected component object."),
+        tool("xomo.layer.delete", "Delete unlocked selected layer roots as complete subtrees and preserve a visible selection fallback."),
         tool("xomo.layer.duplicate", "Duplicate selected layer roots as hierarchy-safe subtrees within their original parents."),
         tool("xomo.layer.rename", "Rename the primary selected layer.", ["name": XomoAutomationSchema.string(description: "New layer name")], required: ["name"]),
         tool("xomo.layer.set_visibility", "Set layer visibility.", idBoolProperties(key: "visible"), required: ["id", "visible"]),
