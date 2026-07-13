@@ -498,6 +498,42 @@ struct XomoAutomationTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerUngroup"))
     }
 
+    @Test func registryMovesLayerSubtreesIntoAndOutOfGroupsAtVisibleBoundaries() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        let moving = ImageEditorLayer.blank(name: "Moving", size: viewModel.document.canvasSize)
+        var existing = ImageEditorLayer.blank(name: "Existing", size: viewModel.document.canvasSize)
+        let target = ImageEditorLayer.group(name: "Target", size: viewModel.document.canvasSize)
+        existing.groupID = target.id
+        viewModel.document.layers = [moving, existing, target]
+        viewModel.document.selectedLayerID = moving.id
+        viewModel.document.selectedLayerIDs = [moving.id]
+        registry.register(viewModel)
+
+        let moveIntoResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.action",
+            arguments: ["action": .string("moveIntoGroup")]
+        ))
+
+        #expect(moveIntoResponse.ok)
+        #expect(viewModel.document.layers.map(\.id) == [existing.id, moving.id, target.id])
+        #expect(viewModel.document.layers.first { $0.id == moving.id }?.groupID == target.id)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerMoveIntoGroup"))
+
+        let moveOutResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.action",
+            arguments: ["action": .string("moveOutOfGroup")]
+        ))
+
+        #expect(moveOutResponse.ok)
+        #expect(viewModel.document.layers.map(\.id) == [existing.id, target.id, moving.id])
+        #expect(viewModel.document.layers.first { $0.id == moving.id }?.groupID == nil)
+        #expect(viewModel.document.selectedLayerIDs == Set([moving.id]))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerMoveOutOfGroup"))
+    }
+
     @Test func registryRunsDestinationPatchWithFeatherThroughSpecialPaintTool() {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared
