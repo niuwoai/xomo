@@ -1514,6 +1514,7 @@
 "imageEditor.status.layerSelectSameLabelColor" = "已选择 %d 个同色标签图层：%@";
 "imageEditor.status.layerSelectionInverted" = "已反选图层，当前选择 %d 个图层";
 "imageEditor.status.layerSelectionCleared" = "已清除图层选择";
+"imageEditor.status.layerRangeSelected" = "已选择 %d 个图层";
 "imageEditor.status.layerNameInvalid" = "图层名称不能为空";
 "imageEditor.status.layerRenamed" = "已重命名图层";
 "imageEditor.status.layerLabelColor" = "已设置图层颜色标签：%@";

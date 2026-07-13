@@ -306,6 +306,7 @@ final class ImageEditorViewModel: ObservableObject {
     var copiedLayerStyleSourceID: UUID?
     private var cloneStampAlignedCanvasOffset: CGSize?
     private var healingBrushAlignedCanvasOffset: CGSize?
+    private var layerSelectionAnchorID: UUID?
     private let onApply: (NSImage) -> Void
     private let workspacePreferencesDefaults: UserDefaults
     private var selectionEdgeGeometrySource: ImageEditorSelection?
@@ -2237,6 +2238,7 @@ final class ImageEditorViewModel: ObservableObject {
                 }
             }
             isEditingLayerMask = false
+            layerSelectionAnchorID = document.selectedLayerIDs.contains(id) ? id : document.selectedLayerID
             syncAdjustmentControlsFromSelection()
             syncFilterControlsFromSelection()
             syncTextControlsFromSelection()
@@ -2249,6 +2251,7 @@ final class ImageEditorViewModel: ObservableObject {
             document.selectedLayerID = id
             document.selectedLayerIDs = [id]
         }
+        layerSelectionAnchorID = id
         if isEditingLayerMask != shouldEditMask {
             isEditingLayerMask = shouldEditMask
         }
@@ -2257,6 +2260,38 @@ final class ImageEditorViewModel: ObservableObject {
         syncTextControlsFromSelection()
         syncShapeControlsFromSelection()
         syncPathControlsFromSelection()
+    }
+
+    func selectLayerRange(
+        to id: UUID,
+        among visibleLayerIDs: [UUID],
+        addingToSelection: Bool = false
+    ) {
+        let existingIDs = Set(document.layers.map(\.id))
+        let orderedIDs = visibleLayerIDs.filter(existingIDs.contains)
+        guard let targetIndex = orderedIDs.firstIndex(of: id) else { return }
+
+        let anchorID = layerSelectionAnchorID.flatMap { orderedIDs.contains($0) ? $0 : nil }
+            ?? document.selectedLayerID.flatMap { orderedIDs.contains($0) ? $0 : nil }
+            ?? id
+        guard let anchorIndex = orderedIDs.firstIndex(of: anchorID) else { return }
+
+        let lowerIndex = min(anchorIndex, targetIndex)
+        let upperIndex = max(anchorIndex, targetIndex)
+        let rangeIDs = Set(orderedIDs[lowerIndex...upperIndex])
+        mutateDocumentWithoutInvalidatingRenderedImageCaches { document in
+            document.selectedLayerIDs = addingToSelection
+                ? document.selectedLayerIDs.union(rangeIDs)
+                : rangeIDs
+            document.selectedLayerID = id
+        }
+        layerSelectionAnchorID = anchorID
+        isEditingLayerMask = false
+        syncControlsFromLayerSelection()
+        statusText = L10n.format(
+            "imageEditor.status.layerRangeSelected",
+            document.selectedLayerIDs.count
+        )
     }
 
     func selectAllLayers() {
@@ -2273,6 +2308,7 @@ final class ImageEditorViewModel: ObservableObject {
         guard !document.selectedLayerIDs.isEmpty || document.selectedLayerID != nil else { return }
         document.selectedLayerID = nil
         document.selectedLayerIDs = []
+        layerSelectionAnchorID = nil
         isEditingLayerMask = false
         syncControlsFromLayerSelection()
         statusText = L10n.text("imageEditor.status.layerSelectionCleared")

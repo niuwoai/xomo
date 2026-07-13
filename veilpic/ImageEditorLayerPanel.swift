@@ -1748,11 +1748,19 @@ extension ImageEditorView {
         .contentShape(Rectangle())
         .onTapGesture {
             let flags = NSEvent.modifierFlags
-            viewModel.selectLayer(
-                layer.id,
-                editingMask: false,
-                extendingSelection: flags.contains(.command) || flags.contains(.shift)
-            )
+            if flags.contains(.shift) {
+                viewModel.selectLayerRange(
+                    to: layer.id,
+                    among: filteredVisibleLayerRows.map(\.id),
+                    addingToSelection: flags.contains(.command)
+                )
+            } else {
+                viewModel.selectLayer(
+                    layer.id,
+                    editingMask: false,
+                    extendingSelection: flags.contains(.command)
+                )
+            }
         }
     }
 
