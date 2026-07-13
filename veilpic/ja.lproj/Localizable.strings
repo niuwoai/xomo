@@ -923,6 +923,13 @@
 "imageEditor.layerStylePreset.builtIn.goldBevel" = "ゴールドベベル";
 "imageEditor.layerStylePreset.builtIn.neonGlow" = "ネオングロー";
 "imageEditor.layerStylePreset.builtIn.sticker" = "ステッカー境界線";
+"imageEditor.layerStylePreset.searchPlaceholder" = "スタイルプリセットを検索";
+"imageEditor.layerStylePreset.scopeLabel" = "プリセットの種類";
+"imageEditor.layerStylePreset.scope.all" = "すべて";
+"imageEditor.layerStylePreset.scope.builtIn" = "内蔵";
+"imageEditor.layerStylePreset.scope.custom" = "カスタム";
+"imageEditor.layerStylePreset.noResults" = "一致するスタイルプリセットはありません";
+"imageEditor.layerStylePreset.showingCount" = "%d / %d を表示";
 "imageEditor.properties.strokeWidthValue" = "境界線：%d px";
 "imageEditor.properties.strokePosition" = "境界線の位置";
 "imageEditor.strokePosition.outside" = "外側";
