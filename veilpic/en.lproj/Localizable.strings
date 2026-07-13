@@ -706,6 +706,9 @@
 "imageEditor.properties.textCharacterSpacingValue" = "Tracking: %d px";
 "imageEditor.properties.textLineSpacingValue" = "Leading: %d px";
 "imageEditor.properties.textBoxWidthValue" = "Text Box: %d px";
+"imageEditor.properties.textLeftIndentValue" = "Left Indent: %d px";
+"imageEditor.properties.textRightIndentValue" = "Right Indent: %d px";
+"imageEditor.properties.textFirstLineIndentValue" = "First-Line Indent: %d px";
 "imageEditor.properties.pathAnchors" = "Path Anchors";
 "imageEditor.properties.pathAnchorXValue" = "X: %d px";
 "imageEditor.properties.pathAnchorYValue" = "Y: %d px";
@@ -739,6 +742,7 @@
 "imageEditor.textAlignment.left" = "Left";
 "imageEditor.textAlignment.center" = "Center";
 "imageEditor.textAlignment.right" = "Right";
+"imageEditor.textAlignment.justified" = "Justify";
 "imageEditor.levels.blackPoint" = "Black point";
 "imageEditor.levels.gamma" = "Midtones";
 "imageEditor.levels.whitePoint" = "White point";
@@ -1387,7 +1391,7 @@
 "imageEditor.status.brushPresetDeleted" = "Brush preset deleted: %@";
 "imageEditor.status.brushPresetLimitReached" = "You can save up to %d custom brush presets";
 "imageEditor.status.characterPanelSummary" = "Text: %@ | Size: %d px | Bold: %@ | Italic: %@ | Underline: %@ | Strikethrough: %@ | Tracking: %d | Leading: %d";
-"imageEditor.status.paragraphPanelSummary" = "Alignment: %@ | Text box width: %d px";
+"imageEditor.status.paragraphPanelSummary" = "Alignment: %@ | Text box width: %d px | Left indent: %d px | Right indent: %d px | First-line indent: %d px";
 "imageEditor.characterPanel.emptyText" = "No text";
 "imageEditor.characterPanel.enabled" = "On";
 "imageEditor.characterPanel.disabled" = "Off";

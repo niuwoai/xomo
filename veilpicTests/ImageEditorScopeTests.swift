@@ -2059,6 +2059,9 @@ struct ImageEditorScopeTests {
         viewModel.textCharacterSpacing = 4
         viewModel.textLineSpacing = 12
         viewModel.textBoxWidth = 320
+        viewModel.textLeftIndent = 24
+        viewModel.textRightIndent = 16
+        viewModel.textFirstLineIndent = 12
         viewModel.selectCharacterPanelTool()
 
         #expect(viewModel.selectedTool == .text)
@@ -2086,6 +2089,9 @@ struct ImageEditorScopeTests {
         #expect(viewModel.statusText == viewModel.paragraphPanelSummaryText)
         #expect(viewModel.paragraphPanelSummaryText.contains(ImageEditorTextAlignment.center.title))
         #expect(viewModel.paragraphPanelSummaryText.contains("320"))
+        #expect(viewModel.paragraphPanelSummaryText.contains("24"))
+        #expect(viewModel.paragraphPanelSummaryText.contains("16"))
+        #expect(viewModel.paragraphPanelSummaryText.contains("12"))
     }
 
     @Test func windowMenuExposesStylesPanelActionsInPhotoshopStyleLocation() throws {

@@ -209,13 +209,21 @@ struct XomoAutomationTests {
                 "text": .string("Hello MCP"),
                 "bold": .bool(true),
                 "underline": .bool(true),
-                "strikethrough": .bool(true)
+                "strikethrough": .bool(true),
+                "alignment": .string("justified"),
+                "leftIndent": .number(24),
+                "rightIndent": .number(16),
+                "firstLineIndent": .number(12)
             ]
         )).ok)
         #expect(viewModel.document.selectedLayer?.textContent?.text == "Hello MCP")
         #expect(viewModel.document.selectedLayer?.textContent?.isBold == true)
         #expect(viewModel.document.selectedLayer?.textContent?.isUnderlined == true)
         #expect(viewModel.document.selectedLayer?.textContent?.isStruckThrough == true)
+        #expect(viewModel.document.selectedLayer?.textContent?.alignment == .justified)
+        #expect(viewModel.document.selectedLayer?.textContent?.leftIndent == 24)
+        #expect(viewModel.document.selectedLayer?.textContent?.rightIndent == 16)
+        #expect(viewModel.document.selectedLayer?.textContent?.firstLineIndent == 12)
     }
 
     @Test func registryConfiguresCloneStampSamplingOptions() {

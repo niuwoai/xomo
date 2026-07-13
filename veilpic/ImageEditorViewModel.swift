@@ -127,6 +127,9 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var textLineSpacing: Double = 0
     @Published var textBoxWidth: Double = 0
     @Published var selectedTextAlignment: ImageEditorTextAlignment = .left
+    @Published var textLeftIndent: Double = 0
+    @Published var textRightIndent: Double = 0
+    @Published var textFirstLineIndent: Double = 0
 
     var availableFontFamilyNames: [String] {
         let families = NSFontManager.shared.availableFontFamilies.sorted {
@@ -1306,7 +1309,10 @@ final class ImageEditorViewModel: ObservableObject {
         L10n.format(
             "imageEditor.status.paragraphPanelSummary",
             selectedTextAlignment.title,
-            Int(clampedTextBoxWidth(textBoxWidth).rounded())
+            Int(clampedTextBoxWidth(textBoxWidth).rounded()),
+            Int(clampedTextIndent(textLeftIndent).rounded()),
+            Int(clampedTextIndent(textRightIndent).rounded()),
+            Int(clampedTextFirstLineIndent(textFirstLineIndent).rounded())
         )
     }
 
@@ -3688,7 +3694,10 @@ final class ImageEditorViewModel: ObservableObject {
             characterSpacing: CGFloat(clampedTextCharacterSpacing(textCharacterSpacing)),
             lineSpacing: CGFloat(clampedTextLineSpacing(textLineSpacing)),
             boxWidth: CGFloat(clampedTextBoxWidth(textBoxWidth)),
-            alignment: selectedTextAlignment
+            alignment: selectedTextAlignment,
+            leftIndent: CGFloat(clampedTextIndent(textLeftIndent)),
+            rightIndent: CGFloat(clampedTextIndent(textRightIndent)),
+            firstLineIndent: CGFloat(clampedTextFirstLineIndent(textFirstLineIndent))
         )
         pushUndo()
         var layer = ImageEditorLayer.text(
@@ -3723,6 +3732,9 @@ final class ImageEditorViewModel: ObservableObject {
         let lineSpacing = CGFloat(clampedTextLineSpacing(textLineSpacing))
         let boxWidth = CGFloat(clampedTextBoxWidth(textBoxWidth))
         let alignment = selectedTextAlignment
+        let leftIndent = CGFloat(clampedTextIndent(textLeftIndent))
+        let rightIndent = CGFloat(clampedTextIndent(textRightIndent))
+        let firstLineIndent = CGFloat(clampedTextFirstLineIndent(textFirstLineIndent))
         pushUndo()
         for index in indices {
             guard var content = document.layers[index].textContent else { continue }
@@ -3741,6 +3753,9 @@ final class ImageEditorViewModel: ObservableObject {
             content.lineSpacing = lineSpacing
             content.boxWidth = boxWidth
             content.alignment = alignment
+            content.leftIndent = leftIndent
+            content.rightIndent = rightIndent
+            content.firstLineIndent = firstLineIndent
             let layerSize = content.layerSize()
             if let mask = document.layers[index].mask, mask.size != layerSize {
                 document.layers[index].mask = mask.resized(to: layerSize)
@@ -6289,6 +6304,9 @@ final class ImageEditorViewModel: ObservableObject {
         textLineSpacing = Double(content.lineSpacing)
         textBoxWidth = Double(content.boxWidth)
         selectedTextAlignment = content.alignment
+        textLeftIndent = Double(content.leftIndent)
+        textRightIndent = Double(content.rightIndent)
+        textFirstLineIndent = Double(content.firstLineIndent)
     }
 
     private func syncShapeControlsFromSelection() {
@@ -6390,6 +6408,14 @@ final class ImageEditorViewModel: ObservableObject {
 
     private func clampedTextBoxWidth(_ width: Double) -> Double {
         max(0, min(1600, width))
+    }
+
+    private func clampedTextIndent(_ indent: Double) -> Double {
+        max(0, min(800, indent))
+    }
+
+    private func clampedTextFirstLineIndent(_ indent: Double) -> Double {
+        max(-800, min(800, indent))
     }
 
     private func textLayerNameFragment(_ text: String) -> String {

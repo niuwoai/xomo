@@ -643,6 +643,9 @@ final class XomoAutomationRegistry {
             "lineSpacing": .number(content.lineSpacing),
             "boxWidth": .number(content.boxWidth),
             "alignment": .string(content.alignment.rawValue),
+            "leftIndent": .number(content.leftIndent),
+            "rightIndent": .number(content.rightIndent),
+            "firstLineIndent": .number(content.firstLineIndent),
             "color": colorJSON(content.color)
         ])
     }
@@ -663,6 +666,9 @@ final class XomoAutomationRegistry {
         viewModel.textCharacterSpacing = arguments["characterSpacing"]?.doubleValue ?? content.characterSpacing
         viewModel.textLineSpacing = arguments["lineSpacing"]?.doubleValue ?? content.lineSpacing
         viewModel.textBoxWidth = arguments["boxWidth"]?.doubleValue ?? content.boxWidth
+        viewModel.textLeftIndent = arguments["leftIndent"]?.doubleValue ?? content.leftIndent
+        viewModel.textRightIndent = arguments["rightIndent"]?.doubleValue ?? content.rightIndent
+        viewModel.textFirstLineIndent = arguments["firstLineIndent"]?.doubleValue ?? content.firstLineIndent
         if let alignmentRaw = arguments["alignment"]?.stringValue {
             guard let alignment = ImageEditorTextAlignment(rawValue: alignmentRaw) else {
                 throw XomoAutomationCallError.invalidArgument("Unknown text alignment")
@@ -2049,7 +2055,10 @@ private extension XomoAutomationRegistry {
             "characterSpacing": XomoAutomationSchema.number(description: "Character spacing"),
             "lineSpacing": XomoAutomationSchema.number(description: "Line spacing"),
             "boxWidth": XomoAutomationSchema.number(description: "Text box width, zero for auto"),
-            "alignment": XomoAutomationSchema.string(description: "Paragraph alignment", values: ImageEditorTextAlignment.allCases.map(\.rawValue))
+            "alignment": XomoAutomationSchema.string(description: "Paragraph alignment", values: ImageEditorTextAlignment.allCases.map(\.rawValue)),
+            "leftIndent": XomoAutomationSchema.number(description: "Paragraph left indent"),
+            "rightIndent": XomoAutomationSchema.number(description: "Paragraph right indent"),
+            "firstLineIndent": XomoAutomationSchema.number(description: "First-line indent relative to the left indent")
         ]),
         tool("xomo.mask.action", "Create, edit, copy, apply, rasterize, or delete raster and vector masks.", [
             "action": XomoAutomationSchema.string(description: "Mask action", values: ["addRevealAll", "addFromSelection", "addHideAll", "addHideSelection", "delete", "apply", "invert", "revealSelection", "hideSelection", "intersectSelection", "loadSelection", "copyToSelected", "toggleEnabled", "toggleLinked", "addVectorFromSelection", "copyVectorToSelected", "rasterizeVector", "loadVectorSelection", "toggleVectorEnabled", "deleteVector"])

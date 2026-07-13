@@ -448,6 +448,9 @@ extension ImageEditorViewModel {
         case .right:
             anchor = "end"
             x = layer.frame.maxX - ImageEditorTextContent.drawingPadding
+        case .justified:
+            anchor = "start"
+            x = layer.frame.minX + content.point.x + ImageEditorTextContent.drawingPadding + content.leftIndent
         }
         let y = layer.frame.minY + content.point.y + content.fontSize
         let lineHeight = content.fontSize + max(0, content.lineSpacing)
