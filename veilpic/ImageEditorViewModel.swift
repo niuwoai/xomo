@@ -126,6 +126,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var textCharacterSpacing: Double = 0
     @Published var textLineSpacing: Double = 0
     @Published var textBoxWidth: Double = 0
+    @Published var textBoxHeight: Double = 0
     @Published var selectedTextAlignment: ImageEditorTextAlignment = .left
     @Published var textLeftIndent: Double = 0
     @Published var textRightIndent: Double = 0
@@ -1310,6 +1311,7 @@ final class ImageEditorViewModel: ObservableObject {
             "imageEditor.status.paragraphPanelSummary",
             selectedTextAlignment.title,
             Int(clampedTextBoxWidth(textBoxWidth).rounded()),
+            Int(clampedTextBoxHeight(textBoxHeight).rounded()),
             Int(clampedTextIndent(textLeftIndent).rounded()),
             Int(clampedTextIndent(textRightIndent).rounded()),
             Int(clampedTextFirstLineIndent(textFirstLineIndent).rounded())
@@ -3681,6 +3683,7 @@ final class ImageEditorViewModel: ObservableObject {
             return
         }
         let targetPoint = point ?? CGPoint(x: document.canvasSize.width * 0.12, y: document.canvasSize.height * 0.16)
+        let boxWidth = CGFloat(clampedTextBoxWidth(textBoxWidth))
         let content = ImageEditorTextContent(
             text: text,
             color: foregroundColor,
@@ -3693,7 +3696,8 @@ final class ImageEditorViewModel: ObservableObject {
             isStruckThrough: textStruckThrough,
             characterSpacing: CGFloat(clampedTextCharacterSpacing(textCharacterSpacing)),
             lineSpacing: CGFloat(clampedTextLineSpacing(textLineSpacing)),
-            boxWidth: CGFloat(clampedTextBoxWidth(textBoxWidth)),
+            boxWidth: boxWidth,
+            boxHeight: boxWidth > 0 ? CGFloat(clampedTextBoxHeight(textBoxHeight)) : 0,
             alignment: selectedTextAlignment,
             leftIndent: CGFloat(clampedTextIndent(textLeftIndent)),
             rightIndent: CGFloat(clampedTextIndent(textRightIndent)),
@@ -3731,6 +3735,7 @@ final class ImageEditorViewModel: ObservableObject {
         let characterSpacing = CGFloat(clampedTextCharacterSpacing(textCharacterSpacing))
         let lineSpacing = CGFloat(clampedTextLineSpacing(textLineSpacing))
         let boxWidth = CGFloat(clampedTextBoxWidth(textBoxWidth))
+        let boxHeight = boxWidth > 0 ? CGFloat(clampedTextBoxHeight(textBoxHeight)) : 0
         let alignment = selectedTextAlignment
         let leftIndent = CGFloat(clampedTextIndent(textLeftIndent))
         let rightIndent = CGFloat(clampedTextIndent(textRightIndent))
@@ -3752,6 +3757,7 @@ final class ImageEditorViewModel: ObservableObject {
             content.characterSpacing = characterSpacing
             content.lineSpacing = lineSpacing
             content.boxWidth = boxWidth
+            content.boxHeight = boxHeight
             content.alignment = alignment
             content.leftIndent = leftIndent
             content.rightIndent = rightIndent
@@ -6303,6 +6309,7 @@ final class ImageEditorViewModel: ObservableObject {
         textCharacterSpacing = Double(content.characterSpacing)
         textLineSpacing = Double(content.lineSpacing)
         textBoxWidth = Double(content.boxWidth)
+        textBoxHeight = Double(content.boxHeight)
         selectedTextAlignment = content.alignment
         textLeftIndent = Double(content.leftIndent)
         textRightIndent = Double(content.rightIndent)
@@ -6407,7 +6414,11 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     private func clampedTextBoxWidth(_ width: Double) -> Double {
-        max(0, min(1600, width))
+        max(0, min(Double(ImageEditorTextContent.maximumBoxDimension), width))
+    }
+
+    private func clampedTextBoxHeight(_ height: Double) -> Double {
+        max(0, min(Double(ImageEditorTextContent.maximumBoxDimension), height))
     }
 
     private func clampedTextIndent(_ indent: Double) -> Double {

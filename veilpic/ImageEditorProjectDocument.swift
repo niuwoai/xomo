@@ -542,6 +542,7 @@ struct ImageEditorProjectTextContent: Equatable, Codable {
     var characterSpacing: CGFloat
     var lineSpacing: CGFloat
     var boxWidth: CGFloat
+    var boxHeight: CGFloat?
     var alignment: ImageEditorTextAlignment
     var leftIndent: CGFloat?
     var rightIndent: CGFloat?
@@ -560,6 +561,7 @@ struct ImageEditorProjectTextContent: Equatable, Codable {
         characterSpacing = content.characterSpacing
         lineSpacing = content.lineSpacing
         boxWidth = content.boxWidth
+        boxHeight = content.boxHeight
         alignment = content.alignment
         leftIndent = content.leftIndent
         rightIndent = content.rightIndent
@@ -580,6 +582,7 @@ struct ImageEditorProjectTextContent: Equatable, Codable {
             characterSpacing: characterSpacing,
             lineSpacing: lineSpacing,
             boxWidth: boxWidth,
+            boxHeight: boxHeight ?? 0,
             alignment: alignment,
             leftIndent: leftIndent ?? 0,
             rightIndent: rightIndent ?? 0,
