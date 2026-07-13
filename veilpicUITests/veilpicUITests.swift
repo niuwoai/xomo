@@ -59,6 +59,30 @@ final class veilpicUITests: XCTestCase {
     }
 
     @MainActor
+    func testLayerStylePresetManagerSearchesAndFiltersRealInterface() throws {
+        let app = XCUIApplication()
+        app.launchArguments += [
+            "-AppleLanguages", "(en)",
+            "-AppleLocale", "en_US",
+            "-XomoUITestPresetManager", "YES"
+        ]
+        app.launch()
+
+        let search = app.textFields["image-editor-layer-style-preset-search"]
+        XCTAssertTrue(search.waitForExistence(timeout: 8))
+        search.click()
+        search.typeText("neon")
+        XCTAssertTrue(app.staticTexts["Neon Glow"].waitForExistence(timeout: 5))
+
+        let scope = app.descendants(matching: .any)
+            .matching(identifier: "image-editor-layer-style-preset-scope")
+            .firstMatch
+        XCTAssertTrue(scope.waitForExistence(timeout: 5))
+        scope.radioButtons["Custom"].click()
+        XCTAssertTrue(app.staticTexts["No matching style presets"].waitForExistence(timeout: 5))
+    }
+
+    @MainActor
     func testLaunchPerformance() throws {
         // This measures how long it takes to launch your application.
         measure(metrics: [XCTApplicationLaunchMetric()]) {

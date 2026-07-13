@@ -923,6 +923,13 @@
 "imageEditor.layerStylePreset.builtIn.goldBevel" = "Gold Bevel";
 "imageEditor.layerStylePreset.builtIn.neonGlow" = "Neon Glow";
 "imageEditor.layerStylePreset.builtIn.sticker" = "Sticker Border";
+"imageEditor.layerStylePreset.searchPlaceholder" = "Search style presets";
+"imageEditor.layerStylePreset.scopeLabel" = "Preset Source";
+"imageEditor.layerStylePreset.scope.all" = "All";
+"imageEditor.layerStylePreset.scope.builtIn" = "Built-in";
+"imageEditor.layerStylePreset.scope.custom" = "Custom";
+"imageEditor.layerStylePreset.noResults" = "No matching style presets";
+"imageEditor.layerStylePreset.showingCount" = "Showing %d / %d";
 "imageEditor.properties.strokeWidthValue" = "Stroke: %d px";
 "imageEditor.properties.strokePosition" = "Stroke Position";
 "imageEditor.strokePosition.outside" = "Outside";

@@ -1,0 +1,51 @@
+{
+  "version": "2.12.0-rc40",
+  "generated_at": "2026-07-14T06:55:41+08:00",
+  "status": "passed_with_ui_automation_infrastructure_note",
+  "app": {
+    "bundle_id": "im.some.xomo",
+    "minimum_macos": "13.0",
+    "architectures": [
+      "arm64",
+      "x86_64"
+    ],
+    "clean_debug_build_for_testing": "passed",
+    "clean_universal_release_build": "passed"
+  },
+  "tests": {
+    "app_unit": {
+      "passed": 744,
+      "failed": 0,
+      "total": 744,
+      "report": "../rc40-full/report.json"
+    },
+    "cli": {
+      "passed": 2,
+      "failed": 0,
+      "total": 2
+    },
+    "manual_equivalent_ui_smoke": {
+      "passed": 2,
+      "failed": 0,
+      "total": 2,
+      "scenarios": [
+        "图层样式预设搜索与自定义来源空结果",
+        "组件插入及组、文字、背景形状可编辑层级"
+      ]
+    },
+    "xctest_ui_automation": {
+      "status": "infrastructure_blocked_before_assertions",
+      "reason": "Timed out while enabling automation mode.",
+      "compiled": true,
+      "signed_with_apple_development": true
+    }
+  },
+  "cli_release": {
+    "version": "2.12.0-rc40",
+    "architectures": [
+      "arm64",
+      "x86_64"
+    ],
+    "status": "passed"
+  }
+}

@@ -29,9 +29,17 @@ struct XomoEditorWorkspaceView: View {
             .onAppear {
                 XomoAutomationRegistry.shared.register(viewModel)
                 XomoAutomationServer.shared.start()
+                presentPresetManagerForUITestingIfRequested()
             }
             .onDisappear {
                 XomoAutomationRegistry.shared.unregister(viewModel)
             }
+    }
+
+    private func presentPresetManagerForUITestingIfRequested() {
+        #if DEBUG
+        guard UserDefaults.standard.bool(forKey: "XomoUITestPresetManager") else { return }
+        viewModel.isLayerStylePresetManagerPresented = true
+        #endif
     }
 }

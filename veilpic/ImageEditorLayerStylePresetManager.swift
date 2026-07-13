@@ -276,6 +276,24 @@ struct ImageEditorLayerStylePresetManager: View {
     @Environment(\.dismiss) private var dismiss
     @State private var selectedPresetID: String?
     @State private var nameDraft = ""
+    @State private var searchText = ""
+    @State private var scope = ImageEditorLayerStylePresetScope.all
+
+    private var query: ImageEditorLayerStylePresetQuery {
+        ImageEditorLayerStylePresetQuery(searchText: searchText, scope: scope)
+    }
+
+    private var filteredPresets: [ImageEditorLayerStylePreset] {
+        query.filter(viewModel.availableLayerStylePresets)
+    }
+
+    private var filteredBuiltInPresets: [ImageEditorLayerStylePreset] {
+        filteredPresets.filter(\.isBuiltIn)
+    }
+
+    private var filteredCustomPresets: [ImageEditorLayerStylePreset] {
+        filteredPresets.filter { !$0.isBuiltIn }
+    }
 
     private var selectedPreset: ImageEditorLayerStylePreset? {
         guard let selectedPresetID else { return nil }
@@ -327,32 +345,89 @@ struct ImageEditorLayerStylePresetManager: View {
         .onAppear(perform: selectInitialPreset)
         .onChange(of: selectedPresetID) { _ in syncNameDraft() }
         .onChange(of: viewModel.customLayerStylePresets) { _ in repairSelection() }
+        .onChange(of: searchText) { _ in repairSelection() }
+        .onChange(of: scope) { _ in repairSelection() }
     }
 
     private var presetList: some View {
-        ScrollView {
-            LazyVStack(alignment: .leading, spacing: 5) {
-                presetSectionTitle("imageEditor.layerStylePreset.builtInSection")
-                ForEach(viewModel.builtInLayerStylePresets) { preset in
-                    presetRow(preset)
-                }
+        VStack(spacing: 8) {
+            HStack(spacing: 6) {
+                Image(systemName: "magnifyingglass")
+                    .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                TextField(
+                    L10n.text("imageEditor.layerStylePreset.searchPlaceholder"),
+                    text: $searchText
+                )
+                .textFieldStyle(.plain)
+                .accessibilityIdentifier("image-editor-layer-style-preset-search")
+            }
+            .padding(.horizontal, 9)
+            .frame(height: 28)
+            .background(Color.white.opacity(0.08))
+            .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
 
-                presetSectionTitle("imageEditor.layerStylePreset.customSection")
-                if viewModel.customLayerStylePresets.isEmpty {
-                    Text(L10n.text("imageEditor.layerStylePreset.empty"))
-                        .font(.system(size: 11))
-                        .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 6)
-                } else {
-                    ForEach(viewModel.customLayerStylePresets) { preset in
-                        presetRow(preset)
-                    }
+            Picker(L10n.text("imageEditor.layerStylePreset.scopeLabel"), selection: $scope) {
+                ForEach(ImageEditorLayerStylePresetScope.allCases) { option in
+                    Text(option.title).tag(option)
                 }
             }
-            .padding(10)
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .focusable(false)
+            .accessibilityIdentifier("image-editor-layer-style-preset-scope")
+
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: 5) {
+                    if filteredPresets.isEmpty {
+                        Text(L10n.text(
+                            scope == .custom
+                                && searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                                && viewModel.customLayerStylePresets.isEmpty
+                                ? "imageEditor.layerStylePreset.empty"
+                                : "imageEditor.layerStylePreset.noResults"
+                        ))
+                            .font(.system(size: 11))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(10)
+                    } else {
+                        if !filteredBuiltInPresets.isEmpty {
+                            presetSectionTitle("imageEditor.layerStylePreset.builtInSection")
+                            ForEach(filteredBuiltInPresets) { preset in
+                                presetRow(preset)
+                            }
+                        }
+                        if !filteredCustomPresets.isEmpty {
+                            presetSectionTitle("imageEditor.layerStylePreset.customSection")
+                            ForEach(filteredCustomPresets) { preset in
+                                presetRow(preset)
+                            }
+                        } else if scope != .builtIn,
+                                  searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                                  viewModel.customLayerStylePresets.isEmpty {
+                            presetSectionTitle("imageEditor.layerStylePreset.customSection")
+                            Text(L10n.text("imageEditor.layerStylePreset.empty"))
+                                .font(.system(size: 11))
+                                .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 6)
+                        }
+                    }
+                }
+                .padding(.horizontal, 2)
+            }
+
+            Text(L10n.format(
+                "imageEditor.layerStylePreset.showingCount",
+                filteredPresets.count,
+                viewModel.availableLayerStylePresets.count
+            ))
+            .font(.system(size: 10).monospacedDigit())
+            .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+            .frame(maxWidth: .infinity, alignment: .trailing)
         }
+        .padding(10)
         .background(Color.black.opacity(0.12))
     }
 
@@ -577,17 +652,18 @@ struct ImageEditorLayerStylePresetManager: View {
     }
 
     private func selectInitialPreset() {
-        selectedPresetID = viewModel.activeLayerStylePreset?.id
-            ?? viewModel.availableLayerStylePresets.first?.id
+        selectedPresetID = query.repairedSelectionID(
+            viewModel.activeLayerStylePreset?.id,
+            in: viewModel.availableLayerStylePresets
+        )
         syncNameDraft()
     }
 
     private func repairSelection() {
-        guard selectedPreset == nil else {
-            syncNameDraft()
-            return
-        }
-        selectedPresetID = viewModel.availableLayerStylePresets.first?.id
+        selectedPresetID = query.repairedSelectionID(
+            selectedPresetID,
+            in: viewModel.availableLayerStylePresets
+        )
         syncNameDraft()
     }
 

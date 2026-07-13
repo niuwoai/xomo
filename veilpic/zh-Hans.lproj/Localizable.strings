@@ -923,6 +923,13 @@
 "imageEditor.layerStylePreset.builtIn.goldBevel" = "金色浮雕";
 "imageEditor.layerStylePreset.builtIn.neonGlow" = "霓虹发光";
 "imageEditor.layerStylePreset.builtIn.sticker" = "贴纸白边";
+"imageEditor.layerStylePreset.searchPlaceholder" = "搜索样式预设";
+"imageEditor.layerStylePreset.scopeLabel" = "预设来源";
+"imageEditor.layerStylePreset.scope.all" = "全部";
+"imageEditor.layerStylePreset.scope.builtIn" = "内置";
+"imageEditor.layerStylePreset.scope.custom" = "自定义";
+"imageEditor.layerStylePreset.noResults" = "没有匹配的样式预设";
+"imageEditor.layerStylePreset.showingCount" = "显示 %d / %d";
 "imageEditor.properties.strokeWidthValue" = "描边：%d px";
 "imageEditor.properties.strokePosition" = "描边位置";
 "imageEditor.strokePosition.outside" = "外侧";
