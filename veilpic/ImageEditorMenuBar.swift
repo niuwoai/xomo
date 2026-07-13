@@ -673,25 +673,25 @@ extension ImageEditorView {
     private var layerOrderMenu: some View {
         Menu(L10n.text("imageEditor.menu.layer.order")) {
             Button(L10n.text("imageEditor.action.layerTop")) {
-                viewModel.moveSelectedLayerToTop()
+                viewModel.moveSelectedLayerToTop(inVisibleOrder: filteredVisibleLayerRowIDs)
             }
             .keyboardShortcut("]", modifiers: [.command, .shift])
-            .disabled(!viewModel.canMoveSelectedLayerToTop)
+            .disabled(!viewModel.canMoveSelectedLayerToTop(inVisibleOrder: filteredVisibleLayerRowIDs))
             Button(L10n.text("imageEditor.action.layerUp")) {
-                viewModel.moveSelectedLayerUp()
+                viewModel.moveSelectedLayerUp(inVisibleOrder: filteredVisibleLayerRowIDs)
             }
             .keyboardShortcut("]", modifiers: [.command])
-            .disabled(!viewModel.canMoveSelectedLayerUp)
+            .disabled(!viewModel.canMoveSelectedLayerUp(inVisibleOrder: filteredVisibleLayerRowIDs))
             Button(L10n.text("imageEditor.action.layerDown")) {
-                viewModel.moveSelectedLayerDown()
+                viewModel.moveSelectedLayerDown(inVisibleOrder: filteredVisibleLayerRowIDs)
             }
             .keyboardShortcut("[", modifiers: [.command])
-            .disabled(!viewModel.canMoveSelectedLayerDown)
+            .disabled(!viewModel.canMoveSelectedLayerDown(inVisibleOrder: filteredVisibleLayerRowIDs))
             Button(L10n.text("imageEditor.action.layerBottom")) {
-                viewModel.moveSelectedLayerToBottom()
+                viewModel.moveSelectedLayerToBottom(inVisibleOrder: filteredVisibleLayerRowIDs)
             }
             .keyboardShortcut("[", modifiers: [.command, .shift])
-            .disabled(!viewModel.canMoveSelectedLayerToBottom)
+            .disabled(!viewModel.canMoveSelectedLayerToBottom(inVisibleOrder: filteredVisibleLayerRowIDs))
         }
     }
 

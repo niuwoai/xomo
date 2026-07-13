@@ -35,7 +35,7 @@ enum XomoToolCatalog {
         ("xomo.layer.set_opacity", "Set selected layer opacity."),
         ("xomo.layer.set_blend_mode", "Set selected layer blend mode."),
         ("xomo.layer.nudge", "Move the selection or selected layers by a canvas delta."),
-        ("xomo.layer.order", "Move selected layers in the stack."),
+        ("xomo.layer.order", "Move selected layer subtrees in the current visible hierarchy order."),
         ("xomo.layer.group", "Group selected layers."),
         ("xomo.layer.ungroup", "Ungroup selected groups."),
         ("xomo.layer.merge_down", "Merge the selected layer down."),

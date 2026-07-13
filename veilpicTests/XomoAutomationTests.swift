@@ -438,6 +438,32 @@ struct XomoAutomationTests {
         #expect(viewModel.document.layers.allSatisfy { layer in layer.isGroupExpanded })
     }
 
+    @Test func registryReordersCollapsedGroupsAsVisibleSubtrees() {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        let bottom = ImageEditorLayer.blank(name: "Bottom", size: viewModel.document.canvasSize)
+        var group = ImageEditorLayer.group(name: "Collapsed", size: viewModel.document.canvasSize)
+        var child = ImageEditorLayer.blank(name: "Child", size: viewModel.document.canvasSize)
+        let top = ImageEditorLayer.blank(name: "Top", size: viewModel.document.canvasSize)
+        child.groupID = group.id
+        group.isGroupExpanded = false
+        viewModel.document.layers = [bottom, child, group, top]
+        viewModel.document.selectedLayerID = group.id
+        viewModel.document.selectedLayerIDs = [group.id]
+        registry.register(viewModel)
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.order",
+            arguments: ["direction": .string("down")]
+        ))
+
+        #expect(response.ok)
+        #expect(viewModel.visibleLayerRows.map(\.id) == [top.id, bottom.id, group.id])
+        #expect(viewModel.document.layers.first { $0.id == child.id }?.groupID == group.id)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerMove"))
+    }
+
     @Test func registryRunsDestinationPatchWithFeatherThroughSpecialPaintTool() {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

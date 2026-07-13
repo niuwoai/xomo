@@ -1156,10 +1156,14 @@ extension ImageEditorView {
             layerActionButton(systemImage: "folder.badge.plus", helpKey: "imageEditor.action.layerGroupNew") { viewModel.addLayerGroup() }
             layerActionButton(systemImage: "doc.on.doc", helpKey: "imageEditor.action.layerDuplicate") { viewModel.duplicateSelectedLayer() }
                 .disabled(!viewModel.canDuplicateSelectedLayer)
-            layerActionButton(systemImage: "arrow.up", helpKey: "imageEditor.action.layerUp") { viewModel.moveSelectedLayerUp() }
-                .disabled(!viewModel.canMoveSelectedLayerUp)
-            layerActionButton(systemImage: "arrow.down", helpKey: "imageEditor.action.layerDown") { viewModel.moveSelectedLayerDown() }
-                .disabled(!viewModel.canMoveSelectedLayerDown)
+            layerActionButton(systemImage: "arrow.up", helpKey: "imageEditor.action.layerUp") {
+                viewModel.moveSelectedLayerUp(inVisibleOrder: filteredVisibleLayerRowIDs)
+            }
+            .disabled(!viewModel.canMoveSelectedLayerUp(inVisibleOrder: filteredVisibleLayerRowIDs))
+            layerActionButton(systemImage: "arrow.down", helpKey: "imageEditor.action.layerDown") {
+                viewModel.moveSelectedLayerDown(inVisibleOrder: filteredVisibleLayerRowIDs)
+            }
+            .disabled(!viewModel.canMoveSelectedLayerDown(inVisibleOrder: filteredVisibleLayerRowIDs))
             layerActionButton(systemImage: "circle.dashed", helpKey: "imageEditor.action.layerMaskAdd") { viewModel.addLayerMask() }
                 .disabled(!viewModel.canAddLayerMask)
             layerActionButton(systemImage: "trash", helpKey: "imageEditor.action.layerDelete") { viewModel.deleteSelectedLayer() }
@@ -1274,14 +1278,22 @@ extension ImageEditorView {
                 .disabled(!viewModel.canShowSelectedLayers)
             layerActionButton(systemImage: "eye.slash", helpKey: "imageEditor.action.layerHideSelected") { viewModel.hideSelectedLayers() }
                 .disabled(!viewModel.canHideSelectedLayers)
-            layerActionButton(systemImage: "arrow.up.to.line", helpKey: "imageEditor.action.layerTop") { viewModel.moveSelectedLayerToTop() }
-                .disabled(!viewModel.canMoveSelectedLayerToTop)
-            layerActionButton(systemImage: "arrow.up", helpKey: "imageEditor.action.layerUp") { viewModel.moveSelectedLayerUp() }
-                .disabled(!viewModel.canMoveSelectedLayerUp)
-            layerActionButton(systemImage: "arrow.down", helpKey: "imageEditor.action.layerDown") { viewModel.moveSelectedLayerDown() }
-                .disabled(!viewModel.canMoveSelectedLayerDown)
-            layerActionButton(systemImage: "arrow.down.to.line", helpKey: "imageEditor.action.layerBottom") { viewModel.moveSelectedLayerToBottom() }
-                .disabled(!viewModel.canMoveSelectedLayerToBottom)
+            layerActionButton(systemImage: "arrow.up.to.line", helpKey: "imageEditor.action.layerTop") {
+                viewModel.moveSelectedLayerToTop(inVisibleOrder: filteredVisibleLayerRowIDs)
+            }
+            .disabled(!viewModel.canMoveSelectedLayerToTop(inVisibleOrder: filteredVisibleLayerRowIDs))
+            layerActionButton(systemImage: "arrow.up", helpKey: "imageEditor.action.layerUp") {
+                viewModel.moveSelectedLayerUp(inVisibleOrder: filteredVisibleLayerRowIDs)
+            }
+            .disabled(!viewModel.canMoveSelectedLayerUp(inVisibleOrder: filteredVisibleLayerRowIDs))
+            layerActionButton(systemImage: "arrow.down", helpKey: "imageEditor.action.layerDown") {
+                viewModel.moveSelectedLayerDown(inVisibleOrder: filteredVisibleLayerRowIDs)
+            }
+            .disabled(!viewModel.canMoveSelectedLayerDown(inVisibleOrder: filteredVisibleLayerRowIDs))
+            layerActionButton(systemImage: "arrow.down.to.line", helpKey: "imageEditor.action.layerBottom") {
+                viewModel.moveSelectedLayerToBottom(inVisibleOrder: filteredVisibleLayerRowIDs)
+            }
+            .disabled(!viewModel.canMoveSelectedLayerToBottom(inVisibleOrder: filteredVisibleLayerRowIDs))
             layerActionButton(systemImage: "square.stack.3d.down.right", helpKey: "imageEditor.action.layerMergeDown") { viewModel.mergeSelectedLayerDown() }
                 .disabled(!viewModel.canMergeSelectedLayerDown)
             layerActionButton(systemImage: "square.stack.3d.down.right.fill", helpKey: "imageEditor.action.layerMergeSelected") { viewModel.mergeSelectedLayers() }
@@ -1404,7 +1416,7 @@ extension ImageEditorView {
         }
     }
 
-    private var filteredVisibleLayerRows: [ImageEditorLayer] {
+    var filteredVisibleLayerRows: [ImageEditorLayer] {
         viewModel.visibleLayerRows(
             matching: layerSearchQuery,
             kindFilter: selectedLayerKindFilter,
@@ -1412,6 +1424,10 @@ extension ImageEditorView {
             stateFilter: selectedLayerStateFilter,
             attributeFilter: selectedLayerAttributeFilter
         )
+    }
+
+    var filteredVisibleLayerRowIDs: [UUID] {
+        filteredVisibleLayerRows.map(\.id)
     }
 
     private var layerSearchField: some View {
