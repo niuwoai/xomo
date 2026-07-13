@@ -1164,6 +1164,8 @@
 "imageEditor.history.layerScale" = "缩放图层";
 "imageEditor.history.layerResize" = "拖拽缩放图层";
 "imageEditor.history.textBoxResize" = "调整文本框";
+"imageEditor.history.textBoxFitContent" = "文本框适合内容";
+"imageEditor.history.textBoxExpandHeight" = "扩高文本框";
 "imageEditor.history.layerRotate" = "旋转图层";
 "imageEditor.history.layerFlipHorizontal" = "水平翻转图层";
 "imageEditor.history.layerFlipVertical" = "垂直翻转图层";
@@ -1708,6 +1710,8 @@
 "imageEditor.status.layerMoved" = "已移动当前图层";
 "imageEditor.status.layerResized" = "已缩放当前图层";
 "imageEditor.status.textBoxResized" = "已调整文本框，字号保持不变";
+"imageEditor.status.textBoxFitContent" = "已让 %d 个文本框适合内容";
+"imageEditor.status.textBoxExpandHeight" = "已扩高 %d 个溢出的文本框";
 "imageEditor.status.layerRotated" = "已旋转当前图层";
 "imageEditor.status.layerFlipHorizontal" = "已水平翻转当前图层";
 "imageEditor.status.layerFlipVertical" = "已垂直翻转当前图层";
@@ -1783,6 +1787,8 @@
 "imageEditor.action.layerTextNew" = "新建文字图层";
 "imageEditor.action.layerTextUpdate" = "更新文字图层";
 "imageEditor.action.textConvertToPoint" = "转换为点文字";
+"imageEditor.action.textBoxFitContent" = "文本框适合内容";
+"imageEditor.action.textBoxExpandHeight" = "扩高以显示全部";
 "imageEditor.action.textConvertToParagraph" = "转换为段落文字";
 "imageEditor.action.layerShapeUpdate" = "更新形状";
 "imageEditor.action.penFinishOpen" = "开放路径";

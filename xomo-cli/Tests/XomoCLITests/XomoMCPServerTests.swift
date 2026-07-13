@@ -24,12 +24,13 @@ struct XomoMCPServerTests {
         ]))
         let result = try #require(response["result"] as? [String: Any])
         let tools = try #require(result["tools"] as? [[String: Any]])
-        #expect(tools.count == 106)
+        #expect(tools.count == 107)
         #expect(tools.contains { $0["name"] as? String == "xomo.layer.list" })
         #expect(tools.contains { $0["name"] as? String == "xomo.channel.action" })
         #expect(tools.contains { $0["name"] as? String == "xomo.clipboard.action" })
         #expect(tools.contains { $0["name"] as? String == "xomo.path.action" })
         #expect(tools.contains { $0["name"] as? String == "xomo.layer_comp.action" })
         #expect(tools.contains { $0["name"] as? String == "xomo.text.convert" })
+        #expect(tools.contains { $0["name"] as? String == "xomo.text.fitBox" })
     }
 }

@@ -1847,6 +1847,15 @@ extension ImageEditorView {
             }
             .disabled(!viewModel.canConvertSelectedTextToParagraph)
             Divider()
+            Button(L10n.text("imageEditor.action.textBoxFitContent")) {
+                viewModel.fitSelectedTextBoxes(.fitContent)
+            }
+            .disabled(!viewModel.canFitSelectedTextBoxesToContent)
+            Button(L10n.text("imageEditor.action.textBoxExpandHeight")) {
+                viewModel.fitSelectedTextBoxes(.expandHeight)
+            }
+            .disabled(!viewModel.canExpandSelectedTextBoxes)
+            Divider()
             Button(L10n.text("imageEditor.action.layerTextUpdate")) {
                 viewModel.updateSelectedTextLayer()
             }

@@ -1164,6 +1164,8 @@
 "imageEditor.history.layerScale" = "レイヤーを拡大縮小";
 "imageEditor.history.layerResize" = "ドラッグでレイヤーを拡大縮小";
 "imageEditor.history.textBoxResize" = "テキスト枠を調整";
+"imageEditor.history.textBoxFitContent" = "テキスト枠を内容に合わせる";
+"imageEditor.history.textBoxExpandHeight" = "テキスト枠の高さを拡張";
 "imageEditor.history.layerRotate" = "レイヤーを回転";
 "imageEditor.history.layerFlipHorizontal" = "レイヤーを左右反転";
 "imageEditor.history.layerFlipVertical" = "レイヤーを上下反転";
@@ -1708,6 +1710,8 @@
 "imageEditor.status.layerMoved" = "選択中のレイヤーを移動しました";
 "imageEditor.status.layerResized" = "選択中のレイヤーを拡大縮小しました";
 "imageEditor.status.textBoxResized" = "文字サイズを変えずにテキスト枠を調整しました";
+"imageEditor.status.textBoxFitContent" = "%d 個のテキスト枠を内容に合わせました";
+"imageEditor.status.textBoxExpandHeight" = "%d 個のあふれたテキスト枠を拡張しました";
 "imageEditor.status.layerRotated" = "選択中のレイヤーを回転しました";
 "imageEditor.status.layerFlipHorizontal" = "選択中のレイヤーを左右反転しました";
 "imageEditor.status.layerFlipVertical" = "選択中のレイヤーを上下反転しました";
@@ -1783,6 +1787,8 @@
 "imageEditor.action.layerTextNew" = "文字レイヤーを作成";
 "imageEditor.action.layerTextUpdate" = "文字レイヤーを更新";
 "imageEditor.action.textConvertToPoint" = "ポイントテキストに変換";
+"imageEditor.action.textBoxFitContent" = "内容に合わせる";
+"imageEditor.action.textBoxExpandHeight" = "すべて表示するまで拡張";
 "imageEditor.action.textConvertToParagraph" = "段落テキストに変換";
 "imageEditor.action.layerShapeUpdate" = "シェイプを更新";
 "imageEditor.action.penFinishOpen" = "開いたパス";

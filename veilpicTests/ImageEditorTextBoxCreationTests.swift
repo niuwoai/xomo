@@ -244,6 +244,8 @@ struct ImageEditorTextBoxCreationTests {
         #expect(source.contains("canvasTextEditingFrame = frame"))
         #expect(source.contains("textBoxOverflowOverlay(in: geometry.size)"))
         #expect(source.contains("image-editor-text-box-overflow"))
+        #expect(source.contains("fitSelectedTextBoxes(.fitContent)"))
+        #expect(source.contains("fitSelectedTextBoxes(.expandHeight)"))
     }
 
     private func editor() -> ImageEditorViewModel {

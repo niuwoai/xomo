@@ -22,22 +22,22 @@ struct ImageEditorLayerPanelStyleTests {
         #expect(ImageEditorLayerPanelTab.allCases.count == 3)
     }
 
-    @Test func layerDockTitleUsesReadableLightText() {
+    @Test func layerDockTitleUsesWhiteText() {
         let color = ImageEditorDockDisclosureAppearance.foregroundColor.usingColorSpace(.deviceRGB)
 
         #expect(color != nil)
-        #expect((color?.redComponent ?? 0) > 0.85)
-        #expect((color?.greenComponent ?? 0) > 0.85)
-        #expect((color?.blueComponent ?? 0) > 0.85)
+        #expect((color?.redComponent ?? 0) > 0.99)
+        #expect((color?.greenComponent ?? 0) > 0.99)
+        #expect((color?.blueComponent ?? 0) > 0.99)
     }
 
-    @Test func layerPanelTitleUsesReadableLightText() {
+    @Test func layerPanelTitleUsesWhiteText() {
         let color = EditorPanelTitleAppearance.foregroundColor.usingColorSpace(.deviceRGB)
 
         #expect(color != nil)
-        #expect((color?.redComponent ?? 0) > 0.85)
-        #expect((color?.greenComponent ?? 0) > 0.85)
-        #expect((color?.blueComponent ?? 0) > 0.85)
+        #expect((color?.redComponent ?? 0) > 0.99)
+        #expect((color?.greenComponent ?? 0) > 0.99)
+        #expect((color?.blueComponent ?? 0) > 0.99)
     }
 
     @Test func dockDisclosureAppliesLightTextToEveryVisibleLabel() throws {

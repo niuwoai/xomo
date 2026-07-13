@@ -4150,6 +4150,21 @@ struct ImageEditorView: View {
                     .accessibilityIdentifier("image-editor-text-box-overflow")
                 }
                 HStack {
+                    Button(L10n.text("imageEditor.action.textBoxFitContent")) {
+                        viewModel.fitSelectedTextBoxes(.fitContent)
+                    }
+                    .buttonStyle(EditorTextButtonStyle())
+                    .focusable(false)
+                    .disabled(!viewModel.canFitSelectedTextBoxesToContent)
+
+                    Button(L10n.text("imageEditor.action.textBoxExpandHeight")) {
+                        viewModel.fitSelectedTextBoxes(.expandHeight)
+                    }
+                    .buttonStyle(EditorTextButtonStyle())
+                    .focusable(false)
+                    .disabled(!viewModel.canExpandSelectedTextBoxes)
+                }
+                HStack {
                     Button(L10n.text("imageEditor.action.textConvertToPoint")) {
                         viewModel.convertSelectedTextLayers(to: .point)
                     }
@@ -6282,7 +6297,7 @@ struct DisabledMaskSlash: View {
 }
 
 enum EditorPanelTitleAppearance {
-    static let foregroundColor = ImageEditorTheme.text
+    static let foregroundColor = NSColor.white
 }
 
 struct EditorPanel<Content: View>: View {
@@ -6317,7 +6332,7 @@ struct EditorPanel<Content: View>: View {
 }
 
 enum ImageEditorDockDisclosureAppearance {
-    static let foregroundColor = ImageEditorTheme.text
+    static let foregroundColor = NSColor.white
 }
 
 struct EditorDockDisclosure<Content: View>: View {

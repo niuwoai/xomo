@@ -1164,6 +1164,8 @@
 "imageEditor.history.layerScale" = "Scale Layer";
 "imageEditor.history.layerResize" = "Drag Resize Layer";
 "imageEditor.history.textBoxResize" = "Resize Text Box";
+"imageEditor.history.textBoxFitContent" = "Fit Text Box to Content";
+"imageEditor.history.textBoxExpandHeight" = "Expand Text Box Height";
 "imageEditor.history.layerRotate" = "Rotate Layer";
 "imageEditor.history.layerFlipHorizontal" = "Flip Layer Horizontal";
 "imageEditor.history.layerFlipVertical" = "Flip Layer Vertical";
@@ -1708,6 +1710,8 @@
 "imageEditor.status.layerMoved" = "Selected layer moved";
 "imageEditor.status.layerResized" = "Selected layer resized";
 "imageEditor.status.textBoxResized" = "Text box resized without scaling the type";
+"imageEditor.status.textBoxFitContent" = "Fitted %d text box(es) to their content";
+"imageEditor.status.textBoxExpandHeight" = "Expanded %d overflowing text box(es)";
 "imageEditor.status.layerRotated" = "Selected layer rotated";
 "imageEditor.status.layerFlipHorizontal" = "Selected layer flipped horizontally";
 "imageEditor.status.layerFlipVertical" = "Selected layer flipped vertically";
@@ -1783,6 +1787,8 @@
 "imageEditor.action.layerTextNew" = "New Text Layer";
 "imageEditor.action.layerTextUpdate" = "Update Text Layer";
 "imageEditor.action.textConvertToPoint" = "Convert to Point Text";
+"imageEditor.action.textBoxFitContent" = "Fit to Content";
+"imageEditor.action.textBoxExpandHeight" = "Expand to Show All";
 "imageEditor.action.textConvertToParagraph" = "Convert to Paragraph Text";
 "imageEditor.action.layerShapeUpdate" = "Update Shape";
 "imageEditor.action.penFinishOpen" = "Open Path";

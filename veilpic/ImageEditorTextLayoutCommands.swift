@@ -19,6 +19,11 @@ enum ImageEditorTextLayoutMode: String, CaseIterable, Identifiable {
     }
 }
 
+enum ImageEditorTextBoxFitMode: String, CaseIterable {
+    case fitContent
+    case expandHeight
+}
+
 extension ImageEditorTextContent {
     var layoutMode: ImageEditorTextLayoutMode {
         boxWidth > 0 ? .paragraph : .point
@@ -48,6 +53,14 @@ extension ImageEditorViewModel {
         canConvertSelectedText(to: .paragraph)
     }
 
+    var canFitSelectedTextBoxesToContent: Bool {
+        !textBoxFitLayerIndices(for: .fitContent).isEmpty
+    }
+
+    var canExpandSelectedTextBoxes: Bool {
+        !textBoxFitLayerIndices(for: .expandHeight).isEmpty
+    }
+
     func convertSelectedTextLayers(to layoutMode: ImageEditorTextLayoutMode) {
         let indices = convertibleSelectedTextLayerIndices(to: layoutMode)
         guard !indices.isEmpty else {
@@ -70,6 +83,30 @@ extension ImageEditorViewModel {
         statusText = L10n.format(statusKey(for: layoutMode), indices.count)
     }
 
+    func fitSelectedTextBoxes(_ mode: ImageEditorTextBoxFitMode) {
+        let indices = textBoxFitLayerIndices(for: mode)
+        guard !indices.isEmpty else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+
+        pushUndo()
+        for index in indices {
+            guard var content = document.layers[index].textContent else { continue }
+            content.boxHeight = min(
+                ImageEditorTextContent.maximumBoxDimension,
+                max(1, content.requiredParagraphHeight)
+            )
+            resizeTextLayer(at: index, for: content)
+        }
+        if let content = document.selectedLayer?.textContent {
+            textBoxWidth = Double(content.boxWidth)
+            textBoxHeight = Double(content.boxHeight)
+        }
+        appendHistory(L10n.text(historyKey(for: mode)))
+        statusText = L10n.format(statusKey(for: mode), indices.count)
+    }
+
     private func canConvertSelectedText(to layoutMode: ImageEditorTextLayoutMode) -> Bool {
         !convertibleSelectedTextLayerIndices(to: layoutMode).isEmpty
     }
@@ -81,6 +118,28 @@ extension ImageEditorViewModel {
                   let content = layer.textContent
             else { return false }
             return content.layoutMode != layoutMode && !document.isEffectivelyPixelsLocked(layer)
+        }
+    }
+
+    private func textBoxFitLayerIndices(for mode: ImageEditorTextBoxFitMode) -> [Int] {
+        document.layers.indices.filter { index in
+            let layer = document.layers[index]
+            guard document.selectedLayerIDs.contains(layer.id),
+                  let content = layer.textContent,
+                  content.layoutMode == .paragraph,
+                  content.boxHeight > 0,
+                  !document.isEffectivelyPixelsLocked(layer)
+            else { return false }
+            let requiredHeight = min(
+                ImageEditorTextContent.maximumBoxDimension,
+                max(1, content.requiredParagraphHeight)
+            )
+            switch mode {
+            case .fitContent:
+                return abs(requiredHeight - content.boxHeight) >= 0.5
+            case .expandHeight:
+                return requiredHeight > content.boxHeight + 0.5
+            }
         }
     }
 
@@ -104,5 +163,17 @@ extension ImageEditorViewModel {
         layoutMode == .paragraph
             ? "imageEditor.status.textConvertedToParagraph"
             : "imageEditor.status.textConvertedToPoint"
+    }
+
+    private func historyKey(for mode: ImageEditorTextBoxFitMode) -> String {
+        mode == .fitContent
+            ? "imageEditor.history.textBoxFitContent"
+            : "imageEditor.history.textBoxExpandHeight"
+    }
+
+    private func statusKey(for mode: ImageEditorTextBoxFitMode) -> String {
+        mode == .fitContent
+            ? "imageEditor.status.textBoxFitContent"
+            : "imageEditor.status.textBoxExpandHeight"
     }
 }
