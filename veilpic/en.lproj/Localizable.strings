@@ -1744,6 +1744,8 @@
 "imageEditor.status.layerGroupTargetMissing" = "No group above the selection can receive these layers";
 "imageEditor.status.layerNotInGroup" = "Selected layers are not inside a group";
 "imageEditor.status.layerReordered" = "Layer stack reordered";
+"imageEditor.status.layerGroupsExpanded" = "%d layer groups expanded";
+"imageEditor.status.layerGroupsCollapsed" = "%d layer groups collapsed";
 "imageEditor.action.layerNew" = "New Layer";
 "imageEditor.action.layerRename" = "Rename";
 "imageEditor.action.layerGroupNew" = "New Layer Group";
@@ -1762,6 +1764,10 @@
 "imageEditor.action.layerLabelNone" = "No color label";
 "imageEditor.action.layerGroupCollapse" = "Collapse layer group";
 "imageEditor.action.layerGroupExpand" = "Expand layer group";
+"imageEditor.action.layerGroupCollapseBranchHint" = "Collapse layer group; Option-click to collapse all nested groups";
+"imageEditor.action.layerGroupExpandBranchHint" = "Expand layer group; Option-click to expand all nested groups";
+"imageEditor.action.layerGroupsExpandSelected" = "Expand Selected Layer Groups";
+"imageEditor.action.layerGroupsCollapseSelected" = "Collapse Selected Layer Groups";
 "imageEditor.action.propertiesShowPanel" = "Show Properties Panel";
 "imageEditor.action.propertiesHidePanel" = "Hide Properties Panel";
 "imageEditor.action.propertiesShowPanelVisibility" = "Show Properties Panel";

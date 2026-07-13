@@ -945,6 +945,18 @@ final class ImageEditorViewModel: ObservableObject {
         selectedLayerIndices.contains { document.layers[$0].isVisible }
     }
 
+    var canExpandSelectedLayerGroups: Bool {
+        selectedLayerGroupBranchIDs().contains { groupID in
+            document.layers.first { $0.id == groupID }?.isGroupExpanded == false
+        }
+    }
+
+    var canCollapseSelectedLayerGroups: Bool {
+        selectedLayerGroupBranchIDs().contains { groupID in
+            document.layers.first { $0.id == groupID }?.isGroupExpanded == true
+        }
+    }
+
     var visibleLayerRows: [ImageEditorLayer] {
         document.layers.reversed().filter { layer in
             document.ancestorGroups(for: layer).allSatisfy(\.isGroupExpanded)
@@ -2993,19 +3005,35 @@ final class ImageEditorViewModel: ObservableObject {
         setSelectedLayersVisibility(false)
     }
 
-    func toggleLayerGroupExpansion(_ id: UUID) {
+    func toggleLayerGroupExpansion(_ id: UUID, recursively: Bool = false) {
         guard let index = document.layers.firstIndex(where: { $0.id == id }),
               document.layers[index].isGroup
         else { return }
-        document.layers[index].isGroupExpanded.toggle()
-        if !document.layers[index].isGroupExpanded {
-            let memberIDs = Set(groupDescendantIndices(for: id).map { document.layers[$0].id })
-            if !document.selectedLayerIDs.isDisjoint(with: memberIDs) {
-                document.selectedLayerID = id
-                document.selectedLayerIDs = [id]
-                isEditingLayerMask = false
-            }
+
+        let expanded = !document.layers[index].isGroupExpanded
+        let groupIDs: Set<UUID> = recursively ? layerGroupBranchIDs(rootedAt: id) : [id]
+        let changedCount = setLayerGroups(groupIDs, expanded: expanded)
+        guard changedCount > 0 else { return }
+
+        if !expanded {
+            normalizeLayerSelectionAfterGroupCollapse(fallbackGroupIDs: [id])
         }
+        if recursively {
+            statusText = L10n.format(
+                expanded
+                    ? "imageEditor.status.layerGroupsExpanded"
+                    : "imageEditor.status.layerGroupsCollapsed",
+                changedCount
+            )
+        }
+    }
+
+    func expandSelectedLayerGroups() {
+        setSelectedLayerGroupsExpanded(true)
+    }
+
+    func collapseSelectedLayerGroups() {
+        setSelectedLayerGroupsExpanded(false)
     }
 
     func toggleLayerLock(_ id: UUID, applyingToSelection: Bool = false) {
@@ -5611,6 +5639,76 @@ final class ImageEditorViewModel: ObservableObject {
             guard layer.isGroup, !document.isEffectivelyLocked(layer) else { return nil }
             return layer.id
         })
+    }
+
+    private func selectedLayerGroupBranchIDs() -> Set<UUID> {
+        selectedLayerIndices.reduce(into: Set<UUID>()) { result, index in
+            let layer = document.layers[index]
+            guard layer.isGroup else { return }
+            result.formUnion(layerGroupBranchIDs(rootedAt: layer.id))
+        }
+    }
+
+    private func layerGroupBranchIDs(rootedAt rootID: UUID) -> Set<UUID> {
+        var groupIDs: Set<UUID> = [rootID]
+        for descendantID in groupDescendantIDs(for: rootID) {
+            guard document.layers.contains(where: { $0.id == descendantID && $0.isGroup }) else { continue }
+            groupIDs.insert(descendantID)
+        }
+        return groupIDs
+    }
+
+    @discardableResult
+    private func setLayerGroups(_ groupIDs: Set<UUID>, expanded: Bool) -> Int {
+        let changedIndices = document.layers.indices.filter { index in
+            groupIDs.contains(document.layers[index].id)
+                && document.layers[index].isGroup
+                && document.layers[index].isGroupExpanded != expanded
+        }
+        for index in changedIndices {
+            document.layers[index].isGroupExpanded = expanded
+        }
+        return changedIndices.count
+    }
+
+    private func setSelectedLayerGroupsExpanded(_ expanded: Bool) {
+        let selectedGroupIDs = Set(selectedLayerIndices.compactMap { index in
+            let layer = document.layers[index]
+            return layer.isGroup ? layer.id : nil
+        })
+        let changedCount = setLayerGroups(selectedLayerGroupBranchIDs(), expanded: expanded)
+        guard changedCount > 0 else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+
+        if !expanded {
+            normalizeLayerSelectionAfterGroupCollapse(fallbackGroupIDs: selectedGroupIDs)
+        }
+        statusText = L10n.format(
+            expanded
+                ? "imageEditor.status.layerGroupsExpanded"
+                : "imageEditor.status.layerGroupsCollapsed",
+            changedCount
+        )
+    }
+
+    private func normalizeLayerSelectionAfterGroupCollapse(fallbackGroupIDs: Set<UUID>) {
+        let visibleIDs = Set(visibleLayerRows.map(\.id))
+        let hiddenSelectedIDs = document.selectedLayerIDs.subtracting(visibleIDs)
+        guard !hiddenSelectedIDs.isEmpty else { return }
+
+        var nextSelectedIDs = document.selectedLayerIDs.intersection(visibleIDs)
+        nextSelectedIDs.formUnion(fallbackGroupIDs.intersection(visibleIDs))
+        document.selectedLayerIDs = nextSelectedIDs
+        if let selectedLayerID = document.selectedLayerID,
+           nextSelectedIDs.contains(selectedLayerID) {
+            return
+        }
+
+        document.selectedLayerID = document.layers.reversed().first { nextSelectedIDs.contains($0.id) }?.id
+        isEditingLayerMask = false
+        syncControlsFromLayerSelection()
     }
 
     private func isBackgroundLayer(at index: Int) -> Bool {

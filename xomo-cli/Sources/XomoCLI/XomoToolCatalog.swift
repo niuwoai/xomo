@@ -49,7 +49,7 @@ enum XomoToolCatalog {
         ("xomo.layer.link", "Link, unlink, or select linked layers."),
         ("xomo.layer.smart_object", "Convert and manage embedded smart object layers."),
         ("xomo.layer.properties", "Set fill, Blend If, mask, clipping, locks, labels, and visibility."),
-        ("xomo.layer.action", "Run background conversion, group movement, clipping, and stamping commands."),
+        ("xomo.layer.action", "Run background conversion, recursive group expansion, group movement, clipping, and stamping commands."),
         ("xomo.layer_comp.list", "List saved layer composition states."),
         ("xomo.layer_comp.action", "Create and manage saved layer compositions."),
         ("xomo.selection.get", "Inspect the active pixel selection."),
