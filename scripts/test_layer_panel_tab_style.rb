@@ -9,7 +9,9 @@ source = File.read(source_path, encoding: "UTF-8")
 checks = {
   "uses_custom_tab_buttons" => source.include?("Button {") && source.include?("image-editor-layer-panel-tab-"),
   "does_not_use_system_segmented_picker" => !source.match?(/private var layerPanelTabs.*?pickerStyle\(\.segmented\)/m),
-  "uses_light_theme_foreground" => source.include?("static let foregroundColor = ImageEditorTheme.text"),
+  "uses_native_label_with_explicit_light_foreground" =>
+    source.include?("struct ImageEditorLayerPanelTabLabel: NSViewRepresentable") &&
+      source.include?("label.textColor = isSelected ? selectedForegroundColor : foregroundColor"),
   "keeps_tabs_unfocusable" => source.match?(/private var layerPanelTabs.*?\.focusable\(false\)/m)
 }
 

@@ -12,7 +12,38 @@ import UniformTypeIdentifiers
 private let imageEditorLayerRowDragStride: CGFloat = 66
 
 enum ImageEditorLayerPanelTabAppearance {
-    static let foregroundColor = ImageEditorTheme.text
+    static let selectedForegroundColor = NSColor.white
+    static let foregroundColor = NSColor(calibratedWhite: 0.84, alpha: 1)
+
+    static func configure(_ label: NSTextField, title: String, isSelected: Bool) {
+        label.stringValue = title
+        label.textColor = isSelected ? selectedForegroundColor : foregroundColor
+        label.font = .systemFont(ofSize: 11, weight: .semibold)
+        label.alignment = .center
+        label.backgroundColor = .clear
+        label.isBordered = false
+        label.isBezeled = false
+        label.isEditable = false
+        label.isSelectable = false
+        label.refusesFirstResponder = true
+        label.lineBreakMode = .byClipping
+        label.maximumNumberOfLines = 1
+    }
+}
+
+struct ImageEditorLayerPanelTabLabel: NSViewRepresentable {
+    let title: String
+    let isSelected: Bool
+
+    func makeNSView(context: Context) -> NSTextField {
+        let label = NSTextField(labelWithString: title)
+        ImageEditorLayerPanelTabAppearance.configure(label, title: title, isSelected: isSelected)
+        return label
+    }
+
+    func updateNSView(_ label: NSTextField, context: Context) {
+        ImageEditorLayerPanelTabAppearance.configure(label, title: title, isSelected: isSelected)
+    }
 }
 
 extension ImageEditorView {
@@ -90,9 +121,10 @@ extension ImageEditorView {
                 Button {
                     selectedLayerPanelTab = tab
                 } label: {
-                    Text(tab.title)
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundColor(Color(nsColor: ImageEditorLayerPanelTabAppearance.foregroundColor))
+                    ImageEditorLayerPanelTabLabel(
+                        title: tab.title,
+                        isSelected: selectedLayerPanelTab == tab
+                    )
                         .padding(.horizontal, 10)
                         .frame(height: 24)
                         .contentShape(Rectangle())
