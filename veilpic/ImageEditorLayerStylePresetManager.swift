@@ -47,6 +47,35 @@ struct ImageEditorLayerStylePresetImportResult: Equatable {
     let skippedCount: Int
 }
 
+enum ImageEditorLayerStylePresetImportOutcome: String, Equatable {
+    case importable
+    case duplicate
+    case capacity
+}
+
+struct ImageEditorLayerStylePresetImportItem: Identifiable, Equatable {
+    let id: Int
+    let title: String
+    let outcome: ImageEditorLayerStylePresetImportOutcome
+}
+
+struct ImageEditorLayerStylePresetImportPreview: Equatable {
+    let items: [ImageEditorLayerStylePresetImportItem]
+    let plannedPresets: [ImageEditorLayerStylePreset]
+
+    var totalCount: Int { items.count }
+    var importableCount: Int { plannedPresets.count }
+    var duplicateCount: Int { items.count { $0.outcome == .duplicate } }
+    var capacitySkippedCount: Int { items.count { $0.outcome == .capacity } }
+    var skippedCount: Int { duplicateCount + capacitySkippedCount }
+}
+
+struct ImageEditorLayerStylePresetImportRequest: Identifiable, Equatable {
+    let id = UUID()
+    let sourceURL: URL
+    let preview: ImageEditorLayerStylePresetImportPreview
+}
+
 @MainActor
 extension ImageEditorViewModel {
     static var layerStylePresetContentType: UTType {
@@ -131,6 +160,14 @@ extension ImageEditorViewModel {
     func importLayerStylePresetLibraryData(
         _ data: Data
     ) throws -> ImageEditorLayerStylePresetImportResult {
+        applyLayerStylePresetImportPreview(
+            try previewLayerStylePresetLibraryData(data)
+        )
+    }
+
+    func previewLayerStylePresetLibraryData(
+        _ data: Data
+    ) throws -> ImageEditorLayerStylePresetImportPreview {
         guard data.count <= ImageEditorLayerStylePresetLibrary.maximumFileSize else {
             throw ImageEditorLayerStylePresetLibraryError.fileTooLarge
         }
@@ -147,28 +184,67 @@ extension ImageEditorViewModel {
             throw ImageEditorLayerStylePresetLibraryError.emptyLibrary
         }
 
-        var importedCount = 0
-        var skippedCount = 0
-        for sourcePreset in library.presets {
-            guard customLayerStylePresets.count < ImageEditorLayerStylePresetPreferences.maximumPresetCount else {
-                skippedCount += 1
-                continue
-            }
+        var simulatedPresets = customLayerStylePresets
+        var items: [ImageEditorLayerStylePresetImportItem] = []
+        var plannedPresets: [ImageEditorLayerStylePreset] = []
+        for (index, sourcePreset) in library.presets.enumerated() {
             let normalized = sourcePreset.normalizedCustomPreset
-            let isDuplicate = customLayerStylePresets.contains {
+            let isDuplicate = simulatedPresets.contains {
                 $0.name == normalized.name && $0.style == normalized.style
             }
-            guard !isDuplicate else {
+            if isDuplicate {
+                items.append(ImageEditorLayerStylePresetImportItem(
+                    id: index,
+                    title: normalized.title,
+                    outcome: .duplicate
+                ))
+                continue
+            }
+            guard simulatedPresets.count < ImageEditorLayerStylePresetPreferences.maximumPresetCount else {
+                items.append(ImageEditorLayerStylePresetImportItem(
+                    id: index,
+                    title: normalized.title,
+                    outcome: .capacity
+                ))
+                continue
+            }
+            let plannedPreset = ImageEditorLayerStylePreset(
+                id: UUID().uuidString,
+                name: normalized.name,
+                style: normalized.style
+            )
+            simulatedPresets.append(plannedPreset)
+            plannedPresets.append(plannedPreset)
+            items.append(ImageEditorLayerStylePresetImportItem(
+                id: index,
+                title: normalized.title,
+                outcome: .importable
+            ))
+        }
+
+        return ImageEditorLayerStylePresetImportPreview(
+            items: items,
+            plannedPresets: plannedPresets
+        )
+    }
+
+    @discardableResult
+    func applyLayerStylePresetImportPreview(
+        _ preview: ImageEditorLayerStylePresetImportPreview
+    ) -> ImageEditorLayerStylePresetImportResult {
+        var importedCount = 0
+        var skippedCount = preview.skippedCount
+        for preset in preview.plannedPresets {
+            let isDuplicate = customLayerStylePresets.contains {
+                $0.name == preset.name && $0.style == preset.style
+            }
+            guard !isDuplicate,
+                  customLayerStylePresets.count < ImageEditorLayerStylePresetPreferences.maximumPresetCount
+            else {
                 skippedCount += 1
                 continue
             }
-            customLayerStylePresets.append(
-                ImageEditorLayerStylePreset(
-                    id: UUID().uuidString,
-                    name: normalized.name,
-                    style: normalized.style
-                )
-            )
+            customLayerStylePresets.append(preset)
             importedCount += 1
         }
         if importedCount > 0 {
@@ -196,15 +272,25 @@ extension ImageEditorViewModel {
 
     @discardableResult
     func importLayerStylePresetLibrary(from url: URL) throws -> ImageEditorLayerStylePresetImportResult {
+        applyLayerStylePresetImportPreview(
+            try previewLayerStylePresetLibrary(from: url)
+        )
+    }
+
+    func previewLayerStylePresetLibrary(
+        from url: URL
+    ) throws -> ImageEditorLayerStylePresetImportPreview {
         let values = try url.resourceValues(forKeys: [.fileSizeKey])
         if let fileSize = values.fileSize,
            fileSize > ImageEditorLayerStylePresetLibrary.maximumFileSize {
             throw ImageEditorLayerStylePresetLibraryError.fileTooLarge
         }
-        return try importLayerStylePresetLibraryData(Data(contentsOf: url))
+        return try previewLayerStylePresetLibraryData(Data(contentsOf: url))
     }
 
-    func chooseLayerStylePresetImportFile() {
+    func chooseLayerStylePresetImportFile(
+        onPreview: @escaping (ImageEditorLayerStylePresetImportRequest) -> Void
+    ) {
         let panel = NSOpenPanel()
         panel.allowedContentTypes = [Self.layerStylePresetContentType, .json]
         panel.allowsMultipleSelection = false
@@ -215,7 +301,11 @@ extension ImageEditorViewModel {
             Task { @MainActor in
                 guard let self, response == .OK, let url = panel.url else { return }
                 do {
-                    try self.importLayerStylePresetLibrary(from: url)
+                    let preview = try self.previewLayerStylePresetLibrary(from: url)
+                    onPreview(ImageEditorLayerStylePresetImportRequest(
+                        sourceURL: url,
+                        preview: preview
+                    ))
                 } catch {
                     self.statusText = self.layerStylePresetLibraryErrorStatus(error)
                 }
@@ -279,6 +369,7 @@ struct ImageEditorLayerStylePresetManager: View {
     @State private var searchText = ""
     @State private var scope = ImageEditorLayerStylePresetScope.all
     @State private var collection = ImageEditorLayerStylePresetCollection.all
+    @State private var pendingLayerStylePresetImport: ImageEditorLayerStylePresetImportRequest?
 
     private var query: ImageEditorLayerStylePresetQuery {
         ImageEditorLayerStylePresetQuery(
@@ -349,6 +440,11 @@ struct ImageEditorLayerStylePresetManager: View {
         .frame(width: 640, height: 450)
         .background(Color(nsColor: ImageEditorTheme.panel))
         .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+        .sheet(item: $pendingLayerStylePresetImport) { request in
+            ImageEditorLayerStylePresetImportPreviewSheet(request: request) {
+                viewModel.applyLayerStylePresetImportPreview(request.preview)
+            }
+        }
         .onAppear(perform: selectInitialPreset)
         .onChange(of: selectedPresetID) { _ in syncNameDraft() }
         .onChange(of: viewModel.customLayerStylePresets) { _ in repairSelection() }
@@ -672,7 +768,9 @@ struct ImageEditorLayerStylePresetManager: View {
             .disabled(!viewModel.canCreateLayerStylePreset)
 
             Button(L10n.text("imageEditor.action.layerStylePresetImport")) {
-                viewModel.chooseLayerStylePresetImportFile()
+                viewModel.chooseLayerStylePresetImportFile { request in
+                    pendingLayerStylePresetImport = request
+                }
             }
             .focusable(false)
 
@@ -767,5 +865,161 @@ struct ImageEditorLayerStylePresetManager: View {
     private func moveSelectedPreset(_ direction: ImageEditorLayerStylePresetMoveDirection) {
         guard let id = selectedPresetID else { return }
         viewModel.moveLayerStylePreset(id: id, direction: direction)
+    }
+}
+
+private struct ImageEditorLayerStylePresetImportPreviewSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    let request: ImageEditorLayerStylePresetImportRequest
+    let onImport: () -> Void
+
+    private var preview: ImageEditorLayerStylePresetImportPreview {
+        request.preview
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(spacing: 10) {
+                Image(systemName: "tray.and.arrow.down.fill")
+                    .font(.system(size: 24))
+                    .foregroundStyle(Color.accentColor)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(L10n.text("imageEditor.layerStylePreset.importPreview.title"))
+                        .font(.system(size: 16, weight: .bold))
+                    Text(request.sourceURL.lastPathComponent)
+                        .font(.system(size: 11))
+                        .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                        .lineLimit(1)
+                }
+            }
+
+            Text(L10n.text("imageEditor.layerStylePreset.importPreview.subtitle"))
+                .font(.system(size: 11))
+                .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+
+            HStack(spacing: 8) {
+                summaryMetric(
+                    titleKey: "imageEditor.layerStylePreset.importPreview.total",
+                    value: preview.totalCount,
+                    color: Color(nsColor: ImageEditorTheme.text)
+                )
+                summaryMetric(
+                    titleKey: "imageEditor.layerStylePreset.importPreview.importable",
+                    value: preview.importableCount,
+                    color: .green
+                )
+                summaryMetric(
+                    titleKey: "imageEditor.layerStylePreset.importPreview.duplicate",
+                    value: preview.duplicateCount,
+                    color: .orange
+                )
+                summaryMetric(
+                    titleKey: "imageEditor.layerStylePreset.importPreview.capacity",
+                    value: preview.capacitySkippedCount,
+                    color: .red
+                )
+            }
+
+            ScrollView {
+                LazyVStack(spacing: 5) {
+                    ForEach(preview.items) { item in
+                        HStack(spacing: 8) {
+                            Image(systemName: outcomeSymbol(item.outcome))
+                                .foregroundStyle(outcomeColor(item.outcome))
+                                .frame(width: 16)
+                            Text(item.title)
+                                .lineLimit(1)
+                            Spacer(minLength: 8)
+                            Text(L10n.text(outcomeTitleKey(item.outcome)))
+                                .font(.system(size: 10, weight: .semibold))
+                                .foregroundStyle(outcomeColor(item.outcome))
+                        }
+                        .font(.system(size: 11))
+                        .padding(.horizontal, 9)
+                        .frame(height: 30)
+                        .background(Color(nsColor: ImageEditorTheme.panelRaised).opacity(0.72))
+                        .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
+                    }
+                }
+                .padding(1)
+            }
+            .frame(maxHeight: 190)
+
+            Divider()
+            HStack {
+                Text(L10n.format(
+                    "imageEditor.layerStylePreset.importPreview.skippedSummary",
+                    preview.skippedCount
+                ))
+                .font(.system(size: 10))
+                .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                Spacer()
+                Button(L10n.text("imageEditor.action.cancel")) {
+                    dismiss()
+                }
+                .focusable(false)
+                Button(L10n.format(
+                    "imageEditor.action.layerStylePresetImportCount",
+                    preview.importableCount
+                )) {
+                    onImport()
+                    dismiss()
+                }
+                .keyboardShortcut(.defaultAction)
+                .focusable(false)
+                .disabled(preview.importableCount == 0)
+                .accessibilityIdentifier("image-editor-layer-style-preset-import-confirm")
+            }
+        }
+        .padding(16)
+        .frame(width: 520, height: 410)
+        .background(Color(nsColor: ImageEditorTheme.panel))
+        .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+        .accessibilityIdentifier("image-editor-layer-style-preset-import-preview")
+    }
+
+    private func summaryMetric(
+        titleKey: String,
+        value: Int,
+        color: Color
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text(L10n.text(titleKey))
+                .font(.system(size: 10))
+                .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+            Text("\(value)")
+                .font(.system(size: 17, weight: .bold).monospacedDigit())
+                .foregroundStyle(color)
+        }
+        .padding(8)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(nsColor: ImageEditorTheme.panelRaised))
+        .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+    }
+
+    private func outcomeTitleKey(
+        _ outcome: ImageEditorLayerStylePresetImportOutcome
+    ) -> String {
+        "imageEditor.layerStylePreset.importPreview.outcome.\(outcome.rawValue)"
+    }
+
+    private func outcomeSymbol(
+        _ outcome: ImageEditorLayerStylePresetImportOutcome
+    ) -> String {
+        switch outcome {
+        case .importable: return "checkmark.circle.fill"
+        case .duplicate: return "doc.on.doc.fill"
+        case .capacity: return "tray.full.fill"
+        }
+    }
+
+    private func outcomeColor(
+        _ outcome: ImageEditorLayerStylePresetImportOutcome
+    ) -> Color {
+        switch outcome {
+        case .importable: return .green
+        case .duplicate: return .orange
+        case .capacity: return .red
+        }
     }
 }

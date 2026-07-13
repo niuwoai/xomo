@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.12.0-rc42 - 2026-07-14
+
+### Added
+- `.xomostyles` 文件选择后新增导入预览确认页：显示文件名、总数、将导入、重复、容量不足和跳过总数，并逐项标记“可导入 / 已存在 / 容量已满”；用户确认前不会修改工作区预设或文档 History。
+- `xomo.layer.style` 新增只读 `presetImportPreview` 动作，返回 `total`、`importable`、`duplicates`、`capacitySkipped`、`skipped` 及逐项 `outcome`；既有 `presetImport` 继续作为明确执行写入的动作。
+
+### Changed
+- 导入预检与实际导入共用同一份计划模型；文件内重复项会与本机预设及前面已计划项一起判重，容量冲突单独统计，确认后使用预检生成的稳定顺序和新 ID 写入。
+
+### Tests
+- 图层样式预设、导入预检、管理器与真实 MCP 调用 25/25，三语资源 4/4、SwiftPM CLI 2/2 通过；核对 Debug App/CLI 版本为 `2.12.0-rc42`、Bundle ID 为 `im.some.xomo`、最低系统为 macOS 13.0，Debug App 为 arm64 架构。
+
 ## 2.12.0-rc41 - 2026-07-14
 
 ### Added

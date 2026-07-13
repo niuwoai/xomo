@@ -106,6 +106,65 @@ struct ImageEditorLayerStylePresetManagerTests {
         #expect(viewModel.customLayerStylePresets.last?.title == "Incoming 0")
     }
 
+    @Test func importPreviewClassifiesConflictsWithoutMutationAndAppliesExactPlan() throws {
+        let context = makeContext()
+        defer { context.defaults.removePersistentDomain(forName: context.suiteName) }
+        let viewModel = makeViewModel(defaults: context.defaults)
+        viewModel.customLayerStylePresets = (0..<98).map { index in
+            ImageEditorLayerStylePreset(
+                id: "local-\(index)",
+                name: "Local \(index)",
+                style: projectStyle(strokeWidth: CGFloat(index + 1))
+            )
+        }
+        let duplicate = viewModel.customLayerStylePresets[5]
+        let uniqueA = ImageEditorLayerStylePreset(
+            id: "incoming-a",
+            name: "Incoming A",
+            style: projectStyle(strokeWidth: 201)
+        )
+        let uniqueB = ImageEditorLayerStylePreset(
+            id: "incoming-b",
+            name: "Incoming B",
+            style: projectStyle(strokeWidth: 202)
+        )
+        let uniqueC = ImageEditorLayerStylePreset(
+            id: "incoming-c",
+            name: "Incoming C",
+            style: projectStyle(strokeWidth: 203)
+        )
+        let library = ImageEditorLayerStylePresetLibrary(
+            presets: [duplicate, uniqueA, uniqueA, uniqueB, uniqueC]
+        )
+        let originalPresets = viewModel.customLayerStylePresets
+        let historyCount = viewModel.document.history.count
+
+        let preview = try viewModel.previewLayerStylePresetLibraryData(
+            JSONEncoder().encode(library)
+        )
+
+        #expect(preview.totalCount == 5)
+        #expect(preview.importableCount == 2)
+        #expect(preview.duplicateCount == 2)
+        #expect(preview.capacitySkippedCount == 1)
+        #expect(preview.skippedCount == 3)
+        #expect(preview.items.map(\.outcome) == [
+            .duplicate,
+            .importable,
+            .duplicate,
+            .importable,
+            .capacity
+        ])
+        #expect(viewModel.customLayerStylePresets == originalPresets)
+        #expect(viewModel.document.history.count == historyCount)
+
+        let result = viewModel.applyLayerStylePresetImportPreview(preview)
+        #expect(result == ImageEditorLayerStylePresetImportResult(importedCount: 2, skippedCount: 3))
+        #expect(viewModel.customLayerStylePresets.count == 100)
+        #expect(viewModel.customLayerStylePresets.suffix(2).map(\.title) == ["Incoming A", "Incoming B"])
+        #expect(viewModel.document.history.count == historyCount)
+    }
+
     @Test func importRejectsUnsupportedOrOversizedLibrariesWithoutMutation() throws {
         let context = makeContext()
         defer { context.defaults.removePersistentDomain(forName: context.suiteName) }
@@ -152,12 +211,15 @@ struct ImageEditorLayerStylePresetManagerTests {
         #expect(managerSource.contains("viewModel.renameLayerStylePreset"))
         #expect(managerSource.contains("viewModel.moveLayerStylePreset"))
         #expect(managerSource.contains("viewModel.chooseLayerStylePresetImportFile"))
+        #expect(managerSource.contains("pendingLayerStylePresetImport"))
+        #expect(managerSource.contains("ImageEditorLayerStylePresetImportPreviewSheet"))
         #expect(managerSource.contains("viewModel.chooseLayerStylePresetExportFile"))
         #expect(viewSource.contains("ImageEditorLayerStylePresetManager(viewModel: viewModel)"))
         #expect(menuSource.contains("isLayerStylePresetManagerPresented = true"))
         #expect(automationSource.contains("presetRename"))
         #expect(automationSource.contains("presetMove"))
         #expect(automationSource.contains("presetImport"))
+        #expect(automationSource.contains("presetImportPreview"))
         #expect(automationSource.contains("presetExport"))
     }
 

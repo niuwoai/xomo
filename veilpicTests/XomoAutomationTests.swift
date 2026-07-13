@@ -811,6 +811,22 @@ struct XomoAutomationTests {
         viewModel.deleteLayerStylePreset(second)
         #expect(viewModel.customLayerStylePresets.isEmpty)
 
+        let previewResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style",
+            arguments: [
+                "action": .string("presetImportPreview"),
+                "path": .string(fileURL.path)
+            ]
+        ))
+        #expect(previewResponse.ok)
+        #expect(previewResponse.result?.objectValue?["total"] == .number(2))
+        #expect(previewResponse.result?.objectValue?["importable"] == .number(2))
+        #expect(previewResponse.result?.objectValue?["duplicates"] == .number(0))
+        #expect(previewResponse.result?.objectValue?["capacitySkipped"] == .number(0))
+        #expect(previewResponse.result?.objectValue?["items"]?.arrayValue?.count == 2)
+        #expect(viewModel.customLayerStylePresets.isEmpty)
+
         let importResponse = registry.execute(request(
             operation: "call",
             name: "xomo.layer.style",

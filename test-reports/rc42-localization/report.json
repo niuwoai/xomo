@@ -1,0 +1,49 @@
+{
+  "generated_at": "2026-07-14 07:46:21 +0800",
+  "total": 4,
+  "passed": 4,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "LocalizationResourceTests",
+      "method": "appShipsOnlyChineseEnglishAndJapaneseLocalizations",
+      "identifier": "veilpicTests/LocalizationResourceTests/appShipsOnlyChineseEnglishAndJapaneseLocalizations",
+      "file": "LocalizationResourceTests.swift",
+      "passed": true,
+      "duration": 2.869,
+      "issues": [],
+      "log": "LocalizationResourceTests.appShipsOnlyChineseEnglishAndJapaneseLocalizations.log"
+    },
+    {
+      "suite": "LocalizationResourceTests",
+      "method": "filterApplyActionIsLocalizedInEverySupportedLanguage",
+      "identifier": "veilpicTests/LocalizationResourceTests/filterApplyActionIsLocalizedInEverySupportedLanguage",
+      "file": "LocalizationResourceTests.swift",
+      "passed": true,
+      "duration": 2.864,
+      "issues": [],
+      "log": "LocalizationResourceTests.filterApplyActionIsLocalizedInEverySupportedLanguage.log"
+    },
+    {
+      "suite": "LocalizationResourceTests",
+      "method": "supportedLocalizationDirectoriesShipOnlyTrackedStringTables",
+      "identifier": "veilpicTests/LocalizationResourceTests/supportedLocalizationDirectoriesShipOnlyTrackedStringTables",
+      "file": "LocalizationResourceTests.swift",
+      "passed": true,
+      "duration": 3.039,
+      "issues": [],
+      "log": "LocalizationResourceTests.supportedLocalizationDirectoriesShipOnlyTrackedStringTables.log"
+    },
+    {
+      "suite": "LocalizationResourceTests",
+      "method": "supportedLocalizationTablesKeepMatchingKeys",
+      "identifier": "veilpicTests/LocalizationResourceTests/supportedLocalizationTablesKeepMatchingKeys",
+      "file": "LocalizationResourceTests.swift",
+      "passed": true,
+      "duration": 2.972,
+      "issues": [],
+      "log": "LocalizationResourceTests.supportedLocalizationTablesKeepMatchingKeys.log"
+    }
+  ]
+}
