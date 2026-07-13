@@ -473,8 +473,14 @@ extension ImageEditorViewModel {
     }
 
     func transformFrame(for indices: [Int]) -> CGRect? {
-        indices
-            .compactMap { transformContentFrame(forLayerAt: $0) }
+        let shouldUseLayerFrameFallback = document.selectedLayerIDs.contains { selectedID in
+            document.layers.contains { $0.id == selectedID && $0.isGroup }
+        }
+        return indices
+            .compactMap { index in
+                transformContentFrame(forLayerAt: index)
+                    ?? (shouldUseLayerFrameFallback ? document.layers[index].frame.standardized : nil)
+            }
             .reduce(nil) { bounds, frame in
                 bounds?.union(frame) ?? frame
             }

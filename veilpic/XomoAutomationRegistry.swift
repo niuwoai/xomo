@@ -1898,8 +1898,8 @@ private extension XomoAutomationRegistry {
         tool("xomo.layer.order", "Move selected layer subtrees in the current visible hierarchy order.", [
             "direction": XomoAutomationSchema.string(description: "Visible stack direction", values: ["top", "up", "down", "bottom"])
         ], required: ["direction"]),
-        tool("xomo.layer.group", "Group selected layers."),
-        tool("xomo.layer.ungroup", "Ungroup selected groups."),
+        tool("xomo.layer.group", "Group selected editable sibling subtrees while leaving locked items in place."),
+        tool("xomo.layer.ungroup", "Ungroup selected editable groups while preserving unaffected selection."),
         tool("xomo.layer.merge_down", "Merge the selected layer down."),
         tool("xomo.layer.merge_visible", "Merge all visible layers."),
         tool("xomo.layer.stamp_visible", "Create a stamped layer from visible content."),

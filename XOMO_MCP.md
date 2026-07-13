@@ -1,6 +1,6 @@
 # Xomo MCP 与 CLI
 
-> 当前版本：v2.12.0-rc22
+> 当前版本：v2.12.0-rc23
 
 ## 架构
 
@@ -78,9 +78,11 @@ MCP 服务器实现 `initialize`、`ping`、`tools/list` 和 `tools/call`。当 
 - 历史状态、撤销、重做、截断、恢复与命名快照
 - 图像尺寸、画布尺寸、裁切、缩放、参考线与网格
 - 22 类可编辑 UI 组件与七套主题
+- PNG、JPEG、WebP、PDF、SVG、PSD 渲染导出
 
 `xomo.layer.order` 的 `direction` 接受 `top`、`up`、`down`、`bottom`。自动化没有图层面板的临时搜索上下文，因此按当前展开/折叠状态下的完整可见层级排序；折叠组会作为完整子树移动，整次调用只产生一个 History/Undo 步骤。
-- PNG、JPEG、WebP、PDF、SVG、PSD 渲染导出
+
+`xomo.layer.group` 会把所选可编辑项目整理为连续图层子树：锁定项留在原位置并保持选中，显式选中的组内后代会提升为新组的直接成员，未选中的后代分支保持原结构。`xomo.layer.ungroup` 可一次处理嵌套所选组，跳过锁定组并保留无关选择；两者均只产生一个 History/Undo 步骤。
 
 ## 边界
 
