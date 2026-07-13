@@ -707,6 +707,7 @@
 "imageEditor.properties.textLineSpacingValue" = "行間：%d px";
 "imageEditor.properties.textBoxWidthValue" = "テキスト枠：%d px";
 "imageEditor.properties.textBoxHeightValue" = "テキスト枠の高さ：%d px";
+"imageEditor.properties.textBoxOverflow" = "テキストがテキスト枠からあふれています";
 "imageEditor.properties.textLeftIndentValue" = "左インデント：%d px";
 "imageEditor.properties.textRightIndentValue" = "右インデント：%d px";
 "imageEditor.properties.textFirstLineIndentValue" = "最初の行のインデント：%d px";
@@ -1162,6 +1163,7 @@
 "imageEditor.history.layerDistributeSpacing" = "レイヤー間隔を分布";
 "imageEditor.history.layerScale" = "レイヤーを拡大縮小";
 "imageEditor.history.layerResize" = "ドラッグでレイヤーを拡大縮小";
+"imageEditor.history.textBoxResize" = "テキスト枠を調整";
 "imageEditor.history.layerRotate" = "レイヤーを回転";
 "imageEditor.history.layerFlipHorizontal" = "レイヤーを左右反転";
 "imageEditor.history.layerFlipVertical" = "レイヤーを上下反転";
@@ -1705,6 +1707,7 @@
 "imageEditor.status.editingMask" = "レイヤーマスクを編集中：ブラシで隠し、消しゴムで戻します";
 "imageEditor.status.layerMoved" = "選択中のレイヤーを移動しました";
 "imageEditor.status.layerResized" = "選択中のレイヤーを拡大縮小しました";
+"imageEditor.status.textBoxResized" = "文字サイズを変えずにテキスト枠を調整しました";
 "imageEditor.status.layerRotated" = "選択中のレイヤーを回転しました";
 "imageEditor.status.layerFlipHorizontal" = "選択中のレイヤーを左右反転しました";
 "imageEditor.status.layerFlipVertical" = "選択中のレイヤーを上下反転しました";

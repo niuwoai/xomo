@@ -31,6 +31,15 @@ extension ImageEditorTextContent {
 }
 
 extension ImageEditorViewModel {
+    var selectedTextBoxHasOverflow: Bool {
+        guard document.selectedLayerIDs.count == 1,
+              let layer = document.selectedLayer,
+              let content = layer.textContent,
+              content.layoutMode == .paragraph
+        else { return false }
+        return content.hasOverflow
+    }
+
     var canConvertSelectedTextToPoint: Bool {
         canConvertSelectedText(to: .point)
     }

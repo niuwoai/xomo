@@ -1115,6 +1115,7 @@ struct ImageEditorView: View {
                     colorSamplerOverlay(in: geometry.size)
                     sampledBrushSourceOverlay(in: geometry.size)
                     layerTransformOverlay(in: geometry.size)
+                    textBoxOverflowOverlay(in: geometry.size)
                     dragOverlay(in: geometry.size)
                     rulerOverlay(in: geometry.size)
                     canvasTextEditingOverlay(in: geometry.size)
@@ -3425,6 +3426,30 @@ struct ImageEditorView: View {
         }
     }
 
+    @ViewBuilder
+    private func textBoxOverflowOverlay(in size: CGSize) -> some View {
+        if viewModel.selectedTool == .move,
+           viewModel.document.areExtrasVisible,
+           viewModel.document.areTransformControlsVisible,
+           viewModel.selectedTextBoxHasOverflow,
+           let layerFrame = viewModel.selectedLayerTransformFrame {
+            let rect = viewRect(from: layerFrame, in: size)
+            ZStack {
+                RoundedRectangle(cornerRadius: 1.5, style: .continuous)
+                    .fill(Color(nsColor: ImageEditorTheme.panel).opacity(0.96))
+                RoundedRectangle(cornerRadius: 1.5, style: .continuous)
+                    .stroke(Color.orange.opacity(0.92), lineWidth: 1.2)
+                Image(systemName: "plus")
+                    .font(.system(size: 7, weight: .bold))
+                    .foregroundStyle(Color.orange.opacity(0.96))
+            }
+            .frame(width: 11, height: 11)
+            .position(x: rect.maxX - 8, y: rect.maxY - 8)
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+        }
+    }
+
     private func xomoObjectSelectionOutline(
         kind: XomoComponentKind,
         rect: CGRect,
@@ -4115,6 +4140,15 @@ struct ImageEditorView: View {
                     in: 0...Double(ImageEditorTextContent.maximumBoxDimension),
                     step: 8
                 )
+                if viewModel.selectedTextBoxHasOverflow {
+                    Label(
+                        L10n.text("imageEditor.properties.textBoxOverflow"),
+                        systemImage: "exclamationmark.triangle.fill"
+                    )
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(Color.orange.opacity(0.94))
+                    .accessibilityIdentifier("image-editor-text-box-overflow")
+                }
                 HStack {
                     Button(L10n.text("imageEditor.action.textConvertToPoint")) {
                         viewModel.convertSelectedTextLayers(to: .point)

@@ -651,6 +651,8 @@ final class XomoAutomationRegistry {
             "lineSpacing": .number(content.lineSpacing),
             "boxWidth": .number(content.boxWidth),
             "boxHeight": .number(content.boxHeight),
+            "requiredBoxHeight": .number(content.requiredParagraphHeight),
+            "hasOverflow": .bool(content.hasOverflow),
             "layoutMode": .string(content.layoutMode.rawValue),
             "alignment": .string(content.alignment.rawValue),
             "leftIndent": .number(content.leftIndent),

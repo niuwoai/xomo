@@ -2159,16 +2159,25 @@ struct ImageEditorTextContent {
         NSAttributedString(string: text, attributes: attributes)
     }
 
+    var requiredParagraphHeight: CGFloat {
+        guard boxWidth > 0 else { return 0 }
+        let bounding = attributedString.boundingRect(
+            with: CGSize(width: max(1, boxWidth), height: CGFloat.greatestFiniteMagnitude),
+            options: [.usesLineFragmentOrigin, .usesFontLeading]
+        )
+        return max(1, ceil(bounding.height))
+    }
+
+    var hasOverflow: Bool {
+        boxWidth > 0 && boxHeight > 0 && requiredParagraphHeight > boxHeight + 0.5
+    }
+
     func layerSize() -> CGSize {
         let measured: CGSize
         if boxWidth > 0 {
-            let bounding = attributedString.boundingRect(
-                with: CGSize(width: max(1, boxWidth), height: CGFloat.greatestFiniteMagnitude),
-                options: [.usesLineFragmentOrigin, .usesFontLeading]
-            )
             measured = CGSize(
-                width: max(boxWidth, ceil(bounding.width)),
-                height: boxHeight > 0 ? boxHeight : ceil(bounding.height)
+                width: boxWidth,
+                height: boxHeight > 0 ? boxHeight : requiredParagraphHeight
             )
         } else {
             let lines = text.components(separatedBy: .newlines)
