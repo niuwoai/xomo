@@ -1076,10 +1076,9 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     var canStampSelectedLayers: Bool {
-        let sourceIDs = selectedStampLayerIDs
-        guard !sourceIDs.isEmpty else { return false }
+        guard let plan = selectedStampPlan else { return false }
         return document.layers.contains { layer in
-            sourceIDs.contains(layer.id) && document.shouldComposite(layer)
+            plan.sourceLayerIDs.contains(layer.id) && document.shouldComposite(layer)
         }
     }
 
@@ -3369,8 +3368,14 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func stampVisibleLayers() {
-        guard canStampVisibleLayers else { return }
-        pushUndo()
+        let sourceLayerIDs = ImageEditorLayerCompositeHierarchy.visibleSourceIDs(
+            in: document.layers,
+            isEffectivelyVisible: { document.isEffectivelyVisible($0) }
+        )
+        guard let plan = ImageEditorLayerCompositeHierarchy.stampVisiblePlan(
+            layers: document.layers,
+            sourceLayerIDs: sourceLayerIDs
+        ) else { return }
         var layer = ImageEditorLayer.blank(
             name: L10n.text("imageEditor.layer.visibleStampName"),
             size: document.canvasSize
@@ -3382,7 +3387,8 @@ final class ImageEditorViewModel: ObservableObject {
         layer.blendMode = .normal
         layer.groupID = nil
         layer.isClippingMask = false
-        document.layers.append(layer)
+        pushUndo()
+        document.layers.insert(layer, at: plan.insertionIndex)
         document.selectedLayerID = layer.id
         document.selectedLayerIDs = [layer.id]
         isEditingLayerMask = false
@@ -3390,27 +3396,32 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func stampSelectedLayers() {
-        let sourceIDs = selectedStampLayerIDs
-        guard canStampSelectedLayers else {
+        guard let plan = selectedStampPlan,
+              document.layers.contains(where: { layer in
+                plan.sourceLayerIDs.contains(layer.id) && document.shouldComposite(layer)
+              })
+        else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
 
-        pushUndo()
         var layer = ImageEditorLayer.blank(
             name: L10n.text("imageEditor.layer.selectedStampName"),
             size: document.canvasSize
         )
-        let insertionContext = selectedStampInsertionContext()
-        layer.image = document.compositedImage(includingOnly: sourceIDs).normalizedBitmapImage()
+        layer.image = document.compositedImage(
+            includingOnly: plan.sourceLayerIDs,
+            within: plan.parentGroupID
+        ).normalizedBitmapImage()
         layer.frame = CGRect(origin: .zero, size: document.canvasSize)
         layer.opacity = 1
         layer.fillOpacity = 1
         layer.blendMode = .normal
-        layer.groupID = insertionContext.parentGroupID
+        layer.groupID = plan.parentGroupID
         layer.isClippingMask = false
-        document.layers.insert(layer, at: insertionContext.index)
-        expandGroupIfNeeded(insertionContext.parentGroupID)
+        pushUndo()
+        document.layers.insert(layer, at: plan.insertionIndex)
+        expandGroupIfNeeded(plan.parentGroupID)
         document.selectedLayerID = layer.id
         document.selectedLayerIDs = [layer.id]
         isEditingLayerMask = false
@@ -5596,29 +5607,11 @@ final class ImageEditorViewModel: ObservableObject {
         )
     }
 
-    private var selectedStampLayerIDs: Set<UUID> {
-        var sourceIDs = document.selectedLayerIDs
-        let selectedGroupIDs = selectedLayerIndices.compactMap { index in
-            document.layers[index].isGroup ? document.layers[index].id : nil
-        }
-
-        for groupID in selectedGroupIDs {
-            sourceIDs.formUnion(groupDescendantIDs(for: groupID))
-        }
-
-        return sourceIDs
-    }
-
-    private func selectedStampInsertionContext() -> NewLayerInsertionContext {
-        let selectedRoots = document.layers.enumerated().filter { _, layer in
-            document.selectedLayerIDs.contains(layer.id)
-        }
-        let parentIDs = Set(selectedRoots.map { _, layer in layer.groupID })
-        let parentGroupID = parentIDs.count == 1 ? parentIDs.first ?? nil : nil
-        let insertionIndex = selectedRoots.map(\.offset).max().map { min($0 + 1, document.layers.count) }
-            ?? document.layers.count
-
-        return NewLayerInsertionContext(parentGroupID: parentGroupID, index: insertionIndex)
+    private var selectedStampPlan: ImageEditorLayerStampPlan? {
+        ImageEditorLayerCompositeHierarchy.stampSelectedPlan(
+            layers: document.layers,
+            selectedLayerIDs: document.selectedLayerIDs
+        )
     }
 
     private func expandGroupIfNeeded(_ groupID: UUID?) {

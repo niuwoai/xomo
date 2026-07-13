@@ -143,6 +143,10 @@ final class XomoAutomationRegistry {
             viewModel.mergeVisibleLayers()
         case "xomo.layer.stamp_visible":
             viewModel.stampVisibleLayers()
+        case "xomo.layer.stamp_selected":
+            viewModel.stampSelectedLayers()
+        case "xomo.layer.flatten":
+            viewModel.flattenImage()
         case "xomo.layer.transform":
             try layerTransform(arguments, viewModel: viewModel)
         case "xomo.layer.align":
@@ -1906,6 +1910,8 @@ private extension XomoAutomationRegistry {
         tool("xomo.layer.merge_selected", "Merge editable selected sibling subtrees while preserving locked selections."),
         tool("xomo.layer.merge_visible", "Merge all visible layers."),
         tool("xomo.layer.stamp_visible", "Create a stamped layer from visible content."),
+        tool("xomo.layer.stamp_selected", "Create a stamped layer from selected layer subtrees."),
+        tool("xomo.layer.flatten", "Flatten visible content onto an opaque locked background and discard hidden layers."),
         tool("xomo.layer.transform", "Scale, rotate, flip, fit, trim, or rasterize selected layers.", [
             "action": XomoAutomationSchema.string(description: "Transform action", values: ["scale", "rotate", "rotateLeft90", "rotateRight90", "rotate180", "flipHorizontal", "flipVertical", "fitCanvas", "fillCanvas", "fitSelection", "fillSelection", "trimTransparent", "rasterize"]),
             "value": XomoAutomationSchema.number(description: "Scale factor or rotation degrees")
