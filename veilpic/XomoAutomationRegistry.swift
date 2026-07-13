@@ -1035,6 +1035,16 @@ final class XomoAutomationRegistry {
             else {
                 throw XomoAutomationCallError.invalidArgument("Unknown preset or move direction")
             }
+        case "presetImportPreview":
+            let path = try requiredString("path", in: arguments)
+            do {
+                let preview = try viewModel.previewLayerStylePresetLibrary(
+                    from: URL(fileURLWithPath: path)
+                )
+                return layerStylePresetImportPreviewResult(preview)
+            } catch {
+                throw XomoAutomationCallError.invalidArgument("Layer style preset preview failed: \(error.localizedDescription)")
+            }
         case "presetImport":
             let path = try requiredString("path", in: arguments)
             do {
@@ -1080,6 +1090,25 @@ final class XomoAutomationRegistry {
                 "effects": .array(layerStyleEffectNames(style).map(XomoJSONValue.string))
             ])
         })
+    }
+
+    private func layerStylePresetImportPreviewResult(
+        _ preview: ImageEditorLayerStylePresetImportPreview
+    ) -> XomoJSONValue {
+        .object([
+            "total": .number(Double(preview.totalCount)),
+            "importable": .number(Double(preview.importableCount)),
+            "duplicates": .number(Double(preview.duplicateCount)),
+            "capacitySkipped": .number(Double(preview.capacitySkippedCount)),
+            "skipped": .number(Double(preview.skippedCount)),
+            "items": .array(preview.items.map { item in
+                .object([
+                    "index": .number(Double(item.id)),
+                    "title": .string(item.title),
+                    "outcome": .string(item.outcome.rawValue)
+                ])
+            })
+        ])
     }
 
     private func layerStyleEffectNames(_ style: ImageEditorLayerStyle) -> [String] {
@@ -2075,13 +2104,13 @@ private extension XomoAutomationRegistry {
             "mode": XomoAutomationSchema.string(description: "Alignment or distribution mode", values: ["left", "horizontalCenter", "right", "top", "verticalCenter", "bottom", "horizontal", "vertical"]),
             "target": XomoAutomationSchema.string(description: "Alignment target", values: ["selectionBounds", "canvas", "pixelSelection"])
         ], required: ["action", "mode"]),
-        tool("xomo.layer.style", "Copy, paste, clear, hide, show, browse built-in styles, or manage portable persisted complete layer style presets.", [
-            "action": XomoAutomationSchema.string(description: "Layer style action", values: ["copy", "paste", "clear", "hideSelected", "showSelected", "hideAll", "showAll", "presetList", "presetCatalog", "presetFavorites", "presetRecent", "presetCreate", "presetApply", "presetDuplicate", "presetFavorite", "presetDelete", "presetRename", "presetMove", "presetImport", "presetExport"]),
+        tool("xomo.layer.style", "Copy, paste, clear, hide, show, browse built-in styles, or preview, import, and manage portable persisted complete layer style presets.", [
+            "action": XomoAutomationSchema.string(description: "Layer style action", values: ["copy", "paste", "clear", "hideSelected", "showSelected", "hideAll", "showAll", "presetList", "presetCatalog", "presetFavorites", "presetRecent", "presetCreate", "presetApply", "presetDuplicate", "presetFavorite", "presetDelete", "presetRename", "presetMove", "presetImportPreview", "presetImport", "presetExport"]),
             "id": XomoAutomationSchema.string(description: "Layer style preset ID for apply, duplicate, favorite, delete, rename, move, or selected export"),
             "favorite": XomoAutomationSchema.boolean(description: "Whether presetFavorite should add or remove the preset from favorites"),
             "name": XomoAutomationSchema.string(description: "Custom preset name when creating or renaming"),
             "direction": XomoAutomationSchema.string(description: "Preset ordering direction", values: ImageEditorLayerStylePresetMoveDirection.allCases.map(\.rawValue)),
-            "path": XomoAutomationSchema.string(description: "Local .xomostyles path for preset import or export")
+            "path": XomoAutomationSchema.string(description: "Local .xomostyles path for preset import preview, import, or export")
         ], required: ["action"]),
         tool("xomo.layer.style_settings", "Set effect scale, stroke, shadow, glow, overlay, satin, bevel, and global-light properties.", [
             "property": XomoAutomationSchema.string(description: "Layer style property", values: ["effectScale", "strokeWidth", "strokeOpacity", "strokeColor", "shadowOpacity", "shadowColor", "shadowBlur", "shadowSpread", "shadowNoise", "shadowDistance", "shadowAngle", "globalLightAngle", "innerShadowOpacity", "innerShadowBlur", "innerShadowChoke", "innerShadowNoise", "innerShadowDistance", "innerShadowAngle", "outerGlowOpacity", "outerGlowColor", "outerGlowBlur", "outerGlowSpread", "outerGlowNoise", "innerGlowOpacity", "innerGlowColor", "innerGlowBlur", "innerGlowChoke", "innerGlowNoise", "colorOverlayOpacity", "colorOverlayColor", "gradientOverlayOpacity", "gradientOverlayScale", "gradientOverlayAngle", "patternOverlayOpacity", "patternOverlayScale", "satinOpacity", "satinColor", "satinDistance", "satinSize", "satinAngle", "satinInvert", "bevelSize", "bevelOpacity", "bevelHighlightColor", "bevelShadowColor", "bevelSoften", "bevelAngle"]),
