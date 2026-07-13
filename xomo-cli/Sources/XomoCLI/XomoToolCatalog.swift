@@ -100,6 +100,7 @@ enum XomoToolCatalog {
         ("xomo.text.get", "Inspect the selected editable text layer."),
         ("xomo.text.update", "Update selected text content, typography, and text box dimensions."),
         ("xomo.text.convert", "Convert selected editable text layers between point and paragraph text."),
+        ("xomo.text.fitBox", "Fit selected paragraph text boxes to content or expand overflowing boxes."),
         ("xomo.mask.action", "Create, delete, enable, or link a layer mask."),
         ("xomo.path.get", "Inspect the selected editable vector path."),
         ("xomo.path.action", "Create and edit vector paths, anchors, subpaths, and masks."),

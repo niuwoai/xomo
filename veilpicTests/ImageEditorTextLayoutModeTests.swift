@@ -131,6 +131,91 @@ struct ImageEditorTextLayoutModeTests {
         #expect(restoredParagraph.boxWidth == 144)
     }
 
+    @Test func fittingTextBoxToContentCanShrinkAndUndoWithoutChangingTypography() throws {
+        let viewModel = editor()
+        viewModel.textValue = "A short paragraph"
+        viewModel.textSize = 22
+        viewModel.textBoxWidth = 120
+        viewModel.textBoxHeight = 220
+        viewModel.addText(at: CGPoint(x: 24, y: 28))
+
+        let before = try #require(viewModel.document.selectedLayer)
+        let beforeContent = try #require(before.textContent)
+        let requiredHeight = beforeContent.requiredParagraphHeight
+        #expect(viewModel.canFitSelectedTextBoxesToContent)
+        #expect(!viewModel.canExpandSelectedTextBoxes)
+
+        viewModel.fitSelectedTextBoxes(.fitContent)
+
+        let fitted = try #require(viewModel.document.selectedLayer)
+        let fittedContent = try #require(fitted.textContent)
+        #expect(fitted.frame.origin == before.frame.origin)
+        #expect(fitted.frame.width == before.frame.width)
+        #expect(fittedContent.boxWidth == beforeContent.boxWidth)
+        #expect(fittedContent.boxHeight == requiredHeight)
+        #expect(fittedContent.fontSize == beforeContent.fontSize)
+        #expect(fitted.frame.height == requiredHeight + ImageEditorTextContent.drawingPadding * 2)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.textBoxFitContent"))
+
+        viewModel.undo()
+        #expect(viewModel.document.selectedLayer?.frame == before.frame)
+        #expect(viewModel.document.selectedLayer?.textContent?.boxHeight == 220)
+    }
+
+    @Test func expandingTextBoxOnlyGrowsOverflowingContent() throws {
+        let viewModel = editor()
+        viewModel.textValue = "One two three four five six seven eight nine ten eleven twelve"
+        viewModel.textBoxWidth = 72
+        viewModel.textBoxHeight = 14
+        viewModel.addText(at: CGPoint(x: 18, y: 20))
+
+        let requiredHeight = try #require(viewModel.document.selectedLayer?.textContent).requiredParagraphHeight
+        #expect(viewModel.selectedTextBoxHasOverflow)
+        #expect(viewModel.canExpandSelectedTextBoxes)
+
+        viewModel.fitSelectedTextBoxes(.expandHeight)
+
+        let expanded = try #require(viewModel.document.selectedLayer?.textContent)
+        #expect(expanded.boxHeight == requiredHeight)
+        #expect(!expanded.hasOverflow)
+        #expect(!viewModel.canExpandSelectedTextBoxes)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.textBoxExpandHeight"))
+    }
+
+    @Test func batchFitSkipsLockedAndPointTextWithOneHistoryStep() throws {
+        let viewModel = editor()
+        viewModel.textValue = "Editable paragraph"
+        viewModel.textBoxWidth = 90
+        viewModel.textBoxHeight = 160
+        viewModel.addText(at: CGPoint(x: 8, y: 8))
+        let editableID = try #require(viewModel.document.selectedLayerID)
+
+        viewModel.textValue = "Locked paragraph"
+        viewModel.textBoxWidth = 90
+        viewModel.textBoxHeight = 180
+        viewModel.addText(at: CGPoint(x: 30, y: 28))
+        let lockedID = try #require(viewModel.document.selectedLayerID)
+        let lockedIndex = try #require(viewModel.document.layers.firstIndex { $0.id == lockedID })
+        viewModel.document.layers[lockedIndex].locksPixels = true
+
+        viewModel.textValue = "Point text"
+        viewModel.textBoxWidth = 0
+        viewModel.textBoxHeight = 0
+        viewModel.addText(at: CGPoint(x: 54, y: 48))
+        let pointID = try #require(viewModel.document.selectedLayerID)
+
+        viewModel.document.selectedLayerID = editableID
+        viewModel.document.selectedLayerIDs = [editableID, lockedID, pointID]
+        let historyCount = viewModel.document.history.count
+
+        viewModel.fitSelectedTextBoxes(.fitContent)
+
+        #expect(try #require(text(editableID, in: viewModel)).boxHeight < 160)
+        #expect(try #require(text(lockedID, in: viewModel)).boxHeight == 180)
+        #expect(try #require(text(pointID, in: viewModel)).layoutMode == .point)
+        #expect(viewModel.document.history.count == historyCount + 1)
+    }
+
     private func editor() -> ImageEditorViewModel {
         ImageEditorViewModel(
             sourceName: "text-layout-mode.png",

@@ -15,7 +15,7 @@ struct XomoAutomationTests {
             Issue.record("Expected tool array")
             return
         }
-        #expect(tools.count == 106)
+        #expect(tools.count == 107)
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.layer.list")
@@ -43,6 +43,10 @@ struct XomoAutomationTests {
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.text.convert")
+        })
+        #expect(tools.contains { tool in
+            guard case .object(let value) = tool else { return false }
+            return value["name"] == .string("xomo.text.fitBox")
         })
     }
 
@@ -253,6 +257,24 @@ struct XomoAutomationTests {
         #expect(inspectedText["boxHeight"] == .number(112))
         #expect(inspectedText["requiredBoxHeight"] != nil)
         #expect(inspectedText["hasOverflow"] != nil)
+
+        #expect(registry.execute(request(
+            operation: "call",
+            name: "xomo.text.update",
+            arguments: [
+                "text": .string("One two three four five six seven eight nine ten eleven twelve"),
+                "boxWidth": .number(72),
+                "boxHeight": .number(14)
+            ]
+        )).ok)
+        #expect(viewModel.document.selectedLayer?.textContent?.hasOverflow == true)
+        #expect(registry.execute(request(
+            operation: "call",
+            name: "xomo.text.fitBox",
+            arguments: ["mode": .string("expandHeight")]
+        )).ok)
+        #expect(viewModel.document.selectedLayer?.textContent?.hasOverflow == false)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.textBoxExpandHeight"))
     }
 
     @Test func registryConfiguresCloneStampSamplingOptions() {
