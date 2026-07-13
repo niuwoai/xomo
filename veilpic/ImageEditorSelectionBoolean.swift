@@ -48,7 +48,7 @@ extension ImageEditorSelection {
             inverted: isInverted,
             targetSize: CGSize(width: width, height: height)
            ) {
-            return image.alphaPlaneMask(width: width, height: height)
+            return image.alphaPlaneMask(width: width, height: height, flipsY: false)
         }
 
         let image = NSImage.rendered(size: CGSize(width: width, height: height)) { rect in
@@ -67,7 +67,7 @@ extension ImageEditorSelection {
                 selectionPath.fill()
             }
         }
-        return image?.alphaPlaneMask(width: width, height: height)
+        return image?.alphaPlaneMask(width: width, height: height, flipsY: true)
     }
 
     func quickMaskOverlayImage(
@@ -753,7 +753,7 @@ extension ImageEditorSelectionMask {
 }
 
 private extension NSImage {
-    func alphaPlaneMask(width: Int, height: Int) -> ImageEditorSelectionMask? {
+    func alphaPlaneMask(width: Int, height: Int, flipsY: Bool) -> ImageEditorSelectionMask? {
         guard let cgImage = cgImage(forProposedRect: nil, context: nil, hints: nil) else { return nil }
         let bytesPerPixel = 4
         let bytesPerRow = width * bytesPerPixel
@@ -776,7 +776,8 @@ private extension NSImage {
         for y in 0..<height {
             for x in 0..<width {
                 let offset = y * bytesPerRow + x * bytesPerPixel
-                alpha[y * width + x] = pixels[offset + 3]
+                let targetY = flipsY ? height - 1 - y : y
+                alpha[targetY * width + x] = pixels[offset + 3]
             }
         }
         return ImageEditorSelectionMask(width: width, height: height, alpha: alpha)
