@@ -9,6 +9,8 @@ import Foundation
 import SwiftUI
 
 struct ImageEditorLayerStylePreset: Identifiable, Codable, Equatable {
+    static let builtInIDPrefix = "builtin."
+
     let id: String
     let name: String
     let style: ImageEditorProjectLayerStyle
@@ -23,6 +25,10 @@ struct ImageEditorLayerStylePreset: Identifiable, Codable, Equatable {
         name
     }
 
+    var isBuiltIn: Bool {
+        id.hasPrefix(Self.builtInIDPrefix)
+    }
+
     var layerStyle: ImageEditorLayerStyle {
         style.layerStyle
     }
@@ -33,8 +39,9 @@ struct ImageEditorLayerStylePreset: Identifiable, Codable, Equatable {
             ? L10n.text("imageEditor.layerStylePreset.untitled")
             : trimmedName
         let normalizedStyle = ImageEditorProjectLayerStyle(style: style.layerStyle)
+        let normalizedID = id.isEmpty || isBuiltIn ? UUID().uuidString : id
         return ImageEditorLayerStylePreset(
-            id: id.isEmpty ? UUID().uuidString : id,
+            id: normalizedID,
             name: String(normalizedName.prefix(80)),
             style: normalizedStyle
         )
@@ -84,20 +91,18 @@ struct ImageEditorLayerStylePresetMenu: View {
 
     var body: some View {
         Menu {
-            if viewModel.customLayerStylePresets.isEmpty {
-                Text(L10n.text("imageEditor.layerStylePreset.empty"))
-            } else {
+            Section(L10n.text("imageEditor.layerStylePreset.builtInSection")) {
+                ForEach(viewModel.builtInLayerStylePresets) { preset in
+                    presetButton(preset)
+                }
+            }
+
+            Section(L10n.text("imageEditor.layerStylePreset.customSection")) {
+                if viewModel.customLayerStylePresets.isEmpty {
+                    Text(L10n.text("imageEditor.layerStylePreset.empty"))
+                }
                 ForEach(viewModel.customLayerStylePresets) { preset in
-                    Button {
-                        viewModel.applyLayerStylePreset(preset)
-                    } label: {
-                        if viewModel.activeLayerStylePreset?.id == preset.id {
-                            Label(preset.title, systemImage: "checkmark")
-                        } else {
-                            Text(preset.title)
-                        }
-                    }
-                    .disabled(!viewModel.canApplyLayerStylePreset)
+                    presetButton(preset)
                 }
             }
 
@@ -109,7 +114,7 @@ struct ImageEditorLayerStylePresetMenu: View {
             }
             .disabled(!viewModel.canCreateLayerStylePreset)
 
-            if let activePreset = viewModel.activeLayerStylePreset {
+            if let activePreset = viewModel.activeLayerStylePreset, !activePreset.isBuiltIn {
                 Button(role: .destructive) {
                     viewModel.deleteLayerStylePreset(activePreset)
                 } label: {
@@ -135,5 +140,20 @@ struct ImageEditorLayerStylePresetMenu: View {
         .help(L10n.text("imageEditor.help.layerStylePreset"))
         .accessibilityIdentifier("image-editor-layer-style-preset-menu")
         .focusable(false)
+    }
+
+    private func presetButton(_ preset: ImageEditorLayerStylePreset) -> some View {
+        Button {
+            viewModel.applyLayerStylePreset(preset)
+        } label: {
+            HStack(spacing: 6) {
+                ImageEditorLayerStylePresetThumbnail(preset: preset, width: 24, height: 16)
+                Text(preset.title)
+                if viewModel.activeLayerStylePreset?.id == preset.id {
+                    Image(systemName: "checkmark")
+                }
+            }
+        }
+        .disabled(!viewModel.canApplyLayerStylePreset)
     }
 }

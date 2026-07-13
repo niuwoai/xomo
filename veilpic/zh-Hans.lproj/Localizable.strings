@@ -911,6 +911,18 @@
 "imageEditor.layerStylePreset.summary" = "包含的效果";
 "imageEditor.layerStylePreset.noEffects" = "没有启用的效果";
 "imageEditor.layerStylePreset.libraryFilename" = "Xomo 图层样式";
+"imageEditor.layerStylePreset.builtInSection" = "内置经典样式";
+"imageEditor.layerStylePreset.customSection" = "我的样式";
+"imageEditor.layerStylePreset.builtInBadge" = "内置样式 · 只读";
+"imageEditor.layerStylePreset.customBadge" = "自定义样式";
+"imageEditor.layerStylePreset.copyName" = "%@ 副本";
+"imageEditor.layerStylePreset.copyNameNumbered" = "%@ 副本 %d";
+"imageEditor.layerStylePreset.builtIn.softShadow" = "柔和投影";
+"imageEditor.layerStylePreset.builtIn.cleanOutline" = "清晰描边";
+"imageEditor.layerStylePreset.builtIn.glassButton" = "玻璃按钮";
+"imageEditor.layerStylePreset.builtIn.goldBevel" = "金色浮雕";
+"imageEditor.layerStylePreset.builtIn.neonGlow" = "霓虹发光";
+"imageEditor.layerStylePreset.builtIn.sticker" = "贴纸白边";
 "imageEditor.properties.strokeWidthValue" = "描边：%d px";
 "imageEditor.properties.strokePosition" = "描边位置";
 "imageEditor.strokePosition.outside" = "外侧";
@@ -1774,6 +1786,7 @@
 "imageEditor.status.layerStylePresetUnsupportedVersion" = "此样式预设文件版本暂不受支持";
 "imageEditor.status.layerStylePresetLibraryEmpty" = "没有可导入或导出的样式预设";
 "imageEditor.status.layerStylePresetFileInvalid" = "无法读取或写入样式预设文件";
+"imageEditor.status.layerStylePresetDuplicated" = "已复制为自定义样式：%@";
 "imageEditor.status.layerStyleCleared" = "已清除 %d 个图层的样式";
 "imageEditor.status.layerStyleReady" = "已准备图层样式选项";
 "imageEditor.status.layerStyleUpdated" = "已更新图层样式";
@@ -2031,6 +2044,7 @@
 "imageEditor.action.layerStylePresetExport" = "导出";
 "imageEditor.action.layerStylePresetExportSelected" = "导出所选…";
 "imageEditor.action.layerStylePresetExportAll" = "导出全部…";
+"imageEditor.action.layerStylePresetDuplicate" = "复制为自定义样式";
 "imageEditor.action.layerStylePaste" = "粘贴图层样式";
 "imageEditor.action.layerStyleClear" = "清除图层样式";
 "imageEditor.action.layerEffectsHideSelected" = "隐藏所选图层效果";

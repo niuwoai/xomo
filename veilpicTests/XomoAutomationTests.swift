@@ -662,6 +662,49 @@ struct XomoAutomationTests {
         #expect(reopened.customLayerStylePresets.isEmpty)
     }
 
+    @Test func registryListsAppliesAndDuplicatesBuiltInLayerStylePresets() throws {
+        let suiteName = "XomoAutomationTests.builtInLayerStylePresets.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName) ?? .standard
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let viewModel = makeViewModel(preferencesDefaults: defaults)
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let catalog = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style",
+            arguments: ["action": .string("presetCatalog")]
+        ))
+        #expect(catalog.ok)
+        let builtIns = try #require(catalog.result?.arrayValue)
+        #expect(builtIns.count == 6)
+        #expect(builtIns.allSatisfy { $0.objectValue?["builtIn"] == .bool(true) })
+        let id = try #require(builtIns.first?.objectValue?["id"]?.stringValue)
+
+        let apply = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style",
+            arguments: ["action": .string("presetApply"), "id": .string(id)]
+        ))
+        #expect(apply.ok)
+        #expect(viewModel.document.selectedLayer?.style.hasConfiguredEffects == true)
+        #expect(viewModel.activeLayerStylePreset?.id == id)
+        let historyCount = viewModel.document.history.count
+
+        let duplicate = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style",
+            arguments: ["action": .string("presetDuplicate"), "id": .string(id)]
+        ))
+        #expect(duplicate.ok)
+        let custom = try #require(duplicate.result?.arrayValue)
+        #expect(custom.count == 1)
+        #expect(custom.first?.objectValue?["builtIn"] == .bool(false))
+        #expect(custom.first?.objectValue?["id"] != .string(id))
+        #expect(viewModel.customLayerStylePresets.first?.style == viewModel.builtInLayerStylePresets.first?.style)
+        #expect(viewModel.document.history.count == historyCount)
+    }
+
     @Test func registryRenamesMovesExportsAndImportsLayerStylePresetLibraries() throws {
         let suiteName = "XomoAutomationTests.layerStylePresetManager.\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suiteName) ?? .standard
