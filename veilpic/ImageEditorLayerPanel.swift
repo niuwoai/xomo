@@ -13,7 +13,7 @@ private let imageEditorLayerRowDragStride: CGFloat = 66
 
 enum ImageEditorLayerPanelTabAppearance {
     static let selectedForegroundColor = NSColor.white
-    static let foregroundColor = NSColor(calibratedWhite: 0.84, alpha: 1)
+    static let foregroundColor = NSColor.white
 
     static func configure(_ label: NSTextField, title: String, isSelected: Bool) {
         label.stringValue = title

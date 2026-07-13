@@ -16,9 +16,9 @@ struct ImageEditorLayerPanelStyleTests {
         let color = ImageEditorLayerPanelTabAppearance.foregroundColor.usingColorSpace(.deviceRGB)
 
         #expect(color != nil)
-        #expect((color?.redComponent ?? 0) > 0.8)
-        #expect((color?.greenComponent ?? 0) > 0.8)
-        #expect((color?.blueComponent ?? 0) > 0.8)
+        #expect((color?.redComponent ?? 0) > 0.99)
+        #expect((color?.greenComponent ?? 0) > 0.99)
+        #expect((color?.blueComponent ?? 0) > 0.99)
         #expect(ImageEditorLayerPanelTab.allCases.count == 3)
     }
 
@@ -29,7 +29,9 @@ struct ImageEditorLayerPanelStyleTests {
         let unselectedColor = label.textColor?.usingColorSpace(.deviceRGB)
         #expect(label.stringValue == "通道")
         #expect(label.refusesFirstResponder)
-        #expect((unselectedColor?.redComponent ?? 0) > 0.8)
+        #expect((unselectedColor?.redComponent ?? 0) > 0.99)
+        #expect((unselectedColor?.greenComponent ?? 0) > 0.99)
+        #expect((unselectedColor?.blueComponent ?? 0) > 0.99)
 
         ImageEditorLayerPanelTabAppearance.configure(label, title: "图层", isSelected: true)
         let selectedColor = label.textColor?.usingColorSpace(.deviceRGB)
