@@ -577,7 +577,7 @@ extension ImageEditorView {
         }
         .disabled(!viewModel.canShowAllLayers)
         Divider()
-        Button(L10n.text("imageEditor.action.layerMergeDown")) {
+        Button(L10n.text(viewModel.mergeDownActionTitleKey)) {
             viewModel.mergeSelectedLayerDown()
         }
         .keyboardShortcut("e", modifiers: [.command])
@@ -1919,7 +1919,7 @@ extension ImageEditorView {
             }
             .disabled(!viewModel.canGroupSelectedLayer)
             Divider()
-            Button(L10n.text("imageEditor.action.layerMergeDown")) {
+            Button(L10n.text(viewModel.mergeDownActionTitleKey)) {
                 selectedLayerPanelTab = .layers
                 viewModel.mergeSelectedLayerDown()
             }

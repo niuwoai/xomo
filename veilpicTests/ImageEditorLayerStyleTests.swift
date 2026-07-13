@@ -241,10 +241,16 @@ struct ImageEditorLayerStyleTests {
         let baseImage = solidImage(color: .systemBlue, size: canvasSize)
         let layerImage = centerRectImage(size: canvasSize, color: .systemGreen)
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: baseImage) { _ in }
+        viewModel.document.layers[0].isLocked = false
         viewModel.replaceSelectedLayerImageForTesting(layerImage, historyTitle: L10n.text("imageEditor.history.brush"))
 
         let layerPixelsBeforeStyle = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
-        viewModel.foregroundColor = .systemRed
+        viewModel.foregroundColor = NSColor(
+            calibratedRed: 1,
+            green: 0,
+            blue: 0,
+            alpha: 1
+        )
         viewModel.setSelectedLayerColorOverlayOpacity(1)
 
         let layerPixelsAfterStyle = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())

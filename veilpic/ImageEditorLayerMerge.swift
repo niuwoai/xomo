@@ -10,22 +10,18 @@ import Foundation
 
 @MainActor
 extension ImageEditorViewModel {
+    var mergeDownActionTitleKey: String {
+        document.selectedLayer?.isGroup == true
+            ? "imageEditor.action.layerMergeGroup"
+            : "imageEditor.action.layerMergeDown"
+    }
+
     var canMergeVisibleLayers: Bool {
         mergeVisibleLayerIDs.count > 1
     }
 
     var canMergeSelectedLayers: Bool {
-        let sourceIDs = selectedMergeLayerIDs
-        guard !sourceIDs.isEmpty else { return false }
-        let selectedRootCount = document.selectedLayerIDs.count
-        let renderableCount = document.layers.filter { layer in
-            sourceIDs.contains(layer.id) && document.shouldComposite(layer)
-        }.count
-        guard selectedRootCount > 1 || renderableCount > 1 else { return false }
-        guard renderableCount > 0 else { return false }
-        return document.layers
-            .filter { sourceIDs.contains($0.id) }
-            .allSatisfy { !document.isEffectivelyLocked($0) }
+        hierarchyMergeSelectedPlan != nil
     }
 
     var canFlattenImage: Bool {
@@ -78,40 +74,25 @@ extension ImageEditorViewModel {
     }
 
     func mergeSelectedLayers() {
-        let sourceIDs = selectedMergeLayerIDs
-        guard canMergeSelectedLayers,
-              let insertionIndex = selectedMergeInsertionIndex(fallbackSourceIDs: sourceIDs)
-        else {
+        guard let sourcePlan = hierarchyMergeSelectedPlan else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
 
-        pushUndo()
-        var mergedLayer = flattenedLayer(
+        let mergedLayer = flattenedLayer(
             name: L10n.text("imageEditor.layer.selectedMergedName"),
-            image: document.compositedImage(includingOnly: sourceIDs)
+            image: document.compositedImage(includingOnly: sourcePlan.sourceLayerIDs)
         )
-        mergedLayer.groupID = selectedMergeParentGroupID(removing: sourceIDs)
-
-        var mergedWasInserted = false
-        var nextLayers: [ImageEditorLayer] = []
-        for (index, layer) in document.layers.enumerated() {
-            if index == insertionIndex {
-                nextLayers.append(mergedLayer)
-                mergedWasInserted = true
-            }
-            guard !sourceIDs.contains(layer.id) else { continue }
-            nextLayers.append(layer)
-        }
-
-        if !mergedWasInserted {
-            nextLayers.append(mergedLayer)
-        }
-
-        document.layers = nextLayers
-        normalizeClippingMasksAfterLayerMerge()
-        document.selectedLayerID = mergedLayer.id
-        document.selectedLayerIDs = [mergedLayer.id]
+        let resultPlan = ImageEditorLayerHierarchyMerge.applying(
+            sourcePlan,
+            mergedLayer: mergedLayer,
+            to: document.layers,
+            isEffectivelyVisible: { document.isEffectivelyVisible($0) }
+        )
+        pushUndo()
+        document.layers = resultPlan.layers
+        document.selectedLayerID = resultPlan.primarySelectionID
+        document.selectedLayerIDs = resultPlan.selectedLayerIDs
         isEditingLayerMask = false
         appendHistory(L10n.text("imageEditor.history.layerMergeSelected"))
         statusText = L10n.text("imageEditor.status.layerMergeSelected")
@@ -142,37 +123,51 @@ extension ImageEditorViewModel {
             .map(\.id)
     }
 
-    private var selectedMergeLayerIDs: Set<UUID> {
-        var sourceIDs = document.selectedLayerIDs
-        let selectedGroupIDs = document.layers
-            .filter { sourceIDs.contains($0.id) && $0.isGroup }
-            .map(\.id)
+    var hierarchyMergeDownPlan: ImageEditorLayerMergeSourcePlan? {
+        ImageEditorLayerHierarchyMerge.mergeDownPlan(
+            layers: document.layers,
+            selectedIDs: document.selectedLayerIDs,
+            primarySelectionID: document.selectedLayerID,
+            isEffectivelyLocked: { document.isEffectivelyLocked($0) },
+            isEffectivelyPixelsLocked: { document.isEffectivelyPixelsLocked($0) },
+            isEffectivelyVisible: { document.isEffectivelyVisible($0) }
+        )
+    }
 
-        for groupID in selectedGroupIDs {
-            for layer in document.layers where document.ancestorGroups(for: layer).contains(where: { $0.id == groupID }) {
-                sourceIDs.insert(layer.id)
-            }
+    var hierarchyMergeSelectedPlan: ImageEditorLayerMergeSourcePlan? {
+        ImageEditorLayerHierarchyMerge.mergeSelectedPlan(
+            layers: document.layers,
+            selectedIDs: document.selectedLayerIDs,
+            primarySelectionID: document.selectedLayerID,
+            isEffectivelyLocked: { document.isEffectivelyLocked($0) },
+            isEffectivelyVisible: { document.isEffectivelyVisible($0) }
+        )
+    }
+
+    func applyHierarchyMerge(
+        _ sourcePlan: ImageEditorLayerMergeSourcePlan,
+        mergedLayer: ImageEditorLayer,
+        historyKey: String,
+        statusKey: String? = nil
+    ) {
+        let resultPlan = ImageEditorLayerHierarchyMerge.applying(
+            sourcePlan,
+            mergedLayer: mergedLayer,
+            to: document.layers,
+            isEffectivelyVisible: { document.isEffectivelyVisible($0) }
+        )
+        pushUndo()
+        document.layers = resultPlan.layers
+        document.selectedLayerID = resultPlan.primarySelectionID
+        document.selectedLayerIDs = resultPlan.selectedLayerIDs
+        isEditingLayerMask = false
+        appendHistory(L10n.text(historyKey))
+        if let statusKey {
+            statusText = L10n.text(statusKey)
         }
-
-        return sourceIDs
     }
 
-    private func selectedMergeInsertionIndex(fallbackSourceIDs sourceIDs: Set<UUID>) -> Int? {
-        document.layers.firstIndex { document.selectedLayerIDs.contains($0.id) }
-            ?? document.layers.firstIndex { sourceIDs.contains($0.id) }
-    }
-
-    private func selectedMergeParentGroupID(removing sourceIDs: Set<UUID>) -> UUID? {
-        let selectedRoots = document.layers.filter { document.selectedLayerIDs.contains($0.id) }
-        let parentIDs = Set(selectedRoots.map(\.groupID))
-        guard parentIDs.count == 1,
-              let parentID = parentIDs.first ?? nil,
-              !sourceIDs.contains(parentID)
-        else { return nil }
-        return parentID
-    }
-
-    private func flattenedLayer(name: String, image: NSImage) -> ImageEditorLayer {
+    func flattenedLayer(name: String, image: NSImage) -> ImageEditorLayer {
         var layer = ImageEditorLayer.blank(name: name, size: document.canvasSize)
         layer.image = image.normalizedBitmapImage()
         layer.frame = CGRect(origin: .zero, size: document.canvasSize)
@@ -202,11 +197,4 @@ extension ImageEditorViewModel {
         }
     }
 
-    private func normalizeClippingMasksAfterLayerMerge() {
-        for index in document.layers.indices where document.layers[index].isClippingMask {
-            if document.clippingBaseIndex(forLayerAt: index) == nil {
-                document.layers[index].isClippingMask = false
-            }
-        }
-    }
 }

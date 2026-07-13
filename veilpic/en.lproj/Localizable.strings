@@ -1202,6 +1202,7 @@
 "imageEditor.history.layerMaskDensity" = "Layer Mask Density";
 "imageEditor.history.layerMaskFeather" = "Layer Mask Feather";
 "imageEditor.history.layerMergeDown" = "Merge Down";
+"imageEditor.history.layerMergeGroup" = "Merge Group";
 "imageEditor.history.layerMergeSelected" = "Merge Selected Layers";
 "imageEditor.history.layerMergeVisible" = "Merge Visible Layers";
 "imageEditor.history.layerStampVisible" = "Stamp Visible Layers";
@@ -1551,6 +1552,7 @@
 "imageEditor.status.layerRasterized" = "Layer rasterized";
 "imageEditor.status.layerRasterizedSelected" = "%d layers rasterized";
 "imageEditor.status.layerMergeSelected" = "Selected layers merged";
+"imageEditor.status.layerMergeGroup" = "Layer group merged into a pixel layer";
 "imageEditor.status.layerMergeVisible" = "Visible layers merged";
 "imageEditor.status.layerStampSelected" = "Selected layers stamped into a new pixel layer";
 "imageEditor.status.layerFlattened" = "Image flattened into one pixel layer";
@@ -1896,6 +1898,7 @@
 "imageEditor.action.layerDown" = "Move Layer Down";
 "imageEditor.action.layerBottom" = "Move Layer to Bottom";
 "imageEditor.action.layerMergeDown" = "Merge Down";
+"imageEditor.action.layerMergeGroup" = "Merge Group";
 "imageEditor.action.layerMergeSelected" = "Merge Selected Layers";
 "imageEditor.action.layerMergeVisible" = "Merge Visible Layers";
 "imageEditor.action.layerStampVisible" = "Stamp Visible Layers";

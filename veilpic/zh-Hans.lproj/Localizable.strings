@@ -1202,6 +1202,7 @@
 "imageEditor.history.layerMaskDensity" = "调整图层蒙版密度";
 "imageEditor.history.layerMaskFeather" = "调整图层蒙版羽化";
 "imageEditor.history.layerMergeDown" = "向下合并";
+"imageEditor.history.layerMergeGroup" = "合并组";
 "imageEditor.history.layerMergeSelected" = "合并所选图层";
 "imageEditor.history.layerMergeVisible" = "合并可见图层";
 "imageEditor.history.layerStampVisible" = "盖印可见图层";
@@ -1551,6 +1552,7 @@
 "imageEditor.status.layerRasterized" = "已栅格化当前图层";
 "imageEditor.status.layerRasterizedSelected" = "已栅格化 %d 个图层";
 "imageEditor.status.layerMergeSelected" = "已合并所选图层";
+"imageEditor.status.layerMergeGroup" = "已将图层组合并为像素层";
 "imageEditor.status.layerMergeVisible" = "已合并所有可见图层";
 "imageEditor.status.layerStampSelected" = "已将所选图层盖印为新的像素层";
 "imageEditor.status.layerFlattened" = "已将图像扁平化为单一像素图层";
@@ -1896,6 +1898,7 @@
 "imageEditor.action.layerDown" = "下移图层";
 "imageEditor.action.layerBottom" = "置底图层";
 "imageEditor.action.layerMergeDown" = "向下合并";
+"imageEditor.action.layerMergeGroup" = "合并组";
 "imageEditor.action.layerMergeSelected" = "合并所选图层";
 "imageEditor.action.layerMergeVisible" = "合并可见图层";
 "imageEditor.action.layerStampVisible" = "盖印可见图层";

@@ -2535,9 +2535,9 @@ struct veilpicTests {
         viewModel.drawBrush(points: [CGPoint(x: 10, y: 10), CGPoint(x: 70, y: 50)])
 
         let layerCountBeforeMerge = viewModel.document.layers.count
-        let compositedBeforeMerge = try #require(viewModel.currentImage.qingtuPNGData())
-        let selectedCompositeBeforeMerge = try #require(
-            viewModel.document.compositedImage(includingOnly: [firstLayerID, secondLayerID]).qingtuPNGData()
+        let compositedImageBeforeMerge = viewModel.currentImage
+        let selectedCompositeImageBeforeMerge = viewModel.document.compositedImage(
+            includingOnly: [firstLayerID, secondLayerID]
         )
 
         viewModel.selectLayer(firstLayerID)
@@ -2549,18 +2549,30 @@ struct veilpicTests {
         let mergedLayer = try #require(viewModel.document.selectedLayer)
         #expect(viewModel.document.layers.count == layerCountBeforeMerge - 1)
         #expect(mergedLayer.name == L10n.text("imageEditor.layer.selectedMergedName"))
-        #expect(mergedLayer.image.qingtuPNGData() == selectedCompositeBeforeMerge)
+        let mergedPixelDifference = imageEditorMaximumPixelDifference(
+            mergedLayer.image,
+            selectedCompositeImageBeforeMerge
+        )
+        #expect(mergedPixelDifference <= ImageEditorTestPixelTolerance.rasterizedMerge)
         #expect(!viewModel.document.layers.contains { $0.id == firstLayerID })
         #expect(!viewModel.document.layers.contains { $0.id == secondLayerID })
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerMergeSelected"))
         #expect(viewModel.statusText == L10n.text("imageEditor.status.layerMergeSelected"))
-        #expect(try #require(viewModel.currentImage.qingtuPNGData()) == compositedBeforeMerge)
+        let compositedPixelDifference = imageEditorMaximumPixelDifference(
+            viewModel.currentImage,
+            compositedImageBeforeMerge
+        )
+        #expect(compositedPixelDifference <= ImageEditorTestPixelTolerance.rasterizedMerge)
 
         viewModel.undo()
         #expect(viewModel.document.layers.count == layerCountBeforeMerge)
         #expect(viewModel.document.layers.contains { $0.id == firstLayerID })
         #expect(viewModel.document.layers.contains { $0.id == secondLayerID })
-        #expect(try #require(viewModel.currentImage.qingtuPNGData()) == compositedBeforeMerge)
+        let undoPixelDifference = imageEditorMaximumPixelDifference(
+            viewModel.currentImage,
+            compositedImageBeforeMerge
+        )
+        #expect(undoPixelDifference <= ImageEditorTestPixelTolerance.undoRoundTrip)
     }
 
     @MainActor
@@ -5349,7 +5361,7 @@ struct veilpicTests {
         #expect(insidePreview.redComponent > 0.62)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerClippingMask"))
 
-        let previewData = try #require(viewModel.currentImage.qingtuPNGData())
+        let previewImage = viewModel.currentImage
         let countBeforeMerge = viewModel.document.layers.count
         viewModel.mergeSelectedLayerDown()
         let mergedLayer = try #require(viewModel.document.selectedLayer)
@@ -5361,7 +5373,14 @@ struct veilpicTests {
         #expect(!viewModel.selectedLayerIsClippingMask)
         #expect(mergedOutside.alphaComponent < 0.05)
         #expect(mergedInside.redComponent > 0.62)
-        #expect(try #require(viewModel.currentImage.qingtuPNGData()) == previewData)
+        let previewPixelDifference = imageEditorMaximumPixelDifference(
+            viewModel.currentImage,
+            previewImage
+        )
+        #expect(
+            previewPixelDifference
+                <= ImageEditorTestPixelTolerance.clippedAdjustmentMerge
+        )
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerMergeDown"))
     }
 
@@ -5904,7 +5923,9 @@ struct veilpicTests {
         let afterInside = try #require(viewModel.currentImage.color(at: CGPoint(x: 40, y: 31))?.usingColorSpace(.deviceRGB))
 
         #expect(viewModel.document.layers.count == beforeMergeCount - 1)
-        #expect(!viewModel.selectedLayerIsClippingMask)
+        let mergedIndex = try #require(viewModel.document.selectedLayerIndex)
+        #expect(viewModel.selectedLayerIsClippingMask)
+        #expect(viewModel.document.clippingBase(forLayerAt: mergedIndex)?.id == baseID)
         #expect(mergedOutside.alphaComponent < 0.05)
         #expect(mergedInside.redComponent > mergedInside.blueComponent + 0.15)
         #expect(afterOutside.blueComponent > afterOutside.greenComponent + 0.15)

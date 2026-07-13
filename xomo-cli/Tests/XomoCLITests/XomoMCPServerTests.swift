@@ -16,7 +16,10 @@ struct XomoMCPServerTests {
     }
 
     @Test func toolsListWorksWithoutRunningApp() throws {
-        let response = try #require(XomoMCPServer(version: "test").handle([
+        let response = try #require(XomoMCPServer(
+            version: "test",
+            toolsProvider: { throw XomoEndpointClientError.endpointMissing([]) }
+        ).handle([
             "jsonrpc": "2.0",
             "id": 2,
             "method": "tools/list",
@@ -24,12 +27,13 @@ struct XomoMCPServerTests {
         ]))
         let result = try #require(response["result"] as? [String: Any])
         let tools = try #require(result["tools"] as? [[String: Any]])
-        #expect(tools.count == 107)
+        #expect(tools.count == 108)
         #expect(tools.contains { $0["name"] as? String == "xomo.layer.list" })
         #expect(tools.contains { $0["name"] as? String == "xomo.channel.action" })
         #expect(tools.contains { $0["name"] as? String == "xomo.clipboard.action" })
         #expect(tools.contains { $0["name"] as? String == "xomo.path.action" })
         #expect(tools.contains { $0["name"] as? String == "xomo.layer_comp.action" })
+        #expect(tools.contains { $0["name"] as? String == "xomo.layer.merge_selected" })
         #expect(tools.contains { $0["name"] as? String == "xomo.text.convert" })
         #expect(tools.contains { $0["name"] as? String == "xomo.text.fitBox" })
     }
