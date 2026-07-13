@@ -911,6 +911,18 @@
 "imageEditor.layerStylePreset.summary" = "含まれる効果";
 "imageEditor.layerStylePreset.noEffects" = "有効な効果はありません";
 "imageEditor.layerStylePreset.libraryFilename" = "Xomo レイヤースタイル";
+"imageEditor.layerStylePreset.builtInSection" = "内蔵クラシック";
+"imageEditor.layerStylePreset.customSection" = "マイスタイル";
+"imageEditor.layerStylePreset.builtInBadge" = "内蔵スタイル・読み取り専用";
+"imageEditor.layerStylePreset.customBadge" = "カスタムスタイル";
+"imageEditor.layerStylePreset.copyName" = "%@ のコピー";
+"imageEditor.layerStylePreset.copyNameNumbered" = "%@ のコピー %d";
+"imageEditor.layerStylePreset.builtIn.softShadow" = "ソフトシャドウ";
+"imageEditor.layerStylePreset.builtIn.cleanOutline" = "クリアアウトライン";
+"imageEditor.layerStylePreset.builtIn.glassButton" = "ガラスボタン";
+"imageEditor.layerStylePreset.builtIn.goldBevel" = "ゴールドベベル";
+"imageEditor.layerStylePreset.builtIn.neonGlow" = "ネオングロー";
+"imageEditor.layerStylePreset.builtIn.sticker" = "ステッカー境界線";
 "imageEditor.properties.strokeWidthValue" = "境界線：%d px";
 "imageEditor.properties.strokePosition" = "境界線の位置";
 "imageEditor.strokePosition.outside" = "外側";
@@ -1774,6 +1786,7 @@
 "imageEditor.status.layerStylePresetUnsupportedVersion" = "このスタイルプリセットファイルのバージョンには対応していません";
 "imageEditor.status.layerStylePresetLibraryEmpty" = "読み込みまたは書き出しできるスタイルプリセットがありません";
 "imageEditor.status.layerStylePresetFileInvalid" = "スタイルプリセットファイルを読み書きできませんでした";
+"imageEditor.status.layerStylePresetDuplicated" = "カスタムスタイルとしてコピーしました：%@";
 "imageEditor.status.layerStyleCleared" = "%d 個のレイヤースタイルをクリアしました";
 "imageEditor.status.layerStyleReady" = "レイヤースタイルオプションを準備しました";
 "imageEditor.status.layerStyleUpdated" = "レイヤースタイルを更新しました";
@@ -2031,6 +2044,7 @@
 "imageEditor.action.layerStylePresetExport" = "書き出す";
 "imageEditor.action.layerStylePresetExportSelected" = "選択項目を書き出す…";
 "imageEditor.action.layerStylePresetExportAll" = "すべてを書き出す…";
+"imageEditor.action.layerStylePresetDuplicate" = "カスタムスタイルとしてコピー";
 "imageEditor.action.layerStylePaste" = "レイヤースタイルをペースト";
 "imageEditor.action.layerStyleClear" = "レイヤースタイルをクリア";
 "imageEditor.action.layerEffectsHideSelected" = "選択レイヤー効果を非表示";

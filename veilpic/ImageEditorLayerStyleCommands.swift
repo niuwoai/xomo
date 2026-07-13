@@ -81,6 +81,7 @@ extension ImageEditorViewModel {
     var activeLayerStylePreset: ImageEditorLayerStylePreset? {
         guard let style = document.selectedLayer?.style else { return nil }
         return customLayerStylePresets.first { $0.matches(style) }
+            ?? builtInLayerStylePresets.first { $0.matches(style) }
     }
 
     var canToggleSelectedLayerEffects: Bool {

@@ -953,20 +953,18 @@ extension ImageEditorView {
 
     @ViewBuilder
     private var layerStylePresetItems: some View {
-        if viewModel.customLayerStylePresets.isEmpty {
-            Text(L10n.text("imageEditor.layerStylePreset.empty"))
-        } else {
+        Section(L10n.text("imageEditor.layerStylePreset.builtInSection")) {
+            ForEach(viewModel.builtInLayerStylePresets) { preset in
+                layerStylePresetButton(preset)
+            }
+        }
+
+        Section(L10n.text("imageEditor.layerStylePreset.customSection")) {
+            if viewModel.customLayerStylePresets.isEmpty {
+                Text(L10n.text("imageEditor.layerStylePreset.empty"))
+            }
             ForEach(viewModel.customLayerStylePresets) { preset in
-                Button {
-                    viewModel.applyLayerStylePreset(preset)
-                } label: {
-                    if viewModel.activeLayerStylePreset?.id == preset.id {
-                        Label(preset.title, systemImage: "checkmark")
-                    } else {
-                        Text(preset.title)
-                    }
-                }
-                .disabled(!viewModel.canApplyLayerStylePreset)
+                layerStylePresetButton(preset)
             }
         }
 
@@ -976,7 +974,7 @@ extension ImageEditorView {
         }
         .disabled(!viewModel.canCreateLayerStylePreset)
 
-        if let activePreset = viewModel.activeLayerStylePreset {
+        if let activePreset = viewModel.activeLayerStylePreset, !activePreset.isBuiltIn {
             Button(L10n.text("imageEditor.action.layerStylePresetDelete"), role: .destructive) {
                 viewModel.deleteLayerStylePreset(activePreset)
             }
@@ -986,6 +984,19 @@ extension ImageEditorView {
         Button(L10n.text("imageEditor.action.layerStylePresetManage")) {
             viewModel.isLayerStylePresetManagerPresented = true
         }
+    }
+
+    private func layerStylePresetButton(_ preset: ImageEditorLayerStylePreset) -> some View {
+        Button {
+            viewModel.applyLayerStylePreset(preset)
+        } label: {
+            if viewModel.activeLayerStylePreset?.id == preset.id {
+                Label(preset.title, systemImage: "checkmark")
+            } else {
+                Text(preset.title)
+            }
+        }
+        .disabled(!viewModel.canApplyLayerStylePreset)
     }
 
     @ViewBuilder

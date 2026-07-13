@@ -911,6 +911,18 @@
 "imageEditor.layerStylePreset.summary" = "Included Effects";
 "imageEditor.layerStylePreset.noEffects" = "No enabled effects";
 "imageEditor.layerStylePreset.libraryFilename" = "Xomo Layer Styles";
+"imageEditor.layerStylePreset.builtInSection" = "Built-in Classics";
+"imageEditor.layerStylePreset.customSection" = "My Styles";
+"imageEditor.layerStylePreset.builtInBadge" = "Built-in style · Read only";
+"imageEditor.layerStylePreset.customBadge" = "Custom style";
+"imageEditor.layerStylePreset.copyName" = "%@ Copy";
+"imageEditor.layerStylePreset.copyNameNumbered" = "%@ Copy %d";
+"imageEditor.layerStylePreset.builtIn.softShadow" = "Soft Shadow";
+"imageEditor.layerStylePreset.builtIn.cleanOutline" = "Clean Outline";
+"imageEditor.layerStylePreset.builtIn.glassButton" = "Glass Button";
+"imageEditor.layerStylePreset.builtIn.goldBevel" = "Gold Bevel";
+"imageEditor.layerStylePreset.builtIn.neonGlow" = "Neon Glow";
+"imageEditor.layerStylePreset.builtIn.sticker" = "Sticker Border";
 "imageEditor.properties.strokeWidthValue" = "Stroke: %d px";
 "imageEditor.properties.strokePosition" = "Stroke Position";
 "imageEditor.strokePosition.outside" = "Outside";
@@ -1774,6 +1786,7 @@
 "imageEditor.status.layerStylePresetUnsupportedVersion" = "This style preset file version is not supported";
 "imageEditor.status.layerStylePresetLibraryEmpty" = "There are no style presets to import or export";
 "imageEditor.status.layerStylePresetFileInvalid" = "The style preset file could not be read or written";
+"imageEditor.status.layerStylePresetDuplicated" = "Copied as a custom style: %@";
 "imageEditor.status.layerStyleCleared" = "Layer style cleared from %d layers";
 "imageEditor.status.layerStyleReady" = "Layer style options ready";
 "imageEditor.status.layerStyleUpdated" = "Layer style updated";
@@ -2031,6 +2044,7 @@
 "imageEditor.action.layerStylePresetExport" = "Export";
 "imageEditor.action.layerStylePresetExportSelected" = "Export Selected…";
 "imageEditor.action.layerStylePresetExportAll" = "Export All…";
+"imageEditor.action.layerStylePresetDuplicate" = "Copy as Custom Style";
 "imageEditor.action.layerStylePaste" = "Paste Layer Style";
 "imageEditor.action.layerStyleClear" = "Clear Layer Style";
 "imageEditor.action.layerEffectsHideSelected" = "Hide Selected Layer Effects";

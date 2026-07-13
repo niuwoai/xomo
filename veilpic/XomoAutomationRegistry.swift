@@ -975,9 +975,12 @@ final class XomoAutomationRegistry {
         _ arguments: [String: XomoJSONValue],
         viewModel: ImageEditorViewModel
     ) throws -> XomoJSONValue {
+        var resultPresets: [ImageEditorLayerStylePreset]?
         switch try requiredString("action", in: arguments) {
         case "presetList":
             break
+        case "presetCatalog":
+            resultPresets = viewModel.builtInLayerStylePresets
         case "presetCreate":
             let preset = viewModel.createLayerStylePresetFromSelectedLayer(
                 name: arguments["name"]?.stringValue
@@ -989,10 +992,18 @@ final class XomoAutomationRegistry {
             }
         case "presetApply":
             let id = try requiredString("id", in: arguments)
-            guard let preset = viewModel.customLayerStylePresets.first(where: { $0.id == id }) else {
+            guard let preset = viewModel.layerStylePreset(id: id) else {
                 throw XomoAutomationCallError.notFound("Layer style preset \(id)")
             }
             viewModel.applyLayerStylePreset(preset)
+        case "presetDuplicate":
+            let id = try requiredString("id", in: arguments)
+            guard let preset = viewModel.layerStylePreset(id: id) else {
+                throw XomoAutomationCallError.notFound("Layer style preset \(id)")
+            }
+            guard viewModel.duplicateLayerStylePresetToCustom(preset) != nil else {
+                throw XomoAutomationCallError.invalidArgument("The custom layer style preset limit was reached")
+            }
         case "presetDelete":
             let id = try requiredString("id", in: arguments)
             guard let preset = viewModel.customLayerStylePresets.first(where: { $0.id == id }) else {
@@ -1034,15 +1045,22 @@ final class XomoAutomationRegistry {
         default:
             throw XomoAutomationCallError.invalidArgument("Unknown layer style preset action")
         }
-        return layerStylePresetsResult(viewModel)
+        return layerStylePresetsResult(
+            viewModel,
+            presets: resultPresets ?? viewModel.customLayerStylePresets
+        )
     }
 
-    private func layerStylePresetsResult(_ viewModel: ImageEditorViewModel) -> XomoJSONValue {
-        .array(viewModel.customLayerStylePresets.map { preset in
+    private func layerStylePresetsResult(
+        _ viewModel: ImageEditorViewModel,
+        presets: [ImageEditorLayerStylePreset]
+    ) -> XomoJSONValue {
+        .array(presets.map { preset in
             let style = preset.layerStyle
             return .object([
                 "id": .string(preset.id),
                 "title": .string(preset.title),
+                "builtIn": .bool(preset.isBuiltIn),
                 "active": .bool(viewModel.activeLayerStylePreset?.id == preset.id),
                 "effectsEnabled": .bool(style.effectsEnabled),
                 "effectScale": .number(Double(style.effectScale * 100)),
@@ -2044,9 +2062,9 @@ private extension XomoAutomationRegistry {
             "mode": XomoAutomationSchema.string(description: "Alignment or distribution mode", values: ["left", "horizontalCenter", "right", "top", "verticalCenter", "bottom", "horizontal", "vertical"]),
             "target": XomoAutomationSchema.string(description: "Alignment target", values: ["selectionBounds", "canvas", "pixelSelection"])
         ], required: ["action", "mode"]),
-        tool("xomo.layer.style", "Copy, paste, clear, hide, show, or manage portable persisted complete layer style presets.", [
-            "action": XomoAutomationSchema.string(description: "Layer style action", values: ["copy", "paste", "clear", "hideSelected", "showSelected", "hideAll", "showAll", "presetList", "presetCreate", "presetApply", "presetDelete", "presetRename", "presetMove", "presetImport", "presetExport"]),
-            "id": XomoAutomationSchema.string(description: "Layer style preset ID for apply, delete, rename, move, or selected export"),
+        tool("xomo.layer.style", "Copy, paste, clear, hide, show, browse built-in styles, or manage portable persisted complete layer style presets.", [
+            "action": XomoAutomationSchema.string(description: "Layer style action", values: ["copy", "paste", "clear", "hideSelected", "showSelected", "hideAll", "showAll", "presetList", "presetCatalog", "presetCreate", "presetApply", "presetDuplicate", "presetDelete", "presetRename", "presetMove", "presetImport", "presetExport"]),
+            "id": XomoAutomationSchema.string(description: "Layer style preset ID for apply, duplicate, delete, rename, move, or selected export"),
             "name": XomoAutomationSchema.string(description: "Custom preset name when creating or renaming"),
             "direction": XomoAutomationSchema.string(description: "Preset ordering direction", values: ImageEditorLayerStylePresetMoveDirection.allCases.map(\.rawValue)),
             "path": XomoAutomationSchema.string(description: "Local .xomostyles path for preset import or export")

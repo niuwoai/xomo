@@ -113,7 +113,7 @@ extension ImageEditorViewModel {
         let presets: [ImageEditorLayerStylePreset]
         if let presetIDs {
             let indexedPresets = Dictionary(
-                uniqueKeysWithValues: customLayerStylePresets.map { ($0.id, $0) }
+                uniqueKeysWithValues: availableLayerStylePresets.map { ($0.id, $0) }
             )
             presets = presetIDs.compactMap { indexedPresets[$0] }
         } else {
@@ -278,7 +278,8 @@ struct ImageEditorLayerStylePresetManager: View {
     @State private var nameDraft = ""
 
     private var selectedPreset: ImageEditorLayerStylePreset? {
-        viewModel.customLayerStylePresets.first { $0.id == selectedPresetID }
+        guard let selectedPresetID else { return nil }
+        return viewModel.layerStylePreset(id: selectedPresetID)
     }
 
     private var selectedPresetIndex: Int? {
@@ -310,7 +311,7 @@ struct ImageEditorLayerStylePresetManager: View {
 
             HStack(spacing: 0) {
                 presetList
-                    .frame(width: 220)
+                    .frame(width: 250)
                 Divider()
                 presetInspector
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -320,7 +321,7 @@ struct ImageEditorLayerStylePresetManager: View {
             footer
                 .padding(12)
         }
-        .frame(width: 580, height: 420)
+        .frame(width: 640, height: 450)
         .background(Color(nsColor: ImageEditorTheme.panel))
         .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
         .onAppear(perform: selectInitialPreset)
@@ -330,40 +331,23 @@ struct ImageEditorLayerStylePresetManager: View {
 
     private var presetList: some View {
         ScrollView {
-            LazyVStack(spacing: 4) {
+            LazyVStack(alignment: .leading, spacing: 5) {
+                presetSectionTitle("imageEditor.layerStylePreset.builtInSection")
+                ForEach(viewModel.builtInLayerStylePresets) { preset in
+                    presetRow(preset)
+                }
+
+                presetSectionTitle("imageEditor.layerStylePreset.customSection")
                 if viewModel.customLayerStylePresets.isEmpty {
                     Text(L10n.text("imageEditor.layerStylePreset.empty"))
                         .font(.system(size: 11))
                         .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(12)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
                 } else {
                     ForEach(viewModel.customLayerStylePresets) { preset in
-                        Button {
-                            selectedPresetID = preset.id
-                        } label: {
-                            HStack(spacing: 8) {
-                                Image(systemName: "square.stack.3d.up")
-                                Text(preset.title)
-                                    .lineLimit(1)
-                                Spacer(minLength: 0)
-                                if viewModel.activeLayerStylePreset?.id == preset.id {
-                                    Image(systemName: "checkmark")
-                                }
-                            }
-                            .font(.system(size: 11, weight: .semibold))
-                            .padding(.horizontal, 10)
-                            .frame(height: 30)
-                            .contentShape(Rectangle())
-                        }
-                        .buttonStyle(.plain)
-                        .focusable(false)
-                        .background(
-                            selectedPresetID == preset.id
-                                ? Color.accentColor.opacity(0.72)
-                                : Color.white.opacity(0.05)
-                        )
-                        .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
+                        presetRow(preset)
                     }
                 }
             }
@@ -374,42 +358,26 @@ struct ImageEditorLayerStylePresetManager: View {
 
     @ViewBuilder
     private var presetInspector: some View {
-        if let preset = selectedPreset, let index = selectedPresetIndex {
+        if let preset = selectedPreset {
             VStack(alignment: .leading, spacing: 14) {
-                Text(L10n.text("imageEditor.layerStylePreset.name"))
-                    .font(.system(size: 11, weight: .semibold))
                 HStack(spacing: 8) {
-                    TextField(L10n.text("imageEditor.layerStylePreset.namePlaceholder"), text: $nameDraft)
-                        .textFieldStyle(.roundedBorder)
-                        .onSubmit {
-                            renameSelectedPreset()
-                        }
-                    Button(L10n.text("imageEditor.action.layerStylePresetRename")) {
-                        renameSelectedPreset()
+                    ImageEditorLayerStylePresetThumbnail(preset: preset, width: 120, height: 78)
+                    VStack(alignment: .leading, spacing: 5) {
+                        Text(preset.title)
+                            .font(.system(size: 14, weight: .bold))
+                            .lineLimit(2)
+                        Text(L10n.text(
+                            preset.isBuiltIn
+                                ? "imageEditor.layerStylePreset.builtInBadge"
+                                : "imageEditor.layerStylePreset.customBadge"
+                        ))
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
                     }
-                    .focusable(false)
-                    .disabled(nameDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }
 
-                Text(L10n.text("imageEditor.layerStylePreset.order"))
-                    .font(.system(size: 11, weight: .semibold))
-                HStack(spacing: 8) {
-                    managerButton("imageEditor.action.layerTop", symbol: "arrow.up.to.line") {
-                        moveSelectedPreset(.top)
-                    }
-                    .disabled(index == 0)
-                    managerButton("imageEditor.action.layerUp", symbol: "arrow.up") {
-                        moveSelectedPreset(.up)
-                    }
-                    .disabled(index == 0)
-                    managerButton("imageEditor.action.layerDown", symbol: "arrow.down") {
-                        moveSelectedPreset(.down)
-                    }
-                    .disabled(index == viewModel.customLayerStylePresets.count - 1)
-                    managerButton("imageEditor.action.layerBottom", symbol: "arrow.down.to.line") {
-                        moveSelectedPreset(.bottom)
-                    }
-                    .disabled(index == viewModel.customLayerStylePresets.count - 1)
+                if !preset.isBuiltIn, let index = selectedPresetIndex {
+                    customPresetControls(index: index)
                 }
 
                 Divider()
@@ -427,10 +395,19 @@ struct ImageEditorLayerStylePresetManager: View {
                     }
                     .focusable(false)
                     Spacer()
-                    Button(L10n.text("imageEditor.action.layerStylePresetDelete"), role: .destructive) {
-                        viewModel.deleteLayerStylePreset(preset)
+                    if preset.isBuiltIn {
+                        Button(L10n.text("imageEditor.action.layerStylePresetDuplicate")) {
+                            if let copy = viewModel.duplicateLayerStylePresetToCustom(preset) {
+                                selectedPresetID = copy.id
+                            }
+                        }
+                        .focusable(false)
+                    } else {
+                        Button(L10n.text("imageEditor.action.layerStylePresetDelete"), role: .destructive) {
+                            viewModel.deleteLayerStylePreset(preset)
+                        }
+                        .focusable(false)
                     }
-                    .focusable(false)
                 }
             }
             .padding(16)
@@ -443,6 +420,83 @@ struct ImageEditorLayerStylePresetManager: View {
             }
             .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+    }
+
+    private func presetSectionTitle(_ key: String) -> some View {
+        Text(L10n.text(key))
+            .font(.system(size: 10, weight: .bold))
+            .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+            .textCase(.uppercase)
+            .padding(.horizontal, 4)
+            .padding(.top, 5)
+    }
+
+    private func presetRow(_ preset: ImageEditorLayerStylePreset) -> some View {
+        Button {
+            selectedPresetID = preset.id
+        } label: {
+            HStack(spacing: 8) {
+                ImageEditorLayerStylePresetThumbnail(preset: preset, width: 40, height: 26)
+                Text(preset.title)
+                    .lineLimit(1)
+                Spacer(minLength: 0)
+                if viewModel.activeLayerStylePreset?.id == preset.id {
+                    Image(systemName: "checkmark")
+                }
+            }
+            .font(.system(size: 11, weight: .semibold))
+            .padding(.horizontal, 8)
+            .frame(height: 34)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .focusable(false)
+        .background(
+            selectedPresetID == preset.id
+                ? Color.accentColor.opacity(0.72)
+                : Color.white.opacity(0.05)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
+    }
+
+    private func customPresetControls(index: Int) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(L10n.text("imageEditor.layerStylePreset.name"))
+                .font(.system(size: 11, weight: .semibold))
+            HStack(spacing: 8) {
+                TextField(L10n.text("imageEditor.layerStylePreset.namePlaceholder"), text: $nameDraft)
+                    .textFieldStyle(.roundedBorder)
+                    .onSubmit {
+                        renameSelectedPreset()
+                    }
+                Button(L10n.text("imageEditor.action.layerStylePresetRename")) {
+                    renameSelectedPreset()
+                }
+                .focusable(false)
+                .disabled(nameDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            }
+
+            Text(L10n.text("imageEditor.layerStylePreset.order"))
+                .font(.system(size: 11, weight: .semibold))
+            HStack(spacing: 8) {
+                managerButton("imageEditor.action.layerTop", symbol: "arrow.up.to.line") {
+                    moveSelectedPreset(.top)
+                }
+                .disabled(index == 0)
+                managerButton("imageEditor.action.layerUp", symbol: "arrow.up") {
+                    moveSelectedPreset(.up)
+                }
+                .disabled(index == 0)
+                managerButton("imageEditor.action.layerDown", symbol: "arrow.down") {
+                    moveSelectedPreset(.down)
+                }
+                .disabled(index == viewModel.customLayerStylePresets.count - 1)
+                managerButton("imageEditor.action.layerBottom", symbol: "arrow.down.to.line") {
+                    moveSelectedPreset(.bottom)
+                }
+                .disabled(index == viewModel.customLayerStylePresets.count - 1)
+            }
         }
     }
 
@@ -524,7 +578,7 @@ struct ImageEditorLayerStylePresetManager: View {
 
     private func selectInitialPreset() {
         selectedPresetID = viewModel.activeLayerStylePreset?.id
-            ?? viewModel.customLayerStylePresets.first?.id
+            ?? viewModel.availableLayerStylePresets.first?.id
         syncNameDraft()
     }
 
@@ -533,7 +587,7 @@ struct ImageEditorLayerStylePresetManager: View {
             syncNameDraft()
             return
         }
-        selectedPresetID = viewModel.customLayerStylePresets.first?.id
+        selectedPresetID = viewModel.availableLayerStylePresets.first?.id
         syncNameDraft()
     }
 
