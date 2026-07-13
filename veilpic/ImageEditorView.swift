@@ -4459,6 +4459,8 @@ struct ImageEditorView: View {
                     .font(.system(size: 11, weight: .bold))
                     .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
 
+                ImageEditorLayerStylePresetMenu(viewModel: viewModel)
+
                 HStack(spacing: 8) {
                     Button {
                         viewModel.toggleSelectedLayerEffects()

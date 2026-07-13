@@ -346,6 +346,7 @@
 "imageEditor.menu.layer.align" = "整列";
 "imageEditor.menu.layer.mask" = "レイヤーマスク";
 "imageEditor.menu.layer.style" = "レイヤースタイル";
+"imageEditor.menu.layer.stylePresets" = "スタイルプリセット";
 "imageEditor.menu.layer.comps" = "レイヤーコンプ";
 "imageEditor.menu.select.alphaChannels" = "Alpha チャンネル";
 "imageEditor.menu.select.transform" = "選択範囲を変形";
@@ -895,6 +896,11 @@
 "imageEditor.patternFill.scale" = "スケール";
 "imageEditor.patternFill.scaleValue" = "%d px";
 "imageEditor.properties.layerStyle" = "レイヤースタイル";
+"imageEditor.option.layerStylePreset" = "スタイルプリセット";
+"imageEditor.help.layerStylePreset" = "プリセットを適用するか、選択レイヤーの完全なスタイルを保存します";
+"imageEditor.layerStylePreset.empty" = "カスタムスタイルプリセットはありません";
+"imageEditor.layerStylePreset.untitled" = "名称未設定スタイル";
+"imageEditor.layerStylePreset.customName" = "カスタムスタイル %d";
 "imageEditor.properties.strokeWidthValue" = "境界線：%d px";
 "imageEditor.properties.strokePosition" = "境界線の位置";
 "imageEditor.strokePosition.outside" = "外側";
@@ -1187,6 +1193,7 @@
 "imageEditor.history.layerStyle" = "レイヤースタイルを調整";
 "imageEditor.history.globalLight" = "グローバルライトを調整";
 "imageEditor.history.layerStylePaste" = "レイヤースタイルをペースト";
+"imageEditor.history.layerStylePresetApply" = "レイヤースタイルプリセットを適用";
 "imageEditor.history.layerStyleClear" = "レイヤースタイルをクリア";
 "imageEditor.history.layerEffectsHideSelected" = "選択レイヤー効果を非表示";
 "imageEditor.history.layerEffectsShowSelected" = "選択レイヤー効果を表示";
@@ -1740,6 +1747,12 @@
 "imageEditor.status.layerStyleCopied" = "現在のレイヤースタイルをコピーしました";
 "imageEditor.status.layerStyleClipboardEmpty" = "先にレイヤースタイルをコピーしてください";
 "imageEditor.status.layerStylePasted" = "%d 個のレイヤーへレイヤースタイルをペーストしました";
+"imageEditor.status.layerStylePresetLimitReached" = "カスタムスタイルプリセットは最大%d件まで保存できます";
+"imageEditor.status.layerStylePresetRequiresStyle" = "選択したレイヤーには保存できる効果がありません";
+"imageEditor.status.layerStylePresetCreated" = "スタイルプリセットを作成しました：%@";
+"imageEditor.status.layerStylePresetAlreadyApplied" = "スタイルプリセットは適用済みです：%@";
+"imageEditor.status.layerStylePresetApplied" = "%@を%d個のレイヤーに適用しました";
+"imageEditor.status.layerStylePresetDeleted" = "スタイルプリセットを削除しました：%@";
 "imageEditor.status.layerStyleCleared" = "%d 個のレイヤースタイルをクリアしました";
 "imageEditor.status.layerStyleReady" = "レイヤースタイルオプションを準備しました";
 "imageEditor.status.layerStyleUpdated" = "レイヤースタイルを更新しました";
@@ -1988,6 +2001,8 @@
 "imageEditor.action.layerTrimTransparentPixels" = "透明ピクセルをトリミング";
 "imageEditor.action.layerStyleBlendingOptions" = "描画オプション...";
 "imageEditor.action.layerStyleCopy" = "レイヤースタイルをコピー";
+"imageEditor.action.layerStylePresetCreate" = "現在のレイヤーからスタイルプリセットを作成";
+"imageEditor.action.layerStylePresetDelete" = "現在のスタイルプリセットを削除";
 "imageEditor.action.layerStylePaste" = "レイヤースタイルをペースト";
 "imageEditor.action.layerStyleClear" = "レイヤースタイルをクリア";
 "imageEditor.action.layerEffectsHideSelected" = "選択レイヤー効果を非表示";

@@ -154,6 +154,9 @@ final class XomoAutomationRegistry {
         case "xomo.layer.align":
             try layerAlignment(arguments, viewModel: viewModel)
         case "xomo.layer.style":
+            if (arguments["action"]?.stringValue ?? "").hasPrefix("preset") {
+                return try layerStylePresetAction(arguments, viewModel: viewModel)
+            }
             try layerStyleAction(arguments, viewModel: viewModel)
         case "xomo.layer.style_settings":
             try layerStyleSetting(arguments, viewModel: viewModel)
@@ -966,6 +969,69 @@ final class XomoAutomationRegistry {
         case "showAll": viewModel.showAllLayerEffects()
         default: throw XomoAutomationCallError.invalidArgument("Unknown layer style action")
         }
+    }
+
+    private func layerStylePresetAction(
+        _ arguments: [String: XomoJSONValue],
+        viewModel: ImageEditorViewModel
+    ) throws -> XomoJSONValue {
+        switch try requiredString("action", in: arguments) {
+        case "presetList":
+            break
+        case "presetCreate":
+            let preset = viewModel.createLayerStylePresetFromSelectedLayer(
+                name: arguments["name"]?.stringValue
+            )
+            guard preset != nil else {
+                throw XomoAutomationCallError.invalidArgument(
+                    "A configured layer style is required and the custom preset limit must not be reached"
+                )
+            }
+        case "presetApply":
+            let id = try requiredString("id", in: arguments)
+            guard let preset = viewModel.customLayerStylePresets.first(where: { $0.id == id }) else {
+                throw XomoAutomationCallError.notFound("Layer style preset \(id)")
+            }
+            viewModel.applyLayerStylePreset(preset)
+        case "presetDelete":
+            let id = try requiredString("id", in: arguments)
+            guard let preset = viewModel.customLayerStylePresets.first(where: { $0.id == id }) else {
+                throw XomoAutomationCallError.notFound("Layer style preset \(id)")
+            }
+            viewModel.deleteLayerStylePreset(preset)
+        default:
+            throw XomoAutomationCallError.invalidArgument("Unknown layer style preset action")
+        }
+        return layerStylePresetsResult(viewModel)
+    }
+
+    private func layerStylePresetsResult(_ viewModel: ImageEditorViewModel) -> XomoJSONValue {
+        .array(viewModel.customLayerStylePresets.map { preset in
+            let style = preset.layerStyle
+            return .object([
+                "id": .string(preset.id),
+                "title": .string(preset.title),
+                "active": .bool(viewModel.activeLayerStylePreset?.id == preset.id),
+                "effectsEnabled": .bool(style.effectsEnabled),
+                "effectScale": .number(Double(style.effectScale * 100)),
+                "effects": .array(layerStyleEffectNames(style).map(XomoJSONValue.string))
+            ])
+        })
+    }
+
+    private func layerStyleEffectNames(_ style: ImageEditorLayerStyle) -> [String] {
+        [
+            style.strokeEnabled ? "stroke" : nil,
+            style.shadowEnabled ? "shadow" : nil,
+            style.innerShadowEnabled ? "innerShadow" : nil,
+            style.outerGlowEnabled ? "outerGlow" : nil,
+            style.innerGlowEnabled ? "innerGlow" : nil,
+            style.colorOverlayEnabled ? "colorOverlay" : nil,
+            style.gradientOverlayEnabled ? "gradientOverlay" : nil,
+            style.patternOverlayEnabled ? "patternOverlay" : nil,
+            style.satinEnabled ? "satin" : nil,
+            style.bevelEnabled ? "bevel" : nil
+        ].compactMap { $0 }
     }
 
     private func layerStyleSetting(
@@ -1946,8 +2012,10 @@ private extension XomoAutomationRegistry {
             "mode": XomoAutomationSchema.string(description: "Alignment or distribution mode", values: ["left", "horizontalCenter", "right", "top", "verticalCenter", "bottom", "horizontal", "vertical"]),
             "target": XomoAutomationSchema.string(description: "Alignment target", values: ["selectionBounds", "canvas", "pixelSelection"])
         ], required: ["action", "mode"]),
-        tool("xomo.layer.style", "Copy, paste, clear, hide, or show complete layer styles.", [
-            "action": XomoAutomationSchema.string(description: "Layer style action", values: ["copy", "paste", "clear", "hideSelected", "showSelected", "hideAll", "showAll"])
+        tool("xomo.layer.style", "Copy, paste, clear, hide, show, or manage persisted complete layer style presets.", [
+            "action": XomoAutomationSchema.string(description: "Layer style action", values: ["copy", "paste", "clear", "hideSelected", "showSelected", "hideAll", "showAll", "presetList", "presetCreate", "presetApply", "presetDelete"]),
+            "id": XomoAutomationSchema.string(description: "Layer style preset ID for apply or delete"),
+            "name": XomoAutomationSchema.string(description: "Optional custom preset name when creating")
         ], required: ["action"]),
         tool("xomo.layer.style_settings", "Set effect scale, stroke, shadow, glow, overlay, satin, bevel, and global-light properties.", [
             "property": XomoAutomationSchema.string(description: "Layer style property", values: ["effectScale", "strokeWidth", "strokeOpacity", "strokeColor", "shadowOpacity", "shadowColor", "shadowBlur", "shadowSpread", "shadowNoise", "shadowDistance", "shadowAngle", "globalLightAngle", "innerShadowOpacity", "innerShadowBlur", "innerShadowChoke", "innerShadowNoise", "innerShadowDistance", "innerShadowAngle", "outerGlowOpacity", "outerGlowColor", "outerGlowBlur", "outerGlowSpread", "outerGlowNoise", "innerGlowOpacity", "innerGlowColor", "innerGlowBlur", "innerGlowChoke", "innerGlowNoise", "colorOverlayOpacity", "colorOverlayColor", "gradientOverlayOpacity", "gradientOverlayScale", "gradientOverlayAngle", "patternOverlayOpacity", "patternOverlayScale", "satinOpacity", "satinColor", "satinDistance", "satinSize", "satinAngle", "satinInvert", "bevelSize", "bevelOpacity", "bevelHighlightColor", "bevelShadowColor", "bevelSoften", "bevelAngle"]),

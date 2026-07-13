@@ -67,6 +67,22 @@ extension ImageEditorViewModel {
         !selectedLayerStyleTargetIndices().isEmpty
     }
 
+    var canCreateLayerStylePreset: Bool {
+        guard customLayerStylePresets.count < ImageEditorLayerStylePresetPreferences.maximumPresetCount,
+              let layer = document.selectedLayer
+        else { return false }
+        return canCopyLayerStyle(layer) && layer.style.hasConfiguredEffects
+    }
+
+    var canApplyLayerStylePreset: Bool {
+        !selectedLayerStyleTargetIndices().isEmpty
+    }
+
+    var activeLayerStylePreset: ImageEditorLayerStylePreset? {
+        guard let style = document.selectedLayer?.style else { return nil }
+        return customLayerStylePresets.first { $0.matches(style) }
+    }
+
     var canToggleSelectedLayerEffects: Bool {
         !selectedLayerEffectVisibilityTargetIndices().isEmpty
     }
@@ -485,6 +501,84 @@ extension ImageEditorViewModel {
         }
         appendHistory(L10n.text("imageEditor.history.layerStylePaste"))
         statusText = L10n.format("imageEditor.status.layerStylePasted", targetIndices.count)
+    }
+
+    @discardableResult
+    func createLayerStylePresetFromSelectedLayer(
+        name requestedName: String? = nil
+    ) -> ImageEditorLayerStylePreset? {
+        guard customLayerStylePresets.count < ImageEditorLayerStylePresetPreferences.maximumPresetCount else {
+            statusText = L10n.format(
+                "imageEditor.status.layerStylePresetLimitReached",
+                ImageEditorLayerStylePresetPreferences.maximumPresetCount
+            )
+            return nil
+        }
+        guard let layer = document.selectedLayer,
+              canCopyLayerStyle(layer),
+              layer.style.hasConfiguredEffects
+        else {
+            statusText = L10n.text("imageEditor.status.layerStylePresetRequiresStyle")
+            return nil
+        }
+
+        let trimmedName = requestedName?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let name: String
+        if let trimmedName, !trimmedName.isEmpty {
+            name = trimmedName
+        } else {
+            let existingNames = Set(customLayerStylePresets.map(\.name))
+            var sequence = customLayerStylePresets.count + 1
+            var candidate = L10n.format("imageEditor.layerStylePreset.customName", sequence)
+            while existingNames.contains(candidate) {
+                sequence += 1
+                candidate = L10n.format("imageEditor.layerStylePreset.customName", sequence)
+            }
+            name = candidate
+        }
+
+        let preset = ImageEditorLayerStylePreset(
+            id: UUID().uuidString,
+            name: name,
+            style: ImageEditorProjectLayerStyle(style: layer.style)
+        ).normalizedCustomPreset
+        customLayerStylePresets.append(preset)
+        persistLayerStylePresetPreferences()
+        statusText = L10n.format("imageEditor.status.layerStylePresetCreated", preset.title)
+        return preset
+    }
+
+    func applyLayerStylePreset(_ preset: ImageEditorLayerStylePreset) {
+        let targetIndices = selectedLayerStyleTargetIndices().filter { index in
+            !preset.matches(document.layers[index].style)
+        }
+        guard !targetIndices.isEmpty else {
+            statusText = canApplyLayerStylePreset
+                ? L10n.format("imageEditor.status.layerStylePresetAlreadyApplied", preset.title)
+                : L10n.text("imageEditor.status.layerLocked")
+            return
+        }
+
+        pushUndo()
+        let style = preset.layerStyle
+        for index in targetIndices {
+            document.layers[index].style = style
+        }
+        appendHistory(L10n.text("imageEditor.history.layerStylePresetApply"))
+        statusText = L10n.format(
+            "imageEditor.status.layerStylePresetApplied",
+            preset.title,
+            targetIndices.count
+        )
+    }
+
+    func deleteLayerStylePreset(_ preset: ImageEditorLayerStylePreset) {
+        guard let index = customLayerStylePresets.firstIndex(where: { $0.id == preset.id }) else {
+            return
+        }
+        let removed = customLayerStylePresets.remove(at: index)
+        persistLayerStylePresetPreferences()
+        statusText = L10n.format("imageEditor.status.layerStylePresetDeleted", removed.title)
     }
 
     func clearSelectedLayerStyles() {

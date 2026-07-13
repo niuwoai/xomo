@@ -63,6 +63,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var brushPressureControlsFlow = true
     @Published var brushPressureSensitivity: CGFloat = 50
     @Published private(set) var customBrushPresets: [ImageEditorBrushPreset] = []
+    @Published var customLayerStylePresets: [ImageEditorLayerStylePreset] = []
     @Published var patchMode: ImageEditorPatchMode = .source
     @Published var feather: CGFloat = 0
     @Published var selectionModifyAmount: CGFloat = 4
@@ -328,6 +329,7 @@ final class ImageEditorViewModel: ObservableObject {
         let quickMaskPreferences = ImageEditorQuickMaskPreferences.load(from: preferencesDefaults)
         let brushDynamicsPreferences = ImageEditorBrushDynamicsPreferences.load(from: preferencesDefaults)
         let brushPresetPreferences = ImageEditorBrushPresetPreferences.load(from: preferencesDefaults)
+        let layerStylePresetPreferences = ImageEditorLayerStylePresetPreferences.load(from: preferencesDefaults)
         document = ImageEditorDocument(sourceName: sourceName, image: image)
         self.onApply = onApply
         workspacePreferencesDefaults = preferencesDefaults
@@ -338,6 +340,7 @@ final class ImageEditorViewModel: ObservableObject {
         brushPressureControlsFlow = brushDynamicsPreferences.pressureControlsFlow
         brushPressureSensitivity = CGFloat(brushDynamicsPreferences.pressureSensitivity)
         customBrushPresets = brushPresetPreferences.presets
+        customLayerStylePresets = layerStylePresetPreferences.presets
         cachedCurrentImage = document.layers.first?.image
         refreshSelectionEdgeGeometry()
         syncSizeControlsFromDocument()
@@ -354,6 +357,7 @@ final class ImageEditorViewModel: ObservableObject {
         let quickMaskPreferences = ImageEditorQuickMaskPreferences.load(from: preferencesDefaults)
         let brushDynamicsPreferences = ImageEditorBrushDynamicsPreferences.load(from: preferencesDefaults)
         let brushPresetPreferences = ImageEditorBrushPresetPreferences.load(from: preferencesDefaults)
+        let layerStylePresetPreferences = ImageEditorLayerStylePresetPreferences.load(from: preferencesDefaults)
         self.document = document
         self.onApply = onApply
         workspacePreferencesDefaults = preferencesDefaults
@@ -364,6 +368,7 @@ final class ImageEditorViewModel: ObservableObject {
         brushPressureControlsFlow = brushDynamicsPreferences.pressureControlsFlow
         brushPressureSensitivity = CGFloat(brushDynamicsPreferences.pressureSensitivity)
         customBrushPresets = brushPresetPreferences.presets
+        customLayerStylePresets = layerStylePresetPreferences.presets
         cachedCurrentImage = initialCompositeImage
         refreshSelectionEdgeGeometry()
         syncSizeControlsFromDocument()
@@ -2022,6 +2027,11 @@ final class ImageEditorViewModel: ObservableObject {
 
     private func persistBrushPresetPreferences() {
         ImageEditorBrushPresetPreferences(presets: customBrushPresets)
+            .save(to: workspacePreferencesDefaults)
+    }
+
+    func persistLayerStylePresetPreferences() {
+        ImageEditorLayerStylePresetPreferences(presets: customLayerStylePresets)
             .save(to: workspacePreferencesDefaults)
     }
 

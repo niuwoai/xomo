@@ -346,6 +346,7 @@
 "imageEditor.menu.layer.align" = "Align";
 "imageEditor.menu.layer.mask" = "Layer Mask";
 "imageEditor.menu.layer.style" = "Layer Style";
+"imageEditor.menu.layer.stylePresets" = "Style Presets";
 "imageEditor.menu.layer.comps" = "Layer Comps";
 "imageEditor.menu.select.alphaChannels" = "Alpha Channels";
 "imageEditor.menu.select.transform" = "Transform Selection";
@@ -895,6 +896,11 @@
 "imageEditor.patternFill.scale" = "Scale";
 "imageEditor.patternFill.scaleValue" = "%d px";
 "imageEditor.properties.layerStyle" = "Layer Style";
+"imageEditor.option.layerStylePreset" = "Style Presets";
+"imageEditor.help.layerStylePreset" = "Apply a preset or save the selected layer's complete style";
+"imageEditor.layerStylePreset.empty" = "No custom style presets";
+"imageEditor.layerStylePreset.untitled" = "Untitled Style";
+"imageEditor.layerStylePreset.customName" = "Custom Style %d";
 "imageEditor.properties.strokeWidthValue" = "Stroke: %d px";
 "imageEditor.properties.strokePosition" = "Stroke Position";
 "imageEditor.strokePosition.outside" = "Outside";
@@ -1187,6 +1193,7 @@
 "imageEditor.history.layerStyle" = "Adjust Layer Style";
 "imageEditor.history.globalLight" = "Adjust Global Light";
 "imageEditor.history.layerStylePaste" = "Paste Layer Style";
+"imageEditor.history.layerStylePresetApply" = "Apply Layer Style Preset";
 "imageEditor.history.layerStyleClear" = "Clear Layer Style";
 "imageEditor.history.layerEffectsHideSelected" = "Hide Selected Layer Effects";
 "imageEditor.history.layerEffectsShowSelected" = "Show Selected Layer Effects";
@@ -1740,6 +1747,12 @@
 "imageEditor.status.layerStyleCopied" = "Current layer style copied";
 "imageEditor.status.layerStyleClipboardEmpty" = "Copy a layer style first";
 "imageEditor.status.layerStylePasted" = "Layer style pasted to %d layers";
+"imageEditor.status.layerStylePresetLimitReached" = "You can save up to %d custom style presets";
+"imageEditor.status.layerStylePresetRequiresStyle" = "The selected layer has no effects to save";
+"imageEditor.status.layerStylePresetCreated" = "Style preset created: %@";
+"imageEditor.status.layerStylePresetAlreadyApplied" = "Style preset is already applied: %@";
+"imageEditor.status.layerStylePresetApplied" = "%@ applied to %d layers";
+"imageEditor.status.layerStylePresetDeleted" = "Style preset deleted: %@";
 "imageEditor.status.layerStyleCleared" = "Layer style cleared from %d layers";
 "imageEditor.status.layerStyleReady" = "Layer style options ready";
 "imageEditor.status.layerStyleUpdated" = "Layer style updated";
@@ -1988,6 +2001,8 @@
 "imageEditor.action.layerTrimTransparentPixels" = "Trim Transparent Pixels";
 "imageEditor.action.layerStyleBlendingOptions" = "Blending Options...";
 "imageEditor.action.layerStyleCopy" = "Copy Layer Style";
+"imageEditor.action.layerStylePresetCreate" = "Create Style Preset from Current Layer";
+"imageEditor.action.layerStylePresetDelete" = "Delete Current Style Preset";
 "imageEditor.action.layerStylePaste" = "Paste Layer Style";
 "imageEditor.action.layerStyleClear" = "Clear Layer Style";
 "imageEditor.action.layerEffectsHideSelected" = "Hide Selected Layer Effects";
