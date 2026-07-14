@@ -101,6 +101,8 @@ struct XomoFigmaNodeImportItem: Equatable, Identifiable, Sendable {
     var geometrySize: XomoFigmaPlanSize?
     var imageReference: String?
     var imageScaleMode: String?
+    var stackLayout: ImageEditorStackLayout?
+    var isStackLayoutExcluded: Bool
 }
 
 struct XomoFigmaNodeImportPlan: Equatable, Sendable {

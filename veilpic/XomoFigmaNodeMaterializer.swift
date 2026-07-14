@@ -94,6 +94,10 @@ enum XomoFigmaNodeMaterializer {
         case .group:
             layer = ImageEditorLayer.group(name: item.sourceName, size: canvasSize)
             if let assignedGroupID { layer.id = assignedGroupID }
+            if let frame = mappedFrame(item.frame, transform: transform) {
+                layer.frame = frame
+            }
+            layer.stackLayout = item.stackLayout
         case .text:
             guard let frame = mappedFrame(item.frame, transform: transform),
                   let text = item.text else { return nil }
@@ -122,6 +126,7 @@ enum XomoFigmaNodeMaterializer {
             layer = makeImagePlaceholderLayer(item: item, frame: frame)
         }
         layer.groupID = parentGroupID
+        layer.isStackLayoutExcluded = item.isStackLayoutExcluded
         layer.isVisible = item.isVisible
         layer.opacity = min(max(item.opacity, 0), 1)
         return layer
@@ -206,6 +211,7 @@ enum XomoFigmaNodeMaterializer {
             content: shapeContent(item: item, kind: .rectangle, scale: transform.scale)
         )
         layer.groupID = groupID
+        layer.isStackLayoutExcluded = true
         return layer
     }
 

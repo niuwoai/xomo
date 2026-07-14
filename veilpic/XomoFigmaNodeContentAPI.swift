@@ -209,10 +209,16 @@ enum XomoFigmaNodeImportMapper {
     ) -> XomoFigmaNodeImportItem {
         var issues: [XomoFigmaNodeMappingIssue] = []
         let mapping = targetMapping(node: node, issues: &issues)
+        let nativeStackLayout = stackLayout(node)
         if node.absoluteBoundingBox == nil {
             issues.append(.missingBounds)
         }
-        if node.layoutMode != nil, node.layoutMode != "NONE" {
+        if node.layoutMode != nil,
+           node.layoutMode != "NONE",
+           (nativeStackLayout == nil || hasUnsupportedAutoLayout(node)) {
+            issues.append(.autoLayoutFlattened)
+        }
+        if (node.layoutGrow ?? 0) > 0 || node.layoutAlign == "STRETCH" {
             issues.append(.autoLayoutFlattened)
         }
         if node.isMask == true {
@@ -285,8 +291,59 @@ enum XomoFigmaNodeImportMapper {
                 XomoFigmaPlanSize(width: max(0, $0.width), height: max(0, $0.height))
             },
             imageReference: imagePaint(node: node)?.imageRef,
-            imageScaleMode: imagePaint(node: node)?.scaleMode
+            imageScaleMode: imagePaint(node: node)?.scaleMode,
+            stackLayout: nativeStackLayout,
+            isStackLayoutExcluded: node.layoutPositioning == "ABSOLUTE"
         )
+    }
+
+    private static func stackLayout(_ node: XomoFigmaNode) -> ImageEditorStackLayout? {
+        let axis: ImageEditorStackAxis
+        switch node.layoutMode {
+        case "HORIZONTAL":
+            axis = .horizontal
+        case "VERTICAL":
+            axis = .vertical
+        default:
+            return nil
+        }
+        return ImageEditorStackLayout(
+            axis: axis,
+            spacing: CGFloat(node.itemSpacing ?? 0),
+            paddingTop: CGFloat(node.paddingTop ?? 0),
+            paddingRight: CGFloat(node.paddingRight ?? 0),
+            paddingBottom: CGFloat(node.paddingBottom ?? 0),
+            paddingLeft: CGFloat(node.paddingLeft ?? 0),
+            primaryAlignment: primaryAlignment(node.primaryAxisAlignItems),
+            crossAlignment: crossAlignment(node.counterAxisAlignItems)
+        )
+    }
+
+    private static func primaryAlignment(_ value: String?) -> ImageEditorStackPrimaryAlignment {
+        switch value {
+        case "CENTER": return .center
+        case "MAX": return .end
+        case "SPACE_BETWEEN": return .spaceBetween
+        default: return .start
+        }
+    }
+
+    private static func crossAlignment(_ value: String?) -> ImageEditorStackCrossAlignment {
+        switch value {
+        case "CENTER": return .center
+        case "MAX": return .end
+        default: return .start
+        }
+    }
+
+    private static func hasUnsupportedAutoLayout(_ node: XomoFigmaNode) -> Bool {
+        let usesWrap = node.layoutWrap != nil && node.layoutWrap != "NO_WRAP"
+        let usesAutomaticSizing = node.primaryAxisSizingMode == "AUTO"
+            || node.counterAxisSizingMode == "AUTO"
+        return usesWrap
+            || usesAutomaticSizing
+            || node.counterAxisAlignItems == "BASELINE"
+            || node.counterAxisSpacing != nil
     }
 
     private static func targetMapping(
@@ -408,6 +465,20 @@ struct XomoFigmaNode: Decodable {
     var cornerRadius: Double?
     var rectangleCornerRadii: [Double]?
     var layoutMode: String?
+    var primaryAxisAlignItems: String?
+    var counterAxisAlignItems: String?
+    var itemSpacing: Double?
+    var counterAxisSpacing: Double?
+    var paddingLeft: Double?
+    var paddingRight: Double?
+    var paddingTop: Double?
+    var paddingBottom: Double?
+    var layoutWrap: String?
+    var primaryAxisSizingMode: String?
+    var counterAxisSizingMode: String?
+    var layoutPositioning: String?
+    var layoutGrow: Double?
+    var layoutAlign: String?
     var size: XomoFigmaSize?
     var relativeTransform: [[Double]]?
     var fillGeometry: [XomoFigmaPath]?

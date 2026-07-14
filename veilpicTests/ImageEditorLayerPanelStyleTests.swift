@@ -34,6 +34,7 @@ struct ImageEditorLayerPanelStyleTests {
         ) as? NSColor
         #expect(label.stringValue == "通道")
         #expect(label.refusesFirstResponder)
+        #expect(label.appearance?.name == .darkAqua)
         #expect((unselectedColor?.redComponent ?? 0) > 0.99)
         #expect((unselectedColor?.greenComponent ?? 0) > 0.99)
         #expect((unselectedColor?.blueComponent ?? 0) > 0.99)

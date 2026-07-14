@@ -2460,6 +2460,8 @@ struct ImageEditorLayer: Identifiable {
     var filterSettings = ImageEditorFilterSettings()
     var groupID: UUID?
     var isGroupExpanded = true
+    var stackLayout: ImageEditorStackLayout?
+    var isStackLayoutExcluded = false
     var isClippingMask = false
     var labelColor: ImageEditorLayerLabelColor?
     var xomoComponentInstance: XomoComponentInstance?
