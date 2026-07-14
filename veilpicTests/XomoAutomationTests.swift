@@ -963,6 +963,101 @@ struct XomoAutomationTests {
         #expect(delete.result?.arrayValue?.isEmpty == true)
     }
 
+    @Test func registryAdvertisesAndReordersIndependentSavedPaths() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        let anchors = [[
+            ImageEditorPathAnchor(point: CGPoint(x: 12, y: 10)),
+            ImageEditorPathAnchor(point: CGPoint(x: 74, y: 14)),
+            ImageEditorPathAnchor(point: CGPoint(x: 44, y: 54))
+        ]]
+        let first = ImageEditorSavedPath(name: "First", subpaths: anchors, isClosed: true)
+        let second = ImageEditorSavedPath(name: "Second", subpaths: anchors, isClosed: true)
+        let third = ImageEditorSavedPath(name: "Third", subpaths: anchors, isClosed: true)
+        viewModel.document.savedPaths = [first, second, third]
+        registry.register(viewModel)
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        let tools = try #require(toolsResponse.result?.arrayValue)
+        let savedPathTool = try #require(tools.first {
+            $0.objectValue?["name"] == .string("xomo.path.saved")
+        })
+        let advertisedActions = savedPathTool.objectValue?["inputSchema"]?
+            .objectValue?["properties"]?
+            .objectValue?["action"]?
+            .objectValue?["enum"]?
+            .arrayValue?
+            .compactMap(\.stringValue) ?? []
+        #expect(["moveUp", "moveDown", "moveToTop", "moveToBottom"].allSatisfy {
+            advertisedActions.contains($0)
+        })
+
+        let initialHistoryCount = viewModel.document.history.count
+        let moveUp = registry.execute(request(
+            operation: "call",
+            name: "xomo.path.saved",
+            arguments: ["action": .string("moveUp"), "id": .string(second.id.uuidString)]
+        ))
+        #expect(moveUp.ok)
+        #expect(moveUp.result?.arrayValue?.compactMap { $0.objectValue?["id"]?.stringValue } == [
+            second.id.uuidString, first.id.uuidString, third.id.uuidString
+        ])
+        #expect(viewModel.document.selectedSavedPathID == second.id)
+        #expect(viewModel.document.history.count == initialHistoryCount + 1)
+
+        let moveDown = registry.execute(request(
+            operation: "call",
+            name: "xomo.path.saved",
+            arguments: ["action": .string("moveDown"), "id": .string(second.id.uuidString)]
+        ))
+        #expect(moveDown.ok)
+        #expect(viewModel.document.savedPaths.map(\.id) == [first.id, second.id, third.id])
+        #expect(viewModel.document.history.count == initialHistoryCount + 2)
+
+        let moveToTop = registry.execute(request(
+            operation: "call",
+            name: "xomo.path.saved",
+            arguments: ["action": .string("moveToTop"), "id": .string(third.id.uuidString)]
+        ))
+        #expect(moveToTop.ok)
+        #expect(viewModel.document.savedPaths.map(\.id) == [third.id, first.id, second.id])
+        #expect(viewModel.document.history.count == initialHistoryCount + 3)
+
+        let moveToBottom = registry.execute(request(
+            operation: "call",
+            name: "xomo.path.saved",
+            arguments: ["action": .string("moveToBottom"), "id": .string(third.id.uuidString)]
+        ))
+        #expect(moveToBottom.ok)
+        #expect(viewModel.document.savedPaths.map(\.id) == [first.id, second.id, third.id])
+        #expect(moveToBottom.result?.arrayValue?.compactMap {
+            $0.objectValue?["id"]?.stringValue
+        } == [first.id.uuidString, second.id.uuidString, third.id.uuidString])
+        #expect(viewModel.document.selectedSavedPathID == third.id)
+        #expect(viewModel.document.history.count == initialHistoryCount + 4)
+
+        let beforeBoundaryPaths = viewModel.document.savedPaths
+        let boundary = registry.execute(request(
+            operation: "call",
+            name: "xomo.path.saved",
+            arguments: ["action": .string("moveUp"), "id": .string(first.id.uuidString)]
+        ))
+        #expect(!boundary.ok)
+        #expect(boundary.error?.contains("boundary") == true)
+        #expect(viewModel.document.savedPaths == beforeBoundaryPaths)
+        #expect(viewModel.document.history.count == initialHistoryCount + 4)
+
+        let missing = registry.execute(request(
+            operation: "call",
+            name: "xomo.path.saved",
+            arguments: ["action": .string("moveDown"), "id": .string(UUID().uuidString)]
+        ))
+        #expect(!missing.ok)
+        #expect(missing.error?.hasPrefix("Not found:") == true)
+        #expect(viewModel.document.savedPaths == beforeBoundaryPaths)
+        #expect(viewModel.document.history.count == initialHistoryCount + 4)
+    }
+
     @Test func registryReordersCollapsedGroupsAsVisibleSubtrees() {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

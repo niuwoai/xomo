@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.12.0-rc53 - 2026-07-15
+
+### Added
+- `xomo.path.saved` 新增 `moveUp`、`moveDown`、`moveToTop`、`moveToBottom`，MCP/CLI 可按保存路径 UUID 调整路径列表与固定轮廓绘制顺序。
+
+### Changed
+- 四种自动化排序动作直接复用路径面板的可撤销重排命令，保持当前路径选择，每次成功移动只写一条 History；路径不存在返回未找到，已在目标边界则明确失败且不修改文档。
+- MCP 工具 schema 同步公布四种新动作，自动化客户端无需猜测未声明的参数值。
+
+### Tests
+- 新增运行时 schema、四向排序结果、选择保持、单步 History 与边界无副作用测试。
+- 保存路径 MCP 新旧工作流及相关独立性回归 11/11、三语资源 4/4、SwiftPM CLI 2/2 通过；Debug `build-for-testing` 通过。
+- 核对 Debug App/CLI 版本为 `2.12.0-rc53`、Bundle ID 为 `im.some.xomo`、最低系统为 macOS 13.0，Debug App 为 arm64 架构。
+
 ## 2.12.0-rc52 - 2026-07-14
 
 ### Added
