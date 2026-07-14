@@ -251,6 +251,7 @@ struct ImageEditorProjectLayer: Codable {
     var groupID: UUID?
     var isGroupExpanded: Bool
     var stackLayout: ImageEditorStackLayout?
+    var stackChildLayout: ImageEditorStackChildLayout?
     var isStackLayoutExcluded: Bool?
     var isStackLayoutBackground: Bool?
     var isClippingMask: Bool
@@ -307,6 +308,7 @@ struct ImageEditorProjectLayer: Codable {
         groupID = layer.groupID
         isGroupExpanded = layer.isGroupExpanded
         stackLayout = layer.stackLayout
+        stackChildLayout = layer.stackChildLayout
         isStackLayoutExcluded = layer.isStackLayoutExcluded
         isStackLayoutBackground = layer.isStackLayoutBackground
         isClippingMask = layer.isClippingMask
@@ -356,6 +358,7 @@ struct ImageEditorProjectLayer: Codable {
         layer.groupID = groupID
         layer.isGroupExpanded = isGroupExpanded
         layer.stackLayout = stackLayout
+        layer.stackChildLayout = stackChildLayout
         layer.isStackLayoutExcluded = isStackLayoutExcluded ?? false
         layer.isStackLayoutBackground = isStackLayoutBackground ?? false
         layer.isClippingMask = isClippingMask

@@ -2461,6 +2461,7 @@ struct ImageEditorLayer: Identifiable {
     var groupID: UUID?
     var isGroupExpanded = true
     var stackLayout: ImageEditorStackLayout?
+    var stackChildLayout: ImageEditorStackChildLayout?
     var isStackLayoutExcluded = false
     var isStackLayoutBackground = false
     var isClippingMask = false

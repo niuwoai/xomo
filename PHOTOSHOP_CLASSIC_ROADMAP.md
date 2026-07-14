@@ -1,6 +1,6 @@
 # Xomo 经典 Photoshop 能力路线图
 
-> 最后更新：2026-07-15 ｜ 当前版本：v2.12.0-rc64 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座
+> 最后更新：2026-07-15 ｜ 当前版本：v2.12.0-rc65 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座
 
 ## 1. 范围原则
 
@@ -195,4 +195,6 @@
 - `v2.12.0-rc63` 验证：Auto Layout 5/5、图层白字 6/6、Figma 全链路 40/40、三语资源 4/4、CLI 2/2 与 Debug 测试产品构建通过；版本、Bundle ID、macOS 13.0 下限与 arm64 架构核对通过。
 - `v2.12.0-rc64`：Auto Layout 主轴/交叉轴支持固定与 Hug 容器尺寸；重排按内容、间距和内距更新组与 Frame 背景边界，继续保留项目往返和单步 Undo/Redo。
 - `v2.12.0-rc64` 验证：Auto Layout 8/8、Figma 全链路 40/40、三语资源 4/4、CLI 2/2 与 Debug 测试产品构建通过；版本、Bundle ID、macOS 13.0 下限与 arm64 架构核对通过。
+- `v2.12.0-rc65`：Auto Layout 子项支持主轴 Fill 权重分配与交叉轴 Stretch；Figma 映射、属性面板、项目往返、父组重排和单步 Undo/Redo 共用同一模型。
+- `v2.12.0-rc65` 验证：Auto Layout 10/10、图层标题与页签白字 6/6、Figma 全链路 40/40、三语资源 4/4、CLI 2/2 与独立 DerivedData 干净 Debug 构建通过；版本、Bundle ID、macOS 13.0 下限与 arm64 架构核对通过。
 - 下一小版本：在不扩大到完整布局引擎的前提下，评估只保留 Auto Layout 方向、间距与内边距元数据，或继续补图片 Crop/Tile/旋转的视觉烘焙精度。

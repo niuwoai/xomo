@@ -36,6 +36,34 @@ enum ImageEditorStackSizingMode: String, CaseIterable, Codable, Identifiable, Se
     var localizationKey: String { "imageEditor.stackLayout.sizing.\(rawValue)" }
 }
 
+enum ImageEditorStackChildSizingMode: String, CaseIterable, Identifiable, Sendable {
+    case fixed
+    case fill
+
+    var id: String { rawValue }
+    var localizationKey: String { "imageEditor.stackLayout.childSizing.\(rawValue)" }
+}
+
+struct ImageEditorStackChildLayout: Equatable, Codable, Sendable {
+    static let maximumGrow: CGFloat = 1_024
+
+    var grow: CGFloat
+    var stretchesCrossAxis: Bool
+
+    init(grow: CGFloat = 0, stretchesCrossAxis: Bool = false) {
+        self.grow = min(max(grow.isFinite ? grow : 0, 0), Self.maximumGrow)
+        self.stretchesCrossAxis = stretchesCrossAxis
+    }
+
+    var primarySizingMode: ImageEditorStackChildSizingMode {
+        grow > 0 ? .fill : .fixed
+    }
+
+    var crossSizingMode: ImageEditorStackChildSizingMode {
+        stretchesCrossAxis ? .fill : .fixed
+    }
+}
+
 struct ImageEditorStackLayout: Equatable, Codable, Sendable {
     static let maximumPadding: CGFloat = 4_096
     static let minimumSpacing: CGFloat = -1_024
@@ -156,18 +184,22 @@ enum ImageEditorStackLayoutEngine {
     static func layout(
         in container: CGRect,
         itemFrames: [CGRect],
+        itemLayouts: [ImageEditorStackChildLayout] = [],
         layout: ImageEditorStackLayout
     ) -> ImageEditorStackLayoutResult {
         let layout = layout.normalized()
-        let sizes = itemFrames.map(\.size)
-        let totalItemMain = sizes.reduce(0) { partial, size in
+        var sizes = itemFrames.map(\.size)
+        let resolvedItemLayouts = itemFrames.indices.map { index in
+            itemLayouts.indices.contains(index) ? itemLayouts[index] : ImageEditorStackChildLayout()
+        }
+        let originalItemMain = sizes.reduce(0) { partial, size in
             partial + (layout.axis == .horizontal ? size.width : size.height)
         }
         let maximumItemCross = sizes.reduce(0) { partial, size in
             max(partial, layout.axis == .horizontal ? size.height : size.width)
         }
         let gapCount = CGFloat(max(0, itemFrames.count - 1))
-        let requiredMain = totalItemMain + layout.spacing * gapCount + mainPadding(layout)
+        let requiredMain = originalItemMain + layout.spacing * gapCount + mainPadding(layout)
         let requiredCross = maximumItemCross + crossPadding(layout)
         var resolvedContainer = container.standardized
         if layout.primarySizingMode == .hug {
@@ -186,20 +218,44 @@ enum ImageEditorStackLayoutEngine {
             height: max(0, resolvedContainer.height - layout.paddingTop - layout.paddingBottom)
         )
         let availableMain = layout.axis == .horizontal ? inner.width : inner.height
+        let availableCross = layout.axis == .horizontal ? inner.height : inner.width
+        let totalGrow = resolvedItemLayouts.reduce(0) { $0 + $1.grow }
+        let usesPrimaryFill = totalGrow > 0 && layout.primarySizingMode == .fixed
+        if usesPrimaryFill {
+            let fixedMain = sizes.indices.reduce(0) { partial, index in
+                guard resolvedItemLayouts[index].grow <= 0 else { return partial }
+                return partial + mainSize(sizes[index], axis: layout.axis)
+            }
+            let distributableMain = max(0, availableMain - fixedMain - layout.spacing * gapCount)
+            for index in sizes.indices where resolvedItemLayouts[index].grow > 0 {
+                let share = distributableMain * resolvedItemLayouts[index].grow / totalGrow
+                setMainSize(max(1, share), axis: layout.axis, size: &sizes[index])
+            }
+        }
+        if layout.crossSizingMode == .fixed {
+            for index in sizes.indices where resolvedItemLayouts[index].stretchesCrossAxis {
+                setCrossSize(max(1, availableCross), axis: layout.axis, size: &sizes[index])
+            }
+        }
+        let totalItemMain = sizes.reduce(0) { partial, size in
+            partial + mainSize(size, axis: layout.axis)
+        }
         let spacing: CGFloat
-        if layout.primaryAlignment == .spaceBetween, itemFrames.count > 1 {
+        if layout.primaryAlignment == .spaceBetween, itemFrames.count > 1, !usesPrimaryFill {
             spacing = (availableMain - totalItemMain) / gapCount
         } else {
             spacing = layout.spacing
         }
         let contentMain = totalItemMain + spacing * gapCount
         let mainOffset: CGFloat
-        switch layout.primaryAlignment {
-        case .center:
+        switch (layout.primaryAlignment, usesPrimaryFill) {
+        case (_, true):
+            mainOffset = 0
+        case (.center, false):
             mainOffset = (availableMain - contentMain) / 2
-        case .end:
+        case (.end, false):
             mainOffset = availableMain - contentMain
-        case .start, .spaceBetween:
+        case (.start, false), (.spaceBetween, false):
             mainOffset = 0
         }
         var cursor = (layout.axis == .horizontal ? inner.minX : inner.minY) + mainOffset
@@ -221,9 +277,15 @@ enum ImageEditorStackLayoutEngine {
     static func frames(
         in container: CGRect,
         itemFrames: [CGRect],
+        itemLayouts: [ImageEditorStackChildLayout] = [],
         layout: ImageEditorStackLayout
     ) -> [CGRect] {
-        self.layout(in: container, itemFrames: itemFrames, layout: layout).itemFrames
+        self.layout(
+            in: container,
+            itemFrames: itemFrames,
+            itemLayouts: itemLayouts,
+            layout: layout
+        ).itemFrames
     }
 
     private static func mainPadding(_ layout: ImageEditorStackLayout) -> CGFloat {
@@ -262,6 +324,34 @@ enum ImageEditorStackLayoutEngine {
         }
     }
 
+    private static func mainSize(_ size: CGSize, axis: ImageEditorStackAxis) -> CGFloat {
+        axis == .horizontal ? size.width : size.height
+    }
+
+    private static func setMainSize(
+        _ value: CGFloat,
+        axis: ImageEditorStackAxis,
+        size: inout CGSize
+    ) {
+        if axis == .horizontal {
+            size.width = value
+        } else {
+            size.height = value
+        }
+    }
+
+    private static func setCrossSize(
+        _ value: CGFloat,
+        axis: ImageEditorStackAxis,
+        size: inout CGSize
+    ) {
+        if axis == .horizontal {
+            size.height = value
+        } else {
+            size.width = value
+        }
+    }
+
     private static func crossOrigin(
         layout: ImageEditorStackLayout,
         inner: CGRect,
@@ -286,6 +376,16 @@ extension ImageEditorViewModel {
     var selectedStackLayout: ImageEditorStackLayout? {
         guard let layer = document.selectedLayer, layer.isGroup else { return nil }
         return layer.stackLayout
+    }
+
+    var selectedStackChildLayout: ImageEditorStackChildLayout? {
+        guard let layer = document.selectedLayer,
+              !layer.isStackLayoutExcluded,
+              !layer.isStackLayoutBackground,
+              let groupID = layer.groupID,
+              document.layers.contains(where: { $0.id == groupID && $0.stackLayout != nil })
+        else { return nil }
+        return layer.stackChildLayout ?? ImageEditorStackChildLayout()
     }
 
     var canReflowSelectedStackLayout: Bool {
@@ -334,6 +434,18 @@ extension ImageEditorViewModel {
         updateSelectedStackLayout { $0.crossSizingMode = mode }
     }
 
+    func setSelectedStackChildPrimarySizingMode(_ mode: ImageEditorStackChildSizingMode) {
+        updateSelectedStackChildLayout { layout in
+            layout.grow = mode == .fill ? max(1, layout.grow) : 0
+        }
+    }
+
+    func setSelectedStackChildCrossSizingMode(_ mode: ImageEditorStackChildSizingMode) {
+        updateSelectedStackChildLayout { layout in
+            layout.stretchesCrossAxis = mode == .fill
+        }
+    }
+
     func reflowSelectedStackLayout() {
         updateSelectedStackLayout(forceReflow: true) { _ in }
     }
@@ -362,6 +474,38 @@ extension ImageEditorViewModel {
         statusText = L10n.text("imageEditor.status.stackLayoutApplied")
     }
 
+    private func updateSelectedStackChildLayout(
+        update: (inout ImageEditorStackChildLayout) -> Void
+    ) {
+        guard let layerID = document.selectedLayerID,
+              let layerIndex = document.layers.firstIndex(where: { $0.id == layerID }),
+              !document.layers[layerIndex].isStackLayoutExcluded,
+              !document.layers[layerIndex].isStackLayoutBackground,
+              let groupID = document.layers[layerIndex].groupID,
+              let groupLayout = document.layers.first(where: { $0.id == groupID })?.stackLayout,
+              canEditStackLayout(groupID: groupID)
+        else {
+            statusText = L10n.text("imageEditor.status.stackLayoutLocked")
+            return
+        }
+        let original = document.layers[layerIndex].stackChildLayout ?? ImageEditorStackChildLayout()
+        var childLayout = original
+        update(&childLayout)
+        childLayout = ImageEditorStackChildLayout(
+            grow: childLayout.grow,
+            stretchesCrossAxis: childLayout.stretchesCrossAxis
+        )
+        guard childLayout != original else { return }
+
+        pushUndo()
+        document.layers[layerIndex].stackChildLayout = childLayout == ImageEditorStackChildLayout()
+            ? nil
+            : childLayout
+        applyStackLayout(groupID: groupID, layout: groupLayout)
+        appendHistory(L10n.text("imageEditor.history.stackChildLayout"))
+        statusText = L10n.text("imageEditor.status.stackChildLayoutApplied")
+    }
+
     private func applyStackLayout(groupID: UUID, layout: ImageEditorStackLayout) {
         guard let groupIndex = document.layers.firstIndex(where: { $0.id == groupID }) else { return }
         let group = document.layers[groupIndex]
@@ -369,6 +513,9 @@ extension ImageEditorViewModel {
         let result = ImageEditorStackLayoutEngine.layout(
             in: group.frame.standardized,
             itemFrames: participantIndices.map { document.layers[$0].frame.standardized },
+            itemLayouts: participantIndices.map {
+                document.layers[$0].stackChildLayout ?? ImageEditorStackChildLayout()
+            },
             layout: layout
         )
         document.layers[groupIndex].frame = result.containerFrame
@@ -381,13 +528,19 @@ extension ImageEditorViewModel {
                 width: targetFrame.minX - participant.frame.minX,
                 height: targetFrame.minY - participant.frame.minY
             )
-            guard abs(delta.width) >= 0.001 || abs(delta.height) >= 0.001 else { continue }
-            let movedLayerIDs = stackMovedLayerIDs(participant)
-            for index in document.layers.indices where movedLayerIDs.contains(document.layers[index].id) {
-                document.layers[index].frame = document.layers[index].frame.offsetBy(
-                    dx: delta.width,
-                    dy: delta.height
-                )
+            if abs(delta.width) >= 0.001 || abs(delta.height) >= 0.001 {
+                let movedLayerIDs = stackMovedLayerIDs(participant)
+                for index in document.layers.indices where movedLayerIDs.contains(document.layers[index].id) {
+                    document.layers[index].frame = document.layers[index].frame.offsetBy(
+                        dx: delta.width,
+                        dy: delta.height
+                    )
+                }
+            }
+            document.layers[participantIndex].frame = targetFrame
+            if let nestedLayout = document.layers[participantIndex].stackLayout,
+               canEditStackLayout(groupID: participant.id) {
+                applyStackLayout(groupID: participant.id, layout: nestedLayout)
             }
         }
     }

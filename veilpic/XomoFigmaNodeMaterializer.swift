@@ -126,6 +126,7 @@ enum XomoFigmaNodeMaterializer {
             layer = makeImagePlaceholderLayer(item: item, frame: frame)
         }
         layer.groupID = parentGroupID
+        layer.stackChildLayout = item.stackChildLayout
         layer.isStackLayoutExcluded = item.isStackLayoutExcluded
         layer.isVisible = item.isVisible
         layer.opacity = min(max(item.opacity, 0), 1)

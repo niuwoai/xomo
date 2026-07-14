@@ -218,9 +218,6 @@ enum XomoFigmaNodeImportMapper {
            (nativeStackLayout == nil || hasUnsupportedAutoLayout(node)) {
             issues.append(.autoLayoutFlattened)
         }
-        if (node.layoutGrow ?? 0) > 0 || node.layoutAlign == "STRETCH" {
-            issues.append(.autoLayoutFlattened)
-        }
         if node.isMask == true {
             issues.append(.maskFlattened)
         }
@@ -293,7 +290,18 @@ enum XomoFigmaNodeImportMapper {
             imageReference: imagePaint(node: node)?.imageRef,
             imageScaleMode: imagePaint(node: node)?.scaleMode,
             stackLayout: nativeStackLayout,
+            stackChildLayout: stackChildLayout(node),
             isStackLayoutExcluded: node.layoutPositioning == "ABSOLUTE"
+        )
+    }
+
+    private static func stackChildLayout(_ node: XomoFigmaNode) -> ImageEditorStackChildLayout? {
+        let grow = CGFloat(node.layoutGrow ?? 0)
+        let stretchesCrossAxis = node.layoutAlign == "STRETCH"
+        guard grow > 0 || stretchesCrossAxis else { return nil }
+        return ImageEditorStackChildLayout(
+            grow: grow,
+            stretchesCrossAxis: stretchesCrossAxis
         )
     }
 

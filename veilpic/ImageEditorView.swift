@@ -3869,6 +3869,42 @@ struct ImageEditorView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
+    private var stackChildLayoutControls: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(L10n.text("imageEditor.properties.stackChildLayout"))
+                .font(.system(size: 11, weight: .bold))
+                .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+
+            Picker(
+                L10n.text("imageEditor.properties.stackChildPrimarySizing"),
+                selection: Binding(
+                    get: { viewModel.selectedStackChildLayout?.primarySizingMode ?? .fixed },
+                    set: { viewModel.setSelectedStackChildPrimarySizingMode($0) }
+                )
+            ) {
+                ForEach(ImageEditorStackChildSizingMode.allCases) { mode in
+                    Text(L10n.text(mode.localizationKey)).tag(mode)
+                }
+            }
+            .focusable(false)
+            .accessibilityIdentifier("image-editor-stack-child-primary-sizing")
+
+            Picker(
+                L10n.text("imageEditor.properties.stackChildCrossSizing"),
+                selection: Binding(
+                    get: { viewModel.selectedStackChildLayout?.crossSizingMode ?? .fixed },
+                    set: { viewModel.setSelectedStackChildCrossSizingMode($0) }
+                )
+            ) {
+                ForEach(ImageEditorStackChildSizingMode.allCases) { mode in
+                    Text(L10n.text(mode.localizationKey)).tag(mode)
+                }
+            }
+            .focusable(false)
+            .accessibilityIdentifier("image-editor-stack-child-cross-sizing")
+        }
+    }
+
     private func propertiesPanel(showsTitle: Bool = true) -> some View {
         EditorPanel(title: L10n.text("imageEditor.panel.properties"), showsTitle: showsTitle) {
             VStack(alignment: .leading, spacing: 10) {
@@ -3894,6 +3930,11 @@ struct ImageEditorView: View {
 
                 if viewModel.selectedStackLayout != nil {
                     stackLayoutControls
+                    Divider().overlay(editorBorder)
+                }
+
+                if viewModel.selectedStackChildLayout != nil {
+                    stackChildLayoutControls
                     Divider().overlay(editorBorder)
                 }
 

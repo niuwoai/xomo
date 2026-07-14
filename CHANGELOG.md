@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.12.0-rc65 - 2026-07-15
+
+### Added
+- Auto Layout 直接子项新增主轴“固定 / 填满容器”和交叉轴“固定 / 填满容器”尺寸模式；属性面板可在选中子项时直接切换，并立即重排父组。
+- 固定主轴容器中的多个 Fill 子项按 Figma `layoutGrow` 权重分配扣除固定子项、间距与内距后的剩余空间；Stretch 子项在固定交叉轴容器中填满内框。
+
+### Changed
+- Figma `layoutGrow` 与 `layoutAlign=STRETCH` 现在映射为可编辑、可保存的原生子项布局，不再误报为固定尺寸降级；Wrap 与 Baseline 仍在逐节点报告中明确降级。
+- Fill 子项改变外框时，像素、文字与形状层使用新外框；嵌套组整体移动并在自身具有 Auto Layout 时递归重排。父轴为 Hug 时 Fill 暂保留导入尺寸，避免循环尺寸依赖。
+
+### Tests
+- 新增 Fill 权重分配、交叉轴 Stretch、属性面板切换、父组即时重排、项目往返、Undo/Redo 和 Figma 子项映射测试。
+- Auto Layout 专项 10/10、图层标题与页签白字 6/6、Figma 全链路 40/40、三语资源 4/4、SwiftPM CLI 2/2 和独立 DerivedData 干净 Debug 构建通过；App/CLI 版本为 `2.12.0-rc65`，Bundle ID 为 `im.some.xomo`，最低系统为 macOS 13.0，Debug App 为 arm64。
+
 ## 2.12.0-rc64 - 2026-07-15
 
 ### Added
