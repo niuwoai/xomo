@@ -1,6 +1,6 @@
 # Xomo Figma 链接导入边界
 
-> 最后更新：2026-07-15 ｜ 当前版本：v2.12.0-rc61 ｜ 当前阶段：可编辑导入闭环及 Swift 6 并发边界已稳定
+> 最后更新：2026-07-15 ｜ 当前版本：v2.12.0-rc62 ｜ 当前阶段：图片填充可安全下载为持久像素层
 
 ## 当前已经支持
 
@@ -29,7 +29,7 @@ rc59 要求链接包含明确的 `node-id`。用户点击“读取节点并生�
 | Text | 可编辑文字层 | 保留文本、字体族、字号、字重、横向对齐和纯色填充 |
 | Rectangle / Ellipse | 可编辑形状层 | 保留纯色填充、纯色描边和描边宽度；圆角暂降级为直角 |
 | Vector / Line / Star / Polygon | 可编辑路径形状层 | 支持 fill/stroke geometry 与 SVG M/L/H/V/C/S/Q/T/A/Z 的绝对、相对命令；按节点局部 size 映射 |
-| 图片填充 Rectangle | 像素占位层 | 保留位置和尺寸；资源尚未下载，使用格纹交叉占位图 |
+| 图片填充 Rectangle | 图片像素层或占位层 | 显式读取时下载当前子树引用的图片，保留位置和尺寸并随项目保存；填充变换烘焙为固定像素，单图失败时保留格纹交叉占位图 |
 | 其它节点 | 不导入 | 报告中列为不支持，不生成假图层 |
 
 ## 安全边界
@@ -40,8 +40,9 @@ rc59 要求链接包含明确的 `node-id`。用户点击“读取节点并生�
 - 除上述三个选择参数外，其余 query 全部丢弃；令牌、时间戳、跟踪参数及其值不会进入规范 URL、预览模型、项目文件或测试报告。
 - 链接只说明资源位置，不代表用户拥有访问权。未连接时授权状态保持 `notChecked`；连接时由 Figma 官方接口决定是否有权读取，不绕过权限。
 - 个人令牌只写入 macOS 钥匙串的 `im.some.xomo.figma` 服务，并使用 `WhenUnlockedThisDeviceOnly`；不写入 `UserDefaults`、项目、日志、Git、查询参数或测试夹具。
-- 元数据请求使用 `file_metadata:read`；节点请求使用 `file_content:read`。两者都通过 `X-Figma-Token` 请求头发送，URLSession 不使用 Cookie 和缓存，不跟随重定向，避免令牌被转发到其它主机。
+- 元数据请求使用 `file_metadata:read`；节点与图片清单请求使用 `file_content:read`。三者都只向 `api.figma.com` 发送 `X-Figma-Token`；URLSession 不使用 Cookie 和缓存，不跟随重定向，避免令牌被转发到其它主机。
 - 节点请求固定携带已校验的 `ids`、`depth=6` 和 `geometry=paths`；只有链接中存在合法版本时才附带 `version`。节点响应上限为 10 MB、树上限为 2000 项，元数据响应上限仍为 2 MB。
+- 图片清单使用官方 `GET /v1/files/:key/images`，只消费当前计划实际引用的 `imageRef`。临时资源下载请求不携带 PAT、Authorization、Cookie 或浏览器状态，只接受无凭据、无自定义端口的 HTTPS URL，并拒绝 localhost、`.local` 与 IP 字面量；最多下载 24 个引用，单图 20 MB、总计 80 MB、最长边 16384 像素且不超过 6400 万像素。
 - 官方节点端点属于 Tier 1，低权限席位的配额可能很少，因此不自动刷新、不轮询；只有用户主动读取才消耗一次请求。401/403、404、429、5xx、畸形响应和传输失败会分别提示。
 - 读取计划不修改画布；导入只消费已读取的本地计划，不再次联网，并将整批变化记录为一个 History/Undo 步骤。断开连接会删除令牌并清除当前远端状态。
 - 当前连接仅适合单个用户的本机工具。面向多用户/商业分发时必须改用 Figma OAuth 和外部回调服务，不能要求团队成员共享 PAT。
@@ -53,12 +54,14 @@ rc59 要求链接包含明确的 `node-id`。用户点击“读取节点并生�
 3. **rc58（已完成）**：用户显式提供本机个人 PAT 后，只通过官方 metadata 端点读取文件元数据；凭据保存在 macOS 钥匙串，不写入项目、偏好、日志或 Git。
 4. **rc59（已完成）**：显式读取链接所选节点，映射 Frame、Group、Text、基础形状/SVG 路径、图片填充占位与组件层级；先生成逐项报告，再由用户确认创建单步可撤销图层。
 5. **rc60（已完成）**：完整项目编译、817 项全量隔离测试和真实界面冒烟通过；集成回归固定导入后的 Undo/Redo、项目保存重开、可编辑层级恢复、PNG 合成导出和凭据不持久化闭环。
-6. **rc61（当前，已完成）**：节点 ID 校验与 SVG 路径解析明确为不依赖主线程的纯函数边界，清除 Swift 6 Release 预警；不扩大授权范围或改变导入结果。
+6. **rc61（已完成）**：节点 ID 校验与 SVG 路径解析明确为不依赖主线程的纯函数边界，清除 Swift 6 Release 预警；不扩大授权范围或改变导入结果。
+7. **rc62（当前，已完成）**：显式节点读取同步解析官方图片清单，把安全、可解码且未超限的图片填充导入为持久像素层；单图失败时保留可导入占位层，下载请求不携带 PAT。
 
 ## 官方依据
 
 - [Figma 文件端点](https://developers.figma.com/docs/rest-api/file-endpoints/)：官方 URL 结构为 `/:file_type/:file_key/:file_name`，文件 Key 或分支 Key用于读取文件。
 - [Figma 文件节点端点](https://developers.figma.com/docs/rest-api/file-endpoints/)：`GET /v1/files/:key/nodes` 通过 `ids` 读取指定节点；`geometry=paths` 返回矢量路径数据，`depth` 限制后代层数。
+- [Figma 图片填充端点](https://developers.figma.com/docs/rest-api/file-endpoints/)：`GET /v1/files/:key/images` 以 `imageRef` 返回最长约 14 天有效的临时下载 URL，要求 `file_content:read`。
 - [Figma 节点类型](https://developers.figma.com/docs/rest-api/file-node-types/)：Frame、Group、Vector、Text、Rectangle、Ellipse、Component 与 Instance 的可读取字段构成 rc59 映射依据。
 - [Figma API 限流](https://developers.figma.com/docs/rest-api/rate-limits/)：文件节点读取属于 Tier 1，配额按席位和计划不同，因此界面使用显式读取且不自动刷新。
 - [Figma 认证](https://developers.figma.com/docs/rest-api/authentication/)：个人工具可使用 PAT，代表多用户操作的应用应使用 OAuth；不同端点要求对应 scope。
@@ -69,4 +72,4 @@ rc59 要求链接包含明确的 `node-id`。用户点击“读取节点并生�
 
 ## 明确尚未支持
 
-rc59 不下载 Figma 图片资源，也不保留渐变/图案等复杂 Paint、旋转/镜像/倾斜变换、圆角、蒙版与 Frame 内容裁切关系、效果、特殊混合模式、Auto Layout 约束、变量、组件属性和实例覆写语义；超过 6 层的后代不会读取。它不解析 `.fig` 私有文件格式，不读取浏览器会话，也不声称 Figma 文件可以无损还原。后续每增加一种节点或语义映射，都必须附带单元测试、降级说明和可核对的导入报告。
+rc62 不保留图片的原生 Crop/Tile/旋转等可编辑填充参数，成功资源会烘焙为固定像素层；它仍不保留渐变/图案等复杂 Paint、旋转/镜像/倾斜变换、圆角、蒙版与 Frame 内容裁切关系、效果、特殊混合模式、Auto Layout 约束、变量、组件属性和实例覆写语义。超过 6 层的后代不会读取；不解析 `.fig` 私有格式、不读取浏览器会话，也不声称 Figma 文件可以无损还原。后续每增加一种节点或语义映射，都必须附带单元测试、降级说明和可核对的导入报告。

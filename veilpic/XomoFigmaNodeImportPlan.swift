@@ -6,6 +6,7 @@ enum XomoFigmaNodeTargetKind: String, CaseIterable, Sendable {
     case rectangle
     case ellipse
     case vector
+    case image
     case imagePlaceholder
 
     var localizationKey: String {
@@ -28,6 +29,8 @@ enum XomoFigmaNodeMappingIssue: String, CaseIterable, Sendable {
     case unsupportedNodeType
     case unsupportedPaint
     case imageAssetPending
+    case imageAssetUnavailable
+    case imageFillTransformFlattened
     case vectorGeometryMissing
     case vectorGeometryUnsupported
     case componentSemanticsFlattened
@@ -71,6 +74,11 @@ struct XomoFigmaPlanText: Equatable, Sendable {
     var horizontalAlignment: String?
 }
 
+struct XomoFigmaImageAsset: Equatable, Sendable {
+    var data: Data
+    var pixelSize: XomoFigmaPlanSize
+}
+
 struct XomoFigmaNodeImportItem: Equatable, Identifiable, Sendable {
     var id: String { sourceID }
     var sourceID: String
@@ -92,6 +100,7 @@ struct XomoFigmaNodeImportItem: Equatable, Identifiable, Sendable {
     var vectorPaths: [String]
     var geometrySize: XomoFigmaPlanSize?
     var imageReference: String?
+    var imageScaleMode: String?
 }
 
 struct XomoFigmaNodeImportPlan: Equatable, Sendable {
@@ -100,6 +109,57 @@ struct XomoFigmaNodeImportPlan: Equatable, Sendable {
     var rootSourceID: String
     var rootName: String
     var items: [XomoFigmaNodeImportItem]
+    var imageAssets: [String: XomoFigmaImageAsset]
+
+    init(
+        fileName: String,
+        version: String?,
+        rootSourceID: String,
+        rootName: String,
+        items: [XomoFigmaNodeImportItem],
+        imageAssets: [String: XomoFigmaImageAsset] = [:]
+    ) {
+        self.fileName = fileName
+        self.version = version
+        self.rootSourceID = rootSourceID
+        self.rootName = rootName
+        self.items = items
+        self.imageAssets = imageAssets
+    }
+
+    var requiredImageReferences: Set<String> {
+        Set(items.compactMap { item in
+            guard item.targetKind == .imagePlaceholder || item.targetKind == .image else { return nil }
+            return item.imageReference
+        })
+    }
+
+    func resolvingImageAssets(_ assets: [String: XomoFigmaImageAsset]) -> Self {
+        let required = requiredImageReferences
+        let acceptedAssets = assets.filter { required.contains($0.key) }
+        var resolved = self
+        resolved.imageAssets = acceptedAssets
+        resolved.items = items.map { item in
+            guard item.targetKind == .imagePlaceholder || item.targetKind == .image,
+                  let imageReference = item.imageReference
+            else { return item }
+            var updated = item
+            updated.issues.removeAll {
+                $0 == .imageAssetPending || $0 == .imageAssetUnavailable
+            }
+            if acceptedAssets[imageReference] != nil {
+                updated.targetKind = .image
+                updated.issues.append(.imageFillTransformFlattened)
+            } else {
+                updated.targetKind = .imagePlaceholder
+                updated.issues.append(.imageAssetUnavailable)
+            }
+            updated.issues = Array(Set(updated.issues)).sorted { $0.rawValue < $1.rawValue }
+            updated.fidelity = updated.issues.isEmpty ? .exact : .partial
+            return updated
+        }
+        return resolved
+    }
 
     var exactCount: Int {
         items.filter { $0.fidelity == .exact }.count

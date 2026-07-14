@@ -2820,11 +2820,11 @@
 "xomo.figma.metadata.error.transportFailed" = "Figma 公式 API に接続できません。ネットワークを確認して再試行してください。";
 "xomo.figma.node.title" = "Figma ノードマッピング計画";
 "xomo.figma.node.planOnly" = "確認してから読み込み";
-"xomo.figma.node.scopeNotice" = "読み取りを選んだ場合のみ公式 Tier 1 ノード API を呼び出します。トークンには file_content:read が必要です。最大 6 階層、2,000 ノード、10 MB に制限し、自動更新は行いません。読み取りは計画のみを作成し、読み込み確認後に一括で取り消し可能なレイヤーを作成します。";
+"xomo.figma.node.scopeNotice" = "読み取りを選んだ場合のみ公式ノード API を呼び出します。画像塗りは公式 Tier 2 画像マニフェストも読み取り、現在のノードが参照する画像だけをダウンロードします。画像の一時リクエストにトークンは付けません。トークンには file_content:read が必要で、ノードは最大 6 階層、2,000 項目、10 MB、自動更新なしです。読み込み確認後に一括で取り消し可能なレイヤーを作成します。";
 "xomo.figma.node.selectionRequired" = "node-id を含む Figma ノードリンクを使用してください。";
 "xomo.figma.node.credentialRequired" = "先に上で個人トークンを保存してください。";
 "xomo.figma.node.readPlan" = "ノードを読み取り計画を作成";
-"xomo.figma.node.loading" = "選択ノードを読み取り、ローカルレイヤーのマッピングを解析中…";
+"xomo.figma.node.loading" = "選択ノードを読み取り、利用可能な画像をダウンロードしてローカルレイヤーのマッピングを解析中…";
 "xomo.figma.node.summary" = "全 %d 件・完全 %d・縮退 %d・未対応 %d";
 "xomo.figma.node.moreItems" = "ほか %d 件はここでは展開していません";
 "xomo.figma.node.importLayers" = "対応レイヤーを読み込む";
@@ -2834,6 +2834,7 @@
 "xomo.figma.node.target.rectangle" = "長方形シェイプ";
 "xomo.figma.node.target.ellipse" = "楕円シェイプ";
 "xomo.figma.node.target.vector" = "ベクターパス";
+"xomo.figma.node.target.image" = "画像ピクセルレイヤー";
 "xomo.figma.node.target.imagePlaceholder" = "画像プレースホルダー";
 "xomo.figma.node.fidelity.exact" = "完全マッピング";
 "xomo.figma.node.fidelity.partial" = "縮退マッピング";
@@ -2842,6 +2843,8 @@
 "xomo.figma.node.issue.unsupportedNodeType" = "ノード種類はまだ未対応です";
 "xomo.figma.node.issue.unsupportedPaint" = "複数または単色以外の塗りは縮退します";
 "xomo.figma.node.issue.imageAssetPending" = "画像素材はまだダウンロードされていません";
+"xomo.figma.node.issue.imageAssetUnavailable" = "画像素材を利用できないため、プレースホルダーを保持します";
+"xomo.figma.node.issue.imageFillTransformFlattened" = "画像塗りの変形は固定ピクセルレイヤーに焼き込まれます";
 "xomo.figma.node.issue.vectorGeometryMissing" = "ベクターパスデータがありません";
 "xomo.figma.node.issue.vectorGeometryUnsupported" = "ベクターパスに解析できないコマンドがあります";
 "xomo.figma.node.issue.componentSemanticsFlattened" = "コンポーネント意味論は通常グループとして扱います";
