@@ -315,8 +315,14 @@ enum XomoFigmaNodeImportMapper {
             paddingBottom: CGFloat(node.paddingBottom ?? 0),
             paddingLeft: CGFloat(node.paddingLeft ?? 0),
             primaryAlignment: primaryAlignment(node.primaryAxisAlignItems),
-            crossAlignment: crossAlignment(node.counterAxisAlignItems)
+            crossAlignment: crossAlignment(node.counterAxisAlignItems),
+            primarySizingMode: sizingMode(node.primaryAxisSizingMode),
+            crossSizingMode: sizingMode(node.counterAxisSizingMode)
         )
+    }
+
+    private static func sizingMode(_ value: String?) -> ImageEditorStackSizingMode {
+        value == "AUTO" ? .hug : .fixed
     }
 
     private static func primaryAlignment(_ value: String?) -> ImageEditorStackPrimaryAlignment {
@@ -338,10 +344,7 @@ enum XomoFigmaNodeImportMapper {
 
     private static func hasUnsupportedAutoLayout(_ node: XomoFigmaNode) -> Bool {
         let usesWrap = node.layoutWrap != nil && node.layoutWrap != "NO_WRAP"
-        let usesAutomaticSizing = node.primaryAxisSizingMode == "AUTO"
-            || node.counterAxisSizingMode == "AUTO"
         return usesWrap
-            || usesAutomaticSizing
             || node.counterAxisAlignItems == "BASELINE"
             || node.counterAxisSpacing != nil
     }

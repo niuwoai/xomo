@@ -28,6 +28,14 @@ enum ImageEditorStackCrossAlignment: String, CaseIterable, Codable, Identifiable
     var localizationKey: String { "imageEditor.stackLayout.cross.\(rawValue)" }
 }
 
+enum ImageEditorStackSizingMode: String, CaseIterable, Codable, Identifiable, Sendable {
+    case fixed
+    case hug
+
+    var id: String { rawValue }
+    var localizationKey: String { "imageEditor.stackLayout.sizing.\(rawValue)" }
+}
+
 struct ImageEditorStackLayout: Equatable, Codable, Sendable {
     static let maximumPadding: CGFloat = 4_096
     static let minimumSpacing: CGFloat = -1_024
@@ -41,6 +49,8 @@ struct ImageEditorStackLayout: Equatable, Codable, Sendable {
     var paddingLeft: CGFloat
     var primaryAlignment: ImageEditorStackPrimaryAlignment
     var crossAlignment: ImageEditorStackCrossAlignment
+    var primarySizingMode: ImageEditorStackSizingMode
+    var crossSizingMode: ImageEditorStackSizingMode
 
     init(
         axis: ImageEditorStackAxis,
@@ -50,7 +60,9 @@ struct ImageEditorStackLayout: Equatable, Codable, Sendable {
         paddingBottom: CGFloat = 0,
         paddingLeft: CGFloat = 0,
         primaryAlignment: ImageEditorStackPrimaryAlignment = .start,
-        crossAlignment: ImageEditorStackCrossAlignment = .start
+        crossAlignment: ImageEditorStackCrossAlignment = .start,
+        primarySizingMode: ImageEditorStackSizingMode = .fixed,
+        crossSizingMode: ImageEditorStackSizingMode = .fixed
     ) {
         self.axis = axis
         self.spacing = spacing
@@ -60,7 +72,64 @@ struct ImageEditorStackLayout: Equatable, Codable, Sendable {
         self.paddingLeft = paddingLeft
         self.primaryAlignment = primaryAlignment
         self.crossAlignment = crossAlignment
+        self.primarySizingMode = primarySizingMode
+        self.crossSizingMode = crossSizingMode
         self = normalized()
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case axis
+        case spacing
+        case paddingTop
+        case paddingRight
+        case paddingBottom
+        case paddingLeft
+        case primaryAlignment
+        case crossAlignment
+        case primarySizingMode
+        case crossSizingMode
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(
+            axis: try container.decode(ImageEditorStackAxis.self, forKey: .axis),
+            spacing: try container.decode(CGFloat.self, forKey: .spacing),
+            paddingTop: try container.decode(CGFloat.self, forKey: .paddingTop),
+            paddingRight: try container.decode(CGFloat.self, forKey: .paddingRight),
+            paddingBottom: try container.decode(CGFloat.self, forKey: .paddingBottom),
+            paddingLeft: try container.decode(CGFloat.self, forKey: .paddingLeft),
+            primaryAlignment: try container.decode(
+                ImageEditorStackPrimaryAlignment.self,
+                forKey: .primaryAlignment
+            ),
+            crossAlignment: try container.decode(
+                ImageEditorStackCrossAlignment.self,
+                forKey: .crossAlignment
+            ),
+            primarySizingMode: try container.decodeIfPresent(
+                ImageEditorStackSizingMode.self,
+                forKey: .primarySizingMode
+            ) ?? .fixed,
+            crossSizingMode: try container.decodeIfPresent(
+                ImageEditorStackSizingMode.self,
+                forKey: .crossSizingMode
+            ) ?? .fixed
+        )
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(axis, forKey: .axis)
+        try container.encode(spacing, forKey: .spacing)
+        try container.encode(paddingTop, forKey: .paddingTop)
+        try container.encode(paddingRight, forKey: .paddingRight)
+        try container.encode(paddingBottom, forKey: .paddingBottom)
+        try container.encode(paddingLeft, forKey: .paddingLeft)
+        try container.encode(primaryAlignment, forKey: .primaryAlignment)
+        try container.encode(crossAlignment, forKey: .crossAlignment)
+        try container.encode(primarySizingMode, forKey: .primarySizingMode)
+        try container.encode(crossSizingMode, forKey: .crossSizingMode)
     }
 
     func normalized() -> Self {
@@ -78,32 +147,52 @@ struct ImageEditorStackLayout: Equatable, Codable, Sendable {
     }
 }
 
+struct ImageEditorStackLayoutResult: Equatable, Sendable {
+    var containerFrame: CGRect
+    var itemFrames: [CGRect]
+}
+
 enum ImageEditorStackLayoutEngine {
-    static func frames(
+    static func layout(
         in container: CGRect,
         itemFrames: [CGRect],
         layout: ImageEditorStackLayout
-    ) -> [CGRect] {
-        guard !itemFrames.isEmpty else { return [] }
+    ) -> ImageEditorStackLayoutResult {
         let layout = layout.normalized()
-        let inner = CGRect(
-            x: container.minX + layout.paddingLeft,
-            y: container.minY + layout.paddingTop,
-            width: max(0, container.width - layout.paddingLeft - layout.paddingRight),
-            height: max(0, container.height - layout.paddingTop - layout.paddingBottom)
-        )
         let sizes = itemFrames.map(\.size)
-        let availableMain = layout.axis == .horizontal ? inner.width : inner.height
         let totalItemMain = sizes.reduce(0) { partial, size in
             partial + (layout.axis == .horizontal ? size.width : size.height)
         }
+        let maximumItemCross = sizes.reduce(0) { partial, size in
+            max(partial, layout.axis == .horizontal ? size.height : size.width)
+        }
+        let gapCount = CGFloat(max(0, itemFrames.count - 1))
+        let requiredMain = totalItemMain + layout.spacing * gapCount + mainPadding(layout)
+        let requiredCross = maximumItemCross + crossPadding(layout)
+        var resolvedContainer = container.standardized
+        if layout.primarySizingMode == .hug {
+            setMainSize(max(1, requiredMain), axis: layout.axis, frame: &resolvedContainer)
+        }
+        if layout.crossSizingMode == .hug {
+            setCrossSize(max(1, requiredCross), axis: layout.axis, frame: &resolvedContainer)
+        }
+        guard !itemFrames.isEmpty else {
+            return ImageEditorStackLayoutResult(containerFrame: resolvedContainer, itemFrames: [])
+        }
+        let inner = CGRect(
+            x: resolvedContainer.minX + layout.paddingLeft,
+            y: resolvedContainer.minY + layout.paddingTop,
+            width: max(0, resolvedContainer.width - layout.paddingLeft - layout.paddingRight),
+            height: max(0, resolvedContainer.height - layout.paddingTop - layout.paddingBottom)
+        )
+        let availableMain = layout.axis == .horizontal ? inner.width : inner.height
         let spacing: CGFloat
         if layout.primaryAlignment == .spaceBetween, itemFrames.count > 1 {
-            spacing = (availableMain - totalItemMain) / CGFloat(itemFrames.count - 1)
+            spacing = (availableMain - totalItemMain) / gapCount
         } else {
             spacing = layout.spacing
         }
-        let contentMain = totalItemMain + spacing * CGFloat(max(0, itemFrames.count - 1))
+        let contentMain = totalItemMain + spacing * gapCount
         let mainOffset: CGFloat
         switch layout.primaryAlignment {
         case .center:
@@ -114,12 +203,8 @@ enum ImageEditorStackLayoutEngine {
             mainOffset = 0
         }
         var cursor = (layout.axis == .horizontal ? inner.minX : inner.minY) + mainOffset
-        return sizes.map { size in
-            let crossOrigin = crossOrigin(
-                layout: layout,
-                inner: inner,
-                itemSize: size
-            )
+        let frames = sizes.map { size in
+            let crossOrigin = crossOrigin(layout: layout, inner: inner, itemSize: size)
             let frame: CGRect
             if layout.axis == .horizontal {
                 frame = CGRect(x: cursor, y: crossOrigin, width: size.width, height: size.height)
@@ -129,6 +214,51 @@ enum ImageEditorStackLayoutEngine {
                 cursor += size.height + spacing
             }
             return frame
+        }
+        return ImageEditorStackLayoutResult(containerFrame: resolvedContainer, itemFrames: frames)
+    }
+
+    static func frames(
+        in container: CGRect,
+        itemFrames: [CGRect],
+        layout: ImageEditorStackLayout
+    ) -> [CGRect] {
+        self.layout(in: container, itemFrames: itemFrames, layout: layout).itemFrames
+    }
+
+    private static func mainPadding(_ layout: ImageEditorStackLayout) -> CGFloat {
+        layout.axis == .horizontal
+            ? layout.paddingLeft + layout.paddingRight
+            : layout.paddingTop + layout.paddingBottom
+    }
+
+    private static func crossPadding(_ layout: ImageEditorStackLayout) -> CGFloat {
+        layout.axis == .horizontal
+            ? layout.paddingTop + layout.paddingBottom
+            : layout.paddingLeft + layout.paddingRight
+    }
+
+    private static func setMainSize(
+        _ value: CGFloat,
+        axis: ImageEditorStackAxis,
+        frame: inout CGRect
+    ) {
+        if axis == .horizontal {
+            frame.size.width = value
+        } else {
+            frame.size.height = value
+        }
+    }
+
+    private static func setCrossSize(
+        _ value: CGFloat,
+        axis: ImageEditorStackAxis,
+        frame: inout CGRect
+    ) {
+        if axis == .horizontal {
+            frame.size.height = value
+        } else {
+            frame.size.width = value
         }
     }
 
@@ -159,15 +289,9 @@ extension ImageEditorViewModel {
     }
 
     var canReflowSelectedStackLayout: Bool {
-        guard let group = document.selectedLayer,
-              group.isGroup,
-              group.stackLayout != nil,
-              !document.isEffectivelyPositionLocked(group)
-        else { return false }
+        guard let group = document.selectedLayer else { return false }
         let indices = stackParticipantIndices(groupID: group.id)
-        return !indices.isEmpty && indices.allSatisfy {
-            !document.isEffectivelyPositionLocked(document.layers[$0])
-        }
+        return !indices.isEmpty && canEditStackLayout(groupID: group.id)
     }
 
     func setSelectedStackAxis(_ axis: ImageEditorStackAxis) {
@@ -202,6 +326,14 @@ extension ImageEditorViewModel {
         updateSelectedStackLayout { $0.crossAlignment = alignment }
     }
 
+    func setSelectedStackPrimarySizingMode(_ mode: ImageEditorStackSizingMode) {
+        updateSelectedStackLayout { $0.primarySizingMode = mode }
+    }
+
+    func setSelectedStackCrossSizingMode(_ mode: ImageEditorStackSizingMode) {
+        updateSelectedStackLayout { $0.crossSizingMode = mode }
+    }
+
     func reflowSelectedStackLayout() {
         updateSelectedStackLayout(forceReflow: true) { _ in }
     }
@@ -214,7 +346,7 @@ extension ImageEditorViewModel {
               let groupIndex = document.layers.firstIndex(where: { $0.id == groupID && $0.isGroup }),
               var layout = document.layers[groupIndex].stackLayout
         else { return }
-        guard canReflowSelectedStackLayout else {
+        guard canEditStackLayout(groupID: groupID) else {
             statusText = L10n.text("imageEditor.status.stackLayoutLocked")
             return
         }
@@ -231,14 +363,19 @@ extension ImageEditorViewModel {
     }
 
     private func applyStackLayout(groupID: UUID, layout: ImageEditorStackLayout) {
-        guard let group = document.layers.first(where: { $0.id == groupID }) else { return }
+        guard let groupIndex = document.layers.firstIndex(where: { $0.id == groupID }) else { return }
+        let group = document.layers[groupIndex]
         let participantIndices = stackParticipantIndices(groupID: groupID)
-        let targetFrames = ImageEditorStackLayoutEngine.frames(
+        let result = ImageEditorStackLayoutEngine.layout(
             in: group.frame.standardized,
             itemFrames: participantIndices.map { document.layers[$0].frame.standardized },
             layout: layout
         )
-        for (participantIndex, targetFrame) in zip(participantIndices, targetFrames) {
+        document.layers[groupIndex].frame = result.containerFrame
+        for index in stackBackgroundIndices(groupID: groupID) {
+            document.layers[index].frame = result.containerFrame
+        }
+        for (participantIndex, targetFrame) in zip(participantIndices, result.itemFrames) {
             let participant = document.layers[participantIndex]
             let delta = CGSize(
                 width: targetFrame.minX - participant.frame.minX,
@@ -259,6 +396,24 @@ extension ImageEditorViewModel {
         document.layers.indices.filter { index in
             let layer = document.layers[index]
             return layer.groupID == groupID && !layer.isStackLayoutExcluded
+        }
+    }
+
+    private func stackBackgroundIndices(groupID: UUID) -> [Int] {
+        document.layers.indices.filter { index in
+            let layer = document.layers[index]
+            return layer.groupID == groupID && layer.isStackLayoutBackground
+        }
+    }
+
+    private func canEditStackLayout(groupID: UUID) -> Bool {
+        guard let group = document.layers.first(where: {
+            $0.id == groupID && $0.isGroup && $0.stackLayout != nil
+        }), !document.isEffectivelyPositionLocked(group) else { return false }
+        let affectedIndices = stackParticipantIndices(groupID: groupID)
+            + stackBackgroundIndices(groupID: groupID)
+        return affectedIndices.allSatisfy {
+            !document.isEffectivelyPositionLocked(document.layers[$0])
         }
     }
 

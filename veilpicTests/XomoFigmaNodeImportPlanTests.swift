@@ -109,7 +109,9 @@ struct XomoFigmaNodeImportPlanTests {
             paddingBottom: 8,
             paddingLeft: 16,
             primaryAlignment: .center,
-            crossAlignment: .end
+            crossAlignment: .end,
+            primarySizingMode: .hug,
+            crossSizingMode: .hug
         ))
         #expect(unsupported.targetKind == nil)
         #expect(unsupported.fidelity == .unsupported)
@@ -342,6 +344,8 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(result.layers.last?.id == root.id)
         #expect(root.isGroup)
         #expect(rootBackground.groupID == root.id)
+        #expect(rootBackground.isStackLayoutExcluded)
+        #expect(rootBackground.isStackLayoutBackground)
         #expect(actions.groupID == root.id)
         #expect(text.groupID == actions.id)
         #expect(text.frame.origin == CGPoint(x: 135, y: 138))
@@ -375,6 +379,8 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(component.frame == CGRect(x: 125, y: 488, width: 240, height: 120))
         #expect(component.stackLayout?.axis == .vertical)
         #expect(component.stackLayout?.crossAlignment == .end)
+        #expect(component.stackLayout?.primarySizingMode == .hug)
+        #expect(component.stackLayout?.crossSizingMode == .hug)
     }
 
     @Test func viewModelImportsPlanAsSingleUndoableHistoryStep() throws {
@@ -404,6 +410,8 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(restoredText.groupID == restoredActions.id)
         #expect(restoredComponent.stackLayout?.axis == .vertical)
         #expect(restoredComponent.stackLayout?.spacing == 12)
+        #expect(restoredComponent.stackLayout?.primarySizingMode == .hug)
+        #expect(restoredComponent.stackLayout?.crossSizingMode == .hug)
 
         viewModel.undo()
         #expect(viewModel.document.layers.count == initialLayerCount)
@@ -575,6 +583,8 @@ struct XomoFigmaNodeImportPlanTests {
                     "name": "Card Component",
                     "type": "COMPONENT",
                     "layoutMode": "VERTICAL",
+                    "primaryAxisSizingMode": "AUTO",
+                    "counterAxisSizingMode": "AUTO",
                     "itemSpacing": 12,
                     "paddingTop": 8,
                     "paddingRight": 16,

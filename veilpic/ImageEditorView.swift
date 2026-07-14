@@ -3774,6 +3774,36 @@ struct ImageEditorView: View {
             }
             .focusable(false)
 
+            HStack(spacing: 8) {
+                Picker(
+                    L10n.text("imageEditor.properties.stackLayoutPrimarySizing"),
+                    selection: Binding(
+                        get: { viewModel.selectedStackLayout?.primarySizingMode ?? .fixed },
+                        set: { viewModel.setSelectedStackPrimarySizingMode($0) }
+                    )
+                ) {
+                    ForEach(ImageEditorStackSizingMode.allCases) { mode in
+                        Text(L10n.text(mode.localizationKey)).tag(mode)
+                    }
+                }
+                .focusable(false)
+                .accessibilityIdentifier("image-editor-stack-layout-primary-sizing")
+
+                Picker(
+                    L10n.text("imageEditor.properties.stackLayoutCrossSizing"),
+                    selection: Binding(
+                        get: { viewModel.selectedStackLayout?.crossSizingMode ?? .fixed },
+                        set: { viewModel.setSelectedStackCrossSizingMode($0) }
+                    )
+                ) {
+                    ForEach(ImageEditorStackSizingMode.allCases) { mode in
+                        Text(L10n.text(mode.localizationKey)).tag(mode)
+                    }
+                }
+                .focusable(false)
+                .accessibilityIdentifier("image-editor-stack-layout-cross-sizing")
+            }
+
             Stepper(
                 L10n.format(
                     "imageEditor.properties.stackLayoutSpacingValue",

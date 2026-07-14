@@ -694,6 +694,8 @@
 "imageEditor.properties.stackLayoutAxis" = "方向";
 "imageEditor.properties.stackLayoutPrimaryAlignment" = "主轴对齐";
 "imageEditor.properties.stackLayoutCrossAlignment" = "交叉轴对齐";
+"imageEditor.properties.stackLayoutPrimarySizing" = "主轴尺寸";
+"imageEditor.properties.stackLayoutCrossSizing" = "交叉轴尺寸";
 "imageEditor.properties.stackLayoutSpacingValue" = "间距：%d px";
 "imageEditor.properties.stackLayoutPaddingTopValue" = "上：%d px";
 "imageEditor.properties.stackLayoutPaddingRightValue" = "右：%d px";
@@ -708,6 +710,8 @@
 "imageEditor.stackLayout.cross.start" = "起点";
 "imageEditor.stackLayout.cross.center" = "居中";
 "imageEditor.stackLayout.cross.end" = "终点";
+"imageEditor.stackLayout.sizing.fixed" = "固定";
+"imageEditor.stackLayout.sizing.hug" = "适应内容";
 "imageEditor.action.stackLayoutReflow" = "重新排列子项";
 "imageEditor.history.stackLayout" = "调整自动布局";
 "imageEditor.status.stackLayoutApplied" = "自动布局已重新排列";
@@ -2870,7 +2874,7 @@
 "xomo.figma.node.issue.vectorGeometryMissing" = "缺少矢量路径数据";
 "xomo.figma.node.issue.vectorGeometryUnsupported" = "矢量路径包含无法解析的命令";
 "xomo.figma.node.issue.componentSemanticsFlattened" = "组件语义暂按普通组处理";
-"xomo.figma.node.issue.autoLayoutFlattened" = "Wrap、Hug/Fill 或基线等布局语义暂按固定尺寸处理";
+"xomo.figma.node.issue.autoLayoutFlattened" = "Wrap、Fill/Stretch 或基线等布局语义暂按固定尺寸处理";
 "xomo.figma.node.issue.maskFlattened" = "蒙版关系尚未保留";
 "xomo.figma.node.issue.clippingFlattened" = "Frame 的内容裁切边界尚未保留";
 "xomo.figma.node.issue.effectsFlattened" = "效果尚未保留";

@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.12.0-rc64 - 2026-07-15
+
+### Added
+- Auto Layout 组新增主轴、交叉轴“固定 / 适应内容”尺寸模式；Figma 的 `primaryAxisSizingMode=AUTO` 与 `counterAxisSizingMode=AUTO` 会映射为原生 Hug 容器，属性面板可直接切换。
+- 重新排列时，Hug 容器会依据直接流式子项、间距和四边内距重新计算组宽高；嵌套组按自身外框参与计算，绝对定位子项不参与。
+
+### Changed
+- Figma Frame 的合成背景层现在带有独立布局背景标记。Hug 改变组边界时，背景会同步调整到新边界；普通绝对定位子项保持原位置和大小。
+- rc63 项目中没有尺寸模式字段的 Auto Layout 数据继续按“固定”解码；Wrap、Fill/Stretch 与 Baseline 仍在导入报告中明确按固定尺寸降级。
+
+### Tests
+- 新增双轴 Hug 尺寸计算、组与背景同步缩放、嵌套子树重排、Undo/Redo、项目往返、rc63 兼容解码和属性面板入口测试。
+- Auto Layout 专项 8/8、Figma 全链路 40/40、三语资源 4/4、SwiftPM CLI 2/2 通过；Debug 测试产品构建成功，App/CLI 版本为 `2.12.0-rc64`，Bundle ID 为 `im.some.xomo`，最低系统为 macOS 13.0，Debug App 为 arm64。
+
 ## 2.12.0-rc63 - 2026-07-15
 
 ### Added

@@ -694,6 +694,8 @@
 "imageEditor.properties.stackLayoutAxis" = "Direction";
 "imageEditor.properties.stackLayoutPrimaryAlignment" = "Primary alignment";
 "imageEditor.properties.stackLayoutCrossAlignment" = "Cross alignment";
+"imageEditor.properties.stackLayoutPrimarySizing" = "Primary size";
+"imageEditor.properties.stackLayoutCrossSizing" = "Cross size";
 "imageEditor.properties.stackLayoutSpacingValue" = "Spacing: %d px";
 "imageEditor.properties.stackLayoutPaddingTopValue" = "Top: %d px";
 "imageEditor.properties.stackLayoutPaddingRightValue" = "Right: %d px";
@@ -708,6 +710,8 @@
 "imageEditor.stackLayout.cross.start" = "Start";
 "imageEditor.stackLayout.cross.center" = "Center";
 "imageEditor.stackLayout.cross.end" = "End";
+"imageEditor.stackLayout.sizing.fixed" = "Fixed";
+"imageEditor.stackLayout.sizing.hug" = "Hug contents";
 "imageEditor.action.stackLayoutReflow" = "Reflow Children";
 "imageEditor.history.stackLayout" = "Update Auto Layout";
 "imageEditor.status.stackLayoutApplied" = "Auto Layout reflowed";
@@ -2870,7 +2874,7 @@
 "xomo.figma.node.issue.vectorGeometryMissing" = "Vector path data is missing";
 "xomo.figma.node.issue.vectorGeometryUnsupported" = "Vector path contains an unsupported command";
 "xomo.figma.node.issue.componentSemanticsFlattened" = "Component semantics will be treated as a regular group";
-"xomo.figma.node.issue.autoLayoutFlattened" = "Wrap, Hug/Fill, baseline, or related layout semantics use fixed sizes";
+"xomo.figma.node.issue.autoLayoutFlattened" = "Wrap, Fill/Stretch, baseline, or related layout semantics use fixed sizes";
 "xomo.figma.node.issue.maskFlattened" = "Mask relationships are not preserved yet";
 "xomo.figma.node.issue.clippingFlattened" = "Frame content clipping is not preserved yet";
 "xomo.figma.node.issue.effectsFlattened" = "Effects are not preserved yet";
