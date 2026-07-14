@@ -1,5 +1,22 @@
 # Changelog
 
+## 2.12.0-rc56 - 2026-07-15
+
+### Added
+- 新增纯本地 `XomoFigmaLinkParser` 与可编码的只读链接预览模型，识别 Figma Design、旧版 File、Prototype、FigJam、Slides、Sites、Buzz 与 Make 文件路径。
+- 解析结果提供资源类型、文件 Key、文件名、节点、原型起点、版本、计划导入范围和规范 URL；URL 节点 ID 会转换为 Figma API 使用的冒号形式。
+- 新增 [FIGMA_LINK_IMPORT.md](FIGMA_LINK_IMPORT.md)，固定 rc56–rc60 的链接预览、用户授权、节点映射、降级报告与完整质量门槛。
+
+### Security
+- 只接受 `figma.com` / `www.figma.com` 的 HTTPS 链接，拒绝仿冒后缀域名、URL 凭据、自定义端口、fragment、重复选择参数、畸形标识和超长输入。
+- 规范 URL 与预览模型只保留 `node-id`、`starting-point-node-id` 和 `version-id`；其余 query 名和值全部丢弃，避免令牌或跟踪数据进入项目、日志和持久化模型。
+- rc56 不联网、不读取浏览器会话、不检查或绕过 Figma 权限，授权状态明确保持为 `notChecked`。
+
+### Tests
+- 新增 8 项 Figma 链接解析测试，覆盖官方资源路径、节点/版本规范化、敏感参数剥离、Codable 往返、域名伪装、凭据、端口、歧义选择器和输入上限。
+- Figma 链接解析与安全边界 8/8、三语资源 4/4、SwiftPM CLI 2/2 通过，Debug `build-for-testing` 通过。
+- 核对 Debug App 与 CLI 版本均为 `2.12.0-rc56`；App Bundle ID 为 `im.some.xomo`、最低系统为 macOS 13.0、架构为 arm64。
+
 ## 2.12.0-rc55 - 2026-07-15
 
 ### Added
