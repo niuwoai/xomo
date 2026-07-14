@@ -212,6 +212,7 @@ enum XomoFigmaNodeMaterializer {
         )
         layer.groupID = groupID
         layer.isStackLayoutExcluded = true
+        layer.isStackLayoutBackground = true
         return layer
     }
 
