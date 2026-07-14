@@ -3925,6 +3925,8 @@ struct ImageEditorDocument {
     var alphaChannels: [ImageEditorAlphaChannel]
     var layerComps: [ImageEditorLayerComp]
     var selectedLayerCompID: UUID?
+    var savedPaths: [ImageEditorSavedPath]
+    var selectedSavedPathID: UUID?
     var guides: [ImageEditorGuide]
     var areExtrasVisible: Bool
     var areGuidesVisible: Bool
@@ -3956,6 +3958,8 @@ struct ImageEditorDocument {
         alphaChannels = []
         layerComps = []
         selectedLayerCompID = nil
+        savedPaths = []
+        selectedSavedPathID = nil
         guides = []
         areExtrasVisible = true
         areGuidesVisible = true

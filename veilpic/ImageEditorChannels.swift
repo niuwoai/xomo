@@ -40,6 +40,7 @@ enum ImageEditorLayerPanelTab: String, CaseIterable, Identifiable {
     case layers
     case channels
     case comps
+    case paths
 
     var id: String { rawValue }
 

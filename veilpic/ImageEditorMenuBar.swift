@@ -2239,6 +2239,32 @@ extension ImageEditorView {
     @ViewBuilder
     private var pathActionsMenu: some View {
         Menu(L10n.text("imageEditor.menu.window.paths")) {
+            Button(L10n.text("imageEditor.action.savedPathSave")) {
+                if let savedPath = viewModel.saveCurrentPath(name: nil) {
+                    selectedLayerPanelTab = .paths
+                    savedPathNameDrafts[savedPath.id] = savedPath.name
+                }
+            }
+            .disabled(!viewModel.canSaveCurrentPath)
+            Button(L10n.text("imageEditor.action.savedPathLoad")) {
+                guard let id = viewModel.document.selectedSavedPathID else { return }
+                selectedLayerPanelTab = .paths
+                viewModel.loadSavedPath(id)
+            }
+            .disabled(viewModel.selectedSavedPath == nil)
+            Button(L10n.text("imageEditor.action.savedPathUpdate")) {
+                guard let id = viewModel.document.selectedSavedPathID else { return }
+                selectedLayerPanelTab = .paths
+                viewModel.updateSavedPath(id)
+            }
+            .disabled(viewModel.selectedSavedPath == nil || !viewModel.hasEditableCurrentPath)
+            Button(L10n.text("imageEditor.action.savedPathDelete")) {
+                guard let id = viewModel.document.selectedSavedPathID else { return }
+                selectedLayerPanelTab = .paths
+                viewModel.deleteSavedPath(id)
+            }
+            .disabled(viewModel.selectedSavedPath == nil)
+            Divider()
             Button(L10n.text("imageEditor.action.pathStroke")) {
                 viewModel.strokeSelectedPathToPixelLayer()
             }

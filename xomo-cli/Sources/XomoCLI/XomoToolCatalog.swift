@@ -108,6 +108,7 @@ enum XomoToolCatalog {
         ("xomo.mask.action", "Create, delete, enable, or link a layer mask."),
         ("xomo.path.get", "Inspect the selected editable vector path."),
         ("xomo.path.action", "Create and edit vector paths, anchors, subpaths, and masks."),
+        ("xomo.path.saved", "List and manage independent named paths stored in the document."),
         ("xomo.layer.effect", "Toggle a layer effect."),
         ("xomo.guide.list", "List guides and grid settings."),
         ("xomo.guide.add", "Add a guide."),

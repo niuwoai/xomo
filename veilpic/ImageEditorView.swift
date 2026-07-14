@@ -54,6 +54,7 @@ struct ImageEditorView: View {
     @State var selectedLayerAttributeFilter: ImageEditorLayerAttributeFilter = .all
     @State var alphaChannelNameDrafts: [UUID: String] = [:]
     @State var layerCompNameDrafts: [UUID: String] = [:]
+    @State var savedPathNameDrafts: [UUID: String] = [:]
     @State var historySnapshotNameDrafts: [UUID: String] = [:]
     @State var selectedLayerPanelTab: ImageEditorLayerPanelTab = .layers
     @State var targetedLayerDropTarget: ImageEditorLayerDropTarget?

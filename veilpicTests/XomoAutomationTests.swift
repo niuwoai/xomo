@@ -844,6 +844,59 @@ struct XomoAutomationTests {
         #expect(viewModel.customLayerStylePresets[1].layerStyle.strokeWidth == 3)
     }
 
+    @Test func registrySavesListsRenamesLoadsAndDeletesIndependentPaths() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        [
+            CGPoint(x: 12, y: 10),
+            CGPoint(x: 74, y: 14),
+            CGPoint(x: 44, y: 54)
+        ].forEach(viewModel.addPenPoint)
+        viewModel.finishPenPath(closed: true)
+        let sourceLayerID = try #require(viewModel.document.selectedLayerID)
+        registry.register(viewModel)
+
+        let save = registry.execute(request(
+            operation: "call",
+            name: "xomo.path.saved",
+            arguments: ["action": .string("save"), "name": .string("Logo")]
+        ))
+        let savedID = try #require(save.result?.arrayValue?.first?.objectValue?["id"]?.stringValue)
+        #expect(save.ok)
+        #expect(save.result?.arrayValue?.first?.objectValue?["title"] == .string("Logo"))
+        #expect(save.result?.arrayValue?.first?.objectValue?["selected"] == .bool(true))
+
+        let rename = registry.execute(request(
+            operation: "call",
+            name: "xomo.path.saved",
+            arguments: [
+                "action": .string("rename"),
+                "id": .string(savedID),
+                "name": .string("Logo Outline")
+            ]
+        ))
+        #expect(rename.ok)
+        #expect(rename.result?.arrayValue?.first?.objectValue?["title"] == .string("Logo Outline"))
+
+        viewModel.document.layers.removeAll { $0.id == sourceLayerID }
+        let load = registry.execute(request(
+            operation: "call",
+            name: "xomo.path.saved",
+            arguments: ["action": .string("load"), "id": .string(savedID)]
+        ))
+        #expect(load.ok)
+        #expect(viewModel.document.selectedLayer?.shapeContent?.kind == .path)
+        #expect(viewModel.document.selectedLayer?.name == "Logo Outline")
+
+        let delete = registry.execute(request(
+            operation: "call",
+            name: "xomo.path.saved",
+            arguments: ["action": .string("delete"), "id": .string(savedID)]
+        ))
+        #expect(delete.ok)
+        #expect(delete.result?.arrayValue?.isEmpty == true)
+    }
+
     @Test func registryReordersCollapsedGroupsAsVisibleSubtrees() {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared
