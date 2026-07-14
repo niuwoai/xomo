@@ -832,6 +832,11 @@ final class XomoAutomationRegistry {
             guard viewModel.renameSavedPath(id, to: try requiredString("name", in: arguments)) else {
                 throw XomoAutomationCallError.invalidArgument("Saved path name must not be blank and the path must exist")
             }
+        case "duplicate":
+            let id = try requiredUUID("id", in: arguments)
+            guard viewModel.duplicateSavedPath(id) != nil else {
+                throw XomoAutomationCallError.operationFailed("The saved path does not exist or the saved path limit was reached")
+            }
         case "update":
             let id = try requiredUUID("id", in: arguments)
             guard viewModel.updateSavedPath(id) else {
@@ -2398,9 +2403,9 @@ private extension XomoAutomationRegistry {
             "dx": XomoAutomationSchema.number(description: "Horizontal path delta"),
             "dy": XomoAutomationSchema.number(description: "Vertical path delta")
         ], required: ["action"]),
-        tool("xomo.path.saved", "List, save, select, rename, update, load, render, show, make a selection from, or delete independent named paths.", [
-            "action": XomoAutomationSchema.string(description: "Saved path action", values: ["list", "save", "select", "rename", "update", "load", "selection", "fill", "stroke", "visibility", "delete"]),
-            "id": XomoAutomationSchema.string(description: "Saved path UUID for select, rename, update, load, selection, fill, stroke, visibility, or delete"),
+        tool("xomo.path.saved", "List, save, select, rename, duplicate, update, load, render, show, make a selection from, or delete independent named paths.", [
+            "action": XomoAutomationSchema.string(description: "Saved path action", values: ["list", "save", "select", "rename", "duplicate", "update", "load", "selection", "fill", "stroke", "visibility", "delete"]),
+            "id": XomoAutomationSchema.string(description: "Saved path UUID for select, rename, duplicate, update, load, selection, fill, stroke, visibility, or delete"),
             "name": XomoAutomationSchema.string(description: "Optional name when saving or required name when renaming"),
             "visible": XomoAutomationSchema.boolean(description: "Persistent canvas overlay state for visibility")
         ], required: ["action"]),

@@ -2252,6 +2252,14 @@ extension ImageEditorView {
                 viewModel.copySavedPath(id)
             }
             .disabled(viewModel.selectedSavedPath == nil)
+            Button(L10n.text("imageEditor.action.savedPathDuplicate")) {
+                guard let id = viewModel.document.selectedSavedPathID else { return }
+                selectedLayerPanelTab = .paths
+                if let savedPath = viewModel.duplicateSavedPath(id) {
+                    savedPathNameDrafts[savedPath.id] = savedPath.name
+                }
+            }
+            .disabled(!viewModel.canDuplicateSelectedSavedPath)
             Button(L10n.text("imageEditor.action.savedPathPaste")) {
                 selectedLayerPanelTab = .paths
                 if let savedPath = viewModel.pasteSavedPath() {

@@ -1,0 +1,269 @@
+{
+  "generated_at": "2026-07-14 19:25:26 +0800",
+  "total": 26,
+  "passed": 26,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorSavedPathTests",
+      "method": "closedSavedPathFillsSelectedPixelLayerWithoutCreatingALayer",
+      "identifier": "veilpicTests/ImageEditorSavedPathTests/closedSavedPathFillsSelectedPixelLayerWithoutCreatingALayer",
+      "file": "ImageEditorSavedPathTests.swift",
+      "passed": true,
+      "duration": 4.36,
+      "issues": [],
+      "log": "ImageEditorSavedPathTests.closedSavedPathFillsSelectedPixelLayerWithoutCreatingALayer.log"
+    },
+    {
+      "suite": "ImageEditorSavedPathTests",
+      "method": "closedSavedPathLoadsSelectionWithoutCreatingOrSelectingALayer",
+      "identifier": "veilpicTests/ImageEditorSavedPathTests/closedSavedPathLoadsSelectionWithoutCreatingOrSelectingALayer",
+      "file": "ImageEditorSavedPathTests.swift",
+      "passed": true,
+      "duration": 6.201,
+      "issues": [],
+      "log": "ImageEditorSavedPathTests.closedSavedPathLoadsSelectionWithoutCreatingOrSelectingALayer.log"
+    },
+    {
+      "suite": "ImageEditorSavedPathTests",
+      "method": "compoundSavedPathLoadsEverySubpathIntoSelection",
+      "identifier": "veilpicTests/ImageEditorSavedPathTests/compoundSavedPathLoadsEverySubpathIntoSelection",
+      "file": "ImageEditorSavedPathTests.swift",
+      "passed": true,
+      "duration": 4.994,
+      "issues": [],
+      "log": "ImageEditorSavedPathTests.compoundSavedPathLoadsEverySubpathIntoSelection.log"
+    },
+    {
+      "suite": "ImageEditorSavedPathTests",
+      "method": "openSavedPathCannotLoadSelectionOrCreateHistory",
+      "identifier": "veilpicTests/ImageEditorSavedPathTests/openSavedPathCannotLoadSelectionOrCreateHistory",
+      "file": "ImageEditorSavedPathTests.swift",
+      "passed": true,
+      "duration": 4.535,
+      "issues": [],
+      "log": "ImageEditorSavedPathTests.openSavedPathCannotLoadSelectionOrCreateHistory.log"
+    },
+    {
+      "suite": "ImageEditorSavedPathTests",
+      "method": "openSavedPathStrokesSelectedPixelLayer",
+      "identifier": "veilpicTests/ImageEditorSavedPathTests/openSavedPathStrokesSelectedPixelLayer",
+      "file": "ImageEditorSavedPathTests.swift",
+      "passed": true,
+      "duration": 4.547,
+      "issues": [],
+      "log": "ImageEditorSavedPathTests.openSavedPathStrokesSelectedPixelLayer.log"
+    },
+    {
+      "suite": "ImageEditorSavedPathTests",
+      "method": "pathsPanelMenuProjectAndAutomationUseSavedPathCommands",
+      "identifier": "veilpicTests/ImageEditorSavedPathTests/pathsPanelMenuProjectAndAutomationUseSavedPathCommands",
+      "file": "ImageEditorSavedPathTests.swift",
+      "passed": true,
+      "duration": 4.107,
+      "issues": [],
+      "log": "ImageEditorSavedPathTests.pathsPanelMenuProjectAndAutomationUseSavedPathCommands.log"
+    },
+    {
+      "suite": "ImageEditorSavedPathTests",
+      "method": "savedPathCanBeRenamedUpdatedAndDeletedWithoutChangingItsIdentity",
+      "identifier": "veilpicTests/ImageEditorSavedPathTests/savedPathCanBeRenamedUpdatedAndDeletedWithoutChangingItsIdentity",
+      "file": "ImageEditorSavedPathTests.swift",
+      "passed": true,
+      "duration": 5.733,
+      "issues": [],
+      "log": "ImageEditorSavedPathTests.savedPathCanBeRenamedUpdatedAndDeletedWithoutChangingItsIdentity.log"
+    },
+    {
+      "suite": "ImageEditorSavedPathTests",
+      "method": "savedPathCanvasOverlayHonorsExtrasVisibilityAndSelection",
+      "identifier": "veilpicTests/ImageEditorSavedPathTests/savedPathCanvasOverlayHonorsExtrasVisibilityAndSelection",
+      "file": "ImageEditorSavedPathTests.swift",
+      "passed": true,
+      "duration": 4.383,
+      "issues": [],
+      "log": "ImageEditorSavedPathTests.savedPathCanvasOverlayHonorsExtrasVisibilityAndSelection.log"
+    },
+    {
+      "suite": "ImageEditorSavedPathTests",
+      "method": "savedPathCopiesAndPastesAsIndependentGeometryWithoutChangingCopyHistory",
+      "identifier": "veilpicTests/ImageEditorSavedPathTests/savedPathCopiesAndPastesAsIndependentGeometryWithoutChangingCopyHistory",
+      "file": "ImageEditorSavedPathTests.swift",
+      "passed": true,
+      "duration": 4.238,
+      "issues": [],
+      "log": "ImageEditorSavedPathTests.savedPathCopiesAndPastesAsIndependentGeometryWithoutChangingCopyHistory.log"
+    },
+    {
+      "suite": "ImageEditorSavedPathTests",
+      "method": "savedPathDuplicateRejectsCapacityWithoutMutation",
+      "identifier": "veilpicTests/ImageEditorSavedPathTests/savedPathDuplicateRejectsCapacityWithoutMutation",
+      "file": "ImageEditorSavedPathTests.swift",
+      "passed": true,
+      "duration": 4.217,
+      "issues": [],
+      "log": "ImageEditorSavedPathTests.savedPathDuplicateRejectsCapacityWithoutMutation.log"
+    },
+    {
+      "suite": "ImageEditorSavedPathTests",
+      "method": "savedPathDuplicatesAdjacentIndependentCopyWithUndo",
+      "identifier": "veilpicTests/ImageEditorSavedPathTests/savedPathDuplicatesAdjacentIndependentCopyWithUndo",
+      "file": "ImageEditorSavedPathTests.swift",
+      "passed": true,
+      "duration": 4.41,
+      "issues": [],
+      "log": "ImageEditorSavedPathTests.savedPathDuplicatesAdjacentIndependentCopyWithUndo.log"
+    },
+    {
+      "suite": "ImageEditorSavedPathTests",
+      "method": "savedPathFillPreservesTransparentPixelsWhenLocked",
+      "identifier": "veilpicTests/ImageEditorSavedPathTests/savedPathFillPreservesTransparentPixelsWhenLocked",
+      "file": "ImageEditorSavedPathTests.swift",
+      "passed": true,
+      "duration": 4.301,
+      "issues": [],
+      "log": "ImageEditorSavedPathTests.savedPathFillPreservesTransparentPixelsWhenLocked.log"
+    },
+    {
+      "suite": "ImageEditorSavedPathTests",
+      "method": "savedPathOrderJumpsToTopAndBottomWithSingleUndoSteps",
+      "identifier": "veilpicTests/ImageEditorSavedPathTests/savedPathOrderJumpsToTopAndBottomWithSingleUndoSteps",
+      "file": "ImageEditorSavedPathTests.swift",
+      "passed": true,
+      "duration": 4.455,
+      "issues": [],
+      "log": "ImageEditorSavedPathTests.savedPathOrderJumpsToTopAndBottomWithSingleUndoSteps.log"
+    },
+    {
+      "suite": "ImageEditorSavedPathTests",
+      "method": "savedPathOrderMovesWithUndoAndControlsOverlayStacking",
+      "identifier": "veilpicTests/ImageEditorSavedPathTests/savedPathOrderMovesWithUndoAndControlsOverlayStacking",
+      "file": "ImageEditorSavedPathTests.swift",
+      "passed": true,
+      "duration": 4.036,
+      "issues": [],
+      "log": "ImageEditorSavedPathTests.savedPathOrderMovesWithUndoAndControlsOverlayStacking.log"
+    },
+    {
+      "suite": "ImageEditorSavedPathTests",
+      "method": "savedPathOrderRejectsEdgesWithoutHistory",
+      "identifier": "veilpicTests/ImageEditorSavedPathTests/savedPathOrderRejectsEdgesWithoutHistory",
+      "file": "ImageEditorSavedPathTests.swift",
+      "passed": true,
+      "duration": 4.111,
+      "issues": [],
+      "log": "ImageEditorSavedPathTests.savedPathOrderRejectsEdgesWithoutHistory.log"
+    },
+    {
+      "suite": "ImageEditorSavedPathTests",
+      "method": "savedPathPasteRejectsInvalidClipboardAndCapacityWithoutMutation",
+      "identifier": "veilpicTests/ImageEditorSavedPathTests/savedPathPasteRejectsInvalidClipboardAndCapacityWithoutMutation",
+      "file": "ImageEditorSavedPathTests.swift",
+      "passed": true,
+      "duration": 4.339,
+      "issues": [],
+      "log": "ImageEditorSavedPathTests.savedPathPasteRejectsInvalidClipboardAndCapacityWithoutMutation.log"
+    },
+    {
+      "suite": "ImageEditorSavedPathTests",
+      "method": "savedPathRenderMapsCanvasCoordinatesIntoOffsetScaledPixelLayer",
+      "identifier": "veilpicTests/ImageEditorSavedPathTests/savedPathRenderMapsCanvasCoordinatesIntoOffsetScaledPixelLayer",
+      "file": "ImageEditorSavedPathTests.swift",
+      "passed": true,
+      "duration": 4.824,
+      "issues": [],
+      "log": "ImageEditorSavedPathTests.savedPathRenderMapsCanvasCoordinatesIntoOffsetScaledPixelLayer.log"
+    },
+    {
+      "suite": "ImageEditorSavedPathTests",
+      "method": "savedPathRenderRejectsLockedTargetWithoutHistory",
+      "identifier": "veilpicTests/ImageEditorSavedPathTests/savedPathRenderRejectsLockedTargetWithoutHistory",
+      "file": "ImageEditorSavedPathTests.swift",
+      "passed": true,
+      "duration": 4.661,
+      "issues": [],
+      "log": "ImageEditorSavedPathTests.savedPathRenderRejectsLockedTargetWithoutHistory.log"
+    },
+    {
+      "suite": "ImageEditorSavedPathTests",
+      "method": "savedPathSelectionRespectsAddMode",
+      "identifier": "veilpicTests/ImageEditorSavedPathTests/savedPathSelectionRespectsAddMode",
+      "file": "ImageEditorSavedPathTests.swift",
+      "passed": true,
+      "duration": 4.766,
+      "issues": [],
+      "log": "ImageEditorSavedPathTests.savedPathSelectionRespectsAddMode.log"
+    },
+    {
+      "suite": "ImageEditorSavedPathTests",
+      "method": "savedPathVisibilityKeepsUnselectedPathsOverlaidWithoutHistory",
+      "identifier": "veilpicTests/ImageEditorSavedPathTests/savedPathVisibilityKeepsUnselectedPathsOverlaidWithoutHistory",
+      "file": "ImageEditorSavedPathTests.swift",
+      "passed": true,
+      "duration": 5.173,
+      "issues": [],
+      "log": "ImageEditorSavedPathTests.savedPathVisibilityKeepsUnselectedPathsOverlaidWithoutHistory.log"
+    },
+    {
+      "suite": "ImageEditorSavedPathTests",
+      "method": "savedPathVisibilityRoundTripsAndOlderPayloadsDefaultToHidden",
+      "identifier": "veilpicTests/ImageEditorSavedPathTests/savedPathVisibilityRoundTripsAndOlderPayloadsDefaultToHidden",
+      "file": "ImageEditorSavedPathTests.swift",
+      "passed": true,
+      "duration": 4.995,
+      "issues": [],
+      "log": "ImageEditorSavedPathTests.savedPathVisibilityRoundTripsAndOlderPayloadsDefaultToHidden.log"
+    },
+    {
+      "suite": "ImageEditorSavedPathTests",
+      "method": "savedPathsRoundTripProjectsAndOlderProjectsDefaultToEmpty",
+      "identifier": "veilpicTests/ImageEditorSavedPathTests/savedPathsRoundTripProjectsAndOlderProjectsDefaultToEmpty",
+      "file": "ImageEditorSavedPathTests.swift",
+      "passed": true,
+      "duration": 4.449,
+      "issues": [],
+      "log": "ImageEditorSavedPathTests.savedPathsRoundTripProjectsAndOlderProjectsDefaultToEmpty.log"
+    },
+    {
+      "suite": "ImageEditorSavedPathTests",
+      "method": "savingPathCreatesIndependentUndoableSnapshotAndLoadsEditableCopy",
+      "identifier": "veilpicTests/ImageEditorSavedPathTests/savingPathCreatesIndependentUndoableSnapshotAndLoadsEditableCopy",
+      "file": "ImageEditorSavedPathTests.swift",
+      "passed": true,
+      "duration": 9.195,
+      "issues": [],
+      "log": "ImageEditorSavedPathTests.savingPathCreatesIndependentUndoableSnapshotAndLoadsEditableCopy.log"
+    },
+    {
+      "suite": "ImageEditorSavedPathTests",
+      "method": "selectedSavedPathExposesReadOnlyAnchorAndControlGeometry",
+      "identifier": "veilpicTests/ImageEditorSavedPathTests/selectedSavedPathExposesReadOnlyAnchorAndControlGeometry",
+      "file": "ImageEditorSavedPathTests.swift",
+      "passed": true,
+      "duration": 4.07,
+      "issues": [],
+      "log": "ImageEditorSavedPathTests.selectedSavedPathExposesReadOnlyAnchorAndControlGeometry.log"
+    },
+    {
+      "suite": "ImageEditorSavedPathTests",
+      "method": "selectedSavedPathProvidesNonDestructiveCanvasOverlay",
+      "identifier": "veilpicTests/ImageEditorSavedPathTests/selectedSavedPathProvidesNonDestructiveCanvasOverlay",
+      "file": "ImageEditorSavedPathTests.swift",
+      "passed": true,
+      "duration": 4.649,
+      "issues": [],
+      "log": "ImageEditorSavedPathTests.selectedSavedPathProvidesNonDestructiveCanvasOverlay.log"
+    },
+    {
+      "suite": "ImageEditorSavedPathTests",
+      "method": "updatingExistingPathRemainsAvailableAtSavedPathCapacity",
+      "identifier": "veilpicTests/ImageEditorSavedPathTests/updatingExistingPathRemainsAvailableAtSavedPathCapacity",
+      "file": "ImageEditorSavedPathTests.swift",
+      "passed": true,
+      "duration": 4.494,
+      "issues": [],
+      "log": "ImageEditorSavedPathTests.updatingExistingPathRemainsAvailableAtSavedPathCapacity.log"
+    }
+  ]
+}

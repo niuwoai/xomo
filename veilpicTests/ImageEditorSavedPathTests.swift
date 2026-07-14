@@ -545,6 +545,70 @@ struct ImageEditorSavedPathTests {
         #expect(viewModel.document.history.count == initialHistoryCount)
     }
 
+    @Test func savedPathDuplicatesAdjacentIndependentCopyWithUndo() throws {
+        let viewModel = makeViewModel()
+        let saved = ImageEditorSavedPath(
+            name: "Curve",
+            subpaths: [[
+                ImageEditorPathAnchor(
+                    point: CGPoint(x: 12, y: 18),
+                    outControl: CGPoint(x: 24, y: 8)
+                ),
+                ImageEditorPathAnchor(
+                    point: CGPoint(x: 62, y: 44),
+                    inControl: CGPoint(x: 48, y: 54)
+                )
+            ]],
+            isClosed: false,
+            isVisible: true
+        )
+        let trailing = ImageEditorSavedPath(
+            name: "Trailing",
+            subpaths: saved.subpaths,
+            isClosed: false
+        )
+        viewModel.document.savedPaths = [saved, trailing]
+        viewModel.document.selectedSavedPathID = saved.id
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.canDuplicateSelectedSavedPath)
+        let duplicate = try #require(viewModel.duplicateSavedPath(saved.id))
+        #expect(duplicate.id != saved.id)
+        #expect(duplicate.name == saved.name + L10n.text("imageEditor.savedPath.copySuffix"))
+        #expect(duplicate.subpaths == saved.subpaths)
+        #expect(duplicate.isClosed == saved.isClosed)
+        #expect(!duplicate.isVisible)
+        #expect(viewModel.document.savedPaths.map(\.id) == [saved.id, duplicate.id, trailing.id])
+        #expect(viewModel.document.selectedSavedPathID == duplicate.id)
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        viewModel.undo()
+        #expect(viewModel.document.savedPaths.map(\.id) == [saved.id, trailing.id])
+        viewModel.redo()
+        #expect(viewModel.document.savedPaths.map(\.id) == [saved.id, duplicate.id, trailing.id])
+    }
+
+    @Test func savedPathDuplicateRejectsCapacityWithoutMutation() {
+        let viewModel = makeViewModel()
+        let anchors = [[
+            ImageEditorPathAnchor(point: CGPoint(x: 8, y: 8)),
+            ImageEditorPathAnchor(point: CGPoint(x: 64, y: 12))
+        ]]
+        viewModel.document.savedPaths = (0..<ImageEditorSavedPath.maximumCount).map { index in
+            ImageEditorSavedPath(name: "Stored \(index)", subpaths: anchors, isClosed: false)
+        }
+        let selectedID = viewModel.document.savedPaths[4].id
+        viewModel.document.selectedSavedPathID = selectedID
+        let originalPaths = viewModel.document.savedPaths
+        let historyCount = viewModel.document.history.count
+
+        #expect(!viewModel.canDuplicateSelectedSavedPath)
+        #expect(viewModel.duplicateSavedPath(selectedID) == nil)
+        #expect(viewModel.document.savedPaths == originalPaths)
+        #expect(viewModel.document.selectedSavedPathID == selectedID)
+        #expect(viewModel.document.history.count == historyCount)
+    }
+
     @Test func savedPathOrderMovesWithUndoAndControlsOverlayStacking() throws {
         let viewModel = makeViewModel()
         let anchors = [[
@@ -682,6 +746,7 @@ struct ImageEditorSavedPathTests {
         #expect(panel.contains("viewModel.strokeSavedPathToSelectedPixelLayer"))
         #expect(panel.contains("viewModel.copySavedPath"))
         #expect(panel.contains("viewModel.pasteSavedPath"))
+        #expect(panel.contains("viewModel.duplicateSavedPath"))
         #expect(panel.contains("viewModel.moveSavedPathUp"))
         #expect(panel.contains("viewModel.moveSavedPathDown"))
         #expect(panel.contains("viewModel.moveSavedPathToTop"))
@@ -694,6 +759,7 @@ struct ImageEditorSavedPathTests {
         #expect(menu.contains("viewModel.strokeSavedPathToSelectedPixelLayer"))
         #expect(menu.contains("viewModel.copySavedPath"))
         #expect(menu.contains("viewModel.pasteSavedPath"))
+        #expect(menu.contains("viewModel.duplicateSavedPath"))
         #expect(menu.contains("viewModel.moveSavedPathUp"))
         #expect(menu.contains("viewModel.moveSavedPathDown"))
         #expect(menu.contains("viewModel.moveSavedPathToTop"))
@@ -711,6 +777,7 @@ struct ImageEditorSavedPathTests {
         #expect(automation.contains("case \"fill\""))
         #expect(automation.contains("case \"stroke\""))
         #expect(automation.contains("case \"visibility\""))
+        #expect(automation.contains("case \"duplicate\""))
     }
 
     private func createPath(

@@ -1380,6 +1380,7 @@
 "imageEditor.history.savedPathLoad" = "パスを読み込む";
 "imageEditor.history.savedPathDelete" = "パスを削除";
 "imageEditor.history.savedPathPaste" = "パスをペースト";
+"imageEditor.history.savedPathDuplicate" = "パスを複製";
 "imageEditor.history.savedPathReorder" = "パスを並べ替え";
 "imageEditor.history.selectionFromSavedPath" = "保存済みパスから選択範囲を読み込む";
 "imageEditor.history.savedPathFill" = "保存済みパスを塗りつぶす";
@@ -1586,6 +1587,7 @@
 "imageEditor.status.savedPathCopyFailed" = "パスをクリップボードへ書き込めませんでした";
 "imageEditor.status.savedPathClipboardInvalid" = "クリップボードにペースト可能な Xomo パスがありません";
 "imageEditor.status.savedPathPasted" = "パスをペーストしました：%@";
+"imageEditor.status.savedPathDuplicated" = "パスを複製しました：%@";
 "imageEditor.status.savedPathMovedUp" = "パスを上へ移動しました：%@";
 "imageEditor.status.savedPathMovedDown" = "パスを下へ移動しました：%@";
 "imageEditor.status.savedPathMovedToTop" = "パスをリストの先頭へ移動しました：%@";
@@ -1977,6 +1979,7 @@
 "imageEditor.action.savedPathFill" = "現在のピクセルレイヤーでパスを塗りつぶす";
 "imageEditor.action.savedPathStroke" = "現在のピクセルレイヤーでパスをストローク";
 "imageEditor.action.savedPathCopy" = "パスをコピー";
+"imageEditor.action.savedPathDuplicate" = "パスを複製";
 "imageEditor.action.savedPathPaste" = "パスをペースト";
 "imageEditor.action.savedPathMoveUp" = "パスを上へ移動";
 "imageEditor.action.savedPathMoveDown" = "パスを下へ移動";
