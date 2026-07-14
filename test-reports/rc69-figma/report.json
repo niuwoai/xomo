@@ -1,0 +1,201 @@
+{
+  "generated_at": "2026-07-15 07:14:02 +0800",
+  "total": 16,
+  "passed": 16,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "XomoFigmaNodeImportPlanTests",
+      "method": "clientMapsBadRequestAuthorizationMissingNodeRateLimitAndServerErrors",
+      "identifier": "veilpicTests/XomoFigmaNodeImportPlanTests/clientMapsBadRequestAuthorizationMissingNodeRateLimitAndServerErrors",
+      "file": "XomoFigmaNodeImportPlanTests.swift",
+      "passed": true,
+      "duration": 2.783,
+      "issues": [
+
+      ],
+      "log": "XomoFigmaNodeImportPlanTests.clientMapsBadRequestAuthorizationMissingNodeRateLimitAndServerErrors.log"
+    },
+    {
+      "suite": "XomoFigmaNodeImportPlanTests",
+      "method": "clientRejectsMissingNodeOversizedResponsesAndExcessiveTrees",
+      "identifier": "veilpicTests/XomoFigmaNodeImportPlanTests/clientRejectsMissingNodeOversizedResponsesAndExcessiveTrees",
+      "file": "XomoFigmaNodeImportPlanTests.swift",
+      "passed": true,
+      "duration": 2.796,
+      "issues": [
+
+      ],
+      "log": "XomoFigmaNodeImportPlanTests.clientRejectsMissingNodeOversizedResponsesAndExcessiveTrees.log"
+    },
+    {
+      "suite": "XomoFigmaNodeImportPlanTests",
+      "method": "clientRequiresSpecificNodeAndUsesBoundedOfficialEndpoint",
+      "identifier": "veilpicTests/XomoFigmaNodeImportPlanTests/clientRequiresSpecificNodeAndUsesBoundedOfficialEndpoint",
+      "file": "XomoFigmaNodeImportPlanTests.swift",
+      "passed": true,
+      "duration": 2.788,
+      "issues": [
+
+      ],
+      "log": "XomoFigmaNodeImportPlanTests.clientRequiresSpecificNodeAndUsesBoundedOfficialEndpoint.log"
+    },
+    {
+      "suite": "XomoFigmaNodeImportPlanTests",
+      "method": "controllerDoesNotReadUntilExplicitUserActionAndClearsStalePlan",
+      "identifier": "veilpicTests/XomoFigmaNodeImportPlanTests/controllerDoesNotReadUntilExplicitUserActionAndClearsStalePlan",
+      "file": "XomoFigmaNodeImportPlanTests.swift",
+      "passed": true,
+      "duration": 2.803,
+      "issues": [
+
+      ],
+      "log": "XomoFigmaNodeImportPlanTests.controllerDoesNotReadUntilExplicitUserActionAndClearsStalePlan.log"
+    },
+    {
+      "suite": "XomoFigmaNodeImportPlanTests",
+      "method": "importedHierarchySurvivesProjectDataAndCompositeExport",
+      "identifier": "veilpicTests/XomoFigmaNodeImportPlanTests/importedHierarchySurvivesProjectDataAndCompositeExport",
+      "file": "XomoFigmaNodeImportPlanTests.swift",
+      "passed": true,
+      "duration": 2.768,
+      "issues": [
+
+      ],
+      "log": "XomoFigmaNodeImportPlanTests.importedHierarchySurvivesProjectDataAndCompositeExport.log"
+    },
+    {
+      "suite": "XomoFigmaNodeImportPlanTests",
+      "method": "mapperBuildsEditableHierarchyAndRelativeFrames",
+      "identifier": "veilpicTests/XomoFigmaNodeImportPlanTests/mapperBuildsEditableHierarchyAndRelativeFrames",
+      "file": "XomoFigmaNodeImportPlanTests.swift",
+      "passed": true,
+      "duration": 2.766,
+      "issues": [
+
+      ],
+      "log": "XomoFigmaNodeImportPlanTests.mapperBuildsEditableHierarchyAndRelativeFrames.log"
+    },
+    {
+      "suite": "XomoFigmaNodeImportPlanTests",
+      "method": "mapperKeepsUniformCornersAndReportsIndependentOrSmoothedCorners",
+      "identifier": "veilpicTests/XomoFigmaNodeImportPlanTests/mapperKeepsUniformCornersAndReportsIndependentOrSmoothedCorners",
+      "file": "XomoFigmaNodeImportPlanTests.swift",
+      "passed": true,
+      "duration": 2.828,
+      "issues": [
+
+      ],
+      "log": "XomoFigmaNodeImportPlanTests.mapperKeepsUniformCornersAndReportsIndependentOrSmoothedCorners.log"
+    },
+    {
+      "suite": "XomoFigmaNodeImportPlanTests",
+      "method": "mapperReportsPartialImageComponentLayoutAndUnsupportedNodes",
+      "identifier": "veilpicTests/XomoFigmaNodeImportPlanTests/mapperReportsPartialImageComponentLayoutAndUnsupportedNodes",
+      "file": "XomoFigmaNodeImportPlanTests.swift",
+      "passed": true,
+      "duration": 2.784,
+      "issues": [
+
+      ],
+      "log": "XomoFigmaNodeImportPlanTests.mapperReportsPartialImageComponentLayoutAndUnsupportedNodes.log"
+    },
+    {
+      "suite": "XomoFigmaNodeImportPlanTests",
+      "method": "mapperReportsUnsupportedWrapWhileKeepingFillChildSemantics",
+      "identifier": "veilpicTests/XomoFigmaNodeImportPlanTests/mapperReportsUnsupportedWrapWhileKeepingFillChildSemantics",
+      "file": "XomoFigmaNodeImportPlanTests.swift",
+      "passed": true,
+      "duration": 2.887,
+      "issues": [
+
+      ],
+      "log": "XomoFigmaNodeImportPlanTests.mapperReportsUnsupportedWrapWhileKeepingFillChildSemantics.log"
+    },
+    {
+      "suite": "XomoFigmaNodeImportPlanTests",
+      "method": "mapperUsesStrokeGeometryAndReportsInheritedRotatedTransform",
+      "identifier": "veilpicTests/XomoFigmaNodeImportPlanTests/mapperUsesStrokeGeometryAndReportsInheritedRotatedTransform",
+      "file": "XomoFigmaNodeImportPlanTests.swift",
+      "passed": true,
+      "duration": 2.764,
+      "issues": [
+
+      ],
+      "log": "XomoFigmaNodeImportPlanTests.mapperUsesStrokeGeometryAndReportsInheritedRotatedTransform.log"
+    },
+    {
+      "suite": "XomoFigmaNodeImportPlanTests",
+      "method": "materializerCreatesEditableHierarchyAtCenteredScaleAndHonestPlaceholder",
+      "identifier": "veilpicTests/XomoFigmaNodeImportPlanTests/materializerCreatesEditableHierarchyAtCenteredScaleAndHonestPlaceholder",
+      "file": "XomoFigmaNodeImportPlanTests.swift",
+      "passed": true,
+      "duration": 2.75,
+      "issues": [
+
+      ],
+      "log": "XomoFigmaNodeImportPlanTests.materializerCreatesEditableHierarchyAtCenteredScaleAndHonestPlaceholder.log"
+    },
+    {
+      "suite": "XomoFigmaNodeImportPlanTests",
+      "method": "materializerOnlyShrinksOversizedRootAndKeepsItInsideCanvasInset",
+      "identifier": "veilpicTests/XomoFigmaNodeImportPlanTests/materializerOnlyShrinksOversizedRootAndKeepsItInsideCanvasInset",
+      "file": "XomoFigmaNodeImportPlanTests.swift",
+      "passed": true,
+      "duration": 2.776,
+      "issues": [
+
+      ],
+      "log": "XomoFigmaNodeImportPlanTests.materializerOnlyShrinksOversizedRootAndKeepsItInsideCanvasInset.log"
+    },
+    {
+      "suite": "XomoFigmaNodeImportPlanTests",
+      "method": "sheetMakesNodeReadExplicitAndRequiresNodeSelection",
+      "identifier": "veilpicTests/XomoFigmaNodeImportPlanTests/sheetMakesNodeReadExplicitAndRequiresNodeSelection",
+      "file": "XomoFigmaNodeImportPlanTests.swift",
+      "passed": true,
+      "duration": 2.814,
+      "issues": [
+
+      ],
+      "log": "XomoFigmaNodeImportPlanTests.sheetMakesNodeReadExplicitAndRequiresNodeSelection.log"
+    },
+    {
+      "suite": "XomoFigmaNodeImportPlanTests",
+      "method": "svgParserSupportsRelativeCurvesQuadraticsAndArcs",
+      "identifier": "veilpicTests/XomoFigmaNodeImportPlanTests/svgParserSupportsRelativeCurvesQuadraticsAndArcs",
+      "file": "XomoFigmaNodeImportPlanTests.swift",
+      "passed": true,
+      "duration": 2.801,
+      "issues": [
+
+      ],
+      "log": "XomoFigmaNodeImportPlanTests.svgParserSupportsRelativeCurvesQuadraticsAndArcs.log"
+    },
+    {
+      "suite": "XomoFigmaNodeImportPlanTests",
+      "method": "viewModelImportsPlanAsSingleUndoableHistoryStep",
+      "identifier": "veilpicTests/XomoFigmaNodeImportPlanTests/viewModelImportsPlanAsSingleUndoableHistoryStep",
+      "file": "XomoFigmaNodeImportPlanTests.swift",
+      "passed": true,
+      "duration": 2.774,
+      "issues": [
+
+      ],
+      "log": "XomoFigmaNodeImportPlanTests.viewModelImportsPlanAsSingleUndoableHistoryStep.log"
+    },
+    {
+      "suite": "XomoFigmaNodeImportPlanTests",
+      "method": "viewModelInsertsImportedRootAfterExistingTopLevelGroup",
+      "identifier": "veilpicTests/XomoFigmaNodeImportPlanTests/viewModelInsertsImportedRootAfterExistingTopLevelGroup",
+      "file": "XomoFigmaNodeImportPlanTests.swift",
+      "passed": true,
+      "duration": 2.786,
+      "issues": [
+
+      ],
+      "log": "XomoFigmaNodeImportPlanTests.viewModelInsertsImportedRootAfterExistingTopLevelGroup.log"
+    }
+  ]
+}

@@ -104,6 +104,22 @@ struct XomoFigmaImageAsset: Equatable, Sendable {
     var pixelSize: XomoFigmaPlanSize
 }
 
+struct XomoFigmaPlanCornerRadii: Equatable, Sendable {
+    var topLeft: Double
+    var topRight: Double
+    var bottomRight: Double
+    var bottomLeft: Double
+
+    func scaled(by scale: CGFloat) -> ImageEditorRectangleCornerRadii {
+        ImageEditorRectangleCornerRadii(
+            topLeft: max(0, CGFloat(topLeft) * scale),
+            topRight: max(0, CGFloat(topRight) * scale),
+            bottomRight: max(0, CGFloat(bottomRight) * scale),
+            bottomLeft: max(0, CGFloat(bottomLeft) * scale)
+        )
+    }
+}
+
 struct XomoFigmaNodeImportItem: Equatable, Identifiable, Sendable {
     var id: String { sourceID }
     var sourceID: String
@@ -121,6 +137,7 @@ struct XomoFigmaNodeImportItem: Equatable, Identifiable, Sendable {
     var solidStroke: XomoFigmaPlanColor?
     var strokeWeight: Double?
     var cornerRadius: Double?
+    var cornerRadii: XomoFigmaPlanCornerRadii? = nil
     var text: XomoFigmaPlanText?
     var vectorPaths: [String]
     var geometrySize: XomoFigmaPlanSize?

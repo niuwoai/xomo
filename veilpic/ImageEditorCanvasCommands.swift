@@ -431,6 +431,7 @@ private extension ImageEditorShapeContent {
         var content = self
         content.strokeWidth = max(Self.minimumStrokeWidth, strokeWidth * averageScale)
         content.cornerRadius = max(0, cornerRadius * averageScale)
+        content.cornerRadii = cornerRadii?.scaled(by: averageScale)
         content.pathPoints = pathPoints.map { $0.scaled(scaleX: scaleX, scaleY: scaleY) }
         content.pathAnchors = pathAnchors.map { anchor in
             ImageEditorPathAnchor(

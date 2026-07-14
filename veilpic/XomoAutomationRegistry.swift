@@ -300,6 +300,8 @@ final class XomoAutomationRegistry {
             try specialPaint(arguments, viewModel: viewModel)
         case "xomo.shape.create":
             let origin = try requiredPoint(arguments)
+            let cornerRadii = try optionalCornerRadii(arguments)
+            try validateExclusiveCornerArguments(arguments)
             let end = CGPoint(
                 x: origin.x + (try requiredNumber("width", in: arguments)),
                 y: origin.y + (try requiredNumber("height", in: arguments))
@@ -308,7 +310,8 @@ final class XomoAutomationRegistry {
                 from: origin,
                 to: end,
                 ellipse: arguments["kind"]?.stringValue == "ellipse",
-                cornerRadius: arguments["cornerRadius"]?.doubleValue
+                cornerRadius: arguments["cornerRadius"]?.doubleValue,
+                cornerRadii: cornerRadii
             )
         case "xomo.shape.get":
             return shapeResult(viewModel)
@@ -726,7 +729,9 @@ final class XomoAutomationRegistry {
             "strokeColor": colorJSON(content.strokeColor),
             "strokeOpacity": .number(content.strokeOpacity),
             "strokeWidth": .number(content.strokeWidth),
-            "cornerRadius": .number(content.cornerRadius)
+            "cornerRadius": .number(content.cornerRadius),
+            "cornerRadii": cornerRadiiJSON(content.effectiveCornerRadii),
+            "usesIndependentCornerRadii": .bool(content.cornerRadii != nil)
         ])
     }
 
@@ -737,6 +742,8 @@ final class XomoAutomationRegistry {
         guard let content = viewModel.document.selectedLayer?.shapeContent else {
             throw XomoAutomationCallError.operationFailed("No selected shape layer")
         }
+        try validateExclusiveCornerArguments(arguments)
+        let cornerRadii = try optionalCornerRadii(arguments)
         viewModel.opacity = arguments["opacity"]?.doubleValue ?? content.fillOpacity
         if let strokeWidth = arguments["strokeWidth"]?.doubleValue {
             viewModel.brushSize = strokeWidth / 0.35
@@ -744,8 +751,46 @@ final class XomoAutomationRegistry {
             viewModel.brushSize = content.strokeWidth / 0.35
         }
         viewModel.updateSelectedShapeLayer(
-            cornerRadius: arguments["cornerRadius"]?.doubleValue
+            cornerRadius: arguments["cornerRadius"]?.doubleValue,
+            cornerRadii: cornerRadii
         )
+    }
+
+    private func optionalCornerRadii(
+        _ arguments: [String: XomoJSONValue]
+    ) throws -> ImageEditorRectangleCornerRadii? {
+        guard let value = arguments["cornerRadii"] else { return nil }
+        guard let object = value.objectValue else {
+            throw XomoAutomationCallError.invalidArgument("cornerRadii must be an object")
+        }
+        return ImageEditorRectangleCornerRadii(
+            topLeft: CGFloat(try requiredNumber("topLeft", in: object)),
+            topRight: CGFloat(try requiredNumber("topRight", in: object)),
+            bottomRight: CGFloat(try requiredNumber("bottomRight", in: object)),
+            bottomLeft: CGFloat(try requiredNumber("bottomLeft", in: object))
+        )
+    }
+
+    private func validateExclusiveCornerArguments(
+        _ arguments: [String: XomoJSONValue]
+    ) throws {
+        guard arguments["cornerRadius"] != nil,
+              arguments["cornerRadii"] != nil
+        else { return }
+        throw XomoAutomationCallError.invalidArgument(
+            "Use either cornerRadius or cornerRadii, not both"
+        )
+    }
+
+    private func cornerRadiiJSON(
+        _ radii: ImageEditorRectangleCornerRadii
+    ) -> XomoJSONValue {
+        .object([
+            "topLeft": .number(radii.topLeft),
+            "topRight": .number(radii.topRight),
+            "bottomRight": .number(radii.bottomRight),
+            "bottomLeft": .number(radii.bottomLeft)
+        ])
     }
 
     private func pathAction(
@@ -2389,13 +2434,15 @@ private extension XomoAutomationRegistry {
             "y": XomoAutomationSchema.number(description: "Top coordinate"),
             "width": XomoAutomationSchema.number(description: "Width"),
             "height": XomoAutomationSchema.number(description: "Height"),
-            "cornerRadius": XomoAutomationSchema.number(description: "Optional uniform rectangle corner radius in pixels")
+            "cornerRadius": XomoAutomationSchema.number(description: "Optional uniform rectangle corner radius in pixels"),
+            "cornerRadii": rectangleCornerRadiiSchema
         ], required: ["kind", "x", "y", "width", "height"]),
         tool("xomo.shape.get", "Inspect the selected editable shape layer."),
         tool("xomo.shape.update", "Update selected shape fill opacity, stroke width, foreground color, and rectangle corner radius.", [
             "opacity": XomoAutomationSchema.number(description: "Fill and stroke opacity"),
             "strokeWidth": XomoAutomationSchema.number(description: "Stroke width in pixels"),
-            "cornerRadius": XomoAutomationSchema.number(description: "Uniform rectangle corner radius in pixels")
+            "cornerRadius": XomoAutomationSchema.number(description: "Uniform rectangle corner radius in pixels"),
+            "cornerRadii": rectangleCornerRadiiSchema
         ]),
         tool("xomo.text.create", "Create an editable text layer.", [
             "text": XomoAutomationSchema.string(description: "Text content"),
@@ -2550,6 +2597,15 @@ private extension XomoAutomationRegistry {
         "width": XomoAutomationSchema.number(description: "Width"),
         "height": XomoAutomationSchema.number(description: "Height")
     ]
+    static let rectangleCornerRadiiSchema = XomoAutomationSchema.object(
+        properties: [
+            "topLeft": XomoAutomationSchema.number(description: "Top-left radius in pixels"),
+            "topRight": XomoAutomationSchema.number(description: "Top-right radius in pixels"),
+            "bottomRight": XomoAutomationSchema.number(description: "Bottom-right radius in pixels"),
+            "bottomLeft": XomoAutomationSchema.number(description: "Bottom-left radius in pixels")
+        ],
+        required: ["topLeft", "topRight", "bottomRight", "bottomLeft"]
+    )
     static let sizeProperties = [
         "width": XomoAutomationSchema.number(description: "Width"),
         "height": XomoAutomationSchema.number(description: "Height")

@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.12.0-rc69 - 2026-07-15
+
+### Added
+- 矩形形状新增四角独立圆角模式：属性面板可在统一圆角与左上、右上、右下、左下四个半径之间切换，每个角保持原生可编辑而非栅格化。
+- Figma 非对称 `rectangleCornerRadii` 现在映射为 Xomo 原生四角属性；MCP `xomo.shape.create/get/update` 同步接受和返回 `cornerRadii` 对象。
+
+### Changed
+- 独立四角进入项目保存、重开、Undo/Redo 与图像缩放链路；旧项目只有 `cornerRadius` 时继续按统一圆角读取。
+- Figma 仅在存在 `cornerSmoothing` 时报告圆角部分保真，合法的非对称四角不再被误报为降级。
+
+### Tests
+- 新增独立四角像素渲染、属性切换、逐角编辑、项目往返、Undo/Redo、缩放、Figma 映射/材质化及 MCP 参数冲突保护测试。
+- 独立四角核心 5/5、Figma 节点导入 16/16、MCP 自动化 32/32、三语资源 4/4、SwiftPM CLI 2/2 通过；隔离 `build-for-testing` 成功，App、CLI 与全部 Xcode target 版本同步为 `2.12.0-rc69`。
+
 ## 2.12.0-rc68 - 2026-07-15
 
 ### Added

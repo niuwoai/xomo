@@ -3929,20 +3929,69 @@ struct ImageEditorView: View {
                 Divider().overlay(editorBorder)
 
                 if viewModel.selectedRectangleCornerRadius != nil {
-                    Stepper(
-                        L10n.format(
-                            "imageEditor.properties.shapeCornerRadiusValue",
-                            Int((viewModel.selectedRectangleCornerRadius ?? 0).rounded())
-                        ),
-                        value: Binding(
-                            get: { viewModel.selectedRectangleCornerRadius ?? 0 },
-                            set: { viewModel.setSelectedRectangleCornerRadius($0) }
-                        ),
-                        in: 0...max(1, viewModel.selectedRectangleMaximumCornerRadius),
-                        step: 1
-                    )
-                    .focusable(false)
-                    .accessibilityIdentifier("image-editor-shape-corner-radius")
+                    VStack(alignment: .leading, spacing: 8) {
+                        Toggle(
+                            L10n.text("imageEditor.properties.shapeCornerRadiiIndependent"),
+                            isOn: Binding(
+                                get: {
+                                    viewModel.selectedRectangleUsesIndependentCornerRadii ?? false
+                                },
+                                set: {
+                                    viewModel.setSelectedRectangleUsesIndependentCornerRadii($0)
+                                }
+                            )
+                        )
+                        .toggleStyle(.switch)
+                        .focusable(false)
+                        .accessibilityIdentifier("image-editor-shape-independent-corners")
+
+                        if viewModel.selectedRectangleUsesIndependentCornerRadii == true {
+                            ForEach(ImageEditorRectangleCorner.allCases) { corner in
+                                Stepper(
+                                    L10n.format(
+                                        "imageEditor.properties.shapeCornerValue",
+                                        corner.title,
+                                        Int(viewModel.selectedRectangleCornerRadius(at: corner).rounded())
+                                    ),
+                                    value: Binding(
+                                        get: {
+                                            viewModel.selectedRectangleCornerRadius(at: corner)
+                                        },
+                                        set: {
+                                            viewModel.setSelectedRectangleCornerRadius($0, at: corner)
+                                        }
+                                    ),
+                                    in: 0...max(
+                                        1,
+                                        viewModel.selectedRectangleMaximumCornerRadius
+                                    ),
+                                    step: 1
+                                )
+                                .focusable(false)
+                                .accessibilityIdentifier(
+                                    "image-editor-shape-corner-\(corner.rawValue)"
+                                )
+                            }
+                        } else {
+                            Stepper(
+                                L10n.format(
+                                    "imageEditor.properties.shapeCornerRadiusValue",
+                                    Int((viewModel.selectedRectangleCornerRadius ?? 0).rounded())
+                                ),
+                                value: Binding(
+                                    get: { viewModel.selectedRectangleCornerRadius ?? 0 },
+                                    set: { viewModel.setSelectedRectangleCornerRadius($0) }
+                                ),
+                                in: 0...max(
+                                    1,
+                                    viewModel.selectedRectangleMaximumCornerRadius
+                                ),
+                                step: 1
+                            )
+                            .focusable(false)
+                            .accessibilityIdentifier("image-editor-shape-corner-radius")
+                        }
+                    }
 
                     Divider().overlay(editorBorder)
                 }

@@ -275,6 +275,7 @@ enum XomoFigmaNodeImportMapper {
             solidStroke: solidColor(in: node.strokes),
             strokeWeight: node.strokeWeight,
             cornerRadius: uniformCornerRadius(node),
+            cornerRadii: independentCornerRadii(node),
             text: node.characters.map {
                 XomoFigmaPlanText(
                     characters: $0,
@@ -440,8 +441,7 @@ enum XomoFigmaNodeImportMapper {
 
     private static func uniformCornerRadius(_ node: XomoFigmaNode) -> Double? {
         if let radii = node.rectangleCornerRadii, !radii.isEmpty {
-            guard radii.count == 4,
-                  radii.allSatisfy({ $0.isFinite && $0 >= 0 }),
+            guard let radii = validRectangleCornerRadii(node),
                   let first = radii.first,
                   radii.dropFirst().allSatisfy({ abs($0 - first) <= 0.001 })
             else { return nil }
@@ -451,13 +451,39 @@ enum XomoFigmaNodeImportMapper {
         return radius
     }
 
+    private static func independentCornerRadii(
+        _ node: XomoFigmaNode
+    ) -> XomoFigmaPlanCornerRadii? {
+        guard let radii = validRectangleCornerRadii(node),
+              uniformCornerRadius(node) == nil
+        else { return nil }
+        return XomoFigmaPlanCornerRadii(
+            topLeft: radii[0],
+            topRight: radii[1],
+            bottomRight: radii[2],
+            bottomLeft: radii[3]
+        )
+    }
+
+    private static func validRectangleCornerRadii(_ node: XomoFigmaNode) -> [Double]? {
+        guard let radii = node.rectangleCornerRadii,
+              radii.count == 4,
+              radii.allSatisfy({ $0.isFinite && $0 >= 0 })
+        else { return nil }
+        return radii
+    }
+
     private static func hasUnsupportedCornerStyle(_ node: XomoFigmaNode) -> Bool {
         let radii = node.rectangleCornerRadii ?? []
-        let independentCornersAreUniform = radii.isEmpty || uniformCornerRadius(node) != nil
+        let hasInvalidIndependentRadii = !radii.isEmpty
+            && validRectangleCornerRadii(node) == nil
+        let hasInvalidUniformRadius = node.cornerRadius.map {
+            !$0.isFinite || $0 < 0
+        } ?? false
         let hasRoundedCorner = (uniformCornerRadius(node) ?? 0) > 0
             || radii.contains(where: { $0.isFinite && $0 > 0 })
         let hasCornerSmoothing = (node.cornerSmoothing ?? 0) > 0 && hasRoundedCorner
-        return !independentCornersAreUniform || hasCornerSmoothing
+        return hasInvalidIndependentRadii || hasInvalidUniformRadius || hasCornerSmoothing
     }
 
     private static func hasFlattenedTransform(_ transform: [[Double]]?) -> Bool {

@@ -705,6 +705,12 @@
 "imageEditor.properties.stackLayoutPaddingBottomValue" = "下：%d px";
 "imageEditor.properties.stackLayoutPaddingLeftValue" = "左：%d px";
 "imageEditor.properties.shapeCornerRadiusValue" = "矩形圆角：%d px";
+"imageEditor.properties.shapeCornerRadiiIndependent" = "独立调整四角";
+"imageEditor.properties.shapeCornerValue" = "%@：%d px";
+"imageEditor.properties.shapeCorner.topLeft" = "左上角";
+"imageEditor.properties.shapeCorner.topRight" = "右上角";
+"imageEditor.properties.shapeCorner.bottomRight" = "右下角";
+"imageEditor.properties.shapeCorner.bottomLeft" = "左下角";
 "imageEditor.stackLayout.axis.horizontal" = "水平";
 "imageEditor.stackLayout.axis.vertical" = "垂直";
 "imageEditor.stackLayout.primary.start" = "起点";
@@ -726,6 +732,9 @@
 "imageEditor.status.stackChildLayoutApplied" = "自动布局子项已重新排列";
 "imageEditor.status.stackLayoutLocked" = "锁定的组或子项无法重新排列";
 "imageEditor.status.shapeCornerRadius" = "矩形圆角已设为 %d px";
+"imageEditor.status.shapeCornerRadiiIndependent" = "矩形四角已可独立调整";
+"imageEditor.status.shapeCornerRadiiLinked" = "矩形四角已链接为左上角的数值";
+"imageEditor.status.shapeCornerRadiusAtCorner" = "%@圆角已设为 %d px";
 "imageEditor.properties.filter" = "滤镜";
 "imageEditor.properties.smartFiltersEmpty" = "当前图层没有智能滤镜";
 "imageEditor.properties.smartFilterItem" = "%@ %d%%";
@@ -2889,7 +2898,7 @@
 "xomo.figma.node.issue.clippingFlattened" = "Frame 的内容裁切边界尚未保留";
 "xomo.figma.node.issue.effectsFlattened" = "效果尚未保留";
 "xomo.figma.node.issue.blendModeFlattened" = "混合模式尚未保留";
-"xomo.figma.node.issue.cornerRadiusFlattened" = "非对称圆角或圆角平滑参数尚不能完整保留";
+"xomo.figma.node.issue.cornerRadiusFlattened" = "圆角平滑参数尚不能完整保留";
 "xomo.figma.node.issue.transformFlattened" = "旋转、镜像或倾斜变换暂按轴对齐边界处理";
 "xomo.figma.node.error.nodeSelectionRequired" = "请先粘贴包含 node-id 的 Figma 节点链接。";
 "xomo.figma.node.error.credentialMissing" = "没有已保存的 Figma 令牌，请先连接。";

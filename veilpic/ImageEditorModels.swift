@@ -2287,6 +2287,7 @@ struct ImageEditorShapeContent {
     var strokeWidth: CGFloat
     var strokeOpacity: CGFloat
     var cornerRadius: CGFloat = 0
+    var cornerRadii: ImageEditorRectangleCornerRadii? = nil
     var pathPoints: [CGPoint] = []
     var pathAnchors: [ImageEditorPathAnchor] = []
     var pathSubpaths: [[ImageEditorPathAnchor]] = []
@@ -2301,9 +2302,16 @@ struct ImageEditorShapeContent {
         } else {
             content.strokeWidth = max(Self.minimumStrokeWidth, min(min(size.width, size.height) / 2, strokeWidth))
         }
-        content.cornerRadius = kind == .rectangle
-            ? max(0, min(min(size.width, size.height) / 2, cornerRadius))
-            : 0
+        if kind == .rectangle {
+            content.cornerRadius = max(0, min(min(size.width, size.height) / 2, cornerRadius))
+            content.cornerRadii = cornerRadii?.normalized(size: size)
+            if let cornerRadii = content.cornerRadii {
+                content.cornerRadius = cornerRadii.topLeft
+            }
+        } else {
+            content.cornerRadius = 0
+            content.cornerRadii = nil
+        }
         content.pathPoints = pathPoints.map { point in
             CGPoint(
                 x: max(0, min(size.width, point.x)),
@@ -2351,14 +2359,8 @@ struct ImageEditorShapeContent {
                     let shapeRect = rect.insetBy(dx: inset, dy: inset)
                     if normalized.kind == .ellipse {
                         path = NSBezierPath(ovalIn: shapeRect)
-                    } else if normalized.cornerRadius > 0 {
-                        path = NSBezierPath(
-                            roundedRect: shapeRect,
-                            xRadius: normalized.cornerRadius,
-                            yRadius: normalized.cornerRadius
-                        )
                     } else {
-                        path = NSBezierPath(rect: shapeRect)
+                        path = normalized.rectangleBezierPath(in: shapeRect)
                     }
                 }
                 if normalized.kind != .path || normalized.isPathClosed {

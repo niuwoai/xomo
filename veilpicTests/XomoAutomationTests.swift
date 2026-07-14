@@ -191,6 +191,58 @@ struct XomoAutomationTests {
 
         viewModel.undo()
         #expect(viewModel.document.selectedLayer?.shapeContent?.cornerRadius == 20)
+
+        let independentUpdate = registry.execute(request(
+            operation: "call",
+            name: "xomo.shape.update",
+            arguments: [
+                "cornerRadii": .object([
+                    "topLeft": .number(4),
+                    "topRight": .number(8),
+                    "bottomRight": .number(12),
+                    "bottomLeft": .number(16)
+                ])
+            ]
+        ))
+        #expect(independentUpdate.ok)
+        #expect(viewModel.document.selectedLayer?.shapeContent?.cornerRadii == ImageEditorRectangleCornerRadii(
+            topLeft: 4,
+            topRight: 8,
+            bottomRight: 12,
+            bottomLeft: 16
+        ))
+
+        let independentInspect = registry.execute(request(
+            operation: "call",
+            name: "xomo.shape.get"
+        ))
+        guard case .object(let independentShape) = independentInspect.result else {
+            Issue.record("Expected independent-corner shape result")
+            return
+        }
+        #expect(independentShape["usesIndependentCornerRadii"] == .bool(true))
+        #expect(independentShape["cornerRadii"] == .object([
+            "topLeft": .number(4),
+            "topRight": .number(8),
+            "bottomRight": .number(12),
+            "bottomLeft": .number(16)
+        ]))
+
+        let conflictingUpdate = registry.execute(request(
+            operation: "call",
+            name: "xomo.shape.update",
+            arguments: [
+                "cornerRadius": .number(5),
+                "cornerRadii": .object([
+                    "topLeft": .number(1),
+                    "topRight": .number(2),
+                    "bottomRight": .number(3),
+                    "bottomLeft": .number(4)
+                ])
+            ]
+        ))
+        #expect(!conflictingUpdate.ok)
+        #expect(viewModel.document.selectedLayer?.shapeContent?.cornerRadii?.bottomLeft == 16)
     }
 
     @Test func registryCreatesAndListsLayerComps() throws {
