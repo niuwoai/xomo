@@ -857,6 +857,14 @@ final class XomoAutomationRegistry {
             guard viewModel.strokeSavedPathToSelectedPixelLayer(id) else {
                 throw XomoAutomationCallError.operationFailed("Stroke requires a saved path and an editable selected pixel layer")
             }
+        case "visibility":
+            let id = try requiredUUID("id", in: arguments)
+            guard viewModel.setSavedPathVisibility(
+                id,
+                isVisible: try requiredBool("visible", in: arguments)
+            ) else {
+                throw XomoAutomationCallError.notFound("Saved path \(id.uuidString)")
+            }
         case "delete":
             let id = try requiredUUID("id", in: arguments)
             guard viewModel.deleteSavedPath(id) else {
@@ -869,11 +877,14 @@ final class XomoAutomationRegistry {
     }
 
     private func savedPathsResult(_ viewModel: ImageEditorViewModel) -> XomoJSONValue {
-        .array(viewModel.document.savedPaths.map { savedPath in
+        let overlayIDs = Set(viewModel.savedPathCanvasOverlays.map(\.id))
+        return .array(viewModel.document.savedPaths.map { savedPath in
             .object([
                 "id": .string(savedPath.id.uuidString),
                 "title": .string(savedPath.name),
                 "selected": .bool(viewModel.document.selectedSavedPathID == savedPath.id),
+                "visible": .bool(savedPath.isVisible),
+                "overlayVisible": .bool(overlayIDs.contains(savedPath.id)),
                 "closed": .bool(savedPath.isClosed),
                 "anchorCount": .number(Double(savedPath.anchorCount)),
                 "subpaths": .array(savedPath.subpaths.enumerated().map { subpathIndex, anchors in
@@ -2387,10 +2398,11 @@ private extension XomoAutomationRegistry {
             "dx": XomoAutomationSchema.number(description: "Horizontal path delta"),
             "dy": XomoAutomationSchema.number(description: "Vertical path delta")
         ], required: ["action"]),
-        tool("xomo.path.saved", "List, save, select, rename, update, load, render, make a selection from, or delete independent named paths.", [
-            "action": XomoAutomationSchema.string(description: "Saved path action", values: ["list", "save", "select", "rename", "update", "load", "selection", "fill", "stroke", "delete"]),
-            "id": XomoAutomationSchema.string(description: "Saved path UUID for select, rename, update, load, selection, fill, stroke, or delete"),
-            "name": XomoAutomationSchema.string(description: "Optional name when saving or required name when renaming")
+        tool("xomo.path.saved", "List, save, select, rename, update, load, render, show, make a selection from, or delete independent named paths.", [
+            "action": XomoAutomationSchema.string(description: "Saved path action", values: ["list", "save", "select", "rename", "update", "load", "selection", "fill", "stroke", "visibility", "delete"]),
+            "id": XomoAutomationSchema.string(description: "Saved path UUID for select, rename, update, load, selection, fill, stroke, visibility, or delete"),
+            "name": XomoAutomationSchema.string(description: "Optional name when saving or required name when renaming"),
+            "visible": XomoAutomationSchema.boolean(description: "Persistent canvas overlay state for visibility")
         ], required: ["action"]),
         tool("xomo.layer.effect", "Toggle a layer effect on selected layers.", [
             "effect": XomoAutomationSchema.string(description: "Layer effect", values: ["stroke", "shadow", "innerShadow", "outerGlow", "innerGlow", "colorOverlay", "gradientOverlay", "patternOverlay", "satin", "bevel"])

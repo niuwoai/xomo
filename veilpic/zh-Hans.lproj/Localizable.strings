@@ -681,7 +681,7 @@
 "imageEditor.panelTab.comps" = "复合";
 "imageEditor.savedPath.defaultName" = "路径 %d";
 "imageEditor.savedPath.empty" = "尚无已保存路径";
-"imageEditor.savedPath.hint" = "路径条目是独立快照；载入后可编辑，修改后用“更新”写回。";
+"imageEditor.savedPath.hint" = "选中路径会临时显示；点眼睛可固定显示。载入后可编辑，修改后用“更新”写回。";
 "imageEditor.savedPath.namePlaceholder" = "路径名称";
 "imageEditor.savedPath.summary.closed" = "闭合 · %d 个锚点 · %d 个子路径";
 "imageEditor.savedPath.summary.open" = "开放 · %d 个锚点 · %d 个子路径";
@@ -1572,6 +1572,8 @@
 "imageEditor.status.savedPathNameRequired" = "路径名称不能为空";
 "imageEditor.status.savedPathCreated" = "已保存路径：%@";
 "imageEditor.status.savedPathSelected" = "已选择路径：%@";
+"imageEditor.status.savedPathVisible" = "已固定显示路径：%@";
+"imageEditor.status.savedPathHidden" = "已取消固定显示路径：%@";
 "imageEditor.status.savedPathRenamed" = "已重命名路径：%@";
 "imageEditor.status.savedPathUpdated" = "已更新路径：%@";
 "imageEditor.status.savedPathLoaded" = "已载入可编辑路径：%@";
@@ -1955,6 +1957,7 @@
 "imageEditor.action.pathLayerMask" = "栅格蒙版下方图层";
 "imageEditor.action.savedPathSave" = "保存当前路径";
 "imageEditor.action.savedPathSelect" = "选择路径";
+"imageEditor.action.savedPathVisibility" = "切换路径固定显示";
 "imageEditor.action.savedPathLoad" = "载入为可编辑路径";
 "imageEditor.action.savedPathUpdate" = "从当前路径更新";
 "imageEditor.action.savedPathDelete" = "删除路径";

@@ -16,6 +16,7 @@ struct ImageEditorSavedPath: Identifiable, Equatable, Codable {
     var name: String
     var subpaths: [[ImageEditorPathAnchor]]
     var isClosed: Bool
+    var isVisible = false
 
     var anchorCount: Int {
         subpaths.reduce(0) { $0 + $1.count }
@@ -34,8 +35,37 @@ struct ImageEditorSavedPath: Identifiable, Equatable, Codable {
             id: id,
             name: String(trimmedName.prefix(Self.maximumNameLength)),
             subpaths: normalizedSubpaths,
-            isClosed: isClosed
+            isClosed: isClosed,
+            isVisible: isVisible
         )
+    }
+}
+
+extension ImageEditorSavedPath {
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case name
+        case subpaths
+        case isClosed
+        case isVisible
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        name = try container.decode(String.self, forKey: .name)
+        subpaths = try container.decode([[ImageEditorPathAnchor]].self, forKey: .subpaths)
+        isClosed = try container.decode(Bool.self, forKey: .isClosed)
+        isVisible = try container.decodeIfPresent(Bool.self, forKey: .isVisible) ?? false
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(name, forKey: .name)
+        try container.encode(subpaths, forKey: .subpaths)
+        try container.encode(isClosed, forKey: .isClosed)
+        try container.encode(isVisible, forKey: .isVisible)
     }
 }
 
@@ -46,9 +76,10 @@ extension ImageEditorViewModel {
         return document.savedPaths.first { $0.id == id }
     }
 
-    var selectedSavedPathCanvasOverlay: ImageEditorSavedPath? {
-        guard document.areExtrasVisible else { return nil }
-        return selectedSavedPath
+    var savedPathCanvasOverlays: [ImageEditorSavedPath] {
+        guard document.areExtrasVisible else { return [] }
+        let selectedID = document.selectedSavedPathID
+        return document.savedPaths.filter { $0.isVisible || $0.id == selectedID }
     }
 
     var hasEditableCurrentPath: Bool {
@@ -112,6 +143,23 @@ extension ImageEditorViewModel {
     }
 
     @discardableResult
+    func setSavedPathVisibility(_ id: UUID, isVisible: Bool) -> Bool {
+        guard let index = document.savedPaths.firstIndex(where: { $0.id == id }) else {
+            statusText = L10n.text("imageEditor.status.savedPathMissing")
+            return false
+        }
+        guard document.savedPaths[index].isVisible != isVisible else { return true }
+        document.savedPaths[index].isVisible = isVisible
+        statusText = L10n.format(
+            isVisible
+                ? "imageEditor.status.savedPathVisible"
+                : "imageEditor.status.savedPathHidden",
+            document.savedPaths[index].name
+        )
+        return true
+    }
+
+    @discardableResult
     func renameSavedPath(_ id: UUID, to name: String) -> Bool {
         guard let index = document.savedPaths.firstIndex(where: { $0.id == id }) else {
             statusText = L10n.text("imageEditor.status.savedPathMissing")
@@ -137,8 +185,12 @@ extension ImageEditorViewModel {
             statusText = L10n.text("imageEditor.status.savedPathMissing")
             return false
         }
-        let name = document.savedPaths[index].name
-        guard let snapshot = currentPathSnapshot(id: id, name: name) else {
+        let existing = document.savedPaths[index]
+        guard let snapshot = currentPathSnapshot(
+            id: id,
+            name: existing.name,
+            isVisible: existing.isVisible
+        ) else {
             statusText = L10n.text("imageEditor.status.savedPathRequiresPath")
             return false
         }
@@ -148,7 +200,7 @@ extension ImageEditorViewModel {
         document.savedPaths[index] = snapshot
         document.selectedSavedPathID = id
         appendHistory(L10n.text("imageEditor.history.savedPathUpdate"))
-        statusText = L10n.format("imageEditor.status.savedPathUpdated", name)
+        statusText = L10n.format("imageEditor.status.savedPathUpdated", existing.name)
         return true
     }
 
@@ -283,7 +335,8 @@ extension ImageEditorViewModel {
 
     private func currentPathSnapshot(
         id: UUID,
-        name: String
+        name: String,
+        isVisible: Bool = false
     ) -> ImageEditorSavedPath? {
         guard let layer = document.selectedLayer,
               let content = layer.shapeContent,
@@ -298,7 +351,8 @@ extension ImageEditorViewModel {
             id: id,
             name: name,
             subpaths: subpaths,
-            isClosed: content.isPathClosed
+            isClosed: content.isPathClosed,
+            isVisible: isVisible
         ).normalized(canvasSize: document.canvasSize)
     }
 

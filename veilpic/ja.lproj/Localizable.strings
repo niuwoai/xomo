@@ -681,7 +681,7 @@
 "imageEditor.panelTab.comps" = "コンプ";
 "imageEditor.savedPath.defaultName" = "パス %d";
 "imageEditor.savedPath.empty" = "保存済みパスはまだありません";
-"imageEditor.savedPath.hint" = "保存済みパスは独立したスナップショットです。読み込んで編集し、「更新」で変更を書き戻します。";
+"imageEditor.savedPath.hint" = "選択中のパスは一時表示され、目のボタンで表示を固定できます。読み込んで編集し、「更新」で変更を書き戻します。";
 "imageEditor.savedPath.namePlaceholder" = "パス名";
 "imageEditor.savedPath.summary.closed" = "閉じたパス · アンカー%d個 · サブパス%d個";
 "imageEditor.savedPath.summary.open" = "開いたパス · アンカー%d個 · サブパス%d個";
@@ -1572,6 +1572,8 @@
 "imageEditor.status.savedPathNameRequired" = "パス名を入力してください";
 "imageEditor.status.savedPathCreated" = "パスを保存しました：%@";
 "imageEditor.status.savedPathSelected" = "パスを選択しました：%@";
+"imageEditor.status.savedPathVisible" = "パス表示を固定しました：%@";
+"imageEditor.status.savedPathHidden" = "パス表示の固定を解除しました：%@";
 "imageEditor.status.savedPathRenamed" = "パス名を変更しました：%@";
 "imageEditor.status.savedPathUpdated" = "パスを更新しました：%@";
 "imageEditor.status.savedPathLoaded" = "編集可能なパスを読み込みました：%@";
@@ -1955,6 +1957,7 @@
 "imageEditor.action.pathLayerMask" = "下のレイヤーマスク";
 "imageEditor.action.savedPathSave" = "現在のパスを保存";
 "imageEditor.action.savedPathSelect" = "パスを選択";
+"imageEditor.action.savedPathVisibility" = "パス表示の固定を切り替え";
 "imageEditor.action.savedPathLoad" = "編集可能なパスとして読み込む";
 "imageEditor.action.savedPathUpdate" = "現在のパスから更新";
 "imageEditor.action.savedPathDelete" = "パスを削除";

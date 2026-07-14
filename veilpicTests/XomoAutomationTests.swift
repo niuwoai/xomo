@@ -866,6 +866,20 @@ struct XomoAutomationTests {
         #expect(save.result?.arrayValue?.first?.objectValue?["title"] == .string("Logo"))
         #expect(save.result?.arrayValue?.first?.objectValue?["selected"] == .bool(true))
 
+        let visibilityHistoryCount = viewModel.document.history.count
+        let visibility = registry.execute(request(
+            operation: "call",
+            name: "xomo.path.saved",
+            arguments: [
+                "action": .string("visibility"),
+                "id": .string(savedID),
+                "visible": .bool(true)
+            ]
+        ))
+        #expect(visibility.ok)
+        #expect(visibility.result?.arrayValue?.first?.objectValue?["visible"] == .bool(true))
+        #expect(viewModel.document.history.count == visibilityHistoryCount)
+
         let rename = registry.execute(request(
             operation: "call",
             name: "xomo.path.saved",

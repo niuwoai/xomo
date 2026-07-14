@@ -681,7 +681,7 @@
 "imageEditor.panelTab.comps" = "Comps";
 "imageEditor.savedPath.defaultName" = "Path %d";
 "imageEditor.savedPath.empty" = "No saved paths yet";
-"imageEditor.savedPath.hint" = "Saved paths are independent snapshots. Load one to edit it, then use Update to write changes back.";
+"imageEditor.savedPath.hint" = "The selected path is shown temporarily; use the eye to keep it visible. Load one to edit, then use Update to write changes back.";
 "imageEditor.savedPath.namePlaceholder" = "Path Name";
 "imageEditor.savedPath.summary.closed" = "Closed · %d anchors · %d subpaths";
 "imageEditor.savedPath.summary.open" = "Open · %d anchors · %d subpaths";
@@ -1572,6 +1572,8 @@
 "imageEditor.status.savedPathNameRequired" = "A path name is required";
 "imageEditor.status.savedPathCreated" = "Saved path: %@";
 "imageEditor.status.savedPathSelected" = "Selected path: %@";
+"imageEditor.status.savedPathVisible" = "Pinned path overlay: %@";
+"imageEditor.status.savedPathHidden" = "Unpinned path overlay: %@";
 "imageEditor.status.savedPathRenamed" = "Renamed path: %@";
 "imageEditor.status.savedPathUpdated" = "Updated path: %@";
 "imageEditor.status.savedPathLoaded" = "Loaded editable path: %@";
@@ -1955,6 +1957,7 @@
 "imageEditor.action.pathLayerMask" = "Layer Mask Below";
 "imageEditor.action.savedPathSave" = "Save Current Path";
 "imageEditor.action.savedPathSelect" = "Select Path";
+"imageEditor.action.savedPathVisibility" = "Toggle Persistent Path Overlay";
 "imageEditor.action.savedPathLoad" = "Load as Editable Path";
 "imageEditor.action.savedPathUpdate" = "Update from Current Path";
 "imageEditor.action.savedPathDelete" = "Delete Path";

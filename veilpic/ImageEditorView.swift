@@ -3400,19 +3400,23 @@ struct ImageEditorView: View {
 
     @ViewBuilder
     private func savedPathOverlay(in size: CGSize) -> some View {
-        if let savedPath = viewModel.selectedSavedPathCanvasOverlay {
+        let savedPaths = viewModel.savedPathCanvasOverlays
+        if !savedPaths.isEmpty {
             Canvas { context, _ in
-                let path = savedPathCanvasPath(savedPath, in: size)
-                context.stroke(
-                    path,
-                    with: .color(Color.black.opacity(0.62)),
-                    style: StrokeStyle(lineWidth: 2.4)
-                )
-                context.stroke(
-                    path,
-                    with: .color(Color.gray.opacity(0.9)),
-                    style: StrokeStyle(lineWidth: 1)
-                )
+                for savedPath in savedPaths {
+                    let path = savedPathCanvasPath(savedPath, in: size)
+                    let isSelected = savedPath.id == viewModel.document.selectedSavedPathID
+                    context.stroke(
+                        path,
+                        with: .color(Color.black.opacity(isSelected ? 0.62 : 0.48)),
+                        style: StrokeStyle(lineWidth: 2.4)
+                    )
+                    context.stroke(
+                        path,
+                        with: .color(Color.gray.opacity(isSelected ? 0.9 : 0.72)),
+                        style: StrokeStyle(lineWidth: 1)
+                    )
+                }
             }
             .allowsHitTesting(false)
             .accessibilityHidden(true)

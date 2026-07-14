@@ -1063,6 +1063,13 @@ extension ImageEditorView {
     private func savedPathRow(_ savedPath: ImageEditorSavedPath) -> some View {
         let isSelected = viewModel.document.selectedSavedPathID == savedPath.id
         return HStack(spacing: 6) {
+            savedPathIconButton(
+                savedPath.isVisible ? "eye.fill" : "eye",
+                "imageEditor.action.savedPathVisibility"
+            ) {
+                viewModel.setSavedPathVisibility(savedPath.id, isVisible: !savedPath.isVisible)
+            }
+
             Button {
                 viewModel.selectSavedPath(savedPath.id)
                 syncSavedPathNameDraft(savedPath)
