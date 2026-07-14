@@ -683,7 +683,7 @@
 "imageEditor.savedPath.copySuffix" = " copy";
 "imageEditor.savedPath.copySuffixIndexed" = " copy %d";
 "imageEditor.savedPath.empty" = "No saved paths yet";
-"imageEditor.savedPath.hint" = "Copy, paste, and quickly reorder paths; list order also controls pinned-outline stacking.";
+"imageEditor.savedPath.hint" = "Drag, copy, and paste paths; list order also controls pinned-outline stacking.";
 "imageEditor.savedPath.namePlaceholder" = "Path Name";
 "imageEditor.savedPath.summary.closed" = "Closed · %d anchors · %d subpaths";
 "imageEditor.savedPath.summary.open" = "Open · %d anchors · %d subpaths";
@@ -1986,6 +1986,7 @@
 "imageEditor.action.savedPathMoveDown" = "Move Path Down";
 "imageEditor.action.savedPathMoveToTop" = "Move Path to List Top";
 "imageEditor.action.savedPathMoveToBottom" = "Move Path to List Bottom";
+"imageEditor.action.savedPathDragReorder" = "Drag to Reorder Path";
 "imageEditor.action.vectorMaskToggle" = "Toggle Vector Mask";
 "imageEditor.action.vectorMaskCopyToSelected" = "Copy Vector Mask to Selected Layers";
 "imageEditor.action.vectorMaskDelete" = "Delete Vector Masks";

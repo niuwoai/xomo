@@ -58,6 +58,7 @@ struct ImageEditorView: View {
     @State var historySnapshotNameDrafts: [UUID: String] = [:]
     @State var selectedLayerPanelTab: ImageEditorLayerPanelTab = .layers
     @State var targetedLayerDropTarget: ImageEditorLayerDropTarget?
+    @State var targetedSavedPathDropTarget: ImageEditorSavedPathDropTarget?
     @State var isLayerAdvancedControlsExpanded = false
     @State private var isLayersDockExpanded = true
     @State private var isNavigatorDockExpanded = false

@@ -683,7 +683,7 @@
 "imageEditor.savedPath.copySuffix" = " 副本";
 "imageEditor.savedPath.copySuffixIndexed" = " 副本 %d";
 "imageEditor.savedPath.empty" = "尚无已保存路径";
-"imageEditor.savedPath.hint" = "可复制、粘贴和快速重排；列表顺序也是固定轮廓的叠放顺序。";
+"imageEditor.savedPath.hint" = "可拖拽、复制和粘贴路径；列表顺序也是固定轮廓的叠放顺序。";
 "imageEditor.savedPath.namePlaceholder" = "路径名称";
 "imageEditor.savedPath.summary.closed" = "闭合 · %d 个锚点 · %d 个子路径";
 "imageEditor.savedPath.summary.open" = "开放 · %d 个锚点 · %d 个子路径";
@@ -1986,6 +1986,7 @@
 "imageEditor.action.savedPathMoveDown" = "下移路径";
 "imageEditor.action.savedPathMoveToTop" = "移到列表顶部";
 "imageEditor.action.savedPathMoveToBottom" = "移到列表底部";
+"imageEditor.action.savedPathDragReorder" = "拖拽重排路径";
 "imageEditor.action.vectorMaskToggle" = "切换矢量蒙版";
 "imageEditor.action.vectorMaskCopyToSelected" = "复制矢量蒙版到所选图层";
 "imageEditor.action.vectorMaskDelete" = "删除所选矢量蒙版";

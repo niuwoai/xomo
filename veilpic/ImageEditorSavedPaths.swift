@@ -52,6 +52,39 @@ struct ImageEditorSavedPath: Identifiable, Equatable, Codable {
     }
 }
 
+enum ImageEditorSavedPathDropPlacement: Equatable {
+    case above
+    case below
+}
+
+struct ImageEditorSavedPathDropTarget: Equatable {
+    var savedPathID: UUID
+    var placement: ImageEditorSavedPathDropPlacement
+}
+
+enum ImageEditorSavedPathDropGeometry {
+    static func destinationIndex(
+        sourceIndex: Int,
+        targetIndex: Int,
+        placement: ImageEditorSavedPathDropPlacement,
+        count: Int
+    ) -> Int? {
+        guard count > 1,
+              (0..<count).contains(sourceIndex),
+              (0..<count).contains(targetIndex)
+        else { return nil }
+
+        var destinationIndex = targetIndex + (placement == .below ? 1 : 0)
+        if sourceIndex < destinationIndex {
+            destinationIndex -= 1
+        }
+        guard destinationIndex != sourceIndex,
+              (0..<count).contains(destinationIndex)
+        else { return nil }
+        return destinationIndex
+    }
+}
+
 extension ImageEditorSavedPath {
     private enum CodingKeys: String, CodingKey {
         case id
