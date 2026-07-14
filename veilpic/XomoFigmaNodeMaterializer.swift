@@ -1,0 +1,394 @@
+import AppKit
+import Foundation
+
+struct XomoFigmaNodeMaterializationResult {
+    var layers: [ImageEditorLayer]
+    var selectedLayerID: UUID?
+    var importedCount: Int
+    var omittedCount: Int
+}
+
+enum XomoFigmaNodeMaterializer {
+    private static let canvasInsetRatio: CGFloat = 0.9
+
+    static func materialize(
+        plan: XomoFigmaNodeImportPlan,
+        canvasSize: CGSize
+    ) -> XomoFigmaNodeMaterializationResult {
+        let itemByID = Dictionary(uniqueKeysWithValues: plan.items.map { ($0.sourceID, $0) })
+        let childrenByParent = Dictionary(grouping: plan.items) { $0.parentSourceID }
+        let groupIDs = Dictionary(uniqueKeysWithValues: plan.items.compactMap { item in
+            item.targetKind == .group ? (item.sourceID, UUID()) : nil
+        })
+        let sourceBounds = importBounds(plan: plan)
+        let transform = importTransform(sourceBounds: sourceBounds, canvasSize: canvasSize)
+        var layers: [ImageEditorLayer] = []
+        var layerIDsBySource: [String: UUID] = [:]
+        var emittedSourceIDs = Set<String>()
+        var omittedCount = 0
+
+        func parentGroupID(for item: XomoFigmaNodeImportItem) -> UUID? {
+            var candidate = item.parentSourceID
+            var visited = Set<String>()
+            while let sourceID = candidate, visited.insert(sourceID).inserted {
+                if let groupID = groupIDs[sourceID] { return groupID }
+                candidate = itemByID[sourceID]?.parentSourceID
+            }
+            return nil
+        }
+
+        func emit(_ item: XomoFigmaNodeImportItem) {
+            guard emittedSourceIDs.insert(item.sourceID).inserted else { return }
+            if item.targetKind == .group,
+               let background = makeGroupBackgroundLayer(
+                   item: item,
+                   transform: transform,
+                   groupID: groupIDs[item.sourceID]
+               ) {
+                layers.append(background)
+            }
+            for child in childrenByParent[item.sourceID] ?? [] {
+                emit(child)
+            }
+            guard let layer = makeLayer(
+                item: item,
+                canvasSize: canvasSize,
+                transform: transform,
+                assignedGroupID: groupIDs[item.sourceID],
+                parentGroupID: parentGroupID(for: item)
+            ) else {
+                omittedCount += 1
+                return
+            }
+            layers.append(layer)
+            layerIDsBySource[item.sourceID] = layer.id
+        }
+
+        if let root = itemByID[plan.rootSourceID] {
+            emit(root)
+        }
+        for item in plan.items where !emittedSourceIDs.contains(item.sourceID) {
+            emit(item)
+        }
+        let selectedLayerID = layerIDsBySource[plan.rootSourceID] ?? layers.last?.id
+        return XomoFigmaNodeMaterializationResult(
+            layers: layers,
+            selectedLayerID: selectedLayerID,
+            importedCount: layers.count,
+            omittedCount: omittedCount
+        )
+    }
+
+    private static func makeLayer(
+        item: XomoFigmaNodeImportItem,
+        canvasSize: CGSize,
+        transform: XomoFigmaImportTransform,
+        assignedGroupID: UUID?,
+        parentGroupID: UUID?
+    ) -> ImageEditorLayer? {
+        guard let targetKind = item.targetKind else { return nil }
+        var layer: ImageEditorLayer
+        switch targetKind {
+        case .group:
+            layer = ImageEditorLayer.group(name: item.sourceName, size: canvasSize)
+            if let assignedGroupID { layer.id = assignedGroupID }
+        case .text:
+            guard let frame = mappedFrame(item.frame, transform: transform),
+                  let text = item.text else { return nil }
+            layer = makeTextLayer(item: item, text: text, frame: frame, scale: transform.scale)
+        case .rectangle, .ellipse:
+            guard let frame = mappedFrame(item.frame, transform: transform) else { return nil }
+            layer = makeShapeLayer(
+                item: item,
+                frame: frame,
+                kind: targetKind == .rectangle ? .rectangle : .ellipse,
+                scale: transform.scale
+            )
+        case .vector:
+            guard let frame = mappedFrame(item.frame, transform: transform),
+                  let vectorLayer = makeVectorLayer(item: item, frame: frame, scale: transform.scale)
+            else { return nil }
+            layer = vectorLayer
+        case .imagePlaceholder:
+            guard let frame = mappedFrame(item.frame, transform: transform) else { return nil }
+            layer = makeImagePlaceholderLayer(item: item, frame: frame)
+        }
+        layer.groupID = parentGroupID
+        layer.isVisible = item.isVisible
+        layer.opacity = min(max(item.opacity, 0), 1)
+        return layer
+    }
+
+    private static func makeTextLayer(
+        item: XomoFigmaNodeImportItem,
+        text: XomoFigmaPlanText,
+        frame: CGRect,
+        scale: CGFloat
+    ) -> ImageEditorLayer {
+        let padding = ImageEditorTextContent.drawingPadding
+        let content = ImageEditorTextContent(
+            text: text.characters,
+            color: nsColor(item.solidFill, fallback: .black),
+            fontSize: max(6, CGFloat(text.fontSize ?? 12) * scale),
+            fontFamilyName: text.fontFamily ?? ImageEditorTextContent.systemFontFamilyName,
+            point: CGPoint(x: padding, y: padding),
+            isBold: (text.fontWeight ?? 400) >= 600,
+            boxWidth: max(1, frame.width - padding * 2),
+            boxHeight: max(1, frame.height - padding * 2),
+            alignment: textAlignment(text.horizontalAlignment)
+        )
+        return ImageEditorLayer.text(name: item.sourceName, origin: frame.origin, content: content)
+    }
+
+    private static func makeGroupBackgroundLayer(
+        item: XomoFigmaNodeImportItem,
+        transform: XomoFigmaImportTransform,
+        groupID: UUID?
+    ) -> ImageEditorLayer? {
+        guard item.solidFill != nil || item.solidStroke != nil,
+              let frame = mappedFrame(item.frame, transform: transform)
+        else { return nil }
+        var layer = ImageEditorLayer.shape(
+            name: L10n.format("imageEditor.layer.figmaFrameBackground", item.sourceName),
+            frame: frame,
+            content: shapeContent(item: item, kind: .rectangle, scale: transform.scale)
+        )
+        layer.groupID = groupID
+        return layer
+    }
+
+    private static func makeShapeLayer(
+        item: XomoFigmaNodeImportItem,
+        frame: CGRect,
+        kind: ImageEditorShapeKind,
+        scale: CGFloat
+    ) -> ImageEditorLayer {
+        ImageEditorLayer.shape(
+            name: item.sourceName,
+            frame: frame,
+            content: shapeContent(item: item, kind: kind, scale: scale)
+        )
+    }
+
+    private static func makeVectorLayer(
+        item: XomoFigmaNodeImportItem,
+        frame: CGRect,
+        scale: CGFloat
+    ) -> ImageEditorLayer? {
+        let parsed = item.vectorPaths.compactMap(XomoSVGPathParser.parse)
+        guard parsed.count == item.vectorPaths.count, !parsed.isEmpty else { return nil }
+        let geometryScale = vectorGeometryScale(item: item, frame: frame, fallbackScale: scale)
+        let subpaths = parsed
+            .flatMap(\.subpaths)
+            .map { anchors in
+                anchors.map {
+                    scaledAnchor($0, scaleX: geometryScale.width, scaleY: geometryScale.height)
+                }
+            }
+        guard let primary = subpaths.first, primary.count >= 2 else { return nil }
+        var content = shapeContent(item: item, kind: .path, scale: scale)
+        content.pathAnchors = primary
+        content.pathPoints = primary.map(\.point)
+        content.pathSubpaths = Array(subpaths.dropFirst())
+        content.isPathClosed = parsed.allSatisfy(\.isClosed)
+        return ImageEditorLayer.shape(name: item.sourceName, frame: frame, content: content)
+    }
+
+    private static func shapeContent(
+        item: XomoFigmaNodeImportItem,
+        kind: ImageEditorShapeKind,
+        scale: CGFloat
+    ) -> ImageEditorShapeContent {
+        let fill = nsColor(item.solidFill, fallback: .clear)
+        let stroke = nsColor(item.solidStroke, fallback: .clear)
+        return ImageEditorShapeContent(
+            kind: kind,
+            fillColor: fill,
+            fillOpacity: item.solidFill.map { CGFloat($0.alpha) } ?? 0,
+            strokeColor: stroke,
+            strokeWidth: max(1, CGFloat(item.strokeWeight ?? 1) * scale),
+            strokeOpacity: item.solidStroke.map { CGFloat($0.alpha) } ?? 0
+        )
+    }
+
+    private static func makeImagePlaceholderLayer(
+        item: XomoFigmaNodeImportItem,
+        frame: CGRect
+    ) -> ImageEditorLayer {
+        let size = CGSize(width: max(1, frame.width), height: max(1, frame.height))
+        var layer = ImageEditorLayer.blank(name: item.sourceName, size: size)
+        layer.image = placeholderImage(size: size)
+        layer.frame = CGRect(origin: frame.origin, size: size)
+        return layer
+    }
+
+    private static func placeholderImage(size: CGSize) -> NSImage {
+        NSImage.rendered(size: size) { rect in
+            let tileSize: CGFloat = 12
+            let rows = Int(ceil(rect.height / tileSize))
+            let columns = Int(ceil(rect.width / tileSize))
+            for row in 0..<rows {
+                for column in 0..<columns {
+                    let color = (row + column).isMultiple(of: 2)
+                        ? NSColor(calibratedWhite: 0.78, alpha: 1)
+                        : NSColor(calibratedWhite: 0.9, alpha: 1)
+                    color.setFill()
+                    CGRect(
+                        x: CGFloat(column) * tileSize,
+                        y: CGFloat(row) * tileSize,
+                        width: tileSize,
+                        height: tileSize
+                    ).fill()
+                }
+            }
+            NSColor.systemOrange.withAlphaComponent(0.75).setStroke()
+            let outline = NSBezierPath(rect: rect.insetBy(dx: 0.5, dy: 0.5))
+            outline.lineWidth = 1
+            outline.stroke()
+            let diagonal = NSBezierPath()
+            diagonal.move(to: CGPoint(x: rect.minX, y: rect.minY))
+            diagonal.line(to: CGPoint(x: rect.maxX, y: rect.maxY))
+            diagonal.move(to: CGPoint(x: rect.maxX, y: rect.minY))
+            diagonal.line(to: CGPoint(x: rect.minX, y: rect.maxY))
+            diagonal.lineWidth = 1
+            diagonal.stroke()
+        } ?? NSImage.transparent(size: size)
+    }
+
+    private static func importBounds(plan: XomoFigmaNodeImportPlan) -> CGRect {
+        if let rootFrame = plan.items.first(where: { $0.sourceID == plan.rootSourceID })?.frame,
+           rootFrame.width > 0,
+           rootFrame.height > 0 {
+            return cgRect(rootFrame)
+        }
+        let frames = plan.items.compactMap(\.frame).filter { $0.width > 0 && $0.height > 0 }
+        guard let first = frames.first else { return CGRect(x: 0, y: 0, width: 1, height: 1) }
+        return frames.dropFirst().reduce(cgRect(first)) { $0.union(cgRect($1)) }
+    }
+
+    private static func importTransform(
+        sourceBounds: CGRect,
+        canvasSize: CGSize
+    ) -> XomoFigmaImportTransform {
+        let availableWidth = max(1, canvasSize.width * canvasInsetRatio)
+        let availableHeight = max(1, canvasSize.height * canvasInsetRatio)
+        let scale = min(
+            1,
+            availableWidth / max(1, sourceBounds.width),
+            availableHeight / max(1, sourceBounds.height)
+        )
+        let scaledSize = CGSize(width: sourceBounds.width * scale, height: sourceBounds.height * scale)
+        return XomoFigmaImportTransform(
+            sourceOrigin: sourceBounds.origin,
+            destinationOrigin: CGPoint(
+                x: (canvasSize.width - scaledSize.width) / 2,
+                y: (canvasSize.height - scaledSize.height) / 2
+            ),
+            scale: scale
+        )
+    }
+
+    private static func mappedFrame(
+        _ frame: XomoFigmaPlanRect?,
+        transform: XomoFigmaImportTransform
+    ) -> CGRect? {
+        guard let frame, frame.width > 0, frame.height > 0 else { return nil }
+        return CGRect(
+            x: transform.destinationOrigin.x + (CGFloat(frame.x) - transform.sourceOrigin.x) * transform.scale,
+            y: transform.destinationOrigin.y + (CGFloat(frame.y) - transform.sourceOrigin.y) * transform.scale,
+            width: CGFloat(frame.width) * transform.scale,
+            height: CGFloat(frame.height) * transform.scale
+        )
+    }
+
+    private static func scaledAnchor(
+        _ anchor: ImageEditorPathAnchor,
+        scaleX: CGFloat,
+        scaleY: CGFloat
+    ) -> ImageEditorPathAnchor {
+        ImageEditorPathAnchor(
+            point: scaledPoint(anchor.point, scaleX: scaleX, scaleY: scaleY),
+            inControl: anchor.inControl.map { scaledPoint($0, scaleX: scaleX, scaleY: scaleY) },
+            outControl: anchor.outControl.map { scaledPoint($0, scaleX: scaleX, scaleY: scaleY) }
+        )
+    }
+
+    private static func scaledPoint(_ point: CGPoint, scaleX: CGFloat, scaleY: CGFloat) -> CGPoint {
+        CGPoint(x: point.x * scaleX, y: point.y * scaleY)
+    }
+
+    private static func vectorGeometryScale(
+        item: XomoFigmaNodeImportItem,
+        frame: CGRect,
+        fallbackScale: CGFloat
+    ) -> CGSize {
+        guard let size = item.geometrySize, size.width > 0, size.height > 0 else {
+            return CGSize(width: fallbackScale, height: fallbackScale)
+        }
+        return CGSize(
+            width: frame.width / CGFloat(size.width),
+            height: frame.height / CGFloat(size.height)
+        )
+    }
+
+    private static func nsColor(_ color: XomoFigmaPlanColor?, fallback: NSColor) -> NSColor {
+        guard let color else { return fallback }
+        return NSColor(
+            calibratedRed: CGFloat(color.red),
+            green: CGFloat(color.green),
+            blue: CGFloat(color.blue),
+            alpha: CGFloat(color.alpha)
+        )
+    }
+
+    private static func textAlignment(_ rawValue: String?) -> ImageEditorTextAlignment {
+        switch rawValue {
+        case "CENTER": .center
+        case "RIGHT": .right
+        case "JUSTIFIED": .justified
+        default: .left
+        }
+    }
+
+    private static func cgRect(_ rect: XomoFigmaPlanRect) -> CGRect {
+        CGRect(x: rect.x, y: rect.y, width: rect.width, height: rect.height)
+    }
+}
+
+private struct XomoFigmaImportTransform {
+    var sourceOrigin: CGPoint
+    var destinationOrigin: CGPoint
+    var scale: CGFloat
+}
+
+extension ImageEditorViewModel {
+    @discardableResult
+    func importFigmaNodePlan(_ plan: XomoFigmaNodeImportPlan) -> Bool {
+        let result = XomoFigmaNodeMaterializer.materialize(plan: plan, canvasSize: document.canvasSize)
+        guard !result.layers.isEmpty else {
+            statusText = L10n.text("imageEditor.status.figmaNodeImportEmpty")
+            return false
+        }
+        pushUndo()
+        let insertionAnchorID = document.selectedLayer.map { selectedLayer in
+            document.ancestorGroups(for: selectedLayer).last?.id ?? selectedLayer.id
+        }
+        let insertionIndex = min(
+            (insertionAnchorID.flatMap { anchorID in
+                document.layers.firstIndex { $0.id == anchorID }
+            } ?? (document.layers.count - 1)) + 1,
+            document.layers.count
+        )
+        document.layers.insert(contentsOf: result.layers, at: insertionIndex)
+        document.selectedLayerID = result.selectedLayerID
+        document.selectedLayerIDs = Set(result.selectedLayerID.map { [$0] } ?? [])
+        isEditingLayerMask = false
+        appendHistory(L10n.text("imageEditor.history.figmaNodeImport"))
+        statusText = L10n.format(
+            "imageEditor.status.figmaNodeImported",
+            result.importedCount,
+            result.omittedCount
+        )
+        return true
+    }
+}

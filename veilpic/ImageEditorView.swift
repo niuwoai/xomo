@@ -184,7 +184,7 @@ struct ImageEditorView: View {
             ImageEditorLayerStylePresetManager(viewModel: viewModel)
         }
         .sheet(isPresented: $isFigmaLinkImportPresented) {
-            XomoFigmaLinkImportSheet()
+            XomoFigmaLinkImportSheet(viewModel: viewModel)
         }
     }
 

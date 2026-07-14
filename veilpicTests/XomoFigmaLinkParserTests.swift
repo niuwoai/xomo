@@ -2,6 +2,7 @@ import Foundation
 import Testing
 @testable import musepic
 
+@MainActor
 struct XomoFigmaLinkParserTests {
     @Test func parsesDesignSelectionAndBuildsSanitizedCanonicalURL() throws {
         let preview = try XomoFigmaLinkParser.parse(

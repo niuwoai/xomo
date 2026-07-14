@@ -3,9 +3,12 @@ import SwiftUI
 
 struct XomoFigmaLinkImportSheet: View {
     @Environment(\.dismiss) private var dismiss
+    @ObservedObject var viewModel: ImageEditorViewModel
     @State private var draft = XomoFigmaLinkImportDraft()
     @State private var transientMessageKey: String?
+    @State private var didImportNodePlan = false
     @StateObject private var metadataController = XomoFigmaAuthorizedMetadataController()
+    @StateObject private var nodeImportController = XomoFigmaNodeImportController()
 
     var body: some View {
         VStack(spacing: 0) {
@@ -16,6 +19,7 @@ struct XomoFigmaLinkImportSheet: View {
                     previewSection
                     if let preview = draft.preview {
                         authorizedMetadataSection(preview)
+                        authorizedNodeImportSection(preview)
                     }
                     securityNotice
                 }
@@ -270,6 +274,8 @@ struct XomoFigmaLinkImportSheet: View {
             .accessibilityIdentifier("xomo-figma-read-metadata")
             Button(L10n.text("xomo.figma.metadata.disconnect")) {
                 metadataController.disconnect()
+                nodeImportController.clear()
+                didImportNodePlan = false
             }
             .buttonStyle(.bordered)
             .focusable(false)
@@ -333,6 +339,176 @@ struct XomoFigmaLinkImportSheet: View {
         return value
     }
 
+    private func authorizedNodeImportSection(_ preview: XomoFigmaLinkPreview) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 8) {
+                Image(systemName: "square.3.layers.3d")
+                    .foregroundStyle(Color.accentColor)
+                Text(L10n.text("xomo.figma.node.title"))
+                    .font(.system(size: 12, weight: .bold))
+                Spacer()
+                Text(L10n.text("xomo.figma.node.planOnly"))
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+            }
+
+            Text(L10n.text("xomo.figma.node.scopeNotice"))
+                .font(.system(size: 10, weight: .medium))
+                .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                .fixedSize(horizontal: false, vertical: true)
+
+            if preview.nodeID == nil {
+                Label(
+                    L10n.text("xomo.figma.node.selectionRequired"),
+                    systemImage: "scope"
+                )
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(.orange)
+            } else if !metadataController.hasStoredCredential {
+                Label(
+                    L10n.text("xomo.figma.node.credentialRequired"),
+                    systemImage: "lock"
+                )
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+            }
+
+            HStack {
+                Spacer()
+                Button(L10n.text("xomo.figma.node.readPlan")) {
+                    didImportNodePlan = false
+                    Task {
+                        await nodeImportController.fetchPlan(preview: preview)
+                    }
+                }
+                .buttonStyle(.borderedProminent)
+                .focusable(false)
+                .disabled(
+                    preview.nodeID == nil
+                        || !metadataController.hasStoredCredential
+                        || nodeImportController.isLoading
+                )
+                .accessibilityIdentifier("xomo-figma-read-node-plan")
+            }
+
+            nodeImportStateView
+        }
+        .padding(12)
+        .background(Color(nsColor: ImageEditorTheme.panelRaised).opacity(0.72))
+        .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
+    }
+
+    @ViewBuilder
+    private var nodeImportStateView: some View {
+        switch nodeImportController.state {
+        case .idle:
+            EmptyView()
+        case .loading:
+            HStack(spacing: 8) {
+                ProgressView().controlSize(.small)
+                Text(L10n.text("xomo.figma.node.loading"))
+                    .font(.system(size: 10, weight: .medium))
+            }
+        case let .failed(error):
+            Label(L10n.text(error.localizationKey), systemImage: "exclamationmark.triangle.fill")
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(.orange)
+                .fixedSize(horizontal: false, vertical: true)
+        case let .loaded(plan):
+            nodeImportPlanView(plan)
+        }
+    }
+
+    private func nodeImportPlanView(_ plan: XomoFigmaNodeImportPlan) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(L10n.format(
+                "xomo.figma.node.summary",
+                plan.items.count,
+                plan.exactCount,
+                plan.partialCount,
+                plan.unsupportedCount
+            ))
+            .font(.system(size: 10, weight: .bold))
+
+            ForEach(Array(plan.items.prefix(50))) { item in
+                nodeImportPlanRow(item)
+            }
+
+            if plan.items.count > 50 {
+                Text(L10n.format("xomo.figma.node.moreItems", plan.items.count - 50))
+                    .font(.system(size: 9, weight: .medium))
+                    .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+            }
+
+            HStack(spacing: 8) {
+                if didImportNodePlan {
+                    Label(
+                        L10n.text("xomo.figma.node.imported"),
+                        systemImage: "checkmark.circle.fill"
+                    )
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(.green)
+                }
+                Spacer()
+                Button(L10n.text("xomo.figma.node.importLayers")) {
+                    didImportNodePlan = viewModel.importFigmaNodePlan(plan)
+                }
+                .buttonStyle(.borderedProminent)
+                .focusable(false)
+                .disabled(didImportNodePlan || plan.mappableCount == 0)
+                .accessibilityIdentifier("xomo-figma-import-node-plan")
+            }
+        }
+        .padding(10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.black.opacity(0.16))
+        .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+        .accessibilityIdentifier("xomo-figma-node-import-plan")
+    }
+
+    private func nodeImportPlanRow(_ item: XomoFigmaNodeImportItem) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack(spacing: 6) {
+                Color.clear.frame(width: CGFloat(min(item.depth, 8)) * 10, height: 1)
+                Image(systemName: nodeImportSymbol(item))
+                    .foregroundStyle(nodeImportColor(item.fidelity))
+                    .frame(width: 14)
+                Text(item.sourceName)
+                    .font(.system(size: 10, weight: .semibold))
+                    .lineLimit(1)
+                Text(item.sourceType)
+                    .font(.system(size: 9, design: .monospaced))
+                    .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                Spacer(minLength: 4)
+                Text(item.targetKind.map { L10n.text($0.localizationKey) } ?? "—")
+                    .font(.system(size: 9, weight: .medium))
+            }
+            if !item.issues.isEmpty {
+                Text(item.issues.map { L10n.text($0.localizationKey) }.joined(separator: " · "))
+                    .font(.system(size: 9))
+                    .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                    .lineLimit(2)
+                    .padding(.leading, CGFloat(min(item.depth, 8)) * 10 + 20)
+            }
+        }
+    }
+
+    private func nodeImportSymbol(_ item: XomoFigmaNodeImportItem) -> String {
+        switch item.fidelity {
+        case .exact: "checkmark.circle.fill"
+        case .partial: "exclamationmark.circle.fill"
+        case .unsupported: "xmark.circle.fill"
+        }
+    }
+
+    private func nodeImportColor(_ fidelity: XomoFigmaNodeMappingFidelity) -> Color {
+        switch fidelity {
+        case .exact: .green
+        case .partial: .orange
+        case .unsupported: .red
+        }
+    }
+
     private var securityNotice: some View {
         HStack(alignment: .top, spacing: 9) {
             Image(systemName: "network.slash")
@@ -376,7 +552,9 @@ struct XomoFigmaLinkImportSheet: View {
             draft.input
         } set: { value in
             transientMessageKey = nil
+            didImportNodePlan = false
             metadataController.clearMetadata()
+            nodeImportController.clear()
             draft.updateInput(value)
         }
     }
@@ -387,7 +565,9 @@ struct XomoFigmaLinkImportSheet: View {
             return
         }
         transientMessageKey = nil
+        didImportNodePlan = false
         metadataController.clearMetadata()
+        nodeImportController.clear()
         draft.updateInput(value)
     }
 

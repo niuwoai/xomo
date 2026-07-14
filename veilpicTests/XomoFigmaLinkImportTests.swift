@@ -3,6 +3,7 @@ import Foundation
 import Testing
 @testable import musepic
 
+@MainActor
 struct XomoFigmaLinkImportTests {
     @Test func draftValidatesImmediatelyAndKeepsOnlyParsedPreview() throws {
         var draft = XomoFigmaLinkImportDraft()

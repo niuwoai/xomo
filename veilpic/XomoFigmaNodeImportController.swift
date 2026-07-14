@@ -1,0 +1,70 @@
+import Combine
+import Foundation
+
+enum XomoFigmaNodeImportState: Equatable {
+    case idle
+    case loading
+    case loaded(XomoFigmaNodeImportPlan)
+    case failed(XomoFigmaNodeImportError)
+}
+
+@MainActor
+final class XomoFigmaNodeImportController: ObservableObject {
+    @Published private(set) var state: XomoFigmaNodeImportState = .idle
+
+    private let store: any XomoFigmaCredentialStoring
+    private let fetcher: any XomoFigmaNodePlanFetching
+    private var requestGeneration = UUID()
+
+    init() {
+        store = XomoFigmaKeychainCredentialStore()
+        fetcher = XomoFigmaNodeContentAPIClient()
+    }
+
+    init(store: any XomoFigmaCredentialStoring, fetcher: any XomoFigmaNodePlanFetching) {
+        self.store = store
+        self.fetcher = fetcher
+    }
+
+    var isLoading: Bool {
+        state == .loading
+    }
+
+    func fetchPlan(preview: XomoFigmaLinkPreview) async {
+        guard preview.nodeID != nil else {
+            state = .failed(.nodeSelectionRequired)
+            return
+        }
+        let credential: XomoFigmaPersonalAccessToken
+        do {
+            guard let storedCredential = try store.load() else {
+                state = .failed(.credentialMissing)
+                return
+            }
+            credential = storedCredential
+        } catch {
+            state = .failed(.secureStorageUnavailable)
+            return
+        }
+
+        let generation = UUID()
+        requestGeneration = generation
+        state = .loading
+        do {
+            let plan = try await fetcher.fetchPlan(for: preview, credential: credential)
+            guard requestGeneration == generation else { return }
+            state = .loaded(plan)
+        } catch let knownError as XomoFigmaNodeImportError {
+            guard requestGeneration == generation else { return }
+            state = .failed(knownError)
+        } catch {
+            guard requestGeneration == generation else { return }
+            state = .failed(.transportFailed)
+        }
+    }
+
+    func clear() {
+        requestGeneration = UUID()
+        state = .idle
+    }
+}
