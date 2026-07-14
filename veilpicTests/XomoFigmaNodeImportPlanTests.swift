@@ -347,6 +347,56 @@ struct XomoFigmaNodeImportPlanTests {
 
         viewModel.undo()
         #expect(viewModel.document.layers.count == initialLayerCount)
+
+        viewModel.redo()
+        #expect(viewModel.document.layers.count == initialLayerCount + 9)
+        #expect(viewModel.document.selectedLayer?.name == "Checkout Frame")
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.figmaNodeImport"))
+    }
+
+    @Test func importedHierarchySurvivesProjectDataAndCompositeExport() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "figma-round-trip.png",
+            image: NSImage.transparent(size: CGSize(width: 600, height: 1_000))
+        ) { _ in }
+        #expect(viewModel.importFigmaNodePlan(try Self.decodedPlan()))
+
+        let projectData = try viewModel.projectData()
+        let projectSource = try #require(String(data: projectData, encoding: .utf8))
+        #expect(!projectSource.contains("figd_"))
+        #expect(!projectSource.contains("X-Figma-Token"))
+
+        let reopened = ImageEditorViewModel(
+            sourceName: "empty.png",
+            image: NSImage.transparent(size: CGSize(width: 8, height: 8))
+        ) { _ in }
+        try reopened.loadProjectData(projectData)
+
+        #expect(reopened.document.sourceName == "figma-round-trip.png")
+        #expect(reopened.document.canvasSize == CGSize(width: 600, height: 1_000))
+        #expect(reopened.document.layers.count == viewModel.document.layers.count)
+        let root = try #require(reopened.document.layers.first { $0.name == "Checkout Frame" })
+        let actions = try #require(reopened.document.layers.first { $0.name == "Actions" })
+        let text = try #require(reopened.document.layers.first { $0.name == "Continue Label" })
+        let vector = try #require(reopened.document.layers.first { $0.name == "Arrow" })
+        let placeholder = try #require(reopened.document.layers.first { $0.name == "Hero Image" })
+        #expect(root.isGroup)
+        #expect(actions.groupID == root.id)
+        #expect(text.groupID == actions.id)
+        #expect(text.textContent?.text == "继续")
+        #expect(vector.shapeContent?.kind == .path)
+        #expect(vector.shapeContent?.editablePathAnchors.count == 3)
+        #expect(placeholder.kind.isPixel)
+
+        let pngData = try #require(reopened.exportData(settings: ImageEditorExportSettings(
+            format: .png,
+            scope: .composited,
+            scale: 1
+        )))
+        #expect(Array(pngData.prefix(8)) == [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A])
+        let exportedImage = try #require(NSImage(data: pngData))
+        #expect(exportedImage.size == CGSize(width: 600, height: 1_000))
+        #expect(exportedImage.nonTransparentPixelBounds() != nil)
     }
 
     @Test func materializerOnlyShrinksOversizedRootAndKeepsItInsideCanvasInset() throws {

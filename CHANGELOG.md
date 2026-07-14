@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.12.0-rc60 - 2026-07-15
+
+### Changed
+- 将第 60 个小版本设为 Figma 可编辑导入闭环的完整质量门禁，不在同一版继续扩大远端读取范围；先固定已导入层级的撤销/重做、项目保存重开和合成导出契约，再决定图片资源或 Auto Layout 的下一条窄路径。
+
+### Tests
+- Figma 节点导入回归新增 Redo、实际 `.xomoproject` 编码/解码、层级与可编辑类型恢复、PNG 合成导出及项目数据不携带 PAT/请求头的验证。
+- Debug `build-for-testing`、全量隔离单元测试 817/817 和 SwiftPM CLI 2/2 通过；arm64/x86_64 通用 Release App 与通用 Release CLI 均构建成功。App/CLI 版本为 `2.12.0-rc60`，Bundle ID 为 `im.some.xomo`，最低系统为 macOS 13.0，两个 Release 可执行文件均包含 arm64 与 x86_64。
+- Computer Use 启动 rc60 Debug App，真实检查图层标题与四页签浅色可读、Figma 链接清理与无凭据禁用状态、组件插入后的组/文字/形状三层结构、画布对象点击自动选层，以及缩放工具条从 100% 到 120% 再缩回 100% 持续可点击；未输入令牌或发起网络请求。
+- 通用 Release 编译仍报告两处非阻断的 Swift 6 actor-isolation 预警，涉及纯解析辅助方法；为保证全量门禁对应同一份源码，本版不在测试后临时改实现，留给独立小版本清理。
+
 ## 2.12.0-rc59 - 2026-07-15
 
 ### Added
