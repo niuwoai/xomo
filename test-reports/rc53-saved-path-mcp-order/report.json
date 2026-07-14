@@ -1,0 +1,141 @@
+{
+  "generated_at": "2026-07-15 00:30:39 +0800",
+  "total": 11,
+  "passed": 11,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorBrushStrokeTests",
+      "method": "pressureCanControlDiameterAndFlowIndependently",
+      "identifier": "veilpicTests/ImageEditorBrushStrokeTests/pressureCanControlDiameterAndFlowIndependently",
+      "file": "ImageEditorBrushStrokeTests.swift",
+      "passed": true,
+      "duration": 2.867,
+      "issues": [
+
+      ],
+      "log": "ImageEditorBrushStrokeTests.pressureCanControlDiameterAndFlowIndependently.log"
+    },
+    {
+      "suite": "ImageEditorLayerStyleTests",
+      "method": "imageEditorStrokeOpacityBlendsStrokeIndependentlyFromFill",
+      "identifier": "veilpicTests/ImageEditorLayerStyleTests/imageEditorStrokeOpacityBlendsStrokeIndependentlyFromFill",
+      "file": "ImageEditorLayerStyleTests.swift",
+      "passed": true,
+      "duration": 2.932,
+      "issues": [
+
+      ],
+      "log": "ImageEditorLayerStyleTests.imageEditorStrokeOpacityBlendsStrokeIndependentlyFromFill.log"
+    },
+    {
+      "suite": "ImageEditorParagraphLayoutTests",
+      "method": "paragraphStyleMapsJustificationAndThreeIndependentIndents",
+      "identifier": "veilpicTests/ImageEditorParagraphLayoutTests/paragraphStyleMapsJustificationAndThreeIndependentIndents",
+      "file": "ImageEditorParagraphLayoutTests.swift",
+      "passed": true,
+      "duration": 2.744,
+      "issues": [
+
+      ],
+      "log": "ImageEditorParagraphLayoutTests.paragraphStyleMapsJustificationAndThreeIndependentIndents.log"
+    },
+    {
+      "suite": "ImageEditorSavedPathTests",
+      "method": "savedPathCopiesAndPastesAsIndependentGeometryWithoutChangingCopyHistory",
+      "identifier": "veilpicTests/ImageEditorSavedPathTests/savedPathCopiesAndPastesAsIndependentGeometryWithoutChangingCopyHistory",
+      "file": "ImageEditorSavedPathTests.swift",
+      "passed": true,
+      "duration": 2.773,
+      "issues": [
+
+      ],
+      "log": "ImageEditorSavedPathTests.savedPathCopiesAndPastesAsIndependentGeometryWithoutChangingCopyHistory.log"
+    },
+    {
+      "suite": "ImageEditorSavedPathTests",
+      "method": "savedPathDuplicatesAdjacentIndependentCopyWithUndo",
+      "identifier": "veilpicTests/ImageEditorSavedPathTests/savedPathDuplicatesAdjacentIndependentCopyWithUndo",
+      "file": "ImageEditorSavedPathTests.swift",
+      "passed": true,
+      "duration": 2.711,
+      "issues": [
+
+      ],
+      "log": "ImageEditorSavedPathTests.savedPathDuplicatesAdjacentIndependentCopyWithUndo.log"
+    },
+    {
+      "suite": "ImageEditorSavedPathTests",
+      "method": "savingPathCreatesIndependentUndoableSnapshotAndLoadsEditableCopy",
+      "identifier": "veilpicTests/ImageEditorSavedPathTests/savingPathCreatesIndependentUndoableSnapshotAndLoadsEditableCopy",
+      "file": "ImageEditorSavedPathTests.swift",
+      "passed": true,
+      "duration": 2.682,
+      "issues": [
+
+      ],
+      "log": "ImageEditorSavedPathTests.savingPathCreatesIndependentUndoableSnapshotAndLoadsEditableCopy.log"
+    },
+    {
+      "suite": "ImageEditorTextBoxCreationTests",
+      "method": "imageResizeScalesFixedTextBoxWidthAndHeightOnIndependentAxes",
+      "identifier": "veilpicTests/ImageEditorTextBoxCreationTests/imageResizeScalesFixedTextBoxWidthAndHeightOnIndependentAxes",
+      "file": "ImageEditorTextBoxCreationTests.swift",
+      "passed": true,
+      "duration": 2.684,
+      "issues": [
+
+      ],
+      "log": "ImageEditorTextBoxCreationTests.imageResizeScalesFixedTextBoxWidthAndHeightOnIndependentAxes.log"
+    },
+    {
+      "suite": "ImageEditorTextDecorationTests",
+      "method": "attributedTextUsesIndependentUnderlineAndStrikethroughAttributes",
+      "identifier": "veilpicTests/ImageEditorTextDecorationTests/attributedTextUsesIndependentUnderlineAndStrikethroughAttributes",
+      "file": "ImageEditorTextDecorationTests.swift",
+      "passed": true,
+      "duration": 2.798,
+      "issues": [
+
+      ],
+      "log": "ImageEditorTextDecorationTests.attributedTextUsesIndependentUnderlineAndStrikethroughAttributes.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registryAdvertisesAndReordersIndependentSavedPaths",
+      "identifier": "veilpicTests/XomoAutomationTests/registryAdvertisesAndReordersIndependentSavedPaths",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 2.945,
+      "issues": [
+
+      ],
+      "log": "XomoAutomationTests.registryAdvertisesAndReordersIndependentSavedPaths.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registrySavesListsRenamesLoadsAndDeletesIndependentPaths",
+      "identifier": "veilpicTests/XomoAutomationTests/registrySavesListsRenamesLoadsAndDeletesIndependentPaths",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 2.91,
+      "issues": [
+
+      ],
+      "log": "XomoAutomationTests.registrySavesListsRenamesLoadsAndDeletesIndependentPaths.log"
+    },
+    {
+      "suite": "XomoLeftSidebarTests",
+      "method": "componentMasterSyncsLinkedInstancesAndKeepsDetachedInstanceIndependent",
+      "identifier": "veilpicTests/XomoLeftSidebarTests/componentMasterSyncsLinkedInstancesAndKeepsDetachedInstanceIndependent",
+      "file": "XomoLeftSidebarTests.swift",
+      "passed": true,
+      "duration": 2.851,
+      "issues": [
+
+      ],
+      "log": "XomoLeftSidebarTests.componentMasterSyncsLinkedInstancesAndKeepsDetachedInstanceIndependent.log"
+    }
+  ]
+}
