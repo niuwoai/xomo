@@ -3928,6 +3928,25 @@ struct ImageEditorView: View {
 
                 Divider().overlay(editorBorder)
 
+                if viewModel.selectedRectangleCornerRadius != nil {
+                    Stepper(
+                        L10n.format(
+                            "imageEditor.properties.shapeCornerRadiusValue",
+                            Int((viewModel.selectedRectangleCornerRadius ?? 0).rounded())
+                        ),
+                        value: Binding(
+                            get: { viewModel.selectedRectangleCornerRadius ?? 0 },
+                            set: { viewModel.setSelectedRectangleCornerRadius($0) }
+                        ),
+                        in: 0...max(1, viewModel.selectedRectangleMaximumCornerRadius),
+                        step: 1
+                    )
+                    .focusable(false)
+                    .accessibilityIdentifier("image-editor-shape-corner-radius")
+
+                    Divider().overlay(editorBorder)
+                }
+
                 if viewModel.selectedStackLayout != nil {
                     stackLayoutControls
                     Divider().overlay(editorBorder)

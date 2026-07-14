@@ -2286,6 +2286,7 @@ struct ImageEditorShapeContent {
     var strokeColor: NSColor
     var strokeWidth: CGFloat
     var strokeOpacity: CGFloat
+    var cornerRadius: CGFloat = 0
     var pathPoints: [CGPoint] = []
     var pathAnchors: [ImageEditorPathAnchor] = []
     var pathSubpaths: [[ImageEditorPathAnchor]] = []
@@ -2300,6 +2301,9 @@ struct ImageEditorShapeContent {
         } else {
             content.strokeWidth = max(Self.minimumStrokeWidth, min(min(size.width, size.height) / 2, strokeWidth))
         }
+        content.cornerRadius = kind == .rectangle
+            ? max(0, min(min(size.width, size.height) / 2, cornerRadius))
+            : 0
         content.pathPoints = pathPoints.map { point in
             CGPoint(
                 x: max(0, min(size.width, point.x)),
@@ -2345,9 +2349,17 @@ struct ImageEditorShapeContent {
                 } else {
                     let inset = normalized.strokeWidth / 2
                     let shapeRect = rect.insetBy(dx: inset, dy: inset)
-                    path = normalized.kind == .ellipse
-                        ? NSBezierPath(ovalIn: shapeRect)
-                        : NSBezierPath(rect: shapeRect)
+                    if normalized.kind == .ellipse {
+                        path = NSBezierPath(ovalIn: shapeRect)
+                    } else if normalized.cornerRadius > 0 {
+                        path = NSBezierPath(
+                            roundedRect: shapeRect,
+                            xRadius: normalized.cornerRadius,
+                            yRadius: normalized.cornerRadius
+                        )
+                    } else {
+                        path = NSBezierPath(rect: shapeRect)
+                    }
                 }
                 if normalized.kind != .path || normalized.isPathClosed {
                     normalized.fillColor.withAlphaComponent(normalized.fillOpacity).setFill()

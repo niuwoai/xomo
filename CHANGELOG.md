@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.12.0-rc68 - 2026-07-15
+
+### Added
+- 矩形形状新增原生统一圆角属性：属性面板可逐像素调整，保持可编辑矢量形状，并进入项目保存、重开、Undo/Redo 和图像缩放链路。
+- Figma `cornerRadius` 与四角值相同的 `rectangleCornerRadii` 现在映射为 Xomo 原生矩形圆角；Frame/Component 背景形状也复用同一语义。
+- MCP `xomo.shape.create/get/update` 与 CLI 工具目录同步支持统一矩形圆角，创建或更新仍各自只产生一个 Undo 步骤。
+
+### Changed
+- 非对称四角与 `cornerSmoothing` 继续明确报告为部分保真；可用的统一半径仍会保留，但不会把尚未支持的独立四角或平滑曲线冒充完整导入。
+- 圆角半径按矩形短边的一半约束，调整图片尺寸时与形状、描边一同等比例缩放；锁定形状不会被属性面板改写。
+
+### Tests
+- 新增圆角像素渲染、属性编辑、范围约束、锁定保护、项目往返、Undo/Redo、图像缩放和属性面板入口测试。
+- 更新 Figma 映射、材质化、项目往返与缩放断言，并新增统一四角、非对称四角和 corner smoothing 的保真度测试。
+- 圆角核心 4/4、Figma 节点导入 16/16、MCP 自动化 32/32、三语资源 4/4、SwiftPM CLI 2/2 通过；隔离 `build-for-testing` 成功，App、CLI 与全部 Xcode target 版本同步为 `2.12.0-rc68`。
+
 ## 2.12.0-rc67 - 2026-07-15
 
 ### Fixed
