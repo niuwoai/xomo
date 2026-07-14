@@ -100,7 +100,17 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(component.targetKind == .group)
         #expect(component.fidelity == .partial)
         #expect(component.issues.contains(.componentSemanticsFlattened))
-        #expect(component.issues.contains(.autoLayoutFlattened))
+        #expect(!component.issues.contains(.autoLayoutFlattened))
+        #expect(component.stackLayout == ImageEditorStackLayout(
+            axis: .vertical,
+            spacing: 12,
+            paddingTop: 8,
+            paddingRight: 16,
+            paddingBottom: 8,
+            paddingLeft: 16,
+            primaryAlignment: .center,
+            crossAlignment: .end
+        ))
         #expect(unsupported.targetKind == nil)
         #expect(unsupported.fidelity == .unsupported)
         #expect(unsupported.issues == [.unsupportedNodeType])
@@ -154,6 +164,49 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(line.issues.contains(.transformFlattened))
         #expect(line.solidStroke?.red == 1)
         #expect(line.strokeWeight == 3)
+    }
+
+    @Test func mapperKeepsStackMetadataWhileReportingUnsupportedWrapAndFillSemantics() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                """
+                {
+                  "name": "Wrapped",
+                  "nodes": {
+                    "1:10": {
+                      "document": {
+                        "id": "1:10",
+                        "name": "Wrapped Frame",
+                        "type": "FRAME",
+                        "layoutMode": "HORIZONTAL",
+                        "layoutWrap": "WRAP",
+                        "primaryAxisSizingMode": "AUTO",
+                        "itemSpacing": 6,
+                        "absoluteBoundingBox": {"x": 0, "y": 0, "width": 200, "height": 100},
+                        "children": [{
+                          "id": "1:11",
+                          "name": "Fill Child",
+                          "type": "RECTANGLE",
+                          "layoutGrow": 1,
+                          "layoutAlign": "STRETCH",
+                          "absoluteBoundingBox": {"x": 0, "y": 0, "width": 40, "height": 20}
+                        }]
+                      }
+                    }
+                  }
+                }
+                """.utf8
+            )
+        )
+
+        let plan = try XomoFigmaNodeImportMapper.makePlan(response: response, requestedNodeID: "1:10")
+        let frame = try #require(plan.items.first { $0.sourceID == "1:10" })
+        let child = try #require(plan.items.first { $0.sourceID == "1:11" })
+        #expect(frame.stackLayout?.axis == .horizontal)
+        #expect(frame.stackLayout?.spacing == 6)
+        #expect(frame.issues.contains(.autoLayoutFlattened))
+        #expect(child.issues.contains(.autoLayoutFlattened))
     }
 
     @Test func clientMapsBadRequestAuthorizationMissingNodeRateLimitAndServerErrors() async throws {
@@ -281,6 +334,7 @@ struct XomoFigmaNodeImportPlanTests {
         let rectangle = try #require(result.layers.first { $0.name == "Primary" })
         let vector = try #require(result.layers.first { $0.name == "Arrow" })
         let placeholder = try #require(result.layers.first { $0.name == "Hero Image" })
+        let component = try #require(result.layers.first { $0.name == "Card Component" })
 
         #expect(result.importedCount == 9)
         #expect(result.omittedCount == 1)
@@ -318,6 +372,9 @@ struct XomoFigmaNodeImportPlanTests {
         }
         #expect(placeholder.kind.isPixel)
         #expect(placeholder.frame == CGRect(x: 125, y: 348, width: 240, height: 120))
+        #expect(component.frame == CGRect(x: 125, y: 488, width: 240, height: 120))
+        #expect(component.stackLayout?.axis == .vertical)
+        #expect(component.stackLayout?.crossAlignment == .end)
     }
 
     @Test func viewModelImportsPlanAsSingleUndoableHistoryStep() throws {
@@ -341,9 +398,12 @@ struct XomoFigmaNodeImportPlanTests {
         let restoredRoot = try #require(restored.layers.first { $0.name == "Checkout Frame" })
         let restoredActions = try #require(restored.layers.first { $0.name == "Actions" })
         let restoredText = try #require(restored.layers.first { $0.name == "Continue Label" })
+        let restoredComponent = try #require(restored.layers.first { $0.name == "Card Component" })
         #expect(restoredRoot.isGroup)
         #expect(restoredActions.groupID == restoredRoot.id)
         #expect(restoredText.groupID == restoredActions.id)
+        #expect(restoredComponent.stackLayout?.axis == .vertical)
+        #expect(restoredComponent.stackLayout?.spacing == 12)
 
         viewModel.undo()
         #expect(viewModel.document.layers.count == initialLayerCount)
@@ -515,6 +575,13 @@ struct XomoFigmaNodeImportPlanTests {
                     "name": "Card Component",
                     "type": "COMPONENT",
                     "layoutMode": "VERTICAL",
+                    "itemSpacing": 12,
+                    "paddingTop": 8,
+                    "paddingRight": 16,
+                    "paddingBottom": 8,
+                    "paddingLeft": 16,
+                    "primaryAxisAlignItems": "CENTER",
+                    "counterAxisAlignItems": "MAX",
                     "absoluteBoundingBox": {"x": 120, "y": 610, "width": 240, "height": 120}
                   },
                   {

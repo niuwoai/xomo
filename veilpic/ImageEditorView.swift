@@ -3727,6 +3727,118 @@ struct ImageEditorView: View {
         CGPoint(x: rect.midX, y: rect.minY - 24)
     }
 
+    private var stackLayoutControls: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(L10n.text("imageEditor.properties.stackLayout"))
+                .font(.system(size: 11, weight: .bold))
+                .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+
+            Picker(
+                L10n.text("imageEditor.properties.stackLayoutAxis"),
+                selection: Binding(
+                    get: { viewModel.selectedStackLayout?.axis ?? .horizontal },
+                    set: { viewModel.setSelectedStackAxis($0) }
+                )
+            ) {
+                ForEach(ImageEditorStackAxis.allCases) { axis in
+                    Text(L10n.text(axis.localizationKey)).tag(axis)
+                }
+            }
+            .pickerStyle(.segmented)
+            .focusable(false)
+            .accessibilityIdentifier("image-editor-stack-layout-axis")
+
+            Picker(
+                L10n.text("imageEditor.properties.stackLayoutPrimaryAlignment"),
+                selection: Binding(
+                    get: { viewModel.selectedStackLayout?.primaryAlignment ?? .start },
+                    set: { viewModel.setSelectedStackPrimaryAlignment($0) }
+                )
+            ) {
+                ForEach(ImageEditorStackPrimaryAlignment.allCases) { alignment in
+                    Text(L10n.text(alignment.localizationKey)).tag(alignment)
+                }
+            }
+            .focusable(false)
+
+            Picker(
+                L10n.text("imageEditor.properties.stackLayoutCrossAlignment"),
+                selection: Binding(
+                    get: { viewModel.selectedStackLayout?.crossAlignment ?? .start },
+                    set: { viewModel.setSelectedStackCrossAlignment($0) }
+                )
+            ) {
+                ForEach(ImageEditorStackCrossAlignment.allCases) { alignment in
+                    Text(L10n.text(alignment.localizationKey)).tag(alignment)
+                }
+            }
+            .focusable(false)
+
+            Stepper(
+                L10n.format(
+                    "imageEditor.properties.stackLayoutSpacingValue",
+                    Int((viewModel.selectedStackLayout?.spacing ?? 0).rounded())
+                ),
+                value: Binding(
+                    get: { viewModel.selectedStackLayout?.spacing ?? 0 },
+                    set: { viewModel.setSelectedStackSpacing($0) }
+                ),
+                in: -256...512,
+                step: 1
+            )
+            .focusable(false)
+
+            HStack(spacing: 8) {
+                stackPaddingStepper(
+                    key: "imageEditor.properties.stackLayoutPaddingTopValue",
+                    value: \ImageEditorStackLayout.paddingTop,
+                    setter: viewModel.setSelectedStackPaddingTop
+                )
+                stackPaddingStepper(
+                    key: "imageEditor.properties.stackLayoutPaddingRightValue",
+                    value: \ImageEditorStackLayout.paddingRight,
+                    setter: viewModel.setSelectedStackPaddingRight
+                )
+            }
+            HStack(spacing: 8) {
+                stackPaddingStepper(
+                    key: "imageEditor.properties.stackLayoutPaddingBottomValue",
+                    value: \ImageEditorStackLayout.paddingBottom,
+                    setter: viewModel.setSelectedStackPaddingBottom
+                )
+                stackPaddingStepper(
+                    key: "imageEditor.properties.stackLayoutPaddingLeftValue",
+                    value: \ImageEditorStackLayout.paddingLeft,
+                    setter: viewModel.setSelectedStackPaddingLeft
+                )
+            }
+
+            Button(L10n.text("imageEditor.action.stackLayoutReflow")) {
+                viewModel.reflowSelectedStackLayout()
+            }
+            .buttonStyle(EditorTextButtonStyle())
+            .focusable(false)
+            .disabled(!viewModel.canReflowSelectedStackLayout)
+            .accessibilityIdentifier("image-editor-stack-layout-reflow")
+        }
+    }
+
+    private func stackPaddingStepper(
+        key: String,
+        value: KeyPath<ImageEditorStackLayout, CGFloat>,
+        setter: @escaping (CGFloat) -> Void
+    ) -> some View {
+        let current = viewModel.selectedStackLayout?[keyPath: value] ?? 0
+        return Stepper(
+            L10n.format(key, Int(current.rounded())),
+            value: Binding(get: { current }, set: setter),
+            in: 0...512,
+            step: 1
+        )
+        .focusable(false)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
     private func propertiesPanel(showsTitle: Bool = true) -> some View {
         EditorPanel(title: L10n.text("imageEditor.panel.properties"), showsTitle: showsTitle) {
             VStack(alignment: .leading, spacing: 10) {
@@ -3749,6 +3861,11 @@ struct ImageEditorView: View {
                 }
 
                 Divider().overlay(editorBorder)
+
+                if viewModel.selectedStackLayout != nil {
+                    stackLayoutControls
+                    Divider().overlay(editorBorder)
+                }
 
                 documentSizeControls
 

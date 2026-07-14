@@ -250,6 +250,8 @@ struct ImageEditorProjectLayer: Codable {
     var filterSettings: ImageEditorFilterSettings
     var groupID: UUID?
     var isGroupExpanded: Bool
+    var stackLayout: ImageEditorStackLayout?
+    var isStackLayoutExcluded: Bool?
     var isClippingMask: Bool
     var labelColor: ImageEditorLayerLabelColor?
     var xomoComponentInstance: XomoComponentInstance?
@@ -303,6 +305,8 @@ struct ImageEditorProjectLayer: Codable {
         filterSettings = layer.filterSettings
         groupID = layer.groupID
         isGroupExpanded = layer.isGroupExpanded
+        stackLayout = layer.stackLayout
+        isStackLayoutExcluded = layer.isStackLayoutExcluded
         isClippingMask = layer.isClippingMask
         labelColor = layer.labelColor
         xomoComponentInstance = layer.xomoComponentInstance
@@ -349,6 +353,8 @@ struct ImageEditorProjectLayer: Codable {
         layer.filterSettings = filterSettings.normalized()
         layer.groupID = groupID
         layer.isGroupExpanded = isGroupExpanded
+        layer.stackLayout = stackLayout
+        layer.isStackLayoutExcluded = isStackLayoutExcluded ?? false
         layer.isClippingMask = isClippingMask
         layer.labelColor = labelColor
         layer.xomoComponentInstance = xomoComponentInstance

@@ -29,6 +29,7 @@ enum ImageEditorLayerPanelTabAppearance {
                 .paragraphStyle: paragraphStyle
             ]
         )
+        label.appearance = NSAppearance(named: .darkAqua)
         label.textColor = color
         label.font = font
         label.alignment = .center
