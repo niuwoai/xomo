@@ -1,44 +1,69 @@
 {
-  "generated_at": "2026-07-15 01:48:04 +0800",
-  "version": "2.12.0-rc57",
-  "status": "passed",
-  "summary": {
-    "automated_tests_total": 19,
-    "automated_tests_passed": 19,
-    "automated_tests_failed": 0,
-    "debug_build_for_testing": "passed",
-    "computer_use_smoke": "passed"
-  },
+  "generated_at": "2026-07-15 02:18:00 +0800",
+  "version": "2.12.0-rc58",
+  "total": 37,
+  "passed": 37,
+  "failed": 0,
   "suites": [
     {
+      "name": "XomoFigmaAuthorizedMetadataTests",
+      "kind": "Xcode Swift Testing",
+      "passed": 8,
+      "total": 8
+    },
+    {
       "name": "XomoFigmaLinkImportTests",
+      "kind": "Xcode Swift Testing",
       "passed": 5,
       "total": 5
     },
     {
       "name": "XomoFigmaLinkParserTests",
+      "kind": "Xcode Swift Testing",
       "passed": 8,
       "total": 8
     },
     {
+      "name": "ImageEditorLayerPanelStyleTests",
+      "kind": "Xcode Swift Testing",
+      "passed": 6,
+      "total": 6
+    },
+    {
       "name": "LocalizationResourceTests",
+      "kind": "Xcode Swift Testing",
       "passed": 4,
       "total": 4
     },
     {
       "name": "XomoMCPServerTests",
+      "kind": "SwiftPM Swift Testing",
       "passed": 2,
       "total": 2
+    },
+    {
+      "name": "layer_panel_tab_style",
+      "kind": "Ruby source contract",
+      "passed": 4,
+      "total": 4
     }
   ],
-  "runtime_checks": {
-    "app_version": "2.12.0-rc57",
-    "cli_version": "2.12.0-rc57",
+  "build": {
+    "configuration": "Debug build-for-testing",
+    "passed": true,
     "bundle_identifier": "im.some.xomo",
+    "app_version": "2.12.0-rc58",
+    "cli_version": "2.12.0-rc58",
     "minimum_macos": "13.0",
-    "debug_architecture": "arm64",
-    "figma_preview_shortcut": "Option+Command+F",
-    "figma_preview_result": "immediate validation, sanitized canonical URL, copy feedback and distinct accessibility identifiers verified",
-    "layer_panel_result": "title and layer/channel/comp/path tabs remain white or light gray on the dark panel"
+    "architecture": "arm64"
+  },
+  "ui_smoke": {
+    "passed": true,
+    "checks": [
+      "Layer panel title and all four tab labels render with light text",
+      "Option-Command-F opens the Figma link sheet",
+      "A sanitized sample link renders the local preview and secure PAT field",
+      "No credential or network action was submitted during smoke testing"
+    ]
   }
 }

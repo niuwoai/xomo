@@ -5,19 +5,31 @@ struct XomoFigmaLinkImportSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var draft = XomoFigmaLinkImportDraft()
     @State private var transientMessageKey: String?
+    @StateObject private var metadataController = XomoFigmaAuthorizedMetadataController()
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            header
-            inputSection
-            previewSection
-            securityNotice
-            footer
+        VStack(spacing: 0) {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    header
+                    inputSection
+                    previewSection
+                    if let preview = draft.preview {
+                        authorizedMetadataSection(preview)
+                    }
+                    securityNotice
+                }
+                .padding(20)
+            }
+            Divider().overlay(Color(nsColor: ImageEditorTheme.border))
+            footer.padding(16)
         }
-        .padding(20)
-        .frame(width: 620)
+        .frame(width: 640, height: 700)
         .background(Color(nsColor: ImageEditorTheme.panel))
         .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+        .onAppear {
+            metadataController.refreshCredentialState()
+        }
     }
 
     private var header: some View {
@@ -175,6 +187,152 @@ struct XomoFigmaLinkImportSheet: View {
         }
     }
 
+    private func authorizedMetadataSection(_ preview: XomoFigmaLinkPreview) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 8) {
+                Image(systemName: "lock.shield")
+                    .foregroundStyle(Color.accentColor)
+                Text(L10n.text("xomo.figma.metadata.title"))
+                    .font(.system(size: 12, weight: .bold))
+                Spacer()
+                Text(L10n.text("xomo.figma.metadata.readOnly"))
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+            }
+
+            Text(L10n.text("xomo.figma.metadata.scopeNotice"))
+                .font(.system(size: 10, weight: .medium))
+                .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                .fixedSize(horizontal: false, vertical: true)
+
+            if metadataController.hasStoredCredential {
+                storedCredentialControls(preview)
+            } else {
+                newCredentialControls(preview)
+            }
+
+            authorizedMetadataStateView
+        }
+        .padding(12)
+        .background(Color(nsColor: ImageEditorTheme.panelRaised).opacity(0.72))
+        .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
+    }
+
+    private func newCredentialControls(_ preview: XomoFigmaLinkPreview) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            SecureField(
+                L10n.text("xomo.figma.metadata.tokenPlaceholder"),
+                text: $metadataController.tokenDraft
+            )
+            .textFieldStyle(.plain)
+            .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+            .padding(.horizontal, 10)
+            .frame(height: 32)
+            .background(Color.black.opacity(0.16))
+            .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+            .accessibilityIdentifier("xomo-figma-personal-token")
+
+            HStack {
+                Text(L10n.text("xomo.figma.metadata.tokenStorageNotice"))
+                    .font(.system(size: 10))
+                    .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                Spacer()
+                Button(L10n.text("xomo.figma.metadata.connectAndRead")) {
+                    Task {
+                        await metadataController.connectAndFetch(preview: preview)
+                    }
+                }
+                .buttonStyle(.borderedProminent)
+                .focusable(false)
+                .disabled(metadataController.tokenDraft.isEmpty || metadataController.isLoading)
+                .accessibilityIdentifier("xomo-figma-connect-and-read")
+            }
+        }
+    }
+
+    private func storedCredentialControls(_ preview: XomoFigmaLinkPreview) -> some View {
+        HStack(spacing: 8) {
+            Label(
+                L10n.text("xomo.figma.metadata.connected"),
+                systemImage: "checkmark.circle.fill"
+            )
+            .font(.system(size: 10, weight: .semibold))
+            .foregroundStyle(.green)
+            Spacer()
+            Button(L10n.text("xomo.figma.metadata.read")) {
+                Task {
+                    await metadataController.fetchMetadata(preview: preview)
+                }
+            }
+            .buttonStyle(.borderedProminent)
+            .focusable(false)
+            .disabled(metadataController.isLoading)
+            .accessibilityIdentifier("xomo-figma-read-metadata")
+            Button(L10n.text("xomo.figma.metadata.disconnect")) {
+                metadataController.disconnect()
+            }
+            .buttonStyle(.bordered)
+            .focusable(false)
+            .accessibilityIdentifier("xomo-figma-disconnect")
+        }
+    }
+
+    @ViewBuilder
+    private var authorizedMetadataStateView: some View {
+        switch metadataController.state {
+        case .idle:
+            EmptyView()
+        case .loading:
+            HStack(spacing: 8) {
+                ProgressView().controlSize(.small)
+                Text(L10n.text("xomo.figma.metadata.loading"))
+                    .font(.system(size: 10, weight: .medium))
+            }
+        case let .failed(error):
+            Label(L10n.text(error.localizationKey), systemImage: "exclamationmark.triangle.fill")
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(.orange)
+                .fixedSize(horizontal: false, vertical: true)
+        case let .loaded(metadata):
+            officialMetadataGrid(metadata)
+        }
+    }
+
+    private func officialMetadataGrid(_ metadata: XomoFigmaOfficialFileMetadata) -> some View {
+        Grid(alignment: .leading, horizontalSpacing: 14, verticalSpacing: 7) {
+            metadataRow("xomo.figma.metadata.fileName", metadata.name)
+            metadataRow("xomo.figma.metadata.folderName", metadataValue(metadata.folderName))
+            metadataRow("xomo.figma.metadata.editorType", metadataValue(metadata.editorType))
+            metadataRow("xomo.figma.metadata.version", metadataValue(metadata.version))
+            metadataRow("xomo.figma.metadata.role", metadataValue(metadata.role))
+            metadataRow("xomo.figma.metadata.linkAccess", metadataValue(metadata.linkAccess))
+            metadataRow("xomo.figma.metadata.lastTouched", metadataValue(metadata.lastTouchedAt))
+        }
+        .padding(10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.black.opacity(0.16))
+        .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+        .accessibilityIdentifier("xomo-figma-official-metadata")
+    }
+
+    private func metadataRow(_ titleKey: String, _ value: String) -> some View {
+        GridRow {
+            Text(L10n.text(titleKey))
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+            Text(value)
+                .font(.system(size: 10, weight: .medium).monospaced())
+                .lineLimit(1)
+        }
+    }
+
+    private func metadataValue(_ value: String?) -> String {
+        guard let value, !value.isEmpty else {
+            return L10n.text("xomo.figma.value.none")
+        }
+        return value
+    }
+
     private var securityNotice: some View {
         HStack(alignment: .top, spacing: 9) {
             Image(systemName: "network.slash")
@@ -218,6 +376,7 @@ struct XomoFigmaLinkImportSheet: View {
             draft.input
         } set: { value in
             transientMessageKey = nil
+            metadataController.clearMetadata()
             draft.updateInput(value)
         }
     }
@@ -228,6 +387,7 @@ struct XomoFigmaLinkImportSheet: View {
             return
         }
         transientMessageKey = nil
+        metadataController.clearMetadata()
         draft.updateInput(value)
     }
 
