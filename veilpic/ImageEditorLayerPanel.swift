@@ -1065,6 +1065,11 @@ extension ImageEditorView {
                         syncSavedPathNameDraft(savedPath)
                     }
                 }
+                savedPathIconButton("arrow.up.to.line", "imageEditor.action.savedPathMoveToTop") {
+                    guard let id = viewModel.document.selectedSavedPathID else { return }
+                    viewModel.moveSavedPathToTop(id)
+                }
+                .disabled(!viewModel.canMoveSelectedSavedPathToTop)
                 savedPathIconButton("arrow.up", "imageEditor.action.savedPathMoveUp") {
                     guard let id = viewModel.document.selectedSavedPathID else { return }
                     viewModel.moveSavedPathUp(id)
@@ -1075,6 +1080,11 @@ extension ImageEditorView {
                     viewModel.moveSavedPathDown(id)
                 }
                 .disabled(!viewModel.canMoveSelectedSavedPathDown)
+                savedPathIconButton("arrow.down.to.line", "imageEditor.action.savedPathMoveToBottom") {
+                    guard let id = viewModel.document.selectedSavedPathID else { return }
+                    viewModel.moveSavedPathToBottom(id)
+                }
+                .disabled(!viewModel.canMoveSelectedSavedPathToBottom)
                 Spacer(minLength: 0)
             }
         }
