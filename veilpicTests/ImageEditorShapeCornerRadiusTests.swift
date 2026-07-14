@@ -41,6 +41,70 @@ struct ImageEditorShapeCornerRadiusTests {
         #expect(squareCorner.alphaComponent > 0.9)
     }
 
+    @Test func independentCornerRadiiRenderPersistUndoAndScale() throws {
+        let size = CGSize(width: 60, height: 40)
+        let independent = ImageEditorShapeContent(
+            kind: .rectangle,
+            fillColor: .systemBlue,
+            fillOpacity: 1,
+            strokeColor: .clear,
+            strokeWidth: 1,
+            strokeOpacity: 0,
+            cornerRadii: ImageEditorRectangleCornerRadii(
+                topLeft: 16,
+                topRight: 0,
+                bottomRight: 0,
+                bottomLeft: 0
+            )
+        ).renderedImage(size: size)
+        let topLeft = try #require(independent.color(at: CGPoint(x: 1, y: 1)))
+        let topRight = try #require(independent.color(at: CGPoint(x: 58, y: 1)))
+        #expect(topLeft.alphaComponent < 0.1)
+        #expect(topRight.alphaComponent > 0.9)
+
+        let viewModel = ImageEditorViewModel(
+            sourceName: "independent-corners.png",
+            image: NSImage.transparent(size: CGSize(width: 120, height: 80))
+        ) { _ in }
+        viewModel.drawShape(
+            from: CGPoint(x: 10, y: 10),
+            to: CGPoint(x: 70, y: 50),
+            ellipse: false
+        )
+        viewModel.setSelectedRectangleCornerRadius(8)
+        viewModel.setSelectedRectangleUsesIndependentCornerRadii(true)
+        viewModel.setSelectedRectangleCornerRadius(4, at: .topLeft)
+        viewModel.setSelectedRectangleCornerRadius(12, at: .bottomRight)
+
+        let edited = try #require(viewModel.document.selectedLayer?.shapeContent)
+        #expect(edited.cornerRadii == ImageEditorRectangleCornerRadii(
+            topLeft: 4,
+            topRight: 8,
+            bottomRight: 12,
+            bottomLeft: 8
+        ))
+        viewModel.undo()
+        #expect(viewModel.document.selectedLayer?.shapeContent?.cornerRadii?.bottomRight == 8)
+        viewModel.redo()
+        #expect(viewModel.document.selectedLayer?.shapeContent?.cornerRadii?.bottomRight == 12)
+
+        let projectData = try viewModel.projectData()
+        let reopened = ImageEditorViewModel(
+            sourceName: "empty.png",
+            image: NSImage.transparent(size: CGSize(width: 8, height: 8))
+        ) { _ in }
+        try reopened.loadProjectData(projectData)
+        #expect(reopened.document.selectedLayer?.shapeContent?.cornerRadii == edited.cornerRadii)
+
+        reopened.resizeImage(to: CGSize(width: 240, height: 160))
+        #expect(reopened.document.selectedLayer?.shapeContent?.cornerRadii == ImageEditorRectangleCornerRadii(
+            topLeft: 8,
+            topRight: 16,
+            bottomRight: 24,
+            bottomLeft: 16
+        ))
+    }
+
     @Test func cornerRadiusEditsUndoPersistsAndScalesWithTheImage() throws {
         let viewModel = ImageEditorViewModel(
             sourceName: "corner-radius.png",
@@ -101,7 +165,9 @@ struct ImageEditorShapeCornerRadiusTests {
             encoding: .utf8
         )
         #expect(source.contains("image-editor-shape-corner-radius"))
+        #expect(source.contains("image-editor-shape-independent-corners"))
         #expect(source.contains("imageEditor.properties.shapeCornerRadiusValue"))
+        #expect(source.contains("imageEditor.properties.shapeCornerValue"))
         #expect(source.contains("viewModel.setSelectedRectangleCornerRadius"))
     }
 

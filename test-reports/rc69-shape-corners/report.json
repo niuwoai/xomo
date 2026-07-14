@@ -1,0 +1,69 @@
+{
+  "generated_at": "2026-07-15 07:12:52 +0800",
+  "total": 5,
+  "passed": 5,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorShapeCornerRadiusTests",
+      "method": "cornerRadiusClampsToHalfTheShortSideAndLockedShapesStayUnchanged",
+      "identifier": "veilpicTests/ImageEditorShapeCornerRadiusTests/cornerRadiusClampsToHalfTheShortSideAndLockedShapesStayUnchanged",
+      "file": "ImageEditorShapeCornerRadiusTests.swift",
+      "passed": true,
+      "duration": 2.791,
+      "issues": [
+
+      ],
+      "log": "ImageEditorShapeCornerRadiusTests.cornerRadiusClampsToHalfTheShortSideAndLockedShapesStayUnchanged.log"
+    },
+    {
+      "suite": "ImageEditorShapeCornerRadiusTests",
+      "method": "cornerRadiusEditsUndoPersistsAndScalesWithTheImage",
+      "identifier": "veilpicTests/ImageEditorShapeCornerRadiusTests/cornerRadiusEditsUndoPersistsAndScalesWithTheImage",
+      "file": "ImageEditorShapeCornerRadiusTests.swift",
+      "passed": true,
+      "duration": 2.756,
+      "issues": [
+
+      ],
+      "log": "ImageEditorShapeCornerRadiusTests.cornerRadiusEditsUndoPersistsAndScalesWithTheImage.log"
+    },
+    {
+      "suite": "ImageEditorShapeCornerRadiusTests",
+      "method": "independentCornerRadiiRenderPersistUndoAndScale",
+      "identifier": "veilpicTests/ImageEditorShapeCornerRadiusTests/independentCornerRadiiRenderPersistUndoAndScale",
+      "file": "ImageEditorShapeCornerRadiusTests.swift",
+      "passed": true,
+      "duration": 2.785,
+      "issues": [
+
+      ],
+      "log": "ImageEditorShapeCornerRadiusTests.independentCornerRadiiRenderPersistUndoAndScale.log"
+    },
+    {
+      "suite": "ImageEditorShapeCornerRadiusTests",
+      "method": "propertiesPanelExposesAKeyboardNeutralCornerRadiusStepper",
+      "identifier": "veilpicTests/ImageEditorShapeCornerRadiusTests/propertiesPanelExposesAKeyboardNeutralCornerRadiusStepper",
+      "file": "ImageEditorShapeCornerRadiusTests.swift",
+      "passed": true,
+      "duration": 2.814,
+      "issues": [
+
+      ],
+      "log": "ImageEditorShapeCornerRadiusTests.propertiesPanelExposesAKeyboardNeutralCornerRadiusStepper.log"
+    },
+    {
+      "suite": "ImageEditorShapeCornerRadiusTests",
+      "method": "roundedRectangleRendersTransparentCornersWithoutRasterizingTheShape",
+      "identifier": "veilpicTests/ImageEditorShapeCornerRadiusTests/roundedRectangleRendersTransparentCornersWithoutRasterizingTheShape",
+      "file": "ImageEditorShapeCornerRadiusTests.swift",
+      "passed": true,
+      "duration": 3.939,
+      "issues": [
+
+      ],
+      "log": "ImageEditorShapeCornerRadiusTests.roundedRectangleRendersTransparentCornersWithoutRasterizingTheShape.log"
+    }
+  ]
+}

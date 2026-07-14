@@ -182,11 +182,32 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(uniform.fidelity == .exact)
         #expect(!uniform.issues.contains(.cornerRadiusFlattened))
         #expect(independent.cornerRadius == nil)
-        #expect(independent.fidelity == .partial)
-        #expect(independent.issues.contains(.cornerRadiusFlattened))
+        #expect(independent.cornerRadii == XomoFigmaPlanCornerRadii(
+            topLeft: 4,
+            topRight: 8,
+            bottomRight: 12,
+            bottomLeft: 16
+        ))
+        #expect(independent.fidelity == .exact)
+        #expect(!independent.issues.contains(.cornerRadiusFlattened))
         #expect(smoothed.cornerRadius == 10)
         #expect(smoothed.fidelity == .partial)
         #expect(smoothed.issues.contains(.cornerRadiusFlattened))
+
+        let materialized = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: CGSize(width: 320, height: 240)
+        )
+        let independentLayer = try #require(
+            materialized.layers.first { $0.name == "Independent" }
+        )
+        let scale = independentLayer.frame.width / 100
+        #expect(independentLayer.shapeContent?.cornerRadii == ImageEditorRectangleCornerRadii(
+            topLeft: 4 * scale,
+            topRight: 8 * scale,
+            bottomRight: 12 * scale,
+            bottomLeft: 16 * scale
+        ))
     }
 
     @Test func mapperUsesStrokeGeometryAndReportsInheritedRotatedTransform() throws {
