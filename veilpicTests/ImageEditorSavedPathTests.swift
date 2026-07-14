@@ -358,7 +358,7 @@ struct ImageEditorSavedPathTests {
         let historyCount = viewModel.document.history.count
         let layerCount = viewModel.document.layers.count
 
-        #expect(viewModel.selectedSavedPathCanvasOverlay == saved)
+        #expect(viewModel.savedPathCanvasOverlays == [saved])
         #expect(viewModel.document.history.count == historyCount)
         #expect(viewModel.document.layers.count == layerCount)
     }
@@ -372,11 +372,65 @@ struct ImageEditorSavedPathTests {
         )
         viewModel.document.savedPaths = [saved]
 
-        #expect(viewModel.selectedSavedPathCanvasOverlay == nil)
+        #expect(viewModel.savedPathCanvasOverlays.isEmpty)
         viewModel.document.selectedSavedPathID = saved.id
-        #expect(viewModel.selectedSavedPathCanvasOverlay == saved)
+        #expect(viewModel.savedPathCanvasOverlays == [saved])
         viewModel.document.areExtrasVisible = false
-        #expect(viewModel.selectedSavedPathCanvasOverlay == nil)
+        #expect(viewModel.savedPathCanvasOverlays.isEmpty)
+    }
+
+    @Test func savedPathVisibilityKeepsUnselectedPathsOverlaidWithoutHistory() throws {
+        let viewModel = makeViewModel()
+        let first = ImageEditorSavedPath(
+            name: "Pinned",
+            subpaths: [rectangleAnchors(CGRect(x: 8, y: 8, width: 24, height: 18))],
+            isClosed: true
+        )
+        let second = ImageEditorSavedPath(
+            name: "Selected",
+            subpaths: [rectangleAnchors(CGRect(x: 48, y: 34, width: 26, height: 20))],
+            isClosed: true
+        )
+        viewModel.document.savedPaths = [first, second]
+        viewModel.document.selectedSavedPathID = second.id
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.setSavedPathVisibility(first.id, isVisible: true))
+        #expect(viewModel.document.savedPaths[0].isVisible)
+        #expect(viewModel.savedPathCanvasOverlays.map(\.id) == [first.id, second.id])
+        #expect(viewModel.document.history.count == historyCount)
+
+        viewModel.document.selectedSavedPathID = nil
+        #expect(viewModel.savedPathCanvasOverlays.map(\.id) == [first.id])
+        #expect(viewModel.setSavedPathVisibility(first.id, isVisible: false))
+        #expect(viewModel.savedPathCanvasOverlays.isEmpty)
+    }
+
+    @Test func savedPathVisibilityRoundTripsAndOlderPayloadsDefaultToHidden() throws {
+        let viewModel = makeViewModel()
+        createPath(
+            points: [CGPoint(x: 12, y: 10), CGPoint(x: 70, y: 14), CGPoint(x: 48, y: 52)],
+            closed: true,
+            viewModel: viewModel
+        )
+        let saved = try #require(viewModel.saveCurrentPath(name: "Persistent"))
+        #expect(viewModel.setSavedPathVisibility(saved.id, isVisible: true))
+        #expect(viewModel.updateSavedPath(saved.id))
+        #expect(viewModel.document.savedPaths.first?.isVisible == true)
+
+        let data = try viewModel.projectData()
+        let restored = makeViewModel()
+        try restored.loadProjectData(data)
+        #expect(restored.document.savedPaths.first?.isVisible == true)
+
+        var json = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        var savedPaths = try #require(json["savedPaths"] as? [[String: Any]])
+        savedPaths[0].removeValue(forKey: "isVisible")
+        json["savedPaths"] = savedPaths
+        let legacyData = try JSONSerialization.data(withJSONObject: json)
+        let legacy = makeViewModel()
+        try legacy.loadProjectData(legacyData)
+        #expect(legacy.document.savedPaths.first?.isVisible == false)
     }
 
     @Test func savedPathsRoundTripProjectsAndOlderProjectsDefaultToEmpty() throws {
@@ -434,7 +488,7 @@ struct ImageEditorSavedPathTests {
         #expect(menu.contains("viewModel.strokeSavedPathToSelectedPixelLayer"))
         let canvas = try source(root, "veilpic/ImageEditorView.swift")
         #expect(canvas.contains("savedPathOverlay(in: geometry.size)"))
-        #expect(canvas.contains("viewModel.selectedSavedPathCanvasOverlay"))
+        #expect(canvas.contains("viewModel.savedPathCanvasOverlays"))
         #expect(canvas.contains("path.addCurve"))
         #expect(canvas.contains(".allowsHitTesting(false)"))
         #expect(project.contains("savedPaths"))
@@ -442,6 +496,7 @@ struct ImageEditorSavedPathTests {
         #expect(automation.contains("case \"selection\""))
         #expect(automation.contains("case \"fill\""))
         #expect(automation.contains("case \"stroke\""))
+        #expect(automation.contains("case \"visibility\""))
     }
 
     private func createPath(
