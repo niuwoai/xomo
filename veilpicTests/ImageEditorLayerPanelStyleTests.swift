@@ -92,6 +92,28 @@ struct ImageEditorLayerPanelStyleTests {
         #expect((placeholderColor?.blueComponent ?? 0) > 0.7)
     }
 
+    @Test func nativeLayerSearchFieldKeepsExplicitLightPlaceholderAndInputText() throws {
+        let field = NSTextField(string: "按钮")
+
+        ImageEditorLayerSearchAppearance.configure(field, placeholder: "搜索图层")
+
+        let textColor = try #require(field.textColor?.usingColorSpace(.deviceRGB))
+        let placeholder = try #require(field.placeholderAttributedString)
+        let rawPlaceholderColor = try #require(
+            placeholder.attribute(.foregroundColor, at: 0, effectiveRange: nil) as? NSColor
+        )
+        let placeholderColor = try #require(rawPlaceholderColor.usingColorSpace(.deviceRGB))
+        #expect(field.appearance?.name == .darkAqua)
+        #expect(field.identifier?.rawValue == "image-editor-layer-search-field")
+        #expect(field.stringValue == "按钮")
+        #expect(placeholder.string == "搜索图层")
+        #expect(textColor.redComponent > 0.9)
+        #expect(placeholderColor.redComponent > 0.7)
+        #expect(!field.drawsBackground)
+        #expect(!field.isBordered)
+        #expect(field.focusRingType == .none)
+    }
+
     @Test func dockDisclosureAppliesLightTextToEveryVisibleLabel() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),

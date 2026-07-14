@@ -48,6 +48,64 @@ enum ImageEditorLayerPanelTabAppearance {
 enum ImageEditorLayerSearchAppearance {
     static let textColor = NSColor(calibratedWhite: 0.92, alpha: 1)
     static let placeholderColor = NSColor(calibratedWhite: 0.72, alpha: 1)
+
+    static func configure(_ field: NSTextField, placeholder: String) {
+        let font = NSFont.systemFont(ofSize: 11, weight: .medium)
+        field.appearance = NSAppearance(named: .darkAqua)
+        field.textColor = textColor
+        field.font = font
+        field.placeholderAttributedString = NSAttributedString(
+            string: placeholder,
+            attributes: [
+                .foregroundColor: placeholderColor,
+                .font: font
+            ]
+        )
+        field.drawsBackground = false
+        field.isBordered = false
+        field.isBezeled = false
+        field.focusRingType = .none
+        field.lineBreakMode = .byTruncatingTail
+        field.usesSingleLineMode = true
+        field.identifier = NSUserInterfaceItemIdentifier("image-editor-layer-search-field")
+    }
+}
+
+struct ImageEditorLayerSearchField: NSViewRepresentable {
+    let placeholder: String
+    @Binding var text: String
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(text: $text)
+    }
+
+    func makeNSView(context: Context) -> NSTextField {
+        let field = NSTextField(string: text)
+        field.delegate = context.coordinator
+        ImageEditorLayerSearchAppearance.configure(field, placeholder: placeholder)
+        return field
+    }
+
+    func updateNSView(_ field: NSTextField, context: Context) {
+        context.coordinator.text = $text
+        if field.stringValue != text {
+            field.stringValue = text
+        }
+        ImageEditorLayerSearchAppearance.configure(field, placeholder: placeholder)
+    }
+
+    final class Coordinator: NSObject, NSTextFieldDelegate {
+        var text: Binding<String>
+
+        init(text: Binding<String>) {
+            self.text = text
+        }
+
+        func controlTextDidChange(_ notification: Notification) {
+            guard let field = notification.object as? NSTextField else { return }
+            text.wrappedValue = field.stringValue
+        }
+    }
 }
 
 struct ImageEditorLayerPanelTabLabel: NSViewRepresentable {
@@ -1772,15 +1830,11 @@ extension ImageEditorView {
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
 
-            TextField(
-                L10n.text("imageEditor.layer.searchPlaceholder"),
-                text: $layerSearchQuery,
-                prompt: Text(L10n.text("imageEditor.layer.searchPlaceholder"))
-                    .foregroundColor(Color(nsColor: ImageEditorLayerSearchAppearance.placeholderColor))
+            ImageEditorLayerSearchField(
+                placeholder: L10n.text("imageEditor.layer.searchPlaceholder"),
+                text: $layerSearchQuery
             )
-                .textFieldStyle(.plain)
-                .font(.system(size: 11, weight: .medium))
-                .foregroundColor(Color(nsColor: ImageEditorLayerSearchAppearance.textColor))
+            .frame(minHeight: 16)
 
             if !layerSearchQuery.isEmpty {
                 Button {
