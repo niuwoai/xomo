@@ -4154,7 +4154,8 @@ final class ImageEditorViewModel: ObservableObject {
         to end: CGPoint,
         ellipse: Bool,
         cornerRadius: Double? = nil,
-        cornerRadii: ImageEditorRectangleCornerRadii? = nil
+        cornerRadii: ImageEditorRectangleCornerRadii? = nil,
+        cornerSmoothing: Double? = nil
     ) {
         let rect = CGRect(
             x: min(start.x, end.x),
@@ -4167,13 +4168,15 @@ final class ImageEditorViewModel: ObservableObject {
             frame: rect,
             kind: ellipse ? .ellipse : .rectangle,
             cornerRadius: cornerRadius,
-            cornerRadii: cornerRadii
+            cornerRadii: cornerRadii,
+            cornerSmoothing: cornerSmoothing
         )
     }
 
     func updateSelectedShapeLayer(
         cornerRadius: Double? = nil,
-        cornerRadii: ImageEditorRectangleCornerRadii? = nil
+        cornerRadii: ImageEditorRectangleCornerRadii? = nil,
+        cornerSmoothing: Double? = nil
     ) {
         let indices = selectedLayerIndices.filter { document.layers[$0].isShape && !document.isEffectivelyPixelsLocked(document.layers[$0]) }
         guard !indices.isEmpty else {
@@ -4200,6 +4203,11 @@ final class ImageEditorViewModel: ObservableObject {
             } else if shapeContent.kind == .rectangle,
                       let cornerRadii {
                 shapeContent.cornerRadii = cornerRadii
+            }
+            if shapeContent.kind == .rectangle,
+               let cornerSmoothing,
+               cornerSmoothing.isFinite {
+                shapeContent.cornerSmoothing = CGFloat(max(0, min(1, cornerSmoothing)))
             }
             document.layers[index].kind = .shape(shapeContent.normalized(size: document.layers[index].image.size))
             document.layers[index].name = L10n.format("imageEditor.layer.shapeName", shapeContent.kind.title)
@@ -6200,9 +6208,13 @@ final class ImageEditorViewModel: ObservableObject {
         frame: CGRect,
         kind: ImageEditorShapeKind,
         cornerRadius: Double?,
-        cornerRadii: ImageEditorRectangleCornerRadii?
+        cornerRadii: ImageEditorRectangleCornerRadii?,
+        cornerSmoothing: Double?
     ) {
         let requestedCornerRadius = cornerRadius?.isFinite == true ? CGFloat(cornerRadius ?? 0) : 0
+        let requestedCornerSmoothing = cornerSmoothing?.isFinite == true
+            ? CGFloat(cornerSmoothing ?? 0)
+            : 0
         let maximumCornerRadius = max(0, min(frame.width, frame.height) / 2)
         let content = ImageEditorShapeContent(
             kind: kind,
@@ -6216,7 +6228,10 @@ final class ImageEditorViewModel: ObservableObject {
                 : 0,
             cornerRadii: kind == .rectangle
                 ? cornerRadii?.normalized(size: frame.size)
-                : nil
+                : nil,
+            cornerSmoothing: kind == .rectangle
+                ? max(0, min(1, requestedCornerSmoothing))
+                : 0
         )
         pushUndo()
         var layer = ImageEditorLayer.shape(

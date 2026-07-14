@@ -706,6 +706,7 @@
 "imageEditor.properties.stackLayoutPaddingLeftValue" = "Left: %d px";
 "imageEditor.properties.shapeCornerRadiusValue" = "Corner radius: %d px";
 "imageEditor.properties.shapeCornerRadiiIndependent" = "Independent corners";
+"imageEditor.properties.shapeCornerSmoothingValue" = "Corner smoothing: %d%%";
 "imageEditor.properties.shapeCornerValue" = "%@: %d px";
 "imageEditor.properties.shapeCorner.topLeft" = "Top left";
 "imageEditor.properties.shapeCorner.topRight" = "Top right";
@@ -728,6 +729,7 @@
 "imageEditor.history.stackLayout" = "Update Auto Layout";
 "imageEditor.history.stackChildLayout" = "Update Auto Layout Child";
 "imageEditor.history.shapeCornerRadius" = "Update Rectangle Corner Radius";
+"imageEditor.history.shapeCornerSmoothing" = "Update Rectangle Corner Smoothing";
 "imageEditor.status.stackLayoutApplied" = "Auto Layout reflowed";
 "imageEditor.status.stackChildLayoutApplied" = "Auto Layout child reflowed";
 "imageEditor.status.stackLayoutLocked" = "A locked group or child cannot be reflowed";
@@ -735,6 +737,7 @@
 "imageEditor.status.shapeCornerRadiiIndependent" = "Rectangle corners can now be edited independently";
 "imageEditor.status.shapeCornerRadiiLinked" = "Rectangle corners are linked to the top-left value";
 "imageEditor.status.shapeCornerRadiusAtCorner" = "%@ corner radius set to %d px";
+"imageEditor.status.shapeCornerSmoothing" = "Rectangle corner smoothing set to %d%%";
 "imageEditor.properties.filter" = "Filter";
 "imageEditor.properties.smartFiltersEmpty" = "No smart filters on selected layer";
 "imageEditor.properties.smartFilterItem" = "%@ %d%%";
@@ -2898,7 +2901,7 @@
 "xomo.figma.node.issue.clippingFlattened" = "Frame content clipping is not preserved yet";
 "xomo.figma.node.issue.effectsFlattened" = "Effects are not preserved yet";
 "xomo.figma.node.issue.blendModeFlattened" = "Blend mode is not preserved yet";
-"xomo.figma.node.issue.cornerRadiusFlattened" = "Corner smoothing is not fully preserved";
+"xomo.figma.node.issue.cornerRadiusFlattened" = "Corner smoothing uses an editable superellipse approximation";
 "xomo.figma.node.issue.transformFlattened" = "Rotation, reflection, or skew is flattened to axis-aligned bounds";
 "xomo.figma.node.error.nodeSelectionRequired" = "Paste a Figma node link that includes node-id first.";
 "xomo.figma.node.error.credentialMissing" = "No saved Figma token was found. Connect first.";

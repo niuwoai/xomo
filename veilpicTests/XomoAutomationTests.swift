@@ -161,11 +161,13 @@ struct XomoAutomationTests {
                 "y": .number(30),
                 "width": .number(80),
                 "height": .number(40),
-                "cornerRadius": .number(40)
+                "cornerRadius": .number(40),
+                "cornerSmoothing": .number(0.5)
             ]
         ))
         #expect(createResponse.ok)
         #expect(viewModel.document.selectedLayer?.shapeContent?.cornerRadius == 20)
+        #expect(viewModel.document.selectedLayer?.shapeContent?.cornerSmoothing == 0.5)
         #expect(viewModel.document.history.count == historyCountBeforeCreate + 1)
 
         let inspectResponse = registry.execute(request(
@@ -178,6 +180,7 @@ struct XomoAutomationTests {
         }
         #expect(inspectedShape["kind"] == .string("rectangle"))
         #expect(inspectedShape["cornerRadius"] == .number(20))
+        #expect(inspectedShape["cornerSmoothing"] == .number(0.5))
 
         let historyCountBeforeUpdate = viewModel.document.history.count
         let updateResponse = registry.execute(request(
@@ -201,7 +204,8 @@ struct XomoAutomationTests {
                     "topRight": .number(8),
                     "bottomRight": .number(12),
                     "bottomLeft": .number(16)
-                ])
+                ]),
+                "cornerSmoothing": .number(0.8)
             ]
         ))
         #expect(independentUpdate.ok)
@@ -211,6 +215,7 @@ struct XomoAutomationTests {
             bottomRight: 12,
             bottomLeft: 16
         ))
+        #expect(viewModel.document.selectedLayer?.shapeContent?.cornerSmoothing == 0.8)
 
         let independentInspect = registry.execute(request(
             operation: "call",
@@ -221,6 +226,7 @@ struct XomoAutomationTests {
             return
         }
         #expect(independentShape["usesIndependentCornerRadii"] == .bool(true))
+        #expect(independentShape["cornerSmoothing"] == .number(0.8))
         #expect(independentShape["cornerRadii"] == .object([
             "topLeft": .number(4),
             "topRight": .number(8),

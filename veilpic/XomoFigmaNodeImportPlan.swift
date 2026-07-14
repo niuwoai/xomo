@@ -138,6 +138,7 @@ struct XomoFigmaNodeImportItem: Equatable, Identifiable, Sendable {
     var strokeWeight: Double?
     var cornerRadius: Double?
     var cornerRadii: XomoFigmaPlanCornerRadii? = nil
+    var cornerSmoothing: Double? = nil
     var text: XomoFigmaPlanText?
     var vectorPaths: [String]
     var geometrySize: XomoFigmaPlanSize?

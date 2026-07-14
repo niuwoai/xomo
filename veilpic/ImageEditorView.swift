@@ -3945,6 +3945,28 @@ struct ImageEditorView: View {
                         .focusable(false)
                         .accessibilityIdentifier("image-editor-shape-independent-corners")
 
+                        Stepper(
+                            L10n.format(
+                                "imageEditor.properties.shapeCornerSmoothingValue",
+                                Int(
+                                    (viewModel.selectedRectangleCornerSmoothingPercent ?? 0)
+                                        .rounded()
+                                )
+                            ),
+                            value: Binding(
+                                get: {
+                                    viewModel.selectedRectangleCornerSmoothingPercent ?? 0
+                                },
+                                set: {
+                                    viewModel.setSelectedRectangleCornerSmoothingPercent($0)
+                                }
+                            ),
+                            in: 0...100,
+                            step: 1
+                        )
+                        .focusable(false)
+                        .accessibilityIdentifier("image-editor-shape-corner-smoothing")
+
                         if viewModel.selectedRectangleUsesIndependentCornerRadii == true {
                             ForEach(ImageEditorRectangleCorner.allCases) { corner in
                                 Stepper(

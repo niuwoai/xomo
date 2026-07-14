@@ -2288,6 +2288,7 @@ struct ImageEditorShapeContent {
     var strokeOpacity: CGFloat
     var cornerRadius: CGFloat = 0
     var cornerRadii: ImageEditorRectangleCornerRadii? = nil
+    var cornerSmoothing: CGFloat = 0
     var pathPoints: [CGPoint] = []
     var pathAnchors: [ImageEditorPathAnchor] = []
     var pathSubpaths: [[ImageEditorPathAnchor]] = []
@@ -2305,12 +2306,14 @@ struct ImageEditorShapeContent {
         if kind == .rectangle {
             content.cornerRadius = max(0, min(min(size.width, size.height) / 2, cornerRadius))
             content.cornerRadii = cornerRadii?.normalized(size: size)
+            content.cornerSmoothing = max(0, min(1, cornerSmoothing.isFinite ? cornerSmoothing : 0))
             if let cornerRadii = content.cornerRadii {
                 content.cornerRadius = cornerRadii.topLeft
             }
         } else {
             content.cornerRadius = 0
             content.cornerRadii = nil
+            content.cornerSmoothing = 0
         }
         content.pathPoints = pathPoints.map { point in
             CGPoint(

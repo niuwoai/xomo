@@ -100,6 +100,21 @@ extension ImageEditorShapeContent {
         let radii = effectiveCornerRadii.normalized(size: rect.size)
         guard radii.hasRoundedCorner else { return NSBezierPath(rect: rect) }
 
+        let smoothing = max(0, min(1, cornerSmoothing))
+        guard smoothing > 0.001 else {
+            return circularRectangleBezierPath(in: rect, radii: radii)
+        }
+        return superellipseRectangleBezierPath(
+            in: rect,
+            radii: radii,
+            smoothing: smoothing
+        )
+    }
+
+    private func circularRectangleBezierPath(
+        in rect: CGRect,
+        radii: ImageEditorRectangleCornerRadii
+    ) -> NSBezierPath {
         let path = NSBezierPath()
         let kappa: CGFloat = 0.552_284_749_8
 
@@ -154,5 +169,108 @@ extension ImageEditorShapeContent {
         )
         path.close()
         return path
+    }
+
+    private func superellipseRectangleBezierPath(
+        in rect: CGRect,
+        radii: ImageEditorRectangleCornerRadii,
+        smoothing: CGFloat
+    ) -> NSBezierPath {
+        let path = NSBezierPath()
+        let exponent = 2 + 2 * smoothing
+
+        path.move(to: CGPoint(x: rect.minX + radii.topLeft, y: rect.minY))
+        path.line(to: CGPoint(x: rect.maxX - radii.topRight, y: rect.minY))
+        appendSuperellipseCorner(
+            center: CGPoint(
+                x: rect.maxX - radii.topRight,
+                y: rect.minY + radii.topRight
+            ),
+            radius: radii.topRight,
+            startAngle: -.pi / 2,
+            endAngle: 0,
+            exponent: exponent,
+            to: path
+        )
+        path.line(to: CGPoint(x: rect.maxX, y: rect.maxY - radii.bottomRight))
+        appendSuperellipseCorner(
+            center: CGPoint(
+                x: rect.maxX - radii.bottomRight,
+                y: rect.maxY - radii.bottomRight
+            ),
+            radius: radii.bottomRight,
+            startAngle: 0,
+            endAngle: .pi / 2,
+            exponent: exponent,
+            to: path
+        )
+        path.line(to: CGPoint(x: rect.minX + radii.bottomLeft, y: rect.maxY))
+        appendSuperellipseCorner(
+            center: CGPoint(
+                x: rect.minX + radii.bottomLeft,
+                y: rect.maxY - radii.bottomLeft
+            ),
+            radius: radii.bottomLeft,
+            startAngle: .pi / 2,
+            endAngle: .pi,
+            exponent: exponent,
+            to: path
+        )
+        path.line(to: CGPoint(x: rect.minX, y: rect.minY + radii.topLeft))
+        appendSuperellipseCorner(
+            center: CGPoint(
+                x: rect.minX + radii.topLeft,
+                y: rect.minY + radii.topLeft
+            ),
+            radius: radii.topLeft,
+            startAngle: .pi,
+            endAngle: .pi * 3 / 2,
+            exponent: exponent,
+            to: path
+        )
+        path.close()
+        return path
+    }
+
+    private func appendSuperellipseCorner(
+        center: CGPoint,
+        radius: CGFloat,
+        startAngle: CGFloat,
+        endAngle: CGFloat,
+        exponent: CGFloat,
+        to path: NSBezierPath
+    ) {
+        let segmentCount = 24
+        for segment in 1...segmentCount {
+            let progress = CGFloat(segment) / CGFloat(segmentCount)
+            let angle = startAngle + (endAngle - startAngle) * progress
+            path.line(to: superellipsePoint(
+                center: center,
+                radius: radius,
+                angle: angle,
+                exponent: exponent
+            ))
+        }
+    }
+
+    private func superellipsePoint(
+        center: CGPoint,
+        radius: CGFloat,
+        angle: CGFloat,
+        exponent: CGFloat
+    ) -> CGPoint {
+        let cosine = cos(angle)
+        let sine = sin(angle)
+        let power = 2 / exponent
+        return CGPoint(
+            x: center.x + signedPower(cosine, power: power) * radius,
+            y: center.y + signedPower(sine, power: power) * radius
+        )
+    }
+
+    private func signedPower(_ value: CGFloat, power: CGFloat) -> CGFloat {
+        guard value != 0 else { return 0 }
+        let magnitude = CGFloat(Foundation.pow(Double(abs(value)), Double(power)))
+        return value < 0 ? -magnitude : magnitude
     }
 }
