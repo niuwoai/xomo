@@ -1060,6 +1060,13 @@ extension ImageEditorView {
                     viewModel.copySavedPath(id)
                 }
                 .disabled(viewModel.selectedSavedPath == nil)
+                savedPathIconButton("plus.square.on.square", "imageEditor.action.savedPathDuplicate") {
+                    guard let id = viewModel.document.selectedSavedPathID else { return }
+                    if let savedPath = viewModel.duplicateSavedPath(id) {
+                        syncSavedPathNameDraft(savedPath)
+                    }
+                }
+                .disabled(!viewModel.canDuplicateSelectedSavedPath)
                 savedPathIconButton("clipboard", "imageEditor.action.savedPathPaste") {
                     if let savedPath = viewModel.pasteSavedPath() {
                         syncSavedPathNameDraft(savedPath)

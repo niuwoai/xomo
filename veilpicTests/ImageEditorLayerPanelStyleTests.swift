@@ -19,7 +19,7 @@ struct ImageEditorLayerPanelStyleTests {
         #expect((color?.redComponent ?? 0) > 0.99)
         #expect((color?.greenComponent ?? 0) > 0.99)
         #expect((color?.blueComponent ?? 0) > 0.99)
-        #expect(ImageEditorLayerPanelTab.allCases.count == 3)
+        #expect(ImageEditorLayerPanelTab.allCases.count == 4)
     }
 
     @Test func nativeTabLabelKeepsExplicitLightTextOutsideSwiftUIButtonTinting() {
@@ -50,13 +50,21 @@ struct ImageEditorLayerPanelStyleTests {
         #expect((color?.blueComponent ?? 0) > 0.99)
     }
 
-    @Test func layerPanelTitleUsesWhiteText() {
+    @Test func layerPanelTitleUsesWhiteText() throws {
         let color = EditorPanelTitleAppearance.foregroundColor.usingColorSpace(.deviceRGB)
 
         #expect(color != nil)
         #expect((color?.redComponent ?? 0) > 0.99)
         #expect((color?.greenComponent ?? 0) > 0.99)
         #expect((color?.blueComponent ?? 0) > 0.99)
+
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        #expect(source.contains(
+            ".foregroundColor(Color(nsColor: EditorPanelTitleAppearance.foregroundColor))"
+        ))
     }
 
     @Test func layerSearchFieldUsesReadableLightTextAndPlaceholder() {

@@ -163,6 +163,11 @@ extension ImageEditorViewModel {
         return savedPath.subpaths.allSatisfy { $0.count >= 2 }
     }
 
+    var canDuplicateSelectedSavedPath: Bool {
+        selectedSavedPath != nil
+            && document.savedPaths.count < ImageEditorSavedPath.maximumCount
+    }
+
     func canPasteSavedPath(from pasteboard: NSPasteboard = .general) -> Bool {
         document.savedPaths.count < ImageEditorSavedPath.maximumCount
             && decodedSavedPathClipboardPayload(from: pasteboard) != nil
@@ -206,7 +211,7 @@ extension ImageEditorViewModel {
             statusText = L10n.text("imageEditor.status.savedPathClipboardInvalid")
             return nil
         }
-        let pastedName = uniquePastedSavedPathName(payload.path.name)
+        let pastedName = uniqueSavedPathCopyName(payload.path.name)
         guard let pastedPath = ImageEditorSavedPath(
             id: UUID(),
             name: pastedName,
@@ -224,6 +229,36 @@ extension ImageEditorViewModel {
         appendHistory(L10n.text("imageEditor.history.savedPathPaste"))
         statusText = L10n.format("imageEditor.status.savedPathPasted", pastedPath.name)
         return pastedPath
+    }
+
+    @discardableResult
+    func duplicateSavedPath(_ id: UUID) -> ImageEditorSavedPath? {
+        guard document.savedPaths.count < ImageEditorSavedPath.maximumCount else {
+            statusText = L10n.text("imageEditor.status.savedPathLimitReached")
+            return nil
+        }
+        guard let sourceIndex = document.savedPaths.firstIndex(where: { $0.id == id }) else {
+            statusText = L10n.text("imageEditor.status.savedPathMissing")
+            return nil
+        }
+        let source = document.savedPaths[sourceIndex]
+        guard let duplicate = ImageEditorSavedPath(
+            id: UUID(),
+            name: uniqueSavedPathCopyName(source.name),
+            subpaths: source.subpaths,
+            isClosed: source.isClosed,
+            isVisible: false
+        ).normalized(canvasSize: document.canvasSize) else {
+            statusText = L10n.text("imageEditor.status.savedPathMissing")
+            return nil
+        }
+
+        pushUndo()
+        document.savedPaths.insert(duplicate, at: sourceIndex + 1)
+        document.selectedSavedPathID = duplicate.id
+        appendHistory(L10n.text("imageEditor.history.savedPathDuplicate"))
+        statusText = L10n.format("imageEditor.status.savedPathDuplicated", duplicate.name)
+        return duplicate
     }
 
     @discardableResult
@@ -648,7 +683,7 @@ extension ImageEditorViewModel {
         return payload
     }
 
-    private func uniquePastedSavedPathName(_ sourceName: String) -> String {
+    private func uniqueSavedPathCopyName(_ sourceName: String) -> String {
         let existingNames = Set(document.savedPaths.map(\.name))
         let normalizedSourceName = normalizedSavedPathName(sourceName) ?? nextSavedPathName()
         guard existingNames.contains(normalizedSourceName) else { return normalizedSourceName }

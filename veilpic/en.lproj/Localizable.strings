@@ -1380,6 +1380,7 @@
 "imageEditor.history.savedPathLoad" = "Load Path";
 "imageEditor.history.savedPathDelete" = "Delete Path";
 "imageEditor.history.savedPathPaste" = "Paste Path";
+"imageEditor.history.savedPathDuplicate" = "Duplicate Path";
 "imageEditor.history.savedPathReorder" = "Reorder Path";
 "imageEditor.history.selectionFromSavedPath" = "Load Selection from Saved Path";
 "imageEditor.history.savedPathFill" = "Fill Saved Path";
@@ -1586,6 +1587,7 @@
 "imageEditor.status.savedPathCopyFailed" = "Could not write the path to Clipboard";
 "imageEditor.status.savedPathClipboardInvalid" = "Clipboard does not contain a pasteable Xomo path";
 "imageEditor.status.savedPathPasted" = "Pasted path: %@";
+"imageEditor.status.savedPathDuplicated" = "Duplicated path: %@";
 "imageEditor.status.savedPathMovedUp" = "Moved path up: %@";
 "imageEditor.status.savedPathMovedDown" = "Moved path down: %@";
 "imageEditor.status.savedPathMovedToTop" = "Moved path to the top of the list: %@";
@@ -1977,6 +1979,7 @@
 "imageEditor.action.savedPathFill" = "Fill Path on Current Pixel Layer";
 "imageEditor.action.savedPathStroke" = "Stroke Path on Current Pixel Layer";
 "imageEditor.action.savedPathCopy" = "Copy Path";
+"imageEditor.action.savedPathDuplicate" = "Duplicate Path";
 "imageEditor.action.savedPathPaste" = "Paste Path";
 "imageEditor.action.savedPathMoveUp" = "Move Path Up";
 "imageEditor.action.savedPathMoveDown" = "Move Path Down";

@@ -1380,6 +1380,7 @@
 "imageEditor.history.savedPathLoad" = "载入路径";
 "imageEditor.history.savedPathDelete" = "删除路径";
 "imageEditor.history.savedPathPaste" = "粘贴路径";
+"imageEditor.history.savedPathDuplicate" = "复制路径";
 "imageEditor.history.savedPathReorder" = "重排路径";
 "imageEditor.history.selectionFromSavedPath" = "从已保存路径载入选区";
 "imageEditor.history.savedPathFill" = "填充已保存路径";
@@ -1586,6 +1587,7 @@
 "imageEditor.status.savedPathCopyFailed" = "无法把路径写入剪贴板";
 "imageEditor.status.savedPathClipboardInvalid" = "剪贴板里没有可粘贴的 Xomo 路径";
 "imageEditor.status.savedPathPasted" = "已粘贴路径：%@";
+"imageEditor.status.savedPathDuplicated" = "已创建路径副本：%@";
 "imageEditor.status.savedPathMovedUp" = "已上移路径：%@";
 "imageEditor.status.savedPathMovedDown" = "已下移路径：%@";
 "imageEditor.status.savedPathMovedToTop" = "已将路径移到列表顶部：%@";
@@ -1977,6 +1979,7 @@
 "imageEditor.action.savedPathFill" = "填充路径到当前像素层";
 "imageEditor.action.savedPathStroke" = "描边路径到当前像素层";
 "imageEditor.action.savedPathCopy" = "复制路径";
+"imageEditor.action.savedPathDuplicate" = "创建路径副本";
 "imageEditor.action.savedPathPaste" = "粘贴路径";
 "imageEditor.action.savedPathMoveUp" = "上移路径";
 "imageEditor.action.savedPathMoveDown" = "下移路径";

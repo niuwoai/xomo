@@ -892,6 +892,22 @@ struct XomoAutomationTests {
         #expect(rename.ok)
         #expect(rename.result?.arrayValue?.first?.objectValue?["title"] == .string("Logo Outline"))
 
+        let duplicate = registry.execute(request(
+            operation: "call",
+            name: "xomo.path.saved",
+            arguments: ["action": .string("duplicate"), "id": .string(savedID)]
+        ))
+        let duplicateID = try #require(
+            duplicate.result?.arrayValue?.first(where: {
+                $0.objectValue?["id"]?.stringValue != savedID
+            })?.objectValue?["id"]?.stringValue
+        )
+        #expect(duplicate.ok)
+        #expect(duplicate.result?.arrayValue?.count == 2)
+        #expect(duplicate.result?.arrayValue?.first(where: {
+            $0.objectValue?["id"]?.stringValue == duplicateID
+        })?.objectValue?["selected"] == .bool(true))
+
         let selection = registry.execute(request(
             operation: "call",
             name: "xomo.path.saved",
@@ -930,6 +946,13 @@ struct XomoAutomationTests {
         #expect(load.ok)
         #expect(viewModel.document.selectedLayer?.shapeContent?.kind == .path)
         #expect(viewModel.document.selectedLayer?.name == "Logo Outline")
+
+        let deleteDuplicate = registry.execute(request(
+            operation: "call",
+            name: "xomo.path.saved",
+            arguments: ["action": .string("delete"), "id": .string(duplicateID)]
+        ))
+        #expect(deleteDuplicate.ok)
 
         let delete = registry.execute(request(
             operation: "call",
