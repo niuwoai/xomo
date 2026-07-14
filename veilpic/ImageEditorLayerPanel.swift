@@ -68,6 +68,8 @@ extension ImageEditorView {
                     ScrollView {
                         if selectedLayerPanelTab == .channels {
                             channelsPanelContent
+                        } else if selectedLayerPanelTab == .paths {
+                            savedPathsPanelContent
                         } else {
                             layerCompsPanelContent
                         }
@@ -937,6 +939,7 @@ extension ImageEditorView {
                 )
                 .textFieldStyle(.plain)
                 .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
                 .lineLimit(1)
                 .onSubmit {
                     commitLayerCompNameDraft(comp)
@@ -998,6 +1001,145 @@ extension ImageEditorView {
         viewModel.renameLayerComp(comp.id, to: layerCompNameDrafts[comp.id] ?? comp.name)
         if let updatedComp = viewModel.document.layerComps.first(where: { $0.id == comp.id }) {
             syncLayerCompNameDraft(updatedComp)
+        }
+    }
+
+    private var savedPathsPanelContent: some View {
+        VStack(spacing: 8) {
+            Button {
+                if let savedPath = viewModel.saveCurrentPath(name: nil) {
+                    syncSavedPathNameDraft(savedPath)
+                }
+            } label: {
+                Label(L10n.text("imageEditor.action.savedPathSave"), systemImage: "tray.and.arrow.down")
+                    .font(.system(size: 11, weight: .semibold))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .buttonStyle(.plain)
+            .focusable(false)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 7)
+            .background(Color.white.opacity(0.08))
+            .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+            .disabled(!viewModel.canSaveCurrentPath)
+            .help(L10n.text("imageEditor.action.savedPathSave"))
+
+            if viewModel.document.savedPaths.isEmpty {
+                Text(L10n.text("imageEditor.savedPath.empty"))
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            } else {
+                ScrollView {
+                    VStack(spacing: 5) {
+                        ForEach(viewModel.document.savedPaths) { savedPath in
+                            savedPathRow(savedPath)
+                        }
+                    }
+                }
+            }
+
+            Text(L10n.text("imageEditor.savedPath.hint"))
+                .font(.system(size: 10, weight: .medium))
+                .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private func savedPathRow(_ savedPath: ImageEditorSavedPath) -> some View {
+        let isSelected = viewModel.document.selectedSavedPathID == savedPath.id
+        return HStack(spacing: 6) {
+            Button {
+                viewModel.selectSavedPath(savedPath.id)
+                syncSavedPathNameDraft(savedPath)
+            } label: {
+                Image(systemName: "vector.square")
+                    .font(.system(size: 13, weight: .semibold))
+                    .frame(width: 18)
+                    .foregroundStyle(Color(nsColor: isSelected ? ImageEditorTheme.selected : ImageEditorTheme.mutedText))
+            }
+            .buttonStyle(.plain)
+            .focusable(false)
+            .help(L10n.text("imageEditor.action.savedPathSelect"))
+
+            VStack(alignment: .leading, spacing: 2) {
+                TextField(
+                    L10n.text("imageEditor.savedPath.namePlaceholder"),
+                    text: savedPathNameBinding(savedPath)
+                )
+                .textFieldStyle(.plain)
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+                .lineLimit(1)
+                .onSubmit {
+                    commitSavedPathNameDraft(savedPath)
+                }
+                .onAppear {
+                    syncSavedPathNameDraft(savedPath)
+                }
+                .onChange(of: savedPath.name) { _ in
+                    syncSavedPathNameDraft(savedPath)
+                }
+
+                Text(viewModel.savedPathSummary(savedPath))
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                    .lineLimit(1)
+            }
+
+            Spacer()
+
+            savedPathIconButton("square.and.arrow.up", "imageEditor.action.savedPathLoad") {
+                viewModel.loadSavedPath(savedPath.id)
+            }
+            savedPathIconButton("arrow.triangle.2.circlepath", "imageEditor.action.savedPathUpdate") {
+                viewModel.updateSavedPath(savedPath.id)
+            }
+            .disabled(!viewModel.hasEditableCurrentPath)
+            savedPathIconButton("trash", "imageEditor.action.savedPathDelete") {
+                viewModel.deleteSavedPath(savedPath.id)
+            }
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 6)
+        .background(isSelected ? Color(nsColor: ImageEditorTheme.selected).opacity(0.28) : Color.white.opacity(0.04))
+        .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+    }
+
+    private func savedPathIconButton(
+        _ systemImage: String,
+        _ helpKey: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            Image(systemName: systemImage)
+                .font(.system(size: 12, weight: .semibold))
+                .frame(width: 24, height: 28)
+        }
+        .buttonStyle(EditorIconButtonStyle(isSelected: false))
+        .focusable(false)
+        .help(L10n.text(helpKey))
+    }
+
+    private func savedPathNameBinding(_ savedPath: ImageEditorSavedPath) -> Binding<String> {
+        Binding {
+            savedPathNameDrafts[savedPath.id] ?? savedPath.name
+        } set: { value in
+            savedPathNameDrafts[savedPath.id] = value
+        }
+    }
+
+    private func syncSavedPathNameDraft(_ savedPath: ImageEditorSavedPath) {
+        savedPathNameDrafts[savedPath.id] = savedPath.name
+    }
+
+    private func commitSavedPathNameDraft(_ savedPath: ImageEditorSavedPath) {
+        viewModel.renameSavedPath(
+            savedPath.id,
+            to: savedPathNameDrafts[savedPath.id] ?? savedPath.name
+        )
+        if let updatedPath = viewModel.document.savedPaths.first(where: { $0.id == savedPath.id }) {
+            syncSavedPathNameDraft(updatedPath)
         }
     }
 

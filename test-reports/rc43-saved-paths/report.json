@@ -1,0 +1,59 @@
+{
+  "generated_at": "2026-07-14 08:22:35 +0800",
+  "total": 5,
+  "passed": 5,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorSavedPathTests",
+      "method": "pathsPanelMenuProjectAndAutomationUseSavedPathCommands",
+      "identifier": "veilpicTests/ImageEditorSavedPathTests/pathsPanelMenuProjectAndAutomationUseSavedPathCommands",
+      "file": "ImageEditorSavedPathTests.swift",
+      "passed": true,
+      "duration": 3.316,
+      "issues": [],
+      "log": "ImageEditorSavedPathTests.pathsPanelMenuProjectAndAutomationUseSavedPathCommands.log"
+    },
+    {
+      "suite": "ImageEditorSavedPathTests",
+      "method": "savedPathCanBeRenamedUpdatedAndDeletedWithoutChangingItsIdentity",
+      "identifier": "veilpicTests/ImageEditorSavedPathTests/savedPathCanBeRenamedUpdatedAndDeletedWithoutChangingItsIdentity",
+      "file": "ImageEditorSavedPathTests.swift",
+      "passed": true,
+      "duration": 3.27,
+      "issues": [],
+      "log": "ImageEditorSavedPathTests.savedPathCanBeRenamedUpdatedAndDeletedWithoutChangingItsIdentity.log"
+    },
+    {
+      "suite": "ImageEditorSavedPathTests",
+      "method": "savedPathsRoundTripProjectsAndOlderProjectsDefaultToEmpty",
+      "identifier": "veilpicTests/ImageEditorSavedPathTests/savedPathsRoundTripProjectsAndOlderProjectsDefaultToEmpty",
+      "file": "ImageEditorSavedPathTests.swift",
+      "passed": true,
+      "duration": 3.205,
+      "issues": [],
+      "log": "ImageEditorSavedPathTests.savedPathsRoundTripProjectsAndOlderProjectsDefaultToEmpty.log"
+    },
+    {
+      "suite": "ImageEditorSavedPathTests",
+      "method": "savingPathCreatesIndependentUndoableSnapshotAndLoadsEditableCopy",
+      "identifier": "veilpicTests/ImageEditorSavedPathTests/savingPathCreatesIndependentUndoableSnapshotAndLoadsEditableCopy",
+      "file": "ImageEditorSavedPathTests.swift",
+      "passed": true,
+      "duration": 4.331,
+      "issues": [],
+      "log": "ImageEditorSavedPathTests.savingPathCreatesIndependentUndoableSnapshotAndLoadsEditableCopy.log"
+    },
+    {
+      "suite": "ImageEditorSavedPathTests",
+      "method": "updatingExistingPathRemainsAvailableAtSavedPathCapacity",
+      "identifier": "veilpicTests/ImageEditorSavedPathTests/updatingExistingPathRemainsAvailableAtSavedPathCapacity",
+      "file": "ImageEditorSavedPathTests.swift",
+      "passed": true,
+      "duration": 3.211,
+      "issues": [],
+      "log": "ImageEditorSavedPathTests.updatingExistingPathRemainsAvailableAtSavedPathCapacity.log"
+    }
+  ]
+}

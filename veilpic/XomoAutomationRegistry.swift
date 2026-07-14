@@ -341,6 +341,8 @@ final class XomoAutomationRegistry {
             return pathResult(viewModel)
         case "xomo.path.action":
             try pathAction(arguments, viewModel: viewModel)
+        case "xomo.path.saved":
+            return try savedPathAction(arguments, viewModel: viewModel)
         case "xomo.layer.effect":
             try layerEffect(arguments, viewModel: viewModel)
         case "xomo.guide.list":
@@ -806,6 +808,74 @@ final class XomoAutomationRegistry {
         case "editVectorMask": viewModel.editSelectedVectorMaskAsPath()
         default: throw XomoAutomationCallError.invalidArgument("Unknown path action")
         }
+    }
+
+    private func savedPathAction(
+        _ arguments: [String: XomoJSONValue],
+        viewModel: ImageEditorViewModel
+    ) throws -> XomoJSONValue {
+        let action = arguments["action"]?.stringValue ?? "list"
+        switch action {
+        case "list":
+            break
+        case "save":
+            guard viewModel.saveCurrentPath(name: arguments["name"]?.stringValue) != nil else {
+                throw XomoAutomationCallError.operationFailed("No editable path is selected or the saved path limit was reached")
+            }
+        case "select":
+            let id = try requiredUUID("id", in: arguments)
+            guard viewModel.selectSavedPath(id) else {
+                throw XomoAutomationCallError.notFound("Saved path \(id.uuidString)")
+            }
+        case "rename":
+            let id = try requiredUUID("id", in: arguments)
+            guard viewModel.renameSavedPath(id, to: try requiredString("name", in: arguments)) else {
+                throw XomoAutomationCallError.invalidArgument("Saved path name must not be blank and the path must exist")
+            }
+        case "update":
+            let id = try requiredUUID("id", in: arguments)
+            guard viewModel.updateSavedPath(id) else {
+                throw XomoAutomationCallError.operationFailed("No editable path is selected or the saved path does not exist")
+            }
+        case "load":
+            let id = try requiredUUID("id", in: arguments)
+            guard viewModel.loadSavedPath(id) != nil else {
+                throw XomoAutomationCallError.notFound("Saved path \(id.uuidString)")
+            }
+        case "delete":
+            let id = try requiredUUID("id", in: arguments)
+            guard viewModel.deleteSavedPath(id) else {
+                throw XomoAutomationCallError.notFound("Saved path \(id.uuidString)")
+            }
+        default:
+            throw XomoAutomationCallError.invalidArgument("Unknown saved path action: \(action)")
+        }
+        return savedPathsResult(viewModel)
+    }
+
+    private func savedPathsResult(_ viewModel: ImageEditorViewModel) -> XomoJSONValue {
+        .array(viewModel.document.savedPaths.map { savedPath in
+            .object([
+                "id": .string(savedPath.id.uuidString),
+                "title": .string(savedPath.name),
+                "selected": .bool(viewModel.document.selectedSavedPathID == savedPath.id),
+                "closed": .bool(savedPath.isClosed),
+                "anchorCount": .number(Double(savedPath.anchorCount)),
+                "subpaths": .array(savedPath.subpaths.enumerated().map { subpathIndex, anchors in
+                    .object([
+                        "index": .number(Double(subpathIndex)),
+                        "anchors": .array(anchors.enumerated().map { anchorIndex, anchor in
+                            .object([
+                                "index": .number(Double(anchorIndex)),
+                                "point": pointJSON(anchor.point),
+                                "inControl": anchor.inControl.map(pointJSON) ?? .null,
+                                "outControl": anchor.outControl.map(pointJSON) ?? .null
+                            ])
+                        })
+                    ])
+                })
+            ])
+        })
     }
 
     private func guidesResult(_ viewModel: ImageEditorViewModel) -> XomoJSONValue {
@@ -2301,6 +2371,11 @@ private extension XomoAutomationRegistry {
             "value": XomoAutomationSchema.number(description: "Anchor coordinate value"),
             "dx": XomoAutomationSchema.number(description: "Horizontal path delta"),
             "dy": XomoAutomationSchema.number(description: "Vertical path delta")
+        ], required: ["action"]),
+        tool("xomo.path.saved", "List, save, select, rename, update, load, or delete independent named paths.", [
+            "action": XomoAutomationSchema.string(description: "Saved path action", values: ["list", "save", "select", "rename", "update", "load", "delete"]),
+            "id": XomoAutomationSchema.string(description: "Saved path UUID for select, rename, update, load, or delete"),
+            "name": XomoAutomationSchema.string(description: "Optional name when saving or required name when renaming")
         ], required: ["action"]),
         tool("xomo.layer.effect", "Toggle a layer effect on selected layers.", [
             "effect": XomoAutomationSchema.string(description: "Layer effect", values: ["stroke", "shadow", "innerShadow", "outerGlow", "innerGlow", "colorOverlay", "gradientOverlay", "patternOverlay", "satin", "bevel"])

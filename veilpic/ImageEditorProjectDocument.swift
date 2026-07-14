@@ -43,7 +43,7 @@ enum ImageEditorProjectDocumentError: LocalizedError {
 
 struct ImageEditorProjectDocument: Codable {
     static let fileExtension = "qpicproject"
-    static let formatVersion = 5
+    static let formatVersion = 6
 
     var formatVersion: Int
     var appVersion: String
@@ -58,6 +58,8 @@ struct ImageEditorProjectDocument: Codable {
     var alphaChannels: [ImageEditorAlphaChannel]
     var layerComps: [ImageEditorLayerComp]?
     var selectedLayerCompID: UUID?
+    var savedPaths: [ImageEditorSavedPath]?
+    var selectedSavedPathID: UUID?
     var guides: [ImageEditorGuide]?
     var areExtrasVisible: Bool?
     var areGuidesVisible: Bool?
@@ -94,6 +96,8 @@ struct ImageEditorProjectDocument: Codable {
         alphaChannels = document.alphaChannels
         layerComps = document.layerComps
         selectedLayerCompID = document.selectedLayerCompID
+        savedPaths = document.savedPaths
+        selectedSavedPathID = document.selectedSavedPathID
         guides = document.guides
         areExtrasVisible = document.areExtrasVisible
         areGuidesVisible = document.areGuidesVisible
@@ -155,6 +159,20 @@ struct ImageEditorProjectDocument: Codable {
         let existingCompIDs = Set(document.layerComps.map(\.id))
         document.selectedLayerCompID = selectedLayerCompID.flatMap { existingCompIDs.contains($0) ? $0 : nil }
             ?? document.layerComps.last?.id
+        var restoredSavedPaths: [ImageEditorSavedPath] = []
+        var existingSavedPathIDs = Set<UUID>()
+        for sourcePath in (savedPaths ?? []).prefix(ImageEditorSavedPath.maximumCount) {
+            guard var restoredPath = sourcePath.normalized(canvasSize: canvasSize) else { continue }
+            if !existingSavedPathIDs.insert(restoredPath.id).inserted {
+                restoredPath.id = UUID()
+                existingSavedPathIDs.insert(restoredPath.id)
+            }
+            restoredSavedPaths.append(restoredPath)
+        }
+        document.savedPaths = restoredSavedPaths
+        document.selectedSavedPathID = selectedSavedPathID.flatMap {
+            existingSavedPathIDs.contains($0) ? $0 : nil
+        }
         document.guides = (guides ?? []).compactMap { guide in
             let upperBound = guide.orientation == .vertical ? canvasSize.width : canvasSize.height
             guard guide.position >= 0, guide.position <= upperBound else { return nil }

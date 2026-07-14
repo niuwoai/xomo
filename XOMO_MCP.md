@@ -1,6 +1,6 @@
 # Xomo MCP 与 CLI
 
-> 当前版本：v2.12.0-rc42
+> 当前版本：v2.12.0-rc43
 
 ## 架构
 
@@ -61,7 +61,7 @@ MCP 服务器实现 `initialize`、`ping`、`tools/list` 和 `tools/call`。当 
 
 ## 当前工具范围
 
-- 共 111 个 MCP 工具；同类细粒度操作通过带严格枚举参数的 action 工具组织。
+- 共 112 个 MCP 工具；同类细粒度操作通过带严格枚举参数的 action 工具组织。
 - App 与文档状态
 - 预设或自定义画布创建、可编辑文字/形状检查与更新、点文字 / 固定宽高段落文字创建和转换、文字框所需高度、溢出诊断与适合内容 / 仅扩高操作，以及详细调整、滤镜和图层样式参数
 - 完整 `qpicproject` 项目导入导出，以及 PNG/JPEG/WebP 等图像图层导入
@@ -74,6 +74,7 @@ MCP 服务器实现 `initialize`、`ping`、`tools/list` 和 `tools/call`。当 
 - 矩形、椭圆、套索、魔棒、快速选择、全选、反选、羽化、平滑、像素填充、描边、清除和内容识别填充
 - 系统剪贴板复制、剪切，以及将剪贴板图片粘贴为可编辑图层
 - 矢量路径创建、锚点与控制柄、子路径、闭合与反向、填充、描边、选区和蒙版转换
+- 独立命名路径的保存、查询、选择、重命名、更新、载入和删除
 - Alpha 通道查询、创建、复制、改名、删除及选择布尔运算
 - 历史状态、撤销、重做、截断、恢复与命名快照
 - 图像尺寸、画布尺寸、裁切、缩放、参考线与网格
@@ -91,6 +92,8 @@ MCP 服务器实现 `initialize`、`ping`、`tools/list` 和 `tools/call`。当 
 `xomo.layer.style` 的 `presetCatalog` 返回 6 个稳定 ID 的内置经典样式，结果中的 `builtIn=true` 表示只读内置项；`presetApply id=<内置或自定义 ID>` 可直接应用任一来源，`presetDuplicate id=<ID>` 会把完整样式复制成可重命名、排序和导出的自定义项。图形界面的样式菜单与管理器使用相同目录，并由真实图层效果合成器生成缩略图。
 
 `xomo.layer.style` 的 `presetFavorite id=<ID> favorite=<true|false>` 切换内置或自定义预设的收藏状态，`presetFavorites` 与 `presetRecent` 分别返回收藏列表和最多 8 项、最新优先的最近使用列表；目录项同时包含 `favorite`、`recent` 标记。收藏与最近记录跨会话保存但不进入文档 History，删除自定义预设会同步移除失效记录。
+
+`xomo.path.saved` 的 `action` 接受 `list`、`save`、`select`、`rename`、`update`、`load` 或 `delete`。`save` 可选 `name`，其余写操作通过 `id` 定位，`rename` 另需 `name`；结果返回路径 ID、名称、选中状态、闭合状态、锚点数以及画布坐标下的完整子路径。保存项是独立快照：删除源图层不会丢失路径，`load` 会生成新的可编辑路径图层，只有显式 `update` 才会用当前路径改写保存项。
 
 `xomo.mask.action` 的 `apply` 只永久应用栅格图层蒙版，`applyVector` 只永久应用矢量蒙版，`rasterizeVector` 则把矢量蒙版转换成仍可编辑的栅格图层蒙版。三者不会再互相冒名顶替；智能对象须先通过 `xomo.layer.rasterize` 的 `smartObject` 目标转成像素层，才能永久应用蒙版。
 
