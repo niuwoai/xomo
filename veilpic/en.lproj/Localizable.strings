@@ -1377,6 +1377,7 @@
 "imageEditor.history.savedPathUpdate" = "Update Path";
 "imageEditor.history.savedPathLoad" = "Load Path";
 "imageEditor.history.savedPathDelete" = "Delete Path";
+"imageEditor.history.selectionFromSavedPath" = "Load Selection from Saved Path";
 "imageEditor.history.vectorMaskEnable" = "Enable Vector Mask";
 "imageEditor.history.vectorMaskDisable" = "Disable Vector Mask";
 "imageEditor.history.vectorMaskEnableSelected" = "Enable Selected Vector Masks";
@@ -1573,6 +1574,8 @@
 "imageEditor.status.savedPathUpdated" = "Updated path: %@";
 "imageEditor.status.savedPathLoaded" = "Loaded editable path: %@";
 "imageEditor.status.savedPathDeleted" = "Deleted path: %@";
+"imageEditor.status.savedPathSelectionRequiresClosed" = "Only a closed saved path can make a selection";
+"imageEditor.status.selectionFromSavedPath" = "Selection loaded from path “%@”";
 "imageEditor.status.colorSampled" = "Foreground color sampled";
 "imageEditor.status.colorSamplerAdded" = "Color sampler %d added";
 "imageEditor.status.colorSamplerCleared" = "Color samplers cleared";
@@ -1949,6 +1952,7 @@
 "imageEditor.action.savedPathLoad" = "Load as Editable Path";
 "imageEditor.action.savedPathUpdate" = "Update from Current Path";
 "imageEditor.action.savedPathDelete" = "Delete Path";
+"imageEditor.action.savedPathSelection" = "Make Selection from Path";
 "imageEditor.action.vectorMaskToggle" = "Toggle Vector Mask";
 "imageEditor.action.vectorMaskCopyToSelected" = "Copy Vector Mask to Selected Layers";
 "imageEditor.action.vectorMaskDelete" = "Delete Vector Masks";

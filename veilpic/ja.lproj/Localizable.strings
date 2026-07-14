@@ -1377,6 +1377,7 @@
 "imageEditor.history.savedPathUpdate" = "パスを更新";
 "imageEditor.history.savedPathLoad" = "パスを読み込む";
 "imageEditor.history.savedPathDelete" = "パスを削除";
+"imageEditor.history.selectionFromSavedPath" = "保存済みパスから選択範囲を読み込む";
 "imageEditor.history.vectorMaskEnable" = "ベクターマスクを有効化";
 "imageEditor.history.vectorMaskDisable" = "ベクターマスクを無効化";
 "imageEditor.history.vectorMaskEnableSelected" = "選択ベクターマスクを有効化";
@@ -1573,6 +1574,8 @@
 "imageEditor.status.savedPathUpdated" = "パスを更新しました：%@";
 "imageEditor.status.savedPathLoaded" = "編集可能なパスを読み込みました：%@";
 "imageEditor.status.savedPathDeleted" = "パスを削除しました：%@";
+"imageEditor.status.savedPathSelectionRequiresClosed" = "閉じた保存済みパスのみ選択範囲に変換できます";
+"imageEditor.status.selectionFromSavedPath" = "パス「%@」から選択範囲を読み込みました";
 "imageEditor.status.colorSampled" = "前景色を取得しました";
 "imageEditor.status.colorSamplerAdded" = "カラーサンプラー %d を追加しました";
 "imageEditor.status.colorSamplerCleared" = "カラーサンプラーを消去しました";
@@ -1949,6 +1952,7 @@
 "imageEditor.action.savedPathLoad" = "編集可能なパスとして読み込む";
 "imageEditor.action.savedPathUpdate" = "現在のパスから更新";
 "imageEditor.action.savedPathDelete" = "パスを削除";
+"imageEditor.action.savedPathSelection" = "パスから選択範囲を作成";
 "imageEditor.action.vectorMaskToggle" = "ベクターマスクを切り替え";
 "imageEditor.action.vectorMaskCopyToSelected" = "ベクターマスクを選択レイヤーへコピー";
 "imageEditor.action.vectorMaskDelete" = "選択ベクターマスクを削除";

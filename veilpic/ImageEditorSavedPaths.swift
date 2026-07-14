@@ -55,6 +55,11 @@ extension ImageEditorViewModel {
             && document.savedPaths.count < ImageEditorSavedPath.maximumCount
     }
 
+    var canLoadSelectionFromSelectedSavedPath: Bool {
+        guard let savedPath = selectedSavedPath, savedPath.isClosed else { return false }
+        return !savedPath.subpaths.isEmpty && savedPath.subpaths.allSatisfy { $0.count >= 3 }
+    }
+
     @discardableResult
     func saveCurrentPath(name: String?) -> ImageEditorSavedPath? {
         guard document.savedPaths.count < ImageEditorSavedPath.maximumCount else {
@@ -175,6 +180,25 @@ extension ImageEditorViewModel {
         appendHistory(L10n.text("imageEditor.history.savedPathLoad"))
         statusText = L10n.format("imageEditor.status.savedPathLoaded", savedPath.name)
         return layer
+    }
+
+    @discardableResult
+    func loadSelectionFromSavedPath(_ id: UUID) -> Bool {
+        guard let savedPath = document.savedPaths.first(where: { $0.id == id }) else {
+            statusText = L10n.text("imageEditor.status.savedPathMissing")
+            return false
+        }
+        guard savedPath.isClosed,
+              let selection = pathSelection(from: savedPath)
+        else {
+            statusText = L10n.text("imageEditor.status.savedPathSelectionRequiresClosed")
+            return false
+        }
+        return applyPathSelection(
+            selection,
+            replaceHistoryKey: "imageEditor.history.selectionFromSavedPath",
+            successStatus: L10n.format("imageEditor.status.selectionFromSavedPath", savedPath.name)
+        )
     }
 
     func savedPathSummary(_ savedPath: ImageEditorSavedPath) -> String {

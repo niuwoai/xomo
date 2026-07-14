@@ -2252,6 +2252,12 @@ extension ImageEditorView {
                 viewModel.loadSavedPath(id)
             }
             .disabled(viewModel.selectedSavedPath == nil)
+            Button(L10n.text("imageEditor.action.savedPathSelection")) {
+                guard let id = viewModel.document.selectedSavedPathID else { return }
+                selectedLayerPanelTab = .paths
+                viewModel.loadSelectionFromSavedPath(id)
+            }
+            .disabled(!viewModel.canLoadSelectionFromSelectedSavedPath)
             Button(L10n.text("imageEditor.action.savedPathUpdate")) {
                 guard let id = viewModel.document.selectedSavedPathID else { return }
                 selectedLayerPanelTab = .paths

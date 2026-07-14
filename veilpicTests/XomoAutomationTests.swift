@@ -878,6 +878,15 @@ struct XomoAutomationTests {
         #expect(rename.ok)
         #expect(rename.result?.arrayValue?.first?.objectValue?["title"] == .string("Logo Outline"))
 
+        let selection = registry.execute(request(
+            operation: "call",
+            name: "xomo.path.saved",
+            arguments: ["action": .string("selection"), "id": .string(savedID)]
+        ))
+        #expect(selection.ok)
+        #expect(viewModel.document.selection?.rasterMask != nil)
+        viewModel.document.selection = nil
+
         viewModel.document.layers.removeAll { $0.id == sourceLayerID }
         let load = registry.execute(request(
             operation: "call",

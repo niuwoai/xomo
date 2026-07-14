@@ -615,6 +615,19 @@ extension ImageEditorViewModel {
             return
         }
 
+        applyPathSelection(
+            selection,
+            replaceHistoryKey: "imageEditor.history.selectionFromPath",
+            successStatus: L10n.text("imageEditor.status.selectionFromPath")
+        )
+    }
+
+    @discardableResult
+    func applyPathSelection(
+        _ selection: ImageEditorSelection,
+        replaceHistoryKey: String,
+        successStatus: String
+    ) -> Bool {
         let nextSelection = ImageEditorSelection.combined(
             current: document.selection,
             candidate: selection,
@@ -623,16 +636,17 @@ extension ImageEditorViewModel {
         )
         guard document.selection != nil || selectionMode == .replace || selectionMode == .add else {
             statusText = L10n.text("imageEditor.status.noSelection")
-            return
+            return false
         }
 
         pushUndo()
         document.selection = nextSelection
-        let historyKey = selectionMode == .replace ? "imageEditor.history.selectionFromPath" : selectionMode.historyKey
+        let historyKey = selectionMode == .replace ? replaceHistoryKey : selectionMode.historyKey
         appendHistory(L10n.text(historyKey))
         statusText = nextSelection == nil
             ? L10n.text("imageEditor.status.selectionEmpty")
-            : L10n.text("imageEditor.status.selectionFromPath")
+            : successStatus
+        return true
     }
 
     func createPathFromSelection() {
@@ -1771,7 +1785,34 @@ extension ImageEditorViewModel {
         )
     }
 
+    func pathSelection(from savedPath: ImageEditorSavedPath) -> ImageEditorSelection? {
+        guard savedPath.isClosed,
+              let primarySubpath = savedPath.subpaths.first,
+              primarySubpath.count >= 3
+        else { return nil }
+        let content = ImageEditorShapeContent(
+            kind: .path,
+            fillColor: .white,
+            fillOpacity: 1,
+            strokeColor: .clear,
+            strokeWidth: 0,
+            strokeOpacity: 0,
+            pathPoints: primarySubpath.map(\.point),
+            pathAnchors: primarySubpath,
+            pathSubpaths: Array(savedPath.subpaths.dropFirst()),
+            isPathClosed: true
+        )
+        return pathSelection(from: content, translation: .zero)
+    }
+
     private func pathSelection(from content: ImageEditorShapeContent, layer: ImageEditorLayer) -> ImageEditorSelection? {
+        pathSelection(from: content, translation: layer.frame.origin)
+    }
+
+    private func pathSelection(
+        from content: ImageEditorShapeContent,
+        translation: CGPoint
+    ) -> ImageEditorSelection? {
         guard content.kind == .path,
               content.isPathClosed,
               content.editablePathAnchors.count >= 3
@@ -1781,7 +1822,7 @@ extension ImageEditorViewModel {
         let height = max(1, Int(document.canvasSize.height.rounded()))
         let canvasSize = CGSize(width: width, height: height)
         let path = content.pathBezierPath()
-        let transform = AffineTransform(translationByX: layer.frame.minX, byY: layer.frame.minY)
+        let transform = AffineTransform(translationByX: translation.x, byY: translation.y)
         path.transform(using: transform)
 
         guard let maskImage = NSImage.rendered(size: canvasSize, actions: { _ in

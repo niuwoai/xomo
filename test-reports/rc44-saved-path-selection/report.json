@@ -1,0 +1,99 @@
+{
+  "generated_at": "2026-07-14 08:39:52 +0800",
+  "total": 9,
+  "passed": 9,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorSavedPathTests",
+      "method": "closedSavedPathLoadsSelectionWithoutCreatingOrSelectingALayer",
+      "identifier": "veilpicTests/ImageEditorSavedPathTests/closedSavedPathLoadsSelectionWithoutCreatingOrSelectingALayer",
+      "file": "ImageEditorSavedPathTests.swift",
+      "passed": true,
+      "duration": 3.054,
+      "issues": [],
+      "log": "ImageEditorSavedPathTests.closedSavedPathLoadsSelectionWithoutCreatingOrSelectingALayer.log"
+    },
+    {
+      "suite": "ImageEditorSavedPathTests",
+      "method": "compoundSavedPathLoadsEverySubpathIntoSelection",
+      "identifier": "veilpicTests/ImageEditorSavedPathTests/compoundSavedPathLoadsEverySubpathIntoSelection",
+      "file": "ImageEditorSavedPathTests.swift",
+      "passed": true,
+      "duration": 2.899,
+      "issues": [],
+      "log": "ImageEditorSavedPathTests.compoundSavedPathLoadsEverySubpathIntoSelection.log"
+    },
+    {
+      "suite": "ImageEditorSavedPathTests",
+      "method": "openSavedPathCannotLoadSelectionOrCreateHistory",
+      "identifier": "veilpicTests/ImageEditorSavedPathTests/openSavedPathCannotLoadSelectionOrCreateHistory",
+      "file": "ImageEditorSavedPathTests.swift",
+      "passed": true,
+      "duration": 3.036,
+      "issues": [],
+      "log": "ImageEditorSavedPathTests.openSavedPathCannotLoadSelectionOrCreateHistory.log"
+    },
+    {
+      "suite": "ImageEditorSavedPathTests",
+      "method": "pathsPanelMenuProjectAndAutomationUseSavedPathCommands",
+      "identifier": "veilpicTests/ImageEditorSavedPathTests/pathsPanelMenuProjectAndAutomationUseSavedPathCommands",
+      "file": "ImageEditorSavedPathTests.swift",
+      "passed": true,
+      "duration": 2.964,
+      "issues": [],
+      "log": "ImageEditorSavedPathTests.pathsPanelMenuProjectAndAutomationUseSavedPathCommands.log"
+    },
+    {
+      "suite": "ImageEditorSavedPathTests",
+      "method": "savedPathCanBeRenamedUpdatedAndDeletedWithoutChangingItsIdentity",
+      "identifier": "veilpicTests/ImageEditorSavedPathTests/savedPathCanBeRenamedUpdatedAndDeletedWithoutChangingItsIdentity",
+      "file": "ImageEditorSavedPathTests.swift",
+      "passed": true,
+      "duration": 3.222,
+      "issues": [],
+      "log": "ImageEditorSavedPathTests.savedPathCanBeRenamedUpdatedAndDeletedWithoutChangingItsIdentity.log"
+    },
+    {
+      "suite": "ImageEditorSavedPathTests",
+      "method": "savedPathSelectionRespectsAddMode",
+      "identifier": "veilpicTests/ImageEditorSavedPathTests/savedPathSelectionRespectsAddMode",
+      "file": "ImageEditorSavedPathTests.swift",
+      "passed": true,
+      "duration": 3.16,
+      "issues": [],
+      "log": "ImageEditorSavedPathTests.savedPathSelectionRespectsAddMode.log"
+    },
+    {
+      "suite": "ImageEditorSavedPathTests",
+      "method": "savedPathsRoundTripProjectsAndOlderProjectsDefaultToEmpty",
+      "identifier": "veilpicTests/ImageEditorSavedPathTests/savedPathsRoundTripProjectsAndOlderProjectsDefaultToEmpty",
+      "file": "ImageEditorSavedPathTests.swift",
+      "passed": true,
+      "duration": 3.163,
+      "issues": [],
+      "log": "ImageEditorSavedPathTests.savedPathsRoundTripProjectsAndOlderProjectsDefaultToEmpty.log"
+    },
+    {
+      "suite": "ImageEditorSavedPathTests",
+      "method": "savingPathCreatesIndependentUndoableSnapshotAndLoadsEditableCopy",
+      "identifier": "veilpicTests/ImageEditorSavedPathTests/savingPathCreatesIndependentUndoableSnapshotAndLoadsEditableCopy",
+      "file": "ImageEditorSavedPathTests.swift",
+      "passed": true,
+      "duration": 3.506,
+      "issues": [],
+      "log": "ImageEditorSavedPathTests.savingPathCreatesIndependentUndoableSnapshotAndLoadsEditableCopy.log"
+    },
+    {
+      "suite": "ImageEditorSavedPathTests",
+      "method": "updatingExistingPathRemainsAvailableAtSavedPathCapacity",
+      "identifier": "veilpicTests/ImageEditorSavedPathTests/updatingExistingPathRemainsAvailableAtSavedPathCapacity",
+      "file": "ImageEditorSavedPathTests.swift",
+      "passed": true,
+      "duration": 3.06,
+      "issues": [],
+      "log": "ImageEditorSavedPathTests.updatingExistingPathRemainsAvailableAtSavedPathCapacity.log"
+    }
+  ]
+}
