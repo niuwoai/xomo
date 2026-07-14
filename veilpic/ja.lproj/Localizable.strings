@@ -680,8 +680,10 @@
 "imageEditor.panelTab.paths" = "パス";
 "imageEditor.panelTab.comps" = "コンプ";
 "imageEditor.savedPath.defaultName" = "パス %d";
+"imageEditor.savedPath.copySuffix" = " のコピー";
+"imageEditor.savedPath.copySuffixIndexed" = " のコピー %d";
 "imageEditor.savedPath.empty" = "保存済みパスはまだありません";
-"imageEditor.savedPath.hint" = "選択中のパスには読み取り専用アンカーが表示され、目のボタンで輪郭を固定できます。読み込んで編集し、「更新」で変更を書き戻します。";
+"imageEditor.savedPath.hint" = "独立したパスをコピー・ペーストできます。選択中は読み取り専用アンカーを表示し、目のボタンで輪郭を固定します。";
 "imageEditor.savedPath.namePlaceholder" = "パス名";
 "imageEditor.savedPath.summary.closed" = "閉じたパス · アンカー%d個 · サブパス%d個";
 "imageEditor.savedPath.summary.open" = "開いたパス · アンカー%d個 · サブパス%d個";
@@ -1377,6 +1379,7 @@
 "imageEditor.history.savedPathUpdate" = "パスを更新";
 "imageEditor.history.savedPathLoad" = "パスを読み込む";
 "imageEditor.history.savedPathDelete" = "パスを削除";
+"imageEditor.history.savedPathPaste" = "パスをペースト";
 "imageEditor.history.selectionFromSavedPath" = "保存済みパスから選択範囲を読み込む";
 "imageEditor.history.savedPathFill" = "保存済みパスを塗りつぶす";
 "imageEditor.history.savedPathStroke" = "保存済みパスをストローク";
@@ -1578,6 +1581,10 @@
 "imageEditor.status.savedPathUpdated" = "パスを更新しました：%@";
 "imageEditor.status.savedPathLoaded" = "編集可能なパスを読み込みました：%@";
 "imageEditor.status.savedPathDeleted" = "パスを削除しました：%@";
+"imageEditor.status.savedPathCopied" = "パスをコピーしました：%@";
+"imageEditor.status.savedPathCopyFailed" = "パスをクリップボードへ書き込めませんでした";
+"imageEditor.status.savedPathClipboardInvalid" = "クリップボードにペースト可能な Xomo パスがありません";
+"imageEditor.status.savedPathPasted" = "パスをペーストしました：%@";
 "imageEditor.status.savedPathSelectionRequiresClosed" = "閉じた保存済みパスのみ選択範囲に変換できます";
 "imageEditor.status.selectionFromSavedPath" = "パス「%@」から選択範囲を読み込みました";
 "imageEditor.status.savedPathFillRequiresClosed" = "閉じた保存済みパスのみ塗りつぶせます";
@@ -1964,6 +1971,8 @@
 "imageEditor.action.savedPathSelection" = "パスから選択範囲を作成";
 "imageEditor.action.savedPathFill" = "現在のピクセルレイヤーでパスを塗りつぶす";
 "imageEditor.action.savedPathStroke" = "現在のピクセルレイヤーでパスをストローク";
+"imageEditor.action.savedPathCopy" = "パスをコピー";
+"imageEditor.action.savedPathPaste" = "パスをペースト";
 "imageEditor.action.vectorMaskToggle" = "ベクターマスクを切り替え";
 "imageEditor.action.vectorMaskCopyToSelected" = "ベクターマスクを選択レイヤーへコピー";
 "imageEditor.action.vectorMaskDelete" = "選択ベクターマスクを削除";

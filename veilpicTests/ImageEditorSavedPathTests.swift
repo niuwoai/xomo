@@ -467,6 +467,84 @@ struct ImageEditorSavedPathTests {
         #expect(viewModel.selectedSavedPathAnchorOverlayItems.isEmpty)
     }
 
+    @Test func savedPathCopiesAndPastesAsIndependentGeometryWithoutChangingCopyHistory() throws {
+        let pasteboard = NSPasteboard(name: NSPasteboard.Name("xomo-tests.saved-path-copy"))
+        defer { pasteboard.clearContents() }
+        let viewModel = makeViewModel()
+        let saved = ImageEditorSavedPath(
+            name: "Curve",
+            subpaths: [[
+                ImageEditorPathAnchor(
+                    point: CGPoint(x: 12, y: 18),
+                    outControl: CGPoint(x: 24, y: 8)
+                ),
+                ImageEditorPathAnchor(
+                    point: CGPoint(x: 62, y: 44),
+                    inControl: CGPoint(x: 48, y: 54)
+                )
+            ]],
+            isClosed: false,
+            isVisible: true
+        )
+        viewModel.document.savedPaths = [saved]
+        viewModel.document.selectedSavedPathID = saved.id
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.copySavedPath(saved.id, to: pasteboard))
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.document.savedPaths == [saved])
+        #expect(viewModel.canPasteSavedPath(from: pasteboard))
+
+        let pasted = try #require(viewModel.pasteSavedPath(from: pasteboard))
+        #expect(pasted.id != saved.id)
+        #expect(pasted.name == saved.name + L10n.text("imageEditor.savedPath.copySuffix"))
+        #expect(pasted.subpaths == saved.subpaths)
+        #expect(pasted.isClosed == saved.isClosed)
+        #expect(!pasted.isVisible)
+        #expect(viewModel.document.selectedSavedPathID == pasted.id)
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        viewModel.undo()
+        #expect(viewModel.document.savedPaths == [saved])
+        viewModel.redo()
+        #expect(viewModel.document.savedPaths.last?.id == pasted.id)
+    }
+
+    @Test func savedPathPasteRejectsInvalidClipboardAndCapacityWithoutMutation() throws {
+        let pasteboard = NSPasteboard(name: NSPasteboard.Name("xomo-tests.saved-path-invalid"))
+        defer { pasteboard.clearContents() }
+        let viewModel = makeViewModel()
+        let initialHistoryCount = viewModel.document.history.count
+
+        pasteboard.clearContents()
+        pasteboard.setData(Data("not-json".utf8), forType: .xomoSavedPath)
+        #expect(!viewModel.canPasteSavedPath(from: pasteboard))
+        #expect(viewModel.pasteSavedPath(from: pasteboard) == nil)
+        #expect(viewModel.document.savedPaths.isEmpty)
+        #expect(viewModel.document.history.count == initialHistoryCount)
+
+        let source = makeViewModel()
+        createPath(
+            points: [CGPoint(x: 8, y: 8), CGPoint(x: 64, y: 12), CGPoint(x: 36, y: 52)],
+            closed: true,
+            viewModel: source
+        )
+        let saved = try #require(source.saveCurrentPath(name: "Capacity Path"))
+        #expect(source.copySavedPath(saved.id, to: pasteboard))
+        viewModel.document.savedPaths = (0..<ImageEditorSavedPath.maximumCount).map { index in
+            ImageEditorSavedPath(
+                name: "Stored \(index)",
+                subpaths: saved.subpaths,
+                isClosed: true
+            )
+        }
+        let fullPaths = viewModel.document.savedPaths
+
+        #expect(viewModel.pasteSavedPath(from: pasteboard) == nil)
+        #expect(viewModel.document.savedPaths == fullPaths)
+        #expect(viewModel.document.history.count == initialHistoryCount)
+    }
+
     @Test func savedPathsRoundTripProjectsAndOlderProjectsDefaultToEmpty() throws {
         let viewModel = makeViewModel()
         createPath(
@@ -514,12 +592,16 @@ struct ImageEditorSavedPathTests {
         #expect(panel.contains("viewModel.loadSelectionFromSavedPath"))
         #expect(panel.contains("viewModel.fillSavedPathToSelectedPixelLayer"))
         #expect(panel.contains("viewModel.strokeSavedPathToSelectedPixelLayer"))
+        #expect(panel.contains("viewModel.copySavedPath"))
+        #expect(panel.contains("viewModel.pasteSavedPath"))
         #expect(panel.contains("text: savedPathNameBinding(savedPath)"))
         #expect(panel.contains(".foregroundStyle(Color(nsColor: ImageEditorTheme.text))"))
         #expect(menu.contains("selectedLayerPanelTab = .paths"))
         #expect(menu.contains("viewModel.loadSelectionFromSavedPath"))
         #expect(menu.contains("viewModel.fillSavedPathToSelectedPixelLayer"))
         #expect(menu.contains("viewModel.strokeSavedPathToSelectedPixelLayer"))
+        #expect(menu.contains("viewModel.copySavedPath"))
+        #expect(menu.contains("viewModel.pasteSavedPath"))
         let canvas = try source(root, "veilpic/ImageEditorView.swift")
         #expect(canvas.contains("savedPathOverlay(in: geometry.size)"))
         #expect(canvas.contains("viewModel.savedPathCanvasOverlays"))

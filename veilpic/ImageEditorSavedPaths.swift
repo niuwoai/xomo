@@ -8,6 +8,17 @@
 import AppKit
 import Foundation
 
+extension NSPasteboard.PasteboardType {
+    static let xomoSavedPath = NSPasteboard.PasteboardType("im.some.xomo.saved-path")
+}
+
+private struct ImageEditorSavedPathClipboardPayload: Codable {
+    static let currentFormatVersion = 1
+
+    var formatVersion: Int
+    var path: ImageEditorSavedPath
+}
+
 struct ImageEditorSavedPath: Identifiable, Equatable, Codable {
     static let maximumCount = 100
     static let maximumNameLength = 80
@@ -132,6 +143,69 @@ extension ImageEditorViewModel {
               let savedPath = selectedSavedPath
         else { return false }
         return savedPath.subpaths.allSatisfy { $0.count >= 2 }
+    }
+
+    func canPasteSavedPath(from pasteboard: NSPasteboard = .general) -> Bool {
+        document.savedPaths.count < ImageEditorSavedPath.maximumCount
+            && decodedSavedPathClipboardPayload(from: pasteboard) != nil
+    }
+
+    @discardableResult
+    func copySavedPath(
+        _ id: UUID,
+        to pasteboard: NSPasteboard = .general
+    ) -> Bool {
+        guard let savedPath = document.savedPaths.first(where: { $0.id == id }) else {
+            statusText = L10n.text("imageEditor.status.savedPathMissing")
+            return false
+        }
+        let payload = ImageEditorSavedPathClipboardPayload(
+            formatVersion: ImageEditorSavedPathClipboardPayload.currentFormatVersion,
+            path: savedPath
+        )
+        guard let data = try? JSONEncoder().encode(payload) else {
+            statusText = L10n.text("imageEditor.status.savedPathCopyFailed")
+            return false
+        }
+        pasteboard.clearContents()
+        guard pasteboard.setData(data, forType: .xomoSavedPath) else {
+            statusText = L10n.text("imageEditor.status.savedPathCopyFailed")
+            return false
+        }
+        statusText = L10n.format("imageEditor.status.savedPathCopied", savedPath.name)
+        return true
+    }
+
+    @discardableResult
+    func pasteSavedPath(
+        from pasteboard: NSPasteboard = .general
+    ) -> ImageEditorSavedPath? {
+        guard document.savedPaths.count < ImageEditorSavedPath.maximumCount else {
+            statusText = L10n.text("imageEditor.status.savedPathLimitReached")
+            return nil
+        }
+        guard let payload = decodedSavedPathClipboardPayload(from: pasteboard) else {
+            statusText = L10n.text("imageEditor.status.savedPathClipboardInvalid")
+            return nil
+        }
+        let pastedName = uniquePastedSavedPathName(payload.path.name)
+        guard let pastedPath = ImageEditorSavedPath(
+            id: UUID(),
+            name: pastedName,
+            subpaths: payload.path.subpaths,
+            isClosed: payload.path.isClosed,
+            isVisible: false
+        ).normalized(canvasSize: document.canvasSize) else {
+            statusText = L10n.text("imageEditor.status.savedPathClipboardInvalid")
+            return nil
+        }
+
+        pushUndo()
+        document.savedPaths.append(pastedPath)
+        document.selectedSavedPathID = pastedPath.id
+        appendHistory(L10n.text("imageEditor.history.savedPathPaste"))
+        statusText = L10n.format("imageEditor.status.savedPathPasted", pastedPath.name)
+        return pastedPath
     }
 
     @discardableResult
@@ -467,6 +541,37 @@ extension ImageEditorViewModel {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return nil }
         return String(trimmed.prefix(ImageEditorSavedPath.maximumNameLength))
+    }
+
+    private func decodedSavedPathClipboardPayload(
+        from pasteboard: NSPasteboard
+    ) -> ImageEditorSavedPathClipboardPayload? {
+        guard let data = pasteboard.data(forType: .xomoSavedPath),
+              let payload = try? JSONDecoder().decode(
+                ImageEditorSavedPathClipboardPayload.self,
+                from: data
+              ),
+              payload.formatVersion == ImageEditorSavedPathClipboardPayload.currentFormatVersion,
+              payload.path.normalized(canvasSize: document.canvasSize) != nil
+        else { return nil }
+        return payload
+    }
+
+    private func uniquePastedSavedPathName(_ sourceName: String) -> String {
+        let existingNames = Set(document.savedPaths.map(\.name))
+        let normalizedSourceName = normalizedSavedPathName(sourceName) ?? nextSavedPathName()
+        guard existingNames.contains(normalizedSourceName) else { return normalizedSourceName }
+
+        var copyIndex = 1
+        while true {
+            let suffix = copyIndex == 1
+                ? L10n.text("imageEditor.savedPath.copySuffix")
+                : L10n.format("imageEditor.savedPath.copySuffixIndexed", copyIndex)
+            let availableBaseLength = max(0, ImageEditorSavedPath.maximumNameLength - suffix.count)
+            let candidate = String(normalizedSourceName.prefix(availableBaseLength)) + suffix
+            if !existingNames.contains(candidate) { return candidate }
+            copyIndex += 1
+        }
     }
 
     private var canRenderSelectedSavedPathToPixelLayer: Bool {

@@ -2246,6 +2246,18 @@ extension ImageEditorView {
                 }
             }
             .disabled(!viewModel.canSaveCurrentPath)
+            Button(L10n.text("imageEditor.action.savedPathCopy")) {
+                guard let id = viewModel.document.selectedSavedPathID else { return }
+                selectedLayerPanelTab = .paths
+                viewModel.copySavedPath(id)
+            }
+            .disabled(viewModel.selectedSavedPath == nil)
+            Button(L10n.text("imageEditor.action.savedPathPaste")) {
+                selectedLayerPanelTab = .paths
+                if let savedPath = viewModel.pasteSavedPath() {
+                    savedPathNameDrafts[savedPath.id] = savedPath.name
+                }
+            }
             Button(L10n.text("imageEditor.action.savedPathLoad")) {
                 guard let id = viewModel.document.selectedSavedPathID else { return }
                 selectedLayerPanelTab = .paths
