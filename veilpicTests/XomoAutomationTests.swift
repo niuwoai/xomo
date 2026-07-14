@@ -887,6 +887,26 @@ struct XomoAutomationTests {
         #expect(viewModel.document.selection?.rasterMask != nil)
         viewModel.document.selection = nil
 
+        let targetLayerID = try #require(viewModel.document.layers.first { $0.id != sourceLayerID }?.id)
+        viewModel.document.selectedLayerID = targetLayerID
+        viewModel.document.selectedLayerIDs = [targetLayerID]
+        viewModel.foregroundColor = .white
+        viewModel.opacity = 1
+        let fill = registry.execute(request(
+            operation: "call",
+            name: "xomo.path.saved",
+            arguments: ["action": .string("fill"), "id": .string(savedID)]
+        ))
+        #expect(fill.ok)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.savedPathFill"))
+        let stroke = registry.execute(request(
+            operation: "call",
+            name: "xomo.path.saved",
+            arguments: ["action": .string("stroke"), "id": .string(savedID)]
+        ))
+        #expect(stroke.ok)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.savedPathStroke"))
+
         viewModel.document.layers.removeAll { $0.id == sourceLayerID }
         let load = registry.execute(request(
             operation: "call",

@@ -1043,6 +1043,20 @@ extension ImageEditorView {
                 .font(.system(size: 10, weight: .medium))
                 .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
                 .frame(maxWidth: .infinity, alignment: .leading)
+
+            HStack(spacing: 6) {
+                savedPathIconButton("circle.fill", "imageEditor.action.savedPathFill") {
+                    guard let id = viewModel.document.selectedSavedPathID else { return }
+                    viewModel.fillSavedPathToSelectedPixelLayer(id)
+                }
+                .disabled(!viewModel.canFillSelectedSavedPathToPixelLayer)
+                savedPathIconButton("circle", "imageEditor.action.savedPathStroke") {
+                    guard let id = viewModel.document.selectedSavedPathID else { return }
+                    viewModel.strokeSavedPathToSelectedPixelLayer(id)
+                }
+                .disabled(!viewModel.canStrokeSelectedSavedPathToPixelLayer)
+                Spacer(minLength: 0)
+            }
         }
     }
 

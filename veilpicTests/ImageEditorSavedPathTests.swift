@@ -196,6 +196,156 @@ struct ImageEditorSavedPathTests {
         #expect(mask.alpha[34 * mask.width + 44] == 0)
     }
 
+    @Test func closedSavedPathFillsSelectedPixelLayerWithoutCreatingALayer() throws {
+        let viewModel = makeViewModel()
+        viewModel.foregroundColor = .white
+        viewModel.opacity = 1
+        createPath(
+            points: [CGPoint(x: 12, y: 10), CGPoint(x: 70, y: 14), CGPoint(x: 48, y: 52)],
+            closed: true,
+            viewModel: viewModel
+        )
+        let sourceLayerID = try #require(viewModel.document.selectedLayerID)
+        let saved = try #require(viewModel.saveCurrentPath(name: "Fill Shape"))
+        viewModel.document.layers.removeAll { $0.id == sourceLayerID }
+        viewModel.document.selectedLayerID = viewModel.document.layers.last?.id
+        viewModel.document.selectedLayerIDs = Set([viewModel.document.selectedLayerID].compactMap { $0 })
+        let targetLayerID = try #require(viewModel.document.selectedLayerID)
+        let targetBefore = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
+        let layerCount = viewModel.document.layers.count
+
+        #expect(viewModel.canFillSelectedSavedPathToPixelLayer)
+        #expect(viewModel.fillSavedPathToSelectedPixelLayer(saved.id))
+
+        let target = try #require(viewModel.document.layers.first { $0.id == targetLayerID })
+        let inside = try #require(target.image.color(at: CGPoint(x: 46, y: 26))?.usingColorSpace(.deviceRGB))
+        let outside = try #require(target.image.color(at: CGPoint(x: 90, y: 66))?.usingColorSpace(.deviceRGB))
+        #expect(viewModel.document.layers.count == layerCount)
+        #expect(viewModel.document.selectedLayerID == targetLayerID)
+        #expect(try #require(target.image.qingtuPNGData()) != targetBefore)
+        #expect(inside.alphaComponent > 0.9)
+        #expect(inside.redComponent > 0.9)
+        #expect(outside.alphaComponent < 0.01)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.savedPathFill"))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.savedPathFilled", saved.name))
+
+        viewModel.undo()
+        #expect(try #require(viewModel.document.selectedLayer?.image.qingtuPNGData()) == targetBefore)
+    }
+
+    @Test func openSavedPathStrokesSelectedPixelLayer() throws {
+        let viewModel = makeViewModel()
+        viewModel.foregroundColor = .white
+        viewModel.opacity = 1
+        viewModel.brushSize = 8
+        createPath(
+            points: [CGPoint(x: 10, y: 20), CGPoint(x: 70, y: 20), CGPoint(x: 70, y: 54)],
+            closed: false,
+            viewModel: viewModel
+        )
+        let sourceLayerID = try #require(viewModel.document.selectedLayerID)
+        let saved = try #require(viewModel.saveCurrentPath(name: "Open Stroke"))
+        viewModel.document.layers.removeAll { $0.id == sourceLayerID }
+        viewModel.document.selectedLayerID = viewModel.document.layers.last?.id
+        viewModel.document.selectedLayerIDs = Set([viewModel.document.selectedLayerID].compactMap { $0 })
+        let targetLayerID = try #require(viewModel.document.selectedLayerID)
+
+        #expect(viewModel.canStrokeSelectedSavedPathToPixelLayer)
+        #expect(!viewModel.canFillSelectedSavedPathToPixelLayer)
+        #expect(viewModel.strokeSavedPathToSelectedPixelLayer(saved.id))
+
+        let target = try #require(viewModel.document.layers.first { $0.id == targetLayerID })
+        let stroked = try #require(target.image.color(at: CGPoint(x: 40, y: 20))?.usingColorSpace(.deviceRGB))
+        let untouched = try #require(target.image.color(at: CGPoint(x: 20, y: 60))?.usingColorSpace(.deviceRGB))
+        #expect(stroked.alphaComponent > 0.9)
+        #expect(stroked.redComponent > 0.9)
+        #expect(untouched.alphaComponent < 0.01)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.savedPathStroke"))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.savedPathStroked", saved.name))
+    }
+
+    @Test func savedPathRenderRejectsLockedTargetWithoutHistory() throws {
+        let viewModel = makeViewModel()
+        createPath(
+            points: [CGPoint(x: 12, y: 10), CGPoint(x: 70, y: 14), CGPoint(x: 48, y: 52)],
+            closed: true,
+            viewModel: viewModel
+        )
+        let sourceLayerID = try #require(viewModel.document.selectedLayerID)
+        let saved = try #require(viewModel.saveCurrentPath(name: "Locked Target"))
+        viewModel.document.layers.removeAll { $0.id == sourceLayerID }
+        let targetIndex = try #require(viewModel.document.layers.indices.last)
+        viewModel.document.selectedLayerID = viewModel.document.layers[targetIndex].id
+        viewModel.document.selectedLayerIDs = [viewModel.document.layers[targetIndex].id]
+        viewModel.document.layers[targetIndex].isLocked = true
+        let historyCount = viewModel.document.history.count
+        let targetBefore = try #require(viewModel.document.layers[targetIndex].image.qingtuPNGData())
+
+        #expect(!viewModel.canFillSelectedSavedPathToPixelLayer)
+        #expect(!viewModel.canStrokeSelectedSavedPathToPixelLayer)
+        #expect(!viewModel.fillSavedPathToSelectedPixelLayer(saved.id))
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(try #require(viewModel.document.layers[targetIndex].image.qingtuPNGData()) == targetBefore)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.savedPathRenderRequiresPixelLayer"))
+    }
+
+    @Test func savedPathFillPreservesTransparentPixelsWhenLocked() throws {
+        let viewModel = makeViewModel()
+        viewModel.foregroundColor = .white
+        viewModel.opacity = 1
+        createPath(
+            points: [CGPoint(x: 12, y: 10), CGPoint(x: 70, y: 14), CGPoint(x: 48, y: 52)],
+            closed: true,
+            viewModel: viewModel
+        )
+        let sourceLayerID = try #require(viewModel.document.selectedLayerID)
+        let saved = try #require(viewModel.saveCurrentPath(name: "Alpha Locked"))
+        viewModel.document.layers.removeAll { $0.id == sourceLayerID }
+        let targetIndex = try #require(viewModel.document.layers.indices.last)
+        viewModel.document.layers[targetIndex].image = alphaSplitImage(size: viewModel.document.canvasSize)
+        viewModel.document.layers[targetIndex].locksTransparentPixels = true
+        viewModel.document.selectedLayerID = viewModel.document.layers[targetIndex].id
+        viewModel.document.selectedLayerIDs = [viewModel.document.layers[targetIndex].id]
+
+        #expect(viewModel.fillSavedPathToSelectedPixelLayer(saved.id))
+
+        let target = viewModel.document.layers[targetIndex]
+        let transparentInside = try #require(target.image.color(at: CGPoint(x: 30, y: 26))?.usingColorSpace(.deviceRGB))
+        let opaqueInside = try #require(target.image.color(at: CGPoint(x: 55, y: 26))?.usingColorSpace(.deviceRGB))
+        #expect(transparentInside.alphaComponent < 0.01)
+        #expect(opaqueInside.alphaComponent > 0.9)
+        #expect(opaqueInside.redComponent > 0.9)
+        #expect(opaqueInside.greenComponent > 0.9)
+        #expect(opaqueInside.blueComponent > 0.9)
+    }
+
+    @Test func savedPathRenderMapsCanvasCoordinatesIntoOffsetScaledPixelLayer() throws {
+        let viewModel = makeViewModel()
+        let saved = ImageEditorSavedPath(
+            name: "Offset Fill",
+            subpaths: [rectangleAnchors(CGRect(x: 30, y: 20, width: 20, height: 20))],
+            isClosed: true
+        )
+        var target = ImageEditorLayer.blank(name: "Scaled Target", size: NSSize(width: 20, height: 20))
+        target.frame = CGRect(x: 20, y: 10, width: 40, height: 40)
+        viewModel.document.layers = [target]
+        viewModel.document.selectedLayerID = target.id
+        viewModel.document.selectedLayerIDs = [target.id]
+        viewModel.document.savedPaths = [saved]
+        viewModel.document.selectedSavedPathID = saved.id
+        viewModel.foregroundColor = .white
+        viewModel.opacity = 1
+
+        #expect(viewModel.fillSavedPathToSelectedPixelLayer(saved.id))
+
+        let rendered = try #require(viewModel.document.selectedLayer?.image)
+        let mappedInside = try #require(rendered.color(at: CGPoint(x: 10, y: 10))?.usingColorSpace(.deviceRGB))
+        let mappedOutside = try #require(rendered.color(at: CGPoint(x: 2, y: 2))?.usingColorSpace(.deviceRGB))
+        #expect(mappedInside.alphaComponent > 0.9)
+        #expect(mappedInside.redComponent > 0.9)
+        #expect(mappedOutside.alphaComponent < 0.01)
+    }
+
     @Test func savedPathsRoundTripProjectsAndOlderProjectsDefaultToEmpty() throws {
         let viewModel = makeViewModel()
         createPath(
@@ -241,13 +391,19 @@ struct ImageEditorSavedPathTests {
         #expect(panel.contains("viewModel.saveCurrentPath"))
         #expect(panel.contains("viewModel.loadSavedPath"))
         #expect(panel.contains("viewModel.loadSelectionFromSavedPath"))
+        #expect(panel.contains("viewModel.fillSavedPathToSelectedPixelLayer"))
+        #expect(panel.contains("viewModel.strokeSavedPathToSelectedPixelLayer"))
         #expect(panel.contains("text: savedPathNameBinding(savedPath)"))
         #expect(panel.contains(".foregroundStyle(Color(nsColor: ImageEditorTheme.text))"))
         #expect(menu.contains("selectedLayerPanelTab = .paths"))
         #expect(menu.contains("viewModel.loadSelectionFromSavedPath"))
+        #expect(menu.contains("viewModel.fillSavedPathToSelectedPixelLayer"))
+        #expect(menu.contains("viewModel.strokeSavedPathToSelectedPixelLayer"))
         #expect(project.contains("savedPaths"))
         #expect(automation.contains("xomo.path.saved"))
         #expect(automation.contains("case \"selection\""))
+        #expect(automation.contains("case \"fill\""))
+        #expect(automation.contains("case \"stroke\""))
     }
 
     private func createPath(
@@ -273,6 +429,15 @@ struct ImageEditorSavedPathTests {
             ImageEditorPathAnchor(point: CGPoint(x: rect.maxX, y: rect.maxY)),
             ImageEditorPathAnchor(point: CGPoint(x: rect.minX, y: rect.maxY))
         ]
+    }
+
+    private func alphaSplitImage(size: NSSize) -> NSImage {
+        NSImage.rendered(size: size) { rect in
+            NSColor.clear.setFill()
+            rect.fill()
+            NSColor.systemRed.setFill()
+            CGRect(x: rect.midX, y: rect.minY, width: rect.width / 2, height: rect.height).fill()
+        } ?? NSImage.transparent(size: size)
     }
 
     private func source(_ root: URL, _ path: String) throws -> String {
