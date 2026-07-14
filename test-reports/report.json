@@ -1,41 +1,44 @@
 {
-  "generated_at": "2026-07-15 01:20:00 +0800",
-  "version": "2.12.0-rc56",
-  "passed": true,
-  "xcode_tests": {
-    "passed": 12,
-    "total": 12,
-    "suites": [
-      {
-        "name": "XomoFigmaLinkParserTests",
-        "passed": 8,
-        "total": 8
-      },
-      {
-        "name": "LocalizationResourceTests",
-        "passed": 4,
-        "total": 4
-      }
-    ]
+  "generated_at": "2026-07-15 01:48:04 +0800",
+  "version": "2.12.0-rc57",
+  "status": "passed",
+  "summary": {
+    "automated_tests_total": 19,
+    "automated_tests_passed": 19,
+    "automated_tests_failed": 0,
+    "debug_build_for_testing": "passed",
+    "computer_use_smoke": "passed"
   },
-  "swiftpm_tests": {
-    "suite": "XomoMCPServerTests",
-    "passed": 2,
-    "total": 2
-  },
-  "debug_build": {
-    "passed": true,
-    "version": "2.12.0-rc56",
-    "bundle_id": "im.some.xomo",
+  "suites": [
+    {
+      "name": "XomoFigmaLinkImportTests",
+      "passed": 5,
+      "total": 5
+    },
+    {
+      "name": "XomoFigmaLinkParserTests",
+      "passed": 8,
+      "total": 8
+    },
+    {
+      "name": "LocalizationResourceTests",
+      "passed": 4,
+      "total": 4
+    },
+    {
+      "name": "XomoMCPServerTests",
+      "passed": 2,
+      "total": 2
+    }
+  ],
+  "runtime_checks": {
+    "app_version": "2.12.0-rc57",
+    "cli_version": "2.12.0-rc57",
+    "bundle_identifier": "im.some.xomo",
     "minimum_macos": "13.0",
-    "architecture": "arm64"
-  },
-  "security_assertions": {
-    "trusted_https_hosts_only": true,
-    "rejects_credentials_and_custom_ports": true,
-    "rejects_ambiguous_selectors": true,
-    "discards_unapproved_query_values": true,
-    "performs_network_requests": false,
-    "authorization_state": "notChecked"
+    "debug_architecture": "arm64",
+    "figma_preview_shortcut": "Option+Command+F",
+    "figma_preview_result": "immediate validation, sanitized canonical URL, copy feedback and distinct accessibility identifiers verified",
+    "layer_panel_result": "title and layer/channel/comp/path tabs remain white or light gray on the dark panel"
   }
 }

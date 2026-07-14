@@ -1,22 +1,23 @@
-# Xomo v2.12.0-rc56 验证报告
+# Xomo v2.12.0-rc57 验证报告
 
-- 生成时间：2026-07-15 01:20 +0800
-- 结果：全部通过
-- Xcode 相关测试：12/12
-- SwiftPM CLI 测试：2/2
+- 生成时间：2026-07-15 01:48:04 +0800
+- 自动化测试：**19/19 通过**
+- Debug `build-for-testing`：**通过**
+- Computer Use 真实界面冒烟：**通过**
 
-## 验证明细
+## 测试套件
 
-| 验证项 | 结果 |
-|---|---:|
+| 套件 | 结果 |
+| --- | --- |
+| `XomoFigmaLinkImportTests` | 5/5 |
 | `XomoFigmaLinkParserTests` | 8/8 |
 | `LocalizationResourceTests` | 4/4 |
 | `XomoMCPServerTests` | 2/2 |
-| Debug `build-for-testing` | 通过 |
 
-## 关键结论
+## 运行时核对
 
-- 解析器识别 Figma 官方现行 Design、File、Prototype、FigJam、Slides、Sites、Buzz 与 Make 链接路径。
-- 只接受可信 Figma HTTPS 主机；仿冒域名、凭据、自定义端口、fragment、重复/畸形选择参数和超长输入均被拒绝。
-- 规范 URL 与 Codable 预览只保留允许的节点、原型起点和版本参数，测试中的令牌及跟踪值没有进入编码结果。
-- Debug App 与 CLI 版本均为 `2.12.0-rc56`；App Bundle ID 为 `im.some.xomo`，最低系统为 macOS 13.0，架构为 arm64。
+- App 与 CLI 版本均为 `2.12.0-rc57`。
+- Bundle ID 为 `im.some.xomo`，最低系统为 macOS 13.0，Debug App 为 arm64。
+- `Option + Command + F` 可打开 Figma 链接预览；输入后立即显示安全解析结果，非白名单 query 被移除，复制规范化链接有明确反馈。
+- 输入框、粘贴、预览与复制按钮暴露独立辅助功能标识。
+- 深色右侧面板中的标题及“图层 / 通道 / 复合 / 路径”页签保持白色/浅灰文字。

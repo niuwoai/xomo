@@ -70,6 +70,7 @@ struct ImageEditorView: View {
     @State private var hoverViewPoint: CGPoint?
     @State private var isMarqueeShapePopoverPresented = false
     @State private var isQuickMaskOptionsPresented = false
+    @State var isFigmaLinkImportPresented = false
     @State private var canvasTextEditingOrigin: CGPoint?
     @State private var canvasTextEditingLayerID: UUID?
     @State private var canvasTextEditingFrame: CGRect?
@@ -181,6 +182,9 @@ struct ImageEditorView: View {
         }
         .sheet(isPresented: $viewModel.isLayerStylePresetManagerPresented) {
             ImageEditorLayerStylePresetManager(viewModel: viewModel)
+        }
+        .sheet(isPresented: $isFigmaLinkImportPresented) {
+            XomoFigmaLinkImportSheet()
         }
     }
 
@@ -957,6 +961,7 @@ struct ImageEditorView: View {
         case .openProject: viewModel.openProjectDocument()
         case .saveProject: viewModel.saveProjectDocument()
         case .export: viewModel.openExportPanel()
+        case .openFigmaLinkImport: isFigmaLinkImportPresented = true
         case .undo: viewModel.undo()
         case .redo: viewModel.redo()
         case .cutSelectionClipboard: viewModel.cutSelectionToClipboard()
@@ -6128,6 +6133,7 @@ enum ImageEditorKeyboardShortcutAction: Equatable {
     case openProject
     case saveProject
     case export
+    case openFigmaLinkImport
     case cutSelectionClipboard
     case copySelectionClipboard
     case copyMergedClipboard
@@ -6220,6 +6226,7 @@ enum ImageEditorKeyboardShortcutAction: Equatable {
         if key == "o", relevantFlags == [.command] { return .openProject }
         if key == "s", relevantFlags == [.command] { return .saveProject }
         if key == "s", relevantFlags == [.command, .option, .shift] { return .export }
+        if key == "f", relevantFlags == [.command, .option] { return .openFigmaLinkImport }
         if key == "z", relevantFlags == [.command] { return .undo }
         if key == "z", relevantFlags == [.command, .shift] { return .redo }
         if key == "x", relevantFlags == [.command] { return .cutSelectionClipboard }

@@ -21,16 +21,47 @@ enum XomoFigmaResourceType: String, CaseIterable, Codable, Sendable {
             .previewOnly
         }
     }
+
+    var localizationKey: String {
+        switch self {
+        case .design:
+            "xomo.figma.resource.design"
+        case .legacyFile:
+            "xomo.figma.resource.legacyFile"
+        case .prototype:
+            "xomo.figma.resource.prototype"
+        case .figJam:
+            "xomo.figma.resource.figJam"
+        case .slides:
+            "xomo.figma.resource.slides"
+        case .slideDeck:
+            "xomo.figma.resource.slideDeck"
+        case .site:
+            "xomo.figma.resource.site"
+        case .buzz:
+            "xomo.figma.resource.buzz"
+        case .make:
+            "xomo.figma.resource.make"
+        }
+    }
 }
 
 enum XomoFigmaPlannedImportScope: String, Codable, Sendable {
     case designDocument
     case figJamBoard
     case previewOnly
+
+    var localizationKey: String {
+        "xomo.figma.scope.\(rawValue)"
+    }
 }
 
 enum XomoFigmaAuthorizationState: String, Codable, Sendable {
     case notChecked
+
+    var localizationKey: String {
+        "xomo.figma.authorization.\(rawValue)"
+    }
 }
 
 struct XomoFigmaLinkPreview: Equatable, Codable, Sendable {
@@ -56,7 +87,7 @@ struct XomoFigmaLinkPreview: Equatable, Codable, Sendable {
     }
 }
 
-enum XomoFigmaLinkParserError: Error, Equatable, Sendable {
+enum XomoFigmaLinkParserError: Error, Equatable, CaseIterable, Sendable {
     case emptyInput
     case inputTooLong
     case malformedURL
@@ -71,6 +102,80 @@ enum XomoFigmaLinkParserError: Error, Equatable, Sendable {
     case duplicateSelector
     case invalidNodeID
     case invalidVersionID
+
+    var localizationKey: String {
+        switch self {
+        case .emptyInput:
+            "xomo.figma.error.emptyInput"
+        case .inputTooLong:
+            "xomo.figma.error.inputTooLong"
+        case .malformedURL:
+            "xomo.figma.error.malformedURL"
+        case .insecureScheme:
+            "xomo.figma.error.insecureScheme"
+        case .untrustedHost:
+            "xomo.figma.error.untrustedHost"
+        case .credentialsNotAllowed:
+            "xomo.figma.error.credentialsNotAllowed"
+        case .customPortNotAllowed:
+            "xomo.figma.error.customPortNotAllowed"
+        case .fragmentNotAllowed:
+            "xomo.figma.error.fragmentNotAllowed"
+        case .unsupportedResourceType:
+            "xomo.figma.error.unsupportedResourceType"
+        case .invalidFileKey:
+            "xomo.figma.error.invalidFileKey"
+        case .invalidFileName:
+            "xomo.figma.error.invalidFileName"
+        case .duplicateSelector:
+            "xomo.figma.error.duplicateSelector"
+        case .invalidNodeID:
+            "xomo.figma.error.invalidNodeID"
+        case .invalidVersionID:
+            "xomo.figma.error.invalidVersionID"
+        }
+    }
+}
+
+enum XomoFigmaLinkImportState: Equatable {
+    case empty
+    case valid(XomoFigmaLinkPreview)
+    case invalid(XomoFigmaLinkParserError)
+}
+
+struct XomoFigmaLinkImportDraft: Equatable {
+    private(set) var input = ""
+    private(set) var state: XomoFigmaLinkImportState = .empty
+
+    var preview: XomoFigmaLinkPreview? {
+        guard case let .valid(preview) = state else { return nil }
+        return preview
+    }
+
+    var error: XomoFigmaLinkParserError? {
+        guard case let .invalid(error) = state else { return nil }
+        return error
+    }
+
+    var canCopyCanonicalURL: Bool {
+        preview != nil
+    }
+
+    mutating func updateInput(_ value: String) {
+        input = value
+        guard !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            state = .empty
+            return
+        }
+        do {
+            state = .valid(try XomoFigmaLinkParser.parse(value))
+        } catch let parserError as XomoFigmaLinkParserError {
+            state = .invalid(parserError)
+        } catch {
+            assertionFailure("Unexpected Figma link parser error: \(error)")
+            state = .invalid(.malformedURL)
+        }
+    }
 }
 
 enum XomoFigmaLinkParser {
