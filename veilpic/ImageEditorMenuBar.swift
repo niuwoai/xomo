@@ -120,6 +120,10 @@ extension ImageEditorView {
         Button(L10n.text("imageEditor.action.fileImport")) {
             viewModel.chooseImageLayerFile()
         }
+        Button(L10n.text("imageEditor.action.figmaLinkImport")) {
+            isFigmaLinkImportPresented = true
+        }
+        .keyboardShortcut("f", modifiers: [.command, .option])
         Button(L10n.text("imageEditor.action.export")) {
             viewModel.openExportPanel()
         }
