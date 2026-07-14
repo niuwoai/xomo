@@ -15,15 +15,22 @@ struct XomoFigmaNodeContentAPIClient: XomoFigmaNodePlanFetching {
 
     private let baseURL: URL
     private let transport: any XomoFigmaHTTPTransport
+    private let imageAssetFetcher: (any XomoFigmaImageAssetFetching)?
 
     init() {
         baseURL = URL(string: "https://api.figma.com")!
         transport = XomoFigmaURLSessionTransport()
+        imageAssetFetcher = XomoFigmaImageAssetAPIClient()
     }
 
-    init(baseURL: URL = URL(string: "https://api.figma.com")!, transport: any XomoFigmaHTTPTransport) {
+    init(
+        baseURL: URL = URL(string: "https://api.figma.com")!,
+        transport: any XomoFigmaHTTPTransport,
+        imageAssetFetcher: (any XomoFigmaImageAssetFetching)? = nil
+    ) {
         self.baseURL = baseURL
         self.transport = transport
+        self.imageAssetFetcher = imageAssetFetcher
     }
 
     func fetchPlan(
@@ -58,7 +65,18 @@ struct XomoFigmaNodeContentAPIClient: XomoFigmaNodePlanFetching {
         } catch {
             throw XomoFigmaNodeImportError.invalidResponse
         }
-        return try XomoFigmaNodeImportMapper.makePlan(response: envelope, requestedNodeID: nodeID)
+        let plan = try XomoFigmaNodeImportMapper.makePlan(response: envelope, requestedNodeID: nodeID)
+        guard let imageAssetFetcher, !plan.requiredImageReferences.isEmpty else { return plan }
+        do {
+            let assets = try await imageAssetFetcher.fetchAssets(
+                fileKey: preview.fileKey,
+                references: plan.requiredImageReferences,
+                credential: credential
+            )
+            return plan.resolvingImageAssets(assets)
+        } catch {
+            return plan.resolvingImageAssets([:])
+        }
     }
 
     private func makeRequest(
@@ -266,7 +284,8 @@ enum XomoFigmaNodeImportMapper {
             geometrySize: node.size.map {
                 XomoFigmaPlanSize(width: max(0, $0.width), height: max(0, $0.height))
             },
-            imageReference: imagePaint(node: node)?.imageRef
+            imageReference: imagePaint(node: node)?.imageRef,
+            imageScaleMode: imagePaint(node: node)?.scaleMode
         )
     }
 
@@ -415,6 +434,7 @@ struct XomoFigmaPaint: Decodable {
     var opacity: Double?
     var color: XomoFigmaColor?
     var imageRef: String?
+    var scaleMode: String?
 }
 
 struct XomoFigmaColor: Decodable {

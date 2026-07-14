@@ -55,7 +55,8 @@ enum XomoFigmaNodeMaterializer {
                 canvasSize: canvasSize,
                 transform: transform,
                 assignedGroupID: groupIDs[item.sourceID],
-                parentGroupID: parentGroupID(for: item)
+                parentGroupID: parentGroupID(for: item),
+                imageAssets: plan.imageAssets
             ) else {
                 omittedCount += 1
                 return
@@ -84,7 +85,8 @@ enum XomoFigmaNodeMaterializer {
         canvasSize: CGSize,
         transform: XomoFigmaImportTransform,
         assignedGroupID: UUID?,
-        parentGroupID: UUID?
+        parentGroupID: UUID?,
+        imageAssets: [String: XomoFigmaImageAsset]
     ) -> ImageEditorLayer? {
         guard let targetKind = item.targetKind else { return nil }
         var layer: ImageEditorLayer
@@ -109,6 +111,12 @@ enum XomoFigmaNodeMaterializer {
                   let vectorLayer = makeVectorLayer(item: item, frame: frame, scale: transform.scale)
             else { return nil }
             layer = vectorLayer
+        case .image:
+            guard let frame = mappedFrame(item.frame, transform: transform),
+                  let reference = item.imageReference,
+                  let asset = imageAssets[reference]
+            else { return nil }
+            layer = makeImageLayer(item: item, asset: asset, frame: frame)
         case .imagePlaceholder:
             guard let frame = mappedFrame(item.frame, transform: transform) else { return nil }
             layer = makeImagePlaceholderLayer(item: item, frame: frame)
@@ -117,6 +125,50 @@ enum XomoFigmaNodeMaterializer {
         layer.isVisible = item.isVisible
         layer.opacity = min(max(item.opacity, 0), 1)
         return layer
+    }
+
+    private static func makeImageLayer(
+        item: XomoFigmaNodeImportItem,
+        asset: XomoFigmaImageAsset,
+        frame: CGRect
+    ) -> ImageEditorLayer {
+        let size = CGSize(width: max(1, frame.width), height: max(1, frame.height))
+        let source = NSImage(data: asset.data) ?? NSImage.transparent(size: size)
+        let baked = bakedImageFill(source, size: size, scaleMode: item.imageScaleMode)
+        var layer = ImageEditorLayer.blank(name: item.sourceName, size: size)
+        layer.image = baked
+        layer.frame = CGRect(origin: frame.origin, size: size)
+        return layer
+    }
+
+    private static func bakedImageFill(
+        _ image: NSImage,
+        size: CGSize,
+        scaleMode: String?
+    ) -> NSImage {
+        NSImage.rendered(size: size) { rect in
+            let sourceSize = image.size
+            guard sourceSize.width > 0, sourceSize.height > 0 else { return }
+            let scale: CGFloat
+            switch scaleMode {
+            case "FIT":
+                scale = min(rect.width / sourceSize.width, rect.height / sourceSize.height)
+            case "STRETCH":
+                image.draw(in: rect, from: .zero, operation: .copy, fraction: 1)
+                return
+            default:
+                scale = max(rect.width / sourceSize.width, rect.height / sourceSize.height)
+            }
+            let drawSize = CGSize(width: sourceSize.width * scale, height: sourceSize.height * scale)
+            let drawRect = CGRect(
+                x: rect.midX - drawSize.width / 2,
+                y: rect.midY - drawSize.height / 2,
+                width: drawSize.width,
+                height: drawSize.height
+            )
+            NSBezierPath(rect: rect).addClip()
+            image.draw(in: drawRect, from: .zero, operation: .copy, fraction: 1)
+        } ?? NSImage.transparent(size: size)
     }
 
     private static func makeTextLayer(

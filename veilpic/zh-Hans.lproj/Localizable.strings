@@ -2820,11 +2820,11 @@
 "xomo.figma.metadata.error.transportFailed" = "无法连接 Figma 官方 API，请检查网络后重试。";
 "xomo.figma.node.title" = "Figma 节点映射计划";
 "xomo.figma.node.planOnly" = "先预检，再导入";
-"xomo.figma.node.scopeNotice" = "仅在点击读取时调用官方 Tier 1 节点接口；令牌需要 file_content:read。最多读取 6 层、2000 个节点和 10 MB，绝不自动刷新。读取只生成计划；确认导入后才会一次性创建可撤销图层。";
+"xomo.figma.node.scopeNotice" = "仅在点击读取时调用官方节点接口；遇到图片填充时还会读取官方 Tier 2 图片清单并下载当前节点引用，临时图片请求不携带令牌。令牌需要 file_content:read；节点最多 6 层、2000 项和 10 MB，绝不自动刷新。确认导入后才会一次性创建可撤销图层。";
 "xomo.figma.node.selectionRequired" = "请使用包含 node-id 的 Figma 节点链接。";
 "xomo.figma.node.credentialRequired" = "请先在上方保存个人令牌。";
 "xomo.figma.node.readPlan" = "读取节点并生成计划";
-"xomo.figma.node.loading" = "正在读取所选节点并分析本地图层映射…";
+"xomo.figma.node.loading" = "正在读取所选节点、下载可用图片并分析本地图层映射…";
 "xomo.figma.node.summary" = "共 %d 项 · 完整 %d · 降级 %d · 不支持 %d";
 "xomo.figma.node.moreItems" = "另有 %d 项未在此处展开";
 "xomo.figma.node.importLayers" = "导入可映射图层";
@@ -2834,6 +2834,7 @@
 "xomo.figma.node.target.rectangle" = "矩形形状";
 "xomo.figma.node.target.ellipse" = "椭圆形状";
 "xomo.figma.node.target.vector" = "矢量路径";
+"xomo.figma.node.target.image" = "图片像素层";
 "xomo.figma.node.target.imagePlaceholder" = "图片占位层";
 "xomo.figma.node.fidelity.exact" = "完整映射";
 "xomo.figma.node.fidelity.partial" = "降级映射";
@@ -2842,6 +2843,8 @@
 "xomo.figma.node.issue.unsupportedNodeType" = "节点类型暂不支持";
 "xomo.figma.node.issue.unsupportedPaint" = "多重或非纯色填充将降级";
 "xomo.figma.node.issue.imageAssetPending" = "图片资源尚未下载";
+"xomo.figma.node.issue.imageAssetUnavailable" = "图片资源不可用，保留占位层";
+"xomo.figma.node.issue.imageFillTransformFlattened" = "图片填充变换已烘焙为固定像素层";
 "xomo.figma.node.issue.vectorGeometryMissing" = "缺少矢量路径数据";
 "xomo.figma.node.issue.vectorGeometryUnsupported" = "矢量路径包含无法解析的命令";
 "xomo.figma.node.issue.componentSemanticsFlattened" = "组件语义暂按普通组处理";

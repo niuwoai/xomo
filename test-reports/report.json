@@ -1,7 +1,7 @@
 {
-  "generated_at": "2026-07-15 04:30:33 +0800",
-  "total": 35,
-  "passed": 35,
+  "generated_at": "2026-07-15 04:56:30 +0800",
+  "total": 39,
+  "passed": 39,
   "failed": 0,
   "jobs": 1,
   "results": [
@@ -11,7 +11,7 @@
       "identifier": "veilpicTests/XomoFigmaAuthorizedMetadataTests/changingLinkOrDisconnectingClearsStaleMetadata",
       "file": "XomoFigmaAuthorizedMetadataTests.swift",
       "passed": true,
-      "duration": 2.873,
+      "duration": 3.002,
       "issues": [
 
       ],
@@ -23,7 +23,7 @@
       "identifier": "veilpicTests/XomoFigmaAuthorizedMetadataTests/clientMapsAuthorizationNotFoundRateLimitAndServerFailures",
       "file": "XomoFigmaAuthorizedMetadataTests.swift",
       "passed": true,
-      "duration": 2.91,
+      "duration": 3.037,
       "issues": [
 
       ],
@@ -35,7 +35,7 @@
       "identifier": "veilpicTests/XomoFigmaAuthorizedMetadataTests/clientRejectsOversizedAndMalformedSuccessfulResponses",
       "file": "XomoFigmaAuthorizedMetadataTests.swift",
       "passed": true,
-      "duration": 2.922,
+      "duration": 3.125,
       "issues": [
 
       ],
@@ -47,7 +47,7 @@
       "identifier": "veilpicTests/XomoFigmaAuthorizedMetadataTests/clientUsesLeastPrivilegeMetadataEndpointAndKeepsTokenOutOfURL",
       "file": "XomoFigmaAuthorizedMetadataTests.swift",
       "passed": true,
-      "duration": 2.995,
+      "duration": 3.008,
       "issues": [
 
       ],
@@ -59,7 +59,7 @@
       "identifier": "veilpicTests/XomoFigmaAuthorizedMetadataTests/controllerNeverReadsNetworkUntilUserExplicitlyConnectsOrRefreshes",
       "file": "XomoFigmaAuthorizedMetadataTests.swift",
       "passed": true,
-      "duration": 2.804,
+      "duration": 3.335,
       "issues": [
 
       ],
@@ -71,7 +71,7 @@
       "identifier": "veilpicTests/XomoFigmaAuthorizedMetadataTests/invalidCredentialDoesNotTouchKeychainOrNetwork",
       "file": "XomoFigmaAuthorizedMetadataTests.swift",
       "passed": true,
-      "duration": 3.012,
+      "duration": 2.786,
       "issues": [
 
       ],
@@ -83,7 +83,7 @@
       "identifier": "veilpicTests/XomoFigmaAuthorizedMetadataTests/personalAccessTokenValidationTrimsEdgesAndRejectsUnsafeValues",
       "file": "XomoFigmaAuthorizedMetadataTests.swift",
       "passed": true,
-      "duration": 3.97,
+      "duration": 4.001,
       "issues": [
 
       ],
@@ -95,11 +95,59 @@
       "identifier": "veilpicTests/XomoFigmaAuthorizedMetadataTests/sheetUsesSecureCredentialInputAndExplicitNetworkActions",
       "file": "XomoFigmaAuthorizedMetadataTests.swift",
       "passed": true,
-      "duration": 2.886,
+      "duration": 2.888,
       "issues": [
 
       ],
       "log": "XomoFigmaAuthorizedMetadataTests.sheetUsesSecureCredentialInputAndExplicitNetworkActions.log"
+    },
+    {
+      "suite": "XomoFigmaImageAssetTests",
+      "method": "clientRejectsUnsafeOrUndecodableAssetURLsWithoutLeakingCredential",
+      "identifier": "veilpicTests/XomoFigmaImageAssetTests/clientRejectsUnsafeOrUndecodableAssetURLsWithoutLeakingCredential",
+      "file": "XomoFigmaImageAssetTests.swift",
+      "passed": true,
+      "duration": 2.943,
+      "issues": [
+
+      ],
+      "log": "XomoFigmaImageAssetTests.clientRejectsUnsafeOrUndecodableAssetURLsWithoutLeakingCredential.log"
+    },
+    {
+      "suite": "XomoFigmaImageAssetTests",
+      "method": "clientUsesOfficialManifestAndTokenlessHTTPSAssetRequests",
+      "identifier": "veilpicTests/XomoFigmaImageAssetTests/clientUsesOfficialManifestAndTokenlessHTTPSAssetRequests",
+      "file": "XomoFigmaImageAssetTests.swift",
+      "passed": true,
+      "duration": 2.904,
+      "issues": [
+
+      ],
+      "log": "XomoFigmaImageAssetTests.clientUsesOfficialManifestAndTokenlessHTTPSAssetRequests.log"
+    },
+    {
+      "suite": "XomoFigmaImageAssetTests",
+      "method": "failedAssetResolutionKeepsAnExplicitImportablePlaceholder",
+      "identifier": "veilpicTests/XomoFigmaImageAssetTests/failedAssetResolutionKeepsAnExplicitImportablePlaceholder",
+      "file": "XomoFigmaImageAssetTests.swift",
+      "passed": true,
+      "duration": 3.23,
+      "issues": [
+
+      ],
+      "log": "XomoFigmaImageAssetTests.failedAssetResolutionKeepsAnExplicitImportablePlaceholder.log"
+    },
+    {
+      "suite": "XomoFigmaImageAssetTests",
+      "method": "nodePipelineImportsDownloadedFillAsPersistentPixelLayer",
+      "identifier": "veilpicTests/XomoFigmaImageAssetTests/nodePipelineImportsDownloadedFillAsPersistentPixelLayer",
+      "file": "XomoFigmaImageAssetTests.swift",
+      "passed": true,
+      "duration": 2.855,
+      "issues": [
+
+      ],
+      "log": "XomoFigmaImageAssetTests.nodePipelineImportsDownloadedFillAsPersistentPixelLayer.log"
     },
     {
       "suite": "XomoFigmaLinkImportTests",
@@ -107,7 +155,7 @@
       "identifier": "veilpicTests/XomoFigmaLinkImportTests/draftValidatesImmediatelyAndKeepsOnlyParsedPreview",
       "file": "XomoFigmaLinkImportTests.swift",
       "passed": true,
-      "duration": 2.943,
+      "duration": 3.075,
       "issues": [
 
       ],
@@ -119,7 +167,7 @@
       "identifier": "veilpicTests/XomoFigmaLinkImportTests/everyParserErrorHasUniqueLocalizedPresentationKey",
       "file": "XomoFigmaLinkImportTests.swift",
       "passed": true,
-      "duration": 2.861,
+      "duration": 3.107,
       "issues": [
 
       ],
@@ -131,7 +179,7 @@
       "identifier": "veilpicTests/XomoFigmaLinkImportTests/everyResourceAndScopeHasLocalizedPresentationKey",
       "file": "XomoFigmaLinkImportTests.swift",
       "passed": true,
-      "duration": 2.861,
+      "duration": 3.29,
       "issues": [
 
       ],
@@ -143,7 +191,7 @@
       "identifier": "veilpicTests/XomoFigmaLinkImportTests/fileMenuAndEditorPresentTheFigmaPreviewSheet",
       "file": "XomoFigmaLinkImportTests.swift",
       "passed": true,
-      "duration": 2.862,
+      "duration": 3.063,
       "issues": [
 
       ],
@@ -155,7 +203,7 @@
       "identifier": "veilpicTests/XomoFigmaLinkImportTests/keyboardShortcutOpensFigmaLinkImportWithoutConflictingWithImageResize",
       "file": "XomoFigmaLinkImportTests.swift",
       "passed": true,
-      "duration": 2.814,
+      "duration": 3.003,
       "issues": [
 
       ],
@@ -167,7 +215,7 @@
       "identifier": "veilpicTests/XomoFigmaLinkParserTests/codablePreviewNeverPersistsDiscardedQueryValues",
       "file": "XomoFigmaLinkParserTests.swift",
       "passed": true,
-      "duration": 2.839,
+      "duration": 2.893,
       "issues": [
 
       ],
@@ -179,7 +227,7 @@
       "identifier": "veilpicTests/XomoFigmaLinkParserTests/parsesDesignSelectionAndBuildsSanitizedCanonicalURL",
       "file": "XomoFigmaLinkParserTests.swift",
       "passed": true,
-      "duration": 2.791,
+      "duration": 3.098,
       "issues": [
 
       ],
@@ -191,7 +239,7 @@
       "identifier": "veilpicTests/XomoFigmaLinkParserTests/parsesPrototypeStartingPointAndNormalizesNestedNodeIDs",
       "file": "XomoFigmaLinkParserTests.swift",
       "passed": true,
-      "duration": 2.763,
+      "duration": 3.305,
       "issues": [
 
       ],
@@ -203,7 +251,7 @@
       "identifier": "veilpicTests/XomoFigmaLinkParserTests/recognizesCurrentOfficialFigmaResourcePathsAndLegacyFiles",
       "file": "XomoFigmaLinkParserTests.swift",
       "passed": true,
-      "duration": 2.843,
+      "duration": 3.632,
       "issues": [
 
       ],
@@ -215,7 +263,7 @@
       "identifier": "veilpicTests/XomoFigmaLinkParserTests/rejectsAmbiguousOrMalformedSelectors",
       "file": "XomoFigmaLinkParserTests.swift",
       "passed": true,
-      "duration": 2.785,
+      "duration": 2.924,
       "issues": [
 
       ],
@@ -227,7 +275,7 @@
       "identifier": "veilpicTests/XomoFigmaLinkParserTests/rejectsInsecureSpoofedCredentialAndCustomPortURLs",
       "file": "XomoFigmaLinkParserTests.swift",
       "passed": true,
-      "duration": 2.745,
+      "duration": 3.094,
       "issues": [
 
       ],
@@ -239,7 +287,7 @@
       "identifier": "veilpicTests/XomoFigmaLinkParserTests/rejectsOversizedInputBeforeURLParsing",
       "file": "XomoFigmaLinkParserTests.swift",
       "passed": true,
-      "duration": 2.989,
+      "duration": 3.022,
       "issues": [
 
       ],
@@ -251,7 +299,7 @@
       "identifier": "veilpicTests/XomoFigmaLinkParserTests/rejectsUnsupportedRoutesAndMalformedFileIdentity",
       "file": "XomoFigmaLinkParserTests.swift",
       "passed": true,
-      "duration": 2.792,
+      "duration": 3.222,
       "issues": [
 
       ],
@@ -263,7 +311,7 @@
       "identifier": "veilpicTests/XomoFigmaNodeImportPlanTests/clientMapsBadRequestAuthorizationMissingNodeRateLimitAndServerErrors",
       "file": "XomoFigmaNodeImportPlanTests.swift",
       "passed": true,
-      "duration": 2.804,
+      "duration": 2.889,
       "issues": [
 
       ],
@@ -275,7 +323,7 @@
       "identifier": "veilpicTests/XomoFigmaNodeImportPlanTests/clientRejectsMissingNodeOversizedResponsesAndExcessiveTrees",
       "file": "XomoFigmaNodeImportPlanTests.swift",
       "passed": true,
-      "duration": 2.809,
+      "duration": 2.841,
       "issues": [
 
       ],
@@ -287,7 +335,7 @@
       "identifier": "veilpicTests/XomoFigmaNodeImportPlanTests/clientRequiresSpecificNodeAndUsesBoundedOfficialEndpoint",
       "file": "XomoFigmaNodeImportPlanTests.swift",
       "passed": true,
-      "duration": 2.795,
+      "duration": 3.238,
       "issues": [
 
       ],
@@ -299,7 +347,7 @@
       "identifier": "veilpicTests/XomoFigmaNodeImportPlanTests/controllerDoesNotReadUntilExplicitUserActionAndClearsStalePlan",
       "file": "XomoFigmaNodeImportPlanTests.swift",
       "passed": true,
-      "duration": 2.786,
+      "duration": 2.761,
       "issues": [
 
       ],
@@ -311,7 +359,7 @@
       "identifier": "veilpicTests/XomoFigmaNodeImportPlanTests/importedHierarchySurvivesProjectDataAndCompositeExport",
       "file": "XomoFigmaNodeImportPlanTests.swift",
       "passed": true,
-      "duration": 2.765,
+      "duration": 2.826,
       "issues": [
 
       ],
@@ -323,7 +371,7 @@
       "identifier": "veilpicTests/XomoFigmaNodeImportPlanTests/mapperBuildsEditableHierarchyAndRelativeFrames",
       "file": "XomoFigmaNodeImportPlanTests.swift",
       "passed": true,
-      "duration": 2.813,
+      "duration": 4.652,
       "issues": [
 
       ],
@@ -335,7 +383,7 @@
       "identifier": "veilpicTests/XomoFigmaNodeImportPlanTests/mapperReportsPartialImageComponentLayoutAndUnsupportedNodes",
       "file": "XomoFigmaNodeImportPlanTests.swift",
       "passed": true,
-      "duration": 2.778,
+      "duration": 2.894,
       "issues": [
 
       ],
@@ -347,7 +395,7 @@
       "identifier": "veilpicTests/XomoFigmaNodeImportPlanTests/mapperUsesStrokeGeometryAndReportsInheritedRotatedTransform",
       "file": "XomoFigmaNodeImportPlanTests.swift",
       "passed": true,
-      "duration": 2.82,
+      "duration": 2.805,
       "issues": [
 
       ],
@@ -359,7 +407,7 @@
       "identifier": "veilpicTests/XomoFigmaNodeImportPlanTests/materializerCreatesEditableHierarchyAtCenteredScaleAndHonestPlaceholder",
       "file": "XomoFigmaNodeImportPlanTests.swift",
       "passed": true,
-      "duration": 3.044,
+      "duration": 2.836,
       "issues": [
 
       ],
@@ -371,7 +419,7 @@
       "identifier": "veilpicTests/XomoFigmaNodeImportPlanTests/materializerOnlyShrinksOversizedRootAndKeepsItInsideCanvasInset",
       "file": "XomoFigmaNodeImportPlanTests.swift",
       "passed": true,
-      "duration": 2.783,
+      "duration": 2.81,
       "issues": [
 
       ],
@@ -383,7 +431,7 @@
       "identifier": "veilpicTests/XomoFigmaNodeImportPlanTests/sheetMakesNodeReadExplicitAndRequiresNodeSelection",
       "file": "XomoFigmaNodeImportPlanTests.swift",
       "passed": true,
-      "duration": 2.842,
+      "duration": 2.883,
       "issues": [
 
       ],
@@ -395,7 +443,7 @@
       "identifier": "veilpicTests/XomoFigmaNodeImportPlanTests/svgParserSupportsRelativeCurvesQuadraticsAndArcs",
       "file": "XomoFigmaNodeImportPlanTests.swift",
       "passed": true,
-      "duration": 2.761,
+      "duration": 2.809,
       "issues": [
 
       ],
@@ -407,7 +455,7 @@
       "identifier": "veilpicTests/XomoFigmaNodeImportPlanTests/viewModelImportsPlanAsSingleUndoableHistoryStep",
       "file": "XomoFigmaNodeImportPlanTests.swift",
       "passed": true,
-      "duration": 2.832,
+      "duration": 2.8,
       "issues": [
 
       ],
@@ -419,7 +467,7 @@
       "identifier": "veilpicTests/XomoFigmaNodeImportPlanTests/viewModelInsertsImportedRootAfterExistingTopLevelGroup",
       "file": "XomoFigmaNodeImportPlanTests.swift",
       "passed": true,
-      "duration": 2.744,
+      "duration": 2.77,
       "issues": [
 
       ],
