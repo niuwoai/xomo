@@ -433,6 +433,40 @@ struct ImageEditorSavedPathTests {
         #expect(legacy.document.savedPaths.first?.isVisible == false)
     }
 
+    @Test func selectedSavedPathExposesReadOnlyAnchorAndControlGeometry() throws {
+        let viewModel = makeViewModel()
+        let first = ImageEditorPathAnchor(
+            point: CGPoint(x: 14, y: 18),
+            outControl: CGPoint(x: 24, y: 10)
+        )
+        let second = ImageEditorPathAnchor(
+            point: CGPoint(x: 58, y: 42),
+            inControl: CGPoint(x: 46, y: 50)
+        )
+        let saved = ImageEditorSavedPath(
+            name: "Curve Structure",
+            subpaths: [[first, second]],
+            isClosed: false
+        )
+        viewModel.document.savedPaths = [saved]
+        viewModel.document.selectedSavedPathID = saved.id
+        let historyCount = viewModel.document.history.count
+        let layerCount = viewModel.document.layers.count
+
+        let items = viewModel.selectedSavedPathAnchorOverlayItems
+        #expect(items.count == 2)
+        #expect(items[0].subpathIndex == 0)
+        #expect(items[0].anchorIndex == 0)
+        #expect(items[0].point == first.point)
+        #expect(items[0].outControl == first.outControl)
+        #expect(items[1].inControl == second.inControl)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.document.layers.count == layerCount)
+
+        viewModel.document.areExtrasVisible = false
+        #expect(viewModel.selectedSavedPathAnchorOverlayItems.isEmpty)
+    }
+
     @Test func savedPathsRoundTripProjectsAndOlderProjectsDefaultToEmpty() throws {
         let viewModel = makeViewModel()
         createPath(
@@ -489,7 +523,9 @@ struct ImageEditorSavedPathTests {
         let canvas = try source(root, "veilpic/ImageEditorView.swift")
         #expect(canvas.contains("savedPathOverlay(in: geometry.size)"))
         #expect(canvas.contains("viewModel.savedPathCanvasOverlays"))
+        #expect(canvas.contains("viewModel.selectedSavedPathAnchorOverlayItems"))
         #expect(canvas.contains("path.addCurve"))
+        #expect(canvas.contains("handleLine"))
         #expect(canvas.contains(".allowsHitTesting(false)"))
         #expect(project.contains("savedPaths"))
         #expect(automation.contains("xomo.path.saved"))

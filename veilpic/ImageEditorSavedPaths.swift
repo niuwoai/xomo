@@ -69,6 +69,14 @@ extension ImageEditorSavedPath {
     }
 }
 
+struct ImageEditorSavedPathAnchorOverlayItem: Equatable {
+    var subpathIndex: Int
+    var anchorIndex: Int
+    var point: CGPoint
+    var inControl: CGPoint?
+    var outControl: CGPoint?
+}
+
 @MainActor
 extension ImageEditorViewModel {
     var selectedSavedPath: ImageEditorSavedPath? {
@@ -80,6 +88,21 @@ extension ImageEditorViewModel {
         guard document.areExtrasVisible else { return [] }
         let selectedID = document.selectedSavedPathID
         return document.savedPaths.filter { $0.isVisible || $0.id == selectedID }
+    }
+
+    var selectedSavedPathAnchorOverlayItems: [ImageEditorSavedPathAnchorOverlayItem] {
+        guard document.areExtrasVisible, let savedPath = selectedSavedPath else { return [] }
+        return savedPath.subpaths.enumerated().flatMap { subpathIndex, anchors in
+            anchors.enumerated().map { anchorIndex, anchor in
+                ImageEditorSavedPathAnchorOverlayItem(
+                    subpathIndex: subpathIndex,
+                    anchorIndex: anchorIndex,
+                    point: anchor.point,
+                    inControl: anchor.inControl,
+                    outControl: anchor.outControl
+                )
+            }
+        }
     }
 
     var hasEditableCurrentPath: Bool {

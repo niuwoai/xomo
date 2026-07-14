@@ -3417,6 +3417,37 @@ struct ImageEditorView: View {
                         style: StrokeStyle(lineWidth: 1)
                     )
                 }
+                for item in viewModel.selectedSavedPathAnchorOverlayItems {
+                    let anchor = viewPoint(from: item.point, in: size)
+                    let controls = [item.inControl, item.outControl].compactMap { $0 }
+                    for control in controls {
+                        let handle = viewPoint(from: control, in: size)
+                        var handleLine = Path()
+                        handleLine.move(to: anchor)
+                        handleLine.addLine(to: handle)
+                        context.stroke(
+                            handleLine,
+                            with: .color(Color.gray.opacity(0.58)),
+                            style: StrokeStyle(lineWidth: 1, dash: [3, 2])
+                        )
+                        let handleRect = CGRect(
+                            x: handle.x - 3,
+                            y: handle.y - 3,
+                            width: 6,
+                            height: 6
+                        )
+                        context.fill(Path(handleRect), with: .color(Color.black.opacity(0.72)))
+                        context.stroke(Path(handleRect), with: .color(Color.gray.opacity(0.9)), lineWidth: 1)
+                    }
+                    let anchorRect = CGRect(
+                        x: anchor.x - 3.5,
+                        y: anchor.y - 3.5,
+                        width: 7,
+                        height: 7
+                    )
+                    context.fill(Path(anchorRect), with: .color(Color.gray.opacity(0.92)))
+                    context.stroke(Path(anchorRect), with: .color(Color.black.opacity(0.7)), lineWidth: 1)
+                }
             }
             .allowsHitTesting(false)
             .accessibilityHidden(true)
