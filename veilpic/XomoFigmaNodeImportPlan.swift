@@ -66,6 +66,31 @@ struct XomoFigmaPlanSize: Equatable, Sendable {
     var height: Double
 }
 
+struct XomoFigmaPlanTransform: Equatable, Sendable {
+    var m11: Double
+    var m12: Double
+    var translationX: Double
+    var m21: Double
+    var m22: Double
+    var translationY: Double
+
+    init?(_ rows: [[Double]]?) {
+        let maximumMagnitude = 1_000_000.0
+        guard let rows,
+              rows.count == 2,
+              rows[0].count == 3,
+              rows[1].count == 3,
+              rows.joined().allSatisfy({ $0.isFinite && abs($0) <= maximumMagnitude })
+        else { return nil }
+        m11 = rows[0][0]
+        m12 = rows[0][1]
+        translationX = rows[0][2]
+        m21 = rows[1][0]
+        m22 = rows[1][1]
+        translationY = rows[1][2]
+    }
+}
+
 struct XomoFigmaPlanText: Equatable, Sendable {
     var characters: String
     var fontFamily: String?
@@ -101,6 +126,9 @@ struct XomoFigmaNodeImportItem: Equatable, Identifiable, Sendable {
     var geometrySize: XomoFigmaPlanSize?
     var imageReference: String?
     var imageScaleMode: String?
+    var imageTransform: XomoFigmaPlanTransform?
+    var imageScalingFactor: Double?
+    var imageRotation: Double?
     var stackLayout: ImageEditorStackLayout?
     var stackChildLayout: ImageEditorStackChildLayout?
     var isStackLayoutExcluded: Bool

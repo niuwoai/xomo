@@ -1,6 +1,6 @@
 # 像界（Xomo）UI 设计能力路线图
 
-> 最后更新：2026-07-15 ｜ 当前版本：v2.12.0-rc65 ｜ 状态：Auto Layout 容器与 Fill/Stretch 子项已进入可编辑闭环；经典能力继续作为底座
+> 最后更新：2026-07-15 ｜ 当前版本：v2.12.0-rc66 ｜ 状态：Figma 图片 Crop/Tile/旋转已进入视觉烘焙闭环；经典能力继续作为底座
 
 ## 1. 产品结论
 
@@ -254,4 +254,4 @@ Figma 链接导入按风险递增拆分：`链接识别与校验 → 文件/节�
 
 ## 6. 当前下一步
 
-阶段 5 已归档，但 UI 设计能力已经并入现代混合编辑器主线。rc56–rc62 建立安全 Figma 链接读取、可编辑节点层级和持久图片填充；rc63 映射基础水平/垂直 Auto Layout；rc64 支持固定/Hug 容器尺寸；rc65 再支持 Fill/Stretch 子项与权重分配。下一步只在图片 Crop/Tile/旋转精度与 Auto Layout 的 Wrap、Baseline 中选择一条窄路径。
+阶段 5 已归档，但 UI 设计能力已经并入现代混合编辑器主线。rc56–rc62 建立安全 Figma 链接读取、可编辑节点层级和持久图片填充；rc63–rc65 依次补齐基础 Auto Layout、固定/Hug 容器与 Fill/Stretch 子项；rc66 再把图片 Crop/STRETCH、Tile 和 90°旋转按参数烘焙为正确像素。下一步在图片滤镜视觉烘焙与 Auto Layout 的 Wrap、Baseline 中只选一条窄路径。

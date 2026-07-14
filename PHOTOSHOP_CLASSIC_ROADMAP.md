@@ -1,6 +1,6 @@
 # Xomo 经典 Photoshop 能力路线图
 
-> 最后更新：2026-07-15 ｜ 当前版本：v2.12.0-rc65 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座
+> 最后更新：2026-07-15 ｜ 当前版本：v2.12.0-rc66 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座
 
 ## 1. 范围原则
 
@@ -197,4 +197,6 @@
 - `v2.12.0-rc64` 验证：Auto Layout 8/8、Figma 全链路 40/40、三语资源 4/4、CLI 2/2 与 Debug 测试产品构建通过；版本、Bundle ID、macOS 13.0 下限与 arm64 架构核对通过。
 - `v2.12.0-rc65`：Auto Layout 子项支持主轴 Fill 权重分配与交叉轴 Stretch；Figma 映射、属性面板、项目往返、父组重排和单步 Undo/Redo 共用同一模型。
 - `v2.12.0-rc65` 验证：Auto Layout 10/10、图层标题与页签白字 6/6、Figma 全链路 40/40、三语资源 4/4、CLI 2/2 与独立 DerivedData 干净 Debug 构建通过；版本、Bundle ID、macOS 13.0 下限与 arm64 架构核对通过。
-- 下一小版本：在不扩大到完整布局引擎的前提下，评估只保留 Auto Layout 方向、间距与内边距元数据，或继续补图片 Crop/Tile/旋转的视觉烘焙精度。
+- `v2.12.0-rc66`：Figma 图片 Crop/STRETCH 仿射变换、Tile 比例与 90°旋转进入像素烘焙链；继续以普通像素层参与项目保存、导出和整批 Undo，不伪装成可编辑填充对象。
+- `v2.12.0-rc66` 验证：图片填充 8/8、Figma 全链路 44/44、三语资源 4/4、CLI 2/2 与 Debug 测试产品构建通过；App/CLI 版本、Bundle ID、macOS 13.0 下限与 arm64 架构核对通过。
+- 下一小版本：在图片滤镜视觉烘焙与 Auto Layout Wrap/Baseline 中选择一条窄路径，不同时扩大两条线。

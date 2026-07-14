@@ -251,6 +251,7 @@ enum XomoFigmaNodeImportMapper {
         } else {
             fidelity = .partial
         }
+        let imagePaint = imagePaint(node: node)
         return XomoFigmaNodeImportItem(
             sourceID: node.id,
             parentSourceID: parentSourceID,
@@ -287,8 +288,13 @@ enum XomoFigmaNodeImportMapper {
             geometrySize: node.size.map {
                 XomoFigmaPlanSize(width: max(0, $0.width), height: max(0, $0.height))
             },
-            imageReference: imagePaint(node: node)?.imageRef,
-            imageScaleMode: imagePaint(node: node)?.scaleMode,
+            imageReference: imagePaint?.imageRef,
+            imageScaleMode: imagePaint?.scaleMode,
+            imageTransform: XomoFigmaPlanTransform(imagePaint?.imageTransform),
+            imageScalingFactor: imagePaint?.scalingFactor.flatMap {
+                $0.isFinite && $0 > 0 ? $0 : nil
+            },
+            imageRotation: imagePaint?.rotation.flatMap { $0.isFinite ? $0 : nil },
             stackLayout: nativeStackLayout,
             stackChildLayout: stackChildLayout(node),
             isStackLayoutExcluded: node.layoutPositioning == "ABSOLUTE"
@@ -517,6 +523,9 @@ struct XomoFigmaPaint: Decodable {
     var color: XomoFigmaColor?
     var imageRef: String?
     var scaleMode: String?
+    var imageTransform: [[Double]]?
+    var scalingFactor: Double?
+    var rotation: Double?
 }
 
 struct XomoFigmaColor: Decodable {
