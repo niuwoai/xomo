@@ -681,7 +681,7 @@
 "imageEditor.panelTab.comps" = "Comps";
 "imageEditor.savedPath.defaultName" = "Path %d";
 "imageEditor.savedPath.empty" = "No saved paths yet";
-"imageEditor.savedPath.hint" = "The selected path is shown temporarily; use the eye to keep it visible. Load one to edit, then use Update to write changes back.";
+"imageEditor.savedPath.hint" = "The selected path shows read-only anchors; use the eye to pin its outline. Load one to edit, then use Update to write changes back.";
 "imageEditor.savedPath.namePlaceholder" = "Path Name";
 "imageEditor.savedPath.summary.closed" = "Closed · %d anchors · %d subpaths";
 "imageEditor.savedPath.summary.open" = "Open · %d anchors · %d subpaths";

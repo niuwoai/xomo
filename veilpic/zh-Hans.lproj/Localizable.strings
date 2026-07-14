@@ -681,7 +681,7 @@
 "imageEditor.panelTab.comps" = "复合";
 "imageEditor.savedPath.defaultName" = "路径 %d";
 "imageEditor.savedPath.empty" = "尚无已保存路径";
-"imageEditor.savedPath.hint" = "选中路径会临时显示；点眼睛可固定显示。载入后可编辑，修改后用“更新”写回。";
+"imageEditor.savedPath.hint" = "选中路径会显示只读锚点；点眼睛可固定轮廓。载入后可编辑，修改后用“更新”写回。";
 "imageEditor.savedPath.namePlaceholder" = "路径名称";
 "imageEditor.savedPath.summary.closed" = "闭合 · %d 个锚点 · %d 个子路径";
 "imageEditor.savedPath.summary.open" = "开放 · %d 个锚点 · %d 个子路径";

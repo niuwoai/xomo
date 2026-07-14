@@ -681,7 +681,7 @@
 "imageEditor.panelTab.comps" = "コンプ";
 "imageEditor.savedPath.defaultName" = "パス %d";
 "imageEditor.savedPath.empty" = "保存済みパスはまだありません";
-"imageEditor.savedPath.hint" = "選択中のパスは一時表示され、目のボタンで表示を固定できます。読み込んで編集し、「更新」で変更を書き戻します。";
+"imageEditor.savedPath.hint" = "選択中のパスには読み取り専用アンカーが表示され、目のボタンで輪郭を固定できます。読み込んで編集し、「更新」で変更を書き戻します。";
 "imageEditor.savedPath.namePlaceholder" = "パス名";
 "imageEditor.savedPath.summary.closed" = "閉じたパス · アンカー%d個 · サブパス%d個";
 "imageEditor.savedPath.summary.open" = "開いたパス · アンカー%d個 · サブパス%d個";
