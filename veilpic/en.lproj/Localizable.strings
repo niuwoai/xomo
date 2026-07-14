@@ -1592,6 +1592,7 @@
 "imageEditor.status.savedPathMovedDown" = "Moved path down: %@";
 "imageEditor.status.savedPathMovedToTop" = "Moved path to the top of the list: %@";
 "imageEditor.status.savedPathMovedToBottom" = "Moved path to the bottom of the list: %@";
+"imageEditor.status.savedPathMoved" = "Moved path: %@";
 "imageEditor.status.savedPathSelectionRequiresClosed" = "Only a closed saved path can make a selection";
 "imageEditor.status.selectionFromSavedPath" = "Selection loaded from path “%@”";
 "imageEditor.status.savedPathFillRequiresClosed" = "Only a closed saved path can be filled";

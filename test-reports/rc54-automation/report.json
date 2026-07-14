@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-07-15 00:45:21 +0800",
+  "total": 1,
+  "passed": 1,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registryReturnsSavedPathIndexesAndMovesToExactIndex",
+      "identifier": "veilpicTests/XomoAutomationTests/registryReturnsSavedPathIndexesAndMovesToExactIndex",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 2.796,
+      "issues": [
+
+      ],
+      "log": "XomoAutomationTests.registryReturnsSavedPathIndexesAndMovesToExactIndex.log"
+    }
+  ]
+}

@@ -136,6 +136,10 @@ enum XomoAutomationSchema {
         .object(["type": .string("number"), "description": .string(description)])
     }
 
+    static func integer(description: String) -> XomoJSONValue {
+        .object(["type": .string("integer"), "description": .string(description)])
+    }
+
     static func boolean(description: String) -> XomoJSONValue {
         .object(["type": .string("boolean"), "description": .string(description)])
     }
