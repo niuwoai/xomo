@@ -60,6 +60,21 @@ extension ImageEditorViewModel {
         return !savedPath.subpaths.isEmpty && savedPath.subpaths.allSatisfy { $0.count >= 3 }
     }
 
+    var canFillSelectedSavedPathToPixelLayer: Bool {
+        guard canRenderSelectedSavedPathToPixelLayer,
+              let savedPath = selectedSavedPath,
+              savedPath.isClosed
+        else { return false }
+        return savedPath.subpaths.allSatisfy { $0.count >= 3 }
+    }
+
+    var canStrokeSelectedSavedPathToPixelLayer: Bool {
+        guard canRenderSelectedSavedPathToPixelLayer,
+              let savedPath = selectedSavedPath
+        else { return false }
+        return savedPath.subpaths.allSatisfy { $0.count >= 2 }
+    }
+
     @discardableResult
     func saveCurrentPath(name: String?) -> ImageEditorSavedPath? {
         guard document.savedPaths.count < ImageEditorSavedPath.maximumCount else {
@@ -201,6 +216,56 @@ extension ImageEditorViewModel {
         )
     }
 
+    @discardableResult
+    func fillSavedPathToSelectedPixelLayer(_ id: UUID) -> Bool {
+        guard let savedPath = document.savedPaths.first(where: { $0.id == id }) else {
+            statusText = L10n.text("imageEditor.status.savedPathMissing")
+            return false
+        }
+        guard savedPath.isClosed else {
+            statusText = L10n.text("imageEditor.status.savedPathFillRequiresClosed")
+            return false
+        }
+        guard let targetIndex = selectedSavedPathPixelTargetIndex,
+              let image = pathFillImage(
+                from: savedPath,
+                targetLayer: document.layers[targetIndex]
+              )
+        else {
+            statusText = L10n.text("imageEditor.status.savedPathRenderRequiresPixelLayer")
+            return false
+        }
+        return applyPathRenderedImage(
+            image,
+            targetIndex: targetIndex,
+            historyKey: "imageEditor.history.savedPathFill",
+            successStatus: L10n.format("imageEditor.status.savedPathFilled", savedPath.name)
+        )
+    }
+
+    @discardableResult
+    func strokeSavedPathToSelectedPixelLayer(_ id: UUID) -> Bool {
+        guard let savedPath = document.savedPaths.first(where: { $0.id == id }) else {
+            statusText = L10n.text("imageEditor.status.savedPathMissing")
+            return false
+        }
+        guard let targetIndex = selectedSavedPathPixelTargetIndex,
+              let image = pathStrokeImage(
+                from: savedPath,
+                targetLayer: document.layers[targetIndex]
+              )
+        else {
+            statusText = L10n.text("imageEditor.status.savedPathRenderRequiresPixelLayer")
+            return false
+        }
+        return applyPathRenderedImage(
+            image,
+            targetIndex: targetIndex,
+            historyKey: "imageEditor.history.savedPathStroke",
+            successStatus: L10n.format("imageEditor.status.savedPathStroked", savedPath.name)
+        )
+    }
+
     func savedPathSummary(_ savedPath: ImageEditorSavedPath) -> String {
         L10n.format(
             savedPath.isClosed
@@ -320,6 +385,19 @@ extension ImageEditorViewModel {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return nil }
         return String(trimmed.prefix(ImageEditorSavedPath.maximumNameLength))
+    }
+
+    private var canRenderSelectedSavedPathToPixelLayer: Bool {
+        selectedSavedPath != nil && selectedSavedPathPixelTargetIndex != nil
+    }
+
+    private var selectedSavedPathPixelTargetIndex: Int? {
+        guard selectedLayerCount == 1,
+              let targetIndex = document.selectedLayerIndex,
+              document.layers[targetIndex].kind.isPixel,
+              !document.isEffectivelyPixelsLocked(document.layers[targetIndex])
+        else { return nil }
+        return targetIndex
     }
 
     private func nextSavedPathName() -> String {

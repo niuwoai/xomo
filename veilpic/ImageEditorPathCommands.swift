@@ -871,14 +871,12 @@ extension ImageEditorViewModel {
             return
         }
 
-        pushUndo()
-        let targetLayer = document.layers[targetIndex]
-        let output = document.isEffectivelyTransparencyLocked(targetLayer)
-            ? (strokedImage.preservingAlpha(from: targetLayer.image) ?? strokedImage)
-            : strokedImage
-        document.layers[targetIndex].image = output.normalizedBitmapImage()
-        appendHistory(L10n.text("imageEditor.history.pathStroke"))
-        statusText = L10n.text("imageEditor.status.pathStroked")
+        applyPathRenderedImage(
+            strokedImage,
+            targetIndex: targetIndex,
+            historyKey: "imageEditor.history.pathStroke",
+            successStatus: L10n.text("imageEditor.status.pathStroked")
+        )
     }
 
     func fillSelectedPathToPixelLayer() {
@@ -896,14 +894,31 @@ extension ImageEditorViewModel {
             return
         }
 
+        applyPathRenderedImage(
+            filledImage,
+            targetIndex: targetIndex,
+            historyKey: "imageEditor.history.pathFill",
+            successStatus: L10n.text("imageEditor.status.pathFilled")
+        )
+    }
+
+    @discardableResult
+    func applyPathRenderedImage(
+        _ image: NSImage,
+        targetIndex: Int,
+        historyKey: String,
+        successStatus: String
+    ) -> Bool {
+        guard document.layers.indices.contains(targetIndex) else { return false }
         pushUndo()
         let targetLayer = document.layers[targetIndex]
         let output = document.isEffectivelyTransparencyLocked(targetLayer)
-            ? (filledImage.preservingAlpha(from: targetLayer.image) ?? filledImage)
-            : filledImage
+            ? (image.preservingAlpha(from: targetLayer.image) ?? image)
+            : image
         document.layers[targetIndex].image = output.normalizedBitmapImage()
-        appendHistory(L10n.text("imageEditor.history.pathFill"))
-        statusText = L10n.text("imageEditor.status.pathFilled")
+        appendHistory(L10n.text(historyKey))
+        statusText = successStatus
+        return true
     }
 
 
@@ -1545,7 +1560,27 @@ extension ImageEditorViewModel {
             sourceLayer: sourceLayer,
             targetLayer: targetLayer
         )
-        guard let targetAnchors = targetSubpaths.first else { return nil }
+        return pathFillImage(from: targetSubpaths, targetLayer: targetLayer)
+    }
+
+    func pathFillImage(
+        from savedPath: ImageEditorSavedPath,
+        targetLayer: ImageEditorLayer
+    ) -> NSImage? {
+        guard savedPath.isClosed else { return nil }
+        let targetSubpaths = savedPath.subpaths.map { anchors in
+            anchors.map { pathTargetAnchor($0, targetLayer: targetLayer) }
+        }
+        return pathFillImage(from: targetSubpaths, targetLayer: targetLayer)
+    }
+
+    private func pathFillImage(
+        from targetSubpaths: [[ImageEditorPathAnchor]],
+        targetLayer: ImageEditorLayer
+    ) -> NSImage? {
+        guard let targetAnchors = targetSubpaths.first,
+              targetAnchors.count >= 3
+        else { return nil }
         let fillContent = ImageEditorShapeContent(
             kind: .path,
             fillColor: foregroundColor,
@@ -1586,7 +1621,35 @@ extension ImageEditorViewModel {
             sourceLayer: sourceLayer,
             targetLayer: targetLayer
         )
-        guard let targetAnchors = targetSubpaths.first else { return nil }
+        return pathStrokeImage(
+            from: targetSubpaths,
+            isClosed: sourceContent.isPathClosed,
+            targetLayer: targetLayer
+        )
+    }
+
+    func pathStrokeImage(
+        from savedPath: ImageEditorSavedPath,
+        targetLayer: ImageEditorLayer
+    ) -> NSImage? {
+        let targetSubpaths = savedPath.subpaths.map { anchors in
+            anchors.map { pathTargetAnchor($0, targetLayer: targetLayer) }
+        }
+        return pathStrokeImage(
+            from: targetSubpaths,
+            isClosed: savedPath.isClosed,
+            targetLayer: targetLayer
+        )
+    }
+
+    private func pathStrokeImage(
+        from targetSubpaths: [[ImageEditorPathAnchor]],
+        isClosed: Bool,
+        targetLayer: ImageEditorLayer
+    ) -> NSImage? {
+        guard let targetAnchors = targetSubpaths.first,
+              targetAnchors.count >= 2
+        else { return nil }
         let localStrokeWidth = pathStrokeWidth(for: targetLayer)
         let strokeContent = ImageEditorShapeContent(
             kind: .path,
@@ -1598,7 +1661,7 @@ extension ImageEditorViewModel {
             pathPoints: targetAnchors.map(\.point),
             pathAnchors: targetAnchors,
             pathSubpaths: Array(targetSubpaths.dropFirst()),
-            isPathClosed: sourceContent.isPathClosed
+            isPathClosed: isClosed
         )
         let path = strokeContent.pathBezierPath()
         path.lineJoinStyle = .round
@@ -1639,6 +1702,17 @@ extension ImageEditorViewModel {
             point: canvasToLocalPoint(localToCanvasPoint(anchor.point, layer: sourceLayer), layer: targetLayer),
             inControl: anchor.inControl.map { canvasToLocalPoint(localToCanvasPoint($0, layer: sourceLayer), layer: targetLayer) },
             outControl: anchor.outControl.map { canvasToLocalPoint(localToCanvasPoint($0, layer: sourceLayer), layer: targetLayer) }
+        )
+    }
+
+    private func pathTargetAnchor(
+        _ anchor: ImageEditorPathAnchor,
+        targetLayer: ImageEditorLayer
+    ) -> ImageEditorPathAnchor {
+        ImageEditorPathAnchor(
+            point: canvasToLocalPoint(anchor.point, layer: targetLayer),
+            inControl: anchor.inControl.map { canvasToLocalPoint($0, layer: targetLayer) },
+            outControl: anchor.outControl.map { canvasToLocalPoint($0, layer: targetLayer) }
         )
     }
 

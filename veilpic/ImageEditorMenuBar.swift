@@ -2258,6 +2258,18 @@ extension ImageEditorView {
                 viewModel.loadSelectionFromSavedPath(id)
             }
             .disabled(!viewModel.canLoadSelectionFromSelectedSavedPath)
+            Button(L10n.text("imageEditor.action.savedPathFill")) {
+                guard let id = viewModel.document.selectedSavedPathID else { return }
+                selectedLayerPanelTab = .paths
+                viewModel.fillSavedPathToSelectedPixelLayer(id)
+            }
+            .disabled(!viewModel.canFillSelectedSavedPathToPixelLayer)
+            Button(L10n.text("imageEditor.action.savedPathStroke")) {
+                guard let id = viewModel.document.selectedSavedPathID else { return }
+                selectedLayerPanelTab = .paths
+                viewModel.strokeSavedPathToSelectedPixelLayer(id)
+            }
+            .disabled(!viewModel.canStrokeSelectedSavedPathToPixelLayer)
             Button(L10n.text("imageEditor.action.savedPathUpdate")) {
                 guard let id = viewModel.document.selectedSavedPathID else { return }
                 selectedLayerPanelTab = .paths

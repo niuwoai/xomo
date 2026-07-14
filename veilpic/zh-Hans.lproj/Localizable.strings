@@ -1378,6 +1378,8 @@
 "imageEditor.history.savedPathLoad" = "载入路径";
 "imageEditor.history.savedPathDelete" = "删除路径";
 "imageEditor.history.selectionFromSavedPath" = "从已保存路径载入选区";
+"imageEditor.history.savedPathFill" = "填充已保存路径";
+"imageEditor.history.savedPathStroke" = "描边已保存路径";
 "imageEditor.history.vectorMaskEnable" = "启用矢量蒙版";
 "imageEditor.history.vectorMaskDisable" = "停用矢量蒙版";
 "imageEditor.history.vectorMaskEnableSelected" = "启用所选矢量蒙版";
@@ -1576,6 +1578,10 @@
 "imageEditor.status.savedPathDeleted" = "已删除路径：%@";
 "imageEditor.status.savedPathSelectionRequiresClosed" = "只有闭合的已保存路径才能建立选区";
 "imageEditor.status.selectionFromSavedPath" = "已从路径“%@”载入选区";
+"imageEditor.status.savedPathFillRequiresClosed" = "只有闭合的已保存路径才能填充";
+"imageEditor.status.savedPathRenderRequiresPixelLayer" = "请先选择未锁定的像素图层";
+"imageEditor.status.savedPathFilled" = "已用前景色填充路径“%@”";
+"imageEditor.status.savedPathStroked" = "已用当前画笔描边路径“%@”";
 "imageEditor.status.colorSampled" = "已取样前景色";
 "imageEditor.status.colorSamplerAdded" = "已添加颜色取样点 %d";
 "imageEditor.status.colorSamplerCleared" = "已清除颜色取样点";
@@ -1953,6 +1959,8 @@
 "imageEditor.action.savedPathUpdate" = "从当前路径更新";
 "imageEditor.action.savedPathDelete" = "删除路径";
 "imageEditor.action.savedPathSelection" = "从路径建立选区";
+"imageEditor.action.savedPathFill" = "填充路径到当前像素层";
+"imageEditor.action.savedPathStroke" = "描边路径到当前像素层";
 "imageEditor.action.vectorMaskToggle" = "切换矢量蒙版";
 "imageEditor.action.vectorMaskCopyToSelected" = "复制矢量蒙版到所选图层";
 "imageEditor.action.vectorMaskDelete" = "删除所选矢量蒙版";

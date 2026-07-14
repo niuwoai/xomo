@@ -847,6 +847,16 @@ final class XomoAutomationRegistry {
             guard viewModel.loadSelectionFromSavedPath(id) else {
                 throw XomoAutomationCallError.operationFailed("The saved path does not exist or is not closed")
             }
+        case "fill":
+            let id = try requiredUUID("id", in: arguments)
+            guard viewModel.fillSavedPathToSelectedPixelLayer(id) else {
+                throw XomoAutomationCallError.operationFailed("Fill requires a closed saved path and an editable selected pixel layer")
+            }
+        case "stroke":
+            let id = try requiredUUID("id", in: arguments)
+            guard viewModel.strokeSavedPathToSelectedPixelLayer(id) else {
+                throw XomoAutomationCallError.operationFailed("Stroke requires a saved path and an editable selected pixel layer")
+            }
         case "delete":
             let id = try requiredUUID("id", in: arguments)
             guard viewModel.deleteSavedPath(id) else {
@@ -2377,9 +2387,9 @@ private extension XomoAutomationRegistry {
             "dx": XomoAutomationSchema.number(description: "Horizontal path delta"),
             "dy": XomoAutomationSchema.number(description: "Vertical path delta")
         ], required: ["action"]),
-        tool("xomo.path.saved", "List, save, select, rename, update, load, make a selection from, or delete independent named paths.", [
-            "action": XomoAutomationSchema.string(description: "Saved path action", values: ["list", "save", "select", "rename", "update", "load", "selection", "delete"]),
-            "id": XomoAutomationSchema.string(description: "Saved path UUID for select, rename, update, load, selection, or delete"),
+        tool("xomo.path.saved", "List, save, select, rename, update, load, render, make a selection from, or delete independent named paths.", [
+            "action": XomoAutomationSchema.string(description: "Saved path action", values: ["list", "save", "select", "rename", "update", "load", "selection", "fill", "stroke", "delete"]),
+            "id": XomoAutomationSchema.string(description: "Saved path UUID for select, rename, update, load, selection, fill, stroke, or delete"),
             "name": XomoAutomationSchema.string(description: "Optional name when saving or required name when renaming")
         ], required: ["action"]),
         tool("xomo.layer.effect", "Toggle a layer effect on selected layers.", [

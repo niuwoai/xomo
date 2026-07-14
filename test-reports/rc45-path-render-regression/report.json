@@ -1,0 +1,29 @@
+{
+  "generated_at": "2026-07-14 08:59:08 +0800",
+  "total": 2,
+  "passed": 2,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorVectorLayerTests",
+      "method": "imageEditorFillsSelectedPathToLowerPixelLayer",
+      "identifier": "veilpicTests/ImageEditorVectorLayerTests/imageEditorFillsSelectedPathToLowerPixelLayer",
+      "file": "ImageEditorVectorLayerTests.swift",
+      "passed": true,
+      "duration": 3.181,
+      "issues": [],
+      "log": "ImageEditorVectorLayerTests.imageEditorFillsSelectedPathToLowerPixelLayer.log"
+    },
+    {
+      "suite": "ImageEditorVectorLayerTests",
+      "method": "imageEditorStrokesSelectedPathToLowerPixelLayer",
+      "identifier": "veilpicTests/ImageEditorVectorLayerTests/imageEditorStrokesSelectedPathToLowerPixelLayer",
+      "file": "ImageEditorVectorLayerTests.swift",
+      "passed": true,
+      "duration": 3.583,
+      "issues": [],
+      "log": "ImageEditorVectorLayerTests.imageEditorStrokesSelectedPathToLowerPixelLayer.log"
+    }
+  ]
+}
