@@ -307,7 +307,8 @@ final class XomoAutomationRegistry {
             viewModel.drawShape(
                 from: origin,
                 to: end,
-                ellipse: arguments["kind"]?.stringValue == "ellipse"
+                ellipse: arguments["kind"]?.stringValue == "ellipse",
+                cornerRadius: arguments["cornerRadius"]?.doubleValue
             )
         case "xomo.shape.get":
             return shapeResult(viewModel)
@@ -724,7 +725,8 @@ final class XomoAutomationRegistry {
             "fillOpacity": .number(content.fillOpacity),
             "strokeColor": colorJSON(content.strokeColor),
             "strokeOpacity": .number(content.strokeOpacity),
-            "strokeWidth": .number(content.strokeWidth)
+            "strokeWidth": .number(content.strokeWidth),
+            "cornerRadius": .number(content.cornerRadius)
         ])
     }
 
@@ -741,7 +743,9 @@ final class XomoAutomationRegistry {
         } else {
             viewModel.brushSize = content.strokeWidth / 0.35
         }
-        viewModel.updateSelectedShapeLayer()
+        viewModel.updateSelectedShapeLayer(
+            cornerRadius: arguments["cornerRadius"]?.doubleValue
+        )
     }
 
     private func pathAction(
@@ -2384,12 +2388,14 @@ private extension XomoAutomationRegistry {
             "x": XomoAutomationSchema.number(description: "Left coordinate"),
             "y": XomoAutomationSchema.number(description: "Top coordinate"),
             "width": XomoAutomationSchema.number(description: "Width"),
-            "height": XomoAutomationSchema.number(description: "Height")
+            "height": XomoAutomationSchema.number(description: "Height"),
+            "cornerRadius": XomoAutomationSchema.number(description: "Optional uniform rectangle corner radius in pixels")
         ], required: ["kind", "x", "y", "width", "height"]),
         tool("xomo.shape.get", "Inspect the selected editable shape layer."),
-        tool("xomo.shape.update", "Update selected shape fill opacity, stroke width, and foreground color.", [
+        tool("xomo.shape.update", "Update selected shape fill opacity, stroke width, foreground color, and rectangle corner radius.", [
             "opacity": XomoAutomationSchema.number(description: "Fill and stroke opacity"),
-            "strokeWidth": XomoAutomationSchema.number(description: "Stroke width in pixels")
+            "strokeWidth": XomoAutomationSchema.number(description: "Stroke width in pixels"),
+            "cornerRadius": XomoAutomationSchema.number(description: "Uniform rectangle corner radius in pixels")
         ]),
         tool("xomo.text.create", "Create an editable text layer.", [
             "text": XomoAutomationSchema.string(description: "Text content"),

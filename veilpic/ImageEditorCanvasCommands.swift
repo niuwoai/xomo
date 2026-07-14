@@ -430,6 +430,7 @@ private extension ImageEditorShapeContent {
         let averageScale = (scaleX + scaleY) / 2
         var content = self
         content.strokeWidth = max(Self.minimumStrokeWidth, strokeWidth * averageScale)
+        content.cornerRadius = max(0, cornerRadius * averageScale)
         content.pathPoints = pathPoints.map { $0.scaled(scaleX: scaleX, scaleY: scaleY) }
         content.pathAnchors = pathAnchors.map { anchor in
             ImageEditorPathAnchor(

@@ -704,6 +704,7 @@
 "imageEditor.properties.stackLayoutPaddingRightValue" = "Right: %d px";
 "imageEditor.properties.stackLayoutPaddingBottomValue" = "Bottom: %d px";
 "imageEditor.properties.stackLayoutPaddingLeftValue" = "Left: %d px";
+"imageEditor.properties.shapeCornerRadiusValue" = "Corner radius: %d px";
 "imageEditor.stackLayout.axis.horizontal" = "Horizontal";
 "imageEditor.stackLayout.axis.vertical" = "Vertical";
 "imageEditor.stackLayout.primary.start" = "Start";
@@ -720,9 +721,11 @@
 "imageEditor.action.stackLayoutReflow" = "Reflow Children";
 "imageEditor.history.stackLayout" = "Update Auto Layout";
 "imageEditor.history.stackChildLayout" = "Update Auto Layout Child";
+"imageEditor.history.shapeCornerRadius" = "Update Rectangle Corner Radius";
 "imageEditor.status.stackLayoutApplied" = "Auto Layout reflowed";
 "imageEditor.status.stackChildLayoutApplied" = "Auto Layout child reflowed";
 "imageEditor.status.stackLayoutLocked" = "A locked group or child cannot be reflowed";
+"imageEditor.status.shapeCornerRadius" = "Rectangle corner radius set to %d px";
 "imageEditor.properties.filter" = "Filter";
 "imageEditor.properties.smartFiltersEmpty" = "No smart filters on selected layer";
 "imageEditor.properties.smartFilterItem" = "%@ %d%%";
@@ -2886,7 +2889,7 @@
 "xomo.figma.node.issue.clippingFlattened" = "Frame content clipping is not preserved yet";
 "xomo.figma.node.issue.effectsFlattened" = "Effects are not preserved yet";
 "xomo.figma.node.issue.blendModeFlattened" = "Blend mode is not preserved yet";
-"xomo.figma.node.issue.cornerRadiusFlattened" = "Corner radius will use a square rectangle for now";
+"xomo.figma.node.issue.cornerRadiusFlattened" = "Independent corner radii or corner smoothing are not fully preserved";
 "xomo.figma.node.issue.transformFlattened" = "Rotation, reflection, or skew is flattened to axis-aligned bounds";
 "xomo.figma.node.error.nodeSelectionRequired" = "Paste a Figma node link that includes node-id first.";
 "xomo.figma.node.error.credentialMissing" = "No saved Figma token was found. Connect first.";

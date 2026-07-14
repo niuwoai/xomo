@@ -230,7 +230,7 @@ enum XomoFigmaNodeImportMapper {
         if let blendMode = node.blendMode, blendMode != "NORMAL", blendMode != "PASS_THROUGH" {
             issues.append(.blendModeFlattened)
         }
-        if (node.cornerRadius ?? 0) > 0 || !(node.rectangleCornerRadii ?? []).allSatisfy({ $0 == 0 }) {
+        if hasUnsupportedCornerStyle(node) {
             issues.append(.cornerRadiusFlattened)
         }
         if transformFlattened {
@@ -274,7 +274,7 @@ enum XomoFigmaNodeImportMapper {
             solidFill: solidColor(in: node.fills),
             solidStroke: solidColor(in: node.strokes),
             strokeWeight: node.strokeWeight,
-            cornerRadius: node.cornerRadius,
+            cornerRadius: uniformCornerRadius(node),
             text: node.characters.map {
                 XomoFigmaPlanText(
                     characters: $0,
@@ -438,6 +438,28 @@ enum XomoFigmaNodeImportMapper {
         return fills.isEmpty ? (node.strokeGeometry ?? []) : fills
     }
 
+    private static func uniformCornerRadius(_ node: XomoFigmaNode) -> Double? {
+        if let radii = node.rectangleCornerRadii, !radii.isEmpty {
+            guard radii.count == 4,
+                  radii.allSatisfy({ $0.isFinite && $0 >= 0 }),
+                  let first = radii.first,
+                  radii.dropFirst().allSatisfy({ abs($0 - first) <= 0.001 })
+            else { return nil }
+            return first
+        }
+        guard let radius = node.cornerRadius, radius.isFinite, radius >= 0 else { return nil }
+        return radius
+    }
+
+    private static func hasUnsupportedCornerStyle(_ node: XomoFigmaNode) -> Bool {
+        let radii = node.rectangleCornerRadii ?? []
+        let independentCornersAreUniform = radii.isEmpty || uniformCornerRadius(node) != nil
+        let hasRoundedCorner = (uniformCornerRadius(node) ?? 0) > 0
+            || radii.contains(where: { $0.isFinite && $0 > 0 })
+        let hasCornerSmoothing = (node.cornerSmoothing ?? 0) > 0 && hasRoundedCorner
+        return !independentCornersAreUniform || hasCornerSmoothing
+    }
+
     private static func hasFlattenedTransform(_ transform: [[Double]]?) -> Bool {
         guard let transform,
               transform.count == 2,
@@ -481,6 +503,7 @@ struct XomoFigmaNode: Decodable {
     var clipsContent: Bool?
     var cornerRadius: Double?
     var rectangleCornerRadii: [Double]?
+    var cornerSmoothing: Double?
     var layoutMode: String?
     var primaryAxisAlignItems: String?
     var counterAxisAlignItems: String?

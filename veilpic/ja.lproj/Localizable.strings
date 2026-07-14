@@ -704,6 +704,7 @@
 "imageEditor.properties.stackLayoutPaddingRightValue" = "右：%d px";
 "imageEditor.properties.stackLayoutPaddingBottomValue" = "下：%d px";
 "imageEditor.properties.stackLayoutPaddingLeftValue" = "左：%d px";
+"imageEditor.properties.shapeCornerRadiusValue" = "角丸：%d px";
 "imageEditor.stackLayout.axis.horizontal" = "水平";
 "imageEditor.stackLayout.axis.vertical" = "垂直";
 "imageEditor.stackLayout.primary.start" = "先頭";
@@ -720,9 +721,11 @@
 "imageEditor.action.stackLayoutReflow" = "子要素を再配置";
 "imageEditor.history.stackLayout" = "オートレイアウトを変更";
 "imageEditor.history.stackChildLayout" = "オートレイアウトの子要素を変更";
+"imageEditor.history.shapeCornerRadius" = "長方形の角丸を変更";
 "imageEditor.status.stackLayoutApplied" = "オートレイアウトを再配置しました";
 "imageEditor.status.stackChildLayoutApplied" = "オートレイアウトの子要素を再配置しました";
 "imageEditor.status.stackLayoutLocked" = "ロック中のグループまたは子要素は再配置できません";
+"imageEditor.status.shapeCornerRadius" = "長方形の角丸を %d px に設定しました";
 "imageEditor.properties.filter" = "フィルター";
 "imageEditor.properties.smartFiltersEmpty" = "選択レイヤーにスマートフィルターはありません";
 "imageEditor.properties.smartFilterItem" = "%@ %d%%";
@@ -2886,7 +2889,7 @@
 "xomo.figma.node.issue.clippingFlattened" = "Frame の内容クリッピングはまだ保持されません";
 "xomo.figma.node.issue.effectsFlattened" = "エフェクトはまだ保持されません";
 "xomo.figma.node.issue.blendModeFlattened" = "描画モードはまだ保持されません";
-"xomo.figma.node.issue.cornerRadiusFlattened" = "角丸は現在、直角の長方形として扱います";
+"xomo.figma.node.issue.cornerRadiusFlattened" = "個別の角丸またはコーナースムージングは完全には保持されません";
 "xomo.figma.node.issue.transformFlattened" = "回転、反転、傾斜は軸に沿った境界へ縮退します";
 "xomo.figma.node.error.nodeSelectionRequired" = "先に node-id を含む Figma ノードリンクを貼り付けてください。";
 "xomo.figma.node.error.credentialMissing" = "保存済みの Figma トークンがありません。先に接続してください。";

@@ -1,0 +1,57 @@
+{
+  "generated_at": "2026-07-15 06:47:06 +0800",
+  "total": 4,
+  "passed": 4,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorShapeCornerRadiusTests",
+      "method": "cornerRadiusClampsToHalfTheShortSideAndLockedShapesStayUnchanged",
+      "identifier": "veilpicTests/ImageEditorShapeCornerRadiusTests/cornerRadiusClampsToHalfTheShortSideAndLockedShapesStayUnchanged",
+      "file": "ImageEditorShapeCornerRadiusTests.swift",
+      "passed": true,
+      "duration": 2.784,
+      "issues": [
+
+      ],
+      "log": "ImageEditorShapeCornerRadiusTests.cornerRadiusClampsToHalfTheShortSideAndLockedShapesStayUnchanged.log"
+    },
+    {
+      "suite": "ImageEditorShapeCornerRadiusTests",
+      "method": "cornerRadiusEditsUndoPersistsAndScalesWithTheImage",
+      "identifier": "veilpicTests/ImageEditorShapeCornerRadiusTests/cornerRadiusEditsUndoPersistsAndScalesWithTheImage",
+      "file": "ImageEditorShapeCornerRadiusTests.swift",
+      "passed": true,
+      "duration": 2.798,
+      "issues": [
+
+      ],
+      "log": "ImageEditorShapeCornerRadiusTests.cornerRadiusEditsUndoPersistsAndScalesWithTheImage.log"
+    },
+    {
+      "suite": "ImageEditorShapeCornerRadiusTests",
+      "method": "propertiesPanelExposesAKeyboardNeutralCornerRadiusStepper",
+      "identifier": "veilpicTests/ImageEditorShapeCornerRadiusTests/propertiesPanelExposesAKeyboardNeutralCornerRadiusStepper",
+      "file": "ImageEditorShapeCornerRadiusTests.swift",
+      "passed": true,
+      "duration": 2.791,
+      "issues": [
+
+      ],
+      "log": "ImageEditorShapeCornerRadiusTests.propertiesPanelExposesAKeyboardNeutralCornerRadiusStepper.log"
+    },
+    {
+      "suite": "ImageEditorShapeCornerRadiusTests",
+      "method": "roundedRectangleRendersTransparentCornersWithoutRasterizingTheShape",
+      "identifier": "veilpicTests/ImageEditorShapeCornerRadiusTests/roundedRectangleRendersTransparentCornersWithoutRasterizingTheShape",
+      "file": "ImageEditorShapeCornerRadiusTests.swift",
+      "passed": true,
+      "duration": 4.208,
+      "issues": [
+
+      ],
+      "log": "ImageEditorShapeCornerRadiusTests.roundedRectangleRendersTransparentCornersWithoutRasterizingTheShape.log"
+    }
+  ]
+}

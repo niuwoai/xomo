@@ -73,8 +73,9 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(text.text?.fontSize == 16)
         #expect(text.frame == XomoFigmaPlanRect(x: 30, y: 60, width: 64, height: 24))
         #expect(rectangle.targetKind == .rectangle)
-        #expect(rectangle.fidelity == .partial)
-        #expect(rectangle.issues.contains(.cornerRadiusFlattened))
+        #expect(rectangle.fidelity == .exact)
+        #expect(!rectangle.issues.contains(.cornerRadiusFlattened))
+        #expect(rectangle.cornerRadius == 8)
         #expect(rectangle.solidFill == XomoFigmaPlanColor(red: 0.1, green: 0.4, blue: 0.9, alpha: 1))
         #expect(rectangle.opacity == 0.8)
         #expect(ellipse.targetKind == .ellipse)
@@ -121,9 +122,71 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(unsupported.targetKind == nil)
         #expect(unsupported.fidelity == .unsupported)
         #expect(unsupported.issues == [.unsupportedNodeType])
-        #expect(plan.exactCount == 5)
-        #expect(plan.partialCount == 3)
+        #expect(plan.exactCount == 6)
+        #expect(plan.partialCount == 2)
         #expect(plan.unsupportedCount == 1)
+    }
+
+    @Test func mapperKeepsUniformCornersAndReportsIndependentOrSmoothedCorners() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                """
+                {
+                  "name": "Corners",
+                  "nodes": {
+                    "1:20": {
+                      "document": {
+                        "id": "1:20",
+                        "name": "Corners Frame",
+                        "type": "FRAME",
+                        "absoluteBoundingBox": {"x": 0, "y": 0, "width": 320, "height": 240},
+                        "children": [
+                          {
+                            "id": "2:20",
+                            "name": "Uniform",
+                            "type": "RECTANGLE",
+                            "rectangleCornerRadii": [6, 6, 6, 6],
+                            "absoluteBoundingBox": {"x": 10, "y": 10, "width": 100, "height": 40}
+                          },
+                          {
+                            "id": "2:21",
+                            "name": "Independent",
+                            "type": "RECTANGLE",
+                            "rectangleCornerRadii": [4, 8, 12, 16],
+                            "absoluteBoundingBox": {"x": 10, "y": 70, "width": 100, "height": 40}
+                          },
+                          {
+                            "id": "2:22",
+                            "name": "Smoothed",
+                            "type": "RECTANGLE",
+                            "cornerRadius": 10,
+                            "cornerSmoothing": 0.6,
+                            "absoluteBoundingBox": {"x": 10, "y": 130, "width": 100, "height": 40}
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+                """.utf8
+            )
+        )
+
+        let plan = try XomoFigmaNodeImportMapper.makePlan(response: response, requestedNodeID: "1:20")
+        let uniform = try #require(plan.items.first { $0.sourceID == "2:20" })
+        let independent = try #require(plan.items.first { $0.sourceID == "2:21" })
+        let smoothed = try #require(plan.items.first { $0.sourceID == "2:22" })
+
+        #expect(uniform.cornerRadius == 6)
+        #expect(uniform.fidelity == .exact)
+        #expect(!uniform.issues.contains(.cornerRadiusFlattened))
+        #expect(independent.cornerRadius == nil)
+        #expect(independent.fidelity == .partial)
+        #expect(independent.issues.contains(.cornerRadiusFlattened))
+        #expect(smoothed.cornerRadius == 10)
+        #expect(smoothed.fidelity == .partial)
+        #expect(smoothed.issues.contains(.cornerRadiusFlattened))
     }
 
     @Test func mapperUsesStrokeGeometryAndReportsInheritedRotatedTransform() throws {
@@ -375,6 +438,7 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(rectangle.opacity == 0.8)
         if case let .shape(content) = rectangle.kind {
             #expect(content.fillOpacity == 1)
+            #expect(content.cornerRadius == 8)
         } else {
             Issue.record("Figma rectangle should materialize as an editable shape")
         }
@@ -459,6 +523,7 @@ struct XomoFigmaNodeImportPlanTests {
         let root = try #require(reopened.document.layers.first { $0.name == "Checkout Frame" })
         let actions = try #require(reopened.document.layers.first { $0.name == "Actions" })
         let text = try #require(reopened.document.layers.first { $0.name == "Continue Label" })
+        let primary = try #require(reopened.document.layers.first { $0.name == "Primary" })
         let vector = try #require(reopened.document.layers.first { $0.name == "Arrow" })
         let placeholder = try #require(reopened.document.layers.first { $0.name == "Hero Image" })
         #expect(root.isGroup)
@@ -469,6 +534,7 @@ struct XomoFigmaNodeImportPlanTests {
             stretchesCrossAxis: true
         ))
         #expect(text.textContent?.text == "继续")
+        #expect(primary.shapeContent?.cornerRadius == 8)
         #expect(vector.shapeContent?.kind == .path)
         #expect(vector.shapeContent?.editablePathAnchors.count == 3)
         #expect(placeholder.kind.isPixel)
@@ -493,11 +559,13 @@ struct XomoFigmaNodeImportPlanTests {
             result.layers.first { $0.name == L10n.format("imageEditor.layer.figmaFrameBackground", "Checkout Frame") }
         )
         let expectedScale = 360.0 / 844.0
+        let primary = try #require(result.layers.first { $0.name == "Primary" })
 
         #expect(abs(rootBackground.frame.height - 360) < 0.001)
         #expect(abs(rootBackground.frame.width - 390 * expectedScale) < 0.001)
         #expect(abs(rootBackground.frame.midX - 150) < 0.001)
         #expect(abs(rootBackground.frame.midY - 200) < 0.001)
+        #expect(abs((primary.shapeContent?.cornerRadius ?? 0) - 8 * expectedScale) < 0.001)
     }
 
     @Test func viewModelInsertsImportedRootAfterExistingTopLevelGroup() throws {

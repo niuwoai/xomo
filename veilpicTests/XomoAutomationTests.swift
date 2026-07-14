@@ -146,6 +146,53 @@ struct XomoAutomationTests {
         #expect(path["closed"] == .bool(true))
     }
 
+    @Test func registryCreatesInspectsAndUpdatesRectangleCornerRadius() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let historyCountBeforeCreate = viewModel.document.history.count
+        let createResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.shape.create",
+            arguments: [
+                "kind": .string("rectangle"),
+                "x": .number(20),
+                "y": .number(30),
+                "width": .number(80),
+                "height": .number(40),
+                "cornerRadius": .number(40)
+            ]
+        ))
+        #expect(createResponse.ok)
+        #expect(viewModel.document.selectedLayer?.shapeContent?.cornerRadius == 20)
+        #expect(viewModel.document.history.count == historyCountBeforeCreate + 1)
+
+        let inspectResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.shape.get"
+        ))
+        guard case .object(let inspectedShape) = inspectResponse.result else {
+            Issue.record("Expected shape result")
+            return
+        }
+        #expect(inspectedShape["kind"] == .string("rectangle"))
+        #expect(inspectedShape["cornerRadius"] == .number(20))
+
+        let historyCountBeforeUpdate = viewModel.document.history.count
+        let updateResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.shape.update",
+            arguments: ["cornerRadius": .number(6)]
+        ))
+        #expect(updateResponse.ok)
+        #expect(viewModel.document.selectedLayer?.shapeContent?.cornerRadius == 6)
+        #expect(viewModel.document.history.count == historyCountBeforeUpdate + 1)
+
+        viewModel.undo()
+        #expect(viewModel.document.selectedLayer?.shapeContent?.cornerRadius == 20)
+    }
+
     @Test func registryCreatesAndListsLayerComps() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

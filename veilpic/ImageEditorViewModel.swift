@@ -4149,7 +4149,12 @@ final class ImageEditorViewModel: ObservableObject {
         statusText = L10n.text("imageEditor.status.paintBucketFilled")
     }
 
-    func drawShape(from start: CGPoint, to end: CGPoint, ellipse: Bool) {
+    func drawShape(
+        from start: CGPoint,
+        to end: CGPoint,
+        ellipse: Bool,
+        cornerRadius: Double? = nil
+    ) {
         let rect = CGRect(
             x: min(start.x, end.x),
             y: min(start.y, end.y),
@@ -4157,10 +4162,14 @@ final class ImageEditorViewModel: ObservableObject {
             height: abs(end.y - start.y)
         )
         guard rect.width > 3, rect.height > 3 else { return }
-        addShapeLayer(frame: rect, kind: ellipse ? .ellipse : .rectangle)
+        addShapeLayer(
+            frame: rect,
+            kind: ellipse ? .ellipse : .rectangle,
+            cornerRadius: cornerRadius
+        )
     }
 
-    func updateSelectedShapeLayer() {
+    func updateSelectedShapeLayer(cornerRadius: Double? = nil) {
         let indices = selectedLayerIndices.filter { document.layers[$0].isShape && !document.isEffectivelyPixelsLocked(document.layers[$0]) }
         guard !indices.isEmpty else {
             statusText = L10n.text("imageEditor.status.operationFailed")
@@ -4178,6 +4187,11 @@ final class ImageEditorViewModel: ObservableObject {
             shapeContent.strokeColor = fillColor
             shapeContent.strokeOpacity = strokeOpacity
             shapeContent.strokeWidth = strokeWidth
+            if shapeContent.kind == .rectangle,
+               let cornerRadius,
+               cornerRadius.isFinite {
+                shapeContent.cornerRadius = CGFloat(max(0, cornerRadius))
+            }
             document.layers[index].kind = .shape(shapeContent.normalized(size: document.layers[index].image.size))
             document.layers[index].name = L10n.format("imageEditor.layer.shapeName", shapeContent.kind.title)
         }
@@ -6173,14 +6187,23 @@ final class ImageEditorViewModel: ObservableObject {
         CGPoint(x: layer.frame.minX + localPoint.x, y: layer.frame.minY + localPoint.y)
     }
 
-    private func addShapeLayer(frame: CGRect, kind: ImageEditorShapeKind) {
+    private func addShapeLayer(
+        frame: CGRect,
+        kind: ImageEditorShapeKind,
+        cornerRadius: Double?
+    ) {
+        let requestedCornerRadius = cornerRadius?.isFinite == true ? CGFloat(cornerRadius ?? 0) : 0
+        let maximumCornerRadius = max(0, min(frame.width, frame.height) / 2)
         let content = ImageEditorShapeContent(
             kind: kind,
             fillColor: foregroundColor,
             fillOpacity: opacity,
             strokeColor: foregroundColor,
             strokeWidth: max(1, min(96, brushSize * 0.35)),
-            strokeOpacity: min(1, max(0.15, opacity))
+            strokeOpacity: min(1, max(0.15, opacity)),
+            cornerRadius: kind == .rectangle
+                ? min(maximumCornerRadius, max(0, requestedCornerRadius))
+                : 0
         )
         pushUndo()
         var layer = ImageEditorLayer.shape(
