@@ -1089,6 +1089,11 @@ extension ImageEditorView {
 
             Spacer()
 
+            savedPathIconButton("circle.dashed", "imageEditor.action.savedPathSelection") {
+                viewModel.selectSavedPath(savedPath.id)
+                viewModel.loadSelectionFromSavedPath(savedPath.id)
+            }
+            .disabled(!savedPath.isClosed)
             savedPathIconButton("square.and.arrow.up", "imageEditor.action.savedPathLoad") {
                 viewModel.loadSavedPath(savedPath.id)
             }
