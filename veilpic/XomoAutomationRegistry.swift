@@ -311,7 +311,8 @@ final class XomoAutomationRegistry {
                 to: end,
                 ellipse: arguments["kind"]?.stringValue == "ellipse",
                 cornerRadius: arguments["cornerRadius"]?.doubleValue,
-                cornerRadii: cornerRadii
+                cornerRadii: cornerRadii,
+                cornerSmoothing: arguments["cornerSmoothing"]?.doubleValue
             )
         case "xomo.shape.get":
             return shapeResult(viewModel)
@@ -731,6 +732,7 @@ final class XomoAutomationRegistry {
             "strokeWidth": .number(content.strokeWidth),
             "cornerRadius": .number(content.cornerRadius),
             "cornerRadii": cornerRadiiJSON(content.effectiveCornerRadii),
+            "cornerSmoothing": .number(content.cornerSmoothing),
             "usesIndependentCornerRadii": .bool(content.cornerRadii != nil)
         ])
     }
@@ -752,7 +754,8 @@ final class XomoAutomationRegistry {
         }
         viewModel.updateSelectedShapeLayer(
             cornerRadius: arguments["cornerRadius"]?.doubleValue,
-            cornerRadii: cornerRadii
+            cornerRadii: cornerRadii,
+            cornerSmoothing: arguments["cornerSmoothing"]?.doubleValue
         )
     }
 
@@ -2435,14 +2438,16 @@ private extension XomoAutomationRegistry {
             "width": XomoAutomationSchema.number(description: "Width"),
             "height": XomoAutomationSchema.number(description: "Height"),
             "cornerRadius": XomoAutomationSchema.number(description: "Optional uniform rectangle corner radius in pixels"),
-            "cornerRadii": rectangleCornerRadiiSchema
+            "cornerRadii": rectangleCornerRadiiSchema,
+            "cornerSmoothing": XomoAutomationSchema.number(description: "Editable superellipse smoothing from 0 to 1")
         ], required: ["kind", "x", "y", "width", "height"]),
         tool("xomo.shape.get", "Inspect the selected editable shape layer."),
         tool("xomo.shape.update", "Update selected shape fill opacity, stroke width, foreground color, and rectangle corner radius.", [
             "opacity": XomoAutomationSchema.number(description: "Fill and stroke opacity"),
             "strokeWidth": XomoAutomationSchema.number(description: "Stroke width in pixels"),
             "cornerRadius": XomoAutomationSchema.number(description: "Uniform rectangle corner radius in pixels"),
-            "cornerRadii": rectangleCornerRadiiSchema
+            "cornerRadii": rectangleCornerRadiiSchema,
+            "cornerSmoothing": XomoAutomationSchema.number(description: "Editable superellipse smoothing from 0 to 1")
         ]),
         tool("xomo.text.create", "Create an editable text layer.", [
             "text": XomoAutomationSchema.string(description: "Text content"),

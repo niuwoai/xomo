@@ -276,6 +276,7 @@ enum XomoFigmaNodeImportMapper {
             strokeWeight: node.strokeWeight,
             cornerRadius: uniformCornerRadius(node),
             cornerRadii: independentCornerRadii(node),
+            cornerSmoothing: validCornerSmoothing(node),
             text: node.characters.map {
                 XomoFigmaPlanText(
                     characters: $0,
@@ -473,6 +474,14 @@ enum XomoFigmaNodeImportMapper {
         return radii
     }
 
+    private static func validCornerSmoothing(_ node: XomoFigmaNode) -> Double? {
+        guard let smoothing = node.cornerSmoothing,
+              smoothing.isFinite,
+              (0...1).contains(smoothing)
+        else { return nil }
+        return smoothing
+    }
+
     private static func hasUnsupportedCornerStyle(_ node: XomoFigmaNode) -> Bool {
         let radii = node.rectangleCornerRadii ?? []
         let hasInvalidIndependentRadii = !radii.isEmpty
@@ -482,8 +491,15 @@ enum XomoFigmaNodeImportMapper {
         } ?? false
         let hasRoundedCorner = (uniformCornerRadius(node) ?? 0) > 0
             || radii.contains(where: { $0.isFinite && $0 > 0 })
-        let hasCornerSmoothing = (node.cornerSmoothing ?? 0) > 0 && hasRoundedCorner
-        return hasInvalidIndependentRadii || hasInvalidUniformRadius || hasCornerSmoothing
+        let hasInvalidCornerSmoothing = node.cornerSmoothing.map {
+            !$0.isFinite || !(0...1).contains($0)
+        } ?? false
+        let hasApproximatedCornerSmoothing = (validCornerSmoothing(node) ?? 0) > 0
+            && hasRoundedCorner
+        return hasInvalidIndependentRadii
+            || hasInvalidUniformRadius
+            || hasInvalidCornerSmoothing
+            || hasApproximatedCornerSmoothing
     }
 
     private static func hasFlattenedTransform(_ transform: [[Double]]?) -> Bool {

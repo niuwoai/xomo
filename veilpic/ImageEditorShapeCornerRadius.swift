@@ -31,6 +31,14 @@ extension ImageEditorViewModel {
         return content.cornerRadii != nil
     }
 
+    var selectedRectangleCornerSmoothingPercent: Double? {
+        guard selectedLayerCount == 1,
+              let content = document.selectedLayer?.shapeContent,
+              content.kind == .rectangle
+        else { return nil }
+        return Double(content.cornerSmoothing * 100)
+    }
+
     func selectedRectangleCornerRadius(at corner: ImageEditorRectangleCorner) -> Double {
         guard let content = document.selectedLayer?.shapeContent else { return 0 }
         return Double(content.effectiveCornerRadii.radius(at: corner))
@@ -110,6 +118,25 @@ extension ImageEditorViewModel {
             "imageEditor.status.shapeCornerRadiusAtCorner",
             corner.title,
             Int(clamped.rounded())
+        )
+    }
+
+    func setSelectedRectangleCornerSmoothingPercent(_ percent: Double) {
+        guard let context = selectedEditableRectangleContext() else { return }
+        let clampedPercent = min(100, max(0, percent.isFinite ? percent : 0))
+        let smoothing = CGFloat(clampedPercent / 100)
+        guard abs(context.content.cornerSmoothing - smoothing) > 0.000_1 else { return }
+
+        pushUndo()
+        var content = context.content
+        content.cornerSmoothing = smoothing
+        document.layers[context.index].kind = .shape(
+            content.normalized(size: document.layers[context.index].image.size)
+        )
+        appendHistory(L10n.text("imageEditor.history.shapeCornerSmoothing"))
+        statusText = L10n.format(
+            "imageEditor.status.shapeCornerSmoothing",
+            Int(clampedPercent.rounded())
         )
     }
 

@@ -105,6 +105,63 @@ struct ImageEditorShapeCornerRadiusTests {
         ))
     }
 
+    @Test func cornerSmoothingUsesEditableSuperellipseGeometryAndPersists() throws {
+        let size = CGSize(width: 60, height: 40)
+        let circular = ImageEditorShapeContent(
+            kind: .rectangle,
+            fillColor: .systemPurple,
+            fillOpacity: 1,
+            strokeColor: .clear,
+            strokeWidth: 1,
+            strokeOpacity: 0,
+            cornerRadius: 18
+        ).renderedImage(size: size)
+        let smoothed = ImageEditorShapeContent(
+            kind: .rectangle,
+            fillColor: .systemPurple,
+            fillOpacity: 1,
+            strokeColor: .clear,
+            strokeWidth: 1,
+            strokeOpacity: 0,
+            cornerRadius: 18,
+            cornerSmoothing: 1
+        ).renderedImage(size: size)
+        let circularCorner = try #require(circular.color(at: CGPoint(x: 4, y: 4)))
+        let smoothedCorner = try #require(smoothed.color(at: CGPoint(x: 4, y: 4)))
+        #expect(circularCorner.alphaComponent < 0.1)
+        #expect(smoothedCorner.alphaComponent > 0.9)
+
+        let viewModel = ImageEditorViewModel(
+            sourceName: "corner-smoothing.png",
+            image: NSImage.transparent(size: CGSize(width: 120, height: 80))
+        ) { _ in }
+        viewModel.drawShape(
+            from: CGPoint(x: 10, y: 10),
+            to: CGPoint(x: 70, y: 50),
+            ellipse: false,
+            cornerRadius: 16
+        )
+        viewModel.setSelectedRectangleCornerSmoothingPercent(75)
+        #expect(viewModel.document.selectedLayer?.shapeContent?.cornerSmoothing == 0.75)
+        #expect(viewModel.document.history.last?.title == L10n.text(
+            "imageEditor.history.shapeCornerSmoothing"
+        ))
+        viewModel.undo()
+        #expect(viewModel.document.selectedLayer?.shapeContent?.cornerSmoothing == 0)
+        viewModel.redo()
+        #expect(viewModel.document.selectedLayer?.shapeContent?.cornerSmoothing == 0.75)
+
+        let projectData = try viewModel.projectData()
+        let reopened = ImageEditorViewModel(
+            sourceName: "empty.png",
+            image: NSImage.transparent(size: CGSize(width: 8, height: 8))
+        ) { _ in }
+        try reopened.loadProjectData(projectData)
+        reopened.resizeImage(to: CGSize(width: 240, height: 160))
+        #expect(reopened.document.selectedLayer?.shapeContent?.cornerSmoothing == 0.75)
+        #expect(reopened.document.selectedLayer?.shapeContent?.cornerRadius == 32)
+    }
+
     @Test func cornerRadiusEditsUndoPersistsAndScalesWithTheImage() throws {
         let viewModel = ImageEditorViewModel(
             sourceName: "corner-radius.png",
@@ -166,6 +223,7 @@ struct ImageEditorShapeCornerRadiusTests {
         )
         #expect(source.contains("image-editor-shape-corner-radius"))
         #expect(source.contains("image-editor-shape-independent-corners"))
+        #expect(source.contains("image-editor-shape-corner-smoothing"))
         #expect(source.contains("imageEditor.properties.shapeCornerRadiusValue"))
         #expect(source.contains("imageEditor.properties.shapeCornerValue"))
         #expect(source.contains("viewModel.setSelectedRectangleCornerRadius"))

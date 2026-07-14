@@ -402,7 +402,8 @@ enum XomoFigmaNodeMaterializer {
             strokeWidth: max(1, CGFloat(item.strokeWeight ?? 1) * scale),
             strokeOpacity: item.solidStroke.map { CGFloat($0.alpha) } ?? 0,
             cornerRadius: max(0, CGFloat(item.cornerRadius ?? 0) * scale),
-            cornerRadii: item.cornerRadii?.scaled(by: scale)
+            cornerRadii: item.cornerRadii?.scaled(by: scale),
+            cornerSmoothing: max(0, min(1, CGFloat(item.cornerSmoothing ?? 0)))
         )
     }
 

@@ -630,6 +630,7 @@ struct ImageEditorProjectShapeContent: Equatable, Codable {
     var strokeOpacity: CGFloat
     var cornerRadius: CGFloat?
     var cornerRadii: ImageEditorRectangleCornerRadii?
+    var cornerSmoothing: CGFloat?
     var pathPoints: [CGPoint]
     var pathAnchors: [ImageEditorPathAnchor]
     var pathSubpaths: [[ImageEditorPathAnchor]]?
@@ -644,6 +645,7 @@ struct ImageEditorProjectShapeContent: Equatable, Codable {
         strokeOpacity = content.strokeOpacity
         cornerRadius = content.cornerRadius
         cornerRadii = content.cornerRadii
+        cornerSmoothing = content.cornerSmoothing
         pathPoints = content.pathPoints
         pathAnchors = content.pathAnchors
         pathSubpaths = content.pathSubpaths
@@ -660,6 +662,7 @@ struct ImageEditorProjectShapeContent: Equatable, Codable {
             strokeOpacity: strokeOpacity,
             cornerRadius: cornerRadius ?? 0,
             cornerRadii: cornerRadii,
+            cornerSmoothing: cornerSmoothing ?? 0,
             pathPoints: pathPoints,
             pathAnchors: pathAnchors,
             pathSubpaths: pathSubpaths ?? [],

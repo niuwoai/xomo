@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.12.0-rc70 - 2026-07-15
+
+### Added
+- 矩形新增 0–100% 可编辑圆角平滑参数：统一或独立四角都可使用超椭圆曲线渲染，并保持为分辨率无关的原生形状。
+- 属性面板可逐百分比调整圆角平滑；项目保存、重开、Undo/Redo、MCP `xomo.shape.create/get/update` 与 CLI 工具目录同步支持该参数。
+
+### Changed
+- Figma `cornerSmoothing` 现在会保留为 Xomo 原生参数并生成视觉接近的超椭圆；导入报告继续标记为部分保真，明确它是可编辑近似而非 Figma 私有几何的一比一复刻。
+- 圆角半径随图像尺寸缩放，圆角平滑作为无量纲比例保持不变；旧项目缺少该字段时按 0% 圆角平滑读取。
+
+### Tests
+- 新增圆形圆角与超椭圆角落像素差异、属性编辑、项目往返、Undo/Redo、缩放不变量、Figma 映射/材质化和 MCP 创建/更新/读取测试。
+- 圆角核心 6/6、Figma 节点导入 16/16、MCP 自动化 32/32、三语资源 4/4、SwiftPM CLI 2/2 通过；隔离 `build-for-testing` 与独立 DerivedData 干净 Debug App 构建成功。
+- Debug App 版本为 `2.12.0-rc70`，Bundle ID 为 `im.some.xomo`，最低系统为 macOS 13.0，可执行文件为 arm64；App、CLI 与全部 Xcode target 版本一致。
+
 ## 2.12.0-rc69 - 2026-07-15
 
 ### Added
