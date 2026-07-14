@@ -589,12 +589,48 @@ struct ImageEditorSavedPathTests {
 
         viewModel.document.selectedSavedPathID = first.id
         #expect(!viewModel.canMoveSelectedSavedPathUp)
+        #expect(!viewModel.canMoveSelectedSavedPathToTop)
         #expect(!viewModel.moveSavedPathUp(first.id))
+        #expect(!viewModel.moveSavedPathToTop(first.id))
         viewModel.document.selectedSavedPathID = second.id
         #expect(!viewModel.canMoveSelectedSavedPathDown)
+        #expect(!viewModel.canMoveSelectedSavedPathToBottom)
         #expect(!viewModel.moveSavedPathDown(second.id))
+        #expect(!viewModel.moveSavedPathToBottom(second.id))
         #expect(viewModel.document.savedPaths.map(\.id) == [first.id, second.id])
         #expect(viewModel.document.history.count == historyCount)
+    }
+
+    @Test func savedPathOrderJumpsToTopAndBottomWithSingleUndoSteps() {
+        let viewModel = makeViewModel()
+        let anchors = [[
+            ImageEditorPathAnchor(point: CGPoint(x: 8, y: 8)),
+            ImageEditorPathAnchor(point: CGPoint(x: 64, y: 12)),
+            ImageEditorPathAnchor(point: CGPoint(x: 36, y: 52))
+        ]]
+        let first = ImageEditorSavedPath(name: "First", subpaths: anchors, isClosed: true, isVisible: true)
+        let second = ImageEditorSavedPath(name: "Second", subpaths: anchors, isClosed: true, isVisible: true)
+        let third = ImageEditorSavedPath(name: "Third", subpaths: anchors, isClosed: true, isVisible: true)
+        let fourth = ImageEditorSavedPath(name: "Fourth", subpaths: anchors, isClosed: true, isVisible: true)
+        viewModel.document.savedPaths = [first, second, third, fourth]
+        viewModel.document.selectedSavedPathID = third.id
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.canMoveSelectedSavedPathToTop)
+        #expect(viewModel.canMoveSelectedSavedPathToBottom)
+        #expect(viewModel.moveSavedPathToTop(third.id))
+        #expect(viewModel.document.savedPaths.map(\.id) == [third.id, first.id, second.id, fourth.id])
+        #expect(viewModel.savedPathCanvasOverlays.map(\.id) == [third.id, first.id, second.id, fourth.id])
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(!viewModel.canMoveSelectedSavedPathToTop)
+
+        viewModel.undo()
+        #expect(viewModel.document.savedPaths.map(\.id) == [first.id, second.id, third.id, fourth.id])
+        viewModel.redo()
+        #expect(viewModel.document.savedPaths.map(\.id) == [third.id, first.id, second.id, fourth.id])
+        #expect(viewModel.moveSavedPathToBottom(third.id))
+        #expect(viewModel.document.savedPaths.map(\.id) == [first.id, second.id, fourth.id, third.id])
+        #expect(!viewModel.canMoveSelectedSavedPathToBottom)
     }
 
     @Test func savedPathsRoundTripProjectsAndOlderProjectsDefaultToEmpty() throws {
@@ -648,6 +684,8 @@ struct ImageEditorSavedPathTests {
         #expect(panel.contains("viewModel.pasteSavedPath"))
         #expect(panel.contains("viewModel.moveSavedPathUp"))
         #expect(panel.contains("viewModel.moveSavedPathDown"))
+        #expect(panel.contains("viewModel.moveSavedPathToTop"))
+        #expect(panel.contains("viewModel.moveSavedPathToBottom"))
         #expect(panel.contains("text: savedPathNameBinding(savedPath)"))
         #expect(panel.contains(".foregroundStyle(Color(nsColor: ImageEditorTheme.text))"))
         #expect(menu.contains("selectedLayerPanelTab = .paths"))
@@ -658,6 +696,8 @@ struct ImageEditorSavedPathTests {
         #expect(menu.contains("viewModel.pasteSavedPath"))
         #expect(menu.contains("viewModel.moveSavedPathUp"))
         #expect(menu.contains("viewModel.moveSavedPathDown"))
+        #expect(menu.contains("viewModel.moveSavedPathToTop"))
+        #expect(menu.contains("viewModel.moveSavedPathToBottom"))
         let canvas = try source(root, "veilpic/ImageEditorView.swift")
         #expect(canvas.contains("savedPathOverlay(in: geometry.size)"))
         #expect(canvas.contains("viewModel.savedPathCanvasOverlays"))

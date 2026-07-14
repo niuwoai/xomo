@@ -683,7 +683,7 @@
 "imageEditor.savedPath.copySuffix" = " copy";
 "imageEditor.savedPath.copySuffixIndexed" = " copy %d";
 "imageEditor.savedPath.empty" = "No saved paths yet";
-"imageEditor.savedPath.hint" = "Copy, paste, and reorder paths; list order also controls the stacking order of pinned outlines.";
+"imageEditor.savedPath.hint" = "Copy, paste, and quickly reorder paths; list order also controls pinned-outline stacking.";
 "imageEditor.savedPath.namePlaceholder" = "Path Name";
 "imageEditor.savedPath.summary.closed" = "Closed · %d anchors · %d subpaths";
 "imageEditor.savedPath.summary.open" = "Open · %d anchors · %d subpaths";
@@ -1588,6 +1588,8 @@
 "imageEditor.status.savedPathPasted" = "Pasted path: %@";
 "imageEditor.status.savedPathMovedUp" = "Moved path up: %@";
 "imageEditor.status.savedPathMovedDown" = "Moved path down: %@";
+"imageEditor.status.savedPathMovedToTop" = "Moved path to the top of the list: %@";
+"imageEditor.status.savedPathMovedToBottom" = "Moved path to the bottom of the list: %@";
 "imageEditor.status.savedPathSelectionRequiresClosed" = "Only a closed saved path can make a selection";
 "imageEditor.status.selectionFromSavedPath" = "Selection loaded from path “%@”";
 "imageEditor.status.savedPathFillRequiresClosed" = "Only a closed saved path can be filled";
@@ -1978,6 +1980,8 @@
 "imageEditor.action.savedPathPaste" = "Paste Path";
 "imageEditor.action.savedPathMoveUp" = "Move Path Up";
 "imageEditor.action.savedPathMoveDown" = "Move Path Down";
+"imageEditor.action.savedPathMoveToTop" = "Move Path to List Top";
+"imageEditor.action.savedPathMoveToBottom" = "Move Path to List Bottom";
 "imageEditor.action.vectorMaskToggle" = "Toggle Vector Mask";
 "imageEditor.action.vectorMaskCopyToSelected" = "Copy Vector Mask to Selected Layers";
 "imageEditor.action.vectorMaskDelete" = "Delete Vector Masks";

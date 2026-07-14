@@ -135,6 +135,14 @@ extension ImageEditorViewModel {
         return index < document.savedPaths.index(before: document.savedPaths.endIndex)
     }
 
+    var canMoveSelectedSavedPathToTop: Bool {
+        canMoveSelectedSavedPathUp
+    }
+
+    var canMoveSelectedSavedPathToBottom: Bool {
+        canMoveSelectedSavedPathDown
+    }
+
     var canLoadSelectionFromSelectedSavedPath: Bool {
         guard let savedPath = selectedSavedPath, savedPath.isClosed else { return false }
         return !savedPath.subpaths.isEmpty && savedPath.subpaths.allSatisfy { $0.count >= 3 }
@@ -274,6 +282,25 @@ extension ImageEditorViewModel {
     @discardableResult
     func moveSavedPathDown(_ id: UUID) -> Bool {
         moveSavedPath(id, offset: 1, statusKey: "imageEditor.status.savedPathMovedDown")
+    }
+
+    @discardableResult
+    func moveSavedPathToTop(_ id: UUID) -> Bool {
+        moveSavedPath(
+            id,
+            destinationIndex: document.savedPaths.startIndex,
+            statusKey: "imageEditor.status.savedPathMovedToTop"
+        )
+    }
+
+    @discardableResult
+    func moveSavedPathToBottom(_ id: UUID) -> Bool {
+        guard !document.savedPaths.isEmpty else { return false }
+        return moveSavedPath(
+            id,
+            destinationIndex: document.savedPaths.index(before: document.savedPaths.endIndex),
+            statusKey: "imageEditor.status.savedPathMovedToBottom"
+        )
     }
 
     @discardableResult
@@ -577,12 +604,30 @@ extension ImageEditorViewModel {
             statusText = L10n.text("imageEditor.status.savedPathMissing")
             return false
         }
-        let destinationIndex = sourceIndex + offset
-        guard document.savedPaths.indices.contains(destinationIndex) else { return false }
+        return moveSavedPath(
+            id,
+            destinationIndex: sourceIndex + offset,
+            statusKey: statusKey
+        )
+    }
+
+    private func moveSavedPath(
+        _ id: UUID,
+        destinationIndex: Int,
+        statusKey: String
+    ) -> Bool {
+        guard let sourceIndex = document.savedPaths.firstIndex(where: { $0.id == id }) else {
+            statusText = L10n.text("imageEditor.status.savedPathMissing")
+            return false
+        }
+        guard document.savedPaths.indices.contains(destinationIndex),
+              sourceIndex != destinationIndex
+        else { return false }
         let name = document.savedPaths[sourceIndex].name
 
         pushUndo()
-        document.savedPaths.swapAt(sourceIndex, destinationIndex)
+        let savedPath = document.savedPaths.remove(at: sourceIndex)
+        document.savedPaths.insert(savedPath, at: destinationIndex)
         document.selectedSavedPathID = id
         appendHistory(L10n.text("imageEditor.history.savedPathReorder"))
         statusText = L10n.format(statusKey, name)

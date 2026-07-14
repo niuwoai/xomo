@@ -683,7 +683,7 @@
 "imageEditor.savedPath.copySuffix" = " のコピー";
 "imageEditor.savedPath.copySuffixIndexed" = " のコピー %d";
 "imageEditor.savedPath.empty" = "保存済みパスはまだありません";
-"imageEditor.savedPath.hint" = "パスをコピー、ペースト、上下移動できます。リスト順は固定した輪郭の重なり順にもなります。";
+"imageEditor.savedPath.hint" = "パスをコピー、ペースト、すばやく並べ替えできます。リスト順は固定輪郭の重なり順にもなります。";
 "imageEditor.savedPath.namePlaceholder" = "パス名";
 "imageEditor.savedPath.summary.closed" = "閉じたパス · アンカー%d個 · サブパス%d個";
 "imageEditor.savedPath.summary.open" = "開いたパス · アンカー%d個 · サブパス%d個";
@@ -1588,6 +1588,8 @@
 "imageEditor.status.savedPathPasted" = "パスをペーストしました：%@";
 "imageEditor.status.savedPathMovedUp" = "パスを上へ移動しました：%@";
 "imageEditor.status.savedPathMovedDown" = "パスを下へ移動しました：%@";
+"imageEditor.status.savedPathMovedToTop" = "パスをリストの先頭へ移動しました：%@";
+"imageEditor.status.savedPathMovedToBottom" = "パスをリストの末尾へ移動しました：%@";
 "imageEditor.status.savedPathSelectionRequiresClosed" = "閉じた保存済みパスのみ選択範囲に変換できます";
 "imageEditor.status.selectionFromSavedPath" = "パス「%@」から選択範囲を読み込みました";
 "imageEditor.status.savedPathFillRequiresClosed" = "閉じた保存済みパスのみ塗りつぶせます";
@@ -1978,6 +1980,8 @@
 "imageEditor.action.savedPathPaste" = "パスをペースト";
 "imageEditor.action.savedPathMoveUp" = "パスを上へ移動";
 "imageEditor.action.savedPathMoveDown" = "パスを下へ移動";
+"imageEditor.action.savedPathMoveToTop" = "リストの先頭へ移動";
+"imageEditor.action.savedPathMoveToBottom" = "リストの末尾へ移動";
 "imageEditor.action.vectorMaskToggle" = "ベクターマスクを切り替え";
 "imageEditor.action.vectorMaskCopyToSelected" = "ベクターマスクを選択レイヤーへコピー";
 "imageEditor.action.vectorMaskDelete" = "選択ベクターマスクを削除";
