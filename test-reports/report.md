@@ -1,7 +1,7 @@
 # veilpicTests 独立进程测试报告
 
-- 生成时间：2026-07-15 06:23:30 +0800
-- 总数：**44**，通过：**44**，失败：**0**
+- 生成时间：2026-07-15 06:34:55 +0800
+- 总数：**7**，通过：**7**，失败：**0**
 - 并行度（jobs）：1
 
 ✅ 全部通过。
@@ -10,8 +10,4 @@
 
 | 套件 | 通过/总数 |
 |---|---|
-| XomoFigmaAuthorizedMetadataTests | 8/8 |
-| XomoFigmaImageAssetTests | 8/8 |
-| XomoFigmaLinkImportTests | 5/5 |
-| XomoFigmaLinkParserTests | 8/8 |
-| XomoFigmaNodeImportPlanTests | 15/15 |
+| ImageEditorLayerPanelStyleTests | 7/7 |
