@@ -250,7 +250,7 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(!sheet.contains(".onChange(of: draft.preview) { await nodeImportController.fetchPlan"))
     }
 
-    @Test func svgParserSupportsRelativeCurvesQuadraticsAndArcs() throws {
+    @Test nonisolated func svgParserSupportsRelativeCurvesQuadraticsAndArcs() throws {
         let result = try #require(XomoSVGPathParser.parse(
             "M 0 0 l 20 0 q 10 0 10 10 t 10 10 a 10 10 0 0 1 10 10 z"
         ))

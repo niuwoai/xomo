@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc61 - 2026-07-15
+
+### Fixed
+- 将 Figma 节点 ID 的纯校验辅助方法，以及 SVG 路径的结果、词法、语法与弧线转换类型明确标记为 `nonisolated`，消除 Swift 6 在 `allSatisfy`、`compactMap` 方法引用及解析链内部的 actor-isolation 预警；解析结果、网络权限与导入行为不变。
+
+### Tests
+- SVG 路径覆盖用例改为从非主线程隔离测试方法调用解析入口，固定纯解析器不依赖 `MainActor` 的编译契约；Figma 链接、授权、节点映射、项目恢复与导出专项隔离测试 35/35 通过。
+- SwiftPM CLI 2/2 通过且版本输出为 `2.12.0-rc61`；arm64/x86_64 通用 Release App 编译成功且不再报告 actor-isolation 预警，产物版本、Bundle ID `im.some.xomo`、macOS 13.0 下限和双架构核对通过。
+
 ## 2.12.0-rc60 - 2026-07-15
 
 ### Changed

@@ -1,12 +1,12 @@
 import CoreGraphics
 import Foundation
 
-struct XomoSVGPathParseResult: Equatable {
+nonisolated struct XomoSVGPathParseResult: Equatable {
     var subpaths: [[ImageEditorPathAnchor]]
     var isClosed: Bool
 }
 
-enum XomoSVGPathParser {
+nonisolated enum XomoSVGPathParser {
     static func parse(_ source: String) -> XomoSVGPathParseResult? {
         guard let tokens = XomoSVGPathLexer.tokenize(source) else { return nil }
         var parser = XomoSVGPathTokenParser(tokens: tokens)
@@ -14,12 +14,12 @@ enum XomoSVGPathParser {
     }
 }
 
-private enum XomoSVGPathToken: Equatable {
+nonisolated private enum XomoSVGPathToken: Equatable {
     case command(Character)
     case number(CGFloat)
 }
 
-private enum XomoSVGPathLexer {
+nonisolated private enum XomoSVGPathLexer {
     static func tokenize(_ source: String) -> [XomoSVGPathToken]? {
         let scalars = Array(source.unicodeScalars)
         var tokens: [XomoSVGPathToken] = []
@@ -85,7 +85,7 @@ private enum XomoSVGPathLexer {
     }
 }
 
-private struct XomoSVGPathTokenParser {
+nonisolated private struct XomoSVGPathTokenParser {
     let tokens: [XomoSVGPathToken]
     var index = 0
     var command: Character?
@@ -373,13 +373,13 @@ private struct XomoSVGPathTokenParser {
     }
 }
 
-private struct XomoSVGArcSegment {
+nonisolated private struct XomoSVGArcSegment {
     var firstControl: CGPoint
     var secondControl: CGPoint
     var end: CGPoint
 }
 
-private enum XomoSVGArcConverter {
+nonisolated private enum XomoSVGArcConverter {
     static func cubicSegments(
         from start: CGPoint,
         to end: CGPoint,
