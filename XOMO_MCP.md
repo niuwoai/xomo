@@ -1,6 +1,6 @@
 # Xomo MCP 与 CLI
 
-> 当前版本：v2.12.0-rc53
+> 当前版本：v2.12.0-rc54
 
 ## 架构
 
@@ -93,7 +93,7 @@ MCP 服务器实现 `initialize`、`ping`、`tools/list` 和 `tools/call`。当 
 
 `xomo.layer.style` 的 `presetFavorite id=<ID> favorite=<true|false>` 切换内置或自定义预设的收藏状态，`presetFavorites` 与 `presetRecent` 分别返回收藏列表和最多 8 项、最新优先的最近使用列表；目录项同时包含 `favorite`、`recent` 标记。收藏与最近记录跨会话保存但不进入文档 History，删除自定义预设会同步移除失效记录。
 
-`xomo.path.saved` 的 `action` 接受 `list`、`save`、`select`、`rename`、`duplicate`、`moveUp`、`moveDown`、`moveToTop`、`moveToBottom`、`update`、`load`、`selection`、`fill`、`stroke`、`visibility` 或 `delete`。`save` 可选 `name`，其余写操作通过 `id` 定位，`rename` 另需 `name`，`visibility` 另需 `visible`；结果返回路径 ID、名称、选中状态、固定可见状态、当前轮廓可见状态、闭合状态、锚点数以及画布坐标下的完整子路径。保存项是独立快照：删除源图层不会丢失路径，`load` 会生成新的可编辑路径图层，只有显式 `update` 才会用当前路径改写保存项。`duplicate` 不经过系统剪贴板创建紧邻原项的独立副本。四个 `move` 动作调整列表和固定轮廓绘制顺序，保持选择并形成单步 Undo/Redo；已在目标边界时明确失败且不写 History。`selection` 从闭合路径直接建立选区，遵守当前替换/相加/相减/相交模式，不创建或切换图层；开放路径会被拒绝。`fill` 用当前前景色和不透明度填充闭合路径，`stroke` 用当前画笔宽度描边开放或闭合路径，两者都写入当前选中的可编辑像素层并尊重透明像素锁。`visibility` 固定或取消固定该路径的非破坏画布轮廓，不写入 History；选中的路径即使未固定也会临时显示。
+`xomo.path.saved` 的 `action` 接受 `list`、`save`、`select`、`rename`、`duplicate`、`moveUp`、`moveDown`、`moveToTop`、`moveToBottom`、`moveToIndex`、`update`、`load`、`selection`、`fill`、`stroke`、`visibility` 或 `delete`。`save` 可选 `name`，其余写操作通过 `id` 定位，`rename` 另需 `name`，`visibility` 另需 `visible`，`moveToIndex` 另需零基整数 `index`；结果返回路径的零基索引、ID、名称、选中状态、固定可见状态、当前轮廓可见状态、闭合状态、锚点数以及画布坐标下的完整子路径。保存项是独立快照：删除源图层不会丢失路径，`load` 会生成新的可编辑路径图层，只有显式 `update` 才会用当前路径改写保存项。`duplicate` 不经过系统剪贴板创建紧邻原项的独立副本。四个方向 `move` 动作调整列表和固定轮廓绘制顺序；`moveToIndex` 可一次到达确切位置。所有排序都保持选择并形成单步 Undo/Redo，边界、同位置、小数、负数和越界索引明确失败且不写 History。`selection` 从闭合路径直接建立选区，遵守当前替换/相加/相减/相交模式，不创建或切换图层；开放路径会被拒绝。`fill` 用当前前景色和不透明度填充闭合路径，`stroke` 用当前画笔宽度描边开放或闭合路径，两者都写入当前选中的可编辑像素层并尊重透明像素锁。`visibility` 固定或取消固定该路径的非破坏画布轮廓，不写入 History；选中的路径即使未固定也会临时显示。
 
 `xomo.mask.action` 的 `apply` 只永久应用栅格图层蒙版，`applyVector` 只永久应用矢量蒙版，`rasterizeVector` 则把矢量蒙版转换成仍可编辑的栅格图层蒙版。三者不会再互相冒名顶替；智能对象须先通过 `xomo.layer.rasterize` 的 `smartObject` 目标转成像素层，才能永久应用蒙版。
 

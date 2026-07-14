@@ -697,6 +697,38 @@ struct ImageEditorSavedPathTests {
         #expect(!viewModel.canMoveSelectedSavedPathToBottom)
     }
 
+    @Test func savedPathMovesToExactIndexWithSingleUndoAndRejectsInvalidDestinations() {
+        let viewModel = makeViewModel()
+        let anchors = [[
+            ImageEditorPathAnchor(point: CGPoint(x: 8, y: 8)),
+            ImageEditorPathAnchor(point: CGPoint(x: 64, y: 12)),
+            ImageEditorPathAnchor(point: CGPoint(x: 36, y: 52))
+        ]]
+        let first = ImageEditorSavedPath(name: "First", subpaths: anchors, isClosed: true)
+        let second = ImageEditorSavedPath(name: "Second", subpaths: anchors, isClosed: true)
+        let third = ImageEditorSavedPath(name: "Third", subpaths: anchors, isClosed: true)
+        let fourth = ImageEditorSavedPath(name: "Fourth", subpaths: anchors, isClosed: true)
+        viewModel.document.savedPaths = [first, second, third, fourth]
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.moveSavedPath(first.id, toIndex: 2))
+        #expect(viewModel.document.savedPaths.map(\.id) == [second.id, third.id, first.id, fourth.id])
+        #expect(viewModel.document.selectedSavedPathID == first.id)
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        viewModel.undo()
+        #expect(viewModel.document.savedPaths.map(\.id) == [first.id, second.id, third.id, fourth.id])
+        viewModel.redo()
+        #expect(viewModel.document.savedPaths.map(\.id) == [second.id, third.id, first.id, fourth.id])
+
+        let movedPaths = viewModel.document.savedPaths
+        #expect(!viewModel.moveSavedPath(first.id, toIndex: 2))
+        #expect(!viewModel.moveSavedPath(first.id, toIndex: -1))
+        #expect(!viewModel.moveSavedPath(first.id, toIndex: movedPaths.count))
+        #expect(viewModel.document.savedPaths == movedPaths)
+        #expect(viewModel.document.history.count == historyCount + 1)
+    }
+
     @Test func savedPathsRoundTripProjectsAndOlderProjectsDefaultToEmpty() throws {
         let viewModel = makeViewModel()
         createPath(

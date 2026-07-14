@@ -853,6 +853,23 @@ final class XomoAutomationRegistry {
             guard moved else {
                 throw XomoAutomationCallError.operationFailed("Saved path is already at the requested boundary")
             }
+        case "moveToIndex":
+            let id = try requiredUUID("id", in: arguments)
+            guard viewModel.document.savedPaths.contains(where: { $0.id == id }) else {
+                throw XomoAutomationCallError.notFound("Saved path \(id.uuidString)")
+            }
+            let rawIndex = try requiredNumber("index", in: arguments)
+            guard rawIndex >= 0,
+                  rawIndex < Double(viewModel.document.savedPaths.count),
+                  rawIndex.rounded(.towardZero) == rawIndex
+            else {
+                throw XomoAutomationCallError.invalidArgument(
+                    "Saved path index must be a zero-based integer within the current list"
+                )
+            }
+            guard viewModel.moveSavedPath(id, toIndex: Int(rawIndex)) else {
+                throw XomoAutomationCallError.operationFailed("Saved path is already at the requested index")
+            }
         case "update":
             let id = try requiredUUID("id", in: arguments)
             guard viewModel.updateSavedPath(id) else {
@@ -899,8 +916,9 @@ final class XomoAutomationRegistry {
 
     private func savedPathsResult(_ viewModel: ImageEditorViewModel) -> XomoJSONValue {
         let overlayIDs = Set(viewModel.savedPathCanvasOverlays.map(\.id))
-        return .array(viewModel.document.savedPaths.map { savedPath in
+        return .array(viewModel.document.savedPaths.enumerated().map { index, savedPath in
             .object([
+                "index": .number(Double(index)),
                 "id": .string(savedPath.id.uuidString),
                 "title": .string(savedPath.name),
                 "selected": .bool(viewModel.document.selectedSavedPathID == savedPath.id),
@@ -2420,8 +2438,9 @@ private extension XomoAutomationRegistry {
             "dy": XomoAutomationSchema.number(description: "Vertical path delta")
         ], required: ["action"]),
         tool("xomo.path.saved", "List, save, select, rename, duplicate, reorder, update, load, render, show, make a selection from, or delete independent named paths.", [
-            "action": XomoAutomationSchema.string(description: "Saved path action", values: ["list", "save", "select", "rename", "duplicate", "moveUp", "moveDown", "moveToTop", "moveToBottom", "update", "load", "selection", "fill", "stroke", "visibility", "delete"]),
+            "action": XomoAutomationSchema.string(description: "Saved path action", values: ["list", "save", "select", "rename", "duplicate", "moveUp", "moveDown", "moveToTop", "moveToBottom", "moveToIndex", "update", "load", "selection", "fill", "stroke", "visibility", "delete"]),
             "id": XomoAutomationSchema.string(description: "Saved path UUID for select, rename, duplicate, reorder, update, load, selection, fill, stroke, visibility, or delete"),
+            "index": XomoAutomationSchema.integer(description: "Zero-based destination index for moveToIndex"),
             "name": XomoAutomationSchema.string(description: "Optional name when saving or required name when renaming"),
             "visible": XomoAutomationSchema.boolean(description: "Persistent canvas overlay state for visibility")
         ], required: ["action"]),

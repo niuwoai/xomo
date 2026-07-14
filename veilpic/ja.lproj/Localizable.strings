@@ -1592,6 +1592,7 @@
 "imageEditor.status.savedPathMovedDown" = "パスを下へ移動しました：%@";
 "imageEditor.status.savedPathMovedToTop" = "パスをリストの先頭へ移動しました：%@";
 "imageEditor.status.savedPathMovedToBottom" = "パスをリストの末尾へ移動しました：%@";
+"imageEditor.status.savedPathMoved" = "パスを移動しました：%@";
 "imageEditor.status.savedPathSelectionRequiresClosed" = "閉じた保存済みパスのみ選択範囲に変換できます";
 "imageEditor.status.selectionFromSavedPath" = "パス「%@」から選択範囲を読み込みました";
 "imageEditor.status.savedPathFillRequiresClosed" = "閉じた保存済みパスのみ塗りつぶせます";

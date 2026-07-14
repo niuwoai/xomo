@@ -1058,6 +1058,79 @@ struct XomoAutomationTests {
         #expect(viewModel.document.history.count == initialHistoryCount + 4)
     }
 
+    @Test func registryReturnsSavedPathIndexesAndMovesToExactIndex() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        let anchors = [[
+            ImageEditorPathAnchor(point: CGPoint(x: 12, y: 10)),
+            ImageEditorPathAnchor(point: CGPoint(x: 74, y: 14)),
+            ImageEditorPathAnchor(point: CGPoint(x: 44, y: 54))
+        ]]
+        let first = ImageEditorSavedPath(name: "First", subpaths: anchors, isClosed: true)
+        let second = ImageEditorSavedPath(name: "Second", subpaths: anchors, isClosed: true)
+        let third = ImageEditorSavedPath(name: "Third", subpaths: anchors, isClosed: true)
+        let fourth = ImageEditorSavedPath(name: "Fourth", subpaths: anchors, isClosed: true)
+        viewModel.document.savedPaths = [first, second, third, fourth]
+        registry.register(viewModel)
+
+        let tools = try #require(registry.execute(request(operation: "tools")).result?.arrayValue)
+        let savedPathTool = try #require(tools.first {
+            $0.objectValue?["name"] == .string("xomo.path.saved")
+        })
+        let properties = savedPathTool.objectValue?["inputSchema"]?
+            .objectValue?["properties"]?.objectValue
+        let advertisedActions = properties?["action"]?
+            .objectValue?["enum"]?.arrayValue?.compactMap(\.stringValue) ?? []
+        #expect(advertisedActions.contains("moveToIndex"))
+        #expect(properties?["index"]?.objectValue?["type"] == .string("integer"))
+
+        let list = registry.execute(request(
+            operation: "call",
+            name: "xomo.path.saved",
+            arguments: ["action": .string("list")]
+        ))
+        #expect(list.ok)
+        #expect(list.result?.arrayValue?.compactMap {
+            $0.objectValue?["index"]?.doubleValue
+        } == [0, 1, 2, 3])
+
+        let historyCount = viewModel.document.history.count
+        let move = registry.execute(request(
+            operation: "call",
+            name: "xomo.path.saved",
+            arguments: [
+                "action": .string("moveToIndex"),
+                "id": .string(first.id.uuidString),
+                "index": .number(2)
+            ]
+        ))
+        #expect(move.ok)
+        #expect(move.result?.arrayValue?.compactMap {
+            $0.objectValue?["id"]?.stringValue
+        } == [second.id.uuidString, third.id.uuidString, first.id.uuidString, fourth.id.uuidString])
+        #expect(move.result?.arrayValue?.compactMap {
+            $0.objectValue?["index"]?.doubleValue
+        } == [0, 1, 2, 3])
+        #expect(viewModel.document.selectedSavedPathID == first.id)
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        let movedPaths = viewModel.document.savedPaths
+        for invalidIndex in [2.0, 1.5, -1.0, 4.0] {
+            let rejected = registry.execute(request(
+                operation: "call",
+                name: "xomo.path.saved",
+                arguments: [
+                    "action": .string("moveToIndex"),
+                    "id": .string(first.id.uuidString),
+                    "index": .number(invalidIndex)
+                ]
+            ))
+            #expect(!rejected.ok)
+            #expect(viewModel.document.savedPaths == movedPaths)
+            #expect(viewModel.document.history.count == historyCount + 1)
+        }
+    }
+
     @Test func registryReordersCollapsedGroupsAsVisibleSubtrees() {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

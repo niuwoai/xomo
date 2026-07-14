@@ -1592,6 +1592,7 @@
 "imageEditor.status.savedPathMovedDown" = "已下移路径：%@";
 "imageEditor.status.savedPathMovedToTop" = "已将路径移到列表顶部：%@";
 "imageEditor.status.savedPathMovedToBottom" = "已将路径移到列表底部：%@";
+"imageEditor.status.savedPathMoved" = "已移动路径：%@";
 "imageEditor.status.savedPathSelectionRequiresClosed" = "只有闭合的已保存路径才能建立选区";
 "imageEditor.status.selectionFromSavedPath" = "已从路径“%@”载入选区";
 "imageEditor.status.savedPathFillRequiresClosed" = "只有闭合的已保存路径才能填充";

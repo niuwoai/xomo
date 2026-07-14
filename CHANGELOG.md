@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.12.0-rc54 - 2026-07-15
+
+### Added
+- `xomo.path.saved` 返回的每条保存路径新增零基 `index`，自动化可直接读取面板、项目持久化与固定轮廓绘制栈中的确切位置。
+- 新增 `moveToIndex` 动作与 `index` 参数，可按路径 UUID 一次移动到指定零基位置。
+
+### Changed
+- 精确移动复用现有保存路径重排核心，成功后保持选择并形成单步 History/Undo/Redo；同位置、负数、小数和越界索引均在修改文档前拒绝。
+- MCP 运行时 schema 同步公布 `moveToIndex` 和整数型 `index`，避免客户端把小数静默截断成另一个位置。
+
+### Tests
+- 新增业务层精确移动、Undo/Redo、无效目标无副作用，以及 MCP schema、返回索引、精确顺序和参数拒绝测试。
+- 保存路径与既有工作流 27/27、真实 MCP 1/1、三语资源 4/4、SwiftPM CLI 2/2 通过；Debug `build-for-testing` 通过。
+- 核对 Debug App/CLI 版本为 `2.12.0-rc54`、Bundle ID 为 `im.some.xomo`、最低系统为 macOS 13.0，Debug App 为 arm64 架构。
+
 ## 2.12.0-rc53 - 2026-07-15
 
 ### Added

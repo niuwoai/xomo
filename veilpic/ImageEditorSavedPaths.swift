@@ -339,6 +339,15 @@ extension ImageEditorViewModel {
     }
 
     @discardableResult
+    func moveSavedPath(_ id: UUID, toIndex destinationIndex: Int) -> Bool {
+        moveSavedPath(
+            id,
+            destinationIndex: destinationIndex,
+            statusKey: "imageEditor.status.savedPathMoved"
+        )
+    }
+
+    @discardableResult
     func renameSavedPath(_ id: UUID, to name: String) -> Bool {
         guard let index = document.savedPaths.firstIndex(where: { $0.id == id }) else {
             statusText = L10n.text("imageEditor.status.savedPathMissing")
