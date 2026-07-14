@@ -346,6 +346,39 @@ struct ImageEditorSavedPathTests {
         #expect(mappedOutside.alphaComponent < 0.01)
     }
 
+    @Test func selectedSavedPathProvidesNonDestructiveCanvasOverlay() throws {
+        let viewModel = makeViewModel()
+        let saved = ImageEditorSavedPath(
+            name: "Overlay Path",
+            subpaths: [rectangleAnchors(CGRect(x: 18, y: 12, width: 42, height: 30))],
+            isClosed: true
+        )
+        viewModel.document.savedPaths = [saved]
+        viewModel.document.selectedSavedPathID = saved.id
+        let historyCount = viewModel.document.history.count
+        let layerCount = viewModel.document.layers.count
+
+        #expect(viewModel.selectedSavedPathCanvasOverlay == saved)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.document.layers.count == layerCount)
+    }
+
+    @Test func savedPathCanvasOverlayHonorsExtrasVisibilityAndSelection() {
+        let viewModel = makeViewModel()
+        let saved = ImageEditorSavedPath(
+            name: "Hidden Overlay",
+            subpaths: [rectangleAnchors(CGRect(x: 10, y: 10, width: 30, height: 20))],
+            isClosed: true
+        )
+        viewModel.document.savedPaths = [saved]
+
+        #expect(viewModel.selectedSavedPathCanvasOverlay == nil)
+        viewModel.document.selectedSavedPathID = saved.id
+        #expect(viewModel.selectedSavedPathCanvasOverlay == saved)
+        viewModel.document.areExtrasVisible = false
+        #expect(viewModel.selectedSavedPathCanvasOverlay == nil)
+    }
+
     @Test func savedPathsRoundTripProjectsAndOlderProjectsDefaultToEmpty() throws {
         let viewModel = makeViewModel()
         createPath(
@@ -399,6 +432,11 @@ struct ImageEditorSavedPathTests {
         #expect(menu.contains("viewModel.loadSelectionFromSavedPath"))
         #expect(menu.contains("viewModel.fillSavedPathToSelectedPixelLayer"))
         #expect(menu.contains("viewModel.strokeSavedPathToSelectedPixelLayer"))
+        let canvas = try source(root, "veilpic/ImageEditorView.swift")
+        #expect(canvas.contains("savedPathOverlay(in: geometry.size)"))
+        #expect(canvas.contains("viewModel.selectedSavedPathCanvasOverlay"))
+        #expect(canvas.contains("path.addCurve"))
+        #expect(canvas.contains(".allowsHitTesting(false)"))
         #expect(project.contains("savedPaths"))
         #expect(automation.contains("xomo.path.saved"))
         #expect(automation.contains("case \"selection\""))
