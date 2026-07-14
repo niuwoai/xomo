@@ -2258,6 +2258,18 @@ extension ImageEditorView {
                     savedPathNameDrafts[savedPath.id] = savedPath.name
                 }
             }
+            Button(L10n.text("imageEditor.action.savedPathMoveUp")) {
+                guard let id = viewModel.document.selectedSavedPathID else { return }
+                selectedLayerPanelTab = .paths
+                viewModel.moveSavedPathUp(id)
+            }
+            .disabled(!viewModel.canMoveSelectedSavedPathUp)
+            Button(L10n.text("imageEditor.action.savedPathMoveDown")) {
+                guard let id = viewModel.document.selectedSavedPathID else { return }
+                selectedLayerPanelTab = .paths
+                viewModel.moveSavedPathDown(id)
+            }
+            .disabled(!viewModel.canMoveSelectedSavedPathDown)
             Button(L10n.text("imageEditor.action.savedPathLoad")) {
                 guard let id = viewModel.document.selectedSavedPathID else { return }
                 selectedLayerPanelTab = .paths
