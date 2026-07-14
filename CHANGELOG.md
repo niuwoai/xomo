@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.12.0-rc50 - 2026-07-14
+
+### Added
+- 路径面板底部和“路径”菜单新增上移、下移；保存路径的列表顺序现在可以直接调整，多条固定轮廓按同一顺序稳定绘制。
+
+### Changed
+- 路径重排保持当前选择并作为单步 History 支持 Undo/Redo；首项上移、末项下移会禁用，直接调用也不会修改路径或写入 History。
+- 面板行序、项目保存顺序与画布叠放顺序共用文档中的唯一数组，不引入容易失配的第二套层级状态。
+
+### Tests
+- 保存路径重排与既有路径工作流 23/23、三语资源 4/4 和 SwiftPM CLI 2/2 通过；第 50 个小版本从空 DerivedData 完成 clean Debug `build-for-testing`。
+- 核对干净 Debug App/CLI 版本为 `2.12.0-rc50`、Bundle ID 为 `im.some.xomo`、最低系统为 macOS 13.0，Debug App 为 arm64 架构。
+
 ## 2.12.0-rc49 - 2026-07-14
 
 ### Added

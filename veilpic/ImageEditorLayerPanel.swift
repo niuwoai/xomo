@@ -1065,6 +1065,16 @@ extension ImageEditorView {
                         syncSavedPathNameDraft(savedPath)
                     }
                 }
+                savedPathIconButton("arrow.up", "imageEditor.action.savedPathMoveUp") {
+                    guard let id = viewModel.document.selectedSavedPathID else { return }
+                    viewModel.moveSavedPathUp(id)
+                }
+                .disabled(!viewModel.canMoveSelectedSavedPathUp)
+                savedPathIconButton("arrow.down", "imageEditor.action.savedPathMoveDown") {
+                    guard let id = viewModel.document.selectedSavedPathID else { return }
+                    viewModel.moveSavedPathDown(id)
+                }
+                .disabled(!viewModel.canMoveSelectedSavedPathDown)
                 Spacer(minLength: 0)
             }
         }

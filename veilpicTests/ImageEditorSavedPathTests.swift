@@ -545,6 +545,58 @@ struct ImageEditorSavedPathTests {
         #expect(viewModel.document.history.count == initialHistoryCount)
     }
 
+    @Test func savedPathOrderMovesWithUndoAndControlsOverlayStacking() throws {
+        let viewModel = makeViewModel()
+        let anchors = [[
+            ImageEditorPathAnchor(point: CGPoint(x: 8, y: 8)),
+            ImageEditorPathAnchor(point: CGPoint(x: 64, y: 12)),
+            ImageEditorPathAnchor(point: CGPoint(x: 36, y: 52))
+        ]]
+        let first = ImageEditorSavedPath(name: "First", subpaths: anchors, isClosed: true, isVisible: true)
+        let second = ImageEditorSavedPath(name: "Second", subpaths: anchors, isClosed: true, isVisible: true)
+        let third = ImageEditorSavedPath(name: "Third", subpaths: anchors, isClosed: true, isVisible: true)
+        viewModel.document.savedPaths = [first, second, third]
+        viewModel.document.selectedSavedPathID = second.id
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.canMoveSelectedSavedPathUp)
+        #expect(viewModel.canMoveSelectedSavedPathDown)
+        #expect(viewModel.moveSavedPathUp(second.id))
+        #expect(viewModel.document.savedPaths.map(\.id) == [second.id, first.id, third.id])
+        #expect(viewModel.savedPathCanvasOverlays.map(\.id) == [second.id, first.id, third.id])
+        #expect(viewModel.document.selectedSavedPathID == second.id)
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        viewModel.undo()
+        #expect(viewModel.document.savedPaths.map(\.id) == [first.id, second.id, third.id])
+        viewModel.redo()
+        #expect(viewModel.document.savedPaths.map(\.id) == [second.id, first.id, third.id])
+        #expect(viewModel.moveSavedPathDown(second.id))
+        #expect(viewModel.document.savedPaths.map(\.id) == [first.id, second.id, third.id])
+    }
+
+    @Test func savedPathOrderRejectsEdgesWithoutHistory() {
+        let viewModel = makeViewModel()
+        let anchors = [[
+            ImageEditorPathAnchor(point: CGPoint(x: 8, y: 8)),
+            ImageEditorPathAnchor(point: CGPoint(x: 64, y: 12)),
+            ImageEditorPathAnchor(point: CGPoint(x: 36, y: 52))
+        ]]
+        let first = ImageEditorSavedPath(name: "First", subpaths: anchors, isClosed: true)
+        let second = ImageEditorSavedPath(name: "Second", subpaths: anchors, isClosed: true)
+        viewModel.document.savedPaths = [first, second]
+        let historyCount = viewModel.document.history.count
+
+        viewModel.document.selectedSavedPathID = first.id
+        #expect(!viewModel.canMoveSelectedSavedPathUp)
+        #expect(!viewModel.moveSavedPathUp(first.id))
+        viewModel.document.selectedSavedPathID = second.id
+        #expect(!viewModel.canMoveSelectedSavedPathDown)
+        #expect(!viewModel.moveSavedPathDown(second.id))
+        #expect(viewModel.document.savedPaths.map(\.id) == [first.id, second.id])
+        #expect(viewModel.document.history.count == historyCount)
+    }
+
     @Test func savedPathsRoundTripProjectsAndOlderProjectsDefaultToEmpty() throws {
         let viewModel = makeViewModel()
         createPath(
@@ -594,6 +646,8 @@ struct ImageEditorSavedPathTests {
         #expect(panel.contains("viewModel.strokeSavedPathToSelectedPixelLayer"))
         #expect(panel.contains("viewModel.copySavedPath"))
         #expect(panel.contains("viewModel.pasteSavedPath"))
+        #expect(panel.contains("viewModel.moveSavedPathUp"))
+        #expect(panel.contains("viewModel.moveSavedPathDown"))
         #expect(panel.contains("text: savedPathNameBinding(savedPath)"))
         #expect(panel.contains(".foregroundStyle(Color(nsColor: ImageEditorTheme.text))"))
         #expect(menu.contains("selectedLayerPanelTab = .paths"))
@@ -602,6 +656,8 @@ struct ImageEditorSavedPathTests {
         #expect(menu.contains("viewModel.strokeSavedPathToSelectedPixelLayer"))
         #expect(menu.contains("viewModel.copySavedPath"))
         #expect(menu.contains("viewModel.pasteSavedPath"))
+        #expect(menu.contains("viewModel.moveSavedPathUp"))
+        #expect(menu.contains("viewModel.moveSavedPathDown"))
         let canvas = try source(root, "veilpic/ImageEditorView.swift")
         #expect(canvas.contains("savedPathOverlay(in: geometry.size)"))
         #expect(canvas.contains("viewModel.savedPathCanvasOverlays"))
