@@ -1,25 +1,22 @@
-# Xomo v2.12.0-rc55 验证报告
+# Xomo v2.12.0-rc56 验证报告
 
-- 生成时间：2026-07-15 01:04 +0800
+- 生成时间：2026-07-15 01:20 +0800
 - 结果：全部通过
-- Xcode 相关测试：38/38
+- Xcode 相关测试：12/12
 - SwiftPM CLI 测试：2/2
 
 ## 验证明细
 
 | 验证项 | 结果 |
 |---|---:|
-| `ImageEditorSavedPathTests` | 28/28 |
-| `ImageEditorLayerPanelStyleTests` | 6/6 |
+| `XomoFigmaLinkParserTests` | 8/8 |
 | `LocalizationResourceTests` | 4/4 |
 | `XomoMCPServerTests` | 2/2 |
-| `scripts/test_layer_panel_tab_style.rb` | 4/4 检查通过 |
-| 全新 DerivedData Debug 构建 | 通过 |
-| Computer Use 真实界面检查 | 通过 |
+| Debug `build-for-testing` | 通过 |
 
 ## 关键结论
 
-- 保存路径拖放覆盖向上、向下、移除源行后的索引修正、原地和越界无副作用。
-- 图层面板页签同时以 `NSTextField.textColor` 与 attributed string 前景色固定为白色。
-- 全新 Debug App 的版本为 `2.12.0-rc55`，Bundle ID 为 `im.some.xomo`，最低系统为 macOS 13.0，架构为 arm64。
-- 实际启动全新 Debug App 后，“图层 / 通道 / 复合 / 路径”四个页签均为清晰白字。
+- 解析器识别 Figma 官方现行 Design、File、Prototype、FigJam、Slides、Sites、Buzz 与 Make 链接路径。
+- 只接受可信 Figma HTTPS 主机；仿冒域名、凭据、自定义端口、fragment、重复/畸形选择参数和超长输入均被拒绝。
+- 规范 URL 与 Codable 预览只保留允许的节点、原型起点和版本参数，测试中的令牌及跟踪值没有进入编码结果。
+- Debug App 与 CLI 版本均为 `2.12.0-rc56`；App Bundle ID 为 `im.some.xomo`，最低系统为 macOS 13.0，架构为 arm64。

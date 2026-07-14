@@ -1,20 +1,15 @@
 {
-  "generated_at": "2026-07-15 01:04:00 +0800",
-  "version": "2.12.0-rc55",
+  "generated_at": "2026-07-15 01:20:00 +0800",
+  "version": "2.12.0-rc56",
   "passed": true,
   "xcode_tests": {
-    "passed": 38,
-    "total": 38,
+    "passed": 12,
+    "total": 12,
     "suites": [
       {
-        "name": "ImageEditorSavedPathTests",
-        "passed": 28,
-        "total": 28
-      },
-      {
-        "name": "ImageEditorLayerPanelStyleTests",
-        "passed": 6,
-        "total": 6
+        "name": "XomoFigmaLinkParserTests",
+        "passed": 8,
+        "total": 8
       },
       {
         "name": "LocalizationResourceTests",
@@ -28,22 +23,19 @@
     "passed": 2,
     "total": 2
   },
-  "ruby_checks": {
-    "script": "scripts/test_layer_panel_tab_style.rb",
-    "passed": 4,
-    "total": 4
-  },
-  "clean_debug_build": {
+  "debug_build": {
     "passed": true,
-    "derived_data": "/tmp/veilpic-rc55-clean-debug",
-    "version": "2.12.0-rc55",
+    "version": "2.12.0-rc56",
     "bundle_id": "im.some.xomo",
     "minimum_macos": "13.0",
     "architecture": "arm64"
   },
-  "computer_use": {
-    "passed": true,
-    "app": "/tmp/veilpic-rc55-clean-debug/Build/Products/Debug/Xomo.app",
-    "assertion": "Layers, Channels, Comps, and Paths tabs render with readable white text"
+  "security_assertions": {
+    "trusted_https_hosts_only": true,
+    "rejects_credentials_and_custom_ports": true,
+    "rejects_ambiguous_selectors": true,
+    "discards_unapproved_query_values": true,
+    "performs_network_requests": false,
+    "authorization_state": "notChecked"
   }
 }
