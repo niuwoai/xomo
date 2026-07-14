@@ -1,5 +1,25 @@
 # Changelog
 
+## 2.12.0-rc59 - 2026-07-15
+
+### Added
+- “导入 Figma 链接”可在用户明确点击后通过官方 `GET /v1/files/:key/nodes` 读取链接中 `node-id` 对应的子树，并在修改画布前展示逐节点的完整、降级与不支持映射报告。
+- 映射计划可再次确认导入：Frame、Group 与组件建立嵌套图层组，Text 建立可编辑文字层，Rectangle、Ellipse 和常见 SVG 路径建立可编辑形状层；纯色填充、描边、文字字体/字重/对齐、显隐、透明度和固定坐标得到保留。
+- 新增 SVG 路径解析器，覆盖绝对/相对 Move、Line、Horizontal、Vertical、Cubic、Smooth Cubic、Quadratic、Smooth Quadratic、Arc 与 Close 命令；图片填充暂以明确的格纹交叉占位层导入。
+
+### Security
+- 节点读取必须由包含 `node-id` 的可信规范链接、已存入 macOS 钥匙串的个人 PAT 和显式“读取”按钮共同触发；打开 Sheet、粘贴链接、预览或导入本地计划都不会自动联网。
+- 请求固定使用 `ids`、`depth=6` 与 `geometry=paths`，可选版本只来自已校验链接；要求 `file_content:read`，最多接受 10 MB 响应和 2000 个节点，并对授权、限流、服务错误与畸形树分别失败。
+
+### Changed
+- 节点透明度与填充/描边透明度分开保存，矢量几何按官方节点局部尺寸缩放，避免重复衰减或错误裁切；不支持的节点、复杂填充、旋转/镜像/倾斜变换、圆角、蒙版、效果、混合模式、Auto Layout 与组件语义都会在确认前列出，不冒充无损还原。
+- 一次节点导入只产生一个 History/Undo 步骤；根节点默认居中，只有超出画布安全区域时才等比缩小，层级与父组关系保持可继续编辑。
+
+### Tests
+- 新增官方节点请求边界、状态码、响应/节点上限、层级映射、降级原因、SVG 命令解析、画布坐标/等比适配、图层类型、占位层、项目保存恢复以及单步 Undo 的单元测试。
+- Figma 链接/授权/元数据/节点导入 34/34、图层标题与页签白字 6/6、三语资源 4/4、Ruby 页签契约 4/4、CLI 2/2 通过；Debug `build-for-testing` 成功，App/CLI 版本均为 `2.12.0-rc59`，Bundle ID 为 `im.some.xomo`，最低系统为 macOS 13.0，Debug App 为 arm64。
+- Computer Use 启动 rc59 Debug App，通过 `Option + Command + F` 打开 Sheet 并输入不含凭据的本地示例链接；实测规范 URL、参数清理、`file_metadata:read` / `file_content:read` 边界、节点/响应上限和“先预检、再导入”文案正确，未输入令牌或发起网络请求。
+
 ## 2.12.0-rc58 - 2026-07-15
 
 ### Added

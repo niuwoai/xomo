@@ -1,69 +1,417 @@
 {
-  "generated_at": "2026-07-15 02:18:00 +0800",
-  "version": "2.12.0-rc58",
-  "total": 37,
-  "passed": 37,
+  "generated_at": "2026-07-15 03:02:18 +0800",
+  "total": 34,
+  "passed": 34,
   "failed": 0,
-  "suites": [
+  "jobs": 1,
+  "results": [
     {
-      "name": "XomoFigmaAuthorizedMetadataTests",
-      "kind": "Xcode Swift Testing",
-      "passed": 8,
-      "total": 8
+      "suite": "XomoFigmaAuthorizedMetadataTests",
+      "method": "changingLinkOrDisconnectingClearsStaleMetadata",
+      "identifier": "veilpicTests/XomoFigmaAuthorizedMetadataTests/changingLinkOrDisconnectingClearsStaleMetadata",
+      "file": "XomoFigmaAuthorizedMetadataTests.swift",
+      "passed": true,
+      "duration": 3.163,
+      "issues": [
+
+      ],
+      "log": "XomoFigmaAuthorizedMetadataTests.changingLinkOrDisconnectingClearsStaleMetadata.log"
     },
     {
-      "name": "XomoFigmaLinkImportTests",
-      "kind": "Xcode Swift Testing",
-      "passed": 5,
-      "total": 5
+      "suite": "XomoFigmaAuthorizedMetadataTests",
+      "method": "clientMapsAuthorizationNotFoundRateLimitAndServerFailures",
+      "identifier": "veilpicTests/XomoFigmaAuthorizedMetadataTests/clientMapsAuthorizationNotFoundRateLimitAndServerFailures",
+      "file": "XomoFigmaAuthorizedMetadataTests.swift",
+      "passed": true,
+      "duration": 2.806,
+      "issues": [
+
+      ],
+      "log": "XomoFigmaAuthorizedMetadataTests.clientMapsAuthorizationNotFoundRateLimitAndServerFailures.log"
     },
     {
-      "name": "XomoFigmaLinkParserTests",
-      "kind": "Xcode Swift Testing",
-      "passed": 8,
-      "total": 8
+      "suite": "XomoFigmaAuthorizedMetadataTests",
+      "method": "clientRejectsOversizedAndMalformedSuccessfulResponses",
+      "identifier": "veilpicTests/XomoFigmaAuthorizedMetadataTests/clientRejectsOversizedAndMalformedSuccessfulResponses",
+      "file": "XomoFigmaAuthorizedMetadataTests.swift",
+      "passed": true,
+      "duration": 2.816,
+      "issues": [
+
+      ],
+      "log": "XomoFigmaAuthorizedMetadataTests.clientRejectsOversizedAndMalformedSuccessfulResponses.log"
     },
     {
-      "name": "ImageEditorLayerPanelStyleTests",
-      "kind": "Xcode Swift Testing",
-      "passed": 6,
-      "total": 6
+      "suite": "XomoFigmaAuthorizedMetadataTests",
+      "method": "clientUsesLeastPrivilegeMetadataEndpointAndKeepsTokenOutOfURL",
+      "identifier": "veilpicTests/XomoFigmaAuthorizedMetadataTests/clientUsesLeastPrivilegeMetadataEndpointAndKeepsTokenOutOfURL",
+      "file": "XomoFigmaAuthorizedMetadataTests.swift",
+      "passed": true,
+      "duration": 2.764,
+      "issues": [
+
+      ],
+      "log": "XomoFigmaAuthorizedMetadataTests.clientUsesLeastPrivilegeMetadataEndpointAndKeepsTokenOutOfURL.log"
     },
     {
-      "name": "LocalizationResourceTests",
-      "kind": "Xcode Swift Testing",
-      "passed": 4,
-      "total": 4
+      "suite": "XomoFigmaAuthorizedMetadataTests",
+      "method": "controllerNeverReadsNetworkUntilUserExplicitlyConnectsOrRefreshes",
+      "identifier": "veilpicTests/XomoFigmaAuthorizedMetadataTests/controllerNeverReadsNetworkUntilUserExplicitlyConnectsOrRefreshes",
+      "file": "XomoFigmaAuthorizedMetadataTests.swift",
+      "passed": true,
+      "duration": 2.865,
+      "issues": [
+
+      ],
+      "log": "XomoFigmaAuthorizedMetadataTests.controllerNeverReadsNetworkUntilUserExplicitlyConnectsOrRefreshes.log"
     },
     {
-      "name": "XomoMCPServerTests",
-      "kind": "SwiftPM Swift Testing",
-      "passed": 2,
-      "total": 2
+      "suite": "XomoFigmaAuthorizedMetadataTests",
+      "method": "invalidCredentialDoesNotTouchKeychainOrNetwork",
+      "identifier": "veilpicTests/XomoFigmaAuthorizedMetadataTests/invalidCredentialDoesNotTouchKeychainOrNetwork",
+      "file": "XomoFigmaAuthorizedMetadataTests.swift",
+      "passed": true,
+      "duration": 2.819,
+      "issues": [
+
+      ],
+      "log": "XomoFigmaAuthorizedMetadataTests.invalidCredentialDoesNotTouchKeychainOrNetwork.log"
     },
     {
-      "name": "layer_panel_tab_style",
-      "kind": "Ruby source contract",
-      "passed": 4,
-      "total": 4
+      "suite": "XomoFigmaAuthorizedMetadataTests",
+      "method": "personalAccessTokenValidationTrimsEdgesAndRejectsUnsafeValues",
+      "identifier": "veilpicTests/XomoFigmaAuthorizedMetadataTests/personalAccessTokenValidationTrimsEdgesAndRejectsUnsafeValues",
+      "file": "XomoFigmaAuthorizedMetadataTests.swift",
+      "passed": true,
+      "duration": 3.157,
+      "issues": [
+
+      ],
+      "log": "XomoFigmaAuthorizedMetadataTests.personalAccessTokenValidationTrimsEdgesAndRejectsUnsafeValues.log"
+    },
+    {
+      "suite": "XomoFigmaAuthorizedMetadataTests",
+      "method": "sheetUsesSecureCredentialInputAndExplicitNetworkActions",
+      "identifier": "veilpicTests/XomoFigmaAuthorizedMetadataTests/sheetUsesSecureCredentialInputAndExplicitNetworkActions",
+      "file": "XomoFigmaAuthorizedMetadataTests.swift",
+      "passed": true,
+      "duration": 3.02,
+      "issues": [
+
+      ],
+      "log": "XomoFigmaAuthorizedMetadataTests.sheetUsesSecureCredentialInputAndExplicitNetworkActions.log"
+    },
+    {
+      "suite": "XomoFigmaLinkImportTests",
+      "method": "draftValidatesImmediatelyAndKeepsOnlyParsedPreview",
+      "identifier": "veilpicTests/XomoFigmaLinkImportTests/draftValidatesImmediatelyAndKeepsOnlyParsedPreview",
+      "file": "XomoFigmaLinkImportTests.swift",
+      "passed": true,
+      "duration": 3.08,
+      "issues": [
+
+      ],
+      "log": "XomoFigmaLinkImportTests.draftValidatesImmediatelyAndKeepsOnlyParsedPreview.log"
+    },
+    {
+      "suite": "XomoFigmaLinkImportTests",
+      "method": "everyParserErrorHasUniqueLocalizedPresentationKey",
+      "identifier": "veilpicTests/XomoFigmaLinkImportTests/everyParserErrorHasUniqueLocalizedPresentationKey",
+      "file": "XomoFigmaLinkImportTests.swift",
+      "passed": true,
+      "duration": 2.977,
+      "issues": [
+
+      ],
+      "log": "XomoFigmaLinkImportTests.everyParserErrorHasUniqueLocalizedPresentationKey.log"
+    },
+    {
+      "suite": "XomoFigmaLinkImportTests",
+      "method": "everyResourceAndScopeHasLocalizedPresentationKey",
+      "identifier": "veilpicTests/XomoFigmaLinkImportTests/everyResourceAndScopeHasLocalizedPresentationKey",
+      "file": "XomoFigmaLinkImportTests.swift",
+      "passed": true,
+      "duration": 2.957,
+      "issues": [
+
+      ],
+      "log": "XomoFigmaLinkImportTests.everyResourceAndScopeHasLocalizedPresentationKey.log"
+    },
+    {
+      "suite": "XomoFigmaLinkImportTests",
+      "method": "fileMenuAndEditorPresentTheFigmaPreviewSheet",
+      "identifier": "veilpicTests/XomoFigmaLinkImportTests/fileMenuAndEditorPresentTheFigmaPreviewSheet",
+      "file": "XomoFigmaLinkImportTests.swift",
+      "passed": true,
+      "duration": 2.858,
+      "issues": [
+
+      ],
+      "log": "XomoFigmaLinkImportTests.fileMenuAndEditorPresentTheFigmaPreviewSheet.log"
+    },
+    {
+      "suite": "XomoFigmaLinkImportTests",
+      "method": "keyboardShortcutOpensFigmaLinkImportWithoutConflictingWithImageResize",
+      "identifier": "veilpicTests/XomoFigmaLinkImportTests/keyboardShortcutOpensFigmaLinkImportWithoutConflictingWithImageResize",
+      "file": "XomoFigmaLinkImportTests.swift",
+      "passed": true,
+      "duration": 2.812,
+      "issues": [
+
+      ],
+      "log": "XomoFigmaLinkImportTests.keyboardShortcutOpensFigmaLinkImportWithoutConflictingWithImageResize.log"
+    },
+    {
+      "suite": "XomoFigmaLinkParserTests",
+      "method": "codablePreviewNeverPersistsDiscardedQueryValues",
+      "identifier": "veilpicTests/XomoFigmaLinkParserTests/codablePreviewNeverPersistsDiscardedQueryValues",
+      "file": "XomoFigmaLinkParserTests.swift",
+      "passed": true,
+      "duration": 2.83,
+      "issues": [
+
+      ],
+      "log": "XomoFigmaLinkParserTests.codablePreviewNeverPersistsDiscardedQueryValues.log"
+    },
+    {
+      "suite": "XomoFigmaLinkParserTests",
+      "method": "parsesDesignSelectionAndBuildsSanitizedCanonicalURL",
+      "identifier": "veilpicTests/XomoFigmaLinkParserTests/parsesDesignSelectionAndBuildsSanitizedCanonicalURL",
+      "file": "XomoFigmaLinkParserTests.swift",
+      "passed": true,
+      "duration": 2.914,
+      "issues": [
+
+      ],
+      "log": "XomoFigmaLinkParserTests.parsesDesignSelectionAndBuildsSanitizedCanonicalURL.log"
+    },
+    {
+      "suite": "XomoFigmaLinkParserTests",
+      "method": "parsesPrototypeStartingPointAndNormalizesNestedNodeIDs",
+      "identifier": "veilpicTests/XomoFigmaLinkParserTests/parsesPrototypeStartingPointAndNormalizesNestedNodeIDs",
+      "file": "XomoFigmaLinkParserTests.swift",
+      "passed": true,
+      "duration": 2.901,
+      "issues": [
+
+      ],
+      "log": "XomoFigmaLinkParserTests.parsesPrototypeStartingPointAndNormalizesNestedNodeIDs.log"
+    },
+    {
+      "suite": "XomoFigmaLinkParserTests",
+      "method": "recognizesCurrentOfficialFigmaResourcePathsAndLegacyFiles",
+      "identifier": "veilpicTests/XomoFigmaLinkParserTests/recognizesCurrentOfficialFigmaResourcePathsAndLegacyFiles",
+      "file": "XomoFigmaLinkParserTests.swift",
+      "passed": true,
+      "duration": 2.839,
+      "issues": [
+
+      ],
+      "log": "XomoFigmaLinkParserTests.recognizesCurrentOfficialFigmaResourcePathsAndLegacyFiles.log"
+    },
+    {
+      "suite": "XomoFigmaLinkParserTests",
+      "method": "rejectsAmbiguousOrMalformedSelectors",
+      "identifier": "veilpicTests/XomoFigmaLinkParserTests/rejectsAmbiguousOrMalformedSelectors",
+      "file": "XomoFigmaLinkParserTests.swift",
+      "passed": true,
+      "duration": 2.895,
+      "issues": [
+
+      ],
+      "log": "XomoFigmaLinkParserTests.rejectsAmbiguousOrMalformedSelectors.log"
+    },
+    {
+      "suite": "XomoFigmaLinkParserTests",
+      "method": "rejectsInsecureSpoofedCredentialAndCustomPortURLs",
+      "identifier": "veilpicTests/XomoFigmaLinkParserTests/rejectsInsecureSpoofedCredentialAndCustomPortURLs",
+      "file": "XomoFigmaLinkParserTests.swift",
+      "passed": true,
+      "duration": 2.842,
+      "issues": [
+
+      ],
+      "log": "XomoFigmaLinkParserTests.rejectsInsecureSpoofedCredentialAndCustomPortURLs.log"
+    },
+    {
+      "suite": "XomoFigmaLinkParserTests",
+      "method": "rejectsOversizedInputBeforeURLParsing",
+      "identifier": "veilpicTests/XomoFigmaLinkParserTests/rejectsOversizedInputBeforeURLParsing",
+      "file": "XomoFigmaLinkParserTests.swift",
+      "passed": true,
+      "duration": 2.927,
+      "issues": [
+
+      ],
+      "log": "XomoFigmaLinkParserTests.rejectsOversizedInputBeforeURLParsing.log"
+    },
+    {
+      "suite": "XomoFigmaLinkParserTests",
+      "method": "rejectsUnsupportedRoutesAndMalformedFileIdentity",
+      "identifier": "veilpicTests/XomoFigmaLinkParserTests/rejectsUnsupportedRoutesAndMalformedFileIdentity",
+      "file": "XomoFigmaLinkParserTests.swift",
+      "passed": true,
+      "duration": 2.858,
+      "issues": [
+
+      ],
+      "log": "XomoFigmaLinkParserTests.rejectsUnsupportedRoutesAndMalformedFileIdentity.log"
+    },
+    {
+      "suite": "XomoFigmaNodeImportPlanTests",
+      "method": "clientMapsBadRequestAuthorizationMissingNodeRateLimitAndServerErrors",
+      "identifier": "veilpicTests/XomoFigmaNodeImportPlanTests/clientMapsBadRequestAuthorizationMissingNodeRateLimitAndServerErrors",
+      "file": "XomoFigmaNodeImportPlanTests.swift",
+      "passed": true,
+      "duration": 2.908,
+      "issues": [
+
+      ],
+      "log": "XomoFigmaNodeImportPlanTests.clientMapsBadRequestAuthorizationMissingNodeRateLimitAndServerErrors.log"
+    },
+    {
+      "suite": "XomoFigmaNodeImportPlanTests",
+      "method": "clientRejectsMissingNodeOversizedResponsesAndExcessiveTrees",
+      "identifier": "veilpicTests/XomoFigmaNodeImportPlanTests/clientRejectsMissingNodeOversizedResponsesAndExcessiveTrees",
+      "file": "XomoFigmaNodeImportPlanTests.swift",
+      "passed": true,
+      "duration": 2.88,
+      "issues": [
+
+      ],
+      "log": "XomoFigmaNodeImportPlanTests.clientRejectsMissingNodeOversizedResponsesAndExcessiveTrees.log"
+    },
+    {
+      "suite": "XomoFigmaNodeImportPlanTests",
+      "method": "clientRequiresSpecificNodeAndUsesBoundedOfficialEndpoint",
+      "identifier": "veilpicTests/XomoFigmaNodeImportPlanTests/clientRequiresSpecificNodeAndUsesBoundedOfficialEndpoint",
+      "file": "XomoFigmaNodeImportPlanTests.swift",
+      "passed": true,
+      "duration": 2.87,
+      "issues": [
+
+      ],
+      "log": "XomoFigmaNodeImportPlanTests.clientRequiresSpecificNodeAndUsesBoundedOfficialEndpoint.log"
+    },
+    {
+      "suite": "XomoFigmaNodeImportPlanTests",
+      "method": "controllerDoesNotReadUntilExplicitUserActionAndClearsStalePlan",
+      "identifier": "veilpicTests/XomoFigmaNodeImportPlanTests/controllerDoesNotReadUntilExplicitUserActionAndClearsStalePlan",
+      "file": "XomoFigmaNodeImportPlanTests.swift",
+      "passed": true,
+      "duration": 2.84,
+      "issues": [
+
+      ],
+      "log": "XomoFigmaNodeImportPlanTests.controllerDoesNotReadUntilExplicitUserActionAndClearsStalePlan.log"
+    },
+    {
+      "suite": "XomoFigmaNodeImportPlanTests",
+      "method": "mapperBuildsEditableHierarchyAndRelativeFrames",
+      "identifier": "veilpicTests/XomoFigmaNodeImportPlanTests/mapperBuildsEditableHierarchyAndRelativeFrames",
+      "file": "XomoFigmaNodeImportPlanTests.swift",
+      "passed": true,
+      "duration": 2.799,
+      "issues": [
+
+      ],
+      "log": "XomoFigmaNodeImportPlanTests.mapperBuildsEditableHierarchyAndRelativeFrames.log"
+    },
+    {
+      "suite": "XomoFigmaNodeImportPlanTests",
+      "method": "mapperReportsPartialImageComponentLayoutAndUnsupportedNodes",
+      "identifier": "veilpicTests/XomoFigmaNodeImportPlanTests/mapperReportsPartialImageComponentLayoutAndUnsupportedNodes",
+      "file": "XomoFigmaNodeImportPlanTests.swift",
+      "passed": true,
+      "duration": 2.905,
+      "issues": [
+
+      ],
+      "log": "XomoFigmaNodeImportPlanTests.mapperReportsPartialImageComponentLayoutAndUnsupportedNodes.log"
+    },
+    {
+      "suite": "XomoFigmaNodeImportPlanTests",
+      "method": "mapperUsesStrokeGeometryAndReportsInheritedRotatedTransform",
+      "identifier": "veilpicTests/XomoFigmaNodeImportPlanTests/mapperUsesStrokeGeometryAndReportsInheritedRotatedTransform",
+      "file": "XomoFigmaNodeImportPlanTests.swift",
+      "passed": true,
+      "duration": 2.933,
+      "issues": [
+
+      ],
+      "log": "XomoFigmaNodeImportPlanTests.mapperUsesStrokeGeometryAndReportsInheritedRotatedTransform.log"
+    },
+    {
+      "suite": "XomoFigmaNodeImportPlanTests",
+      "method": "materializerCreatesEditableHierarchyAtCenteredScaleAndHonestPlaceholder",
+      "identifier": "veilpicTests/XomoFigmaNodeImportPlanTests/materializerCreatesEditableHierarchyAtCenteredScaleAndHonestPlaceholder",
+      "file": "XomoFigmaNodeImportPlanTests.swift",
+      "passed": true,
+      "duration": 2.962,
+      "issues": [
+
+      ],
+      "log": "XomoFigmaNodeImportPlanTests.materializerCreatesEditableHierarchyAtCenteredScaleAndHonestPlaceholder.log"
+    },
+    {
+      "suite": "XomoFigmaNodeImportPlanTests",
+      "method": "materializerOnlyShrinksOversizedRootAndKeepsItInsideCanvasInset",
+      "identifier": "veilpicTests/XomoFigmaNodeImportPlanTests/materializerOnlyShrinksOversizedRootAndKeepsItInsideCanvasInset",
+      "file": "XomoFigmaNodeImportPlanTests.swift",
+      "passed": true,
+      "duration": 2.993,
+      "issues": [
+
+      ],
+      "log": "XomoFigmaNodeImportPlanTests.materializerOnlyShrinksOversizedRootAndKeepsItInsideCanvasInset.log"
+    },
+    {
+      "suite": "XomoFigmaNodeImportPlanTests",
+      "method": "sheetMakesNodeReadExplicitAndRequiresNodeSelection",
+      "identifier": "veilpicTests/XomoFigmaNodeImportPlanTests/sheetMakesNodeReadExplicitAndRequiresNodeSelection",
+      "file": "XomoFigmaNodeImportPlanTests.swift",
+      "passed": true,
+      "duration": 2.706,
+      "issues": [
+
+      ],
+      "log": "XomoFigmaNodeImportPlanTests.sheetMakesNodeReadExplicitAndRequiresNodeSelection.log"
+    },
+    {
+      "suite": "XomoFigmaNodeImportPlanTests",
+      "method": "svgParserSupportsRelativeCurvesQuadraticsAndArcs",
+      "identifier": "veilpicTests/XomoFigmaNodeImportPlanTests/svgParserSupportsRelativeCurvesQuadraticsAndArcs",
+      "file": "XomoFigmaNodeImportPlanTests.swift",
+      "passed": true,
+      "duration": 2.948,
+      "issues": [
+
+      ],
+      "log": "XomoFigmaNodeImportPlanTests.svgParserSupportsRelativeCurvesQuadraticsAndArcs.log"
+    },
+    {
+      "suite": "XomoFigmaNodeImportPlanTests",
+      "method": "viewModelImportsPlanAsSingleUndoableHistoryStep",
+      "identifier": "veilpicTests/XomoFigmaNodeImportPlanTests/viewModelImportsPlanAsSingleUndoableHistoryStep",
+      "file": "XomoFigmaNodeImportPlanTests.swift",
+      "passed": true,
+      "duration": 2.951,
+      "issues": [
+
+      ],
+      "log": "XomoFigmaNodeImportPlanTests.viewModelImportsPlanAsSingleUndoableHistoryStep.log"
+    },
+    {
+      "suite": "XomoFigmaNodeImportPlanTests",
+      "method": "viewModelInsertsImportedRootAfterExistingTopLevelGroup",
+      "identifier": "veilpicTests/XomoFigmaNodeImportPlanTests/viewModelInsertsImportedRootAfterExistingTopLevelGroup",
+      "file": "XomoFigmaNodeImportPlanTests.swift",
+      "passed": true,
+      "duration": 2.853,
+      "issues": [
+
+      ],
+      "log": "XomoFigmaNodeImportPlanTests.viewModelInsertsImportedRootAfterExistingTopLevelGroup.log"
     }
-  ],
-  "build": {
-    "configuration": "Debug build-for-testing",
-    "passed": true,
-    "bundle_identifier": "im.some.xomo",
-    "app_version": "2.12.0-rc58",
-    "cli_version": "2.12.0-rc58",
-    "minimum_macos": "13.0",
-    "architecture": "arm64"
-  },
-  "ui_smoke": {
-    "passed": true,
-    "checks": [
-      "Layer panel title and all four tab labels render with light text",
-      "Option-Command-F opens the Figma link sheet",
-      "A sanitized sample link renders the local preview and secure PAT field",
-      "No credential or network action was submitted during smoke testing"
-    ]
-  }
+  ]
 }
