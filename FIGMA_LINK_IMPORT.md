@@ -1,6 +1,6 @@
 # Xomo Figma 链接导入边界
 
-> 最后更新：2026-07-15 ｜ 当前版本：v2.12.0-rc65 ｜ 当前阶段：Auto Layout 容器与 Fill/Stretch 子项可原生编辑
+> 最后更新：2026-07-15 ｜ 当前版本：v2.12.0-rc66 ｜ 当前阶段：图片 Crop/Tile/旋转可视觉烘焙
 
 ## 当前已经支持
 
@@ -29,7 +29,7 @@ rc59 要求链接包含明确的 `node-id`。用户点击“读取节点并生�
 | Text | 可编辑文字层 | 保留文本、字体族、字号、字重、横向对齐和纯色填充 |
 | Rectangle / Ellipse | 可编辑形状层 | 保留纯色填充、纯色描边和描边宽度；圆角暂降级为直角 |
 | Vector / Line / Star / Polygon | 可编辑路径形状层 | 支持 fill/stroke geometry 与 SVG M/L/H/V/C/S/Q/T/A/Z 的绝对、相对命令；按节点局部 size 映射 |
-| 图片填充 Rectangle | 图片像素层或占位层 | 显式读取时下载当前子树引用的图片，保留位置和尺寸并随项目保存；填充变换烘焙为固定像素，单图失败时保留格纹交叉占位图 |
+| 图片填充 Rectangle | 图片像素层或占位层 | 显式读取时下载当前子树引用的图片；Fill/Fit、Crop 对应的 `STRETCH + imageTransform`、Tile 比例及 90°旋转会烘焙为固定像素，单图失败时保留格纹交叉占位图 |
 | 其它节点 | 不导入 | 报告中列为不支持，不生成假图层 |
 
 ## 安全边界
@@ -58,13 +58,15 @@ rc59 要求链接包含明确的 `node-id`。用户点击“读取节点并生�
 7. **rc62（已完成）**：显式节点读取同步解析官方图片清单，把安全、可解码且未超限的图片填充导入为持久像素层；单图失败时保留可导入占位层，下载请求不携带 PAT。
 8. **rc63（已完成）**：水平/垂直固定尺寸 Auto Layout 映射为原生组布局，保留间距、四边内距、主轴/交叉轴对齐和绝对定位排除；属性面板可重新排列并支持保存、重开与 Undo/Redo。
 9. **rc64（已完成）**：主轴/交叉轴 `AUTO` 尺寸映射为 Hug 容器；重排按内容、间距和内距计算组边界，并同步 Frame 背景。属性面板可切换固定/Hug，项目继续兼容 rc63 数据。
-10. **rc65（当前，已完成）**：子项 `layoutGrow` 与 `layoutAlign=STRETCH` 映射为 Fill/Stretch；固定容器按权重分配主轴空间并填满交叉轴，属性面板可编辑，项目与 Undo/Redo 闭环保持。
+10. **rc65（已完成）**：子项 `layoutGrow` 与 `layoutAlign=STRETCH` 映射为 Fill/Stretch；固定容器按权重分配主轴空间并填满交叉轴，属性面板可编辑，项目与 Undo/Redo 闭环保持。
+11. **rc66（当前，已完成）**：图片填充读取 `imageTransform`、`scalingFactor` 与 `rotation`，把 Crop/STRETCH、Tile 和 90°旋转按源图与目标框烘焙为像素结果；参数语义仍明确降级为不可再次编辑。
 
 ## 官方依据
 
 - [Figma 文件端点](https://developers.figma.com/docs/rest-api/file-endpoints/)：官方 URL 结构为 `/:file_type/:file_key/:file_name`，文件 Key 或分支 Key用于读取文件。
 - [Figma 文件节点端点](https://developers.figma.com/docs/rest-api/file-endpoints/)：`GET /v1/files/:key/nodes` 通过 `ids` 读取指定节点；`geometry=paths` 返回矢量路径数据，`depth` 限制后代层数。
 - [Figma 图片填充端点](https://developers.figma.com/docs/rest-api/file-endpoints/)：`GET /v1/files/:key/images` 以 `imageRef` 返回最长约 14 天有效的临时下载 URL，要求 `file_content:read`。
+- [Figma Paint 属性](https://developers.figma.com/docs/rest-api/file-property-types/)：REST 图片 Paint 提供 Fill/Fit/Tile/Stretch、`imageTransform`、`scalingFactor` 与 `rotation`，rc66 只消费这些白名单字段进行本地像素烘焙。
 - [Figma 节点类型](https://developers.figma.com/docs/rest-api/file-node-types/)：Frame、Group、Vector、Text、Rectangle、Ellipse、Component 与 Instance 的可读取字段构成 rc59 映射依据。
 - [Figma API 限流](https://developers.figma.com/docs/rest-api/rate-limits/)：文件节点读取属于 Tier 1，配额按席位和计划不同，因此界面使用显式读取且不自动刷新。
 - [Figma 认证](https://developers.figma.com/docs/rest-api/authentication/)：个人工具可使用 PAT，代表多用户操作的应用应使用 OAuth；不同端点要求对应 scope。
@@ -75,4 +77,4 @@ rc59 要求链接包含明确的 `node-id`。用户点击“读取节点并生�
 
 ## 明确尚未支持
 
-rc65 不保留图片的原生 Crop/Tile/旋转等可编辑填充参数，成功资源会烘焙为固定像素层；它仍不保留渐变/图案等复杂 Paint、旋转/镜像/倾斜变换、圆角、蒙版与 Frame 内容裁切关系、效果、特殊混合模式、Wrap、Baseline、变量、组件属性和实例覆写语义。Fill/Stretch 只在父组对应轴为固定尺寸时改变子项外框；父轴为 Hug 时保留导入尺寸，避免父子互相依赖。绝对定位子项不参与布局尺寸计算。超过 6 层的后代不会读取；不解析 `.fig` 私有格式、不读取浏览器会话，也不声称 Figma 文件可以无损还原。
+rc66 能视觉烘焙图片 Crop/STRETCH、Tile 和 90°旋转，但不把这些参数保存为可再次编辑的图片填充对象，也不处理图片滤镜；它仍不保留渐变/图案等复杂 Paint、节点旋转/镜像/倾斜变换、圆角、蒙版与 Frame 内容裁切关系、效果、特殊混合模式、Wrap、Baseline、变量、组件属性和实例覆写语义。Fill/Stretch 只在父组对应轴为固定尺寸时改变子项外框；父轴为 Hug 时保留导入尺寸，避免父子互相依赖。绝对定位子项不参与布局尺寸计算。超过 6 层的后代不会读取；不解析 `.fig` 私有格式、不读取浏览器会话，也不声称 Figma 文件可以无损还原。

@@ -172,6 +172,80 @@ struct XomoFigmaImageAssetTests {
         #expect(placeholder.frame == CGRect(x: 60, y: 70, width: 40, height: 30))
     }
 
+    @Test func mapperPreservesCropTileAndRotationImagePaintParameters() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Self.imageFillModesResponse
+        )
+
+        let plan = try XomoFigmaNodeImportMapper.makePlan(
+            response: response,
+            requestedNodeID: "1:3"
+        )
+        let crop = try #require(plan.items.first { $0.sourceID == "2:1" })
+        let tile = try #require(plan.items.first { $0.sourceID == "2:2" })
+        let rotated = try #require(plan.items.first { $0.sourceID == "2:3" })
+
+        #expect(crop.imageScaleMode == "STRETCH")
+        #expect(crop.imageTransform == XomoFigmaPlanTransform([[2, 0, -0.5], [0, 1, 0]]))
+        #expect(tile.imageScaleMode == "TILE")
+        #expect(tile.imageScalingFactor == 1)
+        #expect(rotated.imageScaleMode == "FILL")
+        #expect(rotated.imageRotation == 90)
+    }
+
+    @Test func materializerBakesCropAndTileParametersIntoPixelLayers() throws {
+        let plan = try Self.resolvedImageFillModesPlan()
+        let result = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: CGSize(width: 200, height: 200)
+        )
+        let crop = try #require(result.layers.first { $0.name == "Cropped Image" })
+        let tile = try #require(result.layers.first { $0.name == "Tiled Image" })
+
+        #expect(crop.image.size == CGSize(width: 40, height: 10))
+        try Self.expectDominantColor(crop.image, x: 5, y: 5, channel: .green)
+        try Self.expectDominantColor(crop.image, x: 35, y: 5, channel: .blue)
+
+        #expect(tile.image.size == CGSize(width: 100, height: 20))
+        try Self.expectDominantColor(tile.image, x: 5, y: 5, channel: .red)
+        try Self.expectDominantColor(tile.image, x: 15, y: 5, channel: .green)
+        try Self.expectDominantColor(tile.image, x: 45, y: 5, channel: .red)
+        try Self.expectDominantColor(tile.image, x: 55, y: 5, channel: .green)
+    }
+
+    @Test func materializerBakesQuarterTurnImageRotationBeforeFillScaling() throws {
+        let plan = try Self.resolvedImageFillModesPlan()
+        let result = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: CGSize(width: 200, height: 200)
+        )
+        let rotated = try #require(result.layers.first { $0.name == "Rotated Image" })
+        let samples = try [5, 15, 25, 35].map {
+            try Self.dominantChannel(rotated.image, x: 5, y: $0)
+        }
+
+        #expect(rotated.image.size == CGSize(width: 10, height: 40))
+        #expect(samples == [.yellow, .blue, .green, .red])
+    }
+
+    @Test func materializerAppliesTheFullAffineCropMatrix() throws {
+        let plan = try Self.resolvedImageFillModesPlan()
+        let result = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: CGSize(width: 200, height: 200)
+        )
+        let transformed = try #require(
+            result.layers.first { $0.name == "Affine Rotated Crop" }
+        )
+        let samples = try [5, 15, 25, 35].map {
+            try Self.dominantChannel(transformed.image, x: 5, y: $0)
+        }
+
+        #expect(transformed.image.size == CGSize(width: 10, height: 40))
+        #expect(samples == [.yellow, .blue, .green, .red])
+    }
+
     private static func pngData(color: NSColor) throws -> Data {
         let image = try #require(NSImage.rendered(size: CGSize(width: 4, height: 3)) { rect in
             color.setFill()
@@ -188,6 +262,73 @@ struct XomoFigmaImageAssetTests {
         let color = try #require(representation.colorAt(x: 0, y: 0)?.usingColorSpace(.deviceRGB))
         #expect(color.blueComponent > threshold)
         #expect(color.redComponent < 0.2)
+    }
+
+    private enum DominantChannel: CaseIterable, Hashable {
+        case red
+        case green
+        case blue
+        case yellow
+    }
+
+    private static func expectDominantColor(
+        _ image: NSImage,
+        x: Int,
+        y: Int,
+        channel: DominantChannel
+    ) throws {
+        #expect(try dominantChannel(image, x: x, y: y) == channel)
+    }
+
+    private static func dominantChannel(_ image: NSImage, x: Int, y: Int) throws -> DominantChannel {
+        let tiffData = try #require(image.tiffRepresentation)
+        let representation = try #require(NSBitmapImageRep(data: tiffData))
+        let sampleX = min(max(x, 0), representation.pixelsWide - 1)
+        let sampleY = min(max(y, 0), representation.pixelsHigh - 1)
+        let color = try #require(
+            representation.colorAt(x: sampleX, y: sampleY)?.usingColorSpace(.deviceRGB)
+        )
+        if color.redComponent > 0.7, color.greenComponent > 0.7 { return .yellow }
+        if color.redComponent >= color.greenComponent, color.redComponent >= color.blueComponent {
+            return .red
+        }
+        if color.greenComponent >= color.blueComponent { return .green }
+        return .blue
+    }
+
+    private static func resolvedImageFillModesPlan() throws -> XomoFigmaNodeImportPlan {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: imageFillModesResponse
+        )
+        let pending = try XomoFigmaNodeImportMapper.makePlan(
+            response: response,
+            requestedNodeID: "1:3"
+        )
+        let data = try stripedPNGData()
+        let asset = XomoFigmaImageAsset(
+            data: data,
+            pixelSize: XomoFigmaPlanSize(width: 40, height: 10)
+        )
+        return pending.resolvingImageAssets(["stripe-ref": asset])
+    }
+
+    private static func stripedPNGData() throws -> Data {
+        let colors: [NSColor] = [
+            NSColor(calibratedRed: 1, green: 0, blue: 0, alpha: 1),
+            NSColor(calibratedRed: 0, green: 1, blue: 0, alpha: 1),
+            NSColor(calibratedRed: 0, green: 0, blue: 1, alpha: 1),
+            NSColor(calibratedRed: 1, green: 1, blue: 0, alpha: 1)
+        ]
+        let image = try #require(NSImage.rendered(size: CGSize(width: 40, height: 10)) { _ in
+            for (index, color) in colors.enumerated() {
+                color.setFill()
+                CGRect(x: CGFloat(index * 10), y: 0, width: 10, height: 10).fill()
+            }
+        })
+        let tiffData = try #require(image.tiffRepresentation)
+        let representation = try #require(NSBitmapImageRep(data: tiffData))
+        return try #require(representation.representation(using: .png, properties: [:]))
     }
 
     private static let nodeResponse = Data(
@@ -210,6 +351,75 @@ struct XomoFigmaImageAssetTests {
                   "fills": [{"type": "IMAGE", "imageRef": "img-ref-1", "scaleMode": "FILL"}],
                   "absoluteBoundingBox": {"x": 110, "y": 220, "width": 40, "height": 30}
                 }]
+              }
+            }
+          }
+        }
+        """.utf8
+    )
+
+    private static let imageFillModesResponse = Data(
+        """
+        {
+          "name": "Image Fill Modes",
+          "version": "90",
+          "nodes": {
+            "1:3": {
+              "document": {
+                "id": "1:3",
+                "name": "Image Fill Modes",
+                "type": "FRAME",
+                "absoluteBoundingBox": {"x": 0, "y": 0, "width": 120, "height": 100},
+                "children": [
+                  {
+                    "id": "2:1",
+                    "name": "Cropped Image",
+                    "type": "RECTANGLE",
+                    "fills": [{
+                      "type": "IMAGE",
+                      "imageRef": "stripe-ref",
+                      "scaleMode": "STRETCH",
+                      "imageTransform": [[2, 0, -0.5], [0, 1, 0]]
+                    }],
+                    "absoluteBoundingBox": {"x": 0, "y": 0, "width": 40, "height": 10}
+                  },
+                  {
+                    "id": "2:2",
+                    "name": "Tiled Image",
+                    "type": "RECTANGLE",
+                    "fills": [{
+                      "type": "IMAGE",
+                      "imageRef": "stripe-ref",
+                      "scaleMode": "TILE",
+                      "scalingFactor": 1
+                    }],
+                    "absoluteBoundingBox": {"x": 0, "y": 20, "width": 100, "height": 20}
+                  },
+                  {
+                    "id": "2:3",
+                    "name": "Rotated Image",
+                    "type": "RECTANGLE",
+                    "fills": [{
+                      "type": "IMAGE",
+                      "imageRef": "stripe-ref",
+                      "scaleMode": "FILL",
+                      "rotation": 90
+                    }],
+                    "absoluteBoundingBox": {"x": 0, "y": 50, "width": 10, "height": 40}
+                  },
+                  {
+                    "id": "2:4",
+                    "name": "Affine Rotated Crop",
+                    "type": "RECTANGLE",
+                    "fills": [{
+                      "type": "IMAGE",
+                      "imageRef": "stripe-ref",
+                      "scaleMode": "STRETCH",
+                      "imageTransform": [[0, -1, 1], [1, 0, 0]]
+                    }],
+                    "absoluteBoundingBox": {"x": 20, "y": 50, "width": 10, "height": 40}
+                  }
+                ]
               }
             }
           }

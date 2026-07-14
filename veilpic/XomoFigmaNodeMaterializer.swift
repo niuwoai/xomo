@@ -10,6 +10,9 @@ struct XomoFigmaNodeMaterializationResult {
 
 enum XomoFigmaNodeMaterializer {
     private static let canvasInsetRatio: CGFloat = 0.9
+    private static let minimumTileDimension: CGFloat = 0.25
+    private static let minimumTileScale: CGFloat = 0.01
+    private static let maximumTileScale: CGFloat = 100
 
     static func materialize(
         plan: XomoFigmaNodeImportPlan,
@@ -120,7 +123,12 @@ enum XomoFigmaNodeMaterializer {
                   let reference = item.imageReference,
                   let asset = imageAssets[reference]
             else { return nil }
-            layer = makeImageLayer(item: item, asset: asset, frame: frame)
+            layer = makeImageLayer(
+                item: item,
+                asset: asset,
+                frame: frame,
+                importScale: transform.scale
+            )
         case .imagePlaceholder:
             guard let frame = mappedFrame(item.frame, transform: transform) else { return nil }
             layer = makeImagePlaceholderLayer(item: item, frame: frame)
@@ -136,11 +144,21 @@ enum XomoFigmaNodeMaterializer {
     private static func makeImageLayer(
         item: XomoFigmaNodeImportItem,
         asset: XomoFigmaImageAsset,
-        frame: CGRect
+        frame: CGRect,
+        importScale: CGFloat
     ) -> ImageEditorLayer {
         let size = CGSize(width: max(1, frame.width), height: max(1, frame.height))
         let source = NSImage(data: asset.data) ?? NSImage.transparent(size: size)
-        let baked = bakedImageFill(source, size: size, scaleMode: item.imageScaleMode)
+        let baked = bakedImageFill(
+            source,
+            sourcePixelSize: CGSize(width: asset.pixelSize.width, height: asset.pixelSize.height),
+            size: size,
+            scaleMode: item.imageScaleMode,
+            imageTransform: item.imageTransform,
+            scalingFactor: item.imageScalingFactor,
+            rotation: item.imageRotation,
+            importScale: importScale
+        )
         var layer = ImageEditorLayer.blank(name: item.sourceName, size: size)
         layer.image = baked
         layer.frame = CGRect(origin: frame.origin, size: size)
@@ -149,19 +167,36 @@ enum XomoFigmaNodeMaterializer {
 
     private static func bakedImageFill(
         _ image: NSImage,
+        sourcePixelSize: CGSize,
         size: CGSize,
-        scaleMode: String?
+        scaleMode: String?,
+        imageTransform: XomoFigmaPlanTransform?,
+        scalingFactor: Double?,
+        rotation: Double?,
+        importScale: CGFloat
     ) -> NSImage {
         NSImage.rendered(size: size) { rect in
-            let sourceSize = image.size
+            if scaleMode == "STRETCH" || scaleMode == "CROP" {
+                drawTransformedCrop(image, in: rect, transform: imageTransform)
+                return
+            }
+            let rotated = rotatedImage(image, rotation: rotation)
+            if scaleMode == "TILE" {
+                drawTiledImage(
+                    rotated.image,
+                    sourcePixelSize: rotatedPixelSize(sourcePixelSize, quarterTurns: rotated.quarterTurns),
+                    in: rect,
+                    scalingFactor: scalingFactor,
+                    importScale: importScale
+                )
+                return
+            }
+            let sourceSize = rotated.image.size
             guard sourceSize.width > 0, sourceSize.height > 0 else { return }
             let scale: CGFloat
             switch scaleMode {
             case "FIT":
                 scale = min(rect.width / sourceSize.width, rect.height / sourceSize.height)
-            case "STRETCH":
-                image.draw(in: rect, from: .zero, operation: .copy, fraction: 1)
-                return
             default:
                 scale = max(rect.width / sourceSize.width, rect.height / sourceSize.height)
             }
@@ -173,8 +208,106 @@ enum XomoFigmaNodeMaterializer {
                 height: drawSize.height
             )
             NSBezierPath(rect: rect).addClip()
-            image.draw(in: drawRect, from: .zero, operation: .copy, fraction: 1)
+            rotated.image.draw(in: drawRect, from: .zero, operation: .copy, fraction: 1)
         } ?? NSImage.transparent(size: size)
+    }
+
+    private static func drawTransformedCrop(
+        _ image: NSImage,
+        in rect: CGRect,
+        transform: XomoFigmaPlanTransform?
+    ) {
+        guard let transform,
+              image.size.width > 0,
+              image.size.height > 0,
+              let context = NSGraphicsContext.current
+        else {
+            image.draw(in: rect, from: .zero, operation: .copy, fraction: 1)
+            return
+        }
+        context.withImageEditorTopLeftCoordinates(height: rect.height) {
+            let sourceSize = image.size
+            let affine = CGAffineTransform(
+                a: rect.width * CGFloat(transform.m11) / sourceSize.width,
+                b: rect.height * CGFloat(transform.m21) / sourceSize.width,
+                c: rect.width * CGFloat(transform.m12) / sourceSize.height,
+                d: rect.height * CGFloat(transform.m22) / sourceSize.height,
+                tx: rect.width * CGFloat(transform.translationX),
+                ty: rect.height * CGFloat(transform.translationY)
+            )
+            context.cgContext.clip(to: rect)
+            context.cgContext.concatenate(affine)
+            image.draw(
+                in: CGRect(origin: .zero, size: sourceSize),
+                from: .zero,
+                operation: .copy,
+                fraction: 1,
+                respectFlipped: true,
+                hints: nil
+            )
+        }
+    }
+
+    private static func drawTiledImage(
+        _ image: NSImage,
+        sourcePixelSize: CGSize,
+        in rect: CGRect,
+        scalingFactor: Double?,
+        importScale: CGFloat
+    ) {
+        guard sourcePixelSize.width > 0,
+              sourcePixelSize.height > 0,
+              let tile = image.copy() as? NSImage
+        else { return }
+        let requestedScale = CGFloat(scalingFactor ?? 1)
+        let tileScale = min(max(requestedScale, minimumTileScale), maximumTileScale)
+            * max(importScale, minimumTileScale)
+        tile.size = CGSize(
+            width: max(minimumTileDimension, sourcePixelSize.width * tileScale),
+            height: max(minimumTileDimension, sourcePixelSize.height * tileScale)
+        )
+        NSColor(patternImage: tile).setFill()
+        rect.fill()
+    }
+
+    private static func rotatedImage(
+        _ image: NSImage,
+        rotation: Double?
+    ) -> (image: NSImage, quarterTurns: Int) {
+        let normalized = (rotation ?? 0).truncatingRemainder(dividingBy: 360)
+        let quarterTurns = (Int((normalized / 90).rounded()) % 4 + 4) % 4
+        guard quarterTurns != 0 else { return (image, 0) }
+        let sourceSize = image.size
+        let outputSize = quarterTurns.isMultiple(of: 2)
+            ? sourceSize
+            : CGSize(width: sourceSize.height, height: sourceSize.width)
+        let rotated = NSImage.rendered(size: outputSize) { _ in
+            NSGraphicsContext.current?.withImageEditorTopLeftCoordinates(height: outputSize.height) {
+                guard let context = NSGraphicsContext.current else { return }
+                context.cgContext.translateBy(x: outputSize.width / 2, y: outputSize.height / 2)
+                context.cgContext.rotate(by: CGFloat(quarterTurns) * .pi / 2)
+                image.draw(
+                    in: CGRect(
+                        x: -sourceSize.width / 2,
+                        y: -sourceSize.height / 2,
+                        width: sourceSize.width,
+                        height: sourceSize.height
+                    ),
+                    from: .zero,
+                    operation: .copy,
+                    fraction: 1,
+                    respectFlipped: true,
+                    hints: nil
+                )
+            }
+        }
+        return (rotated ?? image, quarterTurns)
+    }
+
+    private static func rotatedPixelSize(_ size: CGSize, quarterTurns: Int) -> CGSize {
+        quarterTurns.isMultiple(of: 2)
+            ? size
+            : CGSize(width: size.height, height: size.width)
     }
 
     private static func makeTextLayer(
