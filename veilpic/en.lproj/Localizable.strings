@@ -680,8 +680,10 @@
 "imageEditor.panelTab.paths" = "Paths";
 "imageEditor.panelTab.comps" = "Comps";
 "imageEditor.savedPath.defaultName" = "Path %d";
+"imageEditor.savedPath.copySuffix" = " copy";
+"imageEditor.savedPath.copySuffixIndexed" = " copy %d";
 "imageEditor.savedPath.empty" = "No saved paths yet";
-"imageEditor.savedPath.hint" = "The selected path shows read-only anchors; use the eye to pin its outline. Load one to edit, then use Update to write changes back.";
+"imageEditor.savedPath.hint" = "Copy and paste independent paths; the selected path shows read-only anchors, and the eye pins its outline.";
 "imageEditor.savedPath.namePlaceholder" = "Path Name";
 "imageEditor.savedPath.summary.closed" = "Closed · %d anchors · %d subpaths";
 "imageEditor.savedPath.summary.open" = "Open · %d anchors · %d subpaths";
@@ -1377,6 +1379,7 @@
 "imageEditor.history.savedPathUpdate" = "Update Path";
 "imageEditor.history.savedPathLoad" = "Load Path";
 "imageEditor.history.savedPathDelete" = "Delete Path";
+"imageEditor.history.savedPathPaste" = "Paste Path";
 "imageEditor.history.selectionFromSavedPath" = "Load Selection from Saved Path";
 "imageEditor.history.savedPathFill" = "Fill Saved Path";
 "imageEditor.history.savedPathStroke" = "Stroke Saved Path";
@@ -1578,6 +1581,10 @@
 "imageEditor.status.savedPathUpdated" = "Updated path: %@";
 "imageEditor.status.savedPathLoaded" = "Loaded editable path: %@";
 "imageEditor.status.savedPathDeleted" = "Deleted path: %@";
+"imageEditor.status.savedPathCopied" = "Copied path: %@";
+"imageEditor.status.savedPathCopyFailed" = "Could not write the path to Clipboard";
+"imageEditor.status.savedPathClipboardInvalid" = "Clipboard does not contain a pasteable Xomo path";
+"imageEditor.status.savedPathPasted" = "Pasted path: %@";
 "imageEditor.status.savedPathSelectionRequiresClosed" = "Only a closed saved path can make a selection";
 "imageEditor.status.selectionFromSavedPath" = "Selection loaded from path “%@”";
 "imageEditor.status.savedPathFillRequiresClosed" = "Only a closed saved path can be filled";
@@ -1964,6 +1971,8 @@
 "imageEditor.action.savedPathSelection" = "Make Selection from Path";
 "imageEditor.action.savedPathFill" = "Fill Path on Current Pixel Layer";
 "imageEditor.action.savedPathStroke" = "Stroke Path on Current Pixel Layer";
+"imageEditor.action.savedPathCopy" = "Copy Path";
+"imageEditor.action.savedPathPaste" = "Paste Path";
 "imageEditor.action.vectorMaskToggle" = "Toggle Vector Mask";
 "imageEditor.action.vectorMaskCopyToSelected" = "Copy Vector Mask to Selected Layers";
 "imageEditor.action.vectorMaskDelete" = "Delete Vector Masks";

@@ -1055,6 +1055,16 @@ extension ImageEditorView {
                     viewModel.strokeSavedPathToSelectedPixelLayer(id)
                 }
                 .disabled(!viewModel.canStrokeSelectedSavedPathToPixelLayer)
+                savedPathIconButton("doc.on.doc", "imageEditor.action.savedPathCopy") {
+                    guard let id = viewModel.document.selectedSavedPathID else { return }
+                    viewModel.copySavedPath(id)
+                }
+                .disabled(viewModel.selectedSavedPath == nil)
+                savedPathIconButton("clipboard", "imageEditor.action.savedPathPaste") {
+                    if let savedPath = viewModel.pasteSavedPath() {
+                        syncSavedPathNameDraft(savedPath)
+                    }
+                }
                 Spacer(minLength: 0)
             }
         }

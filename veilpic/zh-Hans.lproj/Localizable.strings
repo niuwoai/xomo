@@ -680,8 +680,10 @@
 "imageEditor.panelTab.paths" = "路径";
 "imageEditor.panelTab.comps" = "复合";
 "imageEditor.savedPath.defaultName" = "路径 %d";
+"imageEditor.savedPath.copySuffix" = " 副本";
+"imageEditor.savedPath.copySuffixIndexed" = " 副本 %d";
 "imageEditor.savedPath.empty" = "尚无已保存路径";
-"imageEditor.savedPath.hint" = "选中路径会显示只读锚点；点眼睛可固定轮廓。载入后可编辑，修改后用“更新”写回。";
+"imageEditor.savedPath.hint" = "可复制、粘贴独立路径；选中项显示只读锚点，点眼睛可固定轮廓。";
 "imageEditor.savedPath.namePlaceholder" = "路径名称";
 "imageEditor.savedPath.summary.closed" = "闭合 · %d 个锚点 · %d 个子路径";
 "imageEditor.savedPath.summary.open" = "开放 · %d 个锚点 · %d 个子路径";
@@ -1377,6 +1379,7 @@
 "imageEditor.history.savedPathUpdate" = "更新路径";
 "imageEditor.history.savedPathLoad" = "载入路径";
 "imageEditor.history.savedPathDelete" = "删除路径";
+"imageEditor.history.savedPathPaste" = "粘贴路径";
 "imageEditor.history.selectionFromSavedPath" = "从已保存路径载入选区";
 "imageEditor.history.savedPathFill" = "填充已保存路径";
 "imageEditor.history.savedPathStroke" = "描边已保存路径";
@@ -1578,6 +1581,10 @@
 "imageEditor.status.savedPathUpdated" = "已更新路径：%@";
 "imageEditor.status.savedPathLoaded" = "已载入可编辑路径：%@";
 "imageEditor.status.savedPathDeleted" = "已删除路径：%@";
+"imageEditor.status.savedPathCopied" = "已复制路径：%@";
+"imageEditor.status.savedPathCopyFailed" = "无法把路径写入剪贴板";
+"imageEditor.status.savedPathClipboardInvalid" = "剪贴板里没有可粘贴的 Xomo 路径";
+"imageEditor.status.savedPathPasted" = "已粘贴路径：%@";
 "imageEditor.status.savedPathSelectionRequiresClosed" = "只有闭合的已保存路径才能建立选区";
 "imageEditor.status.selectionFromSavedPath" = "已从路径“%@”载入选区";
 "imageEditor.status.savedPathFillRequiresClosed" = "只有闭合的已保存路径才能填充";
@@ -1964,6 +1971,8 @@
 "imageEditor.action.savedPathSelection" = "从路径建立选区";
 "imageEditor.action.savedPathFill" = "填充路径到当前像素层";
 "imageEditor.action.savedPathStroke" = "描边路径到当前像素层";
+"imageEditor.action.savedPathCopy" = "复制路径";
+"imageEditor.action.savedPathPaste" = "粘贴路径";
 "imageEditor.action.vectorMaskToggle" = "切换矢量蒙版";
 "imageEditor.action.vectorMaskCopyToSelected" = "复制矢量蒙版到所选图层";
 "imageEditor.action.vectorMaskDelete" = "删除所选矢量蒙版";
