@@ -46,6 +46,11 @@ extension ImageEditorViewModel {
         return document.savedPaths.first { $0.id == id }
     }
 
+    var selectedSavedPathCanvasOverlay: ImageEditorSavedPath? {
+        guard document.areExtrasVisible else { return nil }
+        return selectedSavedPath
+    }
+
     var hasEditableCurrentPath: Bool {
         currentPathSnapshot(id: UUID(), name: "Path") != nil
     }

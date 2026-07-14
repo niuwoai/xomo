@@ -1116,6 +1116,7 @@ struct ImageEditorView: View {
                     guideInteractionOverlay(in: geometry.size)
                     quickMaskOverlay(in: geometry.size)
                     selectionOverlay(in: geometry.size)
+                    savedPathOverlay(in: geometry.size)
                     colorSamplerOverlay(in: geometry.size)
                     sampledBrushSourceOverlay(in: geometry.size)
                     layerTransformOverlay(in: geometry.size)
@@ -3395,6 +3396,60 @@ struct ImageEditorView: View {
                 .allowsHitTesting(false)
             }
         }
+    }
+
+    @ViewBuilder
+    private func savedPathOverlay(in size: CGSize) -> some View {
+        if let savedPath = viewModel.selectedSavedPathCanvasOverlay {
+            Canvas { context, _ in
+                let path = savedPathCanvasPath(savedPath, in: size)
+                context.stroke(
+                    path,
+                    with: .color(Color.black.opacity(0.62)),
+                    style: StrokeStyle(lineWidth: 2.4)
+                )
+                context.stroke(
+                    path,
+                    with: .color(Color.gray.opacity(0.9)),
+                    style: StrokeStyle(lineWidth: 1)
+                )
+            }
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+        }
+    }
+
+    private func savedPathCanvasPath(_ savedPath: ImageEditorSavedPath, in size: CGSize) -> Path {
+        var path = Path()
+        for anchors in savedPath.subpaths {
+            guard let first = anchors.first else { continue }
+            path.move(to: viewPoint(from: first.point, in: size))
+            for index in anchors.indices.dropFirst() {
+                let previous = anchors[index - 1]
+                let current = anchors[index]
+                let destination = viewPoint(from: current.point, in: size)
+                if previous.outControl != nil || current.inControl != nil {
+                    path.addCurve(
+                        to: destination,
+                        control1: viewPoint(from: previous.outControl ?? previous.point, in: size),
+                        control2: viewPoint(from: current.inControl ?? current.point, in: size)
+                    )
+                } else {
+                    path.addLine(to: destination)
+                }
+            }
+            if savedPath.isClosed, anchors.count > 2, let last = anchors.last {
+                if last.outControl != nil || first.inControl != nil {
+                    path.addCurve(
+                        to: viewPoint(from: first.point, in: size),
+                        control1: viewPoint(from: last.outControl ?? last.point, in: size),
+                        control2: viewPoint(from: first.inControl ?? first.point, in: size)
+                    )
+                }
+                path.closeSubpath()
+            }
+        }
+        return path
     }
 
     @ViewBuilder
