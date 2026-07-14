@@ -696,6 +696,9 @@
 "imageEditor.properties.stackLayoutCrossAlignment" = "交差軸揃え";
 "imageEditor.properties.stackLayoutPrimarySizing" = "主軸サイズ";
 "imageEditor.properties.stackLayoutCrossSizing" = "交差軸サイズ";
+"imageEditor.properties.stackChildLayout" = "オートレイアウトの子要素";
+"imageEditor.properties.stackChildPrimarySizing" = "主軸サイズ";
+"imageEditor.properties.stackChildCrossSizing" = "交差軸サイズ";
 "imageEditor.properties.stackLayoutSpacingValue" = "間隔：%d px";
 "imageEditor.properties.stackLayoutPaddingTopValue" = "上：%d px";
 "imageEditor.properties.stackLayoutPaddingRightValue" = "右：%d px";
@@ -712,9 +715,13 @@
 "imageEditor.stackLayout.cross.end" = "末尾";
 "imageEditor.stackLayout.sizing.fixed" = "固定";
 "imageEditor.stackLayout.sizing.hug" = "内容に合わせる";
+"imageEditor.stackLayout.childSizing.fixed" = "固定";
+"imageEditor.stackLayout.childSizing.fill" = "コンテナに合わせる";
 "imageEditor.action.stackLayoutReflow" = "子要素を再配置";
 "imageEditor.history.stackLayout" = "オートレイアウトを変更";
+"imageEditor.history.stackChildLayout" = "オートレイアウトの子要素を変更";
 "imageEditor.status.stackLayoutApplied" = "オートレイアウトを再配置しました";
+"imageEditor.status.stackChildLayoutApplied" = "オートレイアウトの子要素を再配置しました";
 "imageEditor.status.stackLayoutLocked" = "ロック中のグループまたは子要素は再配置できません";
 "imageEditor.properties.filter" = "フィルター";
 "imageEditor.properties.smartFiltersEmpty" = "選択レイヤーにスマートフィルターはありません";
@@ -2874,7 +2881,7 @@
 "xomo.figma.node.issue.vectorGeometryMissing" = "ベクターパスデータがありません";
 "xomo.figma.node.issue.vectorGeometryUnsupported" = "ベクターパスに解析できないコマンドがあります";
 "xomo.figma.node.issue.componentSemanticsFlattened" = "コンポーネント意味論は通常グループとして扱います";
-"xomo.figma.node.issue.autoLayoutFlattened" = "Wrap、Fill/Stretch、ベースラインなどは固定サイズとして扱います";
+"xomo.figma.node.issue.autoLayoutFlattened" = "Wrap、ベースラインなどは固定サイズとして扱います";
 "xomo.figma.node.issue.maskFlattened" = "マスク関係はまだ保持されません";
 "xomo.figma.node.issue.clippingFlattened" = "Frame の内容クリッピングはまだ保持されません";
 "xomo.figma.node.issue.effectsFlattened" = "エフェクトはまだ保持されません";

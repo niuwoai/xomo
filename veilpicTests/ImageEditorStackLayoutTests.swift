@@ -82,6 +82,36 @@ struct ImageEditorStackLayoutTests {
         ])
     }
 
+    @Test func fillChildrenSharePrimarySpaceByWeightAndStretchCrossAxis() {
+        let frames = ImageEditorStackLayoutEngine.frames(
+            in: CGRect(x: 0, y: 0, width: 300, height: 100),
+            itemFrames: [
+                CGRect(x: 0, y: 0, width: 20, height: 20),
+                CGRect(x: 0, y: 0, width: 30, height: 30),
+                CGRect(x: 0, y: 0, width: 40, height: 10)
+            ],
+            itemLayouts: [
+                ImageEditorStackChildLayout(),
+                ImageEditorStackChildLayout(grow: 1, stretchesCrossAxis: true),
+                ImageEditorStackChildLayout(grow: 2)
+            ],
+            layout: ImageEditorStackLayout(
+                axis: .horizontal,
+                spacing: 10,
+                paddingTop: 10,
+                paddingRight: 10,
+                paddingBottom: 10,
+                paddingLeft: 10
+            )
+        )
+
+        #expect(frames == [
+            CGRect(x: 10, y: 10, width: 20, height: 20),
+            CGRect(x: 40, y: 10, width: 80, height: 80),
+            CGRect(x: 130, y: 10, width: 160, height: 10)
+        ])
+    }
+
     @Test func reflowMovesDirectChildrenAndNestedSubtreeButNotExcludedBackground() throws {
         let fixture = makeFixture()
         let originalChildFrame = fixture.layer(named: "First").frame
@@ -112,6 +142,9 @@ struct ImageEditorStackLayoutTests {
             layout.primarySizingMode = .hug
             layout.crossSizingMode = .hug
         }
+        fixture.updateLayer(named: "First") {
+            $0.stackChildLayout = ImageEditorStackChildLayout(grow: 2, stretchesCrossAxis: true)
+        }
         let projectData = try fixture.viewModel.projectData()
         let reopened = ImageEditorViewModel(
             sourceName: "empty.png",
@@ -122,6 +155,7 @@ struct ImageEditorStackLayoutTests {
 
         let root = try #require(reopened.document.layers.first { $0.name == "Root" })
         let background = try #require(reopened.document.layers.first { $0.name == "Background" })
+        let first = try #require(reopened.document.layers.first { $0.name == "First" })
         #expect(root.stackLayout == ImageEditorStackLayout(
             axis: .vertical,
             spacing: 10,
@@ -135,6 +169,10 @@ struct ImageEditorStackLayoutTests {
         ))
         #expect(background.isStackLayoutExcluded)
         #expect(background.isStackLayoutBackground)
+        #expect(first.stackChildLayout == ImageEditorStackChildLayout(
+            grow: 2,
+            stretchesCrossAxis: true
+        ))
     }
 
     @Test func hugReflowResizesGroupAndBackgroundWithUndoRedo() {
@@ -182,6 +220,26 @@ struct ImageEditorStackLayoutTests {
         #expect(layout.crossSizingMode == .fixed)
     }
 
+    @Test func childSizingControlsReflowParentAndSupportUndoRedo() {
+        let fixture = makeFixture()
+        fixture.selectLayer(named: "First")
+
+        #expect(fixture.viewModel.selectedStackChildLayout?.primarySizingMode == .fixed)
+        fixture.viewModel.setSelectedStackChildPrimarySizingMode(.fill)
+        #expect(fixture.layer(named: "First").frame == CGRect(x: 95, y: 30, width: 30, height: 100))
+        #expect(fixture.layer(named: "Nested").frame == CGRect(x: 85, y: 140, width: 50, height: 30))
+
+        fixture.viewModel.setSelectedStackChildCrossSizingMode(.fill)
+        #expect(fixture.layer(named: "First").frame == CGRect(x: 30, y: 30, width: 160, height: 100))
+        #expect(fixture.viewModel.document.history.last?.title == L10n.text("imageEditor.history.stackChildLayout"))
+
+        fixture.viewModel.undo()
+        #expect(fixture.layer(named: "First").frame == CGRect(x: 95, y: 30, width: 30, height: 100))
+
+        fixture.viewModel.redo()
+        #expect(fixture.layer(named: "First").frame == CGRect(x: 30, y: 30, width: 160, height: 100))
+    }
+
     @Test func propertyPanelAndLayerTabsKeepExplicitInteractionAndLightTextContracts() throws {
         let repositoryRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
@@ -198,6 +256,8 @@ struct ImageEditorStackLayoutTests {
         #expect(viewSource.contains("image-editor-stack-layout-axis"))
         #expect(viewSource.contains("image-editor-stack-layout-primary-sizing"))
         #expect(viewSource.contains("image-editor-stack-layout-cross-sizing"))
+        #expect(viewSource.contains("image-editor-stack-child-primary-sizing"))
+        #expect(viewSource.contains("image-editor-stack-child-cross-sizing"))
         #expect(viewSource.contains("image-editor-stack-layout-reflow"))
         #expect(viewSource.contains("setSelectedStackSpacing"))
         #expect(panelSource.contains("static let foregroundColor = NSColor.white"))
@@ -259,5 +319,20 @@ private struct StackLayoutFixture {
         }
         update(&layout)
         viewModel.document.layers[index].stackLayout = layout
+    }
+
+    func updateLayer(named name: String, update: (inout ImageEditorLayer) -> Void) {
+        guard let index = viewModel.document.layers.firstIndex(where: { $0.name == name }) else {
+            fatalError("Missing test layer")
+        }
+        update(&viewModel.document.layers[index])
+    }
+
+    func selectLayer(named name: String) {
+        guard let layer = viewModel.document.layers.first(where: { $0.name == name }) else {
+            fatalError("Missing test layer")
+        }
+        viewModel.document.selectedLayerID = layer.id
+        viewModel.document.selectedLayerIDs = [layer.id]
     }
 }

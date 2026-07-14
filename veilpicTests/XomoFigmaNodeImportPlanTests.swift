@@ -61,8 +61,13 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(frame.frame == XomoFigmaPlanRect(x: 0, y: 0, width: 390, height: 844))
         #expect(group.parentSourceID == "1:3")
         #expect(group.targetKind == .group)
+        #expect(group.stackLayout?.axis == .horizontal)
         #expect(text.parentSourceID == "2:1")
         #expect(text.targetKind == .text)
+        #expect(text.stackChildLayout == ImageEditorStackChildLayout(
+            grow: 1,
+            stretchesCrossAxis: true
+        ))
         #expect(text.text?.characters == "继续")
         #expect(text.text?.fontFamily == "Inter")
         #expect(text.text?.fontSize == 16)
@@ -168,7 +173,7 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(line.strokeWeight == 3)
     }
 
-    @Test func mapperKeepsStackMetadataWhileReportingUnsupportedWrapAndFillSemantics() throws {
+    @Test func mapperReportsUnsupportedWrapWhileKeepingFillChildSemantics() throws {
         let response = try JSONDecoder().decode(
             XomoFigmaNodeResponse.self,
             from: Data(
@@ -208,7 +213,11 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(frame.stackLayout?.axis == .horizontal)
         #expect(frame.stackLayout?.spacing == 6)
         #expect(frame.issues.contains(.autoLayoutFlattened))
-        #expect(child.issues.contains(.autoLayoutFlattened))
+        #expect(!child.issues.contains(.autoLayoutFlattened))
+        #expect(child.stackChildLayout == ImageEditorStackChildLayout(
+            grow: 1,
+            stretchesCrossAxis: true
+        ))
     }
 
     @Test func clientMapsBadRequestAuthorizationMissingNodeRateLimitAndServerErrors() async throws {
@@ -348,6 +357,10 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(rootBackground.isStackLayoutBackground)
         #expect(actions.groupID == root.id)
         #expect(text.groupID == actions.id)
+        #expect(text.stackChildLayout == ImageEditorStackChildLayout(
+            grow: 1,
+            stretchesCrossAxis: true
+        ))
         #expect(text.frame.origin == CGPoint(x: 135, y: 138))
         if case let .text(content) = text.kind {
             #expect(content.text == "继续")
@@ -451,6 +464,10 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(root.isGroup)
         #expect(actions.groupID == root.id)
         #expect(text.groupID == actions.id)
+        #expect(text.stackChildLayout == ImageEditorStackChildLayout(
+            grow: 1,
+            stretchesCrossAxis: true
+        ))
         #expect(text.textContent?.text == "继续")
         #expect(vector.shapeContent?.kind == .path)
         #expect(vector.shapeContent?.editablePathAnchors.count == 3)
@@ -531,12 +548,18 @@ struct XomoFigmaNodeImportPlanTests {
                     "id": "2:1",
                     "name": "Actions",
                     "type": "GROUP",
+                    "layoutMode": "HORIZONTAL",
+                    "primaryAxisSizingMode": "FIXED",
+                    "counterAxisSizingMode": "FIXED",
+                    "itemSpacing": 8,
                     "absoluteBoundingBox": {"x": 120, "y": 240, "width": 200, "height": 80},
                     "children": [
                       {
                         "id": "2:2",
                         "name": "Continue Label",
                         "type": "TEXT",
+                        "layoutGrow": 1,
+                        "layoutAlign": "STRETCH",
                         "characters": "继续",
                         "style": {"fontFamily": "Inter", "fontSize": 16, "fontWeight": 600, "textAlignHorizontal": "CENTER"},
                         "fills": [{"type": "SOLID", "color": {"r": 1, "g": 1, "b": 1, "a": 1}}],
