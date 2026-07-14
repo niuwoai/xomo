@@ -27,18 +27,30 @@ struct ImageEditorLayerPanelStyleTests {
 
         ImageEditorLayerPanelTabAppearance.configure(label, title: "通道", isSelected: false)
         let unselectedColor = label.textColor?.usingColorSpace(.deviceRGB)
+        let attributedUnselectedColor = label.attributedStringValue.attribute(
+            .foregroundColor,
+            at: 0,
+            effectiveRange: nil
+        ) as? NSColor
         #expect(label.stringValue == "通道")
         #expect(label.refusesFirstResponder)
         #expect((unselectedColor?.redComponent ?? 0) > 0.99)
         #expect((unselectedColor?.greenComponent ?? 0) > 0.99)
         #expect((unselectedColor?.blueComponent ?? 0) > 0.99)
+        #expect(attributedUnselectedColor == ImageEditorLayerPanelTabAppearance.foregroundColor)
 
         ImageEditorLayerPanelTabAppearance.configure(label, title: "图层", isSelected: true)
         let selectedColor = label.textColor?.usingColorSpace(.deviceRGB)
+        let attributedSelectedColor = label.attributedStringValue.attribute(
+            .foregroundColor,
+            at: 0,
+            effectiveRange: nil
+        ) as? NSColor
         #expect(label.stringValue == "图层")
         #expect((selectedColor?.redComponent ?? 0) > 0.99)
         #expect((selectedColor?.greenComponent ?? 0) > 0.99)
         #expect((selectedColor?.blueComponent ?? 0) > 0.99)
+        #expect(attributedSelectedColor == ImageEditorLayerPanelTabAppearance.selectedForegroundColor)
     }
 
     @Test func layerDockTitleUsesWhiteText() {

@@ -11,7 +11,9 @@ checks = {
   "does_not_use_system_segmented_picker" => !source.match?(/private var layerPanelTabs.*?pickerStyle\(\.segmented\)/m),
   "uses_native_label_with_explicit_light_foreground" =>
     source.include?("struct ImageEditorLayerPanelTabLabel: NSViewRepresentable") &&
-      source.include?("label.textColor = isSelected ? selectedForegroundColor : foregroundColor"),
+      source.include?("label.attributedStringValue = NSAttributedString(") &&
+      source.include?(".foregroundColor: color") &&
+      source.include?("label.textColor = color"),
   "keeps_tabs_unfocusable" => source.match?(/private var layerPanelTabs.*?\.focusable\(false\)/m)
 }
 

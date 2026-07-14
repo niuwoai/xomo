@@ -16,9 +16,21 @@ enum ImageEditorLayerPanelTabAppearance {
     static let foregroundColor = NSColor.white
 
     static func configure(_ label: NSTextField, title: String, isSelected: Bool) {
-        label.stringValue = title
-        label.textColor = isSelected ? selectedForegroundColor : foregroundColor
-        label.font = .systemFont(ofSize: 11, weight: .semibold)
+        let color = isSelected ? selectedForegroundColor : foregroundColor
+        let font = NSFont.systemFont(ofSize: 11, weight: .semibold)
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.alignment = .center
+        paragraphStyle.lineBreakMode = .byClipping
+        label.attributedStringValue = NSAttributedString(
+            string: title,
+            attributes: [
+                .foregroundColor: color,
+                .font: font,
+                .paragraphStyle: paragraphStyle
+            ]
+        )
+        label.textColor = color
+        label.font = font
         label.alignment = .center
         label.backgroundColor = .clear
         label.isBordered = false
@@ -28,6 +40,7 @@ enum ImageEditorLayerPanelTabAppearance {
         label.refusesFirstResponder = true
         label.lineBreakMode = .byClipping
         label.maximumNumberOfLines = 1
+        label.usesSingleLineMode = true
     }
 }
 
@@ -1033,7 +1046,7 @@ extension ImageEditorView {
                 ScrollView {
                     VStack(spacing: 5) {
                         ForEach(viewModel.document.savedPaths) { savedPath in
-                            savedPathRow(savedPath)
+                            savedPathDraggableRow(savedPath)
                         }
                     }
                 }
@@ -1094,6 +1107,20 @@ extension ImageEditorView {
                 .disabled(!viewModel.canMoveSelectedSavedPathToBottom)
                 Spacer(minLength: 0)
             }
+        }
+    }
+
+    private func savedPathDraggableRow(_ savedPath: ImageEditorSavedPath) -> some View {
+        VStack(spacing: 2) {
+            savedPathDropBand(savedPath, placement: .above)
+            savedPathRow(savedPath)
+                .onDrag {
+                    viewModel.selectSavedPath(savedPath.id)
+                    syncSavedPathNameDraft(savedPath)
+                    return NSItemProvider(object: savedPath.id.uuidString as NSString)
+                }
+                .help(L10n.text("imageEditor.action.savedPathDragReorder"))
+            savedPathDropBand(savedPath, placement: .below)
         }
     }
 
@@ -1167,6 +1194,50 @@ extension ImageEditorView {
         .padding(.vertical, 6)
         .background(isSelected ? Color(nsColor: ImageEditorTheme.selected).opacity(0.28) : Color.white.opacity(0.04))
         .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+    }
+
+    private func savedPathDropBand(
+        _ savedPath: ImageEditorSavedPath,
+        placement: ImageEditorSavedPathDropPlacement
+    ) -> some View {
+        let target = ImageEditorSavedPathDropTarget(
+            savedPathID: savedPath.id,
+            placement: placement
+        )
+        let isTargeted = targetedSavedPathDropTarget == target
+        return Rectangle()
+            .fill(isTargeted ? Color(nsColor: ImageEditorTheme.selected) : Color.clear)
+            .frame(height: 6)
+            .clipShape(RoundedRectangle(cornerRadius: 3, style: .continuous))
+            .onDrop(
+                of: [UTType.plainText],
+                delegate: ImageEditorSavedPathDropDelegate(
+                    onTargetChange: { isTargeted in
+                        targetedSavedPathDropTarget = isTargeted ? target : nil
+                    },
+                    onDrop: { sourceID in
+                        _ = handleSavedPathDrop(sourceID, on: savedPath, placement: placement)
+                    }
+                )
+            )
+    }
+
+    private func handleSavedPathDrop(
+        _ sourceIDString: String,
+        on targetPath: ImageEditorSavedPath,
+        placement: ImageEditorSavedPathDropPlacement
+    ) -> Bool {
+        guard let sourceID = UUID(uuidString: sourceIDString),
+              let sourceIndex = viewModel.document.savedPaths.firstIndex(where: { $0.id == sourceID }),
+              let targetIndex = viewModel.document.savedPaths.firstIndex(where: { $0.id == targetPath.id }),
+              let destinationIndex = ImageEditorSavedPathDropGeometry.destinationIndex(
+                  sourceIndex: sourceIndex,
+                  targetIndex: targetIndex,
+                  placement: placement,
+                  count: viewModel.document.savedPaths.count
+              )
+        else { return false }
+        return viewModel.moveSavedPath(sourceID, toIndex: destinationIndex)
     }
 
     private func savedPathIconButton(
@@ -2433,6 +2504,44 @@ private struct ImageEditorLayerDropDelegate: DropDelegate {
             DispatchQueue.main.async {
                 onTargetChange(false, location)
                 onDrop(sourceID as String, location)
+            }
+        }
+        return true
+    }
+}
+
+private struct ImageEditorSavedPathDropDelegate: DropDelegate {
+    let onTargetChange: (Bool) -> Void
+    let onDrop: (String) -> Void
+
+    func validateDrop(info: DropInfo) -> Bool {
+        info.hasItemsConforming(to: [UTType.plainText])
+    }
+
+    func dropEntered(info: DropInfo) {
+        onTargetChange(true)
+    }
+
+    func dropExited(info: DropInfo) {
+        onTargetChange(false)
+    }
+
+    func dropUpdated(info: DropInfo) -> DropProposal? {
+        onTargetChange(true)
+        return DropProposal(operation: .move)
+    }
+
+    func performDrop(info: DropInfo) -> Bool {
+        guard let provider = info.itemProviders(for: [UTType.plainText]).first else {
+            onTargetChange(false)
+            return false
+        }
+
+        provider.loadObject(ofClass: NSString.self) { object, _ in
+            guard let sourceID = object as? NSString else { return }
+            DispatchQueue.main.async {
+                onTargetChange(false)
+                onDrop(sourceID as String)
             }
         }
         return true

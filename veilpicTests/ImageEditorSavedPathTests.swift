@@ -729,6 +729,51 @@ struct ImageEditorSavedPathTests {
         #expect(viewModel.document.history.count == historyCount + 1)
     }
 
+    @Test func savedPathDropGeometryAccountsForRemovalBeforeInsertion() {
+        #expect(ImageEditorSavedPathDropGeometry.destinationIndex(
+            sourceIndex: 0,
+            targetIndex: 2,
+            placement: .above,
+            count: 4
+        ) == 1)
+        #expect(ImageEditorSavedPathDropGeometry.destinationIndex(
+            sourceIndex: 0,
+            targetIndex: 2,
+            placement: .below,
+            count: 4
+        ) == 2)
+        #expect(ImageEditorSavedPathDropGeometry.destinationIndex(
+            sourceIndex: 3,
+            targetIndex: 1,
+            placement: .above,
+            count: 4
+        ) == 1)
+        #expect(ImageEditorSavedPathDropGeometry.destinationIndex(
+            sourceIndex: 3,
+            targetIndex: 1,
+            placement: .below,
+            count: 4
+        ) == 2)
+        #expect(ImageEditorSavedPathDropGeometry.destinationIndex(
+            sourceIndex: 2,
+            targetIndex: 2,
+            placement: .above,
+            count: 4
+        ) == nil)
+        #expect(ImageEditorSavedPathDropGeometry.destinationIndex(
+            sourceIndex: -1,
+            targetIndex: 2,
+            placement: .above,
+            count: 4
+        ) == nil)
+        #expect(ImageEditorSavedPathDropGeometry.destinationIndex(
+            sourceIndex: 0,
+            targetIndex: 4,
+            placement: .below,
+            count: 4
+        ) == nil)
+    }
+
     @Test func savedPathsRoundTripProjectsAndOlderProjectsDefaultToEmpty() throws {
         let viewModel = makeViewModel()
         createPath(
@@ -783,6 +828,9 @@ struct ImageEditorSavedPathTests {
         #expect(panel.contains("viewModel.moveSavedPathDown"))
         #expect(panel.contains("viewModel.moveSavedPathToTop"))
         #expect(panel.contains("viewModel.moveSavedPathToBottom"))
+        #expect(panel.contains("ImageEditorSavedPathDropDelegate"))
+        #expect(panel.contains("savedPathDropBand"))
+        #expect(panel.contains("viewModel.moveSavedPath(sourceID, toIndex: destinationIndex)"))
         #expect(panel.contains("text: savedPathNameBinding(savedPath)"))
         #expect(panel.contains(".foregroundStyle(Color(nsColor: ImageEditorTheme.text))"))
         #expect(menu.contains("selectedLayerPanelTab = .paths"))

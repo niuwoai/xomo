@@ -1,0 +1,49 @@
+{
+  "generated_at": "2026-07-15 01:04:00 +0800",
+  "version": "2.12.0-rc55",
+  "passed": true,
+  "xcode_tests": {
+    "passed": 38,
+    "total": 38,
+    "suites": [
+      {
+        "name": "ImageEditorSavedPathTests",
+        "passed": 28,
+        "total": 28
+      },
+      {
+        "name": "ImageEditorLayerPanelStyleTests",
+        "passed": 6,
+        "total": 6
+      },
+      {
+        "name": "LocalizationResourceTests",
+        "passed": 4,
+        "total": 4
+      }
+    ]
+  },
+  "swiftpm_tests": {
+    "suite": "XomoMCPServerTests",
+    "passed": 2,
+    "total": 2
+  },
+  "ruby_checks": {
+    "script": "scripts/test_layer_panel_tab_style.rb",
+    "passed": 4,
+    "total": 4
+  },
+  "clean_debug_build": {
+    "passed": true,
+    "derived_data": "/tmp/veilpic-rc55-clean-debug",
+    "version": "2.12.0-rc55",
+    "bundle_id": "im.some.xomo",
+    "minimum_macos": "13.0",
+    "architecture": "arm64"
+  },
+  "computer_use": {
+    "passed": true,
+    "app": "/tmp/veilpic-rc55-clean-debug/Build/Products/Debug/Xomo.app",
+    "assertion": "Layers, Channels, Comps, and Paths tabs render with readable white text"
+  }
+}
