@@ -331,7 +331,7 @@ enum XomoFigmaLinkParser {
         }
     }
 
-    private static func isSafeNodeComponent(_ component: Substring) -> Bool {
+    nonisolated private static func isSafeNodeComponent(_ component: Substring) -> Bool {
         guard !component.isEmpty else { return false }
         return component.unicodeScalars.allSatisfy { scalar in
             scalar.isASCII && (CharacterSet.alphanumerics.contains(scalar) || scalar == "_")

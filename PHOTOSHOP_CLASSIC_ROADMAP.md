@@ -1,6 +1,6 @@
 # Xomo 经典 Photoshop 能力路线图
 
-> 最后更新：2026-07-15 ｜ 当前版本：v2.12.0-rc60 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座
+> 最后更新：2026-07-15 ｜ 当前版本：v2.12.0-rc61 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座
 
 ## 1. 范围原则
 
@@ -187,4 +187,6 @@
 - `v2.12.0-rc59` 验证：Figma 全链路 34/34、图层白字 6/6、三语资源 4/4、CLI 2/2 通过；Debug 测试产品构建、版本/Bundle ID/macOS 13.0 下限/arm64 核对和无凭据真实界面冒烟均通过。
 - `v2.12.0-rc60`：固定 Figma 导入后的 Undo/Redo、项目保存重开、可编辑层级恢复、PNG 合成导出与凭据不持久化契约，并执行第 60 个小版本的完整 Debug/Release、全量隔离测试、CLI 和真实界面冒烟门禁。
 - `v2.12.0-rc60` 验证：Debug 测试产品、全量隔离测试 817/817、CLI 2/2、arm64/x86_64 通用 Release App 与 CLI 均通过；版本、Bundle ID、macOS 13.0 下限和双架构核对通过。真实界面复核图层浅色文字、Figma 安全预览、组件三层结构、对象自动选层和缩放工具条持续可点击；Release 剩余两处非阻断 actor-isolation 预警留给独立小版本处理。
+- `v2.12.0-rc61`：将 Figma 节点 ID 校验与 SVG 路径解析的纯函数边界明确为 `nonisolated`，清除 rc60 Release 遗留的两处 Swift 6 actor-isolation 预警；网络、授权、映射与导入结果不变。
+- `v2.12.0-rc61` 验证：Figma 专项隔离测试 35/35、CLI 2/2 和 arm64/x86_64 通用 Release App 通过；Release 不再报告 actor-isolation 预警，版本、Bundle ID 与 macOS 13.0 下限核对通过。
 - 下一小版本：根据 rc60 完整门禁结果，在图片资源下载或 Auto Layout/变量中只选择一条窄路径，不并行扩大文档模型。
