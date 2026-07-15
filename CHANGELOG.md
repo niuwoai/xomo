@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.12.0-rc103 - 2026-07-16
+
+### Fixed
+- 修正独立组件拖动手势的坐标空间，使用画布坐标而不是组件局部坐标，避免点击/拖动位置偏移。
+
+### Verification
+- Release 构建成功并安装到 `/Applications/Xomo.app`；组件库专项 33/33、组件对象命中/移动专项 14/14 通过，报告见 `test-reports/rc103-component-sidebar/` 与 `test-reports/rc103-canvas-object/`。
+
+## 2.12.0-rc102 - 2026-07-15
+
+### Fixed
+- 为选中的 UI 组件增加独立矩形命中层与移动手势，避免组件内容或拖放宿主吞掉首次点击/拖动；画布父手势会跳过该对象，防止移动增量重复应用。
+
+### Verification
+- 组件库专项测试 33/33、组件对象命中/移动专项测试 14/14 通过；报告见 `test-reports/rc102-component-sidebar/` 与 `test-reports/rc102-canvas-object/`。
+
 ## 2.12.0-rc101 - 2026-07-15
 
 ### Fixed

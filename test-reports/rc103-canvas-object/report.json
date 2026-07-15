@@ -1,0 +1,149 @@
+{
+  "generated_at": "2026-07-16 01:28:39 +0800",
+  "total": 14,
+  "passed": 14,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "XomoCanvasObjectTests",
+      "method": "canvasDragTranslationMapsViewPixelsToImagePixels",
+      "identifier": "veilpicTests/XomoCanvasObjectTests/canvasDragTranslationMapsViewPixelsToImagePixels",
+      "file": "XomoCanvasObjectTests.swift",
+      "passed": true,
+      "duration": 20.408,
+      "issues": [],
+      "log": "XomoCanvasObjectTests.canvasDragTranslationMapsViewPixelsToImagePixels.log"
+    },
+    {
+      "suite": "XomoCanvasObjectTests",
+      "method": "clickingAnUncoveredComponentSelectsItsObjectGroup",
+      "identifier": "veilpicTests/XomoCanvasObjectTests/clickingAnUncoveredComponentSelectsItsObjectGroup",
+      "file": "XomoCanvasObjectTests.swift",
+      "passed": true,
+      "duration": 58.311,
+      "issues": [],
+      "log": "XomoCanvasObjectTests.clickingAnUncoveredComponentSelectsItsObjectGroup.log"
+    },
+    {
+      "suite": "XomoCanvasObjectTests",
+      "method": "componentsTabRoutesCanvasInputThroughMoveTool",
+      "identifier": "veilpicTests/XomoCanvasObjectTests/componentsTabRoutesCanvasInputThroughMoveTool",
+      "file": "XomoCanvasObjectTests.swift",
+      "passed": true,
+      "duration": 21.445,
+      "issues": [],
+      "log": "XomoCanvasObjectTests.componentsTabRoutesCanvasInputThroughMoveTool.log"
+    },
+    {
+      "suite": "XomoCanvasObjectTests",
+      "method": "coveredComponentDoesNotClaimTheClick",
+      "identifier": "veilpicTests/XomoCanvasObjectTests/coveredComponentDoesNotClaimTheClick",
+      "file": "XomoCanvasObjectTests.swift",
+      "passed": true,
+      "duration": 262.041,
+      "issues": [],
+      "log": "XomoCanvasObjectTests.coveredComponentDoesNotClaimTheClick.log"
+    },
+    {
+      "suite": "XomoCanvasObjectTests",
+      "method": "deletingASelectedObjectRemovesItsGroupAndChildren",
+      "identifier": "veilpicTests/XomoCanvasObjectTests/deletingASelectedObjectRemovesItsGroupAndChildren",
+      "file": "XomoCanvasObjectTests.swift",
+      "passed": true,
+      "duration": 65.837,
+      "issues": [],
+      "log": "XomoCanvasObjectTests.deletingASelectedObjectRemovesItsGroupAndChildren.log"
+    },
+    {
+      "suite": "XomoCanvasObjectTests",
+      "method": "movingAnObjectPublishesAndClearsItsDashedPreviewFrame",
+      "identifier": "veilpicTests/XomoCanvasObjectTests/movingAnObjectPublishesAndClearsItsDashedPreviewFrame",
+      "file": "XomoCanvasObjectTests.swift",
+      "passed": true,
+      "duration": 24.707,
+      "issues": [],
+      "log": "XomoCanvasObjectTests.movingAnObjectPublishesAndClearsItsDashedPreviewFrame.log"
+    },
+    {
+      "suite": "XomoCanvasObjectTests",
+      "method": "objectPreviewSnapsBeforeTheRealLayersCommit",
+      "identifier": "veilpicTests/XomoCanvasObjectTests/objectPreviewSnapsBeforeTheRealLayersCommit",
+      "file": "XomoCanvasObjectTests.swift",
+      "passed": true,
+      "duration": 127.352,
+      "issues": [],
+      "log": "XomoCanvasObjectTests.objectPreviewSnapsBeforeTheRealLayersCommit.log"
+    },
+    {
+      "suite": "XomoCanvasObjectTests",
+      "method": "repeatedDragUpdatesAccumulateInThePreviewBeforeCommit",
+      "identifier": "veilpicTests/XomoCanvasObjectTests/repeatedDragUpdatesAccumulateInThePreviewBeforeCommit",
+      "file": "XomoCanvasObjectTests.swift",
+      "passed": true,
+      "duration": 40.959,
+      "issues": [],
+      "log": "XomoCanvasObjectTests.repeatedDragUpdatesAccumulateInThePreviewBeforeCommit.log"
+    },
+    {
+      "suite": "XomoCanvasObjectTests",
+      "method": "selectingAnotherObjectKeepsTheCompositeImageCache",
+      "identifier": "veilpicTests/XomoCanvasObjectTests/selectingAnotherObjectKeepsTheCompositeImageCache",
+      "file": "XomoCanvasObjectTests.swift",
+      "passed": true,
+      "duration": 132.741,
+      "issues": [],
+      "log": "XomoCanvasObjectTests.selectingAnotherObjectKeepsTheCompositeImageCache.log"
+    },
+    {
+      "suite": "XomoCanvasObjectTests",
+      "method": "selectingComponentGroupUsesFastSelectionPath",
+      "identifier": "veilpicTests/XomoCanvasObjectTests/selectingComponentGroupUsesFastSelectionPath",
+      "file": "XomoCanvasObjectTests.swift",
+      "passed": true,
+      "duration": 141.673,
+      "issues": [],
+      "log": "XomoCanvasObjectTests.selectingComponentGroupUsesFastSelectionPath.log"
+    },
+    {
+      "suite": "XomoCanvasObjectTests",
+      "method": "switchingObjectsUpdatesKindAndBoundsImmediately",
+      "identifier": "veilpicTests/XomoCanvasObjectTests/switchingObjectsUpdatesKindAndBoundsImmediately",
+      "file": "XomoCanvasObjectTests.swift",
+      "passed": true,
+      "duration": 25.177,
+      "issues": [],
+      "log": "XomoCanvasObjectTests.switchingObjectsUpdatesKindAndBoundsImmediately.log"
+    },
+    {
+      "suite": "XomoCanvasObjectTests",
+      "method": "textHitTestingCanExcludeTheJustCommittedLayer",
+      "identifier": "veilpicTests/XomoCanvasObjectTests/textHitTestingCanExcludeTheJustCommittedLayer",
+      "file": "XomoCanvasObjectTests.swift",
+      "passed": true,
+      "duration": 172.174,
+      "issues": [],
+      "log": "XomoCanvasObjectTests.textHitTestingCanExcludeTheJustCommittedLayer.log"
+    },
+    {
+      "suite": "XomoCanvasObjectTests",
+      "method": "textToolCanSelectEditableTextInsideAComponent",
+      "identifier": "veilpicTests/XomoCanvasObjectTests/textToolCanSelectEditableTextInsideAComponent",
+      "file": "XomoCanvasObjectTests.swift",
+      "passed": true,
+      "duration": 65.101,
+      "issues": [],
+      "log": "XomoCanvasObjectTests.textToolCanSelectEditableTextInsideAComponent.log"
+    },
+    {
+      "suite": "XomoCanvasObjectTests",
+      "method": "topmostOverlappingComponentWinsObjectHitTesting",
+      "identifier": "veilpicTests/XomoCanvasObjectTests/topmostOverlappingComponentWinsObjectHitTesting",
+      "file": "XomoCanvasObjectTests.swift",
+      "passed": true,
+      "duration": 23.566,
+      "issues": [],
+      "log": "XomoCanvasObjectTests.topmostOverlappingComponentWinsObjectHitTesting.log"
+    }
+  ]
+}

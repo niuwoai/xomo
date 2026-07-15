@@ -303,6 +303,10 @@ struct XomoLeftSidebarTests {
         ))
         #expect(source.contains(".simultaneousGesture(canvasGesture(in: geometry.size))"))
         #expect(source.contains("else if tab == .components"))
+        #expect(source.contains("selectedXomoObjectMoveGesture(in: canvasSize)"))
+        #expect(source.contains("coordinateSpace: .named(\"image-editor-canvas-space\")"))
+        #expect(source.contains("allowsHitTesting(canvasInteractionTool == .move)"))
+        #expect(source.contains("!isObjectMoveGestureActive"))
         #expect(source.components(separatedBy: "switch canvasInteractionTool").count - 1 >= 3)
     }
 
