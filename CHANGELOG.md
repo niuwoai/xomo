@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc134 - 2026-07-16
+
+### Fixed
+- 修复组件库插入的 UI 组件选中后无法可靠拖动的问题；独立命中区域使用画布坐标并避免父画布重复移动。
+
+### Verification
+- `XomoCanvasObjectTests` 18/18、`XomoLeftSidebarTests` 42/42 通过。
+
 ## 2.12.0-rc133 - 2026-07-16
 
 ### Added

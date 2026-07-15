@@ -469,6 +469,9 @@ struct XomoLeftSidebarTests {
         #expect(source.contains("viewModel.selectedXomoObjectFrame?.contains(pressedImagePoint) == true"))
         #expect(source.contains("viewModel.beginMovingSelectedLayer()"))
         #expect(source.contains("The parent canvas owns movement for selected objects"))
+        #expect(source.contains("selectedXomoObjectMoveGesture(in: canvasSize)"))
+        #expect(source.contains("coordinateSpace: .named(\"image-editor-canvas-space\")"))
+        #expect(source.contains("allowsHitTesting(canvasInteractionTool == .move)"))
         #expect(source.components(separatedBy: "switch canvasInteractionTool").count - 1 >= 3)
     }
 

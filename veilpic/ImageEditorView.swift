@@ -46,6 +46,7 @@ struct ImageEditorView: View {
     @State private var isCanvasPanGestureActive = false
     @State private var lastMoveTranslation: CGSize = .zero
     @State private var isObjectMoveGestureActive = false
+    @State private var isSelectedObjectMoveGestureActive = false
     @State private var activeResizeHandle: ImageEditorLayerResizeHandle?
     @State private var activeShapeGradientHandle: ImageEditorShapeGradientHandle?
     @State private var activeShapeRadialGradientHandle: ImageEditorShapeRadialGradientHandle?
@@ -1630,6 +1631,16 @@ struct ImageEditorView: View {
                 switch canvasInteractionTool {
                 case .move:
                     if !isObjectMoveGestureActive,
+                       !isSelectedObjectMoveGestureActive,
+                       viewModel.hasSelectedXomoObject,
+                       let pressedImagePoint = imagePoint(from: value.startLocation, in: size),
+                       viewModel.selectedXomoObjectFrame?.contains(pressedImagePoint) == true {
+                        // The selected-object hit target below owns this drag.
+                        // Keep the canvas gesture from opening a second move
+                        // transaction when the drop host also observes it.
+                        break
+                    }
+                    if !isObjectMoveGestureActive,
                        viewModel.hasSelectedXomoObject,
                        let pressedImagePoint = imagePoint(from: value.startLocation, in: size),
                        viewModel.selectedXomoObjectFrame?.contains(pressedImagePoint) == true {
@@ -1880,6 +1891,7 @@ struct ImageEditorView: View {
                 lastPanTranslation = .zero
                 lastMoveTranslation = .zero
                 isObjectMoveGestureActive = false
+                isSelectedObjectMoveGestureActive = false
                 isMovingPathAnchor = false
                 activeResizeHandle = nil
             }
@@ -3573,7 +3585,8 @@ struct ImageEditorView: View {
                 xomoObjectSelectionOutline(
                     kind: componentKind,
                     rect: rect,
-                    isMoving: viewModel.movingObjectPreviewFrame != nil
+                    isMoving: viewModel.movingObjectPreviewFrame != nil,
+                    canvasSize: size
                 )
             } else {
                 Rectangle()
@@ -3959,7 +3972,8 @@ struct ImageEditorView: View {
     private func xomoObjectSelectionOutline(
         kind: XomoComponentKind,
         rect: CGRect,
-        isMoving: Bool
+        isMoving: Bool,
+        canvasSize: CGSize
     ) -> some View {
         let shape: AnyShape
         switch kind {
@@ -3982,10 +3996,33 @@ struct ImageEditorView: View {
             .shadow(color: accent.opacity(isMoving ? 0.10 : 0.24), radius: isMoving ? 2 : 5)
             .frame(width: max(1, rect.width), height: max(1, rect.height))
             .position(x: rect.midX, y: rect.midY)
-            // The parent canvas owns movement for selected objects. Keep the
-            // outline visual-only so resize handles remain the only child
-            // hit targets and cannot compete with the move gesture.
-            .allowsHitTesting(false)
+            // A selected component needs a real hit target above the rendered
+            // pixels. The canvas also hosts a drop destination, which can
+            // otherwise swallow the first zero-distance drag on macOS 13/14.
+            .contentShape(Rectangle())
+            .gesture(selectedXomoObjectMoveGesture(in: canvasSize))
+            .allowsHitTesting(canvasInteractionTool == .move)
+    }
+
+    private func selectedXomoObjectMoveGesture(in size: CGSize) -> some Gesture {
+        DragGesture(minimumDistance: 0, coordinateSpace: .named("image-editor-canvas-space"))
+            .onChanged { value in
+                if !isSelectedObjectMoveGestureActive {
+                    guard let startPoint = imagePoint(from: value.startLocation, in: size),
+                          viewModel.selectXomoObject(at: startPoint)
+                    else { return }
+                    lastMoveTranslation = .zero
+                    viewModel.beginMovingSelectedLayer()
+                    isSelectedObjectMoveGestureActive = true
+                }
+                updateObjectMove(translation: value.translation, in: size)
+            }
+            .onEnded { _ in
+                guard isSelectedObjectMoveGestureActive else { return }
+                viewModel.finishMovingSelectedLayer()
+                isSelectedObjectMoveGestureActive = false
+                lastMoveTranslation = .zero
+            }
     }
 
     private func resizeHandleView(
