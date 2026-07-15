@@ -1,0 +1,15 @@
+{
+  "version": "2.12.0-rc127",
+  "date": "2026-07-16",
+  "suite": "XomoCanvasObjectTests",
+  "passed": 17,
+  "failed": 0,
+  "total": 17,
+  "result": "passed",
+  "coverage": [
+    "transparent-layer-pass-through",
+    "transparent-pixel-hole-pass-through",
+    "visible-pixel-and-solid-cover-occlusion",
+    "component-selection-and-drag-regression"
+  ]
+}
