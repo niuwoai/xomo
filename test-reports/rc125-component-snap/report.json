@@ -1,0 +1,23 @@
+{
+  "version": "2.12.0-rc125",
+  "date": "2026-07-16",
+  "suites": [
+    {
+      "name": "XomoCanvasObjectTests",
+      "passed": 15,
+      "failed": 0,
+      "total": 15
+    },
+    {
+      "name": "ImageEditorGuideTests",
+      "passed": 12,
+      "failed": 0,
+      "total": 12
+    }
+  ],
+  "result": "passed",
+  "notes": [
+    "UI 组件支持画布边缘与水平/垂直中心吸附。",
+    "普通图层参考线吸附回归通过。"
+  ]
+}

@@ -211,6 +211,28 @@ struct XomoCanvasObjectTests {
         #expect(viewModel.selectedXomoObjectFrame?.maxX == initialFrame.maxX + 20)
     }
 
+    @Test func componentMovementSnapsToCanvasCenterGuides() throws {
+        let viewModel = makeViewModel()
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 100, y: 100))
+        let initialFrame = try #require(viewModel.selectedXomoObjectFrame)
+        let deltaToNearCanvasCenter = CGSize(
+            width: viewModel.document.canvasSize.width * 0.5 - initialFrame.maxX - 3,
+            height: 0
+        )
+
+        viewModel.beginMovingSelectedLayer()
+        viewModel.moveSelectedLayer(by: deltaToNearCanvasCenter, snapping: true)
+
+        #expect(viewModel.movingObjectPreviewFrame?.maxX == viewModel.document.canvasSize.width * 0.5)
+        #expect(viewModel.activeAlignmentGuides.contains {
+            $0.orientation == .vertical
+                && $0.position == viewModel.document.canvasSize.width * 0.5
+        })
+
+        viewModel.finishMovingSelectedLayer()
+        #expect(viewModel.selectedXomoObjectFrame?.maxX == viewModel.document.canvasSize.width * 0.5)
+    }
+
     private func makeViewModel() -> ImageEditorViewModel {
         ImageEditorViewModel(
             sourceName: "objects",
