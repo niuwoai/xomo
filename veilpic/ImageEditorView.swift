@@ -135,6 +135,9 @@ struct ImageEditorView: View {
         .background(
             ImageEditorKeyboardShortcutMonitor(
                 perform: performKeyboardShortcut,
+                nudgeSelected: { delta in
+                    viewModel.nudgeSelectionOrSelectedLayer(by: delta)
+                },
                 deleteSelectedObject: {
                     if deleteSelectedShapeGradientStopIfNeeded() {
                         return true
@@ -6977,6 +6980,39 @@ final class CursorRectNSView: NSView {
     }
 }
 
+enum ImageEditorArrowNudge {
+    static func delta(
+        for keyCode: UInt16,
+        modifierFlags: NSEvent.ModifierFlags
+    ) -> CGSize? {
+        let relevantFlags = modifierFlags.intersection([.option, .shift, .command, .control])
+        let amount: CGFloat
+        switch relevantFlags {
+        case []:
+            amount = 1
+        case [.option]:
+            amount = 5
+        case [.shift]:
+            amount = 10
+        default:
+            return nil
+        }
+
+        switch keyCode {
+        case 123:
+            return CGSize(width: -amount, height: 0)
+        case 124:
+            return CGSize(width: amount, height: 0)
+        case 125:
+            return CGSize(width: 0, height: amount)
+        case 126:
+            return CGSize(width: 0, height: -amount)
+        default:
+            return nil
+        }
+    }
+}
+
 enum ImageEditorKeyboardShortcutAction: Equatable {
     case openProject
     case saveProject
@@ -7128,6 +7164,7 @@ enum ImageEditorKeyboardShortcutAction: Equatable {
 
 struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
     let perform: (ImageEditorKeyboardShortcutAction) -> Void
+    let nudgeSelected: (CGSize) -> Void
     let deleteSelectedObject: () -> Bool
     let deleteSelectedHistory: () -> Bool
     let setSpacebarPanning: (Bool) -> Void
@@ -7135,6 +7172,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
     func makeCoordinator() -> Coordinator {
         Coordinator(
             perform: perform,
+            nudgeSelected: nudgeSelected,
             deleteSelectedObject: deleteSelectedObject,
             deleteSelectedHistory: deleteSelectedHistory,
             setSpacebarPanning: setSpacebarPanning
@@ -7147,6 +7185,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
 
     func updateNSView(_ nsView: KeyboardShortcutMonitorNSView, context: Context) {
         context.coordinator.perform = perform
+        context.coordinator.nudgeSelected = nudgeSelected
         context.coordinator.deleteSelectedObject = deleteSelectedObject
         context.coordinator.deleteSelectedHistory = deleteSelectedHistory
         context.coordinator.setSpacebarPanning = setSpacebarPanning
@@ -7155,6 +7194,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
     final class Coordinator {
         weak var window: NSWindow?
         var perform: (ImageEditorKeyboardShortcutAction) -> Void
+        var nudgeSelected: (CGSize) -> Void
         var deleteSelectedObject: () -> Bool
         var deleteSelectedHistory: () -> Bool
         var setSpacebarPanning: (Bool) -> Void
@@ -7164,11 +7204,13 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
 
         init(
             perform: @escaping (ImageEditorKeyboardShortcutAction) -> Void,
+            nudgeSelected: @escaping (CGSize) -> Void,
             deleteSelectedObject: @escaping () -> Bool,
             deleteSelectedHistory: @escaping () -> Bool,
             setSpacebarPanning: @escaping (Bool) -> Void
         ) {
             self.perform = perform
+            self.nudgeSelected = nudgeSelected
             self.deleteSelectedObject = deleteSelectedObject
             self.deleteSelectedHistory = deleteSelectedHistory
             self.setSpacebarPanning = setSpacebarPanning
@@ -7212,6 +7254,16 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
                 return nil
             }
             if isDelete, relevantFlags.isEmpty, !isTextInputActive, deleteSelectedHistory() {
+                return nil
+            }
+
+            if event.type == .keyDown,
+               !isTextInputActive,
+               let delta = ImageEditorArrowNudge.delta(
+                   for: event.keyCode,
+                   modifierFlags: event.modifierFlags
+               ) {
+                nudgeSelected(delta)
                 return nil
             }
 

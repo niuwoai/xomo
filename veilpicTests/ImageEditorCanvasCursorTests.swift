@@ -45,6 +45,13 @@ struct ImageEditorCanvasCursorTests {
         )
     }
 
+    @Test func arrowNudgeUsesPhotoshopStyleModifierDistances() {
+        #expect(ImageEditorArrowNudge.delta(for: 123, modifierFlags: []) == CGSize(width: -1, height: 0))
+        #expect(ImageEditorArrowNudge.delta(for: 124, modifierFlags: [.option]) == CGSize(width: 5, height: 0))
+        #expect(ImageEditorArrowNudge.delta(for: 126, modifierFlags: [.shift]) == CGSize(width: 0, height: -10))
+        #expect(ImageEditorArrowNudge.delta(for: 125, modifierFlags: [.command]) == nil)
+    }
+
     @Test func samplingAndPaintBucketCursorsUseDistinctSemanticShapes() {
         #expect(ImageEditorCanvasCursor.family(for: .paintBucket) == .paintBucket)
         #expect(ImageEditorCanvasCursor.family(for: .eyedropper) == .eyedropper)
