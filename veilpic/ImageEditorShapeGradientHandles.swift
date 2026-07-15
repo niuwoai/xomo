@@ -41,6 +41,7 @@ enum ImageEditorShapeGradientGeometry {
         layerFrame: CGRect
     ) -> ImageEditorShapeGradientHandlePoints? {
         guard let gradient = content.fillGradient?.normalized(),
+              gradient.style == .linear,
               imageSize.width > 0,
               imageSize.height > 0,
               layerFrame.width > 0,
@@ -67,6 +68,7 @@ enum ImageEditorShapeGradientGeometry {
         snappingAngle: Bool
     ) -> ImageEditorShapeContent? {
         guard var gradient = originalContent.fillGradient?.normalized(),
+              gradient.style == .linear,
               imageSize.width > 0,
               imageSize.height > 0,
               layerFrame.width > 0,
@@ -295,7 +297,7 @@ extension ImageEditorViewModel {
 
     var canEditSelectedShapeGradient: Bool {
         guard let layer = singleSelectedShapeGradientLayer,
-              layer.shapeContent?.fillGradient != nil
+              layer.shapeContent?.fillGradient?.style == .linear
         else { return false }
         return !document.isEffectivelyPixelsLocked(layer)
     }

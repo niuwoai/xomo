@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.12.0-rc77 - 2026-07-15
+
+### Added
+- 可编辑形状新增原生径向渐变填充；径向与线性渐变共享 2–16 个色标、反向、中心和缩放数据，继续参与形状裁切、独立描边、项目保存与 Undo/Redo。
+- 属性面板的填充类型新增“径向渐变”，可编辑全部色标及 25%–400% 半径比例；三种填充标签保持单行并在窄面板内缩放文字。
+- MCP/CLI `xomo.shape.create/get/update` 新增 `fillKind=radialGradient`，复用既有 `fillGradient.stops/scale/centerX/centerY` 协议，并在只更新参数时保留当前径向样式。
+
+### Changed
+- 形状规范化只保留明确支持的线性/径向样式；旧的反射或菱形值继续安全降级为线性。径向渐变不显示线性轴控制柄，避免把错误交互伪装成可用功能。
+- App、CLI、教程、Figma/MCP 文档、路线图与全部 Xcode target 版本同步为 `2.12.0-rc77`。
+
+### Tests
+- 新增径向中心/边缘渲染、形状裁切、样式规范化、属性切换、半径单步 Undo、项目重开、锁定保护、线性控制柄隔离和 MCP 创建/读取/切换测试。
+- 形状样式 14/14、MCP 自动化 34/34、三语资源 4/4、CLI 2/2 与隔离 Debug 测试产品构建通过；Debug App 版本、Bundle ID、macOS 13.0 下限和 arm64 架构核对通过。完整 Release、全量冒烟及 `/Applications` 覆盖安装仍按 20 版门槛在 rc80 执行。
+
 ## 2.12.0-rc76 - 2026-07-15
 
 ### Added

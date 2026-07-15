@@ -2423,7 +2423,9 @@ struct ImageEditorShapeContent {
     func normalized(size: CGSize) -> ImageEditorShapeContent {
         var content = self
         if var gradient = fillGradient?.normalized() {
-            gradient.style = .linear
+            if gradient.style != .radial {
+                gradient.style = .linear
+            }
             content.fillGradient = gradient
         }
         content.fillGradientCenter = CGPoint(
