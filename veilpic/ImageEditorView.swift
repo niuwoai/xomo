@@ -76,6 +76,7 @@ struct ImageEditorView: View {
     @State private var isRightDockMounted = false
     @State private var isPointerInsideCanvas = false
     @State private var hoverViewPoint: CGPoint?
+    @State private var canvasModifierFlags: NSEvent.ModifierFlags = []
     @State private var isMarqueeShapePopoverPresented = false
     @State private var isQuickMaskOptionsPresented = false
     @State var isFigmaLinkImportPresented = false
@@ -154,6 +155,9 @@ struct ImageEditorView: View {
                 },
                 setSpacebarPanning: { isPressed in
                     isSpacebarPanning = isPressed
+                },
+                setCanvasModifierFlags: { flags in
+                    canvasModifierFlags = flags.intersection([.shift, .option])
                 }
             )
             .allowsHitTesting(false)
@@ -1209,7 +1213,8 @@ struct ImageEditorView: View {
                         cursor: ImageEditorCanvasCursor.cursor(
                             for: canvasCursorTool,
                             brushDiameter: viewModel.brushSize * displayScale,
-                            handIsDragging: isCanvasPanGestureActive
+                            handIsDragging: isCanvasPanGestureActive,
+                            modifierFlags: canvasModifierFlags
                         )
                     )
                     .allowsHitTesting(false)
@@ -7834,6 +7839,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
     let deleteSelectedObject: () -> Bool
     let deleteSelectedHistory: () -> Bool
     let setSpacebarPanning: (Bool) -> Void
+    let setCanvasModifierFlags: (NSEvent.ModifierFlags) -> Void
 
     func makeCoordinator() -> Coordinator {
         Coordinator(
@@ -7841,7 +7847,8 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
             nudgeSelected: nudgeSelected,
             deleteSelectedObject: deleteSelectedObject,
             deleteSelectedHistory: deleteSelectedHistory,
-            setSpacebarPanning: setSpacebarPanning
+            setSpacebarPanning: setSpacebarPanning,
+            setCanvasModifierFlags: setCanvasModifierFlags
         )
     }
 
@@ -7855,6 +7862,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
         context.coordinator.deleteSelectedObject = deleteSelectedObject
         context.coordinator.deleteSelectedHistory = deleteSelectedHistory
         context.coordinator.setSpacebarPanning = setSpacebarPanning
+        context.coordinator.setCanvasModifierFlags = setCanvasModifierFlags
     }
 
     final class Coordinator {
@@ -7864,6 +7872,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
         var deleteSelectedObject: () -> Bool
         var deleteSelectedHistory: () -> Bool
         var setSpacebarPanning: (Bool) -> Void
+        var setCanvasModifierFlags: (NSEvent.ModifierFlags) -> Void
         private var eventMonitor: Any?
         private var appDeactivateObserver: Any?
         private var isSpacebarPanning = false
@@ -7873,13 +7882,15 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
             nudgeSelected: @escaping (CGSize) -> Void,
             deleteSelectedObject: @escaping () -> Bool,
             deleteSelectedHistory: @escaping () -> Bool,
-            setSpacebarPanning: @escaping (Bool) -> Void
+            setSpacebarPanning: @escaping (Bool) -> Void,
+            setCanvasModifierFlags: @escaping (NSEvent.ModifierFlags) -> Void
         ) {
             self.perform = perform
             self.nudgeSelected = nudgeSelected
             self.deleteSelectedObject = deleteSelectedObject
             self.deleteSelectedHistory = deleteSelectedHistory
             self.setSpacebarPanning = setSpacebarPanning
+            self.setCanvasModifierFlags = setCanvasModifierFlags
             eventMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .keyUp]) { [weak self] event in
                 self?.handle(event) ?? event
             }
@@ -7903,6 +7914,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
 
         private func handle(_ event: NSEvent) -> NSEvent? {
             guard event.window === window else { return event }
+            setCanvasModifierFlags(event.modifierFlags.intersection([.shift, .option]))
             let relevantFlags = event.modifierFlags.intersection([.command, .option, .shift, .control])
             if event.keyCode == 49, relevantFlags.isEmpty {
                 if event.type == .keyUp, isSpacebarPanning {
@@ -7955,6 +7967,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
             guard isSpacebarPanning else { return }
             isSpacebarPanning = false
             setSpacebarPanning(false)
+            setCanvasModifierFlags([])
         }
     }
 }
