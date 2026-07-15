@@ -11,6 +11,7 @@ import Foundation
 enum ImageEditorShapeFillKind: String, CaseIterable, Identifiable {
     case solid
     case linearGradient
+    case radialGradient
 
     var id: String { rawValue }
 
@@ -132,7 +133,10 @@ extension ImageEditorGradientFillContent {
 @MainActor
 extension ImageEditorViewModel {
     var selectedShapeFillKind: ImageEditorShapeFillKind {
-        document.selectedLayer?.shapeContent?.fillGradient == nil ? .solid : .linearGradient
+        guard let gradient = document.selectedLayer?.shapeContent?.fillGradient else {
+            return .solid
+        }
+        return gradient.style == .radial ? .radialGradient : .linearGradient
     }
 
     var selectedShapeFillColor: NSColor {
@@ -149,6 +153,10 @@ extension ImageEditorViewModel {
 
     var selectedShapeGradientAngle: Double {
         Double(selectedShapeGradient.angle)
+    }
+
+    var selectedShapeGradientScale: Double {
+        Double(selectedShapeGradient.scale)
     }
 
     var selectedShapeGradientColorStops: [ImageEditorGradientColorStop] {
@@ -180,7 +188,13 @@ extension ImageEditorViewModel {
         case .solid:
             updateSelectedShapeProperties(clearsFillGradient: true)
         case .linearGradient:
-            updateSelectedShapeProperties(fillGradient: selectedShapeGradient)
+            var gradient = selectedShapeGradient
+            gradient.style = .linear
+            updateSelectedShapeProperties(fillGradient: gradient)
+        case .radialGradient:
+            var gradient = selectedShapeGradient
+            gradient.style = .radial
+            updateSelectedShapeProperties(fillGradient: gradient)
         }
     }
 
@@ -270,6 +284,13 @@ extension ImageEditorViewModel {
         updateSelectedShapeProperties(fillGradient: gradient)
     }
 
+    func setSelectedShapeGradientScale(_ scale: Double) {
+        guard scale.isFinite else { return }
+        var gradient = selectedShapeGradient
+        gradient.scale = CGFloat(max(0.25, min(4, scale)))
+        updateSelectedShapeProperties(fillGradient: gradient)
+    }
+
     func setSelectedShapeFillOpacity(_ opacity: Double) {
         updateSelectedShapeProperties(fillOpacity: opacity)
     }
@@ -322,7 +343,9 @@ extension ImageEditorViewModel {
             if clearsFillGradient {
                 content.fillGradient = nil
             } else if var fillGradient {
-                fillGradient.style = .linear
+                if fillGradient.style != .radial {
+                    fillGradient.style = .linear
+                }
                 content.fillGradient = fillGradient.normalized()
             }
             if let fillGradientCenter {

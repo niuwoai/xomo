@@ -22,6 +22,8 @@ extension ImageEditorView {
                     } label: {
                         Text(kind.title)
                             .font(.system(size: 10, weight: .semibold))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.7)
                             .foregroundStyle(Color.white.opacity(
                                 viewModel.selectedShapeFillKind == kind ? 1 : 0.82
                             ))
@@ -44,19 +46,33 @@ extension ImageEditorView {
             .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
             .accessibilityIdentifier("image-editor-shape-fill-kind")
 
-            if viewModel.selectedShapeFillKind == .linearGradient {
+            if viewModel.selectedShapeFillKind != .solid {
                 shapeGradientStopsEditor
-                Stepper(
-                    L10n.format(
-                        "imageEditor.properties.shapeGradientAngleValue",
-                        Int(viewModel.selectedShapeGradientAngle.rounded())
-                    ),
-                    value: selectedShapeGradientAngleBinding,
-                    in: -180...180,
-                    step: 5
-                )
-                .focusable(false)
-                .accessibilityIdentifier("image-editor-shape-gradient-angle")
+                if viewModel.selectedShapeFillKind == .linearGradient {
+                    Stepper(
+                        L10n.format(
+                            "imageEditor.properties.shapeGradientAngleValue",
+                            Int(viewModel.selectedShapeGradientAngle.rounded())
+                        ),
+                        value: selectedShapeGradientAngleBinding,
+                        in: -180...180,
+                        step: 5
+                    )
+                    .focusable(false)
+                    .accessibilityIdentifier("image-editor-shape-gradient-angle")
+                } else {
+                    Stepper(
+                        L10n.format(
+                            "imageEditor.properties.shapeGradientRadiusValue",
+                            Int((viewModel.selectedShapeGradientScale * 100).rounded())
+                        ),
+                        value: selectedShapeGradientScaleBinding,
+                        in: 0.25...4,
+                        step: 0.05
+                    )
+                    .focusable(false)
+                    .accessibilityIdentifier("image-editor-shape-gradient-radius")
+                }
             } else {
                 HStack(spacing: 8) {
                     Text(L10n.text("imageEditor.properties.shapeFillColor"))
@@ -318,6 +334,14 @@ extension ImageEditorView {
             viewModel.selectedShapeGradientAngle
         } set: { angle in
             viewModel.setSelectedShapeGradientAngle(angle)
+        }
+    }
+
+    private var selectedShapeGradientScaleBinding: Binding<Double> {
+        Binding {
+            viewModel.selectedShapeGradientScale
+        } set: { scale in
+            viewModel.setSelectedShapeGradientScale(scale)
         }
     }
 

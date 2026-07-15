@@ -40,6 +40,68 @@ struct ImageEditorShapeStyleTests {
         #expect(corner.alphaComponent < 0.05)
     }
 
+    @Test func radialGradientRendersPersistsAndSwitchesWithOneUndoPerEdit() throws {
+        var gradient = ImageEditorGradientFillContent.shapeLinear(
+            startColor: .systemRed,
+            endColor: .systemBlue,
+            scale: 0.7
+        )
+        gradient.style = .radial
+        let content = ImageEditorShapeContent(
+            kind: .ellipse,
+            fillColor: .clear,
+            fillGradient: gradient,
+            fillOpacity: 1,
+            strokeColor: .clear,
+            strokeWidth: 1,
+            strokeOpacity: 0
+        ).normalized(size: CGSize(width: 101, height: 101))
+        #expect(content.fillGradient?.style == .radial)
+        var unsupportedContent = content
+        unsupportedContent.fillGradient?.style = .diamond
+        #expect(
+            unsupportedContent.normalized(size: CGSize(width: 101, height: 101))
+                .fillGradient?.style == .linear
+        )
+        let image = content.renderedImage(size: CGSize(width: 101, height: 101))
+        let center = try #require(image.color(at: CGPoint(x: 50, y: 50)))
+        let edge = try #require(image.color(at: CGPoint(x: 95, y: 50)))
+        let corner = try #require(image.color(at: CGPoint(x: 0, y: 0)))
+        #expect(center.redComponent > center.blueComponent + 0.7)
+        #expect(edge.blueComponent > edge.redComponent + 0.5)
+        #expect(corner.alphaComponent < 0.05)
+
+        let viewModel = makeViewModel()
+        viewModel.drawShape(
+            from: CGPoint(x: 10, y: 10),
+            to: CGPoint(x: 110, y: 110),
+            ellipse: true
+        )
+        let historyBeforeKind = viewModel.document.history.count
+        viewModel.setSelectedShapeFillKind(.radialGradient)
+        #expect(viewModel.selectedShapeFillKind == .radialGradient)
+        #expect(viewModel.document.selectedLayer?.shapeContent?.fillGradient?.style == .radial)
+        #expect(viewModel.document.history.count == historyBeforeKind + 1)
+        #expect(viewModel.selectedShapeGradientCanvasHandlePoints == nil)
+
+        let historyBeforeScale = viewModel.document.history.count
+        viewModel.setSelectedShapeGradientScale(0.65)
+        #expect(abs(viewModel.selectedShapeGradientScale - 0.65) < 0.001)
+        #expect(viewModel.document.history.count == historyBeforeScale + 1)
+        viewModel.undo()
+        #expect(abs(viewModel.selectedShapeGradientScale - 1) < 0.001)
+        viewModel.redo()
+
+        let projectData = try viewModel.projectData()
+        let reopened = makeViewModel()
+        try reopened.loadProjectData(projectData)
+        #expect(reopened.selectedShapeFillKind == .radialGradient)
+        #expect(abs(reopened.selectedShapeGradientScale - 0.65) < 0.001)
+        reopened.setSelectedShapeFillKind(.linearGradient)
+        #expect(reopened.selectedShapeFillKind == .linearGradient)
+        #expect(reopened.document.selectedLayer?.shapeContent?.fillGradient?.style == .linear)
+    }
+
     @Test func gradientAppearanceIsUndoablePersistentAndCanReturnToSolid() throws {
         let viewModel = makeViewModel()
         viewModel.drawShape(
@@ -509,9 +571,12 @@ struct ImageEditorShapeStyleTests {
         viewModel.document.layers[selectedIndex].isLocked = true
 
         viewModel.updateSelectedShapeProperties(fillColor: .systemGreen, strokeWidth: 20)
+        viewModel.setSelectedShapeFillKind(.radialGradient)
+        viewModel.setSelectedShapeGradientScale(0.5)
 
         let locked = try #require(viewModel.document.layers[selectedIndex].shapeContent)
         #expect(locked.fillColor.isEqual(original.fillColor))
+        #expect(locked.fillGradient == nil)
         #expect(locked.strokeWidth == original.strokeWidth)
         #expect(viewModel.document.history.count == historyCount)
     }
@@ -553,6 +618,9 @@ struct ImageEditorShapeStyleTests {
         #expect(canvasSource.contains("SpatialTapGesture"))
         #expect(canvasSource.contains("!isTextInputActive, deleteSelectedObject()"))
         #expect(canvasSource.contains("activeShapeGradientStopIndex"))
+
+        #expect(source.contains("image-editor-shape-fill-kind-radialGradient"))
+        #expect(source.contains("image-editor-shape-gradient-radius"))
     }
 
     private func makeViewModel() -> ImageEditorViewModel {

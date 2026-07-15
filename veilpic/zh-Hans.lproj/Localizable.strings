@@ -716,6 +716,7 @@
 "imageEditor.properties.shapeFillKind" = "填充类型";
 "imageEditor.properties.shapeFillKind.solid" = "纯色";
 "imageEditor.properties.shapeFillKind.linearGradient" = "线性渐变";
+"imageEditor.properties.shapeFillKind.radialGradient" = "径向渐变";
 "imageEditor.properties.shapeFillColor" = "填充颜色";
 "imageEditor.properties.shapeGradientStartColor" = "渐变起始色";
 "imageEditor.properties.shapeGradientEndColor" = "渐变结束色";
@@ -724,6 +725,7 @@
 "imageEditor.properties.shapeGradientStopPosition" = "色标位置：%d%%";
 "imageEditor.properties.shapeGradientStopAccessibility" = "色标 %d，位置 %d%%";
 "imageEditor.properties.shapeGradientAngleValue" = "渐变角度：%d°";
+"imageEditor.properties.shapeGradientRadiusValue" = "渐变半径：%d%%";
 "imageEditor.properties.shapeFillOpacityValue" = "填充不透明度：%d%%";
 "imageEditor.properties.shapeStrokeColor" = "描边颜色";
 "imageEditor.properties.shapeStrokeOpacityValue" = "描边不透明度：%d%%";

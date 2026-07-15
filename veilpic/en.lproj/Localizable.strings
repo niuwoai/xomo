@@ -716,6 +716,7 @@
 "imageEditor.properties.shapeFillKind" = "Fill type";
 "imageEditor.properties.shapeFillKind.solid" = "Solid";
 "imageEditor.properties.shapeFillKind.linearGradient" = "Linear gradient";
+"imageEditor.properties.shapeFillKind.radialGradient" = "Radial gradient";
 "imageEditor.properties.shapeFillColor" = "Fill color";
 "imageEditor.properties.shapeGradientStartColor" = "Gradient start";
 "imageEditor.properties.shapeGradientEndColor" = "Gradient end";
@@ -724,6 +725,7 @@
 "imageEditor.properties.shapeGradientStopPosition" = "Stop position: %d%%";
 "imageEditor.properties.shapeGradientStopAccessibility" = "Stop %d at %d%%";
 "imageEditor.properties.shapeGradientAngleValue" = "Gradient angle: %d°";
+"imageEditor.properties.shapeGradientRadiusValue" = "Gradient radius: %d%%";
 "imageEditor.properties.shapeFillOpacityValue" = "Fill opacity: %d%%";
 "imageEditor.properties.shapeStrokeColor" = "Stroke color";
 "imageEditor.properties.shapeStrokeOpacityValue" = "Stroke opacity: %d%%";

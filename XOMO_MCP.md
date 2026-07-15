@@ -1,6 +1,6 @@
 # Xomo MCP 与 CLI
 
-> 当前版本：v2.12.0-rc76
+> 当前版本：v2.12.0-rc77
 
 ## 架构
 
@@ -38,6 +38,7 @@ xomo call xomo.shape.update '{"fillOpacity":0.7,"strokeOpacity":0.9}'
 xomo call xomo.shape.update '{"cornerRadii":{"topLeft":8,"topRight":16,"bottomRight":24,"bottomLeft":4}}'
 xomo call xomo.shape.update '{"cornerSmoothing":0.75}'
 xomo call xomo.shape.update '{"fillKind":"linearGradient","fillGradient":{"stops":[{"position":0,"color":{"red":1,"green":0.2,"blue":0.1}},{"position":0.5,"color":{"red":0.1,"green":1,"blue":0.3}},{"position":1,"color":{"red":0.1,"green":0.3,"blue":1}}],"angle":30,"scale":1,"centerX":0.5,"centerY":0.5}}'
+xomo call xomo.shape.update '{"fillKind":"radialGradient","fillGradient":{"startColor":{"red":1,"green":0.8,"blue":0.1},"endColor":{"red":0.1,"green":0.2,"blue":0.8},"scale":0.75,"centerX":0.5,"centerY":0.5}}'
 xomo call xomo.component.insert '{"component":"button","theme":"native","x":80,"y":100}'
 xomo export ~/Desktop/xomo.png --format png --scope composited --scale 2
 xomo project export ~/Desktop/design.qpicproject

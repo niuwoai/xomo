@@ -302,13 +302,18 @@ final class XomoAutomationRegistry {
             let origin = try requiredPoint(arguments)
             let cornerRadii = try optionalCornerRadii(arguments)
             try validateExclusiveCornerArguments(arguments)
-            let fillGradient = try optionalShapeGradient(arguments)
+            var fillGradient = try optionalShapeGradient(arguments)
             let fillGradientCenter = try optionalShapeGradientCenter(arguments)
             try validateShapeFillArguments(arguments, fillGradient: fillGradient)
-            if arguments["fillKind"]?.stringValue == "linearGradient", fillGradient == nil {
+            let fillKind = arguments["fillKind"]?.stringValue
+            if (fillKind == "linearGradient" || fillKind == "radialGradient"),
+               fillGradient == nil {
                 throw XomoAutomationCallError.invalidArgument(
-                    "fillGradient is required when creating fillKind=linearGradient"
+                    "fillGradient is required when creating a gradient fill"
                 )
+            }
+            if fillKind == "radialGradient" {
+                fillGradient?.style = .radial
             }
             let fillColor = try optionalColor("fillColor", in: arguments)
             let strokeColor = try optionalColor("strokeColor", in: arguments)
@@ -742,7 +747,7 @@ final class XomoAutomationRegistry {
             "active": .bool(true),
             "layerId": .string(layer.id.uuidString),
             "kind": .string(content.kind.rawValue),
-            "fillKind": .string(content.fillGradient == nil ? "solid" : "linearGradient"),
+            "fillKind": .string(shapeFillKind(content.fillGradient)),
             "fillColor": colorJSON(content.fillColor),
             "fillGradient": content.fillGradient.map {
                 shapeGradientJSON($0, center: content.fillGradientCenter)
@@ -772,14 +777,23 @@ final class XomoAutomationRegistry {
         try validateShapeFillArguments(arguments, fillGradient: fillGradient)
         let fillKind = arguments["fillKind"]?.stringValue
         let selectedContent = viewModel.document.selectedLayer?.shapeContent
-        let resolvedGradient: ImageEditorGradientFillContent?
-        if fillKind == "linearGradient", fillGradient == nil, let selectedContent {
+        var resolvedGradient: ImageEditorGradientFillContent?
+        if (fillKind == "linearGradient" || fillKind == "radialGradient"),
+           fillGradient == nil,
+           let selectedContent {
             resolvedGradient = selectedContent.fillGradient ?? .shapeLinear(
                 startColor: selectedContent.fillColor,
                 endColor: viewModel.backgroundColor
             )
         } else {
             resolvedGradient = fillGradient
+        }
+        if fillKind == "radialGradient" {
+            resolvedGradient?.style = .radial
+        } else if fillKind == "linearGradient" {
+            resolvedGradient?.style = .linear
+        } else if selectedContent?.fillGradient?.style == .radial {
+            resolvedGradient?.style = .radial
         }
         let legacyOpacity = arguments["opacity"]?.doubleValue
         viewModel.updateSelectedShapeProperties(
@@ -857,6 +871,11 @@ final class XomoAutomationRegistry {
         )
     }
 
+    private func shapeFillKind(_ gradient: ImageEditorGradientFillContent?) -> String {
+        guard let gradient else { return "solid" }
+        return gradient.style == .radial ? "radialGradient" : "linearGradient"
+    }
+
     private func optionalShapeGradientCenter(
         _ arguments: [String: XomoJSONValue]
     ) throws -> CGPoint? {
@@ -880,9 +899,11 @@ final class XomoAutomationRegistry {
     ) throws {
         guard let fillKindValue = arguments["fillKind"] else { return }
         guard let fillKind = fillKindValue.stringValue,
-              ["solid", "linearGradient"].contains(fillKind)
+              ["solid", "linearGradient", "radialGradient"].contains(fillKind)
         else {
-            throw XomoAutomationCallError.invalidArgument("fillKind must be solid or linearGradient")
+            throw XomoAutomationCallError.invalidArgument(
+                "fillKind must be solid, linearGradient, or radialGradient"
+            )
         }
         if fillKind == "solid", fillGradient != nil {
             throw XomoAutomationCallError.invalidArgument(
@@ -2649,7 +2670,7 @@ private extension XomoAutomationRegistry {
             "y": XomoAutomationSchema.number(description: "Top coordinate"),
             "width": XomoAutomationSchema.number(description: "Width"),
             "height": XomoAutomationSchema.number(description: "Height"),
-            "fillKind": XomoAutomationSchema.string(description: "Shape fill type", values: ["solid", "linearGradient"]),
+            "fillKind": XomoAutomationSchema.string(description: "Shape fill type", values: ["solid", "linearGradient", "radialGradient"]),
             "fillColor": shapeColorSchema,
             "fillGradient": shapeGradientSchema,
             "fillOpacity": XomoAutomationSchema.number(description: "Independent fill opacity from 0 to 1"),
@@ -2663,7 +2684,7 @@ private extension XomoAutomationRegistry {
         tool("xomo.shape.get", "Inspect the selected editable shape layer."),
         tool("xomo.shape.update", "Update only the specified fill, stroke, and rectangle corner properties of selected editable shapes.", [
             "opacity": XomoAutomationSchema.number(description: "Legacy shared fill and stroke opacity"),
-            "fillKind": XomoAutomationSchema.string(description: "Shape fill type", values: ["solid", "linearGradient"]),
+            "fillKind": XomoAutomationSchema.string(description: "Shape fill type", values: ["solid", "linearGradient", "radialGradient"]),
             "fillColor": shapeColorSchema,
             "fillGradient": shapeGradientSchema,
             "fillOpacity": XomoAutomationSchema.number(description: "Independent fill opacity from 0 to 1"),
