@@ -6436,6 +6436,7 @@ enum ImageEditorCanvasCursorFamily: Equatable {
     case textInsertion
     case brushFootprint
     case toneBrush
+    case retouchBrush
     case selectionMarquee
     case lasso
     case magicWand
@@ -6497,10 +6498,12 @@ enum ImageEditorCanvasCursor {
             .gradient
         case .rectangle, .ellipse:
             .shapeOutline
-        case .brush, .eraser, .blur, .sharpen, .smudge:
+        case .brush, .eraser:
             .brushFootprint
         case .dodge, .burn, .sponge:
             .toneBrush
+        case .blur, .sharpen, .smudge:
+            .retouchBrush
         case .paintBucket:
             .paintBucket
         case .colorSampler:
@@ -6553,6 +6556,8 @@ enum ImageEditorCanvasCursor {
             return brushCursor(diameter: brushDiameter, symbolName: tool.symbolName)
         case .toneBrush:
             return toneBrushCursor(for: tool)
+        case .retouchBrush:
+            return retouchBrushCursor(for: tool)
         case .paintBucket:
             return paintBucketCursor()
         case .eyedropper:
@@ -6704,6 +6709,101 @@ enum ImageEditorCanvasCursor {
             NSCursor(image: image, hotSpot: NSPoint(x: center.x, y: side - center.y)),
             for: cacheKey
         )
+    }
+
+    private static func retouchBrushCursor(for tool: ImageEditorTool) -> NSCursor {
+        let cacheKey = "retouch-brush:\(tool.rawValue)"
+        if let cachedCursor = cursorCache[cacheKey] {
+            return cachedCursor
+        }
+
+        let side: CGFloat = 38
+        let image = NSImage(size: NSSize(width: side, height: side))
+        image.lockFocus()
+
+        let center = NSPoint(x: 13, y: 13)
+        let footprint = NSBezierPath(ovalIn: NSRect(x: 3, y: 3, width: 20, height: 20))
+        NSColor.black.withAlphaComponent(0.95).setStroke()
+        footprint.lineWidth = 4
+        footprint.stroke()
+        NSColor.white.withAlphaComponent(0.98).setStroke()
+        footprint.lineWidth = 1.4
+        footprint.stroke()
+
+        switch tool {
+        case .blur:
+            let drop = NSBezierPath()
+            drop.move(to: NSPoint(x: 13, y: 7))
+            drop.curve(to: NSPoint(x: 18, y: 14), controlPoint1: NSPoint(x: 16, y: 10), controlPoint2: NSPoint(x: 18, y: 12))
+            drop.curve(to: NSPoint(x: 13, y: 20), controlPoint1: NSPoint(x: 18, y: 19), controlPoint2: NSPoint(x: 16, y: 20))
+            drop.curve(to: NSPoint(x: 8, y: 14), controlPoint1: NSPoint(x: 10, y: 20), controlPoint2: NSPoint(x: 8, y: 18))
+            drop.curve(to: NSPoint(x: 13, y: 7), controlPoint1: NSPoint(x: 8, y: 11), controlPoint2: NSPoint(x: 11, y: 9))
+            drop.close()
+            NSColor.systemBlue.withAlphaComponent(0.88).setFill()
+            drop.fill()
+            NSColor.black.withAlphaComponent(0.95).setStroke()
+            drop.lineWidth = 3
+            drop.stroke()
+            NSColor.white.withAlphaComponent(0.98).setStroke()
+            drop.lineWidth = 1
+            drop.stroke()
+            drawRetouchMotionLines(color: .systemBlue)
+        case .sharpen:
+            let star = NSBezierPath()
+            star.move(to: NSPoint(x: 13, y: 6))
+            star.line(to: NSPoint(x: 15, y: 11))
+            star.line(to: NSPoint(x: 20, y: 13))
+            star.line(to: NSPoint(x: 15, y: 15))
+            star.line(to: NSPoint(x: 13, y: 20))
+            star.line(to: NSPoint(x: 11, y: 15))
+            star.line(to: NSPoint(x: 6, y: 13))
+            star.line(to: NSPoint(x: 11, y: 11))
+            star.close()
+            NSColor.systemYellow.setFill()
+            star.fill()
+            NSColor.black.withAlphaComponent(0.95).setStroke()
+            star.lineWidth = 3
+            star.stroke()
+            NSColor.white.withAlphaComponent(0.98).setStroke()
+            star.lineWidth = 1
+            star.stroke()
+            drawRetouchMotionLines(color: .systemYellow)
+        case .smudge:
+            let swirl = NSBezierPath()
+            swirl.move(to: NSPoint(x: 7, y: 17))
+            swirl.curve(to: NSPoint(x: 19, y: 17), controlPoint1: NSPoint(x: 9, y: 22), controlPoint2: NSPoint(x: 18, y: 22))
+            swirl.curve(to: NSPoint(x: 18, y: 9), controlPoint1: NSPoint(x: 20, y: 14), controlPoint2: NSPoint(x: 15, y: 9))
+            swirl.curve(to: NSPoint(x: 10, y: 10), controlPoint1: NSPoint(x: 13, y: 7), controlPoint2: NSPoint(x: 8, y: 9))
+            swirl.curve(to: NSPoint(x: 10, y: 15), controlPoint1: NSPoint(x: 8, y: 12), controlPoint2: NSPoint(x: 10, y: 14))
+            NSColor.black.withAlphaComponent(0.95).setStroke()
+            swirl.lineWidth = 4
+            swirl.stroke()
+            NSColor.systemPurple.setStroke()
+            swirl.lineWidth = 1.5
+            swirl.stroke()
+            drawRetouchMotionLines(color: .systemPurple)
+        default:
+            break
+        }
+
+        image.unlockFocus()
+        return cache(
+            NSCursor(image: image, hotSpot: NSPoint(x: center.x, y: side - center.y)),
+            for: cacheKey
+        )
+    }
+
+    private static func drawRetouchMotionLines(color: NSColor) {
+        let lines = NSBezierPath()
+        lines.move(to: NSPoint(x: 25, y: 20)); lines.line(to: NSPoint(x: 32, y: 20))
+        lines.move(to: NSPoint(x: 25, y: 15)); lines.line(to: NSPoint(x: 35, y: 15))
+        lines.move(to: NSPoint(x: 25, y: 10)); lines.line(to: NSPoint(x: 31, y: 10))
+        NSColor.black.withAlphaComponent(0.95).setStroke()
+        lines.lineWidth = 3
+        lines.stroke()
+        color.setStroke()
+        lines.lineWidth = 1
+        lines.stroke()
     }
 
     private static func selectionMarqueeCursor() -> NSCursor {
