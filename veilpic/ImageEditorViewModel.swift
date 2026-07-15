@@ -1637,6 +1637,10 @@ final class ImageEditorViewModel: ObservableObject {
         }
     }
 
+    var canvasInteractionTool: ImageEditorTool {
+        selectedLeftSidebarTab == .components ? .move : selectedTool
+    }
+
     func selectLeftSidebarTab(_ tab: XomoLeftSidebarTab) {
         selectedLeftSidebarTab = tab
     }
