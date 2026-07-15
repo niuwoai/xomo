@@ -6438,6 +6438,7 @@ enum ImageEditorCanvasCursorFamily: Equatable {
     case selectionMarquee
     case lasso
     case magicWand
+    case quickSelection
     case crop
     case patch
     case gradient
@@ -6479,6 +6480,8 @@ enum ImageEditorCanvasCursor {
             .lasso
         case .magicWand:
             .magicWand
+        case .quickSelection:
+            .quickSelection
         case .crop:
             .crop
         case .patchTool:
@@ -6487,7 +6490,7 @@ enum ImageEditorCanvasCursor {
             .gradient
         case .rectangle, .ellipse:
             .shapeOutline
-        case .brush, .eraser, .quickSelection, .cloneStamp, .dodge, .burn, .sponge,
+        case .brush, .eraser, .cloneStamp, .dodge, .burn, .sponge,
              .blur, .sharpen, .smudge, .healingBrush:
             .brushFootprint
         case .paintBucket:
@@ -6524,6 +6527,8 @@ enum ImageEditorCanvasCursor {
             return lassoCursor()
         case .magicWand:
             return magicWandCursor()
+        case .quickSelection:
+            return quickSelectionCursor()
         case .crop:
             return cropCursor()
         case .patch:
@@ -6688,6 +6693,49 @@ enum ImageEditorCanvasCursor {
         image.unlockFocus()
         return cache(
             NSCursor(image: image, hotSpot: NSPoint(x: 5, y: side - 6)),
+            for: cacheKey
+        )
+    }
+
+    private static func quickSelectionCursor() -> NSCursor {
+        let cacheKey = "quick-selection"
+        if let cachedCursor = cursorCache[cacheKey] {
+            return cachedCursor
+        }
+
+        let side: CGFloat = 34
+        let image = NSImage(size: NSSize(width: side, height: side))
+        image.lockFocus()
+
+        let selectionRing = NSBezierPath(ovalIn: NSRect(x: 3, y: 5, width: 18, height: 18))
+        selectionRing.setLineDash([3, 2], count: 2, phase: 0)
+        NSColor.black.withAlphaComponent(0.95).setStroke()
+        selectionRing.lineWidth = 3.5
+        selectionRing.stroke()
+        NSColor.white.withAlphaComponent(0.98).setStroke()
+        selectionRing.lineWidth = 1.2
+        selectionRing.stroke()
+
+        let brush = NSBezierPath()
+        brush.move(to: NSPoint(x: 20, y: 26))
+        brush.line(to: NSPoint(x: 29, y: 17))
+        NSColor.black.withAlphaComponent(0.95).setStroke()
+        brush.lineWidth = 4
+        brush.stroke()
+        NSColor.white.setStroke()
+        brush.lineWidth = 1.4
+        brush.stroke()
+
+        let plus = NSBezierPath()
+        plus.move(to: NSPoint(x: 25, y: 29)); plus.line(to: NSPoint(x: 25, y: 23))
+        plus.move(to: NSPoint(x: 22, y: 26)); plus.line(to: NSPoint(x: 28, y: 26))
+        NSColor.systemBlue.setStroke()
+        plus.lineWidth = 1.5
+        plus.stroke()
+
+        image.unlockFocus()
+        return cache(
+            NSCursor(image: image, hotSpot: NSPoint(x: 10, y: side - 10)),
             for: cacheKey
         )
     }

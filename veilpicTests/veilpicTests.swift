@@ -6420,13 +6420,14 @@ struct veilpicTests {
             (
                 .brushFootprint,
                 [
-                    .brush, .eraser, .quickSelection, .cloneStamp, .dodge, .burn,
-                    .sponge, .blur, .sharpen, .smudge, .healingBrush, .redEye
+                    .brush, .eraser, .cloneStamp, .dodge, .burn,
+                    .sponge, .blur, .sharpen, .smudge, .healingBrush
                 ]
             ),
             (.selectionMarquee, [.marquee]),
             (.lasso, [.lasso]),
             (.magicWand, [.magicWand]),
+            (.quickSelection, [.quickSelection]),
             (.crop, [.crop]),
             (.patch, [.patchTool]),
             (.gradient, [.gradient]),
