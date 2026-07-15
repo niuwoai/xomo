@@ -162,6 +162,64 @@ struct XomoComponentThemeTokens {
     let spacing: CGFloat
 }
 
+struct XomoComponentThemeTokenSnapshot: Codable, Equatable, Sendable {
+    let schemaVersion: Int
+    let theme: String
+    let librarySource: String
+    let colors: [String: String]
+    let metrics: [String: Double]
+
+    init(theme: XomoComponentTheme, tokens: XomoComponentThemeTokens) {
+        schemaVersion = 1
+        self.theme = theme.rawValue
+        librarySource = theme.librarySource.rawValue
+        colors = [
+            "accent": tokens.accent.xomoRGBAHex,
+            "accentBorder": tokens.accentBorder.xomoRGBAHex,
+            "surface": tokens.surface.xomoRGBAHex,
+            "subtleSurface": tokens.subtleSurface.xomoRGBAHex,
+            "border": tokens.border.xomoRGBAHex,
+            "primaryText": tokens.primaryText.xomoRGBAHex,
+            "secondaryText": tokens.secondaryText.xomoRGBAHex,
+            "onAccent": tokens.onAccent.xomoRGBAHex
+        ]
+        metrics = [
+            "cornerRadius": tokens.cornerRadius,
+            "spacing": tokens.spacing
+        ]
+    }
+
+    func encodedJSON() throws -> String {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        let data = try encoder.encode(self)
+        guard let json = String(data: data, encoding: .utf8) else {
+            throw EncodingError.invalidValue(
+                self,
+                EncodingError.Context(codingPath: [], debugDescription: "Token JSON is not UTF-8")
+            )
+        }
+        return json
+    }
+}
+
+extension XomoComponentTheme {
+    var tokenSnapshot: XomoComponentThemeTokenSnapshot {
+        XomoComponentThemeTokenSnapshot(theme: self, tokens: tokens)
+    }
+}
+
+private extension NSColor {
+    var xomoRGBAHex: String {
+        let color = usingColorSpace(.sRGB) ?? self
+        let red = Int((color.redComponent * 255).rounded())
+        let green = Int((color.greenComponent * 255).rounded())
+        let blue = Int((color.blueComponent * 255).rounded())
+        let alpha = Int((color.alphaComponent * 255).rounded())
+        return String(format: "#%02X%02X%02X%02X", red, green, blue, alpha)
+    }
+}
+
 struct XomoComponentInstance: Codable, Equatable {
     var kind: XomoComponentKind
     var theme: XomoComponentTheme

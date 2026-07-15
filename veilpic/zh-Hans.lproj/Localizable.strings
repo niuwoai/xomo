@@ -2765,6 +2765,7 @@
 "xomo.theme.chakraUI" = "Chakra UI 参考";
 "xomo.theme.radixThemes" = "Radix Themes 参考";
 "xomo.theme.libraryTitle" = "%@ · %@";
+"xomo.theme.copyTokens" = "复制主题 Tokens";
 "xomo.librarySource.xomoOriginal" = "像界原创";
 "xomo.librarySource.xomoOriginal.attribution" = "像界以本地代码生成的原创可编辑组件。";
 "xomo.librarySource.chakraUI" = "Chakra UI";
@@ -2781,6 +2782,8 @@
 "xomo.theme.status.applied" = "已将 %@ 应用为 %@ 主题";
 "xomo.theme.status.overrideKept" = "已保留 %d 个图层的局部样式";
 "xomo.theme.status.overrideCleared" = "已清除 %d 个图层的局部样式";
+"xomo.theme.status.tokensCopied" = "已复制 %@ 主题 Tokens";
+"xomo.theme.status.tokensCopyFailed" = "主题 Tokens 复制失败";
 "xomo.themeSample.insert" = "插入当前主题页面示例";
 "xomo.themeSample.nativeWorkspace" = "原生工作台";
 "xomo.themeSample.softMobileProfile" = "柔和移动端个人页";

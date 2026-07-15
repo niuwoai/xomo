@@ -671,4 +671,50 @@ struct XomoLeftSidebarTests {
         #expect(star.shapeContent?.kind == .path)
         #expect(star.shapeContent?.editablePathAnchors.count == 10)
     }
+
+    @Test func everyThemeExportsStableDesignTokenJSON() throws {
+        for theme in XomoComponentTheme.allCases {
+            let snapshot = theme.tokenSnapshot
+            #expect(snapshot.schemaVersion == 1)
+            #expect(snapshot.theme == theme.rawValue)
+            #expect(snapshot.librarySource == theme.librarySource.rawValue)
+            #expect(snapshot.colors.count == 8)
+            #expect(Set(snapshot.metrics.keys) == Set(["cornerRadius", "spacing"]))
+
+            let json = try snapshot.encodedJSON()
+            let decoded = try JSONDecoder().decode(
+                XomoComponentThemeTokenSnapshot.self,
+                from: Data(json.utf8)
+            )
+            #expect(decoded == snapshot)
+        }
+    }
+
+    @Test func componentLibraryCopiesCurrentThemeTokensToClipboard() {
+        let image = NSImage.transparent(size: CGSize(width: 640, height: 480))
+        let viewModel = ImageEditorViewModel(sourceName: "source", image: image) { _ in }
+        viewModel.xomoComponentTheme = .chakraUI
+
+        viewModel.copyCurrentXomoThemeTokens()
+
+        let copied = NSPasteboard.general.string(forType: .string) ?? ""
+        #expect(copied.contains("\"theme\" : \"chakraUI\""))
+        #expect(copied.contains("\"accent\""))
+        #expect(viewModel.statusText.contains(L10n.text("xomo.theme.chakraUI")))
+    }
+
+    @Test func componentLibraryExposesKeyboardNeutralTokenCopyAction() throws {
+        let root = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: root.appendingPathComponent("veilpic/XomoLeftSidebar.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("xomo.theme.copyTokens"))
+        #expect(source.contains("copyCurrentXomoThemeTokens()"))
+        #expect(source.contains("xomo-component-theme-copy-tokens"))
+        #expect(source.contains(".focusable(false)"))
+    }
 }

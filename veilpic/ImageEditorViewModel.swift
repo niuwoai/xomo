@@ -695,6 +695,20 @@ final class ImageEditorViewModel: ObservableObject {
         statusText = L10n.text("imageEditor.status.figmaVariablesCopied")
     }
 
+    func copyCurrentXomoThemeTokens() {
+        do {
+            let json = try xomoComponentTheme.tokenSnapshot.encodedJSON()
+            NSPasteboard.general.clearContents()
+            NSPasteboard.general.setString(json, forType: .string)
+            statusText = L10n.format(
+                "xomo.theme.status.tokensCopied",
+                xomoComponentTheme.title
+            )
+        } catch {
+            statusText = L10n.text("xomo.theme.status.tokensCopyFailed")
+        }
+    }
+
     var selectedLayerIsGroup: Bool {
         document.selectedLayer?.isGroup == true
     }

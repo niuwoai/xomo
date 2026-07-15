@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc106 - 2026-07-16
+
+### Added
+- 组件库主题新增“复制主题 Tokens”入口，将当前原创/参考主题导出为带 schema 版本、颜色和尺寸 token 的稳定 JSON，便于 Sketch/Figma 设计系统复用。
+
+### Verification
+- 组件库主题专项 36/36、三语资源专项 4/4 通过，报告见 `test-reports/rc106-component-tokens/` 与 `test-reports/rc106-localization/`；Debug App 实际切换组件库并点击复制按钮，状态栏显示“已复制 极简 SaaS 主题 Tokens”。
+
 ## 2.12.0-rc105 - 2026-07-16
 
 ### Added
