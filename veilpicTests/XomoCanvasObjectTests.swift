@@ -114,7 +114,12 @@ struct XomoCanvasObjectTests {
         let viewModel = makeViewModel()
         viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))
         let group = try #require(viewModel.document.selectedLayer)
-        var cover = ImageEditorLayer.blank(name: "Cover", size: CGSize(width: 240, height: 80))
+        let coverContent = ImageEditorSolidColorFillContent(red: 0, green: 0, blue: 0)
+        var cover = ImageEditorLayer.solidColorFill(
+            name: "Cover",
+            size: CGSize(width: 240, height: 80),
+            content: coverContent
+        )
         cover.frame = CGRect(x: 80, y: 90, width: 240, height: 80)
         viewModel.document.layers.append(cover)
         viewModel.selectLayer(cover.id)
@@ -122,6 +127,19 @@ struct XomoCanvasObjectTests {
         #expect(!viewModel.selectXomoObject(at: CGPoint(x: 160, y: 112)))
         #expect(viewModel.document.selectedLayerID == cover.id)
         #expect(viewModel.document.selectedLayerID != group.id)
+    }
+
+    @Test func transparentLayerDoesNotBlockComponentObjectHitTesting() throws {
+        let viewModel = makeViewModel()
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))
+        let group = try #require(viewModel.document.selectedLayer)
+        var transparentLayer = ImageEditorLayer.blank(name: "Empty", size: CGSize(width: 240, height: 80))
+        transparentLayer.frame = CGRect(x: 80, y: 90, width: 240, height: 80)
+        viewModel.document.layers.append(transparentLayer)
+        viewModel.selectLayer(transparentLayer.id)
+
+        #expect(viewModel.selectXomoObject(at: CGPoint(x: 160, y: 112)))
+        #expect(viewModel.document.selectedLayerID == group.id)
     }
 
     @Test func deletingASelectedObjectRemovesItsGroupAndChildren() throws {

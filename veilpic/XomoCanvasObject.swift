@@ -118,9 +118,35 @@ extension ImageEditorViewModel {
         return document.layers[(object.frontIndex + 1)...].contains { layer in
             guard layer.groupID != object.groupID,
                   !layer.isGroup,
-                  document.isEffectivelyVisible(layer)
+                  document.isEffectivelyVisible(layer),
+                  layerContainsVisibleContent(layer, at: point)
             else { return false }
-            return layer.frame.standardized.contains(point)
+            return true
         }
+    }
+
+    /// A transparent editing layer still has a canvas-sized frame, but it does
+    /// not visually cover an object underneath. Hit testing the rendered alpha
+    /// keeps empty layers and fully masked pixels from stealing component clicks.
+    private func layerContainsVisibleContent(_ layer: ImageEditorLayer, at point: CGPoint) -> Bool {
+        guard !layer.isAdjustment,
+              !layer.isFilter,
+              layer.opacity > 0.001,
+              layer.fillOpacity > 0.001
+        else { return false }
+
+        let frame = layer.frame.standardized
+        let visibleImage = layer.visibleImage
+        guard frame.width > 0.1,
+              frame.height > 0.1,
+              frame.contains(point),
+              let visibleBounds = visibleImage.nonTransparentPixelBounds(alphaThreshold: 8)
+        else { return false }
+
+        let localPoint = CGPoint(
+            x: (point.x - frame.minX) / frame.width * visibleImage.size.width,
+            y: (point.y - frame.minY) / frame.height * visibleImage.size.height
+        )
+        return visibleBounds.contains(localPoint)
     }
 }
