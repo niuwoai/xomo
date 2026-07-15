@@ -13,6 +13,94 @@ import Testing
 
 @MainActor
 struct XomoFigmaNodeImportPlanTests {
+    @Test func twoStopCenteredLinearGradientMapsToEditableShapeAndComplexGradientStaysPartial() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                """
+                {
+                  "name": "Gradients",
+                  "nodes": {
+                    "1:30": {
+                      "document": {
+                        "id": "1:30",
+                        "name": "Gradient Frame",
+                        "type": "FRAME",
+                        "absoluteBoundingBox": {"x": 0, "y": 0, "width": 240, "height": 160},
+                        "children": [
+                          {
+                            "id": "2:30",
+                            "name": "Editable Gradient",
+                            "type": "RECTANGLE",
+                            "absoluteBoundingBox": {"x": 20, "y": 20, "width": 120, "height": 48},
+                            "fills": [{
+                              "type": "GRADIENT_LINEAR",
+                              "opacity": 0.8,
+                              "gradientHandlePositions": [
+                                {"x": 0, "y": 0.5},
+                                {"x": 1, "y": 0.5},
+                                {"x": 0, "y": 0}
+                              ],
+                              "gradientStops": [
+                                {"position": 0, "color": {"r": 1, "g": 0, "b": 0, "a": 0.5}},
+                                {"position": 1, "color": {"r": 0, "g": 0, "b": 1, "a": 0.5}}
+                              ]
+                            }]
+                          },
+                          {
+                            "id": "2:31",
+                            "name": "Three Stops",
+                            "type": "RECTANGLE",
+                            "absoluteBoundingBox": {"x": 20, "y": 90, "width": 120, "height": 48},
+                            "fills": [{
+                              "type": "GRADIENT_LINEAR",
+                              "gradientHandlePositions": [
+                                {"x": 0, "y": 0.5},
+                                {"x": 1, "y": 0.5},
+                                {"x": 0, "y": 0}
+                              ],
+                              "gradientStops": [
+                                {"position": 0, "color": {"r": 1, "g": 0, "b": 0, "a": 1}},
+                                {"position": 0.5, "color": {"r": 0, "g": 1, "b": 0, "a": 1}},
+                                {"position": 1, "color": {"r": 0, "g": 0, "b": 1, "a": 1}}
+                              ]
+                            }]
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+                """.utf8
+            )
+        )
+        let plan = try XomoFigmaNodeImportMapper.makePlan(
+            response: response,
+            requestedNodeID: "1:30"
+        )
+        let editable = try #require(plan.items.first { $0.sourceID == "2:30" })
+        let complex = try #require(plan.items.first { $0.sourceID == "2:31" })
+        #expect(editable.fidelity == .exact)
+        #expect(editable.linearGradientFill?.angle == 0)
+        #expect(editable.linearGradientFill?.scale == 1)
+        #expect(editable.linearGradientFill?.opacity == 0.4)
+        #expect(!editable.issues.contains(.unsupportedPaint))
+        #expect(complex.fidelity == .partial)
+        #expect(complex.linearGradientFill == nil)
+        #expect(complex.issues.contains(.unsupportedPaint))
+
+        let materialized = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: CGSize(width: 400, height: 300)
+        )
+        let shape = try #require(
+            materialized.layers.first { $0.name == "Editable Gradient" }?.shapeContent
+        )
+        #expect(shape.fillGradient?.angle == 0)
+        #expect(shape.fillGradient?.scale == 1)
+        #expect(abs(shape.fillOpacity - 0.4) < 0.001)
+    }
+
     @Test func clientRequiresSpecificNodeAndUsesBoundedOfficialEndpoint() async throws {
         let transport = RecordingFigmaNodeTransport(statusCode: 200, body: Self.validNodeResponse)
         let client = XomoFigmaNodeContentAPIClient(transport: transport)

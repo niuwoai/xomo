@@ -1,6 +1,6 @@
 # Xomo Figma 链接导入边界
 
-> 最后更新：2026-07-15 ｜ 当前版本：v2.12.0-rc71 ｜ 当前阶段：形状填充与描边可独立编辑，独立四角与圆角平滑可原生编辑
+> 最后更新：2026-07-15 ｜ 当前版本：v2.12.0-rc72 ｜ 当前阶段：基础两色线性渐变可映射为原生可编辑形状填充
 
 ## 当前已经支持
 
@@ -27,10 +27,12 @@ rc59 要求链接包含明确的 `node-id`。用户点击“读取节点并生�
 | Frame / Group | 嵌套图层组 | 保留层级、名称、显隐、透明度与固定坐标；水平/垂直 Auto Layout 保留间距、内距、两轴对齐、固定/Hug 容器及 Fill/Stretch 子项 |
 | Component / Component Set / Instance | 普通嵌套图层组 | 子层可编辑，Auto Layout 容器与子项可重排；组件/实例语义明确降级 |
 | Text | 可编辑文字层 | 保留文本、字体族、字号、字重、横向对齐和纯色填充 |
-| Rectangle / Ellipse | 可编辑形状层 | 保留纯色填充、纯色描边和描边宽度；矩形统一/非对称四角与圆角平滑保留为可编辑属性，平滑曲线使用超椭圆近似 |
-| Vector / Line / Star / Polygon | 可编辑路径形状层 | 支持 fill/stroke geometry 与 SVG M/L/H/V/C/S/Q/T/A/Z 的绝对、相对命令；按节点局部 size 映射 |
+| Rectangle / Ellipse | 可编辑形状层 | 保留纯色或居中两端线性渐变填充、纯色描边和描边宽度；矩形统一/非对称四角与圆角平滑保留为可编辑属性，平滑曲线使用超椭圆近似 |
+| Vector / Line / Star / Polygon | 可编辑路径形状层 | 支持 fill/stroke geometry 与 SVG M/L/H/V/C/S/Q/T/A/Z 的绝对、相对命令；闭合路径可保留同一基础线性渐变，按节点局部 size 映射 |
 | 图片填充 Rectangle | 图片像素层或占位层 | 显式读取时下载当前子树引用的图片；Fill/Fit、Crop 对应的 `STRETCH + imageTransform`、Tile 比例及 90°旋转会烘焙为固定像素，单图失败时保留格纹交叉占位图 |
 | 其它节点 | 不导入 | 报告中列为不支持，不生成假图层 |
+
+rc72 依据 Figma 官方 [Paint / ColorStop 属性说明](https://developers.figma.com/docs/rest-api/file-property-types/) 读取 `gradientHandlePositions` 与 `gradientStops`。当前只有恰好两个 0/1 色标、两端透明度一致、控制轴居中且比例落入 Xomo 可编辑范围的 `GRADIENT_LINEAR` 会标为精确映射；多色、偏心、不同端点透明度、径向、角度和菱形渐变继续报告 `unsupportedPaint`。
 
 ## 安全边界
 

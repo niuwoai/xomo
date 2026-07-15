@@ -1,0 +1,17 @@
+{
+  "generated_at": "2026-07-15 08:33:58 +0800",
+  "total": 2,
+  "passed": 2,
+  "failed": 0,
+  "suite": "XomoMCPServerTests",
+  "results": [
+    {
+      "test": "initializeReturnsToolCapability",
+      "passed": true
+    },
+    {
+      "test": "toolsListWorksWithoutRunningApp",
+      "passed": true
+    }
+  ]
+}

@@ -713,7 +713,13 @@
 "imageEditor.properties.shapeCorner.bottomRight" = "右下";
 "imageEditor.properties.shapeCorner.bottomLeft" = "左下";
 "imageEditor.properties.shapeStyle" = "シェイプの外観";
+"imageEditor.properties.shapeFillKind" = "塗りの種類";
+"imageEditor.properties.shapeFillKind.solid" = "単色";
+"imageEditor.properties.shapeFillKind.linearGradient" = "線形グラデーション";
 "imageEditor.properties.shapeFillColor" = "塗りの色";
+"imageEditor.properties.shapeGradientStartColor" = "グラデーション開始色";
+"imageEditor.properties.shapeGradientEndColor" = "グラデーション終了色";
+"imageEditor.properties.shapeGradientAngleValue" = "グラデーション角度：%d°";
 "imageEditor.properties.shapeFillOpacityValue" = "塗りの不透明度：%d%%";
 "imageEditor.properties.shapeStrokeColor" = "線の色";
 "imageEditor.properties.shapeStrokeOpacityValue" = "線の不透明度：%d%%";

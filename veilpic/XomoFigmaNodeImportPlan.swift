@@ -61,6 +61,14 @@ struct XomoFigmaPlanColor: Equatable, Sendable {
     var alpha: Double
 }
 
+struct XomoFigmaPlanLinearGradient: Equatable, Sendable {
+    var startColor: XomoFigmaPlanColor
+    var endColor: XomoFigmaPlanColor
+    var angle: Double
+    var scale: Double
+    var opacity: Double
+}
+
 struct XomoFigmaPlanSize: Equatable, Sendable {
     var width: Double
     var height: Double
@@ -134,6 +142,7 @@ struct XomoFigmaNodeImportItem: Equatable, Identifiable, Sendable {
     var opacity: Double
     var isVisible: Bool
     var solidFill: XomoFigmaPlanColor?
+    var linearGradientFill: XomoFigmaPlanLinearGradient? = nil
     var solidStroke: XomoFigmaPlanColor?
     var strokeWeight: Double?
     var cornerRadius: Double?

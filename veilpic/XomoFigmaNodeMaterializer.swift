@@ -336,7 +336,7 @@ enum XomoFigmaNodeMaterializer {
         transform: XomoFigmaImportTransform,
         groupID: UUID?
     ) -> ImageEditorLayer? {
-        guard item.solidFill != nil || item.solidStroke != nil,
+        guard item.solidFill != nil || item.linearGradientFill != nil || item.solidStroke != nil,
               let frame = mappedFrame(item.frame, transform: transform)
         else { return nil }
         var layer = ImageEditorLayer.shape(
@@ -394,10 +394,21 @@ enum XomoFigmaNodeMaterializer {
     ) -> ImageEditorShapeContent {
         let fill = nsColor(item.solidFill, fallback: .clear)
         let stroke = nsColor(item.solidStroke, fallback: .clear)
+        let gradient = item.linearGradientFill.map { value in
+            ImageEditorGradientFillContent.shapeLinear(
+                startColor: nsColor(value.startColor, fallback: .clear),
+                endColor: nsColor(value.endColor, fallback: .clear),
+                angle: CGFloat(value.angle),
+                scale: CGFloat(value.scale)
+            )
+        }
         return ImageEditorShapeContent(
             kind: kind,
             fillColor: fill,
-            fillOpacity: item.solidFill.map { CGFloat($0.alpha) } ?? 0,
+            fillGradient: gradient,
+            fillOpacity: item.linearGradientFill.map { CGFloat($0.opacity) }
+                ?? item.solidFill.map { CGFloat($0.alpha) }
+                ?? 0,
             strokeColor: stroke,
             strokeWidth: max(1, CGFloat(item.strokeWeight ?? 1) * scale),
             strokeOpacity: item.solidStroke.map { CGFloat($0.alpha) } ?? 0,

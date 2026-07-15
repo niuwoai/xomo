@@ -272,6 +272,9 @@ enum XomoFigmaNodeImportMapper {
             opacity: min(max(node.opacity ?? 1, 0), 1),
             isVisible: node.visible ?? true,
             solidFill: solidColor(in: node.fills),
+            linearGradientFill: supportsLinearGradientFill(node.type)
+                ? linearGradient(in: node.fills, bounds: node.absoluteBoundingBox)
+                : nil,
             solidStroke: solidColor(in: node.strokes),
             strokeWeight: node.strokeWeight,
             cornerRadius: uniformCornerRadius(node),
@@ -371,30 +374,30 @@ enum XomoFigmaNodeImportMapper {
     ) -> (target: XomoFigmaNodeTargetKind?, isImage: Bool) {
         switch node.type {
         case "FRAME", "GROUP":
-            inspectPaints(node: node, issues: &issues)
+            inspectPaints(node: node, allowsLinearGradientFill: true, issues: &issues)
             return (.group, false)
         case "COMPONENT", "COMPONENT_SET", "INSTANCE":
             issues.append(.componentSemanticsFlattened)
-            inspectPaints(node: node, issues: &issues)
+            inspectPaints(node: node, allowsLinearGradientFill: true, issues: &issues)
             return (.group, false)
         case "TEXT":
-            inspectPaints(node: node, issues: &issues)
+            inspectPaints(node: node, allowsLinearGradientFill: false, issues: &issues)
             return (.text, false)
         case "RECTANGLE":
             if imagePaint(node: node) != nil {
                 issues.append(.imageAssetPending)
                 return (.imagePlaceholder, true)
             }
-            inspectPaints(node: node, issues: &issues)
+            inspectPaints(node: node, allowsLinearGradientFill: true, issues: &issues)
             return (.rectangle, false)
         case "ELLIPSE":
-            inspectPaints(node: node, issues: &issues)
+            inspectPaints(node: node, allowsLinearGradientFill: true, issues: &issues)
             return (.ellipse, false)
         case "VECTOR", "LINE", "STAR", "REGULAR_POLYGON":
             if geometryPaths(node).isEmpty {
                 issues.append(.vectorGeometryMissing)
             }
-            inspectPaints(node: node, issues: &issues)
+            inspectPaints(node: node, allowsLinearGradientFill: true, issues: &issues)
             return (.vector, false)
         default:
             issues.append(.unsupportedNodeType)
@@ -404,12 +407,18 @@ enum XomoFigmaNodeImportMapper {
 
     private static func inspectPaints(
         node: XomoFigmaNode,
+        allowsLinearGradientFill: Bool,
         issues: inout [XomoFigmaNodeMappingIssue]
     ) {
         let visiblePaints = (node.fills ?? []).filter { $0.visible ?? true }
         let visibleStrokes = (node.strokes ?? []).filter { $0.visible ?? true }
+        let hasUnsupportedFill = visiblePaints.contains { paint in
+            if paint.type == "SOLID" { return false }
+            guard allowsLinearGradientFill, paint.type == "GRADIENT_LINEAR" else { return true }
+            return linearGradient(in: [paint], bounds: node.absoluteBoundingBox) == nil
+        }
         if visiblePaints.count > 1
-            || visiblePaints.contains(where: { $0.type != "SOLID" })
+            || hasUnsupportedFill
             || visibleStrokes.count > 1
             || visibleStrokes.contains(where: { $0.type != "SOLID" }) {
             issues.append(.unsupportedPaint)
@@ -429,6 +438,87 @@ enum XomoFigmaNodeImportMapper {
             blue: min(max(color.b, 0), 1),
             alpha: min(max(alpha, 0), 1)
         )
+    }
+
+    private static func linearGradient(
+        in paints: [XomoFigmaPaint]?,
+        bounds: XomoFigmaRectangle?
+    ) -> XomoFigmaPlanLinearGradient? {
+        guard let paint = (paints ?? []).first(where: {
+            ($0.visible ?? true) && $0.type == "GRADIENT_LINEAR"
+        }),
+        let bounds,
+        bounds.width.isFinite,
+        bounds.height.isFinite,
+        bounds.width > 0,
+        bounds.height > 0,
+        let handles = paint.gradientHandlePositions,
+        handles.count == 3,
+        let stops = paint.gradientStops,
+        stops.count == 2,
+        abs(stops[0].position) <= 0.001,
+        abs(stops[1].position - 1) <= 0.001,
+        let paintOpacity = validUnitValue(paint.opacity ?? 1)
+        else { return nil }
+
+        let startHandle = handles[0]
+        let endHandle = handles[1]
+        guard handles.allSatisfy(\.isFinite),
+              abs((startHandle.x + endHandle.x) / 2 - 0.5) <= 0.01,
+              abs((startHandle.y + endHandle.y) / 2 - 0.5) <= 0.01,
+              let start = gradientStopColor(stops[0]),
+              let end = gradientStopColor(stops[1]),
+              abs(start.alpha - end.alpha) <= 0.001
+        else { return nil }
+
+        let deltaX = (endHandle.x - startHandle.x) * bounds.width
+        let deltaY = (endHandle.y - startHandle.y) * bounds.height
+        let length = hypot(deltaX, deltaY)
+        guard length.isFinite, length > 0.001 else { return nil }
+        let angle = atan2(deltaY, deltaX) * 180 / .pi
+        let radians = angle * .pi / 180
+        let span = abs(cos(radians)) * bounds.width + abs(sin(radians)) * bounds.height
+        let scale = length / span
+        guard angle.isFinite, scale.isFinite, (0.25...4).contains(scale) else { return nil }
+
+        return XomoFigmaPlanLinearGradient(
+            startColor: XomoFigmaPlanColor(
+                red: start.red,
+                green: start.green,
+                blue: start.blue,
+                alpha: 1
+            ),
+            endColor: XomoFigmaPlanColor(
+                red: end.red,
+                green: end.green,
+                blue: end.blue,
+                alpha: 1
+            ),
+            angle: angle,
+            scale: scale,
+            opacity: start.alpha * paintOpacity
+        )
+    }
+
+    private static func gradientStopColor(_ stop: XomoFigmaGradientStop) -> XomoFigmaPlanColor? {
+        guard stop.position.isFinite,
+              let red = validUnitValue(stop.color.r),
+              let green = validUnitValue(stop.color.g),
+              let blue = validUnitValue(stop.color.b),
+              let alpha = validUnitValue(stop.color.a ?? 1)
+        else { return nil }
+        return XomoFigmaPlanColor(red: red, green: green, blue: blue, alpha: alpha)
+    }
+
+    private static func validUnitValue(_ value: Double) -> Double? {
+        value.isFinite && (0...1).contains(value) ? value : nil
+    }
+
+    private static func supportsLinearGradientFill(_ nodeType: String) -> Bool {
+        [
+            "FRAME", "GROUP", "COMPONENT", "COMPONENT_SET", "INSTANCE",
+            "RECTANGLE", "ELLIPSE", "VECTOR", "STAR", "REGULAR_POLYGON"
+        ].contains(nodeType)
     }
 
     private static func imagePaint(node: XomoFigmaNode) -> XomoFigmaPaint? {
@@ -586,11 +676,25 @@ struct XomoFigmaPaint: Decodable {
     var visible: Bool?
     var opacity: Double?
     var color: XomoFigmaColor?
+    var gradientHandlePositions: [XomoFigmaVector]?
+    var gradientStops: [XomoFigmaGradientStop]?
     var imageRef: String?
     var scaleMode: String?
     var imageTransform: [[Double]]?
     var scalingFactor: Double?
     var rotation: Double?
+}
+
+struct XomoFigmaVector: Decodable {
+    var x: Double
+    var y: Double
+
+    var isFinite: Bool { x.isFinite && y.isFinite }
+}
+
+struct XomoFigmaGradientStop: Decodable {
+    var position: Double
+    var color: XomoFigmaColor
 }
 
 struct XomoFigmaColor: Decodable {
