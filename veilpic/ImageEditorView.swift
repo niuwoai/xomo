@@ -1185,11 +1185,11 @@ struct ImageEditorView: View {
                         }
                     }
                 )
-                // Keep the editor gesture on the outermost canvas view.  The
-                // drop destination is an AppKit interaction and can otherwise
-                // become the gesture host on macOS, preventing clicks/drags on
-                // already inserted components from reaching canvasGesture.
-                .gesture(canvasGesture(in: geometry.size))
+                // Keep the editor gesture on the outermost canvas view and run
+                // it simultaneously with the drop destination. SwiftUI's drop
+                // host can otherwise swallow the zero-distance drag used to
+                // select and move an already inserted component.
+                .simultaneousGesture(canvasGesture(in: geometry.size))
                 .overlay(
                     ScrollWheelZoomView { factor, location, viewportSize in
                         // 每个离散滚轮 tick 独立锚定当前状态：复用捏合缩放的锚定数学，
