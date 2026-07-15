@@ -160,6 +160,27 @@ struct XomoCanvasObjectTests {
         #expect(viewModel.document.selectedLayerID == group.id)
     }
 
+    @Test func repeatedPixelHitTestingKeepsTransparentHoleSemantics() throws {
+        let viewModel = makeViewModel()
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))
+        let group = try #require(viewModel.document.selectedLayer)
+        let sparseImage = NSImage.rendered(size: CGSize(width: 240, height: 80)) { rect in
+            NSColor.systemRed.setFill()
+            rect.insetBy(dx: 0, dy: 20).fill()
+        }
+        var sparseLayer = ImageEditorLayer.blank(name: "Sparse", size: CGSize(width: 240, height: 80))
+        sparseLayer.image = sparseImage ?? NSImage.transparent(size: CGSize(width: 240, height: 80))
+        sparseLayer.frame = CGRect(x: 80, y: 90, width: 240, height: 80)
+        viewModel.document.layers.append(sparseLayer)
+        viewModel.selectLayer(sparseLayer.id)
+
+        for _ in 0..<12 {
+            #expect(viewModel.selectXomoObject(at: CGPoint(x: 160, y: 95)))
+            #expect(viewModel.document.selectedLayerID == group.id)
+            viewModel.selectLayer(sparseLayer.id)
+        }
+    }
+
     @Test func deletingASelectedObjectRemovesItsGroupAndChildren() throws {
         let viewModel = makeViewModel()
         viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))

@@ -994,8 +994,10 @@ extension ImageEditorViewModel {
         let decoder = JSONDecoder()
         let project = try decoder.decode(ImageEditorProjectDocument.self, from: data)
         document = try project.restoredDocument()
-        xomoComponentTheme = project.xomoComponentTheme ?? .native
-        xomoLocalThemeTokenSnapshot = project.xomoLocalThemeTokenSnapshot
+        restoreXomoThemeContext(
+            theme: project.xomoComponentTheme ?? .native,
+            tokenSnapshot: project.xomoLocalThemeTokenSnapshot
+        )
         if let metadata = document.designCanvasMetadata {
             exportSettings.scale = Double(metadata.exportScale)
         }

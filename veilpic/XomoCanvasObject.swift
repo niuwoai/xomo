@@ -152,6 +152,56 @@ extension ImageEditorViewModel {
     }
 }
 
+@MainActor
+private final class XomoVisiblePixelProbe: NSObject {
+    let width: Int
+    let height: Int
+    let alpha: [UInt8]
+
+    init?(cgImage: CGImage) {
+        guard cgImage.width > 0, cgImage.height > 0 else { return nil }
+        let bytesPerRow = cgImage.width * 4
+        var pixels = [UInt8](repeating: 0, count: bytesPerRow * cgImage.height)
+        guard let context = CGContext(
+            data: &pixels,
+            width: cgImage.width,
+            height: cgImage.height,
+            bitsPerComponent: 8,
+            bytesPerRow: bytesPerRow,
+            space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ) else { return nil }
+
+        context.interpolationQuality = .none
+        context.draw(cgImage, in: CGRect(x: 0, y: 0, width: cgImage.width, height: cgImage.height))
+        width = cgImage.width
+        height = cgImage.height
+        alpha = stride(from: 3, to: pixels.count, by: 4).map { pixels[$0] }
+    }
+}
+
+@MainActor
+private enum XomoVisiblePixelProbeCache {
+    static let cache: NSCache<NSImage, XomoVisiblePixelProbe> = {
+        let cache = NSCache<NSImage, XomoVisiblePixelProbe>()
+        cache.countLimit = 48
+        cache.totalCostLimit = 32 * 1024 * 1024
+        return cache
+    }()
+
+    static func probe(for image: NSImage, cgImage: CGImage) -> XomoVisiblePixelProbe? {
+        if let cached = cache.object(forKey: image) {
+            return cached
+        }
+        guard let probe = XomoVisiblePixelProbe(cgImage: cgImage) else {
+            return nil
+        }
+        cache.setObject(probe, forKey: image, cost: probe.alpha.count)
+        return probe
+    }
+}
+
+@MainActor
 private extension NSImage {
     func hasVisiblePixel(at point: CGPoint, alphaThreshold: UInt8 = 8) -> Bool {
         guard let cgImage = cgImage(forProposedRect: nil, context: nil, hints: nil),
@@ -161,24 +211,14 @@ private extension NSImage {
               size.height > 0
         else { return false }
 
-        let width = cgImage.width
-        let height = cgImage.height
+        guard let probe = XomoVisiblePixelProbeCache.probe(for: self, cgImage: cgImage) else {
+            return false
+        }
+
+        let width = probe.width
+        let height = probe.height
         let x = min(max(Int((point.x / size.width * CGFloat(width)).rounded(.down)), 0), width - 1)
         let y = min(max(Int((point.y / size.height * CGFloat(height)).rounded(.down)), 0), height - 1)
-        let bytesPerRow = width * 4
-        var pixels = [UInt8](repeating: 0, count: bytesPerRow * height)
-        guard let context = CGContext(
-            data: &pixels,
-            width: width,
-            height: height,
-            bitsPerComponent: 8,
-            bytesPerRow: bytesPerRow,
-            space: CGColorSpaceCreateDeviceRGB(),
-            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
-        ) else { return false }
-
-        context.interpolationQuality = .none
-        context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
-        return pixels[y * bytesPerRow + x * 4 + 3] > alphaThreshold
+        return probe.alpha[y * width + x] > alphaThreshold
     }
 }

@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc130 - 2026-07-16
+
+### Fixed
+- 组件对象命中判断缓存上层图像的 alpha 探针，重复点击不再重复分配整张 RGBA 缓冲区，同时保持透明孔洞透传和真实覆盖层遮挡。
+
+### Verification
+- `XomoCanvasObjectTests` 18/18、`XomoLeftSidebarTests` 42/42 通过；项目加载主题上下文的编译修复也纳入本次回归。
+
 ## 2.12.0-rc129 - 2026-07-16
 
 ### Added

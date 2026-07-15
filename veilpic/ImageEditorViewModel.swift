@@ -742,6 +742,17 @@ final class ImageEditorViewModel: ObservableObject {
         xomoLocalThemeTokenSnapshot != nil
     }
 
+    /// Restores the design-asset context while opening a project. Loading a
+    /// document is not an edit, so this intentionally bypasses the theme
+    /// Undo/Redo stack and only updates the published workspace state.
+    func restoreXomoThemeContext(
+        theme: XomoComponentTheme,
+        tokenSnapshot: XomoComponentThemeTokenSnapshot?
+    ) {
+        xomoComponentTheme = theme
+        xomoLocalThemeTokenSnapshot = tokenSnapshot
+    }
+
     private var currentXomoThemeUndoState: ImageEditorXomoThemeUndoState {
         ImageEditorXomoThemeUndoState(
             theme: xomoComponentTheme,

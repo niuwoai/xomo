@@ -1,0 +1,19 @@
+{
+  "version": "2.12.0-rc130",
+  "date": "2026-07-16",
+  "suites": [
+    {
+      "name": "XomoCanvasObjectTests",
+      "passed": 18,
+      "failed": 0,
+      "total": 18
+    }
+  ],
+  "result": "passed",
+  "coverage": [
+    "component-hit-testing",
+    "transparent-layer-occlusion",
+    "transparent-pixel-hole-occlusion",
+    "repeated-alpha-probe"
+  ]
+}
