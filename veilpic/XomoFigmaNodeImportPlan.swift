@@ -77,6 +77,16 @@ struct XomoFigmaPlanLinearGradient: Equatable, Sendable {
     var colorStops: [XomoFigmaPlanGradientStop]
 }
 
+struct XomoFigmaPlanRadialGradient: Equatable, Sendable {
+    var startColor: XomoFigmaPlanColor
+    var endColor: XomoFigmaPlanColor
+    var scale: Double
+    var centerX: Double
+    var centerY: Double
+    var opacity: Double
+    var colorStops: [XomoFigmaPlanGradientStop]
+}
+
 struct XomoFigmaPlanSize: Equatable, Sendable {
     var width: Double
     var height: Double
@@ -151,6 +161,7 @@ struct XomoFigmaNodeImportItem: Equatable, Identifiable, Sendable {
     var isVisible: Bool
     var solidFill: XomoFigmaPlanColor?
     var linearGradientFill: XomoFigmaPlanLinearGradient? = nil
+    var radialGradientFill: XomoFigmaPlanRadialGradient? = nil
     var solidStroke: XomoFigmaPlanColor?
     var strokeWeight: Double?
     var cornerRadius: Double?
