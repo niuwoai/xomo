@@ -236,6 +236,127 @@ struct ImageEditorShapeStyleTests {
         #expect(viewModel.document.selectedLayer?.shapeContent?.fillGradientCenter == CGPoint(x: 0.5, y: 0.5))
     }
 
+    @Test func canvasGradientStopProjectsOntoAxisAndCommitsOneUndoStep() throws {
+        let gradient = ImageEditorGradientFillContent.shapeLinear(colorStops: [
+            ImageEditorGradientColorStop(position: 0, color: .systemRed),
+            ImageEditorGradientColorStop(position: 0.25, color: .systemGreen),
+            ImageEditorGradientColorStop(position: 1, color: .systemBlue)
+        ])
+        let content = ImageEditorShapeContent(
+            kind: .rectangle,
+            fillColor: .clear,
+            fillGradient: gradient,
+            fillOpacity: 1,
+            strokeColor: .clear,
+            strokeWidth: 1,
+            strokeOpacity: 0
+        )
+        let imageSize = CGSize(width: 100, height: 50)
+        let layerFrame = CGRect(x: 10, y: 20, width: 200, height: 100)
+        let handles = ImageEditorShapeGradientGeometry.canvasStopHandlePoints(
+            content: content,
+            imageSize: imageSize,
+            layerFrame: layerFrame
+        )
+        #expect(handles.count == 1)
+        #expect(handles[0].index == 1)
+        #expect(abs(handles[0].canvasPoint.x - 60) < 0.001)
+        #expect(abs(handles[0].canvasPoint.y - 70) < 0.001)
+
+        let projected = try #require(
+            ImageEditorShapeGradientGeometry.updatedContent(
+                from: content,
+                imageSize: imageSize,
+                layerFrame: layerFrame,
+                movingStopAt: 1,
+                to: CGPoint(x: 160, y: 500)
+            )
+        )
+        #expect(abs((projected.fillGradient?.shapeColorStops[1].position ?? 0) - 0.75) < 0.001)
+        let projectedAxis = try #require(
+            ImageEditorShapeGradientGeometry.canvasHandlePoints(
+                content: projected,
+                imageSize: imageSize,
+                layerFrame: layerFrame
+            )
+        )
+        #expect(abs(projectedAxis.start.x - 10) < 0.001)
+        #expect(abs(projectedAxis.end.x - 210) < 0.001)
+
+        var reversedContent = content
+        reversedContent.fillGradient?.reverse = true
+        let reversedHandles = ImageEditorShapeGradientGeometry.canvasStopHandlePoints(
+            content: reversedContent,
+            imageSize: imageSize,
+            layerFrame: layerFrame
+        )
+        #expect(abs((reversedHandles.first?.canvasPoint.x ?? 0) - 160) < 0.001)
+        let reversedMoved = try #require(
+            ImageEditorShapeGradientGeometry.updatedContent(
+                from: reversedContent,
+                imageSize: imageSize,
+                layerFrame: layerFrame,
+                movingStopAt: 1,
+                to: CGPoint(x: 60, y: 70)
+            )
+        )
+        #expect(abs((reversedMoved.fillGradient?.shapeColorStops[1].position ?? 0) - 0.75) < 0.001)
+
+        let viewModel = makeViewModel()
+        viewModel.drawShape(
+            from: CGPoint(x: 10, y: 10),
+            to: CGPoint(x: 110, y: 60),
+            ellipse: false,
+            fillGradient: gradient
+        )
+        let historyCount = viewModel.document.history.count
+        let originalPosition = viewModel.selectedShapeGradientColorStops[1].position
+        let canvasStops = viewModel.selectedShapeGradientCanvasStopHandlePoints
+        let axis = try #require(viewModel.selectedShapeGradientCanvasHandlePoints)
+        #expect(viewModel.beginEditingSelectedShapeGradientStop(at: 1))
+        viewModel.updateSelectedShapeGradientStop(
+            to: CGPoint(
+                x: axis.start.x + (axis.end.x - axis.start.x) * 0.7,
+                y: axis.start.y + (axis.end.y - axis.start.y) * 0.7
+            )
+        )
+        viewModel.finishEditingSelectedShapeGradient()
+        #expect(canvasStops.count == 1)
+        #expect(abs(viewModel.selectedShapeGradientColorStops[1].position - 0.7) < 0.001)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        viewModel.undo()
+        #expect(abs(viewModel.selectedShapeGradientColorStops[1].position - originalPosition) < 0.001)
+
+        let noOpHistoryCount = viewModel.document.history.count
+        let noOpPoint = try #require(viewModel.selectedShapeGradientCanvasStopHandlePoints.first)
+        #expect(viewModel.beginEditingSelectedShapeGradientStop(at: noOpPoint.index))
+        viewModel.updateSelectedShapeGradientStop(to: noOpPoint.canvasPoint)
+        viewModel.finishEditingSelectedShapeGradient()
+        #expect(viewModel.document.history.count == noOpHistoryCount)
+    }
+
+    @Test func lockedShapeRejectsCanvasGradientStopDrag() throws {
+        let viewModel = makeViewModel()
+        viewModel.drawShape(
+            from: CGPoint(x: 10, y: 10),
+            to: CGPoint(x: 110, y: 60),
+            ellipse: false,
+            fillGradient: .shapeLinear(colorStops: [
+                ImageEditorGradientColorStop(position: 0, color: .systemRed),
+                ImageEditorGradientColorStop(position: 0.5, color: .systemGreen),
+                ImageEditorGradientColorStop(position: 1, color: .systemBlue)
+            ])
+        )
+        let selectedID = try #require(viewModel.document.selectedLayerID)
+        let index = try #require(viewModel.document.layers.firstIndex { $0.id == selectedID })
+        viewModel.document.layers[index].isLocked = true
+        let historyCount = viewModel.document.history.count
+
+        #expect(!viewModel.beginEditingSelectedShapeGradientStop(at: 1))
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.selectedShapeGradientColorStops[1].position == 0.5)
+    }
+
     @Test func fillAndStrokeRenderAsIndependentEditableProperties() throws {
         let image = ImageEditorShapeContent(
             kind: .rectangle,
@@ -350,6 +471,14 @@ struct ImageEditorShapeStyleTests {
             #expect(source.contains(identifier))
         }
         #expect(source.components(separatedBy: ".focusable(false)").count - 1 >= 10)
+
+        let canvasSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        #expect(canvasSource.contains("image-editor-shape-gradient-canvas-stop-"))
+        #expect(canvasSource.contains("beginEditingSelectedShapeGradientStop"))
+        #expect(canvasSource.contains("activeShapeGradientStopIndex"))
     }
 
     private func makeViewModel() -> ImageEditorViewModel {

@@ -315,6 +315,7 @@ final class ImageEditorViewModel: ObservableObject {
     var rotatingLayerDidChange = false
     var editingShapeGradientLayerID: UUID?
     var editingShapeGradientOriginalContent: ImageEditorShapeContent?
+    var editingShapeGradientStopIndex: Int?
     var editingShapeGradientDidChange = false
     var copiedLayerStyle: ImageEditorLayerStyle?
     var copiedLayerStyleSourceID: UUID?
