@@ -313,6 +313,9 @@ final class ImageEditorViewModel: ObservableObject {
     var rotatingOriginalTransformFrame: CGRect?
     var rotatingStartAngleDegrees: CGFloat = 0
     var rotatingLayerDidChange = false
+    var editingShapeGradientLayerID: UUID?
+    var editingShapeGradientOriginalContent: ImageEditorShapeContent?
+    var editingShapeGradientDidChange = false
     var copiedLayerStyle: ImageEditorLayerStyle?
     var copiedLayerStyleSourceID: UUID?
     private var cloneStampAlignedCanvasOffset: CGSize?
@@ -4158,6 +4161,7 @@ final class ImageEditorViewModel: ObservableObject {
         cornerSmoothing: Double? = nil,
         fillColor: NSColor? = nil,
         fillGradient: ImageEditorGradientFillContent? = nil,
+        fillGradientCenter: CGPoint? = nil,
         fillOpacity: Double? = nil,
         strokeColor: NSColor? = nil,
         strokeOpacity: Double? = nil,
@@ -4178,6 +4182,7 @@ final class ImageEditorViewModel: ObservableObject {
             cornerSmoothing: cornerSmoothing,
             fillColor: fillColor,
             fillGradient: fillGradient,
+            fillGradientCenter: fillGradientCenter,
             fillOpacity: fillOpacity,
             strokeColor: strokeColor,
             strokeOpacity: strokeOpacity,
@@ -6224,6 +6229,7 @@ final class ImageEditorViewModel: ObservableObject {
         cornerSmoothing: Double?,
         fillColor: NSColor?,
         fillGradient: ImageEditorGradientFillContent?,
+        fillGradientCenter: CGPoint?,
         fillOpacity: Double?,
         strokeColor: NSColor?,
         strokeOpacity: Double?,
@@ -6238,6 +6244,7 @@ final class ImageEditorViewModel: ObservableObject {
             kind: kind,
             fillColor: fillColor ?? foregroundColor,
             fillGradient: fillGradient,
+            fillGradientCenter: fillGradientCenter ?? CGPoint(x: 0.5, y: 0.5),
             fillOpacity: CGFloat(clampedShapeOpacity(fillOpacity, fallback: opacity)),
             strokeColor: strokeColor ?? foregroundColor,
             strokeWidth: CGFloat(clampedShapeStrokeWidth(strokeWidth)),

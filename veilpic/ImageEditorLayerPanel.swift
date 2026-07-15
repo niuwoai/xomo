@@ -13,29 +13,15 @@ private let imageEditorLayerRowDragStride: CGFloat = 66
 
 enum ImageEditorLayerPanelTabAppearance {
     static let selectedForegroundColor = NSColor.white
-    static let foregroundColor = NSColor.white
+    static let foregroundColor = NSColor(calibratedWhite: 0.88, alpha: 1)
 
-    static func configure(_ label: NSTextField, title: String, isSelected: Bool) {
+    static func attributedTitle(_ title: String, isSelected: Bool) -> NSAttributedString {
         let color = isSelected ? selectedForegroundColor : foregroundColor
         let font = NSFont.systemFont(ofSize: 11, weight: .semibold)
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.alignment = .center
         paragraphStyle.lineBreakMode = .byClipping
-        label.appearance = NSAppearance(named: .darkAqua)
-        label.textColor = color
-        (label.cell as? NSTextFieldCell)?.textColor = color
-        label.font = font
-        label.alignment = .center
-        label.backgroundColor = .clear
-        label.isBordered = false
-        label.isBezeled = false
-        label.isEditable = false
-        label.isSelectable = false
-        label.refusesFirstResponder = true
-        label.lineBreakMode = .byClipping
-        label.maximumNumberOfLines = 1
-        label.usesSingleLineMode = true
-        label.attributedStringValue = NSAttributedString(
+        return NSAttributedString(
             string: title,
             attributes: [
                 .foregroundColor: color,
@@ -43,6 +29,39 @@ enum ImageEditorLayerPanelTabAppearance {
                 .paragraphStyle: paragraphStyle
             ]
         )
+    }
+}
+
+final class ImageEditorLayerPanelTabNativeLabel: NSView {
+    var title = "" {
+        didSet {
+            invalidateIntrinsicContentSize()
+            needsDisplay = true
+        }
+    }
+    var isSelected = false {
+        didSet { needsDisplay = true }
+    }
+
+    override var acceptsFirstResponder: Bool { false }
+
+    override var intrinsicContentSize: NSSize {
+        let size = attributedTitle.size()
+        return NSSize(width: ceil(size.width), height: max(16, ceil(size.height)))
+    }
+
+    override func draw(_ dirtyRect: NSRect) {
+        super.draw(dirtyRect)
+        let value = attributedTitle
+        let size = value.size()
+        value.draw(at: NSPoint(
+            x: max(0, (bounds.width - size.width) / 2),
+            y: max(0, (bounds.height - size.height) / 2)
+        ))
+    }
+
+    var attributedTitle: NSAttributedString {
+        ImageEditorLayerPanelTabAppearance.attributedTitle(title, isSelected: isSelected)
     }
 }
 
@@ -113,14 +132,21 @@ struct ImageEditorLayerPanelTabLabel: NSViewRepresentable {
     let title: String
     let isSelected: Bool
 
-    func makeNSView(context: Context) -> NSTextField {
-        let label = NSTextField(labelWithString: title)
-        ImageEditorLayerPanelTabAppearance.configure(label, title: title, isSelected: isSelected)
+    func makeNSView(context: Context) -> ImageEditorLayerPanelTabNativeLabel {
+        let label = ImageEditorLayerPanelTabNativeLabel()
+        configure(label)
         return label
     }
 
-    func updateNSView(_ label: NSTextField, context: Context) {
-        ImageEditorLayerPanelTabAppearance.configure(label, title: title, isSelected: isSelected)
+    func updateNSView(_ label: ImageEditorLayerPanelTabNativeLabel, context: Context) {
+        configure(label)
+    }
+
+    private func configure(_ label: ImageEditorLayerPanelTabNativeLabel) {
+        label.appearance = NSAppearance(named: .darkAqua)
+        label.identifier = NSUserInterfaceItemIdentifier("image-editor-layer-panel-native-tab-label")
+        label.title = title
+        label.isSelected = isSelected
     }
 }
 

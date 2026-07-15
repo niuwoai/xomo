@@ -743,6 +743,10 @@
 "imageEditor.history.shapeCornerRadius" = "長方形の角丸を変更";
 "imageEditor.history.shapeCornerSmoothing" = "長方形のコーナースムージングを変更";
 "imageEditor.history.shapeStyle" = "シェイプの外観を変更";
+"imageEditor.history.shapeGradientHandle" = "シェイプのグラデーションを調整";
+"imageEditor.status.shapeGradientHandleMoved" = "シェイプのグラデーションを調整中";
+"imageEditor.help.shapeGradientHandle.start" = "グラデーションの始点をドラッグします。Shift キーで角度をスナップします";
+"imageEditor.help.shapeGradientHandle.end" = "グラデーションの終点をドラッグします。Shift キーで角度をスナップします";
 "imageEditor.status.stackLayoutApplied" = "オートレイアウトを再配置しました";
 "imageEditor.status.stackChildLayoutApplied" = "オートレイアウトの子要素を再配置しました";
 "imageEditor.status.stackLayoutLocked" = "ロック中のグループまたは子要素は再配置できません";

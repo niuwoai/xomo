@@ -743,6 +743,10 @@
 "imageEditor.history.shapeCornerRadius" = "Update Rectangle Corner Radius";
 "imageEditor.history.shapeCornerSmoothing" = "Update Rectangle Corner Smoothing";
 "imageEditor.history.shapeStyle" = "Update Shape Appearance";
+"imageEditor.history.shapeGradientHandle" = "Adjust Shape Gradient";
+"imageEditor.status.shapeGradientHandleMoved" = "Adjusting shape gradient";
+"imageEditor.help.shapeGradientHandle.start" = "Drag the gradient start; hold Shift to snap the angle";
+"imageEditor.help.shapeGradientHandle.end" = "Drag the gradient end; hold Shift to snap the angle";
 "imageEditor.status.stackLayoutApplied" = "Auto Layout reflowed";
 "imageEditor.status.stackChildLayoutApplied" = "Auto Layout child reflowed";
 "imageEditor.status.stackLayoutLocked" = "A locked group or child cannot be reflowed";

@@ -625,6 +625,7 @@ struct ImageEditorProjectShapeContent: Equatable, Codable {
     var kind: ImageEditorShapeKind
     var fillColor: ImageEditorProjectColor
     var fillGradient: ImageEditorGradientFillContent?
+    var fillGradientCenter: CGPoint?
     var fillOpacity: CGFloat
     var strokeColor: ImageEditorProjectColor
     var strokeWidth: CGFloat
@@ -641,6 +642,7 @@ struct ImageEditorProjectShapeContent: Equatable, Codable {
         kind = content.kind
         fillColor = ImageEditorProjectColor(color: content.fillColor)
         fillGradient = content.fillGradient
+        fillGradientCenter = content.fillGradientCenter
         fillOpacity = content.fillOpacity
         strokeColor = ImageEditorProjectColor(color: content.strokeColor)
         strokeWidth = content.strokeWidth
@@ -659,6 +661,7 @@ struct ImageEditorProjectShapeContent: Equatable, Codable {
             kind: kind,
             fillColor: fillColor.nsColor,
             fillGradient: fillGradient,
+            fillGradientCenter: fillGradientCenter ?? CGPoint(x: 0.5, y: 0.5),
             fillOpacity: fillOpacity,
             strokeColor: strokeColor.nsColor,
             strokeWidth: strokeWidth,

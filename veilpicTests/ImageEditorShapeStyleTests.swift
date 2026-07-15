@@ -78,6 +78,74 @@ struct ImageEditorShapeStyleTests {
         #expect(reopened.document.selectedLayer?.shapeContent?.fillGradient == gradient)
     }
 
+    @Test func gradientHandlesKeepOppositeEndpointFixedAndCommitOneUndoStep() throws {
+        let imageSize = CGSize(width: 100, height: 50)
+        let layerFrame = CGRect(x: 10, y: 20, width: 200, height: 100)
+        let original = ImageEditorShapeContent(
+            kind: .rectangle,
+            fillColor: .clear,
+            fillGradient: .shapeLinear(startColor: .systemRed, endColor: .systemBlue),
+            fillOpacity: 1,
+            strokeColor: .clear,
+            strokeWidth: 1,
+            strokeOpacity: 0
+        )
+        let originalPoints = try #require(
+            ImageEditorShapeGradientGeometry.canvasHandlePoints(
+                content: original,
+                imageSize: imageSize,
+                layerFrame: layerFrame
+            )
+        )
+        #expect(abs(originalPoints.start.x - 10) < 0.001)
+        #expect(abs(originalPoints.end.x - 210) < 0.001)
+
+        let updated = try #require(
+            ImageEditorShapeGradientGeometry.updatedContent(
+                from: original,
+                imageSize: imageSize,
+                layerFrame: layerFrame,
+                moving: .end,
+                to: CGPoint(x: 310, y: 70),
+                snappingAngle: false
+            )
+        )
+        let updatedPoints = try #require(
+            ImageEditorShapeGradientGeometry.canvasHandlePoints(
+                content: updated,
+                imageSize: imageSize,
+                layerFrame: layerFrame
+            )
+        )
+        #expect(abs(updatedPoints.start.x - originalPoints.start.x) < 0.001)
+        #expect(abs(updatedPoints.end.x - 310) < 0.001)
+        #expect(abs(updated.fillGradientCenter.x - 0.75) < 0.001)
+        #expect(abs((updated.fillGradient?.scale ?? 0) - 1.5) < 0.001)
+
+        let viewModel = makeViewModel()
+        viewModel.drawShape(
+            from: CGPoint(x: 10, y: 10),
+            to: CGPoint(x: 90, y: 60),
+            ellipse: false,
+            fillGradient: .shapeLinear(startColor: .systemRed, endColor: .systemBlue)
+        )
+        let historyCount = viewModel.document.history.count
+        viewModel.document.selectedLayerIDs = []
+        #expect(viewModel.selectedShapeGradientCanvasHandlePoints != nil)
+        #expect(viewModel.beginEditingSelectedShapeGradient(handle: .end))
+        let points = try #require(viewModel.selectedShapeGradientCanvasHandlePoints)
+        viewModel.updateSelectedShapeGradient(
+            handle: .end,
+            to: CGPoint(x: points.end.x + 20, y: points.end.y),
+            snappingAngle: false
+        )
+        viewModel.finishEditingSelectedShapeGradient()
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayer?.shapeContent?.fillGradientCenter.x != 0.5)
+        viewModel.undo()
+        #expect(viewModel.document.selectedLayer?.shapeContent?.fillGradientCenter == CGPoint(x: 0.5, y: 0.5))
+    }
+
     @Test func fillAndStrokeRenderAsIndependentEditableProperties() throws {
         let image = ImageEditorShapeContent(
             kind: .rectangle,

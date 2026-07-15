@@ -173,6 +173,7 @@ extension ImageEditorViewModel {
     func updateSelectedShapeProperties(
         fillColor: NSColor? = nil,
         fillGradient: ImageEditorGradientFillContent? = nil,
+        fillGradientCenter: CGPoint? = nil,
         clearsFillGradient: Bool = false,
         fillOpacity: Double? = nil,
         strokeColor: NSColor? = nil,
@@ -207,6 +208,9 @@ extension ImageEditorViewModel {
             } else if var fillGradient {
                 fillGradient.style = .linear
                 content.fillGradient = fillGradient.normalized()
+            }
+            if let fillGradientCenter {
+                content.fillGradientCenter = fillGradientCenter
             }
             if let fillOpacity, fillOpacity.isFinite {
                 content.fillOpacity = CGFloat(max(0, min(1, fillOpacity)))
@@ -252,6 +256,7 @@ extension ImageEditorViewModel {
     ) -> Bool {
         lhs.fillColor.isEqual(rhs.fillColor)
             && lhs.fillGradient == rhs.fillGradient
+            && lhs.fillGradientCenter == rhs.fillGradientCenter
             && abs(lhs.fillOpacity - rhs.fillOpacity) <= 0.000_1
             && lhs.strokeColor.isEqual(rhs.strokeColor)
             && abs(lhs.strokeOpacity - rhs.strokeOpacity) <= 0.000_1

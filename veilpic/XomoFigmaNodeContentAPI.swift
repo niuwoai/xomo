@@ -464,8 +464,6 @@ enum XomoFigmaNodeImportMapper {
         let startHandle = handles[0]
         let endHandle = handles[1]
         guard handles.allSatisfy(\.isFinite),
-              abs((startHandle.x + endHandle.x) / 2 - 0.5) <= 0.01,
-              abs((startHandle.y + endHandle.y) / 2 - 0.5) <= 0.01,
               let start = gradientStopColor(stops[0]),
               let end = gradientStopColor(stops[1]),
               abs(start.alpha - end.alpha) <= 0.001
@@ -496,6 +494,8 @@ enum XomoFigmaNodeImportMapper {
             ),
             angle: angle,
             scale: scale,
+            centerX: (startHandle.x + endHandle.x) / 2,
+            centerY: (startHandle.y + endHandle.y) / 2,
             opacity: start.alpha * paintOpacity
         )
     }

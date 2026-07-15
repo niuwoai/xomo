@@ -406,6 +406,9 @@ enum XomoFigmaNodeMaterializer {
             kind: kind,
             fillColor: fill,
             fillGradient: gradient,
+            fillGradientCenter: item.linearGradientFill.map {
+                CGPoint(x: $0.centerX, y: $0.centerY)
+            } ?? CGPoint(x: 0.5, y: 0.5),
             fillOpacity: item.linearGradientFill.map { CGFloat($0.opacity) }
                 ?? item.solidFill.map { CGFloat($0.alpha) }
                 ?? 0,

@@ -43,6 +43,7 @@ struct ImageEditorView: View {
     @State private var lastMoveTranslation: CGSize = .zero
     @State private var isObjectMoveGestureActive = false
     @State private var activeResizeHandle: ImageEditorLayerResizeHandle?
+    @State private var activeShapeGradientHandle: ImageEditorShapeGradientHandle?
     @State private var isRotatingLayer = false
     @State private var isMovingPathAnchor = false
     @State private var activeGuideDrag: ImageEditorGuideDrag?
@@ -1126,12 +1127,14 @@ struct ImageEditorView: View {
                     colorSamplerOverlay(in: geometry.size)
                     sampledBrushSourceOverlay(in: geometry.size)
                     layerTransformOverlay(in: geometry.size)
+                    shapeGradientControlOverlay(in: geometry.size)
                     textBoxOverflowOverlay(in: geometry.size)
                     dragOverlay(in: geometry.size)
                     rulerOverlay(in: geometry.size)
                     canvasTextEditingOverlay(in: geometry.size)
                 }
                 .contentShape(Rectangle())
+                .coordinateSpace(name: "image-editor-canvas-space")
                 .gesture(canvasGesture(in: geometry.size))
                 .accessibilityElement(children: .contain)
                 .accessibilityIdentifier("image-editor-canvas")
@@ -3532,6 +3535,103 @@ struct ImageEditorView: View {
                 rotateHandleView(in: rect, canvasSize: size)
             }
         }
+    }
+
+    @ViewBuilder
+    private func shapeGradientControlOverlay(in size: CGSize) -> some View {
+        if viewModel.selectedTool == .move,
+           viewModel.document.areExtrasVisible,
+           let points = viewModel.selectedShapeGradientCanvasHandlePoints {
+            let start = viewPoint(from: points.start, in: size)
+            let end = viewPoint(from: points.end, in: size)
+            ZStack {
+                Path { path in
+                    path.move(to: start)
+                    path.addLine(to: end)
+                }
+                .stroke(
+                    Color.gray.opacity(0.76),
+                    style: StrokeStyle(lineWidth: 1.25, dash: [5, 4])
+                )
+                .allowsHitTesting(false)
+
+                ForEach(ImageEditorShapeGradientHandle.allCases) { handle in
+                    shapeGradientHandleView(
+                        handle: handle,
+                        position: handle == .start ? start : end,
+                        canvasSize: size
+                    )
+                }
+            }
+        }
+    }
+
+    private func shapeGradientHandleView(
+        handle: ImageEditorShapeGradientHandle,
+        position: CGPoint,
+        canvasSize: CGSize
+    ) -> some View {
+        Circle()
+            .fill(shapeGradientHandleColor(handle))
+            .overlay {
+                Circle()
+                    .stroke(Color.white.opacity(0.96), lineWidth: 1.5)
+                Circle()
+                    .stroke(Color.black.opacity(0.62), lineWidth: 0.5)
+                    .padding(-1)
+            }
+            .frame(width: 12, height: 12)
+            .position(position)
+            .contentShape(Circle().inset(by: -6))
+            .highPriorityGesture(
+                DragGesture(
+                    minimumDistance: 0,
+                    coordinateSpace: .named("image-editor-canvas-space")
+                )
+                .onChanged { value in
+                    if activeShapeGradientHandle == nil,
+                       viewModel.beginEditingSelectedShapeGradient(handle: handle) {
+                        activeShapeGradientHandle = handle
+                    }
+                    guard activeShapeGradientHandle == handle else { return }
+                    viewModel.updateSelectedShapeGradient(
+                        handle: handle,
+                        to: unboundedImagePoint(from: value.location, in: canvasSize),
+                        snappingAngle: NSEvent.modifierFlags.contains(.shift)
+                    )
+                }
+                .onEnded { value in
+                    guard activeShapeGradientHandle == handle else { return }
+                    viewModel.updateSelectedShapeGradient(
+                        handle: handle,
+                        to: unboundedImagePoint(from: value.location, in: canvasSize),
+                        snappingAngle: NSEvent.modifierFlags.contains(.shift)
+                    )
+                    viewModel.finishEditingSelectedShapeGradient()
+                    activeShapeGradientHandle = nil
+                }
+            )
+            .opacity(viewModel.canEditSelectedShapeGradient ? 1 : 0.55)
+            .help(L10n.text("imageEditor.help.shapeGradientHandle.\(handle.rawValue)"))
+            .accessibilityIdentifier("image-editor-shape-gradient-handle-\(handle.rawValue)")
+    }
+
+    private func shapeGradientHandleColor(_ handle: ImageEditorShapeGradientHandle) -> Color {
+        guard let gradient = viewModel.document.selectedLayer?.shapeContent?.fillGradient else {
+            return Color.gray
+        }
+        let colors = gradient.colors()
+        let value: SIMD3<Double>
+        if gradient.reverse {
+            value = handle == .start ? colors.end : colors.start
+        } else {
+            value = handle == .start ? colors.start : colors.end
+        }
+        return Color(
+            red: value.x,
+            green: value.y,
+            blue: value.z
+        )
     }
 
     @ViewBuilder
