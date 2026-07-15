@@ -1,8 +1,10 @@
 # 像界（Xomo）产品概览
 
-> 最后更新：2026-07-15 | 当前版本：v2.12.0-rc80
+> 最后更新：2026-07-15 | 当前版本：v2.12.0-rc81
 
 ## 产品定位
+
+v2.12.0-rc81 清理 rc80 通用 Release 暴露的最后一处 Swift 6 actor-isolation 预警。Figma 渐变色标与 RGBA 响应模型现在是明确的 `nonisolated + Sendable` 值类型，色标归一化可在后台任务直接运行；网络客户端仍留在主线程边界，线性/径向渐变的颜色、透明度、位置校验与导入结果不变。新增测试从 detached task 真实调用纯函数，并拒绝 NaN 位置和越界通道；Figma 节点导入 19/19、CLI 2/2 与双架构 Release 通过，quiet 编译阶段不再输出 Swift warning。
 
 v2.12.0-rc80 将右侧图层、导航器、历史、滤镜与属性面板的标题切换为原生 AppKit 富文本绘制，直接锁定纯白字色、深色外观与不可聚焦状态，避免标题在 SwiftUI 按钮的 tint、按压或焦点环境中再次变黑。第 80 个小版本门禁完成：标题专项 8/8、全量隔离测试 866/866、CLI 2/2、双架构 Release App/CLI、签名和安装版启动均通过；真实切换图层与通道页确认标题保持纯白，`/Applications/Xomo.app` 已覆盖为 rc80。Release 暴露的一处 Figma 渐变色标纯函数 actor-isolation 预警留给 rc81 独立清理，避免全量测试后变更实现。
 

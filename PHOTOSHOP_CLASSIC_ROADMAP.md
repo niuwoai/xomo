@@ -1,6 +1,6 @@
 # Xomo 经典 Photoshop 能力路线图
 
-> 最后更新：2026-07-15 ｜ 当前版本：v2.12.0-rc80 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座
+> 最后更新：2026-07-15 ｜ 当前版本：v2.12.0-rc81 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座
 
 ## 1. 范围原则
 
@@ -225,4 +225,6 @@
 - `v2.12.0-rc79` 验证：形状样式 16/16、三语资源 4/4、CLI 2/2 与隔离 Debug 测试产品构建通过；Debug App 版本、Bundle ID、macOS 13.0 下限和 arm64 架构核对通过。
 - `v2.12.0-rc80`：右侧图层、导航器、历史、滤镜与属性面板标题改为原生 AppKit 富文本标签，直接绘制纯白文字并拒绝焦点，隔离 SwiftUI 按钮状态对深色界面文字颜色的干扰。
 - `v2.12.0-rc80` 验证：标题专项 8/8、全量隔离测试 866/866、CLI 2/2、arm64/x86_64 通用 Release App 与 CLI、版本/Bundle ID/macOS 13.0/签名核对均通过；真实切换图层与通道页确认标题保持纯白，已覆盖安装 `/Applications/Xomo.app`。
-- 下一小版本：清理 rc80 Release 暴露的 Figma 渐变色标纯函数 actor-isolation 预警，并保持导入结果不变。
+- `v2.12.0-rc81`：Figma 渐变色标与 RGBA 响应值明确为 `nonisolated + Sendable`，色标归一化可在后台任务执行，清除 rc80 Release 的 Swift 6 actor-isolation 预警且不改变映射结果。
+- `v2.12.0-rc81` 验证：detached 色标纯函数、完整 Figma 节点导入 19/19、CLI 2/2 与双架构 Release 通过；quiet 编译阶段无 Swift warning，版本、Bundle ID、macOS 13.0 下限和双架构核对通过。
+- 下一小版本：继续补齐经典图像编辑与现代设计导入的窄路径能力，保持每版可用、可撤销、可测试。
