@@ -1,6 +1,6 @@
 # 像界（Xomo）UI 设计能力路线图
 
-> 最后更新：2026-07-15 ｜ 当前版本：v2.12.0-rc89 ｜ 状态：Figma 水平 Auto Layout Wrap 与文字 Baseline 可原生编辑
+> 最后更新：2026-07-15 ｜ 当前版本：v2.12.0-rc90 ｜ 状态：Figma 水平 Auto Layout Wrap 与文字 Baseline 可原生编辑
 
 ## 1. 产品结论
 

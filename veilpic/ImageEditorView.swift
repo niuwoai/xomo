@@ -2019,7 +2019,12 @@ struct ImageEditorView: View {
     }
 
     private var canvasCursorTool: ImageEditorTool {
-        isSpacebarPanning || isCanvasPanGestureActive ? .hand : canvasInteractionTool
+        ImageEditorCanvasCursor.tool(
+            for: viewModel.selectedLeftSidebarTab,
+            selectedTool: viewModel.selectedTool,
+            isSpacebarPanning: isSpacebarPanning,
+            isCanvasPanGestureActive: isCanvasPanGestureActive
+        )
     }
 
     private var canvasInteractionTool: ImageEditorTool {
@@ -6384,12 +6389,27 @@ enum ImageEditorCanvasCursorFamily: Equatable {
     case textInsertion
     case brushFootprint
     case precisionCrosshair
+    case paintBucket
+    case eyedropper
+    case samplingScope
     case vectorPen
     case zoomMagnifier
 }
 
 enum ImageEditorCanvasCursor {
     private static var cursorCache: [String: NSCursor] = [:]
+
+    static func tool(
+        for sidebarTab: XomoLeftSidebarTab,
+        selectedTool: ImageEditorTool,
+        isSpacebarPanning: Bool,
+        isCanvasPanGestureActive: Bool
+    ) -> ImageEditorTool {
+        if isSpacebarPanning || isCanvasPanGestureActive {
+            return .hand
+        }
+        return sidebarTab == .components ? .move : selectedTool
+    }
 
     static func family(for tool: ImageEditorTool) -> ImageEditorCanvasCursorFamily {
         switch tool {
@@ -6402,12 +6422,17 @@ enum ImageEditorCanvasCursor {
         case .brush, .eraser, .quickSelection, .cloneStamp, .dodge, .burn, .sponge,
              .blur, .sharpen, .smudge, .healingBrush, .redEye:
             .brushFootprint
+        case .paintBucket:
+            .paintBucket
+        case .colorSampler:
+            .samplingScope
+        case .eyedropper:
+            .eyedropper
         case .pen:
             .vectorPen
         case .zoom:
             .zoomMagnifier
-        case .marquee, .lasso, .magicWand, .crop, .patchTool, .paintBucket, .gradient,
-             .eyedropper, .colorSampler, .rectangle, .ellipse:
+        case .marquee, .lasso, .magicWand, .crop, .patchTool, .gradient, .rectangle, .ellipse:
             .precisionCrosshair
         }
     }
@@ -6427,6 +6452,12 @@ enum ImageEditorCanvasCursor {
             return .iBeam
         case .brushFootprint:
             return brushCursor(diameter: brushDiameter, symbolName: tool.symbolName)
+        case .paintBucket:
+            return paintBucketCursor()
+        case .eyedropper:
+            return .crosshair
+        case .samplingScope:
+            return samplingScopeCursor()
         case .vectorPen:
             return penCursor(isClosing: penIsClosing)
         case .precisionCrosshair:
@@ -6509,6 +6540,99 @@ enum ImageEditorCanvasCursor {
         cross.lineWidth = 1.25
         cross.stroke()
         drawSymbolBadge(named: symbolName, origin: NSPoint(x: 17, y: 17))
+        image.unlockFocus()
+        return cache(
+            NSCursor(image: image, hotSpot: NSPoint(x: center.x, y: side - center.y)),
+            for: cacheKey
+        )
+    }
+
+    private static func paintBucketCursor() -> NSCursor {
+        let cacheKey = "paint-bucket"
+        if let cachedCursor = cursorCache[cacheKey] {
+            return cachedCursor
+        }
+
+        let side: CGFloat = 36
+        let image = NSImage(size: NSSize(width: side, height: side))
+        image.lockFocus()
+
+        let bucket = NSBezierPath()
+        bucket.move(to: NSPoint(x: 8, y: 8))
+        bucket.line(to: NSPoint(x: 27, y: 8))
+        bucket.line(to: NSPoint(x: 23, y: 24))
+        bucket.curve(
+            to: NSPoint(x: 12, y: 24),
+            controlPoint1: NSPoint(x: 21, y: 27),
+            controlPoint2: NSPoint(x: 14, y: 27)
+        )
+        bucket.close()
+        NSColor.black.withAlphaComponent(0.92).setStroke()
+        bucket.lineWidth = 3.5
+        bucket.stroke()
+        NSColor.white.withAlphaComponent(0.96).setFill()
+        bucket.fill()
+
+        let handle = NSBezierPath()
+        handle.move(to: NSPoint(x: 11, y: 23))
+        handle.curve(
+            to: NSPoint(x: 27, y: 27),
+            controlPoint1: NSPoint(x: 13, y: 31),
+            controlPoint2: NSPoint(x: 24, y: 32)
+        )
+        NSColor.black.withAlphaComponent(0.92).setStroke()
+        handle.lineWidth = 3
+        handle.stroke()
+        NSColor.white.withAlphaComponent(0.92).setStroke()
+        handle.lineWidth = 1
+        handle.stroke()
+
+        let drop = NSBezierPath(ovalIn: NSRect(x: 24, y: 3, width: 7, height: 9))
+        NSColor.systemBlue.setFill()
+        drop.fill()
+        NSColor.white.setStroke()
+        drop.lineWidth = 1
+        drop.stroke()
+
+        image.unlockFocus()
+        return cache(
+            NSCursor(image: image, hotSpot: NSPoint(x: 6, y: side - 6)),
+            for: cacheKey
+        )
+    }
+
+    private static func samplingScopeCursor() -> NSCursor {
+        let cacheKey = "sampling-scope"
+        if let cachedCursor = cursorCache[cacheKey] {
+            return cachedCursor
+        }
+
+        let side: CGFloat = 32
+        let image = NSImage(size: NSSize(width: side, height: side))
+        image.lockFocus()
+        let center = NSPoint(x: 10, y: 10)
+        let ring = NSBezierPath(ovalIn: NSRect(x: 3, y: 3, width: 14, height: 14))
+        NSColor.black.withAlphaComponent(0.92).setStroke()
+        ring.lineWidth = 4
+        ring.stroke()
+        NSColor.white.withAlphaComponent(0.96).setStroke()
+        ring.lineWidth = 1.5
+        ring.stroke()
+        NSColor.systemBlue.setFill()
+        NSBezierPath(ovalIn: NSRect(x: 8, y: 8, width: 4, height: 4)).fill()
+
+        let ticks = NSBezierPath()
+        ticks.move(to: NSPoint(x: 10, y: 19))
+        ticks.line(to: NSPoint(x: 10, y: 25))
+        ticks.move(to: NSPoint(x: 19, y: 10))
+        ticks.line(to: NSPoint(x: 25, y: 10))
+        NSColor.black.withAlphaComponent(0.92).setStroke()
+        ticks.lineWidth = 3
+        ticks.stroke()
+        NSColor.white.setStroke()
+        ticks.lineWidth = 1
+        ticks.stroke()
+
         image.unlockFocus()
         return cache(
             NSCursor(image: image, hotSpot: NSPoint(x: center.x, y: side - center.y)),

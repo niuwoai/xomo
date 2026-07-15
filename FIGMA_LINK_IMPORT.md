@@ -1,6 +1,6 @@
 # Xomo Figma 链接导入边界
 
-> 最后更新：2026-07-15 ｜ 当前版本：v2.12.0-rc89 ｜ 当前阶段：水平 Auto Layout Wrap 与 Baseline 映射为可编辑原生布局
+> 最后更新：2026-07-15 ｜ 当前版本：v2.12.0-rc90 ｜ 当前阶段：水平 Auto Layout Wrap 与 Baseline 映射为可编辑原生布局
 
 ## 当前已经支持
 
