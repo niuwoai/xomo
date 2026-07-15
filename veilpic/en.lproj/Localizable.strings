@@ -712,6 +712,12 @@
 "imageEditor.properties.shapeCorner.topRight" = "Top right";
 "imageEditor.properties.shapeCorner.bottomRight" = "Bottom right";
 "imageEditor.properties.shapeCorner.bottomLeft" = "Bottom left";
+"imageEditor.properties.shapeStyle" = "Shape appearance";
+"imageEditor.properties.shapeFillColor" = "Fill color";
+"imageEditor.properties.shapeFillOpacityValue" = "Fill opacity: %d%%";
+"imageEditor.properties.shapeStrokeColor" = "Stroke color";
+"imageEditor.properties.shapeStrokeOpacityValue" = "Stroke opacity: %d%%";
+"imageEditor.properties.shapeStrokeWidthValue" = "Stroke width: %d px";
 "imageEditor.stackLayout.axis.horizontal" = "Horizontal";
 "imageEditor.stackLayout.axis.vertical" = "Vertical";
 "imageEditor.stackLayout.primary.start" = "Start";
@@ -730,6 +736,7 @@
 "imageEditor.history.stackChildLayout" = "Update Auto Layout Child";
 "imageEditor.history.shapeCornerRadius" = "Update Rectangle Corner Radius";
 "imageEditor.history.shapeCornerSmoothing" = "Update Rectangle Corner Smoothing";
+"imageEditor.history.shapeStyle" = "Update Shape Appearance";
 "imageEditor.status.stackLayoutApplied" = "Auto Layout reflowed";
 "imageEditor.status.stackChildLayoutApplied" = "Auto Layout child reflowed";
 "imageEditor.status.stackLayoutLocked" = "A locked group or child cannot be reflowed";
@@ -738,6 +745,7 @@
 "imageEditor.status.shapeCornerRadiiLinked" = "Rectangle corners are linked to the top-left value";
 "imageEditor.status.shapeCornerRadiusAtCorner" = "%@ corner radius set to %d px";
 "imageEditor.status.shapeCornerSmoothing" = "Rectangle corner smoothing set to %d%%";
+"imageEditor.status.shapeStyle" = "Updated appearance for %d selected shapes";
 "imageEditor.properties.filter" = "Filter";
 "imageEditor.properties.smartFiltersEmpty" = "No smart filters on selected layer";
 "imageEditor.properties.smartFilterItem" = "%@ %d%%";

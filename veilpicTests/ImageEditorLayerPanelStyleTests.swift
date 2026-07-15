@@ -27,6 +27,9 @@ struct ImageEditorLayerPanelStyleTests {
 
         ImageEditorLayerPanelTabAppearance.configure(label, title: "通道", isSelected: false)
         let unselectedColor = label.textColor?.usingColorSpace(.deviceRGB)
+        let cellUnselectedColor = (label.cell as? NSTextFieldCell)?
+            .textColor?
+            .usingColorSpace(.deviceRGB)
         let attributedUnselectedColor = label.attributedStringValue.attribute(
             .foregroundColor,
             at: 0,
@@ -38,6 +41,7 @@ struct ImageEditorLayerPanelStyleTests {
         #expect((unselectedColor?.redComponent ?? 0) > 0.99)
         #expect((unselectedColor?.greenComponent ?? 0) > 0.99)
         #expect((unselectedColor?.blueComponent ?? 0) > 0.99)
+        #expect((cellUnselectedColor?.redComponent ?? 0) > 0.99)
         #expect(attributedUnselectedColor == ImageEditorLayerPanelTabAppearance.foregroundColor)
 
         ImageEditorLayerPanelTabAppearance.configure(label, title: "图层", isSelected: true)

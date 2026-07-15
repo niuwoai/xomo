@@ -1,0 +1,333 @@
+{
+  "generated_at": "2026-07-15 07:57:38 +0800",
+  "total": 27,
+  "passed": 27,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorVectorLayerTests",
+      "method": "imageEditorAppliesSelectedPathAsLowerLayerMask",
+      "identifier": "veilpicTests/ImageEditorVectorLayerTests/imageEditorAppliesSelectedPathAsLowerLayerMask",
+      "file": "ImageEditorVectorLayerTests.swift",
+      "passed": true,
+      "duration": 2.86,
+      "issues": [
+
+      ],
+      "log": "ImageEditorVectorLayerTests.imageEditorAppliesSelectedPathAsLowerLayerMask.log"
+    },
+    {
+      "suite": "ImageEditorVectorLayerTests",
+      "method": "imageEditorBatchUpdatesSelectedShapeLayersAndSkipsLockedOrIneligibleLayers",
+      "identifier": "veilpicTests/ImageEditorVectorLayerTests/imageEditorBatchUpdatesSelectedShapeLayersAndSkipsLockedOrIneligibleLayers",
+      "file": "ImageEditorVectorLayerTests.swift",
+      "passed": true,
+      "duration": 2.902,
+      "issues": [
+
+      ],
+      "log": "ImageEditorVectorLayerTests.imageEditorBatchUpdatesSelectedShapeLayersAndSkipsLockedOrIneligibleLayers.log"
+    },
+    {
+      "suite": "ImageEditorVectorLayerTests",
+      "method": "imageEditorBatchUpdatesSelectedTextLayersAndSkipsLockedOrIneligibleLayers",
+      "identifier": "veilpicTests/ImageEditorVectorLayerTests/imageEditorBatchUpdatesSelectedTextLayersAndSkipsLockedOrIneligibleLayers",
+      "file": "ImageEditorVectorLayerTests.swift",
+      "passed": true,
+      "duration": 3.216,
+      "issues": [
+
+      ],
+      "log": "ImageEditorVectorLayerTests.imageEditorBatchUpdatesSelectedTextLayersAndSkipsLockedOrIneligibleLayers.log"
+    },
+    {
+      "suite": "ImageEditorVectorLayerTests",
+      "method": "imageEditorCopiesVectorMaskToSelectedLayersWithScaledPath",
+      "identifier": "veilpicTests/ImageEditorVectorLayerTests/imageEditorCopiesVectorMaskToSelectedLayersWithScaledPath",
+      "file": "ImageEditorVectorLayerTests.swift",
+      "passed": true,
+      "duration": 2.89,
+      "issues": [
+
+      ],
+      "log": "ImageEditorVectorLayerTests.imageEditorCopiesVectorMaskToSelectedLayersWithScaledPath.log"
+    },
+    {
+      "suite": "ImageEditorVectorLayerTests",
+      "method": "imageEditorCreatesCompoundPathLayerFromRasterSelectionIslands",
+      "identifier": "veilpicTests/ImageEditorVectorLayerTests/imageEditorCreatesCompoundPathLayerFromRasterSelectionIslands",
+      "file": "ImageEditorVectorLayerTests.swift",
+      "passed": true,
+      "duration": 3.14,
+      "issues": [
+
+      ],
+      "log": "ImageEditorVectorLayerTests.imageEditorCreatesCompoundPathLayerFromRasterSelectionIslands.log"
+    },
+    {
+      "suite": "ImageEditorVectorLayerTests",
+      "method": "imageEditorCreatesEditablePathLayerFromCurrentSelection",
+      "identifier": "veilpicTests/ImageEditorVectorLayerTests/imageEditorCreatesEditablePathLayerFromCurrentSelection",
+      "file": "ImageEditorVectorLayerTests.swift",
+      "passed": true,
+      "duration": 2.896,
+      "issues": [
+
+      ],
+      "log": "ImageEditorVectorLayerTests.imageEditorCreatesEditablePathLayerFromCurrentSelection.log"
+    },
+    {
+      "suite": "ImageEditorVectorLayerTests",
+      "method": "imageEditorCreatesEditablePathLayerFromRasterSelectionOutline",
+      "identifier": "veilpicTests/ImageEditorVectorLayerTests/imageEditorCreatesEditablePathLayerFromRasterSelectionOutline",
+      "file": "ImageEditorVectorLayerTests.swift",
+      "passed": true,
+      "duration": 2.894,
+      "issues": [
+
+      ],
+      "log": "ImageEditorVectorLayerTests.imageEditorCreatesEditablePathLayerFromRasterSelectionOutline.log"
+    },
+    {
+      "suite": "ImageEditorVectorLayerTests",
+      "method": "imageEditorCreatesVectorMaskFromCurrentSelection",
+      "identifier": "veilpicTests/ImageEditorVectorLayerTests/imageEditorCreatesVectorMaskFromCurrentSelection",
+      "file": "ImageEditorVectorLayerTests.swift",
+      "passed": true,
+      "duration": 2.897,
+      "issues": [
+
+      ],
+      "log": "ImageEditorVectorLayerTests.imageEditorCreatesVectorMaskFromCurrentSelection.log"
+    },
+    {
+      "suite": "ImageEditorVectorLayerTests",
+      "method": "imageEditorCreatesVectorMaskOnLayerGroupFromCurrentSelection",
+      "identifier": "veilpicTests/ImageEditorVectorLayerTests/imageEditorCreatesVectorMaskOnLayerGroupFromCurrentSelection",
+      "file": "ImageEditorVectorLayerTests.swift",
+      "passed": true,
+      "duration": 2.819,
+      "issues": [
+
+      ],
+      "log": "ImageEditorVectorLayerTests.imageEditorCreatesVectorMaskOnLayerGroupFromCurrentSelection.log"
+    },
+    {
+      "suite": "ImageEditorVectorLayerTests",
+      "method": "imageEditorCyclesCompoundPathSubpathSelection",
+      "identifier": "veilpicTests/ImageEditorVectorLayerTests/imageEditorCyclesCompoundPathSubpathSelection",
+      "file": "ImageEditorVectorLayerTests.swift",
+      "passed": true,
+      "duration": 2.88,
+      "issues": [
+
+      ],
+      "log": "ImageEditorVectorLayerTests.imageEditorCyclesCompoundPathSubpathSelection.log"
+    },
+    {
+      "suite": "ImageEditorVectorLayerTests",
+      "method": "imageEditorDeletesCompoundPathSubpathWithoutRemovingPrimaryPath",
+      "identifier": "veilpicTests/ImageEditorVectorLayerTests/imageEditorDeletesCompoundPathSubpathWithoutRemovingPrimaryPath",
+      "file": "ImageEditorVectorLayerTests.swift",
+      "passed": true,
+      "duration": 3.024,
+      "issues": [
+
+      ],
+      "log": "ImageEditorVectorLayerTests.imageEditorDeletesCompoundPathSubpathWithoutRemovingPrimaryPath.log"
+    },
+    {
+      "suite": "ImageEditorVectorLayerTests",
+      "method": "imageEditorDeletesSelectedPathAnchorAndOpensSmallClosedPath",
+      "identifier": "veilpicTests/ImageEditorVectorLayerTests/imageEditorDeletesSelectedPathAnchorAndOpensSmallClosedPath",
+      "file": "ImageEditorVectorLayerTests.swift",
+      "passed": true,
+      "duration": 3.028,
+      "issues": [
+
+      ],
+      "log": "ImageEditorVectorLayerTests.imageEditorDeletesSelectedPathAnchorAndOpensSmallClosedPath.log"
+    },
+    {
+      "suite": "ImageEditorVectorLayerTests",
+      "method": "imageEditorDuplicatesCompoundPathSubpathAndSelectsCopy",
+      "identifier": "veilpicTests/ImageEditorVectorLayerTests/imageEditorDuplicatesCompoundPathSubpathAndSelectsCopy",
+      "file": "ImageEditorVectorLayerTests.swift",
+      "passed": true,
+      "duration": 2.881,
+      "issues": [
+
+      ],
+      "log": "ImageEditorVectorLayerTests.imageEditorDuplicatesCompoundPathSubpathAndSelectsCopy.log"
+    },
+    {
+      "suite": "ImageEditorVectorLayerTests",
+      "method": "imageEditorFillsSelectedPathToLowerPixelLayer",
+      "identifier": "veilpicTests/ImageEditorVectorLayerTests/imageEditorFillsSelectedPathToLowerPixelLayer",
+      "file": "ImageEditorVectorLayerTests.swift",
+      "passed": true,
+      "duration": 2.91,
+      "issues": [
+
+      ],
+      "log": "ImageEditorVectorLayerTests.imageEditorFillsSelectedPathToLowerPixelLayer.log"
+    },
+    {
+      "suite": "ImageEditorVectorLayerTests",
+      "method": "imageEditorInsertsPathAnchorAndPreservesCurvedSegmentHandles",
+      "identifier": "veilpicTests/ImageEditorVectorLayerTests/imageEditorInsertsPathAnchorAndPreservesCurvedSegmentHandles",
+      "file": "ImageEditorVectorLayerTests.swift",
+      "passed": true,
+      "duration": 2.89,
+      "issues": [
+
+      ],
+      "log": "ImageEditorVectorLayerTests.imageEditorInsertsPathAnchorAndPreservesCurvedSegmentHandles.log"
+    },
+    {
+      "suite": "ImageEditorVectorLayerTests",
+      "method": "imageEditorMovesCompoundPathSubpathAnchorWithoutChangingPrimaryPath",
+      "identifier": "veilpicTests/ImageEditorVectorLayerTests/imageEditorMovesCompoundPathSubpathAnchorWithoutChangingPrimaryPath",
+      "file": "ImageEditorVectorLayerTests.swift",
+      "passed": true,
+      "duration": 3.045,
+      "issues": [
+
+      ],
+      "log": "ImageEditorVectorLayerTests.imageEditorMovesCompoundPathSubpathAnchorWithoutChangingPrimaryPath.log"
+    },
+    {
+      "suite": "ImageEditorVectorLayerTests",
+      "method": "imageEditorNudgesCompoundPathSubpathWithoutMovingPrimaryPath",
+      "identifier": "veilpicTests/ImageEditorVectorLayerTests/imageEditorNudgesCompoundPathSubpathWithoutMovingPrimaryPath",
+      "file": "ImageEditorVectorLayerTests.swift",
+      "passed": true,
+      "duration": 2.961,
+      "issues": [
+
+      ],
+      "log": "ImageEditorVectorLayerTests.imageEditorNudgesCompoundPathSubpathWithoutMovingPrimaryPath.log"
+    },
+    {
+      "suite": "ImageEditorVectorLayerTests",
+      "method": "imageEditorPenToolCreatesEditablePathShapeLayer",
+      "identifier": "veilpicTests/ImageEditorVectorLayerTests/imageEditorPenToolCreatesEditablePathShapeLayer",
+      "file": "ImageEditorVectorLayerTests.swift",
+      "passed": true,
+      "duration": 3.0,
+      "issues": [
+
+      ],
+      "log": "ImageEditorVectorLayerTests.imageEditorPenToolCreatesEditablePathShapeLayer.log"
+    },
+    {
+      "suite": "ImageEditorVectorLayerTests",
+      "method": "imageEditorRasterizesSelectedVectorMaskToLayerMask",
+      "identifier": "veilpicTests/ImageEditorVectorLayerTests/imageEditorRasterizesSelectedVectorMaskToLayerMask",
+      "file": "ImageEditorVectorLayerTests.swift",
+      "passed": true,
+      "duration": 2.819,
+      "issues": [
+
+      ],
+      "log": "ImageEditorVectorLayerTests.imageEditorRasterizesSelectedVectorMaskToLayerMask.log"
+    },
+    {
+      "suite": "ImageEditorVectorLayerTests",
+      "method": "imageEditorReversesPathDirectionAndSwapsControlHandles",
+      "identifier": "veilpicTests/ImageEditorVectorLayerTests/imageEditorReversesPathDirectionAndSwapsControlHandles",
+      "file": "ImageEditorVectorLayerTests.swift",
+      "passed": true,
+      "duration": 3.203,
+      "issues": [
+
+      ],
+      "log": "ImageEditorVectorLayerTests.imageEditorReversesPathDirectionAndSwapsControlHandles.log"
+    },
+    {
+      "suite": "ImageEditorVectorLayerTests",
+      "method": "imageEditorShapeLayerIsEditableAndRasterizesWithoutChangingComposite",
+      "identifier": "veilpicTests/ImageEditorVectorLayerTests/imageEditorShapeLayerIsEditableAndRasterizesWithoutChangingComposite",
+      "file": "ImageEditorVectorLayerTests.swift",
+      "passed": true,
+      "duration": 2.987,
+      "issues": [
+
+      ],
+      "log": "ImageEditorVectorLayerTests.imageEditorShapeLayerIsEditableAndRasterizesWithoutChangingComposite.log"
+    },
+    {
+      "suite": "ImageEditorVectorLayerTests",
+      "method": "imageEditorStrokesSelectedPathToLowerPixelLayer",
+      "identifier": "veilpicTests/ImageEditorVectorLayerTests/imageEditorStrokesSelectedPathToLowerPixelLayer",
+      "file": "ImageEditorVectorLayerTests.swift",
+      "passed": true,
+      "duration": 2.894,
+      "issues": [
+
+      ],
+      "log": "ImageEditorVectorLayerTests.imageEditorStrokesSelectedPathToLowerPixelLayer.log"
+    },
+    {
+      "suite": "ImageEditorVectorLayerTests",
+      "method": "imageEditorSymmetrizesSelectedPathAnchorHandles",
+      "identifier": "veilpicTests/ImageEditorVectorLayerTests/imageEditorSymmetrizesSelectedPathAnchorHandles",
+      "file": "ImageEditorVectorLayerTests.swift",
+      "passed": true,
+      "duration": 2.828,
+      "issues": [
+
+      ],
+      "log": "ImageEditorVectorLayerTests.imageEditorSymmetrizesSelectedPathAnchorHandles.log"
+    },
+    {
+      "suite": "ImageEditorVectorLayerTests",
+      "method": "imageEditorTextLayerIsEditableAndCanMergeDown",
+      "identifier": "veilpicTests/ImageEditorVectorLayerTests/imageEditorTextLayerIsEditableAndCanMergeDown",
+      "file": "ImageEditorVectorLayerTests.swift",
+      "passed": true,
+      "duration": 2.909,
+      "issues": [
+
+      ],
+      "log": "ImageEditorVectorLayerTests.imageEditorTextLayerIsEditableAndCanMergeDown.log"
+    },
+    {
+      "suite": "ImageEditorVectorLayerTests",
+      "method": "imageEditorTextLayerRendersUprightInAppKitCoordinates",
+      "identifier": "veilpicTests/ImageEditorVectorLayerTests/imageEditorTextLayerRendersUprightInAppKitCoordinates",
+      "file": "ImageEditorVectorLayerTests.swift",
+      "passed": true,
+      "duration": 2.914,
+      "issues": [
+
+      ],
+      "log": "ImageEditorVectorLayerTests.imageEditorTextLayerRendersUprightInAppKitCoordinates.log"
+    },
+    {
+      "suite": "ImageEditorVectorLayerTests",
+      "method": "imageEditorTogglesOpenPathClosedAndBackToOpen",
+      "identifier": "veilpicTests/ImageEditorVectorLayerTests/imageEditorTogglesOpenPathClosedAndBackToOpen",
+      "file": "ImageEditorVectorLayerTests.swift",
+      "passed": true,
+      "duration": 2.894,
+      "issues": [
+
+      ],
+      "log": "ImageEditorVectorLayerTests.imageEditorTogglesOpenPathClosedAndBackToOpen.log"
+    },
+    {
+      "suite": "ImageEditorVectorLayerTests",
+      "method": "imageEditorVectorMaskCanRoundTripThroughEditablePathLayer",
+      "identifier": "veilpicTests/ImageEditorVectorLayerTests/imageEditorVectorMaskCanRoundTripThroughEditablePathLayer",
+      "file": "ImageEditorVectorLayerTests.swift",
+      "passed": true,
+      "duration": 2.905,
+      "issues": [
+
+      ],
+      "log": "ImageEditorVectorLayerTests.imageEditorVectorMaskCanRoundTripThroughEditablePathLayer.log"
+    }
+  ]
+}

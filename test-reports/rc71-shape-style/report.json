@@ -1,0 +1,57 @@
+{
+  "generated_at": "2026-07-15 07:55:04 +0800",
+  "total": 4,
+  "passed": 4,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorShapeStyleTests",
+      "method": "appearanceEditIsOneUndoableProjectPersistentChange",
+      "identifier": "veilpicTests/ImageEditorShapeStyleTests/appearanceEditIsOneUndoableProjectPersistentChange",
+      "file": "ImageEditorShapeStyleTests.swift",
+      "passed": true,
+      "duration": 2.798,
+      "issues": [
+
+      ],
+      "log": "ImageEditorShapeStyleTests.appearanceEditIsOneUndoableProjectPersistentChange.log"
+    },
+    {
+      "suite": "ImageEditorShapeStyleTests",
+      "method": "fillAndStrokeRenderAsIndependentEditableProperties",
+      "identifier": "veilpicTests/ImageEditorShapeStyleTests/fillAndStrokeRenderAsIndependentEditableProperties",
+      "file": "ImageEditorShapeStyleTests.swift",
+      "passed": true,
+      "duration": 4.46,
+      "issues": [
+
+      ],
+      "log": "ImageEditorShapeStyleTests.fillAndStrokeRenderAsIndependentEditableProperties.log"
+    },
+    {
+      "suite": "ImageEditorShapeStyleTests",
+      "method": "lockedShapeRejectsAppearanceChanges",
+      "identifier": "veilpicTests/ImageEditorShapeStyleTests/lockedShapeRejectsAppearanceChanges",
+      "file": "ImageEditorShapeStyleTests.swift",
+      "passed": true,
+      "duration": 2.792,
+      "issues": [
+
+      ],
+      "log": "ImageEditorShapeStyleTests.lockedShapeRejectsAppearanceChanges.log"
+    },
+    {
+      "suite": "ImageEditorShapeStyleTests",
+      "method": "propertiesPanelControlsStayKeyboardNeutral",
+      "identifier": "veilpicTests/ImageEditorShapeStyleTests/propertiesPanelControlsStayKeyboardNeutral",
+      "file": "ImageEditorShapeStyleTests.swift",
+      "passed": true,
+      "duration": 2.785,
+      "issues": [
+
+      ],
+      "log": "ImageEditorShapeStyleTests.propertiesPanelControlsStayKeyboardNeutral.log"
+    }
+  ]
+}

@@ -1,0 +1,93 @@
+{
+  "generated_at": "2026-07-15 07:55:57 +0800",
+  "total": 7,
+  "passed": 7,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorLayerPanelStyleTests",
+      "method": "dockDisclosureAppliesLightTextToEveryVisibleLabel",
+      "identifier": "veilpicTests/ImageEditorLayerPanelStyleTests/dockDisclosureAppliesLightTextToEveryVisibleLabel",
+      "file": "ImageEditorLayerPanelStyleTests.swift",
+      "passed": true,
+      "duration": 2.881,
+      "issues": [
+
+      ],
+      "log": "ImageEditorLayerPanelStyleTests.dockDisclosureAppliesLightTextToEveryVisibleLabel.log"
+    },
+    {
+      "suite": "ImageEditorLayerPanelStyleTests",
+      "method": "everyLayerPanelTabUsesReadableLightText",
+      "identifier": "veilpicTests/ImageEditorLayerPanelStyleTests/everyLayerPanelTabUsesReadableLightText",
+      "file": "ImageEditorLayerPanelStyleTests.swift",
+      "passed": true,
+      "duration": 2.799,
+      "issues": [
+
+      ],
+      "log": "ImageEditorLayerPanelStyleTests.everyLayerPanelTabUsesReadableLightText.log"
+    },
+    {
+      "suite": "ImageEditorLayerPanelStyleTests",
+      "method": "layerDockTitleUsesWhiteText",
+      "identifier": "veilpicTests/ImageEditorLayerPanelStyleTests/layerDockTitleUsesWhiteText",
+      "file": "ImageEditorLayerPanelStyleTests.swift",
+      "passed": true,
+      "duration": 2.764,
+      "issues": [
+
+      ],
+      "log": "ImageEditorLayerPanelStyleTests.layerDockTitleUsesWhiteText.log"
+    },
+    {
+      "suite": "ImageEditorLayerPanelStyleTests",
+      "method": "layerPanelTitleUsesWhiteText",
+      "identifier": "veilpicTests/ImageEditorLayerPanelStyleTests/layerPanelTitleUsesWhiteText",
+      "file": "ImageEditorLayerPanelStyleTests.swift",
+      "passed": true,
+      "duration": 2.815,
+      "issues": [
+
+      ],
+      "log": "ImageEditorLayerPanelStyleTests.layerPanelTitleUsesWhiteText.log"
+    },
+    {
+      "suite": "ImageEditorLayerPanelStyleTests",
+      "method": "layerSearchFieldUsesReadableLightTextAndPlaceholder",
+      "identifier": "veilpicTests/ImageEditorLayerPanelStyleTests/layerSearchFieldUsesReadableLightTextAndPlaceholder",
+      "file": "ImageEditorLayerPanelStyleTests.swift",
+      "passed": true,
+      "duration": 2.876,
+      "issues": [
+
+      ],
+      "log": "ImageEditorLayerPanelStyleTests.layerSearchFieldUsesReadableLightTextAndPlaceholder.log"
+    },
+    {
+      "suite": "ImageEditorLayerPanelStyleTests",
+      "method": "nativeLayerSearchFieldKeepsExplicitLightPlaceholderAndInputText",
+      "identifier": "veilpicTests/ImageEditorLayerPanelStyleTests/nativeLayerSearchFieldKeepsExplicitLightPlaceholderAndInputText",
+      "file": "ImageEditorLayerPanelStyleTests.swift",
+      "passed": true,
+      "duration": 2.893,
+      "issues": [
+
+      ],
+      "log": "ImageEditorLayerPanelStyleTests.nativeLayerSearchFieldKeepsExplicitLightPlaceholderAndInputText.log"
+    },
+    {
+      "suite": "ImageEditorLayerPanelStyleTests",
+      "method": "nativeTabLabelKeepsExplicitLightTextOutsideSwiftUIButtonTinting",
+      "identifier": "veilpicTests/ImageEditorLayerPanelStyleTests/nativeTabLabelKeepsExplicitLightTextOutsideSwiftUIButtonTinting",
+      "file": "ImageEditorLayerPanelStyleTests.swift",
+      "passed": true,
+      "duration": 2.825,
+      "issues": [
+
+      ],
+      "log": "ImageEditorLayerPanelStyleTests.nativeTabLabelKeepsExplicitLightTextOutsideSwiftUIButtonTinting.log"
+    }
+  ]
+}

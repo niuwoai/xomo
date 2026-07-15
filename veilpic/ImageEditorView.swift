@@ -3928,6 +3928,11 @@ struct ImageEditorView: View {
 
                 Divider().overlay(editorBorder)
 
+                if viewModel.selectedLayerIsShape {
+                    shapeStyleControls
+                    Divider().overlay(editorBorder)
+                }
+
                 if viewModel.selectedRectangleCornerRadius != nil {
                     VStack(alignment: .leading, spacing: 8) {
                         Toggle(
