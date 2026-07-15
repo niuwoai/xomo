@@ -118,6 +118,13 @@ struct ImageEditorCanvasCursorTests {
         )
     }
 
+    @Test func zoomDirectionUsesOptionForZoomOut() {
+        #expect(ImageEditorZoomDirection.from(modifierFlags: []) == .zoomIn)
+        #expect(ImageEditorZoomDirection.from(modifierFlags: [.shift]) == .zoomIn)
+        #expect(ImageEditorZoomDirection.from(modifierFlags: [.option]) == .zoomOut)
+        #expect(ImageEditorZoomDirection.from(modifierFlags: [.option, .shift]) == .zoomOut)
+    }
+
     @Test func samplingAndPaintBucketCursorsUseDistinctSemanticShapes() {
         #expect(ImageEditorCanvasCursor.family(for: .paintBucket) == .paintBucket)
         #expect(ImageEditorCanvasCursor.family(for: .eyedropper) == .eyedropper)

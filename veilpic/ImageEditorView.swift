@@ -1860,7 +1860,12 @@ struct ImageEditorView: View {
                 case .gradient:
                     viewModel.drawGradient(from: dragStart, to: endImagePoint)
                 case .zoom:
-                    viewModel.zoomIn()
+                    switch ImageEditorZoomDirection.from(modifierFlags: canvasModifierFlags) {
+                    case .zoomIn:
+                        viewModel.zoomIn()
+                    case .zoomOut:
+                        viewModel.zoomOut()
+                    }
                 default:
                     break
                 }
@@ -6479,6 +6484,15 @@ enum ImageEditorSelectionCursorMode: String, Equatable, CaseIterable {
         default:
             return .replace
         }
+    }
+}
+
+enum ImageEditorZoomDirection: Equatable {
+    case zoomIn
+    case zoomOut
+
+    static func from(modifierFlags: NSEvent.ModifierFlags) -> Self {
+        modifierFlags.contains(.option) ? .zoomOut : .zoomIn
     }
 }
 

@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc132 - 2026-07-16
+
+### Fixed
+- 修复缩放工具 Option 减号光标与实际操作不一致的问题；现在普通点击放大，按住 Option 点击缩小。
+
+### Verification
+- `ImageEditorCanvasCursorTests` 8/8 通过，覆盖光标图像、Option 方向解析和现有工具路由。
+
 ## 2.12.0-rc131 - 2026-07-16
 
 ### Changed
