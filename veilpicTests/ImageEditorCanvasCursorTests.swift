@@ -56,11 +56,13 @@ struct ImageEditorCanvasCursorTests {
         #expect(ImageEditorCanvasCursor.family(for: .paintBucket) == .paintBucket)
         #expect(ImageEditorCanvasCursor.family(for: .eyedropper) == .eyedropper)
         #expect(ImageEditorCanvasCursor.family(for: .colorSampler) == .samplingScope)
-        #expect(ImageEditorCanvasCursor.cursor(for: .eyedropper, brushDiameter: 18) === NSCursor.crosshair)
 
         let bucket = ImageEditorCanvasCursor.cursor(for: .paintBucket, brushDiameter: 18)
+        let eyedropper = ImageEditorCanvasCursor.cursor(for: .eyedropper, brushDiameter: 18)
         let sampler = ImageEditorCanvasCursor.cursor(for: .colorSampler, brushDiameter: 18)
-        #expect(bucket.image.tiffRepresentation != sampler.image.tiffRepresentation)
+        #expect(bucket.image.tiffRepresentation != eyedropper.image.tiffRepresentation)
+        #expect(eyedropper.image.tiffRepresentation != sampler.image.tiffRepresentation)
+        #expect(eyedropper !== NSCursor.crosshair)
     }
 
     @Test func precisionToolsUseDistinctSemanticArtwork() {

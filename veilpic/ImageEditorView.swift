@@ -6534,7 +6534,7 @@ enum ImageEditorCanvasCursor {
         case .paintBucket:
             return paintBucketCursor()
         case .eyedropper:
-            return .crosshair
+            return eyedropperCursor()
         case .samplingScope:
             return samplingScopeCursor()
         case .vectorPen:
@@ -6859,6 +6859,64 @@ enum ImageEditorCanvasCursor {
         image.unlockFocus()
         return cache(
             NSCursor(image: image, hotSpot: NSPoint(x: center.x, y: side - center.y)),
+            for: cacheKey
+        )
+    }
+
+    private static func eyedropperCursor() -> NSCursor {
+        let cacheKey = "eyedropper"
+        if let cachedCursor = cursorCache[cacheKey] {
+            return cachedCursor
+        }
+
+        let side: CGFloat = 36
+        let image = NSImage(size: NSSize(width: side, height: side))
+        image.lockFocus()
+
+        // The tip is the hot spot: the user can see the actual sample point
+        // instead of mistaking the tool for a generic crosshair.
+        let barrel = NSBezierPath()
+        barrel.move(to: NSPoint(x: 7, y: 7))
+        barrel.line(to: NSPoint(x: 14, y: 4))
+        barrel.line(to: NSPoint(x: 30, y: 20))
+        barrel.line(to: NSPoint(x: 27, y: 27))
+        barrel.line(to: NSPoint(x: 20, y: 30))
+        barrel.line(to: NSPoint(x: 7, y: 17))
+        barrel.close()
+        NSColor.black.withAlphaComponent(0.95).setStroke()
+        barrel.lineWidth = 4
+        barrel.stroke()
+        NSColor.white.withAlphaComponent(0.98).setFill()
+        barrel.fill()
+
+        let seam = NSBezierPath()
+        seam.move(to: NSPoint(x: 12, y: 12))
+        seam.line(to: NSPoint(x: 25, y: 25))
+        NSColor.black.withAlphaComponent(0.88).setStroke()
+        seam.lineWidth = 2
+        seam.stroke()
+
+        let drop = NSBezierPath()
+        drop.move(to: NSPoint(x: 29, y: 4))
+        drop.curve(
+            to: NSPoint(x: 29, y: 15),
+            controlPoint1: NSPoint(x: 24, y: 9),
+            controlPoint2: NSPoint(x: 25, y: 13)
+        )
+        drop.curve(
+            to: NSPoint(x: 29, y: 4),
+            controlPoint1: NSPoint(x: 33, y: 13),
+            controlPoint2: NSPoint(x: 33, y: 9)
+        )
+        NSColor.systemBlue.setFill()
+        drop.fill()
+        NSColor.white.setStroke()
+        drop.lineWidth = 1
+        drop.stroke()
+
+        image.unlockFocus()
+        return cache(
+            NSCursor(image: image, hotSpot: NSPoint(x: 7, y: side - 7)),
             for: cacheKey
         )
     }
