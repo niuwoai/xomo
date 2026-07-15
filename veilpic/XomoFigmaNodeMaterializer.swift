@@ -394,7 +394,7 @@ enum XomoFigmaNodeMaterializer {
     ) -> ImageEditorShapeContent {
         let fill = nsColor(item.solidFill, fallback: .clear)
         let stroke = nsColor(item.solidStroke, fallback: .clear)
-        let gradient = item.linearGradientFill.map { value in
+        let linearGradient = item.linearGradientFill.map { value in
             ImageEditorGradientFillContent.shapeLinear(
                 colorStops: value.colorStops.map { stop in
                     ImageEditorGradientColorStop(
@@ -406,14 +406,33 @@ enum XomoFigmaNodeMaterializer {
                 scale: CGFloat(value.scale)
             )
         }
+        let radialGradient = item.radialGradientFill.map { value in
+            var gradient = ImageEditorGradientFillContent.shapeLinear(
+                colorStops: value.colorStops.map { stop in
+                    ImageEditorGradientColorStop(
+                        position: stop.position,
+                        color: nsColor(stop.color, fallback: .clear)
+                    )
+                },
+                scale: CGFloat(value.scale)
+            )
+            gradient.style = .radial
+            return gradient
+        }
+        let gradient = linearGradient ?? radialGradient
+        let gradientCenter = item.linearGradientFill.map {
+            CGPoint(x: $0.centerX, y: $0.centerY)
+        } ?? item.radialGradientFill.map {
+            CGPoint(x: $0.centerX, y: $0.centerY)
+        }
+        let gradientOpacity = item.linearGradientFill?.opacity
+            ?? item.radialGradientFill?.opacity
         return ImageEditorShapeContent(
             kind: kind,
             fillColor: fill,
             fillGradient: gradient,
-            fillGradientCenter: item.linearGradientFill.map {
-                CGPoint(x: $0.centerX, y: $0.centerY)
-            } ?? CGPoint(x: 0.5, y: 0.5),
-            fillOpacity: item.linearGradientFill.map { CGFloat($0.opacity) }
+            fillGradientCenter: gradientCenter ?? CGPoint(x: 0.5, y: 0.5),
+            fillOpacity: gradientOpacity.map { CGFloat($0) }
                 ?? item.solidFill.map { CGFloat($0.alpha) }
                 ?? 0,
             strokeColor: stroke,

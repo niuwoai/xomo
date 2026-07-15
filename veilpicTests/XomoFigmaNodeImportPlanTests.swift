@@ -134,6 +134,104 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(multiStopShape.fillGradient?.shapeColorStops[1].green == 1)
     }
 
+    @Test func circularRadialGradientsMapWhileEllipticalAxesDegrade() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                """
+                {
+                  "name": "Radial Gradients",
+                  "nodes": {
+                    "1:40": {
+                      "document": {
+                        "id": "1:40",
+                        "name": "Radial Frame",
+                        "type": "FRAME",
+                        "absoluteBoundingBox": {"x": 0, "y": 0, "width": 300, "height": 140},
+                        "children": [
+                          {
+                            "id": "2:40",
+                            "name": "Editable Radial",
+                            "type": "RECTANGLE",
+                            "absoluteBoundingBox": {"x": 20, "y": 20, "width": 120, "height": 80},
+                            "fills": [{
+                              "type": "GRADIENT_RADIAL",
+                              "opacity": 0.8,
+                              "gradientHandlePositions": [
+                                {"x": 0.4, "y": 0.5},
+                                {"x": 0.7333333333, "y": 0.5},
+                                {"x": 0.4, "y": 1.0}
+                              ],
+                              "gradientStops": [
+                                {"position": 0, "color": {"r": 1, "g": 0, "b": 0, "a": 0.5}},
+                                {"position": 0.45, "color": {"r": 0, "g": 1, "b": 0, "a": 0.5}},
+                                {"position": 1, "color": {"r": 0, "g": 0, "b": 1, "a": 0.5}}
+                              ]
+                            }]
+                          },
+                          {
+                            "id": "2:41",
+                            "name": "Elliptical Radial",
+                            "type": "RECTANGLE",
+                            "absoluteBoundingBox": {"x": 160, "y": 20, "width": 100, "height": 80},
+                            "fills": [{
+                              "type": "GRADIENT_RADIAL",
+                              "gradientHandlePositions": [
+                                {"x": 0.5, "y": 0.5},
+                                {"x": 0.9, "y": 0.5},
+                                {"x": 0.5, "y": 0.7}
+                              ],
+                              "gradientStops": [
+                                {"position": 0, "color": {"r": 1, "g": 1, "b": 1, "a": 1}},
+                                {"position": 1, "color": {"r": 0, "g": 0, "b": 0, "a": 1}}
+                              ]
+                            }]
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+                """.utf8
+            )
+        )
+
+        let plan = try XomoFigmaNodeImportMapper.makePlan(
+            response: response,
+            requestedNodeID: "1:40"
+        )
+        let radial = try #require(plan.items.first { $0.sourceID == "2:40" })
+        let elliptical = try #require(plan.items.first { $0.sourceID == "2:41" })
+        let radialFill = try #require(radial.radialGradientFill)
+        #expect(radial.fidelity == .exact)
+        #expect(radial.linearGradientFill == nil)
+        #expect(!radial.issues.contains(.unsupportedPaint))
+        #expect(abs(radialFill.centerX - 0.4) < 0.001)
+        #expect(abs(radialFill.centerY - 0.5) < 0.001)
+        #expect(abs(radialFill.scale - (40 / hypot(60, 40))) < 0.001)
+        #expect(abs(radialFill.opacity - 0.4) < 0.001)
+        #expect(radialFill.colorStops.count == 3)
+        #expect(radialFill.colorStops[1].position == 0.45)
+        #expect(elliptical.fidelity == .partial)
+        #expect(elliptical.radialGradientFill == nil)
+        #expect(elliptical.issues.contains(.unsupportedPaint))
+
+        let materialized = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: CGSize(width: 320, height: 200)
+        )
+        let shape = try #require(
+            materialized.layers.first { $0.name == "Editable Radial" }?.shapeContent
+        )
+        #expect(shape.fillGradient?.style == .radial)
+        #expect(abs((shape.fillGradient?.scale ?? 0) - radialFill.scale) < 0.001)
+        #expect(abs(shape.fillGradientCenter.x - 0.4) < 0.001)
+        #expect(abs(shape.fillGradientCenter.y - 0.5) < 0.001)
+        #expect(abs(shape.fillOpacity - 0.4) < 0.001)
+        #expect(shape.fillGradient?.shapeColorStops.count == 3)
+        #expect(shape.fillGradient?.shapeColorStops[1].green == 1)
+    }
+
     @Test func clientRequiresSpecificNodeAndUsesBoundedOfficialEndpoint() async throws {
         let transport = RecordingFigmaNodeTransport(statusCode: 200, body: Self.validNodeResponse)
         let client = XomoFigmaNodeContentAPIClient(transport: transport)

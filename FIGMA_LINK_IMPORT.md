@@ -1,6 +1,6 @@
 # Xomo Figma 链接导入边界
 
-> 最后更新：2026-07-15 ｜ 当前版本：v2.12.0-rc77 ｜ 当前阶段：Xomo 已有原生径向渐变，Figma 径向几何映射将在下一阶段接入
+> 最后更新：2026-07-15 ｜ 当前版本：v2.12.0-rc78 ｜ 当前阶段：Figma 圆形径向渐变可映射为 Xomo 原生可编辑形状填充
 
 ## 当前已经支持
 
@@ -27,12 +27,12 @@ rc59 要求链接包含明确的 `node-id`。用户点击“读取节点并生�
 | Frame / Group | 嵌套图层组 | 保留层级、名称、显隐、透明度与固定坐标；水平/垂直 Auto Layout 保留间距、内距、两轴对齐、固定/Hug 容器及 Fill/Stretch 子项 |
 | Component / Component Set / Instance | 普通嵌套图层组 | 子层可编辑，Auto Layout 容器与子项可重排；组件/实例语义明确降级 |
 | Text | 可编辑文字层 | 保留文本、字体族、字号、字重、横向对齐和纯色填充 |
-| Rectangle / Ellipse | 可编辑形状层 | 保留纯色或两端线性渐变填充（含偏心控制轴）、纯色描边和描边宽度；矩形统一/非对称四角与圆角平滑保留为可编辑属性，平滑曲线使用超椭圆近似 |
-| Vector / Line / Star / Polygon | 可编辑路径形状层 | 支持 fill/stroke geometry 与 SVG M/L/H/V/C/S/Q/T/A/Z 的绝对、相对命令；闭合路径可保留同一基础线性渐变，按节点局部 size 映射 |
+| Rectangle / Ellipse | 可编辑形状层 | 保留纯色、2–16 色标线性渐变或像素轴等长垂直的圆形径向渐变，支持偏心中心与公共透明度；保留纯色描边、描边宽度，以及矩形统一/非对称四角和圆角平滑，平滑曲线使用超椭圆近似 |
+| Vector / Line / Star / Polygon | 可编辑路径形状层 | 支持 fill/stroke geometry 与 SVG M/L/H/V/C/S/Q/T/A/Z 的绝对、相对命令；闭合路径可保留同一套线性或圆形径向渐变，按节点局部 size 映射 |
 | 图片填充 Rectangle | 图片像素层或占位层 | 显式读取时下载当前子树引用的图片；Fill/Fit、Crop 对应的 `STRETCH + imageTransform`、Tile 比例及 90°旋转会烘焙为固定像素，单图失败时保留格纹交叉占位图 |
 | 其它节点 | 不导入 | 报告中列为不支持，不生成假图层 |
 
-rc72 依据 Figma 官方 [Paint / ColorStop 属性说明](https://developers.figma.com/docs/rest-api/file-property-types/) 读取 `gradientHandlePositions` 与 `gradientStops`。rc73 将控制轴中点保留为形状专属的归一化渐变中心；rc74 进一步保留 2–16 个有序色标，并在属性面板继续编辑。当前要求首尾位置为 0/1、各色标透明度一致且跨度落入 Xomo 可编辑范围；不同色标透明度、超过 16 个色标、径向、角度和菱形渐变继续报告 `unsupportedPaint`。
+rc72 依据 Figma 官方 [Paint / ColorStop 属性说明](https://developers.figma.com/docs/rest-api/file-property-types/) 读取 `gradientHandlePositions` 与 `gradientStops`。rc73 将线性控制轴中点保留为形状专属的归一化渐变中心；rc74 进一步保留 2–16 个有序色标。rc78 把径向第一个控制点作为中心，并将后两个控制点按对象实际宽高换算成像素轴；只有两轴等长且垂直、半径落入 Xomo 25%–400% 范围时才精确导入。两类渐变都要求首尾色标位置为 0/1、各色标透明度一致；不同透明度、超过 16 个色标、椭圆/倾斜径向轴、角度和菱形渐变继续报告 `unsupportedPaint`。
 
 ## 安全边界
 
@@ -67,13 +67,14 @@ rc72 依据 Figma 官方 [Paint / ColorStop 属性说明](https://developers.fig
 14. **rc75（当前，已完成）**：导入后的中间色标显示为画布渐变轴上的彩色菱形，可直接拖动位置并与属性面板共享选中索引；轴方向、偏心中心与 Figma 色标顺序保持不变。
 15. **rc76（当前，已完成）**：双击导入渐变的画布轴可在视觉命中位置新增插值色标，Delete 可删除当前中间色标；新增和删除保持原生形状编辑、单步 Undo 与项目持久化语义。
 16. **rc77（当前，已完成）**：Xomo 形状建立原生径向渐变数据、渲染、属性与 MCP 闭环；Figma `GRADIENT_RADIAL` 本版仍按复杂填充明确降级，不提前声称已经精确导入。
+17. **rc78（当前，已完成）**：Figma `GRADIENT_RADIAL` 的多色标、公共透明度、中心和圆形半径映射为原生径向形状渐变；实际像素空间中的椭圆或倾斜双轴继续明确降级。
 
 ## 官方依据
 
 - [Figma 文件端点](https://developers.figma.com/docs/rest-api/file-endpoints/)：官方 URL 结构为 `/:file_type/:file_key/:file_name`，文件 Key 或分支 Key用于读取文件。
 - [Figma 文件节点端点](https://developers.figma.com/docs/rest-api/file-endpoints/)：`GET /v1/files/:key/nodes` 通过 `ids` 读取指定节点；`geometry=paths` 返回矢量路径数据，`depth` 限制后代层数。
 - [Figma 图片填充端点](https://developers.figma.com/docs/rest-api/file-endpoints/)：`GET /v1/files/:key/images` 以 `imageRef` 返回最长约 14 天有效的临时下载 URL，要求 `file_content:read`。
-- [Figma Paint 属性](https://developers.figma.com/docs/rest-api/file-property-types/)：REST 图片 Paint 提供 Fill/Fit/Tile/Stretch、`imageTransform`、`scalingFactor` 与 `rotation`，rc66 只消费这些白名单字段进行本地像素烘焙。
+- [Figma Paint 属性](https://developers.figma.com/docs/rest-api/file-property-types/)：渐变 Paint 的三个归一化控制点依次表示起点、终点和宽度，rc78 据此验证径向双轴；图片 Paint 的 Fill/Fit/Tile/Stretch、`imageTransform`、`scalingFactor` 与 `rotation` 仍按 rc66 白名单进行本地像素烘焙。
 - [Figma 节点类型](https://developers.figma.com/docs/rest-api/file-node-types/)：Frame、Group、Vector、Text、Rectangle、Ellipse、Component 与 Instance 的可读取字段构成 rc59 映射依据。
 - [Figma API 限流](https://developers.figma.com/docs/rest-api/rate-limits/)：文件节点读取属于 Tier 1，配额按席位和计划不同，因此界面使用显式读取且不自动刷新。
 - [Figma 认证](https://developers.figma.com/docs/rest-api/authentication/)：个人工具可使用 PAT，代表多用户操作的应用应使用 OAuth；不同端点要求对应 scope。
@@ -84,4 +85,4 @@ rc72 依据 Figma 官方 [Paint / ColorStop 属性说明](https://developers.fig
 
 ## 明确尚未支持
 
-rc71 能把 Figma 的单一纯色填充和描边映射为彼此独立、可继续修改的颜色、不透明度与线宽，并保留统一 `cornerRadius`、合法的四角 `rectangleCornerRadii` 与 `cornerSmoothing`；平滑轮廓使用超椭圆视觉近似，因此仍会明确标记为部分保真。图片 Crop/STRETCH、Tile 和 90°旋转可以视觉烘焙，但这些参数尚未保存为可再次编辑的图片填充对象，也不处理图片滤镜；渐变/图案等复杂 Paint、节点旋转/镜像/倾斜变换、蒙版与 Frame 内容裁切关系、效果、特殊混合模式、Wrap、Baseline、变量、组件属性和实例覆写语义仍未保留。Fill/Stretch 只在父组对应轴为固定尺寸时改变子项外框；父轴为 Hug 时保留导入尺寸，避免父子互相依赖。绝对定位子项不参与布局尺寸计算。超过 6 层的后代不会读取；不解析 `.fig` 私有格式、不读取浏览器会话，也不声称 Figma 文件可以无损还原。
+rc78 能把 Figma 的单一纯色、2–16 色标线性渐变和圆形径向渐变映射为可继续修改的形状填充，并保留独立纯色描边、统一 `cornerRadius`、合法的四角 `rectangleCornerRadii` 与 `cornerSmoothing`；平滑轮廓使用超椭圆视觉近似，因此仍会明确标记为部分保真。椭圆/倾斜径向轴、角度渐变、菱形渐变、图案与多重 Paint 仍不保留。图片 Crop/STRETCH、Tile 和 90°旋转可以视觉烘焙，但这些参数尚未保存为可再次编辑的图片填充对象，也不处理图片滤镜；节点旋转/镜像/倾斜变换、蒙版与 Frame 内容裁切关系、效果、特殊混合模式、Wrap、Baseline、变量、组件属性和实例覆写语义仍未保留。Fill/Stretch 只在父组对应轴为固定尺寸时改变子项外框；父轴为 Hug 时保留导入尺寸，避免父子互相依赖。绝对定位子项不参与布局尺寸计算。超过 6 层的后代不会读取；不解析 `.fig` 私有格式、不读取浏览器会话，也不声称 Figma 文件可以无损还原。
