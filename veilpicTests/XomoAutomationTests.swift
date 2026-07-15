@@ -131,6 +131,29 @@ struct XomoAutomationTests {
         #expect(group.xomoComponentInstance?.tokenSnapshot == snapshot)
     }
 
+    @Test func registryAppliesActiveComponentTokensToSelectedComponent() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        viewModel.insertXomoComponent(.button)
+        viewModel.xomoComponentTheme = .chakraUI
+
+        let applied = registry.execute(request(
+            operation: "call",
+            name: "xomo.component.tokens",
+            arguments: ["action": .string("apply")]
+        ))
+        #expect(applied.ok)
+        guard case .object(let result) = applied.result else {
+            Issue.record("Expected applied token snapshot")
+            return
+        }
+        #expect(result["action"] == .string("apply"))
+        #expect(result["theme"] == .string("chakraUI"))
+        #expect(viewModel.document.selectedLayer?.xomoComponentInstance?.theme == .chakraUI)
+        #expect(viewModel.document.history.last?.title == L10n.text("xomo.theme.history.apply"))
+    }
+
     @Test func registryCanInspectAndMutateTheActiveDocument() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

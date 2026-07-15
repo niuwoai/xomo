@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc138 - 2026-07-16
+
+### Added
+- `xomo.component.tokens` 新增 `action=apply`，可将当前本地 Token 应用到选中 UI 组件并写入单步 Undo/Redo。
+
+### Verification
+- `XomoAutomationTests` 37/37、`XomoMCPServerTests` 2/2 通过。
+
 ## 2.12.0-rc137 - 2026-07-16
 
 ### Fixed
