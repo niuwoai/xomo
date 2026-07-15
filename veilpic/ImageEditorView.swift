@@ -6447,7 +6447,8 @@ enum ImageEditorCanvasCursorFamily: Equatable {
     case crop
     case patch
     case gradient
-    case shapeOutline
+    case rectangleOutline
+    case ellipseOutline
     case paintBucket
     case eyedropper
     case redEye
@@ -6497,8 +6498,10 @@ enum ImageEditorCanvasCursor {
             .patch
         case .gradient:
             .gradient
-        case .rectangle, .ellipse:
-            .shapeOutline
+        case .rectangle:
+            .rectangleOutline
+        case .ellipse:
+            .ellipseOutline
         case .brush:
             .brushTool
         case .eraser:
@@ -6553,7 +6556,7 @@ enum ImageEditorCanvasCursor {
             return patchCursor()
         case .gradient:
             return gradientCursor()
-        case .shapeOutline:
+        case .rectangleOutline, .ellipseOutline:
             return shapeCursor(for: tool)
         case .brushTool, .eraserTool:
             return paintToolCursor(for: tool, diameter: brushDiameter)

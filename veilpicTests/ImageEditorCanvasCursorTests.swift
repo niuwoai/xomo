@@ -62,6 +62,8 @@ struct ImageEditorCanvasCursorTests {
         #expect(ImageEditorCanvasCursor.family(for: .colorSampler) == .samplingScope)
         #expect(ImageEditorCanvasCursor.family(for: .brush) == .brushTool)
         #expect(ImageEditorCanvasCursor.family(for: .eraser) == .eraserTool)
+        #expect(ImageEditorCanvasCursor.family(for: .rectangle) == .rectangleOutline)
+        #expect(ImageEditorCanvasCursor.family(for: .ellipse) == .ellipseOutline)
         #expect(ImageEditorCanvasCursor.family(for: .dodge) == .toneBrush)
         #expect(ImageEditorCanvasCursor.family(for: .burn) == .toneBrush)
         #expect(ImageEditorCanvasCursor.family(for: .sponge) == .toneBrush)
