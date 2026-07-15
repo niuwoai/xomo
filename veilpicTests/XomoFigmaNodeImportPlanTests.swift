@@ -13,7 +13,7 @@ import Testing
 
 @MainActor
 struct XomoFigmaNodeImportPlanTests {
-    @Test func twoStopOffsetLinearGradientMapsToEditableShapeAndComplexGradientStaysPartial() throws {
+    @Test func offsetMultiStopLinearGradientsMapToEditableShapes() throws {
         let response = try JSONDecoder().decode(
             XomoFigmaNodeResponse.self,
             from: Data(
@@ -65,6 +65,25 @@ struct XomoFigmaNodeImportPlanTests {
                                 {"position": 1, "color": {"r": 0, "g": 0, "b": 1, "a": 1}}
                               ]
                             }]
+                          },
+                          {
+                            "id": "2:32",
+                            "name": "Different Stop Alpha",
+                            "type": "RECTANGLE",
+                            "absoluteBoundingBox": {"x": 150, "y": 90, "width": 70, "height": 48},
+                            "fills": [{
+                              "type": "GRADIENT_LINEAR",
+                              "gradientHandlePositions": [
+                                {"x": 0, "y": 0.5},
+                                {"x": 1, "y": 0.5},
+                                {"x": 0, "y": 0}
+                              ],
+                              "gradientStops": [
+                                {"position": 0, "color": {"r": 1, "g": 0, "b": 0, "a": 1}},
+                                {"position": 0.5, "color": {"r": 0, "g": 1, "b": 0, "a": 0.5}},
+                                {"position": 1, "color": {"r": 0, "g": 0, "b": 1, "a": 1}}
+                              ]
+                            }]
                           }
                         ]
                       }
@@ -79,7 +98,8 @@ struct XomoFigmaNodeImportPlanTests {
             requestedNodeID: "1:30"
         )
         let editable = try #require(plan.items.first { $0.sourceID == "2:30" })
-        let complex = try #require(plan.items.first { $0.sourceID == "2:31" })
+        let multiStop = try #require(plan.items.first { $0.sourceID == "2:31" })
+        let differentAlpha = try #require(plan.items.first { $0.sourceID == "2:32" })
         #expect(editable.fidelity == .exact)
         #expect(editable.linearGradientFill?.angle == 0)
         #expect(abs((editable.linearGradientFill?.scale ?? 0) - 0.6) < 0.001)
@@ -87,9 +107,13 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(editable.linearGradientFill?.centerY == 0.5)
         #expect(editable.linearGradientFill?.opacity == 0.4)
         #expect(!editable.issues.contains(.unsupportedPaint))
-        #expect(complex.fidelity == .partial)
-        #expect(complex.linearGradientFill == nil)
-        #expect(complex.issues.contains(.unsupportedPaint))
+        #expect(multiStop.fidelity == .exact)
+        #expect(multiStop.linearGradientFill?.colorStops.count == 3)
+        #expect(multiStop.linearGradientFill?.colorStops[1].position == 0.5)
+        #expect(!multiStop.issues.contains(.unsupportedPaint))
+        #expect(differentAlpha.fidelity == .partial)
+        #expect(differentAlpha.linearGradientFill == nil)
+        #expect(differentAlpha.issues.contains(.unsupportedPaint))
 
         let materialized = XomoFigmaNodeMaterializer.materialize(
             plan: plan,
@@ -103,6 +127,11 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(abs(shape.fillGradientCenter.x - 0.4) < 0.001)
         #expect(shape.fillGradientCenter.y == 0.5)
         #expect(abs(shape.fillOpacity - 0.4) < 0.001)
+        let multiStopShape = try #require(
+            materialized.layers.first { $0.name == "Three Stops" }?.shapeContent
+        )
+        #expect(multiStopShape.fillGradient?.shapeColorStops.count == 3)
+        #expect(multiStopShape.fillGradient?.shapeColorStops[1].green == 1)
     }
 
     @Test func clientRequiresSpecificNodeAndUsesBoundedOfficialEndpoint() async throws {

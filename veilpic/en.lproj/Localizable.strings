@@ -719,6 +719,10 @@
 "imageEditor.properties.shapeFillColor" = "Fill color";
 "imageEditor.properties.shapeGradientStartColor" = "Gradient start";
 "imageEditor.properties.shapeGradientEndColor" = "Gradient end";
+"imageEditor.properties.shapeGradientStopCount" = "%d color stops";
+"imageEditor.properties.shapeGradientStopColor" = "Stop %d color";
+"imageEditor.properties.shapeGradientStopPosition" = "Stop position: %d%%";
+"imageEditor.properties.shapeGradientStopAccessibility" = "Stop %d at %d%%";
 "imageEditor.properties.shapeGradientAngleValue" = "Gradient angle: %d°";
 "imageEditor.properties.shapeFillOpacityValue" = "Fill opacity: %d%%";
 "imageEditor.properties.shapeStrokeColor" = "Stroke color";
@@ -744,6 +748,8 @@
 "imageEditor.history.shapeCornerSmoothing" = "Update Rectangle Corner Smoothing";
 "imageEditor.history.shapeStyle" = "Update Shape Appearance";
 "imageEditor.history.shapeGradientHandle" = "Adjust Shape Gradient";
+"imageEditor.action.shapeGradientStopAdd" = "Add Gradient Stop";
+"imageEditor.action.shapeGradientStopRemove" = "Remove Selected Gradient Stop";
 "imageEditor.status.shapeGradientHandleMoved" = "Adjusting shape gradient";
 "imageEditor.help.shapeGradientHandle.start" = "Drag the gradient start; hold Shift to snap the angle";
 "imageEditor.help.shapeGradientHandle.end" = "Drag the gradient end; hold Shift to snap the angle";

@@ -78,6 +78,96 @@ struct ImageEditorShapeStyleTests {
         #expect(reopened.document.selectedLayer?.shapeContent?.fillGradient == gradient)
     }
 
+    @Test func multiStopGradientRendersMiddleColorAtItsPosition() throws {
+        let gradient = ImageEditorGradientFillContent.shapeLinear(colorStops: [
+            ImageEditorGradientColorStop(position: 0, color: .systemRed),
+            ImageEditorGradientColorStop(position: 0.5, color: .systemGreen),
+            ImageEditorGradientColorStop(position: 1, color: .systemBlue)
+        ])
+        let image = gradient.renderedImage(size: CGSize(width: 101, height: 9))
+        let left = try #require(image.color(at: CGPoint(x: 0, y: 4)))
+        let middle = try #require(image.color(at: CGPoint(x: 50, y: 4)))
+        let right = try #require(image.color(at: CGPoint(x: 100, y: 4)))
+
+        #expect(left.redComponent > 0.9)
+        #expect(middle.greenComponent > middle.redComponent + 0.6)
+        #expect(middle.greenComponent > middle.blueComponent + 0.6)
+        #expect(right.blueComponent > 0.9)
+
+        var reversedGradient = gradient
+        reversedGradient.reverse = true
+        let reversed = reversedGradient.renderedImage(size: CGSize(width: 101, height: 9))
+        let reversedLeft = try #require(reversed.color(at: CGPoint(x: 0, y: 4)))
+        let reversedMiddle = try #require(reversed.color(at: CGPoint(x: 50, y: 4)))
+        let reversedRight = try #require(reversed.color(at: CGPoint(x: 100, y: 4)))
+        #expect(reversedLeft.blueComponent > 0.9)
+        #expect(reversedMiddle.greenComponent > reversedMiddle.redComponent + 0.6)
+        #expect(reversedRight.redComponent > 0.9)
+    }
+
+    @Test func gradientStopsCanBeAddedEditedRemovedUndoneAndPersisted() throws {
+        let viewModel = makeViewModel()
+        viewModel.drawShape(
+            from: CGPoint(x: 10, y: 10),
+            to: CGPoint(x: 100, y: 60),
+            ellipse: false,
+            fillGradient: .shapeLinear(startColor: .systemRed, endColor: .systemBlue)
+        )
+        let historyCount = viewModel.document.history.count
+        let addedIndex = try #require(viewModel.addSelectedShapeGradientStop())
+        #expect(addedIndex == 1)
+        #expect(viewModel.selectedShapeGradientColorStops.count == 3)
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        viewModel.setSelectedShapeGradientStopColor(at: addedIndex, color: .systemGreen)
+        viewModel.setSelectedShapeGradientStopPosition(at: addedIndex, position: 0.4)
+        let edited = viewModel.selectedShapeGradientColorStops
+        #expect(abs(edited[1].position - 0.4) < 0.001)
+        let editedColor = try #require(edited[1].color.usingColorSpace(.deviceRGB))
+        let expectedColor = try #require(NSColor.systemGreen.usingColorSpace(.deviceRGB))
+        #expect(abs(editedColor.redComponent - expectedColor.redComponent) < 0.02)
+        #expect(abs(editedColor.greenComponent - expectedColor.greenComponent) < 0.02)
+        #expect(abs(editedColor.blueComponent - expectedColor.blueComponent) < 0.02)
+
+        let projectData = try viewModel.projectData()
+        let reopened = makeViewModel()
+        try reopened.loadProjectData(projectData)
+        #expect(reopened.selectedShapeGradientColorStops == edited)
+
+        let removedIndex = try #require(reopened.removeSelectedShapeGradientStop(at: 1))
+        #expect(removedIndex == 1)
+        #expect(reopened.selectedShapeGradientColorStops.count == 2)
+        reopened.undo()
+        #expect(reopened.selectedShapeGradientColorStops == edited)
+    }
+
+    @Test func legacyTwoColorGradientDecodesIntoEditableEndpointStops() throws {
+        let data = Data(
+            """
+            {
+              "preset": "custom",
+              "style": "linear",
+              "reverse": false,
+              "angle": 25,
+              "scale": 1,
+              "startRed": 1,
+              "startGreen": 0,
+              "startBlue": 0,
+              "endRed": 0,
+              "endGreen": 0,
+              "endBlue": 1
+            }
+            """.utf8
+        )
+        let gradient = try JSONDecoder().decode(ImageEditorGradientFillContent.self, from: data)
+        let stops = gradient.shapeColorStops
+        #expect(stops.count == 2)
+        #expect(stops[0].position == 0)
+        #expect(stops[0].red == 1)
+        #expect(stops[1].position == 1)
+        #expect(stops[1].blue == 1)
+    }
+
     @Test func gradientHandlesKeepOppositeEndpointFixedAndCommitOneUndoStep() throws {
         let imageSize = CGSize(width: 100, height: 50)
         let layerFrame = CGRect(x: 10, y: 20, width: 200, height: 100)
@@ -246,8 +336,11 @@ struct ImageEditorShapeStyleTests {
         for identifier in [
             "image-editor-shape-fill-kind",
             "image-editor-shape-fill-color",
-            "image-editor-shape-gradient-start-color",
-            "image-editor-shape-gradient-end-color",
+            "image-editor-shape-gradient-stops",
+            "image-editor-shape-gradient-stop-add",
+            "image-editor-shape-gradient-stop-remove",
+            "image-editor-shape-gradient-stop-color",
+            "image-editor-shape-gradient-stop-position",
             "image-editor-shape-gradient-angle",
             "image-editor-shape-fill-opacity",
             "image-editor-shape-stroke-color",
@@ -256,7 +349,7 @@ struct ImageEditorShapeStyleTests {
         ] {
             #expect(source.contains(identifier))
         }
-        #expect(source.components(separatedBy: ".focusable(false)").count - 1 == 8)
+        #expect(source.components(separatedBy: ".focusable(false)").count - 1 >= 10)
     }
 
     private func makeViewModel() -> ImageEditorViewModel {

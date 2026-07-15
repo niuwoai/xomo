@@ -719,6 +719,10 @@
 "imageEditor.properties.shapeFillColor" = "填充颜色";
 "imageEditor.properties.shapeGradientStartColor" = "渐变起始色";
 "imageEditor.properties.shapeGradientEndColor" = "渐变结束色";
+"imageEditor.properties.shapeGradientStopCount" = "%d 个色标";
+"imageEditor.properties.shapeGradientStopColor" = "色标 %d 颜色";
+"imageEditor.properties.shapeGradientStopPosition" = "色标位置：%d%%";
+"imageEditor.properties.shapeGradientStopAccessibility" = "色标 %d，位置 %d%%";
 "imageEditor.properties.shapeGradientAngleValue" = "渐变角度：%d°";
 "imageEditor.properties.shapeFillOpacityValue" = "填充不透明度：%d%%";
 "imageEditor.properties.shapeStrokeColor" = "描边颜色";
@@ -744,6 +748,8 @@
 "imageEditor.history.shapeCornerSmoothing" = "调整矩形圆角平滑";
 "imageEditor.history.shapeStyle" = "调整形状外观";
 "imageEditor.history.shapeGradientHandle" = "调整形状渐变";
+"imageEditor.action.shapeGradientStopAdd" = "添加渐变色标";
+"imageEditor.action.shapeGradientStopRemove" = "删除选中的渐变色标";
 "imageEditor.status.shapeGradientHandleMoved" = "正在调整形状渐变";
 "imageEditor.help.shapeGradientHandle.start" = "拖动渐变起点；按住 Shift 吸附角度";
 "imageEditor.help.shapeGradientHandle.end" = "拖动渐变终点；按住 Shift 吸附角度";

@@ -1,6 +1,6 @@
 # Xomo MCP 与 CLI
 
-> 当前版本：v2.12.0-rc73
+> 当前版本：v2.12.0-rc74
 
 ## 架构
 
@@ -37,7 +37,7 @@ xomo call xomo.shape.create '{"kind":"rectangle","x":80,"y":80,"width":240,"heig
 xomo call xomo.shape.update '{"fillOpacity":0.7,"strokeOpacity":0.9}'
 xomo call xomo.shape.update '{"cornerRadii":{"topLeft":8,"topRight":16,"bottomRight":24,"bottomLeft":4}}'
 xomo call xomo.shape.update '{"cornerSmoothing":0.75}'
-xomo call xomo.shape.update '{"fillKind":"linearGradient","fillGradient":{"startColor":{"red":1,"green":0.2,"blue":0.1},"endColor":{"red":0.1,"green":0.3,"blue":1},"angle":30,"scale":1,"centerX":0.5,"centerY":0.5}}'
+xomo call xomo.shape.update '{"fillKind":"linearGradient","fillGradient":{"stops":[{"position":0,"color":{"red":1,"green":0.2,"blue":0.1}},{"position":0.5,"color":{"red":0.1,"green":1,"blue":0.3}},{"position":1,"color":{"red":0.1,"green":0.3,"blue":1}}],"angle":30,"scale":1,"centerX":0.5,"centerY":0.5}}'
 xomo call xomo.component.insert '{"component":"button","theme":"native","x":80,"y":100}'
 xomo export ~/Desktop/xomo.png --format png --scope composited --scale 2
 xomo project export ~/Desktop/design.qpicproject
@@ -68,7 +68,7 @@ MCP 服务器实现 `initialize`、`ping`、`tools/list` 和 `tools/call`。当 
 
 - 共 112 个 MCP 工具；同类细粒度操作通过带严格枚举参数的 action 工具组织。
 - App 与文档状态
-- 预设或自定义画布创建、可编辑文字/形状检查与更新（含纯色/两色线性渐变填充、独立描边、不透明度、线宽、统一/独立四角及超椭圆圆角平滑）、点文字 / 固定宽高段落文字创建和转换、文字框所需高度、溢出诊断与适合内容 / 仅扩高操作，以及详细调整、滤镜和图层样式参数
+- 预设或自定义画布创建、可编辑文字/形状检查与更新（含纯色/最多 16 个有序色标的线性渐变填充、独立描边、不透明度、线宽、统一/独立四角及超椭圆圆角平滑）、点文字 / 固定宽高段落文字创建和转换、文字框所需高度、溢出诊断与适合内容 / 仅扩高操作，以及详细调整、滤镜和图层样式参数
 - 完整 `qpicproject` 项目导入导出，以及 PNG/JPEG/WebP 等图像图层导入
 - 28 种编辑器工具选择
 - 前景色、背景色、可持久化画笔预设、带硬度/流量/间距与逐点压力曲线控制的画笔与橡皮擦、渐变

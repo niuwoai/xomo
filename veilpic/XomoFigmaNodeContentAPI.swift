@@ -455,18 +455,23 @@ enum XomoFigmaNodeImportMapper {
         let handles = paint.gradientHandlePositions,
         handles.count == 3,
         let stops = paint.gradientStops,
-        stops.count == 2,
+        (2...ImageEditorGradientFillContent.maximumColorStopCount).contains(stops.count),
         abs(stops[0].position) <= 0.001,
-        abs(stops[1].position - 1) <= 0.001,
+        abs((stops.last?.position ?? 0) - 1) <= 0.001,
         let paintOpacity = validUnitValue(paint.opacity ?? 1)
         else { return nil }
 
         let startHandle = handles[0]
         let endHandle = handles[1]
+        let resolvedStops = stops.compactMap(gradientStopColor)
         guard handles.allSatisfy(\.isFinite),
-              let start = gradientStopColor(stops[0]),
-              let end = gradientStopColor(stops[1]),
-              abs(start.alpha - end.alpha) <= 0.001
+              resolvedStops.count == stops.count,
+              zip(stops, stops.dropFirst()).allSatisfy { pair in
+                pair.0.position <= pair.1.position
+              },
+              let start = resolvedStops.first,
+              let end = resolvedStops.last,
+              resolvedStops.allSatisfy({ abs($0.alpha - start.alpha) <= 0.001 })
         else { return nil }
 
         let deltaX = (endHandle.x - startHandle.x) * bounds.width
@@ -496,7 +501,19 @@ enum XomoFigmaNodeImportMapper {
             scale: scale,
             centerX: (startHandle.x + endHandle.x) / 2,
             centerY: (startHandle.y + endHandle.y) / 2,
-            opacity: start.alpha * paintOpacity
+            opacity: start.alpha * paintOpacity,
+            colorStops: zip(stops, resolvedStops).map { pair in
+                let (stop, color) = pair
+                return XomoFigmaPlanGradientStop(
+                    position: stop.position,
+                    color: XomoFigmaPlanColor(
+                        red: color.red,
+                        green: color.green,
+                        blue: color.blue,
+                        alpha: 1
+                    )
+                )
+            }
         )
     }
 

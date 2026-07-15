@@ -61,6 +61,11 @@ struct XomoFigmaPlanColor: Equatable, Sendable {
     var alpha: Double
 }
 
+struct XomoFigmaPlanGradientStop: Equatable, Sendable {
+    var position: Double
+    var color: XomoFigmaPlanColor
+}
+
 struct XomoFigmaPlanLinearGradient: Equatable, Sendable {
     var startColor: XomoFigmaPlanColor
     var endColor: XomoFigmaPlanColor
@@ -69,6 +74,7 @@ struct XomoFigmaPlanLinearGradient: Equatable, Sendable {
     var centerX: Double
     var centerY: Double
     var opacity: Double
+    var colorStops: [XomoFigmaPlanGradientStop]
 }
 
 struct XomoFigmaPlanSize: Equatable, Sendable {

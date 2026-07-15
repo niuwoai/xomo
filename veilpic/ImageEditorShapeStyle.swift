@@ -38,28 +38,85 @@ extension ImageEditorGradientFillContent {
             startBlue: start.blue,
             endRed: end.red,
             endGreen: end.green,
-            endBlue: end.blue
+            endBlue: end.blue,
+            colorStops: [
+                ImageEditorGradientColorStop(position: 0, color: startColor),
+                ImageEditorGradientColorStop(position: 1, color: endColor)
+            ]
         ).normalized()
     }
 
+    static func shapeLinear(
+        colorStops: [ImageEditorGradientColorStop],
+        angle: CGFloat = 0,
+        scale: CGFloat = 1
+    ) -> ImageEditorGradientFillContent {
+        let stops = colorStops.count >= 2 ? colorStops : [
+            ImageEditorGradientColorStop(position: 0, color: .black),
+            ImageEditorGradientColorStop(position: 1, color: .white)
+        ]
+        let first = stops.first?.normalized() ?? ImageEditorGradientColorStop(position: 0, color: .black)
+        let last = stops.last?.normalized() ?? ImageEditorGradientColorStop(position: 1, color: .white)
+        return ImageEditorGradientFillContent(
+            preset: .custom,
+            style: .linear,
+            angle: angle,
+            scale: scale,
+            startRed: first.red,
+            startGreen: first.green,
+            startBlue: first.blue,
+            endRed: last.red,
+            endGreen: last.green,
+            endBlue: last.blue,
+            colorStops: stops
+        ).normalized()
+    }
+
+    var shapeColorStops: [ImageEditorGradientColorStop] {
+        let content = normalized()
+        if let stops = content.colorStops { return stops }
+        let colors = content.colors()
+        return [
+            ImageEditorGradientColorStop(
+                position: 0,
+                red: colors.start.x,
+                green: colors.start.y,
+                blue: colors.start.z
+            ),
+            ImageEditorGradientColorStop(
+                position: 1,
+                red: colors.end.x,
+                green: colors.end.y,
+                blue: colors.end.z
+            )
+        ]
+    }
+
+    func shapeColor(at position: Double) -> NSColor {
+        let stops = shapeColorStops
+        let value = max(0, min(1, position))
+        guard let first = stops.first, let last = stops.last else { return .black }
+        if value <= first.position { return first.color }
+        if value >= last.position { return last.color }
+        for index in 1..<stops.count {
+            let upper = stops[index]
+            guard value <= upper.position else { continue }
+            let lower = stops[index - 1]
+            let distance = upper.position - lower.position
+            guard distance > 0.000_001 else { return upper.color }
+            let amount = (value - lower.position) / distance
+            let vector = lower.vector + (upper.vector - lower.vector) * amount
+            return NSColor(deviceRed: vector.x, green: vector.y, blue: vector.z, alpha: 1)
+        }
+        return last.color
+    }
+
     var shapeStartColor: NSColor {
-        let colors = colors()
-        return NSColor(
-            deviceRed: colors.start.x,
-            green: colors.start.y,
-            blue: colors.start.z,
-            alpha: 1
-        )
+        shapeColorStops.first?.color ?? .black
     }
 
     var shapeEndColor: NSColor {
-        let colors = colors()
-        return NSColor(
-            deviceRed: colors.end.x,
-            green: colors.end.y,
-            blue: colors.end.z,
-            alpha: 1
-        )
+        shapeColorStops.last?.color ?? .white
     }
 
     private static func rgbComponents(_ color: NSColor) -> (red: Double, green: Double, blue: Double) {
@@ -94,6 +151,10 @@ extension ImageEditorViewModel {
         Double(selectedShapeGradient.angle)
     }
 
+    var selectedShapeGradientColorStops: [ImageEditorGradientColorStop] {
+        selectedShapeGradient.shapeColorStops
+    }
+
     var selectedShapeFillOpacity: Double {
         Double(document.selectedLayer?.shapeContent?.fillOpacity ?? 0)
     }
@@ -124,27 +185,63 @@ extension ImageEditorViewModel {
     }
 
     func setSelectedShapeGradientStartColor(_ color: NSColor) {
-        var gradient = selectedShapeGradient
-        let end = gradient.shapeEndColor
-        gradient = .shapeLinear(
-            startColor: color,
-            endColor: end,
-            angle: gradient.angle,
-            scale: gradient.scale
-        )
-        updateSelectedShapeProperties(fillGradient: gradient)
+        setSelectedShapeGradientStopColor(at: 0, color: color)
     }
 
     func setSelectedShapeGradientEndColor(_ color: NSColor) {
+        let index = max(0, selectedShapeGradientColorStops.count - 1)
+        setSelectedShapeGradientStopColor(at: index, color: color)
+    }
+
+    func setSelectedShapeGradientStopColor(at index: Int, color: NSColor) {
         var gradient = selectedShapeGradient
-        let start = gradient.shapeStartColor
-        gradient = .shapeLinear(
-            startColor: start,
-            endColor: color,
-            angle: gradient.angle,
-            scale: gradient.scale
-        )
+        var stops = gradient.shapeColorStops
+        guard stops.indices.contains(index) else { return }
+        stops[index] = ImageEditorGradientColorStop(position: stops[index].position, color: color)
+        gradient.colorStops = stops
         updateSelectedShapeProperties(fillGradient: gradient)
+    }
+
+    func setSelectedShapeGradientStopPosition(at index: Int, position: Double) {
+        guard position.isFinite else { return }
+        var gradient = selectedShapeGradient
+        var stops = gradient.shapeColorStops
+        guard stops.indices.contains(index), index > 0, index < stops.count - 1 else { return }
+        let lowerBound = stops[index - 1].position + 0.01
+        let upperBound = stops[index + 1].position - 0.01
+        guard lowerBound <= upperBound else { return }
+        stops[index].position = max(lowerBound, min(upperBound, position))
+        gradient.colorStops = stops
+        updateSelectedShapeProperties(fillGradient: gradient)
+    }
+
+    @discardableResult
+    func addSelectedShapeGradientStop() -> Int? {
+        var gradient = selectedShapeGradient
+        var stops = gradient.shapeColorStops
+        guard stops.count < ImageEditorGradientFillContent.maximumColorStopCount else { return nil }
+        let gap = stops.indices.dropLast().max { lhs, rhs in
+            (stops[lhs + 1].position - stops[lhs].position)
+                < (stops[rhs + 1].position - stops[rhs].position)
+        } ?? 0
+        let position = (stops[gap].position + stops[gap + 1].position) / 2
+        let stop = ImageEditorGradientColorStop(position: position, color: gradient.shapeColor(at: position))
+        let insertionIndex = gap + 1
+        stops.insert(stop, at: insertionIndex)
+        gradient.colorStops = stops
+        updateSelectedShapeProperties(fillGradient: gradient)
+        return insertionIndex
+    }
+
+    @discardableResult
+    func removeSelectedShapeGradientStop(at index: Int) -> Int? {
+        var gradient = selectedShapeGradient
+        var stops = gradient.shapeColorStops
+        guard stops.count > 2, index > 0, index < stops.count - 1 else { return nil }
+        stops.remove(at: index)
+        gradient.colorStops = stops
+        updateSelectedShapeProperties(fillGradient: gradient)
+        return min(index, stops.count - 1)
     }
 
     func setSelectedShapeGradientAngle(_ angle: Double) {

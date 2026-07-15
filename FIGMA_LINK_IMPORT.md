@@ -1,6 +1,6 @@
 # Xomo Figma 链接导入边界
 
-> 最后更新：2026-07-15 ｜ 当前版本：v2.12.0-rc73 ｜ 当前阶段：两色线性渐变及偏心控制轴可映射为原生可编辑形状填充
+> 最后更新：2026-07-15 ｜ 当前版本：v2.12.0-rc74 ｜ 当前阶段：最多 16 个色标的线性渐变及偏心控制轴可映射为原生可编辑形状填充
 
 ## 当前已经支持
 
@@ -32,7 +32,7 @@ rc59 要求链接包含明确的 `node-id`。用户点击“读取节点并生�
 | 图片填充 Rectangle | 图片像素层或占位层 | 显式读取时下载当前子树引用的图片；Fill/Fit、Crop 对应的 `STRETCH + imageTransform`、Tile 比例及 90°旋转会烘焙为固定像素，单图失败时保留格纹交叉占位图 |
 | 其它节点 | 不导入 | 报告中列为不支持，不生成假图层 |
 
-rc72 依据 Figma 官方 [Paint / ColorStop 属性说明](https://developers.figma.com/docs/rest-api/file-property-types/) 读取 `gradientHandlePositions` 与 `gradientStops`。rc73 将控制轴中点保留为形状专属的归一化渐变中心，因此偏心的双停止点 `GRADIENT_LINEAR` 也可精确导入，并能在画布拖动起止控制柄继续编辑。当前仍要求恰好两个 0/1 色标、两端透明度一致且跨度落入 Xomo 可编辑范围；多色、不同端点透明度、径向、角度和菱形渐变继续报告 `unsupportedPaint`。
+rc72 依据 Figma 官方 [Paint / ColorStop 属性说明](https://developers.figma.com/docs/rest-api/file-property-types/) 读取 `gradientHandlePositions` 与 `gradientStops`。rc73 将控制轴中点保留为形状专属的归一化渐变中心；rc74 进一步保留 2–16 个有序色标，并在属性面板继续编辑。当前要求首尾位置为 0/1、各色标透明度一致且跨度落入 Xomo 可编辑范围；不同色标透明度、超过 16 个色标、径向、角度和菱形渐变继续报告 `unsupportedPaint`。
 
 ## 安全边界
 
@@ -63,6 +63,7 @@ rc72 依据 Figma 官方 [Paint / ColorStop 属性说明](https://developers.fig
 10. **rc65（已完成）**：子项 `layoutGrow` 与 `layoutAlign=STRETCH` 映射为 Fill/Stretch；固定容器按权重分配主轴空间并填满交叉轴，属性面板可编辑，项目与 Undo/Redo 闭环保持。
 11. **rc66（当前，已完成）**：图片填充读取 `imageTransform`、`scalingFactor` 与 `rotation`，把 Crop/STRETCH、Tile 和 90°旋转按源图与目标框烘焙为像素结果；参数语义仍明确降级为不可再次编辑。
 12. **rc73（当前，已完成）**：双停止点线性渐变保留偏心控制轴；导入后显示可拖动起止控制柄，中心、角度与跨度进入项目保存、Undo/Redo 和 MCP。
+13. **rc74（当前，已完成）**：双停止点扩展为 2–16 个有序色标；Figma 多色标、Xomo 项目、属性面板与 MCP `stops` 数组使用同一插值模型，不同透明度仍明确降级。
 
 ## 官方依据
 
