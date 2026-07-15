@@ -55,4 +55,16 @@ struct ImageEditorCanvasCursorTests {
         let sampler = ImageEditorCanvasCursor.cursor(for: .colorSampler, brushDiameter: 18)
         #expect(bucket.image.tiffRepresentation != sampler.image.tiffRepresentation)
     }
+
+    @Test func precisionToolsUseDistinctSemanticArtwork() {
+        let tools: [ImageEditorTool] = [
+            .marquee, .lasso, .magicWand, .crop, .patchTool,
+            .gradient, .rectangle, .ellipse
+        ]
+        let representations = tools.compactMap {
+            ImageEditorCanvasCursor.cursor(for: $0, brushDiameter: 18).image.tiffRepresentation
+        }
+        #expect(representations.count == tools.count)
+        #expect(Set(representations).count == tools.count)
+    }
 }

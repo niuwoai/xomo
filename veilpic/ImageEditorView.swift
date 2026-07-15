@@ -6388,7 +6388,13 @@ enum ImageEditorCanvasCursorFamily: Equatable {
     case grab
     case textInsertion
     case brushFootprint
-    case precisionCrosshair
+    case selectionMarquee
+    case lasso
+    case magicWand
+    case crop
+    case patch
+    case gradient
+    case shapeOutline
     case paintBucket
     case eyedropper
     case samplingScope
@@ -6419,6 +6425,20 @@ enum ImageEditorCanvasCursor {
             .grab
         case .text:
             .textInsertion
+        case .marquee:
+            .selectionMarquee
+        case .lasso:
+            .lasso
+        case .magicWand:
+            .magicWand
+        case .crop:
+            .crop
+        case .patchTool:
+            .patch
+        case .gradient:
+            .gradient
+        case .rectangle, .ellipse:
+            .shapeOutline
         case .brush, .eraser, .quickSelection, .cloneStamp, .dodge, .burn, .sponge,
              .blur, .sharpen, .smudge, .healingBrush, .redEye:
             .brushFootprint
@@ -6432,8 +6452,6 @@ enum ImageEditorCanvasCursor {
             .vectorPen
         case .zoom:
             .zoomMagnifier
-        case .marquee, .lasso, .magicWand, .crop, .patchTool, .gradient, .rectangle, .ellipse:
-            .precisionCrosshair
         }
     }
 
@@ -6450,6 +6468,20 @@ enum ImageEditorCanvasCursor {
             return handIsDragging ? .closedHand : .openHand
         case .textInsertion:
             return .iBeam
+        case .selectionMarquee:
+            return selectionMarqueeCursor()
+        case .lasso:
+            return lassoCursor()
+        case .magicWand:
+            return magicWandCursor()
+        case .crop:
+            return cropCursor()
+        case .patch:
+            return patchCursor()
+        case .gradient:
+            return gradientCursor()
+        case .shapeOutline:
+            return shapeCursor(for: tool)
         case .brushFootprint:
             return brushCursor(diameter: brushDiameter, symbolName: tool.symbolName)
         case .paintBucket:
@@ -6460,8 +6492,6 @@ enum ImageEditorCanvasCursor {
             return samplingScopeCursor()
         case .vectorPen:
             return penCursor(isClosing: penIsClosing)
-        case .precisionCrosshair:
-            return precisionCursor(symbolName: tool.symbolName)
         case .zoomMagnifier:
             return zoomCursor()
         }
@@ -6519,32 +6549,178 @@ enum ImageEditorCanvasCursor {
         )
     }
 
-    private static func precisionCursor(symbolName: String) -> NSCursor {
-        let cacheKey = "precision:\(symbolName)"
+    private static func selectionMarqueeCursor() -> NSCursor {
+        let cacheKey = "selection-marquee"
+        if let cachedCursor = cursorCache[cacheKey] {
+            return cachedCursor
+        }
+        let side: CGFloat = 32
+        let image = NSImage(size: NSSize(width: side, height: side))
+        image.lockFocus()
+        let outline = NSBezierPath(rect: NSRect(x: 3, y: 3, width: 16, height: 14))
+        outline.setLineDash([3, 2], count: 2, phase: 0)
+        NSColor.black.withAlphaComponent(0.95).setStroke()
+        outline.lineWidth = 3
+        outline.stroke()
+        NSColor.white.setStroke()
+        outline.lineWidth = 1
+        outline.stroke()
+        drawCursorCrosshair(center: NSPoint(x: 10, y: 10))
+        image.unlockFocus()
+        return cache(
+            NSCursor(image: image, hotSpot: NSPoint(x: 10, y: side - 10)),
+            for: cacheKey
+        )
+    }
+
+    private static func lassoCursor() -> NSCursor {
+        let cacheKey = "lasso"
         if let cachedCursor = cursorCache[cacheKey] {
             return cachedCursor
         }
         let side: CGFloat = 34
         let image = NSImage(size: NSSize(width: side, height: side))
         image.lockFocus()
-        let center = NSPoint(x: 10, y: 10)
-        let cross = NSBezierPath()
-        cross.move(to: NSPoint(x: center.x - 7, y: center.y))
-        cross.line(to: NSPoint(x: center.x + 7, y: center.y))
-        cross.move(to: NSPoint(x: center.x, y: center.y - 7))
-        cross.line(to: NSPoint(x: center.x, y: center.y + 7))
-        NSColor.black.withAlphaComponent(0.92).setStroke()
-        cross.lineWidth = 3
-        cross.stroke()
+        let loop = NSBezierPath(ovalIn: NSRect(x: 3, y: 8, width: 17, height: 14))
+        loop.move(to: NSPoint(x: 16, y: 10))
+        loop.curve(
+            to: NSPoint(x: 28, y: 3),
+            controlPoint1: NSPoint(x: 21, y: 10),
+            controlPoint2: NSPoint(x: 25, y: 4)
+        )
+        NSColor.black.withAlphaComponent(0.95).setStroke()
+        loop.lineWidth = 3.5
+        loop.stroke()
         NSColor.white.setStroke()
-        cross.lineWidth = 1.25
-        cross.stroke()
-        drawSymbolBadge(named: symbolName, origin: NSPoint(x: 17, y: 17))
+        loop.lineWidth = 1.3
+        loop.stroke()
         image.unlockFocus()
         return cache(
-            NSCursor(image: image, hotSpot: NSPoint(x: center.x, y: side - center.y)),
+            NSCursor(image: image, hotSpot: NSPoint(x: 9, y: side - 15)),
             for: cacheKey
         )
+    }
+
+    private static func magicWandCursor() -> NSCursor {
+        let cacheKey = "magic-wand"
+        if let cachedCursor = cursorCache[cacheKey] {
+            return cachedCursor
+        }
+        let side: CGFloat = 34
+        let image = NSImage(size: NSSize(width: side, height: side))
+        image.lockFocus()
+        let wand = NSBezierPath()
+        wand.move(to: NSPoint(x: 4, y: 6))
+        wand.line(to: NSPoint(x: 23, y: 25))
+        NSColor.black.withAlphaComponent(0.95).setStroke()
+        wand.lineWidth = 5
+        wand.stroke()
+        NSColor.white.setStroke()
+        wand.lineWidth = 2
+        wand.stroke()
+        let star = NSBezierPath()
+        star.move(to: NSPoint(x: 25, y: 28))
+        star.line(to: NSPoint(x: 25, y: 20))
+        star.move(to: NSPoint(x: 21, y: 24))
+        star.line(to: NSPoint(x: 29, y: 24))
+        star.move(to: NSPoint(x: 29, y: 29))
+        star.line(to: NSPoint(x: 29, y: 23))
+        star.move(to: NSPoint(x: 26, y: 26))
+        star.line(to: NSPoint(x: 32, y: 26))
+        NSColor.black.withAlphaComponent(0.95).setStroke()
+        star.lineWidth = 3
+        star.stroke()
+        NSColor.white.setStroke()
+        star.lineWidth = 1
+        star.stroke()
+        image.unlockFocus()
+        return cache(
+            NSCursor(image: image, hotSpot: NSPoint(x: 5, y: side - 6)),
+            for: cacheKey
+        )
+    }
+
+    private static func cropCursor() -> NSCursor {
+        let cacheKey = "crop"
+        if let cachedCursor = cursorCache[cacheKey] {
+            return cachedCursor
+        }
+        let side: CGFloat = 34
+        let image = NSImage(size: NSSize(width: side, height: side))
+        image.lockFocus()
+        let corners = NSBezierPath()
+        corners.move(to: NSPoint(x: 5, y: 13)); corners.line(to: NSPoint(x: 5, y: 5)); corners.line(to: NSPoint(x: 13, y: 5))
+        corners.move(to: NSPoint(x: 21, y: 5)); corners.line(to: NSPoint(x: 29, y: 5)); corners.line(to: NSPoint(x: 29, y: 13))
+        corners.move(to: NSPoint(x: 29, y: 21)); corners.line(to: NSPoint(x: 29, y: 29)); corners.line(to: NSPoint(x: 21, y: 29))
+        corners.move(to: NSPoint(x: 13, y: 29)); corners.line(to: NSPoint(x: 5, y: 29)); corners.line(to: NSPoint(x: 5, y: 21))
+        NSColor.black.withAlphaComponent(0.95).setStroke(); corners.lineWidth = 4; corners.stroke()
+        NSColor.white.setStroke(); corners.lineWidth = 1.5; corners.stroke()
+        image.unlockFocus()
+        return cache(NSCursor(image: image, hotSpot: NSPoint(x: 5, y: side - 5)), for: cacheKey)
+    }
+
+    private static func patchCursor() -> NSCursor {
+        let cacheKey = "patch"
+        if let cachedCursor = cursorCache[cacheKey] {
+            return cachedCursor
+        }
+        let side: CGFloat = 34
+        let image = NSImage(size: NSSize(width: side, height: side))
+        image.lockFocus()
+        let patch = NSBezierPath(roundedRect: NSRect(x: 4, y: 5, width: 18, height: 16), xRadius: 3, yRadius: 3)
+        patch.setLineDash([3, 2], count: 2, phase: 0)
+        NSColor.black.withAlphaComponent(0.95).setStroke(); patch.lineWidth = 3.5; patch.stroke()
+        NSColor.white.setStroke(); patch.lineWidth = 1.2; patch.stroke()
+        let arrow = NSBezierPath()
+        arrow.move(to: NSPoint(x: 22, y: 24)); arrow.line(to: NSPoint(x: 30, y: 24)); arrow.line(to: NSPoint(x: 26, y: 28))
+        NSColor.black.withAlphaComponent(0.95).setStroke(); arrow.lineWidth = 3; arrow.stroke()
+        NSColor.white.setStroke(); arrow.lineWidth = 1; arrow.stroke()
+        image.unlockFocus()
+        return cache(NSCursor(image: image, hotSpot: NSPoint(x: 8, y: side - 8)), for: cacheKey)
+    }
+
+    private static func gradientCursor() -> NSCursor {
+        let cacheKey = "gradient"
+        if let cachedCursor = cursorCache[cacheKey] {
+            return cachedCursor
+        }
+        let side: CGFloat = 34
+        let image = NSImage(size: NSSize(width: side, height: side))
+        image.lockFocus()
+        let bar = NSRect(x: 3, y: 6, width: 22, height: 8)
+        NSGradient(colors: [.white, .systemBlue, .black])?.draw(in: bar, angle: 0)
+        let barOutline = NSBezierPath(rect: bar)
+        NSColor.black.withAlphaComponent(0.95).setStroke(); barOutline.lineWidth = 3; barOutline.stroke()
+        let arrow = NSBezierPath(); arrow.move(to: NSPoint(x: 8, y: 19)); arrow.line(to: NSPoint(x: 8, y: 29)); arrow.move(to: NSPoint(x: 4, y: 25)); arrow.line(to: NSPoint(x: 8, y: 29)); arrow.line(to: NSPoint(x: 12, y: 25))
+        NSColor.black.withAlphaComponent(0.95).setStroke(); arrow.lineWidth = 3.5; arrow.stroke()
+        NSColor.white.setStroke(); arrow.lineWidth = 1.2; arrow.stroke()
+        image.unlockFocus()
+        return cache(NSCursor(image: image, hotSpot: NSPoint(x: 8, y: side - 8)), for: cacheKey)
+    }
+
+    private static func shapeCursor(for tool: ImageEditorTool) -> NSCursor {
+        let cacheKey = "shape:\(tool.rawValue)"
+        if let cachedCursor = cursorCache[cacheKey] {
+            return cachedCursor
+        }
+        let side: CGFloat = 34
+        let image = NSImage(size: NSSize(width: side, height: side))
+        image.lockFocus()
+        let shapeRect = NSRect(x: 4, y: 4, width: 17, height: 17)
+        let shape = tool == .ellipse ? NSBezierPath(ovalIn: shapeRect) : NSBezierPath(rect: shapeRect)
+        NSColor.black.withAlphaComponent(0.95).setStroke(); shape.lineWidth = 3.5; shape.stroke()
+        NSColor.white.setStroke(); shape.lineWidth = 1.2; shape.stroke()
+        drawCursorCrosshair(center: NSPoint(x: 12, y: 12))
+        image.unlockFocus()
+        return cache(NSCursor(image: image, hotSpot: NSPoint(x: 12, y: side - 12)), for: cacheKey)
+    }
+
+    private static func drawCursorCrosshair(center: NSPoint) {
+        let cross = NSBezierPath()
+        cross.move(to: NSPoint(x: center.x - 4, y: center.y)); cross.line(to: NSPoint(x: center.x + 4, y: center.y))
+        cross.move(to: NSPoint(x: center.x, y: center.y - 4)); cross.line(to: NSPoint(x: center.x, y: center.y + 4))
+        NSColor.black.withAlphaComponent(0.95).setStroke(); cross.lineWidth = 2.5; cross.stroke()
+        NSColor.white.setStroke(); cross.lineWidth = 1; cross.stroke()
     }
 
     private static func paintBucketCursor() -> NSCursor {

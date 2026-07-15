@@ -6424,15 +6424,18 @@ struct veilpicTests {
                     .sponge, .blur, .sharpen, .smudge, .healingBrush, .redEye
                 ]
             ),
+            (.selectionMarquee, [.marquee]),
+            (.lasso, [.lasso]),
+            (.magicWand, [.magicWand]),
+            (.crop, [.crop]),
+            (.patch, [.patchTool]),
+            (.gradient, [.gradient]),
+            (.shapeOutline, [.rectangle, .ellipse]),
+            (.paintBucket, [.paintBucket]),
+            (.eyedropper, [.eyedropper]),
+            (.samplingScope, [.colorSampler]),
             (.vectorPen, [.pen]),
             (.zoomMagnifier, [.zoom]),
-            (
-                .precisionCrosshair,
-                [
-                    .marquee, .lasso, .magicWand, .crop, .patchTool, .paintBucket,
-                    .gradient, .eyedropper, .colorSampler, .rectangle, .ellipse
-                ]
-            )
         ]
 
         for (family, tools) in expectations {
@@ -6446,6 +6449,19 @@ struct veilpicTests {
         let marquee = ImageEditorCanvasCursor.cursor(for: .marquee, brushDiameter: 18)
         #expect(zoom.image.tiffRepresentation != marquee.image.tiffRepresentation)
         #expect(ImageEditorCanvasCursor.cursor(for: .move, brushDiameter: 18) === NSCursor.arrow)
+    }
+
+    @MainActor
+    @Test func precisionToolsExposeDistinctCursorArtwork() async throws {
+        let tools: [ImageEditorTool] = [
+            .marquee, .lasso, .magicWand, .crop, .patchTool,
+            .gradient, .rectangle, .ellipse
+        ]
+        let representations = tools.compactMap {
+            ImageEditorCanvasCursor.cursor(for: $0, brushDiameter: 18).image.tiffRepresentation
+        }
+        #expect(representations.count == tools.count)
+        #expect(Set(representations).count == tools.count)
     }
 
     @MainActor
