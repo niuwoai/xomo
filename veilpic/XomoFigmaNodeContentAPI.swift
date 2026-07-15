@@ -16,21 +16,25 @@ struct XomoFigmaNodeContentAPIClient: XomoFigmaNodePlanFetching {
     private let baseURL: URL
     private let transport: any XomoFigmaHTTPTransport
     private let imageAssetFetcher: (any XomoFigmaImageAssetFetching)?
+    private let variableFetcher: (any XomoFigmaVariableFetching)?
 
     init() {
         baseURL = URL(string: "https://api.figma.com")!
         transport = XomoFigmaURLSessionTransport()
         imageAssetFetcher = XomoFigmaImageAssetAPIClient()
+        variableFetcher = XomoFigmaVariableAPIClient()
     }
 
     init(
         baseURL: URL = URL(string: "https://api.figma.com")!,
         transport: any XomoFigmaHTTPTransport,
-        imageAssetFetcher: (any XomoFigmaImageAssetFetching)? = nil
+        imageAssetFetcher: (any XomoFigmaImageAssetFetching)? = nil,
+        variableFetcher: (any XomoFigmaVariableFetching)? = nil
     ) {
         self.baseURL = baseURL
         self.transport = transport
         self.imageAssetFetcher = imageAssetFetcher
+        self.variableFetcher = variableFetcher
     }
 
     func fetchPlan(
@@ -65,7 +69,18 @@ struct XomoFigmaNodeContentAPIClient: XomoFigmaNodePlanFetching {
         } catch {
             throw XomoFigmaNodeImportError.invalidResponse
         }
-        let plan = try XomoFigmaNodeImportMapper.makePlan(response: envelope, requestedNodeID: nodeID)
+        var plan = try XomoFigmaNodeImportMapper.makePlan(response: envelope, requestedNodeID: nodeID)
+        if let variableFetcher, !plan.requiredVariableIDs.isEmpty {
+            do {
+                let store = try await variableFetcher.fetchVariables(
+                    fileKey: preview.fileKey,
+                    credential: credential
+                )
+                plan = plan.resolvingVariables(store)
+            } catch {
+                // Variable values are an optional enhancement; the imported binding IDs remain usable.
+            }
+        }
         guard let imageAssetFetcher, !plan.requiredImageReferences.isEmpty else { return plan }
         do {
             let assets = try await imageAssetFetcher.fetchAssets(

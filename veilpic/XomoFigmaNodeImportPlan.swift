@@ -265,6 +265,36 @@ struct XomoFigmaNodeImportPlan: Equatable, Sendable {
         })
     }
 
+    var requiredVariableIDs: Set<String> {
+        Set(items.flatMap(\.variableBindings).map(\.variableID))
+    }
+
+    func resolvingVariables(_ store: XomoFigmaVariableStore) -> Self {
+        var resolved = self
+        resolved.items = items.map { item in
+            var updated = item
+            for binding in item.variableBindings {
+                guard let color = store.color(for: binding.variableID) else { continue }
+                switch binding.field {
+                case "fills":
+                    updated.solidFill = color
+                case "strokes":
+                    updated.solidStroke = color
+                default:
+                    continue
+                }
+            }
+            let unresolved = item.variableBindings.contains { store.color(for: $0.variableID) == nil }
+            if !unresolved {
+                updated.issues.removeAll { $0 == .variableBindingPreserved }
+            }
+            updated.issues = Array(Set(updated.issues)).sorted { $0.rawValue < $1.rawValue }
+            updated.fidelity = updated.issues.isEmpty ? .exact : .partial
+            return updated
+        }
+        return resolved
+    }
+
     func resolvingImageAssets(_ assets: [String: XomoFigmaImageAsset]) -> Self {
         let required = requiredImageReferences
         let acceptedAssets = assets.filter { required.contains($0.key) }

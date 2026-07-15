@@ -686,6 +686,101 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(restoredLayer.xomoFigmaVariableBindings == item.variableBindings)
     }
 
+    @Test func figmaVariablesResolveDefaultModeColorsAndAliases() async throws {
+        let transport = RecordingFigmaNodeTransport(
+            statusCode: 200,
+            body: Data(
+                """
+                {
+                  "meta": {
+                    "variables": {
+                      "VariableID:brand-fill": {
+                        "id": "VariableID:brand-fill",
+                        "name": "Brand Fill",
+                        "variableCollectionId": "CollectionID:tokens",
+                        "resolvedType": "COLOR",
+                        "valuesByMode": {
+                          "ModeID:default": {"type": "VARIABLE_ALIAS", "id": "VariableID:brand-base"}
+                        }
+                      },
+                      "VariableID:brand-base": {
+                        "id": "VariableID:brand-base",
+                        "name": "Brand Base",
+                        "variableCollectionId": "CollectionID:tokens",
+                        "resolvedType": "COLOR",
+                        "valuesByMode": {
+                          "ModeID:default": {"r": 0.1, "g": 0.3, "b": 0.8, "a": 0.9}
+                        }
+                      }
+                    },
+                    "variableCollections": {
+                      "CollectionID:tokens": {
+                        "id": "CollectionID:tokens",
+                        "name": "Tokens",
+                        "defaultModeId": "ModeID:default",
+                        "modes": [{"modeId": "ModeID:default", "name": "Default"}]
+                      }
+                    }
+                  }
+                }
+                """.utf8
+            )
+        )
+        let credential = try XomoFigmaPersonalAccessToken(validating: "figma-test-token")
+        let client = XomoFigmaVariableAPIClient(
+            baseURL: URL(string: "https://example.test")!,
+            transport: transport
+        )
+
+        let store = try await client.fetchVariables(fileKey: "file-key", credential: credential)
+        #expect(store.color(for: "VariableID:brand-fill") == XomoFigmaPlanColor(
+            red: 0.1, green: 0.3, blue: 0.8, alpha: 0.9
+        ))
+        #expect(transport.lastRequest?.url?.path == "/v1/files/file-key/variables/local")
+        #expect(transport.lastRequest?.value(forHTTPHeaderField: "X-Figma-Token") == credential.rawValue)
+
+        let item = XomoFigmaNodeImportItem(
+            sourceID: "node",
+            parentSourceID: nil,
+            depth: 0,
+            sourceName: "Token",
+            sourceType: "RECTANGLE",
+            targetKind: .rectangle,
+            fidelity: .partial,
+            issues: [.variableBindingPreserved],
+            variableBindings: [XomoFigmaVariableBinding(field: "fills", variableID: "VariableID:brand-fill")],
+            frame: XomoFigmaPlanRect(x: 0, y: 0, width: 20, height: 20),
+            opacity: 1,
+            isVisible: true,
+            solidFill: XomoFigmaPlanColor(red: 1, green: 1, blue: 1, alpha: 1),
+            solidStroke: nil,
+            strokeWeight: nil,
+            cornerRadius: nil,
+            text: nil,
+            vectorPaths: [],
+            geometrySize: nil,
+            imageReference: nil,
+            imageScaleMode: nil,
+            imageTransform: nil,
+            imageScalingFactor: nil,
+            imageRotation: nil,
+            stackLayout: nil,
+            stackChildLayout: nil,
+            isStackLayoutExcluded: false
+        )
+        let plan = XomoFigmaNodeImportPlan(
+            fileName: "Variables",
+            version: nil,
+            rootSourceID: "node",
+            rootName: "Token",
+            items: [item]
+        )
+        let resolved = try #require(plan.resolvingVariables(store).items.first)
+        #expect(resolved.solidFill == XomoFigmaPlanColor(red: 0.1, green: 0.3, blue: 0.8, alpha: 0.9))
+        #expect(resolved.issues.isEmpty)
+        #expect(resolved.fidelity == .exact)
+    }
+
     @Test func mapperImportsHorizontalBaselineAsEditableNativeLayout() throws {
         let response = try JSONDecoder().decode(
             XomoFigmaNodeResponse.self,

@@ -1,6 +1,6 @@
 # Xomo Figma 链接导入边界
 
-> 最后更新：2026-07-15 ｜ 当前版本：v2.12.0-rc93 ｜ 当前阶段：Figma 变量绑定保留与项目往返
+> 最后更新：2026-07-15 ｜ 当前版本：v2.12.0-rc94 ｜ 当前阶段：Figma Variables 只读颜色解析
 
 ## 当前已经支持
 
@@ -22,7 +22,7 @@ rc58 在这层本地预览之后增加可选的个人连接：用户必须主动
 
 rc59 要求链接包含明确的 `node-id`。用户点击“读取节点并生成计划”后，Xomo 调用官方 `GET /v1/files/:key/nodes`，只读取该节点最多 6 层的子树并请求 `geometry=paths`。响应先转换成逐项报告，画布保持不变；用户再次点击“导入可映射图层”后才会一次性建立可撤销图层：
 
-rc93 开始识别节点的 `boundVariables` 中 `fills`、`strokes` 与 `characters` 的 `VARIABLE_ALIAS`。导入报告保留字段和变量 ID，原生图层与项目保存重开也保留这组绑定；当前仍使用节点响应中的静态颜色/文字，不联网读取变量实时值，因此明确标记为部分保真。
+rc94 在 rc93 的基础上识别节点的 `boundVariables` 中 `fills`、`strokes` 与 `characters` 的 `VARIABLE_ALIAS`，并在用户已提供 Personal Access Token 时调用官方 `GET /v1/files/:key/variables/local`。颜色变量按默认 mode 读取，颜色别名递归解析后覆盖对应的纯色填充/描边；原生图层与项目保存重开继续保留字段和变量 ID。Variables 权限、网络或值类型不满足时，回退到节点响应中的静态颜色/文字，不伪装成完整变量系统。
 
 | Figma 节点 | Xomo 结果 | 当前保真范围 |
 | --- | --- | --- |
@@ -97,4 +97,4 @@ rc72 依据 Figma 官方 [Paint / ColorStop 属性说明](https://developers.fig
 
 ## 明确尚未支持
 
-rc88 能把 Figma 的单一纯色、2–16 色标线性渐变和圆形径向渐变映射为可继续修改的形状填充，并保留独立纯色描边、统一 `cornerRadius`、合法的四角 `rectangleCornerRadii` 与 `cornerSmoothing`；平滑轮廓使用超椭圆视觉近似，因此仍会明确标记为部分保真。椭圆/倾斜径向轴、角度渐变、菱形渐变、图案与多重 Paint 仍不保留。图片 Crop/STRETCH、Tile、90°旋转和 7 项滤镜可以视觉烘焙，但这些参数尚未保存为可再次编辑的图片填充或独立滤镜对象；节点旋转/镜像/倾斜变换、蒙版与 Frame 内容裁切关系、效果、特殊混合模式、纵向 Wrap、换行轨道 `SPACE_BETWEEN`、变量实时值与 mode 解析、组件属性和实例覆写语义仍未保留。rc93 仅保留 `fills`、`strokes`、`characters` 的变量别名 ID。水平 Baseline 已原生保留，非法的垂直 Baseline 仍明确降级。Fill 子项只在父组对应轴为固定尺寸时改变外框；水平 Wrap 中按所在行分配剩余宽度，Stretch 填满所在行高度。父主轴为 Hug 时保留导入尺寸，避免父子互相依赖。绝对定位子项不参与布局尺寸计算。超过 6 层的后代不会读取；不解析 `.fig` 私有格式、不读取浏览器会话，也不声称 Figma 文件可以无损还原。
+rc88 能把 Figma 的单一纯色、2–16 色标线性渐变和圆形径向渐变映射为可继续修改的形状填充，并保留独立纯色描边、统一 `cornerRadius`、合法的四角 `rectangleCornerRadii` 与 `cornerSmoothing`；平滑轮廓使用超椭圆视觉近似，因此仍会明确标记为部分保真。椭圆/倾斜径向轴、角度渐变、菱形渐变、图案与多重 Paint 仍不保留。图片 Crop/STRETCH、Tile、90°旋转和 7 项滤镜可以视觉烘焙，但这些参数尚未保存为可再次编辑的图片填充或独立滤镜对象；节点旋转/镜像/倾斜变换、蒙版与 Frame 内容裁切关系、效果、特殊混合模式、纵向 Wrap、换行轨道 `SPACE_BETWEEN`、组件属性和实例覆写语义仍未保留。rc94 对 `fills`、`strokes`、`characters` 的变量别名 ID 继续随图层保存，并可在有权限时解析颜色变量默认 mode 与颜色别名；变量文字、非颜色类型和完整 mode 编辑仍未保留。水平 Baseline 已原生保留，非法的垂直 Baseline 仍明确降级。Fill 子项只在父组对应轴为固定尺寸时改变外框；水平 Wrap 中按所在行分配剩余宽度，Stretch 填满所在行高度。父主轴为 Hug 时保留导入尺寸，避免父子互相依赖。绝对定位子项不参与布局尺寸计算。超过 6 层的后代不会读取；不解析 `.fig` 私有格式、不读取浏览器会话，也不声称 Figma 文件可以无损还原。

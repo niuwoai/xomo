@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.12.0-rc94 - 2026-07-15
+
+### Added
+- 接入 Figma Variables 本地变量只读接口，按默认 mode 解析颜色值并递归解析颜色别名。
+
+### Changed
+- Figma 节点导入在有 Variables 权限时使用实时颜色覆盖静态填充/描边；网络或权限不可用时仍保留变量绑定 ID 并安全降级。
+
+### Tests
+- 新增 Variables API 请求、默认 mode、别名解析与导入计划颜色应用回归；Figma 导入专项 25/25 通过。
+
 ## 2.12.0-rc93 - 2026-07-15
 
 ### Added
