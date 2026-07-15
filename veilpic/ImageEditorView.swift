@@ -6439,6 +6439,7 @@ enum ImageEditorCanvasCursorFamily: Equatable {
     case lasso
     case magicWand
     case quickSelection
+    case cloneStamp
     case crop
     case patch
     case gradient
@@ -6482,6 +6483,8 @@ enum ImageEditorCanvasCursor {
             .magicWand
         case .quickSelection:
             .quickSelection
+        case .cloneStamp:
+            .cloneStamp
         case .crop:
             .crop
         case .patchTool:
@@ -6490,7 +6493,7 @@ enum ImageEditorCanvasCursor {
             .gradient
         case .rectangle, .ellipse:
             .shapeOutline
-        case .brush, .eraser, .cloneStamp, .dodge, .burn, .sponge,
+        case .brush, .eraser, .dodge, .burn, .sponge,
              .blur, .sharpen, .smudge, .healingBrush:
             .brushFootprint
         case .paintBucket:
@@ -6529,6 +6532,8 @@ enum ImageEditorCanvasCursor {
             return magicWandCursor()
         case .quickSelection:
             return quickSelectionCursor()
+        case .cloneStamp:
+            return cloneStampCursor()
         case .crop:
             return cropCursor()
         case .patch:
@@ -6736,6 +6741,59 @@ enum ImageEditorCanvasCursor {
         image.unlockFocus()
         return cache(
             NSCursor(image: image, hotSpot: NSPoint(x: 10, y: side - 10)),
+            for: cacheKey
+        )
+    }
+
+    private static func cloneStampCursor() -> NSCursor {
+        let cacheKey = "clone-stamp"
+        if let cachedCursor = cursorCache[cacheKey] {
+            return cachedCursor
+        }
+
+        let side: CGFloat = 36
+        let image = NSImage(size: NSSize(width: side, height: side))
+        image.lockFocus()
+
+        let stamp = NSBezierPath(ovalIn: NSRect(x: 3, y: 5, width: 18, height: 18))
+        NSColor.black.withAlphaComponent(0.95).setStroke()
+        stamp.lineWidth = 4
+        stamp.stroke()
+        NSColor.white.withAlphaComponent(0.98).setStroke()
+        stamp.lineWidth = 1.4
+        stamp.stroke()
+
+        let handle = NSBezierPath()
+        handle.move(to: NSPoint(x: 8, y: 8))
+        handle.line(to: NSPoint(x: 17, y: 17))
+        NSColor.systemBlue.setStroke()
+        handle.lineWidth = 2
+        handle.stroke()
+
+        let source = NSBezierPath()
+        source.move(to: NSPoint(x: 26, y: 8)); source.line(to: NSPoint(x: 26, y: 18))
+        source.move(to: NSPoint(x: 21, y: 13)); source.line(to: NSPoint(x: 31, y: 13))
+        NSColor.black.withAlphaComponent(0.95).setStroke()
+        source.lineWidth = 3
+        source.stroke()
+        NSColor.white.setStroke()
+        source.lineWidth = 1
+        source.stroke()
+
+        let arrow = NSBezierPath()
+        arrow.move(to: NSPoint(x: 22, y: 28))
+        arrow.line(to: NSPoint(x: 31, y: 28))
+        arrow.line(to: NSPoint(x: 27, y: 24))
+        NSColor.black.withAlphaComponent(0.95).setStroke()
+        arrow.lineWidth = 3
+        arrow.stroke()
+        NSColor.white.setStroke()
+        arrow.lineWidth = 1
+        arrow.stroke()
+
+        image.unlockFocus()
+        return cache(
+            NSCursor(image: image, hotSpot: NSPoint(x: 26, y: side - 13)),
             for: cacheKey
         )
     }
