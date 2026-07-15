@@ -3644,6 +3644,29 @@ struct ImageEditorView: View {
                 )
                 .allowsHitTesting(false)
 
+            radiusPath
+                .stroke(Color.white.opacity(0.001), lineWidth: 18)
+                .contentShape(radiusPath.strokedPath(StrokeStyle(lineWidth: 18)))
+                .gesture(
+                    SpatialTapGesture(
+                        count: 2,
+                        coordinateSpace: .named("image-editor-canvas-space")
+                    )
+                    .onEnded { value in
+                        guard let index = viewModel.addSelectedShapeGradientStop(
+                            atCanvasPoint: unboundedImagePoint(from: value.location, in: canvasSize)
+                        ) else { return }
+                        selectedShapeGradientStopIndex = index
+                    }
+                )
+                .allowsHitTesting(
+                    viewModel.canEditSelectedShapeGradientStops
+                        && viewModel.selectedShapeGradientColorStops.count
+                            < ImageEditorGradientFillContent.maximumColorStopCount
+                )
+                .help(L10n.text("imageEditor.help.shapeGradientAxis"))
+                .accessibilityIdentifier("image-editor-shape-radial-gradient-axis")
+
             ForEach(viewModel.selectedShapeGradientCanvasStopHandlePoints) { stopPoint in
                 shapeGradientStopHandleView(
                     stopPoint,
