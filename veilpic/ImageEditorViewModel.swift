@@ -666,6 +666,35 @@ final class ImageEditorViewModel: ObservableObject {
         document.selectedLayer?.name ?? ""
     }
 
+    var selectedLayerFigmaVariableBindings: [XomoFigmaVariableBinding] {
+        document.selectedLayer?.xomoFigmaVariableBindings ?? []
+    }
+
+    var hasSelectedLayerFigmaVariableBindings: Bool {
+        !selectedLayerFigmaVariableBindings.isEmpty
+    }
+
+    func copyFigmaVariableBinding(_ binding: XomoFigmaVariableBinding) {
+        let value = binding.variableID.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !value.isEmpty else { return }
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(value, forType: .string)
+        statusText = L10n.format(
+            "imageEditor.status.figmaVariableCopied",
+            binding.field
+        )
+    }
+
+    func copySelectedFigmaVariableBindings() {
+        let values = selectedLayerFigmaVariableBindings
+            .map(\.variableID)
+            .filter { !$0.isEmpty }
+        guard !values.isEmpty else { return }
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(values.joined(separator: "\n"), forType: .string)
+        statusText = L10n.text("imageEditor.status.figmaVariablesCopied")
+    }
+
     var selectedLayerIsGroup: Bool {
         document.selectedLayer?.isGroup == true
     }

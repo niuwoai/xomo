@@ -2828,6 +2828,11 @@
 "imageEditor.status.healingSourceSet" = "Healing source set";
 "imageEditor.status.healingSourcePending" = "Click the canvas to set the healing source";
 "imageEditor.action.figmaLinkImport" = "Import Figma Link…";
+"imageEditor.action.copyFigmaVariables" = "Copy all IDs";
+"imageEditor.action.copyFigmaVariable" = "Copy variable ID";
+"imageEditor.properties.figmaVariables" = "Figma variable bindings";
+"imageEditor.status.figmaVariableCopied" = "Copied %@ variable ID";
+"imageEditor.status.figmaVariablesCopied" = "Copied Figma variable IDs";
 "xomo.figma.resource.design" = "Figma Design";
 "xomo.figma.resource.legacyFile" = "Figma Design (legacy link)";
 "xomo.figma.resource.prototype" = "Figma Prototype";

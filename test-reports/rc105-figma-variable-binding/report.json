@@ -1,0 +1,79 @@
+{
+  "generated_at": "2026-07-16 02:02:16 +0800",
+  "total": 7,
+  "passed": 7,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "XomoFigmaLinkImportTests",
+      "method": "draftValidatesImmediatelyAndKeepsOnlyParsedPreview",
+      "identifier": "veilpicTests/XomoFigmaLinkImportTests/draftValidatesImmediatelyAndKeepsOnlyParsedPreview",
+      "file": "XomoFigmaLinkImportTests.swift",
+      "passed": true,
+      "duration": 4.0,
+      "issues": [],
+      "log": "XomoFigmaLinkImportTests.draftValidatesImmediatelyAndKeepsOnlyParsedPreview.log"
+    },
+    {
+      "suite": "XomoFigmaLinkImportTests",
+      "method": "everyParserErrorHasUniqueLocalizedPresentationKey",
+      "identifier": "veilpicTests/XomoFigmaLinkImportTests/everyParserErrorHasUniqueLocalizedPresentationKey",
+      "file": "XomoFigmaLinkImportTests.swift",
+      "passed": true,
+      "duration": 2.862,
+      "issues": [],
+      "log": "XomoFigmaLinkImportTests.everyParserErrorHasUniqueLocalizedPresentationKey.log"
+    },
+    {
+      "suite": "XomoFigmaLinkImportTests",
+      "method": "everyResourceAndScopeHasLocalizedPresentationKey",
+      "identifier": "veilpicTests/XomoFigmaLinkImportTests/everyResourceAndScopeHasLocalizedPresentationKey",
+      "file": "XomoFigmaLinkImportTests.swift",
+      "passed": true,
+      "duration": 3.031,
+      "issues": [],
+      "log": "XomoFigmaLinkImportTests.everyResourceAndScopeHasLocalizedPresentationKey.log"
+    },
+    {
+      "suite": "XomoFigmaLinkImportTests",
+      "method": "fileMenuAndEditorPresentTheFigmaPreviewSheet",
+      "identifier": "veilpicTests/XomoFigmaLinkImportTests/fileMenuAndEditorPresentTheFigmaPreviewSheet",
+      "file": "XomoFigmaLinkImportTests.swift",
+      "passed": true,
+      "duration": 3.079,
+      "issues": [],
+      "log": "XomoFigmaLinkImportTests.fileMenuAndEditorPresentTheFigmaPreviewSheet.log"
+    },
+    {
+      "suite": "XomoFigmaLinkImportTests",
+      "method": "keyboardShortcutOpensFigmaLinkImportWithoutConflictingWithImageResize",
+      "identifier": "veilpicTests/XomoFigmaLinkImportTests/keyboardShortcutOpensFigmaLinkImportWithoutConflictingWithImageResize",
+      "file": "XomoFigmaLinkImportTests.swift",
+      "passed": true,
+      "duration": 3.022,
+      "issues": [],
+      "log": "XomoFigmaLinkImportTests.keyboardShortcutOpensFigmaLinkImportWithoutConflictingWithImageResize.log"
+    },
+    {
+      "suite": "XomoFigmaLinkImportTests",
+      "method": "propertiesPanelPresentsFigmaVariableBindingsWithoutKeyboardFocus",
+      "identifier": "veilpicTests/XomoFigmaLinkImportTests/propertiesPanelPresentsFigmaVariableBindingsWithoutKeyboardFocus",
+      "file": "XomoFigmaLinkImportTests.swift",
+      "passed": true,
+      "duration": 2.899,
+      "issues": [],
+      "log": "XomoFigmaLinkImportTests.propertiesPanelPresentsFigmaVariableBindingsWithoutKeyboardFocus.log"
+    },
+    {
+      "suite": "XomoFigmaLinkImportTests",
+      "method": "selectedLayerFigmaVariableBindingsAreVisibleAndCopyable",
+      "identifier": "veilpicTests/XomoFigmaLinkImportTests/selectedLayerFigmaVariableBindingsAreVisibleAndCopyable",
+      "file": "XomoFigmaLinkImportTests.swift",
+      "passed": true,
+      "duration": 2.952,
+      "issues": [],
+      "log": "XomoFigmaLinkImportTests.selectedLayerFigmaVariableBindingsAreVisibleAndCopyable.log"
+    }
+  ]
+}

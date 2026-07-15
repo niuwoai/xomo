@@ -90,4 +90,48 @@ struct XomoFigmaLinkImportTests {
             ) == .resizeImage
         )
     }
+
+    @Test func selectedLayerFigmaVariableBindingsAreVisibleAndCopyable() throws {
+        let image = NSImage(size: NSSize(width: 32, height: 32))
+        let viewModel = ImageEditorViewModel(
+            sourceName: "Variables",
+            image: image,
+            onApply: { _ in }
+        )
+        let selectedID = try #require(viewModel.document.selectedLayerID)
+        viewModel.document.layers[viewModel.document.selectedLayerIndex!].xomoFigmaVariableBindings = [
+            XomoFigmaVariableBinding(field: "fills", variableID: "VariableID:brand-primary"),
+            XomoFigmaVariableBinding(field: "characters", variableID: "VariableID:label")
+        ]
+        viewModel.document.selectedLayerID = selectedID
+        viewModel.document.selectedLayerIDs = [selectedID]
+
+        #expect(viewModel.hasSelectedLayerFigmaVariableBindings)
+        #expect(viewModel.selectedLayerFigmaVariableBindings.map(\.field) == ["fills", "characters"])
+
+        viewModel.copyFigmaVariableBinding(viewModel.selectedLayerFigmaVariableBindings[0])
+        #expect(NSPasteboard.general.string(forType: .string) == "VariableID:brand-primary")
+
+        viewModel.copySelectedFigmaVariableBindings()
+        #expect(
+            NSPasteboard.general.string(forType: .string)
+                == "VariableID:brand-primary\nVariableID:label"
+        )
+    }
+
+    @Test func propertiesPanelPresentsFigmaVariableBindingsWithoutKeyboardFocus() throws {
+        let root = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: root.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("selectedLayerFigmaVariableBindings"))
+        #expect(source.contains("image-editor-copy-figma-variables"))
+        #expect(source.contains("image-editor-copy-figma-variable-\\(binding.id)"))
+        #expect(source.contains("imageEditor.properties.figmaVariables"))
+        #expect(source.contains(".focusable(false)"))
+    }
 }

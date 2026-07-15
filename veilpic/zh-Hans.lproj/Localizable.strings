@@ -2828,6 +2828,11 @@
 "imageEditor.status.healingSourceSet" = "已设置修复源";
 "imageEditor.status.healingSourcePending" = "请在画布上点击以设置修复源";
 "imageEditor.action.figmaLinkImport" = "导入 Figma 链接…";
+"imageEditor.action.copyFigmaVariables" = "复制全部 ID";
+"imageEditor.action.copyFigmaVariable" = "复制变量 ID";
+"imageEditor.properties.figmaVariables" = "Figma 变量绑定";
+"imageEditor.status.figmaVariableCopied" = "已复制 %@ 变量 ID";
+"imageEditor.status.figmaVariablesCopied" = "已复制 Figma 变量 ID";
 "xomo.figma.resource.design" = "Figma Design";
 "xomo.figma.resource.legacyFile" = "Figma Design（旧版链接）";
 "xomo.figma.resource.prototype" = "Figma 原型";

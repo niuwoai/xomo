@@ -4120,6 +4120,50 @@ struct ImageEditorView: View {
                     .disabled(layerNameDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }
 
+                if viewModel.hasSelectedLayerFigmaVariableBindings {
+                    VStack(alignment: .leading, spacing: 7) {
+                        HStack(spacing: 8) {
+                            Text(L10n.text("imageEditor.properties.figmaVariables"))
+                                .font(.system(size: 11, weight: .bold))
+                                .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                            Spacer(minLength: 4)
+                            Button(L10n.text("imageEditor.action.copyFigmaVariables")) {
+                                viewModel.copySelectedFigmaVariableBindings()
+                            }
+                            .buttonStyle(EditorTextButtonStyle())
+                            .focusable(false)
+                            .accessibilityIdentifier("image-editor-copy-figma-variables")
+                        }
+
+                        ForEach(viewModel.selectedLayerFigmaVariableBindings) { binding in
+                            HStack(spacing: 7) {
+                                Text(binding.field)
+                                    .font(.system(size: 10, weight: .medium))
+                                    .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+                                    .frame(minWidth: 58, alignment: .leading)
+                                Text(binding.variableID)
+                                    .font(.system(size: 10, design: .monospaced))
+                                    .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                                    .lineLimit(1)
+                                    .truncationMode(.middle)
+                                Spacer(minLength: 0)
+                                Button {
+                                    viewModel.copyFigmaVariableBinding(binding)
+                                } label: {
+                                    Image(systemName: "doc.on.doc")
+                                }
+                                .buttonStyle(EditorIconButtonStyle(isSelected: false))
+                                .focusable(false)
+                                .help(L10n.text("imageEditor.action.copyFigmaVariable"))
+                                .accessibilityLabel(L10n.text("imageEditor.action.copyFigmaVariable"))
+                                .accessibilityIdentifier("image-editor-copy-figma-variable-\(binding.id)")
+                            }
+                        }
+                    }
+
+                    Divider().overlay(editorBorder)
+                }
+
                 Divider().overlay(editorBorder)
 
                 if viewModel.selectedLayerIsShape {

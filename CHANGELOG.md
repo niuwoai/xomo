@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc105 - 2026-07-16
+
+### Added
+- 在属性面板显示选中图层的 Figma 变量绑定，并支持复制单个或全部变量 ID；该动作只读本地剪贴板，不向 Figma 写回。
+
+### Verification
+- Figma 变量绑定专项 7/7、三语资源专项 4/4 通过，报告见 `test-reports/rc105-figma-variable-binding/` 与 `test-reports/rc105-localization/`；rc104 组件对象与组件库回归报告继续保留。
+
 ## 2.12.0-rc104 - 2026-07-16
 
 ### Fixed

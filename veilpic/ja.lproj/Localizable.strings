@@ -2828,6 +2828,11 @@
 "imageEditor.status.healingSourceSet" = "修復ソースを設定しました";
 "imageEditor.status.healingSourcePending" = "キャンバスをクリックして修復ソースを設定してください";
 "imageEditor.action.figmaLinkImport" = "Figma リンクを読み込む…";
+"imageEditor.action.copyFigmaVariables" = "すべての ID をコピー";
+"imageEditor.action.copyFigmaVariable" = "変数 ID をコピー";
+"imageEditor.properties.figmaVariables" = "Figma 変数バインディング";
+"imageEditor.status.figmaVariableCopied" = "%@ 変数 ID をコピーしました";
+"imageEditor.status.figmaVariablesCopied" = "Figma 変数 ID をコピーしました";
 "xomo.figma.resource.design" = "Figma Design";
 "xomo.figma.resource.legacyFile" = "Figma Design（旧形式リンク）";
 "xomo.figma.resource.prototype" = "Figma プロトタイプ";
