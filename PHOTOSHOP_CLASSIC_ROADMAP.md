@@ -1,6 +1,6 @@
 # Xomo 经典 Photoshop 能力路线图
 
-> 最后更新：2026-07-15 ｜ 当前版本：v2.12.0-rc86 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座
+> 最后更新：2026-07-15 ｜ 当前版本：v2.12.0-rc87 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座
 
 ## 1. 范围原则
 
@@ -237,4 +237,6 @@
 - `v2.12.0-rc85` 验证：选项栏、组件侧栏、对象命中/移动、图层面板、光标与三语资源共 62 项、CLI 2/2 通过；隔离 Debug App 版本、Bundle ID `im.some.xomo`、macOS 13.0 下限与 arm64 架构核对通过。
 - `v2.12.0-rc86`：Figma 图片 Paint 的曝光、对比度、饱和度、色温、色调、高光与阴影按官方范围读取，在 Fill/Fit/Crop/Tile/旋转之后近似烘焙为持久像素；导入报告明确提示不可再次单独编辑。
 - `v2.12.0-rc86` 验证：图片滤镜、图片资产与节点导入回归 31/31、三语资源 4/4、CLI 2/2 通过；隔离 Debug App 版本、Bundle ID `im.some.xomo`、macOS 13.0 下限与 arm64 架构核对通过。
-- 下一小版本：从 Auto Layout Wrap 或 Baseline 中选择一条可独立验收的窄路径。
+- `v2.12.0-rc87`：Figma 水平 Auto Layout Wrap 映射为原生多行布局，保留行内/行间距、交叉轴 Hug、逐行 Fill/Stretch、属性面板、项目往返与 Undo/Redo；Baseline 与复杂轨道分布继续明确降级。
+- `v2.12.0-rc87` 验证：Auto Layout 17/17、Figma 节点导入 20/20、三语资源 4/4，共 41/41，CLI 2/2 通过；隔离 Debug App 版本、Bundle ID `im.some.xomo`、macOS 13.0 下限与 arm64 架构核对通过。
+- 下一小版本：从 Auto Layout Baseline 或 Figma 变量/token 中选择一条可独立验收的窄路径。

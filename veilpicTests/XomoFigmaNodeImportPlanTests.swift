@@ -512,7 +512,7 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(line.strokeWeight == 3)
     }
 
-    @Test func mapperReportsUnsupportedWrapWhileKeepingFillChildSemantics() throws {
+    @Test func mapperImportsHorizontalWrapAndCounterSpacingWithFillChildSemantics() throws {
         let response = try JSONDecoder().decode(
             XomoFigmaNodeResponse.self,
             from: Data(
@@ -527,8 +527,10 @@ struct XomoFigmaNodeImportPlanTests {
                         "type": "FRAME",
                         "layoutMode": "HORIZONTAL",
                         "layoutWrap": "WRAP",
-                        "primaryAxisSizingMode": "AUTO",
+                        "primaryAxisSizingMode": "FIXED",
                         "itemSpacing": 6,
+                        "counterAxisSpacing": 14,
+                        "counterAxisAlignContent": "AUTO",
                         "absoluteBoundingBox": {"x": 0, "y": 0, "width": 200, "height": 100},
                         "children": [{
                           "id": "1:11",
@@ -551,12 +553,47 @@ struct XomoFigmaNodeImportPlanTests {
         let child = try #require(plan.items.first { $0.sourceID == "1:11" })
         #expect(frame.stackLayout?.axis == .horizontal)
         #expect(frame.stackLayout?.spacing == 6)
-        #expect(frame.issues.contains(.autoLayoutFlattened))
+        #expect(frame.stackLayout?.wrapMode == .wrap)
+        #expect(frame.stackLayout?.counterSpacing == 14)
+        #expect(!frame.issues.contains(.autoLayoutFlattened))
         #expect(!child.issues.contains(.autoLayoutFlattened))
         #expect(child.stackChildLayout == ImageEditorStackChildLayout(
             grow: 1,
             stretchesCrossAxis: true
         ))
+    }
+
+    @Test func mapperStillReportsUnsupportedBaselineAndWrappedTrackDistribution() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                """
+                {
+                  "name": "Unsupported wrapped alignment",
+                  "nodes": {
+                    "1:12": {
+                      "document": {
+                        "id": "1:12",
+                        "name": "Baseline Wrap",
+                        "type": "FRAME",
+                        "layoutMode": "HORIZONTAL",
+                        "layoutWrap": "WRAP",
+                        "counterAxisAlignItems": "BASELINE",
+                        "counterAxisAlignContent": "SPACE_BETWEEN",
+                        "absoluteBoundingBox": {"x": 0, "y": 0, "width": 200, "height": 100}
+                      }
+                    }
+                  }
+                }
+                """.utf8
+            )
+        )
+
+        let plan = try XomoFigmaNodeImportMapper.makePlan(response: response, requestedNodeID: "1:12")
+        let frame = try #require(plan.items.first)
+        #expect(frame.stackLayout?.wrapMode == .wrap)
+        #expect(frame.issues.contains(.autoLayoutFlattened))
+        #expect(frame.fidelity == .partial)
     }
 
     @Test func clientMapsBadRequestAuthorizationMissingNodeRateLimitAndServerErrors() async throws {

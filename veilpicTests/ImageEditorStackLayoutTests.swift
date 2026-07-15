@@ -112,6 +112,116 @@ struct ImageEditorStackLayoutTests {
         ])
     }
 
+    @Test func horizontalWrapCreatesRowsWithIndependentCrossAlignmentAndSpacing() {
+        let frames = ImageEditorStackLayoutEngine.frames(
+            in: CGRect(x: 0, y: 0, width: 120, height: 100),
+            itemFrames: [
+                CGRect(x: 0, y: 0, width: 45, height: 20),
+                CGRect(x: 0, y: 0, width: 45, height: 30),
+                CGRect(x: 0, y: 0, width: 30, height: 10)
+            ],
+            layout: ImageEditorStackLayout(
+                axis: .horizontal,
+                spacing: 10,
+                paddingTop: 10,
+                paddingRight: 10,
+                paddingBottom: 10,
+                paddingLeft: 10,
+                primaryAlignment: .center,
+                crossAlignment: .center,
+                wrapMode: .wrap,
+                counterSpacing: 8
+            )
+        )
+
+        #expect(frames == [
+            CGRect(x: 10, y: 31, width: 45, height: 20),
+            CGRect(x: 65, y: 26, width: 45, height: 30),
+            CGRect(x: 45, y: 64, width: 30, height: 10)
+        ])
+    }
+
+    @Test func wrapNormalizationKeepsOfficialHorizontalBoundaryAndSafeSpacing() {
+        let vertical = ImageEditorStackLayout(
+            axis: .vertical,
+            wrapMode: .wrap,
+            counterSpacing: -20
+        )
+        let nonFinite = ImageEditorStackLayout(
+            axis: .horizontal,
+            wrapMode: .wrap,
+            counterSpacing: .infinity
+        )
+
+        #expect(vertical.wrapMode == .noWrap)
+        #expect(vertical.counterSpacing == 0)
+        #expect(nonFinite.wrapMode == .wrap)
+        #expect(nonFinite.counterSpacing == 0)
+    }
+
+    @Test func wrappedRowsResizeHugCrossAxisAndDistributeGrowPerRow() {
+        let result = ImageEditorStackLayoutEngine.layout(
+            in: CGRect(x: 5, y: 7, width: 130, height: 200),
+            itemFrames: [
+                CGRect(x: 0, y: 0, width: 50, height: 20),
+                CGRect(x: 0, y: 0, width: 50, height: 30),
+                CGRect(x: 0, y: 0, width: 70, height: 25)
+            ],
+            itemLayouts: [
+                ImageEditorStackChildLayout(),
+                ImageEditorStackChildLayout(grow: 1, stretchesCrossAxis: true),
+                ImageEditorStackChildLayout()
+            ],
+            layout: ImageEditorStackLayout(
+                axis: .horizontal,
+                spacing: 10,
+                paddingTop: 5,
+                paddingRight: 5,
+                paddingBottom: 5,
+                paddingLeft: 5,
+                crossSizingMode: .hug,
+                wrapMode: .wrap,
+                counterSpacing: 7
+            )
+        )
+
+        #expect(result.containerFrame == CGRect(x: 5, y: 7, width: 130, height: 72))
+        #expect(result.itemFrames == [
+            CGRect(x: 10, y: 12, width: 50, height: 20),
+            CGRect(x: 70, y: 12, width: 60, height: 30),
+            CGRect(x: 10, y: 49, width: 70, height: 25)
+        ])
+    }
+
+    @Test func allStretchChildrenExpandWrappedTracksAcrossFixedCrossAxis() {
+        let frames = ImageEditorStackLayoutEngine.frames(
+            in: CGRect(x: 0, y: 0, width: 120, height: 100),
+            itemFrames: [
+                CGRect(x: 0, y: 0, width: 70, height: 20),
+                CGRect(x: 0, y: 0, width: 70, height: 10)
+            ],
+            itemLayouts: [
+                ImageEditorStackChildLayout(stretchesCrossAxis: true),
+                ImageEditorStackChildLayout(stretchesCrossAxis: true)
+            ],
+            layout: ImageEditorStackLayout(
+                axis: .horizontal,
+                spacing: 10,
+                paddingTop: 10,
+                paddingRight: 10,
+                paddingBottom: 10,
+                paddingLeft: 10,
+                wrapMode: .wrap,
+                counterSpacing: 10
+            )
+        )
+
+        #expect(frames == [
+            CGRect(x: 10, y: 10, width: 70, height: 40),
+            CGRect(x: 10, y: 60, width: 70, height: 30)
+        ])
+    }
+
     @Test func reflowMovesDirectChildrenAndNestedSubtreeButNotExcludedBackground() throws {
         let fixture = makeFixture()
         let originalChildFrame = fixture.layer(named: "First").frame
@@ -218,6 +328,69 @@ struct ImageEditorStackLayoutTests {
         let layout = try JSONDecoder().decode(ImageEditorStackLayout.self, from: data)
         #expect(layout.primarySizingMode == .fixed)
         #expect(layout.crossSizingMode == .fixed)
+        #expect(layout.wrapMode == .noWrap)
+        #expect(layout.counterSpacing == 0)
+    }
+
+    @Test func wrapSettingsSurviveProjectRoundTrip() throws {
+        let fixture = makeFixture()
+        fixture.updateRootLayout { layout in
+            layout.axis = .horizontal
+            layout.wrapMode = .wrap
+            layout.counterSpacing = 17
+        }
+        let projectData = try fixture.viewModel.projectData()
+        let reopened = ImageEditorViewModel(
+            sourceName: "empty.png",
+            image: NSImage.transparent(size: CGSize(width: 8, height: 8))
+        ) { _ in }
+
+        try reopened.loadProjectData(projectData)
+
+        let root = try #require(reopened.document.layers.first { $0.name == "Root" })
+        #expect(root.stackLayout?.wrapMode == .wrap)
+        #expect(root.stackLayout?.counterSpacing == 17)
+    }
+
+    @Test func wrapControlsReflowAndSupportUndoRedo() {
+        let fixture = makeFixture()
+
+        fixture.viewModel.setSelectedStackAxis(.horizontal)
+        fixture.viewModel.setSelectedStackWrapMode(.wrap)
+        fixture.viewModel.setSelectedStackCounterSpacing(19)
+        #expect(fixture.viewModel.selectedStackLayout?.wrapMode == .wrap)
+        #expect(fixture.viewModel.selectedStackLayout?.counterSpacing == 19)
+        #expect(fixture.viewModel.document.history.last?.title == L10n.text("imageEditor.history.stackLayout"))
+
+        fixture.viewModel.undo()
+        #expect(fixture.viewModel.selectedStackLayout?.counterSpacing == 0)
+
+        fixture.viewModel.redo()
+        #expect(fixture.viewModel.selectedStackLayout?.counterSpacing == 19)
+    }
+
+    @Test func wrappedHugReflowResizesGroupAndBackgroundWithUndo() {
+        let fixture = makeFixture()
+        fixture.updateLayer(named: "Root") { layer in
+            layer.frame.size.width = 100
+        }
+        fixture.updateRootLayout { layout in
+            layout.axis = .horizontal
+            layout.wrapMode = .wrap
+            layout.counterSpacing = 15
+            layout.crossSizingMode = .hug
+        }
+
+        fixture.viewModel.reflowSelectedStackLayout()
+
+        #expect(fixture.layer(named: "Root").frame == CGRect(x: 10, y: 20, width: 100, height: 75))
+        #expect(fixture.layer(named: "Background").frame == CGRect(x: 10, y: 20, width: 100, height: 75))
+        #expect(fixture.layer(named: "First").frame == CGRect(x: 30, y: 30, width: 30, height: 20))
+        #expect(fixture.layer(named: "Nested").frame == CGRect(x: 30, y: 65, width: 50, height: 30))
+
+        fixture.viewModel.undo()
+        #expect(fixture.layer(named: "Root").frame == CGRect(x: 10, y: 20, width: 100, height: 160))
+        #expect(fixture.layer(named: "Background").frame == CGRect(x: 10, y: 20, width: 200, height: 160))
     }
 
     @Test func childSizingControlsReflowParentAndSupportUndoRedo() {
@@ -245,7 +418,7 @@ struct ImageEditorStackLayoutTests {
             .deletingLastPathComponent()
             .deletingLastPathComponent()
         let viewSource = try String(
-            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorStackLayoutControls.swift"),
             encoding: .utf8
         )
         let panelSource = try String(
@@ -256,6 +429,8 @@ struct ImageEditorStackLayoutTests {
         #expect(viewSource.contains("image-editor-stack-layout-axis"))
         #expect(viewSource.contains("image-editor-stack-layout-primary-sizing"))
         #expect(viewSource.contains("image-editor-stack-layout-cross-sizing"))
+        #expect(viewSource.contains("image-editor-stack-layout-wrap"))
+        #expect(viewSource.contains("image-editor-stack-layout-counter-spacing"))
         #expect(viewSource.contains("image-editor-stack-child-primary-sizing"))
         #expect(viewSource.contains("image-editor-stack-child-cross-sizing"))
         #expect(viewSource.contains("image-editor-stack-layout-reflow"))

@@ -36,6 +36,14 @@ enum ImageEditorStackSizingMode: String, CaseIterable, Codable, Identifiable, Se
     var localizationKey: String { "imageEditor.stackLayout.sizing.\(rawValue)" }
 }
 
+enum ImageEditorStackWrapMode: String, CaseIterable, Codable, Identifiable, Sendable {
+    case noWrap
+    case wrap
+
+    var id: String { rawValue }
+    var localizationKey: String { "imageEditor.stackLayout.wrap.\(rawValue)" }
+}
+
 enum ImageEditorStackChildSizingMode: String, CaseIterable, Identifiable, Sendable {
     case fixed
     case fill
@@ -79,6 +87,8 @@ struct ImageEditorStackLayout: Equatable, Codable, Sendable {
     var crossAlignment: ImageEditorStackCrossAlignment
     var primarySizingMode: ImageEditorStackSizingMode
     var crossSizingMode: ImageEditorStackSizingMode
+    var wrapMode: ImageEditorStackWrapMode
+    var counterSpacing: CGFloat
 
     init(
         axis: ImageEditorStackAxis,
@@ -90,7 +100,9 @@ struct ImageEditorStackLayout: Equatable, Codable, Sendable {
         primaryAlignment: ImageEditorStackPrimaryAlignment = .start,
         crossAlignment: ImageEditorStackCrossAlignment = .start,
         primarySizingMode: ImageEditorStackSizingMode = .fixed,
-        crossSizingMode: ImageEditorStackSizingMode = .fixed
+        crossSizingMode: ImageEditorStackSizingMode = .fixed,
+        wrapMode: ImageEditorStackWrapMode = .noWrap,
+        counterSpacing: CGFloat = 0
     ) {
         self.axis = axis
         self.spacing = spacing
@@ -102,6 +114,8 @@ struct ImageEditorStackLayout: Equatable, Codable, Sendable {
         self.crossAlignment = crossAlignment
         self.primarySizingMode = primarySizingMode
         self.crossSizingMode = crossSizingMode
+        self.wrapMode = wrapMode
+        self.counterSpacing = counterSpacing
         self = normalized()
     }
 
@@ -116,6 +130,8 @@ struct ImageEditorStackLayout: Equatable, Codable, Sendable {
         case crossAlignment
         case primarySizingMode
         case crossSizingMode
+        case wrapMode
+        case counterSpacing
     }
 
     init(from decoder: Decoder) throws {
@@ -142,7 +158,15 @@ struct ImageEditorStackLayout: Equatable, Codable, Sendable {
             crossSizingMode: try container.decodeIfPresent(
                 ImageEditorStackSizingMode.self,
                 forKey: .crossSizingMode
-            ) ?? .fixed
+            ) ?? .fixed,
+            wrapMode: try container.decodeIfPresent(
+                ImageEditorStackWrapMode.self,
+                forKey: .wrapMode
+            ) ?? .noWrap,
+            counterSpacing: try container.decodeIfPresent(
+                CGFloat.self,
+                forKey: .counterSpacing
+            ) ?? 0
         )
     }
 
@@ -158,6 +182,8 @@ struct ImageEditorStackLayout: Equatable, Codable, Sendable {
         try container.encode(crossAlignment, forKey: .crossAlignment)
         try container.encode(primarySizingMode, forKey: .primarySizingMode)
         try container.encode(crossSizingMode, forKey: .crossSizingMode)
+        try container.encode(wrapMode, forKey: .wrapMode)
+        try container.encode(counterSpacing, forKey: .counterSpacing)
     }
 
     func normalized() -> Self {
@@ -167,6 +193,13 @@ struct ImageEditorStackLayout: Equatable, Codable, Sendable {
         value.paddingRight = Self.normalizedPadding(paddingRight)
         value.paddingBottom = Self.normalizedPadding(paddingBottom)
         value.paddingLeft = Self.normalizedPadding(paddingLeft)
+        value.counterSpacing = min(
+            max(counterSpacing.isFinite ? counterSpacing : 0, 0),
+            Self.maximumSpacing
+        )
+        if value.axis != .horizontal {
+            value.wrapMode = .noWrap
+        }
         return value
     }
 
@@ -204,6 +237,14 @@ enum ImageEditorStackLayoutEngine {
         var resolvedContainer = container.standardized
         if layout.primarySizingMode == .hug {
             setMainSize(max(1, requiredMain), axis: layout.axis, frame: &resolvedContainer)
+        }
+        if layout.wrapMode == .wrap, layout.axis == .horizontal {
+            return wrappedHorizontalLayout(
+                in: resolvedContainer,
+                sizes: sizes,
+                itemLayouts: resolvedItemLayouts,
+                layout: layout
+            )
         }
         if layout.crossSizingMode == .hug {
             setCrossSize(max(1, requiredCross), axis: layout.axis, frame: &resolvedContainer)
@@ -286,6 +327,200 @@ enum ImageEditorStackLayoutEngine {
             itemLayouts: itemLayouts,
             layout: layout
         ).itemFrames
+    }
+
+    private static func wrappedHorizontalLayout(
+        in container: CGRect,
+        sizes originalSizes: [CGSize],
+        itemLayouts: [ImageEditorStackChildLayout],
+        layout: ImageEditorStackLayout
+    ) -> ImageEditorStackLayoutResult {
+        guard !originalSizes.isEmpty else {
+            var emptyContainer = container
+            if layout.crossSizingMode == .hug {
+                emptyContainer.size.height = max(1, layout.paddingTop + layout.paddingBottom)
+            }
+            return ImageEditorStackLayoutResult(containerFrame: emptyContainer, itemFrames: [])
+        }
+
+        let availableMain = max(0, container.width - layout.paddingLeft - layout.paddingRight)
+        let rows = wrappedRows(sizes: originalSizes, availableMain: availableMain, spacing: layout.spacing)
+        var sizes = originalSizes
+        if layout.primarySizingMode == .fixed {
+            for row in rows {
+                resolveWrappedGrow(
+                    row: row,
+                    sizes: &sizes,
+                    itemLayouts: itemLayouts,
+                    availableMain: availableMain,
+                    spacing: layout.spacing
+                )
+            }
+        }
+        var rowHeights = rows.map { row in
+            row.reduce(CGFloat.zero) { max($0, sizes[$1].height) }
+        }
+        var contentCross = rowHeights.reduce(0, +)
+            + layout.counterSpacing * CGFloat(max(0, rows.count - 1))
+        var resolvedContainer = container
+        if layout.crossSizingMode == .hug {
+            resolvedContainer.size.height = max(1, contentCross + layout.paddingTop + layout.paddingBottom)
+        } else if itemLayouts.allSatisfy({ $0.stretchesCrossAxis }) {
+            let availableCross = max(
+                0,
+                resolvedContainer.height - layout.paddingTop - layout.paddingBottom
+            )
+            let extraPerRow = max(0, availableCross - contentCross) / CGFloat(rows.count)
+            rowHeights = rowHeights.map { $0 + extraPerRow }
+            contentCross = rowHeights.reduce(0, +)
+                + layout.counterSpacing * CGFloat(max(0, rows.count - 1))
+        }
+        let frames = wrappedFrames(
+            rows: rows,
+            rowHeights: rowHeights,
+            sizes: sizes,
+            itemLayouts: itemLayouts,
+            container: resolvedContainer,
+            availableMain: availableMain,
+            contentCross: contentCross,
+            layout: layout
+        )
+        return ImageEditorStackLayoutResult(containerFrame: resolvedContainer, itemFrames: frames)
+    }
+
+    private static func wrappedRows(
+        sizes: [CGSize],
+        availableMain: CGFloat,
+        spacing: CGFloat
+    ) -> [[Int]] {
+        var rows: [[Int]] = []
+        var row: [Int] = []
+        var usedMain: CGFloat = 0
+        for index in sizes.indices {
+            let nextMain = row.isEmpty ? sizes[index].width : usedMain + spacing + sizes[index].width
+            if !row.isEmpty, nextMain > availableMain {
+                rows.append(row)
+                row = [index]
+                usedMain = sizes[index].width
+            } else {
+                row.append(index)
+                usedMain = nextMain
+            }
+        }
+        if !row.isEmpty {
+            rows.append(row)
+        }
+        return rows
+    }
+
+    private static func resolveWrappedGrow(
+        row: [Int],
+        sizes: inout [CGSize],
+        itemLayouts: [ImageEditorStackChildLayout],
+        availableMain: CGFloat,
+        spacing: CGFloat
+    ) {
+        let totalGrow = row.reduce(CGFloat.zero) { $0 + itemLayouts[$1].grow }
+        guard totalGrow > 0 else { return }
+        let fixedMain = row.reduce(CGFloat.zero) { partial, index in
+            itemLayouts[index].grow > 0 ? partial : partial + sizes[index].width
+        }
+        let distributable = max(0, availableMain - fixedMain - spacing * CGFloat(max(0, row.count - 1)))
+        for index in row where itemLayouts[index].grow > 0 {
+            sizes[index].width = max(1, distributable * itemLayouts[index].grow / totalGrow)
+        }
+    }
+
+    private static func wrappedFrames(
+        rows: [[Int]],
+        rowHeights: [CGFloat],
+        sizes: [CGSize],
+        itemLayouts: [ImageEditorStackChildLayout],
+        container: CGRect,
+        availableMain: CGFloat,
+        contentCross: CGFloat,
+        layout: ImageEditorStackLayout
+    ) -> [CGRect] {
+        var frames = Array(repeating: CGRect.zero, count: sizes.count)
+        let availableCross = max(0, container.height - layout.paddingTop - layout.paddingBottom)
+        let freeCross = max(0, availableCross - contentCross)
+        let trackOffset: CGFloat
+        switch layout.crossAlignment {
+        case .start:
+            trackOffset = 0
+        case .center:
+            trackOffset = freeCross / 2
+        case .end:
+            trackOffset = freeCross
+        }
+        var rowOriginY = container.minY + layout.paddingTop + trackOffset
+        for (rowOffset, row) in rows.enumerated() {
+            let rowHeight = rowHeights[rowOffset]
+            let metrics = wrappedPrimaryMetrics(
+                row: row,
+                sizes: sizes,
+                itemLayouts: itemLayouts,
+                availableMain: availableMain,
+                layout: layout
+            )
+            var cursor = container.minX + layout.paddingLeft + metrics.offset
+            for index in row {
+                var size = sizes[index]
+                if itemLayouts[index].stretchesCrossAxis {
+                    size.height = max(1, rowHeight)
+                }
+                let y = wrappedCrossOrigin(
+                    rowOrigin: rowOriginY,
+                    rowHeight: rowHeight,
+                    itemHeight: size.height,
+                    alignment: layout.crossAlignment
+                )
+                frames[index] = CGRect(origin: CGPoint(x: cursor, y: y), size: size)
+                cursor += size.width + metrics.spacing
+            }
+            rowOriginY += rowHeight + layout.counterSpacing
+        }
+        return frames
+    }
+
+    private static func wrappedPrimaryMetrics(
+        row: [Int],
+        sizes: [CGSize],
+        itemLayouts: [ImageEditorStackChildLayout],
+        availableMain: CGFloat,
+        layout: ImageEditorStackLayout
+    ) -> (spacing: CGFloat, offset: CGFloat) {
+        let totalMain = row.reduce(CGFloat.zero) { $0 + sizes[$1].width }
+        let gapCount = CGFloat(max(0, row.count - 1))
+        let usesFill = layout.primarySizingMode == .fixed
+            && row.contains { itemLayouts[$0].grow > 0 }
+        let spacing = layout.primaryAlignment == .spaceBetween && row.count > 1 && !usesFill
+            ? max(0, availableMain - totalMain) / gapCount
+            : layout.spacing
+        let contentMain = totalMain + spacing * gapCount
+        let offset: CGFloat
+        switch (layout.primaryAlignment, usesFill) {
+        case (_, true), (.start, false), (.spaceBetween, false): offset = 0
+        case (.center, false): offset = (availableMain - contentMain) / 2
+        case (.end, false): offset = availableMain - contentMain
+        }
+        return (spacing, offset)
+    }
+
+    private static func wrappedCrossOrigin(
+        rowOrigin: CGFloat,
+        rowHeight: CGFloat,
+        itemHeight: CGFloat,
+        alignment: ImageEditorStackCrossAlignment
+    ) -> CGFloat {
+        switch alignment {
+        case .start:
+            return rowOrigin
+        case .center:
+            return rowOrigin + (rowHeight - itemHeight) / 2
+        case .end:
+            return rowOrigin + rowHeight - itemHeight
+        }
     }
 
     private static func mainPadding(_ layout: ImageEditorStackLayout) -> CGFloat {
@@ -432,6 +667,14 @@ extension ImageEditorViewModel {
 
     func setSelectedStackCrossSizingMode(_ mode: ImageEditorStackSizingMode) {
         updateSelectedStackLayout { $0.crossSizingMode = mode }
+    }
+
+    func setSelectedStackWrapMode(_ mode: ImageEditorStackWrapMode) {
+        updateSelectedStackLayout { $0.wrapMode = mode }
+    }
+
+    func setSelectedStackCounterSpacing(_ spacing: CGFloat) {
+        updateSelectedStackLayout { $0.counterSpacing = spacing }
     }
 
     func setSelectedStackChildPrimarySizingMode(_ mode: ImageEditorStackChildSizingMode) {

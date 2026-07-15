@@ -350,7 +350,9 @@ enum XomoFigmaNodeImportMapper {
             primaryAlignment: primaryAlignment(node.primaryAxisAlignItems),
             crossAlignment: crossAlignment(node.counterAxisAlignItems),
             primarySizingMode: sizingMode(node.primaryAxisSizingMode),
-            crossSizingMode: sizingMode(node.counterAxisSizingMode)
+            crossSizingMode: sizingMode(node.counterAxisSizingMode),
+            wrapMode: node.layoutWrap == "WRAP" ? .wrap : .noWrap,
+            counterSpacing: CGFloat(node.counterAxisSpacing ?? 0)
         )
     }
 
@@ -376,10 +378,12 @@ enum XomoFigmaNodeImportMapper {
     }
 
     private static func hasUnsupportedAutoLayout(_ node: XomoFigmaNode) -> Bool {
-        let usesWrap = node.layoutWrap != nil && node.layoutWrap != "NO_WRAP"
-        return usesWrap
+        let usesUnsupportedWrap = node.layoutWrap == "WRAP" && node.layoutMode != "HORIZONTAL"
+        let usesUnsupportedTrackDistribution = node.counterAxisAlignContent != nil
+            && node.counterAxisAlignContent != "AUTO"
+        return usesUnsupportedWrap
+            || usesUnsupportedTrackDistribution
             || node.counterAxisAlignItems == "BASELINE"
-            || node.counterAxisSpacing != nil
     }
 
     private static func targetMapping(
@@ -761,6 +765,7 @@ struct XomoFigmaNode: Decodable {
     var layoutMode: String?
     var primaryAxisAlignItems: String?
     var counterAxisAlignItems: String?
+    var counterAxisAlignContent: String?
     var itemSpacing: Double?
     var counterAxisSpacing: Double?
     var paddingLeft: Double?

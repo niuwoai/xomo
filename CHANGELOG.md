@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.12.0-rc87 - 2026-07-15
+
+### Added
+- Xomo 原生 Auto Layout 新增水平换行模式：固定宽度容器会按可用宽度分行，保留行内间距、独立行间距、每行交叉轴对齐，以及 Fill/Stretch 子项语义。
+- 交叉轴为 Hug 时，换行容器会按各行最高子项、行间距和上下内距自动调整高度；项目保存重开、属性面板修改和单步 Undo/Redo 使用同一布局模型。
+- Figma `layoutWrap=WRAP` 与 `counterAxisSpacing` 映射为可编辑原生布局，不再笼统标记为扁平化；Baseline、纵向 Wrap 与 `counterAxisAlignContent=SPACE_BETWEEN` 继续明确降级。
+- App、CLI、教程、Figma/MCP 文档、路线图与全部 Xcode target 版本同步为 `2.12.0-rc87`。
+
+### Changed
+- Auto Layout 容器与子项属性控件从超大 `ImageEditorView.swift` 抽成独立小视图，避免新增条件控件把 SwiftUI 主编译单元拖入数十分钟类型检查，同时保持原有无焦点交互与辅助功能标识。
+
+### Tests
+- 新增多行位置/对齐、Hug 高度、逐行 Fill/Stretch、项目往返、属性修改与 Undo/Redo 回归；Auto Layout 17/17、Figma 节点导入 20/20、三语资源 4/4，共 41/41 通过。
+- SwiftPM CLI 2/2 通过并输出 `2.12.0-rc87`；隔离 Debug App 的版本、Bundle ID `im.some.xomo`、macOS 13.0 下限与 arm64 架构核对通过。
+
 ## 2.12.0-rc86 - 2026-07-15
 
 ### Added
