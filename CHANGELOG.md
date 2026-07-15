@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc104 - 2026-07-16
+
+### Fixed
+- 将选中 UI 组件的移动交给画布父级手势，避免 macOS 拖放宿主吞掉定位叠加层的拖动事件；虚线选框保留为视觉层，缩放控制柄继续独立响应。
+
+### Verification
+- rc104 Release 构建并安装到 `/Applications/Xomo.app`；组件对象专项 14/14、组件库专项 33/33 通过，报告见 `test-reports/rc104-canvas-object/` 与 `test-reports/rc104-component-sidebar/`。
+
 ## 2.12.0-rc103 - 2026-07-16
 
 ### Fixed
