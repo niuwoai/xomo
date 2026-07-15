@@ -45,16 +45,7 @@ extension ImageEditorView {
             .accessibilityIdentifier("image-editor-shape-fill-kind")
 
             if viewModel.selectedShapeFillKind == .linearGradient {
-                shapeGradientColorControl(
-                    title: L10n.text("imageEditor.properties.shapeGradientStartColor"),
-                    selection: selectedShapeGradientStartColorBinding,
-                    identifier: "image-editor-shape-gradient-start-color"
-                )
-                shapeGradientColorControl(
-                    title: L10n.text("imageEditor.properties.shapeGradientEndColor"),
-                    selection: selectedShapeGradientEndColorBinding,
-                    identifier: "image-editor-shape-gradient-end-color"
-                )
+                shapeGradientStopsEditor
                 Stepper(
                     L10n.format(
                         "imageEditor.properties.shapeGradientAngleValue",
@@ -138,21 +129,125 @@ extension ImageEditorView {
         }
     }
 
-    private func shapeGradientColorControl(
-        title: String,
-        selection: Binding<Color>,
-        identifier: String
-    ) -> some View {
-        HStack(spacing: 8) {
-            Text(title)
-                .font(.system(size: 10, weight: .medium))
-                .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
-            Spacer(minLength: 4)
-            ColorPicker("", selection: selection, supportsOpacity: false)
-                .labelsHidden()
-                .frame(width: 32)
+    private var shapeGradientStopsEditor: some View {
+        let stops = viewModel.selectedShapeGradientColorStops
+        let selectedIndex = normalizedShapeGradientStopIndex(stops: stops)
+        let canRemove = stops.count > 2 && selectedIndex > 0 && selectedIndex < stops.count - 1
+        return VStack(alignment: .leading, spacing: 6) {
+            GeometryReader { geometry in
+                ZStack(alignment: .topLeading) {
+                    RoundedRectangle(cornerRadius: 3, style: .continuous)
+                        .fill(
+                            LinearGradient(
+                                gradient: Gradient(stops: stops.map { stop in
+                                    Gradient.Stop(
+                                        color: Color(nsColor: stop.color),
+                                        location: CGFloat(stop.position)
+                                    )
+                                }),
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 3, style: .continuous)
+                                .stroke(Color.white.opacity(0.45), lineWidth: 1)
+                        }
+                        .frame(height: 14)
+
+                    ForEach(stops.indices, id: \.self) { index in
+                        Button {
+                            selectedShapeGradientStopIndex = index
+                        } label: {
+                            RoundedRectangle(cornerRadius: 2, style: .continuous)
+                                .fill(Color(nsColor: stops[index].color))
+                                .overlay {
+                                    RoundedRectangle(cornerRadius: 2, style: .continuous)
+                                        .stroke(
+                                            index == selectedIndex
+                                                ? Color.accentColor
+                                                : Color.white.opacity(0.86),
+                                            lineWidth: index == selectedIndex ? 2 : 1
+                                        )
+                                }
+                                .frame(width: 12, height: 16)
+                        }
+                        .buttonStyle(.plain)
+                        .focusable(false)
+                        .position(
+                            x: max(6, min(geometry.size.width - 6, CGFloat(stops[index].position) * geometry.size.width)),
+                            y: 26
+                        )
+                        .accessibilityIdentifier("image-editor-shape-gradient-stop-\(index)")
+                        .accessibilityLabel(
+                            L10n.format(
+                                "imageEditor.properties.shapeGradientStopAccessibility",
+                                index + 1,
+                                Int((stops[index].position * 100).rounded())
+                            )
+                        )
+                    }
+                }
+            }
+            .frame(height: 36)
+            .accessibilityIdentifier("image-editor-shape-gradient-stops")
+
+            HStack(spacing: 6) {
+                Text(L10n.format("imageEditor.properties.shapeGradientStopCount", stops.count))
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                Spacer(minLength: 4)
+                Button {
+                    if let index = viewModel.addSelectedShapeGradientStop() {
+                        selectedShapeGradientStopIndex = index
+                    }
+                } label: {
+                    Image(systemName: "plus")
+                }
+                .buttonStyle(.borderless)
                 .focusable(false)
-                .accessibilityIdentifier(identifier)
+                .disabled(stops.count >= ImageEditorGradientFillContent.maximumColorStopCount)
+                .help(L10n.text("imageEditor.action.shapeGradientStopAdd"))
+                .accessibilityIdentifier("image-editor-shape-gradient-stop-add")
+
+                Button {
+                    if let index = viewModel.removeSelectedShapeGradientStop(at: selectedIndex) {
+                        selectedShapeGradientStopIndex = index
+                    }
+                } label: {
+                    Image(systemName: "minus")
+                }
+                .buttonStyle(.borderless)
+                .focusable(false)
+                .disabled(!canRemove)
+                .help(L10n.text("imageEditor.action.shapeGradientStopRemove"))
+                .accessibilityIdentifier("image-editor-shape-gradient-stop-remove")
+            }
+
+            HStack(spacing: 8) {
+                Text(L10n.format("imageEditor.properties.shapeGradientStopColor", selectedIndex + 1))
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                Spacer(minLength: 4)
+                ColorPicker("", selection: selectedShapeGradientStopColorBinding, supportsOpacity: false)
+                    .labelsHidden()
+                    .frame(width: 32)
+                    .focusable(false)
+                    .accessibilityIdentifier("image-editor-shape-gradient-stop-color")
+            }
+
+            Stepper(
+                L10n.format(
+                    "imageEditor.properties.shapeGradientStopPosition",
+                    Int((stops[selectedIndex].position * 100).rounded())
+                ),
+                value: selectedShapeGradientStopPositionBinding,
+                in: 0...1,
+                step: 0.01
+            )
+            .focusable(false)
+            .disabled(selectedIndex == 0 || selectedIndex == stops.count - 1)
+            .accessibilityIdentifier("image-editor-shape-gradient-stop-position")
         }
     }
 
@@ -178,6 +273,36 @@ extension ImageEditorView {
         } set: { color in
             viewModel.setSelectedShapeGradientStartColor(NSColor(color))
         }
+    }
+
+    private var selectedShapeGradientStopColorBinding: Binding<Color> {
+        Binding {
+            let stops = viewModel.selectedShapeGradientColorStops
+            let index = normalizedShapeGradientStopIndex(stops: stops)
+            return Color(nsColor: stops[index].color)
+        } set: { color in
+            let stops = viewModel.selectedShapeGradientColorStops
+            let index = normalizedShapeGradientStopIndex(stops: stops)
+            viewModel.setSelectedShapeGradientStopColor(at: index, color: NSColor(color))
+        }
+    }
+
+    private var selectedShapeGradientStopPositionBinding: Binding<Double> {
+        Binding {
+            let stops = viewModel.selectedShapeGradientColorStops
+            let index = normalizedShapeGradientStopIndex(stops: stops)
+            return stops[index].position
+        } set: { position in
+            let stops = viewModel.selectedShapeGradientColorStops
+            let index = normalizedShapeGradientStopIndex(stops: stops)
+            viewModel.setSelectedShapeGradientStopPosition(at: index, position: position)
+        }
+    }
+
+    private func normalizedShapeGradientStopIndex(
+        stops: [ImageEditorGradientColorStop]
+    ) -> Int {
+        max(0, min(selectedShapeGradientStopIndex, stops.count - 1))
     }
 
     private var selectedShapeGradientEndColorBinding: Binding<Color> {

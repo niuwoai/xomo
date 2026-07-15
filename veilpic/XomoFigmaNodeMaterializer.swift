@@ -396,8 +396,12 @@ enum XomoFigmaNodeMaterializer {
         let stroke = nsColor(item.solidStroke, fallback: .clear)
         let gradient = item.linearGradientFill.map { value in
             ImageEditorGradientFillContent.shapeLinear(
-                startColor: nsColor(value.startColor, fallback: .clear),
-                endColor: nsColor(value.endColor, fallback: .clear),
+                colorStops: value.colorStops.map { stop in
+                    ImageEditorGradientColorStop(
+                        position: stop.position,
+                        color: nsColor(stop.color, fallback: .clear)
+                    )
+                },
                 angle: CGFloat(value.angle),
                 scale: CGFloat(value.scale)
             )

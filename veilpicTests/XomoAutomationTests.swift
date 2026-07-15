@@ -307,11 +307,25 @@ struct XomoAutomationTests {
                 "height": .number(50),
                 "fillKind": .string("linearGradient"),
                 "fillGradient": .object([
-                    "startColor": .object([
-                        "red": .number(1), "green": .number(0), "blue": .number(0)
-                    ]),
-                    "endColor": .object([
-                        "red": .number(0), "green": .number(0), "blue": .number(1)
+                    "stops": .array([
+                        .object([
+                            "position": .number(0),
+                            "color": .object([
+                                "red": .number(1), "green": .number(0), "blue": .number(0)
+                            ])
+                        ]),
+                        .object([
+                            "position": .number(0.4),
+                            "color": .object([
+                                "red": .number(0), "green": .number(1), "blue": .number(0)
+                            ])
+                        ]),
+                        .object([
+                            "position": .number(1),
+                            "color": .object([
+                                "red": .number(0), "green": .number(0), "blue": .number(1)
+                            ])
+                        ])
                     ]),
                     "angle": .number(30),
                     "scale": .number(1.5),
@@ -325,6 +339,8 @@ struct XomoAutomationTests {
         let shape = try #require(viewModel.document.selectedLayer?.shapeContent)
         #expect(shape.fillGradient?.angle == 30)
         #expect(shape.fillGradient?.scale == 1.5)
+        #expect(shape.fillGradient?.shapeColorStops.count == 3)
+        #expect(shape.fillGradient?.shapeColorStops[1].position == 0.4)
         #expect(shape.fillGradientCenter == CGPoint(x: 0.35, y: 0.65))
         #expect(shape.fillOpacity == 0.7)
 
@@ -342,6 +358,11 @@ struct XomoAutomationTests {
         #expect(gradientResult["scale"] == .number(1.5))
         #expect(gradientResult["centerX"] == .number(0.35))
         #expect(gradientResult["centerY"] == .number(0.65))
+        guard case .array(let stopResult) = gradientResult["stops"] else {
+            Issue.record("Expected editable gradient stops")
+            return
+        }
+        #expect(stopResult.count == 3)
 
         let previousStroke = shape.strokeColor
         let updated = registry.execute(request(
@@ -403,6 +424,37 @@ struct XomoAutomationTests {
             ]
         ))
         #expect(!perStopAlpha.ok)
+        #expect(viewModel.document.selectedLayer?.shapeContent?.fillGradient == nil)
+
+        let unorderedStops = registry.execute(request(
+            operation: "call",
+            name: "xomo.shape.update",
+            arguments: [
+                "fillGradient": .object([
+                    "stops": .array([
+                        .object([
+                            "position": .number(0),
+                            "color": .object([
+                                "red": .number(1), "green": .number(0), "blue": .number(0)
+                            ])
+                        ]),
+                        .object([
+                            "position": .number(0.8),
+                            "color": .object([
+                                "red": .number(0), "green": .number(1), "blue": .number(0)
+                            ])
+                        ]),
+                        .object([
+                            "position": .number(0.3),
+                            "color": .object([
+                                "red": .number(0), "green": .number(0), "blue": .number(1)
+                            ])
+                        ])
+                    ])
+                ])
+            ]
+        ))
+        #expect(!unorderedStops.ok)
         #expect(viewModel.document.selectedLayer?.shapeContent?.fillGradient == nil)
     }
 

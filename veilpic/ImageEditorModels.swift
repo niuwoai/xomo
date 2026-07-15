@@ -726,7 +726,51 @@ enum ImageEditorGradientFillStyle: String, CaseIterable, Identifiable {
     }
 }
 
+struct ImageEditorGradientColorStop: Equatable, Codable, Sendable {
+    var position: Double
+    var red: Double
+    var green: Double
+    var blue: Double
+
+    init(position: Double, red: Double, green: Double, blue: Double) {
+        self.position = position
+        self.red = red
+        self.green = green
+        self.blue = blue
+    }
+
+    init(position: Double, color: NSColor) {
+        let resolved = color.usingColorSpace(.deviceRGB) ?? .black
+        self.init(
+            position: position,
+            red: Double(resolved.redComponent),
+            green: Double(resolved.greenComponent),
+            blue: Double(resolved.blueComponent)
+        )
+    }
+
+    var color: NSColor {
+        NSColor(deviceRed: red, green: green, blue: blue, alpha: 1)
+    }
+
+    func normalized() -> ImageEditorGradientColorStop {
+        ImageEditorGradientColorStop(
+            position: max(0, min(1, position.isFinite ? position : 0)),
+            red: max(0, min(1, red.isFinite ? red : 0)),
+            green: max(0, min(1, green.isFinite ? green : 0)),
+            blue: max(0, min(1, blue.isFinite ? blue : 0))
+        )
+    }
+
+    var vector: SIMD3<Double> {
+        let value = normalized()
+        return SIMD3<Double>(value.red, value.green, value.blue)
+    }
+}
+
 struct ImageEditorGradientFillContent: Equatable, Codable {
+    static let maximumColorStopCount = 16
+
     var preset: ImageEditorGradientFillPreset = .blueOrange
     var style: ImageEditorGradientFillStyle = .linear
     var reverse: Bool = false
@@ -738,6 +782,7 @@ struct ImageEditorGradientFillContent: Equatable, Codable {
     var endRed: Double = 1.0
     var endGreen: Double = 0.50
     var endBlue: Double = 0.10
+    var colorStops: [ImageEditorGradientColorStop]? = nil
 
     enum CodingKeys: String, CodingKey {
         case preset
@@ -751,6 +796,7 @@ struct ImageEditorGradientFillContent: Equatable, Codable {
         case endRed
         case endGreen
         case endBlue
+        case colorStops
     }
 
     init(
@@ -764,7 +810,8 @@ struct ImageEditorGradientFillContent: Equatable, Codable {
         startBlue: Double = 0.95,
         endRed: Double = 1.0,
         endGreen: Double = 0.50,
-        endBlue: Double = 0.10
+        endBlue: Double = 0.10,
+        colorStops: [ImageEditorGradientColorStop]? = nil
     ) {
         self.preset = preset
         self.style = style
@@ -777,6 +824,7 @@ struct ImageEditorGradientFillContent: Equatable, Codable {
         self.endRed = endRed
         self.endGreen = endGreen
         self.endBlue = endBlue
+        self.colorStops = colorStops
     }
 
     init(from decoder: Decoder) throws {
@@ -792,26 +840,38 @@ struct ImageEditorGradientFillContent: Equatable, Codable {
         endRed = try container.decodeIfPresent(Double.self, forKey: .endRed) ?? 1.0
         endGreen = try container.decodeIfPresent(Double.self, forKey: .endGreen) ?? 0.50
         endBlue = try container.decodeIfPresent(Double.self, forKey: .endBlue) ?? 0.10
+        colorStops = try container.decodeIfPresent(
+            [ImageEditorGradientColorStop].self,
+            forKey: .colorStops
+        )
     }
 
     func normalized() -> ImageEditorGradientFillContent {
-        ImageEditorGradientFillContent(
+        let stops = Self.normalizedColorStops(colorStops)
+        let first = stops?.first
+        let last = stops?.last
+        return ImageEditorGradientFillContent(
             preset: preset,
             style: style,
             reverse: reverse,
             angle: max(-180, min(180, angle)),
             scale: max(0.25, min(4, scale)),
-            startRed: Self.zeroOne(startRed),
-            startGreen: Self.zeroOne(startGreen),
-            startBlue: Self.zeroOne(startBlue),
-            endRed: Self.zeroOne(endRed),
-            endGreen: Self.zeroOne(endGreen),
-            endBlue: Self.zeroOne(endBlue)
+            startRed: first?.red ?? Self.zeroOne(startRed),
+            startGreen: first?.green ?? Self.zeroOne(startGreen),
+            startBlue: first?.blue ?? Self.zeroOne(startBlue),
+            endRed: last?.red ?? Self.zeroOne(endRed),
+            endGreen: last?.green ?? Self.zeroOne(endGreen),
+            endBlue: last?.blue ?? Self.zeroOne(endBlue),
+            colorStops: stops
         )
     }
 
     func colors(foreground: NSColor = .systemRed, background: NSColor = .clear) -> (start: SIMD3<Double>, end: SIMD3<Double>) {
-        switch normalized().preset {
+        let content = normalized()
+        if let stops = content.colorStops, let first = stops.first, let last = stops.last {
+            return (first.vector, last.vector)
+        }
+        switch content.preset {
         case .blackWhite:
             return (SIMD3<Double>(0, 0, 0), SIMD3<Double>(1, 1, 1))
         case .sunset:
@@ -823,7 +883,6 @@ struct ImageEditorGradientFillContent: Equatable, Codable {
         case .foregroundBackground:
             return (Self.rgbVector(foreground), Self.rgbVector(background))
         case .custom:
-            let content = normalized()
             return (
                 SIMD3<Double>(content.startRed, content.startGreen, content.startBlue),
                 SIMD3<Double>(content.endRed, content.endGreen, content.endBlue)
@@ -844,8 +903,30 @@ struct ImageEditorGradientFillContent: Equatable, Codable {
         let bytesPerRow = width * bytesPerPixel
         var pixels = [UInt8](repeating: 0, count: bytesPerRow * height)
         let resolvedColors = content.colors(foreground: foreground, background: background)
-        let start = content.reverse ? resolvedColors.end : resolvedColors.start
-        let end = content.reverse ? resolvedColors.start : resolvedColors.end
+        var stops = content.colorStops ?? [
+            ImageEditorGradientColorStop(
+                position: 0,
+                red: resolvedColors.start.x,
+                green: resolvedColors.start.y,
+                blue: resolvedColors.start.z
+            ),
+            ImageEditorGradientColorStop(
+                position: 1,
+                red: resolvedColors.end.x,
+                green: resolvedColors.end.y,
+                blue: resolvedColors.end.z
+            )
+        ]
+        if content.reverse {
+            stops = stops.reversed().map { stop in
+                ImageEditorGradientColorStop(
+                    position: 1 - stop.position,
+                    red: stop.red,
+                    green: stop.green,
+                    blue: stop.blue
+                )
+            }
+        }
         let radians = Double(content.angle) * Double.pi / 180
         let direction = SIMD2<Double>(cos(radians), sin(radians))
         let span = max(1, abs(direction.x) * Double(width) + abs(direction.y) * Double(height)) * Double(content.scale)
@@ -862,7 +943,7 @@ struct ImageEditorGradientFillContent: Equatable, Codable {
             for x in 0..<width {
                 let point = SIMD2<Double>(Double(x), Double(y))
                 let t = content.progress(at: point, center: center, direction: direction, span: span, cornerDistance: cornerDistance)
-                let color = start + (end - start) * t
+                let color = Self.interpolatedColor(at: t, stops: stops)
                 let offset = y * bytesPerRow + x * bytesPerPixel
                 pixels[offset] = Self.byte(color.x)
                 pixels[offset + 1] = Self.byte(color.y)
@@ -923,6 +1004,41 @@ struct ImageEditorGradientFillContent: Equatable, Codable {
             zeroOne(Double(rgb.greenComponent)),
             zeroOne(Double(rgb.blueComponent))
         )
+    }
+
+    private static func normalizedColorStops(
+        _ stops: [ImageEditorGradientColorStop]?
+    ) -> [ImageEditorGradientColorStop]? {
+        guard let stops, stops.count >= 2 else { return nil }
+        return Array(stops.prefix(maximumColorStopCount))
+            .map { $0.normalized() }
+            .enumerated()
+            .sorted { lhs, rhs in
+                if lhs.element.position == rhs.element.position {
+                    return lhs.offset < rhs.offset
+                }
+                return lhs.element.position < rhs.element.position
+            }
+            .map(\.element)
+    }
+
+    private static func interpolatedColor(
+        at progress: Double,
+        stops: [ImageEditorGradientColorStop]
+    ) -> SIMD3<Double> {
+        guard let first = stops.first, let last = stops.last else { return .zero }
+        if progress <= first.position { return first.vector }
+        if progress >= last.position { return last.vector }
+        for index in 1..<stops.count {
+            let upper = stops[index]
+            guard progress <= upper.position else { continue }
+            let lower = stops[index - 1]
+            let distance = upper.position - lower.position
+            guard distance > 0.000_001 else { return upper.vector }
+            let amount = max(0, min(1, (progress - lower.position) / distance))
+            return lower.vector + (upper.vector - lower.vector) * amount
+        }
+        return last.vector
     }
 
     private static func zeroOne(_ value: Double) -> Double {

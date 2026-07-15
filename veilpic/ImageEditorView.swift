@@ -44,6 +44,7 @@ struct ImageEditorView: View {
     @State private var isObjectMoveGestureActive = false
     @State private var activeResizeHandle: ImageEditorLayerResizeHandle?
     @State private var activeShapeGradientHandle: ImageEditorShapeGradientHandle?
+    @State var selectedShapeGradientStopIndex = 0
     @State private var isRotatingLayer = false
     @State private var isMovingPathAnchor = false
     @State private var activeGuideDrag: ImageEditorGuideDrag?

@@ -804,8 +804,6 @@ final class XomoAutomationRegistry {
         guard let object = value.objectValue else {
             throw XomoAutomationCallError.invalidArgument("fillGradient must be an object")
         }
-        let start = try requiredOpaqueColor("startColor", in: object)
-        let end = try requiredOpaqueColor("endColor", in: object)
         let angle = object["angle"]?.doubleValue ?? 0
         let scale = object["scale"]?.doubleValue ?? 1
         guard angle.isFinite, (-180...180).contains(angle) else {
@@ -814,6 +812,43 @@ final class XomoAutomationRegistry {
         guard scale.isFinite, (0.25...4).contains(scale) else {
             throw XomoAutomationCallError.invalidArgument("fillGradient.scale must be between 0.25 and 4")
         }
+        if let values = object["stops"]?.arrayValue {
+            guard (2...ImageEditorGradientFillContent.maximumColorStopCount).contains(values.count) else {
+                throw XomoAutomationCallError.invalidArgument("fillGradient.stops must contain 2 to 16 items")
+            }
+            let stops = try values.enumerated().map { index, value in
+                guard let stop = value.objectValue,
+                      let position = stop["position"]?.doubleValue,
+                      position.isFinite,
+                      (0...1).contains(position)
+                else {
+                    throw XomoAutomationCallError.invalidArgument(
+                        "fillGradient.stops[\(index)].position must be between 0 and 1"
+                    )
+                }
+                return ImageEditorGradientColorStop(
+                    position: position,
+                    color: try requiredOpaqueColor("color", in: stop)
+                )
+            }
+            guard abs((stops.first?.position ?? 1)) <= 0.000_1,
+                  abs((stops.last?.position ?? 0) - 1) <= 0.000_1,
+                  zip(stops, stops.dropFirst()).allSatisfy({ pair in
+                      pair.0.position <= pair.1.position
+                  })
+            else {
+                throw XomoAutomationCallError.invalidArgument(
+                    "fillGradient.stops must be ordered and span positions 0 through 1"
+                )
+            }
+            return .shapeLinear(
+                colorStops: stops,
+                angle: CGFloat(angle),
+                scale: CGFloat(scale)
+            )
+        }
+        let start = try requiredOpaqueColor("startColor", in: object)
+        let end = try requiredOpaqueColor("endColor", in: object)
         return .shapeLinear(
             startColor: start,
             endColor: end,
@@ -887,6 +922,12 @@ final class XomoAutomationRegistry {
         return .object([
             "startColor": colorJSON(normalized.shapeStartColor),
             "endColor": colorJSON(normalized.shapeEndColor),
+            "stops": .array(normalized.shapeColorStops.map { stop in
+                .object([
+                    "position": .number(stop.position),
+                    "color": colorJSON(stop.color)
+                ])
+            }),
             "angle": .number(normalized.angle),
             "scale": .number(normalized.scale),
             "centerX": .number(center.x),
@@ -2808,12 +2849,25 @@ private extension XomoAutomationRegistry {
         properties: [
             "startColor": shapeColorSchema,
             "endColor": shapeColorSchema,
+            "stops": .object([
+                "type": .string("array"),
+                "description": .string("Ordered 2 to 16 color stops spanning positions 0 through 1"),
+                "items": XomoAutomationSchema.object(
+                    properties: [
+                        "position": XomoAutomationSchema.number(description: "Normalized position from 0 to 1"),
+                        "color": shapeColorSchema
+                    ],
+                    required: ["position", "color"]
+                ),
+                "minItems": .number(2),
+                "maxItems": .number(16)
+            ]),
             "angle": XomoAutomationSchema.number(description: "Linear gradient angle from -180 to 180 degrees"),
             "scale": XomoAutomationSchema.number(description: "Linear gradient span scale from 0.25 to 4"),
             "centerX": XomoAutomationSchema.number(description: "Normalized horizontal gradient center from -4 to 5"),
             "centerY": XomoAutomationSchema.number(description: "Normalized vertical gradient center from -4 to 5")
         ],
-        required: ["startColor", "endColor"]
+        required: []
     )
     static let sizeProperties = [
         "width": XomoAutomationSchema.number(description: "Width"),
