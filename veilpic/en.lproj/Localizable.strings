@@ -2925,6 +2925,7 @@
 "xomo.figma.node.issue.imageAssetPending" = "Image asset has not been downloaded";
 "xomo.figma.node.issue.imageAssetUnavailable" = "Image asset is unavailable; a placeholder will be kept";
 "xomo.figma.node.issue.imageFillTransformFlattened" = "Image fill transform is baked into a fixed pixel layer";
+"xomo.figma.node.issue.imageFiltersBaked" = "Image filters are approximately baked into pixels and are not separately editable after import";
 "xomo.figma.node.issue.vectorGeometryMissing" = "Vector path data is missing";
 "xomo.figma.node.issue.vectorGeometryUnsupported" = "Vector path contains an unsupported command";
 "xomo.figma.node.issue.componentSemanticsFlattened" = "Component semantics will be treated as a regular group";

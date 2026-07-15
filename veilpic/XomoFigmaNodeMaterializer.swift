@@ -149,7 +149,7 @@ enum XomoFigmaNodeMaterializer {
     ) -> ImageEditorLayer {
         let size = CGSize(width: max(1, frame.width), height: max(1, frame.height))
         let source = NSImage(data: asset.data) ?? NSImage.transparent(size: size)
-        let baked = bakedImageFill(
+        let bakedFill = bakedImageFill(
             source,
             sourcePixelSize: CGSize(width: asset.pixelSize.width, height: asset.pixelSize.height),
             size: size,
@@ -159,6 +159,7 @@ enum XomoFigmaNodeMaterializer {
             rotation: item.imageRotation,
             importScale: importScale
         )
+        let baked = XomoFigmaImageFilterBaker.apply(item.imageFilters, to: bakedFill)
         var layer = ImageEditorLayer.blank(name: item.sourceName, size: size)
         layer.image = baked
         layer.frame = CGRect(origin: frame.origin, size: size)

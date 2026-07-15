@@ -2925,6 +2925,7 @@
 "xomo.figma.node.issue.imageAssetPending" = "图片资源尚未下载";
 "xomo.figma.node.issue.imageAssetUnavailable" = "图片资源不可用，保留占位层";
 "xomo.figma.node.issue.imageFillTransformFlattened" = "图片填充变换已烘焙为固定像素层";
+"xomo.figma.node.issue.imageFiltersBaked" = "图片滤镜已近似烘焙为像素，导入后不可单独编辑";
 "xomo.figma.node.issue.vectorGeometryMissing" = "缺少矢量路径数据";
 "xomo.figma.node.issue.vectorGeometryUnsupported" = "矢量路径包含无法解析的命令";
 "xomo.figma.node.issue.componentSemanticsFlattened" = "组件语义暂按普通组处理";
