@@ -756,6 +756,7 @@
 "imageEditor.help.shapeGradientHandle.start" = "グラデーションの始点をドラッグします。Shift キーで角度をスナップします";
 "imageEditor.help.shapeGradientHandle.end" = "グラデーションの終点をドラッグします。Shift キーで角度をスナップします";
 "imageEditor.help.shapeGradientStopHandle" = "中間ストップをグラデーション軸に沿ってドラッグします";
+"imageEditor.help.shapeGradientAxis" = "グラデーション軸をダブルクリックして、その位置にストップを追加します";
 "imageEditor.status.stackLayoutApplied" = "オートレイアウトを再配置しました";
 "imageEditor.status.stackChildLayoutApplied" = "オートレイアウトの子要素を再配置しました";
 "imageEditor.status.stackLayoutLocked" = "ロック中のグループまたは子要素は再配置できません";

@@ -217,17 +217,36 @@ extension ImageEditorViewModel {
 
     @discardableResult
     func addSelectedShapeGradientStop() -> Int? {
-        var gradient = selectedShapeGradient
-        var stops = gradient.shapeColorStops
+        let stops = selectedShapeGradient.shapeColorStops
         guard stops.count < ImageEditorGradientFillContent.maximumColorStopCount else { return nil }
         let gap = stops.indices.dropLast().max { lhs, rhs in
             (stops[lhs + 1].position - stops[lhs].position)
                 < (stops[rhs + 1].position - stops[rhs].position)
         } ?? 0
         let position = (stops[gap].position + stops[gap + 1].position) / 2
-        let stop = ImageEditorGradientColorStop(position: position, color: gradient.shapeColor(at: position))
-        let insertionIndex = gap + 1
-        stops.insert(stop, at: insertionIndex)
+        return addSelectedShapeGradientStop(at: position)
+    }
+
+    @discardableResult
+    func addSelectedShapeGradientStop(at position: Double) -> Int? {
+        guard position.isFinite else { return nil }
+        var gradient = selectedShapeGradient
+        var stops = gradient.shapeColorStops
+        guard stops.count < ImageEditorGradientFillContent.maximumColorStopCount else { return nil }
+        let requestedPosition = max(0, min(1, position))
+        let insertionIndex = stops.firstIndex { requestedPosition < $0.position } ?? stops.count - 1
+        guard insertionIndex > 0, insertionIndex < stops.count else { return nil }
+        let lowerBound = stops[insertionIndex - 1].position + 0.01
+        let upperBound = stops[insertionIndex].position - 0.01
+        guard lowerBound <= upperBound else { return nil }
+        let resolvedPosition = max(lowerBound, min(upperBound, requestedPosition))
+        stops.insert(
+            ImageEditorGradientColorStop(
+                position: resolvedPosition,
+                color: gradient.shapeColor(at: resolvedPosition)
+            ),
+            at: insertionIndex
+        )
         gradient.colorStops = stops
         updateSelectedShapeProperties(fillGradient: gradient)
         return insertionIndex

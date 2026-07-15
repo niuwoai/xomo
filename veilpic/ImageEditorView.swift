@@ -131,7 +131,10 @@ struct ImageEditorView: View {
             ImageEditorKeyboardShortcutMonitor(
                 perform: performKeyboardShortcut,
                 deleteSelectedObject: {
-                    viewModel.deleteSelectedXomoObjectIfNeeded()
+                    if deleteSelectedShapeGradientStopIfNeeded() {
+                        return true
+                    }
+                    return viewModel.deleteSelectedXomoObjectIfNeeded()
                 },
                 deleteSelectedHistory: {
                     guard viewModel.isHistoryPanelVisible,
@@ -3546,16 +3549,40 @@ struct ImageEditorView: View {
            let points = viewModel.selectedShapeGradientCanvasHandlePoints {
             let start = viewPoint(from: points.start, in: size)
             let end = viewPoint(from: points.end, in: size)
+            let axisPath = Path { path in
+                path.move(to: start)
+                path.addLine(to: end)
+            }
             ZStack {
-                Path { path in
-                    path.move(to: start)
-                    path.addLine(to: end)
-                }
+                axisPath
                 .stroke(
                     Color.gray.opacity(0.76),
                     style: StrokeStyle(lineWidth: 1.25, dash: [5, 4])
                 )
                 .allowsHitTesting(false)
+
+                axisPath
+                    .stroke(Color.white.opacity(0.001), lineWidth: 18)
+                    .contentShape(axisPath.strokedPath(StrokeStyle(lineWidth: 18)))
+                    .gesture(
+                        SpatialTapGesture(
+                            count: 2,
+                            coordinateSpace: .named("image-editor-canvas-space")
+                        )
+                        .onEnded { value in
+                            guard let index = viewModel.addSelectedShapeGradientStop(
+                                atCanvasPoint: unboundedImagePoint(from: value.location, in: size)
+                            ) else { return }
+                            selectedShapeGradientStopIndex = index
+                        }
+                    )
+                    .allowsHitTesting(
+                        viewModel.canEditSelectedShapeGradient
+                            && viewModel.selectedShapeGradientColorStops.count
+                                < ImageEditorGradientFillContent.maximumColorStopCount
+                    )
+                    .help(L10n.text("imageEditor.help.shapeGradientAxis"))
+                    .accessibilityIdentifier("image-editor-shape-gradient-axis")
 
                 ForEach(viewModel.selectedShapeGradientCanvasStopHandlePoints) { stopPoint in
                     shapeGradientStopHandleView(
@@ -3626,6 +3653,20 @@ struct ImageEditorView: View {
             .opacity(viewModel.canEditSelectedShapeGradient ? 1 : 0.55)
             .help(L10n.text("imageEditor.help.shapeGradientStopHandle"))
             .accessibilityIdentifier("image-editor-shape-gradient-canvas-stop-\(stopPoint.index)")
+    }
+
+    private func deleteSelectedShapeGradientStopIfNeeded() -> Bool {
+        let stops = viewModel.selectedShapeGradientColorStops
+        let index = selectedShapeGradientStopIndex
+        guard viewModel.selectedTool == .move,
+              viewModel.document.areExtrasVisible,
+              viewModel.selectedShapeGradientCanvasHandlePoints != nil,
+              index > 0,
+              index < stops.count - 1,
+              let nextIndex = viewModel.removeSelectedShapeGradientCanvasStop(at: index)
+        else { return false }
+        selectedShapeGradientStopIndex = nextIndex
+        return true
     }
 
     private func shapeGradientHandleView(
@@ -6805,10 +6846,10 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
                 }
             }
             let isDelete = event.keyCode == 51 || event.keyCode == 117
-            if isDelete, relevantFlags.isEmpty, deleteSelectedObject() {
+            if isDelete, relevantFlags.isEmpty, !isTextInputActive, deleteSelectedObject() {
                 return nil
             }
-            if isDelete, relevantFlags.isEmpty, deleteSelectedHistory() {
+            if isDelete, relevantFlags.isEmpty, !isTextInputActive, deleteSelectedHistory() {
                 return nil
             }
 
