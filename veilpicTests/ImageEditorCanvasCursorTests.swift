@@ -55,13 +55,17 @@ struct ImageEditorCanvasCursorTests {
     @Test func samplingAndPaintBucketCursorsUseDistinctSemanticShapes() {
         #expect(ImageEditorCanvasCursor.family(for: .paintBucket) == .paintBucket)
         #expect(ImageEditorCanvasCursor.family(for: .eyedropper) == .eyedropper)
+        #expect(ImageEditorCanvasCursor.family(for: .redEye) == .redEye)
         #expect(ImageEditorCanvasCursor.family(for: .colorSampler) == .samplingScope)
 
         let bucket = ImageEditorCanvasCursor.cursor(for: .paintBucket, brushDiameter: 18)
         let eyedropper = ImageEditorCanvasCursor.cursor(for: .eyedropper, brushDiameter: 18)
+        let redEye = ImageEditorCanvasCursor.cursor(for: .redEye, brushDiameter: 18)
         let sampler = ImageEditorCanvasCursor.cursor(for: .colorSampler, brushDiameter: 18)
         #expect(bucket.image.tiffRepresentation != eyedropper.image.tiffRepresentation)
         #expect(eyedropper.image.tiffRepresentation != sampler.image.tiffRepresentation)
+        #expect(redEye.image.tiffRepresentation != eyedropper.image.tiffRepresentation)
+        #expect(redEye.image.tiffRepresentation != sampler.image.tiffRepresentation)
         #expect(eyedropper !== NSCursor.crosshair)
     }
 

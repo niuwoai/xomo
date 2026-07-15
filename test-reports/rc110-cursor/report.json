@@ -1,0 +1,89 @@
+{
+  "generated_at": "2026-07-16 02:52:37 +0800",
+  "total": 8,
+  "passed": 8,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorCanvasCursorTests",
+      "method": "arrowNudgeUsesPhotoshopStyleModifierDistances",
+      "identifier": "veilpicTests/ImageEditorCanvasCursorTests/arrowNudgeUsesPhotoshopStyleModifierDistances",
+      "file": "ImageEditorCanvasCursorTests.swift",
+      "passed": true,
+      "duration": 2.814,
+      "issues": [],
+      "log": "ImageEditorCanvasCursorTests.arrowNudgeUsesPhotoshopStyleModifierDistances.log"
+    },
+    {
+      "suite": "ImageEditorCanvasCursorTests",
+      "method": "componentLibraryAlwaysRoutesToSystemArrowUnlessPanning",
+      "identifier": "veilpicTests/ImageEditorCanvasCursorTests/componentLibraryAlwaysRoutesToSystemArrowUnlessPanning",
+      "file": "ImageEditorCanvasCursorTests.swift",
+      "passed": true,
+      "duration": 4.18,
+      "issues": [],
+      "log": "ImageEditorCanvasCursorTests.componentLibraryAlwaysRoutesToSystemArrowUnlessPanning.log"
+    },
+    {
+      "suite": "ImageEditorCanvasCursorTests",
+      "method": "precisionToolsUseDistinctSemanticArtwork",
+      "identifier": "veilpicTests/ImageEditorCanvasCursorTests/precisionToolsUseDistinctSemanticArtwork",
+      "file": "ImageEditorCanvasCursorTests.swift",
+      "passed": true,
+      "duration": 2.8,
+      "issues": [],
+      "log": "ImageEditorCanvasCursorTests.precisionToolsUseDistinctSemanticArtwork.log"
+    },
+    {
+      "suite": "ImageEditorCanvasCursorTests",
+      "method": "samplingAndPaintBucketCursorsUseDistinctSemanticShapes",
+      "identifier": "veilpicTests/ImageEditorCanvasCursorTests/samplingAndPaintBucketCursorsUseDistinctSemanticShapes",
+      "file": "ImageEditorCanvasCursorTests.swift",
+      "passed": true,
+      "duration": 2.825,
+      "issues": [],
+      "log": "ImageEditorCanvasCursorTests.samplingAndPaintBucketCursorsUseDistinctSemanticShapes.log"
+    },
+    {
+      "suite": "ImageEditorCanvasCursorTests",
+      "method": "toolsTabPreservesSelectedToolCursorAndPanOverride",
+      "identifier": "veilpicTests/ImageEditorCanvasCursorTests/toolsTabPreservesSelectedToolCursorAndPanOverride",
+      "file": "ImageEditorCanvasCursorTests.swift",
+      "passed": true,
+      "duration": 2.78,
+      "issues": [],
+      "log": "ImageEditorCanvasCursorTests.toolsTabPreservesSelectedToolCursorAndPanOverride.log"
+    },
+    {
+      "suite": "XomoLeftSidebarTests",
+      "method": "componentSidebarWiresMoveSemanticsIntoCanvasCursorAndGestures",
+      "identifier": "veilpicTests/XomoLeftSidebarTests/componentSidebarWiresMoveSemanticsIntoCanvasCursorAndGestures",
+      "file": "XomoLeftSidebarTests.swift",
+      "passed": true,
+      "duration": 2.814,
+      "issues": [],
+      "log": "XomoLeftSidebarTests.componentSidebarWiresMoveSemanticsIntoCanvasCursorAndGestures.log"
+    },
+    {
+      "suite": "veilpicTests",
+      "method": "imageEditorCanvasCursorFamiliesMatchToolInteractionSemantics",
+      "identifier": "veilpicTests/veilpicTests/imageEditorCanvasCursorFamiliesMatchToolInteractionSemantics",
+      "file": "veilpicTests.swift",
+      "passed": true,
+      "duration": 2.81,
+      "issues": [],
+      "log": "veilpicTests.imageEditorCanvasCursorFamiliesMatchToolInteractionSemantics.log"
+    },
+    {
+      "suite": "veilpicTests",
+      "method": "imageEditorCanvasCursorsTrackBrushDiameterAndPenCloseState",
+      "identifier": "veilpicTests/veilpicTests/imageEditorCanvasCursorsTrackBrushDiameterAndPenCloseState",
+      "file": "veilpicTests.swift",
+      "passed": true,
+      "duration": 2.85,
+      "issues": [],
+      "log": "veilpicTests.imageEditorCanvasCursorsTrackBrushDiameterAndPenCloseState.log"
+    }
+  ]
+}
