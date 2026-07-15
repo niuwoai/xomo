@@ -6435,6 +6435,7 @@ enum ImageEditorCanvasCursorFamily: Equatable {
     case grab
     case textInsertion
     case brushFootprint
+    case toneBrush
     case selectionMarquee
     case lasso
     case magicWand
@@ -6496,9 +6497,10 @@ enum ImageEditorCanvasCursor {
             .gradient
         case .rectangle, .ellipse:
             .shapeOutline
-        case .brush, .eraser, .dodge, .burn, .sponge,
-             .blur, .sharpen, .smudge:
+        case .brush, .eraser, .blur, .sharpen, .smudge:
             .brushFootprint
+        case .dodge, .burn, .sponge:
+            .toneBrush
         case .paintBucket:
             .paintBucket
         case .colorSampler:
@@ -6549,6 +6551,8 @@ enum ImageEditorCanvasCursor {
             return shapeCursor(for: tool)
         case .brushFootprint:
             return brushCursor(diameter: brushDiameter, symbolName: tool.symbolName)
+        case .toneBrush:
+            return toneBrushCursor(for: tool)
         case .paintBucket:
             return paintBucketCursor()
         case .eyedropper:
@@ -6609,6 +6613,92 @@ enum ImageEditorCanvasCursor {
                 y: min(max(center.y - diameter / 2 - 8, 1), side - 18)
             )
         )
+        image.unlockFocus()
+        return cache(
+            NSCursor(image: image, hotSpot: NSPoint(x: center.x, y: side - center.y)),
+            for: cacheKey
+        )
+    }
+
+    private static func toneBrushCursor(for tool: ImageEditorTool) -> NSCursor {
+        let cacheKey = "tone-brush:\(tool.rawValue)"
+        if let cachedCursor = cursorCache[cacheKey] {
+            return cachedCursor
+        }
+
+        let side: CGFloat = 38
+        let image = NSImage(size: NSSize(width: side, height: side))
+        image.lockFocus()
+
+        let center = NSPoint(x: 13, y: 13)
+        let footprint = NSBezierPath(ovalIn: NSRect(x: 3, y: 3, width: 20, height: 20))
+        NSColor.black.withAlphaComponent(0.95).setStroke()
+        footprint.lineWidth = 4
+        footprint.stroke()
+        NSColor.white.withAlphaComponent(0.98).setStroke()
+        footprint.lineWidth = 1.4
+        footprint.stroke()
+
+        switch tool {
+        case .dodge:
+            let rays = NSBezierPath()
+            for angle in stride(from: 0.0, to: Double.pi * 2, by: Double.pi / 4) {
+                let startRadius: CGFloat = 12
+                let endRadius: CGFloat = 16
+                let start = NSPoint(
+                    x: center.x + CGFloat(cos(angle)) * startRadius,
+                    y: center.y + CGFloat(sin(angle)) * startRadius
+                )
+                let end = NSPoint(
+                    x: center.x + CGFloat(cos(angle)) * endRadius,
+                    y: center.y + CGFloat(sin(angle)) * endRadius
+                )
+                rays.move(to: start)
+                rays.line(to: end)
+            }
+            NSColor.black.withAlphaComponent(0.95).setStroke()
+            rays.lineWidth = 3
+            rays.stroke()
+            NSColor.systemYellow.setStroke()
+            rays.lineWidth = 1.3
+            rays.stroke()
+            NSColor.systemYellow.setFill()
+            NSBezierPath(ovalIn: NSRect(x: 8, y: 8, width: 10, height: 10)).fill()
+        case .burn:
+            let flame = NSBezierPath()
+            flame.move(to: NSPoint(x: 13, y: 5))
+            flame.curve(to: NSPoint(x: 19, y: 13), controlPoint1: NSPoint(x: 14, y: 9), controlPoint2: NSPoint(x: 20, y: 10))
+            flame.curve(to: NSPoint(x: 13, y: 21), controlPoint1: NSPoint(x: 19, y: 20), controlPoint2: NSPoint(x: 17, y: 22))
+            flame.curve(to: NSPoint(x: 7, y: 13), controlPoint1: NSPoint(x: 9, y: 21), controlPoint2: NSPoint(x: 6, y: 18))
+            flame.curve(to: NSPoint(x: 13, y: 5), controlPoint1: NSPoint(x: 8, y: 9), controlPoint2: NSPoint(x: 12, y: 8))
+            flame.close()
+            NSColor.systemOrange.setFill()
+            flame.fill()
+            NSColor.black.withAlphaComponent(0.95).setStroke()
+            flame.lineWidth = 3.5
+            flame.stroke()
+            NSColor.white.withAlphaComponent(0.98).setStroke()
+            flame.lineWidth = 1
+            flame.stroke()
+        case .sponge:
+            NSColor.systemGray.setFill()
+            footprint.fill()
+            let pores = [
+                NSPoint(x: 8, y: 9), NSPoint(x: 14, y: 8), NSPoint(x: 18, y: 12),
+                NSPoint(x: 10, y: 15), NSPoint(x: 16, y: 18)
+            ]
+            for pore in pores {
+                NSColor.black.withAlphaComponent(0.42).setFill()
+                NSBezierPath(ovalIn: NSRect(x: pore.x - 1.2, y: pore.y - 1.2, width: 2.4, height: 2.4)).fill()
+            }
+            NSColor.white.withAlphaComponent(0.65).setStroke()
+            footprint.lineWidth = 1
+            footprint.stroke()
+        default:
+            break
+        }
+
+        drawCursorCrosshair(center: center)
         image.unlockFocus()
         return cache(
             NSCursor(image: image, hotSpot: NSPoint(x: center.x, y: side - center.y)),

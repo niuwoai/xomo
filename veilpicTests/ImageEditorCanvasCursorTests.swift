@@ -60,6 +60,9 @@ struct ImageEditorCanvasCursorTests {
         #expect(ImageEditorCanvasCursor.family(for: .cloneStamp) == .cloneStamp)
         #expect(ImageEditorCanvasCursor.family(for: .healingBrush) == .healingBrush)
         #expect(ImageEditorCanvasCursor.family(for: .colorSampler) == .samplingScope)
+        #expect(ImageEditorCanvasCursor.family(for: .dodge) == .toneBrush)
+        #expect(ImageEditorCanvasCursor.family(for: .burn) == .toneBrush)
+        #expect(ImageEditorCanvasCursor.family(for: .sponge) == .toneBrush)
 
         let bucket = ImageEditorCanvasCursor.cursor(for: .paintBucket, brushDiameter: 18)
         let eyedropper = ImageEditorCanvasCursor.cursor(for: .eyedropper, brushDiameter: 18)
@@ -68,6 +71,9 @@ struct ImageEditorCanvasCursorTests {
         let cloneStamp = ImageEditorCanvasCursor.cursor(for: .cloneStamp, brushDiameter: 18)
         let healingBrush = ImageEditorCanvasCursor.cursor(for: .healingBrush, brushDiameter: 18)
         let sampler = ImageEditorCanvasCursor.cursor(for: .colorSampler, brushDiameter: 18)
+        let dodge = ImageEditorCanvasCursor.cursor(for: .dodge, brushDiameter: 18)
+        let burn = ImageEditorCanvasCursor.cursor(for: .burn, brushDiameter: 18)
+        let sponge = ImageEditorCanvasCursor.cursor(for: .sponge, brushDiameter: 18)
         #expect(bucket.image.tiffRepresentation != eyedropper.image.tiffRepresentation)
         #expect(eyedropper.image.tiffRepresentation != sampler.image.tiffRepresentation)
         #expect(redEye.image.tiffRepresentation != eyedropper.image.tiffRepresentation)
@@ -78,6 +84,9 @@ struct ImageEditorCanvasCursorTests {
         #expect(cloneStamp.image.tiffRepresentation != sampler.image.tiffRepresentation)
         #expect(healingBrush.image.tiffRepresentation != cloneStamp.image.tiffRepresentation)
         #expect(healingBrush.image.tiffRepresentation != sampler.image.tiffRepresentation)
+        #expect(dodge.image.tiffRepresentation != burn.image.tiffRepresentation)
+        #expect(burn.image.tiffRepresentation != sponge.image.tiffRepresentation)
+        #expect(sponge.image.tiffRepresentation != sampler.image.tiffRepresentation)
         #expect(eyedropper !== NSCursor.crosshair)
     }
 
