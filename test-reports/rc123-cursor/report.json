@@ -1,0 +1,11 @@
+{
+  "feature": "canvas cursor resolution",
+  "suite": "ImageEditorCanvasCursorTests",
+  "total": 6,
+  "passed": 6,
+  "failed": 0,
+  "component_library": "system arrow",
+  "space_pan": "open hand",
+  "active_pan": "closed hand",
+  "verification": "ImageEditorCanvasCursorTests"
+}

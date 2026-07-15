@@ -1214,9 +1214,11 @@ struct ImageEditorView: View {
                     let displayScale = imageRect.width / max(viewModel.document.canvasSize.width, 1)
                     ImageEditorCursorRectView(
                         cursor: ImageEditorCanvasCursor.cursor(
-                            for: canvasCursorTool,
+                            for: viewModel.selectedLeftSidebarTab,
+                            selectedTool: viewModel.selectedTool,
                             brushDiameter: viewModel.brushSize * displayScale,
                             handIsDragging: isCanvasPanGestureActive,
+                            isSpacebarPanning: isSpacebarPanning,
                             modifierFlags: canvasModifierFlags
                         )
                     )
@@ -2040,21 +2042,14 @@ struct ImageEditorView: View {
         let imageRect = fittedImageRect(in: size)
         let displayScale = imageRect.width / max(viewModel.document.canvasSize.width, 1)
         ImageEditorCanvasCursor.cursor(
-            for: canvasCursorTool,
+            for: viewModel.selectedLeftSidebarTab,
+            selectedTool: viewModel.selectedTool,
             brushDiameter: viewModel.brushSize * displayScale,
             penIsClosing: canvasInteractionTool == .pen && viewModel.isPenCloseCandidate(at: canvasPoint),
             handIsDragging: isCanvasPanGestureActive,
+            isSpacebarPanning: isSpacebarPanning,
             modifierFlags: NSEvent.modifierFlags
         ).set()
-    }
-
-    private var canvasCursorTool: ImageEditorTool {
-        ImageEditorCanvasCursor.tool(
-            for: viewModel.selectedLeftSidebarTab,
-            selectedTool: viewModel.selectedTool,
-            isSpacebarPanning: isSpacebarPanning,
-            isCanvasPanGestureActive: isCanvasPanGestureActive
-        )
     }
 
     private var canvasInteractionTool: ImageEditorTool {
@@ -6489,6 +6484,41 @@ enum ImageEditorSelectionCursorMode: String, Equatable, CaseIterable {
 
 enum ImageEditorCanvasCursor {
     private static var cursorCache: [String: NSCursor] = [:]
+
+    /// Resolves the canvas cursor from the active sidebar mode in one place.
+    /// The component library is a canvas object mode, not a drawing tool: it
+    /// must always restore the native arrow unless the user is explicitly
+    /// panning with Space or the hand tool.
+    static func cursor(
+        for sidebarTab: XomoLeftSidebarTab,
+        selectedTool: ImageEditorTool,
+        brushDiameter: CGFloat,
+        penIsClosing: Bool = false,
+        handIsDragging: Bool = false,
+        isSpacebarPanning: Bool = false,
+        isCanvasPanGestureActive: Bool = false,
+        modifierFlags: NSEvent.ModifierFlags = []
+    ) -> NSCursor {
+        if sidebarTab == .components,
+           !isSpacebarPanning,
+           !isCanvasPanGestureActive {
+            return .arrow
+        }
+
+        let effectiveTool = tool(
+            for: sidebarTab,
+            selectedTool: selectedTool,
+            isSpacebarPanning: isSpacebarPanning,
+            isCanvasPanGestureActive: isCanvasPanGestureActive
+        )
+        return cursor(
+            for: effectiveTool,
+            brushDiameter: brushDiameter,
+            penIsClosing: penIsClosing,
+            handIsDragging: handIsDragging,
+            modifierFlags: modifierFlags
+        )
+    }
 
     static func tool(
         for sidebarTab: XomoLeftSidebarTab,

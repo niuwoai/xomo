@@ -24,6 +24,31 @@ struct ImageEditorCanvasCursorTests {
                 isCanvasPanGestureActive: false
             ) == .hand
         )
+
+        #expect(
+            ImageEditorCanvasCursor.cursor(
+                for: .components,
+                selectedTool: .brush,
+                brushDiameter: 18
+            ) === NSCursor.arrow
+        )
+        #expect(
+            ImageEditorCanvasCursor.cursor(
+                for: .components,
+                selectedTool: .brush,
+                brushDiameter: 18,
+                isSpacebarPanning: true
+            ) === NSCursor.openHand
+        )
+        #expect(
+            ImageEditorCanvasCursor.cursor(
+                for: .components,
+                selectedTool: .brush,
+                brushDiameter: 18,
+                handIsDragging: true,
+                isCanvasPanGestureActive: true
+            ) === NSCursor.closedHand
+        )
     }
 
     @Test func toolsTabPreservesSelectedToolCursorAndPanOverride() {
