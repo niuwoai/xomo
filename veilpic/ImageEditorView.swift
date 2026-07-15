@@ -7069,6 +7069,66 @@ struct EditorPanel<Content: View>: View {
 
 enum ImageEditorDockDisclosureAppearance {
     static let foregroundColor = NSColor.white
+
+    static func attributedTitle(_ title: String) -> NSAttributedString {
+        NSAttributedString(
+            string: title,
+            attributes: [
+                .foregroundColor: foregroundColor,
+                .font: NSFont.systemFont(ofSize: 12, weight: .bold)
+            ]
+        )
+    }
+}
+
+final class ImageEditorDockDisclosureNativeLabel: NSView {
+    var title = "" {
+        didSet {
+            invalidateIntrinsicContentSize()
+            needsDisplay = true
+        }
+    }
+
+    override var acceptsFirstResponder: Bool { false }
+
+    override var intrinsicContentSize: NSSize {
+        let size = attributedTitle.size()
+        return NSSize(width: ceil(size.width), height: max(16, ceil(size.height)))
+    }
+
+    override func draw(_ dirtyRect: NSRect) {
+        super.draw(dirtyRect)
+        let value = attributedTitle
+        let size = value.size()
+        value.draw(at: NSPoint(
+            x: 0,
+            y: max(0, (bounds.height - size.height) / 2)
+        ))
+    }
+
+    var attributedTitle: NSAttributedString {
+        ImageEditorDockDisclosureAppearance.attributedTitle(title)
+    }
+}
+
+struct ImageEditorDockDisclosureLabel: NSViewRepresentable {
+    let title: String
+
+    func makeNSView(context: Context) -> ImageEditorDockDisclosureNativeLabel {
+        let label = ImageEditorDockDisclosureNativeLabel()
+        configure(label)
+        return label
+    }
+
+    func updateNSView(_ label: ImageEditorDockDisclosureNativeLabel, context: Context) {
+        configure(label)
+    }
+
+    private func configure(_ label: ImageEditorDockDisclosureNativeLabel) {
+        label.appearance = NSAppearance(named: .darkAqua)
+        label.identifier = NSUserInterfaceItemIdentifier("image-editor-dock-section-title")
+        label.title = title
+    }
 }
 
 struct EditorDockDisclosure<Content: View>: View {
@@ -7099,9 +7159,8 @@ struct EditorDockDisclosure<Content: View>: View {
                         .font(.system(size: 12, weight: .semibold))
                         .frame(width: 18)
                         .foregroundStyle(Color(nsColor: ImageEditorDockDisclosureAppearance.foregroundColor))
-                    Text(title)
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundStyle(Color(nsColor: ImageEditorDockDisclosureAppearance.foregroundColor))
+                    ImageEditorDockDisclosureLabel(title: title)
+                        .fixedSize(horizontal: true, vertical: false)
                     Spacer(minLength: 0)
                     Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
                         .font(.system(size: 11, weight: .bold))
