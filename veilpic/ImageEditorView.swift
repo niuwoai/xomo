@@ -6434,7 +6434,8 @@ enum ImageEditorCanvasCursorFamily: Equatable {
     case systemArrow
     case grab
     case textInsertion
-    case brushFootprint
+    case brushTool
+    case eraserTool
     case toneBrush
     case retouchBrush
     case selectionMarquee
@@ -6498,8 +6499,10 @@ enum ImageEditorCanvasCursor {
             .gradient
         case .rectangle, .ellipse:
             .shapeOutline
-        case .brush, .eraser:
-            .brushFootprint
+        case .brush:
+            .brushTool
+        case .eraser:
+            .eraserTool
         case .dodge, .burn, .sponge:
             .toneBrush
         case .blur, .sharpen, .smudge:
@@ -6552,8 +6555,8 @@ enum ImageEditorCanvasCursor {
             return gradientCursor()
         case .shapeOutline:
             return shapeCursor(for: tool)
-        case .brushFootprint:
-            return brushCursor(diameter: brushDiameter, symbolName: tool.symbolName)
+        case .brushTool, .eraserTool:
+            return paintToolCursor(for: tool, diameter: brushDiameter)
         case .toneBrush:
             return toneBrushCursor(for: tool)
         case .retouchBrush:
@@ -6618,6 +6621,83 @@ enum ImageEditorCanvasCursor {
                 y: min(max(center.y - diameter / 2 - 8, 1), side - 18)
             )
         )
+        image.unlockFocus()
+        return cache(
+            NSCursor(image: image, hotSpot: NSPoint(x: center.x, y: side - center.y)),
+            for: cacheKey
+        )
+    }
+
+    private static func paintToolCursor(for tool: ImageEditorTool, diameter requestedDiameter: CGFloat) -> NSCursor {
+        let diameter = max(3, min(256, requestedDiameter.rounded()))
+        let cacheKey = "paint-tool:\(tool.rawValue):\(Int(diameter))"
+        if let cachedCursor = cursorCache[cacheKey] {
+            return cachedCursor
+        }
+
+        let side = max(36, diameter + 20)
+        let image = NSImage(size: NSSize(width: side, height: side))
+        image.lockFocus()
+
+        let center = NSPoint(x: side / 2, y: side / 2)
+        let ringRect = NSRect(
+            x: center.x - diameter / 2,
+            y: center.y - diameter / 2,
+            width: diameter,
+            height: diameter
+        )
+        let ring = NSBezierPath(ovalIn: ringRect)
+        NSColor.black.withAlphaComponent(0.9).setStroke()
+        ring.lineWidth = 3.5
+        ring.stroke()
+        NSColor.white.withAlphaComponent(0.98).setStroke()
+        ring.lineWidth = 1.4
+        ring.stroke()
+        drawCursorCrosshair(center: center)
+
+        let markOrigin = NSPoint(x: min(side - 28, center.x + diameter / 2 - 3), y: min(side - 28, center.y - diameter / 2 - 3))
+        switch tool {
+        case .brush:
+            let handle = NSBezierPath()
+            handle.move(to: NSPoint(x: markOrigin.x + 5, y: markOrigin.y + 4))
+            handle.line(to: NSPoint(x: markOrigin.x + 19, y: markOrigin.y + 18))
+            NSColor.black.withAlphaComponent(0.95).setStroke()
+            handle.lineWidth = 5
+            handle.stroke()
+            NSColor.systemBlue.setStroke()
+            handle.lineWidth = 2
+            handle.stroke()
+
+            let ferrule = NSBezierPath(rect: NSRect(x: markOrigin.x + 2, y: markOrigin.y + 2, width: 8, height: 7))
+            NSColor.black.withAlphaComponent(0.95).setStroke()
+            ferrule.lineWidth = 3
+            ferrule.stroke()
+            NSColor.white.setStroke()
+            ferrule.lineWidth = 1
+            ferrule.stroke()
+        case .eraser:
+            let eraser = NSBezierPath()
+            eraser.move(to: NSPoint(x: markOrigin.x + 3, y: markOrigin.y + 8))
+            eraser.line(to: NSPoint(x: markOrigin.x + 12, y: markOrigin.y + 1))
+            eraser.line(to: NSPoint(x: markOrigin.x + 23, y: markOrigin.y + 13))
+            eraser.line(to: NSPoint(x: markOrigin.x + 14, y: markOrigin.y + 21))
+            eraser.close()
+            NSColor.black.withAlphaComponent(0.95).setStroke()
+            eraser.lineWidth = 3.5
+            eraser.stroke()
+            NSColor.systemPink.withAlphaComponent(0.9).setFill()
+            eraser.fill()
+
+            let seam = NSBezierPath()
+            seam.move(to: NSPoint(x: markOrigin.x + 8, y: markOrigin.y + 5))
+            seam.line(to: NSPoint(x: markOrigin.x + 18, y: markOrigin.y + 16))
+            NSColor.white.withAlphaComponent(0.9).setStroke()
+            seam.lineWidth = 1.2
+            seam.stroke()
+        default:
+            break
+        }
+
         image.unlockFocus()
         return cache(
             NSCursor(image: image, hotSpot: NSPoint(x: center.x, y: side - center.y)),
