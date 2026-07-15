@@ -44,6 +44,7 @@ struct ImageEditorView: View {
     @State private var isObjectMoveGestureActive = false
     @State private var activeResizeHandle: ImageEditorLayerResizeHandle?
     @State private var activeShapeGradientHandle: ImageEditorShapeGradientHandle?
+    @State private var activeShapeRadialGradientHandle: ImageEditorShapeRadialGradientHandle?
     @State private var activeShapeGradientStopIndex: Int?
     @State var selectedShapeGradientStopIndex = 0
     @State private var isRotatingLayer = false
@@ -3545,60 +3546,110 @@ struct ImageEditorView: View {
     @ViewBuilder
     private func shapeGradientControlOverlay(in size: CGSize) -> some View {
         if viewModel.selectedTool == .move,
-           viewModel.document.areExtrasVisible,
-           let points = viewModel.selectedShapeGradientCanvasHandlePoints {
-            let start = viewPoint(from: points.start, in: size)
-            let end = viewPoint(from: points.end, in: size)
-            let axisPath = Path { path in
-                path.move(to: start)
-                path.addLine(to: end)
+           viewModel.document.areExtrasVisible {
+            if let points = viewModel.selectedShapeGradientCanvasHandlePoints {
+                linearShapeGradientControlOverlay(points: points, canvasSize: size)
             }
-            ZStack {
-                axisPath
+            if let geometry = viewModel.selectedShapeRadialGradientCanvasGeometry {
+                radialShapeGradientControlOverlay(geometry: geometry, canvasSize: size)
+            }
+        }
+    }
+
+    private func linearShapeGradientControlOverlay(
+        points: ImageEditorShapeGradientHandlePoints,
+        canvasSize: CGSize
+    ) -> some View {
+        let start = viewPoint(from: points.start, in: canvasSize)
+        let end = viewPoint(from: points.end, in: canvasSize)
+        let axisPath = Path { path in
+            path.move(to: start)
+            path.addLine(to: end)
+        }
+        return ZStack {
+            axisPath
                 .stroke(
                     Color.gray.opacity(0.76),
                     style: StrokeStyle(lineWidth: 1.25, dash: [5, 4])
                 )
                 .allowsHitTesting(false)
 
-                axisPath
-                    .stroke(Color.white.opacity(0.001), lineWidth: 18)
-                    .contentShape(axisPath.strokedPath(StrokeStyle(lineWidth: 18)))
-                    .gesture(
-                        SpatialTapGesture(
-                            count: 2,
-                            coordinateSpace: .named("image-editor-canvas-space")
-                        )
-                        .onEnded { value in
-                            guard let index = viewModel.addSelectedShapeGradientStop(
-                                atCanvasPoint: unboundedImagePoint(from: value.location, in: size)
-                            ) else { return }
-                            selectedShapeGradientStopIndex = index
-                        }
+            axisPath
+                .stroke(Color.white.opacity(0.001), lineWidth: 18)
+                .contentShape(axisPath.strokedPath(StrokeStyle(lineWidth: 18)))
+                .gesture(
+                    SpatialTapGesture(
+                        count: 2,
+                        coordinateSpace: .named("image-editor-canvas-space")
                     )
-                    .allowsHitTesting(
-                        viewModel.canEditSelectedShapeGradient
-                            && viewModel.selectedShapeGradientColorStops.count
-                                < ImageEditorGradientFillContent.maximumColorStopCount
-                    )
-                    .help(L10n.text("imageEditor.help.shapeGradientAxis"))
-                    .accessibilityIdentifier("image-editor-shape-gradient-axis")
+                    .onEnded { value in
+                        guard let index = viewModel.addSelectedShapeGradientStop(
+                            atCanvasPoint: unboundedImagePoint(from: value.location, in: canvasSize)
+                        ) else { return }
+                        selectedShapeGradientStopIndex = index
+                    }
+                )
+                .allowsHitTesting(
+                    viewModel.canEditSelectedShapeGradient
+                        && viewModel.selectedShapeGradientColorStops.count
+                            < ImageEditorGradientFillContent.maximumColorStopCount
+                )
+                .help(L10n.text("imageEditor.help.shapeGradientAxis"))
+                .accessibilityIdentifier("image-editor-shape-gradient-axis")
 
-                ForEach(viewModel.selectedShapeGradientCanvasStopHandlePoints) { stopPoint in
-                    shapeGradientStopHandleView(
-                        stopPoint,
-                        position: viewPoint(from: stopPoint.canvasPoint, in: size),
-                        canvasSize: size
-                    )
-                }
+            ForEach(viewModel.selectedShapeGradientCanvasStopHandlePoints) { stopPoint in
+                shapeGradientStopHandleView(
+                    stopPoint,
+                    position: viewPoint(from: stopPoint.canvasPoint, in: canvasSize),
+                    canvasSize: canvasSize
+                )
+            }
 
-                ForEach(ImageEditorShapeGradientHandle.allCases) { handle in
-                    shapeGradientHandleView(
-                        handle: handle,
-                        position: handle == .start ? start : end,
-                        canvasSize: size
-                    )
-                }
+            ForEach(ImageEditorShapeGradientHandle.allCases) { handle in
+                shapeGradientHandleView(
+                    handle: handle,
+                    position: handle == .start ? start : end,
+                    canvasSize: canvasSize
+                )
+            }
+        }
+    }
+
+    private func radialShapeGradientControlOverlay(
+        geometry: ImageEditorShapeRadialGradientCanvasGeometry,
+        canvasSize: CGSize
+    ) -> some View {
+        let center = viewPoint(from: geometry.center, in: canvasSize)
+        let radius = viewPoint(from: geometry.radius, in: canvasSize)
+        let boundary = viewRect(from: geometry.boundaryRect, in: canvasSize)
+        let radiusPath = Path { path in
+            path.move(to: center)
+            path.addLine(to: radius)
+        }
+        return ZStack {
+            Ellipse()
+                .stroke(
+                    Color.gray.opacity(0.58),
+                    style: StrokeStyle(lineWidth: 1, dash: [4, 4])
+                )
+                .frame(width: max(1, boundary.width), height: max(1, boundary.height))
+                .position(x: boundary.midX, y: boundary.midY)
+                .allowsHitTesting(false)
+                .accessibilityIdentifier("image-editor-shape-radial-gradient-boundary")
+
+            radiusPath
+                .stroke(
+                    Color.gray.opacity(0.76),
+                    style: StrokeStyle(lineWidth: 1.25, dash: [5, 4])
+                )
+                .allowsHitTesting(false)
+
+            ForEach(ImageEditorShapeRadialGradientHandle.allCases) { handle in
+                shapeRadialGradientHandleView(
+                    handle: handle,
+                    position: handle == .center ? center : radius,
+                    canvasSize: canvasSize
+                )
             }
         }
     }
@@ -3717,6 +3768,65 @@ struct ImageEditorView: View {
             .opacity(viewModel.canEditSelectedShapeGradient ? 1 : 0.55)
             .help(L10n.text("imageEditor.help.shapeGradientHandle.\(handle.rawValue)"))
             .accessibilityIdentifier("image-editor-shape-gradient-handle-\(handle.rawValue)")
+    }
+
+    private func shapeRadialGradientHandleView(
+        handle: ImageEditorShapeRadialGradientHandle,
+        position: CGPoint,
+        canvasSize: CGSize
+    ) -> some View {
+        Circle()
+            .fill(
+                handle == .center
+                    ? Color.gray.opacity(0.94)
+                    : Color.white.opacity(0.78)
+            )
+            .overlay {
+                Circle()
+                    .stroke(Color.white.opacity(0.9), lineWidth: 1.25)
+                Circle()
+                    .stroke(Color.black.opacity(0.62), lineWidth: 0.5)
+                    .padding(-1)
+                if handle == .center {
+                    Circle()
+                        .fill(Color.black.opacity(0.62))
+                        .frame(width: 3, height: 3)
+                }
+            }
+            .frame(width: 12, height: 12)
+            .position(position)
+            .contentShape(Circle().inset(by: -6))
+            .highPriorityGesture(
+                DragGesture(
+                    minimumDistance: 0,
+                    coordinateSpace: .named("image-editor-canvas-space")
+                )
+                .onChanged { value in
+                    if activeShapeRadialGradientHandle == nil,
+                       viewModel.beginEditingSelectedShapeRadialGradient(handle: handle) {
+                        activeShapeRadialGradientHandle = handle
+                    }
+                    guard activeShapeRadialGradientHandle == handle else { return }
+                    viewModel.updateSelectedShapeRadialGradient(
+                        handle: handle,
+                        to: unboundedImagePoint(from: value.location, in: canvasSize)
+                    )
+                }
+                .onEnded { value in
+                    guard activeShapeRadialGradientHandle == handle else { return }
+                    viewModel.updateSelectedShapeRadialGradient(
+                        handle: handle,
+                        to: unboundedImagePoint(from: value.location, in: canvasSize)
+                    )
+                    viewModel.finishEditingSelectedShapeGradient()
+                    activeShapeRadialGradientHandle = nil
+                }
+            )
+            .opacity(viewModel.canEditSelectedShapeRadialGradient ? 1 : 0.55)
+            .help(L10n.text("imageEditor.help.shapeRadialGradientHandle.\(handle.rawValue)"))
+            .accessibilityIdentifier(
+                "image-editor-shape-radial-gradient-handle-\(handle.rawValue)"
+            )
     }
 
     private func shapeGradientHandleColor(_ handle: ImageEditorShapeGradientHandle) -> Color {

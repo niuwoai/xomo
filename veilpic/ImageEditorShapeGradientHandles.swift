@@ -24,6 +24,23 @@ struct ImageEditorShapeGradientHandlePoints: Equatable {
     }
 }
 
+enum ImageEditorShapeRadialGradientHandle: String, CaseIterable, Identifiable {
+    case center
+    case radius
+
+    var id: String { rawValue }
+}
+
+struct ImageEditorShapeRadialGradientCanvasGeometry: Equatable {
+    var center: CGPoint
+    var radius: CGPoint
+    var boundaryRect: CGRect
+
+    func point(for handle: ImageEditorShapeRadialGradientHandle) -> CGPoint {
+        handle == .center ? center : radius
+    }
+}
+
 struct ImageEditorShapeGradientStopHandlePoint: Identifiable, Equatable {
     var index: Int
     var stop: ImageEditorGradientColorStop
@@ -125,6 +142,88 @@ enum ImageEditorShapeGradientGeometry {
             x: center.x / imageSize.width,
             y: center.y / imageSize.height
         )
+        return content.normalized(size: imageSize)
+    }
+
+    static func radialCanvasGeometry(
+        content: ImageEditorShapeContent,
+        imageSize: CGSize,
+        layerFrame: CGRect
+    ) -> ImageEditorShapeRadialGradientCanvasGeometry? {
+        guard let gradient = content.fillGradient?.normalized(),
+              gradient.style == .radial,
+              imageSize.width > 0,
+              imageSize.height > 0,
+              layerFrame.width > 0,
+              layerFrame.height > 0
+        else { return nil }
+
+        let localCenter = CGPoint(
+            x: content.fillGradientCenter.x * imageSize.width,
+            y: content.fillGradientCenter.y * imageSize.height
+        )
+        let localRadius = radialReferenceRadius(imageSize: imageSize) * gradient.scale
+        let center = canvasPoint(localCenter, imageSize: imageSize, layerFrame: layerFrame)
+        let radius = canvasPoint(
+            CGPoint(x: localCenter.x + localRadius, y: localCenter.y),
+            imageSize: imageSize,
+            layerFrame: layerFrame
+        )
+        let verticalBoundary = canvasPoint(
+            CGPoint(x: localCenter.x, y: localCenter.y + localRadius),
+            imageSize: imageSize,
+            layerFrame: layerFrame
+        )
+        let horizontalRadius = abs(radius.x - center.x)
+        let verticalRadius = abs(verticalBoundary.y - center.y)
+        return ImageEditorShapeRadialGradientCanvasGeometry(
+            center: center,
+            radius: radius,
+            boundaryRect: CGRect(
+                x: center.x - horizontalRadius,
+                y: center.y - verticalRadius,
+                width: horizontalRadius * 2,
+                height: verticalRadius * 2
+            )
+        )
+    }
+
+    static func updatedRadialContent(
+        from originalContent: ImageEditorShapeContent,
+        imageSize: CGSize,
+        layerFrame: CGRect,
+        moving handle: ImageEditorShapeRadialGradientHandle,
+        to canvasPoint: CGPoint
+    ) -> ImageEditorShapeContent? {
+        guard var gradient = originalContent.fillGradient?.normalized(),
+              gradient.style == .radial,
+              imageSize.width > 0,
+              imageSize.height > 0,
+              layerFrame.width > 0,
+              layerFrame.height > 0,
+              canvasPoint.x.isFinite,
+              canvasPoint.y.isFinite
+        else { return nil }
+
+        let draggedPoint = localPoint(canvasPoint, imageSize: imageSize, layerFrame: layerFrame)
+        var content = originalContent
+        switch handle {
+        case .center:
+            content.fillGradientCenter = CGPoint(
+                x: draggedPoint.x / imageSize.width,
+                y: draggedPoint.y / imageSize.height
+            )
+        case .radius:
+            let center = CGPoint(
+                x: originalContent.fillGradientCenter.x * imageSize.width,
+                y: originalContent.fillGradientCenter.y * imageSize.height
+            )
+            let radius = hypot(draggedPoint.x - center.x, draggedPoint.y - center.y)
+            let referenceRadius = radialReferenceRadius(imageSize: imageSize)
+            gradient.scale = max(0.25, min(4, radius / referenceRadius))
+            gradient.style = .radial
+            content.fillGradient = gradient.normalized()
+        }
         return content.normalized(size: imageSize)
     }
 
@@ -239,6 +338,10 @@ enum ImageEditorShapeGradientGeometry {
         )
     }
 
+    private static func radialReferenceRadius(imageSize: CGSize) -> CGFloat {
+        max(1, hypot(imageSize.width / 2, imageSize.height / 2))
+    }
+
     private static func canvasPoint(
         _ point: CGPoint,
         imageSize: CGSize,
@@ -295,9 +398,28 @@ extension ImageEditorViewModel {
         )
     }
 
+    var selectedShapeRadialGradientCanvasGeometry: ImageEditorShapeRadialGradientCanvasGeometry? {
+        guard !isEditingLayerMask,
+              let layer = singleSelectedShapeGradientLayer,
+              let content = layer.shapeContent
+        else { return nil }
+        return ImageEditorShapeGradientGeometry.radialCanvasGeometry(
+            content: content,
+            imageSize: layer.image.size,
+            layerFrame: layer.frame.standardized
+        )
+    }
+
     var canEditSelectedShapeGradient: Bool {
         guard let layer = singleSelectedShapeGradientLayer,
               layer.shapeContent?.fillGradient?.style == .linear
+        else { return false }
+        return !document.isEffectivelyPixelsLocked(layer)
+    }
+
+    var canEditSelectedShapeRadialGradient: Bool {
+        guard let layer = singleSelectedShapeGradientLayer,
+              layer.shapeContent?.fillGradient?.style == .radial
         else { return false }
         return !document.isEffectivelyPixelsLocked(layer)
     }
@@ -334,6 +456,49 @@ extension ImageEditorViewModel {
                 moving: handle,
                 to: canvasPoint,
                 snappingAngle: snappingAngle
+              )
+        else { return }
+        guard document.layers[index].shapeContent?.fillGradient != content.fillGradient
+                || document.layers[index].shapeContent?.fillGradientCenter != content.fillGradientCenter
+        else { return }
+        document.layers[index].kind = .shape(content)
+        editingShapeGradientDidChange = true
+        statusText = L10n.text("imageEditor.status.shapeGradientHandleMoved")
+    }
+
+    func beginEditingSelectedShapeRadialGradient(
+        handle: ImageEditorShapeRadialGradientHandle
+    ) -> Bool {
+        guard editingShapeGradientLayerID == nil,
+              canEditSelectedShapeRadialGradient,
+              let layer = singleSelectedShapeGradientLayer,
+              let content = layer.shapeContent
+        else {
+            statusText = L10n.text("imageEditor.status.layerLocked")
+            return false
+        }
+        _ = handle
+        pushUndo()
+        editingShapeGradientLayerID = layer.id
+        editingShapeGradientOriginalContent = content
+        editingShapeGradientStopIndex = nil
+        editingShapeGradientDidChange = false
+        return true
+    }
+
+    func updateSelectedShapeRadialGradient(
+        handle: ImageEditorShapeRadialGradientHandle,
+        to canvasPoint: CGPoint
+    ) {
+        guard let layerID = editingShapeGradientLayerID,
+              let originalContent = editingShapeGradientOriginalContent,
+              let index = document.layers.firstIndex(where: { $0.id == layerID }),
+              let content = ImageEditorShapeGradientGeometry.updatedRadialContent(
+                from: originalContent,
+                imageSize: document.layers[index].image.size,
+                layerFrame: document.layers[index].frame.standardized,
+                moving: handle,
+                to: canvasPoint
               )
         else { return }
         guard document.layers[index].shapeContent?.fillGradient != content.fillGradient
