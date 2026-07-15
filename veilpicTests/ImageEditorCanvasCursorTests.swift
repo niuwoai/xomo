@@ -52,6 +52,21 @@ struct ImageEditorCanvasCursorTests {
         #expect(ImageEditorArrowNudge.delta(for: 125, modifierFlags: [.command]) == nil)
     }
 
+    @Test func selectionCursorModesReflectPhotoshopModifierSemantics() {
+        #expect(ImageEditorSelectionCursorMode.from(modifierFlags: []) == .replace)
+        #expect(ImageEditorSelectionCursorMode.from(modifierFlags: [.shift]) == .add)
+        #expect(ImageEditorSelectionCursorMode.from(modifierFlags: [.option]) == .subtract)
+        #expect(ImageEditorSelectionCursorMode.from(modifierFlags: [.shift, .option]) == .intersect)
+
+        let replace = ImageEditorCanvasCursor.cursor(for: .marquee, brushDiameter: 18)
+        let add = ImageEditorCanvasCursor.cursor(for: .marquee, brushDiameter: 18, modifierFlags: [.shift])
+        let subtract = ImageEditorCanvasCursor.cursor(for: .marquee, brushDiameter: 18, modifierFlags: [.option])
+        let intersect = ImageEditorCanvasCursor.cursor(for: .marquee, brushDiameter: 18, modifierFlags: [.shift, .option])
+        #expect(replace.image.tiffRepresentation != add.image.tiffRepresentation)
+        #expect(add.image.tiffRepresentation != subtract.image.tiffRepresentation)
+        #expect(subtract.image.tiffRepresentation != intersect.image.tiffRepresentation)
+    }
+
     @Test func samplingAndPaintBucketCursorsUseDistinctSemanticShapes() {
         #expect(ImageEditorCanvasCursor.family(for: .paintBucket) == .paintBucket)
         #expect(ImageEditorCanvasCursor.family(for: .eyedropper) == .eyedropper)

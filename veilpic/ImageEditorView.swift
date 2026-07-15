@@ -2035,7 +2035,8 @@ struct ImageEditorView: View {
             for: canvasCursorTool,
             brushDiameter: viewModel.brushSize * displayScale,
             penIsClosing: canvasInteractionTool == .pen && viewModel.isPenCloseCandidate(at: canvasPoint),
-            handIsDragging: isCanvasPanGestureActive
+            handIsDragging: isCanvasPanGestureActive,
+            modifierFlags: NSEvent.modifierFlags
         ).set()
     }
 
@@ -6457,6 +6458,27 @@ enum ImageEditorCanvasCursorFamily: Equatable {
     case zoomMagnifier
 }
 
+enum ImageEditorSelectionCursorMode: String, Equatable, CaseIterable {
+    case replace
+    case add
+    case subtract
+    case intersect
+
+    static func from(modifierFlags: NSEvent.ModifierFlags) -> Self {
+        let flags = modifierFlags.intersection([.shift, .option])
+        switch flags {
+        case [.shift, .option]:
+            return .intersect
+        case [.shift]:
+            return .add
+        case [.option]:
+            return .subtract
+        default:
+            return .replace
+        }
+    }
+}
+
 enum ImageEditorCanvasCursor {
     private static var cursorCache: [String: NSCursor] = [:]
 
@@ -6529,8 +6551,10 @@ enum ImageEditorCanvasCursor {
         for tool: ImageEditorTool,
         brushDiameter: CGFloat,
         penIsClosing: Bool = false,
-        handIsDragging: Bool = false
+        handIsDragging: Bool = false,
+        modifierFlags: NSEvent.ModifierFlags = []
     ) -> NSCursor {
+        let selectionMode = ImageEditorSelectionCursorMode.from(modifierFlags: modifierFlags)
         switch family(for: tool) {
         case .systemArrow:
             return .arrow
@@ -6539,13 +6563,13 @@ enum ImageEditorCanvasCursor {
         case .textInsertion:
             return .iBeam
         case .selectionMarquee:
-            return selectionMarqueeCursor()
+            return selectionMarqueeCursor(mode: selectionMode)
         case .lasso:
-            return lassoCursor()
+            return lassoCursor(mode: selectionMode)
         case .magicWand:
-            return magicWandCursor()
+            return magicWandCursor(mode: selectionMode)
         case .quickSelection:
-            return quickSelectionCursor()
+            return quickSelectionCursor(mode: selectionMode)
         case .cloneStamp:
             return cloneStampCursor()
         case .healingBrush:
@@ -6889,8 +6913,8 @@ enum ImageEditorCanvasCursor {
         lines.stroke()
     }
 
-    private static func selectionMarqueeCursor() -> NSCursor {
-        let cacheKey = "selection-marquee"
+    private static func selectionMarqueeCursor(mode: ImageEditorSelectionCursorMode) -> NSCursor {
+        let cacheKey = "selection-marquee:\(mode.rawValue)"
         if let cachedCursor = cursorCache[cacheKey] {
             return cachedCursor
         }
@@ -6906,6 +6930,7 @@ enum ImageEditorCanvasCursor {
         outline.lineWidth = 1
         outline.stroke()
         drawCursorCrosshair(center: NSPoint(x: 10, y: 10))
+        drawSelectionModifierBadge(mode, side: side)
         image.unlockFocus()
         return cache(
             NSCursor(image: image, hotSpot: NSPoint(x: 10, y: side - 10)),
@@ -6913,8 +6938,8 @@ enum ImageEditorCanvasCursor {
         )
     }
 
-    private static func lassoCursor() -> NSCursor {
-        let cacheKey = "lasso"
+    private static func lassoCursor(mode: ImageEditorSelectionCursorMode) -> NSCursor {
+        let cacheKey = "lasso:\(mode.rawValue)"
         if let cachedCursor = cursorCache[cacheKey] {
             return cachedCursor
         }
@@ -6934,6 +6959,7 @@ enum ImageEditorCanvasCursor {
         NSColor.white.setStroke()
         loop.lineWidth = 1.3
         loop.stroke()
+        drawSelectionModifierBadge(mode, side: side)
         image.unlockFocus()
         return cache(
             NSCursor(image: image, hotSpot: NSPoint(x: 9, y: side - 15)),
@@ -6941,8 +6967,8 @@ enum ImageEditorCanvasCursor {
         )
     }
 
-    private static func magicWandCursor() -> NSCursor {
-        let cacheKey = "magic-wand"
+    private static func magicWandCursor(mode: ImageEditorSelectionCursorMode) -> NSCursor {
+        let cacheKey = "magic-wand:\(mode.rawValue)"
         if let cachedCursor = cursorCache[cacheKey] {
             return cachedCursor
         }
@@ -6973,6 +6999,7 @@ enum ImageEditorCanvasCursor {
         NSColor.white.setStroke()
         star.lineWidth = 1
         star.stroke()
+        drawSelectionModifierBadge(mode, side: side)
         image.unlockFocus()
         return cache(
             NSCursor(image: image, hotSpot: NSPoint(x: 5, y: side - 6)),
@@ -6980,8 +7007,8 @@ enum ImageEditorCanvasCursor {
         )
     }
 
-    private static func quickSelectionCursor() -> NSCursor {
-        let cacheKey = "quick-selection"
+    private static func quickSelectionCursor(mode: ImageEditorSelectionCursorMode) -> NSCursor {
+        let cacheKey = "quick-selection:\(mode.rawValue)"
         if let cachedCursor = cursorCache[cacheKey] {
             return cachedCursor
         }
@@ -7015,12 +7042,49 @@ enum ImageEditorCanvasCursor {
         NSColor.systemBlue.setStroke()
         plus.lineWidth = 1.5
         plus.stroke()
+        drawSelectionModifierBadge(mode, side: side)
 
         image.unlockFocus()
         return cache(
             NSCursor(image: image, hotSpot: NSPoint(x: 10, y: side - 10)),
             for: cacheKey
         )
+    }
+
+    private static func drawSelectionModifierBadge(
+        _ mode: ImageEditorSelectionCursorMode,
+        side: CGFloat
+    ) {
+        guard mode != .replace else { return }
+        let center = NSPoint(x: side - 7, y: side - 7)
+        let badge = NSBezierPath(ovalIn: NSRect(x: center.x - 6, y: center.y - 6, width: 12, height: 12))
+        NSColor.black.withAlphaComponent(0.95).setFill()
+        badge.fill()
+        NSColor.white.withAlphaComponent(0.98).setStroke()
+        badge.lineWidth = 1
+        badge.stroke()
+
+        let glyph = NSBezierPath()
+        switch mode {
+        case .add:
+            glyph.move(to: NSPoint(x: center.x - 3, y: center.y))
+            glyph.line(to: NSPoint(x: center.x + 3, y: center.y))
+            glyph.move(to: NSPoint(x: center.x, y: center.y - 3))
+            glyph.line(to: NSPoint(x: center.x, y: center.y + 3))
+        case .subtract:
+            glyph.move(to: NSPoint(x: center.x - 3, y: center.y))
+            glyph.line(to: NSPoint(x: center.x + 3, y: center.y))
+        case .intersect:
+            glyph.move(to: NSPoint(x: center.x - 3, y: center.y - 3))
+            glyph.line(to: NSPoint(x: center.x + 3, y: center.y + 3))
+            glyph.move(to: NSPoint(x: center.x + 3, y: center.y - 3))
+            glyph.line(to: NSPoint(x: center.x - 3, y: center.y + 3))
+        case .replace:
+            return
+        }
+        NSColor.systemBlue.setStroke()
+        glyph.lineWidth = 1.4
+        glyph.stroke()
     }
 
     private static func cloneStampCursor() -> NSCursor {
