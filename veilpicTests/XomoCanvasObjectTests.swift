@@ -97,6 +97,19 @@ struct XomoCanvasObjectTests {
         #expect(viewModel.selectedXomoObjectFrame == CGRect(x: 420, y: 260, width: 96, height: 96))
     }
 
+    @Test func selectingComponentGroupUsesFastSelectionPath() throws {
+        let viewModel = makeViewModel()
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))
+        let group = try #require(viewModel.document.selectedLayer)
+        let background = try #require(viewModel.document.layers.first)
+
+        viewModel.selectLayer(background.id)
+        #expect(viewModel.selectXomoObject(at: CGPoint(x: 160, y: 112)))
+        #expect(viewModel.document.selectedLayerID == group.id)
+        #expect(viewModel.document.selectedLayerIDs == [group.id])
+        #expect(!viewModel.isEditingLayerMask)
+    }
+
     @Test func coveredComponentDoesNotClaimTheClick() throws {
         let viewModel = makeViewModel()
         viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))

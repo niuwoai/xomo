@@ -2264,6 +2264,18 @@ final class ImageEditorViewModel: ObservableObject {
            isEditingLayerMask == shouldEditMask {
             return
         }
+        let selectedLayer = document.layers.first { $0.id == id }
+        let isXomoComponentGroup = selectedLayer?.isGroup == true
+            && selectedLayer?.xomoComponentInstance != nil
+        if isXomoComponentGroup, !extendingSelection {
+            mutateDocumentWithoutInvalidatingRenderedImageCaches { document in
+                document.selectedLayerID = id
+                document.selectedLayerIDs = [id]
+            }
+            layerSelectionAnchorID = id
+            isEditingLayerMask = false
+            return
+        }
         if extendingSelection && !editingMask {
             mutateDocumentWithoutInvalidatingRenderedImageCaches { document in
                 if document.selectedLayerIDs.contains(id), document.selectedLayerIDs.count > 1 {
