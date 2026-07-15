@@ -697,6 +697,7 @@
 "imageEditor.properties.stackLayoutPrimarySizing" = "主轴尺寸";
 "imageEditor.properties.stackLayoutCrossSizing" = "交叉轴尺寸";
 "imageEditor.properties.stackLayoutWrap" = "换行";
+"imageEditor.properties.stackLayoutCrossTrackAlignment" = "行分布";
 "imageEditor.properties.stackLayoutCounterSpacingValue" = "行间距：%d px";
 "imageEditor.properties.stackChildLayout" = "自动布局子项";
 "imageEditor.properties.stackChildPrimarySizing" = "主轴尺寸";
@@ -746,6 +747,8 @@
 "imageEditor.stackLayout.sizing.hug" = "适应内容";
 "imageEditor.stackLayout.wrap.noWrap" = "不换行";
 "imageEditor.stackLayout.wrap.wrap" = "换行";
+"imageEditor.stackLayout.crossTrack.automatic" = "自动行间距";
+"imageEditor.stackLayout.crossTrack.spaceBetween" = "行间两端分布";
 "imageEditor.stackLayout.childSizing.fixed" = "固定";
 "imageEditor.stackLayout.childSizing.fill" = "填满容器";
 "imageEditor.action.stackLayoutReflow" = "重新排列子项";

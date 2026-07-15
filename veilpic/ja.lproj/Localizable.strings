@@ -697,6 +697,7 @@
 "imageEditor.properties.stackLayoutPrimarySizing" = "主軸サイズ";
 "imageEditor.properties.stackLayoutCrossSizing" = "交差軸サイズ";
 "imageEditor.properties.stackLayoutWrap" = "折り返し";
+"imageEditor.properties.stackLayoutCrossTrackAlignment" = "行の配置";
 "imageEditor.properties.stackLayoutCounterSpacingValue" = "行間隔：%d px";
 "imageEditor.properties.stackChildLayout" = "オートレイアウトの子要素";
 "imageEditor.properties.stackChildPrimarySizing" = "主軸サイズ";
@@ -746,6 +747,8 @@
 "imageEditor.stackLayout.sizing.hug" = "内容に合わせる";
 "imageEditor.stackLayout.wrap.noWrap" = "折り返さない";
 "imageEditor.stackLayout.wrap.wrap" = "折り返す";
+"imageEditor.stackLayout.crossTrack.automatic" = "行間隔（自動）";
+"imageEditor.stackLayout.crossTrack.spaceBetween" = "行間を均等配置";
 "imageEditor.stackLayout.childSizing.fixed" = "固定";
 "imageEditor.stackLayout.childSizing.fill" = "コンテナに合わせる";
 "imageEditor.action.stackLayoutReflow" = "子要素を再配置";

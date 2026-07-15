@@ -49,6 +49,21 @@ enum ImageEditorStackWrapMode: String, CaseIterable, Codable, Identifiable, Send
     var localizationKey: String { "imageEditor.stackLayout.wrap.\(rawValue)" }
 }
 
+enum ImageEditorStackCrossTrackAlignment: String, CaseIterable, Codable, Identifiable, Sendable {
+    case automatic
+    case spaceBetween
+
+    var id: String { rawValue }
+    var localizationKey: String { "imageEditor.stackLayout.crossTrack.\(rawValue)" }
+
+    static func availableCases(
+        for axis: ImageEditorStackAxis,
+        wrapMode: ImageEditorStackWrapMode
+    ) -> [Self] {
+        axis == .horizontal && wrapMode == .wrap ? allCases : [.automatic]
+    }
+}
+
 enum ImageEditorStackChildSizingMode: String, CaseIterable, Identifiable, Sendable {
     case fixed
     case fill
@@ -94,6 +109,7 @@ struct ImageEditorStackLayout: Equatable, Codable, Sendable {
     var crossSizingMode: ImageEditorStackSizingMode
     var wrapMode: ImageEditorStackWrapMode
     var counterSpacing: CGFloat
+    var crossTrackAlignment: ImageEditorStackCrossTrackAlignment
 
     init(
         axis: ImageEditorStackAxis,
@@ -107,7 +123,8 @@ struct ImageEditorStackLayout: Equatable, Codable, Sendable {
         primarySizingMode: ImageEditorStackSizingMode = .fixed,
         crossSizingMode: ImageEditorStackSizingMode = .fixed,
         wrapMode: ImageEditorStackWrapMode = .noWrap,
-        counterSpacing: CGFloat = 0
+        counterSpacing: CGFloat = 0,
+        crossTrackAlignment: ImageEditorStackCrossTrackAlignment = .automatic
     ) {
         self.axis = axis
         self.spacing = spacing
@@ -121,6 +138,7 @@ struct ImageEditorStackLayout: Equatable, Codable, Sendable {
         self.crossSizingMode = crossSizingMode
         self.wrapMode = wrapMode
         self.counterSpacing = counterSpacing
+        self.crossTrackAlignment = crossTrackAlignment
         self = normalized()
     }
 
@@ -137,6 +155,7 @@ struct ImageEditorStackLayout: Equatable, Codable, Sendable {
         case crossSizingMode
         case wrapMode
         case counterSpacing
+        case crossTrackAlignment
     }
 
     init(from decoder: Decoder) throws {
@@ -171,7 +190,11 @@ struct ImageEditorStackLayout: Equatable, Codable, Sendable {
             counterSpacing: try container.decodeIfPresent(
                 CGFloat.self,
                 forKey: .counterSpacing
-            ) ?? 0
+            ) ?? 0,
+            crossTrackAlignment: try container.decodeIfPresent(
+                ImageEditorStackCrossTrackAlignment.self,
+                forKey: .crossTrackAlignment
+            ) ?? .automatic
         )
     }
 
@@ -189,6 +212,7 @@ struct ImageEditorStackLayout: Equatable, Codable, Sendable {
         try container.encode(crossSizingMode, forKey: .crossSizingMode)
         try container.encode(wrapMode, forKey: .wrapMode)
         try container.encode(counterSpacing, forKey: .counterSpacing)
+        try container.encode(crossTrackAlignment, forKey: .crossTrackAlignment)
     }
 
     func normalized() -> Self {
@@ -207,6 +231,9 @@ struct ImageEditorStackLayout: Equatable, Codable, Sendable {
             if value.crossAlignment == .baseline {
                 value.crossAlignment = .start
             }
+        }
+        if value.axis != .horizontal || value.wrapMode != .wrap {
+            value.crossTrackAlignment = .automatic
         }
         return value
     }
@@ -411,12 +438,15 @@ enum ImageEditorStackLayoutEngine {
                 ).extent
                 : row.reduce(CGFloat.zero) { max($0, sizes[$1].height) }
         }
+        let rowGapCount = CGFloat(max(0, rows.count - 1))
+        let usesSpaceBetweenTracks = layout.crossTrackAlignment == .spaceBetween
+            && rows.count > 1
         var contentCross = rowHeights.reduce(0, +)
-            + layout.counterSpacing * CGFloat(max(0, rows.count - 1))
+            + (usesSpaceBetweenTracks ? 0 : layout.counterSpacing * rowGapCount)
         var resolvedContainer = container
         if layout.crossSizingMode == .hug {
             resolvedContainer.size.height = max(1, contentCross + layout.paddingTop + layout.paddingBottom)
-        } else if itemLayouts.allSatisfy({ $0.stretchesCrossAxis }) {
+        } else if itemLayouts.allSatisfy({ $0.stretchesCrossAxis }) && !usesSpaceBetweenTracks {
             let availableCross = max(
                 0,
                 resolvedContainer.height - layout.paddingTop - layout.paddingBottom
@@ -496,16 +526,23 @@ enum ImageEditorStackLayoutEngine {
     ) -> [CGRect] {
         var frames = Array(repeating: CGRect.zero, count: sizes.count)
         let availableCross = max(0, container.height - layout.paddingTop - layout.paddingBottom)
+        let usesSpaceBetweenTracks = layout.crossTrackAlignment == .spaceBetween
+            && rows.count > 1
         let freeCross = max(0, availableCross - contentCross)
         let trackOffset: CGFloat
-        switch layout.crossAlignment {
-        case .start, .baseline:
+        switch (layout.crossTrackAlignment, layout.crossAlignment) {
+        case (.spaceBetween, _):
             trackOffset = 0
-        case .center:
+        case (.automatic, .start), (.automatic, .baseline):
+            trackOffset = 0
+        case (.automatic, .center):
             trackOffset = freeCross / 2
-        case .end:
+        case (.automatic, .end):
             trackOffset = freeCross
         }
+        let trackSpacing = usesSpaceBetweenTracks
+            ? max(0, availableCross - rowHeights.reduce(0, +)) / CGFloat(max(1, rows.count - 1))
+            : layout.counterSpacing
         var rowOriginY = container.minY + layout.paddingTop + trackOffset
         for (rowOffset, row) in rows.enumerated() {
             let rowHeight = rowHeights[rowOffset]
@@ -547,7 +584,7 @@ enum ImageEditorStackLayoutEngine {
                 frames[index] = CGRect(origin: CGPoint(x: cursor, y: y), size: size)
                 cursor += size.width + metrics.spacing
             }
-            rowOriginY += rowHeight + layout.counterSpacing
+            rowOriginY += rowHeight + trackSpacing
         }
         return frames
     }
@@ -791,6 +828,10 @@ extension ImageEditorViewModel {
 
     func setSelectedStackCounterSpacing(_ spacing: CGFloat) {
         updateSelectedStackLayout { $0.counterSpacing = spacing }
+    }
+
+    func setSelectedStackCrossTrackAlignment(_ alignment: ImageEditorStackCrossTrackAlignment) {
+        updateSelectedStackLayout { $0.crossTrackAlignment = alignment }
     }
 
     func setSelectedStackChildPrimarySizingMode(_ mode: ImageEditorStackChildSizingMode) {

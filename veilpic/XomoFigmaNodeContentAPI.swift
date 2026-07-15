@@ -352,7 +352,12 @@ enum XomoFigmaNodeImportMapper {
             primarySizingMode: sizingMode(node.primaryAxisSizingMode),
             crossSizingMode: sizingMode(node.counterAxisSizingMode),
             wrapMode: node.layoutWrap == "WRAP" ? .wrap : .noWrap,
-            counterSpacing: CGFloat(node.counterAxisSpacing ?? 0)
+            counterSpacing: CGFloat(node.counterAxisSpacing ?? 0),
+            crossTrackAlignment: crossTrackAlignment(
+                node.counterAxisAlignContent,
+                axis: axis,
+                wrapMode: node.layoutWrap == "WRAP" ? .wrap : .noWrap
+            )
         )
     }
 
@@ -369,6 +374,17 @@ enum XomoFigmaNodeImportMapper {
         }
     }
 
+    private static func crossTrackAlignment(
+        _ value: String?,
+        axis: ImageEditorStackAxis,
+        wrapMode: ImageEditorStackWrapMode
+    ) -> ImageEditorStackCrossTrackAlignment {
+        guard axis == .horizontal, wrapMode == .wrap, value == "SPACE_BETWEEN" else {
+            return .automatic
+        }
+        return .spaceBetween
+    }
+
     private static func crossAlignment(_ value: String?) -> ImageEditorStackCrossAlignment {
         switch value {
         case "CENTER": return .center
@@ -380,8 +396,12 @@ enum XomoFigmaNodeImportMapper {
 
     private static func hasUnsupportedAutoLayout(_ node: XomoFigmaNode) -> Bool {
         let usesUnsupportedWrap = node.layoutWrap == "WRAP" && node.layoutMode != "HORIZONTAL"
+        let supportsSpaceBetweenTracks = node.layoutMode == "HORIZONTAL"
+            && node.layoutWrap == "WRAP"
+            && node.counterAxisAlignContent == "SPACE_BETWEEN"
         let usesUnsupportedTrackDistribution = node.counterAxisAlignContent != nil
             && node.counterAxisAlignContent != "AUTO"
+            && !supportsSpaceBetweenTracks
         let usesUnsupportedBaseline = node.counterAxisAlignItems == "BASELINE"
             && node.layoutMode != "HORIZONTAL"
         return usesUnsupportedWrap

@@ -8,6 +8,9 @@ struct ImageEditorStackLayoutControls: View {
             sectionTitle("imageEditor.properties.stackLayout")
             axisPicker
             wrapPicker
+            if viewModel.selectedStackLayout?.wrapMode == .wrap {
+                crossTrackAlignmentPicker
+            }
             alignmentPickers
             sizingPickers
             spacingStepper
@@ -85,6 +88,25 @@ struct ImageEditorStackLayoutControls: View {
             .focusable(false)
             .accessibilityIdentifier("image-editor-stack-layout-cross-alignment")
         }
+    }
+
+    private var crossTrackAlignmentPicker: some View {
+        Picker(
+            L10n.text("imageEditor.properties.stackLayoutCrossTrackAlignment"),
+            selection: Binding(
+                get: { viewModel.selectedStackLayout?.crossTrackAlignment ?? .automatic },
+                set: { viewModel.setSelectedStackCrossTrackAlignment($0) }
+            )
+        ) {
+            ForEach(ImageEditorStackCrossTrackAlignment.availableCases(
+                for: viewModel.selectedStackLayout?.axis ?? .horizontal,
+                wrapMode: viewModel.selectedStackLayout?.wrapMode ?? .noWrap
+            )) { alignment in
+                Text(L10n.text(alignment.localizationKey)).tag(alignment)
+            }
+        }
+        .focusable(false)
+        .accessibilityIdentifier("image-editor-stack-layout-cross-track-alignment")
     }
 
     private var sizingPickers: some View {

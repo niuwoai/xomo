@@ -1,6 +1,6 @@
 # Xomo 经典 Photoshop 能力路线图
 
-> 最后更新：2026-07-15 ｜ 当前版本：v2.12.0-rc90 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座
+> 最后更新：2026-07-15 ｜ 当前版本：v2.12.0-rc91 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座
 
 ## 1. 范围原则
 
@@ -241,4 +241,6 @@
 - `v2.12.0-rc87` 验证：Auto Layout 17/17、Figma 节点导入 20/20、三语资源 4/4，共 41/41，CLI 2/2 通过；隔离 Debug App 版本、Bundle ID `im.some.xomo`、macOS 13.0 下限与 arm64 架构核对通过。
 - `v2.12.0-rc88`：水平 Auto Layout 使用实时字体度量对齐文字首行基线，普通图形回退到底边；Wrap 逐行计算基线包络，Hug、属性面板、项目往返与 Figma 水平 Baseline 共用原生模型。
 - `v2.12.0-rc88` 验证：Auto Layout 23/23、Figma 节点导入 22/22、三语资源 4/4，共 49/49，CLI 2/2 通过；隔离 Debug App 版本、Bundle ID `im.some.xomo`、macOS 13.0 下限与 arm64 架构核对通过。
-- 下一小版本：从 Figma Auto Layout 多行轨道 `SPACE_BETWEEN` 或变量/token 中选择一条可独立验收的窄路径。
+- `v2.12.0-rc91`：Figma 水平 Auto Layout Wrap 的 `counterAxisAlignContent=SPACE_BETWEEN` 进入原生布局模型；固定交叉轴会按行轨道均分剩余空间，Hug、属性面板、项目往返与重排继续可编辑，未知轨道分布仍明确降级。
+- `v2.12.0-rc91` 验证：固定交叉轴行轨道几何、项目 round-trip、属性面板交互契约和 Figma 节点导入回归通过；macOS 颜色空间相关渐变断言改用可解释的显示容差，避免把系统色彩转换误报为导入回归。完整 Release、全量冒烟和 `/Applications` 覆盖仍按 rc100 门禁执行。
+- 下一小版本：从 Figma 变量 / token 映射或其他可独立验收的设计系统窄路径中选择一条。

@@ -162,7 +162,7 @@ struct XomoFigmaNodeImportPlanTests {
             materialized.layers.first { $0.name == "Three Stops" }?.shapeContent
         )
         #expect(multiStopShape.fillGradient?.shapeColorStops.count == 3)
-        #expect(multiStopShape.fillGradient?.shapeColorStops[1].green == 1)
+        #expect((multiStopShape.fillGradient?.shapeColorStops[1].green ?? 0) > 0.95)
     }
 
     @Test func circularRadialGradientsMapWhileEllipticalAxesDegrade() throws {
@@ -260,7 +260,7 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(abs(shape.fillGradientCenter.y - 0.5) < 0.001)
         #expect(abs(shape.fillOpacity - 0.4) < 0.001)
         #expect(shape.fillGradient?.shapeColorStops.count == 3)
-        #expect(shape.fillGradient?.shapeColorStops[1].green == 1)
+        #expect((shape.fillGradient?.shapeColorStops[1].green ?? 0) > 0.95)
     }
 
     @Test func clientRequiresSpecificNodeAndUsesBoundedOfficialEndpoint() async throws {
@@ -563,7 +563,7 @@ struct XomoFigmaNodeImportPlanTests {
         ))
     }
 
-    @Test func mapperSupportsHorizontalBaselineAndStillReportsUnsupportedTrackDistribution() throws {
+    @Test func mapperSupportsHorizontalBaselineAndReportsUnknownTrackDistribution() throws {
         let response = try JSONDecoder().decode(
             XomoFigmaNodeResponse.self,
             from: Data(
@@ -579,7 +579,7 @@ struct XomoFigmaNodeImportPlanTests {
                         "layoutMode": "HORIZONTAL",
                         "layoutWrap": "WRAP",
                         "counterAxisAlignItems": "BASELINE",
-                        "counterAxisAlignContent": "SPACE_BETWEEN",
+                        "counterAxisAlignContent": "SPACE_AROUND",
                         "absoluteBoundingBox": {"x": 0, "y": 0, "width": 200, "height": 100}
                       }
                     }
@@ -595,6 +595,41 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(frame.stackLayout?.crossAlignment == .baseline)
         #expect(frame.issues.contains(.autoLayoutFlattened))
         #expect(frame.fidelity == .partial)
+    }
+
+    @Test func mapperImportsHorizontalWrappedSpaceBetweenTracksAsNativeLayout() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                """
+                {
+                  "name": "Space between rows",
+                  "nodes": {
+                    "1:15": {
+                      "document": {
+                        "id": "1:15",
+                        "name": "Wrapped distribution",
+                        "type": "FRAME",
+                        "layoutMode": "HORIZONTAL",
+                        "layoutWrap": "WRAP",
+                        "counterAxisAlignContent": "SPACE_BETWEEN",
+                        "counterAxisSpacing": 12,
+                        "absoluteBoundingBox": {"x": 0, "y": 0, "width": 240, "height": 180}
+                      }
+                    }
+                  }
+                }
+                """.utf8
+            )
+        )
+
+        let plan = try XomoFigmaNodeImportMapper.makePlan(response: response, requestedNodeID: "1:15")
+        let frame = try #require(plan.items.first)
+        #expect(frame.stackLayout?.wrapMode == .wrap)
+        #expect(frame.stackLayout?.crossTrackAlignment == .spaceBetween)
+        #expect(frame.stackLayout?.counterSpacing == 12)
+        #expect(!frame.issues.contains(.autoLayoutFlattened))
+        #expect(frame.fidelity == .exact)
     }
 
     @Test func mapperImportsHorizontalBaselineAsEditableNativeLayout() throws {

@@ -697,6 +697,7 @@
 "imageEditor.properties.stackLayoutPrimarySizing" = "Primary size";
 "imageEditor.properties.stackLayoutCrossSizing" = "Cross size";
 "imageEditor.properties.stackLayoutWrap" = "Wrap";
+"imageEditor.properties.stackLayoutCrossTrackAlignment" = "Row distribution";
 "imageEditor.properties.stackLayoutCounterSpacingValue" = "Row spacing: %d px";
 "imageEditor.properties.stackChildLayout" = "Auto Layout Child";
 "imageEditor.properties.stackChildPrimarySizing" = "Primary size";
@@ -746,6 +747,8 @@
 "imageEditor.stackLayout.sizing.hug" = "Hug contents";
 "imageEditor.stackLayout.wrap.noWrap" = "No wrap";
 "imageEditor.stackLayout.wrap.wrap" = "Wrap";
+"imageEditor.stackLayout.crossTrack.automatic" = "Automatic row spacing";
+"imageEditor.stackLayout.crossTrack.spaceBetween" = "Space between rows";
 "imageEditor.stackLayout.childSizing.fixed" = "Fixed";
 "imageEditor.stackLayout.childSizing.fill" = "Fill container";
 "imageEditor.action.stackLayoutReflow" = "Reflow Children";

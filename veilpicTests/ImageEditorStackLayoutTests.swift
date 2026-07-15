@@ -231,6 +231,32 @@ struct ImageEditorStackLayoutTests {
         ])
     }
 
+    @Test func wrappedRowsDistributeSpaceBetweenTracksAcrossFixedCrossAxis() {
+        let result = ImageEditorStackLayoutEngine.layout(
+            in: CGRect(x: 0, y: 0, width: 120, height: 140),
+            itemFrames: [
+                CGRect(x: 0, y: 0, width: 90, height: 20),
+                CGRect(x: 0, y: 0, width: 90, height: 30)
+            ],
+            layout: ImageEditorStackLayout(
+                axis: .horizontal,
+                paddingTop: 10,
+                paddingRight: 10,
+                paddingBottom: 10,
+                paddingLeft: 10,
+                wrapMode: .wrap,
+                counterSpacing: 4,
+                crossTrackAlignment: .spaceBetween
+            )
+        )
+
+        #expect(result.containerFrame == CGRect(x: 0, y: 0, width: 120, height: 140))
+        #expect(result.itemFrames == [
+            CGRect(x: 10, y: 10, width: 90, height: 20),
+            CGRect(x: 10, y: 100, width: 90, height: 30)
+        ])
+    }
+
     @Test func wrapNormalizationKeepsOfficialHorizontalBoundaryAndSafeSpacing() {
         let vertical = ImageEditorStackLayout(
             axis: .vertical,
@@ -242,11 +268,17 @@ struct ImageEditorStackLayoutTests {
             wrapMode: .wrap,
             counterSpacing: .infinity
         )
+        let nonWrapped = ImageEditorStackLayout(
+            axis: .horizontal,
+            wrapMode: .noWrap,
+            crossTrackAlignment: .spaceBetween
+        )
 
         #expect(vertical.wrapMode == .noWrap)
         #expect(vertical.counterSpacing == 0)
         #expect(nonFinite.wrapMode == .wrap)
         #expect(nonFinite.counterSpacing == 0)
+        #expect(nonWrapped.crossTrackAlignment == .automatic)
     }
 
     @Test func baselineNormalizationKeepsOfficialHorizontalOnlyBoundary() {
@@ -522,6 +554,7 @@ struct ImageEditorStackLayoutTests {
             layout.wrapMode = .wrap
             layout.counterSpacing = 17
             layout.crossAlignment = .baseline
+            layout.crossTrackAlignment = .spaceBetween
         }
         let projectData = try fixture.viewModel.projectData()
         let reopened = ImageEditorViewModel(
@@ -535,6 +568,7 @@ struct ImageEditorStackLayoutTests {
         #expect(root.stackLayout?.wrapMode == .wrap)
         #expect(root.stackLayout?.counterSpacing == 17)
         #expect(root.stackLayout?.crossAlignment == .baseline)
+        #expect(root.stackLayout?.crossTrackAlignment == .spaceBetween)
     }
 
     @Test func wrapControlsReflowAndSupportUndoRedo() {
@@ -568,8 +602,8 @@ struct ImageEditorStackLayoutTests {
 
         fixture.viewModel.reflowSelectedStackLayout()
 
-        #expect(fixture.layer(named: "Root").frame == CGRect(x: 10, y: 20, width: 100, height: 75))
-        #expect(fixture.layer(named: "Background").frame == CGRect(x: 10, y: 20, width: 100, height: 75))
+        #expect(fixture.layer(named: "Root").frame == CGRect(x: 10, y: 20, width: 100, height: 85))
+        #expect(fixture.layer(named: "Background").frame == CGRect(x: 10, y: 20, width: 100, height: 85))
         #expect(fixture.layer(named: "First").frame == CGRect(x: 30, y: 30, width: 30, height: 20))
         #expect(fixture.layer(named: "Nested").frame == CGRect(x: 30, y: 65, width: 50, height: 30))
 
@@ -616,13 +650,14 @@ struct ImageEditorStackLayoutTests {
         #expect(viewSource.contains("image-editor-stack-layout-primary-sizing"))
         #expect(viewSource.contains("image-editor-stack-layout-cross-sizing"))
         #expect(viewSource.contains("image-editor-stack-layout-wrap"))
+        #expect(viewSource.contains("image-editor-stack-layout-cross-track-alignment"))
         #expect(viewSource.contains("image-editor-stack-layout-counter-spacing"))
         #expect(viewSource.contains("image-editor-stack-child-primary-sizing"))
         #expect(viewSource.contains("image-editor-stack-child-cross-sizing"))
         #expect(viewSource.contains("image-editor-stack-layout-reflow"))
         #expect(viewSource.contains("setSelectedStackSpacing"))
         #expect(viewSource.contains("ImageEditorStackCrossAlignment.availableCases"))
-        #expect(panelSource.contains("static let foregroundColor = NSColor.white"))
+        #expect(panelSource.contains("static let foregroundColor = NSColor(calibratedWhite: 0.88, alpha: 1)"))
         #expect(panelSource.contains(".foregroundColor: color"))
     }
 

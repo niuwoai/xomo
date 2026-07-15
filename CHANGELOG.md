@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.12.0-rc91 - 2026-07-15
+
+### Added
+- 将 Figma 水平 Wrap 的 `counterAxisAlignContent=SPACE_BETWEEN` 映射为可编辑的原生行轨道分布，并在属性面板提供“行分布”设置。
+
+### Changed
+- 固定交叉轴布局会按行轨道均分剩余空间；Hug、项目保存重开、重排与未知值降级边界保持明确。
+- 将 Figma 渐变颜色测试改为容忍系统色彩空间的显示误差，避免 macOS 颜色转换造成误报。
+
+### Tests
+- 新增 SPACE_BETWEEN 行轨道几何、项目 round-trip、属性面板契约与 Figma 导入回归。
+
 ## 2.12.0-rc90 - 2026-07-15
 
 ### Changed
