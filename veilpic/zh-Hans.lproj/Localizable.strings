@@ -712,6 +712,12 @@
 "imageEditor.properties.shapeCorner.topRight" = "右上角";
 "imageEditor.properties.shapeCorner.bottomRight" = "右下角";
 "imageEditor.properties.shapeCorner.bottomLeft" = "左下角";
+"imageEditor.properties.shapeStyle" = "形状外观";
+"imageEditor.properties.shapeFillColor" = "填充颜色";
+"imageEditor.properties.shapeFillOpacityValue" = "填充不透明度：%d%%";
+"imageEditor.properties.shapeStrokeColor" = "描边颜色";
+"imageEditor.properties.shapeStrokeOpacityValue" = "描边不透明度：%d%%";
+"imageEditor.properties.shapeStrokeWidthValue" = "描边宽度：%d px";
 "imageEditor.stackLayout.axis.horizontal" = "水平";
 "imageEditor.stackLayout.axis.vertical" = "垂直";
 "imageEditor.stackLayout.primary.start" = "起点";
@@ -730,6 +736,7 @@
 "imageEditor.history.stackChildLayout" = "调整自动布局子项";
 "imageEditor.history.shapeCornerRadius" = "调整矩形圆角";
 "imageEditor.history.shapeCornerSmoothing" = "调整矩形圆角平滑";
+"imageEditor.history.shapeStyle" = "调整形状外观";
 "imageEditor.status.stackLayoutApplied" = "自动布局已重新排列";
 "imageEditor.status.stackChildLayoutApplied" = "自动布局子项已重新排列";
 "imageEditor.status.stackLayoutLocked" = "锁定的组或子项无法重新排列";
@@ -738,6 +745,7 @@
 "imageEditor.status.shapeCornerRadiiLinked" = "矩形四角已链接为左上角的数值";
 "imageEditor.status.shapeCornerRadiusAtCorner" = "%@圆角已设为 %d px";
 "imageEditor.status.shapeCornerSmoothing" = "矩形圆角平滑已设为 %d%%";
+"imageEditor.status.shapeStyle" = "已更新 %d 个选中形状的外观";
 "imageEditor.properties.filter" = "滤镜";
 "imageEditor.properties.smartFiltersEmpty" = "当前图层没有智能滤镜";
 "imageEditor.properties.smartFilterItem" = "%@ %d%%";

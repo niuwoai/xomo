@@ -4155,7 +4155,12 @@ final class ImageEditorViewModel: ObservableObject {
         ellipse: Bool,
         cornerRadius: Double? = nil,
         cornerRadii: ImageEditorRectangleCornerRadii? = nil,
-        cornerSmoothing: Double? = nil
+        cornerSmoothing: Double? = nil,
+        fillColor: NSColor? = nil,
+        fillOpacity: Double? = nil,
+        strokeColor: NSColor? = nil,
+        strokeOpacity: Double? = nil,
+        strokeWidth: Double? = nil
     ) {
         let rect = CGRect(
             x: min(start.x, end.x),
@@ -4169,7 +4174,12 @@ final class ImageEditorViewModel: ObservableObject {
             kind: ellipse ? .ellipse : .rectangle,
             cornerRadius: cornerRadius,
             cornerRadii: cornerRadii,
-            cornerSmoothing: cornerSmoothing
+            cornerSmoothing: cornerSmoothing,
+            fillColor: fillColor,
+            fillOpacity: fillOpacity,
+            strokeColor: strokeColor,
+            strokeOpacity: strokeOpacity,
+            strokeWidth: strokeWidth
         )
     }
 
@@ -6209,7 +6219,12 @@ final class ImageEditorViewModel: ObservableObject {
         kind: ImageEditorShapeKind,
         cornerRadius: Double?,
         cornerRadii: ImageEditorRectangleCornerRadii?,
-        cornerSmoothing: Double?
+        cornerSmoothing: Double?,
+        fillColor: NSColor?,
+        fillOpacity: Double?,
+        strokeColor: NSColor?,
+        strokeOpacity: Double?,
+        strokeWidth: Double?
     ) {
         let requestedCornerRadius = cornerRadius?.isFinite == true ? CGFloat(cornerRadius ?? 0) : 0
         let requestedCornerSmoothing = cornerSmoothing?.isFinite == true
@@ -6218,11 +6233,13 @@ final class ImageEditorViewModel: ObservableObject {
         let maximumCornerRadius = max(0, min(frame.width, frame.height) / 2)
         let content = ImageEditorShapeContent(
             kind: kind,
-            fillColor: foregroundColor,
-            fillOpacity: opacity,
-            strokeColor: foregroundColor,
-            strokeWidth: max(1, min(96, brushSize * 0.35)),
-            strokeOpacity: min(1, max(0.15, opacity)),
+            fillColor: fillColor ?? foregroundColor,
+            fillOpacity: CGFloat(clampedShapeOpacity(fillOpacity, fallback: opacity)),
+            strokeColor: strokeColor ?? foregroundColor,
+            strokeWidth: CGFloat(clampedShapeStrokeWidth(strokeWidth)),
+            strokeOpacity: CGFloat(
+                clampedShapeOpacity(strokeOpacity, fallback: min(1, max(0.15, opacity)))
+            ),
             cornerRadius: kind == .rectangle
                 ? min(maximumCornerRadius, max(0, requestedCornerRadius))
                 : 0,
@@ -6248,6 +6265,16 @@ final class ImageEditorViewModel: ObservableObject {
         selectedPathAnchorIndex = nil
         isEditingLayerMask = false
         appendHistory(L10n.text("imageEditor.history.layerShapeNew"))
+    }
+
+    private func clampedShapeOpacity(_ value: Double?, fallback: Double) -> Double {
+        guard let value, value.isFinite else { return fallback }
+        return max(0, min(1, value))
+    }
+
+    private func clampedShapeStrokeWidth(_ value: Double?) -> Double {
+        let resolved = value?.isFinite == true ? value ?? 1 : brushSize * 0.35
+        return max(1, min(96, resolved))
     }
 
     private func clampedTextSize(_ size: Double) -> Double {

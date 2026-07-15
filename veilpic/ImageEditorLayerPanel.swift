@@ -21,16 +21,9 @@ enum ImageEditorLayerPanelTabAppearance {
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.alignment = .center
         paragraphStyle.lineBreakMode = .byClipping
-        label.attributedStringValue = NSAttributedString(
-            string: title,
-            attributes: [
-                .foregroundColor: color,
-                .font: font,
-                .paragraphStyle: paragraphStyle
-            ]
-        )
         label.appearance = NSAppearance(named: .darkAqua)
         label.textColor = color
+        (label.cell as? NSTextFieldCell)?.textColor = color
         label.font = font
         label.alignment = .center
         label.backgroundColor = .clear
@@ -42,6 +35,14 @@ enum ImageEditorLayerPanelTabAppearance {
         label.lineBreakMode = .byClipping
         label.maximumNumberOfLines = 1
         label.usesSingleLineMode = true
+        label.attributedStringValue = NSAttributedString(
+            string: title,
+            attributes: [
+                .foregroundColor: color,
+                .font: font,
+                .paragraphStyle: paragraphStyle
+            ]
+        )
     }
 }
 

@@ -302,6 +302,8 @@ final class XomoAutomationRegistry {
             let origin = try requiredPoint(arguments)
             let cornerRadii = try optionalCornerRadii(arguments)
             try validateExclusiveCornerArguments(arguments)
+            let fillColor = try optionalColor("fillColor", in: arguments)
+            let strokeColor = try optionalColor("strokeColor", in: arguments)
             let end = CGPoint(
                 x: origin.x + (try requiredNumber("width", in: arguments)),
                 y: origin.y + (try requiredNumber("height", in: arguments))
@@ -312,7 +314,12 @@ final class XomoAutomationRegistry {
                 ellipse: arguments["kind"]?.stringValue == "ellipse",
                 cornerRadius: arguments["cornerRadius"]?.doubleValue,
                 cornerRadii: cornerRadii,
-                cornerSmoothing: arguments["cornerSmoothing"]?.doubleValue
+                cornerSmoothing: arguments["cornerSmoothing"]?.doubleValue,
+                fillColor: fillColor,
+                fillOpacity: arguments["fillOpacity"]?.doubleValue,
+                strokeColor: strokeColor,
+                strokeOpacity: arguments["strokeOpacity"]?.doubleValue,
+                strokeWidth: arguments["strokeWidth"]?.doubleValue
             )
         case "xomo.shape.get":
             return shapeResult(viewModel)
@@ -741,22 +748,58 @@ final class XomoAutomationRegistry {
         _ arguments: [String: XomoJSONValue],
         viewModel: ImageEditorViewModel
     ) throws {
-        guard let content = viewModel.document.selectedLayer?.shapeContent else {
+        guard viewModel.document.selectedLayer?.shapeContent != nil else {
             throw XomoAutomationCallError.operationFailed("No selected shape layer")
         }
         try validateExclusiveCornerArguments(arguments)
         let cornerRadii = try optionalCornerRadii(arguments)
-        viewModel.opacity = arguments["opacity"]?.doubleValue ?? content.fillOpacity
-        if let strokeWidth = arguments["strokeWidth"]?.doubleValue {
-            viewModel.brushSize = strokeWidth / 0.35
-        } else {
-            viewModel.brushSize = content.strokeWidth / 0.35
-        }
-        viewModel.updateSelectedShapeLayer(
+        let legacyOpacity = arguments["opacity"]?.doubleValue
+        viewModel.updateSelectedShapeProperties(
+            fillColor: try optionalColor("fillColor", in: arguments),
+            fillOpacity: arguments["fillOpacity"]?.doubleValue ?? legacyOpacity,
+            strokeColor: try optionalColor("strokeColor", in: arguments),
+            strokeOpacity: arguments["strokeOpacity"]?.doubleValue ?? legacyOpacity,
+            strokeWidth: arguments["strokeWidth"]?.doubleValue,
             cornerRadius: arguments["cornerRadius"]?.doubleValue,
             cornerRadii: cornerRadii,
             cornerSmoothing: arguments["cornerSmoothing"]?.doubleValue
         )
+    }
+
+    private func optionalColor(
+        _ key: String,
+        in arguments: [String: XomoJSONValue]
+    ) throws -> NSColor? {
+        guard let value = arguments[key] else { return nil }
+        guard let object = value.objectValue else {
+            throw XomoAutomationCallError.invalidArgument("\(key) must be an object")
+        }
+        let red = try requiredUnitNumber("red", in: object)
+        let green = try requiredUnitNumber("green", in: object)
+        let blue = try requiredUnitNumber("blue", in: object)
+        let alpha: Double
+        if object["alpha"] == nil {
+            alpha = 1
+        } else {
+            alpha = try requiredUnitNumber("alpha", in: object)
+        }
+        return NSColor(
+            deviceRed: CGFloat(red),
+            green: CGFloat(green),
+            blue: CGFloat(blue),
+            alpha: CGFloat(alpha)
+        )
+    }
+
+    private func requiredUnitNumber(
+        _ key: String,
+        in arguments: [String: XomoJSONValue]
+    ) throws -> Double {
+        let value = try requiredNumber(key, in: arguments)
+        guard (0...1).contains(value) else {
+            throw XomoAutomationCallError.invalidArgument("\(key) must be between 0 and 1")
+        }
+        return value
     }
 
     private func optionalCornerRadii(
@@ -2437,13 +2480,22 @@ private extension XomoAutomationRegistry {
             "y": XomoAutomationSchema.number(description: "Top coordinate"),
             "width": XomoAutomationSchema.number(description: "Width"),
             "height": XomoAutomationSchema.number(description: "Height"),
+            "fillColor": shapeColorSchema,
+            "fillOpacity": XomoAutomationSchema.number(description: "Independent fill opacity from 0 to 1"),
+            "strokeColor": shapeColorSchema,
+            "strokeOpacity": XomoAutomationSchema.number(description: "Independent stroke opacity from 0 to 1"),
+            "strokeWidth": XomoAutomationSchema.number(description: "Stroke width in pixels"),
             "cornerRadius": XomoAutomationSchema.number(description: "Optional uniform rectangle corner radius in pixels"),
             "cornerRadii": rectangleCornerRadiiSchema,
             "cornerSmoothing": XomoAutomationSchema.number(description: "Editable superellipse smoothing from 0 to 1")
         ], required: ["kind", "x", "y", "width", "height"]),
         tool("xomo.shape.get", "Inspect the selected editable shape layer."),
-        tool("xomo.shape.update", "Update selected shape fill opacity, stroke width, foreground color, and rectangle corner radius.", [
-            "opacity": XomoAutomationSchema.number(description: "Fill and stroke opacity"),
+        tool("xomo.shape.update", "Update only the specified fill, stroke, and rectangle corner properties of selected editable shapes.", [
+            "opacity": XomoAutomationSchema.number(description: "Legacy shared fill and stroke opacity"),
+            "fillColor": shapeColorSchema,
+            "fillOpacity": XomoAutomationSchema.number(description: "Independent fill opacity from 0 to 1"),
+            "strokeColor": shapeColorSchema,
+            "strokeOpacity": XomoAutomationSchema.number(description: "Independent stroke opacity from 0 to 1"),
             "strokeWidth": XomoAutomationSchema.number(description: "Stroke width in pixels"),
             "cornerRadius": XomoAutomationSchema.number(description: "Uniform rectangle corner radius in pixels"),
             "cornerRadii": rectangleCornerRadiiSchema,
@@ -2610,6 +2662,15 @@ private extension XomoAutomationRegistry {
             "bottomLeft": XomoAutomationSchema.number(description: "Bottom-left radius in pixels")
         ],
         required: ["topLeft", "topRight", "bottomRight", "bottomLeft"]
+    )
+    static let shapeColorSchema = XomoAutomationSchema.object(
+        properties: [
+            "red": XomoAutomationSchema.number(description: "Red component from 0 to 1"),
+            "green": XomoAutomationSchema.number(description: "Green component from 0 to 1"),
+            "blue": XomoAutomationSchema.number(description: "Blue component from 0 to 1"),
+            "alpha": XomoAutomationSchema.number(description: "Optional alpha component from 0 to 1")
+        ],
+        required: ["red", "green", "blue"]
     )
     static let sizeProperties = [
         "width": XomoAutomationSchema.number(description: "Width"),

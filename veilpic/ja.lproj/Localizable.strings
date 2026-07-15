@@ -712,6 +712,12 @@
 "imageEditor.properties.shapeCorner.topRight" = "右上";
 "imageEditor.properties.shapeCorner.bottomRight" = "右下";
 "imageEditor.properties.shapeCorner.bottomLeft" = "左下";
+"imageEditor.properties.shapeStyle" = "シェイプの外観";
+"imageEditor.properties.shapeFillColor" = "塗りの色";
+"imageEditor.properties.shapeFillOpacityValue" = "塗りの不透明度：%d%%";
+"imageEditor.properties.shapeStrokeColor" = "線の色";
+"imageEditor.properties.shapeStrokeOpacityValue" = "線の不透明度：%d%%";
+"imageEditor.properties.shapeStrokeWidthValue" = "線幅：%d px";
 "imageEditor.stackLayout.axis.horizontal" = "水平";
 "imageEditor.stackLayout.axis.vertical" = "垂直";
 "imageEditor.stackLayout.primary.start" = "先頭";
@@ -730,6 +736,7 @@
 "imageEditor.history.stackChildLayout" = "オートレイアウトの子要素を変更";
 "imageEditor.history.shapeCornerRadius" = "長方形の角丸を変更";
 "imageEditor.history.shapeCornerSmoothing" = "長方形のコーナースムージングを変更";
+"imageEditor.history.shapeStyle" = "シェイプの外観を変更";
 "imageEditor.status.stackLayoutApplied" = "オートレイアウトを再配置しました";
 "imageEditor.status.stackChildLayoutApplied" = "オートレイアウトの子要素を再配置しました";
 "imageEditor.status.stackLayoutLocked" = "ロック中のグループまたは子要素は再配置できません";
@@ -738,6 +745,7 @@
 "imageEditor.status.shapeCornerRadiiLinked" = "長方形の角を左上の値に連結しました";
 "imageEditor.status.shapeCornerRadiusAtCorner" = "%@の角丸を %d px に設定しました";
 "imageEditor.status.shapeCornerSmoothing" = "長方形のコーナースムージングを %d%% に設定しました";
+"imageEditor.status.shapeStyle" = "選択中の %d 個のシェイプの外観を更新しました";
 "imageEditor.properties.filter" = "フィルター";
 "imageEditor.properties.smartFiltersEmpty" = "選択レイヤーにスマートフィルターはありません";
 "imageEditor.properties.smartFilterItem" = "%@ %d%%";

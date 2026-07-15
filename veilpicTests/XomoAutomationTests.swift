@@ -161,6 +161,15 @@ struct XomoAutomationTests {
                 "y": .number(30),
                 "width": .number(80),
                 "height": .number(40),
+                "fillColor": .object([
+                    "red": .number(1), "green": .number(0), "blue": .number(0)
+                ]),
+                "fillOpacity": .number(0.6),
+                "strokeColor": .object([
+                    "red": .number(0), "green": .number(0), "blue": .number(1)
+                ]),
+                "strokeOpacity": .number(0.8),
+                "strokeWidth": .number(7),
                 "cornerRadius": .number(40),
                 "cornerSmoothing": .number(0.5)
             ]
@@ -168,6 +177,9 @@ struct XomoAutomationTests {
         #expect(createResponse.ok)
         #expect(viewModel.document.selectedLayer?.shapeContent?.cornerRadius == 20)
         #expect(viewModel.document.selectedLayer?.shapeContent?.cornerSmoothing == 0.5)
+        #expect(viewModel.document.selectedLayer?.shapeContent?.fillOpacity == 0.6)
+        #expect(viewModel.document.selectedLayer?.shapeContent?.strokeOpacity == 0.8)
+        #expect(viewModel.document.selectedLayer?.shapeContent?.strokeWidth == 7)
         #expect(viewModel.document.history.count == historyCountBeforeCreate + 1)
 
         let inspectResponse = registry.execute(request(
@@ -181,19 +193,47 @@ struct XomoAutomationTests {
         #expect(inspectedShape["kind"] == .string("rectangle"))
         #expect(inspectedShape["cornerRadius"] == .number(20))
         #expect(inspectedShape["cornerSmoothing"] == .number(0.5))
+        #expect(inspectedShape["fillOpacity"] == .number(0.6))
+        #expect(inspectedShape["strokeOpacity"] == .number(0.8))
+        #expect(inspectedShape["strokeWidth"] == .number(7))
 
         let historyCountBeforeUpdate = viewModel.document.history.count
         let updateResponse = registry.execute(request(
             operation: "call",
             name: "xomo.shape.update",
-            arguments: ["cornerRadius": .number(6)]
+            arguments: [
+                "cornerRadius": .number(6),
+                "strokeColor": .object([
+                    "red": .number(0), "green": .number(1), "blue": .number(0)
+                ]),
+                "strokeOpacity": .number(0.35)
+            ]
         ))
         #expect(updateResponse.ok)
-        #expect(viewModel.document.selectedLayer?.shapeContent?.cornerRadius == 6)
+        let updated = try #require(viewModel.document.selectedLayer?.shapeContent)
+        let updatedStroke = try #require(updated.strokeColor.usingColorSpace(.deviceRGB))
+        let unchangedFill = try #require(updated.fillColor.usingColorSpace(.deviceRGB))
+        #expect(updated.cornerRadius == 6)
+        #expect(updated.strokeOpacity == 0.35)
+        #expect(updatedStroke.greenComponent > 0.99)
+        #expect(unchangedFill.redComponent > 0.99)
+        #expect(updated.fillOpacity == 0.6)
         #expect(viewModel.document.history.count == historyCountBeforeUpdate + 1)
 
         viewModel.undo()
         #expect(viewModel.document.selectedLayer?.shapeContent?.cornerRadius == 20)
+
+        let invalidColorUpdate = registry.execute(request(
+            operation: "call",
+            name: "xomo.shape.update",
+            arguments: [
+                "fillColor": .object([
+                    "red": .number(2), "green": .number(0), "blue": .number(0)
+                ])
+            ]
+        ))
+        #expect(!invalidColorUpdate.ok)
+        #expect(viewModel.document.selectedLayer?.shapeContent?.fillOpacity == 0.6)
 
         let independentUpdate = registry.execute(request(
             operation: "call",

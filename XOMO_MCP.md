@@ -1,6 +1,6 @@
 # Xomo MCP 与 CLI
 
-> 当前版本：v2.12.0-rc70
+> 当前版本：v2.12.0-rc71
 
 ## 架构
 
@@ -33,7 +33,8 @@ xomo tools
 xomo call xomo.document.get '{}'
 xomo call xomo.tool.select '{"tool":"brush"}'
 xomo call xomo.selection.rectangle '{"x":20,"y":20,"width":200,"height":120}'
-xomo call xomo.shape.create '{"kind":"rectangle","x":80,"y":80,"width":240,"height":120,"cornerRadius":16}'
+xomo call xomo.shape.create '{"kind":"rectangle","x":80,"y":80,"width":240,"height":120,"fillColor":{"red":1,"green":0.2,"blue":0.1},"strokeColor":{"red":0.1,"green":0.3,"blue":1},"strokeWidth":4,"cornerRadius":16}'
+xomo call xomo.shape.update '{"fillOpacity":0.7,"strokeOpacity":0.9}'
 xomo call xomo.shape.update '{"cornerRadii":{"topLeft":8,"topRight":16,"bottomRight":24,"bottomLeft":4}}'
 xomo call xomo.shape.update '{"cornerSmoothing":0.75}'
 xomo call xomo.component.insert '{"component":"button","theme":"native","x":80,"y":100}'
@@ -66,7 +67,7 @@ MCP 服务器实现 `initialize`、`ping`、`tools/list` 和 `tools/call`。当 
 
 - 共 112 个 MCP 工具；同类细粒度操作通过带严格枚举参数的 action 工具组织。
 - App 与文档状态
-- 预设或自定义画布创建、可编辑文字/形状检查与更新（含统一/独立四角及超椭圆圆角平滑）、点文字 / 固定宽高段落文字创建和转换、文字框所需高度、溢出诊断与适合内容 / 仅扩高操作，以及详细调整、滤镜和图层样式参数
+- 预设或自定义画布创建、可编辑文字/形状检查与更新（含独立填充/描边颜色、不透明度、线宽、统一/独立四角及超椭圆圆角平滑）、点文字 / 固定宽高段落文字创建和转换、文字框所需高度、溢出诊断与适合内容 / 仅扩高操作，以及详细调整、滤镜和图层样式参数
 - 完整 `qpicproject` 项目导入导出，以及 PNG/JPEG/WebP 等图像图层导入
 - 28 种编辑器工具选择
 - 前景色、背景色、可持久化画笔预设、带硬度/流量/间距与逐点压力曲线控制的画笔与橡皮擦、渐变
