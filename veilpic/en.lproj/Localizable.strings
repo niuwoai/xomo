@@ -2778,6 +2778,9 @@
 "xomo.theme.apply" = "Apply to selected";
 "xomo.theme.keepLocal" = "Keep local style";
 "xomo.theme.history.apply" = "Apply component theme";
+"xomo.theme.history.selected" = "Select component theme: %@";
+"xomo.theme.history.tokensImported" = "Import local design tokens: %@";
+"xomo.theme.history.tokensCleared" = "Clear local design tokens";
 "xomo.theme.history.overrideKeep" = "Keep local theme override";
 "xomo.theme.history.overrideClear" = "Clear local theme override";
 "xomo.theme.status.noApplicableComponent" = "Select a themed component first";

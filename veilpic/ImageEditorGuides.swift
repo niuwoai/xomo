@@ -192,7 +192,7 @@ extension ImageEditorViewModel {
         if movingGuideDidChange {
             appendHistory(L10n.text("imageEditor.history.guideMove"))
         } else {
-            _ = undoStack.popLast()
+            _ = discardLastUndoSnapshot()
             updateStatus()
         }
         movingGuideID = nil

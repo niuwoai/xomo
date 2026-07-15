@@ -29,6 +29,11 @@ private struct ImageEditorSmartObjectConversionPlan {
     var insertionIndex: Int
 }
 
+private struct ImageEditorXomoThemeUndoState {
+    var theme: XomoComponentTheme
+    var tokenSnapshot: XomoComponentThemeTokenSnapshot?
+}
+
 @MainActor
 final class ImageEditorViewModel: ObservableObject {
     static let minimumZoom: CGFloat = 0.08
@@ -295,6 +300,8 @@ final class ImageEditorViewModel: ObservableObject {
 
     var undoStack: [ImageEditorDocument] = []
     var redoStack: [ImageEditorDocument] = []
+    private var undoXomoThemeStates: [ImageEditorXomoThemeUndoState] = []
+    private var redoXomoThemeStates: [ImageEditorXomoThemeUndoState] = []
     var historySnapshots: [UUID: ImageEditorDocument] = [:]
     var movingLayerIDs = Set<UUID>()
     var movingLayerDidChange = false
@@ -432,8 +439,7 @@ final class ImageEditorViewModel: ObservableObject {
         document = newDocument
         cachedCurrentImage = canvas
         exportSettings.scale = Double(draft.clampedExportScale)
-        undoStack.removeAll()
-        redoStack.removeAll()
+        clearUndoHistory()
         historySnapshots.removeAll()
         namedHistorySnapshots.removeAll()
         selectedHistorySnapshotID = nil
@@ -736,9 +742,24 @@ final class ImageEditorViewModel: ObservableObject {
         xomoLocalThemeTokenSnapshot != nil
     }
 
+    private var currentXomoThemeUndoState: ImageEditorXomoThemeUndoState {
+        ImageEditorXomoThemeUndoState(
+            theme: xomoComponentTheme,
+            tokenSnapshot: xomoLocalThemeTokenSnapshot
+        )
+    }
+
+    private func applyXomoThemeUndoState(_ state: ImageEditorXomoThemeUndoState) {
+        xomoComponentTheme = state.theme
+        xomoLocalThemeTokenSnapshot = state.tokenSnapshot
+    }
+
     func selectXomoComponentTheme(_ theme: XomoComponentTheme) {
+        guard theme != xomoComponentTheme || xomoLocalThemeTokenSnapshot != nil else { return }
+        pushUndo()
         xomoComponentTheme = theme
         xomoLocalThemeTokenSnapshot = nil
+        appendHistory(L10n.format("xomo.theme.history.selected", theme.title))
     }
 
     func importXomoThemeTokens(from url: URL) throws {
@@ -748,7 +769,10 @@ final class ImageEditorViewModel: ObservableObject {
         }
         let snapshot = try JSONDecoder().decode(XomoComponentThemeTokenSnapshot.self, from: data)
         _ = try snapshot.makeTokens()
+        guard snapshot != xomoLocalThemeTokenSnapshot else { return }
+        pushUndo()
         xomoLocalThemeTokenSnapshot = snapshot
+        appendHistory(L10n.format("xomo.theme.history.tokensImported", snapshot.theme))
         statusText = L10n.format(
             "xomo.theme.status.tokensImported",
             snapshot.theme
@@ -775,7 +799,9 @@ final class ImageEditorViewModel: ObservableObject {
 
     func clearImportedXomoThemeTokens() {
         guard xomoLocalThemeTokenSnapshot != nil else { return }
+        pushUndo()
         xomoLocalThemeTokenSnapshot = nil
+        appendHistory(L10n.text("xomo.theme.history.tokensCleared"))
         statusText = L10n.text("xomo.theme.status.tokensCleared")
     }
 
@@ -1931,8 +1957,11 @@ final class ImageEditorViewModel: ObservableObject {
 
     func undo() {
         guard let previous = undoStack.popLast() else { return }
+        let previousThemeState = undoXomoThemeStates.popLast() ?? currentXomoThemeUndoState
         redoStack.append(document)
+        redoXomoThemeStates.append(currentXomoThemeUndoState)
         document = previous
+        applyXomoThemeUndoState(previousThemeState)
         selectedHistoryEntryID = document.history.last?.id
         ensureSelectedLayer()
         syncAdjustmentControlsFromSelection()
@@ -1944,8 +1973,11 @@ final class ImageEditorViewModel: ObservableObject {
 
     func redo() {
         guard let next = redoStack.popLast() else { return }
+        let nextThemeState = redoXomoThemeStates.popLast() ?? currentXomoThemeUndoState
         undoStack.append(document)
+        undoXomoThemeStates.append(currentXomoThemeUndoState)
         document = next
+        applyXomoThemeUndoState(nextThemeState)
         selectedHistoryEntryID = document.history.last?.id
         ensureSelectedLayer()
         syncAdjustmentControlsFromSelection()
@@ -2097,8 +2129,7 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func clearHistoryStates() {
-        undoStack.removeAll()
-        redoStack.removeAll()
+        clearUndoHistory()
         historySnapshots.removeAll()
         document.history = [
             ImageEditorHistoryEntry(title: L10n.text("imageEditor.history.currentState"))
@@ -6075,7 +6106,25 @@ final class ImageEditorViewModel: ObservableObject {
 
     func pushUndo() {
         undoStack.append(document)
+        undoXomoThemeStates.append(currentXomoThemeUndoState)
         redoStack.removeAll()
+        redoXomoThemeStates.removeAll()
+    }
+
+    @discardableResult
+    func discardLastUndoSnapshot() -> ImageEditorDocument? {
+        let snapshot = undoStack.popLast()
+        if !undoXomoThemeStates.isEmpty {
+            undoXomoThemeStates.removeLast()
+        }
+        return snapshot
+    }
+
+    func clearUndoHistory() {
+        undoStack.removeAll()
+        redoStack.removeAll()
+        undoXomoThemeStates.removeAll()
+        redoXomoThemeStates.removeAll()
     }
 
     func appendHistory(_ title: String) {

@@ -985,8 +985,7 @@ extension ImageEditorViewModel {
         if let metadata = document.designCanvasMetadata {
             exportSettings.scale = Double(metadata.exportScale)
         }
-        undoStack.removeAll()
-        redoStack.removeAll()
+        clearUndoHistory()
         historySnapshots.removeAll()
         document.history.forEach { entry in
             historySnapshots[entry.id] = document
@@ -1061,8 +1060,7 @@ extension ImageEditorViewModel {
     }
 
     private func resetAfterExternalDocumentOpen() {
-        undoStack.removeAll()
-        redoStack.removeAll()
+        clearUndoHistory()
         historySnapshots.removeAll()
         document.history.forEach { entry in historySnapshots[entry.id] = document }
         selectedTool = .move

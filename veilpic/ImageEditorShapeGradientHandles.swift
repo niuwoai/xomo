@@ -623,7 +623,7 @@ extension ImageEditorViewModel {
                     : "imageEditor.history.shapeGradientStop"
             ))
         } else {
-            _ = undoStack.popLast()
+            _ = discardLastUndoSnapshot()
             updateStatus()
         }
         editingShapeGradientLayerID = nil

@@ -211,6 +211,33 @@ struct XomoLeftSidebarTests {
         #expect(!viewModel.hasLocalXomoThemeTokens)
     }
 
+    @Test func localTokenImportAndClearParticipateInUndoRedo() throws {
+        let snapshot = XomoComponentTheme.native.tokenSnapshot
+        let path = FileManager.default.temporaryDirectory
+            .appendingPathComponent("xomo-local-token-history-\(UUID().uuidString).xomotokens.json")
+        defer { try? FileManager.default.removeItem(at: path) }
+        try Data(snapshot.encodedJSON().utf8).write(to: path)
+
+        let viewModel = ImageEditorViewModel(
+            sourceName: "local-token-history",
+            image: NSImage.transparent(size: CGSize(width: 640, height: 480))
+        ) { _ in }
+
+        try viewModel.importXomoThemeTokens(from: path)
+        #expect(viewModel.hasLocalXomoThemeTokens)
+        viewModel.undo()
+        #expect(!viewModel.hasLocalXomoThemeTokens)
+        viewModel.redo()
+        #expect(viewModel.xomoLocalThemeTokenSnapshot == snapshot)
+
+        viewModel.clearImportedXomoThemeTokens()
+        #expect(!viewModel.hasLocalXomoThemeTokens)
+        viewModel.undo()
+        #expect(viewModel.xomoLocalThemeTokenSnapshot == snapshot)
+        viewModel.redo()
+        #expect(!viewModel.hasLocalXomoThemeTokens)
+    }
+
     @Test func primaryButtonUsesSelectedComponentThemeTokens() throws {
         for theme in XomoComponentTheme.allCases {
             let image = NSImage.transparent(size: CGSize(width: 640, height: 480))

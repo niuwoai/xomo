@@ -1,0 +1,25 @@
+{
+  "version": "2.12.0-rc128",
+  "date": "2026-07-16",
+  "suites": [
+    {
+      "name": "XomoLeftSidebarTests",
+      "passed": 41,
+      "failed": 0,
+      "total": 41
+    },
+    {
+      "name": "ImageEditorHistoryTests",
+      "passed": 5,
+      "failed": 0,
+      "total": 5
+    }
+  ],
+  "result": "passed",
+  "coverage": [
+    "token-import-undo-redo",
+    "token-clear-undo-redo",
+    "theme-selection-history",
+    "ordinary-history-regression"
+  ]
+}

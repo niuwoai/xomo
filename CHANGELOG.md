@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc128 - 2026-07-16
+
+### Added
+- 本地设计 Token 导入、清除和主题切换进入统一 Undo/Redo，并记录到历史面板。
+
+### Verification
+- `XomoLeftSidebarTests` 41/41、`ImageEditorHistoryTests` 5/5 通过，覆盖 Token 状态与普通历史栈。
+
 ## 2.12.0-rc127 - 2026-07-16
 
 ### Fixed

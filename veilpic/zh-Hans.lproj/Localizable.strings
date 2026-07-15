@@ -2778,6 +2778,9 @@
 "xomo.theme.apply" = "应用到所选组件";
 "xomo.theme.keepLocal" = "保留局部样式";
 "xomo.theme.history.apply" = "应用组件主题";
+"xomo.theme.history.selected" = "选择组件主题：%@";
+"xomo.theme.history.tokensImported" = "导入本地设计 Tokens：%@";
+"xomo.theme.history.tokensCleared" = "清除本地设计 Tokens";
 "xomo.theme.history.overrideKeep" = "保留局部主题覆写";
 "xomo.theme.history.overrideClear" = "清除局部主题覆写";
 "xomo.theme.status.noApplicableComponent" = "请先选择可换肤的组件";

@@ -104,7 +104,7 @@ extension ImageEditorViewModel {
             )
             appendHistory(L10n.text("imageEditor.history.layerTranslate"))
         } else {
-            _ = undoStack.popLast()
+            _ = discardLastUndoSnapshot()
             updateStatus()
         }
         movingLayerIDs = []
@@ -216,7 +216,7 @@ extension ImageEditorViewModel {
                     : "imageEditor.history.textBoxResize"
             ))
         } else {
-            _ = undoStack.popLast()
+            _ = discardLastUndoSnapshot()
             updateStatus()
         }
         resizingLayerIDs = []
@@ -268,7 +268,7 @@ extension ImageEditorViewModel {
         if rotatingLayerDidChange {
             appendHistory(L10n.text("imageEditor.history.layerRotate"))
         } else {
-            _ = undoStack.popLast()
+            _ = discardLastUndoSnapshot()
             updateStatus()
         }
         rotatingLayerIDs = []
@@ -308,7 +308,7 @@ extension ImageEditorViewModel {
             originalTransformFrame: transformFrame,
             originalFrames: originalFrames
         ) else {
-            _ = undoStack.popLast()
+            _ = discardLastUndoSnapshot()
             updateStatus()
             return
         }
@@ -631,7 +631,7 @@ extension ImageEditorViewModel {
             layers[document.layers[index].id] = document.layers[index]
         }
         guard applyFlip(horizontal: horizontal, from: originalLayers, around: transformFrame) else {
-            _ = undoStack.popLast()
+            _ = discardLastUndoSnapshot()
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
@@ -718,7 +718,7 @@ extension ImageEditorViewModel {
             originalTransformFrame: transformFrame,
             originalFrames: originalFrames
         ) else {
-            _ = undoStack.popLast()
+            _ = discardLastUndoSnapshot()
             updateStatus()
             return
         }

@@ -2778,6 +2778,9 @@
 "xomo.theme.apply" = "選択項目に適用";
 "xomo.theme.keepLocal" = "ローカルスタイルを保持";
 "xomo.theme.history.apply" = "コンポーネントテーマを適用";
+"xomo.theme.history.selected" = "コンポーネントテーマを選択：%@";
+"xomo.theme.history.tokensImported" = "ローカルデザイントークンを読み込み：%@";
+"xomo.theme.history.tokensCleared" = "ローカルデザイントークンを解除";
 "xomo.theme.history.overrideKeep" = "ローカルテーマ上書きを保持";
 "xomo.theme.history.overrideClear" = "ローカルテーマ上書きを解除";
 "xomo.theme.status.noApplicableComponent" = "先にテーマ対応コンポーネントを選択してください";
