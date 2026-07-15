@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc129 - 2026-07-16
+
+### Added
+- 项目文件保存当前 Xomo 主题和本地 Token 映射，重新打开项目后恢复设计资产上下文；项目格式版本升至 7。
+
+### Verification
+- `XomoLeftSidebarTests` 42/42、`ImageEditorProjectDocumentTests` 8/8、`ImageEditorSavedPathTests` 28/28 通过。
+
 ## 2.12.0-rc128 - 2026-07-16
 
 ### Added

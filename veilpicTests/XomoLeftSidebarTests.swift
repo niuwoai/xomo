@@ -238,6 +238,32 @@ struct XomoLeftSidebarTests {
         #expect(!viewModel.hasLocalXomoThemeTokens)
     }
 
+    @Test func projectRoundTripRetainsActiveThemeAndLocalTokenMapping() throws {
+        let snapshot = XomoComponentTheme.native.tokenSnapshot
+        let path = FileManager.default.temporaryDirectory
+            .appendingPathComponent("xomo-local-token-project-\(UUID().uuidString).xomotokens.json")
+        defer { try? FileManager.default.removeItem(at: path) }
+        try Data(snapshot.encodedJSON().utf8).write(to: path)
+
+        let viewModel = ImageEditorViewModel(
+            sourceName: "local-token-project",
+            image: NSImage.transparent(size: CGSize(width: 640, height: 480))
+        ) { _ in }
+        viewModel.selectXomoComponentTheme(.glassmorphism)
+        try viewModel.importXomoThemeTokens(from: path)
+
+        let projectData = try viewModel.projectData()
+        let reopened = ImageEditorViewModel(
+            sourceName: "empty",
+            image: NSImage.transparent(size: CGSize(width: 1, height: 1))
+        ) { _ in }
+        try reopened.loadProjectData(projectData)
+
+        #expect(reopened.xomoComponentTheme == .glassmorphism)
+        #expect(reopened.xomoLocalThemeTokenSnapshot == snapshot)
+        #expect(reopened.activeXomoComponentTokenSnapshot == snapshot)
+    }
+
     @Test func primaryButtonUsesSelectedComponentThemeTokens() throws {
         for theme in XomoComponentTheme.allCases {
             let image = NSImage.transparent(size: CGSize(width: 640, height: 480))

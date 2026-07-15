@@ -784,7 +784,7 @@ struct ImageEditorSavedPathTests {
         let saved = try #require(viewModel.saveCurrentPath(name: "Open Curve"))
         let data = try viewModel.projectData()
         let project = try JSONDecoder().decode(ImageEditorProjectDocument.self, from: data)
-        #expect(project.formatVersion == 6)
+        #expect(project.formatVersion == ImageEditorProjectDocument.formatVersion)
 
         let restored = makeViewModel()
         try restored.loadProjectData(data)

@@ -43,7 +43,7 @@ enum ImageEditorProjectDocumentError: LocalizedError {
 
 struct ImageEditorProjectDocument: Codable {
     static let fileExtension = "qpicproject"
-    static let formatVersion = 6
+    static let formatVersion = 7
 
     var formatVersion: Int
     var appVersion: String
@@ -72,11 +72,17 @@ struct ImageEditorProjectDocument: Codable {
     var isGridSnappingEnabled: Bool?
     var gridSpacing: CGFloat?
     var designCanvasMetadata: XomoDesignCanvasMetadata?
+    var xomoComponentTheme: XomoComponentTheme?
+    var xomoLocalThemeTokenSnapshot: XomoComponentThemeTokenSnapshot?
     var globalLightAngle: CGFloat?
     var historyTitles: [String]
 
     @MainActor
-    init(document: ImageEditorDocument) throws {
+    init(
+        document: ImageEditorDocument,
+        xomoComponentTheme: XomoComponentTheme? = nil,
+        xomoLocalThemeTokenSnapshot: XomoComponentThemeTokenSnapshot? = nil
+    ) throws {
         formatVersion = Self.formatVersion
         appVersion = AppVersion.current
         sourceName = document.sourceName
@@ -110,6 +116,8 @@ struct ImageEditorProjectDocument: Codable {
         isGridSnappingEnabled = document.isGridSnappingEnabled
         gridSpacing = document.gridSpacing
         designCanvasMetadata = document.designCanvasMetadata
+        self.xomoComponentTheme = xomoComponentTheme
+        self.xomoLocalThemeTokenSnapshot = xomoLocalThemeTokenSnapshot
         globalLightAngle = document.globalLightAngle
         historyTitles = document.history.map(\.title)
     }
@@ -972,7 +980,11 @@ extension ImageEditorViewModel {
     }
 
     func projectData() throws -> Data {
-        let project = try ImageEditorProjectDocument(document: document)
+        let project = try ImageEditorProjectDocument(
+            document: document,
+            xomoComponentTheme: xomoComponentTheme,
+            xomoLocalThemeTokenSnapshot: xomoLocalThemeTokenSnapshot
+        )
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         return try encoder.encode(project)
@@ -982,6 +994,8 @@ extension ImageEditorViewModel {
         let decoder = JSONDecoder()
         let project = try decoder.decode(ImageEditorProjectDocument.self, from: data)
         document = try project.restoredDocument()
+        xomoComponentTheme = project.xomoComponentTheme ?? .native
+        xomoLocalThemeTokenSnapshot = project.xomoLocalThemeTokenSnapshot
         if let metadata = document.designCanvasMetadata {
             exportSettings.scale = Double(metadata.exportScale)
         }
