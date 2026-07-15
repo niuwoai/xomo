@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.12.0-rc101 - 2026-07-15
+
+### Fixed
+- 组件选中框不再与画布父级拖动手势重复响应，避免拖动 UI 组件时出现位置漂移或尺寸异常。
+
+### Verification
+- rc101 Release 构建成功，Bundle ID 为 `im.some.xomo`，覆盖安装到 `/Applications/Xomo.app`；组件库插入、点击选中、画布拖动与撤销冒烟通过。
+
+## 2.12.0-rc100 - 2026-07-15
+
+### Verification
+- Release 构建成功；全量独立进程测试 `908/908` 通过、`0` 失败，报告见 `test-reports/rc100-escalated/report.json` 与 `report.md`。
+
 ## 2.12.0-rc99 - 2026-07-15
 
 ### Performance

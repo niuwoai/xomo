@@ -3963,26 +3963,11 @@ struct ImageEditorView: View {
             .shadow(color: accent.opacity(isMoving ? 0.10 : 0.24), radius: isMoving ? 2 : 5)
             .frame(width: max(1, rect.width), height: max(1, rect.height))
             .position(x: rect.midX, y: rect.midY)
-            .contentShape(shape)
-            .gesture(selectedObjectMoveGesture(in: canvasSize))
-    }
-
-    private func selectedObjectMoveGesture(in canvasSize: CGSize) -> some Gesture {
-        DragGesture(minimumDistance: 1)
-            .onChanged { value in
-                if !isObjectMoveGestureActive {
-                    lastMoveTranslation = .zero
-                    viewModel.beginMovingSelectedLayer()
-                    isObjectMoveGestureActive = true
-                }
-                updateObjectMove(translation: value.translation, in: canvasSize)
-            }
-            .onEnded { value in
-                updateObjectMove(translation: value.translation, in: canvasSize)
-                viewModel.finishMovingSelectedLayer()
-                lastMoveTranslation = .zero
-                isObjectMoveGestureActive = false
-            }
+            // The canvas owns the move gesture. Keeping a second gesture on
+            // the selection outline makes SwiftUI deliver the same drag to
+            // both handlers, which can double-apply the delta and distort a
+            // component while it is being moved.
+            .allowsHitTesting(false)
     }
 
     private func resizeHandleView(
