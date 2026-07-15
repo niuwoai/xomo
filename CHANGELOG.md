@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc137 - 2026-07-16
+
+### Fixed
+- 修复 macOS 13 无 hover 坐标时光标不及时刷新的问题；工具、组件库、画笔尺寸、缩放和修饰键切换后立即重算。
+
+### Verification
+- `ImageEditorCanvasCursorTests` 9/9、`XomoLeftSidebarTests` 42/42 通过。
+
 ## 2.12.0-rc136 - 2026-07-16
 
 ### Fixed

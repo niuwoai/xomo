@@ -1233,17 +1233,15 @@ struct ImageEditorView: View {
                     if tool != .text {
                         cancelCanvasTextEditing()
                     }
-                    guard isPointerInsideCanvas else { return }
-                    guard let hoverViewPoint else { return }
-                    updateCanvasCursor(at: hoverViewPoint, in: geometry.size)
+                    refreshCanvasCursor(in: geometry.size)
                 }
                 .onChange(of: viewModel.selectedLeftSidebarTab) { tab in
                     if tab == .components {
                         pendingCropRect = nil
                         cancelCanvasTextEditing()
                     }
-                    if isPointerInsideCanvas, let hoverViewPoint {
-                        updateCanvasCursor(at: hoverViewPoint, in: geometry.size)
+                    if isPointerInsideCanvas {
+                        refreshCanvasCursor(in: geometry.size)
                     } else if tab == .components {
                         // macOS 13's hover callback has no location. Still reset
                         // the stale tool cursor immediately when entering the
@@ -1252,16 +1250,16 @@ struct ImageEditorView: View {
                     }
                 }
                 .onChange(of: viewModel.brushSize) { _ in
-                    guard isPointerInsideCanvas, let hoverViewPoint else { return }
-                    updateCanvasCursor(at: hoverViewPoint, in: geometry.size)
+                    refreshCanvasCursor(in: geometry.size)
                 }
                 .onChange(of: isSpacebarPanning) { _ in
-                    guard isPointerInsideCanvas, let hoverViewPoint else { return }
-                    updateCanvasCursor(at: hoverViewPoint, in: geometry.size)
+                    refreshCanvasCursor(in: geometry.size)
+                }
+                .onChange(of: canvasModifierFlags) { _ in
+                    refreshCanvasCursor(in: geometry.size)
                 }
                 .onChange(of: viewModel.zoom) { _ in
-                    guard isPointerInsideCanvas, let hoverViewPoint else { return }
-                    updateCanvasCursor(at: hoverViewPoint, in: geometry.size)
+                    refreshCanvasCursor(in: geometry.size)
                 }
                 .onDisappear {
                     isPointerInsideCanvas = false
@@ -2068,6 +2066,26 @@ struct ImageEditorView: View {
             isSpacebarPanning: isSpacebarPanning,
             isCanvasPanGestureActive: isCanvasPanGestureActive,
             modifierFlags: NSEvent.modifierFlags
+        ).set()
+    }
+
+    private func refreshCanvasCursor(in size: CGSize) {
+        guard isPointerInsideCanvas else { return }
+        if let hoverViewPoint {
+            updateCanvasCursor(at: hoverViewPoint, in: size)
+            return
+        }
+
+        let imageRect = fittedImageRect(in: size)
+        let displayScale = imageRect.width / max(viewModel.document.canvasSize.width, 1)
+        ImageEditorCanvasCursor.cursor(
+            for: viewModel.selectedLeftSidebarTab,
+            selectedTool: viewModel.selectedTool,
+            brushDiameter: viewModel.brushSize * displayScale,
+            handIsDragging: isCanvasPanGestureActive,
+            isSpacebarPanning: isSpacebarPanning,
+            isCanvasPanGestureActive: isCanvasPanGestureActive,
+            modifierFlags: canvasModifierFlags
         ).set()
     }
 
