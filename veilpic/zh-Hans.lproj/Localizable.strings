@@ -696,6 +696,8 @@
 "imageEditor.properties.stackLayoutCrossAlignment" = "交叉轴对齐";
 "imageEditor.properties.stackLayoutPrimarySizing" = "主轴尺寸";
 "imageEditor.properties.stackLayoutCrossSizing" = "交叉轴尺寸";
+"imageEditor.properties.stackLayoutWrap" = "换行";
+"imageEditor.properties.stackLayoutCounterSpacingValue" = "行间距：%d px";
 "imageEditor.properties.stackChildLayout" = "自动布局子项";
 "imageEditor.properties.stackChildPrimarySizing" = "主轴尺寸";
 "imageEditor.properties.stackChildCrossSizing" = "交叉轴尺寸";
@@ -741,6 +743,8 @@
 "imageEditor.stackLayout.cross.end" = "终点";
 "imageEditor.stackLayout.sizing.fixed" = "固定";
 "imageEditor.stackLayout.sizing.hug" = "适应内容";
+"imageEditor.stackLayout.wrap.noWrap" = "不换行";
+"imageEditor.stackLayout.wrap.wrap" = "换行";
 "imageEditor.stackLayout.childSizing.fixed" = "固定";
 "imageEditor.stackLayout.childSizing.fill" = "填满容器";
 "imageEditor.action.stackLayoutReflow" = "重新排列子项";
@@ -2929,7 +2933,7 @@
 "xomo.figma.node.issue.vectorGeometryMissing" = "缺少矢量路径数据";
 "xomo.figma.node.issue.vectorGeometryUnsupported" = "矢量路径包含无法解析的命令";
 "xomo.figma.node.issue.componentSemanticsFlattened" = "组件语义暂按普通组处理";
-"xomo.figma.node.issue.autoLayoutFlattened" = "Wrap 或基线等布局语义暂按固定尺寸处理";
+"xomo.figma.node.issue.autoLayoutFlattened" = "基线或尚未支持的换行轨道分布暂按固定位置处理";
 "xomo.figma.node.issue.maskFlattened" = "蒙版关系尚未保留";
 "xomo.figma.node.issue.clippingFlattened" = "Frame 的内容裁切边界尚未保留";
 "xomo.figma.node.issue.effectsFlattened" = "效果尚未保留";
