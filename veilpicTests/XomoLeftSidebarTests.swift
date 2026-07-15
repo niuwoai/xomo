@@ -299,8 +299,9 @@ struct XomoLeftSidebarTests {
         #expect(source.contains(".onChange(of: viewModel.selectedLeftSidebarTab)"))
         #expect(source.contains("switch canvasInteractionTool"))
         #expect(source.contains(
-            "isSpacebarPanning || isCanvasPanGestureActive ? .hand : canvasInteractionTool"
+            "ImageEditorCanvasCursor.tool("
         ))
+        #expect(source.contains(".simultaneousGesture(canvasGesture(in: geometry.size))"))
         #expect(source.components(separatedBy: "switch canvasInteractionTool").count - 1 >= 3)
     }
 
