@@ -1,0 +1,429 @@
+{
+  "generated_at": "2026-07-16 06:49:50 +0800",
+  "total": 42,
+  "passed": 42,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "XomoLeftSidebarTests",
+      "method": "applyingImportedTokensIsUndoableAndClearsWithBuiltInThemeSelection",
+      "identifier": "veilpicTests/XomoLeftSidebarTests/applyingImportedTokensIsUndoableAndClearsWithBuiltInThemeSelection",
+      "file": "XomoLeftSidebarTests.swift",
+      "passed": true,
+      "duration": 2.782,
+      "issues": [],
+      "log": "XomoLeftSidebarTests.applyingImportedTokensIsUndoableAndClearsWithBuiltInThemeSelection.log"
+    },
+    {
+      "suite": "XomoLeftSidebarTests",
+      "method": "applyingThemeMigratesPreviouslyInsertedComponentWithoutThemeMetadata",
+      "identifier": "veilpicTests/XomoLeftSidebarTests/applyingThemeMigratesPreviouslyInsertedComponentWithoutThemeMetadata",
+      "file": "XomoLeftSidebarTests.swift",
+      "passed": true,
+      "duration": 2.803,
+      "issues": [],
+      "log": "XomoLeftSidebarTests.applyingThemeMigratesPreviouslyInsertedComponentWithoutThemeMetadata.log"
+    },
+    {
+      "suite": "XomoLeftSidebarTests",
+      "method": "applyingThemeToExistingButtonPreservesMarkedLocalOverrideAndRoundTrips",
+      "identifier": "veilpicTests/XomoLeftSidebarTests/applyingThemeToExistingButtonPreservesMarkedLocalOverrideAndRoundTrips",
+      "file": "XomoLeftSidebarTests.swift",
+      "passed": true,
+      "duration": 2.918,
+      "issues": [],
+      "log": "XomoLeftSidebarTests.applyingThemeToExistingButtonPreservesMarkedLocalOverrideAndRoundTrips.log"
+    },
+    {
+      "suite": "XomoLeftSidebarTests",
+      "method": "applyingThemeToExistingInputAndCardUpdatesTokens",
+      "identifier": "veilpicTests/XomoLeftSidebarTests/applyingThemeToExistingInputAndCardUpdatesTokens",
+      "file": "XomoLeftSidebarTests.swift",
+      "passed": true,
+      "duration": 2.771,
+      "issues": [],
+      "log": "XomoLeftSidebarTests.applyingThemeToExistingInputAndCardUpdatesTokens.log"
+    },
+    {
+      "suite": "XomoLeftSidebarTests",
+      "method": "avatarComponentRoundTripRetainsEditableChildren",
+      "identifier": "veilpicTests/XomoLeftSidebarTests/avatarComponentRoundTripRetainsEditableChildren",
+      "file": "XomoLeftSidebarTests.swift",
+      "passed": true,
+      "duration": 3.098,
+      "issues": [],
+      "log": "XomoLeftSidebarTests.avatarComponentRoundTripRetainsEditableChildren.log"
+    },
+    {
+      "suite": "XomoLeftSidebarTests",
+      "method": "buttonComponentRoundTripRetainsGroupAndEditableChildren",
+      "identifier": "veilpicTests/XomoLeftSidebarTests/buttonComponentRoundTripRetainsGroupAndEditableChildren",
+      "file": "XomoLeftSidebarTests.swift",
+      "passed": true,
+      "duration": 3.14,
+      "issues": [],
+      "log": "XomoLeftSidebarTests.buttonComponentRoundTripRetainsGroupAndEditableChildren.log"
+    },
+    {
+      "suite": "XomoLeftSidebarTests",
+      "method": "buttonVariantsCreateEditableGroupedLayers",
+      "identifier": "veilpicTests/XomoLeftSidebarTests/buttonVariantsCreateEditableGroupedLayers",
+      "file": "XomoLeftSidebarTests.swift",
+      "passed": true,
+      "duration": 3.166,
+      "issues": [],
+      "log": "XomoLeftSidebarTests.buttonVariantsCreateEditableGroupedLayers.log"
+    },
+    {
+      "suite": "XomoLeftSidebarTests",
+      "method": "cardComponentRoundTripRetainsGroupAndEditableChildren",
+      "identifier": "veilpicTests/XomoLeftSidebarTests/cardComponentRoundTripRetainsGroupAndEditableChildren",
+      "file": "XomoLeftSidebarTests.swift",
+      "passed": true,
+      "duration": 2.895,
+      "issues": [],
+      "log": "XomoLeftSidebarTests.cardComponentRoundTripRetainsGroupAndEditableChildren.log"
+    },
+    {
+      "suite": "XomoLeftSidebarTests",
+      "method": "componentDragPreviewUsesTheExactCanvasDisplaySize",
+      "identifier": "veilpicTests/XomoLeftSidebarTests/componentDragPreviewUsesTheExactCanvasDisplaySize",
+      "file": "XomoLeftSidebarTests.swift",
+      "passed": true,
+      "duration": 3.438,
+      "issues": [],
+      "log": "XomoLeftSidebarTests.componentDragPreviewUsesTheExactCanvasDisplaySize.log"
+    },
+    {
+      "suite": "XomoLeftSidebarTests",
+      "method": "componentDropCentersThePreviewAtThePointerAndClampsToCanvasEdges",
+      "identifier": "veilpicTests/XomoLeftSidebarTests/componentDropCentersThePreviewAtThePointerAndClampsToCanvasEdges",
+      "file": "XomoLeftSidebarTests.swift",
+      "passed": true,
+      "duration": 3.069,
+      "issues": [],
+      "log": "XomoLeftSidebarTests.componentDropCentersThePreviewAtThePointerAndClampsToCanvasEdges.log"
+    },
+    {
+      "suite": "XomoLeftSidebarTests",
+      "method": "componentLibraryCopiesCurrentThemeTokensToClipboard",
+      "identifier": "veilpicTests/XomoLeftSidebarTests/componentLibraryCopiesCurrentThemeTokensToClipboard",
+      "file": "XomoLeftSidebarTests.swift",
+      "passed": true,
+      "duration": 3.472,
+      "issues": [],
+      "log": "XomoLeftSidebarTests.componentLibraryCopiesCurrentThemeTokensToClipboard.log"
+    },
+    {
+      "suite": "XomoLeftSidebarTests",
+      "method": "componentLibraryExportsCurrentThemeTokensToAFile",
+      "identifier": "veilpicTests/XomoLeftSidebarTests/componentLibraryExportsCurrentThemeTokensToAFile",
+      "file": "XomoLeftSidebarTests.swift",
+      "passed": true,
+      "duration": 2.93,
+      "issues": [],
+      "log": "XomoLeftSidebarTests.componentLibraryExportsCurrentThemeTokensToAFile.log"
+    },
+    {
+      "suite": "XomoLeftSidebarTests",
+      "method": "componentLibraryExposesEditableStarterComponents",
+      "identifier": "veilpicTests/XomoLeftSidebarTests/componentLibraryExposesEditableStarterComponents",
+      "file": "XomoLeftSidebarTests.swift",
+      "passed": true,
+      "duration": 3.352,
+      "issues": [],
+      "log": "XomoLeftSidebarTests.componentLibraryExposesEditableStarterComponents.log"
+    },
+    {
+      "suite": "XomoLeftSidebarTests",
+      "method": "componentLibraryExposesKeyboardNeutralTokenCopyAction",
+      "identifier": "veilpicTests/XomoLeftSidebarTests/componentLibraryExposesKeyboardNeutralTokenCopyAction",
+      "file": "XomoLeftSidebarTests.swift",
+      "passed": true,
+      "duration": 3.006,
+      "issues": [],
+      "log": "XomoLeftSidebarTests.componentLibraryExposesKeyboardNeutralTokenCopyAction.log"
+    },
+    {
+      "suite": "XomoLeftSidebarTests",
+      "method": "componentMasterSyncsLinkedInstancesAndKeepsDetachedInstanceIndependent",
+      "identifier": "veilpicTests/XomoLeftSidebarTests/componentMasterSyncsLinkedInstancesAndKeepsDetachedInstanceIndependent",
+      "file": "XomoLeftSidebarTests.swift",
+      "passed": true,
+      "duration": 3.441,
+      "issues": [],
+      "log": "XomoLeftSidebarTests.componentMasterSyncsLinkedInstancesAndKeepsDetachedInstanceIndependent.log"
+    },
+    {
+      "suite": "XomoLeftSidebarTests",
+      "method": "componentSidebarWiresMoveSemanticsIntoCanvasCursorAndGestures",
+      "identifier": "veilpicTests/XomoLeftSidebarTests/componentSidebarWiresMoveSemanticsIntoCanvasCursorAndGestures",
+      "file": "XomoLeftSidebarTests.swift",
+      "passed": true,
+      "duration": 3.288,
+      "issues": [],
+      "log": "XomoLeftSidebarTests.componentSidebarWiresMoveSemanticsIntoCanvasCursorAndGestures.log"
+    },
+    {
+      "suite": "XomoLeftSidebarTests",
+      "method": "componentThemesExposeOriginalAndAttributedReferenceTokenSets",
+      "identifier": "veilpicTests/XomoLeftSidebarTests/componentThemesExposeOriginalAndAttributedReferenceTokenSets",
+      "file": "XomoLeftSidebarTests.swift",
+      "passed": true,
+      "duration": 3.302,
+      "issues": [],
+      "log": "XomoLeftSidebarTests.componentThemesExposeOriginalAndAttributedReferenceTokenSets.log"
+    },
+    {
+      "suite": "XomoLeftSidebarTests",
+      "method": "contentComponentsCreateEditableGroupedLayers",
+      "identifier": "veilpicTests/XomoLeftSidebarTests/contentComponentsCreateEditableGroupedLayers",
+      "file": "XomoLeftSidebarTests.swift",
+      "passed": true,
+      "duration": 3.2,
+      "issues": [],
+      "log": "XomoLeftSidebarTests.contentComponentsCreateEditableGroupedLayers.log"
+    },
+    {
+      "suite": "XomoLeftSidebarTests",
+      "method": "eachThemeCanInsertAnEditablePageSample",
+      "identifier": "veilpicTests/XomoLeftSidebarTests/eachThemeCanInsertAnEditablePageSample",
+      "file": "XomoLeftSidebarTests.swift",
+      "passed": true,
+      "duration": 3.345,
+      "issues": [],
+      "log": "XomoLeftSidebarTests.eachThemeCanInsertAnEditablePageSample.log"
+    },
+    {
+      "suite": "XomoLeftSidebarTests",
+      "method": "everyThemeExportsStableDesignTokenJSON",
+      "identifier": "veilpicTests/XomoLeftSidebarTests/everyThemeExportsStableDesignTokenJSON",
+      "file": "XomoLeftSidebarTests.swift",
+      "passed": true,
+      "duration": 3.164,
+      "issues": [],
+      "log": "XomoLeftSidebarTests.everyThemeExportsStableDesignTokenJSON.log"
+    },
+    {
+      "suite": "XomoLeftSidebarTests",
+      "method": "formInputVariantsCreateEditableGroupedLayers",
+      "identifier": "veilpicTests/XomoLeftSidebarTests/formInputVariantsCreateEditableGroupedLayers",
+      "file": "XomoLeftSidebarTests.swift",
+      "passed": true,
+      "duration": 3.381,
+      "issues": [],
+      "log": "XomoLeftSidebarTests.formInputVariantsCreateEditableGroupedLayers.log"
+    },
+    {
+      "suite": "XomoLeftSidebarTests",
+      "method": "iconComponentRoundTripRetainsEditablePathLayer",
+      "identifier": "veilpicTests/XomoLeftSidebarTests/iconComponentRoundTripRetainsEditablePathLayer",
+      "file": "XomoLeftSidebarTests.swift",
+      "passed": true,
+      "duration": 3.108,
+      "issues": [],
+      "log": "XomoLeftSidebarTests.iconComponentRoundTripRetainsEditablePathLayer.log"
+    },
+    {
+      "suite": "XomoLeftSidebarTests",
+      "method": "imageComponentRoundTripRetainsEditablePixelLayer",
+      "identifier": "veilpicTests/XomoLeftSidebarTests/imageComponentRoundTripRetainsEditablePixelLayer",
+      "file": "XomoLeftSidebarTests.swift",
+      "passed": true,
+      "duration": 3.136,
+      "issues": [],
+      "log": "XomoLeftSidebarTests.imageComponentRoundTripRetainsEditablePixelLayer.log"
+    },
+    {
+      "suite": "XomoLeftSidebarTests",
+      "method": "importingLocalTokensStylesNewComponentsAndRoundTripsMetadata",
+      "identifier": "veilpicTests/XomoLeftSidebarTests/importingLocalTokensStylesNewComponentsAndRoundTripsMetadata",
+      "file": "XomoLeftSidebarTests.swift",
+      "passed": true,
+      "duration": 3.011,
+      "issues": [],
+      "log": "XomoLeftSidebarTests.importingLocalTokensStylesNewComponentsAndRoundTripsMetadata.log"
+    },
+    {
+      "suite": "XomoLeftSidebarTests",
+      "method": "inputComponentRoundTripRetainsGroupAndEditableChildren",
+      "identifier": "veilpicTests/XomoLeftSidebarTests/inputComponentRoundTripRetainsGroupAndEditableChildren",
+      "file": "XomoLeftSidebarTests.swift",
+      "passed": true,
+      "duration": 3.145,
+      "issues": [],
+      "log": "XomoLeftSidebarTests.inputComponentRoundTripRetainsGroupAndEditableChildren.log"
+    },
+    {
+      "suite": "XomoLeftSidebarTests",
+      "method": "inputsAndCardsUseSelectedComponentThemeTokens",
+      "identifier": "veilpicTests/XomoLeftSidebarTests/inputsAndCardsUseSelectedComponentThemeTokens",
+      "file": "XomoLeftSidebarTests.swift",
+      "passed": true,
+      "duration": 2.894,
+      "issues": [],
+      "log": "XomoLeftSidebarTests.inputsAndCardsUseSelectedComponentThemeTokens.log"
+    },
+    {
+      "suite": "XomoLeftSidebarTests",
+      "method": "insertingAvatarCreatesEditableShapeAndInitialsLayers",
+      "identifier": "veilpicTests/XomoLeftSidebarTests/insertingAvatarCreatesEditableShapeAndInitialsLayers",
+      "file": "XomoLeftSidebarTests.swift",
+      "passed": true,
+      "duration": 3.139,
+      "issues": [],
+      "log": "XomoLeftSidebarTests.insertingAvatarCreatesEditableShapeAndInitialsLayers.log"
+    },
+    {
+      "suite": "XomoLeftSidebarTests",
+      "method": "insertingButtonCreatesEditableGroupedLayers",
+      "identifier": "veilpicTests/XomoLeftSidebarTests/insertingButtonCreatesEditableGroupedLayers",
+      "file": "XomoLeftSidebarTests.swift",
+      "passed": true,
+      "duration": 3.129,
+      "issues": [],
+      "log": "XomoLeftSidebarTests.insertingButtonCreatesEditableGroupedLayers.log"
+    },
+    {
+      "suite": "XomoLeftSidebarTests",
+      "method": "insertingCardCreatesEditableGroupedLayers",
+      "identifier": "veilpicTests/XomoLeftSidebarTests/insertingCardCreatesEditableGroupedLayers",
+      "file": "XomoLeftSidebarTests.swift",
+      "passed": true,
+      "duration": 3.357,
+      "issues": [],
+      "log": "XomoLeftSidebarTests.insertingCardCreatesEditableGroupedLayers.log"
+    },
+    {
+      "suite": "XomoLeftSidebarTests",
+      "method": "insertingIconCreatesEditableStarPathLayer",
+      "identifier": "veilpicTests/XomoLeftSidebarTests/insertingIconCreatesEditableStarPathLayer",
+      "file": "XomoLeftSidebarTests.swift",
+      "passed": true,
+      "duration": 2.975,
+      "issues": [],
+      "log": "XomoLeftSidebarTests.insertingIconCreatesEditableStarPathLayer.log"
+    },
+    {
+      "suite": "XomoLeftSidebarTests",
+      "method": "insertingImageCreatesEditablePixelLayerInGroup",
+      "identifier": "veilpicTests/XomoLeftSidebarTests/insertingImageCreatesEditablePixelLayerInGroup",
+      "file": "XomoLeftSidebarTests.swift",
+      "passed": true,
+      "duration": 3.098,
+      "issues": [],
+      "log": "XomoLeftSidebarTests.insertingImageCreatesEditablePixelLayerInGroup.log"
+    },
+    {
+      "suite": "XomoLeftSidebarTests",
+      "method": "insertingInputCreatesEditableGroupedLayers",
+      "identifier": "veilpicTests/XomoLeftSidebarTests/insertingInputCreatesEditableGroupedLayers",
+      "file": "XomoLeftSidebarTests.swift",
+      "passed": true,
+      "duration": 3.069,
+      "issues": [],
+      "log": "XomoLeftSidebarTests.insertingInputCreatesEditableGroupedLayers.log"
+    },
+    {
+      "suite": "XomoLeftSidebarTests",
+      "method": "localTokenImportAndClearParticipateInUndoRedo",
+      "identifier": "veilpicTests/XomoLeftSidebarTests/localTokenImportAndClearParticipateInUndoRedo",
+      "file": "XomoLeftSidebarTests.swift",
+      "passed": true,
+      "duration": 3.077,
+      "issues": [],
+      "log": "XomoLeftSidebarTests.localTokenImportAndClearParticipateInUndoRedo.log"
+    },
+    {
+      "suite": "XomoLeftSidebarTests",
+      "method": "localTokenSnapshotValidatesColorsMetricsAndSchema",
+      "identifier": "veilpicTests/XomoLeftSidebarTests/localTokenSnapshotValidatesColorsMetricsAndSchema",
+      "file": "XomoLeftSidebarTests.swift",
+      "passed": true,
+      "duration": 2.945,
+      "issues": [],
+      "log": "XomoLeftSidebarTests.localTokenSnapshotValidatesColorsMetricsAndSchema.log"
+    },
+    {
+      "suite": "XomoLeftSidebarTests",
+      "method": "mobileLoginCompositionRoundTripsSixEditableComponents",
+      "identifier": "veilpicTests/XomoLeftSidebarTests/mobileLoginCompositionRoundTripsSixEditableComponents",
+      "file": "XomoLeftSidebarTests.swift",
+      "passed": true,
+      "duration": 3.034,
+      "issues": [],
+      "log": "XomoLeftSidebarTests.mobileLoginCompositionRoundTripsSixEditableComponents.log"
+    },
+    {
+      "suite": "XomoLeftSidebarTests",
+      "method": "navigationComponentsCreateEditableGroupedLayers",
+      "identifier": "veilpicTests/XomoLeftSidebarTests/navigationComponentsCreateEditableGroupedLayers",
+      "file": "XomoLeftSidebarTests.swift",
+      "passed": true,
+      "duration": 3.1,
+      "issues": [],
+      "log": "XomoLeftSidebarTests.navigationComponentsCreateEditableGroupedLayers.log"
+    },
+    {
+      "suite": "XomoLeftSidebarTests",
+      "method": "primaryButtonUsesSelectedComponentThemeTokens",
+      "identifier": "veilpicTests/XomoLeftSidebarTests/primaryButtonUsesSelectedComponentThemeTokens",
+      "file": "XomoLeftSidebarTests.swift",
+      "passed": true,
+      "duration": 2.888,
+      "issues": [],
+      "log": "XomoLeftSidebarTests.primaryButtonUsesSelectedComponentThemeTokens.log"
+    },
+    {
+      "suite": "XomoLeftSidebarTests",
+      "method": "projectRoundTripRetainsActiveThemeAndLocalTokenMapping",
+      "identifier": "veilpicTests/XomoLeftSidebarTests/projectRoundTripRetainsActiveThemeAndLocalTokenMapping",
+      "file": "XomoLeftSidebarTests.swift",
+      "passed": true,
+      "duration": 2.893,
+      "issues": [],
+      "log": "XomoLeftSidebarTests.projectRoundTripRetainsActiveThemeAndLocalTokenMapping.log"
+    },
+    {
+      "suite": "XomoLeftSidebarTests",
+      "method": "selectionComponentsCreateEditableGroupedLayers",
+      "identifier": "veilpicTests/XomoLeftSidebarTests/selectionComponentsCreateEditableGroupedLayers",
+      "file": "XomoLeftSidebarTests.swift",
+      "passed": true,
+      "duration": 3.194,
+      "issues": [],
+      "log": "XomoLeftSidebarTests.selectionComponentsCreateEditableGroupedLayers.log"
+    },
+    {
+      "suite": "XomoLeftSidebarTests",
+      "method": "sidebarHasToolsAndComponentsTabs",
+      "identifier": "veilpicTests/XomoLeftSidebarTests/sidebarHasToolsAndComponentsTabs",
+      "file": "XomoLeftSidebarTests.swift",
+      "passed": true,
+      "duration": 3.15,
+      "issues": [],
+      "log": "XomoLeftSidebarTests.sidebarHasToolsAndComponentsTabs.log"
+    },
+    {
+      "suite": "XomoLeftSidebarTests",
+      "method": "switchingSidebarDoesNotChangeSelectedTool",
+      "identifier": "veilpicTests/XomoLeftSidebarTests/switchingSidebarDoesNotChangeSelectedTool",
+      "file": "XomoLeftSidebarTests.swift",
+      "passed": true,
+      "duration": 3.266,
+      "issues": [],
+      "log": "XomoLeftSidebarTests.switchingSidebarDoesNotChangeSelectedTool.log"
+    },
+    {
+      "suite": "XomoLeftSidebarTests",
+      "method": "webSettingsCompositionRoundTripsSixEditableComponents",
+      "identifier": "veilpicTests/XomoLeftSidebarTests/webSettingsCompositionRoundTripsSixEditableComponents",
+      "file": "XomoLeftSidebarTests.swift",
+      "passed": true,
+      "duration": 3.176,
+      "issues": [],
+      "log": "XomoLeftSidebarTests.webSettingsCompositionRoundTripsSixEditableComponents.log"
+    }
+  ]
+}

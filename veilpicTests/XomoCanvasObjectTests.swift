@@ -97,6 +97,21 @@ struct XomoCanvasObjectTests {
         #expect(viewModel.selectedXomoObjectFrame == CGRect(x: 420, y: 260, width: 96, height: 96))
     }
 
+    @Test func componentsTabSwitchesToAnotherObjectBeforeDragging() throws {
+        let viewModel = makeViewModel()
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))
+        let firstObjectID = try #require(viewModel.document.selectedLayerID)
+        viewModel.insertXomoComponent(.avatar, at: CGPoint(x: 420, y: 260))
+        let secondObjectID = try #require(viewModel.document.selectedLayerID)
+        viewModel.selectLayer(firstObjectID)
+        viewModel.selectLeftSidebarTab(.components)
+
+        #expect(viewModel.selectXomoObject(at: CGPoint(x: 468, y: 308)))
+        #expect(viewModel.document.selectedLayerID == secondObjectID)
+        #expect(viewModel.selectedXomoObjectKind == .avatar)
+        #expect(viewModel.canvasInteractionTool == .move)
+    }
+
     @Test func selectingComponentGroupUsesFastSelectionPath() throws {
         let viewModel = makeViewModel()
         viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))

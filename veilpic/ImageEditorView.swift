@@ -3585,9 +3585,15 @@ struct ImageEditorView: View {
                 xomoObjectSelectionOutline(
                     kind: componentKind,
                     rect: rect,
-                    isMoving: viewModel.movingObjectPreviewFrame != nil,
-                    canvasSize: size
+                    isMoving: viewModel.movingObjectPreviewFrame != nil
                 )
+                if canvasInteractionTool == .move,
+                   let selectedObjectFrame = viewModel.selectedXomoObjectFrame {
+                    selectedXomoObjectMoveTarget(
+                        rect: viewRect(from: selectedObjectFrame, in: size),
+                        canvasSize: size
+                    )
+                }
             } else {
                 Rectangle()
                     .stroke(
@@ -3972,8 +3978,7 @@ struct ImageEditorView: View {
     private func xomoObjectSelectionOutline(
         kind: XomoComponentKind,
         rect: CGRect,
-        isMoving: Bool,
-        canvasSize: CGSize
+        isMoving: Bool
     ) -> some View {
         let shape: AnyShape
         switch kind {
@@ -3996,12 +4001,23 @@ struct ImageEditorView: View {
             .shadow(color: accent.opacity(isMoving ? 0.10 : 0.24), radius: isMoving ? 2 : 5)
             .frame(width: max(1, rect.width), height: max(1, rect.height))
             .position(x: rect.midX, y: rect.midY)
-            // A selected component needs a real hit target above the rendered
-            // pixels. The canvas also hosts a drop destination, which can
-            // otherwise swallow the first zero-distance drag on macOS 13/14.
+            .allowsHitTesting(false)
+    }
+
+    private func selectedXomoObjectMoveTarget(
+        rect: CGRect,
+        canvasSize: CGSize
+    ) -> some View {
+        Rectangle()
+            .fill(Color.clear)
+            .frame(width: max(1, rect.width), height: max(1, rect.height))
+            .position(x: rect.midX, y: rect.midY)
+            // Keep the hit target on the committed frame while the dashed
+            // preview moves. Otherwise the target itself moves under the
+            // pointer and can cancel the drag on the first update.
             .contentShape(Rectangle())
             .gesture(selectedXomoObjectMoveGesture(in: canvasSize))
-            .allowsHitTesting(canvasInteractionTool == .move)
+            .accessibilityHidden(true)
     }
 
     private func selectedXomoObjectMoveGesture(in size: CGSize) -> some Gesture {

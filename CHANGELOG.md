@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc135 - 2026-07-16
+
+### Fixed
+- 将组件拖动命中区域固定在已提交对象边界，拖动预览不再把命中目标一起移动；组件库模式下点击其他组件会切换选中对象。
+
+### Verification
+- `XomoCanvasObjectTests` 19/19、`XomoLeftSidebarTests` 42/42 通过。
+
 ## 2.12.0-rc134 - 2026-07-16
 
 ### Fixed
