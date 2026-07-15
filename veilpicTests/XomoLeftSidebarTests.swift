@@ -302,6 +302,7 @@ struct XomoLeftSidebarTests {
             "ImageEditorCanvasCursor.tool("
         ))
         #expect(source.contains(".simultaneousGesture(canvasGesture(in: geometry.size))"))
+        #expect(source.contains("else if tab == .components"))
         #expect(source.components(separatedBy: "switch canvasInteractionTool").count - 1 >= 3)
     }
 

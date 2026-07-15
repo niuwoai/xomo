@@ -1227,8 +1227,14 @@ struct ImageEditorView: View {
                         pendingCropRect = nil
                         cancelCanvasTextEditing()
                     }
-                    guard isPointerInsideCanvas, let hoverViewPoint else { return }
-                    updateCanvasCursor(at: hoverViewPoint, in: geometry.size)
+                    if isPointerInsideCanvas, let hoverViewPoint {
+                        updateCanvasCursor(at: hoverViewPoint, in: geometry.size)
+                    } else if tab == .components {
+                        // macOS 13's hover callback has no location. Still reset
+                        // the stale tool cursor immediately when entering the
+                        // component library; the next hover restores tracking.
+                        NSCursor.arrow.set()
+                    }
                 }
                 .onChange(of: viewModel.brushSize) { _ in
                     guard isPointerInsideCanvas, let hoverViewPoint else { return }
