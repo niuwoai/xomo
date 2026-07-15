@@ -759,6 +759,8 @@
 "imageEditor.help.shapeGradientHandle.end" = "Drag the gradient end; hold Shift to snap the angle";
 "imageEditor.help.shapeGradientStopHandle" = "Drag the middle stop along the gradient axis";
 "imageEditor.help.shapeGradientAxis" = "Double-click the gradient axis to add a stop at that position";
+"imageEditor.help.shapeRadialGradientHandle.center" = "Drag the radial gradient center";
+"imageEditor.help.shapeRadialGradientHandle.radius" = "Drag the radial gradient radius";
 "imageEditor.status.stackLayoutApplied" = "Auto Layout reflowed";
 "imageEditor.status.stackChildLayoutApplied" = "Auto Layout child reflowed";
 "imageEditor.status.stackLayoutLocked" = "A locked group or child cannot be reflowed";
