@@ -599,7 +599,7 @@ final class XomoAutomationRegistry {
         viewModel: ImageEditorViewModel
     ) throws -> XomoJSONValue {
         let action = arguments["action"]?.stringValue ?? "get"
-        guard action == "get" || action == "export" || action == "import" || action == "apply" else {
+        guard action == "get" || action == "export" || action == "import" || action == "apply" || action == "clear" else {
             throw XomoAutomationCallError.invalidArgument("Unknown component token action")
         }
         if action == "import" {
@@ -628,6 +628,20 @@ final class XomoAutomationRegistry {
             let data = try Data(viewModel.activeXomoComponentTokenSnapshot.encodedJSON().utf8)
             return .object([
                 "action": .string("apply"),
+                "theme": .string(viewModel.xomoComponentTheme.rawValue),
+                "snapshot": try decodeJSONValue(data)
+            ])
+        }
+        if action == "clear" {
+            guard viewModel.hasLocalXomoThemeTokens else {
+                throw XomoAutomationCallError.operationFailed(
+                    "No local component token mapping is active"
+                )
+            }
+            viewModel.clearImportedXomoThemeTokens()
+            let data = try Data(viewModel.activeXomoComponentTokenSnapshot.encodedJSON().utf8)
+            return .object([
+                "action": .string("clear"),
                 "theme": .string(viewModel.xomoComponentTheme.rawValue),
                 "snapshot": try decodeJSONValue(data)
             ])
@@ -2703,8 +2717,8 @@ private extension XomoAutomationRegistry {
             "action": XomoAutomationSchema.string(description: "Canvas action", values: ["rotateClockwise", "rotateCounterclockwise", "rotate180", "flipHorizontal", "flipVertical", "cropCenter", "trimTransparent", "revealAll"])
         ], required: ["action"]),
         tool("xomo.component.list", "List editable Xomo UI components and themes."),
-        tool("xomo.component.tokens", "Read, import, export, or apply local component design tokens as a .xomotokens.json file.", [
-            "action": XomoAutomationSchema.string(description: "Token action", values: ["get", "import", "export", "apply"]),
+        tool("xomo.component.tokens", "Read, import, export, apply, or clear local component design tokens as a .xomotokens.json file.", [
+            "action": XomoAutomationSchema.string(description: "Token action", values: ["get", "import", "export", "apply", "clear"]),
             "theme": XomoAutomationSchema.string(description: "Optional theme; defaults to the active component theme", values: XomoComponentTheme.allCases.map(\.rawValue)),
             "path": XomoAutomationSchema.string(description: "Destination file path for export")
         ]),

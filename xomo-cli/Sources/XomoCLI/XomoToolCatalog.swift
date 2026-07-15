@@ -88,7 +88,7 @@ enum XomoToolCatalog {
         ("xomo.canvas.crop_to_selection", "Crop the document to the current selection."),
         ("xomo.canvas.transform", "Rotate, flip, crop, trim, or reveal the complete canvas."),
         ("xomo.component.list", "List editable Xomo UI components and themes."),
-        ("xomo.component.tokens", "Read, import, export, or apply local component design tokens as a .xomotokens.json file."),
+        ("xomo.component.tokens", "Read, import, export, apply, or clear local component design tokens as a .xomotokens.json file."),
         ("xomo.component.insert", "Insert an editable UI component as native layers."),
         ("xomo.color.get", "Read foreground and background colors."),
         ("xomo.color.set", "Set foreground or background color."),

@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc139 - 2026-07-16
+
+### Added
+- `xomo.component.tokens` 新增 `action=clear`，清除当前本地 Token 映射并保留 Undo/Redo 恢复能力。
+
+### Verification
+- `XomoAutomationTests` 38/38、`XomoMCPServerTests` 2/2 通过。
+
 ## 2.12.0-rc138 - 2026-07-16
 
 ### Added

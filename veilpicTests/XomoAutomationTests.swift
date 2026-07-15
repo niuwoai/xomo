@@ -154,6 +154,41 @@ struct XomoAutomationTests {
         #expect(viewModel.document.history.last?.title == L10n.text("xomo.theme.history.apply"))
     }
 
+    @Test func registryClearsImportedComponentTokensAndKeepsUndoAvailable() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        var colors = XomoComponentTheme.native.tokenSnapshot.colors
+        colors["accent"] = "#801F4FFF"
+        let snapshot = XomoComponentThemeTokenSnapshot(
+            schemaVersion: 1,
+            theme: "local-brand",
+            librarySource: "local",
+            colors: colors,
+            metrics: XomoComponentTheme.native.tokenSnapshot.metrics
+        )
+        let path = FileManager.default.temporaryDirectory
+            .appendingPathComponent("xomo-automation-clear-(UUID().uuidString).xomotokens.json")
+        defer { try? FileManager.default.removeItem(at: path) }
+        try Data(snapshot.encodedJSON().utf8).write(to: path)
+
+        #expect(registry.execute(request(
+            operation: "call",
+            name: "xomo.component.tokens",
+            arguments: ["action": .string("import"), "path": .string(path.path)]
+        )).ok)
+        let cleared = registry.execute(request(
+            operation: "call",
+            name: "xomo.component.tokens",
+            arguments: ["action": .string("clear")]
+        ))
+        #expect(cleared.ok)
+        #expect(viewModel.hasLocalXomoThemeTokens == false)
+        #expect(viewModel.document.history.last?.title == L10n.text("xomo.theme.history.tokensCleared"))
+        viewModel.undo()
+        #expect(viewModel.hasLocalXomoThemeTokens)
+    }
+
     @Test func registryCanInspectAndMutateTheActiveDocument() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared
