@@ -1,5 +1,22 @@
 # Changelog
 
+## 2.12.0-rc72 - 2026-07-15
+
+### Added
+- 可编辑矩形、椭圆和闭合路径新增原生两色线性渐变填充；属性面板可在纯色与线性渐变间切换，并编辑起始色、结束色、角度和公共填充不透明度。
+- MCP `xomo.shape.create/get/update` 新增 `fillKind` 与结构化 `fillGradient`，支持创建、检查、部分更新和安全切回纯色；CLI 离线工具目录同步说明该能力。
+- Figma 节点导入可将居中、两端色标、同透明度的 `GRADIENT_LINEAR` 映射为 Xomo 原生可编辑渐变形状。
+
+### Changed
+- 形状渐变进入项目保存/重开、Undo/Redo、圆角裁切、独立描边和多选外观更新链；旧项目缺少渐变字段时继续按纯色读取。
+- Figma 多色、偏心控制轴、透明度不同、范围超限或非线性渐变继续在逐节点报告中标记 `unsupportedPaint`，不伪装成无损导入。
+- App、CLI、教程、Figma/MCP 文档、路线图与全部 Xcode target 版本同步为 `2.12.0-rc72`。
+
+### Tests
+- 新增渐变像素方向、公共透明度、圆角裁切、独立描边、项目往返、Undo/Redo、纯色切换、非焦点控件、MCP 参数及 Figma 精确/降级映射测试。
+- 形状渐变 6/6、Figma 节点导入 17/17、MCP 自动化 33/33、三语资源 4/4、SwiftPM CLI 2/2 通过；隔离 `build-for-testing` 成功。完整 Release 与全量冒烟仍按 20 版门槛在 rc80 执行。
+- Debug App 版本为 `2.12.0-rc72`，Bundle ID 为 `im.some.xomo`，最低系统为 macOS 13.0，可执行文件为 arm64；App、CLI 与全部 Xcode target 版本一致。
+
 ## 2.12.0-rc71 - 2026-07-15
 
 ### Added

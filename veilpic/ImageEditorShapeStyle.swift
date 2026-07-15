@@ -8,10 +8,90 @@
 import AppKit
 import Foundation
 
+enum ImageEditorShapeFillKind: String, CaseIterable, Identifiable {
+    case solid
+    case linearGradient
+
+    var id: String { rawValue }
+
+    var title: String {
+        L10n.text("imageEditor.properties.shapeFillKind.\(rawValue)")
+    }
+}
+
+extension ImageEditorGradientFillContent {
+    static func shapeLinear(
+        startColor: NSColor,
+        endColor: NSColor,
+        angle: CGFloat = 0,
+        scale: CGFloat = 1
+    ) -> ImageEditorGradientFillContent {
+        let start = rgbComponents(startColor)
+        let end = rgbComponents(endColor)
+        return ImageEditorGradientFillContent(
+            preset: .custom,
+            style: .linear,
+            angle: angle,
+            scale: scale,
+            startRed: start.red,
+            startGreen: start.green,
+            startBlue: start.blue,
+            endRed: end.red,
+            endGreen: end.green,
+            endBlue: end.blue
+        ).normalized()
+    }
+
+    var shapeStartColor: NSColor {
+        let colors = colors()
+        return NSColor(
+            deviceRed: colors.start.x,
+            green: colors.start.y,
+            blue: colors.start.z,
+            alpha: 1
+        )
+    }
+
+    var shapeEndColor: NSColor {
+        let colors = colors()
+        return NSColor(
+            deviceRed: colors.end.x,
+            green: colors.end.y,
+            blue: colors.end.z,
+            alpha: 1
+        )
+    }
+
+    private static func rgbComponents(_ color: NSColor) -> (red: Double, green: Double, blue: Double) {
+        let resolved = color.usingColorSpace(.deviceRGB) ?? color
+        return (
+            Double(resolved.redComponent),
+            Double(resolved.greenComponent),
+            Double(resolved.blueComponent)
+        )
+    }
+}
+
 @MainActor
 extension ImageEditorViewModel {
+    var selectedShapeFillKind: ImageEditorShapeFillKind {
+        document.selectedLayer?.shapeContent?.fillGradient == nil ? .solid : .linearGradient
+    }
+
     var selectedShapeFillColor: NSColor {
         document.selectedLayer?.shapeContent?.fillColor ?? .clear
+    }
+
+    var selectedShapeGradientStartColor: NSColor {
+        selectedShapeGradient.shapeStartColor
+    }
+
+    var selectedShapeGradientEndColor: NSColor {
+        selectedShapeGradient.shapeEndColor
+    }
+
+    var selectedShapeGradientAngle: Double {
+        Double(selectedShapeGradient.angle)
     }
 
     var selectedShapeFillOpacity: Double {
@@ -34,6 +114,46 @@ extension ImageEditorViewModel {
         updateSelectedShapeProperties(fillColor: color)
     }
 
+    func setSelectedShapeFillKind(_ kind: ImageEditorShapeFillKind) {
+        switch kind {
+        case .solid:
+            updateSelectedShapeProperties(clearsFillGradient: true)
+        case .linearGradient:
+            updateSelectedShapeProperties(fillGradient: selectedShapeGradient)
+        }
+    }
+
+    func setSelectedShapeGradientStartColor(_ color: NSColor) {
+        var gradient = selectedShapeGradient
+        let end = gradient.shapeEndColor
+        gradient = .shapeLinear(
+            startColor: color,
+            endColor: end,
+            angle: gradient.angle,
+            scale: gradient.scale
+        )
+        updateSelectedShapeProperties(fillGradient: gradient)
+    }
+
+    func setSelectedShapeGradientEndColor(_ color: NSColor) {
+        var gradient = selectedShapeGradient
+        let start = gradient.shapeStartColor
+        gradient = .shapeLinear(
+            startColor: start,
+            endColor: color,
+            angle: gradient.angle,
+            scale: gradient.scale
+        )
+        updateSelectedShapeProperties(fillGradient: gradient)
+    }
+
+    func setSelectedShapeGradientAngle(_ angle: Double) {
+        guard angle.isFinite else { return }
+        var gradient = selectedShapeGradient
+        gradient.angle = CGFloat(max(-180, min(180, angle)))
+        updateSelectedShapeProperties(fillGradient: gradient)
+    }
+
     func setSelectedShapeFillOpacity(_ opacity: Double) {
         updateSelectedShapeProperties(fillOpacity: opacity)
     }
@@ -52,6 +172,8 @@ extension ImageEditorViewModel {
 
     func updateSelectedShapeProperties(
         fillColor: NSColor? = nil,
+        fillGradient: ImageEditorGradientFillContent? = nil,
+        clearsFillGradient: Bool = false,
         fillOpacity: Double? = nil,
         strokeColor: NSColor? = nil,
         strokeOpacity: Double? = nil,
@@ -80,6 +202,12 @@ extension ImageEditorViewModel {
             guard var content = document.layers[index].shapeContent else { continue }
             let previous = content
             if let fillColor { content.fillColor = fillColor }
+            if clearsFillGradient {
+                content.fillGradient = nil
+            } else if var fillGradient {
+                fillGradient.style = .linear
+                content.fillGradient = fillGradient.normalized()
+            }
             if let fillOpacity, fillOpacity.isFinite {
                 content.fillOpacity = CGFloat(max(0, min(1, fillOpacity)))
             }
@@ -123,6 +251,7 @@ extension ImageEditorViewModel {
         _ rhs: ImageEditorShapeContent
     ) -> Bool {
         lhs.fillColor.isEqual(rhs.fillColor)
+            && lhs.fillGradient == rhs.fillGradient
             && abs(lhs.fillOpacity - rhs.fillOpacity) <= 0.000_1
             && lhs.strokeColor.isEqual(rhs.strokeColor)
             && abs(lhs.strokeOpacity - rhs.strokeOpacity) <= 0.000_1
@@ -130,5 +259,15 @@ extension ImageEditorViewModel {
             && abs(lhs.cornerRadius - rhs.cornerRadius) <= 0.000_1
             && lhs.cornerRadii == rhs.cornerRadii
             && abs(lhs.cornerSmoothing - rhs.cornerSmoothing) <= 0.000_1
+    }
+
+    private var selectedShapeGradient: ImageEditorGradientFillContent {
+        if let gradient = document.selectedLayer?.shapeContent?.fillGradient {
+            return gradient.normalized()
+        }
+        return .shapeLinear(
+            startColor: selectedShapeFillColor,
+            endColor: backgroundColor
+        )
     }
 }

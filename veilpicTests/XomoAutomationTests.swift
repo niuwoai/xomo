@@ -291,6 +291,116 @@ struct XomoAutomationTests {
         #expect(viewModel.document.selectedLayer?.shapeContent?.cornerRadii?.bottomLeft == 16)
     }
 
+    @Test func registryCreatesInspectsUpdatesAndClearsShapeLinearGradient() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let created = registry.execute(request(
+            operation: "call",
+            name: "xomo.shape.create",
+            arguments: [
+                "kind": .string("rectangle"),
+                "x": .number(10),
+                "y": .number(12),
+                "width": .number(90),
+                "height": .number(50),
+                "fillKind": .string("linearGradient"),
+                "fillGradient": .object([
+                    "startColor": .object([
+                        "red": .number(1), "green": .number(0), "blue": .number(0)
+                    ]),
+                    "endColor": .object([
+                        "red": .number(0), "green": .number(0), "blue": .number(1)
+                    ]),
+                    "angle": .number(30),
+                    "scale": .number(1.5)
+                ]),
+                "fillOpacity": .number(0.7)
+            ]
+        ))
+        #expect(created.ok)
+        let shape = try #require(viewModel.document.selectedLayer?.shapeContent)
+        #expect(shape.fillGradient?.angle == 30)
+        #expect(shape.fillGradient?.scale == 1.5)
+        #expect(shape.fillOpacity == 0.7)
+
+        let inspected = registry.execute(request(operation: "call", name: "xomo.shape.get"))
+        guard case .object(let result) = inspected.result else {
+            Issue.record("Expected gradient shape result")
+            return
+        }
+        #expect(result["fillKind"] == .string("linearGradient"))
+        guard case .object(let gradientResult) = result["fillGradient"] else {
+            Issue.record("Expected editable gradient payload")
+            return
+        }
+        #expect(gradientResult["angle"] == .number(30))
+        #expect(gradientResult["scale"] == .number(1.5))
+
+        let previousStroke = shape.strokeColor
+        let updated = registry.execute(request(
+            operation: "call",
+            name: "xomo.shape.update",
+            arguments: ["fillKind": .string("solid")]
+        ))
+        #expect(updated.ok)
+        #expect(viewModel.document.selectedLayer?.shapeContent?.fillGradient == nil)
+        #expect(viewModel.document.selectedLayer?.shapeContent?.strokeColor.isEqual(previousStroke) == true)
+
+        let conflicting = registry.execute(request(
+            operation: "call",
+            name: "xomo.shape.update",
+            arguments: [
+                "fillKind": .string("solid"),
+                "fillGradient": .object([
+                    "startColor": .object([
+                        "red": .number(1), "green": .number(0), "blue": .number(0)
+                    ]),
+                    "endColor": .object([
+                        "red": .number(0), "green": .number(0), "blue": .number(1)
+                    ])
+                ])
+            ]
+        ))
+        #expect(!conflicting.ok)
+        #expect(viewModel.document.selectedLayer?.shapeContent?.fillGradient == nil)
+
+        let missingGradient = registry.execute(request(
+            operation: "call",
+            name: "xomo.shape.create",
+            arguments: [
+                "kind": .string("ellipse"),
+                "x": .number(120),
+                "y": .number(12),
+                "width": .number(40),
+                "height": .number(40),
+                "fillKind": .string("linearGradient")
+            ]
+        ))
+        #expect(!missingGradient.ok)
+
+        let perStopAlpha = registry.execute(request(
+            operation: "call",
+            name: "xomo.shape.update",
+            arguments: [
+                "fillGradient": .object([
+                    "startColor": .object([
+                        "red": .number(1),
+                        "green": .number(0),
+                        "blue": .number(0),
+                        "alpha": .number(0.5)
+                    ]),
+                    "endColor": .object([
+                        "red": .number(0), "green": .number(0), "blue": .number(1)
+                    ])
+                ])
+            ]
+        ))
+        #expect(!perStopAlpha.ok)
+        #expect(viewModel.document.selectedLayer?.shapeContent?.fillGradient == nil)
+    }
+
     @Test func registryCreatesAndListsLayerComps() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

@@ -302,6 +302,13 @@ final class XomoAutomationRegistry {
             let origin = try requiredPoint(arguments)
             let cornerRadii = try optionalCornerRadii(arguments)
             try validateExclusiveCornerArguments(arguments)
+            let fillGradient = try optionalShapeGradient(arguments)
+            try validateShapeFillArguments(arguments, fillGradient: fillGradient)
+            if arguments["fillKind"]?.stringValue == "linearGradient", fillGradient == nil {
+                throw XomoAutomationCallError.invalidArgument(
+                    "fillGradient is required when creating fillKind=linearGradient"
+                )
+            }
             let fillColor = try optionalColor("fillColor", in: arguments)
             let strokeColor = try optionalColor("strokeColor", in: arguments)
             let end = CGPoint(
@@ -316,6 +323,7 @@ final class XomoAutomationRegistry {
                 cornerRadii: cornerRadii,
                 cornerSmoothing: arguments["cornerSmoothing"]?.doubleValue,
                 fillColor: fillColor,
+                fillGradient: fillGradient,
                 fillOpacity: arguments["fillOpacity"]?.doubleValue,
                 strokeColor: strokeColor,
                 strokeOpacity: arguments["strokeOpacity"]?.doubleValue,
@@ -732,7 +740,9 @@ final class XomoAutomationRegistry {
             "active": .bool(true),
             "layerId": .string(layer.id.uuidString),
             "kind": .string(content.kind.rawValue),
+            "fillKind": .string(content.fillGradient == nil ? "solid" : "linearGradient"),
             "fillColor": colorJSON(content.fillColor),
+            "fillGradient": content.fillGradient.map(shapeGradientJSON) ?? .null,
             "fillOpacity": .number(content.fillOpacity),
             "strokeColor": colorJSON(content.strokeColor),
             "strokeOpacity": .number(content.strokeOpacity),
@@ -753,9 +763,24 @@ final class XomoAutomationRegistry {
         }
         try validateExclusiveCornerArguments(arguments)
         let cornerRadii = try optionalCornerRadii(arguments)
+        let fillGradient = try optionalShapeGradient(arguments)
+        try validateShapeFillArguments(arguments, fillGradient: fillGradient)
+        let fillKind = arguments["fillKind"]?.stringValue
+        let selectedContent = viewModel.document.selectedLayer?.shapeContent
+        let resolvedGradient: ImageEditorGradientFillContent?
+        if fillKind == "linearGradient", fillGradient == nil, let selectedContent {
+            resolvedGradient = selectedContent.fillGradient ?? .shapeLinear(
+                startColor: selectedContent.fillColor,
+                endColor: viewModel.backgroundColor
+            )
+        } else {
+            resolvedGradient = fillGradient
+        }
         let legacyOpacity = arguments["opacity"]?.doubleValue
         viewModel.updateSelectedShapeProperties(
             fillColor: try optionalColor("fillColor", in: arguments),
+            fillGradient: resolvedGradient,
+            clearsFillGradient: fillKind == "solid",
             fillOpacity: arguments["fillOpacity"]?.doubleValue ?? legacyOpacity,
             strokeColor: try optionalColor("strokeColor", in: arguments),
             strokeOpacity: arguments["strokeOpacity"]?.doubleValue ?? legacyOpacity,
@@ -764,6 +789,81 @@ final class XomoAutomationRegistry {
             cornerRadii: cornerRadii,
             cornerSmoothing: arguments["cornerSmoothing"]?.doubleValue
         )
+    }
+
+    private func optionalShapeGradient(
+        _ arguments: [String: XomoJSONValue]
+    ) throws -> ImageEditorGradientFillContent? {
+        guard let value = arguments["fillGradient"] else { return nil }
+        guard let object = value.objectValue else {
+            throw XomoAutomationCallError.invalidArgument("fillGradient must be an object")
+        }
+        let start = try requiredOpaqueColor("startColor", in: object)
+        let end = try requiredOpaqueColor("endColor", in: object)
+        let angle = object["angle"]?.doubleValue ?? 0
+        let scale = object["scale"]?.doubleValue ?? 1
+        guard angle.isFinite, (-180...180).contains(angle) else {
+            throw XomoAutomationCallError.invalidArgument("fillGradient.angle must be between -180 and 180")
+        }
+        guard scale.isFinite, (0.25...4).contains(scale) else {
+            throw XomoAutomationCallError.invalidArgument("fillGradient.scale must be between 0.25 and 4")
+        }
+        return .shapeLinear(
+            startColor: start,
+            endColor: end,
+            angle: CGFloat(angle),
+            scale: CGFloat(scale)
+        )
+    }
+
+    private func validateShapeFillArguments(
+        _ arguments: [String: XomoJSONValue],
+        fillGradient: ImageEditorGradientFillContent?
+    ) throws {
+        guard let fillKindValue = arguments["fillKind"] else { return }
+        guard let fillKind = fillKindValue.stringValue,
+              ["solid", "linearGradient"].contains(fillKind)
+        else {
+            throw XomoAutomationCallError.invalidArgument("fillKind must be solid or linearGradient")
+        }
+        if fillKind == "solid", fillGradient != nil {
+            throw XomoAutomationCallError.invalidArgument(
+                "fillGradient cannot be combined with fillKind=solid"
+            )
+        }
+    }
+
+    private func requiredColor(
+        _ key: String,
+        in arguments: [String: XomoJSONValue]
+    ) throws -> NSColor {
+        guard let color = try optionalColor(key, in: arguments) else {
+            throw XomoAutomationCallError.invalidArgument("Missing \(key)")
+        }
+        return color
+    }
+
+    private func requiredOpaqueColor(
+        _ key: String,
+        in arguments: [String: XomoJSONValue]
+    ) throws -> NSColor {
+        let color = try requiredColor(key, in: arguments)
+        guard abs(color.alphaComponent - 1) <= 0.000_1 else {
+            throw XomoAutomationCallError.invalidArgument(
+                "\(key).alpha must be 1; use fillOpacity for the shared gradient opacity"
+            )
+        }
+        return color
+    }
+
+    private func shapeGradientJSON(_ content: ImageEditorGradientFillContent) -> XomoJSONValue {
+        let normalized = content.normalized()
+        return .object([
+            "startColor": colorJSON(normalized.shapeStartColor),
+            "endColor": colorJSON(normalized.shapeEndColor),
+            "angle": .number(normalized.angle),
+            "scale": .number(normalized.scale)
+        ])
     }
 
     private func optionalColor(
@@ -2480,7 +2580,9 @@ private extension XomoAutomationRegistry {
             "y": XomoAutomationSchema.number(description: "Top coordinate"),
             "width": XomoAutomationSchema.number(description: "Width"),
             "height": XomoAutomationSchema.number(description: "Height"),
+            "fillKind": XomoAutomationSchema.string(description: "Shape fill type", values: ["solid", "linearGradient"]),
             "fillColor": shapeColorSchema,
+            "fillGradient": shapeGradientSchema,
             "fillOpacity": XomoAutomationSchema.number(description: "Independent fill opacity from 0 to 1"),
             "strokeColor": shapeColorSchema,
             "strokeOpacity": XomoAutomationSchema.number(description: "Independent stroke opacity from 0 to 1"),
@@ -2492,7 +2594,9 @@ private extension XomoAutomationRegistry {
         tool("xomo.shape.get", "Inspect the selected editable shape layer."),
         tool("xomo.shape.update", "Update only the specified fill, stroke, and rectangle corner properties of selected editable shapes.", [
             "opacity": XomoAutomationSchema.number(description: "Legacy shared fill and stroke opacity"),
+            "fillKind": XomoAutomationSchema.string(description: "Shape fill type", values: ["solid", "linearGradient"]),
             "fillColor": shapeColorSchema,
+            "fillGradient": shapeGradientSchema,
             "fillOpacity": XomoAutomationSchema.number(description: "Independent fill opacity from 0 to 1"),
             "strokeColor": shapeColorSchema,
             "strokeOpacity": XomoAutomationSchema.number(description: "Independent stroke opacity from 0 to 1"),
@@ -2671,6 +2775,15 @@ private extension XomoAutomationRegistry {
             "alpha": XomoAutomationSchema.number(description: "Optional alpha component from 0 to 1")
         ],
         required: ["red", "green", "blue"]
+    )
+    static let shapeGradientSchema = XomoAutomationSchema.object(
+        properties: [
+            "startColor": shapeColorSchema,
+            "endColor": shapeColorSchema,
+            "angle": XomoAutomationSchema.number(description: "Linear gradient angle from -180 to 180 degrees"),
+            "scale": XomoAutomationSchema.number(description: "Linear gradient span scale from 0.25 to 4")
+        ],
+        required: ["startColor", "endColor"]
     )
     static let sizeProperties = [
         "width": XomoAutomationSchema.number(description: "Width"),

@@ -2282,6 +2282,7 @@ struct ImageEditorShapeContent {
 
     var kind: ImageEditorShapeKind
     var fillColor: NSColor
+    var fillGradient: ImageEditorGradientFillContent? = nil
     var fillOpacity: CGFloat
     var strokeColor: NSColor
     var strokeWidth: CGFloat
@@ -2296,6 +2297,10 @@ struct ImageEditorShapeContent {
 
     func normalized(size: CGSize) -> ImageEditorShapeContent {
         var content = self
+        if var gradient = fillGradient?.normalized() {
+            gradient.style = .linear
+            content.fillGradient = gradient
+        }
         content.fillOpacity = max(0, min(1, fillOpacity))
         content.strokeOpacity = max(0, min(1, strokeOpacity))
         if kind == .path {
@@ -2367,8 +2372,22 @@ struct ImageEditorShapeContent {
                     }
                 }
                 if normalized.kind != .path || normalized.isPathClosed {
-                    normalized.fillColor.withAlphaComponent(normalized.fillOpacity).setFill()
-                    path.fill()
+                    if let gradient = normalized.fillGradient {
+                        NSGraphicsContext.saveGraphicsState()
+                        path.addClip()
+                        gradient.renderedImage(size: size).draw(
+                            in: rect,
+                            from: .zero,
+                            operation: .sourceOver,
+                            fraction: normalized.fillOpacity,
+                            respectFlipped: true,
+                            hints: nil
+                        )
+                        NSGraphicsContext.restoreGraphicsState()
+                    } else {
+                        normalized.fillColor.withAlphaComponent(normalized.fillOpacity).setFill()
+                        path.fill()
+                    }
                 }
                 path.lineJoinStyle = .round
                 path.lineCapStyle = .round
