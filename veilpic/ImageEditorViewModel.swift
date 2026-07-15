@@ -709,6 +709,33 @@ final class ImageEditorViewModel: ObservableObject {
         }
     }
 
+    func exportCurrentXomoThemeTokens(to url: URL) throws {
+        let json = try xomoComponentTheme.tokenSnapshot.encodedJSON()
+        try Data(json.utf8).write(to: url, options: .atomic)
+        statusText = L10n.format(
+            "xomo.theme.status.tokensExported",
+            url.lastPathComponent
+        )
+    }
+
+    func chooseXomoThemeTokenExportFile() {
+        let panel = NSSavePanel()
+        panel.allowedContentTypes = [UTType.xomoDesignTokens]
+        panel.canCreateDirectories = true
+        panel.nameFieldStringValue = "(xomoComponentTheme.rawValue).xomotokens.json"
+        panel.prompt = L10n.text("xomo.theme.exportTokens")
+        panel.begin { [weak self] response in
+            Task { @MainActor in
+                guard let self, response == .OK, let url = panel.url else { return }
+                do {
+                    try self.exportCurrentXomoThemeTokens(to: url)
+                } catch {
+                    self.statusText = L10n.text("xomo.theme.status.tokensExportFailed")
+                }
+            }
+        }
+    }
+
     var selectedLayerIsGroup: Bool {
         document.selectedLayer?.isGroup == true
     }

@@ -240,13 +240,23 @@ struct XomoComponentLibraryPanel: View {
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityIdentifier("xomo-component-theme-attribution")
 
-                Button(L10n.text("xomo.theme.copyTokens")) {
-                    viewModel.copyCurrentXomoThemeTokens()
+                HStack(spacing: 6) {
+                    Button(L10n.text("xomo.theme.copyTokens")) {
+                        viewModel.copyCurrentXomoThemeTokens()
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                    .focusable(false)
+                    .accessibilityIdentifier("xomo-component-theme-copy-tokens")
+
+                    Button(L10n.text("xomo.theme.exportTokens")) {
+                        viewModel.chooseXomoThemeTokenExportFile()
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                    .focusable(false)
+                    .accessibilityIdentifier("xomo-component-theme-export-tokens")
                 }
-                .buttonStyle(.bordered)
-                .controlSize(.small)
-                .focusable(false)
-                .accessibilityIdentifier("xomo-component-theme-copy-tokens")
 
                 HStack(spacing: 6) {
                     Button(L10n.text("xomo.theme.apply")) {

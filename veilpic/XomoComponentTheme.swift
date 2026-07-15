@@ -5,6 +5,14 @@
 
 import AppKit
 import Foundation
+import UniformTypeIdentifiers
+
+extension UTType {
+    static let xomoDesignTokens = UTType(
+        exportedAs: "im.some.xomo.design-tokens",
+        conformingTo: .json
+    )
+}
 
 enum XomoComponentTheme: String, CaseIterable, Codable, Identifiable {
     case native

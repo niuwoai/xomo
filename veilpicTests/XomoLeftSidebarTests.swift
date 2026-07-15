@@ -703,6 +703,25 @@ struct XomoLeftSidebarTests {
         #expect(viewModel.statusText.contains(L10n.text("xomo.theme.chakraUI")))
     }
 
+    @Test func componentLibraryExportsCurrentThemeTokensToAFile() throws {
+        let image = NSImage.transparent(size: CGSize(width: 640, height: 480))
+        let viewModel = ImageEditorViewModel(sourceName: "source", image: image) { _ in }
+        viewModel.xomoComponentTheme = .radixThemes
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("xomo-theme-(UUID().uuidString).xomotokens.json")
+        defer { try? FileManager.default.removeItem(at: url) }
+
+        try viewModel.exportCurrentXomoThemeTokens(to: url)
+
+        let data = try Data(contentsOf: url)
+        let snapshot = try JSONDecoder().decode(
+            XomoComponentThemeTokenSnapshot.self,
+            from: data
+        )
+        #expect(snapshot.theme == XomoComponentTheme.radixThemes.rawValue)
+        #expect(viewModel.statusText.contains(url.lastPathComponent))
+    }
+
     @Test func componentLibraryExposesKeyboardNeutralTokenCopyAction() throws {
         let root = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
@@ -715,6 +734,9 @@ struct XomoLeftSidebarTests {
         #expect(source.contains("xomo.theme.copyTokens"))
         #expect(source.contains("copyCurrentXomoThemeTokens()"))
         #expect(source.contains("xomo-component-theme-copy-tokens"))
+        #expect(source.contains("xomo.theme.exportTokens"))
+        #expect(source.contains("chooseXomoThemeTokenExportFile()"))
+        #expect(source.contains("xomo-component-theme-export-tokens"))
         #expect(source.contains(".focusable(false)"))
     }
 }

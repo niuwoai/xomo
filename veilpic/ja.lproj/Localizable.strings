@@ -2766,6 +2766,7 @@
 "xomo.theme.radixThemes" = "Radix Themes リファレンス";
 "xomo.theme.libraryTitle" = "%@ · %@";
 "xomo.theme.copyTokens" = "テーマトークンをコピー";
+"xomo.theme.exportTokens" = "テーマトークンを書き出す…";
 "xomo.librarySource.xomoOriginal" = "Xomo オリジナル";
 "xomo.librarySource.xomoOriginal.attribution" = "ローカルコードで生成する、編集可能な Xomo オリジナルコンポーネントです。";
 "xomo.librarySource.chakraUI" = "Chakra UI";
@@ -2784,6 +2785,8 @@
 "xomo.theme.status.overrideCleared" = "%d 個のレイヤーのローカルスタイルを解除しました";
 "xomo.theme.status.tokensCopied" = "%@ テーマトークンをコピーしました";
 "xomo.theme.status.tokensCopyFailed" = "テーマトークンをコピーできませんでした";
+"xomo.theme.status.tokensExported" = "テーマトークンを書き出しました：%@";
+"xomo.theme.status.tokensExportFailed" = "テーマトークンを書き出せませんでした";
 "xomo.themeSample.insert" = "現在のテーマのページ例を挿入";
 "xomo.themeSample.nativeWorkspace" = "ネイティブワークスペース";
 "xomo.themeSample.softMobileProfile" = "ソフトモバイルプロフィール";

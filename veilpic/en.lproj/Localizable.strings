@@ -2766,6 +2766,7 @@
 "xomo.theme.radixThemes" = "Radix Themes reference";
 "xomo.theme.libraryTitle" = "%@ · %@";
 "xomo.theme.copyTokens" = "Copy theme tokens";
+"xomo.theme.exportTokens" = "Export theme tokens…";
 "xomo.librarySource.xomoOriginal" = "Xomo Original";
 "xomo.librarySource.xomoOriginal.attribution" = "Editable, code-generated Xomo original components.";
 "xomo.librarySource.chakraUI" = "Chakra UI";
@@ -2784,6 +2785,8 @@
 "xomo.theme.status.overrideCleared" = "Cleared local style on %d layer(s)";
 "xomo.theme.status.tokensCopied" = "Copied %@ theme tokens";
 "xomo.theme.status.tokensCopyFailed" = "Could not copy theme tokens";
+"xomo.theme.status.tokensExported" = "Exported theme tokens: %@";
+"xomo.theme.status.tokensExportFailed" = "Could not export theme tokens";
 "xomo.themeSample.insert" = "Insert theme page sample";
 "xomo.themeSample.nativeWorkspace" = "Native workspace";
 "xomo.themeSample.softMobileProfile" = "Soft mobile profile";

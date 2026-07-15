@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc107 - 2026-07-16
+
+### Added
+- 组件库主题新增 `.xomotokens.json` 文件导出，可通过系统保存面板将当前主题 Token 保存为可复用设计资产。
+
+### Verification
+- 主题 Token 文件写入/JSON 往返、组件库导出按钮专项 37/37、三语资源专项 4/4 通过，报告见 `test-reports/rc107-theme-export/` 与 `test-reports/rc107-localization/`；Debug App 实际显示复制与导出两个按钮。
+
 ## 2.12.0-rc106 - 2026-07-16
 
 ### Added
