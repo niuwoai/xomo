@@ -3644,6 +3644,14 @@ struct ImageEditorView: View {
                 )
                 .allowsHitTesting(false)
 
+            ForEach(viewModel.selectedShapeGradientCanvasStopHandlePoints) { stopPoint in
+                shapeGradientStopHandleView(
+                    stopPoint,
+                    position: viewPoint(from: stopPoint.canvasPoint, in: canvasSize),
+                    canvasSize: canvasSize
+                )
+            }
+
             ForEach(ImageEditorShapeRadialGradientHandle.allCases) { handle in
                 shapeRadialGradientHandleView(
                     handle: handle,
@@ -3701,7 +3709,7 @@ struct ImageEditorView: View {
                     activeShapeGradientStopIndex = nil
                 }
             )
-            .opacity(viewModel.canEditSelectedShapeGradient ? 1 : 0.55)
+            .opacity(viewModel.canEditSelectedShapeGradientStops ? 1 : 0.55)
             .help(L10n.text("imageEditor.help.shapeGradientStopHandle"))
             .accessibilityIdentifier("image-editor-shape-gradient-canvas-stop-\(stopPoint.index)")
     }
@@ -3711,7 +3719,8 @@ struct ImageEditorView: View {
         let index = selectedShapeGradientStopIndex
         guard viewModel.selectedTool == .move,
               viewModel.document.areExtrasVisible,
-              viewModel.selectedShapeGradientCanvasHandlePoints != nil,
+              viewModel.canEditSelectedShapeGradientStops,
+              !viewModel.selectedShapeGradientCanvasStopHandlePoints.isEmpty,
               index > 0,
               index < stops.count - 1,
               let nextIndex = viewModel.removeSelectedShapeGradientCanvasStop(at: index)

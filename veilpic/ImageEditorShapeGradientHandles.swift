@@ -233,7 +233,7 @@ enum ImageEditorShapeGradientGeometry {
         layerFrame: CGRect
     ) -> [ImageEditorShapeGradientStopHandlePoint] {
         guard let gradient = content.fillGradient?.normalized(),
-              let axis = canvasHandlePoints(
+              let axis = canvasStopAxis(
                 content: content,
                 imageSize: imageSize,
                 layerFrame: layerFrame
@@ -289,7 +289,7 @@ enum ImageEditorShapeGradientGeometry {
         canvasPoint: CGPoint
     ) -> Double? {
         guard let gradient = content.fillGradient?.normalized(),
-              let axis = canvasHandlePoints(
+              let axis = canvasStopAxis(
                 content: content,
                 imageSize: imageSize,
                 layerFrame: layerFrame
@@ -304,6 +304,34 @@ enum ImageEditorShapeGradientGeometry {
         ) / lengthSquared
         displayedPosition = max(0, min(1, displayedPosition))
         return gradient.reverse ? 1 - displayedPosition : displayedPosition
+    }
+
+    private static func canvasStopAxis(
+        content: ImageEditorShapeContent,
+        imageSize: CGSize,
+        layerFrame: CGRect
+    ) -> ImageEditorShapeGradientHandlePoints? {
+        guard let style = content.fillGradient?.normalized().style else { return nil }
+        switch style {
+        case .linear:
+            return canvasHandlePoints(
+                content: content,
+                imageSize: imageSize,
+                layerFrame: layerFrame
+            )
+        case .radial:
+            guard let geometry = radialCanvasGeometry(
+                content: content,
+                imageSize: imageSize,
+                layerFrame: layerFrame
+            ) else { return nil }
+            return ImageEditorShapeGradientHandlePoints(
+                start: geometry.center,
+                end: geometry.radius
+            )
+        default:
+            return nil
+        }
     }
 
     private static func localHandlePoints(
@@ -424,6 +452,14 @@ extension ImageEditorViewModel {
         return !document.isEffectivelyPixelsLocked(layer)
     }
 
+    var canEditSelectedShapeGradientStops: Bool {
+        guard let layer = singleSelectedShapeGradientLayer,
+              let style = layer.shapeContent?.fillGradient?.style,
+              style == .linear || style == .radial
+        else { return false }
+        return !document.isEffectivelyPixelsLocked(layer)
+    }
+
     func beginEditingSelectedShapeGradient(handle: ImageEditorShapeGradientHandle) -> Bool {
         guard editingShapeGradientLayerID == nil,
               canEditSelectedShapeGradient,
@@ -511,7 +547,7 @@ extension ImageEditorViewModel {
 
     func beginEditingSelectedShapeGradientStop(at index: Int) -> Bool {
         guard editingShapeGradientLayerID == nil,
-              canEditSelectedShapeGradient,
+              canEditSelectedShapeGradientStops,
               let layer = singleSelectedShapeGradientLayer,
               let content = layer.shapeContent,
               index > 0,
@@ -548,7 +584,7 @@ extension ImageEditorViewModel {
     }
 
     func addSelectedShapeGradientStop(atCanvasPoint canvasPoint: CGPoint) -> Int? {
-        guard canEditSelectedShapeGradient,
+        guard canEditSelectedShapeGradientStops,
               let layer = singleSelectedShapeGradientLayer,
               let content = layer.shapeContent,
               let position = ImageEditorShapeGradientGeometry.logicalStopPosition(
@@ -562,7 +598,7 @@ extension ImageEditorViewModel {
     }
 
     func removeSelectedShapeGradientCanvasStop(at index: Int) -> Int? {
-        guard canEditSelectedShapeGradient else { return nil }
+        guard canEditSelectedShapeGradientStops else { return nil }
         return removeSelectedShapeGradientStop(at: index)
     }
 
