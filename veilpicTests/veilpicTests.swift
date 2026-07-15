@@ -6412,6 +6412,43 @@ struct veilpicTests {
     }
 
     @MainActor
+    @Test func imageEditorCanvasCursorFamiliesMatchToolInteractionSemantics() async throws {
+        let expectations: [(ImageEditorCanvasCursorFamily, [ImageEditorTool])] = [
+            (.systemArrow, [.move]),
+            (.grab, [.hand]),
+            (.textInsertion, [.text]),
+            (
+                .brushFootprint,
+                [
+                    .brush, .eraser, .quickSelection, .cloneStamp, .dodge, .burn,
+                    .sponge, .blur, .sharpen, .smudge, .healingBrush, .redEye
+                ]
+            ),
+            (.vectorPen, [.pen]),
+            (.zoomMagnifier, [.zoom]),
+            (
+                .precisionCrosshair,
+                [
+                    .marquee, .lasso, .magicWand, .crop, .patchTool, .paintBucket,
+                    .gradient, .eyedropper, .colorSampler, .rectangle, .ellipse
+                ]
+            )
+        ]
+
+        for (family, tools) in expectations {
+            for tool in tools {
+                #expect(ImageEditorCanvasCursor.family(for: tool) == family)
+            }
+        }
+        #expect(Set(expectations.flatMap(\.1)) == Set(ImageEditorTool.allCases))
+
+        let zoom = ImageEditorCanvasCursor.cursor(for: .zoom, brushDiameter: 18)
+        let marquee = ImageEditorCanvasCursor.cursor(for: .marquee, brushDiameter: 18)
+        #expect(zoom.image.tiffRepresentation != marquee.image.tiffRepresentation)
+        #expect(ImageEditorCanvasCursor.cursor(for: .move, brushDiameter: 18) === NSCursor.arrow)
+    }
+
+    @MainActor
     @Test func imageEditorHandCursorAndCanvasPanUseDirectViewportMovement() async throws {
         let openHand = ImageEditorCanvasCursor.cursor(for: .hand, brushDiameter: 18)
         let closedHand = ImageEditorCanvasCursor.cursor(

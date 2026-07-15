@@ -13,6 +13,10 @@ private let imageEditorCanvasToolbarHeight: CGFloat = 42
 private let imageEditorToolRailWidth: CGFloat = 84
 private let imageEditorComponentLibraryWidth: CGFloat = 220
 
+enum ImageEditorOptionsBarAppearance {
+    static let foregroundColor = NSColor.white
+}
+
 enum ImageEditorCanvasDragGeometry {
     static func imageDelta(
         from viewDelta: CGSize,
@@ -305,6 +309,8 @@ struct ImageEditorView: View {
         }
         .frame(height: 48)
         .padding(.horizontal, 12)
+        .foregroundStyle(Color(nsColor: ImageEditorOptionsBarAppearance.foregroundColor))
+        .environment(\.colorScheme, .dark)
         .background(Color(nsColor: ImageEditorTheme.panel))
     }
 
@@ -416,6 +422,7 @@ struct ImageEditorView: View {
         Picker(L10n.text("imageEditor.option.selectionMode"), selection: $viewModel.selectionMode) {
             ForEach(ImageEditorSelectionMode.allCases) { mode in
                 Text(mode.compactTitle)
+                    .foregroundStyle(Color(nsColor: ImageEditorOptionsBarAppearance.foregroundColor))
                     .tag(mode)
                     .help(mode.title)
             }
@@ -488,6 +495,7 @@ struct ImageEditorView: View {
             }
         } label: {
             Label(viewModel.marqueeShape.title, systemImage: viewModel.marqueeShape.symbolName)
+                .foregroundStyle(Color(nsColor: ImageEditorOptionsBarAppearance.foregroundColor))
                 .frame(minWidth: 88, alignment: .leading)
         }
         .menuStyle(.borderlessButton)
@@ -502,13 +510,14 @@ struct ImageEditorView: View {
         HStack(spacing: 6) {
             Text(L10n.text(titleKey))
                 .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                .foregroundStyle(Color(nsColor: ImageEditorOptionsBarAppearance.foregroundColor))
             Slider(value: value, in: range, step: step)
                 .frame(width: 92)
                 .focusable(false)
                 .xomoFocusEffectDisabled()
             Text(sliderText(value.wrappedValue, suffix: suffix))
                 .font(.system(size: 11, weight: .medium).monospacedDigit())
+                .foregroundStyle(Color(nsColor: ImageEditorOptionsBarAppearance.foregroundColor))
                 .frame(width: suffix.isEmpty ? 28 : 42, alignment: .leading)
         }
     }
@@ -1115,7 +1124,7 @@ struct ImageEditorView: View {
                         .position(x: fittedImageRect(in: geometry.size).midX, y: fittedImageRect(in: geometry.size).midY)
                         .shadow(color: .black.opacity(0.46), radius: 12, x: 0, y: 8)
 
-                    if viewModel.selectedTool == .patchTool, let patchPreviewImage {
+                    if canvasInteractionTool == .patchTool, let patchPreviewImage {
                         Image(nsImage: patchPreviewImage)
                             .resizable()
                             .frame(width: fittedImageRect(in: geometry.size).width, height: fittedImageRect(in: geometry.size).height)
@@ -1207,6 +1216,14 @@ struct ImageEditorView: View {
                     }
                     guard isPointerInsideCanvas else { return }
                     guard let hoverViewPoint else { return }
+                    updateCanvasCursor(at: hoverViewPoint, in: geometry.size)
+                }
+                .onChange(of: viewModel.selectedLeftSidebarTab) { tab in
+                    if tab == .components {
+                        pendingCropRect = nil
+                        cancelCanvasTextEditing()
+                    }
+                    guard isPointerInsideCanvas, let hoverViewPoint else { return }
                     updateCanvasCursor(at: hoverViewPoint, in: geometry.size)
                 }
                 .onChange(of: viewModel.brushSize) { _ in
@@ -1426,7 +1443,7 @@ struct ImageEditorView: View {
             .allowsHitTesting(false)
         }
 
-        if let dragStart, let dragEnd, viewModel.selectedTool == .gradient || viewModel.selectedTool == .patchTool {
+        if let dragStart, let dragEnd, canvasInteractionTool == .gradient || canvasInteractionTool == .patchTool {
             let start = viewPoint(from: dragStart, in: size)
             let end = viewPoint(from: dragEnd, in: size)
             Canvas { context, _ in
@@ -1438,7 +1455,7 @@ struct ImageEditorView: View {
                 context.fill(Path(ellipseIn: CGRect(x: start.x - 4, y: start.y - 4, width: 8, height: 8)), with: .color(Color.white.opacity(0.92)))
                 context.fill(Path(ellipseIn: CGRect(x: end.x - 4, y: end.y - 4, width: 8, height: 8)), with: .color(Color(nsColor: ImageEditorTheme.selected).opacity(0.92)))
 
-                if viewModel.selectedTool == .patchTool,
+                if canvasInteractionTool == .patchTool,
                    let edgeGeometry = viewModel.selectionEdgeGeometry {
                     let delta = CGSize(width: dragEnd.x - dragStart.x, height: dragEnd.y - dragStart.y)
                     var translatedPath = Path()
@@ -1466,7 +1483,7 @@ struct ImageEditorView: View {
         }
 
         if let dragStart, let dragEnd, shouldShowDragRect {
-            let imageRect = viewModel.selectedTool == .marquee
+            let imageRect = canvasInteractionTool == .marquee
                 ? viewModel.marqueeSelectionRect(from: dragStart, to: dragEnd)
                 : CGRect(
                     x: min(dragStart.x, dragEnd.x),
@@ -1476,7 +1493,7 @@ struct ImageEditorView: View {
                 )
             let rect = viewRect(from: imageRect, in: size)
             Group {
-                if viewModel.selectedTool == .marquee && viewModel.marqueeShape.isEllipse {
+                if canvasInteractionTool == .marquee && viewModel.marqueeShape.isEllipse {
                     Ellipse()
                         .stroke(Color(nsColor: ImageEditorTheme.selected), style: StrokeStyle(lineWidth: 1.5, dash: [6, 4]))
                         .background(Ellipse().fill(Color(nsColor: ImageEditorTheme.selected).opacity(0.12)))
@@ -1502,7 +1519,7 @@ struct ImageEditorView: View {
     }
 
     private var shouldShowDragRect: Bool {
-        switch viewModel.selectedTool {
+        switch canvasInteractionTool {
         case .crop, .marquee, .rectangle, .ellipse, .text:
             true
         default:
@@ -1564,7 +1581,7 @@ struct ImageEditorView: View {
     }
 
     private var sampledBrushSourcePoint: CGPoint? {
-        switch viewModel.selectedTool {
+        switch canvasInteractionTool {
         case .cloneStamp:
             return viewModel.cloneSourcePoint
         case .healingBrush:
@@ -1577,7 +1594,7 @@ struct ImageEditorView: View {
     private func canvasGesture(in size: CGSize) -> some Gesture {
         DragGesture(minimumDistance: 0)
             .onChanged { value in
-                if isCanvasPanGestureActive || viewModel.selectedTool == .hand || isSpacebarPanning {
+                if isCanvasPanGestureActive || canvasInteractionTool == .hand || isSpacebarPanning {
                     isCanvasPanGestureActive = true
                     updateCanvasPan(translation: value.translation)
                     NSCursor.closedHand.set()
@@ -1587,7 +1604,7 @@ struct ImageEditorView: View {
                 let pointerImagePoint = imagePoint(from: value.location, in: size)
                 viewModel.updatePointer(pointerImagePoint)
 
-                switch viewModel.selectedTool {
+                switch canvasInteractionTool {
                 case .move:
                     if !isObjectMoveGestureActive {
                         let pressedImagePoint = imagePoint(from: value.startLocation, in: size)
@@ -1622,7 +1639,7 @@ struct ImageEditorView: View {
                         dragEnd = boundedImagePoint(from: value.location, in: size)
                     }
                 case .crop, .rectangle, .ellipse, .gradient:
-                    if viewModel.selectedTool == .crop, dragStart == nil {
+                    if canvasInteractionTool == .crop, dragStart == nil {
                         pendingCropRect = nil
                     }
                     if dragStart == nil {
@@ -1699,7 +1716,7 @@ struct ImageEditorView: View {
 
                 let endImagePoint = imagePoint(from: value.location, in: size)
 
-                switch viewModel.selectedTool {
+                switch canvasInteractionTool {
                 case .move:
                     if isObjectMoveGestureActive {
                         updateObjectMove(translation: value.translation, in: size)
@@ -1992,13 +2009,17 @@ struct ImageEditorView: View {
         ImageEditorCanvasCursor.cursor(
             for: canvasCursorTool,
             brushDiameter: viewModel.brushSize * displayScale,
-            penIsClosing: viewModel.selectedTool == .pen && viewModel.isPenCloseCandidate(at: canvasPoint),
+            penIsClosing: canvasInteractionTool == .pen && viewModel.isPenCloseCandidate(at: canvasPoint),
             handIsDragging: isCanvasPanGestureActive
         ).set()
     }
 
     private var canvasCursorTool: ImageEditorTool {
-        isSpacebarPanning || isCanvasPanGestureActive ? .hand : viewModel.selectedTool
+        isSpacebarPanning || isCanvasPanGestureActive ? .hand : canvasInteractionTool
+    }
+
+    private var canvasInteractionTool: ImageEditorTool {
+        viewModel.canvasInteractionTool
     }
 
     private func imagePoint(from viewPoint: CGPoint, in size: CGSize) -> CGPoint? {
@@ -3380,8 +3401,8 @@ struct ImageEditorView: View {
     private func selectionOverlay(in size: CGSize) -> some View {
         if !viewModel.isQuickMaskMode {
             let activeLasso = (
-                viewModel.selectedTool == .lasso
-                    || (viewModel.selectedTool == .patchTool && isDrawingPatchSelection)
+                canvasInteractionTool == .lasso
+                    || (canvasInteractionTool == .patchTool && isDrawingPatchSelection)
             ) && dragPoints.count > 1
             let activeSelection = viewModel.document.areExtrasVisible && viewModel.document.areSelectionEdgesVisible
                 ? viewModel.selection
@@ -3504,7 +3525,7 @@ struct ImageEditorView: View {
 
     @ViewBuilder
     private func layerTransformOverlay(in size: CGSize) -> some View {
-        if (viewModel.selectedTool == .move || viewModel.hasSelectedXomoObject),
+        if (canvasInteractionTool == .move || viewModel.hasSelectedXomoObject),
            (viewModel.document.areExtrasVisible || viewModel.hasSelectedXomoObject),
            (viewModel.document.areTransformControlsVisible || viewModel.hasSelectedXomoObject),
            let layerFrame = viewModel.movingObjectPreviewFrame ?? viewModel.selectedLayerTransformFrame {
@@ -3527,7 +3548,7 @@ struct ImageEditorView: View {
                     .allowsHitTesting(false)
             }
 
-            if viewModel.selectedTool == .move,
+            if canvasInteractionTool == .move,
                viewModel.document.areTransformControlsVisible,
                viewModel.canResizeSelectedLayer {
                 ForEach(ImageEditorLayerResizeHandle.allCases) { handle in
@@ -3535,7 +3556,7 @@ struct ImageEditorView: View {
                 }
             }
 
-            if viewModel.selectedTool == .move,
+            if canvasInteractionTool == .move,
                viewModel.document.areTransformControlsVisible,
                viewModel.canRotateSelectedLayer {
                 rotateHandleView(in: rect, canvasSize: size)
@@ -3545,7 +3566,7 @@ struct ImageEditorView: View {
 
     @ViewBuilder
     private func shapeGradientControlOverlay(in size: CGSize) -> some View {
-        if viewModel.selectedTool == .move,
+        if canvasInteractionTool == .move,
            viewModel.document.areExtrasVisible {
             if let points = viewModel.selectedShapeGradientCanvasHandlePoints {
                 linearShapeGradientControlOverlay(points: points, canvasSize: size)
@@ -3740,7 +3761,7 @@ struct ImageEditorView: View {
     private func deleteSelectedShapeGradientStopIfNeeded() -> Bool {
         let stops = viewModel.selectedShapeGradientColorStops
         let index = selectedShapeGradientStopIndex
-        guard viewModel.selectedTool == .move,
+        guard canvasInteractionTool == .move,
               viewModel.document.areExtrasVisible,
               viewModel.canEditSelectedShapeGradientStops,
               !viewModel.selectedShapeGradientCanvasStopHandlePoints.isEmpty,
@@ -3875,7 +3896,7 @@ struct ImageEditorView: View {
 
     @ViewBuilder
     private func textBoxOverflowOverlay(in size: CGSize) -> some View {
-        if viewModel.selectedTool == .move,
+        if canvasInteractionTool == .move,
            viewModel.document.areExtrasVisible,
            viewModel.document.areTransformControlsVisible,
            viewModel.selectedTextBoxHasOverflow,
@@ -6531,8 +6552,39 @@ private struct EditorMarqueeShapeActionRow: View {
     }
 }
 
+enum ImageEditorCanvasCursorFamily: Equatable {
+    case systemArrow
+    case grab
+    case textInsertion
+    case brushFootprint
+    case precisionCrosshair
+    case vectorPen
+    case zoomMagnifier
+}
+
 enum ImageEditorCanvasCursor {
     private static var cursorCache: [String: NSCursor] = [:]
+
+    static func family(for tool: ImageEditorTool) -> ImageEditorCanvasCursorFamily {
+        switch tool {
+        case .move:
+            .systemArrow
+        case .hand:
+            .grab
+        case .text:
+            .textInsertion
+        case .brush, .eraser, .quickSelection, .cloneStamp, .dodge, .burn, .sponge,
+             .blur, .sharpen, .smudge, .healingBrush, .redEye:
+            .brushFootprint
+        case .pen:
+            .vectorPen
+        case .zoom:
+            .zoomMagnifier
+        case .marquee, .lasso, .magicWand, .crop, .patchTool, .paintBucket, .gradient,
+             .eyedropper, .colorSampler, .rectangle, .ellipse:
+            .precisionCrosshair
+        }
+    }
 
     static func cursor(
         for tool: ImageEditorTool,
@@ -6540,21 +6592,21 @@ enum ImageEditorCanvasCursor {
         penIsClosing: Bool = false,
         handIsDragging: Bool = false
     ) -> NSCursor {
-        switch tool {
-        case .move:
+        switch family(for: tool) {
+        case .systemArrow:
             return .arrow
-        case .hand:
+        case .grab:
             return handIsDragging ? .closedHand : .openHand
-        case .text:
+        case .textInsertion:
             return .iBeam
-        case .brush, .eraser, .quickSelection, .cloneStamp, .dodge, .burn, .sponge,
-             .blur, .sharpen, .smudge, .healingBrush, .redEye:
+        case .brushFootprint:
             return brushCursor(diameter: brushDiameter, symbolName: tool.symbolName)
-        case .pen:
+        case .vectorPen:
             return penCursor(isClosing: penIsClosing)
-        case .marquee, .lasso, .magicWand, .crop, .patchTool, .paintBucket, .gradient,
-             .eyedropper, .colorSampler, .rectangle, .ellipse, .zoom:
+        case .precisionCrosshair:
             return precisionCursor(symbolName: tool.symbolName)
+        case .zoomMagnifier:
+            return zoomCursor()
         }
     }
 
@@ -6681,6 +6733,48 @@ enum ImageEditorCanvasCursor {
 
         image.unlockFocus()
         return cache(NSCursor(image: image, hotSpot: NSPoint(x: 6, y: side - 6)), for: cacheKey)
+    }
+
+    private static func zoomCursor() -> NSCursor {
+        let cacheKey = "zoom:magnifier"
+        if let cachedCursor = cursorCache[cacheKey] {
+            return cachedCursor
+        }
+        let side: CGFloat = 32
+        let center = NSPoint(x: 10, y: 10)
+        let image = NSImage(size: NSSize(width: side, height: side))
+        image.lockFocus()
+
+        let lens = NSBezierPath(ovalIn: NSRect(x: 3, y: 3, width: 14, height: 14))
+        let handle = NSBezierPath()
+        handle.move(to: NSPoint(x: 15, y: 15))
+        handle.line(to: NSPoint(x: 25, y: 25))
+        let plus = NSBezierPath()
+        plus.move(to: NSPoint(x: 7, y: 10))
+        plus.line(to: NSPoint(x: 13, y: 10))
+        plus.move(to: NSPoint(x: 10, y: 7))
+        plus.line(to: NSPoint(x: 10, y: 13))
+
+        NSColor.black.withAlphaComponent(0.94).setStroke()
+        lens.lineWidth = 4
+        handle.lineWidth = 5
+        plus.lineWidth = 3
+        lens.stroke()
+        handle.stroke()
+        plus.stroke()
+        NSColor.white.setStroke()
+        lens.lineWidth = 1.8
+        handle.lineWidth = 2
+        plus.lineWidth = 1.2
+        lens.stroke()
+        handle.stroke()
+        plus.stroke()
+
+        image.unlockFocus()
+        return cache(
+            NSCursor(image: image, hotSpot: NSPoint(x: center.x, y: side - center.y)),
+            for: cacheKey
+        )
     }
 
     private static func cache(_ cursor: NSCursor, for key: String) -> NSCursor {

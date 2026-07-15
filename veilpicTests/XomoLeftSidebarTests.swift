@@ -1,4 +1,5 @@
 import AppKit
+import Foundation
 import Testing
 @testable import musepic
 
@@ -271,16 +272,36 @@ struct XomoLeftSidebarTests {
         let image = NSImage.transparent(size: CGSize(width: 20, height: 20))
         let viewModel = ImageEditorViewModel(sourceName: "source", image: image) { _ in }
         viewModel.selectTool(.brush)
+        #expect(viewModel.canvasInteractionTool == .brush)
 
         viewModel.selectLeftSidebarTab(.components)
 
         #expect(viewModel.selectedLeftSidebarTab == .components)
         #expect(viewModel.selectedTool == .brush)
+        #expect(viewModel.canvasInteractionTool == .move)
 
         viewModel.selectLeftSidebarTab(.tools)
 
         #expect(viewModel.selectedLeftSidebarTab == .tools)
         #expect(viewModel.selectedTool == .brush)
+        #expect(viewModel.canvasInteractionTool == .brush)
+    }
+
+    @Test func componentSidebarWiresMoveSemanticsIntoCanvasCursorAndGestures() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains(".onChange(of: viewModel.selectedLeftSidebarTab)"))
+        #expect(source.contains("switch canvasInteractionTool"))
+        #expect(source.contains(
+            "isSpacebarPanning || isCanvasPanGestureActive ? .hand : canvasInteractionTool"
+        ))
+        #expect(source.components(separatedBy: "switch canvasInteractionTool").count - 1 >= 3)
     }
 
     @Test func insertingButtonCreatesEditableGroupedLayers() throws {
