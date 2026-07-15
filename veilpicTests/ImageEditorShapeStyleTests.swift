@@ -353,8 +353,76 @@ struct ImageEditorShapeStyleTests {
         let historyCount = viewModel.document.history.count
 
         #expect(!viewModel.beginEditingSelectedShapeGradientStop(at: 1))
+        #expect(viewModel.addSelectedShapeGradientStop(atCanvasPoint: CGPoint(x: 40, y: 30)) == nil)
+        #expect(viewModel.removeSelectedShapeGradientCanvasStop(at: 1) == nil)
         #expect(viewModel.document.history.count == historyCount)
         #expect(viewModel.selectedShapeGradientColorStops[1].position == 0.5)
+    }
+
+    @Test func canvasGradientAxisAddsAndDeletesSelectedStopWithOneUndoStep() throws {
+        let gradient = ImageEditorGradientFillContent.shapeLinear(
+            startColor: .systemRed,
+            endColor: .systemBlue
+        )
+        let content = ImageEditorShapeContent(
+            kind: .rectangle,
+            fillColor: .clear,
+            fillGradient: gradient,
+            fillOpacity: 1,
+            strokeColor: .clear,
+            strokeWidth: 1,
+            strokeOpacity: 0
+        )
+        let imageSize = CGSize(width: 100, height: 50)
+        let layerFrame = CGRect(x: 10, y: 20, width: 200, height: 100)
+        var reversedContent = content
+        reversedContent.fillGradient?.reverse = true
+        let reversedPosition = try #require(
+            ImageEditorShapeGradientGeometry.logicalStopPosition(
+                content: reversedContent,
+                imageSize: imageSize,
+                layerFrame: layerFrame,
+                canvasPoint: CGPoint(x: 50, y: 70)
+            )
+        )
+        #expect(abs(reversedPosition - 0.8) < 0.001)
+
+        let viewModel = makeViewModel()
+        viewModel.drawShape(
+            from: CGPoint(x: 10, y: 10),
+            to: CGPoint(x: 110, y: 60),
+            ellipse: false,
+            fillGradient: gradient
+        )
+        let axis = try #require(viewModel.selectedShapeGradientCanvasHandlePoints)
+        let insertionPoint = CGPoint(
+            x: axis.start.x + (axis.end.x - axis.start.x) * 0.3,
+            y: axis.start.y + (axis.end.y - axis.start.y) * 0.3
+        )
+        let historyBeforeAdd = viewModel.document.history.count
+        let insertedIndex = try #require(
+            viewModel.addSelectedShapeGradientStop(atCanvasPoint: insertionPoint)
+        )
+        #expect(insertedIndex == 1)
+        #expect(viewModel.selectedShapeGradientColorStops.count == 3)
+        #expect(abs(viewModel.selectedShapeGradientColorStops[insertedIndex].position - 0.3) < 0.001)
+        let insertedColor = viewModel.selectedShapeGradientColorStops[insertedIndex].vector
+        #expect(abs(insertedColor.x - 0.7) < 0.001)
+        #expect(abs(insertedColor.y) < 0.001)
+        #expect(abs(insertedColor.z - 0.3) < 0.001)
+        #expect(viewModel.document.history.count == historyBeforeAdd + 1)
+        viewModel.undo()
+        #expect(viewModel.selectedShapeGradientColorStops.count == 2)
+
+        let reinsertedIndex = try #require(
+            viewModel.addSelectedShapeGradientStop(atCanvasPoint: insertionPoint)
+        )
+        let historyBeforeRemove = viewModel.document.history.count
+        #expect(viewModel.removeSelectedShapeGradientCanvasStop(at: reinsertedIndex) != nil)
+        #expect(viewModel.selectedShapeGradientColorStops.count == 2)
+        #expect(viewModel.document.history.count == historyBeforeRemove + 1)
+        viewModel.undo()
+        #expect(viewModel.selectedShapeGradientColorStops.count == 3)
     }
 
     @Test func fillAndStrokeRenderAsIndependentEditableProperties() throws {
@@ -477,7 +545,13 @@ struct ImageEditorShapeStyleTests {
             encoding: .utf8
         )
         #expect(canvasSource.contains("image-editor-shape-gradient-canvas-stop-"))
+        #expect(canvasSource.contains("image-editor-shape-gradient-axis"))
+        #expect(canvasSource.contains("axisPath.strokedPath"))
         #expect(canvasSource.contains("beginEditingSelectedShapeGradientStop"))
+        #expect(canvasSource.contains("addSelectedShapeGradientStop(atCanvasPoint:"))
+        #expect(canvasSource.contains("deleteSelectedShapeGradientStopIfNeeded"))
+        #expect(canvasSource.contains("SpatialTapGesture"))
+        #expect(canvasSource.contains("!isTextInputActive, deleteSelectedObject()"))
         #expect(canvasSource.contains("activeShapeGradientStopIndex"))
     }
 
