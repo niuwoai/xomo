@@ -58,6 +58,7 @@ struct ImageEditorCanvasCursorTests {
         #expect(ImageEditorCanvasCursor.family(for: .redEye) == .redEye)
         #expect(ImageEditorCanvasCursor.family(for: .quickSelection) == .quickSelection)
         #expect(ImageEditorCanvasCursor.family(for: .cloneStamp) == .cloneStamp)
+        #expect(ImageEditorCanvasCursor.family(for: .healingBrush) == .healingBrush)
         #expect(ImageEditorCanvasCursor.family(for: .colorSampler) == .samplingScope)
 
         let bucket = ImageEditorCanvasCursor.cursor(for: .paintBucket, brushDiameter: 18)
@@ -65,6 +66,7 @@ struct ImageEditorCanvasCursorTests {
         let redEye = ImageEditorCanvasCursor.cursor(for: .redEye, brushDiameter: 18)
         let quickSelection = ImageEditorCanvasCursor.cursor(for: .quickSelection, brushDiameter: 18)
         let cloneStamp = ImageEditorCanvasCursor.cursor(for: .cloneStamp, brushDiameter: 18)
+        let healingBrush = ImageEditorCanvasCursor.cursor(for: .healingBrush, brushDiameter: 18)
         let sampler = ImageEditorCanvasCursor.cursor(for: .colorSampler, brushDiameter: 18)
         #expect(bucket.image.tiffRepresentation != eyedropper.image.tiffRepresentation)
         #expect(eyedropper.image.tiffRepresentation != sampler.image.tiffRepresentation)
@@ -74,6 +76,8 @@ struct ImageEditorCanvasCursorTests {
         #expect(quickSelection.image.tiffRepresentation != sampler.image.tiffRepresentation)
         #expect(cloneStamp.image.tiffRepresentation != quickSelection.image.tiffRepresentation)
         #expect(cloneStamp.image.tiffRepresentation != sampler.image.tiffRepresentation)
+        #expect(healingBrush.image.tiffRepresentation != cloneStamp.image.tiffRepresentation)
+        #expect(healingBrush.image.tiffRepresentation != sampler.image.tiffRepresentation)
         #expect(eyedropper !== NSCursor.crosshair)
     }
 

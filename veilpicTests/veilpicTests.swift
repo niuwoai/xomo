@@ -6421,7 +6421,7 @@ struct veilpicTests {
                 .brushFootprint,
                 [
                     .brush, .eraser, .dodge, .burn,
-                    .sponge, .blur, .sharpen, .smudge, .healingBrush
+                    .sponge, .blur, .sharpen, .smudge
                 ]
             ),
             (.selectionMarquee, [.marquee]),
@@ -6429,6 +6429,7 @@ struct veilpicTests {
             (.magicWand, [.magicWand]),
             (.quickSelection, [.quickSelection]),
             (.cloneStamp, [.cloneStamp]),
+            (.healingBrush, [.healingBrush]),
             (.crop, [.crop]),
             (.patch, [.patchTool]),
             (.gradient, [.gradient]),

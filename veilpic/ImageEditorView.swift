@@ -6440,6 +6440,7 @@ enum ImageEditorCanvasCursorFamily: Equatable {
     case magicWand
     case quickSelection
     case cloneStamp
+    case healingBrush
     case crop
     case patch
     case gradient
@@ -6485,6 +6486,8 @@ enum ImageEditorCanvasCursor {
             .quickSelection
         case .cloneStamp:
             .cloneStamp
+        case .healingBrush:
+            .healingBrush
         case .crop:
             .crop
         case .patchTool:
@@ -6494,7 +6497,7 @@ enum ImageEditorCanvasCursor {
         case .rectangle, .ellipse:
             .shapeOutline
         case .brush, .eraser, .dodge, .burn, .sponge,
-             .blur, .sharpen, .smudge, .healingBrush:
+             .blur, .sharpen, .smudge:
             .brushFootprint
         case .paintBucket:
             .paintBucket
@@ -6534,6 +6537,8 @@ enum ImageEditorCanvasCursor {
             return quickSelectionCursor()
         case .cloneStamp:
             return cloneStampCursor()
+        case .healingBrush:
+            return healingBrushCursor()
         case .crop:
             return cropCursor()
         case .patch:
@@ -6794,6 +6799,68 @@ enum ImageEditorCanvasCursor {
         image.unlockFocus()
         return cache(
             NSCursor(image: image, hotSpot: NSPoint(x: 26, y: side - 13)),
+            for: cacheKey
+        )
+    }
+
+    private static func healingBrushCursor() -> NSCursor {
+        let cacheKey = "healing-brush"
+        if let cachedCursor = cursorCache[cacheKey] {
+            return cachedCursor
+        }
+
+        let side: CGFloat = 36
+        let image = NSImage(size: NSSize(width: side, height: side))
+        image.lockFocus()
+
+        let bandage = NSBezierPath()
+        bandage.move(to: NSPoint(x: 6, y: 14))
+        bandage.curve(
+            to: NSPoint(x: 17, y: 4),
+            controlPoint1: NSPoint(x: 8, y: 10),
+            controlPoint2: NSPoint(x: 13, y: 5)
+        )
+        bandage.curve(
+            to: NSPoint(x: 28, y: 15),
+            controlPoint1: NSPoint(x: 21, y: 4),
+            controlPoint2: NSPoint(x: 25, y: 9)
+        )
+        bandage.curve(
+            to: NSPoint(x: 17, y: 26),
+            controlPoint1: NSPoint(x: 26, y: 20),
+            controlPoint2: NSPoint(x: 21, y: 25)
+        )
+        bandage.curve(
+            to: NSPoint(x: 6, y: 14),
+            controlPoint1: NSPoint(x: 13, y: 25),
+            controlPoint2: NSPoint(x: 9, y: 20)
+        )
+        bandage.close()
+        NSColor.black.withAlphaComponent(0.95).setStroke()
+        bandage.lineWidth = 4
+        bandage.stroke()
+        NSColor.white.withAlphaComponent(0.98).setFill()
+        bandage.fill()
+
+        let seam = NSBezierPath()
+        seam.move(to: NSPoint(x: 10, y: 12)); seam.line(to: NSPoint(x: 18, y: 20))
+        NSColor.systemBlue.setStroke()
+        seam.lineWidth = 1.4
+        seam.stroke()
+
+        let source = NSBezierPath()
+        source.move(to: NSPoint(x: 27, y: 7)); source.line(to: NSPoint(x: 27, y: 17))
+        source.move(to: NSPoint(x: 22, y: 12)); source.line(to: NSPoint(x: 32, y: 12))
+        NSColor.black.withAlphaComponent(0.95).setStroke()
+        source.lineWidth = 3
+        source.stroke()
+        NSColor.white.setStroke()
+        source.lineWidth = 1
+        source.stroke()
+
+        image.unlockFocus()
+        return cache(
+            NSCursor(image: image, hotSpot: NSPoint(x: 27, y: side - 12)),
             for: cacheKey
         )
     }
