@@ -6505,6 +6505,13 @@ enum ImageEditorCanvasCursor {
             return .arrow
         }
 
+        if sidebarTab == .tools,
+           selectedTool == .move,
+           !isSpacebarPanning,
+           !isCanvasPanGestureActive {
+            return moveToolCursor()
+        }
+
         let effectiveTool = tool(
             for: sidebarTab,
             selectedTool: selectedTool,
@@ -6517,6 +6524,75 @@ enum ImageEditorCanvasCursor {
             penIsClosing: penIsClosing,
             handIsDragging: handIsDragging,
             modifierFlags: modifierFlags
+        )
+    }
+
+    private static func moveToolCursor() -> NSCursor {
+        let cacheKey = "move-tool"
+        if let cachedCursor = cursorCache[cacheKey] {
+            return cachedCursor
+        }
+
+        let side: CGFloat = 32
+        let center = NSPoint(x: side / 2, y: side / 2)
+        let image = NSImage(size: NSSize(width: side, height: side))
+        image.lockFocus()
+
+        func drawArrow(from start: NSPoint, to end: NSPoint) {
+            let shaft = NSBezierPath()
+            shaft.move(to: start)
+            shaft.line(to: end)
+            NSColor.black.withAlphaComponent(0.94).setStroke()
+            shaft.lineWidth = 4
+            shaft.stroke()
+            NSColor.white.withAlphaComponent(0.98).setStroke()
+            shaft.lineWidth = 1.35
+            shaft.stroke()
+
+            let angle = atan2(end.y - start.y, end.x - start.x)
+            let headLength: CGFloat = 7
+            let headWidth: CGFloat = 3.5
+            let left = NSPoint(
+                x: end.x - cos(angle) * headLength + sin(angle) * headWidth,
+                y: end.y - sin(angle) * headLength - cos(angle) * headWidth
+            )
+            let right = NSPoint(
+                x: end.x - cos(angle) * headLength - sin(angle) * headWidth,
+                y: end.y - sin(angle) * headLength + cos(angle) * headWidth
+            )
+            let head = NSBezierPath()
+            head.move(to: end)
+            head.line(to: left)
+            head.line(to: right)
+            head.close()
+            NSColor.black.withAlphaComponent(0.94).setFill()
+            head.fill()
+            NSColor.white.withAlphaComponent(0.98).setStroke()
+            head.lineWidth = 1.2
+            head.stroke()
+        }
+
+        drawArrow(
+            from: NSPoint(x: center.x, y: center.y - 2),
+            to: NSPoint(x: center.x, y: 28)
+        )
+        drawArrow(
+            from: NSPoint(x: center.x, y: center.y + 2),
+            to: NSPoint(x: center.x, y: 4)
+        )
+        drawArrow(
+            from: NSPoint(x: center.x - 2, y: center.y),
+            to: NSPoint(x: 4, y: center.y)
+        )
+        drawArrow(
+            from: NSPoint(x: center.x + 2, y: center.y),
+            to: NSPoint(x: 28, y: center.y)
+        )
+
+        image.unlockFocus()
+        return cache(
+            NSCursor(image: image, hotSpot: NSPoint(x: center.x, y: side - center.y)),
+            for: cacheKey
         )
     }
 

@@ -68,6 +68,13 @@ struct ImageEditorCanvasCursorTests {
                 isCanvasPanGestureActive: true
             ) == .hand
         )
+        let move = ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .move,
+            brushDiameter: 18
+        )
+        #expect(move !== NSCursor.arrow)
+        #expect(move.image.tiffRepresentation != NSCursor.arrow.image.tiffRepresentation)
     }
 
     @Test func arrowNudgeUsesPhotoshopStyleModifierDistances() {

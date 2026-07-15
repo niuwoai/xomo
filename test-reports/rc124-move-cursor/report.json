@@ -1,0 +1,9 @@
+{
+  "suite": "ImageEditorCanvasCursorTests",
+  "total": 6,
+  "passed": 6,
+  "failed": 0,
+  "move_tool": "four-way move cursor",
+  "component_library": "system arrow",
+  "pan": ["open hand", "closed hand"]
+}
