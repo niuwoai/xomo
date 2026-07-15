@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc131 - 2026-07-16
+
+### Changed
+- 缩放工具按住 Option 时显示减号放大镜，默认显示加号放大镜，直接反馈当前缩放方向。
+
+### Verification
+- `ImageEditorCanvasCursorTests` 7/7 通过，覆盖组件库系统箭头、工具光标路由、修饰键和缩放加/减光标。
+
 ## 2.12.0-rc130 - 2026-07-16
 
 ### Fixed

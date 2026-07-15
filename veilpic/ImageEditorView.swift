@@ -6713,7 +6713,7 @@ enum ImageEditorCanvasCursor {
         case .vectorPen:
             return penCursor(isClosing: penIsClosing)
         case .zoomMagnifier:
-            return zoomCursor()
+            return zoomCursor(isZoomingOut: modifierFlags.contains(.option))
         }
     }
 
@@ -7650,8 +7650,8 @@ enum ImageEditorCanvasCursor {
         return cache(NSCursor(image: image, hotSpot: NSPoint(x: 6, y: side - 6)), for: cacheKey)
     }
 
-    private static func zoomCursor() -> NSCursor {
-        let cacheKey = "zoom:magnifier"
+    private static func zoomCursor(isZoomingOut: Bool) -> NSCursor {
+        let cacheKey = "zoom:magnifier:\(isZoomingOut ? "out" : "in")"
         if let cachedCursor = cursorCache[cacheKey] {
             return cachedCursor
         }
@@ -7664,26 +7664,28 @@ enum ImageEditorCanvasCursor {
         let handle = NSBezierPath()
         handle.move(to: NSPoint(x: 15, y: 15))
         handle.line(to: NSPoint(x: 25, y: 25))
-        let plus = NSBezierPath()
-        plus.move(to: NSPoint(x: 7, y: 10))
-        plus.line(to: NSPoint(x: 13, y: 10))
-        plus.move(to: NSPoint(x: 10, y: 7))
-        plus.line(to: NSPoint(x: 10, y: 13))
+        let modeMark = NSBezierPath()
+        modeMark.move(to: NSPoint(x: 7, y: 10))
+        modeMark.line(to: NSPoint(x: 13, y: 10))
+        if !isZoomingOut {
+            modeMark.move(to: NSPoint(x: 10, y: 7))
+            modeMark.line(to: NSPoint(x: 10, y: 13))
+        }
 
         NSColor.black.withAlphaComponent(0.94).setStroke()
         lens.lineWidth = 4
         handle.lineWidth = 5
-        plus.lineWidth = 3
+        modeMark.lineWidth = 3
         lens.stroke()
         handle.stroke()
-        plus.stroke()
+        modeMark.stroke()
         NSColor.white.setStroke()
         lens.lineWidth = 1.8
         handle.lineWidth = 2
-        plus.lineWidth = 1.2
+        modeMark.lineWidth = 1.2
         lens.stroke()
         handle.stroke()
-        plus.stroke()
+        modeMark.stroke()
 
         image.unlockFocus()
         return cache(

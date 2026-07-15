@@ -99,6 +99,25 @@ struct ImageEditorCanvasCursorTests {
         #expect(subtract.image.tiffRepresentation != intersect.image.tiffRepresentation)
     }
 
+    @Test func zoomCursorReflectsOptionZoomOutMode() {
+        let zoomIn = ImageEditorCanvasCursor.cursor(for: .zoom, brushDiameter: 18)
+        let zoomOut = ImageEditorCanvasCursor.cursor(
+            for: .zoom,
+            brushDiameter: 18,
+            modifierFlags: [.option]
+        )
+
+        #expect(zoomIn.image.tiffRepresentation != zoomOut.image.tiffRepresentation)
+        #expect(
+            ImageEditorCanvasCursor.cursor(
+                for: .tools,
+                selectedTool: .zoom,
+                brushDiameter: 18,
+                modifierFlags: [.option]
+            ).image.tiffRepresentation == zoomOut.image.tiffRepresentation
+        )
+    }
+
     @Test func samplingAndPaintBucketCursorsUseDistinctSemanticShapes() {
         #expect(ImageEditorCanvasCursor.family(for: .paintBucket) == .paintBucket)
         #expect(ImageEditorCanvasCursor.family(for: .eyedropper) == .eyedropper)
