@@ -52,6 +52,18 @@ struct ImageEditorShapeGradientStopHandlePoint: Identifiable, Equatable {
 enum ImageEditorShapeGradientGeometry {
     static let angleSnapStep: CGFloat = 15
 
+    static func displayedEndpointColor(
+        gradient: ImageEditorGradientFillContent,
+        handle: ImageEditorShapeGradientHandle
+    ) -> NSColor {
+        let normalizedGradient = gradient.normalized()
+        let stops = normalizedGradient.shapeColorStops
+        let useLastStop = normalizedGradient.reverse
+            ? handle == .start
+            : handle == .end
+        return (useLastStop ? stops.last : stops.first)?.color ?? .gray
+    }
+
     static func canvasHandlePoints(
         content: ImageEditorShapeContent,
         imageSize: CGSize,
