@@ -162,6 +162,131 @@ struct ImageEditorShapeStyleTests {
         #expect(resized.fillGradientCenter == content.fillGradientCenter)
     }
 
+    @Test func radialGradientStopsFollowRadiusAndReverseProjection() throws {
+        var gradient = ImageEditorGradientFillContent.shapeLinear(colorStops: [
+            ImageEditorGradientColorStop(position: 0, color: .systemRed),
+            ImageEditorGradientColorStop(position: 0.25, color: .systemGreen),
+            ImageEditorGradientColorStop(position: 1, color: .systemBlue)
+        ], scale: 0.8)
+        gradient.style = .radial
+        let content = ImageEditorShapeContent(
+            kind: .rectangle,
+            fillColor: .clear,
+            fillGradient: gradient,
+            fillGradientCenter: CGPoint(x: 0.25, y: 0.4),
+            fillOpacity: 1,
+            strokeColor: .clear,
+            strokeWidth: 1,
+            strokeOpacity: 0
+        )
+        let imageSize = CGSize(width: 100, height: 50)
+        let layerFrame = CGRect(x: 10, y: 20, width: 200, height: 150)
+        let geometry = try #require(
+            ImageEditorShapeGradientGeometry.radialCanvasGeometry(
+                content: content,
+                imageSize: imageSize,
+                layerFrame: layerFrame
+            )
+        )
+        let handles = ImageEditorShapeGradientGeometry.canvasStopHandlePoints(
+            content: content,
+            imageSize: imageSize,
+            layerFrame: layerFrame
+        )
+        let handle = try #require(handles.first)
+        #expect(handles.count == 1)
+        #expect(handle.index == 1)
+        #expect(abs(handle.canvasPoint.x - (geometry.center.x + (geometry.radius.x - geometry.center.x) * 0.25)) < 0.001)
+        #expect(abs(handle.canvasPoint.y - geometry.center.y) < 0.001)
+
+        let projected = try #require(
+            ImageEditorShapeGradientGeometry.updatedContent(
+                from: content,
+                imageSize: imageSize,
+                layerFrame: layerFrame,
+                movingStopAt: 1,
+                to: CGPoint(
+                    x: geometry.center.x + (geometry.radius.x - geometry.center.x) * 0.7,
+                    y: geometry.center.y + 200
+                )
+            )
+        )
+        #expect(abs((projected.fillGradient?.shapeColorStops[1].position ?? 0) - 0.7) < 0.001)
+
+        var reversedContent = content
+        reversedContent.fillGradient?.reverse = true
+        let reversedHandle = try #require(
+            ImageEditorShapeGradientGeometry.canvasStopHandlePoints(
+                content: reversedContent,
+                imageSize: imageSize,
+                layerFrame: layerFrame
+            ).first
+        )
+        #expect(abs(reversedHandle.canvasPoint.x - (geometry.center.x + (geometry.radius.x - geometry.center.x) * 0.75)) < 0.001)
+        let reversedPosition = try #require(
+            ImageEditorShapeGradientGeometry.logicalStopPosition(
+                content: reversedContent,
+                imageSize: imageSize,
+                layerFrame: layerFrame,
+                canvasPoint: CGPoint(
+                    x: geometry.center.x + (geometry.radius.x - geometry.center.x) * 0.25,
+                    y: geometry.center.y - 100
+                )
+            )
+        )
+        #expect(abs(reversedPosition - 0.75) < 0.001)
+    }
+
+    @Test func radialGradientStopDragAndRemovalEachCommitOneUndoStep() throws {
+        var gradient = ImageEditorGradientFillContent.shapeLinear(colorStops: [
+            ImageEditorGradientColorStop(position: 0, color: .systemRed),
+            ImageEditorGradientColorStop(position: 0.3, color: .systemGreen),
+            ImageEditorGradientColorStop(position: 1, color: .systemBlue)
+        ])
+        gradient.style = .radial
+        let viewModel = makeViewModel()
+        viewModel.drawShape(
+            from: CGPoint(x: 10, y: 10),
+            to: CGPoint(x: 110, y: 70),
+            ellipse: false,
+            fillGradient: gradient
+        )
+        let originalHistoryCount = viewModel.document.history.count
+        let geometry = try #require(viewModel.selectedShapeRadialGradientCanvasGeometry)
+        #expect(viewModel.selectedShapeGradientCanvasHandlePoints == nil)
+        #expect(viewModel.selectedShapeGradientCanvasStopHandlePoints.count == 1)
+        #expect(viewModel.canEditSelectedShapeGradientStops)
+        #expect(viewModel.beginEditingSelectedShapeGradientStop(at: 1))
+        viewModel.updateSelectedShapeGradientStop(
+            to: CGPoint(
+                x: geometry.center.x + (geometry.radius.x - geometry.center.x) * 0.7,
+                y: geometry.center.y
+            )
+        )
+        viewModel.finishEditingSelectedShapeGradient()
+        #expect(abs(viewModel.selectedShapeGradientColorStops[1].position - 0.7) < 0.001)
+        #expect(viewModel.document.history.count == originalHistoryCount + 1)
+        viewModel.undo()
+        #expect(abs(viewModel.selectedShapeGradientColorStops[1].position - 0.3) < 0.001)
+
+        let historyBeforeRemoval = viewModel.document.history.count
+        #expect(viewModel.removeSelectedShapeGradientCanvasStop(at: 1) != nil)
+        #expect(viewModel.selectedShapeGradientColorStops.count == 2)
+        #expect(viewModel.document.history.count == historyBeforeRemoval + 1)
+        viewModel.undo()
+        #expect(viewModel.selectedShapeGradientColorStops.count == 3)
+
+        let selectedID = try #require(viewModel.document.selectedLayerID)
+        let selectedIndex = try #require(
+            viewModel.document.layers.firstIndex { $0.id == selectedID }
+        )
+        viewModel.document.layers[selectedIndex].isLocked = true
+        let lockedHistoryCount = viewModel.document.history.count
+        #expect(!viewModel.canEditSelectedShapeGradientStops)
+        #expect(!viewModel.beginEditingSelectedShapeGradientStop(at: 1))
+        #expect(viewModel.document.history.count == lockedHistoryCount)
+    }
+
     @Test func radialCanvasHandlesCommitOneUndoAndRejectNoOpOrLockedEdits() throws {
         var gradient = ImageEditorGradientFillContent.shapeLinear(
             startColor: .systemRed,
@@ -740,6 +865,11 @@ struct ImageEditorShapeStyleTests {
         #expect(canvasSource.contains("image-editor-shape-radial-gradient-boundary"))
         #expect(canvasSource.contains("image-editor-shape-radial-gradient-handle-"))
         #expect(canvasSource.contains("beginEditingSelectedShapeRadialGradient"))
+        #expect(
+            canvasSource.components(
+                separatedBy: "ForEach(viewModel.selectedShapeGradientCanvasStopHandlePoints)"
+            ).count - 1 == 2
+        )
 
         #expect(source.contains("image-editor-shape-fill-kind-radialGradient"))
         #expect(source.contains("image-editor-shape-gradient-radius"))
