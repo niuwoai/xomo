@@ -53,6 +53,18 @@ struct XomoCanvasObjectTests {
         #expect(viewModel.document.selectedLayerIDs == [group.id])
     }
 
+    @Test func componentsTabRoutesCanvasInputThroughMoveTool() throws {
+        let viewModel = makeViewModel()
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))
+        let group = try #require(viewModel.document.selectedLayer)
+        viewModel.selectLayer(viewModel.document.layers.first!.id)
+        viewModel.selectLeftSidebarTab(.components)
+
+        #expect(viewModel.canvasInteractionTool == .move)
+        #expect(viewModel.selectXomoObject(at: CGPoint(x: 160, y: 112)))
+        #expect(viewModel.document.selectedLayerID == group.id)
+    }
+
     @Test func topmostOverlappingComponentWinsObjectHitTesting() throws {
         let viewModel = makeViewModel()
         let origin = CGPoint(x: 80, y: 90)

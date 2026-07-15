@@ -563,7 +563,7 @@ struct XomoFigmaNodeImportPlanTests {
         ))
     }
 
-    @Test func mapperStillReportsUnsupportedBaselineAndWrappedTrackDistribution() throws {
+    @Test func mapperSupportsHorizontalBaselineAndStillReportsUnsupportedTrackDistribution() throws {
         let response = try JSONDecoder().decode(
             XomoFigmaNodeResponse.self,
             from: Data(
@@ -592,6 +592,71 @@ struct XomoFigmaNodeImportPlanTests {
         let plan = try XomoFigmaNodeImportMapper.makePlan(response: response, requestedNodeID: "1:12")
         let frame = try #require(plan.items.first)
         #expect(frame.stackLayout?.wrapMode == .wrap)
+        #expect(frame.stackLayout?.crossAlignment == .baseline)
+        #expect(frame.issues.contains(.autoLayoutFlattened))
+        #expect(frame.fidelity == .partial)
+    }
+
+    @Test func mapperImportsHorizontalBaselineAsEditableNativeLayout() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                """
+                {
+                  "name": "Baseline row",
+                  "nodes": {
+                    "1:13": {
+                      "document": {
+                        "id": "1:13",
+                        "name": "Baseline Row",
+                        "type": "FRAME",
+                        "layoutMode": "HORIZONTAL",
+                        "counterAxisAlignItems": "BASELINE",
+                        "absoluteBoundingBox": {"x": 0, "y": 0, "width": 200, "height": 80}
+                      }
+                    }
+                  }
+                }
+                """.utf8
+            )
+        )
+
+        let plan = try XomoFigmaNodeImportMapper.makePlan(response: response, requestedNodeID: "1:13")
+        let frame = try #require(plan.items.first)
+        #expect(frame.stackLayout?.axis == .horizontal)
+        #expect(frame.stackLayout?.crossAlignment == .baseline)
+        #expect(!frame.issues.contains(.autoLayoutFlattened))
+        #expect(frame.fidelity == .exact)
+    }
+
+    @Test func mapperKeepsInvalidVerticalBaselineAsExplicitDowngrade() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                """
+                {
+                  "name": "Invalid baseline column",
+                  "nodes": {
+                    "1:14": {
+                      "document": {
+                        "id": "1:14",
+                        "name": "Baseline Column",
+                        "type": "FRAME",
+                        "layoutMode": "VERTICAL",
+                        "counterAxisAlignItems": "BASELINE",
+                        "absoluteBoundingBox": {"x": 0, "y": 0, "width": 100, "height": 200}
+                      }
+                    }
+                  }
+                }
+                """.utf8
+            )
+        )
+
+        let plan = try XomoFigmaNodeImportMapper.makePlan(response: response, requestedNodeID: "1:14")
+        let frame = try #require(plan.items.first)
+        #expect(frame.stackLayout?.axis == .vertical)
+        #expect(frame.stackLayout?.crossAlignment == .start)
         #expect(frame.issues.contains(.autoLayoutFlattened))
         #expect(frame.fidelity == .partial)
     }

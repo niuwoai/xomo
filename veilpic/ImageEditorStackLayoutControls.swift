@@ -76,11 +76,14 @@ struct ImageEditorStackLayoutControls: View {
                     set: { viewModel.setSelectedStackCrossAlignment($0) }
                 )
             ) {
-                ForEach(ImageEditorStackCrossAlignment.allCases) { alignment in
+                ForEach(ImageEditorStackCrossAlignment.availableCases(
+                    for: viewModel.selectedStackLayout?.axis ?? .horizontal
+                )) { alignment in
                     Text(L10n.text(alignment.localizationKey)).tag(alignment)
                 }
             }
             .focusable(false)
+            .accessibilityIdentifier("image-editor-stack-layout-cross-alignment")
         }
     }
 

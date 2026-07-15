@@ -1,6 +1,6 @@
 # Xomo Figma 链接导入边界
 
-> 最后更新：2026-07-15 ｜ 当前版本：v2.12.0-rc87 ｜ 当前阶段：水平 Auto Layout Wrap 映射为可编辑多行布局
+> 最后更新：2026-07-15 ｜ 当前版本：v2.12.0-rc89 ｜ 当前阶段：水平 Auto Layout Wrap 与 Baseline 映射为可编辑原生布局
 
 ## 当前已经支持
 
@@ -24,7 +24,7 @@ rc59 要求链接包含明确的 `node-id`。用户点击“读取节点并生�
 
 | Figma 节点 | Xomo 结果 | 当前保真范围 |
 | --- | --- | --- |
-| Frame / Group | 嵌套图层组 | 保留层级、名称、显隐、透明度与固定坐标；水平/垂直 Auto Layout 保留间距、内距、两轴对齐、固定/Hug 容器及 Fill/Stretch 子项，水平 Wrap 另保留分行与行间距 |
+| Frame / Group | 嵌套图层组 | 保留层级、名称、显隐、透明度与固定坐标；水平/垂直 Auto Layout 保留间距、内距、两轴对齐、固定/Hug 容器及 Fill/Stretch 子项，水平 Wrap 另保留分行、行间距与逐行文字 Baseline |
 | Component / Component Set / Instance | 普通嵌套图层组 | 子层可编辑，Auto Layout 容器与子项可重排；组件/实例语义明确降级 |
 | Text | 可编辑文字层 | 保留文本、字体族、字号、字重、横向对齐和纯色填充 |
 | Rectangle / Ellipse | 可编辑形状层 | 保留纯色、2–16 色标线性渐变或像素轴等长垂直的圆形径向渐变，支持偏心中心与公共透明度；保留纯色描边、描边宽度，以及矩形统一/非对称四角和圆角平滑，平滑曲线使用超椭圆近似 |
@@ -75,6 +75,7 @@ rc72 依据 Figma 官方 [Paint / ColorStop 属性说明](https://developers.fig
 22. **rc84（当前，已完成）**：径向中心柄与半径柄显示导入渐变的视觉起点/终点颜色；多色标读取真实首尾色，反向时交换，控制柄方向与实际画布渲染一致。
 23. **rc86（当前，已完成）**：图片 Paint 的曝光、对比度、饱和度、色温、色调、高光和阴影按官方范围读取，在布局变换之后近似烘焙为像素；导入报告明确标记其不可再次单独编辑。
 24. **rc87（当前，已完成）**：水平 `layoutWrap=WRAP` 与 `counterAxisSpacing` 映射为原生多行布局；固定宽度负责换行，交叉轴 Hug 随行数调整高度，Fill/Stretch 在各自行内生效。
+25. **rc88（当前，已完成）**：水平 `counterAxisAlignItems=BASELINE` 映射为原生首行基线对齐；文字读取实时字体度量，普通图形回退到底边，Wrap 逐行计算基线上下包络。
 
 ## 官方依据
 
@@ -84,6 +85,7 @@ rc72 依据 Figma 官方 [Paint / ColorStop 属性说明](https://developers.fig
 - [Figma Paint 属性](https://developers.figma.com/docs/rest-api/file-property-types/)：渐变 Paint 的三个归一化控制点依次表示起点、终点和宽度，rc78 据此验证径向双轴；图片 Paint 的 Fill/Fit/Tile/Stretch、`imageTransform`、`scalingFactor`、`rotation` 与 7 项 `filters` 按白名单进行本地像素烘焙。
 - [Figma 节点类型](https://developers.figma.com/docs/rest-api/file-node-types/)：Frame、Group、Vector、Text、Rectangle、Ellipse、Component 与 Instance 的可读取字段构成 rc59 映射依据。
 - [Figma Auto Layout Wrap](https://developers.figma.com/docs/plugins/api/properties/nodes-layoutwrap/)：`layoutWrap=WRAP` 只适用于水平 Auto Layout；[counterAxisSpacing](https://developers.figma.com/docs/plugins/api/properties/nodes-counteraxisspacing/) 定义换行轨道之间的正数间距，rc87 据此建立水平分行与独立行间距。
+- [Figma Auto Layout Baseline](https://developers.figma.com/docs/plugins/api/properties/nodes-counteraxisalignitems/)：`BASELINE` 只允许水平 Auto Layout，并要求子项沿文字基线对齐；rc88 据此限制属性入口与导入边界。
 - [Figma API 限流](https://developers.figma.com/docs/rest-api/rate-limits/)：文件节点读取属于 Tier 1，配额按席位和计划不同，因此界面使用显式读取且不自动刷新。
 - [Figma 认证](https://developers.figma.com/docs/rest-api/authentication/)：个人工具可使用 PAT，代表多用户操作的应用应使用 OAuth；不同端点要求对应 scope。
 - [Figma Personal Access Token](https://developers.figma.com/docs/rest-api/personal-access-tokens/)：PAT 通过 `X-Figma-Token` 请求头发送，不放入 URL。
@@ -93,4 +95,4 @@ rc72 依据 Figma 官方 [Paint / ColorStop 属性说明](https://developers.fig
 
 ## 明确尚未支持
 
-rc78 能把 Figma 的单一纯色、2–16 色标线性渐变和圆形径向渐变映射为可继续修改的形状填充，并保留独立纯色描边、统一 `cornerRadius`、合法的四角 `rectangleCornerRadii` 与 `cornerSmoothing`；平滑轮廓使用超椭圆视觉近似，因此仍会明确标记为部分保真。椭圆/倾斜径向轴、角度渐变、菱形渐变、图案与多重 Paint 仍不保留。图片 Crop/STRETCH、Tile、90°旋转和 7 项滤镜可以视觉烘焙，但这些参数尚未保存为可再次编辑的图片填充或独立滤镜对象；节点旋转/镜像/倾斜变换、蒙版与 Frame 内容裁切关系、效果、特殊混合模式、Baseline、纵向 Wrap、换行轨道 `SPACE_BETWEEN`、变量、组件属性和实例覆写语义仍未保留。Fill 子项只在父组对应轴为固定尺寸时改变外框；水平 Wrap 中按所在行分配剩余宽度，Stretch 填满所在行高度。父主轴为 Hug 时保留导入尺寸，避免父子互相依赖。绝对定位子项不参与布局尺寸计算。超过 6 层的后代不会读取；不解析 `.fig` 私有格式、不读取浏览器会话，也不声称 Figma 文件可以无损还原。
+rc88 能把 Figma 的单一纯色、2–16 色标线性渐变和圆形径向渐变映射为可继续修改的形状填充，并保留独立纯色描边、统一 `cornerRadius`、合法的四角 `rectangleCornerRadii` 与 `cornerSmoothing`；平滑轮廓使用超椭圆视觉近似，因此仍会明确标记为部分保真。椭圆/倾斜径向轴、角度渐变、菱形渐变、图案与多重 Paint 仍不保留。图片 Crop/STRETCH、Tile、90°旋转和 7 项滤镜可以视觉烘焙，但这些参数尚未保存为可再次编辑的图片填充或独立滤镜对象；节点旋转/镜像/倾斜变换、蒙版与 Frame 内容裁切关系、效果、特殊混合模式、纵向 Wrap、换行轨道 `SPACE_BETWEEN`、变量、组件属性和实例覆写语义仍未保留。水平 Baseline 已原生保留，非法的垂直 Baseline 仍明确降级。Fill 子项只在父组对应轴为固定尺寸时改变外框；水平 Wrap 中按所在行分配剩余宽度，Stretch 填满所在行高度。父主轴为 Hug 时保留导入尺寸，避免父子互相依赖。绝对定位子项不参与布局尺寸计算。超过 6 层的后代不会读取；不解析 `.fig` 私有格式、不读取浏览器会话，也不声称 Figma 文件可以无损还原。

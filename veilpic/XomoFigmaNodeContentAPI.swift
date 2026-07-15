@@ -373,6 +373,7 @@ enum XomoFigmaNodeImportMapper {
         switch value {
         case "CENTER": return .center
         case "MAX": return .end
+        case "BASELINE": return .baseline
         default: return .start
         }
     }
@@ -381,9 +382,11 @@ enum XomoFigmaNodeImportMapper {
         let usesUnsupportedWrap = node.layoutWrap == "WRAP" && node.layoutMode != "HORIZONTAL"
         let usesUnsupportedTrackDistribution = node.counterAxisAlignContent != nil
             && node.counterAxisAlignContent != "AUTO"
+        let usesUnsupportedBaseline = node.counterAxisAlignItems == "BASELINE"
+            && node.layoutMode != "HORIZONTAL"
         return usesUnsupportedWrap
             || usesUnsupportedTrackDistribution
-            || node.counterAxisAlignItems == "BASELINE"
+            || usesUnsupportedBaseline
     }
 
     private static func targetMapping(

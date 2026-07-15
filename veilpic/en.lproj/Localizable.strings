@@ -741,6 +741,7 @@
 "imageEditor.stackLayout.cross.start" = "Start";
 "imageEditor.stackLayout.cross.center" = "Center";
 "imageEditor.stackLayout.cross.end" = "End";
+"imageEditor.stackLayout.cross.baseline" = "Baseline";
 "imageEditor.stackLayout.sizing.fixed" = "Fixed";
 "imageEditor.stackLayout.sizing.hug" = "Hug contents";
 "imageEditor.stackLayout.wrap.noWrap" = "No wrap";

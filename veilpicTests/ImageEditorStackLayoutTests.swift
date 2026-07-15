@@ -56,6 +56,96 @@ struct ImageEditorStackLayoutTests {
         ])
     }
 
+    @Test func horizontalBaselineAlignmentUsesFontMetricsAndHugEnvelope() {
+        let result = ImageEditorStackLayoutEngine.layout(
+            in: CGRect(x: 10, y: 20, width: 200, height: 100),
+            itemFrames: [
+                CGRect(x: 0, y: 0, width: 30, height: 20),
+                CGRect(x: 0, y: 0, width: 40, height: 30)
+            ],
+            itemBaselineOffsets: [15, 10],
+            layout: ImageEditorStackLayout(
+                axis: .horizontal,
+                spacing: 8,
+                paddingTop: 4,
+                paddingRight: 6,
+                paddingBottom: 6,
+                paddingLeft: 5,
+                crossAlignment: .baseline,
+                crossSizingMode: .hug
+            )
+        )
+
+        #expect(result.containerFrame == CGRect(x: 10, y: 20, width: 200, height: 45))
+        #expect(result.itemFrames == [
+            CGRect(x: 15, y: 24, width: 30, height: 20),
+            CGRect(x: 53, y: 29, width: 40, height: 30)
+        ])
+        #expect(result.itemFrames[0].minY + 15 == result.itemFrames[1].minY + 10)
+    }
+
+    @Test func wrappedRowsComputeIndependentBaselineEnvelopes() {
+        let result = ImageEditorStackLayoutEngine.layout(
+            in: CGRect(x: 0, y: 0, width: 100, height: 160),
+            itemFrames: [
+                CGRect(x: 0, y: 0, width: 30, height: 20),
+                CGRect(x: 0, y: 0, width: 30, height: 30),
+                CGRect(x: 0, y: 0, width: 30, height: 12)
+            ],
+            itemBaselineOffsets: [15, 10, 8],
+            layout: ImageEditorStackLayout(
+                axis: .horizontal,
+                spacing: 10,
+                paddingTop: 10,
+                paddingRight: 10,
+                paddingBottom: 10,
+                paddingLeft: 10,
+                crossAlignment: .baseline,
+                crossSizingMode: .hug,
+                wrapMode: .wrap,
+                counterSpacing: 5
+            )
+        )
+
+        #expect(result.containerFrame == CGRect(x: 0, y: 0, width: 100, height: 72))
+        #expect(result.itemFrames == [
+            CGRect(x: 10, y: 10, width: 30, height: 20),
+            CGRect(x: 50, y: 15, width: 30, height: 30),
+            CGRect(x: 10, y: 50, width: 30, height: 12)
+        ])
+        #expect(result.itemFrames[0].minY + 15 == result.itemFrames[1].minY + 10)
+    }
+
+    @Test func baselineFallsBackToBottomEdgeAndStretchedChildrenKeepTrackOrigin() {
+        let frames = ImageEditorStackLayoutEngine.frames(
+            in: CGRect(x: 0, y: 0, width: 140, height: 80),
+            itemFrames: [
+                CGRect(x: 0, y: 0, width: 30, height: 20),
+                CGRect(x: 0, y: 0, width: 30, height: 10),
+                CGRect(x: 0, y: 0, width: 30, height: 12)
+            ],
+            itemLayouts: [
+                ImageEditorStackChildLayout(),
+                ImageEditorStackChildLayout(),
+                ImageEditorStackChildLayout(stretchesCrossAxis: true)
+            ],
+            itemBaselineOffsets: [nil, 6, nil],
+            layout: ImageEditorStackLayout(
+                axis: .horizontal,
+                spacing: 5,
+                paddingTop: 10,
+                paddingBottom: 10,
+                crossAlignment: .baseline
+            )
+        )
+
+        #expect(frames == [
+            CGRect(x: 0, y: 10, width: 30, height: 20),
+            CGRect(x: 35, y: 24, width: 30, height: 10),
+            CGRect(x: 70, y: 10, width: 30, height: 60)
+        ])
+    }
+
     @Test func hugSizingRecomputesBothContainerAxesFromContents() {
         let result = ImageEditorStackLayoutEngine.layout(
             in: CGRect(x: 10, y: 20, width: 300, height: 200),
@@ -159,6 +249,22 @@ struct ImageEditorStackLayoutTests {
         #expect(nonFinite.counterSpacing == 0)
     }
 
+    @Test func baselineNormalizationKeepsOfficialHorizontalOnlyBoundary() {
+        let horizontal = ImageEditorStackLayout(
+            axis: .horizontal,
+            crossAlignment: .baseline
+        )
+        let vertical = ImageEditorStackLayout(
+            axis: .vertical,
+            crossAlignment: .baseline
+        )
+
+        #expect(horizontal.crossAlignment == .baseline)
+        #expect(vertical.crossAlignment == .start)
+        #expect(ImageEditorStackCrossAlignment.availableCases(for: .horizontal).contains(.baseline))
+        #expect(!ImageEditorStackCrossAlignment.availableCases(for: .vertical).contains(.baseline))
+    }
+
     @Test func wrappedRowsResizeHugCrossAxisAndDistributeGrowPerRow() {
         let result = ImageEditorStackLayoutEngine.layout(
             in: CGRect(x: 5, y: 7, width: 130, height: 200),
@@ -244,6 +350,83 @@ struct ImageEditorStackLayoutTests {
 
         fixture.viewModel.redo()
         #expect(fixture.layer(named: "First").frame == CGRect(x: 95, y: 30, width: 30, height: 20))
+    }
+
+    @Test func reflowDerivesLiveBaselinesFromTextLayerFontMetrics() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "baseline.png",
+            image: NSImage.transparent(size: CGSize(width: 240, height: 120))
+        ) { _ in }
+        var root = ImageEditorLayer.group(name: "Baseline Row", size: viewModel.document.canvasSize)
+        root.frame = CGRect(x: 10, y: 20, width: 220, height: 80)
+        root.stackLayout = ImageEditorStackLayout(
+            axis: .horizontal,
+            spacing: 12,
+            paddingTop: 8,
+            paddingRight: 8,
+            paddingBottom: 8,
+            paddingLeft: 8,
+            crossAlignment: .baseline
+        )
+        let padding = ImageEditorTextContent.drawingPadding
+        var caption = ImageEditorLayer.text(
+            name: "Caption",
+            origin: CGPoint(x: 80, y: 70),
+            content: ImageEditorTextContent(
+                text: "Caption",
+                color: .white,
+                fontSize: 12,
+                point: CGPoint(x: padding, y: padding)
+            )
+        )
+        caption.groupID = root.id
+        var title = ImageEditorLayer.text(
+            name: "Title",
+            origin: CGPoint(x: 130, y: 30),
+            content: ImageEditorTextContent(
+                text: "Title",
+                color: .white,
+                fontSize: 28,
+                point: CGPoint(x: padding, y: padding)
+            )
+        )
+        title.groupID = root.id
+        viewModel.document.layers = [caption, title, root]
+        viewModel.document.selectedLayerID = root.id
+        viewModel.document.selectedLayerIDs = [root.id]
+
+        viewModel.reflowSelectedStackLayout()
+
+        let movedCaption = try #require(viewModel.document.layers.first { $0.name == "Caption" })
+        let movedTitle = try #require(viewModel.document.layers.first { $0.name == "Title" })
+        let captionBaseline = try #require(movedCaption.stackBaselineOffset)
+        let titleBaseline = try #require(movedTitle.stackBaselineOffset)
+        #expect(abs(
+            movedCaption.frame.minY + captionBaseline
+                - movedTitle.frame.minY - titleBaseline
+        ) < 0.001)
+        #expect(movedCaption.frame.minY > movedTitle.frame.minY)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.stackLayout"))
+    }
+
+    @Test func textBaselineOffsetScalesWithTransformedLayerHeight() throws {
+        let padding = ImageEditorTextContent.drawingPadding
+        var layer = ImageEditorLayer.text(
+            name: "Scale",
+            origin: .zero,
+            content: ImageEditorTextContent(
+                text: "Scale",
+                color: .white,
+                fontSize: 20,
+                point: CGPoint(x: padding, y: padding)
+            )
+        )
+        let original = try #require(layer.stackBaselineOffset)
+
+        layer.frame.size.height *= 2
+
+        let scaled = try #require(layer.stackBaselineOffset)
+        #expect(abs(scaled - original * 2) < 0.001)
     }
 
     @Test func stackLayoutAndExclusionSurviveProjectRoundTrip() throws {
@@ -338,6 +521,7 @@ struct ImageEditorStackLayoutTests {
             layout.axis = .horizontal
             layout.wrapMode = .wrap
             layout.counterSpacing = 17
+            layout.crossAlignment = .baseline
         }
         let projectData = try fixture.viewModel.projectData()
         let reopened = ImageEditorViewModel(
@@ -350,6 +534,7 @@ struct ImageEditorStackLayoutTests {
         let root = try #require(reopened.document.layers.first { $0.name == "Root" })
         #expect(root.stackLayout?.wrapMode == .wrap)
         #expect(root.stackLayout?.counterSpacing == 17)
+        #expect(root.stackLayout?.crossAlignment == .baseline)
     }
 
     @Test func wrapControlsReflowAndSupportUndoRedo() {
@@ -427,6 +612,7 @@ struct ImageEditorStackLayoutTests {
         )
 
         #expect(viewSource.contains("image-editor-stack-layout-axis"))
+        #expect(viewSource.contains("image-editor-stack-layout-cross-alignment"))
         #expect(viewSource.contains("image-editor-stack-layout-primary-sizing"))
         #expect(viewSource.contains("image-editor-stack-layout-cross-sizing"))
         #expect(viewSource.contains("image-editor-stack-layout-wrap"))
@@ -435,6 +621,7 @@ struct ImageEditorStackLayoutTests {
         #expect(viewSource.contains("image-editor-stack-child-cross-sizing"))
         #expect(viewSource.contains("image-editor-stack-layout-reflow"))
         #expect(viewSource.contains("setSelectedStackSpacing"))
+        #expect(viewSource.contains("ImageEditorStackCrossAlignment.availableCases"))
         #expect(panelSource.contains("static let foregroundColor = NSColor.white"))
         #expect(panelSource.contains(".foregroundColor: color"))
     }

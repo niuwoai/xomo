@@ -741,6 +741,7 @@
 "imageEditor.stackLayout.cross.start" = "起点";
 "imageEditor.stackLayout.cross.center" = "居中";
 "imageEditor.stackLayout.cross.end" = "终点";
+"imageEditor.stackLayout.cross.baseline" = "基线";
 "imageEditor.stackLayout.sizing.fixed" = "固定";
 "imageEditor.stackLayout.sizing.hug" = "适应内容";
 "imageEditor.stackLayout.wrap.noWrap" = "不换行";

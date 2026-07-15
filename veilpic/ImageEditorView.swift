@@ -1150,7 +1150,6 @@ struct ImageEditorView: View {
                 }
                 .contentShape(Rectangle())
                 .coordinateSpace(name: "image-editor-canvas-space")
-                .gesture(canvasGesture(in: geometry.size))
                 .accessibilityElement(children: .contain)
                 .accessibilityIdentifier("image-editor-canvas")
                 .xomoCanvasPlatformInteractions(
@@ -1186,6 +1185,11 @@ struct ImageEditorView: View {
                         }
                     }
                 )
+                // Keep the editor gesture on the outermost canvas view.  The
+                // drop destination is an AppKit interaction and can otherwise
+                // become the gesture host on macOS, preventing clicks/drags on
+                // already inserted components from reaching canvasGesture.
+                .gesture(canvasGesture(in: geometry.size))
                 .overlay(
                     ScrollWheelZoomView { factor, location, viewportSize in
                         // 每个离散滚轮 tick 独立锚定当前状态：复用捏合缩放的锚定数学，

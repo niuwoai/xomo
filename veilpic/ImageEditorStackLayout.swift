@@ -23,9 +23,14 @@ enum ImageEditorStackCrossAlignment: String, CaseIterable, Codable, Identifiable
     case start
     case center
     case end
+    case baseline
 
     var id: String { rawValue }
     var localizationKey: String { "imageEditor.stackLayout.cross.\(rawValue)" }
+
+    static func availableCases(for axis: ImageEditorStackAxis) -> [Self] {
+        axis == .horizontal ? allCases : allCases.filter { $0 != .baseline }
+    }
 }
 
 enum ImageEditorStackSizingMode: String, CaseIterable, Codable, Identifiable, Sendable {
@@ -199,6 +204,9 @@ struct ImageEditorStackLayout: Equatable, Codable, Sendable {
         )
         if value.axis != .horizontal {
             value.wrapMode = .noWrap
+            if value.crossAlignment == .baseline {
+                value.crossAlignment = .start
+            }
         }
         return value
     }
@@ -218,6 +226,7 @@ enum ImageEditorStackLayoutEngine {
         in container: CGRect,
         itemFrames: [CGRect],
         itemLayouts: [ImageEditorStackChildLayout] = [],
+        itemBaselineOffsets: [CGFloat?] = [],
         layout: ImageEditorStackLayout
     ) -> ImageEditorStackLayoutResult {
         let layout = layout.normalized()
@@ -225,11 +234,24 @@ enum ImageEditorStackLayoutEngine {
         let resolvedItemLayouts = itemFrames.indices.map { index in
             itemLayouts.indices.contains(index) ? itemLayouts[index] : ImageEditorStackChildLayout()
         }
+        let resolvedItemBaselineOffsets = itemFrames.indices.map { index in
+            itemBaselineOffsets.indices.contains(index) ? itemBaselineOffsets[index] : nil
+        }
         let originalItemMain = sizes.reduce(0) { partial, size in
             partial + (layout.axis == .horizontal ? size.width : size.height)
         }
-        let maximumItemCross = sizes.reduce(0) { partial, size in
-            max(partial, layout.axis == .horizontal ? size.height : size.width)
+        let maximumItemCross: CGFloat
+        if layout.axis == .horizontal, layout.crossAlignment == .baseline {
+            maximumItemCross = baselineMetrics(
+                indices: Array(sizes.indices),
+                sizes: sizes,
+                itemLayouts: resolvedItemLayouts,
+                itemBaselineOffsets: resolvedItemBaselineOffsets
+            ).extent
+        } else {
+            maximumItemCross = sizes.reduce(0) { partial, size in
+                max(partial, layout.axis == .horizontal ? size.height : size.width)
+            }
         }
         let gapCount = CGFloat(max(0, itemFrames.count - 1))
         let requiredMain = originalItemMain + layout.spacing * gapCount + mainPadding(layout)
@@ -243,6 +265,7 @@ enum ImageEditorStackLayoutEngine {
                 in: resolvedContainer,
                 sizes: sizes,
                 itemLayouts: resolvedItemLayouts,
+                itemBaselineOffsets: resolvedItemBaselineOffsets,
                 layout: layout
             )
         }
@@ -300,14 +323,32 @@ enum ImageEditorStackLayoutEngine {
             mainOffset = 0
         }
         var cursor = (layout.axis == .horizontal ? inner.minX : inner.minY) + mainOffset
-        let frames = sizes.map { size in
-            let crossOrigin = crossOrigin(layout: layout, inner: inner, itemSize: size)
+        let baseline = baselineMetrics(
+            indices: Array(sizes.indices),
+            sizes: sizes,
+            itemLayouts: resolvedItemLayouts,
+            itemBaselineOffsets: resolvedItemBaselineOffsets
+        )
+        let frames = sizes.indices.map { index in
+            let size = sizes[index]
+            let crossOriginValue: CGFloat
+            if layout.axis == .horizontal,
+               layout.crossAlignment == .baseline,
+               !resolvedItemLayouts[index].stretchesCrossAxis {
+                crossOriginValue = inner.minY + baseline.target - resolvedBaselineOffset(
+                    at: index,
+                    sizes: sizes,
+                    itemBaselineOffsets: resolvedItemBaselineOffsets
+                )
+            } else {
+                crossOriginValue = crossOrigin(layout: layout, inner: inner, itemSize: size)
+            }
             let frame: CGRect
             if layout.axis == .horizontal {
-                frame = CGRect(x: cursor, y: crossOrigin, width: size.width, height: size.height)
+                frame = CGRect(x: cursor, y: crossOriginValue, width: size.width, height: size.height)
                 cursor += size.width + spacing
             } else {
-                frame = CGRect(x: crossOrigin, y: cursor, width: size.width, height: size.height)
+                frame = CGRect(x: crossOriginValue, y: cursor, width: size.width, height: size.height)
                 cursor += size.height + spacing
             }
             return frame
@@ -319,12 +360,14 @@ enum ImageEditorStackLayoutEngine {
         in container: CGRect,
         itemFrames: [CGRect],
         itemLayouts: [ImageEditorStackChildLayout] = [],
+        itemBaselineOffsets: [CGFloat?] = [],
         layout: ImageEditorStackLayout
     ) -> [CGRect] {
         self.layout(
             in: container,
             itemFrames: itemFrames,
             itemLayouts: itemLayouts,
+            itemBaselineOffsets: itemBaselineOffsets,
             layout: layout
         ).itemFrames
     }
@@ -333,6 +376,7 @@ enum ImageEditorStackLayoutEngine {
         in container: CGRect,
         sizes originalSizes: [CGSize],
         itemLayouts: [ImageEditorStackChildLayout],
+        itemBaselineOffsets: [CGFloat?],
         layout: ImageEditorStackLayout
     ) -> ImageEditorStackLayoutResult {
         guard !originalSizes.isEmpty else {
@@ -358,7 +402,14 @@ enum ImageEditorStackLayoutEngine {
             }
         }
         var rowHeights = rows.map { row in
-            row.reduce(CGFloat.zero) { max($0, sizes[$1].height) }
+            layout.crossAlignment == .baseline
+                ? baselineMetrics(
+                    indices: row,
+                    sizes: sizes,
+                    itemLayouts: itemLayouts,
+                    itemBaselineOffsets: itemBaselineOffsets
+                ).extent
+                : row.reduce(CGFloat.zero) { max($0, sizes[$1].height) }
         }
         var contentCross = rowHeights.reduce(0, +)
             + layout.counterSpacing * CGFloat(max(0, rows.count - 1))
@@ -380,6 +431,7 @@ enum ImageEditorStackLayoutEngine {
             rowHeights: rowHeights,
             sizes: sizes,
             itemLayouts: itemLayouts,
+            itemBaselineOffsets: itemBaselineOffsets,
             container: resolvedContainer,
             availableMain: availableMain,
             contentCross: contentCross,
@@ -436,6 +488,7 @@ enum ImageEditorStackLayoutEngine {
         rowHeights: [CGFloat],
         sizes: [CGSize],
         itemLayouts: [ImageEditorStackChildLayout],
+        itemBaselineOffsets: [CGFloat?],
         container: CGRect,
         availableMain: CGFloat,
         contentCross: CGFloat,
@@ -446,7 +499,7 @@ enum ImageEditorStackLayoutEngine {
         let freeCross = max(0, availableCross - contentCross)
         let trackOffset: CGFloat
         switch layout.crossAlignment {
-        case .start:
+        case .start, .baseline:
             trackOffset = 0
         case .center:
             trackOffset = freeCross / 2
@@ -456,6 +509,12 @@ enum ImageEditorStackLayoutEngine {
         var rowOriginY = container.minY + layout.paddingTop + trackOffset
         for (rowOffset, row) in rows.enumerated() {
             let rowHeight = rowHeights[rowOffset]
+            let baseline = baselineMetrics(
+                indices: row,
+                sizes: sizes,
+                itemLayouts: itemLayouts,
+                itemBaselineOffsets: itemBaselineOffsets
+            )
             let metrics = wrappedPrimaryMetrics(
                 row: row,
                 sizes: sizes,
@@ -469,12 +528,22 @@ enum ImageEditorStackLayoutEngine {
                 if itemLayouts[index].stretchesCrossAxis {
                     size.height = max(1, rowHeight)
                 }
-                let y = wrappedCrossOrigin(
-                    rowOrigin: rowOriginY,
-                    rowHeight: rowHeight,
-                    itemHeight: size.height,
-                    alignment: layout.crossAlignment
-                )
+                let y: CGFloat
+                if layout.crossAlignment == .baseline,
+                   !itemLayouts[index].stretchesCrossAxis {
+                    y = rowOriginY + baseline.target - resolvedBaselineOffset(
+                        at: index,
+                        sizes: sizes,
+                        itemBaselineOffsets: itemBaselineOffsets
+                    )
+                } else {
+                    y = wrappedCrossOrigin(
+                        rowOrigin: rowOriginY,
+                        rowHeight: rowHeight,
+                        itemHeight: size.height,
+                        alignment: layout.crossAlignment
+                    )
+                }
                 frames[index] = CGRect(origin: CGPoint(x: cursor, y: y), size: size)
                 cursor += size.width + metrics.spacing
             }
@@ -514,13 +583,60 @@ enum ImageEditorStackLayoutEngine {
         alignment: ImageEditorStackCrossAlignment
     ) -> CGFloat {
         switch alignment {
-        case .start:
+        case .start, .baseline:
             return rowOrigin
         case .center:
             return rowOrigin + (rowHeight - itemHeight) / 2
         case .end:
             return rowOrigin + rowHeight - itemHeight
         }
+    }
+
+    private static func baselineMetrics(
+        indices: [Int],
+        sizes: [CGSize],
+        itemLayouts: [ImageEditorStackChildLayout],
+        itemBaselineOffsets: [CGFloat?]
+    ) -> (target: CGFloat, extent: CGFloat) {
+        let maximumHeight = indices.reduce(CGFloat.zero) { partial, index in
+            max(partial, sizes[index].height)
+        }
+        let alignedIndices = indices.filter { !itemLayouts[$0].stretchesCrossAxis }
+        guard !alignedIndices.isEmpty else {
+            return (0, maximumHeight)
+        }
+        let target = alignedIndices.reduce(CGFloat.zero) { partial, index in
+            max(
+                partial,
+                resolvedBaselineOffset(
+                    at: index,
+                    sizes: sizes,
+                    itemBaselineOffsets: itemBaselineOffsets
+                )
+            )
+        }
+        let descent = alignedIndices.reduce(CGFloat.zero) { partial, index in
+            let offset = resolvedBaselineOffset(
+                at: index,
+                sizes: sizes,
+                itemBaselineOffsets: itemBaselineOffsets
+            )
+            return max(partial, sizes[index].height - offset)
+        }
+        return (target, max(maximumHeight, target + descent))
+    }
+
+    private static func resolvedBaselineOffset(
+        at index: Int,
+        sizes: [CGSize],
+        itemBaselineOffsets: [CGFloat?]
+    ) -> CGFloat {
+        let height = max(0, sizes[index].height)
+        guard itemBaselineOffsets.indices.contains(index),
+              let requested = itemBaselineOffsets[index],
+              requested.isFinite
+        else { return height }
+        return min(max(requested, 0), height)
     }
 
     private static func mainPadding(_ layout: ImageEditorStackLayout) -> CGFloat {
@@ -596,7 +712,7 @@ enum ImageEditorStackLayoutEngine {
         let itemCross = layout.axis == .horizontal ? itemSize.height : itemSize.width
         let minimum = layout.axis == .horizontal ? inner.minY : inner.minX
         switch layout.crossAlignment {
-        case .start:
+        case .start, .baseline:
             return minimum
         case .center:
             return minimum + (availableCross - itemCross) / 2
@@ -758,6 +874,9 @@ extension ImageEditorViewModel {
             itemFrames: participantIndices.map { document.layers[$0].frame.standardized },
             itemLayouts: participantIndices.map {
                 document.layers[$0].stackChildLayout ?? ImageEditorStackChildLayout()
+            },
+            itemBaselineOffsets: participantIndices.map {
+                document.layers[$0].stackBaselineOffset
             },
             layout: layout
         )

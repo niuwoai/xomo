@@ -1,5 +1,27 @@
 # Changelog
 
+## 2.12.0-rc89 - 2026-07-15
+
+### Fixed
+- 修复组件库模式下 `dropDestination` 抢占画布手势，导致已插入 UI 组件无法稳定点击选中或拖动的问题；画布手势现在优先接收点击和拖动事件。
+
+### Tests
+- 新增组件库标签页强制使用移动工具并命中组件对象的回归测试。
+
+## 2.12.0-rc88 - 2026-07-15
+
+### Added
+- Xomo 原生 Auto Layout 新增水平文字基线对齐；文字层从当前字体 ascender 与绘制起点实时推导首行基线，字号、字体或图层缩放变化后重新排版仍保持准确。
+- 普通图形以底边作为基线回退；水平 Wrap 为每一行独立计算最大基线与下行空间，交叉轴 Hug 会扩展到完整基线包络，不会把较深的字形或混排子项裁掉。
+- 属性面板仅在水平布局提供“基线”选项，项目保存、重开、Undo/Redo 与现有 Auto Layout 模型共用同一语义；垂直布局会规范化为起点对齐。
+- Figma 水平 `counterAxisAlignItems=BASELINE` 映射为可编辑原生布局；非法垂直 Baseline 与 `counterAxisAlignContent=SPACE_BETWEEN` 继续明确降级。
+- App、CLI、教程、Figma/MCP 文档、路线图与全部 Xcode target 版本同步为 `2.12.0-rc88`。
+
+### Tests
+- 新增固定与 Hug 基线包络、普通图形回退、Stretch 覆盖、逐行 Wrap、水平限定、字体度量、缩放、项目往返及 Figma 合法/非法边界回归。
+- Auto Layout 23/23、Figma 节点导入 22/22、三语资源 4/4，共 49/49 通过；SwiftPM CLI 2/2 通过并输出 `2.12.0-rc88`。
+- 隔离 Debug App 的版本、Bundle ID `im.some.xomo`、macOS 13.0 下限与 arm64 架构核对通过；完整 Release、全量测试、冒烟和 `/Applications` 覆盖仍按 20 版门禁在 rc100 执行。
+
 ## 2.12.0-rc87 - 2026-07-15
 
 ### Added
