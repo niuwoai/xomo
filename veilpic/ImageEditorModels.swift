@@ -831,7 +831,12 @@ struct ImageEditorGradientFillContent: Equatable, Codable {
         }
     }
 
-    func renderedImage(size: CGSize, foreground: NSColor = .systemRed, background: NSColor = .clear) -> NSImage {
+    func renderedImage(
+        size: CGSize,
+        foreground: NSColor = .systemRed,
+        background: NSColor = .clear,
+        centerNormalized: CGPoint = CGPoint(x: 0.5, y: 0.5)
+    ) -> NSImage {
         let content = normalized()
         let width = max(1, Int(size.width.rounded()))
         let height = max(1, Int(size.height.rounded()))
@@ -844,7 +849,10 @@ struct ImageEditorGradientFillContent: Equatable, Codable {
         let radians = Double(content.angle) * Double.pi / 180
         let direction = SIMD2<Double>(cos(radians), sin(radians))
         let span = max(1, abs(direction.x) * Double(width) + abs(direction.y) * Double(height)) * Double(content.scale)
-        let center = SIMD2<Double>(Double(width - 1) / 2, Double(height - 1) / 2)
+        let center = SIMD2<Double>(
+            Double(width) * Double(centerNormalized.x) - 0.5,
+            Double(height) * Double(centerNormalized.y) - 0.5
+        )
         let cornerDistance = max(
             1,
             hypot(Double(width - 1) / 2, Double(height - 1) / 2) * Double(content.scale)
@@ -2283,6 +2291,7 @@ struct ImageEditorShapeContent {
     var kind: ImageEditorShapeKind
     var fillColor: NSColor
     var fillGradient: ImageEditorGradientFillContent? = nil
+    var fillGradientCenter: CGPoint = CGPoint(x: 0.5, y: 0.5)
     var fillOpacity: CGFloat
     var strokeColor: NSColor
     var strokeWidth: CGFloat
@@ -2301,6 +2310,10 @@ struct ImageEditorShapeContent {
             gradient.style = .linear
             content.fillGradient = gradient
         }
+        content.fillGradientCenter = CGPoint(
+            x: Self.normalizedGradientCenterComponent(fillGradientCenter.x),
+            y: Self.normalizedGradientCenterComponent(fillGradientCenter.y)
+        )
         content.fillOpacity = max(0, min(1, fillOpacity))
         content.strokeOpacity = max(0, min(1, strokeOpacity))
         if kind == .path {
@@ -2375,7 +2388,10 @@ struct ImageEditorShapeContent {
                     if let gradient = normalized.fillGradient {
                         NSGraphicsContext.saveGraphicsState()
                         path.addClip()
-                        gradient.renderedImage(size: size).draw(
+                        gradient.renderedImage(
+                            size: size,
+                            centerNormalized: normalized.fillGradientCenter
+                        ).draw(
                             in: rect,
                             from: .zero,
                             operation: .sourceOver,
@@ -2396,6 +2412,11 @@ struct ImageEditorShapeContent {
                 path.stroke()
             }
         } ?? NSImage.transparent(size: size)
+    }
+
+    private static func normalizedGradientCenterComponent(_ value: CGFloat) -> CGFloat {
+        guard value.isFinite else { return 0.5 }
+        return max(-4, min(5, value))
     }
 
     func pathBezierPath() -> NSBezierPath {

@@ -303,6 +303,7 @@ final class XomoAutomationRegistry {
             let cornerRadii = try optionalCornerRadii(arguments)
             try validateExclusiveCornerArguments(arguments)
             let fillGradient = try optionalShapeGradient(arguments)
+            let fillGradientCenter = try optionalShapeGradientCenter(arguments)
             try validateShapeFillArguments(arguments, fillGradient: fillGradient)
             if arguments["fillKind"]?.stringValue == "linearGradient", fillGradient == nil {
                 throw XomoAutomationCallError.invalidArgument(
@@ -324,6 +325,7 @@ final class XomoAutomationRegistry {
                 cornerSmoothing: arguments["cornerSmoothing"]?.doubleValue,
                 fillColor: fillColor,
                 fillGradient: fillGradient,
+                fillGradientCenter: fillGradientCenter,
                 fillOpacity: arguments["fillOpacity"]?.doubleValue,
                 strokeColor: strokeColor,
                 strokeOpacity: arguments["strokeOpacity"]?.doubleValue,
@@ -742,7 +744,9 @@ final class XomoAutomationRegistry {
             "kind": .string(content.kind.rawValue),
             "fillKind": .string(content.fillGradient == nil ? "solid" : "linearGradient"),
             "fillColor": colorJSON(content.fillColor),
-            "fillGradient": content.fillGradient.map(shapeGradientJSON) ?? .null,
+            "fillGradient": content.fillGradient.map {
+                shapeGradientJSON($0, center: content.fillGradientCenter)
+            } ?? .null,
             "fillOpacity": .number(content.fillOpacity),
             "strokeColor": colorJSON(content.strokeColor),
             "strokeOpacity": .number(content.strokeOpacity),
@@ -764,6 +768,7 @@ final class XomoAutomationRegistry {
         try validateExclusiveCornerArguments(arguments)
         let cornerRadii = try optionalCornerRadii(arguments)
         let fillGradient = try optionalShapeGradient(arguments)
+        let fillGradientCenter = try optionalShapeGradientCenter(arguments)
         try validateShapeFillArguments(arguments, fillGradient: fillGradient)
         let fillKind = arguments["fillKind"]?.stringValue
         let selectedContent = viewModel.document.selectedLayer?.shapeContent
@@ -780,6 +785,7 @@ final class XomoAutomationRegistry {
         viewModel.updateSelectedShapeProperties(
             fillColor: try optionalColor("fillColor", in: arguments),
             fillGradient: resolvedGradient,
+            fillGradientCenter: fillGradientCenter,
             clearsFillGradient: fillKind == "solid",
             fillOpacity: arguments["fillOpacity"]?.doubleValue ?? legacyOpacity,
             strokeColor: try optionalColor("strokeColor", in: arguments),
@@ -814,6 +820,23 @@ final class XomoAutomationRegistry {
             angle: CGFloat(angle),
             scale: CGFloat(scale)
         )
+    }
+
+    private func optionalShapeGradientCenter(
+        _ arguments: [String: XomoJSONValue]
+    ) throws -> CGPoint? {
+        guard let object = arguments["fillGradient"]?.objectValue else { return nil }
+        let centerX = object["centerX"]?.doubleValue
+        let centerY = object["centerY"]?.doubleValue
+        guard centerX != nil || centerY != nil else { return nil }
+        let x = centerX ?? 0.5
+        let y = centerY ?? 0.5
+        guard x.isFinite, y.isFinite, (-4...5).contains(x), (-4...5).contains(y) else {
+            throw XomoAutomationCallError.invalidArgument(
+                "fillGradient.centerX and centerY must be between -4 and 5"
+            )
+        }
+        return CGPoint(x: x, y: y)
     }
 
     private func validateShapeFillArguments(
@@ -856,13 +879,18 @@ final class XomoAutomationRegistry {
         return color
     }
 
-    private func shapeGradientJSON(_ content: ImageEditorGradientFillContent) -> XomoJSONValue {
+    private func shapeGradientJSON(
+        _ content: ImageEditorGradientFillContent,
+        center: CGPoint
+    ) -> XomoJSONValue {
         let normalized = content.normalized()
         return .object([
             "startColor": colorJSON(normalized.shapeStartColor),
             "endColor": colorJSON(normalized.shapeEndColor),
             "angle": .number(normalized.angle),
-            "scale": .number(normalized.scale)
+            "scale": .number(normalized.scale),
+            "centerX": .number(center.x),
+            "centerY": .number(center.y)
         ])
     }
 
@@ -2781,7 +2809,9 @@ private extension XomoAutomationRegistry {
             "startColor": shapeColorSchema,
             "endColor": shapeColorSchema,
             "angle": XomoAutomationSchema.number(description: "Linear gradient angle from -180 to 180 degrees"),
-            "scale": XomoAutomationSchema.number(description: "Linear gradient span scale from 0.25 to 4")
+            "scale": XomoAutomationSchema.number(description: "Linear gradient span scale from 0.25 to 4"),
+            "centerX": XomoAutomationSchema.number(description: "Normalized horizontal gradient center from -4 to 5"),
+            "centerY": XomoAutomationSchema.number(description: "Normalized vertical gradient center from -4 to 5")
         ],
         required: ["startColor", "endColor"]
     )

@@ -13,7 +13,7 @@ import Testing
 
 @MainActor
 struct XomoFigmaNodeImportPlanTests {
-    @Test func twoStopCenteredLinearGradientMapsToEditableShapeAndComplexGradientStaysPartial() throws {
+    @Test func twoStopOffsetLinearGradientMapsToEditableShapeAndComplexGradientStaysPartial() throws {
         let response = try JSONDecoder().decode(
             XomoFigmaNodeResponse.self,
             from: Data(
@@ -37,8 +37,8 @@ struct XomoFigmaNodeImportPlanTests {
                               "type": "GRADIENT_LINEAR",
                               "opacity": 0.8,
                               "gradientHandlePositions": [
-                                {"x": 0, "y": 0.5},
-                                {"x": 1, "y": 0.5},
+                                {"x": 0.1, "y": 0.5},
+                                {"x": 0.7, "y": 0.5},
                                 {"x": 0, "y": 0}
                               ],
                               "gradientStops": [
@@ -82,7 +82,9 @@ struct XomoFigmaNodeImportPlanTests {
         let complex = try #require(plan.items.first { $0.sourceID == "2:31" })
         #expect(editable.fidelity == .exact)
         #expect(editable.linearGradientFill?.angle == 0)
-        #expect(editable.linearGradientFill?.scale == 1)
+        #expect(abs((editable.linearGradientFill?.scale ?? 0) - 0.6) < 0.001)
+        #expect(abs((editable.linearGradientFill?.centerX ?? 0) - 0.4) < 0.001)
+        #expect(editable.linearGradientFill?.centerY == 0.5)
         #expect(editable.linearGradientFill?.opacity == 0.4)
         #expect(!editable.issues.contains(.unsupportedPaint))
         #expect(complex.fidelity == .partial)
@@ -97,7 +99,9 @@ struct XomoFigmaNodeImportPlanTests {
             materialized.layers.first { $0.name == "Editable Gradient" }?.shapeContent
         )
         #expect(shape.fillGradient?.angle == 0)
-        #expect(shape.fillGradient?.scale == 1)
+        #expect(abs((shape.fillGradient?.scale ?? 0) - 0.6) < 0.001)
+        #expect(abs(shape.fillGradientCenter.x - 0.4) < 0.001)
+        #expect(shape.fillGradientCenter.y == 0.5)
         #expect(abs(shape.fillOpacity - 0.4) < 0.001)
     }
 

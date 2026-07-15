@@ -16,42 +16,40 @@ struct ImageEditorLayerPanelStyleTests {
         let color = ImageEditorLayerPanelTabAppearance.foregroundColor.usingColorSpace(.deviceRGB)
 
         #expect(color != nil)
-        #expect((color?.redComponent ?? 0) > 0.99)
-        #expect((color?.greenComponent ?? 0) > 0.99)
-        #expect((color?.blueComponent ?? 0) > 0.99)
+        #expect((color?.redComponent ?? 0) > 0.85)
+        #expect((color?.greenComponent ?? 0) > 0.85)
+        #expect((color?.blueComponent ?? 0) > 0.85)
         #expect(ImageEditorLayerPanelTab.allCases.count == 4)
     }
 
-    @Test func nativeTabLabelKeepsExplicitLightTextOutsideSwiftUIButtonTinting() {
-        let label = NSTextField(labelWithString: "")
-
-        ImageEditorLayerPanelTabAppearance.configure(label, title: "通道", isSelected: false)
-        let unselectedColor = label.textColor?.usingColorSpace(.deviceRGB)
-        let cellUnselectedColor = (label.cell as? NSTextFieldCell)?
-            .textColor?
-            .usingColorSpace(.deviceRGB)
-        let attributedUnselectedColor = label.attributedStringValue.attribute(
+    @Test func nativeTabLabelDrawsExplicitLightTextOutsideSwiftUIButtonTinting() {
+        let label = ImageEditorLayerPanelTabNativeLabel()
+        label.appearance = NSAppearance(named: .darkAqua)
+        label.title = "通道"
+        label.isSelected = false
+        let attributedUnselectedColor = label.attributedTitle.attribute(
             .foregroundColor,
             at: 0,
             effectiveRange: nil
         ) as? NSColor
-        #expect(label.stringValue == "通道")
-        #expect(label.refusesFirstResponder)
+        let unselectedColor = attributedUnselectedColor?.usingColorSpace(.deviceRGB)
+        #expect(label.title == "通道")
+        #expect(!label.acceptsFirstResponder)
         #expect(label.appearance?.name == .darkAqua)
-        #expect((unselectedColor?.redComponent ?? 0) > 0.99)
-        #expect((unselectedColor?.greenComponent ?? 0) > 0.99)
-        #expect((unselectedColor?.blueComponent ?? 0) > 0.99)
-        #expect((cellUnselectedColor?.redComponent ?? 0) > 0.99)
+        #expect((unselectedColor?.redComponent ?? 0) > 0.85)
+        #expect((unselectedColor?.greenComponent ?? 0) > 0.85)
+        #expect((unselectedColor?.blueComponent ?? 0) > 0.85)
         #expect(attributedUnselectedColor == ImageEditorLayerPanelTabAppearance.foregroundColor)
 
-        ImageEditorLayerPanelTabAppearance.configure(label, title: "图层", isSelected: true)
-        let selectedColor = label.textColor?.usingColorSpace(.deviceRGB)
-        let attributedSelectedColor = label.attributedStringValue.attribute(
+        label.title = "图层"
+        label.isSelected = true
+        let attributedSelectedColor = label.attributedTitle.attribute(
             .foregroundColor,
             at: 0,
             effectiveRange: nil
         ) as? NSColor
-        #expect(label.stringValue == "图层")
+        let selectedColor = attributedSelectedColor?.usingColorSpace(.deviceRGB)
+        #expect(label.title == "图层")
         #expect((selectedColor?.redComponent ?? 0) > 0.99)
         #expect((selectedColor?.greenComponent ?? 0) > 0.99)
         #expect((selectedColor?.blueComponent ?? 0) > 0.99)

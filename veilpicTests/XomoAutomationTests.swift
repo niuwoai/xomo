@@ -314,7 +314,9 @@ struct XomoAutomationTests {
                         "red": .number(0), "green": .number(0), "blue": .number(1)
                     ]),
                     "angle": .number(30),
-                    "scale": .number(1.5)
+                    "scale": .number(1.5),
+                    "centerX": .number(0.35),
+                    "centerY": .number(0.65)
                 ]),
                 "fillOpacity": .number(0.7)
             ]
@@ -323,6 +325,7 @@ struct XomoAutomationTests {
         let shape = try #require(viewModel.document.selectedLayer?.shapeContent)
         #expect(shape.fillGradient?.angle == 30)
         #expect(shape.fillGradient?.scale == 1.5)
+        #expect(shape.fillGradientCenter == CGPoint(x: 0.35, y: 0.65))
         #expect(shape.fillOpacity == 0.7)
 
         let inspected = registry.execute(request(operation: "call", name: "xomo.shape.get"))
@@ -337,6 +340,8 @@ struct XomoAutomationTests {
         }
         #expect(gradientResult["angle"] == .number(30))
         #expect(gradientResult["scale"] == .number(1.5))
+        #expect(gradientResult["centerX"] == .number(0.35))
+        #expect(gradientResult["centerY"] == .number(0.65))
 
         let previousStroke = shape.strokeColor
         let updated = registry.execute(request(

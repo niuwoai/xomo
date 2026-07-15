@@ -66,6 +66,8 @@ struct XomoFigmaPlanLinearGradient: Equatable, Sendable {
     var endColor: XomoFigmaPlanColor
     var angle: Double
     var scale: Double
+    var centerX: Double
+    var centerY: Double
     var opacity: Double
 }
 
