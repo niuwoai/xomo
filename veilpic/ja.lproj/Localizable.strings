@@ -748,11 +748,14 @@
 "imageEditor.history.shapeCornerSmoothing" = "長方形のコーナースムージングを変更";
 "imageEditor.history.shapeStyle" = "シェイプの外観を変更";
 "imageEditor.history.shapeGradientHandle" = "シェイプのグラデーションを調整";
+"imageEditor.history.shapeGradientStop" = "グラデーションストップを移動";
 "imageEditor.action.shapeGradientStopAdd" = "グラデーションストップを追加";
 "imageEditor.action.shapeGradientStopRemove" = "選択したグラデーションストップを削除";
 "imageEditor.status.shapeGradientHandleMoved" = "シェイプのグラデーションを調整中";
+"imageEditor.status.shapeGradientStopMoved" = "グラデーションストップを移動中";
 "imageEditor.help.shapeGradientHandle.start" = "グラデーションの始点をドラッグします。Shift キーで角度をスナップします";
 "imageEditor.help.shapeGradientHandle.end" = "グラデーションの終点をドラッグします。Shift キーで角度をスナップします";
+"imageEditor.help.shapeGradientStopHandle" = "中間ストップをグラデーション軸に沿ってドラッグします";
 "imageEditor.status.stackLayoutApplied" = "オートレイアウトを再配置しました";
 "imageEditor.status.stackChildLayoutApplied" = "オートレイアウトの子要素を再配置しました";
 "imageEditor.status.stackLayoutLocked" = "ロック中のグループまたは子要素は再配置できません";

@@ -24,6 +24,14 @@ struct ImageEditorShapeGradientHandlePoints: Equatable {
     }
 }
 
+struct ImageEditorShapeGradientStopHandlePoint: Identifiable, Equatable {
+    var index: Int
+    var stop: ImageEditorGradientColorStop
+    var canvasPoint: CGPoint
+
+    var id: Int { index }
+}
+
 enum ImageEditorShapeGradientGeometry {
     static let angleSnapStep: CGFloat = 15
 
@@ -118,6 +126,69 @@ enum ImageEditorShapeGradientGeometry {
         return content.normalized(size: imageSize)
     }
 
+    static func canvasStopHandlePoints(
+        content: ImageEditorShapeContent,
+        imageSize: CGSize,
+        layerFrame: CGRect
+    ) -> [ImageEditorShapeGradientStopHandlePoint] {
+        guard let gradient = content.fillGradient?.normalized(),
+              let axis = canvasHandlePoints(
+                content: content,
+                imageSize: imageSize,
+                layerFrame: layerFrame
+              )
+        else { return [] }
+        let stops = gradient.shapeColorStops
+        guard stops.count > 2 else { return [] }
+        return stops.indices.dropFirst().dropLast().map { index in
+            let stop = stops[index]
+            let displayedPosition = gradient.reverse ? 1 - stop.position : stop.position
+            return ImageEditorShapeGradientStopHandlePoint(
+                index: index,
+                stop: stop,
+                canvasPoint: CGPoint(
+                    x: axis.start.x + (axis.end.x - axis.start.x) * displayedPosition,
+                    y: axis.start.y + (axis.end.y - axis.start.y) * displayedPosition
+                )
+            )
+        }
+    }
+
+    static func updatedContent(
+        from originalContent: ImageEditorShapeContent,
+        imageSize: CGSize,
+        layerFrame: CGRect,
+        movingStopAt index: Int,
+        to canvasPoint: CGPoint
+    ) -> ImageEditorShapeContent? {
+        guard var gradient = originalContent.fillGradient?.normalized(),
+              let axis = canvasHandlePoints(
+                content: originalContent,
+                imageSize: imageSize,
+                layerFrame: layerFrame
+              )
+        else { return nil }
+        var stops = gradient.shapeColorStops
+        guard stops.count > 2, index > 0, index < stops.count - 1 else { return nil }
+        let axisVector = CGVector(dx: axis.end.x - axis.start.x, dy: axis.end.y - axis.start.y)
+        let lengthSquared = axisVector.dx * axisVector.dx + axisVector.dy * axisVector.dy
+        guard lengthSquared > 0.000_001 else { return nil }
+        let pointerVector = CGVector(dx: canvasPoint.x - axis.start.x, dy: canvasPoint.y - axis.start.y)
+        var displayedPosition = (
+            pointerVector.dx * axisVector.dx + pointerVector.dy * axisVector.dy
+        ) / lengthSquared
+        displayedPosition = max(0, min(1, displayedPosition))
+        let logicalPosition = gradient.reverse ? 1 - displayedPosition : displayedPosition
+        let lowerBound = stops[index - 1].position + 0.01
+        let upperBound = stops[index + 1].position - 0.01
+        guard lowerBound <= upperBound else { return nil }
+        stops[index].position = max(lowerBound, min(upperBound, logicalPosition))
+        gradient.colorStops = stops
+        var content = originalContent
+        content.fillGradient = gradient.normalized()
+        return content.normalized(size: imageSize)
+    }
+
     private static func localHandlePoints(
         gradient: ImageEditorGradientFillContent,
         centerNormalized: CGPoint,
@@ -194,6 +265,18 @@ extension ImageEditorViewModel {
         )
     }
 
+    var selectedShapeGradientCanvasStopHandlePoints: [ImageEditorShapeGradientStopHandlePoint] {
+        guard !isEditingLayerMask,
+              let layer = singleSelectedShapeGradientLayer,
+              let content = layer.shapeContent
+        else { return [] }
+        return ImageEditorShapeGradientGeometry.canvasStopHandlePoints(
+            content: content,
+            imageSize: layer.image.size,
+            layerFrame: layer.frame.standardized
+        )
+    }
+
     var canEditSelectedShapeGradient: Bool {
         guard let layer = singleSelectedShapeGradientLayer,
               layer.shapeContent?.fillGradient != nil
@@ -235,21 +318,67 @@ extension ImageEditorViewModel {
                 snappingAngle: snappingAngle
               )
         else { return }
+        guard document.layers[index].shapeContent?.fillGradient != content.fillGradient
+                || document.layers[index].shapeContent?.fillGradientCenter != content.fillGradientCenter
+        else { return }
         document.layers[index].kind = .shape(content)
         editingShapeGradientDidChange = true
         statusText = L10n.text("imageEditor.status.shapeGradientHandleMoved")
     }
 
+    func beginEditingSelectedShapeGradientStop(at index: Int) -> Bool {
+        guard editingShapeGradientLayerID == nil,
+              canEditSelectedShapeGradient,
+              let layer = singleSelectedShapeGradientLayer,
+              let content = layer.shapeContent,
+              index > 0,
+              index < (content.fillGradient?.shapeColorStops.count ?? 0) - 1
+        else {
+            statusText = L10n.text("imageEditor.status.layerLocked")
+            return false
+        }
+        pushUndo()
+        editingShapeGradientLayerID = layer.id
+        editingShapeGradientOriginalContent = content
+        editingShapeGradientStopIndex = index
+        editingShapeGradientDidChange = false
+        return true
+    }
+
+    func updateSelectedShapeGradientStop(to canvasPoint: CGPoint) {
+        guard let layerID = editingShapeGradientLayerID,
+              let stopIndex = editingShapeGradientStopIndex,
+              let originalContent = editingShapeGradientOriginalContent,
+              let index = document.layers.firstIndex(where: { $0.id == layerID }),
+              let content = ImageEditorShapeGradientGeometry.updatedContent(
+                from: originalContent,
+                imageSize: document.layers[index].image.size,
+                layerFrame: document.layers[index].frame.standardized,
+                movingStopAt: stopIndex,
+                to: canvasPoint
+              ),
+              document.layers[index].shapeContent?.fillGradient != content.fillGradient
+        else { return }
+        document.layers[index].kind = .shape(content)
+        editingShapeGradientDidChange = true
+        statusText = L10n.text("imageEditor.status.shapeGradientStopMoved")
+    }
+
     func finishEditingSelectedShapeGradient() {
         guard editingShapeGradientLayerID != nil else { return }
         if editingShapeGradientDidChange {
-            appendHistory(L10n.text("imageEditor.history.shapeGradientHandle"))
+            appendHistory(L10n.text(
+                editingShapeGradientStopIndex == nil
+                    ? "imageEditor.history.shapeGradientHandle"
+                    : "imageEditor.history.shapeGradientStop"
+            ))
         } else {
             _ = undoStack.popLast()
             updateStatus()
         }
         editingShapeGradientLayerID = nil
         editingShapeGradientOriginalContent = nil
+        editingShapeGradientStopIndex = nil
         editingShapeGradientDidChange = false
     }
 

@@ -748,11 +748,14 @@
 "imageEditor.history.shapeCornerSmoothing" = "Update Rectangle Corner Smoothing";
 "imageEditor.history.shapeStyle" = "Update Shape Appearance";
 "imageEditor.history.shapeGradientHandle" = "Adjust Shape Gradient";
+"imageEditor.history.shapeGradientStop" = "Move Gradient Stop";
 "imageEditor.action.shapeGradientStopAdd" = "Add Gradient Stop";
 "imageEditor.action.shapeGradientStopRemove" = "Remove Selected Gradient Stop";
 "imageEditor.status.shapeGradientHandleMoved" = "Adjusting shape gradient";
+"imageEditor.status.shapeGradientStopMoved" = "Moving gradient stop";
 "imageEditor.help.shapeGradientHandle.start" = "Drag the gradient start; hold Shift to snap the angle";
 "imageEditor.help.shapeGradientHandle.end" = "Drag the gradient end; hold Shift to snap the angle";
+"imageEditor.help.shapeGradientStopHandle" = "Drag the middle stop along the gradient axis";
 "imageEditor.status.stackLayoutApplied" = "Auto Layout reflowed";
 "imageEditor.status.stackChildLayoutApplied" = "Auto Layout child reflowed";
 "imageEditor.status.stackLayoutLocked" = "A locked group or child cannot be reflowed";

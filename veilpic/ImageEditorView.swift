@@ -44,6 +44,7 @@ struct ImageEditorView: View {
     @State private var isObjectMoveGestureActive = false
     @State private var activeResizeHandle: ImageEditorLayerResizeHandle?
     @State private var activeShapeGradientHandle: ImageEditorShapeGradientHandle?
+    @State private var activeShapeGradientStopIndex: Int?
     @State var selectedShapeGradientStopIndex = 0
     @State private var isRotatingLayer = false
     @State private var isMovingPathAnchor = false
@@ -3556,6 +3557,14 @@ struct ImageEditorView: View {
                 )
                 .allowsHitTesting(false)
 
+                ForEach(viewModel.selectedShapeGradientCanvasStopHandlePoints) { stopPoint in
+                    shapeGradientStopHandleView(
+                        stopPoint,
+                        position: viewPoint(from: stopPoint.canvasPoint, in: size),
+                        canvasSize: size
+                    )
+                }
+
                 ForEach(ImageEditorShapeGradientHandle.allCases) { handle in
                     shapeGradientHandleView(
                         handle: handle,
@@ -3565,6 +3574,58 @@ struct ImageEditorView: View {
                 }
             }
         }
+    }
+
+    private func shapeGradientStopHandleView(
+        _ stopPoint: ImageEditorShapeGradientStopHandlePoint,
+        position: CGPoint,
+        canvasSize: CGSize
+    ) -> some View {
+        let isSelected = selectedShapeGradientStopIndex == stopPoint.index
+        return RoundedRectangle(cornerRadius: 2, style: .continuous)
+            .fill(Color(nsColor: stopPoint.stop.color))
+            .overlay {
+                RoundedRectangle(cornerRadius: 2, style: .continuous)
+                    .stroke(
+                        isSelected ? Color.accentColor : Color.white.opacity(0.94),
+                        lineWidth: isSelected ? 2 : 1.25
+                    )
+                RoundedRectangle(cornerRadius: 2, style: .continuous)
+                    .stroke(Color.black.opacity(0.58), lineWidth: 0.5)
+                    .padding(-1)
+            }
+            .frame(width: 11, height: 11)
+            .rotationEffect(.degrees(45))
+            .position(position)
+            .contentShape(Rectangle().inset(by: -7))
+            .highPriorityGesture(
+                DragGesture(
+                    minimumDistance: 0,
+                    coordinateSpace: .named("image-editor-canvas-space")
+                )
+                .onChanged { value in
+                    selectedShapeGradientStopIndex = stopPoint.index
+                    if activeShapeGradientStopIndex == nil,
+                       viewModel.beginEditingSelectedShapeGradientStop(at: stopPoint.index) {
+                        activeShapeGradientStopIndex = stopPoint.index
+                    }
+                    guard activeShapeGradientStopIndex == stopPoint.index else { return }
+                    viewModel.updateSelectedShapeGradientStop(
+                        to: unboundedImagePoint(from: value.location, in: canvasSize)
+                    )
+                }
+                .onEnded { value in
+                    guard activeShapeGradientStopIndex == stopPoint.index else { return }
+                    viewModel.updateSelectedShapeGradientStop(
+                        to: unboundedImagePoint(from: value.location, in: canvasSize)
+                    )
+                    viewModel.finishEditingSelectedShapeGradient()
+                    activeShapeGradientStopIndex = nil
+                }
+            )
+            .opacity(viewModel.canEditSelectedShapeGradient ? 1 : 0.55)
+            .help(L10n.text("imageEditor.help.shapeGradientStopHandle"))
+            .accessibilityIdentifier("image-editor-shape-gradient-canvas-stop-\(stopPoint.index)")
     }
 
     private func shapeGradientHandleView(

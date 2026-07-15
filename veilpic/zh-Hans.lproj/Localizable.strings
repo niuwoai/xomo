@@ -748,11 +748,14 @@
 "imageEditor.history.shapeCornerSmoothing" = "调整矩形圆角平滑";
 "imageEditor.history.shapeStyle" = "调整形状外观";
 "imageEditor.history.shapeGradientHandle" = "调整形状渐变";
+"imageEditor.history.shapeGradientStop" = "移动渐变色标";
 "imageEditor.action.shapeGradientStopAdd" = "添加渐变色标";
 "imageEditor.action.shapeGradientStopRemove" = "删除选中的渐变色标";
 "imageEditor.status.shapeGradientHandleMoved" = "正在调整形状渐变";
+"imageEditor.status.shapeGradientStopMoved" = "正在移动渐变色标";
 "imageEditor.help.shapeGradientHandle.start" = "拖动渐变起点；按住 Shift 吸附角度";
 "imageEditor.help.shapeGradientHandle.end" = "拖动渐变终点；按住 Shift 吸附角度";
+"imageEditor.help.shapeGradientStopHandle" = "沿渐变轴拖动中间色标";
 "imageEditor.status.stackLayoutApplied" = "自动布局已重新排列";
 "imageEditor.status.stackChildLayoutApplied" = "自动布局子项已重新排列";
 "imageEditor.status.stackLayoutLocked" = "锁定的组或子项无法重新排列";
