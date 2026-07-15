@@ -1220,6 +1220,7 @@ struct ImageEditorView: View {
                             brushDiameter: viewModel.brushSize * displayScale,
                             handIsDragging: isCanvasPanGestureActive,
                             isSpacebarPanning: isSpacebarPanning,
+                            isCanvasPanGestureActive: isCanvasPanGestureActive,
                             modifierFlags: canvasModifierFlags
                         )
                     )
@@ -2065,6 +2066,7 @@ struct ImageEditorView: View {
             penIsClosing: canvasInteractionTool == .pen && viewModel.isPenCloseCandidate(at: canvasPoint),
             handIsDragging: isCanvasPanGestureActive,
             isSpacebarPanning: isSpacebarPanning,
+            isCanvasPanGestureActive: isCanvasPanGestureActive,
             modifierFlags: NSEvent.modifierFlags
         ).set()
     }

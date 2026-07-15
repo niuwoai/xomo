@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc136 - 2026-07-16
+
+### Fixed
+- 修复画布平移状态未传入光标解析器的问题；组件库平时保持系统箭头，实际平移时才显示闭合手。
+
+### Verification
+- `ImageEditorCanvasCursorTests` 9/9、`XomoLeftSidebarTests` 42/42 通过。
+
 ## 2.12.0-rc135 - 2026-07-16
 
 ### Fixed

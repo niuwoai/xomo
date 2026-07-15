@@ -118,6 +118,25 @@ struct ImageEditorCanvasCursorTests {
         )
     }
 
+    @Test func componentLibraryUsesClosedHandOnlyDuringCanvasPan() {
+        let arrow = ImageEditorCanvasCursor.cursor(
+            for: .components,
+            selectedTool: .brush,
+            brushDiameter: 18,
+            isCanvasPanGestureActive: false
+        )
+        let closedHand = ImageEditorCanvasCursor.cursor(
+            for: .components,
+            selectedTool: .brush,
+            brushDiameter: 18,
+            handIsDragging: true,
+            isCanvasPanGestureActive: true
+        )
+
+        #expect(arrow === NSCursor.arrow)
+        #expect(closedHand === NSCursor.closedHand)
+    }
+
     @Test func zoomDirectionUsesOptionForZoomOut() {
         #expect(ImageEditorZoomDirection.from(modifierFlags: []) == .zoomIn)
         #expect(ImageEditorZoomDirection.from(modifierFlags: [.shift]) == .zoomIn)

@@ -473,6 +473,7 @@ struct XomoLeftSidebarTests {
         #expect(source.contains("coordinateSpace: .named(\"image-editor-canvas-space\")"))
         #expect(source.contains("selectedXomoObjectFrame"))
         #expect(source.contains("Keep the hit target on the committed frame"))
+        #expect(source.contains("isCanvasPanGestureActive: isCanvasPanGestureActive"))
         #expect(source.components(separatedBy: "switch canvasInteractionTool").count - 1 >= 3)
     }
 
