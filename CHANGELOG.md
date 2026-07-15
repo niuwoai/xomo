@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.12.0-rc120 - 2026-07-16
+
+### Verification
+- 第 120 个小版本质量门禁覆盖全量隔离测试、Debug/Release 构建、双架构 CLI、真实冒烟和 `/Applications/Xomo.app` 安装版核对。
+
 ## 2.12.0-rc119 - 2026-07-16
 
 ### Changed
