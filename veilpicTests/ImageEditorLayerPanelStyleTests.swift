@@ -65,6 +65,25 @@ struct ImageEditorLayerPanelStyleTests {
         #expect((color?.blueComponent ?? 0) > 0.99)
     }
 
+    @Test func nativeLayerDockTitleKeepsExplicitWhiteTextOutsideButtonTinting() throws {
+        let label = ImageEditorDockDisclosureNativeLabel()
+        label.appearance = NSAppearance(named: .darkAqua)
+        label.title = "图层 / 通道"
+
+        let attributedColor = try #require(
+            label.attributedTitle.attribute(.foregroundColor, at: 0, effectiveRange: nil) as? NSColor
+        )
+        let color = try #require(attributedColor.usingColorSpace(.deviceRGB))
+
+        #expect(label.title == "图层 / 通道")
+        #expect(!label.acceptsFirstResponder)
+        #expect(label.appearance?.name == .darkAqua)
+        #expect(color.redComponent > 0.99)
+        #expect(color.greenComponent > 0.99)
+        #expect(color.blueComponent > 0.99)
+        #expect(attributedColor == ImageEditorDockDisclosureAppearance.foregroundColor)
+    }
+
     @Test func layerPanelTitleUsesWhiteText() throws {
         let color = EditorPanelTitleAppearance.foregroundColor.usingColorSpace(.deviceRGB)
 
@@ -130,7 +149,8 @@ struct ImageEditorLayerPanelStyleTests {
             separatedBy: "ImageEditorDockDisclosureAppearance.foregroundColor"
         ).count - 1
 
-        #expect(explicitForegroundUses == 3)
+        #expect(explicitForegroundUses == 2)
+        #expect(disclosureSource.contains("ImageEditorDockDisclosureLabel(title: title)"))
     }
 
     private static func repositoryRoot() -> URL {
