@@ -1,6 +1,6 @@
 # Xomo MCP 与 CLI
 
-> 当前版本：v2.12.0-rc107
+> 当前版本：v2.12.0-rc108
 
 ## 架构
 
@@ -40,6 +40,8 @@ xomo call xomo.shape.update '{"cornerSmoothing":0.75}'
 xomo call xomo.shape.update '{"fillKind":"linearGradient","fillGradient":{"stops":[{"position":0,"color":{"red":1,"green":0.2,"blue":0.1}},{"position":0.5,"color":{"red":0.1,"green":1,"blue":0.3}},{"position":1,"color":{"red":0.1,"green":0.3,"blue":1}}],"angle":30,"scale":1,"centerX":0.5,"centerY":0.5}}'
 xomo call xomo.shape.update '{"fillKind":"radialGradient","fillGradient":{"startColor":{"red":1,"green":0.8,"blue":0.1},"endColor":{"red":0.1,"green":0.2,"blue":0.8},"scale":0.75,"centerX":0.5,"centerY":0.5}}'
 xomo call xomo.component.insert '{"component":"button","theme":"native","x":80,"y":100}'
+xomo call xomo.component.tokens '{"action":"get","theme":"chakraUI"}'
+xomo call xomo.component.tokens '{"action":"export","path":"/Users/you/Desktop/chakra.xomotokens.json"}'
 xomo export ~/Desktop/xomo.png --format png --scope composited --scale 2
 xomo project export ~/Desktop/design.qpicproject
 xomo project import ~/Desktop/design.qpicproject
@@ -47,6 +49,10 @@ xomo import-image ~/Desktop/reference.png --into-selection
 ```
 
 `xomo call` 的第二个参数必须是 JSON object。对象 ID 可通过 `xomo.layer.list`、`xomo.channel.list`、`xomo.history.list` 和 `xomo.guide.list` 获取。
+
+### 组件主题 Token 自动化
+
+`xomo.component.tokens` 与组件库界面使用同一份序列化逻辑：`action=get` 返回带 `schemaVersion`、主题、来源、颜色和尺寸指标的 JSON；`action=export` 额外要求 `path`，在本机写出 `.xomotokens.json` 文件。`theme` 可省略，省略时读取 Xomo 当前组件主题。该工具只读写本机，不会联网或写回 Figma/Sketch。
 
 ## MCP 客户端配置
 
@@ -67,7 +73,7 @@ MCP 服务器实现 `initialize`、`ping`、`tools/list` 和 `tools/call`。当 
 
 ## 当前工具范围
 
-- 共 112 个 MCP 工具；同类细粒度操作通过带严格枚举参数的 action 工具组织。
+- 共 113 个 MCP 工具；同类细粒度操作通过带严格枚举参数的 action 工具组织。
 - App 与文档状态
 - 预设或自定义画布创建、可编辑文字/形状检查与更新（含纯色/最多 16 个有序色标的线性渐变填充、独立描边、不透明度、线宽、统一/独立四角及超椭圆圆角平滑）、点文字 / 固定宽高段落文字创建和转换、文字框所需高度、溢出诊断与适合内容 / 仅扩高操作，以及详细调整、滤镜和图层样式参数
 - 完整 `qpicproject` 项目导入导出，以及 PNG/JPEG/WebP 等图像图层导入

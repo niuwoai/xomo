@@ -276,6 +276,8 @@ final class XomoAutomationRegistry {
             try canvasTransform(arguments, viewModel: viewModel)
         case "xomo.component.list":
             return componentsResult()
+        case "xomo.component.tokens":
+            return try componentTokensResult(arguments, viewModel: viewModel)
         case "xomo.component.insert":
             try insertComponent(arguments, viewModel: viewModel)
         case "xomo.color.get":
@@ -590,6 +592,56 @@ final class XomoAutomationRegistry {
             "components": .array(XomoComponentKind.allCases.map { .string($0.rawValue) }),
             "themes": .array(XomoComponentTheme.allCases.map { .string($0.rawValue) })
         ])
+    }
+
+    private func componentTokensResult(
+        _ arguments: [String: XomoJSONValue],
+        viewModel: ImageEditorViewModel
+    ) throws -> XomoJSONValue {
+        let action = arguments["action"]?.stringValue ?? "get"
+        guard action == "get" || action == "export" else {
+            throw XomoAutomationCallError.invalidArgument("Unknown component token action")
+        }
+        let theme: XomoComponentTheme
+        if let rawTheme = arguments["theme"]?.stringValue {
+            guard let requestedTheme = XomoComponentTheme(rawValue: rawTheme) else {
+                throw XomoAutomationCallError.invalidArgument("Unknown theme: (rawTheme)")
+            }
+            theme = requestedTheme
+        } else {
+            theme = viewModel.xomoComponentTheme
+        }
+        let snapshot = theme.tokenSnapshot
+        let json = try snapshot.encodedJSON()
+        guard let data = json.data(using: .utf8) else {
+            throw XomoAutomationCallError.operationFailed("Theme token JSON is not UTF-8")
+        }
+        if action == "get" {
+            return try decodeJSONValue(data)
+        }
+        let path = try requiredString("path", in: arguments)
+        do {
+            try data.write(to: URL(fileURLWithPath: path), options: .atomic)
+        } catch {
+            throw XomoAutomationCallError.operationFailed(
+                "Theme token export failed: (error.localizedDescription)"
+            )
+        }
+        return .object([
+            "path": .string(path),
+            "filename": .string((path as NSString).lastPathComponent),
+            "snapshot": try decodeJSONValue(data)
+        ])
+    }
+
+    private func decodeJSONValue(_ data: Data) throws -> XomoJSONValue {
+        do {
+            return try JSONDecoder().decode(XomoJSONValue.self, from: data)
+        } catch {
+            throw XomoAutomationCallError.operationFailed(
+                "Theme token JSON decode failed: (error.localizedDescription)"
+            )
+        }
     }
 
     private func colorResult(_ viewModel: ImageEditorViewModel) -> XomoJSONValue {
@@ -2619,6 +2671,11 @@ private extension XomoAutomationRegistry {
             "action": XomoAutomationSchema.string(description: "Canvas action", values: ["rotateClockwise", "rotateCounterclockwise", "rotate180", "flipHorizontal", "flipVertical", "cropCenter", "trimTransparent", "revealAll"])
         ], required: ["action"]),
         tool("xomo.component.list", "List editable Xomo UI components and themes."),
+        tool("xomo.component.tokens", "Read the current component theme tokens or export them as a .xomotokens.json file.", [
+            "action": XomoAutomationSchema.string(description: "Token action", values: ["get", "export"]),
+            "theme": XomoAutomationSchema.string(description: "Optional theme; defaults to the active component theme", values: XomoComponentTheme.allCases.map(\.rawValue)),
+            "path": XomoAutomationSchema.string(description: "Destination file path for export")
+        ]),
         tool("xomo.component.insert", "Insert an editable UI component as native layers.", [
             "component": XomoAutomationSchema.string(description: "Component identifier", values: XomoComponentKind.allCases.map(\.rawValue)),
             "theme": XomoAutomationSchema.string(description: "Optional theme", values: XomoComponentTheme.allCases.map(\.rawValue)),

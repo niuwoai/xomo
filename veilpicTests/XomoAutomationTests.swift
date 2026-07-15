@@ -15,7 +15,7 @@ struct XomoAutomationTests {
             Issue.record("Expected tool array")
             return
         }
-        #expect(tools.count == 111)
+        #expect(tools.count == 112)
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.layer.list")
@@ -52,6 +52,45 @@ struct XomoAutomationTests {
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.layer.rasterize")
         })
+        #expect(tools.contains { tool in
+            guard case .object(let value) = tool else { return false }
+            return value["name"] == .string("xomo.component.tokens")
+        })
+    }
+
+    @Test func registryReadsAndExportsComponentThemeTokens() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        viewModel.xomoComponentTheme = .chakraUI
+
+        let read = registry.execute(request(
+            operation: "call",
+            name: "xomo.component.tokens",
+            arguments: ["action": .string("get")]
+        ))
+        #expect(read.ok)
+        guard case .object(let snapshot) = read.result else {
+            Issue.record("Expected theme token snapshot")
+            return
+        }
+        #expect(snapshot["theme"] == .string("chakraUI"))
+        #expect(snapshot["schemaVersion"] == .number(1))
+        #expect(snapshot["colors"]?.objectValue?["accent"]?.stringValue?.hasPrefix("#") == true)
+
+        let path = FileManager.default.temporaryDirectory
+            .appendingPathComponent("xomo-theme-\(UUID().uuidString).xomotokens.json")
+        defer { try? FileManager.default.removeItem(at: path) }
+        let exported = registry.execute(request(
+            operation: "call",
+            name: "xomo.component.tokens",
+            arguments: ["action": .string("export"), "path": .string(path.path)]
+        ))
+        #expect(exported.ok)
+        #expect(FileManager.default.fileExists(atPath: path.path))
+        let exportedData = try Data(contentsOf: path)
+        let exportedSnapshot = try JSONDecoder().decode(XomoComponentThemeTokenSnapshot.self, from: exportedData)
+        #expect(exportedSnapshot == .init(theme: .chakraUI, tokens: XomoComponentTheme.chakraUI.tokens))
     }
 
     @Test func registryCanInspectAndMutateTheActiveDocument() throws {

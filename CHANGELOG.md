@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc108 - 2026-07-16
+
+### Added
+- 新增 `xomo.component.tokens` MCP/CLI 工具，复用主题 Token 文件的稳定 JSON，可读取当前主题或导出指定 `.xomotokens.json` 路径。
+
+### Verification
+- 组件 Token 自动化读取/导出、MCP 工具目录与 CLI 目录专项测试通过；输出继续保持本机端点与本地文件操作，不联网写回第三方设计工具。
+
 ## 2.12.0-rc107 - 2026-07-16
 
 ### Added
