@@ -102,6 +102,49 @@ struct ImageEditorShapeStyleTests {
         #expect(reopened.document.selectedLayer?.shapeContent?.fillGradient?.style == .linear)
     }
 
+    @Test func gradientEndpointHandleColorsUseActualStopsAndTrackReverse() {
+        var gradient = ImageEditorGradientFillContent.shapeLinear(colorStops: [
+            ImageEditorGradientColorStop(
+                position: 0,
+                color: NSColor(deviceRed: 0.9, green: 0.1, blue: 0.2, alpha: 1)
+            ),
+            ImageEditorGradientColorStop(
+                position: 0.4,
+                color: NSColor(deviceRed: 0.2, green: 0.8, blue: 0.3, alpha: 1)
+            ),
+            ImageEditorGradientColorStop(
+                position: 1,
+                color: NSColor(deviceRed: 0.1, green: 0.3, blue: 0.95, alpha: 1)
+            )
+        ])
+        let normalStart = ImageEditorShapeGradientGeometry.displayedEndpointColor(
+            gradient: gradient,
+            handle: .start
+        )
+        let normalEnd = ImageEditorShapeGradientGeometry.displayedEndpointColor(
+            gradient: gradient,
+            handle: .end
+        )
+        #expect(abs(normalStart.redComponent - 0.9) < 0.001)
+        #expect(abs(normalStart.blueComponent - 0.2) < 0.001)
+        #expect(abs(normalEnd.redComponent - 0.1) < 0.001)
+        #expect(abs(normalEnd.blueComponent - 0.95) < 0.001)
+
+        gradient.reverse = true
+        let reversedStart = ImageEditorShapeGradientGeometry.displayedEndpointColor(
+            gradient: gradient,
+            handle: .start
+        )
+        let reversedEnd = ImageEditorShapeGradientGeometry.displayedEndpointColor(
+            gradient: gradient,
+            handle: .end
+        )
+        #expect(abs(reversedStart.redComponent - normalEnd.redComponent) < 0.001)
+        #expect(abs(reversedStart.blueComponent - normalEnd.blueComponent) < 0.001)
+        #expect(abs(reversedEnd.redComponent - normalStart.redComponent) < 0.001)
+        #expect(abs(reversedEnd.blueComponent - normalStart.blueComponent) < 0.001)
+    }
+
     @Test func radialCanvasGeometryRespectsNonUniformLayerFrames() throws {
         var gradient = ImageEditorGradientFillContent.shapeLinear(
             startColor: .systemRed,
@@ -969,6 +1012,11 @@ struct ImageEditorShapeStyleTests {
         #expect(canvasSource.contains("image-editor-shape-radial-gradient-handle-"))
         #expect(canvasSource.contains("radiusPath.strokedPath"))
         #expect(canvasSource.contains("beginEditingSelectedShapeRadialGradient"))
+        #expect(
+            canvasSource.contains(
+                "shapeGradientHandleColor(handle == .center ? .start : .end)"
+            )
+        )
         #expect(canvasSource.components(separatedBy: "SpatialTapGesture").count - 1 >= 2)
         #expect(
             canvasSource.components(

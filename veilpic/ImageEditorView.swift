@@ -3808,11 +3808,7 @@ struct ImageEditorView: View {
         canvasSize: CGSize
     ) -> some View {
         Circle()
-            .fill(
-                handle == .center
-                    ? Color.gray.opacity(0.94)
-                    : Color.white.opacity(0.78)
-            )
+            .fill(shapeGradientHandleColor(handle == .center ? .start : .end))
             .overlay {
                 Circle()
                     .stroke(Color.white.opacity(0.9), lineWidth: 1.25)
@@ -3821,8 +3817,12 @@ struct ImageEditorView: View {
                     .padding(-1)
                 if handle == .center {
                     Circle()
-                        .fill(Color.black.opacity(0.62))
-                        .frame(width: 3, height: 3)
+                        .fill(Color.black.opacity(0.72))
+                        .overlay {
+                            Circle()
+                                .stroke(Color.white.opacity(0.88), lineWidth: 0.5)
+                        }
+                        .frame(width: 4, height: 4)
                 }
             }
             .frame(width: 12, height: 12)
@@ -3865,17 +3865,11 @@ struct ImageEditorView: View {
         guard let gradient = viewModel.document.selectedLayer?.shapeContent?.fillGradient else {
             return Color.gray
         }
-        let colors = gradient.colors()
-        let value: SIMD3<Double>
-        if gradient.reverse {
-            value = handle == .start ? colors.end : colors.start
-        } else {
-            value = handle == .start ? colors.start : colors.end
-        }
         return Color(
-            red: value.x,
-            green: value.y,
-            blue: value.z
+            nsColor: ImageEditorShapeGradientGeometry.displayedEndpointColor(
+                gradient: gradient,
+                handle: handle
+            )
         )
     }
 
