@@ -569,7 +569,7 @@ enum XomoFigmaNodeImportMapper {
               let paintOpacity = validUnitValue(paint.opacity ?? 1)
         else { return nil }
 
-        let colors = stops.compactMap(gradientStopColor)
+        let colors = stops.compactMap(resolveGradientStopColor)
         guard colors.count == stops.count,
               zip(stops, stops.dropFirst()).allSatisfy({ pair in
                   pair.0.position <= pair.1.position
@@ -597,7 +597,9 @@ enum XomoFigmaNodeImportMapper {
         XomoFigmaPlanColor(red: color.red, green: color.green, blue: color.blue, alpha: 1)
     }
 
-    private static func gradientStopColor(_ stop: XomoFigmaGradientStop) -> XomoFigmaPlanColor? {
+    nonisolated static func resolveGradientStopColor(
+        _ stop: XomoFigmaGradientStop
+    ) -> XomoFigmaPlanColor? {
         guard stop.position.isFinite,
               let red = validUnitValue(stop.color.r),
               let green = validUnitValue(stop.color.g),
@@ -607,7 +609,7 @@ enum XomoFigmaNodeImportMapper {
         return XomoFigmaPlanColor(red: red, green: green, blue: blue, alpha: alpha)
     }
 
-    private static func validUnitValue(_ value: Double) -> Double? {
+    nonisolated private static func validUnitValue(_ value: Double) -> Double? {
         value.isFinite && (0...1).contains(value) ? value : nil
     }
 
@@ -789,12 +791,12 @@ struct XomoFigmaVector: Decodable {
     var isFinite: Bool { x.isFinite && y.isFinite }
 }
 
-struct XomoFigmaGradientStop: Decodable {
+nonisolated struct XomoFigmaGradientStop: Decodable, Sendable {
     var position: Double
     var color: XomoFigmaColor
 }
 
-struct XomoFigmaColor: Decodable {
+nonisolated struct XomoFigmaColor: Decodable, Sendable {
     var r: Double
     var g: Double
     var b: Double

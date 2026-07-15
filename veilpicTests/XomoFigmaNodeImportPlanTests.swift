@@ -13,6 +13,37 @@ import Testing
 
 @MainActor
 struct XomoFigmaNodeImportPlanTests {
+    @Test func gradientStopResolutionRunsOffMainActorAndRejectsInvalidValues() async {
+        let resolved = await Task.detached {
+            XomoFigmaNodeImportMapper.resolveGradientStopColor(
+                XomoFigmaGradientStop(
+                    position: 0.4,
+                    color: XomoFigmaColor(r: 0.2, g: 0.4, b: 0.6, a: 0.8)
+                )
+            )
+        }.value
+        let invalidPosition = await Task.detached {
+            XomoFigmaNodeImportMapper.resolveGradientStopColor(
+                XomoFigmaGradientStop(
+                    position: .nan,
+                    color: XomoFigmaColor(r: 0.2, g: 0.4, b: 0.6, a: 0.8)
+                )
+            )
+        }.value
+        let invalidChannel = await Task.detached {
+            XomoFigmaNodeImportMapper.resolveGradientStopColor(
+                XomoFigmaGradientStop(
+                    position: 0.4,
+                    color: XomoFigmaColor(r: 0.2, g: 1.4, b: 0.6, a: 0.8)
+                )
+            )
+        }.value
+
+        #expect(resolved == XomoFigmaPlanColor(red: 0.2, green: 0.4, blue: 0.6, alpha: 0.8))
+        #expect(invalidPosition == nil)
+        #expect(invalidChannel == nil)
+    }
+
     @Test func offsetMultiStopLinearGradientsMapToEditableShapes() throws {
         let response = try JSONDecoder().decode(
             XomoFigmaNodeResponse.self,

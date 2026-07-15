@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.12.0-rc81 - 2026-07-15
+
+### Fixed
+- Figma 线性与径向渐变共用的色标颜色解析不再错误继承 UI 的 `MainActor` 隔离，清除 rc80 通用 Release 暴露的 Swift 6 actor-isolation 预警。
+- 色标与颜色响应值明确为 `nonisolated + Sendable` 纯数据，归一化函数可在后台任务安全执行；网络授权、节点映射、颜色/透明度校验和导入结果保持不变。
+
+### Changed
+- App、CLI、教程、Figma/MCP 文档、路线图与全部 Xcode target 版本同步为 `2.12.0-rc81`。
+
+### Tests
+- 新增 detached task 色标解析测试，覆盖合法 RGBA、非有限色标位置与越界颜色通道；完整 Figma 节点导入 19/19、CLI 2/2 通过。
+- arm64/x86_64 通用 Release App 构建通过，quiet 编译阶段不再输出 Swift warning；产物版本 `2.12.0-rc81`、Bundle ID `im.some.xomo`、macOS 13.0 下限和双架构核对通过。
+
 ## 2.12.0-rc80 - 2026-07-15
 
 ### Fixed
