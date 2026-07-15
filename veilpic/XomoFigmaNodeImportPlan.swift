@@ -42,10 +42,18 @@ enum XomoFigmaNodeMappingIssue: String, CaseIterable, Sendable {
     case blendModeFlattened
     case cornerRadiusFlattened
     case transformFlattened
+    case variableBindingPreserved
 
     var localizationKey: String {
         "xomo.figma.node.issue.\(rawValue)"
     }
+}
+
+struct XomoFigmaVariableBinding: Codable, Equatable, Hashable, Sendable, Identifiable {
+    var field: String
+    var variableID: String
+
+    var id: String { "\(field):\(variableID)" }
 }
 
 struct XomoFigmaPlanRect: Equatable, Sendable {
@@ -200,6 +208,7 @@ struct XomoFigmaNodeImportItem: Equatable, Identifiable, Sendable {
     var targetKind: XomoFigmaNodeTargetKind?
     var fidelity: XomoFigmaNodeMappingFidelity
     var issues: [XomoFigmaNodeMappingIssue]
+    var variableBindings: [XomoFigmaVariableBinding] = []
     var frame: XomoFigmaPlanRect?
     var opacity: Double
     var isVisible: Bool

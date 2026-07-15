@@ -209,6 +209,10 @@ enum XomoFigmaNodeImportMapper {
     ) -> XomoFigmaNodeImportItem {
         var issues: [XomoFigmaNodeMappingIssue] = []
         let mapping = targetMapping(node: node, issues: &issues)
+        let variableBindings = node.boundVariables?.bindings() ?? []
+        if !variableBindings.isEmpty {
+            issues.append(.variableBindingPreserved)
+        }
         let nativeStackLayout = stackLayout(node)
         if node.absoluteBoundingBox == nil {
             issues.append(.missingBounds)
@@ -261,6 +265,7 @@ enum XomoFigmaNodeImportMapper {
             targetKind: mapping.target,
             fidelity: fidelity,
             issues: issues,
+            variableBindings: variableBindings,
             frame: node.absoluteBoundingBox.map {
                 XomoFigmaPlanRect(
                     x: $0.x - rootOrigin.x,
@@ -805,6 +810,56 @@ struct XomoFigmaNode: Decodable {
     var relativeTransform: [[Double]]?
     var fillGeometry: [XomoFigmaPath]?
     var strokeGeometry: [XomoFigmaPath]?
+    var boundVariables: XomoFigmaBoundVariables?
+}
+
+struct XomoFigmaVariableReference: Decodable {
+    var type: String
+    var id: String
+
+    var isAlias: Bool { type == "VARIABLE_ALIAS" && !id.isEmpty }
+}
+
+enum XomoFigmaBoundVariableValue: Decodable {
+    case single(XomoFigmaVariableReference)
+    case multiple([XomoFigmaVariableReference])
+
+    init(from decoder: Decoder) throws {
+        if var array = try? decoder.unkeyedContainer() {
+            var values: [XomoFigmaVariableReference] = []
+            while !array.isAtEnd {
+                values.append(try array.decode(XomoFigmaVariableReference.self))
+            }
+            self = .multiple(values)
+            return
+        }
+        self = .single(try XomoFigmaVariableReference(from: decoder))
+    }
+
+    var references: [XomoFigmaVariableReference] {
+        switch self {
+        case .single(let reference): return [reference]
+        case .multiple(let references): return references
+        }
+    }
+}
+
+struct XomoFigmaBoundVariables: Decodable {
+    var fills: XomoFigmaBoundVariableValue?
+    var strokes: XomoFigmaBoundVariableValue?
+    var characters: XomoFigmaBoundVariableValue?
+
+    func bindings() -> [XomoFigmaVariableBinding] {
+        [
+            ("fills", fills),
+            ("strokes", strokes),
+            ("characters", characters)
+        ].flatMap { field, value in
+            (value?.references ?? []).filter(\.isAlias).map {
+                XomoFigmaVariableBinding(field: field, variableID: $0.id)
+            }
+        }
+    }
 }
 
 struct XomoFigmaRectangle: Decodable {

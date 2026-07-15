@@ -2944,6 +2944,7 @@
 "xomo.figma.node.issue.blendModeFlattened" = "Blend mode is not preserved yet";
 "xomo.figma.node.issue.cornerRadiusFlattened" = "Corner smoothing uses an editable superellipse approximation";
 "xomo.figma.node.issue.transformFlattened" = "Rotation, reflection, or skew is flattened to axis-aligned bounds";
+"xomo.figma.node.issue.variableBindingPreserved" = "Figma variable binding is preserved by ID; its live value is not resolved yet";
 "xomo.figma.node.error.nodeSelectionRequired" = "Paste a Figma node link that includes node-id first.";
 "xomo.figma.node.error.credentialMissing" = "No saved Figma token was found. Connect first.";
 "xomo.figma.node.error.invalidRequest" = "The node request is invalid. Check the link and try again.";

@@ -2944,6 +2944,7 @@
 "xomo.figma.node.issue.blendModeFlattened" = "描画モードはまだ保持されません";
 "xomo.figma.node.issue.cornerRadiusFlattened" = "コーナースムージングは編集可能なスーパー楕円で近似されます";
 "xomo.figma.node.issue.transformFlattened" = "回転、反転、傾斜は軸に沿った境界へ縮退します";
+"xomo.figma.node.issue.variableBindingPreserved" = "Figma 変数のバインディング ID は保持されますが、ライブ値はまだ解決されません";
 "xomo.figma.node.error.nodeSelectionRequired" = "先に node-id を含む Figma ノードリンクを貼り付けてください。";
 "xomo.figma.node.error.credentialMissing" = "保存済みの Figma トークンがありません。先に接続してください。";
 "xomo.figma.node.error.invalidRequest" = "ノード読み取りパラメータが無効です。リンクを確認してください。";

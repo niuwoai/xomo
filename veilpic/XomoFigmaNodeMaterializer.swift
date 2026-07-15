@@ -134,6 +134,7 @@ enum XomoFigmaNodeMaterializer {
             layer = makeImagePlaceholderLayer(item: item, frame: frame)
         }
         layer.groupID = parentGroupID
+        layer.xomoFigmaVariableBindings = item.variableBindings
         layer.stackChildLayout = item.stackChildLayout
         layer.isStackLayoutExcluded = item.isStackLayoutExcluded
         layer.isVisible = item.isVisible

@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.12.0-rc93 - 2026-07-15
+
+### Added
+- Figma 节点导入识别 `fills`、`strokes`、`characters` 的 `VARIABLE_ALIAS`，保留字段与变量 ID 到原生图层，并随项目保存重开。
+
+### Changed
+- 导入报告明确标记变量绑定已保留但暂未解析实时值，继续使用 Figma 返回的静态颜色/文字结果，避免伪装成完整 Variables API。
+
+### Tests
+- 新增变量绑定解码、材料化、项目 round-trip 与三语资源回归；Figma 导入专项 24/24 通过。
+
 ## 2.12.0-rc92 - 2026-07-15
 
 ### Changed

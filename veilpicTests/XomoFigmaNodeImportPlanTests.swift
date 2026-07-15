@@ -632,6 +632,60 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(frame.fidelity == .exact)
     }
 
+    @Test func mapperPreservesFigmaVariableBindingsAndProjectRoundTrip() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                """
+                {
+                  "name": "Variable bindings",
+                  "nodes": {
+                    "1:16": {
+                      "document": {
+                        "id": "1:16",
+                        "name": "Token Button",
+                        "type": "RECTANGLE",
+                        "absoluteBoundingBox": {"x": 0, "y": 0, "width": 120, "height": 44},
+                        "fills": [{"type": "SOLID", "color": {"r": 0.2, "g": 0.4, "b": 0.8}}],
+                        "boundVariables": {
+                          "fills": [{"type": "VARIABLE_ALIAS", "id": "VariableID:brand-fill"}],
+                          "characters": {"type": "VARIABLE_ALIAS", "id": "VariableID:body-font"}
+                        }
+                      }
+                    }
+                  }
+                }
+                """.utf8
+            )
+        )
+
+        let plan = try XomoFigmaNodeImportMapper.makePlan(response: response, requestedNodeID: "1:16")
+        let item = try #require(plan.items.first)
+        #expect(item.variableBindings == [
+            XomoFigmaVariableBinding(field: "fills", variableID: "VariableID:brand-fill"),
+            XomoFigmaVariableBinding(field: "characters", variableID: "VariableID:body-font")
+        ])
+        #expect(item.issues.contains(.variableBindingPreserved))
+        #expect(item.fidelity == .partial)
+
+        let materialized = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: CGSize(width: 400, height: 300)
+        )
+        let layer = try #require(materialized.layers.first)
+        #expect(layer.xomoFigmaVariableBindings == item.variableBindings)
+
+        var document = ImageEditorDocument(
+            sourceName: "variables.png",
+            image: NSImage.transparent(size: CGSize(width: 400, height: 300))
+        )
+        document.layers.append(contentsOf: materialized.layers)
+        let project = try ImageEditorProjectDocument(document: document)
+        let restored = try project.restoredDocument()
+        let restoredLayer = try #require(restored.layers.first { $0.id == layer.id })
+        #expect(restoredLayer.xomoFigmaVariableBindings == item.variableBindings)
+    }
+
     @Test func mapperImportsHorizontalBaselineAsEditableNativeLayout() throws {
         let response = try JSONDecoder().decode(
             XomoFigmaNodeResponse.self,

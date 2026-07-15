@@ -2643,6 +2643,7 @@ struct ImageEditorLayer: Identifiable {
     var labelColor: ImageEditorLayerLabelColor?
     var xomoComponentInstance: XomoComponentInstance?
     var isXomoThemeOverride = false
+    var xomoFigmaVariableBindings: [XomoFigmaVariableBinding] = []
 
     static func background(image: NSImage) -> ImageEditorLayer {
         ImageEditorLayer(
