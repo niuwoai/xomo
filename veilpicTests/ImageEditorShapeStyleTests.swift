@@ -284,7 +284,109 @@ struct ImageEditorShapeStyleTests {
         let lockedHistoryCount = viewModel.document.history.count
         #expect(!viewModel.canEditSelectedShapeGradientStops)
         #expect(!viewModel.beginEditingSelectedShapeGradientStop(at: 1))
+        #expect(
+            viewModel.addSelectedShapeGradientStop(
+                atCanvasPoint: CGPoint(x: 40, y: 30)
+            ) == nil
+        )
         #expect(viewModel.document.history.count == lockedHistoryCount)
+    }
+
+    @Test func radialGradientAxisAddsInterpolatedStopForNormalAndReversedFills() throws {
+        var gradient = ImageEditorGradientFillContent.shapeLinear(
+            startColor: .systemRed,
+            endColor: .systemBlue
+        )
+        gradient.style = .radial
+        let viewModel = makeViewModel()
+        viewModel.drawShape(
+            from: CGPoint(x: 10, y: 10),
+            to: CGPoint(x: 110, y: 70),
+            ellipse: false,
+            fillGradient: gradient
+        )
+        let geometry = try #require(viewModel.selectedShapeRadialGradientCanvasGeometry)
+        let insertionPoint = CGPoint(
+            x: geometry.center.x + (geometry.radius.x - geometry.center.x) * 0.25,
+            y: geometry.center.y
+        )
+        let historyBeforeAdd = viewModel.document.history.count
+        let insertedIndex = try #require(
+            viewModel.addSelectedShapeGradientStop(atCanvasPoint: insertionPoint)
+        )
+        let inserted = viewModel.selectedShapeGradientColorStops[insertedIndex]
+        #expect(insertedIndex == 1)
+        #expect(abs(inserted.position - 0.25) < 0.001)
+        #expect(abs(inserted.red - 0.75) < 0.001)
+        #expect(abs(inserted.green) < 0.001)
+        #expect(abs(inserted.blue - 0.25) < 0.001)
+        #expect(viewModel.selectedShapeGradientCanvasStopHandlePoints.count == 1)
+        #expect(viewModel.document.history.count == historyBeforeAdd + 1)
+        viewModel.undo()
+        #expect(viewModel.selectedShapeGradientColorStops.count == 2)
+
+        gradient.reverse = true
+        let reversedViewModel = makeViewModel()
+        reversedViewModel.drawShape(
+            from: CGPoint(x: 10, y: 10),
+            to: CGPoint(x: 110, y: 70),
+            ellipse: false,
+            fillGradient: gradient
+        )
+        let reversedGeometry = try #require(
+            reversedViewModel.selectedShapeRadialGradientCanvasGeometry
+        )
+        let reversedIndex = try #require(
+            reversedViewModel.addSelectedShapeGradientStop(
+                atCanvasPoint: CGPoint(
+                    x: reversedGeometry.center.x
+                        + (reversedGeometry.radius.x - reversedGeometry.center.x) * 0.25,
+                    y: reversedGeometry.center.y
+                )
+            )
+        )
+        let reversedStop = reversedViewModel.selectedShapeGradientColorStops[reversedIndex]
+        #expect(abs(reversedStop.position - 0.75) < 0.001)
+        #expect(abs(reversedStop.red - 0.25) < 0.001)
+        #expect(abs(reversedStop.blue - 0.75) < 0.001)
+    }
+
+    @Test func radialGradientAxisRejectsTheSixteenthStopLimit() throws {
+        let stops = (0..<ImageEditorGradientFillContent.maximumColorStopCount).map { index in
+            let position = Double(index)
+                / Double(ImageEditorGradientFillContent.maximumColorStopCount - 1)
+            return ImageEditorGradientColorStop(
+                position: position,
+                color: NSColor(
+                    deviceRed: position,
+                    green: 0,
+                    blue: 1 - position,
+                    alpha: 1
+                )
+            )
+        }
+        var gradient = ImageEditorGradientFillContent.shapeLinear(colorStops: stops)
+        gradient.style = .radial
+        let viewModel = makeViewModel()
+        viewModel.drawShape(
+            from: CGPoint(x: 10, y: 10),
+            to: CGPoint(x: 110, y: 70),
+            ellipse: false,
+            fillGradient: gradient
+        )
+        let historyCount = viewModel.document.history.count
+        let geometry = try #require(viewModel.selectedShapeRadialGradientCanvasGeometry)
+        #expect(viewModel.selectedShapeGradientColorStops.count == 16)
+        #expect(
+            viewModel.addSelectedShapeGradientStop(
+                atCanvasPoint: CGPoint(
+                    x: (geometry.center.x + geometry.radius.x) / 2,
+                    y: geometry.center.y
+                )
+            ) == nil
+        )
+        #expect(viewModel.selectedShapeGradientColorStops.count == 16)
+        #expect(viewModel.document.history.count == historyCount)
     }
 
     @Test func radialCanvasHandlesCommitOneUndoAndRejectNoOpOrLockedEdits() throws {
@@ -863,8 +965,11 @@ struct ImageEditorShapeStyleTests {
         #expect(canvasSource.contains("!isTextInputActive, deleteSelectedObject()"))
         #expect(canvasSource.contains("activeShapeGradientStopIndex"))
         #expect(canvasSource.contains("image-editor-shape-radial-gradient-boundary"))
+        #expect(canvasSource.contains("image-editor-shape-radial-gradient-axis"))
         #expect(canvasSource.contains("image-editor-shape-radial-gradient-handle-"))
+        #expect(canvasSource.contains("radiusPath.strokedPath"))
         #expect(canvasSource.contains("beginEditingSelectedShapeRadialGradient"))
+        #expect(canvasSource.components(separatedBy: "SpatialTapGesture").count - 1 >= 2)
         #expect(
             canvasSource.components(
                 separatedBy: "ForEach(viewModel.selectedShapeGradientCanvasStopHandlePoints)"
