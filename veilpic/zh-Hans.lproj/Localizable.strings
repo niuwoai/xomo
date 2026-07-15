@@ -2767,6 +2767,8 @@
 "xomo.theme.libraryTitle" = "%@ · %@";
 "xomo.theme.copyTokens" = "复制主题 Tokens";
 "xomo.theme.exportTokens" = "导出主题 Tokens…";
+"xomo.theme.importTokens" = "导入本地 Tokens…";
+"xomo.theme.clearTokens" = "清除本地 Tokens";
 "xomo.librarySource.xomoOriginal" = "像界原创";
 "xomo.librarySource.xomoOriginal.attribution" = "像界以本地代码生成的原创可编辑组件。";
 "xomo.librarySource.chakraUI" = "Chakra UI";
@@ -2787,6 +2789,9 @@
 "xomo.theme.status.tokensCopyFailed" = "主题 Tokens 复制失败";
 "xomo.theme.status.tokensExported" = "已导出主题 Tokens：%@";
 "xomo.theme.status.tokensExportFailed" = "主题 Tokens 导出失败";
+"xomo.theme.status.tokensImported" = "已导入本地 Tokens：%@";
+"xomo.theme.status.tokensImportFailed" = "本地 Tokens 导入失败";
+"xomo.theme.status.tokensCleared" = "已清除本地 Tokens";
 "xomo.themeSample.insert" = "插入当前主题页面示例";
 "xomo.themeSample.nativeWorkspace" = "原生工作台";
 "xomo.themeSample.softMobileProfile" = "柔和移动端个人页";

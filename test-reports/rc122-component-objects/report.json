@@ -1,0 +1,7 @@
+{
+  "suite": "XomoCanvasObjectTests",
+  "total": 14,
+  "passed": 14,
+  "failed": 0,
+  "verification": "独立 xcodebuild 进程，macOS 测试服务已授权"
+}

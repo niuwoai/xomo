@@ -101,6 +101,116 @@ struct XomoLeftSidebarTests {
         #expect(everyComponentSupportsThemes)
     }
 
+    @Test func localTokenSnapshotValidatesColorsMetricsAndSchema() throws {
+        let snapshot = XomoComponentThemeTokenSnapshot(
+            schemaVersion: 1,
+            theme: "local-brand",
+            librarySource: "local",
+            colors: [
+                "accent": "#112233FF",
+                "accentBorder": "#0A1B2CFF",
+                "surface": "#FFFFFFFF",
+                "subtleSurface": "#EEF2F6FF",
+                "border": "#CBD5E1FF",
+                "primaryText": "#0F172AFF",
+                "secondaryText": "#475569FF",
+                "onAccent": "#FFFFFFFF"
+            ],
+            metrics: ["cornerRadius": 10, "spacing": 12]
+        )
+        let tokens = try snapshot.makeTokens()
+        #expect(tokens.accent.isEqual(NSColor(deviceRed: 0x11 / 255, green: 0x22 / 255, blue: 0x33 / 255, alpha: 1)))
+
+        let invalid = XomoComponentThemeTokenSnapshot(
+            schemaVersion: 2,
+            theme: "local-brand",
+            librarySource: "local",
+            colors: snapshot.colors,
+            metrics: snapshot.metrics
+        )
+        #expect(throws: XomoComponentThemeTokenError.unsupportedSchema(2)) {
+            _ = try invalid.makeTokens()
+        }
+    }
+
+    @Test func importingLocalTokensStylesNewComponentsAndRoundTripsMetadata() throws {
+        let snapshot = XomoComponentThemeTokenSnapshot(
+            schemaVersion: 1,
+            theme: "local-brand",
+            librarySource: "local",
+            colors: [
+                "accent": "#112233FF",
+                "accentBorder": "#0A1B2CFF",
+                "surface": "#FFFFFFFF",
+                "subtleSurface": "#EEF2F6FF",
+                "border": "#CBD5E1FF",
+                "primaryText": "#0F172AFF",
+                "secondaryText": "#475569FF",
+                "onAccent": "#FFFFFFFF"
+            ],
+            metrics: ["cornerRadius": 10, "spacing": 12]
+        )
+        let path = FileManager.default.temporaryDirectory
+            .appendingPathComponent("xomo-local-token-\(UUID().uuidString).xomotokens.json")
+        defer { try? FileManager.default.removeItem(at: path) }
+        try Data(snapshot.encodedJSON().utf8).write(to: path)
+
+        let viewModel = ImageEditorViewModel(
+            sourceName: "local-token-import",
+            image: NSImage.transparent(size: CGSize(width: 640, height: 480))
+        ) { _ in }
+        try viewModel.importXomoThemeTokens(from: path)
+        #expect(viewModel.hasLocalXomoThemeTokens)
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 40, y: 60))
+
+        let group = try #require(viewModel.document.selectedLayer)
+        let background = try #require(viewModel.document.layers.first { $0.groupID == group.id && $0.isShape })
+        #expect(background.shapeContent?.fillColor.isEqual(NSColor(deviceRed: 0x11 / 255, green: 0x22 / 255, blue: 0x33 / 255, alpha: 1)) == true)
+        #expect(group.xomoComponentInstance?.tokenSnapshot == snapshot)
+
+        let restored = try ImageEditorProjectDocument(document: viewModel.document).restoredDocument()
+        #expect(restored.layers.first { $0.id == group.id }?.xomoComponentInstance?.tokenSnapshot == snapshot)
+
+        viewModel.clearImportedXomoThemeTokens()
+        #expect(!viewModel.hasLocalXomoThemeTokens)
+    }
+
+    @Test func applyingImportedTokensIsUndoableAndClearsWithBuiltInThemeSelection() throws {
+        let base = XomoComponentTheme.native.tokenSnapshot
+        var colors = base.colors
+        colors["accent"] = "#801F4FFF"
+        let snapshot = XomoComponentThemeTokenSnapshot(
+            schemaVersion: 1,
+            theme: "local-brand",
+            librarySource: "local",
+            colors: colors,
+            metrics: base.metrics
+        )
+        let path = FileManager.default.temporaryDirectory
+            .appendingPathComponent("xomo-local-token-undo-\(UUID().uuidString).xomotokens.json")
+        defer { try? FileManager.default.removeItem(at: path) }
+        try Data(snapshot.encodedJSON().utf8).write(to: path)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "local-token-undo",
+            image: NSImage.transparent(size: CGSize(width: 640, height: 480))
+        ) { _ in }
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 40, y: 60))
+        let group = try #require(viewModel.document.selectedLayer)
+        try viewModel.importXomoThemeTokens(from: path)
+        viewModel.applyXomoThemeToSelectedComponent()
+        let customBackground = try #require(viewModel.document.layers.first { $0.groupID == group.id && $0.isShape })
+        #expect(customBackground.shapeContent?.fillColor.isEqual(NSColor(deviceRed: 0x80 / 255, green: 0x1F / 255, blue: 0x4F / 255, alpha: 1)) == true)
+        #expect(viewModel.document.selectedLayer?.xomoComponentInstance?.tokenSnapshot == snapshot)
+
+        viewModel.undo()
+        let restoredBackground = try #require(viewModel.document.layers.first { $0.groupID == group.id && $0.isShape })
+        #expect(restoredBackground.shapeContent?.fillColor.isEqual(XomoComponentTheme.native.tokens.accent) == true)
+
+        try viewModel.importXomoThemeTokens(from: path)
+        viewModel.selectXomoComponentTheme(.denseAdmin)
+        #expect(!viewModel.hasLocalXomoThemeTokens)
+    }
+
     @Test func primaryButtonUsesSelectedComponentThemeTokens() throws {
         for theme in XomoComponentTheme.allCases {
             let image = NSImage.transparent(size: CGSize(width: 640, height: 480))
@@ -301,7 +411,7 @@ struct XomoLeftSidebarTests {
         #expect(source.contains(
             "ImageEditorCanvasCursor.tool("
         ))
-        #expect(source.contains(".simultaneousGesture(canvasGesture(in: geometry.size))"))
+        #expect(source.contains(".highPriorityGesture(canvasGesture(in: geometry.size))"))
         #expect(source.contains("else if tab == .components"))
         #expect(source.contains("viewModel.selectedXomoObjectFrame?.contains(pressedImagePoint) == true"))
         #expect(source.contains("viewModel.beginMovingSelectedLayer()"))

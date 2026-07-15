@@ -170,12 +170,34 @@ struct XomoComponentThemeTokens {
     let spacing: CGFloat
 }
 
+enum XomoComponentThemeTokenError: Error, Equatable {
+    case unsupportedSchema(Int)
+    case missingColor(String)
+    case invalidColor(String)
+    case missingMetric(String)
+    case invalidMetric(String)
+}
+
 struct XomoComponentThemeTokenSnapshot: Codable, Equatable, Sendable {
     let schemaVersion: Int
     let theme: String
     let librarySource: String
     let colors: [String: String]
     let metrics: [String: Double]
+
+    init(
+        schemaVersion: Int = 1,
+        theme: String,
+        librarySource: String,
+        colors: [String: String],
+        metrics: [String: Double]
+    ) {
+        self.schemaVersion = schemaVersion
+        self.theme = theme
+        self.librarySource = librarySource
+        self.colors = colors
+        self.metrics = metrics
+    }
 
     init(theme: XomoComponentTheme, tokens: XomoComponentThemeTokens) {
         schemaVersion = 1
@@ -209,6 +231,45 @@ struct XomoComponentThemeTokenSnapshot: Codable, Equatable, Sendable {
         }
         return json
     }
+
+    func makeTokens() throws -> XomoComponentThemeTokens {
+        guard schemaVersion == 1 else {
+            throw XomoComponentThemeTokenError.unsupportedSchema(schemaVersion)
+        }
+
+        func color(_ key: String) throws -> NSColor {
+            guard let value = colors[key] else {
+                throw XomoComponentThemeTokenError.missingColor(key)
+            }
+            guard let color = NSColor(xomoRGBAHex: value) else {
+                throw XomoComponentThemeTokenError.invalidColor(key)
+            }
+            return color
+        }
+
+        func metric(_ key: String) throws -> CGFloat {
+            guard let value = metrics[key] else {
+                throw XomoComponentThemeTokenError.missingMetric(key)
+            }
+            guard value.isFinite, value >= 0, value <= 1_000 else {
+                throw XomoComponentThemeTokenError.invalidMetric(key)
+            }
+            return CGFloat(value)
+        }
+
+        return XomoComponentThemeTokens(
+            accent: try color("accent"),
+            accentBorder: try color("accentBorder"),
+            surface: try color("surface"),
+            subtleSurface: try color("subtleSurface"),
+            border: try color("border"),
+            primaryText: try color("primaryText"),
+            secondaryText: try color("secondaryText"),
+            onAccent: try color("onAccent"),
+            cornerRadius: try metric("cornerRadius"),
+            spacing: try metric("spacing")
+        )
+    }
 }
 
 extension XomoComponentTheme {
@@ -218,6 +279,19 @@ extension XomoComponentTheme {
 }
 
 private extension NSColor {
+    convenience init?(xomoRGBAHex value: String) {
+        let normalized = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard normalized.hasPrefix("#"), normalized.count == 9 else { return nil }
+        let hex = String(normalized.dropFirst())
+        guard let rgba = UInt64(hex, radix: 16) else { return nil }
+        self.init(
+            deviceRed: CGFloat((rgba >> 24) & 0xFF) / 255,
+            green: CGFloat((rgba >> 16) & 0xFF) / 255,
+            blue: CGFloat((rgba >> 8) & 0xFF) / 255,
+            alpha: CGFloat(rgba & 0xFF) / 255
+        )
+    }
+
     var xomoRGBAHex: String {
         let color = usingColorSpace(.sRGB) ?? self
         let red = Int((color.redComponent * 255).rounded())
@@ -232,11 +306,18 @@ struct XomoComponentInstance: Codable, Equatable {
     var kind: XomoComponentKind
     var theme: XomoComponentTheme
     var masterID: UUID?
+    var tokenSnapshot: XomoComponentThemeTokenSnapshot?
 
-    init(kind: XomoComponentKind, theme: XomoComponentTheme, masterID: UUID? = nil) {
+    init(
+        kind: XomoComponentKind,
+        theme: XomoComponentTheme,
+        masterID: UUID? = nil,
+        tokenSnapshot: XomoComponentThemeTokenSnapshot? = nil
+    ) {
         self.kind = kind
         self.theme = theme
         self.masterID = masterID
+        self.tokenSnapshot = tokenSnapshot
     }
 }
 

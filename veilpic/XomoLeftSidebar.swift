@@ -203,7 +203,7 @@ struct XomoComponentLibraryPanel: View {
                 Menu {
                     ForEach(XomoComponentTheme.allCases) { theme in
                         Button(theme.libraryTitle) {
-                            viewModel.xomoComponentTheme = theme
+                            viewModel.selectXomoComponentTheme(theme)
                         }
                     }
                 } label: {
@@ -256,6 +256,25 @@ struct XomoComponentLibraryPanel: View {
                     .controlSize(.small)
                     .focusable(false)
                     .accessibilityIdentifier("xomo-component-theme-export-tokens")
+                }
+
+                HStack(spacing: 6) {
+                    Button(L10n.text("xomo.theme.importTokens")) {
+                        viewModel.chooseXomoThemeTokenImportFile()
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                    .focusable(false)
+                    .accessibilityIdentifier("xomo-component-theme-import-tokens")
+
+                    Button(L10n.text("xomo.theme.clearTokens")) {
+                        viewModel.clearImportedXomoThemeTokens()
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                    .focusable(false)
+                    .disabled(!viewModel.hasLocalXomoThemeTokens)
+                    .accessibilityIdentifier("xomo-component-theme-clear-tokens")
                 }
 
                 HStack(spacing: 6) {
@@ -437,7 +456,7 @@ struct XomoComponentLibraryPanel: View {
                 .xomoDraggable(component.rawValue) {
                     XomoComponentDragPreview(
                         kind: component,
-                        tokens: viewModel.xomoComponentTheme.tokens,
+                        tokens: viewModel.activeXomoComponentTokens,
                         displaySize: viewModel.xomoComponentDragPreviewSize(component)
                     )
                 }
@@ -455,7 +474,7 @@ struct XomoComponentLibraryPanel: View {
         let isSelected = item.component == (pendingComponentSelection ?? viewModel.selectedXomoObjectKind)
         return VStack(spacing: 6) {
             if let component = item.component {
-                XomoComponentThumbnail(kind: component, tokens: viewModel.xomoComponentTheme.tokens)
+                XomoComponentThumbnail(kind: component, tokens: viewModel.activeXomoComponentTokens)
             } else {
                 Image(systemName: item.symbolName)
                     .font(.system(size: 18, weight: .semibold))

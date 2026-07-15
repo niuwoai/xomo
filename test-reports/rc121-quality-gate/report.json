@@ -1,0 +1,14 @@
+{
+  "version": "2.12.0-rc121",
+  "date": "2026-07-16",
+  "milestone": "local design token mapping",
+  "component_token_tests": {"passed": 40, "failed": 0, "total": 40},
+  "automation_tests": {"passed": 36, "failed": 0, "total": 36},
+  "figma_node_tests": {"passed": 25, "failed": 0, "total": 25},
+  "localization_tests": {"passed": 4, "failed": 0, "total": 4},
+  "cli_tests": {"passed": 2, "failed": 0, "total": 2},
+  "cli_build": {"status": "passed", "architectures": ["arm64", "x86_64"], "reported_version": "2.12.0-rc121"},
+  "debug_build": {"status": "passed", "architectures": ["arm64", "x86_64"], "path": "/tmp/xomo-debug-rc121/Build/Products/Debug/Xomo.app"},
+  "bundle": {"identifier": "im.some.xomo", "minimum_system_version": "13.0"},
+  "install": {"performed": false, "reason": "rc121 is not a 20-version full gate"}
+}

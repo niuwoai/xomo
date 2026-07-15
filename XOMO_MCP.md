@@ -1,6 +1,6 @@
 # Xomo MCP 与 CLI
 
-> 当前版本：v2.12.0-rc120
+> 当前版本：v2.12.0-rc122
 
 ## 架构
 
@@ -42,6 +42,7 @@ xomo call xomo.shape.update '{"fillKind":"radialGradient","fillGradient":{"start
 xomo call xomo.component.insert '{"component":"button","theme":"native","x":80,"y":100}'
 xomo call xomo.component.tokens '{"action":"get","theme":"chakraUI"}'
 xomo call xomo.component.tokens '{"action":"export","path":"/Users/you/Desktop/chakra.xomotokens.json"}'
+xomo call xomo.component.tokens '{"action":"import","path":"/Users/you/Desktop/brand.xomotokens.json"}'
 xomo export ~/Desktop/xomo.png --format png --scope composited --scale 2
 xomo project export ~/Desktop/design.qpicproject
 xomo project import ~/Desktop/design.qpicproject
@@ -52,7 +53,7 @@ xomo import-image ~/Desktop/reference.png --into-selection
 
 ### 组件主题 Token 自动化
 
-`xomo.component.tokens` 与组件库界面使用同一份序列化逻辑：`action=get` 返回带 `schemaVersion`、主题、来源、颜色和尺寸指标的 JSON；`action=export` 额外要求 `path`，在本机写出 `.xomotokens.json` 文件。`theme` 可省略，省略时读取 Xomo 当前组件主题。该工具只读写本机，不会联网或写回 Figma/Sketch。
+`xomo.component.tokens` 与组件库界面使用同一份序列化逻辑：`action=get` 返回带 `schemaVersion`、主题、来源、颜色和尺寸指标的 JSON；`action=export` 额外要求 `path`，在本机写出 `.xomotokens.json` 文件；`action=import` 从 `path` 严格校验并激活本地 Token 映射，后续插入或应用到所选组件时使用这份映射。`theme` 可省略，省略时读取 Xomo 当前组件主题。该工具只读写本机，不会联网或写回 Figma/Sketch。
 
 ## MCP 客户端配置
 

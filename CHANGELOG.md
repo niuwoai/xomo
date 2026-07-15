@@ -1,5 +1,23 @@
 # Changelog
 
+## 2.12.0-rc122 - 2026-07-16
+
+### Fixed
+- 提高画布组件移动手势优先级，修复 macOS 13 拖放宿主抢占普通鼠标拖拽导致 UI 组件无法点击选中或移动的问题。
+
+### Verification
+- XomoCanvasObjectTests：14/14 通过（独立进程、已授权 macOS 测试服务）。
+- 双架构 Debug 构建：通过（arm64 + x86_64，macOS 13.0）。
+
+## 2.12.0-rc121 - 2026-07-16
+
+### Added
+- 支持导入 `.xomotokens.json` 作为本地设计 Token 映射，作用于新插入和已选 UI 组件，并随组件实例与项目往返保留。
+- 组件库 UI 与 `xomo.component.tokens` MCP/CLI 共用 Token 导入入口，切换内置主题可清除本地映射。
+
+### Verification
+- 组件库 40/40、自动化/MCP 36/36、Figma 节点导入 25/25、三语资源 4/4 通过。
+
 ## 2.12.0-rc120 - 2026-07-16
 
 ### Verification

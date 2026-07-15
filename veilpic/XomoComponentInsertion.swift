@@ -434,7 +434,7 @@ extension ImageEditorViewModel {
 
     private func insertXomoButton(_ variant: XomoButtonVariant, at proposedOrigin: CGPoint?) {
         let canvasSize = document.canvasSize
-        let tokens = xomoComponentTheme.tokens
+        let tokens = activeXomoComponentTokens
         let buttonSize = xomoComponentSize(variant.component)
         let defaultOrigin = CGPoint(
             x: (canvasSize.width - buttonSize.width) * 0.5,
@@ -461,7 +461,11 @@ extension ImageEditorViewModel {
         pushUndo()
         var group = ImageEditorLayer.group(name: component.title, size: canvasSize)
         group.blendMode = .passThrough
-        group.xomoComponentInstance = XomoComponentInstance(kind: component, theme: xomoComponentTheme)
+        group.xomoComponentInstance = XomoComponentInstance(
+            kind: component,
+            theme: xomoComponentTheme,
+            tokenSnapshot: xomoLocalThemeTokenSnapshot
+        )
 
         var background = ImageEditorLayer.shape(
             name: L10n.text("xomo.component.\(component.rawValue).backgroundLayer"),
@@ -495,7 +499,7 @@ extension ImageEditorViewModel {
 
     private func insertXomoInput(_ variant: XomoInputVariant, at proposedOrigin: CGPoint?) {
         let canvasSize = document.canvasSize
-        let tokens = xomoComponentTheme.tokens
+        let tokens = activeXomoComponentTokens
         let inputSize = xomoComponentSize(variant.component)
         let defaultOrigin = CGPoint(
             x: (canvasSize.width - inputSize.width) * 0.5,
@@ -525,7 +529,11 @@ extension ImageEditorViewModel {
         pushUndo()
         var group = ImageEditorLayer.group(name: component.title, size: canvasSize)
         group.blendMode = .passThrough
-        group.xomoComponentInstance = XomoComponentInstance(kind: component, theme: xomoComponentTheme)
+        group.xomoComponentInstance = XomoComponentInstance(
+            kind: component,
+            theme: xomoComponentTheme,
+            tokenSnapshot: xomoLocalThemeTokenSnapshot
+        )
 
         var background = ImageEditorLayer.shape(
             name: L10n.text("xomo.component.\(component.rawValue).backgroundLayer"),
@@ -607,7 +615,7 @@ extension ImageEditorViewModel {
 
     private func insertXomoToggle(at proposedOrigin: CGPoint?) {
         let component = XomoComponentKind.toggle
-        let tokens = xomoComponentTheme.tokens
+        let tokens = activeXomoComponentTokens
         let frame = componentFrame(
             proposedOrigin,
             size: xomoComponentSize(component)
@@ -650,7 +658,7 @@ extension ImageEditorViewModel {
 
     private func insertXomoCheckbox(at proposedOrigin: CGPoint?) {
         let component = XomoComponentKind.checkbox
-        let tokens = xomoComponentTheme.tokens
+        let tokens = activeXomoComponentTokens
         let label = L10n.text("xomo.component.checkbox.defaultLabel")
         let labelContent = ImageEditorTextContent(
             text: label,
@@ -693,7 +701,7 @@ extension ImageEditorViewModel {
 
     private func insertXomoTag(at proposedOrigin: CGPoint?) {
         let component = XomoComponentKind.tag
-        let tokens = xomoComponentTheme.tokens
+        let tokens = activeXomoComponentTokens
         let frame = componentFrame(proposedOrigin, size: xomoComponentSize(component))
         let label = L10n.text("xomo.component.tag.defaultLabel")
         let labelContent = ImageEditorTextContent(
@@ -729,7 +737,7 @@ extension ImageEditorViewModel {
 
     private func insertXomoBadge(at proposedOrigin: CGPoint?) {
         let component = XomoComponentKind.badge
-        let tokens = xomoComponentTheme.tokens
+        let tokens = activeXomoComponentTokens
         let size = xomoComponentSize(component)
         let frame = componentFrame(proposedOrigin, size: size)
         let value = L10n.text("xomo.component.badge.defaultValue")
@@ -781,7 +789,11 @@ extension ImageEditorViewModel {
         pushUndo()
         var group = ImageEditorLayer.group(name: component.title, size: document.canvasSize)
         group.blendMode = .passThrough
-        group.xomoComponentInstance = XomoComponentInstance(kind: component, theme: xomoComponentTheme)
+        group.xomoComponentInstance = XomoComponentInstance(
+            kind: component,
+            theme: xomoComponentTheme,
+            tokenSnapshot: xomoLocalThemeTokenSnapshot
+        )
         return group
     }
 
@@ -872,7 +884,7 @@ extension ImageEditorViewModel {
 
     private func insertXomoSideNavigation(at proposedOrigin: CGPoint?) {
         let component = XomoComponentKind.sideNavigation
-        let tokens = xomoComponentTheme.tokens
+        let tokens = activeXomoComponentTokens
         let frame = componentFrame(
             proposedOrigin,
             size: xomoComponentSize(component)
@@ -972,7 +984,7 @@ extension ImageEditorViewModel {
     }
 
     private func navigationBackground(name: String, frame: CGRect, groupID: UUID) -> ImageEditorLayer {
-        let tokens = xomoComponentTheme.tokens
+        let tokens = activeXomoComponentTokens
         var background = ImageEditorLayer.shape(
             name: name,
             frame: frame,
@@ -998,7 +1010,7 @@ extension ImageEditorViewModel {
         isBold: Bool = false,
         groupID: UUID
     ) -> ImageEditorLayer {
-        let tokens = xomoComponentTheme.tokens
+        let tokens = activeXomoComponentTokens
         var layer = ImageEditorLayer.text(
             name: name,
             origin: origin,
@@ -1066,7 +1078,7 @@ extension ImageEditorViewModel {
 
     private func insertXomoEmptyState(at proposedOrigin: CGPoint?) {
         let component = XomoComponentKind.emptyState
-        let tokens = xomoComponentTheme.tokens
+        let tokens = activeXomoComponentTokens
         let frame = componentFrame(proposedOrigin, size: xomoComponentSize(component))
         let iconFrame = CGRect(
             x: frame.midX - XomoContentComponentStyle.emptyStateIconDiameter * 0.5,
@@ -1118,7 +1130,7 @@ extension ImageEditorViewModel {
     }
 
     private func carouselDots(in frame: CGRect, groupID: UUID) -> [ImageEditorLayer] {
-        let tokens = xomoComponentTheme.tokens
+        let tokens = activeXomoComponentTokens
         let dotDiameter: CGFloat = 6
         let dotGap: CGFloat = 7
         let totalWidth = dotDiameter * 3 + dotGap * 2
@@ -1158,7 +1170,7 @@ extension ImageEditorViewModel {
 
     private func insertXomoCard(at proposedOrigin: CGPoint?) {
         let canvasSize = document.canvasSize
-        let tokens = xomoComponentTheme.tokens
+        let tokens = activeXomoComponentTokens
         let cardSize = xomoComponentSize(.card)
         let defaultOrigin = CGPoint(
             x: (canvasSize.width - cardSize.width) * 0.5,
@@ -1187,7 +1199,11 @@ extension ImageEditorViewModel {
         pushUndo()
         var group = ImageEditorLayer.group(name: L10n.text("xomo.component.card.title"), size: canvasSize)
         group.blendMode = .passThrough
-        group.xomoComponentInstance = XomoComponentInstance(kind: .card, theme: xomoComponentTheme)
+        group.xomoComponentInstance = XomoComponentInstance(
+            kind: .card,
+            theme: xomoComponentTheme,
+            tokenSnapshot: xomoLocalThemeTokenSnapshot
+        )
 
         var background = ImageEditorLayer.shape(
             name: L10n.text("xomo.component.card.backgroundLayer"),
@@ -1238,7 +1254,11 @@ extension ImageEditorViewModel {
         pushUndo()
         var group = ImageEditorLayer.group(name: L10n.text("xomo.component.image.title"), size: canvasSize)
         group.blendMode = .passThrough
-        group.xomoComponentInstance = XomoComponentInstance(kind: .image, theme: xomoComponentTheme)
+        group.xomoComponentInstance = XomoComponentInstance(
+            kind: .image,
+            theme: xomoComponentTheme,
+            tokenSnapshot: xomoLocalThemeTokenSnapshot
+        )
 
         var imageLayer = ImageEditorLayer(
             name: L10n.text("xomo.component.image.placeholderLayer"),
@@ -1262,7 +1282,7 @@ extension ImageEditorViewModel {
     }
 
     private func insertXomoAvatar(at proposedOrigin: CGPoint?) {
-        let tokens = xomoComponentTheme.tokens
+        let tokens = activeXomoComponentTokens
         let avatarSize = xomoComponentSize(.avatar)
         let defaultOrigin = CGPoint(
             x: (document.canvasSize.width - avatarSize.width) * 0.5,
@@ -1288,7 +1308,11 @@ extension ImageEditorViewModel {
         pushUndo()
         var group = ImageEditorLayer.group(name: L10n.text("xomo.component.avatar.title"), size: document.canvasSize)
         group.blendMode = .passThrough
-        group.xomoComponentInstance = XomoComponentInstance(kind: .avatar, theme: xomoComponentTheme)
+        group.xomoComponentInstance = XomoComponentInstance(
+            kind: .avatar,
+            theme: xomoComponentTheme,
+            tokenSnapshot: xomoLocalThemeTokenSnapshot
+        )
 
         var background = ImageEditorLayer.shape(
             name: L10n.text("xomo.component.avatar.backgroundLayer"),
@@ -1321,7 +1345,7 @@ extension ImageEditorViewModel {
     }
 
     private func insertXomoIcon(at proposedOrigin: CGPoint?) {
-        let tokens = xomoComponentTheme.tokens
+        let tokens = activeXomoComponentTokens
         let iconSize = xomoComponentSize(.icon)
         let defaultOrigin = CGPoint(
             x: (document.canvasSize.width - iconSize.width) * 0.5,
@@ -1332,7 +1356,11 @@ extension ImageEditorViewModel {
         pushUndo()
         var group = ImageEditorLayer.group(name: L10n.text("xomo.component.icon.title"), size: document.canvasSize)
         group.blendMode = .passThrough
-        group.xomoComponentInstance = XomoComponentInstance(kind: .icon, theme: xomoComponentTheme)
+        group.xomoComponentInstance = XomoComponentInstance(
+            kind: .icon,
+            theme: xomoComponentTheme,
+            tokenSnapshot: xomoLocalThemeTokenSnapshot
+        )
 
         var pathLayer = ImageEditorLayer.shape(
             name: L10n.text("xomo.component.icon.starLayer"),
@@ -1391,7 +1419,8 @@ extension ImageEditorViewModel {
         }
 
         let groupID = document.layers[groupIndex].id
-        let tokens = xomoComponentTheme.tokens
+        let tokens = activeXomoComponentTokens
+        let tokenSnapshot = xomoLocalThemeTokenSnapshot
         pushUndo()
         for layerIndex in document.layers.indices where document.layers[layerIndex].groupID == groupID {
             guard !document.layers[layerIndex].isXomoThemeOverride else { continue }
@@ -1400,7 +1429,8 @@ extension ImageEditorViewModel {
         document.layers[groupIndex].xomoComponentInstance = XomoComponentInstance(
             kind: component,
             theme: xomoComponentTheme,
-            masterID: document.layers[groupIndex].xomoComponentInstance?.masterID
+            masterID: document.layers[groupIndex].xomoComponentInstance?.masterID,
+            tokenSnapshot: tokenSnapshot
         )
         appendHistory(L10n.text("xomo.theme.history.apply"))
         statusText = L10n.format("xomo.theme.status.applied", component.title, xomoComponentTheme.title)
@@ -1484,7 +1514,8 @@ extension ImageEditorViewModel {
         document.layers[groupIndex].xomoComponentInstance = XomoComponentInstance(
             kind: component,
             theme: document.layers[groupIndex].xomoComponentInstance?.theme ?? xomoComponentTheme,
-            masterID: groupID
+            masterID: groupID,
+            tokenSnapshot: document.layers[groupIndex].xomoComponentInstance?.tokenSnapshot
         )
         xomoActiveMasterID = groupID
         appendHistory(L10n.text("xomo.instance.history.makeMaster"))
@@ -1501,6 +1532,7 @@ extension ImageEditorViewModel {
 
         let masterID = document.layers[masterIndex].id
         let masterTheme = document.layers[masterIndex].xomoComponentInstance?.theme ?? xomoComponentTheme
+        let masterTokenSnapshot = document.layers[masterIndex].xomoComponentInstance?.tokenSnapshot
         let targetIndices = selectedXomoComponentGroupIndices().filter { $0 != masterIndex }
         guard !targetIndices.isEmpty else {
             statusText = L10n.text("xomo.instance.status.noLinkTarget")
@@ -1509,7 +1541,12 @@ extension ImageEditorViewModel {
 
         pushUndo()
         for targetIndex in targetIndices {
-            applyXomoThemeToComponentGroup(targetIndex, component: component, theme: masterTheme)
+            applyXomoThemeToComponentGroup(
+                targetIndex,
+                component: component,
+                theme: masterTheme,
+                tokenSnapshot: masterTokenSnapshot
+            )
             document.layers[targetIndex].xomoComponentInstance?.masterID = masterID
         }
         xomoActiveMasterID = masterID
@@ -1528,6 +1565,7 @@ extension ImageEditorViewModel {
 
         let masterID = document.layers[masterIndex].id
         let masterTheme = document.layers[masterIndex].xomoComponentInstance?.theme ?? xomoComponentTheme
+        let masterTokenSnapshot = document.layers[masterIndex].xomoComponentInstance?.tokenSnapshot
         let instanceIndices = document.layers.indices.filter {
             document.layers[$0].id != masterID && document.layers[$0].xomoComponentInstance?.masterID == masterID
         }
@@ -1538,7 +1576,12 @@ extension ImageEditorViewModel {
 
         pushUndo()
         for instanceIndex in instanceIndices {
-            applyXomoThemeToComponentGroup(instanceIndex, component: component, theme: masterTheme)
+            applyXomoThemeToComponentGroup(
+                instanceIndex,
+                component: component,
+                theme: masterTheme,
+                tokenSnapshot: masterTokenSnapshot
+            )
             document.layers[instanceIndex].xomoComponentInstance?.masterID = masterID
         }
         xomoActiveMasterID = masterID
@@ -1619,17 +1662,20 @@ extension ImageEditorViewModel {
     private func applyXomoThemeToComponentGroup(
         _ groupIndex: Int,
         component: XomoComponentKind,
-        theme: XomoComponentTheme
+        theme: XomoComponentTheme,
+        tokenSnapshot: XomoComponentThemeTokenSnapshot? = nil
     ) {
         let groupID = document.layers[groupIndex].id
+        let tokens = tokenSnapshot.flatMap { try? $0.makeTokens() } ?? theme.tokens
         for layerIndex in document.layers.indices where document.layers[layerIndex].groupID == groupID {
             guard !document.layers[layerIndex].isXomoThemeOverride else { continue }
-            applyXomoTheme(theme.tokens, to: &document.layers[layerIndex], component: component)
+            applyXomoTheme(tokens, to: &document.layers[layerIndex], component: component)
         }
         document.layers[groupIndex].xomoComponentInstance = XomoComponentInstance(
             kind: component,
             theme: theme,
-            masterID: document.layers[groupIndex].xomoComponentInstance?.masterID
+            masterID: document.layers[groupIndex].xomoComponentInstance?.masterID,
+            tokenSnapshot: tokenSnapshot
         )
     }
 

@@ -599,19 +599,37 @@ final class XomoAutomationRegistry {
         viewModel: ImageEditorViewModel
     ) throws -> XomoJSONValue {
         let action = arguments["action"]?.stringValue ?? "get"
-        guard action == "get" || action == "export" else {
+        guard action == "get" || action == "export" || action == "import" else {
             throw XomoAutomationCallError.invalidArgument("Unknown component token action")
+        }
+        if action == "import" {
+            let path = try requiredString("path", in: arguments)
+            do {
+                try viewModel.importXomoThemeTokens(from: URL(fileURLWithPath: path))
+            } catch {
+                throw XomoAutomationCallError.operationFailed(
+                    "Theme token import failed: \(error.localizedDescription)"
+                )
+            }
+            let data = try Data(viewModel.activeXomoComponentTokenSnapshot.encodedJSON().utf8)
+            return .object([
+                "path": .string(path),
+                "filename": .string((path as NSString).lastPathComponent),
+                "snapshot": try decodeJSONValue(data)
+            ])
         }
         let theme: XomoComponentTheme
         if let rawTheme = arguments["theme"]?.stringValue {
             guard let requestedTheme = XomoComponentTheme(rawValue: rawTheme) else {
-                throw XomoAutomationCallError.invalidArgument("Unknown theme: (rawTheme)")
+                throw XomoAutomationCallError.invalidArgument("Unknown theme: \(rawTheme)")
             }
             theme = requestedTheme
         } else {
             theme = viewModel.xomoComponentTheme
         }
-        let snapshot = theme.tokenSnapshot
+        let snapshot = arguments["theme"] == nil
+            ? viewModel.activeXomoComponentTokenSnapshot
+            : theme.tokenSnapshot
         let json = try snapshot.encodedJSON()
         guard let data = json.data(using: .utf8) else {
             throw XomoAutomationCallError.operationFailed("Theme token JSON is not UTF-8")
@@ -624,7 +642,7 @@ final class XomoAutomationRegistry {
             try data.write(to: URL(fileURLWithPath: path), options: .atomic)
         } catch {
             throw XomoAutomationCallError.operationFailed(
-                "Theme token export failed: (error.localizedDescription)"
+                "Theme token export failed: \(error.localizedDescription)"
             )
         }
         return .object([
@@ -1996,7 +2014,7 @@ final class XomoAutomationRegistry {
             guard let theme = XomoComponentTheme(rawValue: themeRaw) else {
                 throw XomoAutomationCallError.invalidArgument("Unknown theme: \(themeRaw)")
             }
-            viewModel.xomoComponentTheme = theme
+            viewModel.selectXomoComponentTheme(theme)
         }
         viewModel.insertXomoComponent(component, at: optionalPoint(arguments))
     }
@@ -2671,8 +2689,8 @@ private extension XomoAutomationRegistry {
             "action": XomoAutomationSchema.string(description: "Canvas action", values: ["rotateClockwise", "rotateCounterclockwise", "rotate180", "flipHorizontal", "flipVertical", "cropCenter", "trimTransparent", "revealAll"])
         ], required: ["action"]),
         tool("xomo.component.list", "List editable Xomo UI components and themes."),
-        tool("xomo.component.tokens", "Read the current component theme tokens or export them as a .xomotokens.json file.", [
-            "action": XomoAutomationSchema.string(description: "Token action", values: ["get", "export"]),
+        tool("xomo.component.tokens", "Read, import, or export local component design tokens as a .xomotokens.json file.", [
+            "action": XomoAutomationSchema.string(description: "Token action", values: ["get", "import", "export"]),
             "theme": XomoAutomationSchema.string(description: "Optional theme; defaults to the active component theme", values: XomoComponentTheme.allCases.map(\.rawValue)),
             "path": XomoAutomationSchema.string(description: "Destination file path for export")
         ]),

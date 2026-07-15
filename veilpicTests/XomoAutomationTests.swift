@@ -93,6 +93,44 @@ struct XomoAutomationTests {
         #expect(exportedSnapshot == .init(theme: .chakraUI, tokens: XomoComponentTheme.chakraUI.tokens))
     }
 
+    @Test func registryImportsLocalComponentTokensForSubsequentInsertion() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        var colors = XomoComponentTheme.native.tokenSnapshot.colors
+        colors["accent"] = "#801F4FFF"
+        let snapshot = XomoComponentThemeTokenSnapshot(
+            schemaVersion: 1,
+            theme: "local-brand",
+            librarySource: "local",
+            colors: colors,
+            metrics: XomoComponentTheme.native.tokenSnapshot.metrics
+        )
+        let path = FileManager.default.temporaryDirectory
+            .appendingPathComponent("xomo-automation-token-\(UUID().uuidString).xomotokens.json")
+        defer { try? FileManager.default.removeItem(at: path) }
+        try Data(snapshot.encodedJSON().utf8).write(to: path)
+
+        let imported = registry.execute(request(
+            operation: "call",
+            name: "xomo.component.tokens",
+            arguments: ["action": .string("import"), "path": .string(path.path)]
+        ))
+        #expect(imported.ok)
+        #expect(viewModel.hasLocalXomoThemeTokens)
+
+        let inserted = registry.execute(request(
+            operation: "call",
+            name: "xomo.component.insert",
+            arguments: ["component": .string("button")]
+        ))
+        #expect(inserted.ok)
+        let group = try #require(viewModel.document.selectedLayer)
+        let background = try #require(viewModel.document.layers.first { $0.groupID == group.id && $0.isShape })
+        #expect(background.shapeContent?.fillColor.isEqual(NSColor(deviceRed: 0x80 / 255, green: 0x1F / 255, blue: 0x4F / 255, alpha: 1)) == true)
+        #expect(group.xomoComponentInstance?.tokenSnapshot == snapshot)
+    }
+
     @Test func registryCanInspectAndMutateTheActiveDocument() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

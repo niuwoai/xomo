@@ -111,6 +111,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var areToolsPanelVisible = true
     @Published var selectedLeftSidebarTab: XomoLeftSidebarTab = .tools
     @Published var xomoComponentTheme: XomoComponentTheme = .native
+    @Published private(set) var xomoLocalThemeTokenSnapshot: XomoComponentThemeTokenSnapshot? = nil
     @Published var xomoActiveMasterID: UUID?
     @Published var isOptionsBarVisible = true
     @Published var isNavigatorPanelVisible = true
@@ -697,7 +698,7 @@ final class ImageEditorViewModel: ObservableObject {
 
     func copyCurrentXomoThemeTokens() {
         do {
-            let json = try xomoComponentTheme.tokenSnapshot.encodedJSON()
+            let json = try activeXomoComponentTokenSnapshot.encodedJSON()
             NSPasteboard.general.clearContents()
             NSPasteboard.general.setString(json, forType: .string)
             statusText = L10n.format(
@@ -710,12 +711,72 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func exportCurrentXomoThemeTokens(to url: URL) throws {
-        let json = try xomoComponentTheme.tokenSnapshot.encodedJSON()
+        let json = try activeXomoComponentTokenSnapshot.encodedJSON()
         try Data(json.utf8).write(to: url, options: .atomic)
         statusText = L10n.format(
             "xomo.theme.status.tokensExported",
             url.lastPathComponent
         )
+    }
+
+    var activeXomoComponentTokens: XomoComponentThemeTokens {
+        guard let snapshot = xomoLocalThemeTokenSnapshot,
+              let tokens = try? snapshot.makeTokens()
+        else {
+            return xomoComponentTheme.tokens
+        }
+        return tokens
+    }
+
+    var activeXomoComponentTokenSnapshot: XomoComponentThemeTokenSnapshot {
+        xomoLocalThemeTokenSnapshot ?? xomoComponentTheme.tokenSnapshot
+    }
+
+    var hasLocalXomoThemeTokens: Bool {
+        xomoLocalThemeTokenSnapshot != nil
+    }
+
+    func selectXomoComponentTheme(_ theme: XomoComponentTheme) {
+        xomoComponentTheme = theme
+        xomoLocalThemeTokenSnapshot = nil
+    }
+
+    func importXomoThemeTokens(from url: URL) throws {
+        let data = try Data(contentsOf: url)
+        guard data.count <= 64 * 1024 else {
+            throw XomoComponentThemeTokenError.invalidMetric("fileSize")
+        }
+        let snapshot = try JSONDecoder().decode(XomoComponentThemeTokenSnapshot.self, from: data)
+        _ = try snapshot.makeTokens()
+        xomoLocalThemeTokenSnapshot = snapshot
+        statusText = L10n.format(
+            "xomo.theme.status.tokensImported",
+            snapshot.theme
+        )
+    }
+
+    func chooseXomoThemeTokenImportFile() {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [UTType.xomoDesignTokens]
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+        panel.prompt = L10n.text("xomo.theme.importTokens")
+        panel.begin { [weak self] response in
+            Task { @MainActor in
+                guard let self, response == .OK, let url = panel.url else { return }
+                do {
+                    try self.importXomoThemeTokens(from: url)
+                } catch {
+                    self.statusText = L10n.text("xomo.theme.status.tokensImportFailed")
+                }
+            }
+        }
+    }
+
+    func clearImportedXomoThemeTokens() {
+        guard xomoLocalThemeTokenSnapshot != nil else { return }
+        xomoLocalThemeTokenSnapshot = nil
+        statusText = L10n.text("xomo.theme.status.tokensCleared")
     }
 
     func chooseXomoThemeTokenExportFile() {
