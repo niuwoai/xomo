@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc133 - 2026-07-16
+
+### Added
+- 增加 Option/Alt `+`、`-` 缩放快捷键，并保留 Command `+`、`-` 兼容。
+
+### Verification
+- `ImageEditorHistoryTests` 5/5 通过，覆盖 Command 与 Option 缩放快捷键解析。
+
 ## 2.12.0-rc132 - 2026-07-16
 
 ### Fixed
