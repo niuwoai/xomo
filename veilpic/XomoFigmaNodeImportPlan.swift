@@ -31,6 +31,7 @@ enum XomoFigmaNodeMappingIssue: String, CaseIterable, Sendable {
     case imageAssetPending
     case imageAssetUnavailable
     case imageFillTransformFlattened
+    case imageFiltersBaked
     case vectorGeometryMissing
     case vectorGeometryUnsupported
     case componentSemanticsFlattened
@@ -130,6 +131,49 @@ struct XomoFigmaImageAsset: Equatable, Sendable {
     var pixelSize: XomoFigmaPlanSize
 }
 
+struct XomoFigmaPlanImageFilters: Equatable, Sendable {
+    var exposure: Double
+    var contrast: Double
+    var saturation: Double
+    var temperature: Double
+    var tint: Double
+    var highlights: Double
+    var shadows: Double
+
+    init(
+        exposure: Double? = nil,
+        contrast: Double? = nil,
+        saturation: Double? = nil,
+        temperature: Double? = nil,
+        tint: Double? = nil,
+        highlights: Double? = nil,
+        shadows: Double? = nil
+    ) {
+        self.exposure = Self.normalized(exposure)
+        self.contrast = Self.normalized(contrast)
+        self.saturation = Self.normalized(saturation)
+        self.temperature = Self.normalized(temperature)
+        self.tint = Self.normalized(tint)
+        self.highlights = Self.normalized(highlights)
+        self.shadows = Self.normalized(shadows)
+    }
+
+    var isIdentity: Bool {
+        exposure == 0
+            && contrast == 0
+            && saturation == 0
+            && temperature == 0
+            && tint == 0
+            && highlights == 0
+            && shadows == 0
+    }
+
+    private static func normalized(_ value: Double?) -> Double {
+        guard let value, value.isFinite else { return 0 }
+        return min(max(value, -1), 1)
+    }
+}
+
 struct XomoFigmaPlanCornerRadii: Equatable, Sendable {
     var topLeft: Double
     var topRight: Double
@@ -175,6 +219,7 @@ struct XomoFigmaNodeImportItem: Equatable, Identifiable, Sendable {
     var imageTransform: XomoFigmaPlanTransform?
     var imageScalingFactor: Double?
     var imageRotation: Double?
+    var imageFilters: XomoFigmaPlanImageFilters = XomoFigmaPlanImageFilters()
     var stackLayout: ImageEditorStackLayout?
     var stackChildLayout: ImageEditorStackChildLayout?
     var isStackLayoutExcluded: Bool

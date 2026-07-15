@@ -303,6 +303,17 @@ enum XomoFigmaNodeImportMapper {
                 $0.isFinite && $0 > 0 ? $0 : nil
             },
             imageRotation: imagePaint?.rotation.flatMap { $0.isFinite ? $0 : nil },
+            imageFilters: imagePaint.map {
+                XomoFigmaPlanImageFilters(
+                    exposure: $0.filters?.exposure,
+                    contrast: $0.filters?.contrast,
+                    saturation: $0.filters?.saturation,
+                    temperature: $0.filters?.temperature,
+                    tint: $0.filters?.tint,
+                    highlights: $0.filters?.highlights,
+                    shadows: $0.filters?.shadows
+                )
+            } ?? XomoFigmaPlanImageFilters(),
             stackLayout: nativeStackLayout,
             stackChildLayout: stackChildLayout(node),
             isStackLayoutExcluded: node.layoutPositioning == "ABSOLUTE"
@@ -387,8 +398,20 @@ enum XomoFigmaNodeImportMapper {
             inspectPaints(node: node, allowsGradientFill: false, issues: &issues)
             return (.text, false)
         case "RECTANGLE":
-            if imagePaint(node: node) != nil {
+            if let imagePaint = imagePaint(node: node) {
                 issues.append(.imageAssetPending)
+                let filters = XomoFigmaPlanImageFilters(
+                    exposure: imagePaint.filters?.exposure,
+                    contrast: imagePaint.filters?.contrast,
+                    saturation: imagePaint.filters?.saturation,
+                    temperature: imagePaint.filters?.temperature,
+                    tint: imagePaint.filters?.tint,
+                    highlights: imagePaint.filters?.highlights,
+                    shadows: imagePaint.filters?.shadows
+                )
+                if !filters.isIdentity {
+                    issues.append(.imageFiltersBaked)
+                }
                 return (.imagePlaceholder, true)
             }
             inspectPaints(node: node, allowsGradientFill: true, issues: &issues)
@@ -782,6 +805,17 @@ struct XomoFigmaPaint: Decodable {
     var imageTransform: [[Double]]?
     var scalingFactor: Double?
     var rotation: Double?
+    var filters: XomoFigmaImageFilters?
+}
+
+struct XomoFigmaImageFilters: Decodable {
+    var exposure: Double?
+    var contrast: Double?
+    var saturation: Double?
+    var temperature: Double?
+    var tint: Double?
+    var highlights: Double?
+    var shadows: Double?
 }
 
 struct XomoFigmaVector: Decodable {
