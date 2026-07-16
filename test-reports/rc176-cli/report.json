@@ -1,0 +1,9 @@
+{
+  "generated_at": "2026-07-17T06:38:28+08:00",
+  "total": 2,
+  "passed": 2,
+  "failed": 0,
+  "jobs": 1,
+  "suite": "XomoMCPServerTests",
+  "focus": "CLI MCP 初始化与工具列表回归"
+}

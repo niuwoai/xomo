@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc176 - 2026-07-17
+
+### Added
+- Figma 导入图层现在保留源节点 ID 与节点类型，并随 Xomo 项目保存、重开，给后续组件语义和源节点回溯留出稳定锚点。
+
+### Verification
+- Figma 节点导入专项 28/28 通过；`XomoMCPServerTests` CLI 2/2 通过。
+
 ## 2.12.0-rc175 - 2026-07-17
 
 ### Added

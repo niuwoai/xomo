@@ -267,6 +267,8 @@ struct ImageEditorProjectLayer: Codable {
     var xomoComponentInstance: XomoComponentInstance?
     var isXomoThemeOverride: Bool?
     var xomoFigmaVariableBindings: [XomoFigmaVariableBinding]?
+    var xomoFigmaSourceID: String?
+    var xomoFigmaNodeType: String?
 
     @MainActor
     init(layer: ImageEditorLayer) throws {
@@ -327,6 +329,8 @@ struct ImageEditorProjectLayer: Codable {
         xomoFigmaVariableBindings = layer.xomoFigmaVariableBindings.isEmpty
             ? nil
             : layer.xomoFigmaVariableBindings
+        xomoFigmaSourceID = layer.xomoFigmaSourceID
+        xomoFigmaNodeType = layer.xomoFigmaNodeType
     }
 
     func restoredLayer(smartObjectSourceData: [UUID: Data] = [:]) throws -> ImageEditorLayer {
@@ -378,6 +382,8 @@ struct ImageEditorProjectLayer: Codable {
         layer.xomoComponentInstance = xomoComponentInstance
         layer.isXomoThemeOverride = isXomoThemeOverride ?? false
         layer.xomoFigmaVariableBindings = xomoFigmaVariableBindings ?? []
+        layer.xomoFigmaSourceID = xomoFigmaSourceID
+        layer.xomoFigmaNodeType = xomoFigmaNodeType
         return layer
     }
 

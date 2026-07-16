@@ -453,6 +453,18 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(result.name == "Union Result")
         #expect(result.shapeContent?.kind == .path)
         #expect(result.shapeContent?.pathAnchors.count == 4)
+        #expect(result.xomoFigmaSourceID == "1:60")
+        #expect(result.xomoFigmaNodeType == "BOOLEAN_OPERATION")
+
+        var sourceDocument = ImageEditorDocument(sourceName: "Figma Boolean", image: result.image)
+        sourceDocument.canvasSize = CGSize(width: 240, height: 160)
+        sourceDocument.layers = materialized.layers
+        sourceDocument.selectedLayerID = result.id
+        sourceDocument.selectedLayerIDs = [result.id]
+        let project = try ImageEditorProjectDocument(document: sourceDocument)
+        let restoredDocument = try project.restoredDocument()
+        #expect(restoredDocument.layers.first?.xomoFigmaSourceID == "1:60")
+        #expect(restoredDocument.layers.first?.xomoFigmaNodeType == "BOOLEAN_OPERATION")
     }
 
     @Test func mapperReportsPartialImageComponentLayoutAndUnsupportedNodes() async throws {

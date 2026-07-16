@@ -2800,6 +2800,9 @@ struct ImageEditorLayer: Identifiable {
     var xomoComponentInstance: XomoComponentInstance?
     var isXomoThemeOverride = false
     var xomoFigmaVariableBindings: [XomoFigmaVariableBinding] = []
+    /// Original Figma node identity retained for inspectable, traceable imports.
+    var xomoFigmaSourceID: String?
+    var xomoFigmaNodeType: String?
 
     static func background(image: NSImage) -> ImageEditorLayer {
         ImageEditorLayer(

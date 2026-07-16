@@ -1,0 +1,13 @@
+{
+  "generated_at": "2026-07-17T06:37:40+08:00",
+  "total": 28,
+  "passed": 28,
+  "failed": 0,
+  "jobs": 1,
+  "suite": "XomoFigmaNodeImportPlanTests",
+  "focus": "Figma 源节点 ID 与节点类型随导入图层和项目往返保留",
+  "new_assertions": [
+    "materialized layer preserves source ID and node type",
+    "project restored layer preserves source ID and node type"
+  ]
+}

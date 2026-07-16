@@ -151,6 +151,8 @@ enum XomoFigmaNodeMaterializer {
             applyFigmaEffects(item.effects, to: &layer, scale: transform.scale)
         }
         layer.xomoFigmaVariableBindings = item.variableBindings
+        layer.xomoFigmaSourceID = item.sourceID
+        layer.xomoFigmaNodeType = item.sourceType
         layer.stackChildLayout = item.stackChildLayout
         layer.isStackLayoutExcluded = item.isStackLayoutExcluded
         layer.isVisible = item.isVisible
