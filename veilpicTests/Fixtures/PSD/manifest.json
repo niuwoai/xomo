@@ -24,7 +24,7 @@
     },
     {
       "file": "unsupported-features.psd",
-      "sha256": "3fb7420368ab084867bb4a52c498539dcb1e5be1ed5785712751b09cd2d62d4c",
+      "sha256": "ec5e3e83d272cb94e026b7658664993f408f14ef3a744e70eb3279cd3df170cf",
       "expected": [
         "compatibility_report",
         "unsupported_semantic_features"
@@ -38,6 +38,15 @@
         "font_size",
         "color",
         "alignment"
+      ]
+    },
+    {
+      "file": "vector-mask.psd",
+      "sha256": "3c0da5f32e5ef66f3fb4e7cda886ccdfbff5daac86b239f7fe086086e67b8824",
+      "expected": [
+        "editable_vector_mask",
+        "closed_path",
+        "bezier_points"
       ]
     }
   ]

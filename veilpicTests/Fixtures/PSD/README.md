@@ -8,6 +8,7 @@
 | `zip-composite.psd` | 无图层 PSD 的 ZIP 合成图解码 |
 | `unsupported-features.psd` | 文字、矢量、智能对象、图层效果、填充层和未知混合模式的兼容性报告 |
 | `editable-text.psd` | 外部生成的 TySh 文字层，读取纯文本、字体、字号、颜色、基础段落对齐和字符样式 |
+| `vector-mask.psd` | 外部生成的 vmsk 简单闭合三点路径，导入为 Xomo 原生矢量蒙版 |
 
 重新生成：
 

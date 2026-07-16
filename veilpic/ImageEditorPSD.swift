@@ -216,7 +216,9 @@ enum ImageEditorPSDCodec {
             if !record.additionalKeys.isDisjoint(with: textKeys), record.textInfo == nil {
                 addIssue(.textRasterized)
             }
-            if !record.additionalKeys.isDisjoint(with: vectorKeys) { addIssue(.vectorRasterized) }
+            if !record.additionalKeys.isDisjoint(with: vectorKeys), record.vectorMaskInfo == nil {
+                addIssue(.vectorRasterized)
+            }
             if !record.additionalKeys.isDisjoint(with: smartObjectKeys) { addIssue(.smartObjectRasterized) }
             if !record.additionalKeys.isDisjoint(with: effectKeys) { addIssue(.layerEffectsRasterized) }
             if !record.additionalKeys.isDisjoint(with: fillKeys) { addIssue(.fillLayerRasterized) }
@@ -678,6 +680,7 @@ enum ImageEditorPSDCodec {
         var protectionFlags: UInt32 = 0
         var additionalKeys = Set<String>()
         var textInfo: PSDTextLayerInfo?
+        var vectorMaskInfo: PSDVectorMaskInfo?
         while reader.offset + 12 <= extraEnd {
             let signature = try reader.ascii(count: 4)
             let key = try reader.ascii(count: 4)
@@ -705,6 +708,9 @@ enum ImageEditorPSDCodec {
             } else if key == "Txt2" {
                 let blockData = try reader.data(count: length)
                 textInfo = parseEngineDataText(blockData)
+            } else if (key == "vmsk" || key == "vsms") {
+                let blockData = try reader.data(count: length)
+                vectorMaskInfo = parseVectorMask(blockData)
             }
             reader.offset = blockEnd
             let paddedEnd = min(extraEnd, blockEnd + (length % 2))
@@ -727,7 +733,8 @@ enum ImageEditorPSDCodec {
             sectionType: sectionType,
             mask: mask,
             additionalKeys: additionalKeys,
-            textInfo: textInfo
+            textInfo: textInfo,
+            vectorMaskInfo: vectorMaskInfo
         )
     }
 
@@ -1208,6 +1215,7 @@ enum ImageEditorPSDCodec {
             layer.isClippingMask = record.clipping != 0
             layer.blendMode = ImageEditorBlendMode(psdKey: record.blendKey)
             applyMask(record: record, channels: channels, to: &layer)
+            applyVectorMask(record: record, size: CGSize(width: width, height: height), to: &layer)
             return layer
         }
         guard let image = imageFromChannels(channels, width: width, height: height) else { return nil }
@@ -1226,7 +1234,103 @@ enum ImageEditorPSDCodec {
         layer.isClippingMask = record.clipping != 0
         layer.blendMode = ImageEditorBlendMode(psdKey: record.blendKey)
         applyMask(record: record, channels: channels, to: &layer)
+        applyVectorMask(record: record, size: image.size, to: &layer)
         return layer
+    }
+
+    private static func applyVectorMask(
+        record: PSDLayerRecord,
+        size: CGSize,
+        to layer: inout ImageEditorLayer
+    ) {
+        guard let info = record.vectorMaskInfo else { return }
+        let anchors = info.anchors.map { anchor in
+            ImageEditorPathAnchor(
+                point: CGPoint(x: anchor.point.x * size.width, y: anchor.point.y * size.height),
+                inControl: anchor.inControl.map {
+                    CGPoint(x: $0.x * size.width, y: $0.y * size.height)
+                },
+                outControl: anchor.outControl.map {
+                    CGPoint(x: $0.x * size.width, y: $0.y * size.height)
+                }
+            )
+        }
+        guard anchors.count >= 3 else { return }
+        let content = ImageEditorShapeContent(
+            kind: .path,
+            fillColor: .white,
+            fillOpacity: 1,
+            strokeColor: .clear,
+            strokeWidth: 1,
+            strokeOpacity: 0,
+            pathPoints: anchors.map(\.point),
+            pathAnchors: anchors,
+            isPathClosed: true
+        ).normalized(size: size)
+        layer.vectorMask = content
+        layer.isVectorMaskEnabled = info.isEnabled
+    }
+
+    private static func parseVectorMask(_ data: Data) -> PSDVectorMaskInfo? {
+        do {
+            var reader = PSDReader(data: data)
+            guard try reader.uint32() == 3 else { return nil }
+            let flags = try reader.uint32()
+            guard flags & 0b011 == 0 else { return nil }
+            var expectedKnotCount: Int?
+            var anchors: [ImageEditorPathAnchor] = []
+            while reader.offset + 26 <= data.count {
+                let selector = try reader.uint16()
+                let payload = try reader.data(count: 24)
+                switch selector {
+                case 0:
+                    guard expectedKnotCount == nil else { return nil }
+                    let count = Int(UInt16(payload[payload.startIndex]) << 8 | UInt16(payload[payload.startIndex + 1]))
+                    guard count >= 3 else { return nil }
+                    expectedKnotCount = count
+                case 1, 2:
+                    guard let expectedKnotCount,
+                          anchors.count < expectedKnotCount
+                    else { return nil }
+                    let previousControl = vectorPathPoint(in: payload, at: 0)
+                    let anchor = vectorPathPoint(in: payload, at: 8)
+                    let nextControl = vectorPathPoint(in: payload, at: 16)
+                    anchors.append(
+                        ImageEditorPathAnchor(
+                            point: anchor,
+                            inControl: previousControl,
+                            outControl: nextControl
+                        )
+                    )
+                case 6, 7, 8:
+                    continue
+                default:
+                    return nil
+                }
+            }
+            guard let expectedKnotCount,
+                  expectedKnotCount == anchors.count,
+                  anchors.count >= 3
+            else { return nil }
+            return PSDVectorMaskInfo(
+                anchors: anchors,
+                isEnabled: flags & 0b100 == 0
+            )
+        } catch {
+            return nil
+        }
+    }
+
+    private static func vectorPathPoint(in payload: Data, at offset: Int) -> CGPoint {
+        func fixed(_ index: Int) -> CGFloat {
+            let start = payload.startIndex + index
+            let bits = UInt32(payload[start]) << 24
+                | UInt32(payload[start + 1]) << 16
+                | UInt32(payload[start + 2]) << 8
+                | UInt32(payload[start + 3])
+            return CGFloat(Double(Int32(bitPattern: bits)) / 16_777_216)
+        }
+        return CGPoint(x: fixed(offset + 4), y: fixed(offset))
     }
 
     private static func makeGroupLayer(
@@ -1548,6 +1652,11 @@ private struct PSDTextLayerInfo {
     let paragraphBoxSize: CGSize?
 }
 
+private struct PSDVectorMaskInfo {
+    let anchors: [ImageEditorPathAnchor]
+    let isEnabled: Bool
+}
+
 nonisolated private struct PSDLayerRecord {
     let top: Int
     let left: Int
@@ -1565,6 +1674,7 @@ nonisolated private struct PSDLayerRecord {
     let mask: PSDLayerMaskRecord?
     let additionalKeys: Set<String>
     let textInfo: PSDTextLayerInfo?
+    let vectorMaskInfo: PSDVectorMaskInfo?
 
     func channelDimensions(identifier: Int16) -> (width: Int, height: Int) {
         if identifier == -2 || identifier == -3, let mask {

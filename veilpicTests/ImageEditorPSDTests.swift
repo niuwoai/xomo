@@ -193,6 +193,30 @@ struct ImageEditorPSDTests {
         #expect(abs(restoredContent.firstLineIndent - content.firstLineIndent) < 0.01)
     }
 
+    @Test func externalVectorMaskFixtureBecomesNativeEditablePath() throws {
+        let data = try psdFixtureData("vector-mask.psd")
+        let document = try ImageEditorPSDCodec.decode(data, sourceName: "vector-mask.psd")
+        let layer = try #require(document.layers.first)
+        let vectorMask = try #require(layer.vectorMask)
+
+        #expect(!layer.isText)
+        #expect(vectorMask.kind == .path)
+        #expect(vectorMask.isPathClosed)
+        #expect(vectorMask.editablePathAnchors.count == 3)
+        #expect(abs(vectorMask.editablePathAnchors[0].point.x - 0.4) < 0.01)
+        #expect(abs(vectorMask.editablePathAnchors[0].point.y - 0.4) < 0.01)
+        #expect(abs(vectorMask.editablePathAnchors[2].point.x - 2.0) < 0.01)
+        #expect(abs(vectorMask.editablePathAnchors[2].point.y - 3.6) < 0.01)
+
+        let report = try ImageEditorPSDCodec.compatibilityReport(data)
+        #expect(!report.issues.contains { $0.kind == .vectorRasterized })
+
+        let project = try ImageEditorProjectDocument(document: document)
+        let restoredProject = try project.restoredDocument()
+        let restoredMask = try #require(restoredProject.layers.first?.vectorMask)
+        #expect(restoredMask.editablePathAnchors == vectorMask.editablePathAnchors)
+    }
+
     @Test func openingPSDPublishesCompatibilityReportForTheCurrentDocument() throws {
         let data = try psdFixtureData("unsupported-features.psd")
         let report = try ImageEditorPSDCodec.compatibilityReport(data)

@@ -47,6 +47,10 @@ def f64(value)
   [value].pack("G")
 end
 
+def fixed8_24(value)
+  i32((value * (1 << 24)).round)
+end
+
 def unicode_string(value)
   utf16 = value.encode("UTF-16BE").b
   u32(utf16.bytesize / 2) + utf16
@@ -71,6 +75,20 @@ end
 
 def engine_string(value)
   "(" + "\xFE\xFF".b + value.encode("UTF-16BE").b + ")"
+end
+
+def vector_mask_payload(flags: 0)
+  record = ->(selector, points) {
+    u16(selector) + points.map { |vertical, horizontal| fixed8_24(vertical) + fixed8_24(horizontal) }.join
+  }
+  fill_rule = u16(6) + ("\0" * 24)
+  length = u16(0) + u16(3) + ("\0" * 20)
+  knots = [
+    [[0.10, 0.10], [0.10, 0.10], [0.10, 0.10]],
+    [[0.10, 0.90], [0.10, 0.90], [0.10, 0.90]],
+    [[0.90, 0.50], [0.90, 0.50], [0.90, 0.50]]
+  ].each_with_index.map { |points, index| record.call(index.zero? ? 1 : 2, points) }.join
+  u32(3) + u32(flags) + fill_rule + length + knots
 end
 
 def editable_text_engine_data
@@ -236,7 +254,13 @@ def unsupported_features_fixture
     1 => raw_channel(pixel),
     2 => raw_channel(pixel)
   }
-  blocks = %w[TySh vmsk SoLd lfx2 SoCo].map { |key| tagged_block(key, "") }
+  blocks = [
+    tagged_block("TySh", ""),
+    tagged_block("vmsk", vector_mask_payload(flags: 1)),
+    tagged_block("SoLd", ""),
+    tagged_block("lfx2", ""),
+    tagged_block("SoCo", "")
+  ]
   record = layer_record(name: "Complex Design Layer", channels: channels, blend: "zzzz", blocks: blocks)
   layer_info = i16(1) + record + channels.values.join
   layer_info << "\0" if layer_info.bytesize.odd?
@@ -271,12 +295,37 @@ def editable_text_fixture
   )
 end
 
+def vector_mask_fixture
+  pixel = ([180] * 16).pack("C*")
+  alpha = ([255] * 16).pack("C*")
+  channels = {
+    -1 => raw_channel(alpha),
+    0 => raw_channel(pixel),
+    1 => raw_channel(pixel),
+    2 => raw_channel(pixel)
+  }
+  record = layer_record(
+    name: "Vector Triangle",
+    channels: channels,
+    blocks: [tagged_block("vmsk", vector_mask_payload)],
+    frame: [0, 0, HEIGHT, WIDTH]
+  )
+  layer_info = i16(1) + record + channels.values.join
+  layer_info << "\0" if layer_info.bytesize.odd?
+  layer_and_mask = u32(layer_info.bytesize) + layer_info + u32(0)
+  psd(
+    layer_payload: u32(layer_and_mask.bytesize) + layer_and_mask,
+    composite: u16(0) + pixel + pixel + pixel + alpha
+  )
+end
+
 FileUtils.mkdir_p(OUTPUT_DIR)
 fixtures = {
   "zip-group-mask.psd" => group_mask_fixture,
   "zip-composite.psd" => composite_only_fixture,
   "unsupported-features.psd" => unsupported_features_fixture,
-  "editable-text.psd" => editable_text_fixture
+  "editable-text.psd" => editable_text_fixture,
+  "vector-mask.psd" => vector_mask_fixture
 }
 fixtures.each do |name, bytes|
   File.binwrite(File.join(OUTPUT_DIR, name), bytes)
@@ -286,7 +335,8 @@ expectations = {
   "zip-group-mask.psd" => %w[zip zip_prediction group raster_mask fill_opacity layer_locks],
   "zip-composite.psd" => %w[zip flattened_composite],
   "unsupported-features.psd" => %w[compatibility_report unsupported_semantic_features],
-  "editable-text.psd" => %w[editable_text font_size color alignment]
+  "editable-text.psd" => %w[editable_text font_size color alignment],
+  "vector-mask.psd" => %w[editable_vector_mask closed_path bezier_points]
 }
 manifest = {
   generator: "scripts/generate_psd_compatibility_fixtures.rb",
