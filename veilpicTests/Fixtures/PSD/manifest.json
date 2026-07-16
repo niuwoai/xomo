@@ -48,6 +48,15 @@
         "closed_path",
         "bezier_points"
       ]
+    },
+    {
+      "file": "vector-mask-multi.psd",
+      "sha256": "52b068f1787f3d51f9055192a53fb3f98cfdd4f03f75b3b12e92c8a643949364",
+      "expected": [
+        "editable_vector_mask",
+        "multiple_subpaths",
+        "even_odd_hole"
+      ]
     }
   ]
 }

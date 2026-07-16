@@ -1,6 +1,6 @@
 # 象墨 PSD 支持说明
 
-> 最后更新：2026-07-17 ｜ 对应版本：v2.12.0-rc150
+> 最后更新：2026-07-17 ｜ 对应版本：v2.12.0-rc151
 
 ## 1. 结论
 
@@ -38,7 +38,7 @@
 |---|---|---|
 | 基础文字层 | 映射为 Xomo 原生文字层 | 读取纯文本、字体、字号、颜色、基础段落对齐、粗斜体、下划线、删除线、字距、行距和缩进；复杂逐字符混排、变换和部分 EngineData 仍降级。无法解析的 TySh 继续使用 PSD 像素内容并报告。 |
 | 矢量形状 | 使用像素内容 | 路径、描边、填充和布尔运算语义不保留。 |
-| 简单矢量蒙版 | 映射为 Xomo 原生路径蒙版 | 支持单个闭合子路径和 Bézier 控制柄；开放、多子路径、反相/断链等复杂记录继续栅格化并报告。 |
+| 简单矢量蒙版 | 映射为 Xomo 原生路径蒙版 | 支持多个闭合子路径、Bézier 控制柄和偶数奇数填充（包括带孔洞形状）；开放路径、反相/断链等复杂记录继续栅格化并报告。 |
 | 智能对象 | 使用像素内容 | 嵌入源、链接源和可替换内容不保留。 |
 | 调整层 | 参数不保留 | 没有独立像素回退的调整层可能不会成为可编辑图层，视觉结果必须核对。 |
 | 图层效果 | 使用图层已有像素表现 | 阴影、描边、发光等 Photoshop 参数不保留。 |
@@ -80,17 +80,18 @@
 - `unsupported-features.psd`：文字、矢量、智能对象、调整层、效果、填充层、ICC、额外通道和未知数据的报告分类。
 - `editable-text.psd`：独立生成的 TySh/EngineData 段落文字层，验证纯文本、Helvetica、24pt、颜色、居中对齐、基础字符/段落样式、文本框边界、溢出状态及项目格式保存重开。
 - `vector-mask.psd`：独立生成的 vmsk 三点闭合路径，验证 Bézier 锚点、控制柄、矢量蒙版和项目格式保存重开。
+- `vector-mask-multi.psd`：独立生成的 vmsk 双闭合子路径，验证 `pathSubpaths`、偶数奇数填充的孔洞和项目格式保存重开。
 
 相关文件：
 
 - 夹具与说明：[`veilpicTests/Fixtures/PSD`](../veilpicTests/Fixtures/PSD)
 - 夹具生成器：[`scripts/generate_psd_compatibility_fixtures.rb`](../scripts/generate_psd_compatibility_fixtures.rb)
-- PSD 测试报告：[`test-reports/rc150-psd-suite/report.md`](../test-reports/rc150-psd-suite/report.md)
-- PSD 矢量蒙版安全边界报告：[`test-reports/rc150-vector-safety-final/report.md`](../test-reports/rc150-vector-safety-final/report.md)
+- PSD 测试报告：[`test-reports/rc151-psd-suite/report.md`](../test-reports/rc151-psd-suite/report.md)
+- PSD 多子路径定向报告：[`test-reports/rc151-vector-multi/report.md`](../test-reports/rc151-vector-multi/report.md)
 - 外部打开测试报告：[`test-reports/rc145-external-open/report.md`](../test-reports/rc145-external-open/report.md)
 - 本地化测试报告：[`test-reports/rc145-localization/report.md`](../test-reports/rc145-localization/report.md)
 
-rc150 的 PSD 定向验证结果为：PSD 专项 10/10、简单矢量蒙版导入 1/1、复杂 vmsk 安全降级 1/1，Debug `build-for-testing` 通过。
+rc151 的 PSD 定向验证结果为：PSD 专项 11/11、多子路径矢量蒙版导入 1/1，复杂 vmsk 安全降级由专项回归覆盖，Debug `build-for-testing` 通过。
 
 ## 7. 使用建议
 
@@ -104,7 +105,7 @@ rc150 的 PSD 定向验证结果为：PSD 专项 10/10、简单矢量蒙版导�
 下一阶段不建议同时追求所有 Photoshop 私有结构。按用户价值和实现风险排序：
 
 1. 可编辑文字层：继续扩展段落框尺寸/溢出语义、逐字符混排和安全的 PSD 文字导出；当前从 Xomo 项目导出 PSD 仍会栅格化文字。
-2. 可编辑矢量形状与矢量蒙版：继续扩展多子路径、路径资源和更完整的 PSD 矢量导出；当前复杂 vmsk、反相/断链路径仍安全栅格化。
+2. 可编辑矢量形状与矢量蒙版：继续扩展开放路径、路径资源和更完整的 PSD 矢量导出；当前复杂 vmsk、反相/断链路径仍安全栅格化。
 3. 智能对象的安全栅格回退与元数据保留：先允许重新定位原始内容，再考虑嵌套编辑。
 4. 常用调整层：优先 Levels、Curves、Hue/Saturation，并为无法映射的参数继续保留明确报告。
 5. 颜色管理、16-bit 和 PSB：这些会牵动渲染、内存与项目模型，应作为独立工程阶段处理。

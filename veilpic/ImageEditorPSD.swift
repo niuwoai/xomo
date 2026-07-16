@@ -1244,18 +1244,20 @@ enum ImageEditorPSDCodec {
         to layer: inout ImageEditorLayer
     ) {
         guard let info = record.vectorMaskInfo else { return }
-        let anchors = info.anchors.map { anchor in
-            ImageEditorPathAnchor(
-                point: CGPoint(x: anchor.point.x * size.width, y: anchor.point.y * size.height),
-                inControl: anchor.inControl.map {
-                    CGPoint(x: $0.x * size.width, y: $0.y * size.height)
-                },
-                outControl: anchor.outControl.map {
-                    CGPoint(x: $0.x * size.width, y: $0.y * size.height)
-                }
-            )
+        let subpaths = info.subpaths.map { anchors in
+            anchors.map { anchor in
+                ImageEditorPathAnchor(
+                    point: CGPoint(x: anchor.point.x * size.width, y: anchor.point.y * size.height),
+                    inControl: anchor.inControl.map {
+                        CGPoint(x: $0.x * size.width, y: $0.y * size.height)
+                    },
+                    outControl: anchor.outControl.map {
+                        CGPoint(x: $0.x * size.width, y: $0.y * size.height)
+                    }
+                )
+            }
         }
-        guard anchors.count >= 3 else { return }
+        guard let anchors = subpaths.first, anchors.count >= 3 else { return }
         let content = ImageEditorShapeContent(
             kind: .path,
             fillColor: .white,
@@ -1265,6 +1267,7 @@ enum ImageEditorPSDCodec {
             strokeOpacity: 0,
             pathPoints: anchors.map(\.point),
             pathAnchors: anchors,
+            pathSubpaths: Array(subpaths.dropFirst()),
             isPathClosed: true
         ).normalized(size: size)
         layer.vectorMask = content
@@ -1278,7 +1281,8 @@ enum ImageEditorPSDCodec {
             let flags = try reader.uint32()
             guard flags & 0b011 == 0 else { return nil }
             var expectedKnotCount: Int?
-            var anchors: [ImageEditorPathAnchor] = []
+            var currentSubpath: [ImageEditorPathAnchor] = []
+            var subpaths: [[ImageEditorPathAnchor]] = []
             while reader.offset + 26 <= data.count {
                 let selector = try reader.uint16()
                 let payload = try reader.data(count: 24)
@@ -1288,32 +1292,39 @@ enum ImageEditorPSDCodec {
                     let count = Int(UInt16(payload[payload.startIndex]) << 8 | UInt16(payload[payload.startIndex + 1]))
                     guard count >= 3 else { return nil }
                     expectedKnotCount = count
+                    currentSubpath = []
                 case 1, 2:
-                    guard let expectedKnotCount,
-                          anchors.count < expectedKnotCount
+                    guard let knotCount = expectedKnotCount,
+                          currentSubpath.count < knotCount
                     else { return nil }
                     let previousControl = vectorPathPoint(in: payload, at: 0)
                     let anchor = vectorPathPoint(in: payload, at: 8)
                     let nextControl = vectorPathPoint(in: payload, at: 16)
-                    anchors.append(
+                    currentSubpath.append(
                         ImageEditorPathAnchor(
                             point: anchor,
                             inControl: previousControl,
                             outControl: nextControl
                         )
                     )
+                    if currentSubpath.count == knotCount {
+                        subpaths.append(currentSubpath)
+                        currentSubpath = []
+                        expectedKnotCount = nil
+                    }
                 case 6, 7, 8:
                     continue
                 default:
                     return nil
                 }
             }
-            guard let expectedKnotCount,
-                  expectedKnotCount == anchors.count,
-                  anchors.count >= 3
+            guard expectedKnotCount == nil,
+                  currentSubpath.isEmpty,
+                  !subpaths.isEmpty,
+                  subpaths.allSatisfy({ $0.count >= 3 })
             else { return nil }
             return PSDVectorMaskInfo(
-                anchors: anchors,
+                subpaths: subpaths,
                 isEnabled: flags & 0b100 == 0
             )
         } catch {
@@ -1653,7 +1664,7 @@ private struct PSDTextLayerInfo {
 }
 
 private struct PSDVectorMaskInfo {
-    let anchors: [ImageEditorPathAnchor]
+    let subpaths: [[ImageEditorPathAnchor]]
     let isEnabled: Bool
 }
 

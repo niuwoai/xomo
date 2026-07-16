@@ -77,18 +77,29 @@ def engine_string(value)
   "(" + "\xFE\xFF".b + value.encode("UTF-16BE").b + ")"
 end
 
-def vector_mask_payload(flags: 0)
+def vector_mask_payload(flags: 0, include_hole: false)
   record = ->(selector, points) {
     u16(selector) + points.map { |vertical, horizontal| fixed8_24(vertical) + fixed8_24(horizontal) }.join
   }
   fill_rule = u16(6) + ("\0" * 24)
-  length = u16(0) + u16(3) + ("\0" * 20)
-  knots = [
+  subpath = lambda do |points|
+    length = u16(0) + u16(points.length) + ("\0" * 20)
+    knots = points.each_with_index.map { |point, index| record.call(index.zero? ? 1 : 2, point) }.join
+    length + knots
+  end
+  outer = [
     [[0.10, 0.10], [0.10, 0.10], [0.10, 0.10]],
     [[0.10, 0.90], [0.10, 0.90], [0.10, 0.90]],
     [[0.90, 0.50], [0.90, 0.50], [0.90, 0.50]]
-  ].each_with_index.map { |points, index| record.call(index.zero? ? 1 : 2, points) }.join
-  u32(3) + u32(flags) + fill_rule + length + knots
+  ]
+  inner = [
+    [[0.35, 0.40], [0.35, 0.40], [0.35, 0.40]],
+    [[0.35, 0.60], [0.35, 0.60], [0.35, 0.60]],
+    [[0.65, 0.50], [0.65, 0.50], [0.65, 0.50]]
+  ]
+  paths = [outer]
+  paths << inner if include_hole
+  u32(3) + u32(flags) + fill_rule + paths.map { |points| subpath.call(points) }.join
 end
 
 def editable_text_engine_data
@@ -295,7 +306,7 @@ def editable_text_fixture
   )
 end
 
-def vector_mask_fixture
+def vector_mask_fixture(payload: vector_mask_payload)
   pixel = ([180] * 16).pack("C*")
   alpha = ([255] * 16).pack("C*")
   channels = {
@@ -307,7 +318,7 @@ def vector_mask_fixture
   record = layer_record(
     name: "Vector Triangle",
     channels: channels,
-    blocks: [tagged_block("vmsk", vector_mask_payload)],
+    blocks: [tagged_block("vmsk", payload)],
     frame: [0, 0, HEIGHT, WIDTH]
   )
   layer_info = i16(1) + record + channels.values.join
@@ -319,13 +330,18 @@ def vector_mask_fixture
   )
 end
 
+def multi_vector_mask_fixture
+  vector_mask_fixture(payload: vector_mask_payload(include_hole: true))
+end
+
 FileUtils.mkdir_p(OUTPUT_DIR)
 fixtures = {
   "zip-group-mask.psd" => group_mask_fixture,
   "zip-composite.psd" => composite_only_fixture,
   "unsupported-features.psd" => unsupported_features_fixture,
   "editable-text.psd" => editable_text_fixture,
-  "vector-mask.psd" => vector_mask_fixture
+  "vector-mask.psd" => vector_mask_fixture,
+  "vector-mask-multi.psd" => multi_vector_mask_fixture
 }
 fixtures.each do |name, bytes|
   File.binwrite(File.join(OUTPUT_DIR, name), bytes)
@@ -336,7 +352,8 @@ expectations = {
   "zip-composite.psd" => %w[zip flattened_composite],
   "unsupported-features.psd" => %w[compatibility_report unsupported_semantic_features],
   "editable-text.psd" => %w[editable_text font_size color alignment],
-  "vector-mask.psd" => %w[editable_vector_mask closed_path bezier_points]
+  "vector-mask.psd" => %w[editable_vector_mask closed_path bezier_points],
+  "vector-mask-multi.psd" => %w[editable_vector_mask multiple_subpaths even_odd_hole]
 }
 manifest = {
   generator: "scripts/generate_psd_compatibility_fixtures.rb",
