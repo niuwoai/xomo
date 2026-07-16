@@ -171,6 +171,48 @@ struct ImageEditorPSDTests {
         #expect(channel.mask.alpha == document.alphaChannels[0].mask.alpha)
     }
 
+    @Test func psdExportPreservesSpotChannelDisplayInfoAndProjectRoundTrip() throws {
+        let canvasSize = CGSize(width: 4, height: 4)
+        var document = ImageEditorDocument(
+            sourceName: "spot-channel.png",
+            image: psdSolidImage(color: .white, size: canvasSize)
+        )
+        let spotColor = ImageEditorPSDSpotColor(
+            colorSpace: 0,
+            components: [65535, 0, 65535, 0],
+            opacity: 49152
+        )
+        document.alphaChannels = [
+            ImageEditorAlphaChannel(
+                name: "专色洋红",
+                mask: ImageEditorSelectionMask(
+                    width: 4,
+                    height: 4,
+                    alpha: [
+                        0, 32, 128, 255,
+                        255, 128, 32, 0,
+                        0, 32, 128, 255,
+                        255, 128, 32, 0
+                    ]
+                ),
+                kind: .spot,
+                spotColor: spotColor
+            )
+        ]
+
+        let data = try ImageEditorPSDCodec.encode(document: document)
+        let restored = try ImageEditorPSDCodec.decode(data, sourceName: "spot-channel.psd")
+        let channel = try #require(restored.alphaChannels.first)
+
+        #expect(channel.kind == .spot)
+        #expect(channel.spotColor == spotColor)
+        #expect(channel.mask.alpha == document.alphaChannels[0].mask.alpha)
+
+        let project = try ImageEditorProjectDocument(document: restored)
+        let projectRestored = try project.restoredDocument()
+        #expect(projectRestored.alphaChannels == restored.alphaChannels)
+    }
+
     @Test func psdExportPreservesBasicEditableTextLayer() throws {
         let canvasSize = CGSize(width: 320, height: 180)
         var document = ImageEditorDocument(
@@ -322,7 +364,7 @@ struct ImageEditorPSDTests {
         #expect(restored.alphaChannels == document.alphaChannels)
 
         let report = try ImageEditorPSDCodec.compatibilityReport(data)
-        #expect(report.issues.contains { $0.kind == .additionalChannels })
+        #expect(!report.issues.contains { $0.kind == .additionalChannels })
     }
 
     @Test func compatibilityReportNamesUnsupportedSemanticFeatures() throws {

@@ -112,6 +112,23 @@ enum ImageEditorPSDCodec {
         output.appendUInt32(UInt32(names.count))
         output.append(names)
         if names.count % 2 != 0 { output.append(0) }
+
+        var displayInfo = Data()
+        displayInfo.appendUInt32(1)
+        for channel in alphaChannels {
+            let spotColor = channel.spotColor ?? ImageEditorPSDSpotColor()
+            let components = Array(spotColor.components.prefix(4)) + Array(repeating: UInt16(0), count: max(0, 4 - spotColor.components.count))
+            displayInfo.appendUInt16(spotColor.colorSpace)
+            for component in components { displayInfo.appendUInt16(component) }
+            displayInfo.appendUInt16(spotColor.opacity)
+            displayInfo.append(channel.kind == .spot ? 2 : 0)
+        }
+        output.appendASCII("8BIM")
+        output.appendUInt16(1077)
+        output.appendPascalString("", alignment: 2)
+        output.appendUInt32(UInt32(displayInfo.count))
+        output.append(displayInfo)
+        if displayInfo.count % 2 != 0 { output.append(0) }
         return output
     }
 
@@ -216,7 +233,8 @@ enum ImageEditorPSDCodec {
         if version != 1 { addIssue(.unsupportedVersion) }
         if depth != 8 { addIssue(.unsupportedBitDepth) }
         if colorMode != 3 { addIssue(.unsupportedColorMode) }
-        if channelCount > 4 { addIssue(.additionalChannels, count: channelCount - 4) }
+        // Additional alpha and spot channels are decoded into editable Xomo channels.
+        // Keep the compatibility issue reserved for a future unsupported channel mode.
 
         guard version == 1 else {
             return compatibilityReport(
@@ -396,6 +414,7 @@ enum ImageEditorPSDCodec {
         try reader.skipLengthPrefixed32()
         let imageResources = try reader.lengthPrefixedData32()
         let alphaChannelNames = parseAlphaChannelNames(imageResources)
+        let alphaChannelDisplayInfo = parseAlphaChannelDisplayInfo(imageResources)
         let savedPaths = parseSavedPaths(
             imageResources,
             canvasSize: CGSize(width: width, height: height)
@@ -429,7 +448,8 @@ enum ImageEditorPSDCodec {
             width: width,
             height: height,
             channelCount: channelCount,
-            alphaChannelNames: alphaChannelNames
+            alphaChannelNames: alphaChannelNames,
+            alphaChannelDisplayInfo: alphaChannelDisplayInfo
         )
 
         if !decodedLayers.isEmpty {
@@ -452,7 +472,7 @@ enum ImageEditorPSDCodec {
         )
     }
 
-    private static func parseAlphaChannelNames(_ data: Data) -> [String] {
+    nonisolated private static func parseAlphaChannelNames(_ data: Data) -> [String] {
         do {
             var reader = PSDReader(data: data)
             while reader.offset + 12 <= data.count {
@@ -471,6 +491,47 @@ enum ImageEditorPSDCodec {
                     names.append(try namesReader.pascalString(alignment: 2))
                 }
                 return names
+            }
+        } catch {
+            return []
+        }
+        return []
+    }
+
+    nonisolated private static func parseAlphaChannelDisplayInfo(_ data: Data) -> [PSDAlphaChannelDisplayInfo] {
+        do {
+            var reader = PSDReader(data: data)
+            while reader.offset + 12 <= data.count {
+                let signature = try reader.ascii(count: 4)
+                guard signature == "8BIM" || signature == "8B64" else { break }
+                let resourceID = try reader.uint16()
+                _ = try reader.pascalString(alignment: 2)
+                let resourceLength = Int(try reader.uint32())
+                let resourceData = try reader.data(count: resourceLength)
+                if resourceLength.isMultiple(of: 2) == false { try reader.skip(1) }
+                guard resourceID == 1077 else { continue }
+
+                var infoReader = PSDReader(data: resourceData)
+                _ = try infoReader.uint32()
+                var result: [PSDAlphaChannelDisplayInfo] = []
+                while infoReader.offset + 13 <= resourceData.count {
+                    let colorSpace = try infoReader.uint16()
+                    let components = [
+                        try infoReader.uint16(), try infoReader.uint16(),
+                        try infoReader.uint16(), try infoReader.uint16()
+                    ]
+                    let opacity = try infoReader.uint16()
+                    let mode = try infoReader.uint8()
+                    result.append(
+                        PSDAlphaChannelDisplayInfo(
+                            colorSpace: colorSpace,
+                            components: components,
+                            opacity: opacity,
+                            mode: mode
+                        )
+                    )
+                }
+                return result
             }
         } catch {
             return []
@@ -1201,7 +1262,8 @@ enum ImageEditorPSDCodec {
         width: Int,
         height: Int,
         channelCount: Int,
-        alphaChannelNames: [String]
+        alphaChannelNames: [String],
+        alphaChannelDisplayInfo: [PSDAlphaChannelDisplayInfo]
     ) throws -> PSDCompositeChannels {
         let compression = try reader.uint16()
         let pixelCount = width * height
@@ -1250,13 +1312,24 @@ enum ImageEditorPSDCodec {
             let importedName = alphaChannelNames.indices.contains(index)
                 ? alphaChannelNames[index].trimmingCharacters(in: .whitespacesAndNewlines)
                 : ""
+            let displayInfo = alphaChannelDisplayInfo.indices.contains(index)
+                ? alphaChannelDisplayInfo[index]
+                : nil
             return ImageEditorAlphaChannel(
                 name: importedName.isEmpty ? fallbackName : importedName,
                 mask: ImageEditorSelectionMask(
                     width: width,
                     height: height,
                     alpha: Array(plane)
-                )
+                ),
+                kind: displayInfo?.mode == 2 ? .spot : .alpha,
+                spotColor: displayInfo.map {
+                    ImageEditorPSDSpotColor(
+                        colorSpace: $0.colorSpace,
+                        components: $0.components,
+                        opacity: $0.opacity
+                    )
+                }
             )
         }
         return PSDCompositeChannels(channels: channels, alphaChannels: alphaChannels)
@@ -2037,6 +2110,13 @@ private struct PSDExportText {
 nonisolated private struct PSDCompositeChannels {
     let channels: PSDChannels
     let alphaChannels: [ImageEditorAlphaChannel]
+}
+
+nonisolated private struct PSDAlphaChannelDisplayInfo {
+    let colorSpace: UInt16
+    let components: [UInt16]
+    let opacity: UInt16
+    let mode: UInt8
 }
 
 nonisolated private struct PSDParsedDocument: @unchecked Sendable {

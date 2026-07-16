@@ -3033,7 +3033,7 @@
 "imageEditor.psd.compatibility.issue.unsupportedBitDepth" = "当前仅原生支持 8-bit 通道，将尝试扁平化打开";
 "imageEditor.psd.compatibility.issue.unsupportedColorMode" = "当前仅原生支持 RGB 色彩模式，将尝试扁平化打开";
 "imageEditor.psd.compatibility.issue.unsupportedCompression" = "包含尚未支持的通道压缩方式";
-"imageEditor.psd.compatibility.issue.additionalChannels" = "额外 Alpha 或专色通道不会导入为象墨通道";
+"imageEditor.psd.compatibility.issue.additionalChannels" = "额外 Alpha 或专色通道的显示元数据需要检查";
 "imageEditor.psd.compatibility.issue.textRasterized" = "Photoshop 文字层会作为像素内容导入";
 "imageEditor.psd.compatibility.issue.vectorRasterized" = "矢量形状或矢量蒙版会作为像素内容导入";
 "imageEditor.psd.compatibility.issue.smartObjectRasterized" = "智能对象会作为像素内容导入";

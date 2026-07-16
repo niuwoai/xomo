@@ -3033,7 +3033,7 @@
 "imageEditor.psd.compatibility.issue.unsupportedBitDepth" = "Only 8-bit channels are supported natively; Xomo will try to open a flattened copy";
 "imageEditor.psd.compatibility.issue.unsupportedColorMode" = "Only RGB is supported natively; Xomo will try to open a flattened copy";
 "imageEditor.psd.compatibility.issue.unsupportedCompression" = "The file contains an unsupported channel compression method";
-"imageEditor.psd.compatibility.issue.additionalChannels" = "Extra alpha or spot channels are not imported as Xomo channels";
+"imageEditor.psd.compatibility.issue.additionalChannels" = "Extra alpha or spot channel display metadata needs review";
 "imageEditor.psd.compatibility.issue.textRasterized" = "Photoshop text layers are imported as pixel content";
 "imageEditor.psd.compatibility.issue.vectorRasterized" = "Vector shapes or vector masks are imported as pixel content";
 "imageEditor.psd.compatibility.issue.smartObjectRasterized" = "Smart objects are imported as pixel content";

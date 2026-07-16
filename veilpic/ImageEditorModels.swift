@@ -375,10 +375,76 @@ struct ImageEditorSelectionMask: Equatable, Codable {
     }
 }
 
-struct ImageEditorAlphaChannel: Identifiable, Equatable, Codable {
+nonisolated enum ImageEditorAlphaChannelKind: String, CaseIterable, Codable, Hashable, Sendable {
+    case alpha
+    case spot
+
+    var titleKey: String {
+        "imageEditor.channel.kind.\(rawValue)"
+    }
+}
+
+nonisolated struct ImageEditorPSDSpotColor: Equatable, Codable, Sendable {
+    /// PSD DisplayInfo color space identifier.
+    var colorSpace: UInt16
+    /// The four 16-bit PSD color components, kept losslessly for round-trip export.
+    var components: [UInt16]
+    /// PSD opacity value (0...65535).
+    var opacity: UInt16
+
+    init(
+        colorSpace: UInt16 = 0,
+        components: [UInt16] = [0, 0, 0, 0],
+        opacity: UInt16 = UInt16.max
+    ) {
+        self.colorSpace = colorSpace
+        self.components = Array(components.prefix(4)) + Array(repeating: 0, count: max(0, 4 - components.count))
+        self.opacity = opacity
+    }
+}
+
+nonisolated struct ImageEditorAlphaChannel: Identifiable, Equatable, Codable {
     var id = UUID()
     var name: String
     var mask: ImageEditorSelectionMask
+    var kind: ImageEditorAlphaChannelKind = .alpha
+    var spotColor: ImageEditorPSDSpotColor?
+
+    init(
+        id: UUID = UUID(),
+        name: String,
+        mask: ImageEditorSelectionMask,
+        kind: ImageEditorAlphaChannelKind = .alpha,
+        spotColor: ImageEditorPSDSpotColor? = nil
+    ) {
+        self.id = id
+        self.name = name
+        self.mask = mask
+        self.kind = kind
+        self.spotColor = spotColor
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case id, name, mask, kind, spotColor
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
+        name = try container.decode(String.self, forKey: .name)
+        mask = try container.decode(ImageEditorSelectionMask.self, forKey: .mask)
+        kind = try container.decodeIfPresent(ImageEditorAlphaChannelKind.self, forKey: .kind) ?? .alpha
+        spotColor = try container.decodeIfPresent(ImageEditorPSDSpotColor.self, forKey: .spotColor)
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(name, forKey: .name)
+        try container.encode(mask, forKey: .mask)
+        try container.encode(kind, forKey: .kind)
+        try container.encodeIfPresent(spotColor, forKey: .spotColor)
+    }
 }
 
 struct ImageEditorSelection: Equatable, Codable {
