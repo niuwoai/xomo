@@ -171,6 +171,52 @@ struct ImageEditorPSDTests {
         #expect(channel.mask.alpha == document.alphaChannels[0].mask.alpha)
     }
 
+    @Test func psdExportPreservesBasicEditableTextLayer() throws {
+        let canvasSize = CGSize(width: 320, height: 180)
+        var document = ImageEditorDocument(
+            sourceName: "text-export.png",
+            image: psdSolidImage(color: .white, size: canvasSize)
+        )
+        var content = ImageEditorTextContent(
+            text: "Hello Xomo",
+            color: .systemBlue,
+            fontSize: 24,
+            fontFamilyName: "Helvetica",
+            point: .zero
+        )
+        content.isBold = true
+        content.isItalic = true
+        content.isUnderlined = true
+        content.characterSpacing = 1.5
+        content.lineSpacing = 4
+        content.boxWidth = 180
+        content.boxHeight = 48
+        content.alignment = .center
+        content.leftIndent = 3
+        content.rightIndent = 4
+        content.firstLineIndent = 2
+        let layer = ImageEditorLayer.text(name: "Greeting", origin: CGPoint(x: 24, y: 32), content: content)
+        document.layers = [layer]
+
+        let data = try ImageEditorPSDCodec.encode(document: document)
+        let restored = try ImageEditorPSDCodec.decode(data, sourceName: "text-export.psd")
+        let restoredContent = try #require(restored.layers.first?.textContent)
+
+        #expect(restoredContent.text == content.text)
+        #expect(restoredContent.fontFamilyName == content.fontFamilyName)
+        #expect(abs(restoredContent.fontSize - content.fontSize) < 0.01)
+        #expect(restoredContent.isBold)
+        #expect(restoredContent.isItalic)
+        #expect(restoredContent.isUnderlined)
+        #expect(abs(restoredContent.characterSpacing - content.characterSpacing) < 0.01)
+        #expect(abs(restoredContent.lineSpacing - content.lineSpacing) < 0.01)
+        #expect(restoredContent.alignment == content.alignment)
+        #expect(abs(restoredContent.boxWidth - content.boxWidth) < 0.01)
+        #expect(abs(restoredContent.boxHeight - content.boxHeight) < 0.01)
+        let report = try ImageEditorPSDCodec.compatibilityReport(data)
+        #expect(!report.issues.contains { $0.kind == .textRasterized })
+    }
+
     @Test func psdRejectsUnsupportedBitDepth() throws {
         let document = ImageEditorDocument(
             sourceName: "tiny.png",

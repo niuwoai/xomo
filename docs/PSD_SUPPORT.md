@@ -1,6 +1,6 @@
 # 象墨 PSD 支持说明
 
-> 最后更新：2026-07-17 ｜ 对应版本：v2.12.0-rc156
+> 最后更新：2026-07-17 ｜ 对应版本：v2.12.0-rc157
 
 ## 1. 结论
 
@@ -56,12 +56,13 @@
 
 | 能力 | 当前状态 | 说明 |
 |---|---|---|
-| 输出格式 | PSD v1、8-bit RGB/RGBA | 同时写入图层记录和文档合成图。 |
+| 输出格式 | PSD v1、8-bit RGB/RGBA + Alpha | 同时写入图层记录、文档合成图和普通额外 Alpha 通道。 |
 | 通道压缩 | Raw | 当前导出器优先保证结构简单可靠，尚未输出 RLE/ZIP。 |
 | 像素图层 | 支持 | 保留名称、位置、可见性、不透明度、Fill、剪贴标记、混合模式和锁定状态。 |
 | 嵌套组 | 支持 | 写入组开始/结束记录、展开状态、组混合模式和组蒙版。 |
 | 栅格蒙版 | 支持 | 写入蒙版像素、启用/停用和链接状态。象墨中的密度、羽化会烘焙进有效蒙版像素，不会保存为独立 Photoshop 参数。 |
-| 文字、形状、智能对象 | 栅格化导出 | 视觉内容进入普通像素层，不保留原对象语义。 |
+| 基础文字层 | 部分支持 | 写入 TySh/EngineData，保留文本、字体、字号、颜色、段落框、对齐、缩进和基础字符样式；复杂逐字符混排与变换仍依赖像素回退。 |
+| 形状、智能对象 | 栅格化导出 | 视觉内容进入普通像素层，不保留原对象语义。 |
 | 命名路径 | 支持 | 写入 Image Resources 的 Path Resource，保留名称、闭合/开放状态、多子路径和 Bézier 控制柄。 |
 | 额外 Alpha 通道 | 支持 | 导入与导出均保留名称和 8-bit 掩码；导出增加对应文档通道，Spot 通道仍不写出。 |
 | 矢量蒙版 | 部分支持 | 结构完整的闭合路径写入图层 `vmsk`，保留子路径、控制柄和启用状态；开放路径、反相/断链及复杂记录栅格化导出。 |
@@ -78,7 +79,7 @@
 
 ## 6. 测试证据
 
-本版本加入三份由独立 Ruby 生成器按 PSD 二进制结构构造的夹具，避免只用象墨自己的编码器做“自己写、自己读”的循环验证：
+本版本使用四份由独立 Ruby 生成器按 PSD 二进制结构构造的夹具，避免只用象墨自己的编码器做“自己写、自己读”的循环验证：
 
 - `zip-group-mask.psd`：ZIP 图层、ZIP Prediction、嵌套组和栅格蒙版。
 - `zip-composite.psd`：只有 ZIP 合成图的 PSD。
@@ -93,13 +94,14 @@
 
 - 夹具与说明：[`veilpicTests/Fixtures/PSD`](../veilpicTests/Fixtures/PSD)
 - 夹具生成器：[`scripts/generate_psd_compatibility_fixtures.rb`](../scripts/generate_psd_compatibility_fixtures.rb)
-- PSD 测试报告：[`test-reports/rc155-psd-suite/report.md`](../test-reports/rc155-psd-suite/report.md)
+- PSD 测试报告：[`test-reports/rc157-psd-suite/report.md`](../test-reports/rc157-psd-suite/report.md)
+- 文字导出定向报告：[`test-reports/rc157-text-export/report.md`](../test-reports/rc157-text-export/report.md)
 - 额外 Alpha 通道导出定向报告：[`test-reports/rc156-alpha-export/report.md`](../test-reports/rc156-alpha-export/report.md)
 - PSD 原生矢量蒙版导出定向报告：[`test-reports/rc154-vector-mask-export/report.md`](../test-reports/rc154-vector-mask-export/report.md)
 - 外部打开测试报告：[`test-reports/rc145-external-open/report.md`](../test-reports/rc145-external-open/report.md)
 - 本地化测试报告：[`test-reports/rc145-localization/report.md`](../test-reports/rc145-localization/report.md)
 
-rc156 的 PSD 定向验证结果为：PSD 专项 16/16、Alpha 通道导出 1/1、Xomo CLI 2/2；开放/复杂路径安全回退由专项回归覆盖。
+rc157 的 PSD 定向验证结果为：PSD 专项 17/17、文字导出 1/1、Xomo CLI 2/2；开放/复杂路径安全回退由专项回归覆盖。
 
 ## 7. 使用建议
 
@@ -112,7 +114,7 @@ rc156 的 PSD 定向验证结果为：PSD 专项 16/16、Alpha 通道导出 1/1�
 
 下一阶段不建议同时追求所有 Photoshop 私有结构。按用户价值和实现风险排序：
 
-1. 可编辑文字层：继续扩展段落框尺寸/溢出语义、逐字符混排和安全的 PSD 文字导出；当前从 Xomo 项目导出 PSD 仍会栅格化文字。
+1. 可编辑文字层：继续扩展段落框溢出语义、逐字符混排和文字变换；当前基础 TySh/EngineData 已可交换，复杂文字仍使用像素回退。
 2. 可编辑矢量形状与矢量蒙版：继续扩展复杂 vmsk、矢量形状和文字/路径交换；当前开放、反相/断链路径仍安全栅格化。
 3. 智能对象的安全栅格回退与元数据保留：先允许重新定位原始内容，再考虑嵌套编辑。
 4. 常用调整层：优先 Levels、Curves、Hue/Saturation，并为无法映射的参数继续保留明确报告。

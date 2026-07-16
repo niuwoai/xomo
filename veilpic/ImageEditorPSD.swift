@@ -795,8 +795,120 @@ enum ImageEditorPSDCodec {
             locksTransparentPixels: layer.locksTransparentPixels,
             sectionType: nil,
             mask: mask,
-            vectorMask: vectorMask
+            vectorMask: vectorMask,
+            textObject: layer.textContent.flatMap {
+                exportTextToolObject($0, size: frame.size)
+            }
         )
+    }
+
+    private static func exportTextToolObject(
+        _ content: ImageEditorTextContent,
+        size: CGSize
+    ) -> PSDExportText? {
+        guard !content.text.isEmpty else { return nil }
+        var engine = Data()
+        engine.appendASCII("<<\n/EngineDict <<\n/Editor <<\n/Text ")
+        appendEngineUnicodeString(content.text, to: &engine)
+        engine.appendASCII("\n>>\n/StyleRun <<\n/RunLengthArray [ \(content.text.utf16.count) ]\n")
+        engine.appendASCII("/RunArray [ << /StyleSheet << /StyleSheetData << /Font 0 /FontSize \(content.fontSize) ")
+        let fauxBold = content.isBold ? "true" : "false"
+        let fauxItalic = content.isItalic ? "true" : "false"
+        let underline = content.isUnderlined ? "true" : "false"
+        let strikethrough = content.isStruckThrough ? "true" : "false"
+        engine.appendASCII("/FauxBold \(fauxBold) /FauxItalic \(fauxItalic) ")
+        engine.appendASCII("/Underline \(underline) /Strikethrough \(strikethrough) ")
+        let tracking = content.fontSize > 0 ? content.characterSpacing * 1000 / content.fontSize : 0
+        engine.appendASCII("/Tracking \(tracking) /Leading \(content.lineSpacing) /LeftIndent \(content.leftIndent) /RightIndent \(content.rightIndent) /FirstLineIndent \(content.firstLineIndent) ")
+        let color = content.color.usingColorSpace(.deviceRGB) ?? .black
+        engine.appendASCII("/FillColor << /Type 1 /Values [ \(color.redComponent) \(color.greenComponent) \(color.blueComponent) \(color.alphaComponent) ] >> >> >> >> ]\n>>\n")
+        let justification: Int
+        switch content.alignment {
+        case .left: justification = 0
+        case .right: justification = 1
+        case .center: justification = 2
+        case .justified: justification = 3
+        }
+        engine.appendASCII("/ParagraphRun << /RunLengthArray [ \(content.text.utf16.count) ] /RunArray [ << /ParagraphSheet << /Properties << /Justification \(justification) >> >> >> ] >>\n")
+        engine.appendASCII("/Rendered << /Shapes << /Children [ << /Cookie << /Photoshop << /ShapeType \(content.boxWidth > 0 ? 1 : 0) >> >> >> ] >> >>\n>>\n/ResourceDict << /FontSet [ << /Name ")
+        appendEngineUnicodeString(content.fontFamilyName, to: &engine)
+        engine.appendASCII(" /FontFamily ")
+        appendEngineUnicodeString(content.fontFamilyName, to: &engine)
+        engine.appendASCII(" /FontStyle ")
+        appendEngineUnicodeString(content.isBold ? "Bold" : "Regular", to: &engine)
+        engine.appendASCII(" >> ] >>\n>>")
+
+        var descriptorItems = Data()
+        descriptorItems.append(descriptorItem(key: "Txt ", type: "TEXT", payload: descriptorUnicodeString(content.text)))
+        descriptorItems.append(descriptorItem(key: "EngineData", type: "tdta", payload: lengthPrefixedData(engine)))
+        var tysh = Data()
+        tysh.appendUInt16(1)
+        for value in [1, 0, 0, 1, 0, 0] { tysh.appendDouble(Double(value)) }
+        tysh.appendUInt16(50)
+        tysh.append(descriptorBlock(name: "", classID: "TxLr", itemCount: 2, items: descriptorItems))
+        tysh.appendUInt16(1)
+        tysh.append(descriptorBlock(name: "", classID: "warp", itemCount: 0, items: Data()))
+        let boxWidth = content.boxWidth > 0 ? content.boxWidth : size.width
+        let boxHeight = content.boxHeight > 0 ? content.boxHeight : size.height
+        for value in [0, 0, boxHeight, boxWidth] { tysh.appendDouble(Double(value)) }
+        return PSDExportText(data: tysh)
+    }
+
+    private static func appendEngineUnicodeString(_ value: String, to data: inout Data) {
+        data.append(0x28)
+        data.append(contentsOf: [0xFE, 0xFF])
+        for codeUnit in value.utf16 {
+            if codeUnit == 0x28 || codeUnit == 0x29 || codeUnit == 0x5C {
+                data.appendUInt16(0x5C)
+            }
+            data.appendUInt16(codeUnit)
+        }
+        data.append(0x29)
+    }
+
+    private static func descriptorItem(key: String, type: String, payload: Data) -> Data {
+        var output = descriptorKey(key)
+        output.appendASCII(type)
+        output.append(payload)
+        return output
+    }
+
+    private static func descriptorBlock(name: String, classID: String, itemCount: Int, items: Data) -> Data {
+        var output = Data()
+        output.appendUInt32(16)
+        output.append(descriptorUnicodeString(name))
+        output.append(descriptorKey(classID))
+        output.appendUInt32(UInt32(itemCount))
+        output.append(items)
+        return output
+    }
+
+    private static func descriptorKey(_ value: String) -> Data {
+        let bytes = Array(value.utf8)
+        var output = Data()
+        if bytes.count == 4 {
+            output.appendUInt32(0)
+            output.append(contentsOf: bytes)
+        } else {
+            output.appendUInt32(UInt32(bytes.count))
+            output.append(contentsOf: bytes)
+        }
+        return output
+    }
+
+    private static func descriptorUnicodeString(_ value: String) -> Data {
+        var output = Data()
+        let utf16 = Array(value.utf16)
+        output.appendUInt32(UInt32(utf16.count))
+        for codeUnit in utf16 { output.appendUInt16(codeUnit) }
+        return output
+    }
+
+    private static func lengthPrefixedData(_ data: Data) -> Data {
+        var output = Data()
+        output.appendUInt32(UInt32(data.count))
+        output.append(data)
+        return output
     }
 
     private static func exportGroupLayer(
@@ -824,7 +936,8 @@ enum ImageEditorPSDCodec {
             locksTransparentPixels: layer.locksTransparentPixels,
             sectionType: layer.isGroupExpanded ? 1 : 2,
             mask: mask,
-            vectorMask: nil
+            vectorMask: nil,
+            textObject: nil
         )
     }
 
@@ -936,6 +1049,7 @@ enum ImageEditorPSDCodec {
             extra.appendSectionDivider(type: sectionType, blendMode: item.blendMode)
         }
         extra.appendVectorMask(item.vectorMask)
+        extra.appendTextToolObject(item.textObject)
         record.appendUInt32(UInt32(extra.count))
         record.append(extra)
         return record
@@ -1379,8 +1493,21 @@ enum ImageEditorPSDCodec {
         }
         cursor += 2
         var value = Data()
+        var escaped = false
         while cursor + 1 < bytes.count {
             let codeUnit = UInt16(bytes[cursor]) << 8 | UInt16(bytes[cursor + 1])
+            if escaped {
+                value.append(bytes[cursor])
+                value.append(bytes[cursor + 1])
+                escaped = false
+                cursor += 2
+                continue
+            }
+            if codeUnit == 0x5C {
+                escaped = true
+                cursor += 2
+                continue
+            }
             if codeUnit == 0x29 { break }
             value.append(bytes[cursor])
             value.append(bytes[cursor + 1])
@@ -1863,6 +1990,7 @@ private struct PSDExportLayer {
     let sectionType: Int?
     let mask: PSDExportMask?
     let vectorMask: PSDExportVectorMask?
+    let textObject: PSDExportText?
 
     static func groupDivider(canvasHeight: Int) -> PSDExportLayer {
         PSDExportLayer(
@@ -1881,7 +2009,8 @@ private struct PSDExportLayer {
             locksTransparentPixels: false,
             sectionType: 3,
             mask: nil,
-            vectorMask: nil
+            vectorMask: nil,
+            textObject: nil
         )
     }
 }
@@ -1898,6 +2027,10 @@ private struct PSDExportMask {
 }
 
 private struct PSDExportVectorMask {
+    let data: Data
+}
+
+private struct PSDExportText {
     let data: Data
 }
 
@@ -2191,6 +2324,19 @@ private extension Data {
         ])
     }
 
+    mutating func appendUInt64(_ value: UInt64) {
+        append(contentsOf: [
+            UInt8((value >> 56) & 0xFF), UInt8((value >> 48) & 0xFF),
+            UInt8((value >> 40) & 0xFF), UInt8((value >> 32) & 0xFF),
+            UInt8((value >> 24) & 0xFF), UInt8((value >> 16) & 0xFF),
+            UInt8((value >> 8) & 0xFF), UInt8(value & 0xFF)
+        ])
+    }
+
+    mutating func appendDouble(_ value: Double) {
+        appendUInt64(value.bitPattern)
+    }
+
     mutating func appendInt32(_ value: Int32) { appendUInt32(UInt32(bitPattern: value)) }
 
     mutating func appendASCII(_ value: String) {
@@ -2285,6 +2431,15 @@ private extension Data {
         appendUInt32(UInt32(mask.data.count))
         append(mask.data)
         if mask.data.count % 2 != 0 { append(0) }
+    }
+
+    mutating func appendTextToolObject(_ text: PSDExportText?) {
+        guard let text else { return }
+        appendASCII("8BIM")
+        appendASCII("TySh")
+        appendUInt32(UInt32(text.data.count))
+        append(text.data)
+        if text.data.count % 2 != 0 { append(0) }
     }
 }
 
