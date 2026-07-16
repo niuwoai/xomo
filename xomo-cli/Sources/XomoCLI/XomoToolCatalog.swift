@@ -24,7 +24,7 @@ enum XomoToolCatalog {
         ("xomo.import.image", "Import an encoded image as an editable layer."),
         ("xomo.tool.list", "List all image editor tools."),
         ("xomo.tool.select", "Select the active editor tool."),
-        ("xomo.layer.list", "List layers, hierarchy, bounds, visibility, locks, opacity, and blend mode."),
+        ("xomo.layer.list", "List layers, hierarchy, bounds, visibility, locks, opacity, blend mode, and preserved Figma variable bindings."),
         ("xomo.layer.select", "Select a layer by UUID."),
         ("xomo.layer.create", "Create a pixel, group, text, adjustment, filter, or fill layer."),
         ("xomo.layer.delete", "Delete unlocked selected layer roots as complete subtrees and preserve a visible selection fallback."),

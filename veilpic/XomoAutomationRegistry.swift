@@ -535,7 +535,15 @@ final class XomoAutomationRegistry {
                 "x": .number(layer.frame.minX),
                 "y": .number(layer.frame.minY),
                 "width": .number(layer.frame.width),
-                "height": .number(layer.frame.height)
+                "height": .number(layer.frame.height),
+                "figmaVariableBindingCount": .number(Double(layer.xomoFigmaVariableBindings.count)),
+                "figmaVariableBindings": .array(layer.xomoFigmaVariableBindings.map { binding in
+                    .object([
+                        "id": .string(binding.id),
+                        "field": .string(binding.field),
+                        "variableId": .string(binding.variableID)
+                    ])
+                })
             ])
         })
     }
@@ -2591,7 +2599,7 @@ private extension XomoAutomationRegistry {
         tool("xomo.tool.select", "Select the active editor tool.", [
             "tool": XomoAutomationSchema.string(description: "Tool identifier", values: ImageEditorTool.allCases.map(\.rawValue))
         ], required: ["tool"]),
-        tool("xomo.layer.list", "List layers with hierarchy, bounds, visibility, locks, opacity, and blend mode."),
+        tool("xomo.layer.list", "List layers with hierarchy, bounds, visibility, locks, opacity, blend mode, and preserved Figma variable bindings."),
         tool("xomo.layer.select", "Select a layer by UUID.", [
             "id": XomoAutomationSchema.string(description: "Layer UUID"),
             "extend": XomoAutomationSchema.boolean(description: "Extend the current layer selection")

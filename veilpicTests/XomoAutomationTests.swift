@@ -258,6 +258,44 @@ struct XomoAutomationTests {
         #expect(viewModel.document.layers.first { $0.id == group.id }?.xomoComponentInstance?.tokenSnapshot == firstSnapshot)
     }
 
+    @Test func registryLayerListExposesFigmaVariableBindings() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        viewModel.addText(at: CGPoint(x: 24, y: 32))
+        let layerIndex = try #require(viewModel.document.layers.indices.last)
+        let layerID = viewModel.document.layers[layerIndex].id
+        viewModel.document.layers[layerIndex].xomoFigmaVariableBindings = [
+            XomoFigmaVariableBinding(field: "fills", variableID: "VariableID:brand-primary"),
+            XomoFigmaVariableBinding(field: "characters", variableID: "VariableID:body-font")
+        ]
+
+        let listed = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.list"
+        ))
+        #expect(listed.ok)
+        guard case .array(let layers) = listed.result,
+              let layer = layers.first(where: { $0.objectValue?["id"] == .string(layerID.uuidString) })?.objectValue
+        else {
+            Issue.record("Expected the created text layer in layer list")
+            return
+        }
+        #expect(layer["figmaVariableBindingCount"] == .number(2))
+        #expect(layer["figmaVariableBindings"]?.arrayValue == [
+            .object([
+                "id": .string("fills:VariableID:brand-primary"),
+                "field": .string("fills"),
+                "variableId": .string("VariableID:brand-primary")
+            ]),
+            .object([
+                "id": .string("characters:VariableID:body-font"),
+                "field": .string("characters"),
+                "variableId": .string("VariableID:body-font")
+            ])
+        ])
+    }
+
     @Test func registryCanInspectAndMutateTheActiveDocument() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

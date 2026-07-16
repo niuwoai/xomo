@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc142 - 2026-07-16
+
+### Added
+- `xomo.layer.list` 现在返回图层携带的 Figma 变量绑定数量与逐项元数据（字段、变量 ID、稳定绑定 ID），让 MCP/CLI 可以检查导入保留的设计变量，而不需要读取项目私有结构。
+
+### Verification
+- `XomoAutomationTests` 40/40、`XomoMCPServerTests` 2/2 通过；真实安装版核验确认组件库模式使用系统箭头，组件仍可点击拖动。
+
 ## 2.12.0-rc141 - 2026-07-16
 
 ### Added
