@@ -587,6 +587,51 @@ struct ImageEditorPSDTests {
             #expect(abs(layer.fillOpacity - expected) < 0.01)
         }
     }
+
+    @Test func psdRoundTripPreservesClippingMaskChainAndProjectState() throws {
+        let canvasSize = CGSize(width: 16, height: 12)
+        var document = ImageEditorDocument(
+            sourceName: "clipping-chain.psd",
+            image: psdSolidImage(color: .white, size: canvasSize)
+        )
+        var base = ImageEditorLayer.blank(name: "Card Shape", size: canvasSize)
+        base.image = psdSolidImage(color: .systemBlue, size: canvasSize)
+        base.frame = CGRect(origin: .zero, size: canvasSize)
+
+        var firstClip = ImageEditorLayer.blank(name: "Card Highlight", size: canvasSize)
+        firstClip.image = psdSolidImage(color: .white, size: canvasSize)
+        firstClip.frame = CGRect(origin: .zero, size: canvasSize)
+        firstClip.opacity = 0.6
+        firstClip.isClippingMask = true
+
+        var secondClip = ImageEditorLayer.blank(name: "Card Texture", size: canvasSize)
+        secondClip.image = psdSolidImage(color: .systemOrange, size: canvasSize)
+        secondClip.frame = CGRect(origin: .zero, size: canvasSize)
+        secondClip.isClippingMask = true
+
+        document.layers = [base, firstClip, secondClip]
+        document.selectedLayerID = secondClip.id
+        document.selectedLayerIDs = [secondClip.id]
+
+        let restored = try ImageEditorPSDCodec.decode(
+            ImageEditorPSDCodec.encode(document: document),
+            sourceName: "clipping-chain.psd"
+        )
+        #expect(restored.layers.map(\.name) == ["Card Shape", "Card Highlight", "Card Texture"])
+        #expect(!restored.layers[0].isClippingMask)
+        #expect(restored.layers[1].isClippingMask)
+        #expect(restored.layers[2].isClippingMask)
+        #expect(restored.clippingBaseIndex(forLayerAt: 1) == 0)
+        #expect(restored.clippingBaseIndex(forLayerAt: 2) == 0)
+        #expect(abs(restored.layers[1].opacity - 0.6) < 0.01)
+
+        let project = try ImageEditorProjectDocument(document: restored)
+        let projectRestored = try project.restoredDocument()
+        #expect(projectRestored.layers.map(\.isClippingMask) == [false, true, true])
+        #expect(projectRestored.selectedLayerID == restored.selectedLayerID)
+        #expect(projectRestored.selectedLayerIDs == restored.selectedLayerIDs)
+        #expect(projectRestored.clippingBaseIndex(forLayerAt: 2) == 0)
+    }
 }
 
 private func psdFixtureData(_ name: String) throws -> Data {
