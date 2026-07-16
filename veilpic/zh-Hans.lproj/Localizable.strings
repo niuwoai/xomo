@@ -2769,6 +2769,7 @@
 "xomo.theme.exportTokens" = "导出主题 Tokens…";
 "xomo.theme.importTokens" = "导入本地 Tokens…";
 "xomo.theme.clearTokens" = "清除本地 Tokens";
+"xomo.theme.refreshTokens" = "刷新已映射组件";
 "xomo.librarySource.xomoOriginal" = "像界原创";
 "xomo.librarySource.xomoOriginal.attribution" = "像界以本地代码生成的原创可编辑组件。";
 "xomo.librarySource.chakraUI" = "Chakra UI";
@@ -2795,6 +2796,10 @@
 "xomo.theme.status.tokensImported" = "已导入本地 Tokens：%@";
 "xomo.theme.status.tokensImportFailed" = "本地 Tokens 导入失败";
 "xomo.theme.status.tokensCleared" = "已清除本地 Tokens";
+"xomo.theme.history.tokensRefreshed" = "刷新本地设计 Tokens：%d 个组件";
+"xomo.theme.status.tokensRefreshed" = "已刷新 %d 个已映射组件";
+"xomo.theme.status.noLocalTokens" = "请先导入本地 Tokens";
+"xomo.theme.status.noMappedComponents" = "没有使用本地 Tokens 的组件";
 "xomo.themeSample.insert" = "插入当前主题页面示例";
 "xomo.themeSample.nativeWorkspace" = "原生工作台";
 "xomo.themeSample.softMobileProfile" = "柔和移动端个人页";

@@ -189,6 +189,75 @@ struct XomoAutomationTests {
         #expect(viewModel.hasLocalXomoThemeTokens)
     }
 
+    @Test func registryRefreshesAllMappedComponentTokensAndReturnsCount() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        var firstColors = XomoComponentTheme.native.tokenSnapshot.colors
+        firstColors["accent"] = "#801F4FFF"
+        let firstSnapshot = XomoComponentThemeTokenSnapshot(
+            schemaVersion: 1,
+            theme: "local-brand",
+            librarySource: "local",
+            colors: firstColors,
+            metrics: XomoComponentTheme.native.tokenSnapshot.metrics
+        )
+        var secondColors = firstColors
+        secondColors["accent"] = "#1D4ED8FF"
+        let secondSnapshot = XomoComponentThemeTokenSnapshot(
+            schemaVersion: 1,
+            theme: "local-brand-v2",
+            librarySource: "local",
+            colors: secondColors,
+            metrics: XomoComponentTheme.native.tokenSnapshot.metrics
+        )
+        let firstPath = FileManager.default.temporaryDirectory
+            .appendingPathComponent("xomo-automation-refresh-a-\(UUID().uuidString).xomotokens.json")
+        let secondPath = FileManager.default.temporaryDirectory
+            .appendingPathComponent("xomo-automation-refresh-b-\(UUID().uuidString).xomotokens.json")
+        defer {
+            try? FileManager.default.removeItem(at: firstPath)
+            try? FileManager.default.removeItem(at: secondPath)
+        }
+        try Data(firstSnapshot.encodedJSON().utf8).write(to: firstPath)
+        try Data(secondSnapshot.encodedJSON().utf8).write(to: secondPath)
+
+        #expect(registry.execute(request(
+            operation: "call",
+            name: "xomo.component.tokens",
+            arguments: ["action": .string("import"), "path": .string(firstPath.path)]
+        )).ok)
+        #expect(registry.execute(request(
+            operation: "call",
+            name: "xomo.component.insert",
+            arguments: ["component": .string("button")]
+        )).ok)
+        let group = try #require(viewModel.document.selectedLayer)
+        #expect(registry.execute(request(
+            operation: "call",
+            name: "xomo.component.tokens",
+            arguments: ["action": .string("import"), "path": .string(secondPath.path)]
+        )).ok)
+
+        let refreshed = registry.execute(request(
+            operation: "call",
+            name: "xomo.component.tokens",
+            arguments: ["action": .string("refresh")]
+        ))
+        #expect(refreshed.ok)
+        guard case .object(let result) = refreshed.result else {
+            Issue.record("Expected refresh result")
+            return
+        }
+        #expect(result["action"] == .string("refresh"))
+        #expect(result["count"] == .number(1))
+        #expect(viewModel.document.layers.first { $0.id == group.id }?.xomoComponentInstance?.tokenSnapshot == secondSnapshot)
+        #expect(viewModel.document.history.last?.title == L10n.format("xomo.theme.history.tokensRefreshed", 1))
+
+        viewModel.undo()
+        #expect(viewModel.document.layers.first { $0.id == group.id }?.xomoComponentInstance?.tokenSnapshot == firstSnapshot)
+    }
+
     @Test func registryCanInspectAndMutateTheActiveDocument() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

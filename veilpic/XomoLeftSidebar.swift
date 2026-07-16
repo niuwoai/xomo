@@ -277,6 +277,15 @@ struct XomoComponentLibraryPanel: View {
                     .accessibilityIdentifier("xomo-component-theme-clear-tokens")
                 }
 
+                Button(L10n.text("xomo.theme.refreshTokens")) {
+                    viewModel.refreshXomoThemeTokensInDocument()
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+                .focusable(false)
+                .disabled(!viewModel.canRefreshXomoThemeTokens)
+                .accessibilityIdentifier("xomo-component-theme-refresh-tokens")
+
                 HStack(spacing: 6) {
                     Button(L10n.text("xomo.theme.apply")) {
                         viewModel.applyXomoThemeToSelectedComponent()

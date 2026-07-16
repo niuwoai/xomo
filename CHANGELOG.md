@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc141 - 2026-07-16
+
+### Added
+- 新增“刷新已映射组件”能力：导入新的本地设计 Tokens 后，可一次刷新所有携带本地映射的 UI 组件，跳过内置主题和局部覆写，并将整批刷新作为一个 Undo/Redo 步骤。
+- `xomo.component.tokens` 新增 `action=refresh`，返回刷新组件数量，并与组件库 UI 共用同一套本地 Token 映射逻辑。
+
+### Verification
+- `XomoLeftSidebarTests` 43/43、`XomoAutomationTests` 39/39、`XomoMCPServerTests` 2/2 通过。
+
 ## 2.12.0-rc140 - 2026-07-16
 
 ### Verification

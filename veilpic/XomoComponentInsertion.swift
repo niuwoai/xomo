@@ -1436,6 +1436,53 @@ extension ImageEditorViewModel {
         statusText = L10n.format("xomo.theme.status.applied", component.title, xomoComponentTheme.title)
     }
 
+    var mappedXomoComponentGroupCount: Int {
+        document.layers.indices.reduce(into: 0) { count, index in
+            guard document.layers[index].isGroup,
+                  document.layers[index].xomoComponentInstance?.tokenSnapshot != nil,
+                  let component = xomoComponentKind(for: document.layers[index]),
+                  component.supportsThemeApplication
+            else { return }
+            count += 1
+        }
+    }
+
+    var canRefreshXomoThemeTokens: Bool {
+        hasLocalXomoThemeTokens && mappedXomoComponentGroupCount > 0
+    }
+
+    func refreshXomoThemeTokensInDocument() {
+        guard let tokenSnapshot = xomoLocalThemeTokenSnapshot else {
+            statusText = L10n.text("xomo.theme.status.noLocalTokens")
+            return
+        }
+        let groupIndices = document.layers.indices.filter { index in
+            guard document.layers[index].isGroup,
+                  document.layers[index].xomoComponentInstance?.tokenSnapshot != nil,
+                  let component = xomoComponentKind(for: document.layers[index])
+            else { return false }
+            return component.supportsThemeApplication
+        }
+        guard !groupIndices.isEmpty else {
+            statusText = L10n.text("xomo.theme.status.noMappedComponents")
+            return
+        }
+
+        pushUndo()
+        for groupIndex in groupIndices {
+            guard let component = xomoComponentKind(for: document.layers[groupIndex]) else { continue }
+            let mappedTheme = document.layers[groupIndex].xomoComponentInstance?.theme ?? xomoComponentTheme
+            applyXomoThemeToComponentGroup(
+                groupIndex,
+                component: component,
+                theme: mappedTheme,
+                tokenSnapshot: tokenSnapshot
+            )
+        }
+        appendHistory(L10n.format("xomo.theme.history.tokensRefreshed", groupIndices.count))
+        statusText = L10n.format("xomo.theme.status.tokensRefreshed", groupIndices.count)
+    }
+
     func toggleXomoThemeOverrideForSelectedLayers() {
         let selectedIndices = document.layers.indices.filter { document.selectedLayerIDs.contains(document.layers[$0].id) }
         let eligibleIndices = selectedIndices.filter { index in

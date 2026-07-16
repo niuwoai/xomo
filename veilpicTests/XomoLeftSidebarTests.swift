@@ -211,6 +211,75 @@ struct XomoLeftSidebarTests {
         #expect(!viewModel.hasLocalXomoThemeTokens)
     }
 
+    @Test func refreshingMappedComponentsUpdatesLocalTokensAsOneUndoableOperation() throws {
+        let base = XomoComponentTheme.native.tokenSnapshot
+        var firstColors = base.colors
+        firstColors["accent"] = "#801F4FFF"
+        let firstSnapshot = XomoComponentThemeTokenSnapshot(
+            schemaVersion: 1,
+            theme: "local-brand",
+            librarySource: "local",
+            colors: firstColors,
+            metrics: base.metrics
+        )
+        var secondColors = firstColors
+        secondColors["accent"] = "#1D4ED8FF"
+        let secondSnapshot = XomoComponentThemeTokenSnapshot(
+            schemaVersion: 1,
+            theme: "local-brand-v2",
+            librarySource: "local",
+            colors: secondColors,
+            metrics: base.metrics
+        )
+        let firstPath = FileManager.default.temporaryDirectory
+            .appendingPathComponent("xomo-local-token-refresh-a-\(UUID().uuidString).xomotokens.json")
+        let secondPath = FileManager.default.temporaryDirectory
+            .appendingPathComponent("xomo-local-token-refresh-b-\(UUID().uuidString).xomotokens.json")
+        defer {
+            try? FileManager.default.removeItem(at: firstPath)
+            try? FileManager.default.removeItem(at: secondPath)
+        }
+        try Data(firstSnapshot.encodedJSON().utf8).write(to: firstPath)
+        try Data(secondSnapshot.encodedJSON().utf8).write(to: secondPath)
+
+        let viewModel = ImageEditorViewModel(
+            sourceName: "local-token-refresh",
+            image: NSImage.transparent(size: CGSize(width: 640, height: 480))
+        ) { _ in }
+        try viewModel.importXomoThemeTokens(from: firstPath)
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 40, y: 60))
+        let firstGroup = try #require(viewModel.document.selectedLayer)
+        viewModel.insertXomoComponent(.input, at: CGPoint(x: 40, y: 140))
+        let secondGroup = try #require(viewModel.document.selectedLayer)
+        #expect(viewModel.mappedXomoComponentGroupCount == 2)
+
+        let overriddenIndex = try #require(viewModel.document.layers.firstIndex {
+            $0.groupID == firstGroup.id && $0.isShape
+        })
+        var overriddenLayer = viewModel.document.layers[overriddenIndex]
+        var overriddenContent = try #require(overriddenLayer.shapeContent)
+        overriddenContent.fillColor = NSColor.systemOrange
+        overriddenLayer.kind = .shape(overriddenContent)
+        overriddenLayer.isXomoThemeOverride = true
+        viewModel.document.layers[overriddenIndex] = overriddenLayer
+
+        try viewModel.importXomoThemeTokens(from: secondPath)
+        viewModel.refreshXomoThemeTokensInDocument()
+        #expect(viewModel.document.layers.first { $0.id == firstGroup.id }?.xomoComponentInstance?.tokenSnapshot == secondSnapshot)
+        #expect(viewModel.document.layers.first { $0.id == secondGroup.id }?.xomoComponentInstance?.tokenSnapshot == secondSnapshot)
+        #expect(viewModel.document.layers[overriddenIndex].shapeContent?.fillColor.isEqual(NSColor.systemOrange) == true)
+        let refreshedBackground = try #require(viewModel.document.layers.first {
+            $0.groupID == secondGroup.id && $0.isShape
+        })
+        #expect(refreshedBackground.shapeContent?.fillColor.isEqual(NSColor(deviceRed: 0x1D / 255, green: 0x4E / 255, blue: 0xD8 / 255, alpha: 1)) == true)
+        #expect(viewModel.document.history.last?.title == L10n.format("xomo.theme.history.tokensRefreshed", 2))
+
+        viewModel.undo()
+        #expect(viewModel.document.layers.first { $0.id == firstGroup.id }?.xomoComponentInstance?.tokenSnapshot == firstSnapshot)
+        #expect(viewModel.document.layers.first { $0.id == secondGroup.id }?.xomoComponentInstance?.tokenSnapshot == firstSnapshot)
+        #expect(viewModel.document.layers[overriddenIndex].isXomoThemeOverride == true)
+    }
+
     @Test func localTokenImportAndClearParticipateInUndoRedo() throws {
         let snapshot = XomoComponentTheme.native.tokenSnapshot
         let path = FileManager.default.temporaryDirectory
