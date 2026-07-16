@@ -1,10 +1,10 @@
 # 象墨（Xomo）产品概览
 
-> 最后更新：2026-07-17 | 当前版本：v2.12.0-rc176
+> 最后更新：2026-07-17 | 当前版本：v2.12.0-rc177
 
 ## 产品定位
 
-v2.12.0-rc176 让 Figma 导入图层保留源节点 ID 与节点类型，并随 Xomo 项目保存、重开，为后续组件语义编辑提供稳定锚点；rc175 将 Figma BOOLEAN_OPERATION 的最终几何路径导入为可编辑矢量，并避免重复生成源子图层；同时明确保留“已展平”的部分保真提示。rc174 补齐 PSD 剪贴蒙版链的导出、重新导入和项目保存重开回归，连续剪贴层、基底关系、透明度与选择状态保持；rc173 让 Figma SECTION 节点作为可编辑组导入，并保留 SECTION 的渐变背景；rc172 修复 PSD 栅格蒙版 alpha 精确导出，复杂蒙版现在可无损往返；rc171 的 ZIP 通道 zlib 头处理、rc170 的 EngineData 字体名修复、rc169 的矢量蒙版子路径对齐、rc168 的命名路径修复、rc167 的组件库系统箭头与工具语义指针、rc166 的 PSD Spot 通道往返、rc165 的 Figma Background Blur、rc164 的 Layer Blur、rc163 的 Drop Shadow/Inner Shadow、rc157 的 PSD 基础文字层双向交换与 rc154 的闭合原生矢量蒙版导出仍保留。
+v2.12.0-rc177 让属性面板显示并复制 Figma 导入图层的源节点类型与 ID；rc176 让 Figma 导入图层保留源节点 ID 与节点类型，并随 Xomo 项目保存、重开，为后续组件语义编辑提供稳定锚点；rc175 将 Figma BOOLEAN_OPERATION 的最终几何路径导入为可编辑矢量，并避免重复生成源子图层；同时明确保留“已展平”的部分保真提示。rc174 补齐 PSD 剪贴蒙版链的导出、重新导入和项目保存重开回归，连续剪贴层、基底关系、透明度与选择状态保持；rc173 让 Figma SECTION 节点作为可编辑组导入，并保留 SECTION 的渐变背景；rc172 修复 PSD 栅格蒙版 alpha 精确导出，复杂蒙版现在可无损往返；rc171 的 ZIP 通道 zlib 头处理、rc170 的 EngineData 字体名修复、rc169 的矢量蒙版子路径对齐、rc168 的命名路径修复、rc167 的组件库系统箭头与工具语义指针、rc166 的 PSD Spot 通道往返、rc165 的 Figma Background Blur、rc164 的 Layer Blur、rc163 的 Drop Shadow/Inner Shadow、rc157 的 PSD 基础文字层双向交换与 rc154 的闭合原生矢量蒙版导出仍保留。
 
 v2.12.0-rc146 让多选图层中的 Figma 变量绑定可以一次稳定读取和复制：重复绑定按稳定 ID 去重，属性面板、MCP 和 CLI 使用同一批量逻辑，仍只写入本机剪贴板，不向 Figma 云端回写。
 

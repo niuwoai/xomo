@@ -698,6 +698,25 @@ final class ImageEditorViewModel: ObservableObject {
         !selectedLayerFigmaVariableBindings.isEmpty
     }
 
+    var selectedLayerFigmaSourceID: String? {
+        document.selectedLayer?.xomoFigmaSourceID
+    }
+
+    var selectedLayerFigmaNodeType: String? {
+        document.selectedLayer?.xomoFigmaNodeType
+    }
+
+    func copySelectedFigmaSourceReference() {
+        guard let sourceID = selectedLayerFigmaSourceID,
+              !sourceID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        else { return }
+        let nodeType = selectedLayerFigmaNodeType ?? ""
+        let value = nodeType.isEmpty ? sourceID : "\(nodeType):\(sourceID)"
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(value, forType: .string)
+        statusText = L10n.text("imageEditor.status.figmaSourceCopied")
+    }
+
     func copyFigmaVariableBinding(_ binding: XomoFigmaVariableBinding) {
         let value = binding.variableID.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !value.isEmpty else { return }

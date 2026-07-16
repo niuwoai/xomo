@@ -2873,6 +2873,10 @@
 "imageEditor.properties.figmaVariables" = "Figma 变量绑定";
 "imageEditor.status.figmaVariableCopied" = "已复制 %@ 变量 ID";
 "imageEditor.status.figmaVariablesCopied" = "已复制 Figma 变量 ID";
+"imageEditor.properties.figmaSource" = "Figma 源节点";
+"imageEditor.properties.figmaSourceType" = "节点类型";
+"imageEditor.action.copyFigmaSource" = "复制源节点引用";
+"imageEditor.status.figmaSourceCopied" = "已复制 Figma 源节点引用";
 "xomo.figma.resource.design" = "Figma Design";
 "xomo.figma.resource.legacyFile" = "Figma Design（旧版链接）";
 "xomo.figma.resource.prototype" = "Figma 原型";

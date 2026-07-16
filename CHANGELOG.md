@@ -1,12 +1,23 @@
 # Changelog
 
+## 2.12.0-rc177 - 2026-07-17
+
+### Added
+- 属性面板现在显示选中 Figma 图层的源节点类型与 ID，并支持复制 `节点类型:节点 ID` 引用，方便从设计稿回溯来源。
+
+### Changed
+- 校正 rc173、rc175、rc176 的 Figma 专项报告计数，使报告包含 `@Test nonisolated` 测试。
+
+### Verification
+- Figma 相关专项合计 30/30 通过；`XomoMCPServerTests` CLI 2/2 通过。
+
 ## 2.12.0-rc176 - 2026-07-17
 
 ### Added
 - Figma 导入图层现在保留源节点 ID 与节点类型，并随 Xomo 项目保存、重开，给后续组件语义和源节点回溯留出稳定锚点。
 
 ### Verification
-- Figma 节点导入专项 28/28 通过；`XomoMCPServerTests` CLI 2/2 通过。
+- Figma 节点导入专项 30/30 通过（含源节点属性专项）；`XomoMCPServerTests` CLI 2/2 通过。
 
 ## 2.12.0-rc175 - 2026-07-17
 
@@ -14,7 +25,7 @@
 - Figma `BOOLEAN_OPERATION` 节点现在使用最终几何路径导入为可编辑矢量，并明确标记为“已展平”，同时不再重复生成布尔运算的源子图层。
 
 ### Verification
-- Figma 节点导入专项 28/28 通过；`XomoMCPServerTests` CLI 2/2 通过。
+- Figma 节点导入专项 29/29 通过；`XomoMCPServerTests` CLI 2/2 通过。
 
 ## 2.12.0-rc174 - 2026-07-17
 
@@ -30,7 +41,7 @@
 - Figma `SECTION` 节点现在按可编辑组导入，并保留其线性/径向渐变背景，不再被错误标记为不支持节点。
 
 ### Verification
-- Figma 节点导入专项 27/27 通过；`XomoMCPServerTests` CLI 2/2 通过。
+- Figma 节点导入专项 28/28 通过；`XomoMCPServerTests` CLI 2/2 通过。
 
 ## 2.12.0-rc172 - 2026-07-17
 

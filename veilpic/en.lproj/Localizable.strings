@@ -2873,6 +2873,10 @@
 "imageEditor.properties.figmaVariables" = "Figma variable bindings";
 "imageEditor.status.figmaVariableCopied" = "Copied %@ variable ID";
 "imageEditor.status.figmaVariablesCopied" = "Copied Figma variable IDs";
+"imageEditor.properties.figmaSource" = "Figma source node";
+"imageEditor.properties.figmaSourceType" = "Node type";
+"imageEditor.action.copyFigmaSource" = "Copy source reference";
+"imageEditor.status.figmaSourceCopied" = "Figma source reference copied";
 "xomo.figma.resource.design" = "Figma Design";
 "xomo.figma.resource.legacyFile" = "Figma Design (legacy link)";
 "xomo.figma.resource.prototype" = "Figma Prototype";

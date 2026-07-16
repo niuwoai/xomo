@@ -4253,6 +4253,41 @@ struct ImageEditorView: View {
                     Divider().overlay(editorBorder)
                 }
 
+                if let sourceID = viewModel.selectedLayerFigmaSourceID {
+                    VStack(alignment: .leading, spacing: 7) {
+                        HStack(spacing: 8) {
+                            Text(L10n.text("imageEditor.properties.figmaSource"))
+                                .font(.system(size: 11, weight: .bold))
+                                .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                            Spacer(minLength: 4)
+                            Button(L10n.text("imageEditor.action.copyFigmaSource")) {
+                                viewModel.copySelectedFigmaSourceReference()
+                            }
+                            .buttonStyle(EditorTextButtonStyle())
+                            .focusable(false)
+                            .accessibilityIdentifier("image-editor-copy-figma-source")
+                        }
+
+                        HStack(spacing: 7) {
+                            Text(L10n.text("imageEditor.properties.figmaSourceType"))
+                                .font(.system(size: 10, weight: .medium))
+                                .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+                            Text(viewModel.selectedLayerFigmaNodeType ?? "—")
+                                .font(.system(size: 10, design: .monospaced))
+                                .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                            Spacer(minLength: 0)
+                        }
+
+                        Text(sourceID)
+                            .font(.system(size: 10, design: .monospaced))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                    }
+
+                    Divider().overlay(editorBorder)
+                }
+
                 Divider().overlay(editorBorder)
 
                 if viewModel.selectedLayerIsShape {
