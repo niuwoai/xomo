@@ -30,6 +30,13 @@ enum XomoFigmaNodeMaterializer {
         var emittedSourceIDs = Set<String>()
         var omittedCount = 0
 
+        func omitMaterializedSubtree(_ item: XomoFigmaNodeImportItem) {
+            guard emittedSourceIDs.insert(item.sourceID).inserted else { return }
+            for child in childrenByParent[item.sourceID] ?? [] {
+                omitMaterializedSubtree(child)
+            }
+        }
+
         func parentGroupID(for item: XomoFigmaNodeImportItem) -> UUID? {
             var candidate = item.parentSourceID
             var visited = Set<String>()
@@ -50,8 +57,14 @@ enum XomoFigmaNodeMaterializer {
                ) {
                 layers.append(background)
             }
-            for child in childrenByParent[item.sourceID] ?? [] {
-                emit(child)
+            if item.sourceType != "BOOLEAN_OPERATION" {
+                for child in childrenByParent[item.sourceID] ?? [] {
+                    emit(child)
+                }
+            } else {
+                for child in childrenByParent[item.sourceID] ?? [] {
+                    omitMaterializedSubtree(child)
+                }
             }
             guard let layer = makeLayer(
                 item: item,

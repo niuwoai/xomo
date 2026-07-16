@@ -2981,6 +2981,7 @@
 "xomo.figma.node.issue.imageFiltersBaked" = "图片滤镜已近似烘焙为像素，导入后不可单独编辑";
 "xomo.figma.node.issue.vectorGeometryMissing" = "缺少矢量路径数据";
 "xomo.figma.node.issue.vectorGeometryUnsupported" = "矢量路径包含无法解析的命令";
+"xomo.figma.node.issue.booleanOperationFlattened" = "布尔运算已展平为可编辑矢量路径";
 "xomo.figma.node.issue.componentSemanticsFlattened" = "组件语义暂按普通组处理";
 "xomo.figma.node.issue.autoLayoutFlattened" = "基线或尚未支持的换行轨道分布暂按固定位置处理";
 "xomo.figma.node.issue.maskFlattened" = "蒙版关系尚未保留";

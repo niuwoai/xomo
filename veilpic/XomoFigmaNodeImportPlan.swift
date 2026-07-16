@@ -34,6 +34,7 @@ enum XomoFigmaNodeMappingIssue: String, CaseIterable, Sendable {
     case imageFiltersBaked
     case vectorGeometryMissing
     case vectorGeometryUnsupported
+    case booleanOperationFlattened
     case componentSemanticsFlattened
     case autoLayoutFlattened
     case maskFlattened

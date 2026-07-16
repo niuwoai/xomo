@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc175 - 2026-07-17
+
+### Added
+- Figma `BOOLEAN_OPERATION` 节点现在使用最终几何路径导入为可编辑矢量，并明确标记为“已展平”，同时不再重复生成布尔运算的源子图层。
+
+### Verification
+- Figma 节点导入专项 28/28 通过；`XomoMCPServerTests` CLI 2/2 通过。
+
 ## 2.12.0-rc174 - 2026-07-17
 
 ### Fixed

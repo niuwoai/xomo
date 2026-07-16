@@ -526,9 +526,12 @@ enum XomoFigmaNodeImportMapper {
         case "ELLIPSE":
             inspectPaints(node: node, allowsGradientFill: true, issues: &issues)
             return (.ellipse, false)
-        case "VECTOR", "LINE", "STAR", "REGULAR_POLYGON":
+        case "BOOLEAN_OPERATION", "VECTOR", "LINE", "STAR", "REGULAR_POLYGON":
             if geometryPaths(node).isEmpty {
                 issues.append(.vectorGeometryMissing)
+            }
+            if node.type == "BOOLEAN_OPERATION" {
+                issues.append(.booleanOperationFlattened)
             }
             inspectPaints(node: node, allowsGradientFill: true, issues: &issues)
             return (.vector, false)
@@ -746,7 +749,7 @@ enum XomoFigmaNodeImportMapper {
     private static func supportsGradientFill(_ nodeType: String) -> Bool {
         [
             "SECTION", "FRAME", "GROUP", "COMPONENT", "COMPONENT_SET", "INSTANCE",
-            "RECTANGLE", "ELLIPSE", "VECTOR", "STAR", "REGULAR_POLYGON"
+            "RECTANGLE", "ELLIPSE", "VECTOR", "STAR", "REGULAR_POLYGON", "BOOLEAN_OPERATION"
         ].contains(nodeType)
     }
 

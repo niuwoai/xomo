@@ -2981,6 +2981,7 @@
 "xomo.figma.node.issue.imageFiltersBaked" = "画像フィルターは近似的にピクセルへベイクされ、読み込み後は個別編集できません";
 "xomo.figma.node.issue.vectorGeometryMissing" = "ベクターパスデータがありません";
 "xomo.figma.node.issue.vectorGeometryUnsupported" = "ベクターパスに解析できないコマンドがあります";
+"xomo.figma.node.issue.booleanOperationFlattened" = "ブール演算を編集可能なベクターパスに展開しました";
 "xomo.figma.node.issue.componentSemanticsFlattened" = "コンポーネント意味論は通常グループとして扱います";
 "xomo.figma.node.issue.autoLayoutFlattened" = "ベースラインまたは未対応の折り返しトラック配置は固定位置として扱います";
 "xomo.figma.node.issue.maskFlattened" = "マスク関係はまだ保持されません";

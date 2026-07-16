@@ -2981,6 +2981,7 @@
 "xomo.figma.node.issue.imageFiltersBaked" = "Image filters are approximately baked into pixels and are not separately editable after import";
 "xomo.figma.node.issue.vectorGeometryMissing" = "Vector path data is missing";
 "xomo.figma.node.issue.vectorGeometryUnsupported" = "Vector path contains an unsupported command";
+"xomo.figma.node.issue.booleanOperationFlattened" = "Boolean operation is flattened to an editable vector path";
 "xomo.figma.node.issue.componentSemanticsFlattened" = "Component semantics will be treated as a regular group";
 "xomo.figma.node.issue.autoLayoutFlattened" = "Baseline or unsupported wrapped-track distribution uses fixed positioning";
 "xomo.figma.node.issue.maskFlattened" = "Mask relationships are not preserved yet";

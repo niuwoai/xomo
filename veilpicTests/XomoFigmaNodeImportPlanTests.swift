@@ -398,6 +398,63 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(background.shapeContent?.fillGradient?.shapeColorStops.count == 2)
     }
 
+    @Test func mapperFlattensBooleanOperationToEditableVectorWithoutDuplicateChildren() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                """
+                {
+                  "name": "Boolean Shapes",
+                  "nodes": {
+                    "1:60": {
+                      "document": {
+                        "id": "1:60",
+                        "name": "Union Result",
+                        "type": "BOOLEAN_OPERATION",
+                        "absoluteBoundingBox": {"x": 0, "y": 0, "width": 120, "height": 80},
+                        "fills": [{"type": "SOLID", "color": {"r": 0.2, "g": 0.5, "b": 0.9, "a": 1}}],
+                        "fillGeometry": [{"path": "M 0 0 L 120 0 L 120 80 L 0 80 Z"}],
+                        "children": [
+                          {
+                            "id": "2:60",
+                            "name": "Union Source A",
+                            "type": "ELLIPSE",
+                            "absoluteBoundingBox": {"x": 0, "y": 0, "width": 80, "height": 80}
+                          },
+                          {
+                            "id": "2:61",
+                            "name": "Union Source B",
+                            "type": "ELLIPSE",
+                            "absoluteBoundingBox": {"x": 40, "y": 0, "width": 80, "height": 80}
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+                """.utf8
+            )
+        )
+
+        let plan = try XomoFigmaNodeImportMapper.makePlan(response: response, requestedNodeID: "1:60")
+        let operation = try #require(plan.items.first { $0.sourceID == "1:60" })
+        #expect(operation.targetKind == .vector)
+        #expect(operation.fidelity == .partial)
+        #expect(operation.issues.contains(.booleanOperationFlattened))
+        #expect(operation.vectorPaths == ["M 0 0 L 120 0 L 120 80 L 0 80 Z"])
+
+        let materialized = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: CGSize(width: 240, height: 160)
+        )
+        #expect(materialized.omittedCount == 0)
+        #expect(materialized.layers.count == 1)
+        let result = try #require(materialized.layers.first)
+        #expect(result.name == "Union Result")
+        #expect(result.shapeContent?.kind == .path)
+        #expect(result.shapeContent?.pathAnchors.count == 4)
+    }
+
     @Test func mapperReportsPartialImageComponentLayoutAndUnsupportedNodes() async throws {
         let transport = RecordingFigmaNodeTransport(statusCode: 200, body: Self.validNodeResponse)
         let client = XomoFigmaNodeContentAPIClient(transport: transport)
