@@ -1,10 +1,10 @@
 # 象墨 PSD 支持说明
 
-> 最后更新：2026-07-17 ｜ 对应版本：v2.12.0-rc153
+> 最后更新：2026-07-17 ｜ 对应版本：v2.12.0-rc154
 
 ## 1. 结论
 
-象墨当前已经可以可靠处理以像素图层为主的常见 PSD，并保留基础图层结构、嵌套组、栅格蒙版、混合模式、Fill 不透明度和锁定状态。Raw、RLE、ZIP、ZIP Prediction 四种 8-bit 通道压缩均可读取。对能解析 TySh/EngineData 的基础文字层，还会生成 Xomo 原生可编辑文字层，读取一组基础字符与段落样式，并保留段落文本框边界；简单 vmsk/vsms 闭合路径和 Image Resources 中的 Path Resource 也会进入原生路径模型，命名路径还能写回 PSD。
+象墨当前已经可以可靠处理以像素图层为主的常见 PSD，并保留基础图层结构、嵌套组、栅格蒙版、混合模式、Fill 不透明度和锁定状态。Raw、RLE、ZIP、ZIP Prediction 四种 8-bit 通道压缩均可读取。对能解析 TySh/EngineData 的基础文字层，还会生成 Xomo 原生可编辑文字层，读取一组基础字符与段落样式，并保留段落文本框边界；简单 vmsk/vsms 闭合路径、Image Resources 中的 Path Resource 以及结构完整的原生矢量蒙版也支持导入导出。
 
 这还不是“完整 Photoshop 语义兼容”。复杂文字变换、逐字符样式、矢量形状、智能对象、调整层、图层效果和填充层等 Photoshop 专有对象，仍不能完整保留为同类可编辑对象。打开 PSD 后，象墨会生成兼容性报告，明确列出文件中被栅格化、忽略或降级的内容。
 
@@ -62,7 +62,7 @@
 | 栅格蒙版 | 支持 | 写入蒙版像素、启用/停用和链接状态。象墨中的密度、羽化会烘焙进有效蒙版像素，不会保存为独立 Photoshop 参数。 |
 | 文字、形状、智能对象 | 栅格化导出 | 视觉内容进入普通像素层，不保留原对象语义。 |
 | 命名路径 | 支持 | 写入 Image Resources 的 Path Resource，保留名称、闭合/开放状态、多子路径和 Bézier 控制柄。 |
-| 矢量蒙版 | 栅格化导出 | 以有效栅格蒙版写出。 |
+| 矢量蒙版 | 部分支持 | 结构完整的闭合路径写入图层 `vmsk`，保留子路径、控制柄和启用状态；开放路径、反相/断链及复杂记录栅格化导出。 |
 | 图层效果 | 烘焙到像素 | 效果参数不写入 Photoshop 图层效果块。 |
 | 调整层、滤镜层 | 不作为独立图层写出 | 最终合成图包含当前文档视觉结果，但可编辑的调整/滤镜层记录会省略。 |
 | ICC、路径、参考线、切片等元数据 | 暂不写出 | 导出的 PSD 以画布、像素和图层结构为主。 |
@@ -90,12 +90,12 @@
 
 - 夹具与说明：[`veilpicTests/Fixtures/PSD`](../veilpicTests/Fixtures/PSD)
 - 夹具生成器：[`scripts/generate_psd_compatibility_fixtures.rb`](../scripts/generate_psd_compatibility_fixtures.rb)
-- PSD 测试报告：[`test-reports/rc153-psd-suite/report.md`](../test-reports/rc153-psd-suite/report.md)
-- PSD 命名路径导出定向报告：[`test-reports/rc153-psd-export-paths/report.md`](../test-reports/rc153-psd-export-paths/report.md)
+- PSD 测试报告：[`test-reports/rc154-psd-suite/report.md`](../test-reports/rc154-psd-suite/report.md)
+- PSD 原生矢量蒙版导出定向报告：[`test-reports/rc154-vector-mask-export/report.md`](../test-reports/rc154-vector-mask-export/report.md)
 - 外部打开测试报告：[`test-reports/rc145-external-open/report.md`](../test-reports/rc145-external-open/report.md)
 - 本地化测试报告：[`test-reports/rc145-localization/report.md`](../test-reports/rc145-localization/report.md)
 
-rc153 的 PSD 定向验证结果为：PSD 专项 13/13、命名路径导出 1/1，复杂 vmsk 安全降级由专项回归覆盖，Debug `build-for-testing` 通过。
+rc154 的 PSD 定向验证结果为：PSD 专项 14/14、原生矢量蒙版导出 1/1，开放/复杂路径安全回退由专项回归覆盖，Debug `build-for-testing` 通过。
 
 ## 7. 使用建议
 
@@ -109,7 +109,7 @@ rc153 的 PSD 定向验证结果为：PSD 专项 13/13、命名路径导出 1/1�
 下一阶段不建议同时追求所有 Photoshop 私有结构。按用户价值和实现风险排序：
 
 1. 可编辑文字层：继续扩展段落框尺寸/溢出语义、逐字符混排和安全的 PSD 文字导出；当前从 Xomo 项目导出 PSD 仍会栅格化文字。
-2. 可编辑矢量形状与矢量蒙版：继续扩展路径资源的复杂记录、文字/路径导出和更完整的 PSD 矢量形状交换；当前复杂 vmsk、反相/断链路径仍安全栅格化。
+2. 可编辑矢量形状与矢量蒙版：继续扩展复杂 vmsk、矢量形状和文字/路径交换；当前开放、反相/断链路径仍安全栅格化。
 3. 智能对象的安全栅格回退与元数据保留：先允许重新定位原始内容，再考虑嵌套编辑。
 4. 常用调整层：优先 Levels、Curves、Hue/Saturation，并为无法映射的参数继续保留明确报告。
 5. 颜色管理、16-bit 和 PSB：这些会牵动渲染、内存与项目模型，应作为独立工程阶段处理。

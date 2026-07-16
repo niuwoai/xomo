@@ -91,6 +91,55 @@ struct ImageEditorPSDTests {
         #expect(abs(restoredGuide.subpaths[0][1].point.y - 17) < 0.01)
     }
 
+    @Test func psdExportPreservesNativeVectorMaskAndEnabledState() throws {
+        let canvasSize = CGSize(width: 32, height: 24)
+        var document = ImageEditorDocument(
+            sourceName: "vector-mask.png",
+            image: psdSolidImage(color: .white, size: canvasSize)
+        )
+        var layer = ImageEditorLayer.blank(name: "Vector Mask Layer", size: canvasSize)
+        layer.frame = CGRect(origin: .zero, size: canvasSize)
+        layer.vectorMask = ImageEditorShapeContent(
+            kind: .path,
+            fillColor: .white,
+            fillOpacity: 1,
+            strokeColor: .clear,
+            strokeWidth: 1,
+            strokeOpacity: 0,
+            pathPoints: [
+                CGPoint(x: 4, y: 4),
+                CGPoint(x: 28, y: 4),
+                CGPoint(x: 16, y: 20)
+            ],
+            pathAnchors: [
+                ImageEditorPathAnchor(point: CGPoint(x: 4, y: 4)),
+                ImageEditorPathAnchor(point: CGPoint(x: 28, y: 4)),
+                ImageEditorPathAnchor(point: CGPoint(x: 16, y: 20))
+            ],
+            pathSubpaths: [[
+                ImageEditorPathAnchor(point: CGPoint(x: 12, y: 8)),
+                ImageEditorPathAnchor(point: CGPoint(x: 20, y: 8)),
+                ImageEditorPathAnchor(point: CGPoint(x: 16, y: 14))
+            ]],
+            isPathClosed: true
+        )
+        layer.isVectorMaskEnabled = false
+        document.layers = [layer]
+
+        let data = try ImageEditorPSDCodec.encode(document: document)
+        let restored = try ImageEditorPSDCodec.decode(data, sourceName: "vector-mask.psd")
+        let restoredMask = try #require(restored.layers.first?.vectorMask)
+
+        #expect(restoredMask.kind == .path)
+        #expect(restoredMask.isPathClosed)
+        #expect(restoredMask.editablePathAnchors.count == 3)
+        #expect(restoredMask.editablePathSubpaths.count == 1)
+        #expect(!restored.layers[0].isVectorMaskEnabled)
+        #expect(abs(restoredMask.editablePathAnchors[1].point.x - 28) < 0.01)
+        let report = try ImageEditorPSDCodec.compatibilityReport(data)
+        #expect(!report.issues.contains { $0.kind == .vectorRasterized })
+    }
+
     @Test func psdRejectsUnsupportedBitDepth() throws {
         let document = ImageEditorDocument(
             sourceName: "tiny.png",

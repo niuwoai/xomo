@@ -1,0 +1,19 @@
+{
+  "generated_at": "2026-07-17 02:41:11 +0800",
+  "total": 1,
+  "passed": 1,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorPSDTests",
+      "method": "psdExportPreservesNativeVectorMaskAndEnabledState",
+      "identifier": "veilpicTests/ImageEditorPSDTests/psdExportPreservesNativeVectorMaskAndEnabledState",
+      "file": "ImageEditorPSDTests.swift",
+      "passed": true,
+      "duration": 3.834,
+      "issues": [],
+      "log": "ImageEditorPSDTests.psdExportPreservesNativeVectorMaskAndEnabledState.log"
+    }
+  ]
+}

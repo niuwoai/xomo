@@ -719,7 +719,10 @@ enum ImageEditorPSDCodec {
             PSDExportChannel(identifier: 1, data: rgba.green),
             PSDExportChannel(identifier: 2, data: rgba.blue)
         ]
-        let mask = exportMask(layer: layer, frame: frame)
+        let vectorMask = exportVectorMask(layer: layer)
+        let mask = layer.mask != nil || vectorMask == nil
+            ? exportMask(layer: layer, frame: frame)
+            : nil
         if let mask { channels.append(PSDExportChannel(identifier: -2, data: mask.alpha)) }
         return PSDExportLayer(
             name: layer.name,
@@ -736,7 +739,8 @@ enum ImageEditorPSDCodec {
             locksPosition: layer.locksPosition,
             locksTransparentPixels: layer.locksTransparentPixels,
             sectionType: nil,
-            mask: mask
+            mask: mask,
+            vectorMask: vectorMask
         )
     }
 
@@ -764,8 +768,51 @@ enum ImageEditorPSDCodec {
             locksPosition: layer.locksPosition,
             locksTransparentPixels: layer.locksTransparentPixels,
             sectionType: layer.isGroupExpanded ? 1 : 2,
-            mask: mask
+            mask: mask,
+            vectorMask: nil
         )
+    }
+
+    private static func exportVectorMask(layer: ImageEditorLayer) -> PSDExportVectorMask? {
+        guard let content = layer.vectorMask,
+              content.kind == .path,
+              content.isPathClosed
+        else { return nil }
+        let size = CGSize(width: max(1, layer.image.size.width), height: max(1, layer.image.size.height))
+        let normalized = content.normalized(size: size)
+        let subpaths = normalized.allEditablePathSubpaths
+        guard !subpaths.isEmpty,
+              subpaths.allSatisfy({ $0.count >= 3 })
+        else { return nil }
+        var payload = Data()
+        payload.appendUInt32(3)
+        payload.appendUInt32(layer.isVectorMaskEnabled ? 0 : 4)
+        payload.appendUInt16(6)
+        payload.append(Data(repeating: 0, count: 24))
+        for anchors in subpaths {
+            guard let count = UInt16(exactly: anchors.count) else { return nil }
+            payload.appendUInt16(0)
+            payload.appendUInt16(count)
+            payload.append(Data(repeating: 0, count: 20))
+            for (index, anchor) in anchors.enumerated() {
+                payload.appendUInt16(index == 0 ? 1 : 2)
+                appendVectorPathPoint(anchor.inControl ?? anchor.point, size: size, to: &payload)
+                appendVectorPathPoint(anchor.point, size: size, to: &payload)
+                appendVectorPathPoint(anchor.outControl ?? anchor.point, size: size, to: &payload)
+            }
+        }
+        return PSDExportVectorMask(data: payload)
+    }
+
+    private static func appendVectorPathPoint(
+        _ point: CGPoint,
+        size: CGSize,
+        to data: inout Data
+    ) {
+        let normalizedX = size.width > 0 ? point.x / size.width : 0
+        let normalizedY = size.height > 0 ? point.y / size.height : 0
+        data.appendInt32(Int32((Double(normalizedY) * 16_777_216).rounded()))
+        data.appendInt32(Int32((Double(normalizedX) * 16_777_216).rounded()))
     }
 
     private static func exportMask(layer: ImageEditorLayer, frame: CGRect) -> PSDExportMask? {
@@ -833,6 +880,7 @@ enum ImageEditorPSDCodec {
         if let sectionType = item.sectionType {
             extra.appendSectionDivider(type: sectionType, blendMode: item.blendMode)
         }
+        extra.appendVectorMask(item.vectorMask)
         record.appendUInt32(UInt32(extra.count))
         record.append(extra)
         return record
@@ -1744,6 +1792,7 @@ private struct PSDExportLayer {
     let locksTransparentPixels: Bool
     let sectionType: Int?
     let mask: PSDExportMask?
+    let vectorMask: PSDExportVectorMask?
 
     static func groupDivider(canvasHeight: Int) -> PSDExportLayer {
         PSDExportLayer(
@@ -1761,7 +1810,8 @@ private struct PSDExportLayer {
             locksPosition: false,
             locksTransparentPixels: false,
             sectionType: 3,
-            mask: nil
+            mask: nil,
+            vectorMask: nil
         )
     }
 }
@@ -1775,6 +1825,10 @@ private struct PSDExportMask {
     let alpha: Data
     let isEnabled: Bool
     let isLinked: Bool
+}
+
+private struct PSDExportVectorMask {
+    let data: Data
 }
 
 nonisolated private struct PSDParsedDocument: @unchecked Sendable {
@@ -2146,6 +2200,15 @@ private extension Data {
         appendUInt32(UInt32(type))
         appendASCII("8BIM")
         appendASCII(blendMode.psdKey)
+    }
+
+    mutating func appendVectorMask(_ mask: PSDExportVectorMask?) {
+        guard let mask else { return }
+        appendASCII("8BIM")
+        appendASCII("vmsk")
+        appendUInt32(UInt32(mask.data.count))
+        append(mask.data)
+        if mask.data.count % 2 != 0 { append(0) }
     }
 }
 
