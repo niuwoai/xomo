@@ -9,7 +9,7 @@ import AppKit
 import Foundation
 import UniformTypeIdentifiers
 
-enum ImageEditorPSDCodecError: LocalizedError {
+nonisolated enum ImageEditorPSDCodecError: LocalizedError, Sendable {
     case invalidFile
     case unsupportedDocument
     case unsupportedCompression
@@ -96,6 +96,23 @@ enum ImageEditorPSDCodec {
     }
 
     static func decode(_ data: Data, sourceName: String) throws -> ImageEditorDocument {
+        try materialize(parse(data), sourceName: sourceName)
+    }
+
+    static func decodeAsync(
+        _ data: Data,
+        sourceName: String,
+        onWillMaterialize: @MainActor @escaping () -> Void
+    ) async throws -> ImageEditorDocument {
+        let parsed = try await Task.detached(priority: .userInitiated) {
+            try parse(data)
+        }.value
+        try Task.checkCancellation()
+        onWillMaterialize()
+        return try await materializeAsync(parsed, sourceName: sourceName)
+    }
+
+    nonisolated private static func parse(_ data: Data) throws -> PSDParsedDocument {
         var reader = PSDReader(data: data)
         guard try reader.ascii(count: 4) == "8BPS", try reader.uint16() == 1 else {
             throw ImageEditorPSDCodecError.invalidFile
@@ -114,7 +131,7 @@ enum ImageEditorPSDCodec {
 
         let layerAndMaskLength = Int(try reader.uint32())
         let layerAndMaskEnd = try reader.checkedEnd(length: layerAndMaskLength)
-        var decodedLayers: [ImageEditorLayer] = []
+        var decodedLayers: [PSDParsedLayer] = []
         if layerAndMaskLength >= 4 {
             let layerInfoLength = Int(try reader.uint32())
             let layerInfoEnd = min(try reader.checkedEnd(length: layerInfoLength), layerAndMaskEnd)
@@ -128,9 +145,7 @@ enum ImageEditorPSDCodec {
                 }
                 for record in records {
                     let channels = try readLayerChannels(&reader, record: record)
-                    if let layer = makeLayer(record: record, channels: channels, canvasHeight: height) {
-                        decodedLayers.append(layer)
-                    }
+                    decodedLayers.append(PSDParsedLayer(record: record, channels: channels))
                 }
             }
             reader.offset = layerInfoEnd
@@ -138,15 +153,12 @@ enum ImageEditorPSDCodec {
         reader.offset = layerAndMaskEnd
 
         if !decodedLayers.isEmpty {
-            var document = ImageEditorDocument(
-                sourceName: sourceName,
-                image: NSImage.transparent(size: CGSize(width: width, height: height))
+            return PSDParsedDocument(
+                width: width,
+                height: height,
+                layers: decodedLayers,
+                composite: nil
             )
-            document.layers = decodedLayers.reversed()
-            document.selectedLayerID = document.layers.last?.id
-            document.selectedLayerIDs = Set(document.layers.last.map { [$0.id] } ?? [])
-            document.history = [ImageEditorHistoryEntry(title: L10n.text("imageEditor.history.psdOpen"))]
-            return document
         }
 
         let composite = try readCompositeChannels(
@@ -155,7 +167,72 @@ enum ImageEditorPSDCodec {
             height: height,
             channelCount: channelCount
         )
-        guard let image = imageFromChannels(composite, width: width, height: height) else {
+        return PSDParsedDocument(
+            width: width,
+            height: height,
+            layers: [],
+            composite: composite
+        )
+    }
+
+    private static func materialize(
+        _ parsed: PSDParsedDocument,
+        sourceName: String
+    ) throws -> ImageEditorDocument {
+        let decodedLayers = parsed.layers.compactMap {
+            makeLayer(record: $0.record, channels: $0.channels, canvasHeight: parsed.height)
+        }
+        return try materializedDocument(
+            parsed: parsed,
+            decodedLayers: decodedLayers,
+            sourceName: sourceName
+        )
+    }
+
+    private static func materializeAsync(
+        _ parsed: PSDParsedDocument,
+        sourceName: String
+    ) async throws -> ImageEditorDocument {
+        var decodedLayers: [ImageEditorLayer] = []
+        decodedLayers.reserveCapacity(parsed.layers.count)
+        for item in parsed.layers {
+            try Task.checkCancellation()
+            if let layer = makeLayer(
+                record: item.record,
+                channels: item.channels,
+                canvasHeight: parsed.height
+            ) {
+                decodedLayers.append(layer)
+            }
+            await Task.yield()
+        }
+        return try materializedDocument(
+            parsed: parsed,
+            decodedLayers: decodedLayers,
+            sourceName: sourceName
+        )
+    }
+
+    private static func materializedDocument(
+        parsed: PSDParsedDocument,
+        decodedLayers: [ImageEditorLayer],
+        sourceName: String
+    ) throws -> ImageEditorDocument {
+        if !decodedLayers.isEmpty {
+            var document = ImageEditorDocument(
+                sourceName: sourceName,
+                image: NSImage.transparent(size: CGSize(width: parsed.width, height: parsed.height))
+            )
+            document.layers = decodedLayers.reversed()
+            document.selectedLayerID = document.layers.last?.id
+            document.selectedLayerIDs = Set(document.layers.last.map { [$0.id] } ?? [])
+            document.history = [ImageEditorHistoryEntry(title: L10n.text("imageEditor.history.psdOpen"))]
+            return document
+        }
+
+        guard let composite = parsed.composite,
+              let image = imageFromChannels(composite, width: parsed.width, height: parsed.height)
+        else {
             throw ImageEditorPSDCodecError.invalidFile
         }
         return ImageEditorDocument(sourceName: sourceName, image: image)
@@ -201,7 +278,7 @@ enum ImageEditorPSDCodec {
         return record
     }
 
-    private static func readLayerRecord(_ reader: inout PSDReader) throws -> PSDLayerRecord {
+    nonisolated private static func readLayerRecord(_ reader: inout PSDReader) throws -> PSDLayerRecord {
         let top = Int(try reader.int32())
         let left = Int(try reader.int32())
         let bottom = Int(try reader.int32())
@@ -252,7 +329,7 @@ enum ImageEditorPSDCodec {
         )
     }
 
-    private static func readLayerChannels(
+    nonisolated private static func readLayerChannels(
         _ reader: inout PSDReader,
         record: PSDLayerRecord
     ) throws -> PSDChannels {
@@ -274,7 +351,7 @@ enum ImageEditorPSDCodec {
         return result
     }
 
-    private static func readCompositeChannels(
+    nonisolated private static func readCompositeChannels(
         _ reader: inout PSDReader,
         width: Int,
         height: Int,
@@ -308,7 +385,7 @@ enum ImageEditorPSDCodec {
         return channels
     }
 
-    private static func readChannel(
+    nonisolated private static func readChannel(
         _ reader: inout PSDReader,
         width: Int,
         height: Int,
@@ -333,7 +410,7 @@ enum ImageEditorPSDCodec {
         }
     }
 
-    private static func unpackBits(_ packed: Data, expectedCount: Int) throws -> Data {
+    nonisolated private static func unpackBits(_ packed: Data, expectedCount: Int) throws -> Data {
         let bytes = [UInt8](packed)
         var output = Data()
         var index = 0
@@ -450,7 +527,19 @@ private struct PSDExportLayer {
     var orderedChannels: [Data] { [channels.alpha, channels.red, channels.green, channels.blue] }
 }
 
-private struct PSDLayerRecord {
+nonisolated private struct PSDParsedDocument: @unchecked Sendable {
+    let width: Int
+    let height: Int
+    let layers: [PSDParsedLayer]
+    let composite: PSDChannels?
+}
+
+nonisolated private struct PSDParsedLayer {
+    let record: PSDLayerRecord
+    let channels: PSDChannels
+}
+
+nonisolated private struct PSDLayerRecord {
     let top: Int
     let left: Int
     let bottom: Int
@@ -463,7 +552,7 @@ private struct PSDLayerRecord {
     let blendKey: String
 }
 
-private struct PSDChannels {
+nonisolated private struct PSDChannels {
     var red: Data
     var green: Data
     var blue: Data
@@ -479,7 +568,7 @@ private struct PSDChannels {
     }
 }
 
-private struct PSDReader {
+nonisolated private struct PSDReader {
     let data: Data
     var offset = 0
 

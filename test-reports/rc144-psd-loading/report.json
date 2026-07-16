@@ -1,0 +1,39 @@
+{
+  "generated_at": "2026-07-16 23:18:16 +0800",
+  "total": 3,
+  "passed": 3,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorPSDTests",
+      "method": "psdAsyncDecodeKeepsLayerMaterializationEquivalent",
+      "identifier": "veilpicTests/ImageEditorPSDTests/psdAsyncDecodeKeepsLayerMaterializationEquivalent",
+      "file": "ImageEditorPSDTests.swift",
+      "passed": true,
+      "duration": 3.532,
+      "issues": [],
+      "log": "ImageEditorPSDTests.psdAsyncDecodeKeepsLayerMaterializationEquivalent.log"
+    },
+    {
+      "suite": "ImageEditorPSDTests",
+      "method": "psdRejectsUnsupportedBitDepth",
+      "identifier": "veilpicTests/ImageEditorPSDTests/psdRejectsUnsupportedBitDepth",
+      "file": "ImageEditorPSDTests.swift",
+      "passed": true,
+      "duration": 3.437,
+      "issues": [],
+      "log": "ImageEditorPSDTests.psdRejectsUnsupportedBitDepth.log"
+    },
+    {
+      "suite": "ImageEditorPSDTests",
+      "method": "psdRoundTripPreservesLayerBasicsAndCompositeCompatibility",
+      "identifier": "veilpicTests/ImageEditorPSDTests/psdRoundTripPreservesLayerBasicsAndCompositeCompatibility",
+      "file": "ImageEditorPSDTests.swift",
+      "passed": true,
+      "duration": 3.055,
+      "issues": [],
+      "log": "ImageEditorPSDTests.psdRoundTripPreservesLayerBasicsAndCompositeCompatibility.log"
+    }
+  ]
+}

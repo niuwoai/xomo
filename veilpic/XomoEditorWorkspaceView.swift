@@ -10,6 +10,7 @@ import SwiftUI
 
 struct XomoEditorWorkspaceView: View {
     @StateObject private var viewModel: ImageEditorViewModel
+    @ObservedObject private var externalOpenCoordinator = XomoExternalDocumentOpenCoordinator.shared
 
     init() {
         let sourceName = L10n.text("imageEditor.developmentSampleName")
@@ -25,13 +26,24 @@ struct XomoEditorWorkspaceView: View {
     }
 
     var body: some View {
-        ImageEditorView(viewModel: viewModel)
+        Group {
+            if let presentation = externalOpenCoordinator.presentation {
+                XomoDocumentLoadingView(presentation: presentation)
+                    .transition(.opacity)
+            } else {
+                ImageEditorView(viewModel: viewModel)
+                    .transition(.opacity)
+            }
+        }
+            .animation(.easeInOut(duration: 0.18), value: externalOpenCoordinator.presentation != nil)
             .onAppear {
+                externalOpenCoordinator.register(viewModel)
                 XomoAutomationRegistry.shared.register(viewModel)
                 XomoAutomationServer.shared.start()
                 presentPresetManagerForUITestingIfRequested()
             }
             .onDisappear {
+                externalOpenCoordinator.unregister(viewModel)
                 XomoAutomationRegistry.shared.unregister(viewModel)
             }
     }

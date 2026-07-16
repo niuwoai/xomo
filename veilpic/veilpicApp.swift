@@ -29,6 +29,10 @@ struct veilpicApp: App {
 
 @MainActor
 final class XomoApplicationDelegate: NSObject, NSApplicationDelegate {
+    func application(_ application: NSApplication, open urls: [URL]) {
+        XomoExternalDocumentOpenCoordinator.shared.open(urls)
+    }
+
     func applicationWillTerminate(_ notification: Notification) {
         XomoAutomationServer.shared.stop()
     }

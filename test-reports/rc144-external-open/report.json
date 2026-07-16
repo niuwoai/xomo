@@ -1,0 +1,49 @@
+{
+  "generated_at": "2026-07-16 23:17:44 +0800",
+  "total": 4,
+  "passed": 4,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "XomoExternalDocumentOpenTests",
+      "method": "appRegistersPSDAndShipsStartupArtwork",
+      "identifier": "veilpicTests/XomoExternalDocumentOpenTests/appRegistersPSDAndShipsStartupArtwork",
+      "file": "XomoExternalDocumentOpenTests.swift",
+      "passed": true,
+      "duration": 3.107,
+      "issues": [],
+      "log": "XomoExternalDocumentOpenTests.appRegistersPSDAndShipsStartupArtwork.log"
+    },
+    {
+      "suite": "XomoExternalDocumentOpenTests",
+      "method": "ordinaryLaunchStateDoesNotPresentLoadingArtwork",
+      "identifier": "veilpicTests/XomoExternalDocumentOpenTests/ordinaryLaunchStateDoesNotPresentLoadingArtwork",
+      "file": "XomoExternalDocumentOpenTests.swift",
+      "passed": true,
+      "duration": 2.91,
+      "issues": [],
+      "log": "XomoExternalDocumentOpenTests.ordinaryLaunchStateDoesNotPresentLoadingArtwork.log"
+    },
+    {
+      "suite": "XomoExternalDocumentOpenTests",
+      "method": "policyShowsImmediatelyOnlyAtLargeFileThreshold",
+      "identifier": "veilpicTests/XomoExternalDocumentOpenTests/policyShowsImmediatelyOnlyAtLargeFileThreshold",
+      "file": "XomoExternalDocumentOpenTests.swift",
+      "passed": true,
+      "duration": 2.943,
+      "issues": [],
+      "log": "XomoExternalDocumentOpenTests.policyShowsImmediatelyOnlyAtLargeFileThreshold.log"
+    },
+    {
+      "suite": "XomoExternalDocumentOpenTests",
+      "method": "policySupportsPSDCaseInsensitively",
+      "identifier": "veilpicTests/XomoExternalDocumentOpenTests/policySupportsPSDCaseInsensitively",
+      "file": "XomoExternalDocumentOpenTests.swift",
+      "passed": true,
+      "duration": 4.807,
+      "issues": [],
+      "log": "XomoExternalDocumentOpenTests.policySupportsPSDCaseInsensitively.log"
+    }
+  ]
+}

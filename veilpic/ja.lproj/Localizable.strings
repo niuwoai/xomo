@@ -453,6 +453,11 @@
 "imageEditor.history.psdOpenFlattened" = "PSD を合成画像として開く";
 "imageEditor.status.psdOpened" = "PSD を開きました：%@";
 "imageEditor.status.psdOpenedFlattened" = "未対応のレイヤー機能があるため、合成画像として開きました：%@";
+"startup.loading.preparing" = "%@ を開く準備をしています…";
+"startup.loading.reading" = "%@ を読み込んでいます…";
+"startup.loading.decodingPSD" = "PSD レイヤーを解析しています…";
+"startup.loading.rendering" = "編集可能なキャンバスを生成しています…";
+"startup.loading.finishing" = "%@ を開いています…";
 "imageEditor.export.scope" = "範囲";
 "imageEditor.export.scope.composited" = "合成画像";
 "imageEditor.export.scope.selectedLayer" = "現在のレイヤー";

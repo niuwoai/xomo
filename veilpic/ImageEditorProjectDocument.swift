@@ -1046,25 +1046,14 @@ extension ImageEditorViewModel {
             Task { @MainActor in
                 guard let self, response == .OK, let url = panel.url else { return }
                 do {
-                    let data = try Data(contentsOf: url)
                     if url.pathExtension.lowercased() == "psd" {
-                        do {
-                            self.document = try ImageEditorPSDCodec.decode(data, sourceName: url.lastPathComponent)
-                            self.resetAfterExternalDocumentOpen()
-                            self.appendHistory(L10n.text("imageEditor.history.psdOpen"))
-                            self.statusText = L10n.format("imageEditor.status.psdOpened", url.lastPathComponent)
-                        } catch {
-                            guard let flattened = NSImage(contentsOf: url) else { throw error }
-                            self.document = ImageEditorDocument(sourceName: url.lastPathComponent, image: flattened)
-                            self.resetAfterExternalDocumentOpen()
-                            self.appendHistory(L10n.text("imageEditor.history.psdOpenFlattened"))
-                            self.statusText = L10n.format("imageEditor.status.psdOpenedFlattened", url.lastPathComponent)
-                        }
-                    } else {
-                        try self.loadProjectData(data)
-                        self.appendHistory(L10n.text("imageEditor.history.projectOpen"))
-                        self.statusText = L10n.format("imageEditor.status.projectOpened", url.lastPathComponent)
+                        XomoExternalDocumentOpenCoordinator.shared.open(url)
+                        return
                     }
+                    let data = try Data(contentsOf: url)
+                    try self.loadProjectData(data)
+                    self.appendHistory(L10n.text("imageEditor.history.projectOpen"))
+                    self.statusText = L10n.format("imageEditor.status.projectOpened", url.lastPathComponent)
                 } catch {
                     self.statusText = L10n.format(
                         "imageEditor.status.projectOpenFailedWithReason",
@@ -1072,6 +1061,24 @@ extension ImageEditorViewModel {
                     )
                 }
             }
+        }
+    }
+
+    func loadExternalPSDDocument(
+        _ document: ImageEditorDocument,
+        openedFlattened: Bool
+    ) {
+        self.document = document
+        resetAfterExternalDocumentOpen()
+        if openedFlattened {
+            appendHistory(L10n.text("imageEditor.history.psdOpenFlattened"))
+            statusText = L10n.format(
+                "imageEditor.status.psdOpenedFlattened",
+                document.sourceName
+            )
+        } else {
+            appendHistory(L10n.text("imageEditor.history.psdOpen"))
+            statusText = L10n.format("imageEditor.status.psdOpened", document.sourceName)
         }
     }
 

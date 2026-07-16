@@ -1,4 +1,4 @@
-"app.name" = "像界";
+"app.name" = "象墨";
 "app.version" = "版本 %@";
 "annotation.tool.ellipse" = "椭圆";
 "annotation.tool.pen" = "画笔";
@@ -52,7 +52,7 @@
 "feedback.screenshot.copied.title" = "截图已复制";
 "feedback.screenshot.copyFailed.message" = "截图已进入工作台，但写入系统剪贴板失败。可以稍后用“复制图片”重试。";
 "feedback.screenshot.copyFailed.title" = "截图复制失败";
-"feedback.screenshot.permission.message" = "请在系统设置中允许像界录制屏幕，授权后再重试。";
+"feedback.screenshot.permission.message" = "请在系统设置中允许象墨录制屏幕，授权后再重试。";
 "feedback.screenshot.permission.title" = "需要屏幕录制权限";
 "feedback.screenshot.region.planned.message" = "区域截图会进入工作台，可继续标注、后处理、保存、上传或复制。";
 "feedback.screenshot.region.planned.title" = "区域截图已可用";
@@ -144,7 +144,7 @@
 "onboarding.step.config.done" = "连接信息已完整，可以开始上传。";
 "onboarding.step.config.missing" = "补齐必填项：%@。";
 "onboarding.step.config.title" = "填写配置";
-"onboarding.step.menubar.message" = "之后点击菜单栏里的像界图标，拖图或读取剪贴板即可上传。";
+"onboarding.step.menubar.message" = "之后点击菜单栏里的象墨图标，拖图或读取剪贴板即可上传。";
 "onboarding.step.menubar.title" = "回到菜单栏";
 "onboarding.step.storage.message" = "选择 OSS / S3 或兼容服务，准备 bucket、endpoint 和访问密钥。";
 "onboarding.step.storage.title" = "准备存储";
@@ -189,10 +189,10 @@
 "settings.autoCopy.note" = "默认上传成功后复制压缩图 URL；你也可以关闭自动复制，或改为复制其他版本。";
 "settings.autoCopy.title" = "上传成功后自动复制 URL";
 "settings.autoCopy.variant" = "自动复制版本";
-"settings.dockVisibility.note" = "默认开启。像界主要以菜单栏托盘的形态使用，隐藏 Dock 图标可让窗口列表更清爽。关闭后会在 Dock 显示图标，并可从 Dock 调出主窗口。";
+"settings.dockVisibility.note" = "默认开启。象墨主要以菜单栏托盘的形态使用，隐藏 Dock 图标可让窗口列表更清爽。关闭后会在 Dock 显示图标，并可从 Dock 调出主窗口。";
 "settings.dockVisibility.title" = "隐藏 Dock 图标";
 "settings.launchAtLogin.error" = "无法更新开机自动启动：%@";
-"settings.launchAtLogin.note" = "开启后，像界会在你登录 macOS 后自动启动，并停留在菜单栏。";
+"settings.launchAtLogin.note" = "开启后，象墨会在你登录 macOS 后自动启动，并停留在菜单栏。";
 "settings.launchAtLogin.title" = "开机自动启动";
 "settings.provider" = "存储后端";
 "settings.screenshotBehavior" = "截图行为";
@@ -205,10 +205,10 @@
 "settings.shortcut.region" = "区域截图";
 "settings.shortcut.reset" = "恢复默认";
 "settings.subtitle" = "配置 OSS / S3 等对象存储；之后从菜单栏图标快速上传图片。";
-"settings.title" = "像界设置";
-"settings.title.onboarding" = "开始使用像界";
+"settings.title" = "象墨设置";
+"settings.title.onboarding" = "开始使用象墨";
 "settings.uploadBehavior" = "上传行为";
-"settings.usage.message" = "配置完成后，像界会留在菜单栏。点击菜单栏图标即可拖拽图片、读取剪贴板、复制上传链接；设置也可以随时从托盘面板打开。";
+"settings.usage.message" = "配置完成后，象墨会留在菜单栏。点击菜单栏图标即可拖拽图片、读取剪贴板、复制上传链接；设置也可以随时从托盘面板打开。";
 "settings.usage.title" = "使用方式";
 "source.clipboard" = "剪贴板";
 "source.drop" = "拖拽图片";
@@ -251,7 +251,7 @@
 "status.upload.failed" = "上传失败";
 "status.uploadedVariants" = "已上传 %d 个版本";
 "status.uploadingVariants" = "正在上传 %d 个版本...";
-"upload.configPrompt.message" = "像界需要 OSS / S3 等存储信息，配置后就能从菜单栏快速上传。";
+"upload.configPrompt.message" = "象墨需要 OSS / S3 等存储信息，配置后就能从菜单栏快速上传。";
 "upload.configPrompt.title" = "先配置对象存储";
 "upload.drop.idle" = "拖拽图片到这里";
 "upload.drop.message" = "可拖拽、选择图片或选择目录；上传成功后默认复制压缩图 URL。";
@@ -453,6 +453,11 @@
 "imageEditor.history.psdOpenFlattened" = "以合成图打开 PSD";
 "imageEditor.status.psdOpened" = "已打开 PSD：%@";
 "imageEditor.status.psdOpenedFlattened" = "该 PSD 使用了暂不支持的图层特性，已以合成图打开：%@";
+"startup.loading.preparing" = "正在准备打开 %@…";
+"startup.loading.reading" = "正在读取 %@…";
+"startup.loading.decodingPSD" = "正在解析 PSD 图层…";
+"startup.loading.rendering" = "正在生成可编辑画布…";
+"startup.loading.finishing" = "正在打开 %@…";
 "imageEditor.export.scope" = "范围";
 "imageEditor.export.scope.composited" = "合成图像";
 "imageEditor.export.scope.selectedLayer" = "当前图层";
@@ -2578,12 +2583,12 @@
 "feedback.imageEditorUnavailable.message" = "请先放入一张图片并等待后处理预览生成。";
 "feedback.imageEditorApplied.title" = "已应用编辑";
 "feedback.imageEditorApplied.message" = "编辑后的图片已成为新的工作台原图，后续保存、复制和上传都会使用它。";
-"about.menuItem" = "关于像界";
+"about.menuItem" = "关于象墨";
 "about.windowTitle" = "关于 %@";
 "about.versionFormat" = "版本 %@";
-"about.summary" = "截图、图片编辑、上传分享都归到像界这一处。";
+"about.summary" = "截图、图片编辑、上传分享都归到象墨这一处。";
 "about.authorHomepage" = "作者主页 · 83d.me";
-"about.productPage" = "像界产品页";
+"about.productPage" = "象墨产品页";
 "about.unknownVersion" = "未知版本";
 "about.copyright" = "© %d rocky.x";
 "imageEditor.properties.shadowContour" = "投影等高线";
@@ -2686,7 +2691,7 @@
 "xomo.component.listRow.titleLayer" = "列表标题文字";
 "xomo.component.listRow.detailLayer" = "列表说明文字";
 "xomo.component.topNavigation.title" = "顶部导航";
-"xomo.component.topNavigation.defaultBrand" = "像界";
+"xomo.component.topNavigation.defaultBrand" = "象墨";
 "xomo.component.topNavigation.defaultFirstItem" = "首页";
 "xomo.component.topNavigation.defaultSecondItem" = "设置";
 "xomo.component.topNavigation.backgroundLayer" = "顶部导航背景";
@@ -2770,8 +2775,8 @@
 "xomo.theme.importTokens" = "导入本地 Tokens…";
 "xomo.theme.clearTokens" = "清除本地 Tokens";
 "xomo.theme.refreshTokens" = "刷新已映射组件";
-"xomo.librarySource.xomoOriginal" = "像界原创";
-"xomo.librarySource.xomoOriginal.attribution" = "像界以本地代码生成的原创可编辑组件。";
+"xomo.librarySource.xomoOriginal" = "象墨原创";
+"xomo.librarySource.xomoOriginal.attribution" = "象墨以本地代码生成的原创可编辑组件。";
 "xomo.librarySource.chakraUI" = "Chakra UI";
 "xomo.librarySource.chakraUI.attribution" = "原生可编辑参考包，来源标注 Chakra UI（MIT）；不是 Chakra 官方产品。";
 "xomo.librarySource.radixThemes" = "Radix Themes";

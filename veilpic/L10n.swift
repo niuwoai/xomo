@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum L10n {
+nonisolated enum L10n {
     static func text(_ key: String) -> String {
         NSLocalizedString(key, comment: "")
     }

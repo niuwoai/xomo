@@ -60,6 +60,32 @@ struct ImageEditorPSDTests {
             try ImageEditorPSDCodec.decode(data, sourceName: "invalid.psd")
         }
     }
+
+    @Test func psdAsyncDecodeKeepsLayerMaterializationEquivalent() async throws {
+        let canvasSize = CGSize(width: 24, height: 18)
+        var document = ImageEditorDocument(
+            sourceName: "async-source.png",
+            image: psdSolidImage(color: .white, size: canvasSize)
+        )
+        document.layers = [
+            .background(image: psdSolidImage(color: .systemIndigo, size: canvasSize))
+        ]
+
+        let data = try ImageEditorPSDCodec.encode(document: document)
+        var didBeginMaterializing = false
+        let restored = try await ImageEditorPSDCodec.decodeAsync(
+            data,
+            sourceName: "async.psd",
+            onWillMaterialize: {
+                didBeginMaterializing = true
+            }
+        )
+
+        #expect(didBeginMaterializing)
+        #expect(restored.sourceName == "async.psd")
+        #expect(restored.canvasSize == canvasSize)
+        #expect(restored.layers.count == 1)
+    }
 }
 
 private func psdSolidImage(color: NSColor, size: CGSize) -> NSImage {
