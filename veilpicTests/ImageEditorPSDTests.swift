@@ -140,6 +140,37 @@ struct ImageEditorPSDTests {
         #expect(!report.issues.contains { $0.kind == .vectorRasterized })
     }
 
+    @Test func psdExportPreservesExtraAlphaChannelsAndNames() throws {
+        let canvasSize = CGSize(width: 4, height: 4)
+        var document = ImageEditorDocument(
+            sourceName: "alpha-channel.png",
+            image: psdSolidImage(color: .white, size: canvasSize)
+        )
+        document.alphaChannels = [
+            ImageEditorAlphaChannel(
+                name: "Exported Selection",
+                mask: ImageEditorSelectionMask(
+                    width: 4,
+                    height: 4,
+                    alpha: [
+                        0, 64, 128, 255,
+                        255, 128, 64, 0,
+                        0, 64, 128, 255,
+                        255, 128, 64, 0
+                    ]
+                )
+            )
+        ]
+
+        let data = try ImageEditorPSDCodec.encode(document: document)
+        let restored = try ImageEditorPSDCodec.decode(data, sourceName: "alpha-channel.psd")
+        let channel = try #require(restored.alphaChannels.first)
+
+        #expect(restored.alphaChannels.count == 1)
+        #expect(channel.name == "Exported Selection")
+        #expect(channel.mask.alpha == document.alphaChannels[0].mask.alpha)
+    }
+
     @Test func psdRejectsUnsupportedBitDepth() throws {
         let document = ImageEditorDocument(
             sourceName: "tiny.png",

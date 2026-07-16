@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc156 - 2026-07-17
+
+### Added
+- PSD 导出现在会写入 Xomo 原生额外 Alpha 通道、名称和 8-bit 掩码，导出后可被 PSD 读取并继续编辑。
+- 新增额外 Alpha 通道导出/导入往返回归测试与定向报告。
+
+### Verification
+- PSD 专项测试 16/16、Alpha 通道导出定向测试 1/1、Xomo CLI 测试 2/2、`git diff --check` 通过。
+
 ## 2.12.0-rc155 - 2026-07-17
 
 ### Added

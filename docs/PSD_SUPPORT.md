@@ -1,6 +1,6 @@
 # 象墨 PSD 支持说明
 
-> 最后更新：2026-07-17 ｜ 对应版本：v2.12.0-rc155
+> 最后更新：2026-07-17 ｜ 对应版本：v2.12.0-rc156
 
 ## 1. 结论
 
@@ -63,7 +63,7 @@
 | 栅格蒙版 | 支持 | 写入蒙版像素、启用/停用和链接状态。象墨中的密度、羽化会烘焙进有效蒙版像素，不会保存为独立 Photoshop 参数。 |
 | 文字、形状、智能对象 | 栅格化导出 | 视觉内容进入普通像素层，不保留原对象语义。 |
 | 命名路径 | 支持 | 写入 Image Resources 的 Path Resource，保留名称、闭合/开放状态、多子路径和 Bézier 控制柄。 |
-| 额外 Alpha 通道 | 暂不导出 | PSD 导入后可在 Xomo 中编辑和保存；当前 PSD 导出仍只写 RGB/RGBA 文档通道，避免误写成 Spot 通道。 |
+| 额外 Alpha 通道 | 支持 | 导入与导出均保留名称和 8-bit 掩码；导出增加对应文档通道，Spot 通道仍不写出。 |
 | 矢量蒙版 | 部分支持 | 结构完整的闭合路径写入图层 `vmsk`，保留子路径、控制柄和启用状态；开放路径、反相/断链及复杂记录栅格化导出。 |
 | 图层效果 | 烘焙到像素 | 效果参数不写入 Photoshop 图层效果块。 |
 | 调整层、滤镜层 | 不作为独立图层写出 | 最终合成图包含当前文档视觉结果，但可编辑的调整/滤镜层记录会省略。 |
@@ -94,12 +94,12 @@
 - 夹具与说明：[`veilpicTests/Fixtures/PSD`](../veilpicTests/Fixtures/PSD)
 - 夹具生成器：[`scripts/generate_psd_compatibility_fixtures.rb`](../scripts/generate_psd_compatibility_fixtures.rb)
 - PSD 测试报告：[`test-reports/rc155-psd-suite/report.md`](../test-reports/rc155-psd-suite/report.md)
-- 额外 Alpha 通道定向报告：[`test-reports/rc155-alpha-channel/report.md`](../test-reports/rc155-alpha-channel/report.md)
+- 额外 Alpha 通道导出定向报告：[`test-reports/rc156-alpha-export/report.md`](../test-reports/rc156-alpha-export/report.md)
 - PSD 原生矢量蒙版导出定向报告：[`test-reports/rc154-vector-mask-export/report.md`](../test-reports/rc154-vector-mask-export/report.md)
 - 外部打开测试报告：[`test-reports/rc145-external-open/report.md`](../test-reports/rc145-external-open/report.md)
 - 本地化测试报告：[`test-reports/rc145-localization/report.md`](../test-reports/rc145-localization/report.md)
 
-rc155 的 PSD 定向验证结果为：PSD 专项 15/15、额外 Alpha 通道 1/1，开放/复杂路径安全回退由专项回归覆盖，Debug `build-for-testing` 通过。
+rc156 的 PSD 定向验证结果为：PSD 专项 16/16、Alpha 通道导出 1/1、Xomo CLI 2/2；开放/复杂路径安全回退由专项回归覆盖。
 
 ## 7. 使用建议
 

@@ -48,16 +48,14 @@ enum ImageEditorPSDCodec {
         output.appendASCII("8BPS")
         output.appendUInt16(1)
         output.append(Data(repeating: 0, count: 6))
-        output.appendUInt16(4)
+        let exportedAlphaChannels = document.alphaChannels.prefix(52)
+        output.appendUInt16(UInt16(4 + exportedAlphaChannels.count))
         output.appendUInt32(UInt32(height))
         output.appendUInt32(UInt32(width))
         output.appendUInt16(8)
         output.appendUInt16(3)
         output.appendUInt32(0)
-        let imageResources = pathResourceData(
-            document.savedPaths,
-            canvasSize: document.canvasSize
-        )
+        let imageResources = imageResourcesData(document: document)
         output.appendUInt32(UInt32(imageResources.count))
         output.append(imageResources)
 
@@ -89,6 +87,31 @@ enum ImageEditorPSDCodec {
         output.append(composite.green)
         output.append(composite.blue)
         output.append(composite.alpha)
+        for channel in exportedAlphaChannels {
+            let mask = channel.mask.resizedNearest(to: CGSize(width: width, height: height))
+            output.append(contentsOf: mask.alpha)
+        }
+        return output
+    }
+
+    private static func imageResourcesData(document: ImageEditorDocument) -> Data {
+        var output = pathResourceData(
+            document.savedPaths,
+            canvasSize: document.canvasSize
+        )
+        let alphaChannels = Array(document.alphaChannels.prefix(52))
+        guard !alphaChannels.isEmpty else { return output }
+
+        var names = Data()
+        for channel in alphaChannels {
+            names.appendPascalString(channel.name, alignment: 2)
+        }
+        output.appendASCII("8BIM")
+        output.appendUInt16(1006)
+        output.appendPascalString("", alignment: 2)
+        output.appendUInt32(UInt32(names.count))
+        output.append(names)
+        if names.count % 2 != 0 { output.append(0) }
         return output
     }
 
