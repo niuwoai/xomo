@@ -54,7 +54,12 @@ enum ImageEditorPSDCodec {
         output.appendUInt16(8)
         output.appendUInt16(3)
         output.appendUInt32(0)
-        output.appendUInt32(0)
+        let imageResources = pathResourceData(
+            document.savedPaths,
+            canvasSize: document.canvasSize
+        )
+        output.appendUInt32(UInt32(imageResources.count))
+        output.append(imageResources)
 
         var layerInfo = Data()
         layerInfo.appendInt16(Int16(exportLayers.count))
@@ -85,6 +90,64 @@ enum ImageEditorPSDCodec {
         output.append(composite.blue)
         output.append(composite.alpha)
         return output
+    }
+
+    private static func pathResourceData(
+        _ paths: [ImageEditorSavedPath],
+        canvasSize: CGSize
+    ) -> Data {
+        var output = Data()
+        for (index, path) in paths.prefix(ImageEditorSavedPath.maximumCount).enumerated() {
+            guard let normalized = path.normalized(canvasSize: canvasSize),
+                  let resourceID = UInt16(exactly: 2000 + index)
+            else { continue }
+            let payload = pathResourcePayload(normalized, canvasSize: canvasSize)
+            guard !payload.isEmpty else { continue }
+            output.appendASCII("8BIM")
+            output.appendUInt16(resourceID)
+            output.appendPascalString(normalized.name, alignment: 2)
+            output.appendUInt32(UInt32(payload.count))
+            output.append(payload)
+            if payload.count % 2 != 0 { output.append(0) }
+        }
+        return output
+    }
+
+    private static func pathResourcePayload(
+        _ path: ImageEditorSavedPath,
+        canvasSize: CGSize
+    ) -> Data {
+        var output = Data()
+        for subpath in path.subpaths where !subpath.isEmpty {
+            guard let knotCount = UInt16(exactly: subpath.count) else { continue }
+            output.appendUInt16(path.isClosed ? 0 : 3)
+            output.appendUInt16(knotCount)
+            output.append(Data(repeating: 0, count: 20))
+            for (index, anchor) in subpath.enumerated() {
+                let selector: UInt16
+                if path.isClosed {
+                    selector = index == 0 ? 1 : 2
+                } else {
+                    selector = index == 0 ? 4 : 5
+                }
+                output.appendUInt16(selector)
+                appendPathFixed8_24(anchor.inControl ?? anchor.point, canvasSize: canvasSize, to: &output)
+                appendPathFixed8_24(anchor.point, canvasSize: canvasSize, to: &output)
+                appendPathFixed8_24(anchor.outControl ?? anchor.point, canvasSize: canvasSize, to: &output)
+            }
+        }
+        return output
+    }
+
+    private static func appendPathFixed8_24(
+        _ point: CGPoint,
+        canvasSize: CGSize,
+        to data: inout Data
+    ) {
+        let normalizedX = canvasSize.width > 0 ? point.x / canvasSize.width : 0
+        let normalizedY = canvasSize.height > 0 ? point.y / canvasSize.height : 0
+        data.appendInt32(Int32((Double(normalizedY) * 16_777_216).rounded()))
+        data.appendInt32(Int32((Double(normalizedX) * 16_777_216).rounded()))
     }
 
     static func compatibilityReport(_ data: Data) throws -> ImageEditorPSDCompatibilityReport {

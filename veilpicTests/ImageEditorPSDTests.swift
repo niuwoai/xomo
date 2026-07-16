@@ -47,6 +47,50 @@ struct ImageEditorPSDTests {
         #expect(!restoredTop.isVisible)
     }
 
+    @Test func psdExportPreservesClosedAndOpenSavedPaths() throws {
+        let canvasSize = CGSize(width: 32, height: 24)
+        var document = ImageEditorDocument(
+            sourceName: "paths.png",
+            image: psdSolidImage(color: .white, size: canvasSize)
+        )
+        let triangle = ImageEditorSavedPath(
+            name: "Exported Triangle",
+            subpaths: [[
+                ImageEditorPathAnchor(point: CGPoint(x: 4, y: 5)),
+                ImageEditorPathAnchor(point: CGPoint(x: 28, y: 5)),
+                ImageEditorPathAnchor(point: CGPoint(x: 16, y: 19))
+            ], [
+                ImageEditorPathAnchor(point: CGPoint(x: 12, y: 8)),
+                ImageEditorPathAnchor(point: CGPoint(x: 20, y: 8)),
+                ImageEditorPathAnchor(point: CGPoint(x: 16, y: 14))
+            ]],
+            isClosed: true
+        )
+        let guide = ImageEditorSavedPath(
+            name: "Exported Guide",
+            subpaths: [[
+                ImageEditorPathAnchor(point: CGPoint(x: 6, y: 8)),
+                ImageEditorPathAnchor(point: CGPoint(x: 26, y: 17))
+            ]],
+            isClosed: false
+        )
+        document.savedPaths = [triangle, guide]
+
+        let data = try ImageEditorPSDCodec.encode(document: document)
+        let restored = try ImageEditorPSDCodec.decode(data, sourceName: "paths.psd")
+
+        #expect(restored.savedPaths.count == 2)
+        let restoredTriangle = try #require(restored.savedPaths.first { $0.name == "Exported Triangle" })
+        let restoredGuide = try #require(restored.savedPaths.first { $0.name == "Exported Guide" })
+        #expect(restoredTriangle.isClosed)
+        #expect(restoredTriangle.subpaths.count == 2)
+        #expect(restoredTriangle.subpaths.first?.count == 3)
+        #expect(!restoredGuide.isClosed)
+        #expect(restoredGuide.subpaths.first?.count == 2)
+        #expect(abs(restoredTriangle.subpaths[0][1].point.x - 28) < 0.01)
+        #expect(abs(restoredGuide.subpaths[0][1].point.y - 17) < 0.01)
+    }
+
     @Test func psdRejectsUnsupportedBitDepth() throws {
         let document = ImageEditorDocument(
             sourceName: "tiny.png",

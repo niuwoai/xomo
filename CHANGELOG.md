@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc153 - 2026-07-17
+
+### Added
+- PSD 导出现在会把 Xomo 原生命名路径写入 Image Resources 的 Path Resource，支持闭合路径、开放路径、多子路径和 Bézier 控制柄。
+- 新增“导出 PSD → 重新读取 PSD”的回归测试，验证名称、路径状态、锚点数量和画布坐标保持不变。
+
+### Verification
+- PSD 专项测试 13/13、PSD 命名路径导出定向测试 1/1、Xomo CLI 测试 2/2、`git diff --check` 通过。
+
 ## 2.12.0-rc152 - 2026-07-17
 
 ### Added
