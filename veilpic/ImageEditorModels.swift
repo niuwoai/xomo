@@ -2460,6 +2460,7 @@ struct ImageEditorShapeContent {
     var strokeOpacity: CGFloat
     var strokeCap: ImageEditorStrokeCap = .round
     var strokeJoin: ImageEditorStrokeJoin = .round
+    var strokeDashPattern: [CGFloat] = []
     var cornerRadius: CGFloat = 0
     var cornerRadii: ImageEditorRectangleCornerRadii? = nil
     var cornerSmoothing: CGFloat = 0
@@ -2482,6 +2483,12 @@ struct ImageEditorShapeContent {
         )
         content.fillOpacity = max(0, min(1, fillOpacity))
         content.strokeOpacity = max(0, min(1, strokeOpacity))
+        content.strokeDashPattern = strokeDashPattern
+            .filter { $0.isFinite && $0 > 0 }
+            .map { min(2_048, $0) }
+        if content.strokeDashPattern.count < 2 {
+            content.strokeDashPattern = []
+        }
         if kind == .path {
             content.strokeWidth = max(Self.minimumStrokeWidth, min(96, strokeWidth))
         } else {
@@ -2573,6 +2580,13 @@ struct ImageEditorShapeContent {
                 }
                 path.lineJoinStyle = normalized.strokeJoin.nsStyle
                 path.lineCapStyle = normalized.strokeCap.nsStyle
+                if normalized.strokeDashPattern.isEmpty {
+                    path.setLineDash(nil, count: 0, phase: 0)
+                } else {
+                    normalized.strokeDashPattern.withUnsafeBufferPointer { pattern in
+                        path.setLineDash(pattern.baseAddress, count: pattern.count, phase: 0)
+                    }
+                }
                 path.lineWidth = normalized.strokeWidth
                 normalized.strokeColor.withAlphaComponent(normalized.strokeOpacity).setStroke()
                 path.stroke()

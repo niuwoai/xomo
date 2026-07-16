@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.12.0-rc159 - 2026-07-17
+
+### Added
+- Figma `strokeDashes` 现在进入原生 Shape，虚线/点划线在导入、缩放渲染和项目保存重开时保持可编辑。
+- 新增虚线描边映射与项目往返回归测试，旧项目缺少字段时安全回退为实线。
+
+### Verification
+- rc159 代码已进入编译回归；完整测试结果待宿主 `testmanagerd` 恢复后采集。
+- `git diff --check` 通过。
+
 ## 2.12.0-rc158 - 2026-07-17
 
 ### Added

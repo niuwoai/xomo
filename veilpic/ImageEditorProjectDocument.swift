@@ -645,6 +645,7 @@ struct ImageEditorProjectShapeContent: Equatable, Codable {
     var strokeOpacity: CGFloat
     var strokeCap: ImageEditorStrokeCap = .round
     var strokeJoin: ImageEditorStrokeJoin = .round
+    var strokeDashPattern: [CGFloat] = []
     var cornerRadius: CGFloat?
     var cornerRadii: ImageEditorRectangleCornerRadii?
     var cornerSmoothing: CGFloat?
@@ -655,7 +656,7 @@ struct ImageEditorProjectShapeContent: Equatable, Codable {
 
     enum CodingKeys: String, CodingKey {
         case kind, fillColor, fillGradient, fillGradientCenter, fillOpacity
-        case strokeColor, strokeWidth, strokeOpacity, strokeCap, strokeJoin
+        case strokeColor, strokeWidth, strokeOpacity, strokeCap, strokeJoin, strokeDashPattern
         case cornerRadius, cornerRadii, cornerSmoothing, pathPoints, pathAnchors
         case pathSubpaths, isPathClosed
     }
@@ -672,6 +673,7 @@ struct ImageEditorProjectShapeContent: Equatable, Codable {
         strokeOpacity = try container.decode(CGFloat.self, forKey: .strokeOpacity)
         strokeCap = try container.decodeIfPresent(ImageEditorStrokeCap.self, forKey: .strokeCap) ?? .round
         strokeJoin = try container.decodeIfPresent(ImageEditorStrokeJoin.self, forKey: .strokeJoin) ?? .round
+        strokeDashPattern = try container.decodeIfPresent([CGFloat].self, forKey: .strokeDashPattern) ?? []
         cornerRadius = try container.decodeIfPresent(CGFloat.self, forKey: .cornerRadius)
         cornerRadii = try container.decodeIfPresent(ImageEditorRectangleCornerRadii.self, forKey: .cornerRadii)
         cornerSmoothing = try container.decodeIfPresent(CGFloat.self, forKey: .cornerSmoothing)
@@ -692,6 +694,7 @@ struct ImageEditorProjectShapeContent: Equatable, Codable {
         strokeOpacity = content.strokeOpacity
         strokeCap = content.strokeCap
         strokeJoin = content.strokeJoin
+        strokeDashPattern = content.strokeDashPattern
         cornerRadius = content.cornerRadius
         cornerRadii = content.cornerRadii
         cornerSmoothing = content.cornerSmoothing
@@ -713,6 +716,7 @@ struct ImageEditorProjectShapeContent: Equatable, Codable {
             strokeOpacity: strokeOpacity,
             strokeCap: strokeCap,
             strokeJoin: strokeJoin,
+            strokeDashPattern: strokeDashPattern,
             cornerRadius: cornerRadius ?? 0,
             cornerRadii: cornerRadii,
             cornerSmoothing: cornerSmoothing ?? 0,

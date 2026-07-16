@@ -1,6 +1,6 @@
 # Xomo Figma 链接导入边界
 
-> 最后更新：2026-07-17 ｜ 当前版本：v2.12.0-rc158 ｜ 当前阶段：设计 token 主题文件交换与 Figma 绑定检查
+> 最后更新：2026-07-17 ｜ 当前版本：v2.12.0-rc159 ｜ 当前阶段：设计 token 主题文件交换与 Figma 绑定检查
 
 ## 当前已经支持
 
@@ -29,7 +29,7 @@ rc94 在 rc93 的基础上识别节点的 `boundVariables` 中 `fills`、`stroke
 | Frame / Group | 嵌套图层组 | 保留层级、名称、显隐、透明度与固定坐标；水平/垂直 Auto Layout 保留间距、内距、两轴对齐、固定/Hug 容器及 Fill/Stretch 子项，水平 Wrap 另保留分行、行间距与逐行文字 Baseline |
 | Component / Component Set / Instance | 普通嵌套图层组 | 子层可编辑，Auto Layout 容器与子项可重排；组件/实例语义明确降级 |
 | Text | 可编辑文字层 | 保留文本、字体族、字号、字重、横向对齐和纯色填充 |
-| Rectangle / Ellipse | 可编辑形状层 | 保留纯色、2–16 色标线性渐变或像素轴等长垂直的圆形径向渐变，支持偏心中心与公共透明度；保留纯色描边、描边宽度、端点（butt/round/square）与连接（miter/round/bevel），以及矩形统一/非对称四角和圆角平滑，平滑曲线使用超椭圆近似 |
+| Rectangle / Ellipse | 可编辑形状层 | 保留纯色、2–16 色标线性渐变或像素轴等长垂直的圆形径向渐变，支持偏心中心与公共透明度；保留纯色描边、描边宽度、端点（butt/round/square）、连接（miter/round/bevel）与虚线数组，以及矩形统一/非对称四角和圆角平滑，平滑曲线使用超椭圆近似 |
 | Vector / Line / Star / Polygon | 可编辑路径形状层 | 支持 fill/stroke geometry 与 SVG M/L/H/V/C/S/Q/T/A/Z 的绝对、相对命令；闭合路径可保留同一套线性或圆形径向渐变，按节点局部 size 映射 |
 | 图片填充 Rectangle | 图片像素层或占位层 | 显式读取时下载当前子树引用的图片；Fill/Fit、Crop 对应的 `STRETCH + imageTransform`、Tile 比例、90°旋转及曝光/对比度/饱和度/色温/色调/高光/阴影会烘焙为固定像素，单图失败时保留格纹交叉占位图 |
 | 其它节点 | 不导入 | 报告中列为不支持，不生成假图层 |

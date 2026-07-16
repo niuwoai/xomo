@@ -194,7 +194,8 @@ struct ImageEditorProjectDocumentTests {
             strokeWidth: 3,
             strokeOpacity: 0.8,
             strokeCap: .square,
-            strokeJoin: .bevel
+            strokeJoin: .bevel,
+            strokeDashPattern: [6, 3]
         )
         let shapeLayer = ImageEditorLayer.shape(
             name: "Badge",
@@ -326,6 +327,7 @@ struct ImageEditorProjectDocumentTests {
         #expect(restoredShapeContent.fillOpacity == 0.45)
         #expect(restoredShapeContent.strokeCap == .square)
         #expect(restoredShapeContent.strokeJoin == .bevel)
+        #expect(restoredShapeContent.strokeDashPattern == [6, 3])
 
         let restoredSmartObject = try #require(restoredViewModel.document.layers.first { $0.id == smartObjectLayer.id })
         let restoredSmartObjectContent = try #require(restoredSmartObject.smartObjectContent)
