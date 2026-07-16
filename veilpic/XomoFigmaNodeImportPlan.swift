@@ -185,6 +185,7 @@ struct XomoFigmaPlanImageFilters: Equatable, Sendable {
 enum XomoFigmaPlanEffectKind: String, Equatable, Sendable {
     case dropShadow
     case innerShadow
+    case layerBlur
 }
 
 struct XomoFigmaPlanEffect: Equatable, Sendable {

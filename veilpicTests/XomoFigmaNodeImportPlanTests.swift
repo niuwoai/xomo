@@ -1053,7 +1053,10 @@ struct XomoFigmaNodeImportPlanTests {
                             "type": "RECTANGLE",
                             "absoluteBoundingBox": {"x": 20, "y": 90, "width": 120, "height": 48},
                             "fills": [{"type": "SOLID", "color": {"r": 1, "g": 1, "b": 1, "a": 1}}],
-                            "effects": [{"type": "LAYER_BLUR", "radius": 6, "visible": true}]
+                            "effects": [
+                              {"type": "LAYER_BLUR", "radius": 6, "visible": true},
+                              {"type": "BACKGROUND_BLUR", "radius": 4, "visible": true}
+                            ]
                           }
                         ]
                       }
@@ -1072,7 +1075,7 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(shadowed.fidelity == .exact)
         #expect(!shadowed.issues.contains(.effectsFlattened))
         let blurred = try #require(plan.items.first { $0.sourceID == "2:41" })
-        #expect(blurred.effects.isEmpty)
+        #expect(blurred.effects.count == 1)
         #expect(blurred.issues.contains(.effectsFlattened))
 
         let result = XomoFigmaNodeMaterializer.materialize(
@@ -1087,6 +1090,10 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(abs(layer.style.shadowOffset.width - 4) < 0.001)
         #expect(abs(layer.style.shadowOffset.height - 6) < 0.001)
         #expect(abs(layer.style.innerShadowDistance - sqrt(13)) < 0.001)
+        let blurredLayer = try #require(result.layers.first { $0.name == "Blurred Card" })
+        #expect(blurredLayer.smartFilters.count == 1)
+        #expect(blurredLayer.smartFilters.first?.kind == .gaussianBlur)
+        #expect(blurredLayer.smartFilters.first?.normalizedSettings.gaussianBlurRadius == 6)
     }
 
     @Test func materializerCreatesEditableHierarchyAtCenteredScaleAndHonestPlaceholder() throws {

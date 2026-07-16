@@ -390,6 +390,15 @@ enum XomoFigmaNodeMaterializer {
                 layer.style.innerShadowDistance = distance
                 layer.style.innerShadowAngle = angle
                 layer.style.innerShadowUsesGlobalLight = false
+            case .layerBlur:
+                let radius = max(0, CGFloat(effect.radius) * scale)
+                layer.smartFilters.append(
+                    ImageEditorSmartFilter(
+                        kind: .gaussianBlur,
+                        intensity: min(1, radius / 18),
+                        settings: ImageEditorFilterSettings(gaussianBlurRadius: Double(radius))
+                    )
+                )
             }
         }
     }

@@ -359,15 +359,19 @@ enum XomoFigmaNodeImportMapper {
     private static func isSupportedEffect(_ effect: XomoFigmaEffect) -> Bool {
         guard effect.visible ?? true else { return true }
         guard let type = effect.type,
-              type == "DROP_SHADOW" || type == "INNER_SHADOW",
+              let radius = effect.radius,
+              radius.isFinite,
+              radius >= 0
+        else { return false }
+        if type == "LAYER_BLUR" {
+            return true
+        }
+        guard type == "DROP_SHADOW" || type == "INNER_SHADOW",
               let color = effect.color,
               [color.r, color.g, color.b, color.a ?? 1].allSatisfy({ $0.isFinite }),
               let offset = effect.offset,
               offset.x.isFinite,
-              offset.y.isFinite,
-              let radius = effect.radius,
-              radius.isFinite,
-              radius >= 0
+              offset.y.isFinite
         else { return false }
         return (effect.spread ?? 0).isFinite
     }
@@ -377,10 +381,19 @@ enum XomoFigmaNodeImportMapper {
             guard effect.visible ?? true,
                   isSupportedEffect(effect),
                   let type = effect.type,
-                  let color = effect.color,
-                  let offset = effect.offset,
                   let radius = effect.radius
             else { return nil }
+            if type == "LAYER_BLUR" {
+                return XomoFigmaPlanEffect(
+                    kind: .layerBlur,
+                    color: XomoFigmaPlanColor(red: 0, green: 0, blue: 0, alpha: 0),
+                    offsetX: 0,
+                    offsetY: 0,
+                    radius: max(0, radius),
+                    spread: 0
+                )
+            }
+            guard let color = effect.color, let offset = effect.offset else { return nil }
             return XomoFigmaPlanEffect(
                 kind: type == "INNER_SHADOW" ? .innerShadow : .dropShadow,
                 color: XomoFigmaPlanColor(

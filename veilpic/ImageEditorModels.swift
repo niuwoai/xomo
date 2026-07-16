@@ -1622,6 +1622,9 @@ struct ImageEditorSmartFilter: Identifiable, Equatable, Codable {
 }
 
 struct ImageEditorFilterSettings: Equatable, Codable {
+    /// When present, Gaussian blur uses this pixel radius instead of the UI's normalized intensity.
+    /// Figma layer-blur imports use this to retain the source radius across project round-trips.
+    var gaussianBlurRadius: Double?
     var unsharpRadius: Double = 1
     var unsharpThreshold: Double = 0
     var liquifyPushX: Double = 0.25
@@ -1638,6 +1641,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
     var spherizeAmount: Double = 0.5
 
     init(
+        gaussianBlurRadius: Double? = nil,
         unsharpRadius: Double = 1,
         unsharpThreshold: Double = 0,
         liquifyPushX: Double = 0.25,
@@ -1653,6 +1657,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         pinchAmount: Double = 0.5,
         spherizeAmount: Double = 0.5
     ) {
+        self.gaussianBlurRadius = gaussianBlurRadius
         self.unsharpRadius = unsharpRadius
         self.unsharpThreshold = unsharpThreshold
         self.liquifyPushX = liquifyPushX
@@ -1671,6 +1676,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
+        gaussianBlurRadius = try container.decodeIfPresent(Double.self, forKey: .gaussianBlurRadius)
         unsharpRadius = try container.decodeIfPresent(Double.self, forKey: .unsharpRadius) ?? 1
         unsharpThreshold = try container.decodeIfPresent(Double.self, forKey: .unsharpThreshold) ?? 0
         liquifyPushX = try container.decodeIfPresent(Double.self, forKey: .liquifyPushX) ?? 0.25
@@ -1689,6 +1695,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
 
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(gaussianBlurRadius, forKey: .gaussianBlurRadius)
         try container.encode(unsharpRadius, forKey: .unsharpRadius)
         try container.encode(unsharpThreshold, forKey: .unsharpThreshold)
         try container.encode(liquifyPushX, forKey: .liquifyPushX)
@@ -1707,6 +1714,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
 
     func normalized() -> ImageEditorFilterSettings {
         ImageEditorFilterSettings(
+            gaussianBlurRadius: gaussianBlurRadius.map { max(0, min(256, $0)) },
             unsharpRadius: max(0.5, min(5, unsharpRadius)),
             unsharpThreshold: max(0, min(1, unsharpThreshold)),
             liquifyPushX: max(-1, min(1, liquifyPushX)),
@@ -1725,6 +1733,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
     }
 
     private enum CodingKeys: String, CodingKey {
+        case gaussianBlurRadius
         case unsharpRadius
         case unsharpThreshold
         case liquifyPushX

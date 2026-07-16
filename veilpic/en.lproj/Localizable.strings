@@ -800,6 +800,7 @@
 "imageEditor.properties.filter" = "Filter";
 "imageEditor.properties.smartFiltersEmpty" = "No smart filters on selected layer";
 "imageEditor.properties.smartFilterItem" = "%@ %d%%";
+"imageEditor.properties.smartFilterGaussianBlurItem" = "%@ · Radius %@ px";
 "imageEditor.properties.smartFilterUnsharpItem" = "%@ %d%% · Radius %@ · Threshold %d";
 "imageEditor.properties.smartFilterLiquifyPushItem" = "%@ %d%% · X %d · Y %d";
 "imageEditor.properties.smartFilterLiquifyTwirlItem" = "%@ %d%% · Twirl %d";

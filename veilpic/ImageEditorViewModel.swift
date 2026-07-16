@@ -957,6 +957,16 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func smartFilterLabel(_ filter: ImageEditorSmartFilter) -> String {
+        if filter.kind == .gaussianBlur,
+           let radius = filter.normalizedSettings.gaussianBlurRadius {
+            let title = L10n.format(
+                "imageEditor.properties.smartFilterGaussianBlurItem",
+                filter.kind.title,
+                String(format: "%.1f", radius)
+            )
+            guard !filter.isEnabled else { return title }
+            return L10n.format("imageEditor.properties.smartFilterDisabled", title)
+        }
         if filter.kind == .unsharpMask {
             let settings = filter.normalizedSettings
             let title = L10n.format(

@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.12.0-rc164 - 2026-07-17
+
+### Added
+- Figma `LAYER_BLUR` 导入为可调半径的非破坏高斯模糊，并随项目保存；`BACKGROUND_BLUR` 仍保留明确的降级提示。
+
 ## 2.12.0-rc163 - 2026-07-17
 
 ### Added

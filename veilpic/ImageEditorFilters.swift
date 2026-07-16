@@ -86,7 +86,8 @@ extension NSImage {
         case .gaussianBlur:
             let filter = CIFilter.gaussianBlur()
             filter.inputImage = ciImage.clampedToExtent()
-            filter.radius = Float(clamped * 18)
+            let radius = settings.normalized().gaussianBlurRadius ?? clamped * 18
+            filter.radius = Float(max(0, min(256, radius)))
             output = filter.outputImage?.cropped(to: ciImage.extent)
         case .sharpen:
             let filter = CIFilter.sharpenLuminance()

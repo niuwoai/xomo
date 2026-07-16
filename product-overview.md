@@ -1,10 +1,10 @@
 # 象墨（Xomo）产品概览
 
-> 最后更新：2026-07-17 | 当前版本：v2.12.0-rc163
+> 最后更新：2026-07-17 | 当前版本：v2.12.0-rc164
 
 ## 产品定位
 
-v2.12.0-rc163 把 Figma Drop Shadow 与 Inner Shadow 导入为可编辑图层效果；rc162 的描边位置 inside/center/outside、rc161 的描边端点/连接/虚线预设、rc157 的 PSD 基础文字层双向交换、rc156 的额外 Alpha 通道交换与 rc154 的闭合原生矢量蒙版导出仍保留。
+v2.12.0-rc164 把 Figma Layer Blur 导入为保留像素半径的非破坏高斯模糊；rc163 的 Drop Shadow/Inner Shadow、rc162 的描边位置 inside/center/outside、rc161 的描边端点/连接/虚线预设、rc157 的 PSD 基础文字层双向交换、rc156 的额外 Alpha 通道交换与 rc154 的闭合原生矢量蒙版导出仍保留。
 
 v2.12.0-rc146 让多选图层中的 Figma 变量绑定可以一次稳定读取和复制：重复绑定按稳定 ID 去重，属性面板、MCP 和 CLI 使用同一批量逻辑，仍只写入本机剪贴板，不向 Figma 云端回写。
 
