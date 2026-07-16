@@ -533,6 +533,7 @@ struct XomoFigmaNodeImportPlanTests {
                           "fills": [],
                           "strokes": [{"type": "SOLID", "color": {"r": 0, "g": 0, "b": 0, "a": 1}}],
                           "strokeWeight": 6,
+                          "strokeAlign": "OUTSIDE",
                           "strokeCap": "SQUARE",
                           "strokeJoin": "BEVEL",
                           "strokeDashes": [6, 3],
@@ -550,6 +551,7 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(item.strokeCap == "SQUARE")
         #expect(item.strokeJoin == "BEVEL")
         #expect(item.strokeDashes == [6, 3])
+        #expect(item.strokeAlign == "OUTSIDE")
 
         let materialized = XomoFigmaNodeMaterializer.materialize(
             plan: plan,
@@ -559,6 +561,7 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(layer.shapeContent?.strokeCap == .square)
         #expect(layer.shapeContent?.strokeJoin == .bevel)
         #expect(layer.shapeContent?.strokeDashPattern == [6 * (layer.frame.width / 80), 3 * (layer.frame.width / 80)])
+        #expect(layer.shapeContent?.strokePosition == .outside)
 
         var noneItem = item
         noneItem.strokeCap = "NONE"

@@ -1,0 +1,219 @@
+{
+  "generated_at": "2026-07-17 04:04:36 +0800",
+  "total": 21,
+  "passed": 0,
+  "failed": 21,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorShapeStyleTests",
+      "method": "appearanceEditIsOneUndoableProjectPersistentChange",
+      "identifier": "veilpicTests/ImageEditorShapeStyleTests/appearanceEditIsOneUndoableProjectPersistentChange",
+      "file": "ImageEditorShapeStyleTests.swift",
+      "passed": false,
+      "duration": 3.032,
+      "issues": [],
+      "log": "ImageEditorShapeStyleTests.appearanceEditIsOneUndoableProjectPersistentChange.log"
+    },
+    {
+      "suite": "ImageEditorShapeStyleTests",
+      "method": "canvasGradientAxisAddsAndDeletesSelectedStopWithOneUndoStep",
+      "identifier": "veilpicTests/ImageEditorShapeStyleTests/canvasGradientAxisAddsAndDeletesSelectedStopWithOneUndoStep",
+      "file": "ImageEditorShapeStyleTests.swift",
+      "passed": false,
+      "duration": 1.563,
+      "issues": [],
+      "log": "ImageEditorShapeStyleTests.canvasGradientAxisAddsAndDeletesSelectedStopWithOneUndoStep.log"
+    },
+    {
+      "suite": "ImageEditorShapeStyleTests",
+      "method": "canvasGradientStopProjectsOntoAxisAndCommitsOneUndoStep",
+      "identifier": "veilpicTests/ImageEditorShapeStyleTests/canvasGradientStopProjectsOntoAxisAndCommitsOneUndoStep",
+      "file": "ImageEditorShapeStyleTests.swift",
+      "passed": false,
+      "duration": 2.384,
+      "issues": [],
+      "log": "ImageEditorShapeStyleTests.canvasGradientStopProjectsOntoAxisAndCommitsOneUndoStep.log"
+    },
+    {
+      "suite": "ImageEditorShapeStyleTests",
+      "method": "fillAndStrokeRenderAsIndependentEditableProperties",
+      "identifier": "veilpicTests/ImageEditorShapeStyleTests/fillAndStrokeRenderAsIndependentEditableProperties",
+      "file": "ImageEditorShapeStyleTests.swift",
+      "passed": false,
+      "duration": 1.61,
+      "issues": [],
+      "log": "ImageEditorShapeStyleTests.fillAndStrokeRenderAsIndependentEditableProperties.log"
+    },
+    {
+      "suite": "ImageEditorShapeStyleTests",
+      "method": "gradientAppearanceIsUndoablePersistentAndCanReturnToSolid",
+      "identifier": "veilpicTests/ImageEditorShapeStyleTests/gradientAppearanceIsUndoablePersistentAndCanReturnToSolid",
+      "file": "ImageEditorShapeStyleTests.swift",
+      "passed": false,
+      "duration": 1.903,
+      "issues": [],
+      "log": "ImageEditorShapeStyleTests.gradientAppearanceIsUndoablePersistentAndCanReturnToSolid.log"
+    },
+    {
+      "suite": "ImageEditorShapeStyleTests",
+      "method": "gradientEndpointHandleColorsUseActualStopsAndTrackReverse",
+      "identifier": "veilpicTests/ImageEditorShapeStyleTests/gradientEndpointHandleColorsUseActualStopsAndTrackReverse",
+      "file": "ImageEditorShapeStyleTests.swift",
+      "passed": false,
+      "duration": 1.607,
+      "issues": [],
+      "log": "ImageEditorShapeStyleTests.gradientEndpointHandleColorsUseActualStopsAndTrackReverse.log"
+    },
+    {
+      "suite": "ImageEditorShapeStyleTests",
+      "method": "gradientHandlesKeepOppositeEndpointFixedAndCommitOneUndoStep",
+      "identifier": "veilpicTests/ImageEditorShapeStyleTests/gradientHandlesKeepOppositeEndpointFixedAndCommitOneUndoStep",
+      "file": "ImageEditorShapeStyleTests.swift",
+      "passed": false,
+      "duration": 3.468,
+      "issues": [],
+      "log": "ImageEditorShapeStyleTests.gradientHandlesKeepOppositeEndpointFixedAndCommitOneUndoStep.log"
+    },
+    {
+      "suite": "ImageEditorShapeStyleTests",
+      "method": "gradientStopsCanBeAddedEditedRemovedUndoneAndPersisted",
+      "identifier": "veilpicTests/ImageEditorShapeStyleTests/gradientStopsCanBeAddedEditedRemovedUndoneAndPersisted",
+      "file": "ImageEditorShapeStyleTests.swift",
+      "passed": false,
+      "duration": 1.57,
+      "issues": [],
+      "log": "ImageEditorShapeStyleTests.gradientStopsCanBeAddedEditedRemovedUndoneAndPersisted.log"
+    },
+    {
+      "suite": "ImageEditorShapeStyleTests",
+      "method": "legacyTwoColorGradientDecodesIntoEditableEndpointStops",
+      "identifier": "veilpicTests/ImageEditorShapeStyleTests/legacyTwoColorGradientDecodesIntoEditableEndpointStops",
+      "file": "ImageEditorShapeStyleTests.swift",
+      "passed": false,
+      "duration": 1.761,
+      "issues": [],
+      "log": "ImageEditorShapeStyleTests.legacyTwoColorGradientDecodesIntoEditableEndpointStops.log"
+    },
+    {
+      "suite": "ImageEditorShapeStyleTests",
+      "method": "linearGradientFillClipsToShapeAndPreservesIndependentStroke",
+      "identifier": "veilpicTests/ImageEditorShapeStyleTests/linearGradientFillClipsToShapeAndPreservesIndependentStroke",
+      "file": "ImageEditorShapeStyleTests.swift",
+      "passed": false,
+      "duration": 2.153,
+      "issues": [],
+      "log": "ImageEditorShapeStyleTests.linearGradientFillClipsToShapeAndPreservesIndependentStroke.log"
+    },
+    {
+      "suite": "ImageEditorShapeStyleTests",
+      "method": "lockedShapeRejectsAppearanceChanges",
+      "identifier": "veilpicTests/ImageEditorShapeStyleTests/lockedShapeRejectsAppearanceChanges",
+      "file": "ImageEditorShapeStyleTests.swift",
+      "passed": false,
+      "duration": 2.733,
+      "issues": [],
+      "log": "ImageEditorShapeStyleTests.lockedShapeRejectsAppearanceChanges.log"
+    },
+    {
+      "suite": "ImageEditorShapeStyleTests",
+      "method": "lockedShapeRejectsCanvasGradientStopDrag",
+      "identifier": "veilpicTests/ImageEditorShapeStyleTests/lockedShapeRejectsCanvasGradientStopDrag",
+      "file": "ImageEditorShapeStyleTests.swift",
+      "passed": false,
+      "duration": 1.876,
+      "issues": [],
+      "log": "ImageEditorShapeStyleTests.lockedShapeRejectsCanvasGradientStopDrag.log"
+    },
+    {
+      "suite": "ImageEditorShapeStyleTests",
+      "method": "multiStopGradientRendersMiddleColorAtItsPosition",
+      "identifier": "veilpicTests/ImageEditorShapeStyleTests/multiStopGradientRendersMiddleColorAtItsPosition",
+      "file": "ImageEditorShapeStyleTests.swift",
+      "passed": false,
+      "duration": 1.619,
+      "issues": [],
+      "log": "ImageEditorShapeStyleTests.multiStopGradientRendersMiddleColorAtItsPosition.log"
+    },
+    {
+      "suite": "ImageEditorShapeStyleTests",
+      "method": "propertiesPanelControlsStayKeyboardNeutral",
+      "identifier": "veilpicTests/ImageEditorShapeStyleTests/propertiesPanelControlsStayKeyboardNeutral",
+      "file": "ImageEditorShapeStyleTests.swift",
+      "passed": false,
+      "duration": 2.313,
+      "issues": [],
+      "log": "ImageEditorShapeStyleTests.propertiesPanelControlsStayKeyboardNeutral.log"
+    },
+    {
+      "suite": "ImageEditorShapeStyleTests",
+      "method": "radialCanvasGeometryRespectsNonUniformLayerFrames",
+      "identifier": "veilpicTests/ImageEditorShapeStyleTests/radialCanvasGeometryRespectsNonUniformLayerFrames",
+      "file": "ImageEditorShapeStyleTests.swift",
+      "passed": false,
+      "duration": 3.207,
+      "issues": [],
+      "log": "ImageEditorShapeStyleTests.radialCanvasGeometryRespectsNonUniformLayerFrames.log"
+    },
+    {
+      "suite": "ImageEditorShapeStyleTests",
+      "method": "radialCanvasHandlesCommitOneUndoAndRejectNoOpOrLockedEdits",
+      "identifier": "veilpicTests/ImageEditorShapeStyleTests/radialCanvasHandlesCommitOneUndoAndRejectNoOpOrLockedEdits",
+      "file": "ImageEditorShapeStyleTests.swift",
+      "passed": false,
+      "duration": 3.579,
+      "issues": [],
+      "log": "ImageEditorShapeStyleTests.radialCanvasHandlesCommitOneUndoAndRejectNoOpOrLockedEdits.log"
+    },
+    {
+      "suite": "ImageEditorShapeStyleTests",
+      "method": "radialGradientAxisAddsInterpolatedStopForNormalAndReversedFills",
+      "identifier": "veilpicTests/ImageEditorShapeStyleTests/radialGradientAxisAddsInterpolatedStopForNormalAndReversedFills",
+      "file": "ImageEditorShapeStyleTests.swift",
+      "passed": false,
+      "duration": 2.988,
+      "issues": [],
+      "log": "ImageEditorShapeStyleTests.radialGradientAxisAddsInterpolatedStopForNormalAndReversedFills.log"
+    },
+    {
+      "suite": "ImageEditorShapeStyleTests",
+      "method": "radialGradientAxisRejectsTheSixteenthStopLimit",
+      "identifier": "veilpicTests/ImageEditorShapeStyleTests/radialGradientAxisRejectsTheSixteenthStopLimit",
+      "file": "ImageEditorShapeStyleTests.swift",
+      "passed": false,
+      "duration": 2.574,
+      "issues": [],
+      "log": "ImageEditorShapeStyleTests.radialGradientAxisRejectsTheSixteenthStopLimit.log"
+    },
+    {
+      "suite": "ImageEditorShapeStyleTests",
+      "method": "radialGradientRendersPersistsAndSwitchesWithOneUndoPerEdit",
+      "identifier": "veilpicTests/ImageEditorShapeStyleTests/radialGradientRendersPersistsAndSwitchesWithOneUndoPerEdit",
+      "file": "ImageEditorShapeStyleTests.swift",
+      "passed": false,
+      "duration": 1.597,
+      "issues": [],
+      "log": "ImageEditorShapeStyleTests.radialGradientRendersPersistsAndSwitchesWithOneUndoPerEdit.log"
+    },
+    {
+      "suite": "ImageEditorShapeStyleTests",
+      "method": "radialGradientStopDragAndRemovalEachCommitOneUndoStep",
+      "identifier": "veilpicTests/ImageEditorShapeStyleTests/radialGradientStopDragAndRemovalEachCommitOneUndoStep",
+      "file": "ImageEditorShapeStyleTests.swift",
+      "passed": false,
+      "duration": 3.164,
+      "issues": [],
+      "log": "ImageEditorShapeStyleTests.radialGradientStopDragAndRemovalEachCommitOneUndoStep.log"
+    },
+    {
+      "suite": "ImageEditorShapeStyleTests",
+      "method": "radialGradientStopsFollowRadiusAndReverseProjection",
+      "identifier": "veilpicTests/ImageEditorShapeStyleTests/radialGradientStopsFollowRadiusAndReverseProjection",
+      "file": "ImageEditorShapeStyleTests.swift",
+      "passed": false,
+      "duration": 2.868,
+      "issues": [],
+      "log": "ImageEditorShapeStyleTests.radialGradientStopsFollowRadiusAndReverseProjection.log"
+    }
+  ]
+}

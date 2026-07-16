@@ -2458,6 +2458,7 @@ struct ImageEditorShapeContent {
     var strokeColor: NSColor
     var strokeWidth: CGFloat
     var strokeOpacity: CGFloat
+    var strokePosition: ImageEditorStrokePosition = .inside
     var strokeCap: ImageEditorStrokeCap = .round
     var strokeJoin: ImageEditorStrokeJoin = .round
     var strokeDashPattern: [CGFloat] = []
@@ -2549,8 +2550,8 @@ struct ImageEditorShapeContent {
                 if normalized.kind == .path {
                     path = normalized.pathBezierPath()
                 } else {
-                    let inset = normalized.strokeWidth / 2
-                    let shapeRect = rect.insetBy(dx: inset, dy: inset)
+                    let fillInset = normalized.strokeWidth / 2
+                    let shapeRect = rect.insetBy(dx: fillInset, dy: fillInset)
                     if normalized.kind == .ellipse {
                         path = NSBezierPath(ovalIn: shapeRect)
                     } else {
@@ -2578,18 +2579,33 @@ struct ImageEditorShapeContent {
                         path.fill()
                     }
                 }
-                path.lineJoinStyle = normalized.strokeJoin.nsStyle
-                path.lineCapStyle = normalized.strokeCap.nsStyle
+                let strokePath: NSBezierPath
+                if normalized.kind == .path {
+                    strokePath = path
+                } else {
+                    let strokeInset: CGFloat
+                    switch normalized.strokePosition {
+                    case .inside: strokeInset = normalized.strokeWidth / 2
+                    case .center: strokeInset = 0
+                    case .outside: strokeInset = -normalized.strokeWidth / 2
+                    }
+                    let strokeRect = rect.insetBy(dx: strokeInset, dy: strokeInset)
+                    strokePath = normalized.kind == .ellipse
+                        ? NSBezierPath(ovalIn: strokeRect)
+                        : normalized.rectangleBezierPath(in: strokeRect)
+                }
+                strokePath.lineJoinStyle = normalized.strokeJoin.nsStyle
+                strokePath.lineCapStyle = normalized.strokeCap.nsStyle
                 if normalized.strokeDashPattern.isEmpty {
-                    path.setLineDash(nil, count: 0, phase: 0)
+                    strokePath.setLineDash(nil, count: 0, phase: 0)
                 } else {
                     normalized.strokeDashPattern.withUnsafeBufferPointer { pattern in
-                        path.setLineDash(pattern.baseAddress, count: pattern.count, phase: 0)
+                        strokePath.setLineDash(pattern.baseAddress, count: pattern.count, phase: 0)
                     }
                 }
-                path.lineWidth = normalized.strokeWidth
+                strokePath.lineWidth = normalized.strokeWidth
                 normalized.strokeColor.withAlphaComponent(normalized.strokeOpacity).setStroke()
-                path.stroke()
+                strokePath.stroke()
             }
         } ?? NSImage.transparent(size: size)
     }

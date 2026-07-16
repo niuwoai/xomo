@@ -910,6 +910,7 @@ struct ImageEditorShapeStyleTests {
             strokeColor: .systemBlue,
             strokeOpacity: 0.75,
             strokeWidth: 7,
+            strokePosition: .outside,
             strokeCap: .square,
             strokeJoin: .bevel,
             strokeDashPattern: [12, 4]
@@ -921,6 +922,7 @@ struct ImageEditorShapeStyleTests {
         #expect(edited.strokeColor.isEqual(NSColor.systemBlue))
         #expect(edited.strokeOpacity == 0.75)
         #expect(edited.strokeWidth == 7)
+        #expect(edited.strokePosition == .outside)
         #expect(edited.strokeCap == .square)
         #expect(edited.strokeJoin == .bevel)
         #expect(edited.strokeDashPattern == [12, 4])
@@ -933,6 +935,7 @@ struct ImageEditorShapeStyleTests {
         #expect(undone.strokeColor.isEqual(original.strokeColor))
         #expect(undone.strokeOpacity == original.strokeOpacity)
         #expect(undone.strokeWidth == original.strokeWidth)
+        #expect(undone.strokePosition == original.strokePosition)
         #expect(undone.strokeCap == original.strokeCap)
         #expect(undone.strokeJoin == original.strokeJoin)
         #expect(undone.strokeDashPattern == original.strokeDashPattern)
@@ -943,6 +946,7 @@ struct ImageEditorShapeStyleTests {
         #expect(redone.strokeColor.isEqual(edited.strokeColor))
         #expect(redone.strokeOpacity == edited.strokeOpacity)
         #expect(redone.strokeWidth == edited.strokeWidth)
+        #expect(redone.strokePosition == edited.strokePosition)
         #expect(redone.strokeCap == edited.strokeCap)
         #expect(redone.strokeJoin == edited.strokeJoin)
         #expect(redone.strokeDashPattern == edited.strokeDashPattern)
@@ -956,6 +960,7 @@ struct ImageEditorShapeStyleTests {
         #expect(restored.strokeColor.isEqual(edited.strokeColor))
         #expect(restored.strokeOpacity == edited.strokeOpacity)
         #expect(restored.strokeWidth == edited.strokeWidth)
+        #expect(restored.strokePosition == edited.strokePosition)
         #expect(restored.strokeCap == edited.strokeCap)
         #expect(restored.strokeJoin == edited.strokeJoin)
         #expect(restored.strokeDashPattern == edited.strokeDashPattern)
@@ -1004,6 +1009,7 @@ struct ImageEditorShapeStyleTests {
             "image-editor-shape-stroke-color",
             "image-editor-shape-stroke-opacity",
             "image-editor-shape-stroke-width",
+            "image-editor-shape-stroke-position",
             "image-editor-shape-stroke-cap",
             "image-editor-shape-stroke-join",
             "image-editor-shape-stroke-dash"

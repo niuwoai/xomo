@@ -440,6 +440,7 @@ enum XomoFigmaNodeMaterializer {
             strokeColor: stroke,
             strokeWidth: max(1, CGFloat(item.strokeWeight ?? 1) * scale),
             strokeOpacity: item.solidStroke.map { CGFloat($0.alpha) } ?? 0,
+            strokePosition: ImageEditorStrokePosition(figmaValue: item.strokeAlign),
             strokeCap: ImageEditorStrokeCap(figmaValue: item.strokeCap),
             strokeJoin: ImageEditorStrokeJoin(figmaValue: item.strokeJoin),
             strokeDashPattern: item.strokeDashes?.map { max(0, CGFloat($0) * scale) } ?? [],

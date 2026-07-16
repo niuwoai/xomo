@@ -144,6 +144,22 @@ extension ImageEditorView {
             .accessibilityIdentifier("image-editor-shape-stroke-width")
 
             HStack(spacing: 8) {
+                Text(L10n.text("imageEditor.properties.strokePosition"))
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                Spacer(minLength: 4)
+                Picker("", selection: selectedShapeStrokePositionBinding) {
+                    ForEach(ImageEditorStrokePosition.allCases) { position in
+                        Text(position.title).tag(position)
+                    }
+                }
+                .labelsHidden()
+                .pickerStyle(.menu)
+                .focusable(false)
+                .accessibilityIdentifier("image-editor-shape-stroke-position")
+            }
+
+            HStack(spacing: 8) {
                 Text(L10n.text("imageEditor.properties.shapeStrokeCap"))
                     .font(.system(size: 10, weight: .medium))
                     .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
@@ -422,6 +438,14 @@ extension ImageEditorView {
             viewModel.selectedShapeStrokeCap
         } set: { cap in
             viewModel.setSelectedShapeStrokeCap(cap)
+        }
+    }
+
+    private var selectedShapeStrokePositionBinding: Binding<ImageEditorStrokePosition> {
+        Binding {
+            viewModel.selectedShapeStrokePosition
+        } set: { position in
+            viewModel.setSelectedShapeStrokePosition(position)
         }
     }
 

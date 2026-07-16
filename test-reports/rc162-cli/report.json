@@ -1,0 +1,10 @@
+{
+  "suite": "XomoCLITests",
+  "total": 2,
+  "passed": 2,
+  "failed": 0,
+  "tests": [
+    "initializeReturnsToolCapability",
+    "toolsListWorksWithoutRunningApp"
+  ]
+}

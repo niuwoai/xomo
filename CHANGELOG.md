@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.12.0-rc162 - 2026-07-17
+
+### Added
+- Figma `strokeAlign` 现在映射为 Shape 的 inside/center/outside 描边位置，属性面板可直接修改，并沿用 Undo/Redo 与项目存档。
+- 新增描边位置导入、渲染、项目往返和控件回归覆盖。
+
+### Verification
+- Shape 专项与 Figma 描边位置定向测试均完成 `build-for-testing` 编译；隔离运行器受当前宿主 `testmanagerd` 限制无法采集断言，结果保留在 `test-reports/rc162-shape-style` 与 `test-reports/rc162-figma-stroke`。
+- Xomo CLI 测试 2/2 通过。
+- `git diff --check` 通过。
+
 ## 2.12.0-rc161 - 2026-07-17
 
 ### Added

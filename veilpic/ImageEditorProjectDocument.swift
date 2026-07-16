@@ -643,6 +643,7 @@ struct ImageEditorProjectShapeContent: Equatable, Codable {
     var strokeColor: ImageEditorProjectColor
     var strokeWidth: CGFloat
     var strokeOpacity: CGFloat
+    var strokePosition: ImageEditorStrokePosition = .inside
     var strokeCap: ImageEditorStrokeCap = .round
     var strokeJoin: ImageEditorStrokeJoin = .round
     var strokeDashPattern: [CGFloat] = []
@@ -656,7 +657,7 @@ struct ImageEditorProjectShapeContent: Equatable, Codable {
 
     enum CodingKeys: String, CodingKey {
         case kind, fillColor, fillGradient, fillGradientCenter, fillOpacity
-        case strokeColor, strokeWidth, strokeOpacity, strokeCap, strokeJoin, strokeDashPattern
+        case strokeColor, strokeWidth, strokeOpacity, strokePosition, strokeCap, strokeJoin, strokeDashPattern
         case cornerRadius, cornerRadii, cornerSmoothing, pathPoints, pathAnchors
         case pathSubpaths, isPathClosed
     }
@@ -671,6 +672,7 @@ struct ImageEditorProjectShapeContent: Equatable, Codable {
         strokeColor = try container.decode(ImageEditorProjectColor.self, forKey: .strokeColor)
         strokeWidth = try container.decode(CGFloat.self, forKey: .strokeWidth)
         strokeOpacity = try container.decode(CGFloat.self, forKey: .strokeOpacity)
+        strokePosition = try container.decodeIfPresent(ImageEditorStrokePosition.self, forKey: .strokePosition) ?? .inside
         strokeCap = try container.decodeIfPresent(ImageEditorStrokeCap.self, forKey: .strokeCap) ?? .round
         strokeJoin = try container.decodeIfPresent(ImageEditorStrokeJoin.self, forKey: .strokeJoin) ?? .round
         strokeDashPattern = try container.decodeIfPresent([CGFloat].self, forKey: .strokeDashPattern) ?? []
@@ -692,6 +694,7 @@ struct ImageEditorProjectShapeContent: Equatable, Codable {
         strokeColor = ImageEditorProjectColor(color: content.strokeColor)
         strokeWidth = content.strokeWidth
         strokeOpacity = content.strokeOpacity
+        strokePosition = content.strokePosition
         strokeCap = content.strokeCap
         strokeJoin = content.strokeJoin
         strokeDashPattern = content.strokeDashPattern
@@ -714,6 +717,7 @@ struct ImageEditorProjectShapeContent: Equatable, Codable {
             strokeColor: strokeColor.nsColor,
             strokeWidth: strokeWidth,
             strokeOpacity: strokeOpacity,
+            strokePosition: strokePosition,
             strokeCap: strokeCap,
             strokeJoin: strokeJoin,
             strokeDashPattern: strokeDashPattern,

@@ -55,6 +55,17 @@ extension ImageEditorStrokeJoin {
     }
 }
 
+extension ImageEditorStrokePosition {
+    init(figmaValue: String?) {
+        switch figmaValue?.uppercased() {
+        case "INSIDE": self = .inside
+        case "CENTER": self = .center
+        case "OUTSIDE": self = .outside
+        default: self = .inside
+        }
+    }
+}
+
 extension ImageEditorGradientFillContent {
     static func shapeLinear(
         startColor: NSColor,
@@ -218,6 +229,10 @@ extension ImageEditorViewModel {
         document.selectedLayer?.shapeContent?.strokeCap ?? .round
     }
 
+    var selectedShapeStrokePosition: ImageEditorStrokePosition {
+        document.selectedLayer?.shapeContent?.strokePosition ?? .inside
+    }
+
     var selectedShapeStrokeJoin: ImageEditorStrokeJoin {
         document.selectedLayer?.shapeContent?.strokeJoin ?? .round
     }
@@ -369,6 +384,10 @@ extension ImageEditorViewModel {
         updateSelectedShapeProperties(strokeCap: cap)
     }
 
+    func setSelectedShapeStrokePosition(_ position: ImageEditorStrokePosition) {
+        updateSelectedShapeProperties(strokePosition: position)
+    }
+
     func setSelectedShapeStrokeJoin(_ join: ImageEditorStrokeJoin) {
         updateSelectedShapeProperties(strokeJoin: join)
     }
@@ -387,6 +406,7 @@ extension ImageEditorViewModel {
         strokeColor: NSColor? = nil,
         strokeOpacity: Double? = nil,
         strokeWidth: Double? = nil,
+        strokePosition: ImageEditorStrokePosition? = nil,
         strokeCap: ImageEditorStrokeCap? = nil,
         strokeJoin: ImageEditorStrokeJoin? = nil,
         strokeDashPattern: [CGFloat]? = nil,
@@ -435,6 +455,7 @@ extension ImageEditorViewModel {
             if let strokeWidth, strokeWidth.isFinite {
                 content.strokeWidth = CGFloat(max(1, min(96, strokeWidth)))
             }
+            if let strokePosition { content.strokePosition = strokePosition }
             if let strokeCap { content.strokeCap = strokeCap }
             if let strokeJoin { content.strokeJoin = strokeJoin }
             if let strokeDashPattern { content.strokeDashPattern = strokeDashPattern }
@@ -477,6 +498,7 @@ extension ImageEditorViewModel {
             && lhs.strokeColor.isEqual(rhs.strokeColor)
             && abs(lhs.strokeOpacity - rhs.strokeOpacity) <= 0.000_1
             && abs(lhs.strokeWidth - rhs.strokeWidth) <= 0.000_1
+            && lhs.strokePosition == rhs.strokePosition
             && lhs.strokeCap == rhs.strokeCap
             && lhs.strokeJoin == rhs.strokeJoin
             && lhs.strokeDashPattern == rhs.strokeDashPattern
