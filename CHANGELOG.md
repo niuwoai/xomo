@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.12.0-rc180 - 2026-07-17
+
+### Verification
+- 完成第 180 个小版本质量门禁：独立进程全量测试 965/965、CLI 测试 2/2、arm64/x86_64 通用 Release App 与 CLI 构建、安装版启动和组件库插入冒烟均通过；已覆盖安装 `/Applications/Xomo.app`。
+
 ## 2.12.0-rc179 - 2026-07-17
 
 ### Added
