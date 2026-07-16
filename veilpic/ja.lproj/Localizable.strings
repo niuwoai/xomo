@@ -801,6 +801,7 @@
 "imageEditor.properties.smartFiltersEmpty" = "選択レイヤーにスマートフィルターはありません";
 "imageEditor.properties.smartFilterItem" = "%@ %d%%";
 "imageEditor.properties.smartFilterGaussianBlurItem" = "%@ · 半径 %@ px";
+"imageEditor.properties.smartFilterBackgroundBlurItem" = "%@ · 背景半径 %@ px";
 "imageEditor.properties.smartFilterUnsharpItem" = "%@ %d%% · 半径 %@ · しきい値 %d";
 "imageEditor.properties.smartFilterLiquifyPushItem" = "%@ %d%% · X %d · Y %d";
 "imageEditor.properties.smartFilterLiquifyTwirlItem" = "%@ %d%% · 回転 %d";

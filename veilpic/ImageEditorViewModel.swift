@@ -960,7 +960,9 @@ final class ImageEditorViewModel: ObservableObject {
         if filter.kind == .gaussianBlur,
            let radius = filter.normalizedSettings.gaussianBlurRadius {
             let title = L10n.format(
-                "imageEditor.properties.smartFilterGaussianBlurItem",
+                filter.appliesToBackdrop
+                    ? "imageEditor.properties.smartFilterBackgroundBlurItem"
+                    : "imageEditor.properties.smartFilterGaussianBlurItem",
                 filter.kind.title,
                 String(format: "%.1f", radius)
             )

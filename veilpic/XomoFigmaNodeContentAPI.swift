@@ -363,7 +363,7 @@ enum XomoFigmaNodeImportMapper {
               radius.isFinite,
               radius >= 0
         else { return false }
-        if type == "LAYER_BLUR" {
+        if type == "LAYER_BLUR" || type == "BACKGROUND_BLUR" {
             return true
         }
         guard type == "DROP_SHADOW" || type == "INNER_SHADOW",
@@ -383,9 +383,9 @@ enum XomoFigmaNodeImportMapper {
                   let type = effect.type,
                   let radius = effect.radius
             else { return nil }
-            if type == "LAYER_BLUR" {
+            if type == "LAYER_BLUR" || type == "BACKGROUND_BLUR" {
                 return XomoFigmaPlanEffect(
-                    kind: .layerBlur,
+                    kind: type == "LAYER_BLUR" ? .layerBlur : .backgroundBlur,
                     color: XomoFigmaPlanColor(red: 0, green: 0, blue: 0, alpha: 0),
                     offsetX: 0,
                     offsetY: 0,

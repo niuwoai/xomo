@@ -1075,8 +1075,10 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(shadowed.fidelity == .exact)
         #expect(!shadowed.issues.contains(.effectsFlattened))
         let blurred = try #require(plan.items.first { $0.sourceID == "2:41" })
-        #expect(blurred.effects.count == 1)
-        #expect(blurred.issues.contains(.effectsFlattened))
+        #expect(blurred.effects.count == 2)
+        #expect(blurred.effects.map(\.kind) == [.layerBlur, .backgroundBlur])
+        #expect(blurred.fidelity == .exact)
+        #expect(!blurred.issues.contains(.effectsFlattened))
 
         let result = XomoFigmaNodeMaterializer.materialize(
             plan: plan,
@@ -1091,9 +1093,13 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(abs(layer.style.shadowOffset.height - 6) < 0.001)
         #expect(abs(layer.style.innerShadowDistance - sqrt(13)) < 0.001)
         let blurredLayer = try #require(result.layers.first { $0.name == "Blurred Card" })
-        #expect(blurredLayer.smartFilters.count == 1)
+        #expect(blurredLayer.smartFilters.count == 2)
         #expect(blurredLayer.smartFilters.first?.kind == .gaussianBlur)
         #expect(blurredLayer.smartFilters.first?.normalizedSettings.gaussianBlurRadius == 6)
+        #expect(blurredLayer.smartFilters.first?.appliesToBackdrop == false)
+        #expect(blurredLayer.smartFilters.last?.kind == .gaussianBlur)
+        #expect(blurredLayer.smartFilters.last?.normalizedSettings.gaussianBlurRadius == 4)
+        #expect(blurredLayer.smartFilters.last?.appliesToBackdrop == true)
     }
 
     @Test func materializerCreatesEditableHierarchyAtCenteredScaleAndHonestPlaceholder() throws {

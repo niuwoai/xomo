@@ -112,6 +112,46 @@ struct ImageEditorFilterTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterClear"))
     }
 
+    @Test func backgroundBlurSmartFilterSamplesTheBackdropWithoutChangingLayerPixels() throws {
+        let canvasSize = NSSize(width: 64, height: 32)
+        let sourceImage = splitColorImage(
+            size: canvasSize,
+            left: .black,
+            right: .white
+        )
+        let plainViewModel = ImageEditorViewModel(sourceName: "source.png", image: sourceImage) { _ in }
+        let plainLayer = ImageEditorLayer.blank(name: "Glass", size: NSSize(width: 24, height: 32))
+        var plain = plainLayer
+        plain.image = solidImage(
+            size: NSSize(width: 24, height: 32),
+            color: NSColor.white.withAlphaComponent(0.2)
+        )
+        plain.frame = CGRect(x: 20, y: 0, width: 24, height: 32)
+        plainViewModel.document.layers.append(plain)
+
+        let blurredViewModel = ImageEditorViewModel(sourceName: "source.png", image: sourceImage) { _ in }
+        var blurred = plain
+        var filter = ImageEditorSmartFilter(
+            kind: .gaussianBlur,
+            intensity: 1,
+            settings: ImageEditorFilterSettings(gaussianBlurRadius: 6)
+        )
+        filter.appliesToBackdrop = true
+        blurred.smartFilters = [filter]
+        blurredViewModel.document.layers.append(blurred)
+
+        let plainColor = try #require(
+            plainViewModel.document.compositedImage.color(at: CGPoint(x: 32, y: 16))?.usingColorSpace(.deviceRGB)
+        )
+        let blurredColor = try #require(
+            blurredViewModel.document.compositedImage.color(at: CGPoint(x: 32, y: 16))?.usingColorSpace(.deviceRGB)
+        )
+        #expect(blurred.smartFilters.first?.appliesToBackdrop == true)
+        #expect(blurred.image.qingtuPNGData() == plain.image.qingtuPNGData())
+        #expect(abs(blurredColor.redComponent - plainColor.redComponent) > 0.02)
+        #expect(abs(blurredColor.redComponent - blurredColor.blueComponent) < 0.02)
+    }
+
     @Test func imageEditorUnsharpMaskFilterLayerAndSmartFilterAreNonDestructive() async throws {
         let canvasSize = NSSize(width: 48, height: 48)
         let sourceImage = softEdgeImage(size: canvasSize)

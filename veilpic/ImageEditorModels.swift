@@ -1611,6 +1611,9 @@ struct ImageEditorSmartFilter: Identifiable, Equatable, Codable {
     var intensity: Double
     var settings = ImageEditorFilterSettings()
     var isEnabled = true
+    /// When true, a Gaussian blur samples the already-composited pixels behind the layer.
+    /// This keeps Figma BACKGROUND_BLUR non-destructive instead of baking the backdrop.
+    var appliesToBackdrop = false
 
     var normalizedIntensity: Double {
         max(0, min(1, intensity))
@@ -3189,7 +3192,7 @@ struct ImageEditorLayer: Identifiable {
             baseImage = image
         }
         return smartFilters.reduce(baseImage) { partial, filter in
-            guard filter.isEnabled else { return partial }
+            guard filter.isEnabled, !filter.appliesToBackdrop else { return partial }
             return partial.filtered(
                 kind: filter.kind,
                 intensity: filter.normalizedIntensity,
@@ -4328,9 +4331,11 @@ struct ImageEditorDocument {
         }
 
         let layerCanvas: NSImage
+        let backdropMask: NSImage?
         if layer.isClippingMask,
            let clippedImage = clippedCompositingImage(forLayerAt: index) {
             layerCanvas = imageByApplyingCanvasMask(clippedImage, mask: groupMask)
+            backdropMask = nil
         } else {
             let compositingImage = layer.renderedCompositingImage(globalLightAngle: globalLightAngle)
             let positionedCanvas = canvasImage(
@@ -4338,17 +4343,41 @@ struct ImageEditorDocument {
                 frame: layer.renderedCompositingFrame(globalLightAngle: globalLightAngle)
             )
             layerCanvas = imageByApplyingCanvasMask(positionedCanvas, mask: groupMask)
+            backdropMask = layerCanvas
         }
+        let backdropCanvas = canvasByApplyingBackdropBlur(
+            for: layer,
+            to: canvas,
+            mask: backdropMask
+        )
         let blendIfCanvas = layerCanvas.applyingBlendIfUnderlyingRange(
             black: layer.blendIfUnderlyingBlack,
             white: layer.blendIfUnderlyingWhite,
-            backdrop: canvas
+            backdrop: backdropCanvas
         ) ?? layerCanvas
-        return canvas.blended(
+        return backdropCanvas.blended(
             with: blendIfCanvas,
             mode: layer.blendMode,
             opacity: layer.opacity * groupOpacity
-        ) ?? canvas
+        ) ?? backdropCanvas
+    }
+
+    private func canvasByApplyingBackdropBlur(
+        for layer: ImageEditorLayer,
+        to canvas: NSImage,
+        mask: NSImage?
+    ) -> NSImage {
+        guard let mask else { return canvas }
+        return layer.smartFilters
+            .filter { $0.isEnabled && $0.appliesToBackdrop && $0.kind == .gaussianBlur }
+            .reduce(canvas) { partial, filter in
+                partial.applyingFilter(
+                    kind: .gaussianBlur,
+                    intensity: filter.normalizedIntensity,
+                    settings: filter.normalizedSettings,
+                    mask: mask
+                ) ?? partial
+            }
     }
 
     private func isolatedGroupCanvas(for group: ImageEditorLayer, includedLayerIDs: Set<UUID>? = nil) -> NSImage {

@@ -399,6 +399,15 @@ enum XomoFigmaNodeMaterializer {
                         settings: ImageEditorFilterSettings(gaussianBlurRadius: Double(radius))
                     )
                 )
+            case .backgroundBlur:
+                let radius = max(0, CGFloat(effect.radius) * scale)
+                var filter = ImageEditorSmartFilter(
+                    kind: .gaussianBlur,
+                    intensity: min(1, radius / 18),
+                    settings: ImageEditorFilterSettings(gaussianBlurRadius: Double(radius))
+                )
+                filter.appliesToBackdrop = true
+                layer.smartFilters.append(filter)
             }
         }
     }
