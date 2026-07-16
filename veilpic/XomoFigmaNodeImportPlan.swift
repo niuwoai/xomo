@@ -266,6 +266,7 @@ struct XomoFigmaNodeImportItem: Equatable, Identifiable, Sendable {
 struct XomoFigmaNodeImportPlan: Equatable, Sendable {
     var fileName: String
     var version: String?
+    var sourceCanonicalURL: URL?
     var rootSourceID: String
     var rootName: String
     var items: [XomoFigmaNodeImportItem]
@@ -274,6 +275,7 @@ struct XomoFigmaNodeImportPlan: Equatable, Sendable {
     init(
         fileName: String,
         version: String?,
+        sourceCanonicalURL: URL? = nil,
         rootSourceID: String,
         rootName: String,
         items: [XomoFigmaNodeImportItem],
@@ -281,6 +283,7 @@ struct XomoFigmaNodeImportPlan: Equatable, Sendable {
     ) {
         self.fileName = fileName
         self.version = version
+        self.sourceCanonicalURL = sourceCanonicalURL
         self.rootSourceID = rootSourceID
         self.rootName = rootName
         self.items = items

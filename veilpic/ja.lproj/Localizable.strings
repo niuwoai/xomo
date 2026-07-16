@@ -2877,7 +2877,9 @@
 "imageEditor.properties.figmaSourceType" = "ノードタイプ";
 "imageEditor.properties.figmaComponentRole" = "コンポーネントの役割";
 "imageEditor.action.copyFigmaSource" = "ソース参照をコピー";
+"imageEditor.action.copyFigmaSourceURL" = "Figma リンクをコピー";
 "imageEditor.status.figmaSourceCopied" = "Figma ソース参照をコピーしました";
+"imageEditor.status.figmaSourceURLCopied" = "Figma ソースリンクをコピーしました";
 "xomo.figma.resource.design" = "Figma Design";
 "xomo.figma.resource.legacyFile" = "Figma Design（旧形式リンク）";
 "xomo.figma.resource.prototype" = "Figma プロトタイプ";

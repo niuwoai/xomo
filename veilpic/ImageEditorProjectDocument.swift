@@ -270,6 +270,7 @@ struct ImageEditorProjectLayer: Codable {
     var xomoFigmaSourceID: String?
     var xomoFigmaNodeType: String?
     var xomoFigmaComponentRole: XomoFigmaComponentRole?
+    var xomoFigmaSourceURL: URL?
 
     @MainActor
     init(layer: ImageEditorLayer) throws {
@@ -333,6 +334,7 @@ struct ImageEditorProjectLayer: Codable {
         xomoFigmaSourceID = layer.xomoFigmaSourceID
         xomoFigmaNodeType = layer.xomoFigmaNodeType
         xomoFigmaComponentRole = layer.xomoFigmaComponentRole
+        xomoFigmaSourceURL = layer.xomoFigmaSourceURL
     }
 
     func restoredLayer(smartObjectSourceData: [UUID: Data] = [:]) throws -> ImageEditorLayer {
@@ -387,6 +389,7 @@ struct ImageEditorProjectLayer: Codable {
         layer.xomoFigmaSourceID = xomoFigmaSourceID
         layer.xomoFigmaNodeType = xomoFigmaNodeType
         layer.xomoFigmaComponentRole = xomoFigmaComponentRole
+        layer.xomoFigmaSourceURL = xomoFigmaSourceURL
         return layer
     }
 

@@ -11,6 +11,7 @@ struct ImageEditorFigmaProvenanceTests {
         layer.xomoFigmaSourceID = "1:60"
         layer.xomoFigmaNodeType = "BOOLEAN_OPERATION"
         layer.xomoFigmaComponentRole = .instance
+        layer.xomoFigmaSourceURL = URL(string: "https://www.figma.com/design/abc123/Checkout?node-id=1-60")
         document.layers = [layer]
         document.selectedLayerID = layer.id
         document.selectedLayerIDs = [layer.id]
@@ -22,5 +23,8 @@ struct ImageEditorFigmaProvenanceTests {
 
         viewModel.copySelectedFigmaSourceReference()
         #expect(NSPasteboard.general.string(forType: .string) == "BOOLEAN_OPERATION:1:60")
+
+        viewModel.copySelectedFigmaSourceURL()
+        #expect(NSPasteboard.general.string(forType: .string) == "https://www.figma.com/design/abc123/Checkout?node-id=1-60")
     }
 }

@@ -289,6 +289,7 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(request.value(forHTTPHeaderField: "X-Figma-Token") == token.rawValue)
         #expect(request.url?.absoluteString.contains(token.rawValue) == false)
         #expect(plan.rootSourceID == "1:3")
+        #expect(plan.sourceCanonicalURL == nodePreview.canonicalURL)
     }
 
     @Test func mapperBuildsEditableHierarchyAndRelativeFrames() async throws {
@@ -306,6 +307,7 @@ struct XomoFigmaNodeImportPlanTests {
         let rectangle = try #require(plan.items.first { $0.sourceID == "2:3" })
         let ellipse = try #require(plan.items.first { $0.sourceID == "2:4" })
         let vector = try #require(plan.items.first { $0.sourceID == "2:5" })
+        #expect(plan.sourceCanonicalURL == preview.canonicalURL)
 
         #expect(frame.targetKind == .group)
         #expect(frame.frame == XomoFigmaPlanRect(x: 0, y: 0, width: 390, height: 844))

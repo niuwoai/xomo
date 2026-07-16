@@ -66,7 +66,7 @@ enum XomoFigmaNodeMaterializer {
                     omitMaterializedSubtree(child)
                 }
             }
-            guard let layer = makeLayer(
+            guard var layer = makeLayer(
                 item: item,
                 canvasSize: canvasSize,
                 transform: transform,
@@ -77,6 +77,7 @@ enum XomoFigmaNodeMaterializer {
                 omittedCount += 1
                 return
             }
+            layer.xomoFigmaSourceURL = plan.sourceCanonicalURL
             layers.append(layer)
             layerIDsBySource[item.sourceID] = layer.id
         }

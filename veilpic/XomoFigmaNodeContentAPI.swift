@@ -70,6 +70,7 @@ struct XomoFigmaNodeContentAPIClient: XomoFigmaNodePlanFetching {
             throw XomoFigmaNodeImportError.invalidResponse
         }
         var plan = try XomoFigmaNodeImportMapper.makePlan(response: envelope, requestedNodeID: nodeID)
+        plan.sourceCanonicalURL = preview.canonicalURL
         if let variableFetcher, !plan.requiredVariableIDs.isEmpty {
             do {
                 let store = try await variableFetcher.fetchVariables(

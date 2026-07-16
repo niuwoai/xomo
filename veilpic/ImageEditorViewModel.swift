@@ -710,6 +710,10 @@ final class ImageEditorViewModel: ObservableObject {
         document.selectedLayer?.xomoFigmaComponentRole
     }
 
+    var selectedLayerFigmaSourceURL: URL? {
+        document.selectedLayer?.xomoFigmaSourceURL
+    }
+
     func copySelectedFigmaSourceReference() {
         guard let sourceID = selectedLayerFigmaSourceID,
               !sourceID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -719,6 +723,13 @@ final class ImageEditorViewModel: ObservableObject {
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(value, forType: .string)
         statusText = L10n.text("imageEditor.status.figmaSourceCopied")
+    }
+
+    func copySelectedFigmaSourceURL() {
+        guard let url = selectedLayerFigmaSourceURL else { return }
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(url.absoluteString, forType: .string)
+        statusText = L10n.text("imageEditor.status.figmaSourceURLCopied")
     }
 
     func copyFigmaVariableBinding(_ binding: XomoFigmaVariableBinding) {

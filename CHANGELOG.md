@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc179 - 2026-07-17
+
+### Added
+- Figma 导入图层保留清洗后的规范源链接，属性面板可直接复制链接回到 Figma 对应节点。
+
+### Verification
+- Figma 导入与源链接专项 30/30 通过；本地化资源专项通过；`XomoMCPServerTests` CLI 2/2 通过。
+
 ## 2.12.0-rc178 - 2026-07-17
 
 ### Added

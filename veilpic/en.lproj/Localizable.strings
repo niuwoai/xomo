@@ -2877,7 +2877,9 @@
 "imageEditor.properties.figmaSourceType" = "Node type";
 "imageEditor.properties.figmaComponentRole" = "Component role";
 "imageEditor.action.copyFigmaSource" = "Copy source reference";
+"imageEditor.action.copyFigmaSourceURL" = "Copy Figma link";
 "imageEditor.status.figmaSourceCopied" = "Figma source reference copied";
+"imageEditor.status.figmaSourceURLCopied" = "Figma source link copied";
 "xomo.figma.resource.design" = "Figma Design";
 "xomo.figma.resource.legacyFile" = "Figma Design (legacy link)";
 "xomo.figma.resource.prototype" = "Figma Prototype";
