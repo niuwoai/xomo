@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc178 - 2026-07-17
+
+### Added
+- Figma `COMPONENT`、`COMPONENT_SET`、`INSTANCE` 导入层现在保留独立的组件角色元数据；属性面板会显示该语义，同时继续按可编辑组参与 Photoshop 式图层操作。
+
+### Verification
+- Figma 导入与源节点属性专项 30/30 通过；`XomoMCPServerTests` CLI 2/2 通过。
+
 ## 2.12.0-rc177 - 2026-07-17
 
 ### Added

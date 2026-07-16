@@ -10,6 +10,7 @@ struct ImageEditorFigmaProvenanceTests {
         var layer = document.layers[0]
         layer.xomoFigmaSourceID = "1:60"
         layer.xomoFigmaNodeType = "BOOLEAN_OPERATION"
+        layer.xomoFigmaComponentRole = .instance
         document.layers = [layer]
         document.selectedLayerID = layer.id
         document.selectedLayerIDs = [layer.id]
@@ -17,6 +18,7 @@ struct ImageEditorFigmaProvenanceTests {
         let viewModel = ImageEditorViewModel(document: document) { _ in }
         #expect(viewModel.selectedLayerFigmaSourceID == "1:60")
         #expect(viewModel.selectedLayerFigmaNodeType == "BOOLEAN_OPERATION")
+        #expect(viewModel.selectedLayerFigmaComponentRole == .instance)
 
         viewModel.copySelectedFigmaSourceReference()
         #expect(NSPasteboard.general.string(forType: .string) == "BOOLEAN_OPERATION:1:60")

@@ -1,0 +1,10 @@
+{
+  "generated_at": "2026-07-17T06:58:58+08:00",
+  "total": 30,
+  "passed": 30,
+  "failed": 0,
+  "jobs": 1,
+  "suite": "XomoFigmaNodeImportPlanTests + ImageEditorFigmaProvenanceTests",
+  "focus": "Figma component/component-set/instance roles remain distinct while materializing editable groups",
+  "new_assertion": "component.componentRole == COMPONENT"
+}

@@ -153,6 +153,7 @@ enum XomoFigmaNodeMaterializer {
         layer.xomoFigmaVariableBindings = item.variableBindings
         layer.xomoFigmaSourceID = item.sourceID
         layer.xomoFigmaNodeType = item.sourceType
+        layer.xomoFigmaComponentRole = item.componentRole
         layer.stackChildLayout = item.stackChildLayout
         layer.isStackLayoutExcluded = item.isStackLayoutExcluded
         layer.isVisible = item.isVisible

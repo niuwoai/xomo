@@ -2875,6 +2875,7 @@
 "imageEditor.status.figmaVariablesCopied" = "已复制 Figma 变量 ID";
 "imageEditor.properties.figmaSource" = "Figma 源节点";
 "imageEditor.properties.figmaSourceType" = "节点类型";
+"imageEditor.properties.figmaComponentRole" = "组件语义";
 "imageEditor.action.copyFigmaSource" = "复制源节点引用";
 "imageEditor.status.figmaSourceCopied" = "已复制 Figma 源节点引用";
 "xomo.figma.resource.design" = "Figma Design";

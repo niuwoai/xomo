@@ -2875,6 +2875,7 @@
 "imageEditor.status.figmaVariablesCopied" = "Copied Figma variable IDs";
 "imageEditor.properties.figmaSource" = "Figma source node";
 "imageEditor.properties.figmaSourceType" = "Node type";
+"imageEditor.properties.figmaComponentRole" = "Component role";
 "imageEditor.action.copyFigmaSource" = "Copy source reference";
 "imageEditor.status.figmaSourceCopied" = "Figma source reference copied";
 "xomo.figma.resource.design" = "Figma Design";

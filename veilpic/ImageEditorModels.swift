@@ -2803,6 +2803,7 @@ struct ImageEditorLayer: Identifiable {
     /// Original Figma node identity retained for inspectable, traceable imports.
     var xomoFigmaSourceID: String?
     var xomoFigmaNodeType: String?
+    var xomoFigmaComponentRole: XomoFigmaComponentRole?
 
     static func background(image: NSImage) -> ImageEditorLayer {
         ImageEditorLayer(

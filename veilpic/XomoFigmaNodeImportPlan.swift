@@ -14,6 +14,12 @@ enum XomoFigmaNodeTargetKind: String, CaseIterable, Sendable {
     }
 }
 
+enum XomoFigmaComponentRole: String, Codable, Equatable, Sendable {
+    case component = "COMPONENT"
+    case componentSet = "COMPONENT_SET"
+    case instance = "INSTANCE"
+}
+
 enum XomoFigmaNodeMappingFidelity: String, CaseIterable, Sendable {
     case exact
     case partial
@@ -222,6 +228,7 @@ struct XomoFigmaNodeImportItem: Equatable, Identifiable, Sendable {
     var depth: Int
     var sourceName: String
     var sourceType: String
+    var componentRole: XomoFigmaComponentRole?
     var targetKind: XomoFigmaNodeTargetKind?
     var fidelity: XomoFigmaNodeMappingFidelity
     var issues: [XomoFigmaNodeMappingIssue]

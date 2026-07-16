@@ -2875,6 +2875,7 @@
 "imageEditor.status.figmaVariablesCopied" = "Figma 変数 ID をコピーしました";
 "imageEditor.properties.figmaSource" = "Figma ソースノード";
 "imageEditor.properties.figmaSourceType" = "ノードタイプ";
+"imageEditor.properties.figmaComponentRole" = "コンポーネントの役割";
 "imageEditor.action.copyFigmaSource" = "ソース参照をコピー";
 "imageEditor.status.figmaSourceCopied" = "Figma ソース参照をコピーしました";
 "xomo.figma.resource.design" = "Figma Design";

@@ -4278,6 +4278,18 @@ struct ImageEditorView: View {
                             Spacer(minLength: 0)
                         }
 
+                        if let role = viewModel.selectedLayerFigmaComponentRole {
+                            HStack(spacing: 7) {
+                                Text(L10n.text("imageEditor.properties.figmaComponentRole"))
+                                    .font(.system(size: 10, weight: .medium))
+                                    .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+                                Text(role.rawValue)
+                                    .font(.system(size: 10, design: .monospaced))
+                                    .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                                Spacer(minLength: 0)
+                            }
+                        }
+
                         Text(sourceID)
                             .font(.system(size: 10, design: .monospaced))
                             .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))

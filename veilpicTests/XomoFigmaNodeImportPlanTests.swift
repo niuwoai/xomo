@@ -486,6 +486,7 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(image.imageReference == "img-ref-1")
         #expect(component.targetKind == .group)
         #expect(component.fidelity == .partial)
+        #expect(component.componentRole == .component)
         #expect(component.issues.contains(.componentSemanticsFlattened))
         #expect(!component.issues.contains(.autoLayoutFlattened))
         #expect(component.stackLayout == ImageEditorStackLayout(

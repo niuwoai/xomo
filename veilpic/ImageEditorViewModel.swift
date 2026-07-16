@@ -706,6 +706,10 @@ final class ImageEditorViewModel: ObservableObject {
         document.selectedLayer?.xomoFigmaNodeType
     }
 
+    var selectedLayerFigmaComponentRole: XomoFigmaComponentRole? {
+        document.selectedLayer?.xomoFigmaComponentRole
+    }
+
     func copySelectedFigmaSourceReference() {
         guard let sourceID = selectedLayerFigmaSourceID,
               !sourceID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty

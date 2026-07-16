@@ -224,6 +224,7 @@ enum XomoFigmaNodeImportMapper {
     ) -> XomoFigmaNodeImportItem {
         var issues: [XomoFigmaNodeMappingIssue] = []
         let mapping = targetMapping(node: node, issues: &issues)
+        let componentRole = XomoFigmaComponentRole(rawValue: node.type)
         let variableBindings = node.boundVariables?.bindings() ?? []
         if !variableBindings.isEmpty {
             issues.append(.variableBindingPreserved)
@@ -278,6 +279,7 @@ enum XomoFigmaNodeImportMapper {
             depth: depth,
             sourceName: node.name,
             sourceType: node.type,
+            componentRole: componentRole,
             targetKind: mapping.target,
             fidelity: fidelity,
             issues: issues,
