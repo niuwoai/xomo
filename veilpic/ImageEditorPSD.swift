@@ -1572,6 +1572,11 @@ enum ImageEditorPSDCodec {
         var value = Data()
         var escaped = false
         while cursor + 1 < bytes.count {
+            // EngineData writes the UTF-16 payload as pairs but keeps the
+            // PostScript closing parenthesis as a single byte. Detect that
+            // delimiter before consuming the next pair; otherwise the first
+            // byte of the following key becomes part of the font name.
+            if bytes[cursor] == 0x29, bytes[cursor + 1] != 0x00 { break }
             let codeUnit = UInt16(bytes[cursor]) << 8 | UInt16(bytes[cursor + 1])
             if escaped {
                 value.append(bytes[cursor])

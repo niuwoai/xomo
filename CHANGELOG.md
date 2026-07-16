@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc170 - 2026-07-17
+
+### Fixed
+- 修复 PSD EngineData UTF-16 字符串以单字节 `)` 结束时的解析偏移，字体名不再吞入后续 `/FontFamily` 与 `/FontStyle` 字段。
+
+### Verification
+- 基础文字层导出与外部文字夹具的字体名断言恢复通过；其余 PSD 兼容性问题继续单独跟踪。
+
 ## 2.12.0-rc169 - 2026-07-17
 
 ### Fixed

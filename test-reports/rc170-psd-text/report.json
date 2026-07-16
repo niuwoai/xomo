@@ -1,0 +1,23 @@
+{
+  "generated_at": "2026-07-17 05:35:05 +0800",
+  "scope": "PSD EngineData UTF-16 font name terminator",
+  "psd_suite": {
+    "total": 18,
+    "passed": 15,
+    "failed": 3,
+    "text_tests_passed": 2,
+    "text_tests": [
+      "psdExportPreservesBasicEditableTextLayer",
+      "externalEditableTextFixtureBecomesNativeTextLayer"
+    ],
+    "remaining_failures": [
+      "externalZIPGroupMaskFixturePreservesSupportedStructure",
+      "externalZIPCompositeFixtureDecodesWithoutLayers",
+      "psdRoundTripPreservesGroupsMasksFillLocksAndEveryBlendMode"
+    ]
+  },
+  "notes": [
+    "EngineData closes UTF-16 payloads with a single-byte PostScript delimiter; the parser now detects that delimiter before consuming the next UTF-16 pair.",
+    "Remaining failures are ZIP group/composite compatibility and complex mask alpha round-trip issues."
+  ]
+}
