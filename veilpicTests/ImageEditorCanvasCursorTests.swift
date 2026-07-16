@@ -4,6 +4,33 @@ import Testing
 
 @MainActor
 struct ImageEditorCanvasCursorTests {
+    @Test func interactionModeSeparatesComponentLibraryFromToolsAndPan() {
+        #expect(
+            ImageEditorCanvasCursor.interactionMode(
+                for: .components,
+                selectedTool: .brush,
+                isSpacebarPanning: false,
+                isCanvasPanGestureActive: false
+            ) == .componentLibrary
+        )
+        #expect(
+            ImageEditorCanvasCursor.interactionMode(
+                for: .tools,
+                selectedTool: .brush,
+                isSpacebarPanning: false,
+                isCanvasPanGestureActive: false
+            ) == .tool(.brush)
+        )
+        #expect(
+            ImageEditorCanvasCursor.interactionMode(
+                for: .components,
+                selectedTool: .brush,
+                isSpacebarPanning: true,
+                isCanvasPanGestureActive: false
+            ) == .pan
+        )
+    }
+
     @Test func componentLibraryAlwaysRoutesToSystemArrowUnlessPanning() {
         #expect(
             ImageEditorCanvasCursor.tool(

@@ -1,10 +1,10 @@
 # 象墨（Xomo）产品概览
 
-> 最后更新：2026-07-17 | 当前版本：v2.12.0-rc166
+> 最后更新：2026-07-17 | 当前版本：v2.12.0-rc167
 
 ## 产品定位
 
-v2.12.0-rc166 在 rc165 的 Figma Background Blur 基础上，让 PSD Spot 通道保留 DisplayInfo 色彩元数据并支持项目/PSD 往返；rc164 的 Layer Blur、rc163 的 Drop Shadow/Inner Shadow、rc162 的描边位置 inside/center/outside、rc161 的描边端点/连接/虚线预设、rc157 的 PSD 基础文字层双向交换、rc156 的额外 Alpha 通道交换与 rc154 的闭合原生矢量蒙版导出仍保留。
+v2.12.0-rc167 在 rc166 的 PSD Spot 通道往返基础上，让组件库切换立即恢复系统箭头，并把工具指针统一为语义化交互状态；rc165 的 Figma Background Blur、rc164 的 Layer Blur、rc163 的 Drop Shadow/Inner Shadow、rc162 的描边位置 inside/center/outside、rc157 的 PSD 基础文字层双向交换、rc156 的额外 Alpha 通道交换与 rc154 的闭合原生矢量蒙版导出仍保留。
 
 v2.12.0-rc146 让多选图层中的 Figma 变量绑定可以一次稳定读取和复制：重复绑定按稳定 ID 去重，属性面板、MCP 和 CLI 使用同一批量逻辑，仍只写入本机剪贴板，不向 Figma 云端回写。
 

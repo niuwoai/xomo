@@ -1247,14 +1247,13 @@ struct ImageEditorView: View {
                     if tab == .components {
                         pendingCropRect = nil
                         cancelCanvasTextEditing()
+                        // Changing sidebar mode must immediately clear the
+                        // previous tool cursor, even before the next hover
+                        // event arrives from the canvas.
+                        NSCursor.arrow.set()
                     }
                     if isPointerInsideCanvas {
                         refreshCanvasCursor(in: geometry.size)
-                    } else if tab == .components {
-                        // macOS 13's hover callback has no location. Still reset
-                        // the stale tool cursor immediately when entering the
-                        // component library; the next hover restores tracking.
-                        NSCursor.arrow.set()
                     }
                 }
                 .onChange(of: viewModel.brushSize) { _ in
@@ -6547,6 +6546,12 @@ enum ImageEditorCanvasCursorFamily: Equatable {
     case zoomMagnifier
 }
 
+enum ImageEditorCanvasInteractionMode: Equatable {
+    case componentLibrary
+    case tool(ImageEditorTool)
+    case pan
+}
+
 enum ImageEditorSelectionCursorMode: String, Equatable, CaseIterable {
     case replace
     case add
@@ -6594,32 +6599,45 @@ enum ImageEditorCanvasCursor {
         isCanvasPanGestureActive: Bool = false,
         modifierFlags: NSEvent.ModifierFlags = []
     ) -> NSCursor {
-        if sidebarTab == .components,
-           !isSpacebarPanning,
-           !isCanvasPanGestureActive {
-            return .arrow
-        }
-
-        if sidebarTab == .tools,
-           selectedTool == .move,
-           !isSpacebarPanning,
-           !isCanvasPanGestureActive {
-            return moveToolCursor()
-        }
-
-        let effectiveTool = tool(
+        switch interactionMode(
             for: sidebarTab,
             selectedTool: selectedTool,
             isSpacebarPanning: isSpacebarPanning,
             isCanvasPanGestureActive: isCanvasPanGestureActive
-        )
-        return cursor(
-            for: effectiveTool,
-            brushDiameter: brushDiameter,
-            penIsClosing: penIsClosing,
-            handIsDragging: handIsDragging,
-            modifierFlags: modifierFlags
-        )
+        ) {
+        case .componentLibrary:
+            return .arrow
+        case .pan:
+            return cursor(
+                for: .hand,
+                brushDiameter: brushDiameter,
+                handIsDragging: handIsDragging,
+                modifierFlags: modifierFlags
+            )
+        case .tool(let selectedTool):
+            if selectedTool == .move {
+                return moveToolCursor()
+            }
+            return cursor(
+                for: selectedTool,
+                brushDiameter: brushDiameter,
+                penIsClosing: penIsClosing,
+                handIsDragging: handIsDragging,
+                modifierFlags: modifierFlags
+            )
+        }
+    }
+
+    static func interactionMode(
+        for sidebarTab: XomoLeftSidebarTab,
+        selectedTool: ImageEditorTool,
+        isSpacebarPanning: Bool,
+        isCanvasPanGestureActive: Bool
+    ) -> ImageEditorCanvasInteractionMode {
+        if isSpacebarPanning || isCanvasPanGestureActive {
+            return .pan
+        }
+        return sidebarTab == .components ? .componentLibrary : .tool(selectedTool)
     }
 
     private static func moveToolCursor() -> NSCursor {
@@ -6697,10 +6715,19 @@ enum ImageEditorCanvasCursor {
         isSpacebarPanning: Bool,
         isCanvasPanGestureActive: Bool
     ) -> ImageEditorTool {
-        if isSpacebarPanning || isCanvasPanGestureActive {
+        switch interactionMode(
+            for: sidebarTab,
+            selectedTool: selectedTool,
+            isSpacebarPanning: isSpacebarPanning,
+            isCanvasPanGestureActive: isCanvasPanGestureActive
+        ) {
+        case .componentLibrary:
+            return .move
+        case .tool(let tool):
+            return tool
+        case .pan:
             return .hand
         }
-        return sidebarTab == .components ? .move : selectedTool
     }
 
     static func family(for tool: ImageEditorTool) -> ImageEditorCanvasCursorFamily {
