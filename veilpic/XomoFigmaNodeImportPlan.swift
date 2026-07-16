@@ -182,6 +182,20 @@ struct XomoFigmaPlanImageFilters: Equatable, Sendable {
     }
 }
 
+enum XomoFigmaPlanEffectKind: String, Equatable, Sendable {
+    case dropShadow
+    case innerShadow
+}
+
+struct XomoFigmaPlanEffect: Equatable, Sendable {
+    var kind: XomoFigmaPlanEffectKind
+    var color: XomoFigmaPlanColor
+    var offsetX: Double
+    var offsetY: Double
+    var radius: Double
+    var spread: Double
+}
+
 struct XomoFigmaPlanCornerRadii: Equatable, Sendable {
     var topLeft: Double
     var topRight: Double
@@ -233,6 +247,7 @@ struct XomoFigmaNodeImportItem: Equatable, Identifiable, Sendable {
     var imageScalingFactor: Double?
     var imageRotation: Double?
     var imageFilters: XomoFigmaPlanImageFilters = XomoFigmaPlanImageFilters()
+    var effects: [XomoFigmaPlanEffect] = []
     var stackLayout: ImageEditorStackLayout?
     var stackChildLayout: ImageEditorStackChildLayout?
     var isStackLayoutExcluded: Bool

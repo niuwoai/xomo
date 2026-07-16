@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.12.0-rc163 - 2026-07-17
+
+### Added
+- Figma Drop Shadow 与 Inner Shadow 导入为可编辑的 Xomo 图层效果；未支持的效果继续在导入计划中标记为扁平化。
+
 ## 2.12.0-rc162 - 2026-07-17
 
 ### Added

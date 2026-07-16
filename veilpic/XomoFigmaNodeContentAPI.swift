@@ -243,7 +243,8 @@ enum XomoFigmaNodeImportMapper {
         if node.clipsContent == true {
             issues.append(.clippingFlattened)
         }
-        if !(node.effects ?? []).isEmpty {
+        let effects = mappedEffects(node.effects)
+        if (node.effects ?? []).contains(where: { !isSupportedEffect($0) }) {
             issues.append(.effectsFlattened)
         }
         if let blendMode = node.blendMode, blendMode != "NORMAL", blendMode != "PASS_THROUGH" {
@@ -338,6 +339,7 @@ enum XomoFigmaNodeImportMapper {
                     shadows: $0.filters?.shadows
                 )
             } ?? XomoFigmaPlanImageFilters(),
+            effects: effects,
             stackLayout: nativeStackLayout,
             stackChildLayout: stackChildLayout(node),
             isStackLayoutExcluded: node.layoutPositioning == "ABSOLUTE"
@@ -352,6 +354,47 @@ enum XomoFigmaNodeImportMapper {
             grow: grow,
             stretchesCrossAxis: stretchesCrossAxis
         )
+    }
+
+    private static func isSupportedEffect(_ effect: XomoFigmaEffect) -> Bool {
+        guard effect.visible ?? true else { return true }
+        guard let type = effect.type,
+              type == "DROP_SHADOW" || type == "INNER_SHADOW",
+              let color = effect.color,
+              [color.r, color.g, color.b, color.a ?? 1].allSatisfy({ $0.isFinite }),
+              let offset = effect.offset,
+              offset.x.isFinite,
+              offset.y.isFinite,
+              let radius = effect.radius,
+              radius.isFinite,
+              radius >= 0
+        else { return false }
+        return (effect.spread ?? 0).isFinite
+    }
+
+    private static func mappedEffects(_ effects: [XomoFigmaEffect]?) -> [XomoFigmaPlanEffect] {
+        (effects ?? []).compactMap { effect in
+            guard effect.visible ?? true,
+                  isSupportedEffect(effect),
+                  let type = effect.type,
+                  let color = effect.color,
+                  let offset = effect.offset,
+                  let radius = effect.radius
+            else { return nil }
+            return XomoFigmaPlanEffect(
+                kind: type == "INNER_SHADOW" ? .innerShadow : .dropShadow,
+                color: XomoFigmaPlanColor(
+                    red: min(max(color.r, 0), 1),
+                    green: min(max(color.g, 0), 1),
+                    blue: min(max(color.b, 0), 1),
+                    alpha: min(max(color.a ?? 1, 0), 1)
+                ),
+                offsetX: offset.x,
+                offsetY: offset.y,
+                radius: max(0, radius),
+                spread: max(0, effect.spread ?? 0)
+            )
+        }
     }
 
     private static func stackLayout(_ node: XomoFigmaNode) -> ImageEditorStackLayout? {
@@ -954,4 +997,14 @@ struct XomoFigmaSize: Decodable {
 
 struct XomoFigmaEffect: Decodable {
     var type: String?
+    var color: XomoFigmaColor?
+    var offset: XomoFigmaEffectOffset?
+    var radius: Double?
+    var spread: Double?
+    var visible: Bool?
+}
+
+struct XomoFigmaEffectOffset: Decodable {
+    var x: Double
+    var y: Double
 }

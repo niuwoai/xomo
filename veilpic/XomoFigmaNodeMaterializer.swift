@@ -134,6 +134,9 @@ enum XomoFigmaNodeMaterializer {
             layer = makeImagePlaceholderLayer(item: item, frame: frame)
         }
         layer.groupID = parentGroupID
+        if item.targetKind != .group {
+            applyFigmaEffects(item.effects, to: &layer, scale: transform.scale)
+        }
         layer.xomoFigmaVariableBindings = item.variableBindings
         layer.stackChildLayout = item.stackChildLayout
         layer.isStackLayoutExcluded = item.isStackLayoutExcluded
@@ -349,7 +352,46 @@ enum XomoFigmaNodeMaterializer {
         layer.groupID = groupID
         layer.isStackLayoutExcluded = true
         layer.isStackLayoutBackground = true
+        applyFigmaEffects(item.effects, to: &layer, scale: transform.scale)
         return layer
+    }
+
+    private static func applyFigmaEffects(
+        _ effects: [XomoFigmaPlanEffect],
+        to layer: inout ImageEditorLayer,
+        scale: CGFloat
+    ) {
+        let scale = max(0.01, scale)
+        for effect in effects {
+            let color = nsColor(effect.color, fallback: .black)
+            let offset = CGSize(
+                width: CGFloat(effect.offsetX) * scale,
+                height: CGFloat(effect.offsetY) * scale
+            )
+            let distance = ImageEditorLayerStyle.shadowDistance(from: offset)
+            let angle = ImageEditorLayerStyle.shadowAngle(from: offset)
+            switch effect.kind {
+            case .dropShadow:
+                layer.style.shadowEnabled = true
+                layer.style.shadowColor = color
+                layer.style.shadowOpacity = CGFloat(effect.color.alpha)
+                layer.style.shadowBlur = CGFloat(effect.radius) * scale
+                layer.style.shadowSpread = CGFloat(effect.spread) * scale
+                layer.style.shadowDistance = distance
+                layer.style.shadowAngle = angle
+                layer.style.shadowOffset = offset
+                layer.style.shadowUsesGlobalLight = false
+            case .innerShadow:
+                layer.style.innerShadowEnabled = true
+                layer.style.innerShadowColor = color
+                layer.style.innerShadowOpacity = CGFloat(effect.color.alpha)
+                layer.style.innerShadowBlur = CGFloat(effect.radius) * scale
+                layer.style.innerShadowChoke = CGFloat(effect.spread) * scale
+                layer.style.innerShadowDistance = distance
+                layer.style.innerShadowAngle = angle
+                layer.style.innerShadowUsesGlobalLight = false
+            }
+        }
     }
 
     private static func makeShapeLayer(

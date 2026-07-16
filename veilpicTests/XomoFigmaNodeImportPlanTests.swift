@@ -1021,6 +1021,74 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(XomoSVGPathParser.parse("M 0 0 C 1 2") == nil)
     }
 
+    @Test func supportedFigmaShadowsBecomeEditableLayerEffects() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                """
+                {
+                  "name": "Effects",
+                  "nodes": {
+                    "1:40": {
+                      "document": {
+                        "id": "1:40",
+                        "name": "Effects Frame",
+                        "type": "FRAME",
+                        "absoluteBoundingBox": {"x": 0, "y": 0, "width": 240, "height": 160},
+                        "children": [
+                          {
+                            "id": "2:40",
+                            "name": "Shadowed Card",
+                            "type": "RECTANGLE",
+                            "absoluteBoundingBox": {"x": 20, "y": 20, "width": 120, "height": 48},
+                            "fills": [{"type": "SOLID", "color": {"r": 1, "g": 1, "b": 1, "a": 1}}],
+                            "effects": [
+                              {"type": "DROP_SHADOW", "color": {"r": 0.1, "g": 0.2, "b": 0.3, "a": 0.45}, "offset": {"x": 4, "y": 6}, "radius": 8, "spread": 2, "visible": true},
+                              {"type": "INNER_SHADOW", "color": {"r": 0.8, "g": 0.1, "b": 0.2, "a": 0.25}, "offset": {"x": -2, "y": 3}, "radius": 4, "visible": true}
+                            ]
+                          },
+                          {
+                            "id": "2:41",
+                            "name": "Blurred Card",
+                            "type": "RECTANGLE",
+                            "absoluteBoundingBox": {"x": 20, "y": 90, "width": 120, "height": 48},
+                            "fills": [{"type": "SOLID", "color": {"r": 1, "g": 1, "b": 1, "a": 1}}],
+                            "effects": [{"type": "LAYER_BLUR", "radius": 6, "visible": true}]
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+                """.utf8
+            )
+        )
+        let plan = try XomoFigmaNodeImportMapper.makePlan(
+            response: response,
+            requestedNodeID: "1:40"
+        )
+        let shadowed = try #require(plan.items.first { $0.sourceID == "2:40" })
+        #expect(shadowed.effects.count == 2)
+        #expect(shadowed.fidelity == .exact)
+        #expect(!shadowed.issues.contains(.effectsFlattened))
+        let blurred = try #require(plan.items.first { $0.sourceID == "2:41" })
+        #expect(blurred.effects.isEmpty)
+        #expect(blurred.issues.contains(.effectsFlattened))
+
+        let result = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: CGSize(width: 400, height: 300)
+        )
+        let layer = try #require(result.layers.first { $0.name == "Shadowed Card" })
+        #expect(layer.style.shadowEnabled)
+        #expect(layer.style.innerShadowEnabled)
+        #expect(abs(layer.style.shadowBlur - 8) < 0.001)
+        #expect(abs(layer.style.shadowSpread - 2) < 0.001)
+        #expect(abs(layer.style.shadowOffset.width - 4) < 0.001)
+        #expect(abs(layer.style.shadowOffset.height - 6) < 0.001)
+        #expect(abs(layer.style.innerShadowDistance - sqrt(13)) < 0.001)
+    }
+
     @Test func materializerCreatesEditableHierarchyAtCenteredScaleAndHonestPlaceholder() throws {
         let plan = try Self.decodedPlan()
         let result = XomoFigmaNodeMaterializer.materialize(
