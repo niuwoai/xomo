@@ -20,6 +20,41 @@ enum ImageEditorShapeFillKind: String, CaseIterable, Identifiable {
     }
 }
 
+enum ImageEditorStrokeDashPreset: String, CaseIterable, Identifiable {
+    case solid
+    case dash
+    case dot
+    case longDash
+    case custom
+
+    var id: String { rawValue }
+
+    var title: String {
+        L10n.text("imageEditor.properties.shapeStrokeDash.(rawValue)")
+    }
+
+    var pattern: [CGFloat] {
+        switch self {
+        case .solid, .custom: return []
+        case .dash: return [6, 3]
+        case .dot: return [2, 2]
+        case .longDash: return [12, 4]
+        }
+    }
+}
+
+extension ImageEditorStrokeCap {
+    var title: String {
+        L10n.text("imageEditor.properties.shapeStrokeCap.(rawValue)")
+    }
+}
+
+extension ImageEditorStrokeJoin {
+    var title: String {
+        L10n.text("imageEditor.properties.shapeStrokeJoin.(rawValue)")
+    }
+}
+
 extension ImageEditorGradientFillContent {
     static func shapeLinear(
         startColor: NSColor,
@@ -179,6 +214,29 @@ extension ImageEditorViewModel {
         Double(document.selectedLayer?.shapeContent?.strokeWidth ?? 1)
     }
 
+    var selectedShapeStrokeCap: ImageEditorStrokeCap {
+        document.selectedLayer?.shapeContent?.strokeCap ?? .round
+    }
+
+    var selectedShapeStrokeJoin: ImageEditorStrokeJoin {
+        document.selectedLayer?.shapeContent?.strokeJoin ?? .round
+    }
+
+    var selectedShapeStrokeDashPreset: ImageEditorStrokeDashPreset {
+        let pattern = document.selectedLayer?.shapeContent?.strokeDashPattern ?? []
+        for preset in ImageEditorStrokeDashPreset.allCases where preset != .custom {
+            guard preset != .solid else {
+                if pattern.isEmpty { return .solid }
+                continue
+            }
+            if pattern.count == preset.pattern.count,
+               zip(pattern, preset.pattern).allSatisfy({ abs($0 - $1) < 0.001 }) {
+                return preset
+            }
+        }
+        return pattern.isEmpty ? .solid : .custom
+    }
+
     func setSelectedShapeFillColor(_ color: NSColor) {
         updateSelectedShapeProperties(fillColor: color)
     }
@@ -307,6 +365,19 @@ extension ImageEditorViewModel {
         updateSelectedShapeProperties(strokeWidth: width)
     }
 
+    func setSelectedShapeStrokeCap(_ cap: ImageEditorStrokeCap) {
+        updateSelectedShapeProperties(strokeCap: cap)
+    }
+
+    func setSelectedShapeStrokeJoin(_ join: ImageEditorStrokeJoin) {
+        updateSelectedShapeProperties(strokeJoin: join)
+    }
+
+    func setSelectedShapeStrokeDashPreset(_ preset: ImageEditorStrokeDashPreset) {
+        guard preset != .custom else { return }
+        updateSelectedShapeProperties(strokeDashPattern: preset.pattern)
+    }
+
     func updateSelectedShapeProperties(
         fillColor: NSColor? = nil,
         fillGradient: ImageEditorGradientFillContent? = nil,
@@ -316,6 +387,9 @@ extension ImageEditorViewModel {
         strokeColor: NSColor? = nil,
         strokeOpacity: Double? = nil,
         strokeWidth: Double? = nil,
+        strokeCap: ImageEditorStrokeCap? = nil,
+        strokeJoin: ImageEditorStrokeJoin? = nil,
+        strokeDashPattern: [CGFloat]? = nil,
         cornerRadius: Double? = nil,
         cornerRadii: ImageEditorRectangleCornerRadii? = nil,
         cornerSmoothing: Double? = nil
@@ -361,6 +435,9 @@ extension ImageEditorViewModel {
             if let strokeWidth, strokeWidth.isFinite {
                 content.strokeWidth = CGFloat(max(1, min(96, strokeWidth)))
             }
+            if let strokeCap { content.strokeCap = strokeCap }
+            if let strokeJoin { content.strokeJoin = strokeJoin }
+            if let strokeDashPattern { content.strokeDashPattern = strokeDashPattern }
             if content.kind == .rectangle,
                let cornerRadius,
                cornerRadius.isFinite {
@@ -400,6 +477,9 @@ extension ImageEditorViewModel {
             && lhs.strokeColor.isEqual(rhs.strokeColor)
             && abs(lhs.strokeOpacity - rhs.strokeOpacity) <= 0.000_1
             && abs(lhs.strokeWidth - rhs.strokeWidth) <= 0.000_1
+            && lhs.strokeCap == rhs.strokeCap
+            && lhs.strokeJoin == rhs.strokeJoin
+            && lhs.strokeDashPattern == rhs.strokeDashPattern
             && abs(lhs.cornerRadius - rhs.cornerRadius) <= 0.000_1
             && lhs.cornerRadii == rhs.cornerRadii
             && abs(lhs.cornerSmoothing - rhs.cornerSmoothing) <= 0.000_1

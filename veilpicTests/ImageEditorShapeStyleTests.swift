@@ -909,7 +909,10 @@ struct ImageEditorShapeStyleTests {
             fillOpacity: 0.55,
             strokeColor: .systemBlue,
             strokeOpacity: 0.75,
-            strokeWidth: 7
+            strokeWidth: 7,
+            strokeCap: .square,
+            strokeJoin: .bevel,
+            strokeDashPattern: [12, 4]
         )
 
         let edited = try #require(viewModel.document.selectedLayer?.shapeContent)
@@ -918,6 +921,9 @@ struct ImageEditorShapeStyleTests {
         #expect(edited.strokeColor.isEqual(NSColor.systemBlue))
         #expect(edited.strokeOpacity == 0.75)
         #expect(edited.strokeWidth == 7)
+        #expect(edited.strokeCap == .square)
+        #expect(edited.strokeJoin == .bevel)
+        #expect(edited.strokeDashPattern == [12, 4])
         #expect(viewModel.document.history.count == historyCount + 1)
 
         viewModel.undo()
@@ -927,6 +933,9 @@ struct ImageEditorShapeStyleTests {
         #expect(undone.strokeColor.isEqual(original.strokeColor))
         #expect(undone.strokeOpacity == original.strokeOpacity)
         #expect(undone.strokeWidth == original.strokeWidth)
+        #expect(undone.strokeCap == original.strokeCap)
+        #expect(undone.strokeJoin == original.strokeJoin)
+        #expect(undone.strokeDashPattern == original.strokeDashPattern)
         viewModel.redo()
         let redone = try #require(viewModel.document.selectedLayer?.shapeContent)
         #expect(redone.fillColor.isEqual(edited.fillColor))
@@ -934,6 +943,9 @@ struct ImageEditorShapeStyleTests {
         #expect(redone.strokeColor.isEqual(edited.strokeColor))
         #expect(redone.strokeOpacity == edited.strokeOpacity)
         #expect(redone.strokeWidth == edited.strokeWidth)
+        #expect(redone.strokeCap == edited.strokeCap)
+        #expect(redone.strokeJoin == edited.strokeJoin)
+        #expect(redone.strokeDashPattern == edited.strokeDashPattern)
 
         let projectData = try viewModel.projectData()
         let reopened = makeViewModel()
@@ -944,6 +956,9 @@ struct ImageEditorShapeStyleTests {
         #expect(restored.strokeColor.isEqual(edited.strokeColor))
         #expect(restored.strokeOpacity == edited.strokeOpacity)
         #expect(restored.strokeWidth == edited.strokeWidth)
+        #expect(restored.strokeCap == edited.strokeCap)
+        #expect(restored.strokeJoin == edited.strokeJoin)
+        #expect(restored.strokeDashPattern == edited.strokeDashPattern)
     }
 
     @Test func lockedShapeRejectsAppearanceChanges() throws {
@@ -988,7 +1003,10 @@ struct ImageEditorShapeStyleTests {
             "image-editor-shape-fill-opacity",
             "image-editor-shape-stroke-color",
             "image-editor-shape-stroke-opacity",
-            "image-editor-shape-stroke-width"
+            "image-editor-shape-stroke-width",
+            "image-editor-shape-stroke-cap",
+            "image-editor-shape-stroke-join",
+            "image-editor-shape-stroke-dash"
         ] {
             #expect(source.contains(identifier))
         }

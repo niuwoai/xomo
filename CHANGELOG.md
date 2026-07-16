@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.12.0-rc161 - 2026-07-17
+
+### Added
+- Shape 属性面板现在可以直接编辑描边端点、连接方式和虚线预设；导入的 Figma 描边不再只能查看，修改仍是一条可撤销、可保存的原生操作。
+- 新增 Shape 描边样式的 Undo/Redo、项目往返和属性控件回归测试。
+
+### Verification
+- Shape 专项已完成 `build-for-testing` 编译；隔离运行器受当前宿主 `testmanagerd` 限制无法采集断言，结果保留在 `test-reports/rc161-shape-style`。
+- Xomo CLI 测试 2/2 通过。
+- `git diff --check` 通过。
+
 ## 2.12.0-rc159 - 2026-07-17
 
 ### Added

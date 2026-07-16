@@ -142,6 +142,54 @@ extension ImageEditorView {
             )
             .focusable(false)
             .accessibilityIdentifier("image-editor-shape-stroke-width")
+
+            HStack(spacing: 8) {
+                Text(L10n.text("imageEditor.properties.shapeStrokeCap"))
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                Spacer(minLength: 4)
+                Picker("", selection: selectedShapeStrokeCapBinding) {
+                    ForEach(ImageEditorStrokeCap.allCases, id: \.self) { cap in
+                        Text(cap.title).tag(cap)
+                    }
+                }
+                .labelsHidden()
+                .pickerStyle(.menu)
+                .focusable(false)
+                .accessibilityIdentifier("image-editor-shape-stroke-cap")
+            }
+
+            HStack(spacing: 8) {
+                Text(L10n.text("imageEditor.properties.shapeStrokeJoin"))
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                Spacer(minLength: 4)
+                Picker("", selection: selectedShapeStrokeJoinBinding) {
+                    ForEach(ImageEditorStrokeJoin.allCases, id: \.self) { join in
+                        Text(join.title).tag(join)
+                    }
+                }
+                .labelsHidden()
+                .pickerStyle(.menu)
+                .focusable(false)
+                .accessibilityIdentifier("image-editor-shape-stroke-join")
+            }
+
+            HStack(spacing: 8) {
+                Text(L10n.text("imageEditor.properties.shapeStrokeDash"))
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                Spacer(minLength: 4)
+                Picker("", selection: selectedShapeStrokeDashPresetBinding) {
+                    ForEach(ImageEditorStrokeDashPreset.allCases) { preset in
+                        Text(preset.title).tag(preset)
+                    }
+                }
+                .labelsHidden()
+                .pickerStyle(.menu)
+                .focusable(false)
+                .accessibilityIdentifier("image-editor-shape-stroke-dash")
+            }
         }
     }
 
@@ -366,6 +414,30 @@ extension ImageEditorView {
             viewModel.selectedShapeStrokeWidth
         } set: { width in
             viewModel.setSelectedShapeStrokeWidth(width)
+        }
+    }
+
+    private var selectedShapeStrokeCapBinding: Binding<ImageEditorStrokeCap> {
+        Binding {
+            viewModel.selectedShapeStrokeCap
+        } set: { cap in
+            viewModel.setSelectedShapeStrokeCap(cap)
+        }
+    }
+
+    private var selectedShapeStrokeJoinBinding: Binding<ImageEditorStrokeJoin> {
+        Binding {
+            viewModel.selectedShapeStrokeJoin
+        } set: { join in
+            viewModel.setSelectedShapeStrokeJoin(join)
+        }
+    }
+
+    private var selectedShapeStrokeDashPresetBinding: Binding<ImageEditorStrokeDashPreset> {
+        Binding {
+            viewModel.selectedShapeStrokeDashPreset
+        } set: { preset in
+            viewModel.setSelectedShapeStrokeDashPreset(preset)
         }
     }
 }
