@@ -372,6 +372,7 @@ enum ImageEditorPSDCodec {
         }
         try reader.skipLengthPrefixed32()
         let imageResources = try reader.lengthPrefixedData32()
+        let alphaChannelNames = parseAlphaChannelNames(imageResources)
         let savedPaths = parseSavedPaths(
             imageResources,
             canvasSize: CGSize(width: width, height: height)
@@ -400,29 +401,58 @@ enum ImageEditorPSDCodec {
         }
         reader.offset = layerAndMaskEnd
 
+        let compositeData = try readCompositeChannels(
+            &reader,
+            width: width,
+            height: height,
+            channelCount: channelCount,
+            alphaChannelNames: alphaChannelNames
+        )
+
         if !decodedLayers.isEmpty {
             return PSDParsedDocument(
                 width: width,
                 height: height,
                 layers: decodedLayers,
                 composite: nil,
-                savedPaths: savedPaths
+                savedPaths: savedPaths,
+                alphaChannels: compositeData.alphaChannels
             )
         }
-
-        let composite = try readCompositeChannels(
-            &reader,
-            width: width,
-            height: height,
-            channelCount: channelCount
-        )
         return PSDParsedDocument(
             width: width,
             height: height,
             layers: [],
-            composite: composite,
-            savedPaths: savedPaths
+            composite: compositeData.channels,
+            savedPaths: savedPaths,
+            alphaChannels: compositeData.alphaChannels
         )
+    }
+
+    private static func parseAlphaChannelNames(_ data: Data) -> [String] {
+        do {
+            var reader = PSDReader(data: data)
+            while reader.offset + 12 <= data.count {
+                let signature = try reader.ascii(count: 4)
+                guard signature == "8BIM" || signature == "8B64" else { break }
+                let resourceID = try reader.uint16()
+                _ = try reader.pascalString(alignment: 2)
+                let resourceLength = Int(try reader.uint32())
+                let resourceData = try reader.data(count: resourceLength)
+                if resourceLength.isMultiple(of: 2) == false { try reader.skip(1) }
+                guard resourceID == 1006 else { continue }
+
+                var namesReader = PSDReader(data: resourceData)
+                var names: [String] = []
+                while namesReader.offset < resourceData.count {
+                    names.append(try namesReader.pascalString(alignment: 2))
+                }
+                return names
+            }
+        } catch {
+            return []
+        }
+        return []
     }
 
     private static func parseSavedPaths(
@@ -634,6 +664,7 @@ enum ImageEditorPSDCodec {
             document.selectedLayerIDs = Set(document.layers.last.map { [$0.id] } ?? [])
             document.savedPaths = parsed.savedPaths
             document.selectedSavedPathID = parsed.savedPaths.last?.id
+            document.alphaChannels = parsed.alphaChannels
             document.history = [ImageEditorHistoryEntry(title: L10n.text("imageEditor.history.psdOpen"))]
             return document
         }
@@ -646,6 +677,7 @@ enum ImageEditorPSDCodec {
         var document = ImageEditorDocument(sourceName: sourceName, image: image)
         document.savedPaths = parsed.savedPaths
         document.selectedSavedPathID = parsed.savedPaths.last?.id
+        document.alphaChannels = parsed.alphaChannels
         return document
     }
 
@@ -1031,8 +1063,9 @@ enum ImageEditorPSDCodec {
         _ reader: inout PSDReader,
         width: Int,
         height: Int,
-        channelCount: Int
-    ) throws -> PSDChannels {
+        channelCount: Int,
+        alphaChannelNames: [String]
+    ) throws -> PSDCompositeChannels {
         let compression = try reader.uint16()
         let pixelCount = width * height
         var planes: [Data] = []
@@ -1075,7 +1108,21 @@ enum ImageEditorPSDCodec {
         if planes.indices.contains(1) { channels.green = planes[1] }
         if planes.indices.contains(2) { channels.blue = planes[2] }
         if planes.indices.contains(3) { channels.alpha = planes[3] }
-        return channels
+        let alphaChannels = planes.dropFirst(4).enumerated().map { index, plane in
+            let fallbackName = "Alpha \(index + 1)"
+            let importedName = alphaChannelNames.indices.contains(index)
+                ? alphaChannelNames[index].trimmingCharacters(in: .whitespacesAndNewlines)
+                : ""
+            return ImageEditorAlphaChannel(
+                name: importedName.isEmpty ? fallbackName : importedName,
+                mask: ImageEditorSelectionMask(
+                    width: width,
+                    height: height,
+                    alpha: Array(plane)
+                )
+            )
+        }
+        return PSDCompositeChannels(channels: channels, alphaChannels: alphaChannels)
     }
 
     nonisolated private static func readChannel(
@@ -1831,12 +1878,18 @@ private struct PSDExportVectorMask {
     let data: Data
 }
 
+nonisolated private struct PSDCompositeChannels {
+    let channels: PSDChannels
+    let alphaChannels: [ImageEditorAlphaChannel]
+}
+
 nonisolated private struct PSDParsedDocument: @unchecked Sendable {
     let width: Int
     let height: Int
     let layers: [PSDParsedLayer]
     let composite: PSDChannels?
     let savedPaths: [ImageEditorSavedPath]
+    let alphaChannels: [ImageEditorAlphaChannel]
 }
 
 nonisolated private struct PSDParsedLayer {

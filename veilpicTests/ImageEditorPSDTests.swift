@@ -224,6 +224,30 @@ struct ImageEditorPSDTests {
         #expect(report.issues.isEmpty)
     }
 
+    @Test func externalExtraAlphaChannelBecomesEditableChannel() throws {
+        let data = try psdFixtureData("extra-alpha.psd")
+        let document = try ImageEditorPSDCodec.decode(data, sourceName: "extra-alpha.psd")
+
+        let channel = try #require(document.alphaChannels.first)
+        #expect(document.alphaChannels.count == 1)
+        #expect(channel.name == "Selection Alpha")
+        #expect(channel.mask.width == 4)
+        #expect(channel.mask.height == 4)
+        #expect(channel.mask.alpha == [
+            0, 64, 128, 255,
+            0, 64, 128, 255,
+            0, 64, 128, 255,
+            0, 64, 128, 255
+        ])
+
+        let project = try ImageEditorProjectDocument(document: document)
+        let restored = try project.restoredDocument()
+        #expect(restored.alphaChannels == document.alphaChannels)
+
+        let report = try ImageEditorPSDCodec.compatibilityReport(data)
+        #expect(report.issues.contains { $0.kind == .additionalChannels })
+    }
+
     @Test func compatibilityReportNamesUnsupportedSemanticFeatures() throws {
         let data = try psdFixtureData("unsupported-features.psd")
         let report = try ImageEditorPSDCodec.compatibilityReport(data)

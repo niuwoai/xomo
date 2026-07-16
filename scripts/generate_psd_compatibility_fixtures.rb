@@ -198,13 +198,18 @@ def path_resource_block(id:, name:, payload:)
   block
 end
 
-def image_resources(include_icc: false, path_resources: [])
+def image_resources(include_icc: false, path_resources: [], alpha_names: [])
   blocks = []
   if include_icc
     profile = "TEST"
     blocks << ("8BIM" + u16(1039) + pascal("", alignment: 2) + u32(profile.bytesize) + profile)
   end
   blocks.concat(path_resources)
+  unless alpha_names.empty?
+    payload = alpha_names.map { |name| pascal(name, alignment: 2) }.join
+    blocks << ("8BIM" + u16(1006) + pascal("", alignment: 2) + u32(payload.bytesize) + payload)
+    blocks << "\0" if payload.bytesize.odd?
+  end
   payload = blocks.join
   u32(payload.bytesize) + payload
 end
@@ -213,8 +218,12 @@ def composite_zip(red:, green:, blue:, alpha:)
   u16(2) + Zlib::Deflate.deflate(red + green + blue + alpha)
 end
 
-def psd(layer_payload:, composite:, include_icc: false, path_resources: [])
-  header + u32(0) + image_resources(include_icc: include_icc, path_resources: path_resources) + layer_payload + composite
+def psd(layer_payload:, composite:, channels: 4, include_icc: false, path_resources: [], alpha_names: [])
+  header(channels: channels) + u32(0) + image_resources(
+    include_icc: include_icc,
+    path_resources: path_resources,
+    alpha_names: alpha_names
+  ) + layer_payload + composite
 end
 
 def group_mask_fixture
@@ -272,6 +281,20 @@ def composite_only_fixture
   psd(
     layer_payload: u32(0),
     composite: composite_zip(red: red, green: green, blue: blue, alpha: alpha)
+  )
+end
+
+def extra_alpha_fixture
+  red = ([20] * 16).pack("C*")
+  green = ([80] * 16).pack("C*")
+  blue = ([140] * 16).pack("C*")
+  alpha = ([255] * 16).pack("C*")
+  selection = [0, 64, 128, 255] * 4
+  psd(
+    channels: 5,
+    layer_payload: u32(0),
+    composite: u16(0) + red + green + blue + alpha + selection.pack("C*"),
+    alpha_names: ["Selection Alpha"]
   )
 end
 
@@ -385,6 +408,7 @@ FileUtils.mkdir_p(OUTPUT_DIR)
 fixtures = {
   "zip-group-mask.psd" => group_mask_fixture,
   "zip-composite.psd" => composite_only_fixture,
+  "extra-alpha.psd" => extra_alpha_fixture,
   "unsupported-features.psd" => unsupported_features_fixture,
   "editable-text.psd" => editable_text_fixture,
   "vector-mask.psd" => vector_mask_fixture,
@@ -398,6 +422,7 @@ end
 expectations = {
   "zip-group-mask.psd" => %w[zip zip_prediction group raster_mask fill_opacity layer_locks],
   "zip-composite.psd" => %w[zip flattened_composite],
+  "extra-alpha.psd" => %w[raw flattened_composite additional_alpha_channel alpha_name],
   "unsupported-features.psd" => %w[compatibility_report unsupported_semantic_features],
   "editable-text.psd" => %w[editable_text font_size color alignment],
   "vector-mask.psd" => %w[editable_vector_mask closed_path bezier_points],

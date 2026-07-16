@@ -1,10 +1,10 @@
 # 象墨 PSD 支持说明
 
-> 最后更新：2026-07-17 ｜ 对应版本：v2.12.0-rc154
+> 最后更新：2026-07-17 ｜ 对应版本：v2.12.0-rc155
 
 ## 1. 结论
 
-象墨当前已经可以可靠处理以像素图层为主的常见 PSD，并保留基础图层结构、嵌套组、栅格蒙版、混合模式、Fill 不透明度和锁定状态。Raw、RLE、ZIP、ZIP Prediction 四种 8-bit 通道压缩均可读取。对能解析 TySh/EngineData 的基础文字层，还会生成 Xomo 原生可编辑文字层，读取一组基础字符与段落样式，并保留段落文本框边界；简单 vmsk/vsms 闭合路径、Image Resources 中的 Path Resource 以及结构完整的原生矢量蒙版也支持导入导出。
+象墨当前已经可以可靠处理以像素图层为主的常见 PSD，并保留基础图层结构、嵌套组、栅格蒙版、混合模式、Fill 不透明度和锁定状态。Raw、RLE、ZIP、ZIP Prediction 四种 8-bit 通道压缩均可读取。对能解析 TySh/EngineData 的基础文字层，还会生成 Xomo 原生可编辑文字层，读取一组基础字符与段落样式，并保留段落文本框边界；简单 vmsk/vsms 闭合路径、Image Resources 中的 Path Resource、额外 Alpha 通道以及结构完整的原生矢量蒙版也支持在导入时进入可编辑模型。
 
 这还不是“完整 Photoshop 语义兼容”。复杂文字变换、逐字符样式、矢量形状、智能对象、调整层、图层效果和填充层等 Photoshop 专有对象，仍不能完整保留为同类可编辑对象。打开 PSD 后，象墨会生成兼容性报告，明确列出文件中被栅格化、忽略或降级的内容。
 
@@ -17,7 +17,7 @@
 | PSD 文件版本 | 支持 | 支持 PSD v1；不支持 PSB v2。 |
 | 位深 | 支持 8-bit | 16-bit、32-bit 会在兼容性报告中标记为不支持，并拒绝原生分层解析。 |
 | 颜色模式 | 支持 RGB | Bitmap、灰度、索引色、CMYK、Multichannel、Duotone、Lab 暂不支持。 |
-| 文档通道 | RGB / RGBA | 文件头允许 3–56 个通道；RGB 和第一个透明通道用于成像，其余 Alpha/Spot 通道会提示但不导入为象墨通道。 |
+| 文档通道 | RGB / RGBA + 额外 Alpha | 文件头允许 3–56 个通道；RGB 和第一个透明通道用于成像，其余非 Spot 通道会读取为带名称的 Xomo Alpha 通道。 |
 | 通道压缩 | 支持 | Raw、RLE、ZIP、8-bit ZIP Prediction。 |
 | 像素图层 | 支持 | 保留名称、顺序、位置、可见性、图层不透明度和透明像素。 |
 | 剪贴蒙版标记 | 支持 | 导入图层的 clipping 标记。复杂 Photoshop 剪贴链的最终视觉仍建议人工核对。 |
@@ -46,7 +46,8 @@
 | 图层效果 | 使用图层已有像素表现 | 阴影、描边、发光等 Photoshop 参数不保留。 |
 | 纯色/渐变/图案填充层 | 使用像素内容 | 填充参数和图案引用不保留。 |
 | ICC 配置文件 | 忽略并提示 | 当前按设备 RGB 处理，可能出现颜色差异。 |
-| 额外 Alpha/Spot 通道 | 忽略并提示 | 不会进入象墨的通道面板。 |
+| 额外 Alpha 通道 | 映射为原生 Alpha 通道 | 读取 Image Resources 中的名称和复合图像中的 8-bit 掩码，可在通道面板与项目格式中继续使用。 |
+| Spot 通道 | 忽略并提示 | 尚未映射为独立专色工作流，会在兼容性报告中明确提示。 |
 | 未识别图层数据 | 忽略并提示 | 对应 Photoshop 私有元数据或第三方插件数据不会保留。 |
 
 兼容性报告会统计画布尺寸、位深、颜色模式、图层数、组数、蒙版数和实际出现的压缩方式，并列出上述风险。存在问题时会在 PSD 打开后自动显示，也可以从“文件”菜单再次查看。
@@ -62,6 +63,7 @@
 | 栅格蒙版 | 支持 | 写入蒙版像素、启用/停用和链接状态。象墨中的密度、羽化会烘焙进有效蒙版像素，不会保存为独立 Photoshop 参数。 |
 | 文字、形状、智能对象 | 栅格化导出 | 视觉内容进入普通像素层，不保留原对象语义。 |
 | 命名路径 | 支持 | 写入 Image Resources 的 Path Resource，保留名称、闭合/开放状态、多子路径和 Bézier 控制柄。 |
+| 额外 Alpha 通道 | 暂不导出 | PSD 导入后可在 Xomo 中编辑和保存；当前 PSD 导出仍只写 RGB/RGBA 文档通道，避免误写成 Spot 通道。 |
 | 矢量蒙版 | 部分支持 | 结构完整的闭合路径写入图层 `vmsk`，保留子路径、控制柄和启用状态；开放路径、反相/断链及复杂记录栅格化导出。 |
 | 图层效果 | 烘焙到像素 | 效果参数不写入 Photoshop 图层效果块。 |
 | 调整层、滤镜层 | 不作为独立图层写出 | 最终合成图包含当前文档视觉结果，但可编辑的调整/滤镜层记录会省略。 |
@@ -85,17 +87,19 @@
 - `vector-mask.psd`：独立生成的 vmsk 三点闭合路径，验证 Bézier 锚点、控制柄、矢量蒙版和项目格式保存重开。
 - `vector-mask-multi.psd`：独立生成的 vmsk 双闭合子路径，验证 `pathSubpaths`、偶数奇数填充的孔洞和项目格式保存重开。
 - `path-resources.psd`：独立生成的 Image Resources 路径资源，验证命名闭合路径、开放路径和项目格式保存重开。
+- `extra-alpha.psd`：独立生成的五通道 PSD，验证额外 Alpha 名称、透明度掩码和项目格式保存重开。
 
 相关文件：
 
 - 夹具与说明：[`veilpicTests/Fixtures/PSD`](../veilpicTests/Fixtures/PSD)
 - 夹具生成器：[`scripts/generate_psd_compatibility_fixtures.rb`](../scripts/generate_psd_compatibility_fixtures.rb)
-- PSD 测试报告：[`test-reports/rc154-psd-suite/report.md`](../test-reports/rc154-psd-suite/report.md)
+- PSD 测试报告：[`test-reports/rc155-psd-suite/report.md`](../test-reports/rc155-psd-suite/report.md)
+- 额外 Alpha 通道定向报告：[`test-reports/rc155-alpha-channel/report.md`](../test-reports/rc155-alpha-channel/report.md)
 - PSD 原生矢量蒙版导出定向报告：[`test-reports/rc154-vector-mask-export/report.md`](../test-reports/rc154-vector-mask-export/report.md)
 - 外部打开测试报告：[`test-reports/rc145-external-open/report.md`](../test-reports/rc145-external-open/report.md)
 - 本地化测试报告：[`test-reports/rc145-localization/report.md`](../test-reports/rc145-localization/report.md)
 
-rc154 的 PSD 定向验证结果为：PSD 专项 14/14、原生矢量蒙版导出 1/1，开放/复杂路径安全回退由专项回归覆盖，Debug `build-for-testing` 通过。
+rc155 的 PSD 定向验证结果为：PSD 专项 15/15、额外 Alpha 通道 1/1，开放/复杂路径安全回退由专项回归覆盖，Debug `build-for-testing` 通过。
 
 ## 7. 使用建议
 

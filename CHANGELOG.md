@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc155 - 2026-07-17
+
+### Added
+- PSD 额外 Alpha 通道现在会读取名称与透明度数据，映射为 Xomo 原生可编辑 Alpha 通道，并随项目保存重开。
+- 新增独立生成的 `extra-alpha.psd` 外部夹具，覆盖额外通道名称与像素掩码。
+
+### Verification
+- PSD 专项测试 15/15、额外 Alpha 通道定向测试 1/1、Xomo CLI 测试 2/2、`git diff --check` 通过。
+
 ## 2.12.0-rc154 - 2026-07-17
 
 ### Added

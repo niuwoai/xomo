@@ -23,6 +23,16 @@
       ]
     },
     {
+      "file": "extra-alpha.psd",
+      "sha256": "0abf522a12e4e21c9f0f11c48c793bc974dba0ec4d43261c418c9e89b32de749",
+      "expected": [
+        "raw",
+        "flattened_composite",
+        "additional_alpha_channel",
+        "alpha_name"
+      ]
+    },
+    {
       "file": "unsupported-features.psd",
       "sha256": "ec5e3e83d272cb94e026b7658664993f408f14ef3a744e70eb3279cd3df170cf",
       "expected": [
