@@ -202,6 +202,14 @@ struct ImageEditorView: View {
         .sheet(isPresented: $viewModel.isLayerStylePresetManagerPresented) {
             ImageEditorLayerStylePresetManager(viewModel: viewModel)
         }
+        .sheet(isPresented: $viewModel.isPSDCompatibilityReportPresented) {
+            if let report = viewModel.psdCompatibilityReport {
+                ImageEditorPSDCompatibilityReportView(
+                    report: report,
+                    fileName: viewModel.psdCompatibilityFileName
+                )
+            }
+        }
         .sheet(isPresented: $isFigmaLinkImportPresented) {
             XomoFigmaLinkImportSheet(viewModel: viewModel)
         }

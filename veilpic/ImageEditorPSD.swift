@@ -6,6 +6,7 @@
 //
 
 import AppKit
+import Compression
 import Foundation
 import UniformTypeIdentifiers
 
@@ -41,16 +42,7 @@ enum ImageEditorPSDCodec {
             throw ImageEditorPSDCodecError.unsupportedDocument
         }
 
-        let exportLayers = try document.layers.reversed().compactMap { layer -> PSDExportLayer? in
-            guard !layer.isGroup, !layer.isAdjustment, !layer.isFilter else { return nil }
-            let frame = integralPSDFrame(layer.frame, canvasSize: document.canvasSize)
-            guard frame.width > 0, frame.height > 0 else { return nil }
-            let rendered = layer.renderedCompositingImage(globalLightAngle: document.globalLightAngle)
-            guard let rgba = rgbaChannels(image: rendered, width: Int(frame.width), height: Int(frame.height)) else {
-                throw ImageEditorPSDCodecError.imageEncodingFailed
-            }
-            return PSDExportLayer(layer: layer, frame: frame, canvasHeight: height, channels: rgba)
-        }
+        let exportLayers = try makeExportLayers(document: document, canvasHeight: height)
 
         var output = Data()
         output.appendASCII("8BPS")
@@ -70,9 +62,9 @@ enum ImageEditorPSDCodec {
             layerInfo.append(layerRecord(item))
         }
         for item in exportLayers {
-            for channel in item.orderedChannels {
+            for channel in item.channels {
                 layerInfo.appendUInt16(0)
-                layerInfo.append(channel)
+                layerInfo.append(channel.data)
             }
         }
         if layerInfo.count % 2 != 0 { layerInfo.append(0) }
@@ -95,6 +87,10 @@ enum ImageEditorPSDCodec {
         return output
     }
 
+    static func compatibilityReport(_ data: Data) throws -> ImageEditorPSDCompatibilityReport {
+        try scanCompatibility(data)
+    }
+
     static func decode(_ data: Data, sourceName: String) throws -> ImageEditorDocument {
         try materialize(parse(data), sourceName: sourceName)
     }
@@ -112,6 +108,187 @@ enum ImageEditorPSDCodec {
         return try await materializeAsync(parsed, sourceName: sourceName)
     }
 
+    nonisolated private static func scanCompatibility(
+        _ data: Data
+    ) throws -> ImageEditorPSDCompatibilityReport {
+        var reader = PSDReader(data: data)
+        guard try reader.ascii(count: 4) == "8BPS" else {
+            throw ImageEditorPSDCodecError.invalidFile
+        }
+        let version = Int(try reader.uint16())
+        try reader.skip(6)
+        let channelCount = Int(try reader.uint16())
+        let height = Int(try reader.uint32())
+        let width = Int(try reader.uint32())
+        let depth = Int(try reader.uint16())
+        let colorMode = Int(try reader.uint16())
+
+        var issueCounts: [ImageEditorPSDCompatibilityIssueKind: Int] = [:]
+        func addIssue(_ kind: ImageEditorPSDCompatibilityIssueKind, count: Int = 1) {
+            issueCounts[kind, default: 0] += count
+        }
+        if version != 1 { addIssue(.unsupportedVersion) }
+        if depth != 8 { addIssue(.unsupportedBitDepth) }
+        if colorMode != 3 { addIssue(.unsupportedColorMode) }
+        if channelCount > 4 { addIssue(.additionalChannels, count: channelCount - 4) }
+
+        guard version == 1 else {
+            return compatibilityReport(
+                width: width,
+                height: height,
+                depth: depth,
+                colorMode: colorMode,
+                layerCount: 0,
+                groupCount: 0,
+                maskCount: 0,
+                compressions: [],
+                issueCounts: issueCounts
+            )
+        }
+
+        try reader.skipLengthPrefixed32()
+        let imageResources = try reader.lengthPrefixedData32()
+        if try imageResourcesContainICCProfile(imageResources) {
+            addIssue(.colorProfileIgnored)
+        }
+
+        let layerAndMaskLength = Int(try reader.uint32())
+        let layerAndMaskEnd = try reader.checkedEnd(length: layerAndMaskLength)
+        var records: [PSDLayerRecord] = []
+        var compressions = Set<ImageEditorPSDCompression>()
+        if layerAndMaskLength >= 4 {
+            let layerInfoLength = Int(try reader.uint32())
+            let layerInfoEnd = min(try reader.checkedEnd(length: layerInfoLength), layerAndMaskEnd)
+            if layerInfoLength >= 2 {
+                let layerCount = abs(Int(try reader.int16()))
+                records.reserveCapacity(layerCount)
+                for _ in 0..<layerCount {
+                    records.append(try readLayerRecord(&reader))
+                }
+                for record in records {
+                    for (_, length) in record.channels {
+                        let end = try reader.checkedEnd(length: length)
+                        if length >= 2 {
+                            let rawCompression = Int(try reader.uint16())
+                            if let compression = ImageEditorPSDCompression(rawValue: rawCompression) {
+                                compressions.insert(compression)
+                            } else {
+                                addIssue(.unsupportedCompression)
+                            }
+                        }
+                        reader.offset = end
+                    }
+                }
+            }
+            reader.offset = layerInfoEnd
+        }
+        reader.offset = layerAndMaskEnd
+        if reader.offset + 2 <= data.count {
+            let rawCompression = Int(try reader.uint16())
+            if let compression = ImageEditorPSDCompression(rawValue: rawCompression) {
+                compressions.insert(compression)
+            } else {
+                addIssue(.unsupportedCompression)
+            }
+        }
+
+        let textKeys: Set<String> = ["TySh", "Txt2"]
+        let vectorKeys: Set<String> = ["vmsk", "vsms", "vstk", "vscg", "vogk"]
+        let smartObjectKeys: Set<String> = ["SoLd", "PlLd", "plLd"]
+        let effectKeys: Set<String> = ["lrFX", "lfx2"]
+        let fillKeys: Set<String> = ["SoCo", "GdFl", "PtFl"]
+        let adjustmentKeys: Set<String> = [
+            "brit", "levl", "curv", "expA", "vibA", "hue ", "hue2", "blnc",
+            "blwh", "phfl", "mixr", "clrL", "nvrt", "post", "thrs", "grdm", "selc"
+        ]
+        let recognizedKeys = textKeys
+            .union(vectorKeys)
+            .union(smartObjectKeys)
+            .union(effectKeys)
+            .union(fillKeys)
+            .union(adjustmentKeys)
+            .union([
+                "luni", "lsct", "lsdk", "lspf", "iOpa", "lyid", "clbl", "infx",
+                "knko", "lclr", "fxrp", "lyvr", "tsly", "lmgm", "vmgm", "shmd",
+                "lnsr", "shpa", "sn2P", "anFX", "pths", "FMsk"
+            ])
+        for record in records {
+            if !record.additionalKeys.isDisjoint(with: textKeys) { addIssue(.textRasterized) }
+            if !record.additionalKeys.isDisjoint(with: vectorKeys) { addIssue(.vectorRasterized) }
+            if !record.additionalKeys.isDisjoint(with: smartObjectKeys) { addIssue(.smartObjectRasterized) }
+            if !record.additionalKeys.isDisjoint(with: effectKeys) { addIssue(.layerEffectsRasterized) }
+            if !record.additionalKeys.isDisjoint(with: fillKeys) { addIssue(.fillLayerRasterized) }
+            if !record.additionalKeys.isDisjoint(with: adjustmentKeys) { addIssue(.adjustmentLayerRasterized) }
+            if !ImageEditorBlendMode.supportedPSDKeys.contains(record.blendKey) {
+                addIssue(.unknownBlendMode)
+            }
+            let unknownKeys = record.additionalKeys.subtracting(recognizedKeys)
+            if !unknownKeys.isEmpty { addIssue(.unknownLayerData, count: unknownKeys.count) }
+        }
+
+        return compatibilityReport(
+            width: width,
+            height: height,
+            depth: depth,
+            colorMode: colorMode,
+            layerCount: records.filter { $0.sectionType != 3 }.count,
+            groupCount: records.filter { $0.sectionType == 1 || $0.sectionType == 2 }.count,
+            maskCount: records.filter { $0.mask != nil }.count,
+            compressions: compressions,
+            issueCounts: issueCounts
+        )
+    }
+
+    nonisolated private static func compatibilityReport(
+        width: Int,
+        height: Int,
+        depth: Int,
+        colorMode: Int,
+        layerCount: Int,
+        groupCount: Int,
+        maskCount: Int,
+        compressions: Set<ImageEditorPSDCompression>,
+        issueCounts: [ImageEditorPSDCompatibilityIssueKind: Int]
+    ) -> ImageEditorPSDCompatibilityReport {
+        let order: [ImageEditorPSDCompatibilityIssueKind] = [
+            .unsupportedVersion, .unsupportedBitDepth, .unsupportedColorMode,
+            .unsupportedCompression, .additionalChannels, .textRasterized,
+            .vectorRasterized, .smartObjectRasterized, .adjustmentLayerRasterized,
+            .layerEffectsRasterized, .fillLayerRasterized, .colorProfileIgnored,
+            .unknownBlendMode, .unknownLayerData, .flattenedFallback
+        ]
+        let issues = order.compactMap { kind -> ImageEditorPSDCompatibilityIssue? in
+            guard let count = issueCounts[kind], count > 0 else { return nil }
+            return ImageEditorPSDCompatibilityIssue(kind: kind, count: count)
+        }
+        return ImageEditorPSDCompatibilityReport(
+            width: width,
+            height: height,
+            bitDepth: depth,
+            colorMode: colorMode,
+            layerCount: layerCount,
+            groupCount: groupCount,
+            maskCount: maskCount,
+            compressions: compressions,
+            issues: issues
+        )
+    }
+
+    nonisolated private static func imageResourcesContainICCProfile(_ data: Data) throws -> Bool {
+        var reader = PSDReader(data: data)
+        while reader.offset + 12 <= data.count {
+            let signature = try reader.ascii(count: 4)
+            guard signature == "8BIM" else { return false }
+            let identifier = try reader.uint16()
+            _ = try reader.pascalString(alignment: 2)
+            let length = Int(try reader.uint32())
+            try reader.skip(length)
+            if length % 2 != 0 { try reader.skip(1) }
+            if identifier == 1039 { return true }
+        }
+        return false
+    }
+
     nonisolated private static func parse(_ data: Data) throws -> PSDParsedDocument {
         var reader = PSDReader(data: data)
         guard try reader.ascii(count: 4) == "8BPS", try reader.uint16() == 1 else {
@@ -123,7 +300,7 @@ enum ImageEditorPSDCodec {
         let width = Int(try reader.uint32())
         let depth = try reader.uint16()
         let colorMode = try reader.uint16()
-        guard (3...4).contains(channelCount), width > 0, height > 0, depth == 8, colorMode == 3 else {
+        guard (3...56).contains(channelCount), width > 0, height > 0, depth == 8, colorMode == 3 else {
             throw ImageEditorPSDCodecError.unsupportedDocument
         }
         try reader.skipLengthPrefixed32()
@@ -179,9 +356,7 @@ enum ImageEditorPSDCodec {
         _ parsed: PSDParsedDocument,
         sourceName: String
     ) throws -> ImageEditorDocument {
-        let decodedLayers = parsed.layers.compactMap {
-            makeLayer(record: $0.record, channels: $0.channels, canvasHeight: parsed.height)
-        }
+        let decodedLayers = materializeLayers(parsed)
         return try materializedDocument(
             parsed: parsed,
             decodedLayers: decodedLayers,
@@ -195,14 +370,30 @@ enum ImageEditorPSDCodec {
     ) async throws -> ImageEditorDocument {
         var decodedLayers: [ImageEditorLayer] = []
         decodedLayers.reserveCapacity(parsed.layers.count)
+        var groupStack: [UUID] = []
         for item in parsed.layers {
             try Task.checkCancellation()
-            if let layer = makeLayer(
-                record: item.record,
-                channels: item.channels,
-                canvasHeight: parsed.height
-            ) {
+            switch item.record.sectionType {
+            case 1, 2:
+                let layer = makeGroupLayer(
+                    record: item.record,
+                    channels: item.channels,
+                    canvasSize: CGSize(width: parsed.width, height: parsed.height),
+                    parentGroupID: groupStack.last
+                )
                 decodedLayers.append(layer)
+                groupStack.append(layer.id)
+            case 3:
+                _ = groupStack.popLast()
+            default:
+                if var layer = makeLayer(
+                    record: item.record,
+                    channels: item.channels,
+                    canvasHeight: parsed.height
+                ) {
+                    layer.groupID = groupStack.last
+                    decodedLayers.append(layer)
+                }
             }
             await Task.yield()
         }
@@ -211,6 +402,37 @@ enum ImageEditorPSDCodec {
             decodedLayers: decodedLayers,
             sourceName: sourceName
         )
+    }
+
+    private static func materializeLayers(_ parsed: PSDParsedDocument) -> [ImageEditorLayer] {
+        var decodedLayers: [ImageEditorLayer] = []
+        decodedLayers.reserveCapacity(parsed.layers.count)
+        var groupStack: [UUID] = []
+        for item in parsed.layers {
+            switch item.record.sectionType {
+            case 1, 2:
+                let layer = makeGroupLayer(
+                    record: item.record,
+                    channels: item.channels,
+                    canvasSize: CGSize(width: parsed.width, height: parsed.height),
+                    parentGroupID: groupStack.last
+                )
+                decodedLayers.append(layer)
+                groupStack.append(layer.id)
+            case 3:
+                _ = groupStack.popLast()
+            default:
+                if var layer = makeLayer(
+                    record: item.record,
+                    channels: item.channels,
+                    canvasHeight: parsed.height
+                ) {
+                    layer.groupID = groupStack.last
+                    decodedLayers.append(layer)
+                }
+            }
+        }
+        return decodedLayers
     }
 
     private static func materializedDocument(
@@ -242,37 +464,186 @@ enum ImageEditorPSDCodec {
         frame.standardized.integral.intersection(CGRect(origin: .zero, size: canvasSize))
     }
 
+    private static func makeExportLayers(
+        document: ImageEditorDocument,
+        canvasHeight: Int
+    ) throws -> [PSDExportLayer] {
+        let layers = document.layers
+        let layerIDs = Set(layers.map(\.id))
+        var visited = Set<UUID>()
+        var result: [PSDExportLayer] = []
+
+        func appendLayer(_ layer: ImageEditorLayer) throws {
+            guard visited.insert(layer.id).inserted else { return }
+            if layer.isGroup {
+                result.append(try exportGroupLayer(layer, document: document, canvasHeight: canvasHeight))
+                for child in layers.reversed() where child.groupID == layer.id {
+                    try appendLayer(child)
+                }
+                result.append(.groupDivider(canvasHeight: canvasHeight))
+                return
+            }
+            guard !layer.isAdjustment, !layer.isFilter,
+                  let item = try exportPixelLayer(layer, document: document, canvasHeight: canvasHeight)
+            else { return }
+            result.append(item)
+        }
+
+        for layer in layers.reversed() {
+            let hasValidParent = layer.groupID.map(layerIDs.contains) == true
+            if !hasValidParent { try appendLayer(layer) }
+        }
+        for layer in layers.reversed() where !visited.contains(layer.id) {
+            try appendLayer(layer)
+        }
+        guard result.count <= Int(Int16.max) else {
+            throw ImageEditorPSDCodecError.unsupportedDocument
+        }
+        return result
+    }
+
+    private static func exportPixelLayer(
+        _ layer: ImageEditorLayer,
+        document: ImageEditorDocument,
+        canvasHeight: Int
+    ) throws -> PSDExportLayer? {
+        let frame = integralPSDFrame(layer.frame, canvasSize: document.canvasSize)
+        guard frame.width > 0, frame.height > 0 else { return nil }
+
+        var layerWithoutMasks = layer
+        layerWithoutMasks.mask = nil
+        layerWithoutMasks.vectorMask = nil
+        let rendered = layerWithoutMasks.renderedCompositingImage(
+            globalLightAngle: document.globalLightAngle
+        )
+        guard let rgba = rgbaChannels(
+            image: rendered,
+            width: Int(frame.width),
+            height: Int(frame.height)
+        ) else {
+            throw ImageEditorPSDCodecError.imageEncodingFailed
+        }
+
+        var channels = [
+            PSDExportChannel(identifier: -1, data: rgba.alpha),
+            PSDExportChannel(identifier: 0, data: rgba.red),
+            PSDExportChannel(identifier: 1, data: rgba.green),
+            PSDExportChannel(identifier: 2, data: rgba.blue)
+        ]
+        let mask = exportMask(layer: layer, frame: frame)
+        if let mask { channels.append(PSDExportChannel(identifier: -2, data: mask.alpha)) }
+        return PSDExportLayer(
+            name: layer.name,
+            frame: frame,
+            canvasHeight: canvasHeight,
+            channels: channels,
+            opacity: layer.opacity,
+            fillOpacity: layer.fillOpacity,
+            blendMode: layer.blendMode,
+            isVisible: layer.isVisible,
+            isClippingMask: layer.isClippingMask,
+            isLocked: layer.isLocked,
+            locksPixels: layer.locksPixels,
+            locksPosition: layer.locksPosition,
+            locksTransparentPixels: layer.locksTransparentPixels,
+            sectionType: nil,
+            mask: mask
+        )
+    }
+
+    private static func exportGroupLayer(
+        _ layer: ImageEditorLayer,
+        document: ImageEditorDocument,
+        canvasHeight: Int
+    ) throws -> PSDExportLayer {
+        let maskFrame = integralPSDFrame(layer.frame, canvasSize: document.canvasSize)
+        let mask = maskFrame.isEmpty ? nil : exportMask(layer: layer, frame: maskFrame)
+        let frame = mask == nil ? .zero : maskFrame
+        let channels = mask.map { [PSDExportChannel(identifier: -2, data: $0.alpha)] } ?? []
+        return PSDExportLayer(
+            name: layer.name,
+            frame: frame,
+            canvasHeight: canvasHeight,
+            channels: channels,
+            opacity: layer.opacity,
+            fillOpacity: layer.fillOpacity,
+            blendMode: layer.blendMode,
+            isVisible: layer.isVisible,
+            isClippingMask: false,
+            isLocked: layer.isLocked,
+            locksPixels: layer.locksPixels,
+            locksPosition: layer.locksPosition,
+            locksTransparentPixels: layer.locksTransparentPixels,
+            sectionType: layer.isGroupExpanded ? 1 : 2,
+            mask: mask
+        )
+    }
+
+    private static func exportMask(layer: ImageEditorLayer, frame: CGRect) -> PSDExportMask? {
+        var maskSourceLayer = layer
+        let isEnabled: Bool
+        if layer.mask != nil {
+            maskSourceLayer.vectorMask = nil
+            maskSourceLayer.isMaskEnabled = true
+            isEnabled = layer.isMaskEnabled
+        } else {
+            maskSourceLayer.isVectorMaskEnabled = true
+            isEnabled = layer.isVectorMaskEnabled
+        }
+        guard let effectiveMask = maskSourceLayer.effectiveMask,
+              let alpha = alphaPlane(
+                image: effectiveMask,
+                width: Int(frame.width),
+                height: Int(frame.height)
+              )
+        else { return nil }
+        return PSDExportMask(
+            alpha: alpha,
+            isEnabled: isEnabled,
+            isLinked: layer.isMaskLinked
+        )
+    }
+
     private static func layerRecord(_ item: PSDExportLayer) -> Data {
         let top = Int32(item.canvasHeight - Int(item.frame.maxY))
         let left = Int32(item.frame.minX)
         let bottom = Int32(item.canvasHeight - Int(item.frame.minY))
         let right = Int32(item.frame.maxX)
-        let pixelCount = UInt32(Int(item.frame.width) * Int(item.frame.height) + 2)
 
         var record = Data()
         record.appendInt32(top)
         record.appendInt32(left)
         record.appendInt32(bottom)
         record.appendInt32(right)
-        record.appendUInt16(4)
-        for identifier: Int16 in [-1, 0, 1, 2] {
-            record.appendInt16(identifier)
-            record.appendUInt32(pixelCount)
+        record.appendUInt16(UInt16(item.channels.count))
+        for channel in item.channels {
+            record.appendInt16(channel.identifier)
+            record.appendUInt32(UInt32(channel.data.count + 2))
         }
         record.appendASCII("8BIM")
-        record.appendASCII(item.layer.blendMode.psdKey)
-        record.append(UInt8((item.layer.opacity * 255).rounded().clamped(to: 0...255)))
-        record.append(item.layer.isClippingMask ? 1 : 0)
-        var flags: UInt8 = item.layer.locksTransparentPixels ? 1 : 0
-        if !item.layer.isVisible { flags |= 2 }
+        record.appendASCII(item.blendMode.psdKey)
+        record.append(UInt8((item.opacity * 255).rounded().clamped(to: 0...255)))
+        record.append(item.isClippingMask ? 1 : 0)
+        var flags: UInt8 = (item.locksTransparentPixels || item.isLocked) ? 1 : 0
+        if !item.isVisible { flags |= 2 }
         record.append(flags)
         record.append(0)
 
         var extra = Data()
+        extra.appendLayerMask(item.mask, frame: item.frame, canvasHeight: item.canvasHeight)
         extra.appendUInt32(0)
-        extra.appendUInt32(0)
-        extra.appendPascalString(item.layer.name, alignment: 4)
-        extra.appendUnicodeLayerName(item.layer.name)
+        extra.appendPascalString(item.name, alignment: 4)
+        extra.appendUnicodeLayerName(item.name)
+        extra.appendFillOpacity(item.fillOpacity)
+        extra.appendProtectionFlags(
+            isLocked: item.isLocked,
+            locksPixels: item.locksPixels,
+            locksPosition: item.locksPosition,
+            locksTransparentPixels: item.locksTransparentPixels
+        )
+        if let sectionType = item.sectionType {
+            extra.appendSectionDivider(type: sectionType, blendMode: item.blendMode)
+        }
         record.appendUInt32(UInt32(extra.count))
         record.append(extra)
         return record
@@ -296,22 +667,38 @@ enum ImageEditorPSDCodec {
         try reader.skip(1)
         let extraLength = Int(try reader.uint32())
         let extraEnd = try reader.checkedEnd(length: extraLength)
-        try reader.skipLengthPrefixed32()
+        let mask = try readLayerMaskRecord(&reader)
         try reader.skipLengthPrefixed32()
         var name = try reader.pascalString(alignment: 4)
+        var sectionType: Int?
+        var sectionBlendKey: String?
+        var fillOpacity = UInt8.max
+        var protectionFlags: UInt32 = 0
+        var additionalKeys = Set<String>()
         while reader.offset + 12 <= extraEnd {
             let signature = try reader.ascii(count: 4)
             let key = try reader.ascii(count: 4)
             let length = Int(try reader.uint32())
             let blockEnd = min(try reader.checkedEnd(length: length), extraEnd)
-            if signature == "8BIM", key == "luni", length >= 4 {
+            additionalKeys.insert(key)
+            if (signature == "8BIM" || signature == "8B64"), key == "luni", length >= 4 {
                 let count = Int(try reader.uint32())
                 let byteCount = min(count * 2, blockEnd - reader.offset)
                 let stringData = try reader.data(count: byteCount)
                 name = String(data: stringData, encoding: .utf16BigEndian) ?? name
+            } else if (key == "lsct" || key == "lsdk"), length >= 4 {
+                sectionType = Int(try reader.uint32())
+                if length >= 12 {
+                    _ = try reader.ascii(count: 4)
+                    sectionBlendKey = try reader.ascii(count: 4)
+                }
+            } else if key == "lspf", length >= 4 {
+                protectionFlags = try reader.uint32()
+            } else if key == "iOpa", length >= 1 {
+                fillOpacity = try reader.uint8()
             }
             reader.offset = blockEnd
-            let paddedEnd = min(extraEnd, (reader.offset + 3) & ~3)
+            let paddedEnd = min(extraEnd, blockEnd + (length % 2))
             reader.offset = paddedEnd
         }
         reader.offset = extraEnd
@@ -325,7 +712,39 @@ enum ImageEditorPSDCodec {
             opacity: opacity,
             clipping: clipping,
             flags: flags,
-            blendKey: blendKey
+            blendKey: sectionBlendKey ?? blendKey,
+            fillOpacity: fillOpacity,
+            protectionFlags: protectionFlags,
+            sectionType: sectionType,
+            mask: mask,
+            additionalKeys: additionalKeys
+        )
+    }
+
+    nonisolated private static func readLayerMaskRecord(
+        _ reader: inout PSDReader
+    ) throws -> PSDLayerMaskRecord? {
+        let length = Int(try reader.uint32())
+        guard length > 0 else { return nil }
+        let end = try reader.checkedEnd(length: length)
+        guard length >= 18 else {
+            reader.offset = end
+            return nil
+        }
+        let top = Int(try reader.int32())
+        let left = Int(try reader.int32())
+        let bottom = Int(try reader.int32())
+        let right = Int(try reader.int32())
+        let defaultColor = try reader.uint8()
+        let flags = try reader.uint8()
+        reader.offset = end
+        return PSDLayerMaskRecord(
+            top: top,
+            left: left,
+            bottom: bottom,
+            right: right,
+            defaultColor: defaultColor,
+            flags: flags
         )
     }
 
@@ -338,9 +757,16 @@ enum ImageEditorPSDCodec {
         var result = PSDChannels.empty(pixelCount: width * height)
         for (identifier, length) in record.channels {
             let end = try reader.checkedEnd(length: length)
-            let decoded = try readChannel(&reader, width: width, height: height, end: end)
+            let dimensions = record.channelDimensions(identifier: identifier)
+            let decoded = try readChannel(
+                &reader,
+                width: dimensions.width,
+                height: dimensions.height,
+                end: end
+            )
             switch identifier {
             case -1: result.alpha = decoded
+            case -3, -2: result.userMask = decoded
             case 0: result.red = decoded
             case 1: result.green = decoded
             case 2: result.blue = decoded
@@ -374,6 +800,23 @@ enum ImageEditorPSDCodec {
                 }
                 planes.append(plane)
             }
+        case 2, 3:
+            let inflated = try inflate(
+                try reader.data(count: reader.data.count - reader.offset),
+                expectedCount: pixelCount * channelCount
+            )
+            let restored = compression == 3
+                ? reverseZIPPrediction(
+                    inflated,
+                    width: width,
+                    height: height,
+                    channelCount: channelCount
+                )
+                : inflated
+            for channel in 0..<channelCount {
+                let start = channel * pixelCount
+                planes.append(restored.subdata(in: start..<(start + pixelCount)))
+            }
         default:
             throw ImageEditorPSDCodecError.unsupportedCompression
         }
@@ -404,10 +847,59 @@ enum ImageEditorPSDCodec {
                 output.append(try unpackBits(try reader.data(count: length), expectedCount: width))
             }
             return output
+        case 2, 3:
+            let packed = try reader.data(count: end - reader.offset)
+            let inflated = try inflate(packed, expectedCount: width * height)
+            return compression == 3
+                ? reverseZIPPrediction(inflated, width: width, height: height, channelCount: 1)
+                : inflated
         default:
             reader.offset = end
             throw ImageEditorPSDCodecError.unsupportedCompression
         }
+    }
+
+    nonisolated private static func inflate(_ data: Data, expectedCount: Int) throws -> Data {
+        guard expectedCount >= 0 else { throw ImageEditorPSDCodecError.invalidFile }
+        if expectedCount == 0 { return Data() }
+        var destination = [UInt8](repeating: 0, count: expectedCount)
+        let decodedCount = data.withUnsafeBytes { sourceBuffer -> Int in
+            guard let source = sourceBuffer.bindMemory(to: UInt8.self).baseAddress else { return 0 }
+            return compression_decode_buffer(
+                &destination,
+                destination.count,
+                source,
+                sourceBuffer.count,
+                nil,
+                COMPRESSION_ZLIB
+            )
+        }
+        guard decodedCount == expectedCount else {
+            throw ImageEditorPSDCodecError.invalidFile
+        }
+        return Data(destination)
+    }
+
+    nonisolated private static func reverseZIPPrediction(
+        _ data: Data,
+        width: Int,
+        height: Int,
+        channelCount: Int
+    ) -> Data {
+        guard width > 1, height > 0, channelCount > 0 else { return data }
+        var bytes = [UInt8](data)
+        let planeSize = width * height
+        for channel in 0..<channelCount {
+            let planeStart = channel * planeSize
+            for row in 0..<height {
+                let rowStart = planeStart + row * width
+                for column in 1..<width {
+                    let index = rowStart + column
+                    bytes[index] = bytes[index] &+ bytes[index - 1]
+                }
+            }
+        }
+        return Data(bytes)
     }
 
     nonisolated private static func unpackBits(_ packed: Data, expectedCount: Int) throws -> Data {
@@ -452,11 +944,96 @@ enum ImageEditorPSDCodec {
             height: height
         )
         layer.opacity = CGFloat(record.opacity) / 255
+        layer.fillOpacity = CGFloat(record.fillOpacity) / 255
         layer.isVisible = record.flags & 2 == 0
-        layer.locksTransparentPixels = record.flags & 1 != 0
+        applyProtection(record: record, to: &layer)
         layer.isClippingMask = record.clipping != 0
         layer.blendMode = ImageEditorBlendMode(psdKey: record.blendKey)
+        applyMask(record: record, channels: channels, to: &layer)
         return layer
+    }
+
+    private static func makeGroupLayer(
+        record: PSDLayerRecord,
+        channels: PSDChannels,
+        canvasSize: CGSize,
+        parentGroupID: UUID?
+    ) -> ImageEditorLayer {
+        var layer = ImageEditorLayer.group(name: record.name, size: canvasSize)
+        layer.frame = CGRect(origin: .zero, size: canvasSize)
+        layer.groupID = parentGroupID
+        layer.opacity = CGFloat(record.opacity) / 255
+        layer.fillOpacity = CGFloat(record.fillOpacity) / 255
+        layer.isVisible = record.flags & 2 == 0
+        layer.isGroupExpanded = record.sectionType != 2
+        layer.blendMode = ImageEditorBlendMode(psdKey: record.blendKey)
+        applyProtection(record: record, to: &layer)
+        applyMask(
+            record: record,
+            channels: channels,
+            targetTop: 0,
+            targetLeft: 0,
+            to: &layer
+        )
+        return layer
+    }
+
+    private static func applyProtection(
+        record: PSDLayerRecord,
+        to layer: inout ImageEditorLayer
+    ) {
+        let flags = record.protectionFlags
+        layer.locksTransparentPixels = record.flags & 1 != 0 || flags & 1 != 0
+        layer.locksPixels = flags & 2 != 0
+        layer.locksPosition = flags & 4 != 0
+        layer.isLocked = flags & 7 == 7
+    }
+
+    private static func applyMask(
+        record: PSDLayerRecord,
+        channels: PSDChannels,
+        targetTop: Int? = nil,
+        targetLeft: Int? = nil,
+        to layer: inout ImageEditorLayer
+    ) {
+        guard let maskRecord = record.mask,
+              let userMask = channels.userMask,
+              let mask = maskImage(
+                maskRecord: maskRecord,
+                values: userMask,
+                targetSize: layer.image.size,
+                targetTop: targetTop ?? record.top,
+                targetLeft: targetLeft ?? record.left
+              )
+        else { return }
+        layer.mask = mask
+        layer.isMaskLinked = maskRecord.flags & 1 != 0
+        layer.isMaskEnabled = maskRecord.flags & 2 == 0
+    }
+
+    private static func maskImage(
+        maskRecord: PSDLayerMaskRecord,
+        values: Data,
+        targetSize: CGSize,
+        targetTop: Int,
+        targetLeft: Int
+    ) -> NSImage? {
+        let width = max(1, Int(targetSize.width.rounded()))
+        let height = max(1, Int(targetSize.height.rounded()))
+        let maskWidth = max(0, maskRecord.right - maskRecord.left)
+        let maskHeight = max(0, maskRecord.bottom - maskRecord.top)
+        guard maskWidth > 0, maskHeight > 0, values.count >= maskWidth * maskHeight else { return nil }
+        var alpha = [UInt8](repeating: maskRecord.defaultColor, count: width * height)
+        for row in 0..<maskHeight {
+            let localY = maskRecord.top + row - targetTop
+            guard (0..<height).contains(localY) else { continue }
+            for column in 0..<maskWidth {
+                let localX = maskRecord.left + column - targetLeft
+                guard (0..<width).contains(localX), (0..<height).contains(localY) else { continue }
+                alpha[localY * width + localX] = values[row * maskWidth + column]
+            }
+        }
+        return alphaMaskImage(width: width, height: height, topDownAlpha: alpha)
     }
 
     private static func rgbaChannels(image: NSImage, width: Int, height: Int) -> PSDChannels? {
@@ -480,6 +1057,27 @@ enum ImageEditorPSDCodec {
             }
         }
         return channels
+    }
+
+    private static func alphaPlane(image: NSImage, width: Int, height: Int) -> Data? {
+        guard width > 0, height > 0,
+              let rendered = NSImage.rendered(size: CGSize(width: width, height: height), actions: { rect in
+                  image.draw(in: rect, from: CGRect(origin: .zero, size: image.size), operation: .copy, fraction: 1)
+              }),
+              let representation = NSBitmapImageRep(data: rendered.tiffRepresentation ?? Data())
+        else { return nil }
+        var alpha = Data(repeating: 0, count: width * height)
+        for row in 0..<height {
+            let imageY = height - row - 1
+            for x in 0..<width {
+                alpha[row * width + x] = UInt8(
+                    ((representation.colorAt(x: x, y: imageY)?.alphaComponent ?? 0) * 255)
+                        .rounded()
+                        .clamped(to: 0...255)
+                )
+            }
+        }
+        return alpha
     }
 
     private static func imageFromChannels(_ channels: PSDChannels, width: Int, height: Int) -> NSImage? {
@@ -516,15 +1114,91 @@ enum ImageEditorPSDCodec {
         image.addRepresentation(bitmap)
         return image
     }
+
+    private static func alphaMaskImage(
+        width: Int,
+        height: Int,
+        topDownAlpha: [UInt8]
+    ) -> NSImage? {
+        guard topDownAlpha.count >= width * height,
+              let bitmap = NSBitmapImageRep(
+                bitmapDataPlanes: nil,
+                pixelsWide: width,
+                pixelsHigh: height,
+                bitsPerSample: 8,
+                samplesPerPixel: 4,
+                hasAlpha: true,
+                isPlanar: false,
+                colorSpaceName: .deviceRGB,
+                bitmapFormat: .alphaNonpremultiplied,
+                bytesPerRow: width * 4,
+                bitsPerPixel: 32
+              ),
+              let pixels = bitmap.bitmapData
+        else { return nil }
+        for row in 0..<height {
+            let imageY = height - row - 1
+            for x in 0..<width {
+                let destination = (imageY * width + x) * 4
+                pixels[destination] = 255
+                pixels[destination + 1] = 255
+                pixels[destination + 2] = 255
+                pixels[destination + 3] = topDownAlpha[row * width + x]
+            }
+        }
+        let image = NSImage(size: CGSize(width: width, height: height))
+        image.addRepresentation(bitmap)
+        return image
+    }
 }
 
 private struct PSDExportLayer {
-    let layer: ImageEditorLayer
+    let name: String
     let frame: CGRect
     let canvasHeight: Int
-    let channels: PSDChannels
+    let channels: [PSDExportChannel]
+    let opacity: Double
+    let fillOpacity: Double
+    let blendMode: ImageEditorBlendMode
+    let isVisible: Bool
+    let isClippingMask: Bool
+    let isLocked: Bool
+    let locksPixels: Bool
+    let locksPosition: Bool
+    let locksTransparentPixels: Bool
+    let sectionType: Int?
+    let mask: PSDExportMask?
 
-    var orderedChannels: [Data] { [channels.alpha, channels.red, channels.green, channels.blue] }
+    static func groupDivider(canvasHeight: Int) -> PSDExportLayer {
+        PSDExportLayer(
+            name: "</Layer group>",
+            frame: .zero,
+            canvasHeight: canvasHeight,
+            channels: [],
+            opacity: 1,
+            fillOpacity: 1,
+            blendMode: .normal,
+            isVisible: false,
+            isClippingMask: false,
+            isLocked: false,
+            locksPixels: false,
+            locksPosition: false,
+            locksTransparentPixels: false,
+            sectionType: 3,
+            mask: nil
+        )
+    }
+}
+
+private struct PSDExportChannel {
+    let identifier: Int16
+    let data: Data
+}
+
+private struct PSDExportMask {
+    let alpha: Data
+    let isEnabled: Bool
+    let isLinked: Bool
 }
 
 nonisolated private struct PSDParsedDocument: @unchecked Sendable {
@@ -550,6 +1224,27 @@ nonisolated private struct PSDLayerRecord {
     let clipping: UInt8
     let flags: UInt8
     let blendKey: String
+    let fillOpacity: UInt8
+    let protectionFlags: UInt32
+    let sectionType: Int?
+    let mask: PSDLayerMaskRecord?
+    let additionalKeys: Set<String>
+
+    func channelDimensions(identifier: Int16) -> (width: Int, height: Int) {
+        if identifier == -2 || identifier == -3, let mask {
+            return (max(0, mask.right - mask.left), max(0, mask.bottom - mask.top))
+        }
+        return (max(0, right - left), max(0, bottom - top))
+    }
+}
+
+nonisolated private struct PSDLayerMaskRecord {
+    let top: Int
+    let left: Int
+    let bottom: Int
+    let right: Int
+    let defaultColor: UInt8
+    let flags: UInt8
 }
 
 nonisolated private struct PSDChannels {
@@ -557,13 +1252,15 @@ nonisolated private struct PSDChannels {
     var green: Data
     var blue: Data
     var alpha: Data
+    var userMask: Data?
 
     static func empty(pixelCount: Int) -> PSDChannels {
         PSDChannels(
             red: Data(repeating: 0, count: pixelCount),
             green: Data(repeating: 0, count: pixelCount),
             blue: Data(repeating: 0, count: pixelCount),
-            alpha: Data(repeating: 255, count: pixelCount)
+            alpha: Data(repeating: 255, count: pixelCount),
+            userMask: nil
         )
     }
 }
@@ -605,6 +1302,10 @@ nonisolated private struct PSDReader {
     mutating func skip(_ count: Int) throws { offset = try checkedEnd(length: count) }
 
     mutating func skipLengthPrefixed32() throws { try skip(Int(try uint32())) }
+
+    mutating func lengthPrefixedData32() throws -> Data {
+        try data(count: Int(try uint32()))
+    }
 
     func checkedEnd(length: Int) throws -> Int {
         guard length >= 0, offset <= data.count - length else { throw ImageEditorPSDCodecError.invalidFile }
@@ -660,7 +1361,67 @@ private extension Data {
         appendASCII("luni")
         appendUInt32(UInt32(block.count))
         append(block)
-        while count % 4 != 0 { append(0) }
+        if block.count % 2 != 0 { append(0) }
+    }
+
+    mutating func appendLayerMask(
+        _ mask: PSDExportMask?,
+        frame: CGRect,
+        canvasHeight: Int
+    ) {
+        guard let mask else {
+            appendUInt32(0)
+            return
+        }
+        appendUInt32(20)
+        appendInt32(Int32(canvasHeight - Int(frame.maxY)))
+        appendInt32(Int32(frame.minX))
+        appendInt32(Int32(canvasHeight - Int(frame.minY)))
+        appendInt32(Int32(frame.maxX))
+        append(0)
+        var flags: UInt8 = mask.isLinked ? 1 : 0
+        if !mask.isEnabled { flags |= 2 }
+        append(flags)
+        appendUInt16(0)
+    }
+
+    mutating func appendFillOpacity(_ opacity: Double) {
+        appendASCII("8BIM")
+        appendASCII("iOpa")
+        appendUInt32(4)
+        append(UInt8((opacity * 255).rounded().clamped(to: 0...255)))
+        append(contentsOf: [0, 0, 0])
+    }
+
+    mutating func appendProtectionFlags(
+        isLocked: Bool,
+        locksPixels: Bool,
+        locksPosition: Bool,
+        locksTransparentPixels: Bool
+    ) {
+        var flags: UInt32 = 0
+        if isLocked || locksTransparentPixels { flags |= 1 }
+        if isLocked || locksPixels { flags |= 2 }
+        if isLocked || locksPosition { flags |= 4 }
+        guard flags != 0 else { return }
+        appendASCII("8BIM")
+        appendASCII("lspf")
+        appendUInt32(4)
+        appendUInt32(flags)
+    }
+
+    mutating func appendSectionDivider(type: Int, blendMode: ImageEditorBlendMode) {
+        appendASCII("8BIM")
+        appendASCII("lsct")
+        if type == 3 {
+            appendUInt32(4)
+            appendUInt32(UInt32(type))
+            return
+        }
+        appendUInt32(12)
+        appendUInt32(UInt32(type))
+        appendASCII("8BIM")
+        appendASCII(blendMode.psdKey)
     }
 }
 
@@ -673,6 +1434,7 @@ private extension Comparable {
 private extension ImageEditorBlendMode {
     var psdKey: String {
         switch self {
+        case .dissolve: "diss"
         case .multiply: "mul "
         case .screen: "scrn"
         case .overlay: "over"
@@ -680,8 +1442,18 @@ private extension ImageEditorBlendMode {
         case .hardLight: "hLit"
         case .darken: "dark"
         case .lighten: "lite"
+        case .darkerColor: "dkCl"
+        case .lighterColor: "lgCl"
         case .colorDodge: "div "
         case .colorBurn: "idiv"
+        case .linearDodge: "lddg"
+        case .linearBurn: "lbrn"
+        case .subtract: "fsub"
+        case .divide: "fdiv"
+        case .vividLight: "vLit"
+        case .linearLight: "lLit"
+        case .pinLight: "pLit"
+        case .hardMix: "hMix"
         case .difference: "diff"
         case .exclusion: "smud"
         case .hue: "hue "
@@ -695,6 +1467,7 @@ private extension ImageEditorBlendMode {
 
     init(psdKey: String) {
         switch psdKey {
+        case "diss": self = .dissolve
         case "mul ": self = .multiply
         case "scrn": self = .screen
         case "over": self = .overlay
@@ -702,8 +1475,18 @@ private extension ImageEditorBlendMode {
         case "hLit": self = .hardLight
         case "dark": self = .darken
         case "lite": self = .lighten
+        case "dkCl": self = .darkerColor
+        case "lgCl": self = .lighterColor
         case "div ": self = .colorDodge
         case "idiv": self = .colorBurn
+        case "lddg": self = .linearDodge
+        case "lbrn": self = .linearBurn
+        case "fsub": self = .subtract
+        case "fdiv": self = .divide
+        case "vLit": self = .vividLight
+        case "lLit": self = .linearLight
+        case "pLit": self = .pinLight
+        case "hMix": self = .hardMix
         case "diff": self = .difference
         case "smud": self = .exclusion
         case "hue ": self = .hue
@@ -714,4 +1497,11 @@ private extension ImageEditorBlendMode {
         default: self = .normal
         }
     }
+
+    static let supportedPSDKeys: Set<String> = [
+        "pass", "norm", "diss", "dark", "mul ", "idiv", "lbrn", "dkCl",
+        "lite", "scrn", "div ", "lddg", "lgCl", "over", "sLit", "hLit",
+        "vLit", "lLit", "pLit", "hMix", "diff", "smud", "fsub", "fdiv",
+        "hue ", "sat ", "colr", "lum "
+    ]
 }

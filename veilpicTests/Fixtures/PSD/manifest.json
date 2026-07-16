@@ -1,0 +1,34 @@
+{
+  "generator": "scripts/generate_psd_compatibility_fixtures.rb",
+  "specification": "Adobe Photoshop File Formats Specification",
+  "fixtures": [
+    {
+      "file": "zip-group-mask.psd",
+      "sha256": "c465cfb2c44b6c03726e11440e65699267690b79eedc9f6ffe69d6e4f4f9ba9a",
+      "expected": [
+        "zip",
+        "zip_prediction",
+        "group",
+        "raster_mask",
+        "fill_opacity",
+        "layer_locks"
+      ]
+    },
+    {
+      "file": "zip-composite.psd",
+      "sha256": "bd19d750fbfabcee8fc2c3690f61db37c125485bbf0e981e3db1e7fc9bf8928e",
+      "expected": [
+        "zip",
+        "flattened_composite"
+      ]
+    },
+    {
+      "file": "unsupported-features.psd",
+      "sha256": "3fb7420368ab084867bb4a52c498539dcb1e5be1ed5785712751b09cd2d62d4c",
+      "expected": [
+        "compatibility_report",
+        "unsupported_semantic_features"
+      ]
+    }
+  ]
+}

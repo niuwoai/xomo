@@ -994,6 +994,9 @@ extension ImageEditorViewModel {
         let decoder = JSONDecoder()
         let project = try decoder.decode(ImageEditorProjectDocument.self, from: data)
         document = try project.restoredDocument()
+        psdCompatibilityReport = nil
+        psdCompatibilityFileName = ""
+        isPSDCompatibilityReportPresented = false
         restoreXomoThemeContext(
             theme: project.xomoComponentTheme ?? .native,
             tokenSnapshot: project.xomoLocalThemeTokenSnapshot
@@ -1066,9 +1069,13 @@ extension ImageEditorViewModel {
 
     func loadExternalPSDDocument(
         _ document: ImageEditorDocument,
-        openedFlattened: Bool
+        openedFlattened: Bool,
+        compatibilityReport: ImageEditorPSDCompatibilityReport?
     ) {
         self.document = document
+        psdCompatibilityReport = compatibilityReport
+        psdCompatibilityFileName = document.sourceName
+        isPSDCompatibilityReportPresented = compatibilityReport?.requiresAttention == true
         resetAfterExternalDocumentOpen()
         if openedFlattened {
             appendHistory(L10n.text("imageEditor.history.psdOpenFlattened"))

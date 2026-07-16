@@ -116,6 +116,10 @@ extension ImageEditorView {
             viewModel.saveProjectDocument()
         }
         .keyboardShortcut("s", modifiers: [.command])
+        Button(L10n.text("imageEditor.action.psdCompatibilityReport")) {
+            viewModel.isPSDCompatibilityReportPresented = true
+        }
+        .disabled(viewModel.psdCompatibilityReport == nil)
         Divider()
         Button(L10n.text("imageEditor.action.fileImport")) {
             viewModel.chooseImageLayerFile()

@@ -159,6 +159,7 @@ final class XomoExternalDocumentOpenCoordinator: ObservableObject {
             updateStage(.decoding, requestID: requestID)
             let document: ImageEditorDocument
             let openedFlattened: Bool
+            var compatibilityReport = try? ImageEditorPSDCodec.compatibilityReport(data)
             do {
                 document = try await ImageEditorPSDCodec.decodeAsync(
                     data,
@@ -176,13 +177,18 @@ final class XomoExternalDocumentOpenCoordinator: ObservableObject {
                     image: flattened
                 )
                 openedFlattened = true
+                compatibilityReport = compatibilityReport?.addingFlattenedFallback()
             }
 
             try Task.checkCancellation()
             updateStage(.finishing, requestID: requestID)
             await Task.yield()
             guard activeRequestID == requestID else { return }
-            viewModel.loadExternalPSDDocument(document, openedFlattened: openedFlattened)
+            viewModel.loadExternalPSDDocument(
+                document,
+                openedFlattened: openedFlattened,
+                compatibilityReport: compatibilityReport
+            )
             NSApp.activate(ignoringOtherApps: true)
             NSApp.keyWindow?.makeKeyAndOrderFront(nil)
             finish(requestID: requestID)

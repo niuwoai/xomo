@@ -282,6 +282,9 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var isExportSheetPresented = false
     @Published var isNewCanvasSheetPresented = false
     @Published var isLayerStylePresetManagerPresented = false
+    @Published var isPSDCompatibilityReportPresented = false
+    @Published var psdCompatibilityReport: ImageEditorPSDCompatibilityReport?
+    @Published var psdCompatibilityFileName = ""
     @Published var namedHistorySnapshots: [ImageEditorHistorySnapshot] = []
     @Published var selectedHistorySnapshotID: UUID?
     @Published var selectedHistoryEntryID: UUID?
@@ -437,6 +440,9 @@ final class ImageEditorViewModel: ObservableObject {
         newDocument.designCanvasMetadata = XomoDesignCanvasMetadata(draft: draft)
 
         document = newDocument
+        psdCompatibilityReport = nil
+        psdCompatibilityFileName = ""
+        isPSDCompatibilityReportPresented = false
         cachedCurrentImage = canvas
         exportSettings.scale = Double(draft.clampedExportScale)
         clearUndoHistory()
