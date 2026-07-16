@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc172 - 2026-07-17
+
+### Fixed
+- 修复 PSD 栅格蒙版导出经过 AppKit 重绘导致透明度被混合的问题，改为使用 Core Graphics 无插值逐像素提取 alpha，复杂蒙版现在可以精确往返。
+
+### Verification
+- PSD 套件 18/18 通过；复杂蒙版 alpha 交替 255/0 数据精确恢复。
+
 ## 2.12.0-rc171 - 2026-07-17
 
 ### Fixed

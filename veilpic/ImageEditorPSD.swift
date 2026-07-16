@@ -1982,20 +1982,31 @@ enum ImageEditorPSDCodec {
 
     private static func alphaPlane(image: NSImage, width: Int, height: Int) -> Data? {
         guard width > 0, height > 0,
-              let rendered = NSImage.rendered(size: CGSize(width: width, height: height), actions: { rect in
-                  image.draw(in: rect, from: CGRect(origin: .zero, size: image.size), operation: .copy, fraction: 1)
-              }),
-              let representation = NSBitmapImageRep(data: rendered.tiffRepresentation ?? Data())
+              let source = image.cgImage(forProposedRect: nil, context: nil, hints: nil)
         else { return nil }
+
+        let bytesPerPixel = 4
+        let bytesPerRow = width * bytesPerPixel
+        var pixels = [UInt8](repeating: 0, count: bytesPerRow * height)
+        guard let context = CGContext(
+            data: &pixels,
+            width: width,
+            height: height,
+            bitsPerComponent: 8,
+            bytesPerRow: bytesPerRow,
+            space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ) else { return nil }
+
+        context.interpolationQuality = .none
+        context.setBlendMode(.copy)
+        context.draw(source, in: CGRect(x: 0, y: 0, width: width, height: height))
+
         var alpha = Data(repeating: 0, count: width * height)
         for row in 0..<height {
             let imageY = height - row - 1
             for x in 0..<width {
-                alpha[row * width + x] = UInt8(
-                    ((representation.colorAt(x: x, y: imageY)?.alphaComponent ?? 0) * 255)
-                        .rounded()
-                        .clamped(to: 0...255)
-                )
+                alpha[row * width + x] = pixels[imageY * bytesPerRow + x * bytesPerPixel + 3]
             }
         }
         return alpha

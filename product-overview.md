@@ -1,10 +1,10 @@
 # 象墨（Xomo）产品概览
 
-> 最后更新：2026-07-17 | 当前版本：v2.12.0-rc171
+> 最后更新：2026-07-17 | 当前版本：v2.12.0-rc172
 
 ## 产品定位
 
-v2.12.0-rc171 修复 PSD ZIP 通道的 zlib 头处理，外部 ZIP 合成与 ZIP 组蒙版恢复可读；rc170 的 EngineData 字体名修复、rc169 的矢量蒙版子路径对齐、rc168 的命名路径修复、rc167 的组件库系统箭头与工具语义指针、rc166 的 PSD Spot 通道往返、rc165 的 Figma Background Blur、rc164 的 Layer Blur、rc163 的 Drop Shadow/Inner Shadow、rc157 的 PSD 基础文字层双向交换与 rc154 的闭合原生矢量蒙版导出仍保留。
+v2.12.0-rc172 修复 PSD 栅格蒙版 alpha 精确导出，复杂蒙版现在可无损往返；rc171 的 ZIP 通道 zlib 头处理、rc170 的 EngineData 字体名修复、rc169 的矢量蒙版子路径对齐、rc168 的命名路径修复、rc167 的组件库系统箭头与工具语义指针、rc166 的 PSD Spot 通道往返、rc165 的 Figma Background Blur、rc164 的 Layer Blur、rc163 的 Drop Shadow/Inner Shadow、rc157 的 PSD 基础文字层双向交换与 rc154 的闭合原生矢量蒙版导出仍保留。
 
 v2.12.0-rc146 让多选图层中的 Figma 变量绑定可以一次稳定读取和复制：重复绑定按稳定 ID 去重，属性面板、MCP 和 CLI 使用同一批量逻辑，仍只写入本机剪贴板，不向 Figma 云端回写。
 
