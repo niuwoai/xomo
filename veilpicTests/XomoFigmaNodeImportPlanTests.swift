@@ -512,6 +512,66 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(line.strokeWeight == 3)
     }
 
+    @Test func mapperAndMaterializerPreserveFigmaStrokeCapAndJoin() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                """
+                {
+                  "name": "Stroke Styles",
+                  "nodes": {
+                    "1:20": {
+                      "document": {
+                        "id": "1:20",
+                        "name": "Stroke Styles",
+                        "type": "FRAME",
+                        "absoluteBoundingBox": {"x": 0, "y": 0, "width": 160, "height": 120},
+                        "children": [{
+                          "id": "2:20",
+                          "name": "Bevel Square",
+                          "type": "RECTANGLE",
+                          "fills": [],
+                          "strokes": [{"type": "SOLID", "color": {"r": 0, "g": 0, "b": 0, "a": 1}}],
+                          "strokeWeight": 6,
+                          "strokeCap": "SQUARE",
+                          "strokeJoin": "BEVEL",
+                          "absoluteBoundingBox": {"x": 20, "y": 20, "width": 80, "height": 48}
+                        }]
+                      }
+                    }
+                  }
+                }
+                """.utf8
+            )
+        )
+        let plan = try XomoFigmaNodeImportMapper.makePlan(response: response, requestedNodeID: "1:20")
+        let item = try #require(plan.items.first { $0.sourceID == "2:20" })
+        #expect(item.strokeCap == "SQUARE")
+        #expect(item.strokeJoin == "BEVEL")
+
+        let materialized = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: CGSize(width: 320, height: 240)
+        )
+        let layer = try #require(materialized.layers.first { $0.name == "Bevel Square" })
+        #expect(layer.shapeContent?.strokeCap == .square)
+        #expect(layer.shapeContent?.strokeJoin == .bevel)
+
+        var noneItem = item
+        noneItem.strokeCap = "NONE"
+        let noneLayer = XomoFigmaNodeMaterializer.materialize(
+            plan: XomoFigmaNodeImportPlan(
+                fileName: "stroke.json",
+                version: nil,
+                rootSourceID: "2:20",
+                rootName: "Bevel Square",
+                items: [noneItem]
+            ),
+            canvasSize: CGSize(width: 320, height: 240)
+        ).layers.first
+        #expect(noneLayer?.shapeContent?.strokeCap == .butt)
+    }
+
     @Test func mapperImportsHorizontalWrapAndCounterSpacingWithFillChildSemantics() throws {
         let response = try JSONDecoder().decode(
             XomoFigmaNodeResponse.self,

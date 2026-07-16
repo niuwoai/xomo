@@ -300,6 +300,8 @@ enum XomoFigmaNodeImportMapper {
                 : nil,
             solidStroke: solidColor(in: node.strokes),
             strokeWeight: node.strokeWeight,
+            strokeCap: node.strokeCap,
+            strokeJoin: node.strokeJoin,
             cornerRadius: uniformCornerRadius(node),
             cornerRadii: independentCornerRadii(node),
             cornerSmoothing: validCornerSmoothing(node),
@@ -798,6 +800,8 @@ struct XomoFigmaNode: Decodable {
     var fills: [XomoFigmaPaint]?
     var strokes: [XomoFigmaPaint]?
     var strokeWeight: Double?
+    var strokeCap: String?
+    var strokeJoin: String?
     var effects: [XomoFigmaEffect]?
     var blendMode: String?
     var isMask: Bool?

@@ -217,6 +217,8 @@ struct XomoFigmaNodeImportItem: Equatable, Identifiable, Sendable {
     var radialGradientFill: XomoFigmaPlanRadialGradient? = nil
     var solidStroke: XomoFigmaPlanColor?
     var strokeWeight: Double?
+    var strokeCap: String? = nil
+    var strokeJoin: String? = nil
     var cornerRadius: Double?
     var cornerRadii: XomoFigmaPlanCornerRadii? = nil
     var cornerSmoothing: Double? = nil

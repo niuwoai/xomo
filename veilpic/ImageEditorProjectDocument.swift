@@ -643,6 +643,8 @@ struct ImageEditorProjectShapeContent: Equatable, Codable {
     var strokeColor: ImageEditorProjectColor
     var strokeWidth: CGFloat
     var strokeOpacity: CGFloat
+    var strokeCap: ImageEditorStrokeCap = .round
+    var strokeJoin: ImageEditorStrokeJoin = .round
     var cornerRadius: CGFloat?
     var cornerRadii: ImageEditorRectangleCornerRadii?
     var cornerSmoothing: CGFloat?
@@ -650,6 +652,34 @@ struct ImageEditorProjectShapeContent: Equatable, Codable {
     var pathAnchors: [ImageEditorPathAnchor]
     var pathSubpaths: [[ImageEditorPathAnchor]]?
     var isPathClosed: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case kind, fillColor, fillGradient, fillGradientCenter, fillOpacity
+        case strokeColor, strokeWidth, strokeOpacity, strokeCap, strokeJoin
+        case cornerRadius, cornerRadii, cornerSmoothing, pathPoints, pathAnchors
+        case pathSubpaths, isPathClosed
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        kind = try container.decode(ImageEditorShapeKind.self, forKey: .kind)
+        fillColor = try container.decode(ImageEditorProjectColor.self, forKey: .fillColor)
+        fillGradient = try container.decodeIfPresent(ImageEditorGradientFillContent.self, forKey: .fillGradient)
+        fillGradientCenter = try container.decodeIfPresent(CGPoint.self, forKey: .fillGradientCenter)
+        fillOpacity = try container.decode(CGFloat.self, forKey: .fillOpacity)
+        strokeColor = try container.decode(ImageEditorProjectColor.self, forKey: .strokeColor)
+        strokeWidth = try container.decode(CGFloat.self, forKey: .strokeWidth)
+        strokeOpacity = try container.decode(CGFloat.self, forKey: .strokeOpacity)
+        strokeCap = try container.decodeIfPresent(ImageEditorStrokeCap.self, forKey: .strokeCap) ?? .round
+        strokeJoin = try container.decodeIfPresent(ImageEditorStrokeJoin.self, forKey: .strokeJoin) ?? .round
+        cornerRadius = try container.decodeIfPresent(CGFloat.self, forKey: .cornerRadius)
+        cornerRadii = try container.decodeIfPresent(ImageEditorRectangleCornerRadii.self, forKey: .cornerRadii)
+        cornerSmoothing = try container.decodeIfPresent(CGFloat.self, forKey: .cornerSmoothing)
+        pathPoints = try container.decode([CGPoint].self, forKey: .pathPoints)
+        pathAnchors = try container.decode([ImageEditorPathAnchor].self, forKey: .pathAnchors)
+        pathSubpaths = try container.decodeIfPresent([[ImageEditorPathAnchor]].self, forKey: .pathSubpaths)
+        isPathClosed = try container.decode(Bool.self, forKey: .isPathClosed)
+    }
 
     init(content: ImageEditorShapeContent) {
         kind = content.kind
@@ -660,6 +690,8 @@ struct ImageEditorProjectShapeContent: Equatable, Codable {
         strokeColor = ImageEditorProjectColor(color: content.strokeColor)
         strokeWidth = content.strokeWidth
         strokeOpacity = content.strokeOpacity
+        strokeCap = content.strokeCap
+        strokeJoin = content.strokeJoin
         cornerRadius = content.cornerRadius
         cornerRadii = content.cornerRadii
         cornerSmoothing = content.cornerSmoothing
@@ -679,6 +711,8 @@ struct ImageEditorProjectShapeContent: Equatable, Codable {
             strokeColor: strokeColor.nsColor,
             strokeWidth: strokeWidth,
             strokeOpacity: strokeOpacity,
+            strokeCap: strokeCap,
+            strokeJoin: strokeJoin,
             cornerRadius: cornerRadius ?? 0,
             cornerRadii: cornerRadii,
             cornerSmoothing: cornerSmoothing ?? 0,

@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.12.0-rc158 - 2026-07-17
+
+### Added
+- Figma 形状导入现在保留 `strokeCap` 与 `strokeJoin`，矩形和路径在 Xomo 中继续以可编辑的 butt/round/square 端点与 miter/round/bevel 连接渲染。
+- 新增 Figma 描边样式映射和项目存档往返回归测试；旧项目缺少字段时安全回退为 round。
+
+### Verification
+- Figma 描边样式定向测试已完成编译；当前隔离测试运行器在本机统一返回无断言异常退出，结果已保留在 `test-reports/rc158-figma-stroke`。
+- `git diff --check` 通过。
+
 ## 2.12.0-rc157 - 2026-07-17
 
 ### Added

@@ -1,0 +1,6 @@
+{
+  "test": "mapperAndMaterializerPreserveFigmaStrokeCapAndJoin",
+  "buildForTesting": "passed",
+  "testProcess": "blocked-by-host-testmanagerd",
+  "assertions": "not-collected"
+}

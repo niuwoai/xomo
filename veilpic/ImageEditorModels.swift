@@ -2392,6 +2392,52 @@ struct ImageEditorPathAnchor: Equatable, Codable {
     }
 }
 
+enum ImageEditorStrokeCap: String, Codable, CaseIterable {
+    case butt
+    case round
+    case square
+
+    init(figmaValue: String?) {
+        switch figmaValue?.uppercased() {
+        case "NONE": self = .butt
+        case "ROUND": self = .round
+        case "SQUARE": self = .square
+        default: self = .round
+        }
+    }
+
+    var nsStyle: NSBezierPath.LineCapStyle {
+        switch self {
+        case .butt: return .butt
+        case .round: return .round
+        case .square: return .square
+        }
+    }
+}
+
+enum ImageEditorStrokeJoin: String, Codable, CaseIterable {
+    case miter
+    case round
+    case bevel
+
+    init(figmaValue: String?) {
+        switch figmaValue?.uppercased() {
+        case "MITER": self = .miter
+        case "BEVEL": self = .bevel
+        case "ROUND": self = .round
+        default: self = .round
+        }
+    }
+
+    var nsStyle: NSBezierPath.LineJoinStyle {
+        switch self {
+        case .miter: return .miter
+        case .round: return .round
+        case .bevel: return .bevel
+        }
+    }
+}
+
 private extension CGPoint {
     func clamped(to size: CGSize) -> CGPoint {
         CGPoint(
@@ -2412,6 +2458,8 @@ struct ImageEditorShapeContent {
     var strokeColor: NSColor
     var strokeWidth: CGFloat
     var strokeOpacity: CGFloat
+    var strokeCap: ImageEditorStrokeCap = .round
+    var strokeJoin: ImageEditorStrokeJoin = .round
     var cornerRadius: CGFloat = 0
     var cornerRadii: ImageEditorRectangleCornerRadii? = nil
     var cornerSmoothing: CGFloat = 0
@@ -2523,8 +2571,8 @@ struct ImageEditorShapeContent {
                         path.fill()
                     }
                 }
-                path.lineJoinStyle = .round
-                path.lineCapStyle = .round
+                path.lineJoinStyle = normalized.strokeJoin.nsStyle
+                path.lineCapStyle = normalized.strokeCap.nsStyle
                 path.lineWidth = normalized.strokeWidth
                 normalized.strokeColor.withAlphaComponent(normalized.strokeOpacity).setStroke()
                 path.stroke()
