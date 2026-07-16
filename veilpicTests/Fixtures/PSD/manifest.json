@@ -29,6 +29,16 @@
         "compatibility_report",
         "unsupported_semantic_features"
       ]
+    },
+    {
+      "file": "editable-text.psd",
+      "sha256": "fc98cac52237b11c41245398acfc44dc796dfb1d6ceebaa385566f0260ff71ec",
+      "expected": [
+        "editable_text",
+        "font_size",
+        "color",
+        "alignment"
+      ]
     }
   ]
 }

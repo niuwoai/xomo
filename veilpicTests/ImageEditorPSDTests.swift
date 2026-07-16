@@ -143,6 +143,32 @@ struct ImageEditorPSDTests {
         #expect(kinds.contains(.unknownBlendMode))
     }
 
+    @Test func externalEditableTextFixtureBecomesNativeTextLayer() throws {
+        let data = try psdFixtureData("editable-text.psd")
+        let document = try ImageEditorPSDCodec.decode(data, sourceName: "editable-text.psd")
+        let textLayer = try #require(document.layers.first)
+        let content = try #require(textLayer.textContent)
+
+        #expect(textLayer.isText)
+        #expect(content.text == "Hello Xomo")
+        #expect(content.fontFamilyName == "Helvetica")
+        #expect(content.fontSize == 24)
+        #expect(content.alignment == .center)
+        #expect(abs(content.color.redComponent - 0.2) < 0.01)
+        #expect(abs(content.color.greenComponent - 0.4) < 0.01)
+        #expect(abs(content.color.blueComponent - 0.8) < 0.01)
+
+        let report = try ImageEditorPSDCodec.compatibilityReport(data)
+        #expect(!report.issues.contains { $0.kind == .textRasterized })
+
+        let project = try ImageEditorProjectDocument(document: document)
+        let restoredProject = try project.restoredDocument()
+        let restoredContent = try #require(restoredProject.layers.first?.textContent)
+        #expect(restoredContent.text == content.text)
+        #expect(restoredContent.fontFamilyName == content.fontFamilyName)
+        #expect(restoredContent.fontSize == content.fontSize)
+    }
+
     @Test func openingPSDPublishesCompatibilityReportForTheCurrentDocument() throws {
         let data = try psdFixtureData("unsupported-features.psd")
         let report = try ImageEditorPSDCodec.compatibilityReport(data)

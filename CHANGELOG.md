@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.12.0-rc147 - 2026-07-17
+
+### Added
+- PSD 导入支持基础 `TySh` / `EngineData` 文字层，读取纯文本、字体、字号、颜色和基础段落对齐并映射为 Xomo 原生可编辑文字层；无法解析的文字数据继续按像素回退。
+- 新增独立外部生成的 `editable-text.psd` 夹具，验证文字导入、兼容性报告和 `.qpicproject` 保存重开。
+
+### Changed
+- PSD 支持说明和路线图明确区分“基础文字可编辑导入”和复杂文字/PSD 导出仍会栅格化的边界。
+
+### Verification
+- PSD 专项测试 9/9、基础文字导入与项目保存 1/1、Xomo CLI 测试 2/2、`git diff --check` 通过。
+
 ## 2.12.0-rc146 - 2026-07-17
 
 ### Added

@@ -213,7 +213,9 @@ enum ImageEditorPSDCodec {
                 "lnsr", "shpa", "sn2P", "anFX", "pths", "FMsk"
             ])
         for record in records {
-            if !record.additionalKeys.isDisjoint(with: textKeys) { addIssue(.textRasterized) }
+            if !record.additionalKeys.isDisjoint(with: textKeys), record.textInfo == nil {
+                addIssue(.textRasterized)
+            }
             if !record.additionalKeys.isDisjoint(with: vectorKeys) { addIssue(.vectorRasterized) }
             if !record.additionalKeys.isDisjoint(with: smartObjectKeys) { addIssue(.smartObjectRasterized) }
             if !record.additionalKeys.isDisjoint(with: effectKeys) { addIssue(.layerEffectsRasterized) }
@@ -675,6 +677,7 @@ enum ImageEditorPSDCodec {
         var fillOpacity = UInt8.max
         var protectionFlags: UInt32 = 0
         var additionalKeys = Set<String>()
+        var textInfo: PSDTextLayerInfo?
         while reader.offset + 12 <= extraEnd {
             let signature = try reader.ascii(count: 4)
             let key = try reader.ascii(count: 4)
@@ -696,6 +699,12 @@ enum ImageEditorPSDCodec {
                 protectionFlags = try reader.uint32()
             } else if key == "iOpa", length >= 1 {
                 fillOpacity = try reader.uint8()
+            } else if key == "TySh" {
+                let blockData = try reader.data(count: length)
+                textInfo = parseTextToolObject(blockData)
+            } else if key == "Txt2" {
+                let blockData = try reader.data(count: length)
+                textInfo = parseEngineDataText(blockData)
             }
             reader.offset = blockEnd
             let paddedEnd = min(extraEnd, blockEnd + (length % 2))
@@ -717,7 +726,8 @@ enum ImageEditorPSDCodec {
             protectionFlags: protectionFlags,
             sectionType: sectionType,
             mask: mask,
-            additionalKeys: additionalKeys
+            additionalKeys: additionalKeys,
+            textInfo: textInfo
         )
     }
 
@@ -925,6 +935,172 @@ enum ImageEditorPSDCodec {
         return output.prefix(expectedCount)
     }
 
+    private static func parseTextToolObject(_ data: Data) -> PSDTextLayerInfo? {
+        do {
+            var reader = PSDReader(data: data)
+            guard try reader.uint16() == 1 else { return nil }
+            try reader.skip(48)
+            guard try reader.uint16() == 50 else { return nil }
+            let descriptor = try reader.psdDescriptorBlock()
+            _ = try reader.uint16()
+            _ = try reader.psdDescriptorBlock()
+            try reader.skip(32)
+
+            let topLevelText = descriptor["Txt "]?.stringValue
+            let engineData = descriptor["EngineData"]?.rawData
+            let style = engineData.flatMap(parseEngineDataStyle)
+            guard let text = topLevelText ?? style?.text, !text.isEmpty else { return nil }
+            return PSDTextLayerInfo(
+                text: normalizedPSDText(text),
+                fontFamilyName: style?.fontFamilyName ?? ImageEditorTextContent.systemFontFamilyName,
+                fontSize: style?.fontSize ?? 12,
+                color: style?.color ?? .black,
+                alignment: style?.alignment ?? .left,
+                isParagraph: style?.isParagraph ?? false
+            )
+        } catch {
+            return nil
+        }
+    }
+
+    private static func parseEngineDataText(_ data: Data) -> PSDTextLayerInfo? {
+        guard let style = parseEngineDataStyle(data), let text = style.text, !text.isEmpty else {
+            return nil
+        }
+        return PSDTextLayerInfo(
+            text: normalizedPSDText(text),
+            fontFamilyName: style.fontFamilyName ?? ImageEditorTextContent.systemFontFamilyName,
+            fontSize: style.fontSize ?? 12,
+            color: style.color ?? .black,
+            alignment: style.alignment ?? .left,
+            isParagraph: style.isParagraph ?? false
+        )
+    }
+
+    private static func parseEngineDataStyle(_ data: Data) -> PSDTextLayerStyle? {
+        let bytes = [UInt8](data)
+        let text = engineUnicodeString(after: "/Text", in: bytes)
+        let fontSetStart = index(of: Array("/FontSet".utf8), in: bytes) ?? 0
+        let fontName = engineUnicodeString(after: "/Name", in: bytes, startingAt: fontSetStart)
+            ?? engineASCIIString(after: "/Name", in: bytes, startingAt: fontSetStart)
+        guard text != nil || fontName != nil else { return nil }
+
+        let fontSize = engineNumber(after: "/FontSize", in: bytes).map { CGFloat(max(1, $0)) }
+        let alignment = engineNumber(after: "/Justification", in: bytes).map {
+            switch Int($0.rounded()) {
+            case 1: return ImageEditorTextAlignment.right
+            case 2: return ImageEditorTextAlignment.center
+            case 3, 4, 5, 6, 7: return ImageEditorTextAlignment.justified
+            default: return ImageEditorTextAlignment.left
+            }
+        }
+        let isParagraph = engineNumber(after: "/ShapeType", in: bytes).map {
+            Int($0.rounded()) == 1
+        }
+        let color = engineColor(after: "/FillColor", in: bytes)
+        return PSDTextLayerStyle(
+            text: text,
+            fontFamilyName: fontName,
+            fontSize: fontSize,
+            color: color,
+            alignment: alignment,
+            isParagraph: isParagraph
+        )
+    }
+
+    private static func normalizedPSDText(_ text: String) -> String {
+        text.replacingOccurrences(of: "\r", with: "\n")
+    }
+
+    private static func engineUnicodeString(
+        after marker: String,
+        in bytes: [UInt8],
+        startingAt: Int = 0
+    ) -> String? {
+        guard let markerIndex = index(of: Array(marker.utf8), in: bytes, startingAt: startingAt) else {
+            return nil
+        }
+        var cursor = markerIndex + marker.utf8.count
+        while cursor < bytes.count, bytes[cursor] != 0x28 { cursor += 1 }
+        guard cursor < bytes.count else { return nil }
+        cursor += 1
+        guard cursor + 1 < bytes.count, bytes[cursor] == 0xFE, bytes[cursor + 1] == 0xFF else {
+            return nil
+        }
+        cursor += 2
+        var value = Data()
+        while cursor + 1 < bytes.count {
+            let codeUnit = UInt16(bytes[cursor]) << 8 | UInt16(bytes[cursor + 1])
+            if codeUnit == 0x29 { break }
+            value.append(bytes[cursor])
+            value.append(bytes[cursor + 1])
+            cursor += 2
+        }
+        return String(data: value, encoding: .utf16BigEndian)
+    }
+
+    private static func engineASCIIString(
+        after marker: String,
+        in bytes: [UInt8],
+        startingAt: Int = 0
+    ) -> String? {
+        guard let markerIndex = index(of: Array(marker.utf8), in: bytes, startingAt: startingAt) else {
+            return nil
+        }
+        var cursor = markerIndex + marker.utf8.count
+        while cursor < bytes.count, bytes[cursor] != 0x28 { cursor += 1 }
+        guard cursor < bytes.count else { return nil }
+        cursor += 1
+        let start = cursor
+        while cursor < bytes.count, bytes[cursor] != 0x29 { cursor += 1 }
+        guard cursor > start else { return nil }
+        return String(bytes: bytes[start..<cursor], encoding: .ascii)
+    }
+
+    private static func engineNumber(after marker: String, in bytes: [UInt8]) -> Double? {
+        guard let markerIndex = index(of: Array(marker.utf8), in: bytes) else { return nil }
+        var cursor = markerIndex + marker.utf8.count
+        while cursor < bytes.count,
+              !((bytes[cursor] >= 0x30 && bytes[cursor] <= 0x39) || bytes[cursor] == 0x2D || bytes[cursor] == 0x2B) {
+            cursor += 1
+        }
+        let start = cursor
+        if cursor < bytes.count, bytes[cursor] == 0x2D || bytes[cursor] == 0x2B { cursor += 1 }
+        while cursor < bytes.count,
+              (bytes[cursor] >= 0x30 && bytes[cursor] <= 0x39 || bytes[cursor] == 0x2E) {
+            cursor += 1
+        }
+        guard cursor > start else { return nil }
+        return Double(String(bytes: bytes[start..<cursor], encoding: .ascii) ?? "")
+    }
+
+    private static func engineColor(after marker: String, in bytes: [UInt8]) -> NSColor? {
+        guard let markerIndex = index(of: Array(marker.utf8), in: bytes),
+              let valuesIndex = index(of: Array("/Values".utf8), in: bytes, startingAt: markerIndex),
+              let openIndex = bytes[valuesIndex...].firstIndex(of: 0x5B),
+              let closeIndex = bytes[openIndex...].firstIndex(of: 0x5D)
+        else { return nil }
+        let valueBytes = Array(bytes[(openIndex + 1)..<closeIndex])
+        let values = valueBytes
+            .split(whereSeparator: { $0 == 0x20 || $0 == 0x0A || $0 == 0x0D || $0 == 0x09 })
+            .compactMap { Double(String(bytes: $0, encoding: .ascii) ?? "") }
+        guard values.count >= 3 else { return nil }
+        return NSColor(
+            calibratedRed: CGFloat(min(max(values[0], 0), 1)),
+            green: CGFloat(min(max(values[1], 0), 1)),
+            blue: CGFloat(min(max(values[2], 0), 1)),
+            alpha: CGFloat(min(max(values.count > 3 ? values[3] : 1, 0), 1))
+        )
+    }
+
+    private static func index(of needle: [UInt8], in bytes: [UInt8], startingAt: Int = 0) -> Int? {
+        guard !needle.isEmpty, startingAt >= 0, startingAt + needle.count <= bytes.count else { return nil }
+        for candidate in startingAt...(bytes.count - needle.count) {
+            if Array(bytes[candidate..<(candidate + needle.count)]) == needle { return candidate }
+        }
+        return nil
+    }
+
     private static func makeLayer(
         record: PSDLayerRecord,
         channels: PSDChannels,
@@ -932,9 +1108,39 @@ enum ImageEditorPSDCodec {
     ) -> ImageEditorLayer? {
         let width = record.right - record.left
         let height = record.bottom - record.top
-        guard width > 0, height > 0,
-              let image = imageFromChannels(channels, width: width, height: height)
-        else { return nil }
+        guard width > 0, height > 0 else { return nil }
+        if let textInfo = record.textInfo {
+            var content = ImageEditorTextContent(
+                text: textInfo.text,
+                color: textInfo.color,
+                fontSize: textInfo.fontSize,
+                point: .zero
+            )
+            content.fontFamilyName = textInfo.fontFamilyName
+            content.alignment = textInfo.alignment
+            content.boxWidth = textInfo.isParagraph ? CGFloat(width) : 0
+            content.boxHeight = textInfo.isParagraph ? CGFloat(height) : 0
+            var layer = ImageEditorLayer.text(
+                name: record.name,
+                size: CGSize(width: width, height: height),
+                content: content
+            )
+            layer.frame = CGRect(
+                x: record.left,
+                y: canvasHeight - record.bottom,
+                width: width,
+                height: height
+            )
+            layer.opacity = CGFloat(record.opacity) / 255
+            layer.fillOpacity = CGFloat(record.fillOpacity) / 255
+            layer.isVisible = record.flags & 2 == 0
+            applyProtection(record: record, to: &layer)
+            layer.isClippingMask = record.clipping != 0
+            layer.blendMode = ImageEditorBlendMode(psdKey: record.blendKey)
+            applyMask(record: record, channels: channels, to: &layer)
+            return layer
+        }
+        guard let image = imageFromChannels(channels, width: width, height: height) else { return nil }
         var layer = ImageEditorLayer.blank(name: record.name, size: image.size)
         layer.image = image
         layer.frame = CGRect(
@@ -1213,6 +1419,46 @@ nonisolated private struct PSDParsedLayer {
     let channels: PSDChannels
 }
 
+private enum PSDDescriptorValue {
+    case string(String)
+    case raw(Data)
+    case integer(Int32)
+    case double(Double)
+    case unit(Double)
+    case boolean(Bool)
+    case object([String: PSDDescriptorValue])
+    case list([PSDDescriptorValue])
+    case unknown
+
+    var stringValue: String? {
+        guard case let .string(value) = self else { return nil }
+        return value
+    }
+
+    var rawData: Data? {
+        guard case let .raw(value) = self else { return nil }
+        return value
+    }
+}
+
+private struct PSDTextLayerStyle {
+    let text: String?
+    let fontFamilyName: String?
+    let fontSize: CGFloat?
+    let color: NSColor?
+    let alignment: ImageEditorTextAlignment?
+    let isParagraph: Bool?
+}
+
+private struct PSDTextLayerInfo {
+    let text: String
+    let fontFamilyName: String
+    let fontSize: CGFloat
+    let color: NSColor
+    let alignment: ImageEditorTextAlignment
+    let isParagraph: Bool
+}
+
 nonisolated private struct PSDLayerRecord {
     let top: Int
     let left: Int
@@ -1229,6 +1475,7 @@ nonisolated private struct PSDLayerRecord {
     let sectionType: Int?
     let mask: PSDLayerMaskRecord?
     let additionalKeys: Set<String>
+    let textInfo: PSDTextLayerInfo?
 
     func channelDimensions(identifier: Int16) -> (width: Int, height: Int) {
         if identifier == -2 || identifier == -3, let mask {
@@ -1320,6 +1567,87 @@ nonisolated private struct PSDReader {
         let padding = (alignment - consumed % alignment) % alignment
         try skip(padding)
         return String(data: bytes, encoding: .macOSRoman) ?? String(data: bytes, encoding: .utf8) ?? "Layer"
+    }
+
+    mutating func unicodeString() throws -> String {
+        let count = Int(try uint32())
+        let bytes = try data(count: count * 2)
+        return String(data: bytes, encoding: .utf16BigEndian) ?? ""
+    }
+
+    mutating func descriptorKey() throws -> String {
+        let length = Int(try uint32())
+        return try ascii(count: length == 0 ? 4 : length)
+    }
+
+    mutating func doubleValue() throws -> Double {
+        let bytes = try data(count: 8)
+        let bits = bytes.reduce(UInt64(0)) { ($0 << 8) | UInt64($1) }
+        return Double(bitPattern: bits)
+    }
+
+    mutating func psdDescriptorBlock() throws -> [String: PSDDescriptorValue] {
+        _ = try uint32()
+        return try psdDescriptorBody()
+    }
+
+    mutating func psdDescriptorBody() throws -> [String: PSDDescriptorValue] {
+        _ = try unicodeString()
+        _ = try descriptorKey()
+        let count = Int(try uint32())
+        guard count >= 0, count <= 10_000 else { throw ImageEditorPSDCodecError.invalidFile }
+        var result: [String: PSDDescriptorValue] = [:]
+        for _ in 0..<count {
+            let key = try descriptorKey()
+            let type = try ascii(count: 4)
+            result[key] = try psdDescriptorValue(type: type)
+        }
+        return result
+    }
+
+    mutating func psdDescriptorValue(type: String) throws -> PSDDescriptorValue {
+        switch type {
+        case "TEXT":
+            return .string(try unicodeString())
+        case "tdta", "alis":
+            return .raw(try lengthPrefixedData32())
+        case "Objc", "GlbO":
+            return .object(try psdDescriptorBody())
+        case "VlLs":
+            let count = Int(try uint32())
+            guard count >= 0, count <= 10_000 else { throw ImageEditorPSDCodecError.invalidFile }
+            var values: [PSDDescriptorValue] = []
+            values.reserveCapacity(count)
+            for _ in 0..<count {
+                values.append(try psdDescriptorValue(type: ascii(count: 4)))
+            }
+            return .list(values)
+        case "doub":
+            return .double(try doubleValue())
+        case "long":
+            return .integer(try int32())
+        case "bool":
+            return .boolean(try uint8() != 0)
+        case "UntF":
+            _ = try ascii(count: 4)
+            return .unit(try doubleValue())
+        case "enum":
+            _ = try descriptorKey()
+            _ = try descriptorKey()
+            return .unknown
+        case "type", "Clss":
+            _ = try unicodeString()
+            _ = try descriptorKey()
+            return .unknown
+        case "comp":
+            _ = try uint32()
+            _ = try uint32()
+            return .unknown
+        case "rele":
+            return .double(try doubleValue())
+        default:
+            throw ImageEditorPSDCodecError.invalidFile
+        }
     }
 }
 

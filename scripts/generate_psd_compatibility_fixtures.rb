@@ -43,6 +43,67 @@ def unicode_name(value)
   tagged_block("luni", u32(utf16.bytesize / 2) + utf16)
 end
 
+def f64(value)
+  [value].pack("G")
+end
+
+def unicode_string(value)
+  utf16 = value.encode("UTF-16BE").b
+  u32(utf16.bytesize / 2) + utf16
+end
+
+def descriptor_key(value)
+  bytes = value.b
+  if bytes.bytesize == 4
+    u32(0) + bytes
+  else
+    u32(bytes.bytesize) + bytes
+  end
+end
+
+def descriptor_block(name:, class_id:, items: [])
+  u32(16) + unicode_string(name) + descriptor_key(class_id) + u32(items.length) + items.join
+end
+
+def descriptor_item(key:, type:, payload:)
+  descriptor_key(key) + type + payload
+end
+
+def engine_string(value)
+  "(" + "\xFE\xFF".b + value.encode("UTF-16BE").b + ")"
+end
+
+def editable_text_engine_data
+  text = "Hello Xomo"
+  output = +"<<\n/EngineDict <<\n/Editor <<\n/Text "
+  output << engine_string(text)
+  output << "\n>>\n/StyleRun <<\n/RunLengthArray [ #{text.length} ]\n"
+  output << "/RunArray [ << /StyleSheet << /StyleSheetData << /Font 0 /FontSize 24.0 "
+  output << "/FillColor << /Type 1 /Values [ 0.2 0.4 0.8 1.0 ] >> >> >> >> ]\n>>\n"
+  output << "/ParagraphRun << /RunLengthArray [ #{text.length} ] "
+  output << "/RunArray [ << /ParagraphSheet << /Properties << /Justification 2 >> >> >> ] >>\n"
+  output << "/Rendered << /Shapes << /Children [ << /Cookie << /Photoshop << /ShapeType 0 >> >> >> ] >> >>\n"
+  output << ">>\n/ResourceDict << /FontSet [ << /Name "
+  output << engine_string("Helvetica")
+  output << " /FontFamily " << engine_string("Helvetica") << " /FontStyle " << engine_string("Regular") << " >> ] >>\n>>"
+  output
+end
+
+def editable_text_tysh
+  text_data = editable_text_engine_data
+  descriptor = descriptor_block(
+    name: "",
+    class_id: "TxLr",
+    items: [
+      descriptor_item(key: "Txt ", type: "TEXT", payload: unicode_string("Hello Xomo")),
+      descriptor_item(key: "EngineData", type: "tdta", payload: u32(text_data.bytesize) + text_data)
+    ]
+  )
+  warp = descriptor_block(name: "", class_id: "warp", items: [])
+  u16(1) + ([1.0, 0.0, 0.0, 1.0, 0.0, 0.0].map { |value| f64(value) }.join) +
+    u16(50) + descriptor + u16(1) + warp + [0.0, 0.0, WIDTH.to_f, HEIGHT.to_f].map { |value| f64(value) }.join
+end
+
 def layer_mask_data(enabled: true, linked: true)
   flags = 0
   flags |= 1 if linked
@@ -184,11 +245,36 @@ def unsupported_features_fixture
   )
 end
 
+def editable_text_fixture
+  pixel = ([180] * 16).pack("C*")
+  alpha = ([255] * 16).pack("C*")
+  channels = {
+    -1 => raw_channel(alpha),
+    0 => raw_channel(pixel),
+    1 => raw_channel(pixel),
+    2 => raw_channel(pixel)
+  }
+  record = layer_record(
+    name: "Editable Greeting",
+    channels: channels,
+    blocks: [tagged_block("TySh", editable_text_tysh)],
+    frame: [0, 0, HEIGHT, WIDTH]
+  )
+  layer_info = i16(1) + record + channels.values.join
+  layer_info << "\0" if layer_info.bytesize.odd?
+  layer_and_mask = u32(layer_info.bytesize) + layer_info + u32(0)
+  psd(
+    layer_payload: u32(layer_and_mask.bytesize) + layer_and_mask,
+    composite: u16(0) + pixel + pixel + pixel + alpha
+  )
+end
+
 FileUtils.mkdir_p(OUTPUT_DIR)
 fixtures = {
   "zip-group-mask.psd" => group_mask_fixture,
   "zip-composite.psd" => composite_only_fixture,
-  "unsupported-features.psd" => unsupported_features_fixture
+  "unsupported-features.psd" => unsupported_features_fixture,
+  "editable-text.psd" => editable_text_fixture
 }
 fixtures.each do |name, bytes|
   File.binwrite(File.join(OUTPUT_DIR, name), bytes)
@@ -197,7 +283,8 @@ end
 expectations = {
   "zip-group-mask.psd" => %w[zip zip_prediction group raster_mask fill_opacity layer_locks],
   "zip-composite.psd" => %w[zip flattened_composite],
-  "unsupported-features.psd" => %w[compatibility_report unsupported_semantic_features]
+  "unsupported-features.psd" => %w[compatibility_report unsupported_semantic_features],
+  "editable-text.psd" => %w[editable_text font_size color alignment]
 }
 manifest = {
   generator: "scripts/generate_psd_compatibility_fixtures.rb",
