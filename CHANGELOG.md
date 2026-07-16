@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc171 - 2026-07-17
+
+### Fixed
+- 修复 PSD ZIP 通道解码未去除标准两字节 zlib 头导致的 `.invalidFile`，外部 ZIP 合成与 ZIP 组蒙版现在可以进入解码流程。
+
+### Verification
+- 外部 ZIP 合成与 ZIP 组/蒙版通过；PSD 套件为 17/18，剩余 1 项为复杂蒙版 alpha 往返问题。
+
 ## 2.12.0-rc170 - 2026-07-17
 
 ### Fixed

@@ -1,0 +1,22 @@
+{
+  "generated_at": "2026-07-17 05:44:38 +0800",
+  "scope": "PSD ZIP channel and flattened composite materialization",
+  "psd_suite": {
+    "total": 18,
+    "passed": 17,
+    "failed": 1,
+    "zip_tests_passed": 2,
+    "zip_tests": [
+      "externalZIPGroupMaskFixturePreservesSupportedStructure",
+      "externalZIPCompositeFixtureDecodesWithoutLayers"
+    ],
+    "remaining_failures": [
+      "psdRoundTripPreservesGroupsMasksFillLocksAndEveryBlendMode"
+    ]
+  },
+  "notes": [
+    "PSD zlib streams are decoded by retrying after removing the two-byte zlib header, with a full-stream fallback for normalized callers.",
+    "Flattened composite-only PSD imports now contain one editable background layer instead of an extra blank working layer.",
+    "The remaining failure is the existing complex mask alpha round-trip case."
+  ]
+}

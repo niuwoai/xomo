@@ -761,6 +761,15 @@ enum ImageEditorPSDCodec {
             throw ImageEditorPSDCodecError.invalidFile
         }
         var document = ImageEditorDocument(sourceName: sourceName, image: image)
+        // A flattened PSD is represented by one editable background layer.
+        // The general document initializer also creates a blank working layer
+        // for new canvases, which would make a composite-only PSD appear to
+        // contain an extra empty layer after import.
+        if let background = document.layers.first {
+            document.layers = [background]
+            document.selectedLayerID = background.id
+            document.selectedLayerIDs = [background.id]
+        }
         document.savedPaths = parsed.savedPaths
         document.selectedSavedPathID = parsed.savedPaths.last?.id
         document.alphaChannels = parsed.alphaChannels
@@ -1373,22 +1382,31 @@ enum ImageEditorPSDCodec {
     nonisolated private static func inflate(_ data: Data, expectedCount: Int) throws -> Data {
         guard expectedCount >= 0 else { throw ImageEditorPSDCodecError.invalidFile }
         if expectedCount == 0 { return Data() }
-        var destination = [UInt8](repeating: 0, count: expectedCount)
-        let decodedCount = data.withUnsafeBytes { sourceBuffer -> Int in
-            guard let source = sourceBuffer.bindMemory(to: UInt8.self).baseAddress else { return 0 }
-            return compression_decode_buffer(
-                &destination,
-                destination.count,
-                source,
-                sourceBuffer.count,
-                nil,
-                COMPRESSION_ZLIB
-            )
+        // PSD ZIP streams carry a two-byte zlib header (normally 78 9c),
+        // while Apple's COMPRESSION_ZLIB decoder expects the deflate payload.
+        // Try the standards-compliant payload first and keep the full stream
+        // as a fallback for already-normalized callers.
+        let candidates: [Data] = data.count > 2
+            ? [Data(data.dropFirst(2)), data]
+            : [data]
+        for candidate in candidates {
+            var destination = [UInt8](repeating: 0, count: expectedCount)
+            let decodedCount = candidate.withUnsafeBytes { sourceBuffer -> Int in
+                guard let source = sourceBuffer.bindMemory(to: UInt8.self).baseAddress else { return 0 }
+                return compression_decode_buffer(
+                    &destination,
+                    destination.count,
+                    source,
+                    sourceBuffer.count,
+                    nil,
+                    COMPRESSION_ZLIB
+                )
+            }
+            if decodedCount == expectedCount {
+                return Data(destination)
+            }
         }
-        guard decodedCount == expectedCount else {
-            throw ImageEditorPSDCodecError.invalidFile
-        }
-        return Data(destination)
+        throw ImageEditorPSDCodecError.invalidFile
     }
 
     nonisolated private static func reverseZIPPrediction(
