@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc148 - 2026-07-17
+
+### Added
+- PSD `EngineData` 基础字符样式导入：粗体、斜体、下划线、删除线、字距、行距及段落缩进进入 Xomo 原生文字模型，并随项目保存重开。
+- 更新外部 `editable-text.psd` 夹具与 PSD 专项验证，确保样式解析不是只针对 Xomo 自己生成的文件。
+
+### Verification
+- PSD 专项测试 9/9、文字样式导入 1/1、Xomo CLI 测试 2/2、`git diff --check` 通过。
+
 ## 2.12.0-rc147 - 2026-07-17
 
 ### Added

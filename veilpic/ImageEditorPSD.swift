@@ -956,7 +956,16 @@ enum ImageEditorPSDCodec {
                 fontSize: style?.fontSize ?? 12,
                 color: style?.color ?? .black,
                 alignment: style?.alignment ?? .left,
-                isParagraph: style?.isParagraph ?? false
+                isParagraph: style?.isParagraph ?? false,
+                isBold: style?.isBold ?? false,
+                isItalic: style?.isItalic ?? false,
+                isUnderlined: style?.isUnderlined ?? false,
+                isStruckThrough: style?.isStruckThrough ?? false,
+                characterSpacing: style?.characterSpacing ?? 0,
+                lineSpacing: style?.lineSpacing ?? 0,
+                leftIndent: style?.leftIndent ?? 0,
+                rightIndent: style?.rightIndent ?? 0,
+                firstLineIndent: style?.firstLineIndent ?? 0
             )
         } catch {
             return nil
@@ -973,7 +982,16 @@ enum ImageEditorPSDCodec {
             fontSize: style.fontSize ?? 12,
             color: style.color ?? .black,
             alignment: style.alignment ?? .left,
-            isParagraph: style.isParagraph ?? false
+            isParagraph: style.isParagraph ?? false,
+            isBold: style.isBold,
+            isItalic: style.isItalic,
+            isUnderlined: style.isUnderlined,
+            isStruckThrough: style.isStruckThrough,
+            characterSpacing: style.characterSpacing,
+            lineSpacing: style.lineSpacing,
+            leftIndent: style.leftIndent,
+            rightIndent: style.rightIndent,
+            firstLineIndent: style.firstLineIndent
         )
     }
 
@@ -998,13 +1016,25 @@ enum ImageEditorPSDCodec {
             Int($0.rounded()) == 1
         }
         let color = engineColor(after: "/FillColor", in: bytes)
+        let fontSizeValue = fontSize ?? 12
+        let tracking = engineNumber(after: "/Tracking", in: bytes) ?? 0
+        let leading = engineNumber(after: "/Leading", in: bytes) ?? 0
         return PSDTextLayerStyle(
             text: text,
             fontFamilyName: fontName,
             fontSize: fontSize,
             color: color,
             alignment: alignment,
-            isParagraph: isParagraph
+            isParagraph: isParagraph,
+            isBold: engineBoolean(after: "/FauxBold", in: bytes) ?? false,
+            isItalic: engineBoolean(after: "/FauxItalic", in: bytes) ?? false,
+            isUnderlined: engineBoolean(after: "/Underline", in: bytes) ?? false,
+            isStruckThrough: engineBoolean(after: "/Strikethrough", in: bytes) ?? false,
+            characterSpacing: CGFloat(tracking) * fontSizeValue / 1000,
+            lineSpacing: CGFloat(max(0, leading)),
+            leftIndent: CGFloat(max(0, engineNumber(after: "/LeftIndent", in: bytes) ?? 0)),
+            rightIndent: CGFloat(max(0, engineNumber(after: "/RightIndent", in: bytes) ?? 0)),
+            firstLineIndent: CGFloat(engineNumber(after: "/FirstLineIndent", in: bytes) ?? 0)
         )
     }
 
@@ -1074,6 +1104,26 @@ enum ImageEditorPSDCodec {
         return Double(String(bytes: bytes[start..<cursor], encoding: .ascii) ?? "")
     }
 
+    private static func engineBoolean(after marker: String, in bytes: [UInt8]) -> Bool? {
+        guard let markerIndex = index(of: Array(marker.utf8), in: bytes) else { return nil }
+        let start = markerIndex + marker.utf8.count
+        let end = min(bytes.count, start + 64)
+        guard start < end else { return nil }
+        let remainder = Array(bytes[start..<end])
+        let trueIndex = index(of: Array("true".utf8), in: remainder)
+        let falseIndex = index(of: Array("false".utf8), in: remainder)
+        switch (trueIndex, falseIndex) {
+        case let (trueIndex?, falseIndex?):
+            return trueIndex < falseIndex
+        case (_?, nil):
+            return true
+        case (nil, _?):
+            return false
+        default:
+            return nil
+        }
+    }
+
     private static func engineColor(after marker: String, in bytes: [UInt8]) -> NSColor? {
         guard let markerIndex = index(of: Array(marker.utf8), in: bytes),
               let valuesIndex = index(of: Array("/Values".utf8), in: bytes, startingAt: markerIndex),
@@ -1117,6 +1167,15 @@ enum ImageEditorPSDCodec {
                 point: .zero
             )
             content.fontFamilyName = textInfo.fontFamilyName
+            content.isBold = textInfo.isBold
+            content.isItalic = textInfo.isItalic
+            content.isUnderlined = textInfo.isUnderlined
+            content.isStruckThrough = textInfo.isStruckThrough
+            content.characterSpacing = textInfo.characterSpacing
+            content.lineSpacing = textInfo.lineSpacing
+            content.leftIndent = textInfo.leftIndent
+            content.rightIndent = textInfo.rightIndent
+            content.firstLineIndent = textInfo.firstLineIndent
             content.alignment = textInfo.alignment
             content.boxWidth = textInfo.isParagraph ? CGFloat(width) : 0
             content.boxHeight = textInfo.isParagraph ? CGFloat(height) : 0
@@ -1448,6 +1507,15 @@ private struct PSDTextLayerStyle {
     let color: NSColor?
     let alignment: ImageEditorTextAlignment?
     let isParagraph: Bool?
+    let isBold: Bool
+    let isItalic: Bool
+    let isUnderlined: Bool
+    let isStruckThrough: Bool
+    let characterSpacing: CGFloat
+    let lineSpacing: CGFloat
+    let leftIndent: CGFloat
+    let rightIndent: CGFloat
+    let firstLineIndent: CGFloat
 }
 
 private struct PSDTextLayerInfo {
@@ -1457,6 +1525,15 @@ private struct PSDTextLayerInfo {
     let color: NSColor
     let alignment: ImageEditorTextAlignment
     let isParagraph: Bool
+    let isBold: Bool
+    let isItalic: Bool
+    let isUnderlined: Bool
+    let isStruckThrough: Bool
+    let characterSpacing: CGFloat
+    let lineSpacing: CGFloat
+    let leftIndent: CGFloat
+    let rightIndent: CGFloat
+    let firstLineIndent: CGFloat
 }
 
 nonisolated private struct PSDLayerRecord {

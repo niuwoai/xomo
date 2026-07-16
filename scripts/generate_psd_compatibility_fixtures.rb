@@ -79,6 +79,8 @@ def editable_text_engine_data
   output << engine_string(text)
   output << "\n>>\n/StyleRun <<\n/RunLengthArray [ #{text.length} ]\n"
   output << "/RunArray [ << /StyleSheet << /StyleSheetData << /Font 0 /FontSize 24.0 "
+  output << "/FauxBold true /FauxItalic true /Underline true /Strikethrough true "
+  output << "/Tracking 100.0 /Leading 6.0 /LeftIndent 1.5 /RightIndent 2.5 /FirstLineIndent -3.0 "
   output << "/FillColor << /Type 1 /Values [ 0.2 0.4 0.8 1.0 ] >> >> >> >> ]\n>>\n"
   output << "/ParagraphRun << /RunLengthArray [ #{text.length} ] "
   output << "/RunArray [ << /ParagraphSheet << /Properties << /Justification 2 >> >> >> ] >>\n"

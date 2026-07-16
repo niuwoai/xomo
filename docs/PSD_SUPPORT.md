@@ -1,10 +1,10 @@
 # 象墨 PSD 支持说明
 
-> 最后更新：2026-07-17 ｜ 对应版本：v2.12.0-rc147
+> 最后更新：2026-07-17 ｜ 对应版本：v2.12.0-rc148
 
 ## 1. 结论
 
-象墨当前已经可以可靠处理以像素图层为主的常见 PSD，并保留基础图层结构、嵌套组、栅格蒙版、混合模式、Fill 不透明度和锁定状态。Raw、RLE、ZIP、ZIP Prediction 四种 8-bit 通道压缩均可读取。对能解析 TySh/EngineData 的基础文字层，还会生成 Xomo 原生可编辑文字层。
+象墨当前已经可以可靠处理以像素图层为主的常见 PSD，并保留基础图层结构、嵌套组、栅格蒙版、混合模式、Fill 不透明度和锁定状态。Raw、RLE、ZIP、ZIP Prediction 四种 8-bit 通道压缩均可读取。对能解析 TySh/EngineData 的基础文字层，还会生成 Xomo 原生可编辑文字层，并读取一组基础字符与段落样式。
 
 这还不是“完整 Photoshop 语义兼容”。复杂文字变换、逐字符样式、矢量形状、智能对象、调整层、图层效果和填充层等 Photoshop 专有对象，仍不能完整保留为同类可编辑对象。打开 PSD 后，象墨会生成兼容性报告，明确列出文件中被栅格化、忽略或降级的内容。
 
@@ -36,7 +36,7 @@
 
 | Photoshop 内容 | 导入结果 | 主要影响 |
 |---|---|---|
-| 基础文字层 | 映射为 Xomo 原生文字层 | 读取纯文本、字体、字号、颜色和基础段落对齐；复杂变换、逐字符样式和部分 EngineData 仍降级。无法解析的 TySh 继续使用 PSD 像素内容并报告。 |
+| 基础文字层 | 映射为 Xomo 原生文字层 | 读取纯文本、字体、字号、颜色、基础段落对齐、粗斜体、下划线、删除线、字距、行距和缩进；复杂逐字符混排、变换和部分 EngineData 仍降级。无法解析的 TySh 继续使用 PSD 像素内容并报告。 |
 | 矢量形状 | 使用像素内容 | 路径、描边、填充和布尔运算语义不保留。 |
 | 矢量蒙版 | 转为/使用栅格结果 | 不保留可编辑矢量路径。 |
 | 智能对象 | 使用像素内容 | 嵌入源、链接源和可替换内容不保留。 |
@@ -78,17 +78,18 @@
 - `zip-group-mask.psd`：ZIP 图层、ZIP Prediction、嵌套组和栅格蒙版。
 - `zip-composite.psd`：只有 ZIP 合成图的 PSD。
 - `unsupported-features.psd`：文字、矢量、智能对象、调整层、效果、填充层、ICC、额外通道和未知数据的报告分类。
-- `editable-text.psd`：独立生成的 TySh/EngineData 基础文字层，验证纯文本、Helvetica、24pt、颜色、居中对齐及项目格式保存重开。
+- `editable-text.psd`：独立生成的 TySh/EngineData 基础文字层，验证纯文本、Helvetica、24pt、颜色、居中对齐、基础字符/段落样式及项目格式保存重开。
 
 相关文件：
 
 - 夹具与说明：[`veilpicTests/Fixtures/PSD`](../veilpicTests/Fixtures/PSD)
 - 夹具生成器：[`scripts/generate_psd_compatibility_fixtures.rb`](../scripts/generate_psd_compatibility_fixtures.rb)
-- PSD 测试报告：[`test-reports/rc147-psd-suite/report.md`](../test-reports/rc147-psd-suite/report.md)
+- PSD 测试报告：[`test-reports/rc148-psd-suite/report.md`](../test-reports/rc148-psd-suite/report.md)
+- PSD 文字样式报告：[`test-reports/rc148-psd-text/report.md`](../test-reports/rc148-psd-text/report.md)
 - 外部打开测试报告：[`test-reports/rc145-external-open/report.md`](../test-reports/rc145-external-open/report.md)
 - 本地化测试报告：[`test-reports/rc145-localization/report.md`](../test-reports/rc145-localization/report.md)
 
-rc147 的 PSD 定向验证结果为：PSD 专项 9/9、基础文字导入与项目保存 1/1，Debug `build-for-testing` 通过。
+rc148 的 PSD 定向验证结果为：PSD 专项 9/9、基础文字样式导入与项目保存 1/1，Debug `build-for-testing` 通过。
 
 ## 7. 使用建议
 
@@ -101,7 +102,7 @@ rc147 的 PSD 定向验证结果为：PSD 专项 9/9、基础文字导入与项�
 
 下一阶段不建议同时追求所有 Photoshop 私有结构。按用户价值和实现风险排序：
 
-1. 可编辑文字层：继续扩展段落框尺寸、逐字符样式和安全的 PSD 文字导出；当前从 Xomo 项目导出 PSD 仍会栅格化文字。
+1. 可编辑文字层：继续扩展段落框尺寸/溢出语义、逐字符混排和安全的 PSD 文字导出；当前从 Xomo 项目导出 PSD 仍会栅格化文字。
 2. 可编辑矢量形状与矢量蒙版：复用象墨现有路径和形状模型，优先覆盖矩形、椭圆和普通 Bézier 路径。
 3. 智能对象的安全栅格回退与元数据保留：先允许重新定位原始内容，再考虑嵌套编辑。
 4. 常用调整层：优先 Levels、Curves、Hue/Saturation，并为无法映射的参数继续保留明确报告。
