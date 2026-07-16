@@ -1,6 +1,6 @@
 # 象墨 PSD 支持说明
 
-> 最后更新：2026-07-17 ｜ 对应版本：v2.12.0-rc167
+> 最后更新：2026-07-17 ｜ 对应版本：v2.12.0-rc168
 
 ## 1. 结论
 
@@ -82,6 +82,8 @@
 rc166 的专色通道定向回归通过；完整套件仍有既有文字、矢量路径与外部 fixture 回归，详见 [`test-reports/rc166-psd-spot/report.md`](../test-reports/rc166-psd-spot/report.md)。
 
 rc167 的画布光标定向回归 10/10 通过，详见 [`test-reports/rc167-cursor/report.md`](../test-reports/rc167-cursor/report.md)。
+
+rc168 修复 Path Resource 记录对齐；闭合/开放命名路径导出与外部导入往返通过，详见 [`test-reports/rc168-psd-path/report.md`](../test-reports/rc168-psd-path/report.md)。
 
 本版本使用四份由独立 Ruby 生成器按 PSD 二进制结构构造的夹具，避免只用象墨自己的编码器做“自己写、自己读”的循环验证：
 

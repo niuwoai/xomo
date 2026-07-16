@@ -70,7 +70,7 @@
     },
     {
       "file": "path-resources.psd",
-      "sha256": "cbe8ffac327c8287c71c5704308f60a74f0e7ec92b7e06c0433331e638730904",
+      "sha256": "2aebbf1a1ff8d7270b04a3fda54b7724ae0f721c006b8f707ec20f43444c2861",
       "expected": [
         "saved_path",
         "closed_path",

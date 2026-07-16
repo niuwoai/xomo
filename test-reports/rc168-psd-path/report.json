@@ -1,0 +1,22 @@
+{
+  "version": "2.12.0-rc168",
+  "date": "2026-07-17",
+  "scope": "PSD saved path resource record alignment",
+  "buildForTesting": "passed",
+  "xomoCLI": {
+    "tests": 2,
+    "passed": 2,
+    "status": "passed"
+  },
+  "fullImageEditorPSDTests": {
+    "total": 18,
+    "passed": 10,
+    "failed": 8,
+    "status": "failed",
+    "notes": "The saved-path export and external path-resource round-trip tests pass after correcting the 26-byte path length record. Remaining failures are unrelated text, vector-mask, and mask regressions."
+  },
+  "pathCoverage": [
+    "psdExportPreservesClosedAndOpenSavedPaths",
+    "externalPathResourcesBecomeEditableSavedPathsAndRoundTrip"
+  ]
+}

@@ -187,7 +187,9 @@ def path_resource_payload(closed:, points:)
   }
   length_selector = closed ? 0 : 3
   knot_selector = closed ? 1 : 4
-  length = u16(length_selector) + u16(points.length) + ("\0" * 20)
+  # A path length record is 26 bytes: selector (2), knot count (2),
+  # and 22 reserved bytes before the first knot record.
+  length = u16(length_selector) + u16(points.length) + ("\0" * 22)
   knots = points.each_with_index.map { |point, index| record.call(index.zero? ? knot_selector : knot_selector + 1, point) }.join
   length + knots
 end

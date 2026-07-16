@@ -162,7 +162,9 @@ enum ImageEditorPSDCodec {
             guard let knotCount = UInt16(exactly: subpath.count) else { continue }
             output.appendUInt16(path.isClosed ? 0 : 3)
             output.appendUInt16(knotCount)
-            output.append(Data(repeating: 0, count: 20))
+            // A path length record is 26 bytes: selector (2), knot count (2),
+            // and 22 reserved bytes before the first 26-byte knot record.
+            output.append(Data(repeating: 0, count: 22))
             for (index, anchor) in subpath.enumerated() {
                 let selector: UInt16
                 if path.isClosed {
