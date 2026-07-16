@@ -494,7 +494,7 @@ enum XomoFigmaNodeImportMapper {
         issues: inout [XomoFigmaNodeMappingIssue]
     ) -> (target: XomoFigmaNodeTargetKind?, isImage: Bool) {
         switch node.type {
-        case "FRAME", "GROUP":
+        case "SECTION", "FRAME", "GROUP":
             inspectPaints(node: node, allowsGradientFill: true, issues: &issues)
             return (.group, false)
         case "COMPONENT", "COMPONENT_SET", "INSTANCE":
@@ -745,7 +745,7 @@ enum XomoFigmaNodeImportMapper {
 
     private static func supportsGradientFill(_ nodeType: String) -> Bool {
         [
-            "FRAME", "GROUP", "COMPONENT", "COMPONENT_SET", "INSTANCE",
+            "SECTION", "FRAME", "GROUP", "COMPONENT", "COMPONENT_SET", "INSTANCE",
             "RECTANGLE", "ELLIPSE", "VECTOR", "STAR", "REGULAR_POLYGON"
         ].contains(nodeType)
     }

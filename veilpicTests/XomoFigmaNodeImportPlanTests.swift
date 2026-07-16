@@ -336,6 +336,68 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(vector.strokeWeight == 2)
     }
 
+    @Test func mapperImportsSectionAsEditableGroupAndPreservesGradientBackground() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                """
+                {
+                  "name": "Sections",
+                  "nodes": {
+                    "1:50": {
+                      "document": {
+                        "id": "1:50",
+                        "name": "Checkout Section",
+                        "type": "SECTION",
+                        "absoluteBoundingBox": {"x": 0, "y": 0, "width": 320, "height": 200},
+                        "fills": [{
+                          "type": "GRADIENT_LINEAR",
+                          "gradientHandlePositions": [
+                            {"x": 0, "y": 0.5},
+                            {"x": 1, "y": 0.5},
+                            {"x": 0, "y": 0}
+                          ],
+                          "gradientStops": [
+                            {"position": 0, "color": {"r": 0.1, "g": 0.2, "b": 0.4, "a": 1}},
+                            {"position": 1, "color": {"r": 0.4, "g": 0.6, "b": 1, "a": 1}}
+                          ]
+                        }],
+                        "children": [{
+                          "id": "2:50",
+                          "name": "Section Button",
+                          "type": "RECTANGLE",
+                          "absoluteBoundingBox": {"x": 24, "y": 24, "width": 120, "height": 40},
+                          "fills": [{"type": "SOLID", "color": {"r": 1, "g": 1, "b": 1, "a": 1}}]
+                        }]
+                      }
+                    }
+                  }
+                }
+                """.utf8
+            )
+        )
+
+        let plan = try XomoFigmaNodeImportMapper.makePlan(response: response, requestedNodeID: "1:50")
+        let section = try #require(plan.items.first { $0.sourceID == "1:50" })
+        let button = try #require(plan.items.first { $0.sourceID == "2:50" })
+        #expect(section.targetKind == .group)
+        #expect(section.fidelity == .exact)
+        #expect(!section.issues.contains(.unsupportedNodeType))
+        #expect(section.linearGradientFill?.colorStops.count == 2)
+        #expect(button.parentSourceID == "1:50")
+
+        let materialized = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: CGSize(width: 640, height: 400)
+        )
+        #expect(materialized.omittedCount == 0)
+        #expect(materialized.layers.contains { $0.name == "Section Button" })
+        let background = try #require(
+            materialized.layers.first { $0.isStackLayoutBackground }
+        )
+        #expect(background.shapeContent?.fillGradient?.shapeColorStops.count == 2)
+    }
+
     @Test func mapperReportsPartialImageComponentLayoutAndUnsupportedNodes() async throws {
         let transport = RecordingFigmaNodeTransport(statusCode: 200, body: Self.validNodeResponse)
         let client = XomoFigmaNodeContentAPIClient(transport: transport)

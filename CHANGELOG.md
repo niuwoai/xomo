@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc173 - 2026-07-17
+
+### Added
+- Figma `SECTION` 节点现在按可编辑组导入，并保留其线性/径向渐变背景，不再被错误标记为不支持节点。
+
+### Verification
+- Figma 节点导入专项 27/27 通过；`XomoMCPServerTests` CLI 2/2 通过。
+
 ## 2.12.0-rc172 - 2026-07-17
 
 ### Fixed
