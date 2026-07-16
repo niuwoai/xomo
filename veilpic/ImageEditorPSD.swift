@@ -944,11 +944,11 @@ enum ImageEditorPSDCodec {
             let descriptor = try reader.psdDescriptorBlock()
             _ = try reader.uint16()
             _ = try reader.psdDescriptorBlock()
-            try reader.skip(32)
 
             let topLevelText = descriptor["Txt "]?.stringValue
             let engineData = descriptor["EngineData"]?.rawData
             let style = engineData.flatMap(parseEngineDataStyle)
+            let bounds = try (0..<4).map { _ in try reader.doubleValue() }
             guard let text = topLevelText ?? style?.text, !text.isEmpty else { return nil }
             return PSDTextLayerInfo(
                 text: normalizedPSDText(text),
@@ -965,7 +965,8 @@ enum ImageEditorPSDCodec {
                 lineSpacing: style?.lineSpacing ?? 0,
                 leftIndent: style?.leftIndent ?? 0,
                 rightIndent: style?.rightIndent ?? 0,
-                firstLineIndent: style?.firstLineIndent ?? 0
+                firstLineIndent: style?.firstLineIndent ?? 0,
+                paragraphBoxSize: style?.isParagraph == true ? paragraphBoxSize(from: bounds) : nil
             )
         } catch {
             return nil
@@ -991,8 +992,17 @@ enum ImageEditorPSDCodec {
             lineSpacing: style.lineSpacing,
             leftIndent: style.leftIndent,
             rightIndent: style.rightIndent,
-            firstLineIndent: style.firstLineIndent
+            firstLineIndent: style.firstLineIndent,
+            paragraphBoxSize: nil
         )
+    }
+
+    private static func paragraphBoxSize(from bounds: [Double]) -> CGSize? {
+        guard bounds.count == 4, bounds.allSatisfy(\.isFinite) else { return nil }
+        let width = abs(bounds[3] - bounds[1])
+        let height = abs(bounds[2] - bounds[0])
+        guard width > 0, height > 0 else { return nil }
+        return CGSize(width: width, height: height)
     }
 
     private static func parseEngineDataStyle(_ data: Data) -> PSDTextLayerStyle? {
@@ -1177,8 +1187,9 @@ enum ImageEditorPSDCodec {
             content.rightIndent = textInfo.rightIndent
             content.firstLineIndent = textInfo.firstLineIndent
             content.alignment = textInfo.alignment
-            content.boxWidth = textInfo.isParagraph ? CGFloat(width) : 0
-            content.boxHeight = textInfo.isParagraph ? CGFloat(height) : 0
+            let paragraphSize = textInfo.paragraphBoxSize ?? CGSize(width: width, height: height)
+            content.boxWidth = textInfo.isParagraph ? paragraphSize.width : 0
+            content.boxHeight = textInfo.isParagraph ? paragraphSize.height : 0
             var layer = ImageEditorLayer.text(
                 name: record.name,
                 size: CGSize(width: width, height: height),
@@ -1534,6 +1545,7 @@ private struct PSDTextLayerInfo {
     let leftIndent: CGFloat
     let rightIndent: CGFloat
     let firstLineIndent: CGFloat
+    let paragraphBoxSize: CGSize?
 }
 
 nonisolated private struct PSDLayerRecord {

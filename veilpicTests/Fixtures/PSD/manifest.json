@@ -32,7 +32,7 @@
     },
     {
       "file": "editable-text.psd",
-      "sha256": "c317efe2a7f4126b8394ae1e94df360420c12e701895a3c8cdbbce940521316c",
+      "sha256": "a7bd69f202ab48425eeb88237d6d2da928fc7ea8100b8a36613ab76a65749ec2",
       "expected": [
         "editable_text",
         "font_size",

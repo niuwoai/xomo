@@ -1,10 +1,10 @@
 # 象墨 PSD 支持说明
 
-> 最后更新：2026-07-17 ｜ 对应版本：v2.12.0-rc148
+> 最后更新：2026-07-17 ｜ 对应版本：v2.12.0-rc149
 
 ## 1. 结论
 
-象墨当前已经可以可靠处理以像素图层为主的常见 PSD，并保留基础图层结构、嵌套组、栅格蒙版、混合模式、Fill 不透明度和锁定状态。Raw、RLE、ZIP、ZIP Prediction 四种 8-bit 通道压缩均可读取。对能解析 TySh/EngineData 的基础文字层，还会生成 Xomo 原生可编辑文字层，并读取一组基础字符与段落样式。
+象墨当前已经可以可靠处理以像素图层为主的常见 PSD，并保留基础图层结构、嵌套组、栅格蒙版、混合模式、Fill 不透明度和锁定状态。Raw、RLE、ZIP、ZIP Prediction 四种 8-bit 通道压缩均可读取。对能解析 TySh/EngineData 的基础文字层，还会生成 Xomo 原生可编辑文字层，读取一组基础字符与段落样式，并保留段落文本框边界。
 
 这还不是“完整 Photoshop 语义兼容”。复杂文字变换、逐字符样式、矢量形状、智能对象、调整层、图层效果和填充层等 Photoshop 专有对象，仍不能完整保留为同类可编辑对象。打开 PSD 后，象墨会生成兼容性报告，明确列出文件中被栅格化、忽略或降级的内容。
 
@@ -78,18 +78,18 @@
 - `zip-group-mask.psd`：ZIP 图层、ZIP Prediction、嵌套组和栅格蒙版。
 - `zip-composite.psd`：只有 ZIP 合成图的 PSD。
 - `unsupported-features.psd`：文字、矢量、智能对象、调整层、效果、填充层、ICC、额外通道和未知数据的报告分类。
-- `editable-text.psd`：独立生成的 TySh/EngineData 基础文字层，验证纯文本、Helvetica、24pt、颜色、居中对齐、基础字符/段落样式及项目格式保存重开。
+- `editable-text.psd`：独立生成的 TySh/EngineData 段落文字层，验证纯文本、Helvetica、24pt、颜色、居中对齐、基础字符/段落样式、文本框边界、溢出状态及项目格式保存重开。
 
 相关文件：
 
 - 夹具与说明：[`veilpicTests/Fixtures/PSD`](../veilpicTests/Fixtures/PSD)
 - 夹具生成器：[`scripts/generate_psd_compatibility_fixtures.rb`](../scripts/generate_psd_compatibility_fixtures.rb)
-- PSD 测试报告：[`test-reports/rc148-psd-suite/report.md`](../test-reports/rc148-psd-suite/report.md)
-- PSD 文字样式报告：[`test-reports/rc148-psd-text/report.md`](../test-reports/rc148-psd-text/report.md)
+- PSD 测试报告：[`test-reports/rc149-psd-suite/report.md`](../test-reports/rc149-psd-suite/report.md)
+- PSD 段落文本框报告：[`test-reports/rc149-psd-text/report.md`](../test-reports/rc149-psd-text/report.md)
 - 外部打开测试报告：[`test-reports/rc145-external-open/report.md`](../test-reports/rc145-external-open/report.md)
 - 本地化测试报告：[`test-reports/rc145-localization/report.md`](../test-reports/rc145-localization/report.md)
 
-rc148 的 PSD 定向验证结果为：PSD 专项 9/9、基础文字样式导入与项目保存 1/1，Debug `build-for-testing` 通过。
+rc149 的 PSD 定向验证结果为：PSD 专项 9/9、段落文本框导入与项目保存 1/1，Debug `build-for-testing` 通过。
 
 ## 7. 使用建议
 

@@ -84,7 +84,7 @@ def editable_text_engine_data
   output << "/FillColor << /Type 1 /Values [ 0.2 0.4 0.8 1.0 ] >> >> >> >> ]\n>>\n"
   output << "/ParagraphRun << /RunLengthArray [ #{text.length} ] "
   output << "/RunArray [ << /ParagraphSheet << /Properties << /Justification 2 >> >> >> ] >>\n"
-  output << "/Rendered << /Shapes << /Children [ << /Cookie << /Photoshop << /ShapeType 0 >> >> >> ] >> >>\n"
+  output << "/Rendered << /Shapes << /Children [ << /Cookie << /Photoshop << /ShapeType 1 >> >> >> ] >> >>\n"
   output << ">>\n/ResourceDict << /FontSet [ << /Name "
   output << engine_string("Helvetica")
   output << " /FontFamily " << engine_string("Helvetica") << " /FontStyle " << engine_string("Regular") << " >> ] >>\n>>"
@@ -102,8 +102,8 @@ def editable_text_tysh
     ]
   )
   warp = descriptor_block(name: "", class_id: "warp", items: [])
-  u16(1) + ([1.0, 0.0, 0.0, 1.0, 0.0, 0.0].map { |value| f64(value) }.join) +
-    u16(50) + descriptor + u16(1) + warp + [0.0, 0.0, WIDTH.to_f, HEIGHT.to_f].map { |value| f64(value) }.join
+    u16(1) + ([1.0, 0.0, 0.0, 1.0, 0.0, 0.0].map { |value| f64(value) }.join) +
+    u16(50) + descriptor + u16(1) + warp + [0.0, 0.0, 2.0, 3.0].map { |value| f64(value) }.join
 end
 
 def layer_mask_data(enabled: true, linked: true)
