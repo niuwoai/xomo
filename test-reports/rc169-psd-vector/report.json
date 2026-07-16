@@ -1,0 +1,32 @@
+{
+  "generated_at": "2026-07-17 05:23:05 +0800",
+  "scope": "PSD vector mask record alignment",
+  "psd_suite": {
+    "total": 18,
+    "passed": 13,
+    "failed": 5,
+    "vector_mask_tests_passed": 4,
+    "vector_mask_tests": [
+      "psdExportPreservesNativeVectorMaskAndEnabledState",
+      "externalVectorMaskFixtureBecomesNativeEditablePath",
+      "externalMultiSubpathVectorMaskPreservesHoleAndProjectRoundTrip",
+      "externalPathResourcesBecomeEditableSavedPathsAndRoundTrip"
+    ],
+    "unrelated_failures": [
+      "psdExportPreservesBasicEditableTextLayer",
+      "externalZIPGroupMaskFixturePreservesSupportedStructure",
+      "externalZIPCompositeFixtureDecodesWithoutLayers",
+      "externalEditableTextFixtureBecomesNativeTextLayer",
+      "psdRoundTripPreservesGroupsMasksFillLocksAndEveryBlendMode"
+    ]
+  },
+  "cli_suite": {
+    "total": 2,
+    "passed": 2,
+    "failed": 0
+  },
+  "notes": [
+    "PSD vector mask and path subpath length records now reserve 22 bytes, making each record 26 bytes as required by the PSD format.",
+    "The five remaining PSD failures are pre-existing text, ZIP compatibility, and complex mask issues outside this fix."
+  ]
+}

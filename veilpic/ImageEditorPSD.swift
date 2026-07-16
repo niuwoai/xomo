@@ -1024,7 +1024,9 @@ enum ImageEditorPSDCodec {
             guard let count = UInt16(exactly: anchors.count) else { return nil }
             payload.appendUInt16(0)
             payload.appendUInt16(count)
-            payload.append(Data(repeating: 0, count: 20))
+            // A vector path length record is 26 bytes: selector (2),
+            // knot count (2), and 22 reserved bytes.
+            payload.append(Data(repeating: 0, count: 22))
             for (index, anchor) in anchors.enumerated() {
                 payload.appendUInt16(index == 0 ? 1 : 2)
                 appendVectorPathPoint(anchor.inControl ?? anchor.point, size: size, to: &payload)

@@ -83,7 +83,9 @@ def vector_mask_payload(flags: 0, include_hole: false)
   }
   fill_rule = u16(6) + ("\0" * 24)
   subpath = lambda do |points|
-    length = u16(0) + u16(points.length) + ("\0" * 20)
+    # A vector path length record is 26 bytes: selector (2), knot count (2),
+    # and 22 reserved bytes.
+    length = u16(0) + u16(points.length) + ("\0" * 22)
     knots = points.each_with_index.map { |point, index| record.call(index.zero? ? 1 : 2, point) }.join
     length + knots
   end

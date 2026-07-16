@@ -34,7 +34,7 @@
     },
     {
       "file": "unsupported-features.psd",
-      "sha256": "ec5e3e83d272cb94e026b7658664993f408f14ef3a744e70eb3279cd3df170cf",
+      "sha256": "6b2874820d6029daebf9ed2a0c9a311fe736e9d92c66e43a3f9fdfe521243d09",
       "expected": [
         "compatibility_report",
         "unsupported_semantic_features"
@@ -52,7 +52,7 @@
     },
     {
       "file": "vector-mask.psd",
-      "sha256": "3c0da5f32e5ef66f3fb4e7cda886ccdfbff5daac86b239f7fe086086e67b8824",
+      "sha256": "603a2c832cd2b6f97b6a2e1575d868196519c477e88ca31f2bb210518a680cb3",
       "expected": [
         "editable_vector_mask",
         "closed_path",
@@ -61,7 +61,7 @@
     },
     {
       "file": "vector-mask-multi.psd",
-      "sha256": "52b068f1787f3d51f9055192a53fb3f98cfdd4f03f75b3b12e92c8a643949364",
+      "sha256": "ccbf4bd23aca35bcf0500928de418ea314fdf7e7eb1e03543bd7b20fb5e67a85",
       "expected": [
         "editable_vector_mask",
         "multiple_subpaths",
@@ -70,7 +70,7 @@
     },
     {
       "file": "path-resources.psd",
-      "sha256": "2aebbf1a1ff8d7270b04a3fda54b7724ae0f721c006b8f707ec20f43444c2861",
+      "sha256": "be2675d6e17186e02c4d1a9fcf712de46bd0876644e4081715278021c25b6c64",
       "expected": [
         "saved_path",
         "closed_path",
