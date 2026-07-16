@@ -87,7 +87,7 @@ final class XomoAutomationRegistry {
             }
             viewModel.selectTool(tool)
         case "xomo.layer.list":
-            return layersResult(viewModel)
+            return try layersResult(arguments, viewModel: viewModel)
         case "xomo.layer.select":
             let id = try requiredUUID("id", in: arguments)
             viewModel.selectLayer(id, extendingSelection: arguments["extend"]?.boolValue ?? false)
@@ -520,8 +520,24 @@ final class XomoAutomationRegistry {
         }
     }
 
-    private func layersResult(_ viewModel: ImageEditorViewModel) -> XomoJSONValue {
-        .array(viewModel.document.layers.reversed().map { layer in
+    private func layersResult(
+        _ arguments: [String: XomoJSONValue],
+        viewModel: ImageEditorViewModel
+    ) throws -> XomoJSONValue {
+        let filter = arguments["figmaBindings"]?.stringValue ?? "all"
+        guard ["all", "bound", "unbound"].contains(filter) else {
+            throw XomoAutomationCallError.invalidArgument(
+                "Unknown Figma variable binding filter: \(filter)"
+            )
+        }
+        let layers = viewModel.document.layers.reversed().filter { layer in
+            switch filter {
+            case "bound": return !layer.xomoFigmaVariableBindings.isEmpty
+            case "unbound": return layer.xomoFigmaVariableBindings.isEmpty
+            default: return true
+            }
+        }
+        return .array(layers.map { layer in
             .object([
                 "id": .string(layer.id.uuidString),
                 "name": .string(layer.name),
@@ -2599,7 +2615,9 @@ private extension XomoAutomationRegistry {
         tool("xomo.tool.select", "Select the active editor tool.", [
             "tool": XomoAutomationSchema.string(description: "Tool identifier", values: ImageEditorTool.allCases.map(\.rawValue))
         ], required: ["tool"]),
-        tool("xomo.layer.list", "List layers with hierarchy, bounds, visibility, locks, opacity, blend mode, and preserved Figma variable bindings."),
+        tool("xomo.layer.list", "List layers with hierarchy, bounds, visibility, locks, opacity, blend mode, preserved Figma variable bindings, and optional binding filters.", [
+            "figmaBindings": XomoAutomationSchema.string(description: "Filter by preserved Figma variable bindings", values: ["all", "bound", "unbound"])
+        ]),
         tool("xomo.layer.select", "Select a layer by UUID.", [
             "id": XomoAutomationSchema.string(description: "Layer UUID"),
             "extend": XomoAutomationSchema.boolean(description: "Extend the current layer selection")

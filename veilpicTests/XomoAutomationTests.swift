@@ -56,6 +56,18 @@ struct XomoAutomationTests {
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.component.tokens")
         })
+        guard let layerListTool = tools.compactMap({ tool -> [String: XomoJSONValue]? in
+            guard case .object(let value) = tool else { return nil }
+            return value
+        }).first(where: { $0["name"] == .string("xomo.layer.list") }) else {
+            Issue.record("Expected xomo.layer.list tool schema")
+            return
+        }
+        #expect(layerListTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["figmaBindings"]?.objectValue?["enum"] == .array([
+            .string("all"),
+            .string("bound"),
+            .string("unbound")
+        ]))
     }
 
     @Test func registryReadsAndExportsComponentThemeTokens() throws {
@@ -294,6 +306,32 @@ struct XomoAutomationTests {
                 "variableId": .string("VariableID:body-font")
             ])
         ])
+
+        let bound = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.list",
+            arguments: ["figmaBindings": .string("bound")]
+        ))
+        #expect(bound.ok)
+        #expect(bound.result?.arrayValue?.count == 1)
+        #expect(bound.result?.arrayValue?.first?.objectValue?["id"] == .string(layerID.uuidString))
+
+        let unbound = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.list",
+            arguments: ["figmaBindings": .string("unbound")]
+        ))
+        #expect(unbound.ok)
+        #expect(unbound.result?.arrayValue?.contains {
+            $0.objectValue?["id"] == .string(layerID.uuidString)
+        } == false)
+
+        let invalid = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.list",
+            arguments: ["figmaBindings": .string("linked")]
+        ))
+        #expect(!invalid.ok)
     }
 
     @Test func registryCanInspectAndMutateTheActiveDocument() throws {

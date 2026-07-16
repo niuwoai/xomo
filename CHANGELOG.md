@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc143 - 2026-07-16
+
+### Added
+- `xomo.layer.list` 新增 `figmaBindings=all|bound|unbound` 筛选，可快速定位有或没有 Figma 变量绑定的图层，并对未知筛选值返回明确错误。
+
+### Verification
+- `registryLayerListExposesFigmaVariableBindings` 1/1、`XomoMCPServerTests` 2/2 和 `git diff --check` 通过；全套隔离测试在无关的修复画笔测试宿主处等待超时，未将其余用例标记为通过。
+
 ## 2.12.0-rc142 - 2026-07-16
 
 ### Added

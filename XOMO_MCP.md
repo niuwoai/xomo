@@ -1,6 +1,6 @@
 # Xomo MCP 与 CLI
 
-> 当前版本：v2.12.0-rc142
+> 当前版本：v2.12.0-rc143
 
 ## 架构
 
@@ -58,7 +58,7 @@ xomo import-image ~/Desktop/reference.png --into-selection
 
 `xomo.component.tokens` 与组件库界面使用同一份序列化逻辑：`action=get` 返回带 `schemaVersion`、主题、来源、颜色和尺寸指标的 JSON；`action=export` 额外要求 `path`，在本机写出 `.xomotokens.json` 文件；`action=import` 从 `path` 严格校验并激活本地 Token 映射；`action=apply` 将当前激活的 Token 应用到选中的 UI 组件，沿用局部覆盖规则并写入一个 Undo/Redo 历史步骤；`action=clear` 清除当前本地映射，同样写入 Undo/Redo，之后可撤销恢复；`action=refresh` 批量刷新所有携带本地 Token 映射的组件，跳过局部覆写并以一个 Undo/Redo 步骤提交，返回 `count`。`theme` 可省略，省略时读取 Xomo 当前组件主题。该工具只读写本机，不会联网或写回 Figma/Sketch。
 
-`xomo.layer.list` 的每个图层同时返回 `figmaVariableBindingCount` 与 `figmaVariableBindings`。后者是稳定数组，每项包含 `id`（`field:variableId`）、`field` 和 `variableId`；没有绑定时返回空数组，不会把 PAT 或远端变量值写入响应。
+`xomo.layer.list` 的每个图层同时返回 `figmaVariableBindingCount` 与 `figmaVariableBindings`。后者是稳定数组，每项包含 `id`（`field:variableId`）、`field` 和 `variableId`；没有绑定时返回空数组，不会把 PAT 或远端变量值写入响应。调用时可传 `figmaBindings=all|bound|unbound`，分别返回全部、已绑定或未绑定图层；未知值会被拒绝。
 
 ## MCP 客户端配置
 
