@@ -119,6 +119,37 @@ struct XomoFigmaLinkImportTests {
         )
     }
 
+    @Test func selectedLayerFigmaVariableBindingsBatchCopyIsStableAndDeduplicated() throws {
+        let image = NSImage(size: NSSize(width: 32, height: 32))
+        let viewModel = ImageEditorViewModel(
+            sourceName: "Variables",
+            image: image,
+            onApply: { _ in }
+        )
+        let firstID = try #require(viewModel.document.layers.first?.id)
+        var second = ImageEditorLayer.blank(name: "Second", size: viewModel.document.canvasSize)
+        second.xomoFigmaVariableBindings = [
+            XomoFigmaVariableBinding(field: "fills", variableID: "VariableID:brand-primary"),
+            XomoFigmaVariableBinding(field: "characters", variableID: "VariableID:label")
+        ]
+        viewModel.document.layers.append(second)
+        viewModel.document.layers[0].xomoFigmaVariableBindings = [
+            XomoFigmaVariableBinding(field: "fills", variableID: "VariableID:brand-primary")
+        ]
+        viewModel.document.selectedLayerID = second.id
+        viewModel.document.selectedLayerIDs = [firstID, second.id]
+
+        #expect(viewModel.selectedLayersFigmaVariableBindings.map(\.variableID) == [
+            "VariableID:brand-primary",
+            "VariableID:label"
+        ])
+        viewModel.copySelectedFigmaVariableBindings()
+        #expect(
+            NSPasteboard.general.string(forType: .string)
+                == "VariableID:brand-primary\nVariableID:label"
+        )
+    }
+
     @Test func propertiesPanelPresentsFigmaVariableBindingsWithoutKeyboardFocus() throws {
         let root = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()

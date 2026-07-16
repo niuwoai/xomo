@@ -4210,7 +4210,7 @@ struct ImageEditorView: View {
                     .disabled(layerNameDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }
 
-                if viewModel.hasSelectedLayerFigmaVariableBindings {
+                if !viewModel.selectedLayersFigmaVariableBindings.isEmpty {
                     VStack(alignment: .leading, spacing: 7) {
                         HStack(spacing: 8) {
                             Text(L10n.text("imageEditor.properties.figmaVariables"))
@@ -4225,7 +4225,7 @@ struct ImageEditorView: View {
                             .accessibilityIdentifier("image-editor-copy-figma-variables")
                         }
 
-                        ForEach(viewModel.selectedLayerFigmaVariableBindings) { binding in
+                        ForEach(viewModel.selectedLayersFigmaVariableBindings) { binding in
                             HStack(spacing: 7) {
                                 Text(binding.field)
                                     .font(.system(size: 10, weight: .medium))

@@ -1,6 +1,6 @@
 # Xomo MCP 与 CLI
 
-> 当前版本：v2.12.0-rc143
+> 当前版本：v2.12.0-rc146
 
 ## 架构
 
@@ -46,6 +46,8 @@ xomo call xomo.component.tokens '{"action":"clear"}'
 xomo call xomo.component.tokens '{"action":"refresh"}'
 xomo call xomo.component.tokens '{"action":"export","path":"/Users/you/Desktop/chakra.xomotokens.json"}'
 xomo call xomo.component.tokens '{"action":"import","path":"/Users/you/Desktop/brand.xomotokens.json"}'
+xomo call xomo.figma.bindings '{"action":"list"}'
+xomo call xomo.figma.bindings '{"action":"copy"}'
 xomo export ~/Desktop/xomo.png --format png --scope composited --scale 2
 xomo project export ~/Desktop/design.qpicproject
 xomo project import ~/Desktop/design.qpicproject
@@ -59,6 +61,8 @@ xomo import-image ~/Desktop/reference.png --into-selection
 `xomo.component.tokens` 与组件库界面使用同一份序列化逻辑：`action=get` 返回带 `schemaVersion`、主题、来源、颜色和尺寸指标的 JSON；`action=export` 额外要求 `path`，在本机写出 `.xomotokens.json` 文件；`action=import` 从 `path` 严格校验并激活本地 Token 映射；`action=apply` 将当前激活的 Token 应用到选中的 UI 组件，沿用局部覆盖规则并写入一个 Undo/Redo 历史步骤；`action=clear` 清除当前本地映射，同样写入 Undo/Redo，之后可撤销恢复；`action=refresh` 批量刷新所有携带本地 Token 映射的组件，跳过局部覆写并以一个 Undo/Redo 步骤提交，返回 `count`。`theme` 可省略，省略时读取 Xomo 当前组件主题。该工具只读写本机，不会联网或写回 Figma/Sketch。
 
 `xomo.layer.list` 的每个图层同时返回 `figmaVariableBindingCount` 与 `figmaVariableBindings`。后者是稳定数组，每项包含 `id`（`field:variableId`）、`field` 和 `variableId`；没有绑定时返回空数组，不会把 PAT 或远端变量值写入响应。调用时可传 `figmaBindings=all|bound|unbound`，分别返回全部、已绑定或未绑定图层；未知值会被拒绝。
+
+`xomo.figma.bindings` 的 `action=list` 返回当前多选图层的去重绑定（没有绑定时返回空结果），`action=copy` 将同一批变量 ID 按稳定顺序写入本机剪贴板；复制时没有选中绑定或传入未知 action 会明确失败，不会联网或写回 Figma。
 
 ## MCP 客户端配置
 
@@ -79,7 +83,7 @@ MCP 服务器实现 `initialize`、`ping`、`tools/list` 和 `tools/call`。当 
 
 ## 当前工具范围
 
-- 共 113 个 MCP 工具；同类细粒度操作通过带严格枚举参数的 action 工具组织。
+- 共 114 个 MCP 工具；同类细粒度操作通过带严格枚举参数的 action 工具组织。
 - App 与文档状态
 - 预设或自定义画布创建、可编辑文字/形状检查与更新（含纯色/最多 16 个有序色标的线性渐变填充、独立描边、不透明度、线宽、统一/独立四角及超椭圆圆角平滑）、点文字 / 固定宽高段落文字创建和转换、文字框所需高度、溢出诊断与适合内容 / 仅扩高操作，以及详细调整、滤镜和图层样式参数
 - 完整 `qpicproject` 项目导入导出，以及 PNG/JPEG/WebP 等图像图层导入

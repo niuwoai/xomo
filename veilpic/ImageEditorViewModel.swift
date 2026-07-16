@@ -683,6 +683,17 @@ final class ImageEditorViewModel: ObservableObject {
         document.selectedLayer?.xomoFigmaVariableBindings ?? []
     }
 
+    var selectedLayersFigmaVariableBindings: [XomoFigmaVariableBinding] {
+        let selectedIDs = document.selectedLayerIDs.isEmpty
+            ? Set(document.selectedLayerID.map { [$0] } ?? [])
+            : document.selectedLayerIDs
+        var seen = Set<String>()
+        return document.layers
+            .filter { selectedIDs.contains($0.id) }
+            .flatMap(\.xomoFigmaVariableBindings)
+            .filter { seen.insert($0.id).inserted }
+    }
+
     var hasSelectedLayerFigmaVariableBindings: Bool {
         !selectedLayerFigmaVariableBindings.isEmpty
     }
@@ -699,7 +710,7 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func copySelectedFigmaVariableBindings() {
-        let values = selectedLayerFigmaVariableBindings
+        let values = selectedLayersFigmaVariableBindings
             .map(\.variableID)
             .filter { !$0.isEmpty }
         guard !values.isEmpty else { return }

@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc146 - 2026-07-17
+
+### Added
+- 多选图层的 Figma 变量绑定可稳定去重后复制；属性面板与 `xomo.figma.bindings` MCP/CLI 工具共享同一批量读取、复制逻辑。
+
+### Verification
+- `selectedLayerFigmaVariableBindingsBatchCopyIsStableAndDeduplicated`、`registryListsAndCopiesFigmaBindingsFromSelectedLayers`、`registryAdvertisesBroadEditorCapabilities` 均通过；Xomo CLI 2 项测试通过；`git diff --check` 通过。
+
 ## 2.12.0-rc145 - 2026-07-17
 
 ### Added

@@ -88,6 +88,8 @@ final class XomoAutomationRegistry {
             viewModel.selectTool(tool)
         case "xomo.layer.list":
             return try layersResult(arguments, viewModel: viewModel)
+        case "xomo.figma.bindings":
+            return try figmaBindingsAction(arguments, viewModel: viewModel)
         case "xomo.layer.select":
             let id = try requiredUUID("id", in: arguments)
             viewModel.selectLayer(id, extendingSelection: arguments["extend"]?.boolValue ?? false)
@@ -562,6 +564,39 @@ final class XomoAutomationRegistry {
                 })
             ])
         })
+    }
+
+    private func figmaBindingsAction(
+        _ arguments: [String: XomoJSONValue],
+        viewModel: ImageEditorViewModel
+    ) throws -> XomoJSONValue {
+        let action = try requiredString("action", in: arguments)
+        let bindings = viewModel.selectedLayersFigmaVariableBindings
+        let result: XomoJSONValue = .object([
+            "count": .number(Double(bindings.count)),
+            "variableIds": .array(bindings.map { .string($0.variableID) }),
+            "bindings": .array(bindings.map { binding in
+                .object([
+                    "id": .string(binding.id),
+                    "field": .string(binding.field),
+                    "variableId": .string(binding.variableID)
+                ])
+            })
+        ])
+        switch action {
+        case "list":
+            return result
+        case "copy":
+            guard !bindings.isEmpty else {
+                throw XomoAutomationCallError.invalidArgument(
+                    "No selected Figma variable bindings"
+                )
+            }
+            viewModel.copySelectedFigmaVariableBindings()
+            return result
+        default:
+            throw XomoAutomationCallError.invalidArgument("Unknown Figma binding action")
+        }
     }
 
     private func selectionResult(_ viewModel: ImageEditorViewModel) -> XomoJSONValue {
@@ -2618,6 +2653,9 @@ private extension XomoAutomationRegistry {
         tool("xomo.layer.list", "List layers with hierarchy, bounds, visibility, locks, opacity, blend mode, preserved Figma variable bindings, and optional binding filters.", [
             "figmaBindings": XomoAutomationSchema.string(description: "Filter by preserved Figma variable bindings", values: ["all", "bound", "unbound"])
         ]),
+        tool("xomo.figma.bindings", "List or copy the deduplicated Figma variable bindings from the current layer selection.", [
+            "action": XomoAutomationSchema.string(description: "Binding action", values: ["list", "copy"])
+        ], required: ["action"]),
         tool("xomo.layer.select", "Select a layer by UUID.", [
             "id": XomoAutomationSchema.string(description: "Layer UUID"),
             "extend": XomoAutomationSchema.boolean(description: "Extend the current layer selection")

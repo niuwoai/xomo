@@ -15,7 +15,7 @@ struct XomoAutomationTests {
             Issue.record("Expected tool array")
             return
         }
-        #expect(tools.count == 112)
+        #expect(tools.count == 114)
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.layer.list")
@@ -68,6 +68,10 @@ struct XomoAutomationTests {
             .string("bound"),
             .string("unbound")
         ]))
+        #expect(tools.contains { tool in
+            guard case .object(let value) = tool else { return false }
+            return value["name"] == .string("xomo.figma.bindings")
+        })
     }
 
     @Test func registryReadsAndExportsComponentThemeTokens() throws {
@@ -332,6 +336,44 @@ struct XomoAutomationTests {
             arguments: ["figmaBindings": .string("linked")]
         ))
         #expect(!invalid.ok)
+    }
+
+    @Test func registryListsAndCopiesFigmaBindingsFromSelectedLayers() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        let firstID = try #require(viewModel.document.layers.first?.id)
+        var second = ImageEditorLayer.blank(name: "Second", size: viewModel.document.canvasSize)
+        second.xomoFigmaVariableBindings = [
+            XomoFigmaVariableBinding(field: "fills", variableID: "VariableID:brand-primary"),
+            XomoFigmaVariableBinding(field: "characters", variableID: "VariableID:label")
+        ]
+        viewModel.document.layers.append(second)
+        viewModel.document.layers[0].xomoFigmaVariableBindings = [
+            XomoFigmaVariableBinding(field: "fills", variableID: "VariableID:brand-primary")
+        ]
+        viewModel.document.selectedLayerID = second.id
+        viewModel.document.selectedLayerIDs = [firstID, second.id]
+
+        let listed = registry.execute(request(
+            operation: "call",
+            name: "xomo.figma.bindings",
+            arguments: ["action": .string("list")]
+        ))
+        #expect(listed.ok)
+        #expect(listed.result?.objectValue?["count"] == .number(2))
+        #expect(listed.result?.objectValue?["variableIds"] == .array([
+            .string("VariableID:brand-primary"),
+            .string("VariableID:label")
+        ]))
+
+        let copied = registry.execute(request(
+            operation: "call",
+            name: "xomo.figma.bindings",
+            arguments: ["action": .string("copy")]
+        ))
+        #expect(copied.ok)
+        #expect(NSPasteboard.general.string(forType: .string) == "VariableID:brand-primary\nVariableID:label")
     }
 
     @Test func registryCanInspectAndMutateTheActiveDocument() throws {
