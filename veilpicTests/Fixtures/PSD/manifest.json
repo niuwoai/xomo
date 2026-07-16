@@ -57,6 +57,15 @@
         "multiple_subpaths",
         "even_odd_hole"
       ]
+    },
+    {
+      "file": "path-resources.psd",
+      "sha256": "cbe8ffac327c8287c71c5704308f60a74f0e7ec92b7e06c0433331e638730904",
+      "expected": [
+        "saved_path",
+        "closed_path",
+        "open_path"
+      ]
     }
   ]
 }

@@ -181,21 +181,40 @@ def header(channels: 4, width: WIDTH, height: HEIGHT, depth: 8, color_mode: 3)
   "8BPS" + u16(1) + ("\0" * 6) + u16(channels) + u32(height) + u32(width) + u16(depth) + u16(color_mode)
 end
 
-def image_resources(include_icc: false)
-  return u32(0) unless include_icc
+def path_resource_payload(closed:, points:)
+  record = ->(selector, point) {
+    u16(selector) + point.map { |vertical, horizontal| fixed8_24(vertical) + fixed8_24(horizontal) }.join
+  }
+  length_selector = closed ? 0 : 3
+  knot_selector = closed ? 1 : 4
+  length = u16(length_selector) + u16(points.length) + ("\0" * 20)
+  knots = points.each_with_index.map { |point, index| record.call(index.zero? ? knot_selector : knot_selector + 1, point) }.join
+  length + knots
+end
 
-  name = "\0\0"
-  profile = "TEST"
-  block = "8BIM" + u16(1039) + name + u32(profile.bytesize) + profile
-  u32(block.bytesize) + block
+def path_resource_block(id:, name:, payload:)
+  block = "8BIM" + u16(id) + pascal(name, alignment: 2) + u32(payload.bytesize) + payload
+  block << "\0" if payload.bytesize.odd?
+  block
+end
+
+def image_resources(include_icc: false, path_resources: [])
+  blocks = []
+  if include_icc
+    profile = "TEST"
+    blocks << ("8BIM" + u16(1039) + pascal("", alignment: 2) + u32(profile.bytesize) + profile)
+  end
+  blocks.concat(path_resources)
+  payload = blocks.join
+  u32(payload.bytesize) + payload
 end
 
 def composite_zip(red:, green:, blue:, alpha:)
   u16(2) + Zlib::Deflate.deflate(red + green + blue + alpha)
 end
 
-def psd(layer_payload:, composite:, include_icc: false)
-  header + u32(0) + image_resources(include_icc: include_icc) + layer_payload + composite
+def psd(layer_payload:, composite:, include_icc: false, path_resources: [])
+  header + u32(0) + image_resources(include_icc: include_icc, path_resources: path_resources) + layer_payload + composite
 end
 
 def group_mask_fixture
@@ -306,7 +325,7 @@ def editable_text_fixture
   )
 end
 
-def vector_mask_fixture(payload: vector_mask_payload)
+def vector_mask_fixture(payload: vector_mask_payload, path_resources: [])
   pixel = ([180] * 16).pack("C*")
   alpha = ([255] * 16).pack("C*")
   channels = {
@@ -326,12 +345,40 @@ def vector_mask_fixture(payload: vector_mask_payload)
   layer_and_mask = u32(layer_info.bytesize) + layer_info + u32(0)
   psd(
     layer_payload: u32(layer_and_mask.bytesize) + layer_and_mask,
-    composite: u16(0) + pixel + pixel + pixel + alpha
+    composite: u16(0) + pixel + pixel + pixel + alpha,
+    path_resources: path_resources
   )
 end
 
 def multi_vector_mask_fixture
   vector_mask_fixture(payload: vector_mask_payload(include_hole: true))
+end
+
+def path_resource_fixture
+  closed = path_resource_block(
+    id: 2000,
+    name: "Triangle Path",
+    payload: path_resource_payload(
+      closed: true,
+      points: [
+        [[0.10, 0.10], [0.10, 0.10], [0.10, 0.10]],
+        [[0.10, 0.90], [0.10, 0.90], [0.10, 0.90]],
+        [[0.90, 0.50], [0.90, 0.50], [0.90, 0.50]]
+      ]
+    )
+  )
+  open_path = path_resource_block(
+    id: 2001,
+    name: "Open Guide",
+    payload: path_resource_payload(
+      closed: false,
+      points: [
+        [[0.20, 0.20], [0.20, 0.20], [0.20, 0.20]],
+        [[0.80, 0.80], [0.80, 0.80], [0.80, 0.80]]
+      ]
+    )
+  )
+  vector_mask_fixture(path_resources: [closed, open_path])
 end
 
 FileUtils.mkdir_p(OUTPUT_DIR)
@@ -341,7 +388,8 @@ fixtures = {
   "unsupported-features.psd" => unsupported_features_fixture,
   "editable-text.psd" => editable_text_fixture,
   "vector-mask.psd" => vector_mask_fixture,
-  "vector-mask-multi.psd" => multi_vector_mask_fixture
+  "vector-mask-multi.psd" => multi_vector_mask_fixture,
+  "path-resources.psd" => path_resource_fixture
 }
 fixtures.each do |name, bytes|
   File.binwrite(File.join(OUTPUT_DIR, name), bytes)
@@ -353,7 +401,8 @@ expectations = {
   "unsupported-features.psd" => %w[compatibility_report unsupported_semantic_features],
   "editable-text.psd" => %w[editable_text font_size color alignment],
   "vector-mask.psd" => %w[editable_vector_mask closed_path bezier_points],
-  "vector-mask-multi.psd" => %w[editable_vector_mask multiple_subpaths even_odd_hole]
+  "vector-mask-multi.psd" => %w[editable_vector_mask multiple_subpaths even_odd_hole],
+  "path-resources.psd" => %w[saved_path closed_path open_path]
 }
 manifest = {
   generator: "scripts/generate_psd_compatibility_fixtures.rb",

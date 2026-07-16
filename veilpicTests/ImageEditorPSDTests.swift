@@ -238,6 +238,26 @@ struct ImageEditorPSDTests {
         #expect(restoredMask.editablePathSubpaths == vectorMask.editablePathSubpaths)
     }
 
+    @Test func externalPathResourcesBecomeEditableSavedPathsAndRoundTrip() throws {
+        let data = try psdFixtureData("path-resources.psd")
+        let document = try ImageEditorPSDCodec.decode(data, sourceName: "path-resources.psd")
+
+        #expect(document.savedPaths.count == 2)
+        let closedPath = try #require(document.savedPaths.first { $0.name == "Triangle Path" })
+        let openPath = try #require(document.savedPaths.first { $0.name == "Open Guide" })
+        #expect(closedPath.isClosed)
+        #expect(closedPath.subpaths.count == 1)
+        #expect(closedPath.subpaths.first?.count == 3)
+        #expect(!openPath.isClosed)
+        #expect(openPath.subpaths.first?.count == 2)
+        #expect(abs(closedPath.subpaths[0][0].point.x - 0.4) < 0.01)
+        #expect(abs(openPath.subpaths[0][1].point.y - 3.2) < 0.01)
+
+        let project = try ImageEditorProjectDocument(document: document)
+        let restoredProject = try project.restoredDocument()
+        #expect(restoredProject.savedPaths == document.savedPaths)
+    }
+
     @Test func openingPSDPublishesCompatibilityReportForTheCurrentDocument() throws {
         let data = try psdFixtureData("unsupported-features.psd")
         let report = try ImageEditorPSDCodec.compatibilityReport(data)

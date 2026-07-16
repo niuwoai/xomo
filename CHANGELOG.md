@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.12.0-rc152 - 2026-07-17
+
+### Added
+- PSD Image Resources 中的 Path Resource 现在会导入为 Xomo 路径面板中的可编辑命名路径，支持闭合路径、开放路径和 Bézier 控制柄。
+- 导入的路径会进入原生项目格式，保存重开后保留名称、闭合状态、子路径和画布坐标。
+- 新增外部生成的 `path-resources.psd` 夹具，覆盖闭合路径与开放路径。
+
+### Verification
+- PSD 专项测试 12/12、路径资源定向测试 1/1、Xomo CLI 测试 2/2、`git diff --check` 通过。
+
 ## 2.12.0-rc151 - 2026-07-17
 
 ### Added

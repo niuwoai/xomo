@@ -10,6 +10,7 @@
 | `editable-text.psd` | 外部生成的 TySh 文字层，读取纯文本、字体、字号、颜色、基础段落对齐和字符样式 |
 | `vector-mask.psd` | 外部生成的 vmsk 简单闭合三点路径，导入为 Xomo 原生矢量蒙版 |
 | `vector-mask-multi.psd` | 外部生成的 vmsk 两个闭合子路径，验证 pathSubpaths 与偶奇填充孔洞 |
+| `path-resources.psd` | 外部生成的 Image Resources 路径资源，验证闭合路径和开放路径进入路径面板 |
 
 重新生成：
 

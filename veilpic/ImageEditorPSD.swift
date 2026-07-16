@@ -308,7 +308,11 @@ enum ImageEditorPSDCodec {
             throw ImageEditorPSDCodecError.unsupportedDocument
         }
         try reader.skipLengthPrefixed32()
-        try reader.skipLengthPrefixed32()
+        let imageResources = try reader.lengthPrefixedData32()
+        let savedPaths = parseSavedPaths(
+            imageResources,
+            canvasSize: CGSize(width: width, height: height)
+        )
 
         let layerAndMaskLength = Int(try reader.uint32())
         let layerAndMaskEnd = try reader.checkedEnd(length: layerAndMaskLength)
@@ -338,7 +342,8 @@ enum ImageEditorPSDCodec {
                 width: width,
                 height: height,
                 layers: decodedLayers,
-                composite: nil
+                composite: nil,
+                savedPaths: savedPaths
             )
         }
 
@@ -352,8 +357,120 @@ enum ImageEditorPSDCodec {
             width: width,
             height: height,
             layers: [],
-            composite: composite
+            composite: composite,
+            savedPaths: savedPaths
         )
+    }
+
+    private static func parseSavedPaths(
+        _ data: Data,
+        canvasSize: CGSize
+    ) -> [ImageEditorSavedPath] {
+        do {
+            var reader = PSDReader(data: data)
+            var paths: [ImageEditorSavedPath] = []
+            while reader.offset + 12 <= data.count {
+                let signature = try reader.ascii(count: 4)
+                guard signature == "8BIM" || signature == "8B64" else { break }
+                let resourceID = try reader.uint16()
+                let resourceName = try reader.pascalString(alignment: 2)
+                let resourceLength = Int(try reader.uint32())
+                let resourceData = try reader.data(count: resourceLength)
+                if resourceLength.isMultiple(of: 2) == false {
+                    try reader.skip(1)
+                }
+                guard (2000...2999).contains(Int(resourceID)) else { continue }
+                guard let path = parseSavedPathResource(
+                    resourceData,
+                    name: resourceName,
+                    fallbackIndex: paths.count + 1,
+                    canvasSize: canvasSize
+                ) else { continue }
+                paths.append(path)
+                guard paths.count < ImageEditorSavedPath.maximumCount else { break }
+            }
+            return paths
+        } catch {
+            return []
+        }
+    }
+
+    private static func parseSavedPathResource(
+        _ data: Data,
+        name: String,
+        fallbackIndex: Int,
+        canvasSize: CGSize
+    ) -> ImageEditorSavedPath? {
+        do {
+            var reader = PSDReader(data: data)
+            var expectedKnotCount: Int?
+            var currentSubpath: [ImageEditorPathAnchor] = []
+            var currentIsClosed: Bool?
+            var subpaths: [[ImageEditorPathAnchor]] = []
+            var closureStates: Set<Bool> = []
+            while reader.offset + 26 <= data.count {
+                let selector = try reader.uint16()
+                let payload = try reader.data(count: 24)
+                switch selector {
+                case 0, 3:
+                    guard expectedKnotCount == nil else { return nil }
+                    let count = Int(
+                        UInt16(payload[payload.startIndex]) << 8
+                            | UInt16(payload[payload.startIndex + 1])
+                    )
+                    guard count >= (selector == 0 ? 3 : 2) else { return nil }
+                    expectedKnotCount = count
+                    currentSubpath = []
+                    currentIsClosed = selector == 0
+                case 1, 2, 4, 5:
+                    guard let knotCount = expectedKnotCount,
+                          currentSubpath.count < knotCount,
+                          let isClosed = currentIsClosed
+                    else { return nil }
+                    let previousControl = vectorPathPoint(in: payload, at: 0)
+                    let anchor = vectorPathPoint(in: payload, at: 8)
+                    let nextControl = vectorPathPoint(in: payload, at: 16)
+                    let selectorIsClosed = selector <= 2
+                    guard selectorIsClosed == isClosed else { return nil }
+                    currentSubpath.append(
+                        ImageEditorPathAnchor(
+                            point: CGPoint(x: anchor.x * canvasSize.width, y: anchor.y * canvasSize.height),
+                            inControl: CGPoint(x: previousControl.x * canvasSize.width, y: previousControl.y * canvasSize.height),
+                            outControl: CGPoint(x: nextControl.x * canvasSize.width, y: nextControl.y * canvasSize.height)
+                        )
+                    )
+                    if currentSubpath.count == knotCount {
+                        subpaths.append(currentSubpath)
+                        closureStates.insert(isClosed)
+                        currentSubpath = []
+                        currentIsClosed = nil
+                        expectedKnotCount = nil
+                    }
+                case 6, 7, 8:
+                    continue
+                default:
+                    return nil
+                }
+            }
+            guard reader.offset == data.count,
+                  expectedKnotCount == nil,
+                  currentSubpath.isEmpty,
+                  closureStates.count == 1,
+                  let isClosed = closureStates.first,
+                  !subpaths.isEmpty
+            else { return nil }
+            let pathName = name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                ? "路径 \(fallbackIndex)"
+                : name
+            return ImageEditorSavedPath(
+                name: pathName,
+                subpaths: subpaths,
+                isClosed: isClosed,
+                isVisible: false
+            ).normalized(canvasSize: canvasSize)
+        } catch {
+            return nil
+        }
     }
 
     private static func materialize(
@@ -452,6 +569,8 @@ enum ImageEditorPSDCodec {
             document.layers = decodedLayers.reversed()
             document.selectedLayerID = document.layers.last?.id
             document.selectedLayerIDs = Set(document.layers.last.map { [$0.id] } ?? [])
+            document.savedPaths = parsed.savedPaths
+            document.selectedSavedPathID = parsed.savedPaths.last?.id
             document.history = [ImageEditorHistoryEntry(title: L10n.text("imageEditor.history.psdOpen"))]
             return document
         }
@@ -461,7 +580,10 @@ enum ImageEditorPSDCodec {
         else {
             throw ImageEditorPSDCodecError.invalidFile
         }
-        return ImageEditorDocument(sourceName: sourceName, image: image)
+        var document = ImageEditorDocument(sourceName: sourceName, image: image)
+        document.savedPaths = parsed.savedPaths
+        document.selectedSavedPathID = parsed.savedPaths.last?.id
+        return document
     }
 
     private static func integralPSDFrame(_ frame: CGRect, canvasSize: CGSize) -> CGRect {
@@ -1597,6 +1719,7 @@ nonisolated private struct PSDParsedDocument: @unchecked Sendable {
     let height: Int
     let layers: [PSDParsedLayer]
     let composite: PSDChannels?
+    let savedPaths: [ImageEditorSavedPath]
 }
 
 nonisolated private struct PSDParsedLayer {
