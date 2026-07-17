@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc230 - 2026-07-18
+
+### Added
+- 颜色范围、相似颜色和扩大颜色选择的自动化入口支持显式 `tolerance`，与界面容差共用 0 到 1 的裁剪规则。
+
+### Verification
+- Xomo 自动化回归通过 56/56，选区操作回归 26/26，CLI schema 回归 2/2；报告：`test-reports/rc230-automation/`、`test-reports/rc230-selection/`。
+
 ## 2.12.0-rc229 - 2026-07-18
 
 ### Fixed

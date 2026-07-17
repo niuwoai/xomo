@@ -72,6 +72,7 @@ struct XomoAutomationTests {
             return
         }
         #expect(magicTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["tolerance"]?.objectValue?["type"] == .string("number"))
+        #expect(selectionModifyTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["tolerance"]?.objectValue?["type"] == .string("number"))
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.layer_comp.action")
@@ -261,6 +262,37 @@ struct XomoAutomationTests {
         ))
         #expect(broadResponse.ok)
         #expect(try #require(viewModel.document.selection).bounds.width == 20)
+    }
+
+    @Test func registryAppliesExplicitColorRangeTolerance() throws {
+        let viewModel = makeViewModel()
+        let layerIndex = try #require(viewModel.document.selectedLayerIndex)
+        let canvasSize = CGSize(width: 20, height: 10)
+        let image = try #require(NSImage.rendered(size: canvasSize) { _ in
+            NSColor(calibratedRed: 1, green: 0, blue: 0, alpha: 1).setFill()
+            CGRect(x: 0, y: 0, width: 10, height: 10).fill()
+            NSColor(calibratedRed: 0.8, green: 0, blue: 0, alpha: 1).setFill()
+            CGRect(x: 10, y: 0, width: 10, height: 10).fill()
+        })
+        viewModel.document.layers[layerIndex].image = image
+        viewModel.document.layers[layerIndex].frame = CGRect(origin: .zero, size: canvasSize)
+        viewModel.foregroundColor = NSColor(calibratedRed: 1, green: 0, blue: 0, alpha: 1)
+        viewModel.tolerance = 0.05
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.selection.modify",
+            arguments: [
+                "action": .string("colorRange"),
+                "tolerance": .number(0.25)
+            ]
+        ))
+
+        #expect(response.ok)
+        #expect(try #require(viewModel.document.selection).bounds.width == 20)
+        #expect(viewModel.tolerance == 0.05)
     }
 
     @Test func registryQueuesPSDOpenThroughTheSharedCoordinator() throws {

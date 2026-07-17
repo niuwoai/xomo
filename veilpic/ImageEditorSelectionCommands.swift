@@ -95,10 +95,11 @@ extension ImageEditorViewModel {
         statusText = L10n.text("imageEditor.status.selectionRestored")
     }
 
-    func selectColorRangeFromForeground() {
+    func selectColorRangeFromForeground(tolerance requestedTolerance: CGFloat? = nil) {
+        let effectiveTolerance = effectiveSelectionTolerance(requestedTolerance)
         guard let selection = currentImage.colorRangeSelection(
             targetColor: foregroundColor,
-            tolerance: tolerance,
+            tolerance: effectiveTolerance,
             canvasSize: document.canvasSize,
             inverted: false
         ) else {
@@ -139,7 +140,8 @@ extension ImageEditorViewModel {
         applySelectionCandidate(selection, replaceHistoryKey: "imageEditor.history.selectionColorRange")
     }
 
-    func selectSimilarColors() {
+    func selectSimilarColors(tolerance requestedTolerance: CGFloat? = nil) {
+        let effectiveTolerance = effectiveSelectionTolerance(requestedTolerance)
         guard let sourceSelection = document.selection else {
             statusText = L10n.text("imageEditor.status.noSelection")
             return
@@ -151,7 +153,7 @@ extension ImageEditorViewModel {
         }
         guard let selection = currentImage.colorRangeSelection(
             targetColors: samples,
-            tolerance: tolerance,
+            tolerance: effectiveTolerance,
             canvasSize: document.canvasSize,
             inverted: false
         ) else {
@@ -162,14 +164,15 @@ extension ImageEditorViewModel {
         applySelectionCandidate(selection, replaceHistoryKey: "imageEditor.history.selectionSimilar")
     }
 
-    func growColorSelection() {
+    func growColorSelection(tolerance requestedTolerance: CGFloat? = nil) {
+        let effectiveTolerance = effectiveSelectionTolerance(requestedTolerance)
         guard let sourceSelection = document.selection else {
             statusText = L10n.text("imageEditor.status.noSelection")
             return
         }
         guard let selection = currentImage.grownColorSelection(
             from: sourceSelection,
-            tolerance: tolerance,
+            tolerance: effectiveTolerance,
             canvasSize: document.canvasSize
         ) else {
             statusText = L10n.text("imageEditor.status.selectionSimilarSampleEmpty")
@@ -542,6 +545,10 @@ extension ImageEditorViewModel {
 
     private func effectiveSelectionRadius(_ requested: Int?, maximum: Int) -> Int {
         max(1, min(maximum, requested ?? Int(selectionModifyAmount.rounded())))
+    }
+
+    private func effectiveSelectionTolerance(_ requested: CGFloat?) -> CGFloat {
+        max(0, min(1, requested ?? tolerance))
     }
 
     private func transparencySelection(forLayerAt index: Int) -> ImageEditorSelection? {
