@@ -2805,6 +2805,10 @@ struct ImageEditorLayer: Identifiable {
     var xomoFigmaNodeType: String?
     var xomoFigmaComponentRole: XomoFigmaComponentRole?
     var xomoFigmaComponentProperties: [String: XomoFigmaComponentProperty] = [:]
+    /// Figma's imported component values before any local override is applied.
+    /// Keeping this snapshot lets the property inspector restore one override
+    /// without re-importing the source document.
+    var xomoFigmaComponentPropertyDefaults: [String: XomoFigmaComponentProperty] = [:]
     var xomoFigmaSourceURL: URL?
 
     static func background(image: NSImage) -> ImageEditorLayer {

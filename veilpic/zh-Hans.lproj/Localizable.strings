@@ -2886,6 +2886,7 @@
 "imageEditor.status.figmaComponentPropertiesCopyFailed" = "复制 Figma 组件属性失败";
 "imageEditor.properties.figmaComponentPropertyValue" = "值";
 "imageEditor.properties.figmaComponentPropertyEnabled" = "启用";
+"imageEditor.properties.figmaComponentPropertyReset" = "还原";
 "imageEditor.history.figmaComponentPropertyChanged" = "修改 Figma 组件属性：%@";
 "imageEditor.status.figmaComponentPropertyUpdated" = "已更新 Figma 组件属性：%@";
 "xomo.figma.resource.design" = "Figma Design";

@@ -95,6 +95,7 @@ struct ImageEditorFigmaProvenanceTests {
         component.xomoFigmaComponentProperties = [
             "Label": XomoFigmaComponentProperty(type: "TEXT", value: "Continue")
         ]
+        component.xomoFigmaComponentPropertyDefaults = component.xomoFigmaComponentProperties
         var label = ImageEditorLayer.text(
             name: "Continue",
             origin: CGPoint(x: 56, y: 72),
@@ -114,11 +115,23 @@ struct ImageEditorFigmaProvenanceTests {
         viewModel.updateSelectedFigmaComponentProperty("Label", value: "Buy now")
 
         #expect(viewModel.document.selectedLayer?.xomoFigmaComponentProperties["Label"]?.value == "Buy now")
+        #expect(viewModel.document.selectedLayer?.xomoFigmaComponentPropertyDefaults["Label"]?.value == "Continue")
         #expect(viewModel.document.layers[1].textContent?.text == "Buy now")
         #expect(viewModel.document.layers[1].isText)
 
-        viewModel.undo()
+        viewModel.resetSelectedFigmaComponentProperty("Label")
         #expect(viewModel.document.selectedLayer?.xomoFigmaComponentProperties["Label"]?.value == "Continue")
         #expect(viewModel.document.layers[1].textContent?.text == "Continue")
+
+        viewModel.undo()
+        #expect(viewModel.document.selectedLayer?.xomoFigmaComponentProperties["Label"]?.value == "Buy now")
+        #expect(viewModel.document.layers[1].textContent?.text == "Buy now")
+        viewModel.redo()
+        #expect(viewModel.document.selectedLayer?.xomoFigmaComponentProperties["Label"]?.value == "Continue")
+        #expect(viewModel.document.layers[1].textContent?.text == "Continue")
+
+        let project = try ImageEditorProjectDocument(document: viewModel.document)
+        let restored = try project.restoredDocument()
+        #expect(restored.layers.first?.xomoFigmaComponentPropertyDefaults["Label"]?.value == "Continue")
     }
 }

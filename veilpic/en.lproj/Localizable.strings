@@ -2886,6 +2886,7 @@
 "imageEditor.status.figmaComponentPropertiesCopyFailed" = "Failed to copy Figma component properties";
 "imageEditor.properties.figmaComponentPropertyValue" = "Value";
 "imageEditor.properties.figmaComponentPropertyEnabled" = "Enabled";
+"imageEditor.properties.figmaComponentPropertyReset" = "Reset";
 "imageEditor.history.figmaComponentPropertyChanged" = "Changed Figma component property: %@";
 "imageEditor.status.figmaComponentPropertyUpdated" = "Updated Figma component property: %@";
 "xomo.figma.resource.design" = "Figma Design";

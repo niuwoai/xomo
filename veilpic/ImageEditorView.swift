@@ -4234,6 +4234,17 @@ struct ImageEditorView: View {
                 Text(property.type)
                     .font(.system(size: 9, design: .monospaced))
                     .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                if viewModel.hasSelectedFigmaComponentPropertyOverride(key, property: property) {
+                    Button(L10n.text("imageEditor.properties.figmaComponentPropertyReset")) {
+                        viewModel.resetSelectedFigmaComponentProperty(key)
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.mini)
+                    .font(.system(size: 9))
+                    .focusable(false)
+                    .xomoFocusEffectDisabled()
+                    .accessibilityIdentifier("image-editor-figma-property-reset-\(key)")
+                }
             }
 
             if property.type == "BOOLEAN" {

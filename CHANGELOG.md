@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc185 - 2026-07-17
+
+### Added
+- Figma 组件属性导入时保留默认值快照，属性面板支持单项还原；还原会同步真实文字子图层，并进入 History/Undo/Redo。
+
+### Verification
+- Figma 组件属性专项独立进程测试 3/3、macOS 13 Debug `build-for-testing`、SwiftPM CLI 测试 2/2 通过。
+
 ## 2.12.0-rc184 - 2026-07-17
 
 ### Changed

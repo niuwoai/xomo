@@ -714,8 +714,22 @@ final class ImageEditorViewModel: ObservableObject {
         document.selectedLayer?.xomoFigmaComponentProperties ?? [:]
     }
 
+    var selectedLayerFigmaComponentPropertyDefaults: [String: XomoFigmaComponentProperty] {
+        document.selectedLayer?.xomoFigmaComponentPropertyDefaults ?? [:]
+    }
+
     var hasSelectedLayerFigmaComponentProperties: Bool {
         !selectedLayerFigmaComponentProperties.isEmpty
+    }
+
+    func hasSelectedFigmaComponentPropertyOverride(
+        _ key: String,
+        property: XomoFigmaComponentProperty
+    ) -> Bool {
+        guard let defaultProperty = selectedLayerFigmaComponentPropertyDefaults[key] else {
+            return false
+        }
+        return defaultProperty != property
     }
 
     func updateSelectedFigmaComponentProperty(_ key: String, value: String) {
@@ -729,6 +743,10 @@ final class ImageEditorViewModel: ObservableObject {
         pushUndo()
         let previousValue = property.value
         property.value = normalizedValue
+        var defaults = document.layers[index].xomoFigmaComponentPropertyDefaults
+        if defaults[key] == nil {
+            defaults[key] = document.layers[index].xomoFigmaComponentProperties[key]
+        }
         let textOverrideIndices: [Int]
         if property.type == "TEXT" {
             let descendantIDs = document.layers[index].isGroup
@@ -747,6 +765,7 @@ final class ImageEditorViewModel: ObservableObject {
         }
         mutateDocumentWithoutInvalidatingRenderedImageCaches { document in
             document.layers[index].xomoFigmaComponentProperties[key] = property
+            document.layers[index].xomoFigmaComponentPropertyDefaults = defaults
             for textIndex in textOverrideIndices {
                 guard var content = document.layers[textIndex].textContent else { continue }
                 content.text = normalizedValue
@@ -765,6 +784,11 @@ final class ImageEditorViewModel: ObservableObject {
         }
         appendHistory(L10n.format("imageEditor.history.figmaComponentPropertyChanged", key))
         statusText = L10n.format("imageEditor.status.figmaComponentPropertyUpdated", key)
+    }
+
+    func resetSelectedFigmaComponentProperty(_ key: String) {
+        guard let defaultProperty = selectedLayerFigmaComponentPropertyDefaults[key] else { return }
+        updateSelectedFigmaComponentProperty(key, value: defaultProperty.value)
     }
 
     func updateSelectedFigmaComponentBooleanProperty(_ key: String, isEnabled: Bool) {

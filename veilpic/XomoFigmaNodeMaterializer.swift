@@ -156,6 +156,7 @@ enum XomoFigmaNodeMaterializer {
         layer.xomoFigmaNodeType = item.sourceType
         layer.xomoFigmaComponentRole = item.componentRole
         layer.xomoFigmaComponentProperties = item.componentProperties
+        layer.xomoFigmaComponentPropertyDefaults = item.componentProperties
         layer.stackChildLayout = item.stackChildLayout
         layer.isStackLayoutExcluded = item.isStackLayoutExcluded
         layer.isVisible = item.isVisible

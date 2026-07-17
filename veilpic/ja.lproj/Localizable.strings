@@ -2886,6 +2886,7 @@
 "imageEditor.status.figmaComponentPropertiesCopyFailed" = "Figma コンポーネントプロパティのコピーに失敗しました";
 "imageEditor.properties.figmaComponentPropertyValue" = "値";
 "imageEditor.properties.figmaComponentPropertyEnabled" = "有効";
+"imageEditor.properties.figmaComponentPropertyReset" = "リセット";
 "imageEditor.history.figmaComponentPropertyChanged" = "Figma コンポーネントプロパティを変更: %@";
 "imageEditor.status.figmaComponentPropertyUpdated" = "Figma コンポーネントプロパティを更新: %@";
 "xomo.figma.resource.design" = "Figma Design";
