@@ -1447,6 +1447,29 @@ struct veilpicTests {
     }
 
     @MainActor
+    @Test func imageEditorPastesCopiedLayerInPlace() throws {
+        let canvas = testImage(color: .systemBlue, size: NSSize(width: 120, height: 90))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: canvas) { _ in }
+        let layerIndex = try #require(viewModel.document.selectedLayerIndex)
+        let originalFrame = CGRect(x: 18, y: 22, width: 24, height: 18)
+        viewModel.document.layers[layerIndex].image = testImage(color: .systemOrange, size: originalFrame.size)
+        viewModel.document.layers[layerIndex].frame = originalFrame
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        defer { pasteboard.clearContents() }
+
+        viewModel.copySelectedLayersToClipboard()
+        #expect(viewModel.canPasteClipboardImageInPlace)
+        viewModel.pasteClipboardInPlaceAsLayer()
+
+        let pastedLayer = try #require(viewModel.document.selectedLayer)
+        #expect(pastedLayer.frame == originalFrame)
+        #expect(viewModel.document.layers.count == 3)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.clipboardPastedInPlace"))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.clipboardPasteLayer"))
+    }
+
+    @MainActor
     @Test func imageEditorCommandCopyFallsBackToSelectedLayerWithoutSelection() throws {
         let canvas = testImage(color: .systemBlue, size: NSSize(width: 80, height: 60))
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: canvas) { _ in }

@@ -1872,6 +1872,8 @@
 "imageEditor.status.clipboardImageMissing" = "剪贴板里没有可粘贴的图片";
 "imageEditor.status.clipboardPastedToLayer" = "已从剪贴板粘贴为新图层";
 "imageEditor.status.clipboardPastedIntoSelection" = "已将剪贴板图像粘贴到选区并生成蒙版图层";
+"imageEditor.status.clipboardPastedInPlace" = "已将剪贴板图层原位粘贴";
+"imageEditor.status.clipboardLayerPositionMissing" = "该剪贴板图像没有像界图层位置信息";
 "imageEditor.status.clipboardCanvasCreated" = "已从剪贴板新建 %d × %d 画布";
 "imageEditor.status.selectionPixelsCleared" = "已清除当前选区内像素";
 "imageEditor.status.selectionPixelsClearedSelected" = "已清除 %d 个图层中的选区像素";
@@ -2330,6 +2332,7 @@
 "imageEditor.action.copyMergedClipboard" = "复制合并图像";
 "imageEditor.action.pasteClipboardLayer" = "粘贴为图层";
 "imageEditor.action.pasteClipboardIntoSelection" = "粘贴到选区";
+"imageEditor.action.pasteClipboardInPlaceLayer" = "原位粘贴";
 "imageEditor.action.freeTransform" = "自由变换";
 "imageEditor.action.clearSelectionPixels" = "清除选区像素";
 "imageEditor.action.saveSelection" = "保存选区";

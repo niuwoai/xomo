@@ -8,6 +8,55 @@
 import AppKit
 import Foundation
 
+enum XomoClipboardLayerPayload {
+    static let pasteboardType = NSPasteboard.PasteboardType("im.some.xomo.layer-frame")
+
+    private struct Frame: Codable {
+        let x: Double
+        let y: Double
+        let width: Double
+        let height: Double
+
+        init(_ rect: CGRect) {
+            x = rect.minX
+            y = rect.minY
+            width = rect.width
+            height = rect.height
+        }
+
+        var rect: CGRect {
+            CGRect(x: x, y: y, width: width, height: height)
+        }
+    }
+
+    static func data(for frame: CGRect) -> Data? {
+        let normalized = frame.standardized
+        guard normalized.width > 0,
+              normalized.height > 0,
+              normalized.minX.isFinite,
+              normalized.minY.isFinite,
+              normalized.width.isFinite,
+              normalized.height.isFinite
+        else { return nil }
+        return try? JSONEncoder().encode(Frame(normalized))
+    }
+
+    static func frame(from pasteboard: NSPasteboard) -> CGRect? {
+        guard let data = pasteboard.data(forType: pasteboardType),
+              let frame = try? JSONDecoder().decode(Frame.self, from: data)
+        else { return nil }
+        let normalized = frame.rect.standardized
+        guard normalized.width > 0,
+              normalized.height > 0,
+              normalized.minX.isFinite,
+              normalized.minY.isFinite,
+              normalized.width.isFinite,
+              normalized.height.isFinite
+        else { return nil }
+        return normalized
+    }
+}
+
 enum ClipboardImageWriter {
     static func copy(_ image: NSImage, preferredFileName: String, optimizeLosslessly: Bool = false) -> Bool {
         let pngData = image.qingtuPNGData().map { data in

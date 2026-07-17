@@ -1872,6 +1872,8 @@
 "imageEditor.status.clipboardImageMissing" = "There is no pasteable image on Clipboard";
 "imageEditor.status.clipboardPastedToLayer" = "Clipboard image pasted as a new layer";
 "imageEditor.status.clipboardPastedIntoSelection" = "Clipboard image pasted into the selection as a masked layer";
+"imageEditor.status.clipboardPastedInPlace" = "Clipboard layer pasted in place";
+"imageEditor.status.clipboardLayerPositionMissing" = "This clipboard image has no Xomo layer position";
 "imageEditor.status.clipboardCanvasCreated" = "Created a %d × %d canvas from Clipboard";
 "imageEditor.status.selectionPixelsCleared" = "Selection pixels cleared";
 "imageEditor.status.selectionPixelsClearedSelected" = "Selection pixels cleared on %d layers";
@@ -2330,6 +2332,7 @@
 "imageEditor.action.copyMergedClipboard" = "Copy Merged";
 "imageEditor.action.pasteClipboardLayer" = "Paste as Layer";
 "imageEditor.action.pasteClipboardIntoSelection" = "Paste Into Selection";
+"imageEditor.action.pasteClipboardInPlaceLayer" = "Paste in Place";
 "imageEditor.action.freeTransform" = "Free Transform";
 "imageEditor.action.clearSelectionPixels" = "Clear Pixels";
 "imageEditor.action.saveSelection" = "Save Selection";

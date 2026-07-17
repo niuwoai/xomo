@@ -18,6 +18,10 @@ extension ImageEditorViewModel {
         hasSelection && canPasteClipboardImage
     }
 
+    var canPasteClipboardImageInPlace: Bool {
+        canPasteClipboardImage && XomoClipboardLayerPayload.frame(from: .general) != nil
+    }
+
     func chooseImageLayerFile() {
         let panel = NSOpenPanel()
         panel.allowedContentTypes = [.png, .jpeg]
@@ -127,11 +131,31 @@ extension ImageEditorViewModel {
         )
     }
 
+    func pasteClipboardInPlaceAsLayer(from pasteboard: NSPasteboard = .general) {
+        guard let image = pasteboard.readImage() else {
+            statusText = L10n.text("imageEditor.status.clipboardImageMissing")
+            return
+        }
+        guard let frame = XomoClipboardLayerPayload.frame(from: pasteboard) else {
+            statusText = L10n.text("imageEditor.status.clipboardLayerPositionMissing")
+            return
+        }
+
+        importImageLayer(
+            image,
+            sourceName: L10n.text("source.clipboard"),
+            historyTitle: L10n.text("imageEditor.history.clipboardPasteLayer"),
+            importedStatus: L10n.text("imageEditor.status.clipboardPastedInPlace"),
+            frameOverride: frame
+        )
+    }
+
     func importImageLayer(
         _ image: NSImage,
         sourceName: String,
         historyTitle: String? = nil,
-        importedStatus: String? = nil
+        importedStatus: String? = nil,
+        frameOverride: CGRect? = nil
     ) {
         let normalized = image.normalizedBitmapImage()
         guard normalized.size.width > 0, normalized.size.height > 0 else {
@@ -145,7 +169,7 @@ extension ImageEditorViewModel {
             size: normalized.size
         )
         layer.image = normalized
-        layer.frame = fittedImportFrame(for: normalized.size)
+        layer.frame = frameOverride ?? fittedImportFrame(for: normalized.size)
         layer.opacity = 1
         layer.blendMode = .normal
         layer.groupID = nil

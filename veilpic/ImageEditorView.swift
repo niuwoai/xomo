@@ -1015,6 +1015,7 @@ struct ImageEditorView: View {
         case .copySelectedLayersClipboard: viewModel.copySelectedLayersToClipboard()
         case .pasteClipboardLayer: viewModel.pasteClipboardAsLayer()
         case .pasteClipboardIntoSelection: viewModel.pasteClipboardIntoSelectionAsLayer()
+        case .pasteClipboardInPlaceLayer: viewModel.pasteClipboardInPlaceAsLayer()
         case .toggleTransformControls: viewModel.toggleTransformControlsVisible()
         case .fillSelection: viewModel.fillSelection()
         case .fillSelectionBackground: viewModel.fillSelectionWithBackgroundColor()
@@ -8314,6 +8315,7 @@ enum ImageEditorKeyboardShortcutAction: Equatable {
     case copySelectedLayersClipboard
     case pasteClipboardLayer
     case pasteClipboardIntoSelection
+    case pasteClipboardInPlaceLayer
     case toggleTransformControls
     case fillSelection
     case fillSelectionBackground
@@ -8411,6 +8413,7 @@ enum ImageEditorKeyboardShortcutAction: Equatable {
         if key == "c", relevantFlags == [.command, .option, .shift] { return .copySelectedLayersClipboard }
         if key == "v", relevantFlags == [.command] { return .pasteClipboardLayer }
         if key == "v", relevantFlags == [.command, .shift] { return .pasteClipboardIntoSelection }
+        if key == "v", relevantFlags == [.command, .option, .shift] { return .pasteClipboardInPlaceLayer }
         if key == "t", relevantFlags == [.command] { return .toggleTransformControls }
         if key == "i", relevantFlags == [.command, .option] { return .resizeImage }
         if key == "c", relevantFlags == [.command, .option] { return .resizeCanvas }

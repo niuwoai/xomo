@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc225 - 2026-07-18
+
+### Added
+- Xomo 复制所选图层会携带裁切内容的画布边界；新增 `⌘⌥⇧V` 原位粘贴，外部 PNG/JPG 继续使用普通居中粘贴。
+
+### Verification
+- 剪贴板图层导入、原位粘贴和快捷键专项回归通过 13/13；报告：`test-reports/rc225-clipboard-paste/`、`test-reports/rc225-clipboard-copy/`、`test-reports/rc225-clipboard-command/`、`test-reports/rc225-history-shortcut/`。
+
 ## 2.12.0-rc224 - 2026-07-18
 
 ### Added

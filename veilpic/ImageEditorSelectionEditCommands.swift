@@ -480,6 +480,7 @@ extension ImageEditorViewModel {
         let image = renderedImage.nonTransparentPixelBounds()
             .flatMap { renderedImage.cropped(to: $0) }
             ?? renderedImage
+        let contentBounds = renderedImage.nonTransparentPixelBounds()
         let clipboardData = image.qingtuPNGData() ?? pngData
 
         let baseName = (document.sourceName as NSString).deletingPathExtension
@@ -489,6 +490,9 @@ extension ImageEditorViewModel {
             image: image,
             preferredFileName: preferredFileName
         )
+        if didCopy, let contentBounds, let payload = XomoClipboardLayerPayload.data(for: contentBounds) {
+            NSPasteboard.general.setData(payload, forType: XomoClipboardLayerPayload.pasteboardType)
+        }
         statusText = didCopy
             ? L10n.text("imageEditor.status.selectedLayersCopiedToClipboard")
             : L10n.text("imageEditor.status.selectedLayersCopyToClipboardFailed")

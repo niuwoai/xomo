@@ -209,6 +209,11 @@ extension ImageEditorView {
         }
         .keyboardShortcut("v", modifiers: [.command, .shift])
         .disabled(!viewModel.canPasteClipboardImageIntoSelection)
+        Button(L10n.text("imageEditor.action.pasteClipboardInPlaceLayer")) {
+            viewModel.pasteClipboardInPlaceAsLayer()
+        }
+        .keyboardShortcut("v", modifiers: [.command, .option, .shift])
+        .disabled(!viewModel.canPasteClipboardImageInPlace)
         Button(L10n.text("imageEditor.action.freeTransform")) {
             viewModel.toggleTransformControlsVisible()
         }

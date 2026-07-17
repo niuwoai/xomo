@@ -1872,6 +1872,8 @@
 "imageEditor.status.clipboardImageMissing" = "クリップボードにペースト可能な画像がありません";
 "imageEditor.status.clipboardPastedToLayer" = "クリップボードの画像を新規レイヤーとしてペーストしました";
 "imageEditor.status.clipboardPastedIntoSelection" = "クリップボード画像を選択範囲内へペーストし、マスク付きレイヤーを作成しました";
+"imageEditor.status.clipboardPastedInPlace" = "クリップボードのレイヤーを同じ位置にペーストしました";
+"imageEditor.status.clipboardLayerPositionMissing" = "このクリップボード画像にはXomoのレイヤー位置情報がありません";
 "imageEditor.status.clipboardCanvasCreated" = "クリップボードから %d × %d のキャンバスを作成しました";
 "imageEditor.status.selectionPixelsCleared" = "現在の選択範囲内のピクセルを消去しました";
 "imageEditor.status.selectionPixelsClearedSelected" = "%d個のレイヤーで選択範囲内のピクセルを消去しました";
@@ -2330,6 +2332,7 @@
 "imageEditor.action.copyMergedClipboard" = "結合部分をコピー";
 "imageEditor.action.pasteClipboardLayer" = "レイヤーとしてペースト";
 "imageEditor.action.pasteClipboardIntoSelection" = "選択範囲内へペースト";
+"imageEditor.action.pasteClipboardInPlaceLayer" = "同じ位置にペースト";
 "imageEditor.action.freeTransform" = "自由変形";
 "imageEditor.action.clearSelectionPixels" = "選択ピクセルを消去";
 "imageEditor.action.saveSelection" = "選択範囲を保存";
