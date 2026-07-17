@@ -3039,9 +3039,9 @@ private extension XomoAutomationRegistry {
             "exportScale": XomoAutomationSchema.number(description: "Export scale from 1 to 3"),
             "background": XomoAutomationSchema.string(description: "Canvas background", values: XomoCanvasBackground.allCases.map(\.rawValue))
         ]),
-        tool("xomo.project.export", "Serialize the complete layered project and return base64 qpicproject data."),
-        tool("xomo.project.import", "Replace the active document from base64 qpicproject data.", [
-            "base64": XomoAutomationSchema.string(description: "Base64 qpicproject data")
+        tool("xomo.project.export", "Serialize the complete layered project and return base64 xomoproject data."),
+        tool("xomo.project.import", "Replace the active document from base64 xomoproject data (legacy qpicproject payloads remain accepted).", [
+            "base64": XomoAutomationSchema.string(description: "Base64 xomoproject data")
         ], required: ["base64"]),
         tool("xomo.import.image", "Import a base64 encoded image as an editable layer.", [
             "base64": XomoAutomationSchema.string(description: "Base64 image data"),

@@ -1328,6 +1328,7 @@ struct XomoAutomationTests {
             Issue.record("Expected encoded project")
             return
         }
+        #expect(project["filename"]?.stringValue?.hasSuffix(".xomoproject") == true)
 
         let destination = makeViewModel()
         registry.register(destination)

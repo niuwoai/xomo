@@ -42,7 +42,10 @@ enum ImageEditorProjectDocumentError: LocalizedError {
 }
 
 struct ImageEditorProjectDocument: Codable {
-    static let fileExtension = "qpicproject"
+    /// The Xomo-native project extension. Keep the legacy QPic extension readable
+    /// so existing documents remain safe to open after the product rename.
+    static let fileExtension = "xomoproject"
+    static let legacyFileExtension = "qpicproject"
     static let formatVersion = 7
 
     var formatVersion: Int
@@ -1040,7 +1043,11 @@ struct ImageEditorProjectColor: Codable, Equatable {
 @MainActor
 extension ImageEditorViewModel {
     static var projectContentType: UTType {
-        UTType(filenameExtension: ImageEditorProjectDocument.fileExtension) ?? .json
+        UTType(exportedAs: "im.some.xomo.project")
+    }
+
+    static var legacyProjectContentType: UTType {
+        UTType(filenameExtension: ImageEditorProjectDocument.legacyFileExtension) ?? .json
     }
 
     func projectData() throws -> Data {
@@ -1104,7 +1111,12 @@ extension ImageEditorViewModel {
 
     func openProjectDocument() {
         let panel = NSOpenPanel()
-        panel.allowedContentTypes = [Self.projectContentType, .json, ImageEditorPSDCodec.contentType]
+        panel.allowedContentTypes = [
+            Self.projectContentType,
+            Self.legacyProjectContentType,
+            .json,
+            ImageEditorPSDCodec.contentType
+        ]
         panel.allowsMultipleSelection = false
         panel.canChooseDirectories = false
         panel.canChooseFiles = true

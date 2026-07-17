@@ -1,0 +1,100 @@
+{
+  "version": "2.12.0-rc201",
+  "generated_at": "2026-07-17 14:22:05 +0800",
+  "total": 9,
+  "passed": 9,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorProjectDocumentTests",
+      "method": "adjustmentSettingsDecodeLegacyPayloadWithMissingNewFields",
+      "identifier": "veilpicTests/ImageEditorProjectDocumentTests/adjustmentSettingsDecodeLegacyPayloadWithMissingNewFields",
+      "file": "ImageEditorProjectDocumentTests.swift",
+      "passed": true,
+      "duration": 8.681,
+      "issues": [],
+      "log": "ImageEditorProjectDocumentTests.adjustmentSettingsDecodeLegacyPayloadWithMissingNewFields.log"
+    },
+    {
+      "suite": "ImageEditorProjectDocumentTests",
+      "method": "gradientFillLayerRendersAndRoundTripsThroughProjectDocument",
+      "identifier": "veilpicTests/ImageEditorProjectDocumentTests/gradientFillLayerRendersAndRoundTripsThroughProjectDocument",
+      "file": "ImageEditorProjectDocumentTests.swift",
+      "passed": true,
+      "duration": 10.024,
+      "issues": [],
+      "log": "ImageEditorProjectDocumentTests.gradientFillLayerRendersAndRoundTripsThroughProjectDocument.log"
+    },
+    {
+      "suite": "ImageEditorProjectDocumentTests",
+      "method": "layerGroupPassThroughKeepsChildBlendingAgainstBackdrop",
+      "identifier": "veilpicTests/ImageEditorProjectDocumentTests/layerGroupPassThroughKeepsChildBlendingAgainstBackdrop",
+      "file": "ImageEditorProjectDocumentTests.swift",
+      "passed": true,
+      "duration": 22.492,
+      "issues": [],
+      "log": "ImageEditorProjectDocumentTests.layerGroupPassThroughKeepsChildBlendingAgainstBackdrop.log"
+    },
+    {
+      "suite": "ImageEditorProjectDocumentTests",
+      "method": "projectDocumentMigratesLegacyNormalGroupsToPassThrough",
+      "identifier": "veilpicTests/ImageEditorProjectDocumentTests/projectDocumentMigratesLegacyNormalGroupsToPassThrough",
+      "file": "ImageEditorProjectDocumentTests.swift",
+      "passed": true,
+      "duration": 5.797,
+      "issues": [],
+      "log": "ImageEditorProjectDocumentTests.projectDocumentMigratesLegacyNormalGroupsToPassThrough.log"
+    },
+    {
+      "suite": "ImageEditorProjectDocumentTests",
+      "method": "projectDocumentRestoresLegacySmartObjectLayerImageData",
+      "identifier": "veilpicTests/ImageEditorProjectDocumentTests/projectDocumentRestoresLegacySmartObjectLayerImageData",
+      "file": "ImageEditorProjectDocumentTests.swift",
+      "passed": true,
+      "duration": 17.866,
+      "issues": [],
+      "log": "ImageEditorProjectDocumentTests.projectDocumentRestoresLegacySmartObjectLayerImageData.log"
+    },
+    {
+      "suite": "ImageEditorProjectDocumentTests",
+      "method": "projectDocumentRoundTripsEditableLayerState",
+      "identifier": "veilpicTests/ImageEditorProjectDocumentTests/projectDocumentRoundTripsEditableLayerState",
+      "file": "ImageEditorProjectDocumentTests.swift",
+      "passed": true,
+      "duration": 10.247,
+      "issues": [],
+      "log": "ImageEditorProjectDocumentTests.projectDocumentRoundTripsEditableLayerState.log"
+    },
+    {
+      "suite": "ImageEditorProjectDocumentTests",
+      "method": "projectDocumentStoresSmartObjectSourceOnceForSharedInstances",
+      "identifier": "veilpicTests/ImageEditorProjectDocumentTests/projectDocumentStoresSmartObjectSourceOnceForSharedInstances",
+      "file": "ImageEditorProjectDocumentTests.swift",
+      "passed": true,
+      "duration": 19.043,
+      "issues": [],
+      "log": "ImageEditorProjectDocumentTests.projectDocumentStoresSmartObjectSourceOnceForSharedInstances.log"
+    },
+    {
+      "suite": "ImageEditorProjectDocumentTests",
+      "method": "projectFormatUsesXomoExtensionAndKeepsLegacyQPicReadable",
+      "identifier": "veilpicTests/ImageEditorProjectDocumentTests/projectFormatUsesXomoExtensionAndKeepsLegacyQPicReadable",
+      "file": "ImageEditorProjectDocumentTests.swift",
+      "passed": true,
+      "duration": 12.734,
+      "issues": [],
+      "log": "ImageEditorProjectDocumentTests.projectFormatUsesXomoExtensionAndKeepsLegacyQPicReadable.log"
+    },
+    {
+      "suite": "ImageEditorProjectDocumentTests",
+      "method": "textFontFamilyRoundTripsAndLegacyPayloadUsesSystemFont",
+      "identifier": "veilpicTests/ImageEditorProjectDocumentTests/textFontFamilyRoundTripsAndLegacyPayloadUsesSystemFont",
+      "file": "ImageEditorProjectDocumentTests.swift",
+      "passed": true,
+      "duration": 10.993,
+      "issues": [],
+      "log": "ImageEditorProjectDocumentTests.textFontFamilyRoundTripsAndLegacyPayloadUsesSystemFont.log"
+    }
+  ]
+}

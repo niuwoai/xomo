@@ -11,6 +11,23 @@
 		<dict>
 			<key>CFBundleTypeExtensions</key>
 			<array>
+				<string>xomoproject</string>
+				<string>qpicproject</string>
+			</array>
+			<key>CFBundleTypeName</key>
+			<string>Xomo Project</string>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>LSHandlerRank</key>
+			<string>Owner</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>im.some.xomo.project</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeExtensions</key>
+			<array>
 				<string>psd</string>
 			</array>
 			<key>CFBundleTypeName</key>
@@ -23,6 +40,29 @@
 			<array>
 				<string>com.adobe.photoshop-image</string>
 			</array>
+		</dict>
+	</array>
+	<key>UTExportedTypeDeclarations</key>
+	<array>
+		<dict>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.json</string>
+			</array>
+			<key>UTTypeDescription</key>
+			<string>Xomo layered project</string>
+			<key>UTTypeIdentifier</key>
+			<string>im.some.xomo.project</string>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>xomoproject</string>
+					<string>qpicproject</string>
+				</array>
+				<key>public.mime-type</key>
+				<string>application/x-xomo-project</string>
+			</dict>
 		</dict>
 	</array>
 	<key>CFBundleExecutable</key>

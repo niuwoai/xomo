@@ -7,10 +7,18 @@
 
 import AppKit
 import Testing
+import UniformTypeIdentifiers
 @testable import musepic
 
 @MainActor
 struct ImageEditorProjectDocumentTests {
+    @Test func projectFormatUsesXomoExtensionAndKeepsLegacyQPicReadable() {
+        #expect(ImageEditorProjectDocument.fileExtension == "xomoproject")
+        #expect(ImageEditorProjectDocument.legacyFileExtension == "qpicproject")
+        #expect(ImageEditorViewModel.projectContentType.identifier == "im.some.xomo.project")
+        #expect(ImageEditorViewModel.legacyProjectContentType.identifier != "public.json")
+    }
+
     @Test func textFontFamilyRoundTripsAndLegacyPayloadUsesSystemFont() throws {
         let content = ImageEditorTextContent(
             text: "Typography",

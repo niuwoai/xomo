@@ -1,6 +1,6 @@
 # Xomo MCP 与 CLI
 
-> 当前版本：v2.12.0-rc200
+> 当前版本：v2.12.0-rc201
 
 ## 架构
 
@@ -56,8 +56,8 @@ xomo call xomo.figma.bindings '{"action":"list"}'
 xomo call xomo.figma.bindings '{"action":"copy"}'
 xomo call xomo.view.pan '{"action":"center","x":480,"y":320}'
 xomo export ~/Desktop/xomo.png --format png --scope composited --scale 2
-xomo project export ~/Desktop/design.qpicproject
-xomo project import ~/Desktop/design.qpicproject
+xomo project export ~/Desktop/design.xomoproject
+xomo project import ~/Desktop/design.xomoproject
 xomo import-image ~/Desktop/reference.png --into-selection
 ```
 
@@ -95,7 +95,7 @@ MCP 服务器实现 `initialize`、`ping`、`tools/list` 和 `tools/call`。当 
 - 共 122 个 MCP 工具；同类细粒度操作通过带严格枚举参数的 action 工具组织。
 - App 与文档状态
 - 预设或自定义画布创建、可编辑文字/形状检查与更新（含纯色/最多 16 个有序色标的线性渐变填充、独立描边、不透明度、线宽、统一/独立四角及超椭圆圆角平滑）、点文字 / 固定宽高段落文字创建和转换、文字框所需高度、溢出诊断与适合内容 / 仅扩高操作，以及详细调整、滤镜和图层样式参数
-- 完整 `qpicproject` 项目导入导出，以及 PNG/JPEG/WebP 等图像图层导入
+- 完整 `xomoproject` 项目导入导出；旧 `qpicproject` 文件仍可打开；以及 PNG/JPEG/WebP 等图像图层导入
 - 本地 PSD 兼容性检查：返回尺寸、图层/组/蒙版、压缩方式和需要注意的降级项，不修改当前文档
 - 本地 PSD 异步打开：`xomo.psd.open` 复用 UI 的后台读取、解码、加载提示、兼容性降级与打开后的 History 入口
 - 当前文档 PSD 保存：`xomo.psd.save` 写出分层 PSD，并在返回前重新读取兼容性报告；不改变当前文档或 History

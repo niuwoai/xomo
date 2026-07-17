@@ -1,7 +1,8 @@
 # Xomo 经典 Photoshop 能力路线图
 
-> 最后更新：2026-07-17 ｜ 当前版本：v2.12.0-rc200 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座
+> 最后更新：2026-07-17 ｜ 当前版本：v2.12.0-rc201 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座
 
+- `v2.12.0-rc201`：项目文件更名为 `.xomoproject`，旧 `.qpicproject` 保持可打开；MCP/CLI 导出示例和项目格式说明同步更新，项目格式专项 9/9、Finder/UTI 4/4、自动化 51/51 与 CLI 2/2 通过，继续保持 Xomo 更名后的可回溯兼容。
 - `v2.12.0-rc200`：完成第 200 个小版本质量门禁：全量隔离测试 984/984（jobs=4）、CLI 2/2、arm64/x86_64 Release App/CLI、macOS 13.0 下限、Bundle ID `im.some.xomo`、签名和安装版启动/组件库插入冒烟均通过；报告见 `test-reports/rc200-full-suite/`。
 - `v2.12.0-rc199`：将独立生成的 `unsupported-features.psd` 外部夹具接入 `xomo.psd.inspect` MCP/CLI 回归，确认文字、智能对象和未知混合模式等降级项能在自动化响应中被准确报告。
 - `v2.12.0-rc198`：新增 `xomo.psd.save` MCP/CLI 工具，可将当前分层文档写出 PSD，并在返回前验证尺寸、图层数量和兼容性报告；保存不改变当前文档或 History。

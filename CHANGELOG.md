@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc201 - 2026-07-17
+
+### Changed
+- 项目文件品牌收敛为 `.xomoproject`：新保存和自动化导出使用 Xomo 扩展名，旧 `.qpicproject` 文件继续可打开，避免产品更名造成已有项目失效。
+- 版本记录、MCP/CLI 示例和组件库文档同步到 rc201。
+
+### Verification
+- 项目格式专项 9/9、Finder/UTI 注册专项 4/4、自动化回归 51/51 通过；rc201 Debug 测试产品构建与 CLI 2/2 通过。
+
 ## 2.12.0-rc200 - 2026-07-17
 
 ### Changed
