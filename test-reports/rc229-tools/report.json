@@ -1,0 +1,119 @@
+{
+  "generated_at": "2026-07-18 02:28:46 +0800",
+  "total": 11,
+  "passed": 11,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorToolCoordinateTests",
+      "method": "blurSharpenSmudgeAndHealingStayOnTheTopStroke",
+      "identifier": "veilpicTests/ImageEditorToolCoordinateTests/blurSharpenSmudgeAndHealingStayOnTheTopStroke",
+      "file": "ImageEditorToolCoordinateTests.swift",
+      "passed": true,
+      "duration": 3.037,
+      "issues": [],
+      "log": "ImageEditorToolCoordinateTests.blurSharpenSmudgeAndHealingStayOnTheTopStroke.log"
+    },
+    {
+      "suite": "ImageEditorToolCoordinateTests",
+      "method": "brushAndEraserUseTopLeftCanvasCoordinates",
+      "identifier": "veilpicTests/ImageEditorToolCoordinateTests/brushAndEraserUseTopLeftCanvasCoordinates",
+      "file": "ImageEditorToolCoordinateTests.swift",
+      "passed": true,
+      "duration": 3.055,
+      "issues": [],
+      "log": "ImageEditorToolCoordinateTests.brushAndEraserUseTopLeftCanvasCoordinates.log"
+    },
+    {
+      "suite": "ImageEditorToolCoordinateTests",
+      "method": "cloneStampUsesTopLeftSourceAndDestinationCoordinates",
+      "identifier": "veilpicTests/ImageEditorToolCoordinateTests/cloneStampUsesTopLeftSourceAndDestinationCoordinates",
+      "file": "ImageEditorToolCoordinateTests.swift",
+      "passed": true,
+      "duration": 3.044,
+      "issues": [],
+      "log": "ImageEditorToolCoordinateTests.cloneStampUsesTopLeftSourceAndDestinationCoordinates.log"
+    },
+    {
+      "suite": "ImageEditorToolCoordinateTests",
+      "method": "everyToolIsIncludedInTheCoordinateAudit",
+      "identifier": "veilpicTests/ImageEditorToolCoordinateTests/everyToolIsIncludedInTheCoordinateAudit",
+      "file": "ImageEditorToolCoordinateTests.swift",
+      "passed": true,
+      "duration": 3.057,
+      "issues": [],
+      "log": "ImageEditorToolCoordinateTests.everyToolIsIncludedInTheCoordinateAudit.log"
+    },
+    {
+      "suite": "ImageEditorToolCoordinateTests",
+      "method": "handAndZoomPreserveThePointerAnchorDirection",
+      "identifier": "veilpicTests/ImageEditorToolCoordinateTests/handAndZoomPreserveThePointerAnchorDirection",
+      "file": "ImageEditorToolCoordinateTests.swift",
+      "passed": true,
+      "duration": 3.079,
+      "issues": [],
+      "log": "ImageEditorToolCoordinateTests.handAndZoomPreserveThePointerAnchorDirection.log"
+    },
+    {
+      "suite": "ImageEditorToolCoordinateTests",
+      "method": "moveCropTextAndPenKeepTopLeftCanvasGeometry",
+      "identifier": "veilpicTests/ImageEditorToolCoordinateTests/moveCropTextAndPenKeepTopLeftCanvasGeometry",
+      "file": "ImageEditorToolCoordinateTests.swift",
+      "passed": true,
+      "duration": 3.077,
+      "issues": [],
+      "log": "ImageEditorToolCoordinateTests.moveCropTextAndPenKeepTopLeftCanvasGeometry.log"
+    },
+    {
+      "suite": "ImageEditorToolCoordinateTests",
+      "method": "pixelPointToolsUseTopLeftRows",
+      "identifier": "veilpicTests/ImageEditorToolCoordinateTests/pixelPointToolsUseTopLeftRows",
+      "file": "ImageEditorToolCoordinateTests.swift",
+      "passed": true,
+      "duration": 3.054,
+      "issues": [],
+      "log": "ImageEditorToolCoordinateTests.pixelPointToolsUseTopLeftRows.log"
+    },
+    {
+      "suite": "ImageEditorToolCoordinateTests",
+      "method": "quickSelectionAndPatchUseTopLeftRegions",
+      "identifier": "veilpicTests/ImageEditorToolCoordinateTests/quickSelectionAndPatchUseTopLeftRegions",
+      "file": "ImageEditorToolCoordinateTests.swift",
+      "passed": true,
+      "duration": 3.035,
+      "issues": [],
+      "log": "ImageEditorToolCoordinateTests.quickSelectionAndPatchUseTopLeftRegions.log"
+    },
+    {
+      "suite": "ImageEditorToolCoordinateTests",
+      "method": "redEyeAndGradientUseTopLeftDirection",
+      "identifier": "veilpicTests/ImageEditorToolCoordinateTests/redEyeAndGradientUseTopLeftDirection",
+      "file": "ImageEditorToolCoordinateTests.swift",
+      "passed": true,
+      "duration": 3.038,
+      "issues": [],
+      "log": "ImageEditorToolCoordinateTests.redEyeAndGradientUseTopLeftDirection.log"
+    },
+    {
+      "suite": "ImageEditorToolCoordinateTests",
+      "method": "shapeLayersStayAtTheirTopLeftCanvasFrame",
+      "identifier": "veilpicTests/ImageEditorToolCoordinateTests/shapeLayersStayAtTheirTopLeftCanvasFrame",
+      "file": "ImageEditorToolCoordinateTests.swift",
+      "passed": true,
+      "duration": 3.078,
+      "issues": [],
+      "log": "ImageEditorToolCoordinateTests.shapeLayersStayAtTheirTopLeftCanvasFrame.log"
+    },
+    {
+      "suite": "ImageEditorToolCoordinateTests",
+      "method": "toneAndSpongeBrushesUseTopLeftCanvasCoordinates",
+      "identifier": "veilpicTests/ImageEditorToolCoordinateTests/toneAndSpongeBrushesUseTopLeftCanvasCoordinates",
+      "file": "ImageEditorToolCoordinateTests.swift",
+      "passed": true,
+      "duration": 3.015,
+      "issues": [],
+      "log": "ImageEditorToolCoordinateTests.toneAndSpongeBrushesUseTopLeftCanvasCoordinates.log"
+    }
+  ]
+}

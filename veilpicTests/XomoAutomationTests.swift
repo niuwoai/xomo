@@ -64,6 +64,14 @@ struct XomoAutomationTests {
             return
         }
         #expect(selectionModifyTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["amount"]?.objectValue?["type"] == .string("number"))
+        guard let magicTool = tools.compactMap({ tool -> [String: XomoJSONValue]? in
+            guard case .object(let value) = tool else { return nil }
+            return value
+        }).first(where: { $0["name"] == .string("xomo.selection.magic") }) else {
+            Issue.record("Expected xomo.selection.magic tool schema")
+            return
+        }
+        #expect(magicTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["tolerance"]?.objectValue?["type"] == .string("number"))
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.layer_comp.action")
@@ -212,6 +220,47 @@ struct XomoAutomationTests {
         #expect(maskAlpha(mask, x: 15, y: 13) == 0)
         #expect(maskAlpha(mask, x: 22, y: 13) == 255)
         #expect(viewModel.statusText == L10n.format("imageEditor.status.selectionBordered", 2))
+    }
+
+    @Test func registryAppliesExplicitMagicWandTolerance() throws {
+        let viewModel = makeViewModel()
+        let layerIndex = try #require(viewModel.document.selectedLayerIndex)
+        let canvasSize = CGSize(width: 20, height: 10)
+        let image = try #require(NSImage.rendered(size: canvasSize) { _ in
+            NSColor(calibratedRed: 1, green: 0, blue: 0, alpha: 1).setFill()
+            CGRect(x: 0, y: 0, width: 10, height: 10).fill()
+            NSColor(calibratedRed: 0.8, green: 0, blue: 0, alpha: 1).setFill()
+            CGRect(x: 10, y: 0, width: 10, height: 10).fill()
+        })
+        viewModel.document.layers[layerIndex].image = image
+        viewModel.document.layers[layerIndex].frame = CGRect(origin: .zero, size: canvasSize)
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let narrowResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.selection.magic",
+            arguments: [
+                "x": .number(3),
+                "y": .number(5),
+                "tolerance": .number(0.05)
+            ]
+        ))
+        #expect(narrowResponse.ok)
+        #expect(try #require(viewModel.document.selection).bounds.width == 10)
+
+        viewModel.clearSelection()
+        let broadResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.selection.magic",
+            arguments: [
+                "x": .number(3),
+                "y": .number(5),
+                "tolerance": .number(0.25)
+            ]
+        ))
+        #expect(broadResponse.ok)
+        #expect(try #require(viewModel.document.selection).bounds.width == 20)
     }
 
     @Test func registryQueuesPSDOpenThroughTheSharedCoordinator() throws {

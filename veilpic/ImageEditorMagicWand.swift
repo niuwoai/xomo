@@ -10,11 +10,12 @@ import Foundation
 
 @MainActor
 extension ImageEditorViewModel {
-    func magicSelection(at point: CGPoint) -> ImageEditorSelection? {
+    func magicSelection(at point: CGPoint, tolerance: CGFloat? = nil) -> ImageEditorSelection? {
+        let effectiveTolerance = max(0, min(1, tolerance ?? self.tolerance))
         guard let selection = document.compositedImage.contiguousMagicSelection(
             at: point,
             canvasSize: document.canvasSize,
-            threshold: 0.22
+            threshold: effectiveTolerance
         ) else {
             return fallbackMagicSelection(at: point)
         }

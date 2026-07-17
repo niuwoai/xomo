@@ -217,9 +217,15 @@ final class XomoAutomationRegistry {
         case "xomo.selection.lasso":
             viewModel.createLassoSelection(points: try requiredPoints("points", in: arguments))
         case "xomo.selection.magic":
-            viewModel.createMagicSelection(at: try requiredPoint(arguments))
+            viewModel.createMagicSelection(
+                at: try requiredPoint(arguments),
+                tolerance: selectionTolerance(arguments["tolerance"])
+            )
         case "xomo.selection.quick":
-            viewModel.createQuickSelection(points: try requiredPoints("points", in: arguments))
+            viewModel.createQuickSelection(
+                points: try requiredPoints("points", in: arguments),
+                tolerance: selectionTolerance(arguments["tolerance"])
+            )
         case "xomo.selection.clear":
             viewModel.clearSelection()
         case "xomo.selection.invert":
@@ -2204,6 +2210,12 @@ final class XomoAutomationRegistry {
         return Int(number.rounded())
     }
 
+    private func selectionTolerance(_ value: XomoJSONValue?) -> CGFloat? {
+        guard let number = value?.doubleValue else { return nil }
+        guard number.isFinite else { return nil }
+        return CGFloat(number)
+    }
+
     private func quickMaskAction(
         _ arguments: [String: XomoJSONValue],
         viewModel: ImageEditorViewModel
@@ -3175,8 +3187,8 @@ private extension XomoAutomationRegistry {
         tool("xomo.selection.rectangle", "Create a rectangular canvas selection.", rectProperties, required: ["x", "y", "width", "height"]),
         tool("xomo.selection.ellipse", "Create an elliptical canvas selection.", rectProperties, required: ["x", "y", "width", "height"]),
         tool("xomo.selection.lasso", "Create a polygonal lasso selection from canvas points.", ["points": pointsSchema], required: ["points"]),
-        tool("xomo.selection.magic", "Create a contiguous magic-wand selection at a canvas point.", pointProperties, required: ["x", "y"]),
-        tool("xomo.selection.quick", "Create a quick selection from sampled canvas points.", ["points": pointsSchema], required: ["points"]),
+        tool("xomo.selection.magic", "Create a contiguous magic-wand selection at a canvas point.", magicPointProperties, required: ["x", "y"]),
+        tool("xomo.selection.quick", "Create a quick selection from sampled canvas points.", ["points": pointsSchema, "tolerance": XomoAutomationSchema.number(description: "Color-distance tolerance from 0 to 1")], required: ["points"]),
         tool("xomo.selection.clear", "Deselect the current selection."),
         tool("xomo.selection.invert", "Invert the current selection."),
         tool("xomo.selection.feather", "Feather the current selection.", ["radius": XomoAutomationSchema.number(description: "Feather radius in pixels")]),
@@ -3471,6 +3483,9 @@ private extension XomoAutomationRegistry {
         "y": XomoAutomationSchema.number(description: "Canvas y coordinate"),
         "pressure": XomoAutomationSchema.number(description: "Optional normalized pen pressure from 0 to 1")
     ]
+    static let magicPointProperties = pointProperties.merging([
+        "tolerance": XomoAutomationSchema.number(description: "Color-distance tolerance from 0 to 1")
+    ]) { current, _ in current }
     static let pointsSchema: XomoJSONValue = .object([
         "type": .string("array"),
         "items": .object([

@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc229 - 2026-07-18
+
+### Fixed
+- 魔棒和快速选择现在真正使用当前容差；MCP/CLI 可为魔棒和快速选择显式传入 `tolerance`，不再固定使用 `0.22`。
+
+### Verification
+- Xomo 自动化回归通过 55/55，选区边缘回归 8/8，工具坐标回归 11/11，工具冒烟回归 6/6，CLI schema 回归 2/2；报告：`test-reports/rc229-automation-final/`、`test-reports/rc229-selection/`、`test-reports/rc229-tools/`、`test-reports/rc229-smoke/`。
+
 ## 2.12.0-rc228 - 2026-07-18
 
 ### Fixed

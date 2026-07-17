@@ -1,0 +1,89 @@
+{
+  "generated_at": "2026-07-18 02:27:57 +0800",
+  "total": 8,
+  "passed": 8,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorSelectionEdgeTests",
+      "method": "cachedEdgesRemainStableWhileZoomingAndPanning",
+      "identifier": "veilpicTests/ImageEditorSelectionEdgeTests/cachedEdgesRemainStableWhileZoomingAndPanning",
+      "file": "ImageEditorSelectionEdgeTests.swift",
+      "passed": true,
+      "duration": 3.093,
+      "issues": [],
+      "log": "ImageEditorSelectionEdgeTests.cachedEdgesRemainStableWhileZoomingAndPanning.log"
+    },
+    {
+      "suite": "ImageEditorSelectionEdgeTests",
+      "method": "diagonallyTouchingIslandsKeepSeparateClosedContours",
+      "identifier": "veilpicTests/ImageEditorSelectionEdgeTests/diagonallyTouchingIslandsKeepSeparateClosedContours",
+      "file": "ImageEditorSelectionEdgeTests.swift",
+      "passed": true,
+      "duration": 3.053,
+      "issues": [],
+      "log": "ImageEditorSelectionEdgeTests.diagonallyTouchingIslandsKeepSeparateClosedContours.log"
+    },
+    {
+      "suite": "ImageEditorSelectionEdgeTests",
+      "method": "everyStageASelectionSourceCanRoundTripThroughQuickMask",
+      "identifier": "veilpicTests/ImageEditorSelectionEdgeTests/everyStageASelectionSourceCanRoundTripThroughQuickMask",
+      "file": "ImageEditorSelectionEdgeTests.swift",
+      "passed": true,
+      "duration": 3.014,
+      "issues": [],
+      "log": "ImageEditorSelectionEdgeTests.everyStageASelectionSourceCanRoundTripThroughQuickMask.log"
+    },
+    {
+      "suite": "ImageEditorSelectionEdgeTests",
+      "method": "invertedRasterEdgesIncludeCanvasAndMaskBoundaries",
+      "identifier": "veilpicTests/ImageEditorSelectionEdgeTests/invertedRasterEdgesIncludeCanvasAndMaskBoundaries",
+      "file": "ImageEditorSelectionEdgeTests.swift",
+      "passed": true,
+      "duration": 3.018,
+      "issues": [],
+      "log": "ImageEditorSelectionEdgeTests.invertedRasterEdgesIncludeCanvasAndMaskBoundaries.log"
+    },
+    {
+      "suite": "ImageEditorSelectionEdgeTests",
+      "method": "invertedVectorEdgesIncludeCanvasAndSelectionBoundaries",
+      "identifier": "veilpicTests/ImageEditorSelectionEdgeTests/invertedVectorEdgesIncludeCanvasAndSelectionBoundaries",
+      "file": "ImageEditorSelectionEdgeTests.swift",
+      "passed": true,
+      "duration": 3.042,
+      "issues": [],
+      "log": "ImageEditorSelectionEdgeTests.invertedVectorEdgesIncludeCanvasAndSelectionBoundaries.log"
+    },
+    {
+      "suite": "ImageEditorSelectionEdgeTests",
+      "method": "outsideDragsClampToCanvasAndKeepFixedAspectRatio",
+      "identifier": "veilpicTests/ImageEditorSelectionEdgeTests/outsideDragsClampToCanvasAndKeepFixedAspectRatio",
+      "file": "ImageEditorSelectionEdgeTests.swift",
+      "passed": true,
+      "duration": 3.028,
+      "issues": [],
+      "log": "ImageEditorSelectionEdgeTests.outsideDragsClampToCanvasAndKeepFixedAspectRatio.log"
+    },
+    {
+      "suite": "ImageEditorSelectionEdgeTests",
+      "method": "rasterEdgesFollowConcavityInsteadOfSelectionBounds",
+      "identifier": "veilpicTests/ImageEditorSelectionEdgeTests/rasterEdgesFollowConcavityInsteadOfSelectionBounds",
+      "file": "ImageEditorSelectionEdgeTests.swift",
+      "passed": true,
+      "duration": 3.065,
+      "issues": [],
+      "log": "ImageEditorSelectionEdgeTests.rasterEdgesFollowConcavityInsteadOfSelectionBounds.log"
+    },
+    {
+      "suite": "ImageEditorSelectionEdgeTests",
+      "method": "rasterEdgesPreserveInteriorHoles",
+      "identifier": "veilpicTests/ImageEditorSelectionEdgeTests/rasterEdgesPreserveInteriorHoles",
+      "file": "ImageEditorSelectionEdgeTests.swift",
+      "passed": true,
+      "duration": 3.086,
+      "issues": [],
+      "log": "ImageEditorSelectionEdgeTests.rasterEdgesPreserveInteriorHoles.log"
+    }
+  ]
+}

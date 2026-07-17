@@ -1,0 +1,69 @@
+{
+  "generated_at": "2026-07-18 02:29:32 +0800",
+  "total": 6,
+  "passed": 6,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorToolSmokeTests",
+      "method": "eyedropperAndColorSamplerReadCanvasPixels",
+      "identifier": "veilpicTests/ImageEditorToolSmokeTests/eyedropperAndColorSamplerReadCanvasPixels",
+      "file": "ImageEditorToolSmokeTests.swift",
+      "passed": true,
+      "duration": 3.595,
+      "issues": [],
+      "log": "ImageEditorToolSmokeTests.eyedropperAndColorSamplerReadCanvasPixels.log"
+    },
+    {
+      "suite": "ImageEditorToolSmokeTests",
+      "method": "lassoCreatesAUsablePolygonSelection",
+      "identifier": "veilpicTests/ImageEditorToolSmokeTests/lassoCreatesAUsablePolygonSelection",
+      "file": "ImageEditorToolSmokeTests.swift",
+      "passed": true,
+      "duration": 3.407,
+      "issues": [],
+      "log": "ImageEditorToolSmokeTests.lassoCreatesAUsablePolygonSelection.log"
+    },
+    {
+      "suite": "ImageEditorToolSmokeTests",
+      "method": "quickSelectionCombinesSampledColorRegions",
+      "identifier": "veilpicTests/ImageEditorToolSmokeTests/quickSelectionCombinesSampledColorRegions",
+      "file": "ImageEditorToolSmokeTests.swift",
+      "passed": true,
+      "duration": 3.211,
+      "issues": [],
+      "log": "ImageEditorToolSmokeTests.quickSelectionCombinesSampledColorRegions.log"
+    },
+    {
+      "suite": "ImageEditorToolSmokeTests",
+      "method": "redEyeToolReducesExcessRedAtTheClickedPupil",
+      "identifier": "veilpicTests/ImageEditorToolSmokeTests/redEyeToolReducesExcessRedAtTheClickedPupil",
+      "file": "ImageEditorToolSmokeTests.swift",
+      "passed": true,
+      "duration": 3.143,
+      "issues": [],
+      "log": "ImageEditorToolSmokeTests.redEyeToolReducesExcessRedAtTheClickedPupil.log"
+    },
+    {
+      "suite": "ImageEditorToolSmokeTests",
+      "method": "shapeToolUsesTheCanvasTopLeftCoordinateSystem",
+      "identifier": "veilpicTests/ImageEditorToolSmokeTests/shapeToolUsesTheCanvasTopLeftCoordinateSystem",
+      "file": "ImageEditorToolSmokeTests.swift",
+      "passed": true,
+      "duration": 3.153,
+      "issues": [],
+      "log": "ImageEditorToolSmokeTests.shapeToolUsesTheCanvasTopLeftCoordinateSystem.log"
+    },
+    {
+      "suite": "ImageEditorToolSmokeTests",
+      "method": "spongeIncreasesLocalColorSaturation",
+      "identifier": "veilpicTests/ImageEditorToolSmokeTests/spongeIncreasesLocalColorSaturation",
+      "file": "ImageEditorToolSmokeTests.swift",
+      "passed": true,
+      "duration": 3.099,
+      "issues": [],
+      "log": "ImageEditorToolSmokeTests.spongeIncreasesLocalColorSaturation.log"
+    }
+  ]
+}
