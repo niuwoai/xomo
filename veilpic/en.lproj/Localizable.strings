@@ -672,6 +672,7 @@
 "imageEditor.shape.ellipse" = "Ellipse";
 "imageEditor.shape.path" = "Path";
 "imageEditor.panel.navigator" = "Navigator / Info";
+"imageEditor.navigator.preview" = "Navigator canvas viewport";
 "imageEditor.histogram.title" = "Histogram";
 "imageEditor.histogram.average" = "Avg RGB: %d / %d / %d";
 "imageEditor.histogram.luminance" = "Avg Luma: %d";

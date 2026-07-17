@@ -39,6 +39,36 @@ struct ImageEditorCanvasGeometryTests {
         assertEqual(viewRect, CGRect(x: 224, y: 142, width: 222, height: 111))
     }
 
+    @Test
+    func navigatorViewportTracksZoomAndPanInsideThumbnail() throws {
+        let canvasSize = CGSize(width: 400, height: 200)
+        let previewBounds = CGRect(x: 0, y: 0, width: 184, height: 92)
+        let fullViewport = ImageEditorCanvasGeometry.navigatorViewportRect(
+            canvasSize: canvasSize,
+            canvasViewportSize: CGSize(width: 800, height: 600),
+            zoom: 1,
+            canvasOffset: .zero,
+            previewBounds: previewBounds
+        )
+        let full = try #require(fullViewport)
+        assertEqual(full, previewBounds)
+
+        let zoomedViewport = ImageEditorCanvasGeometry.navigatorViewportRect(
+            canvasSize: canvasSize,
+            canvasViewportSize: CGSize(width: 800, height: 600),
+            zoom: 2,
+            canvasOffset: CGSize(width: -120, height: 40),
+            previewBounds: previewBounds
+        )
+        let zoomed = try #require(zoomedViewport)
+        #expect(zoomed.width < previewBounds.width)
+        #expect(zoomed.height < previewBounds.height)
+        #expect(zoomed.minX >= previewBounds.minX)
+        #expect(zoomed.maxX <= previewBounds.maxX)
+        #expect(zoomed.minY >= previewBounds.minY)
+        #expect(zoomed.maxY <= previewBounds.maxY)
+    }
+
     private func assertEqual(
         _ actual: CGRect,
         _ expected: CGRect,

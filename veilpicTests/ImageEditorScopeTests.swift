@@ -441,6 +441,40 @@ struct ImageEditorScopeTests {
     }
 
     @MainActor
+    @Test func navigatorRecentersCanvasWithoutAddingHistory() {
+        let image = NSImage(size: NSSize(width: 80, height: 60))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        viewModel.canvasViewportSize = CGSize(width: 800, height: 600)
+        viewModel.zoom = 3
+        viewModel.canvasOffset = CGSize(width: 40, height: -24)
+        let historyCount = viewModel.document.history.count
+
+        viewModel.centerCanvas(on: CGPoint(x: 70, y: 50))
+
+        #expect(viewModel.document.history.count == historyCount)
+        let baseScale = min(800 / 80, 600 / 60) * 0.74
+        let scale = baseScale * viewModel.zoom
+        let origin = CGPoint(
+            x: (800 - 80 * scale) / 2 + viewModel.canvasOffset.width,
+            y: (600 - 60 * scale) / 2 + viewModel.canvasOffset.height
+        )
+        #expect(abs(origin.x + 70 * scale - 400) < 0.001)
+        #expect(abs(origin.y + 50 * scale - 300) < 0.001)
+    }
+
+    @Test func navigatorPreviewWiresViewportOverlayAndPanGesture() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        #expect(source.contains("private var navigatorPreview: some View"))
+        #expect(source.contains("navigatorViewportRect"))
+        #expect(source.contains("imageEditor.navigator.preview"))
+        #expect(source.contains("DragGesture(minimumDistance: 0)"))
+        #expect(source.contains("viewModel.centerCanvas(on: imagePoint)"))
+    }
+
+    @MainActor
     @Test func layerStyleColorSettersUpdateEveryEditableEffectColor() {
         let image = NSImage(size: NSSize(width: 40, height: 30))
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }

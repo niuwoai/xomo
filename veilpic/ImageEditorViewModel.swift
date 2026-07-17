@@ -2122,6 +2122,43 @@ final class ImageEditorViewModel: ObservableObject {
         canvasOffset.height += translation.height
     }
 
+    func centerCanvas(on imagePoint: CGPoint) {
+        let canvasSize = document.canvasSize
+        let viewportSize = canvasViewportSize
+        guard canvasSize.width > 0,
+              canvasSize.height > 0,
+              viewportSize.width > 0,
+              viewportSize.height > 0,
+              zoom.isFinite,
+              zoom > 0
+        else { return }
+
+        let baseScale = min(
+            viewportSize.width / canvasSize.width,
+            viewportSize.height / canvasSize.height
+        ) * 0.74
+        let scale = baseScale * zoom
+        guard scale.isFinite, scale > 0 else { return }
+
+        let boundedPoint = ImageEditorCanvasGeometry.boundedCanvasPoint(
+            imagePoint,
+            canvasSize: canvasSize
+        )
+        let canvasOrigin = CGPoint(
+            x: (viewportSize.width - canvasSize.width * scale) / 2 + canvasOffset.width,
+            y: (viewportSize.height - canvasSize.height * scale) / 2 + canvasOffset.height
+        )
+        let currentViewPoint = CGPoint(
+            x: canvasOrigin.x + boundedPoint.x * scale,
+            y: canvasOrigin.y + boundedPoint.y * scale
+        )
+        let viewportCenter = CGPoint(x: viewportSize.width / 2, y: viewportSize.height / 2)
+        nudgeCanvas(by: CGSize(
+            width: viewportCenter.x - currentViewPoint.x,
+            height: viewportCenter.y - currentViewPoint.y
+        ))
+    }
+
     func updatePointer(_ point: CGPoint?) {
         guard let point else {
             pointerText = "X: 0 Y: 0"

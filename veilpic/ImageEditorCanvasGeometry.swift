@@ -9,6 +9,84 @@ import CoreGraphics
 import Foundation
 
 enum ImageEditorCanvasGeometry {
+    static func aspectFitRect(contentSize: CGSize, in bounds: CGRect) -> CGRect {
+        guard contentSize.width > 0,
+              contentSize.height > 0,
+              bounds.width > 0,
+              bounds.height > 0
+        else { return .zero }
+
+        let scale = min(
+            bounds.width / contentSize.width,
+            bounds.height / contentSize.height
+        )
+        let size = CGSize(
+            width: contentSize.width * scale,
+            height: contentSize.height * scale
+        )
+        return CGRect(
+            x: bounds.midX - size.width / 2,
+            y: bounds.midY - size.height / 2,
+            width: size.width,
+            height: size.height
+        )
+    }
+
+    static func navigatorViewportRect(
+        canvasSize: CGSize,
+        canvasViewportSize: CGSize,
+        zoom: CGFloat,
+        canvasOffset: CGSize,
+        previewBounds: CGRect
+    ) -> CGRect? {
+        guard canvasSize.width > 0,
+              canvasSize.height > 0,
+              canvasViewportSize.width > 0,
+              canvasViewportSize.height > 0
+        else { return nil }
+
+        let canvasRect = fittedImageRect(
+            canvasSize: canvasSize,
+            viewportSize: canvasViewportSize,
+            zoom: zoom,
+            canvasOffset: canvasOffset
+        )
+        let visibleRect = canvasRect.intersection(
+            CGRect(origin: .zero, size: canvasViewportSize)
+        )
+        guard !visibleRect.isNull,
+              visibleRect.width > 0,
+              visibleRect.height > 0
+        else { return nil }
+
+        let thumbnailRect = aspectFitRect(contentSize: canvasSize, in: previewBounds)
+        guard thumbnailRect.width > 0, thumbnailRect.height > 0 else { return nil }
+
+        let minX = min(
+            max(0, (visibleRect.minX - canvasRect.minX) / canvasRect.width * canvasSize.width),
+            canvasSize.width
+        )
+        let minY = min(
+            max(0, (visibleRect.minY - canvasRect.minY) / canvasRect.height * canvasSize.height),
+            canvasSize.height
+        )
+        let maxX = min(
+            max(0, (visibleRect.maxX - canvasRect.minX) / canvasRect.width * canvasSize.width),
+            canvasSize.width
+        )
+        let maxY = min(
+            max(0, (visibleRect.maxY - canvasRect.minY) / canvasRect.height * canvasSize.height),
+            canvasSize.height
+        )
+
+        return CGRect(
+            x: thumbnailRect.minX + minX / canvasSize.width * thumbnailRect.width,
+            y: thumbnailRect.minY + minY / canvasSize.height * thumbnailRect.height,
+            width: max(1, (maxX - minX) / canvasSize.width * thumbnailRect.width),
+            height: max(1, (maxY - minY) / canvasSize.height * thumbnailRect.height)
+        )
+    }
+
     static func fittedImageRect(
         canvasSize: CGSize,
         viewportSize: CGSize,

@@ -672,6 +672,7 @@
 "imageEditor.shape.ellipse" = "楕円";
 "imageEditor.shape.path" = "パス";
 "imageEditor.panel.navigator" = "ナビ / 情報";
+"imageEditor.navigator.preview" = "ナビゲーターのキャンバス表示領域";
 "imageEditor.histogram.title" = "ヒストグラム";
 "imageEditor.histogram.average" = "平均 RGB：%d / %d / %d";
 "imageEditor.histogram.luminance" = "平均輝度：%d";

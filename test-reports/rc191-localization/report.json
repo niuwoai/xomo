@@ -1,0 +1,20 @@
+{
+  "generated_at": "2026-07-17 11:02:10 +0800",
+  "version": "2.12.0-rc191",
+  "total": 1,
+  "passed": 1,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "LocalizationResourceTests",
+      "method": "supportedLocalizationTablesKeepMatchingKeys",
+      "identifier": "veilpicTests/LocalizationResourceTests/supportedLocalizationTablesKeepMatchingKeys",
+      "file": "LocalizationResourceTests.swift",
+      "passed": true,
+      "duration": 3.592,
+      "issues": [],
+      "log": "LocalizationResourceTests.supportedLocalizationTablesKeepMatchingKeys.log"
+    }
+  ]
+}

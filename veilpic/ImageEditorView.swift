@@ -2239,13 +2239,7 @@ struct ImageEditorView: View {
         let histogramSummary = viewModel.histogramSummary
         return EditorPanel(title: L10n.text("imageEditor.panel.navigator"), showsTitle: showsTitle) {
             VStack(alignment: .leading, spacing: 8) {
-                Image(nsImage: viewModel.previewImage)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(height: 92)
-                    .frame(maxWidth: .infinity)
-                    .background(Color.black.opacity(0.22))
-                    .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+                navigatorPreview
                 histogramView(summary: histogramSummary)
                 Text(viewModel.sizeText)
                 Text(viewModel.colorText)
@@ -2258,6 +2252,70 @@ struct ImageEditorView: View {
         }
         .frame(height: showsTitle ? 262 : 226)
         .accessibilityIdentifier("image-editor-navigator-panel")
+    }
+
+    private var navigatorPreview: some View {
+        GeometryReader { geometry in
+            let previewBounds = CGRect(origin: .zero, size: geometry.size)
+            let thumbnailRect = ImageEditorCanvasGeometry.aspectFitRect(
+                contentSize: viewModel.document.canvasSize,
+                in: previewBounds
+            )
+            let viewportRect = ImageEditorCanvasGeometry.navigatorViewportRect(
+                canvasSize: viewModel.document.canvasSize,
+                canvasViewportSize: viewModel.canvasViewportSize,
+                zoom: viewModel.zoom,
+                canvasOffset: viewModel.canvasOffset,
+                previewBounds: previewBounds
+            )
+
+            ZStack {
+                Image(nsImage: viewModel.previewImage)
+                    .resizable()
+                    .scaledToFit()
+                if let viewportRect {
+                    Rectangle()
+                        .fill(Color(nsColor: ImageEditorTheme.selected).opacity(0.14))
+                        .overlay {
+                            Rectangle()
+                                .stroke(
+                                    Color(nsColor: ImageEditorTheme.selected),
+                                    style: StrokeStyle(lineWidth: 1, dash: [4, 3])
+                                )
+                        }
+                        .frame(width: viewportRect.width, height: viewportRect.height)
+                        .position(x: viewportRect.midX, y: viewportRect.midY)
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color.black.opacity(0.22))
+            .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+            .contentShape(Rectangle())
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { value in
+                        guard let imagePoint = navigatorImagePoint(
+                            at: value.location,
+                            in: thumbnailRect
+                        ) else { return }
+                        viewModel.centerCanvas(on: imagePoint)
+                    }
+            )
+            .accessibilityIdentifier("image-editor-navigator-preview")
+            .accessibilityLabel(L10n.text("imageEditor.navigator.preview"))
+        }
+        .frame(height: 92)
+    }
+
+    private func navigatorImagePoint(at point: CGPoint, in thumbnailRect: CGRect) -> CGPoint? {
+        guard thumbnailRect.width > 0,
+              thumbnailRect.height > 0,
+              thumbnailRect.contains(point)
+        else { return nil }
+        return CGPoint(
+            x: (point.x - thumbnailRect.minX) / thumbnailRect.width * viewModel.document.canvasSize.width,
+            y: (point.y - thumbnailRect.minY) / thumbnailRect.height * viewModel.document.canvasSize.height
+        )
     }
 
     private func histogramView(summary: ImageEditorHistogramSummary) -> some View {
