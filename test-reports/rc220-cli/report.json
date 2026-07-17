@@ -1,0 +1,12 @@
+{
+  "version": "2.12.0-rc220",
+  "command": "swift test --package-path xomo-cli",
+  "total": 2,
+  "passed": 2,
+  "failed": 0,
+  "release_cli": {
+    "path": "dist/xomo-macos-universal",
+    "architectures": ["arm64", "x86_64"],
+    "reported_version": "2.12.0-rc220"
+  }
+}

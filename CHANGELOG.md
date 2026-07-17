@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.12.0-rc220 - 2026-07-18
+
+### Verification
+- 完成 20 版本周期的全量质量门禁：独立进程测试 1007/1007、CLI 2/2、双架构 Release、macOS 13 下限、签名/Bundle 检查与安装后真实界面冒烟。
+- 验证报告写入 `test-reports/rc220-full-suite/`、`test-reports/rc220-cli/` 与 `test-reports/rc220-release/`。
+
 ## 2.12.0-rc219 - 2026-07-18
 
 ### Added

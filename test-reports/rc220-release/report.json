@@ -1,0 +1,14 @@
+{
+  "version": "2.12.0-rc220",
+  "full_suite": {"total": 1007, "passed": 1007, "failed": 0},
+  "cli": {"total": 2, "passed": 2, "failed": 0},
+  "app": {
+    "path": "/Applications/Xomo.app",
+    "architectures": ["arm64", "x86_64"],
+    "bundle_id": "im.some.xomo",
+    "minimum_macos": "13.0",
+    "signature": "ad-hoc verified strict",
+    "smoke": "launch and workspace visible"
+  },
+  "cli_release": {"architectures": ["arm64", "x86_64"], "path": "dist/xomo-macos-universal"}
+}
