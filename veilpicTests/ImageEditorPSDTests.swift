@@ -68,6 +68,25 @@ struct ImageEditorPSDTests {
         #expect(restored.layers.first?.name == "Solid")
     }
 
+    @Test func psdExportUsesZIPWhenRLEHasNoBenefit() throws {
+        let canvasSize = CGSize(width: 64, height: 64)
+        let pattern = psdAlternatingImage(width: 64, height: 64)
+        var document = ImageEditorDocument(sourceName: "zip.png", image: pattern)
+        document.layers.removeAll()
+        var layer = ImageEditorLayer.blank(name: "Pattern", size: canvasSize)
+        layer.image = pattern
+        layer.frame = CGRect(origin: .zero, size: canvasSize)
+        document.layers = [layer]
+
+        let data = try ImageEditorPSDCodec.encode(document: document)
+        let report = try ImageEditorPSDCodec.compatibilityReport(data)
+        #expect(report.compressions.contains(.zip))
+
+        let restored = try ImageEditorPSDCodec.decode(data, sourceName: "zip.psd")
+        #expect(restored.canvasSize == canvasSize)
+        #expect(restored.layers.first?.name == "Pattern")
+    }
+
     @Test func psdExportPreservesClosedAndOpenSavedPaths() throws {
         let canvasSize = CGSize(width: 32, height: 24)
         var document = ImageEditorDocument(
@@ -677,4 +696,33 @@ private func psdSolidImage(color: NSColor, size: CGSize) -> NSImage {
         color.setFill()
         rect.fill()
     } ?? NSImage.transparent(size: size)
+}
+
+private func psdAlternatingImage(width: Int, height: Int) -> NSImage {
+    guard let bitmap = NSBitmapImageRep(
+        bitmapDataPlanes: nil,
+        pixelsWide: width,
+        pixelsHigh: height,
+        bitsPerSample: 8,
+        samplesPerPixel: 4,
+        hasAlpha: true,
+        isPlanar: false,
+        colorSpaceName: .deviceRGB,
+        bitmapFormat: [],
+        bytesPerRow: width * 4,
+        bitsPerPixel: 32
+    ) else { return NSImage.transparent(size: CGSize(width: width, height: height)) }
+
+    for y in 0..<height {
+        for x in 0..<width {
+            let value: UInt8 = (x + y).isMultiple(of: 2) ? 32 : 224
+            var pixel = [Int(value), Int(value), Int(value), Int(UInt8.max)]
+            pixel.withUnsafeMutableBufferPointer { buffer in
+                bitmap.setPixel(buffer.baseAddress!, atX: x, y: y)
+            }
+        }
+    }
+    let image = NSImage(size: CGSize(width: width, height: height))
+    image.addRepresentation(bitmap)
+    return image
 }

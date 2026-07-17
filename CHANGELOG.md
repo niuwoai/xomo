@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc194 - 2026-07-17
+
+### Added
+- PSD 导出在 Raw 与 PackBits RLE 之外支持 ZIP（zlib）自动择优；压缩无收益或失败时回退到更安全的编码。
+
+### Verification
+- PSD Raw/RLE/ZIP 导出与图层/复合图像往返定向测试 7/7 通过，完整 PSD 专项 23/23 通过；兼容性报告确认交替像素样本实际写出 ZIP。
+
 ## 2.12.0-rc193 - 2026-07-17
 
 ### Added

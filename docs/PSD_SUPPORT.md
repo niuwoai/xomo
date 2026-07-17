@@ -1,12 +1,12 @@
 # 象墨 PSD 支持说明
 
-> 最后更新：2026-07-17 ｜ 对应版本：v2.12.0-rc193
+> 最后更新：2026-07-17 ｜ 对应版本：v2.12.0-rc194
 
 ## 1. 结论
 
 象墨当前已经可以可靠处理以像素图层为主的常见 PSD，并保留基础图层结构、嵌套组、栅格蒙版、混合模式、Fill 不透明度和锁定状态。Raw、RLE、ZIP、ZIP Prediction 四种 8-bit 通道压缩均可读取。对能解析 TySh/EngineData 的基础文字层，还会生成 Xomo 原生可编辑文字层，读取一组基础字符与段落样式，并保留段落文本框边界；简单 vmsk/vsms 闭合路径、Image Resources 中的 Path Resource、额外 Alpha/Spot 通道以及结构完整的原生矢量蒙版也支持在导入时进入可编辑模型。
 
-rc193 为 PSD 导出增加 PackBits RLE：逐行编码图层通道和复合图像通道，只有在压缩后确实更小且行长度可写入 PSD 的情况下才采用 RLE，否则回退 Raw。rc174 补齐连续剪贴蒙版链的 PSD 导出、重新导入与项目保存重开回归，基底关系、透明度和选择状态都有测试证据。rc169 修复了 `vmsk`/`vsms` 子路径长度记录的保留字节偏移，矢量蒙版和路径资源的单/多子路径导入、导出与项目往返测试通过。rc170 修复 EngineData UTF-16 字体名终止符解析，基础文字层字体名可稳定往返；rc171 修复 ZIP 通道 zlib 头处理，外部 ZIP 合成与 ZIP 组蒙版进入可读模型；rc172 改用 Core Graphics 无插值逐像素读取栅格蒙版 alpha，复杂蒙版 alpha 精确往返。
+rc194 为 PSD 导出增加 ZIP（zlib）自动选择：在 Raw 与 PackBits RLE 之外，对整体数据更小的通道采用 ZIP；压缩失败或无收益时仍回退到 Raw/RLE。rc193 为 PSD 导出增加 PackBits RLE：逐行编码图层通道和复合图像通道，只有在压缩后确实更小且行长度可写入 PSD 的情况下才采用 RLE，否则回退 Raw。rc174 补齐连续剪贴蒙版链的 PSD 导出、重新导入与项目保存重开回归，基底关系、透明度和选择状态都有测试证据。rc169 修复了 `vmsk`/`vsms` 子路径长度记录的保留字节偏移，矢量蒙版和路径资源的单/多子路径导入、导出与项目往返测试通过。rc170 修复 EngineData UTF-16 字体名终止符解析，基础文字层字体名可稳定往返；rc171 修复 ZIP 通道 zlib 头处理，外部 ZIP 合成与 ZIP 组蒙版进入可读模型；rc172 改用 Core Graphics 无插值逐像素读取栅格蒙版 alpha，复杂蒙版 alpha 精确往返。
 
 这还不是“完整 Photoshop 语义兼容”。复杂文字变换、逐字符样式、矢量形状、智能对象、调整层、图层效果和填充层等 Photoshop 专有对象，仍不能完整保留为同类可编辑对象。打开 PSD 后，象墨会生成兼容性报告，明确列出文件中被栅格化、忽略或降级的内容。
 
@@ -59,7 +59,7 @@ rc193 为 PSD 导出增加 PackBits RLE：逐行编码图层通道和复合图�
 | 能力 | 当前状态 | 说明 |
 |---|---|---|
 | 输出格式 | PSD v1、8-bit RGB/RGBA + Alpha / Spot | 同时写入图层记录、文档合成图和额外 Alpha/Spot 通道；Spot 的 DisplayInfo 元数据同步写出。 |
-| 通道压缩 | Raw / PackBits RLE | 导出器按通道实际收益选择 RLE；压缩无收益或行长度超限时回退 Raw，仍不输出 ZIP。 |
+| 通道压缩 | Raw / PackBits RLE / ZIP | 导出器按通道实际收益选择 RLE 或 ZIP；压缩无收益、失败或行长度超限时回退 Raw。 |
 | 像素图层 | 支持 | 保留名称、位置、可见性、不透明度、Fill、剪贴标记、混合模式和锁定状态。 |
 | 嵌套组 | 支持 | 写入组开始/结束记录、展开状态、组混合模式和组蒙版。 |
 | 栅格蒙版 | 支持 | 写入蒙版像素、启用/停用和链接状态。象墨中的密度、羽化会烘焙进有效蒙版像素，不会保存为独立 Photoshop 参数。 |
@@ -106,10 +106,12 @@ rc168 修复 Path Resource 记录对齐；闭合/开放命名路径导出与外�
 - 文字导出定向报告：[`test-reports/rc157-text-export/report.md`](../test-reports/rc157-text-export/report.md)
 - 额外 Alpha 通道导出定向报告：[`test-reports/rc156-alpha-export/report.md`](../test-reports/rc156-alpha-export/report.md)
 - PSD 原生矢量蒙版导出定向报告：[`test-reports/rc154-vector-mask-export/report.md`](../test-reports/rc154-vector-mask-export/report.md)
+- rc194 Raw/RLE/ZIP 导出定向报告：[`test-reports/rc194-psd-zip/report.md`](../test-reports/rc194-psd-zip/report.md)
+- rc194 完整 PSD 专项报告：[`test-reports/rc194-psd-suite/report.md`](../test-reports/rc194-psd-suite/report.md)
 - 外部打开测试报告：[`test-reports/rc145-external-open/report.md`](../test-reports/rc145-external-open/report.md)
 - 本地化测试报告：[`test-reports/rc145-localization/report.md`](../test-reports/rc145-localization/report.md)
 
-rc157 的 PSD 定向验证结果为：PSD 专项 17/17、文字导出 1/1、Xomo CLI 2/2；开放/复杂路径安全回退由专项回归覆盖。
+rc194 的 PSD 专项验证结果为 23/23，包含 Raw/RLE/ZIP 导出、外部 ZIP 夹具、文字、路径、矢量蒙版、额外通道、项目往返和 Finder 打开策略；其中导出压缩定向测试 7/7。
 
 ## 7. 使用建议
 

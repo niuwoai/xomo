@@ -99,40 +99,32 @@ enum ImageEditorPSDCodec {
         width: Int,
         height: Int
     ) -> Data {
+        var rawPayload = Data()
+        for plane in planes { rawPayload.append(plane) }
+        var candidates = [rawEncodedData(rawPayload)]
+
         let rows = planes.map { packBitsRows($0, width: width, height: height) }
         let canUseRLE = rows.allSatisfy { $0 != nil }
             && rows.compactMap { $0 }.allSatisfy { packedRows in
                 packedRows.allSatisfy { $0.count <= Int(UInt16.max) }
             }
-        guard canUseRLE else {
-            var raw = Data()
-            raw.appendUInt16(0)
-            for plane in planes { raw.append(plane) }
-            return raw
+        if canUseRLE {
+            let packedRows = rows.compactMap { $0 }
+            var rle = Data()
+            rle.appendUInt16(1)
+            for planeRows in packedRows {
+                for row in planeRows { rle.appendUInt16(UInt16(row.count)) }
+            }
+            for planeRows in packedRows {
+                for row in planeRows { rle.append(contentsOf: row) }
+            }
+            candidates.append(rle)
         }
 
-        let packedRows = rows.compactMap { $0 }
-        let packedSize = packedRows.reduce(0) { partial, rows in
-            partial + rows.reduce(0) { $0 + $1.count }
+        if let zip = zipEncodedData(rawPayload) {
+            candidates.append(zip)
         }
-        let rleSize = 2 + planes.count * height * 2 + packedSize
-        let rawSize = 2 + planes.reduce(0) { $0 + $1.count }
-        guard rleSize < rawSize else {
-            var raw = Data()
-            raw.appendUInt16(0)
-            for plane in planes { raw.append(plane) }
-            return raw
-        }
-
-        var output = Data()
-        output.appendUInt16(1)
-        for rows in packedRows {
-            for row in rows { output.appendUInt16(UInt16(row.count)) }
-        }
-        for rows in packedRows {
-            for row in rows { output.append(contentsOf: row) }
-        }
-        return output
+        return candidates.min { $0.count < $1.count } ?? rawEncodedData(rawPayload)
     }
 
     private static func encodedChannelData(
@@ -140,28 +132,62 @@ enum ImageEditorPSDCodec {
         width: Int,
         height: Int
     ) -> Data {
+        var candidates = [rawEncodedData(data)]
         guard let rows = packBitsRows(data, width: width, height: height),
               rows.allSatisfy({ $0.count <= Int(UInt16.max) })
         else {
-            var raw = Data()
-            raw.appendUInt16(0)
-            raw.append(data)
-            return raw
+            return zipEncodedData(data) ?? candidates[0]
         }
 
-        let rleSize = 2 + rows.count * 2 + rows.reduce(0) { $0 + $1.count }
-        guard rleSize < 2 + data.count else {
-            var raw = Data()
-            raw.appendUInt16(0)
-            raw.append(data)
-            return raw
+        var rle = Data()
+        rle.appendUInt16(1)
+        for row in rows { rle.appendUInt16(UInt16(row.count)) }
+        for row in rows { rle.append(contentsOf: row) }
+        candidates.append(rle)
+        if let zip = zipEncodedData(data) {
+            candidates.append(zip)
         }
+        return candidates.min { $0.count < $1.count } ?? candidates[0]
+    }
 
+    private static func rawEncodedData(_ data: Data) -> Data {
         var output = Data()
-        output.appendUInt16(1)
-        for row in rows { output.appendUInt16(UInt16(row.count)) }
-        for row in rows { output.append(contentsOf: row) }
+        output.appendUInt16(0)
+        output.append(data)
         return output
+    }
+
+    private static func zipEncodedData(_ data: Data) -> Data? {
+        guard !data.isEmpty,
+              let compressed = deflate(data),
+              compressed.count < data.count
+        else { return nil }
+        var output = Data()
+        output.appendUInt16(2)
+        output.append(compressed)
+        return output
+    }
+
+    private static func deflate(_ data: Data) -> Data? {
+        guard !data.isEmpty else { return Data() }
+        let destinationCapacity = max(data.count + data.count / 100 + 64, 256)
+        var destination = [UInt8](repeating: 0, count: destinationCapacity)
+        let encodedCount = data.withUnsafeBytes { sourceBuffer -> Int in
+            guard let source = sourceBuffer.bindMemory(to: UInt8.self).baseAddress else { return 0 }
+            return destination.withUnsafeMutableBufferPointer { destinationBuffer in
+                guard let destinationBase = destinationBuffer.baseAddress else { return 0 }
+                return compression_encode_buffer(
+                    destinationBase,
+                    destinationCapacity,
+                    source,
+                    data.count,
+                    nil,
+                    COMPRESSION_ZLIB
+                )
+            }
+        }
+        guard encodedCount > 0 else { return nil }
+        return Data(destination.prefix(encodedCount))
     }
 
     private static func packBitsRows(

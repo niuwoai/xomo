@@ -1,0 +1,80 @@
+{
+  "generated_at": "2026-07-17 11:50:06 +0800",
+  "version": "2.12.0-rc194",
+  "total": 7,
+  "passed": 7,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorPSDTests",
+      "method": "psdExportPreservesBasicEditableTextLayer",
+      "identifier": "veilpicTests/ImageEditorPSDTests/psdExportPreservesBasicEditableTextLayer",
+      "file": "ImageEditorPSDTests.swift",
+      "passed": true,
+      "duration": 2.987,
+      "issues": [],
+      "log": "ImageEditorPSDTests.psdExportPreservesBasicEditableTextLayer.log"
+    },
+    {
+      "suite": "ImageEditorPSDTests",
+      "method": "psdExportPreservesClosedAndOpenSavedPaths",
+      "identifier": "veilpicTests/ImageEditorPSDTests/psdExportPreservesClosedAndOpenSavedPaths",
+      "file": "ImageEditorPSDTests.swift",
+      "passed": true,
+      "duration": 3.687,
+      "issues": [],
+      "log": "ImageEditorPSDTests.psdExportPreservesClosedAndOpenSavedPaths.log"
+    },
+    {
+      "suite": "ImageEditorPSDTests",
+      "method": "psdExportPreservesExtraAlphaChannelsAndNames",
+      "identifier": "veilpicTests/ImageEditorPSDTests/psdExportPreservesExtraAlphaChannelsAndNames",
+      "file": "ImageEditorPSDTests.swift",
+      "passed": true,
+      "duration": 5.067,
+      "issues": [],
+      "log": "ImageEditorPSDTests.psdExportPreservesExtraAlphaChannelsAndNames.log"
+    },
+    {
+      "suite": "ImageEditorPSDTests",
+      "method": "psdExportPreservesNativeVectorMaskAndEnabledState",
+      "identifier": "veilpicTests/ImageEditorPSDTests/psdExportPreservesNativeVectorMaskAndEnabledState",
+      "file": "ImageEditorPSDTests.swift",
+      "passed": true,
+      "duration": 3.067,
+      "issues": [],
+      "log": "ImageEditorPSDTests.psdExportPreservesNativeVectorMaskAndEnabledState.log"
+    },
+    {
+      "suite": "ImageEditorPSDTests",
+      "method": "psdExportPreservesSpotChannelDisplayInfoAndProjectRoundTrip",
+      "identifier": "veilpicTests/ImageEditorPSDTests/psdExportPreservesSpotChannelDisplayInfoAndProjectRoundTrip",
+      "file": "ImageEditorPSDTests.swift",
+      "passed": true,
+      "duration": 2.97,
+      "issues": [],
+      "log": "ImageEditorPSDTests.psdExportPreservesSpotChannelDisplayInfoAndProjectRoundTrip.log"
+    },
+    {
+      "suite": "ImageEditorPSDTests",
+      "method": "psdExportUsesRLEForCompressiblePixelChannels",
+      "identifier": "veilpicTests/ImageEditorPSDTests/psdExportUsesRLEForCompressiblePixelChannels",
+      "file": "ImageEditorPSDTests.swift",
+      "passed": true,
+      "duration": 3.938,
+      "issues": [],
+      "log": "ImageEditorPSDTests.psdExportUsesRLEForCompressiblePixelChannels.log"
+    },
+    {
+      "suite": "ImageEditorPSDTests",
+      "method": "psdExportUsesZIPWhenRLEHasNoBenefit",
+      "identifier": "veilpicTests/ImageEditorPSDTests/psdExportUsesZIPWhenRLEHasNoBenefit",
+      "file": "ImageEditorPSDTests.swift",
+      "passed": true,
+      "duration": 5.6,
+      "issues": [],
+      "log": "ImageEditorPSDTests.psdExportUsesZIPWhenRLEHasNoBenefit.log"
+    }
+  ]
+}
