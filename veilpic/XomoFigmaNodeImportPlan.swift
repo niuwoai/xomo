@@ -139,7 +139,7 @@ struct XomoFigmaPlanSize: Equatable, Sendable {
     var height: Double
 }
 
-struct XomoFigmaPlanTransform: Equatable, Sendable {
+struct XomoFigmaPlanTransform: Codable, Equatable, Sendable {
     var m11: Double
     var m12: Double
     var translationX: Double
@@ -177,7 +177,7 @@ struct XomoFigmaImageAsset: Equatable, Sendable {
     var pixelSize: XomoFigmaPlanSize
 }
 
-struct XomoFigmaPlanImageFilters: Equatable, Sendable {
+struct XomoFigmaPlanImageFilters: Codable, Equatable, Sendable {
     var exposure: Double
     var contrast: Double
     var saturation: Double
@@ -218,6 +218,20 @@ struct XomoFigmaPlanImageFilters: Equatable, Sendable {
         guard let value, value.isFinite else { return 0 }
         return min(max(value, -1), 1)
     }
+}
+
+/// Source image-fill parameters retained on a materialized layer.
+///
+/// The current renderer still bakes Figma's crop/tile/filter result into the
+/// layer pixels. Keeping this small, Codable payload makes the source intent
+/// inspectable and recoverable for a future non-destructive image-fill editor.
+struct XomoFigmaImageFillMetadata: Codable, Equatable, Sendable {
+    var imageReference: String
+    var scaleMode: String?
+    var imageTransform: XomoFigmaPlanTransform?
+    var scalingFactor: Double?
+    var rotation: Double?
+    var filters: XomoFigmaPlanImageFilters
 }
 
 enum XomoFigmaPlanEffectKind: String, Equatable, Sendable {

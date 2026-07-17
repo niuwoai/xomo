@@ -587,9 +587,43 @@ final class XomoAutomationRegistry {
                         "field": .string(binding.field),
                         "variableId": .string(binding.variableID)
                     ])
-                })
+                }),
+                "figmaImageFill": figmaImageFillJSON(layer.xomoFigmaImageFill)
             ])
         })
+    }
+
+    private func figmaImageFillJSON(_ metadata: XomoFigmaImageFillMetadata?) -> XomoJSONValue {
+        guard let metadata else { return .null }
+        let transform: XomoJSONValue
+        if let value = metadata.imageTransform {
+            transform = .object([
+                "m11": .number(value.m11),
+                "m12": .number(value.m12),
+                "translationX": .number(value.translationX),
+                "m21": .number(value.m21),
+                "m22": .number(value.m22),
+                "translationY": .number(value.translationY)
+            ])
+        } else {
+            transform = .null
+        }
+        return .object([
+            "imageReference": .string(metadata.imageReference),
+            "scaleMode": metadata.scaleMode.map { .string($0) } ?? .null,
+            "imageTransform": transform,
+            "scalingFactor": metadata.scalingFactor.map { .number($0) } ?? .null,
+            "rotation": metadata.rotation.map { .number($0) } ?? .null,
+            "filters": .object([
+                "exposure": .number(metadata.filters.exposure),
+                "contrast": .number(metadata.filters.contrast),
+                "saturation": .number(metadata.filters.saturation),
+                "temperature": .number(metadata.filters.temperature),
+                "tint": .number(metadata.filters.tint),
+                "highlights": .number(metadata.filters.highlights),
+                "shadows": .number(metadata.filters.shadows)
+            ])
+        ])
     }
 
     private func figmaBindingsAction(

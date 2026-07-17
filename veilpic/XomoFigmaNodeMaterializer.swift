@@ -182,6 +182,16 @@ enum XomoFigmaNodeMaterializer {
         layer.xomoFigmaComponentRole = item.componentRole
         layer.xomoFigmaComponentProperties = item.componentProperties
         layer.xomoFigmaComponentPropertyDefaults = item.componentProperties
+        if let imageReference = item.imageReference {
+            layer.xomoFigmaImageFill = XomoFigmaImageFillMetadata(
+                imageReference: imageReference,
+                scaleMode: item.imageScaleMode,
+                imageTransform: item.imageTransform,
+                scalingFactor: item.imageScalingFactor,
+                rotation: item.imageRotation,
+                filters: item.imageFilters
+            )
+        }
         layer.stackChildLayout = item.stackChildLayout
         layer.isStackLayoutExcluded = item.isStackLayoutExcluded
         layer.isVisible = item.isVisible

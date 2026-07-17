@@ -2815,6 +2815,9 @@ struct ImageEditorLayer: Identifiable {
     /// Keeping this snapshot lets the property inspector restore one override
     /// without re-importing the source document.
     var xomoFigmaComponentPropertyDefaults: [String: XomoFigmaComponentProperty] = [:]
+    /// Original Figma image-fill parameters. Pixels may be baked today, but
+    /// the source intent remains available for inspection and future editing.
+    var xomoFigmaImageFill: XomoFigmaImageFillMetadata?
     var xomoFigmaSourceURL: URL?
 
     static func background(image: NSImage) -> ImageEditorLayer {

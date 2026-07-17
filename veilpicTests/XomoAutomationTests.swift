@@ -801,6 +801,14 @@ struct XomoAutomationTests {
             XomoFigmaVariableBinding(field: "fills", variableID: "VariableID:brand-primary"),
             XomoFigmaVariableBinding(field: "characters", variableID: "VariableID:body-font")
         ]
+        viewModel.document.layers[layerIndex].xomoFigmaImageFill = XomoFigmaImageFillMetadata(
+            imageReference: "img-ref-hero",
+            scaleMode: "CROP",
+            imageTransform: XomoFigmaPlanTransform([[1, 0, 0.1], [0, 1, 0.2]]),
+            scalingFactor: 1.5,
+            rotation: 90,
+            filters: XomoFigmaPlanImageFilters(exposure: 0.25)
+        )
 
         let listed = registry.execute(request(
             operation: "call",
@@ -826,6 +834,10 @@ struct XomoAutomationTests {
                 "variableId": .string("VariableID:body-font")
             ])
         ])
+        #expect(layer["figmaImageFill"]?.objectValue?["imageReference"] == .string("img-ref-hero"))
+        #expect(layer["figmaImageFill"]?.objectValue?["scaleMode"] == .string("CROP"))
+        #expect(layer["figmaImageFill"]?.objectValue?["rotation"] == .number(90))
+        #expect(layer["figmaImageFill"]?.objectValue?["filters"]?.objectValue?["exposure"] == .number(0.25))
 
         let bound = registry.execute(request(
             operation: "call",

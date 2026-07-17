@@ -1284,6 +1284,75 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(restoredLayer.xomoFigmaVariableBindings == item.variableBindings)
     }
 
+    @Test func imageFillSourceMetadataSurvivesMaterializationAndProjectRoundTrip() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                """
+                {
+                  "name": "Image metadata",
+                  "nodes": {
+                    "1:17": {
+                      "document": {
+                        "id": "1:17",
+                        "name": "Hero",
+                        "type": "RECTANGLE",
+                        "absoluteBoundingBox": {"x": 0, "y": 0, "width": 240, "height": 120},
+                        "fills": [{
+                          "type": "IMAGE",
+                          "imageRef": "img-ref-hero",
+                          "scaleMode": "CROP",
+                          "imageTransform": [[0.8, 0.1, 0.12], [-0.1, 0.9, 0.08]],
+                          "scalingFactor": 1.5,
+                          "rotation": 90,
+                          "filters": {
+                            "exposure": 0.25,
+                            "contrast": -0.2,
+                            "saturation": 0.1
+                          }
+                        }]
+                      }
+                    }
+                  }
+                }
+                """.utf8
+            )
+        )
+        let plan = try XomoFigmaNodeImportMapper.makePlan(
+            response: response,
+            requestedNodeID: "1:17"
+        )
+        let item = try #require(plan.items.first)
+        #expect(item.targetKind == .imagePlaceholder)
+        #expect(item.imageReference == "img-ref-hero")
+        let transform = try #require(item.imageTransform)
+        #expect(transform.translationX == 0.12)
+        #expect(item.imageFilters.exposure == 0.25)
+
+        let materialized = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: CGSize(width: 400, height: 300)
+        )
+        let layer = try #require(materialized.layers.first)
+        let metadata = try #require(layer.xomoFigmaImageFill)
+        #expect(metadata.imageReference == "img-ref-hero")
+        #expect(metadata.scaleMode == "CROP")
+        #expect(metadata.imageTransform == item.imageTransform)
+        #expect(metadata.scalingFactor == 1.5)
+        #expect(metadata.rotation == 90)
+        #expect(metadata.filters == item.imageFilters)
+
+        var document = ImageEditorDocument(
+            sourceName: "image-metadata.png",
+            image: NSImage.transparent(size: CGSize(width: 400, height: 300))
+        )
+        document.layers.append(contentsOf: materialized.layers)
+        let project = try ImageEditorProjectDocument(document: document)
+        let restored = try project.restoredDocument()
+        let restoredLayer = try #require(restored.layers.first { $0.id == layer.id })
+        #expect(restoredLayer.xomoFigmaImageFill == metadata)
+    }
+
     @Test func figmaVariablesResolveDefaultModeColorsAndAliases() async throws {
         let transport = RecordingFigmaNodeTransport(
             statusCode: 200,
