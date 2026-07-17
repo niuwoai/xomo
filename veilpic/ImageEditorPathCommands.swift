@@ -103,6 +103,15 @@ extension ImageEditorViewModel {
         setSelectedPathAnchorPosition(CGPoint(x: point.x, y: y))
     }
 
+    /// Keyboard nudges move the selected anchor with the same one-step
+    /// History semantics as dragging it on the canvas.
+    func nudgeSelectedPathAnchor(by delta: CGSize) {
+        guard let point = selectedPathAnchorCanvasPoint else { return }
+        setSelectedPathAnchorPosition(
+            CGPoint(x: point.x + delta.width, y: point.y + delta.height)
+        )
+    }
+
     func selectNextPathAnchor() {
         guard let layer = document.selectedLayer,
               let content = layer.shapeContent,

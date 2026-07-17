@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc218 - 2026-07-18
+
+### Added
+- 钢笔路径编辑接入方向键节点微调与 Delete 节点删除，Option/Shift 步长和单步 History/Undo 保持一致。
+
+### Verification
+- 路径节点键盘运行专项通过 1/1，报告：`test-reports/rc218-path-keyboard/report.md`。
+- 键盘接线契约专项通过 1/1，报告：`test-reports/rc218-path-keyboard-scope/report.md`。
+
 ## 2.12.0-rc217 - 2026-07-18
 
 ### Added

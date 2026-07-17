@@ -1,0 +1,19 @@
+{
+  "generated_at": "2026-07-18 00:27:05 +0800",
+  "total": 1,
+  "passed": 1,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "editorRegistersClassicToolShortcutButtonsWithoutDuplicatingToolRailShortcuts",
+      "identifier": "veilpicTests/ImageEditorScopeTests/editorRegistersClassicToolShortcutButtonsWithoutDuplicatingToolRailShortcuts",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.518,
+      "issues": [],
+      "log": "ImageEditorScopeTests.editorRegistersClassicToolShortcutButtonsWithoutDuplicatingToolRailShortcuts.log"
+    }
+  ]
+}

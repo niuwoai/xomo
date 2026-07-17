@@ -128,6 +128,13 @@ extension ImageEditorViewModel {
             return
         }
 
+        if selectedTool == .pen,
+           canEditSelectedPathAnchors,
+           selectedPathAnchorIndex != nil {
+            nudgeSelectedPathAnchor(by: delta)
+            return
+        }
+
         beginMovingSelectedLayer()
         moveSelectedLayer(by: delta)
         finishMovingSelectedLayer()

@@ -147,6 +147,11 @@ struct ImageEditorView: View {
                     if deleteSelectedShapeGradientStopIfNeeded() {
                         return true
                     }
+                    if viewModel.selectedTool == .pen,
+                       viewModel.canDeleteSelectedPathAnchor {
+                        viewModel.deleteSelectedPathAnchor()
+                        return true
+                    }
                     return viewModel.deleteSelectedXomoObjectIfNeeded()
                 },
                 deleteSelectedHistory: {

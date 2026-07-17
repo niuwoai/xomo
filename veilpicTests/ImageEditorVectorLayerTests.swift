@@ -909,6 +909,30 @@ struct ImageEditorVectorLayerTests {
         #expect(viewModel.statusText == L10n.text("imageEditor.status.pathAnchorDeleted"))
     }
 
+    @Test func imageEditorPenArrowNudgeMovesSelectedAnchorAsOneUndoableStep() async throws {
+        let canvasSize = NSSize(width: 120, height: 90)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.selectTool(.pen)
+        viewModel.addPenPoint(CGPoint(x: 20, y: 20))
+        viewModel.addPenPoint(CGPoint(x: 92, y: 24))
+        viewModel.addPenPoint(CGPoint(x: 54, y: 70))
+        viewModel.finishPenPath(closed: true)
+
+        let originalPoint = try #require(viewModel.selectedPathAnchorCanvasPoint)
+        let historyCount = viewModel.document.history.count
+        viewModel.nudgeSelectionOrSelectedLayer(by: CGSize(width: 5, height: -2))
+
+        let movedPoint = try #require(viewModel.selectedPathAnchorCanvasPoint)
+        #expect(movedPoint == CGPoint(x: originalPoint.x + 5, y: originalPoint.y - 2))
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.pathAnchorMove"))
+
+        viewModel.undo()
+        #expect(viewModel.selectedPathAnchorCanvasPoint == originalPoint)
+    }
+
     @Test func imageEditorInsertsPathAnchorAndPreservesCurvedSegmentHandles() async throws {
         let canvasSize = NSSize(width: 140, height: 100)
         let image = testBitmapImage(size: canvasSize, background: .black)

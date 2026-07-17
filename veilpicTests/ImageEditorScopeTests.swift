@@ -218,6 +218,16 @@ struct ImageEditorScopeTests {
         #expect(nudgeShortcutSource.contains("nudgeShortcutButton(.leftArrow, delta: CGSize(width: -10, height: 0), modifiers: [.shift])"))
         #expect(nudgeShortcutSource.contains("viewModel.nudgeSelectionOrSelectedLayer(by: delta)"))
 
+        let transformSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorTransform.swift"),
+            encoding: .utf8
+        )
+        #expect(transformSource.contains("if selectedTool == .pen"))
+        #expect(transformSource.contains("nudgeSelectedPathAnchor(by: delta)"))
+
+        #expect(source.contains("viewModel.canDeleteSelectedPathAnchor"))
+        #expect(source.contains("viewModel.deleteSelectedPathAnchor()"))
+
         #expect(!source.contains("private var selectionEditShortcutButtons: some View"))
         #expect(!source.contains(".background(selectionEditShortcutButtons)"))
     }
