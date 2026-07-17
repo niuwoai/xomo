@@ -35,6 +35,19 @@ struct XomoMCPServerTests {
         #expect(tools.contains { $0["name"] as? String == "xomo.component.instance" })
         #expect(tools.contains { $0["name"] as? String == "xomo.channel.action" })
         #expect(tools.contains { $0["name"] as? String == "xomo.clipboard.action" })
+        let clipboardTool = try #require(tools.first { $0["name"] as? String == "xomo.clipboard.action" })
+        let clipboardSchema = try #require(clipboardTool["inputSchema"] as? [String: Any])
+        let clipboardProperties = try #require(clipboardSchema["properties"] as? [String: Any])
+        let clipboardAction = try #require(clipboardProperties["action"] as? [String: Any])
+        #expect(clipboardAction["enum"] as? [String] == [
+            "pasteAsLayer",
+            "pasteIntoSelection",
+            "pasteInPlace",
+            "copySelection",
+            "cutSelection",
+            "copyMerged",
+            "copySelectedLayers"
+        ])
         #expect(tools.contains { $0["name"] as? String == "xomo.path.action" })
         #expect(tools.contains { $0["name"] as? String == "xomo.layer_comp.action" })
         #expect(tools.contains { $0["name"] as? String == "xomo.layer.merge_selected" })

@@ -3,7 +3,7 @@ import Foundation
 enum XomoToolCatalog {
     static var fallbackTools: [[String: Any]] {
         entries.map { name, description in
-            [
+            var tool: [String: Any] = [
                 "name": name,
                 "description": description,
                 "inputSchema": [
@@ -12,6 +12,29 @@ enum XomoToolCatalog {
                     "additionalProperties": true
                 ]
             ]
+            if name == "xomo.clipboard.action" {
+                tool["description"] = "Copy, cut, and paste through the system clipboard, including Xomo in-place layer paste."
+                tool["inputSchema"] = [
+                    "type": "object",
+                    "properties": [
+                        "action": [
+                            "type": "string",
+                            "enum": [
+                                "pasteAsLayer",
+                                "pasteIntoSelection",
+                                "pasteInPlace",
+                                "copySelection",
+                                "cutSelection",
+                                "copyMerged",
+                                "copySelectedLayers"
+                            ]
+                        ]
+                    ],
+                    "required": ["action"],
+                    "additionalProperties": true
+                ]
+            }
+            return tool
         }
     }
 
@@ -76,7 +99,7 @@ enum XomoToolCatalog {
         ("xomo.selection.smooth", "Smooth the current selection boundary."),
         ("xomo.selection.edit", "Fill, stroke, clear, duplicate, copy, or cut selected pixels."),
         ("xomo.selection.modify", "Save, restore, transform, clean, or nudge the pixel selection."),
-        ("xomo.clipboard.action", "Copy, cut, and paste through the system clipboard."),
+        ("xomo.clipboard.action", "Copy, cut, and paste through the system clipboard, including Xomo in-place layer paste."),
         ("xomo.channel.list", "List alpha channels."),
         ("xomo.channel.create", "Create a blank alpha channel."),
         ("xomo.channel.select", "Select an alpha channel."),

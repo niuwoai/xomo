@@ -50,6 +50,7 @@ struct XomoAutomationTests {
         #expect(clipboardTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["action"]?.objectValue?["enum"] == .array([
             .string("pasteAsLayer"),
             .string("pasteIntoSelection"),
+            .string("pasteInPlace"),
             .string("copySelection"),
             .string("cutSelection"),
             .string("copyMerged"),
@@ -127,6 +128,35 @@ struct XomoAutomationTests {
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.psd.save")
         })
+    }
+
+    @Test func registryPastesXomoClipboardLayerInPlace() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        let layerIndex = try #require(viewModel.document.selectedLayerIndex)
+        let frame = CGRect(x: 36, y: 42, width: 48, height: 32)
+        let image = try #require(NSImage.rendered(size: frame.size) { rect in
+            NSColor.systemOrange.setFill()
+            rect.fill()
+        })
+        viewModel.document.layers[layerIndex].image = image
+        viewModel.document.layers[layerIndex].frame = frame
+
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        defer { pasteboard.clearContents() }
+        viewModel.copySelectedLayersToClipboard()
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.clipboard.action",
+            arguments: ["action": .string("pasteInPlace")]
+        ))
+
+        #expect(response.ok)
+        #expect(viewModel.document.selectedLayer?.frame == frame)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.clipboardPasteLayer"))
     }
 
     @Test func registryQueuesPSDOpenThroughTheSharedCoordinator() throws {

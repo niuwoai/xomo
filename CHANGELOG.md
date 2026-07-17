@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc226 - 2026-07-18
+
+### Added
+- `xomo.clipboard.action` 新增 `pasteInPlace`，与 UI 复用 Xomo 图层原位粘贴入口；外部图片仍按普通居中方式粘贴。
+
+### Verification
+- Xomo 自动化回归通过 52/52，CLI schema 回归通过 2/2，原位粘贴专项通过 1/1，macOS 13 App 测试构建成功；报告：`test-reports/rc226-automation/`、`test-reports/rc226-single/`。
+
 ## 2.12.0-rc225 - 2026-07-18
 
 ### Added

@@ -2283,6 +2283,7 @@ final class XomoAutomationRegistry {
         switch try requiredString("action", in: arguments) {
         case "pasteAsLayer": viewModel.pasteClipboardAsLayer()
         case "pasteIntoSelection": viewModel.pasteClipboardIntoSelectionAsLayer()
+        case "pasteInPlace": viewModel.pasteClipboardInPlaceAsLayer()
         case "copySelection": viewModel.copySelectionToClipboard()
         case "cutSelection": viewModel.cutSelectionToClipboard()
         case "copyMerged": viewModel.copyMergedToClipboard()
@@ -3200,8 +3201,8 @@ private extension XomoAutomationRegistry {
             "points": pointsSchema,
             "reveal": XomoAutomationSchema.boolean(description: "Reveal selected areas instead of masking them while painting")
         ], required: ["action"]),
-        tool("xomo.clipboard.action", "Copy or cut selected pixels and paste clipboard images as editable layers.", [
-            "action": XomoAutomationSchema.string(description: "Clipboard action", values: ["pasteAsLayer", "pasteIntoSelection", "copySelection", "cutSelection", "copyMerged", "copySelectedLayers"])
+        tool("xomo.clipboard.action", "Copy or cut selected pixels and paste clipboard images as editable layers, including Xomo in-place paste.", [
+            "action": XomoAutomationSchema.string(description: "Clipboard action", values: ["pasteAsLayer", "pasteIntoSelection", "pasteInPlace", "copySelection", "cutSelection", "copyMerged", "copySelectedLayers"])
         ], required: ["action"]),
         tool("xomo.channel.list", "List alpha channels."),
         tool("xomo.channel.create", "Create a blank alpha channel."),
