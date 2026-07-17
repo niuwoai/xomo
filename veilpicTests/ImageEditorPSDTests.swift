@@ -488,6 +488,25 @@ struct ImageEditorPSDTests {
         #expect(abs(restoredContent.firstLineIndent - content.firstLineIndent) < 0.01)
     }
 
+    @Test func externalSmartObjectFixtureUsesNativeRasterFallback() throws {
+        let data = try psdFixtureData("unsupported-features.psd")
+        let document = try ImageEditorPSDCodec.decode(data, sourceName: "unsupported-features.psd")
+        let layer = try #require(document.layers.first)
+
+        #expect(layer.isSmartObject)
+        #expect(layer.smartObjectContent?.sourceName == "Complex Design Layer")
+        #expect(layer.image.size == CGSize(width: 4, height: 4))
+
+        let report = try ImageEditorPSDCodec.compatibilityReport(data)
+        #expect(report.issues.contains { $0.kind == .smartObjectRasterized })
+
+        let project = try ImageEditorProjectDocument(document: document)
+        let restored = try project.restoredDocument()
+        #expect(restored.layers.first?.isSmartObject == true)
+        #expect(restored.layers.first?.smartObjectContent?.sourceName == layer.smartObjectContent?.sourceName)
+        #expect(restored.layers.first?.image.size == layer.image.size)
+    }
+
     @Test func externalVectorMaskFixtureBecomesNativeEditablePath() throws {
         let data = try psdFixtureData("vector-mask.psd")
         let document = try ImageEditorPSDCodec.decode(data, sourceName: "vector-mask.psd")

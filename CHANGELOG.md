@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc216 - 2026-07-17
+
+### Added
+- 含 Photoshop `SoLd`/`PlLd` 标记的 PSD 图层现在导入为 Xomo 原生智能对象栅格回退；不伪称保留嵌入源，但变换、智能滤镜和项目往返继续保持非破坏语义。
+
+### Verification
+- `ImageEditorPSDTests` 定向回归通过 23/23，覆盖外部智能对象夹具的原生回退、兼容性报告与项目往返，报告：`test-reports/rc216-psd-smart-object/report.md`。
+
 ## 2.12.0-rc215 - 2026-07-17
 
 ### Added

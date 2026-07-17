@@ -1959,8 +1959,21 @@ enum ImageEditorPSDCodec {
             return layer
         }
         guard let image = imageFromChannels(channels, width: width, height: height) else { return nil }
-        var layer = ImageEditorLayer.blank(name: record.name, size: image.size)
-        layer.image = image
+        var layer: ImageEditorLayer
+        if record.isSmartObject {
+            // Photoshop's embedded source payload is intentionally not decoded
+            // here. Keep the rendered pixels inside Xomo's native smart-object
+            // wrapper so transforms and smart filters remain non-destructive,
+            // while the compatibility report still records the source loss.
+            layer = ImageEditorLayer.smartObject(
+                name: record.name,
+                image: image,
+                sourceName: record.name
+            )
+        } else {
+            layer = ImageEditorLayer.blank(name: record.name, size: image.size)
+            layer.image = image
+        }
         layer.frame = CGRect(
             x: record.left,
             y: canvasHeight - record.bottom,
@@ -2463,6 +2476,12 @@ nonisolated private struct PSDLayerRecord {
     let additionalKeys: Set<String>
     let textInfo: PSDTextLayerInfo?
     let vectorMaskInfo: PSDVectorMaskInfo?
+
+    var isSmartObject: Bool {
+        additionalKeys.contains("SoLd")
+            || additionalKeys.contains("PlLd")
+            || additionalKeys.contains("plLd")
+    }
 
     func channelDimensions(identifier: Int16) -> (width: Int, height: Int) {
         if identifier == -2 || identifier == -3, let mask {
