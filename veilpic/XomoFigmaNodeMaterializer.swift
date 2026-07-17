@@ -185,6 +185,9 @@ enum XomoFigmaNodeMaterializer {
         layer.stackChildLayout = item.stackChildLayout
         layer.isStackLayoutExcluded = item.isStackLayoutExcluded
         layer.isVisible = item.isVisible
+        if let blendMode = item.blendMode.flatMap(ImageEditorBlendMode.init(rawValue:)) {
+            layer.blendMode = blendMode
+        }
         if item.isMask {
             layer.isVisible = false
         }

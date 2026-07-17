@@ -273,7 +273,8 @@ enum XomoFigmaNodeImportMapper {
         if (node.effects ?? []).contains(where: { !isSupportedEffect($0) }) {
             issues.append(.effectsFlattened)
         }
-        if let blendMode = node.blendMode, blendMode != "NORMAL", blendMode != "PASS_THROUGH" {
+        if let blendMode = node.blendMode,
+           mappedBlendMode(blendMode) == nil {
             issues.append(.blendModeFlattened)
         }
         if hasUnsupportedCornerStyle(node) {
@@ -320,6 +321,7 @@ enum XomoFigmaNodeImportMapper {
             },
             opacity: min(max(node.opacity ?? 1, 0), 1),
             isVisible: node.visible ?? true,
+            blendMode: mappedBlendMode(node.blendMode)?.rawValue,
             solidFill: solidColor(in: node.fills),
             linearGradientFill: supportsGradientFill(node.type)
                 ? linearGradient(in: node.fills, bounds: node.absoluteBoundingBox)
@@ -379,6 +381,52 @@ enum XomoFigmaNodeImportMapper {
             stackChildLayout: stackChildLayout(node),
             isStackLayoutExcluded: node.layoutPositioning == "ABSOLUTE"
         )
+    }
+
+    private static func mappedBlendMode(_ rawValue: String?) -> ImageEditorBlendMode? {
+        guard let rawValue else { return nil }
+        switch rawValue {
+        case "NORMAL":
+            return .normal
+        case "PASS_THROUGH":
+            return .passThrough
+        case "MULTIPLY":
+            return .multiply
+        case "SCREEN":
+            return .screen
+        case "OVERLAY":
+            return .overlay
+        case "DARKEN":
+            return .darken
+        case "LIGHTEN":
+            return .lighten
+        case "COLOR_DODGE":
+            return .colorDodge
+        case "COLOR_BURN":
+            return .colorBurn
+        case "LINEAR_DODGE":
+            return .linearDodge
+        case "LINEAR_BURN":
+            return .linearBurn
+        case "HARD_LIGHT":
+            return .hardLight
+        case "SOFT_LIGHT":
+            return .softLight
+        case "DIFFERENCE":
+            return .difference
+        case "EXCLUSION":
+            return .exclusion
+        case "HUE":
+            return .hue
+        case "SATURATION":
+            return .saturation
+        case "COLOR":
+            return .color
+        case "LUMINOSITY":
+            return .luminosity
+        default:
+            return nil
+        }
     }
 
     private static func stackChildLayout(_ node: XomoFigmaNode) -> ImageEditorStackChildLayout? {

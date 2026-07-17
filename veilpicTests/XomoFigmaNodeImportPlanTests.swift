@@ -165,6 +165,81 @@ struct XomoFigmaNodeImportPlanTests {
         #expect((multiStopShape.fillGradient?.shapeColorStops[1].green ?? 0) > 0.95)
     }
 
+    @Test func supportedFigmaBlendModesRemainEditableAndUnknownModesStayExplicitlyPartial() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                """
+                {
+                  "name": "Blend Modes",
+                  "nodes": {
+                    "1:50": {
+                      "document": {
+                        "id": "1:50",
+                        "name": "Blend Frame",
+                        "type": "FRAME",
+                        "absoluteBoundingBox": {"x": 0, "y": 0, "width": 240, "height": 180},
+                        "children": [
+                          {
+                            "id": "2:50",
+                            "name": "Multiply",
+                            "type": "RECTANGLE",
+                            "blendMode": "MULTIPLY",
+                            "absoluteBoundingBox": {"x": 10, "y": 10, "width": 80, "height": 40},
+                            "fills": [{"type": "SOLID", "color": {"r": 1, "g": 0, "b": 0, "a": 1}}]
+                          },
+                          {
+                            "id": "2:51",
+                            "name": "Screen",
+                            "type": "RECTANGLE",
+                            "blendMode": "SCREEN",
+                            "absoluteBoundingBox": {"x": 100, "y": 10, "width": 80, "height": 40},
+                            "fills": [{"type": "SOLID", "color": {"r": 0, "g": 1, "b": 0, "a": 1}}]
+                          },
+                          {
+                            "id": "2:52",
+                            "name": "Future Mode",
+                            "type": "RECTANGLE",
+                            "blendMode": "PLUS_LIGHTER",
+                            "absoluteBoundingBox": {"x": 10, "y": 70, "width": 80, "height": 40},
+                            "fills": [{"type": "SOLID", "color": {"r": 0, "g": 0, "b": 1, "a": 1}}]
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+                """.utf8
+            )
+        )
+        let plan = try XomoFigmaNodeImportMapper.makePlan(
+            response: response,
+            requestedNodeID: "1:50"
+        )
+        let multiply = try #require(plan.items.first { $0.sourceID == "2:50" })
+        let screen = try #require(plan.items.first { $0.sourceID == "2:51" })
+        let unknown = try #require(plan.items.first { $0.sourceID == "2:52" })
+        #expect(multiply.blendMode == ImageEditorBlendMode.multiply.rawValue)
+        #expect(multiply.fidelity == .exact)
+        #expect(!multiply.issues.contains(.blendModeFlattened))
+        #expect(screen.blendMode == ImageEditorBlendMode.screen.rawValue)
+        #expect(screen.fidelity == .exact)
+        #expect(unknown.blendMode == nil)
+        #expect(unknown.fidelity == .partial)
+        #expect(unknown.issues.contains(.blendModeFlattened))
+
+        let materialized = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: CGSize(width: 400, height: 300)
+        )
+        let multiplyLayer = try #require(materialized.layers.first { $0.name == "Multiply" })
+        let screenLayer = try #require(materialized.layers.first { $0.name == "Screen" })
+        let unknownLayer = try #require(materialized.layers.first { $0.name == "Future Mode" })
+        #expect(multiplyLayer.blendMode == .multiply)
+        #expect(screenLayer.blendMode == .screen)
+        #expect(unknownLayer.blendMode == .normal)
+    }
+
     @Test func multipleSolidFillsCompositeVisuallyAndReportLostFillSemantics() throws {
         let response = try JSONDecoder().decode(
             XomoFigmaNodeResponse.self,
