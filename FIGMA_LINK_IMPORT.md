@@ -1,6 +1,6 @@
 # Xomo Figma 链接导入边界
 
-> 最后更新：2026-07-18 ｜ 当前版本：v2.12.0-rc234 ｜ 当前阶段：设计 token 主题文件交换与 Figma 源节点回溯、组件属性本地覆盖与链接安全解析
+> 最后更新：2026-07-18 ｜ 当前版本：v2.12.0-rc235 ｜ 当前阶段：设计 token 主题文件交换与 Figma 源节点回溯、组件属性本地覆盖与链接安全解析
 
 rc188 起，`xomo.figma.link` MCP/CLI 工具可在不联网、不保存凭据的前提下校验并规范化 Figma 链接，输出资源类型、文件身份、节点选择器、导入范围和被丢弃的查询参数数量。
 
@@ -94,7 +94,8 @@ rc72 依据 Figma 官方 [Paint / ColorStop 属性说明](https://developers.fig
 25. **rc88（当前，已完成）**：水平 `counterAxisAlignItems=BASELINE` 映射为原生首行基线对齐；文字读取实时字体度量，普通图形回退到底边，Wrap 逐行计算基线上下包络。
 26. **rc232（已完成）**：同一节点的多个纯色 Fill 按 Figma 源绘制顺序做 alpha 合成，进入一个可编辑纯色图层；独立 Fill 的逐项编辑语义仍在导入报告中明确降级，渐变/图片/混合 Paint 继续走既有边界。
 27. **rc233（已完成）**：无剪切的正交旋转/镜像矢量路径保留相对变换，并在材质化时真实变换路径锚点与控制点；剪切、文字和带子节点组变换仍明确标记为降级。
-28. **rc234（当前，已完成）**：Figma Frame/Group 的 `clipsContent` 在存在有效边界时导入为 Xomo 原生矩形组蒙版；溢出子内容在画布上被裁切，并保留可继续编辑的组蒙版。
+28. **rc234（已完成）**：Figma Frame/Group 的 `clipsContent` 在存在有效边界时导入为 Xomo 原生矩形组蒙版；溢出子内容在画布上被裁切，并保留可继续编辑的组蒙版。
+29. **rc235（当前，已完成）**：Figma 组中单个有有效边界且位于后续兄弟之前的矩形 `isMask` 子节点导入为 Xomo 原生组矩形蒙版；mask 源图层保持隐藏但可回溯，复杂矢量、多级或缺少边界的 mask 明确降级。
 
 ## 官方依据
 
@@ -103,6 +104,7 @@ rc72 依据 Figma 官方 [Paint / ColorStop 属性说明](https://developers.fig
 - [Figma 图片填充端点](https://developers.figma.com/docs/rest-api/file-endpoints/)：`GET /v1/files/:key/images` 以 `imageRef` 返回最长约 14 天有效的临时下载 URL，要求 `file_content:read`。
 - [Figma Paint 属性](https://developers.figma.com/docs/rest-api/file-property-types/)：渐变 Paint 的三个归一化控制点依次表示起点、终点和宽度，rc78 据此验证径向双轴；图片 Paint 的 Fill/Fit/Tile/Stretch、`imageTransform`、`scalingFactor`、`rotation` 与 7 项 `filters` 按白名单进行本地像素烘焙。
 - [Figma 节点类型](https://developers.figma.com/docs/rest-api/file-node-types/)：Frame、Group、Vector、Text、Rectangle、Ellipse、Component 与 Instance 的可读取字段构成 rc59 映射依据。
+- [Figma isMask 属性](https://developers.figma.com/docs/plugins/api/properties/nodes-ismask/)：mask 节点作用于 `children` 数组中其后的兄弟节点；rc235 仅支持单个有有效边界的矩形子节点这一可验证子集。
 - [Figma Auto Layout Wrap](https://developers.figma.com/docs/plugins/api/properties/nodes-layoutwrap/)：`layoutWrap=WRAP` 只适用于水平 Auto Layout；[counterAxisSpacing](https://developers.figma.com/docs/plugins/api/properties/nodes-counteraxisspacing/) 定义换行轨道之间的正数间距，rc87 据此建立水平分行与独立行间距。
 - [Figma Auto Layout Baseline](https://developers.figma.com/docs/plugins/api/properties/nodes-counteraxisalignitems/)：`BASELINE` 只允许水平 Auto Layout，并要求子项沿文字基线对齐；rc88 据此限制属性入口与导入边界。
 - [Figma API 限流](https://developers.figma.com/docs/rest-api/rate-limits/)：文件节点读取属于 Tier 1，配额按席位和计划不同，因此界面使用显式读取且不自动刷新。

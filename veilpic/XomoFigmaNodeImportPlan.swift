@@ -285,6 +285,8 @@ struct XomoFigmaNodeImportItem: Equatable, Identifiable, Sendable {
     var geometrySize: XomoFigmaPlanSize?
     var relativeTransform: XomoFigmaPlanTransform?
     var clipsContent: Bool = false
+    var isMask: Bool = false
+    var maskFrame: XomoFigmaPlanRect?
     var imageReference: String?
     var imageScaleMode: String?
     var imageTransform: XomoFigmaPlanTransform?

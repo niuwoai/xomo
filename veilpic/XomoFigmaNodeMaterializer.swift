@@ -113,8 +113,17 @@ enum XomoFigmaNodeMaterializer {
             if let assignedGroupID { layer.id = assignedGroupID }
             if let frame = mappedFrame(item.frame, transform: transform) {
                 layer.frame = frame
-                if item.clipsContent {
-                    layer.mask = rectangularCanvasMask(frame: frame, canvasSize: canvasSize)
+            }
+            let clipMask = item.clipsContent
+                ? item.frame.flatMap { mappedFrame($0, transform: transform) }
+                : nil
+            let nodeMask = item.maskFrame.flatMap { mappedFrame($0, transform: transform) }
+            for maskFrame in [clipMask, nodeMask].compactMap({ $0 }) {
+                guard let mask = rectangularCanvasMask(frame: maskFrame, canvasSize: canvasSize) else { continue }
+                if let existingMask = layer.mask {
+                    layer.mask = combinedCanvasMasks(existingMask, mask)
+                } else {
+                    layer.mask = mask
                 }
             }
             layer.stackLayout = item.stackLayout
@@ -163,6 +172,9 @@ enum XomoFigmaNodeMaterializer {
         layer.stackChildLayout = item.stackChildLayout
         layer.isStackLayoutExcluded = item.isStackLayoutExcluded
         layer.isVisible = item.isVisible
+        if item.isMask {
+            layer.isVisible = false
+        }
         layer.opacity = min(max(item.opacity, 0), 1)
         return layer
     }
@@ -180,6 +192,24 @@ enum XomoFigmaNodeMaterializer {
             )
             NSColor.white.setFill()
             appKitFrame.fill()
+        }
+    }
+
+    private static func combinedCanvasMasks(_ first: NSImage, _ second: NSImage) -> NSImage? {
+        guard first.size == second.size else { return nil }
+        return NSImage.rendered(size: first.size) { rect in
+            first.draw(
+                in: rect,
+                from: CGRect(origin: .zero, size: first.size),
+                operation: .copy,
+                fraction: 1
+            )
+            second.draw(
+                in: rect,
+                from: CGRect(origin: .zero, size: second.size),
+                operation: .destinationIn,
+                fraction: 1
+            )
         }
     }
 

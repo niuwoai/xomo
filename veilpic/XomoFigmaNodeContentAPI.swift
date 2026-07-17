@@ -244,7 +244,13 @@ enum XomoFigmaNodeImportMapper {
            (nativeStackLayout == nil || hasUnsupportedAutoLayout(node)) {
             issues.append(.autoLayoutFlattened)
         }
-        if node.isMask == true {
+        if node.isMask == true,
+           !isSupportedMaskShape(node) {
+            issues.append(.maskFlattened)
+        }
+        let childMaskFrame = simpleMaskFrame(in: node.children, rootOrigin: rootOrigin)
+        if (node.children ?? []).contains(where: { $0.isMask == true }),
+           childMaskFrame == nil {
             issues.append(.maskFlattened)
         }
         if node.clipsContent == true,
@@ -333,6 +339,8 @@ enum XomoFigmaNodeImportMapper {
             },
             relativeTransform: XomoFigmaPlanTransform(node.relativeTransform),
             clipsContent: node.clipsContent == true && mapping.target == .group && node.absoluteBoundingBox != nil,
+            isMask: node.isMask == true,
+            maskFrame: childMaskFrame,
             imageReference: imagePaint?.imageRef,
             imageScaleMode: imagePaint?.scaleMode,
             imageTransform: XomoFigmaPlanTransform(imagePaint?.imageTransform),
@@ -852,6 +860,31 @@ enum XomoFigmaNodeImportMapper {
             || hasInvalidUniformRadius
             || hasInvalidCornerSmoothing
             || hasApproximatedCornerSmoothing
+    }
+
+    private static func isSupportedMaskShape(_ node: XomoFigmaNode) -> Bool {
+        node.type == "RECTANGLE"
+            && node.absoluteBoundingBox?.width ?? 0 > 0
+            && node.absoluteBoundingBox?.height ?? 0 > 0
+    }
+
+    private static func simpleMaskFrame(
+        in children: [XomoFigmaNode]?,
+        rootOrigin: (x: Double, y: Double)
+    ) -> XomoFigmaPlanRect? {
+        guard let children,
+              children.filter({ $0.isMask == true }).count == 1,
+              let maskIndex = children.firstIndex(where: { $0.isMask == true }),
+              maskIndex < children.index(before: children.endIndex),
+              isSupportedMaskShape(children[maskIndex]),
+              let bounds = children[maskIndex].absoluteBoundingBox
+        else { return nil }
+        return XomoFigmaPlanRect(
+            x: bounds.x - rootOrigin.x,
+            y: bounds.y - rootOrigin.y,
+            width: bounds.width,
+            height: bounds.height
+        )
     }
 
     private static func hasNonIdentityTransform(_ transform: [[Double]]?) -> Bool {

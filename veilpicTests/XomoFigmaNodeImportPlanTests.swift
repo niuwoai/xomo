@@ -650,6 +650,62 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(layer.mask?.size == CGSize(width: 200, height: 200))
     }
 
+    @Test func mapperPreservesSimpleRectangleMaskOnSubsequentSiblings() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                """
+                {
+                  "name": "Masked Group",
+                  "nodes": {
+                    "1:81": {
+                      "document": {
+                        "id": "1:81",
+                        "name": "Masked Group",
+                        "type": "FRAME",
+                        "absoluteBoundingBox": {"x": 0, "y": 0, "width": 100, "height": 100},
+                        "children": [
+                          {
+                            "id": "2:81",
+                            "name": "Mask Rectangle",
+                            "type": "RECTANGLE",
+                            "absoluteBoundingBox": {"x": 20, "y": 20, "width": 60, "height": 60},
+                            "isMask": true,
+                            "fills": [{"type": "SOLID", "color": {"r": 1, "g": 1, "b": 1, "a": 1}}]
+                          },
+                          {
+                            "id": "2:82",
+                            "name": "Masked Content",
+                            "type": "RECTANGLE",
+                            "absoluteBoundingBox": {"x": 0, "y": 0, "width": 100, "height": 100},
+                            "fills": [{"type": "SOLID", "color": {"r": 0.9, "g": 0.2, "b": 0.1, "a": 1}}]
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+                """.utf8
+            )
+        )
+        let plan = try XomoFigmaNodeImportMapper.makePlan(response: response, requestedNodeID: "1:81")
+        let group = try #require(plan.items.first { $0.sourceID == "1:81" })
+        let mask = try #require(plan.items.first { $0.sourceID == "2:81" })
+        #expect(group.maskFrame == XomoFigmaPlanRect(x: 20, y: 20, width: 60, height: 60))
+        #expect(!group.issues.contains(.maskFlattened))
+        #expect(mask.isMask)
+        #expect(!mask.issues.contains(.maskFlattened))
+
+        let materialized = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: CGSize(width: 200, height: 200)
+        )
+        let groupLayer = try #require(materialized.layers.first { $0.xomoFigmaSourceID == "1:81" })
+        let maskLayer = try #require(materialized.layers.first { $0.xomoFigmaSourceID == "2:81" })
+        #expect(groupLayer.mask != nil)
+        #expect(!maskLayer.isVisible)
+    }
+
     @Test func mapperReportsPartialImageComponentLayoutAndUnsupportedNodes() async throws {
         let transport = RecordingFigmaNodeTransport(statusCode: 200, body: Self.validNodeResponse)
         let client = XomoFigmaNodeContentAPIClient(transport: transport)
@@ -1151,6 +1207,8 @@ struct XomoFigmaNodeImportPlanTests {
             geometrySize: nil,
             relativeTransform: nil,
             clipsContent: false,
+            isMask: false,
+            maskFrame: nil,
             imageReference: nil,
             imageScaleMode: nil,
             imageTransform: nil,
