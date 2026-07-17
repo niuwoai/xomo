@@ -2324,7 +2324,7 @@
 "imageEditor.action.selectionCopyMergedLayer" = "合成复制为层";
 "imageEditor.action.selectionCutLayer" = "选区剪切为层";
 "imageEditor.action.cutSelectionClipboard" = "剪切选区到剪贴板";
-"imageEditor.action.copySelectionClipboard" = "复制选区到剪贴板";
+"imageEditor.action.copySelectionClipboard" = "复制到剪贴板";
 "imageEditor.action.copyMergedClipboard" = "复制合并图像";
 "imageEditor.action.pasteClipboardLayer" = "粘贴为图层";
 "imageEditor.action.pasteClipboardIntoSelection" = "粘贴到选区";

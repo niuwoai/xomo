@@ -1449,6 +1449,28 @@ struct veilpicTests {
     }
 
     @MainActor
+    @Test func imageEditorCommandCopyFallsBackToSelectedLayerWithoutSelection() throws {
+        let canvas = testImage(color: .systemBlue, size: NSSize(width: 80, height: 60))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: canvas) { _ in }
+        let layerIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[layerIndex].image = testImage(color: .systemGreen, size: NSSize(width: 20, height: 16))
+        viewModel.document.layers[layerIndex].frame = CGRect(x: 16, y: 12, width: 20, height: 16)
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        defer { pasteboard.clearContents() }
+
+        #expect(!viewModel.hasSelection)
+        #expect(viewModel.canCopySelectionToClipboard)
+        viewModel.copySelectionToClipboard()
+
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectedLayersCopiedToClipboard"))
+        let copiedImage = try #require(NSImage(pasteboard: pasteboard))
+        let paintedPixel = try #require(copiedImage.color(at: CGPoint(x: 20, y: 16))?.usingColorSpace(.deviceRGB))
+        #expect(paintedPixel.greenComponent > 0.7)
+        #expect(paintedPixel.alphaComponent > 0.9)
+    }
+
+    @MainActor
     @Test func imageEditorRasterizeTextLayerPreservesStyleAndUndoRestoresEditableText() async throws {
         let canvasSize = NSSize(width: 120, height: 80)
         let image = testBitmapImage(size: canvasSize, background: .black)

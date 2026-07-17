@@ -36,7 +36,9 @@ extension ImageEditorViewModel {
     }
 
     var canCopySelectionToClipboard: Bool {
-        canCopySelectionToNewLayer
+        hasSelection
+            ? canCopySelectionToNewLayer
+            : canCopySelectedLayersToClipboard
     }
 
     var canCutSelectionToClipboard: Bool {
@@ -358,6 +360,11 @@ extension ImageEditorViewModel {
     }
 
     func copySelectionToClipboard() {
+        guard hasSelection else {
+            copySelectedLayersToClipboard()
+            return
+        }
+
         guard let selection = document.selection else {
             statusText = L10n.text("imageEditor.status.noSelection")
             return

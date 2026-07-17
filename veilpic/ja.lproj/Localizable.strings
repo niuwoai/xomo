@@ -2324,7 +2324,7 @@
 "imageEditor.action.selectionCopyMergedLayer" = "結合コピーでレイヤー";
 "imageEditor.action.selectionCutLayer" = "カットしてレイヤー";
 "imageEditor.action.cutSelectionClipboard" = "選択範囲をクリップボードへカット";
-"imageEditor.action.copySelectionClipboard" = "選択範囲をクリップボードへコピー";
+"imageEditor.action.copySelectionClipboard" = "クリップボードへコピー";
 "imageEditor.action.copyMergedClipboard" = "結合部分をコピー";
 "imageEditor.action.pasteClipboardLayer" = "レイヤーとしてペースト";
 "imageEditor.action.pasteClipboardIntoSelection" = "選択範囲内へペースト";

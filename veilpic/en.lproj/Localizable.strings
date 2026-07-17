@@ -2324,7 +2324,7 @@
 "imageEditor.action.selectionCopyMergedLayer" = "Layer via Merged Copy";
 "imageEditor.action.selectionCutLayer" = "Layer via Cut";
 "imageEditor.action.cutSelectionClipboard" = "Cut Selection to Clipboard";
-"imageEditor.action.copySelectionClipboard" = "Copy Selection to Clipboard";
+"imageEditor.action.copySelectionClipboard" = "Copy to Clipboard";
 "imageEditor.action.copyMergedClipboard" = "Copy Merged";
 "imageEditor.action.pasteClipboardLayer" = "Paste as Layer";
 "imageEditor.action.pasteClipboardIntoSelection" = "Paste Into Selection";
