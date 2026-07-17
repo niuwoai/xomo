@@ -4,6 +4,16 @@ import Testing
 
 @MainActor
 struct ImageEditorCanvasCursorTests {
+    @Test func cursorRectOnlyTreatsTheRenderedImageAsDrawableCanvas() {
+        let imageRect = CGRect(x: 120, y: 80, width: 720, height: 450)
+
+        #expect(ImageEditorCanvasCursor.isPointerOverDrawableCanvas(nil, imageRect: imageRect) == false)
+        #expect(ImageEditorCanvasCursor.isPointerOverDrawableCanvas(CGPoint(x: 120, y: 80), imageRect: imageRect))
+        #expect(ImageEditorCanvasCursor.isPointerOverDrawableCanvas(CGPoint(x: 839.99, y: 529.99), imageRect: imageRect))
+        #expect(ImageEditorCanvasCursor.isPointerOverDrawableCanvas(CGPoint(x: 100, y: 200), imageRect: imageRect) == false)
+        #expect(ImageEditorCanvasCursor.isPointerOverDrawableCanvas(CGPoint(x: 900, y: 600), imageRect: imageRect) == false)
+    }
+
     @Test func interactionModeSeparatesComponentLibraryFromToolsAndPan() {
         #expect(
             ImageEditorCanvasCursor.interactionMode(

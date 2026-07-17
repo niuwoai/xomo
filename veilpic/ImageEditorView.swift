@@ -1236,12 +1236,16 @@ struct ImageEditorView: View {
                 .overlay {
                     let imageRect = fittedImageRect(in: geometry.size)
                     let displayScale = imageRect.width / max(viewModel.document.canvasSize.width, 1)
+                    let isPointerOverDrawableCanvas = ImageEditorCanvasCursor.isPointerOverDrawableCanvas(
+                        hoverViewPoint,
+                        imageRect: imageRect
+                    )
                     ImageEditorCursorRectView(
                         cursor: ImageEditorCanvasCursor.cursor(
                             for: viewModel.selectedLeftSidebarTab,
                             selectedTool: viewModel.selectedTool,
                             brushDiameter: viewModel.brushSize * displayScale,
-                            isPointerOverCanvas: true,
+                            isPointerOverCanvas: isPointerOverDrawableCanvas,
                             handIsDragging: isCanvasPanGestureActive,
                             isSpacebarPanning: isSpacebarPanning,
                             isCanvasPanGestureActive: isCanvasPanGestureActive,
@@ -6941,6 +6945,11 @@ enum ImageEditorZoomDirection: Equatable {
 
 enum ImageEditorCanvasCursor {
     private static var cursorCache: [String: NSCursor] = [:]
+
+    static func isPointerOverDrawableCanvas(_ point: CGPoint?, imageRect: CGRect) -> Bool {
+        guard let point else { return false }
+        return imageRect.contains(point)
+    }
 
     /// Resolves the canvas cursor from the active sidebar mode in one place.
     /// The component library is a canvas object mode, not a drawing tool: it
