@@ -4469,6 +4469,24 @@ struct ImageEditorView: View {
         }
     }
 
+    private func figmaImageFillRow(
+        titleKey: String,
+        value: String,
+        monospaced: Bool = false
+    ) -> some View {
+        HStack(spacing: 7) {
+            Text(L10n.text(titleKey))
+                .font(.system(size: 10, weight: .medium))
+                .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+            Text(value)
+                .font(.system(size: 10, design: monospaced ? .monospaced : .default))
+                .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                .lineLimit(1)
+                .truncationMode(.middle)
+            Spacer(minLength: 0)
+        }
+    }
+
     private func propertiesPanel(showsTitle: Bool = true) -> some View {
         EditorPanel(title: L10n.text("imageEditor.panel.properties"), showsTitle: showsTitle) {
             VStack(alignment: .leading, spacing: 10) {
@@ -4584,6 +4602,44 @@ struct ImageEditorView: View {
                             .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
                             .lineLimit(1)
                             .truncationMode(.middle)
+                    }
+
+                    Divider().overlay(editorBorder)
+                }
+
+                if let imageFill = viewModel.selectedLayerFigmaImageFill {
+                    VStack(alignment: .leading, spacing: 7) {
+                        HStack(spacing: 8) {
+                            Text(L10n.text("imageEditor.properties.figmaImageFill"))
+                                .font(.system(size: 11, weight: .bold))
+                                .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                            Spacer(minLength: 4)
+                            Button(L10n.text("imageEditor.action.copyFigmaImageFill")) {
+                                viewModel.copySelectedFigmaImageFill()
+                            }
+                            .buttonStyle(EditorTextButtonStyle())
+                            .focusable(false)
+                            .accessibilityIdentifier("image-editor-copy-figma-image-fill")
+                        }
+
+                        figmaImageFillRow(
+                            titleKey: "imageEditor.properties.figmaImageReference",
+                            value: imageFill.imageReference,
+                            monospaced: true
+                        )
+                        figmaImageFillRow(
+                            titleKey: "imageEditor.properties.figmaImageScaleMode",
+                            value: imageFill.scaleMode ?? "—",
+                            monospaced: true
+                        )
+                        figmaImageFillRow(
+                            titleKey: "imageEditor.properties.figmaImageScalingFactor",
+                            value: imageFill.scalingFactor.map { String(format: "%.2f", $0) } ?? "—"
+                        )
+                        figmaImageFillRow(
+                            titleKey: "imageEditor.properties.figmaImageRotation",
+                            value: imageFill.rotation.map { String(format: "%.1f°", $0) } ?? "—"
+                        )
                     }
 
                     Divider().overlay(editorBorder)

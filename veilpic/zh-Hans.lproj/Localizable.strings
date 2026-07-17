@@ -2892,6 +2892,14 @@
 "imageEditor.action.copyFigmaSourceURL" = "复制 Figma 链接";
 "imageEditor.status.figmaSourceCopied" = "已复制 Figma 源节点引用";
 "imageEditor.status.figmaSourceURLCopied" = "已复制 Figma 源节点链接";
+"imageEditor.properties.figmaImageFill" = "Figma 图片填充";
+"imageEditor.properties.figmaImageReference" = "图片引用";
+"imageEditor.properties.figmaImageScaleMode" = "缩放模式";
+"imageEditor.properties.figmaImageScalingFactor" = "缩放因子";
+"imageEditor.properties.figmaImageRotation" = "旋转";
+"imageEditor.action.copyFigmaImageFill" = "复制图片填充元数据";
+"imageEditor.status.figmaImageFillCopied" = "已复制 Figma 图片填充元数据";
+"imageEditor.status.figmaImageFillCopyFailed" = "复制 Figma 图片填充元数据失败";
 "imageEditor.properties.figmaComponentProperties" = "Figma 组件属性";
 "imageEditor.action.copyFigmaComponentProperties" = "复制组件属性";
 "imageEditor.status.figmaComponentPropertiesCopied" = "已复制 Figma 组件属性";

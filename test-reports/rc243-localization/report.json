@@ -1,0 +1,9 @@
+{
+  "version": "2.12.0-rc243",
+  "suite": "LocalizationResourceTests",
+  "passed": 1,
+  "failed": 0,
+  "tests": [
+    "supportedLocalizationTablesKeepMatchingKeys"
+  ]
+}

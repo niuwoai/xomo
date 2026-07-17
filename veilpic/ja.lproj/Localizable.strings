@@ -2892,6 +2892,14 @@
 "imageEditor.action.copyFigmaSourceURL" = "Figma リンクをコピー";
 "imageEditor.status.figmaSourceCopied" = "Figma ソース参照をコピーしました";
 "imageEditor.status.figmaSourceURLCopied" = "Figma ソースリンクをコピーしました";
+"imageEditor.properties.figmaImageFill" = "Figma 画像塗りつぶし";
+"imageEditor.properties.figmaImageReference" = "画像参照";
+"imageEditor.properties.figmaImageScaleMode" = "拡大縮小モード";
+"imageEditor.properties.figmaImageScalingFactor" = "拡大縮小率";
+"imageEditor.properties.figmaImageRotation" = "回転";
+"imageEditor.action.copyFigmaImageFill" = "画像塗りつぶしメタデータをコピー";
+"imageEditor.status.figmaImageFillCopied" = "Figma 画像塗りつぶしメタデータをコピーしました";
+"imageEditor.status.figmaImageFillCopyFailed" = "Figma 画像塗りつぶしメタデータのコピーに失敗しました";
 "imageEditor.properties.figmaComponentProperties" = "Figma コンポーネントプロパティ";
 "imageEditor.action.copyFigmaComponentProperties" = "コンポーネントプロパティをコピー";
 "imageEditor.status.figmaComponentPropertiesCopied" = "Figma コンポーネントプロパティをコピーしました";

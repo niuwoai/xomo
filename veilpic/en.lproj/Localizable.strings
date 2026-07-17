@@ -2892,6 +2892,14 @@
 "imageEditor.action.copyFigmaSourceURL" = "Copy Figma link";
 "imageEditor.status.figmaSourceCopied" = "Figma source reference copied";
 "imageEditor.status.figmaSourceURLCopied" = "Figma source link copied";
+"imageEditor.properties.figmaImageFill" = "Figma image fill";
+"imageEditor.properties.figmaImageReference" = "Image reference";
+"imageEditor.properties.figmaImageScaleMode" = "Scale mode";
+"imageEditor.properties.figmaImageScalingFactor" = "Scaling factor";
+"imageEditor.properties.figmaImageRotation" = "Rotation";
+"imageEditor.action.copyFigmaImageFill" = "Copy image fill metadata";
+"imageEditor.status.figmaImageFillCopied" = "Figma image fill metadata copied";
+"imageEditor.status.figmaImageFillCopyFailed" = "Failed to copy Figma image fill metadata";
 "imageEditor.properties.figmaComponentProperties" = "Figma component properties";
 "imageEditor.action.copyFigmaComponentProperties" = "Copy component properties";
 "imageEditor.status.figmaComponentPropertiesCopied" = "Figma component properties copied";

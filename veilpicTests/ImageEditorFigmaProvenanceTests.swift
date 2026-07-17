@@ -20,6 +20,17 @@ struct ImageEditorFigmaProvenanceTests {
             "Is Enabled": XomoFigmaComponentProperty(type: "BOOLEAN", value: "true")
         ]
         layer.xomoFigmaSourceURL = URL(string: "https://www.figma.com/design/abc123/Checkout?node-id=1-60")
+        layer.xomoFigmaImageFill = XomoFigmaImageFillMetadata(
+            imageReference: "img-ref-hero",
+            scaleMode: "CROP",
+            imageTransform: XomoFigmaPlanTransform([
+                [0.8, 0.1, 0.12],
+                [-0.1, 0.9, 0.08]
+            ]),
+            scalingFactor: 1.5,
+            rotation: 90,
+            filters: XomoFigmaPlanImageFilters(exposure: 0.25, contrast: -0.2, saturation: 0.1)
+        )
         document.layers = [layer]
         document.selectedLayerID = layer.id
         document.selectedLayerIDs = [layer.id]
@@ -29,6 +40,8 @@ struct ImageEditorFigmaProvenanceTests {
         #expect(viewModel.selectedLayerFigmaNodeType == "BOOLEAN_OPERATION")
         #expect(viewModel.selectedLayerFigmaComponentRole == .instance)
         #expect(viewModel.selectedLayerFigmaComponentProperties["Size"]?.value == "Large")
+        #expect(viewModel.selectedLayerFigmaImageFill?.imageReference == "img-ref-hero")
+        #expect(viewModel.selectedLayerFigmaImageFill?.scaleMode == "CROP")
 
         viewModel.copySelectedFigmaSourceReference()
         #expect(NSPasteboard.general.string(forType: .string) == "BOOLEAN_OPERATION:1:60")
@@ -41,9 +54,16 @@ struct ImageEditorFigmaProvenanceTests {
         #expect(copied.contains("\"Is Enabled\""))
         #expect(copied.contains("\"VARIANT\""))
 
+        viewModel.copySelectedFigmaImageFill()
+        let copiedImageFill = try #require(NSPasteboard.general.string(forType: .string))
+        #expect(copiedImageFill.contains("\"img-ref-hero\""))
+        #expect(copiedImageFill.contains("\"CROP\""))
+        #expect(copiedImageFill.contains("\"exposure\""))
+
         let project = try ImageEditorProjectDocument(document: document)
         let restored = try project.restoredDocument()
         #expect(restored.layers.first?.xomoFigmaComponentProperties == layer.xomoFigmaComponentProperties)
+        #expect(restored.layers.first?.xomoFigmaImageFill == layer.xomoFigmaImageFill)
     }
 
     @Test func componentPropertyLocalOverrideUsesUndoAndRedo() throws {
