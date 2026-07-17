@@ -4707,6 +4707,66 @@ struct ImageEditorView: View {
                         .disabled(!viewModel.canEditSelectedFigmaImageFill)
                         .accessibilityIdentifier("image-editor-figma-image-fill-offset-y")
 
+                        HStack(spacing: 7) {
+                            Stepper(
+                                L10n.format(
+                                    "imageEditor.properties.figmaImageMatrixM11Value",
+                                    viewModel.selectedLayerFigmaImageFillMatrixM11
+                                ),
+                                value: Binding(
+                                    get: { viewModel.selectedLayerFigmaImageFillMatrixM11 },
+                                    set: { viewModel.updateSelectedFigmaImageFillMatrixM11($0) }
+                                ),
+                                in: -10...10,
+                                step: 0.01
+                            )
+                            Stepper(
+                                L10n.format(
+                                    "imageEditor.properties.figmaImageMatrixM12Value",
+                                    viewModel.selectedLayerFigmaImageFillMatrixM12
+                                ),
+                                value: Binding(
+                                    get: { viewModel.selectedLayerFigmaImageFillMatrixM12 },
+                                    set: { viewModel.updateSelectedFigmaImageFillMatrixM12($0) }
+                                ),
+                                in: -10...10,
+                                step: 0.01
+                            )
+                        }
+                        .focusable(false)
+                        .disabled(!viewModel.canEditSelectedFigmaImageFill)
+                        .accessibilityIdentifier("image-editor-figma-image-fill-matrix-row-1")
+
+                        HStack(spacing: 7) {
+                            Stepper(
+                                L10n.format(
+                                    "imageEditor.properties.figmaImageMatrixM21Value",
+                                    viewModel.selectedLayerFigmaImageFillMatrixM21
+                                ),
+                                value: Binding(
+                                    get: { viewModel.selectedLayerFigmaImageFillMatrixM21 },
+                                    set: { viewModel.updateSelectedFigmaImageFillMatrixM21($0) }
+                                ),
+                                in: -10...10,
+                                step: 0.01
+                            )
+                            Stepper(
+                                L10n.format(
+                                    "imageEditor.properties.figmaImageMatrixM22Value",
+                                    viewModel.selectedLayerFigmaImageFillMatrixM22
+                                ),
+                                value: Binding(
+                                    get: { viewModel.selectedLayerFigmaImageFillMatrixM22 },
+                                    set: { viewModel.updateSelectedFigmaImageFillMatrixM22($0) }
+                                ),
+                                in: -10...10,
+                                step: 0.01
+                            )
+                        }
+                        .focusable(false)
+                        .disabled(!viewModel.canEditSelectedFigmaImageFill)
+                        .accessibilityIdentifier("image-editor-figma-image-fill-matrix-row-2")
+
                         Toggle(
                             L10n.text("imageEditor.properties.figmaImageFillFiltersEnabled"),
                             isOn: Binding(

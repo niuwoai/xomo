@@ -1,0 +1,9 @@
+{
+  "version": "2.12.0-rc248",
+  "suite": "ImageEditorFigmaProvenanceTests",
+  "result": "passed",
+  "passed": 4,
+  "failed": 0,
+  "total": 4,
+  "xcresult": "/tmp/xomo-rc248-figma-matrix/Logs/Test/Test-veilpic-2026.07.18_07-11-17-+0800.xcresult"
+}

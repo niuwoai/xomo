@@ -1,0 +1,9 @@
+{
+  "version": "2.12.0-rc248",
+  "suite": "XomoMCPServerTests",
+  "result": "passed",
+  "passed": 2,
+  "failed": 0,
+  "total": 2,
+  "command": "swift test --disable-sandbox"
+}

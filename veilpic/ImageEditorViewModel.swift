@@ -800,6 +800,22 @@ final class ImageEditorViewModel: ObservableObject {
         selectedLayerFigmaImageFill?.imageTransform?.translationY ?? 0
     }
 
+    var selectedLayerFigmaImageFillMatrixM11: Double {
+        selectedLayerFigmaImageFill?.imageTransform?.m11 ?? 1
+    }
+
+    var selectedLayerFigmaImageFillMatrixM12: Double {
+        selectedLayerFigmaImageFill?.imageTransform?.m12 ?? 0
+    }
+
+    var selectedLayerFigmaImageFillMatrixM21: Double {
+        selectedLayerFigmaImageFill?.imageTransform?.m21 ?? 0
+    }
+
+    var selectedLayerFigmaImageFillMatrixM22: Double {
+        selectedLayerFigmaImageFill?.imageTransform?.m22 ?? 1
+    }
+
     var canEditSelectedFigmaImageFill: Bool {
         document.selectedLayer?.xomoFigmaImageFill != nil
             && document.selectedLayer?.xomoFigmaImageFillSourceImage != nil
@@ -988,14 +1004,38 @@ final class ImageEditorViewModel: ObservableObject {
         )
     }
 
+    func updateSelectedFigmaImageFillMatrixM11(_ value: Double) {
+        updateSelectedFigmaImageFillTransform(field: .m11, value: value)
+    }
+
+    func updateSelectedFigmaImageFillMatrixM12(_ value: Double) {
+        updateSelectedFigmaImageFillTransform(field: .m12, value: value)
+    }
+
+    func updateSelectedFigmaImageFillMatrixM21(_ value: Double) {
+        updateSelectedFigmaImageFillTransform(field: .m21, value: value)
+    }
+
+    func updateSelectedFigmaImageFillMatrixM22(_ value: Double) {
+        updateSelectedFigmaImageFillTransform(field: .m22, value: value)
+    }
+
     private enum FigmaImageFillTransformField {
         case offsetX
         case offsetY
+        case m11
+        case m12
+        case m21
+        case m22
 
         var historyKey: String {
             switch self {
             case .offsetX: return "imageEditor.history.figmaImageFillOffsetX"
             case .offsetY: return "imageEditor.history.figmaImageFillOffsetY"
+            case .m11: return "imageEditor.history.figmaImageFillMatrixM11"
+            case .m12: return "imageEditor.history.figmaImageFillMatrixM12"
+            case .m21: return "imageEditor.history.figmaImageFillMatrixM21"
+            case .m22: return "imageEditor.history.figmaImageFillMatrixM22"
             }
         }
 
@@ -1003,6 +1043,10 @@ final class ImageEditorViewModel: ObservableObject {
             switch self {
             case .offsetX: return "imageEditor.status.figmaImageFillOffsetX"
             case .offsetY: return "imageEditor.status.figmaImageFillOffsetY"
+            case .m11: return "imageEditor.status.figmaImageFillMatrixM11"
+            case .m12: return "imageEditor.status.figmaImageFillMatrixM12"
+            case .m21: return "imageEditor.status.figmaImageFillMatrixM21"
+            case .m22: return "imageEditor.status.figmaImageFillMatrixM22"
             }
         }
     }
@@ -1024,6 +1068,14 @@ final class ImageEditorViewModel: ObservableObject {
             nextTransform.translationX = normalizedValue
         case .offsetY:
             nextTransform.translationY = normalizedValue
+        case .m11:
+            nextTransform.m11 = normalizedValue
+        case .m12:
+            nextTransform.m12 = normalizedValue
+        case .m21:
+            nextTransform.m21 = normalizedValue
+        case .m22:
+            nextTransform.m22 = normalizedValue
         }
         let nextImageTransform = isIdentityFigmaImageFillTransform(nextTransform)
             ? nil

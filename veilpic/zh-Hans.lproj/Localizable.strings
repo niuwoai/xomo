@@ -2901,6 +2901,10 @@
 "imageEditor.properties.figmaImageRotationValue" = "旋转 %.1f°";
 "imageEditor.properties.figmaImageOffsetXValue" = "裁切偏移 X %.2f";
 "imageEditor.properties.figmaImageOffsetYValue" = "裁切偏移 Y %.2f";
+"imageEditor.properties.figmaImageMatrixM11Value" = "矩阵 m11 %.2f";
+"imageEditor.properties.figmaImageMatrixM12Value" = "矩阵 m12 %.2f";
+"imageEditor.properties.figmaImageMatrixM21Value" = "矩阵 m21 %.2f";
+"imageEditor.properties.figmaImageMatrixM22Value" = "矩阵 m22 %.2f";
 "imageEditor.action.copyFigmaImageFill" = "复制图片填充元数据";
 "imageEditor.status.figmaImageFillCopied" = "已复制 Figma 图片填充元数据";
 "imageEditor.status.figmaImageFillCopyFailed" = "复制 Figma 图片填充元数据失败";
@@ -2914,6 +2918,14 @@
 "imageEditor.history.figmaImageFillOffsetY" = "修改 Figma 图片填充裁切偏移 Y";
 "imageEditor.status.figmaImageFillOffsetX" = "已更新 Figma 图片填充裁切偏移 X";
 "imageEditor.status.figmaImageFillOffsetY" = "已更新 Figma 图片填充裁切偏移 Y";
+"imageEditor.history.figmaImageFillMatrixM11" = "修改 Figma 图片填充矩阵 m11";
+"imageEditor.history.figmaImageFillMatrixM12" = "修改 Figma 图片填充矩阵 m12";
+"imageEditor.history.figmaImageFillMatrixM21" = "修改 Figma 图片填充矩阵 m21";
+"imageEditor.history.figmaImageFillMatrixM22" = "修改 Figma 图片填充矩阵 m22";
+"imageEditor.status.figmaImageFillMatrixM11" = "已更新 Figma 图片填充矩阵 m11";
+"imageEditor.status.figmaImageFillMatrixM12" = "已更新 Figma 图片填充矩阵 m12";
+"imageEditor.status.figmaImageFillMatrixM21" = "已更新 Figma 图片填充矩阵 m21";
+"imageEditor.status.figmaImageFillMatrixM22" = "已更新 Figma 图片填充矩阵 m22";
 "imageEditor.properties.figmaImageFillFiltersEnabled" = "使用导入的图片滤镜";
 "imageEditor.history.figmaImageFillFiltersEnabled" = "启用 Figma 图片填充滤镜";
 "imageEditor.history.figmaImageFillFiltersDisabled" = "停用 Figma 图片填充滤镜";

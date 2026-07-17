@@ -2901,6 +2901,10 @@
 "imageEditor.properties.figmaImageRotationValue" = "Rotation %.1f°";
 "imageEditor.properties.figmaImageOffsetXValue" = "Crop offset X %.2f";
 "imageEditor.properties.figmaImageOffsetYValue" = "Crop offset Y %.2f";
+"imageEditor.properties.figmaImageMatrixM11Value" = "Matrix m11 %.2f";
+"imageEditor.properties.figmaImageMatrixM12Value" = "Matrix m12 %.2f";
+"imageEditor.properties.figmaImageMatrixM21Value" = "Matrix m21 %.2f";
+"imageEditor.properties.figmaImageMatrixM22Value" = "Matrix m22 %.2f";
 "imageEditor.action.copyFigmaImageFill" = "Copy image fill metadata";
 "imageEditor.status.figmaImageFillCopied" = "Figma image fill metadata copied";
 "imageEditor.status.figmaImageFillCopyFailed" = "Failed to copy Figma image fill metadata";
@@ -2914,6 +2918,14 @@
 "imageEditor.history.figmaImageFillOffsetY" = "Changed Figma image fill crop offset Y";
 "imageEditor.status.figmaImageFillOffsetX" = "Figma image fill crop offset X updated";
 "imageEditor.status.figmaImageFillOffsetY" = "Figma image fill crop offset Y updated";
+"imageEditor.history.figmaImageFillMatrixM11" = "Changed Figma image fill matrix m11";
+"imageEditor.history.figmaImageFillMatrixM12" = "Changed Figma image fill matrix m12";
+"imageEditor.history.figmaImageFillMatrixM21" = "Changed Figma image fill matrix m21";
+"imageEditor.history.figmaImageFillMatrixM22" = "Changed Figma image fill matrix m22";
+"imageEditor.status.figmaImageFillMatrixM11" = "Figma image fill matrix m11 updated";
+"imageEditor.status.figmaImageFillMatrixM12" = "Figma image fill matrix m12 updated";
+"imageEditor.status.figmaImageFillMatrixM21" = "Figma image fill matrix m21 updated";
+"imageEditor.status.figmaImageFillMatrixM22" = "Figma image fill matrix m22 updated";
 "imageEditor.properties.figmaImageFillFiltersEnabled" = "Use imported image filters";
 "imageEditor.history.figmaImageFillFiltersEnabled" = "Enabled Figma image fill filters";
 "imageEditor.history.figmaImageFillFiltersDisabled" = "Disabled Figma image fill filters";

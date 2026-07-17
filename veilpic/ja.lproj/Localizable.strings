@@ -2901,6 +2901,10 @@
 "imageEditor.properties.figmaImageRotationValue" = "回転 %.1f°";
 "imageEditor.properties.figmaImageOffsetXValue" = "切り抜きオフセット X %.2f";
 "imageEditor.properties.figmaImageOffsetYValue" = "切り抜きオフセット Y %.2f";
+"imageEditor.properties.figmaImageMatrixM11Value" = "マトリックス m11 %.2f";
+"imageEditor.properties.figmaImageMatrixM12Value" = "マトリックス m12 %.2f";
+"imageEditor.properties.figmaImageMatrixM21Value" = "マトリックス m21 %.2f";
+"imageEditor.properties.figmaImageMatrixM22Value" = "マトリックス m22 %.2f";
 "imageEditor.action.copyFigmaImageFill" = "画像塗りつぶしメタデータをコピー";
 "imageEditor.status.figmaImageFillCopied" = "Figma 画像塗りつぶしメタデータをコピーしました";
 "imageEditor.status.figmaImageFillCopyFailed" = "Figma 画像塗りつぶしメタデータのコピーに失敗しました";
@@ -2914,6 +2918,14 @@
 "imageEditor.history.figmaImageFillOffsetY" = "Figma 画像塗りつぶしの切り抜きオフセット Y を変更";
 "imageEditor.status.figmaImageFillOffsetX" = "Figma 画像塗りつぶしの切り抜きオフセット X を更新しました";
 "imageEditor.status.figmaImageFillOffsetY" = "Figma 画像塗りつぶしの切り抜きオフセット Y を更新しました";
+"imageEditor.history.figmaImageFillMatrixM11" = "Figma 画像塗りつぶしのマトリックス m11 を変更";
+"imageEditor.history.figmaImageFillMatrixM12" = "Figma 画像塗りつぶしのマトリックス m12 を変更";
+"imageEditor.history.figmaImageFillMatrixM21" = "Figma 画像塗りつぶしのマトリックス m21 を変更";
+"imageEditor.history.figmaImageFillMatrixM22" = "Figma 画像塗りつぶしのマトリックス m22 を変更";
+"imageEditor.status.figmaImageFillMatrixM11" = "Figma 画像塗りつぶしのマトリックス m11 を更新しました";
+"imageEditor.status.figmaImageFillMatrixM12" = "Figma 画像塗りつぶしのマトリックス m12 を更新しました";
+"imageEditor.status.figmaImageFillMatrixM21" = "Figma 画像塗りつぶしのマトリックス m21 を更新しました";
+"imageEditor.status.figmaImageFillMatrixM22" = "Figma 画像塗りつぶしのマトリックス m22 を更新しました";
 "imageEditor.properties.figmaImageFillFiltersEnabled" = "読み込んだ画像フィルターを使用";
 "imageEditor.history.figmaImageFillFiltersEnabled" = "Figma 画像塗りつぶしフィルターを有効化";
 "imageEditor.history.figmaImageFillFiltersDisabled" = "Figma 画像塗りつぶしフィルターを無効化";
