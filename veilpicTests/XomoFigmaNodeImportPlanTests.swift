@@ -489,6 +489,15 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(component.targetKind == .group)
         #expect(component.fidelity == .partial)
         #expect(component.componentRole == .component)
+        #expect(component.componentProperties["Size"] == XomoFigmaComponentProperty(
+            type: "VARIANT",
+            value: "Large",
+            preferredValues: [
+                XomoFigmaComponentPreferredValue(key: "Small", name: "Small"),
+                XomoFigmaComponentPreferredValue(key: "Large", name: "Large")
+            ]
+        ))
+        #expect(component.componentProperties["Is Enabled"]?.value == "true")
         #expect(component.issues.contains(.componentSemanticsFlattened))
         #expect(!component.issues.contains(.autoLayoutFlattened))
         #expect(component.stackLayout == ImageEditorStackLayout(
@@ -1516,6 +1525,10 @@ struct XomoFigmaNodeImportPlanTests {
                     "id": "2:7",
                     "name": "Card Component",
                     "type": "COMPONENT",
+                    "componentProperties": {
+                      "Size": {"type": "VARIANT", "value": "Large", "preferredValues": [{"key": "Small", "name": "Small"}, {"key": "Large", "name": "Large"}]},
+                      "Is Enabled": {"type": "BOOLEAN", "value": "true"}
+                    },
                     "layoutMode": "VERTICAL",
                     "primaryAxisSizingMode": "AUTO",
                     "counterAxisSizingMode": "AUTO",

@@ -281,6 +281,7 @@ enum XomoFigmaNodeImportMapper {
             sourceName: node.name,
             sourceType: node.type,
             componentRole: componentRole,
+            componentProperties: node.componentProperties ?? [:],
             targetKind: mapping.target,
             fidelity: fidelity,
             issues: issues,
@@ -896,6 +897,7 @@ struct XomoFigmaNode: Decodable {
     var fillGeometry: [XomoFigmaPath]?
     var strokeGeometry: [XomoFigmaPath]?
     var boundVariables: XomoFigmaBoundVariables?
+    var componentProperties: [String: XomoFigmaComponentProperty]?
 }
 
 struct XomoFigmaVariableReference: Decodable {

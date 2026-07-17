@@ -710,6 +710,14 @@ final class ImageEditorViewModel: ObservableObject {
         document.selectedLayer?.xomoFigmaComponentRole
     }
 
+    var selectedLayerFigmaComponentProperties: [String: XomoFigmaComponentProperty] {
+        document.selectedLayer?.xomoFigmaComponentProperties ?? [:]
+    }
+
+    var hasSelectedLayerFigmaComponentProperties: Bool {
+        !selectedLayerFigmaComponentProperties.isEmpty
+    }
+
     var selectedLayerFigmaSourceURL: URL? {
         document.selectedLayer?.xomoFigmaSourceURL
     }
@@ -730,6 +738,21 @@ final class ImageEditorViewModel: ObservableObject {
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(url.absoluteString, forType: .string)
         statusText = L10n.text("imageEditor.status.figmaSourceURLCopied")
+    }
+
+    func copySelectedFigmaComponentProperties() {
+        guard hasSelectedLayerFigmaComponentProperties else { return }
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        do {
+            let data = try encoder.encode(selectedLayerFigmaComponentProperties)
+            guard let value = String(data: data, encoding: .utf8) else { return }
+            NSPasteboard.general.clearContents()
+            NSPasteboard.general.setString(value, forType: .string)
+            statusText = L10n.text("imageEditor.status.figmaComponentPropertiesCopied")
+        } catch {
+            statusText = L10n.text("imageEditor.status.figmaComponentPropertiesCopyFailed")
+        }
     }
 
     func copyFigmaVariableBinding(_ binding: XomoFigmaVariableBinding) {

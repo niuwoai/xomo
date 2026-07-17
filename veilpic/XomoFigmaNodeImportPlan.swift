@@ -20,6 +20,37 @@ enum XomoFigmaComponentRole: String, Codable, Equatable, Sendable {
     case instance = "INSTANCE"
 }
 
+struct XomoFigmaComponentPreferredValue: Codable, Equatable, Hashable, Sendable {
+    var key: String
+    var name: String
+}
+
+struct XomoFigmaComponentProperty: Codable, Equatable, Hashable, Sendable {
+    var type: String
+    var value: String
+    var preferredValues: [XomoFigmaComponentPreferredValue]
+
+    init(
+        type: String,
+        value: String,
+        preferredValues: [XomoFigmaComponentPreferredValue] = []
+    ) {
+        self.type = type
+        self.value = value
+        self.preferredValues = preferredValues
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        type = try container.decode(String.self, forKey: .type)
+        value = try container.decode(String.self, forKey: .value)
+        preferredValues = try container.decodeIfPresent(
+            [XomoFigmaComponentPreferredValue].self,
+            forKey: .preferredValues
+        ) ?? []
+    }
+}
+
 enum XomoFigmaNodeMappingFidelity: String, CaseIterable, Sendable {
     case exact
     case partial
@@ -229,6 +260,7 @@ struct XomoFigmaNodeImportItem: Equatable, Identifiable, Sendable {
     var sourceName: String
     var sourceType: String
     var componentRole: XomoFigmaComponentRole?
+    var componentProperties: [String: XomoFigmaComponentProperty] = [:]
     var targetKind: XomoFigmaNodeTargetKind?
     var fidelity: XomoFigmaNodeMappingFidelity
     var issues: [XomoFigmaNodeMappingIssue]

@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc181 - 2026-07-17
+
+### Added
+- Figma 导入图层保留组件属性元数据（变体、布尔、文本和实例替换等），属性面板可查看并复制结构化 JSON，项目保存重开继续保留。
+
+### Verification
+- Figma 专项独立进程测试 68/68、本地化资源测试 4/4、macOS 13 Debug `build-for-testing`、SwiftPM CLI 测试 2/2 通过。
+
 ## 2.12.0-rc180 - 2026-07-17
 
 ### Verification

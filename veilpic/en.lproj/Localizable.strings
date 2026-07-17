@@ -2880,6 +2880,10 @@
 "imageEditor.action.copyFigmaSourceURL" = "Copy Figma link";
 "imageEditor.status.figmaSourceCopied" = "Figma source reference copied";
 "imageEditor.status.figmaSourceURLCopied" = "Figma source link copied";
+"imageEditor.properties.figmaComponentProperties" = "Figma component properties";
+"imageEditor.action.copyFigmaComponentProperties" = "Copy component properties";
+"imageEditor.status.figmaComponentPropertiesCopied" = "Figma component properties copied";
+"imageEditor.status.figmaComponentPropertiesCopyFailed" = "Failed to copy Figma component properties";
 "xomo.figma.resource.design" = "Figma Design";
 "xomo.figma.resource.legacyFile" = "Figma Design (legacy link)";
 "xomo.figma.resource.prototype" = "Figma Prototype";

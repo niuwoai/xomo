@@ -2880,6 +2880,10 @@
 "imageEditor.action.copyFigmaSourceURL" = "复制 Figma 链接";
 "imageEditor.status.figmaSourceCopied" = "已复制 Figma 源节点引用";
 "imageEditor.status.figmaSourceURLCopied" = "已复制 Figma 源节点链接";
+"imageEditor.properties.figmaComponentProperties" = "Figma 组件属性";
+"imageEditor.action.copyFigmaComponentProperties" = "复制组件属性";
+"imageEditor.status.figmaComponentPropertiesCopied" = "已复制 Figma 组件属性";
+"imageEditor.status.figmaComponentPropertiesCopyFailed" = "复制 Figma 组件属性失败";
 "xomo.figma.resource.design" = "Figma Design";
 "xomo.figma.resource.legacyFile" = "Figma Design（旧版链接）";
 "xomo.figma.resource.prototype" = "Figma 原型";

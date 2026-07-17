@@ -270,6 +270,7 @@ struct ImageEditorProjectLayer: Codable {
     var xomoFigmaSourceID: String?
     var xomoFigmaNodeType: String?
     var xomoFigmaComponentRole: XomoFigmaComponentRole?
+    var xomoFigmaComponentProperties: [String: XomoFigmaComponentProperty]?
     var xomoFigmaSourceURL: URL?
 
     @MainActor
@@ -334,6 +335,9 @@ struct ImageEditorProjectLayer: Codable {
         xomoFigmaSourceID = layer.xomoFigmaSourceID
         xomoFigmaNodeType = layer.xomoFigmaNodeType
         xomoFigmaComponentRole = layer.xomoFigmaComponentRole
+        xomoFigmaComponentProperties = layer.xomoFigmaComponentProperties.isEmpty
+            ? nil
+            : layer.xomoFigmaComponentProperties
         xomoFigmaSourceURL = layer.xomoFigmaSourceURL
     }
 
@@ -389,6 +393,7 @@ struct ImageEditorProjectLayer: Codable {
         layer.xomoFigmaSourceID = xomoFigmaSourceID
         layer.xomoFigmaNodeType = xomoFigmaNodeType
         layer.xomoFigmaComponentRole = xomoFigmaComponentRole
+        layer.xomoFigmaComponentProperties = xomoFigmaComponentProperties ?? [:]
         layer.xomoFigmaSourceURL = xomoFigmaSourceURL
         return layer
     }

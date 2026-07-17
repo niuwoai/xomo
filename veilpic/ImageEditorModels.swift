@@ -2804,6 +2804,7 @@ struct ImageEditorLayer: Identifiable {
     var xomoFigmaSourceID: String?
     var xomoFigmaNodeType: String?
     var xomoFigmaComponentRole: XomoFigmaComponentRole?
+    var xomoFigmaComponentProperties: [String: XomoFigmaComponentProperty] = [:]
     var xomoFigmaSourceURL: URL?
 
     static func background(image: NSImage) -> ImageEditorLayer {
