@@ -1,0 +1,19 @@
+{
+  "generated_at": "2026-07-17 09:40:10 +0800",
+  "total": 1,
+  "passed": 1,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registryManagesComponentMastersAndInstances",
+      "identifier": "veilpicTests/XomoAutomationTests/registryManagesComponentMastersAndInstances",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 5.764,
+      "issues": [],
+      "log": "XomoAutomationTests.registryManagesComponentMastersAndInstances.log"
+    }
+  ]
+}

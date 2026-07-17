@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.12.0-rc187 - 2026-07-17
+
+### Added
+- 新增 `xomo.component.instance` MCP/CLI 工具，支持把 UI 组件设为主组件、链接实例、同步主组件主题并解除实例链接；自动化入口与组件库 UI 共用实例模型和 Undo/Redo。
+
+### Fixed
+- 修正 MCP 工具总数文档，将当前工具数从 114 更新为 116。
+
+### Verification
+- `XomoAutomationTests` 44/44（含组件实例正向与失败契约）、SwiftPM CLI 测试 2/2，以及 macOS 13 Debug `build-for-testing` 通过。
+
 ## 2.12.0-rc186 - 2026-07-17
 
 ### Added

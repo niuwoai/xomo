@@ -92,6 +92,7 @@ enum XomoToolCatalog {
         ("xomo.component.list", "List editable Xomo UI components and themes."),
         ("xomo.component.tokens", "Read, import, export, apply, clear, or refresh local component design tokens as a .xomotokens.json file."),
         ("xomo.component.insert", "Insert an editable UI component as native layers."),
+        ("xomo.component.instance", "Create a component master, link selected components, synchronize linked instances, or detach instances."),
         ("xomo.color.get", "Read foreground and background colors."),
         ("xomo.color.set", "Set foreground or background color."),
         ("xomo.color.swap", "Swap foreground and background colors."),

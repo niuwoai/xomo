@@ -284,6 +284,8 @@ final class XomoAutomationRegistry {
             return try componentTokensResult(arguments, viewModel: viewModel)
         case "xomo.component.insert":
             try insertComponent(arguments, viewModel: viewModel)
+        case "xomo.component.instance":
+            return try componentInstanceAction(arguments, viewModel: viewModel)
         case "xomo.color.get":
             return colorResult(viewModel)
         case "xomo.color.set":
@@ -672,6 +674,60 @@ final class XomoAutomationRegistry {
                 "Unknown Figma component property action"
             )
         }
+    }
+
+    private func componentInstanceAction(
+        _ arguments: [String: XomoJSONValue],
+        viewModel: ImageEditorViewModel
+    ) throws -> XomoJSONValue {
+        let action = try requiredString("action", in: arguments)
+        switch action {
+        case "makeMaster":
+            guard viewModel.canSetSelectedXomoComponentAsMaster else {
+                throw XomoAutomationCallError.operationFailed("No applicable UI component is selected")
+            }
+            viewModel.setSelectedXomoComponentAsMaster()
+        case "link":
+            guard viewModel.canLinkSelectedXomoComponentsToMaster else {
+                throw XomoAutomationCallError.operationFailed("No matching component master or link target is selected")
+            }
+            viewModel.linkSelectedXomoComponentsToMaster()
+        case "sync":
+            guard viewModel.canSyncSelectedXomoComponentMaster else {
+                throw XomoAutomationCallError.operationFailed("No linked component instances are available to synchronize")
+            }
+            viewModel.syncSelectedXomoComponentMaster()
+        case "detach":
+            guard viewModel.canDetachSelectedXomoComponentInstances else {
+                throw XomoAutomationCallError.operationFailed("No linked component instances are selected")
+            }
+            viewModel.detachSelectedXomoComponentInstances()
+        default:
+            throw XomoAutomationCallError.invalidArgument(
+                "Unknown component instance action"
+            )
+        }
+        return componentInstanceResult(action: action, viewModel: viewModel)
+    }
+
+    private func componentInstanceResult(
+        action: String,
+        viewModel: ImageEditorViewModel
+    ) -> XomoJSONValue {
+        let components = viewModel.document.layers.compactMap { layer -> XomoJSONValue? in
+            guard layer.isGroup, let instance = layer.xomoComponentInstance else { return nil }
+            return .object([
+                "id": .string(layer.id.uuidString),
+                "kind": .string(instance.kind.rawValue),
+                "masterId": instance.masterID.map { .string($0.uuidString) } ?? .null,
+                "isMaster": .bool(instance.masterID == layer.id)
+            ])
+        }
+        return .object([
+            "action": .string(action),
+            "activeMasterId": viewModel.xomoActiveMasterID.map { .string($0.uuidString) } ?? .null,
+            "components": .array(components)
+        ])
     }
 
     private func selectionResult(_ viewModel: ImageEditorViewModel) -> XomoJSONValue {
@@ -2887,6 +2943,9 @@ private extension XomoAutomationRegistry {
             "x": XomoAutomationSchema.number(description: "Optional canvas x position"),
             "y": XomoAutomationSchema.number(description: "Optional canvas y position")
         ], required: ["component"]),
+        tool("xomo.component.instance", "Create a component master, link selected components, synchronize linked instances, or detach instances.", [
+            "action": XomoAutomationSchema.string(description: "Component instance action", values: ["makeMaster", "link", "sync", "detach"])
+        ], required: ["action"]),
         tool("xomo.color.get", "Read foreground and background RGBA colors."),
         tool("xomo.color.set", "Set the foreground or background RGBA color.", [
             "target": XomoAutomationSchema.string(description: "Color target", values: ["foreground", "background"]),

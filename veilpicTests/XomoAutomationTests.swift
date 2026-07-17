@@ -15,7 +15,7 @@ struct XomoAutomationTests {
             Issue.record("Expected tool array")
             return
         }
-        #expect(tools.count == 115)
+        #expect(tools.count == 116)
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.layer.list")
@@ -75,6 +75,10 @@ struct XomoAutomationTests {
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.figma.component_properties")
+        })
+        #expect(tools.contains { tool in
+            guard case .object(let value) = tool else { return false }
+            return value["name"] == .string("xomo.component.instance")
         })
     }
 
@@ -434,6 +438,97 @@ struct XomoAutomationTests {
         #expect(reset.ok)
         #expect(viewModel.document.selectedLayer?.xomoFigmaComponentProperties["Label"]?.value == "Continue")
         #expect(viewModel.document.history.last?.title == L10n.format("imageEditor.history.figmaComponentPropertyChanged", "Label"))
+    }
+
+    @Test func registryManagesComponentMastersAndInstances() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 40, y: 40))
+        let masterID = try #require(viewModel.document.selectedLayerID)
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 360, y: 40))
+        let instanceID = try #require(viewModel.document.selectedLayerID)
+
+        viewModel.selectLayer(masterID)
+        let madeMaster = registry.execute(request(
+            operation: "call",
+            name: "xomo.component.instance",
+            arguments: ["action": .string("makeMaster")]
+        ))
+        #expect(madeMaster.ok)
+        #expect(madeMaster.result?.objectValue?["activeMasterId"] == .string(masterID.uuidString))
+        #expect(viewModel.document.layers.first { $0.id == masterID }?.xomoComponentInstance?.masterID == masterID)
+
+        viewModel.document.selectedLayerID = instanceID
+        viewModel.document.selectedLayerIDs = [masterID, instanceID]
+        let linked = registry.execute(request(
+            operation: "call",
+            name: "xomo.component.instance",
+            arguments: ["action": .string("link")]
+        ))
+        #expect(linked.ok)
+        #expect(viewModel.document.layers.first { $0.id == instanceID }?.xomoComponentInstance?.masterID == masterID)
+
+        viewModel.selectLayer(masterID)
+        viewModel.selectXomoComponentTheme(.chakraUI)
+        viewModel.applyXomoThemeToSelectedComponent()
+        viewModel.selectLayer(instanceID)
+        let synced = registry.execute(request(
+            operation: "call",
+            name: "xomo.component.instance",
+            arguments: ["action": .string("sync")]
+        ))
+        #expect(synced.ok)
+        #expect(viewModel.document.layers.first { $0.id == instanceID }?.xomoComponentInstance?.theme == .chakraUI)
+
+        let detached = registry.execute(request(
+            operation: "call",
+            name: "xomo.component.instance",
+            arguments: ["action": .string("detach")]
+        ))
+        #expect(detached.ok)
+        #expect(viewModel.document.layers.first { $0.id == instanceID }?.xomoComponentInstance?.masterID == nil)
+        #expect(viewModel.document.history.last?.title == L10n.text("xomo.instance.history.detach"))
+    }
+
+    @Test func registryRejectsInvalidComponentInstanceActions() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        #expect(!registry.execute(request(
+            operation: "call",
+            name: "xomo.component.instance",
+            arguments: ["action": .string("makeMaster")]
+        )).ok)
+        #expect(!registry.execute(request(
+            operation: "call",
+            name: "xomo.component.instance",
+            arguments: ["action": .string("link")]
+        )).ok)
+
+        viewModel.insertXomoComponent(.button)
+        #expect(!registry.execute(request(
+            operation: "call",
+            name: "xomo.component.instance",
+            arguments: ["action": .string("link")]
+        )).ok)
+
+        #expect(registry.execute(request(
+            operation: "call",
+            name: "xomo.component.instance",
+            arguments: ["action": .string("makeMaster")]
+        )).ok)
+        #expect(!registry.execute(request(
+            operation: "call",
+            name: "xomo.component.instance",
+            arguments: ["action": .string("sync")]
+        )).ok)
+        #expect(!registry.execute(request(
+            operation: "call",
+            name: "xomo.component.instance",
+            arguments: ["action": .string("detach")]
+        )).ok)
     }
 
     @Test func registryCanInspectAndMutateTheActiveDocument() throws {
