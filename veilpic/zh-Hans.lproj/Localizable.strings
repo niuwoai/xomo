@@ -2900,6 +2900,11 @@
 "imageEditor.action.copyFigmaImageFill" = "复制图片填充元数据";
 "imageEditor.status.figmaImageFillCopied" = "已复制 Figma 图片填充元数据";
 "imageEditor.status.figmaImageFillCopyFailed" = "复制 Figma 图片填充元数据失败";
+"imageEditor.properties.figmaImageFillFiltersEnabled" = "使用导入的图片滤镜";
+"imageEditor.history.figmaImageFillFiltersEnabled" = "启用 Figma 图片填充滤镜";
+"imageEditor.history.figmaImageFillFiltersDisabled" = "停用 Figma 图片填充滤镜";
+"imageEditor.status.figmaImageFillFiltersEnabled" = "已启用 Figma 图片填充滤镜";
+"imageEditor.status.figmaImageFillFiltersDisabled" = "已停用 Figma 图片填充滤镜";
 "imageEditor.properties.figmaComponentProperties" = "Figma 组件属性";
 "imageEditor.action.copyFigmaComponentProperties" = "复制组件属性";
 "imageEditor.status.figmaComponentPropertiesCopied" = "已复制 Figma 组件属性";
@@ -3014,7 +3019,7 @@
 "xomo.figma.node.issue.imageAssetPending" = "图片资源尚未下载";
 "xomo.figma.node.issue.imageAssetUnavailable" = "图片资源不可用，保留占位层";
 "xomo.figma.node.issue.imageFillTransformFlattened" = "图片填充变换已烘焙为固定像素层";
-"xomo.figma.node.issue.imageFiltersBaked" = "图片滤镜已近似烘焙为像素，导入后不可单独编辑";
+"xomo.figma.node.issue.imageFiltersPreserved" = "图片滤镜会保留为可切换的非破坏性图层效果";
 "xomo.figma.node.issue.vectorGeometryMissing" = "缺少矢量路径数据";
 "xomo.figma.node.issue.vectorGeometryUnsupported" = "矢量路径包含无法解析的命令";
 "xomo.figma.node.issue.booleanOperationFlattened" = "布尔运算已展平为可编辑矢量路径";

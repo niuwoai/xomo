@@ -2900,6 +2900,11 @@
 "imageEditor.action.copyFigmaImageFill" = "画像塗りつぶしメタデータをコピー";
 "imageEditor.status.figmaImageFillCopied" = "Figma 画像塗りつぶしメタデータをコピーしました";
 "imageEditor.status.figmaImageFillCopyFailed" = "Figma 画像塗りつぶしメタデータのコピーに失敗しました";
+"imageEditor.properties.figmaImageFillFiltersEnabled" = "読み込んだ画像フィルターを使用";
+"imageEditor.history.figmaImageFillFiltersEnabled" = "Figma 画像塗りつぶしフィルターを有効化";
+"imageEditor.history.figmaImageFillFiltersDisabled" = "Figma 画像塗りつぶしフィルターを無効化";
+"imageEditor.status.figmaImageFillFiltersEnabled" = "Figma 画像塗りつぶしフィルターを有効にしました";
+"imageEditor.status.figmaImageFillFiltersDisabled" = "Figma 画像塗りつぶしフィルターを無効にしました";
 "imageEditor.properties.figmaComponentProperties" = "Figma コンポーネントプロパティ";
 "imageEditor.action.copyFigmaComponentProperties" = "コンポーネントプロパティをコピー";
 "imageEditor.status.figmaComponentPropertiesCopied" = "Figma コンポーネントプロパティをコピーしました";
@@ -3014,7 +3019,7 @@
 "xomo.figma.node.issue.imageAssetPending" = "画像素材はまだダウンロードされていません";
 "xomo.figma.node.issue.imageAssetUnavailable" = "画像素材を利用できないため、プレースホルダーを保持します";
 "xomo.figma.node.issue.imageFillTransformFlattened" = "画像塗りの変形は固定ピクセルレイヤーに焼き込まれます";
-"xomo.figma.node.issue.imageFiltersBaked" = "画像フィルターは近似的にピクセルへベイクされ、読み込み後は個別編集できません";
+"xomo.figma.node.issue.imageFiltersPreserved" = "画像フィルターは非破壊的で切り替え可能なレイヤー効果として保持されます";
 "xomo.figma.node.issue.vectorGeometryMissing" = "ベクターパスデータがありません";
 "xomo.figma.node.issue.vectorGeometryUnsupported" = "ベクターパスに解析できないコマンドがあります";
 "xomo.figma.node.issue.booleanOperationFlattened" = "ブール演算を編集可能なベクターパスに展開しました";

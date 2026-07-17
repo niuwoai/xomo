@@ -4640,6 +4640,17 @@ struct ImageEditorView: View {
                             titleKey: "imageEditor.properties.figmaImageRotation",
                             value: imageFill.rotation.map { String(format: "%.1f°", $0) } ?? "—"
                         )
+                        Toggle(
+                            L10n.text("imageEditor.properties.figmaImageFillFiltersEnabled"),
+                            isOn: Binding(
+                                get: { viewModel.selectedLayerFigmaImageFillFiltersEnabled },
+                                set: { viewModel.setSelectedFigmaImageFillFiltersEnabled($0) }
+                            )
+                        )
+                        .toggleStyle(.switch)
+                        .font(.system(size: 10))
+                        .focusable(false)
+                        .accessibilityIdentifier("image-editor-figma-image-fill-filters-enabled")
                     }
 
                     Divider().overlay(editorBorder)

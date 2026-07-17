@@ -1,0 +1,13 @@
+{
+  "version": "2.12.0-rc244",
+  "suite": "XomoFigmaImageFilterTests",
+  "passed": 4,
+  "failed": 0,
+  "status": "passed",
+  "coverage": [
+    "image filter range validation",
+    "non-destructive materialization",
+    "project round-trip",
+    "property toggle and undo"
+  ]
+}

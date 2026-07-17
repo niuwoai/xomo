@@ -28,7 +28,7 @@ struct XomoFigmaImageFilterTests {
         #expect(XomoFigmaPlanImageFilters().isIdentity)
     }
 
-    @Test func mapperPreservesSevenImageFilterFieldsAndReportsPixelBaking() throws {
+    @Test func mapperPreservesSevenImageFilterFieldsAndReportsNonDestructiveFilters() throws {
         let plan = try Self.plan(
             filtersJSON: """
             {
@@ -54,7 +54,7 @@ struct XomoFigmaImageFilterTests {
             shadows: -0.7
         ))
         #expect(item.issues.contains(.imageAssetPending))
-        #expect(item.issues.contains(.imageFiltersBaked))
+        #expect(item.issues.contains(.imageFiltersPreserved))
         #expect(item.fidelity == .partial)
     }
 
@@ -86,7 +86,7 @@ struct XomoFigmaImageFilterTests {
         #expect(abs(desaturatedColor.greenComponent - desaturatedColor.blueComponent) < 0.02)
     }
 
-    @Test func materializerBakesFiltersIntoPersistentPixelLayer() throws {
+    @Test func materializerKeepsFiltersNonDestructiveAndProjectRoundTripPreservesToggle() throws {
         let pending = try Self.plan(
             filtersJSON: """
             {"temperature": 0.8, "shadows": 0.35, "highlights": -0.2}
@@ -101,7 +101,7 @@ struct XomoFigmaImageFilterTests {
         ])
         let resolvedItem = try #require(resolved.items.first)
         #expect(resolvedItem.targetKind == .image)
-        #expect(resolvedItem.issues.contains(.imageFiltersBaked))
+        #expect(resolvedItem.issues.contains(.imageFiltersPreserved))
         #expect(resolvedItem.issues.contains(.imageFillTransformFlattened))
 
         let result = XomoFigmaNodeMaterializer.materialize(
@@ -109,9 +109,17 @@ struct XomoFigmaImageFilterTests {
             canvasSize: CGSize(width: 100, height: 100)
         )
         let layer = try #require(result.layers.first { $0.name == "Filtered Hero" })
-        let importedColor = try Self.color(in: layer.image)
+        let sourceColor = try Self.color(in: layer.image)
+        let importedColor = try Self.color(in: layer.contentImage)
         #expect(layer.kind.isPixel)
+        #expect(sourceColor.redComponent < sourceColor.blueComponent + 0.02)
         #expect(importedColor.redComponent > importedColor.blueComponent + 0.15)
+        #expect(layer.xomoFigmaImageFillFiltersEnabled)
+
+        var disabledLayer = layer
+        disabledLayer.xomoFigmaImageFillFiltersEnabled = false
+        let disabledColor = try Self.color(in: disabledLayer.contentImage)
+        #expect(abs(disabledColor.redComponent - sourceColor.redComponent) < 0.02)
 
         let viewModel = ImageEditorViewModel(
             sourceName: "filtered.png",
@@ -125,9 +133,17 @@ struct XomoFigmaImageFilterTests {
         ) { _ in }
         try reopened.loadProjectData(projectData)
         let restored = try #require(reopened.document.layers.first { $0.name == "Filtered Hero" })
-        let restoredColor = try Self.color(in: restored.image)
+        let restoredColor = try Self.color(in: restored.contentImage)
         #expect(abs(restoredColor.redComponent - importedColor.redComponent) < 0.02)
         #expect(abs(restoredColor.blueComponent - importedColor.blueComponent) < 0.02)
+        #expect(restored.xomoFigmaImageFillFiltersEnabled)
+
+        reopened.setSelectedFigmaImageFillFiltersEnabled(false)
+        let toggledOff = try #require(reopened.document.layers.first { $0.name == "Filtered Hero" })
+        let toggledOffColor = try Self.color(in: toggledOff.contentImage)
+        #expect(abs(toggledOffColor.redComponent - sourceColor.redComponent) < 0.02)
+        reopened.undo()
+        #expect(reopened.selectedLayerFigmaImageFillFiltersEnabled)
     }
 
     private static func plan(filtersJSON: String) throws -> XomoFigmaNodeImportPlan {

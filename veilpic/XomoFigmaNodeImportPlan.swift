@@ -68,7 +68,7 @@ enum XomoFigmaNodeMappingIssue: String, CaseIterable, Sendable {
     case imageAssetPending
     case imageAssetUnavailable
     case imageFillTransformFlattened
-    case imageFiltersBaked
+    case imageFiltersPreserved
     case vectorGeometryMissing
     case vectorGeometryUnsupported
     case booleanOperationFlattened

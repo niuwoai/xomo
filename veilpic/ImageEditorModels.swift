@@ -2815,9 +2815,10 @@ struct ImageEditorLayer: Identifiable {
     /// Keeping this snapshot lets the property inspector restore one override
     /// without re-importing the source document.
     var xomoFigmaComponentPropertyDefaults: [String: XomoFigmaComponentProperty] = [:]
-    /// Original Figma image-fill parameters. Pixels may be baked today, but
-    /// the source intent remains available for inspection and future editing.
+    /// Original Figma image-fill parameters retained for non-destructive rendering.
     var xomoFigmaImageFill: XomoFigmaImageFillMetadata?
+    /// Allows the imported Figma image-fill filters to be toggled without changing pixels.
+    var xomoFigmaImageFillFiltersEnabled = true
     var xomoFigmaSourceURL: URL?
 
     static func background(image: NSImage) -> ImageEditorLayer {
@@ -3276,7 +3277,14 @@ struct ImageEditorLayer: Identifiable {
         } else {
             baseImage = image
         }
-        return smartFilters.reduce(baseImage) { partial, filter in
+        let imageFillFiltered: NSImage
+        if xomoFigmaImageFillFiltersEnabled,
+           let imageFill = xomoFigmaImageFill {
+            imageFillFiltered = XomoFigmaImageFilterBaker.apply(imageFill.filters, to: baseImage)
+        } else {
+            imageFillFiltered = baseImage
+        }
+        return smartFilters.reduce(imageFillFiltered) { partial, filter in
             guard filter.isEnabled, !filter.appliesToBackdrop else { return partial }
             return partial.filtered(
                 kind: filter.kind,

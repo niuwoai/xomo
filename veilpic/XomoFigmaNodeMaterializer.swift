@@ -278,9 +278,8 @@ enum XomoFigmaNodeMaterializer {
             rotation: item.imageRotation,
             importScale: importScale
         )
-        let baked = XomoFigmaImageFilterBaker.apply(item.imageFilters, to: bakedFill)
         var layer = ImageEditorLayer.blank(name: item.sourceName, size: size)
-        layer.image = baked
+        layer.image = bakedFill
         layer.frame = CGRect(origin: frame.origin, size: size)
         return layer
     }

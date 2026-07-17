@@ -600,7 +600,7 @@ enum XomoFigmaNodeImportMapper {
                     shadows: imagePaint.filters?.shadows
                 )
                 if !filters.isIdentity {
-                    issues.append(.imageFiltersBaked)
+                    issues.append(.imageFiltersPreserved)
                 }
                 return (.imagePlaceholder, true)
             }

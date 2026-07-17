@@ -779,6 +779,10 @@ final class ImageEditorViewModel: ObservableObject {
         document.selectedLayer?.xomoFigmaImageFill
     }
 
+    var selectedLayerFigmaImageFillFiltersEnabled: Bool {
+        document.selectedLayer?.xomoFigmaImageFillFiltersEnabled ?? false
+    }
+
     var selectedLayerFigmaComponentProperties: [String: XomoFigmaComponentProperty] {
         document.selectedLayer?.xomoFigmaComponentProperties ?? [:]
     }
@@ -899,6 +903,21 @@ final class ImageEditorViewModel: ObservableObject {
         } catch {
             statusText = L10n.text("imageEditor.status.figmaImageFillCopyFailed")
         }
+    }
+
+    func setSelectedFigmaImageFillFiltersEnabled(_ isEnabled: Bool) {
+        guard let index = document.selectedLayerIndex,
+              document.layers[index].xomoFigmaImageFill != nil,
+              document.layers[index].xomoFigmaImageFillFiltersEnabled != isEnabled
+        else { return }
+        pushUndo()
+        document.layers[index].xomoFigmaImageFillFiltersEnabled = isEnabled
+        appendHistory(L10n.text(isEnabled
+            ? "imageEditor.history.figmaImageFillFiltersEnabled"
+            : "imageEditor.history.figmaImageFillFiltersDisabled"))
+        statusText = L10n.text(isEnabled
+            ? "imageEditor.status.figmaImageFillFiltersEnabled"
+            : "imageEditor.status.figmaImageFillFiltersDisabled")
     }
 
     func copySelectedFigmaComponentProperties() {

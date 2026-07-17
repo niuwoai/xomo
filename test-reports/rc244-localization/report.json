@@ -1,0 +1,8 @@
+{
+  "version": "2.12.0-rc244",
+  "test": "supportedLocalizationTablesKeepMatchingKeys",
+  "passed": 1,
+  "failed": 0,
+  "status": "passed",
+  "localizations": ["en", "zh-Hans", "ja"]
+}
