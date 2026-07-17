@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc182 - 2026-07-17
+
+### Added
+- Figma 组件属性支持本地覆盖编辑：布尔属性使用开关，变体/实例替换使用首选值菜单，文本属性可编辑；每次覆盖进入 Xomo History/Undo/Redo，不向 Figma 云端写回。
+
+### Verification
+- Figma 组件属性专项独立进程测试 69/69、本地化资源测试 4/4、macOS 13 Debug `build-for-testing`、SwiftPM CLI 测试 2/2 通过。
+
 ## 2.12.0-rc181 - 2026-07-17
 
 ### Added

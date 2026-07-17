@@ -2884,6 +2884,10 @@
 "imageEditor.action.copyFigmaComponentProperties" = "Copy component properties";
 "imageEditor.status.figmaComponentPropertiesCopied" = "Figma component properties copied";
 "imageEditor.status.figmaComponentPropertiesCopyFailed" = "Failed to copy Figma component properties";
+"imageEditor.properties.figmaComponentPropertyValue" = "Value";
+"imageEditor.properties.figmaComponentPropertyEnabled" = "Enabled";
+"imageEditor.history.figmaComponentPropertyChanged" = "Changed Figma component property: %@";
+"imageEditor.status.figmaComponentPropertyUpdated" = "Updated Figma component property: %@";
 "xomo.figma.resource.design" = "Figma Design";
 "xomo.figma.resource.legacyFile" = "Figma Design (legacy link)";
 "xomo.figma.resource.prototype" = "Figma Prototype";

@@ -56,6 +56,7 @@ struct ImageEditorView: View {
     @State private var isMovingPathAnchor = false
     @State private var activeGuideDrag: ImageEditorGuideDrag?
     @State private var layerNameDraft = ""
+    @State private var figmaComponentPropertyDrafts: [String: String] = [:]
     @State var layerSearchQuery = ""
     @State var selectedLayerKindFilter: ImageEditorLayerKindFilter = .all
     @State var selectedLayerLabelFilter: ImageEditorLayerLabelColor?
@@ -170,6 +171,7 @@ struct ImageEditorView: View {
         .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
         .onAppear {
             syncLayerNameDraft()
+            syncFigmaComponentPropertyDrafts()
             viewModel.syncSizeControlsFromDocument()
             guard !isRightDockMounted else { return }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
@@ -178,6 +180,10 @@ struct ImageEditorView: View {
         }
         .onChange(of: viewModel.document.selectedLayerID) { _ in
             syncLayerNameDraft()
+            syncFigmaComponentPropertyDrafts()
+        }
+        .onChange(of: viewModel.selectedLayerFigmaComponentProperties) { _ in
+            syncFigmaComponentPropertyDrafts()
         }
         .onChange(of: viewModel.selectedLayerName) { _ in
             syncLayerNameDraft()
@@ -2505,6 +2511,25 @@ struct ImageEditorView: View {
         layerNameDraft = viewModel.selectedLayerName
     }
 
+    private func syncFigmaComponentPropertyDrafts() {
+        figmaComponentPropertyDrafts = viewModel.selectedLayerFigmaComponentProperties
+            .filter { $0.value.type == "TEXT" }
+            .mapValues(\.value)
+    }
+
+    private func figmaComponentPropertyDraftBinding(_ key: String) -> Binding<String> {
+        Binding(
+            get: {
+                figmaComponentPropertyDrafts[key]
+                    ?? viewModel.selectedLayerFigmaComponentProperties[key]?.value
+                    ?? ""
+            },
+            set: { value in
+                figmaComponentPropertyDrafts[key] = value
+            }
+        )
+    }
+
     private var documentSizeControls: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(L10n.text("imageEditor.properties.documentSize"))
@@ -4188,6 +4213,69 @@ struct ImageEditorView: View {
         CGPoint(x: rect.midX, y: rect.minY - 24)
     }
 
+    @ViewBuilder
+    private func figmaComponentPropertyEditor(
+        key: String,
+        property: XomoFigmaComponentProperty
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 7) {
+                Text(key)
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+                Spacer(minLength: 0)
+                Text(property.type)
+                    .font(.system(size: 9, design: .monospaced))
+                    .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+            }
+
+            if property.type == "BOOLEAN" {
+                Toggle(
+                    L10n.text("imageEditor.properties.figmaComponentPropertyEnabled"),
+                    isOn: Binding(
+                        get: { property.value.lowercased() == "true" },
+                        set: { viewModel.updateSelectedFigmaComponentBooleanProperty(key, isEnabled: $0) }
+                    )
+                )
+                .toggleStyle(.switch)
+                .font(.system(size: 10))
+                .focusable(false)
+                .accessibilityIdentifier("image-editor-figma-property-boolean-\(key)")
+            } else if !property.preferredValues.isEmpty {
+                Picker(
+                    L10n.text("imageEditor.properties.figmaComponentPropertyValue"),
+                    selection: Binding(
+                        get: {
+                            property.preferredValues.first {
+                                $0.name == property.value || $0.key == property.value
+                            }?.name ?? property.value
+                        },
+                        set: { viewModel.updateSelectedFigmaComponentProperty(key, value: $0) }
+                    )
+                ) {
+                    ForEach(property.preferredValues, id: \.key) { preferredValue in
+                        Text(preferredValue.name).tag(preferredValue.name)
+                    }
+                }
+                .pickerStyle(.menu)
+                .focusable(false)
+                .accessibilityIdentifier("image-editor-figma-property-picker-\(key)")
+            } else {
+                TextField(
+                    L10n.text("imageEditor.properties.figmaComponentPropertyValue"),
+                    text: figmaComponentPropertyDraftBinding(key)
+                )
+                .textFieldStyle(.roundedBorder)
+                .font(.system(size: 10))
+                .onSubmit {
+                    let value = figmaComponentPropertyDrafts[key] ?? property.value
+                    viewModel.updateSelectedFigmaComponentProperty(key, value: value)
+                }
+                .accessibilityIdentifier("image-editor-figma-property-text-\(key)")
+            }
+        }
+    }
+
     private func propertiesPanel(showsTitle: Bool = true) -> some View {
         EditorPanel(title: L10n.text("imageEditor.panel.properties"), showsTitle: showsTitle) {
             VStack(alignment: .leading, spacing: 10) {
@@ -4325,17 +4413,7 @@ struct ImageEditorView: View {
 
                         ForEach(viewModel.selectedLayerFigmaComponentProperties.keys.sorted(), id: \.self) { key in
                             if let property = viewModel.selectedLayerFigmaComponentProperties[key] {
-                                HStack(spacing: 7) {
-                                    Text(key)
-                                        .font(.system(size: 10, weight: .medium))
-                                        .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
-                                    Spacer(minLength: 0)
-                                    Text("\(property.type): \(property.value)")
-                                        .font(.system(size: 10, design: .monospaced))
-                                        .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
-                                        .lineLimit(1)
-                                        .truncationMode(.middle)
-                                }
+                                figmaComponentPropertyEditor(key: key, property: property)
                             }
                         }
                     }

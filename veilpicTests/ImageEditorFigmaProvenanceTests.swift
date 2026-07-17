@@ -45,4 +45,45 @@ struct ImageEditorFigmaProvenanceTests {
         let restored = try project.restoredDocument()
         #expect(restored.layers.first?.xomoFigmaComponentProperties == layer.xomoFigmaComponentProperties)
     }
+
+    @Test func componentPropertyLocalOverrideUsesUndoAndRedo() throws {
+        let image = NSImage.transparent(size: CGSize(width: 20, height: 20))
+        var document = ImageEditorDocument(sourceName: "figma-component.png", image: image)
+        var layer = document.layers[0]
+        layer.xomoFigmaComponentProperties = [
+            "Size": XomoFigmaComponentProperty(
+                type: "VARIANT",
+                value: "Large",
+                preferredValues: [
+                    XomoFigmaComponentPreferredValue(key: "small", name: "Small"),
+                    XomoFigmaComponentPreferredValue(key: "large", name: "Large")
+                ]
+            ),
+            "Is Enabled": XomoFigmaComponentProperty(type: "BOOLEAN", value: "true"),
+            "Label": XomoFigmaComponentProperty(type: "TEXT", value: "Continue")
+        ]
+        document.layers = [layer]
+        document.selectedLayerID = layer.id
+        document.selectedLayerIDs = [layer.id]
+
+        let viewModel = ImageEditorViewModel(document: document) { _ in }
+        viewModel.updateSelectedFigmaComponentProperty("Size", value: "Small")
+        viewModel.updateSelectedFigmaComponentBooleanProperty("Is Enabled", isEnabled: false)
+        viewModel.updateSelectedFigmaComponentProperty("Label", value: "")
+
+        #expect(viewModel.document.layers[0].xomoFigmaComponentProperties["Size"]?.value == "Small")
+        #expect(viewModel.document.layers[0].xomoFigmaComponentProperties["Is Enabled"]?.value == "false")
+        #expect(viewModel.document.layers[0].xomoFigmaComponentProperties["Label"]?.value == "")
+
+        viewModel.undo()
+        #expect(viewModel.document.layers[0].xomoFigmaComponentProperties["Is Enabled"]?.value == "false")
+        viewModel.undo()
+        #expect(viewModel.document.layers[0].xomoFigmaComponentProperties["Is Enabled"]?.value == "true")
+        #expect(viewModel.document.layers[0].xomoFigmaComponentProperties["Size"]?.value == "Small")
+
+        viewModel.redo()
+        #expect(viewModel.document.layers[0].xomoFigmaComponentProperties["Is Enabled"]?.value == "false")
+        viewModel.redo()
+        #expect(viewModel.document.layers[0].xomoFigmaComponentProperties["Label"]?.value == "")
+    }
 }

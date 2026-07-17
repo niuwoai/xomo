@@ -2884,6 +2884,10 @@
 "imageEditor.action.copyFigmaComponentProperties" = "复制组件属性";
 "imageEditor.status.figmaComponentPropertiesCopied" = "已复制 Figma 组件属性";
 "imageEditor.status.figmaComponentPropertiesCopyFailed" = "复制 Figma 组件属性失败";
+"imageEditor.properties.figmaComponentPropertyValue" = "值";
+"imageEditor.properties.figmaComponentPropertyEnabled" = "启用";
+"imageEditor.history.figmaComponentPropertyChanged" = "修改 Figma 组件属性：%@";
+"imageEditor.status.figmaComponentPropertyUpdated" = "已更新 Figma 组件属性：%@";
 "xomo.figma.resource.design" = "Figma Design";
 "xomo.figma.resource.legacyFile" = "Figma Design（旧版链接）";
 "xomo.figma.resource.prototype" = "Figma 原型";

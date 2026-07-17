@@ -718,6 +718,27 @@ final class ImageEditorViewModel: ObservableObject {
         !selectedLayerFigmaComponentProperties.isEmpty
     }
 
+    func updateSelectedFigmaComponentProperty(_ key: String, value: String) {
+        guard let index = document.selectedLayerIndex,
+              var property = document.layers[index].xomoFigmaComponentProperties[key]
+        else { return }
+        let normalizedValue = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard (property.type == "TEXT" || !normalizedValue.isEmpty),
+              property.value != normalizedValue
+        else { return }
+        pushUndo()
+        property.value = normalizedValue
+        mutateDocumentWithoutInvalidatingRenderedImageCaches { document in
+            document.layers[index].xomoFigmaComponentProperties[key] = property
+        }
+        appendHistory(L10n.format("imageEditor.history.figmaComponentPropertyChanged", key))
+        statusText = L10n.format("imageEditor.status.figmaComponentPropertyUpdated", key)
+    }
+
+    func updateSelectedFigmaComponentBooleanProperty(_ key: String, isEnabled: Bool) {
+        updateSelectedFigmaComponentProperty(key, value: isEnabled ? "true" : "false")
+    }
+
     var selectedLayerFigmaSourceURL: URL? {
         document.selectedLayer?.xomoFigmaSourceURL
     }
