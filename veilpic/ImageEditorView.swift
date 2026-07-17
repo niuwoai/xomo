@@ -1262,6 +1262,13 @@ struct ImageEditorView: View {
                         refreshCanvasCursor(in: geometry.size)
                     }
                 }
+                .onChange(of: viewModel.selectedXomoObjectKind) { _ in
+                    // Clicking an item in the component library can insert a
+                    // new object without changing the sidebar tab. Refresh
+                    // here so a stale drawing-tool cursor cannot remain over
+                    // the canvas after the object becomes selected.
+                    refreshCanvasCursor(in: geometry.size)
+                }
                 .onChange(of: viewModel.brushSize) { _ in
                     refreshCanvasCursor(in: geometry.size)
                 }

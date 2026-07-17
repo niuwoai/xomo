@@ -529,6 +529,7 @@ struct XomoLeftSidebarTests {
         )
 
         #expect(source.contains(".onChange(of: viewModel.selectedLeftSidebarTab)"))
+        #expect(source.contains(".onChange(of: viewModel.selectedXomoObjectKind)"))
         #expect(source.contains("switch canvasInteractionTool"))
         #expect(source.contains(
             "ImageEditorCanvasCursor.tool("
