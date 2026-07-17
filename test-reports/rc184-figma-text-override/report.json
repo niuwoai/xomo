@@ -1,0 +1,39 @@
+{
+  "generated_at": "2026-07-17 08:59:50 +0800",
+  "total": 3,
+  "passed": 3,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorFigmaProvenanceTests",
+      "method": "componentPropertyLocalOverrideUsesUndoAndRedo",
+      "identifier": "veilpicTests/ImageEditorFigmaProvenanceTests/componentPropertyLocalOverrideUsesUndoAndRedo",
+      "file": "ImageEditorFigmaProvenanceTests.swift",
+      "passed": true,
+      "duration": 3.147,
+      "issues": [],
+      "log": "ImageEditorFigmaProvenanceTests.componentPropertyLocalOverrideUsesUndoAndRedo.log"
+    },
+    {
+      "suite": "ImageEditorFigmaProvenanceTests",
+      "method": "componentTextOverrideUpdatesMatchingEditableDescendantAndUndoRestoresIt",
+      "identifier": "veilpicTests/ImageEditorFigmaProvenanceTests/componentTextOverrideUpdatesMatchingEditableDescendantAndUndoRestoresIt",
+      "file": "ImageEditorFigmaProvenanceTests.swift",
+      "passed": true,
+      "duration": 5.927,
+      "issues": [],
+      "log": "ImageEditorFigmaProvenanceTests.componentTextOverrideUpdatesMatchingEditableDescendantAndUndoRestoresIt.log"
+    },
+    {
+      "suite": "ImageEditorFigmaProvenanceTests",
+      "method": "selectedLayerExposesAndCopiesFigmaSourceReference",
+      "identifier": "veilpicTests/ImageEditorFigmaProvenanceTests/selectedLayerExposesAndCopiesFigmaSourceReference",
+      "file": "ImageEditorFigmaProvenanceTests.swift",
+      "passed": true,
+      "duration": 4.796,
+      "issues": [],
+      "log": "ImageEditorFigmaProvenanceTests.selectedLayerExposesAndCopiesFigmaSourceReference.log"
+    }
+  ]
+}

@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc184 - 2026-07-17
+
+### Changed
+- Figma 文本组件属性覆盖现在同步更新导入组件组内匹配的可编辑文字图层；找不到安全匹配时只更新元数据，不猜测其它图层。
+
+### Verification
+- Figma 文本组件覆盖专项独立进程测试 3/3、macOS 13 Debug `build-for-testing`、SwiftPM CLI 测试 2/2 通过。
+
 ## 2.12.0-rc183 - 2026-07-17
 
 ### Fixed

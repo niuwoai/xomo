@@ -86,4 +86,39 @@ struct ImageEditorFigmaProvenanceTests {
         viewModel.redo()
         #expect(viewModel.document.layers[0].xomoFigmaComponentProperties["Label"]?.value == "")
     }
+
+    @Test func componentTextOverrideUpdatesMatchingEditableDescendantAndUndoRestoresIt() throws {
+        let image = NSImage.transparent(size: CGSize(width: 320, height: 180))
+        var document = ImageEditorDocument(sourceName: "figma-text-component.png", image: image)
+        var component = ImageEditorLayer.group(name: "Button", size: CGSize(width: 140, height: 44))
+        component.frame.origin = CGPoint(x: 40, y: 60)
+        component.xomoFigmaComponentProperties = [
+            "Label": XomoFigmaComponentProperty(type: "TEXT", value: "Continue")
+        ]
+        var label = ImageEditorLayer.text(
+            name: "Continue",
+            origin: CGPoint(x: 56, y: 72),
+            content: ImageEditorTextContent(
+                text: "Continue",
+                color: .white,
+                fontSize: 14,
+                point: CGPoint(x: ImageEditorTextContent.drawingPadding, y: ImageEditorTextContent.drawingPadding)
+            )
+        )
+        label.groupID = component.id
+        document.layers = [component, label]
+        document.selectedLayerID = component.id
+        document.selectedLayerIDs = [component.id]
+
+        let viewModel = ImageEditorViewModel(document: document) { _ in }
+        viewModel.updateSelectedFigmaComponentProperty("Label", value: "Buy now")
+
+        #expect(viewModel.document.selectedLayer?.xomoFigmaComponentProperties["Label"]?.value == "Buy now")
+        #expect(viewModel.document.layers[1].textContent?.text == "Buy now")
+        #expect(viewModel.document.layers[1].isText)
+
+        viewModel.undo()
+        #expect(viewModel.document.selectedLayer?.xomoFigmaComponentProperties["Label"]?.value == "Continue")
+        #expect(viewModel.document.layers[1].textContent?.text == "Continue")
+    }
 }

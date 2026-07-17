@@ -727,9 +727,41 @@ final class ImageEditorViewModel: ObservableObject {
               property.value != normalizedValue
         else { return }
         pushUndo()
+        let previousValue = property.value
         property.value = normalizedValue
+        let textOverrideIndices: [Int]
+        if property.type == "TEXT" {
+            let descendantIDs = document.layers[index].isGroup
+                ? groupDescendantIDs(for: document.layers[index].id)
+                : []
+            textOverrideIndices = document.layers.indices.filter { candidateIndex in
+                let candidate = document.layers[candidateIndex]
+                let belongsToSelectedComponent = candidateIndex == index || descendantIDs.contains(candidate.id)
+                return belongsToSelectedComponent
+                    && candidate.isText
+                    && candidate.textContent?.text == previousValue
+                    && !document.isEffectivelyPixelsLocked(candidate)
+            }
+        } else {
+            textOverrideIndices = []
+        }
         mutateDocumentWithoutInvalidatingRenderedImageCaches { document in
             document.layers[index].xomoFigmaComponentProperties[key] = property
+            for textIndex in textOverrideIndices {
+                guard var content = document.layers[textIndex].textContent else { continue }
+                content.text = normalizedValue
+                let layerSize = content.layerSize()
+                if let mask = document.layers[textIndex].mask, mask.size != layerSize {
+                    document.layers[textIndex].mask = mask.resized(to: layerSize)
+                }
+                document.layers[textIndex].image = NSImage.transparent(size: layerSize)
+                document.layers[textIndex].frame.size = layerSize
+                document.layers[textIndex].kind = .text(content)
+                document.layers[textIndex].name = L10n.format(
+                    "imageEditor.layer.textName",
+                    textLayerNameFragment(content.text)
+                )
+            }
         }
         appendHistory(L10n.format("imageEditor.history.figmaComponentPropertyChanged", key))
         statusText = L10n.format("imageEditor.status.figmaComponentPropertyUpdated", key)
