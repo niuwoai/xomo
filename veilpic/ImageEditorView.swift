@@ -6925,7 +6925,7 @@ enum ImageEditorCanvasCursor {
             )
         case .tool(let selectedTool):
             if selectedTool == .move {
-                return moveToolCursor()
+                return moveToolCursor(isDuplicating: modifierFlags.contains(.option))
             }
             return cursor(
                 for: selectedTool,
@@ -6949,13 +6949,13 @@ enum ImageEditorCanvasCursor {
         return sidebarTab == .components ? .componentLibrary : .tool(selectedTool)
     }
 
-    private static func moveToolCursor() -> NSCursor {
-        let cacheKey = "move-tool"
+    private static func moveToolCursor(isDuplicating: Bool = false) -> NSCursor {
+        let cacheKey = isDuplicating ? "move-tool:duplicate" : "move-tool"
         if let cachedCursor = cursorCache[cacheKey] {
             return cachedCursor
         }
 
-        let side: CGFloat = 32
+        let side: CGFloat = 36
         let center = NSPoint(x: side / 2, y: side / 2)
         let image = NSImage(size: NSSize(width: side, height: side))
         image.lockFocus()
@@ -6996,7 +6996,7 @@ enum ImageEditorCanvasCursor {
 
         drawArrow(
             from: NSPoint(x: center.x, y: center.y - 2),
-            to: NSPoint(x: center.x, y: 28)
+            to: NSPoint(x: center.x, y: 32)
         )
         drawArrow(
             from: NSPoint(x: center.x, y: center.y + 2),
@@ -7008,8 +7008,31 @@ enum ImageEditorCanvasCursor {
         )
         drawArrow(
             from: NSPoint(x: center.x + 2, y: center.y),
-            to: NSPoint(x: 28, y: center.y)
+            to: NSPoint(x: 32, y: center.y)
         )
+
+        if isDuplicating {
+            let badgeRect = NSRect(x: 23, y: 23, width: 11, height: 11)
+            let badge = NSBezierPath(ovalIn: badgeRect)
+            NSColor.black.withAlphaComponent(0.96).setFill()
+            badge.fill()
+            NSColor.white.withAlphaComponent(0.98).setStroke()
+            badge.lineWidth = 1.2
+            badge.stroke()
+
+            let badgeCenter = NSPoint(x: badgeRect.midX, y: badgeRect.midY)
+            let plus = NSBezierPath()
+            plus.move(to: NSPoint(x: badgeCenter.x - 3, y: badgeCenter.y))
+            plus.line(to: NSPoint(x: badgeCenter.x + 3, y: badgeCenter.y))
+            plus.move(to: NSPoint(x: badgeCenter.x, y: badgeCenter.y - 3))
+            plus.line(to: NSPoint(x: badgeCenter.x, y: badgeCenter.y + 3))
+            NSColor.black.withAlphaComponent(0.95).setStroke()
+            plus.lineWidth = 3
+            plus.stroke()
+            NSColor.white.setStroke()
+            plus.lineWidth = 1.2
+            plus.stroke()
+        }
 
         image.unlockFocus()
         return cache(

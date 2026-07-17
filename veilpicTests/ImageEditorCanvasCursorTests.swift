@@ -124,6 +124,22 @@ struct ImageEditorCanvasCursorTests {
         #expect(move.image.tiffRepresentation != NSCursor.arrow.image.tiffRepresentation)
     }
 
+    @Test func moveToolShowsCopyBadgeWhileHoldingOption() {
+        let normal = ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .move,
+            brushDiameter: 18
+        )
+        let duplicating = ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .move,
+            brushDiameter: 18,
+            modifierFlags: [.option]
+        )
+
+        #expect(normal.image.tiffRepresentation != duplicating.image.tiffRepresentation)
+    }
+
     @Test func arrowNudgeUsesPhotoshopStyleModifierDistances() {
         #expect(ImageEditorArrowNudge.delta(for: 123, modifierFlags: []) == CGSize(width: -1, height: 0))
         #expect(ImageEditorArrowNudge.delta(for: 124, modifierFlags: [.option]) == CGSize(width: 5, height: 0))

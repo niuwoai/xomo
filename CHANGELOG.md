@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc214 - 2026-07-17
+
+### Changed
+- 移动工具按住 `Option` 时显示带复制标记的四向移动光标，明确提示即将进行复制拖动；组件库模式仍使用系统箭头。
+
+### Verification
+- `ImageEditorCanvasCursorTests` 回归与带 rc214 构建通过，覆盖组件库箭头、画布外箭头、工具语义光标、Option 复制标记与缩放修饰状态，报告：`test-reports/rc214-cursor-final/report.md`。
+
 ## 2.12.0-rc213 - 2026-07-17
 
 ### Added
