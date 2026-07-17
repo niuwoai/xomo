@@ -66,8 +66,11 @@ enum ImageEditorPSDCodec {
         }
         for item in exportLayers {
             for channel in item.channels {
-                layerInfo.appendUInt16(0)
-                layerInfo.append(channel.data)
+                layerInfo.append(encodedChannelData(
+                    channel.data,
+                    width: Int(item.frame.width.rounded()),
+                    height: Int(item.frame.height.rounded())
+                ))
             }
         }
         if layerInfo.count % 2 != 0 { layerInfo.append(0) }
@@ -82,14 +85,134 @@ enum ImageEditorPSDCodec {
         guard let composite = rgbaChannels(image: document.compositedImage, width: width, height: height) else {
             throw ImageEditorPSDCodecError.imageEncodingFailed
         }
-        output.appendUInt16(0)
-        output.append(composite.red)
-        output.append(composite.green)
-        output.append(composite.blue)
-        output.append(composite.alpha)
+        var compositePlanes = [composite.red, composite.green, composite.blue, composite.alpha]
         for channel in exportedAlphaChannels {
             let mask = channel.mask.resizedNearest(to: CGSize(width: width, height: height))
-            output.append(contentsOf: mask.alpha)
+            compositePlanes.append(Data(mask.alpha))
+        }
+        output.append(encodedCompositeData(compositePlanes, width: width, height: height))
+        return output
+    }
+
+    private static func encodedCompositeData(
+        _ planes: [Data],
+        width: Int,
+        height: Int
+    ) -> Data {
+        let rows = planes.map { packBitsRows($0, width: width, height: height) }
+        let canUseRLE = rows.allSatisfy { $0 != nil }
+            && rows.compactMap { $0 }.allSatisfy { packedRows in
+                packedRows.allSatisfy { $0.count <= Int(UInt16.max) }
+            }
+        guard canUseRLE else {
+            var raw = Data()
+            raw.appendUInt16(0)
+            for plane in planes { raw.append(plane) }
+            return raw
+        }
+
+        let packedRows = rows.compactMap { $0 }
+        let packedSize = packedRows.reduce(0) { partial, rows in
+            partial + rows.reduce(0) { $0 + $1.count }
+        }
+        let rleSize = 2 + planes.count * height * 2 + packedSize
+        let rawSize = 2 + planes.reduce(0) { $0 + $1.count }
+        guard rleSize < rawSize else {
+            var raw = Data()
+            raw.appendUInt16(0)
+            for plane in planes { raw.append(plane) }
+            return raw
+        }
+
+        var output = Data()
+        output.appendUInt16(1)
+        for rows in packedRows {
+            for row in rows { output.appendUInt16(UInt16(row.count)) }
+        }
+        for rows in packedRows {
+            for row in rows { output.append(contentsOf: row) }
+        }
+        return output
+    }
+
+    private static func encodedChannelData(
+        _ data: Data,
+        width: Int,
+        height: Int
+    ) -> Data {
+        guard let rows = packBitsRows(data, width: width, height: height),
+              rows.allSatisfy({ $0.count <= Int(UInt16.max) })
+        else {
+            var raw = Data()
+            raw.appendUInt16(0)
+            raw.append(data)
+            return raw
+        }
+
+        let rleSize = 2 + rows.count * 2 + rows.reduce(0) { $0 + $1.count }
+        guard rleSize < 2 + data.count else {
+            var raw = Data()
+            raw.appendUInt16(0)
+            raw.append(data)
+            return raw
+        }
+
+        var output = Data()
+        output.appendUInt16(1)
+        for row in rows { output.appendUInt16(UInt16(row.count)) }
+        for row in rows { output.append(contentsOf: row) }
+        return output
+    }
+
+    private static func packBitsRows(
+        _ data: Data,
+        width: Int,
+        height: Int
+    ) -> [[UInt8]]? {
+        guard width > 0,
+              height > 0,
+              data.count == width * height
+        else { return nil }
+        return (0..<height).map { row in
+            let start = row * width
+            return packBits(Array(data[start..<(start + width)]))
+        }
+    }
+
+    private static func packBits(_ bytes: [UInt8]) -> [UInt8] {
+        guard !bytes.isEmpty else { return [] }
+        var output: [UInt8] = []
+        var index = 0
+
+        while index < bytes.count {
+            var runLength = 1
+            while index + runLength < bytes.count,
+                  bytes[index + runLength] == bytes[index],
+                  runLength < 128 {
+                runLength += 1
+            }
+            if runLength >= 3 {
+                output.append(UInt8(257 - runLength))
+                output.append(bytes[index])
+                index += runLength
+                continue
+            }
+
+            let literalStart = index
+            index += runLength
+            while index < bytes.count, index - literalStart < 128 {
+                var nextRunLength = 1
+                while index + nextRunLength < bytes.count,
+                      bytes[index + nextRunLength] == bytes[index],
+                      nextRunLength < 3 {
+                    nextRunLength += 1
+                }
+                if nextRunLength >= 3 { break }
+                index += nextRunLength
+            }
+            let literalCount = index - literalStart
+            output.append(UInt8(literalCount - 1))
+            output.append(contentsOf: bytes[literalStart..<index])
         }
         return output
     }
@@ -1096,7 +1219,12 @@ enum ImageEditorPSDCodec {
         record.appendUInt16(UInt16(item.channels.count))
         for channel in item.channels {
             record.appendInt16(channel.identifier)
-            record.appendUInt32(UInt32(channel.data.count + 2))
+            let encoded = ImageEditorPSDCodec.encodedChannelData(
+                channel.data,
+                width: Int(item.frame.width.rounded()),
+                height: Int(item.frame.height.rounded())
+            )
+            record.appendUInt32(UInt32(encoded.count))
         }
         record.appendASCII("8BIM")
         record.appendASCII(item.blendMode.psdKey)

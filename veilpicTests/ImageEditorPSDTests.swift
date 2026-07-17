@@ -47,6 +47,27 @@ struct ImageEditorPSDTests {
         #expect(!restoredTop.isVisible)
     }
 
+    @Test func psdExportUsesRLEForCompressiblePixelChannels() throws {
+        let canvasSize = CGSize(width: 64, height: 64)
+        var document = ImageEditorDocument(
+            sourceName: "rle.png",
+            image: psdSolidImage(color: .systemBlue, size: canvasSize)
+        )
+        document.layers.removeAll()
+        var layer = ImageEditorLayer.blank(name: "Solid", size: canvasSize)
+        layer.image = psdSolidImage(color: .systemBlue, size: canvasSize)
+        layer.frame = CGRect(origin: .zero, size: canvasSize)
+        document.layers = [layer]
+
+        let data = try ImageEditorPSDCodec.encode(document: document)
+        #expect(data.count < 20_000)
+
+        let restored = try ImageEditorPSDCodec.decode(data, sourceName: "rle.psd")
+        #expect(restored.canvasSize == canvasSize)
+        #expect(restored.layers.count == 1)
+        #expect(restored.layers.first?.name == "Solid")
+    }
+
     @Test func psdExportPreservesClosedAndOpenSavedPaths() throws {
         let canvasSize = CGSize(width: 32, height: 24)
         var document = ImageEditorDocument(

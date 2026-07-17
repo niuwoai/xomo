@@ -1,0 +1,70 @@
+{
+  "generated_at": "2026-07-17 11:39:53 +0800",
+  "version": "2.12.0-rc193",
+  "total": 6,
+  "passed": 6,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorPSDTests",
+      "method": "psdExportPreservesBasicEditableTextLayer",
+      "identifier": "veilpicTests/ImageEditorPSDTests/psdExportPreservesBasicEditableTextLayer",
+      "file": "ImageEditorPSDTests.swift",
+      "passed": true,
+      "duration": 5.62,
+      "issues": [],
+      "log": "ImageEditorPSDTests.psdExportPreservesBasicEditableTextLayer.log"
+    },
+    {
+      "suite": "ImageEditorPSDTests",
+      "method": "psdExportPreservesClosedAndOpenSavedPaths",
+      "identifier": "veilpicTests/ImageEditorPSDTests/psdExportPreservesClosedAndOpenSavedPaths",
+      "file": "ImageEditorPSDTests.swift",
+      "passed": true,
+      "duration": 3.064,
+      "issues": [],
+      "log": "ImageEditorPSDTests.psdExportPreservesClosedAndOpenSavedPaths.log"
+    },
+    {
+      "suite": "ImageEditorPSDTests",
+      "method": "psdExportPreservesExtraAlphaChannelsAndNames",
+      "identifier": "veilpicTests/ImageEditorPSDTests/psdExportPreservesExtraAlphaChannelsAndNames",
+      "file": "ImageEditorPSDTests.swift",
+      "passed": true,
+      "duration": 2.94,
+      "issues": [],
+      "log": "ImageEditorPSDTests.psdExportPreservesExtraAlphaChannelsAndNames.log"
+    },
+    {
+      "suite": "ImageEditorPSDTests",
+      "method": "psdExportPreservesNativeVectorMaskAndEnabledState",
+      "identifier": "veilpicTests/ImageEditorPSDTests/psdExportPreservesNativeVectorMaskAndEnabledState",
+      "file": "ImageEditorPSDTests.swift",
+      "passed": true,
+      "duration": 5.135,
+      "issues": [],
+      "log": "ImageEditorPSDTests.psdExportPreservesNativeVectorMaskAndEnabledState.log"
+    },
+    {
+      "suite": "ImageEditorPSDTests",
+      "method": "psdExportPreservesSpotChannelDisplayInfoAndProjectRoundTrip",
+      "identifier": "veilpicTests/ImageEditorPSDTests/psdExportPreservesSpotChannelDisplayInfoAndProjectRoundTrip",
+      "file": "ImageEditorPSDTests.swift",
+      "passed": true,
+      "duration": 2.952,
+      "issues": [],
+      "log": "ImageEditorPSDTests.psdExportPreservesSpotChannelDisplayInfoAndProjectRoundTrip.log"
+    },
+    {
+      "suite": "ImageEditorPSDTests",
+      "method": "psdExportUsesRLEForCompressiblePixelChannels",
+      "identifier": "veilpicTests/ImageEditorPSDTests/psdExportUsesRLEForCompressiblePixelChannels",
+      "file": "ImageEditorPSDTests.swift",
+      "passed": true,
+      "duration": 4.38,
+      "issues": [],
+      "log": "ImageEditorPSDTests.psdExportUsesRLEForCompressiblePixelChannels.log"
+    }
+  ]
+}
