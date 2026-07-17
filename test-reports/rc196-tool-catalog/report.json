@@ -1,0 +1,20 @@
+{
+  "generated_at": "2026-07-17 12:36:16 +0800",
+  "version": "2.12.0-rc196",
+  "total": 1,
+  "passed": 1,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registryAdvertisesBroadEditorCapabilities",
+      "identifier": "veilpicTests/XomoAutomationTests/registryAdvertisesBroadEditorCapabilities",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 4.997,
+      "issues": [],
+      "log": "XomoAutomationTests.registryAdvertisesBroadEditorCapabilities.log"
+    }
+  ]
+}

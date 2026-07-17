@@ -10,6 +10,7 @@ import UniformTypeIdentifiers
 @MainActor
 final class XomoAutomationRegistry {
     static let shared = XomoAutomationRegistry()
+    private static let maximumPSDInspectionBytes = 512 * 1024 * 1024
 
     private weak var activeViewModel: ImageEditorViewModel?
 
@@ -76,6 +77,8 @@ final class XomoAutomationRegistry {
             try importProject(arguments, viewModel: viewModel)
         case "xomo.import.image":
             try importImage(arguments, viewModel: viewModel)
+        case "xomo.psd.inspect":
+            return try psdInspectionResult(arguments)
         case "xomo.tool.list":
             return .array(ImageEditorTool.allCases.map { tool in
                 .object(["id": .string(tool.rawValue), "title": .string(tool.title)])
@@ -2723,6 +2726,75 @@ final class XomoAutomationRegistry {
         ])
     }
 
+    private func psdInspectionResult(
+        _ arguments: [String: XomoJSONValue]
+    ) throws -> XomoJSONValue {
+        let rawPath = try requiredString("path", in: arguments)
+        let (url, data, byteCount) = try psdInspectionFile(rawPath)
+        let report: ImageEditorPSDCompatibilityReport
+        do {
+            report = try ImageEditorPSDCodec.compatibilityReport(data)
+        } catch {
+            throw XomoAutomationCallError.operationFailed(
+                "PSD inspection failed: \(error.localizedDescription)"
+            )
+        }
+        return psdInspectionJSON(report: report, url: url, byteCount: byteCount)
+    }
+
+    private func psdInspectionFile(_ rawPath: String) throws -> (URL, Data, Int) {
+        let url = URL(fileURLWithPath: NSString(string: rawPath).expandingTildeInPath)
+        guard url.pathExtension.lowercased() == "psd" else {
+            throw XomoAutomationCallError.invalidArgument("PSD inspection requires a .psd file")
+        }
+        let attributes: [FileAttributeKey: Any]
+        do {
+            attributes = try FileManager.default.attributesOfItem(atPath: url.path)
+        } catch {
+            throw XomoAutomationCallError.operationFailed(
+                "PSD inspection could not read file metadata: \(error.localizedDescription)"
+            )
+        }
+        let byteCount = (attributes[.size] as? NSNumber)?.intValue ?? 0
+        guard byteCount <= Self.maximumPSDInspectionBytes else {
+            throw XomoAutomationCallError.invalidArgument("PSD file exceeds the 512 MB inspection limit")
+        }
+        do {
+            return (url, try Data(contentsOf: url, options: .mappedIfSafe), byteCount)
+        } catch {
+            throw XomoAutomationCallError.operationFailed(
+                "PSD inspection could not read file data: \(error.localizedDescription)"
+            )
+        }
+    }
+
+    private func psdInspectionJSON(
+        report: ImageEditorPSDCompatibilityReport,
+        url: URL,
+        byteCount: Int
+    ) -> XomoJSONValue {
+        return .object([
+            "path": .string(url.path),
+            "fileName": .string(url.lastPathComponent),
+            "bytes": .number(Double(byteCount)),
+            "width": .number(Double(report.width)),
+            "height": .number(Double(report.height)),
+            "bitDepth": .number(Double(report.bitDepth)),
+            "colorMode": .number(Double(report.colorMode)),
+            "layerCount": .number(Double(report.layerCount)),
+            "groupCount": .number(Double(report.groupCount)),
+            "maskCount": .number(Double(report.maskCount)),
+            "compressions": .array(report.compressions.sorted { $0.rawValue < $1.rawValue }.map { .string($0.identifier) }),
+            "requiresAttention": .bool(report.requiresAttention),
+            "issues": .array(report.issues.map { issue in
+                .object([
+                    "kind": .string(issue.kind.rawValue),
+                    "count": .number(Double(issue.count))
+                ])
+            })
+        ])
+    }
+
     private func optionalPoint(_ arguments: [String: XomoJSONValue]) -> CGPoint? {
         guard let x = arguments["x"]?.doubleValue,
               let y = arguments["y"]?.doubleValue
@@ -2891,6 +2963,9 @@ private extension XomoAutomationRegistry {
             "name": XomoAutomationSchema.string(description: "Source filename"),
             "intoSelection": XomoAutomationSchema.boolean(description: "Mask the imported layer to the current selection")
         ], required: ["base64"]),
+        tool("xomo.psd.inspect", "Inspect a local PSD compatibility report without importing or changing the active document.", [
+            "path": XomoAutomationSchema.string(description: "Local PSD file path")
+        ], required: ["path"]),
         tool("xomo.tool.list", "List all image editor tools."),
         tool("xomo.tool.select", "Select the active editor tool.", [
             "tool": XomoAutomationSchema.string(description: "Tool identifier", values: ImageEditorTool.allCases.map(\.rawValue))

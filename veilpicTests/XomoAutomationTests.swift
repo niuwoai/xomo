@@ -15,7 +15,7 @@ struct XomoAutomationTests {
             Issue.record("Expected tool array")
             return
         }
-        #expect(tools.count == 119)
+        #expect(tools.count == 120)
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.layer.list")
@@ -92,6 +92,44 @@ struct XomoAutomationTests {
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.view.pan")
         })
+        #expect(tools.contains { tool in
+            guard case .object(let value) = tool else { return false }
+            return value["name"] == .string("xomo.psd.inspect")
+        })
+    }
+
+    @Test func registryInspectsPSDCompatibilityWithoutChangingDocument() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        let documentHistoryCount = viewModel.document.history.count
+        let data = try ImageEditorPSDCodec.encode(document: viewModel.document)
+        let path = FileManager.default.temporaryDirectory
+            .appendingPathComponent("xomo-inspect-\(UUID().uuidString).psd")
+        defer { try? FileManager.default.removeItem(at: path) }
+        try data.write(to: path, options: .atomic)
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.psd.inspect",
+            arguments: ["path": .string(path.path)]
+        ))
+        #expect(response.ok)
+        let result = try #require(response.result?.objectValue)
+        #expect(result["fileName"] == .string(path.lastPathComponent))
+        #expect(result["width"] == .number(320))
+        #expect(result["height"] == .number(240))
+        #expect(result["layerCount"] == .number(1))
+        #expect(result["requiresAttention"] == .bool(false))
+        #expect(result["compressions"]?.arrayValue?.isEmpty == false)
+        #expect(viewModel.document.history.count == documentHistoryCount)
+
+        let rejected = registry.execute(request(
+            operation: "call",
+            name: "xomo.psd.inspect",
+            arguments: ["path": .string(path.deletingPathExtension().appendingPathExtension("png").path)]
+        ))
+        #expect(!rejected.ok)
     }
 
     @Test func registryControlsCanvasViewportWithoutAddingHistory() throws {

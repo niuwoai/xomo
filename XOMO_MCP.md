@@ -1,6 +1,6 @@
 # Xomo MCP 与 CLI
 
-> 当前版本：v2.12.0-rc195
+> 当前版本：v2.12.0-rc196
 
 ## 架构
 
@@ -31,6 +31,7 @@ xomo status
 xomo doctor
 xomo tools
 xomo call xomo.document.get '{}'
+xomo call xomo.psd.inspect '{"path":"~/Designs/checkout.psd"}'
 xomo call xomo.tool.select '{"tool":"brush"}'
 xomo call xomo.selection.rectangle '{"x":20,"y":20,"width":200,"height":120}'
 xomo call xomo.selection.quick_mask '{"action":"toggle"}'
@@ -89,10 +90,11 @@ MCP 服务器实现 `initialize`、`ping`、`tools/list` 和 `tools/call`。当 
 
 ## 当前工具范围
 
-- 共 119 个 MCP 工具；同类细粒度操作通过带严格枚举参数的 action 工具组织。
+- 共 120 个 MCP 工具；同类细粒度操作通过带严格枚举参数的 action 工具组织。
 - App 与文档状态
 - 预设或自定义画布创建、可编辑文字/形状检查与更新（含纯色/最多 16 个有序色标的线性渐变填充、独立描边、不透明度、线宽、统一/独立四角及超椭圆圆角平滑）、点文字 / 固定宽高段落文字创建和转换、文字框所需高度、溢出诊断与适合内容 / 仅扩高操作，以及详细调整、滤镜和图层样式参数
 - 完整 `qpicproject` 项目导入导出，以及 PNG/JPEG/WebP 等图像图层导入
+- 本地 PSD 兼容性检查：返回尺寸、图层/组/蒙版、压缩方式和需要注意的降级项，不修改当前文档
 - 28 种编辑器工具选择
 - 前景色、背景色、可持久化画笔预设、带硬度/流量/间距与逐点压力曲线控制的画笔与橡皮擦、渐变
 - 仿制图章与修复画笔源点、对齐 / 非对齐模式、图层采样范围，以及修补工具的源 / 目标模式、透明度和羽化

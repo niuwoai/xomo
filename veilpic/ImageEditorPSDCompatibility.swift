@@ -13,6 +13,15 @@ enum ImageEditorPSDCompression: Int, CaseIterable, Hashable, Sendable {
     case zip = 2
     case zipPrediction = 3
 
+    var identifier: String {
+        switch self {
+        case .raw: "raw"
+        case .rle: "rle"
+        case .zip: "zip"
+        case .zipPrediction: "zipPrediction"
+        }
+    }
+
     var titleKey: String {
         switch self {
         case .raw: "imageEditor.psd.compatibility.compression.raw"

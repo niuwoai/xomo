@@ -22,6 +22,7 @@ enum XomoToolCatalog {
         ("xomo.project.export", "Serialize the complete layered project."),
         ("xomo.project.import", "Replace the active document from qpicproject data."),
         ("xomo.import.image", "Import an encoded image as an editable layer."),
+        ("xomo.psd.inspect", "Inspect a local PSD compatibility report without importing or changing the active document."),
         ("xomo.tool.list", "List all image editor tools."),
         ("xomo.tool.select", "Select the active editor tool."),
         ("xomo.layer.list", "List layers, hierarchy, bounds, visibility, locks, opacity, blend mode, preserved Figma variable bindings, and optional binding filters."),

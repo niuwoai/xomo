@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc196 - 2026-07-17
+
+### Added
+- 新增 `xomo.psd.inspect` MCP/CLI 工具，可在不导入或修改当前文档的情况下读取本地 PSD 兼容性报告。
+
+### Verification
+- PSD 检查正向/扩展名拒绝测试 1/1、MCP 工具目录测试 1/1、`xomo-cli` 测试 2/2 通过；macOS 13 Debug 测试产品构建通过。
+
 ## 2.12.0-rc195 - 2026-07-17
 
 ### Added
