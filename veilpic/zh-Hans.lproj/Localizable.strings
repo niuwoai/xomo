@@ -3018,7 +3018,7 @@
 "xomo.figma.node.issue.unsupportedPaint" = "多重填充会合成或降级，独立编辑语义不保留";
 "xomo.figma.node.issue.imageAssetPending" = "图片资源尚未下载";
 "xomo.figma.node.issue.imageAssetUnavailable" = "图片资源不可用，保留占位层";
-"xomo.figma.node.issue.imageFillTransformFlattened" = "图片填充变换已烘焙为固定像素层";
+"xomo.figma.node.issue.imageFillTransformPreserved" = "图片填充的裁切、平铺和旋转会保留为非破坏性参数";
 "xomo.figma.node.issue.imageFiltersPreserved" = "图片滤镜会保留为可切换的非破坏性图层效果";
 "xomo.figma.node.issue.vectorGeometryMissing" = "缺少矢量路径数据";
 "xomo.figma.node.issue.vectorGeometryUnsupported" = "矢量路径包含无法解析的命令";

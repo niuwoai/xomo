@@ -14,6 +14,26 @@ enum XomoFigmaNodeMaterializer {
     private static let minimumTileScale: CGFloat = 0.01
     private static let maximumTileScale: CGFloat = 100
 
+    static func renderImageFill(
+        _ image: NSImage,
+        metadata: XomoFigmaImageFillMetadata,
+        size: CGSize
+    ) -> NSImage {
+        bakedImageFill(
+            image,
+            sourcePixelSize: CGSize(
+                width: metadata.sourcePixelSize?.width ?? image.size.width,
+                height: metadata.sourcePixelSize?.height ?? image.size.height
+            ),
+            size: size,
+            scaleMode: metadata.scaleMode,
+            imageTransform: metadata.imageTransform,
+            scalingFactor: metadata.scalingFactor,
+            rotation: metadata.rotation,
+            importScale: CGFloat(metadata.importScale)
+        )
+    }
+
     static func materialize(
         plan: XomoFigmaNodeImportPlan,
         canvasSize: CGSize
@@ -189,7 +209,11 @@ enum XomoFigmaNodeMaterializer {
                 imageTransform: item.imageTransform,
                 scalingFactor: item.imageScalingFactor,
                 rotation: item.imageRotation,
-                filters: item.imageFilters
+                filters: item.imageFilters,
+                sourcePixelSize: imageAssets[imageReference].map {
+                    XomoFigmaPlanSize(width: $0.pixelSize.width, height: $0.pixelSize.height)
+                },
+                importScale: Double(transform.scale)
             )
         }
         layer.stackChildLayout = item.stackChildLayout
@@ -281,6 +305,7 @@ enum XomoFigmaNodeMaterializer {
         var layer = ImageEditorLayer.blank(name: item.sourceName, size: size)
         layer.image = bakedFill
         layer.frame = CGRect(origin: frame.origin, size: size)
+        layer.xomoFigmaImageFillSourceImage = source
         return layer
     }
 

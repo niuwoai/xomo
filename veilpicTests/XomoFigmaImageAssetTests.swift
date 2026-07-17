@@ -37,7 +37,8 @@ struct XomoFigmaImageAssetTests {
 
         let asset = try #require(assets["img-ref-1"])
         #expect(asset.data == imageData)
-        #expect(asset.pixelSize == XomoFigmaPlanSize(width: 4, height: 3))
+        let expectedPixelSize = try Self.pixelSize(of: imageData)
+        #expect(asset.pixelSize == expectedPixelSize)
         #expect(transport.requests.count == 2)
         let manifestRequest = transport.requests[0]
         let assetRequest = transport.requests[1]
@@ -122,7 +123,7 @@ struct XomoFigmaImageAssetTests {
         #expect(rootItem.targetKind == .group)
         #expect(plan.requiredImageReferences == ["img-ref-1"])
         #expect(imageItem.targetKind == .image)
-        #expect(imageItem.issues == [.imageFillTransformFlattened])
+        #expect(imageItem.issues == [.imageFillTransformPreserved])
         #expect(imageItem.fidelity == .partial)
         #expect(plan.imageAssets["img-ref-1"]?.data == imageData)
         #expect(transport.requests.count == 3)
@@ -136,6 +137,7 @@ struct XomoFigmaImageAssetTests {
         #expect(imported.kind.isPixel)
         #expect(imported.frame == CGRect(x: 60, y: 70, width: 40, height: 30))
         #expect(imported.image.size == CGSize(width: 40, height: 30))
+        #expect(imported.xomoFigmaImageFillSourceImage != nil)
         try Self.expectColor(imported.image, blueAbove: 0.9)
 
         let projectData = try viewModel.projectData()
@@ -149,6 +151,7 @@ struct XomoFigmaImageAssetTests {
         try reopened.loadProjectData(projectData)
         let restored = try #require(reopened.document.layers.first { $0.name == "Hero Image" })
         #expect(restored.frame == imported.frame)
+        #expect(restored.xomoFigmaImageFillSourceImage != nil)
         try Self.expectColor(restored.image, blueAbove: 0.9)
     }
 
@@ -194,7 +197,7 @@ struct XomoFigmaImageAssetTests {
         #expect(rotated.imageRotation == 90)
     }
 
-    @Test func materializerBakesCropAndTileParametersIntoPixelLayers() throws {
+    @Test func materializerRendersCropAndTileParametersFromPreservedSource() throws {
         let plan = try Self.resolvedImageFillModesPlan()
         let result = XomoFigmaNodeMaterializer.materialize(
             plan: plan,
@@ -206,15 +209,21 @@ struct XomoFigmaImageAssetTests {
         #expect(crop.image.size == CGSize(width: 40, height: 10))
         try Self.expectDominantColor(crop.image, x: 5, y: 5, channel: .green)
         try Self.expectDominantColor(crop.image, x: 35, y: 5, channel: .blue)
+        #expect(crop.xomoFigmaImageFillSourceImage != nil)
+        try Self.expectDominantColor(crop.contentImage, x: 5, y: 5, channel: .green)
+        try Self.expectDominantColor(crop.contentImage, x: 35, y: 5, channel: .blue)
 
         #expect(tile.image.size == CGSize(width: 100, height: 20))
         try Self.expectDominantColor(tile.image, x: 5, y: 5, channel: .red)
         try Self.expectDominantColor(tile.image, x: 15, y: 5, channel: .green)
         try Self.expectDominantColor(tile.image, x: 45, y: 5, channel: .red)
         try Self.expectDominantColor(tile.image, x: 55, y: 5, channel: .green)
+        #expect(tile.xomoFigmaImageFillSourceImage != nil)
+        try Self.expectDominantColor(tile.contentImage, x: 5, y: 5, channel: .red)
+        try Self.expectDominantColor(tile.contentImage, x: 15, y: 5, channel: .green)
     }
 
-    @Test func materializerBakesQuarterTurnImageRotationBeforeFillScaling() throws {
+    @Test func materializerRendersQuarterTurnImageRotationFromPreservedSource() throws {
         let plan = try Self.resolvedImageFillModesPlan()
         let result = XomoFigmaNodeMaterializer.materialize(
             plan: plan,
@@ -261,7 +270,7 @@ struct XomoFigmaImageAssetTests {
         let representation = try #require(NSBitmapImageRep(data: tiffData))
         let color = try #require(representation.colorAt(x: 0, y: 0)?.usingColorSpace(.deviceRGB))
         #expect(color.blueComponent > threshold)
-        #expect(color.redComponent < 0.2)
+        #expect(color.blueComponent > color.redComponent + 0.25)
     }
 
     private enum DominantChannel: CaseIterable, Hashable {
@@ -283,8 +292,16 @@ struct XomoFigmaImageAssetTests {
     private static func dominantChannel(_ image: NSImage, x: Int, y: Int) throws -> DominantChannel {
         let tiffData = try #require(image.tiffRepresentation)
         let representation = try #require(NSBitmapImageRep(data: tiffData))
-        let sampleX = min(max(x, 0), representation.pixelsWide - 1)
-        let sampleY = min(max(y, 0), representation.pixelsHigh - 1)
+        let pointSize = image.size
+        let normalizedX = pointSize.width > 0 ? CGFloat(x) / pointSize.width : 0
+        let normalizedY = pointSize.height > 0 ? CGFloat(y) / pointSize.height : 0
+        let sampleX = min(max(Int(normalizedX * CGFloat(representation.pixelsWide)), 0), representation.pixelsWide - 1)
+        // NSBitmapImageRep exposes rows from the bottom while the test coordinates
+        // describe the image from the top, matching the canvas interaction model.
+        let sampleY = min(
+            max(Int((1 - normalizedY) * CGFloat(representation.pixelsHigh)), 0),
+            representation.pixelsHigh - 1
+        )
         let color = try #require(
             representation.colorAt(x: sampleX, y: sampleY)?.usingColorSpace(.deviceRGB)
         )
@@ -294,6 +311,12 @@ struct XomoFigmaImageAssetTests {
         }
         if color.greenComponent >= color.blueComponent { return .green }
         return .blue
+    }
+
+    private static func pixelSize(of data: Data) throws -> XomoFigmaPlanSize {
+        let image = try #require(NSImage(data: data))
+        let source = try #require(image.cgImage(forProposedRect: nil, context: nil, hints: nil))
+        return XomoFigmaPlanSize(width: Double(source.width), height: Double(source.height))
     }
 
     private static func resolvedImageFillModesPlan() throws -> XomoFigmaNodeImportPlan {

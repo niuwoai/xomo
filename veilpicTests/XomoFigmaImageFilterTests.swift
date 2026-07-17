@@ -102,7 +102,7 @@ struct XomoFigmaImageFilterTests {
         let resolvedItem = try #require(resolved.items.first)
         #expect(resolvedItem.targetKind == .image)
         #expect(resolvedItem.issues.contains(.imageFiltersPreserved))
-        #expect(resolvedItem.issues.contains(.imageFillTransformFlattened))
+        #expect(resolvedItem.issues.contains(.imageFillTransformPreserved))
 
         let result = XomoFigmaNodeMaterializer.materialize(
             plan: resolved,

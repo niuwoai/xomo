@@ -67,7 +67,7 @@ enum XomoFigmaNodeMappingIssue: String, CaseIterable, Sendable {
     case unsupportedPaint
     case imageAssetPending
     case imageAssetUnavailable
-    case imageFillTransformFlattened
+    case imageFillTransformPreserved
     case imageFiltersPreserved
     case vectorGeometryMissing
     case vectorGeometryUnsupported
@@ -134,7 +134,7 @@ struct XomoFigmaPlanRadialGradient: Equatable, Sendable {
     var colorStops: [XomoFigmaPlanGradientStop]
 }
 
-struct XomoFigmaPlanSize: Equatable, Sendable {
+struct XomoFigmaPlanSize: Codable, Equatable, Sendable {
     var width: Double
     var height: Double
 }
@@ -220,11 +220,7 @@ struct XomoFigmaPlanImageFilters: Codable, Equatable, Sendable {
     }
 }
 
-/// Source image-fill parameters retained on a materialized layer.
-///
-/// The current renderer still bakes Figma's crop/tile/filter result into the
-/// layer pixels. Keeping this small, Codable payload makes the source intent
-/// inspectable and recoverable for a future non-destructive image-fill editor.
+/// Figma image-fill parameters retained for non-destructive rendering.
 struct XomoFigmaImageFillMetadata: Codable, Equatable, Sendable {
     var imageReference: String
     var scaleMode: String?
@@ -232,6 +228,54 @@ struct XomoFigmaImageFillMetadata: Codable, Equatable, Sendable {
     var scalingFactor: Double?
     var rotation: Double?
     var filters: XomoFigmaPlanImageFilters
+    var sourcePixelSize: XomoFigmaPlanSize?
+    var importScale: Double
+
+    init(
+        imageReference: String,
+        scaleMode: String?,
+        imageTransform: XomoFigmaPlanTransform?,
+        scalingFactor: Double?,
+        rotation: Double?,
+        filters: XomoFigmaPlanImageFilters,
+        sourcePixelSize: XomoFigmaPlanSize? = nil,
+        importScale: Double = 1
+    ) {
+        self.imageReference = imageReference
+        self.scaleMode = scaleMode
+        self.imageTransform = imageTransform
+        self.scalingFactor = scalingFactor
+        self.rotation = rotation
+        self.filters = filters
+        self.sourcePixelSize = sourcePixelSize
+        self.importScale = importScale.isFinite ? max(0.01, importScale) : 1
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case imageReference
+        case scaleMode
+        case imageTransform
+        case scalingFactor
+        case rotation
+        case filters
+        case sourcePixelSize
+        case importScale
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(
+            imageReference: try container.decode(String.self, forKey: .imageReference),
+            scaleMode: try container.decodeIfPresent(String.self, forKey: .scaleMode),
+            imageTransform: try container.decodeIfPresent(XomoFigmaPlanTransform.self, forKey: .imageTransform),
+            scalingFactor: try container.decodeIfPresent(Double.self, forKey: .scalingFactor),
+            rotation: try container.decodeIfPresent(Double.self, forKey: .rotation),
+            filters: try container.decodeIfPresent(XomoFigmaPlanImageFilters.self, forKey: .filters)
+                ?? XomoFigmaPlanImageFilters(),
+            sourcePixelSize: try container.decodeIfPresent(XomoFigmaPlanSize.self, forKey: .sourcePixelSize),
+            importScale: try container.decodeIfPresent(Double.self, forKey: .importScale) ?? 1
+        )
+    }
 }
 
 enum XomoFigmaPlanEffectKind: String, Equatable, Sendable {
@@ -403,7 +447,7 @@ struct XomoFigmaNodeImportPlan: Equatable, Sendable {
             }
             if acceptedAssets[imageReference] != nil {
                 updated.targetKind = .image
-                updated.issues.append(.imageFillTransformFlattened)
+                updated.issues.append(.imageFillTransformPreserved)
             } else {
                 updated.targetKind = .imagePlaceholder
                 updated.issues.append(.imageAssetUnavailable)

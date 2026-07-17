@@ -2817,6 +2817,8 @@ struct ImageEditorLayer: Identifiable {
     var xomoFigmaComponentPropertyDefaults: [String: XomoFigmaComponentProperty] = [:]
     /// Original Figma image-fill parameters retained for non-destructive rendering.
     var xomoFigmaImageFill: XomoFigmaImageFillMetadata?
+    /// Original Figma image asset used to re-render crop/tile/rotation parameters.
+    var xomoFigmaImageFillSourceImage: NSImage?
     /// Allows the imported Figma image-fill filters to be toggled without changing pixels.
     var xomoFigmaImageFillFiltersEnabled = true
     var xomoFigmaSourceURL: URL?
@@ -3277,12 +3279,23 @@ struct ImageEditorLayer: Identifiable {
         } else {
             baseImage = image
         }
+        let imageFillRendered: NSImage
+        if let imageFill = xomoFigmaImageFill,
+           let sourceImage = xomoFigmaImageFillSourceImage {
+            imageFillRendered = XomoFigmaNodeMaterializer.renderImageFill(
+                sourceImage,
+                metadata: imageFill,
+                size: baseImage.size
+            )
+        } else {
+            imageFillRendered = baseImage
+        }
         let imageFillFiltered: NSImage
         if xomoFigmaImageFillFiltersEnabled,
            let imageFill = xomoFigmaImageFill {
-            imageFillFiltered = XomoFigmaImageFilterBaker.apply(imageFill.filters, to: baseImage)
+            imageFillFiltered = XomoFigmaImageFilterBaker.apply(imageFill.filters, to: imageFillRendered)
         } else {
-            imageFillFiltered = baseImage
+            imageFillFiltered = imageFillRendered
         }
         return smartFilters.reduce(imageFillFiltered) { partial, filter in
             guard filter.isEnabled, !filter.appliesToBackdrop else { return partial }

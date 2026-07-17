@@ -1,0 +1,9 @@
+{
+  "version": "2.12.0-rc245",
+  "suite": "LocalizationResourceTests/supportedLocalizationTablesKeepMatchingKeys",
+  "result": "passed",
+  "passed": 1,
+  "failed": 0,
+  "total": 1,
+  "xcresult": "/tmp/xomo-rc245-localization/Logs/Test/Test-veilpic-2026.07.18_06-32-19-+0800.xcresult"
+}

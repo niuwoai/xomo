@@ -276,6 +276,7 @@ struct ImageEditorProjectLayer: Codable {
     var xomoFigmaComponentProperties: [String: XomoFigmaComponentProperty]?
     var xomoFigmaComponentPropertyDefaults: [String: XomoFigmaComponentProperty]?
     var xomoFigmaImageFill: XomoFigmaImageFillMetadata?
+    var xomoFigmaImageFillSourceImageData: Data?
     var xomoFigmaImageFillFiltersEnabled: Bool?
     var xomoFigmaSourceURL: URL?
 
@@ -348,6 +349,7 @@ struct ImageEditorProjectLayer: Codable {
             ? nil
             : layer.xomoFigmaComponentPropertyDefaults
         xomoFigmaImageFill = layer.xomoFigmaImageFill
+        xomoFigmaImageFillSourceImageData = layer.xomoFigmaImageFillSourceImage?.qingtuPNGData()
         xomoFigmaImageFillFiltersEnabled = layer.xomoFigmaImageFillFiltersEnabled
         xomoFigmaSourceURL = layer.xomoFigmaSourceURL
     }
@@ -407,6 +409,8 @@ struct ImageEditorProjectLayer: Codable {
         layer.xomoFigmaComponentProperties = xomoFigmaComponentProperties ?? [:]
         layer.xomoFigmaComponentPropertyDefaults = xomoFigmaComponentPropertyDefaults ?? [:]
         layer.xomoFigmaImageFill = xomoFigmaImageFill
+        layer.xomoFigmaImageFillSourceImage = xomoFigmaImageFillSourceImageData
+            .flatMap { NSImage(data: $0) }
         layer.xomoFigmaImageFillFiltersEnabled = xomoFigmaImageFillFiltersEnabled ?? true
         layer.xomoFigmaSourceURL = xomoFigmaSourceURL
         return layer

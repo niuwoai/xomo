@@ -3018,7 +3018,7 @@
 "xomo.figma.node.issue.unsupportedPaint" = "複数の塗りは合成または縮退し、個別編集は保持されません";
 "xomo.figma.node.issue.imageAssetPending" = "画像素材はまだダウンロードされていません";
 "xomo.figma.node.issue.imageAssetUnavailable" = "画像素材を利用できないため、プレースホルダーを保持します";
-"xomo.figma.node.issue.imageFillTransformFlattened" = "画像塗りの変形は固定ピクセルレイヤーに焼き込まれます";
+"xomo.figma.node.issue.imageFillTransformPreserved" = "画像塗りの切り抜き、タイル、回転は非破壊パラメータとして保持されます";
 "xomo.figma.node.issue.imageFiltersPreserved" = "画像フィルターは非破壊的で切り替え可能なレイヤー効果として保持されます";
 "xomo.figma.node.issue.vectorGeometryMissing" = "ベクターパスデータがありません";
 "xomo.figma.node.issue.vectorGeometryUnsupported" = "ベクターパスに解析できないコマンドがあります";

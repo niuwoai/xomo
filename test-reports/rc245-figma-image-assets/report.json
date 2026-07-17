@@ -1,0 +1,9 @@
+{
+  "version": "2.12.0-rc245",
+  "suite": "XomoFigmaImageAssetTests",
+  "result": "passed",
+  "passed": 8,
+  "failed": 0,
+  "total": 8,
+  "xcresult": "/tmp/xomo-rc245-figma-images/Logs/Test/Test-veilpic-2026.07.18_06-31-51-+0800.xcresult"
+}
