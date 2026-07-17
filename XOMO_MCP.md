@@ -1,6 +1,6 @@
 # Xomo MCP 与 CLI
 
-> 当前版本：v2.12.0-rc187
+> 当前版本：v2.12.0-rc188
 
 ## 架构
 
@@ -83,7 +83,7 @@ MCP 服务器实现 `initialize`、`ping`、`tools/list` 和 `tools/call`。当 
 
 ## 当前工具范围
 
-- 共 116 个 MCP 工具；同类细粒度操作通过带严格枚举参数的 action 工具组织。
+- 共 117 个 MCP 工具；同类细粒度操作通过带严格枚举参数的 action 工具组织。
 - App 与文档状态
 - 预设或自定义画布创建、可编辑文字/形状检查与更新（含纯色/最多 16 个有序色标的线性渐变填充、独立描边、不透明度、线宽、统一/独立四角及超椭圆圆角平滑）、点文字 / 固定宽高段落文字创建和转换、文字框所需高度、溢出诊断与适合内容 / 仅扩高操作，以及详细调整、滤镜和图层样式参数
 - 完整 `qpicproject` 项目导入导出，以及 PNG/JPEG/WebP 等图像图层导入
@@ -102,6 +102,7 @@ MCP 服务器实现 `initialize`、`ping`、`tools/list` 和 `tools/call`。当 
 - 图像尺寸、画布尺寸、裁切、缩放、参考线与网格
 - 22 类可编辑 UI 组件与七套主题
 - UI 组件主组件、实例链接、主题同步和解除链接（`xomo.component.instance`）
+- Figma 链接安全校验与规范化（`xomo.figma.link`），不联网、不存储凭据，并返回导入范围与清洗计数
 - PNG、JPEG、WebP、PDF、SVG、PSD 渲染导出
 
 `xomo.layer.rasterize` 的 `target` 接受 `type`、`shape`、`fillContent`、`vectorMask`、`smartObject`、`layerStyle` 或 `layer`。普通内容目标只转换所选内容；`layerStyle` 会把样式以及位于样式之前的蒙版、智能滤镜、填充透明度和本图层 Blend If 烘焙为像素，但保留名称、层级、图层不透明度、混合模式、下层 Blend If 与剪贴关系。多选会跳过锁定或类型不匹配的图层，并把整批转换记为一个 History/Undo 步骤。

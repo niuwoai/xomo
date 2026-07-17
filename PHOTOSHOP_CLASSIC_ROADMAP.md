@@ -1,6 +1,8 @@
 # Xomo 经典 Photoshop 能力路线图
 
-> 最后更新：2026-07-17 ｜ 当前版本：v2.12.0-rc187 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座
+> 最后更新：2026-07-17 ｜ 当前版本：v2.12.0-rc188 ｜ 目标：以经典 Photoshop 能力作为现代混合编辑器的可靠像素与图层底座
+
+- `v2.12.0-rc188`：新增 `xomo.figma.link` MCP/CLI 工具，对 Figma 链接执行安全校验与规范化，不联网、不存储凭据，并明确返回可导入范围与被丢弃的查询参数数量。
 
 - `v2.12.0-rc187`：新增 `xomo.component.instance` MCP/CLI 工具，支持主组件、实例链接、主题同步和解除链接；UI、自动化与 Undo/Redo 共用同一组件实例模型，并修正文档中的 MCP 工具总数。
 - `v2.12.0-rc186`：新增 `xomo.figma.component_properties` MCP/CLI 工具，支持读取、设置和还原 Figma 组件属性，并复用 UI 的本地覆盖与 Undo/Redo 语义。

@@ -15,7 +15,7 @@ struct XomoAutomationTests {
             Issue.record("Expected tool array")
             return
         }
-        #expect(tools.count == 116)
+        #expect(tools.count == 117)
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.layer.list")
@@ -78,6 +78,10 @@ struct XomoAutomationTests {
         })
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
+            return value["name"] == .string("xomo.figma.link")
+        })
+        #expect(tools.contains { tool in
+            guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.component.instance")
         })
     }
@@ -115,6 +119,36 @@ struct XomoAutomationTests {
         let exportedData = try Data(contentsOf: path)
         let exportedSnapshot = try JSONDecoder().decode(XomoComponentThemeTokenSnapshot.self, from: exportedData)
         #expect(exportedSnapshot == .init(theme: .chakraUI, tokens: XomoComponentTheme.chakraUI.tokens))
+    }
+
+    @Test func registryValidatesAndCanonicalizesFigmaLinksWithoutNetworkAccess() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.figma.link",
+            arguments: [
+                "url": .string("https://www.figma.com/design/abc123DEF456/Checkout?node-id=32-9&token=must-not-persist")
+            ]
+        ))
+        #expect(response.ok)
+        let result = try #require(response.result?.objectValue)
+        #expect(result["resourceType"] == .string("design"))
+        #expect(result["fileKey"] == .string("abc123DEF456"))
+        #expect(result["nodeId"] == .string("32:9"))
+        #expect(result["plannedImportScope"] == .string("designDocument"))
+        #expect(result["discardedQueryItemCount"] == .number(1))
+        #expect(result["canonicalUrl"]?.stringValue?.contains("token") == false)
+
+        let rejected = registry.execute(request(
+            operation: "call",
+            name: "xomo.figma.link",
+            arguments: ["url": .string("http://www.figma.com/design/abc123DEF456/Checkout")]
+        ))
+        #expect(!rejected.ok)
+        #expect(rejected.error?.contains("xomo.figma.error.insecureScheme") == true)
     }
 
     @Test func registryImportsLocalComponentTokensForSubsequentInsertion() throws {

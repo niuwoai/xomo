@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc188 - 2026-07-17
+
+### Added
+- 新增 `xomo.figma.link` MCP/CLI 工具，在不联网、不保存凭据的前提下校验并规范化 Figma 链接，返回资源类型、文件身份、节点选择器、导入范围与清洗计数。
+
+### Verification
+- Figma 链接自动化正向与拒绝契约、工具目录和 SwiftPM CLI 测试通过；完整 macOS 13 构建仍按 20 版门禁执行。
+
 ## 2.12.0-rc187 - 2026-07-17
 
 ### Added

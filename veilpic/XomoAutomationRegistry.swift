@@ -90,6 +90,8 @@ final class XomoAutomationRegistry {
             return try layersResult(arguments, viewModel: viewModel)
         case "xomo.figma.bindings":
             return try figmaBindingsAction(arguments, viewModel: viewModel)
+        case "xomo.figma.link":
+            return try figmaLinkResult(arguments)
         case "xomo.figma.component_properties":
             return try figmaComponentPropertiesAction(arguments, viewModel: viewModel)
         case "xomo.layer.select":
@@ -601,6 +603,33 @@ final class XomoAutomationRegistry {
         default:
             throw XomoAutomationCallError.invalidArgument("Unknown Figma binding action")
         }
+    }
+
+    private func figmaLinkResult(
+        _ arguments: [String: XomoJSONValue]
+    ) throws -> XomoJSONValue {
+        let input = try requiredString("url", in: arguments)
+        let preview: XomoFigmaLinkPreview
+        do {
+            preview = try XomoFigmaLinkParser.parse(input)
+        } catch let error as XomoFigmaLinkParserError {
+            throw XomoAutomationCallError.invalidArgument(
+                "Figma link rejected: \(error.localizationKey)"
+            )
+        }
+        return .object([
+            "resourceType": .string(preview.resourceType.rawValue),
+            "fileKey": .string(preview.fileKey),
+            "fileSlug": .string(preview.fileSlug),
+            "displayName": .string(preview.displayName),
+            "nodeId": preview.nodeID.map(XomoJSONValue.string) ?? .null,
+            "startingPointNodeId": preview.startingPointNodeID.map(XomoJSONValue.string) ?? .null,
+            "versionId": preview.versionID.map(XomoJSONValue.string) ?? .null,
+            "canonicalUrl": .string(preview.canonicalURL.absoluteString),
+            "discardedQueryItemCount": .number(Double(preview.discardedQueryItemCount)),
+            "plannedImportScope": .string(preview.plannedImportScope.rawValue),
+            "authorizationState": .string(preview.authorizationState.rawValue)
+        ])
     }
 
     private func figmaComponentPropertiesAction(
@@ -2787,6 +2816,9 @@ private extension XomoAutomationRegistry {
         tool("xomo.figma.bindings", "List or copy the deduplicated Figma variable bindings from the current layer selection.", [
             "action": XomoAutomationSchema.string(description: "Binding action", values: ["list", "copy"])
         ], required: ["action"]),
+        tool("xomo.figma.link", "Validate and canonicalize a Figma link without network access or credential storage.", [
+            "url": XomoAutomationSchema.string(description: "Figma design, file, prototype, board, or other supported resource URL")
+        ], required: ["url"]),
         tool("xomo.figma.component_properties", "List, locally override, or reset preserved Figma component properties on the selected layer.", [
             "action": XomoAutomationSchema.string(description: "Component property action", values: ["list", "set", "reset"]),
             "key": XomoAutomationSchema.string(description: "Figma component property name"),
