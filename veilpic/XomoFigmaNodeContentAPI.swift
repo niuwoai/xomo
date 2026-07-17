@@ -174,6 +174,7 @@ enum XomoFigmaNodeImportMapper {
             depth: 0,
             rootOrigin: origin,
             ancestorTransformFlattened: false,
+            siblingMaskFrame: nil,
             items: &items
         )
         return XomoFigmaNodeImportPlan(
@@ -191,6 +192,7 @@ enum XomoFigmaNodeImportMapper {
         depth: Int,
         rootOrigin: (x: Double, y: Double),
         ancestorTransformFlattened: Bool,
+        siblingMaskFrame: XomoFigmaPlanRect?,
         items: inout [XomoFigmaNodeImportItem]
     ) throws {
         guard items.count < maximumNodeCount else {
@@ -207,8 +209,10 @@ enum XomoFigmaNodeImportMapper {
             parentSourceID: parentSourceID,
             depth: depth,
             rootOrigin: rootOrigin,
-            transformFlattened: transformFlattened
+            transformFlattened: transformFlattened,
+            siblingMaskFrame: siblingMaskFrame
         ))
+        let siblingMaskFrames = simpleMaskSiblingFrames(in: node.children, rootOrigin: rootOrigin)
         for child in node.children ?? [] {
             try append(
                 node: child,
@@ -216,6 +220,7 @@ enum XomoFigmaNodeImportMapper {
                 depth: depth + 1,
                 rootOrigin: rootOrigin,
                 ancestorTransformFlattened: transformFlattened,
+                siblingMaskFrame: siblingMaskFrames[child.id],
                 items: &items
             )
         }
@@ -226,7 +231,8 @@ enum XomoFigmaNodeImportMapper {
         parentSourceID: String?,
         depth: Int,
         rootOrigin: (x: Double, y: Double),
-        transformFlattened: Bool
+        transformFlattened: Bool,
+        siblingMaskFrame: XomoFigmaPlanRect?
     ) -> XomoFigmaNodeImportItem {
         var issues: [XomoFigmaNodeMappingIssue] = []
         let mapping = targetMapping(node: node, issues: &issues)
@@ -341,6 +347,7 @@ enum XomoFigmaNodeImportMapper {
             clipsContent: node.clipsContent == true && mapping.target == .group && node.absoluteBoundingBox != nil,
             isMask: node.isMask == true,
             maskFrame: childMaskFrame,
+            siblingMaskFrame: siblingMaskFrame,
             imageReference: imagePaint?.imageRef,
             imageScaleMode: imagePaint?.scaleMode,
             imageTransform: XomoFigmaPlanTransform(imagePaint?.imageTransform),
@@ -885,6 +892,26 @@ enum XomoFigmaNodeImportMapper {
             width: bounds.width,
             height: bounds.height
         )
+    }
+
+    private static func simpleMaskSiblingFrames(
+        in children: [XomoFigmaNode]?,
+        rootOrigin: (x: Double, y: Double)
+    ) -> [String: XomoFigmaPlanRect] {
+        guard let children,
+              children.filter({ $0.isMask == true }).count == 1,
+              let maskIndex = children.firstIndex(where: { $0.isMask == true }),
+              maskIndex < children.index(before: children.endIndex),
+              isSupportedMaskShape(children[maskIndex]),
+              let bounds = children[maskIndex].absoluteBoundingBox
+        else { return [:] }
+        let frame = XomoFigmaPlanRect(
+            x: bounds.x - rootOrigin.x,
+            y: bounds.y - rootOrigin.y,
+            width: bounds.width,
+            height: bounds.height
+        )
+        return Dictionary(uniqueKeysWithValues: children[(maskIndex + 1)...].map { ($0.id, frame) })
     }
 
     private static func hasNonIdentityTransform(_ transform: [[Double]]?) -> Bool {

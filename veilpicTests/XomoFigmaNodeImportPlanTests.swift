@@ -666,6 +666,13 @@ struct XomoFigmaNodeImportPlanTests {
                         "absoluteBoundingBox": {"x": 0, "y": 0, "width": 100, "height": 100},
                         "children": [
                           {
+                            "id": "2:80",
+                            "name": "Before Mask",
+                            "type": "RECTANGLE",
+                            "absoluteBoundingBox": {"x": 0, "y": 0, "width": 100, "height": 100},
+                            "fills": [{"type": "SOLID", "color": {"r": 0.1, "g": 0.2, "b": 0.9, "a": 1}}]
+                          },
+                          {
                             "id": "2:81",
                             "name": "Mask Rectangle",
                             "type": "RECTANGLE",
@@ -690,19 +697,31 @@ struct XomoFigmaNodeImportPlanTests {
         )
         let plan = try XomoFigmaNodeImportMapper.makePlan(response: response, requestedNodeID: "1:81")
         let group = try #require(plan.items.first { $0.sourceID == "1:81" })
+        let before = try #require(plan.items.first { $0.sourceID == "2:80" })
         let mask = try #require(plan.items.first { $0.sourceID == "2:81" })
+        let after = try #require(plan.items.first { $0.sourceID == "2:82" })
         #expect(group.maskFrame == XomoFigmaPlanRect(x: 20, y: 20, width: 60, height: 60))
         #expect(!group.issues.contains(.maskFlattened))
+        #expect(before.siblingMaskFrame == nil)
         #expect(mask.isMask)
         #expect(!mask.issues.contains(.maskFlattened))
+        #expect(after.siblingMaskFrame == group.maskFrame)
 
         let materialized = XomoFigmaNodeMaterializer.materialize(
             plan: plan,
             canvasSize: CGSize(width: 200, height: 200)
         )
         let groupLayer = try #require(materialized.layers.first { $0.xomoFigmaSourceID == "1:81" })
+        let beforeLayer = try #require(materialized.layers.first { $0.xomoFigmaSourceID == "2:80" })
         let maskLayer = try #require(materialized.layers.first { $0.xomoFigmaSourceID == "2:81" })
-        #expect(groupLayer.mask != nil)
+        let afterLayer = try #require(materialized.layers.first { $0.xomoFigmaSourceID == "2:82" })
+        #expect(groupLayer.mask == nil)
+        #expect(beforeLayer.mask == nil)
+        #expect(afterLayer.mask?.size == afterLayer.image.size)
+        let insideMask = try #require(afterLayer.effectiveMask?.color(at: CGPoint(x: afterLayer.image.size.width / 2, y: afterLayer.image.size.height / 2)))
+        let outsideMask = try #require(afterLayer.effectiveMask?.color(at: .zero))
+        #expect(insideMask.alphaComponent > 0.9)
+        #expect(outsideMask.alphaComponent < 0.1)
         #expect(!maskLayer.isVisible)
     }
 

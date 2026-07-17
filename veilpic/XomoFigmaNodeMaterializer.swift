@@ -117,8 +117,7 @@ enum XomoFigmaNodeMaterializer {
             let clipMask = item.clipsContent
                 ? item.frame.flatMap { mappedFrame($0, transform: transform) }
                 : nil
-            let nodeMask = item.maskFrame.flatMap { mappedFrame($0, transform: transform) }
-            for maskFrame in [clipMask, nodeMask].compactMap({ $0 }) {
+            for maskFrame in [clipMask].compactMap({ $0 }) {
                 guard let mask = rectangularCanvasMask(frame: maskFrame, canvasSize: canvasSize) else { continue }
                 if let existingMask = layer.mask {
                     layer.mask = combinedCanvasMasks(existingMask, mask)
@@ -159,6 +158,15 @@ enum XomoFigmaNodeMaterializer {
             guard let frame = mappedFrame(item.frame, transform: transform) else { return nil }
             layer = makeImagePlaceholderLayer(item: item, frame: frame)
         }
+        if let siblingMaskFrame = item.siblingMaskFrame,
+           let mappedMaskFrame = mappedFrame(siblingMaskFrame, transform: transform),
+           let mask = siblingMask(for: layer, mappedFrame: mappedMaskFrame) {
+            if let existingMask = layer.mask {
+                layer.mask = combinedCanvasMasks(existingMask, mask)
+            } else {
+                layer.mask = mask
+            }
+        }
         layer.groupID = parentGroupID
         if item.targetKind != .group {
             applyFigmaEffects(item.effects, to: &layer, scale: transform.scale)
@@ -193,6 +201,14 @@ enum XomoFigmaNodeMaterializer {
             NSColor.white.setFill()
             appKitFrame.fill()
         }
+    }
+
+    private static func siblingMask(for layer: ImageEditorLayer, mappedFrame: CGRect) -> NSImage? {
+        if layer.isGroup {
+            return rectangularCanvasMask(frame: mappedFrame, canvasSize: layer.image.size)
+        }
+        let localFrame = mappedFrame.offsetBy(dx: -layer.frame.minX, dy: -layer.frame.minY)
+        return rectangularCanvasMask(frame: localFrame, canvasSize: layer.image.size)
     }
 
     private static func combinedCanvasMasks(_ first: NSImage, _ second: NSImage) -> NSImage? {

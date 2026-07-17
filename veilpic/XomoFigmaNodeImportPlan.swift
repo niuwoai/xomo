@@ -287,6 +287,8 @@ struct XomoFigmaNodeImportItem: Equatable, Identifiable, Sendable {
     var clipsContent: Bool = false
     var isMask: Bool = false
     var maskFrame: XomoFigmaPlanRect?
+    /// A simple Figma mask applies to direct siblings after the mask node.
+    var siblingMaskFrame: XomoFigmaPlanRect? = nil
     var imageReference: String?
     var imageScaleMode: String?
     var imageTransform: XomoFigmaPlanTransform?
