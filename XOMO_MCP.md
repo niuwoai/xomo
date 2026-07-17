@@ -1,6 +1,6 @@
 # Xomo MCP 与 CLI
 
-> 当前版本：v2.12.0-rc197
+> 当前版本：v2.12.0-rc198
 
 ## 架构
 
@@ -33,6 +33,7 @@ xomo tools
 xomo call xomo.document.get '{}'
 xomo call xomo.psd.inspect '{"path":"~/Designs/checkout.psd"}'
 xomo call xomo.psd.open '{"path":"~/Designs/checkout.psd"}'
+xomo call xomo.psd.save '{"path":"~/Designs/checkout-export.psd"}'
 xomo call xomo.tool.select '{"tool":"brush"}'
 xomo call xomo.selection.rectangle '{"x":20,"y":20,"width":200,"height":120}'
 xomo call xomo.selection.quick_mask '{"action":"toggle"}'
@@ -91,12 +92,13 @@ MCP 服务器实现 `initialize`、`ping`、`tools/list` 和 `tools/call`。当 
 
 ## 当前工具范围
 
-- 共 121 个 MCP 工具；同类细粒度操作通过带严格枚举参数的 action 工具组织。
+- 共 122 个 MCP 工具；同类细粒度操作通过带严格枚举参数的 action 工具组织。
 - App 与文档状态
 - 预设或自定义画布创建、可编辑文字/形状检查与更新（含纯色/最多 16 个有序色标的线性渐变填充、独立描边、不透明度、线宽、统一/独立四角及超椭圆圆角平滑）、点文字 / 固定宽高段落文字创建和转换、文字框所需高度、溢出诊断与适合内容 / 仅扩高操作，以及详细调整、滤镜和图层样式参数
 - 完整 `qpicproject` 项目导入导出，以及 PNG/JPEG/WebP 等图像图层导入
 - 本地 PSD 兼容性检查：返回尺寸、图层/组/蒙版、压缩方式和需要注意的降级项，不修改当前文档
 - 本地 PSD 异步打开：`xomo.psd.open` 复用 UI 的后台读取、解码、加载提示、兼容性降级与打开后的 History 入口
+- 当前文档 PSD 保存：`xomo.psd.save` 写出分层 PSD，并在返回前重新读取兼容性报告；不改变当前文档或 History
 - 28 种编辑器工具选择
 - 前景色、背景色、可持久化画笔预设、带硬度/流量/间距与逐点压力曲线控制的画笔与橡皮擦、渐变
 - 仿制图章与修复画笔源点、对齐 / 非对齐模式、图层采样范围，以及修补工具的源 / 目标模式、透明度和羽化

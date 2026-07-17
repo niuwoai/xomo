@@ -15,7 +15,7 @@ struct XomoAutomationTests {
             Issue.record("Expected tool array")
             return
         }
-        #expect(tools.count == 121)
+        #expect(tools.count == 122)
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.layer.list")
@@ -100,6 +100,10 @@ struct XomoAutomationTests {
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.psd.open")
         })
+        #expect(tools.contains { tool in
+            guard case .object(let value) = tool else { return false }
+            return value["name"] == .string("xomo.psd.save")
+        })
     }
 
     @Test func registryQueuesPSDOpenThroughTheSharedCoordinator() throws {
@@ -124,6 +128,40 @@ struct XomoAutomationTests {
         let rejected = registry.execute(request(
             operation: "call",
             name: "xomo.psd.open",
+            arguments: ["path": .string(path.deletingPathExtension().appendingPathExtension("png").path)]
+        ))
+        #expect(!rejected.ok)
+    }
+
+    @Test func registrySavesCurrentDocumentAsPSDAndVerifiesIt() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        let historyCount = viewModel.document.history.count
+        let path = FileManager.default.temporaryDirectory
+            .appendingPathComponent("xomo-save-\(UUID().uuidString).psd")
+        defer { try? FileManager.default.removeItem(at: path) }
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.psd.save",
+            arguments: ["path": .string(path.path)]
+        ))
+        #expect(response.ok)
+        #expect(response.result?.objectValue?["status"] == .string("saved"))
+        #expect(response.result?.objectValue?["layerCount"] == .number(1))
+        #expect(FileManager.default.fileExists(atPath: path.path))
+        let restored = try ImageEditorPSDCodec.decode(
+            Data(contentsOf: path),
+            sourceName: path.lastPathComponent
+        )
+        #expect(restored.canvasSize == viewModel.document.canvasSize)
+        #expect(restored.layers.count == viewModel.document.layers.count)
+        #expect(viewModel.document.history.count == historyCount)
+
+        let rejected = registry.execute(request(
+            operation: "call",
+            name: "xomo.psd.save",
             arguments: ["path": .string(path.deletingPathExtension().appendingPathExtension("png").path)]
         ))
         #expect(!rejected.ok)

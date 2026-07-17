@@ -1,6 +1,6 @@
 # 象墨 PSD 支持说明
 
-> 最后更新：2026-07-17 ｜ 对应版本：v2.12.0-rc197
+> 最后更新：2026-07-17 ｜ 对应版本：v2.12.0-rc198
 
 ## 1. 结论
 
@@ -52,7 +52,7 @@ rc195 为 PSD 导出增加 ZIP Prediction（逐行左邻差分 + zlib）自动�
 | Spot 通道 | 映射为原生 Spot 通道 | 读取 DisplayInfo（1077）的 Spot 模式、色彩空间、四个 16-bit 分量和不透明度；像素平面继续作为灰度覆盖率预览，并可随项目和 PSD 往返。 |
 | 未识别图层数据 | 忽略并提示 | 对应 Photoshop 私有元数据或第三方插件数据不会保留。 |
 
-兼容性报告会统计画布尺寸、位深、颜色模式、图层数、组数、蒙版数和实际出现的压缩方式，并列出上述风险。存在问题时会在 PSD 打开后自动显示，也可以从“文件”菜单再次查看；自动化客户端可以调用 `xomo.psd.inspect` 在不导入文件的情况下读取同一份报告，也可以调用 `xomo.psd.open` 异步打开 PSD，复用 UI 的后台解码、加载提示和降级路径。
+兼容性报告会统计画布尺寸、位深、颜色模式、图层数、组数、蒙版数和实际出现的压缩方式，并列出上述风险。存在问题时会在 PSD 打开后自动显示，也可以从“文件”菜单再次查看；自动化客户端可以调用 `xomo.psd.inspect` 在不导入文件的情况下读取同一份报告，可以调用 `xomo.psd.open` 异步打开 PSD，也可以调用 `xomo.psd.save` 写出当前分层文档并验证写出结果。
 
 ## 4. PSD 导出支持矩阵
 
@@ -111,6 +111,8 @@ rc168 修复 Path Resource 记录对齐；闭合/开放命名路径导出与外�
 - rc196 PSD 检查工具报告：[`test-reports/rc196-psd-inspect/report.md`](../test-reports/rc196-psd-inspect/report.md)
 - rc196 MCP 工具目录报告：[`test-reports/rc196-tool-catalog/report.md`](../test-reports/rc196-tool-catalog/report.md)
 - rc197 PSD 自动化打开报告：[`test-reports/rc197-psd-open/report.md`](../test-reports/rc197-psd-open/report.md)
+- rc198 PSD 自动化保存报告：[`test-reports/rc198-psd-save/report.md`](../test-reports/rc198-psd-save/report.md)
+- rc198 MCP 工具目录报告：[`test-reports/rc198-tool-catalog/report.md`](../test-reports/rc198-tool-catalog/report.md)
 - rc194 Raw/RLE/ZIP 导出定向报告：[`test-reports/rc194-psd-zip/report.md`](../test-reports/rc194-psd-zip/report.md)
 - rc194 完整 PSD 专项报告：[`test-reports/rc194-psd-suite/report.md`](../test-reports/rc194-psd-suite/report.md)
 - 外部打开测试报告：[`test-reports/rc145-external-open/report.md`](../test-reports/rc145-external-open/report.md)
@@ -118,7 +120,7 @@ rc168 修复 Path Resource 记录对齐；闭合/开放命名路径导出与外�
 
 rc195 的 PSD 专项验证结果为 24/24，包含 Raw/RLE/ZIP/ZIP Prediction 导出、外部 ZIP 夹具、文字、路径、矢量蒙版、额外通道、项目往返和 Finder 打开策略；其中导出压缩定向测试 8/8。兼容性报告确认平滑渐变样本实际写出 ZIP Prediction。
 
-rc197 的 `xomo.psd.open` 正向与扩展名拒绝测试 1/1 通过，MCP 工具目录 1/1 通过；SwiftPM CLI 测试 2/2 通过。
+rc198 的 `xomo.psd.save` 正向、重新解码、History 不变与扩展名拒绝测试 1/1 通过，MCP 工具目录 1/1 通过；SwiftPM CLI 测试 2/2 通过。
 
 ## 7. 使用建议
 

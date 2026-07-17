@@ -81,6 +81,8 @@ final class XomoAutomationRegistry {
             return try psdInspectionResult(arguments)
         case "xomo.psd.open":
             return try psdOpenResult(arguments)
+        case "xomo.psd.save":
+            return try psdSaveResult(arguments, viewModel: viewModel)
         case "xomo.tool.list":
             return .array(ImageEditorTool.allCases.map { tool in
                 .object(["id": .string(tool.rawValue), "title": .string(tool.title)])
@@ -2776,6 +2778,55 @@ final class XomoAutomationRegistry {
         ])
     }
 
+    private func psdSaveResult(
+        _ arguments: [String: XomoJSONValue],
+        viewModel: ImageEditorViewModel
+    ) throws -> XomoJSONValue {
+        let rawPath = try requiredString("path", in: arguments)
+        let url = URL(fileURLWithPath: NSString(string: rawPath).expandingTildeInPath)
+        guard XomoExternalDocumentOpenPolicy.supports(url) else {
+            throw XomoAutomationCallError.invalidArgument("PSD save requires a .psd file")
+        }
+        if let attributes = try? FileManager.default.attributesOfItem(atPath: url.path),
+           (attributes[.type] as? FileAttributeType) != .typeRegular {
+            throw XomoAutomationCallError.invalidArgument("PSD save destination must be a regular file")
+        }
+
+        var settings = ImageEditorExportSettings()
+        settings.format = .psd
+        guard let data = viewModel.exportData(settings: settings) else {
+            throw XomoAutomationCallError.operationFailed("PSD export failed")
+        }
+        guard data.count <= Self.maximumPSDInspectionBytes else {
+            throw XomoAutomationCallError.invalidArgument("PSD export exceeds the 512 MB automation limit")
+        }
+        do {
+            try data.write(to: url, options: .atomic)
+        } catch {
+            throw XomoAutomationCallError.operationFailed(
+                "PSD save failed: \(error.localizedDescription)"
+            )
+        }
+        let report: ImageEditorPSDCompatibilityReport
+        do {
+            report = try ImageEditorPSDCodec.compatibilityReport(data)
+        } catch {
+            throw XomoAutomationCallError.operationFailed(
+                "PSD save verification failed: \(error.localizedDescription)"
+            )
+        }
+        return .object([
+            "path": .string(url.path),
+            "fileName": .string(url.lastPathComponent),
+            "bytes": .number(Double(data.count)),
+            "status": .string("saved"),
+            "width": .number(Double(report.width)),
+            "height": .number(Double(report.height)),
+            "layerCount": .number(Double(report.layerCount)),
+            "requiresAttention": .bool(report.requiresAttention)
+        ])
+    }
+
     private func psdInspectionFile(_ rawPath: String) throws -> (URL, Data, Int) {
         let url = URL(fileURLWithPath: NSString(string: rawPath).expandingTildeInPath)
         guard url.pathExtension.lowercased() == "psd" else {
@@ -3002,6 +3053,9 @@ private extension XomoAutomationRegistry {
         ], required: ["path"]),
         tool("xomo.psd.open", "Open a local PSD asynchronously in the active Xomo editor using the same loading and fallback path as the UI.", [
             "path": XomoAutomationSchema.string(description: "Local PSD file path")
+        ], required: ["path"]),
+        tool("xomo.psd.save", "Save the current layered Xomo document as a PSD file and verify its compatibility report.", [
+            "path": XomoAutomationSchema.string(description: "Destination PSD file path")
         ], required: ["path"]),
         tool("xomo.tool.list", "List all image editor tools."),
         tool("xomo.tool.select", "Select the active editor tool.", [

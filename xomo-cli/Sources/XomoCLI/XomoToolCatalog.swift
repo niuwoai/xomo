@@ -24,6 +24,7 @@ enum XomoToolCatalog {
         ("xomo.import.image", "Import an encoded image as an editable layer."),
         ("xomo.psd.inspect", "Inspect a local PSD compatibility report without importing or changing the active document."),
         ("xomo.psd.open", "Open a local PSD asynchronously in the active Xomo editor."),
+        ("xomo.psd.save", "Save the current layered Xomo document as a PSD file."),
         ("xomo.tool.list", "List all image editor tools."),
         ("xomo.tool.select", "Select the active editor tool."),
         ("xomo.layer.list", "List layers, hierarchy, bounds, visibility, locks, opacity, blend mode, preserved Figma variable bindings, and optional binding filters."),
