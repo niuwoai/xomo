@@ -388,22 +388,20 @@ extension ImageEditorViewModel {
             vertical.append(contentsOf: document.guides.filter { $0.orientation == .vertical }.map(\.position))
             horizontal.append(contentsOf: document.guides.filter { $0.orientation == .horizontal }.map(\.position))
 
-            // UI components use the Sketch/Figma convention of snapping to
-            // the artboard edges and center lines. Keep this scoped to
-            // component objects so ordinary Photoshop layer movement retains
-            // its existing guide-only behavior.
-            if selectedXomoObjectKind != nil {
-                vertical.append(contentsOf: [
-                    0,
-                    document.canvasSize.width * 0.5,
-                    document.canvasSize.width
-                ])
-                horizontal.append(contentsOf: [
-                    0,
-                    document.canvasSize.height * 0.5,
-                    document.canvasSize.height
-                ])
-            }
+            // Sketch/Figma-style smart guides apply to every editable object:
+            // snap edges and center lines to the artboard as well as to other
+            // layers. Components and ordinary Photoshop layers therefore use
+            // the same predictable alignment behavior.
+            vertical.append(contentsOf: [
+                0,
+                document.canvasSize.width * 0.5,
+                document.canvasSize.width
+            ])
+            horizontal.append(contentsOf: [
+                0,
+                document.canvasSize.height * 0.5,
+                document.canvasSize.height
+            ])
 
             let excludedGroupIDs = Set(document.layers.compactMap { layer in
                 excludedLayerIDs.contains(layer.id) && layer.isGroup ? layer.id : nil

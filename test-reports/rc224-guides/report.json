@@ -1,0 +1,139 @@
+{
+  "generated_at": "2026-07-18 01:28:56 +0800",
+  "total": 13,
+  "passed": 13,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorGuideTests",
+      "method": "lockingGuidesPreventsAccidentalMovesWithoutRemovingGuides",
+      "identifier": "veilpicTests/ImageEditorGuideTests/lockingGuidesPreventsAccidentalMovesWithoutRemovingGuides",
+      "file": "ImageEditorGuideTests.swift",
+      "passed": true,
+      "duration": 5.397,
+      "issues": [],
+      "log": "ImageEditorGuideTests.lockingGuidesPreventsAccidentalMovesWithoutRemovingGuides.log"
+    },
+    {
+      "suite": "ImageEditorGuideTests",
+      "method": "movingGuideUpdatesPositionAndHistoryOnce",
+      "identifier": "veilpicTests/ImageEditorGuideTests/movingGuideUpdatesPositionAndHistoryOnce",
+      "file": "ImageEditorGuideTests.swift",
+      "passed": true,
+      "duration": 5.861,
+      "issues": [],
+      "log": "ImageEditorGuideTests.movingGuideUpdatesPositionAndHistoryOnce.log"
+    },
+    {
+      "suite": "ImageEditorGuideTests",
+      "method": "movingLayerExposesComponentAlignmentGuidesUntilTheMoveFinishes",
+      "identifier": "veilpicTests/ImageEditorGuideTests/movingLayerExposesComponentAlignmentGuidesUntilTheMoveFinishes",
+      "file": "ImageEditorGuideTests.swift",
+      "passed": true,
+      "duration": 3.014,
+      "issues": [],
+      "log": "ImageEditorGuideTests.movingLayerExposesComponentAlignmentGuidesUntilTheMoveFinishes.log"
+    },
+    {
+      "suite": "ImageEditorGuideTests",
+      "method": "movingLayerSnapsBoundsToNearbyGuide",
+      "identifier": "veilpicTests/ImageEditorGuideTests/movingLayerSnapsBoundsToNearbyGuide",
+      "file": "ImageEditorGuideTests.swift",
+      "passed": true,
+      "duration": 4.66,
+      "issues": [],
+      "log": "ImageEditorGuideTests.movingLayerSnapsBoundsToNearbyGuide.log"
+    },
+    {
+      "suite": "ImageEditorGuideTests",
+      "method": "movingLayerSnapsToGridWhenGuideSnappingIsDisabled",
+      "identifier": "veilpicTests/ImageEditorGuideTests/movingLayerSnapsToGridWhenGuideSnappingIsDisabled",
+      "file": "ImageEditorGuideTests.swift",
+      "passed": true,
+      "duration": 3.031,
+      "issues": [],
+      "log": "ImageEditorGuideTests.movingLayerSnapsToGridWhenGuideSnappingIsDisabled.log"
+    },
+    {
+      "suite": "ImageEditorGuideTests",
+      "method": "movingLayerSnapsToOtherLayerWithoutManualGuide",
+      "identifier": "veilpicTests/ImageEditorGuideTests/movingLayerSnapsToOtherLayerWithoutManualGuide",
+      "file": "ImageEditorGuideTests.swift",
+      "passed": true,
+      "duration": 3.27,
+      "issues": [],
+      "log": "ImageEditorGuideTests.movingLayerSnapsToOtherLayerWithoutManualGuide.log"
+    },
+    {
+      "suite": "ImageEditorGuideTests",
+      "method": "movingOrdinaryLayerSnapsToCanvasCenterWithoutManualGuide",
+      "identifier": "veilpicTests/ImageEditorGuideTests/movingOrdinaryLayerSnapsToCanvasCenterWithoutManualGuide",
+      "file": "ImageEditorGuideTests.swift",
+      "passed": true,
+      "duration": 3.146,
+      "issues": [],
+      "log": "ImageEditorGuideTests.movingOrdinaryLayerSnapsToCanvasCenterWithoutManualGuide.log"
+    },
+    {
+      "suite": "ImageEditorGuideTests",
+      "method": "projectDocumentRoundTripsGuides",
+      "identifier": "veilpicTests/ImageEditorGuideTests/projectDocumentRoundTripsGuides",
+      "file": "ImageEditorGuideTests.swift",
+      "passed": true,
+      "duration": 6.259,
+      "issues": [],
+      "log": "ImageEditorGuideTests.projectDocumentRoundTripsGuides.log"
+    },
+    {
+      "suite": "ImageEditorGuideTests",
+      "method": "resizingDocumentTransformsGuides",
+      "identifier": "veilpicTests/ImageEditorGuideTests/resizingDocumentTransformsGuides",
+      "file": "ImageEditorGuideTests.swift",
+      "passed": true,
+      "duration": 5.637,
+      "issues": [],
+      "log": "ImageEditorGuideTests.resizingDocumentTransformsGuides.log"
+    },
+    {
+      "suite": "ImageEditorGuideTests",
+      "method": "resizingLayerSnapsCenterToNearbyGuide",
+      "identifier": "veilpicTests/ImageEditorGuideTests/resizingLayerSnapsCenterToNearbyGuide",
+      "file": "ImageEditorGuideTests.swift",
+      "passed": true,
+      "duration": 5.513,
+      "issues": [],
+      "log": "ImageEditorGuideTests.resizingLayerSnapsCenterToNearbyGuide.log"
+    },
+    {
+      "suite": "ImageEditorGuideTests",
+      "method": "resizingLayerSnapsEdgeToGridWhenGuideSnappingIsDisabled",
+      "identifier": "veilpicTests/ImageEditorGuideTests/resizingLayerSnapsEdgeToGridWhenGuideSnappingIsDisabled",
+      "file": "ImageEditorGuideTests.swift",
+      "passed": true,
+      "duration": 5.968,
+      "issues": [],
+      "log": "ImageEditorGuideTests.resizingLayerSnapsEdgeToGridWhenGuideSnappingIsDisabled.log"
+    },
+    {
+      "suite": "ImageEditorGuideTests",
+      "method": "resizingLayerSnapsEdgeToNearbyGuide",
+      "identifier": "veilpicTests/ImageEditorGuideTests/resizingLayerSnapsEdgeToNearbyGuide",
+      "file": "ImageEditorGuideTests.swift",
+      "passed": true,
+      "duration": 2.952,
+      "issues": [],
+      "log": "ImageEditorGuideTests.resizingLayerSnapsEdgeToNearbyGuide.log"
+    },
+    {
+      "suite": "ImageEditorGuideTests",
+      "method": "resizingLayerSnapsToOtherLayerWithoutManualGuide",
+      "identifier": "veilpicTests/ImageEditorGuideTests/resizingLayerSnapsToOtherLayerWithoutManualGuide",
+      "file": "ImageEditorGuideTests.swift",
+      "passed": true,
+      "duration": 3.037,
+      "issues": [],
+      "log": "ImageEditorGuideTests.resizingLayerSnapsToOtherLayerWithoutManualGuide.log"
+    }
+  ]
+}

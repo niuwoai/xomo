@@ -54,6 +54,29 @@ struct ImageEditorGuideTests {
     }
 
     @Test
+    func movingOrdinaryLayerSnapsToCanvasCenterWithoutManualGuide() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: testImage(color: .systemBlue, size: NSSize(width: 120, height: 90))
+        ) { _ in }
+        let layerIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[layerIndex].frame = CGRect(x: 35, y: 12, width: 20, height: 16)
+        #expect(viewModel.document.guides.isEmpty)
+
+        viewModel.beginMovingSelectedLayer()
+        viewModel.moveSelectedLayer(by: CGSize(width: 14, height: 0))
+
+        let movedLayer = viewModel.document.layers[layerIndex]
+        #expect(movedLayer.frame.midX == viewModel.document.canvasSize.width * 0.5)
+        #expect(viewModel.activeAlignmentGuides.contains {
+            $0.orientation == .vertical
+                && $0.position == viewModel.document.canvasSize.width * 0.5
+        })
+
+        viewModel.finishMovingSelectedLayer()
+    }
+
+    @Test
     func movingLayerExposesComponentAlignmentGuidesUntilTheMoveFinishes() throws {
         let viewModel = ImageEditorViewModel(
             sourceName: "source.png",
