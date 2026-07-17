@@ -1,0 +1,7 @@
+{
+  "version": "2.12.0-rc186",
+  "command": "swift test --package-path xomo-cli",
+  "total": 2,
+  "passed": 2,
+  "failed": 0
+}

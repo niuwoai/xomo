@@ -15,7 +15,7 @@ struct XomoAutomationTests {
             Issue.record("Expected tool array")
             return
         }
-        #expect(tools.count == 114)
+        #expect(tools.count == 115)
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.layer.list")
@@ -71,6 +71,10 @@ struct XomoAutomationTests {
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.figma.bindings")
+        })
+        #expect(tools.contains { tool in
+            guard case .object(let value) = tool else { return false }
+            return value["name"] == .string("xomo.figma.component_properties")
         })
     }
 
@@ -374,6 +378,62 @@ struct XomoAutomationTests {
         ))
         #expect(copied.ok)
         #expect(NSPasteboard.general.string(forType: .string) == "VariableID:brand-primary\nVariableID:label")
+    }
+
+    @Test func registryListsSetsAndResetsFigmaComponentProperties() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        let layerID = try #require(viewModel.document.selectedLayerID)
+        viewModel.document.layers[0].xomoFigmaComponentProperties = [
+            "Label": XomoFigmaComponentProperty(type: "TEXT", value: "Continue"),
+            "Enabled": XomoFigmaComponentProperty(type: "BOOLEAN", value: "true")
+        ]
+        viewModel.document.layers[0].xomoFigmaComponentPropertyDefaults =
+            viewModel.document.layers[0].xomoFigmaComponentProperties
+
+        let listed = registry.execute(request(
+            operation: "call",
+            name: "xomo.figma.component_properties",
+            arguments: ["action": .string("list")]
+        ))
+        #expect(listed.ok)
+        #expect(listed.result?.objectValue?["layerId"] == .string(layerID.uuidString))
+        #expect(listed.result?.objectValue?["properties"]?.objectValue?["Label"]?.objectValue?["overridden"] == .bool(false))
+
+        let set = registry.execute(request(
+            operation: "call",
+            name: "xomo.figma.component_properties",
+            arguments: [
+                "action": .string("set"),
+                "key": .string("Label"),
+                "value": .string("Buy now")
+            ]
+        ))
+        #expect(set.ok)
+        #expect(viewModel.document.selectedLayer?.xomoFigmaComponentProperties["Label"]?.value == "Buy now")
+        #expect(set.result?.objectValue?["properties"]?.objectValue?["Label"]?.objectValue?["overridden"] == .bool(true))
+
+        let cleared = registry.execute(request(
+            operation: "call",
+            name: "xomo.figma.component_properties",
+            arguments: [
+                "action": .string("set"),
+                "key": .string("Label"),
+                "value": .string("")
+            ]
+        ))
+        #expect(cleared.ok)
+        #expect(viewModel.document.selectedLayer?.xomoFigmaComponentProperties["Label"]?.value == "")
+
+        let reset = registry.execute(request(
+            operation: "call",
+            name: "xomo.figma.component_properties",
+            arguments: ["action": .string("reset"), "key": .string("Label")]
+        ))
+        #expect(reset.ok)
+        #expect(viewModel.document.selectedLayer?.xomoFigmaComponentProperties["Label"]?.value == "Continue")
+        #expect(viewModel.document.history.last?.title == L10n.format("imageEditor.history.figmaComponentPropertyChanged", "Label"))
     }
 
     @Test func registryCanInspectAndMutateTheActiveDocument() throws {

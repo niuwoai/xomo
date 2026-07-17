@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc186 - 2026-07-17
+
+### Added
+- 新增 `xomo.figma.component_properties` MCP/CLI 工具，支持读取、设置和还原当前选中图层的 Figma 组件属性，并复用 UI 的本地覆盖与 Undo/Redo 语义。
+
+### Verification
+- Figma 自动化专项测试 42/42、空文本属性边界测试 1/1、macOS 13 Debug `build-for-testing`、SwiftPM CLI 测试 2/2 通过。
+
 ## 2.12.0-rc185 - 2026-07-17
 
 ### Added

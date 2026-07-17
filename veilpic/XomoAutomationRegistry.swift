@@ -90,6 +90,8 @@ final class XomoAutomationRegistry {
             return try layersResult(arguments, viewModel: viewModel)
         case "xomo.figma.bindings":
             return try figmaBindingsAction(arguments, viewModel: viewModel)
+        case "xomo.figma.component_properties":
+            return try figmaComponentPropertiesAction(arguments, viewModel: viewModel)
         case "xomo.layer.select":
             let id = try requiredUUID("id", in: arguments)
             viewModel.selectLayer(id, extendingSelection: arguments["extend"]?.boolValue ?? false)
@@ -596,6 +598,79 @@ final class XomoAutomationRegistry {
             return result
         default:
             throw XomoAutomationCallError.invalidArgument("Unknown Figma binding action")
+        }
+    }
+
+    private func figmaComponentPropertiesAction(
+        _ arguments: [String: XomoJSONValue],
+        viewModel: ImageEditorViewModel
+    ) throws -> XomoJSONValue {
+        let action = try requiredString("action", in: arguments)
+        guard let layer = viewModel.document.selectedLayer,
+              !layer.xomoFigmaComponentProperties.isEmpty
+        else {
+            throw XomoAutomationCallError.invalidArgument(
+                "No selected Figma component properties"
+            )
+        }
+
+        func result() -> XomoJSONValue {
+            guard let currentLayer = viewModel.document.selectedLayer else {
+                return .object(["properties": .object([:])])
+            }
+            var properties: [String: XomoJSONValue] = [:]
+            for (key, property) in currentLayer.xomoFigmaComponentProperties {
+                let preferredValues: [XomoJSONValue] = property.preferredValues.map { preferredValue in
+                    .object([
+                        "key": .string(preferredValue.key),
+                        "name": .string(preferredValue.name)
+                    ])
+                }
+                properties[key] = .object([
+                    "type": .string(property.type),
+                    "value": .string(property.value),
+                    "preferredValues": .array(preferredValues),
+                    "defaultValue": currentLayer.xomoFigmaComponentPropertyDefaults[key].map {
+                        .string($0.value)
+                    } ?? .null,
+                    "overridden": .bool(viewModel.hasSelectedFigmaComponentPropertyOverride(key, property: property))
+                ])
+            }
+            return .object([
+                "layerId": .string(currentLayer.id.uuidString),
+                "properties": .object(properties)
+            ])
+        }
+
+        switch action {
+        case "list":
+            return result()
+        case "set":
+            let key = try requiredString("key", in: arguments)
+            guard layer.xomoFigmaComponentProperties[key] != nil else {
+                throw XomoAutomationCallError.notFound("Figma component property \(key)")
+            }
+            guard let value = arguments["value"]?.stringValue else {
+                throw XomoAutomationCallError.invalidArgument("Missing string argument: value")
+            }
+            viewModel.updateSelectedFigmaComponentProperty(key, value: value)
+            return result()
+        case "reset":
+            let key = try requiredString("key", in: arguments)
+            guard layer.xomoFigmaComponentProperties[key] != nil else {
+                throw XomoAutomationCallError.notFound("Figma component property \(key)")
+            }
+            guard layer.xomoFigmaComponentPropertyDefaults[key] != nil else {
+                throw XomoAutomationCallError.operationFailed(
+                    "Figma component property \(key) has no imported default"
+                )
+            }
+            viewModel.resetSelectedFigmaComponentProperty(key)
+            return result()
+        default:
+            throw XomoAutomationCallError.invalidArgument(
+                "Unknown Figma component property action"
+            )
         }
     }
 
@@ -2655,6 +2730,11 @@ private extension XomoAutomationRegistry {
         ]),
         tool("xomo.figma.bindings", "List or copy the deduplicated Figma variable bindings from the current layer selection.", [
             "action": XomoAutomationSchema.string(description: "Binding action", values: ["list", "copy"])
+        ], required: ["action"]),
+        tool("xomo.figma.component_properties", "List, locally override, or reset preserved Figma component properties on the selected layer.", [
+            "action": XomoAutomationSchema.string(description: "Component property action", values: ["list", "set", "reset"]),
+            "key": XomoAutomationSchema.string(description: "Figma component property name"),
+            "value": XomoAutomationSchema.string(description: "New local property value")
         ], required: ["action"]),
         tool("xomo.layer.select", "Select a layer by UUID.", [
             "id": XomoAutomationSchema.string(description: "Layer UUID"),

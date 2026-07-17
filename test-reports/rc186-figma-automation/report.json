@@ -1,0 +1,429 @@
+{
+  "generated_at": "2026-07-17 09:21:25 +0800",
+  "total": 42,
+  "passed": 42,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registryAdvertisesAndReordersIndependentSavedPaths",
+      "identifier": "veilpicTests/XomoAutomationTests/registryAdvertisesAndReordersIndependentSavedPaths",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 3.279,
+      "issues": [],
+      "log": "XomoAutomationTests.registryAdvertisesAndReordersIndependentSavedPaths.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registryAdvertisesBroadEditorCapabilities",
+      "identifier": "veilpicTests/XomoAutomationTests/registryAdvertisesBroadEditorCapabilities",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 6.411,
+      "issues": [],
+      "log": "XomoAutomationTests.registryAdvertisesBroadEditorCapabilities.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registryAppliesActiveComponentTokensToSelectedComponent",
+      "identifier": "veilpicTests/XomoAutomationTests/registryAppliesActiveComponentTokensToSelectedComponent",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 3.111,
+      "issues": [],
+      "log": "XomoAutomationTests.registryAppliesActiveComponentTokensToSelectedComponent.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registryCanInspectAndMutateTheActiveDocument",
+      "identifier": "veilpicTests/XomoAutomationTests/registryCanInspectAndMutateTheActiveDocument",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 7.136,
+      "issues": [],
+      "log": "XomoAutomationTests.registryCanInspectAndMutateTheActiveDocument.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registryClearsImportedComponentTokensAndKeepsUndoAvailable",
+      "identifier": "veilpicTests/XomoAutomationTests/registryClearsImportedComponentTokensAndKeepsUndoAvailable",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 3.396,
+      "issues": [],
+      "log": "XomoAutomationTests.registryClearsImportedComponentTokensAndKeepsUndoAvailable.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registryConfiguresBrushFlowSpacingHardnessAndPressure",
+      "identifier": "veilpicTests/XomoAutomationTests/registryConfiguresBrushFlowSpacingHardnessAndPressure",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 3.298,
+      "issues": [],
+      "log": "XomoAutomationTests.registryConfiguresBrushFlowSpacingHardnessAndPressure.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registryConfiguresCloneStampSamplingOptions",
+      "identifier": "veilpicTests/XomoAutomationTests/registryConfiguresCloneStampSamplingOptions",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 3.172,
+      "issues": [],
+      "log": "XomoAutomationTests.registryConfiguresCloneStampSamplingOptions.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registryConfiguresHealingBrushSourceAndSamplingOptions",
+      "identifier": "veilpicTests/XomoAutomationTests/registryConfiguresHealingBrushSourceAndSamplingOptions",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 7.097,
+      "issues": [],
+      "log": "XomoAutomationTests.registryConfiguresHealingBrushSourceAndSamplingOptions.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registryControlsSelectionsChannelsToolsAndComponents",
+      "identifier": "veilpicTests/XomoAutomationTests/registryControlsSelectionsChannelsToolsAndComponents",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 7.361,
+      "issues": [],
+      "log": "XomoAutomationTests.registryControlsSelectionsChannelsToolsAndComponents.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registryCreatesAndInspectsEditablePaths",
+      "identifier": "veilpicTests/XomoAutomationTests/registryCreatesAndInspectsEditablePaths",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 6.962,
+      "issues": [],
+      "log": "XomoAutomationTests.registryCreatesAndInspectsEditablePaths.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registryCreatesAndListsLayerComps",
+      "identifier": "veilpicTests/XomoAutomationTests/registryCreatesAndListsLayerComps",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 7.662,
+      "issues": [],
+      "log": "XomoAutomationTests.registryCreatesAndListsLayerComps.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registryCreatesAppliesListsAndDeletesPersistedLayerStylePresets",
+      "identifier": "veilpicTests/XomoAutomationTests/registryCreatesAppliesListsAndDeletesPersistedLayerStylePresets",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 7.277,
+      "issues": [],
+      "log": "XomoAutomationTests.registryCreatesAppliesListsAndDeletesPersistedLayerStylePresets.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registryCreatesCanvasAndEditsText",
+      "identifier": "veilpicTests/XomoAutomationTests/registryCreatesCanvasAndEditsText",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 7.453,
+      "issues": [],
+      "log": "XomoAutomationTests.registryCreatesCanvasAndEditsText.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registryCreatesInspectsAndSwitchesShapeRadialGradient",
+      "identifier": "veilpicTests/XomoAutomationTests/registryCreatesInspectsAndSwitchesShapeRadialGradient",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 5.115,
+      "issues": [],
+      "log": "XomoAutomationTests.registryCreatesInspectsAndSwitchesShapeRadialGradient.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registryCreatesInspectsAndUpdatesRectangleCornerRadius",
+      "identifier": "veilpicTests/XomoAutomationTests/registryCreatesInspectsAndUpdatesRectangleCornerRadius",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 3.208,
+      "issues": [],
+      "log": "XomoAutomationTests.registryCreatesInspectsAndUpdatesRectangleCornerRadius.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registryCreatesInspectsUpdatesAndClearsShapeLinearGradient",
+      "identifier": "veilpicTests/XomoAutomationTests/registryCreatesInspectsUpdatesAndClearsShapeLinearGradient",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 3.234,
+      "issues": [],
+      "log": "XomoAutomationTests.registryCreatesInspectsUpdatesAndClearsShapeLinearGradient.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registryCreatesListsAppliesAndDeletesPersistedBrushPresets",
+      "identifier": "veilpicTests/XomoAutomationTests/registryCreatesListsAppliesAndDeletesPersistedBrushPresets",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 3.181,
+      "issues": [],
+      "log": "XomoAutomationTests.registryCreatesListsAppliesAndDeletesPersistedBrushPresets.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registryDeletesUnlockedLayerSubtreesAndPreservesLockedSelection",
+      "identifier": "veilpicTests/XomoAutomationTests/registryDeletesUnlockedLayerSubtreesAndPreservesLockedSelection",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 7.599,
+      "issues": [],
+      "log": "XomoAutomationTests.registryDeletesUnlockedLayerSubtreesAndPreservesLockedSelection.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registryDuplicatesLayerSubtreesInsideTheirOriginalParents",
+      "identifier": "veilpicTests/XomoAutomationTests/registryDuplicatesLayerSubtreesInsideTheirOriginalParents",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 4.509,
+      "issues": [],
+      "log": "XomoAutomationTests.registryDuplicatesLayerSubtreesInsideTheirOriginalParents.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registryFavoritesAndListsRecentLayerStylePresets",
+      "identifier": "veilpicTests/XomoAutomationTests/registryFavoritesAndListsRecentLayerStylePresets",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 7.048,
+      "issues": [],
+      "log": "XomoAutomationTests.registryFavoritesAndListsRecentLayerStylePresets.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registryGroupsAndUngroupsHierarchyWhileSkippingLockedSelection",
+      "identifier": "veilpicTests/XomoAutomationTests/registryGroupsAndUngroupsHierarchyWhileSkippingLockedSelection",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 3.12,
+      "issues": [],
+      "log": "XomoAutomationTests.registryGroupsAndUngroupsHierarchyWhileSkippingLockedSelection.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registryImportsLocalComponentTokensForSubsequentInsertion",
+      "identifier": "veilpicTests/XomoAutomationTests/registryImportsLocalComponentTokensForSubsequentInsertion",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 7.31,
+      "issues": [],
+      "log": "XomoAutomationTests.registryImportsLocalComponentTokensForSubsequentInsertion.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registryLayerListExposesFigmaVariableBindings",
+      "identifier": "veilpicTests/XomoAutomationTests/registryLayerListExposesFigmaVariableBindings",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 3.165,
+      "issues": [],
+      "log": "XomoAutomationTests.registryLayerListExposesFigmaVariableBindings.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registryListsAndCopiesFigmaBindingsFromSelectedLayers",
+      "identifier": "veilpicTests/XomoAutomationTests/registryListsAndCopiesFigmaBindingsFromSelectedLayers",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 3.433,
+      "issues": [],
+      "log": "XomoAutomationTests.registryListsAndCopiesFigmaBindingsFromSelectedLayers.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registryListsAppliesAndDuplicatesBuiltInLayerStylePresets",
+      "identifier": "veilpicTests/XomoAutomationTests/registryListsAppliesAndDuplicatesBuiltInLayerStylePresets",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 6.892,
+      "issues": [],
+      "log": "XomoAutomationTests.registryListsAppliesAndDuplicatesBuiltInLayerStylePresets.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registryListsSetsAndResetsFigmaComponentProperties",
+      "identifier": "veilpicTests/XomoAutomationTests/registryListsSetsAndResetsFigmaComponentProperties",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 4.778,
+      "issues": [],
+      "log": "XomoAutomationTests.registryListsSetsAndResetsFigmaComponentProperties.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registryMergesSelectedSiblingLayersWhilePreservingLockedSelection",
+      "identifier": "veilpicTests/XomoAutomationTests/registryMergesSelectedSiblingLayersWhilePreservingLockedSelection",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 5.657,
+      "issues": [],
+      "log": "XomoAutomationTests.registryMergesSelectedSiblingLayersWhilePreservingLockedSelection.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registryMovesLayerSubtreesIntoAndOutOfGroupsAtVisibleBoundaries",
+      "identifier": "veilpicTests/XomoAutomationTests/registryMovesLayerSubtreesIntoAndOutOfGroupsAtVisibleBoundaries",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 3.729,
+      "issues": [],
+      "log": "XomoAutomationTests.registryMovesLayerSubtreesIntoAndOutOfGroupsAtVisibleBoundaries.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registryRasterizesLayerStylesAndAppliesOnlyVectorMasks",
+      "identifier": "veilpicTests/XomoAutomationTests/registryRasterizesLayerStylesAndAppliesOnlyVectorMasks",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 5.233,
+      "issues": [],
+      "log": "XomoAutomationTests.registryRasterizesLayerStylesAndAppliesOnlyVectorMasks.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registryRasterizesOnlyTheRequestedLayerContentTarget",
+      "identifier": "veilpicTests/XomoAutomationTests/registryRasterizesOnlyTheRequestedLayerContentTarget",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 3.193,
+      "issues": [],
+      "log": "XomoAutomationTests.registryRasterizesOnlyTheRequestedLayerContentTarget.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registryReadsAndExportsComponentThemeTokens",
+      "identifier": "veilpicTests/XomoAutomationTests/registryReadsAndExportsComponentThemeTokens",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 3.052,
+      "issues": [],
+      "log": "XomoAutomationTests.registryReadsAndExportsComponentThemeTokens.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registryRecursivelyExpandsAndCollapsesSelectedLayerGroups",
+      "identifier": "veilpicTests/XomoAutomationTests/registryRecursivelyExpandsAndCollapsesSelectedLayerGroups",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 5.637,
+      "issues": [],
+      "log": "XomoAutomationTests.registryRecursivelyExpandsAndCollapsesSelectedLayerGroups.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registryRefreshesAllMappedComponentTokensAndReturnsCount",
+      "identifier": "veilpicTests/XomoAutomationTests/registryRefreshesAllMappedComponentTokensAndReturnsCount",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 4.827,
+      "issues": [],
+      "log": "XomoAutomationTests.registryRefreshesAllMappedComponentTokensAndReturnsCount.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registryRenamesMovesExportsAndImportsLayerStylePresetLibraries",
+      "identifier": "veilpicTests/XomoAutomationTests/registryRenamesMovesExportsAndImportsLayerStylePresetLibraries",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 7.443,
+      "issues": [],
+      "log": "XomoAutomationTests.registryRenamesMovesExportsAndImportsLayerStylePresetLibraries.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registryReordersCollapsedGroupsAsVisibleSubtrees",
+      "identifier": "veilpicTests/XomoAutomationTests/registryReordersCollapsedGroupsAsVisibleSubtrees",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 3.116,
+      "issues": [],
+      "log": "XomoAutomationTests.registryReordersCollapsedGroupsAsVisibleSubtrees.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registryReturnsSavedPathIndexesAndMovesToExactIndex",
+      "identifier": "veilpicTests/XomoAutomationTests/registryReturnsSavedPathIndexesAndMovesToExactIndex",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 4.991,
+      "issues": [],
+      "log": "XomoAutomationTests.registryReturnsSavedPathIndexesAndMovesToExactIndex.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registryRoundTripsCompleteProjectData",
+      "identifier": "veilpicTests/XomoAutomationTests/registryRoundTripsCompleteProjectData",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 3.96,
+      "issues": [],
+      "log": "XomoAutomationTests.registryRoundTripsCompleteProjectData.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registryRunsDestinationPatchWithFeatherThroughSpecialPaintTool",
+      "identifier": "veilpicTests/XomoAutomationTests/registryRunsDestinationPatchWithFeatherThroughSpecialPaintTool",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 3.257,
+      "issues": [],
+      "log": "XomoAutomationTests.registryRunsDestinationPatchWithFeatherThroughSpecialPaintTool.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registrySavesListsRenamesLoadsAndDeletesIndependentPaths",
+      "identifier": "veilpicTests/XomoAutomationTests/registrySavesListsRenamesLoadsAndDeletesIndependentPaths",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 3.136,
+      "issues": [],
+      "log": "XomoAutomationTests.registrySavesListsRenamesLoadsAndDeletesIndependentPaths.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registryScalesAndTemporarilyHidesLayerEffectsWithoutClearingThem",
+      "identifier": "veilpicTests/XomoAutomationTests/registryScalesAndTemporarilyHidesLayerEffectsWithoutClearingThem",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 7.397,
+      "issues": [],
+      "log": "XomoAutomationTests.registryScalesAndTemporarilyHidesLayerEffectsWithoutClearingThem.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registryStampsSelectedLayersAndFlattensToALockedBackground",
+      "identifier": "veilpicTests/XomoAutomationTests/registryStampsSelectedLayersAndFlattensToALockedBackground",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 3.173,
+      "issues": [],
+      "log": "XomoAutomationTests.registryStampsSelectedLayersAndFlattensToALockedBackground.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registryUsesTheSameSingleBackgroundConversionRulesAsTheEditor",
+      "identifier": "veilpicTests/XomoAutomationTests/registryUsesTheSameSingleBackgroundConversionRulesAsTheEditor",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 3.145,
+      "issues": [],
+      "log": "XomoAutomationTests.registryUsesTheSameSingleBackgroundConversionRulesAsTheEditor.log"
+    }
+  ]
+}
