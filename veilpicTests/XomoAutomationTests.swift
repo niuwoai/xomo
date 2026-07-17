@@ -15,7 +15,7 @@ struct XomoAutomationTests {
             Issue.record("Expected tool array")
             return
         }
-        #expect(tools.count == 120)
+        #expect(tools.count == 121)
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.layer.list")
@@ -96,6 +96,37 @@ struct XomoAutomationTests {
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.psd.inspect")
         })
+        #expect(tools.contains { tool in
+            guard case .object(let value) = tool else { return false }
+            return value["name"] == .string("xomo.psd.open")
+        })
+    }
+
+    @Test func registryQueuesPSDOpenThroughTheSharedCoordinator() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        let data = try ImageEditorPSDCodec.encode(document: viewModel.document)
+        let path = FileManager.default.temporaryDirectory
+            .appendingPathComponent("xomo-open-\(UUID().uuidString).psd")
+        defer { try? FileManager.default.removeItem(at: path) }
+        try data.write(to: path, options: .atomic)
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.psd.open",
+            arguments: ["path": .string(path.path)]
+        ))
+        #expect(response.ok)
+        #expect(response.result?.objectValue?["fileName"] == .string(path.lastPathComponent))
+        #expect(response.result?.objectValue?["status"] == .string("queued"))
+
+        let rejected = registry.execute(request(
+            operation: "call",
+            name: "xomo.psd.open",
+            arguments: ["path": .string(path.deletingPathExtension().appendingPathExtension("png").path)]
+        ))
+        #expect(!rejected.ok)
     }
 
     @Test func registryInspectsPSDCompatibilityWithoutChangingDocument() throws {

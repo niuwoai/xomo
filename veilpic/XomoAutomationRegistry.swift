@@ -79,6 +79,8 @@ final class XomoAutomationRegistry {
             try importImage(arguments, viewModel: viewModel)
         case "xomo.psd.inspect":
             return try psdInspectionResult(arguments)
+        case "xomo.psd.open":
+            return try psdOpenResult(arguments)
         case "xomo.tool.list":
             return .array(ImageEditorTool.allCases.map { tool in
                 .object(["id": .string(tool.rawValue), "title": .string(tool.title)])
@@ -2742,6 +2744,38 @@ final class XomoAutomationRegistry {
         return psdInspectionJSON(report: report, url: url, byteCount: byteCount)
     }
 
+    private func psdOpenResult(
+        _ arguments: [String: XomoJSONValue]
+    ) throws -> XomoJSONValue {
+        let rawPath = try requiredString("path", in: arguments)
+        let url = URL(fileURLWithPath: NSString(string: rawPath).expandingTildeInPath)
+        guard XomoExternalDocumentOpenPolicy.supports(url) else {
+            throw XomoAutomationCallError.invalidArgument("PSD open requires a .psd file")
+        }
+        let attributes: [FileAttributeKey: Any]
+        do {
+            attributes = try FileManager.default.attributesOfItem(atPath: url.path)
+        } catch {
+            throw XomoAutomationCallError.operationFailed(
+                "PSD open could not read file metadata: \(error.localizedDescription)"
+            )
+        }
+        guard (attributes[.type] as? FileAttributeType) == .typeRegular else {
+            throw XomoAutomationCallError.invalidArgument("PSD open requires a regular file")
+        }
+        let byteCount = (attributes[.size] as? NSNumber)?.intValue ?? 0
+        guard byteCount <= Self.maximumPSDInspectionBytes else {
+            throw XomoAutomationCallError.invalidArgument("PSD file exceeds the 512 MB open limit")
+        }
+        XomoExternalDocumentOpenCoordinator.shared.open(url)
+        return .object([
+            "path": .string(url.path),
+            "fileName": .string(url.lastPathComponent),
+            "bytes": .number(Double(byteCount)),
+            "status": .string("queued")
+        ])
+    }
+
     private func psdInspectionFile(_ rawPath: String) throws -> (URL, Data, Int) {
         let url = URL(fileURLWithPath: NSString(string: rawPath).expandingTildeInPath)
         guard url.pathExtension.lowercased() == "psd" else {
@@ -2964,6 +2998,9 @@ private extension XomoAutomationRegistry {
             "intoSelection": XomoAutomationSchema.boolean(description: "Mask the imported layer to the current selection")
         ], required: ["base64"]),
         tool("xomo.psd.inspect", "Inspect a local PSD compatibility report without importing or changing the active document.", [
+            "path": XomoAutomationSchema.string(description: "Local PSD file path")
+        ], required: ["path"]),
+        tool("xomo.psd.open", "Open a local PSD asynchronously in the active Xomo editor using the same loading and fallback path as the UI.", [
             "path": XomoAutomationSchema.string(description: "Local PSD file path")
         ], required: ["path"]),
         tool("xomo.tool.list", "List all image editor tools."),
