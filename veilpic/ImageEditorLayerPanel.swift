@@ -1588,6 +1588,18 @@ extension ImageEditorView {
             Divider()
             Button(L10n.text("imageEditor.action.layerSmartObject")) { viewModel.convertSelectedLayerToSmartObject() }
                 .disabled(!viewModel.canConvertSelectedLayerToSmartObject)
+            Button(L10n.text("imageEditor.action.layerSmartObjectReplace")) {
+                viewModel.chooseSmartObjectReplacementFile()
+            }
+            .disabled(!viewModel.canReplaceSelectedSmartObjectContents)
+            Button(L10n.text("imageEditor.action.layerSmartObjectMakeUnique")) {
+                viewModel.makeSelectedSmartObjectUnique()
+            }
+            .disabled(!viewModel.canMakeSelectedSmartObjectUnique)
+            Button(L10n.text("imageEditor.action.layerSmartObjectResetTransform")) {
+                viewModel.resetSelectedSmartObjectTransform()
+            }
+            .disabled(!viewModel.canResetSelectedSmartObjectTransform)
             Menu(L10n.text("imageEditor.action.layerRasterize")) {
                 ForEach(ImageEditorRasterizeTarget.allCases) { target in
                     Button(L10n.text(target.actionTitleKey)) {

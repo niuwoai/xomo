@@ -1,0 +1,19 @@
+{
+  "generated_at": "2026-07-18 00:16:03 +0800",
+  "total": 1,
+  "passed": 1,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "layerPanelExposesSmartObjectContentActions",
+      "identifier": "veilpicTests/ImageEditorScopeTests/layerPanelExposesSmartObjectContentActions",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.662,
+      "issues": [],
+      "log": "ImageEditorScopeTests.layerPanelExposesSmartObjectContentActions.log"
+    }
+  ]
+}

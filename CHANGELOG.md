@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc217 - 2026-07-18
+
+### Added
+- 图层菜单和图层面板更多操作接入智能对象“替换内容、让实例独立、重置变换”，复用已有多实例、Undo/Redo 与本地化业务入口。
+
+### Verification
+- 顶部“图层”菜单契约通过 1/1，报告：`test-reports/rc217-smart-object-menu/report.md`。
+- 图层面板更多操作契约通过 1/1，报告：`test-reports/rc217-smart-object-panel/report.md`。
+
 ## 2.12.0-rc216 - 2026-07-17
 
 ### Added

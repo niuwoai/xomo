@@ -2300,6 +2300,32 @@ struct ImageEditorScopeTests {
         #expect(layerMenuSource.contains("imageEditor.action.layerFlatten"))
         #expect(layerMenuSource.contains("viewModel.flattenImage()"))
         #expect(layerMenuSource.contains("viewModel.canFlattenImage"))
+        #expect(layerMenuSource.contains("imageEditor.action.layerSmartObjectReplace"))
+        #expect(layerMenuSource.contains("viewModel.chooseSmartObjectReplacementFile()"))
+        #expect(layerMenuSource.contains("viewModel.canReplaceSelectedSmartObjectContents"))
+        #expect(layerMenuSource.contains("imageEditor.action.layerSmartObjectMakeUnique"))
+        #expect(layerMenuSource.contains("viewModel.makeSelectedSmartObjectUnique()"))
+        #expect(layerMenuSource.contains("viewModel.canMakeSelectedSmartObjectUnique"))
+        #expect(layerMenuSource.contains("imageEditor.action.layerSmartObjectResetTransform"))
+        #expect(layerMenuSource.contains("viewModel.resetSelectedSmartObjectTransform()"))
+        #expect(layerMenuSource.contains("viewModel.canResetSelectedSmartObjectTransform"))
+    }
+
+    @Test func layerPanelExposesSmartObjectContentActions() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorLayerPanel.swift"),
+            encoding: .utf8
+        )
+        let menuStart = try #require(source.range(of: "private var layerMoreActionsMenu: some View"))
+        let menuEnd = try #require(source[menuStart.upperBound...].range(of: "private var layerAlignmentButtons"))
+        let menuSource = source[menuStart.lowerBound..<menuEnd.lowerBound]
+
+        #expect(menuSource.contains("imageEditor.action.layerSmartObjectReplace"))
+        #expect(menuSource.contains("viewModel.chooseSmartObjectReplacementFile()"))
+        #expect(menuSource.contains("imageEditor.action.layerSmartObjectMakeUnique"))
+        #expect(menuSource.contains("viewModel.makeSelectedSmartObjectUnique()"))
+        #expect(menuSource.contains("imageEditor.action.layerSmartObjectResetTransform"))
+        #expect(menuSource.contains("viewModel.resetSelectedSmartObjectTransform()"))
     }
 
     @Test func windowMenuExposesHistoryPanelActionsInPhotoshopStyleLocation() throws {
