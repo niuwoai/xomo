@@ -92,6 +92,27 @@ extension ImageEditorViewModel {
         return false
     }
 
+    /// Sketch/Figma-style deep selection for Command-click. Unlike ordinary
+    /// move-tool hit testing this intentionally allows a component child to
+    /// become the selected layer, while still requiring an actually visible
+    /// pixel so transparent children do not steal the click.
+    func selectDeepestVisibleLayer(at point: CGPoint, extendingSelection: Bool = false) -> Bool {
+        for layer in document.layers.reversed() {
+            guard !layer.isGroup,
+                  document.isEffectivelyVisible(layer),
+                  layerContainsVisibleContent(layer, at: point)
+            else { continue }
+
+            selectLayer(layer.id, extendingSelection: extendingSelection)
+            statusText = L10n.format(
+                "imageEditor.status.layerRangeSelected",
+                document.selectedLayerIDs.count
+            )
+            return true
+        }
+        return false
+    }
+
     /// 文字工具优先命中最上方可见文字层。组件中的文字也是普通文字层，
     /// 因而可以从组件组自动切换到具体文字层并直接编辑。
     func selectEditableTextLayer(at point: CGPoint, excluding excludedLayerID: UUID? = nil) -> Bool {

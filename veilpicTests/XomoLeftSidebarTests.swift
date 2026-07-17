@@ -543,6 +543,8 @@ struct XomoLeftSidebarTests {
         #expect(source.contains("isCanvasCloneGestureActive"))
         #expect(source.contains("beginDuplicatingSelectedLayerForMove()"))
         #expect(source.contains("cloneModifiers == [.option]"))
+        #expect(source.contains("deepSelectionModifiers == [.command]"))
+        #expect(source.contains("selectDeepestVisibleLayer(at: pressedImagePoint)"))
         #expect(source.contains("viewModel.selectVisibleLayer(at: pressedImagePoint)"))
         #expect(source.contains("viewModel.beginMovingSelectedLayer()"))
         #expect(source.contains("The parent canvas owns movement for selected objects"))

@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc215 - 2026-07-17
+
+### Added
+- 移动工具按住 `Command` 点击组件时可进入组件内部最上方实际可见的子图层；普通点击仍选择 Xomo 组件整体，透明子图层不会拦截深层选择。
+
+### Verification
+- 带 rc215 构建的 `XomoCanvasObjectTests` 回归通过 27/27，覆盖组件 Command 深选、普通图层命中、Shift 多选、Option 复制移动、透明孔洞和移动预览，报告：`test-reports/rc215-deep-selection-final/report.md`。
+- 移动手势接线契约通过 1/1，确认 Command 深选不会误启动移动，报告：`test-reports/rc215-deep-selection-contract/report.md`。
+
 ## 2.12.0-rc214 - 2026-07-17
 
 ### Changed
