@@ -1360,6 +1360,23 @@ struct ImageEditorScopeTests {
         #expect(fileMenuSource.contains(".disabled(!viewModel.canExportSelection)"))
     }
 
+    @Test func fileMenuExposesDirectSelectedLayerExport() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
+            encoding: .utf8
+        )
+        let fileMenuStart = try #require(source.range(of: "private var fileMenu: some View"))
+        let nextMenuStart = try #require(
+            source[fileMenuStart.upperBound...].range(of: "private var editMenu: some View")
+        )
+        let fileMenuSource = source[fileMenuStart.lowerBound..<nextMenuStart.lowerBound]
+
+        #expect(fileMenuSource.contains("imageEditor.action.exportLayers"))
+        #expect(fileMenuSource.contains("viewModel.selectedLayersExportScope"))
+        #expect(fileMenuSource.contains(".keyboardShortcut(\"l\", modifiers: [.command, .option])"))
+        #expect(fileMenuSource.contains(".disabled(viewModel.selectedLayersExportScope == nil)"))
+    }
+
     @Test func selectMenuExposesSavedSelectionCommandsInPhotoshopStyleLocation() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),

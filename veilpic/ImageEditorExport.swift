@@ -128,6 +128,17 @@ extension ImageEditorViewModel {
         }
     }
 
+    /// Returns the narrowest valid layer export scope for the current layer
+    /// selection. A single editable layer keeps its own scope; groups and
+    /// multi-selection use the composite of the selected layer subtree.
+    var selectedLayersExportScope: ImageEditorExportScope? {
+        guard !document.selectedLayerIDs.isEmpty else { return nil }
+        if document.selectedLayerIDs.count == 1, canExportSelectedLayer {
+            return .selectedLayer
+        }
+        return canExportSelectedLayers ? .selectedLayers : nil
+    }
+
     var canExportSelection: Bool {
         selectionExportBounds != nil
     }

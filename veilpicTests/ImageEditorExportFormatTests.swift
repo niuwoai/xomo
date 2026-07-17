@@ -126,4 +126,21 @@ struct ImageEditorExportFormatTests {
         #expect(corner.alphaComponent < 0.1)
         #expect(viewModel.exportFilenames(settings: settings) == ["landing-selection.png"])
     }
+
+    @Test func selectedLayerExportScopeChoosesSingleLayerOrLayerSubtree() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "layers",
+            image: NSImage.transparent(size: CGSize(width: 120, height: 80))
+        ) { _ in }
+        let baseLayerID = try #require(viewModel.document.selectedLayerID)
+
+        #expect(viewModel.selectedLayersExportScope == .selectedLayer)
+
+        viewModel.addLayer()
+        let secondLayerID = try #require(viewModel.document.selectedLayerID)
+        viewModel.selectLayer(baseLayerID, extendingSelection: true)
+
+        #expect(viewModel.document.selectedLayerIDs == [baseLayerID, secondLayerID])
+        #expect(viewModel.selectedLayersExportScope == .selectedLayers)
+    }
 }

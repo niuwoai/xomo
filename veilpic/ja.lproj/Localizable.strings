@@ -2162,6 +2162,7 @@
 "imageEditor.action.layerImport" = "画像をレイヤーとして読み込み";
 "imageEditor.action.fileImport" = "ファイルを読み込む…";
 "imageEditor.action.exportSelection" = "選択範囲 / スライスを書き出す…";
+"imageEditor.action.exportLayers" = "選択レイヤーを書き出す…";
 "imageEditor.action.canvasNewFromClipboard" = "クリップボードから新規キャンバス";
 "imageEditor.action.layerSmartObject" = "スマートオブジェクトに変換";
 "imageEditor.action.layerSmartObjectReplace" = "スマートオブジェクトの内容を置換";
