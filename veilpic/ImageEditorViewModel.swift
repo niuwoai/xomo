@@ -124,6 +124,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var isLayersPanelVisible = true
     @Published var isPropertiesPanelVisible = true
     @Published var isStatusBarVisible = true
+    @Published var historyQuery = ""
     @Published var pointerText: String = "X: 0 Y: 0"
     @Published var textValue: String = ""
     @Published var textSize: Double = 32
@@ -572,6 +573,14 @@ final class ImageEditorViewModel: ObservableObject {
             undoStack.count,
             redoStack.count
         )
+    }
+
+    var filteredHistoryEntries: [ImageEditorHistoryEntry] {
+        let query = historyQuery.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !query.isEmpty else { return document.history }
+        return document.history.filter { entry in
+            entry.title.localizedCaseInsensitiveContains(query)
+        }
     }
 
     var canTruncateSelectedHistory: Bool {

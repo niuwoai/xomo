@@ -1,0 +1,79 @@
+{
+  "generated_at": "2026-07-18 01:13:28 +0800",
+  "total": 7,
+  "passed": 7,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorHistoryTests",
+      "method": "clearHistoryKeepsCurrentStateAndDropsUndoRedoSnapshots",
+      "identifier": "veilpicTests/ImageEditorHistoryTests/clearHistoryKeepsCurrentStateAndDropsUndoRedoSnapshots",
+      "file": "ImageEditorHistoryTests.swift",
+      "passed": true,
+      "duration": 3.711,
+      "issues": [],
+      "log": "ImageEditorHistoryTests.clearHistoryKeepsCurrentStateAndDropsUndoRedoSnapshots.log"
+    },
+    {
+      "suite": "ImageEditorHistoryTests",
+      "method": "cropSelectsTheEntireNewCanvas",
+      "identifier": "veilpicTests/ImageEditorHistoryTests/cropSelectsTheEntireNewCanvas",
+      "file": "ImageEditorHistoryTests.swift",
+      "passed": true,
+      "duration": 3.279,
+      "issues": [],
+      "log": "ImageEditorHistoryTests.cropSelectsTheEntireNewCanvas.log"
+    },
+    {
+      "suite": "ImageEditorHistoryTests",
+      "method": "deletingSelectedHistoryStepTruncatesThatStepAndLaterOperations",
+      "identifier": "veilpicTests/ImageEditorHistoryTests/deletingSelectedHistoryStepTruncatesThatStepAndLaterOperations",
+      "file": "ImageEditorHistoryTests.swift",
+      "passed": true,
+      "duration": 3.412,
+      "issues": [],
+      "log": "ImageEditorHistoryTests.deletingSelectedHistoryStepTruncatesThatStepAndLaterOperations.log"
+    },
+    {
+      "suite": "ImageEditorHistoryTests",
+      "method": "editorWindowResolvesEveryDeclaredMenuShortcut",
+      "identifier": "veilpicTests/ImageEditorHistoryTests/editorWindowResolvesEveryDeclaredMenuShortcut",
+      "file": "ImageEditorHistoryTests.swift",
+      "passed": true,
+      "duration": 3.397,
+      "issues": [],
+      "log": "ImageEditorHistoryTests.editorWindowResolvesEveryDeclaredMenuShortcut.log"
+    },
+    {
+      "suite": "ImageEditorHistoryTests",
+      "method": "historyPanelUsesSearchFieldAndFilteredEntries",
+      "identifier": "veilpicTests/ImageEditorHistoryTests/historyPanelUsesSearchFieldAndFilteredEntries",
+      "file": "ImageEditorHistoryTests.swift",
+      "passed": true,
+      "duration": 3.227,
+      "issues": [],
+      "log": "ImageEditorHistoryTests.historyPanelUsesSearchFieldAndFilteredEntries.log"
+    },
+    {
+      "suite": "ImageEditorHistoryTests",
+      "method": "historyQueryFiltersByLocalizedTitleWithoutChangingDocumentHistory",
+      "identifier": "veilpicTests/ImageEditorHistoryTests/historyQueryFiltersByLocalizedTitleWithoutChangingDocumentHistory",
+      "file": "ImageEditorHistoryTests.swift",
+      "passed": true,
+      "duration": 3.357,
+      "issues": [],
+      "log": "ImageEditorHistoryTests.historyQueryFiltersByLocalizedTitleWithoutChangingDocumentHistory.log"
+    },
+    {
+      "suite": "ImageEditorHistoryTests",
+      "method": "namedHistorySnapshotsRestoreDocumentStateAndSurviveHistoryClear",
+      "identifier": "veilpicTests/ImageEditorHistoryTests/namedHistorySnapshotsRestoreDocumentStateAndSurviveHistoryClear",
+      "file": "ImageEditorHistoryTests.swift",
+      "passed": true,
+      "duration": 3.455,
+      "issues": [],
+      "log": "ImageEditorHistoryTests.namedHistorySnapshotsRestoreDocumentStateAndSurviveHistoryClear.log"
+    }
+  ]
+}

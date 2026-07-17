@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc221 - 2026-07-18
+
+### Added
+- 历史面板新增实时搜索和一键清空搜索，长历史文档可以按操作名称快速定位；查询只过滤显示，不改变文档历史、撤销栈或项目格式。
+
+### Verification
+- 历史面板搜索定向回归通过 7/7，报告：`test-reports/rc221-history-search/`。
+- 三语本地化资源回归通过 4/4，报告：`test-reports/rc221-localization/`。
+
 ## 2.12.0-rc220 - 2026-07-18
 
 ### Verification

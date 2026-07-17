@@ -2455,6 +2455,40 @@ struct ImageEditorView: View {
                     .help(L10n.text("imageEditor.action.historyClear"))
                 }
 
+                HStack(spacing: 5) {
+                    Image(systemName: "magnifyingglass")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                    TextField(
+                        L10n.text("imageEditor.history.searchPlaceholder"),
+                        text: $viewModel.historyQuery
+                    )
+                    .textFieldStyle(.plain)
+                    .font(.system(size: 11))
+                    .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+                    .accessibilityIdentifier("image-editor-history-search-field")
+                    if !viewModel.historyQuery.isEmpty {
+                        Button {
+                            viewModel.historyQuery = ""
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .font(.system(size: 10, weight: .semibold))
+                        }
+                        .buttonStyle(.plain)
+                        .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                        .help(L10n.text("imageEditor.history.searchClear"))
+                        .accessibilityIdentifier("image-editor-history-search-clear")
+                    }
+                }
+                .padding(.horizontal, 7)
+                .padding(.vertical, 5)
+                .background(Color.black.opacity(0.16))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 4, style: .continuous)
+                        .stroke(editorBorder, lineWidth: 1)
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+
                 ScrollView {
                     VStack(alignment: .leading, spacing: 4) {
                         if !viewModel.namedHistorySnapshots.isEmpty {
@@ -2471,7 +2505,7 @@ struct ImageEditorView: View {
                                 .padding(.vertical, 2)
                         }
 
-                        ForEach(viewModel.document.history) { entry in
+                        ForEach(viewModel.filteredHistoryEntries) { entry in
                             HStack(spacing: 4) {
                                 Button {
                                     viewModel.selectHistoryEntry(entry.id)
@@ -2509,7 +2543,7 @@ struct ImageEditorView: View {
                 }
             }
         }
-        .frame(height: showsTitle ? 164 : 142)
+        .frame(height: showsTitle ? 190 : 168)
     }
 
     private var filtersQuickPanel: some View {

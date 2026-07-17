@@ -1263,6 +1263,8 @@
 "imageEditor.history.projectSave" = "Save Project";
 "imageEditor.history.currentState" = "Current State";
 "imageEditor.history.summary" = "%d states · Undo %d · Redo %d";
+"imageEditor.history.searchPlaceholder" = "Search history";
+"imageEditor.history.searchClear" = "Clear history search";
 "imageEditor.history.snapshots" = "Snapshots";
 "imageEditor.history.snapshotName" = "Snapshot %d";
 "imageEditor.history.snapshotCopyName" = "%@ Copy";

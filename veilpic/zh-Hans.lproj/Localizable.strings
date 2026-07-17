@@ -1263,6 +1263,8 @@
 "imageEditor.history.projectSave" = "保存项目";
 "imageEditor.history.currentState" = "当前状态";
 "imageEditor.history.summary" = "%d 个状态 · 撤销 %d · 重做 %d";
+"imageEditor.history.searchPlaceholder" = "搜索历史";
+"imageEditor.history.searchClear" = "清除历史搜索";
 "imageEditor.history.snapshots" = "快照";
 "imageEditor.history.snapshotName" = "快照 %d";
 "imageEditor.history.snapshotCopyName" = "%@ 副本";

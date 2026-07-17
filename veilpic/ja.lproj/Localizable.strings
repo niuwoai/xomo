@@ -1263,6 +1263,8 @@
 "imageEditor.history.projectSave" = "プロジェクトを保存";
 "imageEditor.history.currentState" = "現在の状態";
 "imageEditor.history.summary" = "%d 件の状態 · 取り消し %d · やり直し %d";
+"imageEditor.history.searchPlaceholder" = "履歴を検索";
+"imageEditor.history.searchClear" = "履歴検索をクリア";
 "imageEditor.history.snapshots" = "スナップショット";
 "imageEditor.history.snapshotName" = "スナップショット %d";
 "imageEditor.history.snapshotCopyName" = "%@ のコピー";
