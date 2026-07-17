@@ -59,6 +59,14 @@
       ]
     },
     {
+      "file": "gradient-fill.psd",
+      "sha256": "7a4728765f8922a611e18dc6a1c897b4be663b68d1f6744e4ecb48b584e43ae9",
+      "expected": [
+        "editable_gradient_fill",
+        "linear_color_stops"
+      ]
+    },
+    {
       "file": "vector-mask.psd",
       "sha256": "603a2c832cd2b6f97b6a2e1575d868196519c477e88ca31f2bb210518a680cb3",
       "expected": [

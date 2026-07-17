@@ -1,0 +1,259 @@
+{
+  "generated_at": "2026-07-18 04:43:41 +0800",
+  "total": 25,
+  "passed": 25,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorPSDTests",
+      "method": "compatibilityReportNamesUnsupportedSemanticFeatures",
+      "identifier": "veilpicTests/ImageEditorPSDTests/compatibilityReportNamesUnsupportedSemanticFeatures",
+      "file": "ImageEditorPSDTests.swift",
+      "passed": true,
+      "duration": 3.009,
+      "issues": [],
+      "log": "ImageEditorPSDTests.compatibilityReportNamesUnsupportedSemanticFeatures.log"
+    },
+    {
+      "suite": "ImageEditorPSDTests",
+      "method": "externalEditableTextFixtureBecomesNativeTextLayer",
+      "identifier": "veilpicTests/ImageEditorPSDTests/externalEditableTextFixtureBecomesNativeTextLayer",
+      "file": "ImageEditorPSDTests.swift",
+      "passed": true,
+      "duration": 3.014,
+      "issues": [],
+      "log": "ImageEditorPSDTests.externalEditableTextFixtureBecomesNativeTextLayer.log"
+    },
+    {
+      "suite": "ImageEditorPSDTests",
+      "method": "externalExtraAlphaChannelBecomesEditableChannel",
+      "identifier": "veilpicTests/ImageEditorPSDTests/externalExtraAlphaChannelBecomesEditableChannel",
+      "file": "ImageEditorPSDTests.swift",
+      "passed": true,
+      "duration": 3.019,
+      "issues": [],
+      "log": "ImageEditorPSDTests.externalExtraAlphaChannelBecomesEditableChannel.log"
+    },
+    {
+      "suite": "ImageEditorPSDTests",
+      "method": "externalGradientFillFixtureBecomesNativeEditableGradientLayer",
+      "identifier": "veilpicTests/ImageEditorPSDTests/externalGradientFillFixtureBecomesNativeEditableGradientLayer",
+      "file": "ImageEditorPSDTests.swift",
+      "passed": true,
+      "duration": 3.039,
+      "issues": [],
+      "log": "ImageEditorPSDTests.externalGradientFillFixtureBecomesNativeEditableGradientLayer.log"
+    },
+    {
+      "suite": "ImageEditorPSDTests",
+      "method": "externalMultiSubpathVectorMaskPreservesHoleAndProjectRoundTrip",
+      "identifier": "veilpicTests/ImageEditorPSDTests/externalMultiSubpathVectorMaskPreservesHoleAndProjectRoundTrip",
+      "file": "ImageEditorPSDTests.swift",
+      "passed": true,
+      "duration": 3.037,
+      "issues": [],
+      "log": "ImageEditorPSDTests.externalMultiSubpathVectorMaskPreservesHoleAndProjectRoundTrip.log"
+    },
+    {
+      "suite": "ImageEditorPSDTests",
+      "method": "externalPathResourcesBecomeEditableSavedPathsAndRoundTrip",
+      "identifier": "veilpicTests/ImageEditorPSDTests/externalPathResourcesBecomeEditableSavedPathsAndRoundTrip",
+      "file": "ImageEditorPSDTests.swift",
+      "passed": true,
+      "duration": 3.041,
+      "issues": [],
+      "log": "ImageEditorPSDTests.externalPathResourcesBecomeEditableSavedPathsAndRoundTrip.log"
+    },
+    {
+      "suite": "ImageEditorPSDTests",
+      "method": "externalSmartObjectFixtureUsesNativeRasterFallback",
+      "identifier": "veilpicTests/ImageEditorPSDTests/externalSmartObjectFixtureUsesNativeRasterFallback",
+      "file": "ImageEditorPSDTests.swift",
+      "passed": true,
+      "duration": 3.03,
+      "issues": [],
+      "log": "ImageEditorPSDTests.externalSmartObjectFixtureUsesNativeRasterFallback.log"
+    },
+    {
+      "suite": "ImageEditorPSDTests",
+      "method": "externalSolidColorFillFixtureBecomesNativeEditableFillLayer",
+      "identifier": "veilpicTests/ImageEditorPSDTests/externalSolidColorFillFixtureBecomesNativeEditableFillLayer",
+      "file": "ImageEditorPSDTests.swift",
+      "passed": true,
+      "duration": 2.991,
+      "issues": [],
+      "log": "ImageEditorPSDTests.externalSolidColorFillFixtureBecomesNativeEditableFillLayer.log"
+    },
+    {
+      "suite": "ImageEditorPSDTests",
+      "method": "externalVectorMaskFixtureBecomesNativeEditablePath",
+      "identifier": "veilpicTests/ImageEditorPSDTests/externalVectorMaskFixtureBecomesNativeEditablePath",
+      "file": "ImageEditorPSDTests.swift",
+      "passed": true,
+      "duration": 3.056,
+      "issues": [],
+      "log": "ImageEditorPSDTests.externalVectorMaskFixtureBecomesNativeEditablePath.log"
+    },
+    {
+      "suite": "ImageEditorPSDTests",
+      "method": "externalZIPCompositeFixtureDecodesWithoutLayers",
+      "identifier": "veilpicTests/ImageEditorPSDTests/externalZIPCompositeFixtureDecodesWithoutLayers",
+      "file": "ImageEditorPSDTests.swift",
+      "passed": true,
+      "duration": 3.042,
+      "issues": [],
+      "log": "ImageEditorPSDTests.externalZIPCompositeFixtureDecodesWithoutLayers.log"
+    },
+    {
+      "suite": "ImageEditorPSDTests",
+      "method": "externalZIPGroupMaskFixturePreservesSupportedStructure",
+      "identifier": "veilpicTests/ImageEditorPSDTests/externalZIPGroupMaskFixturePreservesSupportedStructure",
+      "file": "ImageEditorPSDTests.swift",
+      "passed": true,
+      "duration": 3.054,
+      "issues": [],
+      "log": "ImageEditorPSDTests.externalZIPGroupMaskFixturePreservesSupportedStructure.log"
+    },
+    {
+      "suite": "ImageEditorPSDTests",
+      "method": "openingPSDPublishesCompatibilityReportForTheCurrentDocument",
+      "identifier": "veilpicTests/ImageEditorPSDTests/openingPSDPublishesCompatibilityReportForTheCurrentDocument",
+      "file": "ImageEditorPSDTests.swift",
+      "passed": true,
+      "duration": 3.033,
+      "issues": [],
+      "log": "ImageEditorPSDTests.openingPSDPublishesCompatibilityReportForTheCurrentDocument.log"
+    },
+    {
+      "suite": "ImageEditorPSDTests",
+      "method": "psdAsyncDecodeKeepsLayerMaterializationEquivalent",
+      "identifier": "veilpicTests/ImageEditorPSDTests/psdAsyncDecodeKeepsLayerMaterializationEquivalent",
+      "file": "ImageEditorPSDTests.swift",
+      "passed": true,
+      "duration": 3.031,
+      "issues": [],
+      "log": "ImageEditorPSDTests.psdAsyncDecodeKeepsLayerMaterializationEquivalent.log"
+    },
+    {
+      "suite": "ImageEditorPSDTests",
+      "method": "psdExportPreservesBasicEditableTextLayer",
+      "identifier": "veilpicTests/ImageEditorPSDTests/psdExportPreservesBasicEditableTextLayer",
+      "file": "ImageEditorPSDTests.swift",
+      "passed": true,
+      "duration": 3.012,
+      "issues": [],
+      "log": "ImageEditorPSDTests.psdExportPreservesBasicEditableTextLayer.log"
+    },
+    {
+      "suite": "ImageEditorPSDTests",
+      "method": "psdExportPreservesClosedAndOpenSavedPaths",
+      "identifier": "veilpicTests/ImageEditorPSDTests/psdExportPreservesClosedAndOpenSavedPaths",
+      "file": "ImageEditorPSDTests.swift",
+      "passed": true,
+      "duration": 3.069,
+      "issues": [],
+      "log": "ImageEditorPSDTests.psdExportPreservesClosedAndOpenSavedPaths.log"
+    },
+    {
+      "suite": "ImageEditorPSDTests",
+      "method": "psdExportPreservesExtraAlphaChannelsAndNames",
+      "identifier": "veilpicTests/ImageEditorPSDTests/psdExportPreservesExtraAlphaChannelsAndNames",
+      "file": "ImageEditorPSDTests.swift",
+      "passed": true,
+      "duration": 3.006,
+      "issues": [],
+      "log": "ImageEditorPSDTests.psdExportPreservesExtraAlphaChannelsAndNames.log"
+    },
+    {
+      "suite": "ImageEditorPSDTests",
+      "method": "psdExportPreservesNativeVectorMaskAndEnabledState",
+      "identifier": "veilpicTests/ImageEditorPSDTests/psdExportPreservesNativeVectorMaskAndEnabledState",
+      "file": "ImageEditorPSDTests.swift",
+      "passed": true,
+      "duration": 3.054,
+      "issues": [],
+      "log": "ImageEditorPSDTests.psdExportPreservesNativeVectorMaskAndEnabledState.log"
+    },
+    {
+      "suite": "ImageEditorPSDTests",
+      "method": "psdExportPreservesSpotChannelDisplayInfoAndProjectRoundTrip",
+      "identifier": "veilpicTests/ImageEditorPSDTests/psdExportPreservesSpotChannelDisplayInfoAndProjectRoundTrip",
+      "file": "ImageEditorPSDTests.swift",
+      "passed": true,
+      "duration": 3.016,
+      "issues": [],
+      "log": "ImageEditorPSDTests.psdExportPreservesSpotChannelDisplayInfoAndProjectRoundTrip.log"
+    },
+    {
+      "suite": "ImageEditorPSDTests",
+      "method": "psdExportUsesRLEForCompressiblePixelChannels",
+      "identifier": "veilpicTests/ImageEditorPSDTests/psdExportUsesRLEForCompressiblePixelChannels",
+      "file": "ImageEditorPSDTests.swift",
+      "passed": true,
+      "duration": 3.005,
+      "issues": [],
+      "log": "ImageEditorPSDTests.psdExportUsesRLEForCompressiblePixelChannels.log"
+    },
+    {
+      "suite": "ImageEditorPSDTests",
+      "method": "psdExportUsesZIPPredictionForSmoothGradients",
+      "identifier": "veilpicTests/ImageEditorPSDTests/psdExportUsesZIPPredictionForSmoothGradients",
+      "file": "ImageEditorPSDTests.swift",
+      "passed": true,
+      "duration": 3.105,
+      "issues": [],
+      "log": "ImageEditorPSDTests.psdExportUsesZIPPredictionForSmoothGradients.log"
+    },
+    {
+      "suite": "ImageEditorPSDTests",
+      "method": "psdExportUsesZIPWhenRLEHasNoBenefit",
+      "identifier": "veilpicTests/ImageEditorPSDTests/psdExportUsesZIPWhenRLEHasNoBenefit",
+      "file": "ImageEditorPSDTests.swift",
+      "passed": true,
+      "duration": 3.032,
+      "issues": [],
+      "log": "ImageEditorPSDTests.psdExportUsesZIPWhenRLEHasNoBenefit.log"
+    },
+    {
+      "suite": "ImageEditorPSDTests",
+      "method": "psdRejectsUnsupportedBitDepth",
+      "identifier": "veilpicTests/ImageEditorPSDTests/psdRejectsUnsupportedBitDepth",
+      "file": "ImageEditorPSDTests.swift",
+      "passed": true,
+      "duration": 3.033,
+      "issues": [],
+      "log": "ImageEditorPSDTests.psdRejectsUnsupportedBitDepth.log"
+    },
+    {
+      "suite": "ImageEditorPSDTests",
+      "method": "psdRoundTripPreservesClippingMaskChainAndProjectState",
+      "identifier": "veilpicTests/ImageEditorPSDTests/psdRoundTripPreservesClippingMaskChainAndProjectState",
+      "file": "ImageEditorPSDTests.swift",
+      "passed": true,
+      "duration": 3.012,
+      "issues": [],
+      "log": "ImageEditorPSDTests.psdRoundTripPreservesClippingMaskChainAndProjectState.log"
+    },
+    {
+      "suite": "ImageEditorPSDTests",
+      "method": "psdRoundTripPreservesGroupsMasksFillLocksAndEveryBlendMode",
+      "identifier": "veilpicTests/ImageEditorPSDTests/psdRoundTripPreservesGroupsMasksFillLocksAndEveryBlendMode",
+      "file": "ImageEditorPSDTests.swift",
+      "passed": true,
+      "duration": 3.033,
+      "issues": [],
+      "log": "ImageEditorPSDTests.psdRoundTripPreservesGroupsMasksFillLocksAndEveryBlendMode.log"
+    },
+    {
+      "suite": "ImageEditorPSDTests",
+      "method": "psdRoundTripPreservesLayerBasicsAndCompositeCompatibility",
+      "identifier": "veilpicTests/ImageEditorPSDTests/psdRoundTripPreservesLayerBasicsAndCompositeCompatibility",
+      "file": "ImageEditorPSDTests.swift",
+      "passed": true,
+      "duration": 4.076,
+      "issues": [],
+      "log": "ImageEditorPSDTests.psdRoundTripPreservesLayerBasicsAndCompositeCompatibility.log"
+    }
+  ]
+}

@@ -77,6 +77,10 @@ def descriptor_item(key:, type:, payload:)
   descriptor_key(key) + type + payload
 end
 
+def descriptor_enum_payload(enum_type:, value:)
+  descriptor_key(enum_type) + descriptor_key(value)
+end
+
 def engine_string(value)
   "(" + "\xFE\xFF".b + value.encode("UTF-16BE").b + ")"
 end
@@ -155,6 +159,60 @@ def solid_color_fill_descriptor(red:, green:, blue:)
     name: "",
     class_id: "SoCo",
     items: [descriptor_item(key: "Clr ", type: "Objc", payload: color)]
+  )
+end
+
+def gradient_fill_descriptor
+  color = lambda do |red, green, blue|
+    descriptor_body(
+      name: "RGB Color",
+      class_id: "RGBC",
+      items: [
+        descriptor_item(key: "Rd  ", type: "doub", payload: f64(red)),
+        descriptor_item(key: "Grn ", type: "doub", payload: f64(green)),
+        descriptor_item(key: "Bl  ", type: "doub", payload: f64(blue))
+      ]
+    )
+  end
+  stop = lambda do |location, red, green, blue|
+    descriptor_body(
+      name: "",
+      class_id: "Clrt",
+      items: [
+        descriptor_item(key: "Clr ", type: "Objc", payload: color.call(red, green, blue)),
+        descriptor_item(
+          key: "Type",
+          type: "enum",
+          payload: descriptor_enum_payload(enum_type: "Clry", value: "UsrS")
+        ),
+        descriptor_item(key: "Lctn", type: "long", payload: i32(location)),
+        descriptor_item(key: "Mdpn", type: "long", payload: i32(50))
+      ]
+    )
+  end
+  stops = [stop.call(0, 32, 128, 224), stop.call(4096, 240, 80, 40)]
+  gradient = descriptor_body(
+    name: "",
+    class_id: "Grdn",
+    items: [
+      descriptor_item(
+        key: "GrdF",
+        type: "enum",
+        payload: descriptor_enum_payload(enum_type: "GrdF", value: "CstS")
+      ),
+      descriptor_item(key: "Clrs", type: "VlLs", payload: u32(stops.length) + stops.map { |item| "Objc" + item }.join)
+    ]
+  )
+  descriptor_block(
+    name: "",
+    class_id: "GdFl",
+    items: [
+      descriptor_item(key: "Grad", type: "Objc", payload: gradient),
+      descriptor_item(key: "Type", type: "enum", payload: descriptor_enum_payload(enum_type: "GrdT", value: "Lnr ")),
+      descriptor_item(key: "Angl", type: "UntF", payload: "Angl" + f64(0)),
+      descriptor_item(key: "Scl ", type: "UntF", payload: "#Prc" + f64(100)),
+      descriptor_item(key: "Rvrs", type: "bool", payload: [0].pack("C"))
+    ]
   )
 end
 
@@ -396,6 +454,29 @@ def solid_color_fill_fixture
   )
 end
 
+def gradient_fill_fixture
+  pixel = ([180] * 16).pack("C*")
+  alpha = ([255] * 16).pack("C*")
+  channels = {
+    -1 => raw_channel(alpha),
+    0 => raw_channel(pixel),
+    1 => raw_channel(pixel),
+    2 => raw_channel(pixel)
+  }
+  record = layer_record(
+    name: "Sunset Gradient Fill",
+    channels: channels,
+    blocks: [tagged_block("GdFl", gradient_fill_descriptor)]
+  )
+  layer_info = i16(1) + record + channels.values.join
+  layer_info << "\0" if layer_info.bytesize.odd?
+  layer_and_mask = u32(layer_info.bytesize) + layer_info + u32(0)
+  psd(
+    layer_payload: u32(layer_and_mask.bytesize) + layer_and_mask,
+    composite: u16(0) + pixel + pixel + pixel + alpha
+  )
+end
+
 def vector_mask_fixture(payload: vector_mask_payload, path_resources: [])
   pixel = ([180] * 16).pack("C*")
   alpha = ([255] * 16).pack("C*")
@@ -460,6 +541,7 @@ fixtures = {
   "unsupported-features.psd" => unsupported_features_fixture,
   "editable-text.psd" => editable_text_fixture,
   "solid-color-fill.psd" => solid_color_fill_fixture,
+  "gradient-fill.psd" => gradient_fill_fixture,
   "vector-mask.psd" => vector_mask_fixture,
   "vector-mask-multi.psd" => multi_vector_mask_fixture,
   "path-resources.psd" => path_resource_fixture
@@ -475,6 +557,7 @@ expectations = {
   "unsupported-features.psd" => %w[compatibility_report unsupported_semantic_features],
   "editable-text.psd" => %w[editable_text font_size color alignment],
   "solid-color-fill.psd" => %w[editable_solid_color_fill rgb_descriptor],
+  "gradient-fill.psd" => %w[editable_gradient_fill linear_color_stops],
   "vector-mask.psd" => %w[editable_vector_mask closed_path bezier_points],
   "vector-mask-multi.psd" => %w[editable_vector_mask multiple_subpaths even_odd_hole],
   "path-resources.psd" => %w[saved_path closed_path open_path]

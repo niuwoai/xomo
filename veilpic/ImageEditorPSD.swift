@@ -532,7 +532,9 @@ enum ImageEditorPSDCodec {
             }
             if !record.additionalKeys.isDisjoint(with: smartObjectKeys) { addIssue(.smartObjectRasterized) }
             if !record.additionalKeys.isDisjoint(with: effectKeys) { addIssue(.layerEffectsRasterized) }
-            if !record.additionalKeys.isDisjoint(with: fillKeys), record.solidFillContent == nil {
+            if !record.additionalKeys.isDisjoint(with: fillKeys),
+               record.solidFillContent == nil,
+               record.gradientFillContent == nil {
                 addIssue(.fillLayerRasterized)
             }
             if !record.additionalKeys.isDisjoint(with: adjustmentKeys) { addIssue(.adjustmentLayerRasterized) }
@@ -1370,6 +1372,7 @@ enum ImageEditorPSDCodec {
         var textInfo: PSDTextLayerInfo?
         var vectorMaskInfo: PSDVectorMaskInfo?
         var solidFillContent: ImageEditorSolidColorFillContent?
+        var gradientFillContent: ImageEditorGradientFillContent?
         while reader.offset + 12 <= extraEnd {
             let signature = try reader.ascii(count: 4)
             let key = try reader.ascii(count: 4)
@@ -1403,6 +1406,9 @@ enum ImageEditorPSDCodec {
             } else if key == "SoCo" {
                 let blockData = try reader.data(count: length)
                 solidFillContent = parseSolidColorFill(blockData)
+            } else if key == "GdFl" {
+                let blockData = try reader.data(count: length)
+                gradientFillContent = parseGradientFill(blockData)
             }
             reader.offset = blockEnd
             let paddedEnd = min(extraEnd, blockEnd + (length % 2))
@@ -1427,7 +1433,8 @@ enum ImageEditorPSDCodec {
             additionalKeys: additionalKeys,
             textInfo: textInfo,
             vectorMaskInfo: vectorMaskInfo,
-            solidFillContent: solidFillContent
+            solidFillContent: solidFillContent,
+            gradientFillContent: gradientFillContent
         )
     }
 
@@ -1729,6 +1736,49 @@ enum ImageEditorPSDCodec {
         }
     }
 
+    private static func parseGradientFill(_ data: Data) -> ImageEditorGradientFillContent? {
+        do {
+            var reader = PSDReader(data: data)
+            let descriptor = try reader.psdDescriptorBlock()
+            guard let gradient = descriptor["Grad"]?.objectValue,
+                  let gradientType = descriptor["Type"]?.enumValue,
+                  ["Lnr ", "GrdL", "linear"].contains(gradientType),
+                  let colorEntries = gradient["Clrs"]?.listValue,
+                  colorEntries.count >= 2,
+                  colorEntries.count <= ImageEditorGradientFillContent.maximumColorStopCount
+            else { return nil }
+            let stops = colorEntries.compactMap { entry -> ImageEditorGradientColorStop? in
+                guard let item = entry.objectValue,
+                      let color = item["Clr "]?.objectValue,
+                      let red = color["Rd  "]?.numericValue,
+                      let green = color["Grn "]?.numericValue,
+                      let blue = color["Bl  "]?.numericValue,
+                      let location = item["Lctn"]?.numericValue,
+                      red.isFinite, green.isFinite, blue.isFinite, location.isFinite
+                else { return nil }
+                return ImageEditorGradientColorStop(
+                    position: location > 1 ? location / 4096 : location,
+                    red: red / 255,
+                    green: green / 255,
+                    blue: blue / 255
+                )
+            }.sorted { $0.position < $1.position }
+            guard stops.count >= 2 else { return nil }
+            let angle = descriptor["Angl"]?.numericValue ?? 0
+            let scale = (descriptor["Scl "]?.numericValue ?? 100) / 100
+            return ImageEditorGradientFillContent(
+                preset: .custom,
+                style: .linear,
+                reverse: descriptor["Rvrs"]?.booleanValue ?? false,
+                angle: CGFloat(angle),
+                scale: CGFloat(scale),
+                colorStops: stops
+            ).normalized()
+        } catch {
+            return nil
+        }
+    }
+
     private static func parseEngineDataText(_ data: Data) -> PSDTextLayerInfo? {
         guard let style = parseEngineDataStyle(data), let text = style.text, !text.isEmpty else {
             return nil
@@ -1990,6 +2040,28 @@ enum ImageEditorPSDCodec {
                 name: record.name,
                 size: CGSize(width: width, height: height),
                 content: solidFillContent
+            )
+            layer.frame = CGRect(
+                x: record.left,
+                y: canvasHeight - record.bottom,
+                width: width,
+                height: height
+            )
+            layer.opacity = CGFloat(record.opacity) / 255
+            layer.fillOpacity = CGFloat(record.fillOpacity) / 255
+            layer.isVisible = record.flags & 2 == 0
+            applyProtection(record: record, to: &layer)
+            layer.isClippingMask = record.clipping != 0
+            layer.blendMode = ImageEditorBlendMode(psdKey: record.blendKey)
+            applyMask(record: record, channels: channels, to: &layer)
+            applyVectorMask(record: record, size: CGSize(width: width, height: height), to: &layer)
+            return layer
+        }
+        if let gradientFillContent = record.gradientFillContent {
+            var layer = ImageEditorLayer.gradientFill(
+                name: record.name,
+                size: CGSize(width: width, height: height),
+                content: gradientFillContent
             )
             layer.frame = CGRect(
                 x: record.left,
@@ -2452,6 +2524,7 @@ private enum PSDDescriptorValue {
     case boolean(Bool)
     case object([String: PSDDescriptorValue])
     case list([PSDDescriptorValue])
+    case enumeration(String, String)
     case unknown
 
     var stringValue: String? {
@@ -2466,6 +2539,21 @@ private enum PSDDescriptorValue {
 
     var objectValue: [String: PSDDescriptorValue]? {
         guard case let .object(value) = self else { return nil }
+        return value
+    }
+
+    var listValue: [PSDDescriptorValue]? {
+        guard case let .list(value) = self else { return nil }
+        return value
+    }
+
+    var enumValue: String? {
+        guard case let .enumeration(_, value) = self else { return nil }
+        return value
+    }
+
+    var booleanValue: Bool? {
+        guard case let .boolean(value) = self else { return nil }
         return value
     }
 
@@ -2539,6 +2627,7 @@ nonisolated private struct PSDLayerRecord {
     let textInfo: PSDTextLayerInfo?
     let vectorMaskInfo: PSDVectorMaskInfo?
     let solidFillContent: ImageEditorSolidColorFillContent?
+    let gradientFillContent: ImageEditorGradientFillContent?
 
     var isSmartObject: Bool {
         additionalKeys.contains("SoLd")
@@ -2701,9 +2790,7 @@ nonisolated private struct PSDReader {
             _ = try ascii(count: 4)
             return .unit(try doubleValue())
         case "enum":
-            _ = try descriptorKey()
-            _ = try descriptorKey()
-            return .unknown
+            return .enumeration(try descriptorKey(), try descriptorKey())
         case "type", "Clss":
             _ = try unicodeString()
             _ = try descriptorKey()

@@ -510,6 +510,30 @@ struct ImageEditorPSDTests {
         #expect(restoredFill == fill)
     }
 
+    @Test func externalGradientFillFixtureBecomesNativeEditableGradientLayer() throws {
+        let data = try psdFixtureData("gradient-fill.psd")
+        let document = try ImageEditorPSDCodec.decode(data, sourceName: "gradient-fill.psd")
+        let layer = try #require(document.layers.first)
+        let gradient = try #require(layer.gradientFillContent?.normalized())
+        let stops = try #require(gradient.colorStops)
+
+        #expect(layer.isGradientFill)
+        #expect(layer.name == "Sunset Gradient Fill")
+        #expect(stops.count == 2)
+        #expect(abs(stops[0].position) < 0.01)
+        #expect(abs(stops[1].position - 1) < 0.01)
+        #expect(abs(stops[0].red - 32.0 / 255.0) < 0.01)
+        #expect(abs(stops[1].blue - 40.0 / 255.0) < 0.01)
+
+        let report = try ImageEditorPSDCodec.compatibilityReport(data)
+        #expect(!report.issues.contains { $0.kind == .fillLayerRasterized })
+
+        let project = try ImageEditorProjectDocument(document: document)
+        let restored = try project.restoredDocument()
+        let restoredGradient = try #require(restored.layers.first?.gradientFillContent?.normalized())
+        #expect(restoredGradient == gradient)
+    }
+
     @Test func externalSmartObjectFixtureUsesNativeRasterFallback() throws {
         let data = try psdFixtureData("unsupported-features.psd")
         let document = try ImageEditorPSDCodec.decode(data, sourceName: "unsupported-features.psd")
