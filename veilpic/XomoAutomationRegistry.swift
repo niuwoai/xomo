@@ -225,10 +225,9 @@ final class XomoAutomationRegistry {
         case "xomo.selection.invert":
             viewModel.invertSelection()
         case "xomo.selection.feather":
-            if let radius = arguments["radius"]?.doubleValue { viewModel.feather = radius }
-            viewModel.featherSelection()
+            viewModel.featherSelection(radius: selectionRadius(arguments["radius"]))
         case "xomo.selection.smooth":
-            viewModel.smoothSelection()
+            viewModel.smoothSelection(radius: selectionRadius(arguments["radius"]))
         case "xomo.selection.edit":
             try selectionEdit(arguments, viewModel: viewModel)
         case "xomo.selection.modify":
@@ -2175,11 +2174,11 @@ final class XomoAutomationRegistry {
         case "colorRange": viewModel.selectColorRangeFromForeground()
         case "similarColors": viewModel.selectSimilarColors()
         case "growColor": viewModel.growColorSelection()
-        case "expand": viewModel.expandSelection()
-        case "contract": viewModel.contractSelection()
-        case "border": viewModel.borderSelection()
+        case "expand": viewModel.expandSelection(radius: selectionRadius(arguments["amount"]))
+        case "contract": viewModel.contractSelection(radius: selectionRadius(arguments["amount"]))
+        case "border": viewModel.borderSelection(radius: selectionRadius(arguments["amount"]))
         case "fillHoles": viewModel.fillSelectionHoles()
-        case "removeSpeckles": viewModel.removeSelectionSpeckles()
+        case "removeSpeckles": viewModel.removeSelectionSpeckles(maximumArea: selectionRadius(arguments["amount"]))
         case "centerHorizontal": viewModel.centerSelectionHorizontally()
         case "centerVertical": viewModel.centerSelectionVertically()
         case "centerCanvas": viewModel.centerSelectionInCanvas()
@@ -2198,6 +2197,11 @@ final class XomoAutomationRegistry {
             ))
         default: throw XomoAutomationCallError.invalidArgument("Unknown selection modify action")
         }
+    }
+
+    private func selectionRadius(_ value: XomoJSONValue?) -> Int? {
+        guard let number = value?.doubleValue else { return nil }
+        return Int(number.rounded())
     }
 
     private func quickMaskAction(
@@ -3176,12 +3180,13 @@ private extension XomoAutomationRegistry {
         tool("xomo.selection.clear", "Deselect the current selection."),
         tool("xomo.selection.invert", "Invert the current selection."),
         tool("xomo.selection.feather", "Feather the current selection.", ["radius": XomoAutomationSchema.number(description: "Feather radius in pixels")]),
-        tool("xomo.selection.smooth", "Smooth the current selection boundary."),
+        tool("xomo.selection.smooth", "Smooth the current selection boundary.", ["radius": XomoAutomationSchema.number(description: "Smoothing radius in pixels")]),
         tool("xomo.selection.edit", "Fill, stroke, clear, duplicate, or move selected pixels into new layers.", [
             "action": XomoAutomationSchema.string(description: "Selection edit action", values: ["fillForeground", "fillBackground", "stroke", "contentAwareFill", "clearPixels", "copyToLayer", "cutToLayer", "copyMergedToLayer", "duplicate"])
         ], required: ["action"]),
         tool("xomo.selection.modify", "Save, restore, transform, clean, color-match, or nudge the pixel selection.", [
             "action": XomoAutomationSchema.string(description: "Selection modification", values: ["loadTransparency", "save", "reselect", "restoreSaved", "colorRange", "similarColors", "growColor", "expand", "contract", "border", "fillHoles", "removeSpeckles", "centerHorizontal", "centerVertical", "centerCanvas", "flipHorizontal", "flipVertical", "rotateClockwise", "rotateCounterclockwise", "rotate180", "scaleUp", "scaleDown", "fitCanvas", "nudge"]),
+            "amount": XomoAutomationSchema.number(description: "Selection modification amount in pixels"),
             "dx": XomoAutomationSchema.number(description: "Horizontal selection delta"),
             "dy": XomoAutomationSchema.number(description: "Vertical selection delta")
         ], required: ["action"]),

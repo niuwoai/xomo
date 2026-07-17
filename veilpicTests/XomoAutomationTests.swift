@@ -56,6 +56,14 @@ struct XomoAutomationTests {
             .string("copyMerged"),
             .string("copySelectedLayers")
         ]))
+        guard let selectionModifyTool = tools.compactMap({ tool -> [String: XomoJSONValue]? in
+            guard case .object(let value) = tool else { return nil }
+            return value
+        }).first(where: { $0["name"] == .string("xomo.selection.modify") }) else {
+            Issue.record("Expected xomo.selection.modify tool schema")
+            return
+        }
+        #expect(selectionModifyTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["amount"]?.objectValue?["type"] == .string("number"))
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.layer_comp.action")
@@ -157,6 +165,53 @@ struct XomoAutomationTests {
         #expect(response.ok)
         #expect(viewModel.document.selectedLayer?.frame == frame)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.clipboardPasteLayer"))
+    }
+
+    @Test func registryAppliesExplicitSelectionFeatherRadius() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        viewModel.selectionModifyAmount = 1
+        viewModel.createRectSelection(from: CGPoint(x: 10, y: 8), to: CGPoint(x: 20, y: 18))
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.selection.feather",
+            arguments: ["radius": .number(3)]
+        ))
+
+        #expect(response.ok)
+        let selection = try #require(viewModel.document.selection)
+        let mask = try #require(selection.rasterizedMask(canvasSize: viewModel.document.canvasSize))
+        #expect(maskAlpha(mask, x: 15, y: 13) == 255)
+        #expect(maskAlpha(mask, x: 7, y: 13) > 0)
+        #expect(maskAlpha(mask, x: 7, y: 13) < 255)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.selectionFeathered", 3))
+    }
+
+    @Test func registryAppliesExplicitSelectionModifyAmount() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        viewModel.selectionModifyAmount = 1
+        viewModel.createRectSelection(from: CGPoint(x: 10, y: 8), to: CGPoint(x: 20, y: 18))
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.selection.modify",
+            arguments: [
+                "action": .string("border"),
+                "amount": .number(2)
+            ]
+        ))
+
+        #expect(response.ok)
+        let selection = try #require(viewModel.document.selection)
+        let mask = try #require(selection.rasterizedMask(canvasSize: viewModel.document.canvasSize))
+        #expect(maskAlpha(mask, x: 8, y: 13) == 255)
+        #expect(maskAlpha(mask, x: 15, y: 13) == 0)
+        #expect(maskAlpha(mask, x: 22, y: 13) == 255)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.selectionBordered", 2))
     }
 
     @Test func registryQueuesPSDOpenThroughTheSharedCoordinator() throws {
@@ -2637,5 +2692,10 @@ struct XomoAutomationTests {
             image: NSImage.transparent(size: CGSize(width: 320, height: 240)),
             preferencesDefaults: preferencesDefaults
         ) { _ in }
+    }
+
+    private func maskAlpha(_ mask: ImageEditorSelectionMask, x: Int, y: Int) -> UInt8 {
+        guard x >= 0, y >= 0, x < mask.width, y < mask.height else { return 0 }
+        return mask.alpha[y * mask.width + x]
     }
 }

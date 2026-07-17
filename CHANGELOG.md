@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc228 - 2026-07-18
+
+### Fixed
+- 选择区自动化接口现在真正应用调用方传入的羽化、扩展、收缩、边界、平滑和去杂点像素参数；修复羽化接口误写 UI 羽化属性的问题。
+
+### Verification
+- Xomo 自动化回归通过 54/54，选区默认行为回归通过 26/26，CLI schema 回归通过 2/2；报告：`test-reports/rc228-automation/`、`test-reports/rc228-selection/`。
+
 ## 2.12.0-rc227 - 2026-07-18
 
 ### Fixed

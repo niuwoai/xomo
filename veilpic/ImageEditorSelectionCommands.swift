@@ -220,60 +220,60 @@ extension ImageEditorViewModel {
         colorRangeIncludeColors.isEmpty ? [colorRangeColor] : colorRangeIncludeColors
     }
 
-    func expandSelection() {
-        modifySelectionBoundary(expanding: true)
+    func expandSelection(radius: Int? = nil) {
+        modifySelectionBoundary(expanding: true, radius: radius)
     }
 
-    func contractSelection() {
-        modifySelectionBoundary(expanding: false)
+    func contractSelection(radius: Int? = nil) {
+        modifySelectionBoundary(expanding: false, radius: radius)
     }
 
-    func featherSelection() {
+    func featherSelection(radius: Int? = nil) {
         guard let selection = document.selection else {
             statusText = L10n.text("imageEditor.status.noSelection")
             return
         }
-        let radius = max(1, min(64, Int(selectionModifyAmount.rounded())))
-        let modified = selection.feathered(by: radius, canvasSize: document.canvasSize)
+        let effectiveRadius = effectiveSelectionRadius(radius, maximum: 64)
+        let modified = selection.feathered(by: effectiveRadius, canvasSize: document.canvasSize)
 
         pushUndo()
         document.selection = modified
         appendHistory(L10n.text("imageEditor.history.selectionFeather"))
         statusText = modified == nil
             ? L10n.text("imageEditor.status.selectionEmpty")
-            : L10n.format("imageEditor.status.selectionFeathered", radius)
+            : L10n.format("imageEditor.status.selectionFeathered", effectiveRadius)
     }
 
-    func borderSelection() {
+    func borderSelection(radius: Int? = nil) {
         guard let selection = document.selection else {
             statusText = L10n.text("imageEditor.status.noSelection")
             return
         }
-        let radius = max(1, min(64, Int(selectionModifyAmount.rounded())))
-        let modified = selection.bordered(by: radius, canvasSize: document.canvasSize)
+        let effectiveRadius = effectiveSelectionRadius(radius, maximum: 64)
+        let modified = selection.bordered(by: effectiveRadius, canvasSize: document.canvasSize)
 
         pushUndo()
         document.selection = modified
         appendHistory(L10n.text("imageEditor.history.selectionBorder"))
         statusText = modified == nil
             ? L10n.text("imageEditor.status.selectionEmpty")
-            : L10n.format("imageEditor.status.selectionBordered", radius)
+            : L10n.format("imageEditor.status.selectionBordered", effectiveRadius)
     }
 
-    func smoothSelection() {
+    func smoothSelection(radius: Int? = nil) {
         guard let selection = document.selection else {
             statusText = L10n.text("imageEditor.status.noSelection")
             return
         }
-        let radius = max(1, min(16, Int(selectionModifyAmount.rounded())))
-        let modified = selection.smoothed(by: radius, canvasSize: document.canvasSize)
+        let effectiveRadius = effectiveSelectionRadius(radius, maximum: 16)
+        let modified = selection.smoothed(by: effectiveRadius, canvasSize: document.canvasSize)
 
         pushUndo()
         document.selection = modified
         appendHistory(L10n.text("imageEditor.history.selectionSmooth"))
         statusText = modified == nil
             ? L10n.text("imageEditor.status.selectionEmpty")
-            : L10n.format("imageEditor.status.selectionSmoothed", radius)
+            : L10n.format("imageEditor.status.selectionSmoothed", effectiveRadius)
     }
 
     func fillSelectionHoles() {
@@ -292,14 +292,14 @@ extension ImageEditorViewModel {
         statusText = L10n.text("imageEditor.status.selectionFillHoles")
     }
 
-    func removeSelectionSpeckles() {
+    func removeSelectionSpeckles(maximumArea: Int? = nil) {
         guard let selection = document.selection else {
             statusText = L10n.text("imageEditor.status.noSelection")
             return
         }
-        let maximumArea = max(1, min(64, Int(selectionModifyAmount.rounded())))
+        let effectiveMaximumArea = effectiveSelectionRadius(maximumArea, maximum: 64)
         guard let modified = selection.removedSpeckles(
-            maximumArea: maximumArea,
+            maximumArea: effectiveMaximumArea,
             canvasSize: document.canvasSize
         ) else {
             statusText = L10n.text("imageEditor.status.selectionEmpty")
@@ -309,7 +309,7 @@ extension ImageEditorViewModel {
         pushUndo()
         document.selection = modified
         appendHistory(L10n.text("imageEditor.history.selectionRemoveSpeckles"))
-        statusText = L10n.format("imageEditor.status.selectionSpecklesRemoved", maximumArea)
+        statusText = L10n.format("imageEditor.status.selectionSpecklesRemoved", effectiveMaximumArea)
     }
 
     func moveSelectionLeft() {
@@ -519,15 +519,15 @@ extension ImageEditorViewModel {
         statusText = L10n.text(statusKey)
     }
 
-    private func modifySelectionBoundary(expanding: Bool) {
+    private func modifySelectionBoundary(expanding: Bool, radius: Int? = nil) {
         guard let selection = document.selection else {
             statusText = L10n.text("imageEditor.status.noSelection")
             return
         }
-        let radius = max(1, min(64, Int(selectionModifyAmount.rounded())))
+        let effectiveRadius = effectiveSelectionRadius(radius, maximum: 64)
         let modified = expanding
-            ? selection.expanded(by: radius, canvasSize: document.canvasSize)
-            : selection.contracted(by: radius, canvasSize: document.canvasSize)
+            ? selection.expanded(by: effectiveRadius, canvasSize: document.canvasSize)
+            : selection.contracted(by: effectiveRadius, canvasSize: document.canvasSize)
 
         pushUndo()
         document.selection = modified
@@ -536,8 +536,12 @@ extension ImageEditorViewModel {
             ? L10n.text("imageEditor.status.selectionEmpty")
             : L10n.format(
                 expanding ? "imageEditor.status.selectionExpanded" : "imageEditor.status.selectionContracted",
-                radius
+                effectiveRadius
             )
+    }
+
+    private func effectiveSelectionRadius(_ requested: Int?, maximum: Int) -> Int {
+        max(1, min(maximum, requested ?? Int(selectionModifyAmount.rounded())))
     }
 
     private func transparencySelection(forLayerAt index: Int) -> ImageEditorSelection? {
