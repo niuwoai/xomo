@@ -400,6 +400,8 @@ final class XomoAutomationRegistry {
             try guideSettings(arguments, viewModel: viewModel)
         case "xomo.view.zoom":
             try setZoom(arguments, viewModel: viewModel)
+        case "xomo.view.pan":
+            return try panCanvas(arguments, viewModel: viewModel)
         case "xomo.smart_filter.list":
             return smartFiltersResult(viewModel)
         case "xomo.smart_filter.add":
@@ -458,6 +460,10 @@ final class XomoAutomationRegistry {
             "alphaChannelCount": .number(Double(viewModel.document.alphaChannels.count)),
             "selectedLayerId": viewModel.document.selectedLayerID.map { .string($0.uuidString) } ?? .null,
             "tool": .string(viewModel.selectedTool.rawValue),
+            "canvasOffset": pointJSON(CGPoint(
+                x: viewModel.canvasOffset.width,
+                y: viewModel.canvasOffset.height
+            )),
             "zoom": .number(viewModel.zoom),
             "status": .string(viewModel.statusText)
         ])
@@ -2661,6 +2667,38 @@ final class XomoAutomationRegistry {
         }
     }
 
+    private func panCanvas(
+        _ arguments: [String: XomoJSONValue],
+        viewModel: ImageEditorViewModel
+    ) throws -> XomoJSONValue {
+        let action = arguments["action"]?.stringValue ?? "nudge"
+        switch action {
+        case "nudge":
+            viewModel.nudgeCanvas(by: CGSize(
+                width: try requiredNumber("dx", in: arguments),
+                height: try requiredNumber("dy", in: arguments)
+            ))
+        case "center":
+            viewModel.centerCanvas(on: CGPoint(
+                x: try requiredNumber("x", in: arguments),
+                y: try requiredNumber("y", in: arguments)
+            ))
+        case "reset":
+            viewModel.canvasOffset = .zero
+        default:
+            throw XomoAutomationCallError.invalidArgument("Unknown pan action: \(action)")
+        }
+
+        return .object([
+            "action": .string(action),
+            "offset": pointJSON(CGPoint(
+                x: viewModel.canvasOffset.width,
+                y: viewModel.canvasOffset.height
+            )),
+            "zoom": .number(viewModel.zoom)
+        ])
+    }
+
     private func exportResult(
         _ arguments: [String: XomoJSONValue],
         viewModel: ImageEditorViewModel
@@ -3184,6 +3222,13 @@ private extension XomoAutomationRegistry {
         tool("xomo.view.zoom", "Set or change canvas zoom.", [
             "action": XomoAutomationSchema.string(description: "Zoom action", values: ["set", "in", "out", "actual", "fit"]),
             "value": XomoAutomationSchema.number(description: "Zoom factor for set action")
+        ]),
+        tool("xomo.view.pan", "Nudge, center, or reset the canvas viewport without changing document History.", [
+            "action": XomoAutomationSchema.string(description: "Viewport action", values: ["nudge", "center", "reset"]),
+            "dx": XomoAutomationSchema.number(description: "Horizontal viewport delta for nudge"),
+            "dy": XomoAutomationSchema.number(description: "Vertical viewport delta for nudge"),
+            "x": XomoAutomationSchema.number(description: "Canvas x coordinate for center"),
+            "y": XomoAutomationSchema.number(description: "Canvas y coordinate for center")
         ]),
         tool("xomo.smart_filter.list", "List smart filters on the selected layer."),
         tool("xomo.smart_filter.add", "Add a non-destructive smart filter to the selected layer.", [

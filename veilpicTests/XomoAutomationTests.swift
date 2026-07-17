@@ -15,7 +15,7 @@ struct XomoAutomationTests {
             Issue.record("Expected tool array")
             return
         }
-        #expect(tools.count == 118)
+        #expect(tools.count == 119)
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.layer.list")
@@ -88,6 +88,48 @@ struct XomoAutomationTests {
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.selection.quick_mask")
         })
+        #expect(tools.contains { tool in
+            guard case .object(let value) = tool else { return false }
+            return value["name"] == .string("xomo.view.pan")
+        })
+    }
+
+    @Test func registryControlsCanvasViewportWithoutAddingHistory() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        viewModel.updateCanvasViewportSize(CGSize(width: 400, height: 300))
+        viewModel.setZoom(2)
+        viewModel.canvasOffset = CGSize(width: 18, height: -12)
+        let historyCount = viewModel.document.history.count
+
+        let nudged = registry.execute(request(
+            operation: "call",
+            name: "xomo.view.pan",
+            arguments: ["action": .string("nudge"), "dx": .number(12), "dy": .number(8)]
+        ))
+        #expect(nudged.ok)
+        #expect(nudged.result?.objectValue?["offset"]?.objectValue?["x"] == .number(30))
+        #expect(nudged.result?.objectValue?["offset"]?.objectValue?["y"] == .number(-4))
+
+        let centered = registry.execute(request(
+            operation: "call",
+            name: "xomo.view.pan",
+            arguments: ["action": .string("center"), "x": .number(48), "y": .number(36)]
+        ))
+        #expect(centered.ok)
+        #expect(centered.result?.objectValue?["action"] == .string("center"))
+        #expect(viewModel.canvasOffset != CGSize(width: 30, height: -4))
+        #expect(viewModel.document.history.count == historyCount)
+
+        let reset = registry.execute(request(
+            operation: "call",
+            name: "xomo.view.pan",
+            arguments: ["action": .string("reset")]
+        ))
+        #expect(reset.ok)
+        #expect(viewModel.canvasOffset == .zero)
+        #expect(viewModel.document.history.count == historyCount)
     }
 
     @Test func registryControlsQuickMaskThroughTheSharedSelectionPath() throws {

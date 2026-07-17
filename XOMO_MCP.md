@@ -1,6 +1,6 @@
 # Xomo MCP 与 CLI
 
-> 当前版本：v2.12.0-rc191
+> 当前版本：v2.12.0-rc192
 
 ## 架构
 
@@ -51,6 +51,7 @@ xomo call xomo.component.tokens '{"action":"export","path":"/Users/you/Desktop/c
 xomo call xomo.component.tokens '{"action":"import","path":"/Users/you/Desktop/brand.xomotokens.json"}'
 xomo call xomo.figma.bindings '{"action":"list"}'
 xomo call xomo.figma.bindings '{"action":"copy"}'
+xomo call xomo.view.pan '{"action":"center","x":480,"y":320}'
 xomo export ~/Desktop/xomo.png --format png --scope composited --scale 2
 xomo project export ~/Desktop/design.qpicproject
 xomo project import ~/Desktop/design.qpicproject
@@ -58,6 +59,8 @@ xomo import-image ~/Desktop/reference.png --into-selection
 ```
 
 `xomo call` 的第二个参数必须是 JSON object。对象 ID 可通过 `xomo.layer.list`、`xomo.channel.list`、`xomo.history.list` 和 `xomo.guide.list` 获取。
+
+`xomo.document.get` 返回当前 `canvasOffset` 与 `zoom`；`xomo.view.pan` 的 `nudge` 使用 `dx/dy`，`center` 使用画布坐标 `x/y`，`reset` 清零视口偏移。三种视口操作都只改变显示位置，不写入文档 History。
 
 ### 组件主题 Token 自动化
 
@@ -86,7 +89,7 @@ MCP 服务器实现 `initialize`、`ping`、`tools/list` 和 `tools/call`。当 
 
 ## 当前工具范围
 
-- 共 118 个 MCP 工具；同类细粒度操作通过带严格枚举参数的 action 工具组织。
+- 共 119 个 MCP 工具；同类细粒度操作通过带严格枚举参数的 action 工具组织。
 - App 与文档状态
 - 预设或自定义画布创建、可编辑文字/形状检查与更新（含纯色/最多 16 个有序色标的线性渐变填充、独立描边、不透明度、线宽、统一/独立四角及超椭圆圆角平滑）、点文字 / 固定宽高段落文字创建和转换、文字框所需高度、溢出诊断与适合内容 / 仅扩高操作，以及详细调整、滤镜和图层样式参数
 - 完整 `qpicproject` 项目导入导出，以及 PNG/JPEG/WebP 等图像图层导入
@@ -104,6 +107,7 @@ MCP 服务器实现 `initialize`、`ping`、`tools/list` 和 `tools/call`。当 
 - Alpha 通道查询、创建、复制、改名、删除及选择布尔运算
 - 历史状态、撤销、重做、截断、恢复与命名快照
 - 图像尺寸、画布尺寸、裁切、缩放、参考线与网格
+- 画布视口平移、按画布坐标居中和视口重置（`xomo.view.pan`），不改文档 History
 - 22 类可编辑 UI 组件与七套主题
 - UI 组件主组件、实例链接、主题同步和解除链接（`xomo.component.instance`）
 - Figma 链接安全校验与规范化（`xomo.figma.link`），不联网、不存储凭据，并返回导入范围与清洗计数

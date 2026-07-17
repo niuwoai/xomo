@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc192 - 2026-07-17
+
+### Added
+- 新增 `xomo.view.pan` MCP/CLI 工具，可按增量平移、按画布坐标居中或重置视口，并返回当前偏移与缩放。
+- `xomo.document.get` 现在返回当前画布视口偏移，便于自动化客户端核对导航状态。
+
+### Verification
+- MCP/CLI 注册与视口操作回归测试 47/47 通过；视口操作不增加文档 History。
+
 ## 2.12.0-rc191 - 2026-07-17
 
 ### Added
