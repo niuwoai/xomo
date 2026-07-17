@@ -471,16 +471,21 @@ extension ImageEditorViewModel {
 
         let settings = ImageEditorExportSettings(format: .png, scope: scope)
         guard let pngData = exportData(settings: settings),
-              let image = NSImage(data: pngData)
+              let renderedImage = NSImage(data: pngData)
         else {
             statusText = L10n.text("imageEditor.status.selectedLayersCopyToClipboardFailed")
             return
         }
 
+        let image = renderedImage.nonTransparentPixelBounds()
+            .flatMap { renderedImage.cropped(to: $0) }
+            ?? renderedImage
+        let clipboardData = image.qingtuPNGData() ?? pngData
+
         let baseName = (document.sourceName as NSString).deletingPathExtension
         let preferredFileName = "\(baseName.isEmpty ? "image" : baseName)-selected-layers.png"
         let didCopy = ClipboardImageWriter.copyPNGData(
-            pngData,
+            clipboardData,
             image: image,
             preferredFileName: preferredFileName
         )

@@ -1441,10 +1441,8 @@ struct veilpicTests {
         #expect(viewModel.document.history.count == historyCount)
         #expect(viewModel.statusText == L10n.text("imageEditor.status.selectedLayersCopiedToClipboard"))
         let copiedImage = try #require(NSImage(pasteboard: pasteboard))
-        #expect(copiedImage.size == canvas.size)
-        let transparentPixel = try #require(copiedImage.color(at: CGPoint(x: 2, y: 2))?.usingColorSpace(.deviceRGB))
-        #expect(transparentPixel.alphaComponent < 0.05)
-        let paintedPixel = try #require(copiedImage.color(at: CGPoint(x: 20, y: 22))?.usingColorSpace(.deviceRGB))
+        #expect(copiedImage.size == NSSize(width: 24, height: 18))
+        let paintedPixel = try #require(copiedImage.color(at: CGPoint(x: 12, y: 9))?.usingColorSpace(.deviceRGB))
         #expect(paintedPixel.alphaComponent > 0.9)
     }
 
@@ -1465,7 +1463,8 @@ struct veilpicTests {
 
         #expect(viewModel.statusText == L10n.text("imageEditor.status.selectedLayersCopiedToClipboard"))
         let copiedImage = try #require(NSImage(pasteboard: pasteboard))
-        let paintedPixel = try #require(copiedImage.color(at: CGPoint(x: 20, y: 16))?.usingColorSpace(.deviceRGB))
+        #expect(copiedImage.size == NSSize(width: 20, height: 16))
+        let paintedPixel = try #require(copiedImage.color(at: CGPoint(x: 10, y: 8))?.usingColorSpace(.deviceRGB))
         #expect(paintedPixel.greenComponent > 0.7)
         #expect(paintedPixel.alphaComponent > 0.9)
     }

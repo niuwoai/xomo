@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc209 - 2026-07-17
+
+### Changed
+- 复制所选图层、图层组或多选到剪贴板时自动裁切到实际非透明内容边界，避免小组件携带整张画布；仍保持透明 PNG 与 History 不变。
+
+### Verification
+- rc209 专项构建通过 1/1；紧凑边界回归报告：`test-reports/rc209-clipboard-bounds/report.md`。
+- `Command+A`/无选区时的图层剪贴板回退通过 1/1；报告：`test-reports/rc209-clipboard-fallback-escalated/report.md`。
+
 ## 2.12.0-rc208 - 2026-07-17
 
 ### Changed
