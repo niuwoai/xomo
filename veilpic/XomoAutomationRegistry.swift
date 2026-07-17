@@ -1428,6 +1428,11 @@ final class XomoAutomationRegistry {
         case "previousSubpath": viewModel.selectPreviousPathSubpath()
         case "setAnchorX": viewModel.setSelectedPathAnchorX(try requiredNumber("value", in: arguments))
         case "setAnchorY": viewModel.setSelectedPathAnchorY(try requiredNumber("value", in: arguments))
+        case "nudgeAnchor":
+            viewModel.nudgeSelectedPathAnchor(by: CGSize(
+                width: try requiredNumber("dx", in: arguments),
+                height: try requiredNumber("dy", in: arguments)
+            ))
         case "smoothAnchor": viewModel.smoothSelectedPathAnchor()
         case "symmetrizeHandles": viewModel.symmetrizeSelectedPathAnchorHandles()
         case "clearHandles": viewModel.clearSelectedPathAnchorHandles()
@@ -3352,7 +3357,7 @@ private extension XomoAutomationRegistry {
         ], required: ["action"]),
         tool("xomo.path.get", "Inspect anchors, control handles, subpaths, closure, and active path selection."),
         tool("xomo.path.action", "Create and edit vector paths, anchors, subpaths, masks, fills, and strokes.", [
-            "action": XomoAutomationSchema.string(description: "Path action", values: ["create", "select", "nextAnchor", "previousAnchor", "nextSubpath", "previousSubpath", "setAnchorX", "setAnchorY", "smoothAnchor", "symmetrizeHandles", "clearHandles", "moveSubpath", "duplicateSubpath", "deleteAnchor", "deleteSubpath", "insertAnchorAfter", "toggleClosed", "reverse", "strokeToPixelLayer", "fillToPixelLayer", "fromSelection", "loadSelection", "applyVectorMask", "applyLayerMask", "editVectorMask"]),
+            "action": XomoAutomationSchema.string(description: "Path action", values: ["create", "select", "nextAnchor", "previousAnchor", "nextSubpath", "previousSubpath", "setAnchorX", "setAnchorY", "nudgeAnchor", "smoothAnchor", "symmetrizeHandles", "clearHandles", "moveSubpath", "duplicateSubpath", "deleteAnchor", "deleteSubpath", "insertAnchorAfter", "toggleClosed", "reverse", "strokeToPixelLayer", "fillToPixelLayer", "fromSelection", "loadSelection", "applyVectorMask", "applyLayerMask", "editVectorMask"]),
             "points": pointsSchema,
             "closed": XomoAutomationSchema.boolean(description: "Close a newly created path"),
             "subpath": XomoAutomationSchema.number(description: "Zero-based subpath index"),

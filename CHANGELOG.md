@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc219 - 2026-07-18
+
+### Added
+- `xomo.path.action` 新增 `nudgeAnchor`，让 MCP/CLI 与 UI 方向键共用钢笔节点微调和 History/Undo 语义。
+
+### Verification
+- 路径自动化微调回归通过 1/1，报告：`test-reports/rc219-path-automation/report.md`。
+- 路径工具 schema 契约通过 1/1，报告：`test-reports/rc219-path-automation-scope/report.md`。
+
 ## 2.12.0-rc218 - 2026-07-18
 
 ### Added

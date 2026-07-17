@@ -28,6 +28,14 @@ struct XomoAutomationTests {
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.path.action")
         })
+        guard let pathTool = tools.compactMap({ tool -> [String: XomoJSONValue]? in
+            guard case .object(let value) = tool else { return nil }
+            return value
+        }).first(where: { $0["name"] == .string("xomo.path.action") }) else {
+            Issue.record("Expected xomo.path.action tool schema")
+            return
+        }
+        #expect(pathTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["action"]?.objectValue?["enum"]?.arrayValue?.contains(.string("nudgeAnchor")) == true)
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.clipboard.action")
@@ -913,6 +921,31 @@ struct XomoAutomationTests {
         ))
         #expect(createResponse.ok)
         #expect(viewModel.document.selectedLayer?.shapeContent?.kind == .path)
+
+        let originalAnchor = try #require(viewModel.selectedPathAnchorCanvasPoint)
+        let selectResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.path.action",
+            arguments: [
+                "action": .string("select"),
+                "subpath": .number(0),
+                "anchor": .number(0)
+            ]
+        ))
+        #expect(selectResponse.ok)
+        let nudgeResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.path.action",
+            arguments: [
+                "action": .string("nudgeAnchor"),
+                "dx": .number(5),
+                "dy": .number(-2)
+            ]
+        ))
+        #expect(nudgeResponse.ok)
+        let movedAnchor = try #require(viewModel.selectedPathAnchorCanvasPoint)
+        #expect(movedAnchor == CGPoint(x: originalAnchor.x + 5, y: originalAnchor.y - 2))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.pathAnchorMove"))
 
         let inspectResponse = registry.execute(request(operation: "call", name: "xomo.path.get"))
         #expect(inspectResponse.ok)
