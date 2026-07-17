@@ -2491,13 +2491,13 @@ struct ImageEditorView: View {
 
                 ScrollView {
                     VStack(alignment: .leading, spacing: 4) {
-                        if !viewModel.namedHistorySnapshots.isEmpty {
+                        if !viewModel.filteredHistorySnapshots.isEmpty {
                             Text(L10n.text("imageEditor.history.snapshots"))
                                 .font(.system(size: 10, weight: .semibold))
                                 .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
                                 .padding(.horizontal, 4)
 
-                            ForEach(viewModel.namedHistorySnapshots) { snapshot in
+                            ForEach(viewModel.filteredHistorySnapshots) { snapshot in
                                 historySnapshotRow(snapshot)
                             }
 

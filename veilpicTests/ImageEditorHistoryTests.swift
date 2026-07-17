@@ -130,6 +130,25 @@ struct ImageEditorHistoryTests {
     }
 
     @Test
+    func historyQueryFiltersNamedSnapshotsWithoutChangingSnapshotState() throws {
+        let image = testImage(color: .systemBlue, size: NSSize(width: 80, height: 60))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.createHistorySnapshot()
+        let snapshot = try #require(viewModel.namedHistorySnapshots.first)
+        viewModel.renameHistorySnapshot(snapshot.id, to: "Clean Base")
+        let originalSnapshotIDs = viewModel.namedHistorySnapshots.map(\.id)
+
+        viewModel.historyQuery = "clean"
+        #expect(viewModel.filteredHistorySnapshots.map(\.id) == originalSnapshotIDs)
+        #expect(viewModel.filteredHistoryEntries.count == viewModel.document.history.count)
+
+        viewModel.historyQuery = "missing"
+        #expect(viewModel.filteredHistorySnapshots.isEmpty)
+        #expect(viewModel.namedHistorySnapshots.map(\.id) == originalSnapshotIDs)
+    }
+
+    @Test
     func cropSelectsTheEntireNewCanvas() throws {
         let image = testImage(color: .systemBlue, size: NSSize(width: 100, height: 80))
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
@@ -244,6 +263,7 @@ struct ImageEditorHistoryTests {
         #expect(source.contains("image-editor-history-search-field"))
         #expect(source.contains("image-editor-history-search-clear"))
         #expect(source.contains("ForEach(viewModel.filteredHistoryEntries)"))
+        #expect(source.contains("ForEach(viewModel.filteredHistorySnapshots)"))
         #expect(source.contains("imageEditor.history.searchPlaceholder"))
     }
 

@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc222 - 2026-07-18
+
+### Changed
+- 历史面板搜索现在同时过滤历史步骤和命名快照；仍只改变可见列表，不改变文档 History、撤销栈或命名快照内容。
+
+### Verification
+- 历史搜索与命名快照专项回归通过 8/8，报告：`test-reports/rc222-history-search/`。
+
 ## 2.12.0-rc221 - 2026-07-18
 
 ### Added

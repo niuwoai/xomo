@@ -583,6 +583,14 @@ final class ImageEditorViewModel: ObservableObject {
         }
     }
 
+    var filteredHistorySnapshots: [ImageEditorHistorySnapshot] {
+        let query = historyQuery.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !query.isEmpty else { return namedHistorySnapshots }
+        return namedHistorySnapshots.filter { snapshot in
+            snapshot.name.localizedCaseInsensitiveContains(query)
+        }
+    }
+
     var canTruncateSelectedHistory: Bool {
         guard let selectedHistoryEntryID,
               let index = document.history.firstIndex(where: { $0.id == selectedHistoryEntryID }),
