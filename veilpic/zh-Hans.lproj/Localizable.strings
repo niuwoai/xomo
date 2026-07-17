@@ -1869,6 +1869,7 @@
 "imageEditor.status.clipboardImageMissing" = "剪贴板里没有可粘贴的图片";
 "imageEditor.status.clipboardPastedToLayer" = "已从剪贴板粘贴为新图层";
 "imageEditor.status.clipboardPastedIntoSelection" = "已将剪贴板图像粘贴到选区并生成蒙版图层";
+"imageEditor.status.clipboardCanvasCreated" = "已从剪贴板新建 %d × %d 画布";
 "imageEditor.status.selectionPixelsCleared" = "已清除当前选区内像素";
 "imageEditor.status.selectionPixelsClearedSelected" = "已清除 %d 个图层中的选区像素";
 "imageEditor.status.noSelection" = "当前没有选区";
@@ -2159,6 +2160,7 @@
 "imageEditor.action.layerDistributeVerticalSpacing" = "均分垂直间距";
 "imageEditor.action.layerImport" = "导入图片为图层";
 "imageEditor.action.fileImport" = "导入文件…";
+"imageEditor.action.canvasNewFromClipboard" = "从剪贴板新建画布";
 "imageEditor.action.layerSmartObject" = "转换为智能对象";
 "imageEditor.action.layerSmartObjectReplace" = "替换智能对象内容";
 "imageEditor.action.layerSmartObjectMakeUnique" = "让智能对象实例独立";

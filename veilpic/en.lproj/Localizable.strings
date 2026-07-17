@@ -1869,6 +1869,7 @@
 "imageEditor.status.clipboardImageMissing" = "There is no pasteable image on Clipboard";
 "imageEditor.status.clipboardPastedToLayer" = "Clipboard image pasted as a new layer";
 "imageEditor.status.clipboardPastedIntoSelection" = "Clipboard image pasted into the selection as a masked layer";
+"imageEditor.status.clipboardCanvasCreated" = "Created a %d × %d canvas from Clipboard";
 "imageEditor.status.selectionPixelsCleared" = "Selection pixels cleared";
 "imageEditor.status.selectionPixelsClearedSelected" = "Selection pixels cleared on %d layers";
 "imageEditor.status.noSelection" = "There is no active selection";
@@ -2159,6 +2160,7 @@
 "imageEditor.action.layerDistributeVerticalSpacing" = "Distribute vertical spacing";
 "imageEditor.action.layerImport" = "Import Image as Layer";
 "imageEditor.action.fileImport" = "Import File…";
+"imageEditor.action.canvasNewFromClipboard" = "New Canvas from Clipboard";
 "imageEditor.action.layerSmartObject" = "Convert to Smart Object";
 "imageEditor.action.layerSmartObjectReplace" = "Replace Smart Object Contents";
 "imageEditor.action.layerSmartObjectMakeUnique" = "Make Smart Objects Unique";

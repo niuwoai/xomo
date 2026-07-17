@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc202 - 2026-07-17
+
+### Added
+- 文件菜单新增“从剪贴板新建画布”，支持 `⌘⌥N`，按剪贴板图片的实际像素尺寸创建独立画布，并重置工具、缩放、历史和 PSD 兼容状态。
+
+### Verification
+- 剪贴板新建画布专项 1/1、文件菜单契约专项 1/1 通过；保留报告：`test-reports/rc202-clipboard-canvas/` 与 `test-reports/rc202-clipboard-menu/`。
+
 ## 2.12.0-rc201 - 2026-07-17
 
 ### Changed

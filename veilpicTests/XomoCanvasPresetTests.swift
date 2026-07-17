@@ -48,6 +48,35 @@ struct XomoCanvasPresetTests {
     }
 
     @MainActor
+    @Test func creatingCanvasFromClipboardUsesImageDimensionsAndResetsDocumentState() throws {
+        let original = NSImage.transparent(size: CGSize(width: 20, height: 20))
+        let clipboardImage = NSImage.rendered(size: CGSize(width: 48, height: 32)) { rect in
+            NSColor.systemOrange.setFill()
+            rect.fill()
+        }!
+        let pasteboard = NSPasteboard(name: NSPasteboard.Name("xomo-tests.new-canvas-clipboard"))
+        pasteboard.clearContents()
+        #expect(pasteboard.writeObjects([clipboardImage]))
+        defer { pasteboard.clearContents() }
+
+        let viewModel = ImageEditorViewModel(sourceName: "source", image: original) { _ in }
+        viewModel.zoom = 2
+
+        viewModel.createCanvasFromClipboard(from: pasteboard)
+
+        #expect(viewModel.document.sourceName == L10n.text("source.clipboard"))
+        #expect(viewModel.document.canvasSize == CGSize(width: 48, height: 32))
+        #expect(viewModel.document.layers.count == 2)
+        #expect(viewModel.document.selectedLayer?.name == L10n.text("imageEditor.layer.edit"))
+        #expect(!viewModel.document.isGridVisible)
+        #expect(viewModel.document.designCanvasMetadata == nil)
+        #expect(viewModel.zoom == 1)
+        #expect(!viewModel.canUndo)
+        #expect(viewModel.document.history.count == 1)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.clipboardCanvasCreated", 48, 32))
+    }
+
+    @MainActor
     @Test func projectRoundTripPreservesDesignCanvasMetadata() throws {
         let image = NSImage.transparent(size: CGSize(width: 20, height: 20))
         let viewModel = ImageEditorViewModel(sourceName: "source", image: image) { _ in }

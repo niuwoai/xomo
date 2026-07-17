@@ -463,6 +463,52 @@ final class ImageEditorViewModel: ObservableObject {
         )
     }
 
+    var canCreateCanvasFromClipboard: Bool {
+        NSPasteboard.general.readImage() != nil
+    }
+
+    func createCanvasFromClipboard(from pasteboard: NSPasteboard = .general) {
+        guard let image = pasteboard.readImage() else {
+            statusText = L10n.text("imageEditor.status.clipboardImageMissing")
+            return
+        }
+
+        let normalized = image.normalizedBitmapImage()
+        guard normalized.size.width > 0, normalized.size.height > 0 else {
+            statusText = L10n.text("imageEditor.status.layerImportFailed")
+            return
+        }
+
+        document = ImageEditorDocument(
+            sourceName: L10n.text("source.clipboard"),
+            image: normalized
+        )
+        psdCompatibilityReport = nil
+        psdCompatibilityFileName = ""
+        isPSDCompatibilityReportPresented = false
+        cachedCurrentImage = normalized
+        exportSettings.scale = 1
+        selectedTool = .move
+        selectedChannelPreview = .composite
+        previewedAlphaChannelID = nil
+        isEditingLayerMask = false
+        isQuickMaskMode = false
+        clearUndoHistory()
+        historySnapshots.removeAll()
+        namedHistorySnapshots.removeAll()
+        selectedHistorySnapshotID = nil
+        selectedHistoryEntryID = nil
+        zoom = 1
+        canvasOffset = .zero
+        syncSizeControlsFromDocument()
+        recordCurrentHistorySnapshot()
+        statusText = L10n.format(
+            "imageEditor.status.clipboardCanvasCreated",
+            Int(normalized.size.width),
+            Int(normalized.size.height)
+        )
+    }
+
     var previewImage: NSImage {
         if let previewedAlphaChannel {
             return alphaChannelPreviewImage(previewedAlphaChannel)

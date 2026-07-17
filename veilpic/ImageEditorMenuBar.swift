@@ -108,6 +108,11 @@ extension ImageEditorView {
             viewModel.isNewCanvasSheetPresented = true
         }
         .keyboardShortcut("n", modifiers: [.command])
+        Button(L10n.text("imageEditor.action.canvasNewFromClipboard")) {
+            viewModel.createCanvasFromClipboard()
+        }
+        .keyboardShortcut("n", modifiers: [.command, .option])
+        .disabled(!viewModel.canCreateCanvasFromClipboard)
         Button(L10n.text("imageEditor.action.projectOpen")) {
             viewModel.openProjectDocument()
         }

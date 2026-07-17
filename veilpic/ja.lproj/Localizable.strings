@@ -1869,6 +1869,7 @@
 "imageEditor.status.clipboardImageMissing" = "クリップボードにペースト可能な画像がありません";
 "imageEditor.status.clipboardPastedToLayer" = "クリップボードの画像を新規レイヤーとしてペーストしました";
 "imageEditor.status.clipboardPastedIntoSelection" = "クリップボード画像を選択範囲内へペーストし、マスク付きレイヤーを作成しました";
+"imageEditor.status.clipboardCanvasCreated" = "クリップボードから %d × %d のキャンバスを作成しました";
 "imageEditor.status.selectionPixelsCleared" = "現在の選択範囲内のピクセルを消去しました";
 "imageEditor.status.selectionPixelsClearedSelected" = "%d個のレイヤーで選択範囲内のピクセルを消去しました";
 "imageEditor.status.noSelection" = "現在の選択範囲がありません";
@@ -2159,6 +2160,7 @@
 "imageEditor.action.layerDistributeVerticalSpacing" = "垂直方向の間隔を分布";
 "imageEditor.action.layerImport" = "画像をレイヤーとして読み込み";
 "imageEditor.action.fileImport" = "ファイルを読み込む…";
+"imageEditor.action.canvasNewFromClipboard" = "クリップボードから新規キャンバス";
 "imageEditor.action.layerSmartObject" = "スマートオブジェクトに変換";
 "imageEditor.action.layerSmartObjectReplace" = "スマートオブジェクトの内容を置換";
 "imageEditor.action.layerSmartObjectMakeUnique" = "スマートオブジェクトを独立化";
