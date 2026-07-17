@@ -2044,6 +2044,22 @@ extension ImageEditorView {
             .accessibilityElement(children: .contain)
             .accessibilityLabel(layer.name)
             .accessibilityIdentifier("image-editor-layer-row-\(layer.id.uuidString)")
+            .contextMenu {
+                Button {
+                    if !viewModel.isLayerSelected(layer.id) {
+                        viewModel.selectLayer(layer.id)
+                    }
+                    guard let scope = viewModel.selectedLayersExportScope else { return }
+                    viewModel.exportSettings.scope = scope
+                    viewModel.openExportPanel()
+                } label: {
+                    Label(
+                        L10n.text("imageEditor.action.exportLayers"),
+                        systemImage: "square.and.arrow.up"
+                    )
+                }
+                .disabled(layer.isAdjustment || layer.isFilter)
+            }
 
             layerDropBand(layer, placement: .below)
         }
