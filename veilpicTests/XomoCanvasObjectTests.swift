@@ -114,6 +114,60 @@ struct XomoCanvasObjectTests {
         #expect(viewModel.document.selectedLayerID == transparent.id)
     }
 
+    @Test func shiftCanvasSelectionAddsAndTogglesVisibleOrdinaryLayers() throws {
+        let viewModel = makeViewModel()
+        var first = ImageEditorLayer.solidColorFill(
+            name: "First",
+            size: CGSize(width: 80, height: 60),
+            content: ImageEditorSolidColorFillContent(red: 0.1, green: 0.2, blue: 0.8)
+        )
+        first.frame.origin = CGPoint(x: 40, y: 40)
+        var second = ImageEditorLayer.solidColorFill(
+            name: "Second",
+            size: CGSize(width: 80, height: 60),
+            content: ImageEditorSolidColorFillContent(red: 0.8, green: 0.2, blue: 0.1)
+        )
+        second.frame.origin = CGPoint(x: 220, y: 140)
+        viewModel.document.layers.append(first)
+        viewModel.document.layers.append(second)
+        viewModel.selectLayer(first.id)
+
+        #expect(viewModel.selectVisibleLayer(at: CGPoint(x: 260, y: 160), extendingSelection: true))
+        #expect(viewModel.document.selectedLayerIDs == Set([first.id, second.id]))
+        #expect(viewModel.document.selectedLayerID == second.id)
+
+        #expect(viewModel.selectVisibleLayer(at: CGPoint(x: 260, y: 160), extendingSelection: true))
+        #expect(viewModel.document.selectedLayerIDs == [first.id])
+        #expect(viewModel.document.selectedLayerID == first.id)
+    }
+
+    @Test func shiftCanvasSelectionAddsComponentObjectGroups() throws {
+        let viewModel = makeViewModel()
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 60, y: 80))
+        let firstGroupID = try #require(viewModel.document.selectedLayerID)
+        viewModel.insertXomoComponent(.avatar, at: CGPoint(x: 400, y: 260))
+        let secondGroupID = try #require(viewModel.document.selectedLayerID)
+
+        viewModel.selectLayer(firstGroupID)
+        #expect(viewModel.selectXomoObject(at: CGPoint(x: 448, y: 308), extendingSelection: true))
+        #expect(viewModel.document.selectedLayerIDs == Set([firstGroupID, secondGroupID]))
+        #expect(viewModel.document.selectedLayerID == secondGroupID)
+    }
+
+    @Test func shiftSelectedComponentsUseACompositeSelectionFrame() throws {
+        let viewModel = makeViewModel()
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 60, y: 80))
+        let firstFrame = try #require(viewModel.selectedXomoObjectFrame)
+        let firstGroupID = try #require(viewModel.document.selectedLayerID)
+        viewModel.insertXomoComponent(.avatar, at: CGPoint(x: 400, y: 260))
+        let secondFrame = try #require(viewModel.selectedXomoObjectFrame)
+
+        viewModel.selectLayer(firstGroupID)
+        #expect(viewModel.selectXomoObject(at: CGPoint(x: secondFrame.midX, y: secondFrame.midY), extendingSelection: true))
+        #expect(viewModel.selectedXomoObjectFrame == firstFrame.union(secondFrame))
+        #expect(viewModel.hasSelectedXomoObject)
+    }
+
     @Test func topmostOverlappingComponentWinsObjectHitTesting() throws {
         let viewModel = makeViewModel()
         let origin = CGPoint(x: 80, y: 90)

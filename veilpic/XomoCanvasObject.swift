@@ -16,7 +16,7 @@ private struct XomoCanvasObject {
 @MainActor
 extension ImageEditorViewModel {
     var hasSelectedXomoObject: Bool {
-        selectedXomoObjectKind != nil
+        selectedXomoObjectKind != nil && selectedXomoObjectFrame != nil
     }
 
     var selectedXomoObjectKind: XomoComponentKind? {
@@ -27,12 +27,20 @@ extension ImageEditorViewModel {
     }
 
     var selectedXomoObjectFrame: CGRect? {
-        guard hasSelectedXomoObject,
-              let selectedGroupID = document.selectedLayerID
+        guard let selectedGroupID = document.selectedLayerID,
+              !document.selectedLayerIDs.isEmpty,
+              document.selectedLayerIDs.allSatisfy({ selectedID in
+                  document.layers.contains { layer in
+                      layer.id == selectedID && layer.isGroup && layer.xomoComponentInstance != nil
+                  }
+              })
         else { return nil }
+        let selectedGroupIDs = document.selectedLayerIDs
         return document.layers.lazy
             .filter { layer in
-                layer.groupID == selectedGroupID && self.document.isEffectivelyVisible(layer)
+                guard let groupID = layer.groupID else { return false }
+                return selectedGroupIDs.contains(groupID)
+                    && self.document.isEffectivelyVisible(layer)
             }
             .map { $0.frame.standardized }
             .reduce(nil) { bounds, frame in
@@ -40,7 +48,7 @@ extension ImageEditorViewModel {
             }
     }
 
-    func selectXomoObject(at point: CGPoint) -> Bool {
+    func selectXomoObject(at point: CGPoint, extendingSelection: Bool = false) -> Bool {
         guard let object = xomoCanvasObjects()
             .sorted(by: { $0.frontIndex > $1.frontIndex })
             .first(where: { object in
@@ -48,8 +56,10 @@ extension ImageEditorViewModel {
             })
         else { return false }
 
-        selectLayer(object.groupID)
-        statusText = L10n.format("xomo.object.status.selected", object.kind.title)
+        selectLayer(object.groupID, extendingSelection: extendingSelection)
+        statusText = extendingSelection
+            ? L10n.format("imageEditor.status.layerRangeSelected", document.selectedLayerIDs.count)
+            : L10n.format("xomo.object.status.selected", object.kind.title)
         return true
     }
 
@@ -57,7 +67,7 @@ extension ImageEditorViewModel {
     /// children are intentionally skipped here because their parent object
     /// must remain the selection target; the component path above already
     /// performs the same topmost/occlusion check for them.
-    func selectVisibleLayer(at point: CGPoint) -> Bool {
+    func selectVisibleLayer(at point: CGPoint, extendingSelection: Bool = false) -> Bool {
         let componentGroupIDs: Set<UUID> = Set(
             document.layers.compactMap { layer in
                 guard layer.isGroup, layer.xomoComponentInstance != nil else { return nil }
@@ -72,8 +82,11 @@ extension ImageEditorViewModel {
                   layerContainsVisibleContent(layer, at: point)
             else { continue }
 
-            selectLayer(layer.id)
-            statusText = L10n.format("imageEditor.status.layerRangeSelected", 1)
+            selectLayer(layer.id, extendingSelection: extendingSelection)
+            statusText = L10n.format(
+                "imageEditor.status.layerRangeSelected",
+                document.selectedLayerIDs.count
+            )
             return true
         }
         return false

@@ -46,6 +46,7 @@ struct ImageEditorView: View {
     @State private var isCanvasPanGestureActive = false
     @State private var lastMoveTranslation: CGSize = .zero
     @State private var isObjectMoveGestureActive = false
+    @State private var isCanvasSelectionGestureActive = false
     @State private var isSelectedObjectMoveGestureActive = false
     @State private var activeResizeHandle: ImageEditorLayerResizeHandle?
     @State private var activeShapeGradientHandle: ImageEditorShapeGradientHandle?
@@ -1651,6 +1652,21 @@ struct ImageEditorView: View {
 
                 switch canvasInteractionTool {
                 case .move:
+                    if NSEvent.modifierFlags.contains(.shift),
+                       !isCanvasSelectionGestureActive,
+                       !isObjectMoveGestureActive {
+                        let pressedImagePoint = imagePoint(from: value.startLocation, in: size)
+                        if let pressedImagePoint,
+                           viewModel.selectXomoObject(at: pressedImagePoint, extendingSelection: true)
+                                || viewModel.selectVisibleLayer(at: pressedImagePoint, extendingSelection: true) {
+                            // Shift-click is a selection gesture, not a move.
+                            // Keep it stable while DragGesture emits repeated updates.
+                            isCanvasSelectionGestureActive = true
+                        }
+                    }
+                    if isCanvasSelectionGestureActive {
+                        break
+                    }
                     if !isObjectMoveGestureActive,
                        !isSelectedObjectMoveGestureActive,
                        viewModel.hasSelectedXomoObject,
@@ -1783,6 +1799,19 @@ struct ImageEditorView: View {
                 }
 
                 let endImagePoint = imagePoint(from: value.location, in: size)
+
+                if isCanvasSelectionGestureActive {
+                    isCanvasSelectionGestureActive = false
+                    dragPoints = []
+                    brushStrokeSamples = []
+                    dragStart = nil
+                    dragEnd = nil
+                    lastPanTranslation = .zero
+                    lastMoveTranslation = .zero
+                    isObjectMoveGestureActive = false
+                    isSelectedObjectMoveGestureActive = false
+                    return
+                }
 
                 switch canvasInteractionTool {
                 case .move:

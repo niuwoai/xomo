@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc212 - 2026-07-17
+
+### Added
+- 移动工具在画布上支持 `Shift` 追加或切换普通图层与 Xomo 组件对象选择；追加选择只改变选择集合，不启动拖动，空白处仍可平移画布。
+
+### Verification
+- 带 rc212 版本号的 `XomoCanvasObjectTests` 构建与回归通过 24/24，覆盖普通图层追加/切换、组件组追加、组件联合选中框、透明孔洞、命中、移动预览与吸附，报告：`test-reports/rc212-final-build/report.md`。
+- 画布手势接线契约通过 1/1，确认 `Shift` 选择状态不会被 `DragGesture` 重复切换，报告：`test-reports/rc212-canvas-selection-contract/report.md`。
+
 ## 2.12.0-rc211 - 2026-07-17
 
 ### Added
