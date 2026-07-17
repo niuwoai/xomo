@@ -201,6 +201,35 @@ struct XomoAutomationTests {
         #expect(!rejected.ok)
     }
 
+    @Test func registryInspectsExternalPSDFixtureAndReportsUnsupportedSemantics() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        let fixtureURL = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .appendingPathComponent("Fixtures/PSD/unsupported-features.psd")
+        #expect(FileManager.default.fileExists(atPath: fixtureURL.path))
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.psd.inspect",
+            arguments: ["path": .string(fixtureURL.path)]
+        ))
+        #expect(response.ok)
+        let result = try #require(response.result?.objectValue)
+        #expect(result["fileName"] == .string("unsupported-features.psd"))
+        #expect(result["width"] == .number(4))
+        #expect(result["height"] == .number(4))
+        #expect(result["layerCount"] == .number(1))
+        #expect(result["requiresAttention"] == .bool(true))
+        let issueKinds = Set((result["issues"]?.arrayValue ?? []).compactMap {
+            $0.objectValue?["kind"]?.stringValue
+        })
+        #expect(issueKinds.contains("textRasterized"))
+        #expect(issueKinds.contains("smartObjectRasterized"))
+        #expect(issueKinds.contains("unknownBlendMode"))
+    }
+
     @Test func registryControlsCanvasViewportWithoutAddingHistory() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

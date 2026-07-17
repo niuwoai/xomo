@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.12.0-rc199 - 2026-07-17
+
+### Added
+- 将独立生成的 `unsupported-features.psd` 外部夹具接入 `xomo.psd.inspect` 自动化回归，验证尺寸、图层数和文字/智能对象/未知混合模式降级报告。
+
 ## 2.12.0-rc198 - 2026-07-17
 
 ### Added
