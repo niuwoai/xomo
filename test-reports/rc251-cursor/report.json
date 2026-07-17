@@ -1,0 +1,9 @@
+{
+  "version": "2.12.0-rc251",
+  "suite": "ImageEditorCanvasCursorTests",
+  "result": "passed",
+  "passed": 14,
+  "failed": 0,
+  "total": 14,
+  "xcresult": "/tmp/xomo-rc251-cursor/Logs/Test/Test-veilpic-2026.07.18_07-50-03-+0800.xcresult"
+}

@@ -2163,6 +2163,7 @@ struct ImageEditorView: View {
             selectedTool: viewModel.selectedTool,
             brushDiameter: viewModel.brushSize * displayScale,
             isPointerOverCanvas: canvasPoint != nil,
+            isPointerOverMovableContent: canvasPoint.map(viewModel.hasMovableCanvasContent(at:)) ?? false,
             penIsClosing: canvasInteractionTool == .pen && viewModel.isPenCloseCandidate(at: canvasPoint),
             handIsDragging: isCanvasPanGestureActive,
             isSpacebarPanning: isSpacebarPanning,
@@ -2185,6 +2186,7 @@ struct ImageEditorView: View {
             selectedTool: viewModel.selectedTool,
             brushDiameter: viewModel.brushSize * displayScale,
             isPointerOverCanvas: true,
+            isPointerOverMovableContent: true,
             handIsDragging: isCanvasPanGestureActive,
             isSpacebarPanning: isSpacebarPanning,
             isCanvasPanGestureActive: isCanvasPanGestureActive,
@@ -7155,6 +7157,7 @@ enum ImageEditorCanvasCursor {
         selectedTool: ImageEditorTool,
         brushDiameter: CGFloat,
         isPointerOverCanvas: Bool = true,
+        isPointerOverMovableContent: Bool = true,
         penIsClosing: Bool = false,
         handIsDragging: Bool = false,
         isSpacebarPanning: Bool = false,
@@ -7183,6 +7186,9 @@ enum ImageEditorCanvasCursor {
                 modifierFlags: modifierFlags
             )
         case .tool(let selectedTool):
+            if selectedTool == .move, !isPointerOverMovableContent {
+                return .openHand
+            }
             return cursor(
                 for: selectedTool,
                 brushDiameter: brushDiameter,

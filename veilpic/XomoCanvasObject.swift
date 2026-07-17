@@ -48,6 +48,31 @@ extension ImageEditorViewModel {
             }
     }
 
+    /// Contextual hit testing for cursor feedback. Transparent pixels and
+    /// hidden layers do not claim the move cursor; the move gesture still
+    /// performs its stricter selection check before committing.
+    func hasMovableCanvasContent(at point: CGPoint) -> Bool {
+        guard point.x.isFinite, point.y.isFinite else { return false }
+        if xomoCanvasObjects().contains(where: { $0.frame.contains(point) }) {
+            return true
+        }
+
+        let componentGroupIDs: Set<UUID> = Set(
+            document.layers.compactMap { layer in
+                guard layer.isGroup, layer.xomoComponentInstance != nil else { return nil }
+                return layer.id
+            }
+        )
+        return document.layers.contains { layer in
+            guard !layer.isGroup,
+                  layer.groupID.map({ !componentGroupIDs.contains($0) }) ?? true,
+                  document.isEffectivelyVisible(layer),
+                  layerContainsVisibleContent(layer, at: point)
+            else { return false }
+            return true
+        }
+    }
+
     func selectXomoObject(at point: CGPoint, extendingSelection: Bool = false) -> Bool {
         guard let object = xomoCanvasObjects()
             .sorted(by: { $0.frontIndex > $1.frontIndex })

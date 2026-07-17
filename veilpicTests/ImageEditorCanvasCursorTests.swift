@@ -133,6 +133,27 @@ struct ImageEditorCanvasCursorTests {
         #expect(move !== NSCursor.arrow)
         #expect(move.image.tiffRepresentation != NSCursor.arrow.image.tiffRepresentation)
         #expect(ImageEditorCanvasCursor.family(for: .move) == .moveTool)
+
+        let emptyCanvasMove = ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .move,
+            brushDiameter: 18,
+            isPointerOverMovableContent: false
+        )
+        #expect(emptyCanvasMove === NSCursor.openHand)
+    }
+
+    @Test func moveCursorHitTestUsesComponentGeometryWithoutChangingSelection() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "cursor-hit-test",
+            image: NSImage.transparent(size: CGSize(width: 640, height: 480))
+        ) { _ in }
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))
+        let frame = try #require(viewModel.selectedXomoObjectFrame)
+
+        #expect(viewModel.hasMovableCanvasContent(at: CGPoint(x: frame.midX, y: frame.midY)))
+        #expect(!viewModel.hasMovableCanvasContent(at: CGPoint(x: 620, y: 460)))
+        #expect(viewModel.document.selectedLayer?.xomoComponentInstance != nil)
     }
 
     @Test func moveToolShowsCopyBadgeWhileHoldingOption() {
