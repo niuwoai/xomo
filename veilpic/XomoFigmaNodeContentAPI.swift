@@ -247,7 +247,8 @@ enum XomoFigmaNodeImportMapper {
         if node.isMask == true {
             issues.append(.maskFlattened)
         }
-        if node.clipsContent == true {
+        if node.clipsContent == true,
+           !(mapping.target == .group && node.absoluteBoundingBox != nil) {
             issues.append(.clippingFlattened)
         }
         let effects = mappedEffects(node.effects)
@@ -331,6 +332,7 @@ enum XomoFigmaNodeImportMapper {
                 XomoFigmaPlanSize(width: max(0, $0.width), height: max(0, $0.height))
             },
             relativeTransform: XomoFigmaPlanTransform(node.relativeTransform),
+            clipsContent: node.clipsContent == true && mapping.target == .group && node.absoluteBoundingBox != nil,
             imageReference: imagePaint?.imageRef,
             imageScaleMode: imagePaint?.scaleMode,
             imageTransform: XomoFigmaPlanTransform(imagePaint?.imageTransform),

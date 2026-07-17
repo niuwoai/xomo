@@ -605,6 +605,51 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(vector.issues.contains(.transformFlattened))
     }
 
+    @Test func mapperPreservesFrameClipsContentAsEditableGroupMask() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                """
+                {
+                  "name": "Clipped Card",
+                  "nodes": {
+                    "1:80": {
+                      "document": {
+                        "id": "1:80",
+                        "name": "Clipped Card",
+                        "type": "FRAME",
+                        "absoluteBoundingBox": {"x": 20, "y": 20, "width": 40, "height": 40},
+                        "clipsContent": true,
+                        "children": [
+                          {
+                            "id": "2:80",
+                            "name": "Overflowing Content",
+                            "type": "RECTANGLE",
+                            "absoluteBoundingBox": {"x": 0, "y": 0, "width": 80, "height": 80},
+                            "fills": [{"type": "SOLID", "color": {"r": 0.2, "g": 0.7, "b": 0.9, "a": 1}}]
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+                """.utf8
+            )
+        )
+        let plan = try XomoFigmaNodeImportMapper.makePlan(response: response, requestedNodeID: "1:80")
+        let group = try #require(plan.items.first { $0.sourceID == "1:80" })
+        #expect(group.clipsContent)
+        #expect(!group.issues.contains(.clippingFlattened))
+
+        let materialized = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: CGSize(width: 200, height: 200)
+        )
+        let layer = try #require(materialized.layers.first { $0.xomoFigmaSourceID == "1:80" })
+        #expect(layer.isGroup)
+        #expect(layer.mask?.size == CGSize(width: 200, height: 200))
+    }
+
     @Test func mapperReportsPartialImageComponentLayoutAndUnsupportedNodes() async throws {
         let transport = RecordingFigmaNodeTransport(statusCode: 200, body: Self.validNodeResponse)
         let client = XomoFigmaNodeContentAPIClient(transport: transport)
@@ -1105,6 +1150,7 @@ struct XomoFigmaNodeImportPlanTests {
             vectorPaths: [],
             geometrySize: nil,
             relativeTransform: nil,
+            clipsContent: false,
             imageReference: nil,
             imageScaleMode: nil,
             imageTransform: nil,

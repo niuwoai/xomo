@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.12.0-rc234 - 2026-07-18
+
+### Added
+- Figma `clipsContent` 在带有效边界的 Frame/Group 导入时映射为可编辑的 Xomo 矩形组蒙版，子内容不会越出容器。
+- Figma 导入专项新增 Frame 裁切材质化回归，专项测试 33/33 通过。
+
 ## 2.12.0-rc233 - 2026-07-18
 
 ### Added

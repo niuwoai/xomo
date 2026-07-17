@@ -113,6 +113,9 @@ enum XomoFigmaNodeMaterializer {
             if let assignedGroupID { layer.id = assignedGroupID }
             if let frame = mappedFrame(item.frame, transform: transform) {
                 layer.frame = frame
+                if item.clipsContent {
+                    layer.mask = rectangularCanvasMask(frame: frame, canvasSize: canvasSize)
+                }
             }
             layer.stackLayout = item.stackLayout
         case .text:
@@ -162,6 +165,22 @@ enum XomoFigmaNodeMaterializer {
         layer.isVisible = item.isVisible
         layer.opacity = min(max(item.opacity, 0), 1)
         return layer
+    }
+
+    private static func rectangularCanvasMask(frame: CGRect, canvasSize: CGSize) -> NSImage? {
+        guard canvasSize.width > 0, canvasSize.height > 0 else { return nil }
+        let clippedFrame = frame.intersection(CGRect(origin: .zero, size: canvasSize))
+        guard !clippedFrame.isNull, clippedFrame.width > 0, clippedFrame.height > 0 else { return nil }
+        return NSImage.rendered(size: canvasSize) { _ in
+            let appKitFrame = CGRect(
+                x: clippedFrame.minX,
+                y: canvasSize.height - clippedFrame.maxY,
+                width: clippedFrame.width,
+                height: clippedFrame.height
+            )
+            NSColor.white.setFill()
+            appKitFrame.fill()
+        }
     }
 
     private static func makeImageLayer(
