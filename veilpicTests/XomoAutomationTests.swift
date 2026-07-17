@@ -73,6 +73,7 @@ struct XomoAutomationTests {
         }
         #expect(magicTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["tolerance"]?.objectValue?["type"] == .string("number"))
         #expect(selectionModifyTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["tolerance"]?.objectValue?["type"] == .string("number"))
+        #expect(selectionModifyTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["threshold"]?.objectValue?["type"] == .string("number"))
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.layer_comp.action")
@@ -221,6 +222,38 @@ struct XomoAutomationTests {
         #expect(maskAlpha(mask, x: 15, y: 13) == 0)
         #expect(maskAlpha(mask, x: 22, y: 13) == 255)
         #expect(viewModel.statusText == L10n.format("imageEditor.status.selectionBordered", 2))
+    }
+
+    @Test func registryAppliesExplicitLayerTransparencyThreshold() throws {
+        let viewModel = makeViewModel()
+        let layerIndex = try #require(viewModel.document.selectedLayerIndex)
+        let size = CGSize(width: 20, height: 10)
+        let image = try #require(NSImage.rendered(size: size) { _ in
+            NSColor(calibratedWhite: 1, alpha: 0.25).setFill()
+            CGRect(x: 0, y: 0, width: 10, height: 10).fill()
+            NSColor(calibratedWhite: 1, alpha: 1).setFill()
+            CGRect(x: 10, y: 0, width: 10, height: 10).fill()
+        })
+        viewModel.document.layers[layerIndex].image = image
+        viewModel.document.layers[layerIndex].frame = CGRect(origin: .zero, size: size)
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.selection.modify",
+            arguments: [
+                "action": .string("loadTransparency"),
+                "threshold": .number(200)
+            ]
+        ))
+
+        #expect(response.ok)
+        let selection = try #require(viewModel.document.selection)
+        let mask = try #require(selection.rasterizedMask(canvasSize: size))
+        #expect(maskAlpha(mask, x: 5, y: 5) == 0)
+        #expect(maskAlpha(mask, x: 15, y: 5) == 255)
+        #expect(selection.bounds.minX >= 10)
     }
 
     @Test func registryAppliesExplicitMagicWandTolerance() throws {

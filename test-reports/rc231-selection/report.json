@@ -1,0 +1,269 @@
+{
+  "generated_at": "2026-07-18 02:58:52 +0800",
+  "total": 26,
+  "passed": 26,
+  "failed": 0,
+  "jobs": 2,
+  "results": [
+    {
+      "suite": "ImageEditorSelectionOperationTests",
+      "method": "imageEditorBatchEditsSelectionPixelsAcrossSelectedPixelLayersAndSkipsLockedOrIneligibleLayers",
+      "identifier": "veilpicTests/ImageEditorSelectionOperationTests/imageEditorBatchEditsSelectionPixelsAcrossSelectedPixelLayersAndSkipsLockedOrIneligibleLayers",
+      "file": "ImageEditorSelectionOperationTests.swift",
+      "passed": true,
+      "duration": 3.182,
+      "issues": [],
+      "log": "ImageEditorSelectionOperationTests.imageEditorBatchEditsSelectionPixelsAcrossSelectedPixelLayersAndSkipsLockedOrIneligibleLayers.log"
+    },
+    {
+      "suite": "ImageEditorSelectionOperationTests",
+      "method": "imageEditorCanFillSelectionWithBackgroundColorShortcutCommand",
+      "identifier": "veilpicTests/ImageEditorSelectionOperationTests/imageEditorCanFillSelectionWithBackgroundColorShortcutCommand",
+      "file": "ImageEditorSelectionOperationTests.swift",
+      "passed": true,
+      "duration": 3.168,
+      "issues": [],
+      "log": "ImageEditorSelectionOperationTests.imageEditorCanFillSelectionWithBackgroundColorShortcutCommand.log"
+    },
+    {
+      "suite": "ImageEditorSelectionOperationTests",
+      "method": "imageEditorCanReselectLastClearedSelection",
+      "identifier": "veilpicTests/ImageEditorSelectionOperationTests/imageEditorCanReselectLastClearedSelection",
+      "file": "ImageEditorSelectionOperationTests.swift",
+      "passed": true,
+      "duration": 3.151,
+      "issues": [],
+      "log": "ImageEditorSelectionOperationTests.imageEditorCanReselectLastClearedSelection.log"
+    },
+    {
+      "suite": "ImageEditorSelectionOperationTests",
+      "method": "imageEditorCommandJUsesLayerViaCopyWhenSelectionExists",
+      "identifier": "veilpicTests/ImageEditorSelectionOperationTests/imageEditorCommandJUsesLayerViaCopyWhenSelectionExists",
+      "file": "ImageEditorSelectionOperationTests.swift",
+      "passed": true,
+      "duration": 3.214,
+      "issues": [],
+      "log": "ImageEditorSelectionOperationTests.imageEditorCommandJUsesLayerViaCopyWhenSelectionExists.log"
+    },
+    {
+      "suite": "ImageEditorSelectionOperationTests",
+      "method": "imageEditorCommandXCanCutSelectionToClipboard",
+      "identifier": "veilpicTests/ImageEditorSelectionOperationTests/imageEditorCommandXCanCutSelectionToClipboard",
+      "file": "ImageEditorSelectionOperationTests.swift",
+      "passed": true,
+      "duration": 3.171,
+      "issues": [],
+      "log": "ImageEditorSelectionOperationTests.imageEditorCommandXCanCutSelectionToClipboard.log"
+    },
+    {
+      "suite": "ImageEditorSelectionOperationTests",
+      "method": "imageEditorCreatesEllipseMarqueeWithExpectedBounds",
+      "identifier": "veilpicTests/ImageEditorSelectionOperationTests/imageEditorCreatesEllipseMarqueeWithExpectedBounds",
+      "file": "ImageEditorSelectionOperationTests.swift",
+      "passed": true,
+      "duration": 3.258,
+      "issues": [],
+      "log": "ImageEditorSelectionOperationTests.imageEditorCreatesEllipseMarqueeWithExpectedBounds.log"
+    },
+    {
+      "suite": "ImageEditorSelectionOperationTests",
+      "method": "imageEditorCreatesFixedAspectMarqueeShapes",
+      "identifier": "veilpicTests/ImageEditorSelectionOperationTests/imageEditorCreatesFixedAspectMarqueeShapes",
+      "file": "ImageEditorSelectionOperationTests.swift",
+      "passed": true,
+      "duration": 3.183,
+      "issues": [],
+      "log": "ImageEditorSelectionOperationTests.imageEditorCreatesFixedAspectMarqueeShapes.log"
+    },
+    {
+      "suite": "ImageEditorSelectionOperationTests",
+      "method": "imageEditorCreatesSelectionBorderMask",
+      "identifier": "veilpicTests/ImageEditorSelectionOperationTests/imageEditorCreatesSelectionBorderMask",
+      "file": "ImageEditorSelectionOperationTests.swift",
+      "passed": true,
+      "duration": 3.183,
+      "issues": [],
+      "log": "ImageEditorSelectionOperationTests.imageEditorCreatesSelectionBorderMask.log"
+    },
+    {
+      "suite": "ImageEditorSelectionOperationTests",
+      "method": "imageEditorExpandsAndContractsSelectionMask",
+      "identifier": "veilpicTests/ImageEditorSelectionOperationTests/imageEditorExpandsAndContractsSelectionMask",
+      "file": "ImageEditorSelectionOperationTests.swift",
+      "passed": true,
+      "duration": 3.191,
+      "issues": [],
+      "log": "ImageEditorSelectionOperationTests.imageEditorExpandsAndContractsSelectionMask.log"
+    },
+    {
+      "suite": "ImageEditorSelectionOperationTests",
+      "method": "imageEditorFeathersSelectionMask",
+      "identifier": "veilpicTests/ImageEditorSelectionOperationTests/imageEditorFeathersSelectionMask",
+      "file": "ImageEditorSelectionOperationTests.swift",
+      "passed": true,
+      "duration": 3.261,
+      "issues": [],
+      "log": "ImageEditorSelectionOperationTests.imageEditorFeathersSelectionMask.log"
+    },
+    {
+      "suite": "ImageEditorSelectionOperationTests",
+      "method": "imageEditorFillsSelectionHolesWithoutSelectingOutsideBackground",
+      "identifier": "veilpicTests/ImageEditorSelectionOperationTests/imageEditorFillsSelectionHolesWithoutSelectingOutsideBackground",
+      "file": "ImageEditorSelectionOperationTests.swift",
+      "passed": true,
+      "duration": 3.16,
+      "issues": [],
+      "log": "ImageEditorSelectionOperationTests.imageEditorFillsSelectionHolesWithoutSelectingOutsideBackground.log"
+    },
+    {
+      "suite": "ImageEditorSelectionOperationTests",
+      "method": "imageEditorFitsSelectionMaskToCanvas",
+      "identifier": "veilpicTests/ImageEditorSelectionOperationTests/imageEditorFitsSelectionMaskToCanvas",
+      "file": "ImageEditorSelectionOperationTests.swift",
+      "passed": true,
+      "duration": 3.179,
+      "issues": [],
+      "log": "ImageEditorSelectionOperationTests.imageEditorFitsSelectionMaskToCanvas.log"
+    },
+    {
+      "suite": "ImageEditorSelectionOperationTests",
+      "method": "imageEditorFlipsSelectionMaskAroundItsOwnBounds",
+      "identifier": "veilpicTests/ImageEditorSelectionOperationTests/imageEditorFlipsSelectionMaskAroundItsOwnBounds",
+      "file": "ImageEditorSelectionOperationTests.swift",
+      "passed": true,
+      "duration": 3.168,
+      "issues": [],
+      "log": "ImageEditorSelectionOperationTests.imageEditorFlipsSelectionMaskAroundItsOwnBounds.log"
+    },
+    {
+      "suite": "ImageEditorSelectionOperationTests",
+      "method": "imageEditorMovesSelectionMaskWithoutMovingPixels",
+      "identifier": "veilpicTests/ImageEditorSelectionOperationTests/imageEditorMovesSelectionMaskWithoutMovingPixels",
+      "file": "ImageEditorSelectionOperationTests.swift",
+      "passed": true,
+      "duration": 3.205,
+      "issues": [],
+      "log": "ImageEditorSelectionOperationTests.imageEditorMovesSelectionMaskWithoutMovingPixels.log"
+    },
+    {
+      "suite": "ImageEditorSelectionOperationTests",
+      "method": "imageEditorRemovesSmallSelectionSpecklesWithoutShrinkingMainIsland",
+      "identifier": "veilpicTests/ImageEditorSelectionOperationTests/imageEditorRemovesSmallSelectionSpecklesWithoutShrinkingMainIsland",
+      "file": "ImageEditorSelectionOperationTests.swift",
+      "passed": true,
+      "duration": 3.186,
+      "issues": [],
+      "log": "ImageEditorSelectionOperationTests.imageEditorRemovesSmallSelectionSpecklesWithoutShrinkingMainIsland.log"
+    },
+    {
+      "suite": "ImageEditorSelectionOperationTests",
+      "method": "imageEditorRotatesSelectionMaskAroundItsOwnBounds",
+      "identifier": "veilpicTests/ImageEditorSelectionOperationTests/imageEditorRotatesSelectionMaskAroundItsOwnBounds",
+      "file": "ImageEditorSelectionOperationTests.swift",
+      "passed": true,
+      "duration": 3.189,
+      "issues": [],
+      "log": "ImageEditorSelectionOperationTests.imageEditorRotatesSelectionMaskAroundItsOwnBounds.log"
+    },
+    {
+      "suite": "ImageEditorSelectionOperationTests",
+      "method": "imageEditorRotatesSelectionMaskCounterclockwise",
+      "identifier": "veilpicTests/ImageEditorSelectionOperationTests/imageEditorRotatesSelectionMaskCounterclockwise",
+      "file": "ImageEditorSelectionOperationTests.swift",
+      "passed": true,
+      "duration": 3.181,
+      "issues": [],
+      "log": "ImageEditorSelectionOperationTests.imageEditorRotatesSelectionMaskCounterclockwise.log"
+    },
+    {
+      "suite": "ImageEditorSelectionOperationTests",
+      "method": "imageEditorScalesSelectionMaskAroundItsOwnCenter",
+      "identifier": "veilpicTests/ImageEditorSelectionOperationTests/imageEditorScalesSelectionMaskAroundItsOwnCenter",
+      "file": "ImageEditorSelectionOperationTests.swift",
+      "passed": true,
+      "duration": 3.178,
+      "issues": [],
+      "log": "ImageEditorSelectionOperationTests.imageEditorScalesSelectionMaskAroundItsOwnCenter.log"
+    },
+    {
+      "suite": "ImageEditorSelectionOperationTests",
+      "method": "imageEditorSelectAllCoversCanvas",
+      "identifier": "veilpicTests/ImageEditorSelectionOperationTests/imageEditorSelectAllCoversCanvas",
+      "file": "ImageEditorSelectionOperationTests.swift",
+      "passed": true,
+      "duration": 3.144,
+      "issues": [],
+      "log": "ImageEditorSelectionOperationTests.imageEditorSelectAllCoversCanvas.log"
+    },
+    {
+      "suite": "ImageEditorSelectionOperationTests",
+      "method": "imageEditorSelectionAddKeepsAsymmetricMarqueeYCoordinate",
+      "identifier": "veilpicTests/ImageEditorSelectionOperationTests/imageEditorSelectionAddKeepsAsymmetricMarqueeYCoordinate",
+      "file": "ImageEditorSelectionOperationTests.swift",
+      "passed": true,
+      "duration": 3.318,
+      "issues": [],
+      "log": "ImageEditorSelectionOperationTests.imageEditorSelectionAddKeepsAsymmetricMarqueeYCoordinate.log"
+    },
+    {
+      "suite": "ImageEditorSelectionOperationTests",
+      "method": "imageEditorSelectionIntersectKeepsAnAsymmetricRasterRegionAtItsCanvasPosition",
+      "identifier": "veilpicTests/ImageEditorSelectionOperationTests/imageEditorSelectionIntersectKeepsAnAsymmetricRasterRegionAtItsCanvasPosition",
+      "file": "ImageEditorSelectionOperationTests.swift",
+      "passed": true,
+      "duration": 3.155,
+      "issues": [],
+      "log": "ImageEditorSelectionOperationTests.imageEditorSelectionIntersectKeepsAnAsymmetricRasterRegionAtItsCanvasPosition.log"
+    },
+    {
+      "suite": "ImageEditorSelectionOperationTests",
+      "method": "imageEditorSelectionSubtractKeepsRasterAndVectorMasksInTheSameRowOrder",
+      "identifier": "veilpicTests/ImageEditorSelectionOperationTests/imageEditorSelectionSubtractKeepsRasterAndVectorMasksInTheSameRowOrder",
+      "file": "ImageEditorSelectionOperationTests.swift",
+      "passed": true,
+      "duration": 3.158,
+      "issues": [],
+      "log": "ImageEditorSelectionOperationTests.imageEditorSelectionSubtractKeepsRasterAndVectorMasksInTheSameRowOrder.log"
+    },
+    {
+      "suite": "ImageEditorSelectionOperationTests",
+      "method": "imageEditorSmoothsSelectionMask",
+      "identifier": "veilpicTests/ImageEditorSelectionOperationTests/imageEditorSmoothsSelectionMask",
+      "file": "ImageEditorSelectionOperationTests.swift",
+      "passed": true,
+      "duration": 3.153,
+      "issues": [],
+      "log": "ImageEditorSelectionOperationTests.imageEditorSmoothsSelectionMask.log"
+    },
+    {
+      "suite": "ImageEditorSelectionOperationTests",
+      "method": "quickMaskBrushAndEraserEditSelectionWithUndoAndRedo",
+      "identifier": "veilpicTests/ImageEditorSelectionOperationTests/quickMaskBrushAndEraserEditSelectionWithUndoAndRedo",
+      "file": "ImageEditorSelectionOperationTests.swift",
+      "passed": true,
+      "duration": 3.188,
+      "issues": [],
+      "log": "ImageEditorSelectionOperationTests.quickMaskBrushAndEraserEditSelectionWithUndoAndRedo.log"
+    },
+    {
+      "suite": "ImageEditorSelectionOperationTests",
+      "method": "quickMaskShowsUnselectedAreaAndUsesQShortcut",
+      "identifier": "veilpicTests/ImageEditorSelectionOperationTests/quickMaskShowsUnselectedAreaAndUsesQShortcut",
+      "file": "ImageEditorSelectionOperationTests.swift",
+      "passed": true,
+      "duration": 3.176,
+      "issues": [],
+      "log": "ImageEditorSelectionOperationTests.quickMaskShowsUnselectedAreaAndUsesQShortcut.log"
+    },
+    {
+      "suite": "ImageEditorSelectionOperationTests",
+      "method": "quickMaskStrokeHonorsOpacityAndBrushDiameter",
+      "identifier": "veilpicTests/ImageEditorSelectionOperationTests/quickMaskStrokeHonorsOpacityAndBrushDiameter",
+      "file": "ImageEditorSelectionOperationTests.swift",
+      "passed": true,
+      "duration": 3.161,
+      "issues": [],
+      "log": "ImageEditorSelectionOperationTests.quickMaskStrokeHonorsOpacityAndBrushDiameter.log"
+    }
+  ]
+}

@@ -8,6 +8,8 @@
 import AppKit
 import Foundation
 
+private let defaultLayerTransparencySelectionThreshold = 8
+
 @MainActor
 extension ImageEditorViewModel {
     var canLoadSelectionFromLayerTransparency: Bool {
@@ -43,8 +45,8 @@ extension ImageEditorViewModel {
         statusText = L10n.text("imageEditor.status.selectionAll")
     }
 
-    func loadSelectionFromLayerTransparency() {
-        let selections = layerTransparencySelections()
+    func loadSelectionFromLayerTransparency(threshold requestedThreshold: Int? = nil) {
+        let selections = layerTransparencySelections(threshold: requestedThreshold)
         guard let selection = combinedTransparencySelections(selections) else {
             statusText = L10n.text("imageEditor.status.selectionFromLayerFailed")
             return
@@ -551,11 +553,16 @@ extension ImageEditorViewModel {
         max(0, min(1, requested ?? tolerance))
     }
 
-    private func transparencySelection(forLayerAt index: Int) -> ImageEditorSelection? {
+    private func transparencySelection(
+        forLayerAt index: Int,
+        threshold requestedThreshold: Int? = nil
+    ) -> ImageEditorSelection? {
         guard document.layers.indices.contains(index) else { return nil }
         let layer = document.layers[index]
         if layer.isGroup {
-            return document.compositedImage(includingOnly: [layer.id]).alphaSelection(threshold: 8)
+            return document.compositedImage(includingOnly: [layer.id]).alphaSelection(
+                threshold: effectiveLayerTransparencySelectionThreshold(requestedThreshold)
+            )
         }
 
         guard let image = NSImage.rendered(size: document.canvasSize, actions: { _ in
@@ -577,10 +584,12 @@ extension ImageEditorViewModel {
                 )
             }
         }) else { return nil }
-        return image.alphaSelection(threshold: 8)
+        return image.alphaSelection(
+            threshold: effectiveLayerTransparencySelectionThreshold(requestedThreshold)
+        )
     }
 
-    private func layerTransparencySelections() -> [ImageEditorSelection] {
+    private func layerTransparencySelections(threshold requestedThreshold: Int? = nil) -> [ImageEditorSelection] {
         let selectedIDs = document.selectedLayerIDs.isEmpty
             ? Set(document.selectedLayerID.map { [$0] } ?? [])
             : document.selectedLayerIDs
@@ -590,8 +599,13 @@ extension ImageEditorViewModel {
                   !layer.isAdjustment,
                   !layer.isFilter
             else { return nil }
-            return transparencySelection(forLayerAt: index)
+            return transparencySelection(forLayerAt: index, threshold: requestedThreshold)
         }
+    }
+
+    private func effectiveLayerTransparencySelectionThreshold(_ requestedThreshold: Int?) -> UInt8 {
+        let threshold = requestedThreshold ?? defaultLayerTransparencySelectionThreshold
+        return UInt8(max(0, min(255, threshold)))
     }
 
     private func combinedTransparencySelections(

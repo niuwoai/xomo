@@ -2173,7 +2173,10 @@ final class XomoAutomationRegistry {
         viewModel: ImageEditorViewModel
     ) throws {
         switch try requiredString("action", in: arguments) {
-        case "loadTransparency": viewModel.loadSelectionFromLayerTransparency()
+        case "loadTransparency":
+            viewModel.loadSelectionFromLayerTransparency(
+                threshold: selectionAlphaThreshold(arguments["threshold"])
+            )
         case "save": viewModel.saveCurrentSelection()
         case "reselect": viewModel.reselectSelection()
         case "restoreSaved": viewModel.restoreSavedSelection()
@@ -2214,6 +2217,11 @@ final class XomoAutomationRegistry {
         guard let number = value?.doubleValue else { return nil }
         guard number.isFinite else { return nil }
         return CGFloat(number)
+    }
+
+    private func selectionAlphaThreshold(_ value: XomoJSONValue?) -> Int? {
+        guard let number = value?.doubleValue, number.isFinite else { return nil }
+        return Int(number.rounded())
     }
 
     private func quickMaskAction(
@@ -3200,6 +3208,7 @@ private extension XomoAutomationRegistry {
             "action": XomoAutomationSchema.string(description: "Selection modification", values: ["loadTransparency", "save", "reselect", "restoreSaved", "colorRange", "similarColors", "growColor", "expand", "contract", "border", "fillHoles", "removeSpeckles", "centerHorizontal", "centerVertical", "centerCanvas", "flipHorizontal", "flipVertical", "rotateClockwise", "rotateCounterclockwise", "rotate180", "scaleUp", "scaleDown", "fitCanvas", "nudge"]),
             "amount": XomoAutomationSchema.number(description: "Selection modification amount in pixels"),
             "tolerance": XomoAutomationSchema.number(description: "Color-distance tolerance from 0 to 1"),
+            "threshold": XomoAutomationSchema.number(description: "Layer alpha threshold from 0 to 255 for loadTransparency"),
             "dx": XomoAutomationSchema.number(description: "Horizontal selection delta"),
             "dy": XomoAutomationSchema.number(description: "Vertical selection delta")
         ], required: ["action"]),
