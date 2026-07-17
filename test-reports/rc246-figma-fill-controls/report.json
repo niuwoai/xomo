@@ -1,0 +1,9 @@
+{
+  "version": "2.12.0-rc246",
+  "suite": "ImageEditorFigmaProvenanceTests",
+  "result": "passed",
+  "passed": 4,
+  "failed": 0,
+  "total": 4,
+  "xcresult": "/tmp/xomo-rc246-figma-fill-controls/Logs/Test/Test-veilpic-2026.07.18_06-53-37-+0800.xcresult"
+}

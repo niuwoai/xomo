@@ -2897,9 +2897,17 @@
 "imageEditor.properties.figmaImageScaleMode" = "拡大縮小モード";
 "imageEditor.properties.figmaImageScalingFactor" = "拡大縮小率";
 "imageEditor.properties.figmaImageRotation" = "回転";
+"imageEditor.properties.figmaImageScalingFactorValue" = "拡大縮小率 %.2f";
+"imageEditor.properties.figmaImageRotationValue" = "回転 %.1f°";
 "imageEditor.action.copyFigmaImageFill" = "画像塗りつぶしメタデータをコピー";
 "imageEditor.status.figmaImageFillCopied" = "Figma 画像塗りつぶしメタデータをコピーしました";
 "imageEditor.status.figmaImageFillCopyFailed" = "Figma 画像塗りつぶしメタデータのコピーに失敗しました";
+"imageEditor.history.figmaImageFillScaleMode" = "Figma 画像塗りつぶしの拡大縮小モードを変更";
+"imageEditor.history.figmaImageFillScalingFactor" = "Figma 画像塗りつぶしの拡大縮小率を変更";
+"imageEditor.history.figmaImageFillRotation" = "Figma 画像塗りつぶしの回転を変更";
+"imageEditor.status.figmaImageFillScaleMode" = "Figma 画像塗りつぶしの拡大縮小モードを更新しました";
+"imageEditor.status.figmaImageFillScalingFactor" = "Figma 画像塗りつぶしの拡大縮小率を更新しました";
+"imageEditor.status.figmaImageFillRotation" = "Figma 画像塗りつぶしの回転を更新しました";
 "imageEditor.properties.figmaImageFillFiltersEnabled" = "読み込んだ画像フィルターを使用";
 "imageEditor.history.figmaImageFillFiltersEnabled" = "Figma 画像塗りつぶしフィルターを有効化";
 "imageEditor.history.figmaImageFillFiltersDisabled" = "Figma 画像塗りつぶしフィルターを無効化";

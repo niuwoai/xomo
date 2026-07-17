@@ -38,6 +38,7 @@ private struct ImageEditorXomoThemeUndoState {
 final class ImageEditorViewModel: ObservableObject {
     static let minimumZoom: CGFloat = 0.08
     static let maximumZoom: CGFloat = 8
+    static let figmaImageFillScaleModes = ["FILL", "FIT", "CROP", "TILE", "STRETCH"]
 
     private var preservesRenderedImageCachesForNextDocumentMutation = false
 
@@ -779,6 +780,23 @@ final class ImageEditorViewModel: ObservableObject {
         document.selectedLayer?.xomoFigmaImageFill
     }
 
+    var selectedLayerFigmaImageFillScaleMode: String {
+        selectedLayerFigmaImageFill?.scaleMode ?? "FILL"
+    }
+
+    var selectedLayerFigmaImageFillScalingFactor: Double {
+        selectedLayerFigmaImageFill?.scalingFactor ?? 1
+    }
+
+    var selectedLayerFigmaImageFillRotation: Double {
+        selectedLayerFigmaImageFill?.rotation ?? 0
+    }
+
+    var canEditSelectedFigmaImageFill: Bool {
+        document.selectedLayer?.xomoFigmaImageFill != nil
+            && document.selectedLayer?.xomoFigmaImageFillSourceImage != nil
+    }
+
     var selectedLayerFigmaImageFillFiltersEnabled: Bool {
         document.selectedLayer?.xomoFigmaImageFillFiltersEnabled ?? false
     }
@@ -903,6 +921,49 @@ final class ImageEditorViewModel: ObservableObject {
         } catch {
             statusText = L10n.text("imageEditor.status.figmaImageFillCopyFailed")
         }
+    }
+
+    func updateSelectedFigmaImageFillScaleMode(_ scaleMode: String) {
+        let normalizedMode = scaleMode.uppercased()
+        guard Self.figmaImageFillScaleModes.contains(normalizedMode),
+              let index = document.selectedLayerIndex,
+              var metadata = document.layers[index].xomoFigmaImageFill,
+              document.layers[index].xomoFigmaImageFillSourceImage != nil,
+              metadata.scaleMode != normalizedMode
+        else { return }
+        pushUndo()
+        metadata.scaleMode = normalizedMode
+        document.layers[index].xomoFigmaImageFill = metadata
+        appendHistory(L10n.text("imageEditor.history.figmaImageFillScaleMode"))
+        statusText = L10n.text("imageEditor.status.figmaImageFillScaleMode")
+    }
+
+    func updateSelectedFigmaImageFillScalingFactor(_ scalingFactor: Double) {
+        let normalizedFactor = min(max(scalingFactor.isFinite ? scalingFactor : 1, 0.01), 100)
+        guard let index = document.selectedLayerIndex,
+              var metadata = document.layers[index].xomoFigmaImageFill,
+              document.layers[index].xomoFigmaImageFillSourceImage != nil,
+              abs((metadata.scalingFactor ?? 1) - normalizedFactor) > 0.0001
+        else { return }
+        pushUndo()
+        metadata.scalingFactor = normalizedFactor
+        document.layers[index].xomoFigmaImageFill = metadata
+        appendHistory(L10n.text("imageEditor.history.figmaImageFillScalingFactor"))
+        statusText = L10n.text("imageEditor.status.figmaImageFillScalingFactor")
+    }
+
+    func updateSelectedFigmaImageFillRotation(_ rotation: Double) {
+        let normalizedRotation = rotation.isFinite ? rotation : 0
+        guard let index = document.selectedLayerIndex,
+              var metadata = document.layers[index].xomoFigmaImageFill,
+              document.layers[index].xomoFigmaImageFillSourceImage != nil,
+              abs((metadata.rotation ?? 0) - normalizedRotation) > 0.0001
+        else { return }
+        pushUndo()
+        metadata.rotation = normalizedRotation
+        document.layers[index].xomoFigmaImageFill = metadata
+        appendHistory(L10n.text("imageEditor.history.figmaImageFillRotation"))
+        statusText = L10n.text("imageEditor.status.figmaImageFillRotation")
     }
 
     func setSelectedFigmaImageFillFiltersEnabled(_ isEnabled: Bool) {

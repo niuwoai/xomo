@@ -107,6 +107,52 @@ struct ImageEditorFigmaProvenanceTests {
         #expect(viewModel.document.layers[0].xomoFigmaComponentProperties["Label"]?.value == "")
     }
 
+    @Test func editableFigmaImageFillParametersUseUndoAndRemainProjectCodable() throws {
+        let image = NSImage.rendered(size: CGSize(width: 40, height: 20)) { rect in
+            NSColor.systemBlue.setFill()
+            rect.fill()
+        }!
+        var document = ImageEditorDocument(sourceName: "figma-fill-controls.png", image: image)
+        var layer = document.layers[0]
+        layer.xomoFigmaImageFill = XomoFigmaImageFillMetadata(
+            imageReference: "img-ref-controls",
+            scaleMode: "CROP",
+            imageTransform: nil,
+            scalingFactor: 1,
+            rotation: 0,
+            filters: XomoFigmaPlanImageFilters(),
+            sourcePixelSize: XomoFigmaPlanSize(width: 40, height: 20),
+            importScale: 1
+        )
+        layer.xomoFigmaImageFillSourceImage = image
+        document.layers = [layer]
+        document.selectedLayerID = layer.id
+        document.selectedLayerIDs = [layer.id]
+
+        let viewModel = ImageEditorViewModel(document: document) { _ in }
+        #expect(viewModel.canEditSelectedFigmaImageFill)
+        viewModel.updateSelectedFigmaImageFillScaleMode("TILE")
+        viewModel.updateSelectedFigmaImageFillScalingFactor(2)
+        viewModel.updateSelectedFigmaImageFillRotation(45)
+
+        #expect(viewModel.selectedLayerFigmaImageFill?.scaleMode == "TILE")
+        #expect(viewModel.selectedLayerFigmaImageFill?.scalingFactor == 2)
+        #expect(viewModel.selectedLayerFigmaImageFill?.rotation == 45)
+        #expect(viewModel.document.selectedLayer?.contentImage.size == image.size)
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerFigmaImageFill?.rotation == 0)
+        viewModel.undo()
+        #expect(viewModel.selectedLayerFigmaImageFill?.scalingFactor == 1)
+        viewModel.undo()
+        #expect(viewModel.selectedLayerFigmaImageFill?.scaleMode == "CROP")
+
+        let project = try ImageEditorProjectDocument(document: document)
+        let restored = try project.restoredDocument()
+        #expect(restored.layers.first?.xomoFigmaImageFill?.imageReference == "img-ref-controls")
+        #expect(restored.layers.first?.xomoFigmaImageFillSourceImage != nil)
+    }
+
     @Test func componentTextOverrideUpdatesMatchingEditableDescendantAndUndoRestoresIt() throws {
         let image = NSImage.transparent(size: CGSize(width: 320, height: 180))
         var document = ImageEditorDocument(sourceName: "figma-text-component.png", image: image)

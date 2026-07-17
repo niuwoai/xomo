@@ -4627,19 +4627,53 @@ struct ImageEditorView: View {
                             value: imageFill.imageReference,
                             monospaced: true
                         )
-                        figmaImageFillRow(
-                            titleKey: "imageEditor.properties.figmaImageScaleMode",
-                            value: imageFill.scaleMode ?? "—",
-                            monospaced: true
+                        Picker(
+                            L10n.text("imageEditor.properties.figmaImageScaleMode"),
+                            selection: Binding(
+                                get: { viewModel.selectedLayerFigmaImageFillScaleMode },
+                                set: { viewModel.updateSelectedFigmaImageFillScaleMode($0) }
+                            )
+                        ) {
+                            ForEach(ImageEditorViewModel.figmaImageFillScaleModes, id: \.self) { mode in
+                                Text(mode).tag(mode)
+                            }
+                        }
+                        .pickerStyle(.menu)
+                        .focusable(false)
+                        .disabled(!viewModel.canEditSelectedFigmaImageFill)
+                        .accessibilityIdentifier("image-editor-figma-image-fill-scale-mode")
+
+                        Stepper(
+                            L10n.format(
+                                "imageEditor.properties.figmaImageScalingFactorValue",
+                                viewModel.selectedLayerFigmaImageFillScalingFactor
+                            ),
+                            value: Binding(
+                                get: { viewModel.selectedLayerFigmaImageFillScalingFactor },
+                                set: { viewModel.updateSelectedFigmaImageFillScalingFactor($0) }
+                            ),
+                            in: 0.01...100,
+                            step: 0.1
                         )
-                        figmaImageFillRow(
-                            titleKey: "imageEditor.properties.figmaImageScalingFactor",
-                            value: imageFill.scalingFactor.map { String(format: "%.2f", $0) } ?? "—"
+                        .focusable(false)
+                        .disabled(!viewModel.canEditSelectedFigmaImageFill)
+                        .accessibilityIdentifier("image-editor-figma-image-fill-scaling-factor")
+
+                        Stepper(
+                            L10n.format(
+                                "imageEditor.properties.figmaImageRotationValue",
+                                viewModel.selectedLayerFigmaImageFillRotation
+                            ),
+                            value: Binding(
+                                get: { viewModel.selectedLayerFigmaImageFillRotation },
+                                set: { viewModel.updateSelectedFigmaImageFillRotation($0) }
+                            ),
+                            in: -720...720,
+                            step: 1
                         )
-                        figmaImageFillRow(
-                            titleKey: "imageEditor.properties.figmaImageRotation",
-                            value: imageFill.rotation.map { String(format: "%.1f°", $0) } ?? "—"
-                        )
+                        .focusable(false)
+                        .disabled(!viewModel.canEditSelectedFigmaImageFill)
+                        .accessibilityIdentifier("image-editor-figma-image-fill-rotation")
                         Toggle(
                             L10n.text("imageEditor.properties.figmaImageFillFiltersEnabled"),
                             isOn: Binding(

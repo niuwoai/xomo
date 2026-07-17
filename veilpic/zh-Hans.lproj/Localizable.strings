@@ -2897,9 +2897,17 @@
 "imageEditor.properties.figmaImageScaleMode" = "缩放模式";
 "imageEditor.properties.figmaImageScalingFactor" = "缩放因子";
 "imageEditor.properties.figmaImageRotation" = "旋转";
+"imageEditor.properties.figmaImageScalingFactorValue" = "缩放因子 %.2f";
+"imageEditor.properties.figmaImageRotationValue" = "旋转 %.1f°";
 "imageEditor.action.copyFigmaImageFill" = "复制图片填充元数据";
 "imageEditor.status.figmaImageFillCopied" = "已复制 Figma 图片填充元数据";
 "imageEditor.status.figmaImageFillCopyFailed" = "复制 Figma 图片填充元数据失败";
+"imageEditor.history.figmaImageFillScaleMode" = "修改 Figma 图片填充缩放模式";
+"imageEditor.history.figmaImageFillScalingFactor" = "修改 Figma 图片填充缩放因子";
+"imageEditor.history.figmaImageFillRotation" = "修改 Figma 图片填充旋转";
+"imageEditor.status.figmaImageFillScaleMode" = "已更新 Figma 图片填充缩放模式";
+"imageEditor.status.figmaImageFillScalingFactor" = "已更新 Figma 图片填充缩放因子";
+"imageEditor.status.figmaImageFillRotation" = "已更新 Figma 图片填充旋转";
 "imageEditor.properties.figmaImageFillFiltersEnabled" = "使用导入的图片滤镜";
 "imageEditor.history.figmaImageFillFiltersEnabled" = "启用 Figma 图片填充滤镜";
 "imageEditor.history.figmaImageFillFiltersDisabled" = "停用 Figma 图片填充滤镜";
