@@ -3002,7 +3002,7 @@
 "xomo.figma.node.fidelity.unsupported" = "Unsupported";
 "xomo.figma.node.issue.missingBounds" = "Usable bounds are missing";
 "xomo.figma.node.issue.unsupportedNodeType" = "Node type is not supported yet";
-"xomo.figma.node.issue.unsupportedPaint" = "Multiple or non-solid fills will be degraded";
+"xomo.figma.node.issue.unsupportedPaint" = "Multiple fills are composited or degraded; individual editing is not preserved";
 "xomo.figma.node.issue.imageAssetPending" = "Image asset has not been downloaded";
 "xomo.figma.node.issue.imageAssetUnavailable" = "Image asset is unavailable; a placeholder will be kept";
 "xomo.figma.node.issue.imageFillTransformFlattened" = "Image fill transform is baked into a fixed pixel layer";

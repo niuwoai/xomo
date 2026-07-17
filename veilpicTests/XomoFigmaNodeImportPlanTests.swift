@@ -165,6 +165,60 @@ struct XomoFigmaNodeImportPlanTests {
         #expect((multiStopShape.fillGradient?.shapeColorStops[1].green ?? 0) > 0.95)
     }
 
+    @Test func multipleSolidFillsCompositeVisuallyAndReportLostFillSemantics() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                """
+                {
+                  "name": "Solid Paint Stack",
+                  "nodes": {
+                    "1:60": {
+                      "document": {
+                        "id": "1:60",
+                        "name": "Solid Paint Frame",
+                        "type": "FRAME",
+                        "absoluteBoundingBox": {"x": 0, "y": 0, "width": 200, "height": 120},
+                        "children": [{
+                          "id": "2:60",
+                          "name": "Layered Solid",
+                          "type": "RECTANGLE",
+                          "absoluteBoundingBox": {"x": 20, "y": 20, "width": 100, "height": 50},
+                          "fills": [
+                            {"type": "SOLID", "color": {"r": 0, "g": 0, "b": 1, "a": 0.5}},
+                            {"type": "SOLID", "color": {"r": 1, "g": 0, "b": 0, "a": 0.5}}
+                          ]
+                        }]
+                      }
+                    }
+                  }
+                }
+                """.utf8
+            )
+        )
+
+        let plan = try XomoFigmaNodeImportMapper.makePlan(
+            response: response,
+            requestedNodeID: "1:60"
+        )
+        let item = try #require(plan.items.first { $0.sourceID == "2:60" })
+        #expect(item.fidelity == .partial)
+        #expect(item.issues.contains(.unsupportedPaint))
+        let color = try #require(item.solidFill)
+        #expect(abs(color.alpha - 0.75) < 0.001)
+        #expect(abs(color.red - (1.0 / 3.0)) < 0.001)
+        #expect(abs(color.blue - (2.0 / 3.0)) < 0.001)
+
+        let materialized = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: CGSize(width: 300, height: 200)
+        )
+        let shape = try #require(materialized.layers.first { $0.name == "Layered Solid" }?.shapeContent)
+        #expect(abs(shape.fillOpacity - 0.75) < 0.001)
+        #expect(abs((shape.fillColor.usingColorSpace(.deviceRGB)?.redComponent ?? 0) - (1.0 / 3.0)) < 0.001)
+        #expect(abs((shape.fillColor.usingColorSpace(.deviceRGB)?.blueComponent ?? 0) - (2.0 / 3.0)) < 0.001)
+    }
+
     @Test func circularRadialGradientsMapWhileEllipticalAxesDegrade() throws {
         let response = try JSONDecoder().decode(
             XomoFigmaNodeResponse.self,

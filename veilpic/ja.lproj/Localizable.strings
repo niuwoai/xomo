@@ -3002,7 +3002,7 @@
 "xomo.figma.node.fidelity.unsupported" = "未対応";
 "xomo.figma.node.issue.missingBounds" = "使用可能な境界がありません";
 "xomo.figma.node.issue.unsupportedNodeType" = "ノード種類はまだ未対応です";
-"xomo.figma.node.issue.unsupportedPaint" = "複数または単色以外の塗りは縮退します";
+"xomo.figma.node.issue.unsupportedPaint" = "複数の塗りは合成または縮退し、個別編集は保持されません";
 "xomo.figma.node.issue.imageAssetPending" = "画像素材はまだダウンロードされていません";
 "xomo.figma.node.issue.imageAssetUnavailable" = "画像素材を利用できないため、プレースホルダーを保持します";
 "xomo.figma.node.issue.imageFillTransformFlattened" = "画像塗りの変形は固定ピクセルレイヤーに焼き込まれます";

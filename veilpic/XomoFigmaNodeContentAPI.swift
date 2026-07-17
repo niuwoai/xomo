@@ -573,18 +573,36 @@ enum XomoFigmaNodeImportMapper {
     }
 
     private static func solidColor(in paints: [XomoFigmaPaint]?) -> XomoFigmaPlanColor? {
-        guard let paint = (paints ?? []).first(where: { ($0.visible ?? true) && $0.type == "SOLID" }),
-              let color = paint.color
-        else {
-            return nil
+        let solidPaints = (paints ?? []).filter {
+            ($0.visible ?? true) && $0.type == "SOLID" && $0.color != nil
         }
-        let alpha = (color.a ?? 1) * (paint.opacity ?? 1)
-        return XomoFigmaPlanColor(
-            red: min(max(color.r, 0), 1),
-            green: min(max(color.g, 0), 1),
-            blue: min(max(color.b, 0), 1),
-            alpha: min(max(alpha, 0), 1)
-        )
+        guard !solidPaints.isEmpty else { return nil }
+
+        // Figma applies the fills array in reverse paint order: the last
+        // entry is the bottom paint and the first entry is the top paint.
+        // Flattening only SOLID paints preserves the rendered color while
+        // keeping the unsupportedPaint issue honest about lost per-fill editability.
+        return solidPaints.reversed().reduce(
+            XomoFigmaPlanColor(red: 0, green: 0, blue: 0, alpha: 0)
+        ) { destination, paint in
+            guard let color = paint.color else { return destination }
+            let sourceAlpha = min(max((color.a ?? 1) * (paint.opacity ?? 1), 0), 1)
+            let destinationAlpha = min(max(destination.alpha, 0), 1)
+            let outputAlpha = sourceAlpha + destinationAlpha * (1 - sourceAlpha)
+            guard outputAlpha > 0 else {
+                return XomoFigmaPlanColor(red: 0, green: 0, blue: 0, alpha: 0)
+            }
+            let sourceRed = min(max(color.r, 0), 1)
+            let sourceGreen = min(max(color.g, 0), 1)
+            let sourceBlue = min(max(color.b, 0), 1)
+            let destinationWeight = destinationAlpha * (1 - sourceAlpha)
+            return XomoFigmaPlanColor(
+                red: (sourceRed * sourceAlpha + destination.red * destinationWeight) / outputAlpha,
+                green: (sourceGreen * sourceAlpha + destination.green * destinationWeight) / outputAlpha,
+                blue: (sourceBlue * sourceAlpha + destination.blue * destinationWeight) / outputAlpha,
+                alpha: outputAlpha
+            )
+        }
     }
 
     private struct ResolvedGradientStops {

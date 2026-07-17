@@ -3002,7 +3002,7 @@
 "xomo.figma.node.fidelity.unsupported" = "不支持";
 "xomo.figma.node.issue.missingBounds" = "缺少可用边界";
 "xomo.figma.node.issue.unsupportedNodeType" = "节点类型暂不支持";
-"xomo.figma.node.issue.unsupportedPaint" = "多重或非纯色填充将降级";
+"xomo.figma.node.issue.unsupportedPaint" = "多重填充会合成或降级，独立编辑语义不保留";
 "xomo.figma.node.issue.imageAssetPending" = "图片资源尚未下载";
 "xomo.figma.node.issue.imageAssetUnavailable" = "图片资源不可用，保留占位层";
 "xomo.figma.node.issue.imageFillTransformFlattened" = "图片填充变换已烘焙为固定像素层";
