@@ -3068,3 +3068,6 @@
 "imageEditor.psd.compatibility.issue.unknownBlendMode" = "An unknown blend mode will fall back to Normal";
 "imageEditor.psd.compatibility.issue.unknownLayerData" = "The file contains Photoshop layer data that Xomo does not recognize yet";
 "imageEditor.psd.compatibility.issue.flattenedFallback" = "Native layered decoding failed, so this file was opened as one flattened pixel layer";
+"imageEditor.action.copySelectedLayersClipboard" = "Copy Selected Layers to Clipboard";
+"imageEditor.status.selectedLayersCopiedToClipboard" = "Selected layers copied to Clipboard";
+"imageEditor.status.selectedLayersCopyToClipboardFailed" = "Failed to copy selected layers to Clipboard";

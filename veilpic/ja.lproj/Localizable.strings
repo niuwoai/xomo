@@ -3068,3 +3068,6 @@
 "imageEditor.psd.compatibility.issue.unknownBlendMode" = "不明な描画モードは通常にフォールバックします";
 "imageEditor.psd.compatibility.issue.unknownLayerData" = "象墨がまだ認識しない Photoshop レイヤーデータが含まれています";
 "imageEditor.psd.compatibility.issue.flattenedFallback" = "ネイティブのレイヤー解析に失敗したため、1 枚の統合ピクセルレイヤーとして開きました";
+"imageEditor.action.copySelectedLayersClipboard" = "選択したレイヤーをクリップボードへコピー";
+"imageEditor.status.selectedLayersCopiedToClipboard" = "選択したレイヤーをクリップボードへコピーしました";
+"imageEditor.status.selectedLayersCopyToClipboardFailed" = "選択したレイヤーをクリップボードへコピーできませんでした";

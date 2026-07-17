@@ -32,6 +32,21 @@ struct XomoAutomationTests {
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.clipboard.action")
         })
+        guard let clipboardTool = tools.compactMap({ tool -> [String: XomoJSONValue]? in
+            guard case .object(let value) = tool else { return nil }
+            return value
+        }).first(where: { $0["name"] == .string("xomo.clipboard.action") }) else {
+            Issue.record("Expected xomo.clipboard.action tool schema")
+            return
+        }
+        #expect(clipboardTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["action"]?.objectValue?["enum"] == .array([
+            .string("pasteAsLayer"),
+            .string("pasteIntoSelection"),
+            .string("copySelection"),
+            .string("cutSelection"),
+            .string("copyMerged"),
+            .string("copySelectedLayers")
+        ]))
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.layer_comp.action")

@@ -1005,6 +1005,7 @@ struct ImageEditorView: View {
         case .cutSelectionClipboard: viewModel.cutSelectionToClipboard()
         case .copySelectionClipboard: viewModel.copySelectionToClipboard()
         case .copyMergedClipboard: viewModel.copyMergedToClipboard()
+        case .copySelectedLayersClipboard: viewModel.copySelectedLayersToClipboard()
         case .pasteClipboardLayer: viewModel.pasteClipboardAsLayer()
         case .pasteClipboardIntoSelection: viewModel.pasteClipboardIntoSelectionAsLayer()
         case .toggleTransformControls: viewModel.toggleTransformControlsVisible()
@@ -8169,6 +8170,7 @@ enum ImageEditorKeyboardShortcutAction: Equatable {
     case cutSelectionClipboard
     case copySelectionClipboard
     case copyMergedClipboard
+    case copySelectedLayersClipboard
     case pasteClipboardLayer
     case pasteClipboardIntoSelection
     case toggleTransformControls
@@ -8264,6 +8266,7 @@ enum ImageEditorKeyboardShortcutAction: Equatable {
         if key == "x", relevantFlags == [.command] { return .cutSelectionClipboard }
         if key == "c", relevantFlags == [.command] { return .copySelectionClipboard }
         if key == "c", relevantFlags == [.command, .shift] { return .copyMergedClipboard }
+        if key == "c", relevantFlags == [.command, .option, .shift] { return .copySelectedLayersClipboard }
         if key == "v", relevantFlags == [.command] { return .pasteClipboardLayer }
         if key == "v", relevantFlags == [.command, .shift] { return .pasteClipboardIntoSelection }
         if key == "t", relevantFlags == [.command] { return .toggleTransformControls }

@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc207 - 2026-07-17
+
+### Added
+- 编辑菜单新增“复制所选图层到剪贴板”（`⌘⌥⇧C`），单层、图层组和多选统一输出带透明度的 PNG；MCP/CLI 剪贴板动作同步支持 `copySelectedLayers`。
+
+### Verification
+- 复制所选图层不写入 History；功能专项 1/1、编辑菜单 1/1、快捷键 1/1、MCP/CLI schema 1/1 通过，报告见 `test-reports/rc207-selected-layer-clipboard/`、`rc207-menu/`、`rc207-shortcut/` 与 `rc207-automation/`。
+
 ## 2.12.0-rc206 - 2026-07-17
 
 ### Added

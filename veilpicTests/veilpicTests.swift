@@ -1424,6 +1424,31 @@ struct veilpicTests {
     }
 
     @MainActor
+    @Test func imageEditorCopiesSelectedLayerToClipboardWithoutChangingHistory() throws {
+        let canvas = testImage(color: .systemBlue, size: NSSize(width: 80, height: 60))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: canvas) { _ in }
+        let layerIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[layerIndex].image = testImage(color: .systemOrange, size: NSSize(width: 24, height: 18))
+        viewModel.document.layers[layerIndex].frame = CGRect(x: 12, y: 14, width: 24, height: 18)
+        let historyCount = viewModel.document.history.count
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        defer { pasteboard.clearContents() }
+
+        #expect(viewModel.canCopySelectedLayersToClipboard)
+        viewModel.copySelectedLayersToClipboard()
+
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.selectedLayersCopiedToClipboard"))
+        let copiedImage = try #require(NSImage(pasteboard: pasteboard))
+        #expect(copiedImage.size == canvas.size)
+        let transparentPixel = try #require(copiedImage.color(at: CGPoint(x: 2, y: 2))?.usingColorSpace(.deviceRGB))
+        #expect(transparentPixel.alphaComponent < 0.05)
+        let paintedPixel = try #require(copiedImage.color(at: CGPoint(x: 20, y: 22))?.usingColorSpace(.deviceRGB))
+        #expect(paintedPixel.alphaComponent > 0.9)
+    }
+
+    @MainActor
     @Test func imageEditorRasterizeTextLayerPreservesStyleAndUndoRestoresEditableText() async throws {
         let canvasSize = NSSize(width: 120, height: 80)
         let image = testBitmapImage(size: canvasSize, background: .black)

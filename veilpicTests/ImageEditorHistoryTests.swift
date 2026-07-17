@@ -140,6 +140,7 @@ struct ImageEditorHistoryTests {
             ("x", command, nil, .cutSelectionClipboard),
             ("c", command, nil, .copySelectionClipboard),
             ("c", [command, shift], nil, .copyMergedClipboard),
+            ("c", [command, option, shift], nil, .copySelectedLayersClipboard),
             ("v", command, nil, .pasteClipboardLayer),
             ("v", [command, shift], nil, .pasteClipboardIntoSelection),
             ("t", command, nil, .toggleTransformControls),

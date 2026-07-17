@@ -194,6 +194,11 @@ extension ImageEditorView {
         }
         .keyboardShortcut("c", modifiers: [.command, .shift])
         .disabled(!viewModel.canCopyMergedToClipboard)
+        Button(L10n.text("imageEditor.action.copySelectedLayersClipboard")) {
+            viewModel.copySelectedLayersToClipboard()
+        }
+        .keyboardShortcut("c", modifiers: [.command, .option, .shift])
+        .disabled(!viewModel.canCopySelectedLayersToClipboard)
         Button(L10n.text("imageEditor.action.pasteClipboardLayer")) {
             viewModel.pasteClipboardAsLayer()
         }

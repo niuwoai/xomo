@@ -3068,3 +3068,6 @@
 "imageEditor.psd.compatibility.issue.unknownBlendMode" = "包含未知混合模式，将降级为正常模式";
 "imageEditor.psd.compatibility.issue.unknownLayerData" = "包含象墨尚未识别的 Photoshop 图层数据";
 "imageEditor.psd.compatibility.issue.flattenedFallback" = "原生分层解析失败，本次已扁平化为单个像素图层";
+"imageEditor.action.copySelectedLayersClipboard" = "复制所选图层到剪贴板";
+"imageEditor.status.selectedLayersCopiedToClipboard" = "已将所选图层复制到剪贴板";
+"imageEditor.status.selectedLayersCopyToClipboardFailed" = "复制所选图层到剪贴板失败";

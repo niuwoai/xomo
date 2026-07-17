@@ -47,6 +47,10 @@ extension ImageEditorViewModel {
         document.canvasSize.width > 0 && document.canvasSize.height > 0
     }
 
+    var canCopySelectedLayersToClipboard: Bool {
+        selectedLayersExportScope != nil
+    }
+
     var canCopyMergedToNewLayer: Bool {
         canCopyMergedToClipboard
     }
@@ -450,6 +454,32 @@ extension ImageEditorViewModel {
         statusText = didCopy
             ? L10n.text("imageEditor.status.copyMergedToClipboard")
             : L10n.text("imageEditor.status.copyMergedToClipboardFailed")
+    }
+
+    func copySelectedLayersToClipboard() {
+        guard let scope = selectedLayersExportScope else {
+            statusText = L10n.text("imageEditor.status.selectedLayersCopyToClipboardFailed")
+            return
+        }
+
+        let settings = ImageEditorExportSettings(format: .png, scope: scope)
+        guard let pngData = exportData(settings: settings),
+              let image = NSImage(data: pngData)
+        else {
+            statusText = L10n.text("imageEditor.status.selectedLayersCopyToClipboardFailed")
+            return
+        }
+
+        let baseName = (document.sourceName as NSString).deletingPathExtension
+        let preferredFileName = "\(baseName.isEmpty ? "image" : baseName)-selected-layers.png"
+        let didCopy = ClipboardImageWriter.copyPNGData(
+            pngData,
+            image: image,
+            preferredFileName: preferredFileName
+        )
+        statusText = didCopy
+            ? L10n.text("imageEditor.status.selectedLayersCopiedToClipboard")
+            : L10n.text("imageEditor.status.selectedLayersCopyToClipboardFailed")
     }
 
     func copyMergedToNewLayer() {
