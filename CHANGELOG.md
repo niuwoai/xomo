@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc189 - 2026-07-17
+
+### Fixed
+- 修正菜单和 `Command+F` 的“上次滤镜”语义：现在记录上一次成功应用的滤镜、强度与专属参数，重复时不受当前滤镜面板选择影响；没有可重复滤镜时给出明确提示。
+
+### Verification
+- `commandFRepeatsTheLastSuccessfulFilterAndItsParameters` 1/1、`LocalizationResourceTests` 4/4、CLI 测试 2/2，以及 macOS 13 Debug `build-for-testing` 通过。
+
 ## 2.12.0-rc188 - 2026-07-17
 
 ### Added

@@ -1715,6 +1715,7 @@
 "imageEditor.status.adjustmentFailed" = "調整に失敗しました";
 "imageEditor.status.filter" = "%@ を適用しました";
 "imageEditor.status.filterFailed" = "フィルターに失敗しました";
+"imageEditor.status.lastFilterUnavailable" = "適用済みのフィルターはありません";
 "imageEditor.status.filterSelected" = "%@ を%d個のレイヤーに適用しました";
 "imageEditor.status.autoLevels" = "現在のレイヤーのレベルを自動補正しました";
 "imageEditor.status.autoContrast" = "現在のレイヤーのコントラストを自動補正しました";

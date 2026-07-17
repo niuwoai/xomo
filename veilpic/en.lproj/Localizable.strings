@@ -1715,6 +1715,7 @@
 "imageEditor.status.adjustmentFailed" = "Adjustment failed";
 "imageEditor.status.filter" = "%@ applied";
 "imageEditor.status.filterFailed" = "Filter failed";
+"imageEditor.status.lastFilterUnavailable" = "No previously applied filter";
 "imageEditor.status.filterSelected" = "%@ applied to %d layers";
 "imageEditor.status.autoLevels" = "Current layer levels auto-corrected";
 "imageEditor.status.autoContrast" = "Current layer contrast auto-corrected";

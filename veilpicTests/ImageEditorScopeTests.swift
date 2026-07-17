@@ -1202,9 +1202,9 @@ struct ImageEditorScopeTests {
         let filterMenuSource = source[filterMenuStart.lowerBound..<nextMenuStart.lowerBound]
 
         #expect(filterMenuSource.contains("imageEditor.action.lastFilter"))
-        #expect(filterMenuSource.contains("viewModel.applySelectedFilter()"))
+        #expect(filterMenuSource.contains("viewModel.applyLastFilter()"))
         #expect(filterMenuSource.contains(".keyboardShortcut(\"f\", modifiers: [.command])"))
-        #expect(filterMenuSource.contains("viewModel.canApplySelectedFilter"))
+        #expect(filterMenuSource.contains("viewModel.canApplyLastFilter"))
         #expect(filterMenuSource.contains("imageEditor.menu.filter.blur"))
         #expect(filterMenuSource.contains("viewModel.selectFilter(.gaussianBlur)"))
         #expect(filterMenuSource.contains("viewModel.selectFilter(.motionBlur)"))

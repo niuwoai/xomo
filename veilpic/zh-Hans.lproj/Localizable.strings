@@ -1715,6 +1715,7 @@
 "imageEditor.status.adjustmentFailed" = "调整失败";
 "imageEditor.status.filter" = "已应用 %@";
 "imageEditor.status.filterFailed" = "滤镜失败";
+"imageEditor.status.lastFilterUnavailable" = "还没有应用滤镜";
 "imageEditor.status.filterSelected" = "已将 %@ 应用到 %d 个图层";
 "imageEditor.status.autoLevels" = "已自动校正当前图层色阶";
 "imageEditor.status.autoContrast" = "已自动校正当前图层对比度";

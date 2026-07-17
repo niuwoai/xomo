@@ -34,6 +34,30 @@ struct ImageEditorFilterTests {
         #expect(viewModel.statusText == L10n.format("imageEditor.status.filter", ImageEditorFilter.addNoise.title))
     }
 
+    @Test func commandFRepeatsTheLastSuccessfulFilterAndItsParameters() throws {
+        let canvasSize = NSSize(width: 48, height: 32)
+        let sourceImage = solidImage(size: canvasSize, color: NSColor(calibratedWhite: 0.5, alpha: 1))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: sourceImage) { _ in }
+
+        viewModel.selectedFilter = .gaussianBlur
+        viewModel.filterIntensity = 0.2
+        viewModel.applySelectedFilter()
+        let invocation = try #require(viewModel.lastAppliedFilter)
+
+        viewModel.selectedFilter = .pixelate
+        viewModel.filterIntensity = 0.9
+        let beforeRepeat = try #require(viewModel.currentImage.qingtuPNGData())
+        viewModel.applyLastFilter()
+        let afterRepeat = try #require(viewModel.currentImage.qingtuPNGData())
+
+        #expect(invocation.kind == .gaussianBlur)
+        #expect(invocation.intensity == 0.2)
+        #expect(viewModel.lastAppliedFilter == invocation)
+        #expect(afterRepeat != beforeRepeat)
+        #expect(viewModel.document.history.last?.title == L10n.format("imageEditor.history.filter", ImageEditorFilter.gaussianBlur.title))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.filter", ImageEditorFilter.gaussianBlur.title))
+    }
+
     @Test func imageEditorBatchAddsUpdatesAndClearsSmartFiltersAcrossEditableSelection() async throws {
         let canvasSize = NSSize(width: 32, height: 24)
         let viewModel = ImageEditorViewModel(

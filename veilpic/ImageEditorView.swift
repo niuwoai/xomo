@@ -1040,7 +1040,7 @@ struct ImageEditorView: View {
         case .invertSelection: viewModel.invertSelection()
         case .featherSelection: viewModel.featherSelection()
         case .toggleQuickMask: viewModel.toggleQuickMaskMode()
-        case .applyLastFilter: viewModel.applySelectedFilter()
+        case .applyLastFilter: viewModel.applyLastFilter()
         case .toggleRulers: viewModel.toggleRulersVisible()
         case .toggleGuides: viewModel.toggleGuidesVisible()
         case .toggleGuideSnapping: viewModel.toggleGuideSnapping()

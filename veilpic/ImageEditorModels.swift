@@ -1671,6 +1671,12 @@ enum ImageEditorFilter: String, CaseIterable, Identifiable {
     }
 }
 
+struct ImageEditorFilterApplication: Equatable {
+    var kind: ImageEditorFilter
+    var intensity: Double
+    var settings: ImageEditorFilterSettings
+}
+
 struct ImageEditorSmartFilter: Identifiable, Equatable, Codable {
     var id = UUID()
     var kind: ImageEditorFilter

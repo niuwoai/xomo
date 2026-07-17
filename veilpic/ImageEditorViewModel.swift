@@ -250,6 +250,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var gradientFillEndGreen: Double = 0.50
     @Published var gradientFillEndBlue: Double = 0.12
     @Published var selectedFilter: ImageEditorFilter = .gaussianBlur
+    @Published private(set) var lastAppliedFilter: ImageEditorFilterApplication?
     @Published var filterIntensity: Double = 0.5
     @Published var filterUnsharpRadius: Double = 1
     @Published var filterUnsharpThreshold: Double = 0
@@ -4675,14 +4676,37 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func applySelectedFilter() {
-        let title = selectedFilter.title
+        let application = ImageEditorFilterApplication(
+            kind: selectedFilter,
+            intensity: filterIntensity,
+            settings: currentFilterSettings()
+        )
+        applyFilter(application, remembersAsLastFilter: true)
+    }
+
+    var canApplyLastFilter: Bool {
+        lastAppliedFilter != nil && !editableSelectedLayerIndices().isEmpty
+    }
+
+    func applyLastFilter() {
+        guard let lastAppliedFilter else {
+            statusText = L10n.text("imageEditor.status.lastFilterUnavailable")
+            return
+        }
+        applyFilter(lastAppliedFilter, remembersAsLastFilter: false)
+    }
+
+    private func applyFilter(
+        _ application: ImageEditorFilterApplication,
+        remembersAsLastFilter: Bool
+    ) {
+        let title = application.kind.title
         let indices = editableSelectedLayerIndices()
-        let settings = currentFilterSettings()
         let outputs = indices.reduce(into: [Int: NSImage]()) { result, index in
             if let image = document.layers[index].image.filtered(
-                kind: selectedFilter,
-                intensity: filterIntensity,
-                settings: settings
+                kind: application.kind,
+                intensity: application.intensity,
+                settings: application.settings
             ) {
                 result[index] = image
             }
@@ -4711,6 +4735,9 @@ final class ImageEditorViewModel: ObservableObject {
         } else {
             appendHistory(L10n.format("imageEditor.history.filterSelected", title))
             statusText = L10n.format("imageEditor.status.filterSelected", title, indices.count)
+        }
+        if remembersAsLastFilter {
+            lastAppliedFilter = application
         }
     }
 

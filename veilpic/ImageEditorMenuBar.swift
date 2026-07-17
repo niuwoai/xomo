@@ -1456,10 +1456,10 @@ extension ImageEditorView {
     @ViewBuilder
     private var filterMenu: some View {
         Button(L10n.text("imageEditor.action.lastFilter")) {
-            viewModel.applySelectedFilter()
+            viewModel.applyLastFilter()
         }
         .keyboardShortcut("f", modifiers: [.command])
-        .disabled(!viewModel.canApplySelectedFilter)
+        .disabled(!viewModel.canApplyLastFilter)
         Divider()
         Menu(L10n.text("imageEditor.menu.filter.blur")) {
             Button(ImageEditorFilter.gaussianBlur.title) {
