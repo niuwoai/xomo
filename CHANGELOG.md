@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.12.0-rc240 - 2026-07-18
+
+### Verification
+- 完成 20 个版本质量门禁：全量独立进程测试 1027/1027、CLI 2/2、App 与 CLI arm64+x86_64 Release、macOS 13.0 下限、`im.some.xomo` Bundle ID、ad-hoc 签名与 `/Applications/Xomo.app` 启动冒烟全部通过。
+- 质量门禁报告：`test-reports/rc240-full-suite/`、`test-reports/rc240-cli/`、`test-reports/rc240-release/`。
+
 ## 2.12.0-rc239 - 2026-07-18
 
 ### Added
