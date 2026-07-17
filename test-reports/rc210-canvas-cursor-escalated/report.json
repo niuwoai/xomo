@@ -1,0 +1,19 @@
+{
+  "generated_at": "2026-07-17 22:17:17 +0800",
+  "total": 1,
+  "passed": 1,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorCanvasCursorTests",
+      "method": "toolCursorFallsBackToSystemArrowOutsideDrawableCanvas",
+      "identifier": "veilpicTests/ImageEditorCanvasCursorTests/toolCursorFallsBackToSystemArrowOutsideDrawableCanvas",
+      "file": "ImageEditorCanvasCursorTests.swift",
+      "passed": true,
+      "duration": 4.191,
+      "issues": [],
+      "log": "ImageEditorCanvasCursorTests.toolCursorFallsBackToSystemArrowOutsideDrawableCanvas.log"
+    }
+  ]
+}

@@ -1233,6 +1233,7 @@ struct ImageEditorView: View {
                             for: viewModel.selectedLeftSidebarTab,
                             selectedTool: viewModel.selectedTool,
                             brushDiameter: viewModel.brushSize * displayScale,
+                            isPointerOverCanvas: true,
                             handIsDragging: isCanvasPanGestureActive,
                             isSpacebarPanning: isSpacebarPanning,
                             isCanvasPanGestureActive: isCanvasPanGestureActive,
@@ -2082,6 +2083,7 @@ struct ImageEditorView: View {
             for: viewModel.selectedLeftSidebarTab,
             selectedTool: viewModel.selectedTool,
             brushDiameter: viewModel.brushSize * displayScale,
+            isPointerOverCanvas: canvasPoint != nil,
             penIsClosing: canvasInteractionTool == .pen && viewModel.isPenCloseCandidate(at: canvasPoint),
             handIsDragging: isCanvasPanGestureActive,
             isSpacebarPanning: isSpacebarPanning,
@@ -2103,6 +2105,7 @@ struct ImageEditorView: View {
             for: viewModel.selectedLeftSidebarTab,
             selectedTool: viewModel.selectedTool,
             brushDiameter: viewModel.brushSize * displayScale,
+            isPointerOverCanvas: true,
             handIsDragging: isCanvasPanGestureActive,
             isSpacebarPanning: isSpacebarPanning,
             isCanvasPanGestureActive: isCanvasPanGestureActive,
@@ -6838,12 +6841,19 @@ enum ImageEditorCanvasCursor {
         for sidebarTab: XomoLeftSidebarTab,
         selectedTool: ImageEditorTool,
         brushDiameter: CGFloat,
+        isPointerOverCanvas: Bool = true,
         penIsClosing: Bool = false,
         handIsDragging: Bool = false,
         isSpacebarPanning: Bool = false,
         isCanvasPanGestureActive: Bool = false,
         modifierFlags: NSEvent.ModifierFlags = []
     ) -> NSCursor {
+        // The dark workspace surrounding the document is not drawable. Keep
+        // the native arrow there so a brush/selection cursor never suggests
+        // that a click outside the image will edit pixels.
+        if !isPointerOverCanvas && !isCanvasPanGestureActive {
+            return .arrow
+        }
         switch interactionMode(
             for: sidebarTab,
             selectedTool: selectedTool,

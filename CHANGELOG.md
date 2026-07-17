@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc210 - 2026-07-17
+
+### Changed
+- 工具光标仅在可绘制画布内显示语义图形；画布外深色工作区恢复系统箭头，平移手势进行中仍显示闭合手掌。
+
+### Verification
+- rc210 光标专项构建通过 1/1；`toolCursorFallsBackToSystemArrowOutsideDrawableCanvas` 通过 1/1，报告：`test-reports/rc210-canvas-cursor-escalated/report.md`。
+- 完整 `ImageEditorCanvasCursorTests` 回归通过 11/11，报告：`test-reports/rc210-canvas-cursor-regression/report.md`。
+
 ## 2.12.0-rc209 - 2026-07-17
 
 ### Changed

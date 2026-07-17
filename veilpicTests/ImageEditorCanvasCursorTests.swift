@@ -78,6 +78,26 @@ struct ImageEditorCanvasCursorTests {
         )
     }
 
+    @Test func toolCursorFallsBackToSystemArrowOutsideDrawableCanvas() {
+        let outside = ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .brush,
+            brushDiameter: 48,
+            isPointerOverCanvas: false
+        )
+        #expect(outside === NSCursor.arrow)
+
+        let panning = ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .brush,
+            brushDiameter: 48,
+            isPointerOverCanvas: false,
+            handIsDragging: true,
+            isCanvasPanGestureActive: true
+        )
+        #expect(panning === NSCursor.closedHand)
+    }
+
     @Test func toolsTabPreservesSelectedToolCursorAndPanOverride() {
         #expect(
             ImageEditorCanvasCursor.tool(
