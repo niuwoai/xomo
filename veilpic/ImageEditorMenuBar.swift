@@ -137,6 +137,12 @@ extension ImageEditorView {
             viewModel.openExportPanel()
         }
         .keyboardShortcut("s", modifiers: [.command, .shift, .option])
+        Button(L10n.text("imageEditor.action.exportSelection")) {
+            viewModel.exportSettings.scope = .selection
+            viewModel.openExportPanel()
+        }
+        .keyboardShortcut("e", modifiers: [.command, .option])
+        .disabled(!viewModel.canExportSelection)
         Divider()
         Button(L10n.text("imageEditor.action.apply")) {
             viewModel.applyAndClose {

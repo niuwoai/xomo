@@ -2161,6 +2161,7 @@
 "imageEditor.action.layerDistributeVerticalSpacing" = "Distribute vertical spacing";
 "imageEditor.action.layerImport" = "Import Image as Layer";
 "imageEditor.action.fileImport" = "Import File…";
+"imageEditor.action.exportSelection" = "Export Selection / Slice…";
 "imageEditor.action.canvasNewFromClipboard" = "New Canvas from Clipboard";
 "imageEditor.action.layerSmartObject" = "Convert to Smart Object";
 "imageEditor.action.layerSmartObjectReplace" = "Replace Smart Object Contents";

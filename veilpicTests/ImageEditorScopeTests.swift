@@ -1343,6 +1343,23 @@ struct ImageEditorScopeTests {
         #expect(fileMenuSource.contains(".disabled(!viewModel.canCreateCanvasFromClipboard)"))
     }
 
+    @Test func fileMenuExposesDirectSelectionSliceExport() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
+            encoding: .utf8
+        )
+        let fileMenuStart = try #require(source.range(of: "private var fileMenu: some View"))
+        let nextMenuStart = try #require(
+            source[fileMenuStart.upperBound...].range(of: "private var editMenu: some View")
+        )
+        let fileMenuSource = source[fileMenuStart.lowerBound..<nextMenuStart.lowerBound]
+
+        #expect(fileMenuSource.contains("imageEditor.action.exportSelection"))
+        #expect(fileMenuSource.contains("viewModel.exportSettings.scope = .selection"))
+        #expect(fileMenuSource.contains(".keyboardShortcut(\"e\", modifiers: [.command, .option])"))
+        #expect(fileMenuSource.contains(".disabled(!viewModel.canExportSelection)"))
+    }
+
     @Test func selectMenuExposesSavedSelectionCommandsInPhotoshopStyleLocation() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
