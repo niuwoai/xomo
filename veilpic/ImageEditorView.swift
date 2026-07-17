@@ -47,6 +47,7 @@ struct ImageEditorView: View {
     @State private var lastMoveTranslation: CGSize = .zero
     @State private var isObjectMoveGestureActive = false
     @State private var isCanvasSelectionGestureActive = false
+    @State private var isCanvasCloneGestureActive = false
     @State private var isSelectedObjectMoveGestureActive = false
     @State private var activeResizeHandle: ImageEditorLayerResizeHandle?
     @State private var activeShapeGradientHandle: ImageEditorShapeGradientHandle?
@@ -1652,6 +1653,27 @@ struct ImageEditorView: View {
 
                 switch canvasInteractionTool {
                 case .move:
+                    let cloneModifiers = NSEvent.modifierFlags.intersection([.command, .control, .option, .shift])
+                    if cloneModifiers == [.option],
+                       !isCanvasCloneGestureActive,
+                       !isCanvasSelectionGestureActive,
+                       !isObjectMoveGestureActive {
+                        let pressedImagePoint = imagePoint(from: value.startLocation, in: size)
+                        if let pressedImagePoint,
+                           viewModel.selectXomoObject(at: pressedImagePoint)
+                                || viewModel.selectVisibleLayer(at: pressedImagePoint) {
+                            isCanvasCloneGestureActive = true
+                            if viewModel.beginDuplicatingSelectedLayerForMove() {
+                                isObjectMoveGestureActive = true
+                            }
+                        }
+                    }
+                    if isCanvasCloneGestureActive {
+                        if isObjectMoveGestureActive {
+                            updateObjectMove(translation: value.translation, in: size)
+                        }
+                        break
+                    }
                     if NSEvent.modifierFlags.contains(.shift),
                        !isCanvasSelectionGestureActive,
                        !isObjectMoveGestureActive {
@@ -1809,6 +1831,7 @@ struct ImageEditorView: View {
                     lastPanTranslation = .zero
                     lastMoveTranslation = .zero
                     isObjectMoveGestureActive = false
+                    isCanvasCloneGestureActive = false
                     isSelectedObjectMoveGestureActive = false
                     return
                 }
@@ -1942,6 +1965,7 @@ struct ImageEditorView: View {
                 lastPanTranslation = .zero
                 lastMoveTranslation = .zero
                 isObjectMoveGestureActive = false
+                isCanvasCloneGestureActive = false
                 isSelectedObjectMoveGestureActive = false
                 isMovingPathAnchor = false
                 activeResizeHandle = nil

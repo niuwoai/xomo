@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc213 - 2026-07-17
+
+### Added
+- 移动工具在画布上按住 `Option` 拖动时复制当前可见图层或 Xomo 组件，并把复制与移动合并为一次可撤销操作；普通拖动、`Shift` 多选和空白平移保持不变。
+
+### Verification
+- 带 rc213 构建的 `XomoCanvasObjectTests` 回归通过 26/26，覆盖组件与普通图层 Option 复制移动、单步 Undo、联合选择框、Shift 选择、透明命中与移动预览，报告：`test-reports/rc213-final-build/report.md`。
+- 画布手势接线契约通过 1/1，确认 Option 克隆状态与 Shift 选择状态互不串线，报告：`test-reports/rc213-option-drag-contract/report.md`。
+
 ## 2.12.0-rc212 - 2026-07-17
 
 ### Added

@@ -168,6 +168,51 @@ struct XomoCanvasObjectTests {
         #expect(viewModel.hasSelectedXomoObject)
     }
 
+    @Test func optionDragDuplicatesAndMovesAComponentAsOneUndoableAction() throws {
+        let viewModel = makeViewModel()
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))
+        let originalGroupID = try #require(viewModel.document.selectedLayerID)
+        let originalFrame = try #require(viewModel.selectedXomoObjectFrame)
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.beginDuplicatingSelectedLayerForMove())
+        let duplicateGroupID = try #require(viewModel.document.selectedLayerID)
+        #expect(duplicateGroupID != originalGroupID)
+        viewModel.moveSelectedLayer(by: CGSize(width: 32, height: 18), snapping: false)
+        viewModel.finishMovingSelectedLayer()
+
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerDuplicate"))
+        #expect(viewModel.selectedXomoObjectFrame?.minX == originalFrame.minX + 32)
+        #expect(viewModel.selectedXomoObjectFrame?.minY == originalFrame.minY + 18)
+        viewModel.undo()
+        #expect(viewModel.document.layers.contains { $0.id == originalGroupID })
+        #expect(!viewModel.document.layers.contains { $0.id == duplicateGroupID })
+    }
+
+    @Test func optionDragDuplicatesSelectedOrdinaryLayer() throws {
+        let viewModel = makeViewModel()
+        var layer = ImageEditorLayer.solidColorFill(
+            name: "Card",
+            size: CGSize(width: 96, height: 64),
+            content: ImageEditorSolidColorFillContent(red: 0.2, green: 0.6, blue: 0.9)
+        )
+        layer.frame.origin = CGPoint(x: 120, y: 100)
+        viewModel.document.layers.append(layer)
+        viewModel.selectLayer(layer.id)
+        let originalFrame = layer.frame
+
+        #expect(viewModel.beginDuplicatingSelectedLayerForMove())
+        let duplicateID = try #require(viewModel.document.selectedLayerID)
+        #expect(duplicateID != layer.id)
+        viewModel.moveSelectedLayer(by: CGSize(width: 24, height: 16), snapping: false)
+        viewModel.finishMovingSelectedLayer()
+
+        let duplicate = try #require(viewModel.document.layers.first { $0.id == duplicateID })
+        #expect(duplicate.frame == originalFrame.offsetBy(dx: 24, dy: 16))
+        #expect(viewModel.document.layers.contains { $0.id == layer.id })
+    }
+
     @Test func topmostOverlappingComponentWinsObjectHitTesting() throws {
         let viewModel = makeViewModel()
         let origin = CGPoint(x: 80, y: 90)

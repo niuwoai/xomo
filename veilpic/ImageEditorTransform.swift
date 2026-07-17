@@ -55,6 +55,7 @@ extension ImageEditorViewModel {
 
     func beginMovingSelectedLayer() {
         guard movingLayerIDs.isEmpty else { return }
+        movingLayerWasDuplicated = false
         let indices = editableTransformLayerIndices()
         guard !indices.isEmpty,
               let transformFrame = selectedXomoObjectFrame ?? transformFrame(for: indices)
@@ -68,6 +69,47 @@ extension ImageEditorViewModel {
         movingOriginalTransformFrame = transformFrame
         movingObjectPreviewFrame = transformFrame
         activeAlignmentGuides = []
+    }
+
+    /// Starts an Option-drag as one undoable duplicate-and-move transaction.
+    /// The duplication snapshot is captured before the clone is inserted so
+    /// undo removes both the movement and the newly created layer tree.
+    @discardableResult
+    func beginDuplicatingSelectedLayerForMove() -> Bool {
+        guard movingLayerIDs.isEmpty,
+              !editableTransformLayerIndices().isEmpty,
+              let plan = ImageEditorLayerHierarchyDuplication.duplicationPlan(
+                  layers: document.layers,
+                  selectedIDs: document.selectedLayerIDs,
+                  primarySelectionID: document.selectedLayerID,
+                  duplicateName: { L10n.format("imageEditor.layer.copyName", $0) },
+                  isEffectivelyVisible: { document.isEffectivelyVisible($0) }
+              )
+        else { return false }
+
+        pushUndo()
+        document.layers = plan.layers
+        normalizeLayerLinks()
+        document.selectedLayerIDs = plan.selectedLayerIDs
+        document.selectedLayerID = plan.primarySelectionID
+        syncLayerSelectionAnchorToPrimarySelection()
+        isEditingLayerMask = false
+
+        let indices = editableTransformLayerIndices()
+        guard !indices.isEmpty,
+              let transformFrame = selectedXomoObjectFrame ?? transformFrame(for: indices)
+        else {
+            _ = discardLastUndoSnapshot()
+            return false
+        }
+
+        movingLayerIDs = Set(indices.map { document.layers[$0].id })
+        movingLayerWasDuplicated = true
+        movingLayerDidChange = false
+        movingOriginalTransformFrame = transformFrame
+        movingObjectPreviewFrame = transformFrame
+        activeAlignmentGuides = []
+        return true
     }
 
     func moveSelectedLayer(by delta: CGSize, snapping: Bool = false) {
@@ -102,12 +144,19 @@ extension ImageEditorViewModel {
                     height: previewFrame.minY - originalTransformFrame.minY
                 )
             )
-            appendHistory(L10n.text("imageEditor.history.layerTranslate"))
+            appendHistory(L10n.text(
+                movingLayerWasDuplicated
+                    ? "imageEditor.history.layerDuplicate"
+                    : "imageEditor.history.layerTranslate"
+            ))
+        } else if movingLayerWasDuplicated {
+            appendHistory(L10n.text("imageEditor.history.layerDuplicate"))
         } else {
             _ = discardLastUndoSnapshot()
             updateStatus()
         }
         movingLayerIDs = []
+        movingLayerWasDuplicated = false
         movingLayerDidChange = false
         movingOriginalTransformFrame = nil
         movingObjectPreviewFrame = nil

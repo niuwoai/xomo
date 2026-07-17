@@ -309,6 +309,7 @@ final class ImageEditorViewModel: ObservableObject {
     var historySnapshots: [UUID: ImageEditorDocument] = [:]
     var movingLayerIDs = Set<UUID>()
     var movingLayerDidChange = false
+    var movingLayerWasDuplicated = false
     var movingOriginalTransformFrame: CGRect?
     @Published var movingObjectPreviewFrame: CGRect?
     @Published var activeAlignmentGuides: [ImageEditorAlignmentGuide] = []
@@ -2733,6 +2734,10 @@ final class ImageEditorViewModel: ObservableObject {
         syncTextControlsFromSelection()
         syncShapeControlsFromSelection()
         syncPathControlsFromSelection()
+    }
+
+    func syncLayerSelectionAnchorToPrimarySelection() {
+        layerSelectionAnchorID = document.selectedLayerID
     }
 
     func selectLayerRange(
