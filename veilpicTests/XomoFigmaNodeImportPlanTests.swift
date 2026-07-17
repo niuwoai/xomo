@@ -725,6 +725,64 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(!maskLayer.isVisible)
     }
 
+    @Test func mapperPreservesSimpleEllipseMaskOnSubsequentSiblings() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                """
+                {
+                  "name": "Elliptical Masked Group",
+                  "nodes": {
+                    "1:83": {
+                      "document": {
+                        "id": "1:83",
+                        "name": "Elliptical Masked Group",
+                        "type": "FRAME",
+                        "absoluteBoundingBox": {"x": 0, "y": 0, "width": 100, "height": 100},
+                        "children": [
+                          {
+                            "id": "2:83",
+                            "name": "Ellipse Mask",
+                            "type": "ELLIPSE",
+                            "absoluteBoundingBox": {"x": 20, "y": 30, "width": 60, "height": 40},
+                            "isMask": true,
+                            "fills": [{"type": "SOLID", "color": {"r": 1, "g": 1, "b": 1, "a": 1}}]
+                          },
+                          {
+                            "id": "2:84",
+                            "name": "Elliptical Content",
+                            "type": "RECTANGLE",
+                            "absoluteBoundingBox": {"x": 0, "y": 0, "width": 100, "height": 100},
+                            "fills": [{"type": "SOLID", "color": {"r": 0.9, "g": 0.2, "b": 0.1, "a": 1}}]
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+                """.utf8
+            )
+        )
+        let plan = try XomoFigmaNodeImportMapper.makePlan(response: response, requestedNodeID: "1:83")
+        let group = try #require(plan.items.first { $0.sourceID == "1:83" })
+        let mask = try #require(plan.items.first { $0.sourceID == "2:83" })
+        let content = try #require(plan.items.first { $0.sourceID == "2:84" })
+        #expect(group.maskShape == .ellipse)
+        #expect(mask.maskShape == .ellipse)
+        #expect(content.siblingMaskShape == .ellipse)
+        #expect(!group.issues.contains(.maskFlattened))
+
+        let materialized = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: CGSize(width: 200, height: 200)
+        )
+        let contentLayer = try #require(materialized.layers.first { $0.xomoFigmaSourceID == "2:84" })
+        let inside = try #require(contentLayer.effectiveMask?.color(at: CGPoint(x: contentLayer.image.size.width / 2, y: contentLayer.image.size.height / 2)))
+        let corner = try #require(contentLayer.effectiveMask?.color(at: .zero))
+        #expect(inside.alphaComponent > 0.9)
+        #expect(corner.alphaComponent < 0.1)
+    }
+
     @Test func mapperReportsPartialImageComponentLayoutAndUnsupportedNodes() async throws {
         let transport = RecordingFigmaNodeTransport(statusCode: 200, body: Self.validNodeResponse)
         let client = XomoFigmaNodeContentAPIClient(transport: transport)

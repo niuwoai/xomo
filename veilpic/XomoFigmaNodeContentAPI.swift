@@ -175,6 +175,7 @@ enum XomoFigmaNodeImportMapper {
             rootOrigin: origin,
             ancestorTransformFlattened: false,
             siblingMaskFrame: nil,
+            siblingMaskShape: nil,
             items: &items
         )
         return XomoFigmaNodeImportPlan(
@@ -193,6 +194,7 @@ enum XomoFigmaNodeImportMapper {
         rootOrigin: (x: Double, y: Double),
         ancestorTransformFlattened: Bool,
         siblingMaskFrame: XomoFigmaPlanRect?,
+        siblingMaskShape: XomoFigmaPlanMaskShape?,
         items: inout [XomoFigmaNodeImportItem]
     ) throws {
         guard items.count < maximumNodeCount else {
@@ -204,15 +206,17 @@ enum XomoFigmaNodeImportMapper {
         let transformFlattened = ancestorTransformFlattened
             || transformNeedsFlattening(node.relativeTransform, target: target)
             || (hasChildren && hasNonIdentityTransform(node.relativeTransform))
+        let childSiblingMaskFrames = simpleMaskSiblingFrames(in: node.children, rootOrigin: rootOrigin)
+        let childSiblingMaskShape = simpleMaskShape(in: node.children)
         items.append(makeItem(
             node: node,
             parentSourceID: parentSourceID,
             depth: depth,
             rootOrigin: rootOrigin,
             transformFlattened: transformFlattened,
-            siblingMaskFrame: siblingMaskFrame
+            siblingMaskFrame: siblingMaskFrame,
+            siblingMaskShape: siblingMaskShape
         ))
-        let siblingMaskFrames = simpleMaskSiblingFrames(in: node.children, rootOrigin: rootOrigin)
         for child in node.children ?? [] {
             try append(
                 node: child,
@@ -220,7 +224,8 @@ enum XomoFigmaNodeImportMapper {
                 depth: depth + 1,
                 rootOrigin: rootOrigin,
                 ancestorTransformFlattened: transformFlattened,
-                siblingMaskFrame: siblingMaskFrames[child.id],
+                siblingMaskFrame: childSiblingMaskFrames[child.id],
+                siblingMaskShape: childSiblingMaskFrames[child.id] == nil ? nil : childSiblingMaskShape,
                 items: &items
             )
         }
@@ -232,7 +237,8 @@ enum XomoFigmaNodeImportMapper {
         depth: Int,
         rootOrigin: (x: Double, y: Double),
         transformFlattened: Bool,
-        siblingMaskFrame: XomoFigmaPlanRect?
+        siblingMaskFrame: XomoFigmaPlanRect?,
+        siblingMaskShape: XomoFigmaPlanMaskShape?
     ) -> XomoFigmaNodeImportItem {
         var issues: [XomoFigmaNodeMappingIssue] = []
         let mapping = targetMapping(node: node, issues: &issues)
@@ -251,7 +257,7 @@ enum XomoFigmaNodeImportMapper {
             issues.append(.autoLayoutFlattened)
         }
         if node.isMask == true,
-           !isSupportedMaskShape(node) {
+           supportedMaskShape(node) == nil {
             issues.append(.maskFlattened)
         }
         let childMaskFrame = simpleMaskFrame(in: node.children, rootOrigin: rootOrigin)
@@ -347,7 +353,9 @@ enum XomoFigmaNodeImportMapper {
             clipsContent: node.clipsContent == true && mapping.target == .group && node.absoluteBoundingBox != nil,
             isMask: node.isMask == true,
             maskFrame: childMaskFrame,
+            maskShape: supportedMaskShape(node) ?? .rectangle,
             siblingMaskFrame: siblingMaskFrame,
+            siblingMaskShape: siblingMaskShape,
             imageReference: imagePaint?.imageRef,
             imageScaleMode: imagePaint?.scaleMode,
             imageTransform: XomoFigmaPlanTransform(imagePaint?.imageTransform),
@@ -869,10 +877,15 @@ enum XomoFigmaNodeImportMapper {
             || hasApproximatedCornerSmoothing
     }
 
-    private static func isSupportedMaskShape(_ node: XomoFigmaNode) -> Bool {
-        node.type == "RECTANGLE"
-            && node.absoluteBoundingBox?.width ?? 0 > 0
-            && node.absoluteBoundingBox?.height ?? 0 > 0
+    private static func supportedMaskShape(_ node: XomoFigmaNode) -> XomoFigmaPlanMaskShape? {
+        guard (node.absoluteBoundingBox?.width ?? 0) > 0,
+              (node.absoluteBoundingBox?.height ?? 0) > 0
+        else { return nil }
+        switch node.type {
+        case "RECTANGLE": return .rectangle
+        case "ELLIPSE": return .ellipse
+        default: return nil
+        }
     }
 
     private static func simpleMaskFrame(
@@ -883,7 +896,7 @@ enum XomoFigmaNodeImportMapper {
               children.filter({ $0.isMask == true }).count == 1,
               let maskIndex = children.firstIndex(where: { $0.isMask == true }),
               maskIndex < children.index(before: children.endIndex),
-              isSupportedMaskShape(children[maskIndex]),
+              supportedMaskShape(children[maskIndex]) != nil,
               let bounds = children[maskIndex].absoluteBoundingBox
         else { return nil }
         return XomoFigmaPlanRect(
@@ -902,7 +915,7 @@ enum XomoFigmaNodeImportMapper {
               children.filter({ $0.isMask == true }).count == 1,
               let maskIndex = children.firstIndex(where: { $0.isMask == true }),
               maskIndex < children.index(before: children.endIndex),
-              isSupportedMaskShape(children[maskIndex]),
+              supportedMaskShape(children[maskIndex]) != nil,
               let bounds = children[maskIndex].absoluteBoundingBox
         else { return [:] }
         let frame = XomoFigmaPlanRect(
@@ -912,6 +925,15 @@ enum XomoFigmaNodeImportMapper {
             height: bounds.height
         )
         return Dictionary(uniqueKeysWithValues: children[(maskIndex + 1)...].map { ($0.id, frame) })
+    }
+
+    private static func simpleMaskShape(in children: [XomoFigmaNode]?) -> XomoFigmaPlanMaskShape? {
+        guard let children,
+              children.filter({ $0.isMask == true }).count == 1,
+              let maskIndex = children.firstIndex(where: { $0.isMask == true }),
+              maskIndex < children.index(before: children.endIndex)
+        else { return nil }
+        return supportedMaskShape(children[maskIndex])
     }
 
     private static func hasNonIdentityTransform(_ transform: [[Double]]?) -> Bool {

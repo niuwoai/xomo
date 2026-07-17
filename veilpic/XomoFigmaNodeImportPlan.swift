@@ -227,6 +227,11 @@ enum XomoFigmaPlanEffectKind: String, Equatable, Sendable {
     case backgroundBlur
 }
 
+enum XomoFigmaPlanMaskShape: String, Equatable, Sendable {
+    case rectangle
+    case ellipse
+}
+
 struct XomoFigmaPlanEffect: Equatable, Sendable {
     var kind: XomoFigmaPlanEffectKind
     var color: XomoFigmaPlanColor
@@ -287,8 +292,10 @@ struct XomoFigmaNodeImportItem: Equatable, Identifiable, Sendable {
     var clipsContent: Bool = false
     var isMask: Bool = false
     var maskFrame: XomoFigmaPlanRect?
+    var maskShape: XomoFigmaPlanMaskShape = .rectangle
     /// A simple Figma mask applies to direct siblings after the mask node.
     var siblingMaskFrame: XomoFigmaPlanRect? = nil
+    var siblingMaskShape: XomoFigmaPlanMaskShape? = nil
     var imageReference: String?
     var imageScaleMode: String?
     var imageTransform: XomoFigmaPlanTransform?

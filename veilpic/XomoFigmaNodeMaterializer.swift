@@ -118,7 +118,11 @@ enum XomoFigmaNodeMaterializer {
                 ? item.frame.flatMap { mappedFrame($0, transform: transform) }
                 : nil
             for maskFrame in [clipMask].compactMap({ $0 }) {
-                guard let mask = rectangularCanvasMask(frame: maskFrame, canvasSize: canvasSize) else { continue }
+                guard let mask = canvasMask(
+                    frame: maskFrame,
+                    canvasSize: canvasSize,
+                    shape: .rectangle
+                ) else { continue }
                 if let existingMask = layer.mask {
                     layer.mask = combinedCanvasMasks(existingMask, mask)
                 } else {
@@ -160,7 +164,8 @@ enum XomoFigmaNodeMaterializer {
         }
         if let siblingMaskFrame = item.siblingMaskFrame,
            let mappedMaskFrame = mappedFrame(siblingMaskFrame, transform: transform),
-           let mask = siblingMask(for: layer, mappedFrame: mappedMaskFrame) {
+           let siblingMaskShape = item.siblingMaskShape,
+           let mask = siblingMask(for: layer, mappedFrame: mappedMaskFrame, shape: siblingMaskShape) {
             if let existingMask = layer.mask {
                 layer.mask = combinedCanvasMasks(existingMask, mask)
             } else {
@@ -187,7 +192,11 @@ enum XomoFigmaNodeMaterializer {
         return layer
     }
 
-    private static func rectangularCanvasMask(frame: CGRect, canvasSize: CGSize) -> NSImage? {
+    private static func canvasMask(
+        frame: CGRect,
+        canvasSize: CGSize,
+        shape: XomoFigmaPlanMaskShape
+    ) -> NSImage? {
         guard canvasSize.width > 0, canvasSize.height > 0 else { return nil }
         let clippedFrame = frame.intersection(CGRect(origin: .zero, size: canvasSize))
         guard !clippedFrame.isNull, clippedFrame.width > 0, clippedFrame.height > 0 else { return nil }
@@ -199,16 +208,25 @@ enum XomoFigmaNodeMaterializer {
                 height: clippedFrame.height
             )
             NSColor.white.setFill()
-            appKitFrame.fill()
+            switch shape {
+            case .rectangle:
+                appKitFrame.fill()
+            case .ellipse:
+                NSBezierPath(ovalIn: appKitFrame).fill()
+            }
         }
     }
 
-    private static func siblingMask(for layer: ImageEditorLayer, mappedFrame: CGRect) -> NSImage? {
+    private static func siblingMask(
+        for layer: ImageEditorLayer,
+        mappedFrame: CGRect,
+        shape: XomoFigmaPlanMaskShape
+    ) -> NSImage? {
         if layer.isGroup {
-            return rectangularCanvasMask(frame: mappedFrame, canvasSize: layer.image.size)
+            return canvasMask(frame: mappedFrame, canvasSize: layer.image.size, shape: shape)
         }
         let localFrame = mappedFrame.offsetBy(dx: -layer.frame.minX, dy: -layer.frame.minY)
-        return rectangularCanvasMask(frame: localFrame, canvasSize: layer.image.size)
+        return canvasMask(frame: localFrame, canvasSize: layer.image.size, shape: shape)
     }
 
     private static func combinedCanvasMasks(_ first: NSImage, _ second: NSImage) -> NSImage? {
