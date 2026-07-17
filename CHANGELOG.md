@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.12.0-rc200 - 2026-07-17
+
+### Changed
+- 完成第 200 个小版本质量门禁：全量隔离测试 984/984（jobs=4）通过，CLI 2/2 通过，双架构 Release App/CLI、版本/Bundle ID/macOS 13.0/adhoc runtime 签名核对通过。
+- 启动 Release App 并完成组件库切换、组件插入和可编辑图层生成冒烟；已覆盖安装 `/Applications/Xomo.app`。
+- 保留全量门禁报告：`test-reports/rc200-full-suite/report.json` 与 `report.md`。
+
 ## 2.12.0-rc199 - 2026-07-17
 
 ### Added
