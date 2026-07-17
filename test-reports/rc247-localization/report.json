@@ -1,0 +1,9 @@
+{
+  "version": "2.12.0-rc247",
+  "suite": "LocalizationResourceTests",
+  "result": "passed",
+  "passed": 4,
+  "failed": 0,
+  "total": 4,
+  "xcresult": "/tmp/xomo-rc247-localization/Logs/Test/Test-veilpic-2026.07.18_07-04-07-+0800.xcresult"
+}

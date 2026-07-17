@@ -4674,6 +4674,39 @@ struct ImageEditorView: View {
                         .focusable(false)
                         .disabled(!viewModel.canEditSelectedFigmaImageFill)
                         .accessibilityIdentifier("image-editor-figma-image-fill-rotation")
+
+                        Stepper(
+                            L10n.format(
+                                "imageEditor.properties.figmaImageOffsetXValue",
+                                viewModel.selectedLayerFigmaImageFillOffsetX
+                            ),
+                            value: Binding(
+                                get: { viewModel.selectedLayerFigmaImageFillOffsetX },
+                                set: { viewModel.updateSelectedFigmaImageFillOffsetX($0) }
+                            ),
+                            in: -10...10,
+                            step: 0.01
+                        )
+                        .focusable(false)
+                        .disabled(!viewModel.canEditSelectedFigmaImageFill)
+                        .accessibilityIdentifier("image-editor-figma-image-fill-offset-x")
+
+                        Stepper(
+                            L10n.format(
+                                "imageEditor.properties.figmaImageOffsetYValue",
+                                viewModel.selectedLayerFigmaImageFillOffsetY
+                            ),
+                            value: Binding(
+                                get: { viewModel.selectedLayerFigmaImageFillOffsetY },
+                                set: { viewModel.updateSelectedFigmaImageFillOffsetY($0) }
+                            ),
+                            in: -10...10,
+                            step: 0.01
+                        )
+                        .focusable(false)
+                        .disabled(!viewModel.canEditSelectedFigmaImageFill)
+                        .accessibilityIdentifier("image-editor-figma-image-fill-offset-y")
+
                         Toggle(
                             L10n.text("imageEditor.properties.figmaImageFillFiltersEnabled"),
                             isOn: Binding(

@@ -792,6 +792,14 @@ final class ImageEditorViewModel: ObservableObject {
         selectedLayerFigmaImageFill?.rotation ?? 0
     }
 
+    var selectedLayerFigmaImageFillOffsetX: Double {
+        selectedLayerFigmaImageFill?.imageTransform?.translationX ?? 0
+    }
+
+    var selectedLayerFigmaImageFillOffsetY: Double {
+        selectedLayerFigmaImageFill?.imageTransform?.translationY ?? 0
+    }
+
     var canEditSelectedFigmaImageFill: Bool {
         document.selectedLayer?.xomoFigmaImageFill != nil
             && document.selectedLayer?.xomoFigmaImageFillSourceImage != nil
@@ -964,6 +972,79 @@ final class ImageEditorViewModel: ObservableObject {
         document.layers[index].xomoFigmaImageFill = metadata
         appendHistory(L10n.text("imageEditor.history.figmaImageFillRotation"))
         statusText = L10n.text("imageEditor.status.figmaImageFillRotation")
+    }
+
+    func updateSelectedFigmaImageFillOffsetX(_ offset: Double) {
+        updateSelectedFigmaImageFillTransform(
+            field: .offsetX,
+            value: offset
+        )
+    }
+
+    func updateSelectedFigmaImageFillOffsetY(_ offset: Double) {
+        updateSelectedFigmaImageFillTransform(
+            field: .offsetY,
+            value: offset
+        )
+    }
+
+    private enum FigmaImageFillTransformField {
+        case offsetX
+        case offsetY
+
+        var historyKey: String {
+            switch self {
+            case .offsetX: return "imageEditor.history.figmaImageFillOffsetX"
+            case .offsetY: return "imageEditor.history.figmaImageFillOffsetY"
+            }
+        }
+
+        var statusKey: String {
+            switch self {
+            case .offsetX: return "imageEditor.status.figmaImageFillOffsetX"
+            case .offsetY: return "imageEditor.status.figmaImageFillOffsetY"
+            }
+        }
+    }
+
+    private func updateSelectedFigmaImageFillTransform(
+        field: FigmaImageFillTransformField,
+        value: Double
+    ) {
+        let normalizedValue = min(max(value.isFinite ? value : 0, -10), 10)
+        guard let index = document.selectedLayerIndex,
+              var metadata = document.layers[index].xomoFigmaImageFill,
+              document.layers[index].xomoFigmaImageFillSourceImage != nil
+        else { return }
+
+        let identity = XomoFigmaPlanTransform([[1, 0, 0], [0, 1, 0]])!
+        var nextTransform = metadata.imageTransform ?? identity
+        switch field {
+        case .offsetX:
+            nextTransform.translationX = normalizedValue
+        case .offsetY:
+            nextTransform.translationY = normalizedValue
+        }
+        let nextImageTransform = isIdentityFigmaImageFillTransform(nextTransform)
+            ? nil
+            : nextTransform
+        guard nextImageTransform != metadata.imageTransform else { return }
+
+        pushUndo()
+        metadata.imageTransform = nextImageTransform
+        document.layers[index].xomoFigmaImageFill = metadata
+        appendHistory(L10n.text(field.historyKey))
+        statusText = L10n.text(field.statusKey)
+    }
+
+    private func isIdentityFigmaImageFillTransform(_ transform: XomoFigmaPlanTransform) -> Bool {
+        let epsilon = 0.000_001
+        return abs(transform.m11 - 1) <= epsilon
+            && abs(transform.m12) <= epsilon
+            && abs(transform.m21) <= epsilon
+            && abs(transform.m22 - 1) <= epsilon
+            && abs(transform.translationX) <= epsilon
+            && abs(transform.translationY) <= epsilon
     }
 
     func setSelectedFigmaImageFillFiltersEnabled(_ isEnabled: Bool) {

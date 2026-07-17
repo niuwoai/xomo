@@ -2899,6 +2899,8 @@
 "imageEditor.properties.figmaImageRotation" = "Rotation";
 "imageEditor.properties.figmaImageScalingFactorValue" = "Scaling factor %.2f";
 "imageEditor.properties.figmaImageRotationValue" = "Rotation %.1f°";
+"imageEditor.properties.figmaImageOffsetXValue" = "Crop offset X %.2f";
+"imageEditor.properties.figmaImageOffsetYValue" = "Crop offset Y %.2f";
 "imageEditor.action.copyFigmaImageFill" = "Copy image fill metadata";
 "imageEditor.status.figmaImageFillCopied" = "Figma image fill metadata copied";
 "imageEditor.status.figmaImageFillCopyFailed" = "Failed to copy Figma image fill metadata";
@@ -2908,6 +2910,10 @@
 "imageEditor.status.figmaImageFillScaleMode" = "Figma image fill scale mode updated";
 "imageEditor.status.figmaImageFillScalingFactor" = "Figma image fill scaling factor updated";
 "imageEditor.status.figmaImageFillRotation" = "Figma image fill rotation updated";
+"imageEditor.history.figmaImageFillOffsetX" = "Changed Figma image fill crop offset X";
+"imageEditor.history.figmaImageFillOffsetY" = "Changed Figma image fill crop offset Y";
+"imageEditor.status.figmaImageFillOffsetX" = "Figma image fill crop offset X updated";
+"imageEditor.status.figmaImageFillOffsetY" = "Figma image fill crop offset Y updated";
 "imageEditor.properties.figmaImageFillFiltersEnabled" = "Use imported image filters";
 "imageEditor.history.figmaImageFillFiltersEnabled" = "Enabled Figma image fill filters";
 "imageEditor.history.figmaImageFillFiltersDisabled" = "Disabled Figma image fill filters";
