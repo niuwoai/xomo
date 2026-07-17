@@ -34,6 +34,20 @@ enum XomoToolCatalog {
                     "additionalProperties": true
                 ]
             }
+            if name == "xomo.figma.image_fill" {
+                tool["inputSchema"] = [
+                    "type": "object",
+                    "properties": [
+                        "action": ["type": "string", "enum": ["list", "set"]],
+                        "property": ["type": "string", "enum": ["scaleMode", "scalingFactor", "rotation", "offsetX", "offsetY", "m11", "m12", "m21", "m22", "filtersEnabled"]],
+                        "scaleMode": ["type": "string", "enum": ["FILL", "FIT", "CROP", "TILE", "STRETCH"]],
+                        "value": ["type": "number"],
+                        "enabled": ["type": "boolean"]
+                    ],
+                    "required": ["action"],
+                    "additionalProperties": true
+                ]
+            }
             return tool
         }
     }
@@ -54,6 +68,7 @@ enum XomoToolCatalog {
         ("xomo.figma.bindings", "List or copy the deduplicated Figma variable bindings from the current layer selection."),
         ("xomo.figma.link", "Validate and canonicalize a Figma link without network access or credential storage."),
         ("xomo.figma.component_properties", "List, locally override, or reset preserved Figma component properties on the selected layer."),
+        ("xomo.figma.image_fill", "List or edit the retained source, transform, and filter controls of the selected Figma image fill."),
         ("xomo.layer.select", "Select a layer by UUID."),
         ("xomo.layer.create", "Create a pixel, group, text, adjustment, filter, or fill layer."),
         ("xomo.layer.delete", "Delete unlocked selected layer roots as complete subtrees and preserve a visible selection fallback."),

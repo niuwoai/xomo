@@ -101,6 +101,8 @@ final class XomoAutomationRegistry {
             return try figmaLinkResult(arguments)
         case "xomo.figma.component_properties":
             return try figmaComponentPropertiesAction(arguments, viewModel: viewModel)
+        case "xomo.figma.image_fill":
+            return try figmaImageFillAction(arguments, viewModel: viewModel)
         case "xomo.layer.select":
             let id = try requiredUUID("id", in: arguments)
             viewModel.selectLayer(id, extendingSelection: arguments["extend"]?.boolValue ?? false)
@@ -656,6 +658,93 @@ final class XomoAutomationRegistry {
             return result
         default:
             throw XomoAutomationCallError.invalidArgument("Unknown Figma binding action")
+        }
+    }
+
+    private func figmaImageFillAction(
+        _ arguments: [String: XomoJSONValue],
+        viewModel: ImageEditorViewModel
+    ) throws -> XomoJSONValue {
+        let action = try requiredString("action", in: arguments)
+        guard viewModel.document.selectedLayer?.xomoFigmaImageFill != nil else {
+            throw XomoAutomationCallError.invalidArgument(
+                "No selected Figma image fill"
+            )
+        }
+
+        func result() -> XomoJSONValue {
+            guard let layer = viewModel.document.selectedLayer,
+                  let metadata = layer.xomoFigmaImageFill
+            else {
+                return .object(["imageFill": .null])
+            }
+            return .object([
+                "layerId": .string(layer.id.uuidString),
+                "editable": .bool(viewModel.canEditSelectedFigmaImageFill),
+                "imageFill": figmaImageFillJSON(metadata)
+            ])
+        }
+
+        switch action {
+        case "list":
+            return result()
+        case "set":
+            guard viewModel.canEditSelectedFigmaImageFill else {
+                throw XomoAutomationCallError.operationFailed(
+                    "Selected Figma image fill has no retained source image"
+                )
+            }
+            switch try requiredString("property", in: arguments) {
+            case "scaleMode":
+                viewModel.updateSelectedFigmaImageFillScaleMode(
+                    try requiredString("scaleMode", in: arguments)
+                )
+            case "scalingFactor":
+                viewModel.updateSelectedFigmaImageFillScalingFactor(
+                    try requiredNumber("value", in: arguments)
+                )
+            case "rotation":
+                viewModel.updateSelectedFigmaImageFillRotation(
+                    try requiredNumber("value", in: arguments)
+                )
+            case "offsetX":
+                viewModel.updateSelectedFigmaImageFillOffsetX(
+                    try requiredNumber("value", in: arguments)
+                )
+            case "offsetY":
+                viewModel.updateSelectedFigmaImageFillOffsetY(
+                    try requiredNumber("value", in: arguments)
+                )
+            case "m11":
+                viewModel.updateSelectedFigmaImageFillMatrixM11(
+                    try requiredNumber("value", in: arguments)
+                )
+            case "m12":
+                viewModel.updateSelectedFigmaImageFillMatrixM12(
+                    try requiredNumber("value", in: arguments)
+                )
+            case "m21":
+                viewModel.updateSelectedFigmaImageFillMatrixM21(
+                    try requiredNumber("value", in: arguments)
+                )
+            case "m22":
+                viewModel.updateSelectedFigmaImageFillMatrixM22(
+                    try requiredNumber("value", in: arguments)
+                )
+            case "filtersEnabled":
+                viewModel.setSelectedFigmaImageFillFiltersEnabled(
+                    try requiredBool("enabled", in: arguments)
+                )
+            default:
+                throw XomoAutomationCallError.invalidArgument(
+                    "Unknown Figma image fill property"
+                )
+            }
+            return result()
+        default:
+            throw XomoAutomationCallError.invalidArgument(
+                "Unknown Figma image fill action"
+            )
         }
     }
 
@@ -3139,6 +3228,13 @@ private extension XomoAutomationRegistry {
             "action": XomoAutomationSchema.string(description: "Component property action", values: ["list", "set", "reset"]),
             "key": XomoAutomationSchema.string(description: "Figma component property name"),
             "value": XomoAutomationSchema.string(description: "New local property value")
+        ], required: ["action"]),
+        tool("xomo.figma.image_fill", "List or edit the retained source, transform, and filter controls of the selected Figma image fill.", [
+            "action": XomoAutomationSchema.string(description: "Image fill action", values: ["list", "set"]),
+            "property": XomoAutomationSchema.string(description: "Editable image fill property", values: ["scaleMode", "scalingFactor", "rotation", "offsetX", "offsetY", "m11", "m12", "m21", "m22", "filtersEnabled"]),
+            "scaleMode": XomoAutomationSchema.string(description: "Figma image fill scale mode", values: ImageEditorViewModel.figmaImageFillScaleModes),
+            "value": XomoAutomationSchema.number(description: "Numeric image fill value"),
+            "enabled": XomoAutomationSchema.boolean(description: "Whether image fill filters are enabled")
         ], required: ["action"]),
         tool("xomo.layer.select", "Select a layer by UUID.", [
             "id": XomoAutomationSchema.string(description: "Layer UUID"),

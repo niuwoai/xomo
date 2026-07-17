@@ -1,0 +1,9 @@
+{
+  "version": "2.12.0-rc249",
+  "suite": "ImageEditorFigmaProvenanceTests",
+  "result": "passed",
+  "passed": 5,
+  "failed": 0,
+  "total": 5,
+  "xcresult": "/tmp/xomo-rc249-single/Logs/Test/Test-veilpic-2026.07.18_07-34-22-+0800.xcresult"
+}

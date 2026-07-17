@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc249 - 2026-07-18
+
+### Added
+- 新增 `xomo.figma.image_fill` MCP/CLI 工具，读取或编辑选中 Figma 图片填充的缩放模式、缩放因子、旋转、裁切偏移、仿射矩阵和滤镜开关。
+- 自动化入口复用属性面板已有的 Undo/Redo、History 和非破坏性源图渲染路径，并在无保留源图时明确拒绝写入。
+
+### Verification
+- Figma 图片填充自动化专项与工具目录契约覆盖编辑、Undo 和 CLI 离线目录。
+
 ## 2.12.0-rc248 - 2026-07-18
 
 ### Added

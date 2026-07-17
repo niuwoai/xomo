@@ -15,7 +15,7 @@ struct XomoAutomationTests {
             Issue.record("Expected tool array")
             return
         }
-        #expect(tools.count == 122)
+        #expect(tools.count == 123)
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.layer.list")
@@ -118,6 +118,14 @@ struct XomoAutomationTests {
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.figma.component_properties")
         })
+        guard let imageFillTool = tools.compactMap({ tool -> [String: XomoJSONValue]? in
+            guard case .object(let value) = tool else { return nil }
+            return value
+        }).first(where: { $0["name"] == .string("xomo.figma.image_fill") }) else {
+            Issue.record("Expected xomo.figma.image_fill tool schema")
+            return
+        }
+        #expect(imageFillTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["property"]?.objectValue?["enum"]?.arrayValue?.contains(.string("m22")) == true)
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.figma.link")

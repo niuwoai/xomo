@@ -1,8 +1,10 @@
 # Xomo MCP 与 CLI
 
-> 当前版本：v2.12.0-rc248
+> 当前版本：v2.12.0-rc249
 
 rc242 起，`xomo.layer.list` 的 Figma 图层条目包含 `figmaImageFill`，可读取 IMAGE 填充的源引用、缩放模式、变换、缩放因子、旋转和滤镜参数。
+
+rc249 起，`xomo.figma.image_fill` 可对选中的 Figma IMAGE 填充执行 `action=list` 或 `action=set`。`set` 的 `property` 支持 `scaleMode`（另传 `scaleMode`）、`scalingFactor`、`rotation`、`offsetX`、`offsetY`、`m11`、`m12`、`m21`、`m22`（另传 `value`）和 `filtersEnabled`（另传 `enabled`）。所有写入都进入一次 Xomo History/Undo，并要求项目仍保留源图；它不会把已经烘焙的像素层假装成可编辑 Figma 填充。
 
 ## 架构
 

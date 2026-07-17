@@ -177,6 +177,75 @@ struct ImageEditorFigmaProvenanceTests {
         #expect(restored.layers.first?.xomoFigmaImageFillSourceImage != nil)
     }
 
+    @Test func automationEditsSelectedFigmaImageFillAndUsesUndoableViewModelPath() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        let layerIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[layerIndex].xomoFigmaImageFill = XomoFigmaImageFillMetadata(
+            imageReference: "img-ref-controls",
+            scaleMode: "CROP",
+            imageTransform: nil,
+            scalingFactor: 1,
+            rotation: 0,
+            filters: XomoFigmaPlanImageFilters(),
+            sourcePixelSize: XomoFigmaPlanSize(width: 40, height: 20),
+            importScale: 1
+        )
+        viewModel.document.layers[layerIndex].xomoFigmaImageFillSourceImage =
+            NSImage.transparent(size: CGSize(width: 40, height: 20))
+
+        let listed = registry.execute(request(
+            operation: "call",
+            name: "xomo.figma.image_fill",
+            arguments: ["action": .string("list")]
+        ))
+        #expect(listed.ok)
+        #expect(listed.result?.objectValue?["editable"] == .bool(true))
+        #expect(listed.result?.objectValue?["imageFill"]?.objectValue?["scaleMode"] == .string("CROP"))
+
+        let scaleMode = registry.execute(request(
+            operation: "call",
+            name: "xomo.figma.image_fill",
+            arguments: [
+                "action": .string("set"),
+                "property": .string("scaleMode"),
+                "scaleMode": .string("TILE")
+            ]
+        ))
+        #expect(scaleMode.ok)
+        let matrix = registry.execute(request(
+            operation: "call",
+            name: "xomo.figma.image_fill",
+            arguments: [
+                "action": .string("set"),
+                "property": .string("m11"),
+                "value": .number(0.75)
+            ]
+        ))
+        #expect(matrix.ok)
+        let filters = registry.execute(request(
+            operation: "call",
+            name: "xomo.figma.image_fill",
+            arguments: [
+                "action": .string("set"),
+                "property": .string("filtersEnabled"),
+                "enabled": .bool(false)
+            ]
+        ))
+        #expect(filters.ok)
+        #expect(viewModel.selectedLayerFigmaImageFill?.scaleMode == "TILE")
+        #expect(viewModel.selectedLayerFigmaImageFill?.imageTransform?.m11 == 0.75)
+        #expect(viewModel.selectedLayerFigmaImageFillFiltersEnabled == false)
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerFigmaImageFillFiltersEnabled)
+        viewModel.undo()
+        #expect((viewModel.selectedLayerFigmaImageFill?.imageTransform?.m11 ?? 1) == 1)
+        viewModel.undo()
+        #expect(viewModel.selectedLayerFigmaImageFill?.scaleMode == "CROP")
+    }
+
     @Test func componentTextOverrideUpdatesMatchingEditableDescendantAndUndoRestoresIt() throws {
         let image = NSImage.transparent(size: CGSize(width: 320, height: 180))
         var document = ImageEditorDocument(sourceName: "figma-text-component.png", image: image)
@@ -223,5 +292,25 @@ struct ImageEditorFigmaProvenanceTests {
         let project = try ImageEditorProjectDocument(document: viewModel.document)
         let restored = try project.restoredDocument()
         #expect(restored.layers.first?.xomoFigmaComponentPropertyDefaults["Label"]?.value == "Continue")
+    }
+
+    private func request(
+        operation: String,
+        name: String? = nil,
+        arguments: [String: XomoJSONValue]? = nil
+    ) -> XomoAutomationWireRequest {
+        XomoAutomationWireRequest(
+            token: "test",
+            operation: operation,
+            name: name,
+            arguments: arguments
+        )
+    }
+
+    private func makeViewModel() -> ImageEditorViewModel {
+        ImageEditorViewModel(
+            sourceName: "figma-automation",
+            image: NSImage.transparent(size: CGSize(width: 320, height: 240))
+        ) { _ in }
     }
 }
