@@ -459,13 +459,84 @@ enum XomoFigmaNodeMaterializer {
                     scaledAnchor($0, scaleX: geometryScale.width, scaleY: geometryScale.height)
                 }
             }
-        guard let primary = subpaths.first, primary.count >= 2 else { return nil }
+        let transformedSubpaths = transformedVectorSubpaths(
+            subpaths,
+            transform: item.relativeTransform,
+            frame: frame
+        )
+        guard let primary = transformedSubpaths.first, primary.count >= 2 else { return nil }
         var content = shapeContent(item: item, kind: .path, scale: scale)
         content.pathAnchors = primary
         content.pathPoints = primary.map(\.point)
-        content.pathSubpaths = Array(subpaths.dropFirst())
+        content.pathSubpaths = Array(transformedSubpaths.dropFirst())
         content.isPathClosed = parsed.allSatisfy(\.isClosed)
         return ImageEditorLayer.shape(name: item.sourceName, frame: frame, content: content)
+    }
+
+    private static func transformedVectorSubpaths(
+        _ subpaths: [[ImageEditorPathAnchor]],
+        transform: XomoFigmaPlanTransform?,
+        frame: CGRect
+    ) -> [[ImageEditorPathAnchor]] {
+        guard let transform, !isIdentityTransform(transform), !subpaths.isEmpty else {
+            return subpaths
+        }
+        let transformed = subpaths.map { anchors in
+            anchors.map { anchor in
+                ImageEditorPathAnchor(
+                    point: apply(transform, to: anchor.point),
+                    inControl: anchor.inControl.map { apply(transform, to: $0) },
+                    outControl: anchor.outControl.map { apply(transform, to: $0) }
+                )
+            }
+        }
+        let points = transformed.flatMap { anchors in
+            anchors.flatMap { anchor in
+                [anchor.point, anchor.inControl, anchor.outControl].compactMap { $0 }
+            }
+        }
+        guard let first = points.first else { return subpaths }
+        let bounds = points.dropFirst().reduce(CGRect(origin: first, size: .zero)) { partial, point in
+            partial.union(CGRect(origin: point, size: .zero))
+        }
+        guard bounds.width > 0, bounds.height > 0 else { return subpaths }
+        return transformed.map { anchors in
+            anchors.map { anchor in
+                ImageEditorPathAnchor(
+                    point: normalizedVectorPoint(anchor.point, bounds: bounds, frame: frame),
+                    inControl: anchor.inControl.map { normalizedVectorPoint($0, bounds: bounds, frame: frame) },
+                    outControl: anchor.outControl.map { normalizedVectorPoint($0, bounds: bounds, frame: frame) }
+                )
+            }
+        }
+    }
+
+    private static func apply(_ transform: XomoFigmaPlanTransform, to point: CGPoint) -> CGPoint {
+        CGPoint(
+            x: CGFloat(transform.m11) * point.x + CGFloat(transform.m12) * point.y + CGFloat(transform.translationX),
+            y: CGFloat(transform.m21) * point.x + CGFloat(transform.m22) * point.y + CGFloat(transform.translationY)
+        )
+    }
+
+    private static func normalizedVectorPoint(
+        _ point: CGPoint,
+        bounds: CGRect,
+        frame: CGRect
+    ) -> CGPoint {
+        CGPoint(
+            x: (point.x - bounds.minX) / bounds.width * frame.width,
+            y: (point.y - bounds.minY) / bounds.height * frame.height
+        )
+    }
+
+    private static func isIdentityTransform(_ transform: XomoFigmaPlanTransform) -> Bool {
+        let epsilon = 0.000_001
+        return abs(transform.m11 - 1) <= epsilon
+            && abs(transform.m12) <= epsilon
+            && abs(transform.m21) <= epsilon
+            && abs(transform.m22 - 1) <= epsilon
+            && abs(transform.translationX) <= epsilon
+            && abs(transform.translationY) <= epsilon
     }
 
     private static func shapeContent(

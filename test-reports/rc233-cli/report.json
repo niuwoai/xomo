@@ -1,0 +1,10 @@
+{
+  "version": "2.12.0-rc233",
+  "suite": "xomo-cli",
+  "passed": 2,
+  "failed": 0,
+  "tests": [
+    "initializeReturnsToolCapability",
+    "toolsListWorksWithoutRunningApp"
+  ]
+}

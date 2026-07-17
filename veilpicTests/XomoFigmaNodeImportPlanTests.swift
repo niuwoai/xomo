@@ -523,6 +523,88 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(restoredDocument.layers.first?.xomoFigmaNodeType == "BOOLEAN_OPERATION")
     }
 
+    @Test func mapperPreservesOrthogonalVectorTransformAndMaterializesRotatedGeometry() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                """
+                {
+                  "name": "Rotated Vector",
+                  "nodes": {
+                    "1:70": {
+                      "document": {
+                        "id": "1:70",
+                        "name": "Rotated Frame",
+                        "type": "FRAME",
+                        "absoluteBoundingBox": {"x": 0, "y": 0, "width": 100, "height": 100},
+                        "children": [
+                          {
+                            "id": "2:70",
+                            "name": "Quarter Turn",
+                            "type": "VECTOR",
+                            "absoluteBoundingBox": {"x": 10, "y": 20, "width": 10, "height": 20},
+                            "size": {"width": 20, "height": 10},
+                            "relativeTransform": [[0, -1, 10], [1, 0, 0]],
+                            "fills": [{"type": "SOLID", "color": {"r": 0.1, "g": 0.4, "b": 0.8, "a": 1}}],
+                            "fillGeometry": [{"path": "M 0 0 L 20 0 L 0 10 Z"}]
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+                """.utf8
+            )
+        )
+        let plan = try XomoFigmaNodeImportMapper.makePlan(response: response, requestedNodeID: "1:70")
+        let vector = try #require(plan.items.first { $0.sourceID == "2:70" })
+        #expect(vector.relativeTransform == XomoFigmaPlanTransform([[0, -1, 10], [1, 0, 0]]))
+        #expect(!vector.issues.contains(.transformFlattened))
+
+        let materialized = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: CGSize(width: 200, height: 200)
+        )
+        let layer = try #require(materialized.layers.first { $0.name == "Quarter Turn" })
+        let points = try #require(layer.shapeContent?.pathPoints)
+        #expect(points.count == 3)
+        #expect(abs(points[0].x - 10) < 0.001)
+        #expect(abs(points[0].y) < 0.001)
+        #expect(abs(points[1].x - 10) < 0.001)
+        #expect(abs(points[1].y - 20) < 0.001)
+        #expect(abs(points[2].x) < 0.001)
+        #expect(abs(points[2].y) < 0.001)
+    }
+
+    @Test func mapperStillReportsShearedVectorTransformAsFlattened() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                """
+                {
+                  "name": "Sheared Vector",
+                  "nodes": {
+                    "1:71": {
+                      "document": {
+                        "id": "1:71",
+                        "name": "Sheared Vector",
+                        "type": "VECTOR",
+                        "absoluteBoundingBox": {"x": 0, "y": 0, "width": 20, "height": 20},
+                        "size": {"width": 20, "height": 20},
+                        "relativeTransform": [[1, 0.5, 0], [0, 1, 0]],
+                        "fillGeometry": [{"path": "M 0 0 L 20 0 L 0 20 Z"}]
+                      }
+                    }
+                  }
+                }
+                """.utf8
+            )
+        )
+        let plan = try XomoFigmaNodeImportMapper.makePlan(response: response, requestedNodeID: "1:71")
+        let vector = try #require(plan.items.first)
+        #expect(vector.issues.contains(.transformFlattened))
+    }
+
     @Test func mapperReportsPartialImageComponentLayoutAndUnsupportedNodes() async throws {
         let transport = RecordingFigmaNodeTransport(statusCode: 200, body: Self.validNodeResponse)
         let client = XomoFigmaNodeContentAPIClient(transport: transport)
@@ -1022,6 +1104,7 @@ struct XomoFigmaNodeImportPlanTests {
             text: nil,
             vectorPaths: [],
             geometrySize: nil,
+            relativeTransform: nil,
             imageReference: nil,
             imageScaleMode: nil,
             imageTransform: nil,

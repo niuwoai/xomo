@@ -283,6 +283,7 @@ struct XomoFigmaNodeImportItem: Equatable, Identifiable, Sendable {
     var text: XomoFigmaPlanText?
     var vectorPaths: [String]
     var geometrySize: XomoFigmaPlanSize?
+    var relativeTransform: XomoFigmaPlanTransform?
     var imageReference: String?
     var imageScaleMode: String?
     var imageTransform: XomoFigmaPlanTransform?

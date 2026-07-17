@@ -196,7 +196,12 @@ enum XomoFigmaNodeImportMapper {
         guard items.count < maximumNodeCount else {
             throw XomoFigmaNodeImportError.nodeLimitExceeded
         }
-        let transformFlattened = ancestorTransformFlattened || hasFlattenedTransform(node.relativeTransform)
+        var transformIssues: [XomoFigmaNodeMappingIssue] = []
+        let target = targetMapping(node: node, issues: &transformIssues).target
+        let hasChildren = !(node.children ?? []).isEmpty
+        let transformFlattened = ancestorTransformFlattened
+            || transformNeedsFlattening(node.relativeTransform, target: target)
+            || (hasChildren && hasNonIdentityTransform(node.relativeTransform))
         items.append(makeItem(
             node: node,
             parentSourceID: parentSourceID,
@@ -325,6 +330,7 @@ enum XomoFigmaNodeImportMapper {
             geometrySize: node.size.map {
                 XomoFigmaPlanSize(width: max(0, $0.width), height: max(0, $0.height))
             },
+            relativeTransform: XomoFigmaPlanTransform(node.relativeTransform),
             imageReference: imagePaint?.imageRef,
             imageScaleMode: imagePaint?.scaleMode,
             imageTransform: XomoFigmaPlanTransform(imagePaint?.imageTransform),
@@ -846,17 +852,58 @@ enum XomoFigmaNodeImportMapper {
             || hasApproximatedCornerSmoothing
     }
 
-    private static func hasFlattenedTransform(_ transform: [[Double]]?) -> Bool {
+    private static func hasNonIdentityTransform(_ transform: [[Double]]?) -> Bool {
         guard let transform,
-              transform.count == 2,
-              transform[0].count == 3,
-              transform[1].count == 3
+              let parsed = XomoFigmaPlanTransform(transform)
         else { return false }
         let epsilon = 0.000_001
-        return abs(transform[0][1]) > epsilon
-            || abs(transform[1][0]) > epsilon
-            || transform[0][0] < 0
-            || transform[1][1] < 0
+        return abs(parsed.m11 - 1) > epsilon
+            || abs(parsed.m12) > epsilon
+            || abs(parsed.m21) > epsilon
+            || abs(parsed.m22 - 1) > epsilon
+            || abs(parsed.translationX) > epsilon
+            || abs(parsed.translationY) > epsilon
+    }
+
+    private static func transformNeedsFlattening(
+        _ transform: [[Double]]?,
+        target: XomoFigmaNodeTargetKind?
+    ) -> Bool {
+        guard let transform,
+              let parsed = XomoFigmaPlanTransform(transform)
+        else { return false }
+        let epsilon = 0.000_001
+        let nonZeroEntries = [parsed.m11, parsed.m12, parsed.m21, parsed.m22]
+            .filter { abs($0) > epsilon }
+        let isAxisPermutation = nonZeroEntries.count == 2
+            && abs(parsed.m11) * abs(parsed.m12) <= epsilon
+            && abs(parsed.m21) * abs(parsed.m22) <= epsilon
+        if isAxisPermutation {
+            switch target {
+            case .rectangle, .ellipse, .vector, .group:
+                return false
+            default:
+                return !isIdentityTransform(parsed)
+            }
+        }
+        guard target == .vector else { return !isIdentityTransform(parsed) }
+        let firstLength = hypot(parsed.m11, parsed.m21)
+        let secondLength = hypot(parsed.m12, parsed.m22)
+        let dot = parsed.m11 * parsed.m12 + parsed.m21 * parsed.m22
+        let scale = max(firstLength, secondLength)
+        return firstLength <= epsilon
+            || secondLength <= epsilon
+            || abs(dot) > max(0.000_001, scale * scale * 0.000_001)
+    }
+
+    private static func isIdentityTransform(_ transform: XomoFigmaPlanTransform) -> Bool {
+        let epsilon = 0.000_001
+        return abs(transform.m11 - 1) <= epsilon
+            && abs(transform.m12) <= epsilon
+            && abs(transform.m21) <= epsilon
+            && abs(transform.m22 - 1) <= epsilon
+            && abs(transform.translationX) <= epsilon
+            && abs(transform.translationY) <= epsilon
     }
 }
 
