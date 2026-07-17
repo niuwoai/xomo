@@ -8402,6 +8402,7 @@ enum ImageEditorKeyboardShortcutAction: Equatable {
         if key == "s", relevantFlags == [.command] { return .saveProject }
         if key == "s", relevantFlags == [.command, .option, .shift] { return .export }
         if key == "f", relevantFlags == [.command, .option] { return .openFigmaLinkImport }
+        if key == "z", relevantFlags == [.command, .option] { return .undo }
         if key == "z", relevantFlags == [.command] { return .undo }
         if key == "z", relevantFlags == [.command, .shift] { return .redo }
         if key == "x", relevantFlags == [.command] { return .cutSelectionClipboard }

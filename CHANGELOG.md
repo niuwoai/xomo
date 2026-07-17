@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc223 - 2026-07-18
+
+### Added
+- 增加 Photoshop 兼容的 `⌘⌥Z` 连续撤销快捷键，与现有 `⌘Z`、`⌥Z` 共用同一撤销入口，不改变 History/Undo 数据模型。
+
+### Verification
+- 键盘快捷键与历史回归通过 8/8，报告：`test-reports/rc223-history-shortcut/`。
+
 ## 2.12.0-rc222 - 2026-07-18
 
 ### Changed

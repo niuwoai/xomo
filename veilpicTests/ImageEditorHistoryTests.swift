@@ -172,6 +172,7 @@ struct ImageEditorHistoryTests {
             ("s", [command, option, shift], nil, .export),
             ("z", command, nil, .undo),
             ("z", option, nil, .undo),
+            ("z", [command, option], nil, .undo),
             ("z", [command, shift], nil, .redo),
             ("x", command, nil, .cutSelectionClipboard),
             ("c", command, nil, .copySelectionClipboard),
