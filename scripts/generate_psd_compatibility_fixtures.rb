@@ -66,7 +66,11 @@ def descriptor_key(value)
 end
 
 def descriptor_block(name:, class_id:, items: [])
-  u32(16) + unicode_string(name) + descriptor_key(class_id) + u32(items.length) + items.join
+  u32(16) + descriptor_body(name: name, class_id: class_id, items: items)
+end
+
+def descriptor_body(name:, class_id:, items: [])
+  unicode_string(name) + descriptor_key(class_id) + u32(items.length) + items.join
 end
 
 def descriptor_item(key:, type:, payload:)
@@ -135,6 +139,23 @@ def editable_text_tysh
   warp = descriptor_block(name: "", class_id: "warp", items: [])
     u16(1) + ([1.0, 0.0, 0.0, 1.0, 0.0, 0.0].map { |value| f64(value) }.join) +
     u16(50) + descriptor + u16(1) + warp + [0.0, 0.0, 2.0, 3.0].map { |value| f64(value) }.join
+end
+
+def solid_color_fill_descriptor(red:, green:, blue:)
+  color = descriptor_body(
+    name: "RGB Color",
+    class_id: "RGBC",
+    items: [
+      descriptor_item(key: "Rd  ", type: "doub", payload: f64(red)),
+      descriptor_item(key: "Grn ", type: "doub", payload: f64(green)),
+      descriptor_item(key: "Bl  ", type: "doub", payload: f64(blue))
+    ]
+  )
+  descriptor_block(
+    name: "",
+    class_id: "SoCo",
+    items: [descriptor_item(key: "Clr ", type: "Objc", payload: color)]
+  )
 end
 
 def layer_mask_data(enabled: true, linked: true)
@@ -352,6 +373,29 @@ def editable_text_fixture
   )
 end
 
+def solid_color_fill_fixture
+  pixel = ([180] * 16).pack("C*")
+  alpha = ([255] * 16).pack("C*")
+  channels = {
+    -1 => raw_channel(alpha),
+    0 => raw_channel(pixel),
+    1 => raw_channel(pixel),
+    2 => raw_channel(pixel)
+  }
+  record = layer_record(
+    name: "Brand Blue Fill",
+    channels: channels,
+    blocks: [tagged_block("SoCo", solid_color_fill_descriptor(red: 32, green: 128, blue: 224))]
+  )
+  layer_info = i16(1) + record + channels.values.join
+  layer_info << "\0" if layer_info.bytesize.odd?
+  layer_and_mask = u32(layer_info.bytesize) + layer_info + u32(0)
+  psd(
+    layer_payload: u32(layer_and_mask.bytesize) + layer_and_mask,
+    composite: u16(0) + pixel + pixel + pixel + alpha
+  )
+end
+
 def vector_mask_fixture(payload: vector_mask_payload, path_resources: [])
   pixel = ([180] * 16).pack("C*")
   alpha = ([255] * 16).pack("C*")
@@ -415,6 +459,7 @@ fixtures = {
   "extra-alpha.psd" => extra_alpha_fixture,
   "unsupported-features.psd" => unsupported_features_fixture,
   "editable-text.psd" => editable_text_fixture,
+  "solid-color-fill.psd" => solid_color_fill_fixture,
   "vector-mask.psd" => vector_mask_fixture,
   "vector-mask-multi.psd" => multi_vector_mask_fixture,
   "path-resources.psd" => path_resource_fixture
@@ -429,6 +474,7 @@ expectations = {
   "extra-alpha.psd" => %w[raw flattened_composite additional_alpha_channel alpha_name],
   "unsupported-features.psd" => %w[compatibility_report unsupported_semantic_features],
   "editable-text.psd" => %w[editable_text font_size color alignment],
+  "solid-color-fill.psd" => %w[editable_solid_color_fill rgb_descriptor],
   "vector-mask.psd" => %w[editable_vector_mask closed_path bezier_points],
   "vector-mask-multi.psd" => %w[editable_vector_mask multiple_subpaths even_odd_hole],
   "path-resources.psd" => %w[saved_path closed_path open_path]

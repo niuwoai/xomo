@@ -51,6 +51,14 @@
       ]
     },
     {
+      "file": "solid-color-fill.psd",
+      "sha256": "54d85157cf72ebe69692de024f03b173b212d8808ae25d15c1183b50bc8b2c04",
+      "expected": [
+        "editable_solid_color_fill",
+        "rgb_descriptor"
+      ]
+    },
+    {
       "file": "vector-mask.psd",
       "sha256": "603a2c832cd2b6f97b6a2e1575d868196519c477e88ca31f2bb210518a680cb3",
       "expected": [

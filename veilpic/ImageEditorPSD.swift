@@ -532,7 +532,9 @@ enum ImageEditorPSDCodec {
             }
             if !record.additionalKeys.isDisjoint(with: smartObjectKeys) { addIssue(.smartObjectRasterized) }
             if !record.additionalKeys.isDisjoint(with: effectKeys) { addIssue(.layerEffectsRasterized) }
-            if !record.additionalKeys.isDisjoint(with: fillKeys) { addIssue(.fillLayerRasterized) }
+            if !record.additionalKeys.isDisjoint(with: fillKeys), record.solidFillContent == nil {
+                addIssue(.fillLayerRasterized)
+            }
             if !record.additionalKeys.isDisjoint(with: adjustmentKeys) { addIssue(.adjustmentLayerRasterized) }
             if !ImageEditorBlendMode.supportedPSDKeys.contains(record.blendKey) {
                 addIssue(.unknownBlendMode)
@@ -1367,6 +1369,7 @@ enum ImageEditorPSDCodec {
         var additionalKeys = Set<String>()
         var textInfo: PSDTextLayerInfo?
         var vectorMaskInfo: PSDVectorMaskInfo?
+        var solidFillContent: ImageEditorSolidColorFillContent?
         while reader.offset + 12 <= extraEnd {
             let signature = try reader.ascii(count: 4)
             let key = try reader.ascii(count: 4)
@@ -1397,6 +1400,9 @@ enum ImageEditorPSDCodec {
             } else if (key == "vmsk" || key == "vsms") {
                 let blockData = try reader.data(count: length)
                 vectorMaskInfo = parseVectorMask(blockData)
+            } else if key == "SoCo" {
+                let blockData = try reader.data(count: length)
+                solidFillContent = parseSolidColorFill(blockData)
             }
             reader.offset = blockEnd
             let paddedEnd = min(extraEnd, blockEnd + (length % 2))
@@ -1420,7 +1426,8 @@ enum ImageEditorPSDCodec {
             mask: mask,
             additionalKeys: additionalKeys,
             textInfo: textInfo,
-            vectorMaskInfo: vectorMaskInfo
+            vectorMaskInfo: vectorMaskInfo,
+            solidFillContent: solidFillContent
         )
     }
 
@@ -1702,6 +1709,26 @@ enum ImageEditorPSDCodec {
         }
     }
 
+    private static func parseSolidColorFill(_ data: Data) -> ImageEditorSolidColorFillContent? {
+        do {
+            var reader = PSDReader(data: data)
+            let descriptor = try reader.psdDescriptorBlock()
+            guard let color = descriptor["Clr "]?.objectValue,
+                  let red = color["Rd  "]?.numericValue,
+                  let green = color["Grn "]?.numericValue,
+                  let blue = color["Bl  "]?.numericValue,
+                  red.isFinite, green.isFinite, blue.isFinite
+            else { return nil }
+            return ImageEditorSolidColorFillContent(
+                red: red / 255,
+                green: green / 255,
+                blue: blue / 255
+            ).normalized()
+        } catch {
+            return nil
+        }
+    }
+
     private static func parseEngineDataText(_ data: Data) -> PSDTextLayerInfo? {
         guard let style = parseEngineDataStyle(data), let text = style.text, !text.isEmpty else {
             return nil
@@ -1941,6 +1968,28 @@ enum ImageEditorPSDCodec {
                 name: record.name,
                 size: CGSize(width: width, height: height),
                 content: content
+            )
+            layer.frame = CGRect(
+                x: record.left,
+                y: canvasHeight - record.bottom,
+                width: width,
+                height: height
+            )
+            layer.opacity = CGFloat(record.opacity) / 255
+            layer.fillOpacity = CGFloat(record.fillOpacity) / 255
+            layer.isVisible = record.flags & 2 == 0
+            applyProtection(record: record, to: &layer)
+            layer.isClippingMask = record.clipping != 0
+            layer.blendMode = ImageEditorBlendMode(psdKey: record.blendKey)
+            applyMask(record: record, channels: channels, to: &layer)
+            applyVectorMask(record: record, size: CGSize(width: width, height: height), to: &layer)
+            return layer
+        }
+        if let solidFillContent = record.solidFillContent {
+            var layer = ImageEditorLayer.solidColorFill(
+                name: record.name,
+                size: CGSize(width: width, height: height),
+                content: solidFillContent
             )
             layer.frame = CGRect(
                 x: record.left,
@@ -2414,6 +2463,19 @@ private enum PSDDescriptorValue {
         guard case let .raw(value) = self else { return nil }
         return value
     }
+
+    var objectValue: [String: PSDDescriptorValue]? {
+        guard case let .object(value) = self else { return nil }
+        return value
+    }
+
+    var numericValue: Double? {
+        switch self {
+        case let .double(value), let .unit(value): return value
+        case let .integer(value): return Double(value)
+        default: return nil
+        }
+    }
 }
 
 private struct PSDTextLayerStyle {
@@ -2476,6 +2538,7 @@ nonisolated private struct PSDLayerRecord {
     let additionalKeys: Set<String>
     let textInfo: PSDTextLayerInfo?
     let vectorMaskInfo: PSDVectorMaskInfo?
+    let solidFillContent: ImageEditorSolidColorFillContent?
 
     var isSmartObject: Bool {
         additionalKeys.contains("SoLd")

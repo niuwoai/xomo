@@ -488,6 +488,28 @@ struct ImageEditorPSDTests {
         #expect(abs(restoredContent.firstLineIndent - content.firstLineIndent) < 0.01)
     }
 
+    @Test func externalSolidColorFillFixtureBecomesNativeEditableFillLayer() throws {
+        let data = try psdFixtureData("solid-color-fill.psd")
+        let document = try ImageEditorPSDCodec.decode(data, sourceName: "solid-color-fill.psd")
+        let layer = try #require(document.layers.first)
+        let fill = try #require(layer.solidColorFillContent)
+
+        #expect(layer.isSolidColorFill)
+        #expect(layer.name == "Brand Blue Fill")
+        #expect(layer.frame == CGRect(x: 0, y: 0, width: 4, height: 4))
+        #expect(abs(fill.red - 32.0 / 255.0) < 0.01)
+        #expect(abs(fill.green - 128.0 / 255.0) < 0.01)
+        #expect(abs(fill.blue - 224.0 / 255.0) < 0.01)
+
+        let report = try ImageEditorPSDCodec.compatibilityReport(data)
+        #expect(!report.issues.contains { $0.kind == .fillLayerRasterized })
+
+        let project = try ImageEditorProjectDocument(document: document)
+        let restored = try project.restoredDocument()
+        let restoredFill = try #require(restored.layers.first?.solidColorFillContent)
+        #expect(restoredFill == fill)
+    }
+
     @Test func externalSmartObjectFixtureUsesNativeRasterFallback() throws {
         let data = try psdFixtureData("unsupported-features.psd")
         let document = try ImageEditorPSDCodec.decode(data, sourceName: "unsupported-features.psd")
