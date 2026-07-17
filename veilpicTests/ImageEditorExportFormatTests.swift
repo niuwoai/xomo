@@ -100,4 +100,30 @@ struct ImageEditorExportFormatTests {
         )
         #expect(viewModel.exportFilenames(settings: pdfSettings) == ["landing-edited.pdf"])
     }
+
+    @Test func selectionScopeExportsASelectionSliceBoundedByTheSelectionAndPreservesTransparency() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "landing.png",
+            image: NSImage.rendered(size: CGSize(width: 80, height: 60)) { rect in
+                NSColor.systemBlue.setFill()
+                rect.fill()
+            }!
+        ) { _ in }
+        viewModel.document.selection = try #require(
+            ImageEditorSelection.ellipse(CGRect(x: 20, y: 10, width: 40, height: 30))
+        )
+
+        #expect(viewModel.canExportSelection)
+        let settings = ImageEditorExportSettings(format: .png, scope: .selection)
+        let data = try #require(viewModel.exportData(settings: settings))
+        let exported = try #require(NSImage(data: data))
+        let center = try #require(exported.color(at: CGPoint(x: 20, y: 15))?.usingColorSpace(.deviceRGB))
+        let corner = try #require(exported.color(at: CGPoint(x: 1, y: 1))?.usingColorSpace(.deviceRGB))
+
+        #expect(exported.size == CGSize(width: 40, height: 30))
+        #expect(center.blueComponent > 0.7)
+        #expect(center.alphaComponent > 0.8)
+        #expect(corner.alphaComponent < 0.1)
+        #expect(viewModel.exportFilenames(settings: settings) == ["landing-selection.png"])
+    }
 }

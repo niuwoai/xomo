@@ -462,6 +462,7 @@
 "imageEditor.export.scope.composited" = "Composite";
 "imageEditor.export.scope.selectedLayer" = "Current Layer";
 "imageEditor.export.scope.selectedLayers" = "Selected Layers";
+"imageEditor.export.scope.selection" = "Selection / Slice";
 "imageEditor.export.namingRule" = "File name";
 "imageEditor.export.namingRule.sourceName" = "Document name";
 "imageEditor.export.namingRule.sourceAndScope" = "Document name + scope";

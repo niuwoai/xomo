@@ -462,6 +462,7 @@
 "imageEditor.export.scope.composited" = "合成图像";
 "imageEditor.export.scope.selectedLayer" = "当前图层";
 "imageEditor.export.scope.selectedLayers" = "所选图层";
+"imageEditor.export.scope.selection" = "选区 / 切片";
 "imageEditor.export.namingRule" = "文件名";
 "imageEditor.export.namingRule.sourceName" = "仅文档名";
 "imageEditor.export.namingRule.sourceAndScope" = "文档名 + 范围";

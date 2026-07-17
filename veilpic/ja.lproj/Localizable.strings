@@ -462,6 +462,7 @@
 "imageEditor.export.scope.composited" = "合成画像";
 "imageEditor.export.scope.selectedLayer" = "現在のレイヤー";
 "imageEditor.export.scope.selectedLayers" = "選択レイヤー";
+"imageEditor.export.scope.selection" = "選択範囲 / スライス";
 "imageEditor.export.namingRule" = "ファイル名";
 "imageEditor.export.namingRule.sourceName" = "書類名のみ";
 "imageEditor.export.namingRule.sourceAndScope" = "書類名 + 範囲";

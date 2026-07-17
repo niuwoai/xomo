@@ -62,6 +62,7 @@ enum ImageEditorExportScope: String, CaseIterable, Identifiable {
     case composited
     case selectedLayer
     case selectedLayers
+    case selection
 
     var id: String { rawValue }
 
@@ -127,6 +128,10 @@ extension ImageEditorViewModel {
         }
     }
 
+    var canExportSelection: Bool {
+        selectionExportBounds != nil
+    }
+
     var canExportSVG: Bool {
         svgExportLayers != nil
     }
@@ -143,6 +148,9 @@ extension ImageEditorViewModel {
             exportSettings.scope = .composited
         }
         if exportSettings.scope == .selectedLayers, !canExportSelectedLayers {
+            exportSettings.scope = .composited
+        }
+        if exportSettings.scope == .selection, !canExportSelection {
             exportSettings.scope = .composited
         }
         isExportSheetPresented = true
@@ -254,6 +262,9 @@ extension ImageEditorViewModel {
         if normalized.scope == .selectedLayers, !canExportSelectedLayers {
             normalized.scope = .composited
         }
+        if normalized.scope == .selection, !canExportSelection {
+            normalized.scope = .composited
+        }
         return normalized
     }
 
@@ -265,6 +276,70 @@ extension ImageEditorViewModel {
             selectedLayerExportImage() ?? document.compositedImage
         case .selectedLayers:
             selectedLayersExportImage() ?? document.compositedImage
+        case .selection:
+            selectedSelectionExportImage() ?? document.compositedImage
+        }
+    }
+
+    private var selectionExportBounds: CGRect? {
+        guard let selection = document.selection else { return nil }
+        let canvasBounds = CGRect(origin: .zero, size: document.canvasSize)
+        let candidate = selection.isInverted ? canvasBounds : selection.bounds.standardized
+        let bounded = candidate.intersection(canvasBounds).integral.intersection(canvasBounds)
+        guard bounded.width > 0, bounded.height > 0 else { return nil }
+        return bounded
+    }
+
+    private func selectedSelectionExportImage() -> NSImage? {
+        guard let selection = document.selection,
+              let bounds = selectionExportBounds,
+              let composited = document.compositedImage.cropped(to: bounds),
+              let mask = selectionExportMask(for: selection)?.cropped(to: bounds)
+        else { return nil }
+
+        return NSImage.rendered(size: bounds.size) { _ in
+            composited.draw(
+                in: CGRect(origin: .zero, size: bounds.size),
+                from: CGRect(origin: .zero, size: bounds.size),
+                operation: .copy,
+                fraction: 1
+            )
+            mask.draw(
+                in: CGRect(origin: .zero, size: bounds.size),
+                from: CGRect(origin: .zero, size: bounds.size),
+                operation: .destinationIn,
+                fraction: 1
+            )
+        }
+    }
+
+    private func selectionExportMask(for selection: ImageEditorSelection) -> NSImage? {
+        if let rasterMask = selection.rasterMask {
+            return NSImage.selectionMaskImage(
+                rasterMask,
+                inverted: selection.isInverted,
+                targetSize: document.canvasSize
+            )
+        }
+
+        return NSImage.rendered(size: document.canvasSize) { rect in
+            if selection.isInverted {
+                NSColor.white.setFill()
+                rect.fill()
+                NSGraphicsContext.current?.withImageEditorTopLeftCoordinates(height: document.canvasSize.height) {
+                    guard let context = NSGraphicsContext.current?.cgContext else { return }
+                    context.saveGState()
+                    context.setBlendMode(.clear)
+                    NSColor.clear.setFill()
+                    selection.path().fill()
+                    context.restoreGState()
+                }
+            } else {
+                NSGraphicsContext.current?.withImageEditorTopLeftCoordinates(height: document.canvasSize.height) {
+                    NSColor.white.setFill()
+                    selection.path().fill()
+                }
+            }
         }
     }
 
@@ -320,6 +395,8 @@ extension ImageEditorViewModel {
             scopeSuffix = "layer"
         case .selectedLayers:
             scopeSuffix = "selected-layers"
+        case .selection:
+            scopeSuffix = "selection"
         }
         let name: String
         switch settings.namingRule {

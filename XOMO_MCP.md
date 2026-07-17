@@ -1,6 +1,6 @@
 # Xomo MCP 与 CLI
 
-> 当前版本：v2.12.0-rc202
+> 当前版本：v2.12.0-rc203
 
 ## 架构
 
@@ -34,6 +34,7 @@ xomo call xomo.document.get '{}'
 xomo call xomo.psd.inspect '{"path":"~/Designs/checkout.psd"}'
 xomo call xomo.psd.open '{"path":"~/Designs/checkout.psd"}'
 xomo call xomo.psd.save '{"path":"~/Designs/checkout-export.psd"}'
+xomo call xomo.export.render '{"format":"png","scope":"selection","scale":2}'
 xomo call xomo.tool.select '{"tool":"brush"}'
 xomo call xomo.selection.rectangle '{"x":20,"y":20,"width":200,"height":120}'
 xomo call xomo.selection.quick_mask '{"action":"toggle"}'

@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc203 - 2026-07-17
+
+### Added
+- 导出范围新增“选区 / 切片”：按当前选区边界导出 PNG、JPEG、WebP 或 PDF，非矩形选区外保留透明，自动化 `xomo.export.render` 同步接受 `selection`。
+
+### Verification
+- 选区切片专项 1/1、既有导出格式回归 4/4 通过；报告见 `test-reports/rc203-selection-slice/` 与 `test-reports/rc203-export-regression/`。
+
 ## 2.12.0-rc202 - 2026-07-17
 
 ### Added

@@ -152,6 +152,10 @@ struct ImageEditorExportPanel: View {
             viewModel.exportSettings.format == .psd
                 || viewModel.exportSettings.format == .svg
                 || !viewModel.canExportSelectedLayers
+        case .selection:
+            viewModel.exportSettings.format == .psd
+                || viewModel.exportSettings.format == .svg
+                || !viewModel.canExportSelection
         }
     }
 
