@@ -6483,7 +6483,7 @@ struct veilpicTests {
     @MainActor
     @Test func imageEditorCanvasCursorFamiliesMatchToolInteractionSemantics() async throws {
         let expectations: [(ImageEditorCanvasCursorFamily, [ImageEditorTool])] = [
-            (.systemArrow, [.move]),
+            (.moveTool, [.move]),
             (.grab, [.hand]),
             (.textInsertion, [.text]),
             (.brushTool, [.brush]),

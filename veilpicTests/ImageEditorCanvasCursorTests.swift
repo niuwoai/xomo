@@ -51,7 +51,7 @@ struct ImageEditorCanvasCursorTests {
             ) == .move
         )
         #expect(
-            ImageEditorCanvasCursor.cursor(for: .move, brushDiameter: 18) === NSCursor.arrow
+            ImageEditorCanvasCursor.cursor(for: .move, brushDiameter: 18) !== NSCursor.arrow
         )
         #expect(
             ImageEditorCanvasCursor.tool(
@@ -132,6 +132,7 @@ struct ImageEditorCanvasCursorTests {
         )
         #expect(move !== NSCursor.arrow)
         #expect(move.image.tiffRepresentation != NSCursor.arrow.image.tiffRepresentation)
+        #expect(ImageEditorCanvasCursor.family(for: .move) == .moveTool)
     }
 
     @Test func moveToolShowsCopyBadgeWhileHoldingOption() {

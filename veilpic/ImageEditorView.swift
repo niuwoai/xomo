@@ -7076,6 +7076,7 @@ private struct EditorMarqueeShapeActionRow: View {
 
 enum ImageEditorCanvasCursorFamily: Equatable {
     case systemArrow
+    case moveTool
     case grab
     case textInsertion
     case brushTool
@@ -7182,9 +7183,6 @@ enum ImageEditorCanvasCursor {
                 modifierFlags: modifierFlags
             )
         case .tool(let selectedTool):
-            if selectedTool == .move {
-                return moveToolCursor(isDuplicating: modifierFlags.contains(.option))
-            }
             return cursor(
                 for: selectedTool,
                 brushDiameter: brushDiameter,
@@ -7323,7 +7321,7 @@ enum ImageEditorCanvasCursor {
     static func family(for tool: ImageEditorTool) -> ImageEditorCanvasCursorFamily {
         switch tool {
         case .move:
-            .systemArrow
+            .moveTool
         case .hand:
             .grab
         case .text:
@@ -7384,6 +7382,8 @@ enum ImageEditorCanvasCursor {
         switch family(for: tool) {
         case .systemArrow:
             return .arrow
+        case .moveTool:
+            return moveToolCursor(isDuplicating: modifierFlags.contains(.option))
         case .grab:
             return handIsDragging ? .closedHand : .openHand
         case .textInsertion:
