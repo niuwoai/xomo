@@ -15,7 +15,7 @@ struct XomoAutomationTests {
             Issue.record("Expected tool array")
             return
         }
-        #expect(tools.count == 117)
+        #expect(tools.count == 118)
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.layer.list")
@@ -84,6 +84,80 @@ struct XomoAutomationTests {
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.component.instance")
         })
+        #expect(tools.contains { tool in
+            guard case .object(let value) = tool else { return false }
+            return value["name"] == .string("xomo.selection.quick_mask")
+        })
+    }
+
+    @Test func registryControlsQuickMaskThroughTheSharedSelectionPath() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        viewModel.createRectSelection(from: CGPoint(x: 16, y: 16), to: CGPoint(x: 80, y: 80))
+
+        let enabled = registry.execute(request(
+            operation: "call",
+            name: "xomo.selection.quick_mask",
+            arguments: ["action": .string("toggle")]
+        ))
+        #expect(enabled.ok)
+        #expect(enabled.result?.objectValue?["active"] == .bool(true))
+
+        let configured = registry.execute(request(
+            operation: "call",
+            name: "xomo.selection.quick_mask",
+            arguments: [
+                "action": .string("setTarget"),
+                "target": .string(ImageEditorQuickMaskOverlayTarget.selectedAreas.rawValue)
+            ]
+        ))
+        #expect(configured.ok)
+        #expect(configured.result?.objectValue?["target"] == .string("selectedAreas"))
+
+        let color = XomoJSONValue.object([
+            "red": .number(0.1),
+            "green": .number(0.2),
+            "blue": .number(0.9)
+        ])
+        let colorResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.selection.quick_mask",
+            arguments: ["action": .string("setColor"), "color": color]
+        ))
+        #expect(colorResponse.ok)
+
+        let opacityResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.selection.quick_mask",
+            arguments: ["action": .string("setOpacity"), "opacity": .number(0.25)]
+        ))
+        #expect(opacityResponse.ok)
+        #expect(opacityResponse.result?.objectValue?["opacity"] == .number(0.25))
+
+        let paintResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.selection.quick_mask",
+            arguments: [
+                "action": .string("paint"),
+                "points": .array([
+                    .object(["x": .number(24), "y": .number(24)]),
+                    .object(["x": .number(36), "y": .number(36)])
+                ]),
+                "reveal": .bool(true)
+            ]
+        ))
+        #expect(paintResponse.ok)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.quickMaskReveal"))
+
+        let disabled = registry.execute(request(
+            operation: "call",
+            name: "xomo.selection.quick_mask",
+            arguments: ["action": .string("toggle")]
+        ))
+        #expect(disabled.ok)
+        #expect(disabled.result?.objectValue?["active"] == .bool(false))
     }
 
     @Test func registryReadsAndExportsComponentThemeTokens() throws {

@@ -1,6 +1,6 @@
 # Xomo MCP 与 CLI
 
-> 当前版本：v2.12.0-rc189
+> 当前版本：v2.12.0-rc190
 
 ## 架构
 
@@ -33,6 +33,9 @@ xomo tools
 xomo call xomo.document.get '{}'
 xomo call xomo.tool.select '{"tool":"brush"}'
 xomo call xomo.selection.rectangle '{"x":20,"y":20,"width":200,"height":120}'
+xomo call xomo.selection.quick_mask '{"action":"toggle"}'
+xomo call xomo.selection.quick_mask '{"action":"setTarget","target":"selectedAreas"}'
+xomo call xomo.selection.quick_mask '{"action":"paint","points":[{"x":32,"y":32},{"x":96,"y":64}],"reveal":true}'
 xomo call xomo.shape.create '{"kind":"rectangle","x":80,"y":80,"width":240,"height":120,"fillColor":{"red":1,"green":0.2,"blue":0.1},"strokeColor":{"red":0.1,"green":0.3,"blue":1},"strokeWidth":4,"cornerRadius":16}'
 xomo call xomo.shape.update '{"fillOpacity":0.7,"strokeOpacity":0.9}'
 xomo call xomo.shape.update '{"cornerRadii":{"topLeft":8,"topRight":16,"bottomRight":24,"bottomLeft":4}}'
@@ -83,7 +86,7 @@ MCP 服务器实现 `initialize`、`ping`、`tools/list` 和 `tools/call`。当 
 
 ## 当前工具范围
 
-- 共 117 个 MCP 工具；同类细粒度操作通过带严格枚举参数的 action 工具组织。
+- 共 118 个 MCP 工具；同类细粒度操作通过带严格枚举参数的 action 工具组织。
 - App 与文档状态
 - 预设或自定义画布创建、可编辑文字/形状检查与更新（含纯色/最多 16 个有序色标的线性渐变填充、独立描边、不透明度、线宽、统一/独立四角及超椭圆圆角平滑）、点文字 / 固定宽高段落文字创建和转换、文字框所需高度、溢出诊断与适合内容 / 仅扩高操作，以及详细调整、滤镜和图层样式参数
 - 完整 `qpicproject` 项目导入导出，以及 PNG/JPEG/WebP 等图像图层导入
@@ -94,6 +97,7 @@ MCP 服务器实现 `initialize`、`ping`、`tools/list` 和 `tools/call`。当 
 - 图层查询、选择、创建、删除、复制、命名、显隐、锁定、透明度、混合模式、移动、按可见层级排序、分组、所选组递归展开/折叠、链接、合并、对齐、分布、智能对象、Layer Comps 与几何变换
 - 图层蒙版、矢量蒙版、十类图层效果、样式复制粘贴、智能滤镜
 - 矩形、椭圆、套索、魔棒、快速选择、全选、反选、羽化、平滑、像素填充、描边、清除和内容识别填充
+- Photoshop 风格快速蒙版的状态查询、覆盖目标/颜色/不透明度设置和笔触编辑（`xomo.selection.quick_mask`）
 - 系统剪贴板复制、剪切，以及将剪贴板图片粘贴为可编辑图层
 - 矢量路径创建、锚点与控制柄、子路径、闭合与反向、填充、描边、选区和蒙版转换
 - 独立命名路径的保存、查询、选择、重命名、更新、载入、画布可见性和删除

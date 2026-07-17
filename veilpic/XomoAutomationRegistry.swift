@@ -226,6 +226,8 @@ final class XomoAutomationRegistry {
             try selectionEdit(arguments, viewModel: viewModel)
         case "xomo.selection.modify":
             try selectionModify(arguments, viewModel: viewModel)
+        case "xomo.selection.quick_mask":
+            return try quickMaskAction(arguments, viewModel: viewModel)
         case "xomo.clipboard.action":
             try clipboardAction(arguments, viewModel: viewModel)
         case "xomo.channel.list":
@@ -769,6 +771,17 @@ final class XomoAutomationRegistry {
             "y": .number(bounds.minY),
             "width": .number(bounds.width),
             "height": .number(bounds.height)
+        ])
+    }
+
+    private func quickMaskResult(_ viewModel: ImageEditorViewModel) -> XomoJSONValue {
+        .object([
+            "active": .bool(viewModel.isQuickMaskMode),
+            "hasSelection": .bool(viewModel.hasSelection),
+            "target": .string(viewModel.quickMaskOverlayTarget.rawValue),
+            "opacity": .number(viewModel.quickMaskOverlayOpacity),
+            "color": colorJSON(viewModel.quickMaskOverlayColor),
+            "overlayAvailable": .bool(viewModel.quickMaskOverlayImage != nil)
         ])
     }
 
@@ -2169,6 +2182,40 @@ final class XomoAutomationRegistry {
         }
     }
 
+    private func quickMaskAction(
+        _ arguments: [String: XomoJSONValue],
+        viewModel: ImageEditorViewModel
+    ) throws -> XomoJSONValue {
+        let action = try requiredString("action", in: arguments)
+        switch action {
+        case "get":
+            return quickMaskResult(viewModel)
+        case "toggle":
+            viewModel.toggleQuickMaskMode()
+        case "setTarget":
+            let rawTarget = try requiredString("target", in: arguments)
+            guard let target = ImageEditorQuickMaskOverlayTarget(rawValue: rawTarget) else {
+                throw XomoAutomationCallError.invalidArgument("Unknown quick mask target: \(rawTarget)")
+            }
+            viewModel.setQuickMaskOverlayTarget(target)
+        case "setColor":
+            viewModel.setQuickMaskOverlayColor(try requiredColor("color", in: arguments))
+        case "setOpacity":
+            viewModel.setQuickMaskOverlayOpacity(CGFloat(try requiredNumber("opacity", in: arguments)))
+        case "paint":
+            guard viewModel.isQuickMaskMode else {
+                throw XomoAutomationCallError.operationFailed("Quick Mask is not active")
+            }
+            viewModel.drawBrush(
+                samples: try requiredBrushSamples("points", in: arguments),
+                erase: arguments["reveal"]?.boolValue ?? false
+            )
+        default:
+            throw XomoAutomationCallError.invalidArgument("Unknown quick mask action: \(action)")
+        }
+        return quickMaskResult(viewModel)
+    }
+
     private func historyAction(
         _ arguments: [String: XomoJSONValue],
         viewModel: ImageEditorViewModel
@@ -2926,6 +2973,22 @@ private extension XomoAutomationRegistry {
             "action": XomoAutomationSchema.string(description: "Selection modification", values: ["loadTransparency", "save", "reselect", "restoreSaved", "colorRange", "similarColors", "growColor", "expand", "contract", "border", "fillHoles", "removeSpeckles", "centerHorizontal", "centerVertical", "centerCanvas", "flipHorizontal", "flipVertical", "rotateClockwise", "rotateCounterclockwise", "rotate180", "scaleUp", "scaleDown", "fitCanvas", "nudge"]),
             "dx": XomoAutomationSchema.number(description: "Horizontal selection delta"),
             "dy": XomoAutomationSchema.number(description: "Vertical selection delta")
+        ], required: ["action"]),
+        tool("xomo.selection.quick_mask", "Inspect and edit the current selection through Photoshop-style Quick Mask mode.", [
+            "action": XomoAutomationSchema.string(description: "Quick Mask action", values: ["get", "toggle", "setTarget", "setColor", "setOpacity", "paint"]),
+            "target": XomoAutomationSchema.string(description: "Overlay target", values: ImageEditorQuickMaskOverlayTarget.allCases.map(\.rawValue)),
+            "color": XomoAutomationSchema.object(
+                properties: [
+                    "red": XomoAutomationSchema.number(description: "Red channel from 0 to 1"),
+                    "green": XomoAutomationSchema.number(description: "Green channel from 0 to 1"),
+                    "blue": XomoAutomationSchema.number(description: "Blue channel from 0 to 1"),
+                    "alpha": XomoAutomationSchema.number(description: "Optional alpha channel from 0 to 1")
+                ],
+                required: ["red", "green", "blue"]
+            ),
+            "opacity": XomoAutomationSchema.number(description: "Overlay opacity from 0 to 1"),
+            "points": pointsSchema,
+            "reveal": XomoAutomationSchema.boolean(description: "Reveal selected areas instead of masking them while painting")
         ], required: ["action"]),
         tool("xomo.clipboard.action", "Copy or cut selected pixels and paste clipboard images as editable layers.", [
             "action": XomoAutomationSchema.string(description: "Clipboard action", values: ["pasteAsLayer", "pasteIntoSelection", "copySelection", "cutSelection", "copyMerged"])

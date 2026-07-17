@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc190 - 2026-07-17
+
+### Added
+- 新增 `xomo.selection.quick_mask` MCP/CLI 工具：可查询快速蒙版状态、切换模式、设置覆盖目标/颜色/不透明度，并使用与 UI 相同的画笔路径编辑选区。
+
+### Verification
+- `registryControlsQuickMaskThroughTheSharedSelectionPath` 1/1、CLI 测试 2/2、macOS 13 Debug `build-for-testing` 通过；测试运行器在授权环境中重跑成功。
+
 ## 2.12.0-rc189 - 2026-07-17
 
 ### Fixed
