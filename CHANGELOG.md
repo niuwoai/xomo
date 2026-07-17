@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc195 - 2026-07-17
+
+### Added
+- PSD 导出现在会在 Raw、PackBits RLE、ZIP 与 ZIP Prediction 之间自动择优；对平滑渐变按行预测后再压缩，失败或无收益时安全回退。
+
+### Verification
+- PSD 压缩定向测试 8/8、完整 PSD 专项 24/24、CLI 2/2 通过；渐变样本兼容性报告确认实际写出 ZIP Prediction。
+
 ## 2.12.0-rc194 - 2026-07-17
 
 ### Added

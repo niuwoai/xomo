@@ -124,6 +124,9 @@ enum ImageEditorPSDCodec {
         if let zip = zipEncodedData(rawPayload) {
             candidates.append(zip)
         }
+        if let prediction = zipPredictionEncodedData(planes, width: width, height: height) {
+            candidates.append(prediction)
+        }
         return candidates.min { $0.count < $1.count } ?? rawEncodedData(rawPayload)
     }
 
@@ -147,6 +150,9 @@ enum ImageEditorPSDCodec {
         if let zip = zipEncodedData(data) {
             candidates.append(zip)
         }
+        if let prediction = zipPredictionEncodedData(data, width: width, height: height) {
+            candidates.append(prediction)
+        }
         return candidates.min { $0.count < $1.count } ?? candidates[0]
     }
 
@@ -158,12 +164,62 @@ enum ImageEditorPSDCodec {
     }
 
     private static func zipEncodedData(_ data: Data) -> Data? {
+        encodedDeflateData(data, compression: 2)
+    }
+
+    private static func zipPredictionEncodedData(
+        _ planes: [Data],
+        width: Int,
+        height: Int
+    ) -> Data? {
+        var predicted = Data()
+        for plane in planes {
+            guard let payload = zipPredictionPayload(plane, width: width, height: height) else { return nil }
+            predicted.append(payload)
+        }
+        return encodedDeflateData(predicted, compression: 3, rawCount: predicted.count)
+    }
+
+    private static func zipPredictionEncodedData(
+        _ data: Data,
+        width: Int,
+        height: Int
+    ) -> Data? {
+        guard let predicted = zipPredictionPayload(data, width: width, height: height) else { return nil }
+        return encodedDeflateData(predicted, compression: 3, rawCount: data.count)
+    }
+
+    private static func zipPredictionPayload(
+        _ data: Data,
+        width: Int,
+        height: Int
+    ) -> Data? {
+        guard width > 0, height > 0, data.count == width * height else { return nil }
+        var output = Data()
+        output.reserveCapacity(data.count)
+        for row in 0..<height {
+            let start = row * width
+            output.append(data[start])
+            if width > 1 {
+                for column in 1..<width {
+                    output.append(data[start + column] &- data[start + column - 1])
+                }
+            }
+        }
+        return output
+    }
+
+    private static func encodedDeflateData(
+        _ data: Data,
+        compression: UInt16,
+        rawCount: Int? = nil
+    ) -> Data? {
         guard !data.isEmpty,
               let compressed = deflate(data),
-              compressed.count < data.count
+              compressed.count < (rawCount ?? data.count)
         else { return nil }
         var output = Data()
-        output.appendUInt16(2)
+        output.appendUInt16(compression)
         output.append(compressed)
         return output
     }

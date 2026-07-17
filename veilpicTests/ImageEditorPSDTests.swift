@@ -87,6 +87,25 @@ struct ImageEditorPSDTests {
         #expect(restored.layers.first?.name == "Pattern")
     }
 
+    @Test func psdExportUsesZIPPredictionForSmoothGradients() throws {
+        let canvasSize = CGSize(width: 64, height: 64)
+        let gradient = psdGradientImage(width: 64, height: 64)
+        var document = ImageEditorDocument(sourceName: "gradient.png", image: gradient)
+        document.layers.removeAll()
+        var layer = ImageEditorLayer.blank(name: "Gradient", size: canvasSize)
+        layer.image = gradient
+        layer.frame = CGRect(origin: .zero, size: canvasSize)
+        document.layers = [layer]
+
+        let data = try ImageEditorPSDCodec.encode(document: document)
+        let report = try ImageEditorPSDCodec.compatibilityReport(data)
+        #expect(report.compressions.contains(.zipPrediction))
+
+        let restored = try ImageEditorPSDCodec.decode(data, sourceName: "gradient.psd")
+        #expect(restored.canvasSize == canvasSize)
+        #expect(restored.layers.first?.name == "Gradient")
+    }
+
     @Test func psdExportPreservesClosedAndOpenSavedPaths() throws {
         let canvasSize = CGSize(width: 32, height: 24)
         var document = ImageEditorDocument(
@@ -716,6 +735,35 @@ private func psdAlternatingImage(width: Int, height: Int) -> NSImage {
     for y in 0..<height {
         for x in 0..<width {
             let value: UInt8 = (x + y).isMultiple(of: 2) ? 32 : 224
+            var pixel = [Int(value), Int(value), Int(value), Int(UInt8.max)]
+            pixel.withUnsafeMutableBufferPointer { buffer in
+                bitmap.setPixel(buffer.baseAddress!, atX: x, y: y)
+            }
+        }
+    }
+    let image = NSImage(size: CGSize(width: width, height: height))
+    image.addRepresentation(bitmap)
+    return image
+}
+
+private func psdGradientImage(width: Int, height: Int) -> NSImage {
+    guard let bitmap = NSBitmapImageRep(
+        bitmapDataPlanes: nil,
+        pixelsWide: width,
+        pixelsHigh: height,
+        bitsPerSample: 8,
+        samplesPerPixel: 4,
+        hasAlpha: true,
+        isPlanar: false,
+        colorSpaceName: .deviceRGB,
+        bitmapFormat: [],
+        bytesPerRow: width * 4,
+        bitsPerPixel: 32
+    ) else { return NSImage.transparent(size: CGSize(width: width, height: height)) }
+
+    for y in 0..<height {
+        for x in 0..<width {
+            let value = UInt8((CGFloat(x) / CGFloat(max(width - 1, 1)) * 255).rounded())
             var pixel = [Int(value), Int(value), Int(value), Int(UInt8.max)]
             pixel.withUnsafeMutableBufferPointer { buffer in
                 bitmap.setPixel(buffer.baseAddress!, atX: x, y: y)
