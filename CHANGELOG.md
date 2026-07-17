@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.12.0-rc211 - 2026-07-17
+
+### Added
+- 移动工具现在可以直接从画布按实际可见像素选中最上层普通图层；组件子图层仍归属 Xomo 对象，透明孔洞和空白处不会错误拦截画布平移。
+
+### Verification
+- 普通图层画布命中专项通过 1/1，报告：`test-reports/rc211-canvas-layer-hit-escalated/report.md`。
+- 完整 `XomoCanvasObjectTests` 回归通过 21/21，覆盖组件命中、透明孔洞、移动预览/吸附和新普通图层命中，报告：`test-reports/rc211-canvas-object-regression/report.md`。
+- 移动工具手势接线契约通过 1/1，确认画布拖动入口复用普通图层命中逻辑，报告：`test-reports/rc211-canvas-layer-contract-escalated/report.md`。
+
 ## 2.12.0-rc210 - 2026-07-17
 
 ### Changed

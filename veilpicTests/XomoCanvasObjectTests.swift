@@ -65,6 +65,55 @@ struct XomoCanvasObjectTests {
         #expect(viewModel.document.selectedLayerID == group.id)
     }
 
+    @Test func moveToolSelectsTopmostVisibleOrdinaryLayerFromCanvas() throws {
+        let viewModel = makeViewModel()
+        let lowerImage = NSImage.rendered(size: CGSize(width: 120, height: 80)) { rect in
+            NSColor.systemBlue.setFill()
+            rect.fill()
+        }
+        var lower = ImageEditorLayer.blank(name: "Lower", size: CGSize(width: 120, height: 80))
+        lower.image = try #require(lowerImage)
+        lower.frame = CGRect(x: 100, y: 90, width: 120, height: 80)
+
+        let upperImage = NSImage.rendered(size: CGSize(width: 120, height: 80)) { rect in
+            NSColor.systemRed.setFill()
+            rect.insetBy(dx: 20, dy: 20).fill()
+        }
+        var upper = ImageEditorLayer.blank(name: "Upper", size: CGSize(width: 120, height: 80))
+        upper.image = try #require(upperImage)
+        upper.frame = lower.frame
+
+        viewModel.document.layers.append(lower)
+        viewModel.document.layers.append(upper)
+        viewModel.selectLayer(viewModel.document.layers.first!.id)
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.selectVisibleLayer(at: CGPoint(x: 160, y: 130)))
+        #expect(viewModel.document.selectedLayerID == upper.id)
+        #expect(viewModel.document.history.count == historyCount)
+
+        #expect(viewModel.selectVisibleLayer(at: CGPoint(x: 105, y: 95)))
+        #expect(viewModel.document.selectedLayerID == lower.id)
+    }
+
+    @Test func moveToolDoesNotSelectTransparentOrdinaryLayerOrComponentChildren() throws {
+        let viewModel = makeViewModel()
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))
+        let componentGroup = try #require(viewModel.document.selectedLayer)
+        let child = try #require(viewModel.document.layers.first { $0.groupID == componentGroup.id })
+
+        viewModel.selectLayer(viewModel.document.layers.first!.id)
+        #expect(!viewModel.selectVisibleLayer(at: CGPoint(x: 160, y: 112)))
+        #expect(viewModel.document.selectedLayerID != child.id)
+
+        var transparent = ImageEditorLayer.blank(name: "Transparent", size: CGSize(width: 240, height: 80))
+        transparent.frame = CGRect(x: 80, y: 90, width: 240, height: 80)
+        viewModel.document.layers.append(transparent)
+        viewModel.selectLayer(transparent.id)
+        #expect(!viewModel.selectVisibleLayer(at: CGPoint(x: 160, y: 112)))
+        #expect(viewModel.document.selectedLayerID == transparent.id)
+    }
+
     @Test func topmostOverlappingComponentWinsObjectHitTesting() throws {
         let viewModel = makeViewModel()
         let origin = CGPoint(x: 80, y: 90)

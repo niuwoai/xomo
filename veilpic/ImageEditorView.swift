@@ -1677,6 +1677,7 @@ struct ImageEditorView: View {
                         let pressedImagePoint = imagePoint(from: value.startLocation, in: size)
                         guard let pressedImagePoint,
                               viewModel.selectXomoObject(at: pressedImagePoint)
+                                || viewModel.selectVisibleLayer(at: pressedImagePoint)
                         else {
                             isCanvasPanGestureActive = true
                             updateCanvasPan(translation: value.translation)

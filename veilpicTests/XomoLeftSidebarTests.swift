@@ -537,6 +537,7 @@ struct XomoLeftSidebarTests {
         #expect(source.contains(".highPriorityGesture(canvasGesture(in: geometry.size))"))
         #expect(source.contains("else if tab == .components"))
         #expect(source.contains("viewModel.selectedXomoObjectFrame?.contains(pressedImagePoint) == true"))
+        #expect(source.contains("viewModel.selectVisibleLayer(at: pressedImagePoint)"))
         #expect(source.contains("viewModel.beginMovingSelectedLayer()"))
         #expect(source.contains("The parent canvas owns movement for selected objects"))
         #expect(source.contains("selectedXomoObjectMoveGesture(in: canvasSize)"))

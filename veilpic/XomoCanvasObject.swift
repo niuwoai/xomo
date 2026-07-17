@@ -53,6 +53,32 @@ extension ImageEditorViewModel {
         return true
     }
 
+    /// Move-tool hit testing for ordinary Photoshop-style layers. Component
+    /// children are intentionally skipped here because their parent object
+    /// must remain the selection target; the component path above already
+    /// performs the same topmost/occlusion check for them.
+    func selectVisibleLayer(at point: CGPoint) -> Bool {
+        let componentGroupIDs: Set<UUID> = Set(
+            document.layers.compactMap { layer in
+                guard layer.isGroup, layer.xomoComponentInstance != nil else { return nil }
+                return layer.id
+            }
+        )
+
+        for layer in document.layers.reversed() {
+            guard !layer.isGroup,
+                  layer.groupID.map({ !componentGroupIDs.contains($0) }) ?? true,
+                  document.isEffectivelyVisible(layer),
+                  layerContainsVisibleContent(layer, at: point)
+            else { continue }
+
+            selectLayer(layer.id)
+            statusText = L10n.format("imageEditor.status.layerRangeSelected", 1)
+            return true
+        }
+        return false
+    }
+
     /// 文字工具优先命中最上方可见文字层。组件中的文字也是普通文字层，
     /// 因而可以从组件组自动切换到具体文字层并直接编辑。
     func selectEditableTextLayer(at point: CGPoint, excluding excludedLayerID: UUID? = nil) -> Bool {
