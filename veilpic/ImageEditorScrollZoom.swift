@@ -11,20 +11,35 @@
 import AppKit
 import SwiftUI
 
+enum ImageEditorCanvasMiddleMousePanGeometry {
+    static func delta(from previous: CGPoint, to current: CGPoint) -> CGSize {
+        CGSize(width: current.x - previous.x, height: current.y - previous.y)
+    }
+}
+
 /// 覆盖在画布上的滚轮缩放捕获层。自身对鼠标点击完全透明（hitTest 返回 nil），
 /// 不会影响 SwiftUI 的绘制、选择和拖拽平移。
 struct ScrollWheelZoomView: NSViewRepresentable {
     /// 回调参数：本次缩放乘法系数、光标在视口内的坐标（左上原点 y-down）、视口尺寸。
     let onZoom: (_ factor: CGFloat, _ location: CGPoint, _ viewportSize: CGSize) -> Void
+    let onMiddleMousePanBegan: () -> Void
+    let onMiddleMousePanChanged: (_ delta: CGSize) -> Void
+    let onMiddleMousePanEnded: () -> Void
 
     func makeNSView(context: Context) -> ScrollWheelZoomNSView {
         let view = ScrollWheelZoomNSView()
         view.onZoom = onZoom
+        view.onMiddleMousePanBegan = onMiddleMousePanBegan
+        view.onMiddleMousePanChanged = onMiddleMousePanChanged
+        view.onMiddleMousePanEnded = onMiddleMousePanEnded
         return view
     }
 
     func updateNSView(_ nsView: ScrollWheelZoomNSView, context: Context) {
         nsView.onZoom = onZoom
+        nsView.onMiddleMousePanBegan = onMiddleMousePanBegan
+        nsView.onMiddleMousePanChanged = onMiddleMousePanChanged
+        nsView.onMiddleMousePanEnded = onMiddleMousePanEnded
     }
 
     static func dismantleNSView(_ nsView: ScrollWheelZoomNSView, coordinator: ()) {
@@ -34,7 +49,13 @@ struct ScrollWheelZoomView: NSViewRepresentable {
 
 final class ScrollWheelZoomNSView: NSView {
     var onZoom: ((CGFloat, CGPoint, CGSize) -> Void)?
+    var onMiddleMousePanBegan: (() -> Void)?
+    var onMiddleMousePanChanged: ((CGSize) -> Void)?
+    var onMiddleMousePanEnded: (() -> Void)?
     private var monitor: Any?
+    private var middleMouseMonitor: Any?
+    private var isMiddleMousePanning = false
+    private var lastMiddleMousePoint: CGPoint?
 
     // 采用左上原点，坐标系与 SwiftUI 画布对齐，锚点不会上下翻转。
     override var isFlipped: Bool { true }
@@ -52,11 +73,21 @@ final class ScrollWheelZoomNSView: NSView {
     }
 
     private func installMonitor() {
-        guard monitor == nil else { return }
-        monitor = NSEvent.addLocalMonitorForEvents(matching: .scrollWheel) { [weak self] event in
-            guard let self else { return event }
-            guard let handled = self.handleScroll(event), handled else { return event }
-            return nil // 消费事件，避免继续冒泡触发页面滚动
+        if monitor == nil {
+            monitor = NSEvent.addLocalMonitorForEvents(matching: .scrollWheel) { [weak self] event in
+                guard let self else { return event }
+                guard let handled = self.handleScroll(event), handled else { return event }
+                return nil // 消费事件，避免继续冒泡触发页面滚动
+            }
+        }
+        if middleMouseMonitor == nil {
+            middleMouseMonitor = NSEvent.addLocalMonitorForEvents(
+                matching: [.otherMouseDown, .otherMouseDragged, .otherMouseUp]
+            ) { [weak self] event in
+                guard let self else { return event }
+                guard self.handleMiddleMousePan(event) else { return event }
+                return nil
+            }
         }
     }
 
@@ -65,6 +96,15 @@ final class ScrollWheelZoomNSView: NSView {
             NSEvent.removeMonitor(monitor)
         }
         monitor = nil
+        if let middleMouseMonitor {
+            NSEvent.removeMonitor(middleMouseMonitor)
+        }
+        middleMouseMonitor = nil
+        if isMiddleMousePanning {
+            onMiddleMousePanEnded?()
+        }
+        isMiddleMousePanning = false
+        lastMiddleMousePoint = nil
     }
 
     deinit {
@@ -92,6 +132,42 @@ final class ScrollWheelZoomNSView: NSView {
         let factor = exp(delta * 0.01)
         onZoom?(factor, location, bounds.size)
         return true
+    }
+
+    /// Middle-button dragging is a familiar canvas-navigation gesture in
+    /// Photoshop, Sketch and many graphics tools. It never enters the
+    /// document gesture arena, so pixels, selections and History stay intact.
+    private func handleMiddleMousePan(_ event: NSEvent) -> Bool {
+        guard let window, event.window === window, event.buttonNumber == 2 else { return false }
+
+        let location = convert(event.locationInWindow, from: nil)
+        switch event.type {
+        case .otherMouseDown:
+            guard bounds.contains(location) else { return false }
+            isMiddleMousePanning = true
+            lastMiddleMousePoint = location
+            onMiddleMousePanBegan?()
+            return true
+        case .otherMouseDragged:
+            guard isMiddleMousePanning, let lastMiddleMousePoint else { return false }
+            let delta = ImageEditorCanvasMiddleMousePanGeometry.delta(
+                from: lastMiddleMousePoint,
+                to: location
+            )
+            self.lastMiddleMousePoint = location
+            if delta != .zero {
+                onMiddleMousePanChanged?(delta)
+            }
+            return true
+        case .otherMouseUp:
+            guard isMiddleMousePanning else { return false }
+            onMiddleMousePanEnded?()
+            isMiddleMousePanning = false
+            lastMiddleMousePoint = nil
+            return true
+        default:
+            return false
+        }
     }
 
     /// 归一化不同输入源的滚动量：触控板（精确增量）与鼠标滚轮（离散行）。

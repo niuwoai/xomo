@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-07-18T20:51:21+0800",
+  "version": "2.12.0-rc294",
+  "scope": "鼠标中键画布平移与无 History 导航",
+  "total": 2,
+  "passed": 2,
+  "failed": 0,
+  "skipped": 0,
+  "result": "passed",
+  "environment": "macOS 26.5.2 / Xcode 17E202 / arm64",
+  "test_targets": [
+    "veilpicTests/ImageEditorScopeTests/canvasWorkspaceWiresScrollWheelZoomToViewModel()",
+    "veilpicTests/ImageEditorScopeTests/middleMousePanUsesFlippedCanvasDeltaWithoutTouchingHistory()"
+  ],
+  "notes": [
+    "两个用例使用 Swift Testing 完整测试标识分别精确筛选运行，均通过。",
+    "中键拖动按翻转画布坐标增量更新 viewport offset。",
+    "导航只调用 nudgeCanvas，不修改图层、选区或 History。",
+    "中键按下、拖动、松开分别触发 begin、changed、end 回调，拖动中显示闭合抓手。"
+  ]
+}

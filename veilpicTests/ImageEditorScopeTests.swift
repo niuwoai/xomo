@@ -466,8 +466,30 @@ struct ImageEditorScopeTests {
             encoding: .utf8
         )
         #expect(source.contains("ScrollWheelZoomView"))
+        #expect(source.contains("onMiddleMousePanBegan"))
+        #expect(source.contains("onMiddleMousePanChanged"))
+        #expect(source.contains("onMiddleMousePanEnded"))
         #expect(source.contains("viewModel.magnifyCanvas(factor, at: location, viewportSize: viewportSize)"))
         #expect(source.contains("viewModel.endCanvasMagnify()"))
+    }
+
+    @MainActor
+    @Test func middleMousePanUsesFlippedCanvasDeltaWithoutTouchingHistory() {
+        let previous = CGPoint(x: 120, y: 80)
+        let current = CGPoint(x: 155, y: 104)
+        #expect(
+            ImageEditorCanvasMiddleMousePanGeometry.delta(from: previous, to: current)
+                == CGSize(width: 35, height: 24)
+        )
+
+        let viewModel = ImageEditorViewModel(
+            sourceName: "middle-pan.png",
+            image: NSImage(size: NSSize(width: 80, height: 60))
+        ) { _ in }
+        let historyCount = viewModel.document.history.count
+        viewModel.nudgeCanvas(by: ImageEditorCanvasMiddleMousePanGeometry.delta(from: previous, to: current))
+        #expect(viewModel.canvasOffset == CGSize(width: 35, height: 24))
+        #expect(viewModel.document.history.count == historyCount)
     }
 
     @MainActor

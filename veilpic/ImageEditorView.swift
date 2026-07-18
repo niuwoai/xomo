@@ -1309,12 +1309,25 @@ struct ImageEditorView: View {
                 // the parent canvas owns ordinary layer movement and panning.
                 .simultaneousGesture(canvasGesture(in: geometry.size))
                 .overlay(
-                    ScrollWheelZoomView { factor, location, viewportSize in
-                        // 每个离散滚轮 tick 独立锚定当前状态：复用捏合缩放的锚定数学，
-                        // 立即结束一次缩放会话，避免下一次滚动沿用上一次的基准而叠加错位。
-                        viewModel.magnifyCanvas(factor, at: location, viewportSize: viewportSize)
-                        viewModel.endCanvasMagnify()
-                    }
+                    ScrollWheelZoomView(
+                        onZoom: { factor, location, viewportSize in
+                            // 每个离散滚轮 tick 独立锚定当前状态：复用捏合缩放的锚定数学，
+                            // 立即结束一次缩放会话，避免下一次滚动沿用上一次的基准而叠加错位。
+                            viewModel.magnifyCanvas(factor, at: location, viewportSize: viewportSize)
+                            viewModel.endCanvasMagnify()
+                        },
+                        onMiddleMousePanBegan: {
+                            isCanvasPanGestureActive = true
+                            NSCursor.closedHand.set()
+                        },
+                        onMiddleMousePanChanged: { delta in
+                            viewModel.nudgeCanvas(by: delta)
+                        },
+                        onMiddleMousePanEnded: {
+                            isCanvasPanGestureActive = false
+                            refreshCanvasCursor(in: geometry.size)
+                        }
+                    )
                     .allowsHitTesting(false)
                 )
                 .overlay {
