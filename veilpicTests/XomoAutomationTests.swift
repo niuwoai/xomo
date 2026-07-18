@@ -1985,6 +1985,29 @@ struct XomoAutomationTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.sponge"))
     }
 
+    @Test func registryAcceptsASinglePointSpongeDab() {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("sponge"),
+                "spongeMode": .string("saturate"),
+                "size": .number(12),
+                "hardness": .number(1),
+                "points": .array([
+                    .object(["x": .number(32), "y": .number(32)])
+                ])
+            ]
+        ))
+
+        #expect(response.ok)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.sponge"))
+    }
+
     @Test func registryConfiguresBrushFlowSpacingHardnessAndPressure() {
         let suiteName = "XomoAutomationTests.pressure.\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suiteName) ?? .standard

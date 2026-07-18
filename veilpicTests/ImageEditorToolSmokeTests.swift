@@ -113,6 +113,38 @@ struct ImageEditorToolSmokeTests {
         #expect(hard.document.history.last?.title == L10n.text("imageEditor.history.sponge"))
     }
 
+    @Test func spongeSingleClickAppliesBothSaturationModes() throws {
+        let color = NSColor(deviceRed: 0.68, green: 0.45, blue: 0.22, alpha: 1)
+        let saturate = makeEditableViewModel(image: solidImage(color: color))
+        let desaturate = makeEditableViewModel(image: solidImage(color: color))
+        saturate.spongeMode = .saturate
+        desaturate.spongeMode = .desaturate
+        for viewModel in [saturate, desaturate] {
+            viewModel.brushSize = 12
+            viewModel.hardness = 1
+            viewModel.opacity = 1
+        }
+        let point = CGPoint(x: 20, y: 14)
+        let before = try #require(
+            saturate.document.selectedLayer?.image.color(at: point)?.usingColorSpace(.deviceRGB)
+        )
+
+        saturate.spongeBrush(points: [point])
+        desaturate.spongeBrush(points: [point])
+
+        let saturated = try #require(
+            saturate.document.selectedLayer?.image.color(at: point)?.usingColorSpace(.deviceRGB)
+        )
+        let desaturated = try #require(
+            desaturate.document.selectedLayer?.image.color(at: point)?.usingColorSpace(.deviceRGB)
+        )
+        let beforeRange = before.redComponent - before.blueComponent
+        #expect(saturated.redComponent - saturated.blueComponent > beforeRange)
+        #expect(desaturated.redComponent - desaturated.blueComponent < beforeRange * 0.35)
+        #expect(saturate.document.history.last?.title == L10n.text("imageEditor.history.sponge"))
+        #expect(desaturate.document.history.last?.title == L10n.text("imageEditor.history.sponge"))
+    }
+
     @Test func redEyeToolReducesExcessRedAtTheClickedPupil() throws {
         let image = NSImage.rendered(size: canvasSize) { rect in
             NSColor(deviceWhite: 0.35, alpha: 1).setFill()
