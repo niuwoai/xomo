@@ -293,13 +293,20 @@ struct ImageEditorCanvasCursorTests {
         #expect(ImageEditorCanvasCursor.family(for: .sharpen) == .retouchBrush)
         #expect(ImageEditorCanvasCursor.family(for: .smudge) == .retouchBrush)
 
-        let precisionTools: [ImageEditorTool] = [
-            .lasso, .magicWand, .quickSelection, .crop, .patchTool,
-            .gradient, .rectangle, .ellipse, .colorSampler
+        let semanticTools: [ImageEditorTool] = [
+            .lasso, .magicWand, .quickSelection, .cloneStamp, .healingBrush,
+            .crop, .patchTool, .gradient, .rectangle, .ellipse, .pen
         ]
-        for tool in precisionTools {
-            #expect(ImageEditorCanvasCursor.cursor(for: tool, brushDiameter: 18) === NSCursor.crosshair)
+        for tool in semanticTools {
+            let cursor = ImageEditorCanvasCursor.cursor(for: tool, brushDiameter: 18)
+            #expect(cursor !== NSCursor.crosshair)
+            #expect(cursor.image.tiffRepresentation != NSCursor.crosshair.image.tiffRepresentation)
         }
+
+        #expect(
+            ImageEditorCanvasCursor.cursor(for: .rectangle, brushDiameter: 18).image.tiffRepresentation
+                != ImageEditorCanvasCursor.cursor(for: .ellipse, brushDiameter: 18).image.tiffRepresentation
+        )
 
         let brushTools: [ImageEditorTool] = [
             .brush, .eraser, .cloneStamp, .healingBrush,
@@ -321,11 +328,16 @@ struct ImageEditorCanvasCursorTests {
             .marquee, .lasso, .magicWand, .quickSelection
         ]
         for tool in tools {
-            #expect(ImageEditorCanvasCursor.cursor(for: tool, brushDiameter: 18) === NSCursor.crosshair)
+            let base = ImageEditorCanvasCursor.cursor(for: tool, brushDiameter: 18)
+            if tool == .marquee {
+                #expect(base === NSCursor.crosshair)
+            } else {
+                #expect(base !== NSCursor.crosshair)
+            }
             let add = ImageEditorCanvasCursor.cursor(for: tool, brushDiameter: 18, modifierFlags: [.shift])
             let subtract = ImageEditorCanvasCursor.cursor(for: tool, brushDiameter: 18, modifierFlags: [.option])
-            #expect(add.image.tiffRepresentation != NSCursor.crosshair.image.tiffRepresentation)
-            #expect(subtract.image.tiffRepresentation != NSCursor.crosshair.image.tiffRepresentation)
+            #expect(add.image.tiffRepresentation != base.image.tiffRepresentation)
+            #expect(subtract.image.tiffRepresentation != base.image.tiffRepresentation)
             #expect(add.image.tiffRepresentation != subtract.image.tiffRepresentation)
         }
     }

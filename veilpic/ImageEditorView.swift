@@ -7729,12 +7729,26 @@ enum ImageEditorCanvasCursor {
             return .iBeam
         case .selectionMarquee:
             return familiarSelectionCursor(mode: selectionMode)
-        case .lasso, .magicWand, .quickSelection:
-            return familiarSelectionCursor(mode: selectionMode)
-        case .cloneStamp, .healingBrush, .brushTool, .eraserTool, .toneBrush, .retouchBrush:
+        case .lasso:
+            return lassoCursor(mode: selectionMode)
+        case .magicWand:
+            return magicWandCursor(mode: selectionMode)
+        case .quickSelection:
+            return quickSelectionCursor(mode: selectionMode)
+        case .cloneStamp:
+            return cloneStampCursor()
+        case .healingBrush:
+            return healingBrushCursor()
+        case .brushTool, .eraserTool, .toneBrush, .retouchBrush:
             return familiarBrushCursor(diameter: brushDiameter)
-        case .crop, .patch, .gradient, .rectangleOutline, .ellipseOutline:
-            return .crosshair
+        case .crop:
+            return cropCursor()
+        case .patch:
+            return patchCursor()
+        case .gradient:
+            return gradientCursor()
+        case .rectangleOutline, .ellipseOutline:
+            return shapeCursor(for: tool)
         case .paintBucket:
             return paintBucketCursor()
         case .eyedropper:
@@ -7744,7 +7758,7 @@ enum ImageEditorCanvasCursor {
         case .samplingScope:
             return samplingScopeCursor()
         case .vectorPen:
-            return penIsClosing ? .pointingHand : .crosshair
+            return penCursor(isClosing: penIsClosing)
         case .zoomMagnifier:
             return zoomCursor(isZoomingOut: modifierFlags.contains(.option))
         }
