@@ -497,6 +497,10 @@
 "imageEditor.option.opacity" = "不透明度";
 "imageEditor.option.strength" = "強さ";
 "imageEditor.option.exposure" = "露光量";
+"imageEditor.option.toneRange" = "範囲";
+"imageEditor.toneRange.shadows" = "シャドウ";
+"imageEditor.toneRange.midtones" = "中間調";
+"imageEditor.toneRange.highlights" = "ハイライト";
 "imageEditor.option.fillOpacity" = "塗り";
 "imageEditor.option.blendIf" = "ブレンド条件";
 "imageEditor.option.blendIfSource" = "このレイヤー";

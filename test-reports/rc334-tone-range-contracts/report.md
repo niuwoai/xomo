@@ -1,0 +1,17 @@
+# veilpicTests 独立进程测试报告
+
+- 生成时间：2026-07-19 04:38:12 +0800
+- 总数：**6**，通过：**6**，失败：**0**
+- 并行度（jobs）：1
+
+✅ 全部通过。
+
+## 按套件汇总
+
+| 套件 | 通过/总数 |
+|---|---|
+| ImageEditorAdjustmentTests | 1/1 |
+| ImageEditorScopeTests | 1/1 |
+| LocalizationResourceTests | 1/1 |
+| XomoAutomationTests | 2/2 |
+| veilpicTests | 1/1 |

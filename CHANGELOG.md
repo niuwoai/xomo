@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.12.0-rc334 - 2026-07-19
+
+### Added
+- 减淡与加深工具顶部新增 Photoshop 标准“范围”下拉，可选择阴影、中间调或高光；默认中间调，控件使用不可聚焦的深色菜单，并补齐中、英、日三语。
+- 像素算法新增平滑重叠的三段亮度权重：阴影优先影响暗部，中间调优先影响中灰，高光优先影响亮部，同时避免硬阈值造成色阶断层；既有大小、硬度、曝光度、选区、图层保护、History 与 Undo 继续复用。
+- MCP/CLI `xomo.paint.special` 的 `dodge` 与 `burn` 新增 `toneRange=shadows|midtones|highlights`；省略时使用界面默认中间调，旧 `opacity` 与新版 `exposure` 参数保持兼容。
+
+### Verification
+- 完整工具烟雾套件 21/21、范围相关 UI/三语/MCP 与回归测试 6/6、CLI 2/2、发布版本契约 7/7 通过。
+
 ## 2.12.0-rc333 - 2026-07-19
 
 ### Fixed

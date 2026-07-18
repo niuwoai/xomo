@@ -1,0 +1,69 @@
+{
+  "generated_at": "2026-07-19 04:38:12 +0800",
+  "total": 6,
+  "passed": 6,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorAdjustmentTests",
+      "method": "imageEditorShadowsHighlightsAdjustmentRecoversToneRangeAndSupportsLayerState",
+      "identifier": "veilpicTests/ImageEditorAdjustmentTests/imageEditorShadowsHighlightsAdjustmentRecoversToneRangeAndSupportsLayerState",
+      "file": "ImageEditorAdjustmentTests.swift",
+      "passed": true,
+      "duration": 3.104,
+      "issues": [],
+      "log": "ImageEditorAdjustmentTests.imageEditorShadowsHighlightsAdjustmentRecoversToneRangeAndSupportsLayerState.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "dodgeAndBurnExposeANonFocusableToneRangeMenu",
+      "identifier": "veilpicTests/ImageEditorScopeTests/dodgeAndBurnExposeANonFocusableToneRangeMenu",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.11,
+      "issues": [],
+      "log": "ImageEditorScopeTests.dodgeAndBurnExposeANonFocusableToneRangeMenu.log"
+    },
+    {
+      "suite": "LocalizationResourceTests",
+      "method": "dodgeBurnToneRangesAreLocalizedInEverySupportedLanguage",
+      "identifier": "veilpicTests/LocalizationResourceTests/dodgeBurnToneRangesAreLocalizedInEverySupportedLanguage",
+      "file": "LocalizationResourceTests.swift",
+      "passed": true,
+      "duration": 3.035,
+      "issues": [],
+      "log": "LocalizationResourceTests.dodgeBurnToneRangesAreLocalizedInEverySupportedLanguage.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registryAdvertisesDodgeBurnToneRangeValues",
+      "identifier": "veilpicTests/XomoAutomationTests/registryAdvertisesDodgeBurnToneRangeValues",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 3.074,
+      "issues": [],
+      "log": "XomoAutomationTests.registryAdvertisesDodgeBurnToneRangeValues.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registryConfiguresAndValidatesDodgeBurnToneRange",
+      "identifier": "veilpicTests/XomoAutomationTests/registryConfiguresAndValidatesDodgeBurnToneRange",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 3.06,
+      "issues": [],
+      "log": "XomoAutomationTests.registryConfiguresAndValidatesDodgeBurnToneRange.log"
+    },
+    {
+      "suite": "veilpicTests",
+      "method": "imageEditorColorBalanceAdjustmentSupportsToneRangesAndLayerState",
+      "identifier": "veilpicTests/veilpicTests/imageEditorColorBalanceAdjustmentSupportsToneRangesAndLayerState",
+      "file": "veilpicTests.swift",
+      "passed": true,
+      "duration": 3.073,
+      "issues": [],
+      "log": "veilpicTests.imageEditorColorBalanceAdjustmentSupportsToneRangesAndLayerState.log"
+    }
+  ]
+}

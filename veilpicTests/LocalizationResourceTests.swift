@@ -121,6 +121,30 @@ struct LocalizationResourceTests {
         }
     }
 
+    @Test func dodgeBurnToneRangesAreLocalizedInEverySupportedLanguage() throws {
+        let paths = try Self.repositoryPaths()
+        let expectedValues = [
+            "zh-Hans": ["范围", "阴影", "中间调", "高光"],
+            "en": ["Range", "Shadows", "Midtones", "Highlights"],
+            "ja": ["範囲", "シャドウ", "中間調", "ハイライト"]
+        ]
+        let keys = [
+            "imageEditor.option.toneRange",
+            "imageEditor.toneRange.shadows",
+            "imageEditor.toneRange.midtones",
+            "imageEditor.toneRange.highlights"
+        ]
+
+        for (localizationID, expected) in expectedValues {
+            let strings = try Self.stringTable(
+                tableName: "Localizable",
+                localizationID: localizationID,
+                appDirectory: paths.appDirectory
+            )
+            #expect(keys.compactMap { strings[$0] } == expected)
+        }
+    }
+
     private static func knownRegions(in projectText: String) -> Set<String> {
         guard let start = projectText.range(of: "knownRegions = (") else { return [] }
         let remaining = projectText[start.upperBound...]

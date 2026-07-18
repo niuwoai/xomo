@@ -497,6 +497,10 @@
 "imageEditor.option.opacity" = "Opacity";
 "imageEditor.option.strength" = "Strength";
 "imageEditor.option.exposure" = "Exposure";
+"imageEditor.option.toneRange" = "Range";
+"imageEditor.toneRange.shadows" = "Shadows";
+"imageEditor.toneRange.midtones" = "Midtones";
+"imageEditor.toneRange.highlights" = "Highlights";
 "imageEditor.option.fillOpacity" = "Fill";
 "imageEditor.option.blendIf" = "Blend If";
 "imageEditor.option.blendIfSource" = "This Layer";

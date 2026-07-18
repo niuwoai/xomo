@@ -2582,6 +2582,14 @@ final class XomoAutomationRegistry {
         if let hardness = arguments["hardness"]?.doubleValue {
             viewModel.hardness = max(0, min(1, hardness))
         }
+        if usesExposure, let rawRange = arguments["toneRange"]?.stringValue {
+            guard let range = ImageEditorToneRange(rawValue: rawRange) else {
+                throw XomoAutomationCallError.invalidArgument(
+                    "Dodge or burn toneRange must be shadows, midtones, or highlights"
+                )
+            }
+            viewModel.toneRange = range
+        }
         if let feather = arguments["feather"]?.doubleValue { viewModel.feather = max(0, feather) }
         if action == "setCloneSource" || action == "cloneStamp" {
             if let aligned = arguments["aligned"]?.boolValue {
@@ -3675,6 +3683,7 @@ private extension XomoAutomationRegistry {
             "opacity": XomoAutomationSchema.number(description: "Brush opacity"),
             "strength": XomoAutomationSchema.number(description: "Blur, sharpen, or smudge strength from 0 to 1; preferred over legacy opacity"),
             "exposure": XomoAutomationSchema.number(description: "Dodge or burn exposure from 0 to 1; preferred over legacy opacity"),
+            "toneRange": XomoAutomationSchema.string(description: "Dodge or burn tonal range", values: ["shadows", "midtones", "highlights"]),
             "hardness": XomoAutomationSchema.number(description: "Brush edge hardness from 0 to 1"),
             "feather": XomoAutomationSchema.number(description: "Patch selection feather radius"),
             "mode": XomoAutomationSchema.string(description: "Patch mode", values: ["source", "destination"]),

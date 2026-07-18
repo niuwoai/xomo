@@ -2091,6 +2091,70 @@ struct XomoAutomationTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.burn"))
     }
 
+    @Test func registryConfiguresAndValidatesDodgeBurnToneRange() {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        let point: XomoJSONValue = .array([
+            .object(["x": .number(32), "y": .number(32)])
+        ])
+
+        let shadows = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("dodge"),
+                "toneRange": .string("shadows"),
+                "points": point
+            ]
+        ))
+        #expect(shadows.ok)
+        #expect(viewModel.toneRange == .shadows)
+
+        let highlights = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("burn"),
+                "toneRange": .string("highlights"),
+                "points": point
+            ]
+        ))
+        #expect(highlights.ok)
+        #expect(viewModel.toneRange == .highlights)
+
+        let invalid = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("dodge"),
+                "toneRange": .string("everything"),
+                "points": point
+            ]
+        ))
+        #expect(!invalid.ok)
+        #expect(viewModel.toneRange == .highlights)
+    }
+
+    @Test func registryAdvertisesDodgeBurnToneRangeValues() throws {
+        let registry = XomoAutomationRegistry.shared
+        registry.register(makeViewModel())
+        let response = registry.execute(request(operation: "tools"))
+        guard case .array(let tools) = response.result else {
+            Issue.record("Expected tool array")
+            return
+        }
+        let specialPaint = try #require(tools.compactMap(\.objectValue).first {
+            $0["name"] == .string("xomo.paint.special")
+        })
+        let schema = try #require(specialPaint["inputSchema"]?.objectValue)
+        let properties = try #require(schema["properties"]?.objectValue)
+        let toneRange = try #require(properties["toneRange"]?.objectValue)
+        let values = toneRange["enum"]?.arrayValue
+
+        #expect(values == [.string("shadows"), .string("midtones"), .string("highlights")])
+    }
+
     @Test func registryKeepsLegacyDodgeOpacity() {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

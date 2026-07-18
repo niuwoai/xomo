@@ -250,6 +250,48 @@ struct ImageEditorToolSmokeTests {
         #expect(high.document.history.last?.title == L10n.text("imageEditor.history.burn"))
     }
 
+    @Test func toneRangeSelectivelyTargetsShadowsMidtonesAndHighlights() throws {
+        let image = tonalBandImage()
+        let shadows = makeConfiguredRetouchViewModel(image: image)
+        let midtones = makeConfiguredRetouchViewModel(image: image)
+        let highlights = makeConfiguredRetouchViewModel(image: image)
+        shadows.toneRange = .shadows
+        midtones.toneRange = .midtones
+        highlights.toneRange = .highlights
+        for viewModel in [shadows, midtones, highlights] {
+            viewModel.brushSize = 96
+        }
+        let point = CGPoint(x: 20, y: 14)
+        let darkPoint = CGPoint(x: 6, y: 14)
+        let middlePoint = CGPoint(x: 20, y: 14)
+        let lightPoint = CGPoint(x: 34, y: 14)
+
+        shadows.toneBrush(points: [point], burn: false)
+        midtones.toneBrush(points: [point], burn: false)
+        highlights.toneBrush(points: [point], burn: true)
+
+        let shadowDarkDelta = try redComponent(in: shadows, at: darkPoint) - 0.15
+        let shadowMiddleDelta = try redComponent(in: shadows, at: middlePoint) - 0.50
+        let shadowLightDelta = try redComponent(in: shadows, at: lightPoint) - 0.85
+        #expect(shadowDarkDelta > shadowMiddleDelta + 0.20)
+        #expect(shadowMiddleDelta > shadowLightDelta + 0.05)
+
+        let midtoneDarkDelta = try redComponent(in: midtones, at: darkPoint) - 0.15
+        let midtoneMiddleDelta = try redComponent(in: midtones, at: middlePoint) - 0.50
+        let midtoneLightDelta = try redComponent(in: midtones, at: lightPoint) - 0.85
+        #expect(midtoneMiddleDelta > midtoneDarkDelta + 0.20)
+        #expect(midtoneMiddleDelta > midtoneLightDelta + 0.25)
+
+        let highlightDarkDelta = 0.15 - (try redComponent(in: highlights, at: darkPoint))
+        let highlightMiddleDelta = 0.50 - (try redComponent(in: highlights, at: middlePoint))
+        let highlightLightDelta = 0.85 - (try redComponent(in: highlights, at: lightPoint))
+        #expect(highlightLightDelta > highlightMiddleDelta + 0.20)
+        #expect(highlightMiddleDelta > highlightDarkDelta + 0.05)
+        #expect(shadows.document.history.last?.title == L10n.text("imageEditor.history.dodge"))
+        #expect(midtones.document.history.last?.title == L10n.text("imageEditor.history.dodge"))
+        #expect(highlights.document.history.last?.title == L10n.text("imageEditor.history.burn"))
+    }
+
     @Test func blurAndSharpenHardnessControlTheVisibleStrokeEdge() throws {
         let hardEdge = NSImage.rendered(size: canvasSize) { rect in
             NSColor(deviceWhite: 0.35, alpha: 1).setFill()
@@ -512,6 +554,18 @@ struct ImageEditorToolSmokeTests {
             rect.fill()
             NSColor.white.setFill()
             CGRect(x: rect.midX, y: rect.minY, width: rect.width / 2, height: rect.height).fill()
+        } ?? NSImage.transparent(size: canvasSize)
+    }
+
+    private func tonalBandImage() -> NSImage {
+        NSImage.rendered(size: canvasSize) { rect in
+            let bandWidth = rect.width / 3
+            NSColor(deviceWhite: 0.15, alpha: 1).setFill()
+            CGRect(x: rect.minX, y: rect.minY, width: bandWidth, height: rect.height).fill()
+            NSColor(deviceWhite: 0.50, alpha: 1).setFill()
+            CGRect(x: rect.minX + bandWidth, y: rect.minY, width: bandWidth, height: rect.height).fill()
+            NSColor(deviceWhite: 0.85, alpha: 1).setFill()
+            CGRect(x: rect.minX + bandWidth * 2, y: rect.minY, width: rect.width - bandWidth * 2, height: rect.height).fill()
         } ?? NSImage.transparent(size: canvasSize)
     }
 

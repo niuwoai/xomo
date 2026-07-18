@@ -68,6 +68,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var brushPressureControlsSize = true
     @Published var brushPressureControlsFlow = true
     @Published var brushPressureSensitivity: CGFloat = 50
+    @Published var toneRange: ImageEditorToneRange = .midtones
     @Published var spongeMode: ImageEditorSpongeMode = .saturate
     @Published private(set) var customBrushPresets: [ImageEditorBrushPreset] = []
     @Published var customLayerStylePresets: [ImageEditorLayerStylePreset] = []
@@ -4654,7 +4655,8 @@ final class ImageEditorViewModel: ObservableObject {
             width: rasterLocalBrushWidth(brushSize, layer: layer),
             opacity: opacity,
             hardness: hardness,
-            burn: burn
+            burn: burn,
+            range: toneRange
         ) else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return

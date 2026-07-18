@@ -352,6 +352,23 @@ struct ImageEditorView: View {
                 .accessibilityIdentifier("image-editor-sponge-mode")
             }
 
+            if viewModel.selectedTool == .dodge || viewModel.selectedTool == .burn {
+                Picker(
+                    L10n.text("imageEditor.option.toneRange"),
+                    selection: $viewModel.toneRange
+                ) {
+                    ForEach(ImageEditorToneRange.allCases) { range in
+                        Text(range.title).tag(range)
+                    }
+                }
+                .labelsHidden()
+                .pickerStyle(.menu)
+                .focusable(false)
+                .frame(width: 116)
+                .help(L10n.text("imageEditor.option.toneRange"))
+                .accessibilityIdentifier("image-editor-tone-range")
+            }
+
             if viewModel.selectedTool == .text {
                 fontFamilyPicker(width: 190)
                 Stepper(

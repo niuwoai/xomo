@@ -497,6 +497,10 @@
 "imageEditor.option.opacity" = "不透明度";
 "imageEditor.option.strength" = "强度";
 "imageEditor.option.exposure" = "曝光度";
+"imageEditor.option.toneRange" = "范围";
+"imageEditor.toneRange.shadows" = "阴影";
+"imageEditor.toneRange.midtones" = "中间调";
+"imageEditor.toneRange.highlights" = "高光";
 "imageEditor.option.fillOpacity" = "填充";
 "imageEditor.option.blendIf" = "混合条件";
 "imageEditor.option.blendIfSource" = "当前图层";

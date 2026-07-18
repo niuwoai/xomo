@@ -8,6 +8,40 @@
 import AppKit
 import Foundation
 
+enum ImageEditorToneRange: String, CaseIterable, Identifiable {
+    case shadows
+    case midtones
+    case highlights
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .shadows:
+            L10n.text("imageEditor.toneRange.shadows")
+        case .midtones:
+            L10n.text("imageEditor.toneRange.midtones")
+        case .highlights:
+            L10n.text("imageEditor.toneRange.highlights")
+        }
+    }
+
+    /// Smooth, overlapping tonal masks avoid visible bands while retaining the
+    /// familiar Photoshop distinction between dark, middle, and light values.
+    func weight(for luminance: CGFloat) -> CGFloat {
+        let value = max(0, min(1, luminance))
+        switch self {
+        case .shadows:
+            return (1 - value) * (1 - value)
+        case .midtones:
+            let centered = max(0, 1 - abs(value - 0.5) * 2)
+            return centered * centered
+        case .highlights:
+            return value * value
+        }
+    }
+}
+
 enum ImageEditorSpongeMode: String, CaseIterable, Identifiable {
     case saturate
     case desaturate
@@ -30,7 +64,8 @@ extension NSImage {
         width: CGFloat,
         opacity: CGFloat,
         hardness: CGFloat,
-        burn: Bool
+        burn: Bool,
+        range: ImageEditorToneRange = .midtones
     ) -> NSImage? {
         let pixelWidth = max(1, Int(size.width.rounded()))
         let pixelHeight = max(1, Int(size.height.rounded()))
@@ -42,7 +77,7 @@ extension NSImage {
             hardness: hardness
         )
         guard maskAlpha.count == pixelWidth * pixelHeight else { return nil }
-        return toneAdjusted(maskAlpha: maskAlpha, opacity: opacity, burn: burn)
+        return toneAdjusted(maskAlpha: maskAlpha, opacity: opacity, burn: burn, range: range)
     }
 
     func withSpongeBrush(
@@ -213,7 +248,12 @@ extension NSImage {
         })
     }
 
-    private func toneAdjusted(maskAlpha: [UInt8], opacity: CGFloat, burn: Bool) -> NSImage? {
+    private func toneAdjusted(
+        maskAlpha: [UInt8],
+        opacity: CGFloat,
+        burn: Bool,
+        range: ImageEditorToneRange
+    ) -> NSImage? {
         let width = max(1, Int(size.width.rounded()))
         let height = max(1, Int(size.height.rounded()))
         let bytesPerPixel = 4
@@ -231,7 +271,12 @@ extension NSImage {
                 let offset = y * bytesPerRow + x * bytesPerPixel
                 let maskIndex = y * width + x
                 let maskStrength = CGFloat(maskAlpha[maskIndex]) / 255
-                let strength = clampedOpacity * maskStrength * effectScale
+                let red = CGFloat(sourcePixels[offset]) / 255
+                let green = CGFloat(sourcePixels[offset + 1]) / 255
+                let blue = CGFloat(sourcePixels[offset + 2]) / 255
+                let luminance = red * 0.2126 + green * 0.7152 + blue * 0.0722
+                let toneWeight = range.weight(for: luminance)
+                let strength = clampedOpacity * maskStrength * toneWeight * effectScale
                 guard strength > 0 else { continue }
 
                 for channel in 0..<3 {

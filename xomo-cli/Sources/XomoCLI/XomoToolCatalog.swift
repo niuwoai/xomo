@@ -48,6 +48,34 @@ enum XomoToolCatalog {
                     "additionalProperties": true
                 ]
             }
+            if name == "xomo.paint.special" {
+                tool["inputSchema"] = [
+                    "type": "object",
+                    "properties": [
+                        "action": [
+                            "type": "string",
+                            "enum": ["setCloneSource", "cloneStamp", "setHealingSource", "healing", "patch", "dodge", "burn", "sponge", "blur", "sharpen", "smudge", "redEye", "paintBucket"]
+                        ],
+                        "points": ["type": "array"],
+                        "x": ["type": "number"],
+                        "y": ["type": "number"],
+                        "size": ["type": "number"],
+                        "opacity": ["type": "number"],
+                        "strength": ["type": "number"],
+                        "exposure": ["type": "number"],
+                        "hardness": ["type": "number"],
+                        "feather": ["type": "number"],
+                        "toneRange": ["type": "string", "enum": ["shadows", "midtones", "highlights"]],
+                        "mode": ["type": "string", "enum": ["source", "destination"]],
+                        "healingMode": ["type": "string", "enum": ["source", "spot"]],
+                        "spongeMode": ["type": "string", "enum": ["saturate", "desaturate"]],
+                        "aligned": ["type": "boolean"],
+                        "sampleSource": ["type": "string", "enum": ["currentLayer", "currentAndBelow", "allVisible"]]
+                    ],
+                    "required": ["action"],
+                    "additionalProperties": true
+                ]
+            }
             return tool
         }
     }
@@ -143,7 +171,7 @@ enum XomoToolCatalog {
         ("xomo.brush.preset", "List, create, apply, or delete persisted brush presets."),
         ("xomo.paint.stroke", "Paint a pressure-aware brush or eraser stroke with size, hardness, opacity, flow, spacing, and pressure-curve controls."),
         ("xomo.paint.gradient", "Paint a gradient between canvas points."),
-        ("xomo.paint.special", "Use clone or healing with explicit source and sampling options, source/destination patching, exposure-aware dodge and burn, sponge, strength-aware blur, sharpen, and smudge, red-eye, and paint-bucket tools."),
+        ("xomo.paint.special", "Use clone or healing with explicit source and sampling options, source/destination patching, exposure- and tonal-range-aware dodge and burn, sponge, strength-aware blur, sharpen, and smudge, red-eye, and paint-bucket tools."),
         ("xomo.shape.create", "Create an editable rectangle or ellipse with solid or multi-stop linear-gradient fill, independent stroke, corner radii, and superellipse smoothing."),
         ("xomo.shape.get", "Inspect fill kind, editable multi-stop linear gradient, independent stroke, corner radii, and smoothing on the selected shape."),
         ("xomo.shape.update", "Update only the specified fill kind, multi-stop linear gradient, stroke, corner radii, and smoothing properties."),
