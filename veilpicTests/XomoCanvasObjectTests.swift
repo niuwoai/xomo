@@ -529,6 +529,23 @@ struct XomoCanvasObjectTests {
         }
     }
 
+    @Test func transformInspectorCanPreserveSelectedLayerAspectRatio() throws {
+        let viewModel = makeViewModel()
+        var layer = ImageEditorLayer.solidColorFill(
+            name: "Card",
+            size: CGSize(width: 96, height: 64),
+            content: ImageEditorSolidColorFillContent(red: 0.2, green: 0.6, blue: 0.9)
+        )
+        layer.frame.origin = CGPoint(x: 120, y: 100)
+        viewModel.document.layers.append(layer)
+        viewModel.selectLayer(layer.id)
+
+        viewModel.setSelectedLayerTransform(width: 192, preservingAspectRatio: true)
+
+        #expect(viewModel.selectedLayerTransformFrame?.width == 192)
+        #expect(viewModel.selectedLayerTransformFrame?.height == 128)
+    }
+
     private func makeViewModel() -> ImageEditorViewModel {
         ImageEditorViewModel(
             sourceName: "objects",

@@ -2539,6 +2539,8 @@
 "imageEditor.properties.transformYValue" = "Y：%.1f px";
 "imageEditor.properties.transformWidthValue" = "幅：%.1f px";
 "imageEditor.properties.transformHeightValue" = "高さ：%.1f px";
+"imageEditor.properties.aspectRatioLock" = "縦横比を固定";
+"imageEditor.properties.aspectRatioUnlock" = "縦横比の固定を解除";
 "imageEditor.properties.imageWidthValue" = "画像の幅：%d px";
 "imageEditor.properties.imageHeightValue" = "画像の高さ：%d px";
 "imageEditor.properties.canvasWidthValue" = "カンバスの幅：%d px";

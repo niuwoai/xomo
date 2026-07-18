@@ -2539,6 +2539,8 @@
 "imageEditor.properties.transformYValue" = "Y: %.1f px";
 "imageEditor.properties.transformWidthValue" = "Width: %.1f px";
 "imageEditor.properties.transformHeightValue" = "Height: %.1f px";
+"imageEditor.properties.aspectRatioLock" = "Lock aspect ratio";
+"imageEditor.properties.aspectRatioUnlock" = "Unlock aspect ratio";
 "imageEditor.properties.imageWidthValue" = "Image width: %d px";
 "imageEditor.properties.imageHeightValue" = "Image height: %d px";
 "imageEditor.properties.canvasWidthValue" = "Canvas width: %d px";

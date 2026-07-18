@@ -46,17 +46,30 @@ extension ImageEditorViewModel {
         x: Double? = nil,
         y: Double? = nil,
         width: Double? = nil,
-        height: Double? = nil
+        height: Double? = nil,
+        preservingAspectRatio: Bool = false
     ) {
         guard canResizeSelectedLayer,
               let currentFrame = selectedLayerTransformFrame
         else { return }
 
+        let currentWidth = max(currentFrame.width, 0.1)
+        let currentHeight = max(currentFrame.height, 0.1)
+        var targetWidth = CGFloat(width ?? Double(currentFrame.width))
+        var targetHeight = CGFloat(height ?? Double(currentFrame.height))
+        if preservingAspectRatio {
+            if width != nil, height == nil {
+                targetHeight = targetWidth * currentHeight / currentWidth
+            } else if height != nil, width == nil {
+                targetWidth = targetHeight * currentWidth / currentHeight
+            }
+        }
+
         let targetFrame = CGRect(
             x: CGFloat(x ?? Double(currentFrame.minX)),
             y: CGFloat(y ?? Double(currentFrame.minY)),
-            width: max(1, CGFloat(width ?? Double(currentFrame.width))),
-            height: max(1, CGFloat(height ?? Double(currentFrame.height)))
+            width: max(1, targetWidth),
+            height: max(1, targetHeight)
         )
         let originalFrames = editableTransformLayerIndices().reduce(into: [:]) { frames, index in
             frames[document.layers[index].id] = document.layers[index].frame.standardized

@@ -2539,6 +2539,8 @@
 "imageEditor.properties.transformYValue" = "Y：%.1f px";
 "imageEditor.properties.transformWidthValue" = "宽度：%.1f px";
 "imageEditor.properties.transformHeightValue" = "高度：%.1f px";
+"imageEditor.properties.aspectRatioLock" = "锁定宽高比";
+"imageEditor.properties.aspectRatioUnlock" = "解锁宽高比";
 "imageEditor.properties.imageWidthValue" = "图像宽度：%d px";
 "imageEditor.properties.imageHeightValue" = "图像高度：%d px";
 "imageEditor.properties.canvasWidthValue" = "画布宽度：%d px";

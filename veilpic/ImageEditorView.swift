@@ -121,6 +121,7 @@ struct ImageEditorView: View {
     @State private var canvasTextEditingLayerID: UUID?
     @State private var canvasTextEditingFrame: CGRect?
     @FocusState private var isCanvasTextEditorFocused: Bool
+    @State private var isTransformAspectRatioLocked = false
 
     init(sourceName: String, image: NSImage, onApply: @escaping (NSImage) -> Void) {
         _viewModel = StateObject(wrappedValue: ImageEditorViewModel(sourceName: sourceName, image: image, onApply: onApply))
@@ -3044,13 +3045,53 @@ struct ImageEditorView: View {
         }
     }
 
+    private func setSelectedLayerTransformWidth(_ value: Double) {
+        viewModel.setSelectedLayerTransform(
+            width: value,
+            preservingAspectRatio: isTransformAspectRatioLocked
+        )
+    }
+
+    private func setSelectedLayerTransformHeight(_ value: Double) {
+        viewModel.setSelectedLayerTransform(
+            height: value,
+            preservingAspectRatio: isTransformAspectRatioLocked
+        )
+    }
+
     private var selectedLayerTransformControls: some View {
         Group {
             if viewModel.selectedLayerTransformFrame != nil {
                 VStack(alignment: .leading, spacing: 7) {
-                    Text(L10n.text("imageEditor.properties.transform"))
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                    HStack(spacing: 7) {
+                        Text(L10n.text("imageEditor.properties.transform"))
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                        Spacer(minLength: 0)
+                        Button {
+                            isTransformAspectRatioLocked.toggle()
+                        } label: {
+                            Image(systemName: isTransformAspectRatioLocked ? "link" : "link.slash")
+                                .font(.system(size: 11, weight: .semibold))
+                        }
+                        .buttonStyle(EditorIconButtonStyle(isSelected: isTransformAspectRatioLocked))
+                        .focusable(false)
+                        .help(
+                            L10n.text(
+                                isTransformAspectRatioLocked
+                                    ? "imageEditor.properties.aspectRatioUnlock"
+                                    : "imageEditor.properties.aspectRatioLock"
+                            )
+                        )
+                        .accessibilityLabel(
+                            L10n.text(
+                                isTransformAspectRatioLocked
+                                    ? "imageEditor.properties.aspectRatioUnlock"
+                                    : "imageEditor.properties.aspectRatioLock"
+                            )
+                        )
+                        .accessibilityIdentifier("image-editor-transform-aspect-ratio-lock")
+                    }
 
                     HStack(spacing: 7) {
                         Stepper(
@@ -3094,7 +3135,7 @@ struct ImageEditorView: View {
                             ),
                             value: Binding(
                                 get: { viewModel.selectedLayerTransformWidth },
-                                set: { viewModel.setSelectedLayerTransform(width: $0) }
+                                set: { setSelectedLayerTransformWidth($0) }
                             ),
                             in: 1...12_000,
                             step: 1
@@ -3110,7 +3151,7 @@ struct ImageEditorView: View {
                             ),
                             value: Binding(
                                 get: { viewModel.selectedLayerTransformHeight },
-                                set: { viewModel.setSelectedLayerTransform(height: $0) }
+                                set: { setSelectedLayerTransformHeight($0) }
                             ),
                             in: 1...12_000,
                             step: 1

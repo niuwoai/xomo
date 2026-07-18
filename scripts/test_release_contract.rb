@@ -11,13 +11,13 @@ class ReleaseContractTest < Minitest::Test
     result = XomoReleaseContract.collect(File.expand_path("..", __dir__))
 
     assert result["passed"], result.inspect
-    assert_equal "2.12.0-rc283", result["version"]
-    assert_equal ["2.12.0-rc283"], result["project_versions"]
+    assert_equal "2.12.0-rc284", result["version"]
+    assert_equal ["2.12.0-rc284"], result["project_versions"]
   end
 
   def test_version_drift_fails_the_contract
     with_fixture do |root|
-      write_fixture(root, version: "2.12.0-rc283", cli_version: "2.12.0-rc282")
+      write_fixture(root, version: "2.12.0-rc284", cli_version: "2.12.0-rc283")
 
       result = XomoReleaseContract.collect(root)
 
@@ -43,7 +43,7 @@ class ReleaseContractTest < Minitest::Test
     Dir.mktmpdir("xomo-release-contract") { |root| yield root }
   end
 
-  def write_fixture(root, version: "2.12.0-rc283", cli_version: version, deployment_target: "13.0")
+  def write_fixture(root, version: "2.12.0-rc284", cli_version: version, deployment_target: "13.0")
     FileUtils.mkdir_p(File.join(root, "veilpic.xcodeproj"))
     FileUtils.mkdir_p(File.join(root, "veilpic"))
     FileUtils.mkdir_p(File.join(root, "xomo-cli/Sources/XomoCLI"))

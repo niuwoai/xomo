@@ -1,0 +1,30 @@
+{
+  "generated_at": "2026-07-18 18:48:00 +0800",
+  "total": 3,
+  "passed": 3,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "XomoCanvasObjectTests",
+      "method": "transformInspectorMovesSelectedLayerWithUndoHistory",
+      "identifier": "veilpicTests/XomoCanvasObjectTests/transformInspectorMovesSelectedLayerWithUndoHistory",
+      "passed": true,
+      "issues": []
+    },
+    {
+      "suite": "XomoCanvasObjectTests",
+      "method": "transformInspectorResizesComponentChildrenAsOneObject",
+      "identifier": "veilpicTests/XomoCanvasObjectTests/transformInspectorResizesComponentChildrenAsOneObject",
+      "passed": true,
+      "issues": []
+    },
+    {
+      "suite": "XomoCanvasObjectTests",
+      "method": "transformInspectorCanPreserveSelectedLayerAspectRatio",
+      "identifier": "veilpicTests/XomoCanvasObjectTests/transformInspectorCanPreserveSelectedLayerAspectRatio",
+      "passed": true,
+      "issues": []
+    }
+  ]
+}
