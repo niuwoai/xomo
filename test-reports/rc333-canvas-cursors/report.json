@@ -1,0 +1,319 @@
+{
+  "generated_at": "2026-07-19 04:23:36 +0800",
+  "total": 31,
+  "passed": 31,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorCanvasCursorTests",
+      "method": "activeLayerTransformKeepsItsCursorAfterPointerLeavesTheHandle",
+      "identifier": "veilpicTests/ImageEditorCanvasCursorTests/activeLayerTransformKeepsItsCursorAfterPointerLeavesTheHandle",
+      "file": "ImageEditorCanvasCursorTests.swift",
+      "passed": true,
+      "duration": 3.798,
+      "issues": [],
+      "log": "ImageEditorCanvasCursorTests.activeLayerTransformKeepsItsCursorAfterPointerLeavesTheHandle.log"
+    },
+    {
+      "suite": "ImageEditorCanvasCursorTests",
+      "method": "arrowNudgeUsesPhotoshopStyleModifierDistances",
+      "identifier": "veilpicTests/ImageEditorCanvasCursorTests/arrowNudgeUsesPhotoshopStyleModifierDistances",
+      "file": "ImageEditorCanvasCursorTests.swift",
+      "passed": true,
+      "duration": 4.616,
+      "issues": [],
+      "log": "ImageEditorCanvasCursorTests.arrowNudgeUsesPhotoshopStyleModifierDistances.log"
+    },
+    {
+      "suite": "ImageEditorCanvasCursorTests",
+      "method": "canvasContentHitSharesTheSameSemanticForCursorPaths",
+      "identifier": "veilpicTests/ImageEditorCanvasCursorTests/canvasContentHitSharesTheSameSemanticForCursorPaths",
+      "file": "ImageEditorCanvasCursorTests.swift",
+      "passed": true,
+      "duration": 3.87,
+      "issues": [],
+      "log": "ImageEditorCanvasCursorTests.canvasContentHitSharesTheSameSemanticForCursorPaths.log"
+    },
+    {
+      "suite": "ImageEditorCanvasCursorTests",
+      "method": "capsLockSwitchesEveryBrushLikeToolToPrecisionCursor",
+      "identifier": "veilpicTests/ImageEditorCanvasCursorTests/capsLockSwitchesEveryBrushLikeToolToPrecisionCursor",
+      "file": "ImageEditorCanvasCursorTests.swift",
+      "passed": true,
+      "duration": 3.741,
+      "issues": [],
+      "log": "ImageEditorCanvasCursorTests.capsLockSwitchesEveryBrushLikeToolToPrecisionCursor.log"
+    },
+    {
+      "suite": "ImageEditorCanvasCursorTests",
+      "method": "componentLibraryNeverLeaksAnyPreviousToolOrHoverCursor",
+      "identifier": "veilpicTests/ImageEditorCanvasCursorTests/componentLibraryNeverLeaksAnyPreviousToolOrHoverCursor",
+      "file": "ImageEditorCanvasCursorTests.swift",
+      "passed": true,
+      "duration": 4.027,
+      "issues": [],
+      "log": "ImageEditorCanvasCursorTests.componentLibraryNeverLeaksAnyPreviousToolOrHoverCursor.log"
+    },
+    {
+      "suite": "ImageEditorCanvasCursorTests",
+      "method": "componentLibraryUsesClosedHandOnlyDuringCanvasPan",
+      "identifier": "veilpicTests/ImageEditorCanvasCursorTests/componentLibraryUsesClosedHandOnlyDuringCanvasPan",
+      "file": "ImageEditorCanvasCursorTests.swift",
+      "passed": true,
+      "duration": 3.704,
+      "issues": [],
+      "log": "ImageEditorCanvasCursorTests.componentLibraryUsesClosedHandOnlyDuringCanvasPan.log"
+    },
+    {
+      "suite": "ImageEditorCanvasCursorTests",
+      "method": "componentLibraryUsesSystemArrowUntilDragOrCanvasPanBegins",
+      "identifier": "veilpicTests/ImageEditorCanvasCursorTests/componentLibraryUsesSystemArrowUntilDragOrCanvasPanBegins",
+      "file": "ImageEditorCanvasCursorTests.swift",
+      "passed": true,
+      "duration": 3.963,
+      "issues": [],
+      "log": "ImageEditorCanvasCursorTests.componentLibraryUsesSystemArrowUntilDragOrCanvasPanBegins.log"
+    },
+    {
+      "suite": "ImageEditorCanvasCursorTests",
+      "method": "cropHandlesUseContextualResizeCursors",
+      "identifier": "veilpicTests/ImageEditorCanvasCursorTests/cropHandlesUseContextualResizeCursors",
+      "file": "ImageEditorCanvasCursorTests.swift",
+      "passed": true,
+      "duration": 3.68,
+      "issues": [],
+      "log": "ImageEditorCanvasCursorTests.cropHandlesUseContextualResizeCursors.log"
+    },
+    {
+      "suite": "ImageEditorCanvasCursorTests",
+      "method": "cursorRectOnlyTreatsTheRenderedImageAsDrawableCanvas",
+      "identifier": "veilpicTests/ImageEditorCanvasCursorTests/cursorRectOnlyTreatsTheRenderedImageAsDrawableCanvas",
+      "file": "ImageEditorCanvasCursorTests.swift",
+      "passed": true,
+      "duration": 5.088,
+      "issues": [],
+      "log": "ImageEditorCanvasCursorTests.cursorRectOnlyTreatsTheRenderedImageAsDrawableCanvas.log"
+    },
+    {
+      "suite": "ImageEditorCanvasCursorTests",
+      "method": "directSelectionUsesAWhiteEditingArrowAndSharesTheAGroup",
+      "identifier": "veilpicTests/ImageEditorCanvasCursorTests/directSelectionUsesAWhiteEditingArrowAndSharesTheAGroup",
+      "file": "ImageEditorCanvasCursorTests.swift",
+      "passed": true,
+      "duration": 3.958,
+      "issues": [],
+      "log": "ImageEditorCanvasCursorTests.directSelectionUsesAWhiteEditingArrowAndSharesTheAGroup.log"
+    },
+    {
+      "suite": "ImageEditorCanvasCursorTests",
+      "method": "draggingAnObjectKeepsMoveCursorAcrossSidebarModes",
+      "identifier": "veilpicTests/ImageEditorCanvasCursorTests/draggingAnObjectKeepsMoveCursorAcrossSidebarModes",
+      "file": "ImageEditorCanvasCursorTests.swift",
+      "passed": true,
+      "duration": 4.064,
+      "issues": [],
+      "log": "ImageEditorCanvasCursorTests.draggingAnObjectKeepsMoveCursorAcrossSidebarModes.log"
+    },
+    {
+      "suite": "ImageEditorCanvasCursorTests",
+      "method": "interactionModeSeparatesComponentLibraryFromToolsAndPan",
+      "identifier": "veilpicTests/ImageEditorCanvasCursorTests/interactionModeSeparatesComponentLibraryFromToolsAndPan",
+      "file": "ImageEditorCanvasCursorTests.swift",
+      "passed": true,
+      "duration": 4.001,
+      "issues": [],
+      "log": "ImageEditorCanvasCursorTests.interactionModeSeparatesComponentLibraryFromToolsAndPan.log"
+    },
+    {
+      "suite": "ImageEditorCanvasCursorTests",
+      "method": "layerTransformControlsUseFamiliarResizeAndRotateCursors",
+      "identifier": "veilpicTests/ImageEditorCanvasCursorTests/layerTransformControlsUseFamiliarResizeAndRotateCursors",
+      "file": "ImageEditorCanvasCursorTests.swift",
+      "passed": true,
+      "duration": 3.637,
+      "issues": [],
+      "log": "ImageEditorCanvasCursorTests.layerTransformControlsUseFamiliarResizeAndRotateCursors.log"
+    },
+    {
+      "suite": "ImageEditorCanvasCursorTests",
+      "method": "layerTransformGeometryFindsTheNearestVisibleControl",
+      "identifier": "veilpicTests/ImageEditorCanvasCursorTests/layerTransformGeometryFindsTheNearestVisibleControl",
+      "file": "ImageEditorCanvasCursorTests.swift",
+      "passed": true,
+      "duration": 3.671,
+      "issues": [],
+      "log": "ImageEditorCanvasCursorTests.layerTransformGeometryFindsTheNearestVisibleControl.log"
+    },
+    {
+      "suite": "ImageEditorCanvasCursorTests",
+      "method": "marqueeUsesTheConventionalCrosshairForEveryBaseShape",
+      "identifier": "veilpicTests/ImageEditorCanvasCursorTests/marqueeUsesTheConventionalCrosshairForEveryBaseShape",
+      "file": "ImageEditorCanvasCursorTests.swift",
+      "passed": true,
+      "duration": 3.651,
+      "issues": [],
+      "log": "ImageEditorCanvasCursorTests.marqueeUsesTheConventionalCrosshairForEveryBaseShape.log"
+    },
+    {
+      "suite": "ImageEditorCanvasCursorTests",
+      "method": "moveCursorDoesNotClaimOccludedOrPositionLockedContent",
+      "identifier": "veilpicTests/ImageEditorCanvasCursorTests/moveCursorDoesNotClaimOccludedOrPositionLockedContent",
+      "file": "ImageEditorCanvasCursorTests.swift",
+      "passed": true,
+      "duration": 3.726,
+      "issues": [],
+      "log": "ImageEditorCanvasCursorTests.moveCursorDoesNotClaimOccludedOrPositionLockedContent.log"
+    },
+    {
+      "suite": "ImageEditorCanvasCursorTests",
+      "method": "moveCursorHitTestUsesComponentGeometryWithoutChangingSelection",
+      "identifier": "veilpicTests/ImageEditorCanvasCursorTests/moveCursorHitTestUsesComponentGeometryWithoutChangingSelection",
+      "file": "ImageEditorCanvasCursorTests.swift",
+      "passed": true,
+      "duration": 3.733,
+      "issues": [],
+      "log": "ImageEditorCanvasCursorTests.moveCursorHitTestUsesComponentGeometryWithoutChangingSelection.log"
+    },
+    {
+      "suite": "ImageEditorCanvasCursorTests",
+      "method": "moveCursorUsesTheFrontmostLockedLayerOverAnUnlockedLayer",
+      "identifier": "veilpicTests/ImageEditorCanvasCursorTests/moveCursorUsesTheFrontmostLockedLayerOverAnUnlockedLayer",
+      "file": "ImageEditorCanvasCursorTests.swift",
+      "passed": true,
+      "duration": 3.654,
+      "issues": [],
+      "log": "ImageEditorCanvasCursorTests.moveCursorUsesTheFrontmostLockedLayerOverAnUnlockedLayer.log"
+    },
+    {
+      "suite": "ImageEditorCanvasCursorTests",
+      "method": "moveToolShowsCopyBadgeOnlyAfterAnOptionDragStarts",
+      "identifier": "veilpicTests/ImageEditorCanvasCursorTests/moveToolShowsCopyBadgeOnlyAfterAnOptionDragStarts",
+      "file": "ImageEditorCanvasCursorTests.swift",
+      "passed": true,
+      "duration": 3.599,
+      "issues": [],
+      "log": "ImageEditorCanvasCursorTests.moveToolShowsCopyBadgeOnlyAfterAnOptionDragStarts.log"
+    },
+    {
+      "suite": "ImageEditorCanvasCursorTests",
+      "method": "objectDragReleaseAlwaysClosesEvenWhenPointerLeavesCanvasWindow",
+      "identifier": "veilpicTests/ImageEditorCanvasCursorTests/objectDragReleaseAlwaysClosesEvenWhenPointerLeavesCanvasWindow",
+      "file": "ImageEditorCanvasCursorTests.swift",
+      "passed": true,
+      "duration": 3.622,
+      "issues": [],
+      "log": "ImageEditorCanvasCursorTests.objectDragReleaseAlwaysClosesEvenWhenPointerLeavesCanvasWindow.log"
+    },
+    {
+      "suite": "ImageEditorCanvasCursorTests",
+      "method": "objectDragStartsOnlyAfterThePointerLeavesClickTolerance",
+      "identifier": "veilpicTests/ImageEditorCanvasCursorTests/objectDragStartsOnlyAfterThePointerLeavesClickTolerance",
+      "file": "ImageEditorCanvasCursorTests.swift",
+      "passed": true,
+      "duration": 3.855,
+      "issues": [],
+      "log": "ImageEditorCanvasCursorTests.objectDragStartsOnlyAfterThePointerLeavesClickTolerance.log"
+    },
+    {
+      "suite": "ImageEditorCanvasCursorTests",
+      "method": "pathSelectionUsesTheFamiliarSystemArrowAndPhotoshopShortcut",
+      "identifier": "veilpicTests/ImageEditorCanvasCursorTests/pathSelectionUsesTheFamiliarSystemArrowAndPhotoshopShortcut",
+      "file": "ImageEditorCanvasCursorTests.swift",
+      "passed": true,
+      "duration": 3.91,
+      "issues": [],
+      "log": "ImageEditorCanvasCursorTests.pathSelectionUsesTheFamiliarSystemArrowAndPhotoshopShortcut.log"
+    },
+    {
+      "suite": "ImageEditorCanvasCursorTests",
+      "method": "selectionCursorModesReflectPhotoshopModifierSemantics",
+      "identifier": "veilpicTests/ImageEditorCanvasCursorTests/selectionCursorModesReflectPhotoshopModifierSemantics",
+      "file": "ImageEditorCanvasCursorTests.swift",
+      "passed": true,
+      "duration": 3.695,
+      "issues": [],
+      "log": "ImageEditorCanvasCursorTests.selectionCursorModesReflectPhotoshopModifierSemantics.log"
+    },
+    {
+      "suite": "ImageEditorCanvasCursorTests",
+      "method": "selectionModifierCursorStillCommunicatesAddSubtractModes",
+      "identifier": "veilpicTests/ImageEditorCanvasCursorTests/selectionModifierCursorStillCommunicatesAddSubtractModes",
+      "file": "ImageEditorCanvasCursorTests.swift",
+      "passed": true,
+      "duration": 3.737,
+      "issues": [],
+      "log": "ImageEditorCanvasCursorTests.selectionModifierCursorStillCommunicatesAddSubtractModes.log"
+    },
+    {
+      "suite": "ImageEditorCanvasCursorTests",
+      "method": "selectionToolsUseRecognizablePointersInsteadOfOneGenericShape",
+      "identifier": "veilpicTests/ImageEditorCanvasCursorTests/selectionToolsUseRecognizablePointersInsteadOfOneGenericShape",
+      "file": "ImageEditorCanvasCursorTests.swift",
+      "passed": true,
+      "duration": 3.799,
+      "issues": [],
+      "log": "ImageEditorCanvasCursorTests.selectionToolsUseRecognizablePointersInsteadOfOneGenericShape.log"
+    },
+    {
+      "suite": "ImageEditorCanvasCursorTests",
+      "method": "toolCursorFallsBackToSystemArrowOutsideDrawableCanvas",
+      "identifier": "veilpicTests/ImageEditorCanvasCursorTests/toolCursorFallsBackToSystemArrowOutsideDrawableCanvas",
+      "file": "ImageEditorCanvasCursorTests.swift",
+      "passed": true,
+      "duration": 3.972,
+      "issues": [],
+      "log": "ImageEditorCanvasCursorTests.toolCursorFallsBackToSystemArrowOutsideDrawableCanvas.log"
+    },
+    {
+      "suite": "ImageEditorCanvasCursorTests",
+      "method": "toolCursorsUseFamiliarPrecisionAndBrushConventions",
+      "identifier": "veilpicTests/ImageEditorCanvasCursorTests/toolCursorsUseFamiliarPrecisionAndBrushConventions",
+      "file": "ImageEditorCanvasCursorTests.swift",
+      "passed": true,
+      "duration": 4.079,
+      "issues": [],
+      "log": "ImageEditorCanvasCursorTests.toolCursorsUseFamiliarPrecisionAndBrushConventions.log"
+    },
+    {
+      "suite": "ImageEditorCanvasCursorTests",
+      "method": "toolsTabPreservesSelectedToolCursorAndPanOverride",
+      "identifier": "veilpicTests/ImageEditorCanvasCursorTests/toolsTabPreservesSelectedToolCursorAndPanOverride",
+      "file": "ImageEditorCanvasCursorTests.swift",
+      "passed": true,
+      "duration": 3.833,
+      "issues": [],
+      "log": "ImageEditorCanvasCursorTests.toolsTabPreservesSelectedToolCursorAndPanOverride.log"
+    },
+    {
+      "suite": "ImageEditorCanvasCursorTests",
+      "method": "transformControlCursorOverridesComponentArrowOutsideDrawableCanvas",
+      "identifier": "veilpicTests/ImageEditorCanvasCursorTests/transformControlCursorOverridesComponentArrowOutsideDrawableCanvas",
+      "file": "ImageEditorCanvasCursorTests.swift",
+      "passed": true,
+      "duration": 3.989,
+      "issues": [],
+      "log": "ImageEditorCanvasCursorTests.transformControlCursorOverridesComponentArrowOutsideDrawableCanvas.log"
+    },
+    {
+      "suite": "ImageEditorCanvasCursorTests",
+      "method": "zoomCursorReflectsOptionZoomOutMode",
+      "identifier": "veilpicTests/ImageEditorCanvasCursorTests/zoomCursorReflectsOptionZoomOutMode",
+      "file": "ImageEditorCanvasCursorTests.swift",
+      "passed": true,
+      "duration": 3.556,
+      "issues": [],
+      "log": "ImageEditorCanvasCursorTests.zoomCursorReflectsOptionZoomOutMode.log"
+    },
+    {
+      "suite": "ImageEditorCanvasCursorTests",
+      "method": "zoomDirectionUsesOptionForZoomOut",
+      "identifier": "veilpicTests/ImageEditorCanvasCursorTests/zoomDirectionUsesOptionForZoomOut",
+      "file": "ImageEditorCanvasCursorTests.swift",
+      "passed": true,
+      "duration": 3.629,
+      "issues": [],
+      "log": "ImageEditorCanvasCursorTests.zoomDirectionUsesOptionForZoomOut.log"
+    }
+  ]
+}

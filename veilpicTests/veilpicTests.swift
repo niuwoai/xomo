@@ -6521,20 +6521,25 @@ struct veilpicTests {
         let zoom = ImageEditorCanvasCursor.cursor(for: .zoom, brushDiameter: 18)
         let marquee = ImageEditorCanvasCursor.cursor(for: .marquee, brushDiameter: 18)
         #expect(zoom.image.tiffRepresentation != marquee.image.tiffRepresentation)
-        #expect(ImageEditorCanvasCursor.cursor(for: .move, brushDiameter: 18) !== NSCursor.arrow)
+        #expect(ImageEditorCanvasCursor.cursor(for: .move, brushDiameter: 18) === NSCursor.arrow)
     }
 
     @MainActor
-    @Test func precisionToolsExposeDistinctCursorArtwork() async throws {
-        let tools: [ImageEditorTool] = [
-            .marquee, .lasso, .magicWand, .crop, .patchTool,
-            .gradient, .rectangle, .ellipse
+    @Test func precisionToolsShareTheConventionalCrosshair() async throws {
+        let precisionTools: [ImageEditorTool] = [
+            .marquee, .crop, .gradient, .rectangle, .ellipse,
+            .redEye, .colorSampler
         ]
-        let representations = tools.compactMap {
-            ImageEditorCanvasCursor.cursor(for: $0, brushDiameter: 18).image.tiffRepresentation
+        for tool in precisionTools {
+            #expect(ImageEditorCanvasCursor.cursor(for: tool, brushDiameter: 18) === NSCursor.crosshair)
         }
-        #expect(representations.count == tools.count)
-        #expect(Set(representations).count == tools.count)
+
+        let lasso = ImageEditorCanvasCursor.cursor(for: .lasso, brushDiameter: 18)
+        let magicWand = ImageEditorCanvasCursor.cursor(for: .magicWand, brushDiameter: 18)
+        let patch = ImageEditorCanvasCursor.cursor(for: .patchTool, brushDiameter: 18)
+        #expect(lasso !== NSCursor.crosshair)
+        #expect(magicWand !== NSCursor.crosshair)
+        #expect(patch !== NSCursor.crosshair)
     }
 
     @MainActor

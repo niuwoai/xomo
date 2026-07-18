@@ -51,7 +51,7 @@ struct ImageEditorCanvasCursorTests {
             ) == .move
         )
         #expect(
-            ImageEditorCanvasCursor.cursor(for: .move, brushDiameter: 18) !== NSCursor.arrow
+            ImageEditorCanvasCursor.cursor(for: .move, brushDiameter: 18) === NSCursor.arrow
         )
         #expect(
             ImageEditorCanvasCursor.tool(
@@ -185,8 +185,7 @@ struct ImageEditorCanvasCursorTests {
             selectedTool: .move,
             brushDiameter: 18
         )
-        #expect(move !== NSCursor.arrow)
-        #expect(move.image.tiffRepresentation != NSCursor.arrow.image.tiffRepresentation)
+        #expect(move === NSCursor.arrow)
         #expect(ImageEditorCanvasCursor.family(for: .move) == .moveTool)
 
         let emptyCanvasMove = ImageEditorCanvasCursor.cursor(
@@ -326,20 +325,43 @@ struct ImageEditorCanvasCursorTests {
         )
     }
 
-    @Test func moveToolShowsCopyBadgeWhileHoldingOption() {
-        let normal = ImageEditorCanvasCursor.cursor(
-            for: .tools,
-            selectedTool: .move,
-            brushDiameter: 18
+    @Test func objectDragStartsOnlyAfterThePointerLeavesClickTolerance() {
+        let start = CGPoint(x: 120, y: 90)
+
+        #expect(
+            ImageEditorObjectDragEventPolicy.shouldActivate(
+                from: start,
+                to: CGPoint(x: 122, y: 92)
+            ) == false
         )
-        let duplicating = ImageEditorCanvasCursor.cursor(
-            for: .tools,
-            selectedTool: .move,
-            brushDiameter: 18,
-            modifierFlags: [.option]
+        #expect(
+            ImageEditorObjectDragEventPolicy.shouldActivate(
+                from: start,
+                to: CGPoint(x: 123, y: 90)
+            )
         )
+        #expect(
+            ImageEditorObjectDragEventPolicy.shouldActivate(
+                from: start,
+                to: CGPoint(x: 120, y: 86)
+            )
+        )
+    }
+
+    @Test func moveToolShowsCopyBadgeOnlyAfterAnOptionDragStarts() {
+        let normal = ImageEditorCanvasCursor.objectMoveCursor()
+        let duplicating = ImageEditorCanvasCursor.objectMoveCursor(isDuplicating: true)
 
         #expect(normal.image.tiffRepresentation != duplicating.image.tiffRepresentation)
+        #expect(ImageEditorCanvasCursor.cursor(for: .move, brushDiameter: 18) === NSCursor.arrow)
+        #expect(
+            ImageEditorCanvasCursor.cursor(
+                for: .tools,
+                selectedTool: .move,
+                brushDiameter: 18,
+                modifierFlags: [.option]
+            ) === NSCursor.arrow
+        )
     }
 
     @Test func arrowNudgeUsesPhotoshopStyleModifierDistances() {
@@ -359,12 +381,13 @@ struct ImageEditorCanvasCursorTests {
         let add = ImageEditorCanvasCursor.cursor(for: .marquee, brushDiameter: 18, modifierFlags: [.shift])
         let subtract = ImageEditorCanvasCursor.cursor(for: .marquee, brushDiameter: 18, modifierFlags: [.option])
         let intersect = ImageEditorCanvasCursor.cursor(for: .marquee, brushDiameter: 18, modifierFlags: [.shift, .option])
+        #expect(replace === NSCursor.crosshair)
         #expect(replace.image.tiffRepresentation != add.image.tiffRepresentation)
         #expect(add.image.tiffRepresentation != subtract.image.tiffRepresentation)
         #expect(subtract.image.tiffRepresentation != intersect.image.tiffRepresentation)
     }
 
-    @Test func marqueeCursorReflectsTheSelectedSelectionShape() {
+    @Test func marqueeUsesTheConventionalCrosshairForEveryBaseShape() {
         let rectangle = ImageEditorCanvasCursor.cursor(
             for: .marquee,
             brushDiameter: 18,
@@ -376,7 +399,8 @@ struct ImageEditorCanvasCursorTests {
             marqueeShape: .ellipse
         )
 
-        #expect(rectangle.image.tiffRepresentation != ellipse.image.tiffRepresentation)
+        #expect(rectangle === NSCursor.crosshair)
+        #expect(ellipse === NSCursor.crosshair)
     }
 
     @Test func capsLockSwitchesEveryBrushLikeToolToPrecisionCursor() {
@@ -653,20 +677,20 @@ struct ImageEditorCanvasCursorTests {
         #expect(ImageEditorCanvasCursor.family(for: .sharpen) == .retouchBrush)
         #expect(ImageEditorCanvasCursor.family(for: .smudge) == .retouchBrush)
 
-        let semanticTools: [ImageEditorTool] = [
-            .marquee, .lasso, .magicWand, .quickSelection,
-            .crop, .patchTool, .gradient, .rectangle, .ellipse, .pen
+        let precisionTools: [ImageEditorTool] = [
+            .marquee, .crop, .gradient, .rectangle, .ellipse, .redEye, .colorSampler
         ]
-        for tool in semanticTools {
-            let cursor = ImageEditorCanvasCursor.cursor(for: tool, brushDiameter: 18)
-            #expect(cursor !== NSCursor.crosshair)
-            #expect(cursor.image.tiffRepresentation != NSCursor.crosshair.image.tiffRepresentation)
+        for tool in precisionTools {
+            #expect(ImageEditorCanvasCursor.cursor(for: tool, brushDiameter: 18) === NSCursor.crosshair)
         }
 
-        #expect(
-            ImageEditorCanvasCursor.cursor(for: .rectangle, brushDiameter: 18).image.tiffRepresentation
-                != ImageEditorCanvasCursor.cursor(for: .ellipse, brushDiameter: 18).image.tiffRepresentation
-        )
+        let familiarSpecificTools: [ImageEditorTool] = [
+            .lasso, .magicWand, .quickSelection, .patchTool, .pen,
+            .paintBucket, .eyedropper, .zoom
+        ]
+        for tool in familiarSpecificTools {
+            #expect(ImageEditorCanvasCursor.cursor(for: tool, brushDiameter: 18) !== NSCursor.crosshair)
+        }
 
         let brushTools: [ImageEditorTool] = [
             .brush, .eraser, .cloneStamp, .healingBrush,
@@ -713,9 +737,13 @@ struct ImageEditorCanvasCursorTests {
         ]
         for tool in tools {
             let base = ImageEditorCanvasCursor.cursor(for: tool, brushDiameter: 18)
-            #expect(base !== NSCursor.crosshair)
             let add = ImageEditorCanvasCursor.cursor(for: tool, brushDiameter: 18, modifierFlags: [.shift])
             let subtract = ImageEditorCanvasCursor.cursor(for: tool, brushDiameter: 18, modifierFlags: [.option])
+            if tool == .marquee {
+                #expect(base === NSCursor.crosshair)
+            } else {
+                #expect(base !== NSCursor.crosshair)
+            }
             #expect(add.image.tiffRepresentation != base.image.tiffRepresentation)
             #expect(subtract.image.tiffRepresentation != base.image.tiffRepresentation)
             #expect(add.image.tiffRepresentation != subtract.image.tiffRepresentation)

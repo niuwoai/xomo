@@ -1,0 +1,19 @@
+{
+  "generated_at": "2026-07-19 04:24:19 +0800",
+  "total": 1,
+  "passed": 1,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "XomoCanvasObjectTests",
+      "method": "componentsTabSwitchesToAnotherObjectBeforeDragging",
+      "identifier": "veilpicTests/XomoCanvasObjectTests/componentsTabSwitchesToAnotherObjectBeforeDragging",
+      "file": "XomoCanvasObjectTests.swift",
+      "passed": true,
+      "duration": 3.684,
+      "issues": [],
+      "log": "XomoCanvasObjectTests.componentsTabSwitchesToAnotherObjectBeforeDragging.log"
+    }
+  ]
+}

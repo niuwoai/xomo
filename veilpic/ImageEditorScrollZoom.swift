@@ -18,6 +18,14 @@ enum ImageEditorCanvasMiddleMousePanGeometry {
 }
 
 enum ImageEditorObjectDragEventPolicy {
+    static let activationDistance: CGFloat = 3
+
+    static func shouldActivate(from start: CGPoint, to current: CGPoint) -> Bool {
+        let deltaX = current.x - start.x
+        let deltaY = current.y - start.y
+        return hypot(deltaX, deltaY) >= activationDistance
+    }
+
     static func shouldFinish(
         eventType: NSEvent.EventType,
         isObjectMoving: Bool
@@ -37,9 +45,11 @@ struct ScrollWheelZoomView: NSViewRepresentable {
     let onMiddleMousePanBegan: () -> Void
     let onMiddleMousePanChanged: (_ delta: CGSize) -> Void
     let onMiddleMousePanEnded: () -> Void
-    /// 仅在画布内已经命中可移动组件时消费左键拖拽，绕过 macOS 13
-    /// dropDestination 与 SwiftUI DragGesture 的竞争。
-    let onObjectMoveBegan: (_ location: CGPoint, _ modifierFlags: NSEvent.ModifierFlags) -> Bool
+    /// Mouse-down only selects and records a draggable component candidate.
+    /// The actual transform transaction starts after a familiar small drag
+    /// threshold, so an ordinary click stays cheap and responsive.
+    let onObjectMoveCandidateBegan: (_ location: CGPoint, _ modifierFlags: NSEvent.ModifierFlags) -> Bool
+    let onObjectMoveActivated: () -> Bool
     let onObjectMoveChanged: (_ translation: CGSize) -> Void
     let onObjectMoveEnded: () -> Void
 
@@ -50,7 +60,8 @@ struct ScrollWheelZoomView: NSViewRepresentable {
         view.onMiddleMousePanBegan = onMiddleMousePanBegan
         view.onMiddleMousePanChanged = onMiddleMousePanChanged
         view.onMiddleMousePanEnded = onMiddleMousePanEnded
-        view.onObjectMoveBegan = onObjectMoveBegan
+        view.onObjectMoveCandidateBegan = onObjectMoveCandidateBegan
+        view.onObjectMoveActivated = onObjectMoveActivated
         view.onObjectMoveChanged = onObjectMoveChanged
         view.onObjectMoveEnded = onObjectMoveEnded
         return view
@@ -62,7 +73,8 @@ struct ScrollWheelZoomView: NSViewRepresentable {
         nsView.onMiddleMousePanBegan = onMiddleMousePanBegan
         nsView.onMiddleMousePanChanged = onMiddleMousePanChanged
         nsView.onMiddleMousePanEnded = onMiddleMousePanEnded
-        nsView.onObjectMoveBegan = onObjectMoveBegan
+        nsView.onObjectMoveCandidateBegan = onObjectMoveCandidateBegan
+        nsView.onObjectMoveActivated = onObjectMoveActivated
         nsView.onObjectMoveChanged = onObjectMoveChanged
         nsView.onObjectMoveEnded = onObjectMoveEnded
     }
@@ -78,7 +90,8 @@ final class ScrollWheelZoomNSView: NSView {
     var onMiddleMousePanBegan: (() -> Void)?
     var onMiddleMousePanChanged: ((CGSize) -> Void)?
     var onMiddleMousePanEnded: (() -> Void)?
-    var onObjectMoveBegan: ((_ location: CGPoint, _ modifierFlags: NSEvent.ModifierFlags) -> Bool)?
+    var onObjectMoveCandidateBegan: ((_ location: CGPoint, _ modifierFlags: NSEvent.ModifierFlags) -> Bool)?
+    var onObjectMoveActivated: (() -> Bool)?
     var onObjectMoveChanged: ((_ translation: CGSize) -> Void)?
     var onObjectMoveEnded: (() -> Void)?
     private var monitor: Any?
@@ -88,6 +101,7 @@ final class ScrollWheelZoomNSView: NSView {
     private var isMiddleMousePanning = false
     private var lastMiddleMousePoint: CGPoint?
     private var isObjectMoving = false
+    private var hasObjectMoveCandidate = false
     private var objectMoveStartPoint: CGPoint?
 
     // 采用左上原点，坐标系与 SwiftUI 画布对齐，锚点不会上下翻转。
@@ -160,6 +174,7 @@ final class ScrollWheelZoomNSView: NSView {
             onObjectMoveEnded?()
         }
         isObjectMoving = false
+        hasObjectMoveCandidate = false
         objectMoveStartPoint = nil
         if isMiddleMousePanning {
             onMiddleMousePanEnded?()
@@ -189,16 +204,28 @@ final class ScrollWheelZoomNSView: NSView {
         case .leftMouseDown:
             guard event.window === window else { return false }
             let location = convert(event.locationInWindow, from: nil)
-            guard bounds.contains(location), !isObjectMoving else { return false }
+            guard bounds.contains(location), !hasObjectMoveCandidate, !isObjectMoving else { return false }
             let flags = event.modifierFlags.intersection([.command, .option, .shift, .control])
-            guard onObjectMoveBegan?(location, flags) == true else { return false }
-            isObjectMoving = true
+            guard onObjectMoveCandidateBegan?(location, flags) == true else { return false }
+            hasObjectMoveCandidate = true
             objectMoveStartPoint = location
             return true
         case .leftMouseDragged:
             guard event.window === window else { return false }
             let location = convert(event.locationInWindow, from: nil)
-            guard isObjectMoving, let objectMoveStartPoint else { return false }
+            guard hasObjectMoveCandidate, let objectMoveStartPoint else { return false }
+            if !isObjectMoving {
+                guard ImageEditorObjectDragEventPolicy.shouldActivate(
+                    from: objectMoveStartPoint,
+                    to: location
+                ) else { return true }
+                guard onObjectMoveActivated?() == true else {
+                    hasObjectMoveCandidate = false
+                    self.objectMoveStartPoint = nil
+                    return true
+                }
+                isObjectMoving = true
+            }
             onObjectMoveChanged?(CGSize(
                 width: location.x - objectMoveStartPoint.x,
                 height: location.y - objectMoveStartPoint.y
@@ -209,12 +236,15 @@ final class ScrollWheelZoomNSView: NSView {
             // has crossed the canvas/window edge. Always close the transaction
             // once a drag has started, otherwise the next click is swallowed
             // and the closed-hand cursor can remain stuck indefinitely.
-            guard ImageEditorObjectDragEventPolicy.shouldFinish(
+            guard hasObjectMoveCandidate || isObjectMoving else { return false }
+            if ImageEditorObjectDragEventPolicy.shouldFinish(
                 eventType: event.type,
                 isObjectMoving: isObjectMoving
-            ) else { return false }
-            onObjectMoveEnded?()
+            ) {
+                onObjectMoveEnded?()
+            }
             isObjectMoving = false
+            hasObjectMoveCandidate = false
             objectMoveStartPoint = nil
             return true
         default:

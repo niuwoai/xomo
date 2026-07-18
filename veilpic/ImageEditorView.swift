@@ -1446,13 +1446,16 @@ struct ImageEditorView: View {
                             isCanvasPanGestureActive = false
                             refreshCanvasCursor(in: geometry.size)
                         },
-                        onObjectMoveBegan: { location, modifierFlags in
+                        onObjectMoveCandidateBegan: { location, modifierFlags in
                             guard canvasInteractionTool == .move,
                                   modifierFlags.isEmpty,
                                   let imagePoint = imagePoint(from: location, in: geometry.size),
                                   viewModel.selectXomoObject(at: imagePoint),
                                   viewModel.canResizeSelectedLayer
                             else { return false }
+                            return true
+                        },
+                        onObjectMoveActivated: {
                             resetObjectMoveTracking()
                             guard viewModel.beginMovingSelectedLayer() else { return false }
                             isSelectedObjectMoveGestureActive = true
@@ -1482,7 +1485,13 @@ struct ImageEditorView: View {
                         imageRect: imageRect
                     )
                     let canvasPoint = hoverViewPoint.flatMap { imagePoint(from: $0, in: geometry.size) }
-                    let contentHit = canvasPoint.map(viewModel.canvasContentHit(at:)) ?? .none
+                    let objectMoveIsActive = isSelectedObjectMoveGestureActive || isObjectMoveGestureActive
+                    // The move cursor wins for the entire active transaction.
+                    // Avoid rescanning visible pixels and the layer stack for
+                    // every lightweight preview-frame update while dragging.
+                    let contentHit: XomoCanvasContentHit = objectMoveIsActive
+                        ? .movable
+                        : (canvasPoint.map(viewModel.canvasContentHit(at:)) ?? .none)
                     let cropHandle = cropInteractionHandle(at: hoverViewPoint, in: geometry.size)
                     let layerTransformTarget = layerTransformCursorTarget(
                         at: hoverViewPoint,
@@ -1497,7 +1506,7 @@ struct ImageEditorView: View {
                             isPointerOverMovableContent: contentHit.isMovable,
                             isPointerOverBlockedContent: contentHit.isBlocked,
                             handIsDragging: isCanvasPanGestureActive,
-                            isObjectMoveGestureActive: isSelectedObjectMoveGestureActive || isObjectMoveGestureActive,
+                            isObjectMoveGestureActive: objectMoveIsActive,
                             isSpacebarPanning: isSpacebarPanning,
                             isCanvasPanGestureActive: isCanvasPanGestureActive,
                             modifierFlags: canvasModifierFlags,
@@ -8077,6 +8086,12 @@ enum ImageEditorCanvasCursor {
             if selectedTool == .move, !isPointerOverMovableContent {
                 return .openHand
             }
+            if selectedTool == .move {
+                // Sketch and Figma keep the ordinary pointer while hovering a
+                // selectable object. The four-way move cursor appears only
+                // after a real drag starts, so hover never impersonates pan.
+                return .arrow
+            }
             return cursor(
                 for: selectedTool,
                 brushDiameter: brushDiameter,
@@ -8431,13 +8446,15 @@ enum ImageEditorCanvasCursor {
         case .directSelection:
             return directSelectionCursor()
         case .moveTool:
-            return moveToolCursor(isDuplicating: modifierFlags.contains(.option))
+            return .arrow
         case .grab:
             return handIsDragging ? .closedHand : .openHand
         case .textInsertion:
             return .iBeam
         case .selectionMarquee:
-            return familiarSelectionCursor(mode: selectionMode, shape: marqueeShape)
+            return selectionMode == .replace
+                ? .crosshair
+                : familiarSelectionCursor(mode: selectionMode, shape: marqueeShape)
         case .lasso:
             return lassoCursor(mode: selectionMode)
         case .magicWand:
@@ -8460,21 +8477,21 @@ enum ImageEditorCanvasCursor {
             if let cropHandle {
                 return cropResizeCursor(for: cropHandle)
             }
-            return cropCursor()
+            return .crosshair
         case .patch:
             return patchCursor()
         case .gradient:
-            return gradientCursor()
+            return .crosshair
         case .rectangleOutline, .ellipseOutline:
-            return shapeCursor(for: tool)
+            return .crosshair
         case .paintBucket:
             return paintBucketCursor()
         case .eyedropper:
             return eyedropperCursor()
         case .redEye:
-            return redEyeCursor()
+            return .crosshair
         case .samplingScope:
-            return samplingScopeCursor()
+            return .crosshair
         case .vectorPen:
             return penCursor(isClosing: penIsClosing)
         case .zoomMagnifier:
