@@ -4747,7 +4747,7 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func healingBrush(points: [CGPoint]) {
-        guard points.count > 1 else { return }
+        guard !points.isEmpty else { return }
         guard !isEditingLayerMask else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return

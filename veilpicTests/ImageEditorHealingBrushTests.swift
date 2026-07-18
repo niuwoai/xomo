@@ -42,6 +42,32 @@ struct ImageEditorHealingBrushTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.healingBrush"))
     }
 
+    @Test func imageEditorHealingBrushRepairsASingleClick() throws {
+        let canvasSize = NSSize(width: 80, height: 50)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: blemishImage(size: canvasSize)
+        ) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(
+            blemishImage(size: canvasSize),
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+        viewModel.brushSize = 12
+        viewModel.hardness = 1
+        viewModel.opacity = 1
+        viewModel.setHealingSource(at: CGPoint(x: 16, y: 25))
+
+        viewModel.healingBrush(points: [CGPoint(x: 40, y: 25)])
+
+        let layer = try #require(viewModel.document.selectedLayer)
+        let healed = try #require(
+            layer.image.color(at: CGPoint(x: 40, y: 25))?.usingColorSpace(.deviceRGB)
+        )
+        #expect(healed.redComponent < 0.55)
+        #expect(abs(healed.redComponent - healed.greenComponent) < 0.18)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.healingBrush"))
+    }
+
     @Test func imageEditorHealingBrushRespectsActiveSelection() async throws {
         let canvasSize = NSSize(width: 80, height: 50)
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: blemishImage(size: canvasSize)) { _ in }
@@ -81,6 +107,21 @@ struct ImageEditorHealingBrushTests {
         )
 
         #expect(sparse == dense)
+    }
+
+    @Test func healingStrokeMaskSupportsASinglePointDab() {
+        let alpha = ImageEditorHealingBrushKernel.strokeAlpha(
+            width: 24,
+            height: 24,
+            points: [CGPoint(x: 12, y: 12)],
+            diameter: 10,
+            hardness: 0.5
+        )
+
+        #expect(alpha.count == 24 * 24)
+        #expect(alpha[12 * 24 + 12] > 240)
+        #expect(alpha[12 * 24 + 16] > 0)
+        #expect(alpha[12 * 24 + 18] == 0)
     }
 
     @Test func healingStrokeHardnessPreservesAVisibleSoftEdge() {

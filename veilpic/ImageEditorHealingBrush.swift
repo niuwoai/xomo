@@ -18,7 +18,7 @@ extension NSImage {
         opacity: CGFloat,
         hardness: CGFloat
     ) -> NSImage? {
-        guard points.count > 1 else { return nil }
+        guard !points.isEmpty else { return nil }
         let pixelWidth = max(1, Int(size.width.rounded()))
         let pixelHeight = max(1, Int(size.height.rounded()))
         let bytesPerRow = pixelWidth * ImageEditorHealingBrushKernel.bytesPerPixel
@@ -126,36 +126,69 @@ enum ImageEditorHealingBrushKernel {
         diameter: CGFloat,
         hardness: CGFloat
     ) -> [UInt8] {
-        guard width > 0, height > 0, points.count > 1 else { return [] }
+        guard width > 0, height > 0, !points.isEmpty else { return [] }
         let radius = max(0.5, diameter / 2)
         let innerRadius = radius * max(0, min(1, hardness))
         var alpha = [UInt8](repeating: 0, count: width * height)
 
-        for (start, end) in zip(points, points.dropFirst()) {
-            let minX = max(0, Int(floor(min(start.x, end.x) - radius)))
-            let maxX = min(width - 1, Int(ceil(max(start.x, end.x) + radius)))
-            let minY = max(0, Int(floor(min(start.y, end.y) - radius)))
-            let maxY = min(height - 1, Int(ceil(max(start.y, end.y) + radius)))
-            guard minX <= maxX, minY <= maxY else { continue }
+        if points.count == 1, let point = points.first {
+            applyStrokeSegment(
+                to: &alpha,
+                width: width,
+                height: height,
+                start: point,
+                end: point,
+                radius: radius,
+                innerRadius: innerRadius
+            )
+            return alpha
+        }
 
-            for y in minY...maxY {
-                for x in minX...maxX {
-                    let distance = distanceToSegment(
-                        point: CGPoint(x: CGFloat(x) + 0.5, y: CGFloat(y) + 0.5),
-                        start: start,
-                        end: end
-                    )
-                    let coverage = softCoverage(
-                        distance: distance,
-                        innerRadius: innerRadius,
-                        outerRadius: radius
-                    )
-                    let index = y * width + x
-                    alpha[index] = max(alpha[index], UInt8((coverage * 255).rounded()))
-                }
-            }
+        for (start, end) in zip(points, points.dropFirst()) {
+            applyStrokeSegment(
+                to: &alpha,
+                width: width,
+                height: height,
+                start: start,
+                end: end,
+                radius: radius,
+                innerRadius: innerRadius
+            )
         }
         return alpha
+    }
+
+    private static func applyStrokeSegment(
+        to alpha: inout [UInt8],
+        width: Int,
+        height: Int,
+        start: CGPoint,
+        end: CGPoint,
+        radius: CGFloat,
+        innerRadius: CGFloat
+    ) {
+        let minX = max(0, Int(floor(min(start.x, end.x) - radius)))
+        let maxX = min(width - 1, Int(ceil(max(start.x, end.x) + radius)))
+        let minY = max(0, Int(floor(min(start.y, end.y) - radius)))
+        let maxY = min(height - 1, Int(ceil(max(start.y, end.y) + radius)))
+        guard minX <= maxX, minY <= maxY else { return }
+
+        for y in minY...maxY {
+            for x in minX...maxX {
+                let distance = distanceToSegment(
+                    point: CGPoint(x: CGFloat(x) + 0.5, y: CGFloat(y) + 0.5),
+                    start: start,
+                    end: end
+                )
+                let coverage = softCoverage(
+                    distance: distance,
+                    innerRadius: innerRadius,
+                    outerRadius: radius
+                )
+                let index = y * width + x
+                alpha[index] = max(alpha[index], UInt8((coverage * 255).rounded()))
+            }
+        }
     }
 
     static func heal(
