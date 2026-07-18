@@ -272,6 +272,8 @@ struct ImageEditorCanvasCursorTests {
         #expect(eraserPrecision === NSCursor.crosshair)
         #expect(clonePrecision === NSCursor.crosshair)
         #expect(healingPrecision === NSCursor.crosshair)
+        #expect(ImageEditorCanvasCursor.cursor(for: .cloneStamp, brushDiameter: 18) !== NSCursor.crosshair)
+        #expect(ImageEditorCanvasCursor.cursor(for: .healingBrush, brushDiameter: 18) !== NSCursor.crosshair)
     }
 
     @Test func zoomCursorReflectsOptionZoomOutMode() {
@@ -400,8 +402,7 @@ struct ImageEditorCanvasCursorTests {
         )
 
         let brushTools: [ImageEditorTool] = [
-            .brush, .eraser, .cloneStamp, .healingBrush,
-            .dodge, .burn, .sponge, .blur, .sharpen, .smudge
+            .brush, .eraser, .dodge, .burn, .sponge, .blur, .sharpen, .smudge
         ]
         let brushRepresentations = brushTools.compactMap {
             ImageEditorCanvasCursor.cursor(for: $0, brushDiameter: 18).image.tiffRepresentation
@@ -409,9 +410,25 @@ struct ImageEditorCanvasCursorTests {
         #expect(brushRepresentations.count == brushTools.count)
         #expect(Set(brushRepresentations).count == 1)
 
+        let clone = ImageEditorCanvasCursor.cursor(for: .cloneStamp, brushDiameter: 18)
+        let healing = ImageEditorCanvasCursor.cursor(for: .healingBrush, brushDiameter: 18)
+        #expect(clone.image.tiffRepresentation != healing.image.tiffRepresentation)
+        #expect(clone.image.tiffRepresentation != brushRepresentations[0])
+        #expect(healing.image.tiffRepresentation != brushRepresentations[0])
+
         #expect(ImageEditorCanvasCursor.cursor(for: .paintBucket, brushDiameter: 18) !== NSCursor.crosshair)
         #expect(ImageEditorCanvasCursor.cursor(for: .eyedropper, brushDiameter: 18) !== NSCursor.crosshair)
         #expect(ImageEditorCanvasCursor.cursor(for: .pen, brushDiameter: 18) !== NSCursor.crosshair)
+    }
+
+    @Test func selectionToolsUseRecognizablePointersInsteadOfOneGenericShape() {
+        let marquee = ImageEditorCanvasCursor.cursor(for: .marquee, brushDiameter: 18)
+        let lasso = ImageEditorCanvasCursor.cursor(for: .lasso, brushDiameter: 18)
+        let wand = ImageEditorCanvasCursor.cursor(for: .magicWand, brushDiameter: 18)
+        let quick = ImageEditorCanvasCursor.cursor(for: .quickSelection, brushDiameter: 18)
+
+        let representations = [marquee, lasso, wand, quick].map { $0.image.tiffRepresentation }
+        #expect(Set(representations).count == representations.count)
     }
 
     @Test func selectionModifierCursorStillCommunicatesAddSubtractModes() {

@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc282 - 2026-07-18
+
+### Fixed
+- 修复组件画布拖动被拖放宿主抢占的问题：选中对象优先使用高优先级拖动手势，父画布保留 simultaneous 兜底，拖动中显示低负载行进虚线预览。
+- 重新核对工具光标语义：选区、套索、魔棒、快速选择、仿制图章和修复画笔分别使用熟悉的工具形状，Caps Lock 仍切换为精确十字光标。
+
+### Verification
+- `ImageEditorCanvasCursorTests`、`XomoCanvasObjectTests` 与发布契约测试通过。
+
 ## 2.12.0-rc281 - 2026-07-18
 
 ### Changed

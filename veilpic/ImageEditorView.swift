@@ -1281,14 +1281,13 @@ struct ImageEditorView: View {
                         }
                     }
                 )
-                // Give the editor gesture priority over the drop host. On
-                // macOS 13, a dropDestination-backed canvas can otherwise
-                // swallow the zero-distance drag used to select and move an
-                // already inserted component. The drop destination still
-                // receives external drags from the component library because
-                // it participates in the platform drop session rather than
-                // this in-canvas gesture recognizer.
-                .highPriorityGesture(canvasGesture(in: geometry.size))
+                // Keep the editor gesture simultaneous with the drop host so
+                // external component drops still work on macOS 13. The
+                // selected-object hit target below owns the component drag
+                // with a high-priority gesture; the parent canvas owns
+                // movement for selected objects as a fallback when the
+                // transparent target is not mounted yet.
+                .simultaneousGesture(canvasGesture(in: geometry.size))
                 .overlay(
                     ScrollWheelZoomView { factor, location, viewportSize in
                         // 每个离散滚轮 tick 独立锚定当前状态：复用捏合缩放的锚定数学，
@@ -4584,10 +4583,38 @@ struct ImageEditorView: View {
         }
     }
 
+    @ViewBuilder
     private func xomoObjectSelectionOutline(
         kind: XomoComponentKind,
         rect: CGRect,
         isMoving: Bool
+    ) -> some View {
+        if isMoving {
+            TimelineView(.animation(minimumInterval: 1.0 / 20.0)) { timeline in
+                xomoObjectSelectionOutlineContent(
+                    kind: kind,
+                    rect: rect,
+                    isMoving: true,
+                    dashPhase: ImageEditorSelectionMarchingAnts.dashPhase(
+                        at: timeline.date.timeIntervalSinceReferenceDate
+                    )
+                )
+            }
+        } else {
+            xomoObjectSelectionOutlineContent(
+                kind: kind,
+                rect: rect,
+                isMoving: false,
+                dashPhase: 0
+            )
+        }
+    }
+
+    private func xomoObjectSelectionOutlineContent(
+        kind: XomoComponentKind,
+        rect: CGRect,
+        isMoving: Bool,
+        dashPhase: CGFloat
     ) -> some View {
         let shape: AnyShape
         switch kind {
@@ -4604,7 +4631,11 @@ struct ImageEditorView: View {
             .overlay {
                 shape.stroke(
                     Color.gray.opacity(isMoving ? 0.82 : 0.72),
-                    style: StrokeStyle(lineWidth: isMoving ? 1.5 : 1.25, dash: [6, 4])
+                    style: StrokeStyle(
+                        lineWidth: isMoving ? 1.5 : 1.25,
+                        dash: [6, 4],
+                        dashPhase: dashPhase
+                    )
                 )
             }
             .shadow(color: accent.opacity(isMoving ? 0.10 : 0.24), radius: isMoving ? 2 : 5)
@@ -4625,7 +4656,8 @@ struct ImageEditorView: View {
             // preview moves. Otherwise the target itself moves under the
             // pointer and can cancel the drag on the first update.
             .contentShape(Rectangle())
-            .gesture(selectedXomoObjectMoveGesture(in: canvasSize))
+            .highPriorityGesture(selectedXomoObjectMoveGesture(in: canvasSize))
+            .zIndex(100)
             .accessibilityHidden(true)
     }
 
