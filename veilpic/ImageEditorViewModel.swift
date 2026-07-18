@@ -4638,7 +4638,7 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func toneBrush(points: [CGPoint], burn: Bool) {
-        guard points.count > 1 else { return }
+        guard !points.isEmpty else { return }
         guard !isEditingLayerMask else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return

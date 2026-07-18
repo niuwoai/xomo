@@ -2008,6 +2008,43 @@ struct XomoAutomationTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.sponge"))
     }
 
+    @Test func registryAcceptsSinglePointDodgeAndBurnDabs() {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        let point: XomoJSONValue = .array([
+            .object(["x": .number(32), "y": .number(32)])
+        ])
+
+        let dodge = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("dodge"),
+                "size": .number(12),
+                "hardness": .number(1),
+                "points": point
+            ]
+        ))
+        let burn = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("burn"),
+                "size": .number(12),
+                "hardness": .number(1),
+                "points": point
+            ]
+        ))
+
+        #expect(dodge.ok)
+        #expect(burn.ok)
+        #expect(viewModel.document.history.suffix(2).map(\.title) == [
+            L10n.text("imageEditor.history.dodge"),
+            L10n.text("imageEditor.history.burn")
+        ])
+    }
+
     @Test func registryConfiguresBrushFlowSpacingHardnessAndPressure() {
         let suiteName = "XomoAutomationTests.pressure.\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suiteName) ?? .standard

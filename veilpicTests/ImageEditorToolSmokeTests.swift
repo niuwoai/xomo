@@ -185,6 +185,35 @@ struct ImageEditorToolSmokeTests {
         #expect(hardBurn.document.history.last?.title == L10n.text("imageEditor.history.burn"))
     }
 
+    @Test func toneBrushSingleClickAppliesDodgeAndBurnDabs() throws {
+        let image = solidImage(color: NSColor(deviceWhite: 0.45, alpha: 1))
+        let dodge = makeEditableViewModel(image: image)
+        let burn = makeEditableViewModel(image: image)
+        for viewModel in [dodge, burn] {
+            viewModel.brushSize = 12
+            viewModel.hardness = 1
+            viewModel.opacity = 1
+        }
+        let point = CGPoint(x: 20, y: 14)
+        let before = try #require(
+            dodge.document.selectedLayer?.image.color(at: point)?.usingColorSpace(.deviceRGB)
+        )
+
+        dodge.toneBrush(points: [point], burn: false)
+        burn.toneBrush(points: [point], burn: true)
+
+        let dodged = try #require(
+            dodge.document.selectedLayer?.image.color(at: point)?.usingColorSpace(.deviceRGB)
+        )
+        let burned = try #require(
+            burn.document.selectedLayer?.image.color(at: point)?.usingColorSpace(.deviceRGB)
+        )
+        #expect(dodged.redComponent > before.redComponent + 0.25)
+        #expect(burned.redComponent < before.redComponent - 0.20)
+        #expect(dodge.document.history.last?.title == L10n.text("imageEditor.history.dodge"))
+        #expect(burn.document.history.last?.title == L10n.text("imageEditor.history.burn"))
+    }
+
     @Test func redEyeToolReducesExcessRedAtTheClickedPupil() throws {
         let image = NSImage.rendered(size: canvasSize) { rect in
             NSColor(deviceWhite: 0.35, alpha: 1).setFill()
