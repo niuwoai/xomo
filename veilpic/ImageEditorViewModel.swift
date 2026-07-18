@@ -70,6 +70,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var brushPressureSensitivity: CGFloat = 50
     @Published var toneRange: ImageEditorToneRange = .midtones
     @Published var protectToneBrushTones = true
+    @Published var toneBrushAirbrushEnabled = false
     @Published var spongeMode: ImageEditorSpongeMode = .saturate
     @Published private(set) var customBrushPresets: [ImageEditorBrushPreset] = []
     @Published var customLayerStylePresets: [ImageEditorLayerStylePreset] = []
@@ -4639,7 +4640,11 @@ final class ImageEditorViewModel: ObservableObject {
         statusText = L10n.text("imageEditor.status.cloneStamped")
     }
 
-    func toneBrush(points: [CGPoint], burn: Bool) {
+    func toneBrush(
+        points: [CGPoint],
+        burn: Bool,
+        airbrushPulsePoints: [CGPoint] = []
+    ) {
         guard !points.isEmpty else { return }
         guard !isEditingLayerMask else {
             statusText = L10n.text("imageEditor.status.operationFailed")
@@ -4658,7 +4663,8 @@ final class ImageEditorViewModel: ObservableObject {
             hardness: hardness,
             burn: burn,
             range: toneRange,
-            protectTones: protectToneBrushTones
+            protectTones: protectToneBrushTones,
+            airbrushPulsePoints: toneBrushAirbrushEnabled ? airbrushPulsePoints : []
         ) else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return

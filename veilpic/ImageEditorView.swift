@@ -61,6 +61,7 @@ struct ImageEditorView: View {
     @StateObject var viewModel: ImageEditorViewModel
     @State private var dragPoints: [CGPoint] = []
     @State private var brushStrokeSamples: [ImageEditorBrushStrokeSample] = []
+    @State private var toneAirbrushStroke = ImageEditorToneAirbrushStroke()
     @State private var dragStart: CGPoint?
     @State private var dragEnd: CGPoint?
     @State private var patchPreviewImage: NSImage?
@@ -281,6 +282,7 @@ struct ImageEditorView: View {
             dragStart = nil
             dragEnd = nil
             dragPoints = []
+            toneAirbrushStroke.reset()
             if viewModel.selectedTool != .crop {
                 pendingCropRect = nil
                 endPendingCropInteraction()
@@ -377,6 +379,16 @@ struct ImageEditorView: View {
                 .fixedSize()
                 .help(L10n.text("imageEditor.option.protectTones.help"))
                 .accessibilityIdentifier("image-editor-protect-tones")
+
+                Toggle(
+                    L10n.text("imageEditor.option.airbrush"),
+                    isOn: $viewModel.toneBrushAirbrushEnabled
+                )
+                .toggleStyle(.checkbox)
+                .focusable(false)
+                .fixedSize()
+                .help(L10n.text("imageEditor.option.airbrush.help"))
+                .accessibilityIdentifier("image-editor-tone-airbrush")
             }
 
             if viewModel.selectedTool == .text {
@@ -1394,6 +1406,7 @@ struct ImageEditorView: View {
                     deliverySelectionOverlay(in: geometry.size)
                     colorSamplerOverlay(in: geometry.size)
                     sampledBrushSourceOverlay(in: geometry.size)
+                    toneAirbrushOverlay(in: geometry.size)
                     layerTransformOverlay(in: geometry.size)
                     shapeGradientControlOverlay(in: geometry.size)
                     textBoxOverflowOverlay(in: geometry.size)
@@ -2028,6 +2041,53 @@ struct ImageEditorView: View {
         }
     }
 
+    private func updateToneAirbrushStroke(at point: CGPoint) {
+        guard viewModel.toneBrushAirbrushEnabled else {
+            toneAirbrushStroke.reset()
+            return
+        }
+        let time = Date.timeIntervalSinceReferenceDate
+        if toneAirbrushStroke.isActive {
+            toneAirbrushStroke.update(to: point, time: time)
+        } else {
+            toneAirbrushStroke.begin(at: point, time: time)
+        }
+    }
+
+    private func finishToneAirbrushStroke(at point: CGPoint?) -> [CGPoint] {
+        guard viewModel.toneBrushAirbrushEnabled,
+              toneAirbrushStroke.isActive,
+              let finalPoint = point ?? toneAirbrushStroke.currentPoint
+        else {
+            toneAirbrushStroke.reset()
+            return []
+        }
+        return toneAirbrushStroke.finish(
+            at: finalPoint,
+            time: Date.timeIntervalSinceReferenceDate
+        )
+    }
+
+    @ViewBuilder
+    private func toneAirbrushOverlay(in size: CGSize) -> some View {
+        if viewModel.toneBrushAirbrushEnabled,
+           canvasInteractionTool == .dodge || canvasInteractionTool == .burn,
+           let imagePoint = toneAirbrushStroke.currentPoint,
+           let dwellBeganAt = toneAirbrushStroke.currentDwellBeganAt {
+            let imageRect = fittedImageRect(in: size)
+            ImageEditorToneAirbrushPreview(
+                isBurn: canvasInteractionTool == .burn,
+                point: viewPoint(from: imagePoint, in: size),
+                dwellBeganAt: dwellBeganAt,
+                exposure: viewModel.opacity,
+                diameter: max(
+                    4,
+                    viewModel.brushSize * imageRect.width / max(1, viewModel.document.canvasSize.width)
+                )
+            )
+        }
+    }
+
     private var sampledBrushSourcePoint: CGPoint? {
         let originalSourcePoint: CGPoint?
         let isSettingSource: Bool
@@ -2183,7 +2243,12 @@ struct ImageEditorView: View {
                             pressure: ImageEditorBrushPressureInput.pressure(from: NSApp.currentEvent)
                         ))
                     }
-                case .cloneStamp, .dodge, .burn, .sponge, .blur, .sharpen, .smudge, .healingBrush:
+                case .dodge, .burn:
+                    if let pointerImagePoint {
+                        dragPoints.append(pointerImagePoint)
+                        updateToneAirbrushStroke(at: pointerImagePoint)
+                    }
+                case .cloneStamp, .sponge, .blur, .sharpen, .smudge, .healingBrush:
                     if let pointerImagePoint {
                         dragPoints.append(pointerImagePoint)
                     }
@@ -2357,9 +2422,17 @@ struct ImageEditorView: View {
                         viewModel.cloneStamp(points: dragPoints)
                     }
                 case .dodge:
-                    viewModel.toneBrush(points: dragPoints, burn: false)
+                    viewModel.toneBrush(
+                        points: dragPoints,
+                        burn: false,
+                        airbrushPulsePoints: finishToneAirbrushStroke(at: endImagePoint)
+                    )
                 case .burn:
-                    viewModel.toneBrush(points: dragPoints, burn: true)
+                    viewModel.toneBrush(
+                        points: dragPoints,
+                        burn: true,
+                        airbrushPulsePoints: finishToneAirbrushStroke(at: endImagePoint)
+                    )
                 case .sponge:
                     viewModel.spongeBrush(points: dragPoints)
                 case .blur:
@@ -2455,6 +2528,7 @@ struct ImageEditorView: View {
 
                 dragPoints = []
                 brushStrokeSamples = []
+                toneAirbrushStroke.reset()
                 dragStart = nil
                 dragEnd = nil
                 patchPreviewImage = nil

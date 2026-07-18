@@ -503,6 +503,8 @@
 "imageEditor.toneRange.highlights" = "Highlights";
 "imageEditor.option.protectTones" = "Protect Tones";
 "imageEditor.option.protectTones.help" = "Preserve color and reduce clipping in highlights and shadows";
+"imageEditor.option.airbrush" = "Airbrush";
+"imageEditor.option.airbrush.help" = "Build up dodge or burn gradually while holding the pointer";
 "imageEditor.option.fillOpacity" = "Fill";
 "imageEditor.option.blendIf" = "Blend If";
 "imageEditor.option.blendIfSource" = "This Layer";

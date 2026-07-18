@@ -1,0 +1,79 @@
+{
+  "generated_at": "2026-07-19 05:26:43 +0800",
+  "total": 7,
+  "passed": 7,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "dodgeAndBurnExposeANonFocusableAirbrushToggleAndLightweightPreview",
+      "identifier": "veilpicTests/ImageEditorScopeTests/dodgeAndBurnExposeANonFocusableAirbrushToggleAndLightweightPreview",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 4.331,
+      "issues": [],
+      "log": "ImageEditorScopeTests.dodgeAndBurnExposeANonFocusableAirbrushToggleAndLightweightPreview.log"
+    },
+    {
+      "suite": "ImageEditorToneAirbrushTests",
+      "method": "airbrushPulsesBuildDodgeAndBurnGradually",
+      "identifier": "veilpicTests/ImageEditorToneAirbrushTests/airbrushPulsesBuildDodgeAndBurnGradually",
+      "file": "ImageEditorToneAirbrushTests.swift",
+      "passed": true,
+      "duration": 3.072,
+      "issues": [],
+      "log": "ImageEditorToneAirbrushTests.airbrushPulsesBuildDodgeAndBurnGradually.log"
+    },
+    {
+      "suite": "ImageEditorToneAirbrushTests",
+      "method": "airbrushStrokeCommitsAsOneHistoryStepAndDefaultsOff",
+      "identifier": "veilpicTests/ImageEditorToneAirbrushTests/airbrushStrokeCommitsAsOneHistoryStepAndDefaultsOff",
+      "file": "ImageEditorToneAirbrushTests.swift",
+      "passed": true,
+      "duration": 3.087,
+      "issues": [],
+      "log": "ImageEditorToneAirbrushTests.airbrushStrokeCommitsAsOneHistoryStepAndDefaultsOff.log"
+    },
+    {
+      "suite": "ImageEditorToneAirbrushTests",
+      "method": "dwellSamplerUsesAStableCadenceAndInterpolatesMovement",
+      "identifier": "veilpicTests/ImageEditorToneAirbrushTests/dwellSamplerUsesAStableCadenceAndInterpolatesMovement",
+      "file": "ImageEditorToneAirbrushTests.swift",
+      "passed": true,
+      "duration": 3.072,
+      "issues": [],
+      "log": "ImageEditorToneAirbrushTests.dwellSamplerUsesAStableCadenceAndInterpolatesMovement.log"
+    },
+    {
+      "suite": "LocalizationResourceTests",
+      "method": "dodgeBurnAirbrushIsLocalizedInEverySupportedLanguage",
+      "identifier": "veilpicTests/LocalizationResourceTests/dodgeBurnAirbrushIsLocalizedInEverySupportedLanguage",
+      "file": "LocalizationResourceTests.swift",
+      "passed": true,
+      "duration": 3.055,
+      "issues": [],
+      "log": "LocalizationResourceTests.dodgeBurnAirbrushIsLocalizedInEverySupportedLanguage.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registryAdvertisesDodgeBurnAirbrushControls",
+      "identifier": "veilpicTests/XomoAutomationTests/registryAdvertisesDodgeBurnAirbrushControls",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 3.112,
+      "issues": [],
+      "log": "XomoAutomationTests.registryAdvertisesDodgeBurnAirbrushControls.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registryConfiguresAndValidatesDodgeBurnAirbrushPulses",
+      "identifier": "veilpicTests/XomoAutomationTests/registryConfiguresAndValidatesDodgeBurnAirbrushPulses",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 3.087,
+      "issues": [],
+      "log": "XomoAutomationTests.registryConfiguresAndValidatesDodgeBurnAirbrushPulses.log"
+    }
+  ]
+}

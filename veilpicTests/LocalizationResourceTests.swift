@@ -167,6 +167,28 @@ struct LocalizationResourceTests {
         }
     }
 
+    @Test func dodgeBurnAirbrushIsLocalizedInEverySupportedLanguage() throws {
+        let paths = try Self.repositoryPaths()
+        let expectedValues = [
+            "zh-Hans": ["喷枪", "按住指针时逐渐累积减淡或加深效果"],
+            "en": ["Airbrush", "Build up dodge or burn gradually while holding the pointer"],
+            "ja": ["エアブラシ", "ポインタを押している間、覆い焼きまたは焼き込み効果を徐々に重ねます"]
+        ]
+        let keys = [
+            "imageEditor.option.airbrush",
+            "imageEditor.option.airbrush.help"
+        ]
+
+        for (localizationID, expected) in expectedValues {
+            let strings = try Self.stringTable(
+                tableName: "Localizable",
+                localizationID: localizationID,
+                appDirectory: paths.appDirectory
+            )
+            #expect(keys.compactMap { strings[$0] } == expected)
+        }
+    }
+
     private static func knownRegions(in projectText: String) -> Set<String> {
         guard let start = projectText.range(of: "knownRegions = (") else { return [] }
         let remaining = projectText[start.upperBound...]

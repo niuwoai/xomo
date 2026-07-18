@@ -503,6 +503,8 @@
 "imageEditor.toneRange.highlights" = "高光";
 "imageEditor.option.protectTones" = "保护色调";
 "imageEditor.option.protectTones.help" = "保持颜色并减少高光和阴影剪切";
+"imageEditor.option.airbrush" = "喷枪";
+"imageEditor.option.airbrush.help" = "按住指针时逐渐累积减淡或加深效果";
 "imageEditor.option.fillOpacity" = "填充";
 "imageEditor.option.blendIf" = "混合条件";
 "imageEditor.option.blendIfSource" = "当前图层";

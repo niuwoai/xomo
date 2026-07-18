@@ -2593,6 +2593,24 @@ final class XomoAutomationRegistry {
         if usesExposure, let protectTones = arguments["protectTones"]?.boolValue {
             viewModel.protectToneBrushTones = protectTones
         }
+        if usesExposure, let airbrush = arguments["airbrush"]?.boolValue {
+            viewModel.toneBrushAirbrushEnabled = airbrush
+        }
+        var airbrushPulseCount = 0
+        if usesExposure, let rawPulseCount = arguments["airbrushPulses"]?.doubleValue {
+            guard rawPulseCount.isFinite,
+                  rawPulseCount.rounded() == rawPulseCount,
+                  (0...Double(ImageEditorToneAirbrushStroke.maximumPulseCount)).contains(rawPulseCount)
+            else {
+                throw XomoAutomationCallError.invalidArgument(
+                    "Dodge or burn airbrushPulses must be an integer from 0 to \(ImageEditorToneAirbrushStroke.maximumPulseCount)"
+                )
+            }
+            airbrushPulseCount = Int(rawPulseCount)
+            if arguments["airbrush"] == nil {
+                viewModel.toneBrushAirbrushEnabled = true
+            }
+        }
         if let feather = arguments["feather"]?.doubleValue { viewModel.feather = max(0, feather) }
         if action == "setCloneSource" || action == "cloneStamp" {
             if let aligned = arguments["aligned"]?.boolValue {
@@ -2653,10 +2671,26 @@ final class XomoAutomationRegistry {
             return
         }
         let points = try requiredPoints("points", in: arguments)
+        let airbrushPulsePoints: [CGPoint]
+        if viewModel.toneBrushAirbrushEnabled, let lastPoint = points.last {
+            airbrushPulsePoints = Array(repeating: lastPoint, count: airbrushPulseCount)
+        } else {
+            airbrushPulsePoints = []
+        }
         switch action {
         case "cloneStamp": viewModel.cloneStamp(points: points)
-        case "dodge": viewModel.toneBrush(points: points, burn: false)
-        case "burn": viewModel.toneBrush(points: points, burn: true)
+        case "dodge":
+            viewModel.toneBrush(
+                points: points,
+                burn: false,
+                airbrushPulsePoints: airbrushPulsePoints
+            )
+        case "burn":
+            viewModel.toneBrush(
+                points: points,
+                burn: true,
+                airbrushPulsePoints: airbrushPulsePoints
+            )
         case "sponge": viewModel.spongeBrush(points: points)
         case "blur": viewModel.blurBrush(points: points)
         case "sharpen": viewModel.sharpenBrush(points: points)
@@ -3688,6 +3722,8 @@ private extension XomoAutomationRegistry {
             "exposure": XomoAutomationSchema.number(description: "Dodge or burn exposure from 0 to 1; preferred over legacy opacity"),
             "toneRange": XomoAutomationSchema.string(description: "Dodge or burn tonal range", values: ["shadows", "midtones", "highlights"]),
             "protectTones": XomoAutomationSchema.boolean(description: "Preserve dodge or burn chroma and reduce highlight or shadow clipping"),
+            "airbrush": XomoAutomationSchema.boolean(description: "Enable gradual dodge or burn airbrush buildup"),
+            "airbrushPulses": XomoAutomationSchema.integer(description: "Deterministic dodge or burn dwell pulses from 0 to 80; implies airbrush when airbrush is omitted"),
             "hardness": XomoAutomationSchema.number(description: "Brush edge hardness from 0 to 1"),
             "feather": XomoAutomationSchema.number(description: "Patch selection feather radius"),
             "mode": XomoAutomationSchema.string(description: "Patch mode", values: ["source", "destination"]),

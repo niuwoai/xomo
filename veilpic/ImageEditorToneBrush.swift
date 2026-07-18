@@ -66,7 +66,8 @@ extension NSImage {
         hardness: CGFloat,
         burn: Bool,
         range: ImageEditorToneRange = .midtones,
-        protectTones: Bool = true
+        protectTones: Bool = true,
+        airbrushPulsePoints: [CGPoint] = []
     ) -> NSImage? {
         let pixelWidth = max(1, Int(size.width.rounded()))
         let pixelHeight = max(1, Int(size.height.rounded()))
@@ -78,8 +79,25 @@ extension NSImage {
             hardness: hardness
         )
         guard maskAlpha.count == pixelWidth * pixelHeight else { return nil }
+        let airbrushMaskAlpha = airbrushPulsePoints.isEmpty
+            ? nil
+            : ImageEditorBrushStrokeKernel.coverage(
+                width: pixelWidth,
+                height: pixelHeight,
+                stamps: airbrushPulsePoints.map {
+                    ImageEditorBrushStrokeSample(point: $0, pressure: 1)
+                },
+                settings: ImageEditorBrushStrokeSettings(
+                    diameter: width,
+                    hardness: hardness,
+                    opacity: 1,
+                    flow: ImageEditorToneAirbrushStroke.pulseFlow,
+                    spacing: 1
+                )
+            )
         return toneAdjusted(
             maskAlpha: maskAlpha,
+            airbrushMaskAlpha: airbrushMaskAlpha,
             opacity: opacity,
             burn: burn,
             range: range,
@@ -257,6 +275,7 @@ extension NSImage {
 
     private func toneAdjusted(
         maskAlpha: [UInt8],
+        airbrushMaskAlpha: [UInt8]?,
         opacity: CGFloat,
         burn: Bool,
         range: ImageEditorToneRange,
@@ -267,7 +286,8 @@ extension NSImage {
         let bytesPerPixel = 4
         let bytesPerRow = width * bytesPerPixel
         guard var sourcePixels = rgbaPixels(width: width, height: height, bytesPerRow: bytesPerRow),
-              maskAlpha.count == width * height
+              maskAlpha.count == width * height,
+              airbrushMaskAlpha == nil || airbrushMaskAlpha?.count == width * height
         else {
             return nil
         }
@@ -284,7 +304,10 @@ extension NSImage {
                 let blue = CGFloat(sourcePixels[offset + 2]) / 255
                 let luminance = red * 0.2126 + green * 0.7152 + blue * 0.0722
                 let toneWeight = range.weight(for: luminance)
-                let strength = clampedOpacity * maskStrength * toneWeight * effectScale
+                let baseStrength = clampedOpacity * maskStrength * toneWeight * effectScale
+                let airbrushMaskStrength = CGFloat(airbrushMaskAlpha?[maskIndex] ?? 0) / 255
+                let airbrushStrength = clampedOpacity * airbrushMaskStrength * toneWeight * effectScale
+                let strength = 1 - (1 - baseStrength) * (1 - airbrushStrength)
                 guard strength > 0 else { continue }
 
                 if protectTones {

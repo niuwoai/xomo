@@ -2206,6 +2206,84 @@ struct XomoAutomationTests {
         #expect(properties["protectTones"]?.objectValue?["type"] == .string("boolean"))
     }
 
+    @Test func registryConfiguresAndValidatesDodgeBurnAirbrushPulses() {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        let point: XomoJSONValue = .array([
+            .object(["x": .number(32), "y": .number(32)])
+        ])
+        #expect(!viewModel.toneBrushAirbrushEnabled)
+
+        let enabled = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("dodge"),
+                "airbrush": .bool(true),
+                "airbrushPulses": .number(8),
+                "points": point
+            ]
+        ))
+        #expect(enabled.ok)
+        #expect(viewModel.toneBrushAirbrushEnabled)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.dodge"))
+
+        let disabled = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("burn"),
+                "airbrush": .bool(false),
+                "points": point
+            ]
+        ))
+        #expect(disabled.ok)
+        #expect(!viewModel.toneBrushAirbrushEnabled)
+
+        let pulsesEnableAirbrush = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("dodge"),
+                "airbrushPulses": .number(3),
+                "points": point
+            ]
+        ))
+        #expect(pulsesEnableAirbrush.ok)
+        #expect(viewModel.toneBrushAirbrushEnabled)
+
+        let invalid = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("burn"),
+                "airbrushPulses": .number(81),
+                "points": point
+            ]
+        ))
+        #expect(!invalid.ok)
+        #expect(invalid.error?.contains("airbrushPulses") == true)
+    }
+
+    @Test func registryAdvertisesDodgeBurnAirbrushControls() throws {
+        let registry = XomoAutomationRegistry.shared
+        registry.register(makeViewModel())
+        let response = registry.execute(request(operation: "tools"))
+        guard case .array(let tools) = response.result else {
+            Issue.record("Expected tool array")
+            return
+        }
+        let specialPaint = try #require(tools.compactMap(\.objectValue).first {
+            $0["name"] == .string("xomo.paint.special")
+        })
+        let schema = try #require(specialPaint["inputSchema"]?.objectValue)
+        let properties = try #require(schema["properties"]?.objectValue)
+
+        #expect(properties["airbrush"]?.objectValue?["type"] == .string("boolean"))
+        #expect(properties["airbrushPulses"]?.objectValue?["type"] == .string("integer"))
+    }
+
     @Test func registryKeepsLegacyDodgeOpacity() {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

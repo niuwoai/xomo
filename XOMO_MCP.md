@@ -1,7 +1,8 @@
 # Xomo MCP 与 CLI
 
-> 当前版本：v2.12.0-rc335
+> 当前版本：v2.12.0-rc336
 
+rc336 为 `xomo.paint.special` 的 `dodge` 与 `burn` 增加 `airbrush=true|false` 和确定性的 `airbrushPulses=0...80`；脉冲按 18% 流量在最后坐标渐进累积，单独提供脉冲数会自动启用喷枪，界面拖动则使用同一脉冲模型记录沿途停留位置并保持单步 History。
 rc335 为 `xomo.paint.special` 的 `dodge` 与 `burn` 增加 `protectTones=true|false`；省略时默认开启，与界面共享亮度/色度保护和端点色域压缩算法，关闭后保留既有直接通道运算，离线 CLI 工具目录同步公开该布尔字段。
 rc334 为 `xomo.paint.special` 的 `dodge` 与 `burn` 增加 `toneRange=shadows|midtones|highlights`，与界面范围菜单和同一平滑亮度权重算法共用状态；省略字段时默认中间调，`exposure` 仍优先于旧 `opacity`，既有调用保持兼容。
 rc333 优化本地 UI 组件的命中、拖拽阈值、实时虚线预览和工具光标；MCP/CLI 的组件对象、绝对/相对变换、图层及工具协议没有新增或破坏性变化，自动化仍与本地界面共用同一对象模型。
