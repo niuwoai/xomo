@@ -214,6 +214,62 @@ struct ImageEditorToolSmokeTests {
         #expect(burn.document.history.last?.title == L10n.text("imageEditor.history.burn"))
     }
 
+    @Test func blurAndSharpenHardnessControlTheVisibleStrokeEdge() throws {
+        let hardEdge = NSImage.rendered(size: canvasSize) { rect in
+            NSColor(deviceWhite: 0.35, alpha: 1).setFill()
+            rect.fill()
+            NSColor(deviceWhite: 0.65, alpha: 1).setFill()
+            CGRect(x: rect.midX, y: rect.minY, width: rect.width / 2, height: rect.height).fill()
+        } ?? NSImage.transparent(size: canvasSize)
+        let softenedEdge = try #require(hardEdge.blurred(radius: 3))
+        let softBlur = makeEditableViewModel(image: hardEdge)
+        let hardBlur = makeEditableViewModel(image: hardEdge)
+        let softSharpen = makeEditableViewModel(image: softenedEdge)
+        let hardSharpen = makeEditableViewModel(image: softenedEdge)
+        for viewModel in [softBlur, hardBlur, softSharpen, hardSharpen] {
+            viewModel.brushSize = 12
+            viewModel.opacity = 1
+        }
+        softBlur.hardness = 0
+        softSharpen.hardness = 0
+        hardBlur.hardness = 1
+        hardSharpen.hardness = 1
+        let points = [CGPoint(x: 10, y: 14), CGPoint(x: 30, y: 14)]
+        let edgePoint = CGPoint(x: 19, y: 18)
+        let blurOriginal = try #require(
+            hardEdge.color(at: edgePoint)?.usingColorSpace(.deviceRGB)
+        )
+        let sharpenOriginal = try #require(
+            softenedEdge.color(at: edgePoint)?.usingColorSpace(.deviceRGB)
+        )
+
+        softBlur.blurBrush(points: points)
+        hardBlur.blurBrush(points: points)
+        softSharpen.sharpenBrush(points: points)
+        hardSharpen.sharpenBrush(points: points)
+
+        let softBlurEdge = try #require(
+            softBlur.document.selectedLayer?.image.color(at: edgePoint)?.usingColorSpace(.deviceRGB)
+        )
+        let hardBlurEdge = try #require(
+            hardBlur.document.selectedLayer?.image.color(at: edgePoint)?.usingColorSpace(.deviceRGB)
+        )
+        let softSharpenEdge = try #require(
+            softSharpen.document.selectedLayer?.image.color(at: edgePoint)?.usingColorSpace(.deviceRGB)
+        )
+        let hardSharpenEdge = try #require(
+            hardSharpen.document.selectedLayer?.image.color(at: edgePoint)?.usingColorSpace(.deviceRGB)
+        )
+        let softBlurDelta = abs(softBlurEdge.redComponent - blurOriginal.redComponent)
+        let hardBlurDelta = abs(hardBlurEdge.redComponent - blurOriginal.redComponent)
+        let softSharpenDelta = abs(softSharpenEdge.redComponent - sharpenOriginal.redComponent)
+        let hardSharpenDelta = abs(hardSharpenEdge.redComponent - sharpenOriginal.redComponent)
+        #expect(hardBlurDelta > softBlurDelta + 0.03)
+        #expect(hardSharpenDelta > softSharpenDelta + 0.01)
+        #expect(hardBlur.document.history.last?.title == L10n.text("imageEditor.history.blur"))
+        #expect(hardSharpen.document.history.last?.title == L10n.text("imageEditor.history.sharpen"))
+    }
+
     @Test func redEyeToolReducesExcessRedAtTheClickedPupil() throws {
         let image = NSImage.rendered(size: canvasSize) { rect in
             NSColor(deviceWhite: 0.35, alpha: 1).setFill()

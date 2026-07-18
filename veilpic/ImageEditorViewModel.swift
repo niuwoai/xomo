@@ -4718,6 +4718,7 @@ final class ImageEditorViewModel: ObservableObject {
             points: rasterLocalPoints(points, layer: layer),
             width: localBrushWidth,
             opacity: opacity,
+            hardness: hardness,
             radius: radius
         ) else {
             statusText = L10n.text("imageEditor.status.operationFailed")
@@ -4748,6 +4749,7 @@ final class ImageEditorViewModel: ObservableObject {
             points: rasterLocalPoints(points, layer: layer),
             width: rasterLocalBrushWidth(brushSize, layer: layer),
             opacity: opacity,
+            hardness: hardness,
             intensity: intensity
         ) else {
             statusText = L10n.text("imageEditor.status.operationFailed")

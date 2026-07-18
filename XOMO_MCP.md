@@ -1,7 +1,8 @@
 # Xomo MCP 与 CLI
 
-> 当前版本：v2.12.0-rc326
+> 当前版本：v2.12.0-rc327
 
+rc327 让 `xomo.paint.special` 已有的 `hardness=0...1` 真实影响 `blur` 与 `sharpen` 的笔触边缘；两者与界面共用确定性软边蒙版、选区和 History/Undo 入口，协议字段与连续点数组保持兼容。
 rc326 让 `xomo.paint.special` 的 `dodge` 与 `burn` 接受仅含一个坐标的 `points` 数组，并按当前 `size`、`hardness` 和 `opacity` 执行圆形点按；连续点数组保持兼容。
 rc325 让 `xomo.paint.special` 的 `hardness=0...1` 真实影响 `dodge` 与 `burn` 的笔触边缘；两者与界面共用同一软边蒙版、选区和 History/Undo 入口，协议字段不变。
 rc324 让 `xomo.paint.special` 的 `sponge` 动作接受仅含一个坐标的 `points` 数组，并按当前 `size`、`hardness`、`opacity` 与 `spongeMode` 执行圆形点按；连续点数组协议保持兼容。

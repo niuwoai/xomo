@@ -65,14 +65,38 @@ extension NSImage {
         return saturationAdjusted(maskAlpha: maskAlpha, opacity: opacity, mode: mode)
     }
 
-    func withBlurBrush(points: [CGPoint], width: CGFloat, opacity: CGFloat, radius: CGFloat) -> NSImage? {
+    func withBlurBrush(
+        points: [CGPoint],
+        width: CGFloat,
+        opacity: CGFloat,
+        hardness: CGFloat,
+        radius: CGFloat
+    ) -> NSImage? {
         guard let blurredSource = blurred(radius: max(0.5, radius)) else { return nil }
-        return mixingBrushSource(blurredSource, points: points, width: width, opacity: opacity)
+        return mixingBrushSource(
+            blurredSource,
+            points: points,
+            width: width,
+            opacity: opacity,
+            hardness: hardness
+        )
     }
 
-    func withSharpenBrush(points: [CGPoint], width: CGFloat, opacity: CGFloat, intensity: CGFloat) -> NSImage? {
+    func withSharpenBrush(
+        points: [CGPoint],
+        width: CGFloat,
+        opacity: CGFloat,
+        hardness: CGFloat,
+        intensity: CGFloat
+    ) -> NSImage? {
         guard let sharpenedSource = filtered(kind: .sharpen, intensity: Double(max(0.1, min(1, intensity)))) else { return nil }
-        return mixingBrushSource(sharpenedSource, points: points, width: width, opacity: opacity)
+        return mixingBrushSource(
+            sharpenedSource,
+            points: points,
+            width: width,
+            opacity: opacity,
+            hardness: hardness
+        )
     }
 
     func withSmudgeBrush(points: [CGPoint], width: CGFloat, opacity: CGFloat) -> NSImage? {
@@ -145,26 +169,19 @@ extension NSImage {
         return output
     }
 
-    private func mixingBrushSource(_ brushSource: NSImage, points: [CGPoint], width: CGFloat, opacity: CGFloat) -> NSImage? {
-        guard let first = points.first else { return nil }
-        let path = NSBezierPath()
-        path.lineJoinStyle = .round
-        path.lineCapStyle = .round
-        path.lineWidth = max(1, width)
-        path.move(to: first)
-        for point in points.dropFirst() {
-            path.line(to: point)
-        }
-
-        guard let strokeMask = NSImage.rendered(size: size, actions: { _ in
-                NSGraphicsContext.current?.withImageEditorTopLeftCoordinates(height: size.height) {
-                    NSColor.white.setStroke()
-                    path.stroke()
-                }
-              })
-        else {
-            return nil
-        }
+    private func mixingBrushSource(
+        _ brushSource: NSImage,
+        points: [CGPoint],
+        width: CGFloat,
+        opacity: CGFloat,
+        hardness: CGFloat
+    ) -> NSImage? {
+        guard let strokeMask = ImageEditorHealingBrushKernel.strokeMaskImage(
+            size: size,
+            points: points,
+            diameter: width,
+            hardness: hardness
+        ) else { return nil }
 
         guard let clippedBlur = NSImage.rendered(size: size, actions: { _ in
             brushSource.draw(
