@@ -120,15 +120,16 @@ extension ImageEditorViewModel {
             && !document.isEffectivelyPositionLocked(layer)
     }
 
-    func beginMovingSelectedLayer() {
-        guard movingLayerIDs.isEmpty else { return }
+    @discardableResult
+    func beginMovingSelectedLayer() -> Bool {
+        guard movingLayerIDs.isEmpty else { return false }
         movingLayerWasDuplicated = false
         let indices = editableTransformLayerIndices()
         guard !indices.isEmpty,
               let transformFrame = selectedXomoObjectFrame ?? transformFrame(for: indices)
         else {
             statusText = L10n.text("imageEditor.status.layerLocked")
-            return
+            return false
         }
         pushUndo()
         movingLayerIDs = Set(indices.map { document.layers[$0].id })
@@ -136,6 +137,7 @@ extension ImageEditorViewModel {
         movingOriginalTransformFrame = transformFrame
         movingObjectPreviewFrame = transformFrame
         activeAlignmentGuides = []
+        return true
     }
 
     /// Starts an Option-drag as one undoable duplicate-and-move transaction.

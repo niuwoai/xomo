@@ -1261,7 +1261,6 @@ struct ImageEditorView: View {
                     deliverySelectionOverlay(in: geometry.size)
                     colorSamplerOverlay(in: geometry.size)
                     sampledBrushSourceOverlay(in: geometry.size)
-                    selectedXomoObjectInteractionOverlay(in: geometry.size)
                     layerTransformOverlay(in: geometry.size)
                     shapeGradientControlOverlay(in: geometry.size)
                     textBoxOverflowOverlay(in: geometry.size)
@@ -1312,21 +1311,10 @@ struct ImageEditorView: View {
                         }
                     }
                 )
-                // The drop destination is a platform-level host and can win
-                // hit testing over child overlays on macOS 13. Keep a canvas
-                // level, high-priority object gesture after that host so a
-                // selected UI component always has a direct move path. The
-                // gesture only activates when the pointer starts inside the
-                // selected component, so external drops and ordinary tools
-                // keep their existing behavior.
-                .highPriorityGesture(
-                    selectedXomoObjectCanvasMoveGesture(in: geometry.size),
-                    including: .all
-                )
                 // Keep the editor gesture simultaneous with the drop host so
-                // external component drops still work on macOS 13. The
-                // canvas-level object gesture above owns component dragging;
-                // the parent canvas owns ordinary layer movement and panning.
+                // external component drops still work on macOS 13. The AppKit
+                // canvas monitor below is the single authoritative component
+                // drag path; the parent canvas owns ordinary layers/tools.
                 .simultaneousGesture(canvasGesture(in: geometry.size))
                 .overlay(
                     ScrollWheelZoomView(
@@ -1360,15 +1348,15 @@ struct ImageEditorView: View {
                                   viewModel.canResizeSelectedLayer
                             else { return false }
                             lastMoveTranslation = .zero
-                            viewModel.beginMovingSelectedLayer()
+                            guard viewModel.beginMovingSelectedLayer() else { return false }
                             isSelectedObjectMoveGestureActive = true
-                            NSCursor.closedHand.set()
+                            ImageEditorCanvasCursor.objectMoveCursor().set()
                             return true
                         },
                         onObjectMoveChanged: { translation in
                             guard isSelectedObjectMoveGestureActive else { return }
                             updateObjectMove(translation: translation, in: geometry.size)
-                            NSCursor.closedHand.set()
+                            ImageEditorCanvasCursor.objectMoveCursor().set()
                         },
                         onObjectMoveEnded: {
                             guard isSelectedObjectMoveGestureActive else { return }
@@ -1921,14 +1909,6 @@ struct ImageEditorView: View {
                 if isSelectedObjectMoveGestureActive {
                     return
                 }
-                let moveModifiers = NSEvent.modifierFlags.intersection([.command, .option, .shift, .control])
-                let componentHit: Bool
-                if moveModifiers.isEmpty,
-                   let startPoint = imagePoint(from: value.startLocation, in: size) {
-                    componentHit = viewModel.hasXomoObject(at: startPoint)
-                } else {
-                    componentHit = false
-                }
                 if isCanvasPanGestureActive || canvasInteractionTool == .hand || isSpacebarPanning {
                     isCanvasPanGestureActive = true
                     updateCanvasPan(translation: value.translation)
@@ -2016,43 +1996,24 @@ struct ImageEditorView: View {
                     if isCanvasSelectionGestureActive {
                         break
                     }
-                    if componentHit,
-                       !isObjectMoveGestureActive,
-                       let pressedImagePoint = imagePoint(from: value.startLocation, in: size),
-                       viewModel.selectXomoObject(at: pressedImagePoint) {
-                        viewModel.beginMovingSelectedLayer()
-                        isObjectMoveGestureActive = true
-                    }
-                    if !isObjectMoveGestureActive,
-                       !isSelectedObjectMoveGestureActive,
-                       viewModel.hasSelectedXomoObject,
-                       let pressedImagePoint = imagePoint(from: value.startLocation, in: size),
-                       viewModel.selectedXomoObjectFrame?.contains(pressedImagePoint) == true {
-                        // Keep selected-component movement on the canvas
-                        // gesture itself. The drop host can swallow a
-                        // gesture attached to a positioned overlay, while
-                        // this parent gesture is already receiving pointer
-                        // updates on macOS 13/14.
-                        viewModel.beginMovingSelectedLayer()
-                        isObjectMoveGestureActive = true
-                    }
                     if !isObjectMoveGestureActive {
                         let pressedImagePoint = imagePoint(from: value.startLocation, in: size)
                         guard let pressedImagePoint,
-                              viewModel.selectXomoObject(at: pressedImagePoint)
-                                || viewModel.selectVisibleLayer(at: pressedImagePoint)
+                              viewModel.selectVisibleLayer(at: pressedImagePoint)
                         else {
                             isCanvasPanGestureActive = true
                             updateCanvasPan(translation: value.translation)
                             NSCursor.closedHand.set()
                             return
                         }
-                        viewModel.beginMovingSelectedLayer()
+                        guard viewModel.beginMovingSelectedLayer() else { return }
                         isObjectMoveGestureActive = true
                     }
                     updateObjectMove(translation: value.translation, in: size)
                     if isObjectMoveGestureActive {
-                        NSCursor.closedHand.set()
+                        ImageEditorCanvasCursor.objectMoveCursor(
+                            isDuplicating: isCanvasCloneGestureActive
+                        ).set()
                     }
                 case .brush, .eraser:
                     if let pointerImagePoint {
@@ -2125,8 +2086,7 @@ struct ImageEditorView: View {
                     if !isObjectMoveGestureActive,
                        let pressedImagePoint = imagePoint(from: value.startLocation, in: size),
                        viewModel.selectPathLayer(at: pressedImagePoint) {
-                        viewModel.beginMovingSelectedLayer()
-                        isObjectMoveGestureActive = true
+                        isObjectMoveGestureActive = viewModel.beginMovingSelectedLayer()
                     }
                     if isObjectMoveGestureActive {
                         updateObjectMove(translation: value.translation, in: size)
@@ -2346,52 +2306,6 @@ struct ImageEditorView: View {
                 activeResizeHandle = nil
                 refreshCanvasCursor(in: size)
             }
-    }
-
-    private func selectedXomoObjectCanvasMoveGesture(in size: CGSize) -> some Gesture {
-        DragGesture(minimumDistance: 0, coordinateSpace: .named("image-editor-canvas-space"))
-            .onChanged { value in
-                if !isSelectedObjectMoveGestureActive {
-                    let moveModifiers = NSEvent.modifierFlags.intersection([.command, .option, .shift, .control])
-                    guard moveModifiers.isEmpty else { return }
-                    guard let startPoint = imagePoint(from: value.startLocation, in: size),
-                          viewModel.selectXomoObject(at: startPoint)
-                    else { return }
-                    lastMoveTranslation = .zero
-                    viewModel.beginMovingSelectedLayer()
-                    isSelectedObjectMoveGestureActive = true
-                    NSCursor.closedHand.set()
-                }
-                updateObjectMove(translation: value.translation, in: size)
-                NSCursor.closedHand.set()
-            }
-            .onEnded { _ in
-                guard isSelectedObjectMoveGestureActive else { return }
-                viewModel.finishMovingSelectedLayer()
-                isSelectedObjectMoveGestureActive = false
-                lastMoveTranslation = .zero
-                refreshCanvasCursor(in: size)
-            }
-    }
-
-    /// A transparent hit target keeps component movement reliable on macOS 13.
-    /// The drop destination is a platform host and can otherwise win the drag
-    /// arena before the canvas-level gesture sees the pointer.  Resize handles
-    /// are rendered afterwards, so they remain the higher-priority interaction.
-    @ViewBuilder
-    private func selectedXomoObjectInteractionOverlay(in size: CGSize) -> some View {
-        if canvasInteractionTool == .move,
-           viewModel.hasSelectedXomoObject,
-           let frame = viewModel.selectedXomoObjectFrame {
-            let rect = viewRect(from: frame, in: size)
-            Rectangle()
-                .fill(Color.white.opacity(0.001))
-                .frame(width: max(1, rect.width), height: max(1, rect.height))
-                .position(x: rect.midX, y: rect.midY)
-                .contentShape(Rectangle())
-                .highPriorityGesture(selectedXomoObjectCanvasMoveGesture(in: size))
-                .accessibilityHidden(true)
-        }
     }
 
     private func updateCanvasPan(translation: CGSize) {
@@ -7928,7 +7842,7 @@ enum ImageEditorCanvasCursor {
         // the native arrow there so a brush/selection cursor never suggests
         // that a click outside the image will edit pixels.
         if isObjectMoveGestureActive {
-            return .closedHand
+            return objectMoveCursor(isDuplicating: modifierFlags.contains(.option))
         }
         // Transform controls sit above the canvas and may extend outside the
         // drawable document (the rotation handle intentionally does). Their
@@ -7947,7 +7861,10 @@ enum ImageEditorCanvasCursor {
             isCanvasPanGestureActive: isCanvasPanGestureActive
         ) {
         case .componentLibrary:
-            return .arrow
+            if isPointerOverBlockedContent {
+                return .operationNotAllowed
+            }
+            return isPointerOverMovableContent ? objectMoveCursor() : .openHand
         case .pan:
             return cursor(
                 for: .hand,
@@ -8165,6 +8082,13 @@ enum ImageEditorCanvasCursor {
         )
     }
 
+    /// Photoshop/Sketch/Figma all distinguish object translation from canvas
+    /// panning. Keep the four-way move pointer for objects; reserve open/closed
+    /// hands exclusively for the document viewport.
+    static func objectMoveCursor(isDuplicating: Bool = false) -> NSCursor {
+        moveToolCursor(isDuplicating: isDuplicating)
+    }
+
     /// Photoshop's Direct Selection tool uses a white node-editing arrow,
     /// while Path Selection keeps the native black pointer. Keeping that
     /// distinction visible makes the two tools understandable at a glance.
@@ -8312,9 +8236,13 @@ enum ImageEditorCanvasCursor {
         case .quickSelection:
             return quickSelectionCursor(mode: selectionMode)
         case .cloneStamp:
-            return modifierFlags.contains(.capsLock) ? .crosshair : cloneStampCursor()
+            return modifierFlags.contains(.capsLock)
+                ? .crosshair
+                : familiarBrushCursor(diameter: brushDiameter)
         case .healingBrush:
-            return modifierFlags.contains(.capsLock) ? .crosshair : healingBrushCursor()
+            return modifierFlags.contains(.capsLock)
+                ? .crosshair
+                : familiarBrushCursor(diameter: brushDiameter)
         case .brushTool, .eraserTool, .toneBrush, .retouchBrush:
             return modifierFlags.contains(.capsLock)
                 ? .crosshair

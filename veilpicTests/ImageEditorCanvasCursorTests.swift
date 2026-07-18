@@ -41,7 +41,7 @@ struct ImageEditorCanvasCursorTests {
         )
     }
 
-    @Test func selectedComponentLibraryObjectAlwaysRoutesToSystemArrowUnlessPanning() {
+    @Test func componentLibraryUsesMoveForObjectsAndHandOnlyForCanvasPanning() {
         #expect(
             ImageEditorCanvasCursor.tool(
                 for: .components,
@@ -66,8 +66,17 @@ struct ImageEditorCanvasCursorTests {
             ImageEditorCanvasCursor.cursor(
                 for: .components,
                 selectedTool: .brush,
-                brushDiameter: 18
-            ) === NSCursor.arrow
+                brushDiameter: 18,
+                isPointerOverMovableContent: true
+            ) === ImageEditorCanvasCursor.objectMoveCursor()
+        )
+        #expect(
+            ImageEditorCanvasCursor.cursor(
+                for: .components,
+                selectedTool: .brush,
+                brushDiameter: 18,
+                isPointerOverMovableContent: false
+            ) === NSCursor.openHand
         )
         #expect(
             ImageEditorCanvasCursor.cursor(
@@ -88,7 +97,7 @@ struct ImageEditorCanvasCursorTests {
         )
     }
 
-    @Test func draggingAComponentUsesTheClosedHandCursorAcrossSidebarModes() {
+    @Test func draggingAnObjectKeepsMoveCursorAcrossSidebarModes() {
         let componentDrag = ImageEditorCanvasCursor.cursor(
             for: .components,
             selectedTool: .brush,
@@ -102,11 +111,12 @@ struct ImageEditorCanvasCursorTests {
             isObjectMoveGestureActive: true
         )
 
-        #expect(componentDrag === NSCursor.closedHand)
-        #expect(moveToolDrag === NSCursor.closedHand)
+        #expect(componentDrag === ImageEditorCanvasCursor.objectMoveCursor())
+        #expect(moveToolDrag === ImageEditorCanvasCursor.objectMoveCursor())
+        #expect(componentDrag !== NSCursor.closedHand)
     }
 
-    @Test func componentLibraryNeverLeaksAnyPreviousToolCursor() {
+    @Test func componentLibraryNeverLeaksAnyPreviousDrawingToolCursor() {
         let staleModifiers: NSEvent.ModifierFlags = [.command, .option, .shift, .control, .capsLock]
 
         for tool in ImageEditorTool.allCases {
@@ -115,8 +125,9 @@ struct ImageEditorCanvasCursorTests {
                     for: .components,
                     selectedTool: tool,
                     brushDiameter: 96,
+                    isPointerOverMovableContent: false,
                     modifierFlags: staleModifiers
-                ) === NSCursor.arrow
+                ) === NSCursor.openHand
             )
         }
 
@@ -599,7 +610,7 @@ struct ImageEditorCanvasCursorTests {
         )
 
         #expect(rotate !== NSCursor.arrow)
-        #expect(dragging === NSCursor.closedHand)
+        #expect(dragging === ImageEditorCanvasCursor.objectMoveCursor())
     }
 
     @Test func toolCursorsUseFamiliarPrecisionAndBrushConventions() {
@@ -622,7 +633,7 @@ struct ImageEditorCanvasCursorTests {
         #expect(ImageEditorCanvasCursor.family(for: .smudge) == .retouchBrush)
 
         let semanticTools: [ImageEditorTool] = [
-            .marquee, .lasso, .magicWand, .quickSelection, .cloneStamp, .healingBrush,
+            .marquee, .lasso, .magicWand, .quickSelection,
             .crop, .patchTool, .gradient, .rectangle, .ellipse, .pen
         ]
         for tool in semanticTools {
@@ -637,19 +648,14 @@ struct ImageEditorCanvasCursorTests {
         )
 
         let brushTools: [ImageEditorTool] = [
-            .brush, .eraser, .dodge, .burn, .sponge, .blur, .sharpen, .smudge
+            .brush, .eraser, .cloneStamp, .healingBrush,
+            .dodge, .burn, .sponge, .blur, .sharpen, .smudge
         ]
         let brushRepresentations = brushTools.compactMap {
             ImageEditorCanvasCursor.cursor(for: $0, brushDiameter: 18).image.tiffRepresentation
         }
         #expect(brushRepresentations.count == brushTools.count)
         #expect(Set(brushRepresentations).count == 1)
-
-        let clone = ImageEditorCanvasCursor.cursor(for: .cloneStamp, brushDiameter: 18)
-        let healing = ImageEditorCanvasCursor.cursor(for: .healingBrush, brushDiameter: 18)
-        #expect(clone.image.tiffRepresentation != healing.image.tiffRepresentation)
-        #expect(clone.image.tiffRepresentation != brushRepresentations[0])
-        #expect(healing.image.tiffRepresentation != brushRepresentations[0])
 
         #expect(ImageEditorCanvasCursor.cursor(for: .paintBucket, brushDiameter: 18) !== NSCursor.crosshair)
         #expect(ImageEditorCanvasCursor.cursor(for: .eyedropper, brushDiameter: 18) !== NSCursor.crosshair)

@@ -1,0 +1,33 @@
+{
+  "version": "2.12.0-rc311",
+  "scope": "收敛组件拖动入口并统一对象移动、画布平移和笔刷类工具光标",
+  "environment": "arm64 MacBook Pro, macOS 26.5.2, Xcode 26.4.1",
+  "build": {
+    "derived_data": "/private/tmp/xomo-rc308-derived",
+    "status": "passed",
+    "scope": "incremental test build using shared DerivedData; no Release gate"
+  },
+  "isolated_tests": {
+    "runner": "XOMO_DERIVED_DATA_PATH=/private/tmp/xomo-rc308-derived ruby scripts/run_tests_isolated.rb --skip-build --filter <suite-or-test> --out /private/tmp/<report>",
+    "passed": 67,
+    "failed": 0,
+    "suites": [
+      { "name": "ImageEditorCanvasCursorTests", "passed": 30, "failed": 0 },
+      { "name": "componentSidebarWiresMoveSemanticsIntoCanvasCursorAndGestures", "passed": 1, "failed": 0 },
+      { "name": "XomoCanvasObjectTests", "passed": 36, "failed": 0 }
+    ]
+  },
+  "manual_ui_verification": {
+    "performed": true,
+    "result": "inserted and dragged a new component in the installed Xomo app"
+  },
+  "release_contract": {
+    "tests": 3,
+    "assertions": 7,
+    "failures": 0
+  },
+  "full_gate": {
+    "performed": false,
+    "next_version": "2.12.0-rc320"
+  }
+}
