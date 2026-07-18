@@ -343,7 +343,8 @@ extension ImageEditorViewModel {
     func resizeSelectedLayer(
         to point: CGPoint,
         handle: ImageEditorLayerResizeHandle,
-        preservingAspectRatio: Bool = false
+        preservingAspectRatio: Bool = false,
+        resizingFromCenter: Bool = false
     ) {
         guard !resizingLayerIDs.isEmpty,
               let originalFrame = resizingOriginalTransformFrame
@@ -354,20 +355,23 @@ extension ImageEditorViewModel {
             handle: handle,
             from: originalFrame,
             to: point,
-            preservingAspectRatio: shouldPreserveAspectRatio
+            preservingAspectRatio: shouldPreserveAspectRatio,
+            resizingFromCenter: resizingFromCenter
         )
         let snappedFrame = snappedResizeFrame(
             resizedFrame,
             originalFrame: originalFrame,
             handle: handle,
-            preservingAspectRatio: shouldPreserveAspectRatio
+            preservingAspectRatio: shouldPreserveAspectRatio,
+            resizingFromCenter: resizingFromCenter
         )
         let changed: Bool
         if resizesParagraphTextBox {
             let normalizedFrame = ImageEditorTextBoxGeometry.normalizedResizeFrame(
                 snappedFrame,
                 originalFrame: originalFrame,
-                handle: handle
+                handle: handle,
+                resizingFromCenter: resizingFromCenter
             )
             changed = applyResizedParagraphTextBoxFrame(normalizedFrame)
         } else {
@@ -987,7 +991,8 @@ extension ImageEditorViewModel {
         handle: ImageEditorLayerResizeHandle,
         from originalFrame: CGRect,
         to point: CGPoint,
-        preservingAspectRatio: Bool
+        preservingAspectRatio: Bool,
+        resizingFromCenter: Bool = false
     ) -> CGRect {
         let minimumSize: CGFloat = 4
         var minX = originalFrame.minX
@@ -995,27 +1000,56 @@ extension ImageEditorViewModel {
         var minY = originalFrame.minY
         var maxY = originalFrame.maxY
 
-        switch handle {
-        case .topLeft:
-            minX = min(point.x, originalFrame.maxX - minimumSize)
-            maxY = max(point.y, originalFrame.minY + minimumSize)
-        case .top:
-            maxY = max(point.y, originalFrame.minY + minimumSize)
-        case .topRight:
-            maxX = max(point.x, originalFrame.minX + minimumSize)
-            maxY = max(point.y, originalFrame.minY + minimumSize)
-        case .left:
-            minX = min(point.x, originalFrame.maxX - minimumSize)
-        case .right:
-            maxX = max(point.x, originalFrame.minX + minimumSize)
-        case .bottomLeft:
-            minX = min(point.x, originalFrame.maxX - minimumSize)
-            minY = min(point.y, originalFrame.maxY - minimumSize)
-        case .bottom:
-            minY = min(point.y, originalFrame.maxY - minimumSize)
-        case .bottomRight:
-            maxX = max(point.x, originalFrame.minX + minimumSize)
-            minY = min(point.y, originalFrame.maxY - minimumSize)
+        if resizingFromCenter {
+            if handle.affectsWidth {
+                let halfWidth: CGFloat
+                switch handle {
+                case .topLeft, .left, .bottomLeft:
+                    halfWidth = max(minimumSize / 2, originalFrame.midX - point.x)
+                case .topRight, .right, .bottomRight:
+                    halfWidth = max(minimumSize / 2, point.x - originalFrame.midX)
+                case .top, .bottom:
+                    halfWidth = originalFrame.width / 2
+                }
+                minX = originalFrame.midX - halfWidth
+                maxX = originalFrame.midX + halfWidth
+            }
+            if handle.affectsHeight {
+                let halfHeight: CGFloat
+                switch handle {
+                case .topLeft, .top, .topRight:
+                    halfHeight = max(minimumSize / 2, point.y - originalFrame.midY)
+                case .bottomLeft, .bottom, .bottomRight:
+                    halfHeight = max(minimumSize / 2, originalFrame.midY - point.y)
+                case .left, .right:
+                    halfHeight = originalFrame.height / 2
+                }
+                minY = originalFrame.midY - halfHeight
+                maxY = originalFrame.midY + halfHeight
+            }
+        } else {
+            switch handle {
+            case .topLeft:
+                minX = min(point.x, originalFrame.maxX - minimumSize)
+                maxY = max(point.y, originalFrame.minY + minimumSize)
+            case .top:
+                maxY = max(point.y, originalFrame.minY + minimumSize)
+            case .topRight:
+                maxX = max(point.x, originalFrame.minX + minimumSize)
+                maxY = max(point.y, originalFrame.minY + minimumSize)
+            case .left:
+                minX = min(point.x, originalFrame.maxX - minimumSize)
+            case .right:
+                maxX = max(point.x, originalFrame.minX + minimumSize)
+            case .bottomLeft:
+                minX = min(point.x, originalFrame.maxX - minimumSize)
+                minY = min(point.y, originalFrame.maxY - minimumSize)
+            case .bottom:
+                minY = min(point.y, originalFrame.maxY - minimumSize)
+            case .bottomRight:
+                maxX = max(point.x, originalFrame.minX + minimumSize)
+                minY = min(point.y, originalFrame.maxY - minimumSize)
+            }
         }
 
         let unconstrainedFrame = CGRect(
@@ -1029,7 +1063,8 @@ extension ImageEditorViewModel {
             unconstrainedFrame,
             originalFrame: originalFrame,
             handle: handle,
-            minimumSize: minimumSize
+            minimumSize: minimumSize,
+            resizingFromCenter: resizingFromCenter
         )
     }
 
@@ -1037,7 +1072,8 @@ extension ImageEditorViewModel {
         _ frame: CGRect,
         originalFrame: CGRect,
         handle: ImageEditorLayerResizeHandle,
-        minimumSize: CGFloat
+        minimumSize: CGFloat,
+        resizingFromCenter: Bool = false
     ) -> CGRect {
         let aspectRatio = max(originalFrame.width, minimumSize) / max(originalFrame.height, minimumSize)
         let horizontalScale = frame.width / max(originalFrame.width, minimumSize)
@@ -1052,6 +1088,15 @@ extension ImageEditorViewModel {
         } else if !handle.affectsHeight {
             width = frame.width
             height = max(minimumSize, width / max(aspectRatio, 0.0001))
+        }
+
+        if resizingFromCenter {
+            return CGRect(
+                x: originalFrame.midX - width / 2,
+                y: originalFrame.midY - height / 2,
+                width: width,
+                height: height
+            )
         }
 
         switch handle {

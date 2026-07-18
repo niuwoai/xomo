@@ -47,12 +47,22 @@ enum ImageEditorTextBoxGeometry {
     static func normalizedResizeFrame(
         _ targetFrame: CGRect,
         originalFrame: CGRect,
-        handle: ImageEditorLayerResizeHandle
+        handle: ImageEditorLayerResizeHandle,
+        resizingFromCenter: Bool = false
     ) -> CGRect {
         let original = originalFrame.standardized
         let target = targetFrame.standardized
         let width = max(minimumFrameDimension, min(maximumFrameDimension, ceil(target.width)))
         let height = max(minimumFrameDimension, min(maximumFrameDimension, ceil(target.height)))
+
+        if resizingFromCenter {
+            return CGRect(
+                x: original.midX - width / 2,
+                y: original.midY - height / 2,
+                width: width,
+                height: height
+            )
+        }
 
         let x: CGFloat
         switch handle {

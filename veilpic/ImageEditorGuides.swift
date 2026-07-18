@@ -243,7 +243,8 @@ extension ImageEditorViewModel {
         _ frame: CGRect,
         originalFrame: CGRect,
         handle: ImageEditorLayerResizeHandle,
-        preservingAspectRatio: Bool
+        preservingAspectRatio: Bool,
+        resizingFromCenter: Bool = false
     ) -> CGRect {
         guard document.isGuideSnappingEnabled || document.isGridSnappingEnabled,
               !preservingAspectRatio
@@ -265,16 +266,20 @@ extension ImageEditorViewModel {
         if handle.affectsWidth {
             let leftHandle = handle == .left || handle == .topLeft || handle == .bottomLeft
             let candidates: [(ImageEditorGuideSnapAnchor, CGFloat)] = leftHandle
-                ? [(.minimum, snappedFrame.minX), (.middle, snappedFrame.midX)]
-                : [(.maximum, snappedFrame.maxX), (.middle, snappedFrame.midX)]
+                ? [(.minimum, snappedFrame.minX)]
+                : [(.maximum, snappedFrame.maxX)]
+            let resolvedCandidates = resizingFromCenter
+                ? candidates
+                : candidates + [(.middle, snappedFrame.midX)]
 
-            if let snap = bestGuideSnap(candidates: candidates, guides: snapGuides.vertical, threshold: threshold) {
+            if let snap = bestGuideSnap(candidates: resolvedCandidates, guides: snapGuides.vertical, threshold: threshold) {
                 snappedFrame = resizeFrame(
                     snappedFrame,
                     applying: snap,
                     orientation: .vertical,
                     movesMinimumEdge: leftHandle,
-                    minimumSize: minimumSize
+                    minimumSize: minimumSize,
+                    resizingFromCenter: resizingFromCenter
                 )
                 alignmentGuides.append(
                     ImageEditorAlignmentGuide(orientation: .vertical, position: snap.position)
@@ -285,16 +290,20 @@ extension ImageEditorViewModel {
         if handle.affectsHeight {
             let bottomHandle = handle == .bottom || handle == .bottomLeft || handle == .bottomRight
             let candidates: [(ImageEditorGuideSnapAnchor, CGFloat)] = bottomHandle
-                ? [(.minimum, snappedFrame.minY), (.middle, snappedFrame.midY)]
-                : [(.maximum, snappedFrame.maxY), (.middle, snappedFrame.midY)]
+                ? [(.minimum, snappedFrame.minY)]
+                : [(.maximum, snappedFrame.maxY)]
+            let resolvedCandidates = resizingFromCenter
+                ? candidates
+                : candidates + [(.middle, snappedFrame.midY)]
 
-            if let snap = bestGuideSnap(candidates: candidates, guides: snapGuides.horizontal, threshold: threshold) {
+            if let snap = bestGuideSnap(candidates: resolvedCandidates, guides: snapGuides.horizontal, threshold: threshold) {
                 snappedFrame = resizeFrame(
                     snappedFrame,
                     applying: snap,
                     orientation: .horizontal,
                     movesMinimumEdge: bottomHandle,
-                    minimumSize: minimumSize
+                    minimumSize: minimumSize,
+                    resizingFromCenter: resizingFromCenter
                 )
                 alignmentGuides.append(
                     ImageEditorAlignmentGuide(orientation: .horizontal, position: snap.position)
@@ -516,7 +525,8 @@ extension ImageEditorViewModel {
         applying snap: ImageEditorGuideSnap,
         orientation: ImageEditorGuideOrientation,
         movesMinimumEdge: Bool,
-        minimumSize: CGFloat
+        minimumSize: CGFloat,
+        resizingFromCenter: Bool
     ) -> CGRect {
         var minX = frame.minX
         var maxX = frame.maxX
@@ -526,14 +536,32 @@ extension ImageEditorViewModel {
         switch orientation {
         case .vertical:
             let edgeCorrection = snap.anchor == .middle ? snap.correction * 2 : snap.correction
-            if movesMinimumEdge {
+            if resizingFromCenter {
+                let centerX = frame.midX
+                if movesMinimumEdge {
+                    minX = min(centerX - minimumSize / 2, minX + edgeCorrection)
+                    maxX = centerX + (centerX - minX)
+                } else {
+                    maxX = max(centerX + minimumSize / 2, maxX + edgeCorrection)
+                    minX = centerX - (maxX - centerX)
+                }
+            } else if movesMinimumEdge {
                 minX = min(maxX - minimumSize, minX + edgeCorrection)
             } else {
                 maxX = max(minX + minimumSize, maxX + edgeCorrection)
             }
         case .horizontal:
             let edgeCorrection = snap.anchor == .middle ? snap.correction * 2 : snap.correction
-            if movesMinimumEdge {
+            if resizingFromCenter {
+                let centerY = frame.midY
+                if movesMinimumEdge {
+                    minY = min(centerY - minimumSize / 2, minY + edgeCorrection)
+                    maxY = centerY + (centerY - minY)
+                } else {
+                    maxY = max(centerY + minimumSize / 2, maxY + edgeCorrection)
+                    minY = centerY - (maxY - centerY)
+                }
+            } else if movesMinimumEdge {
                 minY = min(maxY - minimumSize, minY + edgeCorrection)
             } else {
                 maxY = max(minY + minimumSize, maxY + edgeCorrection)

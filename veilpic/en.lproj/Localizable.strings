@@ -2237,7 +2237,7 @@
 "imageEditor.action.vectorMaskLoadSelection" = "Load Selection from Vector Mask";
 "imageEditor.action.layerScaleDown" = "Scale Layer Down";
 "imageEditor.action.layerScaleUp" = "Scale Layer Up";
-"imageEditor.action.layerResizeHandle" = "Drag to resize layer. Hold Shift to keep aspect ratio.";
+"imageEditor.action.layerResizeHandle" = "Drag to resize. Hold Shift for aspect ratio or Option to resize from center.";
 "imageEditor.action.layerRotateHandle" = "Drag to rotate layer. Hold Shift to snap every 15°.";
 "imageEditor.action.layerMore" = "More layer actions";
 "imageEditor.action.layerMoreOpenMenu" = "Find more commands in the Layer menu";

@@ -2237,7 +2237,7 @@
 "imageEditor.action.vectorMaskLoadSelection" = "ベクターマスクから選択範囲を読み込み";
 "imageEditor.action.layerScaleDown" = "レイヤーを縮小";
 "imageEditor.action.layerScaleUp" = "レイヤーを拡大";
-"imageEditor.action.layerResizeHandle" = "ドラッグしてレイヤーを拡大縮小。Shift で比率を固定";
+"imageEditor.action.layerResizeHandle" = "ドラッグして拡大縮小。Shift で比率を固定、Option で中心基準";
 "imageEditor.action.layerRotateHandle" = "ドラッグしてレイヤーを回転。Shift で 15° ごとにスナップ";
 "imageEditor.action.layerMore" = "その他のレイヤー操作";
 "imageEditor.action.layerMoreOpenMenu" = "その他のコマンドは上部の「レイヤー」メニューへ";

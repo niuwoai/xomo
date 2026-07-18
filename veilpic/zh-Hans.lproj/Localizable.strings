@@ -2237,7 +2237,7 @@
 "imageEditor.action.vectorMaskLoadSelection" = "从矢量蒙版载入选区";
 "imageEditor.action.layerScaleDown" = "缩小图层";
 "imageEditor.action.layerScaleUp" = "放大图层";
-"imageEditor.action.layerResizeHandle" = "拖拽缩放图层，按住 Shift 等比缩放";
+"imageEditor.action.layerResizeHandle" = "拖拽缩放图层；Shift 等比缩放，Option 从中心缩放";
 "imageEditor.action.layerRotateHandle" = "拖拽旋转图层，按住 Shift 吸附 15°";
 "imageEditor.action.layerMore" = "更多图层操作";
 "imageEditor.action.layerMoreOpenMenu" = "更多命令请使用顶部“图层”菜单";

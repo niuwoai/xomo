@@ -4994,7 +4994,8 @@ struct ImageEditorView: View {
                         viewModel.resizeSelectedLayer(
                             to: unboundedImagePoint(from: value.location, in: canvasSize),
                             handle: handle,
-                            preservingAspectRatio: NSEvent.modifierFlags.contains(.shift)
+                            preservingAspectRatio: NSEvent.modifierFlags.contains(.shift),
+                            resizingFromCenter: NSEvent.modifierFlags.contains(.option)
                         )
                     }
                     .onEnded { _ in
