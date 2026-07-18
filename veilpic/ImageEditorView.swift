@@ -1313,6 +1313,7 @@ struct ImageEditorView: View {
                             isSpacebarPanning: isSpacebarPanning,
                             isCanvasPanGestureActive: isCanvasPanGestureActive,
                             modifierFlags: canvasModifierFlags,
+                            marqueeShape: viewModel.marqueeShape,
                             cropHandle: cropHandle
                         )
                     )
@@ -2405,6 +2406,7 @@ struct ImageEditorView: View {
             isSpacebarPanning: isSpacebarPanning,
             isCanvasPanGestureActive: isCanvasPanGestureActive,
             modifierFlags: NSEvent.modifierFlags,
+            marqueeShape: viewModel.marqueeShape,
             cropHandle: cropInteractionHandle(at: viewPoint, in: size)
         ).set()
     }
@@ -2428,6 +2430,7 @@ struct ImageEditorView: View {
             isSpacebarPanning: isSpacebarPanning,
             isCanvasPanGestureActive: isCanvasPanGestureActive,
             modifierFlags: canvasModifierFlags,
+            marqueeShape: viewModel.marqueeShape,
             cropHandle: nil
         ).set()
     }
@@ -7530,6 +7533,7 @@ enum ImageEditorCanvasCursor {
         isSpacebarPanning: Bool = false,
         isCanvasPanGestureActive: Bool = false,
         modifierFlags: NSEvent.ModifierFlags = [],
+        marqueeShape: ImageEditorMarqueeShape = .rectangle,
         cropHandle: ImageEditorCropHandle? = nil
     ) -> NSCursor {
         // The dark workspace surrounding the document is not drawable. Keep
@@ -7563,6 +7567,7 @@ enum ImageEditorCanvasCursor {
                 penIsClosing: penIsClosing,
                 handIsDragging: handIsDragging,
                 modifierFlags: modifierFlags,
+                marqueeShape: marqueeShape,
                 cropHandle: cropHandle
             )
         }
@@ -7752,6 +7757,7 @@ enum ImageEditorCanvasCursor {
         penIsClosing: Bool = false,
         handIsDragging: Bool = false,
         modifierFlags: NSEvent.ModifierFlags = [],
+        marqueeShape: ImageEditorMarqueeShape = .rectangle,
         cropHandle: ImageEditorCropHandle? = nil
     ) -> NSCursor {
         let selectionMode = ImageEditorSelectionCursorMode.from(modifierFlags: modifierFlags)
@@ -7765,7 +7771,7 @@ enum ImageEditorCanvasCursor {
         case .textInsertion:
             return .iBeam
         case .selectionMarquee:
-            return familiarSelectionCursor(mode: selectionMode)
+            return familiarSelectionCursor(mode: selectionMode, shape: marqueeShape)
         case .lasso:
             return lassoCursor(mode: selectionMode)
         case .magicWand:
@@ -7807,8 +7813,11 @@ enum ImageEditorCanvasCursor {
     /// Keep the cursor vocabulary close to Photoshop/Sketch: selection tools
     /// show a small dashed selection frame, while modifier modes retain the
     /// familiar add/subtract badge so the operation is still obvious.
-    private static func familiarSelectionCursor(mode: ImageEditorSelectionCursorMode) -> NSCursor {
-        selectionMarqueeCursor(mode: mode)
+    private static func familiarSelectionCursor(
+        mode: ImageEditorSelectionCursorMode,
+        shape: ImageEditorMarqueeShape
+    ) -> NSCursor {
+        selectionMarqueeCursor(mode: mode, shape: shape)
     }
 
     /// Brush-like tools share one predictable footprint cursor. The active
@@ -8130,15 +8139,21 @@ enum ImageEditorCanvasCursor {
         lines.stroke()
     }
 
-    private static func selectionMarqueeCursor(mode: ImageEditorSelectionCursorMode) -> NSCursor {
-        let cacheKey = "selection-marquee:\(mode.rawValue)"
+    private static func selectionMarqueeCursor(
+        mode: ImageEditorSelectionCursorMode,
+        shape: ImageEditorMarqueeShape
+    ) -> NSCursor {
+        let cacheKey = "selection-marquee:\(shape.rawValue):\(mode.rawValue)"
         if let cachedCursor = cursorCache[cacheKey] {
             return cachedCursor
         }
         let side: CGFloat = 32
         let image = NSImage(size: NSSize(width: side, height: side))
         image.lockFocus()
-        let outline = NSBezierPath(rect: NSRect(x: 3, y: 3, width: 16, height: 14))
+        let bounds = NSRect(x: 3, y: 3, width: 16, height: 14)
+        let outline = shape.isEllipse
+            ? NSBezierPath(ovalIn: bounds)
+            : NSBezierPath(rect: bounds)
         outline.setLineDash([3, 2], count: 2, phase: 0)
         NSColor.black.withAlphaComponent(0.95).setStroke()
         outline.lineWidth = 3

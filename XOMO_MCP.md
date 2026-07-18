@@ -1,6 +1,8 @@
 # Xomo MCP 与 CLI
 
-> 当前版本：v2.12.0-rc278
+> 当前版本：v2.12.0-rc279
+
+rc279 让画布选区光标按矩形/椭圆选区形状显示对应虚线框；MCP/CLI 的选区数据和修饰键语义保持不变。
 
 rc278 让油漆桶图标在工具栏、顶部选项栏和当前工具提示中保持一致；rc277 增加只读发布契约检查 `scripts/verify_release_contract.rb`，可为发布门禁输出 JSON/Markdown。
 

@@ -229,6 +229,21 @@ struct ImageEditorCanvasCursorTests {
         #expect(subtract.image.tiffRepresentation != intersect.image.tiffRepresentation)
     }
 
+    @Test func marqueeCursorReflectsTheSelectedSelectionShape() {
+        let rectangle = ImageEditorCanvasCursor.cursor(
+            for: .marquee,
+            brushDiameter: 18,
+            marqueeShape: .rectangle
+        )
+        let ellipse = ImageEditorCanvasCursor.cursor(
+            for: .marquee,
+            brushDiameter: 18,
+            marqueeShape: .ellipse
+        )
+
+        #expect(rectangle.image.tiffRepresentation != ellipse.image.tiffRepresentation)
+    }
+
     @Test func zoomCursorReflectsOptionZoomOutMode() {
         let zoomIn = ImageEditorCanvasCursor.cursor(for: .zoom, brushDiameter: 18)
         let zoomOut = ImageEditorCanvasCursor.cursor(
