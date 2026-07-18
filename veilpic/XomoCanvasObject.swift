@@ -27,7 +27,7 @@ extension ImageEditorViewModel {
     }
 
     var selectedXomoObjectFrame: CGRect? {
-        guard let selectedGroupID = document.selectedLayerID,
+        guard document.selectedLayerID != nil,
               !document.selectedLayerIDs.isEmpty,
               document.selectedLayerIDs.allSatisfy({ selectedID in
                   document.layers.contains { layer in
@@ -53,7 +53,15 @@ extension ImageEditorViewModel {
     /// performs its stricter selection check before committing.
     func hasMovableCanvasContent(at point: CGPoint) -> Bool {
         guard point.x.isFinite, point.y.isFinite else { return false }
-        if xomoCanvasObjects().contains(where: { $0.frame.contains(point) }) {
+        if xomoCanvasObjects().contains(where: { object in
+            guard object.frame.contains(point),
+                  !isXomoObjectOccluded(object, at: point),
+                  let group = document.layers.first(where: { $0.id == object.groupID }),
+                  !document.isEffectivelyPositionLocked(group)
+            else { return false }
+            let children = document.layers.filter { $0.groupID == object.groupID && !$0.isGroup }
+            return !children.isEmpty && children.allSatisfy { !document.isEffectivelyPositionLocked($0) }
+        }) {
             return true
         }
 
@@ -67,6 +75,7 @@ extension ImageEditorViewModel {
             guard !layer.isGroup,
                   layer.groupID.map({ !componentGroupIDs.contains($0) }) ?? true,
                   document.isEffectivelyVisible(layer),
+                  !document.isEffectivelyPositionLocked(layer),
                   layerContainsVisibleContent(layer, at: point)
             else { return false }
             return true

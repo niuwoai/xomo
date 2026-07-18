@@ -156,6 +156,41 @@ struct ImageEditorCanvasCursorTests {
         #expect(viewModel.document.selectedLayer?.xomoComponentInstance != nil)
     }
 
+    @Test func moveCursorDoesNotClaimOccludedOrPositionLockedContent() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "cursor-lock-hit-test",
+            image: NSImage.transparent(size: CGSize(width: 640, height: 480))
+        ) { _ in }
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))
+        let groupID = try #require(viewModel.document.selectedLayerID)
+        let frame = try #require(viewModel.selectedXomoObjectFrame)
+        let center = CGPoint(x: frame.midX, y: frame.midY)
+
+        viewModel.document.layers = viewModel.document.layers.map { layer in
+            guard layer.id == groupID else { return layer }
+            var locked = layer
+            locked.locksPosition = true
+            return locked
+        }
+        #expect(!viewModel.hasMovableCanvasContent(at: center))
+
+        viewModel.document.layers = viewModel.document.layers.map { layer in
+            guard layer.id == groupID else { return layer }
+            var unlocked = layer
+            unlocked.locksPosition = false
+            return unlocked
+        }
+        var cover = ImageEditorLayer.solidColorFill(
+            name: "Cursor cover",
+            size: CGSize(width: 240, height: 80),
+            content: ImageEditorSolidColorFillContent(red: 0.2, green: 0.2, blue: 0.2)
+        )
+        cover.frame = CGRect(x: 80, y: 90, width: 240, height: 80)
+        cover.locksPosition = true
+        viewModel.document.layers.append(cover)
+        #expect(!viewModel.hasMovableCanvasContent(at: center))
+    }
+
     @Test func moveToolShowsCopyBadgeWhileHoldingOption() {
         let normal = ImageEditorCanvasCursor.cursor(
             for: .tools,
