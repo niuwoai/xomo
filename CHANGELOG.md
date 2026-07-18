@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc331 - 2026-07-19
+
+### Changed
+- 模糊与锐化工具顶部从“不透明度”改为 Photoshop 通用“强度”，与涂抹统一显示 0%–100%；画笔、橡皮等其他工具继续保持不透明度语义。
+- MCP/CLI `xomo.paint.special` 的 `strength=0...1` 扩展到 `blur`、`sharpen` 和 `smudge`，三者均优先使用 `strength`，旧 `opacity` 调用继续兼容。
+- 仅统一用户层语义与协议别名，rc327/rc328 的软边硬度、单击圆形点按、连续笔触、选区、History 与 Undo 算法保持不变。
+- 强度像素、MCP 两种 action、旧 opacity 回退、顶部样式和软硬边共 8/8 个 App 定向测试通过，CLI 2/2、发布版本契约 7/7 通过。
+
 ## 2.12.0-rc330 - 2026-07-19
 
 ### Changed

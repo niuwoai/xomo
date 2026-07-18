@@ -2082,6 +2082,52 @@ struct XomoAutomationTests {
         ])
     }
 
+    @Test func registryConfiguresBlurStrength() {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("blur"),
+                "strength": .number(0.28),
+                "opacity": .number(0.91),
+                "points": .array([
+                    .object(["x": .number(32), "y": .number(32)])
+                ])
+            ]
+        ))
+
+        #expect(response.ok)
+        #expect(abs(viewModel.opacity - 0.28) < 0.001)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.blur"))
+    }
+
+    @Test func registryConfiguresSharpenStrength() {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("sharpen"),
+                "strength": .number(0.42),
+                "opacity": .number(0.93),
+                "points": .array([
+                    .object(["x": .number(32), "y": .number(32)])
+                ])
+            ]
+        ))
+
+        #expect(response.ok)
+        #expect(abs(viewModel.opacity - 0.42) < 0.001)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.sharpen"))
+    }
+
     @Test func registryConfiguresSmudgeHardnessAndStrength() {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

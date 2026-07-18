@@ -308,6 +308,44 @@ struct ImageEditorToolSmokeTests {
         #expect(sharpen.document.history.last?.title == L10n.text("imageEditor.history.sharpen"))
     }
 
+    @Test func blurStrengthControlsPixelEffect() throws {
+        let image = verticalEdgeImage()
+        let low = makeConfiguredRetouchViewModel(image: image)
+        let high = makeConfiguredRetouchViewModel(image: image)
+        low.opacity = 0.20
+        high.opacity = 1
+        let darkPoint = CGPoint(x: 18, y: 14)
+        let lightPoint = CGPoint(x: 22, y: 14)
+
+        low.blurBrush(points: [CGPoint(x: 20, y: 14)])
+        high.blurBrush(points: [CGPoint(x: 20, y: 14)])
+
+        let lowContrast = try colorContrast(in: low, darkPoint: darkPoint, lightPoint: lightPoint)
+        let highContrast = try colorContrast(in: high, darkPoint: darkPoint, lightPoint: lightPoint)
+        #expect(highContrast < lowContrast - 0.15)
+        #expect(low.document.history.last?.title == L10n.text("imageEditor.history.blur"))
+        #expect(high.document.history.last?.title == L10n.text("imageEditor.history.blur"))
+    }
+
+    @Test func sharpenStrengthControlsPixelEffect() throws {
+        let image = try #require(verticalEdgeImage().blurred(radius: 4))
+        let low = makeConfiguredRetouchViewModel(image: image)
+        let high = makeConfiguredRetouchViewModel(image: image)
+        low.opacity = 0.20
+        high.opacity = 1
+        let darkPoint = CGPoint(x: 18, y: 14)
+        let lightPoint = CGPoint(x: 22, y: 14)
+
+        low.sharpenBrush(points: [CGPoint(x: 20, y: 14)])
+        high.sharpenBrush(points: [CGPoint(x: 20, y: 14)])
+
+        let lowContrast = try colorContrast(in: low, darkPoint: darkPoint, lightPoint: lightPoint)
+        let highContrast = try colorContrast(in: high, darkPoint: darkPoint, lightPoint: lightPoint)
+        #expect(highContrast > lowContrast + 0.03)
+        #expect(low.document.history.last?.title == L10n.text("imageEditor.history.sharpen"))
+        #expect(high.document.history.last?.title == L10n.text("imageEditor.history.sharpen"))
+    }
+
     @Test func smudgeHardnessControlsTheVisibleStrokeEdge() throws {
         let image = verticalEdgeImage()
         let soft = makeConfiguredRetouchViewModel(image: image)

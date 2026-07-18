@@ -491,21 +491,30 @@ struct ImageEditorView: View {
     }
 
     private var opacityOptionTitleKey: String {
-        viewModel.selectedTool == .smudge
+        usesStrengthOption
             ? "imageEditor.option.strength"
             : "imageEditor.option.opacity"
     }
 
     private var opacityOptionRange: ClosedRange<CGFloat> {
-        viewModel.selectedTool == .smudge ? 0...1 : 0.05...1
+        usesStrengthOption ? 0...1 : 0.05...1
     }
 
     private var opacityOptionSuffix: String {
-        viewModel.selectedTool == .smudge ? "%" : ""
+        usesStrengthOption ? "%" : ""
     }
 
     private var opacityOptionDisplayMultiplier: CGFloat {
-        viewModel.selectedTool == .smudge ? 100 : 1
+        usesStrengthOption ? 100 : 1
+    }
+
+    private var usesStrengthOption: Bool {
+        switch viewModel.selectedTool {
+        case .blur, .sharpen, .smudge:
+            true
+        default:
+            false
+        }
     }
 
     private var usesBrushDynamicsOptions: Bool {

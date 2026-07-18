@@ -45,7 +45,8 @@ struct ImageEditorOptionsBarStyleTests {
         ))
         #expect(optionBarSource.contains("titleKey: opacityOptionTitleKey"))
         #expect(source.contains("? \"imageEditor.option.strength\""))
-        #expect(source.contains("viewModel.selectedTool == .smudge ? 0...1 : 0.05...1"))
+        #expect(source.contains("case .blur, .sharpen, .smudge:"))
+        #expect(source.contains("usesStrengthOption ? 0...1 : 0.05...1"))
         #expect(source.contains("displayMultiplier: opacityOptionDisplayMultiplier"))
 
         let explicitForegroundUses = source.components(

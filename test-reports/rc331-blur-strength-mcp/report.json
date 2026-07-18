@@ -1,0 +1,19 @@
+{
+  "generated_at": "2026-07-19 03:48:09 +0800",
+  "total": 1,
+  "passed": 1,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registryConfiguresBlurStrength",
+      "identifier": "veilpicTests/XomoAutomationTests/registryConfiguresBlurStrength",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 3.449,
+      "issues": [],
+      "log": "XomoAutomationTests.registryConfiguresBlurStrength.log"
+    }
+  ]
+}
