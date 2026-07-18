@@ -41,7 +41,7 @@ struct ImageEditorCanvasCursorTests {
         )
     }
 
-    @Test func componentLibraryAlwaysRoutesToSystemArrowUnlessPanning() {
+    @Test func selectedComponentLibraryObjectAlwaysRoutesToSystemArrowUnlessPanning() {
         #expect(
             ImageEditorCanvasCursor.tool(
                 for: .components,

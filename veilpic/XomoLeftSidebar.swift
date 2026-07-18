@@ -3,6 +3,7 @@
 //  veilpic
 //
 
+import AppKit
 import SwiftUI
 
 enum XomoLeftSidebarTab: String, CaseIterable, Identifiable {
@@ -451,8 +452,14 @@ struct XomoComponentLibraryPanel: View {
             if let component = item.component {
                 Button {
                     pendingComponentSelection = component
+                    // Choosing a component is an object-library action, not
+                    // a drawing gesture. Reset immediately so a cursor left
+                    // behind by the previous tool cannot leak into the
+                    // library interaction while the insertion is queued.
+                    NSCursor.arrow.set()
                     DispatchQueue.main.async {
                         viewModel.insertXomoComponent(component)
+                        NSCursor.arrow.set()
                         if pendingComponentSelection == component {
                             pendingComponentSelection = nil
                         }

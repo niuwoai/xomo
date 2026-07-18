@@ -1328,6 +1328,9 @@ struct ImageEditorView: View {
                     // new object without changing the sidebar tab. Refresh
                     // here so a stale drawing-tool cursor cannot remain over
                     // the canvas after the object becomes selected.
+                    if viewModel.selectedLeftSidebarTab == .components {
+                        NSCursor.arrow.set()
+                    }
                     refreshCanvasCursor(in: geometry.size)
                 }
                 .onChange(of: viewModel.brushSize) { _ in
