@@ -579,6 +579,36 @@ struct ImageEditorPSDTests {
         #expect(restoredFill == fill)
     }
 
+    @Test func externalSolidVectorShapeFixtureBecomesEditableShapeAndRoundTrips() throws {
+        let data = try psdFixtureData("solid-vector-shape.psd")
+        let document = try ImageEditorPSDCodec.decode(data, sourceName: "solid-vector-shape.psd")
+        let layer = try #require(document.layers.first)
+        let shape = try #require(layer.shapeContent)
+        let fillColor = try #require(shape.fillColor.usingColorSpace(.deviceRGB))
+
+        #expect(layer.isShape)
+        #expect(shape.kind == .path)
+        #expect(shape.isPathClosed)
+        #expect(shape.editablePathAnchors.count == 3)
+        #expect(abs(fillColor.redComponent - 32.0 / 255.0) < 0.01)
+        #expect(abs(fillColor.greenComponent - 128.0 / 255.0) < 0.01)
+        #expect(abs(fillColor.blueComponent - 224.0 / 255.0) < 0.01)
+
+        let report = try ImageEditorPSDCodec.compatibilityReport(data)
+        #expect(!report.issues.contains { $0.kind == .vectorRasterized })
+        #expect(!report.issues.contains { $0.kind == .fillLayerRasterized })
+
+        let project = try ImageEditorProjectDocument(document: document)
+        let restoredProject = try project.restoredDocument()
+        #expect(restoredProject.layers.first?.isShape == true)
+
+        let exported = try ImageEditorPSDCodec.encode(document: document)
+        let reimported = try ImageEditorPSDCodec.decode(exported, sourceName: "solid-vector-shape-roundtrip.psd")
+        let reimportedShape = try #require(reimported.layers.first?.shapeContent)
+        #expect(reimportedShape.kind == .path)
+        #expect(reimportedShape.editablePathAnchors.count == 3)
+    }
+
     @Test func externalGradientFillFixtureBecomesNativeEditableGradientLayer() throws {
         let data = try psdFixtureData("gradient-fill.psd")
         let document = try ImageEditorPSDCodec.decode(data, sourceName: "gradient-fill.psd")

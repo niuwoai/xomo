@@ -1077,9 +1077,7 @@ enum ImageEditorPSDCodec {
             sectionType: nil,
             mask: mask,
             vectorMask: vectorMask,
-            solidFillContent: layer.isSolidColorFill && !layer.style.hasConfiguredEffects
-                ? layer.solidColorFillContent
-                : nil,
+            solidFillContent: exportSolidColorFillContent(for: layer),
             gradientFillContent: exportGradientFillContent(for: layer),
             textObject: layer.textContent.flatMap {
                 exportTextToolObject($0, size: frame.size)
@@ -1229,8 +1227,15 @@ enum ImageEditorPSDCodec {
     }
 
     private static func exportVectorMask(layer: ImageEditorLayer) -> PSDExportVectorMask? {
-        guard let content = layer.vectorMask,
-              content.kind == .path,
+        let content: ImageEditorShapeContent?
+        if let vectorMask = layer.vectorMask {
+            content = vectorMask
+        } else if let shapeContent = layer.shapeContent, shapeContent.kind == .path {
+            content = shapeContent
+        } else {
+            content = nil
+        }
+        guard let content,
               content.isPathClosed
         else { return nil }
         let size = CGSize(width: max(1, layer.image.size.width), height: max(1, layer.image.size.height))
@@ -1259,6 +1264,27 @@ enum ImageEditorPSDCodec {
             }
         }
         return PSDExportVectorMask(data: payload)
+    }
+
+    private static func exportSolidColorFillContent(
+        for layer: ImageEditorLayer
+    ) -> ImageEditorSolidColorFillContent? {
+        guard !layer.style.hasConfiguredEffects else { return nil }
+        if let content = layer.solidColorFillContent {
+            return content
+        }
+        guard let shape = layer.shapeContent,
+              shape.kind == .path,
+              shape.fillGradient == nil,
+              shape.fillOpacity >= 0.999,
+              shape.strokeOpacity <= 0.001,
+              let color = shape.fillColor.usingColorSpace(.deviceRGB)
+        else { return nil }
+        return ImageEditorSolidColorFillContent(
+            red: Double(color.redComponent),
+            green: Double(color.greenComponent),
+            blue: Double(color.blueComponent)
+        ).normalized()
     }
 
     private static func exportGradientFillContent(
@@ -2054,6 +2080,30 @@ enum ImageEditorPSDCodec {
             applyVectorMask(record: record, size: CGSize(width: width, height: height), to: &layer)
             return layer
         }
+        if let solidFillContent = record.solidFillContent,
+           record.vectorMaskInfo?.isEnabled == true,
+           let shapeContent = vectorMaskContent(record: record, size: CGSize(width: width, height: height)) {
+            var shape = shapeContent
+            shape.fillColor = solidFillContent.color
+            var layer = ImageEditorLayer.shape(
+                name: record.name,
+                frame: CGRect(
+                    x: record.left,
+                    y: canvasHeight - record.bottom,
+                    width: width,
+                    height: height
+                ),
+                content: shape
+            )
+            layer.opacity = CGFloat(record.opacity) / 255
+            layer.fillOpacity = CGFloat(record.fillOpacity) / 255
+            layer.isVisible = record.flags & 2 == 0
+            applyProtection(record: record, to: &layer)
+            layer.isClippingMask = record.clipping != 0
+            layer.blendMode = ImageEditorBlendMode(psdKey: record.blendKey)
+            applyMask(record: record, channels: channels, to: &layer)
+            return layer
+        }
         if let solidFillContent = record.solidFillContent {
             var layer = ImageEditorLayer.solidColorFill(
                 name: record.name,
@@ -2136,7 +2186,18 @@ enum ImageEditorPSDCodec {
         size: CGSize,
         to layer: inout ImageEditorLayer
     ) {
-        guard let info = record.vectorMaskInfo else { return }
+        guard let info = record.vectorMaskInfo,
+              let content = vectorMaskContent(record: record, size: size)
+        else { return }
+        layer.vectorMask = content
+        layer.isVectorMaskEnabled = info.isEnabled
+    }
+
+    private static func vectorMaskContent(
+        record: PSDLayerRecord,
+        size: CGSize
+    ) -> ImageEditorShapeContent? {
+        guard let info = record.vectorMaskInfo else { return nil }
         let subpaths = info.subpaths.map { anchors in
             anchors.map { anchor in
                 ImageEditorPathAnchor(
@@ -2150,8 +2211,8 @@ enum ImageEditorPSDCodec {
                 )
             }
         }
-        guard let anchors = subpaths.first, anchors.count >= 3 else { return }
-        let content = ImageEditorShapeContent(
+        guard let anchors = subpaths.first, anchors.count >= 3 else { return nil }
+        return ImageEditorShapeContent(
             kind: .path,
             fillColor: .white,
             fillOpacity: 1,
@@ -2163,8 +2224,6 @@ enum ImageEditorPSDCodec {
             pathSubpaths: Array(subpaths.dropFirst()),
             isPathClosed: true
         ).normalized(size: size)
-        layer.vectorMask = content
-        layer.isVectorMaskEnabled = info.isEnabled
     }
 
     private static func parseVectorMask(_ data: Data) -> PSDVectorMaskInfo? {

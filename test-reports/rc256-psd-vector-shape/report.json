@@ -1,0 +1,16 @@
+{
+  "version": "2.12.0-rc256",
+  "suite": "ImageEditorPSDTests",
+  "total": 28,
+  "passed": 28,
+  "failed": 0,
+  "jobs": 1,
+  "build": "arm64",
+  "fixture": "solid-vector-shape.psd",
+  "coverage": [
+    "PSD SoCo + vmsk import",
+    "editable path shape materialization",
+    "project round trip",
+    "PSD export and reimport"
+  ]
+}
