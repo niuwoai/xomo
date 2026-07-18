@@ -1,0 +1,19 @@
+{
+  "generated_at": "2026-07-18 09:43:11.270 UTC",
+  "total": 1053,
+  "passed": 1053,
+  "failed": 0,
+  "jobs": 4,
+  "complete": true,
+  "execution": {
+    "parallel_logs": 1051,
+    "parallel_passed": 1051,
+    "serial_tail_runs": 2,
+    "serial_tail_passed": 2,
+    "serial_tail_tests": [
+      "ImageEditorCanvasCommandTests/canvasRotationCommandsTransformLayerFramesAndHistory",
+      "ImageEditorRasterizeStyleAndApplyMaskTests/applyVectorMaskRemovesOnlyVectorMaskAndPreservesRasterMaskAndLayerAppearance"
+    ],
+    "note": "并行隔离测试完成 1051/1053；两个尾部 worker 无 CPU/无输出持续约一小时，确认卡死后停止。两个缺失用例随后分别串行补跑并通过。"
+  }
+}

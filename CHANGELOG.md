@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc280 - 2026-07-18
+
+### Changed
+- 画笔、橡皮擦、加深、减淡、海绵、模糊、锐化和涂抹工具现在遵循 Photoshop 的 Caps Lock 精确模式，按下 Caps Lock 时显示精确十字光标。
+
+### Verification
+- 完整隔离测试 1053/1053（1051 路并行日志 + 2 个卡死尾部用例串行补跑）、双架构 CLI、双架构 Release App、ad-hoc 签名、构建版/安装版启动冒烟均通过；`/Applications/Xomo.app` 已覆盖为 rc280。
+
 ## 2.12.0-rc279 - 2026-07-18
 
 ### Changed

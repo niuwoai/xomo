@@ -1,0 +1,19 @@
+{
+  "version": "2.12.0-rc280",
+  "bundle_id": "im.some.xomo",
+  "minimum_macos": "13.0",
+  "app_path": "/Applications/Xomo.app",
+  "app_architectures": ["arm64", "x86_64"],
+  "cli_path": "dist/xomo-macos-universal",
+  "cli_architectures": ["arm64", "x86_64"],
+  "checks": {
+    "release_build": true,
+    "adhoc_signature": true,
+    "app_launch_before_install": true,
+    "installed_app_launch": true,
+    "installed_app_bundle_metadata": true,
+    "cli_version": true,
+    "cli_universal_binary": true
+  },
+  "passed": true
+}

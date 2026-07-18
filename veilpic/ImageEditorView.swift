@@ -204,7 +204,10 @@ struct ImageEditorView: View {
                     isSpacebarPanning = isPressed
                 },
                 setCanvasModifierFlags: { flags in
-                    canvasModifierFlags = flags.intersection([.shift, .option])
+                    // Photoshop uses Caps Lock as a precision toggle for
+                    // brush-like tools. Keep it in the cursor-only state;
+                    // selection and zoom modifiers retain their current rules.
+                    canvasModifierFlags = flags.intersection([.shift, .option, .capsLock])
                 }
             )
             .allowsHitTesting(false)
@@ -7783,7 +7786,9 @@ enum ImageEditorCanvasCursor {
         case .healingBrush:
             return healingBrushCursor()
         case .brushTool, .eraserTool, .toneBrush, .retouchBrush:
-            return familiarBrushCursor(diameter: brushDiameter)
+            return modifierFlags.contains(.capsLock)
+                ? .crosshair
+                : familiarBrushCursor(diameter: brushDiameter)
         case .crop:
             if let cropHandle {
                 return cropResizeCursor(for: cropHandle)
@@ -9225,7 +9230,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
 
         private func handle(_ event: NSEvent) -> NSEvent? {
             guard event.window === window else { return event }
-            setCanvasModifierFlags(event.modifierFlags.intersection([.shift, .option]))
+            setCanvasModifierFlags(event.modifierFlags.intersection([.shift, .option, .capsLock]))
             let relevantFlags = event.modifierFlags.intersection([.command, .option, .shift, .control])
             if event.keyCode == 49, relevantFlags.isEmpty {
                 if event.type == .keyUp, isSpacebarPanning {

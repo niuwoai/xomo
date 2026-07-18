@@ -244,6 +244,24 @@ struct ImageEditorCanvasCursorTests {
         #expect(rectangle.image.tiffRepresentation != ellipse.image.tiffRepresentation)
     }
 
+    @Test func capsLockSwitchesBrushFamilyToPrecisionCursor() {
+        let brush = ImageEditorCanvasCursor.cursor(for: .brush, brushDiameter: 18)
+        let precision = ImageEditorCanvasCursor.cursor(
+            for: .brush,
+            brushDiameter: 18,
+            modifierFlags: [.capsLock]
+        )
+        let eraserPrecision = ImageEditorCanvasCursor.cursor(
+            for: .eraser,
+            brushDiameter: 18,
+            modifierFlags: [.capsLock]
+        )
+
+        #expect(brush !== NSCursor.crosshair)
+        #expect(precision === NSCursor.crosshair)
+        #expect(eraserPrecision === NSCursor.crosshair)
+    }
+
     @Test func zoomCursorReflectsOptionZoomOutMode() {
         let zoomIn = ImageEditorCanvasCursor.cursor(for: .zoom, brushDiameter: 18)
         let zoomOut = ImageEditorCanvasCursor.cursor(
