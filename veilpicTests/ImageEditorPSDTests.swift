@@ -92,6 +92,51 @@ struct ImageEditorPSDTests {
         #expect(restoredLayer.isSolidColorFill)
     }
 
+    @Test func psdRoundTripPreservesNativeLinearGradientFillTag() throws {
+        let canvasSize = CGSize(width: 28, height: 20)
+        var document = ImageEditorDocument(
+            sourceName: "native-gradient.xomoproject",
+            image: psdSolidImage(color: .clear, size: canvasSize)
+        )
+        document.layers.removeAll()
+        let content = ImageEditorGradientFillContent(
+            preset: .custom,
+            style: .linear,
+            reverse: true,
+            angle: 32,
+            scale: 1.35,
+            colorStops: [
+                ImageEditorGradientColorStop(position: 0, red: 0.1, green: 0.2, blue: 0.9),
+                ImageEditorGradientColorStop(position: 0.45, red: 0.9, green: 0.3, blue: 0.2),
+                ImageEditorGradientColorStop(position: 1, red: 0.2, green: 0.8, blue: 0.4)
+            ]
+        )
+        var layer = ImageEditorLayer.gradientFill(name: "Native Gradient", size: canvasSize, content: content)
+        layer.frame = CGRect(x: 2, y: 4, width: 21, height: 12)
+        document.layers = [layer]
+
+        let data = try ImageEditorPSDCodec.encode(document: document)
+        let restored = try ImageEditorPSDCodec.decode(data, sourceName: "native-gradient.psd")
+        let restoredLayer = try #require(restored.layers.first)
+        let restoredContent = try #require(restoredLayer.gradientFillContent?.normalized())
+        let expected = content.normalized()
+        let restoredStops = try #require(restoredContent.colorStops)
+        let expectedStops = try #require(expected.colorStops)
+
+        #expect(restoredLayer.frame == layer.frame)
+        #expect(restoredContent.style == .linear)
+        #expect(restoredContent.reverse == expected.reverse)
+        #expect(abs(restoredContent.angle - expected.angle) < 0.01)
+        #expect(abs(restoredContent.scale - expected.scale) < 0.01)
+        #expect(restoredStops.count == expectedStops.count)
+        for (actual, expected) in zip(restoredStops, expectedStops) {
+            #expect(abs(actual.position - expected.position) < 0.002)
+            #expect(abs(actual.red - expected.red) < 0.002)
+            #expect(abs(actual.green - expected.green) < 0.002)
+            #expect(abs(actual.blue - expected.blue) < 0.002)
+        }
+    }
+
     @Test func psdExportUsesZIPWhenRLEHasNoBenefit() throws {
         let canvasSize = CGSize(width: 64, height: 64)
         let pattern = psdAlternatingImage(width: 64, height: 64)

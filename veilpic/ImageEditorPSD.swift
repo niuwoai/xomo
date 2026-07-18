@@ -1080,6 +1080,7 @@ enum ImageEditorPSDCodec {
             solidFillContent: layer.isSolidColorFill && !layer.style.hasConfiguredEffects
                 ? layer.solidColorFillContent
                 : nil,
+            gradientFillContent: exportGradientFillContent(for: layer),
             textObject: layer.textContent.flatMap {
                 exportTextToolObject($0, size: frame.size)
             }
@@ -1222,6 +1223,7 @@ enum ImageEditorPSDCodec {
             mask: mask,
             vectorMask: nil,
             solidFillContent: nil,
+            gradientFillContent: nil,
             textObject: nil
         )
     }
@@ -1257,6 +1259,17 @@ enum ImageEditorPSDCodec {
             }
         }
         return PSDExportVectorMask(data: payload)
+    }
+
+    private static func exportGradientFillContent(
+        for layer: ImageEditorLayer
+    ) -> ImageEditorGradientFillContent? {
+        guard layer.isGradientFill,
+              !layer.style.hasConfiguredEffects,
+              let content = layer.gradientFillContent?.normalized(),
+              content.style == .linear
+        else { return nil }
+        return content
     }
 
     private static func appendVectorPathPoint(
@@ -2451,6 +2464,7 @@ private struct PSDExportLayer {
     let mask: PSDExportMask?
     let vectorMask: PSDExportVectorMask?
     let solidFillContent: ImageEditorSolidColorFillContent?
+    let gradientFillContent: ImageEditorGradientFillContent?
     let textObject: PSDExportText?
 
     static func groupDivider(canvasHeight: Int) -> PSDExportLayer {
@@ -2472,6 +2486,7 @@ private struct PSDExportLayer {
             mask: nil,
             vectorMask: nil,
             solidFillContent: nil,
+            gradientFillContent: nil,
             textObject: nil
         )
     }
@@ -2957,6 +2972,86 @@ private extension Data {
         if descriptor.count % 2 != 0 { append(0) }
     }
 
+    mutating func appendGradientFill(_ content: ImageEditorGradientFillContent?) {
+        guard let content else { return }
+        let normalized = content.normalized()
+        let colors = normalized.colors()
+        let stops = normalized.colorStops ?? [
+            ImageEditorGradientColorStop(
+                position: 0,
+                red: colors.start.x,
+                green: colors.start.y,
+                blue: colors.start.z
+            ),
+            ImageEditorGradientColorStop(
+                position: 1,
+                red: colors.end.x,
+                green: colors.end.y,
+                blue: colors.end.z
+            )
+        ]
+        let stopItems = stops.map { stop -> Data in
+            let color = Data.descriptorBody(name: "RGB Color", classID: "RGBC", items: [
+                Data.descriptorItem(key: "Rd  ", type: "doub", payload: Data(doublePayload: stop.red * 255)),
+                Data.descriptorItem(key: "Grn ", type: "doub", payload: Data(doublePayload: stop.green * 255)),
+                Data.descriptorItem(key: "Bl  ", type: "doub", payload: Data(doublePayload: stop.blue * 255))
+            ])
+            return Data.descriptorBody(name: "", classID: "Clrt", items: [
+                Data.descriptorItem(key: "Clr ", type: "Objc", payload: color),
+                Data.descriptorItem(
+                    key: "Type",
+                    type: "enum",
+                    payload: Data.descriptorEnumPayload(enumType: "Clry", value: "UsrS")
+                ),
+                Data.descriptorItem(
+                    key: "Lctn",
+                    type: "long",
+                    payload: Data(intPayload: Int32((stop.position * 4096).rounded()))
+                ),
+                Data.descriptorItem(key: "Mdpn", type: "long", payload: Data(intPayload: 50))
+            ])
+        }
+        var colorList = Data()
+        colorList.appendUInt32(UInt32(stopItems.count))
+        for item in stopItems {
+            colorList.appendASCII("Objc")
+            colorList.append(item)
+        }
+        let gradient = Data.descriptorBody(name: "", classID: "Grdn", items: [
+            Data.descriptorItem(
+                key: "GrdF",
+                type: "enum",
+                payload: Data.descriptorEnumPayload(enumType: "GrdF", value: "CstS")
+            ),
+            Data.descriptorItem(key: "Clrs", type: "VlLs", payload: colorList)
+        ])
+        var descriptor = Data()
+        descriptor.appendDescriptorBlock(name: "", classID: "GdFl", items: [
+            Data.descriptorItem(key: "Grad", type: "Objc", payload: gradient),
+            Data.descriptorItem(
+                key: "Type",
+                type: "enum",
+                payload: Data.descriptorEnumPayload(enumType: "GrdT", value: "Lnr ")
+            ),
+            Data.descriptorItem(
+                key: "Angl",
+                type: "UntF",
+                payload: Data(unit: "Angl", value: Double(normalized.angle))
+            ),
+            Data.descriptorItem(
+                key: "Scl ",
+                type: "UntF",
+                payload: Data(unit: "#Prc", value: Double(normalized.scale * 100))
+            ),
+            Data.descriptorItem(key: "Rvrs", type: "bool", payload: Data(boolean: normalized.reverse))
+        ])
+        appendASCII("8BIM")
+        appendASCII("GdFl")
+        appendUInt32(UInt32(descriptor.count))
+        append(descriptor)
+        if descriptor.count % 2 != 0 { append(0) }
+    }
+
     mutating func appendTextToolObject(_ text: PSDExportText?) {
         guard let text else { return }
         appendASCII("8BIM")
@@ -3017,12 +3112,52 @@ private extension Data {
             append(contentsOf: bytes)
         }
     }
+
+    private static func descriptorItem(key: String, type: String, payload: Data) -> Data {
+        var output = Data()
+        output.appendDescriptorKey(key)
+        output.appendASCII(type)
+        output.append(payload)
+        return output
+    }
+
+    private static func descriptorBody(name: String, classID: String, items: [Data]) -> Data {
+        var output = Data()
+        output.appendDescriptorUnicodeString(name)
+        output.appendDescriptorKey(classID)
+        output.appendUInt32(UInt32(items.count))
+        items.forEach { output.append($0) }
+        return output
+    }
+
+    private static func descriptorEnumPayload(enumType: String, value: String) -> Data {
+        var output = Data()
+        output.appendDescriptorKey(enumType)
+        output.appendDescriptorKey(value)
+        return output
+    }
 }
 
 private extension Data {
     init(doublePayload value: Double) {
         self.init()
         appendUInt64(value.bitPattern)
+    }
+
+    init(intPayload value: Int32) {
+        self.init()
+        appendInt32(value)
+    }
+
+    init(unit: String, value: Double) {
+        self.init()
+        appendASCII(unit)
+        appendDouble(value)
+    }
+
+    init(boolean value: Bool) {
+        self.init()
+        append(value ? 1 : 0)
     }
 }
 

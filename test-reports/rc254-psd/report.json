@@ -1,0 +1,17 @@
+{
+  "version": "2.12.0-rc254",
+  "scope": "PSD native linear gradient fill export",
+  "total": 27,
+  "passed": 27,
+  "failed": 0,
+  "cliReleaseBuild": "passed",
+  "newTest": {
+    "identifier": "ImageEditorPSDTests/psdRoundTripPreservesNativeLinearGradientFillTag",
+    "passed": true
+  },
+  "command": "XOMO_DERIVED_DATA_PATH=/tmp/xomo-rc254-direct ruby scripts/run_tests_isolated.rb --skip-build --filter ImageEditorPSDTests/ --jobs 1",
+  "notes": [
+    "The arm64 test bundle was built by xcodebuild with macOS 13.0 deployment target.",
+    "The CLI release build is run separately before commit."
+  ]
+}
