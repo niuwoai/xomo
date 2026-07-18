@@ -179,6 +179,8 @@ struct XomoAutomationTests {
         #expect(created["width"] == .number(60))
         #expect(created["height"] == .number(40))
         #expect(viewModel.isSlicesPanelVisible)
+        #expect(viewModel.selectSlice(id: id)?.name == "Hero")
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.sliceSelected", "Hero"))
 
         let updated = try #require(viewModel.updateSlice(
             id: id,
@@ -231,6 +233,8 @@ struct XomoAutomationTests {
         #expect(created["height"] == .number(40))
         #expect(viewModel.selectedHotspotID == id)
         #expect(viewModel.isHotspotsPanelVisible)
+        #expect(viewModel.selectHotspot(id: id)?.name == "Hero link")
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.hotspotSelected", "Hero link"))
 
         let listResponse = registry.execute(request(operation: "call", name: "xomo.hotspot.list"))
         #expect(listResponse.ok)

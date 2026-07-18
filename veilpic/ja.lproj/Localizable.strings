@@ -3154,6 +3154,7 @@
 "imageEditor.status.hotspotsPanelShown" = "ホットスポットパネルを表示しました";
 "imageEditor.status.hotspotsPanelHidden" = "ホットスポットパネルを非表示にしました";
 "imageEditor.status.hotspotInvalidFrame" = "ホットスポットの矩形が無効です。X、Y、幅、高さを確認してください";
+"imageEditor.status.hotspotSelected" = "ホットスポットを選択しました：%@";
 "imageEditor.panel.slices" = "スライス／Web 配信";
 "imageEditor.menu.window.slices" = "スライス配信";
 "imageEditor.action.slicesShowPanel" = "スライスパネルを表示";

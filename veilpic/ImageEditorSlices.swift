@@ -78,6 +78,16 @@ extension ImageEditorViewModel {
         document.slices.first { $0.id == id }
     }
 
+    @discardableResult
+    func selectSlice(id: UUID) -> ImageEditorSlice? {
+        guard let slice = slice(with: id) else { return nil }
+        exportSettings.scope = .slice
+        exportSettings.sliceID = id
+        isSlicesPanelVisible = true
+        statusText = L10n.format("imageEditor.status.sliceSelected", slice.name)
+        return slice
+    }
+
     private var sliceBoundsFromSelection: CGRect? {
         guard let selection = document.selection else { return nil }
         let canvasBounds = CGRect(origin: .zero, size: document.canvasSize)
@@ -171,6 +181,15 @@ extension ImageEditorViewModel {
 
     func hotspot(with id: UUID) -> ImageEditorHotspot? {
         document.hotspots.first { $0.id == id }
+    }
+
+    @discardableResult
+    func selectHotspot(id: UUID) -> ImageEditorHotspot? {
+        guard let hotspot = hotspot(with: id) else { return nil }
+        selectedHotspotID = id
+        isHotspotsPanelVisible = true
+        statusText = L10n.format("imageEditor.status.hotspotSelected", hotspot.name)
+        return hotspot
     }
 
     var canExportHotspotHTML: Bool {

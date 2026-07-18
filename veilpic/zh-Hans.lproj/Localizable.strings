@@ -3154,6 +3154,7 @@
 "imageEditor.status.hotspotsPanelShown" = "已显示热点面板";
 "imageEditor.status.hotspotsPanelHidden" = "已隐藏热点面板";
 "imageEditor.status.hotspotInvalidFrame" = "热点矩形数值无效，请检查 X、Y、宽度和高度";
+"imageEditor.status.hotspotSelected" = "已选中热点：%@";
 "imageEditor.panel.slices" = "切片 / 网页交付";
 "imageEditor.menu.window.slices" = "切片交付";
 "imageEditor.action.slicesShowPanel" = "显示切片面板";

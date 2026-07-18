@@ -3154,6 +3154,7 @@
 "imageEditor.status.hotspotsPanelShown" = "Hotspots panel shown";
 "imageEditor.status.hotspotsPanelHidden" = "Hotspots panel hidden";
 "imageEditor.status.hotspotInvalidFrame" = "The hotspot rectangle is invalid. Check X, Y, width, and height.";
+"imageEditor.status.hotspotSelected" = "Selected hotspot: %@";
 "imageEditor.panel.slices" = "Slices / Web Delivery";
 "imageEditor.menu.window.slices" = "Slice Delivery";
 "imageEditor.action.slicesShowPanel" = "Show Slices Panel";

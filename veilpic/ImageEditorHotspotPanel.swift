@@ -252,9 +252,7 @@ struct ImageEditorSlicePanel: View {
     }
 
     private func select(_ slice: ImageEditorSlice) {
-        viewModel.exportSettings.scope = .slice
-        viewModel.exportSettings.sliceID = slice.id
-        viewModel.statusText = L10n.format("imageEditor.status.sliceSelected", slice.name)
+        _ = viewModel.selectSlice(id: slice.id)
     }
 
     private func save(_ draft: ImageEditorSliceDraft, for slice: ImageEditorSlice) {

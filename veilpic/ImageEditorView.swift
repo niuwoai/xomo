@@ -1174,6 +1174,7 @@ struct ImageEditorView: View {
                     savedPathOverlay(in: geometry.size)
                     sliceOverlay(in: geometry.size)
                     hotspotOverlay(in: geometry.size)
+                    deliverySelectionOverlay(in: geometry.size)
                     colorSamplerOverlay(in: geometry.size)
                     sampledBrushSourceOverlay(in: geometry.size)
                     layerTransformOverlay(in: geometry.size)
@@ -3879,6 +3880,38 @@ struct ImageEditorView: View {
             }
             .allowsHitTesting(false)
             .accessibilityHidden(true)
+        }
+    }
+
+    @ViewBuilder
+    private func deliverySelectionOverlay(in size: CGSize) -> some View {
+        if canvasInteractionTool == .move {
+            ZStack {
+                ForEach(viewModel.availableSlices) { slice in
+                    let rect = viewRect(from: slice.frame, in: size)
+                    Rectangle()
+                        .fill(Color.clear)
+                        .frame(width: rect.width, height: rect.height)
+                        .position(x: rect.midX, y: rect.midY)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            _ = viewModel.selectSlice(id: slice.id)
+                        }
+                        .zIndex(Double(slice.id.hashValue))
+                }
+                ForEach(viewModel.availableHotspots) { hotspot in
+                    let rect = viewRect(from: hotspot.frame, in: size)
+                    Rectangle()
+                        .fill(Color.clear)
+                        .frame(width: rect.width, height: rect.height)
+                        .position(x: rect.midX, y: rect.midY)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            _ = viewModel.selectHotspot(id: hotspot.id)
+                        }
+                        .zIndex(Double(hotspot.id.hashValue) + 0.5)
+                }
+            }
         }
     }
 
