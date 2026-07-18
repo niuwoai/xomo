@@ -119,7 +119,10 @@ extension ImageEditorViewModel {
         guard abs(adjustedDelta.width) >= 0.1 || abs(adjustedDelta.height) >= 0.1 else { return }
         movingObjectPreviewFrame = movingObjectPreviewFrame?.offsetBy(dx: adjustedDelta.width, dy: adjustedDelta.height)
         movingLayerDidChange = true
-        statusText = L10n.text("imageEditor.status.layerMoved")
+        // Keep the drag path lightweight: the preview frame is the only
+        // per-pointer update. Updating the status bar for every mouse event
+        // invalidates more of the SwiftUI tree and makes component dragging
+        // feel sticky on macOS 13.
     }
 
     func nudgeSelectionOrSelectedLayer(by delta: CGSize) {

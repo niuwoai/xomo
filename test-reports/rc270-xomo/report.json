@@ -1,0 +1,289 @@
+{
+  "generated_at": "2026-07-18 13:45:01 +0800",
+  "total": 28,
+  "passed": 28,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "XomoCanvasObjectTests",
+      "method": "canvasDragTranslationMapsViewPixelsToImagePixels",
+      "identifier": "veilpicTests/XomoCanvasObjectTests/canvasDragTranslationMapsViewPixelsToImagePixels",
+      "file": "XomoCanvasObjectTests.swift",
+      "passed": true,
+      "duration": 4.471,
+      "issues": [],
+      "log": "XomoCanvasObjectTests.canvasDragTranslationMapsViewPixelsToImagePixels.log"
+    },
+    {
+      "suite": "XomoCanvasObjectTests",
+      "method": "clickingAnUncoveredComponentSelectsItsObjectGroup",
+      "identifier": "veilpicTests/XomoCanvasObjectTests/clickingAnUncoveredComponentSelectsItsObjectGroup",
+      "file": "XomoCanvasObjectTests.swift",
+      "passed": true,
+      "duration": 3.302,
+      "issues": [],
+      "log": "XomoCanvasObjectTests.clickingAnUncoveredComponentSelectsItsObjectGroup.log"
+    },
+    {
+      "suite": "XomoCanvasObjectTests",
+      "method": "commandCanvasSelectionCanEnterAVisibleComponentChild",
+      "identifier": "veilpicTests/XomoCanvasObjectTests/commandCanvasSelectionCanEnterAVisibleComponentChild",
+      "file": "XomoCanvasObjectTests.swift",
+      "passed": true,
+      "duration": 3.192,
+      "issues": [],
+      "log": "XomoCanvasObjectTests.commandCanvasSelectionCanEnterAVisibleComponentChild.log"
+    },
+    {
+      "suite": "XomoCanvasObjectTests",
+      "method": "componentMovementSnapsToCanvasCenterGuides",
+      "identifier": "veilpicTests/XomoCanvasObjectTests/componentMovementSnapsToCanvasCenterGuides",
+      "file": "XomoCanvasObjectTests.swift",
+      "passed": true,
+      "duration": 3.374,
+      "issues": [],
+      "log": "XomoCanvasObjectTests.componentMovementSnapsToCanvasCenterGuides.log"
+    },
+    {
+      "suite": "XomoCanvasObjectTests",
+      "method": "componentsTabRoutesCanvasInputThroughMoveTool",
+      "identifier": "veilpicTests/XomoCanvasObjectTests/componentsTabRoutesCanvasInputThroughMoveTool",
+      "file": "XomoCanvasObjectTests.swift",
+      "passed": true,
+      "duration": 3.168,
+      "issues": [],
+      "log": "XomoCanvasObjectTests.componentsTabRoutesCanvasInputThroughMoveTool.log"
+    },
+    {
+      "suite": "XomoCanvasObjectTests",
+      "method": "componentsTabSwitchesToAnotherObjectBeforeDragging",
+      "identifier": "veilpicTests/XomoCanvasObjectTests/componentsTabSwitchesToAnotherObjectBeforeDragging",
+      "file": "XomoCanvasObjectTests.swift",
+      "passed": true,
+      "duration": 3.384,
+      "issues": [],
+      "log": "XomoCanvasObjectTests.componentsTabSwitchesToAnotherObjectBeforeDragging.log"
+    },
+    {
+      "suite": "XomoCanvasObjectTests",
+      "method": "coveredComponentDoesNotClaimTheClick",
+      "identifier": "veilpicTests/XomoCanvasObjectTests/coveredComponentDoesNotClaimTheClick",
+      "file": "XomoCanvasObjectTests.swift",
+      "passed": true,
+      "duration": 3.183,
+      "issues": [],
+      "log": "XomoCanvasObjectTests.coveredComponentDoesNotClaimTheClick.log"
+    },
+    {
+      "suite": "XomoCanvasObjectTests",
+      "method": "deletingASelectedObjectRemovesItsGroupAndChildren",
+      "identifier": "veilpicTests/XomoCanvasObjectTests/deletingASelectedObjectRemovesItsGroupAndChildren",
+      "file": "XomoCanvasObjectTests.swift",
+      "passed": true,
+      "duration": 3.734,
+      "issues": [],
+      "log": "XomoCanvasObjectTests.deletingASelectedObjectRemovesItsGroupAndChildren.log"
+    },
+    {
+      "suite": "XomoCanvasObjectTests",
+      "method": "deliveryDragClampPreservesRectangleSizeAtCanvasEdges",
+      "identifier": "veilpicTests/XomoCanvasObjectTests/deliveryDragClampPreservesRectangleSizeAtCanvasEdges",
+      "file": "XomoCanvasObjectTests.swift",
+      "passed": true,
+      "duration": 3.248,
+      "issues": [],
+      "log": "XomoCanvasObjectTests.deliveryDragClampPreservesRectangleSizeAtCanvasEdges.log"
+    },
+    {
+      "suite": "XomoCanvasObjectTests",
+      "method": "moveToolDoesNotSelectTransparentOrdinaryLayerOrComponentChildren",
+      "identifier": "veilpicTests/XomoCanvasObjectTests/moveToolDoesNotSelectTransparentOrdinaryLayerOrComponentChildren",
+      "file": "XomoCanvasObjectTests.swift",
+      "passed": true,
+      "duration": 3.134,
+      "issues": [],
+      "log": "XomoCanvasObjectTests.moveToolDoesNotSelectTransparentOrdinaryLayerOrComponentChildren.log"
+    },
+    {
+      "suite": "XomoCanvasObjectTests",
+      "method": "moveToolSelectsTopmostVisibleOrdinaryLayerFromCanvas",
+      "identifier": "veilpicTests/XomoCanvasObjectTests/moveToolSelectsTopmostVisibleOrdinaryLayerFromCanvas",
+      "file": "XomoCanvasObjectTests.swift",
+      "passed": true,
+      "duration": 3.308,
+      "issues": [],
+      "log": "XomoCanvasObjectTests.moveToolSelectsTopmostVisibleOrdinaryLayerFromCanvas.log"
+    },
+    {
+      "suite": "XomoCanvasObjectTests",
+      "method": "movingAnObjectPublishesAndClearsItsDashedPreviewFrame",
+      "identifier": "veilpicTests/XomoCanvasObjectTests/movingAnObjectPublishesAndClearsItsDashedPreviewFrame",
+      "file": "XomoCanvasObjectTests.swift",
+      "passed": true,
+      "duration": 3.201,
+      "issues": [],
+      "log": "XomoCanvasObjectTests.movingAnObjectPublishesAndClearsItsDashedPreviewFrame.log"
+    },
+    {
+      "suite": "XomoCanvasObjectTests",
+      "method": "objectPreviewSnapsBeforeTheRealLayersCommit",
+      "identifier": "veilpicTests/XomoCanvasObjectTests/objectPreviewSnapsBeforeTheRealLayersCommit",
+      "file": "XomoCanvasObjectTests.swift",
+      "passed": true,
+      "duration": 3.218,
+      "issues": [],
+      "log": "XomoCanvasObjectTests.objectPreviewSnapsBeforeTheRealLayersCommit.log"
+    },
+    {
+      "suite": "XomoCanvasObjectTests",
+      "method": "optionDragDuplicatesAndMovesAComponentAsOneUndoableAction",
+      "identifier": "veilpicTests/XomoCanvasObjectTests/optionDragDuplicatesAndMovesAComponentAsOneUndoableAction",
+      "file": "XomoCanvasObjectTests.swift",
+      "passed": true,
+      "duration": 3.168,
+      "issues": [],
+      "log": "XomoCanvasObjectTests.optionDragDuplicatesAndMovesAComponentAsOneUndoableAction.log"
+    },
+    {
+      "suite": "XomoCanvasObjectTests",
+      "method": "optionDragDuplicatesSelectedOrdinaryLayer",
+      "identifier": "veilpicTests/XomoCanvasObjectTests/optionDragDuplicatesSelectedOrdinaryLayer",
+      "file": "XomoCanvasObjectTests.swift",
+      "passed": true,
+      "duration": 3.196,
+      "issues": [],
+      "log": "XomoCanvasObjectTests.optionDragDuplicatesSelectedOrdinaryLayer.log"
+    },
+    {
+      "suite": "XomoCanvasObjectTests",
+      "method": "repeatedDragUpdatesAccumulateInThePreviewBeforeCommit",
+      "identifier": "veilpicTests/XomoCanvasObjectTests/repeatedDragUpdatesAccumulateInThePreviewBeforeCommit",
+      "file": "XomoCanvasObjectTests.swift",
+      "passed": true,
+      "duration": 3.161,
+      "issues": [],
+      "log": "XomoCanvasObjectTests.repeatedDragUpdatesAccumulateInThePreviewBeforeCommit.log"
+    },
+    {
+      "suite": "XomoCanvasObjectTests",
+      "method": "repeatedPixelHitTestingKeepsTransparentHoleSemantics",
+      "identifier": "veilpicTests/XomoCanvasObjectTests/repeatedPixelHitTestingKeepsTransparentHoleSemantics",
+      "file": "XomoCanvasObjectTests.swift",
+      "passed": true,
+      "duration": 3.935,
+      "issues": [],
+      "log": "XomoCanvasObjectTests.repeatedPixelHitTestingKeepsTransparentHoleSemantics.log"
+    },
+    {
+      "suite": "XomoCanvasObjectTests",
+      "method": "selectingAnotherObjectKeepsTheCompositeImageCache",
+      "identifier": "veilpicTests/XomoCanvasObjectTests/selectingAnotherObjectKeepsTheCompositeImageCache",
+      "file": "XomoCanvasObjectTests.swift",
+      "passed": true,
+      "duration": 3.419,
+      "issues": [],
+      "log": "XomoCanvasObjectTests.selectingAnotherObjectKeepsTheCompositeImageCache.log"
+    },
+    {
+      "suite": "XomoCanvasObjectTests",
+      "method": "selectingComponentGroupUsesFastSelectionPath",
+      "identifier": "veilpicTests/XomoCanvasObjectTests/selectingComponentGroupUsesFastSelectionPath",
+      "file": "XomoCanvasObjectTests.swift",
+      "passed": true,
+      "duration": 3.085,
+      "issues": [],
+      "log": "XomoCanvasObjectTests.selectingComponentGroupUsesFastSelectionPath.log"
+    },
+    {
+      "suite": "XomoCanvasObjectTests",
+      "method": "shiftCanvasSelectionAddsAndTogglesVisibleOrdinaryLayers",
+      "identifier": "veilpicTests/XomoCanvasObjectTests/shiftCanvasSelectionAddsAndTogglesVisibleOrdinaryLayers",
+      "file": "XomoCanvasObjectTests.swift",
+      "passed": true,
+      "duration": 3.337,
+      "issues": [],
+      "log": "XomoCanvasObjectTests.shiftCanvasSelectionAddsAndTogglesVisibleOrdinaryLayers.log"
+    },
+    {
+      "suite": "XomoCanvasObjectTests",
+      "method": "shiftCanvasSelectionAddsComponentObjectGroups",
+      "identifier": "veilpicTests/XomoCanvasObjectTests/shiftCanvasSelectionAddsComponentObjectGroups",
+      "file": "XomoCanvasObjectTests.swift",
+      "passed": true,
+      "duration": 3.24,
+      "issues": [],
+      "log": "XomoCanvasObjectTests.shiftCanvasSelectionAddsComponentObjectGroups.log"
+    },
+    {
+      "suite": "XomoCanvasObjectTests",
+      "method": "shiftSelectedComponentsUseACompositeSelectionFrame",
+      "identifier": "veilpicTests/XomoCanvasObjectTests/shiftSelectedComponentsUseACompositeSelectionFrame",
+      "file": "XomoCanvasObjectTests.swift",
+      "passed": true,
+      "duration": 3.158,
+      "issues": [],
+      "log": "XomoCanvasObjectTests.shiftSelectedComponentsUseACompositeSelectionFrame.log"
+    },
+    {
+      "suite": "XomoCanvasObjectTests",
+      "method": "switchingObjectsUpdatesKindAndBoundsImmediately",
+      "identifier": "veilpicTests/XomoCanvasObjectTests/switchingObjectsUpdatesKindAndBoundsImmediately",
+      "file": "XomoCanvasObjectTests.swift",
+      "passed": true,
+      "duration": 3.199,
+      "issues": [],
+      "log": "XomoCanvasObjectTests.switchingObjectsUpdatesKindAndBoundsImmediately.log"
+    },
+    {
+      "suite": "XomoCanvasObjectTests",
+      "method": "textHitTestingCanExcludeTheJustCommittedLayer",
+      "identifier": "veilpicTests/XomoCanvasObjectTests/textHitTestingCanExcludeTheJustCommittedLayer",
+      "file": "XomoCanvasObjectTests.swift",
+      "passed": true,
+      "duration": 3.265,
+      "issues": [],
+      "log": "XomoCanvasObjectTests.textHitTestingCanExcludeTheJustCommittedLayer.log"
+    },
+    {
+      "suite": "XomoCanvasObjectTests",
+      "method": "textToolCanSelectEditableTextInsideAComponent",
+      "identifier": "veilpicTests/XomoCanvasObjectTests/textToolCanSelectEditableTextInsideAComponent",
+      "file": "XomoCanvasObjectTests.swift",
+      "passed": true,
+      "duration": 3.435,
+      "issues": [],
+      "log": "XomoCanvasObjectTests.textToolCanSelectEditableTextInsideAComponent.log"
+    },
+    {
+      "suite": "XomoCanvasObjectTests",
+      "method": "topmostOverlappingComponentWinsObjectHitTesting",
+      "identifier": "veilpicTests/XomoCanvasObjectTests/topmostOverlappingComponentWinsObjectHitTesting",
+      "file": "XomoCanvasObjectTests.swift",
+      "passed": true,
+      "duration": 3.439,
+      "issues": [],
+      "log": "XomoCanvasObjectTests.topmostOverlappingComponentWinsObjectHitTesting.log"
+    },
+    {
+      "suite": "XomoCanvasObjectTests",
+      "method": "transparentLayerDoesNotBlockComponentObjectHitTesting",
+      "identifier": "veilpicTests/XomoCanvasObjectTests/transparentLayerDoesNotBlockComponentObjectHitTesting",
+      "file": "XomoCanvasObjectTests.swift",
+      "passed": true,
+      "duration": 3.247,
+      "issues": [],
+      "log": "XomoCanvasObjectTests.transparentLayerDoesNotBlockComponentObjectHitTesting.log"
+    },
+    {
+      "suite": "XomoCanvasObjectTests",
+      "method": "transparentPixelHoleDoesNotBlockComponentObjectHitTesting",
+      "identifier": "veilpicTests/XomoCanvasObjectTests/transparentPixelHoleDoesNotBlockComponentObjectHitTesting",
+      "file": "XomoCanvasObjectTests.swift",
+      "passed": true,
+      "duration": 4.599,
+      "issues": [],
+      "log": "XomoCanvasObjectTests.transparentPixelHoleDoesNotBlockComponentObjectHitTesting.log"
+    }
+  ]
+}
