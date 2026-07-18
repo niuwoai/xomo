@@ -406,6 +406,7 @@ extension ImageEditorViewModel {
         rotatingOriginalTransformFrame = transformFrame
         rotatingStartAngleDegrees = layerRotationAngle(from: transformFrame, to: point)
         rotatingLayerDidChange = false
+        rotatingPreviewDegrees = 0
         activeAlignmentGuides = []
     }
 
@@ -423,6 +424,7 @@ extension ImageEditorViewModel {
             degrees = (degrees / 15).rounded() * 15
         }
         guard applyRotation(degrees: degrees, from: rotatingOriginalLayers, around: transformFrame) else { return }
+        rotatingPreviewDegrees = degrees
         rotatingLayerDidChange = rotatingLayerDidChange || abs(degrees) > 0.1
         statusText = L10n.text("imageEditor.status.layerRotated")
     }
@@ -461,6 +463,7 @@ extension ImageEditorViewModel {
         rotatingOriginalTransformFrame = nil
         rotatingStartAngleDegrees = 0
         rotatingLayerDidChange = false
+        rotatingPreviewDegrees = nil
         activeAlignmentGuides = []
     }
 

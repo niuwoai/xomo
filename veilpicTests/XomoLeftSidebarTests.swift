@@ -547,6 +547,7 @@ struct XomoLeftSidebarTests {
         #expect(source.contains("viewModel.cancelTransformingSelectedLayer()"))
         #expect(source.contains("transformHUDOverlay("))
         #expect(source.contains("viewModel.isResizingSelectedLayer"))
+        #expect(source.contains("viewModel.rotatingPreviewDegrees"))
         #expect(source.contains("ImageEditorTransformHUD.displayText"))
         #expect(source.contains("layerTransformCursorTarget(at: viewPoint, in: size)"))
         #expect(source.contains("layerTransformTarget: layerTransformTarget"))

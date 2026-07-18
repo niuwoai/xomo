@@ -11,6 +11,7 @@ import Foundation
 enum ImageEditorTransformHUDMode: Equatable {
     case move
     case resize
+    case rotate(degrees: CGFloat)
 }
 
 /// Pure presentation geometry for the lightweight transform readout shown by
@@ -28,8 +29,14 @@ enum ImageEditorTransformHUD {
     static func displayText(frame: CGRect, mode: ImageEditorTransformHUDMode) -> String {
         let frame = frame.standardized
         let size = "\(format(frame.width)) × \(format(frame.height))"
-        guard mode == .move else { return size }
-        return "X \(format(frame.minX))  Y \(format(frame.minY))  ·  \(size)"
+        switch mode {
+        case .move:
+            return "X \(format(frame.minX))  Y \(format(frame.minY))  ·  \(size)"
+        case .resize:
+            return size
+        case let .rotate(degrees):
+            return "\(format(degrees))°"
+        }
     }
 
     static func badgeSize(for text: String) -> CGSize {

@@ -4583,6 +4583,9 @@ struct ImageEditorView: View {
         if viewModel.isResizingSelectedLayer {
             return .resize
         }
+        if let degrees = viewModel.rotatingPreviewDegrees {
+            return .rotate(degrees: degrees)
+        }
         if viewModel.movingObjectPreviewFrame != nil {
             return .move
         }

@@ -1,3 +1,4 @@
+import AppKit
 import CoreGraphics
 import Testing
 @testable import musepic
@@ -20,6 +21,44 @@ struct ImageEditorTransformHUDTests {
 
         #expect(text == "164 × 48")
         #expect(ImageEditorTransformHUD.badgeSize(for: text).width >= 88)
+    }
+
+    @Test func rotationReadoutShowsSignedAngleToOneDecimalPlace() {
+        #expect(
+            ImageEditorTransformHUD.displayText(
+                frame: CGRect(x: 10, y: 20, width: 100, height: 60),
+                mode: .rotate(degrees: -14.96)
+            ) == "-15°"
+        )
+        #expect(
+            ImageEditorTransformHUD.displayText(
+                frame: CGRect(x: 10, y: 20, width: 100, height: 60),
+                mode: .rotate(degrees: 22.54)
+            ) == "22.5°"
+        )
+    }
+
+    @MainActor
+    @Test func rotationReadoutTracksShiftSnappingAndClearsWhenCommitted() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "rotation-hud",
+            image: NSImage.transparent(size: CGSize(width: 120, height: 80))
+        ) { _ in }
+        let frame = try #require(viewModel.selectedLayerTransformFrame)
+        let radius: CGFloat = 60
+        let start = CGPoint(x: frame.midX, y: frame.midY + radius)
+        let dragAngle = CGFloat(104) * .pi / 180
+        let end = CGPoint(
+            x: frame.midX + cos(dragAngle) * radius,
+            y: frame.midY + sin(dragAngle) * radius
+        )
+
+        viewModel.beginRotatingSelectedLayer(from: start)
+        #expect(viewModel.rotatingPreviewDegrees == 0)
+        viewModel.rotateSelectedLayer(to: end, snappingToStep: true)
+        #expect(viewModel.rotatingPreviewDegrees == 15)
+        viewModel.finishRotatingSelectedLayer()
+        #expect(viewModel.rotatingPreviewDegrees == nil)
     }
 
     @Test func readoutStaysBelowSelectionWhenViewportHasRoom() {

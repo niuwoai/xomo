@@ -331,6 +331,7 @@ final class ImageEditorViewModel: ObservableObject {
     var rotatingOriginalTransformFrame: CGRect?
     var rotatingStartAngleDegrees: CGFloat = 0
     var rotatingLayerDidChange = false
+    @Published var rotatingPreviewDegrees: CGFloat?
     var editingShapeGradientLayerID: UUID?
     var editingShapeGradientOriginalContent: ImageEditorShapeContent?
     var editingShapeGradientStopIndex: Int?

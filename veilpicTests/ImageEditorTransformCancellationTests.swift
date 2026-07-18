@@ -47,12 +47,14 @@ struct ImageEditorTransformCancellationTests {
         viewModel.rotateSelectedLayer(to: end)
 
         #expect(layerFrames(in: viewModel) != originalFrames)
+        #expect(viewModel.rotatingPreviewDegrees != nil)
         #expect(viewModel.cancelTransformingSelectedLayer())
         #expect(layerFrames(in: viewModel) == originalFrames)
         #expect(layerImages(in: viewModel) == originalImages)
         #expect(viewModel.document.history.count == originalHistoryCount)
         #expect(viewModel.undoStack.count == originalUndoCount)
         #expect(viewModel.rotatingLayerIDs.isEmpty)
+        #expect(viewModel.rotatingPreviewDegrees == nil)
         #expect(viewModel.cancelTransformingSelectedLayer() == false)
 
         viewModel.finishRotatingSelectedLayer()
