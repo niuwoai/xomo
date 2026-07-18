@@ -2570,7 +2570,11 @@ final class XomoAutomationRegistry {
     ) throws {
         let action = try requiredString("action", in: arguments)
         if let size = arguments["size"]?.doubleValue { viewModel.brushSize = size }
-        if let opacity = arguments["opacity"]?.doubleValue { viewModel.opacity = opacity }
+        if action == "smudge", let strength = arguments["strength"]?.doubleValue {
+            viewModel.opacity = max(0, min(1, strength))
+        } else if let opacity = arguments["opacity"]?.doubleValue {
+            viewModel.opacity = opacity
+        }
         if let hardness = arguments["hardness"]?.doubleValue {
             viewModel.hardness = max(0, min(1, hardness))
         }
@@ -3665,6 +3669,7 @@ private extension XomoAutomationRegistry {
             "y": XomoAutomationSchema.number(description: "Canvas y coordinate for point actions"),
             "size": XomoAutomationSchema.number(description: "Brush diameter"),
             "opacity": XomoAutomationSchema.number(description: "Brush opacity"),
+            "strength": XomoAutomationSchema.number(description: "Smudge strength from 0 to 1; preferred over legacy opacity"),
             "hardness": XomoAutomationSchema.number(description: "Brush edge hardness from 0 to 1"),
             "feather": XomoAutomationSchema.number(description: "Patch selection feather radius"),
             "mode": XomoAutomationSchema.string(description: "Patch mode", values: ["source", "destination"]),

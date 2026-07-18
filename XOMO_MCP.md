@@ -1,7 +1,8 @@
 # Xomo MCP 与 CLI
 
-> 当前版本：v2.12.0-rc329
+> 当前版本：v2.12.0-rc330
 
+rc330 为 `xomo.paint.special` 的 `smudge` 增加 `strength=0...1`，与界面 0%–100% 强度共用 `viewModel.opacity` 像素入口；若同时提供 `strength` 与旧 `opacity`，使用语义更明确的 `strength`，仅传 `opacity` 的既有客户端保持兼容。
 rc329 让 `xomo.paint.special` 已有的 `hardness=0...1` 真实影响 `smudge` 的笔触边缘；界面与自动化共用同一方向性分段蒙版、选区和 History/Undo 入口，协议字段不变，`smudge` 仍需要至少两个坐标确定拖色方向。
 rc328 让 `xomo.paint.special` 的 `blur` 与 `sharpen` 接受仅含一个坐标的 `points` 数组，并按当前 `size`、`hardness` 和 `opacity` 执行圆形点按；连续点数组保持兼容。
 rc327 让 `xomo.paint.special` 已有的 `hardness=0...1` 真实影响 `blur` 与 `sharpen` 的笔触边缘；两者与界面共用确定性软边蒙版、选区和 History/Undo 入口，协议字段与连续点数组保持兼容。

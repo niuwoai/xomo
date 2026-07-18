@@ -495,6 +495,7 @@
 "imageEditor.action.flipV" = "垂直翻转";
 "imageEditor.option.size" = "大小";
 "imageEditor.option.opacity" = "不透明度";
+"imageEditor.option.strength" = "强度";
 "imageEditor.option.fillOpacity" = "填充";
 "imageEditor.option.blendIf" = "混合条件";
 "imageEditor.option.blendIfSource" = "当前图层";

@@ -333,6 +333,31 @@ struct ImageEditorToolSmokeTests {
         #expect(hard.document.history.last?.title == L10n.text("imageEditor.history.smudge"))
     }
 
+    @Test func smudgeStrengthControlsPixelDisplacement() throws {
+        let image = verticalEdgeImage()
+        let low = makeConfiguredRetouchViewModel(image: image)
+        let high = makeConfiguredRetouchViewModel(image: image)
+        low.brushSize = 12
+        high.brushSize = 12
+        low.opacity = 0.20
+        high.opacity = 1
+        let points = [
+            CGPoint(x: 12, y: 14),
+            CGPoint(x: 20, y: 14),
+            CGPoint(x: 28, y: 14)
+        ]
+
+        low.smudgeBrush(points: points)
+        high.smudgeBrush(points: points)
+
+        let samplePoint = CGPoint(x: 24, y: 14)
+        let lowStrength = try redComponent(in: low, at: samplePoint)
+        let highStrength = try redComponent(in: high, at: samplePoint)
+        #expect(highStrength < lowStrength - 0.35)
+        #expect(low.document.history.last?.title == L10n.text("imageEditor.history.smudge"))
+        #expect(high.document.history.last?.title == L10n.text("imageEditor.history.smudge"))
+    }
+
     @Test func redEyeToolReducesExcessRedAtTheClickedPupil() throws {
         let image = NSImage.rendered(size: canvasSize) { rect in
             NSColor(deviceWhite: 0.35, alpha: 1).setFill()

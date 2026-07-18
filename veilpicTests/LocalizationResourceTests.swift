@@ -85,6 +85,24 @@ struct LocalizationResourceTests {
         }
     }
 
+    @Test func smudgeStrengthLabelIsLocalizedInEverySupportedLanguage() throws {
+        let paths = try Self.repositoryPaths()
+        let expectedValues = [
+            "zh-Hans": "强度",
+            "en": "Strength",
+            "ja": "強さ"
+        ]
+
+        for (localizationID, expectedValue) in expectedValues {
+            let strings = try Self.stringTable(
+                tableName: "Localizable",
+                localizationID: localizationID,
+                appDirectory: paths.appDirectory
+            )
+            #expect(strings["imageEditor.option.strength"] == expectedValue)
+        }
+    }
+
     private static func knownRegions(in projectText: String) -> Set<String> {
         guard let start = projectText.range(of: "knownRegions = (") else { return [] }
         let remaining = projectText[start.upperBound...]

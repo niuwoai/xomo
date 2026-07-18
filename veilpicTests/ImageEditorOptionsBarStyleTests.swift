@@ -43,6 +43,10 @@ struct ImageEditorOptionsBarStyleTests {
         #expect(source.contains(
             "Label(viewModel.marqueeShape.title, systemImage: viewModel.marqueeShape.symbolName)\n                .foregroundStyle(Color(nsColor: ImageEditorOptionsBarAppearance.foregroundColor))"
         ))
+        #expect(optionBarSource.contains("titleKey: opacityOptionTitleKey"))
+        #expect(source.contains("? \"imageEditor.option.strength\""))
+        #expect(source.contains("viewModel.selectedTool == .smudge ? 0...1 : 0.05...1"))
+        #expect(source.contains("displayMultiplier: opacityOptionDisplayMultiplier"))
 
         let explicitForegroundUses = source.components(
             separatedBy: "ImageEditorOptionsBarAppearance.foregroundColor"

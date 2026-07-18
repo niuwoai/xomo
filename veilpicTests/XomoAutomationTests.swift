@@ -2082,7 +2082,7 @@ struct XomoAutomationTests {
         ])
     }
 
-    @Test func registryConfiguresSmudgeHardness() {
+    @Test func registryConfiguresSmudgeHardnessAndStrength() {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared
         registry.register(viewModel)
@@ -2094,6 +2094,8 @@ struct XomoAutomationTests {
                 "action": .string("smudge"),
                 "size": .number(12),
                 "hardness": .number(0.24),
+                "strength": .number(0.31),
+                "opacity": .number(0.88),
                 "points": .array([
                     .object(["x": .number(20), "y": .number(24)]),
                     .object(["x": .number(40), "y": .number(24)])
@@ -2103,6 +2105,30 @@ struct XomoAutomationTests {
 
         #expect(response.ok)
         #expect(abs(viewModel.hardness - 0.24) < 0.001)
+        #expect(abs(viewModel.opacity - 0.31) < 0.001)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.smudge"))
+    }
+
+    @Test func registryKeepsLegacySmudgeOpacity() {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("smudge"),
+                "opacity": .number(0.44),
+                "points": .array([
+                    .object(["x": .number(20), "y": .number(24)]),
+                    .object(["x": .number(40), "y": .number(24)])
+                ])
+            ]
+        ))
+
+        #expect(response.ok)
+        #expect(abs(viewModel.opacity - 0.44) < 0.001)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.smudge"))
     }
 

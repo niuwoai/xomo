@@ -368,7 +368,14 @@ struct ImageEditorView: View {
                     optionSlider(titleKey: "imageEditor.option.hardness", value: $viewModel.hardness, range: 0...1, step: 0.05, suffix: "")
                 }
                 if usesOpacityOption {
-                    optionSlider(titleKey: "imageEditor.option.opacity", value: $viewModel.opacity, range: 0.05...1, step: 0.05, suffix: "")
+                    optionSlider(
+                        titleKey: opacityOptionTitleKey,
+                        value: $viewModel.opacity,
+                        range: opacityOptionRange,
+                        step: 0.05,
+                        suffix: opacityOptionSuffix,
+                        displayMultiplier: opacityOptionDisplayMultiplier
+                    )
                 }
                 if usesBrushDynamicsOptions {
                     brushPresetMenu
@@ -481,6 +488,24 @@ struct ImageEditorView: View {
         default:
             false
         }
+    }
+
+    private var opacityOptionTitleKey: String {
+        viewModel.selectedTool == .smudge
+            ? "imageEditor.option.strength"
+            : "imageEditor.option.opacity"
+    }
+
+    private var opacityOptionRange: ClosedRange<CGFloat> {
+        viewModel.selectedTool == .smudge ? 0...1 : 0.05...1
+    }
+
+    private var opacityOptionSuffix: String {
+        viewModel.selectedTool == .smudge ? "%" : ""
+    }
+
+    private var opacityOptionDisplayMultiplier: CGFloat {
+        viewModel.selectedTool == .smudge ? 100 : 1
     }
 
     private var usesBrushDynamicsOptions: Bool {
@@ -660,7 +685,14 @@ struct ImageEditorView: View {
         .accessibilityValue(viewModel.marqueeShape.rawValue)
     }
 
-    private func optionSlider(titleKey: String, value: Binding<CGFloat>, range: ClosedRange<CGFloat>, step: CGFloat, suffix: String) -> some View {
+    private func optionSlider(
+        titleKey: String,
+        value: Binding<CGFloat>,
+        range: ClosedRange<CGFloat>,
+        step: CGFloat,
+        suffix: String,
+        displayMultiplier: CGFloat = 1
+    ) -> some View {
         HStack(spacing: 6) {
             Text(L10n.text(titleKey))
                 .font(.system(size: 11, weight: .medium))
@@ -669,7 +701,7 @@ struct ImageEditorView: View {
                 .frame(width: 92)
                 .focusable(false)
                 .xomoFocusEffectDisabled()
-            Text(sliderText(value.wrappedValue, suffix: suffix))
+            Text(sliderText(value.wrappedValue * displayMultiplier, suffix: suffix))
                 .font(.system(size: 11, weight: .medium).monospacedDigit())
                 .foregroundStyle(Color(nsColor: ImageEditorOptionsBarAppearance.foregroundColor))
                 .frame(width: suffix.isEmpty ? 28 : 42, alignment: .leading)

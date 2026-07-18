@@ -1,0 +1,29 @@
+{
+  "generated_at": "2026-07-19 03:38:24 +0800",
+  "total": 2,
+  "passed": 2,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorOptionsBarStyleTests",
+      "method": "optionsBarForcesDarkNativeControlsAndExplicitWhiteLabels",
+      "identifier": "veilpicTests/ImageEditorOptionsBarStyleTests/optionsBarForcesDarkNativeControlsAndExplicitWhiteLabels",
+      "file": "ImageEditorOptionsBarStyleTests.swift",
+      "passed": true,
+      "duration": 3.278,
+      "issues": [],
+      "log": "ImageEditorOptionsBarStyleTests.optionsBarForcesDarkNativeControlsAndExplicitWhiteLabels.log"
+    },
+    {
+      "suite": "ImageEditorOptionsBarStyleTests",
+      "method": "optionsBarUsesPureWhiteForeground",
+      "identifier": "veilpicTests/ImageEditorOptionsBarStyleTests/optionsBarUsesPureWhiteForeground",
+      "file": "ImageEditorOptionsBarStyleTests.swift",
+      "passed": true,
+      "duration": 3.213,
+      "issues": [],
+      "log": "ImageEditorOptionsBarStyleTests.optionsBarUsesPureWhiteForeground.log"
+    }
+  ]
+}

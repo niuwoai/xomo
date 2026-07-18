@@ -1,0 +1,49 @@
+{
+  "generated_at": "2026-07-19 03:37:48 +0800",
+  "total": 4,
+  "passed": 4,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorToolCoordinateTests",
+      "method": "blurSharpenSmudgeAndHealingStayOnTheTopStroke",
+      "identifier": "veilpicTests/ImageEditorToolCoordinateTests/blurSharpenSmudgeAndHealingStayOnTheTopStroke",
+      "file": "ImageEditorToolCoordinateTests.swift",
+      "passed": true,
+      "duration": 3.163,
+      "issues": [],
+      "log": "ImageEditorToolCoordinateTests.blurSharpenSmudgeAndHealingStayOnTheTopStroke.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registryConfiguresSmudgeHardnessAndStrength",
+      "identifier": "veilpicTests/XomoAutomationTests/registryConfiguresSmudgeHardnessAndStrength",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 3.144,
+      "issues": [],
+      "log": "XomoAutomationTests.registryConfiguresSmudgeHardnessAndStrength.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registryKeepsLegacySmudgeOpacity",
+      "identifier": "veilpicTests/XomoAutomationTests/registryKeepsLegacySmudgeOpacity",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 3.127,
+      "issues": [],
+      "log": "XomoAutomationTests.registryKeepsLegacySmudgeOpacity.log"
+    },
+    {
+      "suite": "veilpicTests",
+      "method": "imageEditorSmudgeBrushDragsPixelsAlongStrokeOnly",
+      "identifier": "veilpicTests/veilpicTests/imageEditorSmudgeBrushDragsPixelsAlongStrokeOnly",
+      "file": "veilpicTests.swift",
+      "passed": true,
+      "duration": 3.142,
+      "issues": [],
+      "log": "veilpicTests.imageEditorSmudgeBrushDragsPixelsAlongStrokeOnly.log"
+    }
+  ]
+}
