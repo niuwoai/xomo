@@ -1834,15 +1834,6 @@ struct ImageEditorView: View {
                        viewModel.hasSelectedXomoObject,
                        let pressedImagePoint = imagePoint(from: value.startLocation, in: size),
                        viewModel.selectedXomoObjectFrame?.contains(pressedImagePoint) == true {
-                        // The selected-object hit target below owns this drag.
-                        // Keep the canvas gesture from opening a second move
-                        // transaction when the drop host also observes it.
-                        break
-                    }
-                    if !isObjectMoveGestureActive,
-                       viewModel.hasSelectedXomoObject,
-                       let pressedImagePoint = imagePoint(from: value.startLocation, in: size),
-                       viewModel.selectedXomoObjectFrame?.contains(pressedImagePoint) == true {
                         // Keep selected-component movement on the canvas
                         // gesture itself. The drop host can swallow a
                         // gesture attached to a positioned overlay, while
@@ -7625,31 +7616,13 @@ enum ImageEditorCanvasCursor {
         case .textInsertion:
             return .iBeam
         case .selectionMarquee:
-            return selectionMarqueeCursor(mode: selectionMode)
-        case .lasso:
-            return lassoCursor(mode: selectionMode)
-        case .magicWand:
-            return magicWandCursor(mode: selectionMode)
-        case .quickSelection:
-            return quickSelectionCursor(mode: selectionMode)
-        case .cloneStamp:
-            return cloneStampCursor()
-        case .healingBrush:
-            return healingBrushCursor()
-        case .crop:
-            return cropCursor()
-        case .patch:
-            return patchCursor()
-        case .gradient:
-            return gradientCursor()
-        case .rectangleOutline, .ellipseOutline:
-            return shapeCursor(for: tool)
-        case .brushTool, .eraserTool:
-            return paintToolCursor(for: tool, diameter: brushDiameter)
-        case .toneBrush:
-            return toneBrushCursor(for: tool)
-        case .retouchBrush:
-            return retouchBrushCursor(for: tool)
+            return familiarSelectionCursor(mode: selectionMode)
+        case .lasso, .magicWand, .quickSelection:
+            return familiarSelectionCursor(mode: selectionMode)
+        case .cloneStamp, .healingBrush, .brushTool, .eraserTool, .toneBrush, .retouchBrush:
+            return familiarBrushCursor(diameter: brushDiameter)
+        case .crop, .patch, .gradient, .rectangleOutline, .ellipseOutline:
+            return .crosshair
         case .paintBucket:
             return paintBucketCursor()
         case .eyedropper:
@@ -7659,10 +7632,24 @@ enum ImageEditorCanvasCursor {
         case .samplingScope:
             return samplingScopeCursor()
         case .vectorPen:
-            return penCursor(isClosing: penIsClosing)
+            return penIsClosing ? .pointingHand : .crosshair
         case .zoomMagnifier:
             return zoomCursor(isZoomingOut: modifierFlags.contains(.option))
         }
+    }
+
+    /// Keep the cursor vocabulary close to Photoshop/Sketch: selection tools
+    /// use the platform crosshair, while modifier modes retain the familiar
+    /// add/subtract badge so the operation is still obvious.
+    private static func familiarSelectionCursor(mode: ImageEditorSelectionCursorMode) -> NSCursor {
+        mode == .replace ? .crosshair : selectionMarqueeCursor(mode: mode)
+    }
+
+    /// Brush-like tools share one predictable footprint cursor. The active
+    /// tool is already visible in the toolbar, so a large invented symbol on
+    /// the pointer only adds noise while painting.
+    private static func familiarBrushCursor(diameter: CGFloat) -> NSCursor {
+        brushCursor(diameter: diameter, symbolName: "")
     }
 
     private static func brushCursor(diameter requestedDiameter: CGFloat, symbolName: String) -> NSCursor {
@@ -7703,13 +7690,15 @@ enum ImageEditorCanvasCursor {
         cross.lineWidth = 1
         cross.stroke()
 
-        drawSymbolBadge(
-            named: symbolName,
-            origin: NSPoint(
-                x: min(max(center.x + diameter / 2 - 4, 1), side - 18),
-                y: min(max(center.y - diameter / 2 - 8, 1), side - 18)
+        if !symbolName.isEmpty {
+            drawSymbolBadge(
+                named: symbolName,
+                origin: NSPoint(
+                    x: min(max(center.x + diameter / 2 - 4, 1), side - 18),
+                    y: min(max(center.y - diameter / 2 - 8, 1), side - 18)
+                )
             )
-        )
+        }
         image.unlockFocus()
         return cache(
             NSCursor(image: image, hotSpot: NSPoint(x: center.x, y: side - center.y)),

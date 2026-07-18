@@ -274,7 +274,7 @@ struct ImageEditorCanvasCursorTests {
         #expect(ImageEditorZoomDirection.from(modifierFlags: [.option, .shift]) == .zoomOut)
     }
 
-    @Test func samplingAndPaintBucketCursorsUseDistinctSemanticShapes() {
+    @Test func toolCursorsUseFamiliarPrecisionAndBrushConventions() {
         #expect(ImageEditorCanvasCursor.family(for: .paintBucket) == .paintBucket)
         #expect(ImageEditorCanvasCursor.family(for: .eyedropper) == .eyedropper)
         #expect(ImageEditorCanvasCursor.family(for: .redEye) == .redEye)
@@ -293,51 +293,40 @@ struct ImageEditorCanvasCursorTests {
         #expect(ImageEditorCanvasCursor.family(for: .sharpen) == .retouchBrush)
         #expect(ImageEditorCanvasCursor.family(for: .smudge) == .retouchBrush)
 
-        let bucket = ImageEditorCanvasCursor.cursor(for: .paintBucket, brushDiameter: 18)
-        let eyedropper = ImageEditorCanvasCursor.cursor(for: .eyedropper, brushDiameter: 18)
-        let redEye = ImageEditorCanvasCursor.cursor(for: .redEye, brushDiameter: 18)
-        let quickSelection = ImageEditorCanvasCursor.cursor(for: .quickSelection, brushDiameter: 18)
-        let cloneStamp = ImageEditorCanvasCursor.cursor(for: .cloneStamp, brushDiameter: 18)
-        let healingBrush = ImageEditorCanvasCursor.cursor(for: .healingBrush, brushDiameter: 18)
-        let sampler = ImageEditorCanvasCursor.cursor(for: .colorSampler, brushDiameter: 18)
-        let dodge = ImageEditorCanvasCursor.cursor(for: .dodge, brushDiameter: 18)
-        let burn = ImageEditorCanvasCursor.cursor(for: .burn, brushDiameter: 18)
-        let sponge = ImageEditorCanvasCursor.cursor(for: .sponge, brushDiameter: 18)
-        let brush = ImageEditorCanvasCursor.cursor(for: .brush, brushDiameter: 18)
-        let eraser = ImageEditorCanvasCursor.cursor(for: .eraser, brushDiameter: 18)
-        let blur = ImageEditorCanvasCursor.cursor(for: .blur, brushDiameter: 18)
-        let sharpen = ImageEditorCanvasCursor.cursor(for: .sharpen, brushDiameter: 18)
-        let smudge = ImageEditorCanvasCursor.cursor(for: .smudge, brushDiameter: 18)
-        #expect(bucket.image.tiffRepresentation != eyedropper.image.tiffRepresentation)
-        #expect(eyedropper.image.tiffRepresentation != sampler.image.tiffRepresentation)
-        #expect(redEye.image.tiffRepresentation != eyedropper.image.tiffRepresentation)
-        #expect(redEye.image.tiffRepresentation != sampler.image.tiffRepresentation)
-        #expect(quickSelection.image.tiffRepresentation != redEye.image.tiffRepresentation)
-        #expect(quickSelection.image.tiffRepresentation != sampler.image.tiffRepresentation)
-        #expect(cloneStamp.image.tiffRepresentation != quickSelection.image.tiffRepresentation)
-        #expect(cloneStamp.image.tiffRepresentation != sampler.image.tiffRepresentation)
-        #expect(healingBrush.image.tiffRepresentation != cloneStamp.image.tiffRepresentation)
-        #expect(healingBrush.image.tiffRepresentation != sampler.image.tiffRepresentation)
-        #expect(dodge.image.tiffRepresentation != burn.image.tiffRepresentation)
-        #expect(burn.image.tiffRepresentation != sponge.image.tiffRepresentation)
-        #expect(sponge.image.tiffRepresentation != sampler.image.tiffRepresentation)
-        #expect(brush.image.tiffRepresentation != eraser.image.tiffRepresentation)
-        #expect(brush.image.tiffRepresentation != sampler.image.tiffRepresentation)
-        #expect(blur.image.tiffRepresentation != sharpen.image.tiffRepresentation)
-        #expect(sharpen.image.tiffRepresentation != smudge.image.tiffRepresentation)
-        #expect(smudge.image.tiffRepresentation != sampler.image.tiffRepresentation)
-        #expect(eyedropper !== NSCursor.crosshair)
-    }
-
-    @Test func precisionToolsUseDistinctSemanticArtwork() {
-        let tools: [ImageEditorTool] = [
-            .marquee, .lasso, .magicWand, .crop, .patchTool,
-            .gradient, .rectangle, .ellipse
+        let precisionTools: [ImageEditorTool] = [
+            .lasso, .magicWand, .quickSelection, .crop, .patchTool,
+            .gradient, .rectangle, .ellipse, .colorSampler
         ]
-        let representations = tools.compactMap {
+        for tool in precisionTools {
+            #expect(ImageEditorCanvasCursor.cursor(for: tool, brushDiameter: 18) === NSCursor.crosshair)
+        }
+
+        let brushTools: [ImageEditorTool] = [
+            .brush, .eraser, .cloneStamp, .healingBrush,
+            .dodge, .burn, .sponge, .blur, .sharpen, .smudge
+        ]
+        let brushRepresentations = brushTools.compactMap {
             ImageEditorCanvasCursor.cursor(for: $0, brushDiameter: 18).image.tiffRepresentation
         }
-        #expect(representations.count == tools.count)
-        #expect(Set(representations).count == tools.count)
+        #expect(brushRepresentations.count == brushTools.count)
+        #expect(Set(brushRepresentations).count == 1)
+
+        #expect(ImageEditorCanvasCursor.cursor(for: .paintBucket, brushDiameter: 18) !== NSCursor.crosshair)
+        #expect(ImageEditorCanvasCursor.cursor(for: .eyedropper, brushDiameter: 18) !== NSCursor.crosshair)
+        #expect(ImageEditorCanvasCursor.cursor(for: .pen, brushDiameter: 18) !== NSCursor.crosshair)
+    }
+
+    @Test func selectionModifierCursorStillCommunicatesAddSubtractModes() {
+        let tools: [ImageEditorTool] = [
+            .marquee, .lasso, .magicWand, .quickSelection
+        ]
+        for tool in tools {
+            #expect(ImageEditorCanvasCursor.cursor(for: tool, brushDiameter: 18) === NSCursor.crosshair)
+            let add = ImageEditorCanvasCursor.cursor(for: tool, brushDiameter: 18, modifierFlags: [.shift])
+            let subtract = ImageEditorCanvasCursor.cursor(for: tool, brushDiameter: 18, modifierFlags: [.option])
+            #expect(add.image.tiffRepresentation != NSCursor.crosshair.image.tiffRepresentation)
+            #expect(subtract.image.tiffRepresentation != NSCursor.crosshair.image.tiffRepresentation)
+            #expect(add.image.tiffRepresentation != subtract.image.tiffRepresentation)
+        }
     }
 }
