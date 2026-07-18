@@ -97,6 +97,15 @@ extension ImageEditorViewModel {
         return true
     }
 
+    /// Returns whether a component object owns the point without changing
+    /// selection state. Canvas gesture arbitration uses this fast query to
+    /// keep component drags out of the ordinary move fallback.
+    func hasXomoObject(at point: CGPoint) -> Bool {
+        xomoCanvasObjects().contains { object in
+            object.frame.contains(point) && !isXomoObjectOccluded(object, at: point)
+        }
+    }
+
     /// Move-tool hit testing for ordinary Photoshop-style layers. Component
     /// children are intentionally skipped here because their parent object
     /// must remain the selection target; the component path above already

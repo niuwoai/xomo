@@ -1,0 +1,38 @@
+{
+  "version": "2.12.0-rc285",
+  "scope": "component-drag-and-cursor-focused",
+  "passed": true,
+  "checks": [
+    {
+      "name": "componentHitQueryDoesNotMutateSelection",
+      "result": "passed"
+    },
+    {
+      "name": "movingAnObjectPublishesAndClearsItsDashedPreviewFrame",
+      "result": "passed"
+    },
+    {
+      "name": "repeatedDragUpdatesAccumulateInThePreviewBeforeCommit",
+      "result": "passed"
+    },
+    {
+      "name": "componentSidebarWiresMoveSemanticsIntoCanvasCursorAndGestures",
+      "result": "passed"
+    },
+    {
+      "name": "releaseContract",
+      "result": "passed",
+      "runs": 3,
+      "assertions": 7
+    },
+    {
+      "name": "xcodebuildBuildForTesting",
+      "result": "passed",
+      "deploymentTarget": "macOS 13.0"
+    }
+  ],
+  "notes": [
+    "Focused checks passed after the canvas-level gesture change.",
+    "The broader legacy suites still contain unrelated pre-existing failures in command deep-selection and theme-token refresh; they are outside this change scope."
+  ]
+}

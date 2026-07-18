@@ -1276,18 +1276,33 @@ struct ImageEditorView: View {
                         hoverViewPoint = location
                         if let location {
                             updateCanvasCursor(at: location, in: geometry.size)
+                        } else if isInside {
+                            // macOS 13's onHover callback has no pointer
+                            // coordinates. Still refresh the semantic tool
+                            // cursor on entry instead of leaving the previous
+                            // tool's pointer behind until the next event.
+                            refreshCanvasCursor(in: geometry.size)
                         } else if !isInside {
                             viewModel.updatePointer(nil)
                             NSCursor.arrow.set()
                         }
                     }
                 )
+                // The drop destination is a platform-level host and can win
+                // hit testing over child overlays on macOS 13. Keep a canvas
+                // level, high-priority object gesture after that host so a
+                // selected UI component always has a direct move path. The
+                // gesture only activates when the pointer starts inside the
+                // selected component, so external drops and ordinary tools
+                // keep their existing behavior.
+                .highPriorityGesture(
+                    selectedXomoObjectCanvasMoveGesture(in: geometry.size),
+                    including: .all
+                )
                 // Keep the editor gesture simultaneous with the drop host so
                 // external component drops still work on macOS 13. The
-                // selected-object hit target below owns the component drag
-                // with a high-priority gesture; the parent canvas owns
-                // movement for selected objects as a fallback when the
-                // transparent target is not mounted yet.
+                // canvas-level object gesture above owns component dragging;
+                // the parent canvas owns ordinary layer movement and panning.
                 .simultaneousGesture(canvasGesture(in: geometry.size))
                 .overlay(
                     ScrollWheelZoomView { factor, location, viewportSize in
@@ -1820,6 +1835,21 @@ struct ImageEditorView: View {
     private func canvasGesture(in size: CGSize) -> some Gesture {
         DragGesture(minimumDistance: 0)
             .onChanged { value in
+                // A selected component is handled by the canvas-level
+                // gesture attached after the drop host. Do not let the
+                // fallback move branch apply the same translation twice.
+                if isSelectedObjectMoveGestureActive {
+                    return
+                }
+                let moveModifiers = NSEvent.modifierFlags.intersection([.command, .option, .shift, .control])
+                if canvasInteractionTool == .move,
+                   moveModifiers.isEmpty,
+                   let startPoint = imagePoint(from: value.startLocation, in: size),
+                   viewModel.hasXomoObject(at: startPoint) {
+                    // Let the canvas-level component gesture own this drag,
+                    // including the initial selection of another component.
+                    return
+                }
                 if isCanvasPanGestureActive || canvasInteractionTool == .hand || isSpacebarPanning {
                     isCanvasPanGestureActive = true
                     updateCanvasPan(translation: value.translation)
@@ -2019,6 +2049,12 @@ struct ImageEditorView: View {
                 }
             }
             .onEnded { value in
+                if isSelectedObjectMoveGestureActive {
+                    // The component gesture commits the move. Keeping this
+                    // recognizer out of the end phase prevents it from
+                    // clearing the shared state before the commit runs.
+                    return
+                }
                 if isCanvasPanGestureActive {
                     updateCanvasPan(translation: value.translation)
                     isCanvasPanGestureActive = false
@@ -2194,6 +2230,29 @@ struct ImageEditorView: View {
                 deliveryDrag = nil
                 isMovingPathAnchor = false
                 activeResizeHandle = nil
+            }
+    }
+
+    private func selectedXomoObjectCanvasMoveGesture(in size: CGSize) -> some Gesture {
+        DragGesture(minimumDistance: 0, coordinateSpace: .named("image-editor-canvas-space"))
+            .onChanged { value in
+                if !isSelectedObjectMoveGestureActive {
+                    let moveModifiers = NSEvent.modifierFlags.intersection([.command, .option, .shift, .control])
+                    guard moveModifiers.isEmpty else { return }
+                    guard let startPoint = imagePoint(from: value.startLocation, in: size),
+                          viewModel.selectXomoObject(at: startPoint)
+                    else { return }
+                    lastMoveTranslation = .zero
+                    viewModel.beginMovingSelectedLayer()
+                    isSelectedObjectMoveGestureActive = true
+                }
+                updateObjectMove(translation: value.translation, in: size)
+            }
+            .onEnded { _ in
+                guard isSelectedObjectMoveGestureActive else { return }
+                viewModel.finishMovingSelectedLayer()
+                isSelectedObjectMoveGestureActive = false
+                lastMoveTranslation = .zero
             }
     }
 
@@ -4316,13 +4375,6 @@ struct ImageEditorView: View {
                     rect: rect,
                     isMoving: viewModel.movingObjectPreviewFrame != nil
                 )
-                if canvasInteractionTool == .move,
-                   let selectedObjectFrame = viewModel.selectedXomoObjectFrame {
-                    selectedXomoObjectMoveTarget(
-                        rect: viewRect(from: selectedObjectFrame, in: size),
-                        canvasSize: size
-                    )
-                }
             } else {
                 Rectangle()
                     .stroke(
@@ -4763,44 +4815,6 @@ struct ImageEditorView: View {
             .frame(width: max(1, rect.width), height: max(1, rect.height))
             .position(x: rect.midX, y: rect.midY)
             .allowsHitTesting(false)
-    }
-
-    private func selectedXomoObjectMoveTarget(
-        rect: CGRect,
-        canvasSize: CGSize
-    ) -> some View {
-        Rectangle()
-            .fill(Color.clear)
-            .frame(width: max(1, rect.width), height: max(1, rect.height))
-            .position(x: rect.midX, y: rect.midY)
-            // Keep the hit target on the committed frame while the dashed
-            // preview moves. Otherwise the target itself moves under the
-            // pointer and can cancel the drag on the first update.
-            .contentShape(Rectangle())
-            .highPriorityGesture(selectedXomoObjectMoveGesture(in: canvasSize))
-            .zIndex(100)
-            .accessibilityHidden(true)
-    }
-
-    private func selectedXomoObjectMoveGesture(in size: CGSize) -> some Gesture {
-        DragGesture(minimumDistance: 0, coordinateSpace: .named("image-editor-canvas-space"))
-            .onChanged { value in
-                if !isSelectedObjectMoveGestureActive {
-                    guard let startPoint = imagePoint(from: value.startLocation, in: size),
-                          viewModel.selectXomoObject(at: startPoint)
-                    else { return }
-                    lastMoveTranslation = .zero
-                    viewModel.beginMovingSelectedLayer()
-                    isSelectedObjectMoveGestureActive = true
-                }
-                updateObjectMove(translation: value.translation, in: size)
-            }
-            .onEnded { _ in
-                guard isSelectedObjectMoveGestureActive else { return }
-                viewModel.finishMovingSelectedLayer()
-                isSelectedObjectMoveGestureActive = false
-                lastMoveTranslation = .zero
-            }
     }
 
     private func resizeHandleView(

@@ -81,6 +81,21 @@ struct XomoCanvasObjectTests {
         #expect(viewModel.document.selectedLayerID == group.id)
     }
 
+    @Test func componentHitQueryDoesNotMutateSelection() throws {
+        let viewModel = makeViewModel()
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))
+        let group = try #require(viewModel.document.selectedLayer)
+        let frame = try #require(viewModel.selectedXomoObjectFrame)
+        let backgroundID = try #require(viewModel.document.layers.first?.id)
+        viewModel.selectLayer(backgroundID)
+
+        #expect(viewModel.hasXomoObject(at: CGPoint(x: frame.midX, y: frame.midY)))
+        #expect(viewModel.document.selectedLayerID == backgroundID)
+        #expect(!viewModel.hasXomoObject(at: CGPoint(x: 620, y: 460)))
+        #expect(viewModel.document.selectedLayerID == backgroundID)
+        #expect(group.id != backgroundID)
+    }
+
     @Test func moveToolSelectsTopmostVisibleOrdinaryLayerFromCanvas() throws {
         let viewModel = makeViewModel()
         let lowerImage = NSImage.rendered(size: CGSize(width: 120, height: 80)) { rect in
