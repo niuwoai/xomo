@@ -197,6 +197,8 @@ final class XomoAutomationRegistry {
             return sliceListResult(viewModel)
         case "xomo.slice.delete":
             return try sliceDeleteResult(arguments, viewModel: viewModel)
+        case "xomo.slice.update":
+            return try sliceUpdateResult(arguments, viewModel: viewModel)
         case "xomo.hotspot.create":
             return try hotspotCreateResult(arguments, viewModel: viewModel)
         case "xomo.hotspot.list":
@@ -2934,6 +2936,35 @@ final class XomoAutomationRegistry {
         return sliceJSON(slice)
     }
 
+    private func sliceUpdateResult(
+        _ arguments: [String: XomoJSONValue],
+        viewModel: ImageEditorViewModel
+    ) throws -> XomoJSONValue {
+        let id = try requiredUUID("id", in: arguments)
+        let frame: CGRect?
+        if arguments["x"] != nil || arguments["y"] != nil || arguments["width"] != nil || arguments["height"] != nil {
+            guard let slice = viewModel.slice(with: id) else {
+                throw XomoAutomationCallError.notFound("Slice \(id.uuidString)")
+            }
+            frame = CGRect(
+                x: arguments["x"]?.doubleValue ?? slice.frame.origin.x,
+                y: arguments["y"]?.doubleValue ?? slice.frame.origin.y,
+                width: arguments["width"]?.doubleValue ?? slice.frame.width,
+                height: arguments["height"]?.doubleValue ?? slice.frame.height
+            )
+        } else {
+            frame = nil
+        }
+        guard let slice = viewModel.updateSlice(
+            id: id,
+            name: arguments["name"]?.stringValue,
+            frame: frame
+        ) else {
+            throw XomoAutomationCallError.operationFailed("Slice update is invalid")
+        }
+        return sliceJSON(slice)
+    }
+
     private func sliceJSON(_ slice: ImageEditorSlice) -> XomoJSONValue {
         .object([
             "id": .string(slice.id.uuidString),
@@ -3470,6 +3501,14 @@ private extension XomoAutomationRegistry {
         ]),
         tool("xomo.slice.list", "List named rectangular slices in the active document."),
         tool("xomo.slice.delete", "Delete a named slice by UUID.", idProperties, required: ["id"]),
+        tool("xomo.slice.update", "Update a slice name or rectangle.", [
+            "id": XomoAutomationSchema.string(description: "Slice UUID"),
+            "name": XomoAutomationSchema.string(description: "Updated slice name"),
+            "x": XomoAutomationSchema.number(description: "Updated canvas X coordinate"),
+            "y": XomoAutomationSchema.number(description: "Updated canvas Y coordinate"),
+            "width": XomoAutomationSchema.number(description: "Updated slice width"),
+            "height": XomoAutomationSchema.number(description: "Updated slice height")
+        ], required: ["id"]),
         tool("xomo.hotspot.create", "Create a named Fireworks-style hotspot from the current pixel selection.", [
             "name": XomoAutomationSchema.string(description: "Optional hotspot name; defaults to Hotspot N"),
             "url": XomoAutomationSchema.string(description: "Optional destination URL for the hotspot")

@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.12.0-rc267 - 2026-07-18
+
+### Added
+
+- 新增 `xomo.slice.update`，MCP/CLI 现在可以像 UI 和热点一样更新命名切片的名称与矩形范围，并继续复用 Undo/History。
+
+### Verification
+
+- 切片自动化回归改为通过注册表更新入口验证，并覆盖工具 schema。
+
 ## 2.12.0-rc266 - 2026-07-18
 
 ### Added

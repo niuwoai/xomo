@@ -15,7 +15,7 @@ struct XomoAutomationTests {
             Issue.record("Expected tool array")
             return
         }
-        #expect(tools.count == 131)
+        #expect(tools.count == 132)
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.layer.list")
@@ -154,6 +154,10 @@ struct XomoAutomationTests {
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.psd.save")
         })
+        #expect(tools.contains { tool in
+            guard case .object(let value) = tool else { return false }
+            return value["name"] == .string("xomo.slice.update")
+        })
     }
 
     @Test func registryCreatesListsAndDeletesNamedSlices() throws {
@@ -182,12 +186,22 @@ struct XomoAutomationTests {
         #expect(viewModel.selectSlice(id: id)?.name == "Hero")
         #expect(viewModel.statusText == L10n.format("imageEditor.status.sliceSelected", "Hero"))
 
-        let updated = try #require(viewModel.updateSlice(
-            id: id,
-            name: "Hero Updated",
-            frame: CGRect(x: 30, y: 20, width: 70, height: 44)
+        let updateResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.slice.update",
+            arguments: [
+                "id": .string(id.uuidString),
+                "name": .string("Hero Updated"),
+                "x": .number(30),
+                "y": .number(20),
+                "width": .number(70),
+                "height": .number(44)
+            ]
         ))
-        #expect(updated.name == "Hero Updated")
+        #expect(updateResponse.ok)
+        #expect(updateResponse.result?.objectValue?["name"] == .string("Hero Updated"))
+        #expect(updateResponse.result?.objectValue?["width"] == .number(70))
+        let updated = try #require(viewModel.slice(with: id))
         #expect(updated.frame == CGRect(x: 30, y: 20, width: 70, height: 44))
         #expect(viewModel.exportSettings.sliceID == id)
 
