@@ -274,6 +274,52 @@ struct ImageEditorCanvasCursorTests {
         #expect(ImageEditorZoomDirection.from(modifierFlags: [.option, .shift]) == .zoomOut)
     }
 
+    @Test func cropHandlesUseContextualResizeCursors() {
+        let move = ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .crop,
+            brushDiameter: 18,
+            cropHandle: .move
+        )
+        let top = ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .crop,
+            brushDiameter: 18,
+            cropHandle: .top
+        )
+        let left = ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .crop,
+            brushDiameter: 18,
+            cropHandle: .left
+        )
+        let diagonalForward = ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .crop,
+            brushDiameter: 18,
+            cropHandle: .topLeft
+        )
+        let diagonalBackward = ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .crop,
+            brushDiameter: 18,
+            cropHandle: .topRight
+        )
+        let defaultCrop = ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .crop,
+            brushDiameter: 18
+        )
+
+        #expect(move === NSCursor.openHand)
+        #expect(top === NSCursor.resizeUpDown)
+        #expect(left === NSCursor.resizeLeftRight)
+        #expect(diagonalForward !== NSCursor.crosshair)
+        #expect(diagonalBackward !== NSCursor.crosshair)
+        #expect(diagonalForward.image.tiffRepresentation != diagonalBackward.image.tiffRepresentation)
+        #expect(defaultCrop.image.tiffRepresentation != diagonalForward.image.tiffRepresentation)
+    }
+
     @Test func toolCursorsUseFamiliarPrecisionAndBrushConventions() {
         #expect(ImageEditorCanvasCursor.family(for: .paintBucket) == .paintBucket)
         #expect(ImageEditorCanvasCursor.family(for: .eyedropper) == .eyedropper)

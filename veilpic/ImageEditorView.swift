@@ -1285,6 +1285,7 @@ struct ImageEditorView: View {
                         hoverViewPoint,
                         imageRect: imageRect
                     )
+                    let cropHandle = cropInteractionHandle(at: hoverViewPoint, in: geometry.size)
                     ImageEditorCursorRectView(
                         cursor: ImageEditorCanvasCursor.cursor(
                             for: viewModel.selectedLeftSidebarTab,
@@ -1294,7 +1295,8 @@ struct ImageEditorView: View {
                             handIsDragging: isCanvasPanGestureActive,
                             isSpacebarPanning: isSpacebarPanning,
                             isCanvasPanGestureActive: isCanvasPanGestureActive,
-                            modifierFlags: canvasModifierFlags
+                            modifierFlags: canvasModifierFlags,
+                            cropHandle: cropHandle
                         )
                     )
                     .allowsHitTesting(false)
@@ -2385,7 +2387,8 @@ struct ImageEditorView: View {
             handIsDragging: isCanvasPanGestureActive,
             isSpacebarPanning: isSpacebarPanning,
             isCanvasPanGestureActive: isCanvasPanGestureActive,
-            modifierFlags: NSEvent.modifierFlags
+            modifierFlags: NSEvent.modifierFlags,
+            cropHandle: cropInteractionHandle(at: viewPoint, in: size)
         ).set()
     }
 
@@ -2407,8 +2410,22 @@ struct ImageEditorView: View {
             handIsDragging: isCanvasPanGestureActive,
             isSpacebarPanning: isSpacebarPanning,
             isCanvasPanGestureActive: isCanvasPanGestureActive,
-            modifierFlags: canvasModifierFlags
+            modifierFlags: canvasModifierFlags,
+            cropHandle: nil
         ).set()
+    }
+
+    private func cropInteractionHandle(at viewPoint: CGPoint?, in size: CGSize) -> ImageEditorCropHandle? {
+        guard canvasInteractionTool == .crop,
+              let pendingCropRect,
+              let viewPoint,
+              let imagePoint = imagePoint(from: viewPoint, in: size)
+        else { return nil }
+        return ImageEditorCropGeometry.hitHandle(
+            at: imagePoint,
+            in: pendingCropRect,
+            tolerance: cropHitTolerance(in: size)
+        )
     }
 
     private var canvasInteractionTool: ImageEditorTool {
@@ -7495,7 +7512,8 @@ enum ImageEditorCanvasCursor {
         handIsDragging: Bool = false,
         isSpacebarPanning: Bool = false,
         isCanvasPanGestureActive: Bool = false,
-        modifierFlags: NSEvent.ModifierFlags = []
+        modifierFlags: NSEvent.ModifierFlags = [],
+        cropHandle: ImageEditorCropHandle? = nil
     ) -> NSCursor {
         // The dark workspace surrounding the document is not drawable. Keep
         // the native arrow there so a brush/selection cursor never suggests
@@ -7527,7 +7545,8 @@ enum ImageEditorCanvasCursor {
                 brushDiameter: brushDiameter,
                 penIsClosing: penIsClosing,
                 handIsDragging: handIsDragging,
-                modifierFlags: modifierFlags
+                modifierFlags: modifierFlags,
+                cropHandle: cropHandle
             )
         }
     }
@@ -7715,7 +7734,8 @@ enum ImageEditorCanvasCursor {
         brushDiameter: CGFloat,
         penIsClosing: Bool = false,
         handIsDragging: Bool = false,
-        modifierFlags: NSEvent.ModifierFlags = []
+        modifierFlags: NSEvent.ModifierFlags = [],
+        cropHandle: ImageEditorCropHandle? = nil
     ) -> NSCursor {
         let selectionMode = ImageEditorSelectionCursorMode.from(modifierFlags: modifierFlags)
         switch family(for: tool) {
@@ -7742,6 +7762,9 @@ enum ImageEditorCanvasCursor {
         case .brushTool, .eraserTool, .toneBrush, .retouchBrush:
             return familiarBrushCursor(diameter: brushDiameter)
         case .crop:
+            if let cropHandle {
+                return cropResizeCursor(for: cropHandle)
+            }
             return cropCursor()
         case .patch:
             return patchCursor()
@@ -8375,6 +8398,81 @@ enum ImageEditorCanvasCursor {
         image.unlockFocus()
         return cache(
             NSCursor(image: image, hotSpot: NSPoint(x: 27, y: side - 12)),
+            for: cacheKey
+        )
+    }
+
+    private static func cropResizeCursor(for handle: ImageEditorCropHandle) -> NSCursor {
+        switch handle {
+        case .move:
+            return .openHand
+        case .top, .bottom:
+            return .resizeUpDown
+        case .left, .right:
+            return .resizeLeftRight
+        case .topLeft, .bottomRight:
+            return diagonalCropResizeCursor(isForward: true)
+        case .topRight, .bottomLeft:
+            return diagonalCropResizeCursor(isForward: false)
+        }
+    }
+
+    private static func diagonalCropResizeCursor(isForward: Bool) -> NSCursor {
+        let cacheKey = "crop-resize-diagonal:\(isForward ? "forward" : "backward")"
+        if let cachedCursor = cursorCache[cacheKey] {
+            return cachedCursor
+        }
+
+        let side: CGFloat = 34
+        let image = NSImage(size: NSSize(width: side, height: side))
+        image.lockFocus()
+
+        let start = isForward ? NSPoint(x: 6, y: 6) : NSPoint(x: 6, y: 28)
+        let end = isForward ? NSPoint(x: 28, y: 28) : NSPoint(x: 28, y: 6)
+
+        func drawArrow(at tip: NSPoint, toward point: NSPoint, lineWidth: CGFloat) {
+            let dx = tip.x - point.x
+            let dy = tip.y - point.y
+            let length = max(1, hypot(dx, dy))
+            let unitX = dx / length
+            let unitY = dy / length
+            let perpendicularX = -unitY
+            let perpendicularY = unitX
+            let arrowLength: CGFloat = 7
+            let arrowWidth: CGFloat = 3
+            let path = NSBezierPath()
+            path.move(to: tip)
+            path.line(to: NSPoint(
+                x: tip.x - unitX * arrowLength + perpendicularX * arrowWidth,
+                y: tip.y - unitY * arrowLength + perpendicularY * arrowWidth
+            ))
+            path.move(to: tip)
+            path.line(to: NSPoint(
+                x: tip.x - unitX * arrowLength - perpendicularX * arrowWidth,
+                y: tip.y - unitY * arrowLength - perpendicularY * arrowWidth
+            ))
+            path.lineWidth = lineWidth
+            path.stroke()
+        }
+
+        let shaft = NSBezierPath()
+        shaft.move(to: start)
+        shaft.line(to: end)
+        NSColor.black.withAlphaComponent(0.95).setStroke()
+        shaft.lineWidth = 4.5
+        shaft.stroke()
+        drawArrow(at: start, toward: end, lineWidth: 4.5)
+        drawArrow(at: end, toward: start, lineWidth: 4.5)
+
+        NSColor.white.withAlphaComponent(0.98).setStroke()
+        shaft.lineWidth = 1.4
+        shaft.stroke()
+        drawArrow(at: start, toward: end, lineWidth: 1.4)
+        drawArrow(at: end, toward: start, lineWidth: 1.4)
+
+        image.unlockFocus()
+        return cache(
+            NSCursor(image: image, hotSpot: NSPoint(x: side / 2, y: side / 2)),
             for: cacheKey
         )
     }
