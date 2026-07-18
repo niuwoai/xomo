@@ -550,6 +550,37 @@ struct ImageEditorCanvasCursorTests {
         #expect(rotate.image.tiffRepresentation != forward.image.tiffRepresentation)
     }
 
+    @Test func activeLayerTransformKeepsItsCursorAfterPointerLeavesTheHandle() {
+        #expect(
+            ImageEditorCanvasCursor.resolvedTransformTarget(
+                hoveredTarget: nil,
+                activeResizeHandle: .bottomRight,
+                isRotating: false
+            ) == .resize(.bottomRight)
+        )
+        #expect(
+            ImageEditorCanvasCursor.resolvedTransformTarget(
+                hoveredTarget: .resize(.left),
+                activeResizeHandle: .top,
+                isRotating: false
+            ) == .resize(.top)
+        )
+        #expect(
+            ImageEditorCanvasCursor.resolvedTransformTarget(
+                hoveredTarget: nil,
+                activeResizeHandle: nil,
+                isRotating: true
+            ) == .rotate
+        )
+        #expect(
+            ImageEditorCanvasCursor.resolvedTransformTarget(
+                hoveredTarget: .resize(.right),
+                activeResizeHandle: nil,
+                isRotating: false
+            ) == .resize(.right)
+        )
+    }
+
     @Test func transformControlCursorOverridesComponentArrowOutsideDrawableCanvas() {
         let rotate = ImageEditorCanvasCursor.cursor(
             for: .components,

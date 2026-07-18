@@ -2626,7 +2626,7 @@ struct ImageEditorView: View {
             modifierFlags: canvasModifierFlags,
             marqueeShape: viewModel.marqueeShape,
             cropHandle: nil,
-            layerTransformTarget: nil
+            layerTransformTarget: layerTransformCursorTarget(at: nil, in: size)
         ).set()
     }
 
@@ -2634,15 +2634,21 @@ struct ImageEditorView: View {
         at viewPoint: CGPoint?,
         in size: CGSize
     ) -> ImageEditorLayerTransformCursorTarget? {
-        guard canvasInteractionTool == .move,
-              viewModel.document.areTransformControlsVisible,
-              let layerFrame = viewModel.selectedLayerTransformFrame
-        else { return nil }
-        return ImageEditorCanvasCursor.transformTarget(
-            at: viewPoint,
-            frame: viewRect(from: layerFrame, in: size),
-            canResize: viewModel.canResizeSelectedLayer,
-            canRotate: viewModel.canRotateSelectedLayer
+        var hoveredTarget: ImageEditorLayerTransformCursorTarget?
+        if canvasInteractionTool == .move,
+           viewModel.document.areTransformControlsVisible,
+           let layerFrame = viewModel.selectedLayerTransformFrame {
+            hoveredTarget = ImageEditorCanvasCursor.transformTarget(
+                at: viewPoint,
+                frame: viewRect(from: layerFrame, in: size),
+                canResize: viewModel.canResizeSelectedLayer,
+                canRotate: viewModel.canRotateSelectedLayer
+            )
+        }
+        return ImageEditorCanvasCursor.resolvedTransformTarget(
+            hoveredTarget: hoveredTarget,
+            activeResizeHandle: activeResizeHandle,
+            isRotating: isRotatingLayer
         )
     }
 
@@ -4987,6 +4993,7 @@ struct ImageEditorView: View {
                         if activeResizeHandle == nil {
                             activeResizeHandle = handle
                             viewModel.beginResizingSelectedLayer(handle: handle)
+                            ImageEditorCanvasCursor.transformCursor(for: .resize(handle)).set()
                         }
                         viewModel.resizeSelectedLayer(
                             to: unboundedImagePoint(from: value.location, in: canvasSize),
@@ -4997,6 +5004,7 @@ struct ImageEditorView: View {
                     .onEnded { _ in
                         viewModel.finishResizingSelectedLayer()
                         activeResizeHandle = nil
+                        refreshCanvasCursor(in: canvasSize)
                     }
             )
             .help(L10n.text("imageEditor.action.layerResizeHandle"))
@@ -5038,6 +5046,7 @@ struct ImageEditorView: View {
                                 viewModel.beginRotatingSelectedLayer(
                                     from: unboundedImagePoint(from: value.startLocation, in: canvasSize)
                                 )
+                                ImageEditorCanvasCursor.transformCursor(for: .rotate).set()
                             }
                             viewModel.rotateSelectedLayer(
                                 to: unboundedImagePoint(from: value.location, in: canvasSize),
@@ -5047,6 +5056,7 @@ struct ImageEditorView: View {
                         .onEnded { _ in
                             viewModel.finishRotatingSelectedLayer()
                             isRotatingLayer = false
+                            refreshCanvasCursor(in: canvasSize)
                         }
                 )
                 .help(L10n.text("imageEditor.action.layerRotateHandle"))
@@ -7941,6 +7951,20 @@ enum ImageEditorCanvasCursor {
             .filter { $0.1 <= maximumDistanceSquared }
             .min { $0.1 < $1.1 }?
             .0
+    }
+
+    static func resolvedTransformTarget(
+        hoveredTarget: ImageEditorLayerTransformCursorTarget?,
+        activeResizeHandle: ImageEditorLayerResizeHandle?,
+        isRotating: Bool
+    ) -> ImageEditorLayerTransformCursorTarget? {
+        if let activeResizeHandle {
+            return .resize(activeResizeHandle)
+        }
+        if isRotating {
+            return .rotate
+        }
+        return hoveredTarget
     }
 
     static func transformHandlePoint(
