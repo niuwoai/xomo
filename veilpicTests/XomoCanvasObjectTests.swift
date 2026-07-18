@@ -483,6 +483,52 @@ struct XomoCanvasObjectTests {
         #expect(viewModel.selectedXomoObjectFrame?.maxX == viewModel.document.canvasSize.width * 0.5)
     }
 
+    @Test func transformInspectorMovesSelectedLayerWithUndoHistory() throws {
+        let viewModel = makeViewModel()
+        var layer = ImageEditorLayer.solidColorFill(
+            name: "Card",
+            size: CGSize(width: 96, height: 64),
+            content: ImageEditorSolidColorFillContent(red: 0.2, green: 0.6, blue: 0.9)
+        )
+        layer.frame.origin = CGPoint(x: 120, y: 100)
+        viewModel.document.layers.append(layer)
+        viewModel.selectLayer(layer.id)
+        let historyCount = viewModel.document.history.count
+
+        viewModel.setSelectedLayerTransform(x: 240, y: 180)
+
+        #expect(viewModel.selectedLayerTransformFrame?.origin == CGPoint(x: 240, y: 180))
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerTransformInspector"))
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerTransformFrame?.origin == CGPoint(x: 120, y: 100))
+    }
+
+    @Test func transformInspectorResizesComponentChildrenAsOneObject() throws {
+        let viewModel = makeViewModel()
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))
+        let originalObjectFrame = try #require(viewModel.selectedXomoObjectFrame)
+        let groupID = try #require(viewModel.document.selectedLayerID)
+        let originalChildFrames = Dictionary(uniqueKeysWithValues: viewModel.document.layers.compactMap { layer in
+            layer.groupID == groupID ? (layer.id, layer.frame) : nil
+        })
+
+        viewModel.setSelectedLayerTransform(
+            width: Double(originalObjectFrame.width * 2),
+            height: Double(originalObjectFrame.height * 2)
+        )
+
+        let resizedObjectFrame = try #require(viewModel.selectedXomoObjectFrame)
+        #expect(resizedObjectFrame.width == originalObjectFrame.width * 2)
+        #expect(resizedObjectFrame.height == originalObjectFrame.height * 2)
+        for layer in viewModel.document.layers {
+            guard let originalFrame = originalChildFrames[layer.id] else { continue }
+            #expect(layer.frame.width == originalFrame.width * 2)
+            #expect(layer.frame.height == originalFrame.height * 2)
+        }
+    }
+
     private func makeViewModel() -> ImageEditorViewModel {
         ImageEditorViewModel(
             sourceName: "objects",

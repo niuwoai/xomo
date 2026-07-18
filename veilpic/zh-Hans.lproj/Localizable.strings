@@ -1340,6 +1340,7 @@
 "imageEditor.history.layerDistribute" = "分布图层";
 "imageEditor.history.layerDistributeSpacing" = "均分图层间距";
 "imageEditor.history.layerScale" = "缩放图层";
+"imageEditor.history.layerTransformInspector" = "属性面板变换";
 "imageEditor.history.layerResize" = "拖拽缩放图层";
 "imageEditor.history.textBoxResize" = "调整文本框";
 "imageEditor.history.textBoxFitContent" = "文本框适合内容";
@@ -2533,6 +2534,11 @@
 "imageEditor.status.layerCompNameInvalid" = "图层复合名称不能为空";
 "imageEditor.status.layerCompNoMatchingLayers" = "这个图层复合没有可匹配的图层";
 "imageEditor.properties.documentSize" = "文档尺寸";
+"imageEditor.properties.transform" = "变换";
+"imageEditor.properties.transformXValue" = "X：%.1f px";
+"imageEditor.properties.transformYValue" = "Y：%.1f px";
+"imageEditor.properties.transformWidthValue" = "宽度：%.1f px";
+"imageEditor.properties.transformHeightValue" = "高度：%.1f px";
 "imageEditor.properties.imageWidthValue" = "图像宽度：%d px";
 "imageEditor.properties.imageHeightValue" = "图像高度：%d px";
 "imageEditor.properties.canvasWidthValue" = "画布宽度：%d px";

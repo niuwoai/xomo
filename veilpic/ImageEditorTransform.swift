@@ -24,6 +24,56 @@ extension ImageEditorViewModel {
         return indices.allSatisfy { !document.isEffectivelyPositionLocked(document.layers[$0]) }
     }
 
+    var selectedLayerTransformX: Double {
+        Double(selectedLayerTransformFrame?.minX ?? 0)
+    }
+
+    var selectedLayerTransformY: Double {
+        Double(selectedLayerTransformFrame?.minY ?? 0)
+    }
+
+    var selectedLayerTransformWidth: Double {
+        Double(selectedLayerTransformFrame?.width ?? 0)
+    }
+
+    var selectedLayerTransformHeight: Double {
+        Double(selectedLayerTransformFrame?.height ?? 0)
+    }
+
+    /// Applies an inspector edit as one atomic transform, preserving the
+    /// existing multi-layer/component scaling behavior and undo semantics.
+    func setSelectedLayerTransform(
+        x: Double? = nil,
+        y: Double? = nil,
+        width: Double? = nil,
+        height: Double? = nil
+    ) {
+        guard canResizeSelectedLayer,
+              let currentFrame = selectedLayerTransformFrame
+        else { return }
+
+        let targetFrame = CGRect(
+            x: CGFloat(x ?? Double(currentFrame.minX)),
+            y: CGFloat(y ?? Double(currentFrame.minY)),
+            width: max(1, CGFloat(width ?? Double(currentFrame.width))),
+            height: max(1, CGFloat(height ?? Double(currentFrame.height)))
+        )
+        let originalFrames = editableTransformLayerIndices().reduce(into: [:]) { frames, index in
+            frames[document.layers[index].id] = document.layers[index].frame.standardized
+        }
+        pushUndo()
+        guard applyResizedTransformFrame(
+            targetFrame,
+            originalTransformFrame: currentFrame,
+            originalFrames: originalFrames
+        ) else {
+            _ = discardLastUndoSnapshot()
+            updateStatus()
+            return
+        }
+        appendHistory(L10n.text("imageEditor.history.layerTransformInspector"))
+    }
+
     var canRotateSelectedLayer: Bool {
         canResizeSelectedLayer
     }
@@ -534,6 +584,13 @@ extension ImageEditorViewModel {
     func transformFrame(for indices: [Int]) -> CGRect? {
         let shouldUseLayerFrameFallback = document.selectedLayerIDs.contains { selectedID in
             document.layers.contains { $0.id == selectedID && $0.isGroup }
+        } || indices.contains { index in
+            let layer = document.layers[index]
+            return layer.isSolidColorFill
+                || layer.isPatternFill
+                || layer.isGradientFill
+                || layer.isShape
+                || layer.isSmartObject
         }
         return indices
             .compactMap { index in

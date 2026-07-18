@@ -1340,6 +1340,7 @@
 "imageEditor.history.layerDistribute" = "レイヤーを分布";
 "imageEditor.history.layerDistributeSpacing" = "レイヤー間隔を分布";
 "imageEditor.history.layerScale" = "レイヤーを拡大縮小";
+"imageEditor.history.layerTransformInspector" = "プロパティから変形";
 "imageEditor.history.layerResize" = "ドラッグでレイヤーを拡大縮小";
 "imageEditor.history.textBoxResize" = "テキスト枠を調整";
 "imageEditor.history.textBoxFitContent" = "テキスト枠を内容に合わせる";
@@ -2533,6 +2534,11 @@
 "imageEditor.status.layerCompNameInvalid" = "レイヤーコンプ名は空にできません";
 "imageEditor.status.layerCompNoMatchingLayers" = "このレイヤーコンプに一致するレイヤーはありません";
 "imageEditor.properties.documentSize" = "ドキュメントサイズ";
+"imageEditor.properties.transform" = "変形";
+"imageEditor.properties.transformXValue" = "X：%.1f px";
+"imageEditor.properties.transformYValue" = "Y：%.1f px";
+"imageEditor.properties.transformWidthValue" = "幅：%.1f px";
+"imageEditor.properties.transformHeightValue" = "高さ：%.1f px";
 "imageEditor.properties.imageWidthValue" = "画像の幅：%d px";
 "imageEditor.properties.imageHeightValue" = "画像の高さ：%d px";
 "imageEditor.properties.canvasWidthValue" = "カンバスの幅：%d px";

@@ -3044,6 +3044,86 @@ struct ImageEditorView: View {
         }
     }
 
+    private var selectedLayerTransformControls: some View {
+        Group {
+            if viewModel.selectedLayerTransformFrame != nil {
+                VStack(alignment: .leading, spacing: 7) {
+                    Text(L10n.text("imageEditor.properties.transform"))
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+
+                    HStack(spacing: 7) {
+                        Stepper(
+                            L10n.format(
+                                "imageEditor.properties.transformXValue",
+                                viewModel.selectedLayerTransformX
+                            ),
+                            value: Binding(
+                                get: { viewModel.selectedLayerTransformX },
+                                set: { viewModel.setSelectedLayerTransform(x: $0) }
+                            ),
+                            in: -12_000...12_000,
+                            step: 1
+                        )
+                        .focusable(false)
+                        .disabled(!viewModel.canResizeSelectedLayer)
+                        .accessibilityIdentifier("image-editor-transform-x")
+
+                        Stepper(
+                            L10n.format(
+                                "imageEditor.properties.transformYValue",
+                                viewModel.selectedLayerTransformY
+                            ),
+                            value: Binding(
+                                get: { viewModel.selectedLayerTransformY },
+                                set: { viewModel.setSelectedLayerTransform(y: $0) }
+                            ),
+                            in: -12_000...12_000,
+                            step: 1
+                        )
+                        .focusable(false)
+                        .disabled(!viewModel.canResizeSelectedLayer)
+                        .accessibilityIdentifier("image-editor-transform-y")
+                    }
+
+                    HStack(spacing: 7) {
+                        Stepper(
+                            L10n.format(
+                                "imageEditor.properties.transformWidthValue",
+                                viewModel.selectedLayerTransformWidth
+                            ),
+                            value: Binding(
+                                get: { viewModel.selectedLayerTransformWidth },
+                                set: { viewModel.setSelectedLayerTransform(width: $0) }
+                            ),
+                            in: 1...12_000,
+                            step: 1
+                        )
+                        .focusable(false)
+                        .disabled(!viewModel.canResizeSelectedLayer)
+                        .accessibilityIdentifier("image-editor-transform-width")
+
+                        Stepper(
+                            L10n.format(
+                                "imageEditor.properties.transformHeightValue",
+                                viewModel.selectedLayerTransformHeight
+                            ),
+                            value: Binding(
+                                get: { viewModel.selectedLayerTransformHeight },
+                                set: { viewModel.setSelectedLayerTransform(height: $0) }
+                            ),
+                            in: 1...12_000,
+                            step: 1
+                        )
+                        .focusable(false)
+                        .disabled(!viewModel.canResizeSelectedLayer)
+                        .accessibilityIdentifier("image-editor-transform-height")
+                    }
+                }
+            }
+        }
+    }
+
     private var guideControls: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(L10n.text("imageEditor.properties.guides"))
@@ -5321,6 +5401,10 @@ struct ImageEditorView: View {
                     ImageEditorStackChildLayoutControls(viewModel: viewModel)
                     Divider().overlay(editorBorder)
                 }
+
+                selectedLayerTransformControls
+
+                Divider().overlay(editorBorder)
 
                 documentSizeControls
 

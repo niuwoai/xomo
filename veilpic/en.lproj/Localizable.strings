@@ -1340,6 +1340,7 @@
 "imageEditor.history.layerDistribute" = "Distribute Layers";
 "imageEditor.history.layerDistributeSpacing" = "Distribute Layer Spacing";
 "imageEditor.history.layerScale" = "Scale Layer";
+"imageEditor.history.layerTransformInspector" = "Transform from Properties";
 "imageEditor.history.layerResize" = "Drag Resize Layer";
 "imageEditor.history.textBoxResize" = "Resize Text Box";
 "imageEditor.history.textBoxFitContent" = "Fit Text Box to Content";
@@ -2533,6 +2534,11 @@
 "imageEditor.status.layerCompNameInvalid" = "Layer comp name cannot be empty";
 "imageEditor.status.layerCompNoMatchingLayers" = "This layer comp has no matching layers";
 "imageEditor.properties.documentSize" = "Document Size";
+"imageEditor.properties.transform" = "Transform";
+"imageEditor.properties.transformXValue" = "X: %.1f px";
+"imageEditor.properties.transformYValue" = "Y: %.1f px";
+"imageEditor.properties.transformWidthValue" = "Width: %.1f px";
+"imageEditor.properties.transformHeightValue" = "Height: %.1f px";
 "imageEditor.properties.imageWidthValue" = "Image width: %d px";
 "imageEditor.properties.imageHeightValue" = "Image height: %d px";
 "imageEditor.properties.canvasWidthValue" = "Canvas width: %d px";
