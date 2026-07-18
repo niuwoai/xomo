@@ -178,6 +178,16 @@ struct XomoAutomationTests {
         #expect(created["name"] == .string("Hero"))
         #expect(created["width"] == .number(60))
         #expect(created["height"] == .number(40))
+        #expect(viewModel.isSlicesPanelVisible)
+
+        let updated = try #require(viewModel.updateSlice(
+            id: id,
+            name: "Hero Updated",
+            frame: CGRect(x: 30, y: 20, width: 70, height: 44)
+        ))
+        #expect(updated.name == "Hero Updated")
+        #expect(updated.frame == CGRect(x: 30, y: 20, width: 70, height: 44))
+        #expect(viewModel.exportSettings.sliceID == id)
 
         let listResponse = registry.execute(request(operation: "call", name: "xomo.slice.list"))
         #expect(listResponse.ok)
@@ -190,6 +200,7 @@ struct XomoAutomationTests {
         ))
         #expect(deleteResponse.ok)
         #expect(viewModel.document.slices.isEmpty)
+        #expect(viewModel.exportSettings.scope == .composited)
     }
 
     @Test func registryCreatesListsAndDeletesNamedHotspots() throws {

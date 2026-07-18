@@ -125,6 +125,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var isLayersPanelVisible = true
     @Published var isPropertiesPanelVisible = true
     @Published var isHotspotsPanelVisible = false
+    @Published var isSlicesPanelVisible = false
     @Published var selectedHotspotID: UUID?
     @Published var isStatusBarVisible = true
     @Published var historyQuery = ""
@@ -1971,7 +1972,7 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     var isRightDockVisible: Bool {
-        isNavigatorPanelVisible || isHistoryPanelVisible || isLayersPanelVisible || isPropertiesPanelVisible || isHotspotsPanelVisible
+        isNavigatorPanelVisible || isHistoryPanelVisible || isLayersPanelVisible || isPropertiesPanelVisible || isHotspotsPanelVisible || isSlicesPanelVisible
     }
 
     var isWorkspaceChromeVisible: Bool {
@@ -2160,6 +2161,7 @@ final class ImageEditorViewModel: ObservableObject {
         isLayersPanelVisible = true
         isPropertiesPanelVisible = true
         isHotspotsPanelVisible = false
+        isSlicesPanelVisible = false
         selectedHotspotID = nil
         isStatusBarVisible = true
         statusText = L10n.text("imageEditor.status.workspaceDefaultRestored")
@@ -2174,6 +2176,7 @@ final class ImageEditorViewModel: ObservableObject {
         isLayersPanelVisible = shouldShow
         isPropertiesPanelVisible = shouldShow
         isHotspotsPanelVisible = shouldShow
+        isSlicesPanelVisible = shouldShow
         statusText = L10n.text(shouldShow ? "imageEditor.status.workspacePanelsShown" : "imageEditor.status.workspacePanelsHidden")
     }
 
@@ -2184,6 +2187,7 @@ final class ImageEditorViewModel: ObservableObject {
         isLayersPanelVisible = shouldShow
         isPropertiesPanelVisible = shouldShow
         isHotspotsPanelVisible = shouldShow
+        isSlicesPanelVisible = shouldShow
         statusText = L10n.text(shouldShow ? "imageEditor.status.rightDockPanelsShown" : "imageEditor.status.rightDockPanelsHidden")
     }
 
@@ -2215,6 +2219,11 @@ final class ImageEditorViewModel: ObservableObject {
     func toggleHotspotsPanelVisibility() {
         isHotspotsPanelVisible.toggle()
         statusText = L10n.text(isHotspotsPanelVisible ? "imageEditor.status.hotspotsPanelShown" : "imageEditor.status.hotspotsPanelHidden")
+    }
+
+    func toggleSlicesPanelVisibility() {
+        isSlicesPanelVisible.toggle()
+        statusText = L10n.text(isSlicesPanelVisible ? "imageEditor.status.slicesPanelShown" : "imageEditor.status.slicesPanelHidden")
     }
 
     func selectCharacterPanelTool() {

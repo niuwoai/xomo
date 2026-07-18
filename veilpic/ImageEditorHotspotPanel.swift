@@ -181,3 +181,185 @@ private struct ImageEditorHotspotPanelRow: View {
         .frame(minWidth: 48)
     }
 }
+
+struct ImageEditorSliceDraft: Equatable {
+    var name: String
+    var x: String
+    var y: String
+    var width: String
+    var height: String
+
+    init(_ slice: ImageEditorSlice) {
+        name = slice.name
+        x = Self.number(slice.frame.minX)
+        y = Self.number(slice.frame.minY)
+        width = Self.number(slice.frame.width)
+        height = Self.number(slice.frame.height)
+    }
+
+    private static func number(_ value: CGFloat) -> String {
+        value.rounded() == value ? String(Int(value)) : String(format: "%.2f", value)
+    }
+}
+
+struct ImageEditorSlicePanel: View {
+    @ObservedObject var viewModel: ImageEditorViewModel
+    let showsTitle: Bool
+    @State private var drafts: [UUID: ImageEditorSliceDraft] = [:]
+
+    init(viewModel: ImageEditorViewModel, showsTitle: Bool = true) {
+        self.viewModel = viewModel
+        self.showsTitle = showsTitle
+    }
+
+    var body: some View {
+        EditorPanel(title: L10n.text("imageEditor.panel.slices"), showsTitle: showsTitle) {
+            if viewModel.availableSlices.isEmpty {
+                Text(L10n.text("imageEditor.slices.empty"))
+                    .font(.system(size: 12))
+                    .foregroundColor(Color(nsColor: ImageEditorTheme.mutedText))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            } else {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(L10n.text("imageEditor.slices.hint"))
+                        .font(.system(size: 11))
+                        .foregroundColor(Color(nsColor: ImageEditorTheme.mutedText))
+
+                    ForEach(viewModel.availableSlices) { slice in
+                        ImageEditorSlicePanelRow(
+                            slice: slice,
+                            draft: draftBinding(for: slice),
+                            isSelected: viewModel.exportSettings.sliceID == slice.id,
+                            onSelect: { select(slice) },
+                            onSave: { save($0, for: slice) },
+                            onDelete: { delete(slice) }
+                        )
+                    }
+                }
+            }
+        }
+        .onAppear(perform: syncDrafts)
+        .onChange(of: viewModel.document.slices) { _ in
+            syncDrafts()
+        }
+    }
+
+    private func draftBinding(for slice: ImageEditorSlice) -> Binding<ImageEditorSliceDraft> {
+        Binding(
+            get: { drafts[slice.id] ?? ImageEditorSliceDraft(slice) },
+            set: { drafts[slice.id] = $0 }
+        )
+    }
+
+    private func select(_ slice: ImageEditorSlice) {
+        viewModel.exportSettings.scope = .slice
+        viewModel.exportSettings.sliceID = slice.id
+        viewModel.statusText = L10n.format("imageEditor.status.sliceSelected", slice.name)
+    }
+
+    private func save(_ draft: ImageEditorSliceDraft, for slice: ImageEditorSlice) {
+        guard let x = Double(draft.x),
+              let y = Double(draft.y),
+              let width = Double(draft.width),
+              let height = Double(draft.height)
+        else {
+            viewModel.statusText = L10n.text("imageEditor.status.sliceInvalidFrame")
+            return
+        }
+        _ = viewModel.updateSlice(
+            id: slice.id,
+            name: draft.name,
+            frame: CGRect(x: x, y: y, width: width, height: height)
+        )
+        syncDrafts()
+    }
+
+    private func delete(_ slice: ImageEditorSlice) {
+        _ = viewModel.deleteSlice(id: slice.id)
+        drafts.removeValue(forKey: slice.id)
+    }
+
+    private func syncDrafts() {
+        let currentIDs = Set(viewModel.availableSlices.map(\.id))
+        var next = drafts.filter { currentIDs.contains($0.key) }
+        for slice in viewModel.availableSlices where next[slice.id] == nil {
+            next[slice.id] = ImageEditorSliceDraft(slice)
+        }
+        drafts = next
+        if let selected = viewModel.exportSettings.sliceID,
+           currentIDs.contains(selected) == false {
+            viewModel.exportSettings.sliceID = viewModel.availableSlices.first?.id
+        }
+    }
+}
+
+private struct ImageEditorSlicePanelRow: View {
+    let slice: ImageEditorSlice
+    @Binding var draft: ImageEditorSliceDraft
+    let isSelected: Bool
+    let onSelect: () -> Void
+    let onSave: (ImageEditorSliceDraft) -> Void
+    let onDelete: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 6) {
+                Image(systemName: isSelected ? "scope" : "rectangle.dashed")
+                    .foregroundColor(Color.cyan)
+                Text(draft.name.isEmpty ? slice.name : draft.name)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(Color(nsColor: ImageEditorTheme.text))
+                    .lineLimit(1)
+                Spacer(minLength: 0)
+                Button(action: onDelete) {
+                    Image(systemName: "trash")
+                }
+                .buttonStyle(.borderless)
+                .focusable(false)
+                .help(L10n.text("imageEditor.slices.delete"))
+            }
+            .contentShape(Rectangle())
+            .onTapGesture(perform: onSelect)
+
+            TextField(L10n.text("imageEditor.slices.name"), text: $draft.name)
+                .textFieldStyle(.roundedBorder)
+                .onSubmit { onSave(draft) }
+
+            HStack(spacing: 4) {
+                coordinateField("imageEditor.slices.x", text: $draft.x)
+                coordinateField("imageEditor.slices.y", text: $draft.y)
+                coordinateField("imageEditor.slices.width", text: $draft.width)
+                coordinateField("imageEditor.slices.height", text: $draft.height)
+            }
+
+            Button(L10n.text("imageEditor.slices.save")) {
+                onSave(draft)
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.small)
+            .focusable(false)
+        }
+        .padding(8)
+        .background(
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                .fill(Color(nsColor: isSelected ? ImageEditorTheme.selected.withAlphaComponent(0.25) : ImageEditorTheme.chrome))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                .stroke(Color.cyan.opacity(isSelected ? 0.7 : 0.18), lineWidth: 1)
+        )
+    }
+
+    private func coordinateField(_ key: String, text: Binding<String>) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(L10n.text(key))
+                .font(.system(size: 9))
+                .foregroundColor(Color(nsColor: ImageEditorTheme.mutedText))
+            TextField("0", text: text)
+                .textFieldStyle(.roundedBorder)
+                .font(.system(size: 10))
+                .onSubmit { onSave(draft) }
+        }
+        .frame(minWidth: 48)
+    }
+}

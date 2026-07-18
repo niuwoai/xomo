@@ -78,6 +78,7 @@ struct ImageEditorView: View {
     @State private var isFiltersDockExpanded = false
     @State private var isPropertiesDockExpanded = false
     @State private var isHotspotsDockExpanded = true
+    @State private var isSlicesDockExpanded = true
     @State private var isRightDockMounted = false
     @State private var isPointerInsideCanvas = false
     @State private var hoverViewPoint: CGPoint?
@@ -1171,6 +1172,7 @@ struct ImageEditorView: View {
                     quickMaskOverlay(in: geometry.size)
                     selectionOverlay(in: geometry.size)
                     savedPathOverlay(in: geometry.size)
+                    sliceOverlay(in: geometry.size)
                     hotspotOverlay(in: geometry.size)
                     colorSamplerOverlay(in: geometry.size)
                     sampledBrushSourceOverlay(in: geometry.size)
@@ -2320,6 +2322,16 @@ struct ImageEditorView: View {
                         isExpanded: $isHotspotsDockExpanded
                     ) {
                         ImageEditorHotspotPanel(viewModel: viewModel, showsTitle: false)
+                    }
+                }
+
+                if viewModel.isSlicesPanelVisible {
+                    EditorDockDisclosure(
+                        title: L10n.text("imageEditor.panel.slices"),
+                        systemImage: "rectangle.dashed",
+                        isExpanded: $isSlicesDockExpanded
+                    ) {
+                        ImageEditorSlicePanel(viewModel: viewModel, showsTitle: false)
                     }
                 }
             }
@@ -3838,6 +3850,30 @@ struct ImageEditorView: View {
                         Path(rect),
                         with: .color(Color.orange.opacity(isSelected ? 1 : 0.9)),
                         style: StrokeStyle(lineWidth: isSelected ? 2 : 1.4, dash: [6, 4])
+                    )
+                }
+            }
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+        }
+    }
+
+    @ViewBuilder
+    private func sliceOverlay(in size: CGSize) -> some View {
+        let slices = viewModel.availableSlices
+        if !slices.isEmpty {
+            Canvas { context, _ in
+                for slice in slices {
+                    let rect = viewRect(from: slice.frame, in: size)
+                    let isSelected = viewModel.exportSettings.sliceID == slice.id
+                    context.fill(
+                        Path(rect),
+                        with: .color(Color.cyan.opacity(isSelected ? 0.12 : 0.04))
+                    )
+                    context.stroke(
+                        Path(rect),
+                        with: .color(Color.cyan.opacity(isSelected ? 0.95 : 0.62)),
+                        style: StrokeStyle(lineWidth: isSelected ? 1.8 : 1, dash: [4, 4])
                     )
                 }
             }

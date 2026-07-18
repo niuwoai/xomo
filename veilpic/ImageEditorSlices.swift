@@ -26,9 +26,11 @@ extension ImageEditorViewModel {
             name: String(sliceName.prefix(ImageEditorSlice.maximumNameLength)),
             frame: frame
         )
+        pushUndo()
         document.slices.append(slice)
         exportSettings.scope = .slice
         exportSettings.sliceID = slice.id
+        isSlicesPanelVisible = true
         appendHistory(L10n.format("imageEditor.history.sliceCreated", slice.name))
         statusText = L10n.format("imageEditor.status.sliceCreated", slice.name)
         return slice
@@ -37,6 +39,7 @@ extension ImageEditorViewModel {
     @discardableResult
     func deleteSlice(id: UUID) -> ImageEditorSlice? {
         guard let index = document.slices.firstIndex(where: { $0.id == id }) else { return nil }
+        pushUndo()
         let removed = document.slices.remove(at: index)
         if exportSettings.sliceID == id {
             exportSettings.sliceID = document.slices.first?.id
@@ -47,6 +50,28 @@ extension ImageEditorViewModel {
         appendHistory(L10n.format("imageEditor.history.sliceDeleted", removed.name))
         statusText = L10n.format("imageEditor.status.sliceDeleted", removed.name)
         return removed
+    }
+
+    @discardableResult
+    func updateSlice(id: UUID, name: String? = nil, frame: CGRect? = nil) -> ImageEditorSlice? {
+        guard let index = document.slices.firstIndex(where: { $0.id == id }) else { return nil }
+        var updated = document.slices[index]
+        if let name {
+            updated.name = name
+        }
+        if let frame {
+            updated.frame = frame
+        }
+        guard let normalized = updated.normalized(canvasSize: document.canvasSize) else { return nil }
+        guard normalized != document.slices[index] else { return normalized }
+        pushUndo()
+        document.slices[index] = normalized
+        if exportSettings.sliceID == id {
+            exportSettings.scope = .slice
+        }
+        appendHistory(L10n.format("imageEditor.history.sliceUpdated", normalized.name))
+        statusText = L10n.format("imageEditor.status.sliceUpdated", normalized.name)
+        return normalized
     }
 
     func slice(with id: UUID) -> ImageEditorSlice? {

@@ -1,8 +1,8 @@
 # Xomo MCP 与 CLI
 
-> 当前版本：v2.12.0-rc262
+> 当前版本：v2.12.0-rc263
 
-rc262 起，热点交付面板与 MCP/CLI 共用同一热点选中、更新和删除模型；rc261 起，`xomo.hotspot.update` 可更新热点名称、目标 URL 和矩形范围，`xomo.hotspot.export_html` 可将合成画布与热点输出为自包含 HTML image map；文件菜单、MCP 与 CLI 复用同一导出入口。rc260 起，`xomo.hotspot.create`、`xomo.hotspot.list` 和 `xomo.hotspot.delete` 提供 Fireworks 风格矩形热点的创建、查询与删除；热点包含名称、矩形范围和可选目标 URL，并随 `.xomoproject` 保存。rc259 起，`xomo.slice.create`、`xomo.slice.list` 和 `xomo.slice.delete` 提供命名矩形切片的创建、查询与删除；`xomo.export.render` 在 `scope=slice` 时接受 `sliceID`，与 UI 导出面板使用相同的切片模型。
+rc263 起，切片交付面板与既有 `xomo.slice.create`、`xomo.slice.list`、`xomo.slice.delete` 和 `xomo.export.render` 共用命名切片模型；`xomo.export.render` 在 `scope=slice` 时仍接受 `sliceID`。rc262 起，热点交付面板与 MCP/CLI 共用同一热点选中、更新和删除模型；rc261 起，`xomo.hotspot.update` 可更新热点名称、目标 URL 和矩形范围，`xomo.hotspot.export_html` 可将合成画布与热点输出为自包含 HTML image map；文件菜单、MCP 与 CLI 复用同一导出入口。rc260 起，`xomo.hotspot.create`、`xomo.hotspot.list` 和 `xomo.hotspot.delete` 提供 Fireworks 风格矩形热点的创建、查询与删除；热点包含名称、矩形范围和可选目标 URL，并随 `.xomoproject` 保存。
 
 rc242 起，`xomo.layer.list` 的 Figma 图层条目包含 `figmaImageFill`，可读取 IMAGE 填充的源引用、缩放模式、变换、缩放因子、旋转和滤镜参数。
 

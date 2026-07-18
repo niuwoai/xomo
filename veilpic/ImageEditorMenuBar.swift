@@ -1747,6 +1747,8 @@ extension ImageEditorView {
         Divider()
         pathActionsMenu
         Divider()
+        slicesActionsMenu
+        Divider()
         hotspotsActionsMenu
         Divider()
         propertiesActionsMenu
@@ -1767,6 +1769,29 @@ extension ImageEditorView {
                 viewModel.exportHotspotHTML()
             }
             .disabled(!viewModel.canExportHotspotHTML)
+        }
+    }
+
+    @ViewBuilder
+    private var slicesActionsMenu: some View {
+        Menu(L10n.text("imageEditor.menu.window.slices")) {
+            Button(L10n.text("imageEditor.action.slicesShowPanel")) {
+                viewModel.isSlicesPanelVisible = true
+                viewModel.statusText = L10n.text("imageEditor.status.slicesPanelShown")
+            }
+            Button(L10n.text(viewModel.isSlicesPanelVisible ? "imageEditor.action.slicesHidePanel" : "imageEditor.action.slicesShowPanelVisibility")) {
+                viewModel.toggleSlicesPanelVisibility()
+            }
+            Divider()
+            Button(L10n.text("imageEditor.action.sliceCreate")) {
+                viewModel.createSliceFromCurrentSelection()
+            }
+            .disabled(!viewModel.canCreateSliceFromSelection)
+            Button(L10n.text("imageEditor.action.exportSelection")) {
+                viewModel.exportSettings.scope = .slice
+                viewModel.openExportPanel()
+            }
+            .disabled(!viewModel.canExportNamedSlice)
         }
     }
 
