@@ -18,24 +18,30 @@ struct ImageEditorScopeTests {
                 "marquee",
                 "lasso",
                 "magicWand",
+                "quickSelection",
                 "crop",
                 "brush",
                 "eraser",
                 "cloneStamp",
                 "dodge",
                 "burn",
+                "sponge",
                 "blur",
                 "sharpen",
                 "smudge",
                 "healingBrush",
                 "patchTool",
+                "redEye",
                 "paintBucket",
                 "gradient",
                 "eyedropper",
+                "colorSampler",
                 "text",
                 "rectangle",
                 "ellipse",
                 "pen",
+                "pathSelection",
+                "directSelection",
                 "hand",
                 "zoom"
             ]
@@ -121,6 +127,8 @@ struct ImageEditorScopeTests {
         #expect(shortcuts["rectangle"] == "u")
         #expect(shortcuts["ellipse"] == "u")
         #expect(shortcuts["pen"] == "p")
+        #expect(shortcuts["pathSelection"] == "a")
+        #expect(shortcuts["directSelection"] == "a")
         #expect(shortcuts["hand"] == "h")
         #expect(shortcuts["zoom"] == "z")
         #expect(shortcuts["blur"] == "r")
@@ -129,10 +137,11 @@ struct ImageEditorScopeTests {
         #expect(shortcuts["healingBrush"] == "j")
         #expect(shortcuts["patchTool"] == "j")
         #expect(ImageEditorTool.classicShortcutGroup(for: "g")?.tools == [.paintBucket, .gradient])
-        #expect(ImageEditorTool.classicShortcutGroup(for: "o")?.tools == [.dodge, .burn])
+        #expect(ImageEditorTool.classicShortcutGroup(for: "o")?.tools == [.dodge, .burn, .sponge])
         #expect(ImageEditorTool.classicShortcutGroup(for: "r")?.tools == [.blur, .sharpen, .smudge])
         #expect(ImageEditorTool.classicShortcutGroup(for: "u")?.tools == [.rectangle, .ellipse])
-        #expect(ImageEditorTool.classicShortcutGroup(for: "j")?.tools == [.healingBrush, .patchTool])
+        #expect(ImageEditorTool.classicShortcutGroup(for: "j")?.tools == [.healingBrush, .patchTool, .redEye])
+        #expect(ImageEditorTool.classicShortcutGroup(for: "a")?.tools == [.pathSelection, .directSelection])
         #expect(ImageEditorTool.paintBucket.isClassicShortcutPrimary)
         #expect(!ImageEditorTool.gradient.isClassicShortcutPrimary)
     }
@@ -227,10 +236,11 @@ struct ImageEditorScopeTests {
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorTransform.swift"),
             encoding: .utf8
         )
-        #expect(transformSource.contains("if selectedTool == .pen"))
+        #expect(transformSource.contains("if selectedTool == .pen || selectedTool == .directSelection"))
         #expect(transformSource.contains("nudgeSelectedPathAnchor(by: delta)"))
 
         #expect(source.contains("viewModel.canDeleteSelectedPathAnchor"))
+        #expect(source.contains("viewModel.selectedTool == .pen || viewModel.selectedTool == .directSelection"))
         #expect(source.contains("viewModel.deleteSelectedPathAnchor()"))
 
         #expect(!source.contains("private var selectionEditShortcutButtons: some View"))
@@ -269,6 +279,11 @@ struct ImageEditorScopeTests {
         viewModel.selectTool(.brush)
         viewModel.cycleClassicToolShortcut("u")
         #expect(viewModel.selectedTool == .rectangle)
+
+        viewModel.selectClassicToolShortcut("a")
+        #expect(viewModel.selectedTool == .pathSelection)
+        viewModel.cycleClassicToolShortcut("a")
+        #expect(viewModel.selectedTool == .directSelection)
     }
 
     @Test func xomoApplicationOpensEditorWorkspaceWithoutMenuBarOrScreenshotStartup() throws {

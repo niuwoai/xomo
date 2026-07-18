@@ -194,7 +194,7 @@ extension ImageEditorViewModel {
             return
         }
 
-        if selectedTool == .pen,
+        if selectedTool == .pen || selectedTool == .directSelection,
            canEditSelectedPathAnchors,
            selectedPathAnchorIndex != nil {
             nudgeSelectedPathAnchor(by: delta)

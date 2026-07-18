@@ -502,6 +502,7 @@ struct ImageEditorVectorLayerTests {
         viewModel.addPenPoint(CGPoint(x: 104, y: 28))
         viewModel.addPenPoint(CGPoint(x: 70, y: 78))
         viewModel.finishPenPath(closed: true)
+        viewModel.selectTool(.directSelection)
         let pathID = try #require(viewModel.document.selectedLayerID)
         let historyCount = viewModel.document.history.count
 
@@ -519,6 +520,16 @@ struct ImageEditorVectorLayerTests {
         #expect(movedPoint == CGPoint(x: 32, y: 36))
         #expect(viewModel.document.selectedLayerID == pathID)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.pathAnchorMove"))
+
+        viewModel.nudgeSelectionOrSelectedLayer(by: CGSize(width: 5, height: -2))
+        let nudgedPoint = try #require(viewModel.selectedPathAnchorCanvasPoint)
+        #expect(nudgedPoint == CGPoint(x: 37, y: 34))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.pathAnchorMove"))
+
+        viewModel.deleteSelectedPathAnchor()
+        let remainingAnchors = try #require(viewModel.document.selectedLayer?.shapeContent?.pathAnchors)
+        #expect(remainingAnchors.count == 2)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.pathAnchorDelete"))
     }
 
     @Test func imageEditorCreatesEditablePathLayerFromCurrentSelection() async throws {

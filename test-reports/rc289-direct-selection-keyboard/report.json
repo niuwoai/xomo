@@ -1,0 +1,43 @@
+{
+  "version": "2.12.0-rc289",
+  "scope": "photoshop-direct-selection-keyboard-focused",
+  "passed": true,
+  "checks": [
+    {
+      "name": "directSelectionSwitchesToPathAnchorAndMovesOneNode",
+      "result": "passed"
+    },
+    {
+      "name": "directSelectionNudgeAndDeleteStayOnTheSelectedPathAnchor",
+      "result": "passed"
+    },
+    {
+      "name": "directSelectionUsesTheFamiliarSystemArrowAndSharesTheAGroup",
+      "result": "passed"
+    },
+    {
+      "name": "classicToolShortcutsSelectPrimaryToolAndCycleGroupedTools",
+      "result": "passed"
+    },
+    {
+      "name": "supportedLocalizationTablesKeepMatchingKeys",
+      "result": "passed"
+    },
+    {
+      "name": "releaseContract",
+      "result": "passed",
+      "runs": 3,
+      "assertions": 7
+    },
+    {
+      "name": "xcodebuildFocusedTestBuild",
+      "result": "passed",
+      "deploymentTarget": "macOS 13.0"
+    }
+  ],
+  "notes": [
+    "直接选择模式下方向键调用路径锚点微调事务，Delete/Backspace 调用路径锚点删除事务。",
+    "路径节点修改保留单步 Undo/History；普通移动工具和组件对象删除语义未改变。",
+    "更大范围套件仍有历史渲染、布局源码契约和主题 Token 断言失败，未计入本专项通过项。"
+  ]
+}

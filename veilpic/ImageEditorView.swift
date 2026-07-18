@@ -183,7 +183,7 @@ struct ImageEditorView: View {
                     if deleteSelectedShapeGradientStopIfNeeded() {
                         return true
                     }
-                    if viewModel.selectedTool == .pen,
+                    if viewModel.selectedTool == .pen || viewModel.selectedTool == .directSelection,
                        viewModel.canDeleteSelectedPathAnchor {
                         viewModel.deleteSelectedPathAnchor()
                         return true
