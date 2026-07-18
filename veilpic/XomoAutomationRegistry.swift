@@ -2572,10 +2572,13 @@ final class XomoAutomationRegistry {
         if let size = arguments["size"]?.doubleValue { viewModel.brushSize = size }
         let usesStrength = ["blur", "sharpen", "smudge"].contains(action)
         let usesExposure = ["dodge", "burn"].contains(action)
+        let usesFlow = action == "sponge"
         if usesExposure, let exposure = arguments["exposure"]?.doubleValue {
             viewModel.opacity = max(0, min(1, exposure))
         } else if usesStrength, let strength = arguments["strength"]?.doubleValue {
             viewModel.opacity = max(0, min(1, strength))
+        } else if usesFlow, let flow = arguments["flow"]?.doubleValue {
+            viewModel.opacity = max(0, min(1, flow))
         } else if let opacity = arguments["opacity"]?.doubleValue {
             viewModel.opacity = opacity
         }
@@ -3721,6 +3724,7 @@ private extension XomoAutomationRegistry {
             "y": XomoAutomationSchema.number(description: "Canvas y coordinate for point actions"),
             "size": XomoAutomationSchema.number(description: "Brush diameter"),
             "opacity": XomoAutomationSchema.number(description: "Brush opacity"),
+            "flow": XomoAutomationSchema.number(description: "Sponge flow from 0 to 1; preferred over legacy opacity"),
             "strength": XomoAutomationSchema.number(description: "Blur, sharpen, or smudge strength from 0 to 1; preferred over legacy opacity"),
             "exposure": XomoAutomationSchema.number(description: "Dodge or burn exposure from 0 to 1; preferred over legacy opacity"),
             "toneRange": XomoAutomationSchema.string(description: "Dodge or burn tonal range", values: ["shadows", "midtones", "highlights"]),

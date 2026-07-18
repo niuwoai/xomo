@@ -201,6 +201,36 @@ struct ImageEditorToolSmokeTests {
         #expect(unprotected.document.history.last?.title == L10n.text("imageEditor.history.sponge"))
     }
 
+    @Test func spongeFlowControlsPixelEffect() throws {
+        let color = NSColor(deviceRed: 0.62, green: 0.48, blue: 0.32, alpha: 1)
+        let low = makeEditableViewModel(image: solidImage(color: color))
+        let high = makeEditableViewModel(image: solidImage(color: color))
+        for viewModel in [low, high] {
+            viewModel.spongeMode = .saturate
+            viewModel.spongeVibranceEnabled = false
+            viewModel.brushSize = 12
+            viewModel.hardness = 1
+        }
+        low.opacity = 0.20
+        high.opacity = 1
+        let point = CGPoint(x: 20, y: 14)
+
+        low.spongeBrush(points: [point])
+        high.spongeBrush(points: [point])
+
+        let lowColor = try #require(
+            low.document.selectedLayer?.image.color(at: point)?.usingColorSpace(.deviceRGB)
+        )
+        let highColor = try #require(
+            high.document.selectedLayer?.image.color(at: point)?.usingColorSpace(.deviceRGB)
+        )
+        let lowChroma = lowColor.redComponent - lowColor.blueComponent
+        let highChroma = highColor.redComponent - highColor.blueComponent
+        #expect(highChroma > lowChroma + 0.15)
+        #expect(low.document.history.last?.title == L10n.text("imageEditor.history.sponge"))
+        #expect(high.document.history.last?.title == L10n.text("imageEditor.history.sponge"))
+    }
+
     @Test func toneBrushHardnessControlsDodgeAndBurnEdges() throws {
         let image = solidImage(color: NSColor(deviceWhite: 0.45, alpha: 1))
         let softDodge = makeEditableViewModel(image: image)

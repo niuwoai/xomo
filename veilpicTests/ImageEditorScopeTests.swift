@@ -2218,6 +2218,29 @@ struct ImageEditorScopeTests {
         #expect(spongeSource.contains("image-editor-sponge-vibrance"))
     }
 
+    @MainActor
+    @Test func spongeFlowUsesPercentageOptionAndStatus() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        #expect(source.contains("if usesFlowOption { return \"imageEditor.option.flow\" }"))
+        #expect(source.contains("usesExposureOption || usesStrengthOption || usesFlowOption"))
+        #expect(source.contains("viewModel.selectedTool == .sponge"))
+
+        let viewModel = ImageEditorViewModel(
+            sourceName: "Sponge Flow",
+            image: NSImage.transparent(size: CGSize(width: 32, height: 24)),
+            onApply: { _ in }
+        )
+        viewModel.selectTool(.sponge)
+        viewModel.applyOpacityShortcutDigit(4)
+
+        #expect(viewModel.optionsPanelSummaryText.contains(L10n.text("imageEditor.option.flow")))
+        #expect(viewModel.opacity == 0.4)
+        #expect(viewModel.optionsPanelSummaryText.contains("40%"))
+    }
+
     @Test func dodgeAndBurnExposeANonFocusableToneRangeMenu() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),

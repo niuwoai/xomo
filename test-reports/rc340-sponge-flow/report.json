@@ -1,0 +1,49 @@
+{
+  "generated_at": "2026-07-19 06:12:20 +0800",
+  "total": 4,
+  "passed": 4,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "spongeFlowUsesPercentageOptionAndStatus",
+      "identifier": "veilpicTests/ImageEditorScopeTests/spongeFlowUsesPercentageOptionAndStatus",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 4.226,
+      "issues": [],
+      "log": "ImageEditorScopeTests.spongeFlowUsesPercentageOptionAndStatus.log"
+    },
+    {
+      "suite": "ImageEditorToolSmokeTests",
+      "method": "spongeFlowControlsPixelEffect",
+      "identifier": "veilpicTests/ImageEditorToolSmokeTests/spongeFlowControlsPixelEffect",
+      "file": "ImageEditorToolSmokeTests.swift",
+      "passed": true,
+      "duration": 3.037,
+      "issues": [],
+      "log": "ImageEditorToolSmokeTests.spongeFlowControlsPixelEffect.log"
+    },
+    {
+      "suite": "LocalizationResourceTests",
+      "method": "spongeFlowSummaryIsLocalizedInEverySupportedLanguage",
+      "identifier": "veilpicTests/LocalizationResourceTests/spongeFlowSummaryIsLocalizedInEverySupportedLanguage",
+      "file": "LocalizationResourceTests.swift",
+      "passed": true,
+      "duration": 3.036,
+      "issues": [],
+      "log": "LocalizationResourceTests.spongeFlowSummaryIsLocalizedInEverySupportedLanguage.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "spongeFlowAutomationPrefersFlowAndKeepsLegacyOpacity",
+      "identifier": "veilpicTests/XomoAutomationTests/spongeFlowAutomationPrefersFlowAndKeepsLegacyOpacity",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 3.062,
+      "issues": [],
+      "log": "XomoAutomationTests.spongeFlowAutomationPrefersFlowAndKeepsLegacyOpacity.log"
+    }
+  ]
+}

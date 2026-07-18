@@ -1,7 +1,8 @@
 # Xomo MCP 与 CLI
 
-> 当前版本：v2.12.0-rc339
+> 当前版本：v2.12.0-rc340
 
+rc340 为 `xomo.paint.special` 的 `sponge` 增加 `flow=0...1`，与界面 0%–100% 流量共用既有像素强度入口；`flow` 优先于同时出现的旧 `opacity`，仅传 `opacity` 的既有客户端保持兼容，离线 CLI 工具目录同步公开数值范围。
 rc339 为 `xomo.paint.special` 的 `sponge` 增加 `spongeVibrance=true|false`；省略时默认开启，加色按剩余色度空间收力、去色按现有色度收力，以减少完全饱和或完全去色附近的剪切；关闭后保留既有线性像素行为，离线 CLI 工具目录同步公开该布尔字段。
 rc338 增加仅在本地海绵画布工具激活时生效的 `Shift+Option+S/D` 模式快捷键；MCP/CLI 的 `spongeMode=saturate|desaturate` 已完整表达同一状态，因此协议字段与兼容性保持不变。
 rc337 增加仅在本地减淡/加深画布工具激活时生效的 `Shift+Option+S/M/H` 范围快捷键；MCP/CLI 的 `toneRange=shadows|midtones|highlights` 已完整表达同一状态，因此协议字段与兼容性保持不变。

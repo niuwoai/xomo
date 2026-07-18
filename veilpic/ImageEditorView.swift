@@ -546,6 +546,7 @@ struct ImageEditorView: View {
     private var amountOptionTitleKey: String {
         if usesExposureOption { return "imageEditor.option.exposure" }
         if usesStrengthOption { return "imageEditor.option.strength" }
+        if usesFlowOption { return "imageEditor.option.flow" }
         return "imageEditor.option.opacity"
     }
 
@@ -562,7 +563,7 @@ struct ImageEditorView: View {
     }
 
     private var usesPercentageAmountOption: Bool {
-        usesExposureOption || usesStrengthOption
+        usesExposureOption || usesStrengthOption || usesFlowOption
     }
 
     private var usesExposureOption: Bool {
@@ -581,6 +582,10 @@ struct ImageEditorView: View {
         default:
             false
         }
+    }
+
+    private var usesFlowOption: Bool {
+        viewModel.selectedTool == .sponge
     }
 
     private var usesBrushDynamicsOptions: Bool {

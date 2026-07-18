@@ -2042,6 +2042,52 @@ struct XomoAutomationTests {
         #expect(properties["spongeVibrance"]?.objectValue?["type"] == .string("boolean"))
     }
 
+    @Test func spongeFlowAutomationPrefersFlowAndKeepsLegacyOpacity() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        let point: XomoJSONValue = .array([
+            .object(["x": .number(32), "y": .number(32)])
+        ])
+
+        let preferred = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("sponge"),
+                "flow": .number(0.24),
+                "opacity": .number(0.91),
+                "points": point
+            ]
+        ))
+        #expect(preferred.ok)
+        #expect(abs(viewModel.opacity - 0.24) < 0.001)
+
+        let legacy = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("sponge"),
+                "opacity": .number(0.41),
+                "points": point
+            ]
+        ))
+        #expect(legacy.ok)
+        #expect(abs(viewModel.opacity - 0.41) < 0.001)
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        guard case .array(let tools) = toolsResponse.result else {
+            Issue.record("Expected tool array")
+            return
+        }
+        let specialPaint = try #require(tools.compactMap(\.objectValue).first {
+            $0["name"] == .string("xomo.paint.special")
+        })
+        let schema = try #require(specialPaint["inputSchema"]?.objectValue)
+        let properties = try #require(schema["properties"]?.objectValue)
+        #expect(properties["flow"]?.objectValue?["type"] == .string("number"))
+    }
+
     @Test func registryAcceptsSinglePointDodgeAndBurnDabs() {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

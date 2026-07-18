@@ -255,6 +255,24 @@ struct LocalizationResourceTests {
         }
     }
 
+    @Test func spongeFlowSummaryIsLocalizedInEverySupportedLanguage() throws {
+        let paths = try Self.repositoryPaths()
+        let expectedValues = [
+            "zh-Hans": "工具：%@ | 选区：%@ | 大小：%d px | 流量：%d%% | 硬度：%d%%",
+            "en": "Tool: %@ | Selection: %@ | Size: %d px | Flow: %d%% | Hardness: %d%%",
+            "ja": "ツール：%@ | 選択：%@ | サイズ：%d px | 流量：%d%% | 硬さ：%d%%"
+        ]
+
+        for (localizationID, expected) in expectedValues {
+            let strings = try Self.stringTable(
+                tableName: "Localizable",
+                localizationID: localizationID,
+                appDirectory: paths.appDirectory
+            )
+            #expect(strings["imageEditor.status.spongeOptionsPanelSummary"] == expected)
+        }
+    }
+
     private static func knownRegions(in projectText: String) -> Set<String> {
         guard let start = projectText.range(of: "knownRegions = (") else { return [] }
         let remaining = projectText[start.upperBound...]

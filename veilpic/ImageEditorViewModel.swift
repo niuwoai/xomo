@@ -1892,7 +1892,17 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     var optionsPanelSummaryText: String {
-        L10n.format(
+        if selectedTool == .sponge {
+            return L10n.format(
+                "imageEditor.status.spongeOptionsPanelSummary",
+                selectedTool.title,
+                selectionMode.compactTitle,
+                Int(brushSize.rounded()),
+                Int((opacity * 100).rounded()),
+                Int((hardness * 100).rounded())
+            )
+        }
+        return L10n.format(
             "imageEditor.status.optionsPanelSummary",
             selectedTool.title,
             selectionMode.compactTitle,
