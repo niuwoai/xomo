@@ -31,6 +31,17 @@ enum ImageEditorCanvasDragGeometry {
     }
 }
 
+private enum ImageEditorDeliveryObjectReference: Equatable {
+    case slice(UUID)
+    case hotspot(UUID)
+}
+
+private struct ImageEditorDeliveryDrag: Equatable {
+    let reference: ImageEditorDeliveryObjectReference
+    let originalFrame: CGRect
+    var previewFrame: CGRect
+}
+
 struct ImageEditorView: View {
     @StateObject var viewModel: ImageEditorViewModel
     @State private var dragPoints: [CGPoint] = []
@@ -49,6 +60,8 @@ struct ImageEditorView: View {
     @State private var isCanvasSelectionGestureActive = false
     @State private var isCanvasCloneGestureActive = false
     @State private var isSelectedObjectMoveGestureActive = false
+    @State private var isDeliveryObjectMoveGestureActive = false
+    @State private var deliveryDrag: ImageEditorDeliveryDrag?
     @State private var activeResizeHandle: ImageEditorLayerResizeHandle?
     @State private var activeShapeGradientHandle: ImageEditorShapeGradientHandle?
     @State private var activeShapeRadialGradientHandle: ImageEditorShapeRadialGradientHandle?
@@ -1625,6 +1638,87 @@ struct ImageEditorView: View {
         return "\(index)  R\(Int((rgb.redComponent * 255).rounded())) G\(Int((rgb.greenComponent * 255).rounded())) B\(Int((rgb.blueComponent * 255).rounded())) A\(Int((rgb.alphaComponent * 255).rounded()))"
     }
 
+    private func deliveryObjectReference(at point: CGPoint) -> ImageEditorDeliveryObjectReference? {
+        if let hotspot = viewModel.availableHotspots.reversed().first(where: {
+            $0.frame.standardized.contains(point)
+        }) {
+            return .hotspot(hotspot.id)
+        }
+        if let slice = viewModel.availableSlices.reversed().first(where: {
+            $0.frame.standardized.contains(point)
+        }) {
+            return .slice(slice.id)
+        }
+        return nil
+    }
+
+    private func deliveryFrame(
+        for reference: ImageEditorDeliveryObjectReference
+    ) -> CGRect? {
+        switch reference {
+        case .slice(let id):
+            return viewModel.slice(with: id)?.frame
+        case .hotspot(let id):
+            return viewModel.hotspot(with: id)?.frame
+        }
+    }
+
+    private func selectDeliveryObject(_ reference: ImageEditorDeliveryObjectReference) {
+        switch reference {
+        case .slice(let id):
+            _ = viewModel.selectSlice(id: id)
+        case .hotspot(let id):
+            _ = viewModel.selectHotspot(id: id)
+        }
+    }
+
+    private func beginDeliveryObjectMove(at point: CGPoint) -> Bool {
+        guard let reference = deliveryObjectReference(at: point),
+              let frame = deliveryFrame(for: reference)
+        else { return false }
+        selectDeliveryObject(reference)
+        deliveryDrag = ImageEditorDeliveryDrag(
+            reference: reference,
+            originalFrame: frame.standardized,
+            previewFrame: frame.standardized
+        )
+        return true
+    }
+
+    private func updateDeliveryObjectMove(translation: CGSize, in size: CGSize) {
+        guard let deliveryDrag else { return }
+        let imageRect = fittedImageRect(in: size)
+        let delta = ImageEditorCanvasDragGeometry.imageDelta(
+            from: translation,
+            canvasSize: viewModel.document.canvasSize,
+            imageRect: imageRect
+        )
+        let previewFrame = viewModel.clampedDeliveryFrame(
+            deliveryDrag.originalFrame,
+            offsetBy: delta
+        )
+        self.deliveryDrag = ImageEditorDeliveryDrag(
+            reference: deliveryDrag.reference,
+            originalFrame: deliveryDrag.originalFrame,
+            previewFrame: previewFrame
+        )
+    }
+
+    private func finishDeliveryObjectMove() {
+        guard let deliveryDrag else { return }
+        guard deliveryDrag.previewFrame != deliveryDrag.originalFrame else {
+            self.deliveryDrag = nil
+            return
+        }
+        switch deliveryDrag.reference {
+        case .slice(let id):
+            _ = viewModel.updateSlice(id: id, frame: deliveryDrag.previewFrame)
+        case .hotspot(let id):
+            _ = viewModel.updateHotspot(id: id, frame: deliveryDrag.previewFrame)
+        }
+        self.deliveryDrag = nil
+    }
+
     @ViewBuilder
     private func sampledBrushSourceOverlay(in size: CGSize) -> some View {
         if let sourcePoint = sampledBrushSourcePoint {
@@ -1673,6 +1767,17 @@ struct ImageEditorView: View {
 
                 switch canvasInteractionTool {
                 case .move:
+                    if !isDeliveryObjectMoveGestureActive,
+                       !isCanvasSelectionGestureActive,
+                       !isObjectMoveGestureActive,
+                       let pressedImagePoint = imagePoint(from: value.startLocation, in: size),
+                       beginDeliveryObjectMove(at: pressedImagePoint) {
+                        isDeliveryObjectMoveGestureActive = true
+                    }
+                    if isDeliveryObjectMoveGestureActive {
+                        updateDeliveryObjectMove(translation: value.translation, in: size)
+                        break
+                    }
                     let cloneModifiers = NSEvent.modifierFlags.intersection([.command, .control, .option, .shift])
                     if cloneModifiers == [.option],
                        !isCanvasCloneGestureActive,
@@ -1873,6 +1978,12 @@ struct ImageEditorView: View {
 
                 switch canvasInteractionTool {
                 case .move:
+                    if isDeliveryObjectMoveGestureActive {
+                        updateDeliveryObjectMove(translation: value.translation, in: size)
+                        finishDeliveryObjectMove()
+                        isDeliveryObjectMoveGestureActive = false
+                        break
+                    }
                     if isObjectMoveGestureActive {
                         updateObjectMove(translation: value.translation, in: size)
                         viewModel.finishMovingSelectedLayer()
@@ -2002,6 +2113,8 @@ struct ImageEditorView: View {
                 isObjectMoveGestureActive = false
                 isCanvasCloneGestureActive = false
                 isSelectedObjectMoveGestureActive = false
+                isDeliveryObjectMoveGestureActive = false
+                deliveryDrag = nil
                 isMovingPathAnchor = false
                 activeResizeHandle = nil
             }
@@ -3846,7 +3959,10 @@ struct ImageEditorView: View {
         if !hotspots.isEmpty {
             Canvas { context, _ in
                 for hotspot in hotspots {
-                    let rect = viewRect(from: hotspot.frame, in: size)
+                    let frame = deliveryDrag?.reference == .hotspot(hotspot.id)
+                        ? deliveryDrag?.previewFrame ?? hotspot.frame
+                        : hotspot.frame
+                    let rect = viewRect(from: frame, in: size)
                     let isSelected = viewModel.selectedHotspotID == hotspot.id
                     context.fill(
                         Path(rect),
@@ -3870,8 +3986,12 @@ struct ImageEditorView: View {
         if !slices.isEmpty {
             Canvas { context, _ in
                 for slice in slices {
-                    let rect = viewRect(from: slice.frame, in: size)
-                    let isSelected = viewModel.exportSettings.sliceID == slice.id
+                    let frame = deliveryDrag?.reference == .slice(slice.id)
+                        ? deliveryDrag?.previewFrame ?? slice.frame
+                        : slice.frame
+                    let rect = viewRect(from: frame, in: size)
+                    let isSelected = viewModel.selectedHotspotID == nil
+                        && viewModel.exportSettings.sliceID == slice.id
                     context.fill(
                         Path(rect),
                         with: .color(Color.cyan.opacity(isSelected ? 0.12 : 0.04))

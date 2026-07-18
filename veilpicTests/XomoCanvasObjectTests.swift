@@ -14,6 +14,22 @@ struct XomoCanvasObjectTests {
         #expect(imageDelta == CGSize(width: 150, height: 80))
     }
 
+    @Test func deliveryDragClampPreservesRectangleSizeAtCanvasEdges() {
+        let viewModel = makeViewModel()
+        let original = CGRect(x: 120, y: 90, width: 80, height: 50)
+
+        let clamped = viewModel.clampedDeliveryFrame(
+            original,
+            offsetBy: CGSize(width: 10_000, height: 10_000)
+        )
+
+        #expect(clamped.origin == CGPoint(
+            x: viewModel.document.canvasSize.width - original.width,
+            y: viewModel.document.canvasSize.height - original.height
+        ))
+        #expect(clamped.size == original.size)
+    }
+
     @Test func textToolCanSelectEditableTextInsideAComponent() throws {
         let viewModel = makeViewModel()
         viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))

@@ -225,7 +225,7 @@ extension ImageEditorViewModel {
         return updateSlice(id: sliceID, frame: frame) != nil
     }
 
-    private func clampedDeliveryFrame(_ frame: CGRect, offsetBy delta: CGSize) -> CGRect {
+    func clampedDeliveryFrame(_ frame: CGRect, offsetBy delta: CGSize) -> CGRect {
         let standardized = frame.standardized
         let canvasSize = document.canvasSize
         let width = min(standardized.width, canvasSize.width)
