@@ -433,6 +433,19 @@ struct ImageEditorView: View {
                 .accessibilityIdentifier("image-editor-tone-pressure-size")
             }
 
+            if viewModel.selectedTool == .smudge {
+                Toggle(
+                    L10n.text("imageEditor.option.fingerPainting"),
+                    isOn: $viewModel.smudgeFingerPaintingEnabled
+                )
+                .toggleStyle(.checkbox)
+                .focusable(false)
+                .fixedSize()
+                .help(L10n.text("imageEditor.option.fingerPainting.help"))
+                .accessibilityHint(L10n.text("imageEditor.option.fingerPainting.help"))
+                .accessibilityIdentifier("image-editor-smudge-finger-painting")
+            }
+
             if viewModel.selectedTool == .text {
                 fontFamilyPicker(width: 190)
                 Stepper(

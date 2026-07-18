@@ -692,6 +692,40 @@ struct ImageEditorToolSmokeTests {
         #expect(high.document.history.last?.title == L10n.text("imageEditor.history.smudge"))
     }
 
+    @Test func fingerPaintingCarriesForegroundColorAlongTheSmudgeStroke() throws {
+        let image = solidImage(color: NSColor(deviceWhite: 0.45, alpha: 1))
+        let ordinary = makeConfiguredRetouchViewModel(image: image)
+        let fingerPainting = makeConfiguredRetouchViewModel(image: image)
+        for viewModel in [ordinary, fingerPainting] {
+            viewModel.brushSize = 12
+            viewModel.hardness = 1
+            viewModel.opacity = 1
+            viewModel.foregroundColor = NSColor(deviceRed: 1, green: 0.05, blue: 0.05, alpha: 1)
+        }
+        fingerPainting.smudgeFingerPaintingEnabled = true
+        let points = [
+            CGPoint(x: 8, y: 14),
+            CGPoint(x: 16, y: 14),
+            CGPoint(x: 24, y: 14)
+        ]
+
+        ordinary.smudgeBrush(points: points)
+        fingerPainting.smudgeBrush(points: points)
+
+        let ordinaryColor = try #require(
+            ordinary.document.selectedLayer?.image.color(at: CGPoint(x: 23, y: 14))?
+                .usingColorSpace(.deviceRGB)
+        )
+        let paintedColor = try #require(
+            fingerPainting.document.selectedLayer?.image.color(at: CGPoint(x: 23, y: 14))?
+                .usingColorSpace(.deviceRGB)
+        )
+        #expect(abs(ordinaryColor.redComponent - ordinaryColor.greenComponent) < 0.02)
+        #expect(paintedColor.redComponent > paintedColor.greenComponent + 0.25)
+        #expect(paintedColor.redComponent > ordinaryColor.redComponent + 0.20)
+        #expect(fingerPainting.document.history.last?.title == L10n.text("imageEditor.history.smudge"))
+    }
+
     @Test func redEyeToolReducesExcessRedAtTheClickedPupil() throws {
         let image = NSImage.rendered(size: canvasSize) { rect in
             NSColor(deviceWhite: 0.35, alpha: 1).setFill()

@@ -1,7 +1,8 @@
 # Xomo MCP 与 CLI
 
-> 当前版本：v2.12.0-rc342
+> 当前版本：v2.12.0-rc343
 
+rc343 为 `xomo.paint.special action=smudge` 增加 `fingerPainting=true|false`；开启后使用当前前景色在每笔首点建立颜色种子，并通过与界面相同的方向性涂抹、硬度、强度、选区与单步 History 入口带出，省略或关闭时保持既有像素结果。
 rc342 将 `xomo.paint.special` 的点级压力扩展到 `dodge` 与 `burn`，并与 `sponge` 统一使用独立修饰工具动态：`pressureSize` 和 `pressureSensitivity` 不再修改普通画笔偏好；减淡/加深喷枪脉冲继承最后一点压力，界面沿途驻留脉冲则插值压力。省略压力或关闭控制时继续走原连续蒙版，旧客户端结果不变。
 rc341 让 `xomo.paint.special` 的 `sponge` 接受每个点可选的 `pressure=0...1`，并增加 `pressureSize=true|false` 与 `pressureSensitivity=0...100`；真实压力样本复用界面画笔的压力曲线改变海绵直径，省略压力或关闭控制时继续走原连续线段蒙版，旧客户端结果不变。
 rc340 为 `xomo.paint.special` 的 `sponge` 增加 `flow=0...1`，与界面 0%–100% 流量共用既有像素强度入口；`flow` 优先于同时出现的旧 `opacity`，仅传 `opacity` 的既有客户端保持兼容，离线 CLI 工具目录同步公开数值范围。

@@ -2282,6 +2282,27 @@ struct ImageEditorScopeTests {
         #expect(rangeSource.contains("image-editor-tone-range"))
     }
 
+    @Test func fingerPaintingOptionIsSmudgeOnlyNonFocusableAndAccessible() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let smudgeStart = try #require(
+            source.range(of: "if viewModel.selectedTool == .smudge {")
+        )
+        let textStart = try #require(
+            source[smudgeStart.upperBound...].range(of: "if viewModel.selectedTool == .text")
+        )
+        let smudgeSource = source[smudgeStart.lowerBound..<textStart.lowerBound]
+
+        #expect(smudgeSource.contains("isOn: $viewModel.smudgeFingerPaintingEnabled"))
+        #expect(smudgeSource.contains("imageEditor.option.fingerPainting"))
+        #expect(smudgeSource.contains("imageEditor.option.fingerPainting.help"))
+        #expect(smudgeSource.contains("image-editor-smudge-finger-painting"))
+        #expect(smudgeSource.contains(".toggleStyle(.checkbox)"))
+        #expect(smudgeSource.contains(".focusable(false)"))
+    }
+
     @Test func retouchPressureSizeOptionIsSharedByDodgeBurnAndSpongeWithoutFocus() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),

@@ -75,6 +75,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var toneBrushAirbrushEnabled = false
     @Published var spongeMode: ImageEditorSpongeMode = .saturate
     @Published var spongeVibranceEnabled = true
+    @Published var smudgeFingerPaintingEnabled = false
     @Published private(set) var customBrushPresets: [ImageEditorBrushPreset] = []
     @Published var customLayerStylePresets: [ImageEditorLayerStylePreset] = []
     @Published var favoriteLayerStylePresetIDs: [String] = []
@@ -4878,7 +4879,8 @@ final class ImageEditorViewModel: ObservableObject {
             points: rasterLocalPoints(points, layer: layer),
             width: rasterLocalBrushWidth(brushSize, layer: layer),
             opacity: opacity,
-            hardness: hardness
+            hardness: hardness,
+            fingerPaintingColor: smudgeFingerPaintingEnabled ? foregroundColor : nil
         ) else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return

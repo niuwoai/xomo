@@ -70,6 +70,8 @@ struct XomoMCPServerTests {
         #expect(airbrushPulses["maximum"] as? Int == 80)
         let spongeVibrance = try #require(specialPaintProperties["spongeVibrance"] as? [String: Any])
         #expect(spongeVibrance["type"] as? String == "boolean")
+        let fingerPainting = try #require(specialPaintProperties["fingerPainting"] as? [String: Any])
+        #expect(fingerPainting["type"] as? String == "boolean")
         let spongeFlow = try #require(specialPaintProperties["flow"] as? [String: Any])
         #expect(spongeFlow["type"] as? String == "number")
         #expect(spongeFlow["minimum"] as? Int == 0)

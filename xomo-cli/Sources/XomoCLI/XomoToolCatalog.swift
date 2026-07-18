@@ -74,6 +74,10 @@ enum XomoToolCatalog {
                         "healingMode": ["type": "string", "enum": ["source", "spot"]],
                         "spongeMode": ["type": "string", "enum": ["saturate", "desaturate"]],
                         "spongeVibrance": ["type": "boolean"],
+                        "fingerPainting": [
+                            "type": "boolean",
+                            "description": "Start each Smudge stroke with the current foreground color"
+                        ],
                         "pressureSize": [
                             "type": "boolean",
                             "description": "Use point pressure to control Dodge, Burn, or Sponge diameter"

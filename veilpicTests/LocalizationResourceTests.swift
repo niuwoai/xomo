@@ -273,6 +273,28 @@ struct LocalizationResourceTests {
         }
     }
 
+    @Test func fingerPaintingIsLocalizedInEverySupportedLanguage() throws {
+        let paths = try Self.repositoryPaths()
+        let expectedValues = [
+            "zh-Hans": ["手指绘画", "每次涂抹从当前前景色起笔，并沿拖动方向带出颜色"],
+            "en": ["Finger Painting", "Start each Smudge stroke with the current foreground color"],
+            "ja": ["フィンガーペイント", "現在の描画色で各ぼかしストロークを開始します"]
+        ]
+        let keys = [
+            "imageEditor.option.fingerPainting",
+            "imageEditor.option.fingerPainting.help"
+        ]
+
+        for (localizationID, expected) in expectedValues {
+            let strings = try Self.stringTable(
+                tableName: "Localizable",
+                localizationID: localizationID,
+                appDirectory: paths.appDirectory
+            )
+            #expect(keys.compactMap { strings[$0] } == expected)
+        }
+    }
+
     @Test func spongeFlowSummaryIsLocalizedInEverySupportedLanguage() throws {
         let paths = try Self.repositoryPaths()
         let expectedValues = [

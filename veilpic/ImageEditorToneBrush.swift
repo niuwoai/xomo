@@ -264,11 +264,29 @@ extension NSImage {
         points: [CGPoint],
         width: CGFloat,
         opacity: CGFloat,
-        hardness: CGFloat
+        hardness: CGFloat,
+        fingerPaintingColor: NSColor? = nil
     ) -> NSImage? {
         guard points.count > 1 else { return nil }
-        var output = self
         let clampedOpacity = max(0, min(1, opacity)) * 0.86
+        var output = self
+        if let fingerPaintingColor {
+            guard let firstPoint = points.first,
+                  let seededOutput = withBrushStroke(
+                    points: [firstPoint],
+                    color: fingerPaintingColor,
+                    settings: ImageEditorBrushStrokeSettings(
+                        diameter: width,
+                        hardness: hardness,
+                        opacity: clampedOpacity,
+                        flow: 1,
+                        spacing: 1
+                    ),
+                    erase: false
+                  )
+            else { return nil }
+            output = seededOutput
+        }
 
         for segmentIndex in 1..<points.count {
             let previous = points[segmentIndex - 1]

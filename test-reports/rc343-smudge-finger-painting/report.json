@@ -1,0 +1,49 @@
+{
+  "generated_at": "2026-07-19 07:10:04 +0800",
+  "total": 4,
+  "passed": 4,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "fingerPaintingOptionIsSmudgeOnlyNonFocusableAndAccessible",
+      "identifier": "veilpicTests/ImageEditorScopeTests/fingerPaintingOptionIsSmudgeOnlyNonFocusableAndAccessible",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 4.406,
+      "issues": [],
+      "log": "ImageEditorScopeTests.fingerPaintingOptionIsSmudgeOnlyNonFocusableAndAccessible.log"
+    },
+    {
+      "suite": "ImageEditorToolSmokeTests",
+      "method": "fingerPaintingCarriesForegroundColorAlongTheSmudgeStroke",
+      "identifier": "veilpicTests/ImageEditorToolSmokeTests/fingerPaintingCarriesForegroundColorAlongTheSmudgeStroke",
+      "file": "ImageEditorToolSmokeTests.swift",
+      "passed": true,
+      "duration": 3.077,
+      "issues": [],
+      "log": "ImageEditorToolSmokeTests.fingerPaintingCarriesForegroundColorAlongTheSmudgeStroke.log"
+    },
+    {
+      "suite": "LocalizationResourceTests",
+      "method": "fingerPaintingIsLocalizedInEverySupportedLanguage",
+      "identifier": "veilpicTests/LocalizationResourceTests/fingerPaintingIsLocalizedInEverySupportedLanguage",
+      "file": "LocalizationResourceTests.swift",
+      "passed": true,
+      "duration": 3.047,
+      "issues": [],
+      "log": "LocalizationResourceTests.fingerPaintingIsLocalizedInEverySupportedLanguage.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "fingerPaintingAutomationConfiguresSmudgeAndAdvertisesTheOption",
+      "identifier": "veilpicTests/XomoAutomationTests/fingerPaintingAutomationConfiguresSmudgeAndAdvertisesTheOption",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 3.103,
+      "issues": [],
+      "log": "XomoAutomationTests.fingerPaintingAutomationConfiguresSmudgeAndAdvertisesTheOption.log"
+    }
+  ]
+}
