@@ -145,6 +145,46 @@ struct ImageEditorToolSmokeTests {
         #expect(desaturate.document.history.last?.title == L10n.text("imageEditor.history.sponge"))
     }
 
+    @Test func toneBrushHardnessControlsDodgeAndBurnEdges() throws {
+        let image = solidImage(color: NSColor(deviceWhite: 0.45, alpha: 1))
+        let softDodge = makeEditableViewModel(image: image)
+        let hardDodge = makeEditableViewModel(image: image)
+        let softBurn = makeEditableViewModel(image: image)
+        let hardBurn = makeEditableViewModel(image: image)
+        for viewModel in [softDodge, hardDodge, softBurn, hardBurn] {
+            viewModel.brushSize = 12
+            viewModel.opacity = 1
+        }
+        softDodge.hardness = 0
+        softBurn.hardness = 0
+        hardDodge.hardness = 1
+        hardBurn.hardness = 1
+        let points = [CGPoint(x: 10, y: 14), CGPoint(x: 30, y: 14)]
+
+        softDodge.toneBrush(points: points, burn: false)
+        hardDodge.toneBrush(points: points, burn: false)
+        softBurn.toneBrush(points: points, burn: true)
+        hardBurn.toneBrush(points: points, burn: true)
+
+        let edgePoint = CGPoint(x: 20, y: 18)
+        let softDodgeEdge = try #require(
+            softDodge.document.selectedLayer?.image.color(at: edgePoint)?.usingColorSpace(.deviceRGB)
+        )
+        let hardDodgeEdge = try #require(
+            hardDodge.document.selectedLayer?.image.color(at: edgePoint)?.usingColorSpace(.deviceRGB)
+        )
+        let softBurnEdge = try #require(
+            softBurn.document.selectedLayer?.image.color(at: edgePoint)?.usingColorSpace(.deviceRGB)
+        )
+        let hardBurnEdge = try #require(
+            hardBurn.document.selectedLayer?.image.color(at: edgePoint)?.usingColorSpace(.deviceRGB)
+        )
+        #expect(hardDodgeEdge.redComponent > softDodgeEdge.redComponent + 0.15)
+        #expect(hardBurnEdge.redComponent < softBurnEdge.redComponent - 0.12)
+        #expect(hardDodge.document.history.last?.title == L10n.text("imageEditor.history.dodge"))
+        #expect(hardBurn.document.history.last?.title == L10n.text("imageEditor.history.burn"))
+    }
+
     @Test func redEyeToolReducesExcessRedAtTheClickedPupil() throws {
         let image = NSImage.rendered(size: canvasSize) { rect in
             NSColor(deviceWhite: 0.35, alpha: 1).setFill()

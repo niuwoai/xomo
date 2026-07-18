@@ -25,25 +25,24 @@ enum ImageEditorSpongeMode: String, CaseIterable, Identifiable {
 }
 
 extension NSImage {
-    func withToneBrush(points: [CGPoint], width: CGFloat, opacity: CGFloat, burn: Bool) -> NSImage? {
-        guard let first = points.first else { return nil }
-        let path = NSBezierPath()
-        path.lineJoinStyle = .round
-        path.lineCapStyle = .round
-        path.lineWidth = max(1, width)
-        path.move(to: first)
-        for point in points.dropFirst() {
-            path.line(to: point)
-        }
-
-        guard let strokeMask = NSImage.rendered(size: size, actions: { _ in
-            NSGraphicsContext.current?.withImageEditorTopLeftCoordinates(height: size.height) {
-                NSColor.white.setStroke()
-                path.stroke()
-            }
-        }) else { return nil }
-
-        return toneAdjusted(mask: strokeMask, opacity: opacity, burn: burn)
+    func withToneBrush(
+        points: [CGPoint],
+        width: CGFloat,
+        opacity: CGFloat,
+        hardness: CGFloat,
+        burn: Bool
+    ) -> NSImage? {
+        let pixelWidth = max(1, Int(size.width.rounded()))
+        let pixelHeight = max(1, Int(size.height.rounded()))
+        let maskAlpha = ImageEditorHealingBrushKernel.strokeAlpha(
+            width: pixelWidth,
+            height: pixelHeight,
+            points: points,
+            diameter: width,
+            hardness: hardness
+        )
+        guard maskAlpha.count == pixelWidth * pixelHeight else { return nil }
+        return toneAdjusted(maskAlpha: maskAlpha, opacity: opacity, burn: burn)
     }
 
     func withSpongeBrush(
@@ -200,13 +199,13 @@ extension NSImage {
         })
     }
 
-    private func toneAdjusted(mask: NSImage, opacity: CGFloat, burn: Bool) -> NSImage? {
+    private func toneAdjusted(maskAlpha: [UInt8], opacity: CGFloat, burn: Bool) -> NSImage? {
         let width = max(1, Int(size.width.rounded()))
         let height = max(1, Int(size.height.rounded()))
         let bytesPerPixel = 4
         let bytesPerRow = width * bytesPerPixel
         guard var sourcePixels = rgbaPixels(width: width, height: height, bytesPerRow: bytesPerRow),
-              let maskPixels = mask.rgbaPixels(width: width, height: height, bytesPerRow: bytesPerRow)
+              maskAlpha.count == width * height
         else {
             return nil
         }
@@ -216,8 +215,9 @@ extension NSImage {
         for y in 0..<height {
             for x in 0..<width {
                 let offset = y * bytesPerRow + x * bytesPerPixel
-                let maskAlpha = CGFloat(maskPixels[offset + 3]) / 255
-                let strength = clampedOpacity * maskAlpha * effectScale
+                let maskIndex = y * width + x
+                let maskStrength = CGFloat(maskAlpha[maskIndex]) / 255
+                let strength = clampedOpacity * maskStrength * effectScale
                 guard strength > 0 else { continue }
 
                 for channel in 0..<3 {
