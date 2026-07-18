@@ -4554,6 +4554,15 @@ struct ImageEditorView: View {
                     .allowsHitTesting(false)
             }
 
+            if let mode = transformHUDMode {
+                transformHUDOverlay(
+                    frame: layerFrame,
+                    viewRect: rect,
+                    mode: mode,
+                    canvasSize: size
+                )
+            }
+
             if canvasInteractionTool == .move,
                viewModel.document.areTransformControlsVisible,
                viewModel.canResizeSelectedLayer {
@@ -4568,6 +4577,44 @@ struct ImageEditorView: View {
                 rotateHandleView(in: rect, canvasSize: size)
             }
         }
+    }
+
+    private var transformHUDMode: ImageEditorTransformHUDMode? {
+        if viewModel.isResizingSelectedLayer {
+            return .resize
+        }
+        if viewModel.movingObjectPreviewFrame != nil {
+            return .move
+        }
+        return nil
+    }
+
+    private func transformHUDOverlay(
+        frame: CGRect,
+        viewRect: CGRect,
+        mode: ImageEditorTransformHUDMode,
+        canvasSize: CGSize
+    ) -> some View {
+        let text = ImageEditorTransformHUD.displayText(frame: frame, mode: mode)
+        let badgeSize = ImageEditorTransformHUD.badgeSize(for: text)
+        let center = ImageEditorTransformHUD.badgeCenter(
+            selectionRect: viewRect,
+            viewportSize: canvasSize,
+            badgeSize: badgeSize
+        )
+        return Text(text)
+            .font(.system(size: 10, weight: .medium, design: .monospaced))
+            .foregroundStyle(Color.white.opacity(0.94))
+            .lineLimit(1)
+            .frame(width: badgeSize.width, height: badgeSize.height)
+            .background(Color.black.opacity(0.78), in: RoundedRectangle(cornerRadius: 5))
+            .overlay {
+                RoundedRectangle(cornerRadius: 5)
+                    .stroke(Color.white.opacity(0.16), lineWidth: 0.5)
+            }
+            .position(center)
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
     }
 
     @ViewBuilder

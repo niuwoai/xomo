@@ -10,6 +10,10 @@ import Foundation
 
 @MainActor
 extension ImageEditorViewModel {
+    var isResizingSelectedLayer: Bool {
+        !resizingLayerIDs.isEmpty
+    }
+
     var selectedLayerTransformFrame: CGRect? {
         guard !isEditingLayerMask else { return nil }
         if let selectedXomoObjectFrame {
