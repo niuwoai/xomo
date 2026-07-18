@@ -159,6 +159,7 @@ enum ImageEditorTool: String, CaseIterable, Identifiable {
     case ellipse
     case pen
     case pathSelection
+    case directSelection
     case hand
     case zoom
 
@@ -228,6 +229,8 @@ enum ImageEditorTool: String, CaseIterable, Identifiable {
             "point.topleft.down.curvedto.point.bottomright.up"
         case .pathSelection:
             "cursorarrow"
+        case .directSelection:
+            "arrow.up.right"
         case .hand:
             "hand.draw"
         case .zoom:
@@ -260,7 +263,7 @@ enum ImageEditorTool: String, CaseIterable, Identifiable {
         ImageEditorToolShortcutGroup(key: "t", tools: [.text]),
         ImageEditorToolShortcutGroup(key: "u", tools: [.rectangle, .ellipse]),
         ImageEditorToolShortcutGroup(key: "p", tools: [.pen]),
-        ImageEditorToolShortcutGroup(key: "a", tools: [.pathSelection]),
+        ImageEditorToolShortcutGroup(key: "a", tools: [.pathSelection, .directSelection]),
         ImageEditorToolShortcutGroup(key: "h", tools: [.hand]),
         ImageEditorToolShortcutGroup(key: "z", tools: [.zoom])
     ]

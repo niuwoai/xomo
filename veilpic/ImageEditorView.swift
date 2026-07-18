@@ -2043,6 +2043,12 @@ struct ImageEditorView: View {
                     if isObjectMoveGestureActive {
                         updateObjectMove(translation: value.translation, in: size)
                     }
+                case .directSelection:
+                    if !isMovingPathAnchor {
+                        isMovingPathAnchor = viewModel.beginDirectPathAnchorMove(at: pointerImagePoint)
+                    } else {
+                        viewModel.moveSelectedPathAnchor(to: pointerImagePoint)
+                    }
                 case .lasso:
                     if dragPoints.isEmpty {
                         if let pointerImagePoint {
@@ -2186,6 +2192,10 @@ struct ImageEditorView: View {
                     if isObjectMoveGestureActive {
                         updateObjectMove(translation: value.translation, in: size)
                         viewModel.finishMovingSelectedLayer()
+                    }
+                case .directSelection:
+                    if isMovingPathAnchor {
+                        viewModel.finishMovingPathAnchor()
                     }
                 case .crop:
                     if let dragStart, let endImagePoint {
@@ -7957,6 +7967,8 @@ enum ImageEditorCanvasCursor {
         case .pen:
             .vectorPen
         case .pathSelection:
+            .systemArrow
+        case .directSelection:
             .systemArrow
         case .zoom:
             .zoomMagnifier

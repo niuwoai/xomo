@@ -35,6 +35,41 @@ extension ImageEditorViewModel {
         return false
     }
 
+    /// Starts an Illustrator/Photoshop-style direct-selection drag on the
+    /// nearest visible path anchor or control handle, switching to its path
+    /// layer before the existing anchor transaction begins.
+    @discardableResult
+    func beginDirectPathAnchorMove(at point: CGPoint?) -> Bool {
+        guard let point, point.x.isFinite, point.y.isFinite else { return false }
+        for layer in document.layers.reversed() {
+            guard !layer.isGroup,
+                  document.isEffectivelyVisible(layer),
+                  !document.isEffectivelyPixelsLocked(layer),
+                  !document.isEffectivelyPositionLocked(layer),
+                  let content = layer.shapeContent,
+                  content.kind == .path
+            else { continue }
+
+            let nearest = pathControlCandidates(for: content, layer: layer)
+                .map { candidate in
+                    (candidate: candidate, distance: distance(from: point, to: candidate.point))
+                }
+                .min { lhs, rhs in lhs.distance < rhs.distance }
+            guard let nearest, nearest.distance <= pathAnchorHitDistance else { continue }
+
+            selectLayer(layer.id)
+            selectedPathSubpathIndex = nearest.candidate.subpathIndex
+            selectedPathAnchorIndex = nearest.candidate.index
+            selectedPathControlRole = nearest.candidate.role
+            statusText = L10n.format(
+                "imageEditor.status.pathAnchorSelected",
+                nearest.candidate.index + 1
+            )
+            return beginMovingPathAnchor(at: point)
+        }
+        return false
+    }
+
     private func pathLayerContains(
         point: CGPoint,
         content: ImageEditorShapeContent,
@@ -211,7 +246,12 @@ extension ImageEditorViewModel {
     }
 
     func finishMovingPathAnchor() {
-        guard movingPathAnchorDidChange else { return }
+        guard movingPathAnchorDidChange else {
+            movingPathAnchorDidChange = false
+            _ = discardLastUndoSnapshot()
+            updateStatus()
+            return
+        }
         movingPathAnchorDidChange = false
         appendHistory(L10n.text("imageEditor.history.pathAnchorMove"))
         statusText = L10n.text("imageEditor.status.pathAnchorMoved")

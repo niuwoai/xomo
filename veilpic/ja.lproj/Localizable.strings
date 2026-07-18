@@ -569,6 +569,7 @@
 "imageEditor.tool.ellipse" = "楕円";
 "imageEditor.tool.pen" = "ペン";
 "imageEditor.tool.pathSelection" = "パス選択";
+"imageEditor.tool.directSelection" = "直接選択";
 "imageEditor.tool.hand" = "手のひら";
 "imageEditor.tool.zoom" = "ズーム";
 "imageEditor.tool.move.help" = "移動：ドラッグして現在のレイヤーまたは選択範囲を移動します。";
@@ -598,6 +599,7 @@
 "imageEditor.tool.ellipse.help" = "楕円：ドラッグして楕円シェイプレイヤーを作成します。";
 "imageEditor.tool.pen.help" = "ペン：クリックしてアンカーポイントを追加し、編集可能なパスを描きます。";
 "imageEditor.tool.pathSelection.help" = "パス選択：パスをクリックして全体を選択し、ドラッグして移動します。";
+"imageEditor.tool.directSelection.help" = "直接選択：アンカーまたはハンドルをクリックし、ドラッグしてパスを編集します。";
 "imageEditor.tool.hand.help" = "手のひら：ドラッグしてキャンバス表示を移動します。";
 "imageEditor.tool.zoom.help" = "ズーム：クリックで拡大、Optionを押しながらクリックで縮小します。";
 "imageEditor.adjustment.brightness" = "明るさ";

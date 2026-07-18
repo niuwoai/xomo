@@ -492,6 +492,35 @@ struct ImageEditorVectorLayerTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerTranslate"))
     }
 
+    @Test func directSelectionSwitchesToPathAnchorAndMovesOneNode() async throws {
+        let canvasSize = NSSize(width: 140, height: 100)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+
+        viewModel.selectTool(.pen)
+        viewModel.addPenPoint(CGPoint(x: 20, y: 20))
+        viewModel.addPenPoint(CGPoint(x: 104, y: 28))
+        viewModel.addPenPoint(CGPoint(x: 70, y: 78))
+        viewModel.finishPenPath(closed: true)
+        let pathID = try #require(viewModel.document.selectedLayerID)
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.beginDirectPathAnchorMove(at: CGPoint(x: 20, y: 20)))
+        viewModel.finishMovingPathAnchor()
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.document.selectedLayerID == pathID)
+        #expect(viewModel.selectedPathAnchorIndex == 0)
+
+        #expect(viewModel.beginDirectPathAnchorMove(at: CGPoint(x: 20, y: 20)))
+        viewModel.moveSelectedPathAnchor(to: CGPoint(x: 32, y: 36))
+        viewModel.finishMovingPathAnchor()
+
+        let movedPoint = try #require(viewModel.selectedPathAnchorCanvasPoint)
+        #expect(movedPoint == CGPoint(x: 32, y: 36))
+        #expect(viewModel.document.selectedLayerID == pathID)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.pathAnchorMove"))
+    }
+
     @Test func imageEditorCreatesEditablePathLayerFromCurrentSelection() async throws {
         let canvasSize = NSSize(width: 140, height: 100)
         let image = testBitmapImage(size: canvasSize, background: .black)

@@ -569,6 +569,7 @@
 "imageEditor.tool.ellipse" = "椭圆";
 "imageEditor.tool.pen" = "钢笔";
 "imageEditor.tool.pathSelection" = "路径选择";
+"imageEditor.tool.directSelection" = "直接选择";
 "imageEditor.tool.hand" = "抓手";
 "imageEditor.tool.zoom" = "缩放";
 "imageEditor.tool.move.help" = "移动：拖拽以移动当前图层或选区。";
@@ -598,6 +599,7 @@
 "imageEditor.tool.ellipse.help" = "椭圆：拖拽创建椭圆形状图层。";
 "imageEditor.tool.pen.help" = "钢笔：点击添加锚点，绘制可编辑路径。";
 "imageEditor.tool.pathSelection.help" = "路径选择：点击路径选中整个路径，拖拽移动路径。";
+"imageEditor.tool.directSelection.help" = "直接选择：点击锚点或控制柄，拖拽编辑路径节点。";
 "imageEditor.tool.hand.help" = "抓手：拖拽平移画布视图。";
 "imageEditor.tool.zoom.help" = "缩放：点击放大画布，按住 Option 点击缩小。";
 "imageEditor.adjustment.brightness" = "亮度";

@@ -1,0 +1,43 @@
+{
+  "version": "2.12.0-rc288",
+  "scope": "photoshop-direct-selection-focused",
+  "passed": true,
+  "checks": [
+    {
+      "name": "directSelectionSwitchesToPathAnchorAndMovesOneNode",
+      "result": "passed"
+    },
+    {
+      "name": "directSelectionUsesTheFamiliarSystemArrowAndSharesTheAGroup",
+      "result": "passed"
+    },
+    {
+      "name": "pathSelectionUsesTheFamiliarSystemArrowAndPhotoshopShortcut",
+      "result": "passed"
+    },
+    {
+      "name": "componentSidebarWiresMoveSemanticsIntoCanvasCursorAndGestures",
+      "result": "passed"
+    },
+    {
+      "name": "supportedLocalizationTablesKeepMatchingKeys",
+      "result": "passed"
+    },
+    {
+      "name": "releaseContract",
+      "result": "passed",
+      "runs": 3,
+      "assertions": 7
+    },
+    {
+      "name": "xcodebuildFocusedTestBuild",
+      "result": "passed",
+      "deploymentTarget": "macOS 13.0"
+    }
+  ],
+  "notes": [
+    "直接选择工具按锚点/控制柄实际位置命中，并自动切换到所属路径图层。",
+    "拖拽只修改一个路径节点或控制柄；没有实际移动的点击会丢弃临时 Undo 快照。",
+    "矢量图层套件仍有预先存在的颜色/路径渲染断言失败，侧栏套件仍有主题 Token 刷新断言失败，未计入本专项通过项。"
+  ]
+}
