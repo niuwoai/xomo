@@ -74,6 +74,14 @@ struct XomoMCPServerTests {
         #expect(spongeFlow["type"] as? String == "number")
         #expect(spongeFlow["minimum"] as? Int == 0)
         #expect(spongeFlow["maximum"] as? Int == 1)
+        let spongePressureSize = try #require(specialPaintProperties["pressureSize"] as? [String: Any])
+        #expect(spongePressureSize["type"] as? String == "boolean")
+        let spongePressureSensitivity = try #require(
+            specialPaintProperties["pressureSensitivity"] as? [String: Any]
+        )
+        #expect(spongePressureSensitivity["type"] as? String == "number")
+        #expect(spongePressureSensitivity["minimum"] as? Int == 0)
+        #expect(spongePressureSensitivity["maximum"] as? Int == 100)
         #expect(tools.contains { $0["name"] as? String == "xomo.view.pan" })
         #expect(tools.contains { $0["name"] as? String == "xomo.selection.quick_mask" })
         #expect(tools.contains { $0["name"] as? String == "xomo.psd.inspect" })

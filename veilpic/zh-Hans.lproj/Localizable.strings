@@ -528,6 +528,7 @@
 "imageEditor.option.pressureFlow" = "控制流量";
 "imageEditor.option.pressureSensitivity" = "灵敏度";
 "imageEditor.option.pressureHelp" = "使用数位笔压力控制画笔大小和流量";
+"imageEditor.option.spongePressureSize.help" = "使用数位笔压力控制海绵画笔大小";
 "imageEditor.option.patchMode" = "修补模式";
 "imageEditor.patchMode.source" = "源";
 "imageEditor.patchMode.destination" = "目标";

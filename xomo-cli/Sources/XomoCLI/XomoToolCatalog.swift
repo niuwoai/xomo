@@ -74,6 +74,8 @@ enum XomoToolCatalog {
                         "healingMode": ["type": "string", "enum": ["source", "spot"]],
                         "spongeMode": ["type": "string", "enum": ["saturate", "desaturate"]],
                         "spongeVibrance": ["type": "boolean"],
+                        "pressureSize": ["type": "boolean"],
+                        "pressureSensitivity": ["type": "number", "minimum": 0, "maximum": 100],
                         "aligned": ["type": "boolean"],
                         "sampleSource": ["type": "string", "enum": ["currentLayer", "currentAndBelow", "allVisible"]]
                     ],
@@ -176,7 +178,7 @@ enum XomoToolCatalog {
         ("xomo.brush.preset", "List, create, apply, or delete persisted brush presets."),
         ("xomo.paint.stroke", "Paint a pressure-aware brush or eraser stroke with size, hardness, opacity, flow, spacing, and pressure-curve controls."),
         ("xomo.paint.gradient", "Paint a gradient between canvas points."),
-        ("xomo.paint.special", "Use clone or healing with explicit source and sampling options, source/destination patching, exposure-, tonal-range-, tone-protection-, and gradual-airbrush-aware dodge and burn, flow- and vibrance-aware sponge, strength-aware blur, sharpen, and smudge, red-eye, and paint-bucket tools."),
+        ("xomo.paint.special", "Use clone or healing with explicit source and sampling options, source/destination patching, exposure-, tonal-range-, tone-protection-, and gradual-airbrush-aware dodge and burn, pressure-size-, flow-, and vibrance-aware sponge, strength-aware blur, sharpen, and smudge, red-eye, and paint-bucket tools."),
         ("xomo.shape.create", "Create an editable rectangle or ellipse with solid or multi-stop linear-gradient fill, independent stroke, corner radii, and superellipse smoothing."),
         ("xomo.shape.get", "Inspect fill kind, editable multi-stop linear gradient, independent stroke, corner radii, and smoothing on the selected shape."),
         ("xomo.shape.update", "Update only the specified fill kind, multi-stop linear gradient, stroke, corner radii, and smoothing properties."),

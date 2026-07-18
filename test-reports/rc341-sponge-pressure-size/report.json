@@ -1,0 +1,49 @@
+{
+  "generated_at": "2026-07-19 06:31:02 +0800",
+  "total": 4,
+  "passed": 4,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "spongePressureSizeOptionIsNonFocusableAndAccessible",
+      "identifier": "veilpicTests/ImageEditorScopeTests/spongePressureSizeOptionIsNonFocusableAndAccessible",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 4.524,
+      "issues": [],
+      "log": "ImageEditorScopeTests.spongePressureSizeOptionIsNonFocusableAndAccessible.log"
+    },
+    {
+      "suite": "ImageEditorToolSmokeTests",
+      "method": "spongePressureControlsBrushDiameterWithoutChangingMouseStrokes",
+      "identifier": "veilpicTests/ImageEditorToolSmokeTests/spongePressureControlsBrushDiameterWithoutChangingMouseStrokes",
+      "file": "ImageEditorToolSmokeTests.swift",
+      "passed": true,
+      "duration": 3.055,
+      "issues": [],
+      "log": "ImageEditorToolSmokeTests.spongePressureControlsBrushDiameterWithoutChangingMouseStrokes.log"
+    },
+    {
+      "suite": "LocalizationResourceTests",
+      "method": "spongePressureSizeHelpIsLocalizedInEverySupportedLanguage",
+      "identifier": "veilpicTests/LocalizationResourceTests/spongePressureSizeHelpIsLocalizedInEverySupportedLanguage",
+      "file": "LocalizationResourceTests.swift",
+      "passed": true,
+      "duration": 3.068,
+      "issues": [],
+      "log": "LocalizationResourceTests.spongePressureSizeHelpIsLocalizedInEverySupportedLanguage.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "spongePressureAutomationAcceptsSamplesAndAdvertisesControls",
+      "identifier": "veilpicTests/XomoAutomationTests/spongePressureAutomationAcceptsSamplesAndAdvertisesControls",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 3.07,
+      "issues": [],
+      "log": "XomoAutomationTests.spongePressureAutomationAcceptsSamplesAndAdvertisesControls.log"
+    }
+  ]
+}

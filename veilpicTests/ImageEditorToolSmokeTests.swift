@@ -231,6 +231,42 @@ struct ImageEditorToolSmokeTests {
         #expect(high.document.history.last?.title == L10n.text("imageEditor.history.sponge"))
     }
 
+    @Test func spongePressureControlsBrushDiameterWithoutChangingMouseStrokes() throws {
+        let color = NSColor(deviceRed: 0.62, green: 0.48, blue: 0.32, alpha: 1)
+        let lightPressure = makeEditableViewModel(image: solidImage(color: color))
+        let fullPressure = makeEditableViewModel(image: solidImage(color: color))
+        for viewModel in [lightPressure, fullPressure] {
+            viewModel.spongeMode = .saturate
+            viewModel.spongeVibranceEnabled = false
+            viewModel.brushSize = 20
+            viewModel.hardness = 1
+            viewModel.opacity = 1
+            viewModel.setBrushPressureControlsSize(true)
+            viewModel.setBrushPressureSensitivity(50)
+        }
+        let center = CGPoint(x: 20, y: 14)
+        let edge = CGPoint(x: 27, y: 14)
+
+        lightPressure.spongeBrush(samples: [
+            ImageEditorBrushStrokeSample(point: center, pressure: 0.1)
+        ])
+        fullPressure.spongeBrush(samples: [
+            ImageEditorBrushStrokeSample(point: center, pressure: 1)
+        ])
+
+        let lightEdge = try #require(
+            lightPressure.document.selectedLayer?.image.color(at: edge)?.usingColorSpace(.deviceRGB)
+        )
+        let fullEdge = try #require(
+            fullPressure.document.selectedLayer?.image.color(at: edge)?.usingColorSpace(.deviceRGB)
+        )
+        let lightChroma = lightEdge.redComponent - lightEdge.blueComponent
+        let fullChroma = fullEdge.redComponent - fullEdge.blueComponent
+        #expect(fullChroma > lightChroma + 0.12)
+        #expect(lightPressure.document.history.last?.title == L10n.text("imageEditor.history.sponge"))
+        #expect(fullPressure.document.history.last?.title == L10n.text("imageEditor.history.sponge"))
+    }
+
     @Test func toneBrushHardnessControlsDodgeAndBurnEdges() throws {
         let image = solidImage(color: NSColor(deviceWhite: 0.45, alpha: 1))
         let softDodge = makeEditableViewModel(image: image)

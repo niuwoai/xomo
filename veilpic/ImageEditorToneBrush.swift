@@ -113,15 +113,63 @@ extension NSImage {
         mode: ImageEditorSpongeMode,
         vibrance: Bool = true
     ) -> NSImage? {
+        withSpongeBrush(
+            samples: points.map { ImageEditorBrushStrokeSample(point: $0) },
+            width: width,
+            opacity: opacity,
+            hardness: hardness,
+            mode: mode,
+            vibrance: vibrance,
+            pressureControlsSize: false,
+            pressureSensitivity: 0.5
+        )
+    }
+
+    func withSpongeBrush(
+        samples: [ImageEditorBrushStrokeSample],
+        width: CGFloat,
+        opacity: CGFloat,
+        hardness: CGFloat,
+        mode: ImageEditorSpongeMode,
+        vibrance: Bool = true,
+        pressureControlsSize: Bool,
+        pressureSensitivity: CGFloat
+    ) -> NSImage? {
         let pixelWidth = max(1, Int(size.width.rounded()))
         let pixelHeight = max(1, Int(size.height.rounded()))
-        let maskAlpha = ImageEditorHealingBrushKernel.strokeAlpha(
-            width: pixelWidth,
-            height: pixelHeight,
-            points: points,
-            diameter: width,
-            hardness: hardness
-        )
+        let hasPressure = samples.contains { $0.pressure != nil }
+        let maskAlpha: [UInt8]
+        if pressureControlsSize, hasPressure {
+            let settings = ImageEditorBrushStrokeSettings(
+                diameter: width,
+                hardness: hardness,
+                opacity: 1,
+                flow: 1,
+                spacing: 0.1,
+                pressureControlsSize: true,
+                pressureControlsFlow: false,
+                pressureSensitivity: pressureSensitivity
+            )
+            let stamps = ImageEditorBrushStrokeKernel.stampSamples(
+                samples: samples,
+                diameter: settings.diameter,
+                spacing: settings.spacing
+            )
+            maskAlpha = ImageEditorBrushStrokeKernel.coverage(
+                width: pixelWidth,
+                height: pixelHeight,
+                stamps: stamps,
+                settings: settings
+            )
+        } else {
+            maskAlpha = ImageEditorHealingBrushKernel.strokeAlpha(
+                width: pixelWidth,
+                height: pixelHeight,
+                points: samples.map(\.point),
+                diameter: width,
+                hardness: hardness
+            )
+        }
         guard maskAlpha.count == pixelWidth * pixelHeight else { return nil }
         return saturationAdjusted(
             maskAlpha: maskAlpha,

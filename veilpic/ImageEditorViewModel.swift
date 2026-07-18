@@ -4718,7 +4718,11 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func spongeBrush(points: [CGPoint]) {
-        guard !points.isEmpty else { return }
+        spongeBrush(samples: points.map { ImageEditorBrushStrokeSample(point: $0) })
+    }
+
+    func spongeBrush(samples: [ImageEditorBrushStrokeSample]) {
+        guard !samples.isEmpty else { return }
         guard !isEditingLayerMask else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
@@ -4728,14 +4732,16 @@ final class ImageEditorViewModel: ObservableObject {
             return
         }
         let sourceImage = layer.image.normalizedBitmapImage()
-        let localPoints = rasterLocalPoints(points, layer: layer)
+        let localSamples = rasterLocalSamples(samples, layer: layer)
         guard let output = sourceImage.withSpongeBrush(
-            points: localPoints,
+            samples: localSamples,
             width: rasterLocalBrushWidth(brushSize, layer: layer),
             opacity: opacity,
             hardness: hardness,
             mode: spongeMode,
-            vibrance: spongeVibranceEnabled
+            vibrance: spongeVibranceEnabled,
+            pressureControlsSize: brushPressureControlsSize,
+            pressureSensitivity: brushPressureSensitivity / 100
         ) else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return

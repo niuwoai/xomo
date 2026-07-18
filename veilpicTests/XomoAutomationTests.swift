@@ -2042,6 +2042,47 @@ struct XomoAutomationTests {
         #expect(properties["spongeVibrance"]?.objectValue?["type"] == .string("boolean"))
     }
 
+    @Test func spongePressureAutomationAcceptsSamplesAndAdvertisesControls() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("sponge"),
+                "pressureSize": .bool(true),
+                "pressureSensitivity": .number(75),
+                "points": .array([
+                    .object([
+                        "x": .number(32),
+                        "y": .number(32),
+                        "pressure": .number(0.2)
+                    ])
+                ])
+            ]
+        ))
+
+        #expect(response.ok)
+        #expect(viewModel.brushPressureControlsSize)
+        #expect(viewModel.brushPressureSensitivity == 75)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.sponge"))
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        guard case .array(let tools) = toolsResponse.result else {
+            Issue.record("Expected tool array")
+            return
+        }
+        let specialPaint = try #require(tools.compactMap(\.objectValue).first {
+            $0["name"] == .string("xomo.paint.special")
+        })
+        let schema = try #require(specialPaint["inputSchema"]?.objectValue)
+        let properties = try #require(schema["properties"]?.objectValue)
+        #expect(properties["pressureSize"]?.objectValue?["type"] == .string("boolean"))
+        #expect(properties["pressureSensitivity"]?.objectValue?["type"] == .string("number"))
+    }
+
     @Test func spongeFlowAutomationPrefersFlowAndKeepsLegacyOpacity() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

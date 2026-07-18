@@ -2660,6 +2660,12 @@ final class XomoAutomationRegistry {
         if action == "sponge", let vibrance = arguments["spongeVibrance"]?.boolValue {
             viewModel.spongeVibranceEnabled = vibrance
         }
+        if action == "sponge", let pressureSize = arguments["pressureSize"]?.boolValue {
+            viewModel.setBrushPressureControlsSize(pressureSize)
+        }
+        if action == "sponge", let pressureSensitivity = arguments["pressureSensitivity"]?.doubleValue {
+            viewModel.setBrushPressureSensitivity(CGFloat(pressureSensitivity))
+        }
         if action == "paintBucket" {
             viewModel.paintBucketFill(at: try requiredPoint(arguments))
             return
@@ -2676,7 +2682,10 @@ final class XomoAutomationRegistry {
             viewModel.setHealingSource(at: try requiredPoint(arguments))
             return
         }
-        let points = try requiredPoints("points", in: arguments)
+        let samples = action == "sponge"
+            ? try requiredBrushSamples("points", in: arguments)
+            : try requiredPoints("points", in: arguments).map { ImageEditorBrushStrokeSample(point: $0) }
+        let points = samples.map(\.point)
         let airbrushPulsePoints: [CGPoint]
         if viewModel.toneBrushAirbrushEnabled, let lastPoint = points.last {
             airbrushPulsePoints = Array(repeating: lastPoint, count: airbrushPulseCount)
@@ -2697,7 +2706,7 @@ final class XomoAutomationRegistry {
                 burn: true,
                 airbrushPulsePoints: airbrushPulsePoints
             )
-        case "sponge": viewModel.spongeBrush(points: points)
+        case "sponge": viewModel.spongeBrush(samples: samples)
         case "blur": viewModel.blurBrush(points: points)
         case "sharpen": viewModel.sharpenBrush(points: points)
         case "smudge": viewModel.smudgeBrush(points: points)
@@ -3737,6 +3746,8 @@ private extension XomoAutomationRegistry {
             "healingMode": XomoAutomationSchema.string(description: "Healing mode", values: ["source", "spot"]),
             "spongeMode": XomoAutomationSchema.string(description: "Sponge mode", values: ["saturate", "desaturate"]),
             "spongeVibrance": XomoAutomationSchema.boolean(description: "Reduce clipping near fully saturated or desaturated colors"),
+            "pressureSize": XomoAutomationSchema.boolean(description: "Use point pressure to control Sponge diameter"),
+            "pressureSensitivity": XomoAutomationSchema.number(description: "Sponge pressure curve sensitivity from 0 to 100"),
             "aligned": XomoAutomationSchema.boolean(description: "Keep the clone or healing source offset aligned across strokes"),
             "sampleSource": XomoAutomationSchema.string(description: "Clone or healing sampling layer range", values: ["currentLayer", "currentAndBelow", "allVisible"])
         ], required: ["action"]),

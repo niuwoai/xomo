@@ -365,6 +365,20 @@ struct ImageEditorView: View {
                 .help(L10n.text("imageEditor.option.spongeVibrance.help"))
                 .accessibilityHint(L10n.text("imageEditor.option.spongeVibrance.help"))
                 .accessibilityIdentifier("image-editor-sponge-vibrance")
+
+                Toggle(
+                    L10n.text("imageEditor.option.pressureSize"),
+                    isOn: Binding(
+                        get: { viewModel.brushPressureControlsSize },
+                        set: { viewModel.setBrushPressureControlsSize($0) }
+                    )
+                )
+                .toggleStyle(.checkbox)
+                .focusable(false)
+                .fixedSize()
+                .help(L10n.text("imageEditor.option.spongePressureSize.help"))
+                .accessibilityHint(L10n.text("imageEditor.option.spongePressureSize.help"))
+                .accessibilityIdentifier("image-editor-sponge-pressure-size")
             }
 
             if viewModel.selectedTool == .dodge || viewModel.selectedTool == .burn {
@@ -2257,7 +2271,7 @@ struct ImageEditorView: View {
                             isDuplicating: isCanvasCloneGestureActive
                         ).set()
                     }
-                case .brush, .eraser:
+                case .brush, .eraser, .sponge:
                     if let pointerImagePoint {
                         brushStrokeSamples.append(ImageEditorBrushStrokeSample(
                             point: pointerImagePoint,
@@ -2269,7 +2283,7 @@ struct ImageEditorView: View {
                         dragPoints.append(pointerImagePoint)
                         updateToneAirbrushStroke(at: pointerImagePoint)
                     }
-                case .cloneStamp, .sponge, .blur, .sharpen, .smudge, .healingBrush:
+                case .cloneStamp, .blur, .sharpen, .smudge, .healingBrush:
                     if let pointerImagePoint {
                         dragPoints.append(pointerImagePoint)
                     }
@@ -2455,7 +2469,7 @@ struct ImageEditorView: View {
                         airbrushPulsePoints: finishToneAirbrushStroke(at: endImagePoint)
                     )
                 case .sponge:
-                    viewModel.spongeBrush(points: dragPoints)
+                    viewModel.spongeBrush(samples: brushStrokeSamples)
                 case .blur:
                     viewModel.blurBrush(points: dragPoints)
                 case .sharpen:

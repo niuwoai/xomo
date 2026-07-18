@@ -2218,6 +2218,27 @@ struct ImageEditorScopeTests {
         #expect(spongeSource.contains("image-editor-sponge-vibrance"))
     }
 
+    @Test func spongePressureSizeOptionIsNonFocusableAndAccessible() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let spongeStart = try #require(
+            source.range(of: "if viewModel.selectedTool == .sponge {")
+        )
+        let textStart = try #require(
+            source[spongeStart.upperBound...].range(of: "if viewModel.selectedTool == .text")
+        )
+        let spongeSource = source[spongeStart.lowerBound..<textStart.lowerBound]
+
+        #expect(spongeSource.contains("viewModel.brushPressureControlsSize"))
+        #expect(spongeSource.contains("viewModel.setBrushPressureControlsSize"))
+        #expect(spongeSource.contains(".toggleStyle(.checkbox)"))
+        #expect(spongeSource.contains(".focusable(false)"))
+        #expect(spongeSource.contains("imageEditor.option.spongePressureSize.help"))
+        #expect(spongeSource.contains("image-editor-sponge-pressure-size"))
+    }
+
     @MainActor
     @Test func spongeFlowUsesPercentageOptionAndStatus() throws {
         let source = try String(
