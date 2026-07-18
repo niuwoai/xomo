@@ -8,6 +8,140 @@
 import CoreGraphics
 import Foundation
 
+enum ImageEditorCropHandle: String, CaseIterable, Identifiable {
+    case move
+    case topLeft
+    case top
+    case topRight
+    case right
+    case bottomRight
+    case bottom
+    case bottomLeft
+    case left
+
+    var id: String { rawValue }
+
+    var isResizeHandle: Bool { self != .move }
+
+    static var resizeHandles: [Self] {
+        allCases.filter(\.isResizeHandle)
+    }
+
+    func point(in rect: CGRect) -> CGPoint {
+        switch self {
+        case .move:
+            CGPoint(x: rect.midX, y: rect.midY)
+        case .topLeft:
+            CGPoint(x: rect.minX, y: rect.minY)
+        case .top:
+            CGPoint(x: rect.midX, y: rect.minY)
+        case .topRight:
+            CGPoint(x: rect.maxX, y: rect.minY)
+        case .right:
+            CGPoint(x: rect.maxX, y: rect.midY)
+        case .bottomRight:
+            CGPoint(x: rect.maxX, y: rect.maxY)
+        case .bottom:
+            CGPoint(x: rect.midX, y: rect.maxY)
+        case .bottomLeft:
+            CGPoint(x: rect.minX, y: rect.maxY)
+        case .left:
+            CGPoint(x: rect.minX, y: rect.midY)
+        }
+    }
+}
+
+enum ImageEditorCropGeometry {
+    static func hitHandle(
+        at point: CGPoint,
+        in rect: CGRect,
+        tolerance: CGFloat
+    ) -> ImageEditorCropHandle? {
+        let normalized = rect.standardized
+        let safeTolerance = max(1, tolerance)
+        guard normalized.width > 0, normalized.height > 0 else { return nil }
+
+        for handle in ImageEditorCropHandle.resizeHandles {
+            let handlePoint = handle.point(in: normalized)
+            if hypot(point.x - handlePoint.x, point.y - handlePoint.y) <= safeTolerance {
+                return handle
+            }
+        }
+
+        let edgeMatches = [
+            (ImageEditorCropHandle.top, abs(point.y - normalized.minY) <= safeTolerance
+                && point.x >= normalized.minX - safeTolerance
+                && point.x <= normalized.maxX + safeTolerance),
+            (ImageEditorCropHandle.right, abs(point.x - normalized.maxX) <= safeTolerance
+                && point.y >= normalized.minY - safeTolerance
+                && point.y <= normalized.maxY + safeTolerance),
+            (ImageEditorCropHandle.bottom, abs(point.y - normalized.maxY) <= safeTolerance
+                && point.x >= normalized.minX - safeTolerance
+                && point.x <= normalized.maxX + safeTolerance),
+            (ImageEditorCropHandle.left, abs(point.x - normalized.minX) <= safeTolerance
+                && point.y >= normalized.minY - safeTolerance
+                && point.y <= normalized.maxY + safeTolerance)
+        ]
+        if let match = edgeMatches.first(where: { $0.1 }) {
+            return match.0
+        }
+
+        return normalized.insetBy(dx: -safeTolerance, dy: -safeTolerance).contains(point)
+            ? .move
+            : nil
+    }
+
+    static func adjustedFrame(
+        from originalFrame: CGRect,
+        handle: ImageEditorCropHandle,
+        delta: CGSize,
+        canvasSize: CGSize,
+        minimumEdge: CGFloat = 4
+    ) -> CGRect {
+        let canvasWidth = max(0, canvasSize.width)
+        let canvasHeight = max(0, canvasSize.height)
+        let canvasBounds = CGRect(x: 0, y: 0, width: canvasWidth, height: canvasHeight)
+        let original = originalFrame.standardized.intersection(canvasBounds)
+        guard original.width > 0, original.height > 0 else { return .zero }
+        if handle == .move {
+            let width = min(original.width, canvasWidth)
+            let height = min(original.height, canvasHeight)
+            return CGRect(
+                x: min(max(original.minX + delta.width, 0), max(0, canvasWidth - width)),
+                y: min(max(original.minY + delta.height, 0), max(0, canvasHeight - height)),
+                width: width,
+                height: height
+            )
+        }
+
+        let minimumWidth = min(max(1, minimumEdge), canvasWidth)
+        let minimumHeight = min(max(1, minimumEdge), canvasHeight)
+        var minX = original.minX
+        var minY = original.minY
+        var maxX = original.maxX
+        var maxY = original.maxY
+
+        switch handle {
+        case .topLeft, .left, .bottomLeft:
+            minX = min(max(original.minX + delta.width, 0), maxX - minimumWidth)
+        case .topRight, .right, .bottomRight:
+            maxX = max(min(original.maxX + delta.width, canvasWidth), minX + minimumWidth)
+        default:
+            break
+        }
+        switch handle {
+        case .topLeft, .top, .topRight:
+            minY = min(max(original.minY + delta.height, 0), maxY - minimumHeight)
+        case .bottomLeft, .bottom, .bottomRight:
+            maxY = max(min(original.maxY + delta.height, canvasHeight), minY + minimumHeight)
+        default:
+            break
+        }
+
+        return CGRect(x: minX, y: minY, width: maxX - minX, height: maxY - minY)
+    }
+}
+
 enum ImageEditorCanvasGeometry {
     static func aspectFitRect(contentSize: CGSize, in bounds: CGRect) -> CGRect {
         guard contentSize.width > 0,

@@ -67,6 +67,9 @@ struct ImageEditorView: View {
     @State private var isDrawingPatchSelection = false
     @State private var lastPatchPreviewUpdateTime: TimeInterval = 0
     @State private var pendingCropRect: CGRect?
+    @State private var activeCropHandle: ImageEditorCropHandle?
+    @State private var cropInteractionStartPoint: CGPoint?
+    @State private var cropInteractionOriginalRect: CGRect?
     @State private var lastPanTranslation: CGSize = .zero
     @State private var isSpacebarPanning = false
     @State private var isCanvasPanGestureActive = false
@@ -237,6 +240,10 @@ struct ImageEditorView: View {
             dragStart = nil
             dragEnd = nil
             dragPoints = []
+            if viewModel.selectedTool != .crop {
+                pendingCropRect = nil
+                endPendingCropInteraction()
+            }
         }
         .sheet(isPresented: $viewModel.isExportSheetPresented) {
             ImageEditorExportPanel(viewModel: viewModel)
@@ -1295,6 +1302,7 @@ struct ImageEditorView: View {
                 .onChange(of: viewModel.selectedTool) { tool in
                     if tool != .crop {
                         pendingCropRect = nil
+                        endPendingCropInteraction()
                     }
                     if tool != .text {
                         cancelCanvasTextEditing()
@@ -1304,6 +1312,7 @@ struct ImageEditorView: View {
                 .onChange(of: viewModel.selectedLeftSidebarTab) { tab in
                     if tab == .components {
                         pendingCropRect = nil
+                        endPendingCropInteraction()
                         cancelCanvasTextEditing()
                         // Changing sidebar mode must immediately clear the
                         // previous tool cursor, even before the next hover
@@ -1335,6 +1344,7 @@ struct ImageEditorView: View {
                 }
                 .onDisappear {
                     isPointerInsideCanvas = false
+                    endPendingCropInteraction()
                     NSCursor.arrow.set()
                 }
                 .onAppear {
@@ -1604,12 +1614,26 @@ struct ImageEditorView: View {
 
         if let pendingCropRect {
             let rect = viewRect(from: pendingCropRect, in: size)
-            Rectangle()
-                .stroke(Color(nsColor: ImageEditorTheme.selected), style: StrokeStyle(lineWidth: 1.5, dash: [6, 4]))
-                .background(Rectangle().fill(Color(nsColor: ImageEditorTheme.selected).opacity(0.10)))
-                .frame(width: rect.width, height: rect.height)
-                .position(x: rect.midX, y: rect.midY)
-                .allowsHitTesting(false)
+            ZStack {
+                Rectangle()
+                    .stroke(Color(nsColor: ImageEditorTheme.selected), style: StrokeStyle(lineWidth: 1.5, dash: [6, 4]))
+                    .background(Rectangle().fill(Color(nsColor: ImageEditorTheme.selected).opacity(0.10)))
+                    .frame(width: rect.width, height: rect.height)
+                ForEach(ImageEditorCropHandle.resizeHandles) { handle in
+                    let point = viewPoint(from: handle.point(in: pendingCropRect), in: size)
+                    RoundedRectangle(cornerRadius: 1.5, style: .continuous)
+                        .fill(Color.white.opacity(0.96))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 1.5, style: .continuous)
+                                .stroke(Color(nsColor: ImageEditorTheme.selected), lineWidth: 1)
+                        )
+                        .frame(width: 8, height: 8)
+                        .position(x: point.x - rect.minX, y: point.y - rect.minY)
+                }
+            }
+            .frame(width: rect.width, height: rect.height)
+            .position(x: rect.midX, y: rect.midY)
+            .allowsHitTesting(false)
         }
     }
 
@@ -1779,6 +1803,19 @@ struct ImageEditorView: View {
 
                 let pointerImagePoint = imagePoint(from: value.location, in: size)
                 viewModel.updatePointer(pointerImagePoint)
+
+                if canvasInteractionTool == .crop {
+                    if activeCropHandle == nil,
+                       let startPoint = imagePoint(from: value.startLocation, in: size),
+                       beginPendingCropInteraction(at: startPoint, in: size) {
+                        updatePendingCropInteraction(at: boundedImagePoint(from: value.location, in: size))
+                        return
+                    }
+                    if activeCropHandle != nil {
+                        updatePendingCropInteraction(at: boundedImagePoint(from: value.location, in: size))
+                        return
+                    }
+                }
 
                 switch canvasInteractionTool {
                 case .move:
@@ -1968,6 +2005,14 @@ struct ImageEditorView: View {
 
                 let endImagePoint = imagePoint(from: value.location, in: size)
 
+                if activeCropHandle != nil {
+                    endPendingCropInteraction()
+                    dragStart = nil
+                    dragEnd = nil
+                    lastMoveTranslation = .zero
+                    return
+                }
+
                 if isCanvasSelectionGestureActive {
                     isCanvasSelectionGestureActive = false
                     dragPoints = []
@@ -2133,6 +2178,46 @@ struct ImageEditorView: View {
         )
         viewModel.nudgeCanvas(by: delta)
         lastPanTranslation = translation
+    }
+
+    @discardableResult
+    private func beginPendingCropInteraction(at point: CGPoint, in size: CGSize) -> Bool {
+        guard let pendingCropRect,
+              let handle = ImageEditorCropGeometry.hitHandle(
+                  at: point,
+                  in: pendingCropRect,
+                  tolerance: cropHitTolerance(in: size)
+              )
+        else { return false }
+        activeCropHandle = handle
+        cropInteractionStartPoint = point
+        cropInteractionOriginalRect = pendingCropRect
+        return true
+    }
+
+    private func updatePendingCropInteraction(at point: CGPoint) {
+        guard let activeCropHandle,
+              let startPoint = cropInteractionStartPoint,
+              let originalRect = cropInteractionOriginalRect
+        else { return }
+        pendingCropRect = ImageEditorCropGeometry.adjustedFrame(
+            from: originalRect,
+            handle: activeCropHandle,
+            delta: CGSize(width: point.x - startPoint.x, height: point.y - startPoint.y),
+            canvasSize: viewModel.document.canvasSize
+        )
+    }
+
+    private func endPendingCropInteraction() {
+        activeCropHandle = nil
+        cropInteractionStartPoint = nil
+        cropInteractionOriginalRect = nil
+    }
+
+    private func cropHitTolerance(in size: CGSize) -> CGFloat {
+        let imageRect = fittedImageRect(in: size)
+        let displayScale = imageRect.width / max(viewModel.document.canvasSize.width, 1)
+        return max(6, 10 / max(displayScale, 0.01))
     }
 
     private func updateObjectMove(translation: CGSize, in size: CGSize) {

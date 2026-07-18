@@ -79,6 +79,50 @@ struct ImageEditorCanvasGeometryTests {
         #expect(ImageEditorSelectionMarchingAnts.dashPhase(at: .infinity) == 0)
     }
 
+    @Test
+    func cropGeometryMovesAndResizesWithinCanvasBounds() {
+        let crop = CGRect(x: 20, y: 30, width: 80, height: 60)
+        #expect(
+            ImageEditorCropGeometry.hitHandle(
+                at: CGPoint(x: 21, y: 60),
+                in: crop,
+                tolerance: 3
+            ) == .left
+        )
+        #expect(
+            ImageEditorCropGeometry.hitHandle(
+                at: CGPoint(x: 55, y: 55),
+                in: crop,
+                tolerance: 3
+            ) == .move
+        )
+
+        let moved = ImageEditorCropGeometry.adjustedFrame(
+            from: crop,
+            handle: .move,
+            delta: CGSize(width: 500, height: -500),
+            canvasSize: CGSize(width: 160, height: 120)
+        )
+        #expect(moved == CGRect(x: 80, y: 0, width: 80, height: 60))
+
+        let resized = ImageEditorCropGeometry.adjustedFrame(
+            from: crop,
+            handle: .topLeft,
+            delta: CGSize(width: -40, height: -50),
+            canvasSize: CGSize(width: 160, height: 120)
+        )
+        #expect(resized == CGRect(x: 0, y: 0, width: 100, height: 80))
+
+        let minimum = ImageEditorCropGeometry.adjustedFrame(
+            from: crop,
+            handle: .right,
+            delta: CGSize(width: -500, height: 0),
+            canvasSize: CGSize(width: 160, height: 120)
+        )
+        #expect(minimum.width == 4)
+        #expect(minimum.maxX == crop.minX + 4)
+    }
+
     private func assertEqual(
         _ actual: CGRect,
         _ expected: CGRect,
