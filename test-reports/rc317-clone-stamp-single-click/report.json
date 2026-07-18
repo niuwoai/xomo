@@ -1,0 +1,31 @@
+{
+  "version": "2.12.0-rc317",
+  "scope": "仿制图章单击圆形印章与采样工作流回归",
+  "environment": "arm64 MacBook Pro, macOS 26.5.2, Xcode 26.4.1",
+  "build": {
+    "derived_data": "/private/tmp/xomo-rc308-derived",
+    "deployment_target": "macOS 13.0",
+    "status": "passed",
+    "scope": "incremental test build using shared DerivedData; no Release gate"
+  },
+  "isolated_tests": {
+    "passed": 6,
+    "failed": 0,
+    "suites": [
+      {
+        "name": "ImageEditorCloneStampSamplingTests",
+        "passed": 6,
+        "failed": 0
+      }
+    ]
+  },
+  "release_contract": {
+    "tests": 3,
+    "assertions": 7,
+    "failures": 0
+  },
+  "full_gate": {
+    "performed": false,
+    "next_version": "2.12.0-rc320"
+  }
+}

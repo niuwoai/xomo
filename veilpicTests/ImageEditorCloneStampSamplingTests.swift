@@ -88,6 +88,27 @@ struct ImageEditorCloneStampSamplingTests {
         #expect(redonePixel.greenComponent > redonePixel.redComponent + 0.25)
     }
 
+    @Test func cloneStampSupportsASingleClick() throws {
+        let viewModel = patternedCurrentLayerViewModel()
+        viewModel.brushSize = 8
+        viewModel.opacity = 1
+        viewModel.setCloneSource(at: CGPoint(x: 10, y: 15))
+
+        viewModel.cloneStamp(points: [CGPoint(x: 60, y: 15)])
+
+        let stamped = try color(
+            viewModel.document.selectedLayer?.image,
+            at: CGPoint(x: 60, y: 15)
+        )
+        let outsideDab = try color(
+            viewModel.document.selectedLayer?.image,
+            at: CGPoint(x: 66, y: 15)
+        )
+        #expect(stamped.redComponent > stamped.blueComponent + 0.25)
+        #expect(outsideDab.blueComponent > outsideDab.redComponent + 0.25)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.cloneStamp"))
+    }
+
     @Test func compositeSamplingCanReachOutsideSelectedLayerFrame() throws {
         let canvasSize = CGSize(width: 100, height: 30)
         let sourceImage = bitmap(size: canvasSize, background: .systemBlue, fills: [

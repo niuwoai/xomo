@@ -4551,7 +4551,7 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func cloneStamp(points: [CGPoint]) {
-        guard points.count > 1 else { return }
+        guard !points.isEmpty else { return }
         guard !isEditingLayerMask else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
@@ -7216,8 +7216,21 @@ extension NSImage {
         }
         let strokeMask = NSImage.rendered(size: size) { _ in
             NSGraphicsContext.current?.withImageEditorTopLeftCoordinates(height: size.height) {
-                NSColor.white.setStroke()
-                path.stroke()
+                if points.count == 1 {
+                    let radius = width / 2
+                    NSColor.white.setFill()
+                    NSBezierPath(
+                        ovalIn: CGRect(
+                            x: first.x - radius,
+                            y: first.y - radius,
+                            width: width,
+                            height: width
+                        )
+                    ).fill()
+                } else {
+                    NSColor.white.setStroke()
+                    path.stroke()
+                }
             }
         }
         guard let shiftedSource, let strokeMask else { return nil }
