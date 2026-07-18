@@ -24,6 +24,13 @@ struct ImageEditorSampledBrushOffsetResolution: Equatable {
     var canvasOffset: CGSize
     var nextAlignedOffset: CGSize?
 
+    func sourcePreviewPoint(at destination: CGPoint) -> CGPoint {
+        CGPoint(
+            x: destination.x + canvasOffset.width,
+            y: destination.y + canvasOffset.height
+        )
+    }
+
     static func resolve(
         sourcePoint: CGPoint,
         destinationStart: CGPoint,

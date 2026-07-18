@@ -4550,6 +4550,37 @@ final class ImageEditorViewModel: ObservableObject {
         statusText = L10n.text("imageEditor.status.cloneSourcePending")
     }
 
+    func sampledBrushPreviewSourcePoint(
+        for tool: ImageEditorTool,
+        strokeStart: CGPoint,
+        currentDestination: CGPoint
+    ) -> CGPoint? {
+        let sourcePoint: CGPoint
+        let isAligned: Bool
+        let alignedOffset: CGSize?
+        switch tool {
+        case .cloneStamp:
+            guard let cloneSourcePoint else { return nil }
+            sourcePoint = cloneSourcePoint
+            isAligned = isCloneStampAligned
+            alignedOffset = cloneStampAlignedCanvasOffset
+        case .healingBrush:
+            guard let healingSourcePoint else { return nil }
+            sourcePoint = healingSourcePoint
+            isAligned = isHealingBrushAligned
+            alignedOffset = healingBrushAlignedCanvasOffset
+        default:
+            return nil
+        }
+
+        return ImageEditorSampledBrushOffsetResolution.resolve(
+            sourcePoint: sourcePoint,
+            destinationStart: strokeStart,
+            isAligned: isAligned,
+            alignedOffset: alignedOffset
+        ).sourcePreviewPoint(at: currentDestination)
+    }
+
     func cloneStamp(points: [CGPoint]) {
         guard !points.isEmpty else { return }
         guard !isEditingLayerMask else {

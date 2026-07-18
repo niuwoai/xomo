@@ -1901,14 +1901,30 @@ struct ImageEditorView: View {
     }
 
     private var sampledBrushSourcePoint: CGPoint? {
+        let originalSourcePoint: CGPoint?
+        let isSettingSource: Bool
         switch canvasInteractionTool {
         case .cloneStamp:
-            return viewModel.cloneSourcePoint
+            originalSourcePoint = viewModel.cloneSourcePoint
+            isSettingSource = viewModel.isSettingCloneSource
         case .healingBrush:
-            return viewModel.healingSourcePoint
+            originalSourcePoint = viewModel.healingSourcePoint
+            isSettingSource = viewModel.isSettingHealingSource
         default:
             return nil
         }
+
+        guard !isSettingSource,
+              !canvasModifierFlags.contains(.option),
+              let strokeStart = dragPoints.first,
+              let currentDestination = dragPoints.last
+        else { return originalSourcePoint }
+
+        return viewModel.sampledBrushPreviewSourcePoint(
+            for: canvasInteractionTool,
+            strokeStart: strokeStart,
+            currentDestination: currentDestination
+        ) ?? originalSourcePoint
     }
 
     private func canvasGesture(in size: CGSize) -> some Gesture {
