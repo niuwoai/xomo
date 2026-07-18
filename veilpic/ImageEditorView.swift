@@ -272,7 +272,11 @@ struct ImageEditorView: View {
 
     private var optionBar: some View {
         HStack(spacing: 12) {
-            Label(viewModel.selectedTool.title, systemImage: viewModel.selectedTool.symbolName)
+            Label {
+                Text(viewModel.selectedTool.title)
+            } icon: {
+                selectedToolIcon
+            }
                 .font(.system(size: 12, weight: .semibold))
                 .frame(width: 132, alignment: .leading)
                 .accessibilityIdentifier("image-editor-selected-tool")
@@ -853,7 +857,11 @@ struct ImageEditorView: View {
 
     private var selectedToolHint: some View {
         VStack(alignment: .leading, spacing: 2) {
-            Label(viewModel.selectedTool.title, systemImage: viewModel.selectedTool.symbolName)
+            Label {
+                Text(viewModel.selectedTool.title)
+            } icon: {
+                selectedToolIcon
+            }
                 .font(.system(size: 11, weight: .semibold))
             Text(viewModel.selectedTool.helpText)
                 .font(.system(size: 11, weight: .regular))
@@ -872,6 +880,15 @@ struct ImageEditorView: View {
         .allowsHitTesting(false)
         .accessibilityIdentifier("image-editor-selected-tool-hint")
         .accessibilityValue(viewModel.selectedTool.rawValue)
+    }
+
+    @ViewBuilder
+    private var selectedToolIcon: some View {
+        if viewModel.selectedTool == .paintBucket {
+            ImageEditorPaintBucketSymbol()
+        } else {
+            Image(systemName: viewModel.selectedTool.symbolName)
+        }
     }
 
     private var toolShortcutButtons: some View {

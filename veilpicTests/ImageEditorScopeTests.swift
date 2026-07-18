@@ -142,6 +142,11 @@ struct ImageEditorScopeTests {
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
             encoding: .utf8
         )
+
+        #expect(source.contains("private var selectedToolIcon: some View"))
+        #expect(source.contains("if viewModel.selectedTool == .paintBucket"))
+        #expect(source.contains("ImageEditorPaintBucketSymbol()"))
+
         let toolRailStart = try #require(source.range(of: "private var toolRail: some View"))
         let nextSectionStart = try #require(
             source[toolRailStart.upperBound...].range(of: "private var colorChips: some View")

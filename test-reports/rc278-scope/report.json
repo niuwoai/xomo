@@ -1,0 +1,989 @@
+{
+  "generated_at": "2026-07-18 15:03:56 +0800",
+  "total": 98,
+  "passed": 98,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "alternateZoomShortcutsSupportOptionPlusAndMinus",
+      "identifier": "veilpicTests/ImageEditorScopeTests/alternateZoomShortcutsSupportOptionPlusAndMinus",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.11,
+      "issues": [],
+      "log": "ImageEditorScopeTests.alternateZoomShortcutsSupportOptionPlusAndMinus.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "brushAndEraserOptionsExposeNonFocusablePresetManagement",
+      "identifier": "veilpicTests/ImageEditorScopeTests/brushAndEraserOptionsExposeNonFocusablePresetManagement",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.328,
+      "issues": [],
+      "log": "ImageEditorScopeTests.brushAndEraserOptionsExposeNonFocusablePresetManagement.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "brushesPanelActionsReuseExistingBrushSettings",
+      "identifier": "veilpicTests/ImageEditorScopeTests/brushesPanelActionsReuseExistingBrushSettings",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.24,
+      "issues": [],
+      "log": "ImageEditorScopeTests.brushesPanelActionsReuseExistingBrushSettings.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "canvasMagnifyGestureZoomsAndClampsWithinBounds",
+      "identifier": "veilpicTests/ImageEditorScopeTests/canvasMagnifyGestureZoomsAndClampsWithinBounds",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.166,
+      "issues": [],
+      "log": "ImageEditorScopeTests.canvasMagnifyGestureZoomsAndClampsWithinBounds.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "canvasPublishesItsAutomationIdentifierAsAnAccessibilityContainer",
+      "identifier": "veilpicTests/ImageEditorScopeTests/canvasPublishesItsAutomationIdentifierAsAnAccessibilityContainer",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.119,
+      "issues": [],
+      "log": "ImageEditorScopeTests.canvasPublishesItsAutomationIdentifierAsAnAccessibilityContainer.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "canvasScrollWheelZoomComposesDiscreteTicksAnchoredAtCursor",
+      "identifier": "veilpicTests/ImageEditorScopeTests/canvasScrollWheelZoomComposesDiscreteTicksAnchoredAtCursor",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.2,
+      "issues": [],
+      "log": "ImageEditorScopeTests.canvasScrollWheelZoomComposesDiscreteTicksAnchoredAtCursor.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "canvasWorkspaceWiresMagnifyGestureToViewModel",
+      "identifier": "veilpicTests/ImageEditorScopeTests/canvasWorkspaceWiresMagnifyGestureToViewModel",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.162,
+      "issues": [],
+      "log": "ImageEditorScopeTests.canvasWorkspaceWiresMagnifyGestureToViewModel.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "canvasWorkspaceWiresScrollWheelZoomToViewModel",
+      "identifier": "veilpicTests/ImageEditorScopeTests/canvasWorkspaceWiresScrollWheelZoomToViewModel",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.073,
+      "issues": [],
+      "log": "ImageEditorScopeTests.canvasWorkspaceWiresScrollWheelZoomToViewModel.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "channelsPanelKeepsRowsBoundedAndUsesCachedThumbnails",
+      "identifier": "veilpicTests/ImageEditorScopeTests/channelsPanelKeepsRowsBoundedAndUsesCachedThumbnails",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.237,
+      "issues": [],
+      "log": "ImageEditorScopeTests.channelsPanelKeepsRowsBoundedAndUsesCachedThumbnails.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "characterAndParagraphPanelActionsReuseExistingTextSettings",
+      "identifier": "veilpicTests/ImageEditorScopeTests/characterAndParagraphPanelActionsReuseExistingTextSettings",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.273,
+      "issues": [],
+      "log": "ImageEditorScopeTests.characterAndParagraphPanelActionsReuseExistingTextSettings.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "classicAdjustmentShortcutsPreparePropertiesPanel",
+      "identifier": "veilpicTests/ImageEditorScopeTests/classicAdjustmentShortcutsPreparePropertiesPanel",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.125,
+      "issues": [],
+      "log": "ImageEditorScopeTests.classicAdjustmentShortcutsPreparePropertiesPanel.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "classicArrowNudgeShortcutsMoveSelectedLayerWithoutSelection",
+      "identifier": "veilpicTests/ImageEditorScopeTests/classicArrowNudgeShortcutsMoveSelectedLayerWithoutSelection",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.106,
+      "issues": [],
+      "log": "ImageEditorScopeTests.classicArrowNudgeShortcutsMoveSelectedLayerWithoutSelection.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "classicArrowNudgeShortcutsMoveSelectionBeforeLayer",
+      "identifier": "veilpicTests/ImageEditorScopeTests/classicArrowNudgeShortcutsMoveSelectionBeforeLayer",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.101,
+      "issues": [],
+      "log": "ImageEditorScopeTests.classicArrowNudgeShortcutsMoveSelectionBeforeLayer.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "classicBrushHardnessShortcutsClampAndUpdateOptionsStatus",
+      "identifier": "veilpicTests/ImageEditorScopeTests/classicBrushHardnessShortcutsClampAndUpdateOptionsStatus",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.081,
+      "issues": [],
+      "log": "ImageEditorScopeTests.classicBrushHardnessShortcutsClampAndUpdateOptionsStatus.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "classicBrushSizeShortcutsClampAndUpdateOptionsStatus",
+      "identifier": "veilpicTests/ImageEditorScopeTests/classicBrushSizeShortcutsClampAndUpdateOptionsStatus",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.097,
+      "issues": [],
+      "log": "ImageEditorScopeTests.classicBrushSizeShortcutsClampAndUpdateOptionsStatus.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "classicDeleteShortcutClearsSelectionPixelsThroughExistingCommand",
+      "identifier": "veilpicTests/ImageEditorScopeTests/classicDeleteShortcutClearsSelectionPixelsThroughExistingCommand",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.099,
+      "issues": [],
+      "log": "ImageEditorScopeTests.classicDeleteShortcutClearsSelectionPixelsThroughExistingCommand.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "classicFilterMenuSelectionsPreparePropertiesPanel",
+      "identifier": "veilpicTests/ImageEditorScopeTests/classicFilterMenuSelectionsPreparePropertiesPanel",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.128,
+      "issues": [],
+      "log": "ImageEditorScopeTests.classicFilterMenuSelectionsPreparePropertiesPanel.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "classicForegroundBackgroundShortcutsReuseExistingColorActions",
+      "identifier": "veilpicTests/ImageEditorScopeTests/classicForegroundBackgroundShortcutsReuseExistingColorActions",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.099,
+      "issues": [],
+      "log": "ImageEditorScopeTests.classicForegroundBackgroundShortcutsReuseExistingColorActions.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "classicOpacityDigitShortcutsApplyPhotoshopStylePresets",
+      "identifier": "veilpicTests/ImageEditorScopeTests/classicOpacityDigitShortcutsApplyPhotoshopStylePresets",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.115,
+      "issues": [],
+      "log": "ImageEditorScopeTests.classicOpacityDigitShortcutsApplyPhotoshopStylePresets.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "classicToolShortcutsSelectPrimaryToolAndCycleGroupedTools",
+      "identifier": "veilpicTests/ImageEditorScopeTests/classicToolShortcutsSelectPrimaryToolAndCycleGroupedTools",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.976,
+      "issues": [],
+      "log": "ImageEditorScopeTests.classicToolShortcutsSelectPrimaryToolAndCycleGroupedTools.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "colorPanelActionsReuseExistingForegroundBackgroundState",
+      "identifier": "veilpicTests/ImageEditorScopeTests/colorPanelActionsReuseExistingForegroundBackgroundState",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.071,
+      "issues": [],
+      "log": "ImageEditorScopeTests.colorPanelActionsReuseExistingForegroundBackgroundState.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "compactToolRailExposesPreviewAndScreenColorControls",
+      "identifier": "veilpicTests/ImageEditorScopeTests/compactToolRailExposesPreviewAndScreenColorControls",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.161,
+      "issues": [],
+      "log": "ImageEditorScopeTests.compactToolRailExposesPreviewAndScreenColorControls.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "creatingReplacementSelectionPreservesRenderedPreviewCache",
+      "identifier": "veilpicTests/ImageEditorScopeTests/creatingReplacementSelectionPreservesRenderedPreviewCache",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.117,
+      "issues": [],
+      "log": "ImageEditorScopeTests.creatingReplacementSelectionPreservesRenderedPreviewCache.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "defaultWorkspaceResetRestoresAllEditorChromePanels",
+      "identifier": "veilpicTests/ImageEditorScopeTests/defaultWorkspaceResetRestoresAllEditorChromePanels",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.206,
+      "issues": [],
+      "log": "ImageEditorScopeTests.defaultWorkspaceResetRestoresAllEditorChromePanels.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "deploymentTargetsRemainCompatibleWithMacOS13",
+      "identifier": "veilpicTests/ImageEditorScopeTests/deploymentTargetsRemainCompatibleWithMacOS13",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.352,
+      "issues": [],
+      "log": "ImageEditorScopeTests.deploymentTargetsRemainCompatibleWithMacOS13.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "documentTabExposesPersistentZoomControls",
+      "identifier": "veilpicTests/ImageEditorScopeTests/documentTabExposesPersistentZoomControls",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.135,
+      "issues": [],
+      "log": "ImageEditorScopeTests.documentTabExposesPersistentZoomControls.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "editMenuExposesClassicEditingShortcuts",
+      "identifier": "veilpicTests/ImageEditorScopeTests/editMenuExposesClassicEditingShortcuts",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.153,
+      "issues": [],
+      "log": "ImageEditorScopeTests.editMenuExposesClassicEditingShortcuts.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "editorChromeConditionallyRendersRightDockPanels",
+      "identifier": "veilpicTests/ImageEditorScopeTests/editorChromeConditionallyRendersRightDockPanels",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.095,
+      "issues": [],
+      "log": "ImageEditorScopeTests.editorChromeConditionallyRendersRightDockPanels.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "editorChromeConditionallyRendersStatusBar",
+      "identifier": "veilpicTests/ImageEditorScopeTests/editorChromeConditionallyRendersStatusBar",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.098,
+      "issues": [],
+      "log": "ImageEditorScopeTests.editorChromeConditionallyRendersStatusBar.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "editorChromeConditionallyRendersToolsAndOptionsPanels",
+      "identifier": "veilpicTests/ImageEditorScopeTests/editorChromeConditionallyRendersToolsAndOptionsPanels",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.117,
+      "issues": [],
+      "log": "ImageEditorScopeTests.editorChromeConditionallyRendersToolsAndOptionsPanels.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "editorNoLongerCarriesComingSoonToolPlaceholders",
+      "identifier": "veilpicTests/ImageEditorScopeTests/editorNoLongerCarriesComingSoonToolPlaceholders",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.082,
+      "issues": [],
+      "log": "ImageEditorScopeTests.editorNoLongerCarriesComingSoonToolPlaceholders.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "editorRegistersClassicToolShortcutButtonsWithoutDuplicatingToolRailShortcuts",
+      "identifier": "veilpicTests/ImageEditorScopeTests/editorRegistersClassicToolShortcutButtonsWithoutDuplicatingToolRailShortcuts",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.233,
+      "issues": [],
+      "log": "ImageEditorScopeTests.editorRegistersClassicToolShortcutButtonsWithoutDuplicatingToolRailShortcuts.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "editorSidebarsStayFixedWhileCanvasOwnsFlexibleWidth",
+      "identifier": "veilpicTests/ImageEditorScopeTests/editorSidebarsStayFixedWhileCanvasOwnsFlexibleWidth",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.082,
+      "issues": [],
+      "log": "ImageEditorScopeTests.editorSidebarsStayFixedWhileCanvasOwnsFlexibleWidth.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "editorSourceDoesNotIntroduceHeavyExpansionEntryPoints",
+      "identifier": "veilpicTests/ImageEditorScopeTests/editorSourceDoesNotIntroduceHeavyExpansionEntryPoints",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.226,
+      "issues": [],
+      "log": "ImageEditorScopeTests.editorSourceDoesNotIntroduceHeavyExpansionEntryPoints.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "everyZoomEntryPointRestoresTheLeftToolRail",
+      "identifier": "veilpicTests/ImageEditorScopeTests/everyZoomEntryPointRestoresTheLeftToolRail",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.411,
+      "issues": [],
+      "log": "ImageEditorScopeTests.everyZoomEntryPointRestoresTheLeftToolRail.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "fileMenuExposesClassicProjectAndExportShortcuts",
+      "identifier": "veilpicTests/ImageEditorScopeTests/fileMenuExposesClassicProjectAndExportShortcuts",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.126,
+      "issues": [],
+      "log": "ImageEditorScopeTests.fileMenuExposesClassicProjectAndExportShortcuts.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "fileMenuExposesClipboardCanvasCreation",
+      "identifier": "veilpicTests/ImageEditorScopeTests/fileMenuExposesClipboardCanvasCreation",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.142,
+      "issues": [],
+      "log": "ImageEditorScopeTests.fileMenuExposesClipboardCanvasCreation.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "fileMenuExposesDirectSelectedLayerExport",
+      "identifier": "veilpicTests/ImageEditorScopeTests/fileMenuExposesDirectSelectedLayerExport",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.132,
+      "issues": [],
+      "log": "ImageEditorScopeTests.fileMenuExposesDirectSelectedLayerExport.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "fileMenuExposesDirectSelectionSliceExport",
+      "identifier": "veilpicTests/ImageEditorScopeTests/fileMenuExposesDirectSelectionSliceExport",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.099,
+      "issues": [],
+      "log": "ImageEditorScopeTests.fileMenuExposesDirectSelectionSliceExport.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "filterMenuExposesClassicLastFilterShortcut",
+      "identifier": "veilpicTests/ImageEditorScopeTests/filterMenuExposesClassicLastFilterShortcut",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.212,
+      "issues": [],
+      "log": "ImageEditorScopeTests.filterMenuExposesClassicLastFilterShortcut.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "filterMenuExposesEveryFilterCase",
+      "identifier": "veilpicTests/ImageEditorScopeTests/filterMenuExposesEveryFilterCase",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.393,
+      "issues": [],
+      "log": "ImageEditorScopeTests.filterMenuExposesEveryFilterCase.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "imageEditorActualPixelsZoomUsesLastCanvasViewport",
+      "identifier": "veilpicTests/ImageEditorScopeTests/imageEditorActualPixelsZoomUsesLastCanvasViewport",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.135,
+      "issues": [],
+      "log": "ImageEditorScopeTests.imageEditorActualPixelsZoomUsesLastCanvasViewport.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "imageEditorCanHideExtrasWithoutChangingUnderlyingGuidesGridOrSelection",
+      "identifier": "veilpicTests/ImageEditorScopeTests/imageEditorCanHideExtrasWithoutChangingUnderlyingGuidesGridOrSelection",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.162,
+      "issues": [],
+      "log": "ImageEditorScopeTests.imageEditorCanHideExtrasWithoutChangingUnderlyingGuidesGridOrSelection.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "imageEditorCanHideSelectionEdgesWithoutClearingSelection",
+      "identifier": "veilpicTests/ImageEditorScopeTests/imageEditorCanHideSelectionEdgesWithoutClearingSelection",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.175,
+      "issues": [],
+      "log": "ImageEditorScopeTests.imageEditorCanHideSelectionEdgesWithoutClearingSelection.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "imageEditorCanHideTransformControlsWithoutChangingSelectedLayerFrame",
+      "identifier": "veilpicTests/ImageEditorScopeTests/imageEditorCanHideTransformControlsWithoutChangingSelectedLayerFrame",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.115,
+      "issues": [],
+      "log": "ImageEditorScopeTests.imageEditorCanHideTransformControlsWithoutChangingSelectedLayerFrame.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "imageEditorCanStartFromPreparedDocumentForDevelopmentSamples",
+      "identifier": "veilpicTests/ImageEditorScopeTests/imageEditorCanStartFromPreparedDocumentForDevelopmentSamples",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.109,
+      "issues": [],
+      "log": "ImageEditorScopeTests.imageEditorCanStartFromPreparedDocumentForDevelopmentSamples.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "imageEditorDoesNotGrowIntoHeavyExpansionCategories",
+      "identifier": "veilpicTests/ImageEditorScopeTests/imageEditorDoesNotGrowIntoHeavyExpansionCategories",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.108,
+      "issues": [],
+      "log": "ImageEditorScopeTests.imageEditorDoesNotGrowIntoHeavyExpansionCategories.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "imageEditorFitOnScreenRequiresAUsableCanvasViewport",
+      "identifier": "veilpicTests/ImageEditorScopeTests/imageEditorFitOnScreenRequiresAUsableCanvasViewport",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.202,
+      "issues": [],
+      "log": "ImageEditorScopeTests.imageEditorFitOnScreenRequiresAUsableCanvasViewport.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "imageEditorKeepsCurrentLightweightCapabilitySurfaceStable",
+      "identifier": "veilpicTests/ImageEditorScopeTests/imageEditorKeepsCurrentLightweightCapabilitySurfaceStable",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 6.211,
+      "issues": [],
+      "log": "ImageEditorScopeTests.imageEditorKeepsCurrentLightweightCapabilitySurfaceStable.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "imageEditorToolsExposeClassicPhotoshopShortcuts",
+      "identifier": "veilpicTests/ImageEditorScopeTests/imageEditorToolsExposeClassicPhotoshopShortcuts",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.124,
+      "issues": [],
+      "log": "ImageEditorScopeTests.imageEditorToolsExposeClassicPhotoshopShortcuts.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "imageMenuExposesClassicSizeShortcuts",
+      "identifier": "veilpicTests/ImageEditorScopeTests/imageMenuExposesClassicSizeShortcuts",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.102,
+      "issues": [],
+      "log": "ImageEditorScopeTests.imageMenuExposesClassicSizeShortcuts.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "layerListExposesDirectSelectionVisibilityAndDragReordering",
+      "identifier": "veilpicTests/ImageEditorScopeTests/layerListExposesDirectSelectionVisibilityAndDragReordering",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.629,
+      "issues": [],
+      "log": "ImageEditorScopeTests.layerListExposesDirectSelectionVisibilityAndDragReordering.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "layerMenuExposesClassicLayerShortcuts",
+      "identifier": "veilpicTests/ImageEditorScopeTests/layerMenuExposesClassicLayerShortcuts",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.117,
+      "issues": [],
+      "log": "ImageEditorScopeTests.layerMenuExposesClassicLayerShortcuts.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "layerMenuExposesSelectionLayerCommandsInPhotoshopStyleLocation",
+      "identifier": "veilpicTests/ImageEditorScopeTests/layerMenuExposesSelectionLayerCommandsInPhotoshopStyleLocation",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.125,
+      "issues": [],
+      "log": "ImageEditorScopeTests.layerMenuExposesSelectionLayerCommandsInPhotoshopStyleLocation.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "layerOrderMenuExposesClassicLayerOrderShortcuts",
+      "identifier": "veilpicTests/ImageEditorScopeTests/layerOrderMenuExposesClassicLayerOrderShortcuts",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.128,
+      "issues": [],
+      "log": "ImageEditorScopeTests.layerOrderMenuExposesClassicLayerOrderShortcuts.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "layerPanelExposesSmartObjectContentActions",
+      "identifier": "veilpicTests/ImageEditorScopeTests/layerPanelExposesSmartObjectContentActions",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 4.844,
+      "issues": [],
+      "log": "ImageEditorScopeTests.layerPanelExposesSmartObjectContentActions.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "layerRowsExposeTheSameSelectedLayerExportAction",
+      "identifier": "veilpicTests/ImageEditorScopeTests/layerRowsExposeTheSameSelectedLayerExportAction",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.164,
+      "issues": [],
+      "log": "ImageEditorScopeTests.layerRowsExposeTheSameSelectedLayerExportAction.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "layerStyleBlendingOptionsPreparePropertiesPanel",
+      "identifier": "veilpicTests/ImageEditorScopeTests/layerStyleBlendingOptionsPreparePropertiesPanel",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 4.267,
+      "issues": [],
+      "log": "ImageEditorScopeTests.layerStyleBlendingOptionsPreparePropertiesPanel.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "layerStyleColorSettersUpdateEveryEditableEffectColor",
+      "identifier": "veilpicTests/ImageEditorScopeTests/layerStyleColorSettersUpdateEveryEditableEffectColor",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.047,
+      "issues": [],
+      "log": "ImageEditorScopeTests.layerStyleColorSettersUpdateEveryEditableEffectColor.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "layerStylePanelUsesColorPickersForEveryEditableEffectColor",
+      "identifier": "veilpicTests/ImageEditorScopeTests/layerStylePanelUsesColorPickersForEveryEditableEffectColor",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.14,
+      "issues": [],
+      "log": "ImageEditorScopeTests.layerStylePanelUsesColorPickersForEveryEditableEffectColor.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "layersDockUsesTheSharedDisclosureLayout",
+      "identifier": "veilpicTests/ImageEditorScopeTests/layersDockUsesTheSharedDisclosureLayout",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.153,
+      "issues": [],
+      "log": "ImageEditorScopeTests.layersDockUsesTheSharedDisclosureLayout.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "navigatorPreviewWiresViewportOverlayAndPanGesture",
+      "identifier": "veilpicTests/ImageEditorScopeTests/navigatorPreviewWiresViewportOverlayAndPanGesture",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.083,
+      "issues": [],
+      "log": "ImageEditorScopeTests.navigatorPreviewWiresViewportOverlayAndPanGesture.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "navigatorRecentersCanvasWithoutAddingHistory",
+      "identifier": "veilpicTests/ImageEditorScopeTests/navigatorRecentersCanvasWithoutAddingHistory",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.068,
+      "issues": [],
+      "log": "ImageEditorScopeTests.navigatorRecentersCanvasWithoutAddingHistory.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "patchToolExposesModesAndWiresTwoPhaseLivePreviewInteraction",
+      "identifier": "veilpicTests/ImageEditorScopeTests/patchToolExposesModesAndWiresTwoPhaseLivePreviewInteraction",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.446,
+      "issues": [],
+      "log": "ImageEditorScopeTests.patchToolExposesModesAndWiresTwoPhaseLivePreviewInteraction.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "persistentZoomControlClampsAndReportsDirectZoomChanges",
+      "identifier": "veilpicTests/ImageEditorScopeTests/persistentZoomControlClampsAndReportsDirectZoomChanges",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.035,
+      "issues": [],
+      "log": "ImageEditorScopeTests.persistentZoomControlClampsAndReportsDirectZoomChanges.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "productOverviewDocumentsPreserveAndDoNotExpandEditorScope",
+      "identifier": "veilpicTests/ImageEditorScopeTests/productOverviewDocumentsPreserveAndDoNotExpandEditorScope",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.148,
+      "issues": [],
+      "log": "ImageEditorScopeTests.productOverviewDocumentsPreserveAndDoNotExpandEditorScope.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "rightDockPanelVisibilityDefaultsOnAndCanToggle",
+      "identifier": "veilpicTests/ImageEditorScopeTests/rightDockPanelVisibilityDefaultsOnAndCanToggle",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.298,
+      "issues": [],
+      "log": "ImageEditorScopeTests.rightDockPanelVisibilityDefaultsOnAndCanToggle.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "rightDockTogglePreservesToolsAndOptionsPanels",
+      "identifier": "veilpicTests/ImageEditorScopeTests/rightDockTogglePreservesToolsAndOptionsPanels",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.264,
+      "issues": [],
+      "log": "ImageEditorScopeTests.rightDockTogglePreservesToolsAndOptionsPanels.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "screenColorSamplerResultsUpdateTheirRequestedColorTarget",
+      "identifier": "veilpicTests/ImageEditorScopeTests/screenColorSamplerResultsUpdateTheirRequestedColorTarget",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.168,
+      "issues": [],
+      "log": "ImageEditorScopeTests.screenColorSamplerResultsUpdateTheirRequestedColorTarget.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "selectMenuExposesClassicSelectionShortcuts",
+      "identifier": "veilpicTests/ImageEditorScopeTests/selectMenuExposesClassicSelectionShortcuts",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.12,
+      "issues": [],
+      "log": "ImageEditorScopeTests.selectMenuExposesClassicSelectionShortcuts.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "selectMenuExposesSavedSelectionCommandsInPhotoshopStyleLocation",
+      "identifier": "veilpicTests/ImageEditorScopeTests/selectMenuExposesSavedSelectionCommandsInPhotoshopStyleLocation",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.207,
+      "issues": [],
+      "log": "ImageEditorScopeTests.selectMenuExposesSavedSelectionCommandsInPhotoshopStyleLocation.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "statusBarVisibilityDefaultsOnAndCanToggle",
+      "identifier": "veilpicTests/ImageEditorScopeTests/statusBarVisibilityDefaultsOnAndCanToggle",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.252,
+      "issues": [],
+      "log": "ImageEditorScopeTests.statusBarVisibilityDefaultsOnAndCanToggle.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "stylesPanelSummaryReusesExistingLayerStyleState",
+      "identifier": "veilpicTests/ImageEditorScopeTests/stylesPanelSummaryReusesExistingLayerStyleState",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 4.224,
+      "issues": [],
+      "log": "ImageEditorScopeTests.stylesPanelSummaryReusesExistingLayerStyleState.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "swatchesPanelActionsApplyDefaultPaletteToForegroundAndBackground",
+      "identifier": "veilpicTests/ImageEditorScopeTests/swatchesPanelActionsApplyDefaultPaletteToForegroundAndBackground",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.276,
+      "issues": [],
+      "log": "ImageEditorScopeTests.swatchesPanelActionsApplyDefaultPaletteToForegroundAndBackground.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "toolsAndOptionsPanelActionsReuseExistingToolSettings",
+      "identifier": "veilpicTests/ImageEditorScopeTests/toolsAndOptionsPanelActionsReuseExistingToolSettings",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.306,
+      "issues": [],
+      "log": "ImageEditorScopeTests.toolsAndOptionsPanelActionsReuseExistingToolSettings.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "toolsAndOptionsPanelVisibilityDefaultsOnAndCanToggle",
+      "identifier": "veilpicTests/ImageEditorScopeTests/toolsAndOptionsPanelVisibilityDefaultsOnAndCanToggle",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.163,
+      "issues": [],
+      "log": "ImageEditorScopeTests.toolsAndOptionsPanelVisibilityDefaultsOnAndCanToggle.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "transparentCanvasUsesLightGrayAndWhiteCheckerboard",
+      "identifier": "veilpicTests/ImageEditorScopeTests/transparentCanvasUsesLightGrayAndWhiteCheckerboard",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.096,
+      "issues": [],
+      "log": "ImageEditorScopeTests.transparentCanvasUsesLightGrayAndWhiteCheckerboard.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "viewMenuExposesClassicZoomShortcuts",
+      "identifier": "veilpicTests/ImageEditorScopeTests/viewMenuExposesClassicZoomShortcuts",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.164,
+      "issues": [],
+      "log": "ImageEditorScopeTests.viewMenuExposesClassicZoomShortcuts.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "windowMenuExposesBrushesPanelActionsInPhotoshopStyleLocation",
+      "identifier": "veilpicTests/ImageEditorScopeTests/windowMenuExposesBrushesPanelActionsInPhotoshopStyleLocation",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.326,
+      "issues": [],
+      "log": "ImageEditorScopeTests.windowMenuExposesBrushesPanelActionsInPhotoshopStyleLocation.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "windowMenuExposesChannelPanelActionsInPhotoshopStyleLocation",
+      "identifier": "veilpicTests/ImageEditorScopeTests/windowMenuExposesChannelPanelActionsInPhotoshopStyleLocation",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.09,
+      "issues": [],
+      "log": "ImageEditorScopeTests.windowMenuExposesChannelPanelActionsInPhotoshopStyleLocation.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "windowMenuExposesCharacterParagraphPanelActionsInPhotoshopStyleLocation",
+      "identifier": "veilpicTests/ImageEditorScopeTests/windowMenuExposesCharacterParagraphPanelActionsInPhotoshopStyleLocation",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.271,
+      "issues": [],
+      "log": "ImageEditorScopeTests.windowMenuExposesCharacterParagraphPanelActionsInPhotoshopStyleLocation.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "windowMenuExposesColorPanelActionsInPhotoshopStyleLocation",
+      "identifier": "veilpicTests/ImageEditorScopeTests/windowMenuExposesColorPanelActionsInPhotoshopStyleLocation",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.11,
+      "issues": [],
+      "log": "ImageEditorScopeTests.windowMenuExposesColorPanelActionsInPhotoshopStyleLocation.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "windowMenuExposesDefaultWorkspaceResetInPhotoshopStyleLocation",
+      "identifier": "veilpicTests/ImageEditorScopeTests/windowMenuExposesDefaultWorkspaceResetInPhotoshopStyleLocation",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.117,
+      "issues": [],
+      "log": "ImageEditorScopeTests.windowMenuExposesDefaultWorkspaceResetInPhotoshopStyleLocation.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "windowMenuExposesHistogramPanelActionsInPhotoshopStyleLocation",
+      "identifier": "veilpicTests/ImageEditorScopeTests/windowMenuExposesHistogramPanelActionsInPhotoshopStyleLocation",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.12,
+      "issues": [],
+      "log": "ImageEditorScopeTests.windowMenuExposesHistogramPanelActionsInPhotoshopStyleLocation.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "windowMenuExposesHistoryPanelActionsInPhotoshopStyleLocation",
+      "identifier": "veilpicTests/ImageEditorScopeTests/windowMenuExposesHistoryPanelActionsInPhotoshopStyleLocation",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 4.444,
+      "issues": [],
+      "log": "ImageEditorScopeTests.windowMenuExposesHistoryPanelActionsInPhotoshopStyleLocation.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "windowMenuExposesInfoPanelActionsInPhotoshopStyleLocation",
+      "identifier": "veilpicTests/ImageEditorScopeTests/windowMenuExposesInfoPanelActionsInPhotoshopStyleLocation",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.161,
+      "issues": [],
+      "log": "ImageEditorScopeTests.windowMenuExposesInfoPanelActionsInPhotoshopStyleLocation.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "windowMenuExposesLayerCompPanelActionsInPhotoshopStyleLocation",
+      "identifier": "veilpicTests/ImageEditorScopeTests/windowMenuExposesLayerCompPanelActionsInPhotoshopStyleLocation",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.491,
+      "issues": [],
+      "log": "ImageEditorScopeTests.windowMenuExposesLayerCompPanelActionsInPhotoshopStyleLocation.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "windowMenuExposesLayerPanelActionsInPhotoshopStyleLocation",
+      "identifier": "veilpicTests/ImageEditorScopeTests/windowMenuExposesLayerPanelActionsInPhotoshopStyleLocation",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 4.413,
+      "issues": [],
+      "log": "ImageEditorScopeTests.windowMenuExposesLayerPanelActionsInPhotoshopStyleLocation.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "windowMenuExposesNavigatorPanelActionsInPhotoshopStyleLocation",
+      "identifier": "veilpicTests/ImageEditorScopeTests/windowMenuExposesNavigatorPanelActionsInPhotoshopStyleLocation",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.261,
+      "issues": [],
+      "log": "ImageEditorScopeTests.windowMenuExposesNavigatorPanelActionsInPhotoshopStyleLocation.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "windowMenuExposesPathPanelActionsInPhotoshopStyleLocation",
+      "identifier": "veilpicTests/ImageEditorScopeTests/windowMenuExposesPathPanelActionsInPhotoshopStyleLocation",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.449,
+      "issues": [],
+      "log": "ImageEditorScopeTests.windowMenuExposesPathPanelActionsInPhotoshopStyleLocation.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "windowMenuExposesPropertiesPanelActionsInPhotoshopStyleLocation",
+      "identifier": "veilpicTests/ImageEditorScopeTests/windowMenuExposesPropertiesPanelActionsInPhotoshopStyleLocation",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 4.281,
+      "issues": [],
+      "log": "ImageEditorScopeTests.windowMenuExposesPropertiesPanelActionsInPhotoshopStyleLocation.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "windowMenuExposesStylesPanelActionsInPhotoshopStyleLocation",
+      "identifier": "veilpicTests/ImageEditorScopeTests/windowMenuExposesStylesPanelActionsInPhotoshopStyleLocation",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.269,
+      "issues": [],
+      "log": "ImageEditorScopeTests.windowMenuExposesStylesPanelActionsInPhotoshopStyleLocation.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "windowMenuExposesSwatchesPanelActionsInPhotoshopStyleLocation",
+      "identifier": "veilpicTests/ImageEditorScopeTests/windowMenuExposesSwatchesPanelActionsInPhotoshopStyleLocation",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.39,
+      "issues": [],
+      "log": "ImageEditorScopeTests.windowMenuExposesSwatchesPanelActionsInPhotoshopStyleLocation.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "windowMenuExposesToolsAndOptionsPanelActionsInPhotoshopStyleLocation",
+      "identifier": "veilpicTests/ImageEditorScopeTests/windowMenuExposesToolsAndOptionsPanelActionsInPhotoshopStyleLocation",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.114,
+      "issues": [],
+      "log": "ImageEditorScopeTests.windowMenuExposesToolsAndOptionsPanelActionsInPhotoshopStyleLocation.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "workspaceChromeToggleHidesAndShowsAllEditorPanels",
+      "identifier": "veilpicTests/ImageEditorScopeTests/workspaceChromeToggleHidesAndShowsAllEditorPanels",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.316,
+      "issues": [],
+      "log": "ImageEditorScopeTests.workspaceChromeToggleHidesAndShowsAllEditorPanels.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "workspaceDoesNotOverrideChildAutomationIdentifiers",
+      "identifier": "veilpicTests/ImageEditorScopeTests/workspaceDoesNotOverrideChildAutomationIdentifiers",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.096,
+      "issues": [],
+      "log": "ImageEditorScopeTests.workspaceDoesNotOverrideChildAutomationIdentifiers.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "xomoApplicationOpensEditorWorkspaceWithoutMenuBarOrScreenshotStartup",
+      "identifier": "veilpicTests/ImageEditorScopeTests/xomoApplicationOpensEditorWorkspaceWithoutMenuBarOrScreenshotStartup",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.482,
+      "issues": [],
+      "log": "ImageEditorScopeTests.xomoApplicationOpensEditorWorkspaceWithoutMenuBarOrScreenshotStartup.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "xomoSourceTreeDoesNotRetainTrayCaptureOrUploadModules",
+      "identifier": "veilpicTests/ImageEditorScopeTests/xomoSourceTreeDoesNotRetainTrayCaptureOrUploadModules",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.184,
+      "issues": [],
+      "log": "ImageEditorScopeTests.xomoSourceTreeDoesNotRetainTrayCaptureOrUploadModules.log"
+    }
+  ]
+}

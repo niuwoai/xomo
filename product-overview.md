@@ -1,6 +1,8 @@
 # 象墨（Xomo）产品概览
 
-> 最后更新：2026-07-18 | 当前版本：v2.12.0-rc277
+> 最后更新：2026-07-18 | 当前版本：v2.12.0-rc278
+
+v2.12.0-rc278 让油漆桶在工具栏、顶部选项栏、当前工具提示和画布光标中使用一致的桶形表达；rc277 增加只读发布契约检查，自动核对 App/CLI/所有 Xcode target 的版本、Bundle ID、macOS 13 下限、CLI 双架构入口、Release 导出入口和独立测试入口，并输出 JSON/Markdown 门禁报告。
 
 v2.12.0-rc277 增加只读发布契约检查，自动核对 App/CLI/所有 Xcode target 的版本、Bundle ID、macOS 13 下限、CLI 双架构入口、Release 导出入口和独立测试入口，并输出 JSON/Markdown 门禁报告。
 

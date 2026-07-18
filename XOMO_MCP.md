@@ -1,6 +1,8 @@
 # Xomo MCP 与 CLI
 
-> 当前版本：v2.12.0-rc277
+> 当前版本：v2.12.0-rc278
+
+rc278 让油漆桶图标在工具栏、顶部选项栏和当前工具提示中保持一致；rc277 增加只读发布契约检查 `scripts/verify_release_contract.rb`，可为发布门禁输出 JSON/Markdown。
 
 rc277 增加只读发布契约检查 `scripts/verify_release_contract.rb`，可为发布门禁输出 JSON/Markdown，并核对 App/CLI/所有 Xcode target 的版本、Bundle ID、macOS 13 下限和双架构构建入口。
 

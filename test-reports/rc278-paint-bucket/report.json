@@ -1,0 +1,29 @@
+{
+  "generated_at": "2026-07-18 15:05:11 +0800",
+  "total": 2,
+  "passed": 2,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorPaintBucketTests",
+      "method": "imageEditorPaintBucketFillsContiguousColorOnly",
+      "identifier": "veilpicTests/ImageEditorPaintBucketTests/imageEditorPaintBucketFillsContiguousColorOnly",
+      "file": "ImageEditorPaintBucketTests.swift",
+      "passed": true,
+      "duration": 3.375,
+      "issues": [],
+      "log": "ImageEditorPaintBucketTests.imageEditorPaintBucketFillsContiguousColorOnly.log"
+    },
+    {
+      "suite": "ImageEditorPaintBucketTests",
+      "method": "imageEditorPaintBucketRespectsActiveSelection",
+      "identifier": "veilpicTests/ImageEditorPaintBucketTests/imageEditorPaintBucketRespectsActiveSelection",
+      "file": "ImageEditorPaintBucketTests.swift",
+      "passed": true,
+      "duration": 3.143,
+      "issues": [],
+      "log": "ImageEditorPaintBucketTests.imageEditorPaintBucketRespectsActiveSelection.log"
+    }
+  ]
+}
