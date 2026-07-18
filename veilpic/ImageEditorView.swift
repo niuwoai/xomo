@@ -7861,10 +7861,11 @@ enum ImageEditorCanvasCursor {
             isCanvasPanGestureActive: isCanvasPanGestureActive
         ) {
         case .componentLibrary:
-            if isPointerOverBlockedContent {
-                return .operationNotAllowed
-            }
-            return isPointerOverMovableContent ? objectMoveCursor() : .openHand
+            // The component library is a selection/placement mode, not the
+            // Move tool. Keep the native arrow regardless of the previous
+            // toolbox cursor or hovered component. Active object dragging and
+            // explicit canvas panning are resolved before this branch.
+            return .arrow
         case .pan:
             return cursor(
                 for: .hand,

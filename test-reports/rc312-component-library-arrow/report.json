@@ -1,0 +1,27 @@
+{
+  "version": "2.12.0-rc312",
+  "scope": "恢复组件库系统箭头并保留实际拖动与画布平移的临时光标",
+  "environment": "arm64 MacBook Pro, macOS 26.5.2, Xcode 26.4.1",
+  "build": {
+    "derived_data": "/private/tmp/xomo-rc308-derived",
+    "status": "passed",
+    "scope": "incremental test build using shared DerivedData; no Release gate"
+  },
+  "isolated_tests": {
+    "passed": 31,
+    "failed": 0,
+    "suites": [
+      { "name": "ImageEditorCanvasCursorTests", "passed": 30, "failed": 0 },
+      { "name": "componentSidebarWiresMoveSemanticsIntoCanvasCursorAndGestures", "passed": 1, "failed": 0 }
+    ]
+  },
+  "release_contract": {
+    "tests": 3,
+    "assertions": 7,
+    "failures": 0
+  },
+  "full_gate": {
+    "performed": false,
+    "next_version": "2.12.0-rc320"
+  }
+}

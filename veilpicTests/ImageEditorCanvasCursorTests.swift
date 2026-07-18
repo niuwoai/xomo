@@ -41,7 +41,7 @@ struct ImageEditorCanvasCursorTests {
         )
     }
 
-    @Test func componentLibraryUsesMoveForObjectsAndHandOnlyForCanvasPanning() {
+    @Test func componentLibraryUsesSystemArrowUntilDragOrCanvasPanBegins() {
         #expect(
             ImageEditorCanvasCursor.tool(
                 for: .components,
@@ -68,7 +68,7 @@ struct ImageEditorCanvasCursorTests {
                 selectedTool: .brush,
                 brushDiameter: 18,
                 isPointerOverMovableContent: true
-            ) === ImageEditorCanvasCursor.objectMoveCursor()
+            ) === NSCursor.arrow
         )
         #expect(
             ImageEditorCanvasCursor.cursor(
@@ -76,7 +76,7 @@ struct ImageEditorCanvasCursorTests {
                 selectedTool: .brush,
                 brushDiameter: 18,
                 isPointerOverMovableContent: false
-            ) === NSCursor.openHand
+            ) === NSCursor.arrow
         )
         #expect(
             ImageEditorCanvasCursor.cursor(
@@ -116,7 +116,7 @@ struct ImageEditorCanvasCursorTests {
         #expect(componentDrag !== NSCursor.closedHand)
     }
 
-    @Test func componentLibraryNeverLeaksAnyPreviousDrawingToolCursor() {
+    @Test func componentLibraryNeverLeaksAnyPreviousToolOrHoverCursor() {
         let staleModifiers: NSEvent.ModifierFlags = [.command, .option, .shift, .control, .capsLock]
 
         for tool in ImageEditorTool.allCases {
@@ -125,9 +125,10 @@ struct ImageEditorCanvasCursorTests {
                     for: .components,
                     selectedTool: tool,
                     brushDiameter: 96,
-                    isPointerOverMovableContent: false,
+                    isPointerOverMovableContent: true,
+                    isPointerOverBlockedContent: true,
                     modifierFlags: staleModifiers
-                ) === NSCursor.openHand
+                ) === NSCursor.arrow
             )
         }
 
