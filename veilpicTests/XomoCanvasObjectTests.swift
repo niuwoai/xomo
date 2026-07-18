@@ -572,6 +572,30 @@ struct XomoCanvasObjectTests {
         #expect(viewModel.selectedXomoObjectFrame?.maxX == viewModel.document.canvasSize.width * 0.5)
     }
 
+    @Test func horizontalDragConstraintIgnoresCrossAxisSnapCorrection() throws {
+        let viewModel = makeViewModel()
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 100, y: 100))
+        let initialFrame = try #require(viewModel.selectedXomoObjectFrame)
+        viewModel.addGuide(.vertical, at: initialFrame.maxX + 20)
+        viewModel.addGuide(.horizontal, at: initialFrame.minY + 2)
+
+        viewModel.beginMovingSelectedLayer()
+        viewModel.moveSelectedLayer(
+            by: CGSize(width: 18, height: 0),
+            snapping: true,
+            constrainingTo: .horizontal
+        )
+
+        #expect(viewModel.movingObjectPreviewFrame?.maxX == initialFrame.maxX + 20)
+        #expect(viewModel.movingObjectPreviewFrame?.minY == initialFrame.minY)
+        #expect(viewModel.activeAlignmentGuides == [
+            ImageEditorAlignmentGuide(
+                orientation: .vertical,
+                position: initialFrame.maxX + 20
+            )
+        ])
+    }
+
     @Test func transformInspectorMovesSelectedLayerWithUndoHistory() throws {
         let viewModel = makeViewModel()
         var layer = ImageEditorLayer.solidColorFill(

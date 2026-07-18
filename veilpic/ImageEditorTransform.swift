@@ -181,10 +181,25 @@ extension ImageEditorViewModel {
         return true
     }
 
-    func moveSelectedLayer(by delta: CGSize, snapping: Bool = false) {
+    func moveSelectedLayer(
+        by delta: CGSize,
+        snapping: Bool = false,
+        constrainingTo axis: ImageEditorObjectDragAxis? = nil
+    ) {
         guard !movingLayerIDs.isEmpty else { return }
         guard abs(delta.width) >= 0.1 || abs(delta.height) >= 0.1 else { return }
-        let adjustedDelta = snapping ? snappedMoveDelta(delta, movingLayerIDs: movingLayerIDs) : delta
+        let snappedDelta = snapping ? snappedMoveDelta(delta, movingLayerIDs: movingLayerIDs) : delta
+        let adjustedDelta = ImageEditorObjectDragConstraint.constrainedDelta(snappedDelta, to: axis)
+        if let axis {
+            activeAlignmentGuides.removeAll { guide in
+                switch axis {
+                case .horizontal:
+                    return guide.orientation == .horizontal
+                case .vertical:
+                    return guide.orientation == .vertical
+                }
+            }
+        }
         guard abs(adjustedDelta.width) >= 0.1 || abs(adjustedDelta.height) >= 0.1 else { return }
         movingObjectPreviewFrame = movingObjectPreviewFrame?.offsetBy(dx: adjustedDelta.width, dy: adjustedDelta.height)
         movingLayerDidChange = true

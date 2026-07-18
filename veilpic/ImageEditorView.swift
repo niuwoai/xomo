@@ -74,6 +74,7 @@ struct ImageEditorView: View {
     @State private var isSpacebarPanning = false
     @State private var isCanvasPanGestureActive = false
     @State private var lastMoveTranslation: CGSize = .zero
+    @State private var objectMoveAxisLock: ImageEditorObjectDragAxis?
     @State private var isObjectMoveGestureActive = false
     @State private var isCanvasSelectionGestureActive = false
     @State private var isCanvasCloneGestureActive = false
@@ -210,7 +211,7 @@ struct ImageEditorView: View {
                     if viewModel.cancelMovingSelectedLayer() {
                         isSelectedObjectMoveGestureActive = false
                         isObjectMoveGestureActive = false
-                        lastMoveTranslation = .zero
+                        resetObjectMoveTracking()
                         NSCursor.arrow.set()
                         return true
                     }
@@ -1347,7 +1348,7 @@ struct ImageEditorView: View {
                                   viewModel.selectXomoObject(at: imagePoint),
                                   viewModel.canResizeSelectedLayer
                             else { return false }
-                            lastMoveTranslation = .zero
+                            resetObjectMoveTracking()
                             guard viewModel.beginMovingSelectedLayer() else { return false }
                             isSelectedObjectMoveGestureActive = true
                             ImageEditorCanvasCursor.objectMoveCursor().set()
@@ -1362,7 +1363,7 @@ struct ImageEditorView: View {
                             guard isSelectedObjectMoveGestureActive else { return }
                             viewModel.finishMovingSelectedLayer()
                             isSelectedObjectMoveGestureActive = false
-                            lastMoveTranslation = .zero
+                            resetObjectMoveTracking()
                             refreshCanvasCursor(in: geometry.size)
                         }
                     )
@@ -1956,6 +1957,7 @@ struct ImageEditorView: View {
                                 || viewModel.selectVisibleLayer(at: pressedImagePoint) {
                             isCanvasCloneGestureActive = true
                             if viewModel.beginDuplicatingSelectedLayerForMove() {
+                                resetObjectMoveTracking()
                                 isObjectMoveGestureActive = true
                             }
                         }
@@ -2007,6 +2009,7 @@ struct ImageEditorView: View {
                             return
                         }
                         guard viewModel.beginMovingSelectedLayer() else { return }
+                        resetObjectMoveTracking()
                         isObjectMoveGestureActive = true
                     }
                     updateObjectMove(translation: value.translation, in: size)
@@ -2086,7 +2089,10 @@ struct ImageEditorView: View {
                     if !isObjectMoveGestureActive,
                        let pressedImagePoint = imagePoint(from: value.startLocation, in: size),
                        viewModel.selectPathLayer(at: pressedImagePoint) {
-                        isObjectMoveGestureActive = viewModel.beginMovingSelectedLayer()
+                        if viewModel.beginMovingSelectedLayer() {
+                            resetObjectMoveTracking()
+                            isObjectMoveGestureActive = true
+                        }
                     }
                     if isObjectMoveGestureActive {
                         updateObjectMove(translation: value.translation, in: size)
@@ -2136,7 +2142,7 @@ struct ImageEditorView: View {
                     endPendingCropInteraction()
                     dragStart = nil
                     dragEnd = nil
-                    lastMoveTranslation = .zero
+                    resetObjectMoveTracking()
                     return
                 }
 
@@ -2147,7 +2153,7 @@ struct ImageEditorView: View {
                     dragStart = nil
                     dragEnd = nil
                     lastPanTranslation = .zero
-                    lastMoveTranslation = .zero
+                    resetObjectMoveTracking()
                     isObjectMoveGestureActive = false
                     isCanvasCloneGestureActive = false
                     isSelectedObjectMoveGestureActive = false
@@ -2296,7 +2302,7 @@ struct ImageEditorView: View {
                 isDrawingPatchSelection = false
                 lastPatchPreviewUpdateTime = 0
                 lastPanTranslation = .zero
-                lastMoveTranslation = .zero
+                resetObjectMoveTracking()
                 isObjectMoveGestureActive = false
                 isCanvasCloneGestureActive = false
                 isSelectedObjectMoveGestureActive = false
@@ -2360,19 +2366,32 @@ struct ImageEditorView: View {
     private func updateObjectMove(translation: CGSize, in size: CGSize) {
         let imageRect = fittedImageRect(in: size)
         guard imageRect.width > 0, imageRect.height > 0 else { return }
-        let viewDelta = CGSize(
-            width: translation.width - lastMoveTranslation.width,
-            height: translation.height - lastMoveTranslation.height
+        let resolvedAxis = ImageEditorObjectDragConstraint.resolvedAxis(
+            for: translation,
+            existingAxis: objectMoveAxisLock,
+            isConstrained: NSEvent.modifierFlags.contains(.shift)
         )
+        let viewDelta = ImageEditorObjectDragConstraint.incrementalDelta(
+            currentTranslation: translation,
+            previousTranslation: lastMoveTranslation,
+            axis: resolvedAxis
+        )
+        objectMoveAxisLock = resolvedAxis
         viewModel.moveSelectedLayer(
             by: ImageEditorCanvasDragGeometry.imageDelta(
                 from: viewDelta,
                 canvasSize: viewModel.document.canvasSize,
                 imageRect: imageRect
             ),
-            snapping: true
+            snapping: true,
+            constrainingTo: resolvedAxis
         )
         lastMoveTranslation = translation
+    }
+
+    private func resetObjectMoveTracking() {
+        lastMoveTranslation = .zero
+        objectMoveAxisLock = nil
     }
 
     private func fontFamilyPicker(width: CGFloat? = nil) -> some View {
