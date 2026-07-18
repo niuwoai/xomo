@@ -238,6 +238,27 @@ extension ImageEditorViewModel {
             _ = discardLastUndoSnapshot()
             updateStatus()
         }
+        resetMovingSelectedLayerState()
+    }
+
+    /// Escape cancels the preview transaction used by component and layer
+    /// dragging. Ordinary moves only need to discard their pending undo
+    /// snapshot; Option-drag has already inserted a duplicate, so it restores
+    /// the pre-drag document before clearing the transaction state.
+    @discardableResult
+    func cancelMovingSelectedLayer() -> Bool {
+        guard !movingLayerIDs.isEmpty else { return false }
+        let originalDocument = movingLayerWasDuplicated ? undoStack.last : nil
+        _ = discardLastUndoSnapshot()
+        if let originalDocument {
+            document = originalDocument
+        }
+        resetMovingSelectedLayerState()
+        updateStatus()
+        return true
+    }
+
+    private func resetMovingSelectedLayerState() {
         movingLayerIDs = []
         movingLayerWasDuplicated = false
         movingLayerDidChange = false

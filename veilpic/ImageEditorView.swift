@@ -194,7 +194,14 @@ struct ImageEditorView: View {
                     return viewModel.deleteSelectedXomoObjectIfNeeded()
                 },
                 cancelSelectedObject: {
-                    viewModel.clearSelectedXomoObjectIfNeeded()
+                    if viewModel.cancelMovingSelectedLayer() {
+                        isSelectedObjectMoveGestureActive = false
+                        isObjectMoveGestureActive = false
+                        lastMoveTranslation = .zero
+                        NSCursor.arrow.set()
+                        return true
+                    }
+                    return viewModel.clearSelectedXomoObjectIfNeeded()
                 },
                 deleteSelectedHistory: {
                     guard viewModel.isHistoryPanelVisible,

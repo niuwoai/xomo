@@ -1,0 +1,26 @@
+{
+  "version": "2.12.0-rc304",
+  "scope": "Esc 取消组件或图层拖动，丢弃虚线预览并恢复 Option 复制拖动前状态",
+  "environment": "arm64 MacBook Pro, macOS 26.5.2, Xcode 26.4.1",
+  "build": {
+    "command": "xcodebuild build-for-testing -project veilpic.xcodeproj -scheme veilpic -destination 'platform=macOS' -derivedDataPath /private/tmp/xomo-rc304-derived QPIC_SKIP_ADHOC_SIGN=YES ENABLE_USER_SCRIPT_SANDBOXING=NO",
+    "status": "passed"
+  },
+  "isolated_tests": {
+    "runner": "XOMO_DERIVED_DATA_PATH=/private/tmp/xomo-rc304-derived ruby scripts/run_tests_isolated.rb --skip-build --filter <test> --out /private/tmp/<report>",
+    "passed": 4,
+    "failed": 0,
+    "skipped": 0,
+    "tests": [
+      "cancellingAnObjectDragDiscardsPreviewWithoutHistoryOrPositionChange",
+      "cancellingAnOptionDragRemovesThePendingDuplicate",
+      "movingAnObjectPublishesAndClearsItsDashedPreviewFrame",
+      "componentSidebarWiresMoveSemanticsIntoCanvasCursorAndGestures"
+    ]
+  },
+  "release_contract": {
+    "tests": 3,
+    "assertions": 7,
+    "failures": 0
+  }
+}

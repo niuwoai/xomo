@@ -543,6 +543,7 @@ struct XomoLeftSidebarTests {
         #expect(source.contains("selectDeepestVisibleLayer(at: pressedImagePoint)"))
         #expect(source.contains("viewModel.selectVisibleLayer(at: pressedImagePoint)"))
         #expect(source.contains("viewModel.beginMovingSelectedLayer()"))
+        #expect(source.contains("viewModel.cancelMovingSelectedLayer()"))
         #expect(source.contains("case .pathSelection:"))
         #expect(source.contains("viewModel.selectPathLayer(at: pressedImagePoint)"))
         #expect(source.contains("case .directSelection:"))

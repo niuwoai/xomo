@@ -472,6 +472,45 @@ struct XomoCanvasObjectTests {
         #expect(viewModel.selectedLayerTransformFrame?.minY == initialFrame.minY + 5)
     }
 
+    @Test func cancellingAnObjectDragDiscardsPreviewWithoutHistoryOrPositionChange() throws {
+        let viewModel = makeViewModel()
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))
+        let initialFrame = try #require(viewModel.selectedLayerTransformFrame)
+        let initialHistoryCount = viewModel.document.history.count
+        let initialUndoCount = viewModel.undoStack.count
+
+        viewModel.beginMovingSelectedLayer()
+        viewModel.moveSelectedLayer(by: CGSize(width: 28, height: 16), snapping: false)
+        #expect(viewModel.movingObjectPreviewFrame?.minX == initialFrame.minX + 28)
+
+        #expect(viewModel.cancelMovingSelectedLayer())
+        #expect(viewModel.selectedLayerTransformFrame == initialFrame)
+        #expect(viewModel.movingObjectPreviewFrame == nil)
+        #expect(viewModel.document.history.count == initialHistoryCount)
+        #expect(viewModel.undoStack.count == initialUndoCount)
+        #expect(viewModel.cancelMovingSelectedLayer() == false)
+    }
+
+    @Test func cancellingAnOptionDragRemovesThePendingDuplicate() throws {
+        let viewModel = makeViewModel()
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))
+        let initialLayerIDs = viewModel.document.layers.map(\.id)
+        let initialSelectionID = try #require(viewModel.document.selectedLayerID)
+        let initialHistoryCount = viewModel.document.history.count
+        let initialUndoCount = viewModel.undoStack.count
+
+        #expect(viewModel.beginDuplicatingSelectedLayerForMove())
+        #expect(viewModel.document.layers.map(\.id) != initialLayerIDs)
+        viewModel.moveSelectedLayer(by: CGSize(width: 24, height: 12), snapping: false)
+
+        #expect(viewModel.cancelMovingSelectedLayer())
+        #expect(viewModel.document.layers.map(\.id) == initialLayerIDs)
+        #expect(viewModel.document.selectedLayerID == initialSelectionID)
+        #expect(viewModel.document.history.count == initialHistoryCount)
+        #expect(viewModel.undoStack.count == initialUndoCount)
+        #expect(viewModel.movingObjectPreviewFrame == nil)
+    }
+
     @Test func selectingAnotherObjectKeepsTheCompositeImageCache() throws {
         let viewModel = makeViewModel()
         viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))
