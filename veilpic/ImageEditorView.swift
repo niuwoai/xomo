@@ -17,6 +17,21 @@ enum ImageEditorOptionsBarAppearance {
     static let foregroundColor = NSColor.white
 }
 
+/// Provides the low-cost dash movement used by Photoshop-style active
+/// selections. Keeping the phase calculation pure makes the visual feedback
+/// deterministic in tests without coupling selection data to animation state.
+enum ImageEditorSelectionMarchingAnts {
+    static let patternLength: CGFloat = 9
+    private static let period: TimeInterval = 0.72
+
+    static func dashPhase(at elapsed: TimeInterval) -> CGFloat {
+        guard elapsed.isFinite else { return 0 }
+        let remainder = elapsed.truncatingRemainder(dividingBy: period)
+        let normalized = remainder >= 0 ? remainder : remainder + period
+        return CGFloat(normalized / period) * patternLength
+    }
+}
+
 enum ImageEditorCanvasDragGeometry {
     static func imageDelta(
         from viewDelta: CGSize,
@@ -3837,18 +3852,27 @@ struct ImageEditorView: View {
                     )
                 } : nil)
             if let edgeGeometry {
-                Canvas { context, _ in
-                    var path = Path()
-                    for contour in edgeGeometry.contours {
-                        guard let first = contour.first else { continue }
-                        path.move(to: viewPoint(from: first, in: size))
-                        for point in contour.dropFirst() {
-                            path.addLine(to: viewPoint(from: point, in: size))
+                TimelineView(.animation(minimumInterval: 1.0 / 20.0)) { timeline in
+                    Canvas { context, _ in
+                        var path = Path()
+                        for contour in edgeGeometry.contours {
+                            guard let first = contour.first else { continue }
+                            path.move(to: viewPoint(from: first, in: size))
+                            for point in contour.dropFirst() {
+                                path.addLine(to: viewPoint(from: point, in: size))
+                            }
                         }
+                        let phase = ImageEditorSelectionMarchingAnts.dashPhase(
+                            at: timeline.date.timeIntervalSinceReferenceDate
+                        )
+                        let stroke = StrokeStyle(lineWidth: 1.4, dash: [5, 4], dashPhase: phase)
+                        context.stroke(path, with: .color(Color.white.opacity(0.92)), style: stroke)
+                        context.stroke(
+                            path,
+                            with: .color(Color(nsColor: ImageEditorTheme.selected).opacity(0.9)),
+                            style: StrokeStyle(lineWidth: 1.4, dash: [5, 4], dashPhase: phase + 4.5)
+                        )
                     }
-                    let stroke = StrokeStyle(lineWidth: 1.4, dash: [5, 4])
-                    context.stroke(path, with: .color(Color.white.opacity(0.92)), style: stroke)
-                    context.stroke(path, with: .color(Color(nsColor: ImageEditorTheme.selected).opacity(0.9)), style: StrokeStyle(lineWidth: 1.4, dash: [5, 4], dashPhase: 4))
                 }
                 .allowsHitTesting(false)
             }

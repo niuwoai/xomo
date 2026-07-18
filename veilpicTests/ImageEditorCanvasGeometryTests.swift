@@ -69,6 +69,16 @@ struct ImageEditorCanvasGeometryTests {
         #expect(zoomed.maxY <= previewBounds.maxY)
     }
 
+    @Test
+    func marchingAntsDashPhaseWrapsAndHandlesNegativeTime() {
+        let patternLength = ImageEditorSelectionMarchingAnts.patternLength
+        #expect(ImageEditorSelectionMarchingAnts.dashPhase(at: 0) == 0)
+        #expect(abs(ImageEditorSelectionMarchingAnts.dashPhase(at: 0.18) - patternLength / 4) < 0.001)
+        #expect(abs(ImageEditorSelectionMarchingAnts.dashPhase(at: 0.72)) < 0.001)
+        #expect(abs(ImageEditorSelectionMarchingAnts.dashPhase(at: -0.18) - patternLength * 3 / 4) < 0.001)
+        #expect(ImageEditorSelectionMarchingAnts.dashPhase(at: .infinity) == 0)
+    }
+
     private func assertEqual(
         _ actual: CGRect,
         _ expected: CGRect,

@@ -1,0 +1,39 @@
+{
+  "generated_at": "2026-07-18 13:54:32 +0800",
+  "total": 3,
+  "passed": 3,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorCanvasGeometryTests",
+      "method": "marchingAntsDashPhaseWrapsAndHandlesNegativeTime",
+      "identifier": "veilpicTests/ImageEditorCanvasGeometryTests/marchingAntsDashPhaseWrapsAndHandlesNegativeTime",
+      "file": "ImageEditorCanvasGeometryTests.swift",
+      "passed": true,
+      "duration": 3.201,
+      "issues": [],
+      "log": "ImageEditorCanvasGeometryTests.marchingAntsDashPhaseWrapsAndHandlesNegativeTime.log"
+    },
+    {
+      "suite": "ImageEditorCanvasGeometryTests",
+      "method": "navigatorViewportTracksZoomAndPanInsideThumbnail",
+      "identifier": "veilpicTests/ImageEditorCanvasGeometryTests/navigatorViewportTracksZoomAndPanInsideThumbnail",
+      "file": "ImageEditorCanvasGeometryTests.swift",
+      "passed": true,
+      "duration": 3.165,
+      "issues": [],
+      "log": "ImageEditorCanvasGeometryTests.navigatorViewportTracksZoomAndPanInsideThumbnail.log"
+    },
+    {
+      "suite": "ImageEditorCanvasGeometryTests",
+      "method": "transformsPointsAndRectsUsingCanvasDimensionsOnly",
+      "identifier": "veilpicTests/ImageEditorCanvasGeometryTests/transformsPointsAndRectsUsingCanvasDimensionsOnly",
+      "file": "ImageEditorCanvasGeometryTests.swift",
+      "passed": true,
+      "duration": 4.715,
+      "issues": [],
+      "log": "ImageEditorCanvasGeometryTests.transformsPointsAndRectsUsingCanvasDimensionsOnly.log"
+    }
+  ]
+}
