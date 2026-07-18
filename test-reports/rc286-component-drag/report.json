@@ -1,0 +1,39 @@
+{
+  "version": "2.12.0-rc286",
+  "scope": "component-drag-hit-target-focused",
+  "passed": true,
+  "checks": [
+    {
+      "name": "componentSidebarWiresTransparentInteractionOverlay",
+      "result": "passed"
+    },
+    {
+      "name": "componentHitQueryDoesNotMutateSelection",
+      "result": "passed"
+    },
+    {
+      "name": "movingAnObjectPublishesAndClearsItsDashedPreviewFrame",
+      "result": "passed"
+    },
+    {
+      "name": "imageEditorCanvasCursorFocusedSuite",
+      "result": "passed"
+    },
+    {
+      "name": "releaseContract",
+      "result": "passed",
+      "runs": 3,
+      "assertions": 7
+    },
+    {
+      "name": "xcodebuildFocusedTestBuild",
+      "result": "passed",
+      "deploymentTarget": "macOS 13.0"
+    }
+  ],
+  "notes": [
+    "Selected UI components now have a transparent canvas hit target; resize handles remain rendered above it.",
+    "The focused build and cursor/component suites passed.",
+    "The broader legacy suites still contain unrelated pre-existing failures in command deep-selection and theme-token refresh."
+  ]
+}

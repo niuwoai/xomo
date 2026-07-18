@@ -1238,6 +1238,7 @@ struct ImageEditorView: View {
                     deliverySelectionOverlay(in: geometry.size)
                     colorSamplerOverlay(in: geometry.size)
                     sampledBrushSourceOverlay(in: geometry.size)
+                    selectedXomoObjectInteractionOverlay(in: geometry.size)
                     layerTransformOverlay(in: geometry.size)
                     shapeGradientControlOverlay(in: geometry.size)
                     textBoxOverflowOverlay(in: geometry.size)
@@ -2254,6 +2255,26 @@ struct ImageEditorView: View {
                 isSelectedObjectMoveGestureActive = false
                 lastMoveTranslation = .zero
             }
+    }
+
+    /// A transparent hit target keeps component movement reliable on macOS 13.
+    /// The drop destination is a platform host and can otherwise win the drag
+    /// arena before the canvas-level gesture sees the pointer.  Resize handles
+    /// are rendered afterwards, so they remain the higher-priority interaction.
+    @ViewBuilder
+    private func selectedXomoObjectInteractionOverlay(in size: CGSize) -> some View {
+        if canvasInteractionTool == .move,
+           viewModel.hasSelectedXomoObject,
+           let frame = viewModel.selectedXomoObjectFrame {
+            let rect = viewRect(from: frame, in: size)
+            Rectangle()
+                .fill(Color.white.opacity(0.001))
+                .frame(width: max(1, rect.width), height: max(1, rect.height))
+                .position(x: rect.midX, y: rect.midY)
+                .contentShape(Rectangle())
+                .gesture(selectedXomoObjectCanvasMoveGesture(in: size))
+                .accessibilityHidden(true)
+        }
     }
 
     private func updateCanvasPan(translation: CGSize) {
