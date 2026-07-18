@@ -2263,6 +2263,23 @@ struct ImageEditorScopeTests {
         #expect(source.contains("toneAirbrushOverlay(in: geometry.size)"))
     }
 
+    @Test func dodgeBurnToneRangeShortcutsUseTheActiveCanvasToolAndTextFocusGuard() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let shortcutSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorToneRangeShortcut.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("activeTool: viewModel.canvasInteractionTool"))
+        #expect(source.contains("if action.isBlockedByTextInput, isTextInputActive"))
+        #expect(source.contains(".accessibilityHint(ImageEditorToneRangeShortcut.helpText)"))
+        #expect(shortcutSource.contains("guard activeTool == .dodge || activeTool == .burn"))
+        #expect(shortcutSource.contains("static let modifierFlags: NSEvent.ModifierFlags = [.shift, .option]"))
+    }
+
     @MainActor
     @Test func brushesPanelActionsReuseExistingBrushSettings() throws {
         let image = NSImage(size: NSSize(width: 16, height: 16))

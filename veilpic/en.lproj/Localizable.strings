@@ -498,6 +498,7 @@
 "imageEditor.option.strength" = "Strength";
 "imageEditor.option.exposure" = "Exposure";
 "imageEditor.option.toneRange" = "Range";
+"imageEditor.option.toneRange.help" = "Range shortcuts: %@ %@ · %@ %@ · %@ %@";
 "imageEditor.toneRange.shadows" = "Shadows";
 "imageEditor.toneRange.midtones" = "Midtones";
 "imageEditor.toneRange.highlights" = "Highlights";
@@ -1596,6 +1597,7 @@
 "imageEditor.status.toolsPanelShown" = "Tools panel shown";
 "imageEditor.status.toolsPanelHidden" = "Tools panel hidden";
 "imageEditor.status.optionsPanelSummary" = "Tool: %@ | Selection: %@ | Size: %d px | Opacity: %d%% | Hardness: %d%% | Feather: %d px | Tolerance: %d%%";
+"imageEditor.status.toneRangeShortcut" = "Dodge/Burn range: %@ (%@)";
 "imageEditor.status.optionsBarShown" = "Options bar shown";
 "imageEditor.status.optionsBarHidden" = "Options bar hidden";
 "imageEditor.option.sizePreset" = "%d px";

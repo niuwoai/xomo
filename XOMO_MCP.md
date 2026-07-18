@@ -1,7 +1,8 @@
 # Xomo MCP 与 CLI
 
-> 当前版本：v2.12.0-rc336
+> 当前版本：v2.12.0-rc337
 
+rc337 增加仅在本地减淡/加深画布工具激活时生效的 `Shift+Option+S/M/H` 范围快捷键；MCP/CLI 的 `toneRange=shadows|midtones|highlights` 已完整表达同一状态，因此协议字段与兼容性保持不变。
 rc336 为 `xomo.paint.special` 的 `dodge` 与 `burn` 增加 `airbrush=true|false` 和确定性的 `airbrushPulses=0...80`；脉冲按 18% 流量在最后坐标渐进累积，单独提供脉冲数会自动启用喷枪，界面拖动则使用同一脉冲模型记录沿途停留位置并保持单步 History。
 rc335 为 `xomo.paint.special` 的 `dodge` 与 `burn` 增加 `protectTones=true|false`；省略时默认开启，与界面共享亮度/色度保护和端点色域压缩算法，关闭后保留既有直接通道运算，离线 CLI 工具目录同步公开该布尔字段。
 rc334 为 `xomo.paint.special` 的 `dodge` 与 `burn` 增加 `toneRange=shadows|midtones|highlights`，与界面范围菜单和同一平滑亮度权重算法共用状态；省略字段时默认中间调，`exposure` 仍优先于旧 `opacity`，既有调用保持兼容。

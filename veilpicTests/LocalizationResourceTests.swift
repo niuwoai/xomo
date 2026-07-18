@@ -189,6 +189,28 @@ struct LocalizationResourceTests {
         }
     }
 
+    @Test func dodgeBurnToneRangeShortcutsAreLocalizedInEverySupportedLanguage() throws {
+        let paths = try Self.repositoryPaths()
+        let expectedValues = [
+            "zh-Hans": ["范围快捷键：%@ %@；%@ %@；%@ %@", "减淡/加深范围：%@（%@）"],
+            "en": ["Range shortcuts: %@ %@ · %@ %@ · %@ %@", "Dodge/Burn range: %@ (%@)"],
+            "ja": ["範囲ショートカット：%@ %@・%@ %@・%@ %@", "覆い焼き/焼き込み範囲：%@（%@）"]
+        ]
+        let keys = [
+            "imageEditor.option.toneRange.help",
+            "imageEditor.status.toneRangeShortcut"
+        ]
+
+        for (localizationID, expected) in expectedValues {
+            let strings = try Self.stringTable(
+                tableName: "Localizable",
+                localizationID: localizationID,
+                appDirectory: paths.appDirectory
+            )
+            #expect(keys.compactMap { strings[$0] } == expected)
+        }
+    }
+
     private static func knownRegions(in projectText: String) -> Set<String> {
         guard let start = projectText.range(of: "knownRegions = (") else { return [] }
         let remaining = projectText[start.upperBound...]

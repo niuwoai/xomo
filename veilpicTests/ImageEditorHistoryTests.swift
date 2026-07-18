@@ -246,6 +246,28 @@ struct ImageEditorHistoryTests {
 
         #expect(
             ImageEditorKeyboardShortcutAction.resolve(
+                charactersIgnoringModifiers: "s",
+                modifierFlags: [shift, option],
+                activeTool: .dodge
+            ) == .toneRange(.shadows)
+        )
+        #expect(
+            ImageEditorKeyboardShortcutAction.resolve(
+                charactersIgnoringModifiers: "m",
+                modifierFlags: [shift, option],
+                activeTool: .burn
+            ) == .toneRange(.midtones)
+        )
+        #expect(
+            ImageEditorKeyboardShortcutAction.resolve(
+                charactersIgnoringModifiers: "h",
+                modifierFlags: [shift, option],
+                activeTool: .move
+            ) == nil
+        )
+
+        #expect(
+            ImageEditorKeyboardShortcutAction.resolve(
                 charactersIgnoringModifiers: "a",
                 modifierFlags: []
             ) == nil

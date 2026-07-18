@@ -1,0 +1,79 @@
+{
+  "generated_at": "2026-07-19 05:39:25 +0800",
+  "total": 7,
+  "passed": 7,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "dodgeBurnToneRangeShortcutsUseTheActiveCanvasToolAndTextFocusGuard",
+      "identifier": "veilpicTests/ImageEditorScopeTests/dodgeBurnToneRangeShortcutsUseTheActiveCanvasToolAndTextFocusGuard",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 4.137,
+      "issues": [],
+      "log": "ImageEditorScopeTests.dodgeBurnToneRangeShortcutsUseTheActiveCanvasToolAndTextFocusGuard.log"
+    },
+    {
+      "suite": "ImageEditorToneRangeShortcutTests",
+      "method": "componentLibraryDoesNotInheritThePreviousToneBrushShortcut",
+      "identifier": "veilpicTests/ImageEditorToneRangeShortcutTests/componentLibraryDoesNotInheritThePreviousToneBrushShortcut",
+      "file": "ImageEditorToneRangeShortcutTests.swift",
+      "passed": true,
+      "duration": 3.08,
+      "issues": [],
+      "log": "ImageEditorToneRangeShortcutTests.componentLibraryDoesNotInheritThePreviousToneBrushShortcut.log"
+    },
+    {
+      "suite": "ImageEditorToneRangeShortcutTests",
+      "method": "editorActionKeepsToneRangeShortcutsOutOfTextInput",
+      "identifier": "veilpicTests/ImageEditorToneRangeShortcutTests/editorActionKeepsToneRangeShortcutsOutOfTextInput",
+      "file": "ImageEditorToneRangeShortcutTests.swift",
+      "passed": true,
+      "duration": 3.158,
+      "issues": [],
+      "log": "ImageEditorToneRangeShortcutTests.editorActionKeepsToneRangeShortcutsOutOfTextInput.log"
+    },
+    {
+      "suite": "ImageEditorToneRangeShortcutTests",
+      "method": "rejectsRangeKeysOutsideToneBrushesOrWithDifferentModifiers",
+      "identifier": "veilpicTests/ImageEditorToneRangeShortcutTests/rejectsRangeKeysOutsideToneBrushesOrWithDifferentModifiers",
+      "file": "ImageEditorToneRangeShortcutTests.swift",
+      "passed": true,
+      "duration": 3.134,
+      "issues": [],
+      "log": "ImageEditorToneRangeShortcutTests.rejectsRangeKeysOutsideToneBrushesOrWithDifferentModifiers.log"
+    },
+    {
+      "suite": "ImageEditorToneRangeShortcutTests",
+      "method": "resolvesPhotoshopRangeKeysForDodgeAndBurn",
+      "identifier": "veilpicTests/ImageEditorToneRangeShortcutTests/resolvesPhotoshopRangeKeysForDodgeAndBurn",
+      "file": "ImageEditorToneRangeShortcutTests.swift",
+      "passed": true,
+      "duration": 3.064,
+      "issues": [],
+      "log": "ImageEditorToneRangeShortcutTests.resolvesPhotoshopRangeKeysForDodgeAndBurn.log"
+    },
+    {
+      "suite": "ImageEditorToneRangeShortcutTests",
+      "method": "viewModelAppliesRangeAndReportsTheStandardShortcut",
+      "identifier": "veilpicTests/ImageEditorToneRangeShortcutTests/viewModelAppliesRangeAndReportsTheStandardShortcut",
+      "file": "ImageEditorToneRangeShortcutTests.swift",
+      "passed": true,
+      "duration": 3.118,
+      "issues": [],
+      "log": "ImageEditorToneRangeShortcutTests.viewModelAppliesRangeAndReportsTheStandardShortcut.log"
+    },
+    {
+      "suite": "LocalizationResourceTests",
+      "method": "dodgeBurnToneRangeShortcutsAreLocalizedInEverySupportedLanguage",
+      "identifier": "veilpicTests/LocalizationResourceTests/dodgeBurnToneRangeShortcutsAreLocalizedInEverySupportedLanguage",
+      "file": "LocalizationResourceTests.swift",
+      "passed": true,
+      "duration": 3.049,
+      "issues": [],
+      "log": "LocalizationResourceTests.dodgeBurnToneRangeShortcutsAreLocalizedInEverySupportedLanguage.log"
+    }
+  ]
+}

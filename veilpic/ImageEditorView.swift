@@ -178,6 +178,7 @@ struct ImageEditorView: View {
         .background(
             ImageEditorKeyboardShortcutMonitor(
                 perform: performKeyboardShortcut,
+                activeTool: viewModel.canvasInteractionTool,
                 nudgeSelected: { delta in
                     if !viewModel.nudgeSelectedDeliveryObject(by: delta) {
                         viewModel.nudgeSelectionOrSelectedLayer(by: delta)
@@ -367,7 +368,8 @@ struct ImageEditorView: View {
                 .pickerStyle(.menu)
                 .focusable(false)
                 .frame(width: 116)
-                .help(L10n.text("imageEditor.option.toneRange"))
+                .help(ImageEditorToneRangeShortcut.helpText)
+                .accessibilityHint(ImageEditorToneRangeShortcut.helpText)
                 .accessibilityIdentifier("image-editor-tone-range")
 
                 Toggle(
@@ -1257,6 +1259,7 @@ struct ImageEditorView: View {
         case .curves: viewModel.selectAdjustment(.curves)
         case .colorBalance: viewModel.selectAdjustment(.colorBalance)
         case .hueSaturation: viewModel.selectAdjustment(.hueSaturation)
+        case .toneRange(let range): viewModel.applyToneRangeShortcut(range)
         case .desaturate: viewModel.desaturateSelectedLayer()
         case .invertPixels: viewModel.invertSelectedLayer()
         case .autoLevels: viewModel.autoLevelsSelectedLayer()
@@ -9854,6 +9857,7 @@ enum ImageEditorKeyboardShortcutAction: Equatable {
     case curves
     case colorBalance
     case hueSaturation
+    case toneRange(ImageEditorToneRange)
     case desaturate
     case invertPixels
     case autoLevels
@@ -9896,13 +9900,31 @@ enum ImageEditorKeyboardShortcutAction: Equatable {
     case undo
     case redo
 
+    var isBlockedByTextInput: Bool {
+        switch self {
+        case .toggleQuickMask, .toneRange:
+            true
+        default:
+            false
+        }
+    }
+
     static func resolve(
         charactersIgnoringModifiers: String?,
         modifierFlags: NSEvent.ModifierFlags,
-        keyCode: UInt16? = nil
+        keyCode: UInt16? = nil,
+        activeTool: ImageEditorTool? = nil
     ) -> ImageEditorKeyboardShortcutAction? {
         let key = charactersIgnoringModifiers?.lowercased() ?? ""
         let relevantFlags = modifierFlags.intersection([.command, .option, .shift, .control])
+
+        if let range = ImageEditorToneRangeShortcut.resolve(
+            charactersIgnoringModifiers: charactersIgnoringModifiers,
+            modifierFlags: modifierFlags,
+            activeTool: activeTool
+        ) {
+            return .toneRange(range)
+        }
 
         if keyCode == 51 || keyCode == 117 {
             if relevantFlags.isEmpty { return .clearSelectionPixels }
@@ -9990,6 +10012,7 @@ enum ImageEditorKeyboardShortcutAction: Equatable {
 
 struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
     let perform: (ImageEditorKeyboardShortcutAction) -> Void
+    let activeTool: ImageEditorTool
     let nudgeSelected: (CGSize) -> Void
     let deleteSelectedObject: () -> Bool
     let cancelSelectedObject: () -> Bool
@@ -10000,6 +10023,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
     func makeCoordinator() -> Coordinator {
         Coordinator(
             perform: perform,
+            activeTool: activeTool,
             nudgeSelected: nudgeSelected,
             deleteSelectedObject: deleteSelectedObject,
             cancelSelectedObject: cancelSelectedObject,
@@ -10015,6 +10039,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
 
     func updateNSView(_ nsView: KeyboardShortcutMonitorNSView, context: Context) {
         context.coordinator.perform = perform
+        context.coordinator.activeTool = activeTool
         context.coordinator.nudgeSelected = nudgeSelected
         context.coordinator.deleteSelectedObject = deleteSelectedObject
         context.coordinator.cancelSelectedObject = cancelSelectedObject
@@ -10026,6 +10051,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
     final class Coordinator {
         weak var window: NSWindow?
         var perform: (ImageEditorKeyboardShortcutAction) -> Void
+        var activeTool: ImageEditorTool
         var nudgeSelected: (CGSize) -> Void
         var deleteSelectedObject: () -> Bool
         var cancelSelectedObject: () -> Bool
@@ -10038,6 +10064,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
 
         init(
             perform: @escaping (ImageEditorKeyboardShortcutAction) -> Void,
+            activeTool: ImageEditorTool,
             nudgeSelected: @escaping (CGSize) -> Void,
             deleteSelectedObject: @escaping () -> Bool,
             cancelSelectedObject: @escaping () -> Bool,
@@ -10046,6 +10073,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
             setCanvasModifierFlags: @escaping (NSEvent.ModifierFlags) -> Void
         ) {
             self.perform = perform
+            self.activeTool = activeTool
             self.nudgeSelected = nudgeSelected
             self.deleteSelectedObject = deleteSelectedObject
             self.cancelSelectedObject = cancelSelectedObject
@@ -10112,9 +10140,10 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
             if let action = ImageEditorKeyboardShortcutAction.resolve(
                 charactersIgnoringModifiers: event.charactersIgnoringModifiers,
                 modifierFlags: event.modifierFlags,
-                keyCode: event.keyCode
+                keyCode: event.keyCode,
+                activeTool: activeTool
             ) {
-                if action == .toggleQuickMask, isTextInputActive {
+                if action.isBlockedByTextInput, isTextInputActive {
                     return event
                 }
                 perform(action)

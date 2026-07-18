@@ -2149,6 +2149,20 @@ final class ImageEditorViewModel: ObservableObject {
         statusText = optionsPanelSummaryText
     }
 
+    @discardableResult
+    func applyToneRangeShortcut(_ range: ImageEditorToneRange) -> Bool {
+        guard canvasInteractionTool == .dodge || canvasInteractionTool == .burn else {
+            return false
+        }
+        toneRange = range
+        statusText = L10n.format(
+            "imageEditor.status.toneRangeShortcut",
+            range.title,
+            ImageEditorToneRangeShortcut.displayLabel(for: range)
+        )
+        return true
+    }
+
     func applyOptionsOpacityPreset(_ percent: Int) {
         opacity = CGFloat(max(5, min(100, percent))) / 100
         statusText = optionsPanelSummaryText
