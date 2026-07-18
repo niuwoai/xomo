@@ -463,9 +463,11 @@ struct ImageEditorCanvasCursorTests {
         #expect(ImageEditorTool.classicShortcutGroup(for: "a")?.primaryTool == .pathSelection)
     }
 
-    @Test func directSelectionUsesTheFamiliarSystemArrowAndSharesTheAGroup() {
-        #expect(ImageEditorCanvasCursor.family(for: .directSelection) == .systemArrow)
-        #expect(ImageEditorCanvasCursor.cursor(for: .directSelection, brushDiameter: 18) === NSCursor.arrow)
+    @Test func directSelectionUsesAWhiteEditingArrowAndSharesTheAGroup() {
+        #expect(ImageEditorCanvasCursor.family(for: .directSelection) == .directSelection)
+        let directSelection = ImageEditorCanvasCursor.cursor(for: .directSelection, brushDiameter: 18)
+        #expect(directSelection !== NSCursor.arrow)
+        #expect(directSelection.image.tiffRepresentation != NSCursor.arrow.image.tiffRepresentation)
         #expect(ImageEditorTool.classicShortcutGroup(for: "a")?.tools.contains(.directSelection) == true)
     }
 

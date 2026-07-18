@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-07-18T21:07:05+0800",
+  "version": "2.12.0-rc296",
+  "scope": "路径选择与直接选择工具光标语义",
+  "total": 3,
+  "passed": 3,
+  "failed": 0,
+  "skipped": 0,
+  "result": "passed",
+  "environment": "macOS 26.5.2 / Xcode 17E202 / arm64",
+  "test_targets": [
+    "veilpicTests/ImageEditorCanvasCursorTests/pathSelectionUsesTheFamiliarSystemArrowAndPhotoshopShortcut()",
+    "veilpicTests/ImageEditorCanvasCursorTests/directSelectionUsesAWhiteEditingArrowAndSharesTheAGroup()",
+    "veilpicTests/veilpicTests/imageEditorCanvasCursorFamiliesMatchToolInteractionSemantics()"
+  ],
+  "notes": [
+    "路径选择仍返回 NSCursor.arrow，直接选择返回独立的白色描边箭头图像。",
+    "直接选择继续与路径选择共享 A 快捷键组，但光标族保持可区分。",
+    "三个用例使用 Swift Testing 完整测试标识精确筛选运行，均通过。"
+  ]
+}

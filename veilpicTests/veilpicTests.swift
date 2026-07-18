@@ -6483,6 +6483,8 @@ struct veilpicTests {
     @MainActor
     @Test func imageEditorCanvasCursorFamiliesMatchToolInteractionSemantics() async throws {
         let expectations: [(ImageEditorCanvasCursorFamily, [ImageEditorTool])] = [
+            (.systemArrow, [.pathSelection]),
+            (.directSelection, [.directSelection]),
             (.moveTool, [.move]),
             (.grab, [.hand]),
             (.textInsertion, [.text]),
@@ -6519,7 +6521,7 @@ struct veilpicTests {
         let zoom = ImageEditorCanvasCursor.cursor(for: .zoom, brushDiameter: 18)
         let marquee = ImageEditorCanvasCursor.cursor(for: .marquee, brushDiameter: 18)
         #expect(zoom.image.tiffRepresentation != marquee.image.tiffRepresentation)
-        #expect(ImageEditorCanvasCursor.cursor(for: .move, brushDiameter: 18) === NSCursor.arrow)
+        #expect(ImageEditorCanvasCursor.cursor(for: .move, brushDiameter: 18) !== NSCursor.arrow)
     }
 
     @MainActor

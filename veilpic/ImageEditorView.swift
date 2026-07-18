@@ -7694,6 +7694,7 @@ private struct EditorMarqueeShapeActionRow: View {
 
 enum ImageEditorCanvasCursorFamily: Equatable {
     case systemArrow
+    case directSelection
     case moveTool
     case grab
     case textInsertion
@@ -7927,6 +7928,45 @@ enum ImageEditorCanvasCursor {
         )
     }
 
+    /// Photoshop's Direct Selection tool uses a white node-editing arrow,
+    /// while Path Selection keeps the native black pointer. Keeping that
+    /// distinction visible makes the two tools understandable at a glance.
+    private static func directSelectionCursor() -> NSCursor {
+        let cacheKey = "direct-selection"
+        if let cachedCursor = cursorCache[cacheKey] {
+            return cachedCursor
+        }
+
+        let side: CGFloat = 36
+        let image = NSImage(size: NSSize(width: side, height: side))
+        image.lockFocus()
+
+        let pointer = NSBezierPath()
+        pointer.move(to: NSPoint(x: 8, y: 30))
+        pointer.line(to: NSPoint(x: 8, y: 5))
+        pointer.line(to: NSPoint(x: 28, y: 19))
+        pointer.line(to: NSPoint(x: 19, y: 20))
+        pointer.line(to: NSPoint(x: 24, y: 29))
+        pointer.line(to: NSPoint(x: 18, y: 32))
+        pointer.line(to: NSPoint(x: 13, y: 22))
+        pointer.close()
+
+        NSColor.black.withAlphaComponent(0.95).setStroke()
+        pointer.lineWidth = 3
+        pointer.stroke()
+        NSColor.white.withAlphaComponent(0.98).setFill()
+        pointer.fill()
+        NSColor.black.withAlphaComponent(0.95).setStroke()
+        pointer.lineWidth = 1
+        pointer.stroke()
+
+        image.unlockFocus()
+        return cache(
+            NSCursor(image: image, hotSpot: NSPoint(x: 8, y: side - 30)),
+            for: cacheKey
+        )
+    }
+
     static func tool(
         for sidebarTab: XomoLeftSidebarTab,
         selectedTool: ImageEditorTool,
@@ -7999,7 +8039,7 @@ enum ImageEditorCanvasCursor {
         case .pathSelection:
             .systemArrow
         case .directSelection:
-            .systemArrow
+            .directSelection
         case .zoom:
             .zoomMagnifier
         }
@@ -8018,6 +8058,8 @@ enum ImageEditorCanvasCursor {
         switch family(for: tool) {
         case .systemArrow:
             return .arrow
+        case .directSelection:
+            return directSelectionCursor()
         case .moveTool:
             return moveToolCursor(isDuplicating: modifierFlags.contains(.option))
         case .grab:
