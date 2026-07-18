@@ -1,6 +1,8 @@
 # Xomo MCP 与 CLI
 
-> 当前版本：v2.12.0-rc280
+> 当前版本：v2.12.0-rc281
+
+rc281 将仿制图章与修复画笔的画布指针纳入 Caps Lock 精确模式；该变化只影响本地 UI 光标，不改变 MCP/CLI 数据协议。
 
 rc280 的画布工具交互遵循 Photoshop 的 Caps Lock 精确模式：画笔类工具按下 Caps Lock 时使用系统精确十字光标，MCP/CLI 数据协议不变。
 

@@ -244,7 +244,7 @@ struct ImageEditorCanvasCursorTests {
         #expect(rectangle.image.tiffRepresentation != ellipse.image.tiffRepresentation)
     }
 
-    @Test func capsLockSwitchesBrushFamilyToPrecisionCursor() {
+    @Test func capsLockSwitchesEveryBrushLikeToolToPrecisionCursor() {
         let brush = ImageEditorCanvasCursor.cursor(for: .brush, brushDiameter: 18)
         let precision = ImageEditorCanvasCursor.cursor(
             for: .brush,
@@ -256,10 +256,22 @@ struct ImageEditorCanvasCursorTests {
             brushDiameter: 18,
             modifierFlags: [.capsLock]
         )
+        let clonePrecision = ImageEditorCanvasCursor.cursor(
+            for: .cloneStamp,
+            brushDiameter: 18,
+            modifierFlags: [.capsLock]
+        )
+        let healingPrecision = ImageEditorCanvasCursor.cursor(
+            for: .healingBrush,
+            brushDiameter: 18,
+            modifierFlags: [.capsLock]
+        )
 
         #expect(brush !== NSCursor.crosshair)
         #expect(precision === NSCursor.crosshair)
         #expect(eraserPrecision === NSCursor.crosshair)
+        #expect(clonePrecision === NSCursor.crosshair)
+        #expect(healingPrecision === NSCursor.crosshair)
     }
 
     @Test func zoomCursorReflectsOptionZoomOutMode() {

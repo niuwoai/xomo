@@ -7782,9 +7782,9 @@ enum ImageEditorCanvasCursor {
         case .quickSelection:
             return quickSelectionCursor(mode: selectionMode)
         case .cloneStamp:
-            return cloneStampCursor()
+            return modifierFlags.contains(.capsLock) ? .crosshair : cloneStampCursor()
         case .healingBrush:
-            return healingBrushCursor()
+            return modifierFlags.contains(.capsLock) ? .crosshair : healingBrushCursor()
         case .brushTool, .eraserTool, .toneBrush, .retouchBrush:
             return modifierFlags.contains(.capsLock)
                 ? .crosshair
