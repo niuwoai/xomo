@@ -143,7 +143,9 @@ struct ImageEditorView: View {
             ImageEditorKeyboardShortcutMonitor(
                 perform: performKeyboardShortcut,
                 nudgeSelected: { delta in
-                    viewModel.nudgeSelectionOrSelectedLayer(by: delta)
+                    if !viewModel.nudgeSelectedDeliveryObject(by: delta) {
+                        viewModel.nudgeSelectionOrSelectedLayer(by: delta)
+                    }
                 },
                 deleteSelectedObject: {
                     if deleteSelectedShapeGradientStopIfNeeded() {

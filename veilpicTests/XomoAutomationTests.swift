@@ -268,6 +268,27 @@ struct XomoAutomationTests {
         #expect(viewModel.hotspot(with: hotspot.id) == nil)
     }
 
+    @Test func selectedDeliveryObjectsCanBeNudgedWithoutChangingTheirSize() throws {
+        let viewModel = makeViewModel()
+
+        viewModel.createRectSelection(from: CGPoint(x: 24, y: 18), to: CGPoint(x: 84, y: 58))
+        let slice = try #require(viewModel.createSliceFromCurrentSelection(name: "Hero slice"))
+        let sliceSize = slice.frame.size
+        #expect(viewModel.nudgeSelectedDeliveryObject(by: CGSize(width: 5, height: -5)))
+        let nudgedSlice = try #require(viewModel.slice(with: slice.id))
+        #expect(nudgedSlice.frame.origin == CGPoint(x: 29, y: 13))
+        #expect(nudgedSlice.frame.size == sliceSize)
+
+        viewModel.createRectSelection(from: CGPoint(x: 240, y: 150), to: CGPoint(x: 280, y: 190))
+        let hotspot = try #require(viewModel.createHotspotFromCurrentSelection(name: "Hero link"))
+        let hotspotSize = hotspot.frame.size
+        #expect(viewModel.nudgeSelectedDeliveryObject(by: CGSize(width: 50, height: 50)))
+        let nudgedHotspot = try #require(viewModel.hotspot(with: hotspot.id))
+        #expect(nudgedHotspot.frame.maxX <= viewModel.document.canvasSize.width)
+        #expect(nudgedHotspot.frame.maxY <= viewModel.document.canvasSize.height)
+        #expect(nudgedHotspot.frame.size == hotspotSize)
+    }
+
     @Test func registryUpdatesAndExportsNamedHotspotsAsHTML() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

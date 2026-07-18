@@ -207,6 +207,36 @@ extension ImageEditorViewModel {
         return deleteSlice(id: sliceID) != nil
     }
 
+    /// Nudge the selected delivery object by a pixel delta while keeping its
+    /// original size and the whole rectangle inside the canvas.
+    @discardableResult
+    func nudgeSelectedDeliveryObject(by delta: CGSize) -> Bool {
+        guard abs(delta.width) >= 0.1 || abs(delta.height) >= 0.1 else { return false }
+        if let hotspotID = selectedHotspotID,
+           let hotspot = hotspot(with: hotspotID) {
+            let frame = clampedDeliveryFrame(hotspot.frame, offsetBy: delta)
+            return updateHotspot(id: hotspotID, frame: frame) != nil
+        }
+        guard exportSettings.scope == .slice,
+              let sliceID = exportSettings.sliceID,
+              let slice = slice(with: sliceID)
+        else { return false }
+        let frame = clampedDeliveryFrame(slice.frame, offsetBy: delta)
+        return updateSlice(id: sliceID, frame: frame) != nil
+    }
+
+    private func clampedDeliveryFrame(_ frame: CGRect, offsetBy delta: CGSize) -> CGRect {
+        let standardized = frame.standardized
+        let canvasSize = document.canvasSize
+        let width = min(standardized.width, canvasSize.width)
+        let height = min(standardized.height, canvasSize.height)
+        let maxX = max(0, canvasSize.width - width)
+        let maxY = max(0, canvasSize.height - height)
+        let originX = min(max(standardized.minX + delta.width, 0), maxX)
+        let originY = min(max(standardized.minY + delta.height, 0), maxY)
+        return CGRect(x: originX, y: originY, width: width, height: height)
+    }
+
     var canExportHotspotHTML: Bool {
         !document.hotspots.isEmpty
     }

@@ -1,0 +1,79 @@
+{
+  "generated_at": "2026-07-18 12:37:45 +0800",
+  "total": 7,
+  "passed": 7,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorExportFormatTests",
+      "method": "exportNamingRulesSupportBatchScaleVariants",
+      "identifier": "veilpicTests/ImageEditorExportFormatTests/exportNamingRulesSupportBatchScaleVariants",
+      "file": "ImageEditorExportFormatTests.swift",
+      "passed": true,
+      "duration": 2.998,
+      "issues": [],
+      "log": "ImageEditorExportFormatTests.exportNamingRulesSupportBatchScaleVariants.log"
+    },
+    {
+      "suite": "ImageEditorExportFormatTests",
+      "method": "hotspotHTMLExportEmbedsCanvasAndEscapesImageMapMetadata",
+      "identifier": "veilpicTests/ImageEditorExportFormatTests/hotspotHTMLExportEmbedsCanvasAndEscapesImageMapMetadata",
+      "file": "ImageEditorExportFormatTests.swift",
+      "passed": true,
+      "duration": 3.022,
+      "issues": [],
+      "log": "ImageEditorExportFormatTests.hotspotHTMLExportEmbedsCanvasAndEscapesImageMapMetadata.log"
+    },
+    {
+      "suite": "ImageEditorExportFormatTests",
+      "method": "mixedCanvasExportsPDFAndRejectsSVG",
+      "identifier": "veilpicTests/ImageEditorExportFormatTests/mixedCanvasExportsPDFAndRejectsSVG",
+      "file": "ImageEditorExportFormatTests.swift",
+      "passed": true,
+      "duration": 3.013,
+      "issues": [],
+      "log": "ImageEditorExportFormatTests.mixedCanvasExportsPDFAndRejectsSVG.log"
+    },
+    {
+      "suite": "ImageEditorExportFormatTests",
+      "method": "namedSliceScopeExportsTheNamedRectangularCanvasRegion",
+      "identifier": "veilpicTests/ImageEditorExportFormatTests/namedSliceScopeExportsTheNamedRectangularCanvasRegion",
+      "file": "ImageEditorExportFormatTests.swift",
+      "passed": true,
+      "duration": 2.996,
+      "issues": [],
+      "log": "ImageEditorExportFormatTests.namedSliceScopeExportsTheNamedRectangularCanvasRegion.log"
+    },
+    {
+      "suite": "ImageEditorExportFormatTests",
+      "method": "pureVectorCanvasExportsEditableSVG",
+      "identifier": "veilpicTests/ImageEditorExportFormatTests/pureVectorCanvasExportsEditableSVG",
+      "file": "ImageEditorExportFormatTests.swift",
+      "passed": true,
+      "duration": 3.046,
+      "issues": [],
+      "log": "ImageEditorExportFormatTests.pureVectorCanvasExportsEditableSVG.log"
+    },
+    {
+      "suite": "ImageEditorExportFormatTests",
+      "method": "selectedLayerExportScopeChoosesSingleLayerOrLayerSubtree",
+      "identifier": "veilpicTests/ImageEditorExportFormatTests/selectedLayerExportScopeChoosesSingleLayerOrLayerSubtree",
+      "file": "ImageEditorExportFormatTests.swift",
+      "passed": true,
+      "duration": 2.992,
+      "issues": [],
+      "log": "ImageEditorExportFormatTests.selectedLayerExportScopeChoosesSingleLayerOrLayerSubtree.log"
+    },
+    {
+      "suite": "ImageEditorExportFormatTests",
+      "method": "selectionScopeExportsASelectionSliceBoundedByTheSelectionAndPreservesTransparency",
+      "identifier": "veilpicTests/ImageEditorExportFormatTests/selectionScopeExportsASelectionSliceBoundedByTheSelectionAndPreservesTransparency",
+      "file": "ImageEditorExportFormatTests.swift",
+      "passed": true,
+      "duration": 3.002,
+      "issues": [],
+      "log": "ImageEditorExportFormatTests.selectionScopeExportsASelectionSliceBoundedByTheSelectionAndPreservesTransparency.log"
+    }
+  ]
+}
