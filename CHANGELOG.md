@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.12.0-rc260 - 2026-07-18
+
+### Added
+
+- 新增 Fireworks 风格热点：可从当前选区创建带名称与目标 URL 的矩形热点，画布以低干扰橙色虚线叠加显示，并随 `.xomoproject` 保存恢复。
+- 新增 `xomo.hotspot.create`、`xomo.hotspot.list`、`xomo.hotspot.delete` 自动化工具，CLI 与 MCP 共用同一热点模型。
+
+### Verification
+
+- 新增热点项目往返与自动化创建/查询/删除测试；完成 rc260 全量质量门禁、双架构 Release 编译、冒烟启动与 `/Applications` 安装验证。
+
 ## 2.12.0-rc259 - 2026-07-18
 
 ### Added

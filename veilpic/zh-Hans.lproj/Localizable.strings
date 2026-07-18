@@ -3123,3 +3123,10 @@
 "imageEditor.status.sliceDeleted" = "已删除切片：%@";
 "imageEditor.status.sliceLimitReached" = "切片数量已达到上限";
 "imageEditor.slice.defaultName" = "切片 %d";
+"imageEditor.action.hotspotCreate" = "从当前选区创建热点";
+"imageEditor.history.hotspotCreated" = "创建热点：%@";
+"imageEditor.history.hotspotDeleted" = "删除热点：%@";
+"imageEditor.status.hotspotCreated" = "已创建热点：%@";
+"imageEditor.status.hotspotDeleted" = "已删除热点：%@";
+"imageEditor.status.hotspotLimitReached" = "热点数量已达到上限";
+"imageEditor.hotspot.defaultName" = "热点 %d";

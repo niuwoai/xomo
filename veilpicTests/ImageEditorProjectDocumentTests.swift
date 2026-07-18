@@ -383,6 +383,32 @@ struct ImageEditorProjectDocumentTests {
     }
 
     @Test
+    func projectDocumentRoundTripsNamedHotspotsAndKeepsDestinationURL() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "hotspots.png",
+            image: NSImage.transparent(size: CGSize(width: 120, height: 80))
+        ) { _ in }
+        let hotspotID = UUID()
+        viewModel.document.hotspots = [
+            ImageEditorHotspot(
+                id: hotspotID,
+                name: "Hero link",
+                frame: CGRect(x: 20, y: 12, width: 60, height: 40),
+                url: "https://example.com/hero"
+            )
+        ]
+
+        let project = try ImageEditorProjectDocument(document: viewModel.document)
+        let restored = try project.restoredDocument()
+        let hotspot = try #require(restored.hotspots.first)
+
+        #expect(hotspot.id == hotspotID)
+        #expect(hotspot.name == "Hero link")
+        #expect(hotspot.url == "https://example.com/hero")
+        #expect(hotspot.frame == CGRect(x: 20, y: 12, width: 60, height: 40))
+    }
+
+    @Test
     func projectDocumentStoresSmartObjectSourceOnceForSharedInstances() throws {
         let sourceImage = testImage(color: .systemBlue, size: NSSize(width: 96, height: 72))
         let viewModel = ImageEditorViewModel(sourceName: "design.png", image: sourceImage) { _ in }

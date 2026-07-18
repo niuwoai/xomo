@@ -69,4 +69,64 @@ extension ImageEditorViewModel {
         }
         return L10n.format("imageEditor.slice.defaultName", index)
     }
+
+    var canCreateHotspotFromSelection: Bool {
+        document.hotspots.count < ImageEditorHotspot.maximumCount && hotspotBoundsFromSelection != nil
+    }
+
+    var availableHotspots: [ImageEditorHotspot] {
+        document.hotspots
+    }
+
+    @discardableResult
+    func createHotspotFromCurrentSelection(name: String? = nil, url: String? = nil) -> ImageEditorHotspot? {
+        guard let frame = hotspotBoundsFromSelection else { return nil }
+        guard document.hotspots.count < ImageEditorHotspot.maximumCount else {
+            statusText = L10n.text("imageEditor.status.hotspotLimitReached")
+            return nil
+        }
+
+        let baseName = name?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let hotspotName = baseName.flatMap { $0.isEmpty ? nil : $0 } ?? nextHotspotName()
+        let hotspot = ImageEditorHotspot(
+            name: String(hotspotName.prefix(ImageEditorHotspot.maximumNameLength)),
+            frame: frame,
+            url: String((url ?? "").trimmingCharacters(in: .whitespacesAndNewlines).prefix(ImageEditorHotspot.maximumURLLength))
+        )
+        document.hotspots.append(hotspot)
+        appendHistory(L10n.format("imageEditor.history.hotspotCreated", hotspot.name))
+        statusText = L10n.format("imageEditor.status.hotspotCreated", hotspot.name)
+        return hotspot
+    }
+
+    @discardableResult
+    func deleteHotspot(id: UUID) -> ImageEditorHotspot? {
+        guard let index = document.hotspots.firstIndex(where: { $0.id == id }) else { return nil }
+        let removed = document.hotspots.remove(at: index)
+        appendHistory(L10n.format("imageEditor.history.hotspotDeleted", removed.name))
+        statusText = L10n.format("imageEditor.status.hotspotDeleted", removed.name)
+        return removed
+    }
+
+    func hotspot(with id: UUID) -> ImageEditorHotspot? {
+        document.hotspots.first { $0.id == id }
+    }
+
+    private var hotspotBoundsFromSelection: CGRect? {
+        guard let selection = document.selection else { return nil }
+        let canvasBounds = CGRect(origin: .zero, size: document.canvasSize)
+        let candidate = selection.isInverted ? canvasBounds : selection.bounds.standardized
+        let bounded = candidate.intersection(canvasBounds).integral.intersection(canvasBounds)
+        guard bounded.width > 0, bounded.height > 0 else { return nil }
+        return bounded
+    }
+
+    private func nextHotspotName() -> String {
+        let existing = Set(document.hotspots.map { $0.name.lowercased() })
+        var index = document.hotspots.count + 1
+        while existing.contains(L10n.format("imageEditor.hotspot.defaultName", index).lowercased()) {
+            index += 1
+        }
+        return L10n.format("imageEditor.hotspot.defaultName", index)
+    }
 }

@@ -3123,3 +3123,10 @@
 "imageEditor.status.sliceDeleted" = "Deleted slice: %@";
 "imageEditor.status.sliceLimitReached" = "The slice limit has been reached";
 "imageEditor.slice.defaultName" = "Slice %d";
+"imageEditor.action.hotspotCreate" = "Create Hotspot from Current Selection";
+"imageEditor.history.hotspotCreated" = "Create hotspot: %@";
+"imageEditor.history.hotspotDeleted" = "Delete hotspot: %@";
+"imageEditor.status.hotspotCreated" = "Created hotspot: %@";
+"imageEditor.status.hotspotDeleted" = "Deleted hotspot: %@";
+"imageEditor.status.hotspotLimitReached" = "The hotspot limit has been reached";
+"imageEditor.hotspot.defaultName" = "Hotspot %d";

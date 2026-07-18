@@ -1170,6 +1170,7 @@ struct ImageEditorView: View {
                     quickMaskOverlay(in: geometry.size)
                     selectionOverlay(in: geometry.size)
                     savedPathOverlay(in: geometry.size)
+                    hotspotOverlay(in: geometry.size)
                     colorSamplerOverlay(in: geometry.size)
                     sampledBrushSourceOverlay(in: geometry.size)
                     layerTransformOverlay(in: geometry.size)
@@ -3808,6 +3809,29 @@ struct ImageEditorView: View {
             }
         }
         return path
+    }
+
+    @ViewBuilder
+    private func hotspotOverlay(in size: CGSize) -> some View {
+        let hotspots = viewModel.availableHotspots
+        if !hotspots.isEmpty {
+            Canvas { context, _ in
+                for hotspot in hotspots {
+                    let rect = viewRect(from: hotspot.frame, in: size)
+                    context.fill(
+                        Path(rect),
+                        with: .color(Color.orange.opacity(0.08))
+                    )
+                    context.stroke(
+                        Path(rect),
+                        with: .color(Color.orange.opacity(0.9)),
+                        style: StrokeStyle(lineWidth: 1.4, dash: [6, 4])
+                    )
+                }
+            }
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+        }
     }
 
     @ViewBuilder

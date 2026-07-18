@@ -3123,3 +3123,10 @@
 "imageEditor.status.sliceDeleted" = "スライスを削除しました：%@";
 "imageEditor.status.sliceLimitReached" = "スライス数の上限に達しました";
 "imageEditor.slice.defaultName" = "スライス %d";
+"imageEditor.action.hotspotCreate" = "現在の選択範囲からホットスポットを作成";
+"imageEditor.history.hotspotCreated" = "ホットスポットを作成：%@";
+"imageEditor.history.hotspotDeleted" = "ホットスポットを削除：%@";
+"imageEditor.status.hotspotCreated" = "ホットスポットを作成しました：%@";
+"imageEditor.status.hotspotDeleted" = "ホットスポットを削除しました：%@";
+"imageEditor.status.hotspotLimitReached" = "ホットスポット数の上限に達しました";
+"imageEditor.hotspot.defaultName" = "ホットスポット %d";

@@ -148,6 +148,11 @@ extension ImageEditorView {
         }
         .keyboardShortcut("k", modifiers: [.command, .option])
         .disabled(!viewModel.canCreateSliceFromSelection)
+        Button(L10n.text("imageEditor.action.hotspotCreate")) {
+            viewModel.createHotspotFromCurrentSelection()
+        }
+        .keyboardShortcut("h", modifiers: [.command, .option])
+        .disabled(!viewModel.canCreateHotspotFromSelection)
         Button(L10n.text("imageEditor.action.exportLayers")) {
             guard let scope = viewModel.selectedLayersExportScope else { return }
             viewModel.exportSettings.scope = scope

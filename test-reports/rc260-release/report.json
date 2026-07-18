@@ -1,0 +1,13 @@
+{
+  "version": "2.12.0-rc260",
+  "bundle_id": "im.some.xomo",
+  "minimum_macos": "13.0",
+  "app_architectures": ["arm64", "x86_64"],
+  "cli_architectures": ["arm64", "x86_64"],
+  "full_suite": {"passed": 1043, "failed": 0},
+  "project_suite": {"passed": 11, "failed": 0},
+  "automation_suite": {"passed": 59, "failed": 0},
+  "signature_verified": true,
+  "installed_app": "/Applications/Xomo.app",
+  "smoke": {"process_running": true, "window_count": 1}
+}

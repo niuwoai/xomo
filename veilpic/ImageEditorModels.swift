@@ -4320,6 +4320,41 @@ struct ImageEditorSlice: Identifiable, Equatable, Codable {
     }
 }
 
+/// A rectangular interactive region inspired by Fireworks hotspots.
+/// Hotspots are document metadata and do not alter pixels or layer geometry.
+struct ImageEditorHotspot: Identifiable, Equatable, Codable {
+    static let maximumCount = 256
+    static let maximumNameLength = 80
+    static let maximumURLLength = 2_048
+
+    var id = UUID()
+    var name: String
+    var frame: CGRect
+    var url: String
+
+    init(id: UUID = UUID(), name: String, frame: CGRect, url: String = "") {
+        self.id = id
+        self.name = name
+        self.frame = frame
+        self.url = url
+    }
+
+    func normalized(canvasSize: CGSize) -> ImageEditorHotspot? {
+        let canvasBounds = CGRect(origin: .zero, size: canvasSize)
+        let bounded = frame.standardized.integral.intersection(canvasBounds)
+        guard bounded.width > 0, bounded.height > 0 else { return nil }
+        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedName.isEmpty else { return nil }
+        let trimmedURL = String(url.trimmingCharacters(in: .whitespacesAndNewlines).prefix(Self.maximumURLLength))
+        return ImageEditorHotspot(
+            id: id,
+            name: String(trimmedName.prefix(Self.maximumNameLength)),
+            frame: bounded,
+            url: trimmedURL
+        )
+    }
+}
+
 struct ImageEditorDocument {
     let sourceName: String
     var canvasSize: CGSize
@@ -4335,6 +4370,7 @@ struct ImageEditorDocument {
     var selectedSavedPathID: UUID?
     var guides: [ImageEditorGuide]
     var slices: [ImageEditorSlice] = []
+    var hotspots: [ImageEditorHotspot] = []
     var areExtrasVisible: Bool
     var areGuidesVisible: Bool
     var areGuidesLocked: Bool

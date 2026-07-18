@@ -197,6 +197,12 @@ final class XomoAutomationRegistry {
             return sliceListResult(viewModel)
         case "xomo.slice.delete":
             return try sliceDeleteResult(arguments, viewModel: viewModel)
+        case "xomo.hotspot.create":
+            return try hotspotCreateResult(arguments, viewModel: viewModel)
+        case "xomo.hotspot.list":
+            return hotspotListResult(viewModel)
+        case "xomo.hotspot.delete":
+            return try hotspotDeleteResult(arguments, viewModel: viewModel)
         case "xomo.selection.all":
             viewModel.selectAll()
         case "xomo.selection.rectangle":
@@ -2935,6 +2941,47 @@ final class XomoAutomationRegistry {
         ])
     }
 
+    private func hotspotCreateResult(
+        _ arguments: [String: XomoJSONValue],
+        viewModel: ImageEditorViewModel
+    ) throws -> XomoJSONValue {
+        let name = arguments["name"]?.stringValue
+        let url = arguments["url"]?.stringValue
+        guard let hotspot = viewModel.createHotspotFromCurrentSelection(name: name, url: url) else {
+            throw XomoAutomationCallError.operationFailed(
+                "Create hotspot requires a non-empty pixel selection or an inverted selection"
+            )
+        }
+        return hotspotJSON(hotspot)
+    }
+
+    private func hotspotListResult(_ viewModel: ImageEditorViewModel) -> XomoJSONValue {
+        .array(viewModel.availableHotspots.map(hotspotJSON))
+    }
+
+    private func hotspotDeleteResult(
+        _ arguments: [String: XomoJSONValue],
+        viewModel: ImageEditorViewModel
+    ) throws -> XomoJSONValue {
+        let id = try requiredUUID("id", in: arguments)
+        guard let hotspot = viewModel.deleteHotspot(id: id) else {
+            throw XomoAutomationCallError.notFound("Hotspot \(id.uuidString)")
+        }
+        return hotspotJSON(hotspot)
+    }
+
+    private func hotspotJSON(_ hotspot: ImageEditorHotspot) -> XomoJSONValue {
+        .object([
+            "id": .string(hotspot.id.uuidString),
+            "name": .string(hotspot.name),
+            "url": .string(hotspot.url),
+            "x": .number(hotspot.frame.origin.x),
+            "y": .number(hotspot.frame.origin.y),
+            "width": .number(hotspot.frame.width),
+            "height": .number(hotspot.frame.height)
+        ])
+    }
+
     private func psdInspectionResult(
         _ arguments: [String: XomoJSONValue]
     ) throws -> XomoJSONValue {
@@ -3378,6 +3425,12 @@ private extension XomoAutomationRegistry {
         ]),
         tool("xomo.slice.list", "List named rectangular slices in the active document."),
         tool("xomo.slice.delete", "Delete a named slice by UUID.", idProperties, required: ["id"]),
+        tool("xomo.hotspot.create", "Create a named Fireworks-style hotspot from the current pixel selection.", [
+            "name": XomoAutomationSchema.string(description: "Optional hotspot name; defaults to Hotspot N"),
+            "url": XomoAutomationSchema.string(description: "Optional destination URL for the hotspot")
+        ]),
+        tool("xomo.hotspot.list", "List named rectangular hotspots in the active document."),
+        tool("xomo.hotspot.delete", "Delete a named hotspot by UUID.", idProperties, required: ["id"]),
         tool("xomo.selection.rectangle", "Create a rectangular canvas selection.", rectProperties, required: ["x", "y", "width", "height"]),
         tool("xomo.selection.ellipse", "Create an elliptical canvas selection.", rectProperties, required: ["x", "y", "width", "height"]),
         tool("xomo.selection.lasso", "Create a polygonal lasso selection from canvas points.", ["points": pointsSchema], required: ["points"]),

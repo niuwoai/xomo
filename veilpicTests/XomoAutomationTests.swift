@@ -15,7 +15,7 @@ struct XomoAutomationTests {
             Issue.record("Expected tool array")
             return
         }
-        #expect(tools.count == 126)
+        #expect(tools.count == 129)
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.layer.list")
@@ -190,6 +190,46 @@ struct XomoAutomationTests {
         ))
         #expect(deleteResponse.ok)
         #expect(viewModel.document.slices.isEmpty)
+    }
+
+    @Test func registryCreatesListsAndDeletesNamedHotspots() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        viewModel.createRectSelection(from: CGPoint(x: 24, y: 18), to: CGPoint(x: 84, y: 58))
+
+        let createResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.hotspot.create",
+            arguments: [
+                "name": .string("Hero link"),
+                "url": .string("https://example.com/hero")
+            ]
+        ))
+        #expect(createResponse.ok)
+        guard case .object(let created) = createResponse.result,
+              case .string(let rawID) = created["id"],
+              let id = UUID(uuidString: rawID)
+        else {
+            Issue.record("Expected created hotspot payload")
+            return
+        }
+        #expect(created["name"] == .string("Hero link"))
+        #expect(created["url"] == .string("https://example.com/hero"))
+        #expect(created["width"] == .number(60))
+        #expect(created["height"] == .number(40))
+
+        let listResponse = registry.execute(request(operation: "call", name: "xomo.hotspot.list"))
+        #expect(listResponse.ok)
+        #expect(listResponse.result?.arrayValue?.count == 1)
+
+        let deleteResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.hotspot.delete",
+            arguments: ["id": .string(id.uuidString)]
+        ))
+        #expect(deleteResponse.ok)
+        #expect(viewModel.document.hotspots.isEmpty)
     }
 
     @Test func registryPastesXomoClipboardLayerInPlace() throws {
