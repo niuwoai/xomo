@@ -44,6 +44,15 @@ struct ImageEditorExportPanel: View {
                 }
                 .pickerStyle(.segmented)
 
+                if viewModel.exportSettings.scope == .slice {
+                    Picker(L10n.text("imageEditor.export.slice"), selection: sliceBinding) {
+                        ForEach(viewModel.availableSlices) { slice in
+                            Text(slice.name).tag(Optional(slice.id))
+                        }
+                    }
+                    .pickerStyle(.menu)
+                }
+
                 Picker(L10n.text("imageEditor.export.namingRule"), selection: namingRuleBinding) {
                     ForEach(ImageEditorExportNamingRule.allCases) { rule in
                         Text(rule.title).tag(rule)
@@ -129,7 +138,13 @@ struct ImageEditorExportPanel: View {
     private var scopeBinding: Binding<ImageEditorExportScope> {
         Binding(
             get: { viewModel.exportSettings.scope },
-            set: { viewModel.exportSettings.scope = $0 }
+            set: { scope in
+                viewModel.exportSettings.scope = scope
+                if scope == .slice,
+                   viewModel.exportSettings.sliceID == nil {
+                    viewModel.exportSettings.sliceID = viewModel.availableSlices.first?.id
+                }
+            }
         )
     }
 
@@ -156,6 +171,10 @@ struct ImageEditorExportPanel: View {
             viewModel.exportSettings.format == .psd
                 || viewModel.exportSettings.format == .svg
                 || !viewModel.canExportSelection
+        case .slice:
+            viewModel.exportSettings.format == .psd
+                || viewModel.exportSettings.format == .svg
+                || !viewModel.canExportNamedSlice
         }
     }
 
@@ -170,6 +189,13 @@ struct ImageEditorExportPanel: View {
         Binding(
             get: { viewModel.exportSettings.quality },
             set: { viewModel.exportSettings.quality = $0 }
+        )
+    }
+
+    private var sliceBinding: Binding<UUID?> {
+        Binding(
+            get: { viewModel.exportSettings.sliceID },
+            set: { viewModel.exportSettings.sliceID = $0 }
         )
     }
 

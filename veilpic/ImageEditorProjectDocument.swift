@@ -46,7 +46,7 @@ struct ImageEditorProjectDocument: Codable {
     /// so existing documents remain safe to open after the product rename.
     static let fileExtension = "xomoproject"
     static let legacyFileExtension = "qpicproject"
-    static let formatVersion = 7
+    static let formatVersion = 8
 
     var formatVersion: Int
     var appVersion: String
@@ -64,6 +64,7 @@ struct ImageEditorProjectDocument: Codable {
     var savedPaths: [ImageEditorSavedPath]?
     var selectedSavedPathID: UUID?
     var guides: [ImageEditorGuide]?
+    var slices: [ImageEditorSlice]?
     var areExtrasVisible: Bool?
     var areGuidesVisible: Bool?
     var areGuidesLocked: Bool?
@@ -108,6 +109,7 @@ struct ImageEditorProjectDocument: Codable {
         savedPaths = document.savedPaths
         selectedSavedPathID = document.selectedSavedPathID
         guides = document.guides
+        slices = document.slices
         areExtrasVisible = document.areExtrasVisible
         areGuidesVisible = document.areGuidesVisible
         areGuidesLocked = document.areGuidesLocked
@@ -189,6 +191,17 @@ struct ImageEditorProjectDocument: Codable {
             guard guide.position >= 0, guide.position <= upperBound else { return nil }
             return guide
         }
+        var restoredSlices: [ImageEditorSlice] = []
+        var existingSliceIDs = Set<UUID>()
+        for sourceSlice in (slices ?? []).prefix(ImageEditorSlice.maximumCount) {
+            guard var restoredSlice = sourceSlice.normalized(canvasSize: canvasSize) else { continue }
+            if !existingSliceIDs.insert(restoredSlice.id).inserted {
+                restoredSlice.id = UUID()
+                existingSliceIDs.insert(restoredSlice.id)
+            }
+            restoredSlices.append(restoredSlice)
+        }
+        document.slices = restoredSlices
         document.areExtrasVisible = areExtrasVisible ?? true
         document.areGuidesVisible = areGuidesVisible ?? true
         document.areGuidesLocked = areGuidesLocked ?? false

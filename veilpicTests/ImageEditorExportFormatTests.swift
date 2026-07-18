@@ -127,6 +127,33 @@ struct ImageEditorExportFormatTests {
         #expect(viewModel.exportFilenames(settings: settings) == ["landing-selection.png"])
     }
 
+    @Test func namedSliceScopeExportsTheNamedRectangularCanvasRegion() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "landing.png",
+            image: NSImage.rendered(size: CGSize(width: 80, height: 60)) { rect in
+                NSColor.systemBlue.setFill()
+                rect.fill()
+            }!
+        ) { _ in }
+        let slice = ImageEditorSlice(
+            name: "Hero",
+            frame: CGRect(x: 20, y: 10, width: 40, height: 30)
+        )
+        viewModel.document.slices = [slice]
+
+        let settings = ImageEditorExportSettings(
+            format: .png,
+            scope: .slice,
+            sliceID: slice.id
+        )
+        let data = try #require(viewModel.exportData(settings: settings))
+        let exported = try #require(NSImage(data: data))
+
+        #expect(exported.size == CGSize(width: 40, height: 30))
+        #expect(exported.color(at: CGPoint(x: 20, y: 15))?.alphaComponent ?? 0 > 0.8)
+        #expect(viewModel.exportFilenames(settings: settings) == ["landing-slice.png"])
+    }
+
     @Test func selectedLayerExportScopeChoosesSingleLayerOrLayerSubtree() throws {
         let viewModel = ImageEditorViewModel(
             sourceName: "layers",

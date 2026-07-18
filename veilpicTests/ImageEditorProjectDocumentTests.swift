@@ -359,6 +359,30 @@ struct ImageEditorProjectDocumentTests {
     }
 
     @Test
+    func projectDocumentRoundTripsNamedSlicesAndNormalizesThemToCanvas() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "slices.png",
+            image: NSImage.transparent(size: CGSize(width: 120, height: 80))
+        ) { _ in }
+        let sliceID = UUID()
+        viewModel.document.slices = [
+            ImageEditorSlice(
+                id: sliceID,
+                name: "Hero",
+                frame: CGRect(x: 20, y: 12, width: 60, height: 40)
+            )
+        ]
+
+        let project = try ImageEditorProjectDocument(document: viewModel.document)
+        let restored = try project.restoredDocument()
+        let slice = try #require(restored.slices.first)
+
+        #expect(slice.id == sliceID)
+        #expect(slice.name == "Hero")
+        #expect(slice.frame == CGRect(x: 20, y: 12, width: 60, height: 40))
+    }
+
+    @Test
     func projectDocumentStoresSmartObjectSourceOnceForSharedInstances() throws {
         let sourceImage = testImage(color: .systemBlue, size: NSSize(width: 96, height: 72))
         let viewModel = ImageEditorViewModel(sourceName: "design.png", image: sourceImage) { _ in }

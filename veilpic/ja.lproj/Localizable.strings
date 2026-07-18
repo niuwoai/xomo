@@ -3115,3 +3115,11 @@
 "imageEditor.action.copySelectedLayersClipboard" = "選択したレイヤーをクリップボードへコピー";
 "imageEditor.status.selectedLayersCopiedToClipboard" = "選択したレイヤーをクリップボードへコピーしました";
 "imageEditor.status.selectedLayersCopyToClipboardFailed" = "選択したレイヤーをクリップボードへコピーできませんでした";
+"imageEditor.action.sliceCreate" = "現在の選択範囲からスライスを作成";
+"imageEditor.export.slice" = "名前付きスライス";
+"imageEditor.history.sliceCreated" = "スライスを作成：%@";
+"imageEditor.history.sliceDeleted" = "スライスを削除：%@";
+"imageEditor.status.sliceCreated" = "スライスを作成しました：%@";
+"imageEditor.status.sliceDeleted" = "スライスを削除しました：%@";
+"imageEditor.status.sliceLimitReached" = "スライス数の上限に達しました";
+"imageEditor.slice.defaultName" = "スライス %d";

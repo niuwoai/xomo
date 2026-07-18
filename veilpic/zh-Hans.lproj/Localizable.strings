@@ -3115,3 +3115,11 @@
 "imageEditor.action.copySelectedLayersClipboard" = "复制所选图层到剪贴板";
 "imageEditor.status.selectedLayersCopiedToClipboard" = "已将所选图层复制到剪贴板";
 "imageEditor.status.selectedLayersCopyToClipboardFailed" = "复制所选图层到剪贴板失败";
+"imageEditor.action.sliceCreate" = "从当前选区创建切片";
+"imageEditor.export.slice" = "命名切片";
+"imageEditor.history.sliceCreated" = "创建切片：%@";
+"imageEditor.history.sliceDeleted" = "删除切片：%@";
+"imageEditor.status.sliceCreated" = "已创建切片：%@";
+"imageEditor.status.sliceDeleted" = "已删除切片：%@";
+"imageEditor.status.sliceLimitReached" = "切片数量已达到上限";
+"imageEditor.slice.defaultName" = "切片 %d";

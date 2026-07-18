@@ -63,6 +63,7 @@ enum ImageEditorExportScope: String, CaseIterable, Identifiable {
     case selectedLayer
     case selectedLayers
     case selection
+    case slice
 
     var id: String { rawValue }
 
@@ -88,6 +89,7 @@ struct ImageEditorExportSettings: Equatable {
 
     var format: ImageEditorExportFormat = .png
     var scope: ImageEditorExportScope = .composited
+    var sliceID: UUID?
     var scale: Double = 1
     var batchScales: Set<Double> = []
     var namingRule: ImageEditorExportNamingRule = .sourceScopeAndScale
@@ -111,8 +113,14 @@ struct ImageEditorExportSettings: Equatable {
 extension ImageEditorViewModel {
     var exportSizeText: String {
         let scale = exportSettings.usesScale ? exportSettings.scale : 1
-        let size = exportImage(for: exportSettings.scope).size.scaled(by: scale)
+        let size = exportImage(for: exportSettings.scope, sliceID: exportSettings.sliceID).size.scaled(by: scale)
         return "\(Int(size.width.rounded())) x \(Int(size.height.rounded())) px"
+    }
+
+    var canExportNamedSlice: Bool {
+        guard !document.slices.isEmpty else { return false }
+        guard let sliceID = exportSettings.sliceID else { return true }
+        return slice(with: sliceID) != nil
     }
 
     var canExportSelectedLayer: Bool {
@@ -164,6 +172,16 @@ extension ImageEditorViewModel {
         if exportSettings.scope == .selection, !canExportSelection {
             exportSettings.scope = .composited
         }
+        if exportSettings.scope == .slice {
+            if let sliceID = exportSettings.sliceID, slice(with: sliceID) != nil {
+                // Keep the current named slice.
+            } else if let firstSlice = document.slices.first {
+                exportSettings.sliceID = firstSlice.id
+            } else {
+                exportSettings.scope = .composited
+                exportSettings.sliceID = nil
+            }
+        }
         isExportSheetPresented = true
     }
 
@@ -173,7 +191,7 @@ extension ImageEditorViewModel {
 
     func exportData(settings: ImageEditorExportSettings) -> Data? {
         let normalized = normalizedExportSettings(settings)
-        let image = exportImage(for: normalized.scope)
+        let image = exportImage(for: normalized.scope, sliceID: normalized.sliceID)
         let scaled = image.scaled(by: normalized.scale)
         switch normalized.format {
         case .png:
@@ -276,10 +294,20 @@ extension ImageEditorViewModel {
         if normalized.scope == .selection, !canExportSelection {
             normalized.scope = .composited
         }
+        if normalized.scope == .slice {
+            if let sliceID = normalized.sliceID, slice(with: sliceID) != nil {
+                // Keep the requested named slice.
+            } else if let firstSlice = document.slices.first {
+                normalized.sliceID = firstSlice.id
+            } else {
+                normalized.scope = .composited
+                normalized.sliceID = nil
+            }
+        }
         return normalized
     }
 
-    private func exportImage(for scope: ImageEditorExportScope) -> NSImage {
+    private func exportImage(for scope: ImageEditorExportScope, sliceID: UUID? = nil) -> NSImage {
         switch scope {
         case .composited:
             document.compositedImage
@@ -289,7 +317,17 @@ extension ImageEditorViewModel {
             selectedLayersExportImage() ?? document.compositedImage
         case .selection:
             selectedSelectionExportImage() ?? document.compositedImage
+        case .slice:
+            namedSliceExportImage(for: sliceID) ?? document.compositedImage
         }
+    }
+
+    private func namedSliceExportImage(for id: UUID?) -> NSImage? {
+        guard let id,
+              let slice = slice(with: id),
+              let image = document.compositedImage.cropped(to: slice.frame)
+        else { return nil }
+        return image
     }
 
     private var selectionExportBounds: CGRect? {
@@ -408,6 +446,8 @@ extension ImageEditorViewModel {
             scopeSuffix = "selected-layers"
         case .selection:
             scopeSuffix = "selection"
+        case .slice:
+            scopeSuffix = "slice"
         }
         let name: String
         switch settings.namingRule {

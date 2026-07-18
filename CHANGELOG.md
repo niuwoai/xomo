@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.12.0-rc259 - 2026-07-18
+
+### Added
+
+- 新增 Fireworks 风格命名切片：可从当前选区创建矩形切片，随 `.xomoproject` 保存并恢复，可在导出面板中选择并按 PNG/JPEG/WebP 导出。
+- 新增 `xomo.slice.create`、`xomo.slice.list`、`xomo.slice.delete` 自动化工具，并让 `xomo.export.render` 支持 `scope=slice` 与 `sliceID`。
+
+### Verification
+
+- 项目持久化 10/10、导出 6/6、MCP 自动化 58/58 通过；新增切片往返、裁切导出和自动化闭环测试。
+
 ## 2.12.0-rc258 - 2026-07-18
 
 ### Added

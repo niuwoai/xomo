@@ -191,6 +191,12 @@ final class XomoAutomationRegistry {
             try layerCompAction(arguments, viewModel: viewModel)
         case "xomo.selection.get":
             return selectionResult(viewModel)
+        case "xomo.slice.create":
+            return try sliceCreateResult(arguments, viewModel: viewModel)
+        case "xomo.slice.list":
+            return sliceListResult(viewModel)
+        case "xomo.slice.delete":
+            return try sliceDeleteResult(arguments, viewModel: viewModel)
         case "xomo.selection.all":
             viewModel.selectAll()
         case "xomo.selection.rectangle":
@@ -2872,6 +2878,12 @@ final class XomoAutomationRegistry {
         var settings = ImageEditorExportSettings()
         settings.format = format
         settings.scope = scope
+        if scope == .slice, let rawSliceID = arguments["sliceID"]?.stringValue {
+            guard let sliceID = UUID(uuidString: rawSliceID) else {
+                throw XomoAutomationCallError.invalidArgument("Invalid UUID argument: sliceID")
+            }
+            settings.sliceID = sliceID
+        }
         settings.scale = arguments["scale"]?.doubleValue ?? 1
         settings.quality = arguments["quality"]?.doubleValue ?? 0.9
         guard let data = viewModel.exportData(settings: settings) else {
@@ -2881,6 +2893,45 @@ final class XomoAutomationRegistry {
             "filename": .string(viewModel.exportFilenames(settings: settings).first ?? "xomo.\(format.filenameExtension)"),
             "mimeType": .string(format.contentType.preferredMIMEType ?? "application/octet-stream"),
             "base64": .string(data.base64EncodedString())
+        ])
+    }
+
+    private func sliceCreateResult(
+        _ arguments: [String: XomoJSONValue],
+        viewModel: ImageEditorViewModel
+    ) throws -> XomoJSONValue {
+        let name = arguments["name"]?.stringValue
+        guard let slice = viewModel.createSliceFromCurrentSelection(name: name) else {
+            throw XomoAutomationCallError.operationFailed(
+                "Create slice requires a non-empty pixel selection or an inverted selection"
+            )
+        }
+        return sliceJSON(slice)
+    }
+
+    private func sliceListResult(_ viewModel: ImageEditorViewModel) -> XomoJSONValue {
+        .array(viewModel.availableSlices.map(sliceJSON))
+    }
+
+    private func sliceDeleteResult(
+        _ arguments: [String: XomoJSONValue],
+        viewModel: ImageEditorViewModel
+    ) throws -> XomoJSONValue {
+        let id = try requiredUUID("id", in: arguments)
+        guard let slice = viewModel.deleteSlice(id: id) else {
+            throw XomoAutomationCallError.notFound("Slice \(id.uuidString)")
+        }
+        return sliceJSON(slice)
+    }
+
+    private func sliceJSON(_ slice: ImageEditorSlice) -> XomoJSONValue {
+        .object([
+            "id": .string(slice.id.uuidString),
+            "name": .string(slice.name),
+            "x": .number(slice.frame.origin.x),
+            "y": .number(slice.frame.origin.y),
+            "width": .number(slice.frame.width),
+            "height": .number(slice.frame.height)
         ])
     }
 
@@ -3322,6 +3373,11 @@ private extension XomoAutomationRegistry {
         ], required: ["action"]),
         tool("xomo.selection.get", "Inspect the active pixel selection."),
         tool("xomo.selection.all", "Select the full canvas."),
+        tool("xomo.slice.create", "Create a named rectangular Fireworks-style slice from the current pixel selection.", [
+            "name": XomoAutomationSchema.string(description: "Optional slice name; defaults to Slice N")
+        ]),
+        tool("xomo.slice.list", "List named rectangular slices in the active document."),
+        tool("xomo.slice.delete", "Delete a named slice by UUID.", idProperties, required: ["id"]),
         tool("xomo.selection.rectangle", "Create a rectangular canvas selection.", rectProperties, required: ["x", "y", "width", "height"]),
         tool("xomo.selection.ellipse", "Create an elliptical canvas selection.", rectProperties, required: ["x", "y", "width", "height"]),
         tool("xomo.selection.lasso", "Create a polygonal lasso selection from canvas points.", ["points": pointsSchema], required: ["points"]),
@@ -3595,6 +3651,7 @@ private extension XomoAutomationRegistry {
         tool("xomo.export.render", "Render the active document and return base64 encoded export data.", [
             "format": XomoAutomationSchema.string(description: "Export format", values: ImageEditorExportFormat.allCases.map(\.rawValue)),
             "scope": XomoAutomationSchema.string(description: "Export scope", values: ImageEditorExportScope.allCases.map(\.rawValue)),
+            "sliceID": XomoAutomationSchema.string(description: "Named slice UUID when scope is slice"),
             "scale": XomoAutomationSchema.number(description: "Bitmap export scale"),
             "quality": XomoAutomationSchema.number(description: "JPEG or WebP quality from 0 to 1")
         ])

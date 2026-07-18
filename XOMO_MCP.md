@@ -1,6 +1,8 @@
 # Xomo MCP 与 CLI
 
-> 当前版本：v2.12.0-rc258
+> 当前版本：v2.12.0-rc259
+
+rc259 起，`xomo.slice.create`、`xomo.slice.list` 和 `xomo.slice.delete` 提供命名矩形切片的创建、查询与删除；`xomo.export.render` 在 `scope=slice` 时接受 `sliceID`，与 UI 导出面板使用相同的切片模型。
 
 rc242 起，`xomo.layer.list` 的 Figma 图层条目包含 `figmaImageFill`，可读取 IMAGE 填充的源引用、缩放模式、变换、缩放因子、旋转和滤镜参数。
 

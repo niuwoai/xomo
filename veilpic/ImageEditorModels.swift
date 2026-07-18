@@ -4290,6 +4290,36 @@ struct ImageEditorGuide: Identifiable, Equatable, Codable {
     var position: CGFloat
 }
 
+/// A named rectangular delivery region inspired by Fireworks slices.
+/// Slices are document metadata: they do not alter pixels or layer geometry.
+struct ImageEditorSlice: Identifiable, Equatable, Codable {
+    static let maximumCount = 256
+    static let maximumNameLength = 80
+
+    var id = UUID()
+    var name: String
+    var frame: CGRect
+
+    init(id: UUID = UUID(), name: String, frame: CGRect) {
+        self.id = id
+        self.name = name
+        self.frame = frame
+    }
+
+    func normalized(canvasSize: CGSize) -> ImageEditorSlice? {
+        let canvasBounds = CGRect(origin: .zero, size: canvasSize)
+        let bounded = frame.standardized.integral.intersection(canvasBounds)
+        guard bounded.width > 0, bounded.height > 0 else { return nil }
+        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedName.isEmpty else { return nil }
+        return ImageEditorSlice(
+            id: id,
+            name: String(trimmedName.prefix(Self.maximumNameLength)),
+            frame: bounded
+        )
+    }
+}
+
 struct ImageEditorDocument {
     let sourceName: String
     var canvasSize: CGSize
@@ -4304,6 +4334,7 @@ struct ImageEditorDocument {
     var savedPaths: [ImageEditorSavedPath]
     var selectedSavedPathID: UUID?
     var guides: [ImageEditorGuide]
+    var slices: [ImageEditorSlice] = []
     var areExtrasVisible: Bool
     var areGuidesVisible: Bool
     var areGuidesLocked: Bool

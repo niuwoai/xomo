@@ -143,6 +143,11 @@ extension ImageEditorView {
         }
         .keyboardShortcut("e", modifiers: [.command, .option])
         .disabled(!viewModel.canExportSelection)
+        Button(L10n.text("imageEditor.action.sliceCreate")) {
+            viewModel.createSliceFromCurrentSelection()
+        }
+        .keyboardShortcut("k", modifiers: [.command, .option])
+        .disabled(!viewModel.canCreateSliceFromSelection)
         Button(L10n.text("imageEditor.action.exportLayers")) {
             guard let scope = viewModel.selectedLayersExportScope else { return }
             viewModel.exportSettings.scope = scope
