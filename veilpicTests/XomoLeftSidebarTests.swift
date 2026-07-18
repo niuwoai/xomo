@@ -560,6 +560,7 @@ struct XomoLeftSidebarTests {
         #expect(source.contains("isCanvasPanGestureActive: isCanvasPanGestureActive"))
         #expect(source.contains("private func refreshCanvasCursor(in size: CGSize)"))
         #expect(source.contains("refreshCanvasCursor(in: geometry.size)"))
+        #expect(source.contains("NSCursor.arrow.set()"))
         #expect(source.components(separatedBy: "switch canvasInteractionTool").count - 1 >= 3)
     }
 

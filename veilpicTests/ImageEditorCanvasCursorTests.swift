@@ -88,6 +88,31 @@ struct ImageEditorCanvasCursorTests {
         )
     }
 
+    @Test func componentLibraryNeverLeaksAnyPreviousToolCursor() {
+        let staleModifiers: NSEvent.ModifierFlags = [.command, .option, .shift, .control, .capsLock]
+
+        for tool in ImageEditorTool.allCases {
+            #expect(
+                ImageEditorCanvasCursor.cursor(
+                    for: .components,
+                    selectedTool: tool,
+                    brushDiameter: 96,
+                    modifierFlags: staleModifiers
+                ) === NSCursor.arrow
+            )
+        }
+
+        #expect(
+            ImageEditorCanvasCursor.cursor(
+                for: .components,
+                selectedTool: .brush,
+                brushDiameter: 96,
+                isPointerOverCanvas: false,
+                modifierFlags: staleModifiers
+            ) === NSCursor.arrow
+        )
+    }
+
     @Test func toolCursorFallsBackToSystemArrowOutsideDrawableCanvas() {
         let outside = ImageEditorCanvasCursor.cursor(
             for: .tools,

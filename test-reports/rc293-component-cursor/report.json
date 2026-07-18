@@ -1,0 +1,20 @@
+{
+  "generated_at": "2026-07-18 20:35:01 +0800",
+  "version": "2.12.0-rc293",
+  "scope": "组件库系统箭头语义与工具光标隔离",
+  "total": 22,
+  "passed": 22,
+  "failed": 0,
+  "skipped": 0,
+  "result": "passed",
+  "environment": "macOS 26.5.2 / Xcode 17E202 / arm64",
+  "test_targets": [
+    "veilpicTests/ImageEditorCanvasCursorTests",
+    "veilpicTests/XomoLeftSidebarTests/componentSidebarWiresMoveSemanticsIntoCanvasCursorAndGestures"
+  ],
+  "notes": [
+    "组件库模式在所有工具、旧修饰键和画布外状态下均返回 NSCursor.arrow，不泄漏上一个工具的指针。",
+    "只有 Space/画布平移期间切换到 openHand/closedHand；普通组件对象选中仍使用系统箭头。",
+    "MCP/CLI 数据协议不变。"
+  ]
+}
