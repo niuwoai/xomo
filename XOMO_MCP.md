@@ -1,6 +1,8 @@
 # Xomo MCP 与 CLI
 
-> 当前版本：v2.12.0-rc276
+> 当前版本：v2.12.0-rc277
+
+rc277 增加只读发布契约检查 `scripts/verify_release_contract.rb`，可为发布门禁输出 JSON/Markdown，并核对 App/CLI/所有 Xcode target 的版本、Bundle ID、macOS 13 下限和双架构构建入口。
 
 rc276 让裁切框内部、边缘和角点显示上下文抓取/缩放光标；rc275 让矩形选区默认替换模式也使用带虚线框的语义光标；rc274 让选择、裁切、修补、渐变、形状、仿制图章、修复画笔和钢笔等工具使用可辨识的语义光标；rc273 让组件库插入与选中属于对象操作，画布光标保持系统箭头；工具光标仍按工具语义解析。rc272 完善 UI 裁切工作流：裁切框确认前可整体移动或用八个控制点调整，始终限制在画布边界内；MCP/CLI 的 `xomo.canvas.crop_to_selection` 数据语义不变，仍由确认后的文档裁切负责写入 History。rc271 为 UI 活动选区增加 Photoshop 风格行进蚂蚁视觉反馈。
 

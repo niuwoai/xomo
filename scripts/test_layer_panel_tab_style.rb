@@ -10,10 +10,11 @@ checks = {
   "uses_custom_tab_buttons" => source.include?("Button {") && source.include?("image-editor-layer-panel-tab-"),
   "does_not_use_system_segmented_picker" => !source.match?(/private var layerPanelTabs.*?pickerStyle\(\.segmented\)/m),
   "uses_native_label_with_explicit_light_foreground" =>
-    source.include?("struct ImageEditorLayerPanelTabLabel: NSViewRepresentable") &&
-      source.include?("label.attributedStringValue = NSAttributedString(") &&
+    source.include?("enum ImageEditorLayerPanelTabAppearance") &&
+      source.include?("class ImageEditorLayerPanelTabNativeLabel: NSView") &&
+      source.include?("NSColor.white") &&
       source.include?(".foregroundColor: color") &&
-      source.include?("label.textColor = color"),
+      source.include?("label.appearance = NSAppearance(named: .darkAqua)"),
   "keeps_tabs_unfocusable" => source.match?(/private var layerPanelTabs.*?\.focusable\(false\)/m)
 }
 

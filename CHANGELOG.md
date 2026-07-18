@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc277 - 2026-07-18
+
+### Added
+- 新增只读发布契约检查 `scripts/verify_release_contract.rb`，统一核对 App/CLI/所有 Xcode target 的版本、`im.some.xomo` Bundle ID、测试 Bundle ID、macOS 13 下限、CLI 双架构入口、Release 导出入口和独立测试入口，并同时生成 JSON/Markdown 报告。
+
+### Verification
+- Ruby 发布契约单元测试 3/3（7 项断言）通过；当前仓库 8 项发布契约检查全部通过，报告见 `test-reports/rc277-release-contract/`。
+
 ## 2.12.0-rc276 - 2026-07-18
 
 ### Changed
