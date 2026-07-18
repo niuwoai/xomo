@@ -77,6 +77,7 @@ struct ImageEditorView: View {
     @State private var isHistoryDockExpanded = false
     @State private var isFiltersDockExpanded = false
     @State private var isPropertiesDockExpanded = false
+    @State private var isHotspotsDockExpanded = true
     @State private var isRightDockMounted = false
     @State private var isPointerInsideCanvas = false
     @State private var hoverViewPoint: CGPoint?
@@ -2311,6 +2312,16 @@ struct ImageEditorView: View {
                         propertiesPanel(showsTitle: false)
                     }
                 }
+
+                if viewModel.isHotspotsPanelVisible {
+                    EditorDockDisclosure(
+                        title: L10n.text("imageEditor.panel.hotspots"),
+                        systemImage: "scope",
+                        isExpanded: $isHotspotsDockExpanded
+                    ) {
+                        ImageEditorHotspotPanel(viewModel: viewModel, showsTitle: false)
+                    }
+                }
             }
             .frame(maxWidth: .infinity, alignment: .topLeading)
             .padding(8)
@@ -3818,14 +3829,15 @@ struct ImageEditorView: View {
             Canvas { context, _ in
                 for hotspot in hotspots {
                     let rect = viewRect(from: hotspot.frame, in: size)
+                    let isSelected = viewModel.selectedHotspotID == hotspot.id
                     context.fill(
                         Path(rect),
-                        with: .color(Color.orange.opacity(0.08))
+                        with: .color(Color.orange.opacity(isSelected ? 0.16 : 0.08))
                     )
                     context.stroke(
                         Path(rect),
-                        with: .color(Color.orange.opacity(0.9)),
-                        style: StrokeStyle(lineWidth: 1.4, dash: [6, 4])
+                        with: .color(Color.orange.opacity(isSelected ? 1 : 0.9)),
+                        style: StrokeStyle(lineWidth: isSelected ? 2 : 1.4, dash: [6, 4])
                     )
                 }
             }

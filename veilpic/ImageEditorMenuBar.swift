@@ -1747,7 +1747,27 @@ extension ImageEditorView {
         Divider()
         pathActionsMenu
         Divider()
+        hotspotsActionsMenu
+        Divider()
         propertiesActionsMenu
+    }
+
+    @ViewBuilder
+    private var hotspotsActionsMenu: some View {
+        Menu(L10n.text("imageEditor.menu.window.hotspots")) {
+            Button(L10n.text("imageEditor.action.hotspotsShowPanel")) {
+                viewModel.isHotspotsPanelVisible = true
+                viewModel.statusText = L10n.text("imageEditor.status.hotspotsPanelShown")
+            }
+            Button(L10n.text(viewModel.isHotspotsPanelVisible ? "imageEditor.action.hotspotsHidePanel" : "imageEditor.action.hotspotsShowPanelVisibility")) {
+                viewModel.toggleHotspotsPanelVisibility()
+            }
+            Divider()
+            Button(L10n.text("imageEditor.action.hotspotHTMLExport")) {
+                viewModel.exportHotspotHTML()
+            }
+            .disabled(!viewModel.canExportHotspotHTML)
+        }
     }
 
     @ViewBuilder

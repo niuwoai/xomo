@@ -218,6 +218,8 @@ struct XomoAutomationTests {
         #expect(created["url"] == .string("https://example.com/hero"))
         #expect(created["width"] == .number(60))
         #expect(created["height"] == .number(40))
+        #expect(viewModel.selectedHotspotID == id)
+        #expect(viewModel.isHotspotsPanelVisible)
 
         let listResponse = registry.execute(request(operation: "call", name: "xomo.hotspot.list"))
         #expect(listResponse.ok)
@@ -230,6 +232,7 @@ struct XomoAutomationTests {
         ))
         #expect(deleteResponse.ok)
         #expect(viewModel.document.hotspots.isEmpty)
+        #expect(viewModel.selectedHotspotID == nil)
     }
 
     @Test func registryUpdatesAndExportsNamedHotspotsAsHTML() throws {

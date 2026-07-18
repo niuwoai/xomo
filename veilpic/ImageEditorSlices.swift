@@ -96,6 +96,8 @@ extension ImageEditorViewModel {
         )
         pushUndo()
         document.hotspots.append(hotspot)
+        selectedHotspotID = hotspot.id
+        isHotspotsPanelVisible = true
         appendHistory(L10n.format("imageEditor.history.hotspotCreated", hotspot.name))
         statusText = L10n.format("imageEditor.status.hotspotCreated", hotspot.name)
         return hotspot
@@ -106,6 +108,9 @@ extension ImageEditorViewModel {
         guard let index = document.hotspots.firstIndex(where: { $0.id == id }) else { return nil }
         pushUndo()
         let removed = document.hotspots.remove(at: index)
+        if selectedHotspotID == id {
+            selectedHotspotID = document.hotspots.first?.id
+        }
         appendHistory(L10n.format("imageEditor.history.hotspotDeleted", removed.name))
         statusText = L10n.format("imageEditor.status.hotspotDeleted", removed.name)
         return removed
@@ -133,6 +138,7 @@ extension ImageEditorViewModel {
         guard normalized != document.hotspots[index] else { return normalized }
         pushUndo()
         document.hotspots[index] = normalized
+        selectedHotspotID = normalized.id
         appendHistory(L10n.format("imageEditor.history.hotspotUpdated", normalized.name))
         statusText = L10n.format("imageEditor.status.hotspotUpdated", normalized.name)
         return normalized
