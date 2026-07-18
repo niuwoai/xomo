@@ -103,6 +103,24 @@ struct LocalizationResourceTests {
         }
     }
 
+    @Test func dodgeBurnExposureLabelIsLocalizedInEverySupportedLanguage() throws {
+        let paths = try Self.repositoryPaths()
+        let expectedValues = [
+            "zh-Hans": "曝光度",
+            "en": "Exposure",
+            "ja": "露光量"
+        ]
+
+        for (localizationID, expectedValue) in expectedValues {
+            let strings = try Self.stringTable(
+                tableName: "Localizable",
+                localizationID: localizationID,
+                appDirectory: paths.appDirectory
+            )
+            #expect(strings["imageEditor.option.exposure"] == expectedValue)
+        }
+    }
+
     private static func knownRegions(in projectText: String) -> Set<String> {
         guard let start = projectText.range(of: "knownRegions = (") else { return [] }
         let remaining = projectText[start.upperBound...]

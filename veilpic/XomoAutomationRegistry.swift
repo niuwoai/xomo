@@ -2571,7 +2571,10 @@ final class XomoAutomationRegistry {
         let action = try requiredString("action", in: arguments)
         if let size = arguments["size"]?.doubleValue { viewModel.brushSize = size }
         let usesStrength = ["blur", "sharpen", "smudge"].contains(action)
-        if usesStrength, let strength = arguments["strength"]?.doubleValue {
+        let usesExposure = ["dodge", "burn"].contains(action)
+        if usesExposure, let exposure = arguments["exposure"]?.doubleValue {
+            viewModel.opacity = max(0, min(1, exposure))
+        } else if usesStrength, let strength = arguments["strength"]?.doubleValue {
             viewModel.opacity = max(0, min(1, strength))
         } else if let opacity = arguments["opacity"]?.doubleValue {
             viewModel.opacity = opacity
@@ -3671,6 +3674,7 @@ private extension XomoAutomationRegistry {
             "size": XomoAutomationSchema.number(description: "Brush diameter"),
             "opacity": XomoAutomationSchema.number(description: "Brush opacity"),
             "strength": XomoAutomationSchema.number(description: "Blur, sharpen, or smudge strength from 0 to 1; preferred over legacy opacity"),
+            "exposure": XomoAutomationSchema.number(description: "Dodge or burn exposure from 0 to 1; preferred over legacy opacity"),
             "hardness": XomoAutomationSchema.number(description: "Brush edge hardness from 0 to 1"),
             "feather": XomoAutomationSchema.number(description: "Patch selection feather radius"),
             "mode": XomoAutomationSchema.string(description: "Patch mode", values: ["source", "destination"]),

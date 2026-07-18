@@ -1,7 +1,8 @@
 # Xomo MCP 与 CLI
 
-> 当前版本：v2.12.0-rc331
+> 当前版本：v2.12.0-rc332
 
+rc332 为 `xomo.paint.special` 的 `dodge` 与 `burn` 增加 `exposure=0...1`，与界面 0%–100% 曝光度共用 `viewModel.opacity` 像素入口；`exposure` 优先于同时出现的旧 `opacity`，仅传旧字段仍兼容。
 rc331 将 `xomo.paint.special` 的 `strength=0...1` 扩展到 `blur`、`sharpen` 与 `smudge`；三种 action 与界面 0%–100% 强度共用 `viewModel.opacity` 像素入口，`strength` 优先于同时出现的旧 `opacity`，仅传旧字段仍兼容。
 rc330 为 `xomo.paint.special` 的 `smudge` 增加 `strength=0...1`，与界面 0%–100% 强度共用 `viewModel.opacity` 像素入口；若同时提供 `strength` 与旧 `opacity`，使用语义更明确的 `strength`，仅传 `opacity` 的既有客户端保持兼容。
 rc329 让 `xomo.paint.special` 已有的 `hardness=0...1` 真实影响 `smudge` 的笔触边缘；界面与自动化共用同一方向性分段蒙版、选区和 History/Undo 入口，协议字段不变，`smudge` 仍需要至少两个坐标确定拖色方向。

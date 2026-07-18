@@ -369,12 +369,12 @@ struct ImageEditorView: View {
                 }
                 if usesOpacityOption {
                     optionSlider(
-                        titleKey: opacityOptionTitleKey,
+                        titleKey: amountOptionTitleKey,
                         value: $viewModel.opacity,
-                        range: opacityOptionRange,
+                        range: amountOptionRange,
                         step: 0.05,
-                        suffix: opacityOptionSuffix,
-                        displayMultiplier: opacityOptionDisplayMultiplier
+                        suffix: amountOptionSuffix,
+                        displayMultiplier: amountOptionDisplayMultiplier
                     )
                 }
                 if usesBrushDynamicsOptions {
@@ -490,22 +490,35 @@ struct ImageEditorView: View {
         }
     }
 
-    private var opacityOptionTitleKey: String {
-        usesStrengthOption
-            ? "imageEditor.option.strength"
-            : "imageEditor.option.opacity"
+    private var amountOptionTitleKey: String {
+        if usesExposureOption { return "imageEditor.option.exposure" }
+        if usesStrengthOption { return "imageEditor.option.strength" }
+        return "imageEditor.option.opacity"
     }
 
-    private var opacityOptionRange: ClosedRange<CGFloat> {
-        usesStrengthOption ? 0...1 : 0.05...1
+    private var amountOptionRange: ClosedRange<CGFloat> {
+        usesPercentageAmountOption ? 0...1 : 0.05...1
     }
 
-    private var opacityOptionSuffix: String {
-        usesStrengthOption ? "%" : ""
+    private var amountOptionSuffix: String {
+        usesPercentageAmountOption ? "%" : ""
     }
 
-    private var opacityOptionDisplayMultiplier: CGFloat {
-        usesStrengthOption ? 100 : 1
+    private var amountOptionDisplayMultiplier: CGFloat {
+        usesPercentageAmountOption ? 100 : 1
+    }
+
+    private var usesPercentageAmountOption: Bool {
+        usesExposureOption || usesStrengthOption
+    }
+
+    private var usesExposureOption: Bool {
+        switch viewModel.selectedTool {
+        case .dodge, .burn:
+            true
+        default:
+            false
+        }
     }
 
     private var usesStrengthOption: Bool {

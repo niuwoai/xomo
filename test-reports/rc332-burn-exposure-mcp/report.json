@@ -1,0 +1,19 @@
+{
+  "generated_at": "2026-07-19 03:58:54 +0800",
+  "total": 1,
+  "passed": 1,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registryConfiguresBurnExposure",
+      "identifier": "veilpicTests/XomoAutomationTests/registryConfiguresBurnExposure",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 3.217,
+      "issues": [],
+      "log": "XomoAutomationTests.registryConfiguresBurnExposure.log"
+    }
+  ]
+}

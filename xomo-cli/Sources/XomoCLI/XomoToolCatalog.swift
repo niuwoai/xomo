@@ -143,7 +143,7 @@ enum XomoToolCatalog {
         ("xomo.brush.preset", "List, create, apply, or delete persisted brush presets."),
         ("xomo.paint.stroke", "Paint a pressure-aware brush or eraser stroke with size, hardness, opacity, flow, spacing, and pressure-curve controls."),
         ("xomo.paint.gradient", "Paint a gradient between canvas points."),
-        ("xomo.paint.special", "Use clone or healing with explicit source and sampling options, source/destination patching, tone, sponge, strength-aware blur, sharpen, and smudge, red-eye, and paint-bucket tools."),
+        ("xomo.paint.special", "Use clone or healing with explicit source and sampling options, source/destination patching, exposure-aware dodge and burn, sponge, strength-aware blur, sharpen, and smudge, red-eye, and paint-bucket tools."),
         ("xomo.shape.create", "Create an editable rectangle or ellipse with solid or multi-stop linear-gradient fill, independent stroke, corner radii, and superellipse smoothing."),
         ("xomo.shape.get", "Inspect fill kind, editable multi-stop linear gradient, independent stroke, corner radii, and smoothing on the selected shape."),
         ("xomo.shape.update", "Update only the specified fill kind, multi-stop linear gradient, stroke, corner radii, and smoothing properties."),

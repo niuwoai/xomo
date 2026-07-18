@@ -43,11 +43,13 @@ struct ImageEditorOptionsBarStyleTests {
         #expect(source.contains(
             "Label(viewModel.marqueeShape.title, systemImage: viewModel.marqueeShape.symbolName)\n                .foregroundStyle(Color(nsColor: ImageEditorOptionsBarAppearance.foregroundColor))"
         ))
-        #expect(optionBarSource.contains("titleKey: opacityOptionTitleKey"))
-        #expect(source.contains("? \"imageEditor.option.strength\""))
+        #expect(optionBarSource.contains("titleKey: amountOptionTitleKey"))
+        #expect(source.contains("return \"imageEditor.option.strength\""))
+        #expect(source.contains("return \"imageEditor.option.exposure\""))
         #expect(source.contains("case .blur, .sharpen, .smudge:"))
-        #expect(source.contains("usesStrengthOption ? 0...1 : 0.05...1"))
-        #expect(source.contains("displayMultiplier: opacityOptionDisplayMultiplier"))
+        #expect(source.contains("case .dodge, .burn:"))
+        #expect(source.contains("usesPercentageAmountOption ? 0...1 : 0.05...1"))
+        #expect(source.contains("displayMultiplier: amountOptionDisplayMultiplier"))
 
         let explicitForegroundUses = source.components(
             separatedBy: "ImageEditorOptionsBarAppearance.foregroundColor"

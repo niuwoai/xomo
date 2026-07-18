@@ -496,6 +496,7 @@
 "imageEditor.option.size" = "Size";
 "imageEditor.option.opacity" = "Opacity";
 "imageEditor.option.strength" = "Strength";
+"imageEditor.option.exposure" = "Exposure";
 "imageEditor.option.fillOpacity" = "Fill";
 "imageEditor.option.blendIf" = "Blend If";
 "imageEditor.option.blendIfSource" = "This Layer";

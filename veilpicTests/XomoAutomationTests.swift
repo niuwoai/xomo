@@ -2045,6 +2045,74 @@ struct XomoAutomationTests {
         ])
     }
 
+    @Test func registryConfiguresDodgeExposure() {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("dodge"),
+                "exposure": .number(0.34),
+                "opacity": .number(0.87),
+                "points": .array([
+                    .object(["x": .number(32), "y": .number(32)])
+                ])
+            ]
+        ))
+
+        #expect(response.ok)
+        #expect(abs(viewModel.opacity - 0.34) < 0.001)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.dodge"))
+    }
+
+    @Test func registryConfiguresBurnExposure() {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("burn"),
+                "exposure": .number(0.46),
+                "opacity": .number(0.89),
+                "points": .array([
+                    .object(["x": .number(32), "y": .number(32)])
+                ])
+            ]
+        ))
+
+        #expect(response.ok)
+        #expect(abs(viewModel.opacity - 0.46) < 0.001)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.burn"))
+    }
+
+    @Test func registryKeepsLegacyDodgeOpacity() {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("dodge"),
+                "opacity": .number(0.43),
+                "points": .array([
+                    .object(["x": .number(32), "y": .number(32)])
+                ])
+            ]
+        ))
+
+        #expect(response.ok)
+        #expect(abs(viewModel.opacity - 0.43) < 0.001)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.dodge"))
+    }
+
     @Test func registryAcceptsSinglePointBlurAndSharpenDabs() {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

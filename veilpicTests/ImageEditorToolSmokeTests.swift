@@ -214,6 +214,42 @@ struct ImageEditorToolSmokeTests {
         #expect(burn.document.history.last?.title == L10n.text("imageEditor.history.burn"))
     }
 
+    @Test func dodgeExposureControlsPixelEffect() throws {
+        let image = solidImage(color: NSColor(deviceWhite: 0.45, alpha: 1))
+        let low = makeConfiguredRetouchViewModel(image: image)
+        let high = makeConfiguredRetouchViewModel(image: image)
+        low.opacity = 0.20
+        high.opacity = 1
+        let point = CGPoint(x: 20, y: 14)
+
+        low.toneBrush(points: [point], burn: false)
+        high.toneBrush(points: [point], burn: false)
+
+        let lowExposure = try redComponent(in: low, at: point)
+        let highExposure = try redComponent(in: high, at: point)
+        #expect(highExposure > lowExposure + 0.25)
+        #expect(low.document.history.last?.title == L10n.text("imageEditor.history.dodge"))
+        #expect(high.document.history.last?.title == L10n.text("imageEditor.history.dodge"))
+    }
+
+    @Test func burnExposureControlsPixelEffect() throws {
+        let image = solidImage(color: NSColor(deviceWhite: 0.45, alpha: 1))
+        let low = makeConfiguredRetouchViewModel(image: image)
+        let high = makeConfiguredRetouchViewModel(image: image)
+        low.opacity = 0.20
+        high.opacity = 1
+        let point = CGPoint(x: 20, y: 14)
+
+        low.toneBrush(points: [point], burn: true)
+        high.toneBrush(points: [point], burn: true)
+
+        let lowExposure = try redComponent(in: low, at: point)
+        let highExposure = try redComponent(in: high, at: point)
+        #expect(highExposure < lowExposure - 0.20)
+        #expect(low.document.history.last?.title == L10n.text("imageEditor.history.burn"))
+        #expect(high.document.history.last?.title == L10n.text("imageEditor.history.burn"))
+    }
+
     @Test func blurAndSharpenHardnessControlTheVisibleStrokeEdge() throws {
         let hardEdge = NSImage.rendered(size: canvasSize) { rect in
             NSColor(deviceWhite: 0.35, alpha: 1).setFill()
