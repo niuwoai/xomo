@@ -1,0 +1,16 @@
+{
+  "version": "2.12.0-rc257",
+  "suite": "ImageEditorPSDTests",
+  "total": 29,
+  "passed": 29,
+  "failed": 0,
+  "jobs": 1,
+  "build": "arm64",
+  "fixture": "gradient-vector-shape.psd",
+  "coverage": [
+    "PSD GdFl + vmsk import",
+    "editable gradient path shape materialization",
+    "project round trip",
+    "PSD export and reimport"
+  ]
+}

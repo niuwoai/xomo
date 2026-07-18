@@ -1290,9 +1290,15 @@ enum ImageEditorPSDCodec {
     private static func exportGradientFillContent(
         for layer: ImageEditorLayer
     ) -> ImageEditorGradientFillContent? {
-        guard layer.isGradientFill,
-              !layer.style.hasConfiguredEffects,
-              let content = layer.gradientFillContent?.normalized(),
+        guard !layer.style.hasConfiguredEffects else { return nil }
+        if let content = layer.gradientFillContent?.normalized(), content.style == .linear {
+            return content
+        }
+        guard let shape = layer.shapeContent,
+              shape.kind == .path,
+              shape.fillOpacity >= 0.999,
+              shape.strokeOpacity <= 0.001,
+              let content = shape.fillGradient?.normalized(),
               content.style == .linear
         else { return nil }
         return content
@@ -2085,6 +2091,31 @@ enum ImageEditorPSDCodec {
            let shapeContent = vectorMaskContent(record: record, size: CGSize(width: width, height: height)) {
             var shape = shapeContent
             shape.fillColor = solidFillContent.color
+            var layer = ImageEditorLayer.shape(
+                name: record.name,
+                frame: CGRect(
+                    x: record.left,
+                    y: canvasHeight - record.bottom,
+                    width: width,
+                    height: height
+                ),
+                content: shape
+            )
+            layer.opacity = CGFloat(record.opacity) / 255
+            layer.fillOpacity = CGFloat(record.fillOpacity) / 255
+            layer.isVisible = record.flags & 2 == 0
+            applyProtection(record: record, to: &layer)
+            layer.isClippingMask = record.clipping != 0
+            layer.blendMode = ImageEditorBlendMode(psdKey: record.blendKey)
+            applyMask(record: record, channels: channels, to: &layer)
+            return layer
+        }
+        if let gradientFillContent = record.gradientFillContent?.normalized(),
+           gradientFillContent.style == .linear,
+           record.vectorMaskInfo?.isEnabled == true,
+           let shapeContent = vectorMaskContent(record: record, size: CGSize(width: width, height: height)) {
+            var shape = shapeContent
+            shape.fillGradient = gradientFillContent
             var layer = ImageEditorLayer.shape(
                 name: record.name,
                 frame: CGRect(

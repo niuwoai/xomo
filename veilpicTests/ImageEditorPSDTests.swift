@@ -609,6 +609,38 @@ struct ImageEditorPSDTests {
         #expect(reimportedShape.editablePathAnchors.count == 3)
     }
 
+    @Test func externalGradientVectorShapeFixtureBecomesEditableShapeAndRoundTrips() throws {
+        let data = try psdFixtureData("gradient-vector-shape.psd")
+        let document = try ImageEditorPSDCodec.decode(data, sourceName: "gradient-vector-shape.psd")
+        let layer = try #require(document.layers.first)
+        let shape = try #require(layer.shapeContent)
+        let gradient = try #require(shape.fillGradient?.normalized())
+        let stops = try #require(gradient.colorStops)
+
+        #expect(layer.isShape)
+        #expect(shape.kind == .path)
+        #expect(shape.isPathClosed)
+        #expect(gradient.style == .linear)
+        #expect(stops.count == 2)
+        #expect(abs(stops[0].red - 32.0 / 255.0) < 0.01)
+        #expect(abs(stops[1].blue - 40.0 / 255.0) < 0.01)
+
+        let report = try ImageEditorPSDCodec.compatibilityReport(data)
+        #expect(!report.issues.contains { $0.kind == .vectorRasterized })
+        #expect(!report.issues.contains { $0.kind == .fillLayerRasterized })
+
+        let project = try ImageEditorProjectDocument(document: document)
+        let restoredProject = try project.restoredDocument()
+        let restoredShape = try #require(restoredProject.layers.first?.shapeContent)
+        #expect(restoredShape.fillGradient?.normalized() == gradient)
+
+        let exported = try ImageEditorPSDCodec.encode(document: document)
+        let reimported = try ImageEditorPSDCodec.decode(exported, sourceName: "gradient-vector-shape-roundtrip.psd")
+        let reimportedShape = try #require(reimported.layers.first?.shapeContent)
+        #expect(reimportedShape.kind == .path)
+        #expect(reimportedShape.fillGradient?.normalized() == gradient)
+    }
+
     @Test func externalGradientFillFixtureBecomesNativeEditableGradientLayer() throws {
         let data = try psdFixtureData("gradient-fill.psd")
         let document = try ImageEditorPSDCodec.decode(data, sourceName: "gradient-fill.psd")

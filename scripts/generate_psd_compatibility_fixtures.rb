@@ -480,6 +480,32 @@ def solid_vector_shape_fixture
   )
 end
 
+def gradient_vector_shape_fixture
+  pixel = ([180] * 16).pack("C*")
+  alpha = ([255] * 16).pack("C*")
+  channels = {
+    -1 => raw_channel(alpha),
+    0 => raw_channel(pixel),
+    1 => raw_channel(pixel),
+    2 => raw_channel(pixel)
+  }
+  record = layer_record(
+    name: "Editable Gradient Shape",
+    channels: channels,
+    blocks: [
+      tagged_block("GdFl", gradient_fill_descriptor),
+      tagged_block("vmsk", vector_mask_payload)
+    ]
+  )
+  layer_info = i16(1) + record + channels.values.join
+  layer_info << "\0" if layer_info.bytesize.odd?
+  layer_and_mask = u32(layer_info.bytesize) + layer_info + u32(0)
+  psd(
+    layer_payload: u32(layer_and_mask.bytesize) + layer_and_mask,
+    composite: u16(0) + pixel + pixel + pixel + alpha
+  )
+end
+
 def gradient_fill_fixture
   pixel = ([180] * 16).pack("C*")
   alpha = ([255] * 16).pack("C*")
@@ -568,6 +594,7 @@ fixtures = {
   "editable-text.psd" => editable_text_fixture,
   "solid-color-fill.psd" => solid_color_fill_fixture,
   "solid-vector-shape.psd" => solid_vector_shape_fixture,
+  "gradient-vector-shape.psd" => gradient_vector_shape_fixture,
   "gradient-fill.psd" => gradient_fill_fixture,
   "vector-mask.psd" => vector_mask_fixture,
   "vector-mask-multi.psd" => multi_vector_mask_fixture,
@@ -585,6 +612,7 @@ expectations = {
   "editable-text.psd" => %w[editable_text font_size color alignment],
   "solid-color-fill.psd" => %w[editable_solid_color_fill rgb_descriptor],
   "solid-vector-shape.psd" => %w[editable_vector_shape solid_fill vector_mask],
+  "gradient-vector-shape.psd" => %w[editable_vector_shape gradient_fill vector_mask],
   "gradient-fill.psd" => %w[editable_gradient_fill linear_color_stops],
   "vector-mask.psd" => %w[editable_vector_mask closed_path bezier_points],
   "vector-mask-multi.psd" => %w[editable_vector_mask multiple_subpaths even_odd_hole],
