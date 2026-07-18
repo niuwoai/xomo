@@ -469,6 +469,8 @@ struct ImageEditorScopeTests {
         #expect(source.contains("onMiddleMousePanBegan"))
         #expect(source.contains("onMiddleMousePanChanged"))
         #expect(source.contains("onMiddleMousePanEnded"))
+        #expect(source.contains("onMouseMoved"))
+        #expect(source.contains("updateCanvasCursor(at: location, in: geometry.size)"))
         #expect(source.contains("viewModel.magnifyCanvas(factor, at: location, viewportSize: viewportSize)"))
         #expect(source.contains("viewModel.endCanvasMagnify()"))
     }

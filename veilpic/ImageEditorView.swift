@@ -1316,6 +1316,11 @@ struct ImageEditorView: View {
                             viewModel.magnifyCanvas(factor, at: location, viewportSize: viewportSize)
                             viewModel.endCanvasMagnify()
                         },
+                        onMouseMoved: { location in
+                            isPointerInsideCanvas = true
+                            hoverViewPoint = location
+                            updateCanvasCursor(at: location, in: geometry.size)
+                        },
                         onMiddleMousePanBegan: {
                             isCanvasPanGestureActive = true
                             NSCursor.closedHand.set()

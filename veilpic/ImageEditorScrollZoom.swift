@@ -22,6 +22,9 @@ enum ImageEditorCanvasMiddleMousePanGeometry {
 struct ScrollWheelZoomView: NSViewRepresentable {
     /// 回调参数：本次缩放乘法系数、光标在视口内的坐标（左上原点 y-down）、视口尺寸。
     let onZoom: (_ factor: CGFloat, _ location: CGPoint, _ viewportSize: CGSize) -> Void
+    /// macOS 13 的 SwiftUI onHover 不提供坐标；由透明 AppKit 承载层补发
+    /// 鼠标位置，让移动工具可以准确区分空白画布和可移动对象。
+    let onMouseMoved: (_ location: CGPoint) -> Void
     let onMiddleMousePanBegan: () -> Void
     let onMiddleMousePanChanged: (_ delta: CGSize) -> Void
     let onMiddleMousePanEnded: () -> Void
@@ -29,6 +32,7 @@ struct ScrollWheelZoomView: NSViewRepresentable {
     func makeNSView(context: Context) -> ScrollWheelZoomNSView {
         let view = ScrollWheelZoomNSView()
         view.onZoom = onZoom
+        view.onMouseMoved = onMouseMoved
         view.onMiddleMousePanBegan = onMiddleMousePanBegan
         view.onMiddleMousePanChanged = onMiddleMousePanChanged
         view.onMiddleMousePanEnded = onMiddleMousePanEnded
@@ -37,6 +41,7 @@ struct ScrollWheelZoomView: NSViewRepresentable {
 
     func updateNSView(_ nsView: ScrollWheelZoomNSView, context: Context) {
         nsView.onZoom = onZoom
+        nsView.onMouseMoved = onMouseMoved
         nsView.onMiddleMousePanBegan = onMiddleMousePanBegan
         nsView.onMiddleMousePanChanged = onMiddleMousePanChanged
         nsView.onMiddleMousePanEnded = onMiddleMousePanEnded
@@ -49,11 +54,13 @@ struct ScrollWheelZoomView: NSViewRepresentable {
 
 final class ScrollWheelZoomNSView: NSView {
     var onZoom: ((CGFloat, CGPoint, CGSize) -> Void)?
+    var onMouseMoved: ((CGPoint) -> Void)?
     var onMiddleMousePanBegan: (() -> Void)?
     var onMiddleMousePanChanged: ((CGSize) -> Void)?
     var onMiddleMousePanEnded: (() -> Void)?
     private var monitor: Any?
     private var middleMouseMonitor: Any?
+    private var mouseMovedMonitor: Any?
     private var isMiddleMousePanning = false
     private var lastMiddleMousePoint: CGPoint?
 
@@ -89,6 +96,12 @@ final class ScrollWheelZoomNSView: NSView {
                 return nil
             }
         }
+        if mouseMovedMonitor == nil {
+            mouseMovedMonitor = NSEvent.addLocalMonitorForEvents(matching: .mouseMoved) { [weak self] event in
+                self?.handleMouseMoved(event)
+                return event
+            }
+        }
     }
 
     func teardownMonitor() {
@@ -100,6 +113,10 @@ final class ScrollWheelZoomNSView: NSView {
             NSEvent.removeMonitor(middleMouseMonitor)
         }
         middleMouseMonitor = nil
+        if let mouseMovedMonitor {
+            NSEvent.removeMonitor(mouseMovedMonitor)
+        }
+        mouseMovedMonitor = nil
         if isMiddleMousePanning {
             onMiddleMousePanEnded?()
         }
@@ -109,6 +126,13 @@ final class ScrollWheelZoomNSView: NSView {
 
     deinit {
         teardownMonitor()
+    }
+
+    private func handleMouseMoved(_ event: NSEvent) {
+        guard let window, event.window === window else { return }
+        let location = convert(event.locationInWindow, from: nil)
+        guard bounds.contains(location) else { return }
+        onMouseMoved?(location)
     }
 
     /// 返回 true 表示已处理并应消费该滚轮事件。

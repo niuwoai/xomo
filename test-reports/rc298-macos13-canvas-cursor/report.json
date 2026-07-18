@@ -1,0 +1,25 @@
+{
+  "version": "2.12.0-rc298",
+  "scope": "macOS 13 canvas cursor coordinate delivery",
+  "command": "xcodebuild test -project veilpic.xcodeproj -scheme veilpic -destination 'platform=macOS' -derivedDataPath /private/tmp/xomo-rc298-derived -resultBundlePath /private/tmp/xomo-rc298.xcresult -only-testing:veilpicTests/ImageEditorScopeTests/canvasWorkspaceWiresScrollWheelZoomToViewModel() -only-testing:veilpicTests/ImageEditorCanvasCursorTests/toolsTabPreservesSelectedToolCursorAndPanOverride()",
+  "environment": {
+    "architecture": "arm64",
+    "model": "MacBook Pro",
+    "os": "macOS 26.5.2"
+  },
+  "result": {
+    "passed": 2,
+    "failed": 0,
+    "skipped": 0,
+    "status": "passed"
+  },
+  "tests": [
+    "ImageEditorScopeTests/canvasWorkspaceWiresScrollWheelZoomToViewModel()",
+    "ImageEditorCanvasCursorTests/toolsTabPreservesSelectedToolCursorAndPanOverride()"
+  ],
+  "release_contract": {
+    "tests": 3,
+    "assertions": 7,
+    "failures": 0
+  }
+}
