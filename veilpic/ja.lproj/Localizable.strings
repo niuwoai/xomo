@@ -3124,9 +3124,15 @@
 "imageEditor.status.sliceLimitReached" = "スライス数の上限に達しました";
 "imageEditor.slice.defaultName" = "スライス %d";
 "imageEditor.action.hotspotCreate" = "現在の選択範囲からホットスポットを作成";
+"imageEditor.action.hotspotHTMLExport" = "ホットスポット HTML を書き出す";
 "imageEditor.history.hotspotCreated" = "ホットスポットを作成：%@";
 "imageEditor.history.hotspotDeleted" = "ホットスポットを削除：%@";
+"imageEditor.history.hotspotUpdated" = "ホットスポットを更新：%@";
 "imageEditor.status.hotspotCreated" = "ホットスポットを作成しました：%@";
 "imageEditor.status.hotspotDeleted" = "ホットスポットを削除しました：%@";
+"imageEditor.status.hotspotUpdated" = "ホットスポットを更新しました：%@";
 "imageEditor.status.hotspotLimitReached" = "ホットスポット数の上限に達しました";
+"imageEditor.status.hotspotHTMLExported" = "ホットスポット HTML を書き出しました：%@";
+"imageEditor.status.hotspotHTMLExportFailed" = "ホットスポット HTML の書き出しに失敗しました";
+"imageEditor.status.hotspotHTMLExportFailedWithReason" = "ホットスポット HTML の書き出しに失敗しました：%@";
 "imageEditor.hotspot.defaultName" = "ホットスポット %d";

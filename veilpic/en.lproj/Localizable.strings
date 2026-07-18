@@ -3124,9 +3124,15 @@
 "imageEditor.status.sliceLimitReached" = "The slice limit has been reached";
 "imageEditor.slice.defaultName" = "Slice %d";
 "imageEditor.action.hotspotCreate" = "Create Hotspot from Current Selection";
+"imageEditor.action.hotspotHTMLExport" = "Export Hotspot HTML";
 "imageEditor.history.hotspotCreated" = "Create hotspot: %@";
 "imageEditor.history.hotspotDeleted" = "Delete hotspot: %@";
+"imageEditor.history.hotspotUpdated" = "Update hotspot: %@";
 "imageEditor.status.hotspotCreated" = "Created hotspot: %@";
 "imageEditor.status.hotspotDeleted" = "Deleted hotspot: %@";
+"imageEditor.status.hotspotUpdated" = "Updated hotspot: %@";
 "imageEditor.status.hotspotLimitReached" = "The hotspot limit has been reached";
+"imageEditor.status.hotspotHTMLExported" = "Exported hotspot HTML: %@";
+"imageEditor.status.hotspotHTMLExportFailed" = "Hotspot HTML export failed";
+"imageEditor.status.hotspotHTMLExportFailedWithReason" = "Hotspot HTML export failed: %@";
 "imageEditor.hotspot.defaultName" = "Hotspot %d";

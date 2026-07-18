@@ -15,7 +15,7 @@ struct XomoAutomationTests {
             Issue.record("Expected tool array")
             return
         }
-        #expect(tools.count == 129)
+        #expect(tools.count == 131)
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.layer.list")
@@ -230,6 +230,50 @@ struct XomoAutomationTests {
         ))
         #expect(deleteResponse.ok)
         #expect(viewModel.document.hotspots.isEmpty)
+    }
+
+    @Test func registryUpdatesAndExportsNamedHotspotsAsHTML() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        viewModel.createRectSelection(from: CGPoint(x: 24, y: 18), to: CGPoint(x: 84, y: 58))
+
+        let createResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.hotspot.create",
+            arguments: ["name": .string("Hero"), "url": .string("https://example.com/old")]
+        ))
+        #expect(createResponse.ok)
+        let id = try #require(createResponse.result?.objectValue?["id"]?.stringValue)
+
+        let updateResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.hotspot.update",
+            arguments: [
+                "id": .string(id),
+                "name": .string("Hero CTA"),
+                "url": .string("https://example.com/hero"),
+                "x": .number(30),
+                "y": .number(20),
+                "width": .number(70),
+                "height": .number(44)
+            ]
+        ))
+        #expect(updateResponse.ok)
+        #expect(updateResponse.result?.objectValue?["name"] == .string("Hero CTA"))
+        #expect(updateResponse.result?.objectValue?["width"] == .number(70))
+
+        let exportResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.hotspot.export_html"
+        ))
+        #expect(exportResponse.ok)
+        #expect(exportResponse.result?.objectValue?["mimeType"] == .string("text/html"))
+        let encoded = try #require(exportResponse.result?.objectValue?["base64"]?.stringValue)
+        let html = try #require(Data(base64Encoded: encoded).flatMap { String(data: $0, encoding: .utf8) })
+        #expect(html.contains("usemap=\"#xomo-hotspots\""))
+        #expect(html.contains("https://example.com/hero"))
+        #expect(html.contains("Hero CTA"))
     }
 
     @Test func registryPastesXomoClipboardLayerInPlace() throws {

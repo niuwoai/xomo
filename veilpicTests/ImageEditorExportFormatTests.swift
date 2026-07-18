@@ -154,6 +154,31 @@ struct ImageEditorExportFormatTests {
         #expect(viewModel.exportFilenames(settings: settings) == ["landing-slice.png"])
     }
 
+    @Test func hotspotHTMLExportEmbedsCanvasAndEscapesImageMapMetadata() throws {
+        let image = NSImage.transparent(size: CGSize(width: 80, height: 60))
+        let pngData = try #require(image.qingtuPNGData())
+        let hotspot = ImageEditorHotspot(
+            name: "Hero & Link",
+            frame: CGRect(x: 10, y: 12, width: 30, height: 20),
+            url: "https://example.com/a?x=1&y=2"
+        )
+
+        let data = ImageEditorHotspotHTMLExporter.data(
+            canvasSize: image.size,
+            pngData: pngData,
+            hotspots: [hotspot],
+            title: "Demo <Page>"
+        )
+        let html = try #require(String(data: data, encoding: .utf8))
+
+        #expect(html.contains("usemap=\"#xomo-hotspots\""))
+        #expect(html.contains("data:image/png;base64,"))
+        #expect(html.contains("coords=\"10,12,40,32\""))
+        #expect(html.contains("Hero &amp; Link"))
+        #expect(html.contains("https://example.com/a?x=1&amp;y=2"))
+        #expect(html.contains("<title>Demo &lt;Page&gt;</title>"))
+    }
+
     @Test func selectedLayerExportScopeChoosesSingleLayerOrLayerSubtree() throws {
         let viewModel = ImageEditorViewModel(
             sourceName: "layers",

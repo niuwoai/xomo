@@ -203,6 +203,10 @@ final class XomoAutomationRegistry {
             return hotspotListResult(viewModel)
         case "xomo.hotspot.delete":
             return try hotspotDeleteResult(arguments, viewModel: viewModel)
+        case "xomo.hotspot.update":
+            return try hotspotUpdateResult(arguments, viewModel: viewModel)
+        case "xomo.hotspot.export_html":
+            return try hotspotHTMLExportResult(viewModel)
         case "xomo.selection.all":
             viewModel.selectAll()
         case "xomo.selection.rectangle":
@@ -2970,6 +2974,47 @@ final class XomoAutomationRegistry {
         return hotspotJSON(hotspot)
     }
 
+    private func hotspotUpdateResult(
+        _ arguments: [String: XomoJSONValue],
+        viewModel: ImageEditorViewModel
+    ) throws -> XomoJSONValue {
+        let id = try requiredUUID("id", in: arguments)
+        let frame: CGRect?
+        if arguments["x"] != nil || arguments["y"] != nil || arguments["width"] != nil || arguments["height"] != nil {
+            guard let hotspot = viewModel.hotspot(with: id) else {
+                throw XomoAutomationCallError.notFound("Hotspot \(id.uuidString)")
+            }
+            frame = CGRect(
+                x: arguments["x"]?.doubleValue ?? hotspot.frame.origin.x,
+                y: arguments["y"]?.doubleValue ?? hotspot.frame.origin.y,
+                width: arguments["width"]?.doubleValue ?? hotspot.frame.width,
+                height: arguments["height"]?.doubleValue ?? hotspot.frame.height
+            )
+        } else {
+            frame = nil
+        }
+        guard let hotspot = viewModel.updateHotspot(
+            id: id,
+            name: arguments["name"]?.stringValue,
+            url: arguments["url"]?.stringValue,
+            frame: frame
+        ) else {
+            throw XomoAutomationCallError.operationFailed("Hotspot update is invalid")
+        }
+        return hotspotJSON(hotspot)
+    }
+
+    private func hotspotHTMLExportResult(_ viewModel: ImageEditorViewModel) throws -> XomoJSONValue {
+        guard let data = viewModel.hotspotHTMLData() else {
+            throw XomoAutomationCallError.operationFailed("HTML export requires at least one hotspot")
+        }
+        return .object([
+            "filename": .string("\(viewModel.document.sourceName).hotspots.html"),
+            "mimeType": .string("text/html"),
+            "base64": .string(data.base64EncodedString())
+        ])
+    }
+
     private func hotspotJSON(_ hotspot: ImageEditorHotspot) -> XomoJSONValue {
         .object([
             "id": .string(hotspot.id.uuidString),
@@ -3431,6 +3476,16 @@ private extension XomoAutomationRegistry {
         ]),
         tool("xomo.hotspot.list", "List named rectangular hotspots in the active document."),
         tool("xomo.hotspot.delete", "Delete a named hotspot by UUID.", idProperties, required: ["id"]),
+        tool("xomo.hotspot.update", "Update a hotspot name, destination URL, or rectangle.", [
+            "id": XomoAutomationSchema.string(description: "Hotspot UUID"),
+            "name": XomoAutomationSchema.string(description: "Updated hotspot name"),
+            "url": XomoAutomationSchema.string(description: "Updated destination URL"),
+            "x": XomoAutomationSchema.number(description: "Updated canvas X coordinate"),
+            "y": XomoAutomationSchema.number(description: "Updated canvas Y coordinate"),
+            "width": XomoAutomationSchema.number(description: "Updated hotspot width"),
+            "height": XomoAutomationSchema.number(description: "Updated hotspot height")
+        ], required: ["id"]),
+        tool("xomo.hotspot.export_html", "Export the composited canvas and hotspots as a self-contained HTML image map."),
         tool("xomo.selection.rectangle", "Create a rectangular canvas selection.", rectProperties, required: ["x", "y", "width", "height"]),
         tool("xomo.selection.ellipse", "Create an elliptical canvas selection.", rectProperties, required: ["x", "y", "width", "height"]),
         tool("xomo.selection.lasso", "Create a polygonal lasso selection from canvas points.", ["points": pointsSchema], required: ["points"]),

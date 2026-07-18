@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.12.0-rc261 - 2026-07-18
+
+### Added
+
+- Fireworks 风格热点支持更新名称、目标 URL 和矩形范围，并将画布与热点导出为自包含 HTML image map。
+- 文件菜单、MCP 与 CLI 共用热点导出入口；导出的 HTML 内嵌 PNG，不依赖外部资源。
+
+### Verification
+
+- 新增 HTML image-map 转义与自动化更新/导出回归测试；定向测试通过后提交本版本。
+
 ## 2.12.0-rc260 - 2026-07-18
 
 ### Added

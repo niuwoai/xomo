@@ -1,4 +1,5 @@
 import AppKit
+import UniformTypeIdentifiers
 
 @MainActor
 extension ImageEditorViewModel {
@@ -93,6 +94,7 @@ extension ImageEditorViewModel {
             frame: frame,
             url: String((url ?? "").trimmingCharacters(in: .whitespacesAndNewlines).prefix(ImageEditorHotspot.maximumURLLength))
         )
+        pushUndo()
         document.hotspots.append(hotspot)
         appendHistory(L10n.format("imageEditor.history.hotspotCreated", hotspot.name))
         statusText = L10n.format("imageEditor.status.hotspotCreated", hotspot.name)
@@ -102,14 +104,86 @@ extension ImageEditorViewModel {
     @discardableResult
     func deleteHotspot(id: UUID) -> ImageEditorHotspot? {
         guard let index = document.hotspots.firstIndex(where: { $0.id == id }) else { return nil }
+        pushUndo()
         let removed = document.hotspots.remove(at: index)
         appendHistory(L10n.format("imageEditor.history.hotspotDeleted", removed.name))
         statusText = L10n.format("imageEditor.status.hotspotDeleted", removed.name)
         return removed
     }
 
+    @discardableResult
+    func updateHotspot(
+        id: UUID,
+        name: String? = nil,
+        url: String? = nil,
+        frame: CGRect? = nil
+    ) -> ImageEditorHotspot? {
+        guard let index = document.hotspots.firstIndex(where: { $0.id == id }) else { return nil }
+        var updated = document.hotspots[index]
+        if let name {
+            updated.name = name
+        }
+        if let url {
+            updated.url = url
+        }
+        if let frame {
+            updated.frame = frame
+        }
+        guard let normalized = updated.normalized(canvasSize: document.canvasSize) else { return nil }
+        guard normalized != document.hotspots[index] else { return normalized }
+        pushUndo()
+        document.hotspots[index] = normalized
+        appendHistory(L10n.format("imageEditor.history.hotspotUpdated", normalized.name))
+        statusText = L10n.format("imageEditor.status.hotspotUpdated", normalized.name)
+        return normalized
+    }
+
     func hotspot(with id: UUID) -> ImageEditorHotspot? {
         document.hotspots.first { $0.id == id }
+    }
+
+    var canExportHotspotHTML: Bool {
+        !document.hotspots.isEmpty
+    }
+
+    func hotspotHTMLData() -> Data? {
+        guard canExportHotspotHTML,
+              let pngData = document.compositedImage.qingtuPNGData()
+        else { return nil }
+        return ImageEditorHotspotHTMLExporter.data(
+            canvasSize: document.canvasSize,
+            pngData: pngData,
+            hotspots: document.hotspots,
+            title: document.sourceName
+        )
+    }
+
+    func exportHotspotHTML() {
+        guard canExportHotspotHTML else { return }
+        let panel = NSSavePanel()
+        panel.allowedContentTypes = [UTType(filenameExtension: "html") ?? .plainText]
+        panel.canCreateDirectories = true
+        let baseName = (document.sourceName as NSString).deletingPathExtension
+        let exportBaseName = baseName.isEmpty ? "xomo" : baseName
+        panel.nameFieldStringValue = "\(exportBaseName).hotspots.html"
+        panel.begin { [weak self] response in
+            Task { @MainActor in
+                guard let self, response == .OK, let url = panel.url else { return }
+                do {
+                    guard let data = self.hotspotHTMLData() else {
+                        self.statusText = L10n.text("imageEditor.status.hotspotHTMLExportFailed")
+                        return
+                    }
+                    try data.write(to: url, options: .atomic)
+                    self.statusText = L10n.format("imageEditor.status.hotspotHTMLExported", url.lastPathComponent)
+                } catch {
+                    self.statusText = L10n.format(
+                        "imageEditor.status.hotspotHTMLExportFailedWithReason",
+                        error.localizedDescription
+                    )
+                }
+            }
+        }
     }
 
     private var hotspotBoundsFromSelection: CGRect? {
@@ -128,5 +202,54 @@ extension ImageEditorViewModel {
             index += 1
         }
         return L10n.format("imageEditor.hotspot.defaultName", index)
+    }
+}
+
+enum ImageEditorHotspotHTMLExporter {
+    static func data(
+        canvasSize: CGSize,
+        pngData: Data,
+        hotspots: [ImageEditorHotspot],
+        title: String
+    ) -> Data {
+        let validHotspots = hotspots.compactMap { $0.normalized(canvasSize: canvasSize) }
+        let areas = validHotspots.map { hotspot in
+            let frame = hotspot.frame
+            let coordinates = [
+                Int(frame.minX.rounded()),
+                Int(frame.minY.rounded()),
+                Int(frame.maxX.rounded()),
+                Int(frame.maxY.rounded())
+            ].map(String.init).joined(separator: ",")
+            let href = hotspot.url.isEmpty ? "#" : hotspot.url
+            return "    <area shape=\"rect\" coords=\"\(coordinates)\" href=\"\(htmlEscaped(href))\" alt=\"\(htmlEscaped(hotspot.name))\" data-hotspot=\"\(htmlEscaped(hotspot.name))\">"
+        }.joined(separator: "\n")
+        let html = """
+        <!doctype html>
+        <html lang="en">
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <title>\(htmlEscaped(title))</title>
+          <style>html,body{margin:0;background:#202124}body{display:grid;place-items:center;min-height:100vh}img{max-width:100%;height:auto}</style>
+        </head>
+        <body>
+          <img src="data:image/png;base64,\(pngData.base64EncodedString())" width="\(Int(canvasSize.width.rounded()))" height="\(Int(canvasSize.height.rounded()))" usemap="#xomo-hotspots" alt="\(htmlEscaped(title))">
+          <map name="xomo-hotspots">
+        \(areas)
+          </map>
+        </body>
+        </html>
+        """
+        return Data(html.utf8)
+    }
+
+    private static func htmlEscaped(_ value: String) -> String {
+        value
+            .replacingOccurrences(of: "&", with: "&amp;")
+            .replacingOccurrences(of: "<", with: "&lt;")
+            .replacingOccurrences(of: ">", with: "&gt;")
+            .replacingOccurrences(of: "\"", with: "&quot;")
+            .replacingOccurrences(of: "'", with: "&#39;")
     }
 }
