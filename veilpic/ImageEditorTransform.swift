@@ -316,6 +316,7 @@ extension ImageEditorViewModel {
         }
         resizingOriginalTransformFrame = transformFrame
         resizingLayerDidChange = false
+        activeAlignmentGuides = []
     }
 
     func resizeSelectedLayer(
@@ -381,6 +382,7 @@ extension ImageEditorViewModel {
         resizingOriginalParagraphTextContents = [:]
         resizingOriginalTransformFrame = nil
         resizingLayerDidChange = false
+        activeAlignmentGuides = []
     }
 
     func beginRotatingSelectedLayer(from point: CGPoint) {
@@ -400,6 +402,7 @@ extension ImageEditorViewModel {
         rotatingOriginalTransformFrame = transformFrame
         rotatingStartAngleDegrees = layerRotationAngle(from: transformFrame, to: point)
         rotatingLayerDidChange = false
+        activeAlignmentGuides = []
     }
 
     func rotateSelectedLayer(
@@ -454,6 +457,7 @@ extension ImageEditorViewModel {
         rotatingOriginalTransformFrame = nil
         rotatingStartAngleDegrees = 0
         rotatingLayerDidChange = false
+        activeAlignmentGuides = []
     }
 
     func scaleSelectedLayer(by factor: CGFloat) {

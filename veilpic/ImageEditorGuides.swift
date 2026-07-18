@@ -247,13 +247,20 @@ extension ImageEditorViewModel {
     ) -> CGRect {
         guard document.isGuideSnappingEnabled || document.isGridSnappingEnabled,
               !preservingAspectRatio
-        else { return frame }
+        else {
+            activeAlignmentGuides = []
+            return frame
+        }
 
         let minimumSize: CGFloat = 4
         var snappedFrame = frame.standardized
+        var alignmentGuides: [ImageEditorAlignmentGuide] = []
         let threshold = max(1, 8 / max(zoom, 0.01))
         let snapGuides = guideSnapPositions(excluding: resizingLayerIDs)
-        guard !snapGuides.vertical.isEmpty || !snapGuides.horizontal.isEmpty else { return frame }
+        guard !snapGuides.vertical.isEmpty || !snapGuides.horizontal.isEmpty else {
+            activeAlignmentGuides = []
+            return frame
+        }
 
         if handle.affectsWidth {
             let leftHandle = handle == .left || handle == .topLeft || handle == .bottomLeft
@@ -268,6 +275,9 @@ extension ImageEditorViewModel {
                     orientation: .vertical,
                     movesMinimumEdge: leftHandle,
                     minimumSize: minimumSize
+                )
+                alignmentGuides.append(
+                    ImageEditorAlignmentGuide(orientation: .vertical, position: snap.position)
                 )
             }
         }
@@ -286,14 +296,21 @@ extension ImageEditorViewModel {
                     movesMinimumEdge: bottomHandle,
                     minimumSize: minimumSize
                 )
+                alignmentGuides.append(
+                    ImageEditorAlignmentGuide(orientation: .horizontal, position: snap.position)
+                )
             }
         }
 
         guard snappedFrame.width >= minimumSize,
               snappedFrame.height >= minimumSize,
               snappedFrame.isFinite
-        else { return frame }
+        else {
+            activeAlignmentGuides = []
+            return frame
+        }
 
+        activeAlignmentGuides = alignmentGuides
         return snappedFrame
     }
 
@@ -482,7 +499,11 @@ extension ImageEditorViewModel {
                 let distance = abs(correction)
                 if distance <= bestDistance {
                     bestDistance = distance
-                    bestSnap = ImageEditorGuideSnap(anchor: candidate.0, correction: correction)
+                    bestSnap = ImageEditorGuideSnap(
+                        anchor: candidate.0,
+                        position: guide,
+                        correction: correction
+                    )
                 }
             }
         }
@@ -531,6 +552,7 @@ private enum ImageEditorGuideSnapAnchor {
 
 private struct ImageEditorGuideSnap {
     var anchor: ImageEditorGuideSnapAnchor
+    var position: CGFloat
     var correction: CGFloat
 }
 

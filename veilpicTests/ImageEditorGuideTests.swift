@@ -136,12 +136,79 @@ struct ImageEditorGuideTests {
 
         viewModel.beginResizingSelectedLayer(handle: .right)
         viewModel.resizeSelectedLayer(to: CGPoint(x: 48, y: 20), handle: .right)
+
+        #expect(viewModel.activeAlignmentGuides == [
+            ImageEditorAlignmentGuide(orientation: .vertical, position: 50)
+        ])
+
         viewModel.finishResizingSelectedLayer()
 
         let resizedLayer = viewModel.document.layers[layerIndex]
         #expect(resizedLayer.frame.minX == 10)
         #expect(resizedLayer.frame.maxX == 50)
+        #expect(viewModel.activeAlignmentGuides.isEmpty)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerResize"))
+    }
+
+    @Test
+    func resizingComponentShowsBothSmartGuidesUntilTransformEnds() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: testImage(color: .windowBackgroundColor, size: NSSize(width: 360, height: 240))
+        ) { _ in }
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 90, y: 80))
+        let initialFrame = try #require(viewModel.selectedXomoObjectFrame)
+        let verticalGuide = initialFrame.maxX + 20
+        let horizontalGuide = initialFrame.maxY + 16
+        viewModel.addGuide(.vertical, at: verticalGuide)
+        viewModel.addGuide(.horizontal, at: horizontalGuide)
+
+        viewModel.beginResizingSelectedLayer(handle: .topRight)
+        viewModel.resizeSelectedLayer(
+            to: CGPoint(x: verticalGuide - 2, y: horizontalGuide - 2),
+            handle: .topRight
+        )
+
+        #expect(viewModel.activeAlignmentGuides.contains {
+            $0.orientation == .vertical && $0.position == verticalGuide
+        })
+        #expect(viewModel.activeAlignmentGuides.contains {
+            $0.orientation == .horizontal && $0.position == horizontalGuide
+        })
+        #expect(viewModel.selectedXomoObjectFrame?.maxX == verticalGuide)
+        #expect(viewModel.selectedXomoObjectFrame?.maxY == horizontalGuide)
+
+        viewModel.finishResizingSelectedLayer()
+        #expect(viewModel.activeAlignmentGuides.isEmpty)
+    }
+
+    @Test
+    func resizeSmartGuidesClearForAspectRatioModeAndCancellation() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: testImage(color: .systemIndigo, size: NSSize(width: 120, height: 90))
+        ) { _ in }
+        let layerIndex = try #require(viewModel.document.selectedLayerIndex)
+        let originalFrame = CGRect(x: 10, y: 12, width: 20, height: 16)
+        viewModel.document.layers[layerIndex].frame = originalFrame
+        viewModel.addGuide(.vertical, at: 50)
+
+        viewModel.beginResizingSelectedLayer(handle: .right)
+        viewModel.resizeSelectedLayer(to: CGPoint(x: 48, y: 20), handle: .right)
+        #expect(!viewModel.activeAlignmentGuides.isEmpty)
+
+        viewModel.resizeSelectedLayer(
+            to: CGPoint(x: 48, y: 20),
+            handle: .right,
+            preservingAspectRatio: true
+        )
+        #expect(viewModel.activeAlignmentGuides.isEmpty)
+
+        viewModel.resizeSelectedLayer(to: CGPoint(x: 48, y: 20), handle: .right)
+        #expect(!viewModel.activeAlignmentGuides.isEmpty)
+        #expect(viewModel.cancelTransformingSelectedLayer())
+        #expect(viewModel.activeAlignmentGuides.isEmpty)
+        #expect(viewModel.document.layers[layerIndex].frame == originalFrame)
     }
 
     @Test
