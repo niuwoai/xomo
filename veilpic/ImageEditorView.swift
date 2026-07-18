@@ -1377,6 +1377,10 @@ struct ImageEditorView: View {
                     let canvasPoint = hoverViewPoint.flatMap { imagePoint(from: $0, in: geometry.size) }
                     let contentHit = canvasPoint.map(viewModel.canvasContentHit(at:)) ?? .none
                     let cropHandle = cropInteractionHandle(at: hoverViewPoint, in: geometry.size)
+                    let layerTransformTarget = layerTransformCursorTarget(
+                        at: hoverViewPoint,
+                        in: geometry.size
+                    )
                     ImageEditorCursorRectView(
                         cursor: ImageEditorCanvasCursor.cursor(
                             for: viewModel.selectedLeftSidebarTab,
@@ -1391,7 +1395,8 @@ struct ImageEditorView: View {
                             isCanvasPanGestureActive: isCanvasPanGestureActive,
                             modifierFlags: canvasModifierFlags,
                             marqueeShape: viewModel.marqueeShape,
-                            cropHandle: cropHandle
+                            cropHandle: cropHandle,
+                            layerTransformTarget: layerTransformTarget
                         )
                     )
                     .allowsHitTesting(false)
@@ -2592,7 +2597,8 @@ struct ImageEditorView: View {
             isCanvasPanGestureActive: isCanvasPanGestureActive,
             modifierFlags: NSEvent.modifierFlags,
             marqueeShape: viewModel.marqueeShape,
-            cropHandle: cropInteractionHandle(at: viewPoint, in: size)
+            cropHandle: cropInteractionHandle(at: viewPoint, in: size),
+            layerTransformTarget: layerTransformCursorTarget(at: viewPoint, in: size)
         ).set()
     }
 
@@ -2619,8 +2625,25 @@ struct ImageEditorView: View {
             isCanvasPanGestureActive: isCanvasPanGestureActive,
             modifierFlags: canvasModifierFlags,
             marqueeShape: viewModel.marqueeShape,
-            cropHandle: nil
+            cropHandle: nil,
+            layerTransformTarget: nil
         ).set()
+    }
+
+    private func layerTransformCursorTarget(
+        at viewPoint: CGPoint?,
+        in size: CGSize
+    ) -> ImageEditorLayerTransformCursorTarget? {
+        guard canvasInteractionTool == .move,
+              viewModel.document.areTransformControlsVisible,
+              let layerFrame = viewModel.selectedLayerTransformFrame
+        else { return nil }
+        return ImageEditorCanvasCursor.transformTarget(
+            at: viewPoint,
+            frame: viewRect(from: layerFrame, in: size),
+            canResize: viewModel.canResizeSelectedLayer,
+            canRotate: viewModel.canRotateSelectedLayer
+        )
     }
 
     private func cropInteractionHandle(at viewPoint: CGPoint?, in size: CGSize) -> ImageEditorCropHandle? {
@@ -4957,7 +4980,7 @@ struct ImageEditorView: View {
             )
             .frame(width: 10, height: 10)
             .position(point)
-            .contentShape(Rectangle())
+            .contentShape(Rectangle().inset(by: -4))
             .gesture(
                 DragGesture(minimumDistance: 0)
                     .onChanged { value in
@@ -5006,7 +5029,7 @@ struct ImageEditorView: View {
                 }
                 .frame(width: 16, height: 16)
                 .position(handlePoint)
-                .contentShape(Rectangle())
+                .contentShape(Rectangle().inset(by: -1))
                 .gesture(
                     DragGesture(minimumDistance: 0)
                         .onChanged { value in
@@ -5039,28 +5062,11 @@ struct ImageEditorView: View {
     }
 
     private func resizeHandleViewPoint(_ handle: ImageEditorLayerResizeHandle, in rect: CGRect) -> CGPoint {
-        switch handle {
-        case .topLeft:
-            CGPoint(x: rect.minX, y: rect.minY)
-        case .top:
-            CGPoint(x: rect.midX, y: rect.minY)
-        case .topRight:
-            CGPoint(x: rect.maxX, y: rect.minY)
-        case .left:
-            CGPoint(x: rect.minX, y: rect.midY)
-        case .right:
-            CGPoint(x: rect.maxX, y: rect.midY)
-        case .bottomLeft:
-            CGPoint(x: rect.minX, y: rect.maxY)
-        case .bottom:
-            CGPoint(x: rect.midX, y: rect.maxY)
-        case .bottomRight:
-            CGPoint(x: rect.maxX, y: rect.maxY)
-        }
+        ImageEditorCanvasCursor.transformHandlePoint(handle, in: rect)
     }
 
     private func rotateHandleViewPoint(in rect: CGRect) -> CGPoint {
-        CGPoint(x: rect.midX, y: rect.minY - 24)
+        ImageEditorCanvasCursor.transformRotateHandlePoint(in: rect)
     }
 
     @ViewBuilder
@@ -7781,6 +7787,11 @@ enum ImageEditorCanvasInteractionMode: Equatable {
     case pan
 }
 
+enum ImageEditorLayerTransformCursorTarget: Equatable {
+    case resize(ImageEditorLayerResizeHandle)
+    case rotate
+}
+
 enum ImageEditorSelectionCursorMode: String, Equatable, CaseIterable {
     case replace
     case add
@@ -7837,13 +7848,21 @@ enum ImageEditorCanvasCursor {
         isCanvasPanGestureActive: Bool = false,
         modifierFlags: NSEvent.ModifierFlags = [],
         marqueeShape: ImageEditorMarqueeShape = .rectangle,
-        cropHandle: ImageEditorCropHandle? = nil
+        cropHandle: ImageEditorCropHandle? = nil,
+        layerTransformTarget: ImageEditorLayerTransformCursorTarget? = nil
     ) -> NSCursor {
         // The dark workspace surrounding the document is not drawable. Keep
         // the native arrow there so a brush/selection cursor never suggests
         // that a click outside the image will edit pixels.
         if isObjectMoveGestureActive {
             return .closedHand
+        }
+        // Transform controls sit above the canvas and may extend outside the
+        // drawable document (the rotation handle intentionally does). Their
+        // familiar resize/rotate cursor must therefore win before canvas
+        // bounds and component-library arrow fallbacks are considered.
+        if let layerTransformTarget {
+            return transformCursor(for: layerTransformTarget)
         }
         if !isPointerOverCanvas && !isCanvasPanGestureActive {
             return .arrow
@@ -7892,6 +7911,79 @@ enum ImageEditorCanvasCursor {
             return .pan
         }
         return sidebarTab == .components ? .componentLibrary : .tool(selectedTool)
+    }
+
+    static func transformTarget(
+        at point: CGPoint?,
+        frame: CGRect?,
+        canResize: Bool,
+        canRotate: Bool,
+        hitRadius: CGFloat = 9
+    ) -> ImageEditorLayerTransformCursorTarget? {
+        guard let point, let frame else { return nil }
+        var candidates: [(ImageEditorLayerTransformCursorTarget, CGPoint)] = []
+        if canResize {
+            candidates.append(contentsOf: ImageEditorLayerResizeHandle.allCases.map {
+                (.resize($0), transformHandlePoint($0, in: frame))
+            })
+        }
+        if canRotate {
+            candidates.append((.rotate, transformRotateHandlePoint(in: frame)))
+        }
+
+        let maximumDistanceSquared = hitRadius * hitRadius
+        return candidates
+            .map { candidate in
+                let deltaX = candidate.1.x - point.x
+                let deltaY = candidate.1.y - point.y
+                return (candidate.0, deltaX * deltaX + deltaY * deltaY)
+            }
+            .filter { $0.1 <= maximumDistanceSquared }
+            .min { $0.1 < $1.1 }?
+            .0
+    }
+
+    static func transformHandlePoint(
+        _ handle: ImageEditorLayerResizeHandle,
+        in frame: CGRect
+    ) -> CGPoint {
+        switch handle {
+        case .topLeft:
+            CGPoint(x: frame.minX, y: frame.minY)
+        case .top:
+            CGPoint(x: frame.midX, y: frame.minY)
+        case .topRight:
+            CGPoint(x: frame.maxX, y: frame.minY)
+        case .left:
+            CGPoint(x: frame.minX, y: frame.midY)
+        case .right:
+            CGPoint(x: frame.maxX, y: frame.midY)
+        case .bottomLeft:
+            CGPoint(x: frame.minX, y: frame.maxY)
+        case .bottom:
+            CGPoint(x: frame.midX, y: frame.maxY)
+        case .bottomRight:
+            CGPoint(x: frame.maxX, y: frame.maxY)
+        }
+    }
+
+    static func transformRotateHandlePoint(in frame: CGRect) -> CGPoint {
+        CGPoint(x: frame.midX, y: frame.minY - 24)
+    }
+
+    static func transformCursor(for target: ImageEditorLayerTransformCursorTarget) -> NSCursor {
+        switch target {
+        case .resize(.top), .resize(.bottom):
+            return .resizeUpDown
+        case .resize(.left), .resize(.right):
+            return .resizeLeftRight
+        case .resize(.topLeft), .resize(.bottomRight):
+            return diagonalResizeCursor(isForward: true)
+        case .resize(.topRight), .resize(.bottomLeft):
+            return diagonalResizeCursor(isForward: false)
+        case .rotate:
+            return rotateTransformCursor()
+        }
     }
 
     private static func moveToolCursor(isDuplicating: Bool = false) -> NSCursor {
@@ -8799,14 +8891,14 @@ enum ImageEditorCanvasCursor {
         case .left, .right:
             return .resizeLeftRight
         case .topLeft, .bottomRight:
-            return diagonalCropResizeCursor(isForward: true)
+            return diagonalResizeCursor(isForward: true)
         case .topRight, .bottomLeft:
-            return diagonalCropResizeCursor(isForward: false)
+            return diagonalResizeCursor(isForward: false)
         }
     }
 
-    private static func diagonalCropResizeCursor(isForward: Bool) -> NSCursor {
-        let cacheKey = "crop-resize-diagonal:\(isForward ? "forward" : "backward")"
+    private static func diagonalResizeCursor(isForward: Bool) -> NSCursor {
+        let cacheKey = "resize-diagonal:\(isForward ? "forward" : "backward")"
         if let cachedCursor = cursorCache[cacheKey] {
             return cachedCursor
         }
@@ -8861,6 +8953,60 @@ enum ImageEditorCanvasCursor {
         image.unlockFocus()
         return cache(
             NSCursor(image: image, hotSpot: NSPoint(x: side / 2, y: side / 2)),
+            for: cacheKey
+        )
+    }
+
+    /// A compact circular arrow is the established transform convention in
+    /// Photoshop, Sketch and Figma. The pointer hotspot remains at the center
+    /// of the rotation handle instead of at an arbitrary corner of the icon.
+    private static func rotateTransformCursor() -> NSCursor {
+        let cacheKey = "transform-rotate"
+        if let cachedCursor = cursorCache[cacheKey] {
+            return cachedCursor
+        }
+
+        let side: CGFloat = 34
+        let center = NSPoint(x: side / 2, y: side / 2)
+        let image = NSImage(size: NSSize(width: side, height: side))
+        image.lockFocus()
+
+        let arc = NSBezierPath()
+        arc.appendArc(
+            withCenter: center,
+            radius: 9,
+            startAngle: 35,
+            endAngle: 315,
+            clockwise: false
+        )
+        NSColor.black.withAlphaComponent(0.95).setStroke()
+        arc.lineWidth = 4
+        arc.stroke()
+        NSColor.white.withAlphaComponent(0.98).setStroke()
+        arc.lineWidth = 1.5
+        arc.stroke()
+
+        let arrow = NSBezierPath()
+        arrow.move(to: NSPoint(x: 25.5, y: 12.5))
+        arrow.line(to: NSPoint(x: 27.5, y: 20))
+        arrow.line(to: NSPoint(x: 20, y: 17.5))
+        arrow.close()
+        NSColor.black.withAlphaComponent(0.95).setFill()
+        arrow.fill()
+        NSColor.white.withAlphaComponent(0.98).setStroke()
+        arrow.lineWidth = 1
+        arrow.stroke()
+
+        let pivot = NSBezierPath(ovalIn: NSRect(x: center.x - 1.5, y: center.y - 1.5, width: 3, height: 3))
+        NSColor.black.withAlphaComponent(0.9).setFill()
+        pivot.fill()
+        NSColor.white.withAlphaComponent(0.92).setStroke()
+        pivot.lineWidth = 0.75
+        pivot.stroke()
+
+        image.unlockFocus()
+        return cache(
+            NSCursor(image: image, hotSpot: NSPoint(x: center.x, y: side - center.y)),
             for: cacheKey
         )
     }

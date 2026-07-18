@@ -490,6 +490,87 @@ struct ImageEditorCanvasCursorTests {
         #expect(defaultCrop.image.tiffRepresentation != diagonalForward.image.tiffRepresentation)
     }
 
+    @Test func layerTransformGeometryFindsTheNearestVisibleControl() {
+        let frame = CGRect(x: 20, y: 30, width: 120, height: 80)
+
+        #expect(
+            ImageEditorCanvasCursor.transformTarget(
+                at: CGPoint(x: 21, y: 31),
+                frame: frame,
+                canResize: true,
+                canRotate: true
+            ) == .resize(.topLeft)
+        )
+        #expect(
+            ImageEditorCanvasCursor.transformTarget(
+                at: CGPoint(x: 80, y: 30),
+                frame: frame,
+                canResize: true,
+                canRotate: true
+            ) == .resize(.top)
+        )
+        #expect(
+            ImageEditorCanvasCursor.transformTarget(
+                at: CGPoint(x: 80, y: 6),
+                frame: frame,
+                canResize: true,
+                canRotate: true
+            ) == .rotate
+        )
+        #expect(
+            ImageEditorCanvasCursor.transformTarget(
+                at: CGPoint(x: 80, y: 6),
+                frame: frame,
+                canResize: true,
+                canRotate: false
+            ) == nil
+        )
+        #expect(
+            ImageEditorCanvasCursor.transformTarget(
+                at: CGPoint(x: 80, y: 70),
+                frame: frame,
+                canResize: true,
+                canRotate: true
+            ) == nil
+        )
+    }
+
+    @Test func layerTransformControlsUseFamiliarResizeAndRotateCursors() {
+        let vertical = ImageEditorCanvasCursor.transformCursor(for: .resize(.top))
+        let horizontal = ImageEditorCanvasCursor.transformCursor(for: .resize(.left))
+        let forward = ImageEditorCanvasCursor.transformCursor(for: .resize(.topLeft))
+        let backward = ImageEditorCanvasCursor.transformCursor(for: .resize(.topRight))
+        let rotate = ImageEditorCanvasCursor.transformCursor(for: .rotate)
+
+        #expect(vertical === NSCursor.resizeUpDown)
+        #expect(horizontal === NSCursor.resizeLeftRight)
+        #expect(forward.image.tiffRepresentation != backward.image.tiffRepresentation)
+        #expect(rotate !== NSCursor.arrow)
+        #expect(rotate !== NSCursor.crosshair)
+        #expect(rotate.image.tiffRepresentation != forward.image.tiffRepresentation)
+    }
+
+    @Test func transformControlCursorOverridesComponentArrowOutsideDrawableCanvas() {
+        let rotate = ImageEditorCanvasCursor.cursor(
+            for: .components,
+            selectedTool: .brush,
+            brushDiameter: 18,
+            isPointerOverCanvas: false,
+            layerTransformTarget: .rotate
+        )
+        let dragging = ImageEditorCanvasCursor.cursor(
+            for: .components,
+            selectedTool: .brush,
+            brushDiameter: 18,
+            isPointerOverCanvas: false,
+            isObjectMoveGestureActive: true,
+            layerTransformTarget: .rotate
+        )
+
+        #expect(rotate !== NSCursor.arrow)
+        #expect(dragging === NSCursor.closedHand)
+    }
+
     @Test func toolCursorsUseFamiliarPrecisionAndBrushConventions() {
         #expect(ImageEditorCanvasCursor.family(for: .paintBucket) == .paintBucket)
         #expect(ImageEditorCanvasCursor.family(for: .eyedropper) == .eyedropper)

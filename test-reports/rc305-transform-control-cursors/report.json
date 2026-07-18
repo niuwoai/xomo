@@ -1,0 +1,28 @@
+{
+  "version": "2.12.0-rc305",
+  "scope": "图层与 UI 组件变换控制点使用通用缩放和旋转光标，并在组件库与画布边缘外保持正确优先级",
+  "environment": "arm64 MacBook Pro, macOS 26.5.2, Xcode 26.4.1",
+  "build": {
+    "command": "xcodebuild build-for-testing -project veilpic.xcodeproj -scheme veilpic -destination 'platform=macOS' -derivedDataPath /private/tmp/xomo-rc305-derived QPIC_SKIP_ADHOC_SIGN=YES ENABLE_USER_SCRIPT_SANDBOXING=NO",
+    "status": "passed"
+  },
+  "isolated_tests": {
+    "runner": "XOMO_DERIVED_DATA_PATH=/private/tmp/xomo-rc305-derived ruby scripts/run_tests_isolated.rb --skip-build --filter <test> --out /private/tmp/<report>",
+    "passed": 6,
+    "failed": 0,
+    "skipped": 0,
+    "tests": [
+      "layerTransformGeometryFindsTheNearestVisibleControl",
+      "layerTransformControlsUseFamiliarResizeAndRotateCursors",
+      "transformControlCursorOverridesComponentArrowOutsideDrawableCanvas",
+      "componentSidebarWiresMoveSemanticsIntoCanvasCursorAndGestures",
+      "cropHandlesUseContextualResizeCursors",
+      "selectedComponentLibraryObjectAlwaysRoutesToSystemArrowUnlessPanning"
+    ]
+  },
+  "release_contract": {
+    "tests": 3,
+    "assertions": 7,
+    "failures": 0
+  }
+}
