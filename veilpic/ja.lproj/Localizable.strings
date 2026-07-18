@@ -529,6 +529,7 @@
 "imageEditor.option.pressureSensitivity" = "感度";
 "imageEditor.option.pressureHelp" = "ペンの筆圧でブラシサイズと流量を制御します";
 "imageEditor.option.spongePressureSize.help" = "ペンの筆圧でスポンジブラシのサイズを制御します";
+"imageEditor.option.tonePressureSize.help" = "ペンの筆圧で覆い焼きまたは焼き込みブラシのサイズを制御します";
 "imageEditor.option.patchMode" = "パッチモード";
 "imageEditor.patchMode.source" = "ソース";
 "imageEditor.patchMode.destination" = "適用先";

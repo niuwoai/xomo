@@ -529,6 +529,7 @@
 "imageEditor.option.pressureSensitivity" = "Sensitivity";
 "imageEditor.option.pressureHelp" = "Use pen pressure to control brush size and flow";
 "imageEditor.option.spongePressureSize.help" = "Use pen pressure to control the Sponge brush size";
+"imageEditor.option.tonePressureSize.help" = "Use pen pressure to control the Dodge or Burn brush size";
 "imageEditor.option.patchMode" = "Patch Mode";
 "imageEditor.patchMode.source" = "Source";
 "imageEditor.patchMode.destination" = "Destination";

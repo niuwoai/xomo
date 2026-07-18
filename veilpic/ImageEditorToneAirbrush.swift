@@ -18,45 +18,58 @@ struct ImageEditorToneAirbrushStroke: Equatable {
 
     private(set) var beganAt: TimeInterval?
     private(set) var currentPoint: CGPoint?
+    private(set) var currentPressure: CGFloat?
     private(set) var currentDwellBeganAt: TimeInterval?
-    private(set) var pulsePoints: [CGPoint] = []
+    private(set) var pulseSamples: [ImageEditorBrushStrokeSample] = []
+
+    var pulsePoints: [CGPoint] { pulseSamples.map(\.point) }
 
     private var previousPoint: CGPoint?
+    private var previousPressure: CGFloat?
     private var previousTime: TimeInterval?
     private var nextPulseTime: TimeInterval?
 
     var isActive: Bool { beganAt != nil }
 
-    mutating func begin(at point: CGPoint, time: TimeInterval) {
+    mutating func begin(at point: CGPoint, pressure: CGFloat? = nil, time: TimeInterval) {
         let safeTime = time.isFinite ? time : 0
         beganAt = safeTime
         currentPoint = point
+        currentPressure = pressure
         currentDwellBeganAt = safeTime
         previousPoint = point
+        previousPressure = pressure
         previousTime = safeTime
         nextPulseTime = safeTime + Self.pulseInterval
-        pulsePoints = []
+        pulseSamples = []
     }
 
-    mutating func update(to point: CGPoint, time: TimeInterval) {
+    mutating func update(to point: CGPoint, pressure: CGFloat? = nil, time: TimeInterval) {
         guard let previousPoint,
               let previousTime,
               var nextPulseTime
         else {
-            begin(at: point, time: time)
+            begin(at: point, pressure: pressure, time: time)
             return
         }
 
         let safeTime = max(previousTime, time.isFinite ? time : previousTime)
         let duration = safeTime - previousTime
         while nextPulseTime <= safeTime,
-              pulsePoints.count < Self.maximumPulseCount {
+              pulseSamples.count < Self.maximumPulseCount {
             let progress = duration > 0
                 ? max(0, min(1, (nextPulseTime - previousTime) / duration))
                 : 1
-            pulsePoints.append(CGPoint(
-                x: previousPoint.x + (point.x - previousPoint.x) * progress,
-                y: previousPoint.y + (point.y - previousPoint.y) * progress
+            pulseSamples.append(ImageEditorBrushStrokeSample(
+                point: CGPoint(
+                    x: previousPoint.x + (point.x - previousPoint.x) * progress,
+                    y: previousPoint.y + (point.y - previousPoint.y) * progress
+                ),
+                pressure: interpolatedPressure(
+                    from: previousPressure,
+                    to: pressure,
+                    progress: progress
+                )
             ))
             nextPulseTime += Self.pulseInterval
         }
@@ -65,14 +78,25 @@ struct ImageEditorToneAirbrushStroke: Equatable {
             currentDwellBeganAt = safeTime
         }
         currentPoint = point
+        currentPressure = pressure ?? previousPressure
         self.previousPoint = point
+        self.previousPressure = pressure ?? previousPressure
         self.previousTime = safeTime
         self.nextPulseTime = nextPulseTime
     }
 
     mutating func finish(at point: CGPoint, time: TimeInterval) -> [CGPoint] {
-        update(to: point, time: time)
+        update(to: point, pressure: currentPressure, time: time)
         return pulsePoints
+    }
+
+    mutating func finishSamples(
+        at point: CGPoint,
+        pressure: CGFloat? = nil,
+        time: TimeInterval
+    ) -> [ImageEditorBrushStrokeSample] {
+        update(to: point, pressure: pressure ?? currentPressure, time: time)
+        return pulseSamples
     }
 
     mutating func reset() {
@@ -90,6 +114,23 @@ struct ImageEditorToneAirbrushStroke: Equatable {
         let perPulse = max(0, min(1, exposure)) * pulseFlow
         let accumulated = 1 - pow(1 - perPulse, CGFloat(pulses))
         return min(0.24, 0.035 + accumulated * 0.205)
+    }
+
+    private func interpolatedPressure(
+        from start: CGFloat?,
+        to end: CGFloat?,
+        progress: CGFloat
+    ) -> CGFloat? {
+        switch (start, end) {
+        case let (.some(start), .some(end)):
+            return start + (end - start) * progress
+        case let (.some(start), .none):
+            return start
+        case let (.none, .some(end)):
+            return end
+        case (.none, .none):
+            return nil
+        }
     }
 }
 

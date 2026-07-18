@@ -69,30 +69,61 @@ extension NSImage {
         protectTones: Bool = true,
         airbrushPulsePoints: [CGPoint] = []
     ) -> NSImage? {
+        withToneBrush(
+            samples: points.map { ImageEditorBrushStrokeSample(point: $0) },
+            width: width,
+            opacity: opacity,
+            hardness: hardness,
+            burn: burn,
+            range: range,
+            protectTones: protectTones,
+            pressureControlsSize: false,
+            pressureSensitivity: 0.5,
+            airbrushPulseSamples: airbrushPulsePoints.map {
+                ImageEditorBrushStrokeSample(point: $0)
+            }
+        )
+    }
+
+    func withToneBrush(
+        samples: [ImageEditorBrushStrokeSample],
+        width: CGFloat,
+        opacity: CGFloat,
+        hardness: CGFloat,
+        burn: Bool,
+        range: ImageEditorToneRange = .midtones,
+        protectTones: Bool = true,
+        pressureControlsSize: Bool,
+        pressureSensitivity: CGFloat,
+        airbrushPulseSamples: [ImageEditorBrushStrokeSample] = []
+    ) -> NSImage? {
         let pixelWidth = max(1, Int(size.width.rounded()))
         let pixelHeight = max(1, Int(size.height.rounded()))
-        let maskAlpha = ImageEditorHealingBrushKernel.strokeAlpha(
+        let maskAlpha = retouchStrokeAlpha(
             width: pixelWidth,
             height: pixelHeight,
-            points: points,
+            samples: samples,
             diameter: width,
-            hardness: hardness
+            hardness: hardness,
+            pressureControlsSize: pressureControlsSize,
+            pressureSensitivity: pressureSensitivity
         )
         guard maskAlpha.count == pixelWidth * pixelHeight else { return nil }
-        let airbrushMaskAlpha = airbrushPulsePoints.isEmpty
+        let airbrushMaskAlpha = airbrushPulseSamples.isEmpty
             ? nil
             : ImageEditorBrushStrokeKernel.coverage(
                 width: pixelWidth,
                 height: pixelHeight,
-                stamps: airbrushPulsePoints.map {
-                    ImageEditorBrushStrokeSample(point: $0, pressure: 1)
-                },
+                stamps: airbrushPulseSamples,
                 settings: ImageEditorBrushStrokeSettings(
                     diameter: width,
                     hardness: hardness,
                     opacity: 1,
                     flow: ImageEditorToneAirbrushStroke.pulseFlow,
-                    spacing: 1
+                    spacing: 1,
+                    pressureControlsSize: pressureControlsSize,
+                    pressureControlsFlow: false,
+                    pressureSensitivity: pressureSensitivity
                 )
             )
         return toneAdjusted(
@@ -137,45 +168,61 @@ extension NSImage {
     ) -> NSImage? {
         let pixelWidth = max(1, Int(size.width.rounded()))
         let pixelHeight = max(1, Int(size.height.rounded()))
-        let hasPressure = samples.contains { $0.pressure != nil }
-        let maskAlpha: [UInt8]
-        if pressureControlsSize, hasPressure {
-            let settings = ImageEditorBrushStrokeSettings(
-                diameter: width,
-                hardness: hardness,
-                opacity: 1,
-                flow: 1,
-                spacing: 0.1,
-                pressureControlsSize: true,
-                pressureControlsFlow: false,
-                pressureSensitivity: pressureSensitivity
-            )
-            let stamps = ImageEditorBrushStrokeKernel.stampSamples(
-                samples: samples,
-                diameter: settings.diameter,
-                spacing: settings.spacing
-            )
-            maskAlpha = ImageEditorBrushStrokeKernel.coverage(
-                width: pixelWidth,
-                height: pixelHeight,
-                stamps: stamps,
-                settings: settings
-            )
-        } else {
-            maskAlpha = ImageEditorHealingBrushKernel.strokeAlpha(
-                width: pixelWidth,
-                height: pixelHeight,
-                points: samples.map(\.point),
-                diameter: width,
-                hardness: hardness
-            )
-        }
+        let maskAlpha = retouchStrokeAlpha(
+            width: pixelWidth,
+            height: pixelHeight,
+            samples: samples,
+            diameter: width,
+            hardness: hardness,
+            pressureControlsSize: pressureControlsSize,
+            pressureSensitivity: pressureSensitivity
+        )
         guard maskAlpha.count == pixelWidth * pixelHeight else { return nil }
         return saturationAdjusted(
             maskAlpha: maskAlpha,
             opacity: opacity,
             mode: mode,
             vibrance: vibrance
+        )
+    }
+
+    private func retouchStrokeAlpha(
+        width pixelWidth: Int,
+        height pixelHeight: Int,
+        samples: [ImageEditorBrushStrokeSample],
+        diameter: CGFloat,
+        hardness: CGFloat,
+        pressureControlsSize: Bool,
+        pressureSensitivity: CGFloat
+    ) -> [UInt8] {
+        guard pressureControlsSize, samples.contains(where: { $0.pressure != nil }) else {
+            return ImageEditorHealingBrushKernel.strokeAlpha(
+                width: pixelWidth,
+                height: pixelHeight,
+                points: samples.map(\.point),
+                diameter: diameter,
+                hardness: hardness
+            )
+        }
+        let settings = ImageEditorBrushStrokeSettings(
+            diameter: diameter,
+            hardness: hardness,
+            opacity: 1,
+            flow: 1,
+            spacing: 0.1,
+            pressureControlsSize: true,
+            pressureControlsFlow: false,
+            pressureSensitivity: pressureSensitivity
+        )
+        return ImageEditorBrushStrokeKernel.coverage(
+            width: pixelWidth,
+            height: pixelHeight,
+            stamps: ImageEditorBrushStrokeKernel.stampSamples(
+                samples: samples,
+                diameter: settings.diameter,
+                spacing: settings.spacing
+            ),
+            settings: settings
         )
     }
 

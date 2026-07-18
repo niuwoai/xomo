@@ -57,6 +57,31 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(restored.brushPressureSensitivity == 73)
     }
 
+    @Test func retouchPressurePreferencesDefaultOffPersistAndStayIndependent() {
+        let (defaults, suiteName) = temporaryDefaults()
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        #expect(ImageEditorRetouchDynamicsPreferences.load(from: defaults) == .defaultValue)
+        #expect(!ImageEditorRetouchDynamicsPreferences.defaultValue.pressureControlsSize)
+
+        let first = makeViewModel(defaults: defaults)
+        first.setBrushPressureControlsSize(false)
+        first.setBrushPressureSensitivity(12)
+        first.setRetouchPressureControlsSize(true)
+        first.setRetouchPressureSensitivity(140)
+
+        let restored = makeViewModel(defaults: defaults)
+        #expect(restored.retouchPressureControlsSize)
+        #expect(restored.retouchPressureSensitivity == 100)
+        #expect(!restored.brushPressureControlsSize)
+        #expect(restored.brushPressureSensitivity == 12)
+
+        defaults.set(
+            Data("not-json".utf8),
+            forKey: ImageEditorRetouchDynamicsPreferences.storageKey
+        )
+        #expect(ImageEditorRetouchDynamicsPreferences.load(from: defaults) == .defaultValue)
+    }
+
     @Test func customPresetPreferencesRoundTripNormalizeAndRejectDuplicateIDs() throws {
         let (defaults, suiteName) = temporaryDefaults()
         defer { defaults.removePersistentDomain(forName: suiteName) }

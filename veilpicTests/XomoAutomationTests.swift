@@ -2042,10 +2042,11 @@ struct XomoAutomationTests {
         #expect(properties["spongeVibrance"]?.objectValue?["type"] == .string("boolean"))
     }
 
-    @Test func spongePressureAutomationAcceptsSamplesAndAdvertisesControls() throws {
+    @Test func retouchPressureAutomationAcceptsToneAndSpongeSamplesAndAdvertisesControls() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared
         registry.register(viewModel)
+        viewModel.setBrushPressureControlsSize(false)
 
         let response = registry.execute(request(
             operation: "call",
@@ -2065,9 +2066,28 @@ struct XomoAutomationTests {
         ))
 
         #expect(response.ok)
-        #expect(viewModel.brushPressureControlsSize)
-        #expect(viewModel.brushPressureSensitivity == 75)
+        #expect(viewModel.retouchPressureControlsSize)
+        #expect(viewModel.retouchPressureSensitivity == 75)
+        #expect(!viewModel.brushPressureControlsSize)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.sponge"))
+
+        let dodgeResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("dodge"),
+                "pressureSize": .bool(true),
+                "points": .array([
+                    .object([
+                        "x": .number(24),
+                        "y": .number(24),
+                        "pressure": .number(0.3)
+                    ])
+                ])
+            ]
+        ))
+        #expect(dodgeResponse.ok)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.dodge"))
 
         let toolsResponse = registry.execute(request(operation: "tools"))
         guard case .array(let tools) = toolsResponse.result else {

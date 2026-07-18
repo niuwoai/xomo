@@ -369,8 +369,8 @@ struct ImageEditorView: View {
                 Toggle(
                     L10n.text("imageEditor.option.pressureSize"),
                     isOn: Binding(
-                        get: { viewModel.brushPressureControlsSize },
-                        set: { viewModel.setBrushPressureControlsSize($0) }
+                        get: { viewModel.retouchPressureControlsSize },
+                        set: { viewModel.setRetouchPressureControlsSize($0) }
                     )
                 )
                 .toggleStyle(.checkbox)
@@ -417,6 +417,20 @@ struct ImageEditorView: View {
                 .fixedSize()
                 .help(L10n.text("imageEditor.option.airbrush.help"))
                 .accessibilityIdentifier("image-editor-tone-airbrush")
+
+                Toggle(
+                    L10n.text("imageEditor.option.pressureSize"),
+                    isOn: Binding(
+                        get: { viewModel.retouchPressureControlsSize },
+                        set: { viewModel.setRetouchPressureControlsSize($0) }
+                    )
+                )
+                .toggleStyle(.checkbox)
+                .focusable(false)
+                .fixedSize()
+                .help(L10n.text("imageEditor.option.tonePressureSize.help"))
+                .accessibilityHint(L10n.text("imageEditor.option.tonePressureSize.help"))
+                .accessibilityIdentifier("image-editor-tone-pressure-size")
             }
 
             if viewModel.selectedTool == .text {
@@ -2076,20 +2090,20 @@ struct ImageEditorView: View {
         }
     }
 
-    private func updateToneAirbrushStroke(at point: CGPoint) {
+    private func updateToneAirbrushStroke(at point: CGPoint, pressure: CGFloat?) {
         guard viewModel.toneBrushAirbrushEnabled else {
             toneAirbrushStroke.reset()
             return
         }
         let time = Date.timeIntervalSinceReferenceDate
         if toneAirbrushStroke.isActive {
-            toneAirbrushStroke.update(to: point, time: time)
+            toneAirbrushStroke.update(to: point, pressure: pressure, time: time)
         } else {
-            toneAirbrushStroke.begin(at: point, time: time)
+            toneAirbrushStroke.begin(at: point, pressure: pressure, time: time)
         }
     }
 
-    private func finishToneAirbrushStroke(at point: CGPoint?) -> [CGPoint] {
+    private func finishToneAirbrushStroke(at point: CGPoint?) -> [ImageEditorBrushStrokeSample] {
         guard viewModel.toneBrushAirbrushEnabled,
               toneAirbrushStroke.isActive,
               let finalPoint = point ?? toneAirbrushStroke.currentPoint
@@ -2097,8 +2111,9 @@ struct ImageEditorView: View {
             toneAirbrushStroke.reset()
             return []
         }
-        return toneAirbrushStroke.finish(
+        return toneAirbrushStroke.finishSamples(
             at: finalPoint,
+            pressure: toneAirbrushStroke.currentPressure,
             time: Date.timeIntervalSinceReferenceDate
         )
     }
@@ -2110,6 +2125,12 @@ struct ImageEditorView: View {
            let imagePoint = toneAirbrushStroke.currentPoint,
            let dwellBeganAt = toneAirbrushStroke.currentDwellBeganAt {
             let imageRect = fittedImageRect(in: size)
+            let pressureScale = viewModel.retouchPressureControlsSize
+                ? ImageEditorBrushStrokeKernel.mappedPressure(
+                    toneAirbrushStroke.currentPressure ?? 1,
+                    sensitivity: viewModel.retouchPressureSensitivity / 100
+                )
+                : 1
             ImageEditorToneAirbrushPreview(
                 isBurn: canvasInteractionTool == .burn,
                 point: viewPoint(from: imagePoint, in: size),
@@ -2117,7 +2138,8 @@ struct ImageEditorView: View {
                 exposure: viewModel.opacity,
                 diameter: max(
                     4,
-                    viewModel.brushSize * imageRect.width / max(1, viewModel.document.canvasSize.width)
+                    viewModel.brushSize * pressureScale * imageRect.width
+                        / max(1, viewModel.document.canvasSize.width)
                 )
             )
         }
@@ -2280,8 +2302,13 @@ struct ImageEditorView: View {
                     }
                 case .dodge, .burn:
                     if let pointerImagePoint {
+                        let pressure = ImageEditorBrushPressureInput.pressure(from: NSApp.currentEvent)
                         dragPoints.append(pointerImagePoint)
-                        updateToneAirbrushStroke(at: pointerImagePoint)
+                        brushStrokeSamples.append(ImageEditorBrushStrokeSample(
+                            point: pointerImagePoint,
+                            pressure: pressure
+                        ))
+                        updateToneAirbrushStroke(at: pointerImagePoint, pressure: pressure)
                     }
                 case .cloneStamp, .blur, .sharpen, .smudge, .healingBrush:
                     if let pointerImagePoint {
@@ -2458,15 +2485,15 @@ struct ImageEditorView: View {
                     }
                 case .dodge:
                     viewModel.toneBrush(
-                        points: dragPoints,
+                        samples: brushStrokeSamples,
                         burn: false,
-                        airbrushPulsePoints: finishToneAirbrushStroke(at: endImagePoint)
+                        airbrushPulseSamples: finishToneAirbrushStroke(at: endImagePoint)
                     )
                 case .burn:
                     viewModel.toneBrush(
-                        points: dragPoints,
+                        samples: brushStrokeSamples,
                         burn: true,
-                        airbrushPulsePoints: finishToneAirbrushStroke(at: endImagePoint)
+                        airbrushPulseSamples: finishToneAirbrushStroke(at: endImagePoint)
                     )
                 case .sponge:
                     viewModel.spongeBrush(samples: brushStrokeSamples)

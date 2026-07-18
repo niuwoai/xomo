@@ -2231,8 +2231,8 @@ struct ImageEditorScopeTests {
         )
         let spongeSource = source[spongeStart.lowerBound..<textStart.lowerBound]
 
-        #expect(spongeSource.contains("viewModel.brushPressureControlsSize"))
-        #expect(spongeSource.contains("viewModel.setBrushPressureControlsSize"))
+        #expect(spongeSource.contains("viewModel.retouchPressureControlsSize"))
+        #expect(spongeSource.contains("viewModel.setRetouchPressureControlsSize"))
         #expect(spongeSource.contains(".toggleStyle(.checkbox)"))
         #expect(spongeSource.contains(".focusable(false)"))
         #expect(spongeSource.contains("imageEditor.option.spongePressureSize.help"))
@@ -2280,6 +2280,28 @@ struct ImageEditorScopeTests {
         #expect(rangeSource.contains(".pickerStyle(.menu)"))
         #expect(rangeSource.contains(".focusable(false)"))
         #expect(rangeSource.contains("image-editor-tone-range"))
+    }
+
+    @Test func retouchPressureSizeOptionIsSharedByDodgeBurnAndSpongeWithoutFocus() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let toneStart = try #require(
+            source.range(of: "if viewModel.selectedTool == .dodge || viewModel.selectedTool == .burn {")
+        )
+        let textStart = try #require(
+            source[toneStart.upperBound...].range(of: "if viewModel.selectedTool == .text")
+        )
+        let toneSource = source[toneStart.lowerBound..<textStart.lowerBound]
+
+        #expect(toneSource.contains("viewModel.retouchPressureControlsSize"))
+        #expect(toneSource.contains("viewModel.setRetouchPressureControlsSize"))
+        #expect(toneSource.contains("imageEditor.option.tonePressureSize.help"))
+        #expect(toneSource.contains("image-editor-tone-pressure-size"))
+        #expect(toneSource.contains(".focusable(false)"))
+        #expect(source.contains("brushStrokeSamples.append(ImageEditorBrushStrokeSample("))
+        #expect(source.contains("samples: brushStrokeSamples"))
     }
 
     @Test func dodgeAndBurnExposeANonFocusableProtectTonesToggle() throws {

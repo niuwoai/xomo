@@ -1,7 +1,8 @@
 # Xomo MCP 与 CLI
 
-> 当前版本：v2.12.0-rc341
+> 当前版本：v2.12.0-rc342
 
+rc342 将 `xomo.paint.special` 的点级压力扩展到 `dodge` 与 `burn`，并与 `sponge` 统一使用独立修饰工具动态：`pressureSize` 和 `pressureSensitivity` 不再修改普通画笔偏好；减淡/加深喷枪脉冲继承最后一点压力，界面沿途驻留脉冲则插值压力。省略压力或关闭控制时继续走原连续蒙版，旧客户端结果不变。
 rc341 让 `xomo.paint.special` 的 `sponge` 接受每个点可选的 `pressure=0...1`，并增加 `pressureSize=true|false` 与 `pressureSensitivity=0...100`；真实压力样本复用界面画笔的压力曲线改变海绵直径，省略压力或关闭控制时继续走原连续线段蒙版，旧客户端结果不变。
 rc340 为 `xomo.paint.special` 的 `sponge` 增加 `flow=0...1`，与界面 0%–100% 流量共用既有像素强度入口；`flow` 优先于同时出现的旧 `opacity`，仅传 `opacity` 的既有客户端保持兼容，离线 CLI 工具目录同步公开数值范围。
 rc339 为 `xomo.paint.special` 的 `sponge` 增加 `spongeVibrance=true|false`；省略时默认开启，加色按剩余色度空间收力、去色按现有色度收力，以减少完全饱和或完全去色附近的剪切；关闭后保留既有线性像素行为，离线 CLI 工具目录同步公开该布尔字段。

@@ -34,6 +34,23 @@ struct ImageEditorToneAirbrushTests {
         )
     }
 
+    @Test func retouchPressureInterpolatesAcrossAirbrushDwellSamples() throws {
+        var stroke = ImageEditorToneAirbrushStroke()
+        stroke.begin(at: CGPoint(x: 10, y: 10), pressure: 0.2, time: 0)
+        stroke.update(to: CGPoint(x: 22, y: 10), pressure: 0.8, time: 0.30)
+        let pulses = stroke.finishSamples(
+            at: CGPoint(x: 22, y: 10),
+            pressure: 0.8,
+            time: 0.50
+        )
+
+        #expect(pulses.count == 4)
+        #expect(abs(try #require(pulses[0].pressure) - 0.44) < 0.001)
+        #expect(abs(try #require(pulses[1].pressure) - 0.68) < 0.001)
+        #expect(try #require(pulses[2].pressure) == 0.8)
+        #expect(try #require(pulses[3].pressure) == 0.8)
+    }
+
     @Test func airbrushPulsesBuildDodgeAndBurnGradually() throws {
         let source = solidImage(gray: 0.5)
         let pulses = Array(repeating: samplePoint, count: 8)

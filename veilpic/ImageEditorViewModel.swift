@@ -68,6 +68,8 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var brushPressureControlsSize = true
     @Published var brushPressureControlsFlow = true
     @Published var brushPressureSensitivity: CGFloat = 50
+    @Published var retouchPressureControlsSize = false
+    @Published var retouchPressureSensitivity: CGFloat = 50
     @Published var toneRange: ImageEditorToneRange = .midtones
     @Published var protectToneBrushTones = true
     @Published var toneBrushAirbrushEnabled = false
@@ -370,6 +372,7 @@ final class ImageEditorViewModel: ObservableObject {
     ) {
         let quickMaskPreferences = ImageEditorQuickMaskPreferences.load(from: preferencesDefaults)
         let brushDynamicsPreferences = ImageEditorBrushDynamicsPreferences.load(from: preferencesDefaults)
+        let retouchDynamicsPreferences = ImageEditorRetouchDynamicsPreferences.load(from: preferencesDefaults)
         let brushPresetPreferences = ImageEditorBrushPresetPreferences.load(from: preferencesDefaults)
         let layerStylePresetPreferences = ImageEditorLayerStylePresetPreferences.load(from: preferencesDefaults)
         let layerStylePresetUsagePreferences = ImageEditorLayerStylePresetUsagePreferences.load(
@@ -384,6 +387,8 @@ final class ImageEditorViewModel: ObservableObject {
         brushPressureControlsSize = brushDynamicsPreferences.pressureControlsSize
         brushPressureControlsFlow = brushDynamicsPreferences.pressureControlsFlow
         brushPressureSensitivity = CGFloat(brushDynamicsPreferences.pressureSensitivity)
+        retouchPressureControlsSize = retouchDynamicsPreferences.pressureControlsSize
+        retouchPressureSensitivity = CGFloat(retouchDynamicsPreferences.pressureSensitivity)
         customBrushPresets = brushPresetPreferences.presets
         customLayerStylePresets = layerStylePresetPreferences.presets
         let knownPresetIDs = Set(
@@ -408,6 +413,7 @@ final class ImageEditorViewModel: ObservableObject {
     ) {
         let quickMaskPreferences = ImageEditorQuickMaskPreferences.load(from: preferencesDefaults)
         let brushDynamicsPreferences = ImageEditorBrushDynamicsPreferences.load(from: preferencesDefaults)
+        let retouchDynamicsPreferences = ImageEditorRetouchDynamicsPreferences.load(from: preferencesDefaults)
         let brushPresetPreferences = ImageEditorBrushPresetPreferences.load(from: preferencesDefaults)
         let layerStylePresetPreferences = ImageEditorLayerStylePresetPreferences.load(from: preferencesDefaults)
         let layerStylePresetUsagePreferences = ImageEditorLayerStylePresetUsagePreferences.load(
@@ -422,6 +428,8 @@ final class ImageEditorViewModel: ObservableObject {
         brushPressureControlsSize = brushDynamicsPreferences.pressureControlsSize
         brushPressureControlsFlow = brushDynamicsPreferences.pressureControlsFlow
         brushPressureSensitivity = CGFloat(brushDynamicsPreferences.pressureSensitivity)
+        retouchPressureControlsSize = retouchDynamicsPreferences.pressureControlsSize
+        retouchPressureSensitivity = CGFloat(retouchDynamicsPreferences.pressureSensitivity)
         customBrushPresets = brushPresetPreferences.presets
         customLayerStylePresets = layerStylePresetPreferences.presets
         let knownPresetIDs = Set(
@@ -2801,6 +2809,13 @@ final class ImageEditorViewModel: ObservableObject {
         ).save(to: workspacePreferencesDefaults)
     }
 
+    private func persistRetouchDynamicsPreferences() {
+        ImageEditorRetouchDynamicsPreferences(
+            pressureControlsSize: retouchPressureControlsSize,
+            pressureSensitivity: Double(retouchPressureSensitivity)
+        ).save(to: workspacePreferencesDefaults)
+    }
+
     private func persistBrushPresetPreferences() {
         ImageEditorBrushPresetPreferences(presets: customBrushPresets)
             .save(to: workspacePreferencesDefaults)
@@ -2835,6 +2850,19 @@ final class ImageEditorViewModel: ObservableObject {
         guard brushPressureSensitivity != normalized else { return }
         brushPressureSensitivity = normalized
         persistBrushDynamicsPreferences()
+    }
+
+    func setRetouchPressureControlsSize(_ isEnabled: Bool) {
+        guard retouchPressureControlsSize != isEnabled else { return }
+        retouchPressureControlsSize = isEnabled
+        persistRetouchDynamicsPreferences()
+    }
+
+    func setRetouchPressureSensitivity(_ sensitivity: CGFloat) {
+        let normalized = max(0, min(100, sensitivity))
+        guard retouchPressureSensitivity != normalized else { return }
+        retouchPressureSensitivity = normalized
+        persistRetouchDynamicsPreferences()
     }
 
     private func refreshSelectionEdgeGeometry() {
@@ -4682,7 +4710,21 @@ final class ImageEditorViewModel: ObservableObject {
         burn: Bool,
         airbrushPulsePoints: [CGPoint] = []
     ) {
-        guard !points.isEmpty else { return }
+        toneBrush(
+            samples: points.map { ImageEditorBrushStrokeSample(point: $0) },
+            burn: burn,
+            airbrushPulseSamples: airbrushPulsePoints.map {
+                ImageEditorBrushStrokeSample(point: $0)
+            }
+        )
+    }
+
+    func toneBrush(
+        samples: [ImageEditorBrushStrokeSample],
+        burn: Bool,
+        airbrushPulseSamples: [ImageEditorBrushStrokeSample] = []
+    ) {
+        guard !samples.isEmpty else { return }
         guard !isEditingLayerMask else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
@@ -4692,16 +4734,19 @@ final class ImageEditorViewModel: ObservableObject {
             return
         }
         let sourceImage = layer.image.normalizedBitmapImage()
-        let localPoints = rasterLocalPoints(points, layer: layer)
+        let localSamples = rasterLocalSamples(samples, layer: layer)
+        let localAirbrushPulseSamples = rasterLocalSamples(airbrushPulseSamples, layer: layer)
         guard let output = sourceImage.withToneBrush(
-            points: localPoints,
+            samples: localSamples,
             width: rasterLocalBrushWidth(brushSize, layer: layer),
             opacity: opacity,
             hardness: hardness,
             burn: burn,
             range: toneRange,
             protectTones: protectToneBrushTones,
-            airbrushPulsePoints: toneBrushAirbrushEnabled ? airbrushPulsePoints : []
+            pressureControlsSize: retouchPressureControlsSize,
+            pressureSensitivity: retouchPressureSensitivity / 100,
+            airbrushPulseSamples: toneBrushAirbrushEnabled ? localAirbrushPulseSamples : []
         ) else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
@@ -4740,8 +4785,8 @@ final class ImageEditorViewModel: ObservableObject {
             hardness: hardness,
             mode: spongeMode,
             vibrance: spongeVibranceEnabled,
-            pressureControlsSize: brushPressureControlsSize,
-            pressureSensitivity: brushPressureSensitivity / 100
+            pressureControlsSize: retouchPressureControlsSize,
+            pressureSensitivity: retouchPressureSensitivity / 100
         ) else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return

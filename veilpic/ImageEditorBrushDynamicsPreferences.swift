@@ -43,6 +43,42 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
     }
 }
 
+/// Keeps Dodge, Burn, and Sponge tablet dynamics independent from the paint
+/// brush. Photoshop exposes this as a tool-option toggle and leaves it off by
+/// default, so changing a retouch tool must not silently alter Brush dynamics.
+struct ImageEditorRetouchDynamicsPreferences: Codable, Equatable {
+    static let storageKey = "im.some.xomo.imageEditor.retouchDynamicsPreferences"
+    static let defaultValue = ImageEditorRetouchDynamicsPreferences(
+        pressureControlsSize: false,
+        pressureSensitivity: 50
+    )
+
+    var pressureControlsSize: Bool
+    var pressureSensitivity: Double
+
+    var normalized: ImageEditorRetouchDynamicsPreferences {
+        ImageEditorRetouchDynamicsPreferences(
+            pressureControlsSize: pressureControlsSize,
+            pressureSensitivity: max(0, min(100, pressureSensitivity))
+        )
+    }
+
+    static func load(from defaults: UserDefaults) -> ImageEditorRetouchDynamicsPreferences {
+        guard let data = defaults.data(forKey: storageKey),
+              let preferences = try? JSONDecoder().decode(
+                ImageEditorRetouchDynamicsPreferences.self,
+                from: data
+              )
+        else { return defaultValue }
+        return preferences.normalized
+    }
+
+    func save(to defaults: UserDefaults) {
+        guard let data = try? JSONEncoder().encode(normalized) else { return }
+        defaults.set(data, forKey: Self.storageKey)
+    }
+}
+
 struct ImageEditorBrushPresetPreferences: Codable, Equatable {
     static let storageKey = "im.some.xomo.imageEditor.customBrushPresets"
     static let maximumPresetCount = 100

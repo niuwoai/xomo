@@ -1,0 +1,59 @@
+{
+  "generated_at": "2026-07-19 06:47:53 +0800",
+  "total": 5,
+  "passed": 5,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorBrushDynamicsPreferencesTests",
+      "method": "retouchPressurePreferencesDefaultOffPersistAndStayIndependent",
+      "identifier": "veilpicTests/ImageEditorBrushDynamicsPreferencesTests/retouchPressurePreferencesDefaultOffPersistAndStayIndependent",
+      "file": "ImageEditorBrushDynamicsPreferencesTests.swift",
+      "passed": true,
+      "duration": 4.6,
+      "issues": [],
+      "log": "ImageEditorBrushDynamicsPreferencesTests.retouchPressurePreferencesDefaultOffPersistAndStayIndependent.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "retouchPressureSizeOptionIsSharedByDodgeBurnAndSpongeWithoutFocus",
+      "identifier": "veilpicTests/ImageEditorScopeTests/retouchPressureSizeOptionIsSharedByDodgeBurnAndSpongeWithoutFocus",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.067,
+      "issues": [],
+      "log": "ImageEditorScopeTests.retouchPressureSizeOptionIsSharedByDodgeBurnAndSpongeWithoutFocus.log"
+    },
+    {
+      "suite": "ImageEditorToneAirbrushTests",
+      "method": "retouchPressureInterpolatesAcrossAirbrushDwellSamples",
+      "identifier": "veilpicTests/ImageEditorToneAirbrushTests/retouchPressureInterpolatesAcrossAirbrushDwellSamples",
+      "file": "ImageEditorToneAirbrushTests.swift",
+      "passed": true,
+      "duration": 3.066,
+      "issues": [],
+      "log": "ImageEditorToneAirbrushTests.retouchPressureInterpolatesAcrossAirbrushDwellSamples.log"
+    },
+    {
+      "suite": "ImageEditorToolSmokeTests",
+      "method": "retouchPressureControlsDodgeAndBurnDiameterWithoutChangingExposure",
+      "identifier": "veilpicTests/ImageEditorToolSmokeTests/retouchPressureControlsDodgeAndBurnDiameterWithoutChangingExposure",
+      "file": "ImageEditorToolSmokeTests.swift",
+      "passed": true,
+      "duration": 3.051,
+      "issues": [],
+      "log": "ImageEditorToolSmokeTests.retouchPressureControlsDodgeAndBurnDiameterWithoutChangingExposure.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "retouchPressureAutomationAcceptsToneAndSpongeSamplesAndAdvertisesControls",
+      "identifier": "veilpicTests/XomoAutomationTests/retouchPressureAutomationAcceptsToneAndSpongeSamplesAndAdvertisesControls",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 3.03,
+      "issues": [],
+      "log": "XomoAutomationTests.retouchPressureAutomationAcceptsToneAndSpongeSamplesAndAdvertisesControls.log"
+    }
+  ]
+}

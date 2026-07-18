@@ -74,7 +74,10 @@ enum XomoToolCatalog {
                         "healingMode": ["type": "string", "enum": ["source", "spot"]],
                         "spongeMode": ["type": "string", "enum": ["saturate", "desaturate"]],
                         "spongeVibrance": ["type": "boolean"],
-                        "pressureSize": ["type": "boolean"],
+                        "pressureSize": [
+                            "type": "boolean",
+                            "description": "Use point pressure to control Dodge, Burn, or Sponge diameter"
+                        ],
                         "pressureSensitivity": ["type": "number", "minimum": 0, "maximum": 100],
                         "aligned": ["type": "boolean"],
                         "sampleSource": ["type": "string", "enum": ["currentLayer", "currentAndBelow", "allVisible"]]
