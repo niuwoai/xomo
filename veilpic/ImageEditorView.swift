@@ -435,6 +435,17 @@ struct ImageEditorView: View {
 
             if viewModel.selectedTool == .smudge {
                 Toggle(
+                    L10n.text("imageEditor.option.sampleAllLayers"),
+                    isOn: $viewModel.smudgeSampleAllLayersEnabled
+                )
+                .toggleStyle(.checkbox)
+                .focusable(false)
+                .fixedSize()
+                .help(L10n.text("imageEditor.option.sampleAllLayers.help"))
+                .accessibilityHint(L10n.text("imageEditor.option.sampleAllLayers.help"))
+                .accessibilityIdentifier("image-editor-smudge-sample-all-layers")
+
+                Toggle(
                     L10n.text("imageEditor.option.fingerPainting"),
                     isOn: $viewModel.smudgeFingerPaintingEnabled
                 )

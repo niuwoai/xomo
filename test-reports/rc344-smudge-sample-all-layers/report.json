@@ -1,0 +1,49 @@
+{
+  "generated_at": "2026-07-19 07:20:01 +0800",
+  "total": 4,
+  "passed": 4,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "sampleAllLayersOptionIsSmudgeOnlyNonFocusableAndAccessible",
+      "identifier": "veilpicTests/ImageEditorScopeTests/sampleAllLayersOptionIsSmudgeOnlyNonFocusableAndAccessible",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 4.102,
+      "issues": [],
+      "log": "ImageEditorScopeTests.sampleAllLayersOptionIsSmudgeOnlyNonFocusableAndAccessible.log"
+    },
+    {
+      "suite": "ImageEditorToolSmokeTests",
+      "method": "sampleAllLayersSmudgesVisiblePixelsOnlyIntoTheActiveLayer",
+      "identifier": "veilpicTests/ImageEditorToolSmokeTests/sampleAllLayersSmudgesVisiblePixelsOnlyIntoTheActiveLayer",
+      "file": "ImageEditorToolSmokeTests.swift",
+      "passed": true,
+      "duration": 3.053,
+      "issues": [],
+      "log": "ImageEditorToolSmokeTests.sampleAllLayersSmudgesVisiblePixelsOnlyIntoTheActiveLayer.log"
+    },
+    {
+      "suite": "LocalizationResourceTests",
+      "method": "sampleAllLayersIsLocalizedInEverySupportedLanguage",
+      "identifier": "veilpicTests/LocalizationResourceTests/sampleAllLayersIsLocalizedInEverySupportedLanguage",
+      "file": "LocalizationResourceTests.swift",
+      "passed": true,
+      "duration": 3.035,
+      "issues": [],
+      "log": "LocalizationResourceTests.sampleAllLayersIsLocalizedInEverySupportedLanguage.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "sampleAllLayersAutomationConfiguresSmudgeAndAdvertisesTheOption",
+      "identifier": "veilpicTests/XomoAutomationTests/sampleAllLayersAutomationConfiguresSmudgeAndAdvertisesTheOption",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 3.075,
+      "issues": [],
+      "log": "XomoAutomationTests.sampleAllLayersAutomationConfiguresSmudgeAndAdvertisesTheOption.log"
+    }
+  ]
+}

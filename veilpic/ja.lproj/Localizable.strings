@@ -532,6 +532,8 @@
 "imageEditor.option.tonePressureSize.help" = "ペンの筆圧で覆い焼きまたは焼き込みブラシのサイズを制御します";
 "imageEditor.option.fingerPainting" = "フィンガーペイント";
 "imageEditor.option.fingerPainting.help" = "現在の描画色で各ぼかしストロークを開始します";
+"imageEditor.option.sampleAllLayers" = "全レイヤーを対象";
+"imageEditor.option.sampleAllLayers.help" = "すべての表示レイヤーからぼかし、アクティブレイヤーにのみ描画します";
 "imageEditor.option.patchMode" = "パッチモード";
 "imageEditor.patchMode.source" = "ソース";
 "imageEditor.patchMode.destination" = "適用先";

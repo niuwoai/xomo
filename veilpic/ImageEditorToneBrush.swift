@@ -265,14 +265,17 @@ extension NSImage {
         width: CGFloat,
         opacity: CGFloat,
         hardness: CGFloat,
+        sourceImage: NSImage? = nil,
         fingerPaintingColor: NSColor? = nil
     ) -> NSImage? {
         guard points.count > 1 else { return nil }
         let clampedOpacity = max(0, min(1, opacity)) * 0.86
+        let usesIndependentSource = sourceImage != nil
+        var workingSource = sourceImage ?? self
         var output = self
         if let fingerPaintingColor {
             guard let firstPoint = points.first,
-                  let seededOutput = withBrushStroke(
+                  let seededSource = workingSource.withBrushStroke(
                     points: [firstPoint],
                     color: fingerPaintingColor,
                     settings: ImageEditorBrushStrokeSettings(
@@ -285,7 +288,24 @@ extension NSImage {
                     erase: false
                   )
             else { return nil }
-            output = seededOutput
+            workingSource = seededSource
+            if usesIndependentSource {
+                guard let seededOutput = output.withBrushStroke(
+                    points: [firstPoint],
+                    color: fingerPaintingColor,
+                    settings: ImageEditorBrushStrokeSettings(
+                        diameter: width,
+                        hardness: hardness,
+                        opacity: clampedOpacity,
+                        flow: 1,
+                        spacing: 1
+                    ),
+                    erase: false
+                ) else { return nil }
+                output = seededOutput
+            } else {
+                output = seededSource
+            }
         }
 
         for segmentIndex in 1..<points.count {
@@ -294,7 +314,7 @@ extension NSImage {
             let delta = CGSize(width: current.x - previous.x, height: current.y - previous.y)
             guard abs(delta.width) > 0.1 || abs(delta.height) > 0.1 else { continue }
 
-            let sourceSnapshot = output
+            let sourceSnapshot = workingSource
             guard let strokeMask = ImageEditorHealingBrushKernel.strokeMaskImage(
                 size: size,
                 points: [previous, current],
@@ -338,6 +358,25 @@ extension NSImage {
                 )
             }) else {
                 return nil
+            }
+            if usesIndependentSource {
+                guard let nextWorkingSource = NSImage.rendered(size: size, actions: { rect in
+                    workingSource.draw(
+                        in: rect,
+                        from: CGRect(origin: .zero, size: workingSource.size),
+                        operation: .copy,
+                        fraction: 1
+                    )
+                    clippedSource.draw(
+                        in: rect,
+                        from: CGRect(origin: .zero, size: clippedSource.size),
+                        operation: .sourceOver,
+                        fraction: clampedOpacity
+                    )
+                }) else { return nil }
+                workingSource = nextWorkingSource
+            } else {
+                workingSource = nextOutput
             }
             output = nextOutput
         }

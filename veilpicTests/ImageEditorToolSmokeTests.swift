@@ -726,6 +726,71 @@ struct ImageEditorToolSmokeTests {
         #expect(fingerPainting.document.history.last?.title == L10n.text("imageEditor.history.smudge"))
     }
 
+    @Test func sampleAllLayersSmudgesVisiblePixelsOnlyIntoTheActiveLayer() throws {
+        func makeLayeredViewModel() -> ImageEditorViewModel {
+            let bottomImage = NSImage.rendered(size: canvasSize) { rect in
+                NSColor.systemBlue.setFill()
+                rect.fill()
+                NSColor.systemRed.setFill()
+                CGRect(x: 7, y: 10, width: 7, height: 8).fill()
+            } ?? NSImage.transparent(size: canvasSize)
+            var document = ImageEditorDocument(sourceName: "Smudge Layers", image: bottomImage)
+            let editLayer = ImageEditorLayer.blank(name: "Smudge", size: canvasSize)
+            document.layers = [document.layers[0], editLayer]
+            document.selectedLayerID = editLayer.id
+            document.selectedLayerIDs = [editLayer.id]
+            return ImageEditorViewModel(document: document, onApply: { _ in })
+        }
+
+        let currentLayerOnly = makeLayeredViewModel()
+        let allLayers = makeLayeredViewModel()
+        for viewModel in [currentLayerOnly, allLayers] {
+            viewModel.brushSize = 8
+            viewModel.hardness = 1
+            viewModel.opacity = 1
+        }
+        allLayers.smudgeSampleAllLayersEnabled = true
+        let points = [CGPoint(x: 10, y: 14), CGPoint(x: 20, y: 14)]
+
+        currentLayerOnly.smudgeBrush(points: points)
+        allLayers.smudgeBrush(points: points)
+
+        let currentOnlyPixel = try #require(
+            currentLayerOnly.document.selectedLayer?.image.color(at: CGPoint(x: 19, y: 14))?
+                .usingColorSpace(.deviceRGB)
+        )
+        let sampledPixel = try #require(
+            allLayers.document.selectedLayer?.image.color(at: CGPoint(x: 19, y: 14))?
+                .usingColorSpace(.deviceRGB)
+        )
+        let untouchedPixel = try #require(
+            allLayers.document.selectedLayer?.image.color(at: CGPoint(x: 34, y: 4))?
+                .usingColorSpace(.deviceRGB)
+        )
+        let unchangedBottom = try #require(
+            allLayers.document.layers[0].image.color(at: CGPoint(x: 10, y: 14))?
+                .usingColorSpace(.deviceRGB)
+        )
+        #expect(currentOnlyPixel.alphaComponent < 0.05)
+        #expect(sampledPixel.redComponent > sampledPixel.blueComponent + 0.25)
+        #expect(untouchedPixel.alphaComponent < 0.05)
+        #expect(unchangedBottom.redComponent > unchangedBottom.blueComponent + 0.25)
+        #expect(allLayers.document.history.last?.title == L10n.text("imageEditor.history.smudge"))
+
+        allLayers.undo()
+        let undonePixel = try #require(
+            allLayers.document.selectedLayer?.image.color(at: CGPoint(x: 19, y: 14))?
+                .usingColorSpace(.deviceRGB)
+        )
+        #expect(undonePixel.alphaComponent < 0.05)
+        allLayers.redo()
+        let redonePixel = try #require(
+            allLayers.document.selectedLayer?.image.color(at: CGPoint(x: 19, y: 14))?
+                .usingColorSpace(.deviceRGB)
+        )
+        #expect(redonePixel.redComponent > redonePixel.blueComponent + 0.25)
+    }
+
     @Test func redEyeToolReducesExcessRedAtTheClickedPupil() throws {
         let image = NSImage.rendered(size: canvasSize) { rect in
             NSColor(deviceWhite: 0.35, alpha: 1).setFill()

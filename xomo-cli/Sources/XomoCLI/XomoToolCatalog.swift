@@ -78,6 +78,10 @@ enum XomoToolCatalog {
                             "type": "boolean",
                             "description": "Start each Smudge stroke with the current foreground color"
                         ],
+                        "sampleAllLayers": [
+                            "type": "boolean",
+                            "description": "Smudge from the composite of all visible layers into the active layer"
+                        ],
                         "pressureSize": [
                             "type": "boolean",
                             "description": "Use point pressure to control Dodge, Burn, or Sponge diameter"

@@ -76,6 +76,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var spongeMode: ImageEditorSpongeMode = .saturate
     @Published var spongeVibranceEnabled = true
     @Published var smudgeFingerPaintingEnabled = false
+    @Published var smudgeSampleAllLayersEnabled = false
     @Published private(set) var customBrushPresets: [ImageEditorBrushPreset] = []
     @Published var customLayerStylePresets: [ImageEditorLayerStylePreset] = []
     @Published var favoriteLayerStylePresetIDs: [String] = []
@@ -4875,11 +4876,26 @@ final class ImageEditorViewModel: ObservableObject {
             return
         }
         let sourceImage = layer.image.normalizedBitmapImage()
+        let sampledSourceImage: NSImage?
+        if smudgeSampleAllLayersEnabled {
+            guard let sampledInput = sampledBrushInput(
+                for: layer,
+                canvasOffset: .zero,
+                sampleSource: .allVisible
+            ) else {
+                statusText = L10n.text("imageEditor.status.operationFailed")
+                return
+            }
+            sampledSourceImage = sampledInput.image
+        } else {
+            sampledSourceImage = nil
+        }
         guard let output = sourceImage.withSmudgeBrush(
             points: rasterLocalPoints(points, layer: layer),
             width: rasterLocalBrushWidth(brushSize, layer: layer),
             opacity: opacity,
             hardness: hardness,
+            sourceImage: sampledSourceImage,
             fingerPaintingColor: smudgeFingerPaintingEnabled ? foregroundColor : nil
         ) else {
             statusText = L10n.text("imageEditor.status.operationFailed")

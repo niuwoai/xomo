@@ -2664,6 +2664,9 @@ final class XomoAutomationRegistry {
         if action == "smudge", let fingerPainting = arguments["fingerPainting"]?.boolValue {
             viewModel.smudgeFingerPaintingEnabled = fingerPainting
         }
+        if action == "smudge", let sampleAllLayers = arguments["sampleAllLayers"]?.boolValue {
+            viewModel.smudgeSampleAllLayersEnabled = sampleAllLayers
+        }
         if usesRetouchPressure, let pressureSize = arguments["pressureSize"]?.boolValue {
             viewModel.setRetouchPressureControlsSize(pressureSize)
         }
@@ -3752,6 +3755,7 @@ private extension XomoAutomationRegistry {
             "spongeMode": XomoAutomationSchema.string(description: "Sponge mode", values: ["saturate", "desaturate"]),
             "spongeVibrance": XomoAutomationSchema.boolean(description: "Reduce clipping near fully saturated or desaturated colors"),
             "fingerPainting": XomoAutomationSchema.boolean(description: "Start each Smudge stroke with the current foreground color"),
+            "sampleAllLayers": XomoAutomationSchema.boolean(description: "Smudge from the composite of all visible layers into the active layer"),
             "pressureSize": XomoAutomationSchema.boolean(description: "Use point pressure to control Dodge, Burn, or Sponge diameter"),
             "pressureSensitivity": XomoAutomationSchema.number(description: "Dodge, Burn, or Sponge pressure curve sensitivity from 0 to 100"),
             "aligned": XomoAutomationSchema.boolean(description: "Keep the clone or healing source offset aligned across strokes"),

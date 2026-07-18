@@ -295,6 +295,28 @@ struct LocalizationResourceTests {
         }
     }
 
+    @Test func sampleAllLayersIsLocalizedInEverySupportedLanguage() throws {
+        let paths = try Self.repositoryPaths()
+        let expectedValues = [
+            "zh-Hans": ["对所有图层取样", "从所有可见图层取样涂抹，并只写入当前图层"],
+            "en": ["Sample All Layers", "Smudge visible pixels from all layers into the active layer"],
+            "ja": ["全レイヤーを対象", "すべての表示レイヤーからぼかし、アクティブレイヤーにのみ描画します"]
+        ]
+        let keys = [
+            "imageEditor.option.sampleAllLayers",
+            "imageEditor.option.sampleAllLayers.help"
+        ]
+
+        for (localizationID, expected) in expectedValues {
+            let strings = try Self.stringTable(
+                tableName: "Localizable",
+                localizationID: localizationID,
+                appDirectory: paths.appDirectory
+            )
+            #expect(keys.compactMap { strings[$0] } == expected)
+        }
+    }
+
     @Test func spongeFlowSummaryIsLocalizedInEverySupportedLanguage() throws {
         let paths = try Self.repositoryPaths()
         let expectedValues = [

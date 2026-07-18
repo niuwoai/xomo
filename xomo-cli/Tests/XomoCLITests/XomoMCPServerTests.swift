@@ -72,6 +72,8 @@ struct XomoMCPServerTests {
         #expect(spongeVibrance["type"] as? String == "boolean")
         let fingerPainting = try #require(specialPaintProperties["fingerPainting"] as? [String: Any])
         #expect(fingerPainting["type"] as? String == "boolean")
+        let sampleAllLayers = try #require(specialPaintProperties["sampleAllLayers"] as? [String: Any])
+        #expect(sampleAllLayers["type"] as? String == "boolean")
         let spongeFlow = try #require(specialPaintProperties["flow"] as? [String: Any])
         #expect(spongeFlow["type"] as? String == "number")
         #expect(spongeFlow["minimum"] as? Int == 0)
