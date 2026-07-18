@@ -82,6 +82,20 @@ extension ImageEditorViewModel {
         }
     }
 
+    /// Distinguishes blocked visible content from empty canvas space for the
+    /// move-tool cursor. A locked or occluded object should not look like an
+    /// invitation to pan the canvas with an open hand.
+    func hasBlockedCanvasContent(at point: CGPoint) -> Bool {
+        guard point.x.isFinite, point.y.isFinite,
+              !hasMovableCanvasContent(at: point)
+        else { return false }
+
+        return document.layers.reversed().contains { layer in
+            document.isEffectivelyVisible(layer)
+                && layerContainsVisibleContent(layer, at: point)
+        }
+    }
+
     func selectXomoObject(at point: CGPoint, extendingSelection: Bool = false) -> Bool {
         guard let object = xomoCanvasObjects()
             .sorted(by: { $0.frontIndex > $1.frontIndex })

@@ -166,6 +166,15 @@ struct ImageEditorCanvasCursorTests {
             isPointerOverMovableContent: false
         )
         #expect(emptyCanvasMove === NSCursor.openHand)
+
+        let blockedContentMove = ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .move,
+            brushDiameter: 18,
+            isPointerOverMovableContent: false,
+            isPointerOverBlockedContent: true
+        )
+        #expect(blockedContentMove === NSCursor.operationNotAllowed)
     }
 
     @Test func moveCursorHitTestUsesComponentGeometryWithoutChangingSelection() throws {
@@ -198,6 +207,7 @@ struct ImageEditorCanvasCursorTests {
             return locked
         }
         #expect(!viewModel.hasMovableCanvasContent(at: center))
+        #expect(viewModel.hasBlockedCanvasContent(at: center))
 
         viewModel.document.layers = viewModel.document.layers.map { layer in
             guard layer.id == groupID else { return layer }
@@ -214,6 +224,7 @@ struct ImageEditorCanvasCursorTests {
         cover.locksPosition = true
         viewModel.document.layers.append(cover)
         #expect(!viewModel.hasMovableCanvasContent(at: center))
+        #expect(viewModel.hasBlockedCanvasContent(at: center))
     }
 
     @Test func moveToolShowsCopyBadgeWhileHoldingOption() {
