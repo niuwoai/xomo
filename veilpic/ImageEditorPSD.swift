@@ -1354,6 +1354,7 @@ enum ImageEditorPSDCodec {
             extra.appendSectionDivider(type: sectionType, blendMode: item.blendMode)
         }
         extra.appendSolidColorFill(item.solidFillContent)
+        extra.appendGradientFill(item.gradientFillContent)
         extra.appendVectorMask(item.vectorMask)
         extra.appendTextToolObject(item.textObject)
         record.appendUInt32(UInt32(extra.count))

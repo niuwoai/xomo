@@ -1,6 +1,6 @@
 # 象墨 PSD 支持说明
 
-> 最后更新：2026-07-18 ｜ 对应版本：v2.12.0-rc254
+> 最后更新：2026-07-18 ｜ 对应版本：v2.12.0-rc255
 
 ## 1. 结论
 
@@ -86,6 +86,8 @@ rc240 完成 20 个版本质量门禁：PSD 专项 25/25，外部纯色与线性
 - 兼容性扫描本身不会证明最终视觉完全一致。混合链、颜色配置、调整层和插件数据较复杂时，应对照 Photoshop 原图人工核验。
 
 ## 6. 测试证据
+
+rc255 修复图层记录遗漏 `GdFl` 的导出路径；PSD 专项独立进程回归 27/27 通过，报告见 [`test-reports/rc255-psd-gradient-fix/report.md`](../test-reports/rc255-psd-gradient-fix/report.md)。
 
 rc166 的专色通道定向回归通过；完整套件仍有既有文字、矢量路径与外部 fixture 回归，详见 [`test-reports/rc166-psd-spot/report.md`](../test-reports/rc166-psd-spot/report.md)。
 

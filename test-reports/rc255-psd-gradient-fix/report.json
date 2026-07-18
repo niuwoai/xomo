@@ -1,0 +1,10 @@
+{
+  "version": "2.12.0-rc255",
+  "suite": "ImageEditorPSDTests",
+  "total": 27,
+  "passed": 27,
+  "failed": 0,
+  "jobs": 1,
+  "build": "arm64",
+  "fix": "appendGradientFill in PSD layer records"
+}
