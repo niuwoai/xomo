@@ -433,6 +433,22 @@ struct ImageEditorView: View {
                 .accessibilityIdentifier("image-editor-tone-pressure-size")
             }
 
+            if viewModel.selectedTool == .blur || viewModel.selectedTool == .sharpen {
+                Toggle(
+                    L10n.text("imageEditor.option.pressureSize"),
+                    isOn: Binding(
+                        get: { viewModel.retouchPressureControlsSize },
+                        set: { viewModel.setRetouchPressureControlsSize($0) }
+                    )
+                )
+                .toggleStyle(.checkbox)
+                .focusable(false)
+                .fixedSize()
+                .help(L10n.text("imageEditor.option.blurSharpenPressureSize.help"))
+                .accessibilityHint(L10n.text("imageEditor.option.blurSharpenPressureSize.help"))
+                .accessibilityIdentifier("image-editor-blur-sharpen-pressure-size")
+            }
+
             if viewModel.selectedTool == .smudge {
                 Toggle(
                     L10n.text("imageEditor.option.sampleAllLayers"),
@@ -2348,7 +2364,7 @@ struct ImageEditorView: View {
                         ))
                         updateToneAirbrushStroke(at: pointerImagePoint, pressure: pressure)
                     }
-                case .smudge:
+                case .blur, .sharpen, .smudge:
                     if let pointerImagePoint {
                         dragPoints.append(pointerImagePoint)
                         brushStrokeSamples.append(ImageEditorBrushStrokeSample(
@@ -2356,7 +2372,7 @@ struct ImageEditorView: View {
                             pressure: ImageEditorBrushPressureInput.pressure(from: NSApp.currentEvent)
                         ))
                     }
-                case .cloneStamp, .blur, .sharpen, .healingBrush:
+                case .cloneStamp, .healingBrush:
                     if let pointerImagePoint {
                         dragPoints.append(pointerImagePoint)
                     }
@@ -2544,9 +2560,9 @@ struct ImageEditorView: View {
                 case .sponge:
                     viewModel.spongeBrush(samples: brushStrokeSamples)
                 case .blur:
-                    viewModel.blurBrush(points: dragPoints)
+                    viewModel.blurBrush(samples: brushStrokeSamples)
                 case .sharpen:
-                    viewModel.sharpenBrush(points: dragPoints)
+                    viewModel.sharpenBrush(samples: brushStrokeSamples)
                 case .smudge:
                     viewModel.smudgeBrush(samples: brushStrokeSamples)
                 case .healingBrush:

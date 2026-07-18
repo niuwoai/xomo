@@ -1,0 +1,319 @@
+{
+  "generated_at": "2026-07-19 07:55:25 +0800",
+  "total": 31,
+  "passed": 31,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorToolSmokeTests",
+      "method": "blurAndSharpenHardnessControlTheVisibleStrokeEdge",
+      "identifier": "veilpicTests/ImageEditorToolSmokeTests/blurAndSharpenHardnessControlTheVisibleStrokeEdge",
+      "file": "ImageEditorToolSmokeTests.swift",
+      "passed": true,
+      "duration": 3.047,
+      "issues": [],
+      "log": "ImageEditorToolSmokeTests.blurAndSharpenHardnessControlTheVisibleStrokeEdge.log"
+    },
+    {
+      "suite": "ImageEditorToolSmokeTests",
+      "method": "blurSharpenPressureControlsDiameterWithoutChangingMouseStrokes",
+      "identifier": "veilpicTests/ImageEditorToolSmokeTests/blurSharpenPressureControlsDiameterWithoutChangingMouseStrokes",
+      "file": "ImageEditorToolSmokeTests.swift",
+      "passed": true,
+      "duration": 3.041,
+      "issues": [],
+      "log": "ImageEditorToolSmokeTests.blurSharpenPressureControlsDiameterWithoutChangingMouseStrokes.log"
+    },
+    {
+      "suite": "ImageEditorToolSmokeTests",
+      "method": "blurSingleClickAppliesACircularDab",
+      "identifier": "veilpicTests/ImageEditorToolSmokeTests/blurSingleClickAppliesACircularDab",
+      "file": "ImageEditorToolSmokeTests.swift",
+      "passed": true,
+      "duration": 3.112,
+      "issues": [],
+      "log": "ImageEditorToolSmokeTests.blurSingleClickAppliesACircularDab.log"
+    },
+    {
+      "suite": "ImageEditorToolSmokeTests",
+      "method": "blurStrengthControlsPixelEffect",
+      "identifier": "veilpicTests/ImageEditorToolSmokeTests/blurStrengthControlsPixelEffect",
+      "file": "ImageEditorToolSmokeTests.swift",
+      "passed": true,
+      "duration": 3.123,
+      "issues": [],
+      "log": "ImageEditorToolSmokeTests.blurStrengthControlsPixelEffect.log"
+    },
+    {
+      "suite": "ImageEditorToolSmokeTests",
+      "method": "burnExposureControlsPixelEffect",
+      "identifier": "veilpicTests/ImageEditorToolSmokeTests/burnExposureControlsPixelEffect",
+      "file": "ImageEditorToolSmokeTests.swift",
+      "passed": true,
+      "duration": 3.113,
+      "issues": [],
+      "log": "ImageEditorToolSmokeTests.burnExposureControlsPixelEffect.log"
+    },
+    {
+      "suite": "ImageEditorToolSmokeTests",
+      "method": "dodgeExposureControlsPixelEffect",
+      "identifier": "veilpicTests/ImageEditorToolSmokeTests/dodgeExposureControlsPixelEffect",
+      "file": "ImageEditorToolSmokeTests.swift",
+      "passed": true,
+      "duration": 3.105,
+      "issues": [],
+      "log": "ImageEditorToolSmokeTests.dodgeExposureControlsPixelEffect.log"
+    },
+    {
+      "suite": "ImageEditorToolSmokeTests",
+      "method": "eyedropperAndColorSamplerReadCanvasPixels",
+      "identifier": "veilpicTests/ImageEditorToolSmokeTests/eyedropperAndColorSamplerReadCanvasPixels",
+      "file": "ImageEditorToolSmokeTests.swift",
+      "passed": true,
+      "duration": 3.048,
+      "issues": [],
+      "log": "ImageEditorToolSmokeTests.eyedropperAndColorSamplerReadCanvasPixels.log"
+    },
+    {
+      "suite": "ImageEditorToolSmokeTests",
+      "method": "fingerPaintingCarriesForegroundColorAlongTheSmudgeStroke",
+      "identifier": "veilpicTests/ImageEditorToolSmokeTests/fingerPaintingCarriesForegroundColorAlongTheSmudgeStroke",
+      "file": "ImageEditorToolSmokeTests.swift",
+      "passed": true,
+      "duration": 3.126,
+      "issues": [],
+      "log": "ImageEditorToolSmokeTests.fingerPaintingCarriesForegroundColorAlongTheSmudgeStroke.log"
+    },
+    {
+      "suite": "ImageEditorToolSmokeTests",
+      "method": "lassoCreatesAUsablePolygonSelection",
+      "identifier": "veilpicTests/ImageEditorToolSmokeTests/lassoCreatesAUsablePolygonSelection",
+      "file": "ImageEditorToolSmokeTests.swift",
+      "passed": true,
+      "duration": 3.083,
+      "issues": [],
+      "log": "ImageEditorToolSmokeTests.lassoCreatesAUsablePolygonSelection.log"
+    },
+    {
+      "suite": "ImageEditorToolSmokeTests",
+      "method": "protectTonesPreservesChromaAndAvoidsEndpointClipping",
+      "identifier": "veilpicTests/ImageEditorToolSmokeTests/protectTonesPreservesChromaAndAvoidsEndpointClipping",
+      "file": "ImageEditorToolSmokeTests.swift",
+      "passed": true,
+      "duration": 3.038,
+      "issues": [],
+      "log": "ImageEditorToolSmokeTests.protectTonesPreservesChromaAndAvoidsEndpointClipping.log"
+    },
+    {
+      "suite": "ImageEditorToolSmokeTests",
+      "method": "quickSelectionCombinesSampledColorRegions",
+      "identifier": "veilpicTests/ImageEditorToolSmokeTests/quickSelectionCombinesSampledColorRegions",
+      "file": "ImageEditorToolSmokeTests.swift",
+      "passed": true,
+      "duration": 3.085,
+      "issues": [],
+      "log": "ImageEditorToolSmokeTests.quickSelectionCombinesSampledColorRegions.log"
+    },
+    {
+      "suite": "ImageEditorToolSmokeTests",
+      "method": "redEyeToolReducesExcessRedAtTheClickedPupil",
+      "identifier": "veilpicTests/ImageEditorToolSmokeTests/redEyeToolReducesExcessRedAtTheClickedPupil",
+      "file": "ImageEditorToolSmokeTests.swift",
+      "passed": true,
+      "duration": 3.069,
+      "issues": [],
+      "log": "ImageEditorToolSmokeTests.redEyeToolReducesExcessRedAtTheClickedPupil.log"
+    },
+    {
+      "suite": "ImageEditorToolSmokeTests",
+      "method": "retouchPressureControlsDodgeAndBurnDiameterWithoutChangingExposure",
+      "identifier": "veilpicTests/ImageEditorToolSmokeTests/retouchPressureControlsDodgeAndBurnDiameterWithoutChangingExposure",
+      "file": "ImageEditorToolSmokeTests.swift",
+      "passed": true,
+      "duration": 3.041,
+      "issues": [],
+      "log": "ImageEditorToolSmokeTests.retouchPressureControlsDodgeAndBurnDiameterWithoutChangingExposure.log"
+    },
+    {
+      "suite": "ImageEditorToolSmokeTests",
+      "method": "sampleAllLayersSmudgesVisiblePixelsOnlyIntoTheActiveLayer",
+      "identifier": "veilpicTests/ImageEditorToolSmokeTests/sampleAllLayersSmudgesVisiblePixelsOnlyIntoTheActiveLayer",
+      "file": "ImageEditorToolSmokeTests.swift",
+      "passed": true,
+      "duration": 3.104,
+      "issues": [],
+      "log": "ImageEditorToolSmokeTests.sampleAllLayersSmudgesVisiblePixelsOnlyIntoTheActiveLayer.log"
+    },
+    {
+      "suite": "ImageEditorToolSmokeTests",
+      "method": "shapeToolUsesTheCanvasTopLeftCoordinateSystem",
+      "identifier": "veilpicTests/ImageEditorToolSmokeTests/shapeToolUsesTheCanvasTopLeftCoordinateSystem",
+      "file": "ImageEditorToolSmokeTests.swift",
+      "passed": true,
+      "duration": 3.08,
+      "issues": [],
+      "log": "ImageEditorToolSmokeTests.shapeToolUsesTheCanvasTopLeftCoordinateSystem.log"
+    },
+    {
+      "suite": "ImageEditorToolSmokeTests",
+      "method": "sharpenSingleClickAppliesACircularDab",
+      "identifier": "veilpicTests/ImageEditorToolSmokeTests/sharpenSingleClickAppliesACircularDab",
+      "file": "ImageEditorToolSmokeTests.swift",
+      "passed": true,
+      "duration": 3.06,
+      "issues": [],
+      "log": "ImageEditorToolSmokeTests.sharpenSingleClickAppliesACircularDab.log"
+    },
+    {
+      "suite": "ImageEditorToolSmokeTests",
+      "method": "sharpenStrengthControlsPixelEffect",
+      "identifier": "veilpicTests/ImageEditorToolSmokeTests/sharpenStrengthControlsPixelEffect",
+      "file": "ImageEditorToolSmokeTests.swift",
+      "passed": true,
+      "duration": 3.04,
+      "issues": [],
+      "log": "ImageEditorToolSmokeTests.sharpenStrengthControlsPixelEffect.log"
+    },
+    {
+      "suite": "ImageEditorToolSmokeTests",
+      "method": "smudgeHardnessControlsTheVisibleStrokeEdge",
+      "identifier": "veilpicTests/ImageEditorToolSmokeTests/smudgeHardnessControlsTheVisibleStrokeEdge",
+      "file": "ImageEditorToolSmokeTests.swift",
+      "passed": true,
+      "duration": 3.087,
+      "issues": [],
+      "log": "ImageEditorToolSmokeTests.smudgeHardnessControlsTheVisibleStrokeEdge.log"
+    },
+    {
+      "suite": "ImageEditorToolSmokeTests",
+      "method": "smudgePressureControlsDiameterWithoutChangingMouseStrokes",
+      "identifier": "veilpicTests/ImageEditorToolSmokeTests/smudgePressureControlsDiameterWithoutChangingMouseStrokes",
+      "file": "ImageEditorToolSmokeTests.swift",
+      "passed": true,
+      "duration": 3.064,
+      "issues": [],
+      "log": "ImageEditorToolSmokeTests.smudgePressureControlsDiameterWithoutChangingMouseStrokes.log"
+    },
+    {
+      "suite": "ImageEditorToolSmokeTests",
+      "method": "smudgeStrengthControlsPixelDisplacement",
+      "identifier": "veilpicTests/ImageEditorToolSmokeTests/smudgeStrengthControlsPixelDisplacement",
+      "file": "ImageEditorToolSmokeTests.swift",
+      "passed": true,
+      "duration": 3.073,
+      "issues": [],
+      "log": "ImageEditorToolSmokeTests.smudgeStrengthControlsPixelDisplacement.log"
+    },
+    {
+      "suite": "ImageEditorToolSmokeTests",
+      "method": "spongeDesaturateModePullsLocalColorTowardGray",
+      "identifier": "veilpicTests/ImageEditorToolSmokeTests/spongeDesaturateModePullsLocalColorTowardGray",
+      "file": "ImageEditorToolSmokeTests.swift",
+      "passed": true,
+      "duration": 3.041,
+      "issues": [],
+      "log": "ImageEditorToolSmokeTests.spongeDesaturateModePullsLocalColorTowardGray.log"
+    },
+    {
+      "suite": "ImageEditorToolSmokeTests",
+      "method": "spongeFlowControlsPixelEffect",
+      "identifier": "veilpicTests/ImageEditorToolSmokeTests/spongeFlowControlsPixelEffect",
+      "file": "ImageEditorToolSmokeTests.swift",
+      "passed": true,
+      "duration": 3.088,
+      "issues": [],
+      "log": "ImageEditorToolSmokeTests.spongeFlowControlsPixelEffect.log"
+    },
+    {
+      "suite": "ImageEditorToolSmokeTests",
+      "method": "spongeHardnessControlsTheVisibleStrokeEdge",
+      "identifier": "veilpicTests/ImageEditorToolSmokeTests/spongeHardnessControlsTheVisibleStrokeEdge",
+      "file": "ImageEditorToolSmokeTests.swift",
+      "passed": true,
+      "duration": 3.075,
+      "issues": [],
+      "log": "ImageEditorToolSmokeTests.spongeHardnessControlsTheVisibleStrokeEdge.log"
+    },
+    {
+      "suite": "ImageEditorToolSmokeTests",
+      "method": "spongeIncreasesLocalColorSaturation",
+      "identifier": "veilpicTests/ImageEditorToolSmokeTests/spongeIncreasesLocalColorSaturation",
+      "file": "ImageEditorToolSmokeTests.swift",
+      "passed": true,
+      "duration": 3.097,
+      "issues": [],
+      "log": "ImageEditorToolSmokeTests.spongeIncreasesLocalColorSaturation.log"
+    },
+    {
+      "suite": "ImageEditorToolSmokeTests",
+      "method": "spongePressureControlsBrushDiameterWithoutChangingMouseStrokes",
+      "identifier": "veilpicTests/ImageEditorToolSmokeTests/spongePressureControlsBrushDiameterWithoutChangingMouseStrokes",
+      "file": "ImageEditorToolSmokeTests.swift",
+      "passed": true,
+      "duration": 3.091,
+      "issues": [],
+      "log": "ImageEditorToolSmokeTests.spongePressureControlsBrushDiameterWithoutChangingMouseStrokes.log"
+    },
+    {
+      "suite": "ImageEditorToolSmokeTests",
+      "method": "spongeSingleClickAppliesBothSaturationModes",
+      "identifier": "veilpicTests/ImageEditorToolSmokeTests/spongeSingleClickAppliesBothSaturationModes",
+      "file": "ImageEditorToolSmokeTests.swift",
+      "passed": true,
+      "duration": 3.074,
+      "issues": [],
+      "log": "ImageEditorToolSmokeTests.spongeSingleClickAppliesBothSaturationModes.log"
+    },
+    {
+      "suite": "ImageEditorToolSmokeTests",
+      "method": "spongeVibranceKeepsNearGrayChromaFromFlattening",
+      "identifier": "veilpicTests/ImageEditorToolSmokeTests/spongeVibranceKeepsNearGrayChromaFromFlattening",
+      "file": "ImageEditorToolSmokeTests.swift",
+      "passed": true,
+      "duration": 3.057,
+      "issues": [],
+      "log": "ImageEditorToolSmokeTests.spongeVibranceKeepsNearGrayChromaFromFlattening.log"
+    },
+    {
+      "suite": "ImageEditorToolSmokeTests",
+      "method": "spongeVibranceReducesSaturationEndpointClipping",
+      "identifier": "veilpicTests/ImageEditorToolSmokeTests/spongeVibranceReducesSaturationEndpointClipping",
+      "file": "ImageEditorToolSmokeTests.swift",
+      "passed": true,
+      "duration": 3.047,
+      "issues": [],
+      "log": "ImageEditorToolSmokeTests.spongeVibranceReducesSaturationEndpointClipping.log"
+    },
+    {
+      "suite": "ImageEditorToolSmokeTests",
+      "method": "toneBrushHardnessControlsDodgeAndBurnEdges",
+      "identifier": "veilpicTests/ImageEditorToolSmokeTests/toneBrushHardnessControlsDodgeAndBurnEdges",
+      "file": "ImageEditorToolSmokeTests.swift",
+      "passed": true,
+      "duration": 3.081,
+      "issues": [],
+      "log": "ImageEditorToolSmokeTests.toneBrushHardnessControlsDodgeAndBurnEdges.log"
+    },
+    {
+      "suite": "ImageEditorToolSmokeTests",
+      "method": "toneBrushSingleClickAppliesDodgeAndBurnDabs",
+      "identifier": "veilpicTests/ImageEditorToolSmokeTests/toneBrushSingleClickAppliesDodgeAndBurnDabs",
+      "file": "ImageEditorToolSmokeTests.swift",
+      "passed": true,
+      "duration": 3.114,
+      "issues": [],
+      "log": "ImageEditorToolSmokeTests.toneBrushSingleClickAppliesDodgeAndBurnDabs.log"
+    },
+    {
+      "suite": "ImageEditorToolSmokeTests",
+      "method": "toneRangeSelectivelyTargetsShadowsMidtonesAndHighlights",
+      "identifier": "veilpicTests/ImageEditorToolSmokeTests/toneRangeSelectivelyTargetsShadowsMidtonesAndHighlights",
+      "file": "ImageEditorToolSmokeTests.swift",
+      "passed": true,
+      "duration": 3.157,
+      "issues": [],
+      "log": "ImageEditorToolSmokeTests.toneRangeSelectivelyTargetsShadowsMidtonesAndHighlights.log"
+    }
+  ]
+}

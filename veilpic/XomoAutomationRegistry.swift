@@ -2573,7 +2573,7 @@ final class XomoAutomationRegistry {
         let usesStrength = ["blur", "sharpen", "smudge"].contains(action)
         let usesExposure = ["dodge", "burn"].contains(action)
         let usesFlow = action == "sponge"
-        let usesRetouchPressure = usesExposure || usesFlow || action == "smudge"
+        let usesRetouchPressure = usesStrength || usesExposure || usesFlow
         if usesExposure, let exposure = arguments["exposure"]?.doubleValue {
             viewModel.opacity = max(0, min(1, exposure))
         } else if usesStrength, let strength = arguments["strength"]?.doubleValue {
@@ -2715,8 +2715,8 @@ final class XomoAutomationRegistry {
                 airbrushPulseSamples: airbrushPulseSamples
             )
         case "sponge": viewModel.spongeBrush(samples: samples)
-        case "blur": viewModel.blurBrush(points: points)
-        case "sharpen": viewModel.sharpenBrush(points: points)
+        case "blur": viewModel.blurBrush(samples: samples)
+        case "sharpen": viewModel.sharpenBrush(samples: samples)
         case "smudge": viewModel.smudgeBrush(samples: samples)
         case "healing": viewModel.healingBrush(points: points)
         case "patch":
@@ -3756,8 +3756,8 @@ private extension XomoAutomationRegistry {
             "spongeVibrance": XomoAutomationSchema.boolean(description: "Reduce clipping near fully saturated or desaturated colors"),
             "fingerPainting": XomoAutomationSchema.boolean(description: "Start each Smudge stroke with the current foreground color"),
             "sampleAllLayers": XomoAutomationSchema.boolean(description: "Smudge from the composite of all visible layers into the active layer"),
-            "pressureSize": XomoAutomationSchema.boolean(description: "Use point pressure to control Dodge, Burn, Sponge, or Smudge diameter"),
-            "pressureSensitivity": XomoAutomationSchema.number(description: "Dodge, Burn, Sponge, or Smudge pressure curve sensitivity from 0 to 100"),
+            "pressureSize": XomoAutomationSchema.boolean(description: "Use point pressure to control retouch brush diameter"),
+            "pressureSensitivity": XomoAutomationSchema.number(description: "Retouch brush pressure curve sensitivity from 0 to 100"),
             "aligned": XomoAutomationSchema.boolean(description: "Keep the clone or healing source offset aligned across strokes"),
             "sampleSource": XomoAutomationSchema.string(description: "Clone or healing sampling layer range", values: ["currentLayer", "currentAndBelow", "allVisible"])
         ], required: ["action"]),

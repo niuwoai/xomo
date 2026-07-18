@@ -1,0 +1,49 @@
+{
+  "generated_at": "2026-07-19 07:53:35 +0800",
+  "total": 4,
+  "passed": 4,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "blurSharpenPressureSizeOptionSharesRetouchControlWithoutFocus",
+      "identifier": "veilpicTests/ImageEditorScopeTests/blurSharpenPressureSizeOptionSharesRetouchControlWithoutFocus",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 4.228,
+      "issues": [],
+      "log": "ImageEditorScopeTests.blurSharpenPressureSizeOptionSharesRetouchControlWithoutFocus.log"
+    },
+    {
+      "suite": "ImageEditorToolSmokeTests",
+      "method": "blurSharpenPressureControlsDiameterWithoutChangingMouseStrokes",
+      "identifier": "veilpicTests/ImageEditorToolSmokeTests/blurSharpenPressureControlsDiameterWithoutChangingMouseStrokes",
+      "file": "ImageEditorToolSmokeTests.swift",
+      "passed": true,
+      "duration": 3.103,
+      "issues": [],
+      "log": "ImageEditorToolSmokeTests.blurSharpenPressureControlsDiameterWithoutChangingMouseStrokes.log"
+    },
+    {
+      "suite": "LocalizationResourceTests",
+      "method": "blurSharpenPressureSizeHelpIsLocalizedInEverySupportedLanguage",
+      "identifier": "veilpicTests/LocalizationResourceTests/blurSharpenPressureSizeHelpIsLocalizedInEverySupportedLanguage",
+      "file": "LocalizationResourceTests.swift",
+      "passed": true,
+      "duration": 3.054,
+      "issues": [],
+      "log": "LocalizationResourceTests.blurSharpenPressureSizeHelpIsLocalizedInEverySupportedLanguage.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "blurSharpenPressureAutomationAcceptsSamplesAndSharesRetouchControls",
+      "identifier": "veilpicTests/XomoAutomationTests/blurSharpenPressureAutomationAcceptsSamplesAndSharesRetouchControls",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 3.037,
+      "issues": [],
+      "log": "XomoAutomationTests.blurSharpenPressureAutomationAcceptsSamplesAndSharesRetouchControls.log"
+    }
+  ]
+}

@@ -2138,6 +2138,53 @@ struct XomoAutomationTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.smudge"))
     }
 
+    @Test func blurSharpenPressureAutomationAcceptsSamplesAndSharesRetouchControls() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        viewModel.setBrushPressureControlsSize(false)
+
+        let blur = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("blur"),
+                "pressureSize": .bool(true),
+                "pressureSensitivity": .number(70),
+                "points": .array([
+                    .object([
+                        "x": .number(24),
+                        "y": .number(24),
+                        "pressure": .number(0.2)
+                    ])
+                ])
+            ]
+        ))
+        #expect(blur.ok)
+        #expect(viewModel.retouchPressureControlsSize)
+        #expect(viewModel.retouchPressureSensitivity == 70)
+        #expect(!viewModel.brushPressureControlsSize)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.blur"))
+
+        let sharpen = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("sharpen"),
+                "pressureSize": .bool(true),
+                "points": .array([
+                    .object([
+                        "x": .number(24),
+                        "y": .number(24),
+                        "pressure": .number(1)
+                    ])
+                ])
+            ]
+        ))
+        #expect(sharpen.ok)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.sharpen"))
+    }
+
     @Test func spongeFlowAutomationPrefersFlowAndKeepsLegacyOpacity() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

@@ -530,6 +530,7 @@
 "imageEditor.option.pressureHelp" = "使用数位笔压力控制画笔大小和流量";
 "imageEditor.option.spongePressureSize.help" = "使用数位笔压力控制海绵画笔大小";
 "imageEditor.option.tonePressureSize.help" = "使用数位笔压力控制减淡或加深画笔大小";
+"imageEditor.option.blurSharpenPressureSize.help" = "使用数位笔压力控制模糊或锐化画笔大小";
 "imageEditor.option.smudgePressureSize.help" = "使用数位笔压力控制涂抹画笔大小";
 "imageEditor.option.fingerPainting" = "手指绘画";
 "imageEditor.option.fingerPainting.help" = "每次涂抹从当前前景色起笔，并沿拖动方向带出颜色";

@@ -2348,6 +2348,29 @@ struct ImageEditorScopeTests {
         #expect(source.contains("samples: brushStrokeSamples"))
     }
 
+    @Test func blurSharpenPressureSizeOptionSharesRetouchControlWithoutFocus() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let pressureStart = try #require(
+            source.range(of: "if viewModel.selectedTool == .blur || viewModel.selectedTool == .sharpen {")
+        )
+        let smudgeStart = try #require(
+            source[pressureStart.upperBound...].range(of: "if viewModel.selectedTool == .smudge {")
+        )
+        let pressureSource = source[pressureStart.lowerBound..<smudgeStart.lowerBound]
+
+        #expect(pressureSource.contains("viewModel.retouchPressureControlsSize"))
+        #expect(pressureSource.contains("viewModel.setRetouchPressureControlsSize"))
+        #expect(pressureSource.contains("imageEditor.option.blurSharpenPressureSize.help"))
+        #expect(pressureSource.contains("image-editor-blur-sharpen-pressure-size"))
+        #expect(pressureSource.contains(".focusable(false)"))
+        #expect(source.contains("case .blur, .sharpen, .smudge:"))
+        #expect(source.contains("viewModel.blurBrush(samples: brushStrokeSamples)"))
+        #expect(source.contains("viewModel.sharpenBrush(samples: brushStrokeSamples)"))
+    }
+
     @Test func dodgeAndBurnExposeANonFocusableProtectTonesToggle() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),

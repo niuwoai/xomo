@@ -291,6 +291,24 @@ struct LocalizationResourceTests {
         }
     }
 
+    @Test func blurSharpenPressureSizeHelpIsLocalizedInEverySupportedLanguage() throws {
+        let paths = try Self.repositoryPaths()
+        let expectedValues = [
+            "zh-Hans": "使用数位笔压力控制模糊或锐化画笔大小",
+            "en": "Use pen pressure to control the Blur or Sharpen brush size",
+            "ja": "ペンの筆圧でぼかしまたはシャープブラシのサイズを制御します"
+        ]
+
+        for (localizationID, expected) in expectedValues {
+            let strings = try Self.stringTable(
+                tableName: "Localizable",
+                localizationID: localizationID,
+                appDirectory: paths.appDirectory
+            )
+            #expect(strings["imageEditor.option.blurSharpenPressureSize.help"] == expected)
+        }
+    }
+
     @Test func fingerPaintingIsLocalizedInEverySupportedLanguage() throws {
         let paths = try Self.repositoryPaths()
         let expectedValues = [

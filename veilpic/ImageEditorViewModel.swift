@@ -4803,7 +4803,11 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func blurBrush(points: [CGPoint]) {
-        guard !points.isEmpty else { return }
+        blurBrush(samples: points.map { ImageEditorBrushStrokeSample(point: $0) })
+    }
+
+    func blurBrush(samples: [ImageEditorBrushStrokeSample]) {
+        guard !samples.isEmpty else { return }
         guard !isEditingLayerMask else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
@@ -4816,11 +4820,13 @@ final class ImageEditorViewModel: ObservableObject {
         let localBrushWidth = rasterLocalBrushWidth(brushSize, layer: layer)
         let radius = max(1, min(18, localBrushWidth * 0.35))
         guard let output = sourceImage.withBlurBrush(
-            points: rasterLocalPoints(points, layer: layer),
+            samples: rasterLocalSamples(samples, layer: layer),
             width: localBrushWidth,
             opacity: opacity,
             hardness: hardness,
-            radius: radius
+            radius: radius,
+            pressureControlsSize: retouchPressureControlsSize,
+            pressureSensitivity: retouchPressureSensitivity / 100
         ) else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
@@ -4835,7 +4841,11 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func sharpenBrush(points: [CGPoint]) {
-        guard !points.isEmpty else { return }
+        sharpenBrush(samples: points.map { ImageEditorBrushStrokeSample(point: $0) })
+    }
+
+    func sharpenBrush(samples: [ImageEditorBrushStrokeSample]) {
+        guard !samples.isEmpty else { return }
         guard !isEditingLayerMask else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
@@ -4847,11 +4857,13 @@ final class ImageEditorViewModel: ObservableObject {
         let sourceImage = layer.image.normalizedBitmapImage()
         let intensity = max(0.35, min(1, opacity))
         guard let output = sourceImage.withSharpenBrush(
-            points: rasterLocalPoints(points, layer: layer),
+            samples: rasterLocalSamples(samples, layer: layer),
             width: rasterLocalBrushWidth(brushSize, layer: layer),
             opacity: opacity,
             hardness: hardness,
-            intensity: intensity
+            intensity: intensity,
+            pressureControlsSize: retouchPressureControlsSize,
+            pressureSensitivity: retouchPressureSensitivity / 100
         ) else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return

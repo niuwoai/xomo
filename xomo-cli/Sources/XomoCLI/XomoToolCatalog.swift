@@ -84,7 +84,7 @@ enum XomoToolCatalog {
                         ],
                         "pressureSize": [
                             "type": "boolean",
-                            "description": "Use point pressure to control Dodge, Burn, Sponge, or Smudge diameter"
+                            "description": "Use point pressure to control retouch brush diameter"
                         ],
                         "pressureSensitivity": ["type": "number", "minimum": 0, "maximum": 100],
                         "aligned": ["type": "boolean"],

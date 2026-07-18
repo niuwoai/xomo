@@ -530,6 +530,7 @@
 "imageEditor.option.pressureHelp" = "ペンの筆圧でブラシサイズと流量を制御します";
 "imageEditor.option.spongePressureSize.help" = "ペンの筆圧でスポンジブラシのサイズを制御します";
 "imageEditor.option.tonePressureSize.help" = "ペンの筆圧で覆い焼きまたは焼き込みブラシのサイズを制御します";
+"imageEditor.option.blurSharpenPressureSize.help" = "ペンの筆圧でぼかしまたはシャープブラシのサイズを制御します";
 "imageEditor.option.smudgePressureSize.help" = "ペンの筆圧で指先ブラシのサイズを制御します";
 "imageEditor.option.fingerPainting" = "フィンガーペイント";
 "imageEditor.option.fingerPainting.help" = "現在の描画色で各ぼかしストロークを開始します";

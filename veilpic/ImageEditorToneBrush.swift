@@ -233,13 +233,35 @@ extension NSImage {
         hardness: CGFloat,
         radius: CGFloat
     ) -> NSImage? {
+        withBlurBrush(
+            samples: points.map { ImageEditorBrushStrokeSample(point: $0) },
+            width: width,
+            opacity: opacity,
+            hardness: hardness,
+            radius: radius,
+            pressureControlsSize: false,
+            pressureSensitivity: 0.5
+        )
+    }
+
+    func withBlurBrush(
+        samples: [ImageEditorBrushStrokeSample],
+        width: CGFloat,
+        opacity: CGFloat,
+        hardness: CGFloat,
+        radius: CGFloat,
+        pressureControlsSize: Bool,
+        pressureSensitivity: CGFloat
+    ) -> NSImage? {
         guard let blurredSource = blurred(radius: max(0.5, radius)) else { return nil }
         return mixingBrushSource(
             blurredSource,
-            points: points,
+            samples: samples,
             width: width,
             opacity: opacity,
-            hardness: hardness
+            hardness: hardness,
+            pressureControlsSize: pressureControlsSize,
+            pressureSensitivity: pressureSensitivity
         )
     }
 
@@ -250,13 +272,35 @@ extension NSImage {
         hardness: CGFloat,
         intensity: CGFloat
     ) -> NSImage? {
+        withSharpenBrush(
+            samples: points.map { ImageEditorBrushStrokeSample(point: $0) },
+            width: width,
+            opacity: opacity,
+            hardness: hardness,
+            intensity: intensity,
+            pressureControlsSize: false,
+            pressureSensitivity: 0.5
+        )
+    }
+
+    func withSharpenBrush(
+        samples: [ImageEditorBrushStrokeSample],
+        width: CGFloat,
+        opacity: CGFloat,
+        hardness: CGFloat,
+        intensity: CGFloat,
+        pressureControlsSize: Bool,
+        pressureSensitivity: CGFloat
+    ) -> NSImage? {
         guard let sharpenedSource = filtered(kind: .sharpen, intensity: Double(max(0.1, min(1, intensity)))) else { return nil }
         return mixingBrushSource(
             sharpenedSource,
-            points: points,
+            samples: samples,
             width: width,
             opacity: opacity,
-            hardness: hardness
+            hardness: hardness,
+            pressureControlsSize: pressureControlsSize,
+            pressureSensitivity: pressureSensitivity
         )
     }
 
@@ -461,16 +505,28 @@ extension NSImage {
 
     private func mixingBrushSource(
         _ brushSource: NSImage,
-        points: [CGPoint],
+        samples: [ImageEditorBrushStrokeSample],
         width: CGFloat,
         opacity: CGFloat,
-        hardness: CGFloat
+        hardness: CGFloat,
+        pressureControlsSize: Bool,
+        pressureSensitivity: CGFloat
     ) -> NSImage? {
-        guard let strokeMask = ImageEditorHealingBrushKernel.strokeMaskImage(
-            size: size,
-            points: points,
+        let pixelWidth = max(1, Int(size.width.rounded()))
+        let pixelHeight = max(1, Int(size.height.rounded()))
+        let maskAlpha = retouchStrokeAlpha(
+            width: pixelWidth,
+            height: pixelHeight,
+            samples: samples,
             diameter: width,
-            hardness: hardness
+            hardness: hardness,
+            pressureControlsSize: pressureControlsSize,
+            pressureSensitivity: pressureSensitivity
+        )
+        guard let strokeMask = NSImage.alphaMaskImage(
+            width: pixelWidth,
+            height: pixelHeight,
+            alpha: maskAlpha
         ) else { return nil }
 
         guard let clippedBlur = NSImage.rendered(size: size, actions: { _ in

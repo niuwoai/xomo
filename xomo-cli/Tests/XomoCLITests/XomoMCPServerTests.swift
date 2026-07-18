@@ -82,7 +82,7 @@ struct XomoMCPServerTests {
         #expect(retouchPressureSize["type"] as? String == "boolean")
         #expect(
             retouchPressureSize["description"] as? String
-                == "Use point pressure to control Dodge, Burn, Sponge, or Smudge diameter"
+                == "Use point pressure to control retouch brush diameter"
         )
         let retouchPressureSensitivity = try #require(
             specialPaintProperties["pressureSensitivity"] as? [String: Any]

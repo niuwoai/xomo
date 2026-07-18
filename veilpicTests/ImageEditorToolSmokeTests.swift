@@ -642,6 +642,86 @@ struct ImageEditorToolSmokeTests {
         #expect(high.document.history.last?.title == L10n.text("imageEditor.history.sharpen"))
     }
 
+    @Test func blurSharpenPressureControlsDiameterWithoutChangingMouseStrokes() throws {
+        let edge = verticalEdgeImage()
+        let softenedEdge = try #require(edge.blurred(radius: 4))
+        let blurLight = makeConfiguredRetouchViewModel(image: edge)
+        let blurFull = makeConfiguredRetouchViewModel(image: edge)
+        let blurMouseBaseline = makeConfiguredRetouchViewModel(image: edge)
+        let blurMousePressureEnabled = makeConfiguredRetouchViewModel(image: edge)
+        let sharpenLight = makeConfiguredRetouchViewModel(image: softenedEdge)
+        let sharpenFull = makeConfiguredRetouchViewModel(image: softenedEdge)
+        for viewModel in [
+            blurLight,
+            blurFull,
+            blurMouseBaseline,
+            blurMousePressureEnabled,
+            sharpenLight,
+            sharpenFull
+        ] {
+            viewModel.brushSize = 16
+            viewModel.hardness = 1
+            viewModel.opacity = 1
+        }
+        blurLight.retouchPressureControlsSize = true
+        blurFull.retouchPressureControlsSize = true
+        blurMouseBaseline.retouchPressureControlsSize = false
+        blurMousePressureEnabled.retouchPressureControlsSize = true
+        sharpenLight.retouchPressureControlsSize = true
+        sharpenFull.retouchPressureControlsSize = true
+        let point = CGPoint(x: 20, y: 14)
+        let lightSample = [ImageEditorBrushStrokeSample(point: point, pressure: 0.05)]
+        let fullSample = [ImageEditorBrushStrokeSample(point: point, pressure: 1)]
+        let mouseSample = [ImageEditorBrushStrokeSample(point: point)]
+
+        blurLight.blurBrush(samples: lightSample)
+        blurFull.blurBrush(samples: fullSample)
+        blurMouseBaseline.blurBrush(samples: mouseSample)
+        blurMousePressureEnabled.blurBrush(samples: mouseSample)
+        sharpenLight.sharpenBrush(samples: lightSample)
+        sharpenFull.sharpenBrush(samples: fullSample)
+
+        let blurEdgePoint = CGPoint(x: 18, y: 19)
+        let lightBlur = try redComponent(in: blurLight, at: blurEdgePoint)
+        let fullBlur = try redComponent(in: blurFull, at: blurEdgePoint)
+        #expect(fullBlur > lightBlur + 0.10)
+
+        let baselineMouseBlur = try redComponent(in: blurMouseBaseline, at: blurEdgePoint)
+        let pressureEnabledMouseBlur = try redComponent(
+            in: blurMousePressureEnabled,
+            at: blurEdgePoint
+        )
+        #expect(abs(baselineMouseBlur - pressureEnabledMouseBlur) < 0.001)
+
+        let sharpenDarkPoint = CGPoint(x: 18, y: 19)
+        let sharpenLightPoint = CGPoint(x: 22, y: 19)
+        let initialSharpenContrast = try colorContrast(
+            in: softenedEdge,
+            darkPoint: sharpenDarkPoint,
+            lightPoint: sharpenLightPoint
+        )
+        let lightSharpenContrast = try colorContrast(
+            in: sharpenLight,
+            darkPoint: sharpenDarkPoint,
+            lightPoint: sharpenLightPoint
+        )
+        let fullSharpenContrast = try colorContrast(
+            in: sharpenFull,
+            darkPoint: sharpenDarkPoint,
+            lightPoint: sharpenLightPoint
+        )
+        #expect(fullSharpenContrast > lightSharpenContrast + 0.02)
+        #expect(blurFull.document.history.last?.title == L10n.text("imageEditor.history.blur"))
+        #expect(sharpenFull.document.history.last?.title == L10n.text("imageEditor.history.sharpen"))
+        sharpenFull.undo()
+        let undoneContrast = try colorContrast(
+            in: sharpenFull,
+            darkPoint: sharpenDarkPoint,
+            lightPoint: sharpenLightPoint
+        )
+        #expect(abs(undoneContrast - initialSharpenContrast) < 0.001)
+    }
+
     @Test func smudgeHardnessControlsTheVisibleStrokeEdge() throws {
         let image = verticalEdgeImage()
         let soft = makeConfiguredRetouchViewModel(image: image)
