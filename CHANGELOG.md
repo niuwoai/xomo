@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.12.0-rc322 - 2026-07-19
+
+### Added
+- 海绵工具补齐 Photoshop 常见的“加色 / 去色”双模式：默认加色保持原有行为，去色会把笔触区域平滑拉向亮度灰阶，同时保留 alpha、选区、图层锁定、History 与 Undo。
+- 顶部选项栏增加不可聚焦的模式分段控件；MCP/CLI `xomo.paint.special` 增加 `spongeMode=saturate|desaturate`，界面与自动化共用同一像素入口。
+- 海绵算法与界面 3/3、MCP 1/1、坐标 1/1、三语资源 4/4、CLI 2/2 定向测试通过；发布版本契约 7/7 断言通过。
+
 ## 2.12.0-rc321 - 2026-07-19
 
 ### Added

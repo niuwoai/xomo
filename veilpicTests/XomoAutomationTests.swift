@@ -1959,6 +1959,30 @@ struct XomoAutomationTests {
         #expect(viewModel.healingBrushSampleSource == .allVisible)
     }
 
+    @Test func registryConfiguresSpongeDesaturateMode() {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("sponge"),
+                "spongeMode": .string("desaturate"),
+                "size": .number(12),
+                "points": .array([
+                    .object(["x": .number(20), "y": .number(24)]),
+                    .object(["x": .number(40), "y": .number(24)])
+                ])
+            ]
+        ))
+
+        #expect(response.ok)
+        #expect(viewModel.spongeMode == .desaturate)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.sponge"))
+    }
+
     @Test func registryConfiguresBrushFlowSpacingHardnessAndPressure() {
         let suiteName = "XomoAutomationTests.pressure.\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suiteName) ?? .standard

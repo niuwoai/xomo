@@ -2890,6 +2890,9 @@
 "imageEditor.option.healingMode" = "Healing Mode";
 "imageEditor.healingMode.source" = "Source";
 "imageEditor.healingMode.spot" = "Spot";
+"imageEditor.option.spongeMode" = "Sponge Mode";
+"imageEditor.spongeMode.saturate" = "Saturate";
+"imageEditor.spongeMode.desaturate" = "Desaturate";
 "imageEditor.cloneSampleSource.currentLayer" = "Current Layer";
 "imageEditor.cloneSampleSource.currentAndBelow" = "Current & Below";
 "imageEditor.cloneSampleSource.allVisible" = "All Visible Layers";

@@ -8,6 +8,22 @@
 import AppKit
 import Foundation
 
+enum ImageEditorSpongeMode: String, CaseIterable, Identifiable {
+    case saturate
+    case desaturate
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .saturate:
+            L10n.text("imageEditor.spongeMode.saturate")
+        case .desaturate:
+            L10n.text("imageEditor.spongeMode.desaturate")
+        }
+    }
+}
+
 extension NSImage {
     func withToneBrush(points: [CGPoint], width: CGFloat, opacity: CGFloat, burn: Bool) -> NSImage? {
         guard let first = points.first else { return nil }
@@ -30,7 +46,12 @@ extension NSImage {
         return toneAdjusted(mask: strokeMask, opacity: opacity, burn: burn)
     }
 
-    func withSpongeBrush(points: [CGPoint], width: CGFloat, opacity: CGFloat) -> NSImage? {
+    func withSpongeBrush(
+        points: [CGPoint],
+        width: CGFloat,
+        opacity: CGFloat,
+        mode: ImageEditorSpongeMode
+    ) -> NSImage? {
         guard let first = points.first else { return nil }
         let path = NSBezierPath()
         path.lineJoinStyle = .round
@@ -48,7 +69,7 @@ extension NSImage {
             }
         }) else { return nil }
 
-        return saturationAdjusted(mask: strokeMask, opacity: opacity)
+        return saturationAdjusted(mask: strokeMask, opacity: opacity, mode: mode)
     }
 
     func withBlurBrush(points: [CGPoint], width: CGFloat, opacity: CGFloat, radius: CGFloat) -> NSImage? {
@@ -224,7 +245,11 @@ extension NSImage {
         )
     }
 
-    private func saturationAdjusted(mask: NSImage, opacity: CGFloat) -> NSImage? {
+    private func saturationAdjusted(
+        mask: NSImage,
+        opacity: CGFloat,
+        mode: ImageEditorSpongeMode
+    ) -> NSImage? {
         let width = max(1, Int(size.width.rounded()))
         let height = max(1, Int(size.height.rounded()))
         let bytesPerPixel = 4
@@ -244,7 +269,7 @@ extension NSImage {
                 let green = CGFloat(sourcePixels[offset + 1])
                 let blue = CGFloat(sourcePixels[offset + 2])
                 let luminance = red * 0.2126 + green * 0.7152 + blue * 0.0722
-                let multiplier = 1 + strength
+                let multiplier = mode == .saturate ? 1 + strength : 1 - strength
                 sourcePixels[offset] = UInt8(max(0, min(255, (luminance + (red - luminance) * multiplier).rounded())))
                 sourcePixels[offset + 1] = UInt8(max(0, min(255, (luminance + (green - luminance) * multiplier).rounded())))
                 sourcePixels[offset + 2] = UInt8(max(0, min(255, (luminance + (blue - luminance) * multiplier).rounded())))

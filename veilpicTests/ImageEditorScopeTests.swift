@@ -2179,6 +2179,25 @@ struct ImageEditorScopeTests {
         #expect(source.contains("guard viewModel.healingBrushMode == .source else { return nil }"))
     }
 
+    @Test func spongeToolExposesANonFocusableSaturationModePicker() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let spongeStart = try #require(
+            source.range(of: "if viewModel.selectedTool == .sponge {")
+        )
+        let textStart = try #require(
+            source[spongeStart.upperBound...].range(of: "if viewModel.selectedTool == .text")
+        )
+        let spongeSource = source[spongeStart.lowerBound..<textStart.lowerBound]
+
+        #expect(spongeSource.contains("ForEach(ImageEditorSpongeMode.allCases)"))
+        #expect(spongeSource.contains("selection: $viewModel.spongeMode"))
+        #expect(spongeSource.contains(".focusable(false)"))
+        #expect(spongeSource.contains("image-editor-sponge-mode"))
+    }
+
     @MainActor
     @Test func brushesPanelActionsReuseExistingBrushSettings() throws {
         let image = NSImage(size: NSSize(width: 16, height: 16))

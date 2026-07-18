@@ -2606,6 +2606,14 @@ final class XomoAutomationRegistry {
                 viewModel.healingBrushSampleSource = sampleSource
             }
         }
+        if action == "sponge", let rawMode = arguments["spongeMode"]?.stringValue {
+            guard let mode = ImageEditorSpongeMode(rawValue: rawMode) else {
+                throw XomoAutomationCallError.invalidArgument(
+                    "Sponge mode must be saturate or desaturate"
+                )
+            }
+            viewModel.spongeMode = mode
+        }
         if action == "paintBucket" {
             viewModel.paintBucketFill(at: try requiredPoint(arguments))
             return
@@ -3657,6 +3665,7 @@ private extension XomoAutomationRegistry {
             "feather": XomoAutomationSchema.number(description: "Patch selection feather radius"),
             "mode": XomoAutomationSchema.string(description: "Patch mode", values: ["source", "destination"]),
             "healingMode": XomoAutomationSchema.string(description: "Healing mode", values: ["source", "spot"]),
+            "spongeMode": XomoAutomationSchema.string(description: "Sponge mode", values: ["saturate", "desaturate"]),
             "aligned": XomoAutomationSchema.boolean(description: "Keep the clone or healing source offset aligned across strokes"),
             "sampleSource": XomoAutomationSchema.string(description: "Clone or healing sampling layer range", values: ["currentLayer", "currentAndBelow", "allVisible"])
         ], required: ["action"]),

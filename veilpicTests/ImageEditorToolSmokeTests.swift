@@ -61,6 +61,28 @@ struct ImageEditorToolSmokeTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.sponge"))
     }
 
+    @Test func spongeDesaturateModePullsLocalColorTowardGray() throws {
+        let color = NSColor(deviceRed: 0.72, green: 0.43, blue: 0.18, alpha: 1)
+        let viewModel = makeEditableViewModel(image: solidImage(color: color))
+        viewModel.spongeMode = .desaturate
+        viewModel.brushSize = 12
+        viewModel.opacity = 1
+        let point = CGPoint(x: 20, y: 14)
+        let before = try #require(
+            viewModel.document.selectedLayer?.image.color(at: point)?.usingColorSpace(.deviceRGB)
+        )
+
+        viewModel.spongeBrush(points: [CGPoint(x: 10, y: 14), CGPoint(x: 30, y: 14)])
+
+        let after = try #require(
+            viewModel.document.selectedLayer?.image.color(at: point)?.usingColorSpace(.deviceRGB)
+        )
+        let beforeRange = before.redComponent - before.blueComponent
+        let afterRange = after.redComponent - after.blueComponent
+        #expect(afterRange < beforeRange * 0.35)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.sponge"))
+    }
+
     @Test func redEyeToolReducesExcessRedAtTheClickedPupil() throws {
         let image = NSImage.rendered(size: canvasSize) { rect in
             NSColor(deviceWhite: 0.35, alpha: 1).setFill()

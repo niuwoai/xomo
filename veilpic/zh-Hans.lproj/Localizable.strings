@@ -2890,6 +2890,9 @@
 "imageEditor.option.healingMode" = "修复模式";
 "imageEditor.healingMode.source" = "取样";
 "imageEditor.healingMode.spot" = "污点";
+"imageEditor.option.spongeMode" = "海绵模式";
+"imageEditor.spongeMode.saturate" = "加色";
+"imageEditor.spongeMode.desaturate" = "去色";
 "imageEditor.cloneSampleSource.currentLayer" = "当前图层";
 "imageEditor.cloneSampleSource.currentAndBelow" = "当前及以下图层";
 "imageEditor.cloneSampleSource.allVisible" = "所有可见图层";

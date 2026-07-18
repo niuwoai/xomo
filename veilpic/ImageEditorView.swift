@@ -335,6 +335,23 @@ struct ImageEditorView: View {
                 patchModePicker
             }
 
+            if viewModel.selectedTool == .sponge {
+                Picker(
+                    L10n.text("imageEditor.option.spongeMode"),
+                    selection: $viewModel.spongeMode
+                ) {
+                    ForEach(ImageEditorSpongeMode.allCases) { mode in
+                        Text(mode.title).tag(mode)
+                    }
+                }
+                .labelsHidden()
+                .pickerStyle(.segmented)
+                .focusable(false)
+                .frame(width: 132)
+                .help(L10n.text("imageEditor.option.spongeMode"))
+                .accessibilityIdentifier("image-editor-sponge-mode")
+            }
+
             if viewModel.selectedTool == .text {
                 fontFamilyPicker(width: 190)
                 Stepper(

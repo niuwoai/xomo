@@ -68,6 +68,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var brushPressureControlsSize = true
     @Published var brushPressureControlsFlow = true
     @Published var brushPressureSensitivity: CGFloat = 50
+    @Published var spongeMode: ImageEditorSpongeMode = .saturate
     @Published private(set) var customBrushPresets: [ImageEditorBrushPreset] = []
     @Published var customLayerStylePresets: [ImageEditorLayerStylePreset] = []
     @Published var favoriteLayerStylePresetIDs: [String] = []
@@ -4683,7 +4684,8 @@ final class ImageEditorViewModel: ObservableObject {
         guard let output = sourceImage.withSpongeBrush(
             points: localPoints,
             width: rasterLocalBrushWidth(brushSize, layer: layer),
-            opacity: opacity
+            opacity: opacity,
+            mode: spongeMode
         ) else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return

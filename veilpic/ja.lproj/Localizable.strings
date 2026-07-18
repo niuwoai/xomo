@@ -2890,6 +2890,9 @@
 "imageEditor.option.healingMode" = "修復モード";
 "imageEditor.healingMode.source" = "サンプル";
 "imageEditor.healingMode.spot" = "スポット";
+"imageEditor.option.spongeMode" = "スポンジモード";
+"imageEditor.spongeMode.saturate" = "彩度を上げる";
+"imageEditor.spongeMode.desaturate" = "彩度を下げる";
 "imageEditor.cloneSampleSource.currentLayer" = "現在のレイヤー";
 "imageEditor.cloneSampleSource.currentAndBelow" = "現在以下";
 "imageEditor.cloneSampleSource.allVisible" = "すべての表示レイヤー";
