@@ -2566,14 +2566,16 @@ struct ImageEditorView: View {
             return
         }
 
-        let imageRect = fittedImageRect(in: size)
-        let displayScale = imageRect.width / max(viewModel.document.canvasSize.width, 1)
+        // macOS 13's SwiftUI hover callback may report entry before the
+        // AppKit bridge has delivered the first pointer coordinate.  Do not
+        // guess that the pointer is over an editable object: a stale brush or
+        // move cursor is more misleading than a brief native arrow.
         ImageEditorCanvasCursor.cursor(
             for: viewModel.selectedLeftSidebarTab,
             selectedTool: viewModel.selectedTool,
-            brushDiameter: viewModel.brushSize * displayScale,
-            isPointerOverCanvas: true,
-            isPointerOverMovableContent: true,
+            brushDiameter: viewModel.brushSize,
+            isPointerOverCanvas: false,
+            isPointerOverMovableContent: false,
             handIsDragging: isCanvasPanGestureActive,
             isObjectMoveGestureActive: isSelectedObjectMoveGestureActive || isObjectMoveGestureActive,
             isSpacebarPanning: isSpacebarPanning,

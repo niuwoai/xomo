@@ -1,0 +1,25 @@
+{
+  "version": "2.12.0-rc299",
+  "scope": "macOS 13 canvas cursor unknown-position fallback",
+  "command": "xcodebuild test -project veilpic.xcodeproj -scheme veilpic -destination 'platform=macOS' -derivedDataPath /private/tmp/xomo-rc299-derived -resultBundlePath /private/tmp/xomo-rc299.xcresult -only-testing:veilpicTests/ImageEditorCanvasCursorTests/selectedComponentLibraryObjectAlwaysRoutesToSystemArrowUnlessPanning() -only-testing:veilpicTests/XomoLeftSidebarTests/componentSidebarWiresMoveSemanticsIntoCanvasCursorAndGestures()",
+  "environment": {
+    "architecture": "arm64",
+    "model": "MacBook Pro",
+    "os": "macOS 26.5.2"
+  },
+  "result": {
+    "passed": 2,
+    "failed": 0,
+    "skipped": 0,
+    "status": "passed"
+  },
+  "tests": [
+    "ImageEditorCanvasCursorTests/selectedComponentLibraryObjectAlwaysRoutesToSystemArrowUnlessPanning()",
+    "XomoLeftSidebarTests/componentSidebarWiresMoveSemanticsIntoCanvasCursorAndGestures()"
+  ],
+  "release_contract": {
+    "tests": 3,
+    "assertions": 7,
+    "failures": 0
+  }
+}
