@@ -1299,6 +1299,7 @@
 "imageEditor.history.sharpen" = "锐化";
 "imageEditor.history.smudge" = "涂抹";
 "imageEditor.history.healingBrush" = "修复画笔";
+"imageEditor.history.spotHealingBrush" = "污点修复画笔";
 "imageEditor.history.quickSelection" = "快速选择";
 "imageEditor.history.redEye" = "红眼";
 "imageEditor.history.paintBucket" = "油漆桶填充";
@@ -2886,6 +2887,9 @@
 "imageEditor.status.quickMaskOptionsUpdated" = "已更新快速蒙版显示选项";
 "imageEditor.option.cloneAligned" = "对齐";
 "imageEditor.option.cloneSampleSource" = "样本";
+"imageEditor.option.healingMode" = "修复模式";
+"imageEditor.healingMode.source" = "取样";
+"imageEditor.healingMode.spot" = "污点";
 "imageEditor.cloneSampleSource.currentLayer" = "当前图层";
 "imageEditor.cloneSampleSource.currentAndBelow" = "当前及以下图层";
 "imageEditor.cloneSampleSource.allVisible" = "所有可见图层";
@@ -2893,6 +2897,7 @@
 "imageEditor.status.healingSourceMissing" = "请先按住 Option 点击或设置修复源";
 "imageEditor.status.healingSourceSet" = "已设置修复源";
 "imageEditor.status.healingSourcePending" = "请在画布上点击以设置修复源";
+"imageEditor.status.spotHealingApplied" = "已完成污点修复";
 "imageEditor.action.figmaLinkImport" = "导入 Figma 链接…";
 "imageEditor.action.copyFigmaVariables" = "复制全部 ID";
 "imageEditor.action.copyFigmaVariable" = "复制变量 ID";

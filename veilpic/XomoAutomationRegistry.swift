@@ -2586,6 +2586,14 @@ final class XomoAutomationRegistry {
             }
         }
         if action == "setHealingSource" || action == "healing" {
+            if let rawMode = arguments["healingMode"]?.stringValue {
+                guard let mode = ImageEditorHealingBrushMode(rawValue: rawMode) else {
+                    throw XomoAutomationCallError.invalidArgument(
+                        "Healing mode must be source or spot"
+                    )
+                }
+                viewModel.healingBrushMode = mode
+            }
             if let aligned = arguments["aligned"]?.boolValue {
                 viewModel.isHealingBrushAligned = aligned
             }
@@ -3648,6 +3656,7 @@ private extension XomoAutomationRegistry {
             "opacity": XomoAutomationSchema.number(description: "Brush opacity"),
             "feather": XomoAutomationSchema.number(description: "Patch selection feather radius"),
             "mode": XomoAutomationSchema.string(description: "Patch mode", values: ["source", "destination"]),
+            "healingMode": XomoAutomationSchema.string(description: "Healing mode", values: ["source", "spot"]),
             "aligned": XomoAutomationSchema.boolean(description: "Keep the clone or healing source offset aligned across strokes"),
             "sampleSource": XomoAutomationSchema.string(description: "Clone or healing sampling layer range", values: ["currentLayer", "currentAndBelow", "allVisible"])
         ], required: ["action"]),

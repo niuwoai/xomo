@@ -1934,6 +1934,31 @@ struct XomoAutomationTests {
         #expect(viewModel.healingBrushSampleSource == .currentAndBelow)
     }
 
+    @Test func registryConfiguresSpotHealingModeWithoutASourcePoint() {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("healing"),
+                "healingMode": .string("spot"),
+                "sampleSource": .string("allVisible"),
+                "size": .number(10),
+                "points": .array([
+                    .object(["x": .number(32), "y": .number(32)])
+                ])
+            ]
+        ))
+
+        #expect(response.ok)
+        #expect(viewModel.healingBrushMode == .spot)
+        #expect(viewModel.healingSourcePoint == nil)
+        #expect(viewModel.healingBrushSampleSource == .allVisible)
+    }
+
     @Test func registryConfiguresBrushFlowSpacingHardnessAndPressure() {
         let suiteName = "XomoAutomationTests.pressure.\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suiteName) ?? .standard

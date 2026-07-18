@@ -1299,6 +1299,7 @@
 "imageEditor.history.sharpen" = "Sharpen";
 "imageEditor.history.smudge" = "Smudge";
 "imageEditor.history.healingBrush" = "Healing Brush";
+"imageEditor.history.spotHealingBrush" = "Spot Healing Brush";
 "imageEditor.history.quickSelection" = "Quick Selection";
 "imageEditor.history.redEye" = "Red Eye";
 "imageEditor.history.paintBucket" = "Paint Bucket Fill";
@@ -2886,6 +2887,9 @@
 "imageEditor.status.quickMaskOptionsUpdated" = "Quick Mask display options updated";
 "imageEditor.option.cloneAligned" = "Aligned";
 "imageEditor.option.cloneSampleSource" = "Sample";
+"imageEditor.option.healingMode" = "Healing Mode";
+"imageEditor.healingMode.source" = "Source";
+"imageEditor.healingMode.spot" = "Spot";
 "imageEditor.cloneSampleSource.currentLayer" = "Current Layer";
 "imageEditor.cloneSampleSource.currentAndBelow" = "Current & Below";
 "imageEditor.cloneSampleSource.allVisible" = "All Visible Layers";
@@ -2893,6 +2897,7 @@
 "imageEditor.status.healingSourceMissing" = "Option-click or set a healing source first";
 "imageEditor.status.healingSourceSet" = "Healing source set";
 "imageEditor.status.healingSourcePending" = "Click the canvas to set the healing source";
+"imageEditor.status.spotHealingApplied" = "Spot healing applied";
 "imageEditor.action.figmaLinkImport" = "Import Figma Link…";
 "imageEditor.action.copyFigmaVariables" = "Copy all IDs";
 "imageEditor.action.copyFigmaVariable" = "Copy variable ID";

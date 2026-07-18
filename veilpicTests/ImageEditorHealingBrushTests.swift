@@ -68,6 +68,53 @@ struct ImageEditorHealingBrushTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.healingBrush"))
     }
 
+    @Test func spotHealingRepairsASingleClickWithoutAnExplicitSource() throws {
+        let canvasSize = NSSize(width: 80, height: 50)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: blemishImage(size: canvasSize)
+        ) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(
+            blemishImage(size: canvasSize),
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+        viewModel.healingBrushMode = .spot
+        viewModel.brushSize = 12
+        viewModel.hardness = 1
+        viewModel.opacity = 1
+
+        viewModel.healingBrush(points: [CGPoint(x: 40, y: 25)])
+
+        let layer = try #require(viewModel.document.selectedLayer)
+        let healed = try #require(
+            layer.image.color(at: CGPoint(x: 40, y: 25))?.usingColorSpace(.deviceRGB)
+        )
+        #expect(viewModel.healingSourcePoint == nil)
+        #expect(healed.redComponent < 0.55)
+        #expect(abs(healed.redComponent - healed.greenComponent) < 0.18)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.spotHealingBrush"))
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.spotHealingApplied"))
+    }
+
+    @Test func spotHealingFindsAnInBoundsSourceNearACanvasEdge() {
+        let width = 80
+        let height = 50
+        let pixels = [UInt8](repeating: 255, count: width * height * 4)
+
+        let offset = ImageEditorHealingBrushKernel.spotSourceOffset(
+            pixels: pixels,
+            targetContextPixels: pixels,
+            width: width,
+            height: height,
+            points: [CGPoint(x: 7, y: 25)],
+            destinationReference: CGPoint(x: 7, y: 25),
+            brushDiameter: 10
+        )
+
+        #expect(offset != nil)
+        #expect((offset?.width ?? 0) > 0)
+    }
+
     @Test func imageEditorHealingBrushRespectsActiveSelection() async throws {
         let canvasSize = NSSize(width: 80, height: 50)
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: blemishImage(size: canvasSize)) { _ in }

@@ -8,6 +8,22 @@
 import AppKit
 import Foundation
 
+enum ImageEditorHealingBrushMode: String, CaseIterable, Identifiable {
+    case source
+    case spot
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .source:
+            L10n.text("imageEditor.healingMode.source")
+        case .spot:
+            L10n.text("imageEditor.healingMode.spot")
+        }
+    }
+}
+
 extension NSImage {
     func withHealingBrush(
         points: [CGPoint],
@@ -54,6 +70,72 @@ extension NSImage {
             height: pixelHeight,
             sourceOffset: sourceOffset,
             destinationReference: ImageEditorHealingBrushKernel.strokeCenter(points),
+            brushDiameter: width,
+            opacity: opacity
+        )
+        return NSImage.healingImage(
+            pixels: outputPixels,
+            width: pixelWidth,
+            height: pixelHeight,
+            bytesPerRow: bytesPerRow,
+            size: size
+        )
+    }
+
+    func withSpotHealingBrush(
+        points: [CGPoint],
+        sourceImage: NSImage,
+        targetContextImage: NSImage,
+        width: CGFloat,
+        opacity: CGFloat,
+        hardness: CGFloat
+    ) -> NSImage? {
+        guard !points.isEmpty else { return nil }
+        let pixelWidth = max(1, Int(size.width.rounded()))
+        let pixelHeight = max(1, Int(size.height.rounded()))
+        let bytesPerRow = pixelWidth * ImageEditorHealingBrushKernel.bytesPerPixel
+        guard let targetPixels = healingRGBAPixels(
+            width: pixelWidth,
+            height: pixelHeight,
+            bytesPerRow: bytesPerRow
+        ),
+        let sourcePixels = sourceImage.healingRGBAPixels(
+            width: pixelWidth,
+            height: pixelHeight,
+            bytesPerRow: bytesPerRow
+        ),
+        let targetContextPixels = targetContextImage.healingRGBAPixels(
+            width: pixelWidth,
+            height: pixelHeight,
+            bytesPerRow: bytesPerRow
+        ) else { return nil }
+
+        let destinationReference = ImageEditorHealingBrushKernel.strokeCenter(points)
+        guard let sourceOffset = ImageEditorHealingBrushKernel.spotSourceOffset(
+            pixels: sourcePixels,
+            targetContextPixels: targetContextPixels,
+            width: pixelWidth,
+            height: pixelHeight,
+            points: points,
+            destinationReference: destinationReference,
+            brushDiameter: width
+        ) else { return nil }
+        let maskAlpha = ImageEditorHealingBrushKernel.strokeAlpha(
+            width: pixelWidth,
+            height: pixelHeight,
+            points: points,
+            diameter: width,
+            hardness: hardness
+        )
+        let outputPixels = ImageEditorHealingBrushKernel.heal(
+            targetPixels: targetPixels,
+            targetContextPixels: targetContextPixels,
+            sourcePixels: sourcePixels,
+            maskAlpha: maskAlpha,
+            width: pixelWidth,
+            height: pixelHeight,
+            sourceOffset: sourceOffset,
+            destinationReference: destinationReference,
             brushDiameter: width,
             opacity: opacity
         )
@@ -118,6 +200,106 @@ struct ImageEditorHealingBrushColor: Equatable {
 
 enum ImageEditorHealingBrushKernel {
     static let bytesPerPixel = 4
+
+    static func spotSourceOffset(
+        pixels: [UInt8],
+        targetContextPixels: [UInt8],
+        width: Int,
+        height: Int,
+        points: [CGPoint],
+        destinationReference: CGPoint,
+        brushDiameter: CGFloat
+    ) -> CGSize? {
+        guard pixels.count == width * height * bytesPerPixel,
+              targetContextPixels.count == pixels.count,
+              !points.isEmpty
+        else { return nil }
+
+        let radius = max(1, brushDiameter / 2)
+        let referenceRadius = max(2, Int((brushDiameter * 0.9).rounded()))
+        let targetReference = averageColor(
+            pixels: targetContextPixels,
+            width: width,
+            height: height,
+            center: destinationReference,
+            innerRadius: max(1, Int((brushDiameter * 0.55).rounded())),
+            outerRadius: referenceRadius
+        )
+        let primaryDistance = max(brushDiameter * 1.5, brushDiameter + 4)
+        let distances = [primaryDistance, primaryDistance * 1.75]
+        let directions = [
+            CGVector(dx: -1, dy: 0),
+            CGVector(dx: 1, dy: 0),
+            CGVector(dx: 0, dy: -1),
+            CGVector(dx: 0, dy: 1),
+            CGVector(dx: -0.707, dy: -0.707),
+            CGVector(dx: 0.707, dy: -0.707),
+            CGVector(dx: -0.707, dy: 0.707),
+            CGVector(dx: 0.707, dy: 0.707)
+        ]
+        var best: (offset: CGSize, score: CGFloat)?
+
+        for distance in distances {
+            for direction in directions {
+                let offset = CGSize(
+                    width: (direction.dx * distance).rounded(),
+                    height: (direction.dy * distance).rounded()
+                )
+                guard shiftedStrokeFits(
+                    points: points,
+                    offset: offset,
+                    radius: radius,
+                    width: width,
+                    height: height
+                ) else { continue }
+                let sourceCenter = CGPoint(
+                    x: destinationReference.x + offset.width,
+                    y: destinationReference.y + offset.height
+                )
+                guard let sourceReference = averageColor(
+                    pixels: pixels,
+                    width: width,
+                    height: height,
+                    center: sourceCenter,
+                    innerRadius: 0,
+                    outerRadius: max(1, Int((brushDiameter * 0.45).rounded()))
+                ) else { continue }
+                let score = colorDistance(sourceReference, targetReference)
+                if best == nil || score < best!.score {
+                    best = (offset, score)
+                }
+            }
+        }
+        return best?.offset
+    }
+
+    private static func shiftedStrokeFits(
+        points: [CGPoint],
+        offset: CGSize,
+        radius: CGFloat,
+        width: Int,
+        height: Int
+    ) -> Bool {
+        let inset = radius + 1
+        return points.allSatisfy { point in
+            let x = point.x + offset.width
+            let y = point.y + offset.height
+            return x >= inset && y >= inset
+                && x <= CGFloat(width) - inset
+                && y <= CGFloat(height) - inset
+        }
+    }
+
+    private static func colorDistance(
+        _ lhs: ImageEditorHealingBrushColor,
+        _ rhs: ImageEditorHealingBrushColor?
+    ) -> CGFloat {
+        guard let rhs else { return 0 }
+        let red = lhs.red - rhs.red
+        let green = lhs.green - rhs.green
+        let blue = lhs.blue - rhs.blue
+        return red * red + green * green + blue * blue
+    }
 
     static func strokeMaskImage(
         size: CGSize,

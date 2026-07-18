@@ -103,6 +103,13 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var cloneStampSampleSource: ImageEditorCloneSampleSource = .currentLayer
     @Published private(set) var isSettingCloneSource = false
     @Published var healingSourcePoint: CGPoint?
+    @Published var healingBrushMode: ImageEditorHealingBrushMode = .source {
+        didSet {
+            guard healingBrushMode != oldValue else { return }
+            isSettingHealingSource = false
+            healingBrushAlignedCanvasOffset = nil
+        }
+    }
     @Published var isHealingBrushAligned = true {
         didSet {
             guard isHealingBrushAligned != oldValue else { return }
@@ -4565,6 +4572,7 @@ final class ImageEditorViewModel: ObservableObject {
             isAligned = isCloneStampAligned
             alignedOffset = cloneStampAlignedCanvasOffset
         case .healingBrush:
+            guard healingBrushMode == .source else { return nil }
             guard let healingSourcePoint else { return nil }
             sourcePoint = healingSourcePoint
             isAligned = isHealingBrushAligned
@@ -4784,12 +4792,39 @@ final class ImageEditorViewModel: ObservableObject {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
-        guard let sourcePoint = healingSourcePoint, let destinationStart = points.first else {
-            statusText = L10n.text("imageEditor.status.healingSourceMissing")
-            return
-        }
         guard let layer = editableSelectedLayer() else {
             statusText = L10n.text("imageEditor.status.layerLocked")
+            return
+        }
+
+        if healingBrushMode == .spot {
+            guard let targetContext = sampledBrushInput(
+                for: layer,
+                canvasOffset: .zero,
+                sampleSource: healingBrushSampleSource
+            ),
+            let output = layer.image.normalizedBitmapImage().withSpotHealingBrush(
+                points: rasterLocalPoints(points, layer: layer),
+                sourceImage: targetContext.image,
+                targetContextImage: targetContext.image,
+                width: rasterLocalBrushWidth(brushSize, layer: layer),
+                opacity: opacity,
+                hardness: hardness
+            ) else {
+                statusText = L10n.text("imageEditor.status.operationFailed")
+                return
+            }
+            replaceSelectedLayerRenderedPixels(
+                output,
+                historyTitle: L10n.text("imageEditor.history.spotHealingBrush"),
+                resetFrame: false
+            )
+            statusText = L10n.text("imageEditor.status.spotHealingApplied")
+            return
+        }
+
+        guard let sourcePoint = healingSourcePoint, let destinationStart = points.first else {
+            statusText = L10n.text("imageEditor.status.healingSourceMissing")
             return
         }
 
@@ -4841,6 +4876,7 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func beginSettingHealingSource() {
+        guard healingBrushMode == .source else { return }
         isSettingHealingSource = true
         statusText = L10n.text("imageEditor.status.healingSourcePending")
     }

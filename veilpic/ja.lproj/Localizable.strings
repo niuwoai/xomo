@@ -1299,6 +1299,7 @@
 "imageEditor.history.sharpen" = "シャープ";
 "imageEditor.history.smudge" = "指先";
 "imageEditor.history.healingBrush" = "修復ブラシ";
+"imageEditor.history.spotHealingBrush" = "スポット修復ブラシ";
 "imageEditor.history.quickSelection" = "クイック選択";
 "imageEditor.history.redEye" = "赤目補正";
 "imageEditor.history.paintBucket" = "塗りつぶし";
@@ -2886,6 +2887,9 @@
 "imageEditor.status.quickMaskOptionsUpdated" = "クイックマスクの表示オプションを更新しました";
 "imageEditor.option.cloneAligned" = "整列";
 "imageEditor.option.cloneSampleSource" = "サンプル";
+"imageEditor.option.healingMode" = "修復モード";
+"imageEditor.healingMode.source" = "サンプル";
+"imageEditor.healingMode.spot" = "スポット";
 "imageEditor.cloneSampleSource.currentLayer" = "現在のレイヤー";
 "imageEditor.cloneSampleSource.currentAndBelow" = "現在以下";
 "imageEditor.cloneSampleSource.allVisible" = "すべての表示レイヤー";
@@ -2893,6 +2897,7 @@
 "imageEditor.status.healingSourceMissing" = "Option キーを押しながらクリックするか、修復ソースを設定してください";
 "imageEditor.status.healingSourceSet" = "修復ソースを設定しました";
 "imageEditor.status.healingSourcePending" = "キャンバスをクリックして修復ソースを設定してください";
+"imageEditor.status.spotHealingApplied" = "スポット修復を適用しました";
 "imageEditor.action.figmaLinkImport" = "Figma リンクを読み込む…";
 "imageEditor.action.copyFigmaVariables" = "すべての ID をコピー";
 "imageEditor.action.copyFigmaVariable" = "変数 ID をコピー";

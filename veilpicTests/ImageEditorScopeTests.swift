@@ -2157,6 +2157,28 @@ struct ImageEditorScopeTests {
         #expect(source.contains("viewModel.patchSelection(from: dragStart, to: endImagePoint)"))
     }
 
+    @Test func healingBrushExposesNonFocusableSourceAndSpotModes() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let healingStart = try #require(
+            source.range(of: "if viewModel.selectedTool == .healingBrush {")
+        )
+        let colorSamplerStart = try #require(
+            source[healingStart.upperBound...].range(of: "if viewModel.selectedTool == .colorSampler")
+        )
+        let healingSource = source[healingStart.lowerBound..<colorSamplerStart.lowerBound]
+
+        #expect(healingSource.contains("ForEach(ImageEditorHealingBrushMode.allCases)"))
+        #expect(healingSource.contains(".focusable(false)"))
+        #expect(healingSource.contains("image-editor-healing-mode"))
+        #expect(healingSource.contains(
+            "showsExplicitSourceControls: viewModel.healingBrushMode == .source"
+        ))
+        #expect(source.contains("guard viewModel.healingBrushMode == .source else { return nil }"))
+    }
+
     @MainActor
     @Test func brushesPanelActionsReuseExistingBrushSettings() throws {
         let image = NSImage(size: NSSize(width: 16, height: 16))

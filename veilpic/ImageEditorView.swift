@@ -382,11 +382,27 @@ struct ImageEditorView: View {
             }
 
             if viewModel.selectedTool == .healingBrush {
+                Picker(
+                    L10n.text("imageEditor.option.healingMode"),
+                    selection: $viewModel.healingBrushMode
+                ) {
+                    ForEach(ImageEditorHealingBrushMode.allCases) { mode in
+                        Text(mode.title).tag(mode)
+                    }
+                }
+                .labelsHidden()
+                .pickerStyle(.segmented)
+                .focusable(false)
+                .frame(width: 116)
+                .help(L10n.text("imageEditor.option.healingMode"))
+                .accessibilityIdentifier("image-editor-healing-mode")
+
                 sampledBrushOptions(
                     isAligned: $viewModel.isHealingBrushAligned,
                     sampleSource: $viewModel.healingBrushSampleSource,
                     sourceActionKey: "imageEditor.action.healingSourcePick",
-                    identifierPrefix: "image-editor-healing"
+                    identifierPrefix: "image-editor-healing",
+                    showsExplicitSourceControls: viewModel.healingBrushMode == .source
                 ) {
                     viewModel.beginSettingHealingSource()
                 }
@@ -570,13 +586,16 @@ struct ImageEditorView: View {
         sampleSource: Binding<ImageEditorCloneSampleSource>,
         sourceActionKey: String,
         identifierPrefix: String,
+        showsExplicitSourceControls: Bool = true,
         beginSettingSource: @escaping () -> Void
     ) -> some View {
-        Toggle(L10n.text("imageEditor.option.cloneAligned"), isOn: isAligned)
-            .toggleStyle(.checkbox)
-            .focusable(false)
-            .xomoFocusEffectDisabled()
-            .accessibilityIdentifier("\(identifierPrefix)-aligned")
+        if showsExplicitSourceControls {
+            Toggle(L10n.text("imageEditor.option.cloneAligned"), isOn: isAligned)
+                .toggleStyle(.checkbox)
+                .focusable(false)
+                .xomoFocusEffectDisabled()
+                .accessibilityIdentifier("\(identifierPrefix)-aligned")
+        }
 
         Picker(L10n.text("imageEditor.option.cloneSampleSource"), selection: sampleSource) {
             ForEach(ImageEditorCloneSampleSource.allCases) { source in
@@ -593,11 +612,13 @@ struct ImageEditorView: View {
         .accessibilityLabel(L10n.text("imageEditor.option.cloneSampleSource"))
         .accessibilityIdentifier("\(identifierPrefix)-sample-source")
 
-        Button(L10n.text(sourceActionKey), action: beginSettingSource)
-            .buttonStyle(EditorTextButtonStyle())
-            .focusable(false)
-            .xomoFocusEffectDisabled()
-            .help(L10n.text(sourceActionKey))
+        if showsExplicitSourceControls {
+            Button(L10n.text(sourceActionKey), action: beginSettingSource)
+                .buttonStyle(EditorTextButtonStyle())
+                .focusable(false)
+                .xomoFocusEffectDisabled()
+                .help(L10n.text(sourceActionKey))
+        }
     }
 
     private var marqueeShapePicker: some View {
@@ -1908,6 +1929,7 @@ struct ImageEditorView: View {
             originalSourcePoint = viewModel.cloneSourcePoint
             isSettingSource = viewModel.isSettingCloneSource
         case .healingBrush:
+            guard viewModel.healingBrushMode == .source else { return nil }
             originalSourcePoint = viewModel.healingSourcePoint
             isSettingSource = viewModel.isSettingHealingSource
         default:
@@ -2240,7 +2262,8 @@ struct ImageEditorView: View {
                 case .smudge:
                     viewModel.smudgeBrush(points: dragPoints)
                 case .healingBrush:
-                    if viewModel.isSettingHealingSource || NSEvent.modifierFlags.contains(.option),
+                    if viewModel.healingBrushMode == .source,
+                       (viewModel.isSettingHealingSource || NSEvent.modifierFlags.contains(.option)),
                        let endImagePoint {
                         viewModel.setHealingSource(at: endImagePoint)
                     } else {
