@@ -354,6 +354,17 @@ struct ImageEditorView: View {
                 .help(ImageEditorSpongeModeShortcut.helpText)
                 .accessibilityHint(ImageEditorSpongeModeShortcut.helpText)
                 .accessibilityIdentifier("image-editor-sponge-mode")
+
+                Toggle(
+                    L10n.text("imageEditor.option.spongeVibrance"),
+                    isOn: $viewModel.spongeVibranceEnabled
+                )
+                .toggleStyle(.checkbox)
+                .focusable(false)
+                .fixedSize()
+                .help(L10n.text("imageEditor.option.spongeVibrance.help"))
+                .accessibilityHint(L10n.text("imageEditor.option.spongeVibrance.help"))
+                .accessibilityIdentifier("image-editor-sponge-vibrance")
             }
 
             if viewModel.selectedTool == .dodge || viewModel.selectedTool == .burn {

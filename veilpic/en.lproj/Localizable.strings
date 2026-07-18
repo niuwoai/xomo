@@ -594,7 +594,7 @@
 "imageEditor.tool.cloneStamp.help" = "Clone Stamp: copy sampled pixels to the brush stroke.";
 "imageEditor.tool.dodge.help" = "Dodge: lighten pixels along the brush stroke.";
 "imageEditor.tool.burn.help" = "Burn: darken pixels along the brush stroke.";
-"imageEditor.tool.sponge.help" = "Sponge: increase local saturation along the brush stroke.";
+"imageEditor.tool.sponge.help" = "Sponge: increase or decrease local saturation along the brush stroke.";
 "imageEditor.tool.blur.help" = "Blur: soften detail in the brushed area.";
 "imageEditor.tool.sharpen.help" = "Sharpen: enhance edge detail in the brushed area.";
 "imageEditor.tool.smudge.help" = "Smudge: push pixels under the brush like a finger.";
@@ -2905,6 +2905,8 @@
 "imageEditor.healingMode.spot" = "Spot";
 "imageEditor.option.spongeMode" = "Sponge Mode";
 "imageEditor.option.spongeMode.help" = "Sponge mode shortcuts: %@ %@ · %@ %@";
+"imageEditor.option.spongeVibrance" = "Vibrance";
+"imageEditor.option.spongeVibrance.help" = "Reduce clipping near fully saturated or desaturated colors.";
 "imageEditor.spongeMode.saturate" = "Saturate";
 "imageEditor.spongeMode.desaturate" = "Desaturate";
 "imageEditor.cloneSampleSource.currentLayer" = "Current Layer";

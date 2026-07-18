@@ -145,6 +145,62 @@ struct ImageEditorToolSmokeTests {
         #expect(desaturate.document.history.last?.title == L10n.text("imageEditor.history.sponge"))
     }
 
+    @Test func spongeVibranceReducesSaturationEndpointClipping() throws {
+        let color = NSColor(deviceRed: 0.95, green: 0.45, blue: 0.05, alpha: 1)
+        let protected = makeEditableViewModel(image: solidImage(color: color))
+        let unprotected = makeEditableViewModel(image: solidImage(color: color))
+        for viewModel in [protected, unprotected] {
+            viewModel.spongeMode = .saturate
+            viewModel.brushSize = 12
+            viewModel.hardness = 1
+            viewModel.opacity = 1
+        }
+        unprotected.spongeVibranceEnabled = false
+        let point = CGPoint(x: 20, y: 14)
+
+        protected.spongeBrush(points: [point])
+        unprotected.spongeBrush(points: [point])
+
+        let protectedColor = try #require(
+            protected.document.selectedLayer?.image.color(at: point)?.usingColorSpace(.deviceRGB)
+        )
+        let unprotectedColor = try #require(
+            unprotected.document.selectedLayer?.image.color(at: point)?.usingColorSpace(.deviceRGB)
+        )
+        #expect(protected.spongeVibranceEnabled)
+        #expect(protectedColor.redComponent < unprotectedColor.redComponent - 0.005)
+        #expect(protectedColor.blueComponent > unprotectedColor.blueComponent + 0.003)
+        #expect(protected.document.history.last?.title == L10n.text("imageEditor.history.sponge"))
+    }
+
+    @Test func spongeVibranceKeepsNearGrayChromaFromFlattening() throws {
+        let color = NSColor(deviceRed: 0.53, green: 0.50, blue: 0.47, alpha: 1)
+        let protected = makeEditableViewModel(image: solidImage(color: color))
+        let unprotected = makeEditableViewModel(image: solidImage(color: color))
+        for viewModel in [protected, unprotected] {
+            viewModel.spongeMode = .desaturate
+            viewModel.brushSize = 12
+            viewModel.hardness = 1
+            viewModel.opacity = 1
+        }
+        unprotected.spongeVibranceEnabled = false
+        let point = CGPoint(x: 20, y: 14)
+
+        protected.spongeBrush(points: [point])
+        unprotected.spongeBrush(points: [point])
+
+        let protectedColor = try #require(
+            protected.document.selectedLayer?.image.color(at: point)?.usingColorSpace(.deviceRGB)
+        )
+        let unprotectedColor = try #require(
+            unprotected.document.selectedLayer?.image.color(at: point)?.usingColorSpace(.deviceRGB)
+        )
+        let protectedChroma = protectedColor.redComponent - protectedColor.blueComponent
+        let unprotectedChroma = unprotectedColor.redComponent - unprotectedColor.blueComponent
+        #expect(protectedChroma > unprotectedChroma + 0.03)
+        #expect(unprotected.document.history.last?.title == L10n.text("imageEditor.history.sponge"))
+    }
+
     @Test func toneBrushHardnessControlsDodgeAndBurnEdges() throws {
         let image = solidImage(color: NSColor(deviceWhite: 0.45, alpha: 1))
         let softDodge = makeEditableViewModel(image: image)

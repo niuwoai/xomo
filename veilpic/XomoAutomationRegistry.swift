@@ -2654,6 +2654,9 @@ final class XomoAutomationRegistry {
             }
             viewModel.spongeMode = mode
         }
+        if action == "sponge", let vibrance = arguments["spongeVibrance"]?.boolValue {
+            viewModel.spongeVibranceEnabled = vibrance
+        }
         if action == "paintBucket" {
             viewModel.paintBucketFill(at: try requiredPoint(arguments))
             return
@@ -3729,6 +3732,7 @@ private extension XomoAutomationRegistry {
             "mode": XomoAutomationSchema.string(description: "Patch mode", values: ["source", "destination"]),
             "healingMode": XomoAutomationSchema.string(description: "Healing mode", values: ["source", "spot"]),
             "spongeMode": XomoAutomationSchema.string(description: "Sponge mode", values: ["saturate", "desaturate"]),
+            "spongeVibrance": XomoAutomationSchema.boolean(description: "Reduce clipping near fully saturated or desaturated colors"),
             "aligned": XomoAutomationSchema.boolean(description: "Keep the clone or healing source offset aligned across strokes"),
             "sampleSource": XomoAutomationSchema.string(description: "Clone or healing sampling layer range", values: ["currentLayer", "currentAndBelow", "allVisible"])
         ], required: ["action"]),

@@ -233,6 +233,28 @@ struct LocalizationResourceTests {
         }
     }
 
+    @Test func spongeVibranceIsLocalizedInEverySupportedLanguage() throws {
+        let paths = try Self.repositoryPaths()
+        let expectedValues = [
+            "zh-Hans": ["自然饱和", "减少完全饱和或完全去色附近的颜色剪切。"],
+            "en": ["Vibrance", "Reduce clipping near fully saturated or desaturated colors."],
+            "ja": ["自然な彩度", "完全な彩度または彩度ゼロ付近でのクリッピングを抑えます。"]
+        ]
+        let keys = [
+            "imageEditor.option.spongeVibrance",
+            "imageEditor.option.spongeVibrance.help"
+        ]
+
+        for (localizationID, expected) in expectedValues {
+            let strings = try Self.stringTable(
+                tableName: "Localizable",
+                localizationID: localizationID,
+                appDirectory: paths.appDirectory
+            )
+            #expect(keys.compactMap { strings[$0] } == expected)
+        }
+    }
+
     private static func knownRegions(in projectText: String) -> Set<String> {
         guard let start = projectText.range(of: "knownRegions = (") else { return [] }
         let remaining = projectText[start.upperBound...]

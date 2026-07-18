@@ -1,0 +1,59 @@
+{
+  "generated_at": "2026-07-19 06:02:28 +0800",
+  "total": 5,
+  "passed": 5,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "spongeVibranceOptionIsNonFocusableAndAccessible",
+      "identifier": "veilpicTests/ImageEditorScopeTests/spongeVibranceOptionIsNonFocusableAndAccessible",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 4.671,
+      "issues": [],
+      "log": "ImageEditorScopeTests.spongeVibranceOptionIsNonFocusableAndAccessible.log"
+    },
+    {
+      "suite": "ImageEditorToolSmokeTests",
+      "method": "spongeVibranceKeepsNearGrayChromaFromFlattening",
+      "identifier": "veilpicTests/ImageEditorToolSmokeTests/spongeVibranceKeepsNearGrayChromaFromFlattening",
+      "file": "ImageEditorToolSmokeTests.swift",
+      "passed": true,
+      "duration": 3.07,
+      "issues": [],
+      "log": "ImageEditorToolSmokeTests.spongeVibranceKeepsNearGrayChromaFromFlattening.log"
+    },
+    {
+      "suite": "ImageEditorToolSmokeTests",
+      "method": "spongeVibranceReducesSaturationEndpointClipping",
+      "identifier": "veilpicTests/ImageEditorToolSmokeTests/spongeVibranceReducesSaturationEndpointClipping",
+      "file": "ImageEditorToolSmokeTests.swift",
+      "passed": true,
+      "duration": 3.092,
+      "issues": [],
+      "log": "ImageEditorToolSmokeTests.spongeVibranceReducesSaturationEndpointClipping.log"
+    },
+    {
+      "suite": "LocalizationResourceTests",
+      "method": "spongeVibranceIsLocalizedInEverySupportedLanguage",
+      "identifier": "veilpicTests/LocalizationResourceTests/spongeVibranceIsLocalizedInEverySupportedLanguage",
+      "file": "LocalizationResourceTests.swift",
+      "passed": true,
+      "duration": 3.093,
+      "issues": [],
+      "log": "LocalizationResourceTests.spongeVibranceIsLocalizedInEverySupportedLanguage.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "spongeVibranceAutomationConfiguresAndAdvertisesProtection",
+      "identifier": "veilpicTests/XomoAutomationTests/spongeVibranceAutomationConfiguresAndAdvertisesProtection",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 3.074,
+      "issues": [],
+      "log": "XomoAutomationTests.spongeVibranceAutomationConfiguresAndAdvertisesProtection.log"
+    }
+  ]
+}

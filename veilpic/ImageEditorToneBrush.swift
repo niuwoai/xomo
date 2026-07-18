@@ -110,7 +110,8 @@ extension NSImage {
         width: CGFloat,
         opacity: CGFloat,
         hardness: CGFloat,
-        mode: ImageEditorSpongeMode
+        mode: ImageEditorSpongeMode,
+        vibrance: Bool = true
     ) -> NSImage? {
         let pixelWidth = max(1, Int(size.width.rounded()))
         let pixelHeight = max(1, Int(size.height.rounded()))
@@ -122,7 +123,12 @@ extension NSImage {
             hardness: hardness
         )
         guard maskAlpha.count == pixelWidth * pixelHeight else { return nil }
-        return saturationAdjusted(maskAlpha: maskAlpha, opacity: opacity, mode: mode)
+        return saturationAdjusted(
+            maskAlpha: maskAlpha,
+            opacity: opacity,
+            mode: mode,
+            vibrance: vibrance
+        )
     }
 
     func withBlurBrush(
@@ -405,7 +411,8 @@ extension NSImage {
     private func saturationAdjusted(
         maskAlpha: [UInt8],
         opacity: CGFloat,
-        mode: ImageEditorSpongeMode
+        mode: ImageEditorSpongeMode,
+        vibrance: Bool
     ) -> NSImage? {
         let width = max(1, Int(size.width.rounded()))
         let height = max(1, Int(size.height.rounded()))
@@ -420,12 +427,23 @@ extension NSImage {
             for x in 0..<width {
                 let offset = y * bytesPerRow + x * bytesPerPixel
                 let maskIndex = y * width + x
-                let strength = CGFloat(maskAlpha[maskIndex]) / 255 * clampedOpacity * 0.9
-                guard strength > 0 else { continue }
+                let baseStrength = CGFloat(maskAlpha[maskIndex]) / 255 * clampedOpacity * 0.9
+                guard baseStrength > 0 else { continue }
 
                 let red = CGFloat(sourcePixels[offset])
                 let green = CGFloat(sourcePixels[offset + 1])
                 let blue = CGFloat(sourcePixels[offset + 2])
+                let chroma = (max(red, max(green, blue)) - min(red, min(green, blue))) / 255
+                let vibranceWeight: CGFloat
+                switch mode {
+                case .saturate:
+                    vibranceWeight = 1 - chroma
+                case .desaturate:
+                    vibranceWeight = chroma
+                }
+                let strength = vibrance
+                    ? baseStrength * max(0, min(1, vibranceWeight))
+                    : baseStrength
                 let luminance = red * 0.2126 + green * 0.7152 + blue * 0.0722
                 let multiplier = mode == .saturate ? 1 + strength : 1 - strength
                 sourcePixels[offset] = UInt8(max(0, min(255, (luminance + (red - luminance) * multiplier).rounded())))

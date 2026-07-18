@@ -594,7 +594,7 @@
 "imageEditor.tool.cloneStamp.help" = "コピースタンプ：サンプル元のピクセルを筆跡へ複製します。";
 "imageEditor.tool.dodge.help" = "覆い焼き：筆跡に沿ってピクセルを明るくします。";
 "imageEditor.tool.burn.help" = "焼き込み：筆跡に沿ってピクセルを暗くします。";
-"imageEditor.tool.sponge.help" = "スポンジ：筆跡に沿って局所的な彩度を上げます。";
+"imageEditor.tool.sponge.help" = "スポンジ：筆跡に沿って局所的な彩度を上げたり下げたりします。";
 "imageEditor.tool.blur.help" = "ぼかし：なぞった領域の細部を柔らかくします。";
 "imageEditor.tool.sharpen.help" = "シャープ：なぞった領域のエッジの細部を強調します。";
 "imageEditor.tool.smudge.help" = "指先：指のように筆跡下のピクセルを押し広げます。";
@@ -2905,6 +2905,8 @@
 "imageEditor.healingMode.spot" = "スポット";
 "imageEditor.option.spongeMode" = "スポンジモード";
 "imageEditor.option.spongeMode.help" = "スポンジモードのショートカット：%@ %@・%@ %@";
+"imageEditor.option.spongeVibrance" = "自然な彩度";
+"imageEditor.option.spongeVibrance.help" = "完全な彩度または彩度ゼロ付近でのクリッピングを抑えます。";
 "imageEditor.spongeMode.saturate" = "彩度を上げる";
 "imageEditor.spongeMode.desaturate" = "彩度を下げる";
 "imageEditor.cloneSampleSource.currentLayer" = "現在のレイヤー";

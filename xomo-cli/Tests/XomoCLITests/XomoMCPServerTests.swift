@@ -68,6 +68,8 @@ struct XomoMCPServerTests {
         #expect(airbrushPulses["type"] as? String == "integer")
         #expect(airbrushPulses["minimum"] as? Int == 0)
         #expect(airbrushPulses["maximum"] as? Int == 80)
+        let spongeVibrance = try #require(specialPaintProperties["spongeVibrance"] as? [String: Any])
+        #expect(spongeVibrance["type"] as? String == "boolean")
         #expect(tools.contains { $0["name"] as? String == "xomo.view.pan" })
         #expect(tools.contains { $0["name"] as? String == "xomo.selection.quick_mask" })
         #expect(tools.contains { $0["name"] as? String == "xomo.psd.inspect" })

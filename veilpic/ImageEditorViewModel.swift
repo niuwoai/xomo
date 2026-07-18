@@ -72,6 +72,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var protectToneBrushTones = true
     @Published var toneBrushAirbrushEnabled = false
     @Published var spongeMode: ImageEditorSpongeMode = .saturate
+    @Published var spongeVibranceEnabled = true
     @Published private(set) var customBrushPresets: [ImageEditorBrushPreset] = []
     @Published var customLayerStylePresets: [ImageEditorLayerStylePreset] = []
     @Published var favoriteLayerStylePresetIDs: [String] = []
@@ -4723,7 +4724,8 @@ final class ImageEditorViewModel: ObservableObject {
             width: rasterLocalBrushWidth(brushSize, layer: layer),
             opacity: opacity,
             hardness: hardness,
-            mode: spongeMode
+            mode: spongeMode,
+            vibrance: spongeVibranceEnabled
         ) else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return

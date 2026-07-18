@@ -594,7 +594,7 @@
 "imageEditor.tool.cloneStamp.help" = "仿制图章：从取样源复制像素到笔触位置。";
 "imageEditor.tool.dodge.help" = "减淡：沿笔触提亮局部像素。";
 "imageEditor.tool.burn.help" = "加深：沿笔触压暗局部像素。";
-"imageEditor.tool.sponge.help" = "海绵：沿笔触提高局部饱和度。";
+"imageEditor.tool.sponge.help" = "海绵：沿笔触提高或降低局部饱和度。";
 "imageEditor.tool.blur.help" = "模糊：柔化笔触覆盖区域的细节。";
 "imageEditor.tool.sharpen.help" = "锐化：增强笔触覆盖区域的边缘细节。";
 "imageEditor.tool.smudge.help" = "涂抹：像手指一样推开笔触覆盖的像素。";
@@ -2905,6 +2905,8 @@
 "imageEditor.healingMode.spot" = "污点";
 "imageEditor.option.spongeMode" = "海绵模式";
 "imageEditor.option.spongeMode.help" = "海绵模式快捷键：%@ %@；%@ %@";
+"imageEditor.option.spongeVibrance" = "自然饱和";
+"imageEditor.option.spongeVibrance.help" = "减少完全饱和或完全去色附近的颜色剪切。";
 "imageEditor.spongeMode.saturate" = "加色";
 "imageEditor.spongeMode.desaturate" = "去色";
 "imageEditor.cloneSampleSource.currentLayer" = "当前图层";

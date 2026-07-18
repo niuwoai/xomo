@@ -2008,6 +2008,40 @@ struct XomoAutomationTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.sponge"))
     }
 
+    @Test func spongeVibranceAutomationConfiguresAndAdvertisesProtection() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        #expect(viewModel.spongeVibranceEnabled)
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("sponge"),
+                "spongeVibrance": .bool(false),
+                "points": .array([
+                    .object(["x": .number(32), "y": .number(32)])
+                ])
+            ]
+        ))
+        #expect(response.ok)
+        #expect(!viewModel.spongeVibranceEnabled)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.sponge"))
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        guard case .array(let tools) = toolsResponse.result else {
+            Issue.record("Expected tool array")
+            return
+        }
+        let specialPaint = try #require(tools.compactMap(\.objectValue).first {
+            $0["name"] == .string("xomo.paint.special")
+        })
+        let schema = try #require(specialPaint["inputSchema"]?.objectValue)
+        let properties = try #require(schema["properties"]?.objectValue)
+        #expect(properties["spongeVibrance"]?.objectValue?["type"] == .string("boolean"))
+    }
+
     @Test func registryAcceptsSinglePointDodgeAndBurnDabs() {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared
