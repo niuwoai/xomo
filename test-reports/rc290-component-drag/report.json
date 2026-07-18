@@ -1,0 +1,23 @@
+{
+  "generated_at": "2026-07-18 20:06:27 +0800",
+  "version": "2.12.0-rc290",
+  "scope": "组件拖拽兜底、实时虚线预览与工具光标",
+  "total": 21,
+  "passed": 21,
+  "failed": 0,
+  "skipped": 0,
+  "result": "passed",
+  "environment": "macOS 26.5.2 / Xcode 17E202 / arm64",
+  "test_targets": [
+    "veilpicTests/XomoLeftSidebarTests/componentSidebarWiresMoveSemanticsIntoCanvasCursorAndGestures",
+    "veilpicTests/XomoCanvasObjectTests/movingAnObjectPublishesAndClearsItsDashedPreviewFrame",
+    "veilpicTests/XomoCanvasObjectTests/repeatedDragUpdatesAccumulateInThePreviewBeforeCommit",
+    "veilpicTests/XomoCanvasObjectTests/componentsTabRoutesCanvasInputThroughMoveTool",
+    "veilpicTests/ImageEditorCanvasCursorTests"
+  ],
+  "notes": [
+    "父画布手势可以接管 macOS 13/14 下被 drop host 吞掉的组件拖拽事件。",
+    "组件移动仍只更新 movingObjectPreviewFrame，释放鼠标时才提交文档位置。",
+    "工具光标覆盖组件模式、移动、选择、裁切、缩放和画笔精度等通用语义。"
+  ]
+}

@@ -1836,20 +1836,22 @@ struct ImageEditorView: View {
     private func canvasGesture(in size: CGSize) -> some Gesture {
         DragGesture(minimumDistance: 0)
             .onChanged { value in
-                // A selected component is handled by the canvas-level
-                // gesture attached after the drop host. Do not let the
-                // fallback move branch apply the same translation twice.
+                // The selected-object gesture is the fast path, but macOS 13
+                // can still route a drag through the drop host instead of the
+                // transparent object hit target. Keep the normal canvas move
+                // branch as a fallback; when the fast path wins it sets this
+                // flag and the branch exits above, so the translation is never
+                // applied twice.
                 if isSelectedObjectMoveGestureActive {
                     return
                 }
                 let moveModifiers = NSEvent.modifierFlags.intersection([.command, .option, .shift, .control])
-                if canvasInteractionTool == .move,
-                   moveModifiers.isEmpty,
-                   let startPoint = imagePoint(from: value.startLocation, in: size),
-                   viewModel.hasXomoObject(at: startPoint) {
-                    // Let the canvas-level component gesture own this drag,
-                    // including the initial selection of another component.
-                    return
+                let componentHit: Bool
+                if moveModifiers.isEmpty,
+                   let startPoint = imagePoint(from: value.startLocation, in: size) {
+                    componentHit = viewModel.hasXomoObject(at: startPoint)
+                } else {
+                    componentHit = false
                 }
                 if isCanvasPanGestureActive || canvasInteractionTool == .hand || isSpacebarPanning {
                     isCanvasPanGestureActive = true
@@ -1937,6 +1939,13 @@ struct ImageEditorView: View {
                     }
                     if isCanvasSelectionGestureActive {
                         break
+                    }
+                    if componentHit,
+                       !isObjectMoveGestureActive,
+                       let pressedImagePoint = imagePoint(from: value.startLocation, in: size),
+                       viewModel.selectXomoObject(at: pressedImagePoint) {
+                        viewModel.beginMovingSelectedLayer()
+                        isObjectMoveGestureActive = true
                     }
                     if !isObjectMoveGestureActive,
                        !isSelectedObjectMoveGestureActive,
