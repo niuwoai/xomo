@@ -351,7 +351,8 @@ struct ImageEditorView: View {
                 .pickerStyle(.segmented)
                 .focusable(false)
                 .frame(width: 132)
-                .help(L10n.text("imageEditor.option.spongeMode"))
+                .help(ImageEditorSpongeModeShortcut.helpText)
+                .accessibilityHint(ImageEditorSpongeModeShortcut.helpText)
                 .accessibilityIdentifier("image-editor-sponge-mode")
             }
 
@@ -1260,6 +1261,7 @@ struct ImageEditorView: View {
         case .colorBalance: viewModel.selectAdjustment(.colorBalance)
         case .hueSaturation: viewModel.selectAdjustment(.hueSaturation)
         case .toneRange(let range): viewModel.applyToneRangeShortcut(range)
+        case .spongeMode(let mode): viewModel.applySpongeModeShortcut(mode)
         case .desaturate: viewModel.desaturateSelectedLayer()
         case .invertPixels: viewModel.invertSelectedLayer()
         case .autoLevels: viewModel.autoLevelsSelectedLayer()
@@ -9858,6 +9860,7 @@ enum ImageEditorKeyboardShortcutAction: Equatable {
     case colorBalance
     case hueSaturation
     case toneRange(ImageEditorToneRange)
+    case spongeMode(ImageEditorSpongeMode)
     case desaturate
     case invertPixels
     case autoLevels
@@ -9902,7 +9905,7 @@ enum ImageEditorKeyboardShortcutAction: Equatable {
 
     var isBlockedByTextInput: Bool {
         switch self {
-        case .toggleQuickMask, .toneRange:
+        case .toggleQuickMask, .toneRange, .spongeMode:
             true
         default:
             false
@@ -9924,6 +9927,14 @@ enum ImageEditorKeyboardShortcutAction: Equatable {
             activeTool: activeTool
         ) {
             return .toneRange(range)
+        }
+
+        if let mode = ImageEditorSpongeModeShortcut.resolve(
+            charactersIgnoringModifiers: charactersIgnoringModifiers,
+            modifierFlags: modifierFlags,
+            activeTool: activeTool
+        ) {
+            return .spongeMode(mode)
         }
 
         if keyCode == 51 || keyCode == 117 {

@@ -1,0 +1,29 @@
+{
+  "generated_at": "2026-07-19 05:50:34 +0800",
+  "total": 2,
+  "passed": 2,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "spongeModeShortcutsUseTheActiveCanvasToolAndAccessibleHint",
+      "identifier": "veilpicTests/ImageEditorScopeTests/spongeModeShortcutsUseTheActiveCanvasToolAndAccessibleHint",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.172,
+      "issues": [],
+      "log": "ImageEditorScopeTests.spongeModeShortcutsUseTheActiveCanvasToolAndAccessibleHint.log"
+    },
+    {
+      "suite": "LocalizationResourceTests",
+      "method": "spongeModeShortcutsAreLocalizedInEverySupportedLanguage",
+      "identifier": "veilpicTests/LocalizationResourceTests/spongeModeShortcutsAreLocalizedInEverySupportedLanguage",
+      "file": "LocalizationResourceTests.swift",
+      "passed": true,
+      "duration": 2.988,
+      "issues": [],
+      "log": "LocalizationResourceTests.spongeModeShortcutsAreLocalizedInEverySupportedLanguage.log"
+    }
+  ]
+}

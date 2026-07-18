@@ -2280,6 +2280,23 @@ struct ImageEditorScopeTests {
         #expect(shortcutSource.contains("static let modifierFlags: NSEvent.ModifierFlags = [.shift, .option]"))
     }
 
+    @Test func spongeModeShortcutsUseTheActiveCanvasToolAndAccessibleHint() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let shortcutSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorSpongeModeShortcut.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("case .spongeMode(let mode): viewModel.applySpongeModeShortcut(mode)"))
+        #expect(source.contains(".accessibilityHint(ImageEditorSpongeModeShortcut.helpText)"))
+        #expect(source.contains("case .toggleQuickMask, .toneRange, .spongeMode:"))
+        #expect(shortcutSource.contains("guard activeTool == .sponge"))
+        #expect(shortcutSource.contains("static let modifierFlags: NSEvent.ModifierFlags = [.shift, .option]"))
+    }
+
     @MainActor
     @Test func brushesPanelActionsReuseExistingBrushSettings() throws {
         let image = NSImage(size: NSSize(width: 16, height: 16))

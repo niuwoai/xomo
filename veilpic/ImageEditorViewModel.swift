@@ -2163,6 +2163,18 @@ final class ImageEditorViewModel: ObservableObject {
         return true
     }
 
+    @discardableResult
+    func applySpongeModeShortcut(_ mode: ImageEditorSpongeMode) -> Bool {
+        guard canvasInteractionTool == .sponge else { return false }
+        spongeMode = mode
+        statusText = L10n.format(
+            "imageEditor.status.spongeModeShortcut",
+            mode.title,
+            ImageEditorSpongeModeShortcut.displayLabel(for: mode)
+        )
+        return true
+    }
+
     func applyOptionsOpacityPreset(_ percent: Int) {
         opacity = CGFloat(max(5, min(100, percent))) / 100
         statusText = optionsPanelSummaryText

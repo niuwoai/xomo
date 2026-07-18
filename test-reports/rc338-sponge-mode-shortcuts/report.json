@@ -1,0 +1,59 @@
+{
+  "generated_at": "2026-07-19 05:50:10 +0800",
+  "total": 5,
+  "passed": 5,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorSpongeModeShortcutTests",
+      "method": "componentLibraryDoesNotInheritThePreviousSpongeShortcut",
+      "identifier": "veilpicTests/ImageEditorSpongeModeShortcutTests/componentLibraryDoesNotInheritThePreviousSpongeShortcut",
+      "file": "ImageEditorSpongeModeShortcutTests.swift",
+      "passed": true,
+      "duration": 3.152,
+      "issues": [],
+      "log": "ImageEditorSpongeModeShortcutTests.componentLibraryDoesNotInheritThePreviousSpongeShortcut.log"
+    },
+    {
+      "suite": "ImageEditorSpongeModeShortcutTests",
+      "method": "editorActionKeepsSpongeModeShortcutsOutOfTextInput",
+      "identifier": "veilpicTests/ImageEditorSpongeModeShortcutTests/editorActionKeepsSpongeModeShortcutsOutOfTextInput",
+      "file": "ImageEditorSpongeModeShortcutTests.swift",
+      "passed": true,
+      "duration": 3.289,
+      "issues": [],
+      "log": "ImageEditorSpongeModeShortcutTests.editorActionKeepsSpongeModeShortcutsOutOfTextInput.log"
+    },
+    {
+      "suite": "ImageEditorSpongeModeShortcutTests",
+      "method": "rejectsSpongeModeKeysOutsideSpongeOrWithDifferentModifiers",
+      "identifier": "veilpicTests/ImageEditorSpongeModeShortcutTests/rejectsSpongeModeKeysOutsideSpongeOrWithDifferentModifiers",
+      "file": "ImageEditorSpongeModeShortcutTests.swift",
+      "passed": true,
+      "duration": 3.163,
+      "issues": [],
+      "log": "ImageEditorSpongeModeShortcutTests.rejectsSpongeModeKeysOutsideSpongeOrWithDifferentModifiers.log"
+    },
+    {
+      "suite": "ImageEditorSpongeModeShortcutTests",
+      "method": "resolvesPhotoshopSpongeModeKeys",
+      "identifier": "veilpicTests/ImageEditorSpongeModeShortcutTests/resolvesPhotoshopSpongeModeKeys",
+      "file": "ImageEditorSpongeModeShortcutTests.swift",
+      "passed": true,
+      "duration": 4.443,
+      "issues": [],
+      "log": "ImageEditorSpongeModeShortcutTests.resolvesPhotoshopSpongeModeKeys.log"
+    },
+    {
+      "suite": "ImageEditorSpongeModeShortcutTests",
+      "method": "viewModelAppliesModeAndReportsTheStandardShortcut",
+      "identifier": "veilpicTests/ImageEditorSpongeModeShortcutTests/viewModelAppliesModeAndReportsTheStandardShortcut",
+      "file": "ImageEditorSpongeModeShortcutTests.swift",
+      "passed": true,
+      "duration": 3.226,
+      "issues": [],
+      "log": "ImageEditorSpongeModeShortcutTests.viewModelAppliesModeAndReportsTheStandardShortcut.log"
+    }
+  ]
+}

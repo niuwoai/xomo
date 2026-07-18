@@ -265,6 +265,20 @@ struct ImageEditorHistoryTests {
                 activeTool: .move
             ) == nil
         )
+        #expect(
+            ImageEditorKeyboardShortcutAction.resolve(
+                charactersIgnoringModifiers: "s",
+                modifierFlags: [shift, option],
+                activeTool: .sponge
+            ) == .spongeMode(.saturate)
+        )
+        #expect(
+            ImageEditorKeyboardShortcutAction.resolve(
+                charactersIgnoringModifiers: "d",
+                modifierFlags: [shift, option],
+                activeTool: .sponge
+            ) == .spongeMode(.desaturate)
+        )
 
         #expect(
             ImageEditorKeyboardShortcutAction.resolve(

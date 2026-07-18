@@ -1598,6 +1598,7 @@
 "imageEditor.status.toolsPanelHidden" = "工具面板已隐藏";
 "imageEditor.status.optionsPanelSummary" = "工具：%@ | 选区：%@ | 大小：%d px | 不透明度：%d%% | 硬度：%d%% | 羽化：%d px | 容差：%d%%";
 "imageEditor.status.toneRangeShortcut" = "减淡/加深范围：%@（%@）";
+"imageEditor.status.spongeModeShortcut" = "海绵模式：%@（%@）";
 "imageEditor.status.optionsBarShown" = "选项栏已显示";
 "imageEditor.status.optionsBarHidden" = "选项栏已隐藏";
 "imageEditor.option.sizePreset" = "%d px";
@@ -2903,6 +2904,7 @@
 "imageEditor.healingMode.source" = "取样";
 "imageEditor.healingMode.spot" = "污点";
 "imageEditor.option.spongeMode" = "海绵模式";
+"imageEditor.option.spongeMode.help" = "海绵模式快捷键：%@ %@；%@ %@";
 "imageEditor.spongeMode.saturate" = "加色";
 "imageEditor.spongeMode.desaturate" = "去色";
 "imageEditor.cloneSampleSource.currentLayer" = "当前图层";

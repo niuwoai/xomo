@@ -211,6 +211,28 @@ struct LocalizationResourceTests {
         }
     }
 
+    @Test func spongeModeShortcutsAreLocalizedInEverySupportedLanguage() throws {
+        let paths = try Self.repositoryPaths()
+        let expectedValues = [
+            "zh-Hans": ["海绵模式快捷键：%@ %@；%@ %@", "海绵模式：%@（%@）"],
+            "en": ["Sponge mode shortcuts: %@ %@ · %@ %@", "Sponge mode: %@ (%@)"],
+            "ja": ["スポンジモードのショートカット：%@ %@・%@ %@", "スポンジモード：%@（%@）"]
+        ]
+        let keys = [
+            "imageEditor.option.spongeMode.help",
+            "imageEditor.status.spongeModeShortcut"
+        ]
+
+        for (localizationID, expected) in expectedValues {
+            let strings = try Self.stringTable(
+                tableName: "Localizable",
+                localizationID: localizationID,
+                appDirectory: paths.appDirectory
+            )
+            #expect(keys.compactMap { strings[$0] } == expected)
+        }
+    }
+
     private static func knownRegions(in projectText: String) -> Set<String> {
         guard let start = projectText.range(of: "knownRegions = (") else { return [] }
         let remaining = projectText[start.upperBound...]

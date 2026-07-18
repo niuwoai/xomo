@@ -1598,6 +1598,7 @@
 "imageEditor.status.toolsPanelHidden" = "ツールパネルを隠しました";
 "imageEditor.status.optionsPanelSummary" = "ツール：%@ | 選択：%@ | サイズ：%d px | 不透明度：%d%% | 硬さ：%d%% | ぼかし：%d px | 許容値：%d%%";
 "imageEditor.status.toneRangeShortcut" = "覆い焼き/焼き込み範囲：%@（%@）";
+"imageEditor.status.spongeModeShortcut" = "スポンジモード：%@（%@）";
 "imageEditor.status.optionsBarShown" = "オプションバーを表示しました";
 "imageEditor.status.optionsBarHidden" = "オプションバーを隠しました";
 "imageEditor.option.sizePreset" = "%d px";
@@ -2903,6 +2904,7 @@
 "imageEditor.healingMode.source" = "サンプル";
 "imageEditor.healingMode.spot" = "スポット";
 "imageEditor.option.spongeMode" = "スポンジモード";
+"imageEditor.option.spongeMode.help" = "スポンジモードのショートカット：%@ %@・%@ %@";
 "imageEditor.spongeMode.saturate" = "彩度を上げる";
 "imageEditor.spongeMode.desaturate" = "彩度を下げる";
 "imageEditor.cloneSampleSource.currentLayer" = "現在のレイヤー";

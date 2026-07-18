@@ -1598,6 +1598,7 @@
 "imageEditor.status.toolsPanelHidden" = "Tools panel hidden";
 "imageEditor.status.optionsPanelSummary" = "Tool: %@ | Selection: %@ | Size: %d px | Opacity: %d%% | Hardness: %d%% | Feather: %d px | Tolerance: %d%%";
 "imageEditor.status.toneRangeShortcut" = "Dodge/Burn range: %@ (%@)";
+"imageEditor.status.spongeModeShortcut" = "Sponge mode: %@ (%@)";
 "imageEditor.status.optionsBarShown" = "Options bar shown";
 "imageEditor.status.optionsBarHidden" = "Options bar hidden";
 "imageEditor.option.sizePreset" = "%d px";
@@ -2903,6 +2904,7 @@
 "imageEditor.healingMode.source" = "Source";
 "imageEditor.healingMode.spot" = "Spot";
 "imageEditor.option.spongeMode" = "Sponge Mode";
+"imageEditor.option.spongeMode.help" = "Sponge mode shortcuts: %@ %@ · %@ %@";
 "imageEditor.spongeMode.saturate" = "Saturate";
 "imageEditor.spongeMode.desaturate" = "Desaturate";
 "imageEditor.cloneSampleSource.currentLayer" = "Current Layer";
