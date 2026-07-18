@@ -189,6 +189,16 @@ extension ImageEditorViewModel {
     }
 
     func nudgeSelectionOrSelectedLayer(by delta: CGSize) {
+        // The component library is an object-editing mode. When a component
+        // is selected there, arrow keys must move the object even if an old
+        // pixel selection is still present in the document.
+        if hasSelectedXomoObject, canvasInteractionTool == .move {
+            beginMovingSelectedLayer()
+            moveSelectedLayer(by: delta)
+            finishMovingSelectedLayer()
+            return
+        }
+
         if hasSelection {
             nudgeSelection(by: delta)
             return

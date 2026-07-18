@@ -1,0 +1,24 @@
+{
+  "generated_at": "2026-07-18 20:17:36 +0800",
+  "version": "2.12.0-rc291",
+  "scope": "组件对象方向键优先级、删除/拖拽回归与工具光标",
+  "total": 21,
+  "passed": 21,
+  "failed": 0,
+  "skipped": 0,
+  "result": "passed",
+  "environment": "macOS 26.5.2 / Xcode 17E202 / arm64",
+  "test_targets": [
+    "veilpicTests/XomoCanvasObjectTests/componentObjectNudgeWinsOverStalePixelSelectionInComponentsMode",
+    "veilpicTests/XomoCanvasObjectTests/deletingASelectedObjectRemovesItsGroupAndChildren",
+    "veilpicTests/XomoCanvasObjectTests/movingAnObjectPublishesAndClearsItsDashedPreviewFrame",
+    "veilpicTests/ImageEditorScopeTests/classicArrowNudgeShortcutsMoveSelectionBeforeLayer",
+    "veilpicTests/ImageEditorScopeTests/classicArrowNudgeShortcutsMoveSelectedLayerWithoutSelection",
+    "veilpicTests/ImageEditorCanvasCursorTests"
+  ],
+  "notes": [
+    "组件库对象模式下方向键优先移动组件，残留像素选区保持不变。",
+    "组件移动仍复用单步 Undo/History；Option 五倍步长由现有键盘映射保持。",
+    "此前完整 XomoCanvasObjectTests 中的 commandCanvasSelectionCanEnterAVisibleComponentChild 历史断言仍失败，本精确门禁未包含该旧失败。"
+  ]
+}

@@ -81,6 +81,28 @@ struct XomoCanvasObjectTests {
         #expect(viewModel.document.selectedLayerID == group.id)
     }
 
+    @Test func componentObjectNudgeWinsOverStalePixelSelectionInComponentsMode() throws {
+        let viewModel = makeViewModel()
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))
+        let initialFrame = try #require(viewModel.selectedXomoObjectFrame)
+
+        viewModel.createMarqueeSelection(
+            from: CGPoint(x: 12, y: 14),
+            to: CGPoint(x: 42, y: 34)
+        )
+        let selectionBounds = try #require(viewModel.document.selection?.bounds)
+        let historyCount = viewModel.document.history.count
+        viewModel.selectLeftSidebarTab(.components)
+
+        viewModel.nudgeSelectionOrSelectedLayer(by: CGSize(width: 5, height: 0))
+
+        #expect(viewModel.selectedXomoObjectFrame?.minX == initialFrame.minX + 5)
+        #expect(viewModel.selectedXomoObjectFrame?.minY == initialFrame.minY)
+        #expect(viewModel.document.selection?.bounds == selectionBounds)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerTranslate"))
+    }
+
     @Test func componentHitQueryDoesNotMutateSelection() throws {
         let viewModel = makeViewModel()
         viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))
