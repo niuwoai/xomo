@@ -1,0 +1,26 @@
+{
+  "version": "2.12.0-rc303",
+  "scope": "组件拖动在画布或窗口边缘释放时可靠关闭移动事务，并保持组件库与拖动光标语义",
+  "environment": "arm64 MacBook Pro, macOS 26.5.2, Xcode 26.4.1",
+  "build": {
+    "command": "xcodebuild test -project veilpic.xcodeproj -scheme veilpic -destination 'platform=macOS' -derivedDataPath /private/tmp/xomo-rc303-derived-retry ...",
+    "status": "passed"
+  },
+  "isolated_tests": {
+    "runner": "ruby scripts/run_tests_isolated.rb --skip-build --filter <test> --out /private/tmp/<report>",
+    "passed": 4,
+    "failed": 0,
+    "skipped": 0,
+    "tests": [
+      "objectDragReleaseAlwaysClosesEvenWhenPointerLeavesCanvasWindow",
+      "selectedComponentLibraryObjectAlwaysRoutesToSystemArrowUnlessPanning",
+      "draggingAComponentUsesTheClosedHandCursorAcrossSidebarModes",
+      "canvasContentHitSharesTheSameSemanticForCursorPaths"
+    ]
+  },
+  "release_contract": {
+    "tests": 3,
+    "assertions": 7,
+    "failures": 0
+  }
+}

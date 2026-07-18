@@ -293,6 +293,27 @@ struct ImageEditorCanvasCursorTests {
         #expect(viewModel.canvasContentHit(at: CGPoint(x: frame.midX, y: frame.midY)) == .blocked)
     }
 
+    @Test func objectDragReleaseAlwaysClosesEvenWhenPointerLeavesCanvasWindow() {
+        #expect(
+            ImageEditorObjectDragEventPolicy.shouldFinish(
+                eventType: .leftMouseUp,
+                isObjectMoving: true
+            )
+        )
+        #expect(
+            ImageEditorObjectDragEventPolicy.shouldFinish(
+                eventType: .leftMouseDragged,
+                isObjectMoving: true
+            ) == false
+        )
+        #expect(
+            ImageEditorObjectDragEventPolicy.shouldFinish(
+                eventType: .leftMouseUp,
+                isObjectMoving: false
+            ) == false
+        )
+    }
+
     @Test func moveToolShowsCopyBadgeWhileHoldingOption() {
         let normal = ImageEditorCanvasCursor.cursor(
             for: .tools,

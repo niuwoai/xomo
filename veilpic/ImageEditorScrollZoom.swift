@@ -17,6 +17,15 @@ enum ImageEditorCanvasMiddleMousePanGeometry {
     }
 }
 
+enum ImageEditorObjectDragEventPolicy {
+    static func shouldFinish(
+        eventType: NSEvent.EventType,
+        isObjectMoving: Bool
+    ) -> Bool {
+        return eventType == .leftMouseUp && isObjectMoving
+    }
+}
+
 /// 覆盖在画布上的滚轮缩放捕获层。自身对鼠标点击完全透明（hitTest 返回 nil），
 /// 不会影响 SwiftUI 的绘制、选择和拖拽平移。
 struct ScrollWheelZoomView: NSViewRepresentable {
@@ -174,11 +183,12 @@ final class ScrollWheelZoomNSView: NSView {
     /// monitor gives already-selected Xomo objects a deterministic drag path
     /// without changing the event stream for pixels, selections, or imports.
     private func handleObjectMove(_ event: NSEvent) -> Bool {
-        guard let window, event.window === window, event.buttonNumber == 0 else { return false }
-        let location = convert(event.locationInWindow, from: nil)
+        guard let window, event.buttonNumber == 0 else { return false }
 
         switch event.type {
         case .leftMouseDown:
+            guard event.window === window else { return false }
+            let location = convert(event.locationInWindow, from: nil)
             guard bounds.contains(location), !isObjectMoving else { return false }
             let flags = event.modifierFlags.intersection([.command, .option, .shift, .control])
             guard onObjectMoveBegan?(location, flags) == true else { return false }
@@ -186,6 +196,8 @@ final class ScrollWheelZoomNSView: NSView {
             objectMoveStartPoint = location
             return true
         case .leftMouseDragged:
+            guard event.window === window else { return false }
+            let location = convert(event.locationInWindow, from: nil)
             guard isObjectMoving, let objectMoveStartPoint else { return false }
             onObjectMoveChanged?(CGSize(
                 width: location.x - objectMoveStartPoint.x,
@@ -193,7 +205,14 @@ final class ScrollWheelZoomNSView: NSView {
             ))
             return true
         case .leftMouseUp:
-            guard isObjectMoving else { return false }
+            // A local monitor may still receive the release after the pointer
+            // has crossed the canvas/window edge. Always close the transaction
+            // once a drag has started, otherwise the next click is swallowed
+            // and the closed-hand cursor can remain stuck indefinitely.
+            guard ImageEditorObjectDragEventPolicy.shouldFinish(
+                eventType: event.type,
+                isObjectMoving: isObjectMoving
+            ) else { return false }
             onObjectMoveEnded?()
             isObjectMoving = false
             objectMoveStartPoint = nil
