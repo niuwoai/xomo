@@ -183,6 +183,14 @@ extension ImageEditorViewModel {
         return true
     }
 
+    /// Escape follows Sketch/Figma object semantics in the component library:
+    /// leave the selected object without changing pixels or creating history.
+    func clearSelectedXomoObjectIfNeeded() -> Bool {
+        guard selectedLeftSidebarTab == .components, hasSelectedXomoObject else { return false }
+        clearLayerSelection()
+        return true
+    }
+
     private func xomoCanvasObjects() -> [XomoCanvasObject] {
         let groups = document.layers.enumerated().reduce(into: [UUID: (kind: XomoComponentKind, index: Int)]()) { result, item in
             let (index, layer) = item

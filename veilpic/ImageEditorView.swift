@@ -193,6 +193,9 @@ struct ImageEditorView: View {
                     }
                     return viewModel.deleteSelectedXomoObjectIfNeeded()
                 },
+                cancelSelectedObject: {
+                    viewModel.clearSelectedXomoObjectIfNeeded()
+                },
                 deleteSelectedHistory: {
                     guard viewModel.isHistoryPanelVisible,
                           isHistoryDockExpanded,
@@ -9383,6 +9386,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
     let perform: (ImageEditorKeyboardShortcutAction) -> Void
     let nudgeSelected: (CGSize) -> Void
     let deleteSelectedObject: () -> Bool
+    let cancelSelectedObject: () -> Bool
     let deleteSelectedHistory: () -> Bool
     let setSpacebarPanning: (Bool) -> Void
     let setCanvasModifierFlags: (NSEvent.ModifierFlags) -> Void
@@ -9392,6 +9396,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
             perform: perform,
             nudgeSelected: nudgeSelected,
             deleteSelectedObject: deleteSelectedObject,
+            cancelSelectedObject: cancelSelectedObject,
             deleteSelectedHistory: deleteSelectedHistory,
             setSpacebarPanning: setSpacebarPanning,
             setCanvasModifierFlags: setCanvasModifierFlags
@@ -9406,6 +9411,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
         context.coordinator.perform = perform
         context.coordinator.nudgeSelected = nudgeSelected
         context.coordinator.deleteSelectedObject = deleteSelectedObject
+        context.coordinator.cancelSelectedObject = cancelSelectedObject
         context.coordinator.deleteSelectedHistory = deleteSelectedHistory
         context.coordinator.setSpacebarPanning = setSpacebarPanning
         context.coordinator.setCanvasModifierFlags = setCanvasModifierFlags
@@ -9416,6 +9422,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
         var perform: (ImageEditorKeyboardShortcutAction) -> Void
         var nudgeSelected: (CGSize) -> Void
         var deleteSelectedObject: () -> Bool
+        var cancelSelectedObject: () -> Bool
         var deleteSelectedHistory: () -> Bool
         var setSpacebarPanning: (Bool) -> Void
         var setCanvasModifierFlags: (NSEvent.ModifierFlags) -> Void
@@ -9427,6 +9434,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
             perform: @escaping (ImageEditorKeyboardShortcutAction) -> Void,
             nudgeSelected: @escaping (CGSize) -> Void,
             deleteSelectedObject: @escaping () -> Bool,
+            cancelSelectedObject: @escaping () -> Bool,
             deleteSelectedHistory: @escaping () -> Bool,
             setSpacebarPanning: @escaping (Bool) -> Void,
             setCanvasModifierFlags: @escaping (NSEvent.ModifierFlags) -> Void
@@ -9434,6 +9442,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
             self.perform = perform
             self.nudgeSelected = nudgeSelected
             self.deleteSelectedObject = deleteSelectedObject
+            self.cancelSelectedObject = cancelSelectedObject
             self.deleteSelectedHistory = deleteSelectedHistory
             self.setSpacebarPanning = setSpacebarPanning
             self.setCanvasModifierFlags = setCanvasModifierFlags
@@ -9474,6 +9483,9 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
                 }
             }
             let isDelete = event.keyCode == 51 || event.keyCode == 117
+            if event.keyCode == 53, relevantFlags.isEmpty, !isTextInputActive, cancelSelectedObject() {
+                return nil
+            }
             if isDelete, relevantFlags.isEmpty, !isTextInputActive, deleteSelectedObject() {
                 return nil
             }

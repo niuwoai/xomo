@@ -1,0 +1,25 @@
+{
+  "generated_at": "2026-07-18 20:26:10 +0800",
+  "version": "2.12.0-rc292",
+  "scope": "组件库对象 Escape 取消选中、对象移动/删除回归与工具光标",
+  "total": 21,
+  "passed": 21,
+  "failed": 0,
+  "skipped": 0,
+  "result": "passed",
+  "environment": "macOS 26.5.2 / Xcode 17E202 / arm64",
+  "test_targets": [
+    "veilpicTests/XomoCanvasObjectTests/escapeClearsSelectedComponentObjectWithoutChangingHistory",
+    "veilpicTests/XomoCanvasObjectTests/componentObjectNudgeWinsOverStalePixelSelectionInComponentsMode",
+    "veilpicTests/XomoCanvasObjectTests/deletingASelectedObjectRemovesItsGroupAndChildren",
+    "veilpicTests/XomoCanvasObjectTests/movingAnObjectPublishesAndClearsItsDashedPreviewFrame",
+    "veilpicTests/ImageEditorScopeTests/classicArrowNudgeShortcutsMoveSelectionBeforeLayer",
+    "veilpicTests/ImageEditorScopeTests/classicArrowNudgeShortcutsMoveSelectedLayerWithoutSelection",
+    "veilpicTests/ImageEditorCanvasCursorTests"
+  ],
+  "notes": [
+    "组件库对象模式按 Sketch/Figma 习惯支持 Escape 取消选中；只清除对象/图层选中，不修改像素，也不新增 History。",
+    "文字输入期间和普通工具模式不拦截 Escape，继续保留各自语义。",
+    "组件对象方向键优先移动、删除、拖拽虚线预览和熟悉的工具光标语义均保持通过。"
+  ]
+}

@@ -103,6 +103,19 @@ struct XomoCanvasObjectTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerTranslate"))
     }
 
+    @Test func escapeClearsSelectedComponentObjectWithoutChangingHistory() throws {
+        let viewModel = makeViewModel()
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))
+        viewModel.selectLeftSidebarTab(.components)
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.clearSelectedXomoObjectIfNeeded())
+        #expect(viewModel.document.selectedLayerID == nil)
+        #expect(viewModel.document.selectedLayerIDs.isEmpty)
+        #expect(!viewModel.hasSelectedXomoObject)
+        #expect(viewModel.document.history.count == historyCount)
+    }
+
     @Test func componentHitQueryDoesNotMutateSelection() throws {
         let viewModel = makeViewModel()
         viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))
