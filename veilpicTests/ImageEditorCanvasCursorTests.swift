@@ -245,6 +245,33 @@ struct ImageEditorCanvasCursorTests {
         #expect(viewModel.hasBlockedCanvasContent(at: center))
     }
 
+    @Test func moveCursorUsesTheFrontmostLockedLayerOverAnUnlockedLayer() {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "cursor-frontmost-lock-hit-test",
+            image: NSImage.transparent(size: CGSize(width: 640, height: 480))
+        ) { _ in }
+
+        var unlockedBottom = ImageEditorLayer.solidColorFill(
+            name: "Unlocked bottom",
+            size: CGSize(width: 180, height: 90),
+            content: ImageEditorSolidColorFillContent(red: 0.2, green: 0.4, blue: 0.8)
+        )
+        unlockedBottom.frame = CGRect(x: 120, y: 140, width: 180, height: 90)
+
+        var lockedTop = ImageEditorLayer.solidColorFill(
+            name: "Locked top",
+            size: CGSize(width: 180, height: 90),
+            content: ImageEditorSolidColorFillContent(red: 0.8, green: 0.3, blue: 0.2)
+        )
+        lockedTop.frame = unlockedBottom.frame
+        lockedTop.locksPosition = true
+        viewModel.document.layers = [unlockedBottom, lockedTop]
+
+        let center = CGPoint(x: lockedTop.frame.midX, y: lockedTop.frame.midY)
+        #expect(!viewModel.hasMovableCanvasContent(at: center))
+        #expect(viewModel.hasBlockedCanvasContent(at: center))
+    }
+
     @Test func moveToolShowsCopyBadgeWhileHoldingOption() {
         let normal = ImageEditorCanvasCursor.cursor(
             for: .tools,

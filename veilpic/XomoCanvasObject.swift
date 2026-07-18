@@ -52,18 +52,21 @@ extension ImageEditorViewModel {
     /// hidden layers do not claim the move cursor; the move gesture still
     /// performs its stricter selection check before committing.
     func hasMovableCanvasContent(at point: CGPoint) -> Bool {
-        guard point.x.isFinite, point.y.isFinite else { return false }
-        if xomoCanvasObjects().contains(where: { object in
-            guard object.frame.contains(point),
-                  !isXomoObjectOccluded(object, at: point),
-                  let group = document.layers.first(where: { $0.id == object.groupID }),
-                  !document.isEffectivelyPositionLocked(group)
-            else { return false }
-            let children = document.layers.filter { $0.groupID == object.groupID && !$0.isGroup }
-            return !children.isEmpty && children.allSatisfy { !document.isEffectivelyPositionLocked($0) }
-        }) {
-            return true
-        }
+        topmostCanvasContent(at: point)?.isMovable == true
+    }
+
+    /// Distinguishes blocked visible content from empty canvas space for the
+    /// move-tool cursor. A locked or occluded object should not look like an
+    /// invitation to pan the canvas with an open hand.
+    func hasBlockedCanvasContent(at point: CGPoint) -> Bool {
+        topmostCanvasContent(at: point)?.isBlocked == true
+    }
+
+    /// Returns only the frontmost visible pixel at a canvas point. Looking at
+    /// every layer would let an unlocked layer underneath a locked cover claim
+    /// the move cursor, even though a click can only reach the locked cover.
+    private func topmostCanvasContent(at point: CGPoint) -> (isMovable: Bool, isBlocked: Bool)? {
+        guard point.x.isFinite, point.y.isFinite else { return nil }
 
         let componentGroupIDs: Set<UUID> = Set(
             document.layers.compactMap { layer in
@@ -71,29 +74,32 @@ extension ImageEditorViewModel {
                 return layer.id
             }
         )
-        return document.layers.contains { layer in
+        let objectsByGroupID: [UUID: XomoCanvasObject] = Dictionary(
+            uniqueKeysWithValues: xomoCanvasObjects().map { ($0.groupID, $0) }
+        )
+
+        for layer in document.layers.reversed() {
             guard !layer.isGroup,
-                  layer.groupID.map({ !componentGroupIDs.contains($0) }) ?? true,
                   document.isEffectivelyVisible(layer),
-                  !document.isEffectivelyPositionLocked(layer),
                   layerContainsVisibleContent(layer, at: point)
-            else { return false }
-            return true
-        }
-    }
+            else { continue }
 
-    /// Distinguishes blocked visible content from empty canvas space for the
-    /// move-tool cursor. A locked or occluded object should not look like an
-    /// invitation to pan the canvas with an open hand.
-    func hasBlockedCanvasContent(at point: CGPoint) -> Bool {
-        guard point.x.isFinite, point.y.isFinite,
-              !hasMovableCanvasContent(at: point)
-        else { return false }
+            if let groupID = layer.groupID,
+               componentGroupIDs.contains(groupID),
+               let object = objectsByGroupID[groupID],
+               !isXomoObjectOccluded(object, at: point),
+               let group = document.layers.first(where: { $0.id == groupID }) {
+                let children = document.layers.filter { $0.groupID == groupID && !$0.isGroup }
+                let isMovable = !document.isEffectivelyPositionLocked(group)
+                    && !children.isEmpty
+                    && children.allSatisfy { !document.isEffectivelyPositionLocked($0) }
+                return (isMovable, !isMovable)
+            }
 
-        return document.layers.reversed().contains { layer in
-            document.isEffectivelyVisible(layer)
-                && layerContainsVisibleContent(layer, at: point)
+            let isMovable = !document.isEffectivelyPositionLocked(layer)
+            return (isMovable, !isMovable)
         }
+        return nil
     }
 
     func selectXomoObject(at point: CGPoint, extendingSelection: Bool = false) -> Bool {

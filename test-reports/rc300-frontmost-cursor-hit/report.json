@@ -1,0 +1,26 @@
+{
+  "version": "2.12.0-rc300",
+  "scope": "frontmost visible layer cursor hit testing",
+  "command": "xcodebuild test -project veilpic.xcodeproj -scheme veilpic -destination 'platform=macOS' -derivedDataPath /private/tmp/xomo-rc300-derived -resultBundlePath /private/tmp/xomo-rc300-retry.xcresult -only-testing:veilpicTests/ImageEditorCanvasCursorTests/moveCursorUsesTheFrontmostLockedLayerOverAnUnlockedLayer() -only-testing:veilpicTests/ImageEditorCanvasCursorTests/moveCursorDoesNotClaimOccludedOrPositionLockedContent() -only-testing:veilpicTests/ImageEditorCanvasCursorTests/selectedComponentLibraryObjectAlwaysRoutesToSystemArrowUnlessPanning()",
+  "environment": {
+    "architecture": "arm64",
+    "model": "MacBook Pro",
+    "os": "macOS 26.5.2"
+  },
+  "result": {
+    "passed": 3,
+    "failed": 0,
+    "skipped": 0,
+    "status": "passed"
+  },
+  "tests": [
+    "ImageEditorCanvasCursorTests/moveCursorUsesTheFrontmostLockedLayerOverAnUnlockedLayer()",
+    "ImageEditorCanvasCursorTests/moveCursorDoesNotClaimOccludedOrPositionLockedContent()",
+    "ImageEditorCanvasCursorTests/selectedComponentLibraryObjectAlwaysRoutesToSystemArrowUnlessPanning()"
+  ],
+  "release_contract": {
+    "tests": 3,
+    "assertions": 7,
+    "failures": 0
+  }
+}
