@@ -2573,7 +2573,7 @@ final class XomoAutomationRegistry {
         let usesStrength = ["blur", "sharpen", "smudge"].contains(action)
         let usesExposure = ["dodge", "burn"].contains(action)
         let usesFlow = action == "sponge"
-        let usesRetouchPressure = usesExposure || usesFlow
+        let usesRetouchPressure = usesExposure || usesFlow || action == "smudge"
         if usesExposure, let exposure = arguments["exposure"]?.doubleValue {
             viewModel.opacity = max(0, min(1, exposure))
         } else if usesStrength, let strength = arguments["strength"]?.doubleValue {
@@ -2717,7 +2717,7 @@ final class XomoAutomationRegistry {
         case "sponge": viewModel.spongeBrush(samples: samples)
         case "blur": viewModel.blurBrush(points: points)
         case "sharpen": viewModel.sharpenBrush(points: points)
-        case "smudge": viewModel.smudgeBrush(points: points)
+        case "smudge": viewModel.smudgeBrush(samples: samples)
         case "healing": viewModel.healingBrush(points: points)
         case "patch":
             guard points.count == 2 else {
@@ -3756,8 +3756,8 @@ private extension XomoAutomationRegistry {
             "spongeVibrance": XomoAutomationSchema.boolean(description: "Reduce clipping near fully saturated or desaturated colors"),
             "fingerPainting": XomoAutomationSchema.boolean(description: "Start each Smudge stroke with the current foreground color"),
             "sampleAllLayers": XomoAutomationSchema.boolean(description: "Smudge from the composite of all visible layers into the active layer"),
-            "pressureSize": XomoAutomationSchema.boolean(description: "Use point pressure to control Dodge, Burn, or Sponge diameter"),
-            "pressureSensitivity": XomoAutomationSchema.number(description: "Dodge, Burn, or Sponge pressure curve sensitivity from 0 to 100"),
+            "pressureSize": XomoAutomationSchema.boolean(description: "Use point pressure to control Dodge, Burn, Sponge, or Smudge diameter"),
+            "pressureSensitivity": XomoAutomationSchema.number(description: "Dodge, Burn, Sponge, or Smudge pressure curve sensitivity from 0 to 100"),
             "aligned": XomoAutomationSchema.boolean(description: "Keep the clone or healing source offset aligned across strokes"),
             "sampleSource": XomoAutomationSchema.string(description: "Clone or healing sampling layer range", values: ["currentLayer", "currentAndBelow", "allVisible"])
         ], required: ["action"]),

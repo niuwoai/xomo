@@ -530,6 +530,7 @@
 "imageEditor.option.pressureHelp" = "Use pen pressure to control brush size and flow";
 "imageEditor.option.spongePressureSize.help" = "Use pen pressure to control the Sponge brush size";
 "imageEditor.option.tonePressureSize.help" = "Use pen pressure to control the Dodge or Burn brush size";
+"imageEditor.option.smudgePressureSize.help" = "Use pen pressure to control the Smudge brush size";
 "imageEditor.option.fingerPainting" = "Finger Painting";
 "imageEditor.option.fingerPainting.help" = "Start each Smudge stroke with the current foreground color";
 "imageEditor.option.sampleAllLayers" = "Sample All Layers";

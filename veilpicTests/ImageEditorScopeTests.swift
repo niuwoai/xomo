@@ -2324,7 +2324,7 @@ struct ImageEditorScopeTests {
         #expect(smudgeSource.contains(".focusable(false)"))
     }
 
-    @Test func retouchPressureSizeOptionIsSharedByDodgeBurnAndSpongeWithoutFocus() throws {
+    @Test func smudgePressureSizeOptionSharesRetouchControlWithoutFocus() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
             encoding: .utf8
@@ -2341,6 +2341,8 @@ struct ImageEditorScopeTests {
         #expect(toneSource.contains("viewModel.setRetouchPressureControlsSize"))
         #expect(toneSource.contains("imageEditor.option.tonePressureSize.help"))
         #expect(toneSource.contains("image-editor-tone-pressure-size"))
+        #expect(toneSource.contains("imageEditor.option.smudgePressureSize.help"))
+        #expect(toneSource.contains("image-editor-smudge-pressure-size"))
         #expect(toneSource.contains(".focusable(false)"))
         #expect(source.contains("brushStrokeSamples.append(ImageEditorBrushStrokeSample("))
         #expect(source.contains("samples: brushStrokeSamples"))

@@ -4866,7 +4866,11 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func smudgeBrush(points: [CGPoint]) {
-        guard points.count > 1 else { return }
+        smudgeBrush(samples: points.map { ImageEditorBrushStrokeSample(point: $0) })
+    }
+
+    func smudgeBrush(samples: [ImageEditorBrushStrokeSample]) {
+        guard samples.count > 1 else { return }
         guard !isEditingLayerMask else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
@@ -4891,10 +4895,12 @@ final class ImageEditorViewModel: ObservableObject {
             sampledSourceImage = nil
         }
         guard let output = sourceImage.withSmudgeBrush(
-            points: rasterLocalPoints(points, layer: layer),
+            samples: rasterLocalSamples(samples, layer: layer),
             width: rasterLocalBrushWidth(brushSize, layer: layer),
             opacity: opacity,
             hardness: hardness,
+            pressureControlsSize: retouchPressureControlsSize,
+            pressureSensitivity: retouchPressureSensitivity / 100,
             sourceImage: sampledSourceImage,
             fingerPaintingColor: smudgeFingerPaintingEnabled ? foregroundColor : nil
         ) else {

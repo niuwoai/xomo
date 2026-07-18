@@ -2103,6 +2103,41 @@ struct XomoAutomationTests {
         #expect(properties["pressureSensitivity"]?.objectValue?["type"] == .string("number"))
     }
 
+    @Test func smudgePressureAutomationAcceptsSamplesAndSharesRetouchControls() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        viewModel.setBrushPressureControlsSize(false)
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("smudge"),
+                "pressureSize": .bool(true),
+                "pressureSensitivity": .number(65),
+                "points": .array([
+                    .object([
+                        "x": .number(20),
+                        "y": .number(20),
+                        "pressure": .number(0.15)
+                    ]),
+                    .object([
+                        "x": .number(40),
+                        "y": .number(20),
+                        "pressure": .number(1)
+                    ])
+                ])
+            ]
+        ))
+
+        #expect(response.ok)
+        #expect(viewModel.retouchPressureControlsSize)
+        #expect(viewModel.retouchPressureSensitivity == 65)
+        #expect(!viewModel.brushPressureControlsSize)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.smudge"))
+    }
+
     @Test func spongeFlowAutomationPrefersFlowAndKeepsLegacyOpacity() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

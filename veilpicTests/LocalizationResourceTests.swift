@@ -273,6 +273,24 @@ struct LocalizationResourceTests {
         }
     }
 
+    @Test func smudgePressureSizeHelpIsLocalizedInEverySupportedLanguage() throws {
+        let paths = try Self.repositoryPaths()
+        let expectedValues = [
+            "zh-Hans": "使用数位笔压力控制涂抹画笔大小",
+            "en": "Use pen pressure to control the Smudge brush size",
+            "ja": "ペンの筆圧で指先ブラシのサイズを制御します"
+        ]
+
+        for (localizationID, expected) in expectedValues {
+            let strings = try Self.stringTable(
+                tableName: "Localizable",
+                localizationID: localizationID,
+                appDirectory: paths.appDirectory
+            )
+            #expect(strings["imageEditor.option.smudgePressureSize.help"] == expected)
+        }
+    }
+
     @Test func fingerPaintingIsLocalizedInEverySupportedLanguage() throws {
         let paths = try Self.repositoryPaths()
         let expectedValues = [

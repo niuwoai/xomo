@@ -692,6 +692,67 @@ struct ImageEditorToolSmokeTests {
         #expect(high.document.history.last?.title == L10n.text("imageEditor.history.smudge"))
     }
 
+    @Test func smudgePressureControlsDiameterWithoutChangingMouseStrokes() throws {
+        let image = solidImage(color: NSColor(deviceWhite: 0.45, alpha: 1))
+        let lightPressure = makeConfiguredRetouchViewModel(image: image)
+        let fullPressure = makeConfiguredRetouchViewModel(image: image)
+        let mouseBaseline = makeConfiguredRetouchViewModel(image: image)
+        let mouseWithPressureEnabled = makeConfiguredRetouchViewModel(image: image)
+        for viewModel in [lightPressure, fullPressure, mouseBaseline, mouseWithPressureEnabled] {
+            viewModel.brushSize = 16
+            viewModel.hardness = 1
+            viewModel.opacity = 1
+            viewModel.foregroundColor = NSColor(deviceRed: 1, green: 0.05, blue: 0.05, alpha: 1)
+            viewModel.smudgeFingerPaintingEnabled = true
+        }
+        lightPressure.retouchPressureControlsSize = true
+        fullPressure.retouchPressureControlsSize = true
+        mouseBaseline.retouchPressureControlsSize = false
+        mouseWithPressureEnabled.retouchPressureControlsSize = true
+        let points = [CGPoint(x: 8, y: 14), CGPoint(x: 16, y: 14), CGPoint(x: 24, y: 14)]
+        let lightSamples = points.map {
+            ImageEditorBrushStrokeSample(point: $0, pressure: 0.05)
+        }
+        let fullSamples = points.map {
+            ImageEditorBrushStrokeSample(point: $0, pressure: 1)
+        }
+        let mouseSamples = points.map { ImageEditorBrushStrokeSample(point: $0) }
+
+        lightPressure.smudgeBrush(samples: lightSamples)
+        fullPressure.smudgeBrush(samples: fullSamples)
+        mouseBaseline.smudgeBrush(samples: mouseSamples)
+        mouseWithPressureEnabled.smudgeBrush(samples: mouseSamples)
+
+        let outsideLightDiameter = try #require(
+            lightPressure.document.selectedLayer?.image.color(at: CGPoint(x: 22, y: 19))?
+                .usingColorSpace(.deviceRGB)
+        )
+        let insideFullDiameter = try #require(
+            fullPressure.document.selectedLayer?.image.color(at: CGPoint(x: 22, y: 19))?
+                .usingColorSpace(.deviceRGB)
+        )
+        #expect(insideFullDiameter.redComponent > outsideLightDiameter.redComponent + 0.25)
+        #expect(insideFullDiameter.redComponent > insideFullDiameter.greenComponent + 0.25)
+
+        let baselineMouseColor = try #require(
+            mouseBaseline.document.selectedLayer?.image.color(at: CGPoint(x: 22, y: 19))?
+                .usingColorSpace(.deviceRGB)
+        )
+        let pressureEnabledMouseColor = try #require(
+            mouseWithPressureEnabled.document.selectedLayer?.image.color(at: CGPoint(x: 22, y: 19))?
+                .usingColorSpace(.deviceRGB)
+        )
+        #expect(abs(baselineMouseColor.redComponent - pressureEnabledMouseColor.redComponent) < 0.001)
+        #expect(abs(baselineMouseColor.greenComponent - pressureEnabledMouseColor.greenComponent) < 0.001)
+        #expect(fullPressure.document.history.last?.title == L10n.text("imageEditor.history.smudge"))
+        fullPressure.undo()
+        let undone = try #require(
+            fullPressure.document.selectedLayer?.image.color(at: CGPoint(x: 22, y: 19))?
+                .usingColorSpace(.deviceRGB)
+        )
+        #expect(abs(undone.redComponent - undone.greenComponent) < 0.02)
+    }
+
     @Test func fingerPaintingCarriesForegroundColorAlongTheSmudgeStroke() throws {
         let image = solidImage(color: NSColor(deviceWhite: 0.45, alpha: 1))
         let ordinary = makeConfiguredRetouchViewModel(image: image)

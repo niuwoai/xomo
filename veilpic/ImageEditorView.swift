@@ -455,6 +455,20 @@ struct ImageEditorView: View {
                 .help(L10n.text("imageEditor.option.fingerPainting.help"))
                 .accessibilityHint(L10n.text("imageEditor.option.fingerPainting.help"))
                 .accessibilityIdentifier("image-editor-smudge-finger-painting")
+
+                Toggle(
+                    L10n.text("imageEditor.option.pressureSize"),
+                    isOn: Binding(
+                        get: { viewModel.retouchPressureControlsSize },
+                        set: { viewModel.setRetouchPressureControlsSize($0) }
+                    )
+                )
+                .toggleStyle(.checkbox)
+                .focusable(false)
+                .fixedSize()
+                .help(L10n.text("imageEditor.option.smudgePressureSize.help"))
+                .accessibilityHint(L10n.text("imageEditor.option.smudgePressureSize.help"))
+                .accessibilityIdentifier("image-editor-smudge-pressure-size")
             }
 
             if viewModel.selectedTool == .text {
@@ -2334,7 +2348,15 @@ struct ImageEditorView: View {
                         ))
                         updateToneAirbrushStroke(at: pointerImagePoint, pressure: pressure)
                     }
-                case .cloneStamp, .blur, .sharpen, .smudge, .healingBrush:
+                case .smudge:
+                    if let pointerImagePoint {
+                        dragPoints.append(pointerImagePoint)
+                        brushStrokeSamples.append(ImageEditorBrushStrokeSample(
+                            point: pointerImagePoint,
+                            pressure: ImageEditorBrushPressureInput.pressure(from: NSApp.currentEvent)
+                        ))
+                    }
+                case .cloneStamp, .blur, .sharpen, .healingBrush:
                     if let pointerImagePoint {
                         dragPoints.append(pointerImagePoint)
                     }
@@ -2526,7 +2548,7 @@ struct ImageEditorView: View {
                 case .sharpen:
                     viewModel.sharpenBrush(points: dragPoints)
                 case .smudge:
-                    viewModel.smudgeBrush(points: dragPoints)
+                    viewModel.smudgeBrush(samples: brushStrokeSamples)
                 case .healingBrush:
                     if viewModel.healingBrushMode == .source,
                        (viewModel.isSettingHealingSource || NSEvent.modifierFlags.contains(.option)),

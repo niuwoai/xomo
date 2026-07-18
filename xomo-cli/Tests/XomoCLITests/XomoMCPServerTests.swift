@@ -78,14 +78,18 @@ struct XomoMCPServerTests {
         #expect(spongeFlow["type"] as? String == "number")
         #expect(spongeFlow["minimum"] as? Int == 0)
         #expect(spongeFlow["maximum"] as? Int == 1)
-        let spongePressureSize = try #require(specialPaintProperties["pressureSize"] as? [String: Any])
-        #expect(spongePressureSize["type"] as? String == "boolean")
-        let spongePressureSensitivity = try #require(
+        let retouchPressureSize = try #require(specialPaintProperties["pressureSize"] as? [String: Any])
+        #expect(retouchPressureSize["type"] as? String == "boolean")
+        #expect(
+            retouchPressureSize["description"] as? String
+                == "Use point pressure to control Dodge, Burn, Sponge, or Smudge diameter"
+        )
+        let retouchPressureSensitivity = try #require(
             specialPaintProperties["pressureSensitivity"] as? [String: Any]
         )
-        #expect(spongePressureSensitivity["type"] as? String == "number")
-        #expect(spongePressureSensitivity["minimum"] as? Int == 0)
-        #expect(spongePressureSensitivity["maximum"] as? Int == 100)
+        #expect(retouchPressureSensitivity["type"] as? String == "number")
+        #expect(retouchPressureSensitivity["minimum"] as? Int == 0)
+        #expect(retouchPressureSensitivity["maximum"] as? Int == 100)
         #expect(tools.contains { $0["name"] as? String == "xomo.view.pan" })
         #expect(tools.contains { $0["name"] as? String == "xomo.selection.quick_mask" })
         #expect(tools.contains { $0["name"] as? String == "xomo.psd.inspect" })

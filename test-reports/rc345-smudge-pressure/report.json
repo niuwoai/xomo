@@ -1,0 +1,49 @@
+{
+  "generated_at": "2026-07-19 07:39:14 +0800",
+  "total": 4,
+  "passed": 4,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "smudgePressureSizeOptionSharesRetouchControlWithoutFocus",
+      "identifier": "veilpicTests/ImageEditorScopeTests/smudgePressureSizeOptionSharesRetouchControlWithoutFocus",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 4.575,
+      "issues": [],
+      "log": "ImageEditorScopeTests.smudgePressureSizeOptionSharesRetouchControlWithoutFocus.log"
+    },
+    {
+      "suite": "ImageEditorToolSmokeTests",
+      "method": "smudgePressureControlsDiameterWithoutChangingMouseStrokes",
+      "identifier": "veilpicTests/ImageEditorToolSmokeTests/smudgePressureControlsDiameterWithoutChangingMouseStrokes",
+      "file": "ImageEditorToolSmokeTests.swift",
+      "passed": true,
+      "duration": 3.111,
+      "issues": [],
+      "log": "ImageEditorToolSmokeTests.smudgePressureControlsDiameterWithoutChangingMouseStrokes.log"
+    },
+    {
+      "suite": "LocalizationResourceTests",
+      "method": "smudgePressureSizeHelpIsLocalizedInEverySupportedLanguage",
+      "identifier": "veilpicTests/LocalizationResourceTests/smudgePressureSizeHelpIsLocalizedInEverySupportedLanguage",
+      "file": "LocalizationResourceTests.swift",
+      "passed": true,
+      "duration": 3.082,
+      "issues": [],
+      "log": "LocalizationResourceTests.smudgePressureSizeHelpIsLocalizedInEverySupportedLanguage.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "smudgePressureAutomationAcceptsSamplesAndSharesRetouchControls",
+      "identifier": "veilpicTests/XomoAutomationTests/smudgePressureAutomationAcceptsSamplesAndSharesRetouchControls",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 3.051,
+      "issues": [],
+      "log": "XomoAutomationTests.smudgePressureAutomationAcceptsSamplesAndSharesRetouchControls.log"
+    }
+  ]
+}

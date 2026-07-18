@@ -268,7 +268,32 @@ extension NSImage {
         sourceImage: NSImage? = nil,
         fingerPaintingColor: NSColor? = nil
     ) -> NSImage? {
-        guard points.count > 1 else { return nil }
+        withSmudgeBrush(
+            samples: points.map { ImageEditorBrushStrokeSample(point: $0) },
+            width: width,
+            opacity: opacity,
+            hardness: hardness,
+            pressureControlsSize: false,
+            pressureSensitivity: 0.5,
+            sourceImage: sourceImage,
+            fingerPaintingColor: fingerPaintingColor
+        )
+    }
+
+    func withSmudgeBrush(
+        samples: [ImageEditorBrushStrokeSample],
+        width: CGFloat,
+        opacity: CGFloat,
+        hardness: CGFloat,
+        pressureControlsSize: Bool,
+        pressureSensitivity: CGFloat,
+        sourceImage: NSImage? = nil,
+        fingerPaintingColor: NSColor? = nil
+    ) -> NSImage? {
+        guard samples.count > 1 else { return nil }
+        let resolvedSamples = resolvedSmudgePressureSamples(samples)
+        let points = resolvedSamples.map(\.point)
+        let usesPressureSize = pressureControlsSize && samples.contains { $0.pressure != nil }
         let clampedOpacity = max(0, min(1, opacity)) * 0.86
         let usesIndependentSource = sourceImage != nil
         var workingSource = sourceImage ?? self
@@ -279,7 +304,12 @@ extension NSImage {
                     points: [firstPoint],
                     color: fingerPaintingColor,
                     settings: ImageEditorBrushStrokeSettings(
-                        diameter: width,
+                        diameter: smudgeDiameter(
+                            baseWidth: width,
+                            pressure: resolvedSamples.first?.pressure,
+                            controlsSize: usesPressureSize,
+                            sensitivity: pressureSensitivity
+                        ),
                         hardness: hardness,
                         opacity: clampedOpacity,
                         flow: 1,
@@ -294,7 +324,12 @@ extension NSImage {
                     points: [firstPoint],
                     color: fingerPaintingColor,
                     settings: ImageEditorBrushStrokeSettings(
-                        diameter: width,
+                        diameter: smudgeDiameter(
+                            baseWidth: width,
+                            pressure: resolvedSamples.first?.pressure,
+                            controlsSize: usesPressureSize,
+                            sensitivity: pressureSensitivity
+                        ),
                         hardness: hardness,
                         opacity: clampedOpacity,
                         flow: 1,
@@ -313,12 +348,22 @@ extension NSImage {
             let current = points[segmentIndex]
             let delta = CGSize(width: current.x - previous.x, height: current.y - previous.y)
             guard abs(delta.width) > 0.1 || abs(delta.height) > 0.1 else { continue }
+            let segmentPressure = (
+                (resolvedSamples[segmentIndex - 1].pressure ?? 1)
+                    + (resolvedSamples[segmentIndex].pressure ?? 1)
+            ) / 2
+            let segmentDiameter = smudgeDiameter(
+                baseWidth: width,
+                pressure: segmentPressure,
+                controlsSize: usesPressureSize,
+                sensitivity: pressureSensitivity
+            )
 
             let sourceSnapshot = workingSource
             guard let strokeMask = ImageEditorHealingBrushKernel.strokeMaskImage(
                 size: size,
                 points: [previous, current],
-                diameter: width,
+                diameter: segmentDiameter,
                 hardness: hardness
             ),
             let shiftedSource = NSImage.rendered(size: size, actions: { _ in
@@ -382,6 +427,36 @@ extension NSImage {
         }
 
         return output
+    }
+
+    private func resolvedSmudgePressureSamples(
+        _ samples: [ImageEditorBrushStrokeSample]
+    ) -> [ImageEditorBrushStrokeSample] {
+        let firstKnownPressure = samples.compactMap(\.pressure).first ?? 1
+        var previousPressure = max(0, min(1, firstKnownPressure))
+        return samples.map { sample in
+            if let pressure = sample.pressure {
+                previousPressure = max(0, min(1, pressure))
+            }
+            return ImageEditorBrushStrokeSample(
+                point: sample.point,
+                pressure: previousPressure
+            )
+        }
+    }
+
+    private func smudgeDiameter(
+        baseWidth: CGFloat,
+        pressure: CGFloat?,
+        controlsSize: Bool,
+        sensitivity: CGFloat
+    ) -> CGFloat {
+        guard controlsSize else { return max(1, baseWidth) }
+        let scale = ImageEditorBrushStrokeKernel.mappedPressure(
+            pressure ?? 1,
+            sensitivity: sensitivity
+        )
+        return max(1, baseWidth * scale)
     }
 
     private func mixingBrushSource(
