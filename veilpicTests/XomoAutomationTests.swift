@@ -2045,6 +2045,43 @@ struct XomoAutomationTests {
         ])
     }
 
+    @Test func registryAcceptsSinglePointBlurAndSharpenDabs() {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        let point: XomoJSONValue = .array([
+            .object(["x": .number(32), "y": .number(32)])
+        ])
+
+        let blur = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("blur"),
+                "size": .number(12),
+                "hardness": .number(1),
+                "points": point
+            ]
+        ))
+        let sharpen = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("sharpen"),
+                "size": .number(12),
+                "hardness": .number(1),
+                "points": point
+            ]
+        ))
+
+        #expect(blur.ok)
+        #expect(sharpen.ok)
+        #expect(viewModel.document.history.suffix(2).map(\.title) == [
+            L10n.text("imageEditor.history.blur"),
+            L10n.text("imageEditor.history.sharpen")
+        ])
+    }
+
     @Test func registryConfiguresBrushFlowSpacingHardnessAndPressure() {
         let suiteName = "XomoAutomationTests.pressure.\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suiteName) ?? .standard

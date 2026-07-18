@@ -270,6 +270,44 @@ struct ImageEditorToolSmokeTests {
         #expect(hardSharpen.document.history.last?.title == L10n.text("imageEditor.history.sharpen"))
     }
 
+    @Test func blurSingleClickAppliesACircularDab() throws {
+        let hardEdge = verticalEdgeImage()
+        let blur = makeConfiguredRetouchViewModel(image: hardEdge)
+        let dabPoint = CGPoint(x: 20, y: 14)
+        let darkPoint = CGPoint(x: 18, y: 14)
+        let lightPoint = CGPoint(x: 22, y: 14)
+        let farPoint = CGPoint(x: 4, y: 14)
+        let beforeContrast = try colorContrast(in: hardEdge, darkPoint: darkPoint, lightPoint: lightPoint)
+        let farBefore = try redComponent(in: hardEdge, at: farPoint)
+
+        blur.blurBrush(points: [dabPoint])
+
+        let afterContrast = try colorContrast(in: blur, darkPoint: darkPoint, lightPoint: lightPoint)
+        let farAfter = try redComponent(in: blur, at: farPoint)
+        #expect(afterContrast < beforeContrast - 0.15)
+        #expect(abs(farAfter - farBefore) < 0.02)
+        #expect(blur.document.history.last?.title == L10n.text("imageEditor.history.blur"))
+    }
+
+    @Test func sharpenSingleClickAppliesACircularDab() throws {
+        let softenedEdge = try #require(verticalEdgeImage().blurred(radius: 4))
+        let sharpen = makeConfiguredRetouchViewModel(image: softenedEdge)
+        let dabPoint = CGPoint(x: 20, y: 14)
+        let darkPoint = CGPoint(x: 18, y: 14)
+        let lightPoint = CGPoint(x: 22, y: 14)
+        let farPoint = CGPoint(x: 4, y: 14)
+        let beforeContrast = try colorContrast(in: softenedEdge, darkPoint: darkPoint, lightPoint: lightPoint)
+        let farBefore = try redComponent(in: softenedEdge, at: farPoint)
+
+        sharpen.sharpenBrush(points: [dabPoint])
+
+        let afterContrast = try colorContrast(in: sharpen, darkPoint: darkPoint, lightPoint: lightPoint)
+        let farAfter = try redComponent(in: sharpen, at: farPoint)
+        #expect(afterContrast > beforeContrast + 0.03)
+        #expect(abs(farAfter - farBefore) < 0.02)
+        #expect(sharpen.document.history.last?.title == L10n.text("imageEditor.history.sharpen"))
+    }
+
     @Test func redEyeToolReducesExcessRedAtTheClickedPupil() throws {
         let image = NSImage.rendered(size: canvasSize) { rect in
             NSColor(deviceWhite: 0.35, alpha: 1).setFill()
@@ -329,10 +367,61 @@ struct ImageEditorToolSmokeTests {
         return viewModel
     }
 
+    private func makeConfiguredRetouchViewModel(image: NSImage) -> ImageEditorViewModel {
+        let viewModel = makeEditableViewModel(image: image)
+        viewModel.brushSize = 14
+        viewModel.hardness = 1
+        viewModel.opacity = 1
+        return viewModel
+    }
+
     private func solidImage(color: NSColor) -> NSImage {
         NSImage.rendered(size: canvasSize) { rect in
             color.setFill()
             rect.fill()
         } ?? NSImage.transparent(size: canvasSize)
+    }
+
+    private func verticalEdgeImage() -> NSImage {
+        NSImage.rendered(size: canvasSize) { rect in
+            NSColor.black.setFill()
+            rect.fill()
+            NSColor.white.setFill()
+            CGRect(x: rect.midX, y: rect.minY, width: rect.width / 2, height: rect.height).fill()
+        } ?? NSImage.transparent(size: canvasSize)
+    }
+
+    private func colorContrast(
+        in viewModel: ImageEditorViewModel,
+        darkPoint: CGPoint,
+        lightPoint: CGPoint
+    ) throws -> CGFloat {
+        let dark = try #require(
+            viewModel.document.selectedLayer?.image.color(at: darkPoint)?.usingColorSpace(.deviceRGB)
+        )
+        let light = try #require(
+            viewModel.document.selectedLayer?.image.color(at: lightPoint)?.usingColorSpace(.deviceRGB)
+        )
+        return light.redComponent - dark.redComponent
+    }
+
+    private func colorContrast(
+        in image: NSImage,
+        darkPoint: CGPoint,
+        lightPoint: CGPoint
+    ) throws -> CGFloat {
+        try redComponent(in: image, at: lightPoint) - redComponent(in: image, at: darkPoint)
+    }
+
+    private func redComponent(in image: NSImage, at point: CGPoint) throws -> CGFloat {
+        try #require(image.color(at: point)?.usingColorSpace(.deviceRGB)).redComponent
+    }
+
+    private func redComponent(
+        in viewModel: ImageEditorViewModel,
+        at point: CGPoint
+    ) throws -> CGFloat {
+        let image = try #require(viewModel.document.selectedLayer?.image)
+        return try redComponent(in: image, at: point)
     }
 }

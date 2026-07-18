@@ -4702,7 +4702,7 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func blurBrush(points: [CGPoint]) {
-        guard points.count > 1 else { return }
+        guard !points.isEmpty else { return }
         guard !isEditingLayerMask else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
@@ -4734,7 +4734,7 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func sharpenBrush(points: [CGPoint]) {
-        guard points.count > 1 else { return }
+        guard !points.isEmpty else { return }
         guard !isEditingLayerMask else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return

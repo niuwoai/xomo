@@ -1,0 +1,29 @@
+{
+  "generated_at": "2026-07-19 03:21:22 +0800",
+  "total": 2,
+  "passed": 2,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorToolSmokeTests",
+      "method": "blurSingleClickAppliesACircularDab",
+      "identifier": "veilpicTests/ImageEditorToolSmokeTests/blurSingleClickAppliesACircularDab",
+      "file": "ImageEditorToolSmokeTests.swift",
+      "passed": true,
+      "duration": 3.527,
+      "issues": [],
+      "log": "ImageEditorToolSmokeTests.blurSingleClickAppliesACircularDab.log"
+    },
+    {
+      "suite": "ImageEditorToolSmokeTests",
+      "method": "sharpenSingleClickAppliesACircularDab",
+      "identifier": "veilpicTests/ImageEditorToolSmokeTests/sharpenSingleClickAppliesACircularDab",
+      "file": "ImageEditorToolSmokeTests.swift",
+      "passed": true,
+      "duration": 3.109,
+      "issues": [],
+      "log": "ImageEditorToolSmokeTests.sharpenSingleClickAppliesACircularDab.log"
+    }
+  ]
+}
