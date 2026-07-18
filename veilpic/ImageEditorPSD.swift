@@ -1077,6 +1077,9 @@ enum ImageEditorPSDCodec {
             sectionType: nil,
             mask: mask,
             vectorMask: vectorMask,
+            solidFillContent: layer.isSolidColorFill && !layer.style.hasConfiguredEffects
+                ? layer.solidColorFillContent
+                : nil,
             textObject: layer.textContent.flatMap {
                 exportTextToolObject($0, size: frame.size)
             }
@@ -1218,6 +1221,7 @@ enum ImageEditorPSDCodec {
             sectionType: layer.isGroupExpanded ? 1 : 2,
             mask: mask,
             vectorMask: nil,
+            solidFillContent: nil,
             textObject: nil
         )
     }
@@ -1336,6 +1340,7 @@ enum ImageEditorPSDCodec {
         if let sectionType = item.sectionType {
             extra.appendSectionDivider(type: sectionType, blendMode: item.blendMode)
         }
+        extra.appendSolidColorFill(item.solidFillContent)
         extra.appendVectorMask(item.vectorMask)
         extra.appendTextToolObject(item.textObject)
         record.appendUInt32(UInt32(extra.count))
@@ -2445,6 +2450,7 @@ private struct PSDExportLayer {
     let sectionType: Int?
     let mask: PSDExportMask?
     let vectorMask: PSDExportVectorMask?
+    let solidFillContent: ImageEditorSolidColorFillContent?
     let textObject: PSDExportText?
 
     static func groupDivider(canvasHeight: Int) -> PSDExportLayer {
@@ -2465,6 +2471,7 @@ private struct PSDExportLayer {
             sectionType: 3,
             mask: nil,
             vectorMask: nil,
+            solidFillContent: nil,
             textObject: nil
         )
     }
@@ -2930,6 +2937,26 @@ private extension Data {
         if mask.data.count % 2 != 0 { append(0) }
     }
 
+    mutating func appendSolidColorFill(_ content: ImageEditorSolidColorFillContent?) {
+        guard let content else { return }
+        let normalized = content.normalized()
+        var color = Data()
+        color.appendDescriptorBody(name: "RGB Color", classID: "RGBC", items: [
+            color.descriptorItem(key: "Rd  ", type: "doub", payload: normalized.red * 255),
+            color.descriptorItem(key: "Grn ", type: "doub", payload: normalized.green * 255),
+            color.descriptorItem(key: "Bl  ", type: "doub", payload: normalized.blue * 255)
+        ])
+        var descriptor = Data()
+        descriptor.appendDescriptorBlock(name: "", classID: "SoCo", items: [
+            descriptor.descriptorItem(key: "Clr ", type: "Objc", payload: color)
+        ])
+        appendASCII("8BIM")
+        appendASCII("SoCo")
+        appendUInt32(UInt32(descriptor.count))
+        append(descriptor)
+        if descriptor.count % 2 != 0 { append(0) }
+    }
+
     mutating func appendTextToolObject(_ text: PSDExportText?) {
         guard let text else { return }
         appendASCII("8BIM")
@@ -2937,6 +2964,65 @@ private extension Data {
         appendUInt32(UInt32(text.data.count))
         append(text.data)
         if text.data.count % 2 != 0 { append(0) }
+    }
+
+    private func descriptorItem(key: String, type: String, payload: Double) -> Data {
+        descriptorItem(key: key, type: type, payload: Data(doublePayload: payload))
+    }
+
+    private func descriptorItem(key: String, type: String, payload: Data) -> Data {
+        var output = Data()
+        output.appendDescriptorKey(key)
+        output.appendASCII(type)
+        output.append(payload)
+        return output
+    }
+
+    private mutating func appendDescriptorBlock(
+        name: String,
+        classID: String,
+        items: [Data]
+    ) {
+        appendUInt32(16)
+        appendDescriptorUnicodeString(name)
+        appendDescriptorKey(classID)
+        appendUInt32(UInt32(items.count))
+        items.forEach { append($0) }
+    }
+
+    private mutating func appendDescriptorBody(
+        name: String,
+        classID: String,
+        items: [Data]
+    ) {
+        appendDescriptorUnicodeString(name)
+        appendDescriptorKey(classID)
+        appendUInt32(UInt32(items.count))
+        items.forEach { append($0) }
+    }
+
+    private mutating func appendDescriptorUnicodeString(_ value: String) {
+        let units = Array(value.utf16)
+        appendUInt32(UInt32(units.count))
+        units.forEach { appendUInt16($0) }
+    }
+
+    private mutating func appendDescriptorKey(_ value: String) {
+        let bytes = Array(value.utf8)
+        if bytes.count == 4 {
+            appendUInt32(0)
+            append(contentsOf: bytes)
+        } else {
+            appendUInt32(UInt32(bytes.count))
+            append(contentsOf: bytes)
+        }
+    }
+}
+
+private extension Data {
+    init(doublePayload value: Double) {
+        self.init()
+        appendUInt64(value.bitPattern)
     }
 }
 

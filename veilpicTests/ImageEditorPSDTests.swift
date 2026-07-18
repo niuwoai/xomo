@@ -68,6 +68,30 @@ struct ImageEditorPSDTests {
         #expect(restored.layers.first?.name == "Solid")
     }
 
+    @Test func psdRoundTripPreservesNativeSolidColorFillTag() throws {
+        let canvasSize = CGSize(width: 24, height: 18)
+        var document = ImageEditorDocument(
+            sourceName: "native-fill.xomoproject",
+            image: psdSolidImage(color: .clear, size: canvasSize)
+        )
+        document.layers.removeAll()
+        let content = ImageEditorSolidColorFillContent(red: 0.12, green: 0.5, blue: 0.88)
+        var layer = ImageEditorLayer.solidColorFill(name: "Native Blue", size: canvasSize, content: content)
+        layer.frame = CGRect(x: 3, y: 2, width: 15, height: 10)
+        document.layers = [layer]
+
+        let data = try ImageEditorPSDCodec.encode(document: document)
+        let restored = try ImageEditorPSDCodec.decode(data, sourceName: "native-fill.psd")
+        let restoredLayer = try #require(restored.layers.first)
+        let restoredContent = try #require(restoredLayer.solidColorFillContent)
+
+        #expect(restoredLayer.frame == layer.frame)
+        #expect(abs(restoredContent.red - content.red) < 0.01)
+        #expect(abs(restoredContent.green - content.green) < 0.01)
+        #expect(abs(restoredContent.blue - content.blue) < 0.01)
+        #expect(restoredLayer.isSolidColorFill)
+    }
+
     @Test func psdExportUsesZIPWhenRLEHasNoBenefit() throws {
         let canvasSize = CGSize(width: 64, height: 64)
         let pattern = psdAlternatingImage(width: 64, height: 64)

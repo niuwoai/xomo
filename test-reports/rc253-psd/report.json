@@ -1,0 +1,13 @@
+{
+  "version": "2.12.0-rc253",
+  "scope": "PSD native solid fill export",
+  "total": 26,
+  "passed": 26,
+  "failed": 0,
+  "cliReleaseBuild": "passed",
+  "command": "XOMO_DERIVED_DATA_PATH=/tmp/xomo-rc253-direct2 ruby scripts/run_tests_isolated.rb --skip-build --filter ImageEditorPSDTests/ --jobs 1",
+  "notes": [
+    "The arm64 test bundle was built by xcodebuild with macOS 13.0 deployment target.",
+    "The new native solid fill export/import round-trip test passed as test 3/26."
+  ]
+}
