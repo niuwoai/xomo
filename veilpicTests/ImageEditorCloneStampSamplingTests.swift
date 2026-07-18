@@ -109,6 +109,32 @@ struct ImageEditorCloneStampSamplingTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.cloneStamp"))
     }
 
+    @Test func cloneStampHardnessControlsTheDabEdge() throws {
+        let hard = patternedCurrentLayerViewModel()
+        hard.brushSize = 10
+        hard.hardness = 1
+        hard.opacity = 1
+        hard.setCloneSource(at: CGPoint(x: 10, y: 15))
+        hard.cloneStamp(points: [CGPoint(x: 60, y: 15)])
+
+        let soft = patternedCurrentLayerViewModel()
+        soft.brushSize = 10
+        soft.hardness = 0
+        soft.opacity = 1
+        soft.setCloneSource(at: CGPoint(x: 10, y: 15))
+        soft.cloneStamp(points: [CGPoint(x: 60, y: 15)])
+
+        let hardCenter = try color(hard.document.selectedLayer?.image, at: CGPoint(x: 60, y: 15))
+        let softCenter = try color(soft.document.selectedLayer?.image, at: CGPoint(x: 60, y: 15))
+        let hardEdge = try color(hard.document.selectedLayer?.image, at: CGPoint(x: 64, y: 15))
+        let softEdge = try color(soft.document.selectedLayer?.image, at: CGPoint(x: 64, y: 15))
+
+        #expect(hardCenter.redComponent > hardCenter.blueComponent + 0.25)
+        #expect(softCenter.redComponent > softCenter.blueComponent + 0.25)
+        #expect(hardEdge.redComponent > hardEdge.blueComponent + 0.25)
+        #expect(softEdge.blueComponent > softEdge.redComponent + 0.25)
+    }
+
     @Test func compositeSamplingCanReachOutsideSelectedLayerFrame() throws {
         let canvasSize = CGSize(width: 100, height: 30)
         let sourceImage = bitmap(size: canvasSize, background: .systemBlue, fills: [

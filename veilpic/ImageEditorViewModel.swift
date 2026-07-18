@@ -4581,7 +4581,8 @@ final class ImageEditorViewModel: ObservableObject {
             sourceOffset: samplingInput.localOffset,
             sourceImage: samplingInput.image,
             width: rasterLocalBrushWidth(brushSize, layer: layer),
-            opacity: opacity
+            opacity: opacity,
+            hardness: hardness
         ) else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
@@ -7189,17 +7190,10 @@ extension NSImage {
         sourceOffset: CGSize,
         sourceImage: NSImage,
         width: CGFloat,
-        opacity: CGFloat
+        opacity: CGFloat,
+        hardness: CGFloat
     ) -> NSImage? {
-        guard let first = points.first else { return nil }
-        let path = NSBezierPath()
-        path.lineJoinStyle = .round
-        path.lineCapStyle = .round
-        path.lineWidth = width
-        path.move(to: first)
-        for point in points.dropFirst() {
-            path.line(to: point)
-        }
+        guard !points.isEmpty else { return nil }
 
         let shiftedSource = NSImage.rendered(size: size) { _ in
             sourceImage.draw(
@@ -7214,25 +7208,12 @@ extension NSImage {
                 fraction: 1
             )
         }
-        let strokeMask = NSImage.rendered(size: size) { _ in
-            NSGraphicsContext.current?.withImageEditorTopLeftCoordinates(height: size.height) {
-                if points.count == 1 {
-                    let radius = width / 2
-                    NSColor.white.setFill()
-                    NSBezierPath(
-                        ovalIn: CGRect(
-                            x: first.x - radius,
-                            y: first.y - radius,
-                            width: width,
-                            height: width
-                        )
-                    ).fill()
-                } else {
-                    NSColor.white.setStroke()
-                    path.stroke()
-                }
-            }
-        }
+        let strokeMask = ImageEditorHealingBrushKernel.strokeMaskImage(
+            size: size,
+            points: points,
+            diameter: width,
+            hardness: hardness
+        )
         guard let shiftedSource, let strokeMask else { return nil }
 
         let clippedStamp = NSImage.rendered(size: size) { _ in

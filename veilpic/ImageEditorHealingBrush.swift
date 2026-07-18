@@ -119,6 +119,48 @@ struct ImageEditorHealingBrushColor: Equatable {
 enum ImageEditorHealingBrushKernel {
     static let bytesPerPixel = 4
 
+    static func strokeMaskImage(
+        size: CGSize,
+        points: [CGPoint],
+        diameter: CGFloat,
+        hardness: CGFloat
+    ) -> NSImage? {
+        let width = max(1, Int(size.width.rounded()))
+        let height = max(1, Int(size.height.rounded()))
+        let alpha = strokeAlpha(
+            width: width,
+            height: height,
+            points: points,
+            diameter: diameter,
+            hardness: hardness
+        )
+        guard alpha.count == width * height else { return nil }
+
+        var pixels = [UInt8](repeating: 0, count: width * height * bytesPerPixel)
+        for (index, value) in alpha.enumerated() {
+            let offset = index * bytesPerPixel
+            pixels[offset] = value
+            pixels[offset + 1] = value
+            pixels[offset + 2] = value
+            pixels[offset + 3] = value
+        }
+        guard let context = CGContext(
+            data: &pixels,
+            width: width,
+            height: height,
+            bitsPerComponent: 8,
+            bytesPerRow: width * bytesPerPixel,
+            space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ),
+        let cgImage = context.makeImage()
+        else { return nil }
+
+        let image = NSImage(size: size)
+        image.addRepresentation(NSBitmapImageRep(cgImage: cgImage))
+        return image
+    }
+
     static func strokeAlpha(
         width: Int,
         height: Int,
