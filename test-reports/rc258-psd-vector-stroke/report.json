@@ -1,0 +1,10 @@
+{
+  "generated_at": "2026-07-18 09:42:05 +0800",
+  "suite": "ImageEditorPSDTests",
+  "total": 30,
+  "passed": 30,
+  "failed": 0,
+  "jobs": 1,
+  "new_test": "externalStrokedVectorShapeFixturePreservesEditableStrokeAndRoundTrips",
+  "fixture": "stroked-vector-shape.psd"
+}

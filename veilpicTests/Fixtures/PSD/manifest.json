@@ -77,6 +77,16 @@
       ]
     },
     {
+      "file": "stroked-vector-shape.psd",
+      "sha256": "d9f5144f612b6bdf0a62384c92a8711658667860f8546ad1990779634ccc06da",
+      "expected": [
+        "editable_vector_shape",
+        "solid_fill",
+        "vector_mask",
+        "vector_stroke"
+      ]
+    },
+    {
       "file": "gradient-fill.psd",
       "sha256": "7a4728765f8922a611e18dc6a1c897b4be663b68d1f6744e4ecb48b584e43ae9",
       "expected": [

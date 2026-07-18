@@ -665,6 +665,33 @@ struct ImageEditorPSDTests {
         #expect(restoredGradient == gradient)
     }
 
+    @Test func externalStrokedVectorShapeFixturePreservesEditableStrokeAndRoundTrips() throws {
+        let data = try psdFixtureData("stroked-vector-shape.psd")
+        let document = try ImageEditorPSDCodec.decode(data, sourceName: "stroked-vector-shape.psd")
+        let shape = try #require(document.layers.first?.shapeContent)
+        let strokeColor = try #require(shape.strokeColor.usingColorSpace(.deviceRGB))
+
+        #expect(shape.kind == .path)
+        #expect(shape.strokePosition == .center)
+        #expect(shape.strokeCap == .round)
+        #expect(shape.strokeJoin == .bevel)
+        #expect(abs(shape.strokeWidth - 2) < 0.01)
+        #expect(abs(shape.strokeOpacity - 0.75) < 0.01)
+        #expect(abs(strokeColor.redComponent - 240.0 / 255.0) < 0.01)
+        #expect(abs(strokeColor.greenComponent - 80.0 / 255.0) < 0.01)
+
+        let report = try ImageEditorPSDCodec.compatibilityReport(data)
+        #expect(!report.issues.contains { $0.kind == .vectorRasterized })
+
+        let exported = try ImageEditorPSDCodec.encode(document: document)
+        let reimported = try ImageEditorPSDCodec.decode(exported, sourceName: "stroked-vector-shape-roundtrip.psd")
+        let restoredShape = try #require(reimported.layers.first?.shapeContent)
+        #expect(restoredShape.strokePosition == .center)
+        #expect(restoredShape.strokeJoin == .bevel)
+        #expect(abs(restoredShape.strokeWidth - 2) < 0.01)
+        #expect(abs(restoredShape.strokeOpacity - 0.75) < 0.01)
+    }
+
     @Test func externalSmartObjectFixtureUsesNativeRasterFallback() throws {
         let data = try psdFixtureData("unsupported-features.psd")
         let document = try ImageEditorPSDCodec.decode(data, sourceName: "unsupported-features.psd")

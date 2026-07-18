@@ -216,6 +216,54 @@ def gradient_fill_descriptor
   )
 end
 
+def vector_stroke_descriptor
+  color = descriptor_body(
+    name: "RGB Color",
+    class_id: "RGBC",
+    items: [
+      descriptor_item(key: "Rd  ", type: "doub", payload: f64(240)),
+      descriptor_item(key: "Grn ", type: "doub", payload: f64(80)),
+      descriptor_item(key: "Bl  ", type: "doub", payload: f64(40))
+    ]
+  )
+  u32(16) + descriptor_block(
+    name: "",
+    class_id: "vstk",
+    items: [
+      descriptor_item(key: "strokeStyleVersion", type: "long", payload: i32(2)),
+      descriptor_item(key: "strokeEnabled", type: "bool", payload: [1].pack("C")),
+      descriptor_item(key: "fillEnabled", type: "bool", payload: [1].pack("C")),
+      descriptor_item(key: "strokeStyleLineWidth", type: "UntF", payload: "#Pxl" + f64(2.0)),
+      descriptor_item(
+        key: "strokeStyleLineAlignment",
+        type: "enum",
+        payload: descriptor_enum_payload(enum_type: "strokeStyleLineAlignment", value: "strokeStyleAlignCenter")
+      ),
+      descriptor_item(
+        key: "strokeStyleLineCapType",
+        type: "enum",
+        payload: descriptor_enum_payload(enum_type: "strokeStyleLineCapType", value: "strokeStyleRoundCap")
+      ),
+      descriptor_item(
+        key: "strokeStyleLineJoinType",
+        type: "enum",
+        payload: descriptor_enum_payload(enum_type: "strokeStyleLineJoinType", value: "strokeStyleBevelJoin")
+      ),
+      descriptor_item(key: "strokeStyleMiterLimit", type: "doub", payload: f64(100)),
+      descriptor_item(key: "strokeStyleScaleLock", type: "bool", payload: [0].pack("C")),
+      descriptor_item(key: "strokeStyleStrokeAdjust", type: "bool", payload: [0].pack("C")),
+      descriptor_item(
+        key: "strokeStyleBlendMode",
+        type: "enum",
+        payload: descriptor_enum_payload(enum_type: "BlnM", value: "Nrml")
+      ),
+      descriptor_item(key: "strokeStyleOpacity", type: "UntF", payload: "#Prc" + f64(75)),
+      descriptor_item(key: "strokeStyleContent", type: "Objc", payload: color),
+      descriptor_item(key: "strokeStyleResolution", type: "doub", payload: f64(72))
+    ]
+  )
+end
+
 def layer_mask_data(enabled: true, linked: true)
   flags = 0
   flags |= 1 if linked
@@ -506,6 +554,33 @@ def gradient_vector_shape_fixture
   )
 end
 
+def stroked_vector_shape_fixture
+  pixel = ([180] * 16).pack("C*")
+  alpha = ([255] * 16).pack("C*")
+  channels = {
+    -1 => raw_channel(alpha),
+    0 => raw_channel(pixel),
+    1 => raw_channel(pixel),
+    2 => raw_channel(pixel)
+  }
+  record = layer_record(
+    name: "Editable Stroked Shape",
+    channels: channels,
+    blocks: [
+      tagged_block("SoCo", solid_color_fill_descriptor(red: 32, green: 128, blue: 224)),
+      tagged_block("vmsk", vector_mask_payload),
+      tagged_block("vstk", vector_stroke_descriptor)
+    ]
+  )
+  layer_info = i16(1) + record + channels.values.join
+  layer_info << "\0" if layer_info.bytesize.odd?
+  layer_and_mask = u32(layer_info.bytesize) + layer_info + u32(0)
+  psd(
+    layer_payload: u32(layer_and_mask.bytesize) + layer_and_mask,
+    composite: u16(0) + pixel + pixel + pixel + alpha
+  )
+end
+
 def gradient_fill_fixture
   pixel = ([180] * 16).pack("C*")
   alpha = ([255] * 16).pack("C*")
@@ -595,6 +670,7 @@ fixtures = {
   "solid-color-fill.psd" => solid_color_fill_fixture,
   "solid-vector-shape.psd" => solid_vector_shape_fixture,
   "gradient-vector-shape.psd" => gradient_vector_shape_fixture,
+  "stroked-vector-shape.psd" => stroked_vector_shape_fixture,
   "gradient-fill.psd" => gradient_fill_fixture,
   "vector-mask.psd" => vector_mask_fixture,
   "vector-mask-multi.psd" => multi_vector_mask_fixture,
@@ -613,6 +689,7 @@ expectations = {
   "solid-color-fill.psd" => %w[editable_solid_color_fill rgb_descriptor],
   "solid-vector-shape.psd" => %w[editable_vector_shape solid_fill vector_mask],
   "gradient-vector-shape.psd" => %w[editable_vector_shape gradient_fill vector_mask],
+  "stroked-vector-shape.psd" => %w[editable_vector_shape solid_fill vector_mask vector_stroke],
   "gradient-fill.psd" => %w[editable_gradient_fill linear_color_stops],
   "vector-mask.psd" => %w[editable_vector_mask closed_path bezier_points],
   "vector-mask-multi.psd" => %w[editable_vector_mask multiple_subpaths even_odd_hole],

@@ -1,6 +1,6 @@
 # Xomo MCP 与 CLI
 
-> 当前版本：v2.12.0-rc257
+> 当前版本：v2.12.0-rc258
 
 rc242 起，`xomo.layer.list` 的 Figma 图层条目包含 `figmaImageFill`，可读取 IMAGE 填充的源引用、缩放模式、变换、缩放因子、旋转和滤镜参数。
 

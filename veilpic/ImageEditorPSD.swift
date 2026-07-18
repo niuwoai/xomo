@@ -1056,6 +1056,7 @@ enum ImageEditorPSDCodec {
             PSDExportChannel(identifier: 2, data: rgba.blue)
         ]
         let vectorMask = exportVectorMask(layer: layer)
+        let vectorStroke = exportVectorStroke(layer: layer)
         let mask = layer.mask != nil || vectorMask == nil
             ? exportMask(layer: layer, frame: frame)
             : nil
@@ -1077,6 +1078,7 @@ enum ImageEditorPSDCodec {
             sectionType: nil,
             mask: mask,
             vectorMask: vectorMask,
+            vectorStroke: vectorStroke,
             solidFillContent: exportSolidColorFillContent(for: layer),
             gradientFillContent: exportGradientFillContent(for: layer),
             textObject: layer.textContent.flatMap {
@@ -1220,6 +1222,7 @@ enum ImageEditorPSDCodec {
             sectionType: layer.isGroupExpanded ? 1 : 2,
             mask: mask,
             vectorMask: nil,
+            vectorStroke: nil,
             solidFillContent: nil,
             gradientFillContent: nil,
             textObject: nil
@@ -1264,6 +1267,28 @@ enum ImageEditorPSDCodec {
             }
         }
         return PSDExportVectorMask(data: payload)
+    }
+
+    private static func exportVectorStroke(layer: ImageEditorLayer) -> PSDExportVectorStroke? {
+        guard let content = layer.shapeContent,
+              content.kind == .path,
+              content.strokeOpacity > 0.001,
+              content.strokeWidth >= ImageEditorShapeContent.minimumStrokeWidth,
+              let color = content.strokeColor.usingColorSpace(.deviceRGB)
+        else { return nil }
+        return PSDExportVectorStroke(
+            width: Double(content.strokeWidth),
+            opacity: Double(content.strokeOpacity),
+            position: content.strokePosition,
+            cap: content.strokeCap,
+            join: content.strokeJoin,
+            color: ImageEditorSolidColorFillContent(
+                red: Double(color.redComponent),
+                green: Double(color.greenComponent),
+                blue: Double(color.blueComponent)
+            ).normalized(),
+            dashPattern: content.strokeDashPattern
+        )
     }
 
     private static func exportSolidColorFillContent(
@@ -1388,6 +1413,7 @@ enum ImageEditorPSDCodec {
         extra.appendSolidColorFill(item.solidFillContent)
         extra.appendGradientFill(item.gradientFillContent)
         extra.appendVectorMask(item.vectorMask)
+        extra.appendVectorStroke(item.vectorStroke)
         extra.appendTextToolObject(item.textObject)
         record.appendUInt32(UInt32(extra.count))
         record.append(extra)
@@ -1422,6 +1448,7 @@ enum ImageEditorPSDCodec {
         var additionalKeys = Set<String>()
         var textInfo: PSDTextLayerInfo?
         var vectorMaskInfo: PSDVectorMaskInfo?
+        var vectorStrokeInfo: PSDVectorStrokeInfo?
         var solidFillContent: ImageEditorSolidColorFillContent?
         var gradientFillContent: ImageEditorGradientFillContent?
         while reader.offset + 12 <= extraEnd {
@@ -1454,6 +1481,9 @@ enum ImageEditorPSDCodec {
             } else if (key == "vmsk" || key == "vsms") {
                 let blockData = try reader.data(count: length)
                 vectorMaskInfo = parseVectorMask(blockData)
+            } else if key == "vstk" {
+                let blockData = try reader.data(count: length)
+                vectorStrokeInfo = parseVectorStroke(blockData) ?? vectorStrokeInfo
             } else if key == "SoCo" {
                 let blockData = try reader.data(count: length)
                 solidFillContent = parseSolidColorFill(blockData)
@@ -1484,6 +1514,7 @@ enum ImageEditorPSDCodec {
             additionalKeys: additionalKeys,
             textInfo: textInfo,
             vectorMaskInfo: vectorMaskInfo,
+            vectorStrokeInfo: vectorStrokeInfo,
             solidFillContent: solidFillContent,
             gradientFillContent: gradientFillContent
         )
@@ -1830,6 +1861,53 @@ enum ImageEditorPSDCodec {
         }
     }
 
+    private static func parseVectorStroke(_ data: Data) -> PSDVectorStrokeInfo? {
+        for hasVersionPrefix in [false, true] {
+            do {
+                var reader = PSDReader(data: data)
+                if hasVersionPrefix { _ = try reader.uint32() }
+                let descriptor = try reader.psdDescriptorBlock()
+                let width = descriptor["strokeStyleLineWidth"]?.numericValue ?? 1
+                let opacity = (descriptor["strokeStyleOpacity"]?.numericValue ?? 100) / 100
+                let enabled = descriptor["strokeEnabled"]?.booleanValue ?? true
+                guard width.isFinite, opacity.isFinite, enabled else { continue }
+                return PSDVectorStrokeInfo(
+                    width: CGFloat(max(1, min(96, width))),
+                    opacity: CGFloat(max(0, min(1, opacity))),
+                    position: ImageEditorStrokePosition(psdValue: descriptor["strokeStyleLineAlignment"]?.enumValue),
+                    cap: ImageEditorStrokeCap(psdValue: descriptor["strokeStyleLineCapType"]?.enumValue),
+                    join: ImageEditorStrokeJoin(psdValue: descriptor["strokeStyleLineJoinType"]?.enumValue),
+                    color: descriptorColor(descriptor["strokeStyleContent"])
+                )
+            } catch {
+                continue
+            }
+        }
+        return nil
+    }
+
+    private static func descriptorColor(_ value: PSDDescriptorValue?) -> NSColor? {
+        guard let value else { return nil }
+        if let object = value.objectValue,
+           let red = object["Rd  "]?.numericValue,
+           let green = object["Grn "]?.numericValue,
+           let blue = object["Bl  "]?.numericValue,
+           red.isFinite, green.isFinite, blue.isFinite {
+            return NSColor(
+                calibratedRed: CGFloat(max(0, min(255, red)) / 255),
+                green: CGFloat(max(0, min(255, green)) / 255),
+                blue: CGFloat(max(0, min(255, blue)) / 255),
+                alpha: 1
+            )
+        }
+        if let object = value.objectValue {
+            for nested in object.values where nested.objectValue != nil {
+                if let color = descriptorColor(nested) { return color }
+            }
+        }
+        return nil
+    }
+
     private static func parseEngineDataText(_ data: Data) -> PSDTextLayerInfo? {
         guard let style = parseEngineDataStyle(data), let text = style.text, !text.isEmpty else {
             return nil
@@ -2091,6 +2169,7 @@ enum ImageEditorPSDCodec {
            let shapeContent = vectorMaskContent(record: record, size: CGSize(width: width, height: height)) {
             var shape = shapeContent
             shape.fillColor = solidFillContent.color
+            applyVectorStroke(record: record, to: &shape)
             var layer = ImageEditorLayer.shape(
                 name: record.name,
                 frame: CGRect(
@@ -2116,6 +2195,7 @@ enum ImageEditorPSDCodec {
            let shapeContent = vectorMaskContent(record: record, size: CGSize(width: width, height: height)) {
             var shape = shapeContent
             shape.fillGradient = gradientFillContent
+            applyVectorStroke(record: record, to: &shape)
             var layer = ImageEditorLayer.shape(
                 name: record.name,
                 frame: CGRect(
@@ -2255,6 +2335,19 @@ enum ImageEditorPSDCodec {
             pathSubpaths: Array(subpaths.dropFirst()),
             isPathClosed: true
         ).normalized(size: size)
+    }
+
+    private static func applyVectorStroke(
+        record: PSDLayerRecord,
+        to shape: inout ImageEditorShapeContent
+    ) {
+        guard let stroke = record.vectorStrokeInfo else { return }
+        shape.strokeWidth = stroke.width
+        shape.strokeOpacity = stroke.opacity
+        shape.strokePosition = stroke.position
+        shape.strokeCap = stroke.cap
+        shape.strokeJoin = stroke.join
+        if let color = stroke.color { shape.strokeColor = color }
     }
 
     private static func parseVectorMask(_ data: Data) -> PSDVectorMaskInfo? {
@@ -2554,6 +2647,7 @@ private struct PSDExportLayer {
     let sectionType: Int?
     let mask: PSDExportMask?
     let vectorMask: PSDExportVectorMask?
+    let vectorStroke: PSDExportVectorStroke?
     let solidFillContent: ImageEditorSolidColorFillContent?
     let gradientFillContent: ImageEditorGradientFillContent?
     let textObject: PSDExportText?
@@ -2576,6 +2670,7 @@ private struct PSDExportLayer {
             sectionType: 3,
             mask: nil,
             vectorMask: nil,
+            vectorStroke: nil,
             solidFillContent: nil,
             gradientFillContent: nil,
             textObject: nil
@@ -2596,6 +2691,16 @@ private struct PSDExportMask {
 
 private struct PSDExportVectorMask {
     let data: Data
+}
+
+private struct PSDExportVectorStroke {
+    let width: Double
+    let opacity: Double
+    let position: ImageEditorStrokePosition
+    let cap: ImageEditorStrokeCap
+    let join: ImageEditorStrokeJoin
+    let color: ImageEditorSolidColorFillContent
+    let dashPattern: [CGFloat]
 }
 
 private struct PSDExportText {
@@ -2721,6 +2826,69 @@ private struct PSDVectorMaskInfo {
     let isEnabled: Bool
 }
 
+private struct PSDVectorStrokeInfo {
+    let width: CGFloat
+    let opacity: CGFloat
+    let position: ImageEditorStrokePosition
+    let cap: ImageEditorStrokeCap
+    let join: ImageEditorStrokeJoin
+    let color: NSColor?
+}
+
+private extension ImageEditorStrokePosition {
+    init(psdValue: String?) {
+        switch psdValue {
+        case "strokeStyleAlignOutside": self = .outside
+        case "strokeStyleAlignCenter": self = .center
+        default: self = .inside
+        }
+    }
+
+    var psdValue: String {
+        switch self {
+        case .outside: "strokeStyleAlignOutside"
+        case .center: "strokeStyleAlignCenter"
+        case .inside: "strokeStyleAlignInside"
+        }
+    }
+}
+
+private extension ImageEditorStrokeCap {
+    init(psdValue: String?) {
+        switch psdValue {
+        case "strokeStyleRoundCap": self = .round
+        case "strokeStyleSquareCap": self = .square
+        default: self = .butt
+        }
+    }
+
+    var psdValue: String {
+        switch self {
+        case .butt: "strokeStyleButtCap"
+        case .round: "strokeStyleRoundCap"
+        case .square: "strokeStyleSquareCap"
+        }
+    }
+}
+
+private extension ImageEditorStrokeJoin {
+    init(psdValue: String?) {
+        switch psdValue {
+        case "strokeStyleMiterJoin": self = .miter
+        case "strokeStyleBevelJoin": self = .bevel
+        default: self = .round
+        }
+    }
+
+    var psdValue: String {
+        switch self {
+        case .miter: "strokeStyleMiterJoin"
+        case .round: "strokeStyleRoundJoin"
+        case .bevel: "strokeStyleBevelJoin"
+        }
+    }
+}
+
 nonisolated private struct PSDLayerRecord {
     let top: Int
     let left: Int
@@ -2739,6 +2907,7 @@ nonisolated private struct PSDLayerRecord {
     let additionalKeys: Set<String>
     let textInfo: PSDTextLayerInfo?
     let vectorMaskInfo: PSDVectorMaskInfo?
+    let vectorStrokeInfo: PSDVectorStrokeInfo?
     let solidFillContent: ImageEditorSolidColorFillContent?
     let gradientFillContent: ImageEditorGradientFillContent?
 
@@ -3041,6 +3210,39 @@ private extension Data {
         appendUInt32(UInt32(mask.data.count))
         append(mask.data)
         if mask.data.count % 2 != 0 { append(0) }
+    }
+
+    mutating func appendVectorStroke(_ stroke: PSDExportVectorStroke?) {
+        guard let stroke else { return }
+        var color = Data()
+        color.appendDescriptorBody(name: "RGB Color", classID: "RGBC", items: [
+            color.descriptorItem(key: "Rd  ", type: "doub", payload: stroke.color.red * 255),
+            color.descriptorItem(key: "Grn ", type: "doub", payload: stroke.color.green * 255),
+            color.descriptorItem(key: "Bl  ", type: "doub", payload: stroke.color.blue * 255)
+        ])
+        var descriptor = Data()
+        descriptor.appendUInt32(16)
+        descriptor.appendDescriptorBlock(name: "", classID: "vstk", items: [
+            descriptorItem(key: "strokeStyleVersion", type: "long", payload: Data(intPayload: 2)),
+            descriptorItem(key: "strokeEnabled", type: "bool", payload: Data(boolean: true)),
+            descriptorItem(key: "fillEnabled", type: "bool", payload: Data(boolean: true)),
+            descriptorItem(key: "strokeStyleLineWidth", type: "UntF", payload: Data(unit: "#Pxl", value: stroke.width)),
+            descriptorItem(key: "strokeStyleLineAlignment", type: "enum", payload: Data.descriptorEnumPayload(enumType: "strokeStyleLineAlignment", value: stroke.position.psdValue)),
+            descriptorItem(key: "strokeStyleLineCapType", type: "enum", payload: Data.descriptorEnumPayload(enumType: "strokeStyleLineCapType", value: stroke.cap.psdValue)),
+            descriptorItem(key: "strokeStyleLineJoinType", type: "enum", payload: Data.descriptorEnumPayload(enumType: "strokeStyleLineJoinType", value: stroke.join.psdValue)),
+            descriptorItem(key: "strokeStyleMiterLimit", type: "doub", payload: Data(doublePayload: 100)),
+            descriptorItem(key: "strokeStyleScaleLock", type: "bool", payload: Data(boolean: false)),
+            descriptorItem(key: "strokeStyleStrokeAdjust", type: "bool", payload: Data(boolean: false)),
+            descriptorItem(key: "strokeStyleBlendMode", type: "enum", payload: Data.descriptorEnumPayload(enumType: "BlnM", value: "Nrml")),
+            descriptorItem(key: "strokeStyleOpacity", type: "UntF", payload: Data(unit: "#Prc", value: stroke.opacity * 100)),
+            descriptorItem(key: "strokeStyleContent", type: "Objc", payload: color),
+            descriptorItem(key: "strokeStyleResolution", type: "doub", payload: Data(doublePayload: 72))
+        ])
+        appendASCII("8BIM")
+        appendASCII("vstk")
+        appendUInt32(UInt32(descriptor.count))
+        append(descriptor)
+        if descriptor.count % 2 != 0 { append(0) }
     }
 
     mutating func appendSolidColorFill(_ content: ImageEditorSolidColorFillContent?) {
