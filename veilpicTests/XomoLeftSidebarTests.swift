@@ -544,6 +544,7 @@ struct XomoLeftSidebarTests {
         #expect(source.contains("viewModel.selectVisibleLayer(at: pressedImagePoint)"))
         #expect(source.contains("viewModel.beginMovingSelectedLayer()"))
         #expect(source.contains("viewModel.cancelMovingSelectedLayer()"))
+        #expect(source.contains("viewModel.cancelTransformingSelectedLayer()"))
         #expect(source.contains("layerTransformCursorTarget(at: viewPoint, in: size)"))
         #expect(source.contains("layerTransformTarget: layerTransformTarget"))
         #expect(source.contains(".contentShape(Rectangle().inset(by: -4))"))

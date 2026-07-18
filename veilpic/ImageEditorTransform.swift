@@ -372,6 +372,10 @@ extension ImageEditorViewModel {
             _ = discardLastUndoSnapshot()
             updateStatus()
         }
+        resetResizingSelectedLayerState()
+    }
+
+    private func resetResizingSelectedLayerState() {
         resizingLayerIDs = []
         resizingOriginalFrames = [:]
         resizingOriginalParagraphTextContents = [:]
@@ -424,6 +428,27 @@ extension ImageEditorViewModel {
             _ = discardLastUndoSnapshot()
             updateStatus()
         }
+        resetRotatingSelectedLayerState()
+    }
+
+    /// Restores the exact pre-transform document snapshot. Keeping this as a
+    /// transaction-level cancel avoids lossy inverse resize/rotation math and
+    /// gives Escape the same semantics for pixels, text boxes, groups and UI
+    /// components.
+    @discardableResult
+    func cancelTransformingSelectedLayer() -> Bool {
+        guard !resizingLayerIDs.isEmpty || !rotatingLayerIDs.isEmpty,
+              let originalDocument = undoStack.last
+        else { return false }
+        _ = discardLastUndoSnapshot()
+        document = originalDocument
+        resetResizingSelectedLayerState()
+        resetRotatingSelectedLayerState()
+        updateStatus()
+        return true
+    }
+
+    private func resetRotatingSelectedLayerState() {
         rotatingLayerIDs = []
         rotatingOriginalLayers = [:]
         rotatingOriginalTransformFrame = nil

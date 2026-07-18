@@ -194,6 +194,19 @@ struct ImageEditorView: View {
                     return viewModel.deleteSelectedXomoObjectIfNeeded()
                 },
                 cancelSelectedObject: {
+                    if viewModel.cancelTransformingSelectedLayer() {
+                        // Keep the local active handle until mouse-up so any
+                        // remaining drag events cannot begin a new transform
+                        // after Escape restored the original document.
+                        if let activeResizeHandle {
+                            ImageEditorCanvasCursor.transformCursor(for: .resize(activeResizeHandle)).set()
+                        } else if isRotatingLayer {
+                            ImageEditorCanvasCursor.transformCursor(for: .rotate).set()
+                        } else {
+                            NSCursor.arrow.set()
+                        }
+                        return true
+                    }
                     if viewModel.cancelMovingSelectedLayer() {
                         isSelectedObjectMoveGestureActive = false
                         isObjectMoveGestureActive = false
