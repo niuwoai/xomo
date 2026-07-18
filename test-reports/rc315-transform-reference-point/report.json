@@ -1,0 +1,56 @@
+{
+  "version": "2.12.0-rc315",
+  "scope": "图层和 UI 组件的可拖动变换参考点及离中心旋转",
+  "environment": "arm64 MacBook Pro, macOS 26.5.2, Xcode 26.4.1",
+  "build": {
+    "derived_data": "/private/tmp/xomo-rc308-derived",
+    "deployment_target": "macOS 13.0",
+    "status": "passed",
+    "scope": "incremental test build using shared DerivedData; no Release gate"
+  },
+  "isolated_tests": {
+    "passed": 12,
+    "failed": 0,
+    "suites": [
+      {
+        "name": "ImageEditorTransformReferencePointTests",
+        "passed": 5,
+        "failed": 0
+      },
+      {
+        "name": "ImageEditorCanvasCursorTests.transformReferencePoint",
+        "passed": 3,
+        "failed": 0
+      },
+      {
+        "name": "imageEditorRotateHandleSnapsAndUndoRestores",
+        "passed": 1,
+        "failed": 0
+      },
+      {
+        "name": "escapeCancelsRotationWithoutChangingDocumentHistoryOrUndo",
+        "passed": 1,
+        "failed": 0
+      },
+      {
+        "name": "componentSidebarWiresMoveSemanticsIntoCanvasCursorAndGestures",
+        "passed": 1,
+        "failed": 0
+      },
+      {
+        "name": "supportedLocalizationTablesKeepMatchingKeys",
+        "passed": 1,
+        "failed": 0
+      }
+    ]
+  },
+  "release_contract": {
+    "tests": 3,
+    "assertions": 7,
+    "failures": 0
+  },
+  "full_gate": {
+    "performed": false,
+    "next_version": "2.12.0-rc320"
+  }
+}

@@ -95,6 +95,59 @@ extension ImageEditorViewModel {
         canResizeSelectedLayer
     }
 
+    /// Photoshop-style transform reference point. Store it in normalized
+    /// selection coordinates so it follows lightweight move/resize previews,
+    /// while still allowing a point outside the selection bounds.
+    var selectedLayerTransformReferencePoint: CGPoint? {
+        guard let frame = movingObjectPreviewFrame ?? selectedLayerTransformFrame else { return nil }
+        if !rotatingLayerIDs.isEmpty, let rotatingReferencePoint {
+            return rotatingReferencePoint
+        }
+        let selectedIDs = Set(selectedTransformableLayerIndices.map { document.layers[$0].id })
+        guard selectedIDs == transformReferenceLayerIDs,
+              let unitPoint = transformReferenceUnitPoint
+        else {
+            return CGPoint(x: frame.midX, y: frame.midY)
+        }
+        return CGPoint(
+            x: frame.minX + unitPoint.x * frame.width,
+            y: frame.minY + unitPoint.y * frame.height
+        )
+    }
+
+    var hasCustomTransformReferencePoint: Bool {
+        let selectedIDs = Set(selectedTransformableLayerIndices.map { document.layers[$0].id })
+        return !selectedIDs.isEmpty
+            && selectedIDs == transformReferenceLayerIDs
+            && transformReferenceUnitPoint != nil
+    }
+
+    func setSelectedLayerTransformReferencePoint(_ point: CGPoint) {
+        guard let frame = movingObjectPreviewFrame ?? selectedLayerTransformFrame,
+              frame.width > 0.1,
+              frame.height > 0.1
+        else { return }
+        transformReferenceLayerIDs = Set(
+            selectedTransformableLayerIndices.map { document.layers[$0].id }
+        )
+        transformReferenceUnitPoint = CGPoint(
+            x: (point.x - frame.minX) / frame.width,
+            y: (point.y - frame.minY) / frame.height
+        )
+    }
+
+    @discardableResult
+    func resetSelectedLayerTransformReferencePoint() -> Bool {
+        guard hasCustomTransformReferencePoint else { return false }
+        clearSelectedLayerTransformReferencePoint()
+        return true
+    }
+
+    func clearSelectedLayerTransformReferencePoint() {
+        transformReferenceLayerIDs = []
+        transformReferenceUnitPoint = nil
+    }
+
     var canFlipSelectedLayer: Bool {
         canResizeSelectedLayer
     }
@@ -425,7 +478,13 @@ extension ImageEditorViewModel {
             layers[document.layers[index].id] = document.layers[index]
         }
         rotatingOriginalTransformFrame = transformFrame
-        rotatingStartAngleDegrees = layerRotationAngle(from: transformFrame, to: point)
+        rotatingReferenceWasCustom = hasCustomTransformReferencePoint
+        rotatingReferencePoint = selectedLayerTransformReferencePoint
+            ?? CGPoint(x: transformFrame.midX, y: transformFrame.midY)
+        rotatingStartAngleDegrees = layerRotationAngle(
+            around: rotatingReferencePoint ?? CGPoint(x: transformFrame.midX, y: transformFrame.midY),
+            to: point
+        )
         rotatingLayerDidChange = false
         rotatingPreviewDegrees = 0
         activeAlignmentGuides = []
@@ -439,12 +498,14 @@ extension ImageEditorViewModel {
               let transformFrame = rotatingOriginalTransformFrame
         else { return }
 
-        let currentAngle = layerRotationAngle(from: transformFrame, to: point)
+        let referencePoint = rotatingReferencePoint
+            ?? CGPoint(x: transformFrame.midX, y: transformFrame.midY)
+        let currentAngle = layerRotationAngle(around: referencePoint, to: point)
         var degrees = normalizedRotationDelta(currentAngle - rotatingStartAngleDegrees)
         if snappingToStep {
             degrees = (degrees / 15).rounded() * 15
         }
-        guard applyRotation(degrees: degrees, from: rotatingOriginalLayers, around: transformFrame) else { return }
+        guard applyRotation(degrees: degrees, from: rotatingOriginalLayers, around: referencePoint) else { return }
         rotatingPreviewDegrees = degrees
         rotatingLayerDidChange = rotatingLayerDidChange || abs(degrees) > 0.1
         statusText = L10n.text("imageEditor.status.layerRotated")
@@ -452,6 +513,8 @@ extension ImageEditorViewModel {
 
     func finishRotatingSelectedLayer() {
         guard !rotatingLayerIDs.isEmpty else { return }
+        let referencePoint = rotatingReferencePoint
+        let shouldPreserveReferencePoint = rotatingReferenceWasCustom
         if rotatingLayerDidChange {
             appendHistory(L10n.text("imageEditor.history.layerRotate"))
         } else {
@@ -459,6 +522,9 @@ extension ImageEditorViewModel {
             updateStatus()
         }
         resetRotatingSelectedLayerState()
+        if shouldPreserveReferencePoint, let referencePoint {
+            setSelectedLayerTransformReferencePoint(referencePoint)
+        }
     }
 
     /// Restores the exact pre-transform document snapshot. Keeping this as a
@@ -482,6 +548,8 @@ extension ImageEditorViewModel {
         rotatingLayerIDs = []
         rotatingOriginalLayers = [:]
         rotatingOriginalTransformFrame = nil
+        rotatingReferencePoint = nil
+        rotatingReferenceWasCustom = false
         rotatingStartAngleDegrees = 0
         rotatingLayerDidChange = false
         rotatingPreviewDegrees = nil
@@ -536,12 +604,18 @@ extension ImageEditorViewModel {
         }
 
         pushUndo()
+        let shouldPreserveReferencePoint = hasCustomTransformReferencePoint
         let originalLayers = indices.reduce(into: [:]) { layers, index in
             layers[document.layers[index].id] = document.layers[index]
         }
-        guard applyRotation(degrees: degrees, from: originalLayers, around: transformFrame) else {
+        let referencePoint = selectedLayerTransformReferencePoint
+            ?? CGPoint(x: transformFrame.midX, y: transformFrame.midY)
+        guard applyRotation(degrees: degrees, from: originalLayers, around: referencePoint) else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
+        }
+        if shouldPreserveReferencePoint {
+            setSelectedLayerTransformReferencePoint(referencePoint)
         }
         statusText = L10n.text("imageEditor.status.layerRotated")
         appendHistory(L10n.text("imageEditor.history.layerRotate"))
@@ -753,9 +827,8 @@ extension ImageEditorViewModel {
     func applyRotation(
         degrees: CGFloat,
         from originalLayers: [UUID: ImageEditorLayer],
-        around transformFrame: CGRect
+        around center: CGPoint
     ) -> Bool {
-        let center = CGPoint(x: transformFrame.midX, y: transformFrame.midY)
         let radians = degrees * .pi / 180
         let cosine = cos(radians)
         let sine = sin(radians)
@@ -973,8 +1046,11 @@ extension ImageEditorViewModel {
     }
 
     func layerRotationAngle(from frame: CGRect, to point: CGPoint) -> CGFloat {
-        let center = CGPoint(x: frame.midX, y: frame.midY)
-        return atan2(point.y - center.y, point.x - center.x) * 180 / .pi
+        layerRotationAngle(around: CGPoint(x: frame.midX, y: frame.midY), to: point)
+    }
+
+    func layerRotationAngle(around referencePoint: CGPoint, to point: CGPoint) -> CGFloat {
+        atan2(point.y - referencePoint.y, point.x - referencePoint.x) * 180 / .pi
     }
 
     func normalizedRotationDelta(_ degrees: CGFloat) -> CGFloat {

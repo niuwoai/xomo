@@ -87,6 +87,8 @@ struct ImageEditorView: View {
     @State private var activeShapeGradientStopIndex: Int?
     @State var selectedShapeGradientStopIndex = 0
     @State private var isRotatingLayer = false
+    @State private var isMovingTransformReferencePoint = false
+    @State private var isTransformReferencePointDragCancelled = false
     @State private var isMovingPathAnchor = false
     @State private var activeGuideDrag: ImageEditorGuideDrag?
     @State private var layerNameDraft = ""
@@ -195,6 +197,12 @@ struct ImageEditorView: View {
                     return viewModel.deleteSelectedXomoObjectIfNeeded()
                 },
                 cancelSelectedObject: {
+                    if isMovingTransformReferencePoint {
+                        isTransformReferencePointDragCancelled = true
+                        _ = viewModel.resetSelectedLayerTransformReferencePoint()
+                        NSCursor.crosshair.set()
+                        return true
+                    }
                     if viewModel.cancelTransformingSelectedLayer() {
                         // Keep the local active handle until mouse-up so any
                         // remaining drag events cannot begin a new transform
@@ -254,6 +262,11 @@ struct ImageEditorView: View {
         .onChange(of: viewModel.document.selectedLayerID) { _ in
             syncLayerNameDraft()
             syncFigmaComponentPropertyDrafts()
+        }
+        .onChange(of: viewModel.document.selectedLayerIDs) { _ in
+            viewModel.clearSelectedLayerTransformReferencePoint()
+            isMovingTransformReferencePoint = false
+            isTransformReferencePointDragCancelled = false
         }
         .onChange(of: viewModel.selectedLayerFigmaComponentProperties) { _ in
             syncFigmaComponentPropertyDrafts()
@@ -2588,13 +2601,18 @@ struct ImageEditorView: View {
                 at: viewPoint,
                 frame: viewRect(from: layerFrame, in: size),
                 canResize: viewModel.canResizeSelectedLayer,
-                canRotate: viewModel.canRotateSelectedLayer
+                canRotate: viewModel.canRotateSelectedLayer,
+                referencePoint: viewModel.selectedLayerTransformReferencePoint.map {
+                    self.viewPoint(from: $0, in: size)
+                },
+                canMoveReferencePoint: viewModel.canRotateSelectedLayer
             )
         }
         return ImageEditorCanvasCursor.resolvedTransformTarget(
             hoveredTarget: hoveredTarget,
             activeResizeHandle: activeResizeHandle,
-            isRotating: isRotatingLayer
+            isRotating: isRotatingLayer,
+            isMovingReferencePoint: isMovingTransformReferencePoint
         )
     }
 
@@ -4507,6 +4525,7 @@ struct ImageEditorView: View {
             if canvasInteractionTool == .move,
                viewModel.document.areTransformControlsVisible,
                viewModel.canRotateSelectedLayer {
+                transformReferencePointView(in: size)
                 rotateHandleView(in: rect, canvasSize: size)
             }
         }
@@ -5058,6 +5077,53 @@ struct ImageEditorView: View {
                 )
                 .help(L10n.text("imageEditor.action.layerRotateHandle"))
         }
+    }
+
+    private func transformReferencePointView(in canvasSize: CGSize) -> some View {
+        let imagePoint = viewModel.selectedLayerTransformReferencePoint ?? .zero
+        let point = viewPoint(from: imagePoint, in: canvasSize)
+        return ZStack {
+            Circle()
+                .fill(Color(nsColor: ImageEditorTheme.panel).opacity(0.88))
+            Circle()
+                .stroke(Color.white.opacity(0.92), lineWidth: 1)
+            Path { path in
+                path.move(to: CGPoint(x: 2, y: 7))
+                path.addLine(to: CGPoint(x: 12, y: 7))
+                path.move(to: CGPoint(x: 7, y: 2))
+                path.addLine(to: CGPoint(x: 7, y: 12))
+            }
+            .stroke(Color(nsColor: ImageEditorTheme.selected), lineWidth: 1.25)
+        }
+        .frame(width: 14, height: 14)
+        .position(point)
+        .contentShape(Circle().inset(by: -5))
+        .highPriorityGesture(
+            DragGesture(
+                minimumDistance: 0,
+                coordinateSpace: .named("image-editor-canvas-space")
+            )
+            .onChanged { value in
+                guard !isTransformReferencePointDragCancelled else { return }
+                isMovingTransformReferencePoint = true
+                viewModel.setSelectedLayerTransformReferencePoint(
+                    unboundedImagePoint(from: value.location, in: canvasSize)
+                )
+                NSCursor.crosshair.set()
+            }
+            .onEnded { value in
+                if !isTransformReferencePointDragCancelled {
+                    viewModel.setSelectedLayerTransformReferencePoint(
+                        unboundedImagePoint(from: value.location, in: canvasSize)
+                    )
+                }
+                isMovingTransformReferencePoint = false
+                isTransformReferencePointDragCancelled = false
+                refreshCanvasCursor(in: canvasSize)
+            }
+        )
+        .help(L10n.text("imageEditor.action.layerTransformReferencePoint"))
+        .accessibilityIdentifier("image-editor-transform-reference-point")
     }
 
     private func viewRect(from imageRect: CGRect, in size: CGSize) -> CGRect {
@@ -7797,6 +7863,7 @@ enum ImageEditorCanvasInteractionMode: Equatable {
 enum ImageEditorLayerTransformCursorTarget: Equatable {
     case resize(ImageEditorLayerResizeHandle)
     case rotate
+    case referencePoint
 }
 
 enum ImageEditorSelectionCursorMode: String, Equatable, CaseIterable {
@@ -7929,6 +7996,8 @@ enum ImageEditorCanvasCursor {
         frame: CGRect?,
         canResize: Bool,
         canRotate: Bool,
+        referencePoint: CGPoint? = nil,
+        canMoveReferencePoint: Bool = false,
         hitRadius: CGFloat = 9
     ) -> ImageEditorLayerTransformCursorTarget? {
         guard let point, let frame else { return nil }
@@ -7940,6 +8009,9 @@ enum ImageEditorCanvasCursor {
         }
         if canRotate {
             candidates.append((.rotate, transformRotateHandlePoint(in: frame)))
+        }
+        if canMoveReferencePoint, let referencePoint {
+            candidates.append((.referencePoint, referencePoint))
         }
 
         let maximumDistanceSquared = hitRadius * hitRadius
@@ -7957,13 +8029,17 @@ enum ImageEditorCanvasCursor {
     static func resolvedTransformTarget(
         hoveredTarget: ImageEditorLayerTransformCursorTarget?,
         activeResizeHandle: ImageEditorLayerResizeHandle?,
-        isRotating: Bool
+        isRotating: Bool,
+        isMovingReferencePoint: Bool = false
     ) -> ImageEditorLayerTransformCursorTarget? {
         if let activeResizeHandle {
             return .resize(activeResizeHandle)
         }
         if isRotating {
             return .rotate
+        }
+        if isMovingReferencePoint {
+            return .referencePoint
         }
         return hoveredTarget
     }
@@ -8008,6 +8084,8 @@ enum ImageEditorCanvasCursor {
             return diagonalResizeCursor(isForward: false)
         case .rotate:
             return rotateTransformCursor()
+        case .referencePoint:
+            return .crosshair
         }
     }
 

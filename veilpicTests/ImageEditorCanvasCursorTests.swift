@@ -545,6 +545,16 @@ struct ImageEditorCanvasCursorTests {
                 canRotate: true
             ) == nil
         )
+        #expect(
+            ImageEditorCanvasCursor.transformTarget(
+                at: CGPoint(x: 80, y: 70),
+                frame: frame,
+                canResize: true,
+                canRotate: true,
+                referencePoint: CGPoint(x: 80, y: 70),
+                canMoveReferencePoint: true
+            ) == .referencePoint
+        )
     }
 
     @Test func layerTransformControlsUseFamiliarResizeAndRotateCursors() {
@@ -553,6 +563,7 @@ struct ImageEditorCanvasCursorTests {
         let forward = ImageEditorCanvasCursor.transformCursor(for: .resize(.topLeft))
         let backward = ImageEditorCanvasCursor.transformCursor(for: .resize(.topRight))
         let rotate = ImageEditorCanvasCursor.transformCursor(for: .rotate)
+        let referencePoint = ImageEditorCanvasCursor.transformCursor(for: .referencePoint)
 
         #expect(vertical === NSCursor.resizeUpDown)
         #expect(horizontal === NSCursor.resizeLeftRight)
@@ -560,6 +571,7 @@ struct ImageEditorCanvasCursorTests {
         #expect(rotate !== NSCursor.arrow)
         #expect(rotate !== NSCursor.crosshair)
         #expect(rotate.image.tiffRepresentation != forward.image.tiffRepresentation)
+        #expect(referencePoint === NSCursor.crosshair)
     }
 
     @Test func activeLayerTransformKeepsItsCursorAfterPointerLeavesTheHandle() {
@@ -590,6 +602,14 @@ struct ImageEditorCanvasCursorTests {
                 activeResizeHandle: nil,
                 isRotating: false
             ) == .resize(.right)
+        )
+        #expect(
+            ImageEditorCanvasCursor.resolvedTransformTarget(
+                hoveredTarget: nil,
+                activeResizeHandle: nil,
+                isRotating: false,
+                isMovingReferencePoint: true
+            ) == .referencePoint
         )
     }
 

@@ -329,9 +329,13 @@ final class ImageEditorViewModel: ObservableObject {
     var rotatingLayerIDs = Set<UUID>()
     var rotatingOriginalLayers: [UUID: ImageEditorLayer] = [:]
     var rotatingOriginalTransformFrame: CGRect?
+    var rotatingReferencePoint: CGPoint?
+    var rotatingReferenceWasCustom = false
     var rotatingStartAngleDegrees: CGFloat = 0
     var rotatingLayerDidChange = false
     @Published var rotatingPreviewDegrees: CGFloat?
+    @Published var transformReferenceUnitPoint: CGPoint?
+    var transformReferenceLayerIDs = Set<UUID>()
     var editingShapeGradientLayerID: UUID?
     var editingShapeGradientOriginalContent: ImageEditorShapeContent?
     var editingShapeGradientStopIndex: Int?
@@ -2486,6 +2490,7 @@ final class ImageEditorViewModel: ObservableObject {
 
     func undo() {
         guard let previous = undoStack.popLast() else { return }
+        clearSelectedLayerTransformReferencePoint()
         let previousThemeState = undoXomoThemeStates.popLast() ?? currentXomoThemeUndoState
         redoStack.append(document)
         redoXomoThemeStates.append(currentXomoThemeUndoState)
@@ -2502,6 +2507,7 @@ final class ImageEditorViewModel: ObservableObject {
 
     func redo() {
         guard let next = redoStack.popLast() else { return }
+        clearSelectedLayerTransformReferencePoint()
         let nextThemeState = redoXomoThemeStates.popLast() ?? currentXomoThemeUndoState
         undoStack.append(document)
         undoXomoThemeStates.append(currentXomoThemeUndoState)
