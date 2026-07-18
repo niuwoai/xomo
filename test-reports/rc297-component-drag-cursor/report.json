@@ -1,0 +1,24 @@
+{
+  "version": "2.12.0-rc297",
+  "scope": "组件对象拖拽手势与拖动光标",
+  "command": "xcodebuild test -project veilpic.xcodeproj -scheme veilpic -destination 'platform=macOS' -derivedDataPath /private/tmp/xomo-rc297-derived -resultBundlePath /private/tmp/xomo-rc297.xcresult -only-testing:veilpicTests/ImageEditorCanvasCursorTests/draggingAComponentUsesTheClosedHandCursorAcrossSidebarModes() -only-testing:veilpicTests/XomoLeftSidebarTests/componentSidebarWiresMoveSemanticsIntoCanvasCursorAndGestures()",
+  "environment": {
+    "platform": "macOS",
+    "architecture": "arm64",
+    "osVersion": "26.5.2"
+  },
+  "result": "passed",
+  "passedTests": 2,
+  "failedTests": 0,
+  "skippedTests": 0,
+  "tests": [
+    "ImageEditorCanvasCursorTests/draggingAComponentUsesTheClosedHandCursorAcrossSidebarModes()",
+    "XomoLeftSidebarTests/componentSidebarWiresMoveSemanticsIntoCanvasCursorAndGestures()"
+  ],
+  "releaseContract": {
+    "command": "ruby scripts/test_release_contract.rb",
+    "result": "passed",
+    "tests": 3,
+    "assertions": 7
+  }
+}

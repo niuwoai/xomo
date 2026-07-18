@@ -1345,6 +1345,7 @@ struct ImageEditorView: View {
                             brushDiameter: viewModel.brushSize * displayScale,
                             isPointerOverCanvas: isPointerOverDrawableCanvas,
                             handIsDragging: isCanvasPanGestureActive,
+                            isObjectMoveGestureActive: isSelectedObjectMoveGestureActive || isObjectMoveGestureActive,
                             isSpacebarPanning: isSpacebarPanning,
                             isCanvasPanGestureActive: isCanvasPanGestureActive,
                             modifierFlags: canvasModifierFlags,
@@ -1991,6 +1992,9 @@ struct ImageEditorView: View {
                         isObjectMoveGestureActive = true
                     }
                     updateObjectMove(translation: value.translation, in: size)
+                    if isObjectMoveGestureActive {
+                        NSCursor.closedHand.set()
+                    }
                 case .brush, .eraser:
                     if let pointerImagePoint {
                         brushStrokeSamples.append(ImageEditorBrushStrokeSample(
@@ -2281,6 +2285,7 @@ struct ImageEditorView: View {
                 deliveryDrag = nil
                 isMovingPathAnchor = false
                 activeResizeHandle = nil
+                refreshCanvasCursor(in: size)
             }
     }
 
@@ -2296,14 +2301,17 @@ struct ImageEditorView: View {
                     lastMoveTranslation = .zero
                     viewModel.beginMovingSelectedLayer()
                     isSelectedObjectMoveGestureActive = true
+                    NSCursor.closedHand.set()
                 }
                 updateObjectMove(translation: value.translation, in: size)
+                NSCursor.closedHand.set()
             }
             .onEnded { _ in
                 guard isSelectedObjectMoveGestureActive else { return }
                 viewModel.finishMovingSelectedLayer()
                 isSelectedObjectMoveGestureActive = false
                 lastMoveTranslation = .zero
+                refreshCanvasCursor(in: size)
             }
     }
 
@@ -2322,7 +2330,7 @@ struct ImageEditorView: View {
                 .frame(width: max(1, rect.width), height: max(1, rect.height))
                 .position(x: rect.midX, y: rect.midY)
                 .contentShape(Rectangle())
-                .gesture(selectedXomoObjectCanvasMoveGesture(in: size))
+                .highPriorityGesture(selectedXomoObjectCanvasMoveGesture(in: size))
                 .accessibilityHidden(true)
         }
     }
@@ -2537,6 +2545,7 @@ struct ImageEditorView: View {
             isPointerOverBlockedContent: canvasPoint.map(viewModel.hasBlockedCanvasContent(at:)) ?? false,
             penIsClosing: canvasInteractionTool == .pen && viewModel.isPenCloseCandidate(at: canvasPoint),
             handIsDragging: isCanvasPanGestureActive,
+            isObjectMoveGestureActive: isSelectedObjectMoveGestureActive || isObjectMoveGestureActive,
             isSpacebarPanning: isSpacebarPanning,
             isCanvasPanGestureActive: isCanvasPanGestureActive,
             modifierFlags: NSEvent.modifierFlags,
@@ -2561,6 +2570,7 @@ struct ImageEditorView: View {
             isPointerOverCanvas: true,
             isPointerOverMovableContent: true,
             handIsDragging: isCanvasPanGestureActive,
+            isObjectMoveGestureActive: isSelectedObjectMoveGestureActive || isObjectMoveGestureActive,
             isSpacebarPanning: isSpacebarPanning,
             isCanvasPanGestureActive: isCanvasPanGestureActive,
             modifierFlags: canvasModifierFlags,
@@ -7778,6 +7788,7 @@ enum ImageEditorCanvasCursor {
         isPointerOverBlockedContent: Bool = false,
         penIsClosing: Bool = false,
         handIsDragging: Bool = false,
+        isObjectMoveGestureActive: Bool = false,
         isSpacebarPanning: Bool = false,
         isCanvasPanGestureActive: Bool = false,
         modifierFlags: NSEvent.ModifierFlags = [],
@@ -7787,6 +7798,9 @@ enum ImageEditorCanvasCursor {
         // The dark workspace surrounding the document is not drawable. Keep
         // the native arrow there so a brush/selection cursor never suggests
         // that a click outside the image will edit pixels.
+        if isObjectMoveGestureActive {
+            return .closedHand
+        }
         if !isPointerOverCanvas && !isCanvasPanGestureActive {
             return .arrow
         }

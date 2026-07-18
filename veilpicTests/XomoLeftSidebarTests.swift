@@ -553,6 +553,8 @@ struct XomoLeftSidebarTests {
         #expect(source.contains("selectedXomoObjectInteractionOverlay(in: geometry.size)"))
         #expect(source.contains("func selectedXomoObjectInteractionOverlay"))
         #expect(source.contains(".fill(Color.white.opacity(0.001))"))
+        #expect(source.contains(".highPriorityGesture(selectedXomoObjectCanvasMoveGesture(in: size))"))
+        #expect(source.contains("NSCursor.closedHand.set()"))
         #expect(source.contains("viewModel.hasXomoObject(at: startPoint)"))
         #expect(source.contains("coordinateSpace: .named(\"image-editor-canvas-space\")"))
         #expect(source.contains("selectedXomoObjectFrame"))

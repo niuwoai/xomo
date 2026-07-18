@@ -88,6 +88,24 @@ struct ImageEditorCanvasCursorTests {
         )
     }
 
+    @Test func draggingAComponentUsesTheClosedHandCursorAcrossSidebarModes() {
+        let componentDrag = ImageEditorCanvasCursor.cursor(
+            for: .components,
+            selectedTool: .brush,
+            brushDiameter: 18,
+            isObjectMoveGestureActive: true
+        )
+        let moveToolDrag = ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .move,
+            brushDiameter: 18,
+            isObjectMoveGestureActive: true
+        )
+
+        #expect(componentDrag === NSCursor.closedHand)
+        #expect(moveToolDrag === NSCursor.closedHand)
+    }
+
     @Test func componentLibraryNeverLeaksAnyPreviousToolCursor() {
         let staleModifiers: NSEvent.ModifierFlags = [.command, .option, .shift, .control, .capsLock]
 
