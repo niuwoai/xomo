@@ -28,6 +28,11 @@ struct ScrollWheelZoomView: NSViewRepresentable {
     let onMiddleMousePanBegan: () -> Void
     let onMiddleMousePanChanged: (_ delta: CGSize) -> Void
     let onMiddleMousePanEnded: () -> Void
+    /// 仅在画布内已经命中可移动组件时消费左键拖拽，绕过 macOS 13
+    /// dropDestination 与 SwiftUI DragGesture 的竞争。
+    let onObjectMoveBegan: (_ location: CGPoint, _ modifierFlags: NSEvent.ModifierFlags) -> Bool
+    let onObjectMoveChanged: (_ translation: CGSize) -> Void
+    let onObjectMoveEnded: () -> Void
 
     func makeNSView(context: Context) -> ScrollWheelZoomNSView {
         let view = ScrollWheelZoomNSView()
@@ -36,6 +41,9 @@ struct ScrollWheelZoomView: NSViewRepresentable {
         view.onMiddleMousePanBegan = onMiddleMousePanBegan
         view.onMiddleMousePanChanged = onMiddleMousePanChanged
         view.onMiddleMousePanEnded = onMiddleMousePanEnded
+        view.onObjectMoveBegan = onObjectMoveBegan
+        view.onObjectMoveChanged = onObjectMoveChanged
+        view.onObjectMoveEnded = onObjectMoveEnded
         return view
     }
 
@@ -45,6 +53,9 @@ struct ScrollWheelZoomView: NSViewRepresentable {
         nsView.onMiddleMousePanBegan = onMiddleMousePanBegan
         nsView.onMiddleMousePanChanged = onMiddleMousePanChanged
         nsView.onMiddleMousePanEnded = onMiddleMousePanEnded
+        nsView.onObjectMoveBegan = onObjectMoveBegan
+        nsView.onObjectMoveChanged = onObjectMoveChanged
+        nsView.onObjectMoveEnded = onObjectMoveEnded
     }
 
     static func dismantleNSView(_ nsView: ScrollWheelZoomNSView, coordinator: ()) {
@@ -58,11 +69,17 @@ final class ScrollWheelZoomNSView: NSView {
     var onMiddleMousePanBegan: (() -> Void)?
     var onMiddleMousePanChanged: ((CGSize) -> Void)?
     var onMiddleMousePanEnded: (() -> Void)?
+    var onObjectMoveBegan: ((_ location: CGPoint, _ modifierFlags: NSEvent.ModifierFlags) -> Bool)?
+    var onObjectMoveChanged: ((_ translation: CGSize) -> Void)?
+    var onObjectMoveEnded: (() -> Void)?
     private var monitor: Any?
     private var middleMouseMonitor: Any?
     private var mouseMovedMonitor: Any?
+    private var leftMouseMonitor: Any?
     private var isMiddleMousePanning = false
     private var lastMiddleMousePoint: CGPoint?
+    private var isObjectMoving = false
+    private var objectMoveStartPoint: CGPoint?
 
     // 采用左上原点，坐标系与 SwiftUI 画布对齐，锚点不会上下翻转。
     override var isFlipped: Bool { true }
@@ -102,6 +119,15 @@ final class ScrollWheelZoomNSView: NSView {
                 return event
             }
         }
+        if leftMouseMonitor == nil {
+            leftMouseMonitor = NSEvent.addLocalMonitorForEvents(
+                matching: [.leftMouseDown, .leftMouseDragged, .leftMouseUp]
+            ) { [weak self] event in
+                guard let self else { return event }
+                guard self.handleObjectMove(event) else { return event }
+                return nil
+            }
+        }
     }
 
     func teardownMonitor() {
@@ -117,6 +143,15 @@ final class ScrollWheelZoomNSView: NSView {
             NSEvent.removeMonitor(mouseMovedMonitor)
         }
         mouseMovedMonitor = nil
+        if let leftMouseMonitor {
+            NSEvent.removeMonitor(leftMouseMonitor)
+        }
+        leftMouseMonitor = nil
+        if isObjectMoving {
+            onObjectMoveEnded?()
+        }
+        isObjectMoving = false
+        objectMoveStartPoint = nil
         if isMiddleMousePanning {
             onMiddleMousePanEnded?()
         }
@@ -133,6 +168,39 @@ final class ScrollWheelZoomNSView: NSView {
         let location = convert(event.locationInWindow, from: nil)
         guard bounds.contains(location) else { return }
         onMouseMoved?(location)
+    }
+
+    /// The canvas is also a drop destination on macOS 13. A local left-button
+    /// monitor gives already-selected Xomo objects a deterministic drag path
+    /// without changing the event stream for pixels, selections, or imports.
+    private func handleObjectMove(_ event: NSEvent) -> Bool {
+        guard let window, event.window === window, event.buttonNumber == 0 else { return false }
+        let location = convert(event.locationInWindow, from: nil)
+
+        switch event.type {
+        case .leftMouseDown:
+            guard bounds.contains(location), !isObjectMoving else { return false }
+            let flags = event.modifierFlags.intersection([.command, .option, .shift, .control])
+            guard onObjectMoveBegan?(location, flags) == true else { return false }
+            isObjectMoving = true
+            objectMoveStartPoint = location
+            return true
+        case .leftMouseDragged:
+            guard isObjectMoving, let objectMoveStartPoint else { return false }
+            onObjectMoveChanged?(CGSize(
+                width: location.x - objectMoveStartPoint.x,
+                height: location.y - objectMoveStartPoint.y
+            ))
+            return true
+        case .leftMouseUp:
+            guard isObjectMoving else { return false }
+            onObjectMoveEnded?()
+            isObjectMoving = false
+            objectMoveStartPoint = nil
+            return true
+        default:
+            return false
+        }
     }
 
     /// 返回 true 表示已处理并应消费该滚轮事件。

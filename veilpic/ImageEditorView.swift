@@ -1331,6 +1331,31 @@ struct ImageEditorView: View {
                         onMiddleMousePanEnded: {
                             isCanvasPanGestureActive = false
                             refreshCanvasCursor(in: geometry.size)
+                        },
+                        onObjectMoveBegan: { location, modifierFlags in
+                            guard canvasInteractionTool == .move,
+                                  modifierFlags.isEmpty,
+                                  let imagePoint = imagePoint(from: location, in: geometry.size),
+                                  viewModel.selectXomoObject(at: imagePoint),
+                                  viewModel.canResizeSelectedLayer
+                            else { return false }
+                            lastMoveTranslation = .zero
+                            viewModel.beginMovingSelectedLayer()
+                            isSelectedObjectMoveGestureActive = true
+                            NSCursor.closedHand.set()
+                            return true
+                        },
+                        onObjectMoveChanged: { translation in
+                            guard isSelectedObjectMoveGestureActive else { return }
+                            updateObjectMove(translation: translation, in: geometry.size)
+                            NSCursor.closedHand.set()
+                        },
+                        onObjectMoveEnded: {
+                            guard isSelectedObjectMoveGestureActive else { return }
+                            viewModel.finishMovingSelectedLayer()
+                            isSelectedObjectMoveGestureActive = false
+                            lastMoveTranslation = .zero
+                            refreshCanvasCursor(in: geometry.size)
                         }
                     )
                     .allowsHitTesting(false)

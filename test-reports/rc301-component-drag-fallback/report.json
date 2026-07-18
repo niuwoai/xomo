@@ -1,0 +1,27 @@
+{
+  "version": "2.12.0-rc301",
+  "scope": "AppKit left-button fallback for component dragging",
+  "command": "xcodebuild test -project veilpic.xcodeproj -scheme veilpic -destination 'platform=macOS' -derivedDataPath /private/tmp/xomo-rc301-derived -resultBundlePath /private/tmp/xomo-rc301-retry.xcresult -only-testing:veilpicTests/XomoCanvasObjectTests/movingAnObjectPublishesAndClearsItsDashedPreviewFrame -only-testing:veilpicTests/XomoCanvasObjectTests/repeatedDragUpdatesAccumulateInThePreviewBeforeCommit -only-testing:veilpicTests/ImageEditorCanvasCursorTests/draggingAComponentUsesTheClosedHandCursorAcrossSidebarModes -only-testing:veilpicTests/ImageEditorCanvasCursorTests/selectedComponentLibraryObjectAlwaysRoutesToSystemArrowUnlessPanning",
+  "environment": {
+    "architecture": "arm64",
+    "model": "MacBook Pro",
+    "os": "macOS 26.5.2"
+  },
+  "result": {
+    "passed": 4,
+    "failed": 0,
+    "skipped": 0,
+    "status": "passed"
+  },
+  "tests": [
+    "XomoCanvasObjectTests/movingAnObjectPublishesAndClearsItsDashedPreviewFrame()",
+    "XomoCanvasObjectTests/repeatedDragUpdatesAccumulateInThePreviewBeforeCommit()",
+    "ImageEditorCanvasCursorTests/draggingAComponentUsesTheClosedHandCursorAcrossSidebarModes()",
+    "ImageEditorCanvasCursorTests/selectedComponentLibraryObjectAlwaysRoutesToSystemArrowUnlessPanning()"
+  ],
+  "release_contract": {
+    "tests": 3,
+    "assertions": 7,
+    "failures": 0
+  }
+}
