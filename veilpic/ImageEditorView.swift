@@ -7765,10 +7765,10 @@ enum ImageEditorCanvasCursor {
     }
 
     /// Keep the cursor vocabulary close to Photoshop/Sketch: selection tools
-    /// use the platform crosshair, while modifier modes retain the familiar
-    /// add/subtract badge so the operation is still obvious.
+    /// show a small dashed selection frame, while modifier modes retain the
+    /// familiar add/subtract badge so the operation is still obvious.
     private static func familiarSelectionCursor(mode: ImageEditorSelectionCursorMode) -> NSCursor {
-        mode == .replace ? .crosshair : selectionMarqueeCursor(mode: mode)
+        selectionMarqueeCursor(mode: mode)
     }
 
     /// Brush-like tools share one predictable footprint cursor. The active

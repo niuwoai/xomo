@@ -294,7 +294,7 @@ struct ImageEditorCanvasCursorTests {
         #expect(ImageEditorCanvasCursor.family(for: .smudge) == .retouchBrush)
 
         let semanticTools: [ImageEditorTool] = [
-            .lasso, .magicWand, .quickSelection, .cloneStamp, .healingBrush,
+            .marquee, .lasso, .magicWand, .quickSelection, .cloneStamp, .healingBrush,
             .crop, .patchTool, .gradient, .rectangle, .ellipse, .pen
         ]
         for tool in semanticTools {
@@ -329,11 +329,7 @@ struct ImageEditorCanvasCursorTests {
         ]
         for tool in tools {
             let base = ImageEditorCanvasCursor.cursor(for: tool, brushDiameter: 18)
-            if tool == .marquee {
-                #expect(base === NSCursor.crosshair)
-            } else {
-                #expect(base !== NSCursor.crosshair)
-            }
+            #expect(base !== NSCursor.crosshair)
             let add = ImageEditorCanvasCursor.cursor(for: tool, brushDiameter: 18, modifierFlags: [.shift])
             let subtract = ImageEditorCanvasCursor.cursor(for: tool, brushDiameter: 18, modifierFlags: [.option])
             #expect(add.image.tiffRepresentation != base.image.tiffRepresentation)
