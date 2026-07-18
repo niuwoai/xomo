@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.12.0-rc265 - 2026-07-18
+
+### Added
+
+- 选中画布上的切片或热点后，Delete/Backspace 现在会删除当前交付对象；删除仍进入 Undo/History，并复用面板与 MCP/CLI 的同一删除模型。
+- 切片与热点的画布选择状态明确互斥，避免键盘删除落到已经离开的对象上。
+
+### Verification
+
+- 新增共享 Delete 命令的切片/热点回归断言；完成 rc265 build-for-testing 与定向回归。
+
 ## 2.12.0-rc264 - 2026-07-18
 
 ### Added

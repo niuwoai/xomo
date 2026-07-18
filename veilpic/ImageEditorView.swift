@@ -154,6 +154,9 @@ struct ImageEditorView: View {
                         viewModel.deleteSelectedPathAnchor()
                         return true
                     }
+                    if viewModel.deleteSelectedDeliveryObjectIfNeeded() {
+                        return true
+                    }
                     return viewModel.deleteSelectedXomoObjectIfNeeded()
                 },
                 deleteSelectedHistory: {

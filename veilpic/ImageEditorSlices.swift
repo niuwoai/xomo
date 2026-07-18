@@ -81,6 +81,7 @@ extension ImageEditorViewModel {
     @discardableResult
     func selectSlice(id: UUID) -> ImageEditorSlice? {
         guard let slice = slice(with: id) else { return nil }
+        selectedHotspotID = nil
         exportSettings.scope = .slice
         exportSettings.sliceID = id
         isSlicesPanelVisible = true
@@ -190,6 +191,20 @@ extension ImageEditorViewModel {
         isHotspotsPanelVisible = true
         statusText = L10n.format("imageEditor.status.hotspotSelected", hotspot.name)
         return hotspot
+    }
+
+    /// Delete the delivery object selected on the canvas or in its panel.
+    /// Hotspots take precedence because they are independently selectable even
+    /// while the export scope remains set to a slice.
+    @discardableResult
+    func deleteSelectedDeliveryObjectIfNeeded() -> Bool {
+        if let hotspotID = selectedHotspotID {
+            return deleteHotspot(id: hotspotID) != nil
+        }
+        guard exportSettings.scope == .slice,
+              let sliceID = exportSettings.sliceID
+        else { return false }
+        return deleteSlice(id: sliceID) != nil
     }
 
     var canExportHotspotHTML: Bool {

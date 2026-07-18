@@ -250,6 +250,24 @@ struct XomoAutomationTests {
         #expect(viewModel.selectedHotspotID == nil)
     }
 
+    @Test func selectedDeliveryObjectsCanBeDeletedThroughSharedDeleteCommand() throws {
+        let viewModel = makeViewModel()
+
+        viewModel.createRectSelection(from: CGPoint(x: 24, y: 18), to: CGPoint(x: 84, y: 58))
+        let slice = try #require(viewModel.createSliceFromCurrentSelection(name: "Hero slice"))
+        #expect(viewModel.deleteSelectedDeliveryObjectIfNeeded())
+        #expect(viewModel.document.slices.isEmpty)
+        #expect(viewModel.exportSettings.scope == .composited)
+        #expect(viewModel.slice(with: slice.id) == nil)
+
+        viewModel.createRectSelection(from: CGPoint(x: 100, y: 72), to: CGPoint(x: 164, y: 112))
+        let hotspot = try #require(viewModel.createHotspotFromCurrentSelection(name: "Hero link"))
+        #expect(viewModel.deleteSelectedDeliveryObjectIfNeeded())
+        #expect(viewModel.document.hotspots.isEmpty)
+        #expect(viewModel.selectedHotspotID == nil)
+        #expect(viewModel.hotspot(with: hotspot.id) == nil)
+    }
+
     @Test func registryUpdatesAndExportsNamedHotspotsAsHTML() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared
