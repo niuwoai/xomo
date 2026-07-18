@@ -421,6 +421,12 @@ struct ImageEditorCanvasCursorTests {
         #expect(ImageEditorCanvasCursor.cursor(for: .pen, brushDiameter: 18) !== NSCursor.crosshair)
     }
 
+    @Test func pathSelectionUsesTheFamiliarSystemArrowAndPhotoshopShortcut() {
+        #expect(ImageEditorCanvasCursor.family(for: .pathSelection) == .systemArrow)
+        #expect(ImageEditorCanvasCursor.cursor(for: .pathSelection, brushDiameter: 18) === NSCursor.arrow)
+        #expect(ImageEditorTool.classicShortcutGroup(for: "a")?.primaryTool == .pathSelection)
+    }
+
     @Test func selectionToolsUseRecognizablePointersInsteadOfOneGenericShape() {
         let marquee = ImageEditorCanvasCursor.cursor(for: .marquee, brushDiameter: 18)
         let lasso = ImageEditorCanvasCursor.cursor(for: .lasso, brushDiameter: 18)

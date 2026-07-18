@@ -459,6 +459,39 @@ struct ImageEditorVectorLayerTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.vectorMaskDelete"))
     }
 
+    @Test func pathSelectionHitsClosedPathGeometryAndMovesWholeLayer() async throws {
+        let canvasSize = NSSize(width: 140, height: 100)
+        let image = testBitmapImage(size: canvasSize, background: .black)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let backgroundID = try #require(viewModel.document.selectedLayerID)
+
+        viewModel.selectTool(.pen)
+        viewModel.foregroundColor = .systemYellow
+        viewModel.addPenPoint(CGPoint(x: 20, y: 20))
+        viewModel.addPenPoint(CGPoint(x: 104, y: 28))
+        viewModel.addPenPoint(CGPoint(x: 70, y: 78))
+        viewModel.finishPenPath(closed: true)
+
+        let pathLayer = try #require(viewModel.document.selectedLayer)
+        let pathID = pathLayer.id
+        let originalFrame = pathLayer.frame
+        viewModel.selectLayer(backgroundID)
+
+        #expect(viewModel.selectPathLayer(at: CGPoint(x: 68, y: 42)))
+        #expect(viewModel.document.selectedLayerID == pathID)
+        #expect(!viewModel.selectPathLayer(at: CGPoint(x: 25, y: 72)))
+        #expect(viewModel.document.selectedLayerID == pathID)
+
+        viewModel.beginMovingSelectedLayer()
+        viewModel.moveSelectedLayer(by: CGSize(width: 12, height: 9), snapping: false)
+        viewModel.finishMovingSelectedLayer()
+
+        let movedLayer = try #require(viewModel.document.layers.first { $0.id == pathID })
+        let movedFrame = movedLayer.frame
+        #expect(movedFrame.origin == CGPoint(x: originalFrame.minX + 12, y: originalFrame.minY + 9))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerTranslate"))
+    }
+
     @Test func imageEditorCreatesEditablePathLayerFromCurrentSelection() async throws {
         let canvasSize = NSSize(width: 140, height: 100)
         let image = testBitmapImage(size: canvasSize, background: .black)

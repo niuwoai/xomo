@@ -9,6 +9,130 @@ import AppKit
 import CoreGraphics
 
 extension ImageEditorViewModel {
+    /// Photoshop's Path Selection tool selects an editable path by its
+    /// rendered geometry, rather than by the layer's rectangular bounds.
+    /// Closed paths use their fill as the primary hit area; open paths and
+    /// strokes use a small, canvas-space tolerance around sampled segments.
+    @discardableResult
+    func selectPathLayer(at point: CGPoint, extendingSelection: Bool = false) -> Bool {
+        guard point.x.isFinite, point.y.isFinite else { return false }
+        for layer in document.layers.reversed() {
+            guard !layer.isGroup,
+                  document.isEffectivelyVisible(layer),
+                  !document.isEffectivelyPositionLocked(layer),
+                  let content = layer.shapeContent,
+                  content.kind == .path,
+                  pathLayerContains(point: point, content: content, layer: layer)
+            else { continue }
+
+            selectLayer(layer.id, extendingSelection: extendingSelection)
+            statusText = L10n.format(
+                "imageEditor.status.pathSelected",
+                document.selectedLayerIDs.count
+            )
+            return true
+        }
+        return false
+    }
+
+    private func pathLayerContains(
+        point: CGPoint,
+        content: ImageEditorShapeContent,
+        layer: ImageEditorLayer
+    ) -> Bool {
+        let imageSize = layer.image.size
+        let localPoint = CGPoint(
+            x: (point.x - layer.frame.minX) / max(layer.frame.width, 1) * max(imageSize.width, 1),
+            y: (point.y - layer.frame.minY) / max(layer.frame.height, 1) * max(imageSize.height, 1)
+        )
+        if content.isPathClosed,
+           content.fillOpacity > 0.001,
+           content.pathBezierPath().contains(localPoint) {
+            return true
+        }
+
+        let scale = min(
+            layer.frame.width / max(imageSize.width, 1),
+            layer.frame.height / max(imageSize.height, 1)
+        )
+        let tolerance = max(8, content.strokeWidth * max(scale, 0.01) / 2 + 4)
+        return pathDistanceToPoint(point, content: content, layer: layer) <= tolerance
+    }
+
+    private func pathDistanceToPoint(
+        _ point: CGPoint,
+        content: ImageEditorShapeContent,
+        layer: ImageEditorLayer
+    ) -> CGFloat {
+        var minimum = CGFloat.greatestFiniteMagnitude
+        for anchors in content.allEditablePathSubpaths where anchors.count >= 2 {
+            for index in anchors.indices.dropFirst() {
+                minimum = min(
+                    minimum,
+                    cubicPathDistance(
+                        from: anchors[index - 1],
+                        to: anchors[index],
+                        point: point,
+                        layer: layer
+                    )
+                )
+            }
+            if content.isPathClosed {
+                minimum = min(
+                    minimum,
+                    cubicPathDistance(
+                        from: anchors[anchors.count - 1],
+                        to: anchors[0],
+                        point: point,
+                        layer: layer
+                    )
+                )
+            }
+        }
+        return minimum
+    }
+
+    private func cubicPathDistance(
+        from first: ImageEditorPathAnchor,
+        to second: ImageEditorPathAnchor,
+        point: CGPoint,
+        layer: ImageEditorLayer
+    ) -> CGFloat {
+        let start = localToCanvasPoint(first.point, layer: layer)
+        let end = localToCanvasPoint(second.point, layer: layer)
+        let control1 = localToCanvasPoint(first.outControl ?? first.point, layer: layer)
+        let control2 = localToCanvasPoint(second.inControl ?? second.point, layer: layer)
+        var minimum = CGFloat.greatestFiniteMagnitude
+        var previous = start
+        for step in 1...24 {
+            let t = CGFloat(step) / 24
+            let inverse = 1 - t
+            let current = CGPoint(
+                x: inverse * inverse * inverse * start.x
+                    + 3 * inverse * inverse * t * control1.x
+                    + 3 * inverse * t * t * control2.x
+                    + t * t * t * end.x,
+                y: inverse * inverse * inverse * start.y
+                    + 3 * inverse * inverse * t * control1.y
+                    + 3 * inverse * t * t * control2.y
+                    + t * t * t * end.y
+            )
+            minimum = min(minimum, distanceFromPoint(point, toSegmentFrom: previous, to: current))
+            previous = current
+        }
+        return minimum
+    }
+
+    private func distanceFromPoint(_ point: CGPoint, toSegmentFrom start: CGPoint, to end: CGPoint) -> CGFloat {
+        let vector = CGSize(width: end.x - start.x, height: end.y - start.y)
+        let lengthSquared = vector.width * vector.width + vector.height * vector.height
+        guard lengthSquared > 0.001 else { return hypot(point.x - start.x, point.y - start.y) }
+        let projection = ((point.x - start.x) * vector.width + (point.y - start.y) * vector.height) / lengthSquared
+        let factor = max(0, min(1, projection))
+        let nearest = CGPoint(x: start.x + vector.width * factor, y: start.y + vector.height * factor)
+        return hypot(point.x - nearest.x, point.y - nearest.y)
+    }
+
     func isPenCloseCandidate(at point: CGPoint?) -> Bool {
         guard pendingPenPathPoints.count >= 3,
               let point,

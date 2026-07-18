@@ -568,6 +568,7 @@
 "imageEditor.tool.rectangle" = "Rectangle";
 "imageEditor.tool.ellipse" = "Ellipse";
 "imageEditor.tool.pen" = "Pen";
+"imageEditor.tool.pathSelection" = "Path Selection";
 "imageEditor.tool.hand" = "Hand";
 "imageEditor.tool.zoom" = "Zoom";
 "imageEditor.tool.move.help" = "Move: drag to move the current layer or selection.";
@@ -596,6 +597,7 @@
 "imageEditor.tool.rectangle.help" = "Rectangle: drag to create a rectangular shape layer.";
 "imageEditor.tool.ellipse.help" = "Ellipse: drag to create an elliptical shape layer.";
 "imageEditor.tool.pen.help" = "Pen: click to add anchor points and draw an editable path.";
+"imageEditor.tool.pathSelection.help" = "Path Selection: click a path to select it, then drag to move the whole path.";
 "imageEditor.tool.hand.help" = "Hand: drag to pan the canvas view.";
 "imageEditor.tool.zoom.help" = "Zoom: click to zoom in; Option-click to zoom out.";
 "imageEditor.adjustment.brightness" = "Brightness";
@@ -1663,6 +1665,7 @@
 "imageEditor.status.penOpen" = "Open path shape created";
 "imageEditor.status.penCancelled" = "Current path cancelled";
 "imageEditor.status.pathAnchorSelected" = "Path anchor selected: %d";
+"imageEditor.status.pathSelected" = "Path selected: %d layer(s)";
 "imageEditor.status.pathAnchorMoved" = "Path anchor moved";
 "imageEditor.status.pathAnchorInserted" = "Path anchor inserted";
 "imageEditor.status.pathAnchorDeleted" = "Path anchor deleted";

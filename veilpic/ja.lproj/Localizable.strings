@@ -568,6 +568,7 @@
 "imageEditor.tool.rectangle" = "矩形";
 "imageEditor.tool.ellipse" = "楕円";
 "imageEditor.tool.pen" = "ペン";
+"imageEditor.tool.pathSelection" = "パス選択";
 "imageEditor.tool.hand" = "手のひら";
 "imageEditor.tool.zoom" = "ズーム";
 "imageEditor.tool.move.help" = "移動：ドラッグして現在のレイヤーまたは選択範囲を移動します。";
@@ -596,6 +597,7 @@
 "imageEditor.tool.rectangle.help" = "矩形：ドラッグして矩形シェイプレイヤーを作成します。";
 "imageEditor.tool.ellipse.help" = "楕円：ドラッグして楕円シェイプレイヤーを作成します。";
 "imageEditor.tool.pen.help" = "ペン：クリックしてアンカーポイントを追加し、編集可能なパスを描きます。";
+"imageEditor.tool.pathSelection.help" = "パス選択：パスをクリックして全体を選択し、ドラッグして移動します。";
 "imageEditor.tool.hand.help" = "手のひら：ドラッグしてキャンバス表示を移動します。";
 "imageEditor.tool.zoom.help" = "ズーム：クリックで拡大、Optionを押しながらクリックで縮小します。";
 "imageEditor.adjustment.brightness" = "明るさ";
@@ -1663,6 +1665,7 @@
 "imageEditor.status.penOpen" = "開いたパスシェイプを作成しました";
 "imageEditor.status.penCancelled" = "現在のパスをキャンセルしました";
 "imageEditor.status.pathAnchorSelected" = "パスアンカーを選択：%d";
+"imageEditor.status.pathSelected" = "パスを選択しました：%d レイヤー";
 "imageEditor.status.pathAnchorMoved" = "パスアンカーを移動しました";
 "imageEditor.status.pathAnchorInserted" = "パスアンカーを挿入しました";
 "imageEditor.status.pathAnchorDeleted" = "パスアンカーを削除しました";

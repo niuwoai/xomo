@@ -1,0 +1,39 @@
+{
+  "version": "2.12.0-rc287",
+  "scope": "photoshop-path-selection-focused",
+  "passed": true,
+  "checks": [
+    {
+      "name": "pathSelectionHitsClosedPathGeometryAndMovesWholeLayer",
+      "result": "passed"
+    },
+    {
+      "name": "pathSelectionUsesTheFamiliarSystemArrowAndPhotoshopShortcut",
+      "result": "passed"
+    },
+    {
+      "name": "componentSidebarWiresMoveSemanticsIntoCanvasCursorAndGestures",
+      "result": "passed"
+    },
+    {
+      "name": "supportedLocalizationTablesKeepMatchingKeys",
+      "result": "passed"
+    },
+    {
+      "name": "releaseContract",
+      "result": "passed",
+      "runs": 3,
+      "assertions": 7
+    },
+    {
+      "name": "xcodebuildFocusedTestBuild",
+      "result": "passed",
+      "deploymentTarget": "macOS 13.0"
+    }
+  ],
+  "notes": [
+    "路径选择工具按可编辑路径的实际填充或描边几何命中，不使用整层矩形作为命中区。",
+    "点击路径会选中整条路径，拖拽沿用统一移动事务与灰色虚线预览，释放时只写入一次位置 History。",
+    "ImageEditorVectorLayerTests 的既有颜色/路径断言与 XomoLeftSidebarTests 的主题 Token 刷新断言仍有预先存在的失败，未计入本专项通过项。"
+  ]
+}
