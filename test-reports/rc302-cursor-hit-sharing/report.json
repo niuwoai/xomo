@@ -1,0 +1,20 @@
+{
+  "version": "2.12.0-rc302",
+  "scope": "统一画布命中语义，保证直接鼠标更新与 CursorRect 覆盖层使用同一套可移动/受阻判断",
+  "command": "xcodebuild test -project veilpic.xcodeproj -scheme veilpic -destination 'platform=macOS' -derivedDataPath /private/tmp/xomo-rc302-derived-escalated -resultBundlePath /private/tmp/xomo-rc302-escalated.xcresult -only-testing:veilpicTests/ImageEditorCanvasCursorTests/canvasContentHitSharesTheSameSemanticForCursorPaths -only-testing:veilpicTests/ImageEditorCanvasCursorTests/moveCursorUsesTheFrontmostLockedLayerOverAnUnlockedLayer -only-testing:veilpicTests/ImageEditorCanvasCursorTests/moveCursorDoesNotClaimOccludedOrPositionLockedContent",
+  "environment": "arm64 MacBook Pro, macOS 26.5.2, Xcode 26.4.1",
+  "passed": 3,
+  "failed": 0,
+  "skipped": 0,
+  "tests": [
+    "canvasContentHitSharesTheSameSemanticForCursorPaths",
+    "moveCursorUsesTheFrontmostLockedLayerOverAnUnlockedLayer",
+    "moveCursorDoesNotClaimOccludedOrPositionLockedContent"
+  ],
+  "release_contract": {
+    "tests": 3,
+    "assertions": 7,
+    "failures": 0
+  },
+  "result_bundle": "/private/tmp/xomo-rc302-escalated.xcresult"
+}

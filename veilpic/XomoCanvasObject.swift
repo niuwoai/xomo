@@ -13,6 +13,15 @@ private struct XomoCanvasObject {
     let frontIndex: Int
 }
 
+enum XomoCanvasContentHit: Equatable {
+    case none
+    case movable
+    case blocked
+
+    var isMovable: Bool { self == .movable }
+    var isBlocked: Bool { self == .blocked }
+}
+
 @MainActor
 extension ImageEditorViewModel {
     var hasSelectedXomoObject: Bool {
@@ -52,14 +61,22 @@ extension ImageEditorViewModel {
     /// hidden layers do not claim the move cursor; the move gesture still
     /// performs its stricter selection check before committing.
     func hasMovableCanvasContent(at point: CGPoint) -> Bool {
-        topmostCanvasContent(at: point)?.isMovable == true
+        canvasContentHit(at: point).isMovable
     }
 
     /// Distinguishes blocked visible content from empty canvas space for the
     /// move-tool cursor. A locked or occluded object should not look like an
     /// invitation to pan the canvas with an open hand.
     func hasBlockedCanvasContent(at point: CGPoint) -> Bool {
-        topmostCanvasContent(at: point)?.isBlocked == true
+        canvasContentHit(at: point).isBlocked
+    }
+
+    /// Resolves the hover target once so the direct cursor path and the
+    /// CursorRect fallback cannot disagree or scan the layer stack twice for
+    /// one mouse-move event.
+    func canvasContentHit(at point: CGPoint) -> XomoCanvasContentHit {
+        guard let hit = topmostCanvasContent(at: point) else { return .none }
+        return hit.isMovable ? .movable : .blocked
     }
 
     /// Returns only the frontmost visible pixel at a canvas point. Looking at

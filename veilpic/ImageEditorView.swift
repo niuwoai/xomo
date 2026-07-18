@@ -1367,6 +1367,8 @@ struct ImageEditorView: View {
                         hoverViewPoint,
                         imageRect: imageRect
                     )
+                    let canvasPoint = hoverViewPoint.flatMap { imagePoint(from: $0, in: geometry.size) }
+                    let contentHit = canvasPoint.map(viewModel.canvasContentHit(at:)) ?? .none
                     let cropHandle = cropInteractionHandle(at: hoverViewPoint, in: geometry.size)
                     ImageEditorCursorRectView(
                         cursor: ImageEditorCanvasCursor.cursor(
@@ -1374,6 +1376,8 @@ struct ImageEditorView: View {
                             selectedTool: viewModel.selectedTool,
                             brushDiameter: viewModel.brushSize * displayScale,
                             isPointerOverCanvas: isPointerOverDrawableCanvas,
+                            isPointerOverMovableContent: contentHit.isMovable,
+                            isPointerOverBlockedContent: contentHit.isBlocked,
                             handIsDragging: isCanvasPanGestureActive,
                             isObjectMoveGestureActive: isSelectedObjectMoveGestureActive || isObjectMoveGestureActive,
                             isSpacebarPanning: isSpacebarPanning,
@@ -2566,13 +2570,14 @@ struct ImageEditorView: View {
         viewModel.updatePointer(canvasPoint)
         let imageRect = fittedImageRect(in: size)
         let displayScale = imageRect.width / max(viewModel.document.canvasSize.width, 1)
+        let contentHit = canvasPoint.map(viewModel.canvasContentHit(at:)) ?? .none
         ImageEditorCanvasCursor.cursor(
             for: viewModel.selectedLeftSidebarTab,
             selectedTool: viewModel.selectedTool,
             brushDiameter: viewModel.brushSize * displayScale,
             isPointerOverCanvas: canvasPoint != nil,
-            isPointerOverMovableContent: canvasPoint.map(viewModel.hasMovableCanvasContent(at:)) ?? false,
-            isPointerOverBlockedContent: canvasPoint.map(viewModel.hasBlockedCanvasContent(at:)) ?? false,
+            isPointerOverMovableContent: contentHit.isMovable,
+            isPointerOverBlockedContent: contentHit.isBlocked,
             penIsClosing: canvasInteractionTool == .pen && viewModel.isPenCloseCandidate(at: canvasPoint),
             handIsDragging: isCanvasPanGestureActive,
             isObjectMoveGestureActive: isSelectedObjectMoveGestureActive || isObjectMoveGestureActive,

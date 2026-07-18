@@ -272,6 +272,27 @@ struct ImageEditorCanvasCursorTests {
         #expect(viewModel.hasBlockedCanvasContent(at: center))
     }
 
+    @Test func canvasContentHitSharesTheSameSemanticForCursorPaths() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "cursor-shared-hit-test",
+            image: NSImage.transparent(size: CGSize(width: 640, height: 480))
+        ) { _ in }
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))
+        let frame = try #require(viewModel.selectedXomoObjectFrame)
+
+        #expect(viewModel.canvasContentHit(at: CGPoint(x: frame.midX, y: frame.midY)) == .movable)
+        #expect(viewModel.canvasContentHit(at: CGPoint(x: 620, y: 460)) == .none)
+
+        let groupID = try #require(viewModel.document.selectedLayerID)
+        viewModel.document.layers = viewModel.document.layers.map { layer in
+            guard layer.id == groupID else { return layer }
+            var locked = layer
+            locked.locksPosition = true
+            return locked
+        }
+        #expect(viewModel.canvasContentHit(at: CGPoint(x: frame.midX, y: frame.midY)) == .blocked)
+    }
+
     @Test func moveToolShowsCopyBadgeWhileHoldingOption() {
         let normal = ImageEditorCanvasCursor.cursor(
             for: .tools,
