@@ -4778,7 +4778,8 @@ final class ImageEditorViewModel: ObservableObject {
         guard let output = sourceImage.withSmudgeBrush(
             points: rasterLocalPoints(points, layer: layer),
             width: rasterLocalBrushWidth(brushSize, layer: layer),
-            opacity: opacity
+            opacity: opacity,
+            hardness: hardness
         ) else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return

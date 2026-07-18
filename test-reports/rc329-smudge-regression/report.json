@@ -1,0 +1,19 @@
+{
+  "generated_at": "2026-07-19 03:28:29 +0800",
+  "total": 1,
+  "passed": 1,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "veilpicTests",
+      "method": "imageEditorSmudgeBrushDragsPixelsAlongStrokeOnly",
+      "identifier": "veilpicTests/veilpicTests/imageEditorSmudgeBrushDragsPixelsAlongStrokeOnly",
+      "file": "veilpicTests.swift",
+      "passed": true,
+      "duration": 3.252,
+      "issues": [],
+      "log": "veilpicTests.imageEditorSmudgeBrushDragsPixelsAlongStrokeOnly.log"
+    }
+  ]
+}

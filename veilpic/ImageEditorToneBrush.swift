@@ -99,11 +99,15 @@ extension NSImage {
         )
     }
 
-    func withSmudgeBrush(points: [CGPoint], width: CGFloat, opacity: CGFloat) -> NSImage? {
+    func withSmudgeBrush(
+        points: [CGPoint],
+        width: CGFloat,
+        opacity: CGFloat,
+        hardness: CGFloat
+    ) -> NSImage? {
         guard points.count > 1 else { return nil }
         var output = self
         let clampedOpacity = max(0, min(1, opacity)) * 0.86
-        let lineWidth = max(1, width)
 
         for segmentIndex in 1..<points.count {
             let previous = points[segmentIndex - 1]
@@ -112,19 +116,12 @@ extension NSImage {
             guard abs(delta.width) > 0.1 || abs(delta.height) > 0.1 else { continue }
 
             let sourceSnapshot = output
-            let path = NSBezierPath()
-            path.lineJoinStyle = .round
-            path.lineCapStyle = .round
-            path.lineWidth = lineWidth
-            path.move(to: previous)
-            path.line(to: current)
-
-            guard let strokeMask = NSImage.rendered(size: size, actions: { _ in
-                NSGraphicsContext.current?.withImageEditorTopLeftCoordinates(height: size.height) {
-                    NSColor.white.setStroke()
-                    path.stroke()
-                }
-            }),
+            guard let strokeMask = ImageEditorHealingBrushKernel.strokeMaskImage(
+                size: size,
+                points: [previous, current],
+                diameter: width,
+                hardness: hardness
+            ),
             let shiftedSource = NSImage.rendered(size: size, actions: { _ in
                 sourceSnapshot.draw(
                     in: CGRect(x: delta.width, y: -delta.height, width: size.width, height: size.height),

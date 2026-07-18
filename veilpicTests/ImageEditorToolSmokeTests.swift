@@ -308,6 +308,31 @@ struct ImageEditorToolSmokeTests {
         #expect(sharpen.document.history.last?.title == L10n.text("imageEditor.history.sharpen"))
     }
 
+    @Test func smudgeHardnessControlsTheVisibleStrokeEdge() throws {
+        let image = verticalEdgeImage()
+        let soft = makeConfiguredRetouchViewModel(image: image)
+        let hard = makeConfiguredRetouchViewModel(image: image)
+        soft.brushSize = 12
+        hard.brushSize = 12
+        soft.hardness = 0
+        hard.hardness = 1
+        let points = [
+            CGPoint(x: 12, y: 14),
+            CGPoint(x: 20, y: 14),
+            CGPoint(x: 28, y: 14)
+        ]
+
+        soft.smudgeBrush(points: points)
+        hard.smudgeBrush(points: points)
+
+        let edgePoint = CGPoint(x: 24, y: 18)
+        let softEdge = try redComponent(in: soft, at: edgePoint)
+        let hardEdge = try redComponent(in: hard, at: edgePoint)
+        #expect(hardEdge < softEdge - 0.20)
+        #expect(soft.document.history.last?.title == L10n.text("imageEditor.history.smudge"))
+        #expect(hard.document.history.last?.title == L10n.text("imageEditor.history.smudge"))
+    }
+
     @Test func redEyeToolReducesExcessRedAtTheClickedPupil() throws {
         let image = NSImage.rendered(size: canvasSize) { rect in
             NSColor(deviceWhite: 0.35, alpha: 1).setFill()
