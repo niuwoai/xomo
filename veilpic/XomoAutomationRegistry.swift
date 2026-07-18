@@ -2571,6 +2571,9 @@ final class XomoAutomationRegistry {
         let action = try requiredString("action", in: arguments)
         if let size = arguments["size"]?.doubleValue { viewModel.brushSize = size }
         if let opacity = arguments["opacity"]?.doubleValue { viewModel.opacity = opacity }
+        if let hardness = arguments["hardness"]?.doubleValue {
+            viewModel.hardness = max(0, min(1, hardness))
+        }
         if let feather = arguments["feather"]?.doubleValue { viewModel.feather = max(0, feather) }
         if action == "setCloneSource" || action == "cloneStamp" {
             if let aligned = arguments["aligned"]?.boolValue {
@@ -3662,6 +3665,7 @@ private extension XomoAutomationRegistry {
             "y": XomoAutomationSchema.number(description: "Canvas y coordinate for point actions"),
             "size": XomoAutomationSchema.number(description: "Brush diameter"),
             "opacity": XomoAutomationSchema.number(description: "Brush opacity"),
+            "hardness": XomoAutomationSchema.number(description: "Brush edge hardness from 0 to 1"),
             "feather": XomoAutomationSchema.number(description: "Patch selection feather radius"),
             "mode": XomoAutomationSchema.string(description: "Patch mode", values: ["source", "destination"]),
             "healingMode": XomoAutomationSchema.string(description: "Healing mode", values: ["source", "spot"]),

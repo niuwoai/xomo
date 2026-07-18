@@ -83,6 +83,36 @@ struct ImageEditorToolSmokeTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.sponge"))
     }
 
+    @Test func spongeHardnessControlsTheVisibleStrokeEdge() throws {
+        let color = NSColor(deviceRed: 0.64, green: 0.46, blue: 0.24, alpha: 1)
+        let soft = makeEditableViewModel(image: solidImage(color: color))
+        let hard = makeEditableViewModel(image: solidImage(color: color))
+        for viewModel in [soft, hard] {
+            viewModel.spongeMode = .saturate
+            viewModel.brushSize = 12
+            viewModel.opacity = 1
+        }
+        soft.hardness = 0
+        hard.hardness = 1
+        let points = [CGPoint(x: 10, y: 14), CGPoint(x: 30, y: 14)]
+
+        soft.spongeBrush(points: points)
+        hard.spongeBrush(points: points)
+
+        let edgePoint = CGPoint(x: 20, y: 18)
+        let softEdge = try #require(
+            soft.document.selectedLayer?.image.color(at: edgePoint)?.usingColorSpace(.deviceRGB)
+        )
+        let hardEdge = try #require(
+            hard.document.selectedLayer?.image.color(at: edgePoint)?.usingColorSpace(.deviceRGB)
+        )
+        let softRange = softEdge.redComponent - softEdge.blueComponent
+        let hardRange = hardEdge.redComponent - hardEdge.blueComponent
+        #expect(hardRange > softRange + 0.06)
+        #expect(soft.document.history.last?.title == L10n.text("imageEditor.history.sponge"))
+        #expect(hard.document.history.last?.title == L10n.text("imageEditor.history.sponge"))
+    }
+
     @Test func redEyeToolReducesExcessRedAtTheClickedPupil() throws {
         let image = NSImage.rendered(size: canvasSize) { rect in
             NSColor(deviceWhite: 0.35, alpha: 1).setFill()

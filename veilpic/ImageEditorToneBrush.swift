@@ -50,26 +50,20 @@ extension NSImage {
         points: [CGPoint],
         width: CGFloat,
         opacity: CGFloat,
+        hardness: CGFloat,
         mode: ImageEditorSpongeMode
     ) -> NSImage? {
-        guard let first = points.first else { return nil }
-        let path = NSBezierPath()
-        path.lineJoinStyle = .round
-        path.lineCapStyle = .round
-        path.lineWidth = max(1, width)
-        path.move(to: first)
-        for point in points.dropFirst() {
-            path.line(to: point)
-        }
-
-        guard let strokeMask = NSImage.rendered(size: size, actions: { _ in
-            NSGraphicsContext.current?.withImageEditorTopLeftCoordinates(height: size.height) {
-                NSColor.white.setStroke()
-                path.stroke()
-            }
-        }) else { return nil }
-
-        return saturationAdjusted(mask: strokeMask, opacity: opacity, mode: mode)
+        let pixelWidth = max(1, Int(size.width.rounded()))
+        let pixelHeight = max(1, Int(size.height.rounded()))
+        let maskAlpha = ImageEditorHealingBrushKernel.strokeAlpha(
+            width: pixelWidth,
+            height: pixelHeight,
+            points: points,
+            diameter: width,
+            hardness: hardness
+        )
+        guard maskAlpha.count == pixelWidth * pixelHeight else { return nil }
+        return saturationAdjusted(maskAlpha: maskAlpha, opacity: opacity, mode: mode)
     }
 
     func withBlurBrush(points: [CGPoint], width: CGFloat, opacity: CGFloat, radius: CGFloat) -> NSImage? {
@@ -246,7 +240,7 @@ extension NSImage {
     }
 
     private func saturationAdjusted(
-        mask: NSImage,
+        maskAlpha: [UInt8],
         opacity: CGFloat,
         mode: ImageEditorSpongeMode
     ) -> NSImage? {
@@ -255,14 +249,15 @@ extension NSImage {
         let bytesPerPixel = 4
         let bytesPerRow = width * bytesPerPixel
         guard var sourcePixels = rgbaPixels(width: width, height: height, bytesPerRow: bytesPerRow),
-              let maskPixels = mask.rgbaPixels(width: width, height: height, bytesPerRow: bytesPerRow)
+              maskAlpha.count == width * height
         else { return nil }
 
         let clampedOpacity = max(0, min(1, opacity))
         for y in 0..<height {
             for x in 0..<width {
                 let offset = y * bytesPerRow + x * bytesPerPixel
-                let strength = CGFloat(maskPixels[offset + 3]) / 255 * clampedOpacity * 0.9
+                let maskIndex = y * width + x
+                let strength = CGFloat(maskAlpha[maskIndex]) / 255 * clampedOpacity * 0.9
                 guard strength > 0 else { continue }
 
                 let red = CGFloat(sourcePixels[offset])

@@ -1,7 +1,8 @@
 # Xomo MCP 与 CLI
 
-> 当前版本：v2.12.0-rc322
+> 当前版本：v2.12.0-rc323
 
+rc323 让 `xomo.paint.special` 接受 `hardness=0...1`，并把海绵工具接到与界面相同的软边蒙版；参数同样适用于该入口下使用共享硬度状态的修图笔刷。
 rc322 为 `xomo.paint.special` 的 `sponge` 动作增加可选 `spongeMode=saturate|desaturate`；默认加色保持兼容，去色与界面共用同一笔触、选区和 History/Undo 管线。
 rc321 为 `xomo.paint.special` 的 `healing` 动作增加可选 `healingMode`：`source` 保留显式来源，`spot` 无需先调用 `setHealingSource`，会自动选择邻近匹配纹理；两种模式继续共用 `size`、`opacity`、`sampleSource`、选区、History 与 Undo。
 rc320 完成 40 版本完整质量门禁；MCP/CLI 工具协议没有新增或破坏性变化，自动化、组件对象、图层、选区、PSD、Figma 与本地界面继续共用同一业务模型。

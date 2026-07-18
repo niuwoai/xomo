@@ -1971,6 +1971,7 @@ struct XomoAutomationTests {
                 "action": .string("sponge"),
                 "spongeMode": .string("desaturate"),
                 "size": .number(12),
+                "hardness": .number(0.27),
                 "points": .array([
                     .object(["x": .number(20), "y": .number(24)]),
                     .object(["x": .number(40), "y": .number(24)])
@@ -1980,6 +1981,7 @@ struct XomoAutomationTests {
 
         #expect(response.ok)
         #expect(viewModel.spongeMode == .desaturate)
+        #expect(abs(viewModel.hardness - 0.27) < 0.001)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.sponge"))
     }
 

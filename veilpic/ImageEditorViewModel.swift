@@ -4685,6 +4685,7 @@ final class ImageEditorViewModel: ObservableObject {
             points: localPoints,
             width: rasterLocalBrushWidth(brushSize, layer: layer),
             opacity: opacity,
+            hardness: hardness,
             mode: spongeMode
         ) else {
             statusText = L10n.text("imageEditor.status.operationFailed")
