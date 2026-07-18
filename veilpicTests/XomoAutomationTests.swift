@@ -2155,6 +2155,57 @@ struct XomoAutomationTests {
         #expect(values == [.string("shadows"), .string("midtones"), .string("highlights")])
     }
 
+    @Test func registryConfiguresDodgeBurnProtectTones() {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        let point: XomoJSONValue = .array([
+            .object(["x": .number(32), "y": .number(32)])
+        ])
+        #expect(viewModel.protectToneBrushTones)
+
+        let disabled = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("dodge"),
+                "protectTones": .bool(false),
+                "points": point
+            ]
+        ))
+        #expect(disabled.ok)
+        #expect(!viewModel.protectToneBrushTones)
+
+        let enabled = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("burn"),
+                "protectTones": .bool(true),
+                "points": point
+            ]
+        ))
+        #expect(enabled.ok)
+        #expect(viewModel.protectToneBrushTones)
+    }
+
+    @Test func registryAdvertisesDodgeBurnProtectTones() throws {
+        let registry = XomoAutomationRegistry.shared
+        registry.register(makeViewModel())
+        let response = registry.execute(request(operation: "tools"))
+        guard case .array(let tools) = response.result else {
+            Issue.record("Expected tool array")
+            return
+        }
+        let specialPaint = try #require(tools.compactMap(\.objectValue).first {
+            $0["name"] == .string("xomo.paint.special")
+        })
+        let schema = try #require(specialPaint["inputSchema"]?.objectValue)
+        let properties = try #require(schema["properties"]?.objectValue)
+
+        #expect(properties["protectTones"]?.objectValue?["type"] == .string("boolean"))
+    }
+
     @Test func registryKeepsLegacyDodgeOpacity() {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

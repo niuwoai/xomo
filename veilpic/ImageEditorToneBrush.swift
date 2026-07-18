@@ -65,7 +65,8 @@ extension NSImage {
         opacity: CGFloat,
         hardness: CGFloat,
         burn: Bool,
-        range: ImageEditorToneRange = .midtones
+        range: ImageEditorToneRange = .midtones,
+        protectTones: Bool = true
     ) -> NSImage? {
         let pixelWidth = max(1, Int(size.width.rounded()))
         let pixelHeight = max(1, Int(size.height.rounded()))
@@ -77,7 +78,13 @@ extension NSImage {
             hardness: hardness
         )
         guard maskAlpha.count == pixelWidth * pixelHeight else { return nil }
-        return toneAdjusted(maskAlpha: maskAlpha, opacity: opacity, burn: burn, range: range)
+        return toneAdjusted(
+            maskAlpha: maskAlpha,
+            opacity: opacity,
+            burn: burn,
+            range: range,
+            protectTones: protectTones
+        )
     }
 
     func withSpongeBrush(
@@ -252,7 +259,8 @@ extension NSImage {
         maskAlpha: [UInt8],
         opacity: CGFloat,
         burn: Bool,
-        range: ImageEditorToneRange
+        range: ImageEditorToneRange,
+        protectTones: Bool
     ) -> NSImage? {
         let width = max(1, Int(size.width.rounded()))
         let height = max(1, Int(size.height.rounded()))
@@ -279,12 +287,26 @@ extension NSImage {
                 let strength = clampedOpacity * maskStrength * toneWeight * effectScale
                 guard strength > 0 else { continue }
 
-                for channel in 0..<3 {
-                    let value = CGFloat(sourcePixels[offset + channel])
-                    let adjusted = burn
-                        ? value * (1 - strength)
-                        : value + (255 - value) * strength
-                    sourcePixels[offset + channel] = UInt8(max(0, min(255, adjusted.rounded())))
+                if protectTones {
+                    let protected = Self.protectedToneComponents(
+                        red: red,
+                        green: green,
+                        blue: blue,
+                        luminance: luminance,
+                        strength: strength,
+                        burn: burn
+                    )
+                    sourcePixels[offset] = UInt8((protected.red * 255).rounded())
+                    sourcePixels[offset + 1] = UInt8((protected.green * 255).rounded())
+                    sourcePixels[offset + 2] = UInt8((protected.blue * 255).rounded())
+                } else {
+                    for channel in 0..<3 {
+                        let value = CGFloat(sourcePixels[offset + channel])
+                        let adjusted = burn
+                            ? value * (1 - strength)
+                            : value + (255 - value) * strength
+                        sourcePixels[offset + channel] = UInt8(max(0, min(255, adjusted.rounded())))
+                    }
                 }
             }
         }
@@ -296,6 +318,65 @@ extension NSImage {
             bytesPerRow: bytesPerRow,
             size: size
         )
+    }
+
+    private static func protectedToneComponents(
+        red: CGFloat,
+        green: CGFloat,
+        blue: CGFloat,
+        luminance: CGFloat,
+        strength: CGFloat,
+        burn: Bool
+    ) -> (red: CGFloat, green: CGFloat, blue: CGFloat) {
+        let clipInset = 1 / CGFloat(255)
+        let upperLimit = 1 - clipInset
+        let targetLuminance = burn
+            ? luminance * (1 - strength)
+            : luminance + (1 - luminance) * strength
+        let protectedLuminance = max(clipInset, min(upperLimit, targetLuminance))
+        let redChroma = red - luminance
+        let greenChroma = green - luminance
+        let blueChroma = blue - luminance
+        let redScale = maximumChromaScale(
+            for: redChroma,
+            luminance: protectedLuminance,
+            lowerLimit: clipInset,
+            upperLimit: upperLimit
+        )
+        let greenScale = maximumChromaScale(
+            for: greenChroma,
+            luminance: protectedLuminance,
+            lowerLimit: clipInset,
+            upperLimit: upperLimit
+        )
+        let blueScale = maximumChromaScale(
+            for: blueChroma,
+            luminance: protectedLuminance,
+            lowerLimit: clipInset,
+            upperLimit: upperLimit
+        )
+        let chromaScale = max(0, min(1, min(redScale, min(greenScale, blueScale))))
+
+        return (
+            max(clipInset, min(upperLimit, protectedLuminance + redChroma * chromaScale)),
+            max(clipInset, min(upperLimit, protectedLuminance + greenChroma * chromaScale)),
+            max(clipInset, min(upperLimit, protectedLuminance + blueChroma * chromaScale))
+        )
+    }
+
+    private static func maximumChromaScale(
+        for component: CGFloat,
+        luminance: CGFloat,
+        lowerLimit: CGFloat,
+        upperLimit: CGFloat
+    ) -> CGFloat {
+        if component > 0 {
+            return (upperLimit - luminance) / component
+        }
+        if component < 0 {
+            return (luminance - lowerLimit) / -component
+        }
+        return 1
     }
 
     private func saturationAdjusted(

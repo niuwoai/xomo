@@ -69,6 +69,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var brushPressureControlsFlow = true
     @Published var brushPressureSensitivity: CGFloat = 50
     @Published var toneRange: ImageEditorToneRange = .midtones
+    @Published var protectToneBrushTones = true
     @Published var spongeMode: ImageEditorSpongeMode = .saturate
     @Published private(set) var customBrushPresets: [ImageEditorBrushPreset] = []
     @Published var customLayerStylePresets: [ImageEditorLayerStylePreset] = []
@@ -4656,7 +4657,8 @@ final class ImageEditorViewModel: ObservableObject {
             opacity: opacity,
             hardness: hardness,
             burn: burn,
-            range: toneRange
+            range: toneRange,
+            protectTones: protectToneBrushTones
         ) else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return

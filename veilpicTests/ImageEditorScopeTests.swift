@@ -2218,6 +2218,25 @@ struct ImageEditorScopeTests {
         #expect(rangeSource.contains("image-editor-tone-range"))
     }
 
+    @Test func dodgeAndBurnExposeANonFocusableProtectTonesToggle() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let rangeStart = try #require(
+            source.range(of: "if viewModel.selectedTool == .dodge || viewModel.selectedTool == .burn {")
+        )
+        let textStart = try #require(
+            source[rangeStart.upperBound...].range(of: "if viewModel.selectedTool == .text")
+        )
+        let rangeSource = source[rangeStart.lowerBound..<textStart.lowerBound]
+
+        #expect(rangeSource.contains("isOn: $viewModel.protectToneBrushTones"))
+        #expect(rangeSource.contains(".toggleStyle(.checkbox)"))
+        #expect(rangeSource.contains(".focusable(false)"))
+        #expect(rangeSource.contains("image-editor-protect-tones"))
+    }
+
     @MainActor
     @Test func brushesPanelActionsReuseExistingBrushSettings() throws {
         let image = NSImage(size: NSSize(width: 16, height: 16))

@@ -60,6 +60,8 @@ struct XomoMCPServerTests {
         let specialPaintProperties = try #require(specialPaintSchema["properties"] as? [String: Any])
         let toneRange = try #require(specialPaintProperties["toneRange"] as? [String: Any])
         #expect(toneRange["enum"] as? [String] == ["shadows", "midtones", "highlights"])
+        let protectTones = try #require(specialPaintProperties["protectTones"] as? [String: Any])
+        #expect(protectTones["type"] as? String == "boolean")
         #expect(tools.contains { $0["name"] as? String == "xomo.view.pan" })
         #expect(tools.contains { $0["name"] as? String == "xomo.selection.quick_mask" })
         #expect(tools.contains { $0["name"] as? String == "xomo.psd.inspect" })

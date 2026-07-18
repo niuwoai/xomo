@@ -501,6 +501,8 @@
 "imageEditor.toneRange.shadows" = "シャドウ";
 "imageEditor.toneRange.midtones" = "中間調";
 "imageEditor.toneRange.highlights" = "ハイライト";
+"imageEditor.option.protectTones" = "階調を保護";
+"imageEditor.option.protectTones.help" = "色を保ちながらハイライトとシャドウのクリッピングを抑えます";
 "imageEditor.option.fillOpacity" = "塗り";
 "imageEditor.option.blendIf" = "ブレンド条件";
 "imageEditor.option.blendIfSource" = "このレイヤー";

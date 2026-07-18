@@ -292,6 +292,71 @@ struct ImageEditorToolSmokeTests {
         #expect(highlights.document.history.last?.title == L10n.text("imageEditor.history.burn"))
     }
 
+    @Test func protectTonesPreservesChromaAndAvoidsEndpointClipping() throws {
+        let saturated = solidImage(
+            color: NSColor(deviceRed: 0.78, green: 0.32, blue: 0.12, alpha: 1)
+        )
+        let protectedColor = try applyingToneBrush(
+            to: saturated,
+            burn: false,
+            range: .midtones,
+            protectTones: true
+        )
+        let unprotectedColor = try applyingToneBrush(
+            to: saturated,
+            burn: false,
+            range: .midtones,
+            protectTones: false
+        )
+        let point = CGPoint(x: 20, y: 14)
+        let protectedSample = try #require(
+            protectedColor.color(at: point)?.usingColorSpace(.deviceRGB)
+        )
+        let unprotectedSample = try #require(
+            unprotectedColor.color(at: point)?.usingColorSpace(.deviceRGB)
+        )
+        let protectedChroma = protectedSample.redComponent - protectedSample.blueComponent
+        let unprotectedChroma = unprotectedSample.redComponent - unprotectedSample.blueComponent
+        #expect(protectedChroma > unprotectedChroma + 0.12)
+
+        let light = solidImage(color: NSColor(deviceWhite: 0.92, alpha: 1))
+        let protectedLight = try applyingToneBrush(
+            to: light,
+            burn: false,
+            range: .highlights,
+            protectTones: true,
+            repetitions: 10
+        )
+        let unprotectedLight = try applyingToneBrush(
+            to: light,
+            burn: false,
+            range: .highlights,
+            protectTones: false,
+            repetitions: 10
+        )
+        #expect(try redComponent(in: protectedLight, at: point) < 0.999)
+        #expect(try redComponent(in: unprotectedLight, at: point) > 0.999)
+
+        let dark = solidImage(color: NSColor(deviceWhite: 0.08, alpha: 1))
+        let protectedDark = try applyingToneBrush(
+            to: dark,
+            burn: true,
+            range: .shadows,
+            protectTones: true,
+            repetitions: 10
+        )
+        let unprotectedDark = try applyingToneBrush(
+            to: dark,
+            burn: true,
+            range: .shadows,
+            protectTones: false,
+            repetitions: 10
+        )
+        #expect(try redComponent(in: protectedDark, at: point) > 0.001)
+        #expect(try redComponent(in: unprotectedDark, at: point) < 0.001)
+        #expect(makeConfiguredRetouchViewModel(image: saturated).protectToneBrushTones)
+    }
+
     @Test func blurAndSharpenHardnessControlTheVisibleStrokeEdge() throws {
         let hardEdge = NSImage.rendered(size: canvasSize) { rect in
             NSColor(deviceWhite: 0.35, alpha: 1).setFill()
@@ -567,6 +632,28 @@ struct ImageEditorToolSmokeTests {
             NSColor(deviceWhite: 0.85, alpha: 1).setFill()
             CGRect(x: rect.minX + bandWidth * 2, y: rect.minY, width: rect.width - bandWidth * 2, height: rect.height).fill()
         } ?? NSImage.transparent(size: canvasSize)
+    }
+
+    private func applyingToneBrush(
+        to image: NSImage,
+        burn: Bool,
+        range: ImageEditorToneRange,
+        protectTones: Bool,
+        repetitions: Int = 1
+    ) throws -> NSImage {
+        var output = image
+        for _ in 0..<repetitions {
+            output = try #require(output.withToneBrush(
+                points: [CGPoint(x: 20, y: 14)],
+                width: 96,
+                opacity: 1,
+                hardness: 1,
+                burn: burn,
+                range: range,
+                protectTones: protectTones
+            ))
+        }
+        return output
     }
 
     private func colorContrast(

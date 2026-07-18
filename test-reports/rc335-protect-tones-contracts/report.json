@@ -1,0 +1,49 @@
+{
+  "generated_at": "2026-07-19 04:51:19 +0800",
+  "total": 4,
+  "passed": 4,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "dodgeAndBurnExposeANonFocusableProtectTonesToggle",
+      "identifier": "veilpicTests/ImageEditorScopeTests/dodgeAndBurnExposeANonFocusableProtectTonesToggle",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.018,
+      "issues": [],
+      "log": "ImageEditorScopeTests.dodgeAndBurnExposeANonFocusableProtectTonesToggle.log"
+    },
+    {
+      "suite": "LocalizationResourceTests",
+      "method": "dodgeBurnProtectTonesIsLocalizedInEverySupportedLanguage",
+      "identifier": "veilpicTests/LocalizationResourceTests/dodgeBurnProtectTonesIsLocalizedInEverySupportedLanguage",
+      "file": "LocalizationResourceTests.swift",
+      "passed": true,
+      "duration": 3.038,
+      "issues": [],
+      "log": "LocalizationResourceTests.dodgeBurnProtectTonesIsLocalizedInEverySupportedLanguage.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registryAdvertisesDodgeBurnProtectTones",
+      "identifier": "veilpicTests/XomoAutomationTests/registryAdvertisesDodgeBurnProtectTones",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 3.063,
+      "issues": [],
+      "log": "XomoAutomationTests.registryAdvertisesDodgeBurnProtectTones.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registryConfiguresDodgeBurnProtectTones",
+      "identifier": "veilpicTests/XomoAutomationTests/registryConfiguresDodgeBurnProtectTones",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 3.014,
+      "issues": [],
+      "log": "XomoAutomationTests.registryConfiguresDodgeBurnProtectTones.log"
+    }
+  ]
+}

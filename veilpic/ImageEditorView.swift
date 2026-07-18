@@ -367,6 +367,16 @@ struct ImageEditorView: View {
                 .frame(width: 116)
                 .help(L10n.text("imageEditor.option.toneRange"))
                 .accessibilityIdentifier("image-editor-tone-range")
+
+                Toggle(
+                    L10n.text("imageEditor.option.protectTones"),
+                    isOn: $viewModel.protectToneBrushTones
+                )
+                .toggleStyle(.checkbox)
+                .focusable(false)
+                .fixedSize()
+                .help(L10n.text("imageEditor.option.protectTones.help"))
+                .accessibilityIdentifier("image-editor-protect-tones")
             }
 
             if viewModel.selectedTool == .text {
