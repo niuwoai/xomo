@@ -1,7 +1,8 @@
 # 像界（Xomo）产品概览
 
-> 最后更新：2026-07-19 | 当前版本：v2.12.0-rc358
+> 最后更新：2026-07-19 | 当前版本：v2.12.0-rc359
 
+v2.12.0-rc359 为内发光来源补齐多选共同属性语义：边缘和中心混合时，标准不可聚焦菜单显示三语“多个值”；选择来源后批量收敛全部可编辑层，锁定及不适用图层跳过，选择保持且每次单步 History/Undo。MCP `xomo.layer.style_settings` 同步支持 `property=innerGlowSource source=edge|center`。专项 4/4、样式回归 30/30、CLI 2/2、发布契约 7/7 通过。下一版本 rc360 只执行完整质量门禁、Release 打包、真实界面冒烟与 `/Applications` 覆盖，不混入新功能。
 v2.12.0-rc358 完成描边填充分支的主要枚举多选语义：当全部可编辑选中层都使用图案描边、但分别采用棋盘、斜线或圆点时，菜单显示三语“多个值”；选择图案后批量收敛，锁定及不适用图层跳过，选择保持且每次单步 History/Undo。标准菜单不可聚焦并提供辅助值，MCP `xomo.layer.style_settings` 同步支持 `property=strokePatternKind patternKind=checkerboard|diagonalStripes|dots`。专项 4/4、样式回归 30/30、CLI 2/2、发布契约 7/7 通过。
 v2.12.0-rc357 继续修正图层样式多选假状态：当全部可编辑选中层都使用渐变描边、但分别采用线性、径向、反射或菱形样式时，菜单显示三语“多个值”；选择样式后批量收敛，锁定及不适用图层跳过，选择保持且每次单步 History/Undo。标准菜单不可聚焦并提供辅助值，MCP `xomo.layer.style_settings` 同步支持 `property=strokeGradientStyle gradientStyle=linear|radial|reflected|diamond`。专项 4/4、样式回归 30/30、CLI 2/2、发布契约 7/7 通过。
 v2.12.0-rc356 把枚举多选语义扩展到“描边填充”：颜色、渐变、图案混合时菜单显示三语“多个值”，并隐藏主选层的专属参数，避免用户误以为所有选中层都共享同一种填充；选定类型后批量收敛全部可编辑层，再显示正确的颜色/渐变/图案分支。锁定/组/调整/滤镜层跳过，选择保持且每次单步 History/Undo。MCP `xomo.layer.style_settings` 同步支持 `property=strokeFillType fillType=color|gradient|pattern`。专项 4/4、样式回归 30/30、CLI 2/2、发布契约 7/7 通过。

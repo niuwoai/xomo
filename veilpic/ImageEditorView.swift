@@ -4225,14 +4225,6 @@ struct ImageEditorView: View {
         }
     }
 
-    private var selectedLayerInnerGlowSourceBinding: Binding<ImageEditorInnerGlowSource> {
-        Binding {
-            viewModel.selectedLayerInnerGlowSource
-        } set: { value in
-            viewModel.setSelectedLayerInnerGlowSource(value)
-        }
-    }
-
     private var selectedLayerColorOverlayOpacityBinding: Binding<Double> {
         Binding {
             viewModel.selectedLayerColorOverlayOpacity
@@ -7263,12 +7255,15 @@ struct ImageEditorView: View {
                     in: 0...1,
                     step: 0.05
                 )
-                Picker(L10n.text("imageEditor.properties.innerGlowSource"), selection: selectedLayerInnerGlowSourceBinding) {
-                    ForEach(ImageEditorInnerGlowSource.allCases) { source in
-                        Text(source.title).tag(source)
-                    }
+                layerStyleValuePicker(
+                    state: viewModel.selectedLayerInnerGlowSourceState,
+                    values: ImageEditorInnerGlowSource.allCases,
+                    labelKey: "imageEditor.properties.innerGlowSource",
+                    accessibilityIdentifier: "image-editor-layer-style-inner-glow-source",
+                    title: \.title
+                ) { source in
+                    viewModel.setSelectedLayerInnerGlowSource(source)
                 }
-                .pickerStyle(.segmented)
                 Stepper(
                     L10n.format("imageEditor.properties.colorOverlayOpacityValue", Int((viewModel.selectedLayerColorOverlayOpacity * 100).rounded())),
                     value: selectedLayerColorOverlayOpacityBinding,

@@ -2120,6 +2120,12 @@ final class XomoAutomationRegistry {
         case "innerGlowBlur": viewModel.setSelectedLayerInnerGlowBlur(try number())
         case "innerGlowChoke": viewModel.setSelectedLayerInnerGlowChoke(try number())
         case "innerGlowNoise": viewModel.setSelectedLayerInnerGlowNoise(try number())
+        case "innerGlowSource":
+            let rawValue = try requiredString("source", in: arguments)
+            guard let source = ImageEditorInnerGlowSource(rawValue: rawValue) else {
+                throw XomoAutomationCallError.invalidArgument("Unknown inner glow source")
+            }
+            viewModel.setSelectedLayerInnerGlowSource(source)
         case "colorOverlayOpacity": viewModel.setSelectedLayerColorOverlayOpacity(try number())
         case "colorOverlayColor": viewModel.setSelectedLayerColorOverlayColor(viewModel.foregroundColor)
         case "gradientOverlayOpacity": viewModel.setSelectedLayerGradientOverlayOpacity(try number())
@@ -3584,12 +3590,13 @@ private extension XomoAutomationRegistry {
             "path": XomoAutomationSchema.string(description: "Local .xomostyles path for preset import preview, import, or export")
         ], required: ["action"]),
         tool("xomo.layer.style_settings", "Set effect scale, stroke, shadow, glow, overlay, satin, bevel, and global-light properties.", [
-            "property": XomoAutomationSchema.string(description: "Layer style property", values: ["effectScale", "strokeWidth", "strokePosition", "strokeFillType", "strokeGradientStyle", "strokePatternKind", "strokeOpacity", "strokeColor", "shadowOpacity", "shadowColor", "shadowBlur", "shadowSpread", "shadowNoise", "shadowDistance", "shadowAngle", "globalLightAngle", "innerShadowOpacity", "innerShadowBlur", "innerShadowChoke", "innerShadowNoise", "innerShadowDistance", "innerShadowAngle", "outerGlowOpacity", "outerGlowColor", "outerGlowBlur", "outerGlowSpread", "outerGlowNoise", "innerGlowOpacity", "innerGlowColor", "innerGlowBlur", "innerGlowChoke", "innerGlowNoise", "colorOverlayOpacity", "colorOverlayColor", "gradientOverlayOpacity", "gradientOverlayScale", "gradientOverlayAngle", "patternOverlayOpacity", "patternOverlayScale", "satinOpacity", "satinColor", "satinDistance", "satinSize", "satinAngle", "satinInvert", "bevelSize", "bevelOpacity", "bevelHighlightColor", "bevelShadowColor", "bevelSoften", "bevelAngle"]),
+            "property": XomoAutomationSchema.string(description: "Layer style property", values: ["effectScale", "strokeWidth", "strokePosition", "strokeFillType", "strokeGradientStyle", "strokePatternKind", "strokeOpacity", "strokeColor", "shadowOpacity", "shadowColor", "shadowBlur", "shadowSpread", "shadowNoise", "shadowDistance", "shadowAngle", "globalLightAngle", "innerShadowOpacity", "innerShadowBlur", "innerShadowChoke", "innerShadowNoise", "innerShadowDistance", "innerShadowAngle", "outerGlowOpacity", "outerGlowColor", "outerGlowBlur", "outerGlowSpread", "outerGlowNoise", "innerGlowOpacity", "innerGlowColor", "innerGlowBlur", "innerGlowChoke", "innerGlowNoise", "innerGlowSource", "colorOverlayOpacity", "colorOverlayColor", "gradientOverlayOpacity", "gradientOverlayScale", "gradientOverlayAngle", "patternOverlayOpacity", "patternOverlayScale", "satinOpacity", "satinColor", "satinDistance", "satinSize", "satinAngle", "satinInvert", "bevelSize", "bevelOpacity", "bevelHighlightColor", "bevelShadowColor", "bevelSoften", "bevelAngle"]),
             "value": XomoAutomationSchema.number(description: "Numeric style value"),
             "position": XomoAutomationSchema.string(description: "Stroke position", values: ImageEditorStrokePosition.allCases.map(\.rawValue)),
             "fillType": XomoAutomationSchema.string(description: "Stroke fill type", values: ImageEditorStrokeFillType.allCases.map(\.rawValue)),
             "gradientStyle": XomoAutomationSchema.string(description: "Stroke gradient style", values: ImageEditorGradientFillStyle.allCases.map(\.rawValue)),
             "patternKind": XomoAutomationSchema.string(description: "Stroke pattern kind", values: ImageEditorPatternOverlayKind.allCases.map(\.rawValue)),
+            "source": XomoAutomationSchema.string(description: "Inner glow source", values: ImageEditorInnerGlowSource.allCases.map(\.rawValue)),
             "enabled": XomoAutomationSchema.boolean(description: "Boolean style value; color properties use the current foreground color")
         ], required: ["property"]),
         tool("xomo.layer.selection", "Select layers by state, relationship, kind, blend mode, or label.", [

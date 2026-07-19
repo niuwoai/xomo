@@ -1,7 +1,8 @@
 # Xomo MCP 与 CLI
 
-> 当前版本：v2.12.0-rc358
+> 当前版本：v2.12.0-rc359
 
+rc359 为 `xomo.layer.style_settings` 增加 `property=innerGlowSource`，并要求 `source=edge|center`；调用会批量更新全部可编辑选中层、启用内发光并与本地混合值菜单共享单步 History/Undo setter。锁定及不适用图层跳过，工具 schema 明确公开两项枚举，既有参数和返回结构保持兼容。
 rc358 为 `xomo.layer.style_settings` 增加 `property=strokePatternKind`，并要求 `patternKind=checkerboard|diagonalStripes|dots`；调用会批量更新全部可编辑选中层、启用图案描边并与本地混合值菜单共享单步 History/Undo setter。锁定及不适用图层跳过，工具 schema 明确公开三项枚举，既有参数和返回结构保持兼容。
 rc357 为 `xomo.layer.style_settings` 增加 `property=strokeGradientStyle`，并要求 `gradientStyle=linear|radial|reflected|diamond`；调用会批量更新全部可编辑选中层、启用渐变描边并与本地混合值菜单共享单步 History/Undo setter。锁定及不适用图层跳过，工具 schema 明确公开四项枚举，既有参数和返回结构保持兼容。
 rc356 为 `xomo.layer.style_settings` 增加 `property=strokeFillType`，并要求 `fillType=color|gradient|pattern`；调用会批量更新全部可编辑选中层、启用描边并初始化相应填充默认值，锁定及不适用图层跳过。工具 schema 明确公开三项枚举，本地混合值菜单、History/Undo 与自动化共享同一 setter，既有参数和返回结构保持兼容。

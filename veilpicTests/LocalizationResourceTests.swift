@@ -539,6 +539,30 @@ struct LocalizationResourceTests {
         }
     }
 
+    @Test func layerStyleMixedInnerGlowSourceIsLocalizedInEverySupportedLanguage() throws {
+        let paths = try Self.repositoryPaths()
+        let expectedValues = [
+            "zh-Hans": ["内发光来源", "多个值", "边缘", "中心"],
+            "en": ["Inner Glow Source", "Multiple Values", "Edge", "Center"],
+            "ja": ["内側光彩のソース", "複数の値", "エッジ", "中心"]
+        ]
+        let keys = [
+            "imageEditor.properties.innerGlowSource",
+            "imageEditor.properties.multipleValues",
+            "imageEditor.innerGlowSource.edge",
+            "imageEditor.innerGlowSource.center"
+        ]
+
+        for (localizationID, expected) in expectedValues {
+            let strings = try Self.stringTable(
+                tableName: "Localizable",
+                localizationID: localizationID,
+                appDirectory: paths.appDirectory
+            )
+            #expect(keys.compactMap { strings[$0] } == expected)
+        }
+    }
+
     @Test func fingerPaintingIsLocalizedInEverySupportedLanguage() throws {
         let paths = try Self.repositoryPaths()
         let expectedValues = [

@@ -400,6 +400,10 @@ extension ImageEditorViewModel {
         document.selectedLayer?.style.innerGlowSource ?? .edge
     }
 
+    var selectedLayerInnerGlowSourceState: ImageEditorLayerStyleValueState<ImageEditorInnerGlowSource> {
+        selectedLayerStyleValueState(\.innerGlowSource)
+    }
+
     var selectedLayerColorOverlayOpacity: Double {
         Double(document.selectedLayer?.style.colorOverlayOpacity ?? 0.55)
     }

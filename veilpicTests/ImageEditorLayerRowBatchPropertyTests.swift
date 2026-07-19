@@ -549,6 +549,59 @@ struct ImageEditorLayerRowBatchPropertyTests {
         return fixture
     }
 
+    @Test func layerStyleMixedInnerGlowSourceConvergesAcrossEditableSelection() throws {
+        try assertInnerGlowSourceConvergence()
+    }
+
+    @Test func layerStyleMixedInnerGlowSourcePickerUsesLocalizedValue() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("state: viewModel.selectedLayerInnerGlowSourceState"))
+        #expect(source.contains("image-editor-layer-style-inner-glow-source"))
+        #expect(source.contains("viewModel.setSelectedLayerInnerGlowSource(source)"))
+        #expect(!source.contains("selectedLayerInnerGlowSourceBinding"))
+    }
+
+    private func assertInnerGlowSourceConvergence() throws {
+        let fixture = innerGlowSourceFixture()
+        let viewModel = fixture.viewModel
+        let firstID = fixture.layers[0].id
+        let secondID = fixture.layers[1].id
+        let lockedID = fixture.layers[2].id
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.selectedLayerInnerGlowSourceState == .mixed)
+        viewModel.setSelectedLayerInnerGlowSource(.center)
+        #expect(viewModel.selectedLayerInnerGlowSourceState == .value(.center))
+        #expect((try layer(firstID, in: viewModel)).style.innerGlowSource == .center)
+        #expect((try layer(secondID, in: viewModel)).style.innerGlowSource == .center)
+        #expect((try layer(lockedID, in: viewModel)).style.innerGlowSource == .edge)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerInnerGlowSourceState == .mixed)
+        viewModel.redo()
+        #expect(viewModel.selectedLayerInnerGlowSourceState == .value(.center))
+    }
+
+    private func innerGlowSourceFixture() -> Fixture {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        viewModel.document.layers[0].style.innerGlowSource = .edge
+        viewModel.document.layers[1].style.innerGlowSource = .center
+        viewModel.document.layers[2].style.innerGlowSource = .edge
+        viewModel.document.layers[2].isLocked = true
+        select(Set(fixture.layers.map(\.id)), primary: fixture.layers[0].id, in: viewModel)
+        return fixture
+    }
+
     @Test func layerStyleSatinInvertMixedStateConvergesAcrossEditableSelection() throws {
         try assertSatinInvertConvergence()
     }
