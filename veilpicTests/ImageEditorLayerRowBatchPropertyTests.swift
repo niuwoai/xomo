@@ -432,6 +432,60 @@ struct ImageEditorLayerRowBatchPropertyTests {
         return fixture
     }
 
+    @Test func layerStyleStrokeGradientAngleMixedValueConvergesAcrossEditableSelection() throws {
+        let fixture = strokeGradientAngleFixture()
+        let viewModel = fixture.viewModel
+        let firstID = fixture.layers[0].id
+        let secondID = fixture.layers[1].id
+        let lockedID = fixture.layers[2].id
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.selectedLayerStrokeGradientAngleState == .mixed)
+        viewModel.setSelectedLayerStrokeGradientAngle(120)
+        #expect(viewModel.selectedLayerStrokeGradientAngleState == .value(120))
+        #expect((try layer(firstID, in: viewModel)).style.strokeGradientAngle == 120)
+        #expect((try layer(secondID, in: viewModel)).style.strokeGradientAngle == 120)
+        #expect((try layer(lockedID, in: viewModel)).style.strokeGradientAngle == 30)
+        #expect((try layer(firstID, in: viewModel)).style.strokeEnabled)
+        #expect((try layer(secondID, in: viewModel)).style.strokeFillType == .gradient)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerStrokeGradientAngleState == .mixed)
+        viewModel.redo()
+        #expect(viewModel.selectedLayerStrokeGradientAngleState == .value(120))
+    }
+
+    @Test func layerStyleStrokeGradientAngleControlReusesMixedNumericStepper() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("state: viewModel.selectedLayerStrokeGradientAngleState"))
+        #expect(source.contains("value: selectedLayerStrokeGradientAngleBinding"))
+        #expect(source.contains("image-editor-layer-style-stroke-gradient-angle"))
+        #expect(source.contains("L10n.format(\"imageEditor.properties.strokeGradientAngleValue\""))
+    }
+
+    private func strokeGradientAngleFixture() -> Fixture {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        viewModel.document.layers[0].style.strokeFillType = .gradient
+        viewModel.document.layers[0].style.strokeGradientAngle = -45
+        viewModel.document.layers[1].style.strokeFillType = .gradient
+        viewModel.document.layers[1].style.strokeGradientAngle = 90
+        viewModel.document.layers[2].style.strokeFillType = .gradient
+        viewModel.document.layers[2].style.strokeGradientAngle = 30
+        viewModel.document.layers[2].isLocked = true
+        select(Set(fixture.layers.map(\.id)), primary: fixture.layers[0].id, in: viewModel)
+        return fixture
+    }
+
     @Test func layerStyleStrokePositionPickerShowsLocalizedMixedValue() throws {
         let repositoryRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()

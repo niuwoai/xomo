@@ -6992,12 +6992,15 @@ struct ImageEditorView: View {
                     ) { style in
                         viewModel.setSelectedLayerStrokeGradientStyle(style)
                     }
-                    Stepper(
-                        L10n.format("imageEditor.properties.strokeGradientAngleValue", Int(viewModel.selectedLayerStrokeGradientAngle.rounded())),
+                    layerStyleNumericStepper(
+                        state: viewModel.selectedLayerStrokeGradientAngleState,
                         value: selectedLayerStrokeGradientAngleBinding,
-                        in: -180...180,
-                        step: 15
-                    )
+                        range: -180...180,
+                        step: 15,
+                        accessibilityIdentifier: "image-editor-layer-style-stroke-gradient-angle"
+                    ) { value in
+                        L10n.format("imageEditor.properties.strokeGradientAngleValue", Int(value.rounded()))
+                    }
                 } else if viewModel.selectedLayerStrokeFillTypeState.value == .pattern {
                     layerStyleValuePicker(
                         state: viewModel.selectedLayerStrokePatternKindState,

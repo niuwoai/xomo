@@ -261,6 +261,10 @@ extension ImageEditorViewModel {
         Double(document.selectedLayer?.style.strokeGradientAngle ?? 0)
     }
 
+    var selectedLayerStrokeGradientAngleState: ImageEditorLayerStyleValueState<CGFloat> {
+        selectedLayerStyleValueState(\.strokeGradientAngle)
+    }
+
     var selectedLayerStrokePatternKind: ImageEditorPatternOverlayKind {
         document.selectedLayer?.style.strokePatternKind ?? .checkerboard
     }

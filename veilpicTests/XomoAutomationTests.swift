@@ -3173,6 +3173,45 @@ struct XomoAutomationTests {
         #expect(viewModel.document.selectedLayerIDs == [first.id, second.id, locked.id])
     }
 
+    @Test func registrySetsLayerStyleStrokeGradientAngleAcrossEditableSelection() throws {
+        let viewModel = makeViewModel()
+        let canvasSize = viewModel.document.canvasSize
+        var first = ImageEditorLayer.blank(name: "First", size: canvasSize)
+        var second = ImageEditorLayer.blank(name: "Second", size: canvasSize)
+        var locked = ImageEditorLayer.blank(name: "Locked", size: canvasSize)
+        first.style.strokeGradientAngle = -45
+        second.style.strokeGradientAngle = 90
+        locked.style.strokeGradientAngle = 30
+        locked.isLocked = true
+        viewModel.document.layers = [first, second, locked]
+        viewModel.document.selectedLayerID = first.id
+        viewModel.document.selectedLayerIDs = [first.id, second.id, locked.id]
+        let historyCount = viewModel.document.history.count
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        try assertNumericLayerStylePropertySchema("strokeGradientAngle", in: toolsResponse)
+
+        let result = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("strokeGradientAngle"),
+                "value": .number(120)
+            ]
+        ))
+
+        #expect(result.ok)
+        #expect(viewModel.document.layers[0].style.strokeGradientAngle == 120)
+        #expect(viewModel.document.layers[1].style.strokeGradientAngle == 120)
+        #expect(viewModel.document.layers[2].style.strokeGradientAngle == 30)
+        #expect(viewModel.document.layers[0].style.strokeEnabled)
+        #expect(viewModel.document.layers[1].style.strokeFillType == .gradient)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [first.id, second.id, locked.id])
+    }
+
     @Test func registrySetsLayerStyleStrokeFillTypeWithAdvertisedEnum() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

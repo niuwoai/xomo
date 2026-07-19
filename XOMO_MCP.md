@@ -1,7 +1,8 @@
 # Xomo MCP 与 CLI
 
-> 当前版本：v2.12.0-rc369
+> 当前版本：v2.12.0-rc370
 
+rc370 为 `xomo.layer.style_settings` 增加 `property=strokeGradientAngle`，并要求 `value=<-180...180>`；调用会统一更新全部可编辑选中层、启用描边、切换为渐变填充并保持单步 History/Undo，锁定及不适用图层跳过。工具 schema 公开该数值属性，本地混合角度 Stepper 与 MCP 共享同一 setter，既有参数和返回结构保持兼容。
 rc369 不新增破坏性协议字段；既有 `xomo.layer.style_settings property=strokeOpacity value=<0.05...1>` 补充多选批量行为和数值 schema 回归。调用会统一更新全部可编辑选中层、启用描边并保持单步 History/Undo，锁定及不适用图层跳过；本地混合百分比 Stepper 与 MCP 继续共享同一 setter。
 rc368 不新增破坏性协议字段；既有 `xomo.layer.style_settings property=strokeWidth value=<1...24>` 补充多选批量行为和数值 schema 回归。调用会统一更新全部可编辑选中层、启用描边并保持单步 History/Undo，锁定及不适用图层跳过；本地混合数值 Stepper 与 MCP 继续共享同一 setter。
 rc367 为 `xomo.layer.style_settings` 增加 `property=satinContour`，并要求 `satinContour=linear|soft|steep|cone|ring`；调用会批量更新全部可编辑选中层、启用光泽并与本地混合值菜单共享单步 History/Undo setter。锁定及不适用图层跳过，工具 schema 明确公开五项枚举，既有参数和返回结构保持兼容。
