@@ -916,6 +916,57 @@ struct ImageEditorLayerRowBatchPropertyTests {
         return fixture
     }
 
+    @Test func layerStylePatternOverlayOpacityMixedValueConvergesAcrossEditableSelection() throws {
+        let fixture = patternOverlayOpacityFixture()
+        let viewModel = fixture.viewModel
+        let firstID = fixture.layers[0].id
+        let secondID = fixture.layers[1].id
+        let lockedID = fixture.layers[2].id
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.selectedLayerPatternOverlayOpacityState == .mixed)
+        viewModel.setSelectedLayerPatternOverlayOpacity(0.6)
+        #expect(viewModel.selectedLayerPatternOverlayOpacityState == .value(0.6))
+        #expect((try layer(firstID, in: viewModel)).style.patternOverlayOpacity == 0.6)
+        #expect((try layer(secondID, in: viewModel)).style.patternOverlayOpacity == 0.6)
+        #expect((try layer(lockedID, in: viewModel)).style.patternOverlayOpacity == 0.4)
+        #expect((try layer(firstID, in: viewModel)).style.patternOverlayEnabled)
+        #expect((try layer(secondID, in: viewModel)).style.patternOverlayEnabled)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerPatternOverlayOpacityState == .mixed)
+        viewModel.redo()
+        #expect(viewModel.selectedLayerPatternOverlayOpacityState == .value(0.6))
+    }
+
+    @Test func layerStylePatternOverlayOpacityControlReusesMixedNumericStepper() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("state: viewModel.selectedLayerPatternOverlayOpacityState"))
+        #expect(source.contains("value: selectedLayerPatternOverlayOpacityBinding"))
+        #expect(source.contains("image-editor-layer-style-pattern-overlay-opacity"))
+        #expect(source.contains("L10n.format(\"imageEditor.properties.patternOverlayOpacityValue\""))
+    }
+
+    private func patternOverlayOpacityFixture() -> Fixture {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        viewModel.document.layers[0].style.patternOverlayOpacity = 0.25
+        viewModel.document.layers[1].style.patternOverlayOpacity = 0.75
+        viewModel.document.layers[2].style.patternOverlayOpacity = 0.4
+        viewModel.document.layers[2].isLocked = true
+        select(Set(fixture.layers.map(\.id)), primary: fixture.layers[0].id, in: viewModel)
+        return fixture
+    }
+
     @Test func layerStylePatternOverlayScaleMixedValueConvergesAcrossEditableSelection() throws {
         let fixture = patternOverlayScaleFixture()
         let viewModel = fixture.viewModel

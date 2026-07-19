@@ -7317,12 +7317,15 @@ struct ImageEditorView: View {
                     viewModel.setSelectedLayerPatternOverlayKind(kind)
                 }
                 HStack {
-                    Stepper(
-                        L10n.format("imageEditor.properties.patternOverlayOpacityValue", Int((viewModel.selectedLayerPatternOverlayOpacity * 100).rounded())),
+                    layerStyleNumericStepper(
+                        state: viewModel.selectedLayerPatternOverlayOpacityState,
                         value: selectedLayerPatternOverlayOpacityBinding,
-                        in: 0.05...1,
-                        step: 0.05
-                    )
+                        range: 0.05...1,
+                        step: 0.05,
+                        accessibilityIdentifier: "image-editor-layer-style-pattern-overlay-opacity"
+                    ) { value in
+                        L10n.format("imageEditor.properties.patternOverlayOpacityValue", Int((value * 100).rounded()))
+                    }
                     layerStyleNumericStepper(
                         state: viewModel.selectedLayerPatternOverlayScaleState,
                         value: selectedLayerPatternOverlayScaleBinding,

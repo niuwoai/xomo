@@ -472,6 +472,10 @@ extension ImageEditorViewModel {
         Double(document.selectedLayer?.style.patternOverlayOpacity ?? 0.45)
     }
 
+    var selectedLayerPatternOverlayOpacityState: ImageEditorLayerStyleValueState<CGFloat> {
+        selectedLayerStyleValueState(\.patternOverlayOpacity)
+    }
+
     var selectedLayerPatternOverlayScale: Double {
         Double(document.selectedLayer?.style.patternOverlayScale ?? 14)
     }
