@@ -444,6 +444,10 @@ extension ImageEditorViewModel {
         Double(document.selectedLayer?.style.outerGlowBlur ?? 10)
     }
 
+    var selectedLayerOuterGlowBlurState: ImageEditorLayerStyleValueState<CGFloat> {
+        selectedLayerStyleValueState(\.outerGlowBlur)
+    }
+
     var selectedLayerOuterGlowSpread: Double {
         Double(document.selectedLayer?.style.outerGlowSpread ?? 3)
     }

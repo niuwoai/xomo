@@ -7212,12 +7212,15 @@ struct ImageEditorView: View {
                     Spacer(minLength: 4)
                 }
                 HStack {
-                    Stepper(
-                        L10n.format("imageEditor.properties.outerGlowBlurValue", Int(viewModel.selectedLayerOuterGlowBlur.rounded())),
+                    layerStyleNumericStepper(
+                        state: viewModel.selectedLayerOuterGlowBlurState,
                         value: selectedLayerOuterGlowBlurBinding,
-                        in: 0...40,
-                        step: 1
-                    )
+                        range: 0...40,
+                        step: 1,
+                        accessibilityIdentifier: "image-editor-layer-style-outer-glow-blur"
+                    ) { value in
+                        L10n.format("imageEditor.properties.outerGlowBlurValue", Int(value.rounded()))
+                    }
                     Stepper(
                         L10n.format("imageEditor.properties.outerGlowSpreadValue", Int(viewModel.selectedLayerOuterGlowSpread.rounded())),
                         value: selectedLayerOuterGlowSpreadBinding,
