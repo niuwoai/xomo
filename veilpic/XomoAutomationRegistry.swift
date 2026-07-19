@@ -95,6 +95,8 @@ final class XomoAutomationRegistry {
             viewModel.selectTool(tool)
         case "xomo.layer.list":
             return try layersResult(arguments, viewModel: viewModel)
+        case "xomo.object.select_at":
+            return try selectObjectAtPoint(arguments, viewModel: viewModel)
         case "xomo.figma.bindings":
             return try figmaBindingsAction(arguments, viewModel: viewModel)
         case "xomo.figma.link":
@@ -611,6 +613,66 @@ final class XomoAutomationRegistry {
                 "figmaImageFill": figmaImageFillJSON(layer.xomoFigmaImageFill)
             ])
         })
+    }
+
+    private func selectObjectAtPoint(
+        _ arguments: [String: XomoJSONValue],
+        viewModel: ImageEditorViewModel
+    ) throws -> XomoJSONValue {
+        let point = try requiredPoint(arguments)
+        let mode = arguments["mode"]?.stringValue ?? "auto"
+        let extend = arguments["extend"]?.boolValue ?? false
+        let selected: Bool
+
+        switch mode {
+        case "auto":
+            selected = viewModel.selectXomoObject(at: point, extendingSelection: extend)
+                || viewModel.selectVisibleLayer(at: point, extendingSelection: extend)
+        case "component":
+            selected = viewModel.selectXomoObject(at: point, extendingSelection: extend)
+        case "deep":
+            selected = viewModel.selectDeepestVisibleLayer(at: point, extendingSelection: extend)
+        default:
+            throw XomoAutomationCallError.invalidArgument("Unknown object selection mode: \(mode)")
+        }
+
+        if !selected, arguments["clearOnMiss"]?.boolValue == true {
+            viewModel.clearLayerSelection()
+        }
+
+        guard selected, let layer = viewModel.document.selectedLayer else {
+            return .object([
+                "hit": .bool(false),
+                "mode": .string(mode),
+                "selectedLayerId": viewModel.document.selectedLayerID.map {
+                    .string($0.uuidString)
+                } ?? .null,
+                "selectedLayerIds": .array(viewModel.document.selectedLayerIDs.map {
+                    .string($0.uuidString)
+                })
+            ])
+        }
+
+        let bounds = viewModel.selectedXomoObjectFrame ?? layer.frame.standardized
+        return .object([
+            "hit": .bool(true),
+            "mode": .string(mode),
+            "selectedLayerId": .string(layer.id.uuidString),
+            "selectedLayerIds": .array(viewModel.document.selectedLayerIDs.map {
+                .string($0.uuidString)
+            }),
+            "name": .string(layer.name),
+            "kind": .string(layerKindName(layer.kind)),
+            "component": viewModel.selectedXomoObjectKind.map {
+                .string($0.rawValue)
+            } ?? .null,
+            "bounds": .object([
+                "x": .number(bounds.minX),
+                "y": .number(bounds.minY),
+                "width": .number(bounds.width),
+                "height": .number(bounds.height)
+            ])
+        ])
     }
 
     private func figmaImageFillJSON(_ metadata: XomoFigmaImageFillMetadata?) -> XomoJSONValue {
@@ -3561,6 +3623,13 @@ private extension XomoAutomationRegistry {
         tool("xomo.layer.list", "List layers with hierarchy, bounds, visibility, locks, opacity, blend mode, preserved Figma variable bindings, and optional binding filters.", [
             "figmaBindings": XomoAutomationSchema.string(description: "Filter by preserved Figma variable bindings", values: ["all", "bound", "unbound"])
         ]),
+        tool("xomo.object.select_at", "Select the frontmost visible canvas object at a point using the editor's alpha-aware component and layer hit testing.", [
+            "x": XomoAutomationSchema.number(description: "Canvas x coordinate"),
+            "y": XomoAutomationSchema.number(description: "Canvas y coordinate"),
+            "mode": XomoAutomationSchema.string(description: "Selection depth", values: ["auto", "component", "deep"]),
+            "extend": XomoAutomationSchema.boolean(description: "Extend the current layer selection"),
+            "clearOnMiss": XomoAutomationSchema.boolean(description: "Clear layer selection when the point hits no visible object")
+        ], required: ["x", "y"]),
         tool("xomo.figma.bindings", "List or copy the deduplicated Figma variable bindings from the current layer selection.", [
             "action": XomoAutomationSchema.string(description: "Binding action", values: ["list", "copy"])
         ], required: ["action"]),

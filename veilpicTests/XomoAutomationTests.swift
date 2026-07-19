@@ -42,11 +42,21 @@ struct XomoAutomationTests {
             Issue.record("Expected tool array")
             return
         }
-        #expect(tools.count == 132)
+        #expect(tools.count == 133)
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.layer.list")
         })
+        let objectSelectTool = try #require(tools.compactMap { tool -> [String: XomoJSONValue]? in
+            guard case .object(let value) = tool else { return nil }
+            return value
+        }.first { $0["name"] == .string("xomo.object.select_at") })
+        #expect(objectSelectTool["inputSchema"]?.objectValue?["required"] == .array([
+            .string("x"), .string("y")
+        ]))
+        #expect(objectSelectTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["mode"]?.objectValue?["enum"] == .array([
+            .string("auto"), .string("component"), .string("deep")
+        ]))
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.channel.action")
@@ -849,6 +859,95 @@ struct XomoAutomationTests {
         ))
         #expect(!rejected.ok)
         #expect(rejected.error?.contains("xomo.figma.error.insecureScheme") == true)
+    }
+
+    @Test func registrySelectsCanvasComponentsAndDeepChildrenByVisiblePoint() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        defer { registry.unregister(viewModel) }
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))
+        let group = try #require(viewModel.document.selectedLayer)
+        let objectFrame = try #require(viewModel.selectedXomoObjectFrame)
+        let childIDs = Set(viewModel.document.layers.filter { $0.groupID == group.id }.map(\.id))
+        let historyCount = viewModel.document.history.count
+        viewModel.clearLayerSelection()
+
+        let selectedObject = registry.execute(request(
+            operation: "call",
+            name: "xomo.object.select_at",
+            arguments: ["x": .number(160), "y": .number(112)]
+        ))
+
+        #expect(selectedObject.ok)
+        #expect(selectedObject.result?.objectValue?["hit"] == .bool(true))
+        #expect(selectedObject.result?.objectValue?["mode"] == .string("auto"))
+        #expect(selectedObject.result?.objectValue?["selectedLayerId"] == .string(group.id.uuidString))
+        #expect(selectedObject.result?.objectValue?["kind"] == .string("group"))
+        #expect(selectedObject.result?.objectValue?["component"] == .string("button"))
+        #expect(selectedObject.result?.objectValue?["bounds"] == .object([
+            "x": .number(objectFrame.minX),
+            "y": .number(objectFrame.minY),
+            "width": .number(objectFrame.width),
+            "height": .number(objectFrame.height)
+        ]))
+        #expect(viewModel.document.selectedLayerID == group.id)
+        #expect(viewModel.document.history.count == historyCount)
+
+        let selectedChild = registry.execute(request(
+            operation: "call",
+            name: "xomo.object.select_at",
+            arguments: [
+                "x": .number(160),
+                "y": .number(112),
+                "mode": .string("deep")
+            ]
+        ))
+
+        #expect(selectedChild.ok)
+        let selectedChildID = try #require(viewModel.document.selectedLayerID)
+        #expect(childIDs.contains(selectedChildID))
+        #expect(selectedChild.result?.objectValue?["selectedLayerId"] == .string(selectedChildID.uuidString))
+        #expect(selectedChild.result?.objectValue?["component"] == .null)
+        #expect(viewModel.document.history.count == historyCount)
+    }
+
+    @Test func registryObjectPointSelectionCanClearOnMissAndRejectUnknownDepth() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        defer { registry.unregister(viewModel) }
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 80, y: 90))
+        let historyCount = viewModel.document.history.count
+
+        let miss = registry.execute(request(
+            operation: "call",
+            name: "xomo.object.select_at",
+            arguments: [
+                "x": .number(-10),
+                "y": .number(-10),
+                "clearOnMiss": .bool(true)
+            ]
+        ))
+
+        #expect(miss.ok)
+        #expect(miss.result?.objectValue?["hit"] == .bool(false))
+        #expect(miss.result?.objectValue?["selectedLayerId"] == .null)
+        #expect(viewModel.document.selectedLayerID == nil)
+        #expect(viewModel.document.selectedLayerIDs.isEmpty)
+        #expect(viewModel.document.history.count == historyCount)
+
+        let rejected = registry.execute(request(
+            operation: "call",
+            name: "xomo.object.select_at",
+            arguments: [
+                "x": .number(160),
+                "y": .number(112),
+                "mode": .string("mystery")
+            ]
+        ))
+        #expect(!rejected.ok)
+        #expect(rejected.error?.contains("Unknown object selection mode") == true)
     }
 
     @Test func registryImportsLocalComponentTokensForSubsequentInsertion() throws {

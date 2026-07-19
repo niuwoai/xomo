@@ -48,6 +48,20 @@ enum XomoToolCatalog {
                     "additionalProperties": true
                 ]
             }
+            if name == "xomo.object.select_at" {
+                tool["inputSchema"] = [
+                    "type": "object",
+                    "properties": [
+                        "x": ["type": "number"],
+                        "y": ["type": "number"],
+                        "mode": ["type": "string", "enum": ["auto", "component", "deep"]],
+                        "extend": ["type": "boolean"],
+                        "clearOnMiss": ["type": "boolean"]
+                    ],
+                    "required": ["x", "y"],
+                    "additionalProperties": false
+                ]
+            }
             if name == "xomo.paint.special" {
                 tool["inputSchema"] = [
                     "type": "object",
@@ -111,6 +125,7 @@ enum XomoToolCatalog {
         ("xomo.tool.list", "List all image editor tools."),
         ("xomo.tool.select", "Select the active editor tool."),
         ("xomo.layer.list", "List layers, hierarchy, bounds, visibility, locks, opacity, blend mode, preserved Figma variable bindings, and optional binding filters."),
+        ("xomo.object.select_at", "Select the frontmost visible canvas object at a point using Xomo's alpha-aware component and layer hit testing."),
         ("xomo.figma.bindings", "List or copy the deduplicated Figma variable bindings from the current layer selection."),
         ("xomo.figma.link", "Validate and canonicalize a Figma link without network access or credential storage."),
         ("xomo.figma.component_properties", "List, locally override, or reset preserved Figma component properties on the selected layer."),

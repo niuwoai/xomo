@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.12.0-rc401 - 2026-07-19
+
+### Added
+- 新增 `xomo.object.select_at` MCP/CLI 工具，可按画布坐标以 `auto`、`component` 或 `deep` 深度选择最前方可见对象，并支持扩展选择及空白点击清选。
+
+### Changed
+- 自动化坐标选择直接复用编辑器现有的透明像素、有效可见性、遮挡、组件父对象和深层子图层命中语义；组件返回真实子图层联合边界，选择本身不写入 History。
+
+### Verification
+- 对象坐标选择 schema、组件父对象与深选、真实边界、空白清选和非法模式专项 3/3 通过；CLI 2/2、发布契约 7/7 通过。下一次完整 Release、冒烟与 `/Applications` 覆盖门禁仍为 rc440。
+
 ## 2.12.0-rc400 - 2026-07-19
 
 ### Changed
