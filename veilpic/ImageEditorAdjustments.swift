@@ -58,39 +58,14 @@ extension NSImage {
         kind: ImageEditorAdjustment,
         amount: Double,
         settings: ImageEditorAdjustmentSettings = ImageEditorAdjustmentSettings(),
-        mask: NSImage?
+        mask: NSImage?,
+        opacity: Double = 1
     ) -> NSImage? {
+        let normalizedOpacity = max(0, min(1, opacity))
+        guard normalizedOpacity > 0 else { return self }
         guard let adjusted = adjusted(kind: kind, amount: amount, settings: settings) else { return nil }
-        guard let mask else { return adjusted }
-        let maskedAdjusted = NSImage.rendered(size: size) { _ in
-            adjusted.draw(
-                in: CGRect(origin: .zero, size: size),
-                from: CGRect(origin: .zero, size: adjusted.size),
-                operation: .copy,
-                fraction: 1
-            )
-            mask.draw(
-                in: CGRect(origin: .zero, size: size),
-                from: CGRect(origin: .zero, size: mask.size),
-                operation: .destinationIn,
-                fraction: 1
-            )
-        }
-        guard let maskedAdjusted else { return adjusted }
-        return NSImage.rendered(size: size) { _ in
-            draw(
-                in: CGRect(origin: .zero, size: size),
-                from: CGRect(origin: .zero, size: size),
-                operation: .copy,
-                fraction: 1
-            )
-            maskedAdjusted.draw(
-                in: CGRect(origin: .zero, size: size),
-                from: CGRect(origin: .zero, size: maskedAdjusted.size),
-                operation: .sourceOver,
-                fraction: 1
-            )
-        } ?? adjusted
+        guard mask != nil || normalizedOpacity < 1 else { return adjusted }
+        return blendingEditedImage(adjusted, with: mask, opacity: normalizedOpacity) ?? self
     }
 
     func autoLeveled() -> NSImage? {

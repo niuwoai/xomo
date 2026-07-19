@@ -4496,9 +4496,10 @@ struct ImageEditorDocument {
         if let adjustment = layer.adjustment {
             return canvas.applyingAdjustment(
                 kind: adjustment.kind,
-                amount: adjustment.amount * layer.opacity * groupOpacity,
+                amount: adjustment.amount,
                 settings: layer.adjustmentSettings,
-                mask: effectiveCanvasMask(forLayerAt: index, layerMask: layer.effectiveMask, groupMask: groupMask)
+                mask: effectiveCanvasMask(forLayerAt: index, layerMask: layer.effectiveMask, groupMask: groupMask),
+                opacity: layer.opacity * groupOpacity
             ) ?? canvas
         }
         if let filter = layer.filter {

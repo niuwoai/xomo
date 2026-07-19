@@ -6850,9 +6850,10 @@ final class ImageEditorViewModel: ObservableObject {
         }),
               let adjustedImage = renderedLower.applyingAdjustment(
                 kind: adjustment.kind,
-                amount: adjustment.amount * adjustmentLayer.opacity,
+                amount: adjustment.amount,
                 settings: adjustmentLayer.adjustmentSettings,
-                mask: document.localEffectMask(forLayerAt: adjustmentIndex)
+                mask: document.localEffectMask(forLayerAt: adjustmentIndex),
+                opacity: adjustmentLayer.opacity
               )
         else { return nil }
 

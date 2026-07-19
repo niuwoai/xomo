@@ -13,6 +13,51 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct ImageEditorAdjustmentTests {
+    @Test func adjustmentLayerOpacityBlendsTheCompletedEffectWithoutChangingItsParameters() throws {
+        let canvasSize = NSSize(width: 48, height: 32)
+        let sourceImage = bitmapImage(
+            size: canvasSize,
+            background: NSColor(deviceRed: 0.9, green: 0.1, blue: 0.1, alpha: 1)
+        )
+        let viewModel = ImageEditorViewModel(sourceName: "adjustment-layer-opacity.png", image: sourceImage) { _ in }
+        viewModel.selectedAdjustment = .invert
+        viewModel.adjustmentValue = 1
+        viewModel.addAdjustmentLayer()
+
+        let adjustmentIndex = try #require(
+            viewModel.document.layers.firstIndex { $0.id == viewModel.document.selectedLayerID }
+        )
+        let baseIndex = try #require(
+            viewModel.document.layers.indices.first { !viewModel.document.layers[$0].isAdjustment }
+        )
+        viewModel.setSelectedLayerOpacity(0.5)
+
+        let expectedImage = try #require(
+            sourceImage.applyingAdjustment(
+                kind: .invert,
+                amount: 1,
+                mask: nil,
+                opacity: 0.5
+            )
+        )
+        let parameterScaledImage = try #require(
+            sourceImage.applyingAdjustment(
+                kind: .invert,
+                amount: 0.5,
+                mask: nil
+            )
+        )
+        let adjustmentLayer = viewModel.document.layers[adjustmentIndex]
+        let merged = try #require(
+            viewModel.mergedAdjustmentLayer(lowerIndex: baseIndex, adjustmentIndex: adjustmentIndex)
+        )
+
+        #expect(adjustmentLayer.adjustment?.amount == 1)
+        #expect(imageEditorMaximumPixelDifference(viewModel.currentImage, expectedImage) == 0)
+        #expect(imageEditorMaximumPixelDifference(viewModel.currentImage, parameterScaledImage) > 0)
+        #expect(imageEditorMaximumPixelDifference(merged.image, viewModel.currentImage) == 0)
+    }
+
     @Test func imageEditorDesaturatesSelectedLayerWithClassicCommand() throws {
         let canvasSize = NSSize(width: 20, height: 20)
         let sourceImage = bitmapImage(

@@ -163,18 +163,18 @@ extension NSImage {
         guard normalizedOpacity > 0 else { return self }
         guard let filtered = filtered(kind: kind, intensity: intensity, settings: settings) else { return nil }
         guard mask != nil || normalizedOpacity < 1 else { return filtered }
-        return blendingFilteredImage(filtered, with: mask, opacity: normalizedOpacity) ?? self
+        return blendingEditedImage(filtered, with: mask, opacity: normalizedOpacity) ?? self
     }
 
-    private func blendingFilteredImage(
-        _ filtered: NSImage,
+    func blendingEditedImage(
+        _ edited: NSImage,
         with mask: NSImage?,
         opacity: Double
     ) -> NSImage? {
         guard let source = filterRGBAPlane(),
-              let filtered = filtered.filterRGBAPlane(),
-              source.width == filtered.width,
-              source.height == filtered.height
+              let edited = edited.filterRGBAPlane(),
+              source.width == edited.width,
+              source.height == edited.height
         else { return nil }
 
         let maskAlpha: [UInt8]
@@ -192,9 +192,9 @@ extension NSImage {
             let byteOffset = pixelIndex * 4
             for component in 0..<4 {
                 let sourceValue = Double(source.values[byteOffset + component])
-                let filteredValue = Double(filtered.values[byteOffset + component])
+                let editedValue = Double(edited.values[byteOffset + component])
                 output[byteOffset + component] = UInt8(
-                    max(0, min(255, (sourceValue + (filteredValue - sourceValue) * weight).rounded()))
+                    max(0, min(255, (sourceValue + (editedValue - sourceValue) * weight).rounded()))
                 )
             }
         }
