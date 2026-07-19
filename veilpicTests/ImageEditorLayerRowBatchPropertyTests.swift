@@ -602,6 +602,57 @@ struct ImageEditorLayerRowBatchPropertyTests {
         return fixture
     }
 
+    @Test func layerStyleMixedBevelDirectionConvergesAcrossEditableSelection() throws {
+        let fixture = bevelDirectionFixture()
+        let viewModel = fixture.viewModel
+        let firstID = fixture.layers[0].id
+        let secondID = fixture.layers[1].id
+        let lockedID = fixture.layers[2].id
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.selectedLayerBevelDirectionState == .mixed)
+        viewModel.setSelectedLayerBevelDirection(.down)
+        #expect(viewModel.selectedLayerBevelDirectionState == .value(.down))
+        #expect((try layer(firstID, in: viewModel)).style.bevelDirection == .down)
+        #expect((try layer(secondID, in: viewModel)).style.bevelDirection == .down)
+        #expect((try layer(lockedID, in: viewModel)).style.bevelDirection == .up)
+        #expect((try layer(firstID, in: viewModel)).style.bevelEnabled)
+        #expect((try layer(secondID, in: viewModel)).style.bevelEnabled)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerBevelDirectionState == .mixed)
+        viewModel.redo()
+        #expect(viewModel.selectedLayerBevelDirectionState == .value(.down))
+    }
+
+    @Test func layerStyleMixedBevelDirectionPickerUsesLocalizedValue() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("state: viewModel.selectedLayerBevelDirectionState"))
+        #expect(source.contains("image-editor-layer-style-bevel-direction"))
+        #expect(source.contains("viewModel.setSelectedLayerBevelDirection(direction)"))
+        #expect(!source.contains("selectedLayerBevelDirectionBinding"))
+    }
+
+    private func bevelDirectionFixture() -> Fixture {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        viewModel.document.layers[0].style.bevelDirection = .up
+        viewModel.document.layers[1].style.bevelDirection = .down
+        viewModel.document.layers[2].style.bevelDirection = .up
+        viewModel.document.layers[2].isLocked = true
+        select(Set(fixture.layers.map(\.id)), primary: fixture.layers[0].id, in: viewModel)
+        return fixture
+    }
+
     @Test func layerStyleSatinInvertMixedStateConvergesAcrossEditableSelection() throws {
         try assertSatinInvertConvergence()
     }

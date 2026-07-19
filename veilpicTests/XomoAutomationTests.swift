@@ -3187,6 +3187,29 @@ struct XomoAutomationTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStyle"))
     }
 
+    @Test func registrySetsLayerStyleBevelDirectionWithAdvertisedEnum() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        try assertBevelDirectionSchema(in: toolsResponse)
+
+        let result = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("bevelDirection"),
+                "bevelDirection": .string("down")
+            ]
+        ))
+
+        #expect(result.ok)
+        #expect(viewModel.document.selectedLayer?.style.bevelDirection == .down)
+        #expect(viewModel.document.selectedLayer?.style.bevelEnabled == true)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStyle"))
+    }
+
     @Test func registryCreatesAppliesListsAndDeletesPersistedLayerStylePresets() throws {
         let suiteName = "XomoAutomationTests.layerStylePresets.\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suiteName) ?? .standard
@@ -4055,6 +4078,16 @@ struct XomoAutomationTests {
         let sourceSchema = try #require(properties["source"]?.objectValue)
         #expect(propertySchema["enum"]?.arrayValue?.contains(.string("innerGlowSource")) == true)
         #expect(sourceSchema["enum"] == .array([.string("edge"), .string("center")]))
+    }
+
+    private func assertBevelDirectionSchema(in response: XomoAutomationWireResponse) throws {
+        let styleTool = try #require(automationTool(named: "xomo.layer.style_settings", in: response))
+        let inputSchema = try #require(styleTool["inputSchema"]?.objectValue)
+        let properties = try #require(inputSchema["properties"]?.objectValue)
+        let propertySchema = try #require(properties["property"]?.objectValue)
+        let directionSchema = try #require(properties["bevelDirection"]?.objectValue)
+        #expect(propertySchema["enum"]?.arrayValue?.contains(.string("bevelDirection")) == true)
+        #expect(directionSchema["enum"] == .array([.string("up"), .string("down")]))
     }
 
     private func makeViewModel(

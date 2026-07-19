@@ -505,6 +505,10 @@ extension ImageEditorViewModel {
         document.selectedLayer?.style.bevelDirection ?? .up
     }
 
+    var selectedLayerBevelDirectionState: ImageEditorLayerStyleValueState<ImageEditorBevelDirection> {
+        selectedLayerStyleValueState(\.bevelDirection)
+    }
+
     func toggleSelectedLayerStroke() {
         toggleSelectedLayerStyleEffect(.stroke)
     }

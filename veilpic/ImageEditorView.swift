@@ -4361,14 +4361,6 @@ struct ImageEditorView: View {
         }
     }
 
-    private var selectedLayerBevelDirectionBinding: Binding<ImageEditorBevelDirection> {
-        Binding {
-            viewModel.selectedLayerBevelDirection
-        } set: { value in
-            viewModel.setSelectedLayerBevelDirection(value)
-        }
-    }
-
     private func layerStyleGlobalLightToggle(
         _ effect: ImageEditorLayerLightEffect,
         labelKey: String,
@@ -7440,12 +7432,15 @@ struct ImageEditorView: View {
                     labelKey: "imageEditor.properties.bevelUseGlobalLight",
                     accessibilityIdentifier: "image-editor-bevel-global-light"
                 )
-                Picker(L10n.text("imageEditor.properties.bevelDirection"), selection: selectedLayerBevelDirectionBinding) {
-                    ForEach(ImageEditorBevelDirection.allCases) { direction in
-                        Text(direction.title).tag(direction)
-                    }
+                layerStyleValuePicker(
+                    state: viewModel.selectedLayerBevelDirectionState,
+                    values: ImageEditorBevelDirection.allCases,
+                    labelKey: "imageEditor.properties.bevelDirection",
+                    accessibilityIdentifier: "image-editor-layer-style-bevel-direction",
+                    title: \.title
+                ) { direction in
+                    viewModel.setSelectedLayerBevelDirection(direction)
                 }
-                .pickerStyle(.segmented)
                 Stepper(
                     L10n.format("imageEditor.properties.bevelAngleValue", Int(viewModel.selectedLayerBevelAngle.rounded())),
                     value: selectedLayerBevelAngleBinding,

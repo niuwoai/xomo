@@ -1,7 +1,8 @@
 # 像界（Xomo）产品概览
 
-> 最后更新：2026-07-19 | 当前版本：v2.12.0-rc360
+> 最后更新：2026-07-19 | 当前版本：v2.12.0-rc361
 
+v2.12.0-rc361 为斜面浮雕方向补齐多选共同属性语义：向上和向下混合时，标准不可聚焦菜单显示三语“多个值”；选择方向后批量收敛全部可编辑层并启用斜面，锁定及不适用图层跳过，选择保持且每次单步 History/Undo。MCP `xomo.layer.style_settings` 同步支持 `property=bevelDirection bevelDirection=up|down`。专项 3/3、样式回归 30/30、CLI 2/2、发布契约 7/7 通过；下一小步审计渐变叠加样式的同类混合态，下一次完整门禁仍为 rc400。
 v2.12.0-rc360 完成 40 版本完整质量门禁：1249/1249 全量隔离测试、CLI/MCP 2/2、发布契约 7/7、arm64/x86_64 通用 App/CLI、macOS 13、版本与严格签名核验全部通过。真实 Release 界面完成组件插入和画布拖动，确认按钮生成组/文字/背景可编辑图层，组件可直接命中移动；拖动期间只刷新低负载灰色虚线预览，释放时才提交位置。工具光标继续采用系统箭头、移动、抓手、I-Beam、十字、画笔轮廓、缩放与变换等成熟软件惯例。已覆盖安装 `/Applications/Xomo.app` 并通过安装版启动复验；下一次完整门禁为 rc400。
 v2.12.0-rc359 为内发光来源补齐多选共同属性语义：边缘和中心混合时，标准不可聚焦菜单显示三语“多个值”；选择来源后批量收敛全部可编辑层，锁定及不适用图层跳过，选择保持且每次单步 History/Undo。MCP `xomo.layer.style_settings` 同步支持 `property=innerGlowSource source=edge|center`。专项 4/4、样式回归 30/30、CLI 2/2、发布契约 7/7 通过。下一版本 rc360 只执行完整质量门禁、Release 打包、真实界面冒烟与 `/Applications` 覆盖，不混入新功能。
 v2.12.0-rc358 完成描边填充分支的主要枚举多选语义：当全部可编辑选中层都使用图案描边、但分别采用棋盘、斜线或圆点时，菜单显示三语“多个值”；选择图案后批量收敛，锁定及不适用图层跳过，选择保持且每次单步 History/Undo。标准菜单不可聚焦并提供辅助值，MCP `xomo.layer.style_settings` 同步支持 `property=strokePatternKind patternKind=checkerboard|diagonalStripes|dots`。专项 4/4、样式回归 30/30、CLI 2/2、发布契约 7/7 通过。

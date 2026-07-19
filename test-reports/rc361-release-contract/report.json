@@ -1,0 +1,26 @@
+{
+  "version": "2.12.0-rc361",
+  "project_versions": [
+    "2.12.0-rc361"
+  ],
+  "bundle_ids": [
+    "im.some.xomo",
+    "im.some.xomoTests",
+    "im.some.xomoUITests"
+  ],
+  "deployment_targets": [
+    "13.0"
+  ],
+  "checks": {
+    "app_and_cli_version_match": true,
+    "project_versions_match": true,
+    "main_bundle_id": true,
+    "test_bundle_ids": true,
+    "minimum_macos_13": true,
+    "cli_release_is_universal": true,
+    "release_entrypoint_present": true,
+    "isolated_test_entrypoint_present": true
+  },
+  "passed": true,
+  "generated_at": "2026-07-19 11:42:03 +0800"
+}
