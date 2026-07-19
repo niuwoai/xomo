@@ -381,6 +381,57 @@ struct ImageEditorLayerRowBatchPropertyTests {
         return fixture
     }
 
+    @Test func layerStyleStrokeOpacityMixedValueConvergesAcrossEditableSelection() throws {
+        let fixture = strokeOpacityFixture()
+        let viewModel = fixture.viewModel
+        let firstID = fixture.layers[0].id
+        let secondID = fixture.layers[1].id
+        let lockedID = fixture.layers[2].id
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.selectedLayerStrokeOpacityState == .mixed)
+        viewModel.setSelectedLayerStrokeOpacity(0.6)
+        #expect(viewModel.selectedLayerStrokeOpacityState == .value(0.6))
+        #expect((try layer(firstID, in: viewModel)).style.strokeOpacity == 0.6)
+        #expect((try layer(secondID, in: viewModel)).style.strokeOpacity == 0.6)
+        #expect((try layer(lockedID, in: viewModel)).style.strokeOpacity == 0.4)
+        #expect((try layer(firstID, in: viewModel)).style.strokeEnabled)
+        #expect((try layer(secondID, in: viewModel)).style.strokeEnabled)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerStrokeOpacityState == .mixed)
+        viewModel.redo()
+        #expect(viewModel.selectedLayerStrokeOpacityState == .value(0.6))
+    }
+
+    @Test func layerStyleStrokeOpacityControlReusesMixedNumericStepper() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("state: viewModel.selectedLayerStrokeOpacityState"))
+        #expect(source.contains("value: selectedLayerStrokeOpacityBinding"))
+        #expect(source.contains("image-editor-layer-style-stroke-opacity"))
+        #expect(source.contains("L10n.format(\"imageEditor.properties.strokeOpacityValue\""))
+    }
+
+    private func strokeOpacityFixture() -> Fixture {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        viewModel.document.layers[0].style.strokeOpacity = 0.25
+        viewModel.document.layers[1].style.strokeOpacity = 0.75
+        viewModel.document.layers[2].style.strokeOpacity = 0.4
+        viewModel.document.layers[2].isLocked = true
+        select(Set(fixture.layers.map(\.id)), primary: fixture.layers[0].id, in: viewModel)
+        return fixture
+    }
+
     @Test func layerStyleStrokePositionPickerShowsLocalizedMixedValue() throws {
         let repositoryRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()

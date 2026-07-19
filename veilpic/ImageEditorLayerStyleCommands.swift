@@ -233,6 +233,10 @@ extension ImageEditorViewModel {
         Double(document.selectedLayer?.style.strokeOpacity ?? 1)
     }
 
+    var selectedLayerStrokeOpacityState: ImageEditorLayerStyleValueState<CGFloat> {
+        selectedLayerStyleValueState(\.strokeOpacity)
+    }
+
     var selectedLayerStrokeFillType: ImageEditorStrokeFillType {
         document.selectedLayer?.style.strokeFillType ?? .color
     }

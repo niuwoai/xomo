@@ -6950,12 +6950,15 @@ struct ImageEditorView: View {
                 ) { position in
                     viewModel.setSelectedLayerStrokePosition(position)
                 }
-                Stepper(
-                    L10n.format("imageEditor.properties.strokeOpacityValue", Int((viewModel.selectedLayerStrokeOpacity * 100).rounded())),
+                layerStyleNumericStepper(
+                    state: viewModel.selectedLayerStrokeOpacityState,
                     value: selectedLayerStrokeOpacityBinding,
-                    in: 0.05...1,
-                    step: 0.05
-                )
+                    range: 0.05...1,
+                    step: 0.05,
+                    accessibilityIdentifier: "image-editor-layer-style-stroke-opacity"
+                ) { value in
+                    L10n.format("imageEditor.properties.strokeOpacityValue", Int((value * 100).rounded()))
+                }
                 layerStyleValuePicker(
                     state: viewModel.selectedLayerStrokeFillTypeState,
                     values: ImageEditorStrokeFillType.allCases,
