@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.12.0-rc360 - 2026-07-19
+
+### Changed
+- 完成第 40 个小版本质量门禁，不在本版扩展产品协议；组件对象继续采用低负载灰色虚线预览、释放时单次提交，工具光标继续遵循 Photoshop、Sketch 与 macOS 的通用交互语义。
+
+### Verification
+- 全量独立进程测试 1249/1249、CLI/MCP 测试 2/2、发布契约 7/7 通过；组件拖动预览、连续预览累积、释放提交、Escape 取消、吸附、坐标换算及完整工具光标族均纳入同一门禁。
+- arm64/x86_64 通用 Release App 与 CLI 构建通过；版本 `2.12.0-rc360`、Bundle ID `im.some.xomo`、macOS 13.0 下限及 ad-hoc hardened runtime 严格签名核对通过。
+- 真实 Release 界面完成组件库按钮插入、组/文字/背景可编辑图层检查及画布拖动；已覆盖安装 `/Applications/Xomo.app`，安装版启动和签名复验通过。
+- Xcode 26.4 的 `build-for-testing` 在产品及测试代码完成编译链接后，仍因复制的 XCTest Framework 缺少 `Info.plist` 退出；全量隔离测试复用该产物并通过，产品 Release 构建不受影响。
+
 ## 2.12.0-rc359 - 2026-07-19
 
 ### Added

@@ -1,0 +1,27 @@
+{
+  "version": "2.12.0-rc360",
+  "bundle_id": "im.some.xomo",
+  "minimum_macos": "13.0",
+  "app_path": "/Applications/Xomo.app",
+  "app_architectures": ["arm64", "x86_64"],
+  "cli_path": "dist/xomo-macos-universal",
+  "cli_architectures": ["arm64", "x86_64"],
+  "full_suite": {
+    "passed": 1249,
+    "failed": 0
+  },
+  "checks": {
+    "release_build": true,
+    "adhoc_hardened_runtime_signature": true,
+    "app_launch_before_install": true,
+    "component_insert_and_drag": true,
+    "component_editable_layer_structure": true,
+    "installed_app_launch": true,
+    "installed_app_bundle_metadata": true,
+    "installed_app_signature": true,
+    "cli_tests": true,
+    "cli_version": true,
+    "cli_universal_binary": true
+  },
+  "passed": true
+}
