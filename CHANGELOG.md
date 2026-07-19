@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.12.0-rc400 - 2026-07-19
+
+### Changed
+- 完成第 400 个 rc 发布门禁：生成并验证 Release Xomo.app、arm64+x86_64 通用 CLI，覆盖安装 `/Applications/Xomo.app`。
+
+### Verification
+- Release App 完整构建、开发签名与严格 codesign 校验通过；工具像素烟雾 31/31、MCP/快捷键/导出/画布/菜单发布关键回归 5/5、CLI 2/2、发布契约 7/7 通过。
+- `/Applications/Xomo.app` 已验证为 `2.12.0-rc400`、Bundle ID `im.some.xomo`、最低 macOS 13.0；Computer Use 从安装包实测八个顶部菜单、画布辅助节点与深色导出面板均正常。
+- Xcode 26.4 的 `build-for-testing` 在完成编译链接后仍因其复制的 XCTest 框架缺少 Info.plist 退出；隔离测试继续复用已生成产物并全部通过。Release App 构建不受该问题影响。
+
 ## 2.12.0-rc399 - 2026-07-19
 
 ### Changed
