@@ -288,6 +288,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var gradientFillEndGreen: Double = 0.50
     @Published var gradientFillEndBlue: Double = 0.12
     @Published var selectedFilter: ImageEditorFilter = .gaussianBlur
+    @Published private(set) var filterPanelPresentationRequest = 0
     @Published private(set) var lastAppliedFilter: ImageEditorFilterApplication?
     @Published var filterIntensity: Double = 0.5
     @Published var filterUnsharpRadius: Double = 1
@@ -5284,6 +5285,7 @@ final class ImageEditorViewModel: ObservableObject {
 
     func selectFilter(_ filter: ImageEditorFilter) {
         selectedFilter = filter
+        filterPanelPresentationRequest &+= 1
         isPropertiesPanelVisible = true
         statusText = L10n.format("imageEditor.status.filterReady", filter.title)
     }

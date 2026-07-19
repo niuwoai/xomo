@@ -277,6 +277,9 @@ struct ImageEditorView: View {
         .onChange(of: viewModel.selectedLayerName) { _ in
             syncLayerNameDraft()
         }
+        .onChange(of: viewModel.filterPanelPresentationRequest) { _ in
+            isFiltersDockExpanded = true
+        }
         .onChange(of: viewModel.selectedTool) { _ in
             patchPreviewImage = nil
             isDrawingPatchSelection = false

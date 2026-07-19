@@ -637,14 +637,27 @@ struct ImageEditorScopeTests {
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
 
         viewModel.isPropertiesPanelVisible = false
+        let initialPresentationRequest = viewModel.filterPanelPresentationRequest
         viewModel.selectFilter(.unsharpMask)
 
         #expect(viewModel.selectedFilter == .unsharpMask)
+        #expect(viewModel.filterPanelPresentationRequest == initialPresentationRequest + 1)
         #expect(viewModel.isPropertiesPanelVisible)
         #expect(viewModel.statusText == L10n.format("imageEditor.status.filterReady", ImageEditorFilter.unsharpMask.title))
 
-        viewModel.selectFilter(.gaussianBlur)
-        #expect(viewModel.selectedFilter == .gaussianBlur)
+        viewModel.selectFilter(.unsharpMask)
+        #expect(viewModel.selectedFilter == .unsharpMask)
+        #expect(viewModel.filterPanelPresentationRequest == initialPresentationRequest + 2)
+    }
+
+    @Test func filterPresentationRequestAlwaysExpandsQuickControls() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains(".onChange(of: viewModel.filterPanelPresentationRequest)"))
+        #expect(source.contains("isFiltersDockExpanded = true"))
     }
 
     @MainActor
