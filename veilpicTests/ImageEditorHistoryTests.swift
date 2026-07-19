@@ -167,6 +167,7 @@ struct ImageEditorHistoryTests {
         let option = NSEvent.ModifierFlags.option
         let shift = NSEvent.ModifierFlags.shift
         let cases: [(String, NSEvent.ModifierFlags, UInt16?, ImageEditorKeyboardShortcutAction)] = [
+            ("n", command, nil, .newCanvas),
             ("o", command, nil, .openProject),
             ("s", command, nil, .saveProject),
             ("s", [command, option, shift], nil, .export),

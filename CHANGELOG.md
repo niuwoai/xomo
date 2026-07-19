@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.12.0-rc392 - 2026-07-19
+
+### Changed
+- 将 `Command+N` 纳入编辑器窗口自己的快捷键解析链，并在应用命令层替换 `WindowGroup` 默认的“新建窗口”命令。
+
+### Fixed
+- 在已有画布中按 `Command+N` 不再额外打开一个 Xomo 窗口，而是立即在当前编辑器显示“新建画布”面板；文件菜单点击入口和 `Command+Option+N` 从剪贴板新建画布保持不变。
+
+### Verification
+- `Command+N` 动作解析与系统新建窗口命令替换专项 2/2、CLI 2/2、发布契约 7/7 通过；Xcode 26.4 测试宿主完成编译链接后仍因复制的 XCTest 框架缺少 Info.plist 退出，隔离测试复用该产物运行通过。
+
 ## 2.12.0-rc391 - 2026-07-19
 
 ### Changed

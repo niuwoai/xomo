@@ -1400,6 +1400,22 @@ struct ImageEditorScopeTests {
         #expect(fileMenuSource.contains(".disabled(!viewModel.canCreateCanvasFromClipboard)"))
     }
 
+    @Test func commandNOpensCanvasSheetInsteadOfWindowGroupWindow() throws {
+        let root = Self.repositoryRoot()
+        let appSource = try String(
+            contentsOf: root.appendingPathComponent("veilpic/veilpicApp.swift"),
+            encoding: .utf8
+        )
+        let editorSource = try String(
+            contentsOf: root.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(appSource.contains("CommandGroup(replacing: .newItem) { }"))
+        #expect(editorSource.contains("case .newCanvas: viewModel.isNewCanvasSheetPresented = true"))
+        #expect(editorSource.contains("if key == \"n\", relevantFlags == [.command] { return .newCanvas }"))
+    }
+
     @Test func fileMenuExposesDirectSelectionSliceExport() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),

@@ -1407,6 +1407,7 @@ struct ImageEditorView: View {
 
     private func performKeyboardShortcut(_ action: ImageEditorKeyboardShortcutAction) {
         switch action {
+        case .newCanvas: viewModel.isNewCanvasSheetPresented = true
         case .openProject: viewModel.openProjectDocument()
         case .saveProject: viewModel.saveProjectDocument()
         case .export: viewModel.openExportPanel()
@@ -10192,6 +10193,7 @@ enum ImageEditorArrowNudge {
 }
 
 enum ImageEditorKeyboardShortcutAction: Equatable {
+    case newCanvas
     case openProject
     case saveProject
     case export
@@ -10314,6 +10316,7 @@ enum ImageEditorKeyboardShortcutAction: Equatable {
             }
         }
 
+        if key == "n", relevantFlags == [.command] { return .newCanvas }
         if key == "z", relevantFlags == [.option] { return .undo }
         if key == "o", relevantFlags == [.command] { return .openProject }
         if key == "s", relevantFlags == [.command] { return .saveProject }

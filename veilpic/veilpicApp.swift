@@ -17,6 +17,7 @@ struct veilpicApp: App {
             XomoEditorWorkspaceView()
         }
         .commands {
+            CommandGroup(replacing: .newItem) { }
             CommandGroup(replacing: .appInfo) {
                 Button(L10n.text("about.menuItem")) {
                     AboutWindowPresenter.shared.open()
