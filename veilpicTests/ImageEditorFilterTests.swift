@@ -66,6 +66,44 @@ struct ImageEditorFilterTests {
         #expect(imageEditorMaximumPixelDifference(smartViewModel.currentImage, smartPreviewBefore) == 0)
     }
 
+    @Test func zeroStrengthMaskedFilterPreservesSemiTransparentPixels() throws {
+        let canvasSize = NSSize(width: 32, height: 24)
+        let sourceImage = solidImage(
+            size: canvasSize,
+            color: NSColor(calibratedRed: 0.25, green: 0.55, blue: 0.85, alpha: 0.35)
+        )
+        let mask = solidImage(size: canvasSize, color: .white)
+
+        let directOutput = try #require(
+            sourceImage.applyingFilter(kind: .pixelate, intensity: 0, mask: mask)
+        )
+        let negativeOutput = try #require(
+            sourceImage.applyingFilter(kind: .pixelate, intensity: -1, mask: mask)
+        )
+        #expect(directOutput === sourceImage)
+        #expect(negativeOutput === sourceImage)
+        #expect(imageEditorMaximumPixelDifference(directOutput, sourceImage) == 0)
+        #expect(imageEditorMaximumPixelDifference(negativeOutput, sourceImage) == 0)
+
+        let viewModel = ImageEditorViewModel(
+            sourceName: "zero-masked-filter.png",
+            image: sourceImage
+        ) { _ in }
+        let compositeBefore = viewModel.currentImage
+        viewModel.selectedFilter = .emboss
+        viewModel.filterIntensity = 0
+        viewModel.addFilterLayer()
+
+        let filterLayerIndex = try #require(
+            viewModel.document.layers.firstIndex { $0.id == viewModel.document.selectedLayerID }
+        )
+        viewModel.document.layers[filterLayerIndex].mask = mask
+
+        #expect(viewModel.document.layers[filterLayerIndex].isFilter)
+        #expect(viewModel.document.layers[filterLayerIndex].mask != nil)
+        #expect(imageEditorMaximumPixelDifference(viewModel.currentImage, compositeBefore) == 0)
+    }
+
     @Test func imageEditorAppliesCurrentFilterWithClassicLastFilterCommand() throws {
         let canvasSize = NSSize(width: 48, height: 32)
         let sourceImage = solidImage(size: canvasSize, color: NSColor(calibratedWhite: 0.5, alpha: 1))

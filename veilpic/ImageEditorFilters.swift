@@ -157,6 +157,7 @@ extension NSImage {
         settings: ImageEditorFilterSettings = ImageEditorFilterSettings(),
         mask: NSImage?
     ) -> NSImage? {
+        guard intensity > 0 else { return self }
         guard let filtered = filtered(kind: kind, intensity: intensity, settings: settings) else { return nil }
         guard let mask else { return filtered }
         let maskedFiltered = NSImage.rendered(size: size) { _ in
