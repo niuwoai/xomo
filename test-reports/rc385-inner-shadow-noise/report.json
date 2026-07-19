@@ -1,0 +1,39 @@
+{
+  "generated_at": "2026-07-19 17:59:35 +0800",
+  "total": 3,
+  "passed": 3,
+  "failed": 0,
+  "jobs": 4,
+  "results": [
+    {
+      "suite": "ImageEditorLayerRowBatchPropertyTests",
+      "method": "layerStyleInnerShadowNoiseControlReusesMixedNumericStepper",
+      "identifier": "veilpicTests/ImageEditorLayerRowBatchPropertyTests/layerStyleInnerShadowNoiseControlReusesMixedNumericStepper",
+      "file": "ImageEditorLayerRowBatchPropertyTests.swift",
+      "passed": true,
+      "duration": 8.55,
+      "issues": [],
+      "log": "ImageEditorLayerRowBatchPropertyTests.layerStyleInnerShadowNoiseControlReusesMixedNumericStepper.log"
+    },
+    {
+      "suite": "ImageEditorLayerRowBatchPropertyTests",
+      "method": "layerStyleInnerShadowNoiseMixedValueConvergesAcrossEditableSelection",
+      "identifier": "veilpicTests/ImageEditorLayerRowBatchPropertyTests/layerStyleInnerShadowNoiseMixedValueConvergesAcrossEditableSelection",
+      "file": "ImageEditorLayerRowBatchPropertyTests.swift",
+      "passed": true,
+      "duration": 8.554,
+      "issues": [],
+      "log": "ImageEditorLayerRowBatchPropertyTests.layerStyleInnerShadowNoiseMixedValueConvergesAcrossEditableSelection.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registrySetsLayerStyleInnerShadowNoiseAcrossEditableSelection",
+      "identifier": "veilpicTests/XomoAutomationTests/registrySetsLayerStyleInnerShadowNoiseAcrossEditableSelection",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 8.55,
+      "issues": [],
+      "log": "XomoAutomationTests.registrySetsLayerStyleInnerShadowNoiseAcrossEditableSelection.log"
+    }
+  ]
+}

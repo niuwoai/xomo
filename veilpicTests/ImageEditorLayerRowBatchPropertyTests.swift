@@ -814,6 +814,57 @@ struct ImageEditorLayerRowBatchPropertyTests {
         return fixture
     }
 
+    @Test func layerStyleInnerShadowNoiseMixedValueConvergesAcrossEditableSelection() throws {
+        let fixture = innerShadowNoiseFixture()
+        let viewModel = fixture.viewModel
+        let firstID = fixture.layers[0].id
+        let secondID = fixture.layers[1].id
+        let lockedID = fixture.layers[2].id
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.selectedLayerInnerShadowNoiseState == .mixed)
+        viewModel.setSelectedLayerInnerShadowNoise(0.6)
+        #expect(viewModel.selectedLayerInnerShadowNoiseState == .value(0.6))
+        #expect((try layer(firstID, in: viewModel)).style.innerShadowNoise == 0.6)
+        #expect((try layer(secondID, in: viewModel)).style.innerShadowNoise == 0.6)
+        #expect((try layer(lockedID, in: viewModel)).style.innerShadowNoise == 0.4)
+        #expect((try layer(firstID, in: viewModel)).style.innerShadowEnabled)
+        #expect((try layer(secondID, in: viewModel)).style.innerShadowEnabled)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerInnerShadowNoiseState == .mixed)
+        viewModel.redo()
+        #expect(viewModel.selectedLayerInnerShadowNoiseState == .value(0.6))
+    }
+
+    @Test func layerStyleInnerShadowNoiseControlReusesMixedNumericStepper() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("state: viewModel.selectedLayerInnerShadowNoiseState"))
+        #expect(source.contains("value: selectedLayerInnerShadowNoiseBinding"))
+        #expect(source.contains("image-editor-layer-style-inner-shadow-noise"))
+        #expect(source.contains("L10n.format(\"imageEditor.properties.innerShadowNoiseValue\""))
+    }
+
+    private func innerShadowNoiseFixture() -> Fixture {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        viewModel.document.layers[0].style.innerShadowNoise = 0.15
+        viewModel.document.layers[1].style.innerShadowNoise = 0.8
+        viewModel.document.layers[2].style.innerShadowNoise = 0.4
+        viewModel.document.layers[2].isLocked = true
+        select(Set(fixture.layers.map(\.id)), primary: fixture.layers[0].id, in: viewModel)
+        return fixture
+    }
+
     @Test func layerStyleInnerShadowChokeMixedValueConvergesAcrossEditableSelection() throws {
         let fixture = innerShadowChokeFixture()
         let viewModel = fixture.viewModel

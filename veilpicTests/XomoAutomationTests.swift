@@ -3327,6 +3327,45 @@ struct XomoAutomationTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStyle"))
     }
 
+    @Test func registrySetsLayerStyleInnerShadowNoiseAcrossEditableSelection() throws {
+        let viewModel = makeViewModel()
+        let canvasSize = viewModel.document.canvasSize
+        var first = ImageEditorLayer.blank(name: "First", size: canvasSize)
+        var second = ImageEditorLayer.blank(name: "Second", size: canvasSize)
+        var locked = ImageEditorLayer.blank(name: "Locked", size: canvasSize)
+        first.style.innerShadowNoise = 0.15
+        second.style.innerShadowNoise = 0.8
+        locked.style.innerShadowNoise = 0.4
+        locked.isLocked = true
+        viewModel.document.layers = [first, second, locked]
+        viewModel.document.selectedLayerID = first.id
+        viewModel.document.selectedLayerIDs = [first.id, second.id, locked.id]
+        let historyCount = viewModel.document.history.count
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        try assertNumericLayerStylePropertySchema("innerShadowNoise", in: toolsResponse)
+
+        let result = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("innerShadowNoise"),
+                "value": .number(0.6)
+            ]
+        ))
+
+        #expect(result.ok)
+        #expect(viewModel.document.layers[0].style.innerShadowNoise == 0.6)
+        #expect(viewModel.document.layers[1].style.innerShadowNoise == 0.6)
+        #expect(viewModel.document.layers[2].style.innerShadowNoise == 0.4)
+        #expect(viewModel.document.layers[0].style.innerShadowEnabled)
+        #expect(viewModel.document.layers[1].style.innerShadowEnabled)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [first.id, second.id, locked.id])
+    }
+
     @Test func registrySetsLayerStyleInnerShadowChokeAcrossEditableSelection() throws {
         let viewModel = makeViewModel()
         let canvasSize = viewModel.document.canvasSize

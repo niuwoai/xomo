@@ -7154,12 +7154,15 @@ struct ImageEditorView: View {
                         in: 0...48,
                         step: 1
                     )
-                    Stepper(
-                        L10n.format("imageEditor.properties.innerShadowNoiseValue", Int((viewModel.selectedLayerInnerShadowNoise * 100).rounded())),
+                    layerStyleNumericStepper(
+                        state: viewModel.selectedLayerInnerShadowNoiseState,
                         value: selectedLayerInnerShadowNoiseBinding,
-                        in: 0...1,
-                        step: 0.05
-                    )
+                        range: 0...1,
+                        step: 0.05,
+                        accessibilityIdentifier: "image-editor-layer-style-inner-shadow-noise"
+                    ) { value in
+                        L10n.format("imageEditor.properties.innerShadowNoiseValue", Int((value * 100).rounded()))
+                    }
                 }
                 layerStyleValuePicker(
                     state: viewModel.selectedLayerInnerShadowContourState,

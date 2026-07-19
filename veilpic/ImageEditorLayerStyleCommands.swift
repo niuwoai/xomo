@@ -391,6 +391,10 @@ extension ImageEditorViewModel {
         Double(document.selectedLayer?.style.innerShadowNoise ?? 0)
     }
 
+    var selectedLayerInnerShadowNoiseState: ImageEditorLayerStyleValueState<CGFloat> {
+        selectedLayerStyleValueState(\.innerShadowNoise)
+    }
+
     var selectedLayerInnerShadowContour: ImageEditorLayerEffectContour {
         document.selectedLayer?.style.innerShadowContour ?? .linear
     }
