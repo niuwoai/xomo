@@ -383,6 +383,10 @@ extension ImageEditorViewModel {
         Double(document.selectedLayer?.style.innerShadowChoke ?? 0)
     }
 
+    var selectedLayerInnerShadowChokeState: ImageEditorLayerStyleValueState<CGFloat> {
+        selectedLayerStyleValueState(\.innerShadowChoke)
+    }
+
     var selectedLayerInnerShadowNoise: Double {
         Double(document.selectedLayer?.style.innerShadowNoise ?? 0)
     }

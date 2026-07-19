@@ -814,6 +814,57 @@ struct ImageEditorLayerRowBatchPropertyTests {
         return fixture
     }
 
+    @Test func layerStyleInnerShadowChokeMixedValueConvergesAcrossEditableSelection() throws {
+        let fixture = innerShadowChokeFixture()
+        let viewModel = fixture.viewModel
+        let firstID = fixture.layers[0].id
+        let secondID = fixture.layers[1].id
+        let lockedID = fixture.layers[2].id
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.selectedLayerInnerShadowChokeState == .mixed)
+        viewModel.setSelectedLayerInnerShadowChoke(10)
+        #expect(viewModel.selectedLayerInnerShadowChokeState == .value(10))
+        #expect((try layer(firstID, in: viewModel)).style.innerShadowChoke == 10)
+        #expect((try layer(secondID, in: viewModel)).style.innerShadowChoke == 10)
+        #expect((try layer(lockedID, in: viewModel)).style.innerShadowChoke == 6)
+        #expect((try layer(firstID, in: viewModel)).style.innerShadowEnabled)
+        #expect((try layer(secondID, in: viewModel)).style.innerShadowEnabled)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerInnerShadowChokeState == .mixed)
+        viewModel.redo()
+        #expect(viewModel.selectedLayerInnerShadowChokeState == .value(10))
+    }
+
+    @Test func layerStyleInnerShadowChokeControlReusesMixedNumericStepper() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("state: viewModel.selectedLayerInnerShadowChokeState"))
+        #expect(source.contains("value: selectedLayerInnerShadowChokeBinding"))
+        #expect(source.contains("image-editor-layer-style-inner-shadow-choke"))
+        #expect(source.contains("L10n.format(\"imageEditor.properties.innerShadowChokeValue\""))
+    }
+
+    private func innerShadowChokeFixture() -> Fixture {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        viewModel.document.layers[0].style.innerShadowChoke = 2
+        viewModel.document.layers[1].style.innerShadowChoke = 18
+        viewModel.document.layers[2].style.innerShadowChoke = 6
+        viewModel.document.layers[2].isLocked = true
+        select(Set(fixture.layers.map(\.id)), primary: fixture.layers[0].id, in: viewModel)
+        return fixture
+    }
+
     @Test func layerStyleInnerShadowBlurMixedValueConvergesAcrossEditableSelection() throws {
         let fixture = innerShadowBlurFixture()
         let viewModel = fixture.viewModel

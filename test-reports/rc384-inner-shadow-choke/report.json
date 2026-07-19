@@ -1,0 +1,49 @@
+{
+  "generated_at": "2026-07-19 17:51:24 +0800",
+  "total": 4,
+  "passed": 4,
+  "failed": 0,
+  "jobs": 4,
+  "results": [
+    {
+      "suite": "ImageEditorLayerRowBatchPropertyTests",
+      "method": "layerStyleInnerShadowChokeControlReusesMixedNumericStepper",
+      "identifier": "veilpicTests/ImageEditorLayerRowBatchPropertyTests/layerStyleInnerShadowChokeControlReusesMixedNumericStepper",
+      "file": "ImageEditorLayerRowBatchPropertyTests.swift",
+      "passed": true,
+      "duration": 5.663,
+      "issues": [],
+      "log": "ImageEditorLayerRowBatchPropertyTests.layerStyleInnerShadowChokeControlReusesMixedNumericStepper.log"
+    },
+    {
+      "suite": "ImageEditorLayerRowBatchPropertyTests",
+      "method": "layerStyleInnerShadowChokeMixedValueConvergesAcrossEditableSelection",
+      "identifier": "veilpicTests/ImageEditorLayerRowBatchPropertyTests/layerStyleInnerShadowChokeMixedValueConvergesAcrossEditableSelection",
+      "file": "ImageEditorLayerRowBatchPropertyTests.swift",
+      "passed": true,
+      "duration": 5.648,
+      "issues": [],
+      "log": "ImageEditorLayerRowBatchPropertyTests.layerStyleInnerShadowChokeMixedValueConvergesAcrossEditableSelection.log"
+    },
+    {
+      "suite": "ImageEditorLayerStyleTests",
+      "method": "imageEditorInnerShadowChokeAndNoiseRoundTripProjectState",
+      "identifier": "veilpicTests/ImageEditorLayerStyleTests/imageEditorInnerShadowChokeAndNoiseRoundTripProjectState",
+      "file": "ImageEditorLayerStyleTests.swift",
+      "passed": true,
+      "duration": 5.667,
+      "issues": [],
+      "log": "ImageEditorLayerStyleTests.imageEditorInnerShadowChokeAndNoiseRoundTripProjectState.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registrySetsLayerStyleInnerShadowChokeAcrossEditableSelection",
+      "identifier": "veilpicTests/XomoAutomationTests/registrySetsLayerStyleInnerShadowChokeAcrossEditableSelection",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 5.632,
+      "issues": [],
+      "log": "XomoAutomationTests.registrySetsLayerStyleInnerShadowChokeAcrossEditableSelection.log"
+    }
+  ]
+}
