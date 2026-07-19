@@ -104,6 +104,42 @@ struct ImageEditorFilterTests {
         #expect(imageEditorMaximumPixelDifference(viewModel.currentImage, compositeBefore) == 0)
     }
 
+    @Test func maskedFilterInterpolatesPixelsWithoutIncreasingSourceAlpha() throws {
+        let canvasSize = NSSize(width: 32, height: 24)
+        let sourceImage = solidImage(
+            size: canvasSize,
+            color: NSColor(calibratedRed: 0.30, green: 0.55, blue: 0.75, alpha: 0.35)
+        )
+        let mask = splitColorImage(
+            size: canvasSize,
+            left: NSColor(calibratedWhite: 1, alpha: 0.5),
+            right: .clear
+        )
+
+        let output = try #require(
+            sourceImage.applyingFilter(kind: .addNoise, intensity: 1, mask: mask)
+        )
+        let sourceLeft = try #require(
+            sourceImage.color(at: CGPoint(x: 8, y: 12))?.usingColorSpace(.deviceRGB)
+        )
+        let outputLeft = try #require(
+            output.color(at: CGPoint(x: 8, y: 12))?.usingColorSpace(.deviceRGB)
+        )
+        let sourceRight = try #require(
+            sourceImage.color(at: CGPoint(x: 24, y: 12))?.usingColorSpace(.deviceRGB)
+        )
+        let outputRight = try #require(
+            output.color(at: CGPoint(x: 24, y: 12))?.usingColorSpace(.deviceRGB)
+        )
+
+        #expect(abs(outputLeft.alphaComponent - sourceLeft.alphaComponent) < 0.01)
+        #expect(abs(outputRight.alphaComponent - sourceRight.alphaComponent) < 0.01)
+        #expect(abs(outputRight.redComponent - sourceRight.redComponent) < 0.01)
+        #expect(abs(outputRight.greenComponent - sourceRight.greenComponent) < 0.01)
+        #expect(abs(outputRight.blueComponent - sourceRight.blueComponent) < 0.01)
+        #expect(imageEditorMaximumPixelDifference(output, sourceImage) > 0)
+    }
+
     @Test func imageEditorAppliesCurrentFilterWithClassicLastFilterCommand() throws {
         let canvasSize = NSSize(width: 48, height: 32)
         let sourceImage = solidImage(size: canvasSize, color: NSColor(calibratedWhite: 0.5, alpha: 1))

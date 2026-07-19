@@ -160,35 +160,31 @@ extension NSImage {
         guard intensity > 0 else { return self }
         guard let filtered = filtered(kind: kind, intensity: intensity, settings: settings) else { return nil }
         guard let mask else { return filtered }
-        let maskedFiltered = NSImage.rendered(size: size) { _ in
-            filtered.draw(
-                in: CGRect(origin: .zero, size: size),
-                from: CGRect(origin: .zero, size: filtered.size),
-                operation: .copy,
-                fraction: 1
-            )
-            mask.draw(
-                in: CGRect(origin: .zero, size: size),
-                from: CGRect(origin: .zero, size: mask.size),
-                operation: .destinationIn,
-                fraction: 1
-            )
-        }
-        guard let maskedFiltered else { return filtered }
-        return NSImage.rendered(size: size) { _ in
-            draw(
-                in: CGRect(origin: .zero, size: size),
-                from: CGRect(origin: .zero, size: size),
-                operation: .copy,
-                fraction: 1
-            )
-            maskedFiltered.draw(
-                in: CGRect(origin: .zero, size: size),
-                from: CGRect(origin: .zero, size: maskedFiltered.size),
-                operation: .sourceOver,
-                fraction: 1
-            )
-        } ?? filtered
+        return blendingFilteredImage(filtered, with: mask) ?? filtered
+    }
+
+    private func blendingFilteredImage(_ filtered: NSImage, with mask: NSImage) -> NSImage? {
+        guard let sourceImage = ciImageForEditing(),
+              let filteredImage = filtered.ciImageForEditing(),
+              let normalizedMask = NSImage.rendered(size: size, actions: { rect in
+                  mask.draw(
+                      in: rect,
+                      from: CGRect(origin: .zero, size: mask.size),
+                      operation: .copy,
+                      fraction: 1
+                  )
+              }),
+              let maskImage = normalizedMask.ciImageForEditing(),
+              let blend = CIFilter(name: "CIBlendWithAlphaMask")
+        else { return nil }
+
+        blend.setValue(filteredImage, forKey: kCIInputImageKey)
+        blend.setValue(sourceImage, forKey: kCIInputBackgroundImageKey)
+        blend.setValue(maskImage, forKey: kCIInputMaskImageKey)
+        guard let output = blend.outputImage?.cropped(to: sourceImage.extent),
+              let cgImage = ImageEditorImageProcessing.ciContext.createCGImage(output, from: sourceImage.extent)
+        else { return nil }
+        return NSImage(cgImage: cgImage, size: size)
     }
 
     private func addingDeterministicNoise(intensity: Double) -> NSImage? {
