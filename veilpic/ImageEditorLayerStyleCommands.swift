@@ -609,6 +609,12 @@ extension ImageEditorViewModel {
         return Double(style.resolvedBevelAngle(globalLightAngle: document.globalLightAngle))
     }
 
+    var selectedLayerBevelAngleState: ImageEditorLayerStyleValueState<CGFloat> {
+        selectedLayerStyleValueState {
+            $0.resolvedBevelAngle(globalLightAngle: document.globalLightAngle)
+        }
+    }
+
     var selectedLayerBevelUsesGlobalLight: Bool {
         document.selectedLayer?.style.bevelUsesGlobalLight == true
     }

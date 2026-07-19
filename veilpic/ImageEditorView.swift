@@ -7493,12 +7493,15 @@ struct ImageEditorView: View {
                 ) { direction in
                     viewModel.setSelectedLayerBevelDirection(direction)
                 }
-                Stepper(
-                    L10n.format("imageEditor.properties.bevelAngleValue", Int(viewModel.selectedLayerBevelAngle.rounded())),
+                layerStyleNumericStepper(
+                    state: viewModel.selectedLayerBevelAngleState,
                     value: selectedLayerBevelAngleBinding,
-                    in: -180...180,
-                    step: 15
-                )
+                    range: -180...180,
+                    step: 15,
+                    accessibilityIdentifier: "image-editor-layer-style-bevel-angle"
+                ) { value in
+                    L10n.format("imageEditor.properties.bevelAngleValue", Int(value.rounded()))
+                }
 
                 Divider().overlay(editorBorder)
 

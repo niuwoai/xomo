@@ -1,0 +1,49 @@
+{
+  "generated_at": "2026-07-19 18:34:47 +0800",
+  "total": 4,
+  "passed": 4,
+  "failed": 0,
+  "jobs": 4,
+  "results": [
+    {
+      "suite": "ImageEditorLayerRowBatchPropertyTests",
+      "method": "layerStyleBevelAngleControlReusesMixedNumericStepper",
+      "identifier": "veilpicTests/ImageEditorLayerRowBatchPropertyTests/layerStyleBevelAngleControlReusesMixedNumericStepper",
+      "file": "ImageEditorLayerRowBatchPropertyTests.swift",
+      "passed": true,
+      "duration": 7.845,
+      "issues": [],
+      "log": "ImageEditorLayerRowBatchPropertyTests.layerStyleBevelAngleControlReusesMixedNumericStepper.log"
+    },
+    {
+      "suite": "ImageEditorLayerRowBatchPropertyTests",
+      "method": "layerStyleBevelAngleMixedValueConvergesAcrossGlobalAndLocalLight",
+      "identifier": "veilpicTests/ImageEditorLayerRowBatchPropertyTests/layerStyleBevelAngleMixedValueConvergesAcrossGlobalAndLocalLight",
+      "file": "ImageEditorLayerRowBatchPropertyTests.swift",
+      "passed": true,
+      "duration": 7.829,
+      "issues": [],
+      "log": "ImageEditorLayerRowBatchPropertyTests.layerStyleBevelAngleMixedValueConvergesAcrossGlobalAndLocalLight.log"
+    },
+    {
+      "suite": "ImageEditorLayerStyleTests",
+      "method": "imageEditorGlobalLightDrivesLinkedBevelAngles",
+      "identifier": "veilpicTests/ImageEditorLayerStyleTests/imageEditorGlobalLightDrivesLinkedBevelAngles",
+      "file": "ImageEditorLayerStyleTests.swift",
+      "passed": true,
+      "duration": 7.831,
+      "issues": [],
+      "log": "ImageEditorLayerStyleTests.imageEditorGlobalLightDrivesLinkedBevelAngles.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registrySetsLayerStyleBevelAngleAcrossGlobalAndLocalLight",
+      "identifier": "veilpicTests/XomoAutomationTests/registrySetsLayerStyleBevelAngleAcrossGlobalAndLocalLight",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 7.827,
+      "issues": [],
+      "log": "XomoAutomationTests.registrySetsLayerStyleBevelAngleAcrossGlobalAndLocalLight.log"
+    }
+  ]
+}

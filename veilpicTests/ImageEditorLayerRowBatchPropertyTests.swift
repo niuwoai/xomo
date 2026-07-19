@@ -814,6 +814,63 @@ struct ImageEditorLayerRowBatchPropertyTests {
         return fixture
     }
 
+    @Test func layerStyleBevelAngleMixedValueConvergesAcrossGlobalAndLocalLight() throws {
+        let fixture = bevelAngleFixture()
+        let viewModel = fixture.viewModel
+        let firstID = fixture.layers[0].id
+        let secondID = fixture.layers[1].id
+        let lockedID = fixture.layers[2].id
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.selectedLayerBevelAngleState == .mixed)
+        viewModel.setSelectedLayerBevelAngle(-45)
+        #expect(viewModel.selectedLayerBevelAngleState == .value(-45))
+        #expect(viewModel.document.globalLightAngle == -45)
+        #expect((try layer(firstID, in: viewModel)).style.resolvedBevelAngle(globalLightAngle: viewModel.document.globalLightAngle) == -45)
+        #expect((try layer(secondID, in: viewModel)).style.resolvedBevelAngle(globalLightAngle: viewModel.document.globalLightAngle) == -45)
+        #expect((try layer(lockedID, in: viewModel)).style.bevelAngle == 90)
+        #expect((try layer(firstID, in: viewModel)).style.bevelEnabled)
+        #expect((try layer(secondID, in: viewModel)).style.bevelEnabled)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+
+        viewModel.undo()
+        #expect(viewModel.document.globalLightAngle == 35)
+        #expect(viewModel.selectedLayerBevelAngleState == .mixed)
+        viewModel.redo()
+        #expect(viewModel.selectedLayerBevelAngleState == .value(-45))
+    }
+
+    @Test func layerStyleBevelAngleControlReusesMixedNumericStepper() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("state: viewModel.selectedLayerBevelAngleState"))
+        #expect(source.contains("value: selectedLayerBevelAngleBinding"))
+        #expect(source.contains("image-editor-layer-style-bevel-angle"))
+        #expect(source.contains("L10n.format(\"imageEditor.properties.bevelAngleValue\""))
+    }
+
+    private func bevelAngleFixture() -> Fixture {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        viewModel.document.globalLightAngle = 35
+        viewModel.document.layers[0].style.bevelUsesGlobalLight = true
+        viewModel.document.layers[0].style.bevelAngle = 10
+        viewModel.document.layers[1].style.bevelUsesGlobalLight = false
+        viewModel.document.layers[1].style.bevelAngle = -70
+        viewModel.document.layers[2].style.bevelUsesGlobalLight = false
+        viewModel.document.layers[2].style.bevelAngle = 90
+        viewModel.document.layers[2].isLocked = true
+        select(Set(fixture.layers.map(\.id)), primary: fixture.layers[0].id, in: viewModel)
+        return fixture
+    }
+
     @Test func layerStyleShadowAngleMixedValueConvergesAcrossGlobalAndLocalLight() throws {
         let fixture = shadowAngleFixture()
         let viewModel = fixture.viewModel
