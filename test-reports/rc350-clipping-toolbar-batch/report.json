@@ -1,0 +1,39 @@
+{
+  "generated_at": "2026-07-19 08:44:10 +0800",
+  "total": 3,
+  "passed": 3,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorLayerRowBatchPropertyTests",
+      "method": "clippingToolbarMixedSelectionFirstUnifiesOnThenReleasesAllWithUndo",
+      "identifier": "veilpicTests/ImageEditorLayerRowBatchPropertyTests/clippingToolbarMixedSelectionFirstUnifiesOnThenReleasesAllWithUndo",
+      "file": "ImageEditorLayerRowBatchPropertyTests.swift",
+      "passed": true,
+      "duration": 4.582,
+      "issues": [],
+      "log": "ImageEditorLayerRowBatchPropertyTests.clippingToolbarMixedSelectionFirstUnifiesOnThenReleasesAllWithUndo.log"
+    },
+    {
+      "suite": "ImageEditorLayerRowBatchPropertyTests",
+      "method": "clippingToolbarUsesBatchActionAndExposesMixedState",
+      "identifier": "veilpicTests/ImageEditorLayerRowBatchPropertyTests/clippingToolbarUsesBatchActionAndExposesMixedState",
+      "file": "ImageEditorLayerRowBatchPropertyTests.swift",
+      "passed": true,
+      "duration": 3.051,
+      "issues": [],
+      "log": "ImageEditorLayerRowBatchPropertyTests.clippingToolbarUsesBatchActionAndExposesMixedState.log"
+    },
+    {
+      "suite": "LocalizationResourceTests",
+      "method": "clippingToolbarMixedStateIsLocalizedInEverySupportedLanguage",
+      "identifier": "veilpicTests/LocalizationResourceTests/clippingToolbarMixedStateIsLocalizedInEverySupportedLanguage",
+      "file": "LocalizationResourceTests.swift",
+      "passed": true,
+      "duration": 3.145,
+      "issues": [],
+      "log": "LocalizationResourceTests.clippingToolbarMixedStateIsLocalizedInEverySupportedLanguage.log"
+    }
+  ]
+}

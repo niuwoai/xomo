@@ -1,0 +1,79 @@
+{
+  "generated_at": "2026-07-19 08:45:04 +0800",
+  "total": 7,
+  "passed": 7,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorLayerCompTests",
+      "method": "layerCompStateDecodesLegacyFilesWithoutClippingMaskFlag",
+      "identifier": "veilpicTests/ImageEditorLayerCompTests/layerCompStateDecodesLegacyFilesWithoutClippingMaskFlag",
+      "file": "ImageEditorLayerCompTests.swift",
+      "passed": true,
+      "duration": 3.177,
+      "issues": [],
+      "log": "ImageEditorLayerCompTests.layerCompStateDecodesLegacyFilesWithoutClippingMaskFlag.log"
+    },
+    {
+      "suite": "ImageEditorPSDTests",
+      "method": "psdRoundTripPreservesClippingMaskChainAndProjectState",
+      "identifier": "veilpicTests/ImageEditorPSDTests/psdRoundTripPreservesClippingMaskChainAndProjectState",
+      "file": "ImageEditorPSDTests.swift",
+      "passed": true,
+      "duration": 3.046,
+      "issues": [],
+      "log": "ImageEditorPSDTests.psdRoundTripPreservesClippingMaskChainAndProjectState.log"
+    },
+    {
+      "suite": "veilpicTests",
+      "method": "imageEditorClippingMaskChainSharesBaseAndMergeBakesVisualPixels",
+      "identifier": "veilpicTests/veilpicTests/imageEditorClippingMaskChainSharesBaseAndMergeBakesVisualPixels",
+      "file": "veilpicTests.swift",
+      "passed": true,
+      "duration": 3.059,
+      "issues": [],
+      "log": "veilpicTests.imageEditorClippingMaskChainSharesBaseAndMergeBakesVisualPixels.log"
+    },
+    {
+      "suite": "veilpicTests",
+      "method": "imageEditorClippingMaskClipsUpperLayerToLowerAlpha",
+      "identifier": "veilpicTests/veilpicTests/imageEditorClippingMaskClipsUpperLayerToLowerAlpha",
+      "file": "veilpicTests.swift",
+      "passed": true,
+      "duration": 3.059,
+      "issues": [],
+      "log": "veilpicTests.imageEditorClippingMaskClipsUpperLayerToLowerAlpha.log"
+    },
+    {
+      "suite": "veilpicTests",
+      "method": "imageEditorCreatesAndReleasesClippingMasksForSelectedLayers",
+      "identifier": "veilpicTests/veilpicTests/imageEditorCreatesAndReleasesClippingMasksForSelectedLayers",
+      "file": "veilpicTests.swift",
+      "passed": true,
+      "duration": 3.114,
+      "issues": [],
+      "log": "veilpicTests.imageEditorCreatesAndReleasesClippingMasksForSelectedLayers.log"
+    },
+    {
+      "suite": "veilpicTests",
+      "method": "imageEditorGroupingClippedLayerAloneClearsOrphanClippingMask",
+      "identifier": "veilpicTests/veilpicTests/imageEditorGroupingClippedLayerAloneClearsOrphanClippingMask",
+      "file": "veilpicTests.swift",
+      "passed": true,
+      "duration": 3.057,
+      "issues": [],
+      "log": "veilpicTests.imageEditorGroupingClippedLayerAloneClearsOrphanClippingMask.log"
+    },
+    {
+      "suite": "veilpicTests",
+      "method": "imageEditorMovingClippedLayerBelowBaseClearsOrphanClippingMask",
+      "identifier": "veilpicTests/veilpicTests/imageEditorMovingClippedLayerBelowBaseClearsOrphanClippingMask",
+      "file": "veilpicTests.swift",
+      "passed": true,
+      "duration": 3.064,
+      "issues": [],
+      "log": "veilpicTests.imageEditorMovingClippedLayerBelowBaseClearsOrphanClippingMask.log"
+    }
+  ]
+}

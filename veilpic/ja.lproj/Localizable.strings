@@ -1195,6 +1195,9 @@
 "imageEditor.layer.smartObjectBadge" = "スマートオブジェクト";
 "imageEditor.layer.smartFilterBadge" = "スマート";
 "imageEditor.layer.clippingBadge" = "クリップ";
+"imageEditor.layer.clippingState.off" = "クリップなし";
+"imageEditor.layer.clippingState.on" = "すべてクリップ";
+"imageEditor.layer.clippingState.mixed" = "一部クリップ";
 "imageEditor.layer.vectorMaskBadge" = "ベクターマスク";
 "imageEditor.layer.linkedBadge" = "リンク済みレイヤー";
 "imageEditor.layer.adjustmentName" = "%@ 調整";

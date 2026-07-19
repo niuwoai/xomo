@@ -142,6 +142,61 @@ struct ImageEditorLayerRowBatchPropertyTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerLock"))
     }
 
+    @Test func clippingToolbarMixedSelectionFirstUnifiesOnThenReleasesAllWithUndo() throws {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        let baseID = fixture.layers[0].id
+        let firstClipID = fixture.layers[1].id
+        let secondClipID = fixture.layers[2].id
+        viewModel.document.layers[1].isClippingMask = true
+        select([firstClipID, secondClipID], primary: secondClipID, in: viewModel)
+
+        #expect(viewModel.selectedLayersClippingMaskState == .mixed)
+        #expect(viewModel.canToggleClippingMasksForSelectedLayers)
+        viewModel.toggleClippingMasksForSelectedLayers()
+
+        #expect(try layer(firstClipID, in: viewModel).isClippingMask)
+        #expect(try layer(secondClipID, in: viewModel).isClippingMask)
+        #expect(!(try layer(baseID, in: viewModel)).isClippingMask)
+        #expect(viewModel.selectedLayersClippingMaskState == .on)
+        #expect(viewModel.document.selectedLayerIDs == [firstClipID, secondClipID])
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerClippingMaskCreateSelected"))
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayersClippingMaskState == .mixed)
+        #expect(try layer(firstClipID, in: viewModel).isClippingMask)
+        #expect(!(try layer(secondClipID, in: viewModel)).isClippingMask)
+
+        viewModel.redo()
+        #expect(viewModel.selectedLayersClippingMaskState == .on)
+        viewModel.toggleClippingMasksForSelectedLayers()
+
+        #expect(!(try layer(firstClipID, in: viewModel)).isClippingMask)
+        #expect(!(try layer(secondClipID, in: viewModel)).isClippingMask)
+        #expect(viewModel.selectedLayersClippingMaskState == .off)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerClippingMaskReleaseSelected"))
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayersClippingMaskState == .on)
+    }
+
+    @Test func clippingToolbarUsesBatchActionAndExposesMixedState() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorLayerPanel.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("viewModel.toggleClippingMasksForSelectedLayers()"))
+        #expect(source.contains("viewModel.canToggleClippingMasksForSelectedLayers"))
+        #expect(source.contains("state == .mixed"))
+        #expect(source.contains("minus.circle.fill"))
+        #expect(source.contains("state.accessibilityKey"))
+        #expect(source.contains("image-editor-layer-clipping-mask-batch"))
+    }
+
     @Test func layerPanelRoutesEveryRowPropertyControlThroughSelectionAwareMode() throws {
         let repositoryRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()

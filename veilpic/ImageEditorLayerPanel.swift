@@ -1832,11 +1832,31 @@ extension ImageEditorView {
             layerActionButton(systemImage: "checkerboard.rectangle", helpKey: "imageEditor.action.layerPatternOverlay", isSelected: viewModel.selectedLayerHasPatternOverlay) { viewModel.toggleSelectedLayerPatternOverlay() }
             layerActionButton(systemImage: "circle.dotted", helpKey: "imageEditor.action.layerSatin", isSelected: viewModel.selectedLayerHasSatin) { viewModel.toggleSelectedLayerSatin() }
             layerActionButton(systemImage: "cube.transparent", helpKey: "imageEditor.action.layerBevel", isSelected: viewModel.selectedLayerHasBevel) { viewModel.toggleSelectedLayerBevel() }
-            layerActionButton(systemImage: "arrow.down.to.line.compact", helpKey: "imageEditor.action.layerClippingMask", isSelected: viewModel.selectedLayerIsClippingMask) {
-                viewModel.toggleSelectedLayerClippingMask()
-            }
-            .disabled(!viewModel.canToggleSelectedLayerClippingMask)
+            layerClippingMaskBatchButton
         }
+    }
+
+    private var layerClippingMaskBatchButton: some View {
+        let state = viewModel.selectedLayersClippingMaskState
+        return layerActionButton(
+            systemImage: "arrow.down.to.line.compact",
+            helpKey: "imageEditor.action.layerClippingMask",
+            isSelected: state != .off
+        ) {
+            viewModel.toggleClippingMasksForSelectedLayers()
+        }
+        .overlay(alignment: .bottomTrailing) {
+            if state == .mixed {
+                Image(systemName: "minus.circle.fill")
+                    .font(.system(size: 8, weight: .bold))
+                    .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                    .offset(x: 2, y: 2)
+                    .allowsHitTesting(false)
+            }
+        }
+        .disabled(!viewModel.canToggleClippingMasksForSelectedLayers)
+        .accessibilityValue(L10n.text(state.accessibilityKey))
+        .accessibilityIdentifier("image-editor-layer-clipping-mask-batch")
     }
 
     @ViewBuilder

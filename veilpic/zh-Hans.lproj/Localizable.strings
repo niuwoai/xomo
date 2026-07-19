@@ -1195,6 +1195,9 @@
 "imageEditor.layer.smartObjectBadge" = "智能对象";
 "imageEditor.layer.smartFilterBadge" = "智能";
 "imageEditor.layer.clippingBadge" = "剪贴";
+"imageEditor.layer.clippingState.off" = "未剪贴";
+"imageEditor.layer.clippingState.on" = "全部已剪贴";
+"imageEditor.layer.clippingState.mixed" = "部分已剪贴";
 "imageEditor.layer.vectorMaskBadge" = "矢量蒙版";
 "imageEditor.layer.linkedBadge" = "已链接图层";
 "imageEditor.layer.adjustmentName" = "%@ 调整";

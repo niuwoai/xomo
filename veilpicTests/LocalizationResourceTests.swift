@@ -345,6 +345,29 @@ struct LocalizationResourceTests {
         }
     }
 
+    @Test func clippingToolbarMixedStateIsLocalizedInEverySupportedLanguage() throws {
+        let paths = try Self.repositoryPaths()
+        let expectedValues = [
+            "zh-Hans": ["未剪贴", "全部已剪贴", "部分已剪贴"],
+            "en": ["Not clipped", "All clipped", "Partially clipped"],
+            "ja": ["クリップなし", "すべてクリップ", "一部クリップ"]
+        ]
+        let keys = [
+            "imageEditor.layer.clippingState.off",
+            "imageEditor.layer.clippingState.on",
+            "imageEditor.layer.clippingState.mixed"
+        ]
+
+        for (localizationID, expected) in expectedValues {
+            let strings = try Self.stringTable(
+                tableName: "Localizable",
+                localizationID: localizationID,
+                appDirectory: paths.appDirectory
+            )
+            #expect(keys.compactMap { strings[$0] } == expected)
+        }
+    }
+
     @Test func fingerPaintingIsLocalizedInEverySupportedLanguage() throws {
         let paths = try Self.repositoryPaths()
         let expectedValues = [

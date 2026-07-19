@@ -1195,6 +1195,9 @@
 "imageEditor.layer.smartObjectBadge" = "Smart Object";
 "imageEditor.layer.smartFilterBadge" = "Smart";
 "imageEditor.layer.clippingBadge" = "Clip";
+"imageEditor.layer.clippingState.off" = "Not clipped";
+"imageEditor.layer.clippingState.on" = "All clipped";
+"imageEditor.layer.clippingState.mixed" = "Partially clipped";
 "imageEditor.layer.vectorMaskBadge" = "Vector mask";
 "imageEditor.layer.linkedBadge" = "Linked layer";
 "imageEditor.layer.adjustmentName" = "%@ Adjustment";

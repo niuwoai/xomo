@@ -16,6 +16,23 @@ enum ImageEditorImageProcessing {
     static let ciContext = CIContext(options: nil)
 }
 
+enum ImageEditorClippingMaskSelectionState: Equatable {
+    case off
+    case on
+    case mixed
+
+    var accessibilityKey: String {
+        switch self {
+        case .off:
+            "imageEditor.layer.clippingState.off"
+        case .on:
+            "imageEditor.layer.clippingState.on"
+        case .mixed:
+            "imageEditor.layer.clippingState.mixed"
+        }
+    }
+}
+
 private struct ImageEditorSmartObjectConversionCandidate {
     var removedLayerIDs: Set<UUID>
     var insertionIndex: Int
@@ -1726,6 +1743,17 @@ final class ImageEditorViewModel: ObservableObject {
         document.selectedLayer?.isClippingMask == true
     }
 
+    var selectedLayersClippingMaskState: ImageEditorClippingMaskSelectionState {
+        let layers = selectedLayerIndices
+            .map { document.layers[$0] }
+            .filter { !$0.isGroup }
+        guard !layers.isEmpty else { return .off }
+        let clippedCount = layers.lazy.filter(\.isClippingMask).count
+        if clippedCount == 0 { return .off }
+        if clippedCount == layers.count { return .on }
+        return .mixed
+    }
+
     var selectedLayerHasMask: Bool {
         selectedLayerIndices.contains { document.layers[$0].mask != nil }
     }
@@ -1843,6 +1871,13 @@ final class ImageEditorViewModel: ObservableObject {
         guard !layer.isGroup, !document.isEffectivelyLocked(layer) else { return false }
         if layer.isClippingMask { return true }
         return clippingBaseExists(below: index, groupID: layer.groupID)
+    }
+
+    var canToggleClippingMasksForSelectedLayers: Bool {
+        if selectedLayerCount == 1 {
+            return canToggleSelectedLayerClippingMask
+        }
+        return canCreateClippingMasksForSelectedLayers || canReleaseSelectedClippingMasks
     }
 
     var canCreateClippingMasksForSelectedLayers: Bool {
@@ -4137,6 +4172,22 @@ final class ImageEditorViewModel: ObservableObject {
         pushUndo()
         document.layers[index].isClippingMask.toggle()
         appendHistory(L10n.text("imageEditor.history.layerClippingMask"))
+    }
+
+    func toggleClippingMasksForSelectedLayers() {
+        guard selectedLayerCount > 0 else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+        if selectedLayerCount == 1 {
+            toggleSelectedLayerClippingMask()
+        } else if canCreateClippingMasksForSelectedLayers {
+            createClippingMasksForSelectedLayers()
+        } else if canReleaseSelectedClippingMasks {
+            releaseSelectedClippingMasks()
+        } else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+        }
     }
 
     func createClippingMasksForSelectedLayers() {
