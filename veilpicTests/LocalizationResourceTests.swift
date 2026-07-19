@@ -391,6 +391,29 @@ struct LocalizationResourceTests {
         }
     }
 
+    @Test func layerStyleGlobalLightStateReusesLocalizedSelectionValues() throws {
+        let paths = try Self.repositoryPaths()
+        let expectedValues = [
+            "zh-Hans": ["未启用", "全部已启用", "部分已启用"],
+            "en": ["Not enabled", "Enabled for all", "Partially enabled"],
+            "ja": ["無効", "すべて有効", "一部有効"]
+        ]
+        let keys = [
+            "imageEditor.layer.effectState.off",
+            "imageEditor.layer.effectState.on",
+            "imageEditor.layer.effectState.mixed"
+        ]
+
+        for (localizationID, expected) in expectedValues {
+            let strings = try Self.stringTable(
+                tableName: "Localizable",
+                localizationID: localizationID,
+                appDirectory: paths.appDirectory
+            )
+            #expect(keys.compactMap { strings[$0] } == expected)
+        }
+    }
+
     @Test func fingerPaintingIsLocalizedInEverySupportedLanguage() throws {
         let paths = try Self.repositoryPaths()
         let expectedValues = [

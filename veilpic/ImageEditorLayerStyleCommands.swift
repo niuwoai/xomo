@@ -65,10 +65,18 @@ enum ImageEditorLayerStyleSelectionState: Equatable {
     }
 }
 
-private enum ImageEditorLayerLightEffect {
+enum ImageEditorLayerLightEffect: CaseIterable {
     case shadow
     case innerShadow
     case bevel
+
+    func usesGlobalLight(in style: ImageEditorLayerStyle) -> Bool {
+        switch self {
+        case .shadow: style.shadowUsesGlobalLight
+        case .innerShadow: style.innerShadowUsesGlobalLight
+        case .bevel: style.bevelUsesGlobalLight
+        }
+    }
 }
 
 @MainActor
@@ -137,6 +145,19 @@ extension ImageEditorViewModel {
         guard !targetIndices.isEmpty else { return .off }
         let enabledCount = targetIndices.lazy.filter {
             effect.isEnabled(in: self.document.layers[$0].style)
+        }.count
+        if enabledCount == 0 { return .off }
+        if enabledCount == targetIndices.count { return .on }
+        return .mixed
+    }
+
+    func selectedLayerGlobalLightState(
+        _ effect: ImageEditorLayerLightEffect
+    ) -> ImageEditorLayerStyleSelectionState {
+        let targetIndices = selectedLayerStyleTargetIndices()
+        guard !targetIndices.isEmpty else { return .off }
+        let enabledCount = targetIndices.lazy.filter {
+            effect.usesGlobalLight(in: self.document.layers[$0].style)
         }.count
         if enabledCount == 0 { return .off }
         if enabledCount == targetIndices.count { return .on }
@@ -916,13 +937,7 @@ extension ImageEditorViewModel {
     }
 
     func setSelectedLayerShadowUsesGlobalLight(_ enabled: Bool) {
-        updateSelectedLayerStyle {
-            $0.shadowEnabled = true
-            let resolvedAngle = $0.resolvedShadowAngle(globalLightAngle: document.globalLightAngle)
-            $0.shadowUsesGlobalLight = enabled
-            $0.shadowAngle = enabled ? document.globalLightAngle : resolvedAngle
-            $0.shadowOffset = $0.resolvedShadowOffset(globalLightAngle: enabled ? document.globalLightAngle : nil)
-        }
+        setSelectedLayerUsesGlobalLight(enabled, effect: .shadow)
     }
 
     func setGlobalLightAngle(_ angle: Double) {
@@ -987,15 +1002,7 @@ extension ImageEditorViewModel {
     }
 
     func setSelectedLayerInnerShadowUsesGlobalLight(_ enabled: Bool) {
-        updateSelectedLayerStyle {
-            $0.innerShadowEnabled = true
-            $0.innerShadowColor = innerShadowColor()
-            let resolvedAngle = $0.resolvedInnerShadowAngle(globalLightAngle: document.globalLightAngle)
-            $0.innerShadowUsesGlobalLight = enabled
-            $0.innerShadowAngle = enabled
-                ? document.globalLightAngle
-                : resolvedAngle
-        }
+        setSelectedLayerUsesGlobalLight(enabled, effect: .innerShadow)
     }
 
     func setSelectedLayerOuterGlowOpacity(_ opacity: Double) {
@@ -1266,12 +1273,11 @@ extension ImageEditorViewModel {
     }
 
     func setSelectedLayerBevelUsesGlobalLight(_ enabled: Bool) {
-        updateSelectedLayerStyle {
-            $0.bevelEnabled = true
-            let resolvedAngle = $0.resolvedBevelAngle(globalLightAngle: document.globalLightAngle)
-            $0.bevelUsesGlobalLight = enabled
-            $0.bevelAngle = enabled ? document.globalLightAngle : resolvedAngle
-        }
+        setSelectedLayerUsesGlobalLight(enabled, effect: .bevel)
+    }
+
+    func toggleSelectedLayerUsesGlobalLight(_ effect: ImageEditorLayerLightEffect) {
+        setSelectedLayerUsesGlobalLight(selectedLayerGlobalLightState(effect) != .on, effect: effect)
     }
 
     func setSelectedLayerBevelDirection(_ direction: ImageEditorBevelDirection) {
@@ -1302,7 +1308,7 @@ extension ImageEditorViewModel {
         }
         let normalizedAngle = normalizedLightAngle(CGFloat(angle))
         let updatesGlobalLight = targetIndices.contains {
-            self.layerStyleUsesGlobalLight(self.document.layers[$0].style, effect: effect)
+            effect.usesGlobalLight(in: self.document.layers[$0].style)
         }
         pushUndo()
         if updatesGlobalLight {
@@ -1315,17 +1321,6 @@ extension ImageEditorViewModel {
         }
         appendHistory(L10n.text("imageEditor.history.layerStyle"))
         statusText = L10n.text("imageEditor.status.layerStyleUpdated")
-    }
-
-    private func layerStyleUsesGlobalLight(
-        _ style: ImageEditorLayerStyle,
-        effect: ImageEditorLayerLightEffect
-    ) -> Bool {
-        switch effect {
-        case .shadow: style.shadowUsesGlobalLight
-        case .innerShadow: style.innerShadowUsesGlobalLight
-        case .bevel: style.bevelUsesGlobalLight
-        }
     }
 
     private func setLayerStyleLightAngle(
@@ -1345,6 +1340,41 @@ extension ImageEditorViewModel {
         case .bevel:
             style.bevelEnabled = true
             style.bevelAngle = angle
+        }
+    }
+
+    private func setSelectedLayerUsesGlobalLight(
+        _ enabled: Bool,
+        effect: ImageEditorLayerLightEffect
+    ) {
+        updateSelectedLayerStyle { style in
+            let resolvedAngle = resolvedLayerStyleLightAngle(style, effect: effect)
+            setLayerStyleUsesGlobalLight(enabled, effect: effect, style: &style)
+            let targetAngle = enabled ? document.globalLightAngle : resolvedAngle
+            setLayerStyleLightAngle(targetAngle, effect: effect, style: &style)
+        }
+    }
+
+    private func resolvedLayerStyleLightAngle(
+        _ style: ImageEditorLayerStyle,
+        effect: ImageEditorLayerLightEffect
+    ) -> CGFloat {
+        switch effect {
+        case .shadow: style.resolvedShadowAngle(globalLightAngle: document.globalLightAngle)
+        case .innerShadow: style.resolvedInnerShadowAngle(globalLightAngle: document.globalLightAngle)
+        case .bevel: style.resolvedBevelAngle(globalLightAngle: document.globalLightAngle)
+        }
+    }
+
+    private func setLayerStyleUsesGlobalLight(
+        _ enabled: Bool,
+        effect: ImageEditorLayerLightEffect,
+        style: inout ImageEditorLayerStyle
+    ) {
+        switch effect {
+        case .shadow: style.shadowUsesGlobalLight = enabled
+        case .innerShadow: style.innerShadowUsesGlobalLight = enabled
+        case .bevel: style.bevelUsesGlobalLight = enabled
         }
     }
 

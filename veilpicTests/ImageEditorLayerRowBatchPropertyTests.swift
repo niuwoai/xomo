@@ -293,6 +293,34 @@ struct ImageEditorLayerRowBatchPropertyTests {
         )
     }
 
+    @Test func layerStyleGlobalLightMixedStateConvergesAcrossEditableSelection() throws {
+        for effect in ImageEditorLayerLightEffect.allCases {
+            try assertGlobalLightConvergence(effect)
+        }
+    }
+
+    @Test func layerStyleGlobalLightControlsExposeFamiliarTriStateCheckboxes() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let start = try #require(source.range(of: "private func layerStyleGlobalLightToggle("))
+        let end = try #require(source[start.upperBound...].range(of: "private func guidePath("))
+        let controlSource = source[start.lowerBound..<end.lowerBound]
+
+        #expect(source.components(separatedBy: "layerStyleGlobalLightToggle(").count - 1 == 4)
+        #expect(controlSource.contains("checkmark.square.fill"))
+        #expect(controlSource.contains("minus.square.fill"))
+        #expect(controlSource.contains(".focusable(false)"))
+        #expect(controlSource.contains("state.accessibilityKey"))
+        #expect(source.contains("image-editor-shadow-global-light"))
+        #expect(source.contains("image-editor-inner-shadow-global-light"))
+        #expect(source.contains("image-editor-bevel-global-light"))
+    }
+
     @Test func layerPanelRoutesEveryRowPropertyControlThroughSelectionAwareMode() throws {
         let repositoryRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
@@ -404,6 +432,60 @@ struct ImageEditorLayerRowBatchPropertyTests {
         fixture.viewModel.document.layers[0].style = firstStyle
         fixture.viewModel.document.layers[1].style = secondStyle
         fixture.viewModel.document.layers[2].isLocked = true
+        return fixture
+    }
+
+    private func setUsesGlobalLight(
+        _ enabled: Bool,
+        effect: ImageEditorLayerLightEffect,
+        layerIndex: Int,
+        in viewModel: ImageEditorViewModel
+    ) {
+        switch effect {
+        case .shadow: viewModel.document.layers[layerIndex].style.shadowUsesGlobalLight = enabled
+        case .innerShadow: viewModel.document.layers[layerIndex].style.innerShadowUsesGlobalLight = enabled
+        case .bevel: viewModel.document.layers[layerIndex].style.bevelUsesGlobalLight = enabled
+        }
+    }
+
+    private func assertGlobalLightConvergence(_ effect: ImageEditorLayerLightEffect) throws {
+        let fixture = globalLightFixture(effect)
+        let viewModel = fixture.viewModel
+        let firstID = fixture.layers[0].id
+        let secondID = fixture.layers[1].id
+        let lockedID = fixture.layers[2].id
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.selectedLayerGlobalLightState(effect) == .mixed)
+        viewModel.toggleSelectedLayerUsesGlobalLight(effect)
+        #expect(viewModel.selectedLayerGlobalLightState(effect) == .on)
+        #expect(effect.usesGlobalLight(in: try layer(firstID, in: viewModel).style))
+        #expect(effect.usesGlobalLight(in: try layer(secondID, in: viewModel).style))
+        #expect(!effect.usesGlobalLight(in: try layer(lockedID, in: viewModel).style))
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerGlobalLightState(effect) == .mixed)
+        viewModel.redo()
+        viewModel.toggleSelectedLayerUsesGlobalLight(effect)
+        #expect(viewModel.selectedLayerGlobalLightState(effect) == .off)
+        #expect(!effect.usesGlobalLight(in: try layer(firstID, in: viewModel).style))
+        #expect(!effect.usesGlobalLight(in: try layer(secondID, in: viewModel).style))
+    }
+
+    private func globalLightFixture(_ effect: ImageEditorLayerLightEffect) -> Fixture {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        setUsesGlobalLight(true, effect: effect, layerIndex: 0, in: viewModel)
+        setUsesGlobalLight(false, effect: effect, layerIndex: 1, in: viewModel)
+        setUsesGlobalLight(false, effect: effect, layerIndex: 2, in: viewModel)
+        viewModel.document.layers[2].isLocked = true
+        select(
+            Set(fixture.layers.map(\.id)),
+            primary: fixture.layers[1].id,
+            in: viewModel
+        )
         return fixture
     }
 }

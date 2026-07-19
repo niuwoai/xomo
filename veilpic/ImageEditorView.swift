@@ -4097,14 +4097,6 @@ struct ImageEditorView: View {
         }
     }
 
-    private var selectedLayerShadowUsesGlobalLightBinding: Binding<Bool> {
-        Binding {
-            viewModel.selectedLayerShadowUsesGlobalLight
-        } set: { value in
-            viewModel.setSelectedLayerShadowUsesGlobalLight(value)
-        }
-    }
-
     private var selectedLayerShadowDistanceBinding: Binding<Double> {
         Binding {
             viewModel.selectedLayerShadowDistance
@@ -4190,14 +4182,6 @@ struct ImageEditorView: View {
             viewModel.selectedLayerInnerShadowAngle
         } set: { value in
             viewModel.setSelectedLayerInnerShadowAngle(value)
-        }
-    }
-
-    private var selectedLayerInnerShadowUsesGlobalLightBinding: Binding<Bool> {
-        Binding {
-            viewModel.selectedLayerInnerShadowUsesGlobalLight
-        } set: { value in
-            viewModel.setSelectedLayerInnerShadowUsesGlobalLight(value)
         }
     }
 
@@ -4425,20 +4409,52 @@ struct ImageEditorView: View {
         }
     }
 
-    private var selectedLayerBevelUsesGlobalLightBinding: Binding<Bool> {
-        Binding {
-            viewModel.selectedLayerBevelUsesGlobalLight
-        } set: { value in
-            viewModel.setSelectedLayerBevelUsesGlobalLight(value)
-        }
-    }
-
     private var selectedLayerBevelDirectionBinding: Binding<ImageEditorBevelDirection> {
         Binding {
             viewModel.selectedLayerBevelDirection
         } set: { value in
             viewModel.setSelectedLayerBevelDirection(value)
         }
+    }
+
+    private func layerStyleGlobalLightToggle(
+        _ effect: ImageEditorLayerLightEffect,
+        labelKey: String,
+        accessibilityIdentifier: String
+    ) -> some View {
+        let state = viewModel.selectedLayerGlobalLightState(effect)
+        return Button {
+            viewModel.toggleSelectedLayerUsesGlobalLight(effect)
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: layerStyleGlobalLightSymbol(state))
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(layerStyleGlobalLightColor(state))
+                Text(L10n.text(labelKey))
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+                Spacer(minLength: 0)
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .disabled(!viewModel.canEditSelectedLayerStyle)
+        .focusable(false)
+        .accessibilityLabel(L10n.text(labelKey))
+        .accessibilityValue(L10n.text(state.accessibilityKey))
+        .accessibilityIdentifier(accessibilityIdentifier)
+    }
+
+    private func layerStyleGlobalLightSymbol(_ state: ImageEditorLayerStyleSelectionState) -> String {
+        switch state {
+        case .off: "square"
+        case .on: "checkmark.square.fill"
+        case .mixed: "minus.square.fill"
+        }
+    }
+
+    private func layerStyleGlobalLightColor(_ state: ImageEditorLayerStyleSelectionState) -> Color {
+        Color(nsColor: state == .off ? ImageEditorTheme.mutedText : ImageEditorTheme.selected)
     }
 
     private func guidePath(orientation: ImageEditorGuideOrientation, position: CGFloat, in size: CGSize) -> Path {
@@ -7065,8 +7081,11 @@ struct ImageEditorView: View {
                     }
                 }
                 .pickerStyle(.menu)
-                Toggle(L10n.text("imageEditor.properties.shadowUseGlobalLight"), isOn: selectedLayerShadowUsesGlobalLightBinding)
-                    .toggleStyle(.checkbox)
+                layerStyleGlobalLightToggle(
+                    .shadow,
+                    labelKey: "imageEditor.properties.shadowUseGlobalLight",
+                    accessibilityIdentifier: "image-editor-shadow-global-light"
+                )
                 Stepper(
                     L10n.format("imageEditor.properties.globalLightAngleValue", Int(viewModel.globalLightAngle.rounded())),
                     value: globalLightAngleBinding,
@@ -7147,8 +7166,11 @@ struct ImageEditorView: View {
                     in: -180...180,
                     step: 15
                 )
-                Toggle(L10n.text("imageEditor.properties.innerShadowUseGlobalLight"), isOn: selectedLayerInnerShadowUsesGlobalLightBinding)
-                    .toggleStyle(.checkbox)
+                layerStyleGlobalLightToggle(
+                    .innerShadow,
+                    labelKey: "imageEditor.properties.innerShadowUseGlobalLight",
+                    accessibilityIdentifier: "image-editor-inner-shadow-global-light"
+                )
                 Stepper(
                     L10n.format("imageEditor.properties.outerGlowOpacityValue", Int((viewModel.selectedLayerOuterGlowOpacity * 100).rounded())),
                     value: selectedLayerOuterGlowOpacityBinding,
@@ -7396,8 +7418,11 @@ struct ImageEditorView: View {
                     in: 0...24,
                     step: 1
                 )
-                Toggle(L10n.text("imageEditor.properties.bevelUseGlobalLight"), isOn: selectedLayerBevelUsesGlobalLightBinding)
-                    .toggleStyle(.checkbox)
+                layerStyleGlobalLightToggle(
+                    .bevel,
+                    labelKey: "imageEditor.properties.bevelUseGlobalLight",
+                    accessibilityIdentifier: "image-editor-bevel-global-light"
+                )
                 Picker(L10n.text("imageEditor.properties.bevelDirection"), selection: selectedLayerBevelDirectionBinding) {
                     ForEach(ImageEditorBevelDirection.allCases) { direction in
                         Text(direction.title).tag(direction)
