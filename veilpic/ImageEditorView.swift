@@ -7176,12 +7176,15 @@ struct ImageEditorView: View {
                 ) { contour in
                     viewModel.setSelectedLayerInnerShadowContour(contour)
                 }
-                Stepper(
-                    L10n.format("imageEditor.properties.innerShadowAngleValue", Int(viewModel.selectedLayerInnerShadowAngle.rounded())),
+                layerStyleNumericStepper(
+                    state: viewModel.selectedLayerInnerShadowAngleState,
                     value: selectedLayerInnerShadowAngleBinding,
-                    in: -180...180,
-                    step: 15
-                )
+                    range: -180...180,
+                    step: 15,
+                    accessibilityIdentifier: "image-editor-layer-style-inner-shadow-angle"
+                ) { value in
+                    L10n.format("imageEditor.properties.innerShadowAngleValue", Int(value.rounded()))
+                }
                 layerStyleGlobalLightToggle(
                     .innerShadow,
                     labelKey: "imageEditor.properties.innerShadowUseGlobalLight",

@@ -416,6 +416,12 @@ extension ImageEditorViewModel {
         return Double(style.resolvedInnerShadowAngle(globalLightAngle: document.globalLightAngle))
     }
 
+    var selectedLayerInnerShadowAngleState: ImageEditorLayerStyleValueState<CGFloat> {
+        selectedLayerStyleValueState {
+            $0.resolvedInnerShadowAngle(globalLightAngle: document.globalLightAngle)
+        }
+    }
+
     var selectedLayerInnerShadowUsesGlobalLight: Bool {
         document.selectedLayer?.style.innerShadowUsesGlobalLight == true
     }

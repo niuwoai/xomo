@@ -1,0 +1,39 @@
+{
+  "generated_at": "2026-07-19 18:18:32 +0800",
+  "total": 3,
+  "passed": 3,
+  "failed": 0,
+  "jobs": 4,
+  "results": [
+    {
+      "suite": "ImageEditorLayerRowBatchPropertyTests",
+      "method": "layerStyleInnerShadowAngleControlReusesMixedNumericStepper",
+      "identifier": "veilpicTests/ImageEditorLayerRowBatchPropertyTests/layerStyleInnerShadowAngleControlReusesMixedNumericStepper",
+      "file": "ImageEditorLayerRowBatchPropertyTests.swift",
+      "passed": true,
+      "duration": 8.719,
+      "issues": [],
+      "log": "ImageEditorLayerRowBatchPropertyTests.layerStyleInnerShadowAngleControlReusesMixedNumericStepper.log"
+    },
+    {
+      "suite": "ImageEditorLayerRowBatchPropertyTests",
+      "method": "layerStyleInnerShadowAngleMixedValueConvergesAcrossGlobalAndLocalLight",
+      "identifier": "veilpicTests/ImageEditorLayerRowBatchPropertyTests/layerStyleInnerShadowAngleMixedValueConvergesAcrossGlobalAndLocalLight",
+      "file": "ImageEditorLayerRowBatchPropertyTests.swift",
+      "passed": true,
+      "duration": 8.739,
+      "issues": [],
+      "log": "ImageEditorLayerRowBatchPropertyTests.layerStyleInnerShadowAngleMixedValueConvergesAcrossGlobalAndLocalLight.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registrySetsLayerStyleInnerShadowAngleAcrossGlobalAndLocalLight",
+      "identifier": "veilpicTests/XomoAutomationTests/registrySetsLayerStyleInnerShadowAngleAcrossGlobalAndLocalLight",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 8.701,
+      "issues": [],
+      "log": "XomoAutomationTests.registrySetsLayerStyleInnerShadowAngleAcrossGlobalAndLocalLight.log"
+    }
+  ]
+}
