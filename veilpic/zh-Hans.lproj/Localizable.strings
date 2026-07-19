@@ -463,13 +463,14 @@
 "imageEditor.export.scope.selectedLayer" = "当前图层";
 "imageEditor.export.scope.selectedLayers" = "所选图层";
 "imageEditor.export.scope.selection" = "选区 / 切片";
+"imageEditor.export.scope.slice" = "命名切片";
 "imageEditor.export.namingRule" = "文件名";
 "imageEditor.export.namingRule.sourceName" = "仅文档名";
 "imageEditor.export.namingRule.sourceAndScope" = "文档名 + 范围";
 "imageEditor.export.namingRule.sourceScopeAndScale" = "文档名 + 范围 + 倍率";
 "imageEditor.export.batchScales" = "同时导出";
 "imageEditor.export.batchScaleValue" = "%.0gx";
-"imageEditor.export.scaleValue" = "倍率：%.2gx";
+"imageEditor.export.scaleValue" = "倍率：%@x";
 "imageEditor.export.quality" = "质量";
 "imageEditor.export.qualityValue" = "%d%%";
 "imageEditor.export.outputSize" = "输出尺寸";

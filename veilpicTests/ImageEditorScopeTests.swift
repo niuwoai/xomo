@@ -1450,6 +1450,18 @@ struct ImageEditorScopeTests {
         #expect(fileMenuSource.contains(".disabled(viewModel.selectedLayersExportScope == nil)"))
     }
 
+    @Test func exportPanelUsesDarkReadableTextAndLocalizedSliceScope() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorExportPanel.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains(".foregroundStyle(Color(nsColor: ImageEditorTheme.text))"))
+        #expect(source.contains(".environment(\\.colorScheme, .dark)"))
+        #expect(source.contains("ImageEditorExportScaleFormatter.string"))
+        #expect(L10n.text("imageEditor.export.scope.slice") != "imageEditor.export.scope.slice")
+    }
+
     @Test func layerRowsExposeTheSameSelectedLayerExportAction() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorLayerPanel.swift"),

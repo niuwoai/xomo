@@ -7,6 +7,19 @@
 
 import SwiftUI
 
+enum ImageEditorExportScaleFormatter {
+    static func string(from scale: Double) -> String {
+        let rounded = (scale * 100).rounded() / 100
+        if rounded == rounded.rounded() {
+            return String(Int(rounded))
+        }
+        if (rounded * 10).rounded() == rounded * 10 {
+            return String(format: "%.1f", rounded)
+        }
+        return String(format: "%.2f", rounded)
+    }
+}
+
 struct ImageEditorExportPanel: View {
     @ObservedObject var viewModel: ImageEditorViewModel
 
@@ -62,7 +75,10 @@ struct ImageEditorExportPanel: View {
 
                 if viewModel.exportSettings.usesScale {
                     Stepper(
-                        L10n.format("imageEditor.export.scaleValue", viewModel.exportSettings.scale),
+                        L10n.format(
+                            "imageEditor.export.scaleValue",
+                            ImageEditorExportScaleFormatter.string(from: viewModel.exportSettings.scale)
+                        ),
                         value: scaleBinding,
                         in: 0.25...4,
                         step: 0.25
@@ -119,6 +135,8 @@ struct ImageEditorExportPanel: View {
         }
         .padding(18)
         .frame(width: 440)
+        .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+        .environment(\.colorScheme, .dark)
         .background(Color(nsColor: ImageEditorTheme.panel))
     }
 

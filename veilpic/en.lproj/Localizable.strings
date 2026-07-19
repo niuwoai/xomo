@@ -463,13 +463,14 @@
 "imageEditor.export.scope.selectedLayer" = "Current Layer";
 "imageEditor.export.scope.selectedLayers" = "Selected Layers";
 "imageEditor.export.scope.selection" = "Selection / Slice";
+"imageEditor.export.scope.slice" = "Named Slice";
 "imageEditor.export.namingRule" = "File name";
 "imageEditor.export.namingRule.sourceName" = "Document name";
 "imageEditor.export.namingRule.sourceAndScope" = "Document name + scope";
 "imageEditor.export.namingRule.sourceScopeAndScale" = "Document name + scope + scale";
 "imageEditor.export.batchScales" = "Also export";
 "imageEditor.export.batchScaleValue" = "%.0gx";
-"imageEditor.export.scaleValue" = "Scale: %.2gx";
+"imageEditor.export.scaleValue" = "Scale: %@x";
 "imageEditor.export.quality" = "Quality";
 "imageEditor.export.qualityValue" = "%d%%";
 "imageEditor.export.outputSize" = "Output Size";

@@ -463,13 +463,14 @@
 "imageEditor.export.scope.selectedLayer" = "現在のレイヤー";
 "imageEditor.export.scope.selectedLayers" = "選択レイヤー";
 "imageEditor.export.scope.selection" = "選択範囲 / スライス";
+"imageEditor.export.scope.slice" = "名前付きスライス";
 "imageEditor.export.namingRule" = "ファイル名";
 "imageEditor.export.namingRule.sourceName" = "書類名のみ";
 "imageEditor.export.namingRule.sourceAndScope" = "書類名 + 範囲";
 "imageEditor.export.namingRule.sourceScopeAndScale" = "書類名 + 範囲 + 倍率";
 "imageEditor.export.batchScales" = "同時に書き出す";
 "imageEditor.export.batchScaleValue" = "%.0gx";
-"imageEditor.export.scaleValue" = "倍率：%.2gx";
+"imageEditor.export.scaleValue" = "倍率：%@x";
 "imageEditor.export.quality" = "品質";
 "imageEditor.export.qualityValue" = "%d%%";
 "imageEditor.export.outputSize" = "出力サイズ";

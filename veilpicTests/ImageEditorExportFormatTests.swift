@@ -4,6 +4,13 @@ import Testing
 
 @MainActor
 struct ImageEditorExportFormatTests {
+    @Test func exportScaleFormatterPreservesQuarterStepsWithoutTrailingZeros() {
+        #expect(ImageEditorExportScaleFormatter.string(from: 1) == "1")
+        #expect(ImageEditorExportScaleFormatter.string(from: 1.25) == "1.25")
+        #expect(ImageEditorExportScaleFormatter.string(from: 1.5) == "1.5")
+        #expect(ImageEditorExportScaleFormatter.string(from: 2.75) == "2.75")
+    }
+
     @Test func pureVectorCanvasExportsEditableSVG() throws {
         let viewModel = ImageEditorViewModel(
             sourceName: "vector-canvas",
