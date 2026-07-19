@@ -865,6 +865,57 @@ struct ImageEditorLayerRowBatchPropertyTests {
         return fixture
     }
 
+    @Test func layerStyleGradientOverlayScaleMixedValueConvergesAcrossEditableSelection() throws {
+        let fixture = gradientOverlayScaleFixture()
+        let viewModel = fixture.viewModel
+        let firstID = fixture.layers[0].id
+        let secondID = fixture.layers[1].id
+        let lockedID = fixture.layers[2].id
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.selectedLayerGradientOverlayScaleState == .mixed)
+        viewModel.setSelectedLayerGradientOverlayScale(1.5)
+        #expect(viewModel.selectedLayerGradientOverlayScaleState == .value(1.5))
+        #expect((try layer(firstID, in: viewModel)).style.gradientOverlayScale == 1.5)
+        #expect((try layer(secondID, in: viewModel)).style.gradientOverlayScale == 1.5)
+        #expect((try layer(lockedID, in: viewModel)).style.gradientOverlayScale == 1)
+        #expect((try layer(firstID, in: viewModel)).style.gradientOverlayEnabled)
+        #expect((try layer(secondID, in: viewModel)).style.gradientOverlayEnabled)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerGradientOverlayScaleState == .mixed)
+        viewModel.redo()
+        #expect(viewModel.selectedLayerGradientOverlayScaleState == .value(1.5))
+    }
+
+    @Test func layerStyleGradientOverlayScaleControlReusesMixedNumericStepper() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("state: viewModel.selectedLayerGradientOverlayScaleState"))
+        #expect(source.contains("value: selectedLayerGradientOverlayScaleBinding"))
+        #expect(source.contains("image-editor-layer-style-gradient-overlay-scale"))
+        #expect(source.contains("L10n.format(\"imageEditor.properties.gradientOverlayScaleValue\""))
+    }
+
+    private func gradientOverlayScaleFixture() -> Fixture {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        viewModel.document.layers[0].style.gradientOverlayScale = 0.5
+        viewModel.document.layers[1].style.gradientOverlayScale = 2
+        viewModel.document.layers[2].style.gradientOverlayScale = 1
+        viewModel.document.layers[2].isLocked = true
+        select(Set(fixture.layers.map(\.id)), primary: fixture.layers[0].id, in: viewModel)
+        return fixture
+    }
+
     @Test func layerStyleMixedGradientOverlayStyleConvergesAcrossEditableSelection() throws {
         let fixture = gradientOverlayStyleFixture()
         let viewModel = fixture.viewModel

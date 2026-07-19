@@ -460,6 +460,10 @@ extension ImageEditorViewModel {
         Double(document.selectedLayer?.style.gradientOverlayScale ?? 1)
     }
 
+    var selectedLayerGradientOverlayScaleState: ImageEditorLayerStyleValueState<CGFloat> {
+        selectedLayerStyleValueState(\.gradientOverlayScale)
+    }
+
     var selectedLayerGradientOverlayAngle: Double {
         Double(document.selectedLayer?.style.gradientOverlayAngle ?? 0)
     }

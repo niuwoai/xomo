@@ -3366,6 +3366,45 @@ struct XomoAutomationTests {
         #expect(viewModel.document.selectedLayerIDs == [first.id, second.id, locked.id])
     }
 
+    @Test func registrySetsLayerStyleGradientOverlayScaleAcrossEditableSelection() throws {
+        let viewModel = makeViewModel()
+        let canvasSize = viewModel.document.canvasSize
+        var first = ImageEditorLayer.blank(name: "First", size: canvasSize)
+        var second = ImageEditorLayer.blank(name: "Second", size: canvasSize)
+        var locked = ImageEditorLayer.blank(name: "Locked", size: canvasSize)
+        first.style.gradientOverlayScale = 0.5
+        second.style.gradientOverlayScale = 2
+        locked.style.gradientOverlayScale = 1
+        locked.isLocked = true
+        viewModel.document.layers = [first, second, locked]
+        viewModel.document.selectedLayerID = first.id
+        viewModel.document.selectedLayerIDs = [first.id, second.id, locked.id]
+        let historyCount = viewModel.document.history.count
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        try assertNumericLayerStylePropertySchema("gradientOverlayScale", in: toolsResponse)
+
+        let result = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("gradientOverlayScale"),
+                "value": .number(1.5)
+            ]
+        ))
+
+        #expect(result.ok)
+        #expect(viewModel.document.layers[0].style.gradientOverlayScale == 1.5)
+        #expect(viewModel.document.layers[1].style.gradientOverlayScale == 1.5)
+        #expect(viewModel.document.layers[2].style.gradientOverlayScale == 1)
+        #expect(viewModel.document.layers[0].style.gradientOverlayEnabled)
+        #expect(viewModel.document.layers[1].style.gradientOverlayEnabled)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [first.id, second.id, locked.id])
+    }
+
     @Test func registrySetsLayerStyleGradientOverlayStyleWithAdvertisedEnum() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

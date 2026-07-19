@@ -1,7 +1,8 @@
 # Xomo MCP 与 CLI
 
-> 当前版本：v2.12.0-rc373
+> 当前版本：v2.12.0-rc374
 
+rc374 不新增破坏性协议字段；既有 `xomo.layer.style_settings property=gradientOverlayScale value=<0.25...4>` 补充多选批量行为和数值 schema 回归。调用会统一更新全部可编辑选中层、启用渐变叠加并保持单步 History/Undo，锁定及不适用图层跳过；本地混合百分比 Stepper 与 MCP 继续共享同一 setter。
 rc373 不新增破坏性协议字段；既有 `xomo.layer.style_settings property=gradientOverlayOpacity value=<0.05...1>` 补充多选批量行为和数值 schema 回归。调用会统一更新全部可编辑选中层、启用渐变叠加并保持单步 History/Undo，锁定及不适用图层跳过；本地混合百分比 Stepper 与 MCP 继续共享同一 setter。
 rc372 不新增破坏性协议字段；既有 `xomo.layer.style_settings property=patternOverlayOpacity value=<0.05...1>` 补充多选批量行为和数值 schema 回归。调用会统一更新全部可编辑选中层、启用图案叠加并保持单步 History/Undo，锁定及不适用图层跳过；本地混合百分比 Stepper 与 MCP 继续共享同一 setter。
 rc371 不新增破坏性协议字段；既有 `xomo.layer.style_settings property=patternOverlayScale value=<6...64>` 补充多选批量行为和数值 schema 回归。调用会统一更新全部可编辑选中层、启用图案叠加并保持单步 History/Undo，锁定及不适用图层跳过；本地混合尺寸 Stepper 与 MCP 继续共享同一 setter。

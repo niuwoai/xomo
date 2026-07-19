@@ -7304,12 +7304,15 @@ struct ImageEditorView: View {
                         step: 15
                     )
                 }
-                Stepper(
-                    L10n.format("imageEditor.properties.gradientOverlayScaleValue", Int((viewModel.selectedLayerGradientOverlayScale * 100).rounded())),
+                layerStyleNumericStepper(
+                    state: viewModel.selectedLayerGradientOverlayScaleState,
                     value: selectedLayerGradientOverlayScaleBinding,
-                    in: 0.25...4,
-                    step: 0.05
-                )
+                    range: 0.25...4,
+                    step: 0.05,
+                    accessibilityIdentifier: "image-editor-layer-style-gradient-overlay-scale"
+                ) { value in
+                    L10n.format("imageEditor.properties.gradientOverlayScaleValue", Int((value * 100).rounded()))
+                }
                 layerStyleValuePicker(
                     state: viewModel.selectedLayerPatternOverlayKindState,
                     values: ImageEditorPatternOverlayKind.allCases,
