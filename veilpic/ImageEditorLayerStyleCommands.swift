@@ -141,27 +141,17 @@ extension ImageEditorViewModel {
     func selectedLayerStyleEffectState(
         _ effect: ImageEditorLayerStyleEffect
     ) -> ImageEditorLayerStyleSelectionState {
-        let targetIndices = selectedLayerStyleTargetIndices()
-        guard !targetIndices.isEmpty else { return .off }
-        let enabledCount = targetIndices.lazy.filter {
-            effect.isEnabled(in: self.document.layers[$0].style)
-        }.count
-        if enabledCount == 0 { return .off }
-        if enabledCount == targetIndices.count { return .on }
-        return .mixed
+        selectedLayerStyleBooleanState { effect.isEnabled(in: $0) }
     }
 
     func selectedLayerGlobalLightState(
         _ effect: ImageEditorLayerLightEffect
     ) -> ImageEditorLayerStyleSelectionState {
-        let targetIndices = selectedLayerStyleTargetIndices()
-        guard !targetIndices.isEmpty else { return .off }
-        let enabledCount = targetIndices.lazy.filter {
-            effect.usesGlobalLight(in: self.document.layers[$0].style)
-        }.count
-        if enabledCount == 0 { return .off }
-        if enabledCount == targetIndices.count { return .on }
-        return .mixed
+        selectedLayerStyleBooleanState { effect.usesGlobalLight(in: $0) }
+    }
+
+    var selectedLayerSatinInvertState: ImageEditorLayerStyleSelectionState {
+        selectedLayerStyleBooleanState(\.satinInvert)
     }
 
     var canCreateLayerStylePreset: Bool {
@@ -1222,6 +1212,10 @@ extension ImageEditorViewModel {
         }
     }
 
+    func toggleSelectedLayerSatinInvert() {
+        setSelectedLayerSatinInvert(selectedLayerSatinInvertState != .on)
+    }
+
     func setSelectedLayerSatinContour(_ contour: ImageEditorLayerEffectContour) {
         let defaultColor = satinColor()
         updateSelectedLayerStyle {
@@ -1445,6 +1439,19 @@ extension ImageEditorViewModel {
             mutate(&document.layers[index].style)
         }
         appendHistory(L10n.text("imageEditor.history.layerStyle"))
+    }
+
+    private func selectedLayerStyleBooleanState(
+        _ isEnabled: (ImageEditorLayerStyle) -> Bool
+    ) -> ImageEditorLayerStyleSelectionState {
+        let targetIndices = selectedLayerStyleTargetIndices()
+        guard !targetIndices.isEmpty else { return .off }
+        let enabledCount = targetIndices.reduce(into: 0) { count, index in
+            if isEnabled(document.layers[index].style) { count += 1 }
+        }
+        if enabledCount == 0 { return .off }
+        if enabledCount == targetIndices.count { return .on }
+        return .mixed
     }
 
     private func canEditLayerStyle(_ layer: ImageEditorLayer) -> Bool {

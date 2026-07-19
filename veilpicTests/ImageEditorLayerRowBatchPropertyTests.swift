@@ -321,6 +321,71 @@ struct ImageEditorLayerRowBatchPropertyTests {
         #expect(source.contains("image-editor-bevel-global-light"))
     }
 
+    @Test func layerStyleSatinInvertMixedStateConvergesAcrossEditableSelection() throws {
+        try assertSatinInvertConvergence()
+    }
+
+    @Test func layerStyleSatinInvertControlReusesFamiliarTriStateCheckbox() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let start = try #require(source.range(of: "private func layerStyleTriStateToggle("))
+        let end = try #require(source[start.upperBound...].range(of: "private func guidePath("))
+        let controlSource = source[start.lowerBound..<end.lowerBound]
+
+        #expect(controlSource.contains("checkmark.square.fill"))
+        #expect(controlSource.contains("minus.square.fill"))
+        #expect(controlSource.contains(".focusable(false)"))
+        #expect(controlSource.contains("state.accessibilityKey"))
+        #expect(source.contains("state: viewModel.selectedLayerSatinInvertState"))
+        #expect(source.contains("viewModel.toggleSelectedLayerSatinInvert()"))
+        #expect(source.contains("image-editor-satin-invert"))
+        #expect(!source.contains("Toggle(L10n.text(\"imageEditor.properties.satinInvert\")"))
+    }
+
+    private func assertSatinInvertConvergence() throws {
+        let fixture = satinInvertFixture()
+        let viewModel = fixture.viewModel
+        let firstID = fixture.layers[0].id
+        let secondID = fixture.layers[1].id
+        let lockedID = fixture.layers[2].id
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.selectedLayerSatinInvertState == .mixed)
+        viewModel.toggleSelectedLayerSatinInvert()
+        #expect(viewModel.selectedLayerSatinInvertState == .on)
+        #expect((try layer(firstID, in: viewModel)).style.satinInvert)
+        #expect((try layer(secondID, in: viewModel)).style.satinInvert)
+        #expect(!(try layer(lockedID, in: viewModel)).style.satinInvert)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerSatinInvertState == .mixed)
+        viewModel.redo()
+        viewModel.toggleSelectedLayerSatinInvert()
+        #expect(viewModel.selectedLayerSatinInvertState == .off)
+        #expect(!(try layer(firstID, in: viewModel)).style.satinInvert)
+        #expect(!(try layer(secondID, in: viewModel)).style.satinInvert)
+    }
+
+    private func satinInvertFixture() -> Fixture {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        viewModel.document.layers[0].style.satinInvert = true
+        viewModel.document.layers[2].isLocked = true
+        select(
+            Set(fixture.layers.map(\.id)),
+            primary: fixture.layers[1].id,
+            in: viewModel
+        )
+        return fixture
+    }
+
     @Test func layerPanelRoutesEveryRowPropertyControlThroughSelectionAwareMode() throws {
         let repositoryRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()

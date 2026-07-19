@@ -1,0 +1,39 @@
+{
+  "generated_at": "2026-07-19 09:45:44 +0800",
+  "total": 3,
+  "passed": 3,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorLayerRowBatchPropertyTests",
+      "method": "layerStyleGlobalLightControlsExposeFamiliarTriStateCheckboxes",
+      "identifier": "veilpicTests/ImageEditorLayerRowBatchPropertyTests/layerStyleGlobalLightControlsExposeFamiliarTriStateCheckboxes",
+      "file": "ImageEditorLayerRowBatchPropertyTests.swift",
+      "passed": true,
+      "duration": 3.345,
+      "issues": [],
+      "log": "ImageEditorLayerRowBatchPropertyTests.layerStyleGlobalLightControlsExposeFamiliarTriStateCheckboxes.log"
+    },
+    {
+      "suite": "ImageEditorLayerRowBatchPropertyTests",
+      "method": "layerStyleGlobalLightMixedStateConvergesAcrossEditableSelection",
+      "identifier": "veilpicTests/ImageEditorLayerRowBatchPropertyTests/layerStyleGlobalLightMixedStateConvergesAcrossEditableSelection",
+      "file": "ImageEditorLayerRowBatchPropertyTests.swift",
+      "passed": true,
+      "duration": 3.796,
+      "issues": [],
+      "log": "ImageEditorLayerRowBatchPropertyTests.layerStyleGlobalLightMixedStateConvergesAcrossEditableSelection.log"
+    },
+    {
+      "suite": "LocalizationResourceTests",
+      "method": "layerStyleGlobalLightStateReusesLocalizedSelectionValues",
+      "identifier": "veilpicTests/LocalizationResourceTests/layerStyleGlobalLightStateReusesLocalizedSelectionValues",
+      "file": "LocalizationResourceTests.swift",
+      "passed": true,
+      "duration": 3.102,
+      "issues": [],
+      "log": "LocalizationResourceTests.layerStyleGlobalLightStateReusesLocalizedSelectionValues.log"
+    }
+  ]
+}

@@ -4361,14 +4361,6 @@ struct ImageEditorView: View {
         }
     }
 
-    private var selectedLayerSatinInvertBinding: Binding<Bool> {
-        Binding {
-            viewModel.selectedLayerSatinInvert
-        } set: { value in
-            viewModel.setSelectedLayerSatinInvert(value)
-        }
-    }
-
     private var selectedLayerSatinContourBinding: Binding<ImageEditorLayerEffectContour> {
         Binding {
             viewModel.selectedLayerSatinContour
@@ -4423,13 +4415,26 @@ struct ImageEditorView: View {
         accessibilityIdentifier: String
     ) -> some View {
         let state = viewModel.selectedLayerGlobalLightState(effect)
-        return Button {
+        return layerStyleTriStateToggle(
+            state: state,
+            labelKey: labelKey,
+            accessibilityIdentifier: accessibilityIdentifier
+        ) {
             viewModel.toggleSelectedLayerUsesGlobalLight(effect)
-        } label: {
+        }
+    }
+
+    private func layerStyleTriStateToggle(
+        state: ImageEditorLayerStyleSelectionState,
+        labelKey: String,
+        accessibilityIdentifier: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
             HStack(spacing: 6) {
-                Image(systemName: layerStyleGlobalLightSymbol(state))
+                Image(systemName: layerStyleTriStateSymbol(state))
                     .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(layerStyleGlobalLightColor(state))
+                    .foregroundStyle(layerStyleTriStateColor(state))
                 Text(L10n.text(labelKey))
                     .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
@@ -4445,7 +4450,7 @@ struct ImageEditorView: View {
         .accessibilityIdentifier(accessibilityIdentifier)
     }
 
-    private func layerStyleGlobalLightSymbol(_ state: ImageEditorLayerStyleSelectionState) -> String {
+    private func layerStyleTriStateSymbol(_ state: ImageEditorLayerStyleSelectionState) -> String {
         switch state {
         case .off: "square"
         case .on: "checkmark.square.fill"
@@ -4453,7 +4458,7 @@ struct ImageEditorView: View {
         }
     }
 
-    private func layerStyleGlobalLightColor(_ state: ImageEditorLayerStyleSelectionState) -> Color {
+    private func layerStyleTriStateColor(_ state: ImageEditorLayerStyleSelectionState) -> Color {
         Color(nsColor: state == .off ? ImageEditorTheme.mutedText : ImageEditorTheme.selected)
     }
 
@@ -7359,7 +7364,13 @@ struct ImageEditorView: View {
                     }
                     .buttonStyle(EditorTextButtonStyle())
                 }
-                Toggle(L10n.text("imageEditor.properties.satinInvert"), isOn: selectedLayerSatinInvertBinding)
+                layerStyleTriStateToggle(
+                    state: viewModel.selectedLayerSatinInvertState,
+                    labelKey: "imageEditor.properties.satinInvert",
+                    accessibilityIdentifier: "image-editor-satin-invert"
+                ) {
+                    viewModel.toggleSelectedLayerSatinInvert()
+                }
                 Picker(L10n.text("imageEditor.properties.satinContour"), selection: selectedLayerSatinContourBinding) {
                     ForEach(ImageEditorLayerEffectContour.allCases) { contour in
                         Text(contour.title).tag(contour)

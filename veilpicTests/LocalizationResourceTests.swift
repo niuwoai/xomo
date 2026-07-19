@@ -414,6 +414,30 @@ struct LocalizationResourceTests {
         }
     }
 
+    @Test func layerStyleSatinInvertTriStateIsLocalizedInEverySupportedLanguage() throws {
+        let paths = try Self.repositoryPaths()
+        let expectedValues = [
+            "zh-Hans": ["反相光泽", "未启用", "全部已启用", "部分已启用"],
+            "en": ["Invert Satin", "Not enabled", "Enabled for all", "Partially enabled"],
+            "ja": ["サテンを反転", "無効", "すべて有効", "一部有効"]
+        ]
+        let keys = [
+            "imageEditor.properties.satinInvert",
+            "imageEditor.layer.effectState.off",
+            "imageEditor.layer.effectState.on",
+            "imageEditor.layer.effectState.mixed"
+        ]
+
+        for (localizationID, expected) in expectedValues {
+            let strings = try Self.stringTable(
+                tableName: "Localizable",
+                localizationID: localizationID,
+                appDirectory: paths.appDirectory
+            )
+            #expect(keys.compactMap { strings[$0] } == expected)
+        }
+    }
+
     @Test func fingerPaintingIsLocalizedInEverySupportedLanguage() throws {
         let paths = try Self.repositoryPaths()
         let expectedValues = [
