@@ -528,6 +528,7 @@
 "imageEditor.option.pressureFlow" = "Control Flow";
 "imageEditor.option.pressureSensitivity" = "Sensitivity";
 "imageEditor.option.pressureHelp" = "Use pen pressure to control brush size and flow";
+"imageEditor.option.retouchPressureSensitivity.help" = "Adjust how pen pressure changes the retouch brush size";
 "imageEditor.option.spongePressureSize.help" = "Use pen pressure to control the Sponge brush size";
 "imageEditor.option.tonePressureSize.help" = "Use pen pressure to control the Dodge or Burn brush size";
 "imageEditor.option.blurSharpenPressureSize.help" = "Use pen pressure to control the Blur or Sharpen brush size";

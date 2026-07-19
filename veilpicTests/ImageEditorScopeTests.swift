@@ -2224,6 +2224,33 @@ struct ImageEditorScopeTests {
         #expect(source.contains("updateCanvasCursor(at: value.location, in: size)"))
     }
 
+    @Test func retouchPressureSensitivityMenuIsCompactSharedAndNonFocusable() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let menuStart = try #require(
+            source.range(of: "private var retouchPressureSensitivityMenu: some View {")
+        )
+        let selectionStart = try #require(
+            source[menuStart.upperBound...].range(of: "private var selectionModePicker: some View {")
+        )
+        let menuSource = source[menuStart.lowerBound..<selectionStart.lowerBound]
+
+        #expect(source.contains("if usesRetouchPressureOptions {"))
+        #expect(source.contains("case .cloneStamp, .dodge, .burn, .sponge,"))
+        #expect(source.contains(".blur, .sharpen, .smudge, .healingBrush:"))
+        #expect(menuSource.contains("viewModel.retouchPressureSensitivity"))
+        #expect(menuSource.contains("viewModel.setRetouchPressureSensitivity"))
+        #expect(menuSource.contains("ImageEditorPressureSensitivityPresets.values"))
+        #expect(menuSource.contains("slider.horizontal.3"))
+        #expect(menuSource.contains(".fixedSize()"))
+        #expect(menuSource.contains(".focusable(false)"))
+        #expect(menuSource.contains(".xomoFocusEffectDisabled()"))
+        #expect(menuSource.contains("imageEditor.option.retouchPressureSensitivity.help"))
+        #expect(menuSource.contains("image-editor-retouch-pressure-sensitivity"))
+    }
+
     @Test func spongeToolExposesANonFocusableSaturationModePicker() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),

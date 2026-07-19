@@ -506,6 +506,10 @@ struct ImageEditorView: View {
                 .accessibilityIdentifier("image-editor-sampled-brush-pressure-size")
             }
 
+            if usesRetouchPressureOptions {
+                retouchPressureSensitivityMenu
+            }
+
             if viewModel.selectedTool == .text {
                 fontFamilyPicker(width: 190)
                 Stepper(
@@ -693,6 +697,16 @@ struct ImageEditorView: View {
         viewModel.selectedTool == .brush || viewModel.selectedTool == .eraser
     }
 
+    private var usesRetouchPressureOptions: Bool {
+        switch viewModel.selectedTool {
+        case .cloneStamp, .dodge, .burn, .sponge,
+             .blur, .sharpen, .smudge, .healingBrush:
+            true
+        default:
+            false
+        }
+    }
+
     private var brushPresetMenu: some View {
         Menu {
             ForEach(viewModel.brushPresets) { preset in
@@ -756,7 +770,7 @@ struct ImageEditorView: View {
                     set: { viewModel.setBrushPressureSensitivity($0) }
                 )
             ) {
-                ForEach([CGFloat(0), 25, 50, 75, 100], id: \.self) { sensitivity in
+                ForEach(ImageEditorPressureSensitivityPresets.values, id: \.self) { sensitivity in
                     Text("\(Int(sensitivity))%")
                         .tag(sensitivity)
                 }
@@ -771,6 +785,45 @@ struct ImageEditorView: View {
         .xomoFocusEffectDisabled()
         .help(L10n.text("imageEditor.option.pressureHelp"))
         .accessibilityIdentifier("image-editor-brush-pressure-menu")
+    }
+
+    private var retouchPressureSensitivityMenu: some View {
+        Menu {
+            Picker(
+                L10n.text("imageEditor.option.pressureSensitivity"),
+                selection: Binding(
+                    get: { viewModel.retouchPressureSensitivity },
+                    set: { viewModel.setRetouchPressureSensitivity($0) }
+                )
+            ) {
+                ForEach(ImageEditorPressureSensitivityPresets.values, id: \.self) { sensitivity in
+                    Text(L10n.format("imageEditor.option.percentPreset", Int(sensitivity)))
+                        .tag(sensitivity)
+                }
+            }
+            .focusable(false)
+        } label: {
+            Label {
+                Text(L10n.format(
+                    "imageEditor.option.percentPreset",
+                    Int(viewModel.retouchPressureSensitivity.rounded())
+                ))
+            } icon: {
+                Image(systemName: "slider.horizontal.3")
+            }
+            .font(.system(size: 11, weight: .semibold))
+        }
+        .menuStyle(.borderlessButton)
+        .fixedSize()
+        .focusable(false)
+        .xomoFocusEffectDisabled()
+        .help(L10n.text("imageEditor.option.retouchPressureSensitivity.help"))
+        .accessibilityLabel(L10n.text("imageEditor.option.pressureSensitivity"))
+        .accessibilityValue(L10n.format(
+            "imageEditor.option.percentPreset",
+            Int(viewModel.retouchPressureSensitivity.rounded())
+        ))
+        .accessibilityIdentifier("image-editor-retouch-pressure-sensitivity")
     }
 
     private var selectionModePicker: some View {

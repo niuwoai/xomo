@@ -528,6 +528,7 @@
 "imageEditor.option.pressureFlow" = "流量を制御";
 "imageEditor.option.pressureSensitivity" = "感度";
 "imageEditor.option.pressureHelp" = "ペンの筆圧でブラシサイズと流量を制御します";
+"imageEditor.option.retouchPressureSensitivity.help" = "筆圧によるレタッチブラシサイズの変化感度を調整します";
 "imageEditor.option.spongePressureSize.help" = "ペンの筆圧でスポンジブラシのサイズを制御します";
 "imageEditor.option.tonePressureSize.help" = "ペンの筆圧で覆い焼きまたは焼き込みブラシのサイズを制御します";
 "imageEditor.option.blurSharpenPressureSize.help" = "ペンの筆圧でぼかしまたはシャープブラシのサイズを制御します";

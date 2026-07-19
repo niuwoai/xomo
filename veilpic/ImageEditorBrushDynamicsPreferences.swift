@@ -7,6 +7,10 @@
 
 import Foundation
 
+enum ImageEditorPressureSensitivityPresets {
+    static let values: [CGFloat] = [0, 25, 50, 75, 100]
+}
+
 struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
     static let storageKey = "im.some.xomo.imageEditor.brushDynamicsPreferences"
     static let defaultValue = ImageEditorBrushDynamicsPreferences(

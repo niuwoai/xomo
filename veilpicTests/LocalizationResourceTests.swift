@@ -327,6 +327,24 @@ struct LocalizationResourceTests {
         }
     }
 
+    @Test func retouchPressureSensitivityHelpIsLocalizedInEverySupportedLanguage() throws {
+        let paths = try Self.repositoryPaths()
+        let expectedValues = [
+            "zh-Hans": "调整数位笔压力控制修饰画笔大小的灵敏度",
+            "en": "Adjust how pen pressure changes the retouch brush size",
+            "ja": "筆圧によるレタッチブラシサイズの変化感度を調整します"
+        ]
+
+        for (localizationID, expected) in expectedValues {
+            let strings = try Self.stringTable(
+                tableName: "Localizable",
+                localizationID: localizationID,
+                appDirectory: paths.appDirectory
+            )
+            #expect(strings["imageEditor.option.retouchPressureSensitivity.help"] == expected)
+        }
+    }
+
     @Test func fingerPaintingIsLocalizedInEverySupportedLanguage() throws {
         let paths = try Self.repositoryPaths()
         let expectedValues = [

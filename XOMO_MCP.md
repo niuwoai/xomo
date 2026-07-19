@@ -1,7 +1,8 @@
 # Xomo MCP 与 CLI
 
-> 当前版本：v2.12.0-rc348
+> 当前版本：v2.12.0-rc349
 
+rc349 为海绵、减淡、加深、模糊、锐化、涂抹、仿制和修复提供共享的本地压力灵敏度菜单，五档选择继续写入既有修饰笔刷偏好。该版本不改变自动化协议：`xomo.paint.special` 的 `pressureSize` 与 `pressureSensitivity=0...100`、CLI 参数、确定性离线结果和返回结构保持兼容。
 rc348 统一本地数位笔反馈：启用大小压力后，画布圆形光标与最终像素共用 `pressureSensitivity` 曲线并随拖动实时缩放；笔触结束或切换组件库后恢复。该变化只影响本地可视反馈，`xomo.paint.stroke`、`xomo.paint.special` 的 `pressure`、`pressureSize`、`pressureSensitivity` 协议和确定性离线执行结果不变。
 rc347 将 `xomo.paint.special` 的点级压力扩展到 `action=cloneStamp|healing`：每个点可选 `pressure=0...1`，`pressureSize=true` 使用独立修饰工具压力曲线控制仿制或修复的实际蒙版直径，`pressureSensitivity=0...100` 调整曲线；取样修复与污点修复共用该入口，并继续支持 `aligned`、`sampleSource`、`healingMode`、硬度、不透明度、选区和单步 History/Undo。省略压力或关闭控制时保持旧客户端像素结果。
 rc346 将 `xomo.paint.special` 的点级压力扩展到 `action=blur|sharpen`：每个点可选 `pressure=0...1`，`pressureSize=true` 使用独立修饰工具压力曲线控制实际滤镜笔刷直径，`pressureSensitivity=0...100` 调整曲线；省略压力或关闭控制时保持原像素结果，并继续服从 `strength`、`hardness`、选区与单步 History/Undo。
