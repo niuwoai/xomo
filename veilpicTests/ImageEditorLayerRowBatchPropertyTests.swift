@@ -814,6 +814,57 @@ struct ImageEditorLayerRowBatchPropertyTests {
         return fixture
     }
 
+    @Test func layerStyleColorOverlayOpacityMixedValueConvergesAcrossEditableSelection() throws {
+        let fixture = colorOverlayOpacityFixture()
+        let viewModel = fixture.viewModel
+        let firstID = fixture.layers[0].id
+        let secondID = fixture.layers[1].id
+        let lockedID = fixture.layers[2].id
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.selectedLayerColorOverlayOpacityState == .mixed)
+        viewModel.setSelectedLayerColorOverlayOpacity(0.6)
+        #expect(viewModel.selectedLayerColorOverlayOpacityState == .value(0.6))
+        #expect((try layer(firstID, in: viewModel)).style.colorOverlayOpacity == 0.6)
+        #expect((try layer(secondID, in: viewModel)).style.colorOverlayOpacity == 0.6)
+        #expect((try layer(lockedID, in: viewModel)).style.colorOverlayOpacity == 0.4)
+        #expect((try layer(firstID, in: viewModel)).style.colorOverlayEnabled)
+        #expect((try layer(secondID, in: viewModel)).style.colorOverlayEnabled)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerColorOverlayOpacityState == .mixed)
+        viewModel.redo()
+        #expect(viewModel.selectedLayerColorOverlayOpacityState == .value(0.6))
+    }
+
+    @Test func layerStyleColorOverlayOpacityControlReusesMixedNumericStepper() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("state: viewModel.selectedLayerColorOverlayOpacityState"))
+        #expect(source.contains("value: selectedLayerColorOverlayOpacityBinding"))
+        #expect(source.contains("image-editor-layer-style-color-overlay-opacity"))
+        #expect(source.contains("L10n.format(\"imageEditor.properties.colorOverlayOpacityValue\""))
+    }
+
+    private func colorOverlayOpacityFixture() -> Fixture {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        viewModel.document.layers[0].style.colorOverlayOpacity = 0.25
+        viewModel.document.layers[1].style.colorOverlayOpacity = 0.75
+        viewModel.document.layers[2].style.colorOverlayOpacity = 0.4
+        viewModel.document.layers[2].isLocked = true
+        select(Set(fixture.layers.map(\.id)), primary: fixture.layers[0].id, in: viewModel)
+        return fixture
+    }
+
     @Test func layerStyleGradientOverlayOpacityMixedValueConvergesAcrossEditableSelection() throws {
         let fixture = gradientOverlayOpacityFixture()
         let viewModel = fixture.viewModel

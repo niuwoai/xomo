@@ -432,6 +432,10 @@ extension ImageEditorViewModel {
         Double(document.selectedLayer?.style.colorOverlayOpacity ?? 0.55)
     }
 
+    var selectedLayerColorOverlayOpacityState: ImageEditorLayerStyleValueState<CGFloat> {
+        selectedLayerStyleValueState(\.colorOverlayOpacity)
+    }
+
     var selectedLayerGradientOverlayOpacity: Double {
         Double(document.selectedLayer?.style.gradientOverlayOpacity ?? 0.55)
     }

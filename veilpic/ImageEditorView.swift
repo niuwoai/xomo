@@ -7245,12 +7245,15 @@ struct ImageEditorView: View {
                 ) { source in
                     viewModel.setSelectedLayerInnerGlowSource(source)
                 }
-                Stepper(
-                    L10n.format("imageEditor.properties.colorOverlayOpacityValue", Int((viewModel.selectedLayerColorOverlayOpacity * 100).rounded())),
+                layerStyleNumericStepper(
+                    state: viewModel.selectedLayerColorOverlayOpacityState,
                     value: selectedLayerColorOverlayOpacityBinding,
-                    in: 0.05...1,
-                    step: 0.05
-                )
+                    range: 0.05...1,
+                    step: 0.05,
+                    accessibilityIdentifier: "image-editor-layer-style-color-overlay-opacity"
+                ) { value in
+                    L10n.format("imageEditor.properties.colorOverlayOpacityValue", Int((value * 100).rounded()))
+                }
                 HStack(spacing: 8) {
                     Text(L10n.text("imageEditor.properties.colorOverlayColor"))
                         .font(.system(size: 10, weight: .medium))
