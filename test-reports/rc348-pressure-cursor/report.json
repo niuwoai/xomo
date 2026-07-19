@@ -1,0 +1,29 @@
+{
+  "generated_at": "2026-07-19 08:23:58 +0800",
+  "total": 2,
+  "passed": 2,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorCanvasCursorTests",
+      "method": "pressureCursorDiameterTracksBrushFamiliesAndKeepsComponentArrow",
+      "identifier": "veilpicTests/ImageEditorCanvasCursorTests/pressureCursorDiameterTracksBrushFamiliesAndKeepsComponentArrow",
+      "file": "ImageEditorCanvasCursorTests.swift",
+      "passed": true,
+      "duration": 4.316,
+      "issues": [],
+      "log": "ImageEditorCanvasCursorTests.pressureCursorDiameterTracksBrushFamiliesAndKeepsComponentArrow.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "pressureCursorGestureUsesTabletPressureAndResetsAfterRelease",
+      "identifier": "veilpicTests/ImageEditorScopeTests/pressureCursorGestureUsesTabletPressureAndResetsAfterRelease",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.027,
+      "issues": [],
+      "log": "ImageEditorScopeTests.pressureCursorGestureUsesTabletPressureAndResetsAfterRelease.log"
+    }
+  ]
+}

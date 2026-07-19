@@ -118,6 +118,7 @@ struct ImageEditorView: View {
     @State private var isPointerInsideCanvas = false
     @State private var hoverViewPoint: CGPoint?
     @State private var canvasModifierFlags: NSEvent.ModifierFlags = []
+    @State private var activeBrushPressure: CGFloat?
     @State private var isMarqueeShapePopoverPresented = false
     @State private var isQuickMaskOptionsPresented = false
     @State var isFigmaLinkImportPresented = false
@@ -283,6 +284,8 @@ struct ImageEditorView: View {
             dragStart = nil
             dragEnd = nil
             dragPoints = []
+            brushStrokeSamples = []
+            activeBrushPressure = nil
             toneAirbrushStroke.reset()
             if viewModel.selectedTool != .crop {
                 pendingCropRect = nil
@@ -1656,11 +1659,20 @@ struct ImageEditorView: View {
                         at: hoverViewPoint,
                         in: geometry.size
                     )
+                    let displayedBrushDiameter = ImageEditorCanvasCursor.pressureAdjustedBrushDiameter(
+                        baseDiameter: viewModel.brushSize * displayScale,
+                        tool: canvasInteractionTool,
+                        pressure: activeBrushPressure,
+                        brushPressureControlsSize: viewModel.brushPressureControlsSize,
+                        retouchPressureControlsSize: viewModel.retouchPressureControlsSize,
+                        brushPressureSensitivity: viewModel.brushPressureSensitivity / 100,
+                        retouchPressureSensitivity: viewModel.retouchPressureSensitivity / 100
+                    )
                     ImageEditorCursorRectView(
                         cursor: ImageEditorCanvasCursor.cursor(
                             for: viewModel.selectedLeftSidebarTab,
                             selectedTool: viewModel.selectedTool,
-                            brushDiameter: viewModel.brushSize * displayScale,
+                            brushDiameter: displayedBrushDiameter,
                             isPointerOverCanvas: isPointerOverDrawableCanvas,
                             isPointerOverMovableContent: contentHit.isMovable,
                             isPointerOverBlockedContent: contentHit.isBlocked,
@@ -1687,6 +1699,7 @@ struct ImageEditorView: View {
                     refreshCanvasCursor(in: geometry.size)
                 }
                 .onChange(of: viewModel.selectedLeftSidebarTab) { tab in
+                    activeBrushPressure = nil
                     if tab == .components {
                         pendingCropRect = nil
                         endPendingCropInteraction()
@@ -1724,6 +1737,7 @@ struct ImageEditorView: View {
                 }
                 .onDisappear {
                     isPointerInsideCanvas = false
+                    activeBrushPressure = nil
                     endPendingCropInteraction()
                     NSCursor.arrow.set()
                 }
@@ -2243,6 +2257,18 @@ struct ImageEditorView: View {
         ) ?? originalSourcePoint
     }
 
+    private var isSettingSampledBrushSourceGesture: Bool {
+        switch canvasInteractionTool {
+        case .cloneStamp:
+            return viewModel.isSettingCloneSource || canvasModifierFlags.contains(.option)
+        case .healingBrush:
+            return viewModel.healingBrushMode == .source
+                && (viewModel.isSettingHealingSource || canvasModifierFlags.contains(.option))
+        default:
+            return false
+        }
+    }
+
     private func canvasGesture(in size: CGSize) -> some Gesture {
         DragGesture(minimumDistance: 0)
             .onChanged { value in
@@ -2263,6 +2289,7 @@ struct ImageEditorView: View {
                 }
 
                 let pointerImagePoint = imagePoint(from: value.location, in: size)
+                let eventPressure = ImageEditorBrushPressureInput.pressure(from: NSApp.currentEvent)
                 viewModel.updatePointer(pointerImagePoint)
 
                 if canvasInteractionTool == .crop {
@@ -2365,28 +2392,33 @@ struct ImageEditorView: View {
                     }
                 case .brush, .eraser, .sponge:
                     if let pointerImagePoint {
+                        activeBrushPressure = eventPressure
                         brushStrokeSamples.append(ImageEditorBrushStrokeSample(
                             point: pointerImagePoint,
-                            pressure: ImageEditorBrushPressureInput.pressure(from: NSApp.currentEvent)
+                            pressure: eventPressure
                         ))
+                        updateCanvasCursor(at: value.location, in: size)
                     }
                 case .dodge, .burn:
                     if let pointerImagePoint {
-                        let pressure = ImageEditorBrushPressureInput.pressure(from: NSApp.currentEvent)
+                        activeBrushPressure = eventPressure
                         dragPoints.append(pointerImagePoint)
                         brushStrokeSamples.append(ImageEditorBrushStrokeSample(
                             point: pointerImagePoint,
-                            pressure: pressure
+                            pressure: eventPressure
                         ))
-                        updateToneAirbrushStroke(at: pointerImagePoint, pressure: pressure)
+                        updateToneAirbrushStroke(at: pointerImagePoint, pressure: eventPressure)
+                        updateCanvasCursor(at: value.location, in: size)
                     }
                 case .cloneStamp, .blur, .sharpen, .smudge, .healingBrush:
                     if let pointerImagePoint {
+                        activeBrushPressure = isSettingSampledBrushSourceGesture ? nil : eventPressure
                         dragPoints.append(pointerImagePoint)
                         brushStrokeSamples.append(ImageEditorBrushStrokeSample(
                             point: pointerImagePoint,
-                            pressure: ImageEditorBrushPressureInput.pressure(from: NSApp.currentEvent)
+                            pressure: eventPressure
                         ))
+                        updateCanvasCursor(at: value.location, in: size)
                     }
                 case .marquee:
                     if dragStart == nil {
@@ -2496,6 +2528,7 @@ struct ImageEditorView: View {
                 }
 
                 let endImagePoint = imagePoint(from: value.location, in: size)
+                activeBrushPressure = nil
 
                 if activeCropHandle != nil {
                     endPendingCropInteraction()
@@ -2664,6 +2697,7 @@ struct ImageEditorView: View {
 
                 dragPoints = []
                 brushStrokeSamples = []
+                activeBrushPressure = nil
                 toneAirbrushStroke.reset()
                 dragStart = nil
                 dragEnd = nil
@@ -2898,10 +2932,19 @@ struct ImageEditorView: View {
         let imageRect = fittedImageRect(in: size)
         let displayScale = imageRect.width / max(viewModel.document.canvasSize.width, 1)
         let contentHit = canvasPoint.map(viewModel.canvasContentHit(at:)) ?? .none
+        let displayedBrushDiameter = ImageEditorCanvasCursor.pressureAdjustedBrushDiameter(
+            baseDiameter: viewModel.brushSize * displayScale,
+            tool: canvasInteractionTool,
+            pressure: activeBrushPressure,
+            brushPressureControlsSize: viewModel.brushPressureControlsSize,
+            retouchPressureControlsSize: viewModel.retouchPressureControlsSize,
+            brushPressureSensitivity: viewModel.brushPressureSensitivity / 100,
+            retouchPressureSensitivity: viewModel.retouchPressureSensitivity / 100
+        )
         ImageEditorCanvasCursor.cursor(
             for: viewModel.selectedLeftSidebarTab,
             selectedTool: viewModel.selectedTool,
-            brushDiameter: viewModel.brushSize * displayScale,
+            brushDiameter: displayedBrushDiameter,
             isPointerOverCanvas: canvasPoint != nil,
             isPointerOverMovableContent: contentHit.isMovable,
             isPointerOverBlockedContent: contentHit.isBlocked,
@@ -8258,6 +8301,35 @@ enum ImageEditorCanvasCursor {
     static func isPointerOverDrawableCanvas(_ point: CGPoint?, imageRect: CGRect) -> Bool {
         guard let point else { return false }
         return imageRect.contains(point)
+    }
+
+    static func pressureAdjustedBrushDiameter(
+        baseDiameter: CGFloat,
+        tool: ImageEditorTool,
+        pressure: CGFloat?,
+        brushPressureControlsSize: Bool,
+        retouchPressureControlsSize: Bool,
+        brushPressureSensitivity: CGFloat,
+        retouchPressureSensitivity: CGFloat
+    ) -> CGFloat {
+        guard let pressure else { return baseDiameter }
+        let settings: (isEnabled: Bool, sensitivity: CGFloat)
+        switch tool {
+        case .brush, .eraser:
+            settings = (brushPressureControlsSize, brushPressureSensitivity)
+        case .cloneStamp, .dodge, .burn, .sponge, .blur, .sharpen, .smudge, .healingBrush:
+            settings = (retouchPressureControlsSize, retouchPressureSensitivity)
+        default:
+            return baseDiameter
+        }
+        guard settings.isEnabled else { return baseDiameter }
+        return max(
+            1,
+            baseDiameter * ImageEditorBrushStrokeKernel.mappedPressure(
+                pressure,
+                sensitivity: settings.sensitivity
+            )
+        )
     }
 
     /// Resolves the canvas cursor from the active sidebar mode in one place.

@@ -2202,6 +2202,28 @@ struct ImageEditorScopeTests {
         #expect(source.contains("viewModel.healingBrush(samples: brushStrokeSamples)"))
     }
 
+    @Test func pressureCursorGestureUsesTabletPressureAndResetsAfterRelease() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("@State private var activeBrushPressure: CGFloat?"))
+        #expect(source.contains(
+            "let eventPressure = ImageEditorBrushPressureInput.pressure(from: NSApp.currentEvent)"
+        ))
+        #expect(source.contains("activeBrushPressure = eventPressure"))
+        #expect(source.contains(
+            "activeBrushPressure = isSettingSampledBrushSourceGesture ? nil : eventPressure"
+        ))
+        #expect(source.contains("pressure: activeBrushPressure"))
+        #expect(source.contains("ImageEditorCanvasCursor.pressureAdjustedBrushDiameter("))
+        #expect(source.contains("brushPressureControlsSize: viewModel.brushPressureControlsSize"))
+        #expect(source.contains("retouchPressureControlsSize: viewModel.retouchPressureControlsSize"))
+        #expect(source.contains("activeBrushPressure = nil"))
+        #expect(source.contains("updateCanvasCursor(at: value.location, in: size)"))
+    }
+
     @Test func spongeToolExposesANonFocusableSaturationModePicker() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),

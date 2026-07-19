@@ -97,6 +97,90 @@ struct ImageEditorCanvasCursorTests {
         )
     }
 
+    @Test func pressureCursorDiameterTracksBrushFamiliesAndKeepsComponentArrow() {
+        let baseDiameter: CGFloat = 40
+        let pressure: CGFloat = 0.25
+        let expectedBrushDiameter = baseDiameter * ImageEditorBrushStrokeKernel.mappedPressure(
+            pressure,
+            sensitivity: 0.5
+        )
+        let brushDiameter = ImageEditorCanvasCursor.pressureAdjustedBrushDiameter(
+            baseDiameter: baseDiameter,
+            tool: .brush,
+            pressure: pressure,
+            brushPressureControlsSize: true,
+            retouchPressureControlsSize: false,
+            brushPressureSensitivity: 0.5,
+            retouchPressureSensitivity: 0.5
+        )
+        #expect(abs(brushDiameter - expectedBrushDiameter) < 0.001)
+
+        let retouchTools: [ImageEditorTool] = [
+            .cloneStamp, .dodge, .burn, .sponge,
+            .blur, .sharpen, .smudge, .healingBrush
+        ]
+        for tool in retouchTools {
+            let diameter = ImageEditorCanvasCursor.pressureAdjustedBrushDiameter(
+                baseDiameter: baseDiameter,
+                tool: tool,
+                pressure: pressure,
+                brushPressureControlsSize: false,
+                retouchPressureControlsSize: true,
+                brushPressureSensitivity: 0.5,
+                retouchPressureSensitivity: 0.8
+            )
+            let expected = baseDiameter * ImageEditorBrushStrokeKernel.mappedPressure(
+                pressure,
+                sensitivity: 0.8
+            )
+            #expect(abs(diameter - expected) < 0.001)
+        }
+
+        #expect(ImageEditorCanvasCursor.pressureAdjustedBrushDiameter(
+            baseDiameter: baseDiameter,
+            tool: .brush,
+            pressure: pressure,
+            brushPressureControlsSize: false,
+            retouchPressureControlsSize: true,
+            brushPressureSensitivity: 0.5,
+            retouchPressureSensitivity: 0.5
+        ) == baseDiameter)
+        #expect(ImageEditorCanvasCursor.pressureAdjustedBrushDiameter(
+            baseDiameter: baseDiameter,
+            tool: .brush,
+            pressure: nil,
+            brushPressureControlsSize: true,
+            retouchPressureControlsSize: true,
+            brushPressureSensitivity: 0.5,
+            retouchPressureSensitivity: 0.5
+        ) == baseDiameter)
+        #expect(ImageEditorCanvasCursor.pressureAdjustedBrushDiameter(
+            baseDiameter: baseDiameter,
+            tool: .move,
+            pressure: pressure,
+            brushPressureControlsSize: true,
+            retouchPressureControlsSize: true,
+            brushPressureSensitivity: 0.5,
+            retouchPressureSensitivity: 0.5
+        ) == baseDiameter)
+
+        let tinyDiameter = ImageEditorCanvasCursor.pressureAdjustedBrushDiameter(
+            baseDiameter: 2,
+            tool: .eraser,
+            pressure: 0,
+            brushPressureControlsSize: true,
+            retouchPressureControlsSize: false,
+            brushPressureSensitivity: 0.5,
+            retouchPressureSensitivity: 0.5
+        )
+        #expect(tinyDiameter == 1)
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .components,
+            selectedTool: .brush,
+            brushDiameter: brushDiameter
+        ) === NSCursor.arrow)
+    }
+
     @Test func draggingAnObjectKeepsMoveCursorAcrossSidebarModes() {
         let componentDrag = ImageEditorCanvasCursor.cursor(
             for: .components,
