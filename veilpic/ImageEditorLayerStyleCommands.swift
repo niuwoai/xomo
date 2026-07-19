@@ -436,6 +436,10 @@ extension ImageEditorViewModel {
         Double(document.selectedLayer?.style.gradientOverlayOpacity ?? 0.55)
     }
 
+    var selectedLayerGradientOverlayOpacityState: ImageEditorLayerStyleValueState<CGFloat> {
+        selectedLayerStyleValueState(\.gradientOverlayOpacity)
+    }
+
     var selectedLayerGradientOverlayStartColor: NSColor {
         document.selectedLayer?.style.gradientOverlayStartColor ?? .systemRed
     }

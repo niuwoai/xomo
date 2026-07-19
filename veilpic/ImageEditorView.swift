@@ -7288,12 +7288,15 @@ struct ImageEditorView: View {
                     Spacer(minLength: 4)
                 }
                 HStack {
-                    Stepper(
-                        L10n.format("imageEditor.properties.gradientOverlayOpacityValue", Int((viewModel.selectedLayerGradientOverlayOpacity * 100).rounded())),
+                    layerStyleNumericStepper(
+                        state: viewModel.selectedLayerGradientOverlayOpacityState,
                         value: selectedLayerGradientOverlayOpacityBinding,
-                        in: 0.05...1,
-                        step: 0.05
-                    )
+                        range: 0.05...1,
+                        step: 0.05,
+                        accessibilityIdentifier: "image-editor-layer-style-gradient-overlay-opacity"
+                    ) { value in
+                        L10n.format("imageEditor.properties.gradientOverlayOpacityValue", Int((value * 100).rounded()))
+                    }
                     Stepper(
                         L10n.format("imageEditor.properties.gradientOverlayAngleValue", Int(viewModel.selectedLayerGradientOverlayAngle.rounded())),
                         value: selectedLayerGradientOverlayAngleBinding,
