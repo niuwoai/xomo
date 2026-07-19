@@ -14,34 +14,50 @@ extension ImageEditorView {
             Menu { fileMenu } label: { editorMenuLabel("imageEditor.menu.file") }
                 .buttonStyle(.plain)
                 .focusable(false)
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel(L10n.text("imageEditor.menu.file"))
                 .accessibilityIdentifier("image-editor-menu-file")
             Menu { editMenu } label: { editorMenuLabel("imageEditor.menu.edit") }
                 .buttonStyle(.plain)
                 .focusable(false)
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel(L10n.text("imageEditor.menu.edit"))
                 .accessibilityIdentifier("image-editor-menu-edit")
             Menu { imageMenu } label: { editorMenuLabel("imageEditor.menu.image") }
                 .buttonStyle(.plain)
                 .focusable(false)
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel(L10n.text("imageEditor.menu.image"))
                 .accessibilityIdentifier("image-editor-menu-image")
             Menu { layerMenu } label: { editorMenuLabel("imageEditor.menu.layer") }
                 .buttonStyle(.plain)
                 .focusable(false)
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel(L10n.text("imageEditor.menu.layer"))
                 .accessibilityIdentifier("image-editor-menu-layer")
             Menu { selectMenu } label: { editorMenuLabel("imageEditor.menu.select") }
                 .buttonStyle(.plain)
                 .focusable(false)
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel(L10n.text("imageEditor.menu.select"))
                 .accessibilityIdentifier("image-editor-menu-select")
             Menu { filterMenu } label: { editorMenuLabel("imageEditor.menu.filter") }
                 .buttonStyle(.plain)
                 .focusable(false)
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel(L10n.text("imageEditor.menu.filter"))
                 .accessibilityIdentifier("image-editor-menu-filter")
             Menu { viewMenu } label: { editorMenuLabel("imageEditor.menu.view") }
                 .buttonStyle(.plain)
                 .focusable(false)
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel(L10n.text("imageEditor.menu.view"))
                 .accessibilityIdentifier("image-editor-menu-view")
             Menu { windowMenu } label: { editorMenuLabel("imageEditor.menu.window") }
                 .buttonStyle(.plain)
                 .focusable(false)
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel(L10n.text("imageEditor.menu.window"))
                 .accessibilityIdentifier("image-editor-menu-window")
 
             Spacer()

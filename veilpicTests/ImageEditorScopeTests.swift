@@ -1599,6 +1599,25 @@ struct ImageEditorScopeTests {
         #expect(windowMenuSource.contains("viewModel.toggleStatusBarVisibility()"))
     }
 
+    @Test func topMenusExposeOneNonFocusableAccessibilityElementEach() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
+            encoding: .utf8
+        )
+        let menuBarStart = try #require(source.range(of: "var menuBar: some View"))
+        let menuBarEnd = try #require(
+            source[menuBarStart.upperBound...].range(of: "private func editorMenuLabel")
+        )
+        let menuBarSource = source[menuBarStart.lowerBound..<menuBarEnd.lowerBound]
+
+        #expect(menuBarSource.components(separatedBy: ".accessibilityElement(children: .combine)").count - 1 == 8)
+        #expect(menuBarSource.components(separatedBy: ".focusable(false)").count - 1 >= 8)
+        for menu in ["file", "edit", "image", "layer", "select", "filter", "view", "window"] {
+            #expect(menuBarSource.contains("image-editor-menu-\(menu)"))
+            #expect(menuBarSource.contains("imageEditor.menu.\(menu)"))
+        }
+    }
+
     @Test func viewMenuExposesClassicZoomShortcuts() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
