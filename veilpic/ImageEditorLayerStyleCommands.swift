@@ -301,6 +301,10 @@ extension ImageEditorViewModel {
         document.selectedLayer?.style.shadowContour ?? .linear
     }
 
+    var selectedLayerShadowContourState: ImageEditorLayerStyleValueState<ImageEditorLayerEffectContour> {
+        selectedLayerStyleValueState(\.shadowContour)
+    }
+
     var globalLightAngle: Double {
         Double(document.globalLightAngle)
     }

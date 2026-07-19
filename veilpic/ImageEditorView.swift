@@ -4049,14 +4049,6 @@ struct ImageEditorView: View {
         }
     }
 
-    private var selectedLayerShadowContourBinding: Binding<ImageEditorLayerEffectContour> {
-        Binding {
-            viewModel.selectedLayerShadowContour
-        } set: { value in
-            viewModel.setSelectedLayerShadowContour(value)
-        }
-    }
-
     private var globalLightAngleBinding: Binding<Double> {
         Binding {
             viewModel.globalLightAngle
@@ -7059,12 +7051,15 @@ struct ImageEditorView: View {
                     in: 0...1,
                     step: 0.05
                 )
-                Picker(L10n.text("imageEditor.properties.shadowContour"), selection: selectedLayerShadowContourBinding) {
-                    ForEach(ImageEditorLayerEffectContour.allCases) { contour in
-                        Text(contour.title).tag(contour)
-                    }
+                layerStyleValuePicker(
+                    state: viewModel.selectedLayerShadowContourState,
+                    values: ImageEditorLayerEffectContour.allCases,
+                    labelKey: "imageEditor.properties.shadowContour",
+                    accessibilityIdentifier: "image-editor-layer-style-shadow-contour",
+                    title: \.title
+                ) { contour in
+                    viewModel.setSelectedLayerShadowContour(contour)
                 }
-                .pickerStyle(.menu)
                 layerStyleGlobalLightToggle(
                     .shadow,
                     labelKey: "imageEditor.properties.shadowUseGlobalLight",

@@ -755,6 +755,57 @@ struct ImageEditorLayerRowBatchPropertyTests {
         return fixture
     }
 
+    @Test func layerStyleMixedShadowContourConvergesAcrossEditableSelection() throws {
+        let fixture = shadowContourFixture()
+        let viewModel = fixture.viewModel
+        let firstID = fixture.layers[0].id
+        let secondID = fixture.layers[1].id
+        let lockedID = fixture.layers[2].id
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.selectedLayerShadowContourState == .mixed)
+        viewModel.setSelectedLayerShadowContour(.ring)
+        #expect(viewModel.selectedLayerShadowContourState == .value(.ring))
+        #expect((try layer(firstID, in: viewModel)).style.shadowContour == .ring)
+        #expect((try layer(secondID, in: viewModel)).style.shadowContour == .ring)
+        #expect((try layer(lockedID, in: viewModel)).style.shadowContour == .linear)
+        #expect((try layer(firstID, in: viewModel)).style.shadowEnabled)
+        #expect((try layer(secondID, in: viewModel)).style.shadowEnabled)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerShadowContourState == .mixed)
+        viewModel.redo()
+        #expect(viewModel.selectedLayerShadowContourState == .value(.ring))
+    }
+
+    @Test func layerStyleMixedShadowContourPickerUsesLocalizedValue() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("state: viewModel.selectedLayerShadowContourState"))
+        #expect(source.contains("image-editor-layer-style-shadow-contour"))
+        #expect(source.contains("viewModel.setSelectedLayerShadowContour(contour)"))
+        #expect(!source.contains("selectedLayerShadowContourBinding"))
+    }
+
+    private func shadowContourFixture() -> Fixture {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        viewModel.document.layers[0].style.shadowContour = .linear
+        viewModel.document.layers[1].style.shadowContour = .soft
+        viewModel.document.layers[2].style.shadowContour = .linear
+        viewModel.document.layers[2].isLocked = true
+        select(Set(fixture.layers.map(\.id)), primary: fixture.layers[0].id, in: viewModel)
+        return fixture
+    }
+
     @Test func layerStyleSatinInvertMixedStateConvergesAcrossEditableSelection() throws {
         try assertSatinInvertConvergence()
     }

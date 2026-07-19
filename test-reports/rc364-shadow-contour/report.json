@@ -1,0 +1,39 @@
+{
+  "generated_at": "2026-07-19 12:37:17 +0800",
+  "total": 3,
+  "passed": 3,
+  "failed": 0,
+  "jobs": 3,
+  "results": [
+    {
+      "suite": "ImageEditorLayerRowBatchPropertyTests",
+      "method": "layerStyleMixedShadowContourConvergesAcrossEditableSelection",
+      "identifier": "veilpicTests/ImageEditorLayerRowBatchPropertyTests/layerStyleMixedShadowContourConvergesAcrossEditableSelection",
+      "file": "ImageEditorLayerRowBatchPropertyTests.swift",
+      "passed": true,
+      "duration": 11.524,
+      "issues": [],
+      "log": "ImageEditorLayerRowBatchPropertyTests.layerStyleMixedShadowContourConvergesAcrossEditableSelection.log"
+    },
+    {
+      "suite": "ImageEditorLayerRowBatchPropertyTests",
+      "method": "layerStyleMixedShadowContourPickerUsesLocalizedValue",
+      "identifier": "veilpicTests/ImageEditorLayerRowBatchPropertyTests/layerStyleMixedShadowContourPickerUsesLocalizedValue",
+      "file": "ImageEditorLayerRowBatchPropertyTests.swift",
+      "passed": true,
+      "duration": 11.414,
+      "issues": [],
+      "log": "ImageEditorLayerRowBatchPropertyTests.layerStyleMixedShadowContourPickerUsesLocalizedValue.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registrySetsLayerStyleShadowContourWithAdvertisedEnum",
+      "identifier": "veilpicTests/XomoAutomationTests/registrySetsLayerStyleShadowContourWithAdvertisedEnum",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 11.418,
+      "issues": [],
+      "log": "XomoAutomationTests.registrySetsLayerStyleShadowContourWithAdvertisedEnum.log"
+    }
+  ]
+}
