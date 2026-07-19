@@ -407,6 +407,10 @@ extension ImageEditorViewModel {
         Double(document.selectedLayer?.style.innerShadowDistance ?? 7)
     }
 
+    var selectedLayerInnerShadowDistanceState: ImageEditorLayerStyleValueState<CGFloat> {
+        selectedLayerStyleValueState(\.innerShadowDistance)
+    }
+
     var selectedLayerInnerShadowAngle: Double {
         guard let style = document.selectedLayer?.style else { return -45 }
         return Double(style.resolvedInnerShadowAngle(globalLightAngle: document.globalLightAngle))

@@ -814,6 +814,57 @@ struct ImageEditorLayerRowBatchPropertyTests {
         return fixture
     }
 
+    @Test func layerStyleInnerShadowDistanceMixedValueConvergesAcrossEditableSelection() throws {
+        let fixture = innerShadowDistanceFixture()
+        let viewModel = fixture.viewModel
+        let firstID = fixture.layers[0].id
+        let secondID = fixture.layers[1].id
+        let lockedID = fixture.layers[2].id
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.selectedLayerInnerShadowDistanceState == .mixed)
+        viewModel.setSelectedLayerInnerShadowDistance(24)
+        #expect(viewModel.selectedLayerInnerShadowDistanceState == .value(24))
+        #expect((try layer(firstID, in: viewModel)).style.innerShadowDistance == 24)
+        #expect((try layer(secondID, in: viewModel)).style.innerShadowDistance == 24)
+        #expect((try layer(lockedID, in: viewModel)).style.innerShadowDistance == 12)
+        #expect((try layer(firstID, in: viewModel)).style.innerShadowEnabled)
+        #expect((try layer(secondID, in: viewModel)).style.innerShadowEnabled)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerInnerShadowDistanceState == .mixed)
+        viewModel.redo()
+        #expect(viewModel.selectedLayerInnerShadowDistanceState == .value(24))
+    }
+
+    @Test func layerStyleInnerShadowDistanceControlReusesMixedNumericStepper() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("state: viewModel.selectedLayerInnerShadowDistanceState"))
+        #expect(source.contains("value: selectedLayerInnerShadowDistanceBinding"))
+        #expect(source.contains("image-editor-layer-style-inner-shadow-distance"))
+        #expect(source.contains("L10n.format(\"imageEditor.properties.innerShadowDistanceValue\""))
+    }
+
+    private func innerShadowDistanceFixture() -> Fixture {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        viewModel.document.layers[0].style.innerShadowDistance = 6
+        viewModel.document.layers[1].style.innerShadowDistance = 30
+        viewModel.document.layers[2].style.innerShadowDistance = 12
+        viewModel.document.layers[2].isLocked = true
+        select(Set(fixture.layers.map(\.id)), primary: fixture.layers[0].id, in: viewModel)
+        return fixture
+    }
+
     @Test func layerStyleInnerShadowNoiseMixedValueConvergesAcrossEditableSelection() throws {
         let fixture = innerShadowNoiseFixture()
         let viewModel = fixture.viewModel

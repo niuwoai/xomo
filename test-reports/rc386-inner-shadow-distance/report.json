@@ -1,0 +1,39 @@
+{
+  "generated_at": "2026-07-19 18:08:58 +0800",
+  "total": 3,
+  "passed": 3,
+  "failed": 0,
+  "jobs": 4,
+  "results": [
+    {
+      "suite": "ImageEditorLayerRowBatchPropertyTests",
+      "method": "layerStyleInnerShadowDistanceControlReusesMixedNumericStepper",
+      "identifier": "veilpicTests/ImageEditorLayerRowBatchPropertyTests/layerStyleInnerShadowDistanceControlReusesMixedNumericStepper",
+      "file": "ImageEditorLayerRowBatchPropertyTests.swift",
+      "passed": true,
+      "duration": 5.826,
+      "issues": [],
+      "log": "ImageEditorLayerRowBatchPropertyTests.layerStyleInnerShadowDistanceControlReusesMixedNumericStepper.log"
+    },
+    {
+      "suite": "ImageEditorLayerRowBatchPropertyTests",
+      "method": "layerStyleInnerShadowDistanceMixedValueConvergesAcrossEditableSelection",
+      "identifier": "veilpicTests/ImageEditorLayerRowBatchPropertyTests/layerStyleInnerShadowDistanceMixedValueConvergesAcrossEditableSelection",
+      "file": "ImageEditorLayerRowBatchPropertyTests.swift",
+      "passed": true,
+      "duration": 5.828,
+      "issues": [],
+      "log": "ImageEditorLayerRowBatchPropertyTests.layerStyleInnerShadowDistanceMixedValueConvergesAcrossEditableSelection.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registrySetsLayerStyleInnerShadowDistanceAcrossEditableSelection",
+      "identifier": "veilpicTests/XomoAutomationTests/registrySetsLayerStyleInnerShadowDistanceAcrossEditableSelection",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 5.822,
+      "issues": [],
+      "log": "XomoAutomationTests.registrySetsLayerStyleInnerShadowDistanceAcrossEditableSelection.log"
+    }
+  ]
+}

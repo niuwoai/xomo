@@ -7148,12 +7148,15 @@ struct ImageEditorView: View {
                     }
                 }
                 HStack {
-                    Stepper(
-                        L10n.format("imageEditor.properties.innerShadowDistanceValue", Int(viewModel.selectedLayerInnerShadowDistance.rounded())),
+                    layerStyleNumericStepper(
+                        state: viewModel.selectedLayerInnerShadowDistanceState,
                         value: selectedLayerInnerShadowDistanceBinding,
-                        in: 0...48,
-                        step: 1
-                    )
+                        range: 0...48,
+                        step: 1,
+                        accessibilityIdentifier: "image-editor-layer-style-inner-shadow-distance"
+                    ) { value in
+                        L10n.format("imageEditor.properties.innerShadowDistanceValue", Int(value.rounded()))
+                    }
                     layerStyleNumericStepper(
                         state: viewModel.selectedLayerInnerShadowNoiseState,
                         value: selectedLayerInnerShadowNoiseBinding,
