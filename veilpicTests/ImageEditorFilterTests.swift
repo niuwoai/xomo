@@ -12,6 +12,60 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct ImageEditorFilterTests {
+    @Test func everyFilterAtZeroStrengthIsAnExactNoOpAcrossRenderingPaths() throws {
+        let canvasSize = NSSize(width: 48, height: 32)
+        let sourceImage = gradientImage(size: canvasSize)
+        let sourcePixels = try #require(sourceImage.qingtuPNGData())
+
+        for filter in ImageEditorFilter.allCases {
+            let zeroOutput = try #require(sourceImage.filtered(kind: filter, intensity: 0))
+            let negativeOutput = try #require(sourceImage.filtered(kind: filter, intensity: -1))
+            #expect(zeroOutput === sourceImage, "\(filter.rawValue) should bypass rendering at 0%")
+            #expect(negativeOutput === sourceImage, "\(filter.rawValue) should clamp negative strength to 0%")
+            #expect(zeroOutput.qingtuPNGData() == sourcePixels)
+            #expect(negativeOutput.qingtuPNGData() == sourcePixels)
+        }
+
+        let destructiveViewModel = ImageEditorViewModel(
+            sourceName: "zero-filter.png",
+            image: sourceImage
+        ) { _ in }
+        let destructivePreviewBefore = destructiveViewModel.currentImage
+        destructiveViewModel.selectedFilter = .pixelate
+        destructiveViewModel.filterIntensity = 0
+        destructiveViewModel.applySelectedFilter()
+        #expect(imageEditorMaximumPixelDifference(destructiveViewModel.currentImage, destructivePreviewBefore) == 0)
+
+        let filterLayerViewModel = ImageEditorViewModel(
+            sourceName: "zero-filter-layer.png",
+            image: sourceImage
+        ) { _ in }
+        let filterLayerPreviewBefore = filterLayerViewModel.currentImage
+        filterLayerViewModel.selectedFilter = .emboss
+        filterLayerViewModel.filterIntensity = 0
+        filterLayerViewModel.addFilterLayer()
+
+        #expect(filterLayerViewModel.document.selectedLayer?.isFilter == true)
+        #expect(filterLayerViewModel.document.selectedLayer?.filter?.kind == .emboss)
+        #expect(imageEditorMaximumPixelDifference(filterLayerViewModel.currentImage, filterLayerPreviewBefore) == 0)
+
+        let smartViewModel = ImageEditorViewModel(
+            sourceName: "zero-smart-filter.png",
+            image: sourceImage
+        ) { _ in }
+        let smartPreviewBefore = smartViewModel.currentImage
+        let smartBasePixelsBefore = try #require(smartViewModel.document.selectedLayer?.image.qingtuPNGData())
+        smartViewModel.selectedFilter = .highPass
+        smartViewModel.filterIntensity = 0
+        smartViewModel.addSmartFilterToSelectedLayer()
+
+        let smartLayer = try #require(smartViewModel.document.selectedLayer)
+        #expect(smartLayer.smartFilters.first?.kind == .highPass)
+        #expect(smartLayer.smartFilters.first?.intensity == 0)
+        #expect(smartLayer.image.qingtuPNGData() == smartBasePixelsBefore)
+        #expect(imageEditorMaximumPixelDifference(smartViewModel.currentImage, smartPreviewBefore) == 0)
+    }
+
     @Test func imageEditorAppliesCurrentFilterWithClassicLastFilterCommand() throws {
         let canvasSize = NSSize(width: 48, height: 32)
         let sourceImage = solidImage(size: canvasSize, color: NSColor(calibratedWhite: 0.5, alpha: 1))

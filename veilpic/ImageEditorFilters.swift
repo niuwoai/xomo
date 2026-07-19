@@ -24,6 +24,7 @@ extension NSImage {
         settings: ImageEditorFilterSettings = ImageEditorFilterSettings()
     ) -> NSImage? {
         let clamped = max(0, min(1, intensity))
+        guard clamped > 0 else { return self }
         if kind == .addNoise {
             return addingDeterministicNoise(intensity: clamped)
         }
