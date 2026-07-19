@@ -24,11 +24,13 @@ struct ImageEditorExportPanel: View {
     @ObservedObject var viewModel: ImageEditorViewModel
 
     private enum Layout {
-        static let panelWidth: CGFloat = 520
-        static let labelWidth: CGFloat = 62
+        static let panelWidth: CGFloat = 532
+        static let labelWidth: CGFloat = 72
         static let rowSpacing: CGFloat = 10
-        static let menuWidth: CGFloat = 180
-        static let namingMenuWidth: CGFloat = 220
+        static let rowHeight: CGFloat = 26
+        static let menuWidth: CGFloat = 190
+        static let namingMenuWidth: CGFloat = 240
+        static let scopePickerMinimumWidth: CGFloat = 392
     }
 
     var body: some View {
@@ -74,6 +76,7 @@ struct ImageEditorExportPanel: View {
                     .labelsHidden()
                     .pickerStyle(.segmented)
                     .controlSize(.small)
+                    .frame(minWidth: Layout.scopePickerMinimumWidth, alignment: .leading)
                     .accessibilityLabel(L10n.text("imageEditor.export.scope"))
                 }
 
@@ -189,11 +192,16 @@ struct ImageEditorExportPanel: View {
                 .font(.system(size: 12, weight: .semibold))
                 .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
                 .lineLimit(1)
+                .minimumScaleFactor(0.8)
+                .allowsTightening(true)
                 .frame(width: Layout.labelWidth, alignment: .leading)
+                .layoutPriority(2)
 
             content()
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .layoutPriority(1)
         }
+        .frame(minHeight: Layout.rowHeight)
     }
 
     private var formatBinding: Binding<ImageEditorExportFormat> {

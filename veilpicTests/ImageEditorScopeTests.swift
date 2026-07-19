@@ -1516,12 +1516,18 @@ struct ImageEditorScopeTests {
             encoding: .utf8
         )
 
-        #expect(source.contains("static let panelWidth: CGFloat = 520"))
-        #expect(source.contains("static let labelWidth: CGFloat = 62"))
+        #expect(source.contains("static let panelWidth: CGFloat = 532"))
+        #expect(source.contains("static let labelWidth: CGFloat = 72"))
+        #expect(source.contains("static let rowHeight: CGFloat = 26"))
+        #expect(source.contains("static let scopePickerMinimumWidth: CGFloat = 392"))
         #expect(source.contains("private func exportFormRow<Content: View>"))
         #expect(source.contains(".frame(width: Layout.labelWidth, alignment: .leading)"))
+        #expect(source.contains(".frame(minWidth: Layout.scopePickerMinimumWidth, alignment: .leading)"))
+        #expect(source.contains(".frame(minHeight: Layout.rowHeight)"))
         #expect(source.contains(".lineLimit(1)"))
         #expect(source.contains(".minimumScaleFactor(0.75)"))
+        #expect(source.contains(".minimumScaleFactor(0.8)"))
+        #expect(source.contains(".layoutPriority(2)"))
         #expect(source.components(separatedBy: "exportFormRow(").count - 1 >= 7)
     }
 
