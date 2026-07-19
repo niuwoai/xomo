@@ -2228,6 +2228,8 @@
 "imageEditor.action.layerStampSelected" = "Stamp Selected Layers";
 "imageEditor.action.layerFlatten" = "Flatten Image";
 "imageEditor.action.layerVisibility" = "Show / Hide Layer";
+"imageEditor.accessibility.layerVisible" = "Visible";
+"imageEditor.accessibility.layerHidden" = "Hidden";
 "imageEditor.action.layerLock" = "Lock Layer";
 "imageEditor.action.layerUnlock" = "Unlock Layer";
 "imageEditor.action.layerLockSelected" = "Lock Selected Layers";

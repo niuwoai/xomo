@@ -10556,9 +10556,6 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
         }
 
         deinit {
-            if let window {
-                ImageEditorKeyboardShortcutWindowRegistry.unregister(coordinator: self, from: window)
-            }
             if let eventMonitor {
                 NSEvent.removeMonitor(eventMonitor)
             }

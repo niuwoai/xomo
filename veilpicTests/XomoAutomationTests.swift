@@ -1,9 +1,36 @@
 import AppKit
+import Combine
 import Testing
 @testable import musepic
 
 @MainActor
 struct XomoAutomationTests {
+    @Test func mutatingAutomationCallPublishesImmediateEditorRefresh() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        defer { registry.unregister(viewModel) }
+        let layerID = try #require(viewModel.document.selectedLayerID)
+        var refreshCount = 0
+        let cancellable = viewModel.objectWillChange.sink {
+            refreshCount += 1
+        }
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.set_visibility",
+            arguments: [
+                "id": .string(layerID.uuidString),
+                "visible": .bool(false)
+            ]
+        ))
+
+        #expect(response.ok)
+        #expect(viewModel.document.selectedLayer?.isVisible == false)
+        #expect(refreshCount > 0)
+        withExtendedLifetime(cancellable) {}
+    }
+
     @Test func registryAdvertisesBroadEditorCapabilities() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

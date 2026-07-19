@@ -2255,6 +2255,11 @@ extension ImageEditorView {
         .focusable(false)
         .help(L10n.text("imageEditor.action.layerVisibility"))
         .accessibilityLabel(L10n.text("imageEditor.action.layerVisibility"))
+        .accessibilityValue(L10n.text(
+            layer.isVisible
+                ? "imageEditor.accessibility.layerVisible"
+                : "imageEditor.accessibility.layerHidden"
+        ))
         .accessibilityIdentifier("image-editor-layer-visibility-\(layer.id.uuidString)")
     }
 

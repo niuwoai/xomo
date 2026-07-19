@@ -2266,8 +2266,9 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func toggleWorkspaceChromeVisibility(
-        eventSignature: ImageEditorKeyboardShortcutEventSignature? = .currentKeyEvent
+        eventSignature: ImageEditorKeyboardShortcutEventSignature? = nil
     ) {
+        let eventSignature = eventSignature ?? .currentKeyEvent
         guard ImageEditorPanelToggleDispatchGate.shouldDispatch(
             .workspaceChrome,
             event: eventSignature
@@ -2285,8 +2286,9 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func toggleRightDockVisibility(
-        eventSignature: ImageEditorKeyboardShortcutEventSignature? = .currentKeyEvent
+        eventSignature: ImageEditorKeyboardShortcutEventSignature? = nil
     ) {
+        let eventSignature = eventSignature ?? .currentKeyEvent
         guard ImageEditorPanelToggleDispatchGate.shouldDispatch(
             .rightDock,
             event: eventSignature

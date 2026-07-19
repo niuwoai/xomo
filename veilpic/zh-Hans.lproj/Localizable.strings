@@ -2228,6 +2228,8 @@
 "imageEditor.action.layerStampSelected" = "盖印所选图层";
 "imageEditor.action.layerFlatten" = "扁平化图像";
 "imageEditor.action.layerVisibility" = "显示/隐藏图层";
+"imageEditor.accessibility.layerVisible" = "可见";
+"imageEditor.accessibility.layerHidden" = "隐藏";
 "imageEditor.action.layerLock" = "锁定图层";
 "imageEditor.action.layerUnlock" = "解锁图层";
 "imageEditor.action.layerLockSelected" = "锁定所选图层";
