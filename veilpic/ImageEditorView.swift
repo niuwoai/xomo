@@ -3482,6 +3482,8 @@ struct ImageEditorView: View {
                 }
             }
             .pickerStyle(.menu)
+            .focusable(false)
+            .accessibilityIdentifier("image-editor-filter-picker")
 
             HStack(spacing: 8) {
                 Text("\(Int((viewModel.filterIntensity * 100).rounded()))%")
@@ -3489,6 +3491,9 @@ struct ImageEditorView: View {
                     .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
                     .frame(width: 36, alignment: .leading)
                 Slider(value: $viewModel.filterIntensity, in: 0...1, step: 0.05)
+                    .focusable(false)
+                    .accessibilityLabel(L10n.text("imageEditor.option.strength"))
+                    .accessibilityIdentifier("image-editor-filter-intensity")
             }
 
             VStack(spacing: 8) {
@@ -3500,6 +3505,8 @@ struct ImageEditorView: View {
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(EditorPrimaryButtonStyle())
+                .focusable(false)
+                .accessibilityIdentifier("image-editor-filter-apply")
 
                 HStack(spacing: 8) {
                     Button {
@@ -3511,6 +3518,8 @@ struct ImageEditorView: View {
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(EditorTextButtonStyle())
+                    .focusable(false)
+                    .accessibilityIdentifier("image-editor-filter-layer-new")
 
                     Button {
                         viewModel.addSmartFilterToSelectedLayer()
@@ -3521,6 +3530,8 @@ struct ImageEditorView: View {
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(EditorTextButtonStyle())
+                    .focusable(false)
+                    .accessibilityIdentifier("image-editor-filter-smart-add")
                     .disabled(!viewModel.canAddSmartFilterToSelectedLayer)
                 }
             }

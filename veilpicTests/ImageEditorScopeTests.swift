@@ -660,6 +660,24 @@ struct ImageEditorScopeTests {
         #expect(source.contains("isFiltersDockExpanded = true"))
     }
 
+    @Test func filterQuickControlsExposeStableAccessibilityWithoutKeyboardFocus() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let filterStart = try #require(source.range(of: "private var filtersQuickPanel: some View"))
+        let filterEnd = try #require(source[filterStart.upperBound...].range(of: "private func historySnapshotRow"))
+        let filterSource = source[filterStart.lowerBound..<filterEnd.lowerBound]
+
+        #expect(filterSource.contains("image-editor-filter-picker"))
+        #expect(filterSource.contains("image-editor-filter-intensity"))
+        #expect(filterSource.contains("accessibilityLabel(L10n.text(\"imageEditor.option.strength\"))"))
+        #expect(filterSource.contains("image-editor-filter-apply"))
+        #expect(filterSource.contains("image-editor-filter-layer-new"))
+        #expect(filterSource.contains("image-editor-filter-smart-add"))
+        #expect(filterSource.components(separatedBy: ".focusable(false)").count - 1 == 5)
+    }
+
     @MainActor
     @Test func classicBrushSizeShortcutsClampAndUpdateOptionsStatus() {
         let image = NSImage(size: NSSize(width: 80, height: 60))
