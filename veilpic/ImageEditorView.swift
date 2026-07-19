@@ -4009,14 +4009,6 @@ struct ImageEditorView: View {
         }
     }
 
-    private var selectedLayerStrokePatternKindBinding: Binding<ImageEditorPatternOverlayKind> {
-        Binding {
-            viewModel.selectedLayerStrokePatternKind
-        } set: { value in
-            viewModel.setSelectedLayerStrokePatternKind(value)
-        }
-    }
-
     private var selectedLayerStrokePatternScaleBinding: Binding<Double> {
         Binding {
             viewModel.selectedLayerStrokePatternScale
@@ -7046,12 +7038,15 @@ struct ImageEditorView: View {
                         step: 15
                     )
                 } else if viewModel.selectedLayerStrokeFillTypeState.value == .pattern {
-                    Picker(L10n.text("imageEditor.properties.strokePatternKind"), selection: selectedLayerStrokePatternKindBinding) {
-                        ForEach(ImageEditorPatternOverlayKind.allCases) { kind in
-                            Text(kind.title).tag(kind)
-                        }
+                    layerStyleValuePicker(
+                        state: viewModel.selectedLayerStrokePatternKindState,
+                        values: ImageEditorPatternOverlayKind.allCases,
+                        labelKey: "imageEditor.properties.strokePatternKind",
+                        accessibilityIdentifier: "image-editor-layer-style-stroke-pattern-kind",
+                        title: \.title
+                    ) { kind in
+                        viewModel.setSelectedLayerStrokePatternKind(kind)
                     }
-                    .pickerStyle(.menu)
                     Stepper(
                         L10n.format("imageEditor.properties.strokePatternScaleValue", Int(viewModel.selectedLayerStrokePatternScale.rounded())),
                         value: selectedLayerStrokePatternScaleBinding,

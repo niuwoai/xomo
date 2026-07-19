@@ -493,6 +493,62 @@ struct ImageEditorLayerRowBatchPropertyTests {
         return fixture
     }
 
+    @Test func layerStyleStrokePatternKindMixedValueConvergesAcrossEditableSelection() throws {
+        try assertStrokePatternKindConvergence()
+    }
+
+    @Test func layerStyleStrokePatternKindPickerUsesLocalizedMixedValue() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("state: viewModel.selectedLayerStrokePatternKindState"))
+        #expect(source.contains("image-editor-layer-style-stroke-pattern-kind"))
+        #expect(source.contains("viewModel.setSelectedLayerStrokePatternKind(kind)"))
+        #expect(!source.contains("selectedLayerStrokePatternKindBinding"))
+    }
+
+    private func assertStrokePatternKindConvergence() throws {
+        let fixture = strokePatternKindFixture()
+        let viewModel = fixture.viewModel
+        let firstID = fixture.layers[0].id
+        let secondID = fixture.layers[1].id
+        let lockedID = fixture.layers[2].id
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.selectedLayerStrokePatternKindState == .mixed)
+        viewModel.setSelectedLayerStrokePatternKind(.dots)
+        #expect(viewModel.selectedLayerStrokePatternKindState == .value(.dots))
+        #expect((try layer(firstID, in: viewModel)).style.strokePatternKind == .dots)
+        #expect((try layer(secondID, in: viewModel)).style.strokePatternKind == .dots)
+        #expect((try layer(lockedID, in: viewModel)).style.strokePatternKind == .checkerboard)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerStrokePatternKindState == .mixed)
+        viewModel.redo()
+        #expect(viewModel.selectedLayerStrokePatternKindState == .value(.dots))
+    }
+
+    private func strokePatternKindFixture() -> Fixture {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        for index in viewModel.document.layers.indices {
+            viewModel.document.layers[index].style.strokeFillType = .pattern
+        }
+        viewModel.document.layers[0].style.strokePatternKind = .checkerboard
+        viewModel.document.layers[1].style.strokePatternKind = .diagonalStripes
+        viewModel.document.layers[2].style.strokePatternKind = .checkerboard
+        viewModel.document.layers[2].isLocked = true
+        select(Set(fixture.layers.map(\.id)), primary: fixture.layers[0].id, in: viewModel)
+        return fixture
+    }
+
     @Test func layerStyleSatinInvertMixedStateConvergesAcrossEditableSelection() throws {
         try assertSatinInvertConvergence()
     }

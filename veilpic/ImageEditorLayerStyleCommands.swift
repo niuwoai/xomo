@@ -257,6 +257,10 @@ extension ImageEditorViewModel {
         document.selectedLayer?.style.strokePatternKind ?? .checkerboard
     }
 
+    var selectedLayerStrokePatternKindState: ImageEditorLayerStyleValueState<ImageEditorPatternOverlayKind> {
+        selectedLayerStyleValueState(\.strokePatternKind)
+    }
+
     var selectedLayerStrokePatternScale: Double {
         Double(document.selectedLayer?.style.strokePatternScale ?? 14)
     }
