@@ -2573,7 +2573,8 @@ final class XomoAutomationRegistry {
         let usesStrength = ["blur", "sharpen", "smudge"].contains(action)
         let usesExposure = ["dodge", "burn"].contains(action)
         let usesFlow = action == "sponge"
-        let usesRetouchPressure = usesStrength || usesExposure || usesFlow
+        let usesSampledBrush = action == "cloneStamp" || action == "healing"
+        let usesRetouchPressure = usesStrength || usesExposure || usesFlow || usesSampledBrush
         if usesExposure, let exposure = arguments["exposure"]?.doubleValue {
             viewModel.opacity = max(0, min(1, exposure))
         } else if usesStrength, let strength = arguments["strength"]?.doubleValue {
@@ -2701,7 +2702,7 @@ final class XomoAutomationRegistry {
             airbrushPulseSamples = []
         }
         switch action {
-        case "cloneStamp": viewModel.cloneStamp(points: points)
+        case "cloneStamp": viewModel.cloneStamp(samples: samples)
         case "dodge":
             viewModel.toneBrush(
                 samples: samples,
@@ -2718,7 +2719,7 @@ final class XomoAutomationRegistry {
         case "blur": viewModel.blurBrush(samples: samples)
         case "sharpen": viewModel.sharpenBrush(samples: samples)
         case "smudge": viewModel.smudgeBrush(samples: samples)
-        case "healing": viewModel.healingBrush(points: points)
+        case "healing": viewModel.healingBrush(samples: samples)
         case "patch":
             guard points.count == 2 else {
                 throw XomoAutomationCallError.invalidArgument("Patch requires exactly two points")

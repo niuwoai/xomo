@@ -309,6 +309,24 @@ struct LocalizationResourceTests {
         }
     }
 
+    @Test func sampledBrushPressureSizeHelpIsLocalizedInEverySupportedLanguage() throws {
+        let paths = try Self.repositoryPaths()
+        let expectedValues = [
+            "zh-Hans": "使用数位笔压力控制仿制图章或修复画笔大小",
+            "en": "Use pen pressure to control the Clone Stamp or Healing Brush size",
+            "ja": "ペンの筆圧でコピースタンプまたは修復ブラシのサイズを制御します"
+        ]
+
+        for (localizationID, expected) in expectedValues {
+            let strings = try Self.stringTable(
+                tableName: "Localizable",
+                localizationID: localizationID,
+                appDirectory: paths.appDirectory
+            )
+            #expect(strings["imageEditor.option.sampledBrushPressureSize.help"] == expected)
+        }
+    }
+
     @Test func fingerPaintingIsLocalizedInEverySupportedLanguage() throws {
         let paths = try Self.repositoryPaths()
         let expectedValues = [

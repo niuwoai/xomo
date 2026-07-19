@@ -4661,12 +4661,16 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func cloneStamp(points: [CGPoint]) {
-        guard !points.isEmpty else { return }
+        cloneStamp(samples: points.map { ImageEditorBrushStrokeSample(point: $0) })
+    }
+
+    func cloneStamp(samples: [ImageEditorBrushStrokeSample]) {
+        guard !samples.isEmpty else { return }
         guard !isEditingLayerMask else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
-        guard let sourcePoint = cloneSourcePoint, let destinationStart = points.first else {
+        guard let sourcePoint = cloneSourcePoint, let destinationStart = samples.first?.point else {
             statusText = L10n.text("imageEditor.status.cloneSourceMissing")
             return
         }
@@ -4687,12 +4691,14 @@ final class ImageEditorViewModel: ObservableObject {
             sampleSource: cloneStampSampleSource
         ),
               let output = layer.image.normalizedBitmapImage().withCloneStamp(
-            points: rasterLocalPoints(points, layer: layer),
+            samples: rasterLocalSamples(samples, layer: layer),
             sourceOffset: samplingInput.localOffset,
             sourceImage: samplingInput.image,
             width: rasterLocalBrushWidth(brushSize, layer: layer),
             opacity: opacity,
-            hardness: hardness
+            hardness: hardness,
+            pressureControlsSize: retouchPressureControlsSize,
+            pressureSensitivity: retouchPressureSensitivity / 100
         ) else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
@@ -4929,7 +4935,11 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func healingBrush(points: [CGPoint]) {
-        guard !points.isEmpty else { return }
+        healingBrush(samples: points.map { ImageEditorBrushStrokeSample(point: $0) })
+    }
+
+    func healingBrush(samples: [ImageEditorBrushStrokeSample]) {
+        guard !samples.isEmpty else { return }
         guard !isEditingLayerMask else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
@@ -4946,12 +4956,14 @@ final class ImageEditorViewModel: ObservableObject {
                 sampleSource: healingBrushSampleSource
             ),
             let output = layer.image.normalizedBitmapImage().withSpotHealingBrush(
-                points: rasterLocalPoints(points, layer: layer),
+                samples: rasterLocalSamples(samples, layer: layer),
                 sourceImage: targetContext.image,
                 targetContextImage: targetContext.image,
                 width: rasterLocalBrushWidth(brushSize, layer: layer),
                 opacity: opacity,
-                hardness: hardness
+                hardness: hardness,
+                pressureControlsSize: retouchPressureControlsSize,
+                pressureSensitivity: retouchPressureSensitivity / 100
             ) else {
                 statusText = L10n.text("imageEditor.status.operationFailed")
                 return
@@ -4965,7 +4977,7 @@ final class ImageEditorViewModel: ObservableObject {
             return
         }
 
-        guard let sourcePoint = healingSourcePoint, let destinationStart = points.first else {
+        guard let sourcePoint = healingSourcePoint, let destinationStart = samples.first?.point else {
             statusText = L10n.text("imageEditor.status.healingSourceMissing")
             return
         }
@@ -4987,13 +4999,15 @@ final class ImageEditorViewModel: ObservableObject {
             sampleSource: healingBrushSampleSource
         ),
         let output = layer.image.normalizedBitmapImage().withHealingBrush(
-            points: rasterLocalPoints(points, layer: layer),
+            samples: rasterLocalSamples(samples, layer: layer),
             sourceOffset: samplingInput.localOffset,
             sourceImage: samplingInput.image,
             targetContextImage: targetContext.image,
             width: rasterLocalBrushWidth(brushSize, layer: layer),
             opacity: opacity,
-            hardness: hardness
+            hardness: hardness,
+            pressureControlsSize: retouchPressureControlsSize,
+            pressureSensitivity: retouchPressureSensitivity / 100
         ) else {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
@@ -7402,7 +7416,29 @@ extension NSImage {
         opacity: CGFloat,
         hardness: CGFloat
     ) -> NSImage? {
-        guard !points.isEmpty else { return nil }
+        withCloneStamp(
+            samples: points.map { ImageEditorBrushStrokeSample(point: $0) },
+            sourceOffset: sourceOffset,
+            sourceImage: sourceImage,
+            width: width,
+            opacity: opacity,
+            hardness: hardness,
+            pressureControlsSize: false,
+            pressureSensitivity: 0.5
+        )
+    }
+
+    func withCloneStamp(
+        samples: [ImageEditorBrushStrokeSample],
+        sourceOffset: CGSize,
+        sourceImage: NSImage,
+        width: CGFloat,
+        opacity: CGFloat,
+        hardness: CGFloat,
+        pressureControlsSize: Bool,
+        pressureSensitivity: CGFloat
+    ) -> NSImage? {
+        guard !samples.isEmpty else { return nil }
 
         let shiftedSource = NSImage.rendered(size: size) { _ in
             sourceImage.draw(
@@ -7417,11 +7453,21 @@ extension NSImage {
                 fraction: 1
             )
         }
-        let strokeMask = ImageEditorHealingBrushKernel.strokeMaskImage(
-            size: size,
-            points: points,
+        let pixelWidth = max(1, Int(size.width.rounded()))
+        let pixelHeight = max(1, Int(size.height.rounded()))
+        let maskAlpha = retouchStrokeAlpha(
+            width: pixelWidth,
+            height: pixelHeight,
+            samples: samples,
             diameter: width,
-            hardness: hardness
+            hardness: hardness,
+            pressureControlsSize: pressureControlsSize,
+            pressureSensitivity: pressureSensitivity
+        )
+        let strokeMask = NSImage.alphaMaskImage(
+            width: pixelWidth,
+            height: pixelHeight,
+            alpha: maskAlpha
         )
         guard let shiftedSource, let strokeMask else { return nil }
 

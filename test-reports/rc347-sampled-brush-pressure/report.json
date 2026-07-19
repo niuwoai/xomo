@@ -1,0 +1,59 @@
+{
+  "generated_at": "2026-07-19 08:06:37 +0800",
+  "total": 5,
+  "passed": 5,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorCloneStampSamplingTests",
+      "method": "sampledBrushPressureControlsCloneStampDiameterWithoutChangingMouseStrokes",
+      "identifier": "veilpicTests/ImageEditorCloneStampSamplingTests/sampledBrushPressureControlsCloneStampDiameterWithoutChangingMouseStrokes",
+      "file": "ImageEditorCloneStampSamplingTests.swift",
+      "passed": true,
+      "duration": 4.554,
+      "issues": [],
+      "log": "ImageEditorCloneStampSamplingTests.sampledBrushPressureControlsCloneStampDiameterWithoutChangingMouseStrokes.log"
+    },
+    {
+      "suite": "ImageEditorHealingBrushTests",
+      "method": "sampledBrushPressureControlsSourceAndSpotHealingDiameter",
+      "identifier": "veilpicTests/ImageEditorHealingBrushTests/sampledBrushPressureControlsSourceAndSpotHealingDiameter",
+      "file": "ImageEditorHealingBrushTests.swift",
+      "passed": true,
+      "duration": 3.129,
+      "issues": [],
+      "log": "ImageEditorHealingBrushTests.sampledBrushPressureControlsSourceAndSpotHealingDiameter.log"
+    },
+    {
+      "suite": "ImageEditorScopeTests",
+      "method": "sampledBrushPressureSizeOptionUsesSamplesWithoutTakingFocus",
+      "identifier": "veilpicTests/ImageEditorScopeTests/sampledBrushPressureSizeOptionUsesSamplesWithoutTakingFocus",
+      "file": "ImageEditorScopeTests.swift",
+      "passed": true,
+      "duration": 3.046,
+      "issues": [],
+      "log": "ImageEditorScopeTests.sampledBrushPressureSizeOptionUsesSamplesWithoutTakingFocus.log"
+    },
+    {
+      "suite": "LocalizationResourceTests",
+      "method": "sampledBrushPressureSizeHelpIsLocalizedInEverySupportedLanguage",
+      "identifier": "veilpicTests/LocalizationResourceTests/sampledBrushPressureSizeHelpIsLocalizedInEverySupportedLanguage",
+      "file": "LocalizationResourceTests.swift",
+      "passed": true,
+      "duration": 3.04,
+      "issues": [],
+      "log": "LocalizationResourceTests.sampledBrushPressureSizeHelpIsLocalizedInEverySupportedLanguage.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "sampledBrushPressureAutomationAcceptsCloneAndHealingSamples",
+      "identifier": "veilpicTests/XomoAutomationTests/sampledBrushPressureAutomationAcceptsCloneAndHealingSamples",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 3.033,
+      "issues": [],
+      "log": "XomoAutomationTests.sampledBrushPressureAutomationAcceptsCloneAndHealingSamples.log"
+    }
+  ]
+}

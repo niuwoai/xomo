@@ -2185,6 +2185,71 @@ struct XomoAutomationTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.sharpen"))
     }
 
+    @Test func sampledBrushPressureAutomationAcceptsCloneAndHealingSamples() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        viewModel.setBrushPressureControlsSize(false)
+
+        #expect(registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("setCloneSource"),
+                "x": .number(12),
+                "y": .number(20)
+            ]
+        )).ok)
+        let clone = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("cloneStamp"),
+                "pressureSize": .bool(true),
+                "pressureSensitivity": .number(80),
+                "points": .array([
+                    .object([
+                        "x": .number(36),
+                        "y": .number(32),
+                        "pressure": .number(0.25)
+                    ])
+                ])
+            ]
+        ))
+        #expect(clone.ok)
+        #expect(viewModel.retouchPressureControlsSize)
+        #expect(viewModel.retouchPressureSensitivity == 80)
+        #expect(!viewModel.brushPressureControlsSize)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.cloneStamp"))
+
+        #expect(registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("setHealingSource"),
+                "x": .number(16),
+                "y": .number(20)
+            ]
+        )).ok)
+        let healing = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.special",
+            arguments: [
+                "action": .string("healing"),
+                "pressureSize": .bool(true),
+                "points": .array([
+                    .object([
+                        "x": .number(40),
+                        "y": .number(32),
+                        "pressure": .number(1)
+                    ])
+                ])
+            ]
+        ))
+        #expect(healing.ok)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.healingBrush"))
+    }
+
     @Test func spongeFlowAutomationPrefersFlowAndKeepsLegacyOpacity() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

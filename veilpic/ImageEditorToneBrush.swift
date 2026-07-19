@@ -186,7 +186,7 @@ extension NSImage {
         )
     }
 
-    private func retouchStrokeAlpha(
+    func retouchStrokeAlpha(
         width pixelWidth: Int,
         height pixelHeight: Int,
         samples: [ImageEditorBrushStrokeSample],

@@ -34,7 +34,31 @@ extension NSImage {
         opacity: CGFloat,
         hardness: CGFloat
     ) -> NSImage? {
-        guard !points.isEmpty else { return nil }
+        withHealingBrush(
+            samples: points.map { ImageEditorBrushStrokeSample(point: $0) },
+            sourceOffset: sourceOffset,
+            sourceImage: sourceImage,
+            targetContextImage: targetContextImage,
+            width: width,
+            opacity: opacity,
+            hardness: hardness,
+            pressureControlsSize: false,
+            pressureSensitivity: 0.5
+        )
+    }
+
+    func withHealingBrush(
+        samples: [ImageEditorBrushStrokeSample],
+        sourceOffset: CGSize,
+        sourceImage: NSImage,
+        targetContextImage: NSImage,
+        width: CGFloat,
+        opacity: CGFloat,
+        hardness: CGFloat,
+        pressureControlsSize: Bool,
+        pressureSensitivity: CGFloat
+    ) -> NSImage? {
+        guard !samples.isEmpty else { return nil }
         let pixelWidth = max(1, Int(size.width.rounded()))
         let pixelHeight = max(1, Int(size.height.rounded()))
         let bytesPerRow = pixelWidth * ImageEditorHealingBrushKernel.bytesPerPixel
@@ -54,12 +78,20 @@ extension NSImage {
             bytesPerRow: bytesPerRow
         ) else { return nil }
 
-        let maskAlpha = ImageEditorHealingBrushKernel.strokeAlpha(
+        let maskAlpha = retouchStrokeAlpha(
             width: pixelWidth,
             height: pixelHeight,
-            points: points,
+            samples: samples,
             diameter: width,
-            hardness: hardness
+            hardness: hardness,
+            pressureControlsSize: pressureControlsSize,
+            pressureSensitivity: pressureSensitivity
+        )
+        let effectiveDiameter = retouchMaximumDiameter(
+            samples: samples,
+            diameter: width,
+            pressureControlsSize: pressureControlsSize,
+            pressureSensitivity: pressureSensitivity
         )
         let outputPixels = ImageEditorHealingBrushKernel.heal(
             targetPixels: targetPixels,
@@ -69,8 +101,8 @@ extension NSImage {
             width: pixelWidth,
             height: pixelHeight,
             sourceOffset: sourceOffset,
-            destinationReference: ImageEditorHealingBrushKernel.strokeCenter(points),
-            brushDiameter: width,
+            destinationReference: ImageEditorHealingBrushKernel.strokeCenter(samples.map(\.point)),
+            brushDiameter: effectiveDiameter,
             opacity: opacity
         )
         return NSImage.healingImage(
@@ -90,7 +122,29 @@ extension NSImage {
         opacity: CGFloat,
         hardness: CGFloat
     ) -> NSImage? {
-        guard !points.isEmpty else { return nil }
+        withSpotHealingBrush(
+            samples: points.map { ImageEditorBrushStrokeSample(point: $0) },
+            sourceImage: sourceImage,
+            targetContextImage: targetContextImage,
+            width: width,
+            opacity: opacity,
+            hardness: hardness,
+            pressureControlsSize: false,
+            pressureSensitivity: 0.5
+        )
+    }
+
+    func withSpotHealingBrush(
+        samples: [ImageEditorBrushStrokeSample],
+        sourceImage: NSImage,
+        targetContextImage: NSImage,
+        width: CGFloat,
+        opacity: CGFloat,
+        hardness: CGFloat,
+        pressureControlsSize: Bool,
+        pressureSensitivity: CGFloat
+    ) -> NSImage? {
+        guard !samples.isEmpty else { return nil }
         let pixelWidth = max(1, Int(size.width.rounded()))
         let pixelHeight = max(1, Int(size.height.rounded()))
         let bytesPerRow = pixelWidth * ImageEditorHealingBrushKernel.bytesPerPixel
@@ -110,7 +164,14 @@ extension NSImage {
             bytesPerRow: bytesPerRow
         ) else { return nil }
 
+        let points = samples.map(\.point)
         let destinationReference = ImageEditorHealingBrushKernel.strokeCenter(points)
+        let effectiveDiameter = retouchMaximumDiameter(
+            samples: samples,
+            diameter: width,
+            pressureControlsSize: pressureControlsSize,
+            pressureSensitivity: pressureSensitivity
+        )
         guard let sourceOffset = ImageEditorHealingBrushKernel.spotSourceOffset(
             pixels: sourcePixels,
             targetContextPixels: targetContextPixels,
@@ -118,14 +179,16 @@ extension NSImage {
             height: pixelHeight,
             points: points,
             destinationReference: destinationReference,
-            brushDiameter: width
+            brushDiameter: effectiveDiameter
         ) else { return nil }
-        let maskAlpha = ImageEditorHealingBrushKernel.strokeAlpha(
+        let maskAlpha = retouchStrokeAlpha(
             width: pixelWidth,
             height: pixelHeight,
-            points: points,
+            samples: samples,
             diameter: width,
-            hardness: hardness
+            hardness: hardness,
+            pressureControlsSize: pressureControlsSize,
+            pressureSensitivity: pressureSensitivity
         )
         let outputPixels = ImageEditorHealingBrushKernel.heal(
             targetPixels: targetPixels,
@@ -136,7 +199,7 @@ extension NSImage {
             height: pixelHeight,
             sourceOffset: sourceOffset,
             destinationReference: destinationReference,
-            brushDiameter: width,
+            brushDiameter: effectiveDiameter,
             opacity: opacity
         )
         return NSImage.healingImage(
@@ -146,6 +209,24 @@ extension NSImage {
             bytesPerRow: bytesPerRow,
             size: size
         )
+    }
+
+    private func retouchMaximumDiameter(
+        samples: [ImageEditorBrushStrokeSample],
+        diameter: CGFloat,
+        pressureControlsSize: Bool,
+        pressureSensitivity: CGFloat
+    ) -> CGFloat {
+        guard pressureControlsSize, samples.contains(where: { $0.pressure != nil }) else {
+            return max(1, diameter)
+        }
+        let maximumScale = samples.map {
+            ImageEditorBrushStrokeKernel.mappedPressure(
+                $0.pressure ?? 1,
+                sensitivity: pressureSensitivity
+            )
+        }.max() ?? 1
+        return max(1, diameter * maximumScale)
     }
 
     fileprivate func healingRGBAPixels(width: Int, height: Int, bytesPerRow: Int) -> [UInt8]? {

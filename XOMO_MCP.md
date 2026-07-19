@@ -1,7 +1,8 @@
 # Xomo MCP 与 CLI
 
-> 当前版本：v2.12.0-rc346
+> 当前版本：v2.12.0-rc347
 
+rc347 将 `xomo.paint.special` 的点级压力扩展到 `action=cloneStamp|healing`：每个点可选 `pressure=0...1`，`pressureSize=true` 使用独立修饰工具压力曲线控制仿制或修复的实际蒙版直径，`pressureSensitivity=0...100` 调整曲线；取样修复与污点修复共用该入口，并继续支持 `aligned`、`sampleSource`、`healingMode`、硬度、不透明度、选区和单步 History/Undo。省略压力或关闭控制时保持旧客户端像素结果。
 rc346 将 `xomo.paint.special` 的点级压力扩展到 `action=blur|sharpen`：每个点可选 `pressure=0...1`，`pressureSize=true` 使用独立修饰工具压力曲线控制实际滤镜笔刷直径，`pressureSensitivity=0...100` 调整曲线；省略压力或关闭控制时保持原像素结果，并继续服从 `strength`、`hardness`、选区与单步 History/Undo。
 rc345 将 `xomo.paint.special` 的点级压力扩展到 `action=smudge`：每个点可选 `pressure=0...1`，`pressureSize=true` 使用独立修饰工具压力曲线控制涂抹直径，`pressureSensitivity=0...100` 调整曲线；省略压力或关闭控制时保持原像素结果，并可继续与 `strength`、`hardness`、`fingerPainting`、`sampleAllLayers` 组合。
 rc344 为 `xomo.paint.special action=smudge` 增加 `sampleAllLayers=true|false`；开启后从所有可见图层的冻结合成快照连续取样，仅把蒙版内涂抹结果写入活动层，来源图层和笔触外透明区域保持不变。该参数可与 `fingerPainting`、`strength`、`hardness` 组合，省略或关闭时保留既有当前层涂抹结果。

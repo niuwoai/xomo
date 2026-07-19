@@ -1,0 +1,89 @@
+{
+  "generated_at": "2026-07-19 08:07:16 +0800",
+  "total": 8,
+  "passed": 8,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorCloneStampSamplingTests",
+      "method": "alignedAndNonAlignedStrokesUseDifferentSecondSources",
+      "identifier": "veilpicTests/ImageEditorCloneStampSamplingTests/alignedAndNonAlignedStrokesUseDifferentSecondSources",
+      "file": "ImageEditorCloneStampSamplingTests.swift",
+      "passed": true,
+      "duration": 3.042,
+      "issues": [],
+      "log": "ImageEditorCloneStampSamplingTests.alignedAndNonAlignedStrokesUseDifferentSecondSources.log"
+    },
+    {
+      "suite": "ImageEditorCloneStampSamplingTests",
+      "method": "cloneStampHardnessControlsTheDabEdge",
+      "identifier": "veilpicTests/ImageEditorCloneStampSamplingTests/cloneStampHardnessControlsTheDabEdge",
+      "file": "ImageEditorCloneStampSamplingTests.swift",
+      "passed": true,
+      "duration": 3.018,
+      "issues": [],
+      "log": "ImageEditorCloneStampSamplingTests.cloneStampHardnessControlsTheDabEdge.log"
+    },
+    {
+      "suite": "ImageEditorCloneStampSamplingTests",
+      "method": "cloneStampSupportsASingleClick",
+      "identifier": "veilpicTests/ImageEditorCloneStampSamplingTests/cloneStampSupportsASingleClick",
+      "file": "ImageEditorCloneStampSamplingTests.swift",
+      "passed": true,
+      "duration": 3.033,
+      "issues": [],
+      "log": "ImageEditorCloneStampSamplingTests.cloneStampSupportsASingleClick.log"
+    },
+    {
+      "suite": "ImageEditorCloneStampSamplingTests",
+      "method": "compositeSamplingCanReachOutsideSelectedLayerFrame",
+      "identifier": "veilpicTests/ImageEditorCloneStampSamplingTests/compositeSamplingCanReachOutsideSelectedLayerFrame",
+      "file": "ImageEditorCloneStampSamplingTests.swift",
+      "passed": true,
+      "duration": 3.117,
+      "issues": [],
+      "log": "ImageEditorCloneStampSamplingTests.compositeSamplingCanReachOutsideSelectedLayerFrame.log"
+    },
+    {
+      "suite": "ImageEditorCloneStampSamplingTests",
+      "method": "compositeSamplingStillRespectsSelectionAndTransparencyLock",
+      "identifier": "veilpicTests/ImageEditorCloneStampSamplingTests/compositeSamplingStillRespectsSelectionAndTransparencyLock",
+      "file": "ImageEditorCloneStampSamplingTests.swift",
+      "passed": true,
+      "duration": 3.063,
+      "issues": [],
+      "log": "ImageEditorCloneStampSamplingTests.compositeSamplingStillRespectsSelectionAndTransparencyLock.log"
+    },
+    {
+      "suite": "ImageEditorCloneStampSamplingTests",
+      "method": "offsetResolutionKeepsOrResetsTheSourceOffset",
+      "identifier": "veilpicTests/ImageEditorCloneStampSamplingTests/offsetResolutionKeepsOrResetsTheSourceOffset",
+      "file": "ImageEditorCloneStampSamplingTests.swift",
+      "passed": true,
+      "duration": 3.036,
+      "issues": [],
+      "log": "ImageEditorCloneStampSamplingTests.offsetResolutionKeepsOrResetsTheSourceOffset.log"
+    },
+    {
+      "suite": "ImageEditorCloneStampSamplingTests",
+      "method": "sampledBrushPressureControlsCloneStampDiameterWithoutChangingMouseStrokes",
+      "identifier": "veilpicTests/ImageEditorCloneStampSamplingTests/sampledBrushPressureControlsCloneStampDiameterWithoutChangingMouseStrokes",
+      "file": "ImageEditorCloneStampSamplingTests.swift",
+      "passed": true,
+      "duration": 3.027,
+      "issues": [],
+      "log": "ImageEditorCloneStampSamplingTests.sampledBrushPressureControlsCloneStampDiameterWithoutChangingMouseStrokes.log"
+    },
+    {
+      "suite": "ImageEditorCloneStampSamplingTests",
+      "method": "samplingRangeDistinguishesCurrentBelowAndAllVisibleLayers",
+      "identifier": "veilpicTests/ImageEditorCloneStampSamplingTests/samplingRangeDistinguishesCurrentBelowAndAllVisibleLayers",
+      "file": "ImageEditorCloneStampSamplingTests.swift",
+      "passed": true,
+      "duration": 3.036,
+      "issues": [],
+      "log": "ImageEditorCloneStampSamplingTests.samplingRangeDistinguishesCurrentBelowAndAllVisibleLayers.log"
+    }
+  ]
+}

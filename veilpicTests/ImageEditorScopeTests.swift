@@ -2179,6 +2179,29 @@ struct ImageEditorScopeTests {
         #expect(source.contains("guard viewModel.healingBrushMode == .source else { return nil }"))
     }
 
+    @Test func sampledBrushPressureSizeOptionUsesSamplesWithoutTakingFocus() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let pressureStart = try #require(
+            source.range(of: "if viewModel.selectedTool == .cloneStamp || viewModel.selectedTool == .healingBrush {")
+        )
+        let textStart = try #require(
+            source[pressureStart.upperBound...].range(of: "if viewModel.selectedTool == .text")
+        )
+        let pressureSource = source[pressureStart.lowerBound..<textStart.lowerBound]
+
+        #expect(pressureSource.contains("viewModel.retouchPressureControlsSize"))
+        #expect(pressureSource.contains("viewModel.setRetouchPressureControlsSize"))
+        #expect(pressureSource.contains("imageEditor.option.sampledBrushPressureSize.help"))
+        #expect(pressureSource.contains("image-editor-sampled-brush-pressure-size"))
+        #expect(pressureSource.contains(".focusable(false)"))
+        #expect(source.contains("case .cloneStamp, .blur, .sharpen, .smudge, .healingBrush:"))
+        #expect(source.contains("viewModel.cloneStamp(samples: brushStrokeSamples)"))
+        #expect(source.contains("viewModel.healingBrush(samples: brushStrokeSamples)"))
+    }
+
     @Test func spongeToolExposesANonFocusableSaturationModePicker() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),

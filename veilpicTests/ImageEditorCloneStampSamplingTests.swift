@@ -135,6 +135,47 @@ struct ImageEditorCloneStampSamplingTests {
         #expect(softEdge.blueComponent > softEdge.redComponent + 0.25)
     }
 
+    @Test func sampledBrushPressureControlsCloneStampDiameterWithoutChangingMouseStrokes() throws {
+        let light = patternedCurrentLayerViewModel()
+        let full = patternedCurrentLayerViewModel()
+        let mouseBaseline = patternedCurrentLayerViewModel()
+        let mousePressureEnabled = patternedCurrentLayerViewModel()
+        for viewModel in [light, full, mouseBaseline, mousePressureEnabled] {
+            viewModel.brushSize = 16
+            viewModel.hardness = 1
+            viewModel.opacity = 1
+            viewModel.setCloneSource(at: CGPoint(x: 10, y: 15))
+        }
+        light.retouchPressureControlsSize = true
+        full.retouchPressureControlsSize = true
+        mouseBaseline.retouchPressureControlsSize = false
+        mousePressureEnabled.retouchPressureControlsSize = true
+        let destination = CGPoint(x: 60, y: 15)
+
+        light.cloneStamp(samples: [
+            ImageEditorBrushStrokeSample(point: destination, pressure: 0.05)
+        ])
+        full.cloneStamp(samples: [
+            ImageEditorBrushStrokeSample(point: destination, pressure: 1)
+        ])
+        mouseBaseline.cloneStamp(samples: [ImageEditorBrushStrokeSample(point: destination)])
+        mousePressureEnabled.cloneStamp(samples: [ImageEditorBrushStrokeSample(point: destination)])
+
+        let edgePoint = CGPoint(x: 60, y: 19)
+        let lightEdge = try color(light.document.selectedLayer?.image, at: edgePoint)
+        let fullEdge = try color(full.document.selectedLayer?.image, at: edgePoint)
+        let baselineMouseEdge = try color(mouseBaseline.document.selectedLayer?.image, at: edgePoint)
+        let enabledMouseEdge = try color(mousePressureEnabled.document.selectedLayer?.image, at: edgePoint)
+        #expect(lightEdge.blueComponent > lightEdge.redComponent + 0.25)
+        #expect(fullEdge.redComponent > fullEdge.blueComponent + 0.25)
+        #expect(abs(baselineMouseEdge.redComponent - enabledMouseEdge.redComponent) < 0.001)
+        #expect(abs(baselineMouseEdge.blueComponent - enabledMouseEdge.blueComponent) < 0.001)
+        #expect(full.document.history.last?.title == L10n.text("imageEditor.history.cloneStamp"))
+        full.undo()
+        let undoneEdge = try color(full.document.selectedLayer?.image, at: edgePoint)
+        #expect(undoneEdge.blueComponent > undoneEdge.redComponent + 0.25)
+    }
+
     @Test func compositeSamplingCanReachOutsideSelectedLayerFrame() throws {
         let canvasSize = CGSize(width: 100, height: 30)
         let sourceImage = bitmap(size: canvasSize, background: .systemBlue, fills: [

@@ -115,6 +115,48 @@ struct ImageEditorHealingBrushTests {
         #expect((offset?.width ?? 0) > 0)
     }
 
+    @Test func sampledBrushPressureControlsSourceAndSpotHealingDiameter() throws {
+        let canvasSize = NSSize(width: 80, height: 50)
+        let sourceLight = configuredHealingViewModel(size: canvasSize, mode: .source)
+        let sourceFull = configuredHealingViewModel(size: canvasSize, mode: .source)
+        let sourceMouseBaseline = configuredHealingViewModel(size: canvasSize, mode: .source)
+        let sourceMousePressureEnabled = configuredHealingViewModel(size: canvasSize, mode: .source)
+        let spotLight = configuredHealingViewModel(size: canvasSize, mode: .spot)
+        let spotFull = configuredHealingViewModel(size: canvasSize, mode: .spot)
+        sourceLight.retouchPressureControlsSize = true
+        sourceFull.retouchPressureControlsSize = true
+        sourceMouseBaseline.retouchPressureControlsSize = false
+        sourceMousePressureEnabled.retouchPressureControlsSize = true
+        spotLight.retouchPressureControlsSize = true
+        spotFull.retouchPressureControlsSize = true
+        let destination = CGPoint(x: 40, y: 25)
+        let lightSample = [ImageEditorBrushStrokeSample(point: destination, pressure: 0.05)]
+        let fullSample = [ImageEditorBrushStrokeSample(point: destination, pressure: 1)]
+        let mouseSample = [ImageEditorBrushStrokeSample(point: destination)]
+
+        sourceLight.healingBrush(samples: lightSample)
+        sourceFull.healingBrush(samples: fullSample)
+        sourceMouseBaseline.healingBrush(samples: mouseSample)
+        sourceMousePressureEnabled.healingBrush(samples: mouseSample)
+        spotLight.healingBrush(samples: lightSample)
+        spotFull.healingBrush(samples: fullSample)
+
+        let edgePoint = CGPoint(x: 40, y: 28)
+        let sourceLightEdge = try healingColor(in: sourceLight, at: edgePoint)
+        let sourceFullEdge = try healingColor(in: sourceFull, at: edgePoint)
+        let sourceMouseEdge = try healingColor(in: sourceMouseBaseline, at: edgePoint)
+        let sourceEnabledMouseEdge = try healingColor(in: sourceMousePressureEnabled, at: edgePoint)
+        let spotLightEdge = try healingColor(in: spotLight, at: edgePoint)
+        let spotFullEdge = try healingColor(in: spotFull, at: edgePoint)
+        #expect(sourceLightEdge.redComponent > 0.8)
+        #expect(sourceFullEdge.redComponent < sourceLightEdge.redComponent - 0.20)
+        #expect(abs(sourceMouseEdge.redComponent - sourceEnabledMouseEdge.redComponent) < 0.001)
+        #expect(spotLightEdge.redComponent > 0.8)
+        #expect(spotFullEdge.redComponent < spotLightEdge.redComponent - 0.20)
+        #expect(sourceFull.document.history.last?.title == L10n.text("imageEditor.history.healingBrush"))
+        #expect(spotFull.document.history.last?.title == L10n.text("imageEditor.history.spotHealingBrush"))
+    }
+
     @Test func imageEditorHealingBrushRespectsActiveSelection() async throws {
         let canvasSize = NSSize(width: 80, height: 50)
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: blemishImage(size: canvasSize)) { _ in }
@@ -219,6 +261,37 @@ struct ImageEditorHealingBrushTests {
             NSColor.systemRed.setFill()
             CGRect(x: 36, y: 21, width: 8, height: 8).fill()
         } ?? NSImage.transparent(size: size)
+    }
+
+    private func configuredHealingViewModel(
+        size: NSSize,
+        mode: ImageEditorHealingBrushMode
+    ) -> ImageEditorViewModel {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: blemishImage(size: size)
+        ) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(
+            blemishImage(size: size),
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+        viewModel.healingBrushMode = mode
+        viewModel.brushSize = 16
+        viewModel.hardness = 1
+        viewModel.opacity = 1
+        if mode == .source {
+            viewModel.setHealingSource(at: CGPoint(x: 16, y: 25))
+        }
+        return viewModel
+    }
+
+    private func healingColor(
+        in viewModel: ImageEditorViewModel,
+        at point: CGPoint
+    ) throws -> NSColor {
+        try #require(
+            viewModel.document.selectedLayer?.image.color(at: point)?.usingColorSpace(.deviceRGB)
+        )
     }
 
     private func layeredHealingViewModel() -> ImageEditorViewModel {

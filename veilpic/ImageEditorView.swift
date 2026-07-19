@@ -487,6 +487,22 @@ struct ImageEditorView: View {
                 .accessibilityIdentifier("image-editor-smudge-pressure-size")
             }
 
+            if viewModel.selectedTool == .cloneStamp || viewModel.selectedTool == .healingBrush {
+                Toggle(
+                    L10n.text("imageEditor.option.pressureSize"),
+                    isOn: Binding(
+                        get: { viewModel.retouchPressureControlsSize },
+                        set: { viewModel.setRetouchPressureControlsSize($0) }
+                    )
+                )
+                .toggleStyle(.checkbox)
+                .focusable(false)
+                .fixedSize()
+                .help(L10n.text("imageEditor.option.sampledBrushPressureSize.help"))
+                .accessibilityHint(L10n.text("imageEditor.option.sampledBrushPressureSize.help"))
+                .accessibilityIdentifier("image-editor-sampled-brush-pressure-size")
+            }
+
             if viewModel.selectedTool == .text {
                 fontFamilyPicker(width: 190)
                 Stepper(
@@ -2364,17 +2380,13 @@ struct ImageEditorView: View {
                         ))
                         updateToneAirbrushStroke(at: pointerImagePoint, pressure: pressure)
                     }
-                case .blur, .sharpen, .smudge:
+                case .cloneStamp, .blur, .sharpen, .smudge, .healingBrush:
                     if let pointerImagePoint {
                         dragPoints.append(pointerImagePoint)
                         brushStrokeSamples.append(ImageEditorBrushStrokeSample(
                             point: pointerImagePoint,
                             pressure: ImageEditorBrushPressureInput.pressure(from: NSApp.currentEvent)
                         ))
-                    }
-                case .cloneStamp, .healingBrush:
-                    if let pointerImagePoint {
-                        dragPoints.append(pointerImagePoint)
                     }
                 case .marquee:
                     if dragStart == nil {
@@ -2543,7 +2555,7 @@ struct ImageEditorView: View {
                     if viewModel.isSettingCloneSource || NSEvent.modifierFlags.contains(.option), let endImagePoint {
                         viewModel.setCloneSource(at: endImagePoint)
                     } else {
-                        viewModel.cloneStamp(points: dragPoints)
+                        viewModel.cloneStamp(samples: brushStrokeSamples)
                     }
                 case .dodge:
                     viewModel.toneBrush(
@@ -2571,7 +2583,7 @@ struct ImageEditorView: View {
                        let endImagePoint {
                         viewModel.setHealingSource(at: endImagePoint)
                     } else {
-                        viewModel.healingBrush(points: dragPoints)
+                        viewModel.healingBrush(samples: brushStrokeSamples)
                     }
                 case .patchTool:
                     if isDrawingPatchSelection {
