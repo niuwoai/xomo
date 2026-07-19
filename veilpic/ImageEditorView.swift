@@ -7049,12 +7049,15 @@ struct ImageEditorView: View {
                 ) { value in
                     L10n.format("imageEditor.properties.shadowBlurValue", Int(value.rounded()))
                 }
-                Stepper(
-                    L10n.format("imageEditor.properties.shadowSpreadValue", Int(viewModel.selectedLayerShadowSpread.rounded())),
+                layerStyleNumericStepper(
+                    state: viewModel.selectedLayerShadowSpreadState,
                     value: selectedLayerShadowSpreadBinding,
-                    in: 0...24,
-                    step: 1
-                )
+                    range: 0...24,
+                    step: 1,
+                    accessibilityIdentifier: "image-editor-layer-style-shadow-spread"
+                ) { value in
+                    L10n.format("imageEditor.properties.shadowSpreadValue", Int(value.rounded()))
+                }
                 Stepper(
                     L10n.format("imageEditor.properties.shadowNoiseValue", Int((viewModel.selectedLayerShadowNoise * 100).rounded())),
                     value: selectedLayerShadowNoiseBinding,

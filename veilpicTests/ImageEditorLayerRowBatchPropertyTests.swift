@@ -814,6 +814,57 @@ struct ImageEditorLayerRowBatchPropertyTests {
         return fixture
     }
 
+    @Test func layerStyleShadowSpreadMixedValueConvergesAcrossEditableSelection() throws {
+        let fixture = shadowSpreadFixture()
+        let viewModel = fixture.viewModel
+        let firstID = fixture.layers[0].id
+        let secondID = fixture.layers[1].id
+        let lockedID = fixture.layers[2].id
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.selectedLayerShadowSpreadState == .mixed)
+        viewModel.setSelectedLayerShadowSpread(10)
+        #expect(viewModel.selectedLayerShadowSpreadState == .value(10))
+        #expect((try layer(firstID, in: viewModel)).style.shadowSpread == 10)
+        #expect((try layer(secondID, in: viewModel)).style.shadowSpread == 10)
+        #expect((try layer(lockedID, in: viewModel)).style.shadowSpread == 6)
+        #expect((try layer(firstID, in: viewModel)).style.shadowEnabled)
+        #expect((try layer(secondID, in: viewModel)).style.shadowEnabled)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerShadowSpreadState == .mixed)
+        viewModel.redo()
+        #expect(viewModel.selectedLayerShadowSpreadState == .value(10))
+    }
+
+    @Test func layerStyleShadowSpreadControlReusesMixedNumericStepper() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("state: viewModel.selectedLayerShadowSpreadState"))
+        #expect(source.contains("value: selectedLayerShadowSpreadBinding"))
+        #expect(source.contains("image-editor-layer-style-shadow-spread"))
+        #expect(source.contains("L10n.format(\"imageEditor.properties.shadowSpreadValue\""))
+    }
+
+    private func shadowSpreadFixture() -> Fixture {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        viewModel.document.layers[0].style.shadowSpread = 2
+        viewModel.document.layers[1].style.shadowSpread = 16
+        viewModel.document.layers[2].style.shadowSpread = 6
+        viewModel.document.layers[2].isLocked = true
+        select(Set(fixture.layers.map(\.id)), primary: fixture.layers[0].id, in: viewModel)
+        return fixture
+    }
+
     @Test func layerStyleShadowBlurMixedValueConvergesAcrossEditableSelection() throws {
         let fixture = shadowBlurFixture()
         let viewModel = fixture.viewModel

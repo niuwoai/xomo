@@ -3327,6 +3327,45 @@ struct XomoAutomationTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStyle"))
     }
 
+    @Test func registrySetsLayerStyleShadowSpreadAcrossEditableSelection() throws {
+        let viewModel = makeViewModel()
+        let canvasSize = viewModel.document.canvasSize
+        var first = ImageEditorLayer.blank(name: "First", size: canvasSize)
+        var second = ImageEditorLayer.blank(name: "Second", size: canvasSize)
+        var locked = ImageEditorLayer.blank(name: "Locked", size: canvasSize)
+        first.style.shadowSpread = 2
+        second.style.shadowSpread = 16
+        locked.style.shadowSpread = 6
+        locked.isLocked = true
+        viewModel.document.layers = [first, second, locked]
+        viewModel.document.selectedLayerID = first.id
+        viewModel.document.selectedLayerIDs = [first.id, second.id, locked.id]
+        let historyCount = viewModel.document.history.count
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        try assertNumericLayerStylePropertySchema("shadowSpread", in: toolsResponse)
+
+        let result = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("shadowSpread"),
+                "value": .number(10)
+            ]
+        ))
+
+        #expect(result.ok)
+        #expect(viewModel.document.layers[0].style.shadowSpread == 10)
+        #expect(viewModel.document.layers[1].style.shadowSpread == 10)
+        #expect(viewModel.document.layers[2].style.shadowSpread == 6)
+        #expect(viewModel.document.layers[0].style.shadowEnabled)
+        #expect(viewModel.document.layers[1].style.shadowEnabled)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [first.id, second.id, locked.id])
+    }
+
     @Test func registrySetsLayerStyleShadowBlurAcrossEditableSelection() throws {
         let viewModel = makeViewModel()
         let canvasSize = viewModel.document.canvasSize

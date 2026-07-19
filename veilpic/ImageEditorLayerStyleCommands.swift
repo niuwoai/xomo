@@ -313,6 +313,10 @@ extension ImageEditorViewModel {
         Double(document.selectedLayer?.style.shadowSpread ?? 0)
     }
 
+    var selectedLayerShadowSpreadState: ImageEditorLayerStyleValueState<CGFloat> {
+        selectedLayerStyleValueState(\.shadowSpread)
+    }
+
     var selectedLayerShadowNoise: Double {
         Double(document.selectedLayer?.style.shadowNoise ?? 0)
     }

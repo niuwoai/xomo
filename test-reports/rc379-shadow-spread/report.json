@@ -1,0 +1,49 @@
+{
+  "generated_at": "2026-07-19 17:13:11 +0800",
+  "total": 4,
+  "passed": 4,
+  "failed": 0,
+  "jobs": 4,
+  "results": [
+    {
+      "suite": "ImageEditorLayerRowBatchPropertyTests",
+      "method": "layerStyleShadowSpreadControlReusesMixedNumericStepper",
+      "identifier": "veilpicTests/ImageEditorLayerRowBatchPropertyTests/layerStyleShadowSpreadControlReusesMixedNumericStepper",
+      "file": "ImageEditorLayerRowBatchPropertyTests.swift",
+      "passed": true,
+      "duration": 7.996,
+      "issues": [],
+      "log": "ImageEditorLayerRowBatchPropertyTests.layerStyleShadowSpreadControlReusesMixedNumericStepper.log"
+    },
+    {
+      "suite": "ImageEditorLayerRowBatchPropertyTests",
+      "method": "layerStyleShadowSpreadMixedValueConvergesAcrossEditableSelection",
+      "identifier": "veilpicTests/ImageEditorLayerRowBatchPropertyTests/layerStyleShadowSpreadMixedValueConvergesAcrossEditableSelection",
+      "file": "ImageEditorLayerRowBatchPropertyTests.swift",
+      "passed": true,
+      "duration": 7.985,
+      "issues": [],
+      "log": "ImageEditorLayerRowBatchPropertyTests.layerStyleShadowSpreadMixedValueConvergesAcrossEditableSelection.log"
+    },
+    {
+      "suite": "ImageEditorLayerStyleTests",
+      "method": "imageEditorDropShadowSpreadExpandsShadowBeforeBlur",
+      "identifier": "veilpicTests/ImageEditorLayerStyleTests/imageEditorDropShadowSpreadExpandsShadowBeforeBlur",
+      "file": "ImageEditorLayerStyleTests.swift",
+      "passed": true,
+      "duration": 7.869,
+      "issues": [],
+      "log": "ImageEditorLayerStyleTests.imageEditorDropShadowSpreadExpandsShadowBeforeBlur.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registrySetsLayerStyleShadowSpreadAcrossEditableSelection",
+      "identifier": "veilpicTests/XomoAutomationTests/registrySetsLayerStyleShadowSpreadAcrossEditableSelection",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 7.963,
+      "issues": [],
+      "log": "XomoAutomationTests.registrySetsLayerStyleShadowSpreadAcrossEditableSelection.log"
+    }
+  ]
+}
