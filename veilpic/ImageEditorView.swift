@@ -4241,14 +4241,6 @@ struct ImageEditorView: View {
         }
     }
 
-    private var selectedLayerGradientOverlayStyleBinding: Binding<ImageEditorGradientFillStyle> {
-        Binding {
-            viewModel.selectedLayerGradientOverlayStyle
-        } set: { value in
-            viewModel.setSelectedLayerGradientOverlayStyle(value)
-        }
-    }
-
     private var selectedLayerGradientOverlayScaleBinding: Binding<Double> {
         Binding {
             viewModel.selectedLayerGradientOverlayScale
@@ -7271,12 +7263,15 @@ struct ImageEditorView: View {
                         .frame(width: 32)
                     Spacer(minLength: 4)
                 }
-                Picker(L10n.text("imageEditor.properties.gradientOverlayStyle"), selection: selectedLayerGradientOverlayStyleBinding) {
-                    ForEach(ImageEditorGradientFillStyle.allCases) { style in
-                        Text(style.title).tag(style)
-                    }
+                layerStyleValuePicker(
+                    state: viewModel.selectedLayerGradientOverlayStyleState,
+                    values: ImageEditorGradientFillStyle.allCases,
+                    labelKey: "imageEditor.properties.gradientOverlayStyle",
+                    accessibilityIdentifier: "image-editor-layer-style-gradient-overlay-style",
+                    title: \.title
+                ) { style in
+                    viewModel.setSelectedLayerGradientOverlayStyle(style)
                 }
-                .pickerStyle(.menu)
                 HStack(spacing: 8) {
                     Text(L10n.text("imageEditor.properties.gradientOverlayStartColor"))
                         .font(.system(size: 10, weight: .medium))

@@ -653,6 +653,57 @@ struct ImageEditorLayerRowBatchPropertyTests {
         return fixture
     }
 
+    @Test func layerStyleMixedGradientOverlayStyleConvergesAcrossEditableSelection() throws {
+        let fixture = gradientOverlayStyleFixture()
+        let viewModel = fixture.viewModel
+        let firstID = fixture.layers[0].id
+        let secondID = fixture.layers[1].id
+        let lockedID = fixture.layers[2].id
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.selectedLayerGradientOverlayStyleState == .mixed)
+        viewModel.setSelectedLayerGradientOverlayStyle(.reflected)
+        #expect(viewModel.selectedLayerGradientOverlayStyleState == .value(.reflected))
+        #expect((try layer(firstID, in: viewModel)).style.gradientOverlayStyle == .reflected)
+        #expect((try layer(secondID, in: viewModel)).style.gradientOverlayStyle == .reflected)
+        #expect((try layer(lockedID, in: viewModel)).style.gradientOverlayStyle == .linear)
+        #expect((try layer(firstID, in: viewModel)).style.gradientOverlayEnabled)
+        #expect((try layer(secondID, in: viewModel)).style.gradientOverlayEnabled)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerGradientOverlayStyleState == .mixed)
+        viewModel.redo()
+        #expect(viewModel.selectedLayerGradientOverlayStyleState == .value(.reflected))
+    }
+
+    @Test func layerStyleMixedGradientOverlayStylePickerUsesLocalizedValue() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("state: viewModel.selectedLayerGradientOverlayStyleState"))
+        #expect(source.contains("image-editor-layer-style-gradient-overlay-style"))
+        #expect(source.contains("viewModel.setSelectedLayerGradientOverlayStyle(style)"))
+        #expect(!source.contains("selectedLayerGradientOverlayStyleBinding"))
+    }
+
+    private func gradientOverlayStyleFixture() -> Fixture {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        viewModel.document.layers[0].style.gradientOverlayStyle = .linear
+        viewModel.document.layers[1].style.gradientOverlayStyle = .radial
+        viewModel.document.layers[2].style.gradientOverlayStyle = .linear
+        viewModel.document.layers[2].isLocked = true
+        select(Set(fixture.layers.map(\.id)), primary: fixture.layers[0].id, in: viewModel)
+        return fixture
+    }
+
     @Test func layerStyleSatinInvertMixedStateConvergesAcrossEditableSelection() throws {
         try assertSatinInvertConvergence()
     }

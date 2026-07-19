@@ -424,6 +424,10 @@ extension ImageEditorViewModel {
         document.selectedLayer?.style.gradientOverlayStyle ?? .linear
     }
 
+    var selectedLayerGradientOverlayStyleState: ImageEditorLayerStyleValueState<ImageEditorGradientFillStyle> {
+        selectedLayerStyleValueState(\.gradientOverlayStyle)
+    }
+
     var selectedLayerGradientOverlayScale: Double {
         Double(document.selectedLayer?.style.gradientOverlayScale ?? 1)
     }

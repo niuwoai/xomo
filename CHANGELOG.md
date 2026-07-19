@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.12.0-rc362 - 2026-07-19
+
+### Added
+- MCP `xomo.layer.style_settings` 新增 `property=gradientOverlayStyle` 与 `gradientOverlayStyle=linear|radial|reflected|diamond`；工具目录公开完整枚举，并与本地渐变叠加样式菜单共享选择感知批量 setter。
+
+### Fixed
+- 多选图层的渐变叠加样式不一致时，样式控件改为标准不可聚焦菜单并显示三语“多个值”，不再把主选图层的线性、径向、反射或菱形样式伪装成共同值。
+- 选择任一样式后会统一写入全部可编辑选中层并启用渐变叠加；锁定层及不适用图层继续跳过，选择保持，每次修改只有一个 History/Undo 步骤。
+
+### Verification
+- 渐变叠加样式混合态、批量收敛、锁定跳过、撤销/重做、界面与 MCP 枚举专项 3/3，既有图层样式渲染和保存往返回归 30/30，CLI 2/2、发布契约 7/7 通过；Xcode 26.4 测试宿主完成编译链接后仍因复制的 XCTest 框架缺少 Info.plist 退出，隔离测试复用该产物运行通过。
+
 ## 2.12.0-rc361 - 2026-07-19
 
 ### Added

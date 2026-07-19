@@ -3210,6 +3210,29 @@ struct XomoAutomationTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStyle"))
     }
 
+    @Test func registrySetsLayerStyleGradientOverlayStyleWithAdvertisedEnum() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        try assertGradientOverlayStyleSchema(in: toolsResponse)
+
+        let result = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("gradientOverlayStyle"),
+                "gradientOverlayStyle": .string("diamond")
+            ]
+        ))
+
+        #expect(result.ok)
+        #expect(viewModel.document.selectedLayer?.style.gradientOverlayStyle == .diamond)
+        #expect(viewModel.document.selectedLayer?.style.gradientOverlayEnabled == true)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStyle"))
+    }
+
     @Test func registryCreatesAppliesListsAndDeletesPersistedLayerStylePresets() throws {
         let suiteName = "XomoAutomationTests.layerStylePresets.\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suiteName) ?? .standard
@@ -4088,6 +4111,18 @@ struct XomoAutomationTests {
         let directionSchema = try #require(properties["bevelDirection"]?.objectValue)
         #expect(propertySchema["enum"]?.arrayValue?.contains(.string("bevelDirection")) == true)
         #expect(directionSchema["enum"] == .array([.string("up"), .string("down")]))
+    }
+
+    private func assertGradientOverlayStyleSchema(in response: XomoAutomationWireResponse) throws {
+        let styleTool = try #require(automationTool(named: "xomo.layer.style_settings", in: response))
+        let inputSchema = try #require(styleTool["inputSchema"]?.objectValue)
+        let properties = try #require(inputSchema["properties"]?.objectValue)
+        let propertySchema = try #require(properties["property"]?.objectValue)
+        let styleSchema = try #require(properties["gradientOverlayStyle"]?.objectValue)
+        #expect(propertySchema["enum"]?.arrayValue?.contains(.string("gradientOverlayStyle")) == true)
+        #expect(styleSchema["enum"] == .array([
+            .string("linear"), .string("radial"), .string("reflected"), .string("diamond")
+        ]))
     }
 
     private func makeViewModel(

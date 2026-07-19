@@ -1,7 +1,8 @@
 # 像界（Xomo）产品概览
 
-> 最后更新：2026-07-19 | 当前版本：v2.12.0-rc361
+> 最后更新：2026-07-19 | 当前版本：v2.12.0-rc362
 
+v2.12.0-rc362 为渐变叠加样式补齐多选共同属性语义：线性、径向、反射或菱形混合时，标准不可聚焦菜单显示三语“多个值”；选择样式后批量收敛全部可编辑层并启用渐变叠加，锁定及不适用图层跳过，选择保持且每次单步 History/Undo。MCP `xomo.layer.style_settings` 同步支持 `property=gradientOverlayStyle gradientOverlayStyle=linear|radial|reflected|diamond`。专项 3/3、样式回归 30/30、CLI 2/2、发布契约 7/7 通过；下一小步处理图案叠加种类的同类混合态，下一次完整门禁仍为 rc400。
 v2.12.0-rc361 为斜面浮雕方向补齐多选共同属性语义：向上和向下混合时，标准不可聚焦菜单显示三语“多个值”；选择方向后批量收敛全部可编辑层并启用斜面，锁定及不适用图层跳过，选择保持且每次单步 History/Undo。MCP `xomo.layer.style_settings` 同步支持 `property=bevelDirection bevelDirection=up|down`。专项 3/3、样式回归 30/30、CLI 2/2、发布契约 7/7 通过；下一小步审计渐变叠加样式的同类混合态，下一次完整门禁仍为 rc400。
 v2.12.0-rc360 完成 40 版本完整质量门禁：1249/1249 全量隔离测试、CLI/MCP 2/2、发布契约 7/7、arm64/x86_64 通用 App/CLI、macOS 13、版本与严格签名核验全部通过。真实 Release 界面完成组件插入和画布拖动，确认按钮生成组/文字/背景可编辑图层，组件可直接命中移动；拖动期间只刷新低负载灰色虚线预览，释放时才提交位置。工具光标继续采用系统箭头、移动、抓手、I-Beam、十字、画笔轮廓、缩放与变换等成熟软件惯例。已覆盖安装 `/Applications/Xomo.app` 并通过安装版启动复验；下一次完整门禁为 rc400。
 v2.12.0-rc359 为内发光来源补齐多选共同属性语义：边缘和中心混合时，标准不可聚焦菜单显示三语“多个值”；选择来源后批量收敛全部可编辑层，锁定及不适用图层跳过，选择保持且每次单步 History/Undo。MCP `xomo.layer.style_settings` 同步支持 `property=innerGlowSource source=edge|center`。专项 4/4、样式回归 30/30、CLI 2/2、发布契约 7/7 通过。下一版本 rc360 只执行完整质量门禁、Release 打包、真实界面冒烟与 `/Applications` 覆盖，不混入新功能。
