@@ -2313,6 +2313,9 @@
 "imageEditor.action.layerPatternOverlay" = "图层图案叠加";
 "imageEditor.action.layerSatin" = "图层光泽";
 "imageEditor.action.layerBevel" = "图层斜面浮雕";
+"imageEditor.layer.effectState.off" = "未启用";
+"imageEditor.layer.effectState.on" = "全部已启用";
+"imageEditor.layer.effectState.mixed" = "部分已启用";
 "imageEditor.action.layerClippingMask" = "剪贴到下方图层";
 "imageEditor.action.layerClippingMaskCreateSelected" = "为所选图层创建剪贴蒙版";
 "imageEditor.action.layerClippingMaskReleaseSelected" = "释放所选剪贴蒙版";

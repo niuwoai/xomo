@@ -1,7 +1,8 @@
 # Xomo MCP 与 CLI
 
-> 当前版本：v2.12.0-rc350
+> 当前版本：v2.12.0-rc351
 
+rc351 让 `xomo.layer.effect` 的 10 种既有效果与本地图层面板、样式菜单共享多选收敛语义：所选可编辑图层处于混合状态时调用一次会全部开启，全部开启时再调用会全部关闭；锁定层、组、调整层和滤镜层跳过，选择保持且只写入一次 History/Undo。工具名、`effect` 参数枚举和返回结构均未改变。
 rc350 让图层面板剪贴按钮复用已有批量创建/释放业务入口，并新增关闭/开启/混合三态反馈。自动化协议不变：`xomo.layer.action` 的 `createClippingMasks`、`releaseClippingMasks` 和单层 `toggleClippingMask` 继续使用原参数、锁定跳过、单步 History/Undo 与返回结构。
 rc349 为海绵、减淡、加深、模糊、锐化、涂抹、仿制和修复提供共享的本地压力灵敏度菜单，五档选择继续写入既有修饰笔刷偏好。该版本不改变自动化协议：`xomo.paint.special` 的 `pressureSize` 与 `pressureSensitivity=0...100`、CLI 参数、确定性离线结果和返回结构保持兼容。
 rc348 统一本地数位笔反馈：启用大小压力后，画布圆形光标与最终像素共用 `pressureSensitivity` 曲线并随拖动实时缩放；笔触结束或切换组件库后恢复。该变化只影响本地可视反馈，`xomo.paint.stroke`、`xomo.paint.special` 的 `pressure`、`pressureSize`、`pressureSensitivity` 协议和确定性离线执行结果不变。

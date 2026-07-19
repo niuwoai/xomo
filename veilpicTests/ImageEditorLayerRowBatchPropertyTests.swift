@@ -197,6 +197,63 @@ struct ImageEditorLayerRowBatchPropertyTests {
         #expect(source.contains("image-editor-layer-clipping-mask-batch"))
     }
 
+    @Test func layerStyleToolbarMixedSelectionUnifiesEveryEffectAndUndoRestoresIt() throws {
+        for effect in ImageEditorLayerStyleEffect.allCases {
+            let fixture = makeFixture()
+            let viewModel = fixture.viewModel
+            let firstID = fixture.layers[0].id
+            let secondID = fixture.layers[1].id
+            select([firstID], primary: firstID, in: viewModel)
+            toggle(effect, in: viewModel)
+            select([firstID, secondID], primary: secondID, in: viewModel)
+
+            #expect(viewModel.selectedLayerStyleEffectState(effect) == .mixed)
+            let historyCount = viewModel.document.history.count
+            toggle(effect, in: viewModel)
+
+            #expect(viewModel.selectedLayerStyleEffectState(effect) == .on)
+            #expect(effect.isEnabled(in: try layer(firstID, in: viewModel).style))
+            #expect(effect.isEnabled(in: try layer(secondID, in: viewModel).style))
+            #expect(viewModel.document.selectedLayerIDs == [firstID, secondID])
+            #expect(viewModel.document.history.count == historyCount + 1)
+            #expect(viewModel.document.history.last?.title == L10n.text(effect.historyKey))
+
+            viewModel.undo()
+            #expect(viewModel.selectedLayerStyleEffectState(effect) == .mixed)
+            #expect(effect.isEnabled(in: try layer(firstID, in: viewModel).style))
+            #expect(!effect.isEnabled(in: try layer(secondID, in: viewModel).style))
+
+            viewModel.redo()
+            #expect(viewModel.selectedLayerStyleEffectState(effect) == .on)
+            toggle(effect, in: viewModel)
+            #expect(viewModel.selectedLayerStyleEffectState(effect) == .off)
+            #expect(!effect.isEnabled(in: try layer(firstID, in: viewModel).style))
+            #expect(!effect.isEnabled(in: try layer(secondID, in: viewModel).style))
+        }
+    }
+
+    @Test func layerStyleToolbarUsesTriStateBatchButtonsWithoutKeyboardFocus() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorLayerPanel.swift"),
+            encoding: .utf8
+        )
+        let start = try #require(source.range(of: "private var layerEffectButtons: some View"))
+        let end = try #require(source[start.upperBound...].range(of: "private var layerClippingMaskBatchButton: some View"))
+        let effectSource = source[start.lowerBound..<end.lowerBound]
+
+        #expect(ImageEditorLayerStyleEffect.allCases.count == 10)
+        #expect(effectSource.components(separatedBy: "layerStyleEffectButton(.").count - 1 == 10)
+        #expect(effectSource.contains("viewModel.selectedLayerStyleEffectState(effect)"))
+        #expect(effectSource.contains("state == .mixed"))
+        #expect(effectSource.contains("minus.circle.fill"))
+        #expect(effectSource.contains(".focusable(false)"))
+        #expect(effectSource.contains("state.accessibilityKey"))
+        #expect(effectSource.contains("image-editor-layer-style-effect-"))
+    }
+
     @Test func layerPanelRoutesEveryRowPropertyControlThroughSelectionAwareMode() throws {
         let repositoryRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
@@ -244,5 +301,20 @@ struct ImageEditorLayerRowBatchPropertyTests {
 
     private func layer(_ id: UUID, in viewModel: ImageEditorViewModel) throws -> ImageEditorLayer {
         try #require(viewModel.document.layers.first { $0.id == id })
+    }
+
+    private func toggle(_ effect: ImageEditorLayerStyleEffect, in viewModel: ImageEditorViewModel) {
+        switch effect {
+        case .stroke: viewModel.toggleSelectedLayerStroke()
+        case .shadow: viewModel.toggleSelectedLayerShadow()
+        case .innerShadow: viewModel.toggleSelectedLayerInnerShadow()
+        case .outerGlow: viewModel.toggleSelectedLayerOuterGlow()
+        case .innerGlow: viewModel.toggleSelectedLayerInnerGlow()
+        case .colorOverlay: viewModel.toggleSelectedLayerColorOverlay()
+        case .gradientOverlay: viewModel.toggleSelectedLayerGradientOverlay()
+        case .patternOverlay: viewModel.toggleSelectedLayerPatternOverlay()
+        case .satin: viewModel.toggleSelectedLayerSatin()
+        case .bevel: viewModel.toggleSelectedLayerBevel()
+        }
     }
 }

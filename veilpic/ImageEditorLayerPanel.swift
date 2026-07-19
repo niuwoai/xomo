@@ -1822,18 +1822,46 @@ extension ImageEditorView {
 
     private var layerEffectButtons: some View {
         Group {
-            layerActionButton(systemImage: "f.cursive", helpKey: "imageEditor.action.layerStroke", isSelected: viewModel.selectedLayerHasStroke) { viewModel.toggleSelectedLayerStroke() }
-            layerActionButton(systemImage: "sparkles", helpKey: "imageEditor.action.layerShadow", isSelected: viewModel.selectedLayerHasShadow) { viewModel.toggleSelectedLayerShadow() }
-            layerActionButton(systemImage: "circle.righthalf.filled", helpKey: "imageEditor.action.layerInnerShadow", isSelected: viewModel.selectedLayerHasInnerShadow) { viewModel.toggleSelectedLayerInnerShadow() }
-            layerActionButton(systemImage: "sun.max", helpKey: "imageEditor.action.layerOuterGlow", isSelected: viewModel.selectedLayerHasOuterGlow) { viewModel.toggleSelectedLayerOuterGlow() }
-            layerActionButton(systemImage: "circle.circle", helpKey: "imageEditor.action.layerInnerGlow", isSelected: viewModel.selectedLayerHasInnerGlow) { viewModel.toggleSelectedLayerInnerGlow() }
-            layerActionButton(systemImage: "circle.lefthalf.filled", helpKey: "imageEditor.action.layerColorOverlay", isSelected: viewModel.selectedLayerHasColorOverlay) { viewModel.toggleSelectedLayerColorOverlay() }
-            layerActionButton(systemImage: "square.lefthalf.filled", helpKey: "imageEditor.action.layerGradientOverlay", isSelected: viewModel.selectedLayerHasGradientOverlay) { viewModel.toggleSelectedLayerGradientOverlay() }
-            layerActionButton(systemImage: "checkerboard.rectangle", helpKey: "imageEditor.action.layerPatternOverlay", isSelected: viewModel.selectedLayerHasPatternOverlay) { viewModel.toggleSelectedLayerPatternOverlay() }
-            layerActionButton(systemImage: "circle.dotted", helpKey: "imageEditor.action.layerSatin", isSelected: viewModel.selectedLayerHasSatin) { viewModel.toggleSelectedLayerSatin() }
-            layerActionButton(systemImage: "cube.transparent", helpKey: "imageEditor.action.layerBevel", isSelected: viewModel.selectedLayerHasBevel) { viewModel.toggleSelectedLayerBevel() }
+            layerStyleEffectButton(.stroke, systemImage: "f.cursive", helpKey: "imageEditor.action.layerStroke") { viewModel.toggleSelectedLayerStroke() }
+            layerStyleEffectButton(.shadow, systemImage: "sparkles", helpKey: "imageEditor.action.layerShadow") { viewModel.toggleSelectedLayerShadow() }
+            layerStyleEffectButton(.innerShadow, systemImage: "circle.righthalf.filled", helpKey: "imageEditor.action.layerInnerShadow") { viewModel.toggleSelectedLayerInnerShadow() }
+            layerStyleEffectButton(.outerGlow, systemImage: "sun.max", helpKey: "imageEditor.action.layerOuterGlow") { viewModel.toggleSelectedLayerOuterGlow() }
+            layerStyleEffectButton(.innerGlow, systemImage: "circle.circle", helpKey: "imageEditor.action.layerInnerGlow") { viewModel.toggleSelectedLayerInnerGlow() }
+            layerStyleEffectButton(.colorOverlay, systemImage: "circle.lefthalf.filled", helpKey: "imageEditor.action.layerColorOverlay") { viewModel.toggleSelectedLayerColorOverlay() }
+            layerStyleEffectButton(.gradientOverlay, systemImage: "square.lefthalf.filled", helpKey: "imageEditor.action.layerGradientOverlay") { viewModel.toggleSelectedLayerGradientOverlay() }
+            layerStyleEffectButton(.patternOverlay, systemImage: "checkerboard.rectangle", helpKey: "imageEditor.action.layerPatternOverlay") { viewModel.toggleSelectedLayerPatternOverlay() }
+            layerStyleEffectButton(.satin, systemImage: "circle.dotted", helpKey: "imageEditor.action.layerSatin") { viewModel.toggleSelectedLayerSatin() }
+            layerStyleEffectButton(.bevel, systemImage: "cube.transparent", helpKey: "imageEditor.action.layerBevel") { viewModel.toggleSelectedLayerBevel() }
             layerClippingMaskBatchButton
         }
+    }
+
+    private func layerStyleEffectButton(
+        _ effect: ImageEditorLayerStyleEffect,
+        systemImage: String,
+        helpKey: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        let state = viewModel.selectedLayerStyleEffectState(effect)
+        return layerActionButton(
+            systemImage: systemImage,
+            helpKey: helpKey,
+            isSelected: state != .off,
+            action: action
+        )
+        .overlay(alignment: .bottomTrailing) {
+            if state == .mixed {
+                Image(systemName: "minus.circle.fill")
+                    .font(.system(size: 8, weight: .bold))
+                    .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                    .offset(x: 2, y: 2)
+                    .allowsHitTesting(false)
+            }
+        }
+        .disabled(!viewModel.canEditSelectedLayerStyle)
+        .focusable(false)
+        .accessibilityValue(L10n.text(state.accessibilityKey))
+        .accessibilityIdentifier("image-editor-layer-style-effect-\(effect)")
     }
 
     private var layerClippingMaskBatchButton: some View {

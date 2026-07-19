@@ -8,6 +8,63 @@
 import AppKit
 import Foundation
 
+enum ImageEditorLayerStyleEffect: CaseIterable {
+    case stroke
+    case shadow
+    case innerShadow
+    case outerGlow
+    case innerGlow
+    case colorOverlay
+    case gradientOverlay
+    case patternOverlay
+    case satin
+    case bevel
+
+    var historyKey: String {
+        switch self {
+        case .stroke: "imageEditor.history.layerStroke"
+        case .shadow: "imageEditor.history.layerShadow"
+        case .innerShadow: "imageEditor.history.layerInnerShadow"
+        case .outerGlow: "imageEditor.history.layerOuterGlow"
+        case .innerGlow: "imageEditor.history.layerInnerGlow"
+        case .colorOverlay: "imageEditor.history.layerColorOverlay"
+        case .gradientOverlay: "imageEditor.history.layerGradientOverlay"
+        case .patternOverlay: "imageEditor.history.layerPatternOverlay"
+        case .satin: "imageEditor.history.layerSatin"
+        case .bevel: "imageEditor.history.layerBevel"
+        }
+    }
+
+    func isEnabled(in style: ImageEditorLayerStyle) -> Bool {
+        switch self {
+        case .stroke: style.strokeEnabled
+        case .shadow: style.shadowEnabled
+        case .innerShadow: style.innerShadowEnabled
+        case .outerGlow: style.outerGlowEnabled
+        case .innerGlow: style.innerGlowEnabled
+        case .colorOverlay: style.colorOverlayEnabled
+        case .gradientOverlay: style.gradientOverlayEnabled
+        case .patternOverlay: style.patternOverlayEnabled
+        case .satin: style.satinEnabled
+        case .bevel: style.bevelEnabled
+        }
+    }
+}
+
+enum ImageEditorLayerStyleSelectionState: Equatable {
+    case off
+    case on
+    case mixed
+
+    var accessibilityKey: String {
+        switch self {
+        case .off: "imageEditor.layer.effectState.off"
+        case .on: "imageEditor.layer.effectState.on"
+        case .mixed: "imageEditor.layer.effectState.mixed"
+        }
+    }
+}
+
 @MainActor
 extension ImageEditorViewModel {
     var selectedLayerHasStroke: Bool {
@@ -65,6 +122,19 @@ extension ImageEditorViewModel {
 
     var canEditSelectedLayerStyle: Bool {
         !selectedLayerStyleTargetIndices().isEmpty
+    }
+
+    func selectedLayerStyleEffectState(
+        _ effect: ImageEditorLayerStyleEffect
+    ) -> ImageEditorLayerStyleSelectionState {
+        let targetIndices = selectedLayerStyleTargetIndices()
+        guard !targetIndices.isEmpty else { return .off }
+        let enabledCount = targetIndices.lazy.filter {
+            effect.isEnabled(in: self.document.layers[$0].style)
+        }.count
+        if enabledCount == 0 { return .off }
+        if enabledCount == targetIndices.count { return .on }
+        return .mixed
     }
 
     var canCreateLayerStylePreset: Bool {
@@ -384,74 +454,43 @@ extension ImageEditorViewModel {
     }
 
     func toggleSelectedLayerStroke() {
-        toggleSelectedLayerStyleEffect(historyKey: "imageEditor.history.layerStroke") {
-            $0.strokeEnabled.toggle()
-            updateStrokeFillDefaults(style: &$0)
-        }
+        toggleSelectedLayerStyleEffect(.stroke)
     }
 
     func toggleSelectedLayerShadow() {
-        toggleSelectedLayerStyleEffect(historyKey: "imageEditor.history.layerShadow") {
-            $0.shadowEnabled.toggle()
-        }
+        toggleSelectedLayerStyleEffect(.shadow)
     }
 
     func toggleSelectedLayerInnerShadow() {
-        toggleSelectedLayerStyleEffect(historyKey: "imageEditor.history.layerInnerShadow") {
-            $0.innerShadowEnabled.toggle()
-            $0.innerShadowColor = innerShadowColor()
-        }
+        toggleSelectedLayerStyleEffect(.innerShadow)
     }
 
     func toggleSelectedLayerOuterGlow() {
-        toggleSelectedLayerStyleEffect(historyKey: "imageEditor.history.layerOuterGlow") {
-            $0.outerGlowEnabled.toggle()
-        }
+        toggleSelectedLayerStyleEffect(.outerGlow)
     }
 
     func toggleSelectedLayerInnerGlow() {
-        toggleSelectedLayerStyleEffect(historyKey: "imageEditor.history.layerInnerGlow") {
-            $0.innerGlowEnabled.toggle()
-        }
+        toggleSelectedLayerStyleEffect(.innerGlow)
     }
 
     func toggleSelectedLayerColorOverlay() {
-        toggleSelectedLayerStyleEffect(historyKey: "imageEditor.history.layerColorOverlay") {
-            $0.colorOverlayEnabled.toggle()
-            $0.colorOverlayColor = foregroundColor
-        }
+        toggleSelectedLayerStyleEffect(.colorOverlay)
     }
 
     func toggleSelectedLayerGradientOverlay() {
-        toggleSelectedLayerStyleEffect(historyKey: "imageEditor.history.layerGradientOverlay") {
-            $0.gradientOverlayEnabled.toggle()
-            if $0.gradientOverlayEnabled {
-                $0.gradientOverlayStartColor = foregroundColor
-                $0.gradientOverlayEndColor = gradientOverlayEndColor()
-            }
-        }
+        toggleSelectedLayerStyleEffect(.gradientOverlay)
     }
 
     func toggleSelectedLayerPatternOverlay() {
-        toggleSelectedLayerStyleEffect(historyKey: "imageEditor.history.layerPatternOverlay") {
-            $0.patternOverlayEnabled.toggle()
-            $0.patternOverlayColor = patternOverlayColor()
-        }
+        toggleSelectedLayerStyleEffect(.patternOverlay)
     }
 
     func toggleSelectedLayerSatin() {
-        toggleSelectedLayerStyleEffect(historyKey: "imageEditor.history.layerSatin") {
-            $0.satinEnabled.toggle()
-            if $0.satinEnabled {
-                $0.satinColor = satinColor()
-            }
-        }
+        toggleSelectedLayerStyleEffect(.satin)
     }
 
     func toggleSelectedLayerBevel() {
-        toggleSelectedLayerStyleEffect(historyKey: "imageEditor.history.layerBevel") {
-            $0.bevelEnabled.toggle()
-        }
+        toggleSelectedLayerStyleEffect(.bevel)
     }
 
     func showLayerStyleBlendingOptions() {
@@ -1292,20 +1331,60 @@ extension ImageEditorViewModel {
         return normalized
     }
 
-    private func toggleSelectedLayerStyleEffect(
-        historyKey: String,
-        mutate: (inout ImageEditorLayerStyle) -> Void
-    ) {
+    private func toggleSelectedLayerStyleEffect(_ effect: ImageEditorLayerStyleEffect) {
         let targetIndices = selectedLayerStyleTargetIndices()
         guard !targetIndices.isEmpty else {
             statusText = L10n.text("imageEditor.status.layerLocked")
             return
         }
+        let shouldEnable = targetIndices.contains {
+            !effect.isEnabled(in: self.document.layers[$0].style)
+        }
         pushUndo()
         for index in targetIndices {
-            mutate(&document.layers[index].style)
+            var style = document.layers[index].style
+            setLayerStyleEffect(effect, enabled: shouldEnable, style: &style)
+            document.layers[index].style = style
         }
-        appendHistory(L10n.text(historyKey))
+        appendHistory(L10n.text(effect.historyKey))
+    }
+
+    private func setLayerStyleEffect(
+        _ effect: ImageEditorLayerStyleEffect,
+        enabled: Bool,
+        style: inout ImageEditorLayerStyle
+    ) {
+        switch effect {
+        case .stroke:
+            style.strokeEnabled = enabled
+            if enabled { updateStrokeFillDefaults(style: &style) }
+        case .shadow:
+            style.shadowEnabled = enabled
+        case .innerShadow:
+            style.innerShadowEnabled = enabled
+            if enabled { style.innerShadowColor = innerShadowColor() }
+        case .outerGlow:
+            style.outerGlowEnabled = enabled
+        case .innerGlow:
+            style.innerGlowEnabled = enabled
+        case .colorOverlay:
+            style.colorOverlayEnabled = enabled
+            if enabled { style.colorOverlayColor = foregroundColor }
+        case .gradientOverlay:
+            style.gradientOverlayEnabled = enabled
+            if enabled {
+                style.gradientOverlayStartColor = foregroundColor
+                style.gradientOverlayEndColor = gradientOverlayEndColor()
+            }
+        case .patternOverlay:
+            style.patternOverlayEnabled = enabled
+            if enabled { style.patternOverlayColor = patternOverlayColor() }
+        case .satin:
+            style.satinEnabled = enabled
+            if enabled { style.satinColor = satinColor() }
+        case .bevel:
+            style.bevelEnabled = enabled
+        }
     }
 
     private func updateSelectedLayerStyle(_ mutate: (inout ImageEditorLayerStyle) -> Void) {

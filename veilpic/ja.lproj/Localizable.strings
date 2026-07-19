@@ -2313,6 +2313,9 @@
 "imageEditor.action.layerPatternOverlay" = "レイヤーパターンオーバーレイ";
 "imageEditor.action.layerSatin" = "レイヤーサテン";
 "imageEditor.action.layerBevel" = "レイヤーベベル";
+"imageEditor.layer.effectState.off" = "無効";
+"imageEditor.layer.effectState.on" = "すべて有効";
+"imageEditor.layer.effectState.mixed" = "一部有効";
 "imageEditor.action.layerClippingMask" = "下のレイヤーへクリップ";
 "imageEditor.action.layerClippingMaskCreateSelected" = "選択レイヤーにクリッピングマスクを作成";
 "imageEditor.action.layerClippingMaskReleaseSelected" = "選択クリッピングマスクを解除";

@@ -1,0 +1,39 @@
+{
+  "generated_at": "2026-07-19 08:58:28 +0800",
+  "total": 3,
+  "passed": 3,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorLayerRowBatchPropertyTests",
+      "method": "layerStyleToolbarMixedSelectionUnifiesEveryEffectAndUndoRestoresIt",
+      "identifier": "veilpicTests/ImageEditorLayerRowBatchPropertyTests/layerStyleToolbarMixedSelectionUnifiesEveryEffectAndUndoRestoresIt",
+      "file": "ImageEditorLayerRowBatchPropertyTests.swift",
+      "passed": true,
+      "duration": 4.717,
+      "issues": [],
+      "log": "ImageEditorLayerRowBatchPropertyTests.layerStyleToolbarMixedSelectionUnifiesEveryEffectAndUndoRestoresIt.log"
+    },
+    {
+      "suite": "ImageEditorLayerRowBatchPropertyTests",
+      "method": "layerStyleToolbarUsesTriStateBatchButtonsWithoutKeyboardFocus",
+      "identifier": "veilpicTests/ImageEditorLayerRowBatchPropertyTests/layerStyleToolbarUsesTriStateBatchButtonsWithoutKeyboardFocus",
+      "file": "ImageEditorLayerRowBatchPropertyTests.swift",
+      "passed": true,
+      "duration": 3.146,
+      "issues": [],
+      "log": "ImageEditorLayerRowBatchPropertyTests.layerStyleToolbarUsesTriStateBatchButtonsWithoutKeyboardFocus.log"
+    },
+    {
+      "suite": "LocalizationResourceTests",
+      "method": "layerStyleToolbarEffectStateIsLocalizedInEverySupportedLanguage",
+      "identifier": "veilpicTests/LocalizationResourceTests/layerStyleToolbarEffectStateIsLocalizedInEverySupportedLanguage",
+      "file": "LocalizationResourceTests.swift",
+      "passed": true,
+      "duration": 3.051,
+      "issues": [],
+      "log": "LocalizationResourceTests.layerStyleToolbarEffectStateIsLocalizedInEverySupportedLanguage.log"
+    }
+  ]
+}

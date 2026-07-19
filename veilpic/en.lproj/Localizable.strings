@@ -2313,6 +2313,9 @@
 "imageEditor.action.layerPatternOverlay" = "Layer Pattern Overlay";
 "imageEditor.action.layerSatin" = "Layer Satin";
 "imageEditor.action.layerBevel" = "Layer Bevel";
+"imageEditor.layer.effectState.off" = "Not enabled";
+"imageEditor.layer.effectState.on" = "Enabled for all";
+"imageEditor.layer.effectState.mixed" = "Partially enabled";
 "imageEditor.action.layerClippingMask" = "Clip to Layer Below";
 "imageEditor.action.layerClippingMaskCreateSelected" = "Create Clipping Masks for Selected Layers";
 "imageEditor.action.layerClippingMaskReleaseSelected" = "Release Selected Clipping Masks";
