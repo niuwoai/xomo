@@ -814,6 +814,57 @@ struct ImageEditorLayerRowBatchPropertyTests {
         return fixture
     }
 
+    @Test func layerStyleShadowOpacityMixedValueConvergesAcrossEditableSelection() throws {
+        let fixture = shadowOpacityFixture()
+        let viewModel = fixture.viewModel
+        let firstID = fixture.layers[0].id
+        let secondID = fixture.layers[1].id
+        let lockedID = fixture.layers[2].id
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.selectedLayerShadowOpacityState == .mixed)
+        viewModel.setSelectedLayerShadowOpacity(0.6)
+        #expect(viewModel.selectedLayerShadowOpacityState == .value(0.6))
+        #expect((try layer(firstID, in: viewModel)).style.shadowOpacity == 0.6)
+        #expect((try layer(secondID, in: viewModel)).style.shadowOpacity == 0.6)
+        #expect((try layer(lockedID, in: viewModel)).style.shadowOpacity == 0.4)
+        #expect((try layer(firstID, in: viewModel)).style.shadowEnabled)
+        #expect((try layer(secondID, in: viewModel)).style.shadowEnabled)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerShadowOpacityState == .mixed)
+        viewModel.redo()
+        #expect(viewModel.selectedLayerShadowOpacityState == .value(0.6))
+    }
+
+    @Test func layerStyleShadowOpacityControlReusesMixedNumericStepper() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("state: viewModel.selectedLayerShadowOpacityState"))
+        #expect(source.contains("value: selectedLayerShadowOpacityBinding"))
+        #expect(source.contains("image-editor-layer-style-shadow-opacity"))
+        #expect(source.contains("L10n.format(\"imageEditor.properties.shadowOpacityValue\""))
+    }
+
+    private func shadowOpacityFixture() -> Fixture {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        viewModel.document.layers[0].style.shadowOpacity = 0.25
+        viewModel.document.layers[1].style.shadowOpacity = 0.75
+        viewModel.document.layers[2].style.shadowOpacity = 0.4
+        viewModel.document.layers[2].isLocked = true
+        select(Set(fixture.layers.map(\.id)), primary: fixture.layers[0].id, in: viewModel)
+        return fixture
+    }
+
     @Test func layerStyleColorOverlayOpacityMixedValueConvergesAcrossEditableSelection() throws {
         let fixture = colorOverlayOpacityFixture()
         let viewModel = fixture.viewModel

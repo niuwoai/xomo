@@ -1,0 +1,39 @@
+{
+  "generated_at": "2026-07-19 16:58:11 +0800",
+  "total": 3,
+  "passed": 3,
+  "failed": 0,
+  "jobs": 3,
+  "results": [
+    {
+      "suite": "ImageEditorLayerRowBatchPropertyTests",
+      "method": "layerStyleShadowOpacityControlReusesMixedNumericStepper",
+      "identifier": "veilpicTests/ImageEditorLayerRowBatchPropertyTests/layerStyleShadowOpacityControlReusesMixedNumericStepper",
+      "file": "ImageEditorLayerRowBatchPropertyTests.swift",
+      "passed": true,
+      "duration": 6.821,
+      "issues": [],
+      "log": "ImageEditorLayerRowBatchPropertyTests.layerStyleShadowOpacityControlReusesMixedNumericStepper.log"
+    },
+    {
+      "suite": "ImageEditorLayerRowBatchPropertyTests",
+      "method": "layerStyleShadowOpacityMixedValueConvergesAcrossEditableSelection",
+      "identifier": "veilpicTests/ImageEditorLayerRowBatchPropertyTests/layerStyleShadowOpacityMixedValueConvergesAcrossEditableSelection",
+      "file": "ImageEditorLayerRowBatchPropertyTests.swift",
+      "passed": true,
+      "duration": 6.835,
+      "issues": [],
+      "log": "ImageEditorLayerRowBatchPropertyTests.layerStyleShadowOpacityMixedValueConvergesAcrossEditableSelection.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registrySetsLayerStyleShadowOpacityAcrossEditableSelection",
+      "identifier": "veilpicTests/XomoAutomationTests/registrySetsLayerStyleShadowOpacityAcrossEditableSelection",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 6.813,
+      "issues": [],
+      "log": "XomoAutomationTests.registrySetsLayerStyleShadowOpacityAcrossEditableSelection.log"
+    }
+  ]
+}

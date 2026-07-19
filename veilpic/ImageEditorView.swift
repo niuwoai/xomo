@@ -7018,12 +7018,15 @@ struct ImageEditorView: View {
                         step: 2
                     )
                 }
-                Stepper(
-                    L10n.format("imageEditor.properties.shadowOpacityValue", Int((viewModel.selectedLayerShadowOpacity * 100).rounded())),
+                layerStyleNumericStepper(
+                    state: viewModel.selectedLayerShadowOpacityState,
                     value: selectedLayerShadowOpacityBinding,
-                    in: 0.05...1,
-                    step: 0.05
-                )
+                    range: 0.05...1,
+                    step: 0.05,
+                    accessibilityIdentifier: "image-editor-layer-style-shadow-opacity"
+                ) { value in
+                    L10n.format("imageEditor.properties.shadowOpacityValue", Int((value * 100).rounded()))
+                }
                 HStack(spacing: 8) {
                     Text(L10n.text("imageEditor.properties.shadowColor"))
                         .font(.system(size: 10, weight: .medium))

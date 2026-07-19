@@ -281,6 +281,10 @@ extension ImageEditorViewModel {
         Double(document.selectedLayer?.style.shadowOpacity ?? 0.35)
     }
 
+    var selectedLayerShadowOpacityState: ImageEditorLayerStyleValueState<CGFloat> {
+        selectedLayerStyleValueState(\.shadowOpacity)
+    }
+
     var selectedLayerShadowColor: NSColor {
         document.selectedLayer?.style.shadowColor ?? .black
     }
