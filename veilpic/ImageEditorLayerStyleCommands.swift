@@ -321,6 +321,10 @@ extension ImageEditorViewModel {
         Double(document.selectedLayer?.style.shadowNoise ?? 0)
     }
 
+    var selectedLayerShadowNoiseState: ImageEditorLayerStyleValueState<CGFloat> {
+        selectedLayerStyleValueState(\.shadowNoise)
+    }
+
     var selectedLayerShadowContour: ImageEditorLayerEffectContour {
         document.selectedLayer?.style.shadowContour ?? .linear
     }

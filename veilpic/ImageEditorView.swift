@@ -7058,12 +7058,15 @@ struct ImageEditorView: View {
                 ) { value in
                     L10n.format("imageEditor.properties.shadowSpreadValue", Int(value.rounded()))
                 }
-                Stepper(
-                    L10n.format("imageEditor.properties.shadowNoiseValue", Int((viewModel.selectedLayerShadowNoise * 100).rounded())),
+                layerStyleNumericStepper(
+                    state: viewModel.selectedLayerShadowNoiseState,
                     value: selectedLayerShadowNoiseBinding,
-                    in: 0...1,
-                    step: 0.05
-                )
+                    range: 0...1,
+                    step: 0.05,
+                    accessibilityIdentifier: "image-editor-layer-style-shadow-noise"
+                ) { value in
+                    L10n.format("imageEditor.properties.shadowNoiseValue", Int((value * 100).rounded()))
+                }
                 layerStyleValuePicker(
                     state: viewModel.selectedLayerShadowContourState,
                     values: ImageEditorLayerEffectContour.allCases,

@@ -814,6 +814,57 @@ struct ImageEditorLayerRowBatchPropertyTests {
         return fixture
     }
 
+    @Test func layerStyleShadowNoiseMixedValueConvergesAcrossEditableSelection() throws {
+        let fixture = shadowNoiseFixture()
+        let viewModel = fixture.viewModel
+        let firstID = fixture.layers[0].id
+        let secondID = fixture.layers[1].id
+        let lockedID = fixture.layers[2].id
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.selectedLayerShadowNoiseState == .mixed)
+        viewModel.setSelectedLayerShadowNoise(0.6)
+        #expect(viewModel.selectedLayerShadowNoiseState == .value(0.6))
+        #expect((try layer(firstID, in: viewModel)).style.shadowNoise == 0.6)
+        #expect((try layer(secondID, in: viewModel)).style.shadowNoise == 0.6)
+        #expect((try layer(lockedID, in: viewModel)).style.shadowNoise == 0.4)
+        #expect((try layer(firstID, in: viewModel)).style.shadowEnabled)
+        #expect((try layer(secondID, in: viewModel)).style.shadowEnabled)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerShadowNoiseState == .mixed)
+        viewModel.redo()
+        #expect(viewModel.selectedLayerShadowNoiseState == .value(0.6))
+    }
+
+    @Test func layerStyleShadowNoiseControlReusesMixedNumericStepper() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("state: viewModel.selectedLayerShadowNoiseState"))
+        #expect(source.contains("value: selectedLayerShadowNoiseBinding"))
+        #expect(source.contains("image-editor-layer-style-shadow-noise"))
+        #expect(source.contains("L10n.format(\"imageEditor.properties.shadowNoiseValue\""))
+    }
+
+    private func shadowNoiseFixture() -> Fixture {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        viewModel.document.layers[0].style.shadowNoise = 0.15
+        viewModel.document.layers[1].style.shadowNoise = 0.8
+        viewModel.document.layers[2].style.shadowNoise = 0.4
+        viewModel.document.layers[2].isLocked = true
+        select(Set(fixture.layers.map(\.id)), primary: fixture.layers[0].id, in: viewModel)
+        return fixture
+    }
+
     @Test func layerStyleShadowSpreadMixedValueConvergesAcrossEditableSelection() throws {
         let fixture = shadowSpreadFixture()
         let viewModel = fixture.viewModel
