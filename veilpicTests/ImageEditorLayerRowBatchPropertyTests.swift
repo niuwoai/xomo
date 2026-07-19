@@ -254,6 +254,45 @@ struct ImageEditorLayerRowBatchPropertyTests {
         #expect(effectSource.contains("image-editor-layer-style-effect-"))
     }
 
+    @Test func layerStyleAngleBatchUpdatesEveryEditableSelectionWithOneUndoStep() throws {
+        try assertLayerStyleAngleBatch(
+            angle: 35,
+            configure: { first, second in
+                first.shadowUsesGlobalLight = true
+                second.shadowUsesGlobalLight = false
+            },
+            apply: { $0.setSelectedLayerShadowAngle($1) },
+            enabled: { $0.shadowEnabled },
+            resolvedAngle: { style, globalAngle in
+                style.resolvedShadowAngle(globalLightAngle: globalAngle)
+            }
+        )
+        try assertLayerStyleAngleBatch(
+            angle: -50,
+            configure: { first, second in
+                first.innerShadowUsesGlobalLight = false
+                second.innerShadowUsesGlobalLight = true
+            },
+            apply: { $0.setSelectedLayerInnerShadowAngle($1) },
+            enabled: { $0.innerShadowEnabled },
+            resolvedAngle: { style, globalAngle in
+                style.resolvedInnerShadowAngle(globalLightAngle: globalAngle)
+            }
+        )
+        try assertLayerStyleAngleBatch(
+            angle: 70,
+            configure: { first, second in
+                first.bevelUsesGlobalLight = true
+                second.bevelUsesGlobalLight = false
+            },
+            apply: { $0.setSelectedLayerBevelAngle($1) },
+            enabled: { $0.bevelEnabled },
+            resolvedAngle: { style, globalAngle in
+                style.resolvedBevelAngle(globalLightAngle: globalAngle)
+            }
+        )
+    }
+
     @Test func layerPanelRoutesEveryRowPropertyControlThroughSelectionAwareMode() throws {
         let repositoryRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
@@ -316,5 +355,55 @@ struct ImageEditorLayerRowBatchPropertyTests {
         case .satin: viewModel.toggleSelectedLayerSatin()
         case .bevel: viewModel.toggleSelectedLayerBevel()
         }
+    }
+
+    private func assertLayerStyleAngleBatch(
+        angle: CGFloat,
+        configure: (inout ImageEditorLayerStyle, inout ImageEditorLayerStyle) -> Void,
+        apply: (ImageEditorViewModel, Double) -> Void,
+        enabled: (ImageEditorLayerStyle) -> Bool,
+        resolvedAngle: (ImageEditorLayerStyle, CGFloat) -> CGFloat
+    ) throws {
+        let fixture = configuredAngleFixture(configure)
+        let viewModel = fixture.viewModel
+        let firstID = fixture.layers[0].id
+        let secondID = fixture.layers[1].id
+        let lockedID = fixture.layers[2].id
+        let originalGlobalAngle = viewModel.document.globalLightAngle
+        select([firstID, secondID, lockedID], primary: firstID, in: viewModel)
+        let historyCount = viewModel.document.history.count
+
+        apply(viewModel, Double(angle))
+
+        let firstStyle = try layer(firstID, in: viewModel).style
+        let secondStyle = try layer(secondID, in: viewModel).style
+        #expect(viewModel.document.globalLightAngle == angle)
+        #expect(enabled(firstStyle))
+        #expect(enabled(secondStyle))
+        #expect(resolvedAngle(firstStyle, viewModel.document.globalLightAngle) == angle)
+        #expect(resolvedAngle(secondStyle, viewModel.document.globalLightAngle) == angle)
+        #expect(!(try layer(lockedID, in: viewModel).style.hasConfiguredEffects))
+        #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStyle"))
+
+        viewModel.undo()
+        #expect(viewModel.document.globalLightAngle == originalGlobalAngle)
+        #expect(!enabled(try layer(firstID, in: viewModel).style))
+        #expect(!enabled(try layer(secondID, in: viewModel).style))
+        #expect(!(try layer(lockedID, in: viewModel).style.hasConfiguredEffects))
+    }
+
+    private func configuredAngleFixture(
+        _ configure: (inout ImageEditorLayerStyle, inout ImageEditorLayerStyle) -> Void
+    ) -> Fixture {
+        let fixture = makeFixture()
+        var firstStyle = fixture.viewModel.document.layers[0].style
+        var secondStyle = fixture.viewModel.document.layers[1].style
+        configure(&firstStyle, &secondStyle)
+        fixture.viewModel.document.layers[0].style = firstStyle
+        fixture.viewModel.document.layers[1].style = secondStyle
+        fixture.viewModel.document.layers[2].isLocked = true
+        return fixture
     }
 }

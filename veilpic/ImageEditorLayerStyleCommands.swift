@@ -65,6 +65,12 @@ enum ImageEditorLayerStyleSelectionState: Equatable {
     }
 }
 
+private enum ImageEditorLayerLightEffect {
+    case shadow
+    case innerShadow
+    case bevel
+}
+
 @MainActor
 extension ImageEditorViewModel {
     var selectedLayerHasStroke: Bool {
@@ -882,24 +888,7 @@ extension ImageEditorViewModel {
     }
 
     func setSelectedLayerShadowAngle(_ angle: Double) {
-        guard let index = document.selectedLayerIndex,
-              canEditLayerStyle(document.layers[index])
-        else {
-            statusText = L10n.text("imageEditor.status.layerLocked")
-            return
-        }
-        let normalizedAngle = normalizedLightAngle(CGFloat(angle))
-        pushUndo()
-        document.layers[index].style.shadowEnabled = true
-        if document.layers[index].style.shadowUsesGlobalLight {
-            document.globalLightAngle = normalizedAngle
-        }
-        document.layers[index].style.shadowAngle = normalizedAngle
-        document.layers[index].style.shadowOffset = document.layers[index].style.resolvedShadowOffset(
-            globalLightAngle: document.globalLightAngle
-        )
-        appendHistory(L10n.text("imageEditor.history.layerStyle"))
-        statusText = L10n.text("imageEditor.status.layerStyleUpdated")
+        setSelectedLayerLightAngle(angle, effect: .shadow)
     }
 
     func setSelectedLayerShadowOffsetX(_ offset: Double) {
@@ -994,22 +983,7 @@ extension ImageEditorViewModel {
     }
 
     func setSelectedLayerInnerShadowAngle(_ angle: Double) {
-        guard let index = document.selectedLayerIndex,
-              canEditLayerStyle(document.layers[index])
-        else {
-            statusText = L10n.text("imageEditor.status.layerLocked")
-            return
-        }
-        let normalizedAngle = normalizedLightAngle(CGFloat(angle))
-        pushUndo()
-        document.layers[index].style.innerShadowEnabled = true
-        document.layers[index].style.innerShadowColor = innerShadowColor()
-        if document.layers[index].style.innerShadowUsesGlobalLight {
-            document.globalLightAngle = normalizedAngle
-        }
-        document.layers[index].style.innerShadowAngle = normalizedAngle
-        appendHistory(L10n.text("imageEditor.history.layerStyle"))
-        statusText = L10n.text("imageEditor.status.layerStyleUpdated")
+        setSelectedLayerLightAngle(angle, effect: .innerShadow)
     }
 
     func setSelectedLayerInnerShadowUsesGlobalLight(_ enabled: Bool) {
@@ -1288,21 +1262,7 @@ extension ImageEditorViewModel {
     }
 
     func setSelectedLayerBevelAngle(_ angle: Double) {
-        guard let index = document.selectedLayerIndex,
-              canEditLayerStyle(document.layers[index])
-        else {
-            statusText = L10n.text("imageEditor.status.layerLocked")
-            return
-        }
-        let normalizedAngle = normalizedLightAngle(CGFloat(angle))
-        pushUndo()
-        document.layers[index].style.bevelEnabled = true
-        if document.layers[index].style.bevelUsesGlobalLight {
-            document.globalLightAngle = normalizedAngle
-        }
-        document.layers[index].style.bevelAngle = normalizedAngle
-        appendHistory(L10n.text("imageEditor.history.layerStyle"))
-        statusText = L10n.text("imageEditor.status.layerStyleUpdated")
+        setSelectedLayerLightAngle(angle, effect: .bevel)
     }
 
     func setSelectedLayerBevelUsesGlobalLight(_ enabled: Bool) {
@@ -1329,6 +1289,63 @@ extension ImageEditorViewModel {
             normalized += 360
         }
         return normalized
+    }
+
+    private func setSelectedLayerLightAngle(
+        _ angle: Double,
+        effect: ImageEditorLayerLightEffect
+    ) {
+        let targetIndices = selectedLayerStyleTargetIndices()
+        guard !targetIndices.isEmpty else {
+            statusText = L10n.text("imageEditor.status.layerLocked")
+            return
+        }
+        let normalizedAngle = normalizedLightAngle(CGFloat(angle))
+        let updatesGlobalLight = targetIndices.contains {
+            self.layerStyleUsesGlobalLight(self.document.layers[$0].style, effect: effect)
+        }
+        pushUndo()
+        if updatesGlobalLight {
+            document.globalLightAngle = normalizedAngle
+        }
+        for index in targetIndices {
+            var style = document.layers[index].style
+            setLayerStyleLightAngle(normalizedAngle, effect: effect, style: &style)
+            document.layers[index].style = style
+        }
+        appendHistory(L10n.text("imageEditor.history.layerStyle"))
+        statusText = L10n.text("imageEditor.status.layerStyleUpdated")
+    }
+
+    private func layerStyleUsesGlobalLight(
+        _ style: ImageEditorLayerStyle,
+        effect: ImageEditorLayerLightEffect
+    ) -> Bool {
+        switch effect {
+        case .shadow: style.shadowUsesGlobalLight
+        case .innerShadow: style.innerShadowUsesGlobalLight
+        case .bevel: style.bevelUsesGlobalLight
+        }
+    }
+
+    private func setLayerStyleLightAngle(
+        _ angle: CGFloat,
+        effect: ImageEditorLayerLightEffect,
+        style: inout ImageEditorLayerStyle
+    ) {
+        switch effect {
+        case .shadow:
+            style.shadowEnabled = true
+            style.shadowAngle = angle
+            style.shadowOffset = style.resolvedShadowOffset(globalLightAngle: document.globalLightAngle)
+        case .innerShadow:
+            style.innerShadowEnabled = true
+            style.innerShadowColor = innerShadowColor()
+            style.innerShadowAngle = angle
+        case .bevel:
+            style.bevelEnabled = true
+            style.bevelAngle = angle
+        }
     }
 
     private func toggleSelectedLayerStyleEffect(_ effect: ImageEditorLayerStyleEffect) {
