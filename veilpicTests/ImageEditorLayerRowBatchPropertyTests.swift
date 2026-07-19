@@ -814,6 +814,57 @@ struct ImageEditorLayerRowBatchPropertyTests {
         return fixture
     }
 
+    @Test func layerStyleShadowBlurMixedValueConvergesAcrossEditableSelection() throws {
+        let fixture = shadowBlurFixture()
+        let viewModel = fixture.viewModel
+        let firstID = fixture.layers[0].id
+        let secondID = fixture.layers[1].id
+        let lockedID = fixture.layers[2].id
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.selectedLayerShadowBlurState == .mixed)
+        viewModel.setSelectedLayerShadowBlur(12)
+        #expect(viewModel.selectedLayerShadowBlurState == .value(12))
+        #expect((try layer(firstID, in: viewModel)).style.shadowBlur == 12)
+        #expect((try layer(secondID, in: viewModel)).style.shadowBlur == 12)
+        #expect((try layer(lockedID, in: viewModel)).style.shadowBlur == 9)
+        #expect((try layer(firstID, in: viewModel)).style.shadowEnabled)
+        #expect((try layer(secondID, in: viewModel)).style.shadowEnabled)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerShadowBlurState == .mixed)
+        viewModel.redo()
+        #expect(viewModel.selectedLayerShadowBlurState == .value(12))
+    }
+
+    @Test func layerStyleShadowBlurControlReusesMixedNumericStepper() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("state: viewModel.selectedLayerShadowBlurState"))
+        #expect(source.contains("value: selectedLayerShadowBlurBinding"))
+        #expect(source.contains("image-editor-layer-style-shadow-blur"))
+        #expect(source.contains("L10n.format(\"imageEditor.properties.shadowBlurValue\""))
+    }
+
+    private func shadowBlurFixture() -> Fixture {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        viewModel.document.layers[0].style.shadowBlur = 4
+        viewModel.document.layers[1].style.shadowBlur = 18
+        viewModel.document.layers[2].style.shadowBlur = 9
+        viewModel.document.layers[2].isLocked = true
+        select(Set(fixture.layers.map(\.id)), primary: fixture.layers[0].id, in: viewModel)
+        return fixture
+    }
+
     @Test func layerStyleShadowOpacityMixedValueConvergesAcrossEditableSelection() throws {
         let fixture = shadowOpacityFixture()
         let viewModel = fixture.viewModel

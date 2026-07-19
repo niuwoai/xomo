@@ -305,6 +305,10 @@ extension ImageEditorViewModel {
         Double(document.selectedLayer?.style.shadowBlur ?? 8)
     }
 
+    var selectedLayerShadowBlurState: ImageEditorLayerStyleValueState<CGFloat> {
+        selectedLayerStyleValueState(\.shadowBlur)
+    }
+
     var selectedLayerShadowSpread: Double {
         Double(document.selectedLayer?.style.shadowSpread ?? 0)
     }

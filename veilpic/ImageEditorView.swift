@@ -7040,12 +7040,15 @@ struct ImageEditorView: View {
                     }
                     .buttonStyle(EditorTextButtonStyle())
                 }
-                Stepper(
-                    L10n.format("imageEditor.properties.shadowBlurValue", Int(viewModel.selectedLayerShadowBlur.rounded())),
+                layerStyleNumericStepper(
+                    state: viewModel.selectedLayerShadowBlurState,
                     value: selectedLayerShadowBlurBinding,
-                    in: 0...30,
-                    step: 1
-                )
+                    range: 0...30,
+                    step: 1,
+                    accessibilityIdentifier: "image-editor-layer-style-shadow-blur"
+                ) { value in
+                    L10n.format("imageEditor.properties.shadowBlurValue", Int(value.rounded()))
+                }
                 Stepper(
                     L10n.format("imageEditor.properties.shadowSpreadValue", Int(viewModel.selectedLayerShadowSpread.rounded())),
                     value: selectedLayerShadowSpreadBinding,
