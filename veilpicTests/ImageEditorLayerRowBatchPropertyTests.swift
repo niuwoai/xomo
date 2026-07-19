@@ -814,6 +814,57 @@ struct ImageEditorLayerRowBatchPropertyTests {
         return fixture
     }
 
+    @Test func layerStyleInnerShadowOpacityMixedValueConvergesAcrossEditableSelection() throws {
+        let fixture = innerShadowOpacityFixture()
+        let viewModel = fixture.viewModel
+        let firstID = fixture.layers[0].id
+        let secondID = fixture.layers[1].id
+        let lockedID = fixture.layers[2].id
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.selectedLayerInnerShadowOpacityState == .mixed)
+        viewModel.setSelectedLayerInnerShadowOpacity(0.6)
+        #expect(viewModel.selectedLayerInnerShadowOpacityState == .value(0.6))
+        #expect((try layer(firstID, in: viewModel)).style.innerShadowOpacity == 0.6)
+        #expect((try layer(secondID, in: viewModel)).style.innerShadowOpacity == 0.6)
+        #expect((try layer(lockedID, in: viewModel)).style.innerShadowOpacity == 0.4)
+        #expect((try layer(firstID, in: viewModel)).style.innerShadowEnabled)
+        #expect((try layer(secondID, in: viewModel)).style.innerShadowEnabled)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerInnerShadowOpacityState == .mixed)
+        viewModel.redo()
+        #expect(viewModel.selectedLayerInnerShadowOpacityState == .value(0.6))
+    }
+
+    @Test func layerStyleInnerShadowOpacityControlReusesMixedNumericStepper() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("state: viewModel.selectedLayerInnerShadowOpacityState"))
+        #expect(source.contains("value: selectedLayerInnerShadowOpacityBinding"))
+        #expect(source.contains("image-editor-layer-style-inner-shadow-opacity"))
+        #expect(source.contains("L10n.format(\"imageEditor.properties.innerShadowOpacityValue\""))
+    }
+
+    private func innerShadowOpacityFixture() -> Fixture {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        viewModel.document.layers[0].style.innerShadowOpacity = 0.2
+        viewModel.document.layers[1].style.innerShadowOpacity = 0.8
+        viewModel.document.layers[2].style.innerShadowOpacity = 0.4
+        viewModel.document.layers[2].isLocked = true
+        select(Set(fixture.layers.map(\.id)), primary: fixture.layers[0].id, in: viewModel)
+        return fixture
+    }
+
     @Test func layerStyleShadowDistanceMixedValueConvergesAcrossEditableSelection() throws {
         let fixture = shadowDistanceFixture()
         let viewModel = fixture.viewModel

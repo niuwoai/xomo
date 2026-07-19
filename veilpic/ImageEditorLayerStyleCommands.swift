@@ -367,6 +367,10 @@ extension ImageEditorViewModel {
         Double(document.selectedLayer?.style.innerShadowOpacity ?? 0.35)
     }
 
+    var selectedLayerInnerShadowOpacityState: ImageEditorLayerStyleValueState<CGFloat> {
+        selectedLayerStyleValueState(\.innerShadowOpacity)
+    }
+
     var selectedLayerInnerShadowBlur: Double {
         Double(document.selectedLayer?.style.innerShadowBlur ?? 8)
     }

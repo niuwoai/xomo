@@ -1,7 +1,8 @@
 # Xomo MCP 与 CLI
 
-> 当前版本：v2.12.0-rc381
+> 当前版本：v2.12.0-rc382
 
+rc382 不新增破坏性协议字段；既有 `xomo.layer.style_settings property=innerShadowOpacity value=<0.05...1>` 补充多选批量行为和数值 schema 回归。调用会统一更新全部可编辑选中层、启用内阴影并保持单步 History/Undo，锁定及不适用图层跳过；本地混合百分比 Stepper 与 MCP 继续共享同一 setter。
 rc381 不新增破坏性协议字段；既有 `xomo.layer.style_settings property=shadowDistance value=<0...80>` 补充多选批量行为和数值 schema 回归。调用会统一更新全部可编辑选中层、启用投影、同步各层偏移向量并保持单步 History/Undo，锁定及不适用图层跳过；本地混合距离 Stepper 与 MCP 继续共享同一 setter。
 rc380 不新增破坏性协议字段；既有 `xomo.layer.style_settings property=shadowNoise value=<0...1>` 补充多选批量行为和数值 schema 回归。调用会统一更新全部可编辑选中层、启用投影并保持单步 History/Undo，锁定及不适用图层跳过；本地混合百分比 Stepper 与 MCP 继续共享同一 setter。
 rc379 不新增破坏性协议字段；既有 `xomo.layer.style_settings property=shadowSpread value=<0...24>` 补充多选批量行为和数值 schema 回归。调用会统一更新全部可编辑选中层、启用投影并保持单步 History/Undo，锁定及不适用图层跳过；本地混合尺寸 Stepper 与 MCP 继续共享同一 setter。
