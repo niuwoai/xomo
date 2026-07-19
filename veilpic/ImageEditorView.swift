@@ -4001,14 +4001,6 @@ struct ImageEditorView: View {
         }
     }
 
-    private var selectedLayerStrokeFillTypeBinding: Binding<ImageEditorStrokeFillType> {
-        Binding {
-            viewModel.selectedLayerStrokeFillType
-        } set: { value in
-            viewModel.setSelectedLayerStrokeFillType(value)
-        }
-    }
-
     private var selectedLayerStrokeGradientStyleBinding: Binding<ImageEditorGradientFillStyle> {
         Binding {
             viewModel.selectedLayerStrokeGradientStyle
@@ -7022,13 +7014,16 @@ struct ImageEditorView: View {
                     in: 0.05...1,
                     step: 0.05
                 )
-                Picker(L10n.text("imageEditor.properties.strokeFillType"), selection: selectedLayerStrokeFillTypeBinding) {
-                    ForEach(ImageEditorStrokeFillType.allCases) { fillType in
-                        Text(fillType.title).tag(fillType)
-                    }
+                layerStyleValuePicker(
+                    state: viewModel.selectedLayerStrokeFillTypeState,
+                    values: ImageEditorStrokeFillType.allCases,
+                    labelKey: "imageEditor.properties.strokeFillType",
+                    accessibilityIdentifier: "image-editor-layer-style-stroke-fill-type",
+                    title: \.title
+                ) { fillType in
+                    viewModel.setSelectedLayerStrokeFillType(fillType)
                 }
-                .pickerStyle(.menu)
-                if viewModel.selectedLayerStrokeFillType == .color {
+                if viewModel.selectedLayerStrokeFillTypeState.value == .color {
                     HStack(spacing: 8) {
                         Text(L10n.text("imageEditor.properties.strokeColor"))
                             .font(.system(size: 10, weight: .medium))
@@ -7042,7 +7037,7 @@ struct ImageEditorView: View {
                         }
                         .buttonStyle(EditorTextButtonStyle())
                     }
-                } else if viewModel.selectedLayerStrokeFillType == .gradient {
+                } else if viewModel.selectedLayerStrokeFillTypeState.value == .gradient {
                     Picker(L10n.text("imageEditor.properties.strokeGradientStyle"), selection: selectedLayerStrokeGradientStyleBinding) {
                         ForEach(ImageEditorGradientFillStyle.allCases) { style in
                             Text(style.title).tag(style)
@@ -7055,7 +7050,7 @@ struct ImageEditorView: View {
                         in: -180...180,
                         step: 15
                     )
-                } else {
+                } else if viewModel.selectedLayerStrokeFillTypeState.value == .pattern {
                     Picker(L10n.text("imageEditor.properties.strokePatternKind"), selection: selectedLayerStrokePatternKindBinding) {
                         ForEach(ImageEditorPatternOverlayKind.allCases) { kind in
                             Text(kind.title).tag(kind)

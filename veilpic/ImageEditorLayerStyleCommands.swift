@@ -233,6 +233,10 @@ extension ImageEditorViewModel {
         document.selectedLayer?.style.strokeFillType ?? .color
     }
 
+    var selectedLayerStrokeFillTypeState: ImageEditorLayerStyleValueState<ImageEditorStrokeFillType> {
+        selectedLayerStyleValueState(\.strokeFillType)
+    }
+
     var selectedLayerStrokeColor: NSColor {
         document.selectedLayer?.style.strokeColor ?? .white
     }

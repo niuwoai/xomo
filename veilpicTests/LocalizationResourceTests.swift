@@ -463,6 +463,31 @@ struct LocalizationResourceTests {
         }
     }
 
+    @Test func layerStyleStrokeFillTypeMixedValueIsLocalizedInEverySupportedLanguage() throws {
+        let paths = try Self.repositoryPaths()
+        let expectedValues = [
+            "zh-Hans": ["描边填充", "多个值", "颜色", "渐变", "图案"],
+            "en": ["Stroke Fill", "Multiple Values", "Color", "Gradient", "Pattern"],
+            "ja": ["境界線の塗り", "複数の値", "カラー", "グラデーション", "パターン"]
+        ]
+        let keys = [
+            "imageEditor.properties.strokeFillType",
+            "imageEditor.properties.multipleValues",
+            "imageEditor.strokeFillType.color",
+            "imageEditor.strokeFillType.gradient",
+            "imageEditor.strokeFillType.pattern"
+        ]
+
+        for (localizationID, expected) in expectedValues {
+            let strings = try Self.stringTable(
+                tableName: "Localizable",
+                localizationID: localizationID,
+                appDirectory: paths.appDirectory
+            )
+            #expect(keys.compactMap { strings[$0] } == expected)
+        }
+    }
+
     @Test func fingerPaintingIsLocalizedInEverySupportedLanguage() throws {
         let paths = try Self.repositoryPaths()
         let expectedValues = [

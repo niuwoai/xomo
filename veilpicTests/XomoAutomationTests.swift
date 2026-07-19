@@ -3095,6 +3095,29 @@ struct XomoAutomationTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStyle"))
     }
 
+    @Test func registrySetsLayerStyleStrokeFillTypeWithAdvertisedEnum() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        try assertStrokeFillTypeSchema(in: toolsResponse)
+
+        let result = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("strokeFillType"),
+                "fillType": .string("pattern")
+            ]
+        ))
+
+        #expect(result.ok)
+        #expect(viewModel.document.selectedLayer?.style.strokeFillType == .pattern)
+        #expect(viewModel.document.selectedLayer?.style.strokeEnabled == true)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStyle"))
+    }
+
     @Test func registryCreatesAppliesListsAndDeletesPersistedLayerStylePresets() throws {
         let suiteName = "XomoAutomationTests.layerStylePresets.\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suiteName) ?? .standard
@@ -3916,6 +3939,18 @@ struct XomoAutomationTests {
         #expect(propertySchema["enum"]?.arrayValue?.contains(.string("strokePosition")) == true)
         #expect(positionSchema["enum"] == .array([
             .string("outside"), .string("center"), .string("inside")
+        ]))
+    }
+
+    private func assertStrokeFillTypeSchema(in response: XomoAutomationWireResponse) throws {
+        let styleTool = try #require(automationTool(named: "xomo.layer.style_settings", in: response))
+        let inputSchema = try #require(styleTool["inputSchema"]?.objectValue)
+        let properties = try #require(inputSchema["properties"]?.objectValue)
+        let propertySchema = try #require(properties["property"]?.objectValue)
+        let fillTypeSchema = try #require(properties["fillType"]?.objectValue)
+        #expect(propertySchema["enum"]?.arrayValue?.contains(.string("strokeFillType")) == true)
+        #expect(fillTypeSchema["enum"] == .array([
+            .string("color"), .string("gradient"), .string("pattern")
         ]))
     }
 

@@ -381,6 +381,62 @@ struct ImageEditorLayerRowBatchPropertyTests {
         return fixture
     }
 
+    @Test func layerStyleStrokeFillTypeMixedValueConvergesAcrossEditableSelection() throws {
+        try assertStrokeFillTypeConvergence()
+    }
+
+    @Test func layerStyleStrokeFillTypePickerHidesIncorrectMixedBranch() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("state: viewModel.selectedLayerStrokeFillTypeState"))
+        #expect(source.contains("image-editor-layer-style-stroke-fill-type"))
+        #expect(source.contains("viewModel.setSelectedLayerStrokeFillType(fillType)"))
+        #expect(source.contains("selectedLayerStrokeFillTypeState.value == .color"))
+        #expect(source.contains("selectedLayerStrokeFillTypeState.value == .gradient"))
+        #expect(source.contains("selectedLayerStrokeFillTypeState.value == .pattern"))
+        #expect(!source.contains("selectedLayerStrokeFillTypeBinding"))
+    }
+
+    private func assertStrokeFillTypeConvergence() throws {
+        let fixture = strokeFillTypeFixture()
+        let viewModel = fixture.viewModel
+        let firstID = fixture.layers[0].id
+        let secondID = fixture.layers[1].id
+        let lockedID = fixture.layers[2].id
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.selectedLayerStrokeFillTypeState == .mixed)
+        viewModel.setSelectedLayerStrokeFillType(.pattern)
+        #expect(viewModel.selectedLayerStrokeFillTypeState == .value(.pattern))
+        #expect((try layer(firstID, in: viewModel)).style.strokeFillType == .pattern)
+        #expect((try layer(secondID, in: viewModel)).style.strokeFillType == .pattern)
+        #expect((try layer(lockedID, in: viewModel)).style.strokeFillType == .color)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerStrokeFillTypeState == .mixed)
+        viewModel.redo()
+        #expect(viewModel.selectedLayerStrokeFillTypeState == .value(.pattern))
+    }
+
+    private func strokeFillTypeFixture() -> Fixture {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        viewModel.document.layers[0].style.strokeFillType = .color
+        viewModel.document.layers[1].style.strokeFillType = .gradient
+        viewModel.document.layers[2].style.strokeFillType = .color
+        viewModel.document.layers[2].isLocked = true
+        select(Set(fixture.layers.map(\.id)), primary: fixture.layers[0].id, in: viewModel)
+        return fixture
+    }
+
     @Test func layerStyleSatinInvertMixedStateConvergesAcrossEditableSelection() throws {
         try assertSatinInvertConvergence()
     }

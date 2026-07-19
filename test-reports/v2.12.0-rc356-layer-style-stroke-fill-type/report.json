@@ -1,0 +1,49 @@
+{
+  "generated_at": "2026-07-19 10:15:30 +0800",
+  "total": 4,
+  "passed": 4,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorLayerRowBatchPropertyTests",
+      "method": "layerStyleStrokeFillTypeMixedValueConvergesAcrossEditableSelection",
+      "identifier": "veilpicTests/ImageEditorLayerRowBatchPropertyTests/layerStyleStrokeFillTypeMixedValueConvergesAcrossEditableSelection",
+      "file": "ImageEditorLayerRowBatchPropertyTests.swift",
+      "passed": true,
+      "duration": 4.796,
+      "issues": [],
+      "log": "ImageEditorLayerRowBatchPropertyTests.layerStyleStrokeFillTypeMixedValueConvergesAcrossEditableSelection.log"
+    },
+    {
+      "suite": "ImageEditorLayerRowBatchPropertyTests",
+      "method": "layerStyleStrokeFillTypePickerHidesIncorrectMixedBranch",
+      "identifier": "veilpicTests/ImageEditorLayerRowBatchPropertyTests/layerStyleStrokeFillTypePickerHidesIncorrectMixedBranch",
+      "file": "ImageEditorLayerRowBatchPropertyTests.swift",
+      "passed": true,
+      "duration": 3.205,
+      "issues": [],
+      "log": "ImageEditorLayerRowBatchPropertyTests.layerStyleStrokeFillTypePickerHidesIncorrectMixedBranch.log"
+    },
+    {
+      "suite": "LocalizationResourceTests",
+      "method": "layerStyleStrokeFillTypeMixedValueIsLocalizedInEverySupportedLanguage",
+      "identifier": "veilpicTests/LocalizationResourceTests/layerStyleStrokeFillTypeMixedValueIsLocalizedInEverySupportedLanguage",
+      "file": "LocalizationResourceTests.swift",
+      "passed": true,
+      "duration": 3.235,
+      "issues": [],
+      "log": "LocalizationResourceTests.layerStyleStrokeFillTypeMixedValueIsLocalizedInEverySupportedLanguage.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registrySetsLayerStyleStrokeFillTypeWithAdvertisedEnum",
+      "identifier": "veilpicTests/XomoAutomationTests/registrySetsLayerStyleStrokeFillTypeWithAdvertisedEnum",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 3.226,
+      "issues": [],
+      "log": "XomoAutomationTests.registrySetsLayerStyleStrokeFillTypeWithAdvertisedEnum.log"
+    }
+  ]
+}
