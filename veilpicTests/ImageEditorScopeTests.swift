@@ -1510,6 +1510,21 @@ struct ImageEditorScopeTests {
         #expect(L10n.text("imageEditor.export.scope.slice") != "imageEditor.export.scope.slice")
     }
 
+    @Test func exportPanelUsesSharedLabelGridAndSingleLineScopeSegments() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorExportPanel.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("static let panelWidth: CGFloat = 520"))
+        #expect(source.contains("static let labelWidth: CGFloat = 62"))
+        #expect(source.contains("private func exportFormRow<Content: View>"))
+        #expect(source.contains(".frame(width: Layout.labelWidth, alignment: .leading)"))
+        #expect(source.contains(".lineLimit(1)"))
+        #expect(source.contains(".minimumScaleFactor(0.75)"))
+        #expect(source.components(separatedBy: "exportFormRow(").count - 1 >= 7)
+    }
+
     @Test func layerRowsExposeTheSameSelectedLayerExportAction() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorLayerPanel.swift"),

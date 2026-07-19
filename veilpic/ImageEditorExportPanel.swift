@@ -23,6 +23,14 @@ enum ImageEditorExportScaleFormatter {
 struct ImageEditorExportPanel: View {
     @ObservedObject var viewModel: ImageEditorViewModel
 
+    private enum Layout {
+        static let panelWidth: CGFloat = 520
+        static let labelWidth: CGFloat = 62
+        static let rowSpacing: CGFloat = 10
+        static let menuWidth: CGFloat = 180
+        static let namingMenuWidth: CGFloat = 220
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
@@ -39,54 +47,85 @@ struct ImageEditorExportPanel: View {
             }
 
             VStack(alignment: .leading, spacing: 10) {
-                Picker(L10n.text("imageEditor.export.format"), selection: formatBinding) {
-                    ForEach(ImageEditorExportFormat.allCases) { format in
-                        Text(format.title)
-                            .tag(format)
-                            .disabled(format == .svg && !viewModel.canExportSVG)
-                    }
-                }
-                .pickerStyle(.menu)
-
-                Picker(L10n.text("imageEditor.export.scope"), selection: scopeBinding) {
-                    ForEach(ImageEditorExportScope.allCases) { scope in
-                        Text(scope.title)
-                            .tag(scope)
-                            .disabled(isScopeDisabled(scope))
-                    }
-                }
-                .pickerStyle(.segmented)
-
-                if viewModel.exportSettings.scope == .slice {
-                    Picker(L10n.text("imageEditor.export.slice"), selection: sliceBinding) {
-                        ForEach(viewModel.availableSlices) { slice in
-                            Text(slice.name).tag(Optional(slice.id))
+                exportFormRow(L10n.text("imageEditor.export.format")) {
+                    Picker("", selection: formatBinding) {
+                        ForEach(ImageEditorExportFormat.allCases) { format in
+                            Text(format.title)
+                                .tag(format)
+                                .disabled(format == .svg && !viewModel.canExportSVG)
                         }
                     }
+                    .labelsHidden()
                     .pickerStyle(.menu)
+                    .frame(width: Layout.menuWidth, alignment: .leading)
+                    .accessibilityLabel(L10n.text("imageEditor.export.format"))
                 }
 
-                Picker(L10n.text("imageEditor.export.namingRule"), selection: namingRuleBinding) {
-                    ForEach(ImageEditorExportNamingRule.allCases) { rule in
-                        Text(rule.title).tag(rule)
+                exportFormRow(L10n.text("imageEditor.export.scope")) {
+                    Picker("", selection: scopeBinding) {
+                        ForEach(ImageEditorExportScope.allCases) { scope in
+                            Text(scope.title)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.75)
+                                .tag(scope)
+                                .disabled(isScopeDisabled(scope))
+                        }
+                    }
+                    .labelsHidden()
+                    .pickerStyle(.segmented)
+                    .controlSize(.small)
+                    .accessibilityLabel(L10n.text("imageEditor.export.scope"))
+                }
+
+                if viewModel.exportSettings.scope == .slice {
+                    exportFormRow(L10n.text("imageEditor.export.slice")) {
+                        Picker("", selection: sliceBinding) {
+                            ForEach(viewModel.availableSlices) { slice in
+                                Text(slice.name).tag(Optional(slice.id))
+                            }
+                        }
+                        .labelsHidden()
+                        .pickerStyle(.menu)
+                        .frame(width: Layout.namingMenuWidth, alignment: .leading)
+                        .accessibilityLabel(L10n.text("imageEditor.export.slice"))
                     }
                 }
-                .pickerStyle(.menu)
+
+                exportFormRow(L10n.text("imageEditor.export.namingRule")) {
+                    Picker("", selection: namingRuleBinding) {
+                        ForEach(ImageEditorExportNamingRule.allCases) { rule in
+                            Text(rule.title).tag(rule)
+                        }
+                    }
+                    .labelsHidden()
+                    .pickerStyle(.menu)
+                    .frame(width: Layout.namingMenuWidth, alignment: .leading)
+                    .accessibilityLabel(L10n.text("imageEditor.export.namingRule"))
+                }
 
                 if viewModel.exportSettings.usesScale {
-                    Stepper(
+                    exportFormRow(
                         L10n.format(
                             "imageEditor.export.scaleValue",
                             ImageEditorExportScaleFormatter.string(from: viewModel.exportSettings.scale)
-                        ),
-                        value: scaleBinding,
-                        in: 0.25...4,
-                        step: 0.25
-                    )
+                        )
+                    ) {
+                        Stepper(
+                            "",
+                            value: scaleBinding,
+                            in: 0.25...4,
+                            step: 0.25
+                        )
+                        .labelsHidden()
+                        .accessibilityLabel(
+                            L10n.format(
+                                "imageEditor.export.scaleValue",
+                                ImageEditorExportScaleFormatter.string(from: viewModel.exportSettings.scale)
+                            )
+                        )
+                    }
 
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(L10n.text("imageEditor.export.batchScales"))
-                            .font(.system(size: 12, weight: .semibold))
+                    exportFormRow(L10n.text("imageEditor.export.batchScales")) {
                         HStack(spacing: 10) {
                             ForEach(ImageEditorExportSettings.batchScalePresets, id: \.self) { scale in
                                 Toggle(
@@ -101,23 +140,24 @@ struct ImageEditorExportPanel: View {
                 }
 
                 if viewModel.exportSettings.usesQuality {
-                    HStack {
-                        Text(L10n.text("imageEditor.export.quality"))
-                            .font(.system(size: 12, weight: .semibold))
-                        Slider(value: qualityBinding, in: 0.1...1, step: 0.05)
-                        Text(L10n.format("imageEditor.export.qualityValue", Int((viewModel.exportSettings.quality * 100).rounded())))
-                            .font(.system(size: 12, weight: .medium).monospacedDigit())
-                            .frame(width: 44, alignment: .trailing)
+                    exportFormRow(L10n.text("imageEditor.export.quality")) {
+                        HStack {
+                            Slider(value: qualityBinding, in: 0.1...1, step: 0.05)
+                            Text(L10n.format("imageEditor.export.qualityValue", Int((viewModel.exportSettings.quality * 100).rounded())))
+                                .font(.system(size: 12, weight: .medium).monospacedDigit())
+                                .frame(width: 44, alignment: .trailing)
+                        }
                     }
                 }
 
-                HStack {
-                    Text(L10n.text("imageEditor.export.outputSize"))
-                    Spacer()
-                    Text(viewModel.exportSizeText)
-                        .font(.system(size: 12, weight: .medium).monospacedDigit())
+                exportFormRow(L10n.text("imageEditor.export.outputSize")) {
+                    HStack {
+                        Spacer()
+                        Text(viewModel.exportSizeText)
+                            .font(.system(size: 12, weight: .medium).monospacedDigit())
+                    }
+                    .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
                 }
-                .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
             }
 
             HStack {
@@ -134,10 +174,26 @@ struct ImageEditorExportPanel: View {
             }
         }
         .padding(18)
-        .frame(width: 440)
+        .frame(width: Layout.panelWidth)
         .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
         .environment(\.colorScheme, .dark)
         .background(Color(nsColor: ImageEditorTheme.panel))
+    }
+
+    private func exportFormRow<Content: View>(
+        _ title: String,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        HStack(alignment: .center, spacing: Layout.rowSpacing) {
+            Text(title)
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                .lineLimit(1)
+                .frame(width: Layout.labelWidth, alignment: .leading)
+
+            content()
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
     }
 
     private var formatBinding: Binding<ImageEditorExportFormat> {
