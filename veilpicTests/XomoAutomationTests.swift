@@ -3095,6 +3095,45 @@ struct XomoAutomationTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStyle"))
     }
 
+    @Test func registrySetsLayerStyleStrokeWidthAcrossEditableSelection() throws {
+        let viewModel = makeViewModel()
+        let canvasSize = viewModel.document.canvasSize
+        var first = ImageEditorLayer.blank(name: "First", size: canvasSize)
+        var second = ImageEditorLayer.blank(name: "Second", size: canvasSize)
+        var locked = ImageEditorLayer.blank(name: "Locked", size: canvasSize)
+        first.style.strokeWidth = 2
+        second.style.strokeWidth = 8
+        locked.style.strokeWidth = 4
+        locked.isLocked = true
+        viewModel.document.layers = [first, second, locked]
+        viewModel.document.selectedLayerID = first.id
+        viewModel.document.selectedLayerIDs = [first.id, second.id, locked.id]
+        let historyCount = viewModel.document.history.count
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        try assertNumericLayerStylePropertySchema("strokeWidth", in: toolsResponse)
+
+        let result = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("strokeWidth"),
+                "value": .number(12)
+            ]
+        ))
+
+        #expect(result.ok)
+        #expect(viewModel.document.layers[0].style.strokeWidth == 12)
+        #expect(viewModel.document.layers[1].style.strokeWidth == 12)
+        #expect(viewModel.document.layers[2].style.strokeWidth == 4)
+        #expect(viewModel.document.layers[0].style.strokeEnabled)
+        #expect(viewModel.document.layers[1].style.strokeEnabled)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [first.id, second.id, locked.id])
+    }
+
     @Test func registrySetsLayerStyleStrokeFillTypeWithAdvertisedEnum() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared
@@ -4170,6 +4209,19 @@ struct XomoAutomationTests {
         #expect(positionSchema["enum"] == .array([
             .string("outside"), .string("center"), .string("inside")
         ]))
+    }
+
+    private func assertNumericLayerStylePropertySchema(
+        _ property: String,
+        in response: XomoAutomationWireResponse
+    ) throws {
+        let styleTool = try #require(automationTool(named: "xomo.layer.style_settings", in: response))
+        let inputSchema = try #require(styleTool["inputSchema"]?.objectValue)
+        let properties = try #require(inputSchema["properties"]?.objectValue)
+        let propertySchema = try #require(properties["property"]?.objectValue)
+        let valueSchema = try #require(properties["value"]?.objectValue)
+        #expect(propertySchema["enum"]?.arrayValue?.contains(.string(property)) == true)
+        #expect(valueSchema["type"] == .string("number"))
     }
 
     private func assertStrokeFillTypeSchema(in response: XomoAutomationWireResponse) throws {

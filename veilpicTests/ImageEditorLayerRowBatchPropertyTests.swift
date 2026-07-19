@@ -325,6 +325,62 @@ struct ImageEditorLayerRowBatchPropertyTests {
         try assertStrokePositionConvergence()
     }
 
+    @Test func layerStyleStrokeWidthMixedValueConvergesAcrossEditableSelection() throws {
+        let fixture = strokeWidthFixture()
+        let viewModel = fixture.viewModel
+        let firstID = fixture.layers[0].id
+        let secondID = fixture.layers[1].id
+        let lockedID = fixture.layers[2].id
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.selectedLayerStrokeWidthState == .mixed)
+        viewModel.setSelectedLayerStrokeWidth(12)
+        #expect(viewModel.selectedLayerStrokeWidthState == .value(12))
+        #expect((try layer(firstID, in: viewModel)).style.strokeWidth == 12)
+        #expect((try layer(secondID, in: viewModel)).style.strokeWidth == 12)
+        #expect((try layer(lockedID, in: viewModel)).style.strokeWidth == 4)
+        #expect((try layer(firstID, in: viewModel)).style.strokeEnabled)
+        #expect((try layer(secondID, in: viewModel)).style.strokeEnabled)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerStrokeWidthState == .mixed)
+        viewModel.redo()
+        #expect(viewModel.selectedLayerStrokeWidthState == .value(12))
+    }
+
+    @Test func layerStyleStrokeWidthControlShowsLocalizedMixedValue() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let start = try #require(source.range(of: "private func layerStyleNumericStepper("))
+        let end = try #require(source[start.upperBound...].range(of: "private func guidePath("))
+        let stepperSource = source[start.lowerBound..<end.lowerBound]
+
+        #expect(stepperSource.contains("imageEditor.properties.multipleValues"))
+        #expect(stepperSource.contains(".focusable(false)"))
+        #expect(stepperSource.contains(".accessibilityValue(displayedTitle)"))
+        #expect(source.contains("state: viewModel.selectedLayerStrokeWidthState"))
+        #expect(source.contains("image-editor-layer-style-stroke-width"))
+        #expect(source.contains("value: selectedLayerStrokeWidthBinding"))
+    }
+
+    private func strokeWidthFixture() -> Fixture {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        viewModel.document.layers[0].style.strokeWidth = 2
+        viewModel.document.layers[1].style.strokeWidth = 8
+        viewModel.document.layers[2].style.strokeWidth = 4
+        viewModel.document.layers[2].isLocked = true
+        select(Set(fixture.layers.map(\.id)), primary: fixture.layers[0].id, in: viewModel)
+        return fixture
+    }
+
     @Test func layerStyleStrokePositionPickerShowsLocalizedMixedValue() throws {
         let repositoryRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()

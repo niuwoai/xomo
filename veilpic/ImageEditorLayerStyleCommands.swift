@@ -217,6 +217,10 @@ extension ImageEditorViewModel {
         Double(document.selectedLayer?.style.strokeWidth ?? 3)
     }
 
+    var selectedLayerStrokeWidthState: ImageEditorLayerStyleValueState<CGFloat> {
+        selectedLayerStyleValueState(\.strokeWidth)
+    }
+
     var selectedLayerStrokePosition: ImageEditorStrokePosition {
         document.selectedLayer?.style.strokePosition ?? .outside
     }

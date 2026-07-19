@@ -4397,6 +4397,25 @@ struct ImageEditorView: View {
         .accessibilityIdentifier(accessibilityIdentifier)
     }
 
+    private func layerStyleNumericStepper(
+        state: ImageEditorLayerStyleValueState<CGFloat>,
+        value: Binding<Double>,
+        range: ClosedRange<Double>,
+        step: Double,
+        accessibilityIdentifier: String,
+        title: @escaping (Double) -> String
+    ) -> some View {
+        let displayedTitle = state.value.map { title(Double($0)) }
+            ?? (state.isMixed ? L10n.text("imageEditor.properties.multipleValues") : "")
+        return Stepper(value: value, in: range, step: step) {
+            Text(displayedTitle)
+        }
+        .disabled(!viewModel.canEditSelectedLayerStyle || state == .unavailable)
+        .focusable(false)
+        .accessibilityValue(displayedTitle)
+        .accessibilityIdentifier(accessibilityIdentifier)
+    }
+
     private func guidePath(orientation: ImageEditorGuideOrientation, position: CGFloat, in size: CGSize) -> Path {
         var path = Path()
         switch orientation {
@@ -6913,12 +6932,15 @@ struct ImageEditorView: View {
                     .disabled(!viewModel.canScaleSelectedLayerEffects)
                 }
 
-                Stepper(
-                    L10n.format("imageEditor.properties.strokeWidthValue", Int(viewModel.selectedLayerStrokeWidth.rounded())),
+                layerStyleNumericStepper(
+                    state: viewModel.selectedLayerStrokeWidthState,
                     value: selectedLayerStrokeWidthBinding,
-                    in: 1...24,
-                    step: 1
-                )
+                    range: 1...24,
+                    step: 1,
+                    accessibilityIdentifier: "image-editor-layer-style-stroke-width"
+                ) { value in
+                    L10n.format("imageEditor.properties.strokeWidthValue", Int(value.rounded()))
+                }
                 layerStyleValuePicker(
                     state: viewModel.selectedLayerStrokePositionState,
                     values: ImageEditorStrokePosition.allCases,
