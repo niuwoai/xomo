@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.12.0-rc398 - 2026-07-19
+
+### Changed
+- 画布向 macOS 辅助功能树暴露稳定的 `image-editor-canvas` 容器，标签与中、英、日详情包含画布尺寸、当前缩放比例和当前工具。
+
+### Fixed
+- 修复 Computer Use 和 VoiceOver 无法直接识别画布区域、只能依赖截图坐标猜测的问题；工具或缩放改变时，画布详情会随界面状态即时更新。
+
+### Verification
+- 画布辅助身份与实时上下文 1/1、三语资源一致性 1/1、CLI 2/2、发布契约 7/7 通过；Computer Use 实测辅助树出现 `image-editor-canvas`，并在工具从移动切到矩形选区后即时更新详情。Xcode 26.4 测试宿主完成编译链接后仍因复制的 XCTest 框架缺少 Info.plist 退出，隔离测试复用该产物运行通过。
+
 ## 2.12.0-rc397 - 2026-07-19
 
 ### Changed

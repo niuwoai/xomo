@@ -2231,6 +2231,8 @@
 "imageEditor.action.layerVisibility" = "レイヤーを表示/非表示";
 "imageEditor.accessibility.layerVisible" = "表示";
 "imageEditor.accessibility.layerHidden" = "非表示";
+"imageEditor.accessibility.canvas" = "キャンバス";
+"imageEditor.accessibility.canvasValue" = "%d × %d px、ズーム %d%%、現在のツール：%@";
 "imageEditor.action.layerLock" = "レイヤーをロック";
 "imageEditor.action.layerUnlock" = "レイヤーを解除";
 "imageEditor.action.layerLockSelected" = "選択レイヤーをロック";

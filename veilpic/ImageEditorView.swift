@@ -1593,6 +1593,14 @@ struct ImageEditorView: View {
                 .contentShape(Rectangle())
                 .coordinateSpace(name: "image-editor-canvas-space")
                 .accessibilityElement(children: .contain)
+                .accessibilityLabel(L10n.text("imageEditor.accessibility.canvas"))
+                .accessibilityValue(L10n.format(
+                    "imageEditor.accessibility.canvasValue",
+                    Int(viewModel.document.canvasSize.width.rounded()),
+                    Int(viewModel.document.canvasSize.height.rounded()),
+                    Int((viewModel.zoom * 100).rounded()),
+                    canvasInteractionTool.title
+                ))
                 .accessibilityIdentifier("image-editor-canvas")
                 .xomoCanvasPlatformInteractions(
                     onDrop: { components, location in

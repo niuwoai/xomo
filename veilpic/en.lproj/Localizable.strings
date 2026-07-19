@@ -2231,6 +2231,8 @@
 "imageEditor.action.layerVisibility" = "Show / Hide Layer";
 "imageEditor.accessibility.layerVisible" = "Visible";
 "imageEditor.accessibility.layerHidden" = "Hidden";
+"imageEditor.accessibility.canvas" = "Canvas";
+"imageEditor.accessibility.canvasValue" = "%d × %d px, zoom %d%%, current tool: %@";
 "imageEditor.action.layerLock" = "Lock Layer";
 "imageEditor.action.layerUnlock" = "Unlock Layer";
 "imageEditor.action.layerLockSelected" = "Lock Selected Layers";

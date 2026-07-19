@@ -2231,6 +2231,8 @@
 "imageEditor.action.layerVisibility" = "显示/隐藏图层";
 "imageEditor.accessibility.layerVisible" = "可见";
 "imageEditor.accessibility.layerHidden" = "隐藏";
+"imageEditor.accessibility.canvas" = "画布";
+"imageEditor.accessibility.canvasValue" = "%d × %d px，缩放 %d%%，当前工具：%@";
 "imageEditor.action.layerLock" = "锁定图层";
 "imageEditor.action.layerUnlock" = "解锁图层";
 "imageEditor.action.layerLockSelected" = "锁定所选图层";

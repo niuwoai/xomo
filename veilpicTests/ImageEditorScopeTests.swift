@@ -1884,6 +1884,25 @@ struct ImageEditorScopeTests {
         #expect(source.contains("statusBar"))
     }
 
+    @Test func canvasExposesStableAccessibilityIdentityAndLiveContext() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let canvasStart = try #require(source.range(of: "private var canvasSurface: some View"))
+        let canvasEnd = try #require(
+            source[canvasStart.upperBound...].range(of: "private var documentTab: some View")
+        )
+        let canvasSource = source[canvasStart.lowerBound..<canvasEnd.lowerBound]
+
+        #expect(canvasSource.contains(".accessibilityIdentifier(\"image-editor-canvas\")"))
+        #expect(canvasSource.contains("imageEditor.accessibility.canvas"))
+        #expect(canvasSource.contains("imageEditor.accessibility.canvasValue"))
+        #expect(canvasSource.contains("viewModel.document.canvasSize"))
+        #expect(canvasSource.contains("viewModel.zoom"))
+        #expect(canvasSource.contains("canvasInteractionTool.title"))
+    }
+
     @MainActor
     @Test func toolsAndOptionsPanelActionsReuseExistingToolSettings() throws {
         let image = NSImage(size: NSSize(width: 16, height: 16))
