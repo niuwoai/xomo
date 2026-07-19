@@ -3993,14 +3993,6 @@ struct ImageEditorView: View {
         }
     }
 
-    private var selectedLayerStrokePositionBinding: Binding<ImageEditorStrokePosition> {
-        Binding {
-            viewModel.selectedLayerStrokePosition
-        } set: { value in
-            viewModel.setSelectedLayerStrokePosition(value)
-        }
-    }
-
     private var selectedLayerStrokeOpacityBinding: Binding<Double> {
         Binding {
             viewModel.selectedLayerStrokeOpacity
@@ -4460,6 +4452,37 @@ struct ImageEditorView: View {
 
     private func layerStyleTriStateColor(_ state: ImageEditorLayerStyleSelectionState) -> Color {
         Color(nsColor: state == .off ? ImageEditorTheme.mutedText : ImageEditorTheme.selected)
+    }
+
+    private func layerStyleValuePicker<Value: Hashable>(
+        state: ImageEditorLayerStyleValueState<Value>,
+        values: [Value],
+        labelKey: String,
+        accessibilityIdentifier: String,
+        title: @escaping (Value) -> String,
+        onSelect: @escaping (Value) -> Void
+    ) -> some View {
+        let selection = Binding<Value?> {
+            state.value
+        } set: { value in
+            if let value { onSelect(value) }
+        }
+        let accessibilityValue = state.value.map(title)
+            ?? (state.isMixed ? L10n.text("imageEditor.properties.multipleValues") : "")
+        return Picker(L10n.text(labelKey), selection: selection) {
+            if state.isMixed {
+                Text(L10n.text("imageEditor.properties.multipleValues"))
+                    .tag(Optional<Value>.none)
+            }
+            ForEach(values, id: \.self) { value in
+                Text(title(value)).tag(Optional(value))
+            }
+        }
+        .pickerStyle(.menu)
+        .disabled(!viewModel.canEditSelectedLayerStyle)
+        .focusable(false)
+        .accessibilityValue(accessibilityValue)
+        .accessibilityIdentifier(accessibilityIdentifier)
     }
 
     private func guidePath(orientation: ImageEditorGuideOrientation, position: CGFloat, in size: CGSize) -> Path {
@@ -6984,12 +7007,15 @@ struct ImageEditorView: View {
                     in: 1...24,
                     step: 1
                 )
-                Picker(L10n.text("imageEditor.properties.strokePosition"), selection: selectedLayerStrokePositionBinding) {
-                    ForEach(ImageEditorStrokePosition.allCases) { position in
-                        Text(position.title).tag(position)
-                    }
+                layerStyleValuePicker(
+                    state: viewModel.selectedLayerStrokePositionState,
+                    values: ImageEditorStrokePosition.allCases,
+                    labelKey: "imageEditor.properties.strokePosition",
+                    accessibilityIdentifier: "image-editor-layer-style-stroke-position",
+                    title: \.title
+                ) { position in
+                    viewModel.setSelectedLayerStrokePosition(position)
                 }
-                .pickerStyle(.menu)
                 Stepper(
                     L10n.format("imageEditor.properties.strokeOpacityValue", Int((viewModel.selectedLayerStrokeOpacity * 100).rounded())),
                     value: selectedLayerStrokeOpacityBinding,

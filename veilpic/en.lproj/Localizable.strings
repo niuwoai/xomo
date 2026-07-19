@@ -1098,6 +1098,7 @@
 "imageEditor.action.layerStylePresetImportCount" = "Import %d Items";
 "imageEditor.properties.strokeWidthValue" = "Stroke: %d px";
 "imageEditor.properties.strokePosition" = "Stroke Position";
+"imageEditor.properties.multipleValues" = "Multiple Values";
 "imageEditor.strokePosition.outside" = "Outside";
 "imageEditor.strokePosition.center" = "Center";
 "imageEditor.strokePosition.inside" = "Inside";

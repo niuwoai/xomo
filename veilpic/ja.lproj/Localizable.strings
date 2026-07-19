@@ -1098,6 +1098,7 @@
 "imageEditor.action.layerStylePresetImportCount" = "%d項目を読み込む";
 "imageEditor.properties.strokeWidthValue" = "境界線：%d px";
 "imageEditor.properties.strokePosition" = "境界線の位置";
+"imageEditor.properties.multipleValues" = "複数の値";
 "imageEditor.strokePosition.outside" = "外側";
 "imageEditor.strokePosition.center" = "中央";
 "imageEditor.strokePosition.inside" = "内側";

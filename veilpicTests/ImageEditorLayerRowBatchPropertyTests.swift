@@ -321,6 +321,66 @@ struct ImageEditorLayerRowBatchPropertyTests {
         #expect(source.contains("image-editor-bevel-global-light"))
     }
 
+    @Test func layerStyleStrokePositionMixedValueConvergesAcrossEditableSelection() throws {
+        try assertStrokePositionConvergence()
+    }
+
+    @Test func layerStyleStrokePositionPickerShowsLocalizedMixedValue() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let start = try #require(source.range(of: "private func layerStyleValuePicker<"))
+        let end = try #require(source[start.upperBound...].range(of: "private func guidePath("))
+        let pickerSource = source[start.lowerBound..<end.lowerBound]
+
+        #expect(pickerSource.contains("imageEditor.properties.multipleValues"))
+        #expect(pickerSource.contains(".tag(Optional<Value>.none)"))
+        #expect(pickerSource.contains(".focusable(false)"))
+        #expect(pickerSource.contains(".accessibilityValue(accessibilityValue)"))
+        #expect(source.contains("state: viewModel.selectedLayerStrokePositionState"))
+        #expect(source.contains("viewModel.setSelectedLayerStrokePosition(position)"))
+        #expect(source.contains("image-editor-layer-style-stroke-position"))
+        #expect(!source.contains("selectedLayerStrokePositionBinding"))
+    }
+
+    private func assertStrokePositionConvergence() throws {
+        let fixture = strokePositionFixture()
+        let viewModel = fixture.viewModel
+        let firstID = fixture.layers[0].id
+        let secondID = fixture.layers[1].id
+        let lockedID = fixture.layers[2].id
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.selectedLayerStrokePositionState == .mixed)
+        viewModel.setSelectedLayerStrokePosition(.center)
+        #expect(viewModel.selectedLayerStrokePositionState == .value(.center))
+        #expect((try layer(firstID, in: viewModel)).style.strokePosition == .center)
+        #expect((try layer(secondID, in: viewModel)).style.strokePosition == .center)
+        #expect((try layer(lockedID, in: viewModel)).style.strokePosition == .outside)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerStrokePositionState == .mixed)
+        viewModel.redo()
+        #expect(viewModel.selectedLayerStrokePositionState == .value(.center))
+    }
+
+    private func strokePositionFixture() -> Fixture {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        viewModel.document.layers[0].style.strokePosition = .outside
+        viewModel.document.layers[1].style.strokePosition = .inside
+        viewModel.document.layers[2].style.strokePosition = .outside
+        viewModel.document.layers[2].isLocked = true
+        select(Set(fixture.layers.map(\.id)), primary: fixture.layers[0].id, in: viewModel)
+        return fixture
+    }
+
     @Test func layerStyleSatinInvertMixedStateConvergesAcrossEditableSelection() throws {
         try assertSatinInvertConvergence()
     }

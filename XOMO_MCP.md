@@ -1,8 +1,9 @@
 # Xomo MCP 与 CLI
 
-> 当前版本：v2.12.0-rc354
+> 当前版本：v2.12.0-rc355
 
-rc354 让本地“反相光泽”复选框与三种全局光控件共享选择感知三态模型；混合选择可统一开启，全开后统一关闭，锁定及不适用图层跳过且每次单步 History/Undo。自动化协议不变：`xomo.layer.effect property=satinInvert enabled=true|false` 继续走同一批量 setter，工具名、参数和返回结构保持兼容。
+rc355 为 `xomo.layer.style_settings` 增加 `property=strokePosition`，并要求 `position=outside|center|inside`；调用会批量更新全部可编辑选中层、跳过锁定及不适用图层，并与本地混合值菜单共享单步 History/Undo setter。工具 schema 明确公开三项枚举，既有 `value`、`enabled` 参数与返回结构不变。
+rc354 让本地“反相光泽”复选框与三种全局光控件共享选择感知三态模型；混合选择可统一开启，全开后统一关闭，锁定及不适用图层跳过且每次单步 History/Undo。自动化协议不变：`xomo.layer.style_settings property=satinInvert enabled=true|false` 继续走同一批量 setter，工具名、参数和返回结构保持兼容。
 rc353 让本地图层样式面板的投影、内阴影与斜面浮雕“使用全局光”共享选择感知三态模型和批量写入入口；锁定及不适用图层跳过，选择保持且每次单步 History/Undo。当前 MCP 仅公开 `globalLightAngle` 等既有样式属性，尚未新增三个布尔开关，因此工具名、参数、返回结构与旧客户端结果均保持不变。
 rc352 让投影、内阴影与斜面浮雕的 ViewModel 角度写入遵循多选语义：可编辑选择全部更新，任一目标使用全局光时文档全局角度只更新一次，其余目标同步相同本地角度；全部目标未链接时保留全局光。当前 MCP 工具名、参数与返回结构不变，既有 `xomo.layer.effect` 开关及后续共用这些 ViewModel 属性的自动化入口获得相同单步 History/Undo 基础。
 rc351 让 `xomo.layer.effect` 的 10 种既有效果与本地图层面板、样式菜单共享多选收敛语义：所选可编辑图层处于混合状态时调用一次会全部开启，全部开启时再调用会全部关闭；锁定层、组、调整层和滤镜层跳过，选择保持且只写入一次 History/Undo。工具名、`effect` 参数枚举和返回结构均未改变。

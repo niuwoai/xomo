@@ -3072,6 +3072,29 @@ struct XomoAutomationTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerEffectsShowAll"))
     }
 
+    @Test func registrySetsLayerStyleStrokePositionWithAdvertisedEnum() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        try assertStrokePositionSchema(in: toolsResponse)
+
+        let result = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("strokePosition"),
+                "position": .string("inside")
+            ]
+        ))
+
+        #expect(result.ok)
+        #expect(viewModel.document.selectedLayer?.style.strokePosition == .inside)
+        #expect(viewModel.document.selectedLayer?.style.strokeEnabled == true)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStyle"))
+    }
+
     @Test func registryCreatesAppliesListsAndDeletesPersistedLayerStylePresets() throws {
         let suiteName = "XomoAutomationTests.layerStylePresets.\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suiteName) ?? .standard
@@ -3871,6 +3894,29 @@ struct XomoAutomationTests {
             name: name,
             arguments: arguments
         )
+    }
+
+    private func automationTool(
+        named name: String,
+        in response: XomoAutomationWireResponse
+    ) -> [String: XomoJSONValue]? {
+        guard case .array(let tools) = response.result else { return nil }
+        return tools.compactMap { tool -> [String: XomoJSONValue]? in
+            guard case .object(let value) = tool else { return nil }
+            return value
+        }.first { $0["name"] == .string(name) }
+    }
+
+    private func assertStrokePositionSchema(in response: XomoAutomationWireResponse) throws {
+        let styleTool = try #require(automationTool(named: "xomo.layer.style_settings", in: response))
+        let inputSchema = try #require(styleTool["inputSchema"]?.objectValue)
+        let properties = try #require(inputSchema["properties"]?.objectValue)
+        let propertySchema = try #require(properties["property"]?.objectValue)
+        let positionSchema = try #require(properties["position"]?.objectValue)
+        #expect(propertySchema["enum"]?.arrayValue?.contains(.string("strokePosition")) == true)
+        #expect(positionSchema["enum"] == .array([
+            .string("outside"), .string("center"), .string("inside")
+        ]))
     }
 
     private func makeViewModel(

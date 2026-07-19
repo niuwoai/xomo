@@ -65,6 +65,21 @@ enum ImageEditorLayerStyleSelectionState: Equatable {
     }
 }
 
+enum ImageEditorLayerStyleValueState<Value: Equatable>: Equatable {
+    case unavailable
+    case value(Value)
+    case mixed
+
+    var value: Value? {
+        guard case .value(let value) = self else { return nil }
+        return value
+    }
+
+    var isMixed: Bool {
+        self == .mixed
+    }
+}
+
 enum ImageEditorLayerLightEffect: CaseIterable {
     case shadow
     case innerShadow
@@ -204,6 +219,10 @@ extension ImageEditorViewModel {
 
     var selectedLayerStrokePosition: ImageEditorStrokePosition {
         document.selectedLayer?.style.strokePosition ?? .outside
+    }
+
+    var selectedLayerStrokePositionState: ImageEditorLayerStyleValueState<ImageEditorStrokePosition> {
+        selectedLayerStyleValueState(\.strokePosition)
     }
 
     var selectedLayerStrokeOpacity: Double {
@@ -1452,6 +1471,18 @@ extension ImageEditorViewModel {
         if enabledCount == 0 { return .off }
         if enabledCount == targetIndices.count { return .on }
         return .mixed
+    }
+
+    private func selectedLayerStyleValueState<Value: Equatable>(
+        _ value: (ImageEditorLayerStyle) -> Value
+    ) -> ImageEditorLayerStyleValueState<Value> {
+        let targetIndices = selectedLayerStyleTargetIndices()
+        guard let firstIndex = targetIndices.first else { return .unavailable }
+        let firstValue = value(document.layers[firstIndex].style)
+        let allMatch = targetIndices.dropFirst().allSatisfy {
+            value(document.layers[$0].style) == firstValue
+        }
+        return allMatch ? .value(firstValue) : .mixed
     }
 
     private func canEditLayerStyle(_ layer: ImageEditorLayer) -> Bool {

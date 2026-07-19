@@ -1098,6 +1098,7 @@
 "imageEditor.action.layerStylePresetImportCount" = "导入 %d 项";
 "imageEditor.properties.strokeWidthValue" = "描边：%d px";
 "imageEditor.properties.strokePosition" = "描边位置";
+"imageEditor.properties.multipleValues" = "多个值";
 "imageEditor.strokePosition.outside" = "外侧";
 "imageEditor.strokePosition.center" = "居中";
 "imageEditor.strokePosition.inside" = "内侧";
