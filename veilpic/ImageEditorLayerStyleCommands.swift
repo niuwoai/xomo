@@ -355,6 +355,12 @@ extension ImageEditorViewModel {
         return Double(style.resolvedShadowAngle(globalLightAngle: document.globalLightAngle))
     }
 
+    var selectedLayerShadowAngleState: ImageEditorLayerStyleValueState<CGFloat> {
+        selectedLayerStyleValueState {
+            $0.resolvedShadowAngle(globalLightAngle: document.globalLightAngle)
+        }
+    }
+
     var selectedLayerShadowOffsetX: Double {
         Double(document.selectedLayer?.style.resolvedShadowOffset(globalLightAngle: document.globalLightAngle).width ?? 7)
     }

@@ -814,6 +814,74 @@ struct ImageEditorLayerRowBatchPropertyTests {
         return fixture
     }
 
+    @Test func layerStyleShadowAngleMixedValueConvergesAcrossGlobalAndLocalLight() throws {
+        let fixture = shadowAngleFixture()
+        let viewModel = fixture.viewModel
+        let firstID = fixture.layers[0].id
+        let secondID = fixture.layers[1].id
+        let lockedID = fixture.layers[2].id
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.selectedLayerShadowAngleState == .mixed)
+        viewModel.setSelectedLayerShadowAngle(-45)
+        #expect(viewModel.selectedLayerShadowAngleState == .value(-45))
+        #expect(viewModel.document.globalLightAngle == -45)
+        let firstStyle = try layer(firstID, in: viewModel).style
+        let secondStyle = try layer(secondID, in: viewModel).style
+        let firstOffset = ImageEditorLayerStyle.shadowOffset(distance: 12, angle: -45)
+        let secondOffset = ImageEditorLayerStyle.shadowOffset(distance: 20, angle: -45)
+        #expect(firstStyle.resolvedShadowAngle(globalLightAngle: viewModel.document.globalLightAngle) == -45)
+        #expect(secondStyle.resolvedShadowAngle(globalLightAngle: viewModel.document.globalLightAngle) == -45)
+        #expect(abs(firstStyle.shadowOffset.width - firstOffset.width) < 0.001)
+        #expect(abs(firstStyle.shadowOffset.height - firstOffset.height) < 0.001)
+        #expect(abs(secondStyle.shadowOffset.width - secondOffset.width) < 0.001)
+        #expect(abs(secondStyle.shadowOffset.height - secondOffset.height) < 0.001)
+        #expect((try layer(lockedID, in: viewModel)).style.shadowAngle == 90)
+        #expect((try layer(lockedID, in: viewModel)).style.shadowOffset == CGSize(width: 7, height: -7))
+        #expect(firstStyle.shadowEnabled)
+        #expect(secondStyle.shadowEnabled)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+
+        viewModel.undo()
+        #expect(viewModel.document.globalLightAngle == 35)
+        #expect(viewModel.selectedLayerShadowAngleState == .mixed)
+        viewModel.redo()
+        #expect(viewModel.selectedLayerShadowAngleState == .value(-45))
+    }
+
+    @Test func layerStyleShadowAngleControlReusesMixedNumericStepper() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("state: viewModel.selectedLayerShadowAngleState"))
+        #expect(source.contains("value: selectedLayerShadowAngleBinding"))
+        #expect(source.contains("image-editor-layer-style-shadow-angle"))
+        #expect(source.contains("L10n.format(\"imageEditor.properties.shadowAngleValue\""))
+    }
+
+    private func shadowAngleFixture() -> Fixture {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        viewModel.document.globalLightAngle = 35
+        viewModel.document.layers[0].style.shadowUsesGlobalLight = true
+        viewModel.document.layers[0].style.shadowDistance = 12
+        viewModel.document.layers[0].style.shadowAngle = 10
+        viewModel.document.layers[1].style.shadowUsesGlobalLight = false
+        viewModel.document.layers[1].style.shadowDistance = 20
+        viewModel.document.layers[1].style.shadowAngle = -70
+        viewModel.document.layers[2].style.shadowUsesGlobalLight = false
+        viewModel.document.layers[2].style.shadowAngle = 90
+        viewModel.document.layers[2].isLocked = true
+        select(Set(fixture.layers.map(\.id)), primary: fixture.layers[0].id, in: viewModel)
+        return fixture
+    }
+
     @Test func layerStyleInnerShadowAngleMixedValueConvergesAcrossGlobalAndLocalLight() throws {
         let fixture = innerShadowAngleFixture()
         let viewModel = fixture.viewModel

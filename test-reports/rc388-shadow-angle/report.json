@@ -1,0 +1,89 @@
+{
+  "generated_at": "2026-07-19 18:26:34 +0800",
+  "total": 8,
+  "passed": 8,
+  "failed": 0,
+  "jobs": 4,
+  "results": [
+    {
+      "suite": "ImageEditorLayerRowBatchPropertyTests",
+      "method": "layerStyleInnerShadowAngleControlReusesMixedNumericStepper",
+      "identifier": "veilpicTests/ImageEditorLayerRowBatchPropertyTests/layerStyleInnerShadowAngleControlReusesMixedNumericStepper",
+      "file": "ImageEditorLayerRowBatchPropertyTests.swift",
+      "passed": true,
+      "duration": 5.632,
+      "issues": [],
+      "log": "ImageEditorLayerRowBatchPropertyTests.layerStyleInnerShadowAngleControlReusesMixedNumericStepper.log"
+    },
+    {
+      "suite": "ImageEditorLayerRowBatchPropertyTests",
+      "method": "layerStyleInnerShadowAngleMixedValueConvergesAcrossGlobalAndLocalLight",
+      "identifier": "veilpicTests/ImageEditorLayerRowBatchPropertyTests/layerStyleInnerShadowAngleMixedValueConvergesAcrossGlobalAndLocalLight",
+      "file": "ImageEditorLayerRowBatchPropertyTests.swift",
+      "passed": true,
+      "duration": 5.627,
+      "issues": [],
+      "log": "ImageEditorLayerRowBatchPropertyTests.layerStyleInnerShadowAngleMixedValueConvergesAcrossGlobalAndLocalLight.log"
+    },
+    {
+      "suite": "ImageEditorLayerRowBatchPropertyTests",
+      "method": "layerStyleShadowAngleControlReusesMixedNumericStepper",
+      "identifier": "veilpicTests/ImageEditorLayerRowBatchPropertyTests/layerStyleShadowAngleControlReusesMixedNumericStepper",
+      "file": "ImageEditorLayerRowBatchPropertyTests.swift",
+      "passed": true,
+      "duration": 5.661,
+      "issues": [],
+      "log": "ImageEditorLayerRowBatchPropertyTests.layerStyleShadowAngleControlReusesMixedNumericStepper.log"
+    },
+    {
+      "suite": "ImageEditorLayerRowBatchPropertyTests",
+      "method": "layerStyleShadowAngleMixedValueConvergesAcrossGlobalAndLocalLight",
+      "identifier": "veilpicTests/ImageEditorLayerRowBatchPropertyTests/layerStyleShadowAngleMixedValueConvergesAcrossGlobalAndLocalLight",
+      "file": "ImageEditorLayerRowBatchPropertyTests.swift",
+      "passed": true,
+      "duration": 5.643,
+      "issues": [],
+      "log": "ImageEditorLayerRowBatchPropertyTests.layerStyleShadowAngleMixedValueConvergesAcrossGlobalAndLocalLight.log"
+    },
+    {
+      "suite": "ImageEditorLayerStyleTests",
+      "method": "imageEditorDropShadowAngleAndDistanceMoveShadowDirectionally",
+      "identifier": "veilpicTests/ImageEditorLayerStyleTests/imageEditorDropShadowAngleAndDistanceMoveShadowDirectionally",
+      "file": "ImageEditorLayerStyleTests.swift",
+      "passed": true,
+      "duration": 4.755,
+      "issues": [],
+      "log": "ImageEditorLayerStyleTests.imageEditorDropShadowAngleAndDistanceMoveShadowDirectionally.log"
+    },
+    {
+      "suite": "ImageEditorLayerStyleTests",
+      "method": "imageEditorGlobalLightDrivesLinkedShadowAngles",
+      "identifier": "veilpicTests/ImageEditorLayerStyleTests/imageEditorGlobalLightDrivesLinkedShadowAngles",
+      "file": "ImageEditorLayerStyleTests.swift",
+      "passed": true,
+      "duration": 4.283,
+      "issues": [],
+      "log": "ImageEditorLayerStyleTests.imageEditorGlobalLightDrivesLinkedShadowAngles.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registrySetsLayerStyleInnerShadowAngleAcrossGlobalAndLocalLight",
+      "identifier": "veilpicTests/XomoAutomationTests/registrySetsLayerStyleInnerShadowAngleAcrossGlobalAndLocalLight",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 4.583,
+      "issues": [],
+      "log": "XomoAutomationTests.registrySetsLayerStyleInnerShadowAngleAcrossGlobalAndLocalLight.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registrySetsLayerStyleShadowAngleAcrossGlobalAndLocalLight",
+      "identifier": "veilpicTests/XomoAutomationTests/registrySetsLayerStyleShadowAngleAcrossGlobalAndLocalLight",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 4.373,
+      "issues": [],
+      "log": "XomoAutomationTests.registrySetsLayerStyleShadowAngleAcrossGlobalAndLocalLight.log"
+    }
+  ]
+}

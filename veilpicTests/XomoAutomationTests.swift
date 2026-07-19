@@ -3327,6 +3327,61 @@ struct XomoAutomationTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStyle"))
     }
 
+    @Test func registrySetsLayerStyleShadowAngleAcrossGlobalAndLocalLight() throws {
+        let viewModel = makeViewModel()
+        let canvasSize = viewModel.document.canvasSize
+        var first = ImageEditorLayer.blank(name: "First", size: canvasSize)
+        var second = ImageEditorLayer.blank(name: "Second", size: canvasSize)
+        var locked = ImageEditorLayer.blank(name: "Locked", size: canvasSize)
+        first.style.shadowUsesGlobalLight = true
+        first.style.shadowDistance = 12
+        first.style.shadowAngle = 10
+        second.style.shadowUsesGlobalLight = false
+        second.style.shadowDistance = 20
+        second.style.shadowAngle = -70
+        locked.style.shadowUsesGlobalLight = false
+        locked.style.shadowAngle = 90
+        locked.isLocked = true
+        viewModel.document.globalLightAngle = 35
+        viewModel.document.layers = [first, second, locked]
+        viewModel.document.selectedLayerID = first.id
+        viewModel.document.selectedLayerIDs = [first.id, second.id, locked.id]
+        let historyCount = viewModel.document.history.count
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        try assertNumericLayerStylePropertySchema("shadowAngle", in: toolsResponse)
+
+        let result = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("shadowAngle"),
+                "value": .number(-45)
+            ]
+        ))
+
+        #expect(result.ok)
+        #expect(viewModel.document.globalLightAngle == -45)
+        let firstStyle = viewModel.document.layers[0].style
+        let secondStyle = viewModel.document.layers[1].style
+        let firstOffset = ImageEditorLayerStyle.shadowOffset(distance: 12, angle: -45)
+        let secondOffset = ImageEditorLayerStyle.shadowOffset(distance: 20, angle: -45)
+        #expect(firstStyle.resolvedShadowAngle(globalLightAngle: viewModel.document.globalLightAngle) == -45)
+        #expect(secondStyle.resolvedShadowAngle(globalLightAngle: viewModel.document.globalLightAngle) == -45)
+        #expect(abs(firstStyle.shadowOffset.width - firstOffset.width) < 0.001)
+        #expect(abs(firstStyle.shadowOffset.height - firstOffset.height) < 0.001)
+        #expect(abs(secondStyle.shadowOffset.width - secondOffset.width) < 0.001)
+        #expect(abs(secondStyle.shadowOffset.height - secondOffset.height) < 0.001)
+        #expect(viewModel.document.layers[2].style.shadowAngle == 90)
+        #expect(viewModel.document.layers[2].style.shadowOffset == CGSize(width: 7, height: -7))
+        #expect(firstStyle.shadowEnabled)
+        #expect(secondStyle.shadowEnabled)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [first.id, second.id, locked.id])
+    }
+
     @Test func registrySetsLayerStyleInnerShadowAngleAcrossGlobalAndLocalLight() throws {
         let viewModel = makeViewModel()
         let canvasSize = viewModel.document.canvasSize
