@@ -1,0 +1,49 @@
+{
+  "generated_at": "2026-07-19 10:26:31 +0800",
+  "total": 4,
+  "passed": 4,
+  "failed": 0,
+  "jobs": 1,
+  "results": [
+    {
+      "suite": "ImageEditorLayerRowBatchPropertyTests",
+      "method": "layerStyleStrokeGradientStyleMixedValueConvergesAcrossEditableSelection",
+      "identifier": "veilpicTests/ImageEditorLayerRowBatchPropertyTests/layerStyleStrokeGradientStyleMixedValueConvergesAcrossEditableSelection",
+      "file": "ImageEditorLayerRowBatchPropertyTests.swift",
+      "passed": true,
+      "duration": 5.648,
+      "issues": [],
+      "log": "ImageEditorLayerRowBatchPropertyTests.layerStyleStrokeGradientStyleMixedValueConvergesAcrossEditableSelection.log"
+    },
+    {
+      "suite": "ImageEditorLayerRowBatchPropertyTests",
+      "method": "layerStyleStrokeGradientStylePickerUsesLocalizedMixedValue",
+      "identifier": "veilpicTests/ImageEditorLayerRowBatchPropertyTests/layerStyleStrokeGradientStylePickerUsesLocalizedMixedValue",
+      "file": "ImageEditorLayerRowBatchPropertyTests.swift",
+      "passed": true,
+      "duration": 6.644,
+      "issues": [],
+      "log": "ImageEditorLayerRowBatchPropertyTests.layerStyleStrokeGradientStylePickerUsesLocalizedMixedValue.log"
+    },
+    {
+      "suite": "LocalizationResourceTests",
+      "method": "layerStyleStrokeGradientStyleMixedValueIsLocalizedInEverySupportedLanguage",
+      "identifier": "veilpicTests/LocalizationResourceTests/layerStyleStrokeGradientStyleMixedValueIsLocalizedInEverySupportedLanguage",
+      "file": "LocalizationResourceTests.swift",
+      "passed": true,
+      "duration": 4.592,
+      "issues": [],
+      "log": "LocalizationResourceTests.layerStyleStrokeGradientStyleMixedValueIsLocalizedInEverySupportedLanguage.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registrySetsLayerStyleStrokeGradientStyleWithAdvertisedEnum",
+      "identifier": "veilpicTests/XomoAutomationTests/registrySetsLayerStyleStrokeGradientStyleWithAdvertisedEnum",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 5.227,
+      "issues": [],
+      "log": "XomoAutomationTests.registrySetsLayerStyleStrokeGradientStyleWithAdvertisedEnum.log"
+    }
+  ]
+}

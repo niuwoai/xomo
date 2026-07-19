@@ -2082,6 +2082,12 @@ final class XomoAutomationRegistry {
                 throw XomoAutomationCallError.invalidArgument("Unknown stroke fill type")
             }
             viewModel.setSelectedLayerStrokeFillType(fillType)
+        case "strokeGradientStyle":
+            let rawValue = try requiredString("gradientStyle", in: arguments)
+            guard let gradientStyle = ImageEditorGradientFillStyle(rawValue: rawValue) else {
+                throw XomoAutomationCallError.invalidArgument("Unknown stroke gradient style")
+            }
+            viewModel.setSelectedLayerStrokeGradientStyle(gradientStyle)
         case "strokeOpacity": viewModel.setSelectedLayerStrokeOpacity(try number())
         case "strokeColor": viewModel.setSelectedLayerStrokeColor(viewModel.foregroundColor)
         case "shadowOpacity": viewModel.setSelectedLayerShadowOpacity(try number())
@@ -3572,10 +3578,11 @@ private extension XomoAutomationRegistry {
             "path": XomoAutomationSchema.string(description: "Local .xomostyles path for preset import preview, import, or export")
         ], required: ["action"]),
         tool("xomo.layer.style_settings", "Set effect scale, stroke, shadow, glow, overlay, satin, bevel, and global-light properties.", [
-            "property": XomoAutomationSchema.string(description: "Layer style property", values: ["effectScale", "strokeWidth", "strokePosition", "strokeFillType", "strokeOpacity", "strokeColor", "shadowOpacity", "shadowColor", "shadowBlur", "shadowSpread", "shadowNoise", "shadowDistance", "shadowAngle", "globalLightAngle", "innerShadowOpacity", "innerShadowBlur", "innerShadowChoke", "innerShadowNoise", "innerShadowDistance", "innerShadowAngle", "outerGlowOpacity", "outerGlowColor", "outerGlowBlur", "outerGlowSpread", "outerGlowNoise", "innerGlowOpacity", "innerGlowColor", "innerGlowBlur", "innerGlowChoke", "innerGlowNoise", "colorOverlayOpacity", "colorOverlayColor", "gradientOverlayOpacity", "gradientOverlayScale", "gradientOverlayAngle", "patternOverlayOpacity", "patternOverlayScale", "satinOpacity", "satinColor", "satinDistance", "satinSize", "satinAngle", "satinInvert", "bevelSize", "bevelOpacity", "bevelHighlightColor", "bevelShadowColor", "bevelSoften", "bevelAngle"]),
+            "property": XomoAutomationSchema.string(description: "Layer style property", values: ["effectScale", "strokeWidth", "strokePosition", "strokeFillType", "strokeGradientStyle", "strokeOpacity", "strokeColor", "shadowOpacity", "shadowColor", "shadowBlur", "shadowSpread", "shadowNoise", "shadowDistance", "shadowAngle", "globalLightAngle", "innerShadowOpacity", "innerShadowBlur", "innerShadowChoke", "innerShadowNoise", "innerShadowDistance", "innerShadowAngle", "outerGlowOpacity", "outerGlowColor", "outerGlowBlur", "outerGlowSpread", "outerGlowNoise", "innerGlowOpacity", "innerGlowColor", "innerGlowBlur", "innerGlowChoke", "innerGlowNoise", "colorOverlayOpacity", "colorOverlayColor", "gradientOverlayOpacity", "gradientOverlayScale", "gradientOverlayAngle", "patternOverlayOpacity", "patternOverlayScale", "satinOpacity", "satinColor", "satinDistance", "satinSize", "satinAngle", "satinInvert", "bevelSize", "bevelOpacity", "bevelHighlightColor", "bevelShadowColor", "bevelSoften", "bevelAngle"]),
             "value": XomoAutomationSchema.number(description: "Numeric style value"),
             "position": XomoAutomationSchema.string(description: "Stroke position", values: ImageEditorStrokePosition.allCases.map(\.rawValue)),
             "fillType": XomoAutomationSchema.string(description: "Stroke fill type", values: ImageEditorStrokeFillType.allCases.map(\.rawValue)),
+            "gradientStyle": XomoAutomationSchema.string(description: "Stroke gradient style", values: ImageEditorGradientFillStyle.allCases.map(\.rawValue)),
             "enabled": XomoAutomationSchema.boolean(description: "Boolean style value; color properties use the current foreground color")
         ], required: ["property"]),
         tool("xomo.layer.selection", "Select layers by state, relationship, kind, blend mode, or label.", [

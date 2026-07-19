@@ -437,6 +437,62 @@ struct ImageEditorLayerRowBatchPropertyTests {
         return fixture
     }
 
+    @Test func layerStyleStrokeGradientStyleMixedValueConvergesAcrossEditableSelection() throws {
+        try assertStrokeGradientStyleConvergence()
+    }
+
+    @Test func layerStyleStrokeGradientStylePickerUsesLocalizedMixedValue() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("state: viewModel.selectedLayerStrokeGradientStyleState"))
+        #expect(source.contains("image-editor-layer-style-stroke-gradient-style"))
+        #expect(source.contains("viewModel.setSelectedLayerStrokeGradientStyle(style)"))
+        #expect(!source.contains("selectedLayerStrokeGradientStyleBinding"))
+    }
+
+    private func assertStrokeGradientStyleConvergence() throws {
+        let fixture = strokeGradientStyleFixture()
+        let viewModel = fixture.viewModel
+        let firstID = fixture.layers[0].id
+        let secondID = fixture.layers[1].id
+        let lockedID = fixture.layers[2].id
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.selectedLayerStrokeGradientStyleState == .mixed)
+        viewModel.setSelectedLayerStrokeGradientStyle(.diamond)
+        #expect(viewModel.selectedLayerStrokeGradientStyleState == .value(.diamond))
+        #expect((try layer(firstID, in: viewModel)).style.strokeGradientStyle == .diamond)
+        #expect((try layer(secondID, in: viewModel)).style.strokeGradientStyle == .diamond)
+        #expect((try layer(lockedID, in: viewModel)).style.strokeGradientStyle == .linear)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerStrokeGradientStyleState == .mixed)
+        viewModel.redo()
+        #expect(viewModel.selectedLayerStrokeGradientStyleState == .value(.diamond))
+    }
+
+    private func strokeGradientStyleFixture() -> Fixture {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        for index in viewModel.document.layers.indices {
+            viewModel.document.layers[index].style.strokeFillType = .gradient
+        }
+        viewModel.document.layers[0].style.strokeGradientStyle = .linear
+        viewModel.document.layers[1].style.strokeGradientStyle = .radial
+        viewModel.document.layers[2].style.strokeGradientStyle = .linear
+        viewModel.document.layers[2].isLocked = true
+        select(Set(fixture.layers.map(\.id)), primary: fixture.layers[0].id, in: viewModel)
+        return fixture
+    }
+
     @Test func layerStyleSatinInvertMixedStateConvergesAcrossEditableSelection() throws {
         try assertSatinInvertConvergence()
     }

@@ -4001,14 +4001,6 @@ struct ImageEditorView: View {
         }
     }
 
-    private var selectedLayerStrokeGradientStyleBinding: Binding<ImageEditorGradientFillStyle> {
-        Binding {
-            viewModel.selectedLayerStrokeGradientStyle
-        } set: { value in
-            viewModel.setSelectedLayerStrokeGradientStyle(value)
-        }
-    }
-
     private var selectedLayerStrokeGradientAngleBinding: Binding<Double> {
         Binding {
             viewModel.selectedLayerStrokeGradientAngle
@@ -7038,12 +7030,15 @@ struct ImageEditorView: View {
                         .buttonStyle(EditorTextButtonStyle())
                     }
                 } else if viewModel.selectedLayerStrokeFillTypeState.value == .gradient {
-                    Picker(L10n.text("imageEditor.properties.strokeGradientStyle"), selection: selectedLayerStrokeGradientStyleBinding) {
-                        ForEach(ImageEditorGradientFillStyle.allCases) { style in
-                            Text(style.title).tag(style)
-                        }
+                    layerStyleValuePicker(
+                        state: viewModel.selectedLayerStrokeGradientStyleState,
+                        values: ImageEditorGradientFillStyle.allCases,
+                        labelKey: "imageEditor.properties.strokeGradientStyle",
+                        accessibilityIdentifier: "image-editor-layer-style-stroke-gradient-style",
+                        title: \.title
+                    ) { style in
+                        viewModel.setSelectedLayerStrokeGradientStyle(style)
                     }
-                    .pickerStyle(.menu)
                     Stepper(
                         L10n.format("imageEditor.properties.strokeGradientAngleValue", Int(viewModel.selectedLayerStrokeGradientAngle.rounded())),
                         value: selectedLayerStrokeGradientAngleBinding,

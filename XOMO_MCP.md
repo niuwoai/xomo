@@ -1,7 +1,8 @@
 # Xomo MCP 与 CLI
 
-> 当前版本：v2.12.0-rc356
+> 当前版本：v2.12.0-rc357
 
+rc357 为 `xomo.layer.style_settings` 增加 `property=strokeGradientStyle`，并要求 `gradientStyle=linear|radial|reflected|diamond`；调用会批量更新全部可编辑选中层、启用渐变描边并与本地混合值菜单共享单步 History/Undo setter。锁定及不适用图层跳过，工具 schema 明确公开四项枚举，既有参数和返回结构保持兼容。
 rc356 为 `xomo.layer.style_settings` 增加 `property=strokeFillType`，并要求 `fillType=color|gradient|pattern`；调用会批量更新全部可编辑选中层、启用描边并初始化相应填充默认值，锁定及不适用图层跳过。工具 schema 明确公开三项枚举，本地混合值菜单、History/Undo 与自动化共享同一 setter，既有参数和返回结构保持兼容。
 rc355 为 `xomo.layer.style_settings` 增加 `property=strokePosition`，并要求 `position=outside|center|inside`；调用会批量更新全部可编辑选中层、跳过锁定及不适用图层，并与本地混合值菜单共享单步 History/Undo setter。工具 schema 明确公开三项枚举，既有 `value`、`enabled` 参数与返回结构不变。
 rc354 让本地“反相光泽”复选框与三种全局光控件共享选择感知三态模型；混合选择可统一开启，全开后统一关闭，锁定及不适用图层跳过且每次单步 History/Undo。自动化协议不变：`xomo.layer.style_settings property=satinInvert enabled=true|false` 继续走同一批量 setter，工具名、参数和返回结构保持兼容。

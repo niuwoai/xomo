@@ -3118,6 +3118,29 @@ struct XomoAutomationTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStyle"))
     }
 
+    @Test func registrySetsLayerStyleStrokeGradientStyleWithAdvertisedEnum() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        try assertStrokeGradientStyleSchema(in: toolsResponse)
+
+        let result = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("strokeGradientStyle"),
+                "gradientStyle": .string("reflected")
+            ]
+        ))
+
+        #expect(result.ok)
+        #expect(viewModel.document.selectedLayer?.style.strokeGradientStyle == .reflected)
+        #expect(viewModel.document.selectedLayer?.style.strokeFillType == .gradient)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStyle"))
+    }
+
     @Test func registryCreatesAppliesListsAndDeletesPersistedLayerStylePresets() throws {
         let suiteName = "XomoAutomationTests.layerStylePresets.\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suiteName) ?? .standard
@@ -3951,6 +3974,18 @@ struct XomoAutomationTests {
         #expect(propertySchema["enum"]?.arrayValue?.contains(.string("strokeFillType")) == true)
         #expect(fillTypeSchema["enum"] == .array([
             .string("color"), .string("gradient"), .string("pattern")
+        ]))
+    }
+
+    private func assertStrokeGradientStyleSchema(in response: XomoAutomationWireResponse) throws {
+        let styleTool = try #require(automationTool(named: "xomo.layer.style_settings", in: response))
+        let inputSchema = try #require(styleTool["inputSchema"]?.objectValue)
+        let properties = try #require(inputSchema["properties"]?.objectValue)
+        let propertySchema = try #require(properties["property"]?.objectValue)
+        let gradientSchema = try #require(properties["gradientStyle"]?.objectValue)
+        #expect(propertySchema["enum"]?.arrayValue?.contains(.string("strokeGradientStyle")) == true)
+        #expect(gradientSchema["enum"] == .array([
+            .string("linear"), .string("radial"), .string("reflected"), .string("diamond")
         ]))
     }
 

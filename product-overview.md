@@ -1,7 +1,8 @@
 # 像界（Xomo）产品概览
 
-> 最后更新：2026-07-19 | 当前版本：v2.12.0-rc356
+> 最后更新：2026-07-19 | 当前版本：v2.12.0-rc357
 
+v2.12.0-rc357 继续修正图层样式多选假状态：当全部可编辑选中层都使用渐变描边、但分别采用线性、径向、反射或菱形样式时，菜单显示三语“多个值”；选择样式后批量收敛，锁定及不适用图层跳过，选择保持且每次单步 History/Undo。标准菜单不可聚焦并提供辅助值，MCP `xomo.layer.style_settings` 同步支持 `property=strokeGradientStyle gradientStyle=linear|radial|reflected|diamond`。专项 4/4、样式回归 30/30、CLI 2/2、发布契约 7/7 通过。
 v2.12.0-rc356 把枚举多选语义扩展到“描边填充”：颜色、渐变、图案混合时菜单显示三语“多个值”，并隐藏主选层的专属参数，避免用户误以为所有选中层都共享同一种填充；选定类型后批量收敛全部可编辑层，再显示正确的颜色/渐变/图案分支。锁定/组/调整/滤镜层跳过，选择保持且每次单步 History/Undo。MCP `xomo.layer.style_settings` 同步支持 `property=strokeFillType fillType=color|gradient|pattern`。专项 4/4、样式回归 30/30、CLI 2/2、发布契约 7/7 通过。
 v2.12.0-rc355 为枚举型图层样式属性建立首个可靠多选范例：“描边位置”在外侧/居中/内侧混合时显示三语“多个值”，用户选定任一项后批量收敛全部可编辑选中层；标准菜单不可聚焦并报告当前或混合辅助值，锁定/组/调整/滤镜层跳过，选择保持且每次单步 History/Undo。MCP `xomo.layer.style_settings` 同步支持 `property=strokePosition position=outside|center|inside`，和本地菜单共享 setter。专项 4/4、样式回归 30/30、CLI 2/2、发布契约 7/7 通过。
 v2.12.0-rc354 让图层样式“反相光泽”真正理解多选：空框、勾选和减号分别表示未反相、全部反相和部分反相；混合状态点一次统一开启，全开时再点统一关闭。它与三种“使用全局光”复用同一不可聚焦三态控件和选择感知模型，锁定/组/调整/滤镜层跳过，选择保持，每次修改只有一个 History/Undo。MCP `xomo.layer.style_settings property=satinInvert` 继续使用既有参数并共享批量写入入口。专项 3/3、全局光三态回归 3/3、样式回归 30/30、CLI 2/2、发布契约 7/7 通过。

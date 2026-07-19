@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.12.0-rc357 - 2026-07-19
+
+### Added
+- MCP `xomo.layer.style_settings` 新增 `property=strokeGradientStyle` 与 `gradientStyle=linear|radial|reflected|diamond`；工具目录公开完整枚举，并与本地渐变样式菜单共享选择感知批量 setter。
+
+### Fixed
+- 所选图层都使用渐变描边、但渐变样式不一致时，样式菜单改为显示三语“多个值”，不再把主选图层的线性、径向、反射或菱形样式伪装成共同值。
+- 选择任一渐变样式后会统一写入全部可编辑选中层；标准菜单不可聚焦并提供当前或混合辅助值，锁定层及不适用图层继续跳过，选择保持且每次修改只有一个 History/Undo 步骤。
+
+### Verification
+- 描边渐变样式混合态、批量收敛、锁定跳过、撤销/重做、界面、三语资源与 MCP 枚举专项 4/4，既有图层样式渲染、渐变描边和保存往返回归 30/30，CLI 2/2、发布契约 7/7 通过；Xcode 26.4 测试宿主完成编译链接后仍因复制的 XCTest 框架缺少 Info.plist 退出，隔离测试复用该产物运行通过。
+
 ## 2.12.0-rc356 - 2026-07-19
 
 ### Added

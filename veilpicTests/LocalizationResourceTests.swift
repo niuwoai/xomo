@@ -488,6 +488,32 @@ struct LocalizationResourceTests {
         }
     }
 
+    @Test func layerStyleStrokeGradientStyleMixedValueIsLocalizedInEverySupportedLanguage() throws {
+        let paths = try Self.repositoryPaths()
+        let expectedValues = [
+            "zh-Hans": ["描边渐变样式", "多个值", "线性", "径向", "反射", "菱形"],
+            "en": ["Stroke Gradient Style", "Multiple Values", "Linear", "Radial", "Reflected", "Diamond"],
+            "ja": ["境界線グラデーションスタイル", "複数の値", "線形", "円形", "反射", "菱形"]
+        ]
+        let keys = [
+            "imageEditor.properties.strokeGradientStyle",
+            "imageEditor.properties.multipleValues",
+            "imageEditor.gradientFill.style.linear",
+            "imageEditor.gradientFill.style.radial",
+            "imageEditor.gradientFill.style.reflected",
+            "imageEditor.gradientFill.style.diamond"
+        ]
+
+        for (localizationID, expected) in expectedValues {
+            let strings = try Self.stringTable(
+                tableName: "Localizable",
+                localizationID: localizationID,
+                appDirectory: paths.appDirectory
+            )
+            #expect(keys.compactMap { strings[$0] } == expected)
+        }
+    }
+
     @Test func fingerPaintingIsLocalizedInEverySupportedLanguage() throws {
         let paths = try Self.repositoryPaths()
         let expectedValues = [

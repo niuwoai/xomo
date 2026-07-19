@@ -245,6 +245,10 @@ extension ImageEditorViewModel {
         document.selectedLayer?.style.strokeGradientStyle ?? .linear
     }
 
+    var selectedLayerStrokeGradientStyleState: ImageEditorLayerStyleValueState<ImageEditorGradientFillStyle> {
+        selectedLayerStyleValueState(\.strokeGradientStyle)
+    }
+
     var selectedLayerStrokeGradientAngle: Double {
         Double(document.selectedLayer?.style.strokeGradientAngle ?? 0)
     }
