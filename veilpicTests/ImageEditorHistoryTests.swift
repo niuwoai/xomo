@@ -224,6 +224,7 @@ struct ImageEditorHistoryTests {
             ("-", command, nil, .zoomOut),
             ("+", option, nil, .zoomIn),
             ("=", option, nil, .zoomIn),
+            ("=", [option, shift], nil, .zoomIn),
             ("-", option, nil, .zoomOut),
             ("1", command, nil, .actualPixels),
             ("0", command, nil, .fitOnScreen),

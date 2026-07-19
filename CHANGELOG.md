@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.12.0-rc393 - 2026-07-19
+
+### Fixed
+- 修复实体键盘上的 `Option++` 无法放大：美式键盘实际发送 `Option+Shift+=`，快捷键解析器与隐藏菜单入口现在都接受这组修饰键；`Option+=`、`Option+-` 与既有 `Command+/-` 行为保持不变。
+
+### Verification
+- `Option++` 物理组合与菜单快捷键专项 2/2、CLI 2/2、发布契约 7/7 通过；Xcode 26.4 测试宿主完成编译链接后仍因复制的 XCTest 框架缺少 Info.plist 退出，隔离测试复用该产物运行通过。
+
 ## 2.12.0-rc392 - 2026-07-19
 
 ### Changed

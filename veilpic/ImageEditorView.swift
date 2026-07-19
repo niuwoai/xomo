@@ -1361,7 +1361,7 @@ struct ImageEditorView: View {
             } label: {
                 EmptyView()
             }
-            .keyboardShortcut("+", modifiers: [.option])
+            .keyboardShortcut("=", modifiers: [.option, .shift])
             .accessibilityHidden(true)
 
             Button {
@@ -10370,7 +10370,10 @@ enum ImageEditorKeyboardShortcutAction: Equatable {
         if key == "'", relevantFlags == [.command] { return .toggleGrid }
         if (key == "+" || key == "="), relevantFlags == [.command] || relevantFlags == [.command, .shift] { return .zoomIn }
         if key == "-", relevantFlags == [.command] { return .zoomOut }
-        if (key == "+" || key == "="), relevantFlags == [.option] { return .zoomIn }
+        if (key == "+" || key == "="),
+           relevantFlags == [.option] || relevantFlags == [.option, .shift] {
+            return .zoomIn
+        }
         if key == "-", relevantFlags == [.option] { return .zoomOut }
         if key == "1", relevantFlags == [.command] { return .actualPixels }
         if key == "0", relevantFlags == [.command] { return .fitOnScreen }

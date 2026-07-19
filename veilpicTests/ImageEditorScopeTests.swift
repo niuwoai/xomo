@@ -971,7 +971,7 @@ struct ImageEditorScopeTests {
         #expect(shortcutSource.contains("viewModel.zoomOut()"))
         #expect(shortcutSource.contains(".keyboardShortcut(\"-\", modifiers: [.option])"))
         #expect(shortcutSource.contains("viewModel.zoomIn()"))
-        #expect(shortcutSource.contains(".keyboardShortcut(\"+\", modifiers: [.option])"))
+        #expect(shortcutSource.contains(".keyboardShortcut(\"=\", modifiers: [.option, .shift])"))
         #expect(shortcutSource.contains(".keyboardShortcut(\"=\", modifiers: [.option])"))
     }
 
