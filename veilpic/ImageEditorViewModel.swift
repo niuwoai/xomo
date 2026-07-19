@@ -5599,10 +5599,7 @@ final class ImageEditorViewModel: ObservableObject {
         pushUndo()
         for index in targetIndices {
             guard let lastIndex = document.layers[index].smartFilters.indices.last else { continue }
-            document.layers[index].smartFilters[lastIndex].kind = selectedFilter
-            document.layers[index].smartFilters[lastIndex].intensity = filterIntensity
-            document.layers[index].smartFilters[lastIndex].settings = currentFilterSettings()
-            document.layers[index].smartFilters[lastIndex].isEnabled = true
+            updateSmartFilterFromCurrentControls(&document.layers[index].smartFilters[lastIndex])
         }
         appendHistory(L10n.text("imageEditor.history.layerSmartFilterUpdate"))
     }
@@ -5615,11 +5612,17 @@ final class ImageEditorViewModel: ObservableObject {
             return
         }
         pushUndo()
-        document.layers[layerIndex].smartFilters[filterIndex].kind = selectedFilter
-        document.layers[layerIndex].smartFilters[filterIndex].intensity = filterIntensity
-        document.layers[layerIndex].smartFilters[filterIndex].settings = currentFilterSettings()
-        document.layers[layerIndex].smartFilters[filterIndex].isEnabled = true
+        updateSmartFilterFromCurrentControls(&document.layers[layerIndex].smartFilters[filterIndex])
         appendHistory(L10n.text("imageEditor.history.layerSmartFilterUpdate"))
+    }
+
+    private func updateSmartFilterFromCurrentControls(_ filter: inout ImageEditorSmartFilter) {
+        let keepsBackdropRouting = filter.appliesToBackdrop && selectedFilter == .gaussianBlur
+        filter.kind = selectedFilter
+        filter.intensity = filterIntensity
+        filter.settings = currentFilterSettings()
+        filter.isEnabled = true
+        filter.appliesToBackdrop = keepsBackdropRouting
     }
 
     func toggleSmartFilterOnSelectedLayer(_ filterID: UUID) {

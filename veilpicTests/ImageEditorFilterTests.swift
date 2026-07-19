@@ -1183,6 +1183,89 @@ struct ImageEditorFilterTests {
         #expect(restoredFilter.normalizedSettings.spherizeAmount == -1)
     }
 
+    @Test func updatingFigmaBackdropBlurToContentSmartFilterReentersPixelPipeline() throws {
+        let canvasSize = NSSize(width: 64, height: 40)
+        let sourceImage = gradientImage(size: canvasSize)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: sourceImage) { _ in }
+        let layerID = try #require(viewModel.document.selectedLayerID)
+        let layerIndex = try #require(viewModel.document.layers.firstIndex { $0.id == layerID })
+        let basePixels = try #require(viewModel.document.layers[layerIndex].image.qingtuPNGData())
+
+        var backdropBlur = ImageEditorSmartFilter(
+            kind: .gaussianBlur,
+            intensity: 0.8,
+            settings: ImageEditorFilterSettings(gaussianBlurRadius: 8)
+        )
+        backdropBlur.appliesToBackdrop = true
+        viewModel.document.layers[layerIndex].smartFilters = [backdropBlur]
+        let backdropPreview = try #require(viewModel.currentImage.qingtuPNGData())
+
+        viewModel.selectedFilter = .pixelate
+        viewModel.filterIntensity = 1
+        viewModel.updateSmartFilterOnSelectedLayer(backdropBlur.id)
+
+        let updatedLayer = try #require(layer(layerID, in: viewModel))
+        let updatedFilter = try #require(updatedLayer.smartFilters.first)
+        let pixelatedPreview = try #require(viewModel.currentImage.qingtuPNGData())
+        #expect(updatedFilter.kind == .pixelate)
+        #expect(updatedFilter.appliesToBackdrop == false)
+        #expect(updatedLayer.image.qingtuPNGData() == basePixels)
+        #expect(pixelatedPreview != backdropPreview)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterUpdate"))
+
+        viewModel.undo()
+
+        let restoredFilter = try #require(layer(layerID, in: viewModel)?.smartFilters.first)
+        #expect(restoredFilter.kind == .gaussianBlur)
+        #expect(restoredFilter.appliesToBackdrop == true)
+        #expect(try #require(viewModel.currentImage.qingtuPNGData()) == backdropPreview)
+    }
+
+    @Test func batchSmartFilterUpdatePreservesBackdropRoutingOnlyForGaussianBlur() throws {
+        let canvasSize = NSSize(width: 48, height: 32)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: gradientImage(size: canvasSize)
+        ) { _ in }
+        let backdropLayerID = try #require(viewModel.document.selectedLayerID)
+        let backdropIndex = try #require(viewModel.document.layers.firstIndex { $0.id == backdropLayerID })
+        var backdropBlur = ImageEditorSmartFilter(kind: .gaussianBlur, intensity: 0.4)
+        backdropBlur.appliesToBackdrop = true
+        viewModel.document.layers[backdropIndex].smartFilters = [backdropBlur]
+
+        viewModel.addLayer()
+        let contentLayerID = try #require(viewModel.document.selectedLayerID)
+        let contentIndex = try #require(viewModel.document.layers.firstIndex { $0.id == contentLayerID })
+        viewModel.document.layers[contentIndex].smartFilters = [
+            ImageEditorSmartFilter(kind: .sharpen, intensity: 0.3)
+        ]
+        viewModel.selectLayer(backdropLayerID)
+        viewModel.selectLayer(contentLayerID, extendingSelection: true)
+
+        viewModel.selectedFilter = .gaussianBlur
+        viewModel.filterIntensity = 0.65
+        viewModel.updateLastSmartFilterOnSelectedLayer()
+
+        #expect(try #require(layer(backdropLayerID, in: viewModel)?.smartFilters.last).appliesToBackdrop == true)
+        #expect(try #require(layer(contentLayerID, in: viewModel)?.smartFilters.last).appliesToBackdrop == false)
+
+        viewModel.selectedFilter = .pixelate
+        viewModel.filterIntensity = 0.9
+        viewModel.updateLastSmartFilterOnSelectedLayer()
+
+        let updatedBackdrop = try #require(layer(backdropLayerID, in: viewModel)?.smartFilters.last)
+        let updatedContent = try #require(layer(contentLayerID, in: viewModel)?.smartFilters.last)
+        #expect(updatedBackdrop.kind == .pixelate)
+        #expect(updatedBackdrop.appliesToBackdrop == false)
+        #expect(updatedContent.kind == .pixelate)
+        #expect(updatedContent.appliesToBackdrop == false)
+
+        viewModel.undo()
+
+        #expect(try #require(layer(backdropLayerID, in: viewModel)?.smartFilters.last).appliesToBackdrop == true)
+        #expect(try #require(layer(contentLayerID, in: viewModel)?.smartFilters.last).appliesToBackdrop == false)
+    }
+
     @Test func imageEditorBatchUpdatesSelectedFilterLayersAndSkipsLockedOrIneligibleLayers() async throws {
         let canvasSize = NSSize(width: 48, height: 32)
         let viewModel = ImageEditorViewModel(
