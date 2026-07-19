@@ -916,6 +916,57 @@ struct ImageEditorLayerRowBatchPropertyTests {
         return fixture
     }
 
+    @Test func layerStyleGradientOverlayAngleMixedValueConvergesAcrossEditableSelection() throws {
+        let fixture = gradientOverlayAngleFixture()
+        let viewModel = fixture.viewModel
+        let firstID = fixture.layers[0].id
+        let secondID = fixture.layers[1].id
+        let lockedID = fixture.layers[2].id
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.selectedLayerGradientOverlayAngleState == .mixed)
+        viewModel.setSelectedLayerGradientOverlayAngle(120)
+        #expect(viewModel.selectedLayerGradientOverlayAngleState == .value(120))
+        #expect((try layer(firstID, in: viewModel)).style.gradientOverlayAngle == 120)
+        #expect((try layer(secondID, in: viewModel)).style.gradientOverlayAngle == 120)
+        #expect((try layer(lockedID, in: viewModel)).style.gradientOverlayAngle == 30)
+        #expect((try layer(firstID, in: viewModel)).style.gradientOverlayEnabled)
+        #expect((try layer(secondID, in: viewModel)).style.gradientOverlayEnabled)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerGradientOverlayAngleState == .mixed)
+        viewModel.redo()
+        #expect(viewModel.selectedLayerGradientOverlayAngleState == .value(120))
+    }
+
+    @Test func layerStyleGradientOverlayAngleControlReusesMixedNumericStepper() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("state: viewModel.selectedLayerGradientOverlayAngleState"))
+        #expect(source.contains("value: selectedLayerGradientOverlayAngleBinding"))
+        #expect(source.contains("image-editor-layer-style-gradient-overlay-angle"))
+        #expect(source.contains("L10n.format(\"imageEditor.properties.gradientOverlayAngleValue\""))
+    }
+
+    private func gradientOverlayAngleFixture() -> Fixture {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        viewModel.document.layers[0].style.gradientOverlayAngle = -45
+        viewModel.document.layers[1].style.gradientOverlayAngle = 90
+        viewModel.document.layers[2].style.gradientOverlayAngle = 30
+        viewModel.document.layers[2].isLocked = true
+        select(Set(fixture.layers.map(\.id)), primary: fixture.layers[0].id, in: viewModel)
+        return fixture
+    }
+
     @Test func layerStyleMixedGradientOverlayStyleConvergesAcrossEditableSelection() throws {
         let fixture = gradientOverlayStyleFixture()
         let viewModel = fixture.viewModel

@@ -7297,12 +7297,15 @@ struct ImageEditorView: View {
                     ) { value in
                         L10n.format("imageEditor.properties.gradientOverlayOpacityValue", Int((value * 100).rounded()))
                     }
-                    Stepper(
-                        L10n.format("imageEditor.properties.gradientOverlayAngleValue", Int(viewModel.selectedLayerGradientOverlayAngle.rounded())),
+                    layerStyleNumericStepper(
+                        state: viewModel.selectedLayerGradientOverlayAngleState,
                         value: selectedLayerGradientOverlayAngleBinding,
-                        in: -180...180,
-                        step: 15
-                    )
+                        range: -180...180,
+                        step: 15,
+                        accessibilityIdentifier: "image-editor-layer-style-gradient-overlay-angle"
+                    ) { value in
+                        L10n.format("imageEditor.properties.gradientOverlayAngleValue", Int(value.rounded()))
+                    }
                 }
                 layerStyleNumericStepper(
                     state: viewModel.selectedLayerGradientOverlayScaleState,

@@ -468,6 +468,10 @@ extension ImageEditorViewModel {
         Double(document.selectedLayer?.style.gradientOverlayAngle ?? 0)
     }
 
+    var selectedLayerGradientOverlayAngleState: ImageEditorLayerStyleValueState<CGFloat> {
+        selectedLayerStyleValueState(\.gradientOverlayAngle)
+    }
+
     var selectedLayerPatternOverlayKind: ImageEditorPatternOverlayKind {
         document.selectedLayer?.style.patternOverlayKind ?? .checkerboard
     }

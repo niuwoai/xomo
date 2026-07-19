@@ -1,0 +1,39 @@
+{
+  "generated_at": "2026-07-19 16:41:56 +0800",
+  "total": 3,
+  "passed": 3,
+  "failed": 0,
+  "jobs": 3,
+  "results": [
+    {
+      "suite": "ImageEditorLayerRowBatchPropertyTests",
+      "method": "layerStyleGradientOverlayAngleControlReusesMixedNumericStepper",
+      "identifier": "veilpicTests/ImageEditorLayerRowBatchPropertyTests/layerStyleGradientOverlayAngleControlReusesMixedNumericStepper",
+      "file": "ImageEditorLayerRowBatchPropertyTests.swift",
+      "passed": true,
+      "duration": 5.71,
+      "issues": [],
+      "log": "ImageEditorLayerRowBatchPropertyTests.layerStyleGradientOverlayAngleControlReusesMixedNumericStepper.log"
+    },
+    {
+      "suite": "ImageEditorLayerRowBatchPropertyTests",
+      "method": "layerStyleGradientOverlayAngleMixedValueConvergesAcrossEditableSelection",
+      "identifier": "veilpicTests/ImageEditorLayerRowBatchPropertyTests/layerStyleGradientOverlayAngleMixedValueConvergesAcrossEditableSelection",
+      "file": "ImageEditorLayerRowBatchPropertyTests.swift",
+      "passed": true,
+      "duration": 5.676,
+      "issues": [],
+      "log": "ImageEditorLayerRowBatchPropertyTests.layerStyleGradientOverlayAngleMixedValueConvergesAcrossEditableSelection.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registrySetsLayerStyleGradientOverlayAngleAcrossEditableSelection",
+      "identifier": "veilpicTests/XomoAutomationTests/registrySetsLayerStyleGradientOverlayAngleAcrossEditableSelection",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 5.702,
+      "issues": [],
+      "log": "XomoAutomationTests.registrySetsLayerStyleGradientOverlayAngleAcrossEditableSelection.log"
+    }
+  ]
+}
