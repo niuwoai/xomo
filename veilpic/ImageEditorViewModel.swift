@@ -2265,7 +2265,13 @@ final class ImageEditorViewModel: ObservableObject {
         statusText = L10n.text("imageEditor.status.workspaceDefaultRestored")
     }
 
-    func toggleWorkspaceChromeVisibility() {
+    func toggleWorkspaceChromeVisibility(
+        eventSignature: ImageEditorKeyboardShortcutEventSignature? = .currentKeyEvent
+    ) {
+        guard ImageEditorPanelToggleDispatchGate.shouldDispatch(
+            .workspaceChrome,
+            event: eventSignature
+        ) else { return }
         let shouldShow = !isWorkspaceChromeVisible
         areToolsPanelVisible = shouldShow
         isOptionsBarVisible = shouldShow
@@ -2278,7 +2284,13 @@ final class ImageEditorViewModel: ObservableObject {
         statusText = L10n.text(shouldShow ? "imageEditor.status.workspacePanelsShown" : "imageEditor.status.workspacePanelsHidden")
     }
 
-    func toggleRightDockVisibility() {
+    func toggleRightDockVisibility(
+        eventSignature: ImageEditorKeyboardShortcutEventSignature? = .currentKeyEvent
+    ) {
+        guard ImageEditorPanelToggleDispatchGate.shouldDispatch(
+            .rightDock,
+            event: eventSignature
+        ) else { return }
         let shouldShow = !isRightDockVisible
         isNavigatorPanelVisible = shouldShow
         isHistoryPanelVisible = shouldShow

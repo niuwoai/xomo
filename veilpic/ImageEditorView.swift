@@ -10381,6 +10381,98 @@ enum ImageEditorKeyboardShortcutAction: Equatable {
     }
 }
 
+struct ImageEditorKeyboardShortcutEventSignature: Equatable {
+    let windowNumber: Int
+    let eventNumber: Int
+    let timestamp: TimeInterval
+    let typeRawValue: UInt
+    let keyCode: UInt16
+
+    init(
+        windowNumber: Int,
+        eventNumber: Int,
+        timestamp: TimeInterval,
+        typeRawValue: UInt,
+        keyCode: UInt16
+    ) {
+        self.windowNumber = windowNumber
+        self.eventNumber = eventNumber
+        self.timestamp = timestamp
+        self.typeRawValue = typeRawValue
+        self.keyCode = keyCode
+    }
+
+    init(event: NSEvent) {
+        self.init(
+            windowNumber: event.windowNumber,
+            eventNumber: event.eventNumber,
+            timestamp: event.timestamp,
+            typeRawValue: event.type.rawValue,
+            keyCode: event.keyCode
+        )
+    }
+
+    static var currentKeyEvent: ImageEditorKeyboardShortcutEventSignature? {
+        guard let event = NSApp.currentEvent,
+              event.type == .keyDown || event.type == .keyUp
+        else { return nil }
+        return ImageEditorKeyboardShortcutEventSignature(event: event)
+    }
+}
+
+@MainActor
+enum ImageEditorKeyboardShortcutWindowRegistry {
+    private static var activeCoordinatorByWindow: [ObjectIdentifier: ObjectIdentifier] = [:]
+
+    static func register(coordinator: AnyObject, for window: AnyObject) {
+        activeCoordinatorByWindow[ObjectIdentifier(window)] = ObjectIdentifier(coordinator)
+    }
+
+    static func unregister(coordinator: AnyObject, from window: AnyObject) {
+        let windowID = ObjectIdentifier(window)
+        guard activeCoordinatorByWindow[windowID] == ObjectIdentifier(coordinator) else { return }
+        activeCoordinatorByWindow.removeValue(forKey: windowID)
+    }
+
+    static func isActive(coordinator: AnyObject, for window: AnyObject) -> Bool {
+        activeCoordinatorByWindow[ObjectIdentifier(window)] == ObjectIdentifier(coordinator)
+    }
+
+    static func reset() {
+        activeCoordinatorByWindow.removeAll()
+    }
+}
+
+enum ImageEditorPanelToggleAction: Equatable {
+    case workspaceChrome
+    case rightDock
+}
+
+@MainActor
+enum ImageEditorPanelToggleDispatchGate {
+    private struct Dispatch: Equatable {
+        let action: ImageEditorPanelToggleAction
+        let event: ImageEditorKeyboardShortcutEventSignature
+    }
+
+    private static var lastDispatch: Dispatch?
+
+    static func shouldDispatch(
+        _ action: ImageEditorPanelToggleAction,
+        event: ImageEditorKeyboardShortcutEventSignature?
+    ) -> Bool {
+        guard let event else { return true }
+        let dispatch = Dispatch(action: action, event: event)
+        guard dispatch != lastDispatch else { return false }
+        lastDispatch = dispatch
+        return true
+    }
+
+    static func reset() {
+        lastDispatch = nil
+    }
+}
+
 struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
     let perform: (ImageEditorKeyboardShortcutAction) -> Void
     let activeTool: ImageEditorTool
@@ -10420,7 +10512,7 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
     }
 
     final class Coordinator {
-        weak var window: NSWindow?
+        private(set) weak var window: NSWindow?
         var perform: (ImageEditorKeyboardShortcutAction) -> Void
         var activeTool: ImageEditorTool
         var nudgeSelected: (CGSize) -> Void
@@ -10464,6 +10556,9 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
         }
 
         deinit {
+            if let window {
+                ImageEditorKeyboardShortcutWindowRegistry.unregister(coordinator: self, from: window)
+            }
             if let eventMonitor {
                 NSEvent.removeMonitor(eventMonitor)
             }
@@ -10472,8 +10567,21 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
             }
         }
 
+        func attach(to newWindow: NSWindow?) {
+            if let window {
+                ImageEditorKeyboardShortcutWindowRegistry.unregister(coordinator: self, from: window)
+            }
+            window = newWindow
+            if let newWindow {
+                ImageEditorKeyboardShortcutWindowRegistry.register(coordinator: self, for: newWindow)
+            }
+        }
+
         private func handle(_ event: NSEvent) -> NSEvent? {
-            guard event.window === window else { return event }
+            guard let window,
+                  event.window === window,
+                  ImageEditorKeyboardShortcutWindowRegistry.isActive(coordinator: self, for: window)
+            else { return event }
             setCanvasModifierFlags(event.modifierFlags.intersection([.shift, .option, .capsLock]))
             let relevantFlags = event.modifierFlags.intersection([.command, .option, .shift, .control])
             if event.keyCode == 49, relevantFlags.isEmpty {
@@ -10551,7 +10659,7 @@ final class KeyboardShortcutMonitorNSView: NSView {
 
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
-        coordinator?.window = window
+        coordinator?.attach(to: window)
     }
 
     override func hitTest(_ point: NSPoint) -> NSView? {

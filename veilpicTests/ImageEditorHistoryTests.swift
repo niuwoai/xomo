@@ -291,6 +291,54 @@ struct ImageEditorHistoryTests {
     }
 
     @Test
+    func keyboardShortcutWindowRegistryKeepsOneActiveCoordinatorPerWindow() {
+        ImageEditorKeyboardShortcutWindowRegistry.reset()
+        defer { ImageEditorKeyboardShortcutWindowRegistry.reset() }
+        let window = NSObject()
+        let firstCoordinator = NSObject()
+        let latestCoordinator = NSObject()
+
+        ImageEditorKeyboardShortcutWindowRegistry.register(
+            coordinator: firstCoordinator,
+            for: window
+        )
+        #expect(ImageEditorKeyboardShortcutWindowRegistry.isActive(
+            coordinator: firstCoordinator,
+            for: window
+        ))
+
+        ImageEditorKeyboardShortcutWindowRegistry.register(
+            coordinator: latestCoordinator,
+            for: window
+        )
+        #expect(!ImageEditorKeyboardShortcutWindowRegistry.isActive(
+            coordinator: firstCoordinator,
+            for: window
+        ))
+        #expect(ImageEditorKeyboardShortcutWindowRegistry.isActive(
+            coordinator: latestCoordinator,
+            for: window
+        ))
+
+        ImageEditorKeyboardShortcutWindowRegistry.unregister(
+            coordinator: firstCoordinator,
+            from: window
+        )
+        #expect(ImageEditorKeyboardShortcutWindowRegistry.isActive(
+            coordinator: latestCoordinator,
+            for: window
+        ))
+        ImageEditorKeyboardShortcutWindowRegistry.unregister(
+            coordinator: latestCoordinator,
+            from: window
+        )
+        #expect(!ImageEditorKeyboardShortcutWindowRegistry.isActive(
+            coordinator: latestCoordinator,
+            for: window
+        ))
+    }
+
+    @Test
     func historyPanelUsesSearchFieldAndFilteredEntries() throws {
         let root = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()

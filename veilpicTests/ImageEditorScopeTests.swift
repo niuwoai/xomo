@@ -1576,11 +1576,12 @@ struct ImageEditorScopeTests {
         #expect(windowMenuSource.contains("imageEditor.action.workspaceHidePanels"))
         #expect(windowMenuSource.contains("imageEditor.action.workspaceShowPanels"))
         #expect(windowMenuSource.contains("viewModel.toggleWorkspaceChromeVisibility()"))
+        #expect(windowMenuSource.contains(".keyboardShortcut(.tab, modifiers: [])"))
         #expect(windowMenuSource.contains("imageEditor.action.rightDockHidePanels"))
         #expect(windowMenuSource.contains("imageEditor.action.rightDockShowPanels"))
         #expect(windowMenuSource.contains("viewModel.toggleRightDockVisibility()"))
-        #expect(!windowMenuSource.contains(".keyboardShortcut(.tab"))
-        #expect(windowMenuSource.contains("ImageEditorKeyboardShortcutMonitor"))
+        #expect(windowMenuSource.contains(".keyboardShortcut(.tab, modifiers: [.shift])"))
+        #expect(windowMenuSource.contains("ImageEditorPanelToggleDispatchGate"))
         #expect(windowMenuSource.contains("imageEditor.action.statusBarHide"))
         #expect(windowMenuSource.contains("imageEditor.action.statusBarShow"))
         #expect(windowMenuSource.contains("viewModel.toggleStatusBarVisibility()"))
@@ -1985,6 +1986,35 @@ struct ImageEditorScopeTests {
         #expect(viewModel.isPropertiesPanelVisible)
         #expect(viewModel.isRightDockVisible)
         #expect(viewModel.statusText == L10n.text("imageEditor.status.rightDockPanelsShown"))
+    }
+
+    @MainActor
+    @Test func rightDockKeyboardToggleCoalescesDuplicateDispatchPaths() {
+        ImageEditorPanelToggleDispatchGate.reset()
+        defer { ImageEditorPanelToggleDispatchGate.reset() }
+        let image = NSImage(size: NSSize(width: 16, height: 16))
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let firstEvent = ImageEditorKeyboardShortcutEventSignature(
+            windowNumber: 5,
+            eventNumber: 90,
+            timestamp: 20,
+            typeRawValue: NSEvent.EventType.keyDown.rawValue,
+            keyCode: 48
+        )
+        let secondEvent = ImageEditorKeyboardShortcutEventSignature(
+            windowNumber: 5,
+            eventNumber: 91,
+            timestamp: 20.2,
+            typeRawValue: NSEvent.EventType.keyDown.rawValue,
+            keyCode: 48
+        )
+
+        viewModel.toggleRightDockVisibility(eventSignature: firstEvent)
+        #expect(!viewModel.isRightDockVisible)
+        viewModel.toggleRightDockVisibility(eventSignature: firstEvent)
+        #expect(!viewModel.isRightDockVisible)
+        viewModel.toggleRightDockVisibility(eventSignature: secondEvent)
+        #expect(viewModel.isRightDockVisible)
     }
 
     @MainActor

@@ -1717,12 +1717,14 @@ extension ImageEditorView {
         Button(L10n.text(viewModel.isWorkspaceChromeVisible ? "imageEditor.action.workspaceHidePanels" : "imageEditor.action.workspaceShowPanels")) {
             viewModel.toggleWorkspaceChromeVisibility()
         }
+        .keyboardShortcut(.tab, modifiers: [])
         Button(L10n.text(viewModel.isRightDockVisible ? "imageEditor.action.rightDockHidePanels" : "imageEditor.action.rightDockShowPanels")) {
             viewModel.toggleRightDockVisibility()
         }
-        // Tab and Shift-Tab are consumed by ImageEditorKeyboardShortcutMonitor.
-        // Registering them here as SwiftUI key equivalents as well can execute
-        // the toggle twice, leaving the panels visually unchanged.
+        .keyboardShortcut(.tab, modifiers: [.shift])
+        // SwiftUI key equivalents keep menus and assistive input working;
+        // ImageEditorPanelToggleDispatchGate coalesces the same physical event
+        // when the AppKit shortcut monitor receives it as well.
         Button(L10n.text(viewModel.isStatusBarVisible ? "imageEditor.action.statusBarHide" : "imageEditor.action.statusBarShow")) {
             viewModel.toggleStatusBarVisibility()
         }
