@@ -1138,6 +1138,7 @@ struct ImageEditorView: View {
                 .buttonStyle(EditorIconButtonStyle(isSelected: viewModel.selectedTool == tool))
                 .focusable(false)
                 .xomoFocusEffectDisabled()
+                .accessibilityLabel(tool.title)
 
                 Color.clear
                 .frame(width: 11, height: 11)
@@ -1194,6 +1195,7 @@ struct ImageEditorView: View {
             .buttonStyle(EditorIconButtonStyle(isSelected: viewModel.selectedTool == tool))
             .focusable(false)
             .xomoFocusEffectDisabled()
+            .accessibilityLabel(tool.title)
             .help(tool.helpText)
             .accessibilityIdentifier("image-editor-tool-\(tool.rawValue)")
             .accessibilityValue(viewModel.selectedTool == tool ? "selected" : "available")

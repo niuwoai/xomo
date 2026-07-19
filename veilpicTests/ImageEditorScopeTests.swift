@@ -247,6 +247,23 @@ struct ImageEditorScopeTests {
         #expect(!source.contains(".background(selectionEditShortcutButtons)"))
     }
 
+    @Test func toolRailProvidesExplicitLocalizedAccessibleNamesWithoutKeyboardFocus() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let railItemStart = try #require(source.range(of: "private func toolRailItem(_ tool: ImageEditorTool) -> some View"))
+        let railItemEnd = try #require(
+            source[railItemStart.upperBound...].range(of: "private var selectedToolHint: some View")
+        )
+        let railItemSource = source[railItemStart.lowerBound..<railItemEnd.lowerBound]
+
+        #expect(railItemSource.components(separatedBy: ".accessibilityLabel(tool.title)").count - 1 == 2)
+        #expect(railItemSource.components(separatedBy: ".focusable(false)").count - 1 >= 3)
+        #expect(railItemSource.contains("ImageEditorPaintBucketSymbol()"))
+        #expect(railItemSource.contains(".accessibilityIdentifier(\"image-editor-tool-\\(tool.rawValue)\")"))
+    }
+
     @MainActor
     @Test func classicToolShortcutsSelectPrimaryToolAndCycleGroupedTools() {
         let image = NSImage(size: NSSize(width: 80, height: 60))
