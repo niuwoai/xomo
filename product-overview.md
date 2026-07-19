@@ -1,8 +1,8 @@
 # 像界（Xomo）产品概览
 
-> 最后更新：2026-07-19 | 当前版本：v2.12.0-rc365
+> 最后更新：2026-07-19 | 当前版本：v2.12.0-rc366
 
-v2.12.0-rc365 为内阴影轮廓补齐多选共同属性语义：五档轮廓混合时，标准不可聚焦菜单显示三语“多个值”；选择轮廓后批量收敛全部可编辑层并启用内阴影，锁定及不适用图层跳过，选择保持且每次单步 History/Undo。MCP `xomo.layer.style_settings` 同步支持 `property=innerShadowContour innerShadowContour=linear|soft|steep|cone|ring`。专项 3/3、样式回归 30/30、CLI 2/2、发布契约 7/7 通过；下一小步处理外发光轮廓，下一次完整门禁仍为 rc400。
+v2.12.0-rc366 为外发光轮廓补齐多选共同属性语义：五档轮廓混合时，标准不可聚焦菜单显示三语“多个值”；选择轮廓后批量收敛全部可编辑层并启用外发光，锁定及不适用图层跳过，选择保持且每次单步 History/Undo。MCP `xomo.layer.style_settings` 同步支持 `property=outerGlowContour outerGlowContour=linear|soft|steep|cone|ring`。专项 3/3、样式回归 30/30、CLI 2/2、发布契约 7/7 通过；下一小步处理光泽轮廓，下一次完整门禁仍为 rc400。
 v2.12.0-rc364 为投影轮廓补齐多选共同属性语义：线性、柔和、陡峭、锥形或环形混合时，标准不可聚焦菜单显示三语“多个值”；选择轮廓后批量收敛全部可编辑层并启用投影，锁定及不适用图层跳过，选择保持且每次单步 History/Undo。MCP `xomo.layer.style_settings` 同步支持 `property=shadowContour shadowContour=linear|soft|steep|cone|ring`。专项 3/3、样式回归 30/30、CLI 2/2、发布契约 7/7 通过；下一小步处理内阴影轮廓，下一次完整门禁仍为 rc400。
 v2.12.0-rc363 为图案叠加种类补齐多选共同属性语义：棋盘、斜线或圆点混合时，标准不可聚焦菜单显示三语“多个值”；选择图案后批量收敛全部可编辑层并启用图案叠加，锁定及不适用图层跳过，选择保持且每次单步 History/Undo。MCP `xomo.layer.style_settings` 同步支持 `property=patternOverlayKind patternOverlayKind=checkerboard|diagonalStripes|dots`。专项 3/3、样式回归 30/30、CLI 2/2、发布契约 7/7 通过；下一小步审计光泽及发光轮廓的同类混合态，下一次完整门禁仍为 rc400。
 v2.12.0-rc362 为渐变叠加样式补齐多选共同属性语义：线性、径向、反射或菱形混合时，标准不可聚焦菜单显示三语“多个值”；选择样式后批量收敛全部可编辑层并启用渐变叠加，锁定及不适用图层跳过，选择保持且每次单步 History/Undo。MCP `xomo.layer.style_settings` 同步支持 `property=gradientOverlayStyle gradientOverlayStyle=linear|radial|reflected|diamond`。专项 3/3、样式回归 30/30、CLI 2/2、发布契约 7/7 通过；下一小步处理图案叠加种类的同类混合态，下一次完整门禁仍为 rc400。

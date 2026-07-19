@@ -4169,14 +4169,6 @@ struct ImageEditorView: View {
         }
     }
 
-    private var selectedLayerOuterGlowContourBinding: Binding<ImageEditorLayerEffectContour> {
-        Binding {
-            viewModel.selectedLayerOuterGlowContour
-        } set: { value in
-            viewModel.setSelectedLayerOuterGlowContour(value)
-        }
-    }
-
     private var selectedLayerInnerGlowOpacityBinding: Binding<Double> {
         Binding {
             viewModel.selectedLayerInnerGlowOpacity
@@ -7180,12 +7172,15 @@ struct ImageEditorView: View {
                     in: 0...1,
                     step: 0.05
                 )
-                Picker(L10n.text("imageEditor.properties.outerGlowContour"), selection: selectedLayerOuterGlowContourBinding) {
-                    ForEach(ImageEditorLayerEffectContour.allCases) { contour in
-                        Text(contour.title).tag(contour)
-                    }
+                layerStyleValuePicker(
+                    state: viewModel.selectedLayerOuterGlowContourState,
+                    values: ImageEditorLayerEffectContour.allCases,
+                    labelKey: "imageEditor.properties.outerGlowContour",
+                    accessibilityIdentifier: "image-editor-layer-style-outer-glow-contour",
+                    title: \.title
+                ) { contour in
+                    viewModel.setSelectedLayerOuterGlowContour(contour)
                 }
-                .pickerStyle(.menu)
                 Stepper(
                     L10n.format("imageEditor.properties.innerGlowOpacityValue", Int((viewModel.selectedLayerInnerGlowOpacity * 100).rounded())),
                     value: selectedLayerInnerGlowOpacityBinding,

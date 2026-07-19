@@ -388,6 +388,10 @@ extension ImageEditorViewModel {
         document.selectedLayer?.style.outerGlowContour ?? .linear
     }
 
+    var selectedLayerOuterGlowContourState: ImageEditorLayerStyleValueState<ImageEditorLayerEffectContour> {
+        selectedLayerStyleValueState(\.outerGlowContour)
+    }
+
     var selectedLayerInnerGlowOpacity: Double {
         Double(document.selectedLayer?.style.innerGlowOpacity ?? 0.36)
     }
