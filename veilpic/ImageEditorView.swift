@@ -4121,14 +4121,6 @@ struct ImageEditorView: View {
         }
     }
 
-    private var selectedLayerInnerShadowContourBinding: Binding<ImageEditorLayerEffectContour> {
-        Binding {
-            viewModel.selectedLayerInnerShadowContour
-        } set: { value in
-            viewModel.setSelectedLayerInnerShadowContour(value)
-        }
-    }
-
     private var selectedLayerInnerShadowDistanceBinding: Binding<Double> {
         Binding {
             viewModel.selectedLayerInnerShadowDistance
@@ -7133,12 +7125,15 @@ struct ImageEditorView: View {
                         step: 0.05
                     )
                 }
-                Picker(L10n.text("imageEditor.properties.innerShadowContour"), selection: selectedLayerInnerShadowContourBinding) {
-                    ForEach(ImageEditorLayerEffectContour.allCases) { contour in
-                        Text(contour.title).tag(contour)
-                    }
+                layerStyleValuePicker(
+                    state: viewModel.selectedLayerInnerShadowContourState,
+                    values: ImageEditorLayerEffectContour.allCases,
+                    labelKey: "imageEditor.properties.innerShadowContour",
+                    accessibilityIdentifier: "image-editor-layer-style-inner-shadow-contour",
+                    title: \.title
+                ) { contour in
+                    viewModel.setSelectedLayerInnerShadowContour(contour)
                 }
-                .pickerStyle(.menu)
                 Stepper(
                     L10n.format("imageEditor.properties.innerShadowAngleValue", Int(viewModel.selectedLayerInnerShadowAngle.rounded())),
                     value: selectedLayerInnerShadowAngleBinding,

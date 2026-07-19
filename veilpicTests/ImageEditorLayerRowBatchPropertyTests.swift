@@ -806,6 +806,57 @@ struct ImageEditorLayerRowBatchPropertyTests {
         return fixture
     }
 
+    @Test func layerStyleMixedInnerShadowContourConvergesAcrossEditableSelection() throws {
+        let fixture = innerShadowContourFixture()
+        let viewModel = fixture.viewModel
+        let firstID = fixture.layers[0].id
+        let secondID = fixture.layers[1].id
+        let lockedID = fixture.layers[2].id
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.selectedLayerInnerShadowContourState == .mixed)
+        viewModel.setSelectedLayerInnerShadowContour(.cone)
+        #expect(viewModel.selectedLayerInnerShadowContourState == .value(.cone))
+        #expect((try layer(firstID, in: viewModel)).style.innerShadowContour == .cone)
+        #expect((try layer(secondID, in: viewModel)).style.innerShadowContour == .cone)
+        #expect((try layer(lockedID, in: viewModel)).style.innerShadowContour == .linear)
+        #expect((try layer(firstID, in: viewModel)).style.innerShadowEnabled)
+        #expect((try layer(secondID, in: viewModel)).style.innerShadowEnabled)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerInnerShadowContourState == .mixed)
+        viewModel.redo()
+        #expect(viewModel.selectedLayerInnerShadowContourState == .value(.cone))
+    }
+
+    @Test func layerStyleMixedInnerShadowContourPickerUsesLocalizedValue() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("state: viewModel.selectedLayerInnerShadowContourState"))
+        #expect(source.contains("image-editor-layer-style-inner-shadow-contour"))
+        #expect(source.contains("viewModel.setSelectedLayerInnerShadowContour(contour)"))
+        #expect(!source.contains("selectedLayerInnerShadowContourBinding"))
+    }
+
+    private func innerShadowContourFixture() -> Fixture {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        viewModel.document.layers[0].style.innerShadowContour = .linear
+        viewModel.document.layers[1].style.innerShadowContour = .steep
+        viewModel.document.layers[2].style.innerShadowContour = .linear
+        viewModel.document.layers[2].isLocked = true
+        select(Set(fixture.layers.map(\.id)), primary: fixture.layers[0].id, in: viewModel)
+        return fixture
+    }
+
     @Test func layerStyleSatinInvertMixedStateConvergesAcrossEditableSelection() throws {
         try assertSatinInvertConvergence()
     }

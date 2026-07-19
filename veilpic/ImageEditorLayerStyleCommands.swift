@@ -351,6 +351,10 @@ extension ImageEditorViewModel {
         document.selectedLayer?.style.innerShadowContour ?? .linear
     }
 
+    var selectedLayerInnerShadowContourState: ImageEditorLayerStyleValueState<ImageEditorLayerEffectContour> {
+        selectedLayerStyleValueState(\.innerShadowContour)
+    }
+
     var selectedLayerInnerShadowDistance: Double {
         Double(document.selectedLayer?.style.innerShadowDistance ?? 7)
     }

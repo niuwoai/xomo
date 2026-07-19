@@ -1,7 +1,8 @@
 # Xomo MCP 与 CLI
 
-> 当前版本：v2.12.0-rc364
+> 当前版本：v2.12.0-rc365
 
+rc365 为 `xomo.layer.style_settings` 增加 `property=innerShadowContour`，并要求 `innerShadowContour=linear|soft|steep|cone|ring`；调用会批量更新全部可编辑选中层、启用内阴影并与本地混合值菜单共享单步 History/Undo setter。锁定及不适用图层跳过，工具 schema 明确公开五项枚举，既有参数和返回结构保持兼容。
 rc364 为 `xomo.layer.style_settings` 增加 `property=shadowContour`，并要求 `shadowContour=linear|soft|steep|cone|ring`；调用会批量更新全部可编辑选中层、启用投影并与本地混合值菜单共享单步 History/Undo setter。锁定及不适用图层跳过，工具 schema 明确公开五项枚举，既有参数和返回结构保持兼容。
 rc363 为 `xomo.layer.style_settings` 增加 `property=patternOverlayKind`，并要求 `patternOverlayKind=checkerboard|diagonalStripes|dots`；调用会批量更新全部可编辑选中层、启用图案叠加并与本地混合值菜单共享单步 History/Undo setter。锁定及不适用图层跳过，工具 schema 明确公开三项枚举；独立字段避免与描边图案 `patternKind` 混淆，既有参数和返回结构保持兼容。
 rc362 为 `xomo.layer.style_settings` 增加 `property=gradientOverlayStyle`，并要求 `gradientOverlayStyle=linear|radial|reflected|diamond`；调用会批量更新全部可编辑选中层、启用渐变叠加并与本地混合值菜单共享单步 History/Undo setter。锁定及不适用图层跳过，工具 schema 明确公开四项枚举，既有参数和返回结构保持兼容。
