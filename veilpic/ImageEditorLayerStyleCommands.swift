@@ -346,6 +346,10 @@ extension ImageEditorViewModel {
         return Double(ImageEditorLayerStyle.shadowDistance(from: style.resolvedShadowOffset(globalLightAngle: document.globalLightAngle)))
     }
 
+    var selectedLayerShadowDistanceState: ImageEditorLayerStyleValueState<CGFloat> {
+        selectedLayerStyleValueState(\.shadowDistance)
+    }
+
     var selectedLayerShadowAngle: Double {
         guard let style = document.selectedLayer?.style else { return -45 }
         return Double(style.resolvedShadowAngle(globalLightAngle: document.globalLightAngle))

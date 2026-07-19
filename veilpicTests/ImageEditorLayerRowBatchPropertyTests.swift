@@ -814,6 +814,57 @@ struct ImageEditorLayerRowBatchPropertyTests {
         return fixture
     }
 
+    @Test func layerStyleShadowDistanceMixedValueConvergesAcrossEditableSelection() throws {
+        let fixture = shadowDistanceFixture()
+        let viewModel = fixture.viewModel
+        let firstID = fixture.layers[0].id
+        let secondID = fixture.layers[1].id
+        let lockedID = fixture.layers[2].id
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.selectedLayerShadowDistanceState == .mixed)
+        viewModel.setSelectedLayerShadowDistance(24)
+        #expect(viewModel.selectedLayerShadowDistanceState == .value(24))
+        #expect((try layer(firstID, in: viewModel)).style.shadowDistance == 24)
+        #expect((try layer(secondID, in: viewModel)).style.shadowDistance == 24)
+        #expect((try layer(lockedID, in: viewModel)).style.shadowDistance == 12)
+        #expect((try layer(firstID, in: viewModel)).style.shadowEnabled)
+        #expect((try layer(secondID, in: viewModel)).style.shadowEnabled)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerShadowDistanceState == .mixed)
+        viewModel.redo()
+        #expect(viewModel.selectedLayerShadowDistanceState == .value(24))
+    }
+
+    @Test func layerStyleShadowDistanceControlReusesMixedNumericStepper() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("state: viewModel.selectedLayerShadowDistanceState"))
+        #expect(source.contains("value: selectedLayerShadowDistanceBinding"))
+        #expect(source.contains("image-editor-layer-style-shadow-distance"))
+        #expect(source.contains("L10n.format(\"imageEditor.properties.shadowDistanceValue\""))
+    }
+
+    private func shadowDistanceFixture() -> Fixture {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        viewModel.document.layers[0].style.shadowDistance = 6
+        viewModel.document.layers[1].style.shadowDistance = 30
+        viewModel.document.layers[2].style.shadowDistance = 12
+        viewModel.document.layers[2].isLocked = true
+        select(Set(fixture.layers.map(\.id)), primary: fixture.layers[0].id, in: viewModel)
+        return fixture
+    }
+
     @Test func layerStyleShadowNoiseMixedValueConvergesAcrossEditableSelection() throws {
         let fixture = shadowNoiseFixture()
         let viewModel = fixture.viewModel

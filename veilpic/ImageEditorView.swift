@@ -7088,12 +7088,15 @@ struct ImageEditorView: View {
                     step: 15
                 )
                 HStack {
-                    Stepper(
-                        L10n.format("imageEditor.properties.shadowDistanceValue", Int(viewModel.selectedLayerShadowDistance.rounded())),
+                    layerStyleNumericStepper(
+                        state: viewModel.selectedLayerShadowDistanceState,
                         value: selectedLayerShadowDistanceBinding,
-                        in: 0...80,
-                        step: 1
-                    )
+                        range: 0...80,
+                        step: 1,
+                        accessibilityIdentifier: "image-editor-layer-style-shadow-distance"
+                    ) { value in
+                        L10n.format("imageEditor.properties.shadowDistanceValue", Int(value.rounded()))
+                    }
                     Stepper(
                         L10n.format("imageEditor.properties.shadowAngleValue", Int(viewModel.selectedLayerShadowAngle.rounded())),
                         value: selectedLayerShadowAngleBinding,
