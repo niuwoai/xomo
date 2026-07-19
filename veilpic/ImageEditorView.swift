@@ -7323,12 +7323,15 @@ struct ImageEditorView: View {
                         in: 0.05...1,
                         step: 0.05
                     )
-                    Stepper(
-                        L10n.format("imageEditor.properties.patternOverlayScaleValue", Int(viewModel.selectedLayerPatternOverlayScale.rounded())),
+                    layerStyleNumericStepper(
+                        state: viewModel.selectedLayerPatternOverlayScaleState,
                         value: selectedLayerPatternOverlayScaleBinding,
-                        in: 6...64,
-                        step: 2
-                    )
+                        range: 6...64,
+                        step: 2,
+                        accessibilityIdentifier: "image-editor-layer-style-pattern-overlay-scale"
+                    ) { value in
+                        L10n.format("imageEditor.properties.patternOverlayScaleValue", Int(value.rounded()))
+                    }
                 }
                 HStack {
                     Stepper(

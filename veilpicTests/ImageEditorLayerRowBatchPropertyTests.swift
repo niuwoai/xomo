@@ -916,6 +916,57 @@ struct ImageEditorLayerRowBatchPropertyTests {
         return fixture
     }
 
+    @Test func layerStylePatternOverlayScaleMixedValueConvergesAcrossEditableSelection() throws {
+        let fixture = patternOverlayScaleFixture()
+        let viewModel = fixture.viewModel
+        let firstID = fixture.layers[0].id
+        let secondID = fixture.layers[1].id
+        let lockedID = fixture.layers[2].id
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.selectedLayerPatternOverlayScaleState == .mixed)
+        viewModel.setSelectedLayerPatternOverlayScale(32)
+        #expect(viewModel.selectedLayerPatternOverlayScaleState == .value(32))
+        #expect((try layer(firstID, in: viewModel)).style.patternOverlayScale == 32)
+        #expect((try layer(secondID, in: viewModel)).style.patternOverlayScale == 32)
+        #expect((try layer(lockedID, in: viewModel)).style.patternOverlayScale == 12)
+        #expect((try layer(firstID, in: viewModel)).style.patternOverlayEnabled)
+        #expect((try layer(secondID, in: viewModel)).style.patternOverlayEnabled)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerPatternOverlayScaleState == .mixed)
+        viewModel.redo()
+        #expect(viewModel.selectedLayerPatternOverlayScaleState == .value(32))
+    }
+
+    @Test func layerStylePatternOverlayScaleControlReusesMixedNumericStepper() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("state: viewModel.selectedLayerPatternOverlayScaleState"))
+        #expect(source.contains("value: selectedLayerPatternOverlayScaleBinding"))
+        #expect(source.contains("image-editor-layer-style-pattern-overlay-scale"))
+        #expect(source.contains("L10n.format(\"imageEditor.properties.patternOverlayScaleValue\""))
+    }
+
+    private func patternOverlayScaleFixture() -> Fixture {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        viewModel.document.layers[0].style.patternOverlayScale = 8
+        viewModel.document.layers[1].style.patternOverlayScale = 24
+        viewModel.document.layers[2].style.patternOverlayScale = 12
+        viewModel.document.layers[2].isLocked = true
+        select(Set(fixture.layers.map(\.id)), primary: fixture.layers[0].id, in: viewModel)
+        return fixture
+    }
+
     @Test func layerStyleMixedShadowContourConvergesAcrossEditableSelection() throws {
         let fixture = shadowContourFixture()
         let viewModel = fixture.viewModel
