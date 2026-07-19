@@ -704,6 +704,57 @@ struct ImageEditorLayerRowBatchPropertyTests {
         return fixture
     }
 
+    @Test func layerStyleMixedPatternOverlayKindConvergesAcrossEditableSelection() throws {
+        let fixture = patternOverlayKindFixture()
+        let viewModel = fixture.viewModel
+        let firstID = fixture.layers[0].id
+        let secondID = fixture.layers[1].id
+        let lockedID = fixture.layers[2].id
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.selectedLayerPatternOverlayKindState == .mixed)
+        viewModel.setSelectedLayerPatternOverlayKind(.dots)
+        #expect(viewModel.selectedLayerPatternOverlayKindState == .value(.dots))
+        #expect((try layer(firstID, in: viewModel)).style.patternOverlayKind == .dots)
+        #expect((try layer(secondID, in: viewModel)).style.patternOverlayKind == .dots)
+        #expect((try layer(lockedID, in: viewModel)).style.patternOverlayKind == .checkerboard)
+        #expect((try layer(firstID, in: viewModel)).style.patternOverlayEnabled)
+        #expect((try layer(secondID, in: viewModel)).style.patternOverlayEnabled)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerPatternOverlayKindState == .mixed)
+        viewModel.redo()
+        #expect(viewModel.selectedLayerPatternOverlayKindState == .value(.dots))
+    }
+
+    @Test func layerStyleMixedPatternOverlayKindPickerUsesLocalizedValue() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("state: viewModel.selectedLayerPatternOverlayKindState"))
+        #expect(source.contains("image-editor-layer-style-pattern-overlay-kind"))
+        #expect(source.contains("viewModel.setSelectedLayerPatternOverlayKind(kind)"))
+        #expect(!source.contains("selectedLayerPatternOverlayKindBinding"))
+    }
+
+    private func patternOverlayKindFixture() -> Fixture {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        viewModel.document.layers[0].style.patternOverlayKind = .checkerboard
+        viewModel.document.layers[1].style.patternOverlayKind = .diagonalStripes
+        viewModel.document.layers[2].style.patternOverlayKind = .checkerboard
+        viewModel.document.layers[2].isLocked = true
+        select(Set(fixture.layers.map(\.id)), primary: fixture.layers[0].id, in: viewModel)
+        return fixture
+    }
+
     @Test func layerStyleSatinInvertMixedStateConvergesAcrossEditableSelection() throws {
         try assertSatinInvertConvergence()
     }

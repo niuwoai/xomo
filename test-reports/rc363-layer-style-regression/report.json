@@ -1,0 +1,309 @@
+{
+  "generated_at": "2026-07-19 12:10:41 +0800",
+  "total": 30,
+  "passed": 30,
+  "failed": 0,
+  "jobs": 4,
+  "results": [
+    {
+      "suite": "ImageEditorLayerStyleTests",
+      "method": "imageEditorBatchEditsLayerStyleEffectsAcrossEditableSelection",
+      "identifier": "veilpicTests/ImageEditorLayerStyleTests/imageEditorBatchEditsLayerStyleEffectsAcrossEditableSelection",
+      "file": "ImageEditorLayerStyleTests.swift",
+      "passed": true,
+      "duration": 22.483,
+      "issues": [],
+      "log": "ImageEditorLayerStyleTests.imageEditorBatchEditsLayerStyleEffectsAcrossEditableSelection.log"
+    },
+    {
+      "suite": "ImageEditorLayerStyleTests",
+      "method": "imageEditorBevelIsNonDestructiveAndUpdatesStyleParameters",
+      "identifier": "veilpicTests/ImageEditorLayerStyleTests/imageEditorBevelIsNonDestructiveAndUpdatesStyleParameters",
+      "file": "ImageEditorLayerStyleTests.swift",
+      "passed": true,
+      "duration": 21.956,
+      "issues": [],
+      "log": "ImageEditorLayerStyleTests.imageEditorBevelIsNonDestructiveAndUpdatesStyleParameters.log"
+    },
+    {
+      "suite": "ImageEditorLayerStyleTests",
+      "method": "imageEditorBlendIfHidesSourceLuminanceOutsideSelectedRange",
+      "identifier": "veilpicTests/ImageEditorLayerStyleTests/imageEditorBlendIfHidesSourceLuminanceOutsideSelectedRange",
+      "file": "ImageEditorLayerStyleTests.swift",
+      "passed": true,
+      "duration": 22.241,
+      "issues": [],
+      "log": "ImageEditorLayerStyleTests.imageEditorBlendIfHidesSourceLuminanceOutsideSelectedRange.log"
+    },
+    {
+      "suite": "ImageEditorLayerStyleTests",
+      "method": "imageEditorBlendIfUnderlyingHidesLayerOverBackdropLuminanceOutsideRange",
+      "identifier": "veilpicTests/ImageEditorLayerStyleTests/imageEditorBlendIfUnderlyingHidesLayerOverBackdropLuminanceOutsideRange",
+      "file": "ImageEditorLayerStyleTests.swift",
+      "passed": true,
+      "duration": 23.092,
+      "issues": [],
+      "log": "ImageEditorLayerStyleTests.imageEditorBlendIfUnderlyingHidesLayerOverBackdropLuminanceOutsideRange.log"
+    },
+    {
+      "suite": "ImageEditorLayerStyleTests",
+      "method": "imageEditorColorOverlayIsNonDestructiveAndBakesOnMerge",
+      "identifier": "veilpicTests/ImageEditorLayerStyleTests/imageEditorColorOverlayIsNonDestructiveAndBakesOnMerge",
+      "file": "ImageEditorLayerStyleTests.swift",
+      "passed": true,
+      "duration": 22.735,
+      "issues": [],
+      "log": "ImageEditorLayerStyleTests.imageEditorColorOverlayIsNonDestructiveAndBakesOnMerge.log"
+    },
+    {
+      "suite": "ImageEditorLayerStyleTests",
+      "method": "imageEditorColorOverlayRemainsVisibleWhenFillOpacityIsZero",
+      "identifier": "veilpicTests/ImageEditorLayerStyleTests/imageEditorColorOverlayRemainsVisibleWhenFillOpacityIsZero",
+      "file": "ImageEditorLayerStyleTests.swift",
+      "passed": true,
+      "duration": 23.979,
+      "issues": [],
+      "log": "ImageEditorLayerStyleTests.imageEditorColorOverlayRemainsVisibleWhenFillOpacityIsZero.log"
+    },
+    {
+      "suite": "ImageEditorLayerStyleTests",
+      "method": "imageEditorCopiesPastesAndClearsLayerStyleAcrossEditableSelection",
+      "identifier": "veilpicTests/ImageEditorLayerStyleTests/imageEditorCopiesPastesAndClearsLayerStyleAcrossEditableSelection",
+      "file": "ImageEditorLayerStyleTests.swift",
+      "passed": true,
+      "duration": 22.073,
+      "issues": [],
+      "log": "ImageEditorLayerStyleTests.imageEditorCopiesPastesAndClearsLayerStyleAcrossEditableSelection.log"
+    },
+    {
+      "suite": "ImageEditorLayerStyleTests",
+      "method": "imageEditorDissolveBlendModeDithersLayerOpacityDeterministically",
+      "identifier": "veilpicTests/ImageEditorLayerStyleTests/imageEditorDissolveBlendModeDithersLayerOpacityDeterministically",
+      "file": "ImageEditorLayerStyleTests.swift",
+      "passed": true,
+      "duration": 23.376,
+      "issues": [],
+      "log": "ImageEditorLayerStyleTests.imageEditorDissolveBlendModeDithersLayerOpacityDeterministically.log"
+    },
+    {
+      "suite": "ImageEditorLayerStyleTests",
+      "method": "imageEditorDropShadowAngleAndDistanceMoveShadowDirectionally",
+      "identifier": "veilpicTests/ImageEditorLayerStyleTests/imageEditorDropShadowAngleAndDistanceMoveShadowDirectionally",
+      "file": "ImageEditorLayerStyleTests.swift",
+      "passed": true,
+      "duration": 20.266,
+      "issues": [],
+      "log": "ImageEditorLayerStyleTests.imageEditorDropShadowAngleAndDistanceMoveShadowDirectionally.log"
+    },
+    {
+      "suite": "ImageEditorLayerStyleTests",
+      "method": "imageEditorDropShadowColorUsesForegroundColor",
+      "identifier": "veilpicTests/ImageEditorLayerStyleTests/imageEditorDropShadowColorUsesForegroundColor",
+      "file": "ImageEditorLayerStyleTests.swift",
+      "passed": true,
+      "duration": 19.538,
+      "issues": [],
+      "log": "ImageEditorLayerStyleTests.imageEditorDropShadowColorUsesForegroundColor.log"
+    },
+    {
+      "suite": "ImageEditorLayerStyleTests",
+      "method": "imageEditorDropShadowNoiseVariesShadowAlphaAndRoundTripsProjectState",
+      "identifier": "veilpicTests/ImageEditorLayerStyleTests/imageEditorDropShadowNoiseVariesShadowAlphaAndRoundTripsProjectState",
+      "file": "ImageEditorLayerStyleTests.swift",
+      "passed": true,
+      "duration": 23.528,
+      "issues": [],
+      "log": "ImageEditorLayerStyleTests.imageEditorDropShadowNoiseVariesShadowAlphaAndRoundTripsProjectState.log"
+    },
+    {
+      "suite": "ImageEditorLayerStyleTests",
+      "method": "imageEditorDropShadowRemainsVisibleWhenFillOpacityIsZero",
+      "identifier": "veilpicTests/ImageEditorLayerStyleTests/imageEditorDropShadowRemainsVisibleWhenFillOpacityIsZero",
+      "file": "ImageEditorLayerStyleTests.swift",
+      "passed": true,
+      "duration": 24.503,
+      "issues": [],
+      "log": "ImageEditorLayerStyleTests.imageEditorDropShadowRemainsVisibleWhenFillOpacityIsZero.log"
+    },
+    {
+      "suite": "ImageEditorLayerStyleTests",
+      "method": "imageEditorDropShadowSpreadExpandsShadowBeforeBlur",
+      "identifier": "veilpicTests/ImageEditorLayerStyleTests/imageEditorDropShadowSpreadExpandsShadowBeforeBlur",
+      "file": "ImageEditorLayerStyleTests.swift",
+      "passed": true,
+      "duration": 24.224,
+      "issues": [],
+      "log": "ImageEditorLayerStyleTests.imageEditorDropShadowSpreadExpandsShadowBeforeBlur.log"
+    },
+    {
+      "suite": "ImageEditorLayerStyleTests",
+      "method": "imageEditorGlobalLightDrivesLinkedBevelAngles",
+      "identifier": "veilpicTests/ImageEditorLayerStyleTests/imageEditorGlobalLightDrivesLinkedBevelAngles",
+      "file": "ImageEditorLayerStyleTests.swift",
+      "passed": true,
+      "duration": 19.5,
+      "issues": [],
+      "log": "ImageEditorLayerStyleTests.imageEditorGlobalLightDrivesLinkedBevelAngles.log"
+    },
+    {
+      "suite": "ImageEditorLayerStyleTests",
+      "method": "imageEditorGlobalLightDrivesLinkedShadowAngles",
+      "identifier": "veilpicTests/ImageEditorLayerStyleTests/imageEditorGlobalLightDrivesLinkedShadowAngles",
+      "file": "ImageEditorLayerStyleTests.swift",
+      "passed": true,
+      "duration": 19.854,
+      "issues": [],
+      "log": "ImageEditorLayerStyleTests.imageEditorGlobalLightDrivesLinkedShadowAngles.log"
+    },
+    {
+      "suite": "ImageEditorLayerStyleTests",
+      "method": "imageEditorGradientOverlayIsNonDestructiveAndUpdatesStyleParameters",
+      "identifier": "veilpicTests/ImageEditorLayerStyleTests/imageEditorGradientOverlayIsNonDestructiveAndUpdatesStyleParameters",
+      "file": "ImageEditorLayerStyleTests.swift",
+      "passed": true,
+      "duration": 23.771,
+      "issues": [],
+      "log": "ImageEditorLayerStyleTests.imageEditorGradientOverlayIsNonDestructiveAndUpdatesStyleParameters.log"
+    },
+    {
+      "suite": "ImageEditorLayerStyleTests",
+      "method": "imageEditorInnerGlowNoiseChangesGlowAndRoundTripsProjectState",
+      "identifier": "veilpicTests/ImageEditorLayerStyleTests/imageEditorInnerGlowNoiseChangesGlowAndRoundTripsProjectState",
+      "file": "ImageEditorLayerStyleTests.swift",
+      "passed": true,
+      "duration": 19.27,
+      "issues": [],
+      "log": "ImageEditorLayerStyleTests.imageEditorInnerGlowNoiseChangesGlowAndRoundTripsProjectState.log"
+    },
+    {
+      "suite": "ImageEditorLayerStyleTests",
+      "method": "imageEditorInnerGlowSourceChangesRenderedGlow",
+      "identifier": "veilpicTests/ImageEditorLayerStyleTests/imageEditorInnerGlowSourceChangesRenderedGlow",
+      "file": "ImageEditorLayerStyleTests.swift",
+      "passed": true,
+      "duration": 18.936,
+      "issues": [],
+      "log": "ImageEditorLayerStyleTests.imageEditorInnerGlowSourceChangesRenderedGlow.log"
+    },
+    {
+      "suite": "ImageEditorLayerStyleTests",
+      "method": "imageEditorInnerShadowChokeAndNoiseRoundTripProjectState",
+      "identifier": "veilpicTests/ImageEditorLayerStyleTests/imageEditorInnerShadowChokeAndNoiseRoundTripProjectState",
+      "file": "ImageEditorLayerStyleTests.swift",
+      "passed": true,
+      "duration": 22.329,
+      "issues": [],
+      "log": "ImageEditorLayerStyleTests.imageEditorInnerShadowChokeAndNoiseRoundTripProjectState.log"
+    },
+    {
+      "suite": "ImageEditorLayerStyleTests",
+      "method": "imageEditorInnerShadowIsNonDestructiveAndUpdatesStyleParameters",
+      "identifier": "veilpicTests/ImageEditorLayerStyleTests/imageEditorInnerShadowIsNonDestructiveAndUpdatesStyleParameters",
+      "file": "ImageEditorLayerStyleTests.swift",
+      "passed": true,
+      "duration": 23.792,
+      "issues": [],
+      "log": "ImageEditorLayerStyleTests.imageEditorInnerShadowIsNonDestructiveAndUpdatesStyleParameters.log"
+    },
+    {
+      "suite": "ImageEditorLayerStyleTests",
+      "method": "imageEditorInsideStrokeStaysInsideLayerAlpha",
+      "identifier": "veilpicTests/ImageEditorLayerStyleTests/imageEditorInsideStrokeStaysInsideLayerAlpha",
+      "file": "ImageEditorLayerStyleTests.swift",
+      "passed": true,
+      "duration": 18.511,
+      "issues": [],
+      "log": "ImageEditorLayerStyleTests.imageEditorInsideStrokeStaysInsideLayerAlpha.log"
+    },
+    {
+      "suite": "ImageEditorLayerStyleTests",
+      "method": "imageEditorLayerEffectContoursChangeFalloffAndRoundTripProjectState",
+      "identifier": "veilpicTests/ImageEditorLayerStyleTests/imageEditorLayerEffectContoursChangeFalloffAndRoundTripProjectState",
+      "file": "ImageEditorLayerStyleTests.swift",
+      "passed": true,
+      "duration": 19.061,
+      "issues": [],
+      "log": "ImageEditorLayerStyleTests.imageEditorLayerEffectContoursChangeFalloffAndRoundTripProjectState.log"
+    },
+    {
+      "suite": "ImageEditorLayerStyleTests",
+      "method": "imageEditorOuterGlowNoiseChangesGlowAndRoundTripsProjectState",
+      "identifier": "veilpicTests/ImageEditorLayerStyleTests/imageEditorOuterGlowNoiseChangesGlowAndRoundTripsProjectState",
+      "file": "ImageEditorLayerStyleTests.swift",
+      "passed": true,
+      "duration": 22.758,
+      "issues": [],
+      "log": "ImageEditorLayerStyleTests.imageEditorOuterGlowNoiseChangesGlowAndRoundTripsProjectState.log"
+    },
+    {
+      "suite": "ImageEditorLayerStyleTests",
+      "method": "imageEditorPatternOverlayIsNonDestructiveAndRemainsVisibleWithZeroFill",
+      "identifier": "veilpicTests/ImageEditorLayerStyleTests/imageEditorPatternOverlayIsNonDestructiveAndRemainsVisibleWithZeroFill",
+      "file": "ImageEditorLayerStyleTests.swift",
+      "passed": true,
+      "duration": 30.706,
+      "issues": [],
+      "log": "ImageEditorLayerStyleTests.imageEditorPatternOverlayIsNonDestructiveAndRemainsVisibleWithZeroFill.log"
+    },
+    {
+      "suite": "ImageEditorLayerStyleTests",
+      "method": "imageEditorSatinIsNonDestructiveAndUpdatesStyleParameters",
+      "identifier": "veilpicTests/ImageEditorLayerStyleTests/imageEditorSatinIsNonDestructiveAndUpdatesStyleParameters",
+      "file": "ImageEditorLayerStyleTests.swift",
+      "passed": true,
+      "duration": 29.523,
+      "issues": [],
+      "log": "ImageEditorLayerStyleTests.imageEditorSatinIsNonDestructiveAndUpdatesStyleParameters.log"
+    },
+    {
+      "suite": "ImageEditorLayerStyleTests",
+      "method": "imageEditorStrokeColorUsesForegroundColor",
+      "identifier": "veilpicTests/ImageEditorLayerStyleTests/imageEditorStrokeColorUsesForegroundColor",
+      "file": "ImageEditorLayerStyleTests.swift",
+      "passed": true,
+      "duration": 21.365,
+      "issues": [],
+      "log": "ImageEditorLayerStyleTests.imageEditorStrokeColorUsesForegroundColor.log"
+    },
+    {
+      "suite": "ImageEditorLayerStyleTests",
+      "method": "imageEditorStrokeGradientFillRendersAndRoundTripsProjectState",
+      "identifier": "veilpicTests/ImageEditorLayerStyleTests/imageEditorStrokeGradientFillRendersAndRoundTripsProjectState",
+      "file": "ImageEditorLayerStyleTests.swift",
+      "passed": true,
+      "duration": 19.295,
+      "issues": [],
+      "log": "ImageEditorLayerStyleTests.imageEditorStrokeGradientFillRendersAndRoundTripsProjectState.log"
+    },
+    {
+      "suite": "ImageEditorLayerStyleTests",
+      "method": "imageEditorStrokeOpacityBlendsStrokeIndependentlyFromFill",
+      "identifier": "veilpicTests/ImageEditorLayerStyleTests/imageEditorStrokeOpacityBlendsStrokeIndependentlyFromFill",
+      "file": "ImageEditorLayerStyleTests.swift",
+      "passed": true,
+      "duration": 19.505,
+      "issues": [],
+      "log": "ImageEditorLayerStyleTests.imageEditorStrokeOpacityBlendsStrokeIndependentlyFromFill.log"
+    },
+    {
+      "suite": "ImageEditorLayerStyleTests",
+      "method": "imageEditorStrokePatternFillRendersAndRoundTripsProjectState",
+      "identifier": "veilpicTests/ImageEditorLayerStyleTests/imageEditorStrokePatternFillRendersAndRoundTripsProjectState",
+      "file": "ImageEditorLayerStyleTests.swift",
+      "passed": true,
+      "duration": 18.895,
+      "issues": [],
+      "log": "ImageEditorLayerStyleTests.imageEditorStrokePatternFillRendersAndRoundTripsProjectState.log"
+    },
+    {
+      "suite": "ImageEditorLayerStyleTests",
+      "method": "imageEditorStrokeSupportsGradientAndPatternFillTypesAndRoundTripsProjectState",
+      "identifier": "veilpicTests/ImageEditorLayerStyleTests/imageEditorStrokeSupportsGradientAndPatternFillTypesAndRoundTripsProjectState",
+      "file": "ImageEditorLayerStyleTests.swift",
+      "passed": true,
+      "duration": 23.187,
+      "issues": [],
+      "log": "ImageEditorLayerStyleTests.imageEditorStrokeSupportsGradientAndPatternFillTypesAndRoundTripsProjectState.log"
+    }
+  ]
+}

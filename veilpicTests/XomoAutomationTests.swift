@@ -3233,6 +3233,29 @@ struct XomoAutomationTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStyle"))
     }
 
+    @Test func registrySetsLayerStylePatternOverlayKindWithAdvertisedEnum() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        try assertPatternOverlayKindSchema(in: toolsResponse)
+
+        let result = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("patternOverlayKind"),
+                "patternOverlayKind": .string("diagonalStripes")
+            ]
+        ))
+
+        #expect(result.ok)
+        #expect(viewModel.document.selectedLayer?.style.patternOverlayKind == .diagonalStripes)
+        #expect(viewModel.document.selectedLayer?.style.patternOverlayEnabled == true)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStyle"))
+    }
+
     @Test func registryCreatesAppliesListsAndDeletesPersistedLayerStylePresets() throws {
         let suiteName = "XomoAutomationTests.layerStylePresets.\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suiteName) ?? .standard
@@ -4122,6 +4145,18 @@ struct XomoAutomationTests {
         #expect(propertySchema["enum"]?.arrayValue?.contains(.string("gradientOverlayStyle")) == true)
         #expect(styleSchema["enum"] == .array([
             .string("linear"), .string("radial"), .string("reflected"), .string("diamond")
+        ]))
+    }
+
+    private func assertPatternOverlayKindSchema(in response: XomoAutomationWireResponse) throws {
+        let styleTool = try #require(automationTool(named: "xomo.layer.style_settings", in: response))
+        let inputSchema = try #require(styleTool["inputSchema"]?.objectValue)
+        let properties = try #require(inputSchema["properties"]?.objectValue)
+        let propertySchema = try #require(properties["property"]?.objectValue)
+        let kindSchema = try #require(properties["patternOverlayKind"]?.objectValue)
+        #expect(propertySchema["enum"]?.arrayValue?.contains(.string("patternOverlayKind")) == true)
+        #expect(kindSchema["enum"] == .array([
+            .string("checkerboard"), .string("diagonalStripes"), .string("dots")
         ]))
     }
 

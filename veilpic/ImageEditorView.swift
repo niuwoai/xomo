@@ -4257,14 +4257,6 @@ struct ImageEditorView: View {
         }
     }
 
-    private var selectedLayerPatternOverlayKindBinding: Binding<ImageEditorPatternOverlayKind> {
-        Binding {
-            viewModel.selectedLayerPatternOverlayKind
-        } set: { value in
-            viewModel.setSelectedLayerPatternOverlayKind(value)
-        }
-    }
-
     private var selectedLayerPatternOverlayOpacityBinding: Binding<Double> {
         Binding {
             viewModel.selectedLayerPatternOverlayOpacity
@@ -7310,12 +7302,15 @@ struct ImageEditorView: View {
                     in: 0.25...4,
                     step: 0.05
                 )
-                Picker(L10n.text("imageEditor.properties.patternOverlayKind"), selection: selectedLayerPatternOverlayKindBinding) {
-                    ForEach(ImageEditorPatternOverlayKind.allCases) { kind in
-                        Text(kind.title).tag(kind)
-                    }
+                layerStyleValuePicker(
+                    state: viewModel.selectedLayerPatternOverlayKindState,
+                    values: ImageEditorPatternOverlayKind.allCases,
+                    labelKey: "imageEditor.properties.patternOverlayKind",
+                    accessibilityIdentifier: "image-editor-layer-style-pattern-overlay-kind",
+                    title: \.title
+                ) { kind in
+                    viewModel.setSelectedLayerPatternOverlayKind(kind)
                 }
-                .pickerStyle(.menu)
                 HStack {
                     Stepper(
                         L10n.format("imageEditor.properties.patternOverlayOpacityValue", Int((viewModel.selectedLayerPatternOverlayOpacity * 100).rounded())),

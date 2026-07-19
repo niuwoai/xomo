@@ -440,6 +440,10 @@ extension ImageEditorViewModel {
         document.selectedLayer?.style.patternOverlayKind ?? .checkerboard
     }
 
+    var selectedLayerPatternOverlayKindState: ImageEditorLayerStyleValueState<ImageEditorPatternOverlayKind> {
+        selectedLayerStyleValueState(\.patternOverlayKind)
+    }
+
     var selectedLayerPatternOverlayOpacity: Double {
         Double(document.selectedLayer?.style.patternOverlayOpacity ?? 0.45)
     }
