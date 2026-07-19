@@ -7193,12 +7193,15 @@ struct ImageEditorView: View {
                     labelKey: "imageEditor.properties.innerShadowUseGlobalLight",
                     accessibilityIdentifier: "image-editor-inner-shadow-global-light"
                 )
-                Stepper(
-                    L10n.format("imageEditor.properties.outerGlowOpacityValue", Int((viewModel.selectedLayerOuterGlowOpacity * 100).rounded())),
+                layerStyleNumericStepper(
+                    state: viewModel.selectedLayerOuterGlowOpacityState,
                     value: selectedLayerOuterGlowOpacityBinding,
-                    in: 0.05...1,
-                    step: 0.05
-                )
+                    range: 0.05...1,
+                    step: 0.05,
+                    accessibilityIdentifier: "image-editor-layer-style-outer-glow-opacity"
+                ) { value in
+                    L10n.format("imageEditor.properties.outerGlowOpacityValue", Int((value * 100).rounded()))
+                }
                 HStack(spacing: 8) {
                     Text(L10n.text("imageEditor.properties.outerGlowColor"))
                         .font(.system(size: 10, weight: .medium))

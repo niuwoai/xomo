@@ -1,7 +1,8 @@
 # Xomo MCP 与 CLI
 
-> 当前版本：v2.12.0-rc389
+> 当前版本：v2.12.0-rc390
 
+rc390 不新增破坏性协议字段；既有 `xomo.layer.style_settings property=outerGlowOpacity value=<0.05...1>` 补充多选批量行为和数值 schema 回归。调用会统一更新全部可编辑选中层、启用外发光并保持单步 History/Undo，锁定及不适用图层跳过；本地混合百分比 Stepper 与 MCP 继续共享同一 setter。
 rc389 不新增破坏性协议字段；既有 `xomo.layer.style_settings property=bevelAngle value=<-180...180>` 补充全局光与本地光混选的批量行为和数值 schema 回归。调用会统一全部可编辑选中层的解析斜面角度，任一目标使用全局光时同步文档全局角度，并保持单步 History/Undo；锁定及不适用图层跳过，本地混合角度 Stepper 与 MCP 继续共享同一 setter。
 rc388 不新增破坏性协议字段；既有 `xomo.layer.style_settings property=shadowAngle value=<-180...180>` 补充全局光与本地光混选的批量行为、逐层偏移同步和数值 schema 回归。调用会统一全部可编辑选中层的解析角度，任一目标使用全局光时同步文档全局角度，并按每层原距离重算 `shadowOffset`；锁定及不适用图层跳过，本地混合角度 Stepper 与 MCP 继续共享同一单步 History/Undo setter。
 rc387 不新增破坏性协议字段；既有 `xomo.layer.style_settings property=innerShadowAngle value=<-180...180>` 补充全局光与本地光混选的批量行为和数值 schema 回归。调用会统一全部可编辑选中层的解析角度，任一目标使用全局光时同步文档全局角度，并保持单步 History/Undo；锁定及不适用图层跳过，本地混合角度 Stepper 与 MCP 继续共享同一 setter。

@@ -1,0 +1,39 @@
+{
+  "generated_at": "2026-07-19 18:42:22 +0800",
+  "total": 3,
+  "passed": 3,
+  "failed": 0,
+  "jobs": 4,
+  "results": [
+    {
+      "suite": "ImageEditorLayerRowBatchPropertyTests",
+      "method": "layerStyleOuterGlowOpacityControlReusesMixedNumericStepper",
+      "identifier": "veilpicTests/ImageEditorLayerRowBatchPropertyTests/layerStyleOuterGlowOpacityControlReusesMixedNumericStepper",
+      "file": "ImageEditorLayerRowBatchPropertyTests.swift",
+      "passed": true,
+      "duration": 5.669,
+      "issues": [],
+      "log": "ImageEditorLayerRowBatchPropertyTests.layerStyleOuterGlowOpacityControlReusesMixedNumericStepper.log"
+    },
+    {
+      "suite": "ImageEditorLayerRowBatchPropertyTests",
+      "method": "layerStyleOuterGlowOpacityMixedValueConvergesAcrossEditableSelection",
+      "identifier": "veilpicTests/ImageEditorLayerRowBatchPropertyTests/layerStyleOuterGlowOpacityMixedValueConvergesAcrossEditableSelection",
+      "file": "ImageEditorLayerRowBatchPropertyTests.swift",
+      "passed": true,
+      "duration": 5.666,
+      "issues": [],
+      "log": "ImageEditorLayerRowBatchPropertyTests.layerStyleOuterGlowOpacityMixedValueConvergesAcrossEditableSelection.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registrySetsLayerStyleOuterGlowOpacityAcrossEditableSelection",
+      "identifier": "veilpicTests/XomoAutomationTests/registrySetsLayerStyleOuterGlowOpacityAcrossEditableSelection",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 5.664,
+      "issues": [],
+      "log": "XomoAutomationTests.registrySetsLayerStyleOuterGlowOpacityAcrossEditableSelection.log"
+    }
+  ]
+}

@@ -436,6 +436,10 @@ extension ImageEditorViewModel {
         Double(document.selectedLayer?.style.outerGlowOpacity ?? 0.42)
     }
 
+    var selectedLayerOuterGlowOpacityState: ImageEditorLayerStyleValueState<CGFloat> {
+        selectedLayerStyleValueState(\.outerGlowOpacity)
+    }
+
     var selectedLayerOuterGlowBlur: Double {
         Double(document.selectedLayer?.style.outerGlowBlur ?? 10)
     }
