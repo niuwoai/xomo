@@ -4051,6 +4051,7 @@ final class ImageEditorViewModel: ObservableObject {
         for index in indices {
             document.layers[index].opacity = normalizedOpacity
         }
+        invalidateRenderedImageCaches()
         updateStatus()
     }
 
@@ -6887,9 +6888,10 @@ final class ImageEditorViewModel: ObservableObject {
         }),
               let filteredImage = renderedLower.applyingFilter(
                 kind: filter.kind,
-                intensity: filter.intensity * filterLayer.opacity,
+                intensity: filter.intensity,
                 settings: filterLayer.filterSettings,
-                mask: document.localEffectMask(forLayerAt: filterIndex)
+                mask: document.localEffectMask(forLayerAt: filterIndex),
+                opacity: filterLayer.opacity
               )
         else { return nil }
 

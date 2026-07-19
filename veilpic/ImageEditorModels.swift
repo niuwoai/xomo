@@ -4504,9 +4504,10 @@ struct ImageEditorDocument {
         if let filter = layer.filter {
             return canvas.applyingFilter(
                 kind: filter.kind,
-                intensity: filter.intensity * layer.opacity * groupOpacity,
+                intensity: filter.intensity,
                 settings: layer.filterSettings,
-                mask: effectiveCanvasMask(forLayerAt: index, layerMask: layer.effectiveMask, groupMask: groupMask)
+                mask: effectiveCanvasMask(forLayerAt: index, layerMask: layer.effectiveMask, groupMask: groupMask),
+                opacity: layer.opacity * groupOpacity
             ) ?? canvas
         }
 

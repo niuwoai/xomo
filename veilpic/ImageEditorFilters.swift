@@ -155,36 +155,128 @@ extension NSImage {
         kind: ImageEditorFilter,
         intensity: Double,
         settings: ImageEditorFilterSettings = ImageEditorFilterSettings(),
-        mask: NSImage?
+        mask: NSImage?,
+        opacity: Double = 1
     ) -> NSImage? {
         guard intensity > 0 else { return self }
+        let normalizedOpacity = max(0, min(1, opacity))
+        guard normalizedOpacity > 0 else { return self }
         guard let filtered = filtered(kind: kind, intensity: intensity, settings: settings) else { return nil }
-        guard let mask else { return filtered }
-        return blendingFilteredImage(filtered, with: mask) ?? filtered
+        guard mask != nil || normalizedOpacity < 1 else { return filtered }
+        return blendingFilteredImage(filtered, with: mask, opacity: normalizedOpacity) ?? self
     }
 
-    private func blendingFilteredImage(_ filtered: NSImage, with mask: NSImage) -> NSImage? {
-        guard let sourceImage = ciImageForEditing(),
-              let filteredImage = filtered.ciImageForEditing(),
-              let normalizedMask = NSImage.rendered(size: size, actions: { rect in
-                  mask.draw(
-                      in: rect,
-                      from: CGRect(origin: .zero, size: mask.size),
-                      operation: .copy,
-                      fraction: 1
-                  )
-              }),
-              let maskImage = normalizedMask.ciImageForEditing(),
-              let blend = CIFilter(name: "CIBlendWithAlphaMask")
+    private func blendingFilteredImage(
+        _ filtered: NSImage,
+        with mask: NSImage?,
+        opacity: Double
+    ) -> NSImage? {
+        guard let source = filterRGBAPlane(),
+              let filtered = filtered.filterRGBAPlane(),
+              source.width == filtered.width,
+              source.height == filtered.height
         else { return nil }
 
-        blend.setValue(filteredImage, forKey: kCIInputImageKey)
-        blend.setValue(sourceImage, forKey: kCIInputBackgroundImageKey)
-        blend.setValue(maskImage, forKey: kCIInputMaskImageKey)
-        guard let output = blend.outputImage?.cropped(to: sourceImage.extent),
-              let cgImage = ImageEditorImageProcessing.ciContext.createCGImage(output, from: sourceImage.extent)
+        let maskAlpha: [UInt8]
+        if let mask {
+            guard let alpha = mask.filterAlphaPlane(width: source.width, height: source.height) else { return nil }
+            maskAlpha = alpha
+        } else {
+            maskAlpha = [UInt8](repeating: .max, count: source.width * source.height)
+        }
+
+        var output = source.values
+        for pixelIndex in maskAlpha.indices {
+            let weight = Double(maskAlpha[pixelIndex]) / 255 * opacity
+            guard weight > 0 else { continue }
+            let byteOffset = pixelIndex * 4
+            for component in 0..<4 {
+                let sourceValue = Double(source.values[byteOffset + component])
+                let filteredValue = Double(filtered.values[byteOffset + component])
+                output[byteOffset + component] = UInt8(
+                    max(0, min(255, (sourceValue + (filteredValue - sourceValue) * weight).rounded()))
+                )
+            }
+        }
+        return Self.filterRGBAImage(
+            width: source.width,
+            height: source.height,
+            values: output,
+            displaySize: size
+        )
+    }
+
+    private func filterAlphaPlane(width: Int, height: Int) -> [UInt8]? {
+        guard let cgImage = cgImage(forProposedRect: nil, context: nil, hints: nil) else { return nil }
+        let bytesPerPixel = 4
+        let bytesPerRow = width * bytesPerPixel
+        var pixels = [UInt8](repeating: 0, count: bytesPerRow * height)
+
+        guard let context = CGContext(
+            data: &pixels,
+            width: width,
+            height: height,
+            bitsPerComponent: 8,
+            bytesPerRow: bytesPerRow,
+            space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ) else { return nil }
+
+        context.interpolationQuality = .none
+        context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
+        var alpha = [UInt8](repeating: 0, count: width * height)
+        for pixelIndex in alpha.indices {
+            alpha[pixelIndex] = pixels[pixelIndex * bytesPerPixel + 3]
+        }
+        return alpha
+    }
+
+    private func filterRGBAPlane() -> (width: Int, height: Int, values: [UInt8])? {
+        guard let cgImage = cgImage(forProposedRect: nil, context: nil, hints: nil) else { return nil }
+        let width = max(1, cgImage.width)
+        let height = max(1, cgImage.height)
+        let bytesPerPixel = 4
+        let bytesPerRow = width * bytesPerPixel
+        var pixels = [UInt8](repeating: 0, count: bytesPerRow * height)
+
+        guard let context = CGContext(
+            data: &pixels,
+            width: width,
+            height: height,
+            bitsPerComponent: 8,
+            bytesPerRow: bytesPerRow,
+            space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ) else { return nil }
+
+        context.interpolationQuality = .none
+        context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
+        return (width, height, pixels)
+    }
+
+    private static func filterRGBAImage(
+        width: Int,
+        height: Int,
+        values: [UInt8],
+        displaySize: CGSize
+    ) -> NSImage? {
+        guard values.count == width * height * 4,
+              let provider = CGDataProvider(data: Data(values) as CFData),
+              let image = CGImage(
+                  width: width,
+                  height: height,
+                  bitsPerComponent: 8,
+                  bitsPerPixel: 32,
+                  bytesPerRow: width * 4,
+                  space: CGColorSpaceCreateDeviceRGB(),
+                  bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue),
+                  provider: provider,
+                  decode: nil,
+                  shouldInterpolate: false,
+                  intent: .defaultIntent
+              )
         else { return nil }
-        return NSImage(cgImage: cgImage, size: size)
+        return NSImage(cgImage: image, size: displaySize)
     }
 
     private func addingDeterministicNoise(intensity: Double) -> NSImage? {

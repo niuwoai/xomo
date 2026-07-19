@@ -140,6 +140,84 @@ struct ImageEditorFilterTests {
         #expect(imageEditorMaximumPixelDifference(output, sourceImage) > 0)
     }
 
+    @Test func filterLayerOpacityBlendsTheCompletedEffectWithoutChangingItsParameters() throws {
+        let canvasSize = NSSize(width: 48, height: 32)
+        let sourceImage = splitColorImage(
+            size: canvasSize,
+            left: NSColor(calibratedRed: 1, green: 0, blue: 0, alpha: 1),
+            right: NSColor(calibratedRed: 0, green: 0, blue: 1, alpha: 1)
+        )
+        let viewModel = ImageEditorViewModel(
+            sourceName: "filter-layer-opacity.png",
+            image: sourceImage
+        ) { _ in }
+        viewModel.selectedFilter = .offset
+        viewModel.filterIntensity = 1
+        viewModel.filterOffsetX = 1
+        viewModel.filterOffsetY = 0
+        viewModel.addFilterLayer()
+
+        let filterIndex = try #require(
+            viewModel.document.layers.firstIndex { $0.id == viewModel.document.selectedLayerID }
+        )
+        let baseIndex = try #require(
+            viewModel.document.layers.indices.first { !viewModel.document.layers[$0].isFilter }
+        )
+        let mask = splitColorImage(
+            size: canvasSize,
+            left: .white,
+            right: .clear
+        )
+        viewModel.document.layers[filterIndex].mask = mask
+        viewModel.setSelectedLayerOpacity(0.5)
+
+        var settings = ImageEditorFilterSettings()
+        settings.offsetX = 1
+        settings.offsetY = 0
+        let expectedImage = try #require(
+            sourceImage.applyingFilter(
+                kind: .offset,
+                intensity: 1,
+                settings: settings,
+                mask: mask,
+                opacity: 0.5
+            )
+        )
+        let parameterScaledImage = try #require(
+            sourceImage.applyingFilter(
+                kind: .offset,
+                intensity: 0.5,
+                settings: settings,
+                mask: mask
+            )
+        )
+        let expectedSample = try #require(
+            expectedImage.color(at: CGPoint(x: 12, y: 16))?.usingColorSpace(.deviceRGB)
+        )
+        let sourceRight = try #require(
+            sourceImage.color(at: CGPoint(x: 36, y: 16))?.usingColorSpace(.deviceRGB)
+        )
+        let filteredSample = try #require(
+            viewModel.currentImage.color(at: CGPoint(x: 12, y: 16))?.usingColorSpace(.deviceRGB)
+        )
+        let maskedOutSample = try #require(
+            viewModel.currentImage.color(at: CGPoint(x: 36, y: 16))?.usingColorSpace(.deviceRGB)
+        )
+        let filterLayer = viewModel.document.layers[filterIndex]
+        let merged = try #require(viewModel.mergedFilterLayer(lowerIndex: baseIndex, filterIndex: filterIndex))
+
+        #expect(filterLayer.filter?.intensity == 1)
+        #expect(abs(filteredSample.redComponent - expectedSample.redComponent) < 0.01)
+        #expect(abs(filteredSample.greenComponent - expectedSample.greenComponent) < 0.01)
+        #expect(abs(filteredSample.blueComponent - expectedSample.blueComponent) < 0.01)
+        #expect(abs(maskedOutSample.redComponent - sourceRight.redComponent) < 0.01)
+        #expect(abs(maskedOutSample.greenComponent - sourceRight.greenComponent) < 0.01)
+        #expect(abs(maskedOutSample.blueComponent - sourceRight.blueComponent) < 0.01)
+        #expect(imageEditorMaximumPixelDifference(viewModel.currentImage, expectedImage) == 0)
+        #expect(imageEditorMaximumPixelDifference(viewModel.currentImage, parameterScaledImage) > 0)
+        #expect(imageEditorMaximumPixelDifference(merged.image, viewModel.currentImage) == 0)
+    }
+
     @Test func imageEditorAppliesCurrentFilterWithClassicLastFilterCommand() throws {
         let canvasSize = NSSize(width: 48, height: 32)
         let sourceImage = solidImage(size: canvasSize, color: NSColor(calibratedWhite: 0.5, alpha: 1))
