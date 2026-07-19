@@ -7128,12 +7128,15 @@ struct ImageEditorView: View {
                     L10n.format("imageEditor.properties.innerShadowOpacityValue", Int((value * 100).rounded()))
                 }
                 HStack {
-                    Stepper(
-                        L10n.format("imageEditor.properties.innerShadowBlurValue", Int(viewModel.selectedLayerInnerShadowBlur.rounded())),
+                    layerStyleNumericStepper(
+                        state: viewModel.selectedLayerInnerShadowBlurState,
                         value: selectedLayerInnerShadowBlurBinding,
-                        in: 0...40,
-                        step: 1
-                    )
+                        range: 0...40,
+                        step: 1,
+                        accessibilityIdentifier: "image-editor-layer-style-inner-shadow-blur"
+                    ) { value in
+                        L10n.format("imageEditor.properties.innerShadowBlurValue", Int(value.rounded()))
+                    }
                     Stepper(
                         L10n.format("imageEditor.properties.innerShadowChokeValue", Int(viewModel.selectedLayerInnerShadowChoke.rounded())),
                         value: selectedLayerInnerShadowChokeBinding,

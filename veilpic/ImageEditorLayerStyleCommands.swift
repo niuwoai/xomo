@@ -375,6 +375,10 @@ extension ImageEditorViewModel {
         Double(document.selectedLayer?.style.innerShadowBlur ?? 8)
     }
 
+    var selectedLayerInnerShadowBlurState: ImageEditorLayerStyleValueState<CGFloat> {
+        selectedLayerStyleValueState(\.innerShadowBlur)
+    }
+
     var selectedLayerInnerShadowChoke: Double {
         Double(document.selectedLayer?.style.innerShadowChoke ?? 0)
     }
