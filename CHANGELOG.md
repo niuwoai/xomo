@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.12.0-rc367 - 2026-07-19
+
+### Added
+- MCP `xomo.layer.style_settings` 新增 `property=satinContour` 与 `satinContour=linear|soft|steep|cone|ring`；工具目录公开完整枚举，并与本地光泽轮廓菜单共享选择感知批量 setter。
+
+### Fixed
+- 多选图层的光泽轮廓不一致时，轮廓控件改为标准不可聚焦菜单并显示三语“多个值”，不再把主选图层的五档轮廓伪装成共同值。
+- 选择任一轮廓后会统一写入全部可编辑选中层并启用光泽；锁定层及不适用图层继续跳过，选择保持，每次修改只有一个 History/Undo 步骤。
+
+### Verification
+- 光泽轮廓混合态、批量收敛、锁定跳过、撤销/重做、界面与 MCP 枚举专项 3/3，既有轮廓渲染、图层样式和保存往返回归 30/30，CLI 2/2、发布契约 7/7 通过；Xcode 26.4 测试宿主完成编译链接后仍因复制的 XCTest 框架缺少 Info.plist 退出，隔离测试复用该产物运行通过。
+
 ## 2.12.0-rc366 - 2026-07-19
 
 ### Added

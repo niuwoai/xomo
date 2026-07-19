@@ -4281,14 +4281,6 @@ struct ImageEditorView: View {
         }
     }
 
-    private var selectedLayerSatinContourBinding: Binding<ImageEditorLayerEffectContour> {
-        Binding {
-            viewModel.selectedLayerSatinContour
-        } set: { value in
-            viewModel.setSelectedLayerSatinContour(value)
-        }
-    }
-
     private var selectedLayerBevelSizeBinding: Binding<Double> {
         Binding {
             viewModel.selectedLayerBevelSize
@@ -7344,12 +7336,15 @@ struct ImageEditorView: View {
                 ) {
                     viewModel.toggleSelectedLayerSatinInvert()
                 }
-                Picker(L10n.text("imageEditor.properties.satinContour"), selection: selectedLayerSatinContourBinding) {
-                    ForEach(ImageEditorLayerEffectContour.allCases) { contour in
-                        Text(contour.title).tag(contour)
-                    }
+                layerStyleValuePicker(
+                    state: viewModel.selectedLayerSatinContourState,
+                    values: ImageEditorLayerEffectContour.allCases,
+                    labelKey: "imageEditor.properties.satinContour",
+                    accessibilityIdentifier: "image-editor-layer-style-satin-contour",
+                    title: \.title
+                ) { contour in
+                    viewModel.setSelectedLayerSatinContour(contour)
                 }
-                .pickerStyle(.menu)
                 HStack {
                     Stepper(
                         L10n.format("imageEditor.properties.satinSizeValue", Int(viewModel.selectedLayerSatinSize.rounded())),

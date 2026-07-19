@@ -1,0 +1,39 @@
+{
+  "generated_at": "2026-07-19 13:17:21 +0800",
+  "total": 3,
+  "passed": 3,
+  "failed": 0,
+  "jobs": 3,
+  "results": [
+    {
+      "suite": "ImageEditorLayerRowBatchPropertyTests",
+      "method": "layerStyleMixedSatinContourConvergesAcrossEditableSelection",
+      "identifier": "veilpicTests/ImageEditorLayerRowBatchPropertyTests/layerStyleMixedSatinContourConvergesAcrossEditableSelection",
+      "file": "ImageEditorLayerRowBatchPropertyTests.swift",
+      "passed": true,
+      "duration": 8.597,
+      "issues": [],
+      "log": "ImageEditorLayerRowBatchPropertyTests.layerStyleMixedSatinContourConvergesAcrossEditableSelection.log"
+    },
+    {
+      "suite": "ImageEditorLayerRowBatchPropertyTests",
+      "method": "layerStyleMixedSatinContourPickerUsesLocalizedValue",
+      "identifier": "veilpicTests/ImageEditorLayerRowBatchPropertyTests/layerStyleMixedSatinContourPickerUsesLocalizedValue",
+      "file": "ImageEditorLayerRowBatchPropertyTests.swift",
+      "passed": true,
+      "duration": 8.555,
+      "issues": [],
+      "log": "ImageEditorLayerRowBatchPropertyTests.layerStyleMixedSatinContourPickerUsesLocalizedValue.log"
+    },
+    {
+      "suite": "XomoAutomationTests",
+      "method": "registrySetsLayerStyleSatinContourWithAdvertisedEnum",
+      "identifier": "veilpicTests/XomoAutomationTests/registrySetsLayerStyleSatinContourWithAdvertisedEnum",
+      "file": "XomoAutomationTests.swift",
+      "passed": true,
+      "duration": 8.549,
+      "issues": [],
+      "log": "XomoAutomationTests.registrySetsLayerStyleSatinContourWithAdvertisedEnum.log"
+    }
+  ]
+}

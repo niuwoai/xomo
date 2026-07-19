@@ -492,6 +492,10 @@ extension ImageEditorViewModel {
         document.selectedLayer?.style.satinContour ?? .linear
     }
 
+    var selectedLayerSatinContourState: ImageEditorLayerStyleValueState<ImageEditorLayerEffectContour> {
+        selectedLayerStyleValueState(\.satinContour)
+    }
+
     var selectedLayerBevelSize: Double {
         Double(document.selectedLayer?.style.bevelSize ?? 4)
     }
