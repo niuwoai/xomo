@@ -31,7 +31,7 @@ func imageEditorMaximumPixelDifference(_ lhs: NSImage, _ rhs: NSImage) -> Int {
     return maximumDifference
 }
 
-private func imageEditorRGBABytes(
+func imageEditorRGBABytes(
     _ image: NSImage,
     width: Int,
     height: Int

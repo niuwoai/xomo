@@ -152,7 +152,8 @@ struct ImageEditorProjectDocumentTests {
             ImageEditorSmartFilter(
                 kind: .unsharpMask,
                 intensity: 0.8,
-                settings: ImageEditorFilterSettings(unsharpRadius: 2.5, unsharpThreshold: 0.2)
+                settings: ImageEditorFilterSettings(unsharpRadius: 2.5, unsharpThreshold: 0.2),
+                opacity: 0.42
             )
         ]
         pixelLayer.vectorMask = ImageEditorShapeContent(
@@ -315,6 +316,7 @@ struct ImageEditorProjectDocumentTests {
         #expect(restoredPixel.style.resolvedBevelAngle(globalLightAngle: restoredViewModel.document.globalLightAngle) == 18)
         #expect(restoredPixel.smartFilters.count == 1)
         #expect(restoredPixel.smartFilters.first?.kind == .unsharpMask)
+        #expect(restoredPixel.smartFilters.first?.normalizedOpacity == 0.42)
         #expect(restoredPixel.smartFilters.first?.normalizedSettings.unsharpRadius == 2.5)
         #expect(restoredPixel.smartFilters.first?.normalizedSettings.unsharpThreshold == 0.2)
         #expect(restoredPixel.groupID == groupLayer.id)

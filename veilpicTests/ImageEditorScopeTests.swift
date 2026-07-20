@@ -1552,6 +1552,24 @@ struct ImageEditorScopeTests {
         #expect(filterSource.contains(".focusable(false)"))
     }
 
+    @Test func smartFilterRowsExposeNonFocusableResultOpacityControl() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let propertiesStart = try #require(source.range(of: "private func propertiesPanel"))
+        let propertiesEnd = try #require(
+            source[propertiesStart.upperBound...].range(of: "private var levelsControls")
+        )
+        let propertiesSource = source[propertiesStart.lowerBound..<propertiesEnd.lowerBound]
+
+        #expect(propertiesSource.contains("viewModel.smartFilterOpacity(filter.id)"))
+        #expect(propertiesSource.contains("viewModel.setSmartFilterOpacityOnSelectedLayer(filter.id, opacity: $0)"))
+        #expect(propertiesSource.contains("image-editor-smart-filter-opacity-\\(filter.id)"))
+        #expect(propertiesSource.contains("imageEditor.option.opacity"))
+        #expect(propertiesSource.contains(".focusable(false)"))
+    }
+
     @Test func layerRowsExposeTheSameSelectedLayerExportAction() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorLayerPanel.swift"),

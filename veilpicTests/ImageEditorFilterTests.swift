@@ -66,6 +66,67 @@ struct ImageEditorFilterTests {
         #expect(imageEditorMaximumPixelDifference(smartViewModel.currentImage, smartPreviewBefore) == 0)
     }
 
+    @Test func smartFilterOpacityBlendsTheCompleteResultAndSupportsUndoRedo() throws {
+        let sourceImage = saltAndPepperImage(size: NSSize(width: 48, height: 48))
+        let viewModel = ImageEditorViewModel(sourceName: "smart-opacity.png", image: sourceImage) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(
+            sourceImage,
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+        let filterInputImage = try #require(viewModel.document.selectedLayer?.image)
+        viewModel.selectedFilter = .median
+        viewModel.filterIntensity = 1
+        viewModel.addSmartFilterToSelectedLayer()
+
+        let filterID = try #require(viewModel.document.selectedLayer?.smartFilters.first?.id)
+        let fullImage = try #require(viewModel.document.selectedLayer?.contentImage)
+        viewModel.setSmartFilterOpacityOnSelectedLayer(filterID, opacity: 0.5)
+        let halfImage = try #require(viewModel.document.selectedLayer?.contentImage)
+
+        let width = 48
+        let height = 48
+        let centerRedOffset = ((height / 2) * width + width / 2) * 4
+        let inputPixels = try #require(imageEditorRGBABytes(filterInputImage, width: width, height: height))
+        let fullPixels = try #require(imageEditorRGBABytes(fullImage, width: width, height: height))
+        let halfPixels = try #require(imageEditorRGBABytes(halfImage, width: width, height: height))
+        let expectedHalfRed = Int(inputPixels[centerRedOffset])
+            + (Int(fullPixels[centerRedOffset]) - Int(inputPixels[centerRedOffset])) / 2
+
+        #expect(Int(inputPixels[centerRedOffset]) > Int(fullPixels[centerRedOffset]) + 40)
+        #expect(abs(Int(fullPixels[centerRedOffset]) - 128) <= 1)
+        #expect(abs(Int(halfPixels[centerRedOffset]) - expectedHalfRed) <= 1)
+        #expect(viewModel.smartFilterOpacity(filterID) == 0.5)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterOpacity"))
+
+        viewModel.undo()
+        #expect(viewModel.smartFilterOpacity(filterID) == 1)
+        #expect(imageEditorMaximumPixelDifference(
+            try #require(viewModel.document.selectedLayer?.contentImage),
+            fullImage
+        ) == 0)
+
+        viewModel.redo()
+        #expect(viewModel.smartFilterOpacity(filterID) == 0.5)
+        #expect(imageEditorMaximumPixelDifference(
+            try #require(viewModel.document.selectedLayer?.contentImage),
+            halfImage
+        ) == 0)
+    }
+
+    @Test func smartFilterOpacityCodableDefaultsLegacyDocumentsToFullyOpaque() throws {
+        let filter = ImageEditorSmartFilter(kind: .median, intensity: 0.8, opacity: 0.35)
+        let encoder = JSONEncoder()
+        let encoded = try encoder.encode(filter)
+        let decoded = try JSONDecoder().decode(ImageEditorSmartFilter.self, from: encoded)
+        #expect(decoded.normalizedOpacity == 0.35)
+
+        var legacyObject = try #require(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
+        legacyObject.removeValue(forKey: "opacity")
+        let legacyData = try JSONSerialization.data(withJSONObject: legacyObject)
+        let legacyDecoded = try JSONDecoder().decode(ImageEditorSmartFilter.self, from: legacyData)
+        #expect(legacyDecoded.normalizedOpacity == 1)
+    }
+
     @Test func zeroStrengthMaskedFilterPreservesSemiTransparentPixels() throws {
         let canvasSize = NSSize(width: 32, height: 24)
         let sourceImage = solidImage(
@@ -370,15 +431,26 @@ struct ImageEditorFilterTests {
         blurred.smartFilters = [filter]
         blurredViewModel.document.layers.append(blurred)
 
+        let halfBlurredViewModel = ImageEditorViewModel(sourceName: "source.png", image: sourceImage) { _ in }
+        var halfBlurred = plain
+        filter.opacity = 0.5
+        halfBlurred.smartFilters = [filter]
+        halfBlurredViewModel.document.layers.append(halfBlurred)
+
         let plainColor = try #require(
             plainViewModel.document.compositedImage.color(at: CGPoint(x: 32, y: 16))?.usingColorSpace(.deviceRGB)
         )
         let blurredColor = try #require(
             blurredViewModel.document.compositedImage.color(at: CGPoint(x: 32, y: 16))?.usingColorSpace(.deviceRGB)
         )
+        let halfBlurredColor = try #require(
+            halfBlurredViewModel.document.compositedImage.color(at: CGPoint(x: 32, y: 16))?.usingColorSpace(.deviceRGB)
+        )
         #expect(blurred.smartFilters.first?.appliesToBackdrop == true)
         #expect(blurred.image.qingtuPNGData() == plain.image.qingtuPNGData())
         #expect(abs(blurredColor.redComponent - plainColor.redComponent) > 0.02)
+        #expect(abs(halfBlurredColor.redComponent - plainColor.redComponent) > 0.005)
+        #expect(abs(halfBlurredColor.redComponent - plainColor.redComponent) < abs(blurredColor.redComponent - plainColor.redComponent))
         #expect(abs(blurredColor.redComponent - blurredColor.blueComponent) < 0.02)
     }
 

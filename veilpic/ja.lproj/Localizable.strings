@@ -1492,6 +1492,7 @@
 "imageEditor.history.layerSmartFilterAdd" = "スマートフィルターを追加";
 "imageEditor.history.layerSmartFilterUpdate" = "スマートフィルターを更新";
 "imageEditor.history.layerSmartFilterToggle" = "スマートフィルターを切り替え";
+"imageEditor.history.layerSmartFilterOpacity" = "スマートフィルターの不透明度を変更";
 "imageEditor.history.layerSmartFilterRemove" = "スマートフィルターを削除";
 "imageEditor.history.layerSmartFilterMove" = "スマートフィルターを移動";
 "imageEditor.history.layerSmartFilterClear" = "スマートフィルターをクリア";

@@ -1690,12 +1690,68 @@ struct ImageEditorSmartFilter: Identifiable, Equatable, Codable {
     var intensity: Double
     var settings = ImageEditorFilterSettings()
     var isEnabled = true
+    /// Blends the complete filter result back over its input without weakening filter parameters.
+    var opacity = 1.0
     /// When true, a Gaussian blur samples the already-composited pixels behind the layer.
     /// This keeps Figma BACKGROUND_BLUR non-destructive instead of baking the backdrop.
     var appliesToBackdrop = false
 
+    init(
+        id: UUID = UUID(),
+        kind: ImageEditorFilter,
+        intensity: Double,
+        settings: ImageEditorFilterSettings = ImageEditorFilterSettings(),
+        isEnabled: Bool = true,
+        opacity: Double = 1,
+        appliesToBackdrop: Bool = false
+    ) {
+        self.id = id
+        self.kind = kind
+        self.intensity = intensity
+        self.settings = settings
+        self.isEnabled = isEnabled
+        self.opacity = max(0, min(1, opacity))
+        self.appliesToBackdrop = appliesToBackdrop
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case kind
+        case intensity
+        case settings
+        case isEnabled
+        case opacity
+        case appliesToBackdrop
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
+        kind = try container.decode(ImageEditorFilter.self, forKey: .kind)
+        intensity = try container.decode(Double.self, forKey: .intensity)
+        settings = try container.decodeIfPresent(ImageEditorFilterSettings.self, forKey: .settings) ?? ImageEditorFilterSettings()
+        isEnabled = try container.decodeIfPresent(Bool.self, forKey: .isEnabled) ?? true
+        opacity = max(0, min(1, try container.decodeIfPresent(Double.self, forKey: .opacity) ?? 1))
+        appliesToBackdrop = try container.decodeIfPresent(Bool.self, forKey: .appliesToBackdrop) ?? false
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(kind, forKey: .kind)
+        try container.encode(intensity, forKey: .intensity)
+        try container.encode(settings, forKey: .settings)
+        try container.encode(isEnabled, forKey: .isEnabled)
+        try container.encode(opacity, forKey: .opacity)
+        try container.encode(appliesToBackdrop, forKey: .appliesToBackdrop)
+    }
+
     var normalizedIntensity: Double {
         max(0, min(1, intensity))
+    }
+
+    var normalizedOpacity: Double {
+        max(0, min(1, opacity))
     }
 
     var normalizedSettings: ImageEditorFilterSettings {
@@ -3306,10 +3362,12 @@ struct ImageEditorLayer: Identifiable {
         }
         return smartFilters.reduce(imageFillFiltered) { partial, filter in
             guard filter.isEnabled, !filter.appliesToBackdrop else { return partial }
-            return partial.filtered(
+            return partial.applyingFilter(
                 kind: filter.kind,
                 intensity: filter.normalizedIntensity,
-                settings: filter.normalizedSettings
+                settings: filter.normalizedSettings,
+                mask: nil,
+                opacity: filter.normalizedOpacity
             ) ?? partial
         }
     }
@@ -4557,7 +4615,8 @@ struct ImageEditorDocument {
                     kind: .gaussianBlur,
                     intensity: filter.normalizedIntensity,
                     settings: filter.normalizedSettings,
-                    mask: mask
+                    mask: mask,
+                    opacity: filter.normalizedOpacity
                 ) ?? partial
             }
     }

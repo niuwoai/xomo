@@ -197,6 +197,52 @@ struct XomoAutomationTests {
         })
     }
 
+    @Test func smartFilterAutomationAddsListsAndUpdatesResultOpacity() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        defer { registry.unregister(viewModel) }
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        let manageTool = try #require(automationTool(named: "xomo.smart_filter.manage", in: toolsResponse))
+        let manageProperties = try #require(manageTool["inputSchema"]?.objectValue?["properties"]?.objectValue)
+        #expect(manageProperties["action"]?.objectValue?["enum"]?.arrayValue?.contains(.string("setOpacity")) == true)
+        #expect(manageProperties["opacity"]?.objectValue?["type"] == .string("number"))
+
+        let addResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.smart_filter.add",
+            arguments: [
+                "filter": .string(ImageEditorFilter.median.rawValue),
+                "intensity": .number(1),
+                "opacity": .number(0.4)
+            ]
+        ))
+        #expect(addResponse.ok)
+        let filterID = try #require(viewModel.document.selectedLayer?.smartFilters.first?.id)
+        #expect(viewModel.smartFilterOpacity(filterID) == 0.4)
+
+        let listResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.smart_filter.list"
+        ))
+        let listedFilter = try #require(listResponse.result?.arrayValue?.first?.objectValue)
+        #expect(listedFilter["opacity"] == .number(0.4))
+
+        let updateResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.smart_filter.manage",
+            arguments: [
+                "id": .string(filterID.uuidString),
+                "action": .string("setOpacity"),
+                "opacity": .number(0.25)
+            ]
+        ))
+        #expect(updateResponse.ok)
+        #expect(viewModel.smartFilterOpacity(filterID) == 0.25)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterOpacity"))
+    }
+
     @Test func registryCreatesListsAndDeletesNamedSlices() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

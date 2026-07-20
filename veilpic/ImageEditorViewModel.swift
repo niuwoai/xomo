@@ -5573,7 +5573,7 @@ final class ImageEditorViewModel: ObservableObject {
         if indices.count > 1 { statusText = L10n.format("imageEditor.status.layerGradientFillUpdatedSelected", indices.count) }
     }
 
-    func addSmartFilterToSelectedLayer() {
+    func addSmartFilterToSelectedLayer(opacity: Double = 1) {
         let targetIndices = selectedLayerSmartFilterTargetIndices()
         guard !targetIndices.isEmpty else {
             statusText = L10n.text("imageEditor.status.operationFailed")
@@ -5584,7 +5584,8 @@ final class ImageEditorViewModel: ObservableObject {
             let smartFilter = ImageEditorSmartFilter(
                 kind: selectedFilter,
                 intensity: filterIntensity,
-                settings: currentFilterSettings()
+                settings: currentFilterSettings(),
+                opacity: opacity
             )
             document.layers[index].smartFilters.append(smartFilter)
         }
@@ -5636,6 +5637,25 @@ final class ImageEditorViewModel: ObservableObject {
         pushUndo()
         document.layers[layerIndex].smartFilters[filterIndex].isEnabled.toggle()
         appendHistory(L10n.text("imageEditor.history.layerSmartFilterToggle"))
+    }
+
+    func smartFilterOpacity(_ filterID: UUID) -> Double? {
+        guard let (layerIndex, filterIndex) = selectedSmartFilterIndex(filterID) else { return nil }
+        return document.layers[layerIndex].smartFilters[filterIndex].normalizedOpacity
+    }
+
+    func setSmartFilterOpacityOnSelectedLayer(_ filterID: UUID, opacity: Double) {
+        guard let (layerIndex, filterIndex) = selectedSmartFilterIndex(filterID),
+              canEditSmartFilters(on: document.layers[layerIndex])
+        else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+        let normalizedOpacity = max(0, min(1, opacity))
+        guard document.layers[layerIndex].smartFilters[filterIndex].normalizedOpacity != normalizedOpacity else { return }
+        pushUndo()
+        document.layers[layerIndex].smartFilters[filterIndex].opacity = normalizedOpacity
+        appendHistory(L10n.text("imageEditor.history.layerSmartFilterOpacity"))
     }
 
     func removeSmartFilterFromSelectedLayer(_ filterID: UUID) {

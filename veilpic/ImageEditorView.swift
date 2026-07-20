@@ -6495,32 +6495,54 @@ struct ImageEditorView: View {
                 if viewModel.selectedLayerHasSmartFilters {
                     VStack(spacing: 6) {
                         ForEach(viewModel.selectedLayerSmartFilters) { filter in
-                            HStack(spacing: 6) {
-                                Text(viewModel.smartFilterLabel(filter))
-                                    .font(.system(size: 10, weight: .semibold))
-                                    .foregroundStyle(filter.isEnabled ? Color(nsColor: ImageEditorTheme.text) : Color(nsColor: ImageEditorTheme.mutedText))
-                                    .lineLimit(1)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                Button(L10n.text(filter.isEnabled ? "imageEditor.action.layerSmartFilterDisable" : "imageEditor.action.layerSmartFilterEnable")) {
-                                    viewModel.toggleSmartFilterOnSelectedLayer(filter.id)
+                            let opacity = viewModel.smartFilterOpacity(filter.id) ?? filter.normalizedOpacity
+                            VStack(spacing: 4) {
+                                HStack(spacing: 6) {
+                                    Text(viewModel.smartFilterLabel(filter))
+                                        .font(.system(size: 10, weight: .semibold))
+                                        .foregroundStyle(filter.isEnabled ? Color(nsColor: ImageEditorTheme.text) : Color(nsColor: ImageEditorTheme.mutedText))
+                                        .lineLimit(1)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                    Button(L10n.text(filter.isEnabled ? "imageEditor.action.layerSmartFilterDisable" : "imageEditor.action.layerSmartFilterEnable")) {
+                                        viewModel.toggleSmartFilterOnSelectedLayer(filter.id)
+                                    }
+                                    .buttonStyle(EditorTextButtonStyle())
+                                    Button(L10n.text("imageEditor.action.layerSmartFilterUpdateShort")) {
+                                        viewModel.updateSmartFilterOnSelectedLayer(filter.id)
+                                    }
+                                    .buttonStyle(EditorTextButtonStyle())
+                                    Button(L10n.text("imageEditor.action.layerSmartFilterMoveUp")) {
+                                        viewModel.moveSmartFilterOnSelectedLayer(filter.id, offset: -1)
+                                    }
+                                    .buttonStyle(EditorTextButtonStyle())
+                                    Button(L10n.text("imageEditor.action.layerSmartFilterMoveDown")) {
+                                        viewModel.moveSmartFilterOnSelectedLayer(filter.id, offset: 1)
+                                    }
+                                    .buttonStyle(EditorTextButtonStyle())
+                                    Button(L10n.text("imageEditor.action.layerSmartFilterRemove")) {
+                                        viewModel.removeSmartFilterFromSelectedLayer(filter.id)
+                                    }
+                                    .buttonStyle(EditorTextButtonStyle())
                                 }
-                                .buttonStyle(EditorTextButtonStyle())
-                                Button(L10n.text("imageEditor.action.layerSmartFilterUpdateShort")) {
-                                    viewModel.updateSmartFilterOnSelectedLayer(filter.id)
+                                Stepper(
+                                    value: Binding(
+                                        get: { viewModel.smartFilterOpacity(filter.id) ?? filter.normalizedOpacity },
+                                        set: { viewModel.setSmartFilterOpacityOnSelectedLayer(filter.id, opacity: $0) }
+                                    ),
+                                    in: 0...1,
+                                    step: 0.05
+                                ) {
+                                    HStack(spacing: 6) {
+                                        Text(L10n.text("imageEditor.option.opacity"))
+                                        Spacer(minLength: 4)
+                                        Text(L10n.format("imageEditor.option.percentPreset", Int((opacity * 100).rounded())))
+                                            .monospacedDigit()
+                                    }
+                                    .font(.system(size: 10, weight: .medium))
+                                    .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
                                 }
-                                .buttonStyle(EditorTextButtonStyle())
-                                Button(L10n.text("imageEditor.action.layerSmartFilterMoveUp")) {
-                                    viewModel.moveSmartFilterOnSelectedLayer(filter.id, offset: -1)
-                                }
-                                .buttonStyle(EditorTextButtonStyle())
-                                Button(L10n.text("imageEditor.action.layerSmartFilterMoveDown")) {
-                                    viewModel.moveSmartFilterOnSelectedLayer(filter.id, offset: 1)
-                                }
-                                .buttonStyle(EditorTextButtonStyle())
-                                Button(L10n.text("imageEditor.action.layerSmartFilterRemove")) {
-                                    viewModel.removeSmartFilterFromSelectedLayer(filter.id)
-                                }
-                                .buttonStyle(EditorTextButtonStyle())
+                                .focusable(false)
+                                .accessibilityIdentifier("image-editor-smart-filter-opacity-\(filter.id)")
                             }
                         }
                     }

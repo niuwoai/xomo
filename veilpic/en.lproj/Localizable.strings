@@ -1492,6 +1492,7 @@
 "imageEditor.history.layerSmartFilterAdd" = "Add Smart Filter";
 "imageEditor.history.layerSmartFilterUpdate" = "Update Smart Filter";
 "imageEditor.history.layerSmartFilterToggle" = "Toggle Smart Filter";
+"imageEditor.history.layerSmartFilterOpacity" = "Change Smart Filter Opacity";
 "imageEditor.history.layerSmartFilterRemove" = "Remove Smart Filter";
 "imageEditor.history.layerSmartFilterMove" = "Move Smart Filter";
 "imageEditor.history.layerSmartFilterClear" = "Clear Smart Filters";

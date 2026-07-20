@@ -445,7 +445,7 @@ final class XomoAutomationRegistry {
             }
             viewModel.selectedFilter = filter
             if let intensity = arguments["intensity"]?.doubleValue { viewModel.filterIntensity = intensity }
-            viewModel.addSmartFilterToSelectedLayer()
+            viewModel.addSmartFilterToSelectedLayer(opacity: arguments["opacity"]?.doubleValue ?? 1)
         case "xomo.smart_filter.toggle":
             viewModel.toggleSmartFilterOnSelectedLayer(try requiredUUID("id", in: arguments))
         case "xomo.smart_filter.clear":
@@ -1822,6 +1822,7 @@ final class XomoAutomationRegistry {
                 "id": .string(filter.id.uuidString),
                 "filter": .string(filter.kind.rawValue),
                 "intensity": .number(filter.intensity),
+                "opacity": .number(filter.normalizedOpacity),
                 "enabled": .bool(filter.isEnabled)
             ])
         })
@@ -2954,6 +2955,11 @@ final class XomoAutomationRegistry {
         case "update":
             if let intensity = arguments["intensity"]?.doubleValue { viewModel.filterIntensity = intensity }
             viewModel.updateSmartFilterOnSelectedLayer(id)
+        case "setOpacity":
+            viewModel.setSmartFilterOpacityOnSelectedLayer(
+                id,
+                opacity: try requiredNumber("opacity", in: arguments)
+            )
         case "remove": viewModel.removeSmartFilterFromSelectedLayer(id)
         case "moveUp": viewModel.moveSmartFilterOnSelectedLayer(id, offset: 1)
         case "moveDown": viewModel.moveSmartFilterOnSelectedLayer(id, offset: -1)
@@ -4031,14 +4037,16 @@ private extension XomoAutomationRegistry {
         tool("xomo.smart_filter.list", "List smart filters on the selected layer."),
         tool("xomo.smart_filter.add", "Add a non-destructive smart filter to the selected layer.", [
             "filter": XomoAutomationSchema.string(description: "Filter identifier", values: ImageEditorFilter.allCases.map(\.rawValue)),
-            "intensity": XomoAutomationSchema.number(description: "Filter intensity from 0 to 1")
+            "intensity": XomoAutomationSchema.number(description: "Filter intensity from 0 to 1"),
+            "opacity": XomoAutomationSchema.number(description: "Result opacity from 0 to 1")
         ], required: ["filter"]),
         tool("xomo.smart_filter.toggle", "Enable or disable a smart filter by UUID.", idProperties, required: ["id"]),
         tool("xomo.smart_filter.clear", "Remove all smart filters from selected layers."),
-        tool("xomo.smart_filter.manage", "Update, remove, or reorder a smart filter.", [
+        tool("xomo.smart_filter.manage", "Update opacity, parameters, order, or remove a smart filter.", [
             "id": XomoAutomationSchema.string(description: "Smart filter UUID"),
-            "action": XomoAutomationSchema.string(description: "Management action", values: ["update", "remove", "moveUp", "moveDown"]),
-            "intensity": XomoAutomationSchema.number(description: "Updated filter intensity")
+            "action": XomoAutomationSchema.string(description: "Management action", values: ["update", "setOpacity", "remove", "moveUp", "moveDown"]),
+            "intensity": XomoAutomationSchema.number(description: "Updated filter intensity"),
+            "opacity": XomoAutomationSchema.number(description: "Result opacity from 0 to 1")
         ], required: ["id", "action"]),
         tool("xomo.filter.list", "List raster filters."),
         tool("xomo.filter.apply", "Apply a raster filter to selected layers.", [

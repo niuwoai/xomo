@@ -1492,6 +1492,7 @@
 "imageEditor.history.layerSmartFilterAdd" = "添加智能滤镜";
 "imageEditor.history.layerSmartFilterUpdate" = "更新智能滤镜";
 "imageEditor.history.layerSmartFilterToggle" = "切换智能滤镜";
+"imageEditor.history.layerSmartFilterOpacity" = "调整智能滤镜不透明度";
 "imageEditor.history.layerSmartFilterRemove" = "删除智能滤镜";
 "imageEditor.history.layerSmartFilterMove" = "移动智能滤镜";
 "imageEditor.history.layerSmartFilterClear" = "清空智能滤镜";
