@@ -423,16 +423,19 @@ struct ImageEditorFilterTests {
         viewModel.filterIntensity = 0.8
         #expect(viewModel.smartFilterHasPendingControlChanges(target.id))
         #expect(viewModel.canDiscardSmartFilterControlChanges(target.id))
+        #expect(viewModel.canDiscardLoadedSmartFilterControlChanges)
 
-        #expect(viewModel.discardSmartFilterControlChanges(target.id))
+        #expect(viewModel.discardLoadedSmartFilterControlChanges())
         #expect(viewModel.selectedFilter == .gaussianBlur)
         #expect(abs(viewModel.filterIntensity - 0.35) < 0.000_001)
         #expect(viewModel.filterGaussianBlurRadius == 8)
         #expect(!viewModel.smartFilterHasPendingControlChanges(target.id))
         #expect(!viewModel.canDiscardSmartFilterControlChanges(target.id))
+        #expect(!viewModel.canDiscardLoadedSmartFilterControlChanges)
         #expect(viewModel.document.history.count == historyCount)
         #expect(viewModel.statusText == L10n.text("imageEditor.status.smartFilterChangesDiscarded"))
         #expect(!viewModel.discardSmartFilterControlChanges(target.id))
+        #expect(!viewModel.discardLoadedSmartFilterControlChanges())
         #expect(viewModel.document.history.count == historyCount)
     }
 

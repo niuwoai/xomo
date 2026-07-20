@@ -1610,6 +1610,52 @@ struct ImageEditorScopeTests {
         #expect(propertiesSource.contains(".focusable(false)"))
     }
 
+    @Test func escapeDiscardsPendingSmartFilterControlsAfterObjectCancellation() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("viewModel.discardLoadedSmartFilterControlChanges()"))
+        #expect(source.contains("discardPendingSmartFilterChanges: discardPendingSmartFilterChanges"))
+        #expect(source.contains("context.coordinator.discardPendingSmartFilterChanges = discardPendingSmartFilterChanges"))
+        let escapeStart = try #require(
+            source.range(of: "if event.type == .keyDown,\n               event.keyCode == 53")
+        )
+        let escapeSource = source[escapeStart.lowerBound...]
+        #expect(escapeSource.contains("ImageEditorEscapeCancelDispatcher.handle("))
+
+        var calls: [String] = []
+        #expect(
+            ImageEditorEscapeCancelDispatcher.handle(
+                cancelSelectedObject: {
+                    calls.append("object")
+                    return true
+                },
+                discardPendingSmartFilterChanges: {
+                    calls.append("filter")
+                    return true
+                }
+            )
+        )
+        #expect(calls == ["object"])
+
+        calls.removeAll()
+        #expect(
+            ImageEditorEscapeCancelDispatcher.handle(
+                cancelSelectedObject: {
+                    calls.append("object")
+                    return false
+                },
+                discardPendingSmartFilterChanges: {
+                    calls.append("filter")
+                    return true
+                }
+            )
+        )
+        #expect(calls == ["object", "filter"])
+    }
+
     @Test func layerRowsExposeTheSameSelectedLayerExportAction() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorLayerPanel.swift"),

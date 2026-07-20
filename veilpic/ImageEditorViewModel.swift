@@ -5741,6 +5741,17 @@ final class ImageEditorViewModel: ObservableObject {
         )
     }
 
+    var canDiscardLoadedSmartFilterControlChanges: Bool {
+        guard let loadedSmartFilterID else { return false }
+        return canDiscardSmartFilterControlChanges(loadedSmartFilterID)
+    }
+
+    @discardableResult
+    func discardLoadedSmartFilterControlChanges() -> Bool {
+        guard let loadedSmartFilterID else { return false }
+        return discardSmartFilterControlChanges(loadedSmartFilterID)
+    }
+
     private func updateSmartFilterFromCurrentControls(_ filter: inout ImageEditorSmartFilter) {
         let keepsBackdropRouting = filter.appliesToBackdrop && selectedFilter == .gaussianBlur
         filter.kind = selectedFilter

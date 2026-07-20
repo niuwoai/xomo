@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.12.0-rc426 - 2026-07-21
+
+### Added
+- 当前智能滤镜参数尚未提交时，按 Escape 可恢复文档中已保存的类型、强度和详细设置；复用现有放弃逻辑，不改变文档、滤镜身份或 History/Undo。
+
+### Changed
+- Escape 分发保持桌面编辑器常见优先级：先取消正在进行的对象移动、变换或画布对象选择，只有没有对象操作可取消时才放弃智能滤镜参数；文本框和文字编辑中完全不拦截。
+- Escape 只在 key-down 执行，避免一次按键的 key-up 又继续触发下一层取消动作。
+
+### Verification
+- 智能滤镜 Escape 放弃、对象取消优先级、文本输入保护与界面接线定向测试 2/2，CLI 2/2、发布版本契约 7/7 通过；主 `.xcresult` 为 `/tmp/veilpic-rc426-smart-filter-escape/Logs/Test/Test-veilpic-2026.07.21_02-54-15-+0800.xcresult`。下一次完整 Release、冒烟与 `/Applications` 覆盖门禁仍为 rc440。
+
 ## 2.12.0-rc425 - 2026-07-21
 
 ### Changed
