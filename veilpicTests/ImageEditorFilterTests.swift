@@ -476,6 +476,41 @@ struct ImageEditorFilterTests {
         #expect(viewModel.document.selectedLayer?.smartFilters.map(\.id) == [original.id, duplicateID])
     }
 
+    @Test func smartFilterMoveAvailabilityDisablesBoundariesAndAvoidsEmptyHistory() throws {
+        let image = solidImage(size: NSSize(width: 24, height: 18), color: .systemBlue)
+        let viewModel = ImageEditorViewModel(sourceName: "smart-filter-move-boundaries.png", image: image) { _ in }
+        let layerIndex = try #require(
+            viewModel.document.layers.firstIndex { $0.id == viewModel.document.selectedLayerID }
+        )
+        let first = ImageEditorSmartFilter(kind: .gaussianBlur, intensity: 0.2)
+        let middle = ImageEditorSmartFilter(kind: .sharpen, intensity: 0.4)
+        let last = ImageEditorSmartFilter(kind: .pixelate, intensity: 0.6)
+        viewModel.document.layers[layerIndex].smartFilters = [first, middle, last]
+
+        #expect(!viewModel.canMoveSmartFilterOnSelectedLayer(first.id, offset: -1))
+        #expect(viewModel.canMoveSmartFilterOnSelectedLayer(first.id, offset: 1))
+        #expect(viewModel.canMoveSmartFilterOnSelectedLayer(middle.id, offset: -1))
+        #expect(viewModel.canMoveSmartFilterOnSelectedLayer(middle.id, offset: 1))
+        #expect(viewModel.canMoveSmartFilterOnSelectedLayer(last.id, offset: -1))
+        #expect(!viewModel.canMoveSmartFilterOnSelectedLayer(last.id, offset: 1))
+
+        let historyCount = viewModel.document.history.count
+        #expect(!viewModel.moveSmartFilterOnSelectedLayer(first.id, offset: -1))
+        #expect(viewModel.document.history.count == historyCount)
+
+        #expect(viewModel.loadSmartFilterIntoControls(middle.id))
+        #expect(viewModel.moveSmartFilterOnSelectedLayer(middle.id, offset: -1))
+        #expect(viewModel.document.selectedLayer?.smartFilters.map(\.id) == [middle.id, first.id, last.id])
+        #expect(viewModel.isSmartFilterLoadedForEditing(middle.id))
+        #expect(!viewModel.canMoveSmartFilterOnSelectedLayer(middle.id, offset: -1))
+        #expect(viewModel.canMoveSmartFilterOnSelectedLayer(middle.id, offset: 1))
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterMove"))
+
+        viewModel.undo()
+        #expect(viewModel.document.selectedLayer?.smartFilters.map(\.id) == [first.id, middle.id, last.id])
+    }
+
     @Test func zeroStrengthMaskedFilterPreservesSemiTransparentPixels() throws {
         let canvasSize = NSSize(width: 32, height: 24)
         let sourceImage = solidImage(

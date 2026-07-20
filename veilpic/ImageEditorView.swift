@@ -7555,6 +7555,8 @@ struct ImageEditorView: View {
         let isLoadedForEditing = viewModel.isSmartFilterLoadedForEditing(filter.id)
         let hasPendingControlChanges = viewModel.smartFilterHasPendingControlChanges(filter.id)
         let canDiscardControlChanges = viewModel.canDiscardSmartFilterControlChanges(filter.id)
+        let canMoveUp = viewModel.canMoveSmartFilterOnSelectedLayer(filter.id, offset: -1)
+        let canMoveDown = viewModel.canMoveSmartFilterOnSelectedLayer(filter.id, offset: 1)
         let editingAccessibilityValue = isLoadedForEditing
             ? L10n.text(
                 hasPendingControlChanges
@@ -7621,14 +7623,30 @@ struct ImageEditorView: View {
                 .focusable(false)
                 .accessibilityLabel(L10n.text("imageEditor.action.layerSmartFilterDuplicate"))
                 .accessibilityIdentifier("image-editor-smart-filter-duplicate-\(filter.id)")
-                Button(L10n.text("imageEditor.action.layerSmartFilterMoveUp")) {
-                    viewModel.moveSmartFilterOnSelectedLayer(filter.id, offset: -1)
+                Button {
+                    _ = viewModel.moveSmartFilterOnSelectedLayer(filter.id, offset: -1)
+                } label: {
+                    Image(systemName: "chevron.up")
+                        .font(.system(size: 10, weight: .semibold))
                 }
                 .buttonStyle(EditorTextButtonStyle())
-                Button(L10n.text("imageEditor.action.layerSmartFilterMoveDown")) {
-                    viewModel.moveSmartFilterOnSelectedLayer(filter.id, offset: 1)
+                .focusable(false)
+                .disabled(!canMoveUp)
+                .accessibilityLabel(L10n.text("imageEditor.action.layerSmartFilterMoveUp"))
+                .accessibilityIdentifier("image-editor-smart-filter-move-up-\(filter.id)")
+                .help(L10n.text("imageEditor.action.layerSmartFilterMoveUp"))
+                Button {
+                    _ = viewModel.moveSmartFilterOnSelectedLayer(filter.id, offset: 1)
+                } label: {
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 10, weight: .semibold))
                 }
                 .buttonStyle(EditorTextButtonStyle())
+                .focusable(false)
+                .disabled(!canMoveDown)
+                .accessibilityLabel(L10n.text("imageEditor.action.layerSmartFilterMoveDown"))
+                .accessibilityIdentifier("image-editor-smart-filter-move-down-\(filter.id)")
+                .help(L10n.text("imageEditor.action.layerSmartFilterMoveDown"))
                 Button(L10n.text("imageEditor.action.layerSmartFilterRemove")) {
                     viewModel.removeSmartFilterFromSelectedLayer(filter.id)
                 }

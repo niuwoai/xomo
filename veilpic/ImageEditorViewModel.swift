@@ -5850,20 +5850,30 @@ final class ImageEditorViewModel: ObservableObject {
         return duplicate.id
     }
 
-    func moveSmartFilterOnSelectedLayer(_ filterID: UUID, offset: Int) {
+    func canMoveSmartFilterOnSelectedLayer(_ filterID: UUID, offset: Int) -> Bool {
+        guard offset != 0,
+              let (layerIndex, filterIndex) = selectedSmartFilterIndex(filterID),
+              canEditSmartFilters(on: document.layers[layerIndex])
+        else { return false }
+        return document.layers[layerIndex].smartFilters.indices.contains(filterIndex + offset)
+    }
+
+    @discardableResult
+    func moveSmartFilterOnSelectedLayer(_ filterID: UUID, offset: Int) -> Bool {
         guard offset != 0,
               let (layerIndex, filterIndex) = selectedSmartFilterIndex(filterID),
               canEditSmartFilters(on: document.layers[layerIndex])
         else {
             statusText = L10n.text("imageEditor.status.operationFailed")
-            return
+            return false
         }
         let targetIndex = filterIndex + offset
-        guard document.layers[layerIndex].smartFilters.indices.contains(targetIndex) else { return }
+        guard document.layers[layerIndex].smartFilters.indices.contains(targetIndex) else { return false }
         pushUndo()
         let filter = document.layers[layerIndex].smartFilters.remove(at: filterIndex)
         document.layers[layerIndex].smartFilters.insert(filter, at: targetIndex)
         appendHistory(L10n.text("imageEditor.history.layerSmartFilterMove"))
+        return true
     }
 
     func clearSmartFiltersFromSelectedLayer() {
