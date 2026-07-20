@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc418 - 2026-07-20
+
+### Fixed
+- 修复 MCP/CLI `xomo.smart_filter.manage` 的 `moveUp` 与 `moveDown` 方向和属性面板相反的问题；上移现在进入更小的栈索引，下移进入更大的栈索引。
+- 界面、模型与自动化继续复用同一排序入口，移动操作保持单步 History、Undo 与 Redo，不改变滤镜参数或 UUID。
+
+### Verification
+- 智能滤镜 UI/MCP 排序方向定向测试 2/2、CLI 2/2、发布版本契约 7/7 通过；`.xcresult` 为 `/tmp/veilpic-rc417-smart-filter-duplicate/Logs/Test/Test-veilpic-2026.07.20_15-23-17-+0800.xcresult`。下一次完整 Release、冒烟与 `/Applications` 覆盖门禁仍为 rc440。
+
 ## 2.12.0-rc417 - 2026-07-20
 
 ### Added

@@ -280,6 +280,30 @@ struct XomoAutomationTests {
         #expect(filters[1].normalizedOpacity == filters[0].normalizedOpacity)
         #expect(filters[1].normalizedBlendMode == filters[0].normalizedBlendMode)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterDuplicate"))
+
+        let duplicateID = filters[1].id
+        let moveUpResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.smart_filter.manage",
+            arguments: [
+                "id": .string(duplicateID.uuidString),
+                "action": .string("moveUp")
+            ]
+        ))
+        #expect(moveUpResponse.ok)
+        #expect(viewModel.document.selectedLayer?.smartFilters.map(\.id) == [duplicateID, filterID])
+
+        let moveDownResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.smart_filter.manage",
+            arguments: [
+                "id": .string(duplicateID.uuidString),
+                "action": .string("moveDown")
+            ]
+        ))
+        #expect(moveDownResponse.ok)
+        #expect(viewModel.document.selectedLayer?.smartFilters.map(\.id) == [filterID, duplicateID])
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterMove"))
     }
 
     @Test func registryCreatesListsAndDeletesNamedSlices() throws {
