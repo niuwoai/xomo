@@ -7558,6 +7558,9 @@ struct ImageEditorView: View {
             L10n.format("imageEditor.option.percentPreset", Int(($0 * 100).rounded()))
         } ?? (opacityState.isMixed ? L10n.text("imageEditor.properties.multipleValues") : "")
         let blendMode = viewModel.smartFilterBlendMode(filter.id) ?? filter.normalizedBlendMode
+        let blendModeState = viewModel.smartFilterBlendModeState(filter.id)
+        let blendModeTitle = blendModeState.value?.title
+            ?? (blendModeState.isMixed ? L10n.text("imageEditor.properties.multipleValues") : blendMode.title)
         let isLoadedForEditing = viewModel.isSmartFilterLoadedForEditing(filter.id)
         let hasPendingControlChanges = viewModel.smartFilterHasPendingControlChanges(filter.id)
         let canDiscardControlChanges = viewModel.canDiscardSmartFilterControlChanges(filter.id)
@@ -7688,11 +7691,13 @@ struct ImageEditorView: View {
                     selection: Binding(
                         get: { viewModel.smartFilterBlendMode(filter.id) ?? filter.normalizedBlendMode },
                         set: { viewModel.setSmartFilterBlendModeOnSelectedLayer(filter.id, blendMode: $0) }
-                    )
+                    ),
+                    isMixed: blendModeState.isMixed
                 )
                 .frame(width: 132, height: 24)
+                .disabled(blendModeState == .unavailable)
                 .focusable(false)
-                .accessibilityValue(blendMode.title)
+                .accessibilityValue(blendModeTitle)
                 .accessibilityIdentifier("image-editor-smart-filter-blend-mode-\(filter.id)")
             }
         }

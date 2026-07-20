@@ -5849,6 +5849,23 @@ final class ImageEditorViewModel: ObservableObject {
         return document.layers[layerIndex].smartFilters[filterIndex].normalizedBlendMode
     }
 
+    func smartFilterBlendModeState(
+        _ filterID: UUID
+    ) -> ImageEditorSmartFilterValueState<ImageEditorBlendMode> {
+        guard let (layerIndex, filterIndex) = selectedSmartFilterIndex(filterID),
+              canEditSmartFilters(on: document.layers[layerIndex])
+        else { return .unavailable }
+        let targetIndices = selectedSmartFilterTargetIndices(at: filterIndex)
+        guard targetIndices.contains(layerIndex), let firstIndex = targetIndices.first else {
+            return .unavailable
+        }
+        let firstBlendMode = document.layers[firstIndex].smartFilters[filterIndex].normalizedBlendMode
+        let allMatch = targetIndices.dropFirst().allSatisfy { targetIndex in
+            document.layers[targetIndex].smartFilters[filterIndex].normalizedBlendMode == firstBlendMode
+        }
+        return allMatch ? .value(firstBlendMode) : .mixed
+    }
+
     func isSmartFilterLoadedForEditing(_ filterID: UUID) -> Bool {
         loadedSmartFilterID == filterID
             && document.selectedLayer?.smartFilters.contains(where: { $0.id == filterID }) == true
@@ -5900,10 +5917,29 @@ final class ImageEditorViewModel: ObservableObject {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
-        guard document.layers[layerIndex].smartFilters[filterIndex].normalizedBlendMode != blendMode else { return }
+        let matchingTargetIndices = selectedSmartFilterTargetIndices(at: filterIndex)
+        guard matchingTargetIndices.contains(layerIndex) else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+        let targetIndices = matchingTargetIndices.filter { targetIndex in
+            document.layers[targetIndex].smartFilters[filterIndex].normalizedBlendMode != blendMode
+        }
+        guard !targetIndices.isEmpty else { return }
         pushUndo()
-        document.layers[layerIndex].smartFilters[filterIndex].blendMode = blendMode
-        appendHistory(L10n.text("imageEditor.history.layerSmartFilterBlendMode"))
+        for targetIndex in targetIndices {
+            document.layers[targetIndex].smartFilters[filterIndex].blendMode = blendMode
+        }
+        guard matchingTargetIndices.count > 1 else {
+            appendHistory(L10n.text("imageEditor.history.layerSmartFilterBlendMode"))
+            return
+        }
+        appendHistory(L10n.text("imageEditor.history.layerSmartFilterBlendModeSelected"))
+        statusText = L10n.format(
+            "imageEditor.status.layerSmartFilterBlendModeSelected",
+            blendMode.title,
+            targetIndices.count
+        )
     }
 
     func removeSmartFilterFromSelectedLayer(_ filterID: UUID) {

@@ -181,4 +181,16 @@ struct ImageEditorDarkPanelControlsTests {
         #expect(picker.attributedTitle.string == ImageEditorBlendMode.multiply.title)
         #expect(!blendModes.contains(.passThrough))
     }
+
+    @Test func smartFilterBlendPickerPrependsLocalizedMixedValueWithoutCreatingAMode() throws {
+        let regularOptions = ImageEditorDarkSmartFilterBlendPicker.options(isMixed: false)
+        let mixedOptions = ImageEditorDarkSmartFilterBlendPicker.options(isMixed: true)
+
+        #expect(regularOptions.count == ImageEditorBlendMode.smartFilterCases.count)
+        #expect(regularOptions.allSatisfy { $0.blendMode != nil })
+        #expect(mixedOptions.count == regularOptions.count + 1)
+        #expect(mixedOptions.first?.blendMode == nil)
+        #expect(mixedOptions.first?.title == L10n.text("imageEditor.properties.multipleValues"))
+        #expect(mixedOptions.dropFirst().map(\.blendMode) == regularOptions.map(\.blendMode))
+    }
 }

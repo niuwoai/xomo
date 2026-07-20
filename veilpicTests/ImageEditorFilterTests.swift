@@ -469,6 +469,71 @@ struct ImageEditorFilterTests {
         #expect(viewModel.smartFilterOpacityState(primaryTarget.id) == .value(0.25))
     }
 
+    @Test func smartFilterBlendModeShowsMixedValueAndConvergesMatchingStackPosition() throws {
+        let canvasSize = NSSize(width: 24, height: 18)
+        let image = solidImage(size: canvasSize, color: .systemBlue)
+        let viewModel = ImageEditorViewModel(sourceName: "smart-filter-blend-selected.png", image: image) { _ in }
+        let primaryIndex = try #require(viewModel.document.selectedLayerIndex)
+        let primaryID = viewModel.document.layers[primaryIndex].id
+        let primaryLead = ImageEditorSmartFilter(kind: .gaussianBlur, intensity: 0.2, blendMode: .overlay)
+        let primaryTarget = ImageEditorSmartFilter(kind: .sharpen, intensity: 0.4, blendMode: .normal)
+        viewModel.document.layers[primaryIndex].smartFilters = [primaryLead, primaryTarget]
+
+        var secondary = ImageEditorLayer.blank(name: "Secondary", size: canvasSize)
+        secondary.smartFilters = [
+            ImageEditorSmartFilter(kind: .pixelate, intensity: 0.3, blendMode: .screen),
+            ImageEditorSmartFilter(kind: .wave, intensity: 0.5, blendMode: .multiply)
+        ]
+        var locked = ImageEditorLayer.blank(name: "Locked", size: canvasSize)
+        locked.smartFilters = [
+            ImageEditorSmartFilter(kind: .median, intensity: 0.6, blendMode: .darken),
+            ImageEditorSmartFilter(kind: .ripple, intensity: 0.7, blendMode: .difference)
+        ]
+        locked.isLocked = true
+        var missingPosition = ImageEditorLayer.blank(name: "Short Stack", size: canvasSize)
+        missingPosition.smartFilters = [
+            ImageEditorSmartFilter(kind: .offset, intensity: 0.8, blendMode: .lighten)
+        ]
+        viewModel.document.layers.append(contentsOf: [secondary, locked, missingPosition])
+        viewModel.document.selectedLayerID = primaryID
+        viewModel.document.selectedLayerIDs = [primaryID, secondary.id, locked.id, missingPosition.id]
+
+        #expect(viewModel.loadSmartFilterIntoControls(primaryTarget.id))
+        #expect(viewModel.smartFilterBlendModeState(primaryTarget.id) == .mixed)
+        let historyCount = viewModel.document.history.count
+        viewModel.setSmartFilterBlendModeOnSelectedLayer(primaryTarget.id, blendMode: .softLight)
+
+        #expect(viewModel.document.layers.first { $0.id == primaryID }?.smartFilters.map(\.blendMode) == [.overlay, .softLight])
+        #expect(viewModel.document.layers.first { $0.id == secondary.id }?.smartFilters.map(\.blendMode) == [.screen, .softLight])
+        #expect(viewModel.document.layers.first { $0.id == locked.id }?.smartFilters.map(\.blendMode) == [.darken, .difference])
+        #expect(viewModel.document.layers.first { $0.id == missingPosition.id }?.smartFilters.map(\.blendMode) == [.lighten])
+        #expect(viewModel.smartFilterBlendModeState(primaryTarget.id) == .value(.softLight))
+        #expect(viewModel.loadedSmartFilterID == primaryTarget.id)
+        #expect(viewModel.document.selectedLayerIDs == [primaryID, secondary.id, locked.id, missingPosition.id])
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterBlendModeSelected"))
+        #expect(viewModel.statusText == L10n.format(
+            "imageEditor.status.layerSmartFilterBlendModeSelected",
+            ImageEditorBlendMode.softLight.title,
+            2
+        ))
+
+        viewModel.setSmartFilterBlendModeOnSelectedLayer(primaryTarget.id, blendMode: .softLight)
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        viewModel.undo()
+        #expect(viewModel.smartFilterBlendModeState(primaryTarget.id) == .mixed)
+        viewModel.setSmartFilterBlendModeOnSelectedLayer(primaryTarget.id, blendMode: .normal)
+        #expect(viewModel.document.layers.first { $0.id == primaryID }?.smartFilters[1].blendMode == .normal)
+        #expect(viewModel.document.layers.first { $0.id == secondary.id }?.smartFilters[1].blendMode == .normal)
+        #expect(viewModel.statusText == L10n.format(
+            "imageEditor.status.layerSmartFilterBlendModeSelected",
+            ImageEditorBlendMode.normal.title,
+            1
+        ))
+        #expect(viewModel.smartFilterBlendModeState(primaryTarget.id) == .value(.normal))
+    }
+
     @Test func updatingLoadedSmartFilterTargetsMatchingStackPositionAcrossSelection() throws {
         let canvasSize = NSSize(width: 24, height: 18)
         let image = solidImage(size: canvasSize, color: .systemBlue)

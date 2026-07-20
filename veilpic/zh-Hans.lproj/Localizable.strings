@@ -1498,6 +1498,7 @@
 "imageEditor.history.layerSmartFilterOpacity" = "调整智能滤镜不透明度";
 "imageEditor.history.layerSmartFilterOpacitySelected" = "调整所选图层的智能滤镜不透明度";
 "imageEditor.history.layerSmartFilterBlendMode" = "调整智能滤镜混合模式";
+"imageEditor.history.layerSmartFilterBlendModeSelected" = "调整所选图层的智能滤镜混合模式";
 "imageEditor.history.layerSmartFilterDuplicate" = "复制智能滤镜";
 "imageEditor.history.layerSmartFilterRemove" = "删除智能滤镜";
 "imageEditor.history.layerSmartFilterMove" = "移动智能滤镜";
@@ -1781,6 +1782,7 @@
 "imageEditor.status.layerSmartFilterEnabledSelected" = "已启用 %d 个图层的智能滤镜";
 "imageEditor.status.layerSmartFilterDisabledSelected" = "已停用 %d 个图层的智能滤镜";
 "imageEditor.status.layerSmartFilterOpacitySelected" = "已将智能滤镜不透明度设为 %d%%，更新 %d 个图层";
+"imageEditor.status.layerSmartFilterBlendModeSelected" = "已将智能滤镜混合模式设为 %@，更新 %d 个图层";
 "imageEditor.status.adjustmentSelected" = "已将 %@ 应用到 %d 个图层";
 "imageEditor.status.operationFailed" = "操作失败";
 "imageEditor.status.layerLocked" = "当前图层不可编辑";

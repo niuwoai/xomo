@@ -357,6 +357,18 @@ struct ImageEditorDarkFilterPicker: NSViewRepresentable {
 
 struct ImageEditorDarkSmartFilterBlendPicker: NSViewRepresentable {
     @Binding var selection: ImageEditorBlendMode
+    var isMixed = false
+
+    static func options(isMixed: Bool) -> [(title: String, blendMode: ImageEditorBlendMode?)] {
+        let options = ImageEditorBlendMode.smartFilterCases.map {
+            (title: $0.title, blendMode: Optional.some($0))
+        }
+        guard isMixed else { return options }
+        return [(
+            title: L10n.text("imageEditor.properties.multipleValues"),
+            blendMode: nil
+        )] + options
+    }
 
     func makeCoordinator() -> Coordinator {
         Coordinator(selection: $selection)
@@ -381,20 +393,23 @@ struct ImageEditorDarkSmartFilterBlendPicker: NSViewRepresentable {
         picker.identifier = NSUserInterfaceItemIdentifier("image-editor-smart-filter-blend-mode-picker")
         picker.setAccessibilityLabel(L10n.text("imageEditor.properties.smartFilterBlendMode"))
         picker.menu?.appearance = NSAppearance(named: .darkAqua)
-        let blendModes = ImageEditorBlendMode.smartFilterCases
-        if picker.numberOfItems != blendModes.count {
+        let options = Self.options(isMixed: isMixed)
+        let blendModes = options.map(\.blendMode)
+        if picker.numberOfItems != options.count {
             picker.removeAllItems()
-            blendModes.forEach { blendMode in
-                let item = NSMenuItem(title: blendMode.title, action: nil, keyEquivalent: "")
+            options.forEach { option in
+                let item = NSMenuItem(title: option.title, action: nil, keyEquivalent: "")
                 item.attributedTitle = ImageEditorDarkPanelControlAppearance.attributedTitle(
-                    blendMode.title,
+                    option.title,
                     role: .primary,
                     font: NSFont.systemFont(ofSize: 12, weight: .medium)
                 )
                 picker.menu?.addItem(item)
             }
         }
-        guard let index = blendModes.firstIndex(of: selection) else { return }
+        guard let index = isMixed ? blendModes.firstIndex(of: nil) : blendModes.firstIndex(of: selection) else {
+            return
+        }
         picker.selectItem(at: index)
         ImageEditorDarkPanelControlAppearance.synchronizeSelectedTitle(on: picker)
         coordinator.blendModes = blendModes
@@ -402,15 +417,17 @@ struct ImageEditorDarkSmartFilterBlendPicker: NSViewRepresentable {
 
     final class Coordinator: NSObject {
         var selection: Binding<ImageEditorBlendMode>
-        var blendModes = ImageEditorBlendMode.smartFilterCases
+        var blendModes = ImageEditorBlendMode.smartFilterCases.map(Optional.some)
 
         init(selection: Binding<ImageEditorBlendMode>) {
             self.selection = selection
         }
 
         @objc func selectionChanged(_ sender: NSPopUpButton) {
-            guard blendModes.indices.contains(sender.indexOfSelectedItem) else { return }
-            selection.wrappedValue = blendModes[sender.indexOfSelectedItem]
+            guard blendModes.indices.contains(sender.indexOfSelectedItem),
+                  let blendMode = blendModes[sender.indexOfSelectedItem]
+            else { return }
+            selection.wrappedValue = blendMode
             guard let picker = sender as? ImageEditorFilterPopUpButton else { return }
             ImageEditorDarkPanelControlAppearance.synchronizeSelectedTitle(on: picker)
         }
