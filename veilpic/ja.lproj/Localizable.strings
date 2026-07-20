@@ -2088,6 +2088,7 @@
 "imageEditor.action.layerSmartFilterUpdate" = "最後のスマートフィルターを更新";
 "imageEditor.action.layerSmartFilterUpdateShort" = "更新";
 "imageEditor.action.layerSmartFilterLoadSettings" = "このフィルター設定を読み込む";
+"imageEditor.state.editing" = "編集中";
 "imageEditor.action.layerSmartFilterEnable" = "オン";
 "imageEditor.action.layerSmartFilterDisable" = "オフ";
 "imageEditor.action.layerSmartFilterDuplicate" = "スマートフィルターを複製";

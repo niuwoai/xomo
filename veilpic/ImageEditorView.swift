@@ -6505,6 +6505,7 @@ struct ImageEditorView: View {
                         ForEach(viewModel.selectedLayerSmartFilters) { filter in
                             let opacity = viewModel.smartFilterOpacity(filter.id) ?? filter.normalizedOpacity
                             let blendMode = viewModel.smartFilterBlendMode(filter.id) ?? filter.normalizedBlendMode
+                            let isLoadedForEditing = viewModel.isSmartFilterLoadedForEditing(filter.id)
                             VStack(spacing: 4) {
                                 HStack(spacing: 6) {
                                     Text(viewModel.smartFilterLabel(filter))
@@ -6518,6 +6519,7 @@ struct ImageEditorView: View {
                                         }
                                         .accessibilityElement(children: .ignore)
                                         .accessibilityLabel(viewModel.smartFilterLabel(filter))
+                                        .accessibilityValue(isLoadedForEditing ? L10n.text("imageEditor.state.editing") : "")
                                         .accessibilityHint(L10n.text("imageEditor.action.layerSmartFilterLoadSettings"))
                                         .accessibilityAddTraits(.isButton)
                                         .accessibilityAction {
@@ -6591,6 +6593,24 @@ struct ImageEditorView: View {
                                     .accessibilityValue(blendMode.title)
                                     .accessibilityIdentifier("image-editor-smart-filter-blend-mode-\(filter.id)")
                                 }
+                            }
+                            .padding(6)
+                            .background(
+                                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                    .fill(
+                                        isLoadedForEditing
+                                            ? Color(nsColor: ImageEditorTheme.selected).opacity(0.20)
+                                            : Color.clear
+                                    )
+                            )
+                            .overlay {
+                                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                    .stroke(
+                                        isLoadedForEditing
+                                            ? Color(nsColor: ImageEditorTheme.selected).opacity(0.72)
+                                            : Color.clear,
+                                        lineWidth: 1
+                                    )
                             }
                         }
                     }

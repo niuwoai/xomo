@@ -250,6 +250,40 @@ struct ImageEditorFilterTests {
         #expect(viewModel.filterGaussianBlurRadius == nil)
     }
 
+    @Test func loadedSmartFilterSelectionFollowsStackMutationsAndUndo() throws {
+        let image = solidImage(size: NSSize(width: 24, height: 18), color: .systemBlue)
+        let viewModel = ImageEditorViewModel(sourceName: "smart-filter-selection.png", image: image) { _ in }
+        viewModel.selectedFilter = .median
+        viewModel.filterIntensity = 0.7
+        viewModel.addSmartFilterToSelectedLayer()
+
+        let originalID = try #require(viewModel.document.selectedLayer?.smartFilters.first?.id)
+        #expect(viewModel.loadedSmartFilterID == originalID)
+        #expect(viewModel.isSmartFilterLoadedForEditing(originalID))
+
+        let duplicateID = try #require(viewModel.duplicateSmartFilterOnSelectedLayer(originalID))
+        #expect(viewModel.loadedSmartFilterID == duplicateID)
+        #expect(viewModel.isSmartFilterLoadedForEditing(duplicateID))
+        #expect(!viewModel.isSmartFilterLoadedForEditing(originalID))
+
+        #expect(viewModel.loadSmartFilterIntoControls(originalID))
+        viewModel.moveSmartFilterOnSelectedLayer(originalID, offset: 1)
+        #expect(viewModel.isSmartFilterLoadedForEditing(originalID))
+
+        viewModel.removeSmartFilterFromSelectedLayer(originalID)
+        #expect(viewModel.loadedSmartFilterID == nil)
+        #expect(!viewModel.isSmartFilterLoadedForEditing(originalID))
+
+        viewModel.clearSmartFiltersFromSelectedLayer()
+        #expect(viewModel.loadedSmartFilterID == nil)
+        viewModel.undo()
+        #expect(viewModel.document.selectedLayer?.smartFilters.map(\.id) == [duplicateID])
+        #expect(viewModel.isSmartFilterLoadedForEditing(duplicateID))
+
+        viewModel.selectFilter(.wave)
+        #expect(viewModel.loadedSmartFilterID == nil)
+    }
+
     @Test func duplicatingSmartFilterPreservesCompleteSettingsAndSupportsUndoRedo() throws {
         let image = solidImage(
             size: NSSize(width: 32, height: 24),

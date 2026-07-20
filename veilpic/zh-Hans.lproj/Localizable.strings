@@ -2088,6 +2088,7 @@
 "imageEditor.action.layerSmartFilterUpdate" = "更新最后一个智能滤镜";
 "imageEditor.action.layerSmartFilterUpdateShort" = "更新";
 "imageEditor.action.layerSmartFilterLoadSettings" = "载入这项滤镜参数";
+"imageEditor.state.editing" = "正在编辑";
 "imageEditor.action.layerSmartFilterEnable" = "启用";
 "imageEditor.action.layerSmartFilterDisable" = "关闭";
 "imageEditor.action.layerSmartFilterDuplicate" = "复制智能滤镜";

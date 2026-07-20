@@ -296,6 +296,7 @@ final class ImageEditorViewModel: ObservableObject {
     }
     @Published private(set) var filterPanelPresentationRequest = 0
     @Published private(set) var lastAppliedFilter: ImageEditorFilterApplication?
+    @Published private(set) var loadedSmartFilterID: UUID?
     @Published var filterIntensity: Double = 0.5
     @Published private(set) var filterGaussianBlurRadius: Double?
     @Published var filterUnsharpRadius: Double = 1
@@ -5292,6 +5293,7 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func selectFilter(_ filter: ImageEditorFilter) {
+        loadedSmartFilterID = nil
         selectedFilter = filter
         filterPanelPresentationRequest &+= 1
         isPropertiesPanelVisible = true
@@ -5600,6 +5602,7 @@ final class ImageEditorViewModel: ObservableObject {
             )
             document.layers[index].smartFilters.append(smartFilter)
         }
+        loadedSmartFilterID = document.selectedLayer?.smartFilters.last?.id
         appendHistory(L10n.text("imageEditor.history.layerSmartFilterAdd"))
     }
 
@@ -5614,6 +5617,7 @@ final class ImageEditorViewModel: ObservableObject {
             guard let lastIndex = document.layers[index].smartFilters.indices.last else { continue }
             updateSmartFilterFromCurrentControls(&document.layers[index].smartFilters[lastIndex])
         }
+        loadedSmartFilterID = document.selectedLayer?.smartFilters.last?.id
         appendHistory(L10n.text("imageEditor.history.layerSmartFilterUpdate"))
     }
 
@@ -5626,6 +5630,7 @@ final class ImageEditorViewModel: ObservableObject {
         }
         pushUndo()
         updateSmartFilterFromCurrentControls(&document.layers[layerIndex].smartFilters[filterIndex])
+        loadedSmartFilterID = filterID
         appendHistory(L10n.text("imageEditor.history.layerSmartFilterUpdate"))
     }
 
@@ -5636,6 +5641,7 @@ final class ImageEditorViewModel: ObservableObject {
             return false
         }
         let filter = document.layers[layerIndex].smartFilters[filterIndex]
+        loadedSmartFilterID = filterID
         selectedFilter = filter.kind
         filterIntensity = filter.normalizedIntensity
         syncFilterSettings(filter.normalizedSettings)
@@ -5674,6 +5680,11 @@ final class ImageEditorViewModel: ObservableObject {
     func smartFilterBlendMode(_ filterID: UUID) -> ImageEditorBlendMode? {
         guard let (layerIndex, filterIndex) = selectedSmartFilterIndex(filterID) else { return nil }
         return document.layers[layerIndex].smartFilters[filterIndex].normalizedBlendMode
+    }
+
+    func isSmartFilterLoadedForEditing(_ filterID: UUID) -> Bool {
+        loadedSmartFilterID == filterID
+            && document.selectedLayer?.smartFilters.contains(where: { $0.id == filterID }) == true
     }
 
     func setSmartFilterOpacityOnSelectedLayer(_ filterID: UUID, opacity: Double) {
@@ -5716,6 +5727,9 @@ final class ImageEditorViewModel: ObservableObject {
         }
         pushUndo()
         document.layers[layerIndex].smartFilters.remove(at: filterIndex)
+        if loadedSmartFilterID == filterID {
+            loadedSmartFilterID = nil
+        }
         appendHistory(L10n.text("imageEditor.history.layerSmartFilterRemove"))
     }
 
@@ -5731,6 +5745,7 @@ final class ImageEditorViewModel: ObservableObject {
         duplicate.id = UUID()
         pushUndo()
         document.layers[layerIndex].smartFilters.insert(duplicate, at: filterIndex + 1)
+        loadedSmartFilterID = duplicate.id
         appendHistory(L10n.text("imageEditor.history.layerSmartFilterDuplicate"))
         return duplicate.id
     }
@@ -5758,6 +5773,7 @@ final class ImageEditorViewModel: ObservableObject {
         for index in targetIndices {
             document.layers[index].smartFilters.removeAll()
         }
+        loadedSmartFilterID = nil
         appendHistory(L10n.text("imageEditor.history.layerSmartFilterClear"))
     }
 
@@ -7226,11 +7242,13 @@ final class ImageEditorViewModel: ObservableObject {
 
     private func syncFilterControlsFromSelection() {
         if let smartFilter = document.selectedLayer?.smartFilters.last {
+            loadedSmartFilterID = smartFilter.id
             selectedFilter = smartFilter.kind
             filterIntensity = smartFilter.normalizedIntensity
             syncFilterSettings(smartFilter.normalizedSettings)
             return
         }
+        loadedSmartFilterID = nil
         guard let filter = document.selectedLayer?.filter else { return }
         selectedFilter = filter.kind
         filterIntensity = filter.intensity

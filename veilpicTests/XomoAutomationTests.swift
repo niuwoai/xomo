@@ -251,6 +251,7 @@ struct XomoAutomationTests {
         #expect(loadResponse.ok)
         #expect(viewModel.selectedFilter == .median)
         #expect(viewModel.filterIntensity == 1)
+        #expect(viewModel.isSmartFilterLoadedForEditing(filterID))
         #expect(viewModel.document.history.count == historyCountBeforeLoad)
 
         let updateResponse = registry.execute(request(
