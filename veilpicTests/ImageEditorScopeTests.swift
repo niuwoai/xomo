@@ -1531,6 +1531,27 @@ struct ImageEditorScopeTests {
         #expect(source.components(separatedBy: "exportFormRow(").count - 1 >= 7)
     }
 
+    @Test func historyAndNativeFilterControlsForceDarkReadableAppearance() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let historyStart = try #require(source.range(of: "private func historyPanel"))
+        let filterStart = try #require(source.range(of: "private var filtersQuickPanel: some View"))
+        let historySource = source[historyStart.lowerBound..<filterStart.lowerBound]
+        let snapshotStart = try #require(
+            source[filterStart.upperBound...].range(of: "private func historySnapshotRow")
+        )
+        let filterSource = source[filterStart.lowerBound..<snapshotStart.lowerBound]
+
+        #expect(historySource.contains(".environment(\\.colorScheme, .dark)"))
+        #expect(historySource.components(separatedBy: ".foregroundStyle(Color(nsColor: ImageEditorTheme.text))").count - 1 >= 2)
+        #expect(filterSource.contains(".pickerStyle(.menu)"))
+        #expect(filterSource.contains(".foregroundStyle(Color(nsColor: ImageEditorTheme.text))"))
+        #expect(filterSource.contains(".environment(\\.colorScheme, .dark)"))
+        #expect(filterSource.contains(".focusable(false)"))
+    }
+
     @Test func layerRowsExposeTheSameSelectedLayerExportAction() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorLayerPanel.swift"),

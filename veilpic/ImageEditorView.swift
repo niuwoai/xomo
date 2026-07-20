@@ -3394,6 +3394,7 @@ struct ImageEditorView: View {
                     .textFieldStyle(.plain)
                     .font(.system(size: 11))
                     .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+                    .environment(\.colorScheme, .dark)
                     .accessibilityIdentifier("image-editor-history-search-field")
                     if !viewModel.historyQuery.isEmpty {
                         Button {
@@ -3440,6 +3441,7 @@ struct ImageEditorView: View {
                                 } label: {
                                     Label(entry.title, systemImage: historyIconName(for: entry))
                                         .font(.system(size: 12, weight: .medium))
+                                        .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
                                         .frame(maxWidth: .infinity, alignment: .leading)
                                         .padding(.horizontal, 8)
                                         .padding(.vertical, 6)
@@ -3482,6 +3484,8 @@ struct ImageEditorView: View {
                 }
             }
             .pickerStyle(.menu)
+            .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+            .environment(\.colorScheme, .dark)
             .focusable(false)
             .accessibilityIdentifier("image-editor-filter-picker")
 
