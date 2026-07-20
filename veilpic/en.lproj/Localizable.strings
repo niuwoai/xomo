@@ -2085,7 +2085,7 @@
 "imageEditor.action.layerGradientFillUpdate" = "Update Gradient Fill";
 "imageEditor.action.layerFilterUpdate" = "Update Filter Layer";
 "imageEditor.action.layerSmartFilterAdd" = "Add Smart Filter";
-"imageEditor.action.layerSmartFilterUpdate" = "Update Last Smart Filter";
+"imageEditor.action.layerSmartFilterUpdate" = "Update Smart Filter";
 "imageEditor.action.layerSmartFilterUpdateShort" = "Update";
 "imageEditor.action.layerSmartFilterLoadSettings" = "Load This Filter's Settings";
 "imageEditor.state.editing" = "Editing";

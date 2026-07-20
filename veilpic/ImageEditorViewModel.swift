@@ -1905,6 +1905,18 @@ final class ImageEditorViewModel: ObservableObject {
         !selectedLayerSmartFilterUpdateTargetIndices().isEmpty
     }
 
+    var canUpdateLoadedSmartFilterOnSelectedLayer: Bool {
+        guard let loadedSmartFilterID,
+              let (loadedLayerIndex, filterIndex) = selectedSmartFilterIndex(loadedSmartFilterID)
+        else {
+            return canUpdateLastSmartFilterOnSelectedLayer
+        }
+        let targetIndices = selectedLayerSmartFilterUpdateTargetIndices().filter { layerIndex in
+            document.layers[layerIndex].smartFilters.indices.contains(filterIndex)
+        }
+        return targetIndices.contains(loadedLayerIndex)
+    }
+
     var canClearSmartFiltersFromSelectedLayer: Bool {
         !selectedLayerSmartFilterClearTargetIndices().isEmpty
     }
@@ -5618,6 +5630,28 @@ final class ImageEditorViewModel: ObservableObject {
             updateSmartFilterFromCurrentControls(&document.layers[index].smartFilters[lastIndex])
         }
         loadedSmartFilterID = document.selectedLayer?.smartFilters.last?.id
+        appendHistory(L10n.text("imageEditor.history.layerSmartFilterUpdate"))
+    }
+
+    func updateLoadedSmartFilterOnSelectedLayer() {
+        guard let loadedSmartFilterID,
+              let (loadedLayerIndex, filterIndex) = selectedSmartFilterIndex(loadedSmartFilterID)
+        else {
+            updateLastSmartFilterOnSelectedLayer()
+            return
+        }
+        let targetIndices = selectedLayerSmartFilterUpdateTargetIndices().filter { layerIndex in
+            document.layers[layerIndex].smartFilters.indices.contains(filterIndex)
+        }
+        guard targetIndices.contains(loadedLayerIndex) else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+        pushUndo()
+        for layerIndex in targetIndices {
+            updateSmartFilterFromCurrentControls(&document.layers[layerIndex].smartFilters[filterIndex])
+        }
+        self.loadedSmartFilterID = document.layers[loadedLayerIndex].smartFilters[filterIndex].id
         appendHistory(L10n.text("imageEditor.history.layerSmartFilterUpdate"))
     }
 

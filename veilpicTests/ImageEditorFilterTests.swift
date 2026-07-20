@@ -284,6 +284,82 @@ struct ImageEditorFilterTests {
         #expect(viewModel.loadedSmartFilterID == nil)
     }
 
+    @Test func updatingLoadedSmartFilterTargetsMatchingStackPositionAcrossSelection() throws {
+        let canvasSize = NSSize(width: 24, height: 18)
+        let image = solidImage(size: canvasSize, color: .systemBlue)
+        let viewModel = ImageEditorViewModel(sourceName: "smart-filter-loaded-update.png", image: image) { _ in }
+        let primaryIndex = try #require(viewModel.document.selectedLayerIndex)
+        let primaryID = viewModel.document.layers[primaryIndex].id
+        let primaryTarget = ImageEditorSmartFilter(kind: .median, intensity: 0.25)
+        let primaryTail = ImageEditorSmartFilter(kind: .sharpen, intensity: 0.35)
+        viewModel.document.layers[primaryIndex].smartFilters = [primaryTarget, primaryTail]
+
+        var secondaryLayer = ImageEditorLayer.blank(name: "Secondary", size: canvasSize)
+        let secondaryTarget = ImageEditorSmartFilter(kind: .gaussianBlur, intensity: 0.45)
+        let secondaryTail = ImageEditorSmartFilter(kind: .wave, intensity: 0.55)
+        secondaryLayer.smartFilters = [secondaryTarget, secondaryTail]
+        viewModel.document.layers.append(secondaryLayer)
+        viewModel.document.selectedLayerID = primaryID
+        viewModel.document.selectedLayerIDs = [primaryID, secondaryLayer.id]
+
+        #expect(viewModel.loadSmartFilterIntoControls(primaryTarget.id))
+        #expect(viewModel.canUpdateLoadedSmartFilterOnSelectedLayer)
+        viewModel.selectedFilter = .pixelate
+        viewModel.filterIntensity = 0.8
+        let historyCount = viewModel.document.history.count
+
+        viewModel.updateLoadedSmartFilterOnSelectedLayer()
+
+        let primaryFilters = viewModel.document.layers[primaryIndex].smartFilters
+        let secondaryFilters = try #require(
+            viewModel.document.layers.first(where: { $0.id == secondaryLayer.id })?.smartFilters
+        )
+        #expect(primaryFilters[0].id == primaryTarget.id)
+        #expect(primaryFilters[0].kind == .pixelate)
+        #expect(primaryFilters[0].intensity == 0.8)
+        #expect(primaryFilters[1].id == primaryTail.id)
+        #expect(primaryFilters[1].kind == .sharpen)
+        #expect(secondaryFilters[0].id == secondaryTarget.id)
+        #expect(secondaryFilters[0].kind == .pixelate)
+        #expect(secondaryFilters[0].intensity == 0.8)
+        #expect(secondaryFilters[1].id == secondaryTail.id)
+        #expect(secondaryFilters[1].kind == .wave)
+        #expect(viewModel.loadedSmartFilterID == primaryTarget.id)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterUpdate"))
+
+        viewModel.undo()
+        #expect(viewModel.document.layers[primaryIndex].smartFilters[0].kind == .median)
+        #expect(viewModel.document.layers[primaryIndex].smartFilters[1].kind == .sharpen)
+        let restoredSecondary = try #require(
+            viewModel.document.layers.first(where: { $0.id == secondaryLayer.id })?.smartFilters
+        )
+        #expect(restoredSecondary[0].kind == .gaussianBlur)
+        #expect(restoredSecondary[1].kind == .wave)
+
+        viewModel.selectFilter(.wave)
+        viewModel.filterIntensity = 0.65
+        #expect(viewModel.loadedSmartFilterID == nil)
+        viewModel.updateLoadedSmartFilterOnSelectedLayer()
+        #expect(viewModel.document.layers[primaryIndex].smartFilters[0].kind == .median)
+        #expect(viewModel.document.layers[primaryIndex].smartFilters[1].kind == .wave)
+        let fallbackSecondary = try #require(
+            viewModel.document.layers.first(where: { $0.id == secondaryLayer.id })?.smartFilters
+        )
+        #expect(fallbackSecondary[0].kind == .gaussianBlur)
+        #expect(fallbackSecondary[1].kind == .wave)
+        #expect(fallbackSecondary[1].intensity == 0.65)
+        viewModel.undo()
+
+        #expect(viewModel.loadSmartFilterIntoControls(primaryTarget.id))
+        viewModel.document.layers[primaryIndex].isLocked = true
+        #expect(!viewModel.canUpdateLoadedSmartFilterOnSelectedLayer)
+        let lockedHistoryCount = viewModel.document.history.count
+        viewModel.updateLoadedSmartFilterOnSelectedLayer()
+        #expect(viewModel.document.history.count == lockedHistoryCount)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.operationFailed"))
+    }
+
     @Test func duplicatingSmartFilterPreservesCompleteSettingsAndSupportsUndoRedo() throws {
         let image = solidImage(
             size: NSSize(width: 32, height: 24),

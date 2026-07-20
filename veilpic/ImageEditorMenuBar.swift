@@ -1654,9 +1654,9 @@ extension ImageEditorView {
         }
         .disabled(!viewModel.canAddSmartFilterToSelectedLayer)
         Button(L10n.text("imageEditor.action.layerSmartFilterUpdate")) {
-            viewModel.updateLastSmartFilterOnSelectedLayer()
+            viewModel.updateLoadedSmartFilterOnSelectedLayer()
         }
-        .disabled(!viewModel.canUpdateLastSmartFilterOnSelectedLayer)
+        .disabled(!viewModel.canUpdateLoadedSmartFilterOnSelectedLayer)
     }
 
     @ViewBuilder
@@ -2262,9 +2262,9 @@ extension ImageEditorView {
             }
             .disabled(!viewModel.canAddSmartFilterToSelectedLayer)
             Button(L10n.text("imageEditor.action.layerSmartFilterUpdate")) {
-                viewModel.updateLastSmartFilterOnSelectedLayer()
+                viewModel.updateLoadedSmartFilterOnSelectedLayer()
             }
-            .disabled(!viewModel.canUpdateLastSmartFilterOnSelectedLayer)
+            .disabled(!viewModel.canUpdateLoadedSmartFilterOnSelectedLayer)
             Divider()
             Button(L10n.text("imageEditor.action.addText")) {
                 viewModel.addText()

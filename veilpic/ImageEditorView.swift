@@ -6535,6 +6535,7 @@ struct ImageEditorView: View {
                                         viewModel.updateSmartFilterOnSelectedLayer(filter.id)
                                     }
                                     .buttonStyle(EditorTextButtonStyle())
+                                    .disabled(!isLoadedForEditing)
                                     Button {
                                         viewModel.duplicateSmartFilterOnSelectedLayer(filter.id)
                                     } label: {
@@ -6633,9 +6634,9 @@ struct ImageEditorView: View {
                     }
                     .buttonStyle(EditorTextButtonStyle())
                     .disabled(!viewModel.canAddSmartFilterToSelectedLayer)
-                    if viewModel.canUpdateLastSmartFilterOnSelectedLayer {
+                    if viewModel.canUpdateLoadedSmartFilterOnSelectedLayer {
                         Button(L10n.text("imageEditor.action.layerSmartFilterUpdate")) {
-                            viewModel.updateLastSmartFilterOnSelectedLayer()
+                            viewModel.updateLoadedSmartFilterOnSelectedLayer()
                         }
                         .buttonStyle(EditorTextButtonStyle())
                     }

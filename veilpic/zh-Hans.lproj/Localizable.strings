@@ -2085,7 +2085,7 @@
 "imageEditor.action.layerGradientFillUpdate" = "更新渐变填充";
 "imageEditor.action.layerFilterUpdate" = "更新滤镜图层";
 "imageEditor.action.layerSmartFilterAdd" = "添加智能滤镜";
-"imageEditor.action.layerSmartFilterUpdate" = "更新最后一个智能滤镜";
+"imageEditor.action.layerSmartFilterUpdate" = "更新智能滤镜";
 "imageEditor.action.layerSmartFilterUpdateShort" = "更新";
 "imageEditor.action.layerSmartFilterLoadSettings" = "载入这项滤镜参数";
 "imageEditor.state.editing" = "正在编辑";

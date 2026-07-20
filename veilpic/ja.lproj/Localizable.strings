@@ -2085,7 +2085,7 @@
 "imageEditor.action.layerGradientFillUpdate" = "グラデーション塗りを更新";
 "imageEditor.action.layerFilterUpdate" = "フィルターレイヤーを更新";
 "imageEditor.action.layerSmartFilterAdd" = "スマートフィルターを追加";
-"imageEditor.action.layerSmartFilterUpdate" = "最後のスマートフィルターを更新";
+"imageEditor.action.layerSmartFilterUpdate" = "スマートフィルターを更新";
 "imageEditor.action.layerSmartFilterUpdateShort" = "更新";
 "imageEditor.action.layerSmartFilterLoadSettings" = "このフィルター設定を読み込む";
 "imageEditor.state.editing" = "編集中";
