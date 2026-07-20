@@ -5942,16 +5942,24 @@ final class ImageEditorViewModel: ObservableObject {
         )
     }
 
-    func removeSmartFilterFromSelectedLayer(_ filterID: UUID) {
+    @discardableResult
+    func removeSmartFilterFromSelectedLayer(_ filterID: UUID) -> Bool {
         guard let (layerIndex, filterIndex) = selectedSmartFilterIndex(filterID),
               canEditSmartFilters(on: document.layers[layerIndex])
         else {
             statusText = L10n.text("imageEditor.status.operationFailed")
-            return
+            return false
+        }
+        let targetIndices = selectedSmartFilterTargetIndices(at: filterIndex)
+        guard targetIndices.contains(layerIndex) else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return false
         }
         let removesLoadedFilter = loadedSmartFilterID == filterID
         pushUndo()
-        document.layers[layerIndex].smartFilters.remove(at: filterIndex)
+        for targetIndex in targetIndices {
+            document.layers[targetIndex].smartFilters.remove(at: filterIndex)
+        }
         if removesLoadedFilter {
             let filters = document.layers[layerIndex].smartFilters
             if !filters.isEmpty {
@@ -5960,7 +5968,16 @@ final class ImageEditorViewModel: ObservableObject {
                 loadedSmartFilterID = nil
             }
         }
-        appendHistory(L10n.text("imageEditor.history.layerSmartFilterRemove"))
+        guard targetIndices.count > 1 else {
+            appendHistory(L10n.text("imageEditor.history.layerSmartFilterRemove"))
+            return true
+        }
+        appendHistory(L10n.text("imageEditor.history.layerSmartFilterRemoveSelected"))
+        statusText = L10n.format(
+            "imageEditor.status.layerSmartFilterRemovedSelected",
+            targetIndices.count
+        )
+        return true
     }
 
     @discardableResult

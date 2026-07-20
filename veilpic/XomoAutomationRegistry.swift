@@ -2978,7 +2978,10 @@ final class XomoAutomationRegistry {
             guard viewModel.duplicateSmartFilterOnSelectedLayer(id) != nil else {
                 throw XomoAutomationCallError.invalidArgument("Smart filter cannot be duplicated")
             }
-        case "remove": viewModel.removeSmartFilterFromSelectedLayer(id)
+        case "remove":
+            guard viewModel.removeSmartFilterFromSelectedLayer(id) else {
+                throw XomoAutomationCallError.invalidArgument("Smart filter cannot be removed")
+            }
         case "moveUp": viewModel.moveSmartFilterOnSelectedLayer(id, offset: -1)
         case "moveDown": viewModel.moveSmartFilterOnSelectedLayer(id, offset: 1)
         default: throw XomoAutomationCallError.invalidArgument("Unknown smart filter management action")

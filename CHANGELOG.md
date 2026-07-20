@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.12.0-rc432 - 2026-07-21
+
+### Changed
+- 多选图层删除智能滤镜时，会按主图层目标项的栈位置，从每个可编辑图层中删除各自对应的滤镜；锁定层、组、调整/滤镜层和缺少对应位置的图层安全跳过。
+- 删除主图层当前编辑项后继续沿用“原位置下一项优先、末项选择前一项”的桌面编辑器语义；删除未载入项时保持原编辑目标，多选集合不变。
+- 批量删除合并为一次 History/Undo/Redo，并提供三语数量反馈；MCP `xomo.smart_filter.manage action=remove` 复用同一模型并在目标无效时返回失败，不再报告虚假成功。
+
+### Verification
+- 多选同栈删除、锁定/缺项跳过、主层邻项衔接、未载入项保持、Undo/Redo、MCP 成功/失败与三语资源定向测试 5/5，CLI 2/2、发布版本契约 7/7 通过；主 `.xcresult` 为 `/tmp/veilpic-rc432-smart-filter-remove-selected/Logs/Test/Test-veilpic-2026.07.21_03-46-14-+0800.xcresult`。下一次完整 Release、冒烟与 `/Applications` 覆盖门禁仍为 rc440。
+
 ## 2.12.0-rc431 - 2026-07-21
 
 ### Changed

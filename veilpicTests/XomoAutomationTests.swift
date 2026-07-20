@@ -322,6 +322,28 @@ struct XomoAutomationTests {
         #expect(moveDownResponse.ok)
         #expect(viewModel.document.selectedLayer?.smartFilters.map(\.id) == [filterID, duplicateID])
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterMove"))
+
+        let removeResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.smart_filter.manage",
+            arguments: [
+                "id": .string(duplicateID.uuidString),
+                "action": .string("remove")
+            ]
+        ))
+        #expect(removeResponse.ok)
+        #expect(viewModel.document.selectedLayer?.smartFilters.map(\.id) == [filterID])
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterRemove"))
+
+        let missingRemoveResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.smart_filter.manage",
+            arguments: [
+                "id": .string(duplicateID.uuidString),
+                "action": .string("remove")
+            ]
+        ))
+        #expect(!missingRemoveResponse.ok)
     }
 
     @Test func registryCreatesListsAndDeletesNamedSlices() throws {

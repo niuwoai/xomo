@@ -1502,6 +1502,7 @@
 "imageEditor.history.layerSmartFilterDuplicate" = "Duplicate Smart Filter";
 "imageEditor.history.layerSmartFilterDuplicateSelected" = "Duplicate Smart Filters on Selected Layers";
 "imageEditor.history.layerSmartFilterRemove" = "Remove Smart Filter";
+"imageEditor.history.layerSmartFilterRemoveSelected" = "Remove Smart Filters from Selected Layers";
 "imageEditor.history.layerSmartFilterMove" = "Move Smart Filter";
 "imageEditor.history.layerSmartFilterClear" = "Clear Smart Filters";
 "imageEditor.history.layerTextNew" = "New Text Layer";
@@ -1785,6 +1786,7 @@
 "imageEditor.status.layerSmartFilterOpacitySelected" = "Set smart filter opacity to %d%% on %d layers";
 "imageEditor.status.layerSmartFilterBlendModeSelected" = "Set smart filter blend mode to %@ on %d layers";
 "imageEditor.status.layerSmartFilterDuplicatedSelected" = "Duplicated smart filters on %d layers";
+"imageEditor.status.layerSmartFilterRemovedSelected" = "Removed smart filters from %d layers";
 "imageEditor.status.adjustmentSelected" = "Applied %@ to %d layers";
 "imageEditor.status.operationFailed" = "Operation failed";
 "imageEditor.status.layerLocked" = "The selected layer cannot be edited";
