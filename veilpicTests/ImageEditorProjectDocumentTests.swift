@@ -153,7 +153,8 @@ struct ImageEditorProjectDocumentTests {
                 kind: .unsharpMask,
                 intensity: 0.8,
                 settings: ImageEditorFilterSettings(unsharpRadius: 2.5, unsharpThreshold: 0.2),
-                opacity: 0.42
+                opacity: 0.42,
+                blendMode: .softLight
             )
         ]
         pixelLayer.vectorMask = ImageEditorShapeContent(
@@ -317,6 +318,7 @@ struct ImageEditorProjectDocumentTests {
         #expect(restoredPixel.smartFilters.count == 1)
         #expect(restoredPixel.smartFilters.first?.kind == .unsharpMask)
         #expect(restoredPixel.smartFilters.first?.normalizedOpacity == 0.42)
+        #expect(restoredPixel.smartFilters.first?.normalizedBlendMode == .softLight)
         #expect(restoredPixel.smartFilters.first?.normalizedSettings.unsharpRadius == 2.5)
         #expect(restoredPixel.smartFilters.first?.normalizedSettings.unsharpThreshold == 0.2)
         #expect(restoredPixel.groupID == groupLayer.id)

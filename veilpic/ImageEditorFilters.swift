@@ -156,20 +156,28 @@ extension NSImage {
         intensity: Double,
         settings: ImageEditorFilterSettings = ImageEditorFilterSettings(),
         mask: NSImage?,
-        opacity: Double = 1
+        opacity: Double = 1,
+        blendMode: ImageEditorBlendMode = .normal
     ) -> NSImage? {
         guard intensity > 0 else { return self }
         let normalizedOpacity = max(0, min(1, opacity))
         guard normalizedOpacity > 0 else { return self }
         guard let filtered = filtered(kind: kind, intensity: intensity, settings: settings) else { return nil }
-        guard mask != nil || normalizedOpacity < 1 else { return filtered }
-        return blendingEditedImage(filtered, with: mask, opacity: normalizedOpacity) ?? self
+        let normalizedBlendMode = blendMode == .passThrough ? ImageEditorBlendMode.normal : blendMode
+        guard mask != nil || normalizedOpacity < 1 || normalizedBlendMode != .normal else { return filtered }
+        return blendingEditedImage(
+            filtered,
+            with: mask,
+            opacity: normalizedOpacity,
+            blendMode: normalizedBlendMode
+        ) ?? self
     }
 
     func blendingEditedImage(
         _ edited: NSImage,
         with mask: NSImage?,
-        opacity: Double
+        opacity: Double,
+        blendMode: ImageEditorBlendMode = .normal
     ) -> NSImage? {
         guard let source = filterRGBAPlane(),
               let edited = edited.filterRGBAPlane(),
@@ -187,9 +195,51 @@ extension NSImage {
 
         var output = source.values
         for pixelIndex in maskAlpha.indices {
-            let weight = Double(maskAlpha[pixelIndex]) / 255 * opacity
+            var weight = Double(maskAlpha[pixelIndex]) / 255 * opacity
             guard weight > 0 else { continue }
             let byteOffset = pixelIndex * 4
+            if blendMode == .dissolve {
+                let x = pixelIndex % source.width
+                let y = pixelIndex / source.width
+                weight = Self.filterDissolveSample(x: x, y: y) < weight ? 1 : 0
+                guard weight > 0 else { continue }
+            }
+            if blendMode != .normal && blendMode != .dissolve {
+                let sourceAlpha = Double(source.values[byteOffset + 3]) / 255
+                let editedAlpha = Double(edited.values[byteOffset + 3]) / 255
+                let baseRed = Self.filterUnpremultiplied(source.values[byteOffset], alpha: sourceAlpha)
+                let baseGreen = Self.filterUnpremultiplied(source.values[byteOffset + 1], alpha: sourceAlpha)
+                let baseBlue = Self.filterUnpremultiplied(source.values[byteOffset + 2], alpha: sourceAlpha)
+                let editedRed = Self.filterUnpremultiplied(edited.values[byteOffset], alpha: editedAlpha)
+                let editedGreen = Self.filterUnpremultiplied(edited.values[byteOffset + 1], alpha: editedAlpha)
+                let editedBlue = Self.filterUnpremultiplied(edited.values[byteOffset + 2], alpha: editedAlpha)
+                let blended = blendMode.blend(
+                    baseRed: baseRed,
+                    baseGreen: baseGreen,
+                    baseBlue: baseBlue,
+                    overlayRed: editedRed,
+                    overlayGreen: editedGreen,
+                    overlayBlue: editedBlue
+                )
+                // Result blend modes change the filtered color, not the
+                // source layer's coverage. Some Core Image filters return an
+                // opaque working image even when their input is translucent;
+                // using that working alpha here would silently fill the
+                // transparent portion of the layer.
+                let target = [
+                    blended.red * sourceAlpha * 255,
+                    blended.green * sourceAlpha * 255,
+                    blended.blue * sourceAlpha * 255,
+                    sourceAlpha * 255
+                ]
+                for component in 0..<4 {
+                    let sourceValue = Double(source.values[byteOffset + component])
+                    output[byteOffset + component] = UInt8(
+                        max(0, min(255, (sourceValue + (target[component] - sourceValue) * weight).rounded()))
+                    )
+                }
+                continue
+            }
             for component in 0..<4 {
                 let sourceValue = Double(source.values[byteOffset + component])
                 let editedValue = Double(edited.values[byteOffset + component])
@@ -204,6 +254,25 @@ extension NSImage {
             values: output,
             displaySize: size
         )
+    }
+
+    private static func filterUnpremultiplied(_ value: UInt8, alpha: Double) -> Double {
+        guard alpha > 0 else { return 0 }
+        return max(0, min(1, Double(value) / 255 / alpha))
+    }
+
+    private static func filterDissolveSample(x: Int, y: Int) -> Double {
+        let xMultiplier: UInt64 = 0x9E37_79B9_7F4A_7C15
+        let yMultiplier: UInt64 = 0xBF58_476D_1CE4_E5B9
+        var value = UInt64(truncatingIfNeeded: x) &* xMultiplier
+        value &+= UInt64(truncatingIfNeeded: y) &* yMultiplier
+        value &+= 0x94D0_49BB_1331_11EB
+        value ^= value >> 30
+        value &*= 0xBF58_476D_1CE4_E5B9
+        value ^= value >> 27
+        value &*= 0x94D0_49BB_1331_11EB
+        value ^= value >> 31
+        return Double(value & 0xFFFF) / 65_535
     }
 
     private func filterAlphaPlane(width: Int, height: Int) -> [UInt8]? {

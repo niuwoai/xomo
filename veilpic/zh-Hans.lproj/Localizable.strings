@@ -827,6 +827,7 @@
 "imageEditor.status.shapeStyle" = "已更新 %d 个选中形状的外观";
 "imageEditor.properties.filter" = "滤镜";
 "imageEditor.properties.smartFiltersEmpty" = "当前图层没有智能滤镜";
+"imageEditor.properties.smartFilterBlendMode" = "混合模式";
 "imageEditor.properties.smartFilterItem" = "%@ %d%%";
 "imageEditor.properties.smartFilterGaussianBlurItem" = "%@ · 半径 %@ px";
 "imageEditor.properties.smartFilterBackgroundBlurItem" = "%@ · 背景半径 %@ px";
@@ -1493,6 +1494,7 @@
 "imageEditor.history.layerSmartFilterUpdate" = "更新智能滤镜";
 "imageEditor.history.layerSmartFilterToggle" = "切换智能滤镜";
 "imageEditor.history.layerSmartFilterOpacity" = "调整智能滤镜不透明度";
+"imageEditor.history.layerSmartFilterBlendMode" = "调整智能滤镜混合模式";
 "imageEditor.history.layerSmartFilterRemove" = "删除智能滤镜";
 "imageEditor.history.layerSmartFilterMove" = "移动智能滤镜";
 "imageEditor.history.layerSmartFilterClear" = "清空智能滤镜";

@@ -290,3 +290,63 @@ struct ImageEditorDarkFilterPicker: NSViewRepresentable {
         }
     }
 }
+
+struct ImageEditorDarkSmartFilterBlendPicker: NSViewRepresentable {
+    @Binding var selection: ImageEditorBlendMode
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(selection: $selection)
+    }
+
+    func makeNSView(context: Context) -> ImageEditorFilterPopUpButton {
+        let picker = ImageEditorFilterPopUpButton(frame: .zero, pullsDown: false)
+        picker.target = context.coordinator
+        picker.action = #selector(Coordinator.selectionChanged(_:))
+        configure(picker, coordinator: context.coordinator)
+        return picker
+    }
+
+    func updateNSView(_ picker: ImageEditorFilterPopUpButton, context: Context) {
+        context.coordinator.selection = $selection
+        configure(picker, coordinator: context.coordinator)
+    }
+
+    private func configure(_ picker: ImageEditorFilterPopUpButton, coordinator: Coordinator) {
+        ImageEditorDarkPanelControlAppearance.configureFilterPicker(picker)
+        picker.identifier = NSUserInterfaceItemIdentifier("image-editor-smart-filter-blend-mode-picker")
+        picker.setAccessibilityLabel(L10n.text("imageEditor.properties.smartFilterBlendMode"))
+        picker.menu?.appearance = NSAppearance(named: .darkAqua)
+        let blendModes = ImageEditorBlendMode.smartFilterCases
+        if picker.numberOfItems != blendModes.count {
+            picker.removeAllItems()
+            blendModes.forEach { blendMode in
+                let item = NSMenuItem(title: blendMode.title, action: nil, keyEquivalent: "")
+                item.attributedTitle = ImageEditorDarkPanelControlAppearance.attributedTitle(
+                    blendMode.title,
+                    role: .primary,
+                    font: NSFont.systemFont(ofSize: 12, weight: .medium)
+                )
+                picker.menu?.addItem(item)
+            }
+        }
+        guard let index = blendModes.firstIndex(of: selection) else { return }
+        picker.selectItem(at: index)
+        picker.needsDisplay = true
+        coordinator.blendModes = blendModes
+    }
+
+    final class Coordinator: NSObject {
+        var selection: Binding<ImageEditorBlendMode>
+        var blendModes = ImageEditorBlendMode.smartFilterCases
+
+        init(selection: Binding<ImageEditorBlendMode>) {
+            self.selection = selection
+        }
+
+        @objc func selectionChanged(_ sender: NSPopUpButton) {
+            guard blendModes.indices.contains(sender.indexOfSelectedItem) else { return }
+            selection.wrappedValue = blendModes[sender.indexOfSelectedItem]
+            sender.needsDisplay = true
+        }
+    }
+}

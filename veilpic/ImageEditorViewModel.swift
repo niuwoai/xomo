@@ -5573,7 +5573,10 @@ final class ImageEditorViewModel: ObservableObject {
         if indices.count > 1 { statusText = L10n.format("imageEditor.status.layerGradientFillUpdatedSelected", indices.count) }
     }
 
-    func addSmartFilterToSelectedLayer(opacity: Double = 1) {
+    func addSmartFilterToSelectedLayer(
+        opacity: Double = 1,
+        blendMode: ImageEditorBlendMode = .normal
+    ) {
         let targetIndices = selectedLayerSmartFilterTargetIndices()
         guard !targetIndices.isEmpty else {
             statusText = L10n.text("imageEditor.status.operationFailed")
@@ -5585,7 +5588,8 @@ final class ImageEditorViewModel: ObservableObject {
                 kind: selectedFilter,
                 intensity: filterIntensity,
                 settings: currentFilterSettings(),
-                opacity: opacity
+                opacity: opacity,
+                blendMode: blendMode
             )
             document.layers[index].smartFilters.append(smartFilter)
         }
@@ -5644,6 +5648,11 @@ final class ImageEditorViewModel: ObservableObject {
         return document.layers[layerIndex].smartFilters[filterIndex].normalizedOpacity
     }
 
+    func smartFilterBlendMode(_ filterID: UUID) -> ImageEditorBlendMode? {
+        guard let (layerIndex, filterIndex) = selectedSmartFilterIndex(filterID) else { return nil }
+        return document.layers[layerIndex].smartFilters[filterIndex].normalizedBlendMode
+    }
+
     func setSmartFilterOpacityOnSelectedLayer(_ filterID: UUID, opacity: Double) {
         guard let (layerIndex, filterIndex) = selectedSmartFilterIndex(filterID),
               canEditSmartFilters(on: document.layers[layerIndex])
@@ -5656,6 +5665,23 @@ final class ImageEditorViewModel: ObservableObject {
         pushUndo()
         document.layers[layerIndex].smartFilters[filterIndex].opacity = normalizedOpacity
         appendHistory(L10n.text("imageEditor.history.layerSmartFilterOpacity"))
+    }
+
+    func setSmartFilterBlendModeOnSelectedLayer(
+        _ filterID: UUID,
+        blendMode: ImageEditorBlendMode
+    ) {
+        guard blendMode != .passThrough,
+              let (layerIndex, filterIndex) = selectedSmartFilterIndex(filterID),
+              canEditSmartFilters(on: document.layers[layerIndex])
+        else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+        guard document.layers[layerIndex].smartFilters[filterIndex].normalizedBlendMode != blendMode else { return }
+        pushUndo()
+        document.layers[layerIndex].smartFilters[filterIndex].blendMode = blendMode
+        appendHistory(L10n.text("imageEditor.history.layerSmartFilterBlendMode"))
     }
 
     func removeSmartFilterFromSelectedLayer(_ filterID: UUID) {

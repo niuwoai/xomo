@@ -113,18 +113,83 @@ struct ImageEditorFilterTests {
         ) == 0)
     }
 
+    @Test func smartFilterBlendModeCombinesTheCompleteResultAndSupportsUndoRedo() throws {
+        let sourceImage = saltAndPepperImage(size: NSSize(width: 48, height: 48))
+        let viewModel = ImageEditorViewModel(sourceName: "smart-blend.png", image: sourceImage) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(
+            sourceImage,
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+        viewModel.selectedFilter = .median
+        viewModel.filterIntensity = 1
+        viewModel.addSmartFilterToSelectedLayer()
+
+        let filterID = try #require(viewModel.document.selectedLayer?.smartFilters.first?.id)
+        let normalImage = try #require(viewModel.document.selectedLayer?.contentImage)
+        viewModel.setSmartFilterBlendModeOnSelectedLayer(filterID, blendMode: .multiply)
+        let multipliedImage = try #require(viewModel.document.selectedLayer?.contentImage)
+
+        let normalPixels = try #require(imageEditorRGBABytes(normalImage, width: 48, height: 48))
+        let multipliedPixels = try #require(imageEditorRGBABytes(multipliedImage, width: 48, height: 48))
+        #expect(abs(Int(normalPixels[0]) - 128) <= 1)
+        #expect(abs(Int(multipliedPixels[0]) - 64) <= 1)
+        #expect(normalPixels[3] == 255)
+        #expect(multipliedPixels[3] == 255)
+        #expect(viewModel.smartFilterBlendMode(filterID) == .multiply)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterBlendMode"))
+
+        viewModel.undo()
+        #expect(viewModel.smartFilterBlendMode(filterID) == .normal)
+        #expect(imageEditorMaximumPixelDifference(
+            try #require(viewModel.document.selectedLayer?.contentImage),
+            normalImage
+        ) == 0)
+
+        viewModel.redo()
+        #expect(viewModel.smartFilterBlendMode(filterID) == .multiply)
+        #expect(imageEditorMaximumPixelDifference(
+            try #require(viewModel.document.selectedLayer?.contentImage),
+            multipliedImage
+        ) == 0)
+
+        let translucentInput = solidImage(
+            size: NSSize(width: 12, height: 12),
+            color: NSColor(calibratedRed: 0.6, green: 0.4, blue: 0.2, alpha: 0.35)
+        )
+        let translucentOutput = try #require(
+            translucentInput.applyingFilter(
+                kind: .pixelate,
+                intensity: 1,
+                mask: nil,
+                blendMode: .multiply
+            )
+        )
+        let translucentInputPixels = try #require(imageEditorRGBABytes(translucentInput, width: 12, height: 12))
+        let translucentOutputPixels = try #require(imageEditorRGBABytes(translucentOutput, width: 12, height: 12))
+        #expect(abs(Int(translucentOutputPixels[3]) - Int(translucentInputPixels[3])) <= 1)
+        #expect(translucentOutputPixels[0] < translucentInputPixels[0])
+    }
+
     @Test func smartFilterOpacityCodableDefaultsLegacyDocumentsToFullyOpaque() throws {
-        let filter = ImageEditorSmartFilter(kind: .median, intensity: 0.8, opacity: 0.35)
+        let filter = ImageEditorSmartFilter(
+            kind: .median,
+            intensity: 0.8,
+            opacity: 0.35,
+            blendMode: .softLight
+        )
         let encoder = JSONEncoder()
         let encoded = try encoder.encode(filter)
         let decoded = try JSONDecoder().decode(ImageEditorSmartFilter.self, from: encoded)
         #expect(decoded.normalizedOpacity == 0.35)
+        #expect(decoded.normalizedBlendMode == .softLight)
 
         var legacyObject = try #require(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
         legacyObject.removeValue(forKey: "opacity")
+        legacyObject.removeValue(forKey: "blendMode")
         let legacyData = try JSONSerialization.data(withJSONObject: legacyObject)
         let legacyDecoded = try JSONDecoder().decode(ImageEditorSmartFilter.self, from: legacyData)
         #expect(legacyDecoded.normalizedOpacity == 1)
+        #expect(legacyDecoded.normalizedBlendMode == .normal)
     }
 
     @Test func zeroStrengthMaskedFilterPreservesSemiTransparentPixels() throws {

@@ -197,7 +197,7 @@ struct XomoAutomationTests {
         })
     }
 
-    @Test func smartFilterAutomationAddsListsAndUpdatesResultOpacity() throws {
+    @Test func smartFilterAutomationAddsListsAndUpdatesResultOpacityAndBlendMode() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared
         registry.register(viewModel)
@@ -207,7 +207,10 @@ struct XomoAutomationTests {
         let manageTool = try #require(automationTool(named: "xomo.smart_filter.manage", in: toolsResponse))
         let manageProperties = try #require(manageTool["inputSchema"]?.objectValue?["properties"]?.objectValue)
         #expect(manageProperties["action"]?.objectValue?["enum"]?.arrayValue?.contains(.string("setOpacity")) == true)
+        #expect(manageProperties["action"]?.objectValue?["enum"]?.arrayValue?.contains(.string("setBlendMode")) == true)
         #expect(manageProperties["opacity"]?.objectValue?["type"] == .string("number"))
+        #expect(manageProperties["blendMode"]?.objectValue?["enum"]?.arrayValue?.contains(.string("multiply")) == true)
+        #expect(manageProperties["blendMode"]?.objectValue?["enum"]?.arrayValue?.contains(.string("passThrough")) == false)
 
         let addResponse = registry.execute(request(
             operation: "call",
@@ -215,12 +218,14 @@ struct XomoAutomationTests {
             arguments: [
                 "filter": .string(ImageEditorFilter.median.rawValue),
                 "intensity": .number(1),
-                "opacity": .number(0.4)
+                "opacity": .number(0.4),
+                "blendMode": .string(ImageEditorBlendMode.softLight.rawValue)
             ]
         ))
         #expect(addResponse.ok)
         let filterID = try #require(viewModel.document.selectedLayer?.smartFilters.first?.id)
         #expect(viewModel.smartFilterOpacity(filterID) == 0.4)
+        #expect(viewModel.smartFilterBlendMode(filterID) == .softLight)
 
         let listResponse = registry.execute(request(
             operation: "call",
@@ -228,6 +233,7 @@ struct XomoAutomationTests {
         ))
         let listedFilter = try #require(listResponse.result?.arrayValue?.first?.objectValue)
         #expect(listedFilter["opacity"] == .number(0.4))
+        #expect(listedFilter["blendMode"] == .string("softLight"))
 
         let updateResponse = registry.execute(request(
             operation: "call",
@@ -241,6 +247,19 @@ struct XomoAutomationTests {
         #expect(updateResponse.ok)
         #expect(viewModel.smartFilterOpacity(filterID) == 0.25)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterOpacity"))
+
+        let blendResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.smart_filter.manage",
+            arguments: [
+                "id": .string(filterID.uuidString),
+                "action": .string("setBlendMode"),
+                "blendMode": .string(ImageEditorBlendMode.multiply.rawValue)
+            ]
+        ))
+        #expect(blendResponse.ok)
+        #expect(viewModel.smartFilterBlendMode(filterID) == .multiply)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterBlendMode"))
     }
 
     @Test func registryCreatesListsAndDeletesNamedSlices() throws {

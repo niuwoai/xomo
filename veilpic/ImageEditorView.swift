@@ -6497,6 +6497,7 @@ struct ImageEditorView: View {
                     VStack(spacing: 6) {
                         ForEach(viewModel.selectedLayerSmartFilters) { filter in
                             let opacity = viewModel.smartFilterOpacity(filter.id) ?? filter.normalizedOpacity
+                            let blendMode = viewModel.smartFilterBlendMode(filter.id) ?? filter.normalizedBlendMode
                             VStack(spacing: 4) {
                                 HStack(spacing: 6) {
                                     Text(viewModel.smartFilterLabel(filter))
@@ -6544,6 +6545,22 @@ struct ImageEditorView: View {
                                 }
                                 .focusable(false)
                                 .accessibilityIdentifier("image-editor-smart-filter-opacity-\(filter.id)")
+                                HStack(spacing: 6) {
+                                    Text(L10n.text("imageEditor.properties.smartFilterBlendMode"))
+                                        .font(.system(size: 10, weight: .medium))
+                                        .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                                    Spacer(minLength: 4)
+                                    ImageEditorDarkSmartFilterBlendPicker(
+                                        selection: Binding(
+                                            get: { viewModel.smartFilterBlendMode(filter.id) ?? filter.normalizedBlendMode },
+                                            set: { viewModel.setSmartFilterBlendModeOnSelectedLayer(filter.id, blendMode: $0) }
+                                        )
+                                    )
+                                    .frame(width: 132, height: 24)
+                                    .focusable(false)
+                                    .accessibilityValue(blendMode.title)
+                                    .accessibilityIdentifier("image-editor-smart-filter-blend-mode-\(filter.id)")
+                                }
                             }
                         }
                     }

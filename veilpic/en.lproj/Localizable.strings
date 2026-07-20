@@ -827,6 +827,7 @@
 "imageEditor.status.shapeStyle" = "Updated appearance for %d selected shapes";
 "imageEditor.properties.filter" = "Filter";
 "imageEditor.properties.smartFiltersEmpty" = "No smart filters on selected layer";
+"imageEditor.properties.smartFilterBlendMode" = "Blend Mode";
 "imageEditor.properties.smartFilterItem" = "%@ %d%%";
 "imageEditor.properties.smartFilterGaussianBlurItem" = "%@ · Radius %@ px";
 "imageEditor.properties.smartFilterBackgroundBlurItem" = "%@ · Backdrop radius %@ px";
@@ -1493,6 +1494,7 @@
 "imageEditor.history.layerSmartFilterUpdate" = "Update Smart Filter";
 "imageEditor.history.layerSmartFilterToggle" = "Toggle Smart Filter";
 "imageEditor.history.layerSmartFilterOpacity" = "Change Smart Filter Opacity";
+"imageEditor.history.layerSmartFilterBlendMode" = "Change Smart Filter Blend Mode";
 "imageEditor.history.layerSmartFilterRemove" = "Remove Smart Filter";
 "imageEditor.history.layerSmartFilterMove" = "Move Smart Filter";
 "imageEditor.history.layerSmartFilterClear" = "Clear Smart Filters";

@@ -827,6 +827,7 @@
 "imageEditor.status.shapeStyle" = "選択中の %d 個のシェイプの外観を更新しました";
 "imageEditor.properties.filter" = "フィルター";
 "imageEditor.properties.smartFiltersEmpty" = "選択レイヤーにスマートフィルターはありません";
+"imageEditor.properties.smartFilterBlendMode" = "描画モード";
 "imageEditor.properties.smartFilterItem" = "%@ %d%%";
 "imageEditor.properties.smartFilterGaussianBlurItem" = "%@ · 半径 %@ px";
 "imageEditor.properties.smartFilterBackgroundBlurItem" = "%@ · 背景半径 %@ px";
@@ -1493,6 +1494,7 @@
 "imageEditor.history.layerSmartFilterUpdate" = "スマートフィルターを更新";
 "imageEditor.history.layerSmartFilterToggle" = "スマートフィルターを切り替え";
 "imageEditor.history.layerSmartFilterOpacity" = "スマートフィルターの不透明度を変更";
+"imageEditor.history.layerSmartFilterBlendMode" = "スマートフィルターの描画モードを変更";
 "imageEditor.history.layerSmartFilterRemove" = "スマートフィルターを削除";
 "imageEditor.history.layerSmartFilterMove" = "スマートフィルターを移動";
 "imageEditor.history.layerSmartFilterClear" = "スマートフィルターをクリア";

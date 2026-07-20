@@ -1692,6 +1692,8 @@ struct ImageEditorSmartFilter: Identifiable, Equatable, Codable {
     var isEnabled = true
     /// Blends the complete filter result back over its input without weakening filter parameters.
     var opacity = 1.0
+    /// Applies a Photoshop-style blend mode between the filter input and its complete result.
+    var blendMode = ImageEditorBlendMode.normal
     /// When true, a Gaussian blur samples the already-composited pixels behind the layer.
     /// This keeps Figma BACKGROUND_BLUR non-destructive instead of baking the backdrop.
     var appliesToBackdrop = false
@@ -1703,6 +1705,7 @@ struct ImageEditorSmartFilter: Identifiable, Equatable, Codable {
         settings: ImageEditorFilterSettings = ImageEditorFilterSettings(),
         isEnabled: Bool = true,
         opacity: Double = 1,
+        blendMode: ImageEditorBlendMode = .normal,
         appliesToBackdrop: Bool = false
     ) {
         self.id = id
@@ -1711,6 +1714,7 @@ struct ImageEditorSmartFilter: Identifiable, Equatable, Codable {
         self.settings = settings
         self.isEnabled = isEnabled
         self.opacity = max(0, min(1, opacity))
+        self.blendMode = blendMode == .passThrough ? .normal : blendMode
         self.appliesToBackdrop = appliesToBackdrop
     }
 
@@ -1721,6 +1725,7 @@ struct ImageEditorSmartFilter: Identifiable, Equatable, Codable {
         case settings
         case isEnabled
         case opacity
+        case blendMode
         case appliesToBackdrop
     }
 
@@ -1732,6 +1737,8 @@ struct ImageEditorSmartFilter: Identifiable, Equatable, Codable {
         settings = try container.decodeIfPresent(ImageEditorFilterSettings.self, forKey: .settings) ?? ImageEditorFilterSettings()
         isEnabled = try container.decodeIfPresent(Bool.self, forKey: .isEnabled) ?? true
         opacity = max(0, min(1, try container.decodeIfPresent(Double.self, forKey: .opacity) ?? 1))
+        blendMode = try container.decodeIfPresent(ImageEditorBlendMode.self, forKey: .blendMode) ?? .normal
+        if blendMode == .passThrough { blendMode = .normal }
         appliesToBackdrop = try container.decodeIfPresent(Bool.self, forKey: .appliesToBackdrop) ?? false
     }
 
@@ -1743,6 +1750,7 @@ struct ImageEditorSmartFilter: Identifiable, Equatable, Codable {
         try container.encode(settings, forKey: .settings)
         try container.encode(isEnabled, forKey: .isEnabled)
         try container.encode(opacity, forKey: .opacity)
+        try container.encode(normalizedBlendMode, forKey: .blendMode)
         try container.encode(appliesToBackdrop, forKey: .appliesToBackdrop)
     }
 
@@ -1752,6 +1760,10 @@ struct ImageEditorSmartFilter: Identifiable, Equatable, Codable {
 
     var normalizedOpacity: Double {
         max(0, min(1, opacity))
+    }
+
+    var normalizedBlendMode: ImageEditorBlendMode {
+        blendMode == .passThrough ? .normal : blendMode
     }
 
     var normalizedSettings: ImageEditorFilterSettings {
@@ -1951,6 +1963,10 @@ enum ImageEditorBlendMode: String, CaseIterable, Identifiable {
     case luminosity
 
     var id: String { rawValue }
+
+    static var smartFilterCases: [ImageEditorBlendMode] {
+        allCases.filter { $0 != .passThrough }
+    }
 
     var title: String {
         L10n.text("imageEditor.blend.\(rawValue)")
@@ -3367,7 +3383,8 @@ struct ImageEditorLayer: Identifiable {
                 intensity: filter.normalizedIntensity,
                 settings: filter.normalizedSettings,
                 mask: nil,
-                opacity: filter.normalizedOpacity
+                opacity: filter.normalizedOpacity,
+                blendMode: filter.normalizedBlendMode
             ) ?? partial
         }
     }
@@ -4616,7 +4633,8 @@ struct ImageEditorDocument {
                     intensity: filter.normalizedIntensity,
                     settings: filter.normalizedSettings,
                     mask: mask,
-                    opacity: filter.normalizedOpacity
+                    opacity: filter.normalizedOpacity,
+                    blendMode: filter.normalizedBlendMode
                 ) ?? partial
             }
     }

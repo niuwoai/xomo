@@ -445,7 +445,11 @@ final class XomoAutomationRegistry {
             }
             viewModel.selectedFilter = filter
             if let intensity = arguments["intensity"]?.doubleValue { viewModel.filterIntensity = intensity }
-            viewModel.addSmartFilterToSelectedLayer(opacity: arguments["opacity"]?.doubleValue ?? 1)
+            let blendMode = try smartFilterBlendMode(arguments["blendMode"]?.stringValue)
+            viewModel.addSmartFilterToSelectedLayer(
+                opacity: arguments["opacity"]?.doubleValue ?? 1,
+                blendMode: blendMode
+            )
         case "xomo.smart_filter.toggle":
             viewModel.toggleSmartFilterOnSelectedLayer(try requiredUUID("id", in: arguments))
         case "xomo.smart_filter.clear":
@@ -1823,6 +1827,7 @@ final class XomoAutomationRegistry {
                 "filter": .string(filter.kind.rawValue),
                 "intensity": .number(filter.intensity),
                 "opacity": .number(filter.normalizedOpacity),
+                "blendMode": .string(filter.normalizedBlendMode.rawValue),
                 "enabled": .bool(filter.isEnabled)
             ])
         })
@@ -2960,11 +2965,26 @@ final class XomoAutomationRegistry {
                 id,
                 opacity: try requiredNumber("opacity", in: arguments)
             )
+        case "setBlendMode":
+            viewModel.setSmartFilterBlendModeOnSelectedLayer(
+                id,
+                blendMode: try smartFilterBlendMode(try requiredString("blendMode", in: arguments))
+            )
         case "remove": viewModel.removeSmartFilterFromSelectedLayer(id)
         case "moveUp": viewModel.moveSmartFilterOnSelectedLayer(id, offset: 1)
         case "moveDown": viewModel.moveSmartFilterOnSelectedLayer(id, offset: -1)
         default: throw XomoAutomationCallError.invalidArgument("Unknown smart filter management action")
         }
+    }
+
+    private func smartFilterBlendMode(_ rawValue: String?) throws -> ImageEditorBlendMode {
+        guard let rawValue else { return .normal }
+        guard let blendMode = ImageEditorBlendMode(rawValue: rawValue),
+              ImageEditorBlendMode.smartFilterCases.contains(blendMode)
+        else {
+            throw XomoAutomationCallError.invalidArgument("Unknown smart filter blend mode: \(rawValue)")
+        }
+        return blendMode
     }
 
     private func configureAdjustment(
@@ -4038,15 +4058,17 @@ private extension XomoAutomationRegistry {
         tool("xomo.smart_filter.add", "Add a non-destructive smart filter to the selected layer.", [
             "filter": XomoAutomationSchema.string(description: "Filter identifier", values: ImageEditorFilter.allCases.map(\.rawValue)),
             "intensity": XomoAutomationSchema.number(description: "Filter intensity from 0 to 1"),
-            "opacity": XomoAutomationSchema.number(description: "Result opacity from 0 to 1")
+            "opacity": XomoAutomationSchema.number(description: "Result opacity from 0 to 1"),
+            "blendMode": XomoAutomationSchema.string(description: "Result blend mode", values: ImageEditorBlendMode.smartFilterCases.map(\.rawValue))
         ], required: ["filter"]),
         tool("xomo.smart_filter.toggle", "Enable or disable a smart filter by UUID.", idProperties, required: ["id"]),
         tool("xomo.smart_filter.clear", "Remove all smart filters from selected layers."),
-        tool("xomo.smart_filter.manage", "Update opacity, parameters, order, or remove a smart filter.", [
+        tool("xomo.smart_filter.manage", "Update opacity, blend mode, parameters, order, or remove a smart filter.", [
             "id": XomoAutomationSchema.string(description: "Smart filter UUID"),
-            "action": XomoAutomationSchema.string(description: "Management action", values: ["update", "setOpacity", "remove", "moveUp", "moveDown"]),
+            "action": XomoAutomationSchema.string(description: "Management action", values: ["update", "setOpacity", "setBlendMode", "remove", "moveUp", "moveDown"]),
             "intensity": XomoAutomationSchema.number(description: "Updated filter intensity"),
-            "opacity": XomoAutomationSchema.number(description: "Result opacity from 0 to 1")
+            "opacity": XomoAutomationSchema.number(description: "Result opacity from 0 to 1"),
+            "blendMode": XomoAutomationSchema.string(description: "Result blend mode", values: ImageEditorBlendMode.smartFilterCases.map(\.rawValue))
         ], required: ["id", "action"]),
         tool("xomo.filter.list", "List raster filters."),
         tool("xomo.filter.apply", "Apply a raster filter to selected layers.", [

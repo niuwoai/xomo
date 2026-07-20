@@ -86,4 +86,35 @@ struct ImageEditorDarkPanelControlsTests {
         #expect(titleRGB.greenComponent > 0.9)
         #expect(titleRGB.blueComponent > 0.9)
     }
+
+    @Test func smartFilterBlendPickerUsesTheSameExplicitLightNativeControl() throws {
+        let picker = ImageEditorFilterPopUpButton(frame: .zero, pullsDown: false)
+
+        ImageEditorDarkPanelControlAppearance.configureFilterPicker(picker)
+        picker.identifier = NSUserInterfaceItemIdentifier("image-editor-smart-filter-blend-mode-picker")
+        let blendModes = ImageEditorBlendMode.smartFilterCases
+        blendModes.forEach { blendMode in
+            let item = NSMenuItem(title: blendMode.title, action: nil, keyEquivalent: "")
+            item.attributedTitle = ImageEditorDarkPanelControlAppearance.attributedTitle(
+                blendMode.title,
+                role: .primary,
+                font: NSFont.systemFont(ofSize: 12, weight: .medium)
+            )
+            picker.menu?.addItem(item)
+        }
+        let multiplyIndex = try #require(blendModes.firstIndex(of: .multiply))
+        picker.selectItem(at: multiplyIndex)
+
+        let titleColor = try #require(
+            picker.displayedAttributedTitle.attribute(.foregroundColor, at: 0, effectiveRange: nil) as? NSColor
+        )
+        let titleRGB = try #require(titleColor.usingColorSpace(.deviceRGB))
+        #expect(picker.titleOfSelectedItem == ImageEditorBlendMode.multiply.title)
+        #expect(picker.identifier?.rawValue == "image-editor-smart-filter-blend-mode-picker")
+        #expect(!picker.acceptsFirstResponder)
+        #expect(titleRGB.redComponent > 0.9)
+        #expect(titleRGB.greenComponent > 0.9)
+        #expect(titleRGB.blueComponent > 0.9)
+        #expect(!blendModes.contains(.passThrough))
+    }
 }

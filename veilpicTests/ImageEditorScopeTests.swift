@@ -1551,7 +1551,7 @@ struct ImageEditorScopeTests {
         #expect(!filterSource.contains("Picker(L10n.text(\"imageEditor.properties.filter\")"))
     }
 
-    @Test func smartFilterRowsExposeNonFocusableResultOpacityControl() throws {
+    @Test func smartFilterRowsExposeNonFocusableResultOpacityAndBlendControls() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
             encoding: .utf8
@@ -1565,6 +1565,10 @@ struct ImageEditorScopeTests {
         #expect(propertiesSource.contains("viewModel.smartFilterOpacity(filter.id)"))
         #expect(propertiesSource.contains("viewModel.setSmartFilterOpacityOnSelectedLayer(filter.id, opacity: $0)"))
         #expect(propertiesSource.contains("image-editor-smart-filter-opacity-\\(filter.id)"))
+        #expect(propertiesSource.contains("viewModel.smartFilterBlendMode(filter.id)"))
+        #expect(propertiesSource.contains("viewModel.setSmartFilterBlendModeOnSelectedLayer(filter.id, blendMode: $0)"))
+        #expect(propertiesSource.contains("ImageEditorDarkSmartFilterBlendPicker("))
+        #expect(propertiesSource.contains("image-editor-smart-filter-blend-mode-\\(filter.id)"))
         #expect(propertiesSource.contains("imageEditor.option.opacity"))
         #expect(propertiesSource.contains(".focusable(false)"))
     }
