@@ -6513,6 +6513,16 @@ struct ImageEditorView: View {
                                         viewModel.updateSmartFilterOnSelectedLayer(filter.id)
                                     }
                                     .buttonStyle(EditorTextButtonStyle())
+                                    Button {
+                                        viewModel.duplicateSmartFilterOnSelectedLayer(filter.id)
+                                    } label: {
+                                        Image(systemName: "square.on.square")
+                                            .font(.system(size: 10, weight: .semibold))
+                                    }
+                                    .buttonStyle(EditorTextButtonStyle())
+                                    .focusable(false)
+                                    .accessibilityLabel(L10n.text("imageEditor.action.layerSmartFilterDuplicate"))
+                                    .accessibilityIdentifier("image-editor-smart-filter-duplicate-\(filter.id)")
                                     Button(L10n.text("imageEditor.action.layerSmartFilterMoveUp")) {
                                         viewModel.moveSmartFilterOnSelectedLayer(filter.id, offset: -1)
                                     }

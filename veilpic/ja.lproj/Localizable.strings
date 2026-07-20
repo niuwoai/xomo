@@ -1495,6 +1495,7 @@
 "imageEditor.history.layerSmartFilterToggle" = "スマートフィルターを切り替え";
 "imageEditor.history.layerSmartFilterOpacity" = "スマートフィルターの不透明度を変更";
 "imageEditor.history.layerSmartFilterBlendMode" = "スマートフィルターの描画モードを変更";
+"imageEditor.history.layerSmartFilterDuplicate" = "スマートフィルターを複製";
 "imageEditor.history.layerSmartFilterRemove" = "スマートフィルターを削除";
 "imageEditor.history.layerSmartFilterMove" = "スマートフィルターを移動";
 "imageEditor.history.layerSmartFilterClear" = "スマートフィルターをクリア";
@@ -2088,6 +2089,7 @@
 "imageEditor.action.layerSmartFilterUpdateShort" = "更新";
 "imageEditor.action.layerSmartFilterEnable" = "オン";
 "imageEditor.action.layerSmartFilterDisable" = "オフ";
+"imageEditor.action.layerSmartFilterDuplicate" = "スマートフィルターを複製";
 "imageEditor.action.layerSmartFilterMoveUp" = "上へ";
 "imageEditor.action.layerSmartFilterMoveDown" = "下へ";
 "imageEditor.action.layerSmartFilterRemove" = "削除";

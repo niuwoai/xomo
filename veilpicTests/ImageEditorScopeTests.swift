@@ -1569,6 +1569,9 @@ struct ImageEditorScopeTests {
         #expect(propertiesSource.contains("viewModel.setSmartFilterBlendModeOnSelectedLayer(filter.id, blendMode: $0)"))
         #expect(propertiesSource.contains("ImageEditorDarkSmartFilterBlendPicker("))
         #expect(propertiesSource.contains("image-editor-smart-filter-blend-mode-\\(filter.id)"))
+        #expect(propertiesSource.contains("viewModel.duplicateSmartFilterOnSelectedLayer(filter.id)"))
+        #expect(propertiesSource.contains("image-editor-smart-filter-duplicate-\\(filter.id)"))
+        #expect(propertiesSource.contains("imageEditor.action.layerSmartFilterDuplicate"))
         #expect(propertiesSource.contains("imageEditor.option.opacity"))
         #expect(propertiesSource.contains(".focusable(false)"))
     }

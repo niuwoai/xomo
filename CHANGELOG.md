@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.12.0-rc417 - 2026-07-20
+
+### Added
+- 智能滤镜行新增传统重叠方块复制按钮；副本紧跟原滤镜插入，并完整保留滤镜类型、参数、启用状态、结果不透明度、混合模式与 Figma 背景模糊路由。
+- 复制操作使用新 UUID，进入单步 History、Undo 与 Redo；按钮不可聚焦并提供稳定辅助功能名称和标识。
+- MCP/CLI 的 `xomo.smart_filter.manage` 新增 `action=duplicate`，与本地界面复用同一复制路径。
+
+### Verification
+- 智能滤镜复制、界面接线和 MCP 契约定向测试 3/3、CLI 2/2、发布版本契约 7/7 通过；`.xcresult` 确认实际执行 3 项且无跳过。下一次完整 Release、冒烟与 `/Applications` 覆盖门禁仍为 rc440。
+
 ## 2.12.0-rc416 - 2026-07-20
 
 ### Added

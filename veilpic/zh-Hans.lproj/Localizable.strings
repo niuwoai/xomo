@@ -1495,6 +1495,7 @@
 "imageEditor.history.layerSmartFilterToggle" = "切换智能滤镜";
 "imageEditor.history.layerSmartFilterOpacity" = "调整智能滤镜不透明度";
 "imageEditor.history.layerSmartFilterBlendMode" = "调整智能滤镜混合模式";
+"imageEditor.history.layerSmartFilterDuplicate" = "复制智能滤镜";
 "imageEditor.history.layerSmartFilterRemove" = "删除智能滤镜";
 "imageEditor.history.layerSmartFilterMove" = "移动智能滤镜";
 "imageEditor.history.layerSmartFilterClear" = "清空智能滤镜";
@@ -2088,6 +2089,7 @@
 "imageEditor.action.layerSmartFilterUpdateShort" = "更新";
 "imageEditor.action.layerSmartFilterEnable" = "启用";
 "imageEditor.action.layerSmartFilterDisable" = "关闭";
+"imageEditor.action.layerSmartFilterDuplicate" = "复制智能滤镜";
 "imageEditor.action.layerSmartFilterMoveUp" = "上移";
 "imageEditor.action.layerSmartFilterMoveDown" = "下移";
 "imageEditor.action.layerSmartFilterRemove" = "删除";

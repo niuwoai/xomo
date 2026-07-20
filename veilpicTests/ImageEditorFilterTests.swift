@@ -192,6 +192,46 @@ struct ImageEditorFilterTests {
         #expect(legacyDecoded.normalizedBlendMode == .normal)
     }
 
+    @Test func duplicatingSmartFilterPreservesCompleteSettingsAndSupportsUndoRedo() throws {
+        let image = solidImage(
+            size: NSSize(width: 32, height: 24),
+            color: NSColor(calibratedRed: 0.3, green: 0.5, blue: 0.7, alpha: 0.8)
+        )
+        let viewModel = ImageEditorViewModel(sourceName: "duplicate-smart-filter.png", image: image) { _ in }
+        let layerIndex = try #require(
+            viewModel.document.layers.firstIndex { $0.id == viewModel.document.selectedLayerID }
+        )
+        let original = ImageEditorSmartFilter(
+            kind: .gaussianBlur,
+            intensity: 0.67,
+            settings: ImageEditorFilterSettings(gaussianBlurRadius: 14),
+            isEnabled: false,
+            opacity: 0.35,
+            blendMode: .softLight,
+            appliesToBackdrop: true
+        )
+        viewModel.document.layers[layerIndex].smartFilters = [original]
+
+        let duplicateID = try #require(viewModel.duplicateSmartFilterOnSelectedLayer(original.id))
+        let duplicatedFilters = viewModel.document.layers[layerIndex].smartFilters
+        #expect(duplicatedFilters.map(\.id) == [original.id, duplicateID])
+        let duplicate = try #require(duplicatedFilters.last)
+        #expect(duplicate.kind == original.kind)
+        #expect(duplicate.intensity == original.intensity)
+        #expect(duplicate.settings == original.settings)
+        #expect(duplicate.isEnabled == original.isEnabled)
+        #expect(duplicate.normalizedOpacity == original.normalizedOpacity)
+        #expect(duplicate.normalizedBlendMode == original.normalizedBlendMode)
+        #expect(duplicate.appliesToBackdrop == original.appliesToBackdrop)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterDuplicate"))
+
+        viewModel.undo()
+        #expect(viewModel.document.selectedLayer?.smartFilters.map(\.id) == [original.id])
+
+        viewModel.redo()
+        #expect(viewModel.document.selectedLayer?.smartFilters.map(\.id) == [original.id, duplicateID])
+    }
+
     @Test func zeroStrengthMaskedFilterPreservesSemiTransparentPixels() throws {
         let canvasSize = NSSize(width: 32, height: 24)
         let sourceImage = solidImage(

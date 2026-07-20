@@ -208,6 +208,7 @@ struct XomoAutomationTests {
         let manageProperties = try #require(manageTool["inputSchema"]?.objectValue?["properties"]?.objectValue)
         #expect(manageProperties["action"]?.objectValue?["enum"]?.arrayValue?.contains(.string("setOpacity")) == true)
         #expect(manageProperties["action"]?.objectValue?["enum"]?.arrayValue?.contains(.string("setBlendMode")) == true)
+        #expect(manageProperties["action"]?.objectValue?["enum"]?.arrayValue?.contains(.string("duplicate")) == true)
         #expect(manageProperties["opacity"]?.objectValue?["type"] == .string("number"))
         #expect(manageProperties["blendMode"]?.objectValue?["enum"]?.arrayValue?.contains(.string("multiply")) == true)
         #expect(manageProperties["blendMode"]?.objectValue?["enum"]?.arrayValue?.contains(.string("passThrough")) == false)
@@ -260,6 +261,25 @@ struct XomoAutomationTests {
         #expect(blendResponse.ok)
         #expect(viewModel.smartFilterBlendMode(filterID) == .multiply)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterBlendMode"))
+
+        let duplicateResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.smart_filter.manage",
+            arguments: [
+                "id": .string(filterID.uuidString),
+                "action": .string("duplicate")
+            ]
+        ))
+        #expect(duplicateResponse.ok)
+        let filters = try #require(viewModel.document.selectedLayer?.smartFilters)
+        #expect(filters.count == 2)
+        #expect(filters[0].id == filterID)
+        #expect(filters[1].id != filterID)
+        #expect(filters[1].kind == filters[0].kind)
+        #expect(filters[1].settings == filters[0].settings)
+        #expect(filters[1].normalizedOpacity == filters[0].normalizedOpacity)
+        #expect(filters[1].normalizedBlendMode == filters[0].normalizedBlendMode)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterDuplicate"))
     }
 
     @Test func registryCreatesListsAndDeletesNamedSlices() throws {

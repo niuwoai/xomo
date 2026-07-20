@@ -5696,6 +5696,22 @@ final class ImageEditorViewModel: ObservableObject {
         appendHistory(L10n.text("imageEditor.history.layerSmartFilterRemove"))
     }
 
+    @discardableResult
+    func duplicateSmartFilterOnSelectedLayer(_ filterID: UUID) -> UUID? {
+        guard let (layerIndex, filterIndex) = selectedSmartFilterIndex(filterID),
+              canEditSmartFilters(on: document.layers[layerIndex])
+        else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return nil
+        }
+        var duplicate = document.layers[layerIndex].smartFilters[filterIndex]
+        duplicate.id = UUID()
+        pushUndo()
+        document.layers[layerIndex].smartFilters.insert(duplicate, at: filterIndex + 1)
+        appendHistory(L10n.text("imageEditor.history.layerSmartFilterDuplicate"))
+        return duplicate.id
+    }
+
     func moveSmartFilterOnSelectedLayer(_ filterID: UUID, offset: Int) {
         guard offset != 0,
               let (layerIndex, filterIndex) = selectedSmartFilterIndex(filterID),

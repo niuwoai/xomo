@@ -2970,6 +2970,10 @@ final class XomoAutomationRegistry {
                 id,
                 blendMode: try smartFilterBlendMode(try requiredString("blendMode", in: arguments))
             )
+        case "duplicate":
+            guard viewModel.duplicateSmartFilterOnSelectedLayer(id) != nil else {
+                throw XomoAutomationCallError.invalidArgument("Smart filter cannot be duplicated")
+            }
         case "remove": viewModel.removeSmartFilterFromSelectedLayer(id)
         case "moveUp": viewModel.moveSmartFilterOnSelectedLayer(id, offset: 1)
         case "moveDown": viewModel.moveSmartFilterOnSelectedLayer(id, offset: -1)
@@ -4063,9 +4067,9 @@ private extension XomoAutomationRegistry {
         ], required: ["filter"]),
         tool("xomo.smart_filter.toggle", "Enable or disable a smart filter by UUID.", idProperties, required: ["id"]),
         tool("xomo.smart_filter.clear", "Remove all smart filters from selected layers."),
-        tool("xomo.smart_filter.manage", "Update opacity, blend mode, parameters, order, or remove a smart filter.", [
+        tool("xomo.smart_filter.manage", "Update, duplicate, reorder, or remove a smart filter.", [
             "id": XomoAutomationSchema.string(description: "Smart filter UUID"),
-            "action": XomoAutomationSchema.string(description: "Management action", values: ["update", "setOpacity", "setBlendMode", "remove", "moveUp", "moveDown"]),
+            "action": XomoAutomationSchema.string(description: "Management action", values: ["update", "setOpacity", "setBlendMode", "duplicate", "remove", "moveUp", "moveDown"]),
             "intensity": XomoAutomationSchema.number(description: "Updated filter intensity"),
             "opacity": XomoAutomationSchema.number(description: "Result opacity from 0 to 1"),
             "blendMode": XomoAutomationSchema.string(description: "Result blend mode", values: ImageEditorBlendMode.smartFilterCases.map(\.rawValue))
