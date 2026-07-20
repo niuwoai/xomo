@@ -1774,6 +1774,7 @@
 "imageEditor.status.adjustmentReady" = "%@ の調整を準備しました";
 "imageEditor.status.filterReady" = "%@ フィルターを準備しました";
 "imageEditor.status.smartFilterUnchanged" = "スマートフィルター設定に変更はありません";
+"imageEditor.status.smartFilterChangesDiscarded" = "保存済みのスマートフィルター設定に戻しました";
 "imageEditor.status.adjustmentSelected" = "%@ を%d個のレイヤーに適用しました";
 "imageEditor.status.operationFailed" = "操作に失敗しました";
 "imageEditor.status.layerLocked" = "選択中のレイヤーは編集できません";
@@ -2089,6 +2090,7 @@
 "imageEditor.action.layerSmartFilterUpdate" = "スマートフィルターを更新";
 "imageEditor.action.layerSmartFilterUpdateShort" = "更新";
 "imageEditor.action.layerSmartFilterLoadSettings" = "このフィルター設定を読み込む";
+"imageEditor.action.layerSmartFilterDiscardChanges" = "未保存のフィルター設定を破棄";
 "imageEditor.state.editing" = "編集中";
 "imageEditor.state.editingModified" = "編集中、未保存の変更あり";
 "imageEditor.state.unsavedChanges" = "未保存の変更あり";

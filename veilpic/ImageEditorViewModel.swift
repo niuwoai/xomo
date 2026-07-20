@@ -5720,6 +5720,27 @@ final class ImageEditorViewModel: ObservableObject {
         return true
     }
 
+    /// Restores the persisted filter parameters without changing the document
+    /// or creating an undo/history entry. This is the inspector equivalent of
+    /// cancelling edits in a modal filter dialog.
+    @discardableResult
+    func discardSmartFilterControlChanges(_ filterID: UUID) -> Bool {
+        guard canDiscardSmartFilterControlChanges(filterID),
+              loadSmartFilterIntoControls(filterID)
+        else { return false }
+        statusText = L10n.text("imageEditor.status.smartFilterChangesDiscarded")
+        return true
+    }
+
+    func canDiscardSmartFilterControlChanges(_ filterID: UUID) -> Bool {
+        guard loadedSmartFilterID == filterID,
+              let (layerIndex, filterIndex) = selectedSmartFilterIndex(filterID)
+        else { return false }
+        return smartFilterDiffersFromCurrentControls(
+            document.layers[layerIndex].smartFilters[filterIndex]
+        )
+    }
+
     private func updateSmartFilterFromCurrentControls(_ filter: inout ImageEditorSmartFilter) {
         let keepsBackdropRouting = filter.appliesToBackdrop && selectedFilter == .gaussianBlur
         filter.kind = selectedFilter

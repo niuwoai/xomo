@@ -306,8 +306,10 @@ struct ImageEditorFilterTests {
         #expect(viewModel.canUpdateLoadedSmartFilterOnSelectedLayer)
         #expect(viewModel.loadedSmartFilterHasPendingChanges)
         #expect(viewModel.smartFilterHasPendingControlChanges(primaryTarget.id))
+        #expect(!viewModel.canDiscardSmartFilterControlChanges(primaryTarget.id))
         viewModel.selectedFilter = .pixelate
         viewModel.filterIntensity = 0.8
+        #expect(viewModel.canDiscardSmartFilterControlChanges(primaryTarget.id))
         let historyCount = viewModel.document.history.count
 
         viewModel.updateLoadedSmartFilterOnSelectedLayer()
@@ -399,6 +401,39 @@ struct ImageEditorFilterTests {
         viewModel.updateSmartFilterOnSelectedLayer(filterID)
         #expect(viewModel.document.history.count == updatedHistoryCount)
         #expect(viewModel.statusText == L10n.text("imageEditor.status.smartFilterUnchanged"))
+    }
+
+    @Test func discardingPendingSmartFilterControlsRestoresSavedValuesWithoutHistory() throws {
+        let image = solidImage(size: NSSize(width: 24, height: 18), color: .systemBlue)
+        let viewModel = ImageEditorViewModel(sourceName: "smart-filter-discard.png", image: image) { _ in }
+        let layerIndex = try #require(
+            viewModel.document.layers.firstIndex { $0.id == viewModel.document.selectedLayerID }
+        )
+        let target = ImageEditorSmartFilter(
+            kind: .gaussianBlur,
+            intensity: 0.35,
+            settings: ImageEditorFilterSettings(gaussianBlurRadius: 8)
+        )
+        viewModel.document.layers[layerIndex].smartFilters = [target]
+
+        #expect(viewModel.loadSmartFilterIntoControls(target.id))
+        let historyCount = viewModel.document.history.count
+
+        viewModel.selectedFilter = .pixelate
+        viewModel.filterIntensity = 0.8
+        #expect(viewModel.smartFilterHasPendingControlChanges(target.id))
+        #expect(viewModel.canDiscardSmartFilterControlChanges(target.id))
+
+        #expect(viewModel.discardSmartFilterControlChanges(target.id))
+        #expect(viewModel.selectedFilter == .gaussianBlur)
+        #expect(abs(viewModel.filterIntensity - 0.35) < 0.000_001)
+        #expect(viewModel.filterGaussianBlurRadius == 8)
+        #expect(!viewModel.smartFilterHasPendingControlChanges(target.id))
+        #expect(!viewModel.canDiscardSmartFilterControlChanges(target.id))
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.smartFilterChangesDiscarded"))
+        #expect(!viewModel.discardSmartFilterControlChanges(target.id))
+        #expect(viewModel.document.history.count == historyCount)
     }
 
     @Test func duplicatingSmartFilterPreservesCompleteSettingsAndSupportsUndoRedo() throws {

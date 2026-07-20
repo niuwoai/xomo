@@ -7554,6 +7554,7 @@ struct ImageEditorView: View {
         let blendMode = viewModel.smartFilterBlendMode(filter.id) ?? filter.normalizedBlendMode
         let isLoadedForEditing = viewModel.isSmartFilterLoadedForEditing(filter.id)
         let hasPendingControlChanges = viewModel.smartFilterHasPendingControlChanges(filter.id)
+        let canDiscardControlChanges = viewModel.canDiscardSmartFilterControlChanges(filter.id)
         let editingAccessibilityValue = isLoadedForEditing
             ? L10n.text(
                 hasPendingControlChanges
@@ -7598,6 +7599,18 @@ struct ImageEditorView: View {
                 }
                 .buttonStyle(EditorTextButtonStyle())
                 .disabled(!isLoadedForEditing || !hasPendingControlChanges)
+                Button {
+                    _ = viewModel.discardSmartFilterControlChanges(filter.id)
+                } label: {
+                    Image(systemName: "arrow.counterclockwise")
+                        .font(.system(size: 10, weight: .semibold))
+                }
+                .buttonStyle(EditorTextButtonStyle())
+                .focusable(false)
+                .disabled(!canDiscardControlChanges)
+                .accessibilityLabel(L10n.text("imageEditor.action.layerSmartFilterDiscardChanges"))
+                .accessibilityIdentifier("image-editor-smart-filter-discard-\(filter.id)")
+                .help(L10n.text("imageEditor.action.layerSmartFilterDiscardChanges"))
                 Button {
                     viewModel.duplicateSmartFilterOnSelectedLayer(filter.id)
                 } label: {

@@ -1774,6 +1774,7 @@
 "imageEditor.status.adjustmentReady" = "%@ adjustment ready";
 "imageEditor.status.filterReady" = "%@ filter ready";
 "imageEditor.status.smartFilterUnchanged" = "Smart filter settings are unchanged";
+"imageEditor.status.smartFilterChangesDiscarded" = "Restored the saved smart filter settings";
 "imageEditor.status.adjustmentSelected" = "Applied %@ to %d layers";
 "imageEditor.status.operationFailed" = "Operation failed";
 "imageEditor.status.layerLocked" = "The selected layer cannot be edited";
@@ -2089,6 +2090,7 @@
 "imageEditor.action.layerSmartFilterUpdate" = "Update Smart Filter";
 "imageEditor.action.layerSmartFilterUpdateShort" = "Update";
 "imageEditor.action.layerSmartFilterLoadSettings" = "Load This Filter's Settings";
+"imageEditor.action.layerSmartFilterDiscardChanges" = "Discard Unsaved Filter Settings";
 "imageEditor.state.editing" = "Editing";
 "imageEditor.state.editingModified" = "Editing, unsaved changes";
 "imageEditor.state.unsavedChanges" = "Unsaved changes";
