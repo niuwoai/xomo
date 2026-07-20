@@ -5971,13 +5971,33 @@ final class ImageEditorViewModel: ObservableObject {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return nil
         }
-        var duplicate = document.layers[layerIndex].smartFilters[filterIndex]
-        duplicate.id = UUID()
+        let targetIndices = selectedSmartFilterTargetIndices(at: filterIndex)
+        guard targetIndices.contains(layerIndex) else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return nil
+        }
         pushUndo()
-        document.layers[layerIndex].smartFilters.insert(duplicate, at: filterIndex + 1)
-        loadedSmartFilterID = duplicate.id
-        appendHistory(L10n.text("imageEditor.history.layerSmartFilterDuplicate"))
-        return duplicate.id
+        var primaryDuplicateID: UUID?
+        for targetIndex in targetIndices {
+            var duplicate = document.layers[targetIndex].smartFilters[filterIndex]
+            duplicate.id = UUID()
+            document.layers[targetIndex].smartFilters.insert(duplicate, at: filterIndex + 1)
+            if targetIndex == layerIndex {
+                primaryDuplicateID = duplicate.id
+            }
+        }
+        guard let primaryDuplicateID else { return nil }
+        loadedSmartFilterID = primaryDuplicateID
+        guard targetIndices.count > 1 else {
+            appendHistory(L10n.text("imageEditor.history.layerSmartFilterDuplicate"))
+            return primaryDuplicateID
+        }
+        appendHistory(L10n.text("imageEditor.history.layerSmartFilterDuplicateSelected"))
+        statusText = L10n.format(
+            "imageEditor.status.layerSmartFilterDuplicatedSelected",
+            targetIndices.count
+        )
+        return primaryDuplicateID
     }
 
     func canMoveSmartFilterOnSelectedLayer(_ filterID: UUID, offset: Int) -> Bool {

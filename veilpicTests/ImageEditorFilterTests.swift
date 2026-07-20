@@ -729,6 +729,88 @@ struct ImageEditorFilterTests {
         #expect(viewModel.document.selectedLayer?.smartFilters.map(\.id) == [original.id, duplicateID])
     }
 
+    @Test func duplicatingSmartFilterCopiesEachSelectedLayersMatchingStackPosition() throws {
+        let canvasSize = NSSize(width: 24, height: 18)
+        let image = solidImage(size: canvasSize, color: .systemBlue)
+        let viewModel = ImageEditorViewModel(sourceName: "duplicate-smart-filter-selected.png", image: image) { _ in }
+        let primaryIndex = try #require(viewModel.document.selectedLayerIndex)
+        let primaryID = viewModel.document.layers[primaryIndex].id
+        let primaryLead = ImageEditorSmartFilter(kind: .median, intensity: 0.2)
+        let primaryTarget = ImageEditorSmartFilter(
+            kind: .gaussianBlur,
+            intensity: 0.67,
+            settings: ImageEditorFilterSettings(gaussianBlurRadius: 14),
+            isEnabled: false,
+            opacity: 0.35,
+            blendMode: .softLight,
+            appliesToBackdrop: true
+        )
+        viewModel.document.layers[primaryIndex].smartFilters = [primaryLead, primaryTarget]
+
+        var secondary = ImageEditorLayer.blank(name: "Secondary", size: canvasSize)
+        let secondaryLead = ImageEditorSmartFilter(kind: .pixelate, intensity: 0.3)
+        let secondaryTarget = ImageEditorSmartFilter(
+            kind: .wave,
+            intensity: 0.42,
+            settings: ImageEditorFilterSettings(waveAmplitude: 0.7, waveFrequency: 0.8),
+            opacity: 0.8,
+            blendMode: .screen
+        )
+        secondary.smartFilters = [secondaryLead, secondaryTarget]
+        var locked = ImageEditorLayer.blank(name: "Locked", size: canvasSize)
+        locked.smartFilters = [
+            ImageEditorSmartFilter(kind: .sharpen, intensity: 0.5),
+            ImageEditorSmartFilter(kind: .ripple, intensity: 0.6)
+        ]
+        locked.isLocked = true
+        var missingPosition = ImageEditorLayer.blank(name: "Short Stack", size: canvasSize)
+        missingPosition.smartFilters = [ImageEditorSmartFilter(kind: .offset, intensity: 0.7)]
+        viewModel.document.layers.append(contentsOf: [secondary, locked, missingPosition])
+        viewModel.document.selectedLayerID = primaryID
+        viewModel.document.selectedLayerIDs = [primaryID, secondary.id, locked.id, missingPosition.id]
+
+        #expect(viewModel.loadSmartFilterIntoControls(primaryTarget.id))
+        let historyCount = viewModel.document.history.count
+        let primaryDuplicateID = try #require(
+            viewModel.duplicateSmartFilterOnSelectedLayer(primaryTarget.id)
+        )
+
+        let primaryFilters = try #require(
+            viewModel.document.layers.first { $0.id == primaryID }?.smartFilters
+        )
+        let secondaryFilters = try #require(
+            viewModel.document.layers.first { $0.id == secondary.id }?.smartFilters
+        )
+        #expect(primaryFilters.count == 3)
+        #expect(secondaryFilters.count == 3)
+        #expect(primaryFilters.map(\.id) == [primaryLead.id, primaryTarget.id, primaryDuplicateID])
+        #expect(secondaryFilters[2].id != secondaryTarget.id)
+        #expect(secondaryFilters[2].id != primaryDuplicateID)
+        var normalizedPrimaryDuplicate = primaryFilters[2]
+        normalizedPrimaryDuplicate.id = primaryTarget.id
+        var normalizedSecondaryDuplicate = secondaryFilters[2]
+        normalizedSecondaryDuplicate.id = secondaryTarget.id
+        #expect(normalizedPrimaryDuplicate == primaryTarget)
+        #expect(normalizedSecondaryDuplicate == secondaryTarget)
+        #expect(viewModel.document.layers.first { $0.id == locked.id }?.smartFilters.count == 2)
+        #expect(viewModel.document.layers.first { $0.id == missingPosition.id }?.smartFilters.count == 1)
+        #expect(viewModel.loadedSmartFilterID == primaryDuplicateID)
+        #expect(viewModel.document.selectedLayerIDs == [primaryID, secondary.id, locked.id, missingPosition.id])
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterDuplicateSelected"))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerSmartFilterDuplicatedSelected", 2))
+
+        viewModel.undo()
+        #expect(viewModel.document.layers.first { $0.id == primaryID }?.smartFilters.map(\.id) == [primaryLead.id, primaryTarget.id])
+        #expect(viewModel.document.layers.first { $0.id == secondary.id }?.smartFilters.map(\.id) == [secondaryLead.id, secondaryTarget.id])
+        #expect(viewModel.loadedSmartFilterID == primaryTarget.id)
+
+        viewModel.redo()
+        #expect(viewModel.document.layers.first { $0.id == primaryID }?.smartFilters.last?.id == primaryDuplicateID)
+        #expect(viewModel.document.layers.first { $0.id == secondary.id }?.smartFilters.count == 3)
+        #expect(viewModel.loadedSmartFilterID == primaryDuplicateID)
+    }
+
     @Test func smartFilterMoveAvailabilityDisablesBoundariesAndAvoidsEmptyHistory() throws {
         let image = solidImage(size: NSSize(width: 24, height: 18), color: .systemBlue)
         let viewModel = ImageEditorViewModel(sourceName: "smart-filter-move-boundaries.png", image: image) { _ in }

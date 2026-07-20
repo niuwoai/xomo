@@ -1500,6 +1500,7 @@
 "imageEditor.history.layerSmartFilterBlendMode" = "スマートフィルターの描画モードを変更";
 "imageEditor.history.layerSmartFilterBlendModeSelected" = "選択レイヤーのスマートフィルター描画モードを変更";
 "imageEditor.history.layerSmartFilterDuplicate" = "スマートフィルターを複製";
+"imageEditor.history.layerSmartFilterDuplicateSelected" = "選択レイヤーのスマートフィルターを複製";
 "imageEditor.history.layerSmartFilterRemove" = "スマートフィルターを削除";
 "imageEditor.history.layerSmartFilterMove" = "スマートフィルターを移動";
 "imageEditor.history.layerSmartFilterClear" = "スマートフィルターをクリア";
@@ -1783,6 +1784,7 @@
 "imageEditor.status.layerSmartFilterDisabledSelected" = "%d個のレイヤーでスマートフィルターを無効にしました";
 "imageEditor.status.layerSmartFilterOpacitySelected" = "スマートフィルターの不透明度を%d%%に設定し、%d個のレイヤーを更新しました";
 "imageEditor.status.layerSmartFilterBlendModeSelected" = "スマートフィルターの描画モードを%@に設定し、%d個のレイヤーを更新しました";
+"imageEditor.status.layerSmartFilterDuplicatedSelected" = "%d個のレイヤーでスマートフィルターを複製しました";
 "imageEditor.status.adjustmentSelected" = "%@ を%d個のレイヤーに適用しました";
 "imageEditor.status.operationFailed" = "操作に失敗しました";
 "imageEditor.status.layerLocked" = "選択中のレイヤーは編集できません";
