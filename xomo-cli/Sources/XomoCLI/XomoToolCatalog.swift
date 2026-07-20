@@ -228,7 +228,7 @@ enum XomoToolCatalog {
         ("xomo.smart_filter.list", "List smart filters."),
         ("xomo.smart_filter.add", "Add a smart filter."),
         ("xomo.smart_filter.toggle", "Toggle a smart filter."),
-        ("xomo.smart_filter.clear", "Clear smart filters."),
+        ("xomo.smart_filter.clear", "Clear smart filters and return the cleared layer count."),
         ("xomo.smart_filter.manage", "Update, remove, or reorder a smart filter."),
         ("xomo.filter.list", "List raster filters."),
         ("xomo.filter.apply", "Apply a raster filter to selected layers."),

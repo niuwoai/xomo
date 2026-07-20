@@ -6056,15 +6056,35 @@ final class ImageEditorViewModel: ObservableObject {
         return true
     }
 
-    func clearSmartFiltersFromSelectedLayer() {
+    @discardableResult
+    func clearSmartFiltersFromSelectedLayer() -> Int {
         let targetIndices = selectedLayerSmartFilterClearTargetIndices()
-        guard !targetIndices.isEmpty else { return }
+        guard !targetIndices.isEmpty else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return 0
+        }
+        let removesLoadedFilter = loadedSmartFilterID.map { loadedFilterID in
+            targetIndices.contains { layerIndex in
+                document.layers[layerIndex].smartFilters.contains { $0.id == loadedFilterID }
+            }
+        } ?? false
         pushUndo()
         for index in targetIndices {
             document.layers[index].smartFilters.removeAll()
         }
-        loadedSmartFilterID = nil
-        appendHistory(L10n.text("imageEditor.history.layerSmartFilterClear"))
+        if removesLoadedFilter {
+            loadedSmartFilterID = nil
+        }
+        guard targetIndices.count > 1 else {
+            appendHistory(L10n.text("imageEditor.history.layerSmartFilterClear"))
+            return targetIndices.count
+        }
+        appendHistory(L10n.text("imageEditor.history.layerSmartFilterClearSelected"))
+        statusText = L10n.format(
+            "imageEditor.status.layerSmartFilterClearedSelected",
+            targetIndices.count
+        )
+        return targetIndices.count
     }
 
     private func selectedSmartFilterIndex(_ filterID: UUID) -> (layerIndex: Int, filterIndex: Int)? {

@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.12.0-rc434 - 2026-07-21
+
+### Changed
+- 多选图层清空智能滤镜时，为每个可编辑且非空的目标清空完整滤镜栈；锁定层、组、调整/滤镜层与空栈安全跳过，并以一次 History/Undo/Redo 记录整次操作。
+- 批量清空新增三语 History 与实际清空图层数反馈；若当前载入滤镜位于被跳过的锁定主图层，会继续保留编辑目标，不再因清空其他图层而误取消。
+- MCP `xomo.smart_filter.clear` 现在返回 `clearedLayerCount`；没有可清空目标时明确失败且不制造空 History/Undo，CLI 工具目录同步说明返回语义。
+
+### Verification
+- 多选清空、载入滤镜生命周期、批量新增/更新/清空、MCP 成功/失败与三语资源定向测试 5/5，CLI 2/2、发布版本契约 7/7 通过；主 `.xcresult` 为 `/tmp/veilpic-rc434-smart-filter-clear-selected-passed.xcresult`。
+- Computer Use 已在 rc434 Debug App 中确认历史摘要、搜索占位、历史条目“打开”和滤镜下拉“高斯模糊”均使用浅色文字；下一次完整 Release、冒烟与 `/Applications` 覆盖门禁仍为 rc440。
+
 ## 2.12.0-rc433 - 2026-07-21
 
 ### Changed

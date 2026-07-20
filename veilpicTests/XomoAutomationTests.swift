@@ -355,6 +355,23 @@ struct XomoAutomationTests {
             ]
         ))
         #expect(!missingRemoveResponse.ok)
+
+        let clearResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.smart_filter.clear"
+        ))
+        #expect(clearResponse.ok)
+        #expect(clearResponse.result?.objectValue?["clearedLayerCount"] == .number(1))
+        #expect(viewModel.document.selectedLayer?.smartFilters.isEmpty == true)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterClear"))
+
+        let historyCountBeforeEmptyClear = viewModel.document.history.count
+        let emptyClearResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.smart_filter.clear"
+        ))
+        #expect(!emptyClearResponse.ok)
+        #expect(viewModel.document.history.count == historyCountBeforeEmptyClear)
     }
 
     @Test func registryCreatesListsAndDeletesNamedSlices() throws {

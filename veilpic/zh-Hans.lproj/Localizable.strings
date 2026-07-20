@@ -1506,6 +1506,7 @@
 "imageEditor.history.layerSmartFilterMove" = "移动智能滤镜";
 "imageEditor.history.layerSmartFilterMoveSelected" = "移动所选图层的智能滤镜";
 "imageEditor.history.layerSmartFilterClear" = "清空智能滤镜";
+"imageEditor.history.layerSmartFilterClearSelected" = "清空所选图层的智能滤镜";
 "imageEditor.history.layerTextNew" = "新建文字图层";
 "imageEditor.history.layerTextUpdate" = "更新文字图层";
 "imageEditor.history.layerTextUpdateSelected" = "更新所选文字图层";
@@ -1788,6 +1789,7 @@
 "imageEditor.status.layerSmartFilterBlendModeSelected" = "已将智能滤镜混合模式设为 %@，更新 %d 个图层";
 "imageEditor.status.layerSmartFilterDuplicatedSelected" = "已在 %d 个图层中复制智能滤镜";
 "imageEditor.status.layerSmartFilterRemovedSelected" = "已从 %d 个图层中删除智能滤镜";
+"imageEditor.status.layerSmartFilterClearedSelected" = "已清空 %d 个图层的智能滤镜";
 "imageEditor.status.layerSmartFilterMovedSelected" = "已在 %d 个图层中移动智能滤镜";
 "imageEditor.status.adjustmentSelected" = "已将 %@ 应用到 %d 个图层";
 "imageEditor.status.operationFailed" = "操作失败";

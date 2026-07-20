@@ -453,7 +453,13 @@ final class XomoAutomationRegistry {
         case "xomo.smart_filter.toggle":
             viewModel.toggleSmartFilterOnSelectedLayer(try requiredUUID("id", in: arguments))
         case "xomo.smart_filter.clear":
-            viewModel.clearSmartFiltersFromSelectedLayer()
+            let clearedLayerCount = viewModel.clearSmartFiltersFromSelectedLayer()
+            guard clearedLayerCount > 0 else {
+                throw XomoAutomationCallError.invalidArgument("No smart filters can be cleared")
+            }
+            return .object([
+                "clearedLayerCount": .number(Double(clearedLayerCount))
+            ])
         case "xomo.smart_filter.manage":
             try smartFilterManage(arguments, viewModel: viewModel)
         case "xomo.filter.list":
@@ -4079,7 +4085,7 @@ private extension XomoAutomationRegistry {
             "blendMode": XomoAutomationSchema.string(description: "Result blend mode", values: ImageEditorBlendMode.smartFilterCases.map(\.rawValue))
         ], required: ["filter"]),
         tool("xomo.smart_filter.toggle", "Enable or disable a smart filter by UUID.", idProperties, required: ["id"]),
-        tool("xomo.smart_filter.clear", "Remove all smart filters from selected layers."),
+        tool("xomo.smart_filter.clear", "Remove all smart filters from selected layers and return the cleared layer count."),
         tool("xomo.smart_filter.manage", "Load, update, duplicate, reorder, or remove a smart filter.", [
             "id": XomoAutomationSchema.string(description: "Smart filter UUID"),
             "action": XomoAutomationSchema.string(description: "Management action", values: ["load", "update", "setOpacity", "setBlendMode", "duplicate", "remove", "moveUp", "moveDown"]),

@@ -1022,6 +1022,78 @@ struct ImageEditorFilterTests {
         #expect(viewModel.statusText == L10n.format("imageEditor.status.layerSmartFilterMovedSelected", 2))
     }
 
+    @Test func clearingSmartFiltersAcrossSelectionReportsCountAndPreservesSkippedLoadedFilter() throws {
+        let canvasSize = NSSize(width: 24, height: 18)
+        let image = solidImage(size: canvasSize, color: .systemBlue)
+        let viewModel = ImageEditorViewModel(sourceName: "smart-filter-clear-selected.png", image: image) { _ in }
+        let primaryIndex = try #require(viewModel.document.selectedLayerIndex)
+        let primaryID = viewModel.document.layers[primaryIndex].id
+        let primaryLead = ImageEditorSmartFilter(kind: .median, intensity: 0.2)
+        let primaryTarget = ImageEditorSmartFilter(
+            kind: .gaussianBlur,
+            intensity: 0.4,
+            settings: ImageEditorFilterSettings(gaussianBlurRadius: 18),
+            opacity: 0.35,
+            blendMode: .softLight
+        )
+        let primaryFilters = [primaryLead, primaryTarget]
+        viewModel.document.layers[primaryIndex].smartFilters = primaryFilters
+
+        var secondary = ImageEditorLayer.blank(name: "Secondary", size: canvasSize)
+        let secondaryFilters = [
+            ImageEditorSmartFilter(kind: .pixelate, intensity: 0.3),
+            ImageEditorSmartFilter(
+                kind: .wave,
+                intensity: 0.5,
+                settings: ImageEditorFilterSettings(waveAmplitude: 0.7, waveFrequency: 0.8),
+                opacity: 0.75,
+                blendMode: .screen
+            )
+        ]
+        secondary.smartFilters = secondaryFilters
+        var tertiary = ImageEditorLayer.blank(name: "Tertiary", size: canvasSize)
+        let tertiaryFilters = [ImageEditorSmartFilter(kind: .ripple, intensity: 0.7)]
+        tertiary.smartFilters = tertiaryFilters
+        let empty = ImageEditorLayer.blank(name: "Empty", size: canvasSize)
+        viewModel.document.layers.append(contentsOf: [secondary, tertiary, empty])
+        viewModel.document.selectedLayerID = primaryID
+        viewModel.document.selectedLayerIDs = [primaryID, secondary.id, tertiary.id, empty.id]
+
+        #expect(viewModel.loadSmartFilterIntoControls(primaryTarget.id))
+        viewModel.document.layers[primaryIndex].isLocked = true
+        let historyCount = viewModel.document.history.count
+        #expect(viewModel.canClearSmartFiltersFromSelectedLayer)
+        #expect(viewModel.clearSmartFiltersFromSelectedLayer() == 2)
+
+        #expect(viewModel.document.layers.first { $0.id == primaryID }?.smartFilters == primaryFilters)
+        #expect(viewModel.document.layers.first { $0.id == secondary.id }?.smartFilters.isEmpty == true)
+        #expect(viewModel.document.layers.first { $0.id == tertiary.id }?.smartFilters.isEmpty == true)
+        #expect(viewModel.document.layers.first { $0.id == empty.id }?.smartFilters.isEmpty == true)
+        #expect(viewModel.isSmartFilterLoadedForEditing(primaryTarget.id))
+        #expect(viewModel.document.selectedLayerIDs == [primaryID, secondary.id, tertiary.id, empty.id])
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterClearSelected"))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerSmartFilterClearedSelected", 2))
+
+        viewModel.undo()
+        #expect(viewModel.document.layers.first { $0.id == secondary.id }?.smartFilters == secondaryFilters)
+        #expect(viewModel.document.layers.first { $0.id == tertiary.id }?.smartFilters == tertiaryFilters)
+        #expect(viewModel.isSmartFilterLoadedForEditing(primaryTarget.id))
+
+        viewModel.redo()
+        #expect(viewModel.document.layers.first { $0.id == secondary.id }?.smartFilters.isEmpty == true)
+        #expect(viewModel.document.layers.first { $0.id == tertiary.id }?.smartFilters.isEmpty == true)
+        #expect(viewModel.isSmartFilterLoadedForEditing(primaryTarget.id))
+        let historyCountBeforeNoOp = viewModel.document.history.count
+        #expect(viewModel.clearSmartFiltersFromSelectedLayer() == 0)
+        #expect(viewModel.document.history.count == historyCountBeforeNoOp)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.operationFailed"))
+
+        viewModel.undo()
+        #expect(viewModel.document.layers.first { $0.id == secondary.id }?.smartFilters == secondaryFilters)
+        #expect(viewModel.document.layers.first { $0.id == tertiary.id }?.smartFilters == tertiaryFilters)
+    }
+
     @Test func zeroStrengthMaskedFilterPreservesSemiTransparentPixels() throws {
         let canvasSize = NSSize(width: 32, height: 24)
         let sourceImage = solidImage(
@@ -1283,7 +1355,7 @@ struct ImageEditorFilterTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterUpdate"))
 
         #expect(viewModel.canClearSmartFiltersFromSelectedLayer)
-        viewModel.clearSmartFiltersFromSelectedLayer()
+        let clearedLayerCount = viewModel.clearSmartFiltersFromSelectedLayer()
 
         first = try #require(layer(firstID, in: viewModel))
         second = try #require(layer(secondID, in: viewModel))
@@ -1295,7 +1367,9 @@ struct ImageEditorFilterTests {
         #expect(group.smartFilters.isEmpty)
         #expect(!viewModel.canUpdateLastSmartFilterOnSelectedLayer)
         #expect(!viewModel.canClearSmartFiltersFromSelectedLayer)
-        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterClear"))
+        #expect(clearedLayerCount == 2)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterClearSelected"))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerSmartFilterClearedSelected", 2))
     }
 
     @Test func backgroundBlurSmartFilterSamplesTheBackdropWithoutChangingLayerPixels() throws {
