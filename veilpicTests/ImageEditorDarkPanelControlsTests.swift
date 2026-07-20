@@ -60,7 +60,8 @@ struct ImageEditorDarkPanelControlsTests {
     }
 
     @Test func filterPickerUsesDarkAppearanceAndCannotTakeKeyboardFocus() throws {
-        let picker = ImageEditorFilterPopUpButton(frame: .zero, pullsDown: false)
+        let host = ImageEditorFilterPickerHost()
+        let picker = host.picker
 
         ImageEditorDarkPanelControlAppearance.configureFilterPicker(picker)
         let attributedTitle = ImageEditorDarkPanelControlAppearance.attributedTitle(
@@ -72,12 +73,34 @@ struct ImageEditorDarkPanelControlsTests {
         item.attributedTitle = attributedTitle
         picker.menu?.addItem(item)
         picker.selectItem(at: 0)
-        picker.needsDisplay = true
+        ImageEditorDarkPanelControlAppearance.synchronizeSelectedTitle(on: picker)
+        host.frame = NSRect(x: 0, y: 0, width: 240, height: 24)
+        host.layoutSubtreeIfNeeded()
 
         let titleColor = try #require(
             picker.displayedAttributedTitle.attribute(.foregroundColor, at: 0, effectiveRange: nil) as? NSColor
         )
         let titleRGB = try #require(titleColor.usingColorSpace(.deviceRGB))
+        let nativeTitleColor = try #require(
+            picker.attributedTitle.attribute(.foregroundColor, at: 0, effectiveRange: nil) as? NSColor
+        )
+        let nativeTitleRGB = try #require(nativeTitleColor.usingColorSpace(.deviceRGB))
+        let cellTitleColor = try #require(
+            (picker.cell as? NSPopUpButtonCell)?.attributedTitle.attribute(
+                .foregroundColor,
+                at: 0,
+                effectiveRange: nil
+            ) as? NSColor
+        )
+        let cellTitleRGB = try #require(cellTitleColor.usingColorSpace(.deviceRGB))
+        let visibleTitleColor = try #require(
+            host.displayedTitleLabel.attributedStringValue.attribute(
+                .foregroundColor,
+                at: 0,
+                effectiveRange: nil
+            ) as? NSColor
+        )
+        let visibleTitleRGB = try #require(visibleTitleColor.usingColorSpace(.deviceRGB))
         #expect(picker.appearance?.name == .darkAqua)
         #expect(picker.identifier?.rawValue == "image-editor-filter-picker")
         #expect(!picker.acceptsFirstResponder)
@@ -85,10 +108,49 @@ struct ImageEditorDarkPanelControlsTests {
         #expect(titleRGB.redComponent > 0.9)
         #expect(titleRGB.greenComponent > 0.9)
         #expect(titleRGB.blueComponent > 0.9)
+        #expect(nativeTitleRGB.redComponent > 0.9)
+        #expect(cellTitleRGB.redComponent > 0.9)
+        #expect(visibleTitleRGB.redComponent > 0.9)
+        #expect(host.displayedTitleLabel.identifier?.rawValue == "image-editor-filter-visible-title")
+        #expect(host.displayedTitleLabel.hitTest(.zero) == nil)
+        #expect(host.subviews.last === host.displayedTitleLabel)
+        #expect(host.picker.frame == host.bounds)
+        #expect(host.displayedTitleLabel.frame.width == 206)
+    }
+
+    @Test func filterPickerHostActuallyRendersLightTitlePixels() throws {
+        let host = ImageEditorFilterPickerHost(frame: NSRect(x: 0, y: 0, width: 240, height: 24))
+        let picker = host.picker
+        let item = NSMenuItem(title: "高斯模糊", action: nil, keyEquivalent: "")
+        item.attributedTitle = ImageEditorDarkPanelControlAppearance.attributedTitle(
+            item.title,
+            role: .primary,
+            font: NSFont.systemFont(ofSize: 12, weight: .medium)
+        )
+        picker.menu?.addItem(item)
+        picker.selectItem(at: 0)
+        ImageEditorDarkPanelControlAppearance.synchronizeSelectedTitle(on: picker)
+        host.layoutSubtreeIfNeeded()
+
+        let bitmap = try #require(host.bitmapImageRepForCachingDisplay(in: host.bounds))
+        host.cacheDisplay(in: host.bounds, to: bitmap)
+        var maximumLuminance = 0.0
+        for x in 8..<120 {
+            for y in 0..<24 {
+                guard let color = bitmap.colorAt(x: x, y: y)?.usingColorSpace(.deviceRGB) else { continue }
+                maximumLuminance = max(
+                    maximumLuminance,
+                    0.2126 * color.redComponent + 0.7152 * color.greenComponent + 0.0722 * color.blueComponent
+                )
+            }
+        }
+
+        #expect(maximumLuminance > 0.8)
     }
 
     @Test func smartFilterBlendPickerUsesTheSameExplicitLightNativeControl() throws {
-        let picker = ImageEditorFilterPopUpButton(frame: .zero, pullsDown: false)
+        let host = ImageEditorFilterPickerHost()
+        let picker = host.picker
 
         ImageEditorDarkPanelControlAppearance.configureFilterPicker(picker)
         picker.identifier = NSUserInterfaceItemIdentifier("image-editor-smart-filter-blend-mode-picker")
@@ -104,6 +166,7 @@ struct ImageEditorDarkPanelControlsTests {
         }
         let multiplyIndex = try #require(blendModes.firstIndex(of: .multiply))
         picker.selectItem(at: multiplyIndex)
+        ImageEditorDarkPanelControlAppearance.synchronizeSelectedTitle(on: picker)
 
         let titleColor = try #require(
             picker.displayedAttributedTitle.attribute(.foregroundColor, at: 0, effectiveRange: nil) as? NSColor
@@ -115,6 +178,7 @@ struct ImageEditorDarkPanelControlsTests {
         #expect(titleRGB.redComponent > 0.9)
         #expect(titleRGB.greenComponent > 0.9)
         #expect(titleRGB.blueComponent > 0.9)
+        #expect(picker.attributedTitle.string == ImageEditorBlendMode.multiply.title)
         #expect(!blendModes.contains(.passThrough))
     }
 }

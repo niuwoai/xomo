@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc419 - 2026-07-20
+
+### Fixed
+- 修复历史列表操作名在深色 Dock 中仍可能被按钮样式染成黑色的问题；历史项改为显式浅色文字与独立点击区域，不再把文字放进原生按钮标签层级。
+- 滤镜及智能滤镜混合模式下拉在选中值变化后，同时把浅色富文本同步到控件、`NSPopUpButtonCell` 与不可交互的独立可见标题层，避免 AppKit 最终绘制阶段回退到黑色系统标题。
+
+### Verification
+- 深色历史文字与滤镜下拉定向测试 6/6、CLI 2/2、发布版本契约 7/7 通过；`.xcresult` 为 `/tmp/veilpic-rc419-dark-panel-text/Logs/Test/Test-veilpic-2026.07.20_15-47-50-+0800.xcresult`。Computer Use 已在真实 Debug App 中确认“打开”和“高斯模糊”为浅色，滤镜菜单可正常展开且控件不抢键盘焦点。下一次完整 Release、冒烟与 `/Applications` 覆盖门禁仍为 rc440。
+
 ## 2.12.0-rc418 - 2026-07-20
 
 ### Fixed

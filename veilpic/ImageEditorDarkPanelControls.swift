@@ -71,6 +71,14 @@ enum ImageEditorDarkPanelControlAppearance {
         picker.contentTintColor = ImageEditorTheme.text
         picker.identifier = NSUserInterfaceItemIdentifier("image-editor-filter-picker")
     }
+
+    static func synchronizeSelectedTitle(on picker: ImageEditorFilterPopUpButton) {
+        let title = picker.displayedAttributedTitle
+        picker.attributedTitle = title
+        (picker.cell as? NSPopUpButtonCell)?.attributedTitle = title
+        picker.synchronizeDisplayedTitle()
+        picker.needsDisplay = true
+    }
 }
 
 final class ImageEditorDarkPanelNativeLabel: NSView {
@@ -189,6 +197,16 @@ struct ImageEditorHistorySearchField: NSViewRepresentable {
 }
 
 final class ImageEditorFilterPopUpButton: NSPopUpButton {
+    final class TitleLabel: NSTextField {
+        override var acceptsFirstResponder: Bool { false }
+
+        override func hitTest(_ point: NSPoint) -> NSView? {
+            nil
+        }
+    }
+
+    weak var displayedTitleLabel: TitleLabel?
+
     override var acceptsFirstResponder: Bool { false }
 
     var displayedAttributedTitle: NSAttributedString {
@@ -197,6 +215,11 @@ final class ImageEditorFilterPopUpButton: NSPopUpButton {
             role: .primary,
             font: NSFont.systemFont(ofSize: 12, weight: .medium)
         )
+    }
+
+    func synchronizeDisplayedTitle() {
+        displayedTitleLabel?.attributedStringValue = displayedAttributedTitle
+        displayedTitleLabel?.needsDisplay = true
     }
 
     override func draw(_ dirtyRect: NSRect) {
@@ -208,17 +231,6 @@ final class ImageEditorFilterPopUpButton: NSPopUpButton {
         ImageEditorTheme.border.setStroke()
         surface.lineWidth = 1
         surface.stroke()
-
-        let title = displayedAttributedTitle
-        let titleHeight = ceil(title.size().height)
-        title.draw(
-            in: NSRect(
-                x: 9,
-                y: max(0, (bounds.height - titleHeight) / 2),
-                width: max(0, bounds.width - 34),
-                height: titleHeight
-            )
-        )
 
         let arrowCenter = NSPoint(x: bounds.maxX - 13, y: bounds.midY)
         let chevron = NSBezierPath()
@@ -233,6 +245,52 @@ final class ImageEditorFilterPopUpButton: NSPopUpButton {
     }
 }
 
+final class ImageEditorFilterPickerHost: NSView {
+    let picker = ImageEditorFilterPopUpButton(frame: .zero, pullsDown: false)
+    let displayedTitleLabel = ImageEditorFilterPopUpButton.TitleLabel(labelWithString: "")
+
+    override var acceptsFirstResponder: Bool { false }
+
+    override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        configureSubviews()
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        configureSubviews()
+    }
+
+    override func layout() {
+        super.layout()
+        picker.frame = bounds
+        displayedTitleLabel.frame = NSRect(
+            x: 9,
+            y: 0,
+            width: max(0, bounds.width - 34),
+            height: bounds.height
+        )
+    }
+
+    private func configureSubviews() {
+        appearance = NSAppearance(named: .darkAqua)
+        picker.displayedTitleLabel = displayedTitleLabel
+        addSubview(picker)
+
+        displayedTitleLabel.appearance = NSAppearance(named: .darkAqua)
+        displayedTitleLabel.isEditable = false
+        displayedTitleLabel.isSelectable = false
+        displayedTitleLabel.isBordered = false
+        displayedTitleLabel.drawsBackground = false
+        displayedTitleLabel.lineBreakMode = .byTruncatingTail
+        displayedTitleLabel.usesSingleLineMode = true
+        displayedTitleLabel.textColor = ImageEditorTheme.text
+        displayedTitleLabel.identifier = NSUserInterfaceItemIdentifier("image-editor-filter-visible-title")
+        displayedTitleLabel.setAccessibilityElement(false)
+        addSubview(displayedTitleLabel)
+    }
+}
+
 struct ImageEditorDarkFilterPicker: NSViewRepresentable {
     @Binding var selection: ImageEditorFilter
 
@@ -240,17 +298,18 @@ struct ImageEditorDarkFilterPicker: NSViewRepresentable {
         Coordinator(selection: $selection)
     }
 
-    func makeNSView(context: Context) -> ImageEditorFilterPopUpButton {
-        let picker = ImageEditorFilterPopUpButton(frame: .zero, pullsDown: false)
+    func makeNSView(context: Context) -> ImageEditorFilterPickerHost {
+        let host = ImageEditorFilterPickerHost()
+        let picker = host.picker
         picker.target = context.coordinator
         picker.action = #selector(Coordinator.selectionChanged(_:))
         configure(picker, coordinator: context.coordinator)
-        return picker
+        return host
     }
 
-    func updateNSView(_ picker: ImageEditorFilterPopUpButton, context: Context) {
+    func updateNSView(_ host: ImageEditorFilterPickerHost, context: Context) {
         context.coordinator.selection = $selection
-        configure(picker, coordinator: context.coordinator)
+        configure(host.picker, coordinator: context.coordinator)
     }
 
     private func configure(_ picker: ImageEditorFilterPopUpButton, coordinator: Coordinator) {
@@ -271,7 +330,7 @@ struct ImageEditorDarkFilterPicker: NSViewRepresentable {
         }
         guard let index = filters.firstIndex(of: selection) else { return }
         picker.selectItem(at: index)
-        picker.needsDisplay = true
+        ImageEditorDarkPanelControlAppearance.synchronizeSelectedTitle(on: picker)
         coordinator.filters = filters
     }
 
@@ -286,7 +345,8 @@ struct ImageEditorDarkFilterPicker: NSViewRepresentable {
         @objc func selectionChanged(_ sender: NSPopUpButton) {
             guard filters.indices.contains(sender.indexOfSelectedItem) else { return }
             selection.wrappedValue = filters[sender.indexOfSelectedItem]
-            sender.needsDisplay = true
+            guard let picker = sender as? ImageEditorFilterPopUpButton else { return }
+            ImageEditorDarkPanelControlAppearance.synchronizeSelectedTitle(on: picker)
         }
     }
 }
@@ -298,17 +358,18 @@ struct ImageEditorDarkSmartFilterBlendPicker: NSViewRepresentable {
         Coordinator(selection: $selection)
     }
 
-    func makeNSView(context: Context) -> ImageEditorFilterPopUpButton {
-        let picker = ImageEditorFilterPopUpButton(frame: .zero, pullsDown: false)
+    func makeNSView(context: Context) -> ImageEditorFilterPickerHost {
+        let host = ImageEditorFilterPickerHost()
+        let picker = host.picker
         picker.target = context.coordinator
         picker.action = #selector(Coordinator.selectionChanged(_:))
         configure(picker, coordinator: context.coordinator)
-        return picker
+        return host
     }
 
-    func updateNSView(_ picker: ImageEditorFilterPopUpButton, context: Context) {
+    func updateNSView(_ host: ImageEditorFilterPickerHost, context: Context) {
         context.coordinator.selection = $selection
-        configure(picker, coordinator: context.coordinator)
+        configure(host.picker, coordinator: context.coordinator)
     }
 
     private func configure(_ picker: ImageEditorFilterPopUpButton, coordinator: Coordinator) {
@@ -331,7 +392,7 @@ struct ImageEditorDarkSmartFilterBlendPicker: NSViewRepresentable {
         }
         guard let index = blendModes.firstIndex(of: selection) else { return }
         picker.selectItem(at: index)
-        picker.needsDisplay = true
+        ImageEditorDarkPanelControlAppearance.synchronizeSelectedTitle(on: picker)
         coordinator.blendModes = blendModes
     }
 
@@ -346,7 +407,8 @@ struct ImageEditorDarkSmartFilterBlendPicker: NSViewRepresentable {
         @objc func selectionChanged(_ sender: NSPopUpButton) {
             guard blendModes.indices.contains(sender.indexOfSelectedItem) else { return }
             selection.wrappedValue = blendModes[sender.indexOfSelectedItem]
-            sender.needsDisplay = true
+            guard let picker = sender as? ImageEditorFilterPopUpButton else { return }
+            ImageEditorDarkPanelControlAppearance.synchronizeSelectedTitle(on: picker)
         }
     }
 }

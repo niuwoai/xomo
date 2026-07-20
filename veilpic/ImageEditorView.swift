@@ -3439,22 +3439,29 @@ struct ImageEditorView: View {
 
                         ForEach(viewModel.filteredHistoryEntries) { entry in
                             HStack(spacing: 4) {
-                                Button {
-                                    viewModel.selectHistoryEntry(entry.id)
-                                } label: {
-                                    HStack(spacing: 6) {
-                                        Image(systemName: historyIconName(for: entry))
-                                            .font(.system(size: 12, weight: .medium))
-                                            .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
-                                        ImageEditorDarkPanelLabel(title: entry.title)
-                                            .frame(maxWidth: .infinity, alignment: .leading)
-                                    }
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 6)
+                                HStack(spacing: 6) {
+                                    Image(systemName: historyIconName(for: entry))
+                                        .font(.system(size: 12, weight: .medium))
+                                        .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+                                    Text(entry.title)
+                                        .font(.system(size: 12, weight: .medium))
+                                        .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+                                        .lineLimit(1)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
                                 }
-                                .buttonStyle(.plain)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 6)
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    viewModel.selectHistoryEntry(entry.id)
+                                }
+                                .accessibilityElement(children: .ignore)
                                 .accessibilityLabel(entry.title)
+                                .accessibilityAddTraits(.isButton)
+                                .accessibilityAction {
+                                    viewModel.selectHistoryEntry(entry.id)
+                                }
                                 .help(L10n.text("imageEditor.action.historySelect"))
                                 .accessibilityIdentifier("image-editor-history-entry-\(entry.id)")
 

@@ -1544,7 +1544,10 @@ struct ImageEditorScopeTests {
         )
         let filterSource = source[filterStart.lowerBound..<snapshotStart.lowerBound]
 
-        #expect(historySource.contains("ImageEditorDarkPanelLabel("))
+        #expect(historySource.contains("Text(entry.title)"))
+        #expect(historySource.contains(".onTapGesture"))
+        #expect(historySource.contains(".accessibilityAction"))
+        #expect(!historySource.contains("ImageEditorDarkPanelLabel(title: entry.title)"))
         #expect(historySource.contains("ImageEditorHistorySearchField("))
         #expect(historySource.contains(".foregroundStyle(Color(nsColor: ImageEditorTheme.text))"))
         #expect(filterSource.contains("ImageEditorDarkFilterPicker(selection: $viewModel.selectedFilter)"))
