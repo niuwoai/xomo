@@ -1544,12 +1544,11 @@ struct ImageEditorScopeTests {
         )
         let filterSource = source[filterStart.lowerBound..<snapshotStart.lowerBound]
 
-        #expect(historySource.contains(".environment(\\.colorScheme, .dark)"))
-        #expect(historySource.components(separatedBy: ".foregroundStyle(Color(nsColor: ImageEditorTheme.text))").count - 1 >= 2)
-        #expect(filterSource.contains(".pickerStyle(.menu)"))
-        #expect(filterSource.contains(".foregroundStyle(Color(nsColor: ImageEditorTheme.text))"))
-        #expect(filterSource.contains(".environment(\\.colorScheme, .dark)"))
-        #expect(filterSource.contains(".focusable(false)"))
+        #expect(historySource.contains("ImageEditorDarkPanelLabel("))
+        #expect(historySource.contains("ImageEditorHistorySearchField("))
+        #expect(historySource.contains(".foregroundStyle(Color(nsColor: ImageEditorTheme.text))"))
+        #expect(filterSource.contains("ImageEditorDarkFilterPicker(selection: $viewModel.selectedFilter)"))
+        #expect(!filterSource.contains("Picker(L10n.text(\"imageEditor.properties.filter\")"))
     }
 
     @Test func smartFilterRowsExposeNonFocusableResultOpacityControl() throws {

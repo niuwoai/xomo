@@ -3359,10 +3359,17 @@ struct ImageEditorView: View {
         EditorPanel(title: L10n.text("imageEditor.panel.history"), showsTitle: showsTitle) {
             VStack(spacing: 6) {
                 VStack(alignment: .leading, spacing: 6) {
-                    Label(viewModel.historyStateSummary, systemImage: "clock")
-                        .font(.system(size: 10, weight: .semibold))
-                        .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
-                        .lineLimit(1)
+                    HStack(spacing: 5) {
+                        Image(systemName: "clock")
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                        ImageEditorDarkPanelLabel(
+                            title: viewModel.historyStateSummary,
+                            role: .muted,
+                            font: NSFont.systemFont(ofSize: 10, weight: .semibold)
+                        )
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
                     Spacer()
                     Button {
                         viewModel.createHistorySnapshot()
@@ -3387,14 +3394,10 @@ struct ImageEditorView: View {
                     Image(systemName: "magnifyingglass")
                         .font(.system(size: 10, weight: .semibold))
                         .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
-                    TextField(
-                        L10n.text("imageEditor.history.searchPlaceholder"),
+                    ImageEditorHistorySearchField(
+                        placeholder: L10n.text("imageEditor.history.searchPlaceholder"),
                         text: $viewModel.historyQuery
                     )
-                    .textFieldStyle(.plain)
-                    .font(.system(size: 11))
-                    .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
-                    .environment(\.colorScheme, .dark)
                     .accessibilityIdentifier("image-editor-history-search-field")
                     if !viewModel.historyQuery.isEmpty {
                         Button {
@@ -3439,14 +3442,19 @@ struct ImageEditorView: View {
                                 Button {
                                     viewModel.selectHistoryEntry(entry.id)
                                 } label: {
-                                    Label(entry.title, systemImage: historyIconName(for: entry))
-                                        .font(.system(size: 12, weight: .medium))
-                                        .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                        .padding(.horizontal, 8)
-                                        .padding(.vertical, 6)
+                                    HStack(spacing: 6) {
+                                        Image(systemName: historyIconName(for: entry))
+                                            .font(.system(size: 12, weight: .medium))
+                                            .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
+                                        ImageEditorDarkPanelLabel(title: entry.title)
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                    }
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 6)
                                 }
                                 .buttonStyle(.plain)
+                                .accessibilityLabel(entry.title)
                                 .help(L10n.text("imageEditor.action.historySelect"))
                                 .accessibilityIdentifier("image-editor-history-entry-\(entry.id)")
 
@@ -3478,15 +3486,8 @@ struct ImageEditorView: View {
 
     private var filtersQuickPanel: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Picker(L10n.text("imageEditor.properties.filter"), selection: $viewModel.selectedFilter) {
-                ForEach(ImageEditorFilter.allCases) { filter in
-                    Text(filter.title).tag(filter)
-                }
-            }
-            .pickerStyle(.menu)
-            .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
-            .environment(\.colorScheme, .dark)
-            .focusable(false)
+            ImageEditorDarkFilterPicker(selection: $viewModel.selectedFilter)
+            .frame(maxWidth: .infinity, minHeight: 24)
             .accessibilityIdentifier("image-editor-filter-picker")
 
             HStack(spacing: 8) {
