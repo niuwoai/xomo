@@ -350,6 +350,68 @@ struct ImageEditorFilterTests {
         #expect(viewModel.document.history.count == historyCount + 1)
     }
 
+    @Test func togglingSmartFilterConvergesMatchingStackPositionAcrossSelection() throws {
+        let canvasSize = NSSize(width: 24, height: 18)
+        let image = solidImage(size: canvasSize, color: .systemBlue)
+        let viewModel = ImageEditorViewModel(sourceName: "smart-filter-toggle-selected.png", image: image) { _ in }
+        let primaryIndex = try #require(viewModel.document.selectedLayerIndex)
+        let primaryID = viewModel.document.layers[primaryIndex].id
+        let primaryLead = ImageEditorSmartFilter(kind: .gaussianBlur, intensity: 0.2)
+        let primaryTarget = ImageEditorSmartFilter(kind: .sharpen, intensity: 0.4)
+        viewModel.document.layers[primaryIndex].smartFilters = [primaryLead, primaryTarget]
+
+        var secondary = ImageEditorLayer.blank(name: "Secondary", size: canvasSize)
+        secondary.smartFilters = [
+            ImageEditorSmartFilter(kind: .pixelate, intensity: 0.3),
+            ImageEditorSmartFilter(kind: .wave, intensity: 0.5)
+        ]
+        var locked = ImageEditorLayer.blank(name: "Locked", size: canvasSize)
+        locked.smartFilters = [
+            ImageEditorSmartFilter(kind: .median, intensity: 0.6),
+            ImageEditorSmartFilter(kind: .ripple, intensity: 0.7)
+        ]
+        locked.isLocked = true
+        var missingPosition = ImageEditorLayer.blank(name: "Short Stack", size: canvasSize)
+        missingPosition.smartFilters = [ImageEditorSmartFilter(kind: .offset, intensity: 0.8)]
+        viewModel.document.layers.append(contentsOf: [secondary, locked, missingPosition])
+        viewModel.document.selectedLayerID = primaryID
+        viewModel.document.selectedLayerIDs = [primaryID, secondary.id, locked.id, missingPosition.id]
+
+        #expect(viewModel.loadSmartFilterIntoControls(primaryTarget.id))
+        let historyCount = viewModel.document.history.count
+        viewModel.toggleSmartFilterOnSelectedLayer(primaryTarget.id)
+
+        let disabledPrimary = try #require(viewModel.document.layers.first { $0.id == primaryID })
+        let disabledSecondary = try #require(viewModel.document.layers.first { $0.id == secondary.id })
+        let skippedLocked = try #require(viewModel.document.layers.first { $0.id == locked.id })
+        let skippedShort = try #require(viewModel.document.layers.first { $0.id == missingPosition.id })
+        #expect(disabledPrimary.smartFilters.map(\.isEnabled) == [true, false])
+        #expect(disabledSecondary.smartFilters.map(\.isEnabled) == [true, false])
+        #expect(skippedLocked.smartFilters.map(\.isEnabled) == [true, true])
+        #expect(skippedShort.smartFilters.map(\.isEnabled) == [true])
+        #expect(viewModel.loadedSmartFilterID == primaryTarget.id)
+        #expect(viewModel.document.selectedLayerIDs == [primaryID, secondary.id, locked.id, missingPosition.id])
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterDisableSelected"))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerSmartFilterDisabledSelected", 2))
+
+        viewModel.toggleSmartFilterOnSelectedLayer(primaryTarget.id)
+        let enabledPrimary = try #require(viewModel.document.layers.first { $0.id == primaryID })
+        let enabledSecondary = try #require(viewModel.document.layers.first { $0.id == secondary.id })
+        #expect(enabledPrimary.smartFilters.map(\.isEnabled) == [true, true])
+        #expect(enabledSecondary.smartFilters.map(\.isEnabled) == [true, true])
+        #expect(viewModel.document.history.count == historyCount + 2)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterEnableSelected"))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerSmartFilterEnabledSelected", 2))
+
+        viewModel.undo()
+        #expect(viewModel.document.layers.first { $0.id == primaryID }?.smartFilters[1].isEnabled == false)
+        #expect(viewModel.document.layers.first { $0.id == secondary.id }?.smartFilters[1].isEnabled == false)
+        viewModel.undo()
+        #expect(viewModel.document.layers.first { $0.id == primaryID }?.smartFilters[1].isEnabled == true)
+        #expect(viewModel.document.layers.first { $0.id == secondary.id }?.smartFilters[1].isEnabled == true)
+    }
+
     @Test func updatingLoadedSmartFilterTargetsMatchingStackPositionAcrossSelection() throws {
         let canvasSize = NSSize(width: 24, height: 18)
         let image = solidImage(size: canvasSize, color: .systemBlue)

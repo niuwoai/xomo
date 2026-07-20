@@ -5775,9 +5775,36 @@ final class ImageEditorViewModel: ObservableObject {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
+        let isEnabled = !document.layers[layerIndex].smartFilters[filterIndex].isEnabled
+        let targetIndices = selectedLayerSmartFilterUpdateTargetIndices().filter { targetIndex in
+            document.layers[targetIndex].smartFilters.indices.contains(filterIndex)
+                && document.layers[targetIndex].smartFilters[filterIndex].isEnabled != isEnabled
+        }
+        guard targetIndices.contains(layerIndex) else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
         pushUndo()
-        document.layers[layerIndex].smartFilters[filterIndex].isEnabled.toggle()
-        appendHistory(L10n.text("imageEditor.history.layerSmartFilterToggle"))
+        for targetIndex in targetIndices {
+            document.layers[targetIndex].smartFilters[filterIndex].isEnabled = isEnabled
+        }
+        guard targetIndices.count > 1 else {
+            appendHistory(L10n.text("imageEditor.history.layerSmartFilterToggle"))
+            return
+        }
+        appendHistory(
+            L10n.text(
+                isEnabled
+                    ? "imageEditor.history.layerSmartFilterEnableSelected"
+                    : "imageEditor.history.layerSmartFilterDisableSelected"
+            )
+        )
+        statusText = L10n.format(
+            isEnabled
+                ? "imageEditor.status.layerSmartFilterEnabledSelected"
+                : "imageEditor.status.layerSmartFilterDisabledSelected",
+            targetIndices.count
+        )
     }
 
     func smartFilterOpacity(_ filterID: UUID) -> Double? {
