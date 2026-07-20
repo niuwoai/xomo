@@ -6035,11 +6035,24 @@ final class ImageEditorViewModel: ObservableObject {
             return false
         }
         let targetIndex = filterIndex + offset
-        guard document.layers[layerIndex].smartFilters.indices.contains(targetIndex) else { return false }
+        let targetIndices = selectedSmartFilterTargetIndices(at: filterIndex).filter { selectedLayerIndex in
+            document.layers[selectedLayerIndex].smartFilters.indices.contains(targetIndex)
+        }
+        guard targetIndices.contains(layerIndex) else { return false }
         pushUndo()
-        let filter = document.layers[layerIndex].smartFilters.remove(at: filterIndex)
-        document.layers[layerIndex].smartFilters.insert(filter, at: targetIndex)
-        appendHistory(L10n.text("imageEditor.history.layerSmartFilterMove"))
+        for selectedLayerIndex in targetIndices {
+            let filter = document.layers[selectedLayerIndex].smartFilters.remove(at: filterIndex)
+            document.layers[selectedLayerIndex].smartFilters.insert(filter, at: targetIndex)
+        }
+        guard targetIndices.count > 1 else {
+            appendHistory(L10n.text("imageEditor.history.layerSmartFilterMove"))
+            return true
+        }
+        appendHistory(L10n.text("imageEditor.history.layerSmartFilterMoveSelected"))
+        statusText = L10n.format(
+            "imageEditor.status.layerSmartFilterMovedSelected",
+            targetIndices.count
+        )
         return true
     }
 

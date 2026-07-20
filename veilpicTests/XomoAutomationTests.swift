@@ -323,6 +323,17 @@ struct XomoAutomationTests {
         #expect(viewModel.document.selectedLayer?.smartFilters.map(\.id) == [filterID, duplicateID])
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterMove"))
 
+        let outOfBoundsMoveResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.smart_filter.manage",
+            arguments: [
+                "id": .string(duplicateID.uuidString),
+                "action": .string("moveDown")
+            ]
+        ))
+        #expect(!outOfBoundsMoveResponse.ok)
+        #expect(viewModel.document.selectedLayer?.smartFilters.map(\.id) == [filterID, duplicateID])
+
         let removeResponse = registry.execute(request(
             operation: "call",
             name: "xomo.smart_filter.manage",

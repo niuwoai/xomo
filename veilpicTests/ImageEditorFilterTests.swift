@@ -921,6 +921,107 @@ struct ImageEditorFilterTests {
         #expect(viewModel.document.selectedLayer?.smartFilters.map(\.id) == [first.id, middle.id, last.id])
     }
 
+    @Test func movingSmartFilterReordersMatchingStackPositionAcrossSelection() throws {
+        let canvasSize = NSSize(width: 24, height: 18)
+        let image = solidImage(size: canvasSize, color: .systemBlue)
+        let viewModel = ImageEditorViewModel(sourceName: "smart-filter-move-selected.png", image: image) { _ in }
+        let primaryIndex = try #require(viewModel.document.selectedLayerIndex)
+        let primaryID = viewModel.document.layers[primaryIndex].id
+        let primaryLead = ImageEditorSmartFilter(kind: .median, intensity: 0.2)
+        let primaryTarget = ImageEditorSmartFilter(
+            kind: .gaussianBlur,
+            intensity: 0.4,
+            settings: ImageEditorFilterSettings(gaussianBlurRadius: 18),
+            isEnabled: false,
+            opacity: 0.35,
+            blendMode: .softLight,
+            appliesToBackdrop: true
+        )
+        let primaryTail = ImageEditorSmartFilter(kind: .sharpen, intensity: 0.6)
+        viewModel.document.layers[primaryIndex].smartFilters = [primaryLead, primaryTarget, primaryTail]
+
+        var secondary = ImageEditorLayer.blank(name: "Secondary", size: canvasSize)
+        let secondaryLead = ImageEditorSmartFilter(kind: .pixelate, intensity: 0.3)
+        let secondaryTarget = ImageEditorSmartFilter(
+            kind: .wave,
+            intensity: 0.5,
+            settings: ImageEditorFilterSettings(waveAmplitude: 0.7, waveFrequency: 0.8),
+            opacity: 0.75,
+            blendMode: .screen
+        )
+        let secondaryTail = ImageEditorSmartFilter(kind: .ripple, intensity: 0.7)
+        secondary.smartFilters = [secondaryLead, secondaryTarget, secondaryTail]
+        var locked = ImageEditorLayer.blank(name: "Locked", size: canvasSize)
+        let lockedFilters = [
+            ImageEditorSmartFilter(kind: .offset, intensity: 0.2),
+            ImageEditorSmartFilter(kind: .pinch, intensity: 0.4),
+            ImageEditorSmartFilter(kind: .spherize, intensity: 0.6)
+        ]
+        locked.smartFilters = lockedFilters
+        locked.isLocked = true
+        var missingDestination = ImageEditorLayer.blank(name: "Short Stack", size: canvasSize)
+        let shortLead = ImageEditorSmartFilter(kind: .findEdges, intensity: 0.3)
+        let shortTarget = ImageEditorSmartFilter(kind: .emboss, intensity: 0.5)
+        missingDestination.smartFilters = [shortLead, shortTarget]
+        viewModel.document.layers.append(contentsOf: [secondary, locked, missingDestination])
+        viewModel.document.selectedLayerID = primaryID
+        viewModel.document.selectedLayerIDs = [primaryID, secondary.id, locked.id, missingDestination.id]
+
+        #expect(viewModel.loadSmartFilterIntoControls(primaryTarget.id))
+        let historyCount = viewModel.document.history.count
+        #expect(viewModel.moveSmartFilterOnSelectedLayer(primaryTarget.id, offset: 1))
+
+        #expect(
+            viewModel.document.layers.first { $0.id == primaryID }?.smartFilters.map(\.id)
+                == [primaryLead.id, primaryTail.id, primaryTarget.id]
+        )
+        #expect(
+            viewModel.document.layers.first { $0.id == secondary.id }?.smartFilters.map(\.id)
+                == [secondaryLead.id, secondaryTail.id, secondaryTarget.id]
+        )
+        #expect(viewModel.document.layers.first { $0.id == primaryID }?.smartFilters.last == primaryTarget)
+        #expect(viewModel.document.layers.first { $0.id == secondary.id }?.smartFilters.last == secondaryTarget)
+        #expect(viewModel.document.layers.first { $0.id == locked.id }?.smartFilters == lockedFilters)
+        #expect(
+            viewModel.document.layers.first { $0.id == missingDestination.id }?.smartFilters.map(\.id)
+                == [shortLead.id, shortTarget.id]
+        )
+        #expect(viewModel.isSmartFilterLoadedForEditing(primaryTarget.id))
+        #expect(viewModel.document.selectedLayerIDs == [primaryID, secondary.id, locked.id, missingDestination.id])
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterMoveSelected"))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerSmartFilterMovedSelected", 2))
+
+        viewModel.undo()
+        #expect(
+            viewModel.document.layers.first { $0.id == primaryID }?.smartFilters.map(\.id)
+                == [primaryLead.id, primaryTarget.id, primaryTail.id]
+        )
+        #expect(
+            viewModel.document.layers.first { $0.id == secondary.id }?.smartFilters.map(\.id)
+                == [secondaryLead.id, secondaryTarget.id, secondaryTail.id]
+        )
+        #expect(viewModel.document.layers.first { $0.id == primaryID }?.smartFilters[1] == primaryTarget)
+        #expect(viewModel.document.layers.first { $0.id == secondary.id }?.smartFilters[1] == secondaryTarget)
+        #expect(viewModel.loadedSmartFilterID == primaryTail.id)
+
+        viewModel.redo()
+        #expect(viewModel.isSmartFilterLoadedForEditing(primaryTarget.id))
+        #expect(viewModel.moveSmartFilterOnSelectedLayer(primaryTarget.id, offset: -1))
+        #expect(
+            viewModel.document.layers.first { $0.id == primaryID }?.smartFilters.map(\.id)
+                == [primaryLead.id, primaryTarget.id, primaryTail.id]
+        )
+        #expect(
+            viewModel.document.layers.first { $0.id == secondary.id }?.smartFilters.map(\.id)
+                == [secondaryLead.id, secondaryTarget.id, secondaryTail.id]
+        )
+        #expect(viewModel.isSmartFilterLoadedForEditing(primaryTarget.id))
+        #expect(viewModel.document.history.count == historyCount + 2)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterMoveSelected"))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerSmartFilterMovedSelected", 2))
+    }
+
     @Test func zeroStrengthMaskedFilterPreservesSemiTransparentPixels() throws {
         let canvasSize = NSSize(width: 32, height: 24)
         let sourceImage = solidImage(

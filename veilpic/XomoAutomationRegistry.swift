@@ -2982,8 +2982,14 @@ final class XomoAutomationRegistry {
             guard viewModel.removeSmartFilterFromSelectedLayer(id) else {
                 throw XomoAutomationCallError.invalidArgument("Smart filter cannot be removed")
             }
-        case "moveUp": viewModel.moveSmartFilterOnSelectedLayer(id, offset: -1)
-        case "moveDown": viewModel.moveSmartFilterOnSelectedLayer(id, offset: 1)
+        case "moveUp":
+            guard viewModel.moveSmartFilterOnSelectedLayer(id, offset: -1) else {
+                throw XomoAutomationCallError.invalidArgument("Smart filter cannot be moved up")
+            }
+        case "moveDown":
+            guard viewModel.moveSmartFilterOnSelectedLayer(id, offset: 1) else {
+                throw XomoAutomationCallError.invalidArgument("Smart filter cannot be moved down")
+            }
         default: throw XomoAutomationCallError.invalidArgument("Unknown smart filter management action")
         }
     }

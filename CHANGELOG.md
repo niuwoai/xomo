@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.12.0-rc433 - 2026-07-21
+
+### Changed
+- 多选图层移动智能滤镜时，会按主图层目标项的栈位置，在每个具备有效目标位置的可编辑图层中移动各自对应的滤镜；锁定层、组、调整/滤镜层和缺少目标位置的图层安全跳过。
+- 上移与下移均保留各层滤镜 UUID、完整参数和主图层当前编辑目标，多选集合不变；批量排序合并为一次 History/Undo/Redo，并提供三语数量反馈。
+- MCP `xomo.smart_filter.manage` 的 `moveUp` / `moveDown` 复用同一批量模型，越界移动现在明确返回失败，不再报告虚假成功。
+
+### Verification
+- 多选同栈双向排序、锁定/缺少目标位置跳过、滤镜完整设置与编辑目标保持、Undo/Redo、边界无空历史、MCP 越界失败及三语资源定向测试 5/5，CLI 2/2、发布版本契约 7/7 通过；主 `.xcresult` 为 `/tmp/veilpic-rc433-smart-filter-move-selected/Logs/Test/Test-veilpic-2026.07.21_05-56-23-+0800.xcresult`。下一次完整 Release、冒烟与 `/Applications` 覆盖门禁仍为 rc440。
+
 ## 2.12.0-rc432 - 2026-07-21
 
 ### Changed
