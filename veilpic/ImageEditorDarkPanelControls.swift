@@ -101,6 +101,10 @@ final class ImageEditorDarkPanelNativeLabel: NSView {
 
     override var acceptsFirstResponder: Bool { false }
 
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        nil
+    }
+
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         setAccessibilityElement(true)

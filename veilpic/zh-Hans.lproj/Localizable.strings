@@ -1773,6 +1773,7 @@
 "imageEditor.status.invertSelected" = "已将 %d 个图层反相";
 "imageEditor.status.adjustmentReady" = "已准备 %@ 调整";
 "imageEditor.status.filterReady" = "已准备 %@ 滤镜";
+"imageEditor.status.smartFilterUnchanged" = "智能滤镜参数没有变化";
 "imageEditor.status.adjustmentSelected" = "已将 %@ 应用到 %d 个图层";
 "imageEditor.status.operationFailed" = "操作失败";
 "imageEditor.status.layerLocked" = "当前图层不可编辑";
@@ -2089,6 +2090,8 @@
 "imageEditor.action.layerSmartFilterUpdateShort" = "更新";
 "imageEditor.action.layerSmartFilterLoadSettings" = "载入这项滤镜参数";
 "imageEditor.state.editing" = "正在编辑";
+"imageEditor.state.editingModified" = "正在编辑，有未保存更改";
+"imageEditor.state.unsavedChanges" = "有未保存更改";
 "imageEditor.action.layerSmartFilterEnable" = "启用";
 "imageEditor.action.layerSmartFilterDisable" = "关闭";
 "imageEditor.action.layerSmartFilterDuplicate" = "复制智能滤镜";

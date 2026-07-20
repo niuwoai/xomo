@@ -3443,10 +3443,10 @@ struct ImageEditorView: View {
                                     Image(systemName: historyIconName(for: entry))
                                         .font(.system(size: 12, weight: .medium))
                                         .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
-                                    Text(entry.title)
-                                        .font(.system(size: 12, weight: .medium))
-                                        .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
-                                        .lineLimit(1)
+                                    ImageEditorDarkPanelLabel(
+                                        title: entry.title,
+                                        font: NSFont.systemFont(ofSize: 12, weight: .medium)
+                                    )
                                         .frame(maxWidth: .infinity, alignment: .leading)
                                 }
                                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -6503,116 +6503,7 @@ struct ImageEditorView: View {
                 if viewModel.selectedLayerHasSmartFilters {
                     VStack(spacing: 6) {
                         ForEach(viewModel.selectedLayerSmartFilters) { filter in
-                            let opacity = viewModel.smartFilterOpacity(filter.id) ?? filter.normalizedOpacity
-                            let blendMode = viewModel.smartFilterBlendMode(filter.id) ?? filter.normalizedBlendMode
-                            let isLoadedForEditing = viewModel.isSmartFilterLoadedForEditing(filter.id)
-                            VStack(spacing: 4) {
-                                HStack(spacing: 6) {
-                                    Text(viewModel.smartFilterLabel(filter))
-                                        .font(.system(size: 10, weight: .semibold))
-                                        .foregroundStyle(filter.isEnabled ? Color(nsColor: ImageEditorTheme.text) : Color(nsColor: ImageEditorTheme.mutedText))
-                                        .lineLimit(1)
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                        .contentShape(Rectangle())
-                                        .onTapGesture {
-                                            viewModel.loadSmartFilterIntoControls(filter.id)
-                                        }
-                                        .accessibilityElement(children: .ignore)
-                                        .accessibilityLabel(viewModel.smartFilterLabel(filter))
-                                        .accessibilityValue(isLoadedForEditing ? L10n.text("imageEditor.state.editing") : "")
-                                        .accessibilityHint(L10n.text("imageEditor.action.layerSmartFilterLoadSettings"))
-                                        .accessibilityAddTraits(.isButton)
-                                        .accessibilityAction {
-                                            viewModel.loadSmartFilterIntoControls(filter.id)
-                                        }
-                                        .accessibilityIdentifier("image-editor-smart-filter-load-\(filter.id)")
-                                        .help(L10n.text("imageEditor.action.layerSmartFilterLoadSettings"))
-                                    Button(L10n.text(filter.isEnabled ? "imageEditor.action.layerSmartFilterDisable" : "imageEditor.action.layerSmartFilterEnable")) {
-                                        viewModel.toggleSmartFilterOnSelectedLayer(filter.id)
-                                    }
-                                    .buttonStyle(EditorTextButtonStyle())
-                                    Button(L10n.text("imageEditor.action.layerSmartFilterUpdateShort")) {
-                                        viewModel.updateSmartFilterOnSelectedLayer(filter.id)
-                                    }
-                                    .buttonStyle(EditorTextButtonStyle())
-                                    .disabled(!isLoadedForEditing)
-                                    Button {
-                                        viewModel.duplicateSmartFilterOnSelectedLayer(filter.id)
-                                    } label: {
-                                        Image(systemName: "square.on.square")
-                                            .font(.system(size: 10, weight: .semibold))
-                                    }
-                                    .buttonStyle(EditorTextButtonStyle())
-                                    .focusable(false)
-                                    .accessibilityLabel(L10n.text("imageEditor.action.layerSmartFilterDuplicate"))
-                                    .accessibilityIdentifier("image-editor-smart-filter-duplicate-\(filter.id)")
-                                    Button(L10n.text("imageEditor.action.layerSmartFilterMoveUp")) {
-                                        viewModel.moveSmartFilterOnSelectedLayer(filter.id, offset: -1)
-                                    }
-                                    .buttonStyle(EditorTextButtonStyle())
-                                    Button(L10n.text("imageEditor.action.layerSmartFilterMoveDown")) {
-                                        viewModel.moveSmartFilterOnSelectedLayer(filter.id, offset: 1)
-                                    }
-                                    .buttonStyle(EditorTextButtonStyle())
-                                    Button(L10n.text("imageEditor.action.layerSmartFilterRemove")) {
-                                        viewModel.removeSmartFilterFromSelectedLayer(filter.id)
-                                    }
-                                    .buttonStyle(EditorTextButtonStyle())
-                                }
-                                Stepper(
-                                    value: Binding(
-                                        get: { viewModel.smartFilterOpacity(filter.id) ?? filter.normalizedOpacity },
-                                        set: { viewModel.setSmartFilterOpacityOnSelectedLayer(filter.id, opacity: $0) }
-                                    ),
-                                    in: 0...1,
-                                    step: 0.05
-                                ) {
-                                    HStack(spacing: 6) {
-                                        Text(L10n.text("imageEditor.option.opacity"))
-                                        Spacer(minLength: 4)
-                                        Text(L10n.format("imageEditor.option.percentPreset", Int((opacity * 100).rounded())))
-                                            .monospacedDigit()
-                                    }
-                                    .font(.system(size: 10, weight: .medium))
-                                    .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
-                                }
-                                .focusable(false)
-                                .accessibilityIdentifier("image-editor-smart-filter-opacity-\(filter.id)")
-                                HStack(spacing: 6) {
-                                    Text(L10n.text("imageEditor.properties.smartFilterBlendMode"))
-                                        .font(.system(size: 10, weight: .medium))
-                                        .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
-                                    Spacer(minLength: 4)
-                                    ImageEditorDarkSmartFilterBlendPicker(
-                                        selection: Binding(
-                                            get: { viewModel.smartFilterBlendMode(filter.id) ?? filter.normalizedBlendMode },
-                                            set: { viewModel.setSmartFilterBlendModeOnSelectedLayer(filter.id, blendMode: $0) }
-                                        )
-                                    )
-                                    .frame(width: 132, height: 24)
-                                    .focusable(false)
-                                    .accessibilityValue(blendMode.title)
-                                    .accessibilityIdentifier("image-editor-smart-filter-blend-mode-\(filter.id)")
-                                }
-                            }
-                            .padding(6)
-                            .background(
-                                RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                    .fill(
-                                        isLoadedForEditing
-                                            ? Color(nsColor: ImageEditorTheme.selected).opacity(0.20)
-                                            : Color.clear
-                                    )
-                            )
-                            .overlay {
-                                RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                    .stroke(
-                                        isLoadedForEditing
-                                            ? Color(nsColor: ImageEditorTheme.selected).opacity(0.72)
-                                            : Color.clear,
-                                        lineWidth: 1
-                                    )
-                            }
+                            smartFilterRow(filter)
                         }
                     }
                 }
@@ -7656,6 +7547,135 @@ struct ImageEditorView: View {
             }
         }
         .accessibilityIdentifier("image-editor-properties-panel")
+    }
+
+    private func smartFilterRow(_ filter: ImageEditorSmartFilter) -> AnyView {
+        let opacity = viewModel.smartFilterOpacity(filter.id) ?? filter.normalizedOpacity
+        let blendMode = viewModel.smartFilterBlendMode(filter.id) ?? filter.normalizedBlendMode
+        let isLoadedForEditing = viewModel.isSmartFilterLoadedForEditing(filter.id)
+        let hasPendingControlChanges = viewModel.smartFilterHasPendingControlChanges(filter.id)
+        let editingAccessibilityValue = isLoadedForEditing
+            ? L10n.text(
+                hasPendingControlChanges
+                    ? "imageEditor.state.editingModified"
+                    : "imageEditor.state.editing"
+            )
+            : ""
+
+        return AnyView(VStack(spacing: 4) {
+            HStack(spacing: 6) {
+                Text(viewModel.smartFilterLabel(filter))
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(filter.isEnabled ? Color(nsColor: ImageEditorTheme.text) : Color(nsColor: ImageEditorTheme.mutedText))
+                    .lineLimit(1)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        viewModel.loadSmartFilterIntoControls(filter.id)
+                    }
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel(viewModel.smartFilterLabel(filter))
+                    .accessibilityValue(editingAccessibilityValue)
+                    .accessibilityHint(L10n.text("imageEditor.action.layerSmartFilterLoadSettings"))
+                    .accessibilityAddTraits(.isButton)
+                    .accessibilityAction {
+                        viewModel.loadSmartFilterIntoControls(filter.id)
+                    }
+                    .accessibilityIdentifier("image-editor-smart-filter-load-\(filter.id)")
+                    .help(L10n.text("imageEditor.action.layerSmartFilterLoadSettings"))
+                Circle()
+                    .fill(Color.orange.opacity(0.78))
+                    .frame(width: 5, height: 5)
+                    .opacity(hasPendingControlChanges ? 1 : 0)
+                    .accessibilityHidden(true)
+                    .help(L10n.text("imageEditor.state.unsavedChanges"))
+                Button(L10n.text(filter.isEnabled ? "imageEditor.action.layerSmartFilterDisable" : "imageEditor.action.layerSmartFilterEnable")) {
+                    viewModel.toggleSmartFilterOnSelectedLayer(filter.id)
+                }
+                .buttonStyle(EditorTextButtonStyle())
+                Button(L10n.text("imageEditor.action.layerSmartFilterUpdateShort")) {
+                    viewModel.updateSmartFilterOnSelectedLayer(filter.id)
+                }
+                .buttonStyle(EditorTextButtonStyle())
+                .disabled(!isLoadedForEditing || !hasPendingControlChanges)
+                Button {
+                    viewModel.duplicateSmartFilterOnSelectedLayer(filter.id)
+                } label: {
+                    Image(systemName: "square.on.square")
+                        .font(.system(size: 10, weight: .semibold))
+                }
+                .buttonStyle(EditorTextButtonStyle())
+                .focusable(false)
+                .accessibilityLabel(L10n.text("imageEditor.action.layerSmartFilterDuplicate"))
+                .accessibilityIdentifier("image-editor-smart-filter-duplicate-\(filter.id)")
+                Button(L10n.text("imageEditor.action.layerSmartFilterMoveUp")) {
+                    viewModel.moveSmartFilterOnSelectedLayer(filter.id, offset: -1)
+                }
+                .buttonStyle(EditorTextButtonStyle())
+                Button(L10n.text("imageEditor.action.layerSmartFilterMoveDown")) {
+                    viewModel.moveSmartFilterOnSelectedLayer(filter.id, offset: 1)
+                }
+                .buttonStyle(EditorTextButtonStyle())
+                Button(L10n.text("imageEditor.action.layerSmartFilterRemove")) {
+                    viewModel.removeSmartFilterFromSelectedLayer(filter.id)
+                }
+                .buttonStyle(EditorTextButtonStyle())
+            }
+            Stepper(
+                value: Binding(
+                    get: { viewModel.smartFilterOpacity(filter.id) ?? filter.normalizedOpacity },
+                    set: { viewModel.setSmartFilterOpacityOnSelectedLayer(filter.id, opacity: $0) }
+                ),
+                in: 0...1,
+                step: 0.05
+            ) {
+                HStack(spacing: 6) {
+                    Text(L10n.text("imageEditor.option.opacity"))
+                    Spacer(minLength: 4)
+                    Text(L10n.format("imageEditor.option.percentPreset", Int((opacity * 100).rounded())))
+                        .monospacedDigit()
+                }
+                .font(.system(size: 10, weight: .medium))
+                .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+            }
+            .focusable(false)
+            .accessibilityIdentifier("image-editor-smart-filter-opacity-\(filter.id)")
+            HStack(spacing: 6) {
+                Text(L10n.text("imageEditor.properties.smartFilterBlendMode"))
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                Spacer(minLength: 4)
+                ImageEditorDarkSmartFilterBlendPicker(
+                    selection: Binding(
+                        get: { viewModel.smartFilterBlendMode(filter.id) ?? filter.normalizedBlendMode },
+                        set: { viewModel.setSmartFilterBlendModeOnSelectedLayer(filter.id, blendMode: $0) }
+                    )
+                )
+                .frame(width: 132, height: 24)
+                .focusable(false)
+                .accessibilityValue(blendMode.title)
+                .accessibilityIdentifier("image-editor-smart-filter-blend-mode-\(filter.id)")
+            }
+        }
+        .padding(6)
+        .background(
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                .fill(
+                    isLoadedForEditing
+                        ? Color(nsColor: ImageEditorTheme.selected).opacity(0.20)
+                        : Color.clear
+                )
+        )
+        .overlay {
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                .stroke(
+                    isLoadedForEditing
+                        ? Color(nsColor: ImageEditorTheme.selected).opacity(0.72)
+                        : Color.clear,
+                    lineWidth: 1
+                )
+        }
+        )
     }
 
     private var levelsControls: some View {

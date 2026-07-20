@@ -1909,12 +1909,33 @@ final class ImageEditorViewModel: ObservableObject {
         guard let loadedSmartFilterID,
               let (loadedLayerIndex, filterIndex) = selectedSmartFilterIndex(loadedSmartFilterID)
         else {
-            return canUpdateLastSmartFilterOnSelectedLayer
+            return selectedLayerSmartFilterUpdateTargetIndices().contains { layerIndex in
+                guard let filter = document.layers[layerIndex].smartFilters.last else { return false }
+                return smartFilterDiffersFromCurrentControls(filter)
+            }
         }
         let targetIndices = selectedLayerSmartFilterUpdateTargetIndices().filter { layerIndex in
             document.layers[layerIndex].smartFilters.indices.contains(filterIndex)
         }
         return targetIndices.contains(loadedLayerIndex)
+            && targetIndices.contains { layerIndex in
+                smartFilterDiffersFromCurrentControls(document.layers[layerIndex].smartFilters[filterIndex])
+            }
+    }
+
+    var loadedSmartFilterHasPendingChanges: Bool {
+        guard let loadedSmartFilterID,
+              let (loadedLayerIndex, filterIndex) = selectedSmartFilterIndex(loadedSmartFilterID)
+        else {
+            return false
+        }
+        let targetIndices = selectedLayerSmartFilterUpdateTargetIndices().filter { layerIndex in
+            document.layers[layerIndex].smartFilters.indices.contains(filterIndex)
+        }
+        return targetIndices.contains(loadedLayerIndex)
+            && targetIndices.contains { layerIndex in
+                smartFilterDiffersFromCurrentControls(document.layers[layerIndex].smartFilters[filterIndex])
+            }
     }
 
     var canClearSmartFiltersFromSelectedLayer: Bool {
@@ -5619,9 +5640,12 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func updateLastSmartFilterOnSelectedLayer() {
-        let targetIndices = selectedLayerSmartFilterUpdateTargetIndices()
+        let targetIndices = selectedLayerSmartFilterUpdateTargetIndices().filter { layerIndex in
+            guard let filter = document.layers[layerIndex].smartFilters.last else { return false }
+            return smartFilterDiffersFromCurrentControls(filter)
+        }
         guard !targetIndices.isEmpty else {
-            statusText = L10n.text("imageEditor.status.operationFailed")
+            statusText = L10n.text("imageEditor.status.smartFilterUnchanged")
             return
         }
         pushUndo()
@@ -5640,11 +5664,18 @@ final class ImageEditorViewModel: ObservableObject {
             updateLastSmartFilterOnSelectedLayer()
             return
         }
-        let targetIndices = selectedLayerSmartFilterUpdateTargetIndices().filter { layerIndex in
+        let matchingTargetIndices = selectedLayerSmartFilterUpdateTargetIndices().filter { layerIndex in
             document.layers[layerIndex].smartFilters.indices.contains(filterIndex)
         }
-        guard targetIndices.contains(loadedLayerIndex) else {
+        guard matchingTargetIndices.contains(loadedLayerIndex) else {
             statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+        let targetIndices = matchingTargetIndices.filter { layerIndex in
+            smartFilterDiffersFromCurrentControls(document.layers[layerIndex].smartFilters[filterIndex])
+        }
+        guard !targetIndices.isEmpty else {
+            statusText = L10n.text("imageEditor.status.smartFilterUnchanged")
             return
         }
         pushUndo()
@@ -5660,6 +5691,10 @@ final class ImageEditorViewModel: ObservableObject {
               canEditSmartFilters(on: document.layers[layerIndex])
         else {
             statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+        guard smartFilterDiffersFromCurrentControls(document.layers[layerIndex].smartFilters[filterIndex]) else {
+            statusText = L10n.text("imageEditor.status.smartFilterUnchanged")
             return
         }
         pushUndo()
@@ -5692,6 +5727,16 @@ final class ImageEditorViewModel: ObservableObject {
         filter.settings = currentFilterSettings()
         filter.isEnabled = true
         filter.appliesToBackdrop = keepsBackdropRouting
+    }
+
+    private func smartFilterDiffersFromCurrentControls(_ filter: ImageEditorSmartFilter) -> Bool {
+        filter.kind != selectedFilter
+            || abs(filter.normalizedIntensity - max(0, min(1, filterIntensity))) > 0.000_001
+            || filter.normalizedSettings != currentFilterSettings().normalized()
+    }
+
+    func smartFilterHasPendingControlChanges(_ filterID: UUID) -> Bool {
+        loadedSmartFilterID == filterID && loadedSmartFilterHasPendingChanges
     }
 
     func toggleSmartFilterOnSelectedLayer(_ filterID: UUID) {

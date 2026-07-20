@@ -304,6 +304,8 @@ struct ImageEditorFilterTests {
 
         #expect(viewModel.loadSmartFilterIntoControls(primaryTarget.id))
         #expect(viewModel.canUpdateLoadedSmartFilterOnSelectedLayer)
+        #expect(viewModel.loadedSmartFilterHasPendingChanges)
+        #expect(viewModel.smartFilterHasPendingControlChanges(primaryTarget.id))
         viewModel.selectedFilter = .pixelate
         viewModel.filterIntensity = 0.8
         let historyCount = viewModel.document.history.count
@@ -327,6 +329,9 @@ struct ImageEditorFilterTests {
         #expect(viewModel.loadedSmartFilterID == primaryTarget.id)
         #expect(viewModel.document.history.count == historyCount + 1)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterUpdate"))
+        #expect(!viewModel.loadedSmartFilterHasPendingChanges)
+        #expect(!viewModel.smartFilterHasPendingControlChanges(primaryTarget.id))
+        #expect(!viewModel.canUpdateLoadedSmartFilterOnSelectedLayer)
 
         viewModel.undo()
         #expect(viewModel.document.layers[primaryIndex].smartFilters[0].kind == .median)
@@ -358,6 +363,42 @@ struct ImageEditorFilterTests {
         viewModel.updateLoadedSmartFilterOnSelectedLayer()
         #expect(viewModel.document.history.count == lockedHistoryCount)
         #expect(viewModel.statusText == L10n.text("imageEditor.status.operationFailed"))
+    }
+
+    @Test func loadedSmartFilterPendingChangesAvoidNoOpHistoryAndClearAfterUpdate() throws {
+        let image = solidImage(size: NSSize(width: 24, height: 18), color: .systemBlue)
+        let viewModel = ImageEditorViewModel(sourceName: "smart-filter-pending.png", image: image) { _ in }
+        viewModel.selectedFilter = .median
+        viewModel.filterIntensity = 0.4
+        viewModel.addSmartFilterToSelectedLayer()
+
+        let filterID = try #require(viewModel.document.selectedLayer?.smartFilters.first?.id)
+        #expect(viewModel.loadSmartFilterIntoControls(filterID))
+        #expect(!viewModel.loadedSmartFilterHasPendingChanges)
+        #expect(!viewModel.smartFilterHasPendingControlChanges(filterID))
+        #expect(!viewModel.canUpdateLoadedSmartFilterOnSelectedLayer)
+
+        let initialHistoryCount = viewModel.document.history.count
+        viewModel.updateLoadedSmartFilterOnSelectedLayer()
+        #expect(viewModel.document.history.count == initialHistoryCount)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.smartFilterUnchanged"))
+
+        viewModel.filterIntensity = 0.65
+        #expect(viewModel.loadedSmartFilterHasPendingChanges)
+        #expect(viewModel.smartFilterHasPendingControlChanges(filterID))
+        #expect(viewModel.canUpdateLoadedSmartFilterOnSelectedLayer)
+
+        viewModel.updateLoadedSmartFilterOnSelectedLayer()
+        #expect(viewModel.document.selectedLayer?.smartFilters.first?.intensity == 0.65)
+        #expect(viewModel.document.history.count == initialHistoryCount + 1)
+        #expect(!viewModel.loadedSmartFilterHasPendingChanges)
+        #expect(!viewModel.smartFilterHasPendingControlChanges(filterID))
+        #expect(!viewModel.canUpdateLoadedSmartFilterOnSelectedLayer)
+
+        let updatedHistoryCount = viewModel.document.history.count
+        viewModel.updateSmartFilterOnSelectedLayer(filterID)
+        #expect(viewModel.document.history.count == updatedHistoryCount)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.smartFilterUnchanged"))
     }
 
     @Test func duplicatingSmartFilterPreservesCompleteSettingsAndSupportsUndoRedo() throws {

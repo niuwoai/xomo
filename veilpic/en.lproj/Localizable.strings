@@ -1773,6 +1773,7 @@
 "imageEditor.status.invertSelected" = "Inverted %d layers";
 "imageEditor.status.adjustmentReady" = "%@ adjustment ready";
 "imageEditor.status.filterReady" = "%@ filter ready";
+"imageEditor.status.smartFilterUnchanged" = "Smart filter settings are unchanged";
 "imageEditor.status.adjustmentSelected" = "Applied %@ to %d layers";
 "imageEditor.status.operationFailed" = "Operation failed";
 "imageEditor.status.layerLocked" = "The selected layer cannot be edited";
@@ -2089,6 +2090,8 @@
 "imageEditor.action.layerSmartFilterUpdateShort" = "Update";
 "imageEditor.action.layerSmartFilterLoadSettings" = "Load This Filter's Settings";
 "imageEditor.state.editing" = "Editing";
+"imageEditor.state.editingModified" = "Editing, unsaved changes";
+"imageEditor.state.unsavedChanges" = "Unsaved changes";
 "imageEditor.action.layerSmartFilterEnable" = "On";
 "imageEditor.action.layerSmartFilterDisable" = "Off";
 "imageEditor.action.layerSmartFilterDuplicate" = "Duplicate Smart Filter";

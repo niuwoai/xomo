@@ -1544,14 +1544,19 @@ struct ImageEditorScopeTests {
         )
         let filterSource = source[filterStart.lowerBound..<snapshotStart.lowerBound]
 
-        #expect(historySource.contains("Text(entry.title)"))
+        #expect(historySource.contains("ImageEditorDarkPanelLabel("))
+        #expect(historySource.contains("title: entry.title"))
         #expect(historySource.contains(".onTapGesture"))
         #expect(historySource.contains(".accessibilityAction"))
-        #expect(!historySource.contains("ImageEditorDarkPanelLabel(title: entry.title)"))
         #expect(historySource.contains("ImageEditorHistorySearchField("))
         #expect(historySource.contains(".foregroundStyle(Color(nsColor: ImageEditorTheme.text))"))
         #expect(filterSource.contains("ImageEditorDarkFilterPicker(selection: $viewModel.selectedFilter)"))
         #expect(!filterSource.contains("Picker(L10n.text(\"imageEditor.properties.filter\")"))
+        let controlsSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorDarkPanelControls.swift"),
+            encoding: .utf8
+        )
+        #expect(controlsSource.contains("override func hitTest(_ point: NSPoint) -> NSView?"))
     }
 
     @Test func smartFilterRowsExposeNonFocusableResultOpacityAndBlendControls() throws {
@@ -1579,9 +1584,12 @@ struct ImageEditorScopeTests {
         #expect(propertiesSource.contains("image-editor-smart-filter-load-\\(filter.id)"))
         #expect(propertiesSource.contains("imageEditor.action.layerSmartFilterLoadSettings"))
         #expect(propertiesSource.contains("viewModel.isSmartFilterLoadedForEditing(filter.id)"))
+        #expect(propertiesSource.contains("viewModel.smartFilterHasPendingControlChanges(filter.id)"))
         #expect(propertiesSource.contains("ImageEditorTheme.selected).opacity(0.20)"))
         #expect(propertiesSource.contains("imageEditor.state.editing"))
-        #expect(propertiesSource.contains(".disabled(!isLoadedForEditing)"))
+        #expect(propertiesSource.contains("imageEditor.state.editingModified"))
+        #expect(propertiesSource.contains("imageEditor.state.unsavedChanges"))
+        #expect(propertiesSource.contains(".disabled(!isLoadedForEditing || !hasPendingControlChanges)"))
         #expect(propertiesSource.contains("viewModel.updateLoadedSmartFilterOnSelectedLayer()"))
         #expect(propertiesSource.contains("viewModel.canUpdateLoadedSmartFilterOnSelectedLayer"))
         #expect(propertiesSource.contains("viewModel.moveSmartFilterOnSelectedLayer(filter.id, offset: -1)"))
