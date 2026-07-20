@@ -5710,10 +5710,7 @@ final class ImageEditorViewModel: ObservableObject {
             return false
         }
         let filter = document.layers[layerIndex].smartFilters[filterIndex]
-        loadedSmartFilterID = filterID
-        selectedFilter = filter.kind
-        filterIntensity = filter.normalizedIntensity
-        syncFilterSettings(filter.normalizedSettings)
+        syncSmartFilterControls(filter)
         filterPanelPresentationRequest &+= 1
         isPropertiesPanelVisible = true
         statusText = L10n.format("imageEditor.status.filterReady", filter.kind.title)
@@ -5836,10 +5833,16 @@ final class ImageEditorViewModel: ObservableObject {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
+        let removesLoadedFilter = loadedSmartFilterID == filterID
         pushUndo()
         document.layers[layerIndex].smartFilters.remove(at: filterIndex)
-        if loadedSmartFilterID == filterID {
-            loadedSmartFilterID = nil
+        if removesLoadedFilter {
+            let filters = document.layers[layerIndex].smartFilters
+            if !filters.isEmpty {
+                syncSmartFilterControls(filters[min(filterIndex, filters.count - 1)])
+            } else {
+                loadedSmartFilterID = nil
+            }
         }
         appendHistory(L10n.text("imageEditor.history.layerSmartFilterRemove"))
     }
@@ -7363,10 +7366,7 @@ final class ImageEditorViewModel: ObservableObject {
 
     private func syncFilterControlsFromSelection() {
         if let smartFilter = document.selectedLayer?.smartFilters.last {
-            loadedSmartFilterID = smartFilter.id
-            selectedFilter = smartFilter.kind
-            filterIntensity = smartFilter.normalizedIntensity
-            syncFilterSettings(smartFilter.normalizedSettings)
+            syncSmartFilterControls(smartFilter)
             return
         }
         loadedSmartFilterID = nil
@@ -7374,6 +7374,13 @@ final class ImageEditorViewModel: ObservableObject {
         selectedFilter = filter.kind
         filterIntensity = filter.intensity
         syncFilterSettings(document.selectedLayer?.filterSettings.normalized() ?? ImageEditorFilterSettings())
+    }
+
+    private func syncSmartFilterControls(_ smartFilter: ImageEditorSmartFilter) {
+        loadedSmartFilterID = smartFilter.id
+        selectedFilter = smartFilter.kind
+        filterIntensity = smartFilter.normalizedIntensity
+        syncFilterSettings(smartFilter.normalizedSettings)
     }
 
     private func syncFilterSettings(_ settings: ImageEditorFilterSettings) {

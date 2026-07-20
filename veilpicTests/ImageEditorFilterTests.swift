@@ -271,7 +271,8 @@ struct ImageEditorFilterTests {
         #expect(viewModel.isSmartFilterLoadedForEditing(originalID))
 
         viewModel.removeSmartFilterFromSelectedLayer(originalID)
-        #expect(viewModel.loadedSmartFilterID == nil)
+        #expect(viewModel.loadedSmartFilterID == duplicateID)
+        #expect(viewModel.isSmartFilterLoadedForEditing(duplicateID))
         #expect(!viewModel.isSmartFilterLoadedForEditing(originalID))
 
         viewModel.clearSmartFiltersFromSelectedLayer()
@@ -282,6 +283,71 @@ struct ImageEditorFilterTests {
 
         viewModel.selectFilter(.wave)
         #expect(viewModel.loadedSmartFilterID == nil)
+    }
+
+    @Test func removingLoadedSmartFilterSelectsNextThenPreviousNeighbor() throws {
+        let image = solidImage(size: NSSize(width: 24, height: 18), color: .systemBlue)
+        let viewModel = ImageEditorViewModel(sourceName: "smart-filter-remove-neighbor.png", image: image) { _ in }
+        let layerIndex = try #require(
+            viewModel.document.layers.firstIndex { $0.id == viewModel.document.selectedLayerID }
+        )
+        let first = ImageEditorSmartFilter(
+            kind: .gaussianBlur,
+            intensity: 0.2,
+            settings: ImageEditorFilterSettings(gaussianBlurRadius: 4)
+        )
+        let middle = ImageEditorSmartFilter(kind: .sharpen, intensity: 0.4)
+        let last = ImageEditorSmartFilter(kind: .pixelate, intensity: 0.6)
+        viewModel.document.layers[layerIndex].smartFilters = [first, middle, last]
+
+        #expect(viewModel.loadSmartFilterIntoControls(middle.id))
+        let historyCount = viewModel.document.history.count
+        viewModel.removeSmartFilterFromSelectedLayer(middle.id)
+        #expect(viewModel.document.selectedLayer?.smartFilters.map(\.id) == [first.id, last.id])
+        #expect(viewModel.loadedSmartFilterID == last.id)
+        #expect(viewModel.selectedFilter == .pixelate)
+        #expect(abs(viewModel.filterIntensity - 0.6) < 0.000_001)
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        viewModel.removeSmartFilterFromSelectedLayer(last.id)
+        #expect(viewModel.document.selectedLayer?.smartFilters.map(\.id) == [first.id])
+        #expect(viewModel.loadedSmartFilterID == first.id)
+        #expect(viewModel.selectedFilter == .gaussianBlur)
+        #expect(abs(viewModel.filterIntensity - 0.2) < 0.000_001)
+        #expect(viewModel.filterGaussianBlurRadius == 4)
+        #expect(viewModel.document.history.count == historyCount + 2)
+
+        viewModel.removeSmartFilterFromSelectedLayer(first.id)
+        #expect(viewModel.document.selectedLayer?.smartFilters.isEmpty == true)
+        #expect(viewModel.loadedSmartFilterID == nil)
+        #expect(viewModel.document.history.count == historyCount + 3)
+    }
+
+    @Test func removingUnloadedSmartFilterPreservesLoadedControls() throws {
+        let image = solidImage(size: NSSize(width: 24, height: 18), color: .systemBlue)
+        let viewModel = ImageEditorViewModel(sourceName: "smart-filter-remove-other.png", image: image) { _ in }
+        let layerIndex = try #require(
+            viewModel.document.layers.firstIndex { $0.id == viewModel.document.selectedLayerID }
+        )
+        let first = ImageEditorSmartFilter(kind: .gaussianBlur, intensity: 0.2)
+        let loaded = ImageEditorSmartFilter(
+            kind: .sharpen,
+            intensity: 0.45,
+            settings: ImageEditorFilterSettings(unsharpRadius: 2.5)
+        )
+        let last = ImageEditorSmartFilter(kind: .pixelate, intensity: 0.7)
+        viewModel.document.layers[layerIndex].smartFilters = [first, loaded, last]
+
+        #expect(viewModel.loadSmartFilterIntoControls(loaded.id))
+        let historyCount = viewModel.document.history.count
+        viewModel.removeSmartFilterFromSelectedLayer(first.id)
+
+        #expect(viewModel.document.selectedLayer?.smartFilters.map(\.id) == [loaded.id, last.id])
+        #expect(viewModel.loadedSmartFilterID == loaded.id)
+        #expect(viewModel.selectedFilter == .sharpen)
+        #expect(abs(viewModel.filterIntensity - 0.45) < 0.000_001)
+        #expect(viewModel.filterUnsharpRadius == 2.5)
+        #expect(viewModel.document.history.count == historyCount + 1)
     }
 
     @Test func updatingLoadedSmartFilterTargetsMatchingStackPositionAcrossSelection() throws {
