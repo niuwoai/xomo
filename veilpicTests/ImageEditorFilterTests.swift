@@ -412,6 +412,63 @@ struct ImageEditorFilterTests {
         #expect(viewModel.document.layers.first { $0.id == secondary.id }?.smartFilters[1].isEnabled == true)
     }
 
+    @Test func smartFilterOpacityShowsMixedValueAndConvergesMatchingStackPosition() throws {
+        let canvasSize = NSSize(width: 24, height: 18)
+        let image = solidImage(size: canvasSize, color: .systemBlue)
+        let viewModel = ImageEditorViewModel(sourceName: "smart-filter-opacity-selected.png", image: image) { _ in }
+        let primaryIndex = try #require(viewModel.document.selectedLayerIndex)
+        let primaryID = viewModel.document.layers[primaryIndex].id
+        let primaryLead = ImageEditorSmartFilter(kind: .gaussianBlur, intensity: 0.2, opacity: 0.6)
+        let primaryTarget = ImageEditorSmartFilter(kind: .sharpen, intensity: 0.4, opacity: 0.25)
+        viewModel.document.layers[primaryIndex].smartFilters = [primaryLead, primaryTarget]
+
+        var secondary = ImageEditorLayer.blank(name: "Secondary", size: canvasSize)
+        secondary.smartFilters = [
+            ImageEditorSmartFilter(kind: .pixelate, intensity: 0.3, opacity: 0.5),
+            ImageEditorSmartFilter(kind: .wave, intensity: 0.5, opacity: 0.75)
+        ]
+        var locked = ImageEditorLayer.blank(name: "Locked", size: canvasSize)
+        locked.smartFilters = [
+            ImageEditorSmartFilter(kind: .median, intensity: 0.6, opacity: 0.4),
+            ImageEditorSmartFilter(kind: .ripple, intensity: 0.7, opacity: 0.9)
+        ]
+        locked.isLocked = true
+        var missingPosition = ImageEditorLayer.blank(name: "Short Stack", size: canvasSize)
+        missingPosition.smartFilters = [
+            ImageEditorSmartFilter(kind: .offset, intensity: 0.8, opacity: 0.1)
+        ]
+        viewModel.document.layers.append(contentsOf: [secondary, locked, missingPosition])
+        viewModel.document.selectedLayerID = primaryID
+        viewModel.document.selectedLayerIDs = [primaryID, secondary.id, locked.id, missingPosition.id]
+
+        #expect(viewModel.loadSmartFilterIntoControls(primaryTarget.id))
+        #expect(viewModel.smartFilterOpacityState(primaryTarget.id) == .mixed)
+        let historyCount = viewModel.document.history.count
+        viewModel.setSmartFilterOpacityOnSelectedLayer(primaryTarget.id, opacity: 0.4)
+
+        #expect(viewModel.document.layers.first { $0.id == primaryID }?.smartFilters.map(\.opacity) == [0.6, 0.4])
+        #expect(viewModel.document.layers.first { $0.id == secondary.id }?.smartFilters.map(\.opacity) == [0.5, 0.4])
+        #expect(viewModel.document.layers.first { $0.id == locked.id }?.smartFilters.map(\.opacity) == [0.4, 0.9])
+        #expect(viewModel.document.layers.first { $0.id == missingPosition.id }?.smartFilters.map(\.opacity) == [0.1])
+        #expect(viewModel.smartFilterOpacityState(primaryTarget.id) == .value(0.4))
+        #expect(viewModel.loadedSmartFilterID == primaryTarget.id)
+        #expect(viewModel.document.selectedLayerIDs == [primaryID, secondary.id, locked.id, missingPosition.id])
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterOpacitySelected"))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerSmartFilterOpacitySelected", 40, 2))
+
+        viewModel.setSmartFilterOpacityOnSelectedLayer(primaryTarget.id, opacity: 0.4)
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        viewModel.undo()
+        #expect(viewModel.smartFilterOpacityState(primaryTarget.id) == .mixed)
+        viewModel.setSmartFilterOpacityOnSelectedLayer(primaryTarget.id, opacity: 0.25)
+        #expect(viewModel.document.layers.first { $0.id == primaryID }?.smartFilters[1].opacity == 0.25)
+        #expect(viewModel.document.layers.first { $0.id == secondary.id }?.smartFilters[1].opacity == 0.25)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerSmartFilterOpacitySelected", 25, 1))
+        #expect(viewModel.smartFilterOpacityState(primaryTarget.id) == .value(0.25))
+    }
+
     @Test func updatingLoadedSmartFilterTargetsMatchingStackPositionAcrossSelection() throws {
         let canvasSize = NSSize(width: 24, height: 18)
         let image = solidImage(size: canvasSize, color: .systemBlue)

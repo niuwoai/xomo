@@ -1571,8 +1571,11 @@ struct ImageEditorScopeTests {
         let propertiesSource = source[propertiesStart.lowerBound..<propertiesEnd.lowerBound]
 
         #expect(propertiesSource.contains("viewModel.smartFilterOpacity(filter.id)"))
+        #expect(propertiesSource.contains("viewModel.smartFilterOpacityState(filter.id)"))
+        #expect(propertiesSource.contains("opacityState.isMixed ? L10n.text(\"imageEditor.properties.multipleValues\")"))
         #expect(propertiesSource.contains("viewModel.setSmartFilterOpacityOnSelectedLayer(filter.id, opacity: $0)"))
         #expect(propertiesSource.contains("image-editor-smart-filter-opacity-\\(filter.id)"))
+        #expect(propertiesSource.contains(".accessibilityValue(opacityTitle)"))
         #expect(propertiesSource.contains("viewModel.smartFilterBlendMode(filter.id)"))
         #expect(propertiesSource.contains("viewModel.setSmartFilterBlendModeOnSelectedLayer(filter.id, blendMode: $0)"))
         #expect(propertiesSource.contains("ImageEditorDarkSmartFilterBlendPicker("))

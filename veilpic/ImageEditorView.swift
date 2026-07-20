@@ -7553,7 +7553,10 @@ struct ImageEditorView: View {
     }
 
     private func smartFilterRow(_ filter: ImageEditorSmartFilter) -> AnyView {
-        let opacity = viewModel.smartFilterOpacity(filter.id) ?? filter.normalizedOpacity
+        let opacityState = viewModel.smartFilterOpacityState(filter.id)
+        let opacityTitle = opacityState.value.map {
+            L10n.format("imageEditor.option.percentPreset", Int(($0 * 100).rounded()))
+        } ?? (opacityState.isMixed ? L10n.text("imageEditor.properties.multipleValues") : "")
         let blendMode = viewModel.smartFilterBlendMode(filter.id) ?? filter.normalizedBlendMode
         let isLoadedForEditing = viewModel.isSmartFilterLoadedForEditing(filter.id)
         let hasPendingControlChanges = viewModel.smartFilterHasPendingControlChanges(filter.id)
@@ -7666,13 +7669,15 @@ struct ImageEditorView: View {
                 HStack(spacing: 6) {
                     Text(L10n.text("imageEditor.option.opacity"))
                     Spacer(minLength: 4)
-                    Text(L10n.format("imageEditor.option.percentPreset", Int((opacity * 100).rounded())))
+                    Text(opacityTitle)
                         .monospacedDigit()
                 }
                 .font(.system(size: 10, weight: .medium))
                 .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
             }
+            .disabled(opacityState == .unavailable)
             .focusable(false)
+            .accessibilityValue(opacityTitle)
             .accessibilityIdentifier("image-editor-smart-filter-opacity-\(filter.id)")
             HStack(spacing: 6) {
                 Text(L10n.text("imageEditor.properties.smartFilterBlendMode"))

@@ -33,6 +33,21 @@ enum ImageEditorClippingMaskSelectionState: Equatable {
     }
 }
 
+enum ImageEditorSmartFilterValueState<Value: Equatable>: Equatable {
+    case unavailable
+    case value(Value)
+    case mixed
+
+    var value: Value? {
+        guard case .value(let value) = self else { return nil }
+        return value
+    }
+
+    var isMixed: Bool {
+        self == .mixed
+    }
+}
+
 private struct ImageEditorSmartObjectConversionCandidate {
     var removedLayerIDs: Set<UUID>
     var insertionIndex: Int
@@ -5812,6 +5827,23 @@ final class ImageEditorViewModel: ObservableObject {
         return document.layers[layerIndex].smartFilters[filterIndex].normalizedOpacity
     }
 
+    func smartFilterOpacityState(_ filterID: UUID) -> ImageEditorSmartFilterValueState<Double> {
+        guard let (layerIndex, filterIndex) = selectedSmartFilterIndex(filterID),
+              canEditSmartFilters(on: document.layers[layerIndex])
+        else { return .unavailable }
+        let targetIndices = selectedSmartFilterTargetIndices(at: filterIndex)
+        guard targetIndices.contains(layerIndex), let firstIndex = targetIndices.first else {
+            return .unavailable
+        }
+        let firstOpacity = document.layers[firstIndex].smartFilters[filterIndex].normalizedOpacity
+        let allMatch = targetIndices.dropFirst().allSatisfy { targetIndex in
+            abs(
+                document.layers[targetIndex].smartFilters[filterIndex].normalizedOpacity - firstOpacity
+            ) <= 0.000_001
+        }
+        return allMatch ? .value(firstOpacity) : .mixed
+    }
+
     func smartFilterBlendMode(_ filterID: UUID) -> ImageEditorBlendMode? {
         guard let (layerIndex, filterIndex) = selectedSmartFilterIndex(filterID) else { return nil }
         return document.layers[layerIndex].smartFilters[filterIndex].normalizedBlendMode
@@ -5830,10 +5862,31 @@ final class ImageEditorViewModel: ObservableObject {
             return
         }
         let normalizedOpacity = max(0, min(1, opacity))
-        guard document.layers[layerIndex].smartFilters[filterIndex].normalizedOpacity != normalizedOpacity else { return }
+        let matchingTargetIndices = selectedSmartFilterTargetIndices(at: filterIndex)
+        guard matchingTargetIndices.contains(layerIndex) else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return
+        }
+        let targetIndices = matchingTargetIndices.filter { targetIndex in
+            abs(
+                document.layers[targetIndex].smartFilters[filterIndex].normalizedOpacity - normalizedOpacity
+            ) > 0.000_001
+        }
+        guard !targetIndices.isEmpty else { return }
         pushUndo()
-        document.layers[layerIndex].smartFilters[filterIndex].opacity = normalizedOpacity
-        appendHistory(L10n.text("imageEditor.history.layerSmartFilterOpacity"))
+        for targetIndex in targetIndices {
+            document.layers[targetIndex].smartFilters[filterIndex].opacity = normalizedOpacity
+        }
+        guard matchingTargetIndices.count > 1 else {
+            appendHistory(L10n.text("imageEditor.history.layerSmartFilterOpacity"))
+            return
+        }
+        appendHistory(L10n.text("imageEditor.history.layerSmartFilterOpacitySelected"))
+        statusText = L10n.format(
+            "imageEditor.status.layerSmartFilterOpacitySelected",
+            Int((normalizedOpacity * 100).rounded()),
+            targetIndices.count
+        )
     }
 
     func setSmartFilterBlendModeOnSelectedLayer(
@@ -6740,6 +6793,12 @@ final class ImageEditorViewModel: ObservableObject {
 
     private func selectedLayerSmartFilterUpdateTargetIndices() -> [Int] {
         selectedLayerSmartFilterTargetIndices().filter { !document.layers[$0].smartFilters.isEmpty }
+    }
+
+    private func selectedSmartFilterTargetIndices(at filterIndex: Int) -> [Int] {
+        selectedLayerSmartFilterUpdateTargetIndices().filter {
+            document.layers[$0].smartFilters.indices.contains(filterIndex)
+        }
     }
 
     private func selectedLayerSmartFilterClearTargetIndices() -> [Int] {
