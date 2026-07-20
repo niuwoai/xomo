@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc420 - 2026-07-21
+
+### Added
+- 智能滤镜列表中的名称现在可直接点击，把该项现有的滤镜类型、强度和详细参数载入属性面板；载入是只读准备动作，不改画布、不产生 History，用户仍需显式点击“更新”才会提交修改。
+- `xomo.smart_filter.manage` 新增 `action=load`，与界面共用同一条参数载入路径；Figma 导入的显式高斯模糊半径也会保留在编辑状态中，不会因切换到该滤镜而静默丢失。
+
+### Verification
+- 智能滤镜载入、显式更新保留 Figma 模糊半径、界面接线与 MCP 契约定向测试 3/3，三语资源键测试 1/1、CLI 2/2、发布版本契约 7/7 通过；主 `.xcresult` 为 `/tmp/veilpic-rc420-smart-filter-load/Logs/Test/Test-veilpic-2026.07.21_01-27-12-+0800.xcresult`。下一次完整 Release、冒烟与 `/Applications` 覆盖门禁仍为 rc440。
+
 ## 2.12.0-rc419 - 2026-07-20
 
 ### Fixed

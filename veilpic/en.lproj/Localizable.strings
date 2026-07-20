@@ -2087,6 +2087,7 @@
 "imageEditor.action.layerSmartFilterAdd" = "Add Smart Filter";
 "imageEditor.action.layerSmartFilterUpdate" = "Update Last Smart Filter";
 "imageEditor.action.layerSmartFilterUpdateShort" = "Update";
+"imageEditor.action.layerSmartFilterLoadSettings" = "Load This Filter's Settings";
 "imageEditor.action.layerSmartFilterEnable" = "On";
 "imageEditor.action.layerSmartFilterDisable" = "Off";
 "imageEditor.action.layerSmartFilterDuplicate" = "Duplicate Smart Filter";

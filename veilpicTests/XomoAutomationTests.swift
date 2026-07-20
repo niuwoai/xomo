@@ -206,6 +206,7 @@ struct XomoAutomationTests {
         let toolsResponse = registry.execute(request(operation: "tools"))
         let manageTool = try #require(automationTool(named: "xomo.smart_filter.manage", in: toolsResponse))
         let manageProperties = try #require(manageTool["inputSchema"]?.objectValue?["properties"]?.objectValue)
+        #expect(manageProperties["action"]?.objectValue?["enum"]?.arrayValue?.contains(.string("load")) == true)
         #expect(manageProperties["action"]?.objectValue?["enum"]?.arrayValue?.contains(.string("setOpacity")) == true)
         #expect(manageProperties["action"]?.objectValue?["enum"]?.arrayValue?.contains(.string("setBlendMode")) == true)
         #expect(manageProperties["action"]?.objectValue?["enum"]?.arrayValue?.contains(.string("duplicate")) == true)
@@ -235,6 +236,22 @@ struct XomoAutomationTests {
         let listedFilter = try #require(listResponse.result?.arrayValue?.first?.objectValue)
         #expect(listedFilter["opacity"] == .number(0.4))
         #expect(listedFilter["blendMode"] == .string("softLight"))
+
+        viewModel.selectedFilter = .sharpen
+        viewModel.filterIntensity = 0.1
+        let historyCountBeforeLoad = viewModel.document.history.count
+        let loadResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.smart_filter.manage",
+            arguments: [
+                "id": .string(filterID.uuidString),
+                "action": .string("load")
+            ]
+        ))
+        #expect(loadResponse.ok)
+        #expect(viewModel.selectedFilter == .median)
+        #expect(viewModel.filterIntensity == 1)
+        #expect(viewModel.document.history.count == historyCountBeforeLoad)
 
         let updateResponse = registry.execute(request(
             operation: "call",

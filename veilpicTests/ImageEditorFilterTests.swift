@@ -192,6 +192,64 @@ struct ImageEditorFilterTests {
         #expect(legacyDecoded.normalizedBlendMode == .normal)
     }
 
+    @Test func loadingSpecificSmartFilterRestoresControlsWithoutChangingDocumentHistory() throws {
+        let image = solidImage(
+            size: NSSize(width: 32, height: 24),
+            color: NSColor(calibratedRed: 0.2, green: 0.4, blue: 0.6, alpha: 0.8)
+        )
+        let viewModel = ImageEditorViewModel(sourceName: "load-smart-filter.png", image: image) { _ in }
+        let layerIndex = try #require(
+            viewModel.document.layers.firstIndex { $0.id == viewModel.document.selectedLayerID }
+        )
+        let target = ImageEditorSmartFilter(
+            kind: .gaussianBlur,
+            intensity: 0.72,
+            settings: ImageEditorFilterSettings(
+                gaussianBlurRadius: 42,
+                unsharpRadius: 3.5,
+                offsetX: -0.4,
+                waveFrequency: 0.8
+            )
+        )
+        let other = ImageEditorSmartFilter(kind: .sharpen, intensity: 0.2)
+        viewModel.document.layers[layerIndex].smartFilters = [target, other]
+        viewModel.selectedFilter = .wave
+        viewModel.filterIntensity = 0.1
+        viewModel.filterUnsharpRadius = 0.5
+        viewModel.filterOffsetX = 0.9
+        viewModel.filterWaveFrequency = 0.1
+        let historyCount = viewModel.document.history.count
+        let presentationRequest = viewModel.filterPanelPresentationRequest
+        let imageBefore = try #require(viewModel.currentImage.qingtuPNGData())
+
+        #expect(viewModel.loadSmartFilterIntoControls(target.id))
+        #expect(viewModel.selectedFilter == .gaussianBlur)
+        #expect(viewModel.filterIntensity == 0.72)
+        #expect(viewModel.filterGaussianBlurRadius == 42)
+        #expect(viewModel.filterUnsharpRadius == 3.5)
+        #expect(viewModel.filterOffsetX == -0.4)
+        #expect(viewModel.filterWaveFrequency == 0.8)
+        #expect(viewModel.filterPanelPresentationRequest == presentationRequest + 1)
+        #expect(viewModel.isPropertiesPanelVisible)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(try #require(viewModel.currentImage.qingtuPNGData()) == imageBefore)
+
+        viewModel.filterIntensity = 0.6
+        viewModel.updateSmartFilterOnSelectedLayer(target.id)
+        let updated = try #require(viewModel.document.selectedLayer?.smartFilters.first)
+        #expect(updated.intensity == 0.6)
+        #expect(updated.normalizedSettings.gaussianBlurRadius == 42)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterUpdate"))
+
+        viewModel.undo()
+        let restored = try #require(viewModel.document.selectedLayer?.smartFilters.first)
+        #expect(restored.intensity == 0.72)
+        #expect(restored.normalizedSettings.gaussianBlurRadius == 42)
+
+        viewModel.selectedFilter = .sharpen
+        #expect(viewModel.filterGaussianBlurRadius == nil)
+    }
+
     @Test func duplicatingSmartFilterPreservesCompleteSettingsAndSupportsUndoRedo() throws {
         let image = solidImage(
             size: NSSize(width: 32, height: 24),

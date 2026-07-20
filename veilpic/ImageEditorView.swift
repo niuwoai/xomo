@@ -6512,6 +6512,19 @@ struct ImageEditorView: View {
                                         .foregroundStyle(filter.isEnabled ? Color(nsColor: ImageEditorTheme.text) : Color(nsColor: ImageEditorTheme.mutedText))
                                         .lineLimit(1)
                                         .frame(maxWidth: .infinity, alignment: .leading)
+                                        .contentShape(Rectangle())
+                                        .onTapGesture {
+                                            viewModel.loadSmartFilterIntoControls(filter.id)
+                                        }
+                                        .accessibilityElement(children: .ignore)
+                                        .accessibilityLabel(viewModel.smartFilterLabel(filter))
+                                        .accessibilityHint(L10n.text("imageEditor.action.layerSmartFilterLoadSettings"))
+                                        .accessibilityAddTraits(.isButton)
+                                        .accessibilityAction {
+                                            viewModel.loadSmartFilterIntoControls(filter.id)
+                                        }
+                                        .accessibilityIdentifier("image-editor-smart-filter-load-\(filter.id)")
+                                        .help(L10n.text("imageEditor.action.layerSmartFilterLoadSettings"))
                                     Button(L10n.text(filter.isEnabled ? "imageEditor.action.layerSmartFilterDisable" : "imageEditor.action.layerSmartFilterEnable")) {
                                         viewModel.toggleSmartFilterOnSelectedLayer(filter.id)
                                     }

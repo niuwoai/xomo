@@ -2957,6 +2957,10 @@ final class XomoAutomationRegistry {
     ) throws {
         let id = try requiredUUID("id", in: arguments)
         switch try requiredString("action", in: arguments) {
+        case "load":
+            guard viewModel.loadSmartFilterIntoControls(id) else {
+                throw XomoAutomationCallError.invalidArgument("Smart filter cannot be loaded")
+            }
         case "update":
             if let intensity = arguments["intensity"]?.doubleValue { viewModel.filterIntensity = intensity }
             viewModel.updateSmartFilterOnSelectedLayer(id)
@@ -4067,9 +4071,9 @@ private extension XomoAutomationRegistry {
         ], required: ["filter"]),
         tool("xomo.smart_filter.toggle", "Enable or disable a smart filter by UUID.", idProperties, required: ["id"]),
         tool("xomo.smart_filter.clear", "Remove all smart filters from selected layers."),
-        tool("xomo.smart_filter.manage", "Update, duplicate, reorder, or remove a smart filter.", [
+        tool("xomo.smart_filter.manage", "Load, update, duplicate, reorder, or remove a smart filter.", [
             "id": XomoAutomationSchema.string(description: "Smart filter UUID"),
-            "action": XomoAutomationSchema.string(description: "Management action", values: ["update", "setOpacity", "setBlendMode", "duplicate", "remove", "moveUp", "moveDown"]),
+            "action": XomoAutomationSchema.string(description: "Management action", values: ["load", "update", "setOpacity", "setBlendMode", "duplicate", "remove", "moveUp", "moveDown"]),
             "intensity": XomoAutomationSchema.number(description: "Updated filter intensity"),
             "opacity": XomoAutomationSchema.number(description: "Result opacity from 0 to 1"),
             "blendMode": XomoAutomationSchema.string(description: "Result blend mode", values: ImageEditorBlendMode.smartFilterCases.map(\.rawValue))

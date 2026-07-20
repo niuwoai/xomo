@@ -287,10 +287,17 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var gradientFillEndRed: Double = 1
     @Published var gradientFillEndGreen: Double = 0.50
     @Published var gradientFillEndBlue: Double = 0.12
-    @Published var selectedFilter: ImageEditorFilter = .gaussianBlur
+    @Published var selectedFilter: ImageEditorFilter = .gaussianBlur {
+        didSet {
+            if oldValue != selectedFilter {
+                filterGaussianBlurRadius = nil
+            }
+        }
+    }
     @Published private(set) var filterPanelPresentationRequest = 0
     @Published private(set) var lastAppliedFilter: ImageEditorFilterApplication?
     @Published var filterIntensity: Double = 0.5
+    @Published private(set) var filterGaussianBlurRadius: Double?
     @Published var filterUnsharpRadius: Double = 1
     @Published var filterUnsharpThreshold: Double = 0
     @Published var filterLiquifyPushX: Double = 0.25
@@ -5622,6 +5629,22 @@ final class ImageEditorViewModel: ObservableObject {
         appendHistory(L10n.text("imageEditor.history.layerSmartFilterUpdate"))
     }
 
+    @discardableResult
+    func loadSmartFilterIntoControls(_ filterID: UUID) -> Bool {
+        guard let (layerIndex, filterIndex) = selectedSmartFilterIndex(filterID) else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return false
+        }
+        let filter = document.layers[layerIndex].smartFilters[filterIndex]
+        selectedFilter = filter.kind
+        filterIntensity = filter.normalizedIntensity
+        syncFilterSettings(filter.normalizedSettings)
+        filterPanelPresentationRequest &+= 1
+        isPropertiesPanelVisible = true
+        statusText = L10n.format("imageEditor.status.filterReady", filter.kind.title)
+        return true
+    }
+
     private func updateSmartFilterFromCurrentControls(_ filter: inout ImageEditorSmartFilter) {
         let keepsBackdropRouting = filter.appliesToBackdrop && selectedFilter == .gaussianBlur
         filter.kind = selectedFilter
@@ -5765,6 +5788,7 @@ final class ImageEditorViewModel: ObservableObject {
 
     private func currentFilterSettings() -> ImageEditorFilterSettings {
         ImageEditorFilterSettings(
+            gaussianBlurRadius: selectedFilter == .gaussianBlur ? filterGaussianBlurRadius : nil,
             unsharpRadius: filterUnsharpRadius,
             unsharpThreshold: filterUnsharpThreshold,
             liquifyPushX: filterLiquifyPushX,
@@ -7215,6 +7239,7 @@ final class ImageEditorViewModel: ObservableObject {
 
     private func syncFilterSettings(_ settings: ImageEditorFilterSettings) {
         let normalized = settings.normalized()
+        filterGaussianBlurRadius = normalized.gaussianBlurRadius
         filterUnsharpRadius = normalized.unsharpRadius
         filterUnsharpThreshold = normalized.unsharpThreshold
         filterLiquifyPushX = normalized.liquifyPushX
