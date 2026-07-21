@@ -894,33 +894,39 @@ extension ImageEditorViewModel {
         )
     }
 
-    func setSelectedLayerEffectScale(_ percentage: Double) {
+    @discardableResult
+    func setSelectedLayerEffectScale(_ percentage: Double) -> Int {
         guard percentage.isFinite else {
             statusText = L10n.text("imageEditor.status.operationFailed")
-            return
+            return 0
         }
         let targetIndices = selectedLayerEffectScaleTargetIndices()
         guard !targetIndices.isEmpty else {
             statusText = L10n.text("imageEditor.status.layerLocked")
-            return
+            return 0
         }
         let normalizedPercentage = max(1, min(1_000, percentage))
         let normalizedScale = CGFloat(normalizedPercentage / 100)
-        guard targetIndices.contains(where: {
+        let changedIndices = targetIndices.filter {
             abs(document.layers[$0].style.effectScale - normalizedScale) > 0.0001
-        }) else { return }
+        }
+        guard !changedIndices.isEmpty else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return 0
+        }
 
         pushUndo()
-        for index in targetIndices {
+        for index in changedIndices {
             document.layers[index].style.effectScale = normalizedScale
         }
         let roundedPercentage = Int(normalizedPercentage.rounded())
         appendHistory(L10n.text("imageEditor.history.layerEffectsScale"))
         statusText = L10n.format(
             "imageEditor.status.layerEffectsScaled",
-            targetIndices.count,
+            changedIndices.count,
             roundedPercentage
         )
+        return changedIndices.count
     }
 
     func setSelectedLayerStrokeWidth(_ width: Double) {

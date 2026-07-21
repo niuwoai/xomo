@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.12.0-rc445 - 2026-07-22
+
+### Changed
+- 图层样式效果缩放返回实际修改图层数；MCP `xomo.layer.style_settings(property=effectScale)` 返回 `updatedLayerCount`。
+
+### Fixed
+- 批量缩放只写入比例真正变化的可编辑样式层，相同值、锁定层和无样式层跳过，数量反馈不再虚高。
+- 重复设置同一效果比例不再制造空 Undo/History，MCP 对零变化明确失败；1%–1000% 夹取和旧工程往返保持兼容。
+
+### Verification
+- 效果缩放实际数量、重复值、范围夹取、锁定层、普通样式属性与项目往返定向及回归测试 5/5、SwiftPM CLI 2/2、发布版本契约 7/7 通过。
+
 ## 2.12.0-rc444 - 2026-07-22
 
 ### Changed

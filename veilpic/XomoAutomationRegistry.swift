@@ -176,7 +176,7 @@ final class XomoAutomationRegistry {
             }
             return try layerStyleAction(arguments, viewModel: viewModel)
         case "xomo.layer.style_settings":
-            try layerStyleSetting(arguments, viewModel: viewModel)
+            return try layerStyleSetting(arguments, viewModel: viewModel)
         case "xomo.layer.selection":
             try layerSelectionAction(arguments, viewModel: viewModel)
         case "xomo.layer.link":
@@ -2207,7 +2207,7 @@ final class XomoAutomationRegistry {
     private func layerStyleSetting(
         _ arguments: [String: XomoJSONValue],
         viewModel: ImageEditorViewModel
-    ) throws {
+    ) throws -> XomoJSONValue {
         let property = try requiredString("property", in: arguments)
         let value = arguments["value"]?.doubleValue
         func number() throws -> Double {
@@ -2217,7 +2217,16 @@ final class XomoAutomationRegistry {
             return value
         }
         switch property {
-        case "effectScale": viewModel.setSelectedLayerEffectScale(try number())
+        case "effectScale":
+            let updatedLayerCount = viewModel.setSelectedLayerEffectScale(try number())
+            guard updatedLayerCount > 0 else {
+                throw XomoAutomationCallError.operationFailed(
+                    "No editable styled layer needs the requested effect scale"
+                )
+            }
+            return .object([
+                "updatedLayerCount": .number(Double(updatedLayerCount))
+            ])
         case "strokeWidth": viewModel.setSelectedLayerStrokeWidth(try number())
         case "strokePosition":
             let rawValue = try requiredString("position", in: arguments)
@@ -2339,6 +2348,7 @@ final class XomoAutomationRegistry {
             viewModel.setSelectedLayerBevelDirection(direction)
         default: throw XomoAutomationCallError.invalidArgument("Unknown layer style setting")
         }
+        return actionResult(viewModel)
     }
 
     private func layerSelectionAction(
@@ -3867,7 +3877,7 @@ private extension XomoAutomationRegistry {
             "direction": XomoAutomationSchema.string(description: "Preset ordering direction", values: ImageEditorLayerStylePresetMoveDirection.allCases.map(\.rawValue)),
             "path": XomoAutomationSchema.string(description: "Local .xomostyles path for preset import preview, import, or export")
         ], required: ["action"]),
-        tool("xomo.layer.style_settings", "Set effect scale, stroke, shadow, glow, overlay, satin, bevel, and global-light properties.", [
+        tool("xomo.layer.style_settings", "Set effect scale with actual updated-layer counts, plus stroke, shadow, glow, overlay, satin, bevel, and global-light properties.", [
             "property": XomoAutomationSchema.string(description: "Layer style property", values: ["effectScale", "strokeWidth", "strokePosition", "strokeFillType", "strokeGradientStyle", "strokeGradientAngle", "strokePatternKind", "strokeOpacity", "strokeColor", "shadowOpacity", "shadowColor", "shadowBlur", "shadowSpread", "shadowNoise", "shadowContour", "shadowDistance", "shadowAngle", "globalLightAngle", "innerShadowOpacity", "innerShadowBlur", "innerShadowChoke", "innerShadowNoise", "innerShadowContour", "innerShadowDistance", "innerShadowAngle", "outerGlowOpacity", "outerGlowColor", "outerGlowBlur", "outerGlowSpread", "outerGlowNoise", "outerGlowContour", "innerGlowOpacity", "innerGlowColor", "innerGlowBlur", "innerGlowChoke", "innerGlowNoise", "innerGlowSource", "colorOverlayOpacity", "colorOverlayColor", "gradientOverlayOpacity", "gradientOverlayScale", "gradientOverlayAngle", "gradientOverlayStyle", "patternOverlayKind", "patternOverlayOpacity", "patternOverlayScale", "satinOpacity", "satinColor", "satinDistance", "satinSize", "satinAngle", "satinInvert", "satinContour", "bevelSize", "bevelOpacity", "bevelHighlightColor", "bevelShadowColor", "bevelSoften", "bevelAngle", "bevelDirection"]),
             "value": XomoAutomationSchema.number(description: "Numeric style value"),
             "position": XomoAutomationSchema.string(description: "Stroke position", values: ImageEditorStrokePosition.allCases.map(\.rawValue)),

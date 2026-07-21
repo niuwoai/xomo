@@ -237,6 +237,11 @@ struct ImageEditorLayerStyleVisibilityScaleTests {
         viewModel.document.layers[firstIndex].style.strokeEnabled = true
         viewModel.document.layers[firstIndex].style.strokeWidth = 4
         viewModel.addLayer()
+        let matchingID = try #require(viewModel.document.selectedLayerID)
+        let matchingIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[matchingIndex].style.shadowEnabled = true
+        viewModel.document.layers[matchingIndex].style.effectScale = 2
+        viewModel.addLayer()
         let lockedID = try #require(viewModel.document.selectedLayerID)
         let lockedIndex = try #require(viewModel.document.selectedLayerIndex)
         viewModel.document.layers[lockedIndex].style.outerGlowEnabled = true
@@ -244,22 +249,32 @@ struct ImageEditorLayerStyleVisibilityScaleTests {
         viewModel.addLayer()
         let emptyID = try #require(viewModel.document.selectedLayerID)
         viewModel.document.selectedLayerID = firstID
-        viewModel.document.selectedLayerIDs = [firstID, lockedID, emptyID]
+        viewModel.document.selectedLayerIDs = [firstID, matchingID, lockedID, emptyID]
+        let historyBeforeScale = viewModel.document.history.count
 
         #expect(viewModel.canScaleSelectedLayerEffects)
-        viewModel.setSelectedLayerEffectScale(200)
+        #expect(viewModel.setSelectedLayerEffectScale(200) == 1)
 
         #expect(viewModel.document.layers[firstIndex].style.effectScale == 2)
+        #expect(viewModel.document.layers[matchingIndex].style.effectScale == 2)
         #expect(viewModel.document.layers[firstIndex].style.strokeWidth == 4)
         #expect(viewModel.document.layers[lockedIndex].style.effectScale == 1)
         #expect(viewModel.selectedLayerEffectScale == 200)
+        #expect(viewModel.document.history.count == historyBeforeScale + 1)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerEffectsScale"))
         #expect(viewModel.statusText == L10n.format("imageEditor.status.layerEffectsScaled", 1, 200))
 
-        viewModel.setSelectedLayerEffectScale(2_000)
+        let historyAfterScale = viewModel.document.history.count
+        #expect(viewModel.setSelectedLayerEffectScale(200) == 0)
+        #expect(viewModel.document.history.count == historyAfterScale)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.operationFailed"))
+
+        #expect(viewModel.setSelectedLayerEffectScale(2_000) == 2)
         #expect(viewModel.document.layers[firstIndex].style.effectScale == 10)
-        viewModel.setSelectedLayerEffectScale(0)
+        #expect(viewModel.document.layers[matchingIndex].style.effectScale == 10)
+        #expect(viewModel.setSelectedLayerEffectScale(0) == 2)
         #expect(viewModel.document.layers[firstIndex].style.effectScale == 0.01)
+        #expect(viewModel.document.layers[matchingIndex].style.effectScale == 0.01)
     }
 
     @Test func effectVisibilityAndScaleRoundTripWhileLegacyProjectsUseVisibleHundredPercent() throws {
