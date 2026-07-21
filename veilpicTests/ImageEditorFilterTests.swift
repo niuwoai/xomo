@@ -269,7 +269,7 @@ struct ImageEditorFilterTests {
         #expect(!viewModel.isSmartFilterLoadedForEditing(originalID))
 
         #expect(viewModel.loadSmartFilterIntoControls(originalID))
-        viewModel.moveSmartFilterOnSelectedLayer(originalID, offset: 1)
+        #expect(viewModel.moveSmartFilterOnSelectedLayer(originalID, offset: 1) == 1)
         #expect(viewModel.isSmartFilterLoadedForEditing(originalID))
 
         viewModel.removeSmartFilterFromSelectedLayer(originalID)
@@ -935,11 +935,11 @@ struct ImageEditorFilterTests {
         #expect(!viewModel.canMoveSmartFilterOnSelectedLayer(last.id, offset: 1))
 
         let historyCount = viewModel.document.history.count
-        #expect(!viewModel.moveSmartFilterOnSelectedLayer(first.id, offset: -1))
+        #expect(viewModel.moveSmartFilterOnSelectedLayer(first.id, offset: -1) == 0)
         #expect(viewModel.document.history.count == historyCount)
 
         #expect(viewModel.loadSmartFilterIntoControls(middle.id))
-        #expect(viewModel.moveSmartFilterOnSelectedLayer(middle.id, offset: -1))
+        #expect(viewModel.moveSmartFilterOnSelectedLayer(middle.id, offset: -1) == 1)
         #expect(viewModel.document.selectedLayer?.smartFilters.map(\.id) == [middle.id, first.id, last.id])
         #expect(viewModel.isSmartFilterLoadedForEditing(middle.id))
         #expect(!viewModel.canMoveSmartFilterOnSelectedLayer(middle.id, offset: -1))
@@ -999,7 +999,7 @@ struct ImageEditorFilterTests {
 
         #expect(viewModel.loadSmartFilterIntoControls(primaryTarget.id))
         let historyCount = viewModel.document.history.count
-        #expect(viewModel.moveSmartFilterOnSelectedLayer(primaryTarget.id, offset: 1))
+        #expect(viewModel.moveSmartFilterOnSelectedLayer(primaryTarget.id, offset: 1) == 2)
 
         #expect(
             viewModel.document.layers.first { $0.id == primaryID }?.smartFilters.map(\.id)
@@ -1037,7 +1037,7 @@ struct ImageEditorFilterTests {
 
         viewModel.redo()
         #expect(viewModel.isSmartFilterLoadedForEditing(primaryTarget.id))
-        #expect(viewModel.moveSmartFilterOnSelectedLayer(primaryTarget.id, offset: -1))
+        #expect(viewModel.moveSmartFilterOnSelectedLayer(primaryTarget.id, offset: -1) == 2)
         #expect(
             viewModel.document.layers.first { $0.id == primaryID }?.smartFilters.map(\.id)
                 == [primaryLead.id, primaryTarget.id, primaryTail.id]
@@ -1050,6 +1050,57 @@ struct ImageEditorFilterTests {
         #expect(viewModel.document.history.count == historyCount + 2)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterMoveSelected"))
         #expect(viewModel.statusText == L10n.format("imageEditor.status.layerSmartFilterMovedSelected", 2))
+    }
+
+    @Test func movingSmartFilterUsesLockedPrimaryAsStackAnchorAndReportsActualCount() throws {
+        let canvasSize = NSSize(width: 24, height: 18)
+        let image = solidImage(size: canvasSize, color: .systemBlue)
+        let viewModel = ImageEditorViewModel(sourceName: "smart-filter-move-locked-anchor.png", image: image) { _ in }
+        let primaryIndex = try #require(viewModel.document.selectedLayerIndex)
+        let primaryID = viewModel.document.layers[primaryIndex].id
+        let primaryLead = ImageEditorSmartFilter(kind: .median, intensity: 0.2)
+        let primaryTarget = ImageEditorSmartFilter(kind: .gaussianBlur, intensity: 0.4)
+        let primaryTail = ImageEditorSmartFilter(kind: .sharpen, intensity: 0.6)
+        viewModel.document.layers[primaryIndex].smartFilters = [primaryLead, primaryTarget, primaryTail]
+        viewModel.document.layers[primaryIndex].isLocked = true
+
+        var peer = ImageEditorLayer.blank(name: "Peer", size: canvasSize)
+        let peerLead = ImageEditorSmartFilter(kind: .pixelate, intensity: 0.3)
+        let peerTarget = ImageEditorSmartFilter(kind: .wave, intensity: 0.5)
+        let peerTail = ImageEditorSmartFilter(kind: .ripple, intensity: 0.7)
+        peer.smartFilters = [peerLead, peerTarget, peerTail]
+        var shortPeer = ImageEditorLayer.blank(name: "Short Peer", size: canvasSize)
+        shortPeer.smartFilters = [
+            ImageEditorSmartFilter(kind: .findEdges, intensity: 0.3),
+            ImageEditorSmartFilter(kind: .emboss, intensity: 0.5)
+        ]
+        viewModel.document.layers.append(contentsOf: [peer, shortPeer])
+        viewModel.document.selectedLayerID = primaryID
+        viewModel.document.selectedLayerIDs = [primaryID, peer.id, shortPeer.id]
+
+        #expect(viewModel.loadSmartFilterIntoControls(primaryTarget.id))
+        #expect(viewModel.canMoveSmartFilterOnSelectedLayer(primaryTarget.id, offset: 1))
+        let historyCount = viewModel.document.history.count
+        #expect(viewModel.moveSmartFilterOnSelectedLayer(primaryTarget.id, offset: 1) == 1)
+        #expect(
+            viewModel.document.layers.first { $0.id == primaryID }?.smartFilters.map(\.id)
+                == [primaryLead.id, primaryTarget.id, primaryTail.id]
+        )
+        #expect(
+            viewModel.document.layers.first { $0.id == peer.id }?.smartFilters.map(\.id)
+                == [peerLead.id, peerTail.id, peerTarget.id]
+        )
+        #expect(viewModel.document.layers.first { $0.id == shortPeer.id }?.smartFilters.count == 2)
+        #expect(viewModel.loadedSmartFilterID == primaryTarget.id)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterMove"))
+
+        viewModel.undo()
+        #expect(
+            viewModel.document.layers.first { $0.id == peer.id }?.smartFilters.map(\.id)
+                == [peerLead.id, peerTarget.id, peerTail.id]
+        )
+        #expect(viewModel.loadedSmartFilterID == primaryTail.id)
     }
 
     @Test func clearingSmartFiltersAcrossSelectionReportsCountAndPreservesSkippedLoadedFilter() throws {

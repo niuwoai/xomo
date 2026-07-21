@@ -3032,13 +3032,21 @@ final class XomoAutomationRegistry {
                 "removedLayerCount": .number(Double(removedLayerCount))
             ])
         case "moveUp":
-            guard viewModel.moveSmartFilterOnSelectedLayer(id, offset: -1) else {
+            let movedLayerCount = viewModel.moveSmartFilterOnSelectedLayer(id, offset: -1)
+            guard movedLayerCount > 0 else {
                 throw XomoAutomationCallError.invalidArgument("Smart filter cannot be moved up")
             }
+            return .object([
+                "movedLayerCount": .number(Double(movedLayerCount))
+            ])
         case "moveDown":
-            guard viewModel.moveSmartFilterOnSelectedLayer(id, offset: 1) else {
+            let movedLayerCount = viewModel.moveSmartFilterOnSelectedLayer(id, offset: 1)
+            guard movedLayerCount > 0 else {
                 throw XomoAutomationCallError.invalidArgument("Smart filter cannot be moved down")
             }
+            return .object([
+                "movedLayerCount": .number(Double(movedLayerCount))
+            ])
         default: throw XomoAutomationCallError.invalidArgument("Unknown smart filter management action")
         }
         return nil

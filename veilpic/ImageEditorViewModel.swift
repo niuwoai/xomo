@@ -6058,26 +6058,25 @@ final class ImageEditorViewModel: ObservableObject {
 
     func canMoveSmartFilterOnSelectedLayer(_ filterID: UUID, offset: Int) -> Bool {
         guard offset != 0,
-              let (layerIndex, filterIndex) = selectedSmartFilterIndex(filterID),
-              canEditSmartFilters(on: document.layers[layerIndex])
+              let (_, filterIndex) = selectedSmartFilterIndex(filterID)
         else { return false }
-        return document.layers[layerIndex].smartFilters.indices.contains(filterIndex + offset)
+        return !selectedSmartFilterMoveTargetIndices(at: filterIndex, offset: offset).isEmpty
     }
 
     @discardableResult
-    func moveSmartFilterOnSelectedLayer(_ filterID: UUID, offset: Int) -> Bool {
+    func moveSmartFilterOnSelectedLayer(_ filterID: UUID, offset: Int) -> Int {
         guard offset != 0,
-              let (layerIndex, filterIndex) = selectedSmartFilterIndex(filterID),
-              canEditSmartFilters(on: document.layers[layerIndex])
+              let (_, filterIndex) = selectedSmartFilterIndex(filterID)
         else {
             statusText = L10n.text("imageEditor.status.operationFailed")
-            return false
+            return 0
         }
         let targetIndex = filterIndex + offset
-        let targetIndices = selectedSmartFilterTargetIndices(at: filterIndex).filter { selectedLayerIndex in
-            document.layers[selectedLayerIndex].smartFilters.indices.contains(targetIndex)
+        let targetIndices = selectedSmartFilterMoveTargetIndices(at: filterIndex, offset: offset)
+        guard !targetIndices.isEmpty else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return 0
         }
-        guard targetIndices.contains(layerIndex) else { return false }
         pushUndo()
         for selectedLayerIndex in targetIndices {
             let filter = document.layers[selectedLayerIndex].smartFilters.remove(at: filterIndex)
@@ -6085,14 +6084,14 @@ final class ImageEditorViewModel: ObservableObject {
         }
         guard targetIndices.count > 1 else {
             appendHistory(L10n.text("imageEditor.history.layerSmartFilterMove"))
-            return true
+            return targetIndices.count
         }
         appendHistory(L10n.text("imageEditor.history.layerSmartFilterMoveSelected"))
         statusText = L10n.format(
             "imageEditor.status.layerSmartFilterMovedSelected",
             targetIndices.count
         )
-        return true
+        return targetIndices.count
     }
 
     @discardableResult
@@ -6943,6 +6942,13 @@ final class ImageEditorViewModel: ObservableObject {
     private func selectedSmartFilterTargetIndices(at filterIndex: Int) -> [Int] {
         selectedLayerSmartFilterUpdateTargetIndices().filter {
             document.layers[$0].smartFilters.indices.contains(filterIndex)
+        }
+    }
+
+    private func selectedSmartFilterMoveTargetIndices(at filterIndex: Int, offset: Int) -> [Int] {
+        let destinationIndex = filterIndex + offset
+        return selectedSmartFilterTargetIndices(at: filterIndex).filter {
+            document.layers[$0].smartFilters.indices.contains(destinationIndex)
         }
     }
 

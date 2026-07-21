@@ -313,6 +313,7 @@ struct XomoAutomationTests {
             ]
         ))
         #expect(moveUpResponse.ok)
+        #expect(moveUpResponse.result?.objectValue?["movedLayerCount"] == .number(1))
         #expect(viewModel.document.selectedLayer?.smartFilters.map(\.id) == [duplicateID, filterID])
 
         let moveDownResponse = registry.execute(request(
@@ -324,6 +325,7 @@ struct XomoAutomationTests {
             ]
         ))
         #expect(moveDownResponse.ok)
+        #expect(moveDownResponse.result?.objectValue?["movedLayerCount"] == .number(1))
         #expect(viewModel.document.selectedLayer?.smartFilters.map(\.id) == [filterID, duplicateID])
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterMove"))
 
@@ -557,6 +559,26 @@ struct XomoAutomationTests {
         #expect(configuredAddResponse.result?.objectValue?["addedLayerCount"] == .number(1))
         #expect(viewModel.document.layers.first { $0.id == primaryID }?.smartFilters.count == 1)
         #expect(viewModel.document.layers.first { $0.id == peerID }?.smartFilters.count == 3)
+
+        let peerFilterOrder = try #require(
+            viewModel.document.layers.first { $0.id == peerID }?.smartFilters.map(\.id)
+        )
+        let movePeerDownResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.smart_filter.manage",
+            arguments: [
+                "id": .string(primaryFilterID.uuidString),
+                "action": .string("moveDown")
+            ]
+        ))
+        #expect(movePeerDownResponse.ok)
+        #expect(movePeerDownResponse.result?.objectValue?["movedLayerCount"] == .number(1))
+        #expect(viewModel.document.layers.first { $0.id == primaryID }?.smartFilters.count == 1)
+        #expect(
+            viewModel.document.layers.first { $0.id == peerID }?.smartFilters.map(\.id)
+                == [peerFilterOrder[1], peerFilterOrder[0], peerFilterOrder[2]]
+        )
+        #expect(viewModel.isSmartFilterLoadedForEditing(primaryFilterID))
 
         let removeResponse = registry.execute(request(
             operation: "call",
