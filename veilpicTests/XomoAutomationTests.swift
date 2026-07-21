@@ -4008,6 +4008,20 @@ struct XomoAutomationTests {
 
     @Test func registrySetsLayerStyleStrokeFillTypeWithAdvertisedEnum() throws {
         let viewModel = makeViewModel()
+        let canvasSize = viewModel.document.canvasSize
+        var first = ImageEditorLayer.blank(name: "First", size: canvasSize)
+        var second = ImageEditorLayer.blank(name: "Second", size: canvasSize)
+        var locked = ImageEditorLayer.blank(name: "Locked", size: canvasSize)
+        first.style.strokeFillType = .color
+        second.style.strokeEnabled = true
+        second.style.strokeFillType = .pattern
+        second.style.strokePatternColor = .systemGreen
+        locked.style.strokeFillType = .color
+        locked.isLocked = true
+        viewModel.document.layers = [first, second, locked]
+        viewModel.document.selectedLayerID = first.id
+        viewModel.document.selectedLayerIDs = [first.id, second.id, locked.id]
+        let historyCount = viewModel.document.history.count
         let registry = XomoAutomationRegistry.shared
         registry.register(viewModel)
 
@@ -4024,9 +4038,27 @@ struct XomoAutomationTests {
         ))
 
         #expect(result.ok)
-        #expect(viewModel.document.selectedLayer?.style.strokeFillType == .pattern)
-        #expect(viewModel.document.selectedLayer?.style.strokeEnabled == true)
-        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStyle"))
+        #expect(result.result?.objectValue?["updatedLayerCount"] == .number(1))
+        #expect(viewModel.document.layers[0].style.strokeFillType == .pattern)
+        #expect(viewModel.document.layers[1].style.strokeFillType == .pattern)
+        #expect(viewModel.document.layers[2].style.strokeFillType == .color)
+        #expect(viewModel.document.layers[0].style.strokeEnabled)
+        #expect(viewModel.document.layers[1].style.strokePatternColor.isEqual(NSColor.systemGreen))
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [first.id, second.id, locked.id])
+
+        let historyAfterUpdate = viewModel.document.history.count
+        let repeated = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("strokeFillType"),
+                "fillType": .string("pattern")
+            ]
+        ))
+        #expect(!repeated.ok)
+        #expect(viewModel.document.layers[1].style.strokePatternColor.isEqual(NSColor.systemGreen))
+        #expect(viewModel.document.history.count == historyAfterUpdate)
     }
 
     @Test func registrySetsLayerStyleStrokeGradientStyleWithAdvertisedEnum() throws {

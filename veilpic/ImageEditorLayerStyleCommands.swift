@@ -953,11 +953,15 @@ extension ImageEditorViewModel {
         }
     }
 
-    func setSelectedLayerStrokeFillType(_ fillType: ImageEditorStrokeFillType) {
+    @discardableResult
+    func setSelectedLayerStrokeFillType(_ fillType: ImageEditorStrokeFillType) -> Int {
         updateSelectedLayerStyle {
+            let fillTypeChanged = $0.strokeFillType != fillType
             $0.strokeEnabled = true
             $0.strokeFillType = fillType
-            updateStrokeFillDefaults(style: &$0)
+            if fillTypeChanged {
+                updateStrokeFillDefaults(style: &$0)
+            }
         }
     }
 

@@ -582,13 +582,21 @@ struct ImageEditorLayerRowBatchPropertyTests {
         let historyCount = viewModel.document.history.count
 
         #expect(viewModel.selectedLayerStrokeFillTypeState == .mixed)
-        viewModel.setSelectedLayerStrokeFillType(.pattern)
+        let updatedLayerCount = viewModel.setSelectedLayerStrokeFillType(.pattern)
+        #expect(updatedLayerCount == 1)
         #expect(viewModel.selectedLayerStrokeFillTypeState == .value(.pattern))
         #expect((try layer(firstID, in: viewModel)).style.strokeFillType == .pattern)
         #expect((try layer(secondID, in: viewModel)).style.strokeFillType == .pattern)
         #expect((try layer(lockedID, in: viewModel)).style.strokeFillType == .color)
+        #expect((try layer(firstID, in: viewModel)).style.strokeEnabled)
+        #expect((try layer(secondID, in: viewModel)).style.strokePatternColor.isEqual(NSColor.systemGreen))
         #expect(viewModel.document.history.count == historyCount + 1)
         #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+
+        let historyAfterUpdate = viewModel.document.history.count
+        #expect(viewModel.setSelectedLayerStrokeFillType(.pattern) == 0)
+        #expect((try layer(secondID, in: viewModel)).style.strokePatternColor.isEqual(NSColor.systemGreen))
+        #expect(viewModel.document.history.count == historyAfterUpdate)
 
         viewModel.undo()
         #expect(viewModel.selectedLayerStrokeFillTypeState == .mixed)
@@ -600,7 +608,10 @@ struct ImageEditorLayerRowBatchPropertyTests {
         let fixture = makeFixture()
         let viewModel = fixture.viewModel
         viewModel.document.layers[0].style.strokeFillType = .color
-        viewModel.document.layers[1].style.strokeFillType = .gradient
+        viewModel.document.layers[0].style.strokeEnabled = false
+        viewModel.document.layers[1].style.strokeFillType = .pattern
+        viewModel.document.layers[1].style.strokeEnabled = true
+        viewModel.document.layers[1].style.strokePatternColor = .systemGreen
         viewModel.document.layers[2].style.strokeFillType = .color
         viewModel.document.layers[2].isLocked = true
         select(Set(fixture.layers.map(\.id)), primary: fixture.layers[0].id, in: viewModel)
