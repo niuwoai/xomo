@@ -441,15 +441,26 @@ struct ImageEditorLayerRowBatchPropertyTests {
         let historyCount = viewModel.document.history.count
 
         #expect(viewModel.selectedLayerStrokeGradientAngleState == .mixed)
-        viewModel.setSelectedLayerStrokeGradientAngle(120)
+        let updatedLayerCount = viewModel.setSelectedLayerStrokeGradientAngle(480)
+        #expect(updatedLayerCount == 1)
         #expect(viewModel.selectedLayerStrokeGradientAngleState == .value(120))
         #expect((try layer(firstID, in: viewModel)).style.strokeGradientAngle == 120)
         #expect((try layer(secondID, in: viewModel)).style.strokeGradientAngle == 120)
         #expect((try layer(lockedID, in: viewModel)).style.strokeGradientAngle == 30)
         #expect((try layer(firstID, in: viewModel)).style.strokeEnabled)
         #expect((try layer(secondID, in: viewModel)).style.strokeFillType == .gradient)
+        #expect((try layer(firstID, in: viewModel)).style.strokeGradientStartColor.isEqual(NSColor.systemRed))
+        #expect((try layer(firstID, in: viewModel)).style.strokeGradientEndColor.isEqual(NSColor.systemBlue))
+        #expect((try layer(secondID, in: viewModel)).style.strokeGradientStartColor.isEqual(NSColor.systemGreen))
+        #expect((try layer(secondID, in: viewModel)).style.strokeGradientEndColor.isEqual(NSColor.systemOrange))
         #expect(viewModel.document.history.count == historyCount + 1)
         #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+
+        let historyAfterUpdate = viewModel.document.history.count
+        #expect(viewModel.setSelectedLayerStrokeGradientAngle(120) == 0)
+        #expect((try layer(secondID, in: viewModel)).style.strokeGradientStartColor.isEqual(NSColor.systemGreen))
+        #expect((try layer(secondID, in: viewModel)).style.strokeGradientEndColor.isEqual(NSColor.systemOrange))
+        #expect(viewModel.document.history.count == historyAfterUpdate)
 
         viewModel.undo()
         #expect(viewModel.selectedLayerStrokeGradientAngleState == .mixed)
@@ -476,9 +487,15 @@ struct ImageEditorLayerRowBatchPropertyTests {
         let fixture = makeFixture()
         let viewModel = fixture.viewModel
         viewModel.document.layers[0].style.strokeFillType = .gradient
+        viewModel.document.layers[0].style.strokeEnabled = true
         viewModel.document.layers[0].style.strokeGradientAngle = -45
+        viewModel.document.layers[0].style.strokeGradientStartColor = .systemRed
+        viewModel.document.layers[0].style.strokeGradientEndColor = .systemBlue
         viewModel.document.layers[1].style.strokeFillType = .gradient
-        viewModel.document.layers[1].style.strokeGradientAngle = 90
+        viewModel.document.layers[1].style.strokeEnabled = true
+        viewModel.document.layers[1].style.strokeGradientAngle = 120
+        viewModel.document.layers[1].style.strokeGradientStartColor = .systemGreen
+        viewModel.document.layers[1].style.strokeGradientEndColor = .systemOrange
         viewModel.document.layers[2].style.strokeFillType = .gradient
         viewModel.document.layers[2].style.strokeGradientAngle = 30
         viewModel.document.layers[2].isLocked = true

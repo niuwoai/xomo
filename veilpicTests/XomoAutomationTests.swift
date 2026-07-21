@@ -3973,8 +3973,14 @@ struct XomoAutomationTests {
         var first = ImageEditorLayer.blank(name: "First", size: canvasSize)
         var second = ImageEditorLayer.blank(name: "Second", size: canvasSize)
         var locked = ImageEditorLayer.blank(name: "Locked", size: canvasSize)
-        first.style.strokeGradientAngle = -45
-        second.style.strokeGradientAngle = 90
+        first.style.strokeFillType = .color
+        first.style.strokeGradientAngle = 120
+        second.style.strokeEnabled = true
+        second.style.strokeFillType = .gradient
+        second.style.strokeGradientAngle = 120
+        second.style.strokeGradientStartColor = .systemGreen
+        second.style.strokeGradientEndColor = .systemOrange
+        locked.style.strokeFillType = .gradient
         locked.style.strokeGradientAngle = 30
         locked.isLocked = true
         viewModel.document.layers = [first, second, locked]
@@ -3992,18 +3998,38 @@ struct XomoAutomationTests {
             name: "xomo.layer.style_settings",
             arguments: [
                 "property": .string("strokeGradientAngle"),
-                "value": .number(120)
+                "value": .number(480)
             ]
         ))
 
         #expect(result.ok)
+        #expect(result.result?.objectValue?["updatedLayerCount"] == .number(1))
         #expect(viewModel.document.layers[0].style.strokeGradientAngle == 120)
         #expect(viewModel.document.layers[1].style.strokeGradientAngle == 120)
         #expect(viewModel.document.layers[2].style.strokeGradientAngle == 30)
         #expect(viewModel.document.layers[0].style.strokeEnabled)
+        #expect(viewModel.document.layers[0].style.strokeFillType == .gradient)
+        #expect(viewModel.document.layers[0].style.strokeGradientStartColor.isEqual(viewModel.foregroundColor))
+        #expect(viewModel.document.layers[0].style.strokeGradientEndColor.isEqual(viewModel.backgroundColor))
         #expect(viewModel.document.layers[1].style.strokeFillType == .gradient)
+        #expect(viewModel.document.layers[1].style.strokeGradientStartColor.isEqual(NSColor.systemGreen))
+        #expect(viewModel.document.layers[1].style.strokeGradientEndColor.isEqual(NSColor.systemOrange))
         #expect(viewModel.document.history.count == historyCount + 1)
         #expect(viewModel.document.selectedLayerIDs == [first.id, second.id, locked.id])
+
+        let historyAfterUpdate = viewModel.document.history.count
+        let repeated = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("strokeGradientAngle"),
+                "value": .number(120)
+            ]
+        ))
+        #expect(!repeated.ok)
+        #expect(viewModel.document.layers[1].style.strokeGradientStartColor.isEqual(NSColor.systemGreen))
+        #expect(viewModel.document.layers[1].style.strokeGradientEndColor.isEqual(NSColor.systemOrange))
+        #expect(viewModel.document.history.count == historyAfterUpdate)
     }
 
     @Test func registrySetsLayerStyleStrokeFillTypeWithAdvertisedEnum() throws {

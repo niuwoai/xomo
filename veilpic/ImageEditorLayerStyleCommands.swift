@@ -995,12 +995,16 @@ extension ImageEditorViewModel {
         }
     }
 
-    func setSelectedLayerStrokeGradientAngle(_ angle: Double) {
+    @discardableResult
+    func setSelectedLayerStrokeGradientAngle(_ angle: Double) -> Int {
         updateSelectedLayerStyle {
+            let fillTypeChanged = $0.strokeFillType != .gradient
             $0.strokeEnabled = true
             $0.strokeFillType = .gradient
-            $0.strokeGradientStartColor = foregroundColor
-            $0.strokeGradientEndColor = strokeGradientEndColor()
+            if fillTypeChanged {
+                $0.strokeGradientStartColor = foregroundColor
+                $0.strokeGradientEndColor = strokeGradientEndColor()
+            }
             $0.strokeGradientAngle = CGFloat(angle).truncatingRemainder(dividingBy: 360)
         }
     }
