@@ -517,25 +517,34 @@ struct ImageEditorLayerRowBatchPropertyTests {
         let historyCount = viewModel.document.history.count
 
         #expect(viewModel.selectedLayerStrokePositionState == .mixed)
-        viewModel.setSelectedLayerStrokePosition(.center)
-        #expect(viewModel.selectedLayerStrokePositionState == .value(.center))
-        #expect((try layer(firstID, in: viewModel)).style.strokePosition == .center)
-        #expect((try layer(secondID, in: viewModel)).style.strokePosition == .center)
+        let updatedLayerCount = viewModel.setSelectedLayerStrokePosition(.inside)
+        #expect(updatedLayerCount == 1)
+        #expect(viewModel.selectedLayerStrokePositionState == .value(.inside))
+        #expect((try layer(firstID, in: viewModel)).style.strokePosition == .inside)
+        #expect((try layer(secondID, in: viewModel)).style.strokePosition == .inside)
         #expect((try layer(lockedID, in: viewModel)).style.strokePosition == .outside)
+        #expect((try layer(firstID, in: viewModel)).style.strokeEnabled)
+        #expect((try layer(secondID, in: viewModel)).style.strokeEnabled)
         #expect(viewModel.document.history.count == historyCount + 1)
         #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+
+        let historyAfterUpdate = viewModel.document.history.count
+        #expect(viewModel.setSelectedLayerStrokePosition(.inside) == 0)
+        #expect(viewModel.document.history.count == historyAfterUpdate)
 
         viewModel.undo()
         #expect(viewModel.selectedLayerStrokePositionState == .mixed)
         viewModel.redo()
-        #expect(viewModel.selectedLayerStrokePositionState == .value(.center))
+        #expect(viewModel.selectedLayerStrokePositionState == .value(.inside))
     }
 
     private func strokePositionFixture() -> Fixture {
         let fixture = makeFixture()
         let viewModel = fixture.viewModel
         viewModel.document.layers[0].style.strokePosition = .outside
+        viewModel.document.layers[0].style.strokeEnabled = false
         viewModel.document.layers[1].style.strokePosition = .inside
+        viewModel.document.layers[1].style.strokeEnabled = true
         viewModel.document.layers[2].style.strokePosition = .outside
         viewModel.document.layers[2].isLocked = true
         select(Set(fixture.layers.map(\.id)), primary: fixture.layers[0].id, in: viewModel)

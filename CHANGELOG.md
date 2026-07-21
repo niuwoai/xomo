@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.12.0-rc448 - 2026-07-22
+
+### Changed
+- 描边位置批量更新返回实际修改图层数；MCP `xomo.layer.style_settings(property=strokePosition)` 返回 `updatedLayerCount`。
+
+### Fixed
+- 重复选择当前描边位置不再制造空 Undo/History，MCP 对零变化明确失败。
+- 已处于目标位置且描边已启用的图层、锁定层和不适用层不计入结果；需要自动启用描边的图层仍视为真实更新。
+
+### Verification
+- 描边位置实际数量、重复值、自动启用、锁定层、混合值控件及描边宽度/透明度公共更新器回归测试 5/5、SwiftPM CLI 2/2、发布版本契约 7/7 通过。
+
 ## 2.12.0-rc447 - 2026-07-22
 
 ### Changed

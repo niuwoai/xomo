@@ -3783,6 +3783,19 @@ struct XomoAutomationTests {
 
     @Test func registrySetsLayerStyleStrokePositionWithAdvertisedEnum() throws {
         let viewModel = makeViewModel()
+        let canvasSize = viewModel.document.canvasSize
+        var first = ImageEditorLayer.blank(name: "First", size: canvasSize)
+        var second = ImageEditorLayer.blank(name: "Second", size: canvasSize)
+        var locked = ImageEditorLayer.blank(name: "Locked", size: canvasSize)
+        first.style.strokePosition = .outside
+        second.style.strokeEnabled = true
+        second.style.strokePosition = .inside
+        locked.style.strokePosition = .outside
+        locked.isLocked = true
+        viewModel.document.layers = [first, second, locked]
+        viewModel.document.selectedLayerID = first.id
+        viewModel.document.selectedLayerIDs = [first.id, second.id, locked.id]
+        let historyCount = viewModel.document.history.count
         let registry = XomoAutomationRegistry.shared
         registry.register(viewModel)
 
@@ -3799,9 +3812,26 @@ struct XomoAutomationTests {
         ))
 
         #expect(result.ok)
-        #expect(viewModel.document.selectedLayer?.style.strokePosition == .inside)
-        #expect(viewModel.document.selectedLayer?.style.strokeEnabled == true)
-        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStyle"))
+        #expect(result.result?.objectValue?["updatedLayerCount"] == .number(1))
+        #expect(viewModel.document.layers[0].style.strokePosition == .inside)
+        #expect(viewModel.document.layers[1].style.strokePosition == .inside)
+        #expect(viewModel.document.layers[2].style.strokePosition == .outside)
+        #expect(viewModel.document.layers[0].style.strokeEnabled)
+        #expect(viewModel.document.layers[1].style.strokeEnabled)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [first.id, second.id, locked.id])
+
+        let historyAfterUpdate = viewModel.document.history.count
+        let repeated = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("strokePosition"),
+                "position": .string("inside")
+            ]
+        ))
+        #expect(!repeated.ok)
+        #expect(viewModel.document.history.count == historyAfterUpdate)
     }
 
     @Test func registrySetsLayerStyleStrokeWidthAcrossEditableSelection() throws {

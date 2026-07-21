@@ -937,7 +937,8 @@ extension ImageEditorViewModel {
         }
     }
 
-    func setSelectedLayerStrokePosition(_ position: ImageEditorStrokePosition) {
+    @discardableResult
+    func setSelectedLayerStrokePosition(_ position: ImageEditorStrokePosition) -> Int {
         updateSelectedLayerStyle {
             $0.strokeEnabled = true
             $0.strokePosition = position
