@@ -521,12 +521,16 @@ struct ImageEditorFilterTests {
         #expect(viewModel.loadSmartFilterIntoControls(primaryTarget.id))
         #expect(viewModel.smartFilterOpacityState(primaryTarget.id) == .mixed)
         let historyCount = viewModel.document.history.count
-        viewModel.setSmartFilterOpacityOnSelectedLayer(primaryTarget.id, opacity: 0.4)
+        let updatedLayerCount = viewModel.setSmartFilterOpacityOnSelectedLayer(
+            primaryTarget.id,
+            opacity: 0.4
+        )
 
         #expect(viewModel.document.layers.first { $0.id == primaryID }?.smartFilters.map(\.opacity) == [0.6, 0.4])
         #expect(viewModel.document.layers.first { $0.id == secondary.id }?.smartFilters.map(\.opacity) == [0.5, 0.4])
         #expect(viewModel.document.layers.first { $0.id == locked.id }?.smartFilters.map(\.opacity) == [0.4, 0.9])
         #expect(viewModel.document.layers.first { $0.id == missingPosition.id }?.smartFilters.map(\.opacity) == [0.1])
+        #expect(updatedLayerCount == 2)
         #expect(viewModel.smartFilterOpacityState(primaryTarget.id) == .value(0.4))
         #expect(viewModel.loadedSmartFilterID == primaryTarget.id)
         #expect(viewModel.document.selectedLayerIDs == [primaryID, secondary.id, locked.id, missingPosition.id])
@@ -534,14 +538,19 @@ struct ImageEditorFilterTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterOpacitySelected"))
         #expect(viewModel.statusText == L10n.format("imageEditor.status.layerSmartFilterOpacitySelected", 40, 2))
 
-        viewModel.setSmartFilterOpacityOnSelectedLayer(primaryTarget.id, opacity: 0.4)
+        let noOpLayerCount = viewModel.setSmartFilterOpacityOnSelectedLayer(primaryTarget.id, opacity: 0.4)
+        #expect(noOpLayerCount == 0)
         #expect(viewModel.document.history.count == historyCount + 1)
 
         viewModel.undo()
         #expect(viewModel.smartFilterOpacityState(primaryTarget.id) == .mixed)
-        viewModel.setSmartFilterOpacityOnSelectedLayer(primaryTarget.id, opacity: 0.25)
+        let convergedLayerCount = viewModel.setSmartFilterOpacityOnSelectedLayer(
+            primaryTarget.id,
+            opacity: 0.25
+        )
         #expect(viewModel.document.layers.first { $0.id == primaryID }?.smartFilters[1].opacity == 0.25)
         #expect(viewModel.document.layers.first { $0.id == secondary.id }?.smartFilters[1].opacity == 0.25)
+        #expect(convergedLayerCount == 1)
         #expect(viewModel.statusText == L10n.format("imageEditor.status.layerSmartFilterOpacitySelected", 25, 1))
         #expect(viewModel.smartFilterOpacityState(primaryTarget.id) == .value(0.25))
     }

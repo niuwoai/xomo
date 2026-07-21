@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.12.0-rc437 - 2026-07-21
+
+### Changed
+- 智能滤镜不透明度更新现在返回实际修改图层数；以目标 UUID 的栈位置为锚点，只写入同位置、可编辑且值真正变化的所选图层。
+- 锁定主图层仍可提供目标栈位置但不会被写入；缺项、锁定及已经处于目标值的图层安全跳过，零实际目标不制造 Undo/History。
+- MCP `xomo.smart_filter.manage(setOpacity)` 返回 `updatedLayerCount`，重复设置同值或无可编辑目标时明确失败；CLI 工具目录同步返回语义。
+
+### Verification
+- 待完成 App 定向测试、SwiftPM CLI 测试与发布版本契约；下一次完整 Release、冒烟与 `/Applications` 覆盖门禁仍为 rc440。
+
 ## 2.12.0-rc436 - 2026-07-21
 
 ### Changed

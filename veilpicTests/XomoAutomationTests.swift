@@ -265,6 +265,7 @@ struct XomoAutomationTests {
             ]
         ))
         #expect(updateResponse.ok)
+        #expect(updateResponse.result?.objectValue?["updatedLayerCount"] == .number(1))
         #expect(viewModel.smartFilterOpacity(filterID) == 0.25)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterOpacity"))
 
@@ -471,6 +472,33 @@ struct XomoAutomationTests {
         ))
         #expect(!noOpToggleResponse.ok)
         #expect(viewModel.document.history.count == historyCountBeforeNoOpToggle)
+
+        let opacityResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.smart_filter.manage",
+            arguments: [
+                "id": .string(primaryFilterID.uuidString),
+                "action": .string("setOpacity"),
+                "opacity": .number(0.45)
+            ]
+        ))
+        #expect(opacityResponse.ok)
+        #expect(opacityResponse.result?.objectValue?["updatedLayerCount"] == .number(1))
+        #expect(viewModel.document.layers.first { $0.id == primaryID }?.smartFilters.first?.normalizedOpacity == 1)
+        #expect(viewModel.document.layers.first { $0.id == peerID }?.smartFilters.first?.normalizedOpacity == 0.45)
+
+        let historyCountBeforeNoOpOpacity = viewModel.document.history.count
+        let noOpOpacityResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.smart_filter.manage",
+            arguments: [
+                "id": .string(primaryFilterID.uuidString),
+                "action": .string("setOpacity"),
+                "opacity": .number(0.45)
+            ]
+        ))
+        #expect(!noOpOpacityResponse.ok)
+        #expect(viewModel.document.history.count == historyCountBeforeNoOpOpacity)
 
         let configuredAddResponse = registry.execute(request(
             operation: "call",

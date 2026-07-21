@@ -5904,32 +5904,34 @@ final class ImageEditorViewModel: ObservableObject {
             && document.selectedLayer?.smartFilters.contains(where: { $0.id == filterID }) == true
     }
 
-    func setSmartFilterOpacityOnSelectedLayer(_ filterID: UUID, opacity: Double) {
-        guard let (layerIndex, filterIndex) = selectedSmartFilterIndex(filterID),
-              canEditSmartFilters(on: document.layers[layerIndex])
-        else {
+    @discardableResult
+    func setSmartFilterOpacityOnSelectedLayer(_ filterID: UUID, opacity: Double) -> Int {
+        guard let (_, filterIndex) = selectedSmartFilterIndex(filterID) else {
             statusText = L10n.text("imageEditor.status.operationFailed")
-            return
+            return 0
         }
         let normalizedOpacity = max(0, min(1, opacity))
         let matchingTargetIndices = selectedSmartFilterTargetIndices(at: filterIndex)
-        guard matchingTargetIndices.contains(layerIndex) else {
+        guard !matchingTargetIndices.isEmpty else {
             statusText = L10n.text("imageEditor.status.operationFailed")
-            return
+            return 0
         }
         let targetIndices = matchingTargetIndices.filter { targetIndex in
             abs(
                 document.layers[targetIndex].smartFilters[filterIndex].normalizedOpacity - normalizedOpacity
             ) > 0.000_001
         }
-        guard !targetIndices.isEmpty else { return }
+        guard !targetIndices.isEmpty else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return 0
+        }
         pushUndo()
         for targetIndex in targetIndices {
             document.layers[targetIndex].smartFilters[filterIndex].opacity = normalizedOpacity
         }
         guard matchingTargetIndices.count > 1 else {
             appendHistory(L10n.text("imageEditor.history.layerSmartFilterOpacity"))
-            return
+            return targetIndices.count
         }
         appendHistory(L10n.text("imageEditor.history.layerSmartFilterOpacitySelected"))
         statusText = L10n.format(
@@ -5937,6 +5939,7 @@ final class ImageEditorViewModel: ObservableObject {
             Int((normalizedOpacity * 100).rounded()),
             targetIndices.count
         )
+        return targetIndices.count
     }
 
     func setSmartFilterBlendModeOnSelectedLayer(
