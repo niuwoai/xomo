@@ -4118,6 +4118,7 @@ final class ImageEditorViewModel: ObservableObject {
         for index in indices {
             document.layers[index].fillOpacity = normalizedOpacity
         }
+        invalidateRenderedImageCaches()
         updateStatus()
     }
 

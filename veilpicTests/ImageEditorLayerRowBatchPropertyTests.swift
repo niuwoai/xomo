@@ -1739,20 +1739,24 @@ struct ImageEditorLayerRowBatchPropertyTests {
         let historyCount = viewModel.document.history.count
 
         #expect(viewModel.selectedLayerShadowOpacityState == .mixed)
-        viewModel.setSelectedLayerShadowOpacity(0.6)
-        #expect(viewModel.selectedLayerShadowOpacityState == .value(0.6))
-        #expect((try layer(firstID, in: viewModel)).style.shadowOpacity == 0.6)
-        #expect((try layer(secondID, in: viewModel)).style.shadowOpacity == 0.6)
+        #expect(viewModel.setSelectedLayerShadowOpacity(0.75) == 1)
+        #expect(viewModel.selectedLayerShadowOpacityState == .value(0.75))
+        #expect((try layer(firstID, in: viewModel)).style.shadowOpacity == 0.75)
+        #expect((try layer(secondID, in: viewModel)).style.shadowOpacity == 0.75)
         #expect((try layer(lockedID, in: viewModel)).style.shadowOpacity == 0.4)
         #expect((try layer(firstID, in: viewModel)).style.shadowEnabled)
         #expect((try layer(secondID, in: viewModel)).style.shadowEnabled)
         #expect(viewModel.document.history.count == historyCount + 1)
         #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
 
+        let historyAfterUpdate = viewModel.document.history.count
+        #expect(viewModel.setSelectedLayerShadowOpacity(0.75) == 0)
+        #expect(viewModel.document.history.count == historyAfterUpdate)
+
         viewModel.undo()
         #expect(viewModel.selectedLayerShadowOpacityState == .mixed)
         viewModel.redo()
-        #expect(viewModel.selectedLayerShadowOpacityState == .value(0.6))
+        #expect(viewModel.selectedLayerShadowOpacityState == .value(0.75))
     }
 
     @Test func layerStyleShadowOpacityControlReusesMixedNumericStepper() throws {
@@ -1775,6 +1779,7 @@ struct ImageEditorLayerRowBatchPropertyTests {
         let viewModel = fixture.viewModel
         viewModel.document.layers[0].style.shadowOpacity = 0.25
         viewModel.document.layers[1].style.shadowOpacity = 0.75
+        viewModel.document.layers[1].style.shadowEnabled = true
         viewModel.document.layers[2].style.shadowOpacity = 0.4
         viewModel.document.layers[2].isLocked = true
         select(Set(fixture.layers.map(\.id)), primary: fixture.layers[0].id, in: viewModel)

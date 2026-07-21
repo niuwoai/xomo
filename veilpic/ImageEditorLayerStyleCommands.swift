@@ -1041,7 +1041,8 @@ extension ImageEditorViewModel {
         }
     }
 
-    func setSelectedLayerShadowOpacity(_ opacity: Double) {
+    @discardableResult
+    func setSelectedLayerShadowOpacity(_ opacity: Double) -> Int {
         updateSelectedLayerStyle {
             $0.shadowEnabled = true
             $0.shadowOpacity = max(0.05, min(1, CGFloat(opacity)))

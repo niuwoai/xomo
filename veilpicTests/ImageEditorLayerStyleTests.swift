@@ -406,7 +406,8 @@ struct ImageEditorLayerStyleTests {
 
     @Test func imageEditorDropShadowRemainsVisibleWhenFillOpacityIsZero() async throws {
         let canvasSize = NSSize(width: 80, height: 60)
-        let baseImage = solidImage(color: .systemBlue, size: canvasSize)
+        let baseColor = NSColor(srgbRed: 0.04, green: 0.1, blue: 0.92, alpha: 1)
+        let baseImage = solidImage(color: baseColor, size: canvasSize)
         let layerImage = centerRectImage(size: canvasSize, color: .systemGreen)
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: baseImage) { _ in }
         viewModel.replaceSelectedLayerImageForTesting(layerImage, historyTitle: L10n.text("imageEditor.history.brush"))
@@ -418,6 +419,7 @@ struct ImageEditorLayerStyleTests {
         viewModel.setSelectedLayerShadowDistance(12)
         viewModel.setSelectedLayerShadowAngle(0)
         viewModel.setSelectedLayerFillOpacity(0)
+        viewModel.commitSelectedLayerFillOpacityChange()
 
         let styledLayer = try #require(viewModel.document.selectedLayer)
         let layerPixelsAfterStyle = try #require(styledLayer.image.qingtuPNGData())
