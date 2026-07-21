@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.12.0-rc457 - 2026-07-22
+
+### Changed
+- 投影模糊半径 setter 返回实际修改图层数；MCP `xomo.layer.style_settings(property=shadowBlur)` 返回 `updatedLayerCount`。
+- 投影模糊继续使用多选“多个值”控件，并将输入夹取到 0–30 px。
+
+### Fixed
+- 已处于目标模糊半径且投影已启用的图层、锁定层和不适用层不再计入结果；需要自动启用投影的图层仍视为真实更新。
+- 重复或夹取后等价的投影模糊值不再制造空 Undo/History，MCP 对零变化明确失败。
+
+### Verification
+- 投影模糊真实数量、0–30 px 夹取、重复值、锁定层、混合值控件、投影扩展/模糊渲染及投影颜色回归测试 5/5、SwiftPM CLI 2/2、发布版本契约 7/7 通过。
+
 ## 2.12.0-rc456 - 2026-07-22
 
 ### Changed

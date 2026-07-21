@@ -1688,20 +1688,24 @@ struct ImageEditorLayerRowBatchPropertyTests {
         let historyCount = viewModel.document.history.count
 
         #expect(viewModel.selectedLayerShadowBlurState == .mixed)
-        viewModel.setSelectedLayerShadowBlur(12)
-        #expect(viewModel.selectedLayerShadowBlurState == .value(12))
-        #expect((try layer(firstID, in: viewModel)).style.shadowBlur == 12)
-        #expect((try layer(secondID, in: viewModel)).style.shadowBlur == 12)
+        #expect(viewModel.setSelectedLayerShadowBlur(18) == 1)
+        #expect(viewModel.selectedLayerShadowBlurState == .value(18))
+        #expect((try layer(firstID, in: viewModel)).style.shadowBlur == 18)
+        #expect((try layer(secondID, in: viewModel)).style.shadowBlur == 18)
         #expect((try layer(lockedID, in: viewModel)).style.shadowBlur == 9)
         #expect((try layer(firstID, in: viewModel)).style.shadowEnabled)
         #expect((try layer(secondID, in: viewModel)).style.shadowEnabled)
         #expect(viewModel.document.history.count == historyCount + 1)
         #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
 
+        let historyAfterUpdate = viewModel.document.history.count
+        #expect(viewModel.setSelectedLayerShadowBlur(18) == 0)
+        #expect(viewModel.document.history.count == historyAfterUpdate)
+
         viewModel.undo()
         #expect(viewModel.selectedLayerShadowBlurState == .mixed)
         viewModel.redo()
-        #expect(viewModel.selectedLayerShadowBlurState == .value(12))
+        #expect(viewModel.selectedLayerShadowBlurState == .value(18))
     }
 
     @Test func layerStyleShadowBlurControlReusesMixedNumericStepper() throws {
@@ -1724,6 +1728,7 @@ struct ImageEditorLayerRowBatchPropertyTests {
         let viewModel = fixture.viewModel
         viewModel.document.layers[0].style.shadowBlur = 4
         viewModel.document.layers[1].style.shadowBlur = 18
+        viewModel.document.layers[1].style.shadowEnabled = true
         viewModel.document.layers[2].style.shadowBlur = 9
         viewModel.document.layers[2].isLocked = true
         select(Set(fixture.layers.map(\.id)), primary: fixture.layers[0].id, in: viewModel)

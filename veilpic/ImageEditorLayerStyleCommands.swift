@@ -1087,7 +1087,8 @@ extension ImageEditorViewModel {
         }
     }
 
-    func setSelectedLayerShadowBlur(_ blur: Double) {
+    @discardableResult
+    func setSelectedLayerShadowBlur(_ blur: Double) -> Int {
         updateSelectedLayerStyle {
             $0.shadowEnabled = true
             $0.shadowBlur = max(0, min(30, CGFloat(blur)))
