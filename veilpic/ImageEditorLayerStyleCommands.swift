@@ -1095,7 +1095,8 @@ extension ImageEditorViewModel {
         }
     }
 
-    func setSelectedLayerShadowSpread(_ spread: Double) {
+    @discardableResult
+    func setSelectedLayerShadowSpread(_ spread: Double) -> Int {
         updateSelectedLayerStyle {
             $0.shadowEnabled = true
             $0.shadowSpread = max(0, min(24, CGFloat(spread)))

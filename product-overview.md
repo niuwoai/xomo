@@ -1,7 +1,8 @@
 # 像界（Xomo）产品概览
 
-> 最后更新：2026-07-22 | 当前版本：v2.12.0-rc457
+> 最后更新：2026-07-22 | 当前版本：v2.12.0-rc458
 
+v2.12.0-rc458 让投影扩展批量更新具备真实结果：已经处于目标扩展且投影已启用、锁定层和不适用层安全跳过，需要自动启用投影的图层仍计入；输入继续夹取到 0–24 px，多选“多个值”控件保持不变。重复或夹取后等价的设置不制造空 Undo/History，MCP `xomo.layer.style_settings(property=shadowSpread)` 返回 `updatedLayerCount` 并对零变化明确失败。定向与回归测试 5/5、CLI 2/2、发布契约 7/7 通过；下一次完整 Release、冒烟和 `/Applications` 覆盖门禁仍为 rc480。
 v2.12.0-rc457 让投影模糊半径批量更新具备真实结果：已经处于目标半径且投影已启用、锁定层和不适用层安全跳过，需要自动启用投影的图层仍计入；输入继续夹取到 0–30 px，多选“多个值”控件保持不变。重复或夹取后等价的设置不制造空 Undo/History，MCP `xomo.layer.style_settings(property=shadowBlur)` 返回 `updatedLayerCount` 并对零变化明确失败。定向与回归测试 5/5、CLI 2/2、发布契约 7/7 通过；下一次完整 Release、冒烟和 `/Applications` 覆盖门禁仍为 rc480。
 v2.12.0-rc456 让投影颜色成为可核验的多选能力：不同颜色的可编辑图层同时选中时，颜色控件旁显示本地化“多个值”并提供辅助功能值；批量应用当前前景色只统计真正变化的目标。已经使用目标颜色且投影已启用、锁定层和不适用层安全跳过，需要自动启用投影的图层仍计入。重复设置不制造空 Undo/History，MCP `xomo.layer.style_settings(property=shadowColor)` 返回 `updatedLayerCount` 并对零变化明确失败。定向与回归测试 5/5、CLI 2/2、发布契约 7/7 通过；下一次完整 Release、冒烟和 `/Applications` 覆盖门禁仍为 rc480。
 v2.12.0-rc455 让投影透明度批量更新具备真实结果：已经处于目标透明度且投影已启用、锁定层和不适用层安全跳过，需要自动启用投影的图层仍计入；输入继续夹取到 5%–100%，多选“多个值”控件保持不变。重复设置不制造空 Undo/History，MCP `xomo.layer.style_settings(property=shadowOpacity)` 返回 `updatedLayerCount` 并对零变化明确失败。本版同时修复图层填充透明度修改后未清除合成图缓存的问题，0% 填充会立即从画布消失而投影继续显示；像素回归使用确定性 sRGB 底色并按真实滑杆流程提交历史。定向与回归测试 5/5、CLI 2/2、发布契约 7/7 通过；下一次完整 Release、冒烟和 `/Applications` 覆盖门禁仍为 rc480。
