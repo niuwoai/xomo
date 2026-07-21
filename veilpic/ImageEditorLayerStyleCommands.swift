@@ -290,6 +290,10 @@ extension ImageEditorViewModel {
         Double(document.selectedLayer?.style.strokePatternScale ?? 14)
     }
 
+    var selectedLayerStrokePatternScaleState: ImageEditorLayerStyleValueState<CGFloat> {
+        selectedLayerStyleValueState(\.strokePatternScale)
+    }
+
     var selectedLayerShadowOpacity: Double {
         Double(document.selectedLayer?.style.shadowOpacity ?? 0.35)
     }
@@ -1022,11 +1026,15 @@ extension ImageEditorViewModel {
         }
     }
 
-    func setSelectedLayerStrokePatternScale(_ scale: Double) {
+    @discardableResult
+    func setSelectedLayerStrokePatternScale(_ scale: Double) -> Int {
         updateSelectedLayerStyle {
+            let fillTypeChanged = $0.strokeFillType != .pattern
             $0.strokeEnabled = true
             $0.strokeFillType = .pattern
-            $0.strokePatternColor = strokePatternColor()
+            if fillTypeChanged {
+                $0.strokePatternColor = strokePatternColor()
+            }
             $0.strokePatternScale = max(6, min(64, CGFloat(scale)))
         }
     }

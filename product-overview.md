@@ -1,7 +1,8 @@
 # 像界（Xomo）产品概览
 
-> 最后更新：2026-07-22 | 当前版本：v2.12.0-rc452
+> 最后更新：2026-07-22 | 当前版本：v2.12.0-rc453
 
+v2.12.0-rc453 补齐描边图案缩放的完整数据、界面和自动化链路：多选不同缩放时显示“多个值”，输入继续夹取到 6–64；已经处于目标缩放且图案描边已启用、锁定层和不适用层安全跳过，需要切入图案或自动启用描边的图层仍计入。调整缩放保留用户选好的图案颜色，只有从非图案首次进入时才用当前前景色初始化。重复设置不制造空 Undo/History，MCP `xomo.layer.style_settings(property=strokePatternScale)` 返回 `updatedLayerCount` 并对零变化明确失败。定向与回归测试 5/5、CLI 2/2、发布契约 7/7 通过；下一次完整 Release、冒烟和 `/Applications` 覆盖门禁仍为 rc480。
 v2.12.0-rc452 让描边图案种类批量更新具备真实结果：已经处于目标图案且图案描边已启用、锁定层和不适用层安全跳过，需要切入图案或自动启用描边的图层仍计入。只有从非图案描边首次进入时才用当前前景色初始化图案颜色；在棋盘、斜线和圆点之间切换会保留用户选好的颜色。重复设置不制造空 Undo/History，MCP `xomo.layer.style_settings(property=strokePatternKind)` 返回 `updatedLayerCount` 并对零变化明确失败。定向与回归测试 5/5、CLI 2/2、发布契约 7/7 通过；下一次完整 Release、冒烟和 `/Applications` 覆盖门禁仍为 rc480。
 v2.12.0-rc451 让描边渐变角度批量更新具备真实结果：输入先按 360° 取余，因此 480° 与 120° 等价；已经处于等价目标角度且渐变描边已启用、锁定层和不适用层安全跳过，需要切入渐变或自动启用描边的图层仍计入。调整角度会保留用户调好的渐变起止色，只有从非渐变首次进入时才用当前前景色／背景色初始化。重复设置不制造空 Undo/History，MCP `xomo.layer.style_settings(property=strokeGradientAngle)` 返回 `updatedLayerCount` 并对零变化明确失败。定向与回归测试 5/5、CLI 2/2、发布契约 7/7 通过；下一次完整 Release、冒烟和 `/Applications` 覆盖门禁仍为 rc480。
 v2.12.0-rc450 让描边渐变样式批量更新具备真实结果：已经处于目标样式且渐变描边已启用、锁定层和不适用层安全跳过，需要切入渐变或自动启用描边的图层仍计入。只有从非渐变描边首次进入渐变时才用当前前景色／背景色初始化端色；在线性、径向、角度、对称和菱形之间切换会保留用户调好的渐变起止色。重复设置不制造空 Undo/History，MCP `xomo.layer.style_settings(property=strokeGradientStyle)` 返回 `updatedLayerCount` 并对零变化明确失败。定向与回归测试 5/5、CLI 2/2、发布契约 7/7 通过；下一次完整 Release、冒烟和 `/Applications` 覆盖门禁仍为 rc480。

@@ -4207,6 +4207,79 @@ struct XomoAutomationTests {
         #expect(viewModel.document.history.count == historyAfterUpdate)
     }
 
+    @Test func registrySetsLayerStyleStrokePatternScaleAcrossEditableSelection() throws {
+        let viewModel = makeViewModel()
+        let canvasSize = viewModel.document.canvasSize
+        var first = ImageEditorLayer.blank(name: "First", size: canvasSize)
+        var second = ImageEditorLayer.blank(name: "Second", size: canvasSize)
+        var locked = ImageEditorLayer.blank(name: "Locked", size: canvasSize)
+        first.style.strokeFillType = .color
+        first.style.strokePatternScale = 64
+        second.style.strokeEnabled = true
+        second.style.strokeFillType = .pattern
+        second.style.strokePatternScale = 64
+        second.style.strokePatternColor = .systemGreen
+        locked.style.strokeFillType = .pattern
+        locked.style.strokePatternScale = 30
+        locked.isLocked = true
+        viewModel.document.layers = [first, second, locked]
+        viewModel.document.selectedLayerID = first.id
+        viewModel.document.selectedLayerIDs = [first.id, second.id, locked.id]
+        let historyCount = viewModel.document.history.count
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        try assertNumericLayerStylePropertySchema("strokePatternScale", in: toolsResponse)
+
+        let maximum = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("strokePatternScale"),
+                "value": .number(80)
+            ]
+        ))
+
+        #expect(maximum.ok)
+        #expect(maximum.result?.objectValue?["updatedLayerCount"] == .number(1))
+        #expect(viewModel.document.layers[0].style.strokePatternScale == 64)
+        #expect(viewModel.document.layers[0].style.strokeFillType == .pattern)
+        #expect(viewModel.document.layers[0].style.strokeEnabled)
+        #expect(viewModel.document.layers[0].style.strokePatternColor.isEqual(viewModel.foregroundColor))
+        #expect(viewModel.document.layers[1].style.strokePatternScale == 64)
+        #expect(viewModel.document.layers[1].style.strokePatternColor.isEqual(NSColor.systemGreen))
+        #expect(viewModel.document.layers[2].style.strokePatternScale == 30)
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        let historyAfterMaximum = viewModel.document.history.count
+        let repeated = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("strokePatternScale"),
+                "value": .number(64)
+            ]
+        ))
+        #expect(!repeated.ok)
+        #expect(viewModel.document.history.count == historyAfterMaximum)
+
+        let minimum = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("strokePatternScale"),
+                "value": .number(0)
+            ]
+        ))
+        #expect(minimum.ok)
+        #expect(minimum.result?.objectValue?["updatedLayerCount"] == .number(2))
+        #expect(viewModel.document.layers[0].style.strokePatternScale == 6)
+        #expect(viewModel.document.layers[1].style.strokePatternScale == 6)
+        #expect(viewModel.document.layers[1].style.strokePatternColor.isEqual(NSColor.systemGreen))
+        #expect(viewModel.document.layers[2].style.strokePatternScale == 30)
+    }
+
     @Test func registrySetsMixedInnerGlowSourceWithAdvertisedEnum() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

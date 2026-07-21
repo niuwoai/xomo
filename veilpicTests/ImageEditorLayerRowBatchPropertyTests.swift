@@ -774,6 +774,62 @@ struct ImageEditorLayerRowBatchPropertyTests {
         return fixture
     }
 
+    @Test func layerStyleStrokePatternScaleMixedValueConvergesAcrossEditableSelection() throws {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        let firstID = fixture.layers[0].id
+        let secondID = fixture.layers[1].id
+        let lockedID = fixture.layers[2].id
+        viewModel.document.layers[0].style.strokeEnabled = true
+        viewModel.document.layers[0].style.strokeFillType = .pattern
+        viewModel.document.layers[0].style.strokePatternScale = 10
+        viewModel.document.layers[0].style.strokePatternColor = .systemRed
+        viewModel.document.layers[1].style.strokeEnabled = true
+        viewModel.document.layers[1].style.strokeFillType = .pattern
+        viewModel.document.layers[1].style.strokePatternScale = 24
+        viewModel.document.layers[1].style.strokePatternColor = .systemGreen
+        viewModel.document.layers[2].style.strokeFillType = .pattern
+        viewModel.document.layers[2].style.strokePatternScale = 16
+        viewModel.document.layers[2].isLocked = true
+        select(Set(fixture.layers.map(\.id)), primary: firstID, in: viewModel)
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.selectedLayerStrokePatternScaleState == .mixed)
+        #expect(viewModel.setSelectedLayerStrokePatternScale(24) == 1)
+        #expect(viewModel.selectedLayerStrokePatternScaleState == .value(24))
+        #expect((try layer(firstID, in: viewModel)).style.strokePatternScale == 24)
+        #expect((try layer(secondID, in: viewModel)).style.strokePatternScale == 24)
+        #expect((try layer(lockedID, in: viewModel)).style.strokePatternScale == 16)
+        #expect((try layer(firstID, in: viewModel)).style.strokePatternColor.isEqual(NSColor.systemRed))
+        #expect((try layer(secondID, in: viewModel)).style.strokePatternColor.isEqual(NSColor.systemGreen))
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+
+        let historyAfterUpdate = viewModel.document.history.count
+        #expect(viewModel.setSelectedLayerStrokePatternScale(24) == 0)
+        #expect(viewModel.document.history.count == historyAfterUpdate)
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerStrokePatternScaleState == .mixed)
+        viewModel.redo()
+        #expect(viewModel.selectedLayerStrokePatternScaleState == .value(24))
+    }
+
+    @Test func layerStyleStrokePatternScaleControlUsesMixedNumericStepper() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("state: viewModel.selectedLayerStrokePatternScaleState"))
+        #expect(source.contains("value: selectedLayerStrokePatternScaleBinding"))
+        #expect(source.contains("image-editor-layer-style-stroke-pattern-scale"))
+        #expect(source.contains("L10n.format(\"imageEditor.properties.strokePatternScaleValue\""))
+    }
+
     @Test func layerStyleMixedInnerGlowSourceConvergesAcrossEditableSelection() throws {
         try assertInnerGlowSourceConvergence()
     }

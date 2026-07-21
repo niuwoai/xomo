@@ -7025,12 +7025,15 @@ struct ImageEditorView: View {
                     ) { kind in
                         viewModel.setSelectedLayerStrokePatternKind(kind)
                     }
-                    Stepper(
-                        L10n.format("imageEditor.properties.strokePatternScaleValue", Int(viewModel.selectedLayerStrokePatternScale.rounded())),
+                    layerStyleNumericStepper(
+                        state: viewModel.selectedLayerStrokePatternScaleState,
                         value: selectedLayerStrokePatternScaleBinding,
-                        in: 6...64,
-                        step: 2
-                    )
+                        range: 6...64,
+                        step: 2,
+                        accessibilityIdentifier: "image-editor-layer-style-stroke-pattern-scale"
+                    ) { value in
+                        L10n.format("imageEditor.properties.strokePatternScaleValue", Int(value.rounded()))
+                    }
                 }
                 layerStyleNumericStepper(
                     state: viewModel.selectedLayerShadowOpacityState,
