@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.12.0-rc439 - 2026-07-21
+
+### Changed
+- 智能滤镜复制返回实际复制图层数；以目标 UUID 的栈位置为锚点，为每个同位置、可编辑的所选图层创建拥有独立 UUID 的完整副本。
+- 锁定主图层仍可提供目标栈位置但不会被复制；主层无副本时保留原有载入目标，缺项和锁定图层安全跳过，零实际目标不制造 Undo/History。
+- MCP `xomo.smart_filter.manage(duplicate)` 返回 `duplicatedLayerCount`，无可编辑目标时明确失败；CLI 工具目录同步返回语义。
+
+### Verification
+- App 定向测试 4/4、SwiftPM CLI 测试 2/2、发布版本契约 7/7 通过；结果保存在 `/tmp/veilpic-rc439-smart-filter-duplicate-counts.xcresult`。下一版 rc440 执行完整 Release、冒烟与 `/Applications` 覆盖门禁。
+
 ## 2.12.0-rc438 - 2026-07-21
 
 ### Changed

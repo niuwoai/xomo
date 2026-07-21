@@ -292,6 +292,7 @@ struct XomoAutomationTests {
             ]
         ))
         #expect(duplicateResponse.ok)
+        #expect(duplicateResponse.result?.objectValue?["duplicatedLayerCount"] == .number(1))
         let filters = try #require(viewModel.document.selectedLayer?.smartFilters)
         #expect(filters.count == 2)
         #expect(filters[0].id == filterID)
@@ -528,6 +529,20 @@ struct XomoAutomationTests {
         #expect(!noOpBlendModeResponse.ok)
         #expect(viewModel.document.history.count == historyCountBeforeNoOpBlendMode)
 
+        let duplicateResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.smart_filter.manage",
+            arguments: [
+                "id": .string(primaryFilterID.uuidString),
+                "action": .string("duplicate")
+            ]
+        ))
+        #expect(duplicateResponse.ok)
+        #expect(duplicateResponse.result?.objectValue?["duplicatedLayerCount"] == .number(1))
+        #expect(viewModel.document.layers.first { $0.id == primaryID }?.smartFilters.count == 1)
+        #expect(viewModel.document.layers.first { $0.id == peerID }?.smartFilters.count == 2)
+        #expect(viewModel.isSmartFilterLoadedForEditing(primaryFilterID))
+
         let configuredAddResponse = registry.execute(request(
             operation: "call",
             name: "xomo.filter.configure",
@@ -540,7 +555,7 @@ struct XomoAutomationTests {
         #expect(configuredAddResponse.ok)
         #expect(configuredAddResponse.result?.objectValue?["addedLayerCount"] == .number(1))
         #expect(viewModel.document.layers.first { $0.id == primaryID }?.smartFilters.count == 1)
-        #expect(viewModel.document.layers.first { $0.id == peerID }?.smartFilters.count == 2)
+        #expect(viewModel.document.layers.first { $0.id == peerID }?.smartFilters.count == 3)
 
         let peerIndex = try #require(viewModel.document.layers.firstIndex { $0.id == peerID })
         viewModel.document.layers[peerIndex].isLocked = true
@@ -554,6 +569,17 @@ struct XomoAutomationTests {
             ]
         ))
         #expect(!rejectedAddResponse.ok)
+        #expect(viewModel.document.history.count == historyCountBeforeRejectedAdd)
+
+        let rejectedDuplicateResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.smart_filter.manage",
+            arguments: [
+                "id": .string(primaryFilterID.uuidString),
+                "action": .string("duplicate")
+            ]
+        ))
+        #expect(!rejectedDuplicateResponse.ok)
         #expect(viewModel.document.history.count == historyCountBeforeRejectedAdd)
     }
 

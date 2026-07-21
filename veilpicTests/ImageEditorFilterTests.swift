@@ -261,7 +261,9 @@ struct ImageEditorFilterTests {
         #expect(viewModel.loadedSmartFilterID == originalID)
         #expect(viewModel.isSmartFilterLoadedForEditing(originalID))
 
-        let duplicateID = try #require(viewModel.duplicateSmartFilterOnSelectedLayer(originalID))
+        let duplication = try #require(viewModel.duplicateSmartFilterOnSelectedLayer(originalID))
+        let duplicateID = try #require(duplication.primaryDuplicateID)
+        #expect(duplication.duplicatedLayerCount == 1)
         #expect(viewModel.loadedSmartFilterID == duplicateID)
         #expect(viewModel.isSmartFilterLoadedForEditing(duplicateID))
         #expect(!viewModel.isSmartFilterLoadedForEditing(originalID))
@@ -808,7 +810,9 @@ struct ImageEditorFilterTests {
         )
         viewModel.document.layers[layerIndex].smartFilters = [original]
 
-        let duplicateID = try #require(viewModel.duplicateSmartFilterOnSelectedLayer(original.id))
+        let duplication = try #require(viewModel.duplicateSmartFilterOnSelectedLayer(original.id))
+        let duplicateID = try #require(duplication.primaryDuplicateID)
+        #expect(duplication.duplicatedLayerCount == 1)
         let duplicatedFilters = viewModel.document.layers[layerIndex].smartFilters
         #expect(duplicatedFilters.map(\.id) == [original.id, duplicateID])
         let duplicate = try #require(duplicatedFilters.last)
@@ -870,9 +874,11 @@ struct ImageEditorFilterTests {
 
         #expect(viewModel.loadSmartFilterIntoControls(primaryTarget.id))
         let historyCount = viewModel.document.history.count
-        let primaryDuplicateID = try #require(
+        let duplication = try #require(
             viewModel.duplicateSmartFilterOnSelectedLayer(primaryTarget.id)
         )
+        let primaryDuplicateID = try #require(duplication.primaryDuplicateID)
+        #expect(duplication.duplicatedLayerCount == 2)
 
         let primaryFilters = try #require(
             viewModel.document.layers.first { $0.id == primaryID }?.smartFilters
