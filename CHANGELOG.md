@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.12.0-rc436 - 2026-07-21
+
+### Changed
+- 智能滤镜启停现在返回实际切换图层数；以目标 UUID 在主图层中的栈位置和状态为锚点，只修改同位置、可编辑且状态不同的所选图层。
+- 锁定主图层仍可作为启停锚点但不会被写入；缺少同栈位置、锁定及已经处于目标状态的图层安全跳过，零实际目标不会写入 Undo/History。
+- MCP `xomo.smart_filter.toggle` 返回 `toggledLayerCount`，零目标明确失败；CLI 工具目录同步公开返回语义。
+
+### Verification
+- App 定向测试 2/2、SwiftPM CLI 测试 2/2、发布版本契约 7/7 通过；模型与 MCP 结果分别保存在 `/tmp/veilpic-rc436-toggle-model-parentheses.xcresult`、`/tmp/veilpic-rc436-toggle-automation.xcresult`。下一次完整 Release、冒烟与 `/Applications` 覆盖门禁仍为 rc440。
+
 ## 2.12.0-rc435 - 2026-07-21
 
 ### Changed

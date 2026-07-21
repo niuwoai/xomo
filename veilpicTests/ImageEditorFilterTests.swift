@@ -454,7 +454,7 @@ struct ImageEditorFilterTests {
 
         #expect(viewModel.loadSmartFilterIntoControls(primaryTarget.id))
         let historyCount = viewModel.document.history.count
-        viewModel.toggleSmartFilterOnSelectedLayer(primaryTarget.id)
+        let disabledLayerCount = viewModel.toggleSmartFilterOnSelectedLayer(primaryTarget.id)
 
         let disabledPrimary = try #require(viewModel.document.layers.first { $0.id == primaryID })
         let disabledSecondary = try #require(viewModel.document.layers.first { $0.id == secondary.id })
@@ -464,17 +464,19 @@ struct ImageEditorFilterTests {
         #expect(disabledSecondary.smartFilters.map(\.isEnabled) == [true, false])
         #expect(skippedLocked.smartFilters.map(\.isEnabled) == [true, true])
         #expect(skippedShort.smartFilters.map(\.isEnabled) == [true])
+        #expect(disabledLayerCount == 2)
         #expect(viewModel.loadedSmartFilterID == primaryTarget.id)
         #expect(viewModel.document.selectedLayerIDs == [primaryID, secondary.id, locked.id, missingPosition.id])
         #expect(viewModel.document.history.count == historyCount + 1)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterDisableSelected"))
         #expect(viewModel.statusText == L10n.format("imageEditor.status.layerSmartFilterDisabledSelected", 2))
 
-        viewModel.toggleSmartFilterOnSelectedLayer(primaryTarget.id)
+        let enabledLayerCount = viewModel.toggleSmartFilterOnSelectedLayer(primaryTarget.id)
         let enabledPrimary = try #require(viewModel.document.layers.first { $0.id == primaryID })
         let enabledSecondary = try #require(viewModel.document.layers.first { $0.id == secondary.id })
         #expect(enabledPrimary.smartFilters.map(\.isEnabled) == [true, true])
         #expect(enabledSecondary.smartFilters.map(\.isEnabled) == [true, true])
+        #expect(enabledLayerCount == 2)
         #expect(viewModel.document.history.count == historyCount + 2)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterEnableSelected"))
         #expect(viewModel.statusText == L10n.format("imageEditor.status.layerSmartFilterEnabledSelected", 2))

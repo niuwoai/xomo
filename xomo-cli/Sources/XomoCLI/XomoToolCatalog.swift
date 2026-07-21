@@ -227,7 +227,7 @@ enum XomoToolCatalog {
         ("xomo.view.pan", "Nudge, center, or reset the canvas viewport without changing document History."),
         ("xomo.smart_filter.list", "List smart filters."),
         ("xomo.smart_filter.add", "Add a smart filter and return the added layer count."),
-        ("xomo.smart_filter.toggle", "Toggle a smart filter."),
+        ("xomo.smart_filter.toggle", "Toggle a smart filter and return the toggled layer count."),
         ("xomo.smart_filter.clear", "Clear smart filters and return the cleared layer count."),
         ("xomo.smart_filter.manage", "Update, remove, or reorder a smart filter; update returns the affected layer count."),
         ("xomo.filter.list", "List raster filters."),

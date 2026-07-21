@@ -457,7 +457,15 @@ final class XomoAutomationRegistry {
                 "addedLayerCount": .number(Double(addedLayerCount))
             ])
         case "xomo.smart_filter.toggle":
-            viewModel.toggleSmartFilterOnSelectedLayer(try requiredUUID("id", in: arguments))
+            let toggledLayerCount = viewModel.toggleSmartFilterOnSelectedLayer(
+                try requiredUUID("id", in: arguments)
+            )
+            guard toggledLayerCount > 0 else {
+                throw XomoAutomationCallError.invalidArgument("Smart filter cannot be toggled")
+            }
+            return .object([
+                "toggledLayerCount": .number(Double(toggledLayerCount))
+            ])
         case "xomo.smart_filter.clear":
             let clearedLayerCount = viewModel.clearSmartFiltersFromSelectedLayer()
             guard clearedLayerCount > 0 else {
@@ -4109,7 +4117,7 @@ private extension XomoAutomationRegistry {
             "opacity": XomoAutomationSchema.number(description: "Result opacity from 0 to 1"),
             "blendMode": XomoAutomationSchema.string(description: "Result blend mode", values: ImageEditorBlendMode.smartFilterCases.map(\.rawValue))
         ], required: ["filter"]),
-        tool("xomo.smart_filter.toggle", "Enable or disable a smart filter by UUID.", idProperties, required: ["id"]),
+        tool("xomo.smart_filter.toggle", "Enable or disable a smart filter by UUID and return the toggled layer count.", idProperties, required: ["id"]),
         tool("xomo.smart_filter.clear", "Remove all smart filters from selected layers and return the cleared layer count."),
         tool("xomo.smart_filter.manage", "Load, update, duplicate, reorder, or remove a smart filter; update returns the updated layer count.", [
             "id": XomoAutomationSchema.string(description: "Smart filter UUID"),

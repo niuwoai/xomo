@@ -453,6 +453,25 @@ struct XomoAutomationTests {
         #expect(viewModel.document.layers.first { $0.id == peerID }?.smartFilters.first?.normalizedIntensity == 0.9)
         #expect(viewModel.isSmartFilterLoadedForEditing(primaryFilterID))
 
+        let toggleResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.smart_filter.toggle",
+            arguments: ["id": .string(primaryFilterID.uuidString)]
+        ))
+        #expect(toggleResponse.ok)
+        #expect(toggleResponse.result?.objectValue?["toggledLayerCount"] == .number(1))
+        #expect(viewModel.document.layers.first { $0.id == primaryID }?.smartFilters.first?.isEnabled == true)
+        #expect(viewModel.document.layers.first { $0.id == peerID }?.smartFilters.first?.isEnabled == false)
+
+        let historyCountBeforeNoOpToggle = viewModel.document.history.count
+        let noOpToggleResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.smart_filter.toggle",
+            arguments: ["id": .string(primaryFilterID.uuidString)]
+        ))
+        #expect(!noOpToggleResponse.ok)
+        #expect(viewModel.document.history.count == historyCountBeforeNoOpToggle)
+
         let configuredAddResponse = registry.execute(request(
             operation: "call",
             name: "xomo.filter.configure",

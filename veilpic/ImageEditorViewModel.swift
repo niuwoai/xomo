@@ -5817,21 +5817,19 @@ final class ImageEditorViewModel: ObservableObject {
         loadedSmartFilterID == filterID && loadedSmartFilterHasPendingChanges
     }
 
-    func toggleSmartFilterOnSelectedLayer(_ filterID: UUID) {
-        guard let (layerIndex, filterIndex) = selectedSmartFilterIndex(filterID),
-              canEditSmartFilters(on: document.layers[layerIndex])
-        else {
+    @discardableResult
+    func toggleSmartFilterOnSelectedLayer(_ filterID: UUID) -> Int {
+        guard let (layerIndex, filterIndex) = selectedSmartFilterIndex(filterID) else {
             statusText = L10n.text("imageEditor.status.operationFailed")
-            return
+            return 0
         }
         let isEnabled = !document.layers[layerIndex].smartFilters[filterIndex].isEnabled
-        let targetIndices = selectedLayerSmartFilterUpdateTargetIndices().filter { targetIndex in
-            document.layers[targetIndex].smartFilters.indices.contains(filterIndex)
-                && document.layers[targetIndex].smartFilters[filterIndex].isEnabled != isEnabled
+        let targetIndices = selectedSmartFilterTargetIndices(at: filterIndex).filter { targetIndex in
+            document.layers[targetIndex].smartFilters[filterIndex].isEnabled != isEnabled
         }
-        guard targetIndices.contains(layerIndex) else {
+        guard !targetIndices.isEmpty else {
             statusText = L10n.text("imageEditor.status.operationFailed")
-            return
+            return 0
         }
         pushUndo()
         for targetIndex in targetIndices {
@@ -5839,7 +5837,7 @@ final class ImageEditorViewModel: ObservableObject {
         }
         guard targetIndices.count > 1 else {
             appendHistory(L10n.text("imageEditor.history.layerSmartFilterToggle"))
-            return
+            return targetIndices.count
         }
         appendHistory(
             L10n.text(
@@ -5854,6 +5852,7 @@ final class ImageEditorViewModel: ObservableObject {
                 : "imageEditor.status.layerSmartFilterDisabledSelected",
             targetIndices.count
         )
+        return targetIndices.count
     }
 
     func smartFilterOpacity(_ filterID: UUID) -> Double? {
