@@ -115,7 +115,7 @@ end
 
 # 运行单个测试；返回 result Hash
 def run_one(test, logs_dir)
-  identifier = "#{TEST_TARGET}/#{test[:suite]}/#{test[:method]}"
+  identifier = "#{TEST_TARGET}/#{test[:suite]}/#{test[:method]}()"
   result_bundle_path = File.join(logs_dir, "#{test[:suite]}.#{test[:method]}.xcresult")
   FileUtils.rm_rf(result_bundle_path)
   args = base_xcodebuild_args + [

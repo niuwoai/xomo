@@ -385,7 +385,7 @@ struct ImageEditorFilterTests {
 
         #expect(viewModel.loadSmartFilterIntoControls(primaryTarget.id))
         let historyCount = viewModel.document.history.count
-        #expect(viewModel.removeSmartFilterFromSelectedLayer(primaryTarget.id))
+        #expect(viewModel.removeSmartFilterFromSelectedLayer(primaryTarget.id) == 2)
 
         #expect(
             viewModel.document.layers.first { $0.id == primaryID }?.smartFilters.map(\.id)

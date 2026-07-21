@@ -3024,9 +3024,13 @@ final class XomoAutomationRegistry {
                 "duplicatedLayerCount": .number(Double(duplication.duplicatedLayerCount))
             ])
         case "remove":
-            guard viewModel.removeSmartFilterFromSelectedLayer(id) else {
+            let removedLayerCount = viewModel.removeSmartFilterFromSelectedLayer(id)
+            guard removedLayerCount > 0 else {
                 throw XomoAutomationCallError.invalidArgument("Smart filter cannot be removed")
             }
+            return .object([
+                "removedLayerCount": .number(Double(removedLayerCount))
+            ])
         case "moveUp":
             guard viewModel.moveSmartFilterOnSelectedLayer(id, offset: -1) else {
                 throw XomoAutomationCallError.invalidArgument("Smart filter cannot be moved up")

@@ -8,6 +8,13 @@
 import AppKit
 import Foundation
 
+private enum ImageEditorRetouchTuning {
+    static let toneEffectScale: CGFloat = 0.82
+    static let spongeEffectScale: CGFloat = 0.9
+    static let spongeDesaturateVibranceBoost: CGFloat = 1.1
+    static let sharpenSecondPassScale: CGFloat = 1
+}
+
 enum ImageEditorToneRange: String, CaseIterable, Identifiable {
     case shadows
     case midtones
@@ -292,7 +299,14 @@ extension NSImage {
         pressureControlsSize: Bool,
         pressureSensitivity: CGFloat
     ) -> NSImage? {
-        guard let sharpenedSource = filtered(kind: .sharpen, intensity: Double(max(0.1, min(1, intensity)))) else { return nil }
+        let clampedIntensity = max(0.1, min(1, intensity))
+        guard let firstPass = filtered(kind: .sharpen, intensity: Double(clampedIntensity)) else {
+            return nil
+        }
+        let sharpenedSource = firstPass.filtered(
+            kind: .sharpen,
+            intensity: Double(clampedIntensity * ImageEditorRetouchTuning.sharpenSecondPassScale)
+        ) ?? firstPass
         return mixingBrushSource(
             sharpenedSource,
             samples: samples,
@@ -582,7 +596,7 @@ extension NSImage {
         }
 
         let clampedOpacity = max(0, min(1, opacity))
-        let effectScale: CGFloat = 0.72
+        let effectScale = ImageEditorRetouchTuning.toneEffectScale
         for y in 0..<height {
             for x in 0..<width {
                 let offset = y * bytesPerRow + x * bytesPerPixel
@@ -710,7 +724,9 @@ extension NSImage {
             for x in 0..<width {
                 let offset = y * bytesPerRow + x * bytesPerPixel
                 let maskIndex = y * width + x
-                let baseStrength = CGFloat(maskAlpha[maskIndex]) / 255 * clampedOpacity * 0.9
+                let baseStrength = CGFloat(maskAlpha[maskIndex]) / 255
+                    * clampedOpacity
+                    * ImageEditorRetouchTuning.spongeEffectScale
                 guard baseStrength > 0 else { continue }
 
                 let red = CGFloat(sourcePixels[offset])
@@ -720,9 +736,11 @@ extension NSImage {
                 let vibranceWeight: CGFloat
                 switch mode {
                 case .saturate:
-                    vibranceWeight = 1 - chroma
+                    let endpointDistance = 1 - chroma
+                    vibranceWeight = endpointDistance * endpointDistance
                 case .desaturate:
-                    vibranceWeight = chroma
+                    vibranceWeight = sqrt(chroma)
+                        * ImageEditorRetouchTuning.spongeDesaturateVibranceBoost
                 }
                 let strength = vibrance
                     ? baseStrength * max(0, min(1, vibranceWeight))

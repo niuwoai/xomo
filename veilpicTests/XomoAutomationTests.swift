@@ -347,6 +347,7 @@ struct XomoAutomationTests {
             ]
         ))
         #expect(removeResponse.ok)
+        #expect(removeResponse.result?.objectValue?["removedLayerCount"] == .number(1))
         #expect(viewModel.document.selectedLayer?.smartFilters.map(\.id) == [filterID])
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterRemove"))
 
@@ -557,6 +558,20 @@ struct XomoAutomationTests {
         #expect(viewModel.document.layers.first { $0.id == primaryID }?.smartFilters.count == 1)
         #expect(viewModel.document.layers.first { $0.id == peerID }?.smartFilters.count == 3)
 
+        let removeResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.smart_filter.manage",
+            arguments: [
+                "id": .string(primaryFilterID.uuidString),
+                "action": .string("remove")
+            ]
+        ))
+        #expect(removeResponse.ok)
+        #expect(removeResponse.result?.objectValue?["removedLayerCount"] == .number(1))
+        #expect(viewModel.document.layers.first { $0.id == primaryID }?.smartFilters.count == 1)
+        #expect(viewModel.document.layers.first { $0.id == peerID }?.smartFilters.count == 2)
+        #expect(viewModel.isSmartFilterLoadedForEditing(primaryFilterID))
+
         let peerIndex = try #require(viewModel.document.layers.firstIndex { $0.id == peerID })
         viewModel.document.layers[peerIndex].isLocked = true
         let historyCountBeforeRejectedAdd = viewModel.document.history.count
@@ -580,6 +595,17 @@ struct XomoAutomationTests {
             ]
         ))
         #expect(!rejectedDuplicateResponse.ok)
+        #expect(viewModel.document.history.count == historyCountBeforeRejectedAdd)
+
+        let rejectedRemoveResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.smart_filter.manage",
+            arguments: [
+                "id": .string(primaryFilterID.uuidString),
+                "action": .string("remove")
+            ]
+        ))
+        #expect(!rejectedRemoveResponse.ok)
         #expect(viewModel.document.history.count == historyCountBeforeRejectedAdd)
     }
 

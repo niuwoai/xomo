@@ -342,24 +342,11 @@ extension ImageEditorViewModel {
     private func selectedSelectionExportImage() -> NSImage? {
         guard let selection = document.selection,
               let bounds = selectionExportBounds,
-              let composited = document.compositedImage.cropped(to: bounds),
-              let mask = selectionExportMask(for: selection)?.cropped(to: bounds)
+              let composited = document.compositedImage.croppedFromTopLeftCanvas(to: bounds),
+              let mask = selectionExportMask(for: selection)?.croppedFromTopLeftCanvas(to: bounds)
         else { return nil }
 
-        return NSImage.rendered(size: bounds.size) { _ in
-            composited.draw(
-                in: CGRect(origin: .zero, size: bounds.size),
-                from: CGRect(origin: .zero, size: bounds.size),
-                operation: .copy,
-                fraction: 1
-            )
-            mask.draw(
-                in: CGRect(origin: .zero, size: bounds.size),
-                from: CGRect(origin: .zero, size: bounds.size),
-                operation: .destinationIn,
-                fraction: 1
-            )
-        }
+        return composited.applyingExportAlphaMask(mask)
     }
 
     private func selectionExportMask(for selection: ImageEditorSelection) -> NSImage? {
@@ -674,6 +661,85 @@ private extension NSImage {
                 fraction: 1
             )
         } ?? self
+    }
+
+    /// ImageEditor canvas geometry uses a top-left origin while AppKit image
+    /// drawing uses a bottom-left origin. Keep that conversion explicit at the
+    /// export boundary so the selected pixels and their mask stay aligned.
+    func croppedFromTopLeftCanvas(to rect: CGRect) -> NSImage? {
+        let bounded = rect.standardized.intersection(CGRect(origin: .zero, size: size))
+        guard bounded.width > 0, bounded.height > 0 else { return nil }
+        let sourceRect = CGRect(
+            x: bounded.minX,
+            y: size.height - bounded.maxY,
+            width: bounded.width,
+            height: bounded.height
+        )
+        return NSImage.rendered(size: bounded.size) { outputRect in
+            draw(
+                in: outputRect,
+                from: sourceRect,
+                operation: .copy,
+                fraction: 1
+            )
+        }
+    }
+
+    /// Applies the mask deterministically instead of relying on AppKit blend
+    /// operations whose alpha result can vary with the backing image format.
+    func applyingExportAlphaMask(_ mask: NSImage) -> NSImage? {
+        guard size.width > 0, size.height > 0, mask.size == size else { return nil }
+        let width = max(1, Int(size.width.rounded()))
+        let height = max(1, Int(size.height.rounded()))
+        let bytesPerPixel = 4
+        let bytesPerRow = width * bytesPerPixel
+        guard var sourcePixels = rgbaPixelsForExport(width: width, height: height),
+              let maskPixels = mask.rgbaPixelsForExport(width: width, height: height)
+        else { return nil }
+
+        for offset in stride(from: 0, to: sourcePixels.count, by: bytesPerPixel) {
+            let maskAlpha = Int(maskPixels[offset + 3])
+            sourcePixels[offset] = UInt8(Int(sourcePixels[offset]) * maskAlpha / 255)
+            sourcePixels[offset + 1] = UInt8(Int(sourcePixels[offset + 1]) * maskAlpha / 255)
+            sourcePixels[offset + 2] = UInt8(Int(sourcePixels[offset + 2]) * maskAlpha / 255)
+            sourcePixels[offset + 3] = UInt8(Int(sourcePixels[offset + 3]) * maskAlpha / 255)
+        }
+
+        guard let provider = CGDataProvider(data: Data(sourcePixels) as CFData),
+              let cgImage = CGImage(
+                width: width,
+                height: height,
+                bitsPerComponent: 8,
+                bitsPerPixel: 32,
+                bytesPerRow: bytesPerRow,
+                space: CGColorSpaceCreateDeviceRGB(),
+                bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue),
+                provider: provider,
+                decode: nil,
+                shouldInterpolate: false,
+                intent: .defaultIntent
+              )
+        else { return nil }
+        return NSImage(cgImage: cgImage, size: size)
+    }
+
+    func rgbaPixelsForExport(width: Int, height: Int) -> [UInt8]? {
+        let bytesPerRow = width * 4
+        var pixels = [UInt8](repeating: 0, count: bytesPerRow * height)
+        guard let cgImage = cgImage(forProposedRect: nil, context: nil, hints: nil),
+              let context = CGContext(
+                data: &pixels,
+                width: width,
+                height: height,
+                bitsPerComponent: 8,
+                bytesPerRow: bytesPerRow,
+                space: CGColorSpaceCreateDeviceRGB(),
+                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+              )
+        else { return nil }
+        context.interpolationQuality = .none
+        context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
+        return pixels
     }
 
     func flattened(on color: NSColor) -> NSImage {
