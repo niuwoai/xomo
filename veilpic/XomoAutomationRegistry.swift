@@ -2270,7 +2270,15 @@ final class XomoAutomationRegistry {
             guard let gradientStyle = ImageEditorGradientFillStyle(rawValue: rawValue) else {
                 throw XomoAutomationCallError.invalidArgument("Unknown stroke gradient style")
             }
-            viewModel.setSelectedLayerStrokeGradientStyle(gradientStyle)
+            let updatedLayerCount = viewModel.setSelectedLayerStrokeGradientStyle(gradientStyle)
+            guard updatedLayerCount > 0 else {
+                throw XomoAutomationCallError.operationFailed(
+                    "No editable layer needs the requested stroke gradient style"
+                )
+            }
+            return .object([
+                "updatedLayerCount": .number(Double(updatedLayerCount))
+            ])
         case "strokeGradientAngle": viewModel.setSelectedLayerStrokeGradientAngle(try number())
         case "strokePatternKind":
             let rawValue = try requiredString("patternKind", in: arguments)
@@ -3911,7 +3919,7 @@ private extension XomoAutomationRegistry {
             "direction": XomoAutomationSchema.string(description: "Preset ordering direction", values: ImageEditorLayerStylePresetMoveDirection.allCases.map(\.rawValue)),
             "path": XomoAutomationSchema.string(description: "Local .xomostyles path for preset import preview, import, or export")
         ], required: ["action"]),
-        tool("xomo.layer.style_settings", "Set effect scale, stroke width, stroke position, stroke fill type, or stroke opacity with actual updated-layer counts, plus stroke, shadow, glow, overlay, satin, bevel, and global-light properties.", [
+        tool("xomo.layer.style_settings", "Set effect scale, stroke width, stroke position, stroke fill type, stroke gradient style, or stroke opacity with actual updated-layer counts, plus stroke, shadow, glow, overlay, satin, bevel, and global-light properties.", [
             "property": XomoAutomationSchema.string(description: "Layer style property", values: ["effectScale", "strokeWidth", "strokePosition", "strokeFillType", "strokeGradientStyle", "strokeGradientAngle", "strokePatternKind", "strokeOpacity", "strokeColor", "shadowOpacity", "shadowColor", "shadowBlur", "shadowSpread", "shadowNoise", "shadowContour", "shadowDistance", "shadowAngle", "globalLightAngle", "innerShadowOpacity", "innerShadowBlur", "innerShadowChoke", "innerShadowNoise", "innerShadowContour", "innerShadowDistance", "innerShadowAngle", "outerGlowOpacity", "outerGlowColor", "outerGlowBlur", "outerGlowSpread", "outerGlowNoise", "outerGlowContour", "innerGlowOpacity", "innerGlowColor", "innerGlowBlur", "innerGlowChoke", "innerGlowNoise", "innerGlowSource", "colorOverlayOpacity", "colorOverlayColor", "gradientOverlayOpacity", "gradientOverlayScale", "gradientOverlayAngle", "gradientOverlayStyle", "patternOverlayKind", "patternOverlayOpacity", "patternOverlayScale", "satinOpacity", "satinColor", "satinDistance", "satinSize", "satinAngle", "satinInvert", "satinContour", "bevelSize", "bevelOpacity", "bevelHighlightColor", "bevelShadowColor", "bevelSoften", "bevelAngle", "bevelDirection"]),
             "value": XomoAutomationSchema.number(description: "Numeric style value"),
             "position": XomoAutomationSchema.string(description: "Stroke position", values: ImageEditorStrokePosition.allCases.map(\.rawValue)),

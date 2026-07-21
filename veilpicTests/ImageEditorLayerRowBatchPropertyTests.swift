@@ -646,13 +646,24 @@ struct ImageEditorLayerRowBatchPropertyTests {
         let historyCount = viewModel.document.history.count
 
         #expect(viewModel.selectedLayerStrokeGradientStyleState == .mixed)
-        viewModel.setSelectedLayerStrokeGradientStyle(.diamond)
+        let updatedLayerCount = viewModel.setSelectedLayerStrokeGradientStyle(.diamond)
+        #expect(updatedLayerCount == 1)
         #expect(viewModel.selectedLayerStrokeGradientStyleState == .value(.diamond))
         #expect((try layer(firstID, in: viewModel)).style.strokeGradientStyle == .diamond)
         #expect((try layer(secondID, in: viewModel)).style.strokeGradientStyle == .diamond)
         #expect((try layer(lockedID, in: viewModel)).style.strokeGradientStyle == .linear)
+        #expect((try layer(firstID, in: viewModel)).style.strokeGradientStartColor.isEqual(NSColor.systemRed))
+        #expect((try layer(firstID, in: viewModel)).style.strokeGradientEndColor.isEqual(NSColor.systemBlue))
+        #expect((try layer(secondID, in: viewModel)).style.strokeGradientStartColor.isEqual(NSColor.systemGreen))
+        #expect((try layer(secondID, in: viewModel)).style.strokeGradientEndColor.isEqual(NSColor.systemOrange))
         #expect(viewModel.document.history.count == historyCount + 1)
         #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+
+        let historyAfterUpdate = viewModel.document.history.count
+        #expect(viewModel.setSelectedLayerStrokeGradientStyle(.diamond) == 0)
+        #expect((try layer(secondID, in: viewModel)).style.strokeGradientStartColor.isEqual(NSColor.systemGreen))
+        #expect((try layer(secondID, in: viewModel)).style.strokeGradientEndColor.isEqual(NSColor.systemOrange))
+        #expect(viewModel.document.history.count == historyAfterUpdate)
 
         viewModel.undo()
         #expect(viewModel.selectedLayerStrokeGradientStyleState == .mixed)
@@ -665,9 +676,14 @@ struct ImageEditorLayerRowBatchPropertyTests {
         let viewModel = fixture.viewModel
         for index in viewModel.document.layers.indices {
             viewModel.document.layers[index].style.strokeFillType = .gradient
+            viewModel.document.layers[index].style.strokeEnabled = true
         }
         viewModel.document.layers[0].style.strokeGradientStyle = .linear
-        viewModel.document.layers[1].style.strokeGradientStyle = .radial
+        viewModel.document.layers[0].style.strokeGradientStartColor = .systemRed
+        viewModel.document.layers[0].style.strokeGradientEndColor = .systemBlue
+        viewModel.document.layers[1].style.strokeGradientStyle = .diamond
+        viewModel.document.layers[1].style.strokeGradientStartColor = .systemGreen
+        viewModel.document.layers[1].style.strokeGradientEndColor = .systemOrange
         viewModel.document.layers[2].style.strokeGradientStyle = .linear
         viewModel.document.layers[2].isLocked = true
         select(Set(fixture.layers.map(\.id)), primary: fixture.layers[0].id, in: viewModel)

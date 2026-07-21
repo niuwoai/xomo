@@ -981,12 +981,16 @@ extension ImageEditorViewModel {
         }
     }
 
-    func setSelectedLayerStrokeGradientStyle(_ style: ImageEditorGradientFillStyle) {
+    @discardableResult
+    func setSelectedLayerStrokeGradientStyle(_ style: ImageEditorGradientFillStyle) -> Int {
         updateSelectedLayerStyle {
+            let fillTypeChanged = $0.strokeFillType != .gradient
             $0.strokeEnabled = true
             $0.strokeFillType = .gradient
-            $0.strokeGradientStartColor = foregroundColor
-            $0.strokeGradientEndColor = strokeGradientEndColor()
+            if fillTypeChanged {
+                $0.strokeGradientStartColor = foregroundColor
+                $0.strokeGradientEndColor = strokeGradientEndColor()
+            }
             $0.strokeGradientStyle = style
         }
     }

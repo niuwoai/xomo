@@ -1,7 +1,8 @@
 # 像界（Xomo）产品概览
 
-> 最后更新：2026-07-22 | 当前版本：v2.12.0-rc449
+> 最后更新：2026-07-22 | 当前版本：v2.12.0-rc450
 
+v2.12.0-rc450 让描边渐变样式批量更新具备真实结果：已经处于目标样式且渐变描边已启用、锁定层和不适用层安全跳过，需要切入渐变或自动启用描边的图层仍计入。只有从非渐变描边首次进入渐变时才用当前前景色／背景色初始化端色；在线性、径向、角度、对称和菱形之间切换会保留用户调好的渐变起止色。重复设置不制造空 Undo/History，MCP `xomo.layer.style_settings(property=strokeGradientStyle)` 返回 `updatedLayerCount` 并对零变化明确失败。定向与回归测试 5/5、CLI 2/2、发布契约 7/7 通过；下一次完整 Release、冒烟和 `/Applications` 覆盖门禁仍为 rc480。
 v2.12.0-rc449 让描边填充类型批量更新具备真实结果：已经处于目标类型且描边已启用、锁定层和不适用层安全跳过，需要自动启用描边的图层仍计入；只有真正从颜色、渐变、图案中的另一种类型切换时才补目标默认参数，重复选择不会覆盖用户调好的描边颜色、渐变端色或图案颜色。重复设置不制造空 Undo/History，MCP `xomo.layer.style_settings(property=strokeFillType)` 返回 `updatedLayerCount` 并对零变化明确失败。定向与回归测试 5/5、CLI 2/2、发布契约 7/7 通过；下一次完整 Release、冒烟和 `/Applications` 覆盖门禁仍为 rc480。
 v2.12.0-rc448 让描边位置批量更新具备真实结果：已经处于目标位置且描边已启用、锁定层和不适用层安全跳过，需要自动启用描边的图层仍计入；多选外侧/居中/内侧混合值和不可聚焦控件保持不变。重复设置不制造空 Undo/History，MCP `xomo.layer.style_settings(property=strokePosition)` 返回 `updatedLayerCount` 并对零变化明确失败。定向与回归测试 5/5、CLI 2/2、发布契约 7/7 通过；下一次完整 Release、冒烟和 `/Applications` 覆盖门禁仍为 rc480。
 v2.12.0-rc447 让描边透明度批量更新具备真实结果：相同透明度且描边已启用、锁定层和不适用层安全跳过，需要自动启用描边的图层仍计入；输入继续夹取到 5%–100%。重复设置不制造空 Undo/History，MCP `xomo.layer.style_settings(property=strokeOpacity)` 返回 `updatedLayerCount` 并对零变化明确失败。定向与回归测试 5/5、CLI 2/2、发布契约 7/7 通过；下一次完整 Release、冒烟和 `/Applications` 覆盖门禁仍为 rc480。
