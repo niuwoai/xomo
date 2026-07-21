@@ -174,7 +174,7 @@ final class XomoAutomationRegistry {
             if (arguments["action"]?.stringValue ?? "").hasPrefix("preset") {
                 return try layerStylePresetAction(arguments, viewModel: viewModel)
             }
-            try layerStyleAction(arguments, viewModel: viewModel)
+            return try layerStyleAction(arguments, viewModel: viewModel)
         case "xomo.layer.style_settings":
             try layerStyleSetting(arguments, viewModel: viewModel)
         case "xomo.layer.selection":
@@ -1979,17 +1979,45 @@ final class XomoAutomationRegistry {
     private func layerStyleAction(
         _ arguments: [String: XomoJSONValue],
         viewModel: ImageEditorViewModel
-    ) throws {
+    ) throws -> XomoJSONValue {
         switch try requiredString("action", in: arguments) {
-        case "copy": viewModel.copySelectedLayerStyle()
-        case "paste": viewModel.pasteLayerStyleToSelectedLayers()
-        case "clear": viewModel.clearSelectedLayerStyles()
+        case "copy":
+            guard viewModel.copySelectedLayerStyle(),
+                  let sourceLayerID = viewModel.copiedLayerStyleSourceID
+            else {
+                throw XomoAutomationCallError.operationFailed("No copyable layer is selected")
+            }
+            return .object([
+                "copied": .bool(true),
+                "sourceLayerId": .string(sourceLayerID.uuidString)
+            ])
+        case "paste":
+            let pastedLayerCount = viewModel.pasteLayerStyleToSelectedLayers()
+            guard pastedLayerCount > 0 else {
+                throw XomoAutomationCallError.operationFailed(
+                    "No selected editable layer needs the copied style"
+                )
+            }
+            return .object([
+                "pastedLayerCount": .number(Double(pastedLayerCount))
+            ])
+        case "clear":
+            let clearedLayerCount = viewModel.clearSelectedLayerStyles()
+            guard clearedLayerCount > 0 else {
+                throw XomoAutomationCallError.operationFailed(
+                    "No selected editable layer has a configured style"
+                )
+            }
+            return .object([
+                "clearedLayerCount": .number(Double(clearedLayerCount))
+            ])
         case "hideSelected": viewModel.hideSelectedLayerEffects()
         case "showSelected": viewModel.showSelectedLayerEffects()
         case "hideAll": viewModel.hideAllLayerEffects()
         case "showAll": viewModel.showAllLayerEffects()
         default: throw XomoAutomationCallError.invalidArgument("Unknown layer style action")
         }
+        return actionResult(viewModel)
     }
 
     private func layerStylePresetAction(
@@ -3802,7 +3830,7 @@ private extension XomoAutomationRegistry {
             "mode": XomoAutomationSchema.string(description: "Alignment or distribution mode", values: ["left", "horizontalCenter", "right", "top", "verticalCenter", "bottom", "horizontal", "vertical"]),
             "target": XomoAutomationSchema.string(description: "Alignment target", values: ["selectionBounds", "canvas", "pixelSelection"])
         ], required: ["action", "mode"]),
-        tool("xomo.layer.style", "Copy, paste, clear, hide, show, browse built-in styles, or preview, import, and manage portable persisted complete layer style presets.", [
+        tool("xomo.layer.style", "Copy layer styles; paste or clear selected layers with actual affected counts; hide, show, browse built-in styles, or preview, import, and manage portable persisted complete layer style presets.", [
             "action": XomoAutomationSchema.string(description: "Layer style action", values: ["copy", "paste", "clear", "hideSelected", "showSelected", "hideAll", "showAll", "presetList", "presetCatalog", "presetFavorites", "presetRecent", "presetCreate", "presetApply", "presetDuplicate", "presetFavorite", "presetDelete", "presetRename", "presetMove", "presetImportPreview", "presetImport", "presetExport"]),
             "id": XomoAutomationSchema.string(description: "Layer style preset ID for apply, duplicate, favorite, delete, rename, move, or selected export"),
             "favorite": XomoAutomationSchema.boolean(description: "Whether presetFavorite should add or remove the preset from favorites"),

@@ -152,7 +152,7 @@ enum XomoToolCatalog {
         ("xomo.layer.transform", "Scale, rotate, flip, fit, trim, or rasterize selected layers."),
         ("xomo.layer.rasterize", "Rasterize type, shape, fill content, vector masks, Smart Objects, layer styles, or complete selected layers."),
         ("xomo.layer.align", "Align or distribute selected layers."),
-        ("xomo.layer.style", "Copy, paste, clear, hide, show, browse built-in styles, or preview, import, manage, favorite, and revisit portable layer style presets."),
+        ("xomo.layer.style", "Copy layer styles; paste or clear selected layers with actual affected counts; hide, show, browse built-in styles, or preview, import, manage, favorite, and revisit portable layer style presets."),
         ("xomo.layer.style_settings", "Set effect scale and detailed layer style properties."),
         ("xomo.layer.selection", "Select layers by state, relationship, kind, blend mode, or label."),
         ("xomo.layer.link", "Link, unlink, or select linked layers."),

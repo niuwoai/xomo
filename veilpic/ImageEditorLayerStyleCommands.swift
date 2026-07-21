@@ -142,7 +142,8 @@ extension ImageEditorViewModel {
     }
 
     var canPasteLayerStyleToSelectedLayers: Bool {
-        copiedLayerStyle != nil && !selectedLayerStylePasteTargetIndices().isEmpty
+        guard let copiedLayerStyle else { return false }
+        return !selectedLayerStylePasteTargetIndices(for: copiedLayerStyle).isEmpty
     }
 
     var canClearSelectedLayerStyles: Bool {
@@ -706,27 +707,30 @@ extension ImageEditorViewModel {
         statusText = L10n.text("imageEditor.status.layerEffectsScaleReady")
     }
 
-    func copySelectedLayerStyle() {
+    @discardableResult
+    func copySelectedLayerStyle() -> Bool {
         guard canCopySelectedLayerStyle,
               let style = document.selectedLayer?.style
         else {
             statusText = L10n.text("imageEditor.status.operationFailed")
-            return
+            return false
         }
         copiedLayerStyle = style
         copiedLayerStyleSourceID = document.selectedLayerID
         statusText = L10n.text("imageEditor.status.layerStyleCopied")
+        return true
     }
 
-    func pasteLayerStyleToSelectedLayers() {
+    @discardableResult
+    func pasteLayerStyleToSelectedLayers() -> Int {
         guard let style = copiedLayerStyle else {
             statusText = L10n.text("imageEditor.status.layerStyleClipboardEmpty")
-            return
+            return 0
         }
-        let targetIndices = selectedLayerStylePasteTargetIndices()
+        let targetIndices = selectedLayerStylePasteTargetIndices(for: style)
         guard !targetIndices.isEmpty else {
-            statusText = L10n.text("imageEditor.status.layerLocked")
-            return
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return 0
         }
 
         pushUndo()
@@ -735,6 +739,7 @@ extension ImageEditorViewModel {
         }
         appendHistory(L10n.text("imageEditor.history.layerStylePaste"))
         statusText = L10n.format("imageEditor.status.layerStylePasted", targetIndices.count)
+        return targetIndices.count
     }
 
     @discardableResult
@@ -819,11 +824,12 @@ extension ImageEditorViewModel {
         statusText = L10n.format("imageEditor.status.layerStylePresetDeleted", removed.title)
     }
 
-    func clearSelectedLayerStyles() {
+    @discardableResult
+    func clearSelectedLayerStyles() -> Int {
         let targetIndices = selectedLayerStyleTargetIndices().filter { document.layers[$0].style.hasConfiguredEffects }
         guard !targetIndices.isEmpty else {
             statusText = L10n.text("imageEditor.status.operationFailed")
-            return
+            return 0
         }
 
         pushUndo()
@@ -832,6 +838,7 @@ extension ImageEditorViewModel {
         }
         appendHistory(L10n.text("imageEditor.history.layerStyleClear"))
         statusText = L10n.format("imageEditor.status.layerStyleCleared", targetIndices.count)
+        return targetIndices.count
     }
 
     func toggleSelectedLayerEffects() {
@@ -1663,9 +1670,13 @@ extension ImageEditorViewModel {
         }
     }
 
-    private func selectedLayerStylePasteTargetIndices() -> [Int] {
-        selectedLayerStyleTargetIndices().filter { index in
+    private func selectedLayerStylePasteTargetIndices(
+        for copiedStyle: ImageEditorLayerStyle
+    ) -> [Int] {
+        let copiedProjectStyle = ImageEditorProjectLayerStyle(style: copiedStyle)
+        return selectedLayerStyleTargetIndices().filter { index in
             document.layers[index].id != copiedLayerStyleSourceID
+                && ImageEditorProjectLayerStyle(style: document.layers[index].style) != copiedProjectStyle
         }
     }
 

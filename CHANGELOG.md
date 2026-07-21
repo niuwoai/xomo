@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.12.0-rc443 - 2026-07-22
+
+### Changed
+- 图层样式粘贴与清除命令返回实际修改图层数；MCP `xomo.layer.style` 分别返回 `pastedLayerCount`、`clearedLayerCount`，复制返回来源图层 ID。
+
+### Fixed
+- 粘贴样式会跳过已经与剪贴板样式完全一致的可编辑图层，菜单可用性也按真实待修改目标计算。
+- 重复粘贴或清除不再制造空 Undo/History；MCP 对零实际目标明确失败，锁定层和复制来源层继续安全跳过。
+
+### Verification
+- 图层样式实际数量、空操作、锁定层、来源层保护及显示/隐藏自动化定向与回归测试 5/5、SwiftPM CLI 2/2、发布版本契约 7/7 通过。
+
 ## 2.12.0-rc442 - 2026-07-22
 
 ### Fixed

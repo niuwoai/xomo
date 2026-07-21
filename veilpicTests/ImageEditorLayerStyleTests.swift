@@ -131,6 +131,68 @@ struct ImageEditorLayerStyleTests {
         #expect(viewModel.statusText == L10n.format("imageEditor.status.layerStyleCleared", 1))
     }
 
+    @Test func layerStylePasteAndClearCountOnlyChangedEditableTargetsAndSkipNoOps() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: solidImage(color: .black, size: NSSize(width: 32, height: 24))
+        ) { _ in }
+        let sourceID = try #require(viewModel.document.selectedLayerID)
+        let sourceIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[sourceIndex].style.strokeEnabled = true
+        viewModel.document.layers[sourceIndex].style.strokeWidth = 9
+        let copiedStyle = viewModel.document.layers[sourceIndex].style
+        #expect(viewModel.copySelectedLayerStyle())
+
+        viewModel.addLayer()
+        let matchingID = try #require(viewModel.document.selectedLayerID)
+        let matchingIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[matchingIndex].style = copiedStyle
+
+        viewModel.addLayer()
+        let changedID = try #require(viewModel.document.selectedLayerID)
+        let changedIndex = try #require(viewModel.document.selectedLayerIndex)
+
+        viewModel.addLayer()
+        let lockedID = try #require(viewModel.document.selectedLayerID)
+        let lockedIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[lockedIndex].style.shadowEnabled = true
+        viewModel.document.layers[lockedIndex].isLocked = true
+
+        viewModel.document.selectedLayerID = sourceID
+        viewModel.document.selectedLayerIDs = [sourceID, matchingID, changedID, lockedID]
+        let historyBeforePaste = viewModel.document.history.count
+
+        #expect(viewModel.canPasteLayerStyleToSelectedLayers)
+        #expect(viewModel.pasteLayerStyleToSelectedLayers() == 1)
+        #expect(viewModel.document.layers[changedIndex].style.strokeEnabled)
+        #expect(viewModel.document.layers[changedIndex].style.strokeWidth == 9)
+        #expect(viewModel.document.layers[matchingIndex].style.strokeEnabled)
+        #expect(viewModel.document.layers[lockedIndex].style.shadowEnabled)
+        #expect(viewModel.document.history.count == historyBeforePaste + 1)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerStylePasted", 1))
+
+        let historyAfterPaste = viewModel.document.history.count
+        #expect(!viewModel.canPasteLayerStyleToSelectedLayers)
+        #expect(viewModel.pasteLayerStyleToSelectedLayers() == 0)
+        #expect(viewModel.document.history.count == historyAfterPaste)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.operationFailed"))
+
+        viewModel.document.selectedLayerID = matchingID
+        viewModel.document.selectedLayerIDs = [matchingID, changedID, lockedID]
+        #expect(viewModel.canClearSelectedLayerStyles)
+        #expect(viewModel.clearSelectedLayerStyles() == 2)
+        #expect(!viewModel.document.layers[matchingIndex].style.hasConfiguredEffects)
+        #expect(!viewModel.document.layers[changedIndex].style.hasConfiguredEffects)
+        #expect(viewModel.document.layers[lockedIndex].style.shadowEnabled)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerStyleCleared", 2))
+
+        let historyAfterClear = viewModel.document.history.count
+        #expect(!viewModel.canClearSelectedLayerStyles)
+        #expect(viewModel.clearSelectedLayerStyles() == 0)
+        #expect(viewModel.document.history.count == historyAfterClear)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.operationFailed"))
+    }
+
     @Test func imageEditorBlendIfUnderlyingHidesLayerOverBackdropLuminanceOutsideRange() async throws {
         let canvasSize = NSSize(width: 16, height: 8)
         let viewModel = ImageEditorViewModel(

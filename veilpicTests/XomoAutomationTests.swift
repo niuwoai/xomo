@@ -3632,6 +3632,72 @@ struct XomoAutomationTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerEffectsShowAll"))
     }
 
+    @Test func registryReportsActualLayerStylePasteAndClearCountsAndRejectsNoOps() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        defer { registry.unregister(viewModel) }
+        let sourceID = try #require(viewModel.document.selectedLayerID)
+        let sourceIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[sourceIndex].style.strokeEnabled = true
+        viewModel.document.layers[sourceIndex].style.strokeWidth = 7
+        let sourceStyle = viewModel.document.layers[sourceIndex].style
+
+        let copy = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style",
+            arguments: ["action": .string("copy")]
+        ))
+        #expect(copy.ok)
+        #expect(copy.result?.objectValue?["copied"] == .bool(true))
+        #expect(copy.result?.objectValue?["sourceLayerId"] == .string(sourceID.uuidString))
+
+        viewModel.addLayer()
+        let changedID = try #require(viewModel.document.selectedLayerID)
+        viewModel.addLayer()
+        let matchingID = try #require(viewModel.document.selectedLayerID)
+        let matchingIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[matchingIndex].style = sourceStyle
+        viewModel.document.selectedLayerID = changedID
+        viewModel.document.selectedLayerIDs = [changedID, matchingID]
+        let historyBeforePaste = viewModel.document.history.count
+
+        let paste = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style",
+            arguments: ["action": .string("paste")]
+        ))
+        #expect(paste.ok)
+        #expect(paste.result?.objectValue?["pastedLayerCount"] == .number(1))
+        #expect(viewModel.document.history.count == historyBeforePaste + 1)
+
+        let historyAfterPaste = viewModel.document.history.count
+        let repeatedPaste = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style",
+            arguments: ["action": .string("paste")]
+        ))
+        #expect(!repeatedPaste.ok)
+        #expect(viewModel.document.history.count == historyAfterPaste)
+
+        let clear = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style",
+            arguments: ["action": .string("clear")]
+        ))
+        #expect(clear.ok)
+        #expect(clear.result?.objectValue?["clearedLayerCount"] == .number(2))
+
+        let historyAfterClear = viewModel.document.history.count
+        let repeatedClear = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style",
+            arguments: ["action": .string("clear")]
+        ))
+        #expect(!repeatedClear.ok)
+        #expect(viewModel.document.history.count == historyAfterClear)
+    }
+
     @Test func registrySetsLayerStyleStrokePositionWithAdvertisedEnum() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared
