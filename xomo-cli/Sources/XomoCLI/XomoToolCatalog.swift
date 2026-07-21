@@ -229,7 +229,7 @@ enum XomoToolCatalog {
         ("xomo.smart_filter.add", "Add a smart filter and return the added layer count."),
         ("xomo.smart_filter.toggle", "Toggle a smart filter and return the toggled layer count."),
         ("xomo.smart_filter.clear", "Clear smart filters and return the cleared layer count."),
-        ("xomo.smart_filter.manage", "Update, remove, or reorder a smart filter; update and setOpacity return the affected layer count."),
+        ("xomo.smart_filter.manage", "Update, remove, or reorder a smart filter; update, setOpacity, and setBlendMode return the affected layer count."),
         ("xomo.filter.list", "List raster filters."),
         ("xomo.filter.apply", "Apply a raster filter to selected layers."),
         ("xomo.filter.configure", "Configure filter settings and destination; smart-filter creation returns the added layer count."),

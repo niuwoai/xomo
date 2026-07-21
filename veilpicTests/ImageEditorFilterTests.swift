@@ -587,12 +587,16 @@ struct ImageEditorFilterTests {
         #expect(viewModel.loadSmartFilterIntoControls(primaryTarget.id))
         #expect(viewModel.smartFilterBlendModeState(primaryTarget.id) == .mixed)
         let historyCount = viewModel.document.history.count
-        viewModel.setSmartFilterBlendModeOnSelectedLayer(primaryTarget.id, blendMode: .softLight)
+        let updatedLayerCount = viewModel.setSmartFilterBlendModeOnSelectedLayer(
+            primaryTarget.id,
+            blendMode: .softLight
+        )
 
         #expect(viewModel.document.layers.first { $0.id == primaryID }?.smartFilters.map(\.blendMode) == [.overlay, .softLight])
         #expect(viewModel.document.layers.first { $0.id == secondary.id }?.smartFilters.map(\.blendMode) == [.screen, .softLight])
         #expect(viewModel.document.layers.first { $0.id == locked.id }?.smartFilters.map(\.blendMode) == [.darken, .difference])
         #expect(viewModel.document.layers.first { $0.id == missingPosition.id }?.smartFilters.map(\.blendMode) == [.lighten])
+        #expect(updatedLayerCount == 2)
         #expect(viewModel.smartFilterBlendModeState(primaryTarget.id) == .value(.softLight))
         #expect(viewModel.loadedSmartFilterID == primaryTarget.id)
         #expect(viewModel.document.selectedLayerIDs == [primaryID, secondary.id, locked.id, missingPosition.id])
@@ -604,14 +608,22 @@ struct ImageEditorFilterTests {
             2
         ))
 
-        viewModel.setSmartFilterBlendModeOnSelectedLayer(primaryTarget.id, blendMode: .softLight)
+        let noOpLayerCount = viewModel.setSmartFilterBlendModeOnSelectedLayer(
+            primaryTarget.id,
+            blendMode: .softLight
+        )
+        #expect(noOpLayerCount == 0)
         #expect(viewModel.document.history.count == historyCount + 1)
 
         viewModel.undo()
         #expect(viewModel.smartFilterBlendModeState(primaryTarget.id) == .mixed)
-        viewModel.setSmartFilterBlendModeOnSelectedLayer(primaryTarget.id, blendMode: .normal)
+        let convergedLayerCount = viewModel.setSmartFilterBlendModeOnSelectedLayer(
+            primaryTarget.id,
+            blendMode: .normal
+        )
         #expect(viewModel.document.layers.first { $0.id == primaryID }?.smartFilters[1].blendMode == .normal)
         #expect(viewModel.document.layers.first { $0.id == secondary.id }?.smartFilters[1].blendMode == .normal)
+        #expect(convergedLayerCount == 1)
         #expect(viewModel.statusText == L10n.format(
             "imageEditor.status.layerSmartFilterBlendModeSelected",
             ImageEditorBlendMode.normal.title,

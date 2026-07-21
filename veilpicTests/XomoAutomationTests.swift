@@ -279,6 +279,7 @@ struct XomoAutomationTests {
             ]
         ))
         #expect(blendResponse.ok)
+        #expect(blendResponse.result?.objectValue?["updatedLayerCount"] == .number(1))
         #expect(viewModel.smartFilterBlendMode(filterID) == .multiply)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterBlendMode"))
 
@@ -499,6 +500,33 @@ struct XomoAutomationTests {
         ))
         #expect(!noOpOpacityResponse.ok)
         #expect(viewModel.document.history.count == historyCountBeforeNoOpOpacity)
+
+        let blendModeResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.smart_filter.manage",
+            arguments: [
+                "id": .string(primaryFilterID.uuidString),
+                "action": .string("setBlendMode"),
+                "blendMode": .string(ImageEditorBlendMode.multiply.rawValue)
+            ]
+        ))
+        #expect(blendModeResponse.ok)
+        #expect(blendModeResponse.result?.objectValue?["updatedLayerCount"] == .number(1))
+        #expect(viewModel.document.layers.first { $0.id == primaryID }?.smartFilters.first?.normalizedBlendMode == .normal)
+        #expect(viewModel.document.layers.first { $0.id == peerID }?.smartFilters.first?.normalizedBlendMode == .multiply)
+
+        let historyCountBeforeNoOpBlendMode = viewModel.document.history.count
+        let noOpBlendModeResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.smart_filter.manage",
+            arguments: [
+                "id": .string(primaryFilterID.uuidString),
+                "action": .string("setBlendMode"),
+                "blendMode": .string(ImageEditorBlendMode.multiply.rawValue)
+            ]
+        ))
+        #expect(!noOpBlendModeResponse.ok)
+        #expect(viewModel.document.history.count == historyCountBeforeNoOpBlendMode)
 
         let configuredAddResponse = registry.execute(request(
             operation: "call",

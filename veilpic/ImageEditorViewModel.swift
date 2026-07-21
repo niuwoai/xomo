@@ -5942,33 +5942,36 @@ final class ImageEditorViewModel: ObservableObject {
         return targetIndices.count
     }
 
+    @discardableResult
     func setSmartFilterBlendModeOnSelectedLayer(
         _ filterID: UUID,
         blendMode: ImageEditorBlendMode
-    ) {
+    ) -> Int {
         guard blendMode != .passThrough,
-              let (layerIndex, filterIndex) = selectedSmartFilterIndex(filterID),
-              canEditSmartFilters(on: document.layers[layerIndex])
+              let (_, filterIndex) = selectedSmartFilterIndex(filterID)
         else {
             statusText = L10n.text("imageEditor.status.operationFailed")
-            return
+            return 0
         }
         let matchingTargetIndices = selectedSmartFilterTargetIndices(at: filterIndex)
-        guard matchingTargetIndices.contains(layerIndex) else {
+        guard !matchingTargetIndices.isEmpty else {
             statusText = L10n.text("imageEditor.status.operationFailed")
-            return
+            return 0
         }
         let targetIndices = matchingTargetIndices.filter { targetIndex in
             document.layers[targetIndex].smartFilters[filterIndex].normalizedBlendMode != blendMode
         }
-        guard !targetIndices.isEmpty else { return }
+        guard !targetIndices.isEmpty else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return 0
+        }
         pushUndo()
         for targetIndex in targetIndices {
             document.layers[targetIndex].smartFilters[filterIndex].blendMode = blendMode
         }
         guard matchingTargetIndices.count > 1 else {
             appendHistory(L10n.text("imageEditor.history.layerSmartFilterBlendMode"))
-            return
+            return targetIndices.count
         }
         appendHistory(L10n.text("imageEditor.history.layerSmartFilterBlendModeSelected"))
         statusText = L10n.format(
@@ -5976,6 +5979,7 @@ final class ImageEditorViewModel: ObservableObject {
             blendMode.title,
             targetIndices.count
         )
+        return targetIndices.count
     }
 
     @discardableResult

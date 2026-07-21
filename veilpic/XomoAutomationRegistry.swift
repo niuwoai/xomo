@@ -3006,10 +3006,16 @@ final class XomoAutomationRegistry {
                 "updatedLayerCount": .number(Double(updatedLayerCount))
             ])
         case "setBlendMode":
-            viewModel.setSmartFilterBlendModeOnSelectedLayer(
+            let updatedLayerCount = viewModel.setSmartFilterBlendModeOnSelectedLayer(
                 id,
                 blendMode: try smartFilterBlendMode(try requiredString("blendMode", in: arguments))
             )
+            guard updatedLayerCount > 0 else {
+                throw XomoAutomationCallError.invalidArgument("Smart filter blend mode cannot be updated")
+            }
+            return .object([
+                "updatedLayerCount": .number(Double(updatedLayerCount))
+            ])
         case "duplicate":
             guard viewModel.duplicateSmartFilterOnSelectedLayer(id) != nil else {
                 throw XomoAutomationCallError.invalidArgument("Smart filter cannot be duplicated")
@@ -4125,7 +4131,7 @@ private extension XomoAutomationRegistry {
         ], required: ["filter"]),
         tool("xomo.smart_filter.toggle", "Enable or disable a smart filter by UUID and return the toggled layer count.", idProperties, required: ["id"]),
         tool("xomo.smart_filter.clear", "Remove all smart filters from selected layers and return the cleared layer count."),
-        tool("xomo.smart_filter.manage", "Load, update, duplicate, reorder, or remove a smart filter; update and setOpacity return the updated layer count.", [
+        tool("xomo.smart_filter.manage", "Load, update, duplicate, reorder, or remove a smart filter; update, setOpacity, and setBlendMode return the updated layer count.", [
             "id": XomoAutomationSchema.string(description: "Smart filter UUID"),
             "action": XomoAutomationSchema.string(description: "Management action", values: ["load", "update", "setOpacity", "setBlendMode", "duplicate", "remove", "moveUp", "moveDown"]),
             "intensity": XomoAutomationSchema.number(description: "Updated filter intensity"),
