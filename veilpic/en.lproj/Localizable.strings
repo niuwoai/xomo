@@ -1491,7 +1491,9 @@
 "imageEditor.history.layerFilterUpdate" = "Update Filter Layer";
 "imageEditor.history.layerFilterUpdateSelected" = "Update Selected Filter Layers";
 "imageEditor.history.layerSmartFilterAdd" = "Add Smart Filter";
+"imageEditor.history.layerSmartFilterAddSelected" = "Add Smart Filters to Selected Layers";
 "imageEditor.history.layerSmartFilterUpdate" = "Update Smart Filter";
+"imageEditor.history.layerSmartFilterUpdateSelected" = "Update Smart Filters on Selected Layers";
 "imageEditor.history.layerSmartFilterToggle" = "Toggle Smart Filter";
 "imageEditor.history.layerSmartFilterEnableSelected" = "Enable Smart Filters on Selected Layers";
 "imageEditor.history.layerSmartFilterDisableSelected" = "Disable Smart Filters on Selected Layers";
@@ -1787,6 +1789,8 @@
 "imageEditor.status.layerSmartFilterDisabledSelected" = "Disabled smart filters on %d layers";
 "imageEditor.status.layerSmartFilterOpacitySelected" = "Set smart filter opacity to %d%% on %d layers";
 "imageEditor.status.layerSmartFilterBlendModeSelected" = "Set smart filter blend mode to %@ on %d layers";
+"imageEditor.status.layerSmartFilterAddedSelected" = "Added smart filters to %d layers";
+"imageEditor.status.layerSmartFilterUpdatedSelected" = "Updated smart filters on %d layers";
 "imageEditor.status.layerSmartFilterDuplicatedSelected" = "Duplicated smart filters on %d layers";
 "imageEditor.status.layerSmartFilterRemovedSelected" = "Removed smart filters from %d layers";
 "imageEditor.status.layerSmartFilterClearedSelected" = "Cleared smart filters from %d layers";

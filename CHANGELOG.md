@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.12.0-rc435 - 2026-07-21
+
+### Changed
+- 智能滤镜新增与更新现在返回实际影响图层数；多选新增/更新使用独立的三语 History 标题和数量状态，锁定、不适用、缺少同栈位置及无变化目标安全跳过。
+- 按滤镜 UUID 更新时，以主图层滤镜的栈位置为锚点批量更新可编辑的所选图层；锁定主图层仍可作为定位锚点，但其内容不会被修改，滤镜 UUID 与单步 History/Undo 保持。
+- MCP `xomo.smart_filter.add`、`xomo.smart_filter.manage(update)` 与 `xomo.filter.configure(addSmartFilter)` 分别返回 `addedLayerCount` / `updatedLayerCount`；零目标和重复更新明确失败且不制造空 History/Undo，CLI 工具目录同步返回语义。
+
+### Verification
+- 多选新增/更新、锁定锚点、无变化失败、配置旁路、既有智能滤镜生命周期与三语资源定向测试 5/5，发布版本契约 7/7 通过；主 `.xcresult` 为 `/tmp/veilpic-rc435-smart-filter-add-update-counts.xcresult`。
+- SwiftPM CLI 测试 2/2 通过；下一次完整 Release、冒烟与 `/Applications` 覆盖门禁仍为 rc440。
+
 ## 2.12.0-rc434 - 2026-07-21
 
 ### Changed

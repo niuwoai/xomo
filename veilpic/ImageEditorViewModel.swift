@@ -5630,14 +5630,15 @@ final class ImageEditorViewModel: ObservableObject {
         if indices.count > 1 { statusText = L10n.format("imageEditor.status.layerGradientFillUpdatedSelected", indices.count) }
     }
 
+    @discardableResult
     func addSmartFilterToSelectedLayer(
         opacity: Double = 1,
         blendMode: ImageEditorBlendMode = .normal
-    ) {
+    ) -> Int {
         let targetIndices = selectedLayerSmartFilterTargetIndices()
         guard !targetIndices.isEmpty else {
             statusText = L10n.text("imageEditor.status.operationFailed")
-            return
+            return 0
         }
         pushUndo()
         for index in targetIndices {
@@ -5650,72 +5651,105 @@ final class ImageEditorViewModel: ObservableObject {
             )
             document.layers[index].smartFilters.append(smartFilter)
         }
-        loadedSmartFilterID = document.selectedLayer?.smartFilters.last?.id
-        appendHistory(L10n.text("imageEditor.history.layerSmartFilterAdd"))
+        if let selectedLayerIndex = document.selectedLayerIndex,
+           targetIndices.contains(selectedLayerIndex) {
+            loadedSmartFilterID = document.layers[selectedLayerIndex].smartFilters.last?.id
+        }
+        guard targetIndices.count > 1 else {
+            appendHistory(L10n.text("imageEditor.history.layerSmartFilterAdd"))
+            return targetIndices.count
+        }
+        appendHistory(L10n.text("imageEditor.history.layerSmartFilterAddSelected"))
+        statusText = L10n.format(
+            "imageEditor.status.layerSmartFilterAddedSelected",
+            targetIndices.count
+        )
+        return targetIndices.count
     }
 
-    func updateLastSmartFilterOnSelectedLayer() {
+    @discardableResult
+    func updateLastSmartFilterOnSelectedLayer() -> Int {
         let targetIndices = selectedLayerSmartFilterUpdateTargetIndices().filter { layerIndex in
             guard let filter = document.layers[layerIndex].smartFilters.last else { return false }
             return smartFilterDiffersFromCurrentControls(filter)
         }
         guard !targetIndices.isEmpty else {
             statusText = L10n.text("imageEditor.status.smartFilterUnchanged")
-            return
+            return 0
         }
         pushUndo()
         for index in targetIndices {
             guard let lastIndex = document.layers[index].smartFilters.indices.last else { continue }
             updateSmartFilterFromCurrentControls(&document.layers[index].smartFilters[lastIndex])
         }
-        loadedSmartFilterID = document.selectedLayer?.smartFilters.last?.id
-        appendHistory(L10n.text("imageEditor.history.layerSmartFilterUpdate"))
+        if let selectedLayerIndex = document.selectedLayerIndex,
+           targetIndices.contains(selectedLayerIndex) {
+            loadedSmartFilterID = document.layers[selectedLayerIndex].smartFilters.last?.id
+        }
+        return finishSmartFilterUpdate(targetCount: targetIndices.count)
     }
 
-    func updateLoadedSmartFilterOnSelectedLayer() {
+    @discardableResult
+    func updateLoadedSmartFilterOnSelectedLayer() -> Int {
         guard let loadedSmartFilterID,
               let (loadedLayerIndex, filterIndex) = selectedSmartFilterIndex(loadedSmartFilterID)
         else {
-            updateLastSmartFilterOnSelectedLayer()
-            return
+            return updateLastSmartFilterOnSelectedLayer()
         }
         let matchingTargetIndices = selectedLayerSmartFilterUpdateTargetIndices().filter { layerIndex in
             document.layers[layerIndex].smartFilters.indices.contains(filterIndex)
         }
         guard matchingTargetIndices.contains(loadedLayerIndex) else {
             statusText = L10n.text("imageEditor.status.operationFailed")
-            return
+            return 0
         }
         let targetIndices = matchingTargetIndices.filter { layerIndex in
             smartFilterDiffersFromCurrentControls(document.layers[layerIndex].smartFilters[filterIndex])
         }
         guard !targetIndices.isEmpty else {
             statusText = L10n.text("imageEditor.status.smartFilterUnchanged")
-            return
+            return 0
         }
         pushUndo()
         for layerIndex in targetIndices {
             updateSmartFilterFromCurrentControls(&document.layers[layerIndex].smartFilters[filterIndex])
         }
         self.loadedSmartFilterID = document.layers[loadedLayerIndex].smartFilters[filterIndex].id
-        appendHistory(L10n.text("imageEditor.history.layerSmartFilterUpdate"))
+        return finishSmartFilterUpdate(targetCount: targetIndices.count)
     }
 
-    func updateSmartFilterOnSelectedLayer(_ filterID: UUID) {
-        guard let (layerIndex, filterIndex) = selectedSmartFilterIndex(filterID),
-              canEditSmartFilters(on: document.layers[layerIndex])
-        else {
+    @discardableResult
+    func updateSmartFilterOnSelectedLayer(_ filterID: UUID) -> Int {
+        guard let (_, filterIndex) = selectedSmartFilterIndex(filterID) else {
             statusText = L10n.text("imageEditor.status.operationFailed")
-            return
+            return 0
         }
-        guard smartFilterDiffersFromCurrentControls(document.layers[layerIndex].smartFilters[filterIndex]) else {
+        let targetIndices = selectedSmartFilterTargetIndices(at: filterIndex).filter { layerIndex in
+            smartFilterDiffersFromCurrentControls(document.layers[layerIndex].smartFilters[filterIndex])
+        }
+        guard !targetIndices.isEmpty else {
             statusText = L10n.text("imageEditor.status.smartFilterUnchanged")
-            return
+            return 0
         }
         pushUndo()
-        updateSmartFilterFromCurrentControls(&document.layers[layerIndex].smartFilters[filterIndex])
+        for layerIndex in targetIndices {
+            updateSmartFilterFromCurrentControls(&document.layers[layerIndex].smartFilters[filterIndex])
+        }
         loadedSmartFilterID = filterID
-        appendHistory(L10n.text("imageEditor.history.layerSmartFilterUpdate"))
+        return finishSmartFilterUpdate(targetCount: targetIndices.count)
+    }
+
+    private func finishSmartFilterUpdate(targetCount: Int) -> Int {
+        guard targetCount > 1 else {
+            appendHistory(L10n.text("imageEditor.history.layerSmartFilterUpdate"))
+            return targetCount
+        }
+        appendHistory(L10n.text("imageEditor.history.layerSmartFilterUpdateSelected"))
+        statusText = L10n.format(
+            "imageEditor.status.layerSmartFilterUpdatedSelected",
+            targetCount
+        )
+        return targetCount
     }
 
     @discardableResult

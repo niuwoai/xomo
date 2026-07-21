@@ -446,10 +446,16 @@ final class XomoAutomationRegistry {
             viewModel.selectedFilter = filter
             if let intensity = arguments["intensity"]?.doubleValue { viewModel.filterIntensity = intensity }
             let blendMode = try smartFilterBlendMode(arguments["blendMode"]?.stringValue)
-            viewModel.addSmartFilterToSelectedLayer(
+            let addedLayerCount = viewModel.addSmartFilterToSelectedLayer(
                 opacity: arguments["opacity"]?.doubleValue ?? 1,
                 blendMode: blendMode
             )
+            guard addedLayerCount > 0 else {
+                throw XomoAutomationCallError.invalidArgument("No selected layers can accept a smart filter")
+            }
+            return .object([
+                "addedLayerCount": .number(Double(addedLayerCount))
+            ])
         case "xomo.smart_filter.toggle":
             viewModel.toggleSmartFilterOnSelectedLayer(try requiredUUID("id", in: arguments))
         case "xomo.smart_filter.clear":
@@ -461,7 +467,9 @@ final class XomoAutomationRegistry {
                 "clearedLayerCount": .number(Double(clearedLayerCount))
             ])
         case "xomo.smart_filter.manage":
-            try smartFilterManage(arguments, viewModel: viewModel)
+            if let result = try smartFilterManage(arguments, viewModel: viewModel) {
+                return result
+            }
         case "xomo.filter.list":
             return .array(ImageEditorFilter.allCases.map { .string($0.rawValue) })
         case "xomo.filter.apply":
@@ -473,7 +481,9 @@ final class XomoAutomationRegistry {
             if let intensity = arguments["intensity"]?.doubleValue { viewModel.filterIntensity = intensity }
             viewModel.applySelectedFilter()
         case "xomo.filter.configure":
-            try configureFilter(arguments, viewModel: viewModel)
+            if let result = try configureFilter(arguments, viewModel: viewModel) {
+                return result
+            }
         case "xomo.adjustment.list":
             return .array(ImageEditorAdjustment.allCases.map { .string($0.rawValue) })
         case "xomo.adjustment.apply":
@@ -2960,7 +2970,7 @@ final class XomoAutomationRegistry {
     private func smartFilterManage(
         _ arguments: [String: XomoJSONValue],
         viewModel: ImageEditorViewModel
-    ) throws {
+    ) throws -> XomoJSONValue? {
         let id = try requiredUUID("id", in: arguments)
         switch try requiredString("action", in: arguments) {
         case "load":
@@ -2969,7 +2979,13 @@ final class XomoAutomationRegistry {
             }
         case "update":
             if let intensity = arguments["intensity"]?.doubleValue { viewModel.filterIntensity = intensity }
-            viewModel.updateSmartFilterOnSelectedLayer(id)
+            let updatedLayerCount = viewModel.updateSmartFilterOnSelectedLayer(id)
+            guard updatedLayerCount > 0 else {
+                throw XomoAutomationCallError.invalidArgument("Smart filter cannot be updated")
+            }
+            return .object([
+                "updatedLayerCount": .number(Double(updatedLayerCount))
+            ])
         case "setOpacity":
             viewModel.setSmartFilterOpacityOnSelectedLayer(
                 id,
@@ -2998,6 +3014,7 @@ final class XomoAutomationRegistry {
             }
         default: throw XomoAutomationCallError.invalidArgument("Unknown smart filter management action")
         }
+        return nil
     }
 
     private func smartFilterBlendMode(_ rawValue: String?) throws -> ImageEditorBlendMode {
@@ -3060,7 +3077,7 @@ final class XomoAutomationRegistry {
     private func configureFilter(
         _ arguments: [String: XomoJSONValue],
         viewModel: ImageEditorViewModel
-    ) throws {
+    ) throws -> XomoJSONValue? {
         let rawValue = try requiredString("filter", in: arguments)
         guard let filter = ImageEditorFilter(rawValue: rawValue) else {
             throw XomoAutomationCallError.invalidArgument("Unknown filter")
@@ -3091,9 +3108,17 @@ final class XomoAutomationRegistry {
         case "apply": viewModel.applySelectedFilter()
         case "addLayer": viewModel.addFilterLayer()
         case "updateLayer": viewModel.updateSelectedFilterLayer()
-        case "addSmartFilter": viewModel.addSmartFilterToSelectedLayer()
+        case "addSmartFilter":
+            let addedLayerCount = viewModel.addSmartFilterToSelectedLayer()
+            guard addedLayerCount > 0 else {
+                throw XomoAutomationCallError.invalidArgument("No selected layers can accept a smart filter")
+            }
+            return .object([
+                "addedLayerCount": .number(Double(addedLayerCount))
+            ])
         default: throw XomoAutomationCallError.invalidArgument("Unknown filter configure action")
         }
+        return nil
     }
 
     private func numericSetting(_ value: XomoJSONValue, key: String) throws -> Double {
@@ -4078,7 +4103,7 @@ private extension XomoAutomationRegistry {
             "y": XomoAutomationSchema.number(description: "Canvas y coordinate for center")
         ]),
         tool("xomo.smart_filter.list", "List smart filters on the selected layer."),
-        tool("xomo.smart_filter.add", "Add a non-destructive smart filter to the selected layer.", [
+        tool("xomo.smart_filter.add", "Add a non-destructive smart filter to selected editable layers and return the added layer count.", [
             "filter": XomoAutomationSchema.string(description: "Filter identifier", values: ImageEditorFilter.allCases.map(\.rawValue)),
             "intensity": XomoAutomationSchema.number(description: "Filter intensity from 0 to 1"),
             "opacity": XomoAutomationSchema.number(description: "Result opacity from 0 to 1"),
@@ -4086,7 +4111,7 @@ private extension XomoAutomationRegistry {
         ], required: ["filter"]),
         tool("xomo.smart_filter.toggle", "Enable or disable a smart filter by UUID.", idProperties, required: ["id"]),
         tool("xomo.smart_filter.clear", "Remove all smart filters from selected layers and return the cleared layer count."),
-        tool("xomo.smart_filter.manage", "Load, update, duplicate, reorder, or remove a smart filter.", [
+        tool("xomo.smart_filter.manage", "Load, update, duplicate, reorder, or remove a smart filter; update returns the updated layer count.", [
             "id": XomoAutomationSchema.string(description: "Smart filter UUID"),
             "action": XomoAutomationSchema.string(description: "Management action", values: ["load", "update", "setOpacity", "setBlendMode", "duplicate", "remove", "moveUp", "moveDown"]),
             "intensity": XomoAutomationSchema.number(description: "Updated filter intensity"),
@@ -4098,7 +4123,7 @@ private extension XomoAutomationRegistry {
             "filter": XomoAutomationSchema.string(description: "Filter identifier", values: ImageEditorFilter.allCases.map(\.rawValue)),
             "intensity": XomoAutomationSchema.number(description: "Filter intensity from 0 to 1")
         ], required: ["filter"]),
-        tool("xomo.filter.configure", "Configure detailed filter settings and apply, add, update, or create a smart filter.", [
+        tool("xomo.filter.configure", "Configure detailed filter settings and apply, add, update, or create a smart filter; addSmartFilter returns the added layer count.", [
             "filter": XomoAutomationSchema.string(description: "Filter identifier", values: ImageEditorFilter.allCases.map(\.rawValue)),
             "action": XomoAutomationSchema.string(description: "Filter destination", values: ["apply", "addLayer", "updateLayer", "addSmartFilter"]),
             "settings": filterSettingsSchema

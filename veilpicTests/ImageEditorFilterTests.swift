@@ -655,7 +655,8 @@ struct ImageEditorFilterTests {
         #expect(secondaryFilters[1].kind == .wave)
         #expect(viewModel.loadedSmartFilterID == primaryTarget.id)
         #expect(viewModel.document.history.count == historyCount + 1)
-        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterUpdate"))
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterUpdateSelected"))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerSmartFilterUpdatedSelected", 2))
         #expect(!viewModel.loadedSmartFilterHasPendingChanges)
         #expect(!viewModel.smartFilterHasPendingControlChanges(primaryTarget.id))
         #expect(!viewModel.canUpdateLoadedSmartFilterOnSelectedLayer)
@@ -1317,7 +1318,7 @@ struct ImageEditorFilterTests {
         #expect(viewModel.canAddSmartFilterToSelectedLayer)
         viewModel.selectedFilter = .gaussianBlur
         viewModel.filterIntensity = 0.35
-        viewModel.addSmartFilterToSelectedLayer()
+        let addedLayerCount = viewModel.addSmartFilterToSelectedLayer()
 
         var first = try #require(layer(firstID, in: viewModel))
         var second = try #require(layer(secondID, in: viewModel))
@@ -1331,12 +1332,14 @@ struct ImageEditorFilterTests {
         #expect(second.smartFilters.first?.intensity == 0.35)
         #expect(locked.smartFilters.isEmpty)
         #expect(group.smartFilters.isEmpty)
-        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterAdd"))
+        #expect(addedLayerCount == 2)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterAddSelected"))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerSmartFilterAddedSelected", 2))
 
         #expect(viewModel.canUpdateLastSmartFilterOnSelectedLayer)
         viewModel.selectedFilter = .pixelate
         viewModel.filterIntensity = 0.8
-        viewModel.updateLastSmartFilterOnSelectedLayer()
+        let updatedLayerCount = viewModel.updateLastSmartFilterOnSelectedLayer()
 
         first = try #require(layer(firstID, in: viewModel))
         second = try #require(layer(secondID, in: viewModel))
@@ -1352,7 +1355,9 @@ struct ImageEditorFilterTests {
         #expect(second.smartFilters.first?.isEnabled == true)
         #expect(locked.smartFilters.isEmpty)
         #expect(group.smartFilters.isEmpty)
-        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterUpdate"))
+        #expect(updatedLayerCount == 2)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterUpdateSelected"))
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.layerSmartFilterUpdatedSelected", 2))
 
         #expect(viewModel.canClearSmartFiltersFromSelectedLayer)
         let clearedLayerCount = viewModel.clearSmartFiltersFromSelectedLayer()

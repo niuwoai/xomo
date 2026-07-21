@@ -225,6 +225,7 @@ struct XomoAutomationTests {
             ]
         ))
         #expect(addResponse.ok)
+        #expect(addResponse.result?.objectValue?["addedLayerCount"] == .number(1))
         let filterID = try #require(viewModel.document.selectedLayer?.smartFilters.first?.id)
         #expect(viewModel.smartFilterOpacity(filterID) == 0.4)
         #expect(viewModel.smartFilterBlendMode(filterID) == .softLight)
@@ -372,6 +373,113 @@ struct XomoAutomationTests {
         ))
         #expect(!emptyClearResponse.ok)
         #expect(viewModel.document.history.count == historyCountBeforeEmptyClear)
+    }
+
+    @Test func smartFilterAutomationReportsAffectedLayerCountsAndRejectsNoOpMutations() throws {
+        let viewModel = makeViewModel()
+        let primaryID = try #require(viewModel.document.selectedLayerID)
+        let peer = ImageEditorLayer.blank(name: "Peer", size: viewModel.document.canvasSize)
+        let peerID = peer.id
+        var locked = ImageEditorLayer.blank(name: "Locked", size: viewModel.document.canvasSize)
+        locked.isLocked = true
+        let lockedID = locked.id
+        viewModel.document.layers.append(contentsOf: [peer, locked])
+        viewModel.document.selectedLayerID = primaryID
+        viewModel.document.selectedLayerIDs = [primaryID, peerID, lockedID]
+
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        defer { registry.unregister(viewModel) }
+
+        let addResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.smart_filter.add",
+            arguments: [
+                "filter": .string(ImageEditorFilter.median.rawValue),
+                "intensity": .number(0.4)
+            ]
+        ))
+        #expect(addResponse.ok)
+        #expect(addResponse.result?.objectValue?["addedLayerCount"] == .number(2))
+        let primaryFilterID = try #require(
+            viewModel.document.layers.first { $0.id == primaryID }?.smartFilters.first?.id
+        )
+        #expect(viewModel.document.layers.first { $0.id == peerID }?.smartFilters.count == 1)
+        #expect(viewModel.document.layers.first { $0.id == lockedID }?.smartFilters.isEmpty == true)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterAddSelected"))
+
+        let updateResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.smart_filter.manage",
+            arguments: [
+                "id": .string(primaryFilterID.uuidString),
+                "action": .string("update"),
+                "intensity": .number(0.7)
+            ]
+        ))
+        #expect(updateResponse.ok)
+        #expect(updateResponse.result?.objectValue?["updatedLayerCount"] == .number(2))
+        #expect(viewModel.document.layers.first { $0.id == primaryID }?.smartFilters.first?.normalizedIntensity == 0.7)
+        #expect(viewModel.document.layers.first { $0.id == peerID }?.smartFilters.first?.normalizedIntensity == 0.7)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSmartFilterUpdateSelected"))
+
+        let historyCountBeforeNoOp = viewModel.document.history.count
+        let noOpUpdateResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.smart_filter.manage",
+            arguments: [
+                "id": .string(primaryFilterID.uuidString),
+                "action": .string("update"),
+                "intensity": .number(0.7)
+            ]
+        ))
+        #expect(!noOpUpdateResponse.ok)
+        #expect(viewModel.document.history.count == historyCountBeforeNoOp)
+
+        let primaryIndex = try #require(viewModel.document.layers.firstIndex { $0.id == primaryID })
+        viewModel.document.layers[primaryIndex].isLocked = true
+        let peerOnlyUpdateResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.smart_filter.manage",
+            arguments: [
+                "id": .string(primaryFilterID.uuidString),
+                "action": .string("update"),
+                "intensity": .number(0.9)
+            ]
+        ))
+        #expect(peerOnlyUpdateResponse.ok)
+        #expect(peerOnlyUpdateResponse.result?.objectValue?["updatedLayerCount"] == .number(1))
+        #expect(viewModel.document.layers.first { $0.id == primaryID }?.smartFilters.first?.normalizedIntensity == 0.7)
+        #expect(viewModel.document.layers.first { $0.id == peerID }?.smartFilters.first?.normalizedIntensity == 0.9)
+        #expect(viewModel.isSmartFilterLoadedForEditing(primaryFilterID))
+
+        let configuredAddResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.filter.configure",
+            arguments: [
+                "filter": .string(ImageEditorFilter.pixelate.rawValue),
+                "action": .string("addSmartFilter"),
+                "settings": .object(["intensity": .number(0.6)])
+            ]
+        ))
+        #expect(configuredAddResponse.ok)
+        #expect(configuredAddResponse.result?.objectValue?["addedLayerCount"] == .number(1))
+        #expect(viewModel.document.layers.first { $0.id == primaryID }?.smartFilters.count == 1)
+        #expect(viewModel.document.layers.first { $0.id == peerID }?.smartFilters.count == 2)
+
+        let peerIndex = try #require(viewModel.document.layers.firstIndex { $0.id == peerID })
+        viewModel.document.layers[peerIndex].isLocked = true
+        let historyCountBeforeRejectedAdd = viewModel.document.history.count
+        let rejectedAddResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.filter.configure",
+            arguments: [
+                "filter": .string(ImageEditorFilter.pixelate.rawValue),
+                "action": .string("addSmartFilter")
+            ]
+        ))
+        #expect(!rejectedAddResponse.ok)
+        #expect(viewModel.document.history.count == historyCountBeforeRejectedAdd)
     }
 
     @Test func registryCreatesListsAndDeletesNamedSlices() throws {
