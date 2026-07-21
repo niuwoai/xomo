@@ -3811,7 +3811,8 @@ struct XomoAutomationTests {
         var second = ImageEditorLayer.blank(name: "Second", size: canvasSize)
         var locked = ImageEditorLayer.blank(name: "Locked", size: canvasSize)
         first.style.strokeWidth = 2
-        second.style.strokeWidth = 8
+        second.style.strokeEnabled = true
+        second.style.strokeWidth = 12
         locked.style.strokeWidth = 4
         locked.isLocked = true
         viewModel.document.layers = [first, second, locked]
@@ -3834,6 +3835,7 @@ struct XomoAutomationTests {
         ))
 
         #expect(result.ok)
+        #expect(result.result?.objectValue?["updatedLayerCount"] == .number(1))
         #expect(viewModel.document.layers[0].style.strokeWidth == 12)
         #expect(viewModel.document.layers[1].style.strokeWidth == 12)
         #expect(viewModel.document.layers[2].style.strokeWidth == 4)
@@ -3841,6 +3843,18 @@ struct XomoAutomationTests {
         #expect(viewModel.document.layers[1].style.strokeEnabled)
         #expect(viewModel.document.history.count == historyCount + 1)
         #expect(viewModel.document.selectedLayerIDs == [first.id, second.id, locked.id])
+
+        let historyAfterUpdate = viewModel.document.history.count
+        let repeated = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("strokeWidth"),
+                "value": .number(12)
+            ]
+        ))
+        #expect(!repeated.ok)
+        #expect(viewModel.document.history.count == historyAfterUpdate)
     }
 
     @Test func registrySetsLayerStyleStrokeOpacityAcrossEditableSelection() throws {

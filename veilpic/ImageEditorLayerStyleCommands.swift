@@ -929,7 +929,8 @@ extension ImageEditorViewModel {
         return changedIndices.count
     }
 
-    func setSelectedLayerStrokeWidth(_ width: Double) {
+    @discardableResult
+    func setSelectedLayerStrokeWidth(_ width: Double) -> Int {
         updateSelectedLayerStyle {
             $0.strokeEnabled = true
             $0.strokeWidth = max(1, min(24, CGFloat(width)))
@@ -1623,17 +1624,33 @@ extension ImageEditorViewModel {
         }
     }
 
-    private func updateSelectedLayerStyle(_ mutate: (inout ImageEditorLayerStyle) -> Void) {
+    @discardableResult
+    private func updateSelectedLayerStyle(
+        _ mutate: (inout ImageEditorLayerStyle) -> Void
+    ) -> Int {
         let targetIndices = selectedLayerStyleTargetIndices()
         guard !targetIndices.isEmpty else {
             statusText = L10n.text("imageEditor.status.layerLocked")
-            return
+            return 0
+        }
+        let updates = targetIndices.compactMap { index -> (Int, ImageEditorLayerStyle)? in
+            var style = document.layers[index].style
+            mutate(&style)
+            guard ImageEditorProjectLayerStyle(style: style)
+                != ImageEditorProjectLayerStyle(style: document.layers[index].style)
+            else { return nil }
+            return (index, style)
+        }
+        guard !updates.isEmpty else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return 0
         }
         pushUndo()
-        for index in targetIndices {
-            mutate(&document.layers[index].style)
+        for (index, style) in updates {
+            document.layers[index].style = style
         }
         appendHistory(L10n.text("imageEditor.history.layerStyle"))
+        return updates.count
     }
 
     private func selectedLayerStyleBooleanState(

@@ -1,7 +1,8 @@
 # 像界（Xomo）产品概览
 
-> 最后更新：2026-07-22 | 当前版本：v2.12.0-rc445
+> 最后更新：2026-07-22 | 当前版本：v2.12.0-rc446
 
+v2.12.0-rc446 让描边宽度批量更新具备真实结果：通用图层样式更新器先计算候选样式，只提交与现状确实不同的目标；相同宽度且描边已启用、锁定层和不适用层安全跳过，需要自动启用描边的图层仍计入更新。重复设置不制造空 Undo/History，MCP `xomo.layer.style_settings(property=strokeWidth)` 返回 `updatedLayerCount` 并对零变化明确失败。定向与回归测试 5/5、CLI 2/2、发布契约 7/7 通过；下一次完整 Release、冒烟和 `/Applications` 覆盖门禁仍为 rc480。
 v2.12.0-rc445 让图层样式效果缩放具备真实批量结果：只修改比例确实变化的可编辑样式层，相同值、锁定层和无样式层安全跳过，界面数量反馈与 MCP `updatedLayerCount` 都使用实际修改数。重复设置同一比例不制造空 Undo/History，MCP 零变化明确失败；1%–1000% 范围夹取和旧项目解码/往返保持兼容。定向与回归测试 5/5、CLI 2/2、发布契约 7/7 通过；下一次完整 Release、冒烟和 `/Applications` 覆盖门禁仍为 rc480。
 v2.12.0-rc444 让图层样式可见性自动化具备可核验结果：“隐藏所选 / 显示所选 / 隐藏全部 / 显示全部”均返回实际改变图层数，混合状态只修改需要变化的目标，锁定层继续按非破坏式样式可见性语义参与。重复操作不制造空 Undo/History，MCP `xomo.layer.style` 返回 `hiddenLayerCount` 或 `shownLayerCount`，零变化明确失败。定向与回归测试 5/5、CLI 2/2、发布契约 7/7 通过；下一次完整 Release、冒烟和 `/Applications` 覆盖门禁仍为 rc480。
 v2.12.0-rc443 让图层样式复制、粘贴与清除具备可核验的批量结果：粘贴只修改与剪贴板样式确实不同的可编辑目标，相同样式、锁定层和复制来源层安全跳过；清除只统计真正带有样式的可编辑图层。重复粘贴或清除不再制造空 Undo/History，MCP `xomo.layer.style` 返回来源图层 ID、`pastedLayerCount` 与 `clearedLayerCount`，零实际目标明确失败。定向与回归测试 5/5、CLI 2/2、发布契约 7/7 通过；下一次完整 Release、冒烟和 `/Applications` 覆盖门禁仍为 rc480。
