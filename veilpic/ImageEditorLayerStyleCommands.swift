@@ -262,6 +262,10 @@ extension ImageEditorViewModel {
         document.selectedLayer?.style.strokeColor ?? .white
     }
 
+    var selectedLayerStrokeColorState: ImageEditorLayerStyleValueState<ImageEditorProjectColor> {
+        selectedLayerStyleValueState { ImageEditorProjectColor(color: $0.strokeColor) }
+    }
+
     var selectedLayerStrokeGradientStyle: ImageEditorGradientFillStyle {
         document.selectedLayer?.style.strokeGradientStyle ?? .linear
     }
@@ -969,15 +973,13 @@ extension ImageEditorViewModel {
         }
     }
 
-    func setSelectedLayerStrokeColorFromForeground() {
-        updateSelectedLayerStyle {
-            $0.strokeEnabled = true
-            $0.strokeFillType = .color
-            $0.strokeColor = strokeColor()
-        }
+    @discardableResult
+    func setSelectedLayerStrokeColorFromForeground() -> Int {
+        setSelectedLayerStrokeColor(strokeColor())
     }
 
-    func setSelectedLayerStrokeColor(_ color: NSColor) {
+    @discardableResult
+    func setSelectedLayerStrokeColor(_ color: NSColor) -> Int {
         updateSelectedLayerStyle {
             $0.strokeEnabled = true
             $0.strokeFillType = .color

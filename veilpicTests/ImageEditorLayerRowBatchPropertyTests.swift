@@ -572,6 +572,59 @@ struct ImageEditorLayerRowBatchPropertyTests {
         try assertStrokeFillTypeConvergence()
     }
 
+    @Test func layerStyleStrokeColorMixedValueConvergesAcrossEditableSelection() throws {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        let firstID = fixture.layers[0].id
+        let secondID = fixture.layers[1].id
+        let lockedID = fixture.layers[2].id
+        viewModel.document.layers[0].style.strokeEnabled = true
+        viewModel.document.layers[0].style.strokeFillType = .color
+        viewModel.document.layers[0].style.strokeColor = .systemRed
+        viewModel.document.layers[1].style.strokeEnabled = true
+        viewModel.document.layers[1].style.strokeFillType = .color
+        viewModel.document.layers[1].style.strokeColor = .systemGreen
+        viewModel.document.layers[2].style.strokeColor = .systemBlue
+        viewModel.document.layers[2].isLocked = true
+        select(Set(fixture.layers.map(\.id)), primary: firstID, in: viewModel)
+        let historyCount = viewModel.document.history.count
+        let targetColor = NSColor(srgbRed: 0.12, green: 0.68, blue: 0.34, alpha: 1)
+        let targetProjectColor = ImageEditorProjectColor(color: targetColor)
+
+        #expect(viewModel.selectedLayerStrokeColorState == .mixed)
+        #expect(viewModel.setSelectedLayerStrokeColor(targetColor) == 2)
+        #expect(viewModel.selectedLayerStrokeColorState == .value(targetProjectColor))
+        #expect((try layer(firstID, in: viewModel)).style.strokeColor.isEqual(targetColor))
+        #expect((try layer(secondID, in: viewModel)).style.strokeColor.isEqual(targetColor))
+        #expect((try layer(lockedID, in: viewModel)).style.strokeColor.isEqual(NSColor.systemBlue))
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+
+        let historyAfterUpdate = viewModel.document.history.count
+        #expect(viewModel.setSelectedLayerStrokeColor(targetColor) == 0)
+        #expect(viewModel.document.history.count == historyAfterUpdate)
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerStrokeColorState == .mixed)
+        viewModel.redo()
+        #expect(viewModel.selectedLayerStrokeColorState == .value(targetProjectColor))
+    }
+
+    @Test func layerStyleStrokeColorPickerShowsLocalizedMixedValue() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("viewModel.selectedLayerStrokeColorState.isMixed"))
+        #expect(source.contains("L10n.text(\"imageEditor.properties.multipleValues\")"))
+        #expect(source.contains("ColorPicker(\"\", selection: selectedLayerStrokeColorBinding, supportsOpacity: false)"))
+        #expect(source.contains(".focusable(false)"))
+    }
+
     @Test func layerStyleStrokeFillTypePickerHidesIncorrectMixedBranch() throws {
         let repositoryRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
