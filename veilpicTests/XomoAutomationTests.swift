@@ -3632,6 +3632,89 @@ struct XomoAutomationTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerEffectsShowAll"))
     }
 
+    @Test func registryReportsLayerEffectVisibilityCountsAndRejectsNoOps() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        defer { registry.unregister(viewModel) }
+        let firstID = try #require(viewModel.document.selectedLayerID)
+        let firstIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[firstIndex].style.strokeEnabled = true
+        viewModel.addLayer()
+        let secondID = try #require(viewModel.document.selectedLayerID)
+        let secondIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[secondIndex].style.shadowEnabled = true
+        viewModel.document.layers[secondIndex].style.effectsEnabled = false
+        viewModel.document.selectedLayerID = firstID
+        viewModel.document.selectedLayerIDs = [firstID, secondID]
+        let initialHistoryCount = viewModel.document.history.count
+
+        let hideSelected = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style",
+            arguments: ["action": .string("hideSelected")]
+        ))
+        #expect(hideSelected.ok)
+        #expect(hideSelected.result?.objectValue?["hiddenLayerCount"] == .number(1))
+        #expect(viewModel.document.history.count == initialHistoryCount + 1)
+        let historyAfterHideSelected = viewModel.document.history.count
+        let repeatedHideSelected = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style",
+            arguments: ["action": .string("hideSelected")]
+        ))
+        #expect(!repeatedHideSelected.ok)
+        #expect(viewModel.document.history.count == historyAfterHideSelected)
+
+        let showSelected = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style",
+            arguments: ["action": .string("showSelected")]
+        ))
+        #expect(showSelected.ok)
+        #expect(showSelected.result?.objectValue?["shownLayerCount"] == .number(2))
+        let historyAfterShowSelected = viewModel.document.history.count
+        let repeatedShowSelected = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style",
+            arguments: ["action": .string("showSelected")]
+        ))
+        #expect(!repeatedShowSelected.ok)
+        #expect(viewModel.document.history.count == historyAfterShowSelected)
+
+        let hideAll = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style",
+            arguments: ["action": .string("hideAll")]
+        ))
+        #expect(hideAll.ok)
+        #expect(hideAll.result?.objectValue?["hiddenLayerCount"] == .number(2))
+        let historyAfterHideAll = viewModel.document.history.count
+        let repeatedHideAll = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style",
+            arguments: ["action": .string("hideAll")]
+        ))
+        #expect(!repeatedHideAll.ok)
+        #expect(viewModel.document.history.count == historyAfterHideAll)
+
+        let showAll = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style",
+            arguments: ["action": .string("showAll")]
+        ))
+        #expect(showAll.ok)
+        #expect(showAll.result?.objectValue?["shownLayerCount"] == .number(2))
+        let historyAfterShowAll = viewModel.document.history.count
+        let repeatedShowAll = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style",
+            arguments: ["action": .string("showAll")]
+        ))
+        #expect(!repeatedShowAll.ok)
+        #expect(viewModel.document.history.count == historyAfterShowAll)
+    }
+
     @Test func registryReportsActualLayerStylePasteAndClearCountsAndRejectsNoOps() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

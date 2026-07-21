@@ -182,6 +182,54 @@ struct ImageEditorLayerStyleVisibilityScaleTests {
         #expect(viewModel.statusText == L10n.format("imageEditor.status.layerEffectsHiddenSelected", 1))
     }
 
+    @Test func effectVisibilityCommandsReturnActualCountsAndSkipNoOpHistory() throws {
+        let viewModel = makeViewModel()
+        let firstID = try #require(viewModel.document.selectedLayerID)
+        let firstIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[firstIndex].style.strokeEnabled = true
+
+        viewModel.addLayer()
+        let secondID = try #require(viewModel.document.selectedLayerID)
+        let secondIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[secondIndex].style.shadowEnabled = true
+        viewModel.document.layers[secondIndex].style.effectsEnabled = false
+        viewModel.document.layers[secondIndex].isLocked = true
+
+        viewModel.addLayer()
+        let thirdIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[thirdIndex].style.outerGlowEnabled = true
+        viewModel.document.layers[thirdIndex].style.effectsEnabled = false
+        viewModel.document.selectedLayerID = firstID
+        viewModel.document.selectedLayerIDs = [firstID, secondID]
+        let initialHistoryCount = viewModel.document.history.count
+
+        #expect(viewModel.hideSelectedLayerEffects() == 1)
+        #expect(viewModel.document.history.count == initialHistoryCount + 1)
+        let historyAfterHideSelected = viewModel.document.history.count
+        #expect(viewModel.hideSelectedLayerEffects() == 0)
+        #expect(viewModel.document.history.count == historyAfterHideSelected)
+        #expect(viewModel.statusText == L10n.text("imageEditor.status.operationFailed"))
+
+        #expect(viewModel.showSelectedLayerEffects() == 2)
+        #expect(viewModel.document.layers[firstIndex].style.effectsEnabled)
+        #expect(viewModel.document.layers[secondIndex].style.effectsEnabled)
+        let historyAfterShowSelected = viewModel.document.history.count
+        #expect(viewModel.showSelectedLayerEffects() == 0)
+        #expect(viewModel.document.history.count == historyAfterShowSelected)
+
+        #expect(viewModel.showAllLayerEffects() == 1)
+        #expect(viewModel.document.layers[thirdIndex].style.effectsEnabled)
+        let historyAfterShowAll = viewModel.document.history.count
+        #expect(viewModel.showAllLayerEffects() == 0)
+        #expect(viewModel.document.history.count == historyAfterShowAll)
+
+        #expect(viewModel.hideAllLayerEffects() == 3)
+        #expect(viewModel.document.layers.filter(\.style.hasConfiguredEffects).allSatisfy { !$0.style.effectsEnabled })
+        let historyAfterHideAll = viewModel.document.history.count
+        #expect(viewModel.hideAllLayerEffects() == 0)
+        #expect(viewModel.document.history.count == historyAfterHideAll)
+    }
+
     @Test func scaleEffectsUsesOneAbsolutePercentageAcrossEditableStyledSelection() throws {
         let viewModel = makeViewModel()
         let firstID = try #require(viewModel.document.selectedLayerID)

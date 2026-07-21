@@ -841,21 +841,23 @@ extension ImageEditorViewModel {
         return targetIndices.count
     }
 
-    func toggleSelectedLayerEffects() {
+    @discardableResult
+    func toggleSelectedLayerEffects() -> Int {
         let targetIndices = selectedLayerEffectVisibilityTargetIndices()
         guard !targetIndices.isEmpty else {
             statusText = L10n.text("imageEditor.status.operationFailed")
-            return
+            return 0
         }
         let shouldEnable = targetIndices.contains { !document.layers[$0].style.effectsEnabled }
         if shouldEnable {
-            showSelectedLayerEffects()
+            return showSelectedLayerEffects()
         } else {
-            hideSelectedLayerEffects()
+            return hideSelectedLayerEffects()
         }
     }
 
-    func hideSelectedLayerEffects() {
+    @discardableResult
+    func hideSelectedLayerEffects() -> Int {
         setLayerEffectsEnabled(
             false,
             indices: selectedLayerEffectVisibilityTargetIndices(),
@@ -864,7 +866,8 @@ extension ImageEditorViewModel {
         )
     }
 
-    func showSelectedLayerEffects() {
+    @discardableResult
+    func showSelectedLayerEffects() -> Int {
         setLayerEffectsEnabled(
             true,
             indices: selectedLayerEffectVisibilityTargetIndices(),
@@ -873,7 +876,8 @@ extension ImageEditorViewModel {
         )
     }
 
-    func hideAllLayerEffects() {
+    @discardableResult
+    func hideAllLayerEffects() -> Int {
         setAllLayerEffectsEnabled(
             false,
             historyKey: "imageEditor.history.layerEffectsHideAll",
@@ -881,7 +885,8 @@ extension ImageEditorViewModel {
         )
     }
 
-    func showAllLayerEffects() {
+    @discardableResult
+    func showAllLayerEffects() -> Int {
         setAllLayerEffectsEnabled(
             true,
             historyKey: "imageEditor.history.layerEffectsShowAll",
@@ -1697,16 +1702,16 @@ extension ImageEditorViewModel {
         _ enabled: Bool,
         historyKey: String,
         statusKey: String
-    ) {
+    ) -> Int {
         let targetIndices = document.layers.indices.filter { index in
             document.layers[index].style.hasConfiguredEffects
                 && document.layers[index].style.effectsEnabled != enabled
         }
         guard !targetIndices.isEmpty else {
             statusText = L10n.text("imageEditor.status.operationFailed")
-            return
+            return 0
         }
-        setLayerEffectsEnabled(
+        return setLayerEffectsEnabled(
             enabled,
             indices: targetIndices,
             historyKey: historyKey,
@@ -1719,15 +1724,19 @@ extension ImageEditorViewModel {
         indices: [Int],
         historyKey: String,
         statusKey: String
-    ) {
+    ) -> Int {
         let changedIndices = indices.filter { document.layers[$0].style.effectsEnabled != enabled }
-        guard !changedIndices.isEmpty else { return }
+        guard !changedIndices.isEmpty else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return 0
+        }
         pushUndo()
         for index in changedIndices {
             document.layers[index].style.effectsEnabled = enabled
         }
         appendHistory(L10n.text(historyKey))
         statusText = L10n.format(statusKey, changedIndices.count)
+        return changedIndices.count
     }
 
     private func gradientOverlayEndColor() -> NSColor {

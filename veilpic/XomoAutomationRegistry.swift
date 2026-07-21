@@ -2011,13 +2011,42 @@ final class XomoAutomationRegistry {
             return .object([
                 "clearedLayerCount": .number(Double(clearedLayerCount))
             ])
-        case "hideSelected": viewModel.hideSelectedLayerEffects()
-        case "showSelected": viewModel.showSelectedLayerEffects()
-        case "hideAll": viewModel.hideAllLayerEffects()
-        case "showAll": viewModel.showAllLayerEffects()
+        case "hideSelected":
+            return try layerEffectVisibilityResult(
+                viewModel.hideSelectedLayerEffects(),
+                resultKey: "hiddenLayerCount"
+            )
+        case "showSelected":
+            return try layerEffectVisibilityResult(
+                viewModel.showSelectedLayerEffects(),
+                resultKey: "shownLayerCount"
+            )
+        case "hideAll":
+            return try layerEffectVisibilityResult(
+                viewModel.hideAllLayerEffects(),
+                resultKey: "hiddenLayerCount"
+            )
+        case "showAll":
+            return try layerEffectVisibilityResult(
+                viewModel.showAllLayerEffects(),
+                resultKey: "shownLayerCount"
+            )
         default: throw XomoAutomationCallError.invalidArgument("Unknown layer style action")
         }
-        return actionResult(viewModel)
+    }
+
+    private func layerEffectVisibilityResult(
+        _ changedLayerCount: Int,
+        resultKey: String
+    ) throws -> XomoJSONValue {
+        guard changedLayerCount > 0 else {
+            throw XomoAutomationCallError.operationFailed(
+                "No layer effect visibility state needs to change"
+            )
+        }
+        return .object([
+            resultKey: .number(Double(changedLayerCount))
+        ])
     }
 
     private func layerStylePresetAction(
@@ -3830,7 +3859,7 @@ private extension XomoAutomationRegistry {
             "mode": XomoAutomationSchema.string(description: "Alignment or distribution mode", values: ["left", "horizontalCenter", "right", "top", "verticalCenter", "bottom", "horizontal", "vertical"]),
             "target": XomoAutomationSchema.string(description: "Alignment target", values: ["selectionBounds", "canvas", "pixelSelection"])
         ], required: ["action", "mode"]),
-        tool("xomo.layer.style", "Copy layer styles; paste or clear selected layers with actual affected counts; hide, show, browse built-in styles, or preview, import, and manage portable persisted complete layer style presets.", [
+        tool("xomo.layer.style", "Copy layer styles; paste, clear, hide, or show layers with actual affected counts; browse built-in styles, or preview, import, and manage portable persisted complete layer style presets.", [
             "action": XomoAutomationSchema.string(description: "Layer style action", values: ["copy", "paste", "clear", "hideSelected", "showSelected", "hideAll", "showAll", "presetList", "presetCatalog", "presetFavorites", "presetRecent", "presetCreate", "presetApply", "presetDuplicate", "presetFavorite", "presetDelete", "presetRename", "presetMove", "presetImportPreview", "presetImport", "presetExport"]),
             "id": XomoAutomationSchema.string(description: "Layer style preset ID for apply, duplicate, favorite, delete, rename, move, or selected export"),
             "favorite": XomoAutomationSchema.boolean(description: "Whether presetFavorite should add or remove the preset from favorites"),
