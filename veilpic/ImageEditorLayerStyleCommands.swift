@@ -944,7 +944,8 @@ extension ImageEditorViewModel {
         }
     }
 
-    func setSelectedLayerStrokeOpacity(_ opacity: Double) {
+    @discardableResult
+    func setSelectedLayerStrokeOpacity(_ opacity: Double) -> Int {
         updateSelectedLayerStyle {
             $0.strokeEnabled = true
             $0.strokeOpacity = max(0.05, min(1, CGFloat(opacity)))

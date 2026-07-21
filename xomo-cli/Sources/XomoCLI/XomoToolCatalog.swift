@@ -153,7 +153,7 @@ enum XomoToolCatalog {
         ("xomo.layer.rasterize", "Rasterize type, shape, fill content, vector masks, Smart Objects, layer styles, or complete selected layers."),
         ("xomo.layer.align", "Align or distribute selected layers."),
         ("xomo.layer.style", "Copy layer styles; paste, clear, hide, or show layers with actual affected counts; browse built-in styles, or preview, import, manage, favorite, and revisit portable layer style presets."),
-        ("xomo.layer.style_settings", "Set effect scale or stroke width with actual updated-layer counts and edit detailed layer style properties."),
+        ("xomo.layer.style_settings", "Set effect scale, stroke width, or stroke opacity with actual updated-layer counts and edit detailed layer style properties."),
         ("xomo.layer.selection", "Select layers by state, relationship, kind, blend mode, or label."),
         ("xomo.layer.link", "Link, unlink, or select linked layers."),
         ("xomo.layer.smart_object", "Convert and manage embedded smart object layers."),

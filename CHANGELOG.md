@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.12.0-rc447 - 2026-07-22
+
+### Changed
+- 描边透明度批量更新返回实际修改图层数；MCP `xomo.layer.style_settings(property=strokeOpacity)` 返回 `updatedLayerCount`。
+
+### Fixed
+- 已处于目标透明度且描边已启用的图层、锁定层与不适用层不计入结果；需要自动启用描边仍视为真实更新。
+- 重复设置同一透明度不制造空 Undo/History，MCP 零变化明确失败；输入继续夹取到 5%–100%。
+
+### Verification
+- 描边透明度实际数量、重复值、范围夹取、混合值、锁定层、Undo/Redo、描边宽度与公共更新器回归测试 5/5、SwiftPM CLI 2/2、发布版本契约 7/7 通过。
+
 ## 2.12.0-rc446 - 2026-07-22
 
 ### Changed

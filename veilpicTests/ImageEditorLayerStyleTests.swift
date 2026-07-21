@@ -41,7 +41,10 @@ struct ImageEditorLayerStyleTests {
         #expect(viewModel.setSelectedLayerStrokeWidth(9) == 0)
         #expect(viewModel.document.history.count == historyAfterStrokeWidth)
         #expect(viewModel.statusText == L10n.text("imageEditor.status.operationFailed"))
-        viewModel.setSelectedLayerStrokeOpacity(0.45)
+        #expect(viewModel.setSelectedLayerStrokeOpacity(0.45) == 2)
+        let historyAfterStrokeOpacity = viewModel.document.history.count
+        #expect(viewModel.setSelectedLayerStrokeOpacity(0.45) == 0)
+        #expect(viewModel.document.history.count == historyAfterStrokeOpacity)
         viewModel.toggleSelectedLayerShadow()
         viewModel.setSelectedLayerShadowDistance(14)
         viewModel.setSelectedLayerShadowAngle(35)
