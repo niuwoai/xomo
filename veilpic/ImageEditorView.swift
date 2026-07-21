@@ -7063,6 +7063,18 @@ struct ImageEditorView: View {
                     ColorPicker("", selection: selectedLayerShadowColorBinding, supportsOpacity: false)
                         .labelsHidden()
                         .frame(width: 32)
+                        .focusable(false)
+                        .accessibilityValue(
+                            viewModel.selectedLayerShadowColorState.isMixed
+                                ? L10n.text("imageEditor.properties.multipleValues")
+                                : ""
+                        )
+                    if viewModel.selectedLayerShadowColorState.isMixed {
+                        Text(L10n.text("imageEditor.properties.multipleValues"))
+                            .font(.system(size: 9, weight: .medium))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                            .lineLimit(1)
+                    }
                     Spacer(minLength: 4)
                     Button(L10n.text("imageEditor.action.shadowColorFromForeground")) {
                         viewModel.setSelectedLayerShadowColorFromForeground()

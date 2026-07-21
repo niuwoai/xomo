@@ -310,6 +310,10 @@ extension ImageEditorViewModel {
         document.selectedLayer?.style.shadowColor ?? .black
     }
 
+    var selectedLayerShadowColorState: ImageEditorLayerStyleValueState<ImageEditorProjectColor> {
+        selectedLayerStyleValueState { ImageEditorProjectColor(color: $0.shadowColor) }
+    }
+
     var selectedLayerOuterGlowColor: NSColor {
         document.selectedLayer?.style.outerGlowColor ?? .systemYellow
     }
@@ -1049,14 +1053,13 @@ extension ImageEditorViewModel {
         }
     }
 
-    func setSelectedLayerShadowColorFromForeground() {
-        updateSelectedLayerStyle {
-            $0.shadowEnabled = true
-            $0.shadowColor = shadowColor()
-        }
+    @discardableResult
+    func setSelectedLayerShadowColorFromForeground() -> Int {
+        setSelectedLayerShadowColor(shadowColor())
     }
 
-    func setSelectedLayerShadowColor(_ color: NSColor) {
+    @discardableResult
+    func setSelectedLayerShadowColor(_ color: NSColor) -> Int {
         updateSelectedLayerStyle {
             $0.shadowEnabled = true
             $0.shadowColor = color.usingColorSpace(.sRGB) ?? color

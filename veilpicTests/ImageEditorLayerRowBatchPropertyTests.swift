@@ -1786,6 +1786,56 @@ struct ImageEditorLayerRowBatchPropertyTests {
         return fixture
     }
 
+    @Test func layerStyleShadowColorMixedValueConvergesAcrossEditableSelection() throws {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        let firstID = fixture.layers[0].id
+        let secondID = fixture.layers[1].id
+        let lockedID = fixture.layers[2].id
+        let targetColor = NSColor(srgbRed: 0.16, green: 0.24, blue: 0.72, alpha: 1)
+        let targetProjectColor = ImageEditorProjectColor(color: targetColor)
+        viewModel.document.layers[0].style.shadowEnabled = true
+        viewModel.document.layers[0].style.shadowColor = .systemRed
+        viewModel.document.layers[1].style.shadowEnabled = true
+        viewModel.document.layers[1].style.shadowColor = targetColor
+        viewModel.document.layers[2].style.shadowColor = .systemBlue
+        viewModel.document.layers[2].isLocked = true
+        select(Set(fixture.layers.map(\.id)), primary: firstID, in: viewModel)
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.selectedLayerShadowColorState == .mixed)
+        #expect(viewModel.setSelectedLayerShadowColor(targetColor) == 1)
+        #expect(viewModel.selectedLayerShadowColorState == .value(targetProjectColor))
+        #expect((try layer(firstID, in: viewModel)).style.shadowColor.isEqual(targetColor))
+        #expect((try layer(secondID, in: viewModel)).style.shadowColor.isEqual(targetColor))
+        #expect((try layer(lockedID, in: viewModel)).style.shadowColor.isEqual(NSColor.systemBlue))
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+
+        let historyAfterUpdate = viewModel.document.history.count
+        #expect(viewModel.setSelectedLayerShadowColor(targetColor) == 0)
+        #expect(viewModel.document.history.count == historyAfterUpdate)
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerShadowColorState == .mixed)
+        viewModel.redo()
+        #expect(viewModel.selectedLayerShadowColorState == .value(targetProjectColor))
+    }
+
+    @Test func layerStyleShadowColorPickerShowsLocalizedMixedValue() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("viewModel.selectedLayerShadowColorState.isMixed"))
+        #expect(source.contains("ColorPicker(\"\", selection: selectedLayerShadowColorBinding, supportsOpacity: false)"))
+        #expect(source.contains("L10n.text(\"imageEditor.properties.multipleValues\")"))
+    }
+
     @Test func layerStyleColorOverlayOpacityMixedValueConvergesAcrossEditableSelection() throws {
         let fixture = colorOverlayOpacityFixture()
         let viewModel = fixture.viewModel
