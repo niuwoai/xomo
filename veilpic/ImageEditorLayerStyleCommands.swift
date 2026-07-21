@@ -196,6 +196,18 @@ extension ImageEditorViewModel {
             && targetIndices.allSatisfy { document.layers[$0].style.effectsEnabled }
     }
 
+    var canHideSelectedLayerEffects: Bool {
+        selectedLayerEffectVisibilityTargetIndices().contains {
+            document.layers[$0].style.effectsEnabled
+        }
+    }
+
+    var canShowSelectedLayerEffects: Bool {
+        selectedLayerEffectVisibilityTargetIndices().contains {
+            !document.layers[$0].style.effectsEnabled
+        }
+    }
+
     var canHideAllLayerEffects: Bool {
         document.layers.contains { $0.style.hasConfiguredEffects && $0.style.effectsEnabled }
     }
@@ -828,7 +840,7 @@ extension ImageEditorViewModel {
             statusText = L10n.text("imageEditor.status.operationFailed")
             return
         }
-        let shouldEnable = !targetIndices.contains { document.layers[$0].style.effectsEnabled }
+        let shouldEnable = targetIndices.contains { !document.layers[$0].style.effectsEnabled }
         if shouldEnable {
             showSelectedLayerEffects()
         } else {

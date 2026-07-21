@@ -2937,6 +2937,8 @@ struct ImageEditorScopeTests {
         #expect(source.contains("viewModel.copySelectedLayerStyle()"))
         #expect(source.contains("viewModel.pasteLayerStyleToSelectedLayers()"))
         #expect(source.contains("viewModel.clearSelectedLayerStyles()"))
+        #expect(source.contains(".disabled(!viewModel.canHideSelectedLayerEffects)"))
+        #expect(source.contains(".disabled(!viewModel.canShowSelectedLayerEffects)"))
         #expect(source.contains("viewModel.toggleSelectedLayerStroke()"))
         #expect(source.contains("viewModel.toggleSelectedLayerShadow()"))
         #expect(source.contains("viewModel.toggleSelectedLayerInnerShadow()"))

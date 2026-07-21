@@ -971,11 +971,11 @@ extension ImageEditorView {
         Button(L10n.text("imageEditor.action.layerEffectsHideSelected")) {
             viewModel.hideSelectedLayerEffects()
         }
-        .disabled(!viewModel.canToggleSelectedLayerEffects || !viewModel.selectedLayerEffectsAreVisible)
+        .disabled(!viewModel.canHideSelectedLayerEffects)
         Button(L10n.text("imageEditor.action.layerEffectsShowSelected")) {
             viewModel.showSelectedLayerEffects()
         }
-        .disabled(!viewModel.canToggleSelectedLayerEffects || viewModel.selectedLayerEffectsAreVisible)
+        .disabled(!viewModel.canShowSelectedLayerEffects)
         Button(L10n.text("imageEditor.action.layerEffectsHideAll")) {
             viewModel.hideAllLayerEffects()
         }
