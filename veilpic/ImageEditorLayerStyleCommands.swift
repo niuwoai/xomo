@@ -1009,12 +1009,16 @@ extension ImageEditorViewModel {
         }
     }
 
-    func setSelectedLayerStrokePatternKind(_ kind: ImageEditorPatternOverlayKind) {
+    @discardableResult
+    func setSelectedLayerStrokePatternKind(_ kind: ImageEditorPatternOverlayKind) -> Int {
         updateSelectedLayerStyle {
+            let fillTypeChanged = $0.strokeFillType != .pattern
             $0.strokeEnabled = true
             $0.strokeFillType = .pattern
             $0.strokePatternKind = kind
-            $0.strokePatternColor = strokePatternColor()
+            if fillTypeChanged {
+                $0.strokePatternColor = strokePatternColor()
+            }
         }
     }
 

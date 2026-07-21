@@ -735,13 +735,21 @@ struct ImageEditorLayerRowBatchPropertyTests {
         let historyCount = viewModel.document.history.count
 
         #expect(viewModel.selectedLayerStrokePatternKindState == .mixed)
-        viewModel.setSelectedLayerStrokePatternKind(.dots)
+        let updatedLayerCount = viewModel.setSelectedLayerStrokePatternKind(.dots)
+        #expect(updatedLayerCount == 1)
         #expect(viewModel.selectedLayerStrokePatternKindState == .value(.dots))
         #expect((try layer(firstID, in: viewModel)).style.strokePatternKind == .dots)
         #expect((try layer(secondID, in: viewModel)).style.strokePatternKind == .dots)
         #expect((try layer(lockedID, in: viewModel)).style.strokePatternKind == .checkerboard)
+        #expect((try layer(firstID, in: viewModel)).style.strokePatternColor.isEqual(NSColor.systemRed))
+        #expect((try layer(secondID, in: viewModel)).style.strokePatternColor.isEqual(NSColor.systemGreen))
         #expect(viewModel.document.history.count == historyCount + 1)
         #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+
+        let historyAfterUpdate = viewModel.document.history.count
+        #expect(viewModel.setSelectedLayerStrokePatternKind(.dots) == 0)
+        #expect((try layer(secondID, in: viewModel)).style.strokePatternColor.isEqual(NSColor.systemGreen))
+        #expect(viewModel.document.history.count == historyAfterUpdate)
 
         viewModel.undo()
         #expect(viewModel.selectedLayerStrokePatternKindState == .mixed)
@@ -754,9 +762,12 @@ struct ImageEditorLayerRowBatchPropertyTests {
         let viewModel = fixture.viewModel
         for index in viewModel.document.layers.indices {
             viewModel.document.layers[index].style.strokeFillType = .pattern
+            viewModel.document.layers[index].style.strokeEnabled = true
         }
         viewModel.document.layers[0].style.strokePatternKind = .checkerboard
-        viewModel.document.layers[1].style.strokePatternKind = .diagonalStripes
+        viewModel.document.layers[0].style.strokePatternColor = .systemRed
+        viewModel.document.layers[1].style.strokePatternKind = .dots
+        viewModel.document.layers[1].style.strokePatternColor = .systemGreen
         viewModel.document.layers[2].style.strokePatternKind = .checkerboard
         viewModel.document.layers[2].isLocked = true
         select(Set(fixture.layers.map(\.id)), primary: fixture.layers[0].id, in: viewModel)
