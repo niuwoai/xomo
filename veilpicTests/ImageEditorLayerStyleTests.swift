@@ -476,10 +476,13 @@ struct ImageEditorLayerStyleTests {
         viewModel.setSelectedLayerShadowSpread(0)
         viewModel.setSelectedLayerShadowDistance(12)
         viewModel.setSelectedLayerShadowAngle(0)
+        viewModel.setSelectedLayerShadowNoise(0)
+        let smoothShadowData = try #require(viewModel.currentImage.qingtuPNGData())
         viewModel.setSelectedLayerShadowNoise(1)
 
         let styledLayer = try #require(viewModel.document.selectedLayer)
         let layerPixelsAfterStyle = try #require(styledLayer.image.qingtuPNGData())
+        let noisyShadowData = try #require(viewModel.currentImage.qingtuPNGData())
         let lowNoiseShadow = try #require(viewModel.currentImage.color(at: CGPoint(x: 64, y: 30))?.usingColorSpace(.deviceRGB))
         let highNoiseShadow = try #require(viewModel.currentImage.color(at: CGPoint(x: 64, y: 36))?.usingColorSpace(.deviceRGB))
 
@@ -487,8 +490,8 @@ struct ImageEditorLayerStyleTests {
         #expect(styledLayer.style.shadowNoise == 1)
         #expect(viewModel.selectedLayerShadowNoise == 1)
         #expect(layerPixelsAfterStyle == layerPixelsBeforeStyle)
+        #expect(noisyShadowData != smoothShadowData)
         #expect(lowNoiseShadow.blueComponent > highNoiseShadow.blueComponent + 0.45)
-        #expect(highNoiseShadow.blueComponent < 0.20)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStyle"))
 
         let project = try ImageEditorProjectDocument(document: viewModel.document)

@@ -1103,7 +1103,8 @@ extension ImageEditorViewModel {
         }
     }
 
-    func setSelectedLayerShadowNoise(_ noise: Double) {
+    @discardableResult
+    func setSelectedLayerShadowNoise(_ noise: Double) -> Int {
         updateSelectedLayerStyle {
             $0.shadowEnabled = true
             $0.shadowNoise = max(0, min(1, CGFloat(noise)))
