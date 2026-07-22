@@ -1408,20 +1408,36 @@ struct ImageEditorLayerRowBatchPropertyTests {
         let historyCount = viewModel.document.history.count
 
         #expect(viewModel.selectedLayerInnerShadowNoiseState == .mixed)
-        viewModel.setSelectedLayerInnerShadowNoise(0.6)
+        #expect(viewModel.setSelectedLayerInnerShadowNoise(0.6) == 1)
         #expect(viewModel.selectedLayerInnerShadowNoiseState == .value(0.6))
         #expect((try layer(firstID, in: viewModel)).style.innerShadowNoise == 0.6)
         #expect((try layer(secondID, in: viewModel)).style.innerShadowNoise == 0.6)
         #expect((try layer(lockedID, in: viewModel)).style.innerShadowNoise == 0.4)
         #expect((try layer(firstID, in: viewModel)).style.innerShadowEnabled)
         #expect((try layer(secondID, in: viewModel)).style.innerShadowEnabled)
+        #expect((try layer(secondID, in: viewModel)).style.innerShadowColor == .systemRed)
         #expect(viewModel.document.history.count == historyCount + 1)
         #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
 
+        let historyAfterUpdate = viewModel.document.history.count
+        #expect(viewModel.setSelectedLayerInnerShadowNoise(0.6) == 0)
+        #expect(viewModel.document.history.count == historyAfterUpdate)
+
+        #expect(viewModel.setSelectedLayerInnerShadowNoise(-1) == 2)
+        #expect(viewModel.selectedLayerInnerShadowNoiseState == .value(0))
+        #expect((try layer(firstID, in: viewModel)).style.innerShadowNoise == 0)
+        #expect((try layer(secondID, in: viewModel)).style.innerShadowNoise == 0)
+
+        #expect(viewModel.setSelectedLayerInnerShadowNoise(10) == 2)
+        #expect(viewModel.selectedLayerInnerShadowNoiseState == .value(1))
+        #expect((try layer(firstID, in: viewModel)).style.innerShadowNoise == 1)
+        #expect((try layer(secondID, in: viewModel)).style.innerShadowNoise == 1)
+        #expect((try layer(secondID, in: viewModel)).style.innerShadowColor == .systemRed)
+
         viewModel.undo()
-        #expect(viewModel.selectedLayerInnerShadowNoiseState == .mixed)
+        #expect(viewModel.selectedLayerInnerShadowNoiseState == .value(0))
         viewModel.redo()
-        #expect(viewModel.selectedLayerInnerShadowNoiseState == .value(0.6))
+        #expect(viewModel.selectedLayerInnerShadowNoiseState == .value(1))
     }
 
     @Test func layerStyleInnerShadowNoiseControlReusesMixedNumericStepper() throws {
@@ -1443,7 +1459,9 @@ struct ImageEditorLayerRowBatchPropertyTests {
         let fixture = makeFixture()
         let viewModel = fixture.viewModel
         viewModel.document.layers[0].style.innerShadowNoise = 0.15
-        viewModel.document.layers[1].style.innerShadowNoise = 0.8
+        viewModel.document.layers[1].style.innerShadowEnabled = true
+        viewModel.document.layers[1].style.innerShadowNoise = 0.6
+        viewModel.document.layers[1].style.innerShadowColor = .systemRed
         viewModel.document.layers[2].style.innerShadowNoise = 0.4
         viewModel.document.layers[2].isLocked = true
         select(Set(fixture.layers.map(\.id)), primary: fixture.layers[0].id, in: viewModel)

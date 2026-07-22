@@ -2466,7 +2466,16 @@ final class XomoAutomationRegistry {
             return .object([
                 "updatedLayerCount": .number(Double(updatedLayerCount))
             ])
-        case "innerShadowNoise": viewModel.setSelectedLayerInnerShadowNoise(try number())
+        case "innerShadowNoise":
+            let updatedLayerCount = viewModel.setSelectedLayerInnerShadowNoise(try number())
+            guard updatedLayerCount > 0 else {
+                throw XomoAutomationCallError.operationFailed(
+                    "No editable layer needs the requested inner shadow noise"
+                )
+            }
+            return .object([
+                "updatedLayerCount": .number(Double(updatedLayerCount))
+            ])
         case "innerShadowContour":
             let rawValue = try requiredString("innerShadowContour", in: arguments)
             guard let contour = ImageEditorLayerEffectContour(rawValue: rawValue) else {
