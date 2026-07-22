@@ -766,6 +766,70 @@ struct ImageEditorLayerStyleTests {
         #expect(restoredLayer.style.outerGlowColor.isEqual(glowColor))
     }
 
+    @Test func imageEditorOuterGlowRangeChangesFalloffAndPreservesLegacyProjects() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let glowColor = NSColor(srgbRed: 0.92, green: 0.16, blue: 0.08, alpha: 1)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: solidImage(color: .clear, size: canvasSize)
+        ) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(
+            centerRectImage(size: canvasSize, color: .white),
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+        let layerPixelsBeforeStyle = try #require(
+            viewModel.document.selectedLayer?.image.qingtuPNGData()
+        )
+
+        viewModel.setSelectedLayerOuterGlowOpacity(1)
+        viewModel.setSelectedLayerOuterGlowColor(glowColor)
+        viewModel.setSelectedLayerOuterGlowBlur(10)
+        viewModel.setSelectedLayerOuterGlowSpread(0)
+        viewModel.setSelectedLayerOuterGlowNoise(0)
+        viewModel.setSelectedLayerOuterGlowContour(.linear)
+        #expect(viewModel.setSelectedLayerOuterGlowRange(1) == 1)
+        let fullRange = viewModel.currentImage
+        let fullRangeData = try #require(fullRange.qingtuPNGData())
+
+        #expect(viewModel.setSelectedLayerOuterGlowRange(0.25) == 1)
+        let narrowRange = viewModel.currentImage
+        let narrowRangeData = try #require(narrowRange.qingtuPNGData())
+
+        var maximumAlphaIncrease: CGFloat = 0
+        for x in 0..<24 {
+            let point = CGPoint(x: CGFloat(x), y: 30)
+            let fullAlpha = try #require(
+                fullRange.color(at: point)?.usingColorSpace(.deviceRGB)?.alphaComponent
+            )
+            let narrowAlpha = try #require(
+                narrowRange.color(at: point)?.usingColorSpace(.deviceRGB)?.alphaComponent
+            )
+            maximumAlphaIncrease = max(maximumAlphaIncrease, narrowAlpha - fullAlpha)
+        }
+
+        let styledLayer = try #require(viewModel.document.selectedLayer)
+        #expect(styledLayer.style.outerGlowEnabled)
+        #expect(styledLayer.style.outerGlowRange == 0.25)
+        #expect(styledLayer.style.outerGlowContour == .linear)
+        #expect(try #require(styledLayer.image.qingtuPNGData()) == layerPixelsBeforeStyle)
+        #expect(narrowRangeData != fullRangeData)
+        #expect(maximumAlphaIncrease > 0.03)
+
+        let project = try ImageEditorProjectDocument(document: viewModel.document)
+        let restoredDocument = try project.restoredDocument()
+        let restoredLayer = try #require(restoredDocument.layers.first { $0.id == styledLayer.id })
+        #expect(restoredLayer.style.outerGlowRange == 0.25)
+
+        let encodedStyle = try JSONEncoder().encode(ImageEditorProjectLayerStyle(style: styledLayer.style))
+        var legacyObject = try #require(
+            JSONSerialization.jsonObject(with: encodedStyle) as? [String: Any]
+        )
+        legacyObject.removeValue(forKey: "outerGlowRange")
+        let legacyData = try JSONSerialization.data(withJSONObject: legacyObject)
+        let legacyStyle = try JSONDecoder().decode(ImageEditorProjectLayerStyle.self, from: legacyData)
+        #expect(legacyStyle.layerStyle.outerGlowRange == 1)
+    }
+
     @Test func imageEditorInnerGlowContourChangesFalloffAndRoundTripsProjectState() async throws {
         let canvasSize = NSSize(width: 80, height: 60)
         let glowColor = NSColor(srgbRed: 0.9, green: 0.08, blue: 0.12, alpha: 1)

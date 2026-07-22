@@ -2207,6 +2207,7 @@ struct ImageEditorLayerStyle {
     var outerGlowSpread: CGFloat = 3
     var outerGlowNoise: CGFloat = 0
     var outerGlowContour = ImageEditorLayerEffectContour.linear
+    var outerGlowRange: CGFloat = 0.5
     var innerGlowEnabled = false
     var innerGlowColor = NSColor.systemCyan
     var innerGlowOpacity: CGFloat = 0.36
@@ -3544,7 +3545,10 @@ struct ImageEditorLayer: Identifiable {
                     }
                 } ?? NSImage(size: outputSize)
                 let blurredGlow = glowCanvas.blurred(radius: style.outerGlowBlur) ?? glowCanvas
-                let contouredGlow = blurredGlow.applyingEffectContour(style.outerGlowContour) ?? blurredGlow
+                let contouredGlow = blurredGlow.applyingEffectContour(
+                    style.outerGlowContour,
+                    range: style.outerGlowRange
+                ) ?? blurredGlow
                 contouredGlow.draw(
                     in: CGRect(origin: .zero, size: outputSize),
                     from: CGRect(origin: .zero, size: contouredGlow.size),

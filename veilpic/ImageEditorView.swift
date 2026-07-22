@@ -4221,6 +4221,14 @@ struct ImageEditorView: View {
         }
     }
 
+    private var selectedLayerOuterGlowRangeBinding: Binding<Double> {
+        Binding {
+            viewModel.selectedLayerOuterGlowRange
+        } set: { value in
+            viewModel.setSelectedLayerOuterGlowRange(value)
+        }
+    }
+
     private var selectedLayerInnerGlowOpacityBinding: Binding<Double> {
         Binding {
             viewModel.selectedLayerInnerGlowOpacity
@@ -7411,6 +7419,15 @@ struct ImageEditorView: View {
                     title: \.title
                 ) { contour in
                     viewModel.setSelectedLayerOuterGlowContour(contour)
+                }
+                layerStyleNumericStepper(
+                    state: viewModel.selectedLayerOuterGlowRangeState,
+                    value: selectedLayerOuterGlowRangeBinding,
+                    range: 0.01...1,
+                    step: 0.05,
+                    accessibilityIdentifier: "image-editor-layer-style-outer-glow-range"
+                ) { value in
+                    L10n.format("imageEditor.properties.outerGlowRangeValue", Int((value * 100).rounded()))
                 }
                 layerStyleNumericStepper(
                     state: viewModel.selectedLayerInnerGlowOpacityState,

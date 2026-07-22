@@ -523,6 +523,14 @@ extension ImageEditorViewModel {
         selectedLayerStyleValueState(\.outerGlowContour)
     }
 
+    var selectedLayerOuterGlowRange: Double {
+        Double(document.selectedLayer?.style.outerGlowRange ?? 0.5)
+    }
+
+    var selectedLayerOuterGlowRangeState: ImageEditorLayerStyleValueState<CGFloat> {
+        selectedLayerStyleValueState(\.outerGlowRange)
+    }
+
     var selectedLayerInnerGlowOpacity: Double {
         Double(document.selectedLayer?.style.innerGlowOpacity ?? 0.36)
     }
@@ -1370,6 +1378,14 @@ extension ImageEditorViewModel {
         updateSelectedLayerStyle {
             $0.outerGlowEnabled = true
             $0.outerGlowContour = contour
+        }
+    }
+
+    @discardableResult
+    func setSelectedLayerOuterGlowRange(_ range: Double) -> Int {
+        updateSelectedLayerStyle {
+            $0.outerGlowEnabled = true
+            $0.outerGlowRange = max(0.01, min(1, CGFloat(range)))
         }
     }
 

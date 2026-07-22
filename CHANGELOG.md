@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.12.0-rc490 - 2026-07-23
+
+### Added
+- “外发光”增加 Photoshop 式范围控制：1%–100% 真实重映射轮廓后的 Alpha 衰减；新样式默认 50%，旧工程缺字段时按 100% 恢复，保持历史画面不变。
+- 范围参数贯通不可聚焦的三语多选步进器、锁定层跳过、单步 Undo/Redo、工程与样式预设往返，以及 MCP/CLI `xomo.layer.style_settings(property=outerGlowRange)` 的真实 `updatedLayerCount`。
+
+### Fixed
+- 重复或夹取后等价的范围输入不再制造空 History；调整范围不会覆盖颜色、透明度、模糊、扩展、杂色或轮廓。
+
+### Verification
+- Xcode 定向测试 4/4 通过，覆盖真实外发光像素差异、工程/旧格式往返、多选事务、不可聚焦界面接线与 MCP 修改计数；SwiftPM CLI 2/2、发布契约 4/4（10 条断言）通过。下一次完整 Release、全量冒烟与 `/Applications` 覆盖门禁仍为 rc520。
+
 ## 2.12.0-rc489 - 2026-07-23
 
 ### Added

@@ -1142,6 +1142,7 @@
 "imageEditor.properties.outerGlowBlurValue" = "外側光彩のぼかし：%d px";
 "imageEditor.properties.outerGlowSpreadValue" = "スプレッド：%d px";
 "imageEditor.properties.outerGlowNoiseValue" = "外側光彩のノイズ：%d%%";
+"imageEditor.properties.outerGlowRangeValue" = "外側光彩の範囲：%d%%";
 "imageEditor.properties.innerGlowOpacityValue" = "内側光彩の不透明度：%d%%";
 "imageEditor.properties.innerGlowBlurValue" = "内側光彩のぼかし：%d px";
 "imageEditor.properties.innerGlowChokeValue" = "チョーク：%d px";
