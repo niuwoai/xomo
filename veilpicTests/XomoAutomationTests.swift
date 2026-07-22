@@ -6751,6 +6751,27 @@ struct XomoAutomationTests {
 
     @Test func registrySetsLayerStylePatternOverlayKindWithAdvertisedEnum() throws {
         let viewModel = makeViewModel()
+        let canvasSize = viewModel.document.canvasSize
+        var first = ImageEditorLayer.blank(name: "First", size: canvasSize)
+        var second = ImageEditorLayer.blank(name: "Second", size: canvasSize)
+        var locked = ImageEditorLayer.blank(name: "Locked", size: canvasSize)
+        first.style.patternOverlayKind = .checkerboard
+        first.style.patternOverlayColor = .systemBlue
+        first.style.patternOverlayOpacity = 0.25
+        first.style.patternOverlayScale = 8
+        second.style.patternOverlayKind = .dots
+        second.style.patternOverlayColor = .systemGreen
+        second.style.patternOverlayOpacity = 0.75
+        second.style.patternOverlayScale = 24
+        locked.style.patternOverlayKind = .checkerboard
+        locked.style.patternOverlayColor = .systemOrange
+        locked.style.patternOverlayOpacity = 0.4
+        locked.style.patternOverlayScale = 12
+        locked.isLocked = true
+        viewModel.document.layers = [first, second, locked]
+        viewModel.document.selectedLayerID = first.id
+        viewModel.document.selectedLayerIDs = [first.id, second.id, locked.id]
+        let historyCount = viewModel.document.history.count
         let registry = XomoAutomationRegistry.shared
         registry.register(viewModel)
 
@@ -6767,9 +6788,34 @@ struct XomoAutomationTests {
         ))
 
         #expect(result.ok)
-        #expect(viewModel.document.selectedLayer?.style.patternOverlayKind == .diagonalStripes)
-        #expect(viewModel.document.selectedLayer?.style.patternOverlayEnabled == true)
+        #expect(result.result?.objectValue?["updatedLayerCount"] == .number(2))
+        #expect(viewModel.document.layers[0].style.patternOverlayKind == .diagonalStripes)
+        #expect(viewModel.document.layers[1].style.patternOverlayKind == .diagonalStripes)
+        #expect(viewModel.document.layers[2].style.patternOverlayKind == .checkerboard)
+        #expect(viewModel.document.layers[0].style.patternOverlayColor.isEqual(NSColor.systemBlue))
+        #expect(viewModel.document.layers[1].style.patternOverlayColor.isEqual(NSColor.systemGreen))
+        #expect(viewModel.document.layers[2].style.patternOverlayColor.isEqual(NSColor.systemOrange))
+        #expect(viewModel.document.layers[0].style.patternOverlayOpacity == 0.25)
+        #expect(viewModel.document.layers[1].style.patternOverlayOpacity == 0.75)
+        #expect(viewModel.document.layers[0].style.patternOverlayScale == 8)
+        #expect(viewModel.document.layers[1].style.patternOverlayScale == 24)
+        #expect(viewModel.document.layers[0].style.patternOverlayEnabled)
+        #expect(viewModel.document.layers[1].style.patternOverlayEnabled)
+        #expect(viewModel.document.history.count == historyCount + 1)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStyle"))
+        #expect(viewModel.document.selectedLayerIDs == [first.id, second.id, locked.id])
+
+        let historyAfterUpdate = viewModel.document.history.count
+        let repeated = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("patternOverlayKind"),
+                "patternOverlayKind": .string("diagonalStripes")
+            ]
+        ))
+        #expect(!repeated.ok)
+        #expect(viewModel.document.history.count == historyAfterUpdate)
     }
 
     @Test func registrySetsLayerStylePatternOverlayScaleAcrossEditableSelection() throws {

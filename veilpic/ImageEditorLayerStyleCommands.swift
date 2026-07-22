@@ -1558,11 +1558,11 @@ extension ImageEditorViewModel {
         }
     }
 
-    func setSelectedLayerPatternOverlayKind(_ kind: ImageEditorPatternOverlayKind) {
+    @discardableResult
+    func setSelectedLayerPatternOverlayKind(_ kind: ImageEditorPatternOverlayKind) -> Int {
         updateSelectedLayerStyle {
             $0.patternOverlayEnabled = true
             $0.patternOverlayKind = kind
-            $0.patternOverlayColor = patternOverlayColor()
         }
     }
 

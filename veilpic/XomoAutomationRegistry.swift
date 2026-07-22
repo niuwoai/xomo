@@ -2817,7 +2817,15 @@ final class XomoAutomationRegistry {
             guard let kind = ImageEditorPatternOverlayKind(rawValue: rawValue) else {
                 throw XomoAutomationCallError.invalidArgument("Unknown pattern overlay kind")
             }
-            viewModel.setSelectedLayerPatternOverlayKind(kind)
+            let updatedLayerCount = viewModel.setSelectedLayerPatternOverlayKind(kind)
+            guard updatedLayerCount > 0 else {
+                throw XomoAutomationCallError.operationFailed(
+                    "No editable layer needs the requested pattern overlay kind"
+                )
+            }
+            return .object([
+                "updatedLayerCount": .number(Double(updatedLayerCount))
+            ])
         case "patternOverlayOpacity": viewModel.setSelectedLayerPatternOverlayOpacity(try number())
         case "patternOverlayScale": viewModel.setSelectedLayerPatternOverlayScale(try number())
         case "satinOpacity": viewModel.setSelectedLayerSatinOpacity(try number())
@@ -4375,7 +4383,7 @@ private extension XomoAutomationRegistry {
             "direction": XomoAutomationSchema.string(description: "Preset ordering direction", values: ImageEditorLayerStylePresetMoveDirection.allCases.map(\.rawValue)),
             "path": XomoAutomationSchema.string(description: "Local .xomostyles path for preset import preview, import, or export")
         ], required: ["action"]),
-        tool("xomo.layer.style_settings", "Set effect scale; stroke; shadow; inner-shadow; outer/inner-glow settings; color-overlay color/opacity; and complete gradient-overlay settings with actual updated-layer counts. Gradient start color uses the current foreground color; gradient end color uses the current background color. Shadow angle reports whether global light changed; direct global-light updates report affected layer/effect counts across linked shadows, inner shadows, and bevels. Remaining pattern-overlay, satin, and bevel properties stay available.", [
+        tool("xomo.layer.style_settings", "Set effect scale; stroke; shadow; inner-shadow; outer/inner-glow settings; color-overlay color/opacity; complete gradient-overlay settings; and pattern-overlay kind with actual updated-layer counts. Gradient start color uses the current foreground color; gradient end color uses the current background color. Shadow angle reports whether global light changed; direct global-light updates report affected layer/effect counts across linked shadows, inner shadows, and bevels. Remaining pattern-overlay, satin, and bevel properties stay available.", [
             "property": XomoAutomationSchema.string(description: "Layer style property", values: ["effectScale", "strokeWidth", "strokePosition", "strokeFillType", "strokeGradientStyle", "strokeGradientAngle", "strokePatternKind", "strokePatternScale", "strokeOpacity", "strokeColor", "shadowOpacity", "shadowColor", "shadowBlur", "shadowSpread", "shadowNoise", "shadowContour", "shadowDistance", "shadowAngle", "globalLightAngle", "innerShadowOpacity", "innerShadowBlur", "innerShadowChoke", "innerShadowNoise", "innerShadowContour", "innerShadowDistance", "innerShadowAngle", "outerGlowOpacity", "outerGlowColor", "outerGlowBlur", "outerGlowSpread", "outerGlowTechnique", "outerGlowNoise", "outerGlowContour", "outerGlowRange", "outerGlowJitter", "innerGlowOpacity", "innerGlowColor", "innerGlowBlur", "innerGlowChoke", "innerGlowTechnique", "innerGlowNoise", "innerGlowSource", "innerGlowContour", "innerGlowRange", "innerGlowJitter", "colorOverlayOpacity", "colorOverlayColor", "gradientOverlayOpacity", "gradientOverlayStartColor", "gradientOverlayEndColor", "gradientOverlayScale", "gradientOverlayAngle", "gradientOverlayStyle", "patternOverlayKind", "patternOverlayOpacity", "patternOverlayScale", "satinOpacity", "satinColor", "satinDistance", "satinSize", "satinAngle", "satinInvert", "satinContour", "bevelSize", "bevelOpacity", "bevelHighlightColor", "bevelShadowColor", "bevelSoften", "bevelAngle", "bevelDirection"]),
             "value": XomoAutomationSchema.number(description: "Numeric style value"),
             "position": XomoAutomationSchema.string(description: "Stroke position", values: ImageEditorStrokePosition.allCases.map(\.rawValue)),

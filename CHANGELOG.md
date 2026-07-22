@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.12.0-rc503 - 2026-07-23
+
+### Fixed
+- 图案叠加类型现在是参数独立的批量事务：切换棋盘格、斜纹或圆点时只启用效果并修改类型，不再把各图层已经配置的图案颜色重置为当前前景色。
+- 图案颜色、透明度和缩放在类型切换时完整保留；锁定层和重复类型安全跳过，零变化不创建空 Undo/History。
+
+### Automation
+- `xomo.layer.style_settings property=patternOverlayKind` 现在返回实际 `updatedLayerCount`；没有图层需要变化时明确失败，界面与 MCP/CLI 共用同一事务。
+
+### Verification
+- Xcode 批量属性套件与精确 MCP 用例 126/126、SwiftPM CLI 2/2、发布契约 4/4（10 条断言）通过；覆盖三种图案类型、颜色/透明度/缩放保持、锁定层保护、真实修改数、Undo/Redo、重复类型零历史及 MCP 零变化失败。常规完整 Release、全量冒烟与 `/Applications` 覆盖门禁仍为 rc520；下一小步处理图案叠加透明度事务。
+
 ## 2.12.0-rc502 - 2026-07-23
 
 ### Added
