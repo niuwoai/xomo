@@ -1194,10 +1194,14 @@ extension ImageEditorViewModel {
         return result
     }
 
-    func setSelectedLayerInnerShadowOpacity(_ opacity: Double) {
+    @discardableResult
+    func setSelectedLayerInnerShadowOpacity(_ opacity: Double) -> Int {
         updateSelectedLayerStyle {
+            let wasEnabled = $0.innerShadowEnabled
             $0.innerShadowEnabled = true
-            $0.innerShadowColor = innerShadowColor()
+            if !wasEnabled {
+                $0.innerShadowColor = innerShadowColor()
+            }
             $0.innerShadowOpacity = max(0.05, min(1, CGFloat(opacity)))
         }
     }

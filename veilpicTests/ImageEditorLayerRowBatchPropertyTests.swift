@@ -1561,20 +1561,36 @@ struct ImageEditorLayerRowBatchPropertyTests {
         let historyCount = viewModel.document.history.count
 
         #expect(viewModel.selectedLayerInnerShadowOpacityState == .mixed)
-        viewModel.setSelectedLayerInnerShadowOpacity(0.6)
-        #expect(viewModel.selectedLayerInnerShadowOpacityState == .value(0.6))
-        #expect((try layer(firstID, in: viewModel)).style.innerShadowOpacity == 0.6)
-        #expect((try layer(secondID, in: viewModel)).style.innerShadowOpacity == 0.6)
+        #expect(viewModel.setSelectedLayerInnerShadowOpacity(0.8) == 1)
+        #expect(viewModel.selectedLayerInnerShadowOpacityState == .value(0.8))
+        #expect((try layer(firstID, in: viewModel)).style.innerShadowOpacity == 0.8)
+        #expect((try layer(secondID, in: viewModel)).style.innerShadowOpacity == 0.8)
         #expect((try layer(lockedID, in: viewModel)).style.innerShadowOpacity == 0.4)
         #expect((try layer(firstID, in: viewModel)).style.innerShadowEnabled)
         #expect((try layer(secondID, in: viewModel)).style.innerShadowEnabled)
+        #expect((try layer(secondID, in: viewModel)).style.innerShadowColor == .systemRed)
         #expect(viewModel.document.history.count == historyCount + 1)
         #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
 
+        let historyAfterUpdate = viewModel.document.history.count
+        #expect(viewModel.setSelectedLayerInnerShadowOpacity(0.8) == 0)
+        #expect(viewModel.document.history.count == historyAfterUpdate)
+
+        #expect(viewModel.setSelectedLayerInnerShadowOpacity(0) == 2)
+        #expect(viewModel.selectedLayerInnerShadowOpacityState == .value(0.05))
+        #expect((try layer(firstID, in: viewModel)).style.innerShadowOpacity == 0.05)
+        #expect((try layer(secondID, in: viewModel)).style.innerShadowOpacity == 0.05)
+
+        #expect(viewModel.setSelectedLayerInnerShadowOpacity(2) == 2)
+        #expect(viewModel.selectedLayerInnerShadowOpacityState == .value(1))
+        #expect((try layer(firstID, in: viewModel)).style.innerShadowOpacity == 1)
+        #expect((try layer(secondID, in: viewModel)).style.innerShadowOpacity == 1)
+        #expect((try layer(secondID, in: viewModel)).style.innerShadowColor == .systemRed)
+
         viewModel.undo()
-        #expect(viewModel.selectedLayerInnerShadowOpacityState == .mixed)
+        #expect(viewModel.selectedLayerInnerShadowOpacityState == .value(0.05))
         viewModel.redo()
-        #expect(viewModel.selectedLayerInnerShadowOpacityState == .value(0.6))
+        #expect(viewModel.selectedLayerInnerShadowOpacityState == .value(1))
     }
 
     @Test func layerStyleInnerShadowOpacityControlReusesMixedNumericStepper() throws {
@@ -1596,7 +1612,9 @@ struct ImageEditorLayerRowBatchPropertyTests {
         let fixture = makeFixture()
         let viewModel = fixture.viewModel
         viewModel.document.layers[0].style.innerShadowOpacity = 0.2
+        viewModel.document.layers[1].style.innerShadowEnabled = true
         viewModel.document.layers[1].style.innerShadowOpacity = 0.8
+        viewModel.document.layers[1].style.innerShadowColor = .systemRed
         viewModel.document.layers[2].style.innerShadowOpacity = 0.4
         viewModel.document.layers[2].isLocked = true
         select(Set(fixture.layers.map(\.id)), primary: fixture.layers[0].id, in: viewModel)
