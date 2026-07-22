@@ -2826,7 +2826,16 @@ final class XomoAutomationRegistry {
             return .object([
                 "updatedLayerCount": .number(Double(updatedLayerCount))
             ])
-        case "patternOverlayOpacity": viewModel.setSelectedLayerPatternOverlayOpacity(try number())
+        case "patternOverlayOpacity":
+            let updatedLayerCount = viewModel.setSelectedLayerPatternOverlayOpacity(try number())
+            guard updatedLayerCount > 0 else {
+                throw XomoAutomationCallError.operationFailed(
+                    "No editable layer needs the requested pattern overlay opacity"
+                )
+            }
+            return .object([
+                "updatedLayerCount": .number(Double(updatedLayerCount))
+            ])
         case "patternOverlayScale": viewModel.setSelectedLayerPatternOverlayScale(try number())
         case "satinOpacity": viewModel.setSelectedLayerSatinOpacity(try number())
         case "satinColor": viewModel.setSelectedLayerSatinColor(viewModel.foregroundColor)

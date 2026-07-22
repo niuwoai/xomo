@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.12.0-rc505 - 2026-07-23
+
+### Fixed
+- 图案叠加透明度现在是参数独立的批量事务：调整 5%–100% 透明度时只启用效果并修改透明度，不再把每个图层已经配置的图案颜色替换为当前前景色。
+- 图案类型、颜色和缩放在透明度调整时完整保留；锁定层与重复值安全跳过，零变化不创建空 Undo/History。
+
+### Automation
+- `xomo.layer.style_settings property=patternOverlayOpacity` 现在返回实际 `updatedLayerCount`；没有图层需要变化时明确失败，超出范围的值统一夹取到 5%–100%。
+
+### Verification
+- Xcode 定向 3/3、SwiftPM CLI 2/2、发布契约 4/4（10 条断言）通过；覆盖混合值收敛、真实修改数、颜色/缩放保持、锁定层保护、范围夹取、Undo/Redo、重复值零历史和 MCP 零变化失败。常规完整 Release、全量冒烟与 `/Applications` 覆盖门禁仍为 rc520；下一小步处理图案叠加缩放事务。
+
 ## 2.12.0-rc504 - 2026-07-23
 
 ### Fixed

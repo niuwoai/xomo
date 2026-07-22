@@ -1566,10 +1566,10 @@ extension ImageEditorViewModel {
         }
     }
 
-    func setSelectedLayerPatternOverlayOpacity(_ opacity: Double) {
+    @discardableResult
+    func setSelectedLayerPatternOverlayOpacity(_ opacity: Double) -> Int {
         updateSelectedLayerStyle {
             $0.patternOverlayEnabled = true
-            $0.patternOverlayColor = patternOverlayColor()
             $0.patternOverlayOpacity = max(0.05, min(1, CGFloat(opacity)))
         }
     }

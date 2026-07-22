@@ -6864,8 +6864,15 @@ struct XomoAutomationTests {
         var second = ImageEditorLayer.blank(name: "Second", size: canvasSize)
         var locked = ImageEditorLayer.blank(name: "Locked", size: canvasSize)
         first.style.patternOverlayOpacity = 0.25
-        second.style.patternOverlayOpacity = 0.75
+        first.style.patternOverlayColor = .systemBlue
+        first.style.patternOverlayScale = 8
+        second.style.patternOverlayEnabled = true
+        second.style.patternOverlayOpacity = 0.6
+        second.style.patternOverlayColor = .systemGreen
+        second.style.patternOverlayScale = 24
         locked.style.patternOverlayOpacity = 0.4
+        locked.style.patternOverlayColor = .systemOrange
+        locked.style.patternOverlayScale = 12
         locked.isLocked = true
         viewModel.document.layers = [first, second, locked]
         viewModel.document.selectedLayerID = first.id
@@ -6887,13 +6894,63 @@ struct XomoAutomationTests {
         ))
 
         #expect(result.ok)
+        #expect(result.result?.objectValue?["updatedLayerCount"] == .number(1))
         #expect(viewModel.document.layers[0].style.patternOverlayOpacity == 0.6)
         #expect(viewModel.document.layers[1].style.patternOverlayOpacity == 0.6)
         #expect(viewModel.document.layers[2].style.patternOverlayOpacity == 0.4)
+        #expect(viewModel.document.layers[0].style.patternOverlayColor.isEqual(NSColor.systemBlue))
+        #expect(viewModel.document.layers[1].style.patternOverlayColor.isEqual(NSColor.systemGreen))
+        #expect(viewModel.document.layers[2].style.patternOverlayColor.isEqual(NSColor.systemOrange))
+        #expect(viewModel.document.layers[0].style.patternOverlayScale == 8)
+        #expect(viewModel.document.layers[1].style.patternOverlayScale == 24)
         #expect(viewModel.document.layers[0].style.patternOverlayEnabled)
         #expect(viewModel.document.layers[1].style.patternOverlayEnabled)
         #expect(viewModel.document.history.count == historyCount + 1)
         #expect(viewModel.document.selectedLayerIDs == [first.id, second.id, locked.id])
+
+        let historyAfterUpdate = viewModel.document.history.count
+        let repeated = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("patternOverlayOpacity"),
+                "value": .number(0.6)
+            ]
+        ))
+        #expect(!repeated.ok)
+        #expect(viewModel.document.history.count == historyAfterUpdate)
+
+        let minimum = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("patternOverlayOpacity"),
+                "value": .number(0)
+            ]
+        ))
+        #expect(minimum.ok)
+        #expect(minimum.result?.objectValue?["updatedLayerCount"] == .number(2))
+        #expect(viewModel.document.layers[0].style.patternOverlayOpacity == 0.05)
+        #expect(viewModel.document.layers[1].style.patternOverlayOpacity == 0.05)
+        #expect(viewModel.document.layers[2].style.patternOverlayOpacity == 0.4)
+        #expect(viewModel.document.layers[0].style.patternOverlayColor.isEqual(NSColor.systemBlue))
+        #expect(viewModel.document.layers[1].style.patternOverlayColor.isEqual(NSColor.systemGreen))
+
+        let maximum = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("patternOverlayOpacity"),
+                "value": .number(2)
+            ]
+        ))
+        #expect(maximum.ok)
+        #expect(maximum.result?.objectValue?["updatedLayerCount"] == .number(2))
+        #expect(viewModel.document.layers[0].style.patternOverlayOpacity == 1)
+        #expect(viewModel.document.layers[1].style.patternOverlayOpacity == 1)
+        #expect(viewModel.document.layers[2].style.patternOverlayOpacity == 0.4)
+        #expect(viewModel.document.layers[0].style.patternOverlayColor.isEqual(NSColor.systemBlue))
+        #expect(viewModel.document.layers[1].style.patternOverlayColor.isEqual(NSColor.systemGreen))
     }
 
     @Test func registrySetsLayerStyleShadowContourWithAdvertisedEnum() throws {
