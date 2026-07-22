@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.12.0-rc473 - 2026-07-22
+
+### Changed
+- 外发光透明度 setter 返回实际修改的可编辑选中图层数；MCP `xomo.layer.style_settings(property=outerGlowOpacity)` 返回 `updatedLayerCount`。
+- 保持既有不可聚焦的多选“多个值”控件和 5%–100% 范围，锁定层及不适用层安全跳过，需要自动启用外发光的图层仍计入真实修改。
+
+### Fixed
+- 调整透明度只改变外发光启用状态与透明度，不覆盖用户选定的颜色、模糊、扩展、杂色或轮廓参数。
+- 重复值或夹取后等价值不再制造空 Undo/History，MCP 对零实际变化明确失败。
+
+### Verification
+- 批量数量、范围夹取、自动启用、颜色保留、零变化、锁定层、不可聚焦控件、MCP 结果及真实合成测试 4/4，外发光杂色与工程往返相邻回归 1/1 通过。
+- SwiftPM CLI 2/2、发布版本契约 7/7 通过；本版不覆盖 `/Applications`，下一次完整 Release、冒烟与安装门禁仍为 rc480。
+
 ## 2.12.0-rc472 - 2026-07-22
 
 ### Changed

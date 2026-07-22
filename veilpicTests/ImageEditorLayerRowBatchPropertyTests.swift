@@ -1047,20 +1047,36 @@ struct ImageEditorLayerRowBatchPropertyTests {
         let historyCount = viewModel.document.history.count
 
         #expect(viewModel.selectedLayerOuterGlowOpacityState == .mixed)
-        viewModel.setSelectedLayerOuterGlowOpacity(0.6)
-        #expect(viewModel.selectedLayerOuterGlowOpacityState == .value(0.6))
-        #expect((try layer(firstID, in: viewModel)).style.outerGlowOpacity == 0.6)
-        #expect((try layer(secondID, in: viewModel)).style.outerGlowOpacity == 0.6)
+        #expect(viewModel.setSelectedLayerOuterGlowOpacity(0.8) == 1)
+        #expect(viewModel.selectedLayerOuterGlowOpacityState == .value(0.8))
+        #expect((try layer(firstID, in: viewModel)).style.outerGlowOpacity == 0.8)
+        #expect((try layer(secondID, in: viewModel)).style.outerGlowOpacity == 0.8)
         #expect((try layer(lockedID, in: viewModel)).style.outerGlowOpacity == 0.4)
         #expect((try layer(firstID, in: viewModel)).style.outerGlowEnabled)
         #expect((try layer(secondID, in: viewModel)).style.outerGlowEnabled)
+        #expect((try layer(secondID, in: viewModel)).style.outerGlowColor == .systemRed)
         #expect(viewModel.document.history.count == historyCount + 1)
         #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
 
+        let historyAfterUpdate = viewModel.document.history.count
+        #expect(viewModel.setSelectedLayerOuterGlowOpacity(0.8) == 0)
+        #expect(viewModel.document.history.count == historyAfterUpdate)
+
+        #expect(viewModel.setSelectedLayerOuterGlowOpacity(0) == 2)
+        #expect(viewModel.selectedLayerOuterGlowOpacityState == .value(0.05))
+        #expect((try layer(firstID, in: viewModel)).style.outerGlowOpacity == 0.05)
+        #expect((try layer(secondID, in: viewModel)).style.outerGlowOpacity == 0.05)
+
+        #expect(viewModel.setSelectedLayerOuterGlowOpacity(2) == 2)
+        #expect(viewModel.selectedLayerOuterGlowOpacityState == .value(1))
+        #expect((try layer(firstID, in: viewModel)).style.outerGlowOpacity == 1)
+        #expect((try layer(secondID, in: viewModel)).style.outerGlowOpacity == 1)
+        #expect((try layer(secondID, in: viewModel)).style.outerGlowColor == .systemRed)
+
         viewModel.undo()
-        #expect(viewModel.selectedLayerOuterGlowOpacityState == .mixed)
+        #expect(viewModel.selectedLayerOuterGlowOpacityState == .value(0.05))
         viewModel.redo()
-        #expect(viewModel.selectedLayerOuterGlowOpacityState == .value(0.6))
+        #expect(viewModel.selectedLayerOuterGlowOpacityState == .value(1))
     }
 
     @Test func layerStyleOuterGlowOpacityControlReusesMixedNumericStepper() throws {
@@ -1076,13 +1092,23 @@ struct ImageEditorLayerRowBatchPropertyTests {
         #expect(source.contains("value: selectedLayerOuterGlowOpacityBinding"))
         #expect(source.contains("image-editor-layer-style-outer-glow-opacity"))
         #expect(source.contains("L10n.format(\"imageEditor.properties.outerGlowOpacityValue\""))
+        let helperStart = try #require(
+            source.range(of: "private func layerStyleNumericStepper(")
+        )
+        let helperEnd = try #require(
+            source[helperStart.upperBound...].range(of: "private func guidePath(")
+        )
+        let helperSource = source[helperStart.lowerBound..<helperEnd.lowerBound]
+        #expect(helperSource.contains(".focusable(false)"))
     }
 
     private func outerGlowOpacityFixture() -> Fixture {
         let fixture = makeFixture()
         let viewModel = fixture.viewModel
         viewModel.document.layers[0].style.outerGlowOpacity = 0.2
+        viewModel.document.layers[1].style.outerGlowEnabled = true
         viewModel.document.layers[1].style.outerGlowOpacity = 0.8
+        viewModel.document.layers[1].style.outerGlowColor = .systemRed
         viewModel.document.layers[2].style.outerGlowOpacity = 0.4
         viewModel.document.layers[2].isLocked = true
         select(Set(fixture.layers.map(\.id)), primary: fixture.layers[0].id, in: viewModel)

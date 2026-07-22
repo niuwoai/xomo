@@ -1275,7 +1275,8 @@ extension ImageEditorViewModel {
         setSelectedLayerUsesGlobalLight(enabled, effect: .innerShadow)
     }
 
-    func setSelectedLayerOuterGlowOpacity(_ opacity: Double) {
+    @discardableResult
+    func setSelectedLayerOuterGlowOpacity(_ opacity: Double) -> Int {
         updateSelectedLayerStyle {
             $0.outerGlowEnabled = true
             $0.outerGlowOpacity = max(0.05, min(1, CGFloat(opacity)))

@@ -2514,7 +2514,16 @@ final class XomoAutomationRegistry {
                     abs(viewModel.document.globalLightAngle - previousGlobalLightAngle) > 0.001
                 )
             ])
-        case "outerGlowOpacity": viewModel.setSelectedLayerOuterGlowOpacity(try number())
+        case "outerGlowOpacity":
+            let updatedLayerCount = viewModel.setSelectedLayerOuterGlowOpacity(try number())
+            guard updatedLayerCount > 0 else {
+                throw XomoAutomationCallError.operationFailed(
+                    "No editable layer needs the requested outer glow opacity"
+                )
+            }
+            return .object([
+                "updatedLayerCount": .number(Double(updatedLayerCount))
+            ])
         case "outerGlowColor": viewModel.setSelectedLayerOuterGlowColor(viewModel.foregroundColor)
         case "outerGlowBlur": viewModel.setSelectedLayerOuterGlowBlur(try number())
         case "outerGlowSpread": viewModel.setSelectedLayerOuterGlowSpread(try number())

@@ -535,6 +535,41 @@ struct ImageEditorLayerStyleTests {
         #expect(restoredLayer.style.outerGlowNoise == 1)
     }
 
+    @Test func imageEditorOuterGlowOpacityChangesCompositeWithoutReplacingExistingColor() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let baseImage = solidImage(color: .systemBlue, size: canvasSize)
+        let layerImage = centerRectImage(size: canvasSize, color: .systemGreen)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: baseImage) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(
+            layerImage,
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+        let layerPixelsBeforeStyle = try #require(
+            viewModel.document.selectedLayer?.image.qingtuPNGData()
+        )
+
+        viewModel.setSelectedLayerOuterGlowColor(.systemRed)
+        viewModel.setSelectedLayerOuterGlowBlur(0)
+        viewModel.setSelectedLayerOuterGlowSpread(8)
+        #expect(viewModel.setSelectedLayerOuterGlowOpacity(0.05) == 1)
+        let faintGlow = try #require(viewModel.currentImage.qingtuPNGData())
+        let originalColor = ImageEditorProjectColor(
+            color: try #require(viewModel.document.selectedLayer).style.outerGlowColor
+        )
+
+        viewModel.foregroundColor = .systemYellow
+        #expect(viewModel.setSelectedLayerOuterGlowOpacity(1) == 1)
+
+        let styledLayer = try #require(viewModel.document.selectedLayer)
+        let layerPixelsAfterStyle = try #require(styledLayer.image.qingtuPNGData())
+        let strongGlow = try #require(viewModel.currentImage.qingtuPNGData())
+        #expect(styledLayer.style.outerGlowEnabled)
+        #expect(styledLayer.style.outerGlowOpacity == 1)
+        #expect(ImageEditorProjectColor(color: styledLayer.style.outerGlowColor) == originalColor)
+        #expect(layerPixelsAfterStyle == layerPixelsBeforeStyle)
+        #expect(strongGlow != faintGlow)
+    }
+
     @Test func imageEditorLayerEffectContoursChangeFalloffAndRoundTripProjectState() async throws {
         let canvasSize = NSSize(width: 80, height: 60)
         let baseImage = solidImage(color: .systemBlue, size: canvasSize)

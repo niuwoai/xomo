@@ -4436,7 +4436,9 @@ struct XomoAutomationTests {
         var second = ImageEditorLayer.blank(name: "Second", size: canvasSize)
         var locked = ImageEditorLayer.blank(name: "Locked", size: canvasSize)
         first.style.outerGlowOpacity = 0.2
+        second.style.outerGlowEnabled = true
         second.style.outerGlowOpacity = 0.8
+        second.style.outerGlowColor = .systemRed
         locked.style.outerGlowOpacity = 0.4
         locked.isLocked = true
         viewModel.document.layers = [first, second, locked]
@@ -4454,18 +4456,46 @@ struct XomoAutomationTests {
             name: "xomo.layer.style_settings",
             arguments: [
                 "property": .string("outerGlowOpacity"),
-                "value": .number(0.6)
+                "value": .number(0.8)
             ]
         ))
 
         #expect(result.ok)
-        #expect(viewModel.document.layers[0].style.outerGlowOpacity == 0.6)
-        #expect(viewModel.document.layers[1].style.outerGlowOpacity == 0.6)
+        #expect(result.result?.objectValue?["updatedLayerCount"] == .number(1))
+        #expect(viewModel.document.layers[0].style.outerGlowOpacity == 0.8)
+        #expect(viewModel.document.layers[1].style.outerGlowOpacity == 0.8)
         #expect(viewModel.document.layers[2].style.outerGlowOpacity == 0.4)
         #expect(viewModel.document.layers[0].style.outerGlowEnabled)
         #expect(viewModel.document.layers[1].style.outerGlowEnabled)
+        #expect(viewModel.document.layers[1].style.outerGlowColor == .systemRed)
         #expect(viewModel.document.history.count == historyCount + 1)
         #expect(viewModel.document.selectedLayerIDs == [first.id, second.id, locked.id])
+
+        let historyAfterUpdate = viewModel.document.history.count
+        let repeated = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("outerGlowOpacity"),
+                "value": .number(0.8)
+            ]
+        ))
+        #expect(!repeated.ok)
+        #expect(viewModel.document.history.count == historyAfterUpdate)
+
+        let minimum = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("outerGlowOpacity"),
+                "value": .number(0)
+            ]
+        ))
+        #expect(minimum.ok)
+        #expect(minimum.result?.objectValue?["updatedLayerCount"] == .number(2))
+        #expect(viewModel.document.layers[0].style.outerGlowOpacity == 0.05)
+        #expect(viewModel.document.layers[1].style.outerGlowOpacity == 0.05)
+        #expect(viewModel.document.layers[1].style.outerGlowColor == .systemRed)
     }
 
     @Test func registrySetsLayerStyleBevelAngleAcrossGlobalAndLocalLight() throws {
