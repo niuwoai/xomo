@@ -1510,9 +1510,9 @@ extension ImageEditorViewModel {
         }
     }
 
-    func setSelectedLayerGradientOverlayOpacity(_ opacity: Double) {
+    @discardableResult
+    func setSelectedLayerGradientOverlayOpacity(_ opacity: Double) -> Int {
         updateSelectedLayerStyle {
-            setGradientOverlayDefaultColorsIfNeeded(style: &$0)
             $0.gradientOverlayEnabled = true
             $0.gradientOverlayOpacity = max(0.05, min(1, CGFloat(opacity)))
         }
