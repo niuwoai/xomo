@@ -2874,6 +2874,53 @@ struct ImageEditorLayerRowBatchPropertyTests {
         return fixture
     }
 
+    @Test func layerStyleGradientOverlayColorsUpdateOnlyChangedEditableLayers() throws {
+        let fixture = gradientOverlayOpacityFixture()
+        let viewModel = fixture.viewModel
+        let firstID = fixture.layers[0].id
+        let secondID = fixture.layers[1].id
+        let lockedID = fixture.layers[2].id
+        let targetStart = NSColor(displayP3Red: 0.78, green: 0.18, blue: 0.42, alpha: 1)
+        let targetEnd = NSColor(displayP3Red: 0.12, green: 0.72, blue: 0.84, alpha: 1)
+        let normalizedStart = try #require(targetStart.usingColorSpace(.sRGB))
+        let normalizedEnd = try #require(targetEnd.usingColorSpace(.sRGB))
+        let firstEndColor = try layer(firstID, in: viewModel).style.gradientOverlayEndColor
+        let secondEndColor = try layer(secondID, in: viewModel).style.gradientOverlayEndColor
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.setSelectedLayerGradientOverlayStartColor(targetStart) == 2)
+        #expect((try layer(firstID, in: viewModel)).style.gradientOverlayStartColor.isEqual(normalizedStart))
+        #expect((try layer(secondID, in: viewModel)).style.gradientOverlayStartColor.isEqual(normalizedStart))
+        #expect((try layer(lockedID, in: viewModel)).style.gradientOverlayStartColor.isEqual(NSColor.systemOrange))
+        #expect((try layer(firstID, in: viewModel)).style.gradientOverlayEndColor.isEqual(firstEndColor))
+        #expect((try layer(secondID, in: viewModel)).style.gradientOverlayEndColor.isEqual(secondEndColor))
+        #expect((try layer(firstID, in: viewModel)).style.gradientOverlayEnabled)
+        #expect((try layer(secondID, in: viewModel)).style.gradientOverlayEnabled)
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        let historyAfterStart = viewModel.document.history.count
+        #expect(viewModel.setSelectedLayerGradientOverlayStartColor(targetStart) == 0)
+        #expect(viewModel.document.history.count == historyAfterStart)
+
+        #expect(viewModel.setSelectedLayerGradientOverlayEndColor(targetEnd) == 2)
+        #expect((try layer(firstID, in: viewModel)).style.gradientOverlayEndColor.isEqual(normalizedEnd))
+        #expect((try layer(secondID, in: viewModel)).style.gradientOverlayEndColor.isEqual(normalizedEnd))
+        #expect((try layer(lockedID, in: viewModel)).style.gradientOverlayEndColor.isEqual(NSColor.systemCyan))
+        #expect((try layer(firstID, in: viewModel)).style.gradientOverlayStartColor.isEqual(normalizedStart))
+        #expect((try layer(secondID, in: viewModel)).style.gradientOverlayStartColor.isEqual(normalizedStart))
+        #expect(viewModel.document.history.count == historyAfterStart + 1)
+        #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+
+        let historyAfterEnd = viewModel.document.history.count
+        #expect(viewModel.setSelectedLayerGradientOverlayEndColor(targetEnd) == 0)
+        #expect(viewModel.document.history.count == historyAfterEnd)
+
+        viewModel.undo()
+        #expect((try layer(firstID, in: viewModel)).style.gradientOverlayEndColor.isEqual(firstEndColor))
+        viewModel.redo()
+        #expect((try layer(firstID, in: viewModel)).style.gradientOverlayEndColor.isEqual(normalizedEnd))
+    }
+
     @Test func layerStyleGradientOverlayOpacityMixedValueConvergesAcrossEditableSelection() throws {
         let fixture = gradientOverlayOpacityFixture()
         let viewModel = fixture.viewModel

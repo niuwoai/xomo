@@ -1518,14 +1518,16 @@ extension ImageEditorViewModel {
         }
     }
 
-    func setSelectedLayerGradientOverlayStartColor(_ color: NSColor) {
+    @discardableResult
+    func setSelectedLayerGradientOverlayStartColor(_ color: NSColor) -> Int {
         updateSelectedLayerStyle {
             $0.gradientOverlayEnabled = true
             $0.gradientOverlayStartColor = color.usingColorSpace(.sRGB) ?? color
         }
     }
 
-    func setSelectedLayerGradientOverlayEndColor(_ color: NSColor) {
+    @discardableResult
+    func setSelectedLayerGradientOverlayEndColor(_ color: NSColor) -> Int {
         updateSelectedLayerStyle {
             $0.gradientOverlayEnabled = true
             $0.gradientOverlayEndColor = color.usingColorSpace(.sRGB) ?? color

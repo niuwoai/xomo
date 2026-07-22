@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.12.0-rc502 - 2026-07-23
+
+### Added
+- MCP `xomo.layer.style_settings` 新增 `gradientOverlayStartColor` 与 `gradientOverlayEndColor`：起始色使用当前前景色，结束色使用当前背景色，可直接驱动多选图层的完整渐变叠加配色。
+
+### Fixed
+- 渐变叠加起止色现在返回实际发生变化的可编辑图层数，统一转换为 sRGB；每端颜色独立修改，不触碰另一端颜色、锁定层或其它渐变参数。
+- 重复颜色安全跳过，零变化不创建空 Undo/History；MCP 对零变化明确失败并返回真实 `updatedLayerCount`。
+
+### Verification
+- Xcode 批量属性套件与精确 MCP 用例 126/126、SwiftPM CLI 2/2、发布契约 4/4（10 条断言）通过；覆盖 Display P3→sRGB 归一化、前景/背景色路由、两端颜色互不串改、锁定层保护、真实修改数、Undo/Redo、重复颜色零历史及 MCP 零变化失败。常规完整 Release、全量冒烟与 `/Applications` 覆盖门禁仍为 rc520；下一小步开始收紧图案叠加类型事务。
+
 ## 2.12.0-rc501 - 2026-07-23
 
 ### Fixed
