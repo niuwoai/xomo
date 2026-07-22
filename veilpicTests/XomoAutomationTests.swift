@@ -6345,6 +6345,74 @@ struct XomoAutomationTests {
         #expect(viewModel.document.history.count == historyAfterUpdate)
     }
 
+    @Test func registrySetsLayerStyleColorOverlayColorAcrossEditableSelection() throws {
+        let viewModel = makeViewModel()
+        let canvasSize = viewModel.document.canvasSize
+        var first = ImageEditorLayer.blank(name: "First", size: canvasSize)
+        var second = ImageEditorLayer.blank(name: "Second", size: canvasSize)
+        var locked = ImageEditorLayer.blank(name: "Locked", size: canvasSize)
+        let foreground = NSColor(srgbRed: 0.68, green: 0.24, blue: 0.82, alpha: 1)
+        first.style.colorOverlayColor = foreground
+        first.style.colorOverlayOpacity = 0.25
+        second.style.colorOverlayEnabled = true
+        second.style.colorOverlayColor = .systemGreen
+        second.style.colorOverlayOpacity = 0.75
+        locked.style.colorOverlayColor = .systemOrange
+        locked.style.colorOverlayOpacity = 0.4
+        locked.isLocked = true
+        viewModel.document.layers = [first, second, locked]
+        viewModel.document.selectedLayerID = first.id
+        viewModel.document.selectedLayerIDs = [first.id, second.id, locked.id]
+        viewModel.foregroundColor = foreground
+        let historyCount = viewModel.document.history.count
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        try assertLayerStylePropertySchema("colorOverlayColor", in: toolsResponse)
+
+        let result = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: ["property": .string("colorOverlayColor")]
+        ))
+
+        #expect(result.ok)
+        #expect(result.result?.objectValue?["updatedLayerCount"] == .number(2))
+        #expect(viewModel.document.layers[0].style.colorOverlayEnabled)
+        #expect(viewModel.document.layers[1].style.colorOverlayEnabled)
+        #expect(viewModel.document.layers[0].style.colorOverlayColor.isEqual(foreground))
+        #expect(viewModel.document.layers[1].style.colorOverlayColor.isEqual(foreground))
+        #expect(viewModel.document.layers[2].style.colorOverlayColor.isEqual(NSColor.systemOrange))
+        #expect(viewModel.document.layers[0].style.colorOverlayOpacity == 0.25)
+        #expect(viewModel.document.layers[1].style.colorOverlayOpacity == 0.75)
+        #expect(viewModel.document.layers[2].style.colorOverlayOpacity == 0.4)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [first.id, second.id, locked.id])
+
+        let historyAfterUpdate = viewModel.document.history.count
+        let repeated = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: ["property": .string("colorOverlayColor")]
+        ))
+        #expect(!repeated.ok)
+        #expect(viewModel.document.history.count == historyAfterUpdate)
+
+        let replacement = NSColor(srgbRed: 0.12, green: 0.78, blue: 0.44, alpha: 1)
+        viewModel.foregroundColor = replacement
+        let recolored = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: ["property": .string("colorOverlayColor")]
+        ))
+        #expect(recolored.ok)
+        #expect(recolored.result?.objectValue?["updatedLayerCount"] == .number(2))
+        #expect(viewModel.document.layers[0].style.colorOverlayColor.isEqual(replacement))
+        #expect(viewModel.document.layers[1].style.colorOverlayColor.isEqual(replacement))
+        #expect(viewModel.document.layers[2].style.colorOverlayColor.isEqual(NSColor.systemOrange))
+    }
+
     @Test func registrySetsLayerStyleGradientOverlayOpacityAcrossEditableSelection() throws {
         let viewModel = makeViewModel()
         let canvasSize = viewModel.document.canvasSize

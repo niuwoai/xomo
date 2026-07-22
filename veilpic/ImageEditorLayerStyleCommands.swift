@@ -1188,7 +1188,8 @@ extension ImageEditorViewModel {
         }
     }
 
-    func setSelectedLayerColorOverlayColor(_ color: NSColor) {
+    @discardableResult
+    func setSelectedLayerColorOverlayColor(_ color: NSColor) -> Int {
         updateSelectedLayerStyle {
             $0.colorOverlayEnabled = true
             $0.colorOverlayColor = color.usingColorSpace(.sRGB) ?? color

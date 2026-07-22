@@ -2826,6 +2826,40 @@ struct ImageEditorLayerRowBatchPropertyTests {
         #expect(source.contains("L10n.format(\"imageEditor.properties.colorOverlayOpacityValue\""))
     }
 
+    @Test func layerStyleColorOverlayColorUpdatesOnlyChangedEditableLayers() throws {
+        let fixture = colorOverlayOpacityFixture()
+        let viewModel = fixture.viewModel
+        let firstID = fixture.layers[0].id
+        let secondID = fixture.layers[1].id
+        let lockedID = fixture.layers[2].id
+        let targetColor = NSColor(srgbRed: 0.72, green: 0.18, blue: 0.46, alpha: 1)
+        let firstOpacity = try layer(firstID, in: viewModel).style.colorOverlayOpacity
+        let secondOpacity = try layer(secondID, in: viewModel).style.colorOverlayOpacity
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.setSelectedLayerColorOverlayColor(targetColor) == 2)
+        #expect((try layer(firstID, in: viewModel)).style.colorOverlayColor.isEqual(targetColor))
+        #expect((try layer(secondID, in: viewModel)).style.colorOverlayColor.isEqual(targetColor))
+        #expect((try layer(lockedID, in: viewModel)).style.colorOverlayColor.isEqual(NSColor.systemOrange))
+        #expect((try layer(firstID, in: viewModel)).style.colorOverlayOpacity == firstOpacity)
+        #expect((try layer(secondID, in: viewModel)).style.colorOverlayOpacity == secondOpacity)
+        #expect((try layer(firstID, in: viewModel)).style.colorOverlayEnabled)
+        #expect((try layer(secondID, in: viewModel)).style.colorOverlayEnabled)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+
+        let historyAfterUpdate = viewModel.document.history.count
+        #expect(viewModel.setSelectedLayerColorOverlayColor(targetColor) == 0)
+        #expect(viewModel.document.history.count == historyAfterUpdate)
+
+        viewModel.undo()
+        #expect((try layer(firstID, in: viewModel)).style.colorOverlayColor.isEqual(NSColor.systemBlue))
+        #expect((try layer(secondID, in: viewModel)).style.colorOverlayColor.isEqual(NSColor.systemGreen))
+        viewModel.redo()
+        #expect((try layer(firstID, in: viewModel)).style.colorOverlayColor.isEqual(targetColor))
+        #expect((try layer(secondID, in: viewModel)).style.colorOverlayColor.isEqual(targetColor))
+    }
+
     private func colorOverlayOpacityFixture() -> Fixture {
         let fixture = makeFixture()
         let viewModel = fixture.viewModel
