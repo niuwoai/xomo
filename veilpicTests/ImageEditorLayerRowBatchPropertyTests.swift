@@ -3442,6 +3442,74 @@ struct ImageEditorLayerRowBatchPropertyTests {
         return fixture
     }
 
+    @Test func layerStyleInnerGlowRangeConvergesAcrossEditableSelection() throws {
+        let fixture = innerGlowRangeFixture()
+        let viewModel = fixture.viewModel
+        let firstID = fixture.layers[0].id
+        let secondID = fixture.layers[1].id
+        let lockedID = fixture.layers[2].id
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.selectedLayerInnerGlowRangeState == .mixed)
+        #expect(viewModel.setSelectedLayerInnerGlowRange(0.65) == 1)
+        #expect(viewModel.selectedLayerInnerGlowRangeState == .value(0.65))
+        #expect((try layer(firstID, in: viewModel)).style.innerGlowRange == 0.65)
+        #expect((try layer(secondID, in: viewModel)).style.innerGlowRange == 0.65)
+        #expect((try layer(lockedID, in: viewModel)).style.innerGlowRange == 0.4)
+        #expect((try layer(firstID, in: viewModel)).style.innerGlowEnabled)
+        #expect((try layer(secondID, in: viewModel)).style.innerGlowEnabled)
+        #expect((try layer(firstID, in: viewModel)).style.innerGlowBlur == 7)
+        #expect((try layer(secondID, in: viewModel)).style.innerGlowColor == .systemRed)
+        #expect((try layer(secondID, in: viewModel)).style.innerGlowContour == .steep)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+
+        let historyAfterUpdate = viewModel.document.history.count
+        #expect(viewModel.setSelectedLayerInnerGlowRange(0.65) == 0)
+        #expect(viewModel.document.history.count == historyAfterUpdate)
+
+        #expect(viewModel.setSelectedLayerInnerGlowRange(0) == 2)
+        #expect(viewModel.selectedLayerInnerGlowRangeState == .value(0.01))
+        #expect(viewModel.setSelectedLayerInnerGlowRange(2) == 2)
+        #expect(viewModel.selectedLayerInnerGlowRangeState == .value(1))
+        #expect((try layer(lockedID, in: viewModel)).style.innerGlowRange == 0.4)
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerInnerGlowRangeState == .value(0.01))
+        viewModel.redo()
+        #expect(viewModel.selectedLayerInnerGlowRangeState == .value(1))
+    }
+
+    @Test func layerStyleInnerGlowRangeControlUsesMixedNumericStepper() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("state: viewModel.selectedLayerInnerGlowRangeState"))
+        #expect(source.contains("value: selectedLayerInnerGlowRangeBinding"))
+        #expect(source.contains("image-editor-layer-style-inner-glow-range"))
+        #expect(source.contains("imageEditor.properties.innerGlowRangeValue"))
+    }
+
+    private func innerGlowRangeFixture() -> Fixture {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        viewModel.document.layers[0].style.innerGlowRange = 0.25
+        viewModel.document.layers[0].style.innerGlowBlur = 7
+        viewModel.document.layers[1].style.innerGlowEnabled = true
+        viewModel.document.layers[1].style.innerGlowRange = 0.65
+        viewModel.document.layers[1].style.innerGlowColor = .systemRed
+        viewModel.document.layers[1].style.innerGlowContour = .steep
+        viewModel.document.layers[2].style.innerGlowRange = 0.4
+        viewModel.document.layers[2].isLocked = true
+        select(Set(fixture.layers.map(\.id)), primary: fixture.layers[0].id, in: viewModel)
+        return fixture
+    }
+
     @Test func layerStyleMixedSatinContourConvergesAcrossEditableSelection() throws {
         let fixture = satinContourFixture()
         let viewModel = fixture.viewModel

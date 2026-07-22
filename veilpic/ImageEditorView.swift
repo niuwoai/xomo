@@ -4253,6 +4253,14 @@ struct ImageEditorView: View {
         }
     }
 
+    private var selectedLayerInnerGlowRangeBinding: Binding<Double> {
+        Binding {
+            viewModel.selectedLayerInnerGlowRange
+        } set: { value in
+            viewModel.setSelectedLayerInnerGlowRange(value)
+        }
+    }
+
     private var selectedLayerColorOverlayOpacityBinding: Binding<Double> {
         Binding {
             viewModel.selectedLayerColorOverlayOpacity
@@ -5743,6 +5751,45 @@ struct ImageEditorView: View {
         }
     }
 
+    private var adjustmentValueControls: AnyView {
+        switch viewModel.selectedAdjustment {
+        case .levels:
+            return AnyView(levelsControls)
+        case .curves:
+            return AnyView(curvesControls)
+        case .colorBalance:
+            return AnyView(colorBalanceControls)
+        case .hueSaturation:
+            return AnyView(hueSaturationControls)
+        case .brightnessContrast:
+            return AnyView(brightnessContrastControls)
+        case .exposure:
+            return AnyView(exposureControls)
+        case .shadowsHighlights:
+            return AnyView(shadowsHighlightsControls)
+        case .vibrance:
+            return AnyView(vibranceControls)
+        case .posterize:
+            return AnyView(posterizeControls)
+        case .blackWhite:
+            return AnyView(blackWhiteControls)
+        case .channelMixer:
+            return AnyView(channelMixerControls)
+        case .photoFilter:
+            return AnyView(photoFilterControls)
+        case .colorLookup:
+            return AnyView(colorLookupControls)
+        case .selectiveColor:
+            return AnyView(selectiveColorControls)
+        case .gradientMap:
+            return AnyView(gradientMapControls)
+        default:
+            return AnyView(
+                Slider(value: $viewModel.adjustmentValue, in: -1...1, step: 0.05)
+            )
+        }
+    }
+
     private func propertiesPanel(showsTitle: Bool = true) -> some View {
         EditorPanel(title: L10n.text("imageEditor.panel.properties"), showsTitle: showsTitle) {
             VStack(alignment: .leading, spacing: 10) {
@@ -5863,6 +5910,10 @@ struct ImageEditorView: View {
 
                     Divider().overlay(editorBorder)
                 }
+
+                }
+
+                Group {
 
                 if let imageFill = viewModel.selectedLayerFigmaImageFill {
                     VStack(alignment: .leading, spacing: 7) {
@@ -6040,6 +6091,10 @@ struct ImageEditorView: View {
                     Divider().overlay(editorBorder)
                 }
 
+                }
+
+                Group {
+
                 if viewModel.hasSelectedLayerFigmaComponentProperties {
                     VStack(alignment: .leading, spacing: 7) {
                         HStack(spacing: 8) {
@@ -6064,6 +6119,10 @@ struct ImageEditorView: View {
 
                     Divider().overlay(editorBorder)
                 }
+
+                }
+
+                Group {
 
                 Divider().overlay(editorBorder)
 
@@ -6187,39 +6246,12 @@ struct ImageEditorView: View {
                         Text(adjustment.title).tag(adjustment)
                     }
                 }
-                if viewModel.selectedAdjustment == .levels {
-                    levelsControls
-                } else if viewModel.selectedAdjustment == .curves {
-                    curvesControls
-                } else if viewModel.selectedAdjustment == .colorBalance {
-                    colorBalanceControls
-                } else if viewModel.selectedAdjustment == .hueSaturation {
-                    hueSaturationControls
-                } else if viewModel.selectedAdjustment == .brightnessContrast {
-                    brightnessContrastControls
-                } else if viewModel.selectedAdjustment == .exposure {
-                    exposureControls
-                } else if viewModel.selectedAdjustment == .shadowsHighlights {
-                    shadowsHighlightsControls
-                } else if viewModel.selectedAdjustment == .vibrance {
-                    vibranceControls
-                } else if viewModel.selectedAdjustment == .posterize {
-                    posterizeControls
-                } else if viewModel.selectedAdjustment == .blackWhite {
-                    blackWhiteControls
-                } else if viewModel.selectedAdjustment == .channelMixer {
-                    channelMixerControls
-                } else if viewModel.selectedAdjustment == .photoFilter {
-                    photoFilterControls
-                } else if viewModel.selectedAdjustment == .colorLookup {
-                    colorLookupControls
-                } else if viewModel.selectedAdjustment == .selectiveColor {
-                    selectiveColorControls
-                } else if viewModel.selectedAdjustment == .gradientMap {
-                    gradientMapControls
-                } else {
-                    Slider(value: $viewModel.adjustmentValue, in: -1...1, step: 0.05)
+                adjustmentValueControls
+
                 }
+
+                Group {
+
                 VStack(alignment: .leading, spacing: 6) {
                     HStack {
                         Button(L10n.text("imageEditor.action.applyAdjustment")) {
@@ -6478,6 +6510,11 @@ struct ImageEditorView: View {
                             .frame(width: 44, alignment: .trailing)
                     }
                 }
+
+                }
+
+                Group {
+
                 if viewModel.selectedFilter == .wave {
                     HStack {
                         Text(L10n.text("imageEditor.filter.waveAmplitude"))
@@ -6546,6 +6583,11 @@ struct ImageEditorView: View {
                             .frame(width: 44, alignment: .trailing)
                     }
                 }
+
+                }
+
+                Group {
+
                 Text(viewModel.selectedLayerSmartFilterText)
                     .font(.system(size: 10, weight: .medium))
                     .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
@@ -6713,6 +6755,10 @@ struct ImageEditorView: View {
                     in: -800...800,
                     step: 4
                 )
+                }
+
+                Group {
+
                 if viewModel.canEditSelectedPathAnchors {
                     VStack(alignment: .leading, spacing: 6) {
                         Text(L10n.text("imageEditor.properties.pathAnchors"))
@@ -6877,6 +6923,10 @@ struct ImageEditorView: View {
                         }
                     }
                 }
+                }
+
+                Group {
+
                 if viewModel.selectedTool == .pen || !viewModel.pendingPenPathPoints.isEmpty {
                     HStack {
                         Button(L10n.text("imageEditor.action.penFinishOpen")) {
@@ -6920,6 +6970,10 @@ struct ImageEditorView: View {
                     }
                     .buttonStyle(EditorTextButtonStyle())
                 }
+
+                }
+
+                Group {
 
                 Divider().overlay(editorBorder)
 
@@ -7107,6 +7161,10 @@ struct ImageEditorView: View {
                 ) { value in
                     L10n.format("imageEditor.properties.shadowOpacityValue", Int((value * 100).rounded()))
                 }
+                }
+
+                Group {
+
                 HStack(spacing: 8) {
                     Text(L10n.text("imageEditor.properties.shadowColor"))
                         .font(.system(size: 10, weight: .medium))
@@ -7290,6 +7348,9 @@ struct ImageEditorView: View {
                     labelKey: "imageEditor.properties.innerShadowUseGlobalLight",
                     accessibilityIdentifier: "image-editor-inner-shadow-global-light"
                 )
+                }
+
+                Group {
                 layerStyleNumericStepper(
                     state: viewModel.selectedLayerOuterGlowOpacityState,
                     value: selectedLayerOuterGlowOpacityBinding,
@@ -7404,6 +7465,15 @@ struct ImageEditorView: View {
                     title: \.title
                 ) { contour in
                     viewModel.setSelectedLayerInnerGlowContour(contour)
+                }
+                layerStyleNumericStepper(
+                    state: viewModel.selectedLayerInnerGlowRangeState,
+                    value: selectedLayerInnerGlowRangeBinding,
+                    range: 0.01...1,
+                    step: 0.05,
+                    accessibilityIdentifier: "image-editor-layer-style-inner-glow-range"
+                ) { value in
+                    L10n.format("imageEditor.properties.innerGlowRangeValue", Int((value * 100).rounded()))
                 }
                 }
 
@@ -7525,6 +7595,10 @@ struct ImageEditorView: View {
                         step: 1
                     )
                 }
+                }
+
+                Group {
+
                 HStack(spacing: 8) {
                     Text(L10n.text("imageEditor.properties.satinColor"))
                         .font(.system(size: 10, weight: .medium))
@@ -7582,6 +7656,10 @@ struct ImageEditorView: View {
                         step: 0.05
                     )
                 }
+                }
+
+                Group {
+
                 HStack(spacing: 8) {
                     Text(L10n.text("imageEditor.properties.bevelHighlightColor"))
                         .font(.system(size: 10, weight: .medium))

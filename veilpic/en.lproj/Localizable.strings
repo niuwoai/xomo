@@ -1148,6 +1148,7 @@
 "imageEditor.properties.innerGlowNoiseValue" = "Inner Glow Noise: %d%%";
 "imageEditor.properties.innerGlowSource" = "Inner Glow Source";
 "imageEditor.properties.innerGlowContour" = "Inner Glow Contour";
+"imageEditor.properties.innerGlowRangeValue" = "Inner Glow Range: %d%%";
 "imageEditor.innerGlowSource.edge" = "Edge";
 "imageEditor.innerGlowSource.center" = "Center";
 "imageEditor.properties.colorOverlayOpacityValue" = "Color Overlay Opacity: %d%%";

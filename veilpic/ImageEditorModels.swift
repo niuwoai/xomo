@@ -2215,6 +2215,7 @@ struct ImageEditorLayerStyle {
     var innerGlowNoise: CGFloat = 0
     var innerGlowSource = ImageEditorInnerGlowSource.edge
     var innerGlowContour = ImageEditorLayerEffectContour.linear
+    var innerGlowRange: CGFloat = 0.5
     var colorOverlayEnabled = false
     var colorOverlayColor = NSColor.systemRed
     var colorOverlayOpacity: CGFloat = 0.55
@@ -3854,7 +3855,10 @@ struct ImageEditorLayer: Identifiable {
                     ? rawInnerGlowCanvas.shadowNoised(amount: style.innerGlowNoise) ?? rawInnerGlowCanvas
                     : rawInnerGlowCanvas
                 let blurredInnerGlow = innerGlowCanvas.blurred(radius: style.innerGlowBlur) ?? innerGlowCanvas
-                let contouredInnerGlow = blurredInnerGlow.applyingEffectContour(style.innerGlowContour) ?? blurredInnerGlow
+                let contouredInnerGlow = blurredInnerGlow.applyingEffectContour(
+                    style.innerGlowContour,
+                    range: style.innerGlowRange
+                ) ?? blurredInnerGlow
                 contouredInnerGlow.draw(
                     in: CGRect(origin: .zero, size: outputSize),
                     from: CGRect(origin: .zero, size: contouredInnerGlow.size),
@@ -4931,8 +4935,12 @@ struct ImageEditorDocument {
 }
 
 private extension NSImage {
-    func applyingEffectContour(_ contour: ImageEditorLayerEffectContour) -> NSImage? {
-        guard contour != .linear else { return self }
+    func applyingEffectContour(
+        _ contour: ImageEditorLayerEffectContour,
+        range: CGFloat = 1
+    ) -> NSImage? {
+        let normalizedRange = max(0.01, min(1, range))
+        guard contour != .linear || abs(normalizedRange - 1) > 0.0001 else { return self }
         guard let cgImage = cgImage(forProposedRect: nil, context: nil, hints: nil) else { return nil }
 
         let width = max(1, cgImage.width)
@@ -4959,7 +4967,8 @@ private extension NSImage {
                 let offset = y * bytesPerRow + x * bytesPerPixel
                 let alpha = CGFloat(pixels[offset + 3]) / 255
                 guard alpha > 0 else { continue }
-                let mappedAlpha = contour.mappedAlpha(alpha)
+                let rangedAlpha = min(1, alpha / normalizedRange)
+                let mappedAlpha = contour.mappedAlpha(rangedAlpha)
                 let multiplier = mappedAlpha / alpha
                 pixels[offset] = Self.scaledByte(pixels[offset], multiplier: multiplier)
                 pixels[offset + 1] = Self.scaledByte(pixels[offset + 1], multiplier: multiplier)

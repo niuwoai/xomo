@@ -836,6 +836,74 @@ struct ImageEditorLayerStyleTests {
         #expect(restoredLayer.style.innerGlowColor.isEqual(glowColor))
     }
 
+    @Test func imageEditorInnerGlowRangeChangesFalloffAndPreservesLegacyProjects() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let glowColor = NSColor(srgbRed: 0.88, green: 0.06, blue: 0.1, alpha: 1)
+        let baseImage = solidImage(color: .clear, size: canvasSize)
+        let layerImage = centerRectImage(size: canvasSize, color: .white)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: baseImage) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(
+            layerImage,
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+        let layerPixelsBeforeStyle = try #require(
+            viewModel.document.selectedLayer?.image.qingtuPNGData()
+        )
+
+        viewModel.setSelectedLayerInnerGlowOpacity(1)
+        viewModel.setSelectedLayerInnerGlowColor(glowColor)
+        viewModel.setSelectedLayerInnerGlowBlur(10)
+        viewModel.setSelectedLayerInnerGlowChoke(0)
+        viewModel.setSelectedLayerInnerGlowNoise(0)
+        viewModel.setSelectedLayerInnerGlowSource(.edge)
+        viewModel.setSelectedLayerInnerGlowContour(.linear)
+        #expect(viewModel.setSelectedLayerInnerGlowRange(1) == 1)
+        let fullRange = viewModel.currentImage
+        let fullRangeData = try #require(fullRange.qingtuPNGData())
+
+        #expect(viewModel.setSelectedLayerInnerGlowRange(0.25) == 1)
+        let narrowRange = viewModel.currentImage
+        let narrowRangeData = try #require(narrowRange.qingtuPNGData())
+
+        var maximumGreenReduction: CGFloat = 0
+        for x in 24...40 {
+            let point = CGPoint(x: CGFloat(x), y: 30)
+            let fullColor = try #require(
+                fullRange.color(at: point)?.usingColorSpace(.deviceRGB)
+            )
+            let narrowColor = try #require(
+                narrowRange.color(at: point)?.usingColorSpace(.deviceRGB)
+            )
+            maximumGreenReduction = max(
+                maximumGreenReduction,
+                fullColor.greenComponent - narrowColor.greenComponent
+            )
+        }
+
+        let styledLayer = try #require(viewModel.document.selectedLayer)
+        let layerPixelsAfterStyle = try #require(styledLayer.image.qingtuPNGData())
+        #expect(styledLayer.style.innerGlowEnabled)
+        #expect(styledLayer.style.innerGlowRange == 0.25)
+        #expect(styledLayer.style.innerGlowContour == .linear)
+        #expect(layerPixelsAfterStyle == layerPixelsBeforeStyle)
+        #expect(narrowRangeData != fullRangeData)
+        #expect(maximumGreenReduction > 0.03)
+
+        let project = try ImageEditorProjectDocument(document: viewModel.document)
+        let restoredDocument = try project.restoredDocument()
+        let restoredLayer = try #require(restoredDocument.layers.first { $0.id == styledLayer.id })
+        #expect(restoredLayer.style.innerGlowRange == 0.25)
+
+        let encodedStyle = try JSONEncoder().encode(ImageEditorProjectLayerStyle(style: styledLayer.style))
+        var legacyObject = try #require(
+            JSONSerialization.jsonObject(with: encodedStyle) as? [String: Any]
+        )
+        legacyObject.removeValue(forKey: "innerGlowRange")
+        let legacyData = try JSONSerialization.data(withJSONObject: legacyObject)
+        let legacyStyle = try JSONDecoder().decode(ImageEditorProjectLayerStyle.self, from: legacyData)
+        #expect(legacyStyle.layerStyle.innerGlowRange == 1)
+    }
+
     @Test func imageEditorLayerEffectContoursChangeFalloffAndRoundTripProjectState() async throws {
         let canvasSize = NSSize(width: 80, height: 60)
         let baseImage = solidImage(color: .systemBlue, size: canvasSize)

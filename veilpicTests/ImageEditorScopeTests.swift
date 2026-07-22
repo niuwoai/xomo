@@ -302,9 +302,14 @@ struct ImageEditorScopeTests {
             separatedBy: "\n                Group {\n"
         ).count - 1
 
-        #expect(partitionCount == 8)
+        // Keep each opaque SwiftUI metadata subtree comfortably below the
+        // runtime recursion limit. Layer-style controls continue to grow, so
+        // this is deliberately a lower bound rather than a frozen count.
+        #expect(partitionCount >= 9)
+        #expect(source.contains("private var adjustmentValueControls: AnyView"))
         #expect(panelSource.contains("selectedLayerTransformControls"))
         #expect(panelSource.contains("image-editor-layer-style-global-light-angle"))
+        #expect(panelSource.contains("image-editor-layer-style-inner-glow-range"))
         #expect(panelSource.contains("image-editor-layer-style-bevel-angle"))
         #expect(panelSource.contains("imageEditor.action.flipV"))
     }

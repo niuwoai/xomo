@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.12.0-rc488 - 2026-07-23
+
+### Added
+- “内发光”增加 Photoshop 式范围控制：1%–100% 会真实重映射等高线后的 Alpha 衰减；新样式默认 50%，旧工程缺少该字段时按 100% 恢复，避免历史画面变化。
+- 范围参数贯通不可聚焦的三语多选步进器、单步 Undo/Redo、Xomo 工程往返及 MCP/CLI `xomo.layer.style_settings(property=innerGlowRange)`，并返回真实 `updatedLayerCount`。
+
+### Fixed
+- 属性面板从 8 个大 SwiftUI 元数据子树继续细分为 21 个职责分区，并将 15 层调整控件条件树通过 `AnyView` 隔离，修复 rc488 Release 优化版启动时的主线程栈溢出。
+- `/Applications` 中滞留的 rc481 已替换为包含 rc485 鼠标事件归属修复的 rc488；组件库拖放后不再让左侧工具栏整体失去点击响应。
+
+### Verification
+- Xcode 定向测试 5/5、结构启动回归 1/1、SwiftPM CLI 2/2、发布契约 4/4（10 条断言）通过；通用 Release 双架构构建、严格签名核验和真实启动通过。
+- Computer Use 真实坐标验证矩形选区、套索、画笔、橡皮擦即时切换，并通过“组件库 → 拖放 → 工具 → 画笔”回归；安装后的 `/Applications/Xomo.app` 再次验证矩形选区与画笔可点击。
+
 ## 2.12.0-rc487 - 2026-07-23
 
 ### Added
