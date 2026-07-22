@@ -523,6 +523,10 @@ extension ImageEditorViewModel {
         Double(document.selectedLayer?.style.innerGlowOpacity ?? 0.36)
     }
 
+    var selectedLayerInnerGlowOpacityState: ImageEditorLayerStyleValueState<CGFloat> {
+        selectedLayerStyleValueState(\.innerGlowOpacity)
+    }
+
     var selectedLayerInnerGlowBlur: Double {
         Double(document.selectedLayer?.style.innerGlowBlur ?? 8)
     }
@@ -1328,7 +1332,8 @@ extension ImageEditorViewModel {
         }
     }
 
-    func setSelectedLayerInnerGlowOpacity(_ opacity: Double) {
+    @discardableResult
+    func setSelectedLayerInnerGlowOpacity(_ opacity: Double) -> Int {
         updateSelectedLayerStyle {
             $0.innerGlowEnabled = true
             $0.innerGlowOpacity = max(0.05, min(1, CGFloat(opacity)))

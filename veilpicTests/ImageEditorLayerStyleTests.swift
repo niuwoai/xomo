@@ -822,6 +822,62 @@ struct ImageEditorLayerStyleTests {
         #expect(restoredLayer.style.outerGlowContour == .steep)
     }
 
+    @Test func imageEditorInnerGlowOpacityChangesCompositeWithoutReplacingExistingColor() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let glowColor = NSColor(srgbRed: 0.92, green: 0.12, blue: 0.08, alpha: 1)
+        let baseImage = solidImage(color: .black, size: canvasSize)
+        let layerImage = centerRectImage(size: canvasSize, color: .white)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: baseImage) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(
+            layerImage,
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+        let layerPixelsBeforeStyle = try #require(
+            viewModel.document.selectedLayer?.image.qingtuPNGData()
+        )
+
+        viewModel.setSelectedLayerInnerGlowColor(glowColor)
+        viewModel.setSelectedLayerInnerGlowBlur(0)
+        viewModel.setSelectedLayerInnerGlowChoke(0)
+        viewModel.setSelectedLayerInnerGlowNoise(0)
+        viewModel.setSelectedLayerInnerGlowSource(.edge)
+        #expect(viewModel.setSelectedLayerInnerGlowOpacity(0.05) == 1)
+        let faintGlow = try #require(
+            viewModel.currentImage.color(at: CGPoint(x: 25, y: 30))?.usingColorSpace(.deviceRGB)
+        )
+        let faintGlowData = try #require(viewModel.currentImage.qingtuPNGData())
+
+        #expect(viewModel.setSelectedLayerInnerGlowOpacity(1) == 1)
+
+        let styledLayer = try #require(viewModel.document.selectedLayer)
+        let layerPixelsAfterStyle = try #require(styledLayer.image.qingtuPNGData())
+        let strongGlow = try #require(
+            viewModel.currentImage.color(at: CGPoint(x: 25, y: 30))?.usingColorSpace(.deviceRGB)
+        )
+        let strongGlowData = try #require(viewModel.currentImage.qingtuPNGData())
+        #expect(styledLayer.style.innerGlowEnabled)
+        #expect(styledLayer.style.innerGlowOpacity == 1)
+        #expect(styledLayer.style.innerGlowBlur == 0)
+        #expect(styledLayer.style.innerGlowChoke == 0)
+        #expect(styledLayer.style.innerGlowNoise == 0)
+        #expect(styledLayer.style.innerGlowSource == .edge)
+        #expect(styledLayer.style.innerGlowColor.isEqual(glowColor))
+        #expect(layerPixelsAfterStyle == layerPixelsBeforeStyle)
+        #expect(strongGlowData != faintGlowData)
+        #expect(strongGlow.greenComponent < faintGlow.greenComponent - 0.5)
+
+        let project = try ImageEditorProjectDocument(document: viewModel.document)
+        let restoredDocument = try project.restoredDocument()
+        let restoredLayer = try #require(restoredDocument.layers.first { $0.id == styledLayer.id })
+        #expect(restoredLayer.style.innerGlowEnabled)
+        #expect(restoredLayer.style.innerGlowOpacity == 1)
+        #expect(restoredLayer.style.innerGlowBlur == 0)
+        #expect(restoredLayer.style.innerGlowChoke == 0)
+        #expect(restoredLayer.style.innerGlowNoise == 0)
+        #expect(restoredLayer.style.innerGlowSource == .edge)
+        #expect(restoredLayer.style.innerGlowColor.isEqual(glowColor))
+    }
+
     @Test func imageEditorInnerGlowNoiseChangesGlowAndRoundTripsProjectState() async throws {
         let canvasSize = NSSize(width: 80, height: 60)
         let baseImage = solidImage(color: .systemBlue, size: canvasSize)

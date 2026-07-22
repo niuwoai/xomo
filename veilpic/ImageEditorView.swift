@@ -7329,12 +7329,15 @@ struct ImageEditorView: View {
                 ) { contour in
                     viewModel.setSelectedLayerOuterGlowContour(contour)
                 }
-                Stepper(
-                    L10n.format("imageEditor.properties.innerGlowOpacityValue", Int((viewModel.selectedLayerInnerGlowOpacity * 100).rounded())),
+                layerStyleNumericStepper(
+                    state: viewModel.selectedLayerInnerGlowOpacityState,
                     value: selectedLayerInnerGlowOpacityBinding,
-                    in: 0.05...1,
-                    step: 0.05
-                )
+                    range: 0.05...1,
+                    step: 0.05,
+                    accessibilityIdentifier: "image-editor-layer-style-inner-glow-opacity"
+                ) { value in
+                    L10n.format("imageEditor.properties.innerGlowOpacityValue", Int((value * 100).rounded()))
+                }
                 HStack(spacing: 8) {
                     Text(L10n.text("imageEditor.properties.innerGlowColor"))
                         .font(.system(size: 10, weight: .medium))
