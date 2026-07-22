@@ -2208,6 +2208,7 @@ struct ImageEditorLayerStyle {
     var outerGlowNoise: CGFloat = 0
     var outerGlowContour = ImageEditorLayerEffectContour.linear
     var outerGlowRange: CGFloat = 0.5
+    var outerGlowJitter: CGFloat = 0
     var innerGlowEnabled = false
     var innerGlowColor = NSColor.systemCyan
     var innerGlowOpacity: CGFloat = 0.36
@@ -3549,9 +3550,12 @@ struct ImageEditorLayer: Identifiable {
                     style.outerGlowContour,
                     range: style.outerGlowRange
                 ) ?? blurredGlow
-                contouredGlow.draw(
+                let jitteredGlow = contouredGlow.shadowNoised(
+                    amount: style.outerGlowJitter
+                ) ?? contouredGlow
+                jitteredGlow.draw(
                     in: CGRect(origin: .zero, size: outputSize),
-                    from: CGRect(origin: .zero, size: contouredGlow.size),
+                    from: CGRect(origin: .zero, size: jitteredGlow.size),
                     operation: .sourceOver,
                     fraction: 1
                 )

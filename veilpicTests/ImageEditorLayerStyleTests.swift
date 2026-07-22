@@ -830,6 +830,58 @@ struct ImageEditorLayerStyleTests {
         #expect(legacyStyle.layerStyle.outerGlowRange == 1)
     }
 
+    @Test func imageEditorOuterGlowJitterTexturesQualityAndRoundTripsProjectState() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let glowColor = NSColor(srgbRed: 0.92, green: 0.16, blue: 0.08, alpha: 1)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: solidImage(color: .clear, size: canvasSize)
+        ) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(
+            centerRectImage(size: canvasSize, color: .white),
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+        let layerPixelsBeforeStyle = try #require(
+            viewModel.document.selectedLayer?.image.qingtuPNGData()
+        )
+
+        viewModel.setSelectedLayerOuterGlowOpacity(1)
+        viewModel.setSelectedLayerOuterGlowColor(glowColor)
+        viewModel.setSelectedLayerOuterGlowBlur(10)
+        viewModel.setSelectedLayerOuterGlowSpread(0)
+        viewModel.setSelectedLayerOuterGlowNoise(0)
+        viewModel.setSelectedLayerOuterGlowContour(.linear)
+        viewModel.setSelectedLayerOuterGlowRange(1)
+        let smoothData = try #require(viewModel.currentImage.qingtuPNGData())
+
+        #expect(viewModel.setSelectedLayerOuterGlowJitter(1) == 1)
+        let jitteredData = try #require(viewModel.currentImage.qingtuPNGData())
+        let repeatedRenderData = try #require(viewModel.currentImage.qingtuPNGData())
+
+        let styledLayer = try #require(viewModel.document.selectedLayer)
+        #expect(styledLayer.style.outerGlowEnabled)
+        #expect(styledLayer.style.outerGlowJitter == 1)
+        #expect(styledLayer.style.outerGlowNoise == 0)
+        #expect(styledLayer.style.outerGlowContour == .linear)
+        #expect(try #require(styledLayer.image.qingtuPNGData()) == layerPixelsBeforeStyle)
+        #expect(jitteredData != smoothData)
+        #expect(repeatedRenderData == jitteredData)
+
+        let project = try ImageEditorProjectDocument(document: viewModel.document)
+        let restoredDocument = try project.restoredDocument()
+        let restoredLayer = try #require(restoredDocument.layers.first { $0.id == styledLayer.id })
+        #expect(restoredLayer.style.outerGlowJitter == 1)
+
+        let encodedStyle = try JSONEncoder().encode(ImageEditorProjectLayerStyle(style: styledLayer.style))
+        var legacyObject = try #require(
+            JSONSerialization.jsonObject(with: encodedStyle) as? [String: Any]
+        )
+        legacyObject.removeValue(forKey: "outerGlowJitter")
+        let legacyData = try JSONSerialization.data(withJSONObject: legacyObject)
+        let legacyStyle = try JSONDecoder().decode(ImageEditorProjectLayerStyle.self, from: legacyData)
+        #expect(legacyStyle.layerStyle.outerGlowJitter == 0)
+    }
+
     @Test func imageEditorInnerGlowContourChangesFalloffAndRoundTripsProjectState() async throws {
         let canvasSize = NSSize(width: 80, height: 60)
         let glowColor = NSColor(srgbRed: 0.9, green: 0.08, blue: 0.12, alpha: 1)

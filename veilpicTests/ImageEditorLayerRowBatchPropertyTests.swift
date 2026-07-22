@@ -3441,6 +3441,73 @@ struct ImageEditorLayerRowBatchPropertyTests {
         return fixture
     }
 
+    @Test func layerStyleOuterGlowJitterConvergesAcrossEditableSelection() throws {
+        let fixture = outerGlowJitterFixture()
+        let viewModel = fixture.viewModel
+        let firstID = fixture.layers[0].id
+        let secondID = fixture.layers[1].id
+        let lockedID = fixture.layers[2].id
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.selectedLayerOuterGlowJitterState == .mixed)
+        #expect(viewModel.setSelectedLayerOuterGlowJitter(0.6) == 1)
+        #expect(viewModel.selectedLayerOuterGlowJitterState == .value(0.6))
+        #expect((try layer(firstID, in: viewModel)).style.outerGlowJitter == 0.6)
+        #expect((try layer(secondID, in: viewModel)).style.outerGlowJitter == 0.6)
+        #expect((try layer(lockedID, in: viewModel)).style.outerGlowJitter == 0.3)
+        #expect((try layer(firstID, in: viewModel)).style.outerGlowEnabled)
+        #expect((try layer(secondID, in: viewModel)).style.outerGlowEnabled)
+        #expect((try layer(firstID, in: viewModel)).style.outerGlowBlur == 7)
+        #expect((try layer(secondID, in: viewModel)).style.outerGlowColor == .systemRed)
+        #expect((try layer(secondID, in: viewModel)).style.outerGlowRange == 0.4)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+
+        let historyAfterUpdate = viewModel.document.history.count
+        #expect(viewModel.setSelectedLayerOuterGlowJitter(0.6) == 0)
+        #expect(viewModel.document.history.count == historyAfterUpdate)
+        #expect(viewModel.setSelectedLayerOuterGlowJitter(-1) == 2)
+        #expect(viewModel.selectedLayerOuterGlowJitterState == .value(0))
+        #expect(viewModel.setSelectedLayerOuterGlowJitter(2) == 2)
+        #expect(viewModel.selectedLayerOuterGlowJitterState == .value(1))
+        #expect((try layer(lockedID, in: viewModel)).style.outerGlowJitter == 0.3)
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerOuterGlowJitterState == .value(0))
+        viewModel.redo()
+        #expect(viewModel.selectedLayerOuterGlowJitterState == .value(1))
+    }
+
+    @Test func layerStyleOuterGlowJitterControlUsesMixedNumericStepper() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("state: viewModel.selectedLayerOuterGlowJitterState"))
+        #expect(source.contains("value: selectedLayerOuterGlowJitterBinding"))
+        #expect(source.contains("image-editor-layer-style-outer-glow-jitter"))
+        #expect(source.contains("imageEditor.properties.outerGlowJitterValue"))
+    }
+
+    private func outerGlowJitterFixture() -> Fixture {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        viewModel.document.layers[0].style.outerGlowJitter = 0.1
+        viewModel.document.layers[0].style.outerGlowBlur = 7
+        viewModel.document.layers[1].style.outerGlowEnabled = true
+        viewModel.document.layers[1].style.outerGlowJitter = 0.6
+        viewModel.document.layers[1].style.outerGlowColor = .systemRed
+        viewModel.document.layers[1].style.outerGlowRange = 0.4
+        viewModel.document.layers[2].style.outerGlowJitter = 0.3
+        viewModel.document.layers[2].isLocked = true
+        select(Set(fixture.layers.map(\.id)), primary: fixture.layers[0].id, in: viewModel)
+        return fixture
+    }
+
     @Test func layerStyleMixedInnerGlowContourConvergesAcrossEditableSelection() throws {
         let fixture = innerGlowContourFixture()
         let viewModel = fixture.viewModel

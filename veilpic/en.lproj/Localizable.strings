@@ -1143,6 +1143,7 @@
 "imageEditor.properties.outerGlowSpreadValue" = "Spread: %d px";
 "imageEditor.properties.outerGlowNoiseValue" = "Outer Glow Noise: %d%%";
 "imageEditor.properties.outerGlowRangeValue" = "Outer Glow Range: %d%%";
+"imageEditor.properties.outerGlowJitterValue" = "Outer Glow Jitter: %d%%";
 "imageEditor.properties.innerGlowOpacityValue" = "Inner Glow Opacity: %d%%";
 "imageEditor.properties.innerGlowBlurValue" = "Inner Glow Blur: %d px";
 "imageEditor.properties.innerGlowChokeValue" = "Choke: %d px";

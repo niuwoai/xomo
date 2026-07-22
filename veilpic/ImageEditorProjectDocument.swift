@@ -838,6 +838,7 @@ struct ImageEditorProjectLayerStyle: Codable, Equatable {
     var outerGlowNoise: CGFloat?
     var outerGlowContour: ImageEditorLayerEffectContour?
     var outerGlowRange: CGFloat?
+    var outerGlowJitter: CGFloat?
     var innerGlowEnabled: Bool
     var innerGlowColor: ImageEditorProjectColor
     var innerGlowOpacity: CGFloat
@@ -926,6 +927,7 @@ struct ImageEditorProjectLayerStyle: Codable, Equatable {
         outerGlowNoise = style.outerGlowNoise
         outerGlowContour = style.outerGlowContour
         outerGlowRange = style.outerGlowRange
+        outerGlowJitter = style.outerGlowJitter
         innerGlowEnabled = style.innerGlowEnabled
         innerGlowColor = ImageEditorProjectColor(color: style.innerGlowColor)
         innerGlowOpacity = style.innerGlowOpacity
@@ -1018,6 +1020,7 @@ struct ImageEditorProjectLayerStyle: Codable, Equatable {
             outerGlowNoise: max(0, min(1, outerGlowNoise ?? 0)),
             outerGlowContour: outerGlowContour ?? .linear,
             outerGlowRange: max(0.01, min(1, outerGlowRange ?? 1)),
+            outerGlowJitter: max(0, min(1, outerGlowJitter ?? 0)),
             innerGlowEnabled: innerGlowEnabled,
             innerGlowColor: innerGlowColor.nsColor,
             innerGlowOpacity: innerGlowOpacity,

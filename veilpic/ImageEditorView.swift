@@ -4229,6 +4229,14 @@ struct ImageEditorView: View {
         }
     }
 
+    private var selectedLayerOuterGlowJitterBinding: Binding<Double> {
+        Binding {
+            viewModel.selectedLayerOuterGlowJitter
+        } set: { value in
+            viewModel.setSelectedLayerOuterGlowJitter(value)
+        }
+    }
+
     private var selectedLayerInnerGlowOpacityBinding: Binding<Double> {
         Binding {
             viewModel.selectedLayerInnerGlowOpacity
@@ -7428,6 +7436,15 @@ struct ImageEditorView: View {
                     accessibilityIdentifier: "image-editor-layer-style-outer-glow-range"
                 ) { value in
                     L10n.format("imageEditor.properties.outerGlowRangeValue", Int((value * 100).rounded()))
+                }
+                layerStyleNumericStepper(
+                    state: viewModel.selectedLayerOuterGlowJitterState,
+                    value: selectedLayerOuterGlowJitterBinding,
+                    range: 0...1,
+                    step: 0.05,
+                    accessibilityIdentifier: "image-editor-layer-style-outer-glow-jitter"
+                ) { value in
+                    L10n.format("imageEditor.properties.outerGlowJitterValue", Int((value * 100).rounded()))
                 }
                 layerStyleNumericStepper(
                     state: viewModel.selectedLayerInnerGlowOpacityState,
