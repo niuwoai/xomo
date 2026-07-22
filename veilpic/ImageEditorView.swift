@@ -11,6 +11,7 @@ import SwiftUI
 private let imageEditorRightDockWidth: CGFloat = 384
 private let imageEditorCanvasToolbarHeight: CGFloat = 42
 private let imageEditorToolRailWidth: CGFloat = 84
+private let imageEditorToolButtonHitSize: CGFloat = 36
 private let imageEditorComponentLibraryWidth: CGFloat = 220
 
 enum ImageEditorOptionsBarAppearance {
@@ -993,6 +994,10 @@ struct ImageEditorView: View {
                     XomoComponentLibraryPanel(viewModel: viewModel)
                 }
             }
+            // Component previews install native drag sources. Give each tab a
+            // distinct subtree identity so switching back tears those sources
+            // down instead of reusing their hit-test view for the tool rail.
+            .id(viewModel.selectedLeftSidebarTab)
             .frame(maxHeight: .infinity)
         }
         .frame(width: viewModel.selectedLeftSidebarTab == .tools ? imageEditorToolRailWidth : imageEditorComponentLibraryWidth)
@@ -1004,14 +1009,17 @@ struct ImageEditorView: View {
         VStack(spacing: 8) {
             ScrollView(.vertical, showsIndicators: false) {
                 LazyVGrid(
-                    columns: Array(repeating: GridItem(.fixed(30), spacing: 4), count: 2),
-                    spacing: 4
+                    columns: Array(
+                        repeating: GridItem(.fixed(imageEditorToolButtonHitSize), spacing: 2),
+                        count: 2
+                    ),
+                    spacing: 2
                 ) {
                     ForEach(ImageEditorTool.allCases) { tool in
                         toolRailItem(tool)
                     }
                 }
-                .frame(width: 64)
+                .frame(width: imageEditorToolButtonHitSize * 2 + 2)
             }
 
             Divider().overlay(editorBorder)
@@ -1136,11 +1144,13 @@ struct ImageEditorView: View {
                 Button {
                     viewModel.selectTool(tool)
                 } label: {
-                    ImageEditorMarqueeToolSymbol(shape: viewModel.marqueeShape)
-                        .frame(width: 30, height: 30)
+                    ZStack {
+                        ImageEditorMarqueeToolSymbol(shape: viewModel.marqueeShape)
+                            .frame(width: 30, height: 30)
+                    }
+                    .frame(width: imageEditorToolButtonHitSize, height: imageEditorToolButtonHitSize)
+                    .contentShape(Rectangle())
                 }
-                .frame(width: 30, height: 30)
-                .contentShape(Rectangle())
                 .buttonStyle(EditorIconButtonStyle(isSelected: viewModel.selectedTool == tool))
                 .focusable(false)
                 .xomoFocusEffectDisabled()
@@ -1179,7 +1189,7 @@ struct ImageEditorView: View {
                     .xomoFocusEffectDisabled()
                 }
             }
-            .frame(width: 30, height: 30)
+            .frame(width: imageEditorToolButtonHitSize, height: imageEditorToolButtonHitSize)
             .help(L10n.text("imageEditor.option.marqueeShape"))
             .accessibilityIdentifier("image-editor-tool-marquee")
             .accessibilityValue(viewModel.marqueeShape.rawValue)
@@ -1187,17 +1197,19 @@ struct ImageEditorView: View {
             Button {
                 viewModel.selectTool(tool)
             } label: {
-                if tool == .paintBucket {
-                    ImageEditorPaintBucketSymbol()
-                        .frame(width: 30, height: 30)
-                } else {
-                    Image(systemName: tool.symbolName)
-                        .font(.system(size: 15, weight: .semibold))
-                        .frame(width: 30, height: 30)
+                ZStack {
+                    if tool == .paintBucket {
+                        ImageEditorPaintBucketSymbol()
+                            .frame(width: 30, height: 30)
+                    } else {
+                        Image(systemName: tool.symbolName)
+                            .font(.system(size: 15, weight: .semibold))
+                            .frame(width: 30, height: 30)
+                    }
                 }
+                .frame(width: imageEditorToolButtonHitSize, height: imageEditorToolButtonHitSize)
+                .contentShape(Rectangle())
             }
-            .frame(width: 30, height: 30)
-            .contentShape(Rectangle())
             .buttonStyle(EditorIconButtonStyle(isSelected: viewModel.selectedTool == tool))
             .focusable(false)
             .xomoFocusEffectDisabled()

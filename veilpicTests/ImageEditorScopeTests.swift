@@ -262,6 +262,28 @@ struct ImageEditorScopeTests {
         #expect(railItemSource.components(separatedBy: ".focusable(false)").count - 1 >= 3)
         #expect(railItemSource.contains("ImageEditorPaintBucketSymbol()"))
         #expect(railItemSource.contains(".accessibilityIdentifier(\"image-editor-tool-\\(tool.rawValue)\")"))
+        #expect(source.contains("private let imageEditorToolButtonHitSize: CGFloat = 36"))
+        #expect(
+            railItemSource.components(
+                separatedBy: ".frame(width: imageEditorToolButtonHitSize, height: imageEditorToolButtonHitSize)"
+            ).count - 1 >= 3
+        )
+    }
+
+    @Test func leftSidebarRebuildsToolContentAfterLeavingComponentDragSources() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let sidebarStart = try #require(source.range(of: "private var leftSidebar: some View"))
+        let sidebarEnd = try #require(
+            source[sidebarStart.upperBound...].range(of: "private var toolRail: some View")
+        )
+        let sidebarSource = source[sidebarStart.lowerBound..<sidebarEnd.lowerBound]
+
+        #expect(sidebarSource.contains("case .tools:"))
+        #expect(sidebarSource.contains("case .components:"))
+        #expect(sidebarSource.contains(".id(viewModel.selectedLeftSidebarTab)"))
     }
 
     @MainActor
