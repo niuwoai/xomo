@@ -5716,6 +5716,7 @@ struct ImageEditorView: View {
     private func propertiesPanel(showsTitle: Bool = true) -> some View {
         EditorPanel(title: L10n.text("imageEditor.panel.properties"), showsTitle: showsTitle) {
             VStack(alignment: .leading, spacing: 10) {
+                Group {
                 Text(L10n.text("imageEditor.properties.layerName"))
                     .font(.system(size: 11, weight: .bold))
                     .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
@@ -6140,7 +6141,9 @@ struct ImageEditorView: View {
                     ImageEditorStackChildLayoutControls(viewModel: viewModel)
                     Divider().overlay(editorBorder)
                 }
+                }
 
+                Group {
                 selectedLayerTransformControls
 
                 Divider().overlay(editorBorder)
@@ -6344,7 +6347,9 @@ struct ImageEditorView: View {
                 Divider().overlay(editorBorder)
 
                 gradientFillControls
+                }
 
+                Group {
                 Divider().overlay(editorBorder)
 
                 Picker(L10n.text("imageEditor.properties.filter"), selection: $viewModel.selectedFilter) {
@@ -6553,7 +6558,9 @@ struct ImageEditorView: View {
                         .buttonStyle(EditorTextButtonStyle())
                     }
                 }
+                }
 
+                Group {
                 Divider().overlay(editorBorder)
 
                 TextField(L10n.text("imageEditor.properties.textPlaceholder"), text: $viewModel.textValue)
@@ -6923,7 +6930,9 @@ struct ImageEditorView: View {
                     .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
 
                 Divider().overlay(editorBorder)
+                }
 
+                Group {
                 Text(L10n.text("imageEditor.properties.layerStyle"))
                     .font(.system(size: 11, weight: .bold))
                     .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
@@ -7142,6 +7151,9 @@ struct ImageEditorView: View {
                 )
                 .focusable(false)
                 .accessibilityIdentifier("image-editor-layer-style-global-light-angle")
+                }
+
+                Group {
                 HStack {
                     layerStyleNumericStepper(
                         state: viewModel.selectedLayerShadowDistanceState,
@@ -7342,6 +7354,9 @@ struct ImageEditorView: View {
                 ) { source in
                     viewModel.setSelectedLayerInnerGlowSource(source)
                 }
+                }
+
+                Group {
                 layerStyleNumericStepper(
                     state: viewModel.selectedLayerColorOverlayOpacityState,
                     value: selectedLayerColorOverlayOpacityBinding,
@@ -7563,7 +7578,9 @@ struct ImageEditorView: View {
                 ) { value in
                     L10n.format("imageEditor.properties.bevelAngleValue", Int(value.rounded()))
                 }
+                }
 
+                Group {
                 Divider().overlay(editorBorder)
 
                 HStack {
@@ -7587,6 +7604,7 @@ struct ImageEditorView: View {
                         Label(L10n.text("imageEditor.action.flipV"), systemImage: "arrow.up.and.down.righttriangle.up.righttriangle.down")
                     }
                     .buttonStyle(EditorTextButtonStyle())
+                }
                 }
             }
         }

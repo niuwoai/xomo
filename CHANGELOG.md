@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.12.0-rc471 - 2026-07-22
+
+### Fixed
+- 将属性面板约 1,900 行的单一 SwiftUI `ViewBuilder` 分成八个布局透明分区，避免 Release 全模块优化后在窗口恢复阶段构造超大 `buildBlock` 触发主线程栈溢出。
+- 保留 rc466 的组件库往返清理和 36 × 36 pt 工具命中区域，确保覆盖安装后的真实鼠标事件不再落到旧组件拖放视图。
+
+### Verification
+- 属性面板分区源码回归 1/1、SwiftPM CLI 2/2、发布版本契约 7/7 通过；rc471 Release 构建、递归签名与 macOS 13 最低版本核验通过。
+- Computer Use 在临时 Release 和最终 `/Applications/Xomo.app` 上均完成真实启动、组件库往返，以及画笔中心/橡皮擦边缘坐标点击；套索、矩形选区与油漆桶坐标点击亦通过。
+
 ## 2.12.0-rc470 - 2026-07-22
 
 ### Changed

@@ -286,6 +286,29 @@ struct ImageEditorScopeTests {
         #expect(sidebarSource.contains(".id(viewModel.selectedLeftSidebarTab)"))
     }
 
+    @Test func propertiesPanelPartitionsLargeViewBuilderForReleaseRuntime() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let panelStart = try #require(
+            source.range(of: "private func propertiesPanel(showsTitle: Bool = true) -> some View")
+        )
+        let panelEnd = try #require(
+            source[panelStart.upperBound...].range(of: "private func smartFilterRow")
+        )
+        let panelSource = source[panelStart.lowerBound..<panelEnd.lowerBound]
+        let partitionCount = panelSource.components(
+            separatedBy: "\n                Group {\n"
+        ).count - 1
+
+        #expect(partitionCount == 8)
+        #expect(panelSource.contains("selectedLayerTransformControls"))
+        #expect(panelSource.contains("image-editor-layer-style-global-light-angle"))
+        #expect(panelSource.contains("image-editor-layer-style-bevel-angle"))
+        #expect(panelSource.contains("imageEditor.action.flipV"))
+    }
+
     @MainActor
     @Test func classicToolShortcutsSelectPrimaryToolAndCycleGroupedTools() {
         let image = NSImage(size: NSSize(width: 80, height: 60))
