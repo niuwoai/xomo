@@ -2870,7 +2870,16 @@ final class XomoAutomationRegistry {
                 throw XomoAutomationCallError.invalidArgument("Unknown satin contour")
             }
             viewModel.setSelectedLayerSatinContour(contour)
-        case "bevelSize": viewModel.setSelectedLayerBevelSize(try number())
+        case "bevelSize":
+            let updatedLayerCount = viewModel.setSelectedLayerBevelSize(try number())
+            guard updatedLayerCount > 0 else {
+                throw XomoAutomationCallError.operationFailed(
+                    "No editable layer needs the requested bevel size"
+                )
+            }
+            return .object([
+                "updatedLayerCount": .number(Double(updatedLayerCount))
+            ])
         case "bevelOpacity": viewModel.setSelectedLayerBevelOpacity(try number())
         case "bevelHighlightColor": viewModel.setSelectedLayerBevelHighlightColor(viewModel.foregroundColor)
         case "bevelShadowColor": viewModel.setSelectedLayerBevelShadowColor(viewModel.foregroundColor)

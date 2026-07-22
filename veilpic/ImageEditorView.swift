@@ -7752,12 +7752,15 @@ struct ImageEditorView: View {
                     )
                 }
                 HStack {
-                    Stepper(
-                        L10n.format("imageEditor.properties.bevelSizeValue", Int(viewModel.selectedLayerBevelSize.rounded())),
+                    layerStyleNumericStepper(
+                        state: viewModel.selectedLayerBevelSizeState,
                         value: selectedLayerBevelSizeBinding,
-                        in: 1...24,
-                        step: 1
-                    )
+                        range: 1...24,
+                        step: 1,
+                        accessibilityIdentifier: "image-editor-layer-style-bevel-size"
+                    ) { value in
+                        L10n.format("imageEditor.properties.bevelSizeValue", Int(value.rounded()))
+                    }
                     Stepper(
                         L10n.format("imageEditor.properties.bevelOpacityValue", Int((viewModel.selectedLayerBevelOpacity * 100).rounded())),
                         value: selectedLayerBevelOpacityBinding,

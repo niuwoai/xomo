@@ -735,6 +735,10 @@ extension ImageEditorViewModel {
         Double(document.selectedLayer?.style.bevelSize ?? 4)
     }
 
+    var selectedLayerBevelSizeState: ImageEditorLayerStyleValueState<CGFloat> {
+        selectedLayerStyleValueState(\.bevelSize)
+    }
+
     var selectedLayerBevelOpacity: Double {
         Double(document.selectedLayer?.style.bevelOpacity ?? 0.38)
     }
@@ -1682,7 +1686,8 @@ extension ImageEditorViewModel {
         }
     }
 
-    func setSelectedLayerBevelSize(_ size: Double) {
+    @discardableResult
+    func setSelectedLayerBevelSize(_ size: Double) -> Int {
         updateSelectedLayerStyle {
             $0.bevelEnabled = true
             $0.bevelSize = max(1, min(24, CGFloat(size)))

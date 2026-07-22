@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.12.0-rc509 - 2026-07-23
+
+### Fixed
+- 斜面与浮雕“大小”现在使用真实多选共同值：选中图层的大小不一致时显示“多个值”，调整后一次收敛全部可编辑图层；锁定层和重复值安全跳过，选择保持且只生成一步 Undo/History。
+- 大小入口复用不可聚焦的混合数值 Stepper，仍限制在 1–24 px，并只启用斜面与修改大小，不触碰透明度、颜色、柔化、方向或光照参数。
+
+### Automation
+- `xomo.layer.style_settings property=bevelSize` 返回实际 `updatedLayerCount`；零变化明确失败，不再用通用动作结果掩盖空操作。
+
+### Verification
+- Xcode 定向测试 3/3、SwiftPM CLI 2/2、发布契约 4/4（10 条断言）通过，覆盖混合值收敛、锁定层保护、参数隔离、选择保持、单步 Undo/Redo、重复值零历史、界面混合态契约、MCP schema、真实修改数、零变化失败与 1–24 px 上限夹取。常规完整 Release、冒烟与 `/Applications` 覆盖门禁仍为 rc520；下一小步继续收紧斜面透明度事务。
+
 ## 2.12.0-rc508 - 2026-07-23
 
 ### Fixed
