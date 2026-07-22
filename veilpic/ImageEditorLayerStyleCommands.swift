@@ -1254,10 +1254,14 @@ extension ImageEditorViewModel {
         }
     }
 
-    func setSelectedLayerInnerShadowDistance(_ distance: Double) {
+    @discardableResult
+    func setSelectedLayerInnerShadowDistance(_ distance: Double) -> Int {
         updateSelectedLayerStyle {
+            let wasEnabled = $0.innerShadowEnabled
             $0.innerShadowEnabled = true
-            $0.innerShadowColor = innerShadowColor()
+            if !wasEnabled {
+                $0.innerShadowColor = innerShadowColor()
+            }
             $0.innerShadowDistance = max(0, min(48, CGFloat(distance)))
         }
     }

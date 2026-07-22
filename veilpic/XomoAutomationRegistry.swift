@@ -2490,7 +2490,16 @@ final class XomoAutomationRegistry {
             return .object([
                 "updatedLayerCount": .number(Double(updatedLayerCount))
             ])
-        case "innerShadowDistance": viewModel.setSelectedLayerInnerShadowDistance(try number())
+        case "innerShadowDistance":
+            let updatedLayerCount = viewModel.setSelectedLayerInnerShadowDistance(try number())
+            guard updatedLayerCount > 0 else {
+                throw XomoAutomationCallError.operationFailed(
+                    "No editable layer needs the requested inner shadow distance"
+                )
+            }
+            return .object([
+                "updatedLayerCount": .number(Double(updatedLayerCount))
+            ])
         case "innerShadowAngle": viewModel.setSelectedLayerInnerShadowAngle(try number())
         case "outerGlowOpacity": viewModel.setSelectedLayerOuterGlowOpacity(try number())
         case "outerGlowColor": viewModel.setSelectedLayerOuterGlowColor(viewModel.foregroundColor)

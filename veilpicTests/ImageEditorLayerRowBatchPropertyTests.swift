@@ -1357,20 +1357,36 @@ struct ImageEditorLayerRowBatchPropertyTests {
         let historyCount = viewModel.document.history.count
 
         #expect(viewModel.selectedLayerInnerShadowDistanceState == .mixed)
-        viewModel.setSelectedLayerInnerShadowDistance(24)
+        #expect(viewModel.setSelectedLayerInnerShadowDistance(24) == 1)
         #expect(viewModel.selectedLayerInnerShadowDistanceState == .value(24))
         #expect((try layer(firstID, in: viewModel)).style.innerShadowDistance == 24)
         #expect((try layer(secondID, in: viewModel)).style.innerShadowDistance == 24)
         #expect((try layer(lockedID, in: viewModel)).style.innerShadowDistance == 12)
         #expect((try layer(firstID, in: viewModel)).style.innerShadowEnabled)
         #expect((try layer(secondID, in: viewModel)).style.innerShadowEnabled)
+        #expect((try layer(secondID, in: viewModel)).style.innerShadowColor == .systemRed)
         #expect(viewModel.document.history.count == historyCount + 1)
         #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
 
+        let historyAfterUpdate = viewModel.document.history.count
+        #expect(viewModel.setSelectedLayerInnerShadowDistance(24) == 0)
+        #expect(viewModel.document.history.count == historyAfterUpdate)
+
+        #expect(viewModel.setSelectedLayerInnerShadowDistance(-20) == 2)
+        #expect(viewModel.selectedLayerInnerShadowDistanceState == .value(0))
+        #expect((try layer(firstID, in: viewModel)).style.innerShadowDistance == 0)
+        #expect((try layer(secondID, in: viewModel)).style.innerShadowDistance == 0)
+
+        #expect(viewModel.setSelectedLayerInnerShadowDistance(100) == 2)
+        #expect(viewModel.selectedLayerInnerShadowDistanceState == .value(48))
+        #expect((try layer(firstID, in: viewModel)).style.innerShadowDistance == 48)
+        #expect((try layer(secondID, in: viewModel)).style.innerShadowDistance == 48)
+        #expect((try layer(secondID, in: viewModel)).style.innerShadowColor == .systemRed)
+
         viewModel.undo()
-        #expect(viewModel.selectedLayerInnerShadowDistanceState == .mixed)
+        #expect(viewModel.selectedLayerInnerShadowDistanceState == .value(0))
         viewModel.redo()
-        #expect(viewModel.selectedLayerInnerShadowDistanceState == .value(24))
+        #expect(viewModel.selectedLayerInnerShadowDistanceState == .value(48))
     }
 
     @Test func layerStyleInnerShadowDistanceControlReusesMixedNumericStepper() throws {
@@ -1392,7 +1408,9 @@ struct ImageEditorLayerRowBatchPropertyTests {
         let fixture = makeFixture()
         let viewModel = fixture.viewModel
         viewModel.document.layers[0].style.innerShadowDistance = 6
-        viewModel.document.layers[1].style.innerShadowDistance = 30
+        viewModel.document.layers[1].style.innerShadowEnabled = true
+        viewModel.document.layers[1].style.innerShadowDistance = 24
+        viewModel.document.layers[1].style.innerShadowColor = .systemRed
         viewModel.document.layers[2].style.innerShadowDistance = 12
         viewModel.document.layers[2].isLocked = true
         select(Set(fixture.layers.map(\.id)), primary: fixture.layers[0].id, in: viewModel)

@@ -1036,8 +1036,10 @@ struct ImageEditorLayerStyleTests {
         viewModel.foregroundColor = .black
         viewModel.setSelectedLayerInnerShadowOpacity(0.75)
         viewModel.setSelectedLayerInnerShadowBlur(9)
-        viewModel.setSelectedLayerInnerShadowDistance(11)
         viewModel.setSelectedLayerInnerShadowAngle(-30)
+        viewModel.setSelectedLayerInnerShadowDistance(0)
+        let zeroDistanceData = try #require(viewModel.currentImage.qingtuPNGData())
+        viewModel.setSelectedLayerInnerShadowDistance(11)
 
         let styledLayer = try #require(viewModel.document.selectedLayer)
         let layerPixelsAfterStyle = try #require(styledLayer.image.qingtuPNGData())
@@ -1049,6 +1051,7 @@ struct ImageEditorLayerStyleTests {
         #expect(styledLayer.style.innerShadowAngle == -30)
         #expect(layerPixelsAfterStyle == layerPixelsBeforeStyle)
         #expect(compositedAfterStyle != compositedBeforeStyle)
+        #expect(compositedAfterStyle != zeroDistanceData)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStyle"))
     }
 
