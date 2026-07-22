@@ -344,6 +344,10 @@ extension ImageEditorViewModel {
         document.selectedLayer?.style.innerGlowColor ?? .systemCyan
     }
 
+    var selectedLayerInnerGlowColorState: ImageEditorLayerStyleValueState<ImageEditorProjectColor> {
+        selectedLayerStyleValueState { ImageEditorProjectColor(color: $0.innerGlowColor) }
+    }
+
     var selectedLayerColorOverlayColor: NSColor {
         document.selectedLayer?.style.colorOverlayColor ?? .systemRed
     }
@@ -1108,7 +1112,8 @@ extension ImageEditorViewModel {
         }
     }
 
-    func setSelectedLayerInnerGlowColor(_ color: NSColor) {
+    @discardableResult
+    func setSelectedLayerInnerGlowColor(_ color: NSColor) -> Int {
         updateSelectedLayerStyle {
             $0.innerGlowEnabled = true
             $0.innerGlowColor = color.usingColorSpace(.sRGB) ?? color

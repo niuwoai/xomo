@@ -1,5 +1,6 @@
 "app.name" = "Xomo";
 "app.version" = "Version %@";
+"someim.update.check" = "Check for Updates…";
 "annotation.tool.ellipse" = "Ellipse";
 "annotation.tool.pen" = "Pen";
 "annotation.tool.rectangle" = "Rectangle";
@@ -1793,8 +1794,8 @@
 "imageEditor.status.layerSmartFilterUpdatedSelected" = "Updated smart filters on %d layers";
 "imageEditor.status.layerSmartFilterDuplicatedSelected" = "Duplicated smart filters on %d layers";
 "imageEditor.status.layerSmartFilterRemovedSelected" = "Removed smart filters from %d layers";
-"imageEditor.status.layerSmartFilterClearedSelected" = "Cleared smart filters from %d layers";
 "imageEditor.status.layerSmartFilterMovedSelected" = "Moved smart filters on %d layers";
+"imageEditor.status.layerSmartFilterClearedSelected" = "Cleared smart filters from %d layers";
 "imageEditor.status.adjustmentSelected" = "Applied %@ to %d layers";
 "imageEditor.status.operationFailed" = "Operation failed";
 "imageEditor.status.layerLocked" = "The selected layer cannot be edited";

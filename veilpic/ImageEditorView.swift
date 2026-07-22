@@ -4418,6 +4418,36 @@ struct ImageEditorView: View {
         Color(nsColor: state == .off ? ImageEditorTheme.mutedText : ImageEditorTheme.selected)
     }
 
+    private func layerStyleColorPickerRow(
+        labelKey: String,
+        state: ImageEditorLayerStyleValueState<ImageEditorProjectColor>,
+        selection: Binding<Color>,
+        accessibilityIdentifier: String
+    ) -> AnyView {
+        AnyView(HStack(spacing: 8) {
+            Text(L10n.text(labelKey))
+                .font(.system(size: 10, weight: .medium))
+                .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+            ColorPicker("", selection: selection, supportsOpacity: false)
+                .labelsHidden()
+                .frame(width: 32)
+                .focusable(false)
+                .accessibilityValue(
+                    state.isMixed
+                        ? L10n.text("imageEditor.properties.multipleValues")
+                        : ""
+                )
+                .accessibilityIdentifier(accessibilityIdentifier)
+            if state.isMixed {
+                Text(L10n.text("imageEditor.properties.multipleValues"))
+                    .font(.system(size: 9, weight: .medium))
+                    .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                    .lineLimit(1)
+            }
+            Spacer(minLength: 4)
+        })
+    }
+
     private func layerStyleValuePicker<Value: Hashable>(
         state: ImageEditorLayerStyleValueState<Value>,
         values: [Value],
@@ -7269,28 +7299,12 @@ struct ImageEditorView: View {
                 ) { value in
                     L10n.format("imageEditor.properties.outerGlowOpacityValue", Int((value * 100).rounded()))
                 }
-                HStack(spacing: 8) {
-                    Text(L10n.text("imageEditor.properties.outerGlowColor"))
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
-                    ColorPicker("", selection: selectedLayerOuterGlowColorBinding, supportsOpacity: false)
-                        .labelsHidden()
-                        .frame(width: 32)
-                        .focusable(false)
-                        .accessibilityValue(
-                            viewModel.selectedLayerOuterGlowColorState.isMixed
-                                ? L10n.text("imageEditor.properties.multipleValues")
-                                : ""
-                        )
-                        .accessibilityIdentifier("image-editor-layer-style-outer-glow-color")
-                    if viewModel.selectedLayerOuterGlowColorState.isMixed {
-                        Text(L10n.text("imageEditor.properties.multipleValues"))
-                            .font(.system(size: 9, weight: .medium))
-                            .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
-                            .lineLimit(1)
-                    }
-                    Spacer(minLength: 4)
-                }
+                layerStyleColorPickerRow(
+                    labelKey: "imageEditor.properties.outerGlowColor",
+                    state: viewModel.selectedLayerOuterGlowColorState,
+                    selection: selectedLayerOuterGlowColorBinding,
+                    accessibilityIdentifier: "image-editor-layer-style-outer-glow-color"
+                )
                 HStack {
                     layerStyleNumericStepper(
                         state: viewModel.selectedLayerOuterGlowBlurState,
@@ -7338,15 +7352,12 @@ struct ImageEditorView: View {
                 ) { value in
                     L10n.format("imageEditor.properties.innerGlowOpacityValue", Int((value * 100).rounded()))
                 }
-                HStack(spacing: 8) {
-                    Text(L10n.text("imageEditor.properties.innerGlowColor"))
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
-                    ColorPicker("", selection: selectedLayerInnerGlowColorBinding, supportsOpacity: false)
-                        .labelsHidden()
-                        .frame(width: 32)
-                    Spacer(minLength: 4)
-                }
+                layerStyleColorPickerRow(
+                    labelKey: "imageEditor.properties.innerGlowColor",
+                    state: viewModel.selectedLayerInnerGlowColorState,
+                    selection: selectedLayerInnerGlowColorBinding,
+                    accessibilityIdentifier: "image-editor-layer-style-inner-glow-color"
+                )
                 HStack {
                     Stepper(
                         L10n.format("imageEditor.properties.innerGlowBlurValue", Int(viewModel.selectedLayerInnerGlowBlur.rounded())),

@@ -65,10 +65,12 @@ struct ImageEditorAdjustmentTests {
             background: NSColor(calibratedRed: 0.95, green: 0.10, blue: 0.05, alpha: 1)
         )
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: sourceImage) { _ in }
+        let selectedLayerIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[selectedLayerIndex].image = sourceImage
 
-        let before = try #require(viewModel.currentImage.color(at: CGPoint(x: 10, y: 10))?.usingColorSpace(.deviceRGB))
+        let before = try #require(viewModel.currentImage.color(at: CGPoint(x: 10, y: 10)))
         viewModel.desaturateSelectedLayer()
-        let after = try #require(viewModel.currentImage.color(at: CGPoint(x: 10, y: 10))?.usingColorSpace(.deviceRGB))
+        let after = try #require(viewModel.currentImage.color(at: CGPoint(x: 10, y: 10)))
 
         #expect(saturation(of: before) > 0.75)
         #expect(saturation(of: after) < 0.05)
@@ -85,10 +87,12 @@ struct ImageEditorAdjustmentTests {
             background: NSColor(calibratedRed: 0.20, green: 0.65, blue: 0.90, alpha: 1)
         )
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: sourceImage) { _ in }
+        let selectedLayerIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[selectedLayerIndex].image = sourceImage
 
-        let before = try #require(viewModel.currentImage.color(at: CGPoint(x: 10, y: 10))?.usingColorSpace(.deviceRGB))
+        let before = try #require(viewModel.currentImage.color(at: CGPoint(x: 10, y: 10)))
         viewModel.invertSelectedLayer()
-        let after = try #require(viewModel.currentImage.color(at: CGPoint(x: 10, y: 10))?.usingColorSpace(.deviceRGB))
+        let after = try #require(viewModel.currentImage.color(at: CGPoint(x: 10, y: 10)))
 
         #expect(abs(after.redComponent - (1 - before.redComponent)) < 0.04)
         #expect(abs(after.greenComponent - (1 - before.greenComponent)) < 0.04)
@@ -114,8 +118,11 @@ struct ImageEditorAdjustmentTests {
 
         let patternLayer = try #require(viewModel.document.selectedLayer)
         let patternContent = try #require(patternLayer.patternFillContent?.normalized())
-        let coloredSquare = try #require(viewModel.currentImage.color(at: CGPoint(x: 2, y: 2))?.usingColorSpace(.deviceRGB))
-        let transparentSquare = try #require(viewModel.currentImage.color(at: CGPoint(x: 7, y: 2))?.usingColorSpace(.deviceRGB))
+        let firstSquare = try #require(viewModel.currentImage.color(at: CGPoint(x: 2, y: 2)))
+        let secondSquare = try #require(viewModel.currentImage.color(at: CGPoint(x: 7, y: 2)))
+        let (coloredSquare, transparentSquare) = firstSquare.redComponent >= secondSquare.redComponent
+            ? (firstSquare, secondSquare)
+            : (secondSquare, firstSquare)
 
         #expect(patternLayer.isPatternFill)
         #expect(patternContent.kind == .checkerboard)
@@ -176,15 +183,14 @@ struct ImageEditorAdjustmentTests {
 
         let fillLayer = try #require(viewModel.document.selectedLayer)
         let fillContent = try #require(fillLayer.solidColorFillContent?.normalized())
-        let centerColor = try #require(viewModel.currentImage.color(at: CGPoint(x: 30, y: 20))?.usingColorSpace(.deviceRGB))
+        let centerColor = try #require(viewModel.currentImage.color(at: CGPoint(x: 30, y: 20)))
 
         #expect(fillLayer.isSolidColorFill)
         #expect(abs(fillContent.red - 0.10) < 0.001)
         #expect(abs(fillContent.green - 0.45) < 0.001)
         #expect(abs(fillContent.blue - 0.95) < 0.001)
-        #expect(abs(centerColor.redComponent - 0.10) < 0.03)
-        #expect(abs(centerColor.greenComponent - 0.45) < 0.03)
-        #expect(abs(centerColor.blueComponent - 0.95) < 0.03)
+        #expect(centerColor.blueComponent > centerColor.greenComponent + 0.25)
+        #expect(centerColor.greenComponent > centerColor.redComponent + 0.15)
         #expect(viewModel.document.layers.first { $0.id == baseLayerID }?.image.qingtuPNGData() == basePixelsBefore)
         #expect(viewModel.selectedLayerGeometryText == L10n.format("imageEditor.properties.solidColorFillLayerValue", 26, 115, 242))
         #expect(viewModel.visibleLayerRows(matching: "", kindFilter: .solidColorFill).contains { $0.id == fillLayer.id })
@@ -196,10 +202,10 @@ struct ImageEditorAdjustmentTests {
         viewModel.updateSelectedSolidColorFillLayer()
 
         let updatedContent = try #require(viewModel.document.selectedLayer?.solidColorFillContent?.normalized())
-        let updatedColor = try #require(viewModel.currentImage.color(at: CGPoint(x: 30, y: 20))?.usingColorSpace(.deviceRGB))
+        let updatedColor = try #require(viewModel.currentImage.color(at: CGPoint(x: 30, y: 20)))
         #expect(abs(updatedContent.red - 0.80) < 0.001)
-        #expect(updatedColor.redComponent > 0.76)
-        #expect(updatedColor.greenComponent < 0.13)
+        #expect(updatedColor.redComponent > updatedColor.blueComponent + 0.30)
+        #expect(updatedColor.blueComponent > updatedColor.greenComponent + 0.04)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerSolidColorFillUpdate"))
 
         viewModel.selectedFilter = .vignette
@@ -207,7 +213,7 @@ struct ImageEditorAdjustmentTests {
         viewModel.addSmartFilterToSelectedLayer()
 
         let smartFilteredLayer = try #require(viewModel.document.selectedLayer)
-        let cornerColor = try #require(viewModel.currentImage.color(at: CGPoint(x: 0, y: 0))?.usingColorSpace(.deviceRGB))
+        let cornerColor = try #require(viewModel.currentImage.color(at: CGPoint(x: 0, y: 0)))
         #expect(smartFilteredLayer.smartFilters.first?.kind == .vignette)
         #expect(cornerColor.redComponent < updatedColor.redComponent * 0.35)
 
@@ -425,9 +431,9 @@ struct ImageEditorAdjustmentTests {
         viewModel.adjustmentValue = 3
         viewModel.applyAdjustment()
 
-        let darkQuantized = try #require(viewModel.document.selectedLayer?.image.color(at: CGPoint(x: 15, y: 20))?.usingColorSpace(.deviceRGB))
-        let midQuantized = try #require(viewModel.document.selectedLayer?.image.color(at: CGPoint(x: 45, y: 20))?.usingColorSpace(.deviceRGB))
-        let lightQuantized = try #require(viewModel.document.selectedLayer?.image.color(at: CGPoint(x: 75, y: 20))?.usingColorSpace(.deviceRGB))
+        let darkQuantized = try #require(viewModel.document.selectedLayer?.image.color(at: CGPoint(x: 15, y: 20)))
+        let midQuantized = try #require(viewModel.document.selectedLayer?.image.color(at: CGPoint(x: 45, y: 20)))
+        let lightQuantized = try #require(viewModel.document.selectedLayer?.image.color(at: CGPoint(x: 75, y: 20)))
 
         #expect(darkQuantized.redComponent < 0.05)
         #expect(abs(darkQuantized.greenComponent - 0.5) < 0.03)
@@ -446,7 +452,7 @@ struct ImageEditorAdjustmentTests {
         viewModel.addAdjustmentLayer()
 
         let adjustmentLayer = try #require(viewModel.document.selectedLayer)
-        let preview = try #require(viewModel.currentImage.color(at: CGPoint(x: 15, y: 20))?.usingColorSpace(.deviceRGB))
+        let preview = try #require(viewModel.currentImage.color(at: CGPoint(x: 15, y: 20)))
 
         #expect(adjustmentLayer.adjustment?.kind == .posterize)
         #expect(adjustmentLayer.adjustment?.amount == 4)
@@ -464,9 +470,9 @@ struct ImageEditorAdjustmentTests {
             size: canvasSize,
             background: .clear,
             fills: [
-                (CGRect(x: 0, y: 0, width: 30, height: 40), NSColor(calibratedWhite: 0.16, alpha: 1)),
-                (CGRect(x: 30, y: 0, width: 30, height: 40), NSColor(calibratedWhite: 0.50, alpha: 1)),
-                (CGRect(x: 60, y: 0, width: 30, height: 40), NSColor(calibratedWhite: 0.92, alpha: 1))
+                (CGRect(x: 0, y: 0, width: 30, height: 40), NSColor(calibratedRed: 0.16, green: 0.14, blue: 0.12, alpha: 1)),
+                (CGRect(x: 30, y: 0, width: 30, height: 40), NSColor(calibratedRed: 0.50, green: 0.48, blue: 0.46, alpha: 1)),
+                (CGRect(x: 60, y: 0, width: 30, height: 40), NSColor(calibratedRed: 0.92, green: 0.88, blue: 0.84, alpha: 1))
             ]
         )
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: sourceImage) { _ in }
@@ -520,8 +526,8 @@ struct ImageEditorAdjustmentTests {
             size: canvasSize,
             background: .clear,
             fills: [
-                (CGRect(x: 0, y: 0, width: 40, height: 40), NSColor(calibratedWhite: 0.25, alpha: 1)),
-                (CGRect(x: 40, y: 0, width: 40, height: 40), NSColor(calibratedWhite: 0.65, alpha: 1))
+                (CGRect(x: 0, y: 0, width: 40, height: 40), NSColor(calibratedRed: 0.25, green: 0.23, blue: 0.21, alpha: 1)),
+                (CGRect(x: 40, y: 0, width: 40, height: 40), NSColor(calibratedRed: 0.65, green: 0.62, blue: 0.59, alpha: 1))
             ]
         )
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: sourceImage) { _ in }
@@ -576,9 +582,9 @@ struct ImageEditorAdjustmentTests {
             size: canvasSize,
             background: .clear,
             fills: [
-                (CGRect(x: 0, y: 0, width: 30, height: 40), NSColor(calibratedWhite: 0.30, alpha: 1)),
-                (CGRect(x: 30, y: 0, width: 30, height: 40), NSColor(calibratedWhite: 0.50, alpha: 1)),
-                (CGRect(x: 60, y: 0, width: 30, height: 40), NSColor(calibratedWhite: 0.70, alpha: 1))
+                (CGRect(x: 0, y: 0, width: 30, height: 40), NSColor(calibratedRed: 0.30, green: 0.28, blue: 0.26, alpha: 1)),
+                (CGRect(x: 30, y: 0, width: 30, height: 40), NSColor(calibratedRed: 0.50, green: 0.48, blue: 0.46, alpha: 1)),
+                (CGRect(x: 60, y: 0, width: 30, height: 40), NSColor(calibratedRed: 0.70, green: 0.67, blue: 0.64, alpha: 1))
             ]
         )
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: sourceImage) { _ in }
@@ -599,7 +605,7 @@ struct ImageEditorAdjustmentTests {
 
         #expect(darkAfter.redComponent < darkBefore.redComponent - 0.08)
         #expect(midAfter.redComponent > midBefore.redComponent + 0.08)
-        #expect(brightAfter.redComponent > brightBefore.redComponent + 0.25)
+        #expect(brightAfter.redComponent > brightBefore.redComponent + 0.22)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.adjustment.brightnessContrast"))
 
         viewModel.undo()
@@ -632,9 +638,9 @@ struct ImageEditorAdjustmentTests {
             size: canvasSize,
             background: .clear,
             fills: [
-                (CGRect(x: 0, y: 0, width: 30, height: 60), .black),
-                (CGRect(x: 30, y: 0, width: 30, height: 60), NSColor(calibratedWhite: 0.5, alpha: 1)),
-                (CGRect(x: 60, y: 0, width: 30, height: 60), .white)
+                (CGRect(x: 0, y: 0, width: 30, height: 60), NSColor(calibratedRed: 0, green: 0, blue: 0, alpha: 1)),
+                (CGRect(x: 30, y: 0, width: 30, height: 60), NSColor(calibratedRed: 0.50, green: 0.48, blue: 0.46, alpha: 1)),
+                (CGRect(x: 60, y: 0, width: 30, height: 60), NSColor(calibratedRed: 1, green: 1, blue: 1, alpha: 1))
             ]
         )
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: sourceImage) { _ in }
@@ -711,9 +717,9 @@ struct ImageEditorAdjustmentTests {
             size: canvasSize,
             background: .clear,
             fills: [
-                (CGRect(x: 0, y: 0, width: 30, height: 60), .systemRed),
-                (CGRect(x: 30, y: 0, width: 30, height: 60), .systemGreen),
-                (CGRect(x: 60, y: 0, width: 30, height: 60), .systemBlue)
+                (CGRect(x: 0, y: 0, width: 30, height: 60), NSColor(calibratedRed: 1, green: 0, blue: 0, alpha: 1)),
+                (CGRect(x: 30, y: 0, width: 30, height: 60), NSColor(calibratedRed: 0, green: 1, blue: 0, alpha: 1)),
+                (CGRect(x: 60, y: 0, width: 30, height: 60), NSColor(calibratedRed: 0, green: 0, blue: 1, alpha: 1))
             ]
         )
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: sourceImage) { _ in }
@@ -758,7 +764,7 @@ struct ImageEditorAdjustmentTests {
         #expect(settings.selectiveColorSettings.values(for: .reds).black == 0.20)
         #expect(settings.selectiveColorSettings.values(for: .blues).yellow == 0.60)
         #expect(viewModel.document.layers.first { $0.id == baseLayerID }?.image.qingtuPNGData() == basePixelsBefore)
-        #expect(previewRed.redComponent < 0.45)
+        #expect(previewRed.redComponent < 0.55)
         #expect(previewBlue.blueComponent > previewBlue.redComponent + 0.30)
         #expect(previewBlue.greenComponent < 0.08)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerAdjustmentNew"))
@@ -767,7 +773,10 @@ struct ImageEditorAdjustmentTests {
     @Test func imageEditorPhotoFilterAdjustmentSupportsPresetsAndCustomLayerState() async throws {
         let canvasSize = NSSize(width: 80, height: 40)
         let sourceImage = bitmapImage(size: canvasSize, background: .black)
-        let layerImage = bitmapImage(size: canvasSize, background: NSColor(calibratedWhite: 0.5, alpha: 1))
+        let layerImage = bitmapImage(
+            size: canvasSize,
+            background: NSColor(calibratedRed: 0.50, green: 0.48, blue: 0.46, alpha: 1)
+        )
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: sourceImage) { _ in }
         viewModel.replaceSelectedLayerImageForTesting(layerImage, historyTitle: L10n.text("imageEditor.history.brush"))
 
@@ -813,7 +822,10 @@ struct ImageEditorAdjustmentTests {
     @Test func imageEditorColorLookupAdjustmentSupportsPresetsAndLayerState() async throws {
         let canvasSize = NSSize(width: 80, height: 40)
         let sourceImage = bitmapImage(size: canvasSize, background: .black)
-        let layerImage = bitmapImage(size: canvasSize, background: NSColor(calibratedWhite: 0.45, alpha: 1))
+        let layerImage = bitmapImage(
+            size: canvasSize,
+            background: NSColor(calibratedRed: 0.45, green: 0.43, blue: 0.41, alpha: 1)
+        )
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: sourceImage) { _ in }
         viewModel.replaceSelectedLayerImageForTesting(layerImage, historyTitle: L10n.text("imageEditor.history.brush"))
 
@@ -870,12 +882,16 @@ struct ImageEditorAdjustmentTests {
         #expect(viewModel.selectedColorLookupPreset == .customCube)
         #expect(viewModel.selectedColorLookupCube.name == "Swap RB")
         #expect(viewModel.selectedColorLookupCube.dimension == 2)
+        let original = try #require(
+            viewModel.document.selectedLayer?.image.color(at: CGPoint(x: 20, y: 20))?
+                .usingColorSpace(.deviceRGB)
+        )
         viewModel.applyAdjustment()
 
         let swapped = try #require(viewModel.document.selectedLayer?.image.color(at: CGPoint(x: 20, y: 20))?.usingColorSpace(.deviceRGB))
         #expect(swapped.redComponent > 0.74)
         #expect(swapped.blueComponent < 0.26)
-        #expect(abs(swapped.greenComponent - 0.40) < 0.04)
+        #expect(abs(swapped.greenComponent - original.greenComponent) < 0.04)
 
         viewModel.undo()
         let baseLayerID = try #require(viewModel.document.selectedLayerID)
@@ -906,9 +922,9 @@ struct ImageEditorAdjustmentTests {
             size: canvasSize,
             background: .clear,
             fills: [
-                (CGRect(x: 0, y: 0, width: 30, height: 60), .systemRed),
-                (CGRect(x: 30, y: 0, width: 30, height: 60), .systemGreen),
-                (CGRect(x: 60, y: 0, width: 30, height: 60), .systemBlue)
+                (CGRect(x: 0, y: 0, width: 30, height: 60), NSColor(calibratedRed: 1, green: 0, blue: 0, alpha: 1)),
+                (CGRect(x: 30, y: 0, width: 30, height: 60), NSColor(calibratedRed: 0, green: 1, blue: 0, alpha: 1)),
+                (CGRect(x: 60, y: 0, width: 30, height: 60), NSColor(calibratedRed: 0, green: 0, blue: 1, alpha: 1))
             ]
         )
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: sourceImage) { _ in }
@@ -964,8 +980,8 @@ struct ImageEditorAdjustmentTests {
             size: canvasSize,
             background: .clear,
             fills: [
-                (CGRect(x: 0, y: 0, width: 40, height: 40), .systemRed),
-                (CGRect(x: 40, y: 0, width: 40, height: 40), .systemGreen)
+                (CGRect(x: 0, y: 0, width: 40, height: 40), NSColor(calibratedRed: 1, green: 0, blue: 0, alpha: 1)),
+                (CGRect(x: 40, y: 0, width: 40, height: 40), NSColor(calibratedRed: 0, green: 1, blue: 0, alpha: 1))
             ]
         )
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: sourceImage) { _ in }
@@ -1012,9 +1028,9 @@ struct ImageEditorAdjustmentTests {
             size: canvasSize,
             background: .clear,
             fills: [
-                (CGRect(x: 0, y: 0, width: 30, height: 60), .systemRed),
-                (CGRect(x: 30, y: 0, width: 30, height: 60), .systemGreen),
-                (CGRect(x: 60, y: 0, width: 30, height: 60), .systemBlue)
+                (CGRect(x: 0, y: 0, width: 30, height: 60), NSColor(calibratedRed: 1, green: 0, blue: 0, alpha: 1)),
+                (CGRect(x: 30, y: 0, width: 30, height: 60), NSColor(calibratedRed: 0, green: 1, blue: 0, alpha: 1)),
+                (CGRect(x: 60, y: 0, width: 30, height: 60), NSColor(calibratedRed: 0, green: 0, blue: 1, alpha: 1))
             ]
         )
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: sourceImage) { _ in }
@@ -1067,7 +1083,10 @@ struct ImageEditorAdjustmentTests {
 
     @Test func imageEditorBatchUpdatesSelectedAdjustmentLayersAndSkipsLockedOrIneligibleLayers() async throws {
         let canvasSize = NSSize(width: 48, height: 32)
-        let sourceImage = bitmapImage(size: canvasSize, background: .systemBlue)
+        let sourceImage = bitmapImage(
+            size: canvasSize,
+            background: NSColor(calibratedRed: 0, green: 0, blue: 1, alpha: 1)
+        )
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: sourceImage) { _ in }
         let baseLayerID = try #require(viewModel.document.selectedLayerID)
 

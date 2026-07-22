@@ -47,6 +47,9 @@ fastlane/test_output
 # Logs
 *.log
 
+# Generated test reports and result bundles
+test-reports/
+
 # Editor / tool caches
 .vscode/
 .idea/

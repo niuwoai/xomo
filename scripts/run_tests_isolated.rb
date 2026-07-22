@@ -42,6 +42,7 @@ DESTINATION = 'platform=macOS'
 TEST_TARGET = 'veilpicTests'
 TESTS_DIR   = File.join(__dir__, '..', TEST_TARGET)
 DERIVED_DATA_PATH = ENV.fetch('XOMO_DERIVED_DATA_PATH', '/tmp/veilpic-isolated-tests')
+INFRASTRUCTURE_RETRY_LIMIT = 2
 
 options = {
   jobs: 1,
@@ -117,7 +118,6 @@ end
 def run_one(test, logs_dir)
   identifier = "#{TEST_TARGET}/#{test[:suite]}/#{test[:method]}()"
   result_bundle_path = File.join(logs_dir, "#{test[:suite]}.#{test[:method]}.xcresult")
-  FileUtils.rm_rf(result_bundle_path)
   args = base_xcodebuild_args + [
     'test-without-building',
     "-only-testing:#{identifier}",
@@ -125,7 +125,21 @@ def run_one(test, logs_dir)
     '-enableCodeCoverage', 'NO',
   ]
   started = Time.now
-  out, status = Open3.capture2e(*args)
+  attempts = 0
+  output_chunks = []
+  status = nil
+  loop do
+    FileUtils.rm_rf(result_bundle_path)
+    out, status = Open3.capture2e(*args)
+    output_chunks << out
+    break if status.success?
+    break unless attempts < INFRASTRUCTURE_RETRY_LIMIT && transient_xcode_failure?(out, result_bundle_path)
+
+    attempts += 1
+    output_chunks << "\n==> Xcode 基础设施异常，自动重试 #{attempts}/#{INFRASTRUCTURE_RETRY_LIMIT}\n"
+    sleep 1
+  end
+  out = output_chunks.join
   duration = Time.now - started
 
   log_path = File.join(logs_dir, "#{test[:suite]}.#{test[:method]}.log")
@@ -141,9 +155,18 @@ def run_one(test, logs_dir)
     file: test[:file],
     passed: passed,
     duration: duration.round(3),
+    infrastructure_retries: attempts,
     issues: issues,
     log: File.basename(log_path),
   }
+end
+
+def transient_xcode_failure?(output, result_bundle_path)
+  return false if File.exist?(result_bundle_path)
+
+  output.include?('DVTAssertions: ASSERTION FAILURE') ||
+    output.include?('Failed to launch test host') ||
+    output.include?('The test runner failed to initialize')
 end
 
 # -----------------------------------------------------------------------------
@@ -185,7 +208,8 @@ workers = Array.new(options[:jobs]) do
         results << res
         done_count += 1
         mark = res[:passed] ? '✔' : '✘'
-        printf("[%3d/%3d] %s %s (%.1fs)\n", done_count, tests.size, mark, res[:identifier], res[:duration])
+        retry_note = res[:infrastructure_retries].positive? ? "，基础设施重试 #{res[:infrastructure_retries]} 次" : ''
+        printf("[%3d/%3d] %s %s (%.1fs%s)\n", done_count, tests.size, mark, res[:identifier], res[:duration], retry_note)
         if !res[:passed] && options[:stop_on_first_failure]
           stop = true
         end

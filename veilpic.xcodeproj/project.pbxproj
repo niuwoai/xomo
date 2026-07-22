@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		E4D91DEC7D2982D0CBB7A8EA /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 0AFDAAF27413E0CA08EF70B8 /* Sparkle */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		5C64E7482FBCBBFC00FCD09D /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -32,16 +36,22 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		5C64E73A2FBCBBFB00FCD09D /* veilpic */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = veilpic;
 			sourceTree = "<group>";
 		};
 		5C64E74A2FBCBBFC00FCD09D /* veilpicTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = veilpicTests;
 			sourceTree = "<group>";
 		};
 		5C64E7542FBCBBFC00FCD09D /* veilpicUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+			);
 			path = veilpicUITests;
 			sourceTree = "<group>";
 		};
@@ -52,6 +62,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E4D91DEC7D2982D0CBB7A8EA /* Sparkle in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -113,6 +124,7 @@
 			);
 			name = veilpic;
 			packageProductDependencies = (
+				0AFDAAF27413E0CA08EF70B8 /* Sparkle */,
 			);
 			productName = veilpic;
 			productReference = 5C64E7382FBCBBFB00FCD09D /* Xomo.app */;
@@ -136,8 +148,6 @@
 				5C64E74A2FBCBBFC00FCD09D /* veilpicTests */,
 			);
 			name = veilpicTests;
-			packageProductDependencies = (
-			);
 			productName = veilpicTests;
 			productReference = 5C64E7472FBCBBFC00FCD09D /* veilpicTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
@@ -160,8 +170,6 @@
 				5C64E7542FBCBBFC00FCD09D /* veilpicUITests */,
 			);
 			name = veilpicUITests;
-			packageProductDependencies = (
-			);
 			productName = veilpicUITests;
 			productReference = 5C64E7512FBCBBFC00FCD09D /* veilpicUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
@@ -199,6 +207,9 @@
 			);
 			mainGroup = 5C64E72F2FBCBBFB00FCD09D;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				BDB0758C7D4330271702CD02 /* XCRemoteSwiftPackageReference "Sparkle" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 5C64E7392FBCBBFB00FCD09D /* Products */;
 			projectDirPath = "";
@@ -453,13 +464,13 @@
 				CODE_SIGNING_ALLOWED = NO;
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 480;
 				DEVELOPMENT_TEAM = ZH2S7D6PL6;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_FILE_ACCESS_DOWNLOADS_FOLDER = readwrite;
 				ENABLE_HARDENED_RUNTIME = YES;
-				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
 				ENABLE_INCOMING_NETWORK_CONNECTIONS = YES;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readwrite;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -467,14 +478,19 @@
 				INFOPLIST_KEY_CFBundleDisplayName = Xomo;
 				INFOPLIST_KEY_CFBundleName = Xomo;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_SUAutomaticallyUpdate = YES;
+				INFOPLIST_KEY_SUEnableAutomaticChecks = YES;
+				INFOPLIST_KEY_SUFeedURL = "https://some.im/api/v1/public/app-updates/appcast.xml?app_id=xomo&platform=macos&channel=stable";
+				INFOPLIST_KEY_SUPublicEDKey = "3QVMPCYo42ORmq8uUHqUdW8ayy5nw8Hs5uq9DLKDp0A=";
+				INFOPLIST_KEY_SUVerifyUpdateBeforeExtraction = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = "2.12.0-rc479";
+				MARKETING_VERSION = "2.12.0-rc480";
 				PRODUCT_BUNDLE_IDENTIFIER = im.some.xomo;
-				PRODUCT_NAME = Xomo;
 				PRODUCT_MODULE_NAME = musepic;
+				PRODUCT_NAME = Xomo;
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -493,13 +509,13 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 480;
 				DEVELOPMENT_TEAM = ZH2S7D6PL6;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_FILE_ACCESS_DOWNLOADS_FOLDER = readwrite;
 				ENABLE_HARDENED_RUNTIME = YES;
-				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
 				ENABLE_INCOMING_NETWORK_CONNECTIONS = YES;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readwrite;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -507,14 +523,19 @@
 				INFOPLIST_KEY_CFBundleDisplayName = Xomo;
 				INFOPLIST_KEY_CFBundleName = Xomo;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_SUAutomaticallyUpdate = YES;
+				INFOPLIST_KEY_SUEnableAutomaticChecks = YES;
+				INFOPLIST_KEY_SUFeedURL = "https://some.im/api/v1/public/app-updates/appcast.xml?app_id=xomo&platform=macos&channel=stable";
+				INFOPLIST_KEY_SUPublicEDKey = "3QVMPCYo42ORmq8uUHqUdW8ayy5nw8Hs5uq9DLKDp0A=";
+				INFOPLIST_KEY_SUVerifyUpdateBeforeExtraction = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = "2.12.0-rc479";
+				MARKETING_VERSION = "2.12.0-rc480";
 				PRODUCT_BUNDLE_IDENTIFIER = im.some.xomo;
-				PRODUCT_NAME = Xomo;
 				PRODUCT_MODULE_NAME = musepic;
+				PRODUCT_NAME = Xomo;
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -531,11 +552,11 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGNING_ALLOWED = NO;
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 480;
 				DEVELOPMENT_TEAM = ZH2S7D6PL6;
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = "2.12.0-rc479";
+				MARKETING_VERSION = "2.12.0-rc480";
 				PRODUCT_BUNDLE_IDENTIFIER = im.some.xomoTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
@@ -552,11 +573,11 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 480;
 				DEVELOPMENT_TEAM = ZH2S7D6PL6;
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = "2.12.0-rc479";
+				MARKETING_VERSION = "2.12.0-rc480";
 				PRODUCT_BUNDLE_IDENTIFIER = im.some.xomoTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
@@ -573,10 +594,10 @@
 			buildSettings = {
 				CODE_SIGNING_ALLOWED = NO;
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 480;
 				DEVELOPMENT_TEAM = ZH2S7D6PL6;
 				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = "2.12.0-rc479";
+				MARKETING_VERSION = "2.12.0-rc480";
 				PRODUCT_BUNDLE_IDENTIFIER = im.some.xomoUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
@@ -592,10 +613,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 480;
 				DEVELOPMENT_TEAM = ZH2S7D6PL6;
 				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = "2.12.0-rc479";
+				MARKETING_VERSION = "2.12.0-rc480";
 				PRODUCT_BUNDLE_IDENTIFIER = im.some.xomoUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
@@ -647,6 +668,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		BDB0758C7D4330271702CD02 /* XCRemoteSwiftPackageReference "Sparkle" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sparkle-project/Sparkle";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.6.4;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		0AFDAAF27413E0CA08EF70B8 /* Sparkle */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BDB0758C7D4330271702CD02 /* XCRemoteSwiftPackageReference "Sparkle" */;
+			productName = Sparkle;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 5C64E7302FBCBBFB00FCD09D /* Project object */;
 }

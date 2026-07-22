@@ -20,12 +20,15 @@ module XomoReleaseContract
     app_version = app_source[/static let current = "([^"]+)"/, 1]
     cli_version = cli_source[/xomoCLIVersion = "([^"]+)"/, 1]
     project_versions = project.scan(/MARKETING_VERSION = ([^;]+);/).flatten.map { |value| value.strip.delete('"') }.uniq
+    build_versions = project.scan(/CURRENT_PROJECT_VERSION = ([^;]+);/).flatten.map { |value| value.strip.delete('"') }.uniq
     bundle_ids = project.scan(/PRODUCT_BUNDLE_IDENTIFIER = ([^;]+);/).flatten.map { |value| value.strip.delete('"') }.uniq
     deployment_targets = project.scan(/MACOSX_DEPLOYMENT_TARGET = ([^;]+);/).flatten.map { |value| value.strip.delete('"') }.uniq
+    expected_build_version = app_version&.match(/-rc(\d+)\z/)&.[](1)
 
     checks = {
       "app_and_cli_version_match" => !app_version.nil? && app_version == cli_version,
       "project_versions_match" => !project_versions.empty? && project_versions == [app_version],
+      "build_version_matches_prerelease" => !expected_build_version.nil? && build_versions == [expected_build_version],
       "main_bundle_id" => bundle_ids.include?(EXPECTED_BUNDLE_ID),
       "test_bundle_ids" => bundle_ids.include?("#{EXPECTED_BUNDLE_ID}Tests") && bundle_ids.include?("#{EXPECTED_BUNDLE_ID}UITests"),
       "minimum_macos_13" => !deployment_targets.empty? && deployment_targets.all? { |value| Gem::Version.new(value) >= MINIMUM_MACOS_VERSION },
@@ -37,6 +40,7 @@ module XomoReleaseContract
     {
       "version" => app_version,
       "project_versions" => project_versions,
+      "build_versions" => build_versions,
       "bundle_ids" => bundle_ids,
       "deployment_targets" => deployment_targets,
       "checks" => checks,
@@ -46,6 +50,7 @@ module XomoReleaseContract
     {
       "version" => nil,
       "project_versions" => [],
+      "build_versions" => [],
       "bundle_ids" => [],
       "deployment_targets" => [],
       "checks" => { "repository_files_present" => false },

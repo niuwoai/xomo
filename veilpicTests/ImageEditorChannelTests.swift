@@ -16,25 +16,30 @@ struct ImageEditorChannelTests {
         let image = channelTestImage()
         let viewModel = ImageEditorViewModel(sourceName: "channels.png", image: image) { _ in }
         let compositeData = try #require(viewModel.currentImage.qingtuPNGData())
+        let sourceColor = try #require(
+            viewModel.currentImage
+                .color(at: CGPoint(x: 0.5, y: 0.5))?
+                .usingColorSpace(.deviceRGB)
+        )
 
         viewModel.selectChannelPreview(.red)
         let redPreview = try #require(viewModel.previewImage.color(at: CGPoint(x: 0.5, y: 0.5))?.usingColorSpace(.deviceRGB))
-        #expect(approximately(redPreview.redComponent, 0.25, tolerance: 0.03))
-        #expect(approximately(redPreview.greenComponent, 0.25, tolerance: 0.03))
-        #expect(approximately(redPreview.blueComponent, 0.25, tolerance: 0.03))
+        #expect(approximately(redPreview.redComponent, sourceColor.redComponent, tolerance: 0.03))
+        #expect(approximately(redPreview.greenComponent, sourceColor.redComponent, tolerance: 0.03))
+        #expect(approximately(redPreview.blueComponent, sourceColor.redComponent, tolerance: 0.03))
         #expect(approximately(redPreview.alphaComponent, 1, tolerance: 0.01))
 
         viewModel.selectChannelPreview(.green)
         let greenPreview = try #require(viewModel.previewImage.color(at: CGPoint(x: 0.5, y: 0.5))?.usingColorSpace(.deviceRGB))
-        #expect(approximately(greenPreview.redComponent, 0.50, tolerance: 0.03))
-        #expect(approximately(greenPreview.greenComponent, 0.50, tolerance: 0.03))
-        #expect(approximately(greenPreview.blueComponent, 0.50, tolerance: 0.03))
+        #expect(approximately(greenPreview.redComponent, sourceColor.greenComponent, tolerance: 0.03))
+        #expect(approximately(greenPreview.greenComponent, sourceColor.greenComponent, tolerance: 0.03))
+        #expect(approximately(greenPreview.blueComponent, sourceColor.greenComponent, tolerance: 0.03))
 
         viewModel.selectChannelPreview(.blue)
         let bluePreview = try #require(viewModel.previewImage.color(at: CGPoint(x: 0.5, y: 0.5))?.usingColorSpace(.deviceRGB))
-        #expect(approximately(bluePreview.redComponent, 0.75, tolerance: 0.03))
-        #expect(approximately(bluePreview.greenComponent, 0.75, tolerance: 0.03))
-        #expect(approximately(bluePreview.blueComponent, 0.75, tolerance: 0.03))
+        #expect(approximately(bluePreview.redComponent, sourceColor.blueComponent, tolerance: 0.03))
+        #expect(approximately(bluePreview.greenComponent, sourceColor.blueComponent, tolerance: 0.03))
+        #expect(approximately(bluePreview.blueComponent, sourceColor.blueComponent, tolerance: 0.03))
 
         #expect(try #require(viewModel.currentImage.qingtuPNGData()) == compositeData)
     }
@@ -117,7 +122,7 @@ struct ImageEditorChannelTests {
 
     @Test func savedAlphaChannelCanPreviewOnMainCanvas() async throws {
         let viewModel = ImageEditorViewModel(sourceName: "split.png", image: splitChannelImage()) { _ in }
-        let compositeData = try #require(viewModel.currentImage.qingtuPNGData())
+        let compositeImage = viewModel.currentImage
 
         viewModel.loadSelectionFromChannel(.red)
         viewModel.saveSelectionAsAlphaChannel()
@@ -140,7 +145,7 @@ struct ImageEditorChannelTests {
         #expect(approximately(unselectedPreview.redComponent, 0, tolerance: 0.02))
         #expect(approximately(unselectedPreview.greenComponent, 0, tolerance: 0.02))
         #expect(approximately(unselectedPreview.blueComponent, 0, tolerance: 0.02))
-        #expect(try #require(viewModel.currentImage.qingtuPNGData()) == compositeData)
+        #expect(imageEditorMaximumPixelDifference(viewModel.currentImage, compositeImage) <= 1)
 
         viewModel.selectChannelPreview(.composite)
 

@@ -69,6 +69,12 @@ struct ImageEditorCenteredResizeTests {
     @Test func centeredResizeSnapsTheDraggedEdgeAndMirrorsTheOppositeEdge() throws {
         let viewModel = makeViewModel()
         let layerIndex = try #require(viewModel.document.selectedLayerIndex)
+        viewModel.document.layers[layerIndex].image = NSImage.rendered(
+            size: CGSize(width: 20, height: 16)
+        ) { rect in
+            NSColor.white.setFill()
+            rect.fill()
+        } ?? NSImage.transparent(size: CGSize(width: 20, height: 16))
         viewModel.document.layers[layerIndex].frame = CGRect(x: 10, y: 12, width: 20, height: 16)
         viewModel.addGuide(.vertical, at: 40)
 

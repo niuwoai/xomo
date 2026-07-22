@@ -345,22 +345,20 @@ extension ImageEditorViewModel {
     }
 
     func offsetGuides(by offset: CGSize, targetCanvasSize: CGSize) -> [ImageEditorGuide] {
-        document.guides.map { guide in
+        document.guides.compactMap { guide in
             var updated = guide
+            let position: CGFloat
+            let upperBound: CGFloat
             switch guide.orientation {
             case .vertical:
-                updated.position = clampedGuidePosition(
-                    guide.position + offset.width,
-                    orientation: .vertical,
-                    canvasSize: targetCanvasSize
-                )
+                position = guide.position + offset.width
+                upperBound = targetCanvasSize.width
             case .horizontal:
-                updated.position = clampedGuidePosition(
-                    guide.position + offset.height,
-                    orientation: .horizontal,
-                    canvasSize: targetCanvasSize
-                )
+                position = guide.position + offset.height
+                upperBound = targetCanvasSize.height
             }
+            guard position >= 0, position <= upperBound else { return nil }
+            updated.position = position.rounded()
             return updated
         }
     }

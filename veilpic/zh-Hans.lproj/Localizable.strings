@@ -1,5 +1,6 @@
 "app.name" = "象墨";
 "app.version" = "版本 %@";
+"someim.update.check" = "检查更新…";
 "annotation.tool.ellipse" = "椭圆";
 "annotation.tool.pen" = "画笔";
 "annotation.tool.rectangle" = "矩形";
@@ -1793,8 +1794,8 @@
 "imageEditor.status.layerSmartFilterUpdatedSelected" = "已更新 %d 个图层的智能滤镜";
 "imageEditor.status.layerSmartFilterDuplicatedSelected" = "已在 %d 个图层中复制智能滤镜";
 "imageEditor.status.layerSmartFilterRemovedSelected" = "已从 %d 个图层中删除智能滤镜";
-"imageEditor.status.layerSmartFilterClearedSelected" = "已清空 %d 个图层的智能滤镜";
 "imageEditor.status.layerSmartFilterMovedSelected" = "已在 %d 个图层中移动智能滤镜";
+"imageEditor.status.layerSmartFilterClearedSelected" = "已清空 %d 个图层的智能滤镜";
 "imageEditor.status.adjustmentSelected" = "已将 %@ 应用到 %d 个图层";
 "imageEditor.status.operationFailed" = "操作失败";
 "imageEditor.status.layerLocked" = "当前图层不可编辑";

@@ -111,7 +111,9 @@ struct ImageEditorCanvasGeometryTests {
             delta: CGSize(width: -40, height: -50),
             canvasSize: CGSize(width: 160, height: 120)
         )
-        #expect(resized == CGRect(x: 0, y: 0, width: 100, height: 80))
+        #expect(resized == CGRect(x: 0, y: 0, width: 100, height: 90))
+        #expect(resized.maxX == crop.maxX)
+        #expect(resized.maxY == crop.maxY)
 
         let minimum = ImageEditorCropGeometry.adjustedFrame(
             from: crop,

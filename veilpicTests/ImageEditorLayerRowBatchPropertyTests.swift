@@ -1386,6 +1386,80 @@ struct ImageEditorLayerRowBatchPropertyTests {
         return fixture
     }
 
+    @Test func layerStyleInnerGlowColorMixedValueConvergesAcrossEditableSelection() throws {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        let firstID = fixture.layers[0].id
+        let secondID = fixture.layers[1].id
+        let lockedID = fixture.layers[2].id
+        let targetColor = NSColor(srgbRed: 0.82, green: 0.31, blue: 0.12, alpha: 1)
+        let targetProjectColor = ImageEditorProjectColor(color: targetColor)
+        viewModel.document.layers[0].style.innerGlowColor = .systemRed
+        viewModel.document.layers[0].style.innerGlowOpacity = 0.35
+        viewModel.document.layers[0].style.innerGlowBlur = 7
+        viewModel.document.layers[1].style.innerGlowEnabled = true
+        viewModel.document.layers[1].style.innerGlowColor = targetColor
+        viewModel.document.layers[1].style.innerGlowOpacity = 0.72
+        viewModel.document.layers[1].style.innerGlowBlur = 19
+        viewModel.document.layers[1].style.innerGlowChoke = 8
+        viewModel.document.layers[1].style.innerGlowSource = .center
+        viewModel.document.layers[2].style.innerGlowColor = .systemBlue
+        viewModel.document.layers[2].isLocked = true
+        select(Set(fixture.layers.map(\.id)), primary: firstID, in: viewModel)
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.selectedLayerInnerGlowColorState == .mixed)
+        #expect(viewModel.setSelectedLayerInnerGlowColor(targetColor) == 1)
+        #expect(viewModel.selectedLayerInnerGlowColorState == .value(targetProjectColor))
+        #expect((try layer(firstID, in: viewModel)).style.innerGlowEnabled)
+        #expect((try layer(firstID, in: viewModel)).style.innerGlowColor.isEqual(targetColor))
+        #expect((try layer(secondID, in: viewModel)).style.innerGlowColor.isEqual(targetColor))
+        #expect((try layer(lockedID, in: viewModel)).style.innerGlowColor.isEqual(NSColor.systemBlue))
+        #expect((try layer(firstID, in: viewModel)).style.innerGlowOpacity == 0.35)
+        #expect((try layer(firstID, in: viewModel)).style.innerGlowBlur == 7)
+        #expect((try layer(secondID, in: viewModel)).style.innerGlowOpacity == 0.72)
+        #expect((try layer(secondID, in: viewModel)).style.innerGlowBlur == 19)
+        #expect((try layer(secondID, in: viewModel)).style.innerGlowChoke == 8)
+        #expect((try layer(secondID, in: viewModel)).style.innerGlowSource == .center)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+
+        let historyAfterUpdate = viewModel.document.history.count
+        #expect(viewModel.setSelectedLayerInnerGlowColor(targetColor) == 0)
+        #expect(viewModel.document.history.count == historyAfterUpdate)
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerInnerGlowColorState == .mixed)
+        viewModel.redo()
+        #expect(viewModel.selectedLayerInnerGlowColorState == .value(targetProjectColor))
+    }
+
+    @Test func layerStyleInnerGlowColorPickerShowsLocalizedMixedValue() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("labelKey: \"imageEditor.properties.innerGlowColor\""))
+        #expect(source.contains("state: viewModel.selectedLayerInnerGlowColorState"))
+        #expect(source.contains("selection: selectedLayerInnerGlowColorBinding"))
+        #expect(source.contains("image-editor-layer-style-inner-glow-color"))
+        let helperStart = try #require(
+            source.range(of: "private func layerStyleColorPickerRow(")
+        )
+        let helperEnd = try #require(
+            source[helperStart.upperBound...].range(of: "private func layerStyleValuePicker")
+        )
+        let helperSource = source[helperStart.lowerBound..<helperEnd.lowerBound]
+        #expect(helperSource.contains("ColorPicker(\"\", selection: selection"))
+        #expect(helperSource.contains("L10n.text(\"imageEditor.properties.multipleValues\")"))
+        #expect(helperSource.contains(".focusable(false)"))
+        #expect(helperSource.contains(".accessibilityIdentifier(accessibilityIdentifier)"))
+    }
+
     @Test func layerStyleOuterGlowColorMixedValueConvergesAcrossEditableSelection() throws {
         let fixture = makeFixture()
         let viewModel = fixture.viewModel
@@ -1439,17 +1513,21 @@ struct ImageEditorLayerRowBatchPropertyTests {
             encoding: .utf8
         )
 
-        let pickerStart = try #require(
-            source.range(of: "ColorPicker(\"\", selection: selectedLayerOuterGlowColorBinding")
+        #expect(source.contains("labelKey: \"imageEditor.properties.outerGlowColor\""))
+        #expect(source.contains("state: viewModel.selectedLayerOuterGlowColorState"))
+        #expect(source.contains("selection: selectedLayerOuterGlowColorBinding"))
+        #expect(source.contains("image-editor-layer-style-outer-glow-color"))
+        let helperStart = try #require(
+            source.range(of: "private func layerStyleColorPickerRow(")
         )
-        let pickerEnd = try #require(
-            source[pickerStart.upperBound...].range(of: "layerStyleNumericStepper(")
+        let helperEnd = try #require(
+            source[helperStart.upperBound...].range(of: "private func layerStyleValuePicker")
         )
-        let pickerSource = source[pickerStart.lowerBound..<pickerEnd.lowerBound]
-        #expect(pickerSource.contains("viewModel.selectedLayerOuterGlowColorState.isMixed"))
-        #expect(pickerSource.contains("L10n.text(\"imageEditor.properties.multipleValues\")"))
-        #expect(pickerSource.contains(".focusable(false)"))
-        #expect(pickerSource.contains("image-editor-layer-style-outer-glow-color"))
+        let helperSource = source[helperStart.lowerBound..<helperEnd.lowerBound]
+        #expect(helperSource.contains("ColorPicker(\"\", selection: selection"))
+        #expect(helperSource.contains("L10n.text(\"imageEditor.properties.multipleValues\")"))
+        #expect(helperSource.contains(".focusable(false)"))
+        #expect(helperSource.contains(".accessibilityIdentifier(accessibilityIdentifier)"))
     }
 
     @Test func layerStyleBevelAngleMixedValueConvergesAcrossGlobalAndLocalLight() throws {

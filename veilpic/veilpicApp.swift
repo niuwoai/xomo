@@ -12,11 +12,17 @@ import SwiftUI
 struct veilpicApp: App {
     @NSApplicationDelegateAdaptor(XomoApplicationDelegate.self) private var applicationDelegate
 
+    init() {
+        SomeIMUpdateController.shared.start()
+    }
+
     var body: some Scene {
         WindowGroup {
             XomoEditorWorkspaceView()
         }
         .commands {
+            SomeIMUpdateCommands()
+
             CommandGroup(replacing: .newItem) { }
             CommandGroup(replacing: .appInfo) {
                 Button(L10n.text("about.menuItem")) {

@@ -1,5 +1,6 @@
 "app.name" = "軽図";
 "app.version" = "バージョン %@";
+"someim.update.check" = "アップデートを確認…";
 "annotation.tool.ellipse" = "楕円";
 "annotation.tool.pen" = "ペン";
 "annotation.tool.rectangle" = "矩形";
@@ -1793,8 +1794,8 @@
 "imageEditor.status.layerSmartFilterUpdatedSelected" = "%d個のレイヤーのスマートフィルターを更新しました";
 "imageEditor.status.layerSmartFilterDuplicatedSelected" = "%d個のレイヤーでスマートフィルターを複製しました";
 "imageEditor.status.layerSmartFilterRemovedSelected" = "%d個のレイヤーからスマートフィルターを削除しました";
-"imageEditor.status.layerSmartFilterClearedSelected" = "%d個のレイヤーからスマートフィルターをクリアしました";
 "imageEditor.status.layerSmartFilterMovedSelected" = "%d個のレイヤーでスマートフィルターを移動しました";
+"imageEditor.status.layerSmartFilterClearedSelected" = "%d個のレイヤーからスマートフィルターをクリアしました";
 "imageEditor.status.adjustmentSelected" = "%@ を%d個のレイヤーに適用しました";
 "imageEditor.status.operationFailed" = "操作に失敗しました";
 "imageEditor.status.layerLocked" = "選択中のレイヤーは編集できません";

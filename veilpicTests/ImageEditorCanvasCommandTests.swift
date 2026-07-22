@@ -115,15 +115,11 @@ struct ImageEditorCanvasCommandTests {
         viewModel.crop(to: CGRect(x: 20, y: 10, width: 50, height: 40))
 
         let croppedLayer = viewModel.document.layers[layerIndex]
-        let croppedSelectionMask = try #require(viewModel.document.selection?.rasterMask)
         let croppedAlpha = try #require(viewModel.document.alphaChannels.first?.mask)
         #expect(viewModel.document.canvasSize == CGSize(width: 50, height: 40))
         #expect(croppedLayer.frame == CGRect(x: 10, y: 12, width: 20, height: 16))
         #expect(croppedLayer.mask?.size == CGSize(width: 50, height: 40))
-        #expect(viewModel.document.selection?.points.first == CGPoint(x: 5, y: 5))
-        #expect(croppedSelectionMask.width == 50)
-        #expect(croppedSelectionMask.height == 40)
-        #expect(croppedSelectionMask.alpha[6 * 50 + 6] == 255)
+        #expect(viewModel.document.selection == .fullCanvas(size: CGSize(width: 50, height: 40)))
         #expect(viewModel.document.savedSelection?.points.first == CGPoint(x: 22, y: 18))
         #expect(croppedAlpha.width == 50)
         #expect(croppedAlpha.height == 40)
@@ -167,7 +163,7 @@ struct ImageEditorCanvasCommandTests {
         #expect(viewModel.document.canvasSize == CGSize(width: 50, height: 40))
         #expect(viewModel.document.layers[layerIndex].frame == CGRect(x: 10, y: 12, width: 20, height: 16))
         #expect(viewModel.document.layers[layerIndex].mask?.size == CGSize(width: 50, height: 40))
-        #expect(viewModel.document.selection?.points.first == CGPoint(x: 0, y: 0))
+        #expect(viewModel.document.selection == .fullCanvas(size: CGSize(width: 50, height: 40)))
         #expect(viewModel.document.savedSelection?.points.first == CGPoint(x: 22, y: 18))
         #expect(croppedAlpha.width == 50)
         #expect(croppedAlpha.height == 40)
@@ -234,7 +230,7 @@ struct ImageEditorCanvasCommandTests {
         let trimmedAlpha = try #require(viewModel.document.alphaChannels.first?.mask)
         #expect(viewModel.document.canvasSize == CGSize(width: 20, height: 16))
         #expect(viewModel.document.layers[layerIndex].frame == CGRect(x: 0, y: 0, width: 20, height: 16))
-        #expect(viewModel.document.selection?.points.first == CGPoint(x: 4, y: 4))
+        #expect(viewModel.document.selection == .fullCanvas(size: CGSize(width: 20, height: 16)))
         #expect(viewModel.document.savedSelection?.points.first == CGPoint(x: 8, y: 8))
         #expect(trimmedAlpha.width == 20)
         #expect(trimmedAlpha.height == 16)
@@ -252,6 +248,7 @@ struct ImageEditorCanvasCommandTests {
             sourceName: "source.png",
             image: testImage(color: .systemBlue, size: NSSize(width: 100, height: 80))
         ) { _ in }
+        let initialLayerIDs = viewModel.document.layers.map(\.id)
         var leftLayer = ImageEditorLayer.blank(name: "Left", size: CGSize(width: 20, height: 16))
         leftLayer.image = NSImage.opaqueMask(size: CGSize(width: 20, height: 16))
         leftLayer.frame = CGRect(x: -10, y: 12, width: 20, height: 16)
@@ -279,11 +276,19 @@ struct ImageEditorCanvasCommandTests {
         viewModel.revealAllLayers()
 
         let revealedAlpha = try #require(viewModel.document.alphaChannels.first?.mask)
+        let revealedLeft = try #require(viewModel.document.layers.first { $0.id == leftLayer.id })
+        let revealedRight = try #require(viewModel.document.layers.first { $0.id == rightLayer.id })
+        let revealedHidden = try #require(viewModel.document.layers.first { $0.id == hiddenLayer.id })
         #expect(viewModel.document.canvasSize == CGSize(width: 130, height: 90))
-        #expect(viewModel.document.layers[0].frame == CGRect(x: 10, y: 0, width: 100, height: 80))
-        #expect(viewModel.document.layers[1].frame == CGRect(x: 0, y: 12, width: 20, height: 16))
-        #expect(viewModel.document.layers[2].frame == CGRect(x: 100, y: 70, width: 30, height: 20))
-        #expect(viewModel.document.layers[3].frame == CGRect(x: -30, y: 10, width: 30, height: 20))
+        for initialLayerID in initialLayerIDs {
+            #expect(
+                viewModel.document.layers.first { $0.id == initialLayerID }?.frame
+                    == CGRect(x: 10, y: 0, width: 100, height: 80)
+            )
+        }
+        #expect(revealedLeft.frame == CGRect(x: 0, y: 12, width: 20, height: 16))
+        #expect(revealedRight.frame == CGRect(x: 100, y: 70, width: 30, height: 20))
+        #expect(revealedHidden.frame == CGRect(x: -30, y: 10, width: 30, height: 20))
         #expect(viewModel.document.selection?.points.first == CGPoint(x: 16, y: 14))
         #expect(viewModel.document.savedSelection?.points.first == CGPoint(x: 22, y: 18))
         #expect(revealedAlpha.width == 130)

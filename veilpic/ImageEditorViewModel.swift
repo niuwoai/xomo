@@ -7087,13 +7087,20 @@ final class ImageEditorViewModel: ObservableObject {
     private func backgroundImage(from layer: ImageEditorLayer) -> NSImage? {
         let fillColor = (backgroundColor.usingColorSpace(.deviceRGB) ?? backgroundColor).withAlphaComponent(1)
         let layerImage = layer.renderedCompositingImage(globalLightAngle: document.globalLightAngle)
+        let renderedFrame = layer.renderedCompositingFrame(globalLightAngle: document.globalLightAngle)
+        let appKitFrame = CGRect(
+            x: renderedFrame.minX,
+            y: document.canvasSize.height - renderedFrame.maxY,
+            width: renderedFrame.width,
+            height: renderedFrame.height
+        )
         guard let solidCanvas = NSImage.rendered(size: document.canvasSize, actions: { rect in
             fillColor.setFill()
             rect.fill()
         })?.normalizedBitmapImage(),
               let layerCanvas = NSImage.rendered(size: document.canvasSize, actions: { _ in
             layerImage.draw(
-                in: layer.renderedCompositingFrame(globalLightAngle: document.globalLightAngle),
+                in: appKitFrame,
                 from: CGRect(origin: .zero, size: layerImage.size),
                 operation: .sourceOver,
                 fraction: 1

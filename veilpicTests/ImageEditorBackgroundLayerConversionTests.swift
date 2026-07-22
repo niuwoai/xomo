@@ -78,11 +78,14 @@ struct ImageEditorBackgroundLayerConversionTests {
             name: "Half Red",
             size: NSSize(width: 20, height: 20)
         )
-        source.image = solidImage(color: .systemRed, size: source.image.size)
+        source.image = solidImage(
+            color: NSColor(calibratedRed: 1, green: 0, blue: 0, alpha: 1),
+            size: source.image.size
+        )
         source.frame = CGRect(x: 10, y: 12, width: 20, height: 20)
         source.opacity = 0.5
         source.labelColor = .orange
-        viewModel.backgroundColor = .systemBlue
+        viewModel.backgroundColor = NSColor(calibratedRed: 0, green: 0, blue: 1, alpha: 1)
         viewModel.document.layers.append(source)
         select(source.id, in: viewModel)
 
@@ -118,10 +121,10 @@ struct ImageEditorBackgroundLayerConversionTests {
     @Test func nestedLayerBecomesTheRootBackgroundWithoutDisturbingTheRemainingGroup() throws {
         let viewModel = makeViewModelWithoutBackground()
         let retainedRoot = viewModel.document.layers[0]
-        var sibling = pixelLayer("Sibling", color: .systemGreen, in: viewModel)
-        var source = pixelLayer("Nested Source", color: .systemRed, in: viewModel)
+        var sibling = pixelLayer("Sibling", color: NSColor(calibratedRed: 0, green: 1, blue: 0, alpha: 1), in: viewModel)
+        var source = pixelLayer("Nested Source", color: NSColor(calibratedRed: 1, green: 0, blue: 0, alpha: 1), in: viewModel)
         let group = ImageEditorLayer.group(name: "Group", size: viewModel.document.canvasSize)
-        let upperRoot = pixelLayer("Upper Root", color: .systemBlue, in: viewModel)
+        let upperRoot = pixelLayer("Upper Root", color: NSColor(calibratedRed: 0, green: 0, blue: 1, alpha: 1), in: viewModel)
         sibling.groupID = group.id
         source.groupID = group.id
         viewModel.document.layers = [retainedRoot, sibling, source, group, upperRoot]
@@ -138,10 +141,10 @@ struct ImageEditorBackgroundLayerConversionTests {
 
     @Test func layerToBackgroundClearsLinksOnBothSidesAndReleasesAnOrphanedClip() throws {
         let viewModel = makeViewModelWithoutBackground()
-        var source = pixelLayer("Base", color: .systemRed, in: viewModel)
-        var clip = pixelLayer("Clip", color: .systemGreen, in: viewModel)
+        var source = pixelLayer("Base", color: NSColor(calibratedRed: 1, green: 0, blue: 0, alpha: 1), in: viewModel)
+        var clip = pixelLayer("Clip", color: NSColor(calibratedRed: 0, green: 1, blue: 0, alpha: 1), in: viewModel)
         let group = ImageEditorLayer.group(name: "Group", size: viewModel.document.canvasSize)
-        var linkedRoot = pixelLayer("Linked", color: .systemBlue, in: viewModel)
+        var linkedRoot = pixelLayer("Linked", color: NSColor(calibratedRed: 0, green: 0, blue: 1, alpha: 1), in: viewModel)
         source.groupID = group.id
         clip.groupID = group.id
         clip.isClippingMask = true
@@ -163,7 +166,7 @@ struct ImageEditorBackgroundLayerConversionTests {
 
     @Test func hiddenLayerRemainsHiddenWhenItBecomesTheBackground() throws {
         let viewModel = makeViewModelWithoutBackground()
-        var source = pixelLayer("Hidden", color: .systemRed, in: viewModel)
+        var source = pixelLayer("Hidden", color: NSColor(calibratedRed: 1, green: 0, blue: 0, alpha: 1), in: viewModel)
         source.isVisible = false
         viewModel.document.layers.append(source)
         select(source.id, in: viewModel)
@@ -183,7 +186,7 @@ struct ImageEditorBackgroundLayerConversionTests {
             frame: CGRect(x: 14, y: 16, width: 36, height: 24),
             content: ImageEditorShapeContent(
                 kind: .rectangle,
-                fillColor: .systemPink,
+                fillColor: NSColor(calibratedRed: 1, green: 0.2, blue: 0.5, alpha: 1),
                 fillOpacity: 1,
                 strokeColor: .white,
                 strokeWidth: 4,

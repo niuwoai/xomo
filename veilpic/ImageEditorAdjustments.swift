@@ -393,9 +393,9 @@ extension NSImage {
             filter.angle = Float(amount * .pi)
             output = filter.outputImage
         case .invert:
-            let filter = CIFilter.colorInvert()
-            filter.inputImage = ciImage
-            output = filter.outputImage
+            return pixelMapped { red, green, blue, alpha in
+                (1 - red, 1 - green, 1 - blue, alpha)
+            }
         case .blur:
             let filter = CIFilter.gaussianBlur()
             filter.inputImage = ciImage.clampedToExtent()

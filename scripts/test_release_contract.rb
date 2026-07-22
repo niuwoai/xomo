@@ -11,8 +11,9 @@ class ReleaseContractTest < Minitest::Test
     result = XomoReleaseContract.collect(File.expand_path("..", __dir__))
 
     assert result["passed"], result.inspect
-    assert_equal "2.12.0-rc479", result["version"]
-    assert_equal ["2.12.0-rc479"], result["project_versions"]
+    assert_equal "2.12.0-rc480", result["version"]
+    assert_equal ["2.12.0-rc480"], result["project_versions"]
+    assert_equal ["480"], result["build_versions"]
   end
 
   def test_version_drift_fails_the_contract
@@ -37,13 +38,30 @@ class ReleaseContractTest < Minitest::Test
     end
   end
 
+  def test_prerelease_build_number_drift_fails_the_contract
+    with_fixture do |root|
+      write_fixture(root, version: "2.12.0-rc285", build_version: "284")
+
+      result = XomoReleaseContract.collect(root)
+
+      refute result["passed"]
+      refute result["checks"]["build_version_matches_prerelease"]
+    end
+  end
+
   private
 
   def with_fixture
     Dir.mktmpdir("xomo-release-contract") { |root| yield root }
   end
 
-  def write_fixture(root, version: "2.12.0-rc285", cli_version: version, deployment_target: "13.0")
+  def write_fixture(
+    root,
+    version: "2.12.0-rc285",
+    cli_version: version,
+    deployment_target: "13.0",
+    build_version: version[/-rc(\d+)\z/, 1]
+  )
     FileUtils.mkdir_p(File.join(root, "veilpic.xcodeproj"))
     FileUtils.mkdir_p(File.join(root, "veilpic"))
     FileUtils.mkdir_p(File.join(root, "xomo-cli/Sources/XomoCLI"))
@@ -52,6 +70,7 @@ class ReleaseContractTest < Minitest::Test
     File.write(File.join(root, "veilpic/AppModels.swift"), "enum AppVersion { static let current = \"#{version}\" }\n")
     File.write(File.join(root, "xomo-cli/Sources/XomoCLI/main.swift"), "private let xomoCLIVersion = \"#{cli_version}\"\n")
     File.write(File.join(root, "veilpic.xcodeproj/project.pbxproj"), <<~PBX)
+      CURRENT_PROJECT_VERSION = #{build_version};
       MACOSX_DEPLOYMENT_TARGET = #{deployment_target};
       MARKETING_VERSION = #{version};
       PRODUCT_BUNDLE_IDENTIFIER = im.some.xomo;

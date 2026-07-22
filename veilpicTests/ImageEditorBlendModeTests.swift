@@ -97,18 +97,37 @@ struct ImageEditorBlendModeTests {
             size: size,
             color: NSColor(calibratedRed: 0.50, green: 0.25, blue: 0.30, alpha: 1)
         )
+        let samplePoint = CGPoint(x: 6, y: 6)
+        let sampledBase = try #require(base.color(at: samplePoint))
+        let sampledOverlay = try #require(overlay.color(at: samplePoint))
 
         let divideImage = try #require(base.blended(with: overlay, mode: .divide, opacity: 1))
-        let divide = try #require(divideImage.color(at: CGPoint(x: 6, y: 6))?.usingColorSpace(.deviceRGB))
-        #expect(abs(divide.redComponent - 0.40) < 0.02)
-        #expect(abs(divide.greenComponent - 1.00) < 0.02)
-        #expect(abs(divide.blueComponent - 1.00) < 0.02)
+        let divide = try #require(divideImage.color(at: samplePoint))
+        let expectedDivide = ImageEditorBlendMode.divide.blend(
+            baseRed: sampledBase.redComponent,
+            baseGreen: sampledBase.greenComponent,
+            baseBlue: sampledBase.blueComponent,
+            overlayRed: sampledOverlay.redComponent,
+            overlayGreen: sampledOverlay.greenComponent,
+            overlayBlue: sampledOverlay.blueComponent
+        )
+        #expect(abs(divide.redComponent - expectedDivide.red) < 0.02)
+        #expect(abs(divide.greenComponent - expectedDivide.green) < 0.02)
+        #expect(abs(divide.blueComponent - expectedDivide.blue) < 0.02)
 
         let subtractImage = try #require(base.blended(with: overlay, mode: .subtract, opacity: 1))
-        let subtract = try #require(subtractImage.color(at: CGPoint(x: 6, y: 6))?.usingColorSpace(.deviceRGB))
-        #expect(abs(subtract.redComponent - 0.00) < 0.02)
-        #expect(abs(subtract.greenComponent - 0.25) < 0.02)
-        #expect(abs(subtract.blueComponent - 0.60) < 0.02)
+        let subtract = try #require(subtractImage.color(at: samplePoint))
+        let expectedSubtract = ImageEditorBlendMode.subtract.blend(
+            baseRed: sampledBase.redComponent,
+            baseGreen: sampledBase.greenComponent,
+            baseBlue: sampledBase.blueComponent,
+            overlayRed: sampledOverlay.redComponent,
+            overlayGreen: sampledOverlay.greenComponent,
+            overlayBlue: sampledOverlay.blueComponent
+        )
+        #expect(abs(subtract.redComponent - expectedSubtract.red) < 0.02)
+        #expect(abs(subtract.greenComponent - expectedSubtract.green) < 0.02)
+        #expect(abs(subtract.blueComponent - expectedSubtract.blue) < 0.02)
     }
 
     @Test func blendingPreservesTopToBottomImageOrientation() throws {

@@ -4753,6 +4753,66 @@ struct XomoAutomationTests {
         #expect(viewModel.document.layers[1].style.innerGlowColor == .systemRed)
     }
 
+    @Test func registrySetsLayerStyleInnerGlowColorAcrossEditableSelection() throws {
+        let viewModel = makeViewModel()
+        let canvasSize = viewModel.document.canvasSize
+        var first = ImageEditorLayer.blank(name: "First", size: canvasSize)
+        var second = ImageEditorLayer.blank(name: "Second", size: canvasSize)
+        var locked = ImageEditorLayer.blank(name: "Locked", size: canvasSize)
+        let targetColor = NSColor(srgbRed: 0.82, green: 0.31, blue: 0.12, alpha: 1)
+        first.style.innerGlowColor = .systemRed
+        first.style.innerGlowOpacity = 0.35
+        first.style.innerGlowBlur = 7
+        second.style.innerGlowEnabled = true
+        second.style.innerGlowColor = targetColor
+        second.style.innerGlowOpacity = 0.72
+        second.style.innerGlowBlur = 19
+        second.style.innerGlowChoke = 8
+        second.style.innerGlowSource = .center
+        locked.style.innerGlowColor = .systemBlue
+        locked.isLocked = true
+        viewModel.foregroundColor = targetColor
+        viewModel.document.layers = [first, second, locked]
+        viewModel.document.selectedLayerID = first.id
+        viewModel.document.selectedLayerIDs = [first.id, second.id, locked.id]
+        let historyCount = viewModel.document.history.count
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        try assertLayerStylePropertySchema("innerGlowColor", in: toolsResponse)
+
+        let result = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: ["property": .string("innerGlowColor")]
+        ))
+
+        #expect(result.ok)
+        #expect(result.result?.objectValue?["updatedLayerCount"] == .number(1))
+        #expect(viewModel.document.layers[0].style.innerGlowEnabled)
+        #expect(viewModel.document.layers[0].style.innerGlowColor.isEqual(targetColor))
+        #expect(viewModel.document.layers[1].style.innerGlowColor.isEqual(targetColor))
+        #expect(viewModel.document.layers[2].style.innerGlowColor.isEqual(NSColor.systemBlue))
+        #expect(viewModel.document.layers[0].style.innerGlowOpacity == 0.35)
+        #expect(viewModel.document.layers[0].style.innerGlowBlur == 7)
+        #expect(viewModel.document.layers[1].style.innerGlowOpacity == 0.72)
+        #expect(viewModel.document.layers[1].style.innerGlowBlur == 19)
+        #expect(viewModel.document.layers[1].style.innerGlowChoke == 8)
+        #expect(viewModel.document.layers[1].style.innerGlowSource == .center)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [first.id, second.id, locked.id])
+
+        let historyAfterUpdate = viewModel.document.history.count
+        let repeated = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: ["property": .string("innerGlowColor")]
+        ))
+        #expect(!repeated.ok)
+        #expect(viewModel.document.history.count == historyAfterUpdate)
+    }
+
     @Test func registrySetsLayerStyleOuterGlowColorAcrossEditableSelection() throws {
         let viewModel = makeViewModel()
         let canvasSize = viewModel.document.canvasSize
