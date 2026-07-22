@@ -651,6 +651,47 @@ struct ImageEditorLayerStyleTests {
         #expect(restoredLayer.style.outerGlowColor.isEqual(glowColor))
     }
 
+    @Test func imageEditorOuterGlowSpreadExpandsGlowAndRoundTripsProjectState() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let glowColor = NSColor(srgbRed: 0.92, green: 0.12, blue: 0.08, alpha: 1)
+        let baseImage = solidImage(color: .black, size: canvasSize)
+        let layerImage = centerRectImage(size: canvasSize, color: .white)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: baseImage) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(
+            layerImage,
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+        let layerPixelsBeforeStyle = try #require(
+            viewModel.document.selectedLayer?.image.qingtuPNGData()
+        )
+
+        viewModel.setSelectedLayerOuterGlowOpacity(1)
+        viewModel.setSelectedLayerOuterGlowColor(glowColor)
+        viewModel.setSelectedLayerOuterGlowBlur(0)
+        #expect(viewModel.setSelectedLayerOuterGlowSpread(0) == 1)
+        let compactGlow = try #require(viewModel.currentImage.qingtuPNGData())
+
+        #expect(viewModel.setSelectedLayerOuterGlowSpread(8) == 1)
+
+        let styledLayer = try #require(viewModel.document.selectedLayer)
+        let layerPixelsAfterStyle = try #require(styledLayer.image.qingtuPNGData())
+        let expandedGlow = try #require(viewModel.currentImage.qingtuPNGData())
+        #expect(styledLayer.style.outerGlowEnabled)
+        #expect(styledLayer.style.outerGlowSpread == 8)
+        #expect(styledLayer.style.outerGlowBlur == 0)
+        #expect(styledLayer.style.outerGlowColor.isEqual(glowColor))
+        #expect(layerPixelsAfterStyle == layerPixelsBeforeStyle)
+        #expect(expandedGlow != compactGlow)
+
+        let project = try ImageEditorProjectDocument(document: viewModel.document)
+        let restoredDocument = try project.restoredDocument()
+        let restoredLayer = try #require(restoredDocument.layers.first { $0.id == styledLayer.id })
+        #expect(restoredLayer.style.outerGlowEnabled)
+        #expect(restoredLayer.style.outerGlowSpread == 8)
+        #expect(restoredLayer.style.outerGlowBlur == 0)
+        #expect(restoredLayer.style.outerGlowColor.isEqual(glowColor))
+    }
+
     @Test func imageEditorLayerEffectContoursChangeFalloffAndRoundTripProjectState() async throws {
         let canvasSize = NSSize(width: 80, height: 60)
         let baseImage = solidImage(color: .systemBlue, size: canvasSize)

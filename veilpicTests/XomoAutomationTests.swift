@@ -4460,6 +4460,80 @@ struct XomoAutomationTests {
         #expect(viewModel.document.layers[1].style.outerGlowColor == .systemRed)
     }
 
+    @Test func registrySetsLayerStyleOuterGlowSpreadAcrossEditableSelection() throws {
+        let viewModel = makeViewModel()
+        let canvasSize = viewModel.document.canvasSize
+        var first = ImageEditorLayer.blank(name: "First", size: canvasSize)
+        var second = ImageEditorLayer.blank(name: "Second", size: canvasSize)
+        var locked = ImageEditorLayer.blank(name: "Locked", size: canvasSize)
+        first.style.outerGlowSpread = 4
+        first.style.outerGlowBlur = 7
+        second.style.outerGlowEnabled = true
+        second.style.outerGlowSpread = 14
+        second.style.outerGlowBlur = 19
+        second.style.outerGlowColor = .systemRed
+        locked.style.outerGlowSpread = 9
+        locked.isLocked = true
+        viewModel.document.layers = [first, second, locked]
+        viewModel.document.selectedLayerID = first.id
+        viewModel.document.selectedLayerIDs = [first.id, second.id, locked.id]
+        let historyCount = viewModel.document.history.count
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        try assertNumericLayerStylePropertySchema("outerGlowSpread", in: toolsResponse)
+
+        let result = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("outerGlowSpread"),
+                "value": .number(14)
+            ]
+        ))
+
+        #expect(result.ok)
+        #expect(result.result?.objectValue?["updatedLayerCount"] == .number(1))
+        #expect(viewModel.document.layers[0].style.outerGlowSpread == 14)
+        #expect(viewModel.document.layers[1].style.outerGlowSpread == 14)
+        #expect(viewModel.document.layers[2].style.outerGlowSpread == 9)
+        #expect(viewModel.document.layers[0].style.outerGlowEnabled)
+        #expect(viewModel.document.layers[1].style.outerGlowEnabled)
+        #expect(viewModel.document.layers[0].style.outerGlowBlur == 7)
+        #expect(viewModel.document.layers[1].style.outerGlowBlur == 19)
+        #expect(viewModel.document.layers[1].style.outerGlowColor == .systemRed)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [first.id, second.id, locked.id])
+
+        let historyAfterUpdate = viewModel.document.history.count
+        let repeated = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("outerGlowSpread"),
+                "value": .number(14)
+            ]
+        ))
+        #expect(!repeated.ok)
+        #expect(viewModel.document.history.count == historyAfterUpdate)
+
+        let maximum = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("outerGlowSpread"),
+                "value": .number(100)
+            ]
+        ))
+        #expect(maximum.ok)
+        #expect(maximum.result?.objectValue?["updatedLayerCount"] == .number(2))
+        #expect(viewModel.document.layers[0].style.outerGlowSpread == 24)
+        #expect(viewModel.document.layers[1].style.outerGlowSpread == 24)
+        #expect(viewModel.document.layers[2].style.outerGlowSpread == 9)
+        #expect(viewModel.document.layers[1].style.outerGlowColor == .systemRed)
+    }
+
     @Test func registrySetsLayerStyleOuterGlowOpacityAcrossEditableSelection() throws {
         let viewModel = makeViewModel()
         let canvasSize = viewModel.document.canvasSize

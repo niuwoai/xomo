@@ -7301,12 +7301,15 @@ struct ImageEditorView: View {
                     ) { value in
                         L10n.format("imageEditor.properties.outerGlowBlurValue", Int(value.rounded()))
                     }
-                    Stepper(
-                        L10n.format("imageEditor.properties.outerGlowSpreadValue", Int(viewModel.selectedLayerOuterGlowSpread.rounded())),
+                    layerStyleNumericStepper(
+                        state: viewModel.selectedLayerOuterGlowSpreadState,
                         value: selectedLayerOuterGlowSpreadBinding,
-                        in: 0...24,
-                        step: 1
-                    )
+                        range: 0...24,
+                        step: 1,
+                        accessibilityIdentifier: "image-editor-layer-style-outer-glow-spread"
+                    ) { value in
+                        L10n.format("imageEditor.properties.outerGlowSpreadValue", Int(value.rounded()))
+                    }
                 }
                 Stepper(
                     L10n.format("imageEditor.properties.outerGlowNoiseValue", Int((viewModel.selectedLayerOuterGlowNoise * 100).rounded())),

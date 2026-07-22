@@ -499,6 +499,10 @@ extension ImageEditorViewModel {
         Double(document.selectedLayer?.style.outerGlowSpread ?? 3)
     }
 
+    var selectedLayerOuterGlowSpreadState: ImageEditorLayerStyleValueState<CGFloat> {
+        selectedLayerStyleValueState(\.outerGlowSpread)
+    }
+
     var selectedLayerOuterGlowNoise: Double {
         Double(document.selectedLayer?.style.outerGlowNoise ?? 0)
     }
@@ -1296,7 +1300,8 @@ extension ImageEditorViewModel {
         }
     }
 
-    func setSelectedLayerOuterGlowSpread(_ spread: Double) {
+    @discardableResult
+    func setSelectedLayerOuterGlowSpread(_ spread: Double) -> Int {
         updateSelectedLayerStyle {
             $0.outerGlowEnabled = true
             $0.outerGlowSpread = max(0, min(24, CGFloat(spread)))

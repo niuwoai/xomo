@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.12.0-rc476 - 2026-07-22
+
+### Changed
+- 外发光扩展 setter 返回实际修改的可编辑选中图层数；MCP `xomo.layer.style_settings(property=outerGlowSpread)` 返回 `updatedLayerCount`。
+- 扩展控件改用不可聚焦的多选数值步进器，所选可编辑图层数值不一致时显示本地化“多个值”，输入保持 0–24 px 夹取。
+
+### Fixed
+- 调整扩展只改变外发光启用状态与扩展参数，不覆盖颜色、透明度、模糊、杂色或轮廓；锁定层与不适用层安全跳过。
+- 重复值或夹取后等价值不再制造空 Undo/History，MCP 对零实际变化明确失败。
+
+### Verification
+- 混合态、真实数量、0–24 px 夹取、参数保留、锁定层、不可聚焦控件、MCP 结果及真实像素扩张／工程往返测试 4/4，外发光模糊相邻回归 4/4 通过。
+- SwiftPM CLI 2/2、发布版本契约 7/7 通过；本版不覆盖 `/Applications`，下一次完整 Release、冒烟与安装门禁仍为 rc480。
+
 ## 2.12.0-rc475 - 2026-07-22
 
 ### Changed
