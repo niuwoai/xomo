@@ -3270,6 +3270,54 @@ struct ImageEditorLayerRowBatchPropertyTests {
         return fixture
     }
 
+    @Test func layerStylePatternOverlayColorUpdatesOnlyChangedEditableLayers() throws {
+        let fixture = patternOverlayKindFixture()
+        let viewModel = fixture.viewModel
+        let firstID = fixture.layers[0].id
+        let secondID = fixture.layers[1].id
+        let lockedID = fixture.layers[2].id
+        let targetColor = NSColor(displayP3Red: 0.76, green: 0.16, blue: 0.48, alpha: 1)
+        let normalizedTarget = try #require(targetColor.usingColorSpace(.sRGB))
+        let targetProjectColor = ImageEditorProjectColor(color: normalizedTarget)
+        let firstKind = try layer(firstID, in: viewModel).style.patternOverlayKind
+        let secondKind = try layer(secondID, in: viewModel).style.patternOverlayKind
+        let firstOpacity = try layer(firstID, in: viewModel).style.patternOverlayOpacity
+        let secondOpacity = try layer(secondID, in: viewModel).style.patternOverlayOpacity
+        let firstScale = try layer(firstID, in: viewModel).style.patternOverlayScale
+        let secondScale = try layer(secondID, in: viewModel).style.patternOverlayScale
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.selectedLayerPatternOverlayColorState == .mixed)
+        #expect(viewModel.setSelectedLayerPatternOverlayColor(targetColor) == 2)
+        #expect(viewModel.selectedLayerPatternOverlayColorState == .value(targetProjectColor))
+        #expect((try layer(firstID, in: viewModel)).style.patternOverlayColor.isEqual(normalizedTarget))
+        #expect((try layer(secondID, in: viewModel)).style.patternOverlayColor.isEqual(normalizedTarget))
+        #expect((try layer(lockedID, in: viewModel)).style.patternOverlayColor.isEqual(NSColor.systemOrange))
+        #expect((try layer(firstID, in: viewModel)).style.patternOverlayKind == firstKind)
+        #expect((try layer(secondID, in: viewModel)).style.patternOverlayKind == secondKind)
+        #expect((try layer(firstID, in: viewModel)).style.patternOverlayOpacity == firstOpacity)
+        #expect((try layer(secondID, in: viewModel)).style.patternOverlayOpacity == secondOpacity)
+        #expect((try layer(firstID, in: viewModel)).style.patternOverlayScale == firstScale)
+        #expect((try layer(secondID, in: viewModel)).style.patternOverlayScale == secondScale)
+        #expect((try layer(firstID, in: viewModel)).style.patternOverlayEnabled)
+        #expect((try layer(secondID, in: viewModel)).style.patternOverlayEnabled)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+
+        let historyAfterUpdate = viewModel.document.history.count
+        #expect(viewModel.setSelectedLayerPatternOverlayColor(targetColor) == 0)
+        #expect(viewModel.document.history.count == historyAfterUpdate)
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerPatternOverlayColorState == .mixed)
+        #expect((try layer(firstID, in: viewModel)).style.patternOverlayColor.isEqual(NSColor.systemBlue))
+        #expect((try layer(secondID, in: viewModel)).style.patternOverlayColor.isEqual(NSColor.systemGreen))
+        viewModel.redo()
+        #expect(viewModel.selectedLayerPatternOverlayColorState == .value(targetProjectColor))
+        #expect((try layer(firstID, in: viewModel)).style.patternOverlayColor.isEqual(normalizedTarget))
+        #expect((try layer(secondID, in: viewModel)).style.patternOverlayColor.isEqual(normalizedTarget))
+    }
+
     @Test func layerStylePatternOverlayOpacityMixedValueConvergesAcrossEditableSelection() throws {
         let fixture = patternOverlayOpacityFixture()
         let viewModel = fixture.viewModel

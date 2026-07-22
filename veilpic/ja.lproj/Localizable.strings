@@ -1166,6 +1166,7 @@
 "imageEditor.properties.gradientOverlayScaleValue" = "グラデーションオーバーレイスケール：%d%%";
 "imageEditor.properties.gradientOverlayAngleValue" = "グラデーション角度：%d°";
 "imageEditor.properties.patternOverlayKind" = "パターン";
+"imageEditor.properties.patternOverlayColor" = "パターンカラー";
 "imageEditor.properties.patternOverlayOpacityValue" = "パターンオーバーレイ不透明度：%d%%";
 "imageEditor.properties.patternOverlayScaleValue" = "パターンスケール：%d px";
 "imageEditor.properties.satinOpacityValue" = "サテン不透明度：%d%%";

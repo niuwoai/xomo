@@ -4047,6 +4047,14 @@ struct ImageEditorView: View {
         }
     }
 
+    private var selectedLayerPatternOverlayColorBinding: Binding<Color> {
+        Binding {
+            Color(nsColor: viewModel.selectedLayerPatternOverlayColor)
+        } set: { value in
+            viewModel.setSelectedLayerPatternOverlayColor(NSColor(value))
+        }
+    }
+
     private var selectedLayerSatinColorBinding: Binding<Color> {
         Binding {
             Color(nsColor: viewModel.selectedLayerSatinColor)
@@ -7656,6 +7664,12 @@ struct ImageEditorView: View {
                 ) { kind in
                     viewModel.setSelectedLayerPatternOverlayKind(kind)
                 }
+                layerStyleColorPickerRow(
+                    labelKey: "imageEditor.properties.patternOverlayColor",
+                    state: viewModel.selectedLayerPatternOverlayColorState,
+                    selection: selectedLayerPatternOverlayColorBinding,
+                    accessibilityIdentifier: "image-editor-layer-style-pattern-overlay-color"
+                )
                 HStack {
                     layerStyleNumericStepper(
                         state: viewModel.selectedLayerPatternOverlayOpacityState,

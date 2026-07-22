@@ -1166,6 +1166,7 @@
 "imageEditor.properties.gradientOverlayScaleValue" = "Gradient Overlay Scale: %d%%";
 "imageEditor.properties.gradientOverlayAngleValue" = "Gradient Angle: %d°";
 "imageEditor.properties.patternOverlayKind" = "Pattern";
+"imageEditor.properties.patternOverlayColor" = "Pattern Color";
 "imageEditor.properties.patternOverlayOpacityValue" = "Pattern Overlay Opacity: %d%%";
 "imageEditor.properties.patternOverlayScaleValue" = "Pattern Scale: %d px";
 "imageEditor.properties.satinOpacityValue" = "Satin Opacity: %d%%";

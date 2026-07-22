@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.12.0-rc507 - 2026-07-23
+
+### Added
+- 图层样式属性面板为图案叠加补齐独立颜色选择器，并提供中、英、日三语标签；颜色选择只启用图案效果并修改颜色，不会重置图案类型、透明度或缩放。
+
+### Automation
+- `xomo.layer.style_settings property=patternOverlayColor` 使用当前前景色批量设置图案颜色，返回实际 `updatedLayerCount`；锁定层安全跳过，零变化明确失败且不创建空 Undo/History。
+
+### Verification
+- Xcode 定向 5/5、混合状态补充复验 1/1、SwiftPM CLI 2/2、发布契约 4/4（10 条断言）通过；覆盖 sRGB 归一化、多选混合值提示、不可聚焦颜色入口、真实修改数、图案类型/透明度/缩放保持、锁定层保护、Undo/Redo、重复颜色零历史和 MCP 零变化失败。常规完整 Release、全量冒烟与 `/Applications` 覆盖门禁仍为 rc520；下一小步开始收紧斜面与浮雕参数事务。
+
 ## 2.12.0-rc506 - 2026-07-23
 
 ### Fixed

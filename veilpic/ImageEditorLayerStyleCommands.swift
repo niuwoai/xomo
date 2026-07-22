@@ -675,6 +675,14 @@ extension ImageEditorViewModel {
         selectedLayerStyleValueState(\.patternOverlayKind)
     }
 
+    var selectedLayerPatternOverlayColor: NSColor {
+        document.selectedLayer?.style.patternOverlayColor ?? .white
+    }
+
+    var selectedLayerPatternOverlayColorState: ImageEditorLayerStyleValueState<ImageEditorProjectColor> {
+        selectedLayerStyleValueState { ImageEditorProjectColor(color: $0.patternOverlayColor) }
+    }
+
     var selectedLayerPatternOverlayOpacity: Double {
         Double(document.selectedLayer?.style.patternOverlayOpacity ?? 0.45)
     }
@@ -1563,6 +1571,14 @@ extension ImageEditorViewModel {
         updateSelectedLayerStyle {
             $0.patternOverlayEnabled = true
             $0.patternOverlayKind = kind
+        }
+    }
+
+    @discardableResult
+    func setSelectedLayerPatternOverlayColor(_ color: NSColor) -> Int {
+        updateSelectedLayerStyle {
+            $0.patternOverlayEnabled = true
+            $0.patternOverlayColor = color.usingColorSpace(.sRGB) ?? color
         }
     }
 
