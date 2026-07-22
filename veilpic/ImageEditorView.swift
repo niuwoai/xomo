@@ -4261,6 +4261,14 @@ struct ImageEditorView: View {
         }
     }
 
+    private var selectedLayerInnerGlowJitterBinding: Binding<Double> {
+        Binding {
+            viewModel.selectedLayerInnerGlowJitter
+        } set: { value in
+            viewModel.setSelectedLayerInnerGlowJitter(value)
+        }
+    }
+
     private var selectedLayerColorOverlayOpacityBinding: Binding<Double> {
         Binding {
             viewModel.selectedLayerColorOverlayOpacity
@@ -7474,6 +7482,15 @@ struct ImageEditorView: View {
                     accessibilityIdentifier: "image-editor-layer-style-inner-glow-range"
                 ) { value in
                     L10n.format("imageEditor.properties.innerGlowRangeValue", Int((value * 100).rounded()))
+                }
+                layerStyleNumericStepper(
+                    state: viewModel.selectedLayerInnerGlowJitterState,
+                    value: selectedLayerInnerGlowJitterBinding,
+                    range: 0...1,
+                    step: 0.05,
+                    accessibilityIdentifier: "image-editor-layer-style-inner-glow-jitter"
+                ) { value in
+                    L10n.format("imageEditor.properties.innerGlowJitterValue", Int((value * 100).rounded()))
                 }
                 }
 

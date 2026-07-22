@@ -6946,6 +6946,82 @@ struct XomoAutomationTests {
         #expect(viewModel.document.layers[2].style.innerGlowRange == 0.4)
     }
 
+    @Test func registrySetsLayerStyleInnerGlowJitterWithActualUpdateCount() throws {
+        let viewModel = makeViewModel()
+        let canvasSize = viewModel.document.canvasSize
+        var first = ImageEditorLayer.blank(name: "First", size: canvasSize)
+        var second = ImageEditorLayer.blank(name: "Second", size: canvasSize)
+        var locked = ImageEditorLayer.blank(name: "Locked", size: canvasSize)
+        first.style.innerGlowJitter = 0.1
+        first.style.innerGlowBlur = 7
+        second.style.innerGlowEnabled = true
+        second.style.innerGlowJitter = 0.6
+        second.style.innerGlowColor = .systemRed
+        second.style.innerGlowRange = 0.4
+        locked.style.innerGlowJitter = 0.3
+        locked.isLocked = true
+        viewModel.document.layers = [first, second, locked]
+        viewModel.document.selectedLayerID = first.id
+        viewModel.document.selectedLayerIDs = [first.id, second.id, locked.id]
+        let historyCount = viewModel.document.history.count
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        let styleTool = try #require(automationTool(named: "xomo.layer.style_settings", in: toolsResponse))
+        let inputSchema = try #require(styleTool["inputSchema"]?.objectValue)
+        let properties = try #require(inputSchema["properties"]?.objectValue)
+        let propertySchema = try #require(properties["property"]?.objectValue)
+        #expect(propertySchema["enum"]?.arrayValue?.contains(.string("innerGlowJitter")) == true)
+
+        let result = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("innerGlowJitter"),
+                "value": .number(0.6)
+            ]
+        ))
+
+        #expect(result.ok)
+        #expect(result.result?.objectValue?["updatedLayerCount"] == .number(1))
+        #expect(viewModel.document.layers[0].style.innerGlowJitter == 0.6)
+        #expect(viewModel.document.layers[1].style.innerGlowJitter == 0.6)
+        #expect(viewModel.document.layers[2].style.innerGlowJitter == 0.3)
+        #expect(viewModel.document.layers[0].style.innerGlowEnabled)
+        #expect(viewModel.document.layers[1].style.innerGlowEnabled)
+        #expect(viewModel.document.layers[0].style.innerGlowBlur == 7)
+        #expect(viewModel.document.layers[1].style.innerGlowColor == .systemRed)
+        #expect(viewModel.document.layers[1].style.innerGlowRange == 0.4)
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        let historyAfterUpdate = viewModel.document.history.count
+        let repeated = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("innerGlowJitter"),
+                "value": .number(0.6)
+            ]
+        ))
+        #expect(!repeated.ok)
+        #expect(viewModel.document.history.count == historyAfterUpdate)
+
+        let clamped = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("innerGlowJitter"),
+                "value": .number(2)
+            ]
+        ))
+        #expect(clamped.ok)
+        #expect(clamped.result?.objectValue?["updatedLayerCount"] == .number(2))
+        #expect(viewModel.document.layers[0].style.innerGlowJitter == 1)
+        #expect(viewModel.document.layers[1].style.innerGlowJitter == 1)
+        #expect(viewModel.document.layers[2].style.innerGlowJitter == 0.3)
+    }
+
     @Test func registrySetsLayerStyleSatinContourWithAdvertisedEnum() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

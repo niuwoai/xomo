@@ -1149,6 +1149,7 @@
 "imageEditor.properties.innerGlowSource" = "内发光来源";
 "imageEditor.properties.innerGlowContour" = "内发光等高线";
 "imageEditor.properties.innerGlowRangeValue" = "内发光范围：%d%%";
+"imageEditor.properties.innerGlowJitterValue" = "内发光抖动：%d%%";
 "imageEditor.innerGlowSource.edge" = "边缘";
 "imageEditor.innerGlowSource.center" = "中心";
 "imageEditor.properties.colorOverlayOpacityValue" = "颜色叠加不透明度：%d%%";

@@ -2216,6 +2216,7 @@ struct ImageEditorLayerStyle {
     var innerGlowSource = ImageEditorInnerGlowSource.edge
     var innerGlowContour = ImageEditorLayerEffectContour.linear
     var innerGlowRange: CGFloat = 0.5
+    var innerGlowJitter: CGFloat = 0
     var colorOverlayEnabled = false
     var colorOverlayColor = NSColor.systemRed
     var colorOverlayOpacity: CGFloat = 0.55
@@ -3859,9 +3860,17 @@ struct ImageEditorLayer: Identifiable {
                     style.innerGlowContour,
                     range: style.innerGlowRange
                 ) ?? blurredInnerGlow
-                contouredInnerGlow.draw(
+                // Photoshop applies Jitter in the inner-glow quality stage,
+                // after the smooth contour has been resolved.  Keeping it
+                // here makes it visibly distinct from Noise, which textures
+                // the source before blur, while stableNoise keeps rendering
+                // deterministic across redraws and project reopen.
+                let jitteredInnerGlow = contouredInnerGlow.shadowNoised(
+                    amount: style.innerGlowJitter
+                ) ?? contouredInnerGlow
+                jitteredInnerGlow.draw(
                     in: CGRect(origin: .zero, size: outputSize),
-                    from: CGRect(origin: .zero, size: contouredInnerGlow.size),
+                    from: CGRect(origin: .zero, size: jitteredInnerGlow.size),
                     operation: .sourceOver,
                     fraction: 1
                 )

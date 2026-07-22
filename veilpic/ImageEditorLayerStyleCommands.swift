@@ -579,6 +579,14 @@ extension ImageEditorViewModel {
         selectedLayerStyleValueState(\.innerGlowRange)
     }
 
+    var selectedLayerInnerGlowJitter: Double {
+        Double(document.selectedLayer?.style.innerGlowJitter ?? 0)
+    }
+
+    var selectedLayerInnerGlowJitterState: ImageEditorLayerStyleValueState<CGFloat> {
+        selectedLayerStyleValueState(\.innerGlowJitter)
+    }
+
     var selectedLayerColorOverlayOpacity: Double {
         Double(document.selectedLayer?.style.colorOverlayOpacity ?? 0.55)
     }
@@ -1418,6 +1426,14 @@ extension ImageEditorViewModel {
         updateSelectedLayerStyle {
             $0.innerGlowEnabled = true
             $0.innerGlowRange = max(0.01, min(1, CGFloat(range)))
+        }
+    }
+
+    @discardableResult
+    func setSelectedLayerInnerGlowJitter(_ jitter: Double) -> Int {
+        updateSelectedLayerStyle {
+            $0.innerGlowEnabled = true
+            $0.innerGlowJitter = max(0, min(1, CGFloat(jitter)))
         }
     }
 

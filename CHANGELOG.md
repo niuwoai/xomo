@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.12.0-rc489 - 2026-07-23
+
+### Added
+- “内发光”增加 Photoshop 式抖动控制：0%–100% 在轮廓与范围计算后对最终光晕 Alpha 施加确定性纹理，与模糊前的“杂色”形成可见且稳定的语义区分。
+- 抖动参数贯通不可聚焦的三语多选步进器、锁定层跳过、单步 Undo/Redo、工程与样式预设往返，以及 MCP/CLI `xomo.layer.style_settings(property=innerGlowJitter)` 的真实 `updatedLayerCount`。
+
+### Fixed
+- 重复或夹取后等价的抖动输入不再制造空 History；旧工程缺少抖动字段时恢复为 0%，保持既有画面不变。
+
+### Verification
+- Xcode 定向测试 5/5 通过，覆盖真实像素差异与确定性、工程/旧格式往返、多选事务、不可聚焦界面接线、MCP 修改计数及组件库前一工具光标不泄漏；SwiftPM CLI 2/2、发布契约 4/4（10 条断言）通过。下一次完整 Release、全量冒烟与 `/Applications` 覆盖门禁仍为 rc520。
+
 ## 2.12.0-rc488 - 2026-07-23
 
 ### Added
