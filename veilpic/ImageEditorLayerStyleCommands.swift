@@ -336,6 +336,10 @@ extension ImageEditorViewModel {
         document.selectedLayer?.style.outerGlowColor ?? .systemYellow
     }
 
+    var selectedLayerOuterGlowColorState: ImageEditorLayerStyleValueState<ImageEditorProjectColor> {
+        selectedLayerStyleValueState { ImageEditorProjectColor(color: $0.outerGlowColor) }
+    }
+
     var selectedLayerInnerGlowColor: NSColor {
         document.selectedLayer?.style.innerGlowColor ?? .systemCyan
     }
@@ -1084,7 +1088,8 @@ extension ImageEditorViewModel {
         }
     }
 
-    func setSelectedLayerOuterGlowColor(_ color: NSColor) {
+    @discardableResult
+    func setSelectedLayerOuterGlowColor(_ color: NSColor) -> Int {
         updateSelectedLayerStyle {
             $0.outerGlowEnabled = true
             $0.outerGlowColor = color.usingColorSpace(.sRGB) ?? color

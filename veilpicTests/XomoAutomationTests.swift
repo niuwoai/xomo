@@ -4498,6 +4498,62 @@ struct XomoAutomationTests {
         #expect(viewModel.document.layers[1].style.outerGlowColor == .systemRed)
     }
 
+    @Test func registrySetsLayerStyleOuterGlowColorAcrossEditableSelection() throws {
+        let viewModel = makeViewModel()
+        let canvasSize = viewModel.document.canvasSize
+        var first = ImageEditorLayer.blank(name: "First", size: canvasSize)
+        var second = ImageEditorLayer.blank(name: "Second", size: canvasSize)
+        var locked = ImageEditorLayer.blank(name: "Locked", size: canvasSize)
+        let targetColor = NSColor(srgbRed: 0.82, green: 0.31, blue: 0.12, alpha: 1)
+        first.style.outerGlowColor = .systemRed
+        first.style.outerGlowOpacity = 0.35
+        first.style.outerGlowBlur = 7
+        second.style.outerGlowEnabled = true
+        second.style.outerGlowColor = targetColor
+        second.style.outerGlowOpacity = 0.72
+        second.style.outerGlowBlur = 19
+        locked.style.outerGlowColor = .systemBlue
+        locked.isLocked = true
+        viewModel.foregroundColor = targetColor
+        viewModel.document.layers = [first, second, locked]
+        viewModel.document.selectedLayerID = first.id
+        viewModel.document.selectedLayerIDs = [first.id, second.id, locked.id]
+        let historyCount = viewModel.document.history.count
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        try assertLayerStylePropertySchema("outerGlowColor", in: toolsResponse)
+
+        let result = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: ["property": .string("outerGlowColor")]
+        ))
+
+        #expect(result.ok)
+        #expect(result.result?.objectValue?["updatedLayerCount"] == .number(1))
+        #expect(viewModel.document.layers[0].style.outerGlowEnabled)
+        #expect(viewModel.document.layers[0].style.outerGlowColor.isEqual(targetColor))
+        #expect(viewModel.document.layers[1].style.outerGlowColor.isEqual(targetColor))
+        #expect(viewModel.document.layers[2].style.outerGlowColor.isEqual(NSColor.systemBlue))
+        #expect(viewModel.document.layers[0].style.outerGlowOpacity == 0.35)
+        #expect(viewModel.document.layers[0].style.outerGlowBlur == 7)
+        #expect(viewModel.document.layers[1].style.outerGlowOpacity == 0.72)
+        #expect(viewModel.document.layers[1].style.outerGlowBlur == 19)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [first.id, second.id, locked.id])
+
+        let historyAfterUpdate = viewModel.document.history.count
+        let repeated = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: ["property": .string("outerGlowColor")]
+        ))
+        #expect(!repeated.ok)
+        #expect(viewModel.document.history.count == historyAfterUpdate)
+    }
+
     @Test func registrySetsLayerStyleBevelAngleAcrossGlobalAndLocalLight() throws {
         let viewModel = makeViewModel()
         let canvasSize = viewModel.document.canvasSize

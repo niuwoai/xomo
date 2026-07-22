@@ -7276,6 +7276,19 @@ struct ImageEditorView: View {
                     ColorPicker("", selection: selectedLayerOuterGlowColorBinding, supportsOpacity: false)
                         .labelsHidden()
                         .frame(width: 32)
+                        .focusable(false)
+                        .accessibilityValue(
+                            viewModel.selectedLayerOuterGlowColorState.isMixed
+                                ? L10n.text("imageEditor.properties.multipleValues")
+                                : ""
+                        )
+                        .accessibilityIdentifier("image-editor-layer-style-outer-glow-color")
+                    if viewModel.selectedLayerOuterGlowColorState.isMixed {
+                        Text(L10n.text("imageEditor.properties.multipleValues"))
+                            .font(.system(size: 9, weight: .medium))
+                            .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                            .lineLimit(1)
+                    }
                     Spacer(minLength: 4)
                 }
                 HStack {

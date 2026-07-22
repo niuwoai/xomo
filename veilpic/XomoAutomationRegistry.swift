@@ -2524,7 +2524,16 @@ final class XomoAutomationRegistry {
             return .object([
                 "updatedLayerCount": .number(Double(updatedLayerCount))
             ])
-        case "outerGlowColor": viewModel.setSelectedLayerOuterGlowColor(viewModel.foregroundColor)
+        case "outerGlowColor":
+            let updatedLayerCount = viewModel.setSelectedLayerOuterGlowColor(viewModel.foregroundColor)
+            guard updatedLayerCount > 0 else {
+                throw XomoAutomationCallError.operationFailed(
+                    "No editable layer needs the requested outer glow color"
+                )
+            }
+            return .object([
+                "updatedLayerCount": .number(Double(updatedLayerCount))
+            ])
         case "outerGlowBlur": viewModel.setSelectedLayerOuterGlowBlur(try number())
         case "outerGlowSpread": viewModel.setSelectedLayerOuterGlowSpread(try number())
         case "outerGlowNoise": viewModel.setSelectedLayerOuterGlowNoise(try number())

@@ -1115,6 +1115,72 @@ struct ImageEditorLayerRowBatchPropertyTests {
         return fixture
     }
 
+    @Test func layerStyleOuterGlowColorMixedValueConvergesAcrossEditableSelection() throws {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        let firstID = fixture.layers[0].id
+        let secondID = fixture.layers[1].id
+        let lockedID = fixture.layers[2].id
+        let targetColor = NSColor(srgbRed: 0.82, green: 0.31, blue: 0.12, alpha: 1)
+        let targetProjectColor = ImageEditorProjectColor(color: targetColor)
+        viewModel.document.layers[0].style.outerGlowColor = .systemRed
+        viewModel.document.layers[0].style.outerGlowOpacity = 0.35
+        viewModel.document.layers[0].style.outerGlowBlur = 7
+        viewModel.document.layers[1].style.outerGlowEnabled = true
+        viewModel.document.layers[1].style.outerGlowColor = targetColor
+        viewModel.document.layers[1].style.outerGlowOpacity = 0.72
+        viewModel.document.layers[1].style.outerGlowBlur = 19
+        viewModel.document.layers[2].style.outerGlowColor = .systemBlue
+        viewModel.document.layers[2].isLocked = true
+        select(Set(fixture.layers.map(\.id)), primary: firstID, in: viewModel)
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.selectedLayerOuterGlowColorState == .mixed)
+        #expect(viewModel.setSelectedLayerOuterGlowColor(targetColor) == 1)
+        #expect(viewModel.selectedLayerOuterGlowColorState == .value(targetProjectColor))
+        #expect((try layer(firstID, in: viewModel)).style.outerGlowEnabled)
+        #expect((try layer(firstID, in: viewModel)).style.outerGlowColor.isEqual(targetColor))
+        #expect((try layer(secondID, in: viewModel)).style.outerGlowColor.isEqual(targetColor))
+        #expect((try layer(lockedID, in: viewModel)).style.outerGlowColor.isEqual(NSColor.systemBlue))
+        #expect((try layer(firstID, in: viewModel)).style.outerGlowOpacity == 0.35)
+        #expect((try layer(firstID, in: viewModel)).style.outerGlowBlur == 7)
+        #expect((try layer(secondID, in: viewModel)).style.outerGlowOpacity == 0.72)
+        #expect((try layer(secondID, in: viewModel)).style.outerGlowBlur == 19)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+
+        let historyAfterUpdate = viewModel.document.history.count
+        #expect(viewModel.setSelectedLayerOuterGlowColor(targetColor) == 0)
+        #expect(viewModel.document.history.count == historyAfterUpdate)
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerOuterGlowColorState == .mixed)
+        viewModel.redo()
+        #expect(viewModel.selectedLayerOuterGlowColorState == .value(targetProjectColor))
+    }
+
+    @Test func layerStyleOuterGlowColorPickerShowsLocalizedMixedValue() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        let pickerStart = try #require(
+            source.range(of: "ColorPicker(\"\", selection: selectedLayerOuterGlowColorBinding")
+        )
+        let pickerEnd = try #require(
+            source[pickerStart.upperBound...].range(of: "layerStyleNumericStepper(")
+        )
+        let pickerSource = source[pickerStart.lowerBound..<pickerEnd.lowerBound]
+        #expect(pickerSource.contains("viewModel.selectedLayerOuterGlowColorState.isMixed"))
+        #expect(pickerSource.contains("L10n.text(\"imageEditor.properties.multipleValues\")"))
+        #expect(pickerSource.contains(".focusable(false)"))
+        #expect(pickerSource.contains("image-editor-layer-style-outer-glow-color"))
+    }
+
     @Test func layerStyleBevelAngleMixedValueConvergesAcrossGlobalAndLocalLight() throws {
         let fixture = bevelAngleFixture()
         let viewModel = fixture.viewModel
