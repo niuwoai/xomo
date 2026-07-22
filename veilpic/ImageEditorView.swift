@@ -120,7 +120,7 @@ struct ImageEditorView: View {
     @State private var hoverViewPoint: CGPoint?
     @State private var canvasModifierFlags: NSEvent.ModifierFlags = []
     @State private var activeBrushPressure: CGFloat?
-    @State private var isMarqueeShapePopoverPresented = false
+    @State private var isMarqueeShapeMenuPresented = false
     @State private var isQuickMaskOptionsPresented = false
     @State var isFigmaLinkImportPresented = false
     @State private var canvasTextEditingOrigin: CGPoint?
@@ -161,6 +161,15 @@ struct ImageEditorView: View {
                     rightDock
                         .fixedSize(horizontal: true, vertical: false)
                         .layoutPriority(2)
+                }
+            }
+            .overlay(alignment: .topLeading) {
+                if isMarqueeShapeMenuPresented,
+                   viewModel.areToolsPanelVisible,
+                   viewModel.selectedLeftSidebarTab == .tools {
+                    marqueeShapeFloatingMenu
+                        .offset(x: imageEditorToolRailWidth + 4, y: 50)
+                        .zIndex(1_000)
                 }
             }
 
@@ -285,6 +294,9 @@ struct ImageEditorView: View {
             isFiltersDockExpanded = true
         }
         .onChange(of: viewModel.selectedTool) { _ in
+            if viewModel.selectedTool != .marquee {
+                isMarqueeShapeMenuPresented = false
+            }
             patchPreviewImage = nil
             isDrawingPatchSelection = false
             lastPatchPreviewUpdateTime = 0
@@ -961,6 +973,7 @@ struct ImageEditorView: View {
             HStack(spacing: 6) {
                 ForEach(XomoLeftSidebarTab.allCases) { tab in
                     Button {
+                        isMarqueeShapeMenuPresented = false
                         viewModel.selectLeftSidebarTab(tab)
                     } label: {
                         Image(systemName: tab.symbolName)
@@ -1142,7 +1155,7 @@ struct ImageEditorView: View {
         if tool == .marquee {
             ZStack(alignment: .bottomTrailing) {
                 Button {
-                    viewModel.selectTool(tool)
+                    selectToolFromRail(tool)
                 } label: {
                     ZStack {
                         ImageEditorMarqueeToolSymbol(shape: viewModel.marqueeShape)
@@ -1160,7 +1173,7 @@ struct ImageEditorView: View {
                 .frame(width: 11, height: 11)
                 .contentShape(Rectangle())
                 .onTapGesture {
-                    isMarqueeShapePopoverPresented.toggle()
+                    isMarqueeShapeMenuPresented.toggle()
                 }
                 .focusable(false)
                 .xomoFocusEffectDisabled()
@@ -1168,25 +1181,7 @@ struct ImageEditorView: View {
                 .accessibilityLabel(L10n.text("imageEditor.option.marqueeShape"))
                 .accessibilityAddTraits(.isButton)
                 .accessibilityAction {
-                    isMarqueeShapePopoverPresented.toggle()
-                }
-                .popover(isPresented: $isMarqueeShapePopoverPresented, arrowEdge: .trailing) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        ForEach(ImageEditorMarqueeShape.allCases) { shape in
-                            EditorMarqueeShapeActionRow(
-                                shape: shape,
-                                isSelected: viewModel.marqueeShape == shape
-                            ) {
-                                viewModel.selectMarqueeShape(shape)
-                                isMarqueeShapePopoverPresented = false
-                            }
-                        }
-                    }
-                    .padding(8)
-                    .frame(width: 150)
-                    .background(Color(nsColor: ImageEditorTheme.panelRaised))
-                    .focusable(false)
-                    .xomoFocusEffectDisabled()
+                    isMarqueeShapeMenuPresented.toggle()
                 }
             }
             .frame(width: imageEditorToolButtonHitSize, height: imageEditorToolButtonHitSize)
@@ -1195,7 +1190,7 @@ struct ImageEditorView: View {
             .accessibilityValue(viewModel.marqueeShape.rawValue)
         } else {
             Button {
-                viewModel.selectTool(tool)
+                selectToolFromRail(tool)
             } label: {
                 ZStack {
                     if tool == .paintBucket {
@@ -1218,6 +1213,37 @@ struct ImageEditorView: View {
             .accessibilityIdentifier("image-editor-tool-\(tool.rawValue)")
             .accessibilityValue(viewModel.selectedTool == tool ? "selected" : "available")
         }
+    }
+
+    private var marqueeShapeFloatingMenu: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            ForEach(ImageEditorMarqueeShape.allCases) { shape in
+                EditorMarqueeShapeActionRow(
+                    shape: shape,
+                    isSelected: viewModel.marqueeShape == shape
+                ) {
+                    viewModel.selectMarqueeShape(shape)
+                    isMarqueeShapeMenuPresented = false
+                }
+            }
+        }
+        .padding(8)
+        .frame(width: 150)
+        .background(Color(nsColor: ImageEditorTheme.panelRaised))
+        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .stroke(Color(nsColor: ImageEditorTheme.border), lineWidth: 1)
+        }
+        .shadow(color: .black.opacity(0.35), radius: 10, y: 4)
+        .focusable(false)
+        .xomoFocusEffectDisabled()
+        .accessibilityIdentifier("image-editor-marquee-shape-menu")
+    }
+
+    private func selectToolFromRail(_ tool: ImageEditorTool) {
+        isMarqueeShapeMenuPresented = false
+        viewModel.selectTool(tool)
     }
 
     private var selectedToolHint: some View {

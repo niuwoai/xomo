@@ -270,6 +270,25 @@ struct ImageEditorScopeTests {
         )
     }
 
+    @Test func marqueeShapeMenuDoesNotConsumeTheNextToolClick() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let railItemStart = try #require(source.range(of: "private func toolRailItem(_ tool: ImageEditorTool) -> some View"))
+        let railItemEnd = try #require(
+            source[railItemStart.upperBound...].range(of: "private var selectedToolHint: some View")
+        )
+        let railItemSource = source[railItemStart.lowerBound..<railItemEnd.lowerBound]
+
+        #expect(railItemSource.contains("private var marqueeShapeFloatingMenu: some View"))
+        #expect(railItemSource.contains("private func selectToolFromRail(_ tool: ImageEditorTool)"))
+        #expect(railItemSource.contains("isMarqueeShapeMenuPresented = false\n        viewModel.selectTool(tool)"))
+        #expect(!railItemSource.contains(".popover(isPresented:"))
+        #expect(source.contains("marqueeShapeFloatingMenu\n                        .offset(x: imageEditorToolRailWidth + 4, y: 50)"))
+        #expect(source.contains(".accessibilityIdentifier(\"image-editor-marquee-shape-menu\")"))
+    }
+
     @Test func leftSidebarRebuildsToolContentAfterLeavingComponentDragSources() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
