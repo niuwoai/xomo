@@ -2554,7 +2554,16 @@ final class XomoAutomationRegistry {
             return .object([
                 "updatedLayerCount": .number(Double(updatedLayerCount))
             ])
-        case "outerGlowNoise": viewModel.setSelectedLayerOuterGlowNoise(try number())
+        case "outerGlowNoise":
+            let updatedLayerCount = viewModel.setSelectedLayerOuterGlowNoise(try number())
+            guard updatedLayerCount > 0 else {
+                throw XomoAutomationCallError.operationFailed(
+                    "No editable layer needs the requested outer glow noise"
+                )
+            }
+            return .object([
+                "updatedLayerCount": .number(Double(updatedLayerCount))
+            ])
         case "outerGlowContour":
             let rawValue = try requiredString("outerGlowContour", in: arguments)
             guard let contour = ImageEditorLayerEffectContour(rawValue: rawValue) else {

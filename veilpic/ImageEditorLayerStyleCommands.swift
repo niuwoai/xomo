@@ -507,6 +507,10 @@ extension ImageEditorViewModel {
         Double(document.selectedLayer?.style.outerGlowNoise ?? 0)
     }
 
+    var selectedLayerOuterGlowNoiseState: ImageEditorLayerStyleValueState<CGFloat> {
+        selectedLayerStyleValueState(\.outerGlowNoise)
+    }
+
     var selectedLayerOuterGlowContour: ImageEditorLayerEffectContour {
         document.selectedLayer?.style.outerGlowContour ?? .linear
     }
@@ -1308,7 +1312,8 @@ extension ImageEditorViewModel {
         }
     }
 
-    func setSelectedLayerOuterGlowNoise(_ noise: Double) {
+    @discardableResult
+    func setSelectedLayerOuterGlowNoise(_ noise: Double) -> Int {
         updateSelectedLayerStyle {
             $0.outerGlowEnabled = true
             $0.outerGlowNoise = max(0, min(1, CGFloat(noise)))

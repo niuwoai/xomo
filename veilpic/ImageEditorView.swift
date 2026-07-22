@@ -7311,12 +7311,15 @@ struct ImageEditorView: View {
                         L10n.format("imageEditor.properties.outerGlowSpreadValue", Int(value.rounded()))
                     }
                 }
-                Stepper(
-                    L10n.format("imageEditor.properties.outerGlowNoiseValue", Int((viewModel.selectedLayerOuterGlowNoise * 100).rounded())),
+                layerStyleNumericStepper(
+                    state: viewModel.selectedLayerOuterGlowNoiseState,
                     value: selectedLayerOuterGlowNoiseBinding,
-                    in: 0...1,
-                    step: 0.05
-                )
+                    range: 0...1,
+                    step: 0.05,
+                    accessibilityIdentifier: "image-editor-layer-style-outer-glow-noise"
+                ) { value in
+                    L10n.format("imageEditor.properties.outerGlowNoiseValue", Int((value * 100).rounded()))
+                }
                 layerStyleValuePicker(
                     state: viewModel.selectedLayerOuterGlowContourState,
                     values: ImageEditorLayerEffectContour.allCases,

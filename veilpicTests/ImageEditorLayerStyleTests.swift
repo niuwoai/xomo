@@ -503,6 +503,7 @@ struct ImageEditorLayerStyleTests {
 
     @Test func imageEditorOuterGlowNoiseChangesGlowAndRoundTripsProjectState() async throws {
         let canvasSize = NSSize(width: 80, height: 60)
+        let glowColor = NSColor(srgbRed: 0.92, green: 0.16, blue: 0.08, alpha: 1)
         let baseImage = solidImage(color: .systemBlue, size: canvasSize)
         let layerImage = centerRectImage(size: canvasSize, color: .systemGreen)
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: baseImage) { _ in }
@@ -510,12 +511,13 @@ struct ImageEditorLayerStyleTests {
         let layerPixelsBeforeStyle = try #require(viewModel.document.selectedLayer?.image.qingtuPNGData())
 
         viewModel.setSelectedLayerOuterGlowOpacity(1)
+        viewModel.setSelectedLayerOuterGlowColor(glowColor)
         viewModel.setSelectedLayerOuterGlowBlur(0)
         viewModel.setSelectedLayerOuterGlowSpread(8)
-        viewModel.setSelectedLayerOuterGlowNoise(0)
+        #expect(viewModel.setSelectedLayerOuterGlowNoise(0) == 0)
         let smoothGlowData = try #require(viewModel.currentImage.qingtuPNGData())
 
-        viewModel.setSelectedLayerOuterGlowNoise(1)
+        #expect(viewModel.setSelectedLayerOuterGlowNoise(1) == 1)
 
         let styledLayer = try #require(viewModel.document.selectedLayer)
         let layerPixelsAfterStyle = try #require(styledLayer.image.qingtuPNGData())
@@ -523,6 +525,10 @@ struct ImageEditorLayerStyleTests {
 
         #expect(styledLayer.style.outerGlowEnabled)
         #expect(styledLayer.style.outerGlowNoise == 1)
+        #expect(styledLayer.style.outerGlowOpacity == 1)
+        #expect(styledLayer.style.outerGlowBlur == 0)
+        #expect(styledLayer.style.outerGlowSpread == 8)
+        #expect(styledLayer.style.outerGlowColor.isEqual(glowColor))
         #expect(viewModel.selectedLayerOuterGlowNoise == 1)
         #expect(layerPixelsAfterStyle == layerPixelsBeforeStyle)
         #expect(noisyGlowData != smoothGlowData)
@@ -533,6 +539,10 @@ struct ImageEditorLayerStyleTests {
         let restoredLayer = try #require(restoredDocument.layers.first { $0.id == styledLayer.id })
         #expect(restoredLayer.style.outerGlowEnabled)
         #expect(restoredLayer.style.outerGlowNoise == 1)
+        #expect(restoredLayer.style.outerGlowOpacity == 1)
+        #expect(restoredLayer.style.outerGlowBlur == 0)
+        #expect(restoredLayer.style.outerGlowSpread == 8)
+        #expect(restoredLayer.style.outerGlowColor.isEqual(glowColor))
     }
 
     @Test func imageEditorOuterGlowOpacityChangesCompositeWithoutReplacingExistingColor() async throws {

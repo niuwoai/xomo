@@ -1145,6 +1145,87 @@ struct ImageEditorLayerRowBatchPropertyTests {
         return fixture
     }
 
+    @Test func layerStyleOuterGlowNoiseMixedValueConvergesAcrossEditableSelection() throws {
+        let fixture = outerGlowNoiseFixture()
+        let viewModel = fixture.viewModel
+        let firstID = fixture.layers[0].id
+        let secondID = fixture.layers[1].id
+        let lockedID = fixture.layers[2].id
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.selectedLayerOuterGlowNoiseState == .mixed)
+        #expect(viewModel.setSelectedLayerOuterGlowNoise(0.6) == 1)
+        #expect(viewModel.selectedLayerOuterGlowNoiseState == .value(0.6))
+        #expect((try layer(firstID, in: viewModel)).style.outerGlowNoise == 0.6)
+        #expect((try layer(secondID, in: viewModel)).style.outerGlowNoise == 0.6)
+        #expect((try layer(lockedID, in: viewModel)).style.outerGlowNoise == 0.4)
+        #expect((try layer(firstID, in: viewModel)).style.outerGlowEnabled)
+        #expect((try layer(secondID, in: viewModel)).style.outerGlowEnabled)
+        #expect((try layer(secondID, in: viewModel)).style.outerGlowColor == .systemRed)
+        #expect((try layer(firstID, in: viewModel)).style.outerGlowBlur == 7)
+        #expect((try layer(secondID, in: viewModel)).style.outerGlowSpread == 8)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+
+        let historyAfterUpdate = viewModel.document.history.count
+        #expect(viewModel.setSelectedLayerOuterGlowNoise(0.6) == 0)
+        #expect(viewModel.document.history.count == historyAfterUpdate)
+
+        #expect(viewModel.setSelectedLayerOuterGlowNoise(-1) == 2)
+        #expect(viewModel.selectedLayerOuterGlowNoiseState == .value(0))
+        #expect((try layer(firstID, in: viewModel)).style.outerGlowNoise == 0)
+        #expect((try layer(secondID, in: viewModel)).style.outerGlowNoise == 0)
+
+        #expect(viewModel.setSelectedLayerOuterGlowNoise(10) == 2)
+        #expect(viewModel.selectedLayerOuterGlowNoiseState == .value(1))
+        #expect((try layer(firstID, in: viewModel)).style.outerGlowNoise == 1)
+        #expect((try layer(secondID, in: viewModel)).style.outerGlowNoise == 1)
+        #expect((try layer(secondID, in: viewModel)).style.outerGlowColor == .systemRed)
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerOuterGlowNoiseState == .value(0))
+        viewModel.redo()
+        #expect(viewModel.selectedLayerOuterGlowNoiseState == .value(1))
+    }
+
+    @Test func layerStyleOuterGlowNoiseControlReusesMixedNumericStepper() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("state: viewModel.selectedLayerOuterGlowNoiseState"))
+        #expect(source.contains("value: selectedLayerOuterGlowNoiseBinding"))
+        #expect(source.contains("image-editor-layer-style-outer-glow-noise"))
+        #expect(source.contains("L10n.format(\"imageEditor.properties.outerGlowNoiseValue\""))
+        let helperStart = try #require(
+            source.range(of: "private func layerStyleNumericStepper(")
+        )
+        let helperEnd = try #require(
+            source[helperStart.upperBound...].range(of: "private func guidePath(")
+        )
+        let helperSource = source[helperStart.lowerBound..<helperEnd.lowerBound]
+        #expect(helperSource.contains(".focusable(false)"))
+    }
+
+    private func outerGlowNoiseFixture() -> Fixture {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        viewModel.document.layers[0].style.outerGlowNoise = 0.15
+        viewModel.document.layers[0].style.outerGlowBlur = 7
+        viewModel.document.layers[1].style.outerGlowEnabled = true
+        viewModel.document.layers[1].style.outerGlowNoise = 0.6
+        viewModel.document.layers[1].style.outerGlowSpread = 8
+        viewModel.document.layers[1].style.outerGlowColor = .systemRed
+        viewModel.document.layers[2].style.outerGlowNoise = 0.4
+        viewModel.document.layers[2].isLocked = true
+        select(Set(fixture.layers.map(\.id)), primary: fixture.layers[0].id, in: viewModel)
+        return fixture
+    }
+
     @Test func layerStyleOuterGlowOpacityMixedValueConvergesAcrossEditableSelection() throws {
         let fixture = outerGlowOpacityFixture()
         let viewModel = fixture.viewModel
