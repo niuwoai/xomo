@@ -882,6 +882,56 @@ struct ImageEditorLayerStyleTests {
         #expect(legacyStyle.layerStyle.outerGlowJitter == 0)
     }
 
+    @Test func imageEditorOuterGlowTechniqueChangesDiffusionAndPreservesLegacyProjects() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: solidImage(color: .clear, size: canvasSize)
+        ) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(
+            centerRectImage(size: canvasSize, color: .white),
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+        let layerPixelsBeforeStyle = try #require(
+            viewModel.document.selectedLayer?.image.qingtuPNGData()
+        )
+
+        viewModel.setSelectedLayerOuterGlowOpacity(1)
+        viewModel.setSelectedLayerOuterGlowColor(.systemOrange)
+        viewModel.setSelectedLayerOuterGlowBlur(12)
+        viewModel.setSelectedLayerOuterGlowSpread(0)
+        viewModel.setSelectedLayerOuterGlowNoise(0)
+        viewModel.setSelectedLayerOuterGlowContour(.linear)
+        viewModel.setSelectedLayerOuterGlowRange(1)
+        #expect(viewModel.setSelectedLayerOuterGlowTechnique(.softer) == 0)
+        let softerData = try #require(viewModel.currentImage.qingtuPNGData())
+
+        #expect(viewModel.setSelectedLayerOuterGlowTechnique(.precise) == 1)
+        let preciseData = try #require(viewModel.currentImage.qingtuPNGData())
+        let repeatedPreciseData = try #require(viewModel.currentImage.qingtuPNGData())
+
+        let styledLayer = try #require(viewModel.document.selectedLayer)
+        #expect(styledLayer.style.outerGlowTechnique == .precise)
+        #expect(styledLayer.style.outerGlowBlur == 12)
+        #expect(try #require(styledLayer.image.qingtuPNGData()) == layerPixelsBeforeStyle)
+        #expect(preciseData != softerData)
+        #expect(repeatedPreciseData == preciseData)
+
+        let project = try ImageEditorProjectDocument(document: viewModel.document)
+        let restoredDocument = try project.restoredDocument()
+        let restoredLayer = try #require(restoredDocument.layers.first { $0.id == styledLayer.id })
+        #expect(restoredLayer.style.outerGlowTechnique == .precise)
+
+        let encodedStyle = try JSONEncoder().encode(ImageEditorProjectLayerStyle(style: styledLayer.style))
+        var legacyObject = try #require(
+            JSONSerialization.jsonObject(with: encodedStyle) as? [String: Any]
+        )
+        legacyObject.removeValue(forKey: "outerGlowTechnique")
+        let legacyData = try JSONSerialization.data(withJSONObject: legacyObject)
+        let legacyStyle = try JSONDecoder().decode(ImageEditorProjectLayerStyle.self, from: legacyData)
+        #expect(legacyStyle.layerStyle.outerGlowTechnique == .softer)
+    }
+
     @Test func imageEditorInnerGlowContourChangesFalloffAndRoundTripsProjectState() async throws {
         let canvasSize = NSSize(width: 80, height: 60)
         let glowColor = NSColor(srgbRed: 0.9, green: 0.08, blue: 0.12, alpha: 1)

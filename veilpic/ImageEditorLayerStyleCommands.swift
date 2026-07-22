@@ -507,6 +507,14 @@ extension ImageEditorViewModel {
         selectedLayerStyleValueState(\.outerGlowSpread)
     }
 
+    var selectedLayerOuterGlowTechnique: ImageEditorGlowTechnique {
+        document.selectedLayer?.style.outerGlowTechnique ?? .softer
+    }
+
+    var selectedLayerOuterGlowTechniqueState: ImageEditorLayerStyleValueState<ImageEditorGlowTechnique> {
+        selectedLayerStyleValueState(\.outerGlowTechnique)
+    }
+
     var selectedLayerOuterGlowNoise: Double {
         Double(document.selectedLayer?.style.outerGlowNoise ?? 0)
     }
@@ -1370,6 +1378,14 @@ extension ImageEditorViewModel {
         updateSelectedLayerStyle {
             $0.outerGlowEnabled = true
             $0.outerGlowSpread = max(0, min(24, CGFloat(spread)))
+        }
+    }
+
+    @discardableResult
+    func setSelectedLayerOuterGlowTechnique(_ technique: ImageEditorGlowTechnique) -> Int {
+        updateSelectedLayerStyle {
+            $0.outerGlowEnabled = true
+            $0.outerGlowTechnique = technique
         }
     }
 

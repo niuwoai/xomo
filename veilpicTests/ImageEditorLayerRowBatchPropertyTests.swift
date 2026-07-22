@@ -3508,6 +3508,51 @@ struct ImageEditorLayerRowBatchPropertyTests {
         return fixture
     }
 
+    @Test func layerStyleOuterGlowTechniqueConvergesAcrossEditableSelectionAndUsesPicker() throws {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        let firstID = fixture.layers[0].id
+        let secondID = fixture.layers[1].id
+        let lockedID = fixture.layers[2].id
+        viewModel.document.layers[0].style.outerGlowTechnique = .softer
+        viewModel.document.layers[0].style.outerGlowBlur = 7
+        viewModel.document.layers[1].style.outerGlowEnabled = true
+        viewModel.document.layers[1].style.outerGlowTechnique = .precise
+        viewModel.document.layers[1].style.outerGlowColor = .systemRed
+        viewModel.document.layers[2].style.outerGlowTechnique = .softer
+        viewModel.document.layers[2].isLocked = true
+        select(Set(fixture.layers.map(\.id)), primary: firstID, in: viewModel)
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.selectedLayerOuterGlowTechniqueState == .mixed)
+        #expect(viewModel.setSelectedLayerOuterGlowTechnique(.precise) == 1)
+        #expect(viewModel.selectedLayerOuterGlowTechniqueState == .value(.precise))
+        #expect((try layer(firstID, in: viewModel)).style.outerGlowTechnique == .precise)
+        #expect((try layer(secondID, in: viewModel)).style.outerGlowTechnique == .precise)
+        #expect((try layer(lockedID, in: viewModel)).style.outerGlowTechnique == .softer)
+        #expect((try layer(firstID, in: viewModel)).style.outerGlowEnabled)
+        #expect((try layer(secondID, in: viewModel)).style.outerGlowColor == .systemRed)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.setSelectedLayerOuterGlowTechnique(.precise) == 0)
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerOuterGlowTechniqueState == .mixed)
+        viewModel.redo()
+        #expect(viewModel.selectedLayerOuterGlowTechniqueState == .value(.precise))
+
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        #expect(source.contains("state: viewModel.selectedLayerOuterGlowTechniqueState"))
+        #expect(source.contains("values: ImageEditorGlowTechnique.allCases"))
+        #expect(source.contains("image-editor-layer-style-outer-glow-technique"))
+        #expect(source.contains("viewModel.setSelectedLayerOuterGlowTechnique(technique)"))
+    }
+
     @Test func layerStyleMixedInnerGlowContourConvergesAcrossEditableSelection() throws {
         let fixture = innerGlowContourFixture()
         let viewModel = fixture.viewModel

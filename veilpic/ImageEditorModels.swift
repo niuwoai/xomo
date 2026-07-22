@@ -2205,6 +2205,7 @@ struct ImageEditorLayerStyle {
     var outerGlowOpacity: CGFloat = 0.42
     var outerGlowBlur: CGFloat = 10
     var outerGlowSpread: CGFloat = 3
+    var outerGlowTechnique = ImageEditorGlowTechnique.softer
     var outerGlowNoise: CGFloat = 0
     var outerGlowContour = ImageEditorLayerEffectContour.linear
     var outerGlowRange: CGFloat = 0.5
@@ -3545,11 +3546,17 @@ struct ImageEditorLayer: Identifiable {
                         }
                     }
                 } ?? NSImage(size: outputSize)
-                let blurredGlow = glowCanvas.blurred(radius: style.outerGlowBlur) ?? glowCanvas
-                let contouredGlow = blurredGlow.applyingEffectContour(
+                let diffusedGlow: NSImage
+                switch style.outerGlowTechnique {
+                case .softer:
+                    diffusedGlow = glowCanvas.blurred(radius: style.outerGlowBlur) ?? glowCanvas
+                case .precise:
+                    diffusedGlow = glowCanvas.preciseOuterGlow(radius: style.outerGlowBlur) ?? glowCanvas
+                }
+                let contouredGlow = diffusedGlow.applyingEffectContour(
                     style.outerGlowContour,
                     range: style.outerGlowRange
-                ) ?? blurredGlow
+                ) ?? diffusedGlow
                 let jitteredGlow = contouredGlow.shadowNoised(
                     amount: style.outerGlowJitter
                 ) ?? contouredGlow

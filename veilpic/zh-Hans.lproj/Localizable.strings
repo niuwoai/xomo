@@ -1141,6 +1141,9 @@
 "imageEditor.properties.outerGlowOpacityValue" = "外发光不透明度：%d%%";
 "imageEditor.properties.outerGlowBlurValue" = "外发光模糊：%d px";
 "imageEditor.properties.outerGlowSpreadValue" = "扩展：%d px";
+"imageEditor.properties.outerGlowTechnique" = "外发光技术";
+"imageEditor.glowTechnique.softer" = "柔和";
+"imageEditor.glowTechnique.precise" = "精确";
 "imageEditor.properties.outerGlowNoiseValue" = "外发光噪点：%d%%";
 "imageEditor.properties.outerGlowRangeValue" = "外发光范围：%d%%";
 "imageEditor.properties.outerGlowJitterValue" = "外发光抖动：%d%%";

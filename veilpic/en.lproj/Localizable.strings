@@ -1141,6 +1141,9 @@
 "imageEditor.properties.outerGlowOpacityValue" = "Outer Glow Opacity: %d%%";
 "imageEditor.properties.outerGlowBlurValue" = "Outer Glow Blur: %d px";
 "imageEditor.properties.outerGlowSpreadValue" = "Spread: %d px";
+"imageEditor.properties.outerGlowTechnique" = "Outer Glow Technique";
+"imageEditor.glowTechnique.softer" = "Softer";
+"imageEditor.glowTechnique.precise" = "Precise";
 "imageEditor.properties.outerGlowNoiseValue" = "Outer Glow Noise: %d%%";
 "imageEditor.properties.outerGlowRangeValue" = "Outer Glow Range: %d%%";
 "imageEditor.properties.outerGlowJitterValue" = "Outer Glow Jitter: %d%%";

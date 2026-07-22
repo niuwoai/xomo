@@ -7410,6 +7410,15 @@ struct ImageEditorView: View {
                         L10n.format("imageEditor.properties.outerGlowSpreadValue", Int(value.rounded()))
                     }
                 }
+                layerStyleValuePicker(
+                    state: viewModel.selectedLayerOuterGlowTechniqueState,
+                    values: ImageEditorGlowTechnique.allCases,
+                    labelKey: "imageEditor.properties.outerGlowTechnique",
+                    accessibilityIdentifier: "image-editor-layer-style-outer-glow-technique",
+                    title: \.title
+                ) { technique in
+                    viewModel.setSelectedLayerOuterGlowTechnique(technique)
+                }
                 layerStyleNumericStepper(
                     state: viewModel.selectedLayerOuterGlowNoiseState,
                     value: selectedLayerOuterGlowNoiseBinding,

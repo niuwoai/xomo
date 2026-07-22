@@ -835,6 +835,7 @@ struct ImageEditorProjectLayerStyle: Codable, Equatable {
     var outerGlowOpacity: CGFloat
     var outerGlowBlur: CGFloat
     var outerGlowSpread: CGFloat
+    var outerGlowTechnique: ImageEditorGlowTechnique?
     var outerGlowNoise: CGFloat?
     var outerGlowContour: ImageEditorLayerEffectContour?
     var outerGlowRange: CGFloat?
@@ -924,6 +925,7 @@ struct ImageEditorProjectLayerStyle: Codable, Equatable {
         outerGlowOpacity = style.outerGlowOpacity
         outerGlowBlur = style.outerGlowBlur
         outerGlowSpread = style.outerGlowSpread
+        outerGlowTechnique = style.outerGlowTechnique
         outerGlowNoise = style.outerGlowNoise
         outerGlowContour = style.outerGlowContour
         outerGlowRange = style.outerGlowRange
@@ -1017,6 +1019,7 @@ struct ImageEditorProjectLayerStyle: Codable, Equatable {
             outerGlowOpacity: outerGlowOpacity,
             outerGlowBlur: outerGlowBlur,
             outerGlowSpread: outerGlowSpread,
+            outerGlowTechnique: outerGlowTechnique ?? .softer,
             outerGlowNoise: max(0, min(1, outerGlowNoise ?? 0)),
             outerGlowContour: outerGlowContour ?? .linear,
             outerGlowRange: max(0.01, min(1, outerGlowRange ?? 1)),

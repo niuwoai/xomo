@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.12.0-rc492 - 2026-07-23
+
+### Added
+- 外发光增加 Photoshop 式“技术”选择：柔和沿用高斯扩散，精确使用线性复杂度的轮廓距离场，贴合真实 Alpha 边缘且不模糊源遮罩内部。
+- 技术参数贯通不可聚焦的三语多选下拉、锁定层跳过、单步 Undo/Redo、工程与样式预设往返，以及 MCP/CLI `xomo.layer.style_settings(property=outerGlowTechnique)` 的真实 `updatedLayerCount`。
+
+### Fixed
+- 旧工程缺少技术字段时固定恢复“柔和”，保持历史渲染；重复设置同一技术不会制造空 History。
+
+### Verification
+- Xcode 定向测试 3/3 通过，覆盖柔和/精确真实像素差异、确定性重绘、工程/旧格式往返、多选事务、不可聚焦界面接线与 MCP 枚举修改计数；SwiftPM CLI 2/2、发布契约 4/4（10 条断言）通过。下一次完整 Release、全量冒烟与 `/Applications` 覆盖门禁仍为 rc520。
+
 ## 2.12.0-rc491 - 2026-07-23
 
 ### Added
