@@ -996,20 +996,36 @@ struct ImageEditorLayerRowBatchPropertyTests {
         let historyCount = viewModel.document.history.count
 
         #expect(viewModel.selectedLayerOuterGlowBlurState == .mixed)
-        viewModel.setSelectedLayerOuterGlowBlur(14)
+        #expect(viewModel.setSelectedLayerOuterGlowBlur(14) == 1)
         #expect(viewModel.selectedLayerOuterGlowBlurState == .value(14))
         #expect((try layer(firstID, in: viewModel)).style.outerGlowBlur == 14)
         #expect((try layer(secondID, in: viewModel)).style.outerGlowBlur == 14)
         #expect((try layer(lockedID, in: viewModel)).style.outerGlowBlur == 9)
         #expect((try layer(firstID, in: viewModel)).style.outerGlowEnabled)
         #expect((try layer(secondID, in: viewModel)).style.outerGlowEnabled)
+        #expect((try layer(secondID, in: viewModel)).style.outerGlowColor == .systemRed)
         #expect(viewModel.document.history.count == historyCount + 1)
         #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
 
+        let historyAfterUpdate = viewModel.document.history.count
+        #expect(viewModel.setSelectedLayerOuterGlowBlur(14) == 0)
+        #expect(viewModel.document.history.count == historyAfterUpdate)
+
+        #expect(viewModel.setSelectedLayerOuterGlowBlur(-10) == 2)
+        #expect(viewModel.selectedLayerOuterGlowBlurState == .value(0))
+        #expect((try layer(firstID, in: viewModel)).style.outerGlowBlur == 0)
+        #expect((try layer(secondID, in: viewModel)).style.outerGlowBlur == 0)
+
+        #expect(viewModel.setSelectedLayerOuterGlowBlur(100) == 2)
+        #expect(viewModel.selectedLayerOuterGlowBlurState == .value(40))
+        #expect((try layer(firstID, in: viewModel)).style.outerGlowBlur == 40)
+        #expect((try layer(secondID, in: viewModel)).style.outerGlowBlur == 40)
+        #expect((try layer(secondID, in: viewModel)).style.outerGlowColor == .systemRed)
+
         viewModel.undo()
-        #expect(viewModel.selectedLayerOuterGlowBlurState == .mixed)
+        #expect(viewModel.selectedLayerOuterGlowBlurState == .value(0))
         viewModel.redo()
-        #expect(viewModel.selectedLayerOuterGlowBlurState == .value(14))
+        #expect(viewModel.selectedLayerOuterGlowBlurState == .value(40))
     }
 
     @Test func layerStyleOuterGlowBlurControlReusesMixedNumericStepper() throws {
@@ -1025,13 +1041,23 @@ struct ImageEditorLayerRowBatchPropertyTests {
         #expect(source.contains("value: selectedLayerOuterGlowBlurBinding"))
         #expect(source.contains("image-editor-layer-style-outer-glow-blur"))
         #expect(source.contains("L10n.format(\"imageEditor.properties.outerGlowBlurValue\""))
+        let helperStart = try #require(
+            source.range(of: "private func layerStyleNumericStepper(")
+        )
+        let helperEnd = try #require(
+            source[helperStart.upperBound...].range(of: "private func guidePath(")
+        )
+        let helperSource = source[helperStart.lowerBound..<helperEnd.lowerBound]
+        #expect(helperSource.contains(".focusable(false)"))
     }
 
     private func outerGlowBlurFixture() -> Fixture {
         let fixture = makeFixture()
         let viewModel = fixture.viewModel
         viewModel.document.layers[0].style.outerGlowBlur = 4
-        viewModel.document.layers[1].style.outerGlowBlur = 24
+        viewModel.document.layers[1].style.outerGlowEnabled = true
+        viewModel.document.layers[1].style.outerGlowBlur = 14
+        viewModel.document.layers[1].style.outerGlowColor = .systemRed
         viewModel.document.layers[2].style.outerGlowBlur = 9
         viewModel.document.layers[2].isLocked = true
         select(Set(fixture.layers.map(\.id)), primary: fixture.layers[0].id, in: viewModel)

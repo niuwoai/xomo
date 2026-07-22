@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.12.0-rc475 - 2026-07-22
+
+### Changed
+- 外发光模糊半径 setter 返回实际修改的可编辑选中图层数；MCP `xomo.layer.style_settings(property=outerGlowBlur)` 返回 `updatedLayerCount`。
+- 保持既有不可聚焦的多选“多个值”控件和 0–40 px 范围；锁定层及不适用层安全跳过，需要自动启用外发光的图层仍计入真实修改。
+
+### Fixed
+- 调整模糊半径只改变外发光启用状态与模糊参数，不覆盖颜色、透明度、扩展、杂色或轮廓。
+- 重复值或夹取后等价值不再制造空 Undo/History，MCP 对零实际变化明确失败。
+
+### Verification
+- 实际数量、0–40 px 夹取、自动启用、颜色保留、锁定层、不可聚焦控件、MCP 结果以及硬边／软边真实合成与工程往返测试 4/4，外发光颜色相邻回归 4/4 通过。
+- SwiftPM CLI 2/2、发布版本契约 7/7 通过；本版不覆盖 `/Applications`，下一次完整 Release、冒烟与安装门禁仍为 rc480。
+
 ## 2.12.0-rc474 - 2026-07-22
 
 ### Added

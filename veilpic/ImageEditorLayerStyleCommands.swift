@@ -1288,7 +1288,8 @@ extension ImageEditorViewModel {
         }
     }
 
-    func setSelectedLayerOuterGlowBlur(_ blur: Double) {
+    @discardableResult
+    func setSelectedLayerOuterGlowBlur(_ blur: Double) -> Int {
         updateSelectedLayerStyle {
             $0.outerGlowEnabled = true
             $0.outerGlowBlur = max(0, min(40, CGFloat(blur)))
