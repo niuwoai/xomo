@@ -44,13 +44,14 @@ enum ImageEditorObjectDragEventPolicy {
             )
         }
 
-        // A mouse-down can select an object without ever crossing the drag
-        // threshold. That candidate-only release must pass through so a stale
-        // canvas candidate cannot swallow the mouse-up of the next toolbar
-        // button. Only a real object-move transaction owns the release event.
+        // The local monitor owns the complete sequence once mouse-down hits a
+        // movable object. Passing only the candidate mouse-up through creates
+        // an unbalanced stream for SwiftUI; passing an active drag through lets
+        // both gesture systems mutate the same transaction. Consume the paired
+        // release even when the pointer never crosses the drag threshold.
         return ReleaseDecision(
             shouldFinishMove: isObjectMoving,
-            shouldConsumeEvent: isObjectMoving
+            shouldConsumeEvent: true
         )
     }
 }
@@ -123,6 +124,7 @@ final class ScrollWheelZoomNSView: NSView {
     private var lastMiddleMousePoint: CGPoint?
     private var isObjectMoving = false
     private var hasObjectMoveCandidate = false
+    private var isObjectMoveCaptureRejected = false
     private var objectMoveStartPoint: CGPoint?
 
     // 采用左上原点，坐标系与 SwiftUI 画布对齐，锚点不会上下翻转。
@@ -196,6 +198,7 @@ final class ScrollWheelZoomNSView: NSView {
         }
         isObjectMoving = false
         hasObjectMoveCandidate = false
+        isObjectMoveCaptureRejected = false
         objectMoveStartPoint = nil
         if isMiddleMousePanning {
             onMiddleMousePanEnded?()
@@ -215,34 +218,48 @@ final class ScrollWheelZoomNSView: NSView {
         onMouseMoved?(location)
     }
 
-    /// The canvas is also a drop destination on macOS 13. A local left-button
-    /// monitor gives already-selected Xomo objects a deterministic drag path
-    /// without changing the event stream for pixels, selections, or imports.
+    /// The canvas is also a drop destination on macOS 13. Once a mouse-down
+    /// hits a movable Xomo object, this monitor owns that complete pointer
+    /// sequence so SwiftUI's canvas gesture cannot race the object transaction.
+    /// All unrelated events pass through untouched.
     private func handleObjectMove(_ event: NSEvent) -> Bool {
         guard let window, event.buttonNumber == 0 else { return false }
 
         switch event.type {
         case .leftMouseDown:
-            guard event.window === window else { return false }
+            if hasObjectMoveCandidate || isObjectMoving {
+                cancelStaleObjectMoveCapture()
+            }
+            guard event.window === window else {
+                return false
+            }
             let location = convert(event.locationInWindow, from: nil)
-            guard bounds.contains(location), !hasObjectMoveCandidate, !isObjectMoving else { return false }
+            guard bounds.contains(location) else {
+                return false
+            }
             let flags = event.modifierFlags.intersection([.command, .option, .shift, .control])
             guard onObjectMoveCandidateBegan?(location, flags) == true else { return false }
             hasObjectMoveCandidate = true
+            isObjectMoveCaptureRejected = false
             objectMoveStartPoint = location
             return true
         case .leftMouseDragged:
-            guard event.window === window else { return false }
+            guard event.window === window else { return hasObjectMoveCandidate }
             let location = convert(event.locationInWindow, from: nil)
             guard hasObjectMoveCandidate, let objectMoveStartPoint else { return false }
+            if isObjectMoveCaptureRejected {
+                return true
+            }
             if !isObjectMoving {
                 guard ImageEditorObjectDragEventPolicy.shouldActivate(
                     from: objectMoveStartPoint,
                     to: location
                 ) else { return true }
                 guard onObjectMoveActivated?() == true else {
-                    hasObjectMoveCandidate = false
-                    self.objectMoveStartPoint = nil
+                    // Mouse-down was already consumed. Keep ownership through
+                    // mouse-up even if the model rejects activation, otherwise
+                    // SwiftUI receives an orphaned release event.
+                    isObjectMoveCaptureRejected = true
                     return true
                 }
                 isObjectMoving = true
@@ -268,11 +285,22 @@ final class ScrollWheelZoomNSView: NSView {
             }
             isObjectMoving = false
             hasObjectMoveCandidate = false
+            isObjectMoveCaptureRejected = false
             objectMoveStartPoint = nil
             return releaseDecision.shouldConsumeEvent
         default:
             return false
         }
+    }
+
+    private func cancelStaleObjectMoveCapture() {
+        if isObjectMoving {
+            onObjectMoveEnded?()
+        }
+        isObjectMoving = false
+        hasObjectMoveCandidate = false
+        isObjectMoveCaptureRejected = false
+        objectMoveStartPoint = nil
     }
 
     /// 返回 true 表示已处理并应消费该滚轮事件。

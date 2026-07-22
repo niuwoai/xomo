@@ -187,7 +187,6 @@ private struct XomoComponentDragPreview: View {
 
 struct XomoComponentLibraryPanel: View {
     @ObservedObject var viewModel: ImageEditorViewModel
-    @State private var pendingComponentSelection: XomoComponentKind?
 
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
@@ -451,19 +450,15 @@ struct XomoComponentLibraryPanel: View {
         Group {
             if let component = item.component {
                 Button {
-                    pendingComponentSelection = component
                     // Choosing a component is an object-library action, not
-                    // a drawing gesture. Reset immediately so a cursor left
-                    // behind by the previous tool cannot leak into the
-                    // library interaction while the insertion is queued.
+                    // a drawing gesture. Keep the native Button + draggable
+                    // mouse sequence on one run-loop turn: rebuilding this
+                    // tile through a temporary pending-selection state before
+                    // the click finishes can strand AppKit's drag source and
+                    // leave the toolbar outside its normal hit-test path.
                     NSCursor.arrow.set()
-                    DispatchQueue.main.async {
-                        viewModel.insertXomoComponent(component)
-                        NSCursor.arrow.set()
-                        if pendingComponentSelection == component {
-                            pendingComponentSelection = nil
-                        }
-                    }
+                    viewModel.insertXomoComponent(component)
+                    NSCursor.arrow.set()
                 } label: {
                     componentPreviewLabel(item, isAvailable: true)
                 }
@@ -487,7 +482,7 @@ struct XomoComponentLibraryPanel: View {
     }
 
     private func componentPreviewLabel(_ item: XomoComponentLibraryPreviewItem, isAvailable: Bool) -> some View {
-        let isSelected = item.component == (pendingComponentSelection ?? viewModel.selectedXomoObjectKind)
+        let isSelected = item.component == viewModel.selectedXomoObjectKind
         return VStack(spacing: 6) {
             if let component = item.component {
                 XomoComponentThumbnail(kind: component, tokens: viewModel.activeXomoComponentTokens)

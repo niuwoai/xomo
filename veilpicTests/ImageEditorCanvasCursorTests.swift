@@ -388,7 +388,7 @@ struct ImageEditorCanvasCursorTests {
         #expect(viewModel.canvasContentHit(at: CGPoint(x: frame.midX, y: frame.midY)) == .blocked)
     }
 
-    @Test func objectDragReleaseOnlyConsumesEventsForAnActiveMove() {
+    @Test func objectDragReleaseKeepsTheLocallyOwnedEventStreamBalanced() {
         let activeMove = ImageEditorObjectDragEventPolicy.releaseDecision(
             eventType: .leftMouseUp,
             hasObjectMoveCandidate: true,
@@ -403,7 +403,7 @@ struct ImageEditorCanvasCursorTests {
             isObjectMoving: false
         )
         #expect(!candidateOnly.shouldFinishMove)
-        #expect(!candidateOnly.shouldConsumeEvent)
+        #expect(candidateOnly.shouldConsumeEvent)
 
         let unrelatedDrag = ImageEditorObjectDragEventPolicy.releaseDecision(
             eventType: .leftMouseDragged,
