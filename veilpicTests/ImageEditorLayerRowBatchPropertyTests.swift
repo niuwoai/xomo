@@ -1510,20 +1510,36 @@ struct ImageEditorLayerRowBatchPropertyTests {
         let historyCount = viewModel.document.history.count
 
         #expect(viewModel.selectedLayerInnerShadowBlurState == .mixed)
-        viewModel.setSelectedLayerInnerShadowBlur(14)
+        #expect(viewModel.setSelectedLayerInnerShadowBlur(14) == 1)
         #expect(viewModel.selectedLayerInnerShadowBlurState == .value(14))
         #expect((try layer(firstID, in: viewModel)).style.innerShadowBlur == 14)
         #expect((try layer(secondID, in: viewModel)).style.innerShadowBlur == 14)
         #expect((try layer(lockedID, in: viewModel)).style.innerShadowBlur == 9)
         #expect((try layer(firstID, in: viewModel)).style.innerShadowEnabled)
         #expect((try layer(secondID, in: viewModel)).style.innerShadowEnabled)
+        #expect((try layer(secondID, in: viewModel)).style.innerShadowColor == .systemRed)
         #expect(viewModel.document.history.count == historyCount + 1)
         #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
 
+        let historyAfterUpdate = viewModel.document.history.count
+        #expect(viewModel.setSelectedLayerInnerShadowBlur(14) == 0)
+        #expect(viewModel.document.history.count == historyAfterUpdate)
+
+        #expect(viewModel.setSelectedLayerInnerShadowBlur(-20) == 2)
+        #expect(viewModel.selectedLayerInnerShadowBlurState == .value(0))
+        #expect((try layer(firstID, in: viewModel)).style.innerShadowBlur == 0)
+        #expect((try layer(secondID, in: viewModel)).style.innerShadowBlur == 0)
+
+        #expect(viewModel.setSelectedLayerInnerShadowBlur(100) == 2)
+        #expect(viewModel.selectedLayerInnerShadowBlurState == .value(40))
+        #expect((try layer(firstID, in: viewModel)).style.innerShadowBlur == 40)
+        #expect((try layer(secondID, in: viewModel)).style.innerShadowBlur == 40)
+        #expect((try layer(secondID, in: viewModel)).style.innerShadowColor == .systemRed)
+
         viewModel.undo()
-        #expect(viewModel.selectedLayerInnerShadowBlurState == .mixed)
+        #expect(viewModel.selectedLayerInnerShadowBlurState == .value(0))
         viewModel.redo()
-        #expect(viewModel.selectedLayerInnerShadowBlurState == .value(14))
+        #expect(viewModel.selectedLayerInnerShadowBlurState == .value(40))
     }
 
     @Test func layerStyleInnerShadowBlurControlReusesMixedNumericStepper() throws {
@@ -1545,7 +1561,9 @@ struct ImageEditorLayerRowBatchPropertyTests {
         let fixture = makeFixture()
         let viewModel = fixture.viewModel
         viewModel.document.layers[0].style.innerShadowBlur = 4
-        viewModel.document.layers[1].style.innerShadowBlur = 24
+        viewModel.document.layers[1].style.innerShadowEnabled = true
+        viewModel.document.layers[1].style.innerShadowBlur = 14
+        viewModel.document.layers[1].style.innerShadowColor = .systemRed
         viewModel.document.layers[2].style.innerShadowBlur = 9
         viewModel.document.layers[2].isLocked = true
         select(Set(fixture.layers.map(\.id)), primary: fixture.layers[0].id, in: viewModel)

@@ -4826,7 +4826,9 @@ struct XomoAutomationTests {
         var second = ImageEditorLayer.blank(name: "Second", size: canvasSize)
         var locked = ImageEditorLayer.blank(name: "Locked", size: canvasSize)
         first.style.innerShadowBlur = 4
-        second.style.innerShadowBlur = 24
+        second.style.innerShadowEnabled = true
+        second.style.innerShadowBlur = 14
+        second.style.innerShadowColor = .systemRed
         locked.style.innerShadowBlur = 9
         locked.isLocked = true
         viewModel.document.layers = [first, second, locked]
@@ -4849,13 +4851,55 @@ struct XomoAutomationTests {
         ))
 
         #expect(result.ok)
+        #expect(result.result?.objectValue?["updatedLayerCount"] == .number(1))
         #expect(viewModel.document.layers[0].style.innerShadowBlur == 14)
         #expect(viewModel.document.layers[1].style.innerShadowBlur == 14)
         #expect(viewModel.document.layers[2].style.innerShadowBlur == 9)
         #expect(viewModel.document.layers[0].style.innerShadowEnabled)
         #expect(viewModel.document.layers[1].style.innerShadowEnabled)
+        #expect(viewModel.document.layers[1].style.innerShadowColor == .systemRed)
         #expect(viewModel.document.history.count == historyCount + 1)
         #expect(viewModel.document.selectedLayerIDs == [first.id, second.id, locked.id])
+
+        let historyAfterUpdate = viewModel.document.history.count
+        let repeated = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("innerShadowBlur"),
+                "value": .number(14)
+            ]
+        ))
+        #expect(!repeated.ok)
+        #expect(viewModel.document.history.count == historyAfterUpdate)
+
+        let minimum = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("innerShadowBlur"),
+                "value": .number(-20)
+            ]
+        ))
+        #expect(minimum.ok)
+        #expect(minimum.result?.objectValue?["updatedLayerCount"] == .number(2))
+        #expect(viewModel.document.layers[0].style.innerShadowBlur == 0)
+        #expect(viewModel.document.layers[1].style.innerShadowBlur == 0)
+
+        let maximum = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("innerShadowBlur"),
+                "value": .number(100)
+            ]
+        ))
+        #expect(maximum.ok)
+        #expect(maximum.result?.objectValue?["updatedLayerCount"] == .number(2))
+        #expect(viewModel.document.layers[0].style.innerShadowBlur == 40)
+        #expect(viewModel.document.layers[1].style.innerShadowBlur == 40)
+        #expect(viewModel.document.layers[2].style.innerShadowBlur == 9)
+        #expect(viewModel.document.layers[1].style.innerShadowColor == .systemRed)
     }
 
     @Test func registrySetsLayerStyleInnerShadowOpacityAcrossEditableSelection() throws {
