@@ -1381,7 +1381,8 @@ extension ImageEditorViewModel {
         }
     }
 
-    func setSelectedLayerInnerGlowSource(_ source: ImageEditorInnerGlowSource) {
+    @discardableResult
+    func setSelectedLayerInnerGlowSource(_ source: ImageEditorInnerGlowSource) -> Int {
         updateSelectedLayerStyle {
             $0.innerGlowEnabled = true
             $0.innerGlowSource = source

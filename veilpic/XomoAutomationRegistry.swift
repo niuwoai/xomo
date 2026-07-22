@@ -2633,7 +2633,15 @@ final class XomoAutomationRegistry {
             guard let source = ImageEditorInnerGlowSource(rawValue: rawValue) else {
                 throw XomoAutomationCallError.invalidArgument("Unknown inner glow source")
             }
-            viewModel.setSelectedLayerInnerGlowSource(source)
+            let updatedLayerCount = viewModel.setSelectedLayerInnerGlowSource(source)
+            guard updatedLayerCount > 0 else {
+                throw XomoAutomationCallError.operationFailed(
+                    "No editable layer needs the requested inner glow source"
+                )
+            }
+            return .object([
+                "updatedLayerCount": .number(Double(updatedLayerCount))
+            ])
         case "colorOverlayOpacity": viewModel.setSelectedLayerColorOverlayOpacity(try number())
         case "colorOverlayColor": viewModel.setSelectedLayerColorOverlayColor(viewModel.foregroundColor)
         case "gradientOverlayOpacity": viewModel.setSelectedLayerGradientOverlayOpacity(try number())

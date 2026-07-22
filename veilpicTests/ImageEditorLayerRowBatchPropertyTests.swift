@@ -911,13 +911,19 @@ struct ImageEditorLayerRowBatchPropertyTests {
         let historyCount = viewModel.document.history.count
 
         #expect(viewModel.selectedLayerInnerGlowSourceState == .mixed)
-        viewModel.setSelectedLayerInnerGlowSource(.center)
+        #expect(viewModel.setSelectedLayerInnerGlowSource(.center) == 1)
         #expect(viewModel.selectedLayerInnerGlowSourceState == .value(.center))
         #expect((try layer(firstID, in: viewModel)).style.innerGlowSource == .center)
         #expect((try layer(secondID, in: viewModel)).style.innerGlowSource == .center)
         #expect((try layer(lockedID, in: viewModel)).style.innerGlowSource == .edge)
+        #expect((try layer(firstID, in: viewModel)).style.innerGlowEnabled)
+        #expect((try layer(secondID, in: viewModel)).style.innerGlowEnabled)
         #expect(viewModel.document.history.count == historyCount + 1)
         #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+
+        let historyAfterUpdate = viewModel.document.history.count
+        #expect(viewModel.setSelectedLayerInnerGlowSource(.center) == 0)
+        #expect(viewModel.document.history.count == historyAfterUpdate)
 
         viewModel.undo()
         #expect(viewModel.selectedLayerInnerGlowSourceState == .mixed)
@@ -930,6 +936,7 @@ struct ImageEditorLayerRowBatchPropertyTests {
         let viewModel = fixture.viewModel
         viewModel.document.layers[0].style.innerGlowSource = .edge
         viewModel.document.layers[1].style.innerGlowSource = .center
+        viewModel.document.layers[1].style.innerGlowEnabled = true
         viewModel.document.layers[2].style.innerGlowSource = .edge
         viewModel.document.layers[2].isLocked = true
         select(Set(fixture.layers.map(\.id)), primary: fixture.layers[0].id, in: viewModel)

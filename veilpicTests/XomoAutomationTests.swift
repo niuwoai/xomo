@@ -4346,6 +4346,21 @@ struct XomoAutomationTests {
 
     @Test func registrySetsMixedInnerGlowSourceWithAdvertisedEnum() throws {
         let viewModel = makeViewModel()
+        let canvasSize = viewModel.document.canvasSize
+        var first = ImageEditorLayer.blank(name: "First", size: canvasSize)
+        var second = ImageEditorLayer.blank(name: "Second", size: canvasSize)
+        var locked = ImageEditorLayer.blank(name: "Locked", size: canvasSize)
+        first.style.innerGlowSource = .edge
+        first.style.innerGlowBlur = 7
+        second.style.innerGlowEnabled = true
+        second.style.innerGlowSource = .center
+        second.style.innerGlowColor = .systemRed
+        locked.style.innerGlowSource = .edge
+        locked.isLocked = true
+        viewModel.document.layers = [first, second, locked]
+        viewModel.document.selectedLayerID = first.id
+        viewModel.document.selectedLayerIDs = [first.id, second.id, locked.id]
+        let historyCount = viewModel.document.history.count
         let registry = XomoAutomationRegistry.shared
         registry.register(viewModel)
 
@@ -4362,9 +4377,43 @@ struct XomoAutomationTests {
         ))
 
         #expect(result.ok)
-        #expect(viewModel.document.selectedLayer?.style.innerGlowSource == .center)
-        #expect(viewModel.document.selectedLayer?.style.innerGlowEnabled == true)
+        #expect(result.result?.objectValue?["updatedLayerCount"] == .number(1))
+        #expect(viewModel.document.layers[0].style.innerGlowSource == .center)
+        #expect(viewModel.document.layers[1].style.innerGlowSource == .center)
+        #expect(viewModel.document.layers[2].style.innerGlowSource == .edge)
+        #expect(viewModel.document.layers[0].style.innerGlowEnabled)
+        #expect(viewModel.document.layers[1].style.innerGlowEnabled)
+        #expect(viewModel.document.layers[0].style.innerGlowBlur == 7)
+        #expect(viewModel.document.layers[1].style.innerGlowColor == .systemRed)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [first.id, second.id, locked.id])
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStyle"))
+
+        let historyAfterUpdate = viewModel.document.history.count
+        let repeated = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("innerGlowSource"),
+                "source": .string("center")
+            ]
+        ))
+        #expect(!repeated.ok)
+        #expect(viewModel.document.history.count == historyAfterUpdate)
+
+        let edge = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("innerGlowSource"),
+                "source": .string("edge")
+            ]
+        ))
+        #expect(edge.ok)
+        #expect(edge.result?.objectValue?["updatedLayerCount"] == .number(2))
+        #expect(viewModel.document.layers[0].style.innerGlowSource == .edge)
+        #expect(viewModel.document.layers[1].style.innerGlowSource == .edge)
+        #expect(viewModel.document.layers[2].style.innerGlowSource == .edge)
     }
 
     @Test func registrySetsLayerStyleBevelDirectionWithAdvertisedEnum() throws {

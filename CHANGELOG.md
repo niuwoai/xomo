@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc486 - 2026-07-23
+
+### Changed
+- “内发光来源”现在是可观测的多图层事务：边缘/中心会收敛所有可编辑选中图层，锁定层安全跳过，并只统计真正发生变化或需要自动启用内发光的图层。
+- MCP/CLI `xomo.layer.style_settings(property=innerGlowSource)` 返回真实 `updatedLayerCount`；重复设置不再制造空 History/Undo，而是明确报告没有可修改目标。
+
+### Verification
+- 图层样式批量模型与 MCP 注册表定向测试 2/2 通过，覆盖混合值、锁定层、自动启用、属性保留、重复值零操作、实际更新数量和边缘/中心往返；SwiftPM CLI 2/2、发布契约 4/4（10 条断言）通过。下一次完整 Release、全量测试、真实冒烟与 `/Applications` 覆盖门禁仍为 rc520。
+
 ## 2.12.0-rc485 - 2026-07-23
 
 ### Fixed
