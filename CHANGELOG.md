@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.12.0-rc462 - 2026-07-22
+
+### Changed
+- 投影角度 setter 返回实际修改的可编辑选中图层数；MCP `xomo.layer.style_settings(property=shadowAngle)` 返回 `updatedLayerCount` 与 `globalLightUpdated`。
+- 投影角度继续规范化到 -180°…180°；使用全局光的选中层更新文档全局角度，局部光图层保持独立，同时同步重算每层投影偏移。
+
+### Fixed
+- 已处于等价目标角度、投影已启用且偏移一致的选中层不再计入结果；315° 与 -45° 等规范化等价值不再制造空 Undo/History。
+- 共享角度事务先计算候选样式和全局光变化再提交，避免零变化时提前写入 Undo；MCP 对零变化明确失败，并通过 `globalLightUpdated` 揭示文档级联动。
+
+### Verification
+- 投影角度真实数量、全局/局部光混选、等价角度、派生偏移、锁定层、混合值控件、链接层渲染、投影距离及共享内阴影/斜面角度事务回归测试 7/7、SwiftPM CLI 2/2、发布版本契约 7/7 通过。
+
 ## 2.12.0-rc461 - 2026-07-22
 
 ### Changed

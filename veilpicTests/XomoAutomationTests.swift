@@ -4519,11 +4519,15 @@ struct XomoAutomationTests {
         var second = ImageEditorLayer.blank(name: "Second", size: canvasSize)
         var locked = ImageEditorLayer.blank(name: "Locked", size: canvasSize)
         first.style.shadowUsesGlobalLight = true
+        first.style.shadowEnabled = true
         first.style.shadowDistance = 12
         first.style.shadowAngle = 10
+        first.style.shadowOffset = ImageEditorLayerStyle.shadowOffset(distance: 12, angle: 35)
         second.style.shadowUsesGlobalLight = false
+        second.style.shadowEnabled = true
         second.style.shadowDistance = 20
-        second.style.shadowAngle = -70
+        second.style.shadowAngle = -45
+        second.style.shadowOffset = ImageEditorLayerStyle.shadowOffset(distance: 20, angle: -45)
         locked.style.shadowUsesGlobalLight = false
         locked.style.shadowAngle = 90
         locked.isLocked = true
@@ -4548,6 +4552,8 @@ struct XomoAutomationTests {
         ))
 
         #expect(result.ok)
+        #expect(result.result?.objectValue?["updatedLayerCount"] == .number(1))
+        #expect(result.result?.objectValue?["globalLightUpdated"] == .bool(true))
         #expect(viewModel.document.globalLightAngle == -45)
         let firstStyle = viewModel.document.layers[0].style
         let secondStyle = viewModel.document.layers[1].style
@@ -4565,6 +4571,31 @@ struct XomoAutomationTests {
         #expect(secondStyle.shadowEnabled)
         #expect(viewModel.document.history.count == historyCount + 1)
         #expect(viewModel.document.selectedLayerIDs == [first.id, second.id, locked.id])
+
+        let historyAfterUpdate = viewModel.document.history.count
+        let repeated = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("shadowAngle"),
+                "value": .number(315)
+            ]
+        ))
+        #expect(!repeated.ok)
+        #expect(viewModel.document.history.count == historyAfterUpdate)
+
+        let changedAgain = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("shadowAngle"),
+                "value": .number(-170)
+            ]
+        ))
+        #expect(changedAgain.ok)
+        #expect(changedAgain.result?.objectValue?["updatedLayerCount"] == .number(2))
+        #expect(changedAgain.result?.objectValue?["globalLightUpdated"] == .bool(true))
+        #expect(viewModel.document.globalLightAngle == -170)
     }
 
     @Test func registrySetsLayerStyleInnerShadowAngleAcrossGlobalAndLocalLight() throws {

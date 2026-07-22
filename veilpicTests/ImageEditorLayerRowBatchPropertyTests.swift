@@ -1155,7 +1155,7 @@ struct ImageEditorLayerRowBatchPropertyTests {
         let historyCount = viewModel.document.history.count
 
         #expect(viewModel.selectedLayerShadowAngleState == .mixed)
-        viewModel.setSelectedLayerShadowAngle(-45)
+        #expect(viewModel.setSelectedLayerShadowAngle(-45) == 1)
         #expect(viewModel.selectedLayerShadowAngleState == .value(-45))
         #expect(viewModel.document.globalLightAngle == -45)
         let firstStyle = try layer(firstID, in: viewModel).style
@@ -1174,6 +1174,10 @@ struct ImageEditorLayerRowBatchPropertyTests {
         #expect(secondStyle.shadowEnabled)
         #expect(viewModel.document.history.count == historyCount + 1)
         #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+
+        let historyAfterUpdate = viewModel.document.history.count
+        #expect(viewModel.setSelectedLayerShadowAngle(315) == 0)
+        #expect(viewModel.document.history.count == historyAfterUpdate)
 
         viewModel.undo()
         #expect(viewModel.document.globalLightAngle == 35)
@@ -1202,11 +1206,15 @@ struct ImageEditorLayerRowBatchPropertyTests {
         let viewModel = fixture.viewModel
         viewModel.document.globalLightAngle = 35
         viewModel.document.layers[0].style.shadowUsesGlobalLight = true
+        viewModel.document.layers[0].style.shadowEnabled = true
         viewModel.document.layers[0].style.shadowDistance = 12
         viewModel.document.layers[0].style.shadowAngle = 10
+        viewModel.document.layers[0].style.shadowOffset = ImageEditorLayerStyle.shadowOffset(distance: 12, angle: 35)
         viewModel.document.layers[1].style.shadowUsesGlobalLight = false
+        viewModel.document.layers[1].style.shadowEnabled = true
         viewModel.document.layers[1].style.shadowDistance = 20
-        viewModel.document.layers[1].style.shadowAngle = -70
+        viewModel.document.layers[1].style.shadowAngle = -45
+        viewModel.document.layers[1].style.shadowOffset = ImageEditorLayerStyle.shadowOffset(distance: 20, angle: -45)
         viewModel.document.layers[2].style.shadowUsesGlobalLight = false
         viewModel.document.layers[2].style.shadowAngle = 90
         viewModel.document.layers[2].isLocked = true

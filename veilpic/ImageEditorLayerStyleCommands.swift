@@ -1131,7 +1131,8 @@ extension ImageEditorViewModel {
         }
     }
 
-    func setSelectedLayerShadowAngle(_ angle: Double) {
+    @discardableResult
+    func setSelectedLayerShadowAngle(_ angle: Double) -> Int {
         setSelectedLayerLightAngle(angle, effect: .shadow)
     }
 
@@ -1524,30 +1525,48 @@ extension ImageEditorViewModel {
         return normalized
     }
 
+    @discardableResult
     private func setSelectedLayerLightAngle(
         _ angle: Double,
         effect: ImageEditorLayerLightEffect
-    ) {
+    ) -> Int {
         let targetIndices = selectedLayerStyleTargetIndices()
         guard !targetIndices.isEmpty else {
             statusText = L10n.text("imageEditor.status.layerLocked")
-            return
+            return 0
         }
         let normalizedAngle = normalizedLightAngle(CGFloat(angle))
         let updatesGlobalLight = targetIndices.contains {
             effect.usesGlobalLight(in: self.document.layers[$0].style)
         }
+        let globalLightChanged = updatesGlobalLight
+            && abs(document.globalLightAngle - normalizedAngle) > 0.001
+        let updates = targetIndices.compactMap { index -> (Int, ImageEditorLayerStyle)? in
+            let originalStyle = document.layers[index].style
+            var style = originalStyle
+            setLayerStyleLightAngle(normalizedAngle, effect: effect, style: &style)
+            let storedStyleChanged = ImageEditorProjectLayerStyle(style: style)
+                != ImageEditorProjectLayerStyle(style: originalStyle)
+            let linkedGlobalLightChanged = globalLightChanged
+                && effect.usesGlobalLight(in: originalStyle)
+            guard storedStyleChanged || linkedGlobalLightChanged else { return nil }
+            return (index, style)
+        }
+        guard globalLightChanged || !updates.isEmpty else {
+            statusText = L10n.text("imageEditor.status.operationFailed")
+            return 0
+        }
+
         pushUndo()
-        if updatesGlobalLight {
+        if globalLightChanged {
             document.globalLightAngle = normalizedAngle
         }
-        for index in targetIndices {
-            var style = document.layers[index].style
-            setLayerStyleLightAngle(normalizedAngle, effect: effect, style: &style)
+        for (index, style) in updates {
             document.layers[index].style = style
         }
         appendHistory(L10n.text("imageEditor.history.layerStyle"))
         statusText = L10n.text("imageEditor.status.layerStyleUpdated")
+        return updates.count
     }
 
     private func setLayerStyleLightAngle(
@@ -1559,7 +1578,10 @@ extension ImageEditorViewModel {
         case .shadow:
             style.shadowEnabled = true
             style.shadowAngle = angle
-            style.shadowOffset = style.resolvedShadowOffset(globalLightAngle: document.globalLightAngle)
+            style.shadowOffset = ImageEditorLayerStyle.shadowOffset(
+                distance: style.shadowDistance,
+                angle: angle
+            )
         case .innerShadow:
             style.innerShadowEnabled = true
             style.innerShadowColor = innerShadowColor()
