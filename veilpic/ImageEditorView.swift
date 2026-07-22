@@ -7359,12 +7359,15 @@ struct ImageEditorView: View {
                     accessibilityIdentifier: "image-editor-layer-style-inner-glow-color"
                 )
                 HStack {
-                    Stepper(
-                        L10n.format("imageEditor.properties.innerGlowBlurValue", Int(viewModel.selectedLayerInnerGlowBlur.rounded())),
+                    layerStyleNumericStepper(
+                        state: viewModel.selectedLayerInnerGlowBlurState,
                         value: selectedLayerInnerGlowBlurBinding,
-                        in: 0...40,
-                        step: 1
-                    )
+                        range: 0...40,
+                        step: 1,
+                        accessibilityIdentifier: "image-editor-layer-style-inner-glow-blur"
+                    ) { value in
+                        L10n.format("imageEditor.properties.innerGlowBlurValue", Int(value.rounded()))
+                    }
                     Stepper(
                         L10n.format("imageEditor.properties.innerGlowChokeValue", Int(viewModel.selectedLayerInnerGlowChoke.rounded())),
                         value: selectedLayerInnerGlowChokeBinding,

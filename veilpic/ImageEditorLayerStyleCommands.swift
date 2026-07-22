@@ -535,6 +535,10 @@ extension ImageEditorViewModel {
         Double(document.selectedLayer?.style.innerGlowBlur ?? 8)
     }
 
+    var selectedLayerInnerGlowBlurState: ImageEditorLayerStyleValueState<CGFloat> {
+        selectedLayerStyleValueState(\.innerGlowBlur)
+    }
+
     var selectedLayerInnerGlowChoke: Double {
         Double(document.selectedLayer?.style.innerGlowChoke ?? 2)
     }
@@ -1345,7 +1349,8 @@ extension ImageEditorViewModel {
         }
     }
 
-    func setSelectedLayerInnerGlowBlur(_ blur: Double) {
+    @discardableResult
+    func setSelectedLayerInnerGlowBlur(_ blur: Double) -> Int {
         updateSelectedLayerStyle {
             $0.innerGlowEnabled = true
             $0.innerGlowBlur = max(0, min(40, CGFloat(blur)))

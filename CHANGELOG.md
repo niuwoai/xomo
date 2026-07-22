@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.12.0-rc482 - 2026-07-23
+
+### Changed
+- 内发光模糊半径支持多选混合值：不同模糊半径同时选中时显示本地化“多个值”，并复用不可聚焦的图层样式数值步进器。
+- `xomo.layer.style_settings(property=innerGlowBlur)` 返回实际修改的 `updatedLayerCount`，让 MCP/CLI 调用可以核验真实结果。
+
+### Fixed
+- 内发光模糊继续夹取到 0–40 px；只更新启用状态与模糊半径，不覆盖颜色、透明度、阻塞、杂色或来源，锁定层和不适用层安全跳过。
+- 重复值或夹取后等价的设置不再制造空 Undo/History；MCP 对零实际变化明确失败。
+
+### Verification
+- 模型事务、混合值控件契约和 MCP 批量结果定向测试 3/3，SwiftPM CLI 2/2、发布契约 4/4（10 条断言）通过；下一次完整 Release、全量测试、真实界面冒烟与 `/Applications` 覆盖门禁为 rc520。
+
 ## 2.12.0-rc481 - 2026-07-23
 
 ### Fixed

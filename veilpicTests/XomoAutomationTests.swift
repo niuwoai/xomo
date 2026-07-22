@@ -4813,6 +4813,82 @@ struct XomoAutomationTests {
         #expect(viewModel.document.history.count == historyAfterUpdate)
     }
 
+    @Test func registrySetsLayerStyleInnerGlowBlurAcrossEditableSelection() throws {
+        let viewModel = makeViewModel()
+        let canvasSize = viewModel.document.canvasSize
+        var first = ImageEditorLayer.blank(name: "First", size: canvasSize)
+        var second = ImageEditorLayer.blank(name: "Second", size: canvasSize)
+        var locked = ImageEditorLayer.blank(name: "Locked", size: canvasSize)
+        first.style.innerGlowBlur = 4
+        first.style.innerGlowOpacity = 0.35
+        second.style.innerGlowEnabled = true
+        second.style.innerGlowBlur = 14
+        second.style.innerGlowChoke = 8
+        second.style.innerGlowSource = .center
+        second.style.innerGlowColor = .systemRed
+        locked.style.innerGlowBlur = 9
+        locked.isLocked = true
+        viewModel.document.layers = [first, second, locked]
+        viewModel.document.selectedLayerID = first.id
+        viewModel.document.selectedLayerIDs = [first.id, second.id, locked.id]
+        let historyCount = viewModel.document.history.count
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        try assertNumericLayerStylePropertySchema("innerGlowBlur", in: toolsResponse)
+
+        let result = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("innerGlowBlur"),
+                "value": .number(14)
+            ]
+        ))
+
+        #expect(result.ok)
+        #expect(result.result?.objectValue?["updatedLayerCount"] == .number(1))
+        #expect(viewModel.document.layers[0].style.innerGlowBlur == 14)
+        #expect(viewModel.document.layers[1].style.innerGlowBlur == 14)
+        #expect(viewModel.document.layers[2].style.innerGlowBlur == 9)
+        #expect(viewModel.document.layers[0].style.innerGlowEnabled)
+        #expect(viewModel.document.layers[1].style.innerGlowEnabled)
+        #expect(viewModel.document.layers[0].style.innerGlowOpacity == 0.35)
+        #expect(viewModel.document.layers[1].style.innerGlowChoke == 8)
+        #expect(viewModel.document.layers[1].style.innerGlowSource == .center)
+        #expect(viewModel.document.layers[1].style.innerGlowColor == .systemRed)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [first.id, second.id, locked.id])
+
+        let historyAfterUpdate = viewModel.document.history.count
+        let repeated = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("innerGlowBlur"),
+                "value": .number(14)
+            ]
+        ))
+        #expect(!repeated.ok)
+        #expect(viewModel.document.history.count == historyAfterUpdate)
+
+        let maximum = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("innerGlowBlur"),
+                "value": .number(100)
+            ]
+        ))
+        #expect(maximum.ok)
+        #expect(maximum.result?.objectValue?["updatedLayerCount"] == .number(2))
+        #expect(viewModel.document.layers[0].style.innerGlowBlur == 40)
+        #expect(viewModel.document.layers[1].style.innerGlowBlur == 40)
+        #expect(viewModel.document.layers[2].style.innerGlowBlur == 9)
+        #expect(viewModel.document.layers[1].style.innerGlowColor == .systemRed)
+    }
+
     @Test func registrySetsLayerStyleOuterGlowColorAcrossEditableSelection() throws {
         let viewModel = makeViewModel()
         let canvasSize = viewModel.document.canvasSize
