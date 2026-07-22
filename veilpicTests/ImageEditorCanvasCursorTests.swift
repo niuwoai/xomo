@@ -388,25 +388,30 @@ struct ImageEditorCanvasCursorTests {
         #expect(viewModel.canvasContentHit(at: CGPoint(x: frame.midX, y: frame.midY)) == .blocked)
     }
 
-    @Test func objectDragReleaseAlwaysClosesEvenWhenPointerLeavesCanvasWindow() {
-        #expect(
-            ImageEditorObjectDragEventPolicy.shouldFinish(
-                eventType: .leftMouseUp,
-                isObjectMoving: true
-            )
+    @Test func objectDragReleaseOnlyConsumesEventsForAnActiveMove() {
+        let activeMove = ImageEditorObjectDragEventPolicy.releaseDecision(
+            eventType: .leftMouseUp,
+            hasObjectMoveCandidate: true,
+            isObjectMoving: true
         )
-        #expect(
-            ImageEditorObjectDragEventPolicy.shouldFinish(
-                eventType: .leftMouseDragged,
-                isObjectMoving: true
-            ) == false
+        #expect(activeMove.shouldFinishMove)
+        #expect(activeMove.shouldConsumeEvent)
+
+        let candidateOnly = ImageEditorObjectDragEventPolicy.releaseDecision(
+            eventType: .leftMouseUp,
+            hasObjectMoveCandidate: true,
+            isObjectMoving: false
         )
-        #expect(
-            ImageEditorObjectDragEventPolicy.shouldFinish(
-                eventType: .leftMouseUp,
-                isObjectMoving: false
-            ) == false
+        #expect(!candidateOnly.shouldFinishMove)
+        #expect(!candidateOnly.shouldConsumeEvent)
+
+        let unrelatedDrag = ImageEditorObjectDragEventPolicy.releaseDecision(
+            eventType: .leftMouseDragged,
+            hasObjectMoveCandidate: true,
+            isObjectMoving: true
         )
+        #expect(!unrelatedDrag.shouldFinishMove)
+        #expect(!unrelatedDrag.shouldConsumeEvent)
     }
 
     @Test func objectDragStartsOnlyAfterThePointerLeavesClickTolerance() {

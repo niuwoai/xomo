@@ -20,17 +20,38 @@ enum ImageEditorCanvasMiddleMousePanGeometry {
 enum ImageEditorObjectDragEventPolicy {
     static let activationDistance: CGFloat = 3
 
+    struct ReleaseDecision: Equatable {
+        let shouldFinishMove: Bool
+        let shouldConsumeEvent: Bool
+    }
+
     static func shouldActivate(from start: CGPoint, to current: CGPoint) -> Bool {
         let deltaX = current.x - start.x
         let deltaY = current.y - start.y
         return hypot(deltaX, deltaY) >= activationDistance
     }
 
-    static func shouldFinish(
+    static func releaseDecision(
         eventType: NSEvent.EventType,
+        hasObjectMoveCandidate: Bool,
         isObjectMoving: Bool
-    ) -> Bool {
-        return eventType == .leftMouseUp && isObjectMoving
+    ) -> ReleaseDecision {
+        guard eventType == .leftMouseUp,
+              hasObjectMoveCandidate || isObjectMoving else {
+            return ReleaseDecision(
+                shouldFinishMove: false,
+                shouldConsumeEvent: false
+            )
+        }
+
+        // A mouse-down can select an object without ever crossing the drag
+        // threshold. That candidate-only release must pass through so a stale
+        // canvas candidate cannot swallow the mouse-up of the next toolbar
+        // button. Only a real object-move transaction owns the release event.
+        return ReleaseDecision(
+            shouldFinishMove: isObjectMoving,
+            shouldConsumeEvent: isObjectMoving
+        )
     }
 }
 
@@ -237,16 +258,18 @@ final class ScrollWheelZoomNSView: NSView {
             // once a drag has started, otherwise the next click is swallowed
             // and the closed-hand cursor can remain stuck indefinitely.
             guard hasObjectMoveCandidate || isObjectMoving else { return false }
-            if ImageEditorObjectDragEventPolicy.shouldFinish(
+            let releaseDecision = ImageEditorObjectDragEventPolicy.releaseDecision(
                 eventType: event.type,
+                hasObjectMoveCandidate: hasObjectMoveCandidate,
                 isObjectMoving: isObjectMoving
-            ) {
+            )
+            if releaseDecision.shouldFinishMove {
                 onObjectMoveEnded?()
             }
             isObjectMoving = false
             hasObjectMoveCandidate = false
             objectMoveStartPoint = nil
-            return true
+            return releaseDecision.shouldConsumeEvent
         default:
             return false
         }
