@@ -449,27 +449,28 @@ struct XomoComponentLibraryPanel: View {
     private func componentPreview(_ item: XomoComponentLibraryPreviewItem) -> some View {
         Group {
             if let component = item.component {
-                Button {
-                    // Choosing a component is an object-library action, not
-                    // a drawing gesture. Keep the native Button + draggable
-                    // mouse sequence on one run-loop turn: rebuilding this
-                    // tile through a temporary pending-selection state before
-                    // the click finishes can strand AppKit's drag source and
-                    // leave the toolbar outside its normal hit-test path.
-                    NSCursor.arrow.set()
-                    viewModel.insertXomoComponent(component)
-                    NSCursor.arrow.set()
-                } label: {
-                    componentPreviewLabel(item, isAvailable: true)
+                // A native Button and a native drag source on the same view
+                // can leave AppKit's button tracking session alive when a
+                // component drag finishes. The following toolbar click then
+                // never reaches SwiftUI. Keep tapping and dragging as sibling
+                // gestures on an ordinary hit-test view instead.
+                componentPreviewLabel(item, isAvailable: true)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    insertComponent(component)
                 }
-                .buttonStyle(.plain)
-                .focusable(false)
                 .xomoDraggable(component.rawValue) {
                     XomoComponentDragPreview(
                         kind: component,
                         tokens: viewModel.activeXomoComponentTokens,
                         displaySize: viewModel.xomoComponentDragPreviewSize(component)
                     )
+                }
+                .focusable(false)
+                .accessibilityElement(children: .combine)
+                .accessibilityAddTraits(.isButton)
+                .accessibilityAction {
+                    insertComponent(component)
                 }
                 .accessibilityIdentifier("xomo-component-library-item-\(component.rawValue)")
                 .help(L10n.text("xomo.componentLibrary.dragOrInsert"))
@@ -479,6 +480,12 @@ struct XomoComponentLibraryPanel: View {
                     .accessibilityLabel(L10n.text(item.titleKey))
             }
         }
+    }
+
+    private func insertComponent(_ component: XomoComponentKind) {
+        NSCursor.arrow.set()
+        viewModel.insertXomoComponent(component)
+        NSCursor.arrow.set()
     }
 
     private func componentPreviewLabel(_ item: XomoComponentLibraryPreviewItem, isAvailable: Bool) -> some View {

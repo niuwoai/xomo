@@ -437,6 +437,27 @@ struct ImageEditorCanvasCursorTests {
         )
     }
 
+    @Test func componentTilesDoNotCombineNativeButtonTrackingWithDragSources() throws {
+        let source = try String(
+            contentsOf: URL(fileURLWithPath: #filePath)
+                .deletingLastPathComponent()
+                .deletingLastPathComponent()
+                .appendingPathComponent("veilpic/XomoLeftSidebar.swift"),
+            encoding: .utf8
+        )
+        let previewStart = try #require(source.range(of: "private func componentPreview("))
+        let labelStart = try #require(
+            source[previewStart.upperBound...].range(of: "private func componentPreviewLabel(")
+        )
+        let previewSource = source[previewStart.lowerBound..<labelStart.lowerBound]
+
+        #expect(previewSource.contains("componentPreviewLabel(item, isAvailable: true)"))
+        #expect(previewSource.contains(".onTapGesture"))
+        #expect(previewSource.contains(".xomoDraggable(component.rawValue)"))
+        #expect(previewSource.contains(".accessibilityAction"))
+        #expect(!previewSource.contains("Button {"))
+    }
+
     @Test func moveToolShowsCopyBadgeOnlyAfterAnOptionDragStarts() {
         let normal = ImageEditorCanvasCursor.objectMoveCursor()
         let duplicating = ImageEditorCanvasCursor.objectMoveCursor(isDuplicating: true)
