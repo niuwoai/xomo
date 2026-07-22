@@ -2500,7 +2500,20 @@ final class XomoAutomationRegistry {
             return .object([
                 "updatedLayerCount": .number(Double(updatedLayerCount))
             ])
-        case "innerShadowAngle": viewModel.setSelectedLayerInnerShadowAngle(try number())
+        case "innerShadowAngle":
+            let previousGlobalLightAngle = viewModel.document.globalLightAngle
+            let updatedLayerCount = viewModel.setSelectedLayerInnerShadowAngle(try number())
+            guard updatedLayerCount > 0 else {
+                throw XomoAutomationCallError.operationFailed(
+                    "No editable layer needs the requested inner shadow angle"
+                )
+            }
+            return .object([
+                "updatedLayerCount": .number(Double(updatedLayerCount)),
+                "globalLightUpdated": .bool(
+                    abs(viewModel.document.globalLightAngle - previousGlobalLightAngle) > 0.001
+                )
+            ])
         case "outerGlowOpacity": viewModel.setSelectedLayerOuterGlowOpacity(try number())
         case "outerGlowColor": viewModel.setSelectedLayerOuterGlowColor(viewModel.foregroundColor)
         case "outerGlowBlur": viewModel.setSelectedLayerOuterGlowBlur(try number())

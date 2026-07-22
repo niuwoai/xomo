@@ -1055,6 +1055,38 @@ struct ImageEditorLayerStyleTests {
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStyle"))
     }
 
+    @Test func imageEditorInnerShadowAngleUsesGlobalLightWithoutReplacingExistingColor() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let baseImage = solidImage(color: .systemBlue, size: canvasSize)
+        let layerImage = centerRectImage(size: canvasSize, color: .systemGreen)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: baseImage) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(
+            layerImage,
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+
+        viewModel.foregroundColor = .systemRed
+        viewModel.setSelectedLayerInnerShadowOpacity(1)
+        viewModel.setSelectedLayerInnerShadowBlur(0)
+        viewModel.setSelectedLayerInnerShadowDistance(10)
+        viewModel.setSelectedLayerInnerShadowUsesGlobalLight(true)
+        viewModel.setSelectedLayerInnerShadowAngle(0)
+        let rightwardShadow = try #require(viewModel.currentImage.qingtuPNGData())
+        let originalColor = ImageEditorProjectColor(
+            color: try #require(viewModel.document.selectedLayer).style.innerShadowColor
+        )
+
+        viewModel.foregroundColor = .systemYellow
+        #expect(viewModel.setSelectedLayerInnerShadowAngle(180) == 1)
+
+        let styledLayer = try #require(viewModel.document.selectedLayer)
+        let leftwardShadow = try #require(viewModel.currentImage.qingtuPNGData())
+        #expect(viewModel.document.globalLightAngle == 180)
+        #expect(styledLayer.style.resolvedInnerShadowAngle(globalLightAngle: viewModel.document.globalLightAngle) == 180)
+        #expect(ImageEditorProjectColor(color: styledLayer.style.innerShadowColor) == originalColor)
+        #expect(leftwardShadow != rightwardShadow)
+    }
+
     @Test func imageEditorInnerShadowChokeAndNoiseRoundTripProjectState() async throws {
         let canvasSize = NSSize(width: 80, height: 60)
         let baseImage = solidImage(color: .systemBlue, size: canvasSize)

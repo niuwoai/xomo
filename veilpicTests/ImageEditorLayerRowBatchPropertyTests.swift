@@ -1298,18 +1298,30 @@ struct ImageEditorLayerRowBatchPropertyTests {
         let secondID = fixture.layers[1].id
         let lockedID = fixture.layers[2].id
         let historyCount = viewModel.document.history.count
+        let firstColor = ImageEditorProjectColor(
+            color: try layer(firstID, in: viewModel).style.innerShadowColor
+        )
+        let secondColor = ImageEditorProjectColor(
+            color: try layer(secondID, in: viewModel).style.innerShadowColor
+        )
 
         #expect(viewModel.selectedLayerInnerShadowAngleState == .mixed)
-        viewModel.setSelectedLayerInnerShadowAngle(-45)
+        #expect(viewModel.setSelectedLayerInnerShadowAngle(-45) == 2)
         #expect(viewModel.selectedLayerInnerShadowAngleState == .value(-45))
         #expect(viewModel.document.globalLightAngle == -45)
         #expect((try layer(firstID, in: viewModel)).style.resolvedInnerShadowAngle(globalLightAngle: viewModel.document.globalLightAngle) == -45)
         #expect((try layer(secondID, in: viewModel)).style.resolvedInnerShadowAngle(globalLightAngle: viewModel.document.globalLightAngle) == -45)
         #expect((try layer(lockedID, in: viewModel)).style.innerShadowAngle == 90)
+        #expect(ImageEditorProjectColor(color: try layer(firstID, in: viewModel).style.innerShadowColor) == firstColor)
+        #expect(ImageEditorProjectColor(color: try layer(secondID, in: viewModel).style.innerShadowColor) == secondColor)
         #expect((try layer(firstID, in: viewModel)).style.innerShadowEnabled)
         #expect((try layer(secondID, in: viewModel)).style.innerShadowEnabled)
         #expect(viewModel.document.history.count == historyCount + 1)
         #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+
+        let historyAfterUpdate = viewModel.document.history.count
+        #expect(viewModel.setSelectedLayerInnerShadowAngle(315) == 0)
+        #expect(viewModel.document.history.count == historyAfterUpdate)
 
         viewModel.undo()
         #expect(viewModel.document.globalLightAngle == 35)
@@ -1331,6 +1343,14 @@ struct ImageEditorLayerRowBatchPropertyTests {
         #expect(source.contains("value: selectedLayerInnerShadowAngleBinding"))
         #expect(source.contains("image-editor-layer-style-inner-shadow-angle"))
         #expect(source.contains("L10n.format(\"imageEditor.properties.innerShadowAngleValue\""))
+        let helperStart = try #require(
+            source.range(of: "private func layerStyleNumericStepper(")
+        )
+        let helperEnd = try #require(
+            source[helperStart.upperBound...].range(of: "private func guidePath(")
+        )
+        let helperSource = source[helperStart.lowerBound..<helperEnd.lowerBound]
+        #expect(helperSource.contains(".focusable(false)"))
     }
 
     private func innerShadowAngleFixture() -> Fixture {
@@ -1338,9 +1358,13 @@ struct ImageEditorLayerRowBatchPropertyTests {
         let viewModel = fixture.viewModel
         viewModel.document.globalLightAngle = 35
         viewModel.document.layers[0].style.innerShadowUsesGlobalLight = true
+        viewModel.document.layers[0].style.innerShadowEnabled = true
         viewModel.document.layers[0].style.innerShadowAngle = 10
+        viewModel.document.layers[0].style.innerShadowColor = .systemRed
         viewModel.document.layers[1].style.innerShadowUsesGlobalLight = false
+        viewModel.document.layers[1].style.innerShadowEnabled = true
         viewModel.document.layers[1].style.innerShadowAngle = -70
+        viewModel.document.layers[1].style.innerShadowColor = .systemGreen
         viewModel.document.layers[2].style.innerShadowUsesGlobalLight = false
         viewModel.document.layers[2].style.innerShadowAngle = 90
         viewModel.document.layers[2].isLocked = true

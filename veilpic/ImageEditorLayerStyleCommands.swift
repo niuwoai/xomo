@@ -1266,7 +1266,8 @@ extension ImageEditorViewModel {
         }
     }
 
-    func setSelectedLayerInnerShadowAngle(_ angle: Double) {
+    @discardableResult
+    func setSelectedLayerInnerShadowAngle(_ angle: Double) -> Int {
         setSelectedLayerLightAngle(angle, effect: .innerShadow)
     }
 
@@ -1660,8 +1661,11 @@ extension ImageEditorViewModel {
                 angle: angle
             )
         case .innerShadow:
+            let wasEnabled = style.innerShadowEnabled
             style.innerShadowEnabled = true
-            style.innerShadowColor = innerShadowColor()
+            if !wasEnabled {
+                style.innerShadowColor = innerShadowColor()
+            }
             style.innerShadowAngle = angle
         case .bevel:
             style.bevelEnabled = true

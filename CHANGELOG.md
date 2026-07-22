@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.12.0-rc472 - 2026-07-22
+
+### Changed
+- 内阴影角度批量命令返回实际修改的可编辑选中图层数；MCP `xomo.layer.style_settings(property=innerShadowAngle)` 同时返回 `updatedLayerCount` 与 `globalLightUpdated`。
+- 保持 Photoshop 式 -180°…180° 角度规范化、全局光／局部光混选语义和不可聚焦的多选步进器；文档全局光变化继续驱动其它链接效果，但不冒充直接编辑数量。
+
+### Fixed
+- 调整已经启用的内阴影角度不再把用户定制颜色重置为当前前景色；只有首次启用效果时才初始化颜色。
+- 315° 与 -45° 等等价输入不再制造空 Undo/History，锁定层保持不变，MCP 对零实际变化明确失败。
+
+### Verification
+- 内阴影角度批量事务、颜色保留、等价角度、锁定层、界面非焦点契约、MCP 结果以及方向性合成测试 4/4、发布版本契约 7/7 通过。
+- 外部项目持续占用唯一 Swift 构建槽，本版未并发启动独立 CLI 测试；CLI 与 App 的 rc472 版本一致性已由发布契约验证。
+- 本小版本不覆盖 `/Applications`；下一次完整 Release、冒烟与安装门禁仍为 rc480。
+
 ## 2.12.0-rc471 - 2026-07-22
 
 ### Fixed

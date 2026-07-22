@@ -4665,9 +4665,13 @@ struct XomoAutomationTests {
         var second = ImageEditorLayer.blank(name: "Second", size: canvasSize)
         var locked = ImageEditorLayer.blank(name: "Locked", size: canvasSize)
         first.style.innerShadowUsesGlobalLight = true
+        first.style.innerShadowEnabled = true
         first.style.innerShadowAngle = 10
+        first.style.innerShadowColor = .systemRed
         second.style.innerShadowUsesGlobalLight = false
+        second.style.innerShadowEnabled = true
         second.style.innerShadowAngle = -70
+        second.style.innerShadowColor = .systemGreen
         locked.style.innerShadowUsesGlobalLight = false
         locked.style.innerShadowAngle = 90
         locked.isLocked = true
@@ -4678,6 +4682,8 @@ struct XomoAutomationTests {
         let historyCount = viewModel.document.history.count
         let registry = XomoAutomationRegistry.shared
         registry.register(viewModel)
+        let firstColor = ImageEditorProjectColor(color: first.style.innerShadowColor)
+        let secondColor = ImageEditorProjectColor(color: second.style.innerShadowColor)
 
         let toolsResponse = registry.execute(request(operation: "tools"))
         try assertNumericLayerStylePropertySchema("innerShadowAngle", in: toolsResponse)
@@ -4692,14 +4698,30 @@ struct XomoAutomationTests {
         ))
 
         #expect(result.ok)
+        #expect(result.result?.objectValue?["updatedLayerCount"] == .number(2))
+        #expect(result.result?.objectValue?["globalLightUpdated"] == .bool(true))
         #expect(viewModel.document.globalLightAngle == -45)
         #expect(viewModel.document.layers[0].style.resolvedInnerShadowAngle(globalLightAngle: viewModel.document.globalLightAngle) == -45)
         #expect(viewModel.document.layers[1].style.resolvedInnerShadowAngle(globalLightAngle: viewModel.document.globalLightAngle) == -45)
         #expect(viewModel.document.layers[2].style.innerShadowAngle == 90)
+        #expect(ImageEditorProjectColor(color: viewModel.document.layers[0].style.innerShadowColor) == firstColor)
+        #expect(ImageEditorProjectColor(color: viewModel.document.layers[1].style.innerShadowColor) == secondColor)
         #expect(viewModel.document.layers[0].style.innerShadowEnabled)
         #expect(viewModel.document.layers[1].style.innerShadowEnabled)
         #expect(viewModel.document.history.count == historyCount + 1)
         #expect(viewModel.document.selectedLayerIDs == [first.id, second.id, locked.id])
+
+        let historyAfterUpdate = viewModel.document.history.count
+        let repeated = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("innerShadowAngle"),
+                "value": .number(315)
+            ]
+        ))
+        #expect(!repeated.ok)
+        #expect(viewModel.document.history.count == historyAfterUpdate)
     }
 
     @Test func registrySetsLayerStyleInnerShadowDistanceAcrossEditableSelection() throws {
