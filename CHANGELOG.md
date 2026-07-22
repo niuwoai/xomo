@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.12.0-rc460 - 2026-07-22
+
+### Changed
+- 投影轮廓 setter 返回实际修改图层数；MCP `xomo.layer.style_settings(property=shadowContour)` 返回 `updatedLayerCount`。
+- 五档轮廓继续通过标准不可聚焦菜单支持多选“多个值”，MCP schema 保持 `linear|soft|steep|cone|ring` 完整枚举。
+
+### Fixed
+- 已处于目标轮廓且投影已启用的图层、锁定层和不适用层不再计入结果；需要自动启用投影的图层仍视为真实更新。
+- 重复设置同一投影轮廓不再制造空 Undo/History，MCP 对零变化和非法枚举分别明确失败。
+
+### Verification
+- 投影轮廓真实数量、自动启用、重复值、非法枚举、锁定层、混合值菜单、真实 Alpha 轮廓与工程往返及投影杂色回归测试 5/5、SwiftPM CLI 2/2、发布版本契约 7/7 通过。
+
 ## 2.12.0-rc459 - 2026-07-22
 
 ### Changed

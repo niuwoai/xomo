@@ -1111,7 +1111,8 @@ extension ImageEditorViewModel {
         }
     }
 
-    func setSelectedLayerShadowContour(_ contour: ImageEditorLayerEffectContour) {
+    @discardableResult
+    func setSelectedLayerShadowContour(_ contour: ImageEditorLayerEffectContour) -> Int {
         updateSelectedLayerStyle {
             $0.shadowEnabled = true
             $0.shadowContour = contour

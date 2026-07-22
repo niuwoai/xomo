@@ -1,7 +1,8 @@
 # 像界（Xomo）产品概览
 
-> 最后更新：2026-07-22 | 当前版本：v2.12.0-rc459
+> 最后更新：2026-07-22 | 当前版本：v2.12.0-rc460
 
+v2.12.0-rc460 让投影轮廓成为结果可见的批量能力：已经处于目标轮廓且投影已启用、锁定层和不适用层安全跳过，需要自动启用投影的图层仍计入；五档轮廓继续使用不可聚焦的多选“多个值”菜单，MCP schema 完整公开 `linear|soft|steep|cone|ring`。重复设置不制造空 Undo/History，非法枚举与零变化均明确失败，成功返回 `updatedLayerCount`；真实像素回归确认轮廓改变阴影 Alpha 分布且工程往返不丢参数。定向与回归测试 5/5、CLI 2/2、发布契约 7/7 通过；下一次完整 Release、冒烟和 `/Applications` 覆盖门禁仍为 rc480。
 v2.12.0-rc459 让投影杂色批量更新具备真实结果：已经处于目标杂色且投影已启用、锁定层和不适用层安全跳过，需要自动启用投影的图层仍计入；输入继续夹取到 0%–100%，多选“多个值”控件保持不变。重复或夹取后等价的设置不制造空 Undo/History，MCP `xomo.layer.style_settings(property=shadowNoise)` 返回 `updatedLayerCount` 并对零变化明确失败；真实像素测试同时验证平滑/杂色整图差异、确定性纹理、源图层不变和工程往返。定向与回归测试 5/5、CLI 2/2、发布契约 7/7 通过；下一次完整 Release、冒烟和 `/Applications` 覆盖门禁仍为 rc480。
 v2.12.0-rc458 让投影扩展批量更新具备真实结果：已经处于目标扩展且投影已启用、锁定层和不适用层安全跳过，需要自动启用投影的图层仍计入；输入继续夹取到 0–24 px，多选“多个值”控件保持不变。重复或夹取后等价的设置不制造空 Undo/History，MCP `xomo.layer.style_settings(property=shadowSpread)` 返回 `updatedLayerCount` 并对零变化明确失败。定向与回归测试 5/5、CLI 2/2、发布契约 7/7 通过；下一次完整 Release、冒烟和 `/Applications` 覆盖门禁仍为 rc480。
 v2.12.0-rc457 让投影模糊半径批量更新具备真实结果：已经处于目标半径且投影已启用、锁定层和不适用层安全跳过，需要自动启用投影的图层仍计入；输入继续夹取到 0–30 px，多选“多个值”控件保持不变。重复或夹取后等价的设置不制造空 Undo/History，MCP `xomo.layer.style_settings(property=shadowBlur)` 返回 `updatedLayerCount` 并对零变化明确失败。定向与回归测试 5/5、CLI 2/2、发布契约 7/7 通过；下一次完整 Release、冒烟和 `/Applications` 覆盖门禁仍为 rc480。

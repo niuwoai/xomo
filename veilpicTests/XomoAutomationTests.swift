@@ -5508,6 +5508,19 @@ struct XomoAutomationTests {
 
     @Test func registrySetsLayerStyleShadowContourWithAdvertisedEnum() throws {
         let viewModel = makeViewModel()
+        let canvasSize = viewModel.document.canvasSize
+        var first = ImageEditorLayer.blank(name: "First", size: canvasSize)
+        var second = ImageEditorLayer.blank(name: "Second", size: canvasSize)
+        var locked = ImageEditorLayer.blank(name: "Locked", size: canvasSize)
+        first.style.shadowContour = .linear
+        second.style.shadowEnabled = true
+        second.style.shadowContour = .cone
+        locked.style.shadowContour = .soft
+        locked.isLocked = true
+        viewModel.document.layers = [first, second, locked]
+        viewModel.document.selectedLayerID = first.id
+        viewModel.document.selectedLayerIDs = [first.id, second.id, locked.id]
+        let historyCount = viewModel.document.history.count
         let registry = XomoAutomationRegistry.shared
         registry.register(viewModel)
 
@@ -5524,9 +5537,38 @@ struct XomoAutomationTests {
         ))
 
         #expect(result.ok)
-        #expect(viewModel.document.selectedLayer?.style.shadowContour == .cone)
-        #expect(viewModel.document.selectedLayer?.style.shadowEnabled == true)
+        #expect(result.result?.objectValue?["updatedLayerCount"] == .number(1))
+        #expect(viewModel.document.layers[0].style.shadowContour == .cone)
+        #expect(viewModel.document.layers[1].style.shadowContour == .cone)
+        #expect(viewModel.document.layers[2].style.shadowContour == .soft)
+        #expect(viewModel.document.layers[0].style.shadowEnabled)
+        #expect(viewModel.document.layers[1].style.shadowEnabled)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [first.id, second.id, locked.id])
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStyle"))
+
+        let historyAfterUpdate = viewModel.document.history.count
+        let repeated = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("shadowContour"),
+                "shadowContour": .string("cone")
+            ]
+        ))
+        #expect(!repeated.ok)
+        #expect(viewModel.document.history.count == historyAfterUpdate)
+
+        let invalid = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("shadowContour"),
+                "shadowContour": .string("unknown")
+            ]
+        ))
+        #expect(!invalid.ok)
+        #expect(viewModel.document.history.count == historyAfterUpdate)
     }
 
     @Test func registrySetsLayerStyleInnerShadowContourWithAdvertisedEnum() throws {
