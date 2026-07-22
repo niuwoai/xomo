@@ -1532,9 +1532,9 @@ extension ImageEditorViewModel {
         }
     }
 
-    func setSelectedLayerGradientOverlayStyle(_ style: ImageEditorGradientFillStyle) {
+    @discardableResult
+    func setSelectedLayerGradientOverlayStyle(_ style: ImageEditorGradientFillStyle) -> Int {
         updateSelectedLayerStyle {
-            setGradientOverlayDefaultColorsIfNeeded(style: &$0)
             $0.gradientOverlayEnabled = true
             $0.gradientOverlayStyle = style
         }
@@ -2063,12 +2063,6 @@ extension ImageEditorViewModel {
         let color = backgroundColor.usingColorSpace(.deviceRGB) ?? backgroundColor
         guard color.alphaComponent > 0.01 else { return .white }
         return backgroundColor
-    }
-
-    private func setGradientOverlayDefaultColorsIfNeeded(style: inout ImageEditorLayerStyle) {
-        guard !style.gradientOverlayEnabled else { return }
-        style.gradientOverlayStartColor = foregroundColor
-        style.gradientOverlayEndColor = gradientOverlayEndColor()
     }
 
     private func patternOverlayColor() -> NSColor {

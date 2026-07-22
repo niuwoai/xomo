@@ -6607,6 +6607,24 @@ struct XomoAutomationTests {
 
     @Test func registrySetsLayerStyleGradientOverlayStyleWithAdvertisedEnum() throws {
         let viewModel = makeViewModel()
+        let canvasSize = viewModel.document.canvasSize
+        var first = ImageEditorLayer.blank(name: "First", size: canvasSize)
+        var second = ImageEditorLayer.blank(name: "Second", size: canvasSize)
+        var locked = ImageEditorLayer.blank(name: "Locked", size: canvasSize)
+        first.style.gradientOverlayStyle = .linear
+        first.style.gradientOverlayStartColor = .systemBlue
+        first.style.gradientOverlayEndColor = .systemYellow
+        second.style.gradientOverlayStyle = .radial
+        second.style.gradientOverlayStartColor = .systemGreen
+        second.style.gradientOverlayEndColor = .systemPink
+        locked.style.gradientOverlayStyle = .linear
+        locked.style.gradientOverlayStartColor = .systemOrange
+        locked.style.gradientOverlayEndColor = .systemCyan
+        locked.isLocked = true
+        viewModel.document.layers = [first, second, locked]
+        viewModel.document.selectedLayerID = first.id
+        viewModel.document.selectedLayerIDs = [first.id, second.id, locked.id]
+        let historyCount = viewModel.document.history.count
         let registry = XomoAutomationRegistry.shared
         registry.register(viewModel)
 
@@ -6623,9 +6641,33 @@ struct XomoAutomationTests {
         ))
 
         #expect(result.ok)
-        #expect(viewModel.document.selectedLayer?.style.gradientOverlayStyle == .diamond)
-        #expect(viewModel.document.selectedLayer?.style.gradientOverlayEnabled == true)
+        #expect(result.result?.objectValue?["updatedLayerCount"] == .number(2))
+        #expect(viewModel.document.layers[0].style.gradientOverlayStyle == .diamond)
+        #expect(viewModel.document.layers[1].style.gradientOverlayStyle == .diamond)
+        #expect(viewModel.document.layers[2].style.gradientOverlayStyle == .linear)
+        #expect(viewModel.document.layers[0].style.gradientOverlayStartColor.isEqual(NSColor.systemBlue))
+        #expect(viewModel.document.layers[0].style.gradientOverlayEndColor.isEqual(NSColor.systemYellow))
+        #expect(viewModel.document.layers[1].style.gradientOverlayStartColor.isEqual(NSColor.systemGreen))
+        #expect(viewModel.document.layers[1].style.gradientOverlayEndColor.isEqual(NSColor.systemPink))
+        #expect(viewModel.document.layers[2].style.gradientOverlayStartColor.isEqual(NSColor.systemOrange))
+        #expect(viewModel.document.layers[2].style.gradientOverlayEndColor.isEqual(NSColor.systemCyan))
+        #expect(viewModel.document.layers[0].style.gradientOverlayEnabled)
+        #expect(viewModel.document.layers[1].style.gradientOverlayEnabled)
+        #expect(viewModel.document.history.count == historyCount + 1)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStyle"))
+        #expect(viewModel.document.selectedLayerIDs == [first.id, second.id, locked.id])
+
+        let historyAfterUpdate = viewModel.document.history.count
+        let repeated = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("gradientOverlayStyle"),
+                "gradientOverlayStyle": .string("diamond")
+            ]
+        ))
+        #expect(!repeated.ok)
+        #expect(viewModel.document.history.count == historyAfterUpdate)
     }
 
     @Test func registrySetsLayerStylePatternOverlayKindWithAdvertisedEnum() throws {
