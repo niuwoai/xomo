@@ -1540,9 +1540,9 @@ extension ImageEditorViewModel {
         }
     }
 
-    func setSelectedLayerGradientOverlayScale(_ scale: Double) {
+    @discardableResult
+    func setSelectedLayerGradientOverlayScale(_ scale: Double) -> Int {
         updateSelectedLayerStyle {
-            setGradientOverlayDefaultColorsIfNeeded(style: &$0)
             $0.gradientOverlayEnabled = true
             $0.gradientOverlayScale = max(0.25, min(4, CGFloat(scale)))
         }

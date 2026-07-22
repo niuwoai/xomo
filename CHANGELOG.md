@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.12.0-rc499 - 2026-07-23
+
+### Fixed
+- 渐变叠加缩放现在是参数独立的批量事务：只启用渐变叠加并修改夹取到 25%–400% 的缩放，不再在效果尚未启用时覆盖各图层已经配置的渐变起止色。
+- 批量缩放返回实际发生变化的可编辑图层数；锁定层、重复等价值和不适用层安全跳过，零变化不创建空 Undo/History。
+
+### Automation
+- `xomo.layer.style_settings property=gradientOverlayScale` 现在返回 `updatedLayerCount`；没有图层需要变化时明确失败，界面与 MCP/CLI 共用同一事务。
+
+### Verification
+- Xcode 批量属性套件与精确 MCP 用例 125/125、SwiftPM CLI 2/2、发布契约 4/4（10 条断言）通过；覆盖各图层渐变起止色保留、启用状态、锁定层保护、真实修改数、重复值零历史及 MCP 零变化失败。下一小步处理渐变叠加角度的同类事务一致性，常规完整 Release、全量冒烟与 `/Applications` 覆盖门禁仍为 rc520。
+
 ## 2.12.0-rc498 - 2026-07-23
 
 ### Fixed

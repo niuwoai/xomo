@@ -2950,17 +2950,29 @@ struct ImageEditorLayerRowBatchPropertyTests {
         let secondID = fixture.layers[1].id
         let lockedID = fixture.layers[2].id
         let historyCount = viewModel.document.history.count
+        let firstStartColor = try layer(firstID, in: viewModel).style.gradientOverlayStartColor
+        let firstEndColor = try layer(firstID, in: viewModel).style.gradientOverlayEndColor
+        let secondStartColor = try layer(secondID, in: viewModel).style.gradientOverlayStartColor
+        let secondEndColor = try layer(secondID, in: viewModel).style.gradientOverlayEndColor
 
         #expect(viewModel.selectedLayerGradientOverlayScaleState == .mixed)
-        viewModel.setSelectedLayerGradientOverlayScale(1.5)
+        #expect(viewModel.setSelectedLayerGradientOverlayScale(1.5) == 2)
         #expect(viewModel.selectedLayerGradientOverlayScaleState == .value(1.5))
         #expect((try layer(firstID, in: viewModel)).style.gradientOverlayScale == 1.5)
         #expect((try layer(secondID, in: viewModel)).style.gradientOverlayScale == 1.5)
         #expect((try layer(lockedID, in: viewModel)).style.gradientOverlayScale == 1)
+        #expect((try layer(firstID, in: viewModel)).style.gradientOverlayStartColor.isEqual(firstStartColor))
+        #expect((try layer(firstID, in: viewModel)).style.gradientOverlayEndColor.isEqual(firstEndColor))
+        #expect((try layer(secondID, in: viewModel)).style.gradientOverlayStartColor.isEqual(secondStartColor))
+        #expect((try layer(secondID, in: viewModel)).style.gradientOverlayEndColor.isEqual(secondEndColor))
         #expect((try layer(firstID, in: viewModel)).style.gradientOverlayEnabled)
         #expect((try layer(secondID, in: viewModel)).style.gradientOverlayEnabled)
         #expect(viewModel.document.history.count == historyCount + 1)
         #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+
+        let historyAfterUpdate = viewModel.document.history.count
+        #expect(viewModel.setSelectedLayerGradientOverlayScale(1.5) == 0)
+        #expect(viewModel.document.history.count == historyAfterUpdate)
 
         viewModel.undo()
         #expect(viewModel.selectedLayerGradientOverlayScaleState == .mixed)
@@ -2987,8 +2999,14 @@ struct ImageEditorLayerRowBatchPropertyTests {
         let fixture = makeFixture()
         let viewModel = fixture.viewModel
         viewModel.document.layers[0].style.gradientOverlayScale = 0.5
+        viewModel.document.layers[0].style.gradientOverlayStartColor = .systemBlue
+        viewModel.document.layers[0].style.gradientOverlayEndColor = .systemYellow
         viewModel.document.layers[1].style.gradientOverlayScale = 2
+        viewModel.document.layers[1].style.gradientOverlayStartColor = .systemGreen
+        viewModel.document.layers[1].style.gradientOverlayEndColor = .systemPink
         viewModel.document.layers[2].style.gradientOverlayScale = 1
+        viewModel.document.layers[2].style.gradientOverlayStartColor = .systemOrange
+        viewModel.document.layers[2].style.gradientOverlayEndColor = .systemCyan
         viewModel.document.layers[2].isLocked = true
         select(Set(fixture.layers.map(\.id)), primary: fixture.layers[0].id, in: viewModel)
         return fixture
