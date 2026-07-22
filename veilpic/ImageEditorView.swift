@@ -7378,12 +7378,15 @@ struct ImageEditorView: View {
                         L10n.format("imageEditor.properties.innerGlowChokeValue", Int(value.rounded()))
                     }
                 }
-                Stepper(
-                    L10n.format("imageEditor.properties.innerGlowNoiseValue", Int((viewModel.selectedLayerInnerGlowNoise * 100).rounded())),
+                layerStyleNumericStepper(
+                    state: viewModel.selectedLayerInnerGlowNoiseState,
                     value: selectedLayerInnerGlowNoiseBinding,
-                    in: 0...1,
-                    step: 0.05
-                )
+                    range: 0...1,
+                    step: 0.05,
+                    accessibilityIdentifier: "image-editor-layer-style-inner-glow-noise"
+                ) { value in
+                    L10n.format("imageEditor.properties.innerGlowNoiseValue", Int((value * 100).rounded()))
+                }
                 layerStyleValuePicker(
                     state: viewModel.selectedLayerInnerGlowSourceState,
                     values: ImageEditorInnerGlowSource.allCases,

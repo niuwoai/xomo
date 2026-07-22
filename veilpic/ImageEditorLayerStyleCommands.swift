@@ -551,6 +551,10 @@ extension ImageEditorViewModel {
         Double(document.selectedLayer?.style.innerGlowNoise ?? 0)
     }
 
+    var selectedLayerInnerGlowNoiseState: ImageEditorLayerStyleValueState<CGFloat> {
+        selectedLayerStyleValueState(\.innerGlowNoise)
+    }
+
     var selectedLayerInnerGlowSource: ImageEditorInnerGlowSource {
         document.selectedLayer?.style.innerGlowSource ?? .edge
     }
@@ -1369,7 +1373,8 @@ extension ImageEditorViewModel {
         }
     }
 
-    func setSelectedLayerInnerGlowNoise(_ noise: Double) {
+    @discardableResult
+    func setSelectedLayerInnerGlowNoise(_ noise: Double) -> Int {
         updateSelectedLayerStyle {
             $0.innerGlowEnabled = true
             $0.innerGlowNoise = max(0, min(1, CGFloat(noise)))
