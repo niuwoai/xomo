@@ -1119,7 +1119,8 @@ extension ImageEditorViewModel {
         }
     }
 
-    func setSelectedLayerShadowDistance(_ distance: Double) {
+    @discardableResult
+    func setSelectedLayerShadowDistance(_ distance: Double) -> Int {
         updateSelectedLayerStyle {
             $0.shadowEnabled = true
             $0.shadowDistance = max(0, min(80, CGFloat(distance)))

@@ -4813,7 +4813,10 @@ struct XomoAutomationTests {
         var second = ImageEditorLayer.blank(name: "Second", size: canvasSize)
         var locked = ImageEditorLayer.blank(name: "Locked", size: canvasSize)
         first.style.shadowDistance = 6
-        second.style.shadowDistance = 30
+        first.style.shadowOffset = ImageEditorLayerStyle.shadowOffset(distance: 6, angle: -45)
+        second.style.shadowEnabled = true
+        second.style.shadowDistance = 24
+        second.style.shadowOffset = ImageEditorLayerStyle.shadowOffset(distance: 24, angle: -45)
         locked.style.shadowDistance = 12
         locked.isLocked = true
         viewModel.document.layers = [first, second, locked]
@@ -4836,13 +4839,60 @@ struct XomoAutomationTests {
         ))
 
         #expect(result.ok)
+        #expect(result.result?.objectValue?["updatedLayerCount"] == .number(1))
         #expect(viewModel.document.layers[0].style.shadowDistance == 24)
         #expect(viewModel.document.layers[1].style.shadowDistance == 24)
         #expect(viewModel.document.layers[2].style.shadowDistance == 12)
+        let targetOffset = ImageEditorLayerStyle.shadowOffset(distance: 24, angle: -45)
+        #expect(abs(viewModel.document.layers[0].style.shadowOffset.width - targetOffset.width) < 0.001)
+        #expect(abs(viewModel.document.layers[0].style.shadowOffset.height - targetOffset.height) < 0.001)
+        #expect(abs(viewModel.document.layers[1].style.shadowOffset.width - targetOffset.width) < 0.001)
+        #expect(abs(viewModel.document.layers[1].style.shadowOffset.height - targetOffset.height) < 0.001)
         #expect(viewModel.document.layers[0].style.shadowEnabled)
         #expect(viewModel.document.layers[1].style.shadowEnabled)
         #expect(viewModel.document.history.count == historyCount + 1)
         #expect(viewModel.document.selectedLayerIDs == [first.id, second.id, locked.id])
+
+        let historyAfterUpdate = viewModel.document.history.count
+        let repeated = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("shadowDistance"),
+                "value": .number(24)
+            ]
+        ))
+        #expect(!repeated.ok)
+        #expect(viewModel.document.history.count == historyAfterUpdate)
+
+        let minimum = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("shadowDistance"),
+                "value": .number(-1)
+            ]
+        ))
+        #expect(minimum.ok)
+        #expect(minimum.result?.objectValue?["updatedLayerCount"] == .number(2))
+        #expect(viewModel.document.layers[0].style.shadowDistance == 0)
+        #expect(viewModel.document.layers[1].style.shadowDistance == 0)
+        #expect(viewModel.document.layers[0].style.shadowOffset == .zero)
+        #expect(viewModel.document.layers[1].style.shadowOffset == .zero)
+
+        let maximum = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("shadowDistance"),
+                "value": .number(100)
+            ]
+        ))
+        #expect(maximum.ok)
+        #expect(maximum.result?.objectValue?["updatedLayerCount"] == .number(2))
+        #expect(viewModel.document.layers[0].style.shadowDistance == 80)
+        #expect(viewModel.document.layers[1].style.shadowDistance == 80)
+        #expect(viewModel.document.layers[2].style.shadowDistance == 12)
     }
 
     @Test func registrySetsLayerStyleShadowNoiseAcrossEditableSelection() throws {

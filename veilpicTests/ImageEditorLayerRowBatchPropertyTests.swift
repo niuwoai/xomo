@@ -1535,20 +1535,43 @@ struct ImageEditorLayerRowBatchPropertyTests {
         let historyCount = viewModel.document.history.count
 
         #expect(viewModel.selectedLayerShadowDistanceState == .mixed)
-        viewModel.setSelectedLayerShadowDistance(24)
+        #expect(viewModel.setSelectedLayerShadowDistance(24) == 1)
         #expect(viewModel.selectedLayerShadowDistanceState == .value(24))
         #expect((try layer(firstID, in: viewModel)).style.shadowDistance == 24)
         #expect((try layer(secondID, in: viewModel)).style.shadowDistance == 24)
         #expect((try layer(lockedID, in: viewModel)).style.shadowDistance == 12)
+        let targetOffset = ImageEditorLayerStyle.shadowOffset(distance: 24, angle: -45)
+        let firstOffset = try layer(firstID, in: viewModel).style.shadowOffset
+        let secondOffset = try layer(secondID, in: viewModel).style.shadowOffset
+        #expect(abs(firstOffset.width - targetOffset.width) < 0.001)
+        #expect(abs(firstOffset.height - targetOffset.height) < 0.001)
+        #expect(abs(secondOffset.width - targetOffset.width) < 0.001)
+        #expect(abs(secondOffset.height - targetOffset.height) < 0.001)
         #expect((try layer(firstID, in: viewModel)).style.shadowEnabled)
         #expect((try layer(secondID, in: viewModel)).style.shadowEnabled)
         #expect(viewModel.document.history.count == historyCount + 1)
         #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
 
+        let historyAfterUpdate = viewModel.document.history.count
+        #expect(viewModel.setSelectedLayerShadowDistance(24) == 0)
+        #expect(viewModel.document.history.count == historyAfterUpdate)
+
+        #expect(viewModel.setSelectedLayerShadowDistance(-1) == 2)
+        #expect(viewModel.selectedLayerShadowDistanceState == .value(0))
+        #expect((try layer(firstID, in: viewModel)).style.shadowOffset == .zero)
+        #expect((try layer(secondID, in: viewModel)).style.shadowOffset == .zero)
+
+        #expect(viewModel.setSelectedLayerShadowDistance(100) == 2)
+        #expect(viewModel.selectedLayerShadowDistanceState == .value(80))
+        let maximumOffset = ImageEditorLayerStyle.shadowOffset(distance: 80, angle: -45)
+        let maximumFirstOffset = try layer(firstID, in: viewModel).style.shadowOffset
+        #expect(abs(maximumFirstOffset.width - maximumOffset.width) < 0.001)
+        #expect(abs(maximumFirstOffset.height - maximumOffset.height) < 0.001)
+
         viewModel.undo()
-        #expect(viewModel.selectedLayerShadowDistanceState == .mixed)
+        #expect(viewModel.selectedLayerShadowDistanceState == .value(0))
         viewModel.redo()
-        #expect(viewModel.selectedLayerShadowDistanceState == .value(24))
+        #expect(viewModel.selectedLayerShadowDistanceState == .value(80))
     }
 
     @Test func layerStyleShadowDistanceControlReusesMixedNumericStepper() throws {
@@ -1570,7 +1593,10 @@ struct ImageEditorLayerRowBatchPropertyTests {
         let fixture = makeFixture()
         let viewModel = fixture.viewModel
         viewModel.document.layers[0].style.shadowDistance = 6
-        viewModel.document.layers[1].style.shadowDistance = 30
+        viewModel.document.layers[0].style.shadowOffset = ImageEditorLayerStyle.shadowOffset(distance: 6, angle: -45)
+        viewModel.document.layers[1].style.shadowEnabled = true
+        viewModel.document.layers[1].style.shadowDistance = 24
+        viewModel.document.layers[1].style.shadowOffset = ImageEditorLayerStyle.shadowOffset(distance: 24, angle: -45)
         viewModel.document.layers[2].style.shadowDistance = 12
         viewModel.document.layers[2].isLocked = true
         select(Set(fixture.layers.map(\.id)), primary: fixture.layers[0].id, in: viewModel)

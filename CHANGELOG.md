@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.12.0-rc461 - 2026-07-22
+
+### Changed
+- 投影距离 setter 返回实际修改图层数；MCP `xomo.layer.style_settings(property=shadowDistance)` 返回 `updatedLayerCount`。
+- 投影距离继续使用多选“多个值”控件并夹取到 0–80 px；写入时按每层当前全局/局部光角度同步重算 `shadowOffset`。
+
+### Fixed
+- 距离、启用状态和派生偏移都已匹配目标的图层、锁定层及不适用层不再计入结果；需要自动启用投影或修复陈旧偏移的图层仍视为真实更新。
+- 重复或夹取后等价的投影距离不再制造空 Undo/History，MCP 对零变化明确失败。
+
+### Verification
+- 投影距离真实数量、0–80 px 夹取、派生偏移、重复值、锁定层、混合值控件、方向像素及投影轮廓回归测试 5/5、SwiftPM CLI 2/2、发布版本契约 7/7 通过。
+
 ## 2.12.0-rc460 - 2026-07-22
 
 ### Changed
