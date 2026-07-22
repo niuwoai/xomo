@@ -2481,7 +2481,15 @@ final class XomoAutomationRegistry {
             guard let contour = ImageEditorLayerEffectContour(rawValue: rawValue) else {
                 throw XomoAutomationCallError.invalidArgument("Unknown inner shadow contour")
             }
-            viewModel.setSelectedLayerInnerShadowContour(contour)
+            let updatedLayerCount = viewModel.setSelectedLayerInnerShadowContour(contour)
+            guard updatedLayerCount > 0 else {
+                throw XomoAutomationCallError.operationFailed(
+                    "No editable layer needs the requested inner shadow contour"
+                )
+            }
+            return .object([
+                "updatedLayerCount": .number(Double(updatedLayerCount))
+            ])
         case "innerShadowDistance": viewModel.setSelectedLayerInnerShadowDistance(try number())
         case "innerShadowAngle": viewModel.setSelectedLayerInnerShadowAngle(try number())
         case "outerGlowOpacity": viewModel.setSelectedLayerOuterGlowOpacity(try number())

@@ -1242,10 +1242,14 @@ extension ImageEditorViewModel {
         }
     }
 
-    func setSelectedLayerInnerShadowContour(_ contour: ImageEditorLayerEffectContour) {
+    @discardableResult
+    func setSelectedLayerInnerShadowContour(_ contour: ImageEditorLayerEffectContour) -> Int {
         updateSelectedLayerStyle {
+            let wasEnabled = $0.innerShadowEnabled
             $0.innerShadowEnabled = true
-            $0.innerShadowColor = innerShadowColor()
+            if !wasEnabled {
+                $0.innerShadowColor = innerShadowColor()
+            }
             $0.innerShadowContour = contour
         }
     }

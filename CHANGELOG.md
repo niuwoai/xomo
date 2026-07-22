@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.12.0-rc469 - 2026-07-22
+
+### Changed
+- 内阴影轮廓（Contour）setter 返回实际修改的可编辑选中图层数；MCP `xomo.layer.style_settings(property=innerShadowContour)` 返回 `updatedLayerCount`。
+- 继续使用五档本地化轮廓菜单和公开 MCP 枚举，首次启用内阴影时才使用当前前景色初始化效果颜色。
+
+### Fixed
+- 已处于目标轮廓且内阴影已启用、锁定层及不适用层不再计入更新；需要自动启用内阴影的图层仍计为真实修改。
+- 调整已启用内阴影的轮廓不再覆盖用户定制颜色；重复枚举不再制造空 Undo/History，MCP 对零变化及非法枚举明确失败。
+
+### Verification
+- 内阴影轮廓真实数量、自动启用、颜色保留、重复枚举、锁定层、混合值菜单、非法值拒绝、真实像素衰减/工程往返及相邻 Noise 回归测试 5/5 通过；SwiftPM CLI 2/2、发布版本契约 7/7 通过。
+
 ## 2.12.0-rc468 - 2026-07-22
 
 ### Changed

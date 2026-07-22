@@ -2509,15 +2509,20 @@ struct ImageEditorLayerRowBatchPropertyTests {
         let historyCount = viewModel.document.history.count
 
         #expect(viewModel.selectedLayerInnerShadowContourState == .mixed)
-        viewModel.setSelectedLayerInnerShadowContour(.cone)
+        #expect(viewModel.setSelectedLayerInnerShadowContour(.cone) == 1)
         #expect(viewModel.selectedLayerInnerShadowContourState == .value(.cone))
         #expect((try layer(firstID, in: viewModel)).style.innerShadowContour == .cone)
         #expect((try layer(secondID, in: viewModel)).style.innerShadowContour == .cone)
-        #expect((try layer(lockedID, in: viewModel)).style.innerShadowContour == .linear)
+        #expect((try layer(lockedID, in: viewModel)).style.innerShadowContour == .soft)
         #expect((try layer(firstID, in: viewModel)).style.innerShadowEnabled)
         #expect((try layer(secondID, in: viewModel)).style.innerShadowEnabled)
+        #expect((try layer(secondID, in: viewModel)).style.innerShadowColor == .systemRed)
         #expect(viewModel.document.history.count == historyCount + 1)
         #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+
+        let historyAfterUpdate = viewModel.document.history.count
+        #expect(viewModel.setSelectedLayerInnerShadowContour(.cone) == 0)
+        #expect(viewModel.document.history.count == historyAfterUpdate)
 
         viewModel.undo()
         #expect(viewModel.selectedLayerInnerShadowContourState == .mixed)
@@ -2544,8 +2549,10 @@ struct ImageEditorLayerRowBatchPropertyTests {
         let fixture = makeFixture()
         let viewModel = fixture.viewModel
         viewModel.document.layers[0].style.innerShadowContour = .linear
-        viewModel.document.layers[1].style.innerShadowContour = .steep
-        viewModel.document.layers[2].style.innerShadowContour = .linear
+        viewModel.document.layers[1].style.innerShadowEnabled = true
+        viewModel.document.layers[1].style.innerShadowContour = .cone
+        viewModel.document.layers[1].style.innerShadowColor = .systemRed
+        viewModel.document.layers[2].style.innerShadowContour = .soft
         viewModel.document.layers[2].isLocked = true
         select(Set(fixture.layers.map(\.id)), primary: fixture.layers[0].id, in: viewModel)
         return fixture
