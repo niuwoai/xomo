@@ -1469,6 +1469,89 @@ struct ImageEditorLayerRowBatchPropertyTests {
         return fixture
     }
 
+    @Test func layerStyleInnerGlowChokeMixedValueConvergesAcrossEditableSelection() throws {
+        let fixture = innerGlowChokeFixture()
+        let viewModel = fixture.viewModel
+        let firstID = fixture.layers[0].id
+        let secondID = fixture.layers[1].id
+        let lockedID = fixture.layers[2].id
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.selectedLayerInnerGlowChokeState == .mixed)
+        #expect(viewModel.setSelectedLayerInnerGlowChoke(8) == 1)
+        #expect(viewModel.selectedLayerInnerGlowChokeState == .value(8))
+        #expect((try layer(firstID, in: viewModel)).style.innerGlowChoke == 8)
+        #expect((try layer(secondID, in: viewModel)).style.innerGlowChoke == 8)
+        #expect((try layer(lockedID, in: viewModel)).style.innerGlowChoke == 5)
+        #expect((try layer(firstID, in: viewModel)).style.innerGlowEnabled)
+        #expect((try layer(secondID, in: viewModel)).style.innerGlowEnabled)
+        #expect((try layer(firstID, in: viewModel)).style.innerGlowBlur == 7)
+        #expect((try layer(secondID, in: viewModel)).style.innerGlowColor == .systemRed)
+        #expect((try layer(secondID, in: viewModel)).style.innerGlowOpacity == 0.72)
+        #expect((try layer(secondID, in: viewModel)).style.innerGlowSource == .center)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+
+        let historyAfterUpdate = viewModel.document.history.count
+        #expect(viewModel.setSelectedLayerInnerGlowChoke(8) == 0)
+        #expect(viewModel.document.history.count == historyAfterUpdate)
+
+        #expect(viewModel.setSelectedLayerInnerGlowChoke(-10) == 2)
+        #expect(viewModel.selectedLayerInnerGlowChokeState == .value(0))
+        #expect((try layer(firstID, in: viewModel)).style.innerGlowChoke == 0)
+        #expect((try layer(secondID, in: viewModel)).style.innerGlowChoke == 0)
+
+        #expect(viewModel.setSelectedLayerInnerGlowChoke(100) == 2)
+        #expect(viewModel.selectedLayerInnerGlowChokeState == .value(24))
+        #expect((try layer(firstID, in: viewModel)).style.innerGlowChoke == 24)
+        #expect((try layer(secondID, in: viewModel)).style.innerGlowChoke == 24)
+        #expect((try layer(secondID, in: viewModel)).style.innerGlowColor == .systemRed)
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerInnerGlowChokeState == .value(0))
+        viewModel.redo()
+        #expect(viewModel.selectedLayerInnerGlowChokeState == .value(24))
+    }
+
+    @Test func layerStyleInnerGlowChokeControlReusesMixedNumericStepper() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("state: viewModel.selectedLayerInnerGlowChokeState"))
+        #expect(source.contains("value: selectedLayerInnerGlowChokeBinding"))
+        #expect(source.contains("image-editor-layer-style-inner-glow-choke"))
+        #expect(source.contains("L10n.format(\"imageEditor.properties.innerGlowChokeValue\""))
+        let helperStart = try #require(
+            source.range(of: "private func layerStyleNumericStepper(")
+        )
+        let helperEnd = try #require(
+            source[helperStart.upperBound...].range(of: "private func guidePath(")
+        )
+        let helperSource = source[helperStart.lowerBound..<helperEnd.lowerBound]
+        #expect(helperSource.contains(".focusable(false)"))
+    }
+
+    private func innerGlowChokeFixture() -> Fixture {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        viewModel.document.layers[0].style.innerGlowChoke = 2
+        viewModel.document.layers[0].style.innerGlowBlur = 7
+        viewModel.document.layers[1].style.innerGlowEnabled = true
+        viewModel.document.layers[1].style.innerGlowChoke = 8
+        viewModel.document.layers[1].style.innerGlowOpacity = 0.72
+        viewModel.document.layers[1].style.innerGlowSource = .center
+        viewModel.document.layers[1].style.innerGlowColor = .systemRed
+        viewModel.document.layers[2].style.innerGlowChoke = 5
+        viewModel.document.layers[2].isLocked = true
+        select(Set(fixture.layers.map(\.id)), primary: fixture.layers[0].id, in: viewModel)
+        return fixture
+    }
+
     @Test func layerStyleInnerGlowColorMixedValueConvergesAcrossEditableSelection() throws {
         let fixture = makeFixture()
         let viewModel = fixture.viewModel

@@ -2608,7 +2608,16 @@ final class XomoAutomationRegistry {
             return .object([
                 "updatedLayerCount": .number(Double(updatedLayerCount))
             ])
-        case "innerGlowChoke": viewModel.setSelectedLayerInnerGlowChoke(try number())
+        case "innerGlowChoke":
+            let updatedLayerCount = viewModel.setSelectedLayerInnerGlowChoke(try number())
+            guard updatedLayerCount > 0 else {
+                throw XomoAutomationCallError.operationFailed(
+                    "No editable layer needs the requested inner glow choke"
+                )
+            }
+            return .object([
+                "updatedLayerCount": .number(Double(updatedLayerCount))
+            ])
         case "innerGlowNoise": viewModel.setSelectedLayerInnerGlowNoise(try number())
         case "innerGlowSource":
             let rawValue = try requiredString("source", in: arguments)

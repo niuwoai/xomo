@@ -543,6 +543,10 @@ extension ImageEditorViewModel {
         Double(document.selectedLayer?.style.innerGlowChoke ?? 2)
     }
 
+    var selectedLayerInnerGlowChokeState: ImageEditorLayerStyleValueState<CGFloat> {
+        selectedLayerStyleValueState(\.innerGlowChoke)
+    }
+
     var selectedLayerInnerGlowNoise: Double {
         Double(document.selectedLayer?.style.innerGlowNoise ?? 0)
     }
@@ -1357,7 +1361,8 @@ extension ImageEditorViewModel {
         }
     }
 
-    func setSelectedLayerInnerGlowChoke(_ choke: Double) {
+    @discardableResult
+    func setSelectedLayerInnerGlowChoke(_ choke: Double) -> Int {
         updateSelectedLayerStyle {
             $0.innerGlowEnabled = true
             $0.innerGlowChoke = max(0, min(24, CGFloat(choke)))

@@ -7368,12 +7368,15 @@ struct ImageEditorView: View {
                     ) { value in
                         L10n.format("imageEditor.properties.innerGlowBlurValue", Int(value.rounded()))
                     }
-                    Stepper(
-                        L10n.format("imageEditor.properties.innerGlowChokeValue", Int(viewModel.selectedLayerInnerGlowChoke.rounded())),
+                    layerStyleNumericStepper(
+                        state: viewModel.selectedLayerInnerGlowChokeState,
                         value: selectedLayerInnerGlowChokeBinding,
-                        in: 0...24,
-                        step: 1
-                    )
+                        range: 0...24,
+                        step: 1,
+                        accessibilityIdentifier: "image-editor-layer-style-inner-glow-choke"
+                    ) { value in
+                        L10n.format("imageEditor.properties.innerGlowChokeValue", Int(value.rounded()))
+                    }
                 }
                 Stepper(
                     L10n.format("imageEditor.properties.innerGlowNoiseValue", Int((viewModel.selectedLayerInnerGlowNoise * 100).rounded())),
