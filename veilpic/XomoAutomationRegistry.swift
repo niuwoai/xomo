@@ -2880,7 +2880,16 @@ final class XomoAutomationRegistry {
             return .object([
                 "updatedLayerCount": .number(Double(updatedLayerCount))
             ])
-        case "bevelOpacity": viewModel.setSelectedLayerBevelOpacity(try number())
+        case "bevelOpacity":
+            let updatedLayerCount = viewModel.setSelectedLayerBevelOpacity(try number())
+            guard updatedLayerCount > 0 else {
+                throw XomoAutomationCallError.operationFailed(
+                    "No editable layer needs the requested bevel opacity"
+                )
+            }
+            return .object([
+                "updatedLayerCount": .number(Double(updatedLayerCount))
+            ])
         case "bevelHighlightColor": viewModel.setSelectedLayerBevelHighlightColor(viewModel.foregroundColor)
         case "bevelShadowColor": viewModel.setSelectedLayerBevelShadowColor(viewModel.foregroundColor)
         case "bevelSoften": viewModel.setSelectedLayerBevelSoften(try number())

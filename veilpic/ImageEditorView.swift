@@ -7761,12 +7761,15 @@ struct ImageEditorView: View {
                     ) { value in
                         L10n.format("imageEditor.properties.bevelSizeValue", Int(value.rounded()))
                     }
-                    Stepper(
-                        L10n.format("imageEditor.properties.bevelOpacityValue", Int((viewModel.selectedLayerBevelOpacity * 100).rounded())),
+                    layerStyleNumericStepper(
+                        state: viewModel.selectedLayerBevelOpacityState,
                         value: selectedLayerBevelOpacityBinding,
-                        in: 0.05...1,
-                        step: 0.05
-                    )
+                        range: 0.05...1,
+                        step: 0.05,
+                        accessibilityIdentifier: "image-editor-layer-style-bevel-opacity"
+                    ) { value in
+                        L10n.format("imageEditor.properties.bevelOpacityValue", Int((value * 100).rounded()))
+                    }
                 }
                 }
 

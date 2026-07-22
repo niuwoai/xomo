@@ -743,6 +743,10 @@ extension ImageEditorViewModel {
         Double(document.selectedLayer?.style.bevelOpacity ?? 0.38)
     }
 
+    var selectedLayerBevelOpacityState: ImageEditorLayerStyleValueState<CGFloat> {
+        selectedLayerStyleValueState(\.bevelOpacity)
+    }
+
     var selectedLayerBevelHighlightColor: NSColor {
         document.selectedLayer?.style.bevelHighlightColor ?? .white
     }
@@ -1694,7 +1698,8 @@ extension ImageEditorViewModel {
         }
     }
 
-    func setSelectedLayerBevelOpacity(_ opacity: Double) {
+    @discardableResult
+    func setSelectedLayerBevelOpacity(_ opacity: Double) -> Int {
         updateSelectedLayerStyle {
             $0.bevelEnabled = true
             $0.bevelOpacity = max(0.05, min(1, CGFloat(opacity)))

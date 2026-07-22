@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.12.0-rc510 - 2026-07-23
+
+### Fixed
+- 斜面与浮雕“透明度”现在显示真实多选共同值；混合选择显示“多个值”，调整后一次收敛全部可编辑图层，锁定层与重复值跳过，选择保持且只生成一步 Undo/History。
+- 透明度入口复用不可聚焦的混合数值 Stepper，限制在 5%–100%，仅启用斜面并修改透明度，不改大小、颜色、柔化、方向或光照参数。
+
+### Automation
+- `xomo.layer.style_settings property=bevelOpacity` 返回实际 `updatedLayerCount`；没有图层需要变化时明确失败，不再返回含糊的通用动作结果。
+
+### Verification
+- Xcode 定向测试 3/3、SwiftPM CLI 2/2、发布契约 4/4（10 条断言）通过，覆盖混合值收敛、锁定层保护、参数隔离、选择保持、单步 Undo/Redo、重复值零历史、界面混合态契约、MCP schema、真实修改数、零变化失败和 5% 下限夹取。常规完整 Release、冒烟与 `/Applications` 覆盖门禁仍为 rc520；下一小步处理斜面高光颜色事务。
+
 ## 2.12.0-rc509 - 2026-07-23
 
 ### Fixed
