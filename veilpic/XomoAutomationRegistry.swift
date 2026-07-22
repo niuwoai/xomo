@@ -2456,7 +2456,16 @@ final class XomoAutomationRegistry {
             return .object([
                 "updatedLayerCount": .number(Double(updatedLayerCount))
             ])
-        case "innerShadowChoke": viewModel.setSelectedLayerInnerShadowChoke(try number())
+        case "innerShadowChoke":
+            let updatedLayerCount = viewModel.setSelectedLayerInnerShadowChoke(try number())
+            guard updatedLayerCount > 0 else {
+                throw XomoAutomationCallError.operationFailed(
+                    "No editable layer needs the requested inner shadow choke"
+                )
+            }
+            return .object([
+                "updatedLayerCount": .number(Double(updatedLayerCount))
+            ])
         case "innerShadowNoise": viewModel.setSelectedLayerInnerShadowNoise(try number())
         case "innerShadowContour":
             let rawValue = try requiredString("innerShadowContour", in: arguments)

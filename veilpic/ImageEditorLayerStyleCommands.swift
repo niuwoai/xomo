@@ -1218,10 +1218,14 @@ extension ImageEditorViewModel {
         }
     }
 
-    func setSelectedLayerInnerShadowChoke(_ choke: Double) {
+    @discardableResult
+    func setSelectedLayerInnerShadowChoke(_ choke: Double) -> Int {
         updateSelectedLayerStyle {
+            let wasEnabled = $0.innerShadowEnabled
             $0.innerShadowEnabled = true
-            $0.innerShadowColor = innerShadowColor()
+            if !wasEnabled {
+                $0.innerShadowColor = innerShadowColor()
+            }
             $0.innerShadowChoke = max(0, min(24, CGFloat(choke)))
         }
     }
