@@ -1320,7 +1320,8 @@ extension ImageEditorViewModel {
         }
     }
 
-    func setSelectedLayerOuterGlowContour(_ contour: ImageEditorLayerEffectContour) {
+    @discardableResult
+    func setSelectedLayerOuterGlowContour(_ contour: ImageEditorLayerEffectContour) -> Int {
         updateSelectedLayerStyle {
             $0.outerGlowEnabled = true
             $0.outerGlowContour = contour

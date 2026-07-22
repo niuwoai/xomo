@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.12.0-rc478 - 2026-07-22
+
+### Changed
+- 外发光轮廓 setter 返回实际修改的可编辑选中图层数；MCP `xomo.layer.style_settings(property=outerGlowContour)` 返回 `updatedLayerCount`。
+- 线性、柔和、陡峭、锥形与环形五档轮廓继续使用不可聚焦的本地化多选菜单，混选时显示“多个值”。
+
+### Fixed
+- 轮廓更新只改变外发光启用状态与轮廓，不覆盖颜色、透明度、模糊、扩展或杂色；锁定层与不适用层安全跳过。
+- 重复轮廓不再制造空 Undo/History，非法枚举与零实际变化均由 MCP 明确失败。
+
+### Verification
+- 混合态、真实数量、五档 schema、参数保留、锁定层、不可聚焦控件、MCP 结果及陡峭／线性真实 Alpha 衰减与工程往返测试 4/4，外发光杂色相邻回归 4/4 通过。
+- SwiftPM CLI 2/2、发布版本契约 7/7 通过；本版不覆盖 `/Applications`，下一次完整 Release、冒烟与安装门禁仍为 rc480。
+
 ## 2.12.0-rc477 - 2026-07-22
 
 ### Changed

@@ -2889,18 +2889,32 @@ struct ImageEditorLayerRowBatchPropertyTests {
         let historyCount = viewModel.document.history.count
 
         #expect(viewModel.selectedLayerOuterGlowContourState == .mixed)
-        viewModel.setSelectedLayerOuterGlowContour(.ring)
+        #expect(viewModel.setSelectedLayerOuterGlowContour(.soft) == 1)
+        #expect(viewModel.selectedLayerOuterGlowContourState == .value(.soft))
+        #expect((try layer(firstID, in: viewModel)).style.outerGlowContour == .soft)
+        #expect((try layer(secondID, in: viewModel)).style.outerGlowContour == .soft)
+        #expect((try layer(lockedID, in: viewModel)).style.outerGlowContour == .linear)
+        #expect((try layer(firstID, in: viewModel)).style.outerGlowEnabled)
+        #expect((try layer(secondID, in: viewModel)).style.outerGlowEnabled)
+        #expect((try layer(secondID, in: viewModel)).style.outerGlowColor == .systemRed)
+        #expect((try layer(firstID, in: viewModel)).style.outerGlowBlur == 7)
+        #expect((try layer(secondID, in: viewModel)).style.outerGlowSpread == 8)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+
+        let historyAfterUpdate = viewModel.document.history.count
+        #expect(viewModel.setSelectedLayerOuterGlowContour(.soft) == 0)
+        #expect(viewModel.document.history.count == historyAfterUpdate)
+
+        #expect(viewModel.setSelectedLayerOuterGlowContour(.ring) == 2)
         #expect(viewModel.selectedLayerOuterGlowContourState == .value(.ring))
         #expect((try layer(firstID, in: viewModel)).style.outerGlowContour == .ring)
         #expect((try layer(secondID, in: viewModel)).style.outerGlowContour == .ring)
         #expect((try layer(lockedID, in: viewModel)).style.outerGlowContour == .linear)
-        #expect((try layer(firstID, in: viewModel)).style.outerGlowEnabled)
-        #expect((try layer(secondID, in: viewModel)).style.outerGlowEnabled)
-        #expect(viewModel.document.history.count == historyCount + 1)
-        #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+        #expect((try layer(secondID, in: viewModel)).style.outerGlowColor == .systemRed)
 
         viewModel.undo()
-        #expect(viewModel.selectedLayerOuterGlowContourState == .mixed)
+        #expect(viewModel.selectedLayerOuterGlowContourState == .value(.soft))
         viewModel.redo()
         #expect(viewModel.selectedLayerOuterGlowContourState == .value(.ring))
     }
@@ -2918,13 +2932,25 @@ struct ImageEditorLayerRowBatchPropertyTests {
         #expect(source.contains("image-editor-layer-style-outer-glow-contour"))
         #expect(source.contains("viewModel.setSelectedLayerOuterGlowContour(contour)"))
         #expect(!source.contains("selectedLayerOuterGlowContourBinding"))
+        let helperStart = try #require(
+            source.range(of: "private func layerStyleValuePicker")
+        )
+        let helperEnd = try #require(
+            source[helperStart.upperBound...].range(of: "private func layerStyleNumericStepper(")
+        )
+        let helperSource = source[helperStart.lowerBound..<helperEnd.lowerBound]
+        #expect(helperSource.contains(".focusable(false)"))
     }
 
     private func outerGlowContourFixture() -> Fixture {
         let fixture = makeFixture()
         let viewModel = fixture.viewModel
         viewModel.document.layers[0].style.outerGlowContour = .linear
+        viewModel.document.layers[0].style.outerGlowBlur = 7
+        viewModel.document.layers[1].style.outerGlowEnabled = true
         viewModel.document.layers[1].style.outerGlowContour = .soft
+        viewModel.document.layers[1].style.outerGlowSpread = 8
+        viewModel.document.layers[1].style.outerGlowColor = .systemRed
         viewModel.document.layers[2].style.outerGlowContour = .linear
         viewModel.document.layers[2].isLocked = true
         select(Set(fixture.layers.map(\.id)), primary: fixture.layers[0].id, in: viewModel)

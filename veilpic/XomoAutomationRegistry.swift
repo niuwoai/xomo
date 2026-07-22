@@ -2569,7 +2569,15 @@ final class XomoAutomationRegistry {
             guard let contour = ImageEditorLayerEffectContour(rawValue: rawValue) else {
                 throw XomoAutomationCallError.invalidArgument("Unknown outer glow contour")
             }
-            viewModel.setSelectedLayerOuterGlowContour(contour)
+            let updatedLayerCount = viewModel.setSelectedLayerOuterGlowContour(contour)
+            guard updatedLayerCount > 0 else {
+                throw XomoAutomationCallError.operationFailed(
+                    "No editable layer needs the requested outer glow contour"
+                )
+            }
+            return .object([
+                "updatedLayerCount": .number(Double(updatedLayerCount))
+            ])
         case "innerGlowOpacity": viewModel.setSelectedLayerInnerGlowOpacity(try number())
         case "innerGlowColor": viewModel.setSelectedLayerInnerGlowColor(viewModel.foregroundColor)
         case "innerGlowBlur": viewModel.setSelectedLayerInnerGlowBlur(try number())

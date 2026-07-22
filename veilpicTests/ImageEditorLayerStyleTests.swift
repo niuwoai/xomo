@@ -702,6 +702,70 @@ struct ImageEditorLayerStyleTests {
         #expect(restoredLayer.style.outerGlowColor.isEqual(glowColor))
     }
 
+    @Test func imageEditorOuterGlowContourChangesAlphaFalloffAndRoundTripsProjectState() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let glowColor = NSColor(srgbRed: 0.92, green: 0.16, blue: 0.08, alpha: 1)
+        let baseImage = solidImage(color: .clear, size: canvasSize)
+        let layerImage = centerRectImage(size: canvasSize, color: .white)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: baseImage) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(
+            layerImage,
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+        let layerPixelsBeforeStyle = try #require(
+            viewModel.document.selectedLayer?.image.qingtuPNGData()
+        )
+
+        viewModel.setSelectedLayerOuterGlowOpacity(1)
+        viewModel.setSelectedLayerOuterGlowColor(glowColor)
+        viewModel.setSelectedLayerOuterGlowBlur(10)
+        viewModel.setSelectedLayerOuterGlowSpread(0)
+        viewModel.setSelectedLayerOuterGlowNoise(0)
+        #expect(viewModel.setSelectedLayerOuterGlowContour(.linear) == 0)
+        let linearGlow = viewModel.currentImage
+        let linearGlowData = try #require(linearGlow.qingtuPNGData())
+
+        #expect(viewModel.setSelectedLayerOuterGlowContour(.steep) == 1)
+        let steepGlow = viewModel.currentImage
+        let steepGlowData = try #require(steepGlow.qingtuPNGData())
+
+        var maximumAlphaIncrease: CGFloat = 0
+        for x in 0..<24 {
+            let point = CGPoint(x: CGFloat(x), y: 30)
+            let linearAlpha = try #require(
+                linearGlow.color(at: point)?.usingColorSpace(.deviceRGB)?.alphaComponent
+            )
+            let steepAlpha = try #require(
+                steepGlow.color(at: point)?.usingColorSpace(.deviceRGB)?.alphaComponent
+            )
+            maximumAlphaIncrease = max(maximumAlphaIncrease, steepAlpha - linearAlpha)
+        }
+
+        let styledLayer = try #require(viewModel.document.selectedLayer)
+        let layerPixelsAfterStyle = try #require(styledLayer.image.qingtuPNGData())
+        #expect(styledLayer.style.outerGlowEnabled)
+        #expect(styledLayer.style.outerGlowContour == .steep)
+        #expect(styledLayer.style.outerGlowOpacity == 1)
+        #expect(styledLayer.style.outerGlowBlur == 10)
+        #expect(styledLayer.style.outerGlowSpread == 0)
+        #expect(styledLayer.style.outerGlowNoise == 0)
+        #expect(styledLayer.style.outerGlowColor.isEqual(glowColor))
+        #expect(layerPixelsAfterStyle == layerPixelsBeforeStyle)
+        #expect(steepGlowData != linearGlowData)
+        #expect(maximumAlphaIncrease > 0.05)
+
+        let project = try ImageEditorProjectDocument(document: viewModel.document)
+        let restoredDocument = try project.restoredDocument()
+        let restoredLayer = try #require(restoredDocument.layers.first { $0.id == styledLayer.id })
+        #expect(restoredLayer.style.outerGlowEnabled)
+        #expect(restoredLayer.style.outerGlowContour == .steep)
+        #expect(restoredLayer.style.outerGlowOpacity == 1)
+        #expect(restoredLayer.style.outerGlowBlur == 10)
+        #expect(restoredLayer.style.outerGlowSpread == 0)
+        #expect(restoredLayer.style.outerGlowNoise == 0)
+        #expect(restoredLayer.style.outerGlowColor.isEqual(glowColor))
+    }
+
     @Test func imageEditorLayerEffectContoursChangeFalloffAndRoundTripProjectState() async throws {
         let canvasSize = NSSize(width: 80, height: 60)
         let baseImage = solidImage(color: .systemBlue, size: canvasSize)

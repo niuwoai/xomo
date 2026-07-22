@@ -6288,6 +6288,22 @@ struct XomoAutomationTests {
 
     @Test func registrySetsLayerStyleOuterGlowContourWithAdvertisedEnum() throws {
         let viewModel = makeViewModel()
+        let canvasSize = viewModel.document.canvasSize
+        var first = ImageEditorLayer.blank(name: "First", size: canvasSize)
+        var second = ImageEditorLayer.blank(name: "Second", size: canvasSize)
+        var locked = ImageEditorLayer.blank(name: "Locked", size: canvasSize)
+        first.style.outerGlowContour = .linear
+        first.style.outerGlowBlur = 7
+        second.style.outerGlowEnabled = true
+        second.style.outerGlowContour = .soft
+        second.style.outerGlowSpread = 8
+        second.style.outerGlowColor = .systemRed
+        locked.style.outerGlowContour = .linear
+        locked.isLocked = true
+        viewModel.document.layers = [first, second, locked]
+        viewModel.document.selectedLayerID = first.id
+        viewModel.document.selectedLayerIDs = [first.id, second.id, locked.id]
+        let historyCount = viewModel.document.history.count
         let registry = XomoAutomationRegistry.shared
         registry.register(viewModel)
 
@@ -6304,9 +6320,56 @@ struct XomoAutomationTests {
         ))
 
         #expect(result.ok)
-        #expect(viewModel.document.selectedLayer?.style.outerGlowContour == .soft)
-        #expect(viewModel.document.selectedLayer?.style.outerGlowEnabled == true)
+        #expect(result.result?.objectValue?["updatedLayerCount"] == .number(1))
+        #expect(viewModel.document.layers[0].style.outerGlowContour == .soft)
+        #expect(viewModel.document.layers[1].style.outerGlowContour == .soft)
+        #expect(viewModel.document.layers[2].style.outerGlowContour == .linear)
+        #expect(viewModel.document.layers[0].style.outerGlowEnabled)
+        #expect(viewModel.document.layers[1].style.outerGlowEnabled)
+        #expect(viewModel.document.layers[0].style.outerGlowBlur == 7)
+        #expect(viewModel.document.layers[1].style.outerGlowSpread == 8)
+        #expect(viewModel.document.layers[1].style.outerGlowColor == .systemRed)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [first.id, second.id, locked.id])
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerStyle"))
+
+        let historyAfterUpdate = viewModel.document.history.count
+        let repeated = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("outerGlowContour"),
+                "outerGlowContour": .string("soft")
+            ]
+        ))
+        #expect(!repeated.ok)
+        #expect(viewModel.document.history.count == historyAfterUpdate)
+
+        let ring = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("outerGlowContour"),
+                "outerGlowContour": .string("ring")
+            ]
+        ))
+        #expect(ring.ok)
+        #expect(ring.result?.objectValue?["updatedLayerCount"] == .number(2))
+        #expect(viewModel.document.layers[0].style.outerGlowContour == .ring)
+        #expect(viewModel.document.layers[1].style.outerGlowContour == .ring)
+        #expect(viewModel.document.layers[2].style.outerGlowContour == .linear)
+        #expect(viewModel.document.layers[1].style.outerGlowColor == .systemRed)
+
+        let invalid = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("outerGlowContour"),
+                "outerGlowContour": .string("unknown")
+            ]
+        ))
+        #expect(!invalid.ok)
+        #expect(viewModel.document.history.count == historyAfterUpdate + 1)
     }
 
     @Test func registrySetsLayerStyleSatinContourWithAdvertisedEnum() throws {
