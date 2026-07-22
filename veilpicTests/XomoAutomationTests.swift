@@ -6548,8 +6548,14 @@ struct XomoAutomationTests {
         var second = ImageEditorLayer.blank(name: "Second", size: canvasSize)
         var locked = ImageEditorLayer.blank(name: "Locked", size: canvasSize)
         first.style.gradientOverlayAngle = -45
+        first.style.gradientOverlayStartColor = .systemBlue
+        first.style.gradientOverlayEndColor = .systemYellow
         second.style.gradientOverlayAngle = 90
+        second.style.gradientOverlayStartColor = .systemGreen
+        second.style.gradientOverlayEndColor = .systemPink
         locked.style.gradientOverlayAngle = 30
+        locked.style.gradientOverlayStartColor = .systemOrange
+        locked.style.gradientOverlayEndColor = .systemCyan
         locked.isLocked = true
         viewModel.document.layers = [first, second, locked]
         viewModel.document.selectedLayerID = first.id
@@ -6566,18 +6572,37 @@ struct XomoAutomationTests {
             name: "xomo.layer.style_settings",
             arguments: [
                 "property": .string("gradientOverlayAngle"),
-                "value": .number(120)
+                "value": .number(480)
             ]
         ))
 
         #expect(result.ok)
+        #expect(result.result?.objectValue?["updatedLayerCount"] == .number(2))
         #expect(viewModel.document.layers[0].style.gradientOverlayAngle == 120)
         #expect(viewModel.document.layers[1].style.gradientOverlayAngle == 120)
         #expect(viewModel.document.layers[2].style.gradientOverlayAngle == 30)
+        #expect(viewModel.document.layers[0].style.gradientOverlayStartColor.isEqual(NSColor.systemBlue))
+        #expect(viewModel.document.layers[0].style.gradientOverlayEndColor.isEqual(NSColor.systemYellow))
+        #expect(viewModel.document.layers[1].style.gradientOverlayStartColor.isEqual(NSColor.systemGreen))
+        #expect(viewModel.document.layers[1].style.gradientOverlayEndColor.isEqual(NSColor.systemPink))
+        #expect(viewModel.document.layers[2].style.gradientOverlayStartColor.isEqual(NSColor.systemOrange))
+        #expect(viewModel.document.layers[2].style.gradientOverlayEndColor.isEqual(NSColor.systemCyan))
         #expect(viewModel.document.layers[0].style.gradientOverlayEnabled)
         #expect(viewModel.document.layers[1].style.gradientOverlayEnabled)
         #expect(viewModel.document.history.count == historyCount + 1)
         #expect(viewModel.document.selectedLayerIDs == [first.id, second.id, locked.id])
+
+        let historyAfterUpdate = viewModel.document.history.count
+        let repeated = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("gradientOverlayAngle"),
+                "value": .number(-240)
+            ]
+        ))
+        #expect(!repeated.ok)
+        #expect(viewModel.document.history.count == historyAfterUpdate)
     }
 
     @Test func registrySetsLayerStyleGradientOverlayStyleWithAdvertisedEnum() throws {

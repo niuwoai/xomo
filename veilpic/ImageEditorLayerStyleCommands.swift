@@ -1275,7 +1275,7 @@ extension ImageEditorViewModel {
 
     @discardableResult
     func setGlobalLightAngle(_ angle: Double) -> ImageEditorGlobalLightUpdateResult {
-        let normalizedAngle = normalizedLightAngle(CGFloat(angle))
+        let normalizedAngle = normalizedLayerStyleAngle(CGFloat(angle))
         guard abs(document.globalLightAngle - normalizedAngle) > 0.001 else { return .unchanged }
         let result = globalLightUpdateResult()
         pushUndo()
@@ -1548,11 +1548,11 @@ extension ImageEditorViewModel {
         }
     }
 
-    func setSelectedLayerGradientOverlayAngle(_ angle: Double) {
+    @discardableResult
+    func setSelectedLayerGradientOverlayAngle(_ angle: Double) -> Int {
         updateSelectedLayerStyle {
-            setGradientOverlayDefaultColorsIfNeeded(style: &$0)
             $0.gradientOverlayEnabled = true
-            $0.gradientOverlayAngle = CGFloat(angle).truncatingRemainder(dividingBy: 360)
+            $0.gradientOverlayAngle = normalizedLayerStyleAngle(CGFloat(angle))
         }
     }
 
@@ -1718,7 +1718,7 @@ extension ImageEditorViewModel {
         }
     }
 
-    private func normalizedLightAngle(_ angle: CGFloat) -> CGFloat {
+    private func normalizedLayerStyleAngle(_ angle: CGFloat) -> CGFloat {
         var normalized = angle.truncatingRemainder(dividingBy: 360)
         if normalized > 180 {
             normalized -= 360
@@ -1770,7 +1770,7 @@ extension ImageEditorViewModel {
             statusText = L10n.text("imageEditor.status.layerLocked")
             return 0
         }
-        let normalizedAngle = normalizedLightAngle(CGFloat(angle))
+        let normalizedAngle = normalizedLayerStyleAngle(CGFloat(angle))
         let updatesGlobalLight = targetIndices.contains {
             effect.usesGlobalLight(in: self.document.layers[$0].style)
         }
