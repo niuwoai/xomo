@@ -158,12 +158,12 @@ struct ImageEditorScopeTests {
 
         let toolRailStart = try #require(source.range(of: "private var toolRail: some View"))
         let nextSectionStart = try #require(
-            source[toolRailStart.upperBound...].range(of: "private var colorChips: some View")
+            source[toolRailStart.upperBound...].range(of: "private var quickMaskControls: some View")
         )
         let toolRailSource = source[toolRailStart.lowerBound..<nextSectionStart.lowerBound]
 
         #expect(toolRailSource.contains("ForEach(ImageEditorTool.allCases)"))
-        #expect(toolRailSource.contains("viewModel.selectTool(tool)"))
+        #expect(toolRailSource.contains("toolRailItem(tool)"))
         #expect(!toolRailSource.contains("keyboardShortcut"))
         #expect(!toolRailSource.contains("ImageEditorToolShortcutModifier"))
 
@@ -260,9 +260,14 @@ struct ImageEditorScopeTests {
 
         #expect(railItemSource.components(separatedBy: ".accessibilityLabel(tool.title)").count - 1 == 2)
         #expect(railItemSource.components(separatedBy: ".focusable(false)").count - 1 >= 3)
+        #expect(railItemSource.components(separatedBy: "EditorToolRailTile(").count - 1 == 2)
+        #expect(!railItemSource.contains("Button {\n                    selectToolFromRail(tool)"))
         #expect(railItemSource.contains("ImageEditorPaintBucketSymbol()"))
         #expect(railItemSource.contains(".accessibilityIdentifier(\"image-editor-tool-\\(tool.rawValue)\")"))
         #expect(source.contains("private let imageEditorToolButtonHitSize: CGFloat = 36"))
+        #expect(source.contains("private struct EditorToolRailTile<Label: View>: View"))
+        #expect(source.contains(".onTapGesture(perform: action)"))
+        #expect(source.contains(".accessibilityAction {\n                action()\n            }"))
         #expect(
             railItemSource.components(
                 separatedBy: ".frame(width: imageEditorToolButtonHitSize, height: imageEditorToolButtonHitSize)"

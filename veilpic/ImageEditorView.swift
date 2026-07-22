@@ -1154,9 +1154,10 @@ struct ImageEditorView: View {
     private func toolRailItem(_ tool: ImageEditorTool) -> some View {
         if tool == .marquee {
             ZStack(alignment: .bottomTrailing) {
-                Button {
-                    selectToolFromRail(tool)
-                } label: {
+                EditorToolRailTile(
+                    isSelected: viewModel.selectedTool == tool,
+                    action: { selectToolFromRail(tool) }
+                ) {
                     ZStack {
                         ImageEditorMarqueeToolSymbol(shape: viewModel.marqueeShape)
                             .frame(width: 30, height: 30)
@@ -1164,7 +1165,6 @@ struct ImageEditorView: View {
                     .frame(width: imageEditorToolButtonHitSize, height: imageEditorToolButtonHitSize)
                     .contentShape(Rectangle())
                 }
-                .buttonStyle(EditorIconButtonStyle(isSelected: viewModel.selectedTool == tool))
                 .focusable(false)
                 .xomoFocusEffectDisabled()
                 .accessibilityLabel(tool.title)
@@ -1189,9 +1189,10 @@ struct ImageEditorView: View {
             .accessibilityIdentifier("image-editor-tool-marquee")
             .accessibilityValue(viewModel.marqueeShape.rawValue)
         } else {
-            Button {
-                selectToolFromRail(tool)
-            } label: {
+            EditorToolRailTile(
+                isSelected: viewModel.selectedTool == tool,
+                action: { selectToolFromRail(tool) }
+            ) {
                 ZStack {
                     if tool == .paintBucket {
                         ImageEditorPaintBucketSymbol()
@@ -1205,7 +1206,6 @@ struct ImageEditorView: View {
                 .frame(width: imageEditorToolButtonHitSize, height: imageEditorToolButtonHitSize)
                 .contentShape(Rectangle())
             }
-            .buttonStyle(EditorIconButtonStyle(isSelected: viewModel.selectedTool == tool))
             .focusable(false)
             .xomoFocusEffectDisabled()
             .accessibilityLabel(tool.title)
@@ -11375,6 +11375,58 @@ private struct ImageEditorMarqueeToolSymbol: View {
         }
         .allowsHitTesting(false)
         .accessibilityHidden(true)
+    }
+}
+
+/// Tool choices deliberately avoid SwiftUI's native `Button` tracking.
+/// AppKit can leave a mouse tracking session alive after a component drag or
+/// transient menu interaction, causing every subsequent toolbar button to
+/// miss its mouse-up event. A plain hit-test surface with an explicit tap and
+/// accessibility action remains clickable without accepting keyboard focus.
+private struct EditorToolRailTile<Label: View>: View {
+    let isSelected: Bool
+    let action: () -> Void
+    @ViewBuilder let label: Label
+    @State private var isHovered = false
+
+    init(
+        isSelected: Bool,
+        action: @escaping () -> Void,
+        @ViewBuilder label: () -> Label
+    ) {
+        self.isSelected = isSelected
+        self.action = action
+        self.label = label()
+    }
+
+    private var background: Color {
+        if isSelected {
+            return Color(nsColor: ImageEditorTheme.selected)
+        }
+        return isHovered
+            ? Color(nsColor: ImageEditorTheme.selected).opacity(0.20)
+            : .clear
+    }
+
+    var body: some View {
+        label
+            .foregroundStyle(isSelected ? .white : Color(nsColor: ImageEditorTheme.text))
+            .background(background)
+            .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 5, style: .continuous)
+                    .strokeBorder(isSelected ? Color.white.opacity(0.16) : .clear, lineWidth: 1)
+            }
+            .contentShape(Rectangle())
+            .onHover { isHovered = $0 }
+            .onTapGesture(perform: action)
+            .focusable(false)
+            .xomoFocusEffectDisabled()
+            .accessibilityElement(children: .ignore)
+            .accessibilityAddTraits(.isButton)
+            .accessibilityAction {
+                action()
+            }
     }
 }
 
