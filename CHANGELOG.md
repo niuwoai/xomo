@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.12.0-rc504 - 2026-07-23
+
+### Fixed
+- 组件库拖拽源从可能残留 Transferable 鼠标跟踪会话的 `.draggable` 改为显式 `NSItemProvider` 拖拽；组件放入画布后切回工具栏，单击画笔、橡皮擦等工具不再被悬挂的原生拖拽会话吞掉。
+- 点击插入、拖拽预览、组件实际尺寸和画布 Drop 数据格式保持不变；组件库切换后仍重建工具子树，工具按钮继续保持不可聚焦。
+
+### Verification
+- 新增“真实拖入组件 → 切回工具 → 连续单击画笔与橡皮擦”的组合 UI 回归，并增加源码契约防止组件拖拽源退回 `.draggable`。Xcode 定向源码契约 3/3、SwiftPM CLI 2/2、发布契约 4/4（10 条断言）及 arm64 Release 编译通过。
+- Computer Use 在 rc504 构建中确认画笔、橡皮擦、矩形选区、套索可一次点击切换；点击插入组件、切回工具，以及拖放动作后再次切回时，画笔仍可立即选中。Release 已覆盖 `/Applications/Xomo.app`，包内版本 `2.12.0-rc504 (504)`、Bundle ID `im.some.xomo`、严格签名校验通过。组合 UI 用例本机启动时被 Xcode Runner 卡在 `waiting for workers to materialize`，未把 Runner 中断误记为用例通过；常规完整门禁仍为 rc520。
+
 ## 2.12.0-rc503 - 2026-07-23
 
 ### Fixed

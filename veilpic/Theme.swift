@@ -93,7 +93,9 @@ extension View {
     @ViewBuilder
     func xomoDraggable(_ payload: String) -> some View {
         if #available(macOS 13.0, *) {
-            draggable(payload)
+            onDrag {
+                NSItemProvider(object: payload as NSString)
+            }
         } else {
             self
         }
@@ -105,7 +107,11 @@ extension View {
         @ViewBuilder preview: () -> Preview
     ) -> some View {
         if #available(macOS 13.0, *) {
-            draggable(payload, preview: preview)
+            onDrag {
+                NSItemProvider(object: payload as NSString)
+            } preview: {
+                preview()
+            }
         } else {
             self
         }

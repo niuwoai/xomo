@@ -83,6 +83,45 @@ final class veilpicUITests: XCTestCase {
     }
 
     @MainActor
+    func testToolButtonsRemainClickableAfterDraggingComponentToCanvas() throws {
+        let app = XCUIApplication()
+        app.launchArguments += ["-AppleLanguages", "(zh-Hans)", "-AppleLocale", "zh_CN"]
+        app.launch()
+
+        let componentsTab = app.buttons["组件库"]
+        let toolsTab = app.buttons["工具"]
+        XCTAssertTrue(componentsTab.waitForExistence(timeout: 5))
+        componentsTab.tap()
+
+        let buttonComponent = app.buttons
+            .matching(identifier: "xomo-component-library-item-button")
+            .firstMatch
+        let canvas = app.descendants(matching: .any)
+            .matching(identifier: "image-editor-canvas")
+            .firstMatch
+        XCTAssertTrue(buttonComponent.waitForExistence(timeout: 5))
+        XCTAssertTrue(canvas.waitForExistence(timeout: 5))
+        buttonComponent.press(forDuration: 0.4, thenDragTo: canvas)
+
+        let insertedStatus = app.staticTexts
+            .matching(NSPredicate(format: "value CONTAINS %@", "已插入组件：按钮"))
+            .firstMatch
+        XCTAssertTrue(insertedStatus.waitForExistence(timeout: 5))
+
+        XCTAssertTrue(toolsTab.waitForExistence(timeout: 5))
+        toolsTab.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).click()
+
+        let brush = app.buttons.matching(identifier: "image-editor-tool-brush").firstMatch
+        let eraser = app.buttons.matching(identifier: "image-editor-tool-eraser").firstMatch
+        XCTAssertTrue(brush.waitForExistence(timeout: 5))
+        XCTAssertTrue(eraser.waitForExistence(timeout: 5))
+        brush.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).click()
+        XCTAssertEqual(brush.value as? String, "selected")
+        eraser.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).click()
+        XCTAssertEqual(eraser.value as? String, "selected")
+    }
+
+    @MainActor
     func testLayerStylePresetManagerSearchesAndFiltersRealInterface() throws {
         let app = XCUIApplication()
         app.launchArguments += [

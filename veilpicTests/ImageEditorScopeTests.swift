@@ -305,6 +305,22 @@ struct ImageEditorScopeTests {
         #expect(sidebarSource.contains(".id(viewModel.selectedLeftSidebarTab)"))
     }
 
+    @Test func componentDragSourceDoesNotUseTransferableTrackingSession() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/Theme.swift"),
+            encoding: .utf8
+        )
+        let dragStart = try #require(source.range(of: "func xomoDraggable<Preview: View>"))
+        let dragEnd = try #require(
+            source[dragStart.upperBound...].range(of: "func xomoCanvasPlatformInteractions")
+        )
+        let dragSource = source[dragStart.lowerBound..<dragEnd.lowerBound]
+
+        #expect(dragSource.contains("onDrag"))
+        #expect(dragSource.contains("NSItemProvider(object: payload as NSString)"))
+        #expect(!dragSource.contains("draggable(payload"))
+    }
+
     @Test func propertiesPanelPartitionsLargeViewBuilderForReleaseRuntime() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
