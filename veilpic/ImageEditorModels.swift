@@ -2215,6 +2215,7 @@ struct ImageEditorLayerStyle {
     var innerGlowOpacity: CGFloat = 0.36
     var innerGlowBlur: CGFloat = 8
     var innerGlowChoke: CGFloat = 2
+    var innerGlowTechnique = ImageEditorGlowTechnique.softer
     var innerGlowNoise: CGFloat = 0
     var innerGlowSource = ImageEditorInnerGlowSource.edge
     var innerGlowContour = ImageEditorLayerEffectContour.linear
@@ -3853,6 +3854,28 @@ struct ImageEditorLayer: Identifiable {
                                 }
                             }
                         }
+                    case .center where style.innerGlowTechnique == .precise:
+                        innerGlowImage.draw(
+                            in: contentRect,
+                            from: CGRect(origin: .zero, size: innerGlowImage.size),
+                            operation: .sourceOver,
+                            fraction: 1
+                        )
+                        if choke > 0 {
+                            let directions = 24
+                            for radius in 1...choke {
+                                for step in 0..<directions {
+                                    let angle = CGFloat(step) / CGFloat(directions) * .pi * 2
+                                    let offset = CGSize(width: cos(angle) * CGFloat(radius), height: sin(angle) * CGFloat(radius))
+                                    innerGlowImage.draw(
+                                        in: contentRect.offsetBy(dx: offset.width, dy: offset.height),
+                                        from: CGRect(origin: .zero, size: innerGlowImage.size),
+                                        operation: .sourceOver,
+                                        fraction: 1
+                                    )
+                                }
+                            }
+                        }
                     case .center:
                         let glowColor = style.innerGlowColor.withAlphaComponent(style.innerGlowOpacity)
                         let clearColor = style.innerGlowColor.withAlphaComponent(0)
@@ -3867,14 +3890,23 @@ struct ImageEditorLayer: Identifiable {
                         )
                     }
                 } ?? NSImage(size: outputSize)
-                let innerGlowCanvas = style.innerGlowSource == .center
+                let innerGlowCanvas = style.innerGlowSource == .center && style.innerGlowTechnique == .softer
                     ? rawInnerGlowCanvas.shadowNoised(amount: style.innerGlowNoise) ?? rawInnerGlowCanvas
                     : rawInnerGlowCanvas
-                let blurredInnerGlow = innerGlowCanvas.blurred(radius: style.innerGlowBlur) ?? innerGlowCanvas
-                let contouredInnerGlow = blurredInnerGlow.applyingEffectContour(
+                let diffusedInnerGlow: NSImage
+                switch style.innerGlowTechnique {
+                case .softer:
+                    diffusedInnerGlow = innerGlowCanvas.blurred(radius: style.innerGlowBlur) ?? innerGlowCanvas
+                case .precise:
+                    diffusedInnerGlow = innerGlowCanvas.preciseInnerGlow(
+                        radius: style.innerGlowBlur,
+                        source: style.innerGlowSource
+                    ) ?? innerGlowCanvas
+                }
+                let contouredInnerGlow = diffusedInnerGlow.applyingEffectContour(
                     style.innerGlowContour,
                     range: style.innerGlowRange
-                ) ?? blurredInnerGlow
+                ) ?? diffusedInnerGlow
                 // Photoshop applies Jitter in the inner-glow quality stage,
                 // after the smooth contour has been resolved.  Keeping it
                 // here makes it visibly distinct from Noise, which textures

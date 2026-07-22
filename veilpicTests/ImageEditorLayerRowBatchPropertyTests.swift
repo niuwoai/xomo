@@ -3553,6 +3553,52 @@ struct ImageEditorLayerRowBatchPropertyTests {
         #expect(source.contains("viewModel.setSelectedLayerOuterGlowTechnique(technique)"))
     }
 
+    @Test func layerStyleInnerGlowTechniqueConvergesAcrossEditableSelectionAndUsesPicker() throws {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        let firstID = fixture.layers[0].id
+        let secondID = fixture.layers[1].id
+        let lockedID = fixture.layers[2].id
+        viewModel.document.layers[0].style.innerGlowTechnique = .softer
+        viewModel.document.layers[0].style.innerGlowBlur = 7
+        viewModel.document.layers[1].style.innerGlowEnabled = true
+        viewModel.document.layers[1].style.innerGlowTechnique = .precise
+        viewModel.document.layers[1].style.innerGlowColor = .systemRed
+        viewModel.document.layers[2].style.innerGlowTechnique = .softer
+        viewModel.document.layers[2].isLocked = true
+        select(Set(fixture.layers.map(\.id)), primary: firstID, in: viewModel)
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.selectedLayerInnerGlowTechniqueState == .mixed)
+        #expect(viewModel.setSelectedLayerInnerGlowTechnique(.precise) == 1)
+        #expect(viewModel.selectedLayerInnerGlowTechniqueState == .value(.precise))
+        #expect((try layer(firstID, in: viewModel)).style.innerGlowTechnique == .precise)
+        #expect((try layer(secondID, in: viewModel)).style.innerGlowTechnique == .precise)
+        #expect((try layer(lockedID, in: viewModel)).style.innerGlowTechnique == .softer)
+        #expect((try layer(firstID, in: viewModel)).style.innerGlowEnabled)
+        #expect((try layer(firstID, in: viewModel)).style.innerGlowBlur == 7)
+        #expect((try layer(secondID, in: viewModel)).style.innerGlowColor == .systemRed)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.setSelectedLayerInnerGlowTechnique(.precise) == 0)
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerInnerGlowTechniqueState == .mixed)
+        viewModel.redo()
+        #expect(viewModel.selectedLayerInnerGlowTechniqueState == .value(.precise))
+
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        #expect(source.contains("state: viewModel.selectedLayerInnerGlowTechniqueState"))
+        #expect(source.contains("values: ImageEditorGlowTechnique.allCases"))
+        #expect(source.contains("image-editor-layer-style-inner-glow-technique"))
+        #expect(source.contains("viewModel.setSelectedLayerInnerGlowTechnique(technique)"))
+    }
+
     @Test func layerStyleMixedInnerGlowContourConvergesAcrossEditableSelection() throws {
         let fixture = innerGlowContourFixture()
         let viewModel = fixture.viewModel

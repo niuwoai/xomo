@@ -845,6 +845,7 @@ struct ImageEditorProjectLayerStyle: Codable, Equatable {
     var innerGlowOpacity: CGFloat
     var innerGlowBlur: CGFloat
     var innerGlowChoke: CGFloat
+    var innerGlowTechnique: ImageEditorGlowTechnique?
     var innerGlowNoise: CGFloat?
     var innerGlowSource: ImageEditorInnerGlowSource?
     var innerGlowContour: ImageEditorLayerEffectContour?
@@ -935,6 +936,7 @@ struct ImageEditorProjectLayerStyle: Codable, Equatable {
         innerGlowOpacity = style.innerGlowOpacity
         innerGlowBlur = style.innerGlowBlur
         innerGlowChoke = style.innerGlowChoke
+        innerGlowTechnique = style.innerGlowTechnique
         innerGlowNoise = style.innerGlowNoise
         innerGlowSource = style.innerGlowSource
         innerGlowContour = style.innerGlowContour
@@ -1029,6 +1031,7 @@ struct ImageEditorProjectLayerStyle: Codable, Equatable {
             innerGlowOpacity: innerGlowOpacity,
             innerGlowBlur: innerGlowBlur,
             innerGlowChoke: innerGlowChoke,
+            innerGlowTechnique: innerGlowTechnique ?? .softer,
             innerGlowNoise: max(0, min(1, innerGlowNoise ?? 0)),
             innerGlowSource: innerGlowSource ?? .edge,
             innerGlowContour: innerGlowContour ?? .linear,

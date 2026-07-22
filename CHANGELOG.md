@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.12.0-rc494 - 2026-07-23
+
+### Added
+- 内发光补齐 Photoshop 式“柔和 / 精确”技术选择；精确模式用两遍线性距离场沿真实 Alpha 内轮廓计算光晕，边缘来源向内衰减，中心来源反向使用轮廓距离，因此异形对象不再退化为矩形径向渐变。
+- 内发光技术贯通多选混合值、锁定层跳过、单步 History/Undo、不可聚焦三语界面、工程与样式预设往返，以及 MCP/CLI `xomo.layer.style_settings property=innerGlowTechnique`。
+
+### Compatibility
+- 新建样式默认“柔和”；旧工程没有 `innerGlowTechnique` 字段时同样回退为“柔和”，保持既有视觉。
+
+### Verification
+- Xcode 定向测试 4/4、SwiftPM CLI 2/2、发布契约 4/4（10 条断言）通过；真实像素回归覆盖技术差异、精确模式确定性、Alpha 轮廓内侧衰减、源图层像素不变与工程兼容。下一次完整 Release、全量测试、冒烟和 `/Applications` 覆盖门禁仍为 rc520。
+
 ## 2.12.0-rc493 - 2026-07-23
 
 ### Fixed

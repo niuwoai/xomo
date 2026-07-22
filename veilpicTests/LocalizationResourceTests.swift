@@ -542,11 +542,12 @@ struct LocalizationResourceTests {
     @Test func layerStyleMixedInnerGlowSourceIsLocalizedInEverySupportedLanguage() throws {
         let paths = try Self.repositoryPaths()
         let expectedValues = [
-            "zh-Hans": ["内发光来源", "多个值", "边缘", "中心"],
-            "en": ["Inner Glow Source", "Multiple Values", "Edge", "Center"],
-            "ja": ["内側光彩のソース", "複数の値", "エッジ", "中心"]
+            "zh-Hans": ["内发光技术", "内发光来源", "多个值", "边缘", "中心"],
+            "en": ["Inner Glow Technique", "Inner Glow Source", "Multiple Values", "Edge", "Center"],
+            "ja": ["内側光彩のテクニック", "内側光彩のソース", "複数の値", "エッジ", "中心"]
         ]
         let keys = [
+            "imageEditor.properties.innerGlowTechnique",
             "imageEditor.properties.innerGlowSource",
             "imageEditor.properties.multipleValues",
             "imageEditor.innerGlowSource.edge",

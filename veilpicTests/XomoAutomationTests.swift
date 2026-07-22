@@ -7005,6 +7005,74 @@ struct XomoAutomationTests {
         #expect(!invalid.ok)
     }
 
+    @Test func registrySetsLayerStyleInnerGlowTechniqueWithAdvertisedEnum() throws {
+        let viewModel = makeViewModel()
+        let canvasSize = viewModel.document.canvasSize
+        var first = ImageEditorLayer.blank(name: "First", size: canvasSize)
+        var second = ImageEditorLayer.blank(name: "Second", size: canvasSize)
+        var locked = ImageEditorLayer.blank(name: "Locked", size: canvasSize)
+        first.style.innerGlowTechnique = .softer
+        first.style.innerGlowBlur = 7
+        second.style.innerGlowEnabled = true
+        second.style.innerGlowTechnique = .precise
+        second.style.innerGlowColor = .systemRed
+        locked.style.innerGlowTechnique = .softer
+        locked.isLocked = true
+        viewModel.document.layers = [first, second, locked]
+        viewModel.document.selectedLayerID = first.id
+        viewModel.document.selectedLayerIDs = [first.id, second.id, locked.id]
+        let historyCount = viewModel.document.history.count
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        let styleTool = try #require(automationTool(named: "xomo.layer.style_settings", in: toolsResponse))
+        let inputSchema = try #require(styleTool["inputSchema"]?.objectValue)
+        let properties = try #require(inputSchema["properties"]?.objectValue)
+        let propertySchema = try #require(properties["property"]?.objectValue)
+        let techniqueSchema = try #require(properties["innerGlowTechnique"]?.objectValue)
+        #expect(propertySchema["enum"]?.arrayValue?.contains(.string("innerGlowTechnique")) == true)
+        #expect(techniqueSchema["enum"] == .array([.string("softer"), .string("precise")]))
+
+        let result = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("innerGlowTechnique"),
+                "innerGlowTechnique": .string("precise")
+            ]
+        ))
+        #expect(result.ok)
+        #expect(result.result?.objectValue?["updatedLayerCount"] == .number(1))
+        #expect(viewModel.document.layers[0].style.innerGlowTechnique == .precise)
+        #expect(viewModel.document.layers[1].style.innerGlowTechnique == .precise)
+        #expect(viewModel.document.layers[2].style.innerGlowTechnique == .softer)
+        #expect(viewModel.document.layers[0].style.innerGlowEnabled)
+        #expect(viewModel.document.layers[0].style.innerGlowBlur == 7)
+        #expect(viewModel.document.layers[1].style.innerGlowColor == .systemRed)
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        let repeated = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("innerGlowTechnique"),
+                "innerGlowTechnique": .string("precise")
+            ]
+        ))
+        #expect(!repeated.ok)
+
+        let invalid = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("innerGlowTechnique"),
+                "innerGlowTechnique": .string("unknown")
+            ]
+        ))
+        #expect(!invalid.ok)
+    }
+
     @Test func registrySetsLayerStyleInnerGlowContourWithAdvertisedEnum() throws {
         let viewModel = makeViewModel()
         let canvasSize = viewModel.document.canvasSize

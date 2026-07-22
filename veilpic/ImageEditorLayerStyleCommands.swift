@@ -571,6 +571,14 @@ extension ImageEditorViewModel {
         selectedLayerStyleValueState(\.innerGlowChoke)
     }
 
+    var selectedLayerInnerGlowTechnique: ImageEditorGlowTechnique {
+        document.selectedLayer?.style.innerGlowTechnique ?? .softer
+    }
+
+    var selectedLayerInnerGlowTechniqueState: ImageEditorLayerStyleValueState<ImageEditorGlowTechnique> {
+        selectedLayerStyleValueState(\.innerGlowTechnique)
+    }
+
     var selectedLayerInnerGlowNoise: Double {
         Double(document.selectedLayer?.style.innerGlowNoise ?? 0)
     }
@@ -1442,6 +1450,14 @@ extension ImageEditorViewModel {
         updateSelectedLayerStyle {
             $0.innerGlowEnabled = true
             $0.innerGlowChoke = max(0, min(24, CGFloat(choke)))
+        }
+    }
+
+    @discardableResult
+    func setSelectedLayerInnerGlowTechnique(_ technique: ImageEditorGlowTechnique) -> Int {
+        updateSelectedLayerStyle {
+            $0.innerGlowEnabled = true
+            $0.innerGlowTechnique = technique
         }
     }
 

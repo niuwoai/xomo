@@ -1142,6 +1142,7 @@
 "imageEditor.properties.outerGlowBlurValue" = "外发光模糊：%d px";
 "imageEditor.properties.outerGlowSpreadValue" = "扩展：%d px";
 "imageEditor.properties.outerGlowTechnique" = "外发光技术";
+"imageEditor.properties.innerGlowTechnique" = "内发光技术";
 "imageEditor.glowTechnique.softer" = "柔和";
 "imageEditor.glowTechnique.precise" = "精确";
 "imageEditor.properties.outerGlowNoiseValue" = "外发光噪点：%d%%";
