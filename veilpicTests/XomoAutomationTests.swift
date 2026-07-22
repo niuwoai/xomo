@@ -6785,6 +6785,90 @@ struct XomoAutomationTests {
         #expect(viewModel.document.history.count == historyAfterUpdate + 1)
     }
 
+    @Test func registrySetsLayerStyleInnerGlowContourWithAdvertisedEnum() throws {
+        let viewModel = makeViewModel()
+        let canvasSize = viewModel.document.canvasSize
+        var first = ImageEditorLayer.blank(name: "First", size: canvasSize)
+        var second = ImageEditorLayer.blank(name: "Second", size: canvasSize)
+        var locked = ImageEditorLayer.blank(name: "Locked", size: canvasSize)
+        first.style.innerGlowContour = .linear
+        first.style.innerGlowBlur = 7
+        second.style.innerGlowEnabled = true
+        second.style.innerGlowContour = .soft
+        second.style.innerGlowColor = .systemRed
+        second.style.innerGlowSource = .center
+        locked.style.innerGlowContour = .linear
+        locked.isLocked = true
+        viewModel.document.layers = [first, second, locked]
+        viewModel.document.selectedLayerID = first.id
+        viewModel.document.selectedLayerIDs = [first.id, second.id, locked.id]
+        let historyCount = viewModel.document.history.count
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        try assertInnerGlowContourSchema(in: toolsResponse)
+
+        let result = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("innerGlowContour"),
+                "innerGlowContour": .string("soft")
+            ]
+        ))
+
+        #expect(result.ok)
+        #expect(result.result?.objectValue?["updatedLayerCount"] == .number(1))
+        #expect(viewModel.document.layers[0].style.innerGlowContour == .soft)
+        #expect(viewModel.document.layers[1].style.innerGlowContour == .soft)
+        #expect(viewModel.document.layers[2].style.innerGlowContour == .linear)
+        #expect(viewModel.document.layers[0].style.innerGlowEnabled)
+        #expect(viewModel.document.layers[1].style.innerGlowEnabled)
+        #expect(viewModel.document.layers[0].style.innerGlowBlur == 7)
+        #expect(viewModel.document.layers[1].style.innerGlowColor == .systemRed)
+        #expect(viewModel.document.layers[1].style.innerGlowSource == .center)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [first.id, second.id, locked.id])
+
+        let historyAfterUpdate = viewModel.document.history.count
+        let repeated = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("innerGlowContour"),
+                "innerGlowContour": .string("soft")
+            ]
+        ))
+        #expect(!repeated.ok)
+        #expect(viewModel.document.history.count == historyAfterUpdate)
+
+        let ring = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("innerGlowContour"),
+                "innerGlowContour": .string("ring")
+            ]
+        ))
+        #expect(ring.ok)
+        #expect(ring.result?.objectValue?["updatedLayerCount"] == .number(2))
+        #expect(viewModel.document.layers[0].style.innerGlowContour == .ring)
+        #expect(viewModel.document.layers[1].style.innerGlowContour == .ring)
+        #expect(viewModel.document.layers[2].style.innerGlowContour == .linear)
+
+        let invalid = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("innerGlowContour"),
+                "innerGlowContour": .string("unknown")
+            ]
+        ))
+        #expect(!invalid.ok)
+        #expect(viewModel.document.history.count == historyAfterUpdate + 1)
+    }
+
     @Test func registrySetsLayerStyleSatinContourWithAdvertisedEnum() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared
@@ -7767,6 +7851,18 @@ struct XomoAutomationTests {
         let propertySchema = try #require(properties["property"]?.objectValue)
         let contourSchema = try #require(properties["outerGlowContour"]?.objectValue)
         #expect(propertySchema["enum"]?.arrayValue?.contains(.string("outerGlowContour")) == true)
+        #expect(contourSchema["enum"] == .array([
+            .string("linear"), .string("soft"), .string("steep"), .string("cone"), .string("ring")
+        ]))
+    }
+
+    private func assertInnerGlowContourSchema(in response: XomoAutomationWireResponse) throws {
+        let styleTool = try #require(automationTool(named: "xomo.layer.style_settings", in: response))
+        let inputSchema = try #require(styleTool["inputSchema"]?.objectValue)
+        let properties = try #require(inputSchema["properties"]?.objectValue)
+        let propertySchema = try #require(properties["property"]?.objectValue)
+        let contourSchema = try #require(properties["innerGlowContour"]?.objectValue)
+        #expect(propertySchema["enum"]?.arrayValue?.contains(.string("innerGlowContour")) == true)
         #expect(contourSchema["enum"] == .array([
             .string("linear"), .string("soft"), .string("steep"), .string("cone"), .string("ring")
         ]))

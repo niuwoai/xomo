@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.12.0-rc487 - 2026-07-23
+
+### Added
+- “内发光”增加 Photoshop 式等高线控制，提供线性、柔和、陡峭、锥形和环形五种 Alpha 衰减曲线；界面使用本地化、不可聚焦的多选菜单，并支持混合值。
+- 等高线参与边缘与中心两类内发光的真实像素合成，并随 Xomo 工程、图层样式预设复制与重开完整保留。
+- MCP/CLI `xomo.layer.style_settings(property=innerGlowContour)` 开放同一五档枚举并返回真实 `updatedLayerCount`。
+
+### Fixed
+- 多图层修改只收敛可编辑目标并跳过锁定层；首次设置会自动启用内发光，重复设置不制造空 Undo/History，非法枚举和零变化均明确失败。
+
+### Verification
+- 内发光等高线批量事务、不可聚焦界面接线、真实像素差异/工程往返及 MCP 枚举与更新计数用例 4/4 真实执行通过；SwiftPM CLI 2/2、发布契约 4/4（10 条断言）通过。下一次完整 Release、全量测试、真实冒烟与 `/Applications` 覆盖门禁仍为 rc520。
+
 ## 2.12.0-rc486 - 2026-07-23
 
 ### Changed

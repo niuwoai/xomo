@@ -2214,6 +2214,7 @@ struct ImageEditorLayerStyle {
     var innerGlowChoke: CGFloat = 2
     var innerGlowNoise: CGFloat = 0
     var innerGlowSource = ImageEditorInnerGlowSource.edge
+    var innerGlowContour = ImageEditorLayerEffectContour.linear
     var colorOverlayEnabled = false
     var colorOverlayColor = NSColor.systemRed
     var colorOverlayOpacity: CGFloat = 0.55
@@ -3853,9 +3854,10 @@ struct ImageEditorLayer: Identifiable {
                     ? rawInnerGlowCanvas.shadowNoised(amount: style.innerGlowNoise) ?? rawInnerGlowCanvas
                     : rawInnerGlowCanvas
                 let blurredInnerGlow = innerGlowCanvas.blurred(radius: style.innerGlowBlur) ?? innerGlowCanvas
-                blurredInnerGlow.draw(
+                let contouredInnerGlow = blurredInnerGlow.applyingEffectContour(style.innerGlowContour) ?? blurredInnerGlow
+                contouredInnerGlow.draw(
                     in: CGRect(origin: .zero, size: outputSize),
-                    from: CGRect(origin: .zero, size: outputSize),
+                    from: CGRect(origin: .zero, size: contouredInnerGlow.size),
                     operation: .sourceOver,
                     fraction: 1
                 )

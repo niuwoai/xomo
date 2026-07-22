@@ -3374,6 +3374,74 @@ struct ImageEditorLayerRowBatchPropertyTests {
         return fixture
     }
 
+    @Test func layerStyleMixedInnerGlowContourConvergesAcrossEditableSelection() throws {
+        let fixture = innerGlowContourFixture()
+        let viewModel = fixture.viewModel
+        let firstID = fixture.layers[0].id
+        let secondID = fixture.layers[1].id
+        let lockedID = fixture.layers[2].id
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.selectedLayerInnerGlowContourState == .mixed)
+        #expect(viewModel.setSelectedLayerInnerGlowContour(.soft) == 1)
+        #expect(viewModel.selectedLayerInnerGlowContourState == .value(.soft))
+        #expect((try layer(firstID, in: viewModel)).style.innerGlowContour == .soft)
+        #expect((try layer(secondID, in: viewModel)).style.innerGlowContour == .soft)
+        #expect((try layer(lockedID, in: viewModel)).style.innerGlowContour == .linear)
+        #expect((try layer(firstID, in: viewModel)).style.innerGlowEnabled)
+        #expect((try layer(secondID, in: viewModel)).style.innerGlowEnabled)
+        #expect((try layer(firstID, in: viewModel)).style.innerGlowBlur == 7)
+        #expect((try layer(secondID, in: viewModel)).style.innerGlowColor == .systemRed)
+        #expect((try layer(secondID, in: viewModel)).style.innerGlowSource == .center)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+
+        let historyAfterUpdate = viewModel.document.history.count
+        #expect(viewModel.setSelectedLayerInnerGlowContour(.soft) == 0)
+        #expect(viewModel.document.history.count == historyAfterUpdate)
+
+        #expect(viewModel.setSelectedLayerInnerGlowContour(.ring) == 2)
+        #expect(viewModel.selectedLayerInnerGlowContourState == .value(.ring))
+        #expect((try layer(firstID, in: viewModel)).style.innerGlowContour == .ring)
+        #expect((try layer(secondID, in: viewModel)).style.innerGlowContour == .ring)
+        #expect((try layer(lockedID, in: viewModel)).style.innerGlowContour == .linear)
+
+        viewModel.undo()
+        #expect(viewModel.selectedLayerInnerGlowContourState == .value(.soft))
+        viewModel.redo()
+        #expect(viewModel.selectedLayerInnerGlowContourState == .value(.ring))
+    }
+
+    @Test func layerStyleMixedInnerGlowContourPickerUsesLocalizedValue() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("state: viewModel.selectedLayerInnerGlowContourState"))
+        #expect(source.contains("image-editor-layer-style-inner-glow-contour"))
+        #expect(source.contains("viewModel.setSelectedLayerInnerGlowContour(contour)"))
+        #expect(!source.contains("selectedLayerInnerGlowContourBinding"))
+    }
+
+    private func innerGlowContourFixture() -> Fixture {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        viewModel.document.layers[0].style.innerGlowContour = .linear
+        viewModel.document.layers[0].style.innerGlowBlur = 7
+        viewModel.document.layers[1].style.innerGlowEnabled = true
+        viewModel.document.layers[1].style.innerGlowContour = .soft
+        viewModel.document.layers[1].style.innerGlowColor = .systemRed
+        viewModel.document.layers[1].style.innerGlowSource = .center
+        viewModel.document.layers[2].style.innerGlowContour = .linear
+        viewModel.document.layers[2].isLocked = true
+        select(Set(fixture.layers.map(\.id)), primary: fixture.layers[0].id, in: viewModel)
+        return fixture
+    }
+
     @Test func layerStyleMixedSatinContourConvergesAcrossEditableSelection() throws {
         let fixture = satinContourFixture()
         let viewModel = fixture.viewModel

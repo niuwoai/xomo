@@ -1147,6 +1147,7 @@
 "imageEditor.properties.innerGlowChokeValue" = "チョーク：%d px";
 "imageEditor.properties.innerGlowNoiseValue" = "内側光彩のノイズ：%d%%";
 "imageEditor.properties.innerGlowSource" = "内側光彩のソース";
+"imageEditor.properties.innerGlowContour" = "内側光彩の輪郭";
 "imageEditor.innerGlowSource.edge" = "エッジ";
 "imageEditor.innerGlowSource.center" = "中心";
 "imageEditor.properties.colorOverlayOpacityValue" = "カラーオーバーレイ不透明度：%d%%";

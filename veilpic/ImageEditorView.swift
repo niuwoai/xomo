@@ -7396,6 +7396,15 @@ struct ImageEditorView: View {
                 ) { source in
                     viewModel.setSelectedLayerInnerGlowSource(source)
                 }
+                layerStyleValuePicker(
+                    state: viewModel.selectedLayerInnerGlowContourState,
+                    values: ImageEditorLayerEffectContour.allCases,
+                    labelKey: "imageEditor.properties.innerGlowContour",
+                    accessibilityIdentifier: "image-editor-layer-style-inner-glow-contour",
+                    title: \.title
+                ) { contour in
+                    viewModel.setSelectedLayerInnerGlowContour(contour)
+                }
                 }
 
                 Group {

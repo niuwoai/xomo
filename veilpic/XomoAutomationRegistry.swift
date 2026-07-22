@@ -2642,6 +2642,20 @@ final class XomoAutomationRegistry {
             return .object([
                 "updatedLayerCount": .number(Double(updatedLayerCount))
             ])
+        case "innerGlowContour":
+            let rawValue = try requiredString("innerGlowContour", in: arguments)
+            guard let contour = ImageEditorLayerEffectContour(rawValue: rawValue) else {
+                throw XomoAutomationCallError.invalidArgument("Unknown inner glow contour")
+            }
+            let updatedLayerCount = viewModel.setSelectedLayerInnerGlowContour(contour)
+            guard updatedLayerCount > 0 else {
+                throw XomoAutomationCallError.operationFailed(
+                    "No editable layer needs the requested inner glow contour"
+                )
+            }
+            return .object([
+                "updatedLayerCount": .number(Double(updatedLayerCount))
+            ])
         case "colorOverlayOpacity": viewModel.setSelectedLayerColorOverlayOpacity(try number())
         case "colorOverlayColor": viewModel.setSelectedLayerColorOverlayColor(viewModel.foregroundColor)
         case "gradientOverlayOpacity": viewModel.setSelectedLayerGradientOverlayOpacity(try number())
@@ -4216,8 +4230,8 @@ private extension XomoAutomationRegistry {
             "direction": XomoAutomationSchema.string(description: "Preset ordering direction", values: ImageEditorLayerStylePresetMoveDirection.allCases.map(\.rawValue)),
             "path": XomoAutomationSchema.string(description: "Local .xomostyles path for preset import preview, import, or export")
         ], required: ["action"]),
-        tool("xomo.layer.style_settings", "Set effect scale, stroke width, stroke position, stroke fill type, stroke gradient style or angle, stroke pattern kind or scale, stroke opacity or color, shadow opacity/color/blur/spread/noise/contour/distance/angle, or inner-shadow opacity/blur with actual updated-layer counts. Shadow angle reports whether global light changed; direct global-light updates report affected layer/effect counts across linked shadows, inner shadows, and bevels. Other glow, overlay, satin, and bevel properties remain available.", [
-            "property": XomoAutomationSchema.string(description: "Layer style property", values: ["effectScale", "strokeWidth", "strokePosition", "strokeFillType", "strokeGradientStyle", "strokeGradientAngle", "strokePatternKind", "strokePatternScale", "strokeOpacity", "strokeColor", "shadowOpacity", "shadowColor", "shadowBlur", "shadowSpread", "shadowNoise", "shadowContour", "shadowDistance", "shadowAngle", "globalLightAngle", "innerShadowOpacity", "innerShadowBlur", "innerShadowChoke", "innerShadowNoise", "innerShadowContour", "innerShadowDistance", "innerShadowAngle", "outerGlowOpacity", "outerGlowColor", "outerGlowBlur", "outerGlowSpread", "outerGlowNoise", "outerGlowContour", "innerGlowOpacity", "innerGlowColor", "innerGlowBlur", "innerGlowChoke", "innerGlowNoise", "innerGlowSource", "colorOverlayOpacity", "colorOverlayColor", "gradientOverlayOpacity", "gradientOverlayScale", "gradientOverlayAngle", "gradientOverlayStyle", "patternOverlayKind", "patternOverlayOpacity", "patternOverlayScale", "satinOpacity", "satinColor", "satinDistance", "satinSize", "satinAngle", "satinInvert", "satinContour", "bevelSize", "bevelOpacity", "bevelHighlightColor", "bevelShadowColor", "bevelSoften", "bevelAngle", "bevelDirection"]),
+        tool("xomo.layer.style_settings", "Set effect scale; stroke; shadow; inner-shadow; and outer/inner-glow opacity, color, blur, spread or choke, noise, source, and contour settings with actual updated-layer counts. Shadow angle reports whether global light changed; direct global-light updates report affected layer/effect counts across linked shadows, inner shadows, and bevels. Overlay, satin, and bevel properties remain available.", [
+            "property": XomoAutomationSchema.string(description: "Layer style property", values: ["effectScale", "strokeWidth", "strokePosition", "strokeFillType", "strokeGradientStyle", "strokeGradientAngle", "strokePatternKind", "strokePatternScale", "strokeOpacity", "strokeColor", "shadowOpacity", "shadowColor", "shadowBlur", "shadowSpread", "shadowNoise", "shadowContour", "shadowDistance", "shadowAngle", "globalLightAngle", "innerShadowOpacity", "innerShadowBlur", "innerShadowChoke", "innerShadowNoise", "innerShadowContour", "innerShadowDistance", "innerShadowAngle", "outerGlowOpacity", "outerGlowColor", "outerGlowBlur", "outerGlowSpread", "outerGlowNoise", "outerGlowContour", "innerGlowOpacity", "innerGlowColor", "innerGlowBlur", "innerGlowChoke", "innerGlowNoise", "innerGlowSource", "innerGlowContour", "colorOverlayOpacity", "colorOverlayColor", "gradientOverlayOpacity", "gradientOverlayScale", "gradientOverlayAngle", "gradientOverlayStyle", "patternOverlayKind", "patternOverlayOpacity", "patternOverlayScale", "satinOpacity", "satinColor", "satinDistance", "satinSize", "satinAngle", "satinInvert", "satinContour", "bevelSize", "bevelOpacity", "bevelHighlightColor", "bevelShadowColor", "bevelSoften", "bevelAngle", "bevelDirection"]),
             "value": XomoAutomationSchema.number(description: "Numeric style value"),
             "position": XomoAutomationSchema.string(description: "Stroke position", values: ImageEditorStrokePosition.allCases.map(\.rawValue)),
             "fillType": XomoAutomationSchema.string(description: "Stroke fill type", values: ImageEditorStrokeFillType.allCases.map(\.rawValue)),
@@ -4229,6 +4243,7 @@ private extension XomoAutomationRegistry {
             "shadowContour": XomoAutomationSchema.string(description: "Drop shadow contour", values: ImageEditorLayerEffectContour.allCases.map(\.rawValue)),
             "innerShadowContour": XomoAutomationSchema.string(description: "Inner shadow contour", values: ImageEditorLayerEffectContour.allCases.map(\.rawValue)),
             "outerGlowContour": XomoAutomationSchema.string(description: "Outer glow contour", values: ImageEditorLayerEffectContour.allCases.map(\.rawValue)),
+            "innerGlowContour": XomoAutomationSchema.string(description: "Inner glow contour", values: ImageEditorLayerEffectContour.allCases.map(\.rawValue)),
             "satinContour": XomoAutomationSchema.string(description: "Satin contour", values: ImageEditorLayerEffectContour.allCases.map(\.rawValue)),
             "bevelDirection": XomoAutomationSchema.string(description: "Bevel direction", values: ImageEditorBevelDirection.allCases.map(\.rawValue)),
             "enabled": XomoAutomationSchema.boolean(description: "Boolean style value; color properties use the current foreground color")

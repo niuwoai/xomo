@@ -563,6 +563,14 @@ extension ImageEditorViewModel {
         selectedLayerStyleValueState(\.innerGlowSource)
     }
 
+    var selectedLayerInnerGlowContour: ImageEditorLayerEffectContour {
+        document.selectedLayer?.style.innerGlowContour ?? .linear
+    }
+
+    var selectedLayerInnerGlowContourState: ImageEditorLayerStyleValueState<ImageEditorLayerEffectContour> {
+        selectedLayerStyleValueState(\.innerGlowContour)
+    }
+
     var selectedLayerColorOverlayOpacity: Double {
         Double(document.selectedLayer?.style.colorOverlayOpacity ?? 0.55)
     }
@@ -1386,6 +1394,14 @@ extension ImageEditorViewModel {
         updateSelectedLayerStyle {
             $0.innerGlowEnabled = true
             $0.innerGlowSource = source
+        }
+    }
+
+    @discardableResult
+    func setSelectedLayerInnerGlowContour(_ contour: ImageEditorLayerEffectContour) -> Int {
+        updateSelectedLayerStyle {
+            $0.innerGlowEnabled = true
+            $0.innerGlowContour = contour
         }
     }
 

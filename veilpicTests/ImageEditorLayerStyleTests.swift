@@ -766,6 +766,76 @@ struct ImageEditorLayerStyleTests {
         #expect(restoredLayer.style.outerGlowColor.isEqual(glowColor))
     }
 
+    @Test func imageEditorInnerGlowContourChangesFalloffAndRoundTripsProjectState() async throws {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let glowColor = NSColor(srgbRed: 0.9, green: 0.08, blue: 0.12, alpha: 1)
+        let baseImage = solidImage(color: .clear, size: canvasSize)
+        let layerImage = centerRectImage(size: canvasSize, color: .white)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: baseImage) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(
+            layerImage,
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+        let layerPixelsBeforeStyle = try #require(
+            viewModel.document.selectedLayer?.image.qingtuPNGData()
+        )
+
+        viewModel.setSelectedLayerInnerGlowOpacity(1)
+        viewModel.setSelectedLayerInnerGlowColor(glowColor)
+        viewModel.setSelectedLayerInnerGlowBlur(10)
+        viewModel.setSelectedLayerInnerGlowChoke(0)
+        viewModel.setSelectedLayerInnerGlowNoise(0)
+        viewModel.setSelectedLayerInnerGlowSource(.edge)
+        #expect(viewModel.setSelectedLayerInnerGlowContour(.linear) == 0)
+        let linearGlow = viewModel.currentImage
+        let linearGlowData = try #require(linearGlow.qingtuPNGData())
+
+        #expect(viewModel.setSelectedLayerInnerGlowContour(.steep) == 1)
+        let steepGlow = viewModel.currentImage
+        let steepGlowData = try #require(steepGlow.qingtuPNGData())
+
+        var maximumGreenReduction: CGFloat = 0
+        for x in 24...40 {
+            let point = CGPoint(x: CGFloat(x), y: 30)
+            let linearColor = try #require(
+                linearGlow.color(at: point)?.usingColorSpace(.deviceRGB)
+            )
+            let steepColor = try #require(
+                steepGlow.color(at: point)?.usingColorSpace(.deviceRGB)
+            )
+            maximumGreenReduction = max(
+                maximumGreenReduction,
+                linearColor.greenComponent - steepColor.greenComponent
+            )
+        }
+
+        let styledLayer = try #require(viewModel.document.selectedLayer)
+        let layerPixelsAfterStyle = try #require(styledLayer.image.qingtuPNGData())
+        #expect(styledLayer.style.innerGlowEnabled)
+        #expect(styledLayer.style.innerGlowContour == .steep)
+        #expect(styledLayer.style.innerGlowOpacity == 1)
+        #expect(styledLayer.style.innerGlowBlur == 10)
+        #expect(styledLayer.style.innerGlowChoke == 0)
+        #expect(styledLayer.style.innerGlowNoise == 0)
+        #expect(styledLayer.style.innerGlowSource == .edge)
+        #expect(styledLayer.style.innerGlowColor.isEqual(glowColor))
+        #expect(layerPixelsAfterStyle == layerPixelsBeforeStyle)
+        #expect(steepGlowData != linearGlowData)
+        #expect(maximumGreenReduction > 0.03)
+
+        let project = try ImageEditorProjectDocument(document: viewModel.document)
+        let restoredDocument = try project.restoredDocument()
+        let restoredLayer = try #require(restoredDocument.layers.first { $0.id == styledLayer.id })
+        #expect(restoredLayer.style.innerGlowEnabled)
+        #expect(restoredLayer.style.innerGlowContour == .steep)
+        #expect(restoredLayer.style.innerGlowOpacity == 1)
+        #expect(restoredLayer.style.innerGlowBlur == 10)
+        #expect(restoredLayer.style.innerGlowChoke == 0)
+        #expect(restoredLayer.style.innerGlowNoise == 0)
+        #expect(restoredLayer.style.innerGlowSource == .edge)
+        #expect(restoredLayer.style.innerGlowColor.isEqual(glowColor))
+    }
+
     @Test func imageEditorLayerEffectContoursChangeFalloffAndRoundTripProjectState() async throws {
         let canvasSize = NSSize(width: 80, height: 60)
         let baseImage = solidImage(color: .systemBlue, size: canvasSize)
