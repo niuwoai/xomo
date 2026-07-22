@@ -7128,6 +7128,8 @@ struct ImageEditorView: View {
                     in: -180...180,
                     step: 15
                 )
+                .focusable(false)
+                .accessibilityIdentifier("image-editor-layer-style-global-light-angle")
                 HStack {
                     layerStyleNumericStepper(
                         state: viewModel.selectedLayerShadowDistanceState,

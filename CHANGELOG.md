@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.12.0-rc463 - 2026-07-22
+
+### Changed
+- 文档级全局光 setter 返回更新结果：去重后的受影响图层数、链接效果总数，以及投影、内阴影、斜面三类分项计数。
+- MCP `xomo.layer.style_settings(property=globalLightAngle)` 返回 `globalLightUpdated`、`updatedLayerCount`、`affectedEffectCount` 与三类分项；锁定层的全局光链接效果按真实传播计入。
+- 全局光 Stepper 增加稳定辅助标识并设为不可聚焦，避免样式面板控件抢走画布键盘操作。
+
+### Fixed
+- 重复或规范化后等价的全局光角度不再制造空 Undo/History；MCP 对零变化明确失败。
+- 受影响图层按 ID 去重，同一图层同时启用投影和内阴影时计为一个图层、两个效果；局部光效果不误计。
+
+### Verification
+- 全局光文档事务、图层去重、效果分项、锁定层传播、390° 等价值、不可聚焦控件、投影/斜面链接渲染测试 5/5、SwiftPM CLI 2/2、发布版本契约 7/7 通过。
+
 ## 2.12.0-rc462 - 2026-07-22
 
 ### Changed

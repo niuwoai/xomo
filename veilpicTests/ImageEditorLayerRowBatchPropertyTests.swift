@@ -1201,6 +1201,75 @@ struct ImageEditorLayerRowBatchPropertyTests {
         #expect(source.contains("L10n.format(\"imageEditor.properties.shadowAngleValue\""))
     }
 
+    @Test func globalLightAngleReportsLinkedEffectAndLayerCounts() throws {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        viewModel.document.globalLightAngle = -45
+
+        viewModel.document.layers[0].style.shadowEnabled = true
+        viewModel.document.layers[0].style.shadowUsesGlobalLight = true
+        viewModel.document.layers[0].style.innerShadowEnabled = true
+        viewModel.document.layers[0].style.innerShadowUsesGlobalLight = true
+
+        viewModel.document.layers[1].style.shadowEnabled = true
+        viewModel.document.layers[1].style.shadowUsesGlobalLight = false
+        viewModel.document.layers[1].style.bevelEnabled = true
+        viewModel.document.layers[1].style.bevelUsesGlobalLight = true
+
+        viewModel.document.layers[2].style.shadowEnabled = true
+        viewModel.document.layers[2].style.shadowUsesGlobalLight = true
+        viewModel.document.layers[2].isLocked = true
+
+        let historyCount = viewModel.document.history.count
+        let result = viewModel.setGlobalLightAngle(30)
+
+        #expect(result.didUpdate)
+        #expect(result.affectedLayerCount == 3)
+        #expect(result.affectedEffectCount == 4)
+        #expect(result.shadowLayerCount == 2)
+        #expect(result.innerShadowLayerCount == 1)
+        #expect(result.bevelLayerCount == 1)
+        #expect(viewModel.document.globalLightAngle == 30)
+        #expect(viewModel.document.layers[0].style.resolvedShadowAngle(globalLightAngle: 30) == 30)
+        #expect(viewModel.document.layers[0].style.resolvedInnerShadowAngle(globalLightAngle: 30) == 30)
+        #expect(viewModel.document.layers[1].style.resolvedShadowAngle(globalLightAngle: 30) == -45)
+        #expect(viewModel.document.layers[1].style.resolvedBevelAngle(globalLightAngle: 30) == 30)
+        #expect(viewModel.document.layers[2].style.resolvedShadowAngle(globalLightAngle: 30) == 30)
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        let historyAfterUpdate = viewModel.document.history.count
+        #expect(viewModel.setGlobalLightAngle(390) == .unchanged)
+        #expect(viewModel.document.history.count == historyAfterUpdate)
+
+        viewModel.undo()
+        #expect(viewModel.document.globalLightAngle == -45)
+        viewModel.redo()
+        #expect(viewModel.document.globalLightAngle == 30)
+    }
+
+    @Test func globalLightAngleControlIsNotFocusable() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        let identifierRange = try #require(
+            source.range(of: "image-editor-layer-style-global-light-angle")
+        )
+        let snippetStart = source.index(
+            identifierRange.lowerBound,
+            offsetBy: -400,
+            limitedBy: source.startIndex
+        ) ?? source.startIndex
+        let snippet = source[snippetStart..<identifierRange.upperBound]
+
+        #expect(snippet.contains("L10n.format(\"imageEditor.properties.globalLightAngleValue\""))
+        #expect(snippet.contains(".focusable(false)"))
+    }
+
     private func shadowAngleFixture() -> Fixture {
         let fixture = makeFixture()
         let viewModel = fixture.viewModel

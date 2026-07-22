@@ -4598,6 +4598,66 @@ struct XomoAutomationTests {
         #expect(viewModel.document.globalLightAngle == -170)
     }
 
+    @Test func registrySetsGlobalLightAngleWithLinkedEffectCounts() throws {
+        let viewModel = makeViewModel()
+        let canvasSize = viewModel.document.canvasSize
+        var first = ImageEditorLayer.blank(name: "First", size: canvasSize)
+        var second = ImageEditorLayer.blank(name: "Second", size: canvasSize)
+        var locked = ImageEditorLayer.blank(name: "Locked", size: canvasSize)
+
+        first.style.shadowEnabled = true
+        first.style.shadowUsesGlobalLight = true
+        first.style.innerShadowEnabled = true
+        first.style.innerShadowUsesGlobalLight = true
+        second.style.shadowEnabled = true
+        second.style.shadowUsesGlobalLight = false
+        second.style.bevelEnabled = true
+        second.style.bevelUsesGlobalLight = true
+        locked.style.shadowEnabled = true
+        locked.style.shadowUsesGlobalLight = true
+        locked.isLocked = true
+
+        viewModel.document.globalLightAngle = -45
+        viewModel.document.layers = [first, second, locked]
+        let historyCount = viewModel.document.history.count
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        try assertNumericLayerStylePropertySchema("globalLightAngle", in: toolsResponse)
+
+        let result = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("globalLightAngle"),
+                "value": .number(30)
+            ]
+        ))
+
+        #expect(result.ok)
+        #expect(result.result?.objectValue?["globalLightUpdated"] == .bool(true))
+        #expect(result.result?.objectValue?["updatedLayerCount"] == .number(3))
+        #expect(result.result?.objectValue?["affectedEffectCount"] == .number(4))
+        #expect(result.result?.objectValue?["shadowLayerCount"] == .number(2))
+        #expect(result.result?.objectValue?["innerShadowLayerCount"] == .number(1))
+        #expect(result.result?.objectValue?["bevelLayerCount"] == .number(1))
+        #expect(viewModel.document.globalLightAngle == 30)
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        let historyAfterUpdate = viewModel.document.history.count
+        let repeated = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("globalLightAngle"),
+                "value": .number(390)
+            ]
+        ))
+        #expect(!repeated.ok)
+        #expect(viewModel.document.history.count == historyAfterUpdate)
+    }
+
     @Test func registrySetsLayerStyleInnerShadowAngleAcrossGlobalAndLocalLight() throws {
         let viewModel = makeViewModel()
         let canvasSize = viewModel.document.canvasSize

@@ -94,6 +94,24 @@ enum ImageEditorLayerLightEffect: CaseIterable {
     }
 }
 
+struct ImageEditorGlobalLightUpdateResult: Equatable {
+    let didUpdate: Bool
+    let affectedLayerCount: Int
+    let affectedEffectCount: Int
+    let shadowLayerCount: Int
+    let innerShadowLayerCount: Int
+    let bevelLayerCount: Int
+
+    static let unchanged = ImageEditorGlobalLightUpdateResult(
+        didUpdate: false,
+        affectedLayerCount: 0,
+        affectedEffectCount: 0,
+        shadowLayerCount: 0,
+        innerShadowLayerCount: 0,
+        bevelLayerCount: 0
+    )
+}
+
 @MainActor
 extension ImageEditorViewModel {
     var selectedLayerHasStroke: Bool {
@@ -1164,13 +1182,16 @@ extension ImageEditorViewModel {
         setSelectedLayerUsesGlobalLight(enabled, effect: .shadow)
     }
 
-    func setGlobalLightAngle(_ angle: Double) {
+    @discardableResult
+    func setGlobalLightAngle(_ angle: Double) -> ImageEditorGlobalLightUpdateResult {
         let normalizedAngle = normalizedLightAngle(CGFloat(angle))
-        guard abs(document.globalLightAngle - normalizedAngle) > 0.001 else { return }
+        guard abs(document.globalLightAngle - normalizedAngle) > 0.001 else { return .unchanged }
+        let result = globalLightUpdateResult()
         pushUndo()
         document.globalLightAngle = normalizedAngle
         appendHistory(L10n.text("imageEditor.history.globalLight"))
         statusText = L10n.format("imageEditor.status.globalLight", Int(normalizedAngle.rounded()))
+        return result
     }
 
     func setSelectedLayerInnerShadowOpacity(_ opacity: Double) {
@@ -1523,6 +1544,38 @@ extension ImageEditorViewModel {
             normalized += 360
         }
         return normalized
+    }
+
+    private func globalLightUpdateResult() -> ImageEditorGlobalLightUpdateResult {
+        var affectedLayerIDs = Set<UUID>()
+        var shadowLayerCount = 0
+        var innerShadowLayerCount = 0
+        var bevelLayerCount = 0
+
+        for layer in document.layers {
+            let style = layer.style
+            if style.shadowEnabled && style.shadowUsesGlobalLight {
+                shadowLayerCount += 1
+                affectedLayerIDs.insert(layer.id)
+            }
+            if style.innerShadowEnabled && style.innerShadowUsesGlobalLight {
+                innerShadowLayerCount += 1
+                affectedLayerIDs.insert(layer.id)
+            }
+            if style.bevelEnabled && style.bevelUsesGlobalLight {
+                bevelLayerCount += 1
+                affectedLayerIDs.insert(layer.id)
+            }
+        }
+
+        return ImageEditorGlobalLightUpdateResult(
+            didUpdate: true,
+            affectedLayerCount: affectedLayerIDs.count,
+            affectedEffectCount: shadowLayerCount + innerShadowLayerCount + bevelLayerCount,
+            shadowLayerCount: shadowLayerCount,
+            innerShadowLayerCount: innerShadowLayerCount,
+            bevelLayerCount: bevelLayerCount
+        )
     }
 
     @discardableResult
