@@ -1574,10 +1574,10 @@ extension ImageEditorViewModel {
         }
     }
 
-    func setSelectedLayerPatternOverlayScale(_ scale: Double) {
+    @discardableResult
+    func setSelectedLayerPatternOverlayScale(_ scale: Double) -> Int {
         updateSelectedLayerStyle {
             $0.patternOverlayEnabled = true
-            $0.patternOverlayColor = patternOverlayColor()
             $0.patternOverlayScale = max(6, min(64, CGFloat(scale)))
         }
     }

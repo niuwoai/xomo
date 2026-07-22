@@ -3347,17 +3347,30 @@ struct ImageEditorLayerRowBatchPropertyTests {
         let secondID = fixture.layers[1].id
         let lockedID = fixture.layers[2].id
         let historyCount = viewModel.document.history.count
+        let firstColor = try layer(firstID, in: viewModel).style.patternOverlayColor
+        let secondColor = try layer(secondID, in: viewModel).style.patternOverlayColor
+        let firstOpacity = try layer(firstID, in: viewModel).style.patternOverlayOpacity
+        let secondOpacity = try layer(secondID, in: viewModel).style.patternOverlayOpacity
 
         #expect(viewModel.selectedLayerPatternOverlayScaleState == .mixed)
-        viewModel.setSelectedLayerPatternOverlayScale(32)
+        #expect(viewModel.setSelectedLayerPatternOverlayScale(32) == 2)
         #expect(viewModel.selectedLayerPatternOverlayScaleState == .value(32))
         #expect((try layer(firstID, in: viewModel)).style.patternOverlayScale == 32)
         #expect((try layer(secondID, in: viewModel)).style.patternOverlayScale == 32)
         #expect((try layer(lockedID, in: viewModel)).style.patternOverlayScale == 12)
+        #expect((try layer(firstID, in: viewModel)).style.patternOverlayColor.isEqual(firstColor))
+        #expect((try layer(secondID, in: viewModel)).style.patternOverlayColor.isEqual(secondColor))
+        #expect((try layer(lockedID, in: viewModel)).style.patternOverlayColor.isEqual(NSColor.systemOrange))
+        #expect((try layer(firstID, in: viewModel)).style.patternOverlayOpacity == firstOpacity)
+        #expect((try layer(secondID, in: viewModel)).style.patternOverlayOpacity == secondOpacity)
         #expect((try layer(firstID, in: viewModel)).style.patternOverlayEnabled)
         #expect((try layer(secondID, in: viewModel)).style.patternOverlayEnabled)
         #expect(viewModel.document.history.count == historyCount + 1)
         #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+
+        let historyAfterUpdate = viewModel.document.history.count
+        #expect(viewModel.setSelectedLayerPatternOverlayScale(32) == 0)
+        #expect(viewModel.document.history.count == historyAfterUpdate)
 
         viewModel.undo()
         #expect(viewModel.selectedLayerPatternOverlayScaleState == .mixed)
@@ -3384,8 +3397,14 @@ struct ImageEditorLayerRowBatchPropertyTests {
         let fixture = makeFixture()
         let viewModel = fixture.viewModel
         viewModel.document.layers[0].style.patternOverlayScale = 8
+        viewModel.document.layers[0].style.patternOverlayColor = .systemBlue
+        viewModel.document.layers[0].style.patternOverlayOpacity = 0.25
         viewModel.document.layers[1].style.patternOverlayScale = 24
+        viewModel.document.layers[1].style.patternOverlayColor = .systemGreen
+        viewModel.document.layers[1].style.patternOverlayOpacity = 0.75
         viewModel.document.layers[2].style.patternOverlayScale = 12
+        viewModel.document.layers[2].style.patternOverlayColor = .systemOrange
+        viewModel.document.layers[2].style.patternOverlayOpacity = 0.4
         viewModel.document.layers[2].isLocked = true
         select(Set(fixture.layers.map(\.id)), primary: fixture.layers[0].id, in: viewModel)
         return fixture

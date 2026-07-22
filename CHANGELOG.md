@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.12.0-rc506 - 2026-07-23
+
+### Fixed
+- 图案叠加缩放现在是参数独立的批量事务：调整 6–64 px 图案尺寸时只启用效果并修改缩放，不再把每个图层已经配置的图案颜色替换为当前前景色。
+- 图案类型、颜色和透明度在缩放调整时完整保留；锁定层与重复值安全跳过，零变化不创建空 Undo/History。
+
+### Automation
+- `xomo.layer.style_settings property=patternOverlayScale` 现在返回实际 `updatedLayerCount`；没有图层需要变化时明确失败，超出范围的值统一夹取到 6–64 px。
+
+### Verification
+- Xcode 定向 3/3、SwiftPM CLI 2/2、发布契约 4/4（10 条断言）通过；覆盖混合值收敛、真实修改数、颜色/透明度保持、锁定层保护、上下限夹取、Undo/Redo、重复值零历史和 MCP 零变化失败。
+- 纠正 rc504 本地安装包使用 ad-hoc 重签后与 Sparkle 框架无法通过 macOS 库校验的问题；rc506 改用同一 `ZH2S7D6PL6` Developer ID 签署主程序、Sparkle 与嵌套服务，严格签名与真实启动均通过。已覆盖 `/Applications/Xomo.app`，Computer Use 连续点击移动、画笔、矩形选区、套索、魔棒、裁剪与油漆桶均即时切换。常规完整门禁仍为 rc520；下一小步补齐图案叠加颜色的显式事务。
+
 ## 2.12.0-rc505 - 2026-07-23
 
 ### Fixed
