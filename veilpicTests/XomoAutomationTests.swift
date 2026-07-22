@@ -6294,8 +6294,11 @@ struct XomoAutomationTests {
         var second = ImageEditorLayer.blank(name: "Second", size: canvasSize)
         var locked = ImageEditorLayer.blank(name: "Locked", size: canvasSize)
         first.style.colorOverlayOpacity = 0.25
+        first.style.colorOverlayColor = .systemBlue
         second.style.colorOverlayOpacity = 0.75
+        second.style.colorOverlayColor = .systemGreen
         locked.style.colorOverlayOpacity = 0.4
+        locked.style.colorOverlayColor = .systemOrange
         locked.isLocked = true
         viewModel.document.layers = [first, second, locked]
         viewModel.document.selectedLayerID = first.id
@@ -6317,13 +6320,29 @@ struct XomoAutomationTests {
         ))
 
         #expect(result.ok)
+        #expect(result.result?.objectValue?["updatedLayerCount"] == .number(2))
         #expect(viewModel.document.layers[0].style.colorOverlayOpacity == 0.6)
         #expect(viewModel.document.layers[1].style.colorOverlayOpacity == 0.6)
         #expect(viewModel.document.layers[2].style.colorOverlayOpacity == 0.4)
+        #expect(viewModel.document.layers[0].style.colorOverlayColor.isEqual(NSColor.systemBlue))
+        #expect(viewModel.document.layers[1].style.colorOverlayColor.isEqual(NSColor.systemGreen))
+        #expect(viewModel.document.layers[2].style.colorOverlayColor.isEqual(NSColor.systemOrange))
         #expect(viewModel.document.layers[0].style.colorOverlayEnabled)
         #expect(viewModel.document.layers[1].style.colorOverlayEnabled)
         #expect(viewModel.document.history.count == historyCount + 1)
         #expect(viewModel.document.selectedLayerIDs == [first.id, second.id, locked.id])
+
+        let historyAfterUpdate = viewModel.document.history.count
+        let repeated = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("colorOverlayOpacity"),
+                "value": .number(0.6)
+            ]
+        ))
+        #expect(!repeated.ok)
+        #expect(viewModel.document.history.count == historyAfterUpdate)
     }
 
     @Test func registrySetsLayerStyleGradientOverlayOpacityAcrossEditableSelection() throws {

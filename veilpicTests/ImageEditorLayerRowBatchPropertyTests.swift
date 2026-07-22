@@ -2782,17 +2782,28 @@ struct ImageEditorLayerRowBatchPropertyTests {
         let secondID = fixture.layers[1].id
         let lockedID = fixture.layers[2].id
         let historyCount = viewModel.document.history.count
+        let firstColor = try layer(firstID, in: viewModel).style.colorOverlayColor
+        let secondColor = try layer(secondID, in: viewModel).style.colorOverlayColor
+        let lockedColor = try layer(lockedID, in: viewModel).style.colorOverlayColor
 
         #expect(viewModel.selectedLayerColorOverlayOpacityState == .mixed)
-        viewModel.setSelectedLayerColorOverlayOpacity(0.6)
+        let updatedLayerCount = viewModel.setSelectedLayerColorOverlayOpacity(0.6)
+        #expect(updatedLayerCount == 2)
         #expect(viewModel.selectedLayerColorOverlayOpacityState == .value(0.6))
         #expect((try layer(firstID, in: viewModel)).style.colorOverlayOpacity == 0.6)
         #expect((try layer(secondID, in: viewModel)).style.colorOverlayOpacity == 0.6)
         #expect((try layer(lockedID, in: viewModel)).style.colorOverlayOpacity == 0.4)
+        #expect((try layer(firstID, in: viewModel)).style.colorOverlayColor.isEqual(firstColor))
+        #expect((try layer(secondID, in: viewModel)).style.colorOverlayColor.isEqual(secondColor))
+        #expect((try layer(lockedID, in: viewModel)).style.colorOverlayColor.isEqual(lockedColor))
         #expect((try layer(firstID, in: viewModel)).style.colorOverlayEnabled)
         #expect((try layer(secondID, in: viewModel)).style.colorOverlayEnabled)
         #expect(viewModel.document.history.count == historyCount + 1)
         #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+
+        let historyAfterUpdate = viewModel.document.history.count
+        #expect(viewModel.setSelectedLayerColorOverlayOpacity(0.6) == 0)
+        #expect(viewModel.document.history.count == historyAfterUpdate)
 
         viewModel.undo()
         #expect(viewModel.selectedLayerColorOverlayOpacityState == .mixed)
@@ -2819,8 +2830,11 @@ struct ImageEditorLayerRowBatchPropertyTests {
         let fixture = makeFixture()
         let viewModel = fixture.viewModel
         viewModel.document.layers[0].style.colorOverlayOpacity = 0.25
+        viewModel.document.layers[0].style.colorOverlayColor = .systemBlue
         viewModel.document.layers[1].style.colorOverlayOpacity = 0.75
+        viewModel.document.layers[1].style.colorOverlayColor = .systemGreen
         viewModel.document.layers[2].style.colorOverlayOpacity = 0.4
+        viewModel.document.layers[2].style.colorOverlayColor = .systemOrange
         viewModel.document.layers[2].isLocked = true
         select(Set(fixture.layers.map(\.id)), primary: fixture.layers[0].id, in: viewModel)
         return fixture

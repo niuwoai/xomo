@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.12.0-rc496 - 2026-07-23
+
+### Fixed
+- 颜色叠加的不透明度现在是独立参数：调整时只启用颜色叠加并修改 5%–100% 不透明度，不再把每个图层原有的叠加颜色偷偷替换为当前前景色。
+- 多选批量调整返回实际变化的可编辑图层数；锁定层和重复等价值安全跳过，零变化不再制造空 Undo/History。
+
+### Automation
+- `xomo.layer.style_settings property=colorOverlayOpacity` 现在返回 `updatedLayerCount`，没有图层需要变化时明确失败；MCP 与界面继续共用同一事务。
+
+### Verification
+- Xcode 批量属性套件与精确 MCP 用例 124/124、SwiftPM CLI 2/2、发布契约 4/4（10 条断言）通过；覆盖多选混合值收敛、各图层颜色保留、锁定层保护、真实更新数量、重复值零历史及 MCP 零变化失败。下一次常规完整 Release、全量测试、冒烟与 `/Applications` 覆盖门禁仍为 rc520。
+
 ## 2.12.0-rc495 - 2026-07-23
 
 ### Fixed

@@ -1501,10 +1501,10 @@ extension ImageEditorViewModel {
         }
     }
 
-    func setSelectedLayerColorOverlayOpacity(_ opacity: Double) {
+    @discardableResult
+    func setSelectedLayerColorOverlayOpacity(_ opacity: Double) -> Int {
         updateSelectedLayerStyle {
             $0.colorOverlayEnabled = true
-            $0.colorOverlayColor = foregroundColor
             $0.colorOverlayOpacity = max(0.05, min(1, CGFloat(opacity)))
         }
     }
