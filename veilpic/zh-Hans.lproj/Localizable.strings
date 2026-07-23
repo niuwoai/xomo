@@ -1113,6 +1113,8 @@
 "imageEditor.properties.strokeColor" = "描边颜色";
 "imageEditor.action.strokeColorFromForeground" = "使用前景色";
 "imageEditor.properties.strokeGradientStyle" = "描边渐变样式";
+"imageEditor.properties.strokeGradientStartColor" = "描边渐变起点颜色";
+"imageEditor.properties.strokeGradientEndColor" = "描边渐变终点颜色";
 "imageEditor.properties.strokeGradientAngleValue" = "描边渐变角度：%d°";
 "imageEditor.properties.strokePatternKind" = "描边图案";
 "imageEditor.properties.strokePatternScaleValue" = "描边图案缩放：%d px";

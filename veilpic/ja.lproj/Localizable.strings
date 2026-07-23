@@ -1113,6 +1113,8 @@
 "imageEditor.properties.strokeColor" = "境界線の色";
 "imageEditor.action.strokeColorFromForeground" = "前景色を使用";
 "imageEditor.properties.strokeGradientStyle" = "境界線グラデーションスタイル";
+"imageEditor.properties.strokeGradientStartColor" = "境界線グラデーション開始色";
+"imageEditor.properties.strokeGradientEndColor" = "境界線グラデーション終了色";
 "imageEditor.properties.strokeGradientAngleValue" = "境界線グラデーション角度：%d°";
 "imageEditor.properties.strokePatternKind" = "境界線パターン";
 "imageEditor.properties.strokePatternScaleValue" = "境界線パターンスケール：%d px";

@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc522 - 2026-07-23
+
+### Added
+- 描边填充为渐变时，可分别编辑起点和终点颜色；两个颜色入口支持多选混合值、不可键盘聚焦、锁定层跳过、单步 History/Undo/Redo，并且修改一端不会覆盖已有的另一端。
+- `xomo.layer.style_settings` 新增 `strokeGradientStartColor` 与 `strokeGradientEndColor`，分别使用当前前景色和背景色，与界面复用同一批量事务并返回实际修改图层数。
+
+### Verification
+- 描边渐变颜色事务、界面契约、MCP schema/调用与三语本地化定向 Xcode 测试 4/4 通过；CLI 测试 2/2、发布契约 4/4（10 个断言）通过，三语 `Localizable.strings` 语法正常且 3283 个键一致。下一次完整构建、冒烟和 `/Applications` 覆盖门禁为 rc560。
+
 ## 2.12.0-rc521 - 2026-07-23
 
 ### Fixed

@@ -3999,6 +3999,22 @@ struct ImageEditorView: View {
         }
     }
 
+    private var selectedLayerStrokeGradientStartColorBinding: Binding<Color> {
+        Binding {
+            Color(nsColor: viewModel.selectedLayerStrokeGradientStartColor)
+        } set: { value in
+            viewModel.setSelectedLayerStrokeGradientStartColor(NSColor(value))
+        }
+    }
+
+    private var selectedLayerStrokeGradientEndColorBinding: Binding<Color> {
+        Binding {
+            Color(nsColor: viewModel.selectedLayerStrokeGradientEndColor)
+        } set: { value in
+            viewModel.setSelectedLayerStrokeGradientEndColor(NSColor(value))
+        }
+    }
+
     private var selectedLayerShadowColorBinding: Binding<Color> {
         Binding {
             Color(nsColor: viewModel.selectedLayerShadowColor)
@@ -7172,6 +7188,18 @@ struct ImageEditorView: View {
                         .buttonStyle(EditorTextButtonStyle())
                     }
                 } else if viewModel.selectedLayerStrokeFillTypeState.value == .gradient {
+                    layerStyleColorPickerRow(
+                        labelKey: "imageEditor.properties.strokeGradientStartColor",
+                        state: viewModel.selectedLayerStrokeGradientStartColorState,
+                        selection: selectedLayerStrokeGradientStartColorBinding,
+                        accessibilityIdentifier: "image-editor-layer-style-stroke-gradient-start-color"
+                    )
+                    layerStyleColorPickerRow(
+                        labelKey: "imageEditor.properties.strokeGradientEndColor",
+                        state: viewModel.selectedLayerStrokeGradientEndColorState,
+                        selection: selectedLayerStrokeGradientEndColorBinding,
+                        accessibilityIdentifier: "image-editor-layer-style-stroke-gradient-end-color"
+                    )
                     layerStyleValuePicker(
                         state: viewModel.selectedLayerStrokeGradientStyleState,
                         values: ImageEditorGradientFillStyle.allCases,

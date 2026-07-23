@@ -1113,6 +1113,8 @@
 "imageEditor.properties.strokeColor" = "Stroke Color";
 "imageEditor.action.strokeColorFromForeground" = "Use Foreground";
 "imageEditor.properties.strokeGradientStyle" = "Stroke Gradient Style";
+"imageEditor.properties.strokeGradientStartColor" = "Stroke Gradient Start Color";
+"imageEditor.properties.strokeGradientEndColor" = "Stroke Gradient End Color";
 "imageEditor.properties.strokeGradientAngleValue" = "Stroke Gradient Angle: %d°";
 "imageEditor.properties.strokePatternKind" = "Stroke Pattern";
 "imageEditor.properties.strokePatternScaleValue" = "Stroke Pattern Scale: %d px";

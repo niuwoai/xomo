@@ -4031,6 +4031,82 @@ struct XomoAutomationTests {
         #expect(viewModel.document.layers[2].style.strokeColor.isEqual(NSColor.systemBlue))
     }
 
+    @Test func registrySetsStrokeGradientEndpointColorsAcrossEditableSelection() throws {
+        let viewModel = makeViewModel()
+        let canvasSize = viewModel.document.canvasSize
+        var first = ImageEditorLayer.blank(name: "First", size: canvasSize)
+        var second = ImageEditorLayer.blank(name: "Second", size: canvasSize)
+        var locked = ImageEditorLayer.blank(name: "Locked", size: canvasSize)
+        let foreground = NSColor(srgbRed: 0.72, green: 0.16, blue: 0.41, alpha: 1)
+        let background = NSColor(srgbRed: 0.12, green: 0.68, blue: 0.86, alpha: 1)
+        first.style.strokeFillType = .color
+        first.style.strokeGradientStartColor = foreground
+        second.style.strokeEnabled = true
+        second.style.strokeFillType = .gradient
+        second.style.strokeGradientStartColor = foreground
+        second.style.strokeGradientEndColor = .systemOrange
+        locked.style.strokeFillType = .gradient
+        locked.style.strokeGradientStartColor = .systemYellow
+        locked.style.strokeGradientEndColor = .systemPurple
+        locked.isLocked = true
+        viewModel.document.layers = [first, second, locked]
+        viewModel.document.selectedLayerID = first.id
+        viewModel.document.selectedLayerIDs = [first.id, second.id, locked.id]
+        viewModel.foregroundColor = foreground
+        viewModel.backgroundColor = background
+        let historyCount = viewModel.document.history.count
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        try assertLayerStylePropertySchema("strokeGradientStartColor", in: toolsResponse)
+        try assertLayerStylePropertySchema("strokeGradientEndColor", in: toolsResponse)
+
+        let startResult = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: ["property": .string("strokeGradientStartColor")]
+        ))
+        #expect(startResult.ok)
+        #expect(startResult.result?.objectValue?["updatedLayerCount"] == .number(1))
+        #expect(viewModel.document.layers[0].style.strokeEnabled)
+        #expect(viewModel.document.layers[0].style.strokeFillType == .gradient)
+        #expect(viewModel.document.layers[0].style.strokeGradientStartColor.isEqual(foreground))
+        #expect(viewModel.document.layers[0].style.strokeGradientEndColor.isEqual(background))
+        #expect(viewModel.document.layers[1].style.strokeGradientEndColor.isEqual(NSColor.systemOrange))
+        #expect(viewModel.document.layers[2].style.strokeGradientStartColor.isEqual(NSColor.systemYellow))
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        let endResult = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: ["property": .string("strokeGradientEndColor")]
+        ))
+        #expect(endResult.ok)
+        #expect(endResult.result?.objectValue?["updatedLayerCount"] == .number(1))
+        #expect(viewModel.document.layers[0].style.strokeGradientEndColor.isEqual(background))
+        #expect(viewModel.document.layers[1].style.strokeGradientEndColor.isEqual(background))
+        #expect(viewModel.document.layers[1].style.strokeGradientStartColor.isEqual(foreground))
+        #expect(viewModel.document.layers[2].style.strokeGradientEndColor.isEqual(NSColor.systemPurple))
+        #expect(viewModel.document.selectedLayerIDs == [first.id, second.id, locked.id])
+        #expect(viewModel.document.history.count == historyCount + 2)
+
+        let historyAfterEndpoints = viewModel.document.history.count
+        let repeatedStart = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: ["property": .string("strokeGradientStartColor")]
+        ))
+        let repeatedEnd = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: ["property": .string("strokeGradientEndColor")]
+        ))
+        #expect(!repeatedStart.ok)
+        #expect(!repeatedEnd.ok)
+        #expect(viewModel.document.history.count == historyAfterEndpoints)
+    }
+
     @Test func registrySetsLayerStyleStrokeGradientAngleAcrossEditableSelection() throws {
         let viewModel = makeViewModel()
         let canvasSize = viewModel.document.canvasSize

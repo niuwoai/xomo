@@ -625,6 +625,70 @@ struct ImageEditorLayerRowBatchPropertyTests {
         #expect(source.contains(".focusable(false)"))
     }
 
+    @Test func layerStyleStrokeGradientColorsConvergeWithoutOverwritingOppositeEndpoint() throws {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        let firstID = fixture.layers[0].id
+        let secondID = fixture.layers[1].id
+        let lockedID = fixture.layers[2].id
+        viewModel.document.layers[0].style.strokeFillType = .color
+        viewModel.document.layers[0].style.strokeGradientStartColor = .systemRed
+        viewModel.document.layers[0].style.strokeGradientEndColor = .systemBlue
+        viewModel.document.layers[1].style.strokeEnabled = true
+        viewModel.document.layers[1].style.strokeFillType = .gradient
+        viewModel.document.layers[1].style.strokeGradientStartColor = .systemGreen
+        viewModel.document.layers[1].style.strokeGradientEndColor = .systemOrange
+        viewModel.document.layers[2].style.strokeFillType = .gradient
+        viewModel.document.layers[2].style.strokeGradientStartColor = .systemYellow
+        viewModel.document.layers[2].style.strokeGradientEndColor = .systemPurple
+        viewModel.document.layers[2].isLocked = true
+        select(Set(fixture.layers.map(\.id)), primary: firstID, in: viewModel)
+        let targetStart = NSColor(displayP3Red: 0.82, green: 0.21, blue: 0.43, alpha: 1)
+        let targetEnd = NSColor(displayP3Red: 0.16, green: 0.71, blue: 0.86, alpha: 1)
+        let normalizedStart = try #require(targetStart.usingColorSpace(.sRGB))
+        let normalizedEnd = try #require(targetEnd.usingColorSpace(.sRGB))
+        let secondOriginalEnd = try layer(secondID, in: viewModel).style.strokeGradientEndColor
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.selectedLayerStrokeGradientStartColorState == .mixed)
+        #expect(viewModel.setSelectedLayerStrokeGradientStartColor(targetStart) == 2)
+        #expect(viewModel.selectedLayerStrokeGradientStartColorState == .value(
+            ImageEditorProjectColor(color: normalizedStart)
+        ))
+        #expect((try layer(firstID, in: viewModel)).style.strokeFillType == .gradient)
+        #expect((try layer(firstID, in: viewModel)).style.strokeEnabled)
+        #expect((try layer(firstID, in: viewModel)).style.strokeGradientStartColor.isEqual(normalizedStart))
+        #expect((try layer(secondID, in: viewModel)).style.strokeGradientStartColor.isEqual(normalizedStart))
+        #expect((try layer(secondID, in: viewModel)).style.strokeGradientEndColor.isEqual(secondOriginalEnd))
+        #expect((try layer(lockedID, in: viewModel)).style.strokeGradientStartColor.isEqual(NSColor.systemYellow))
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        let historyAfterStart = viewModel.document.history.count
+        #expect(viewModel.setSelectedLayerStrokeGradientStartColor(targetStart) == 0)
+        #expect(viewModel.document.history.count == historyAfterStart)
+
+        #expect(viewModel.selectedLayerStrokeGradientEndColorState == .mixed)
+        #expect(viewModel.setSelectedLayerStrokeGradientEndColor(targetEnd) == 2)
+        #expect(viewModel.selectedLayerStrokeGradientEndColorState == .value(
+            ImageEditorProjectColor(color: normalizedEnd)
+        ))
+        #expect((try layer(firstID, in: viewModel)).style.strokeGradientEndColor.isEqual(normalizedEnd))
+        #expect((try layer(secondID, in: viewModel)).style.strokeGradientEndColor.isEqual(normalizedEnd))
+        #expect((try layer(firstID, in: viewModel)).style.strokeGradientStartColor.isEqual(normalizedStart))
+        #expect((try layer(secondID, in: viewModel)).style.strokeGradientStartColor.isEqual(normalizedStart))
+        #expect((try layer(lockedID, in: viewModel)).style.strokeGradientEndColor.isEqual(NSColor.systemPurple))
+        #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+        #expect(viewModel.document.history.count == historyAfterStart + 1)
+
+        let historyAfterEnd = viewModel.document.history.count
+        #expect(viewModel.setSelectedLayerStrokeGradientEndColor(targetEnd) == 0)
+        #expect(viewModel.document.history.count == historyAfterEnd)
+        viewModel.undo()
+        #expect((try layer(secondID, in: viewModel)).style.strokeGradientEndColor.isEqual(secondOriginalEnd))
+        viewModel.redo()
+        #expect((try layer(secondID, in: viewModel)).style.strokeGradientEndColor.isEqual(normalizedEnd))
+    }
+
     @Test func layerStyleStrokeFillTypePickerHidesIncorrectMixedBranch() throws {
         let repositoryRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()

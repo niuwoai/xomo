@@ -284,6 +284,26 @@ extension ImageEditorViewModel {
         selectedLayerStyleValueState { ImageEditorProjectColor(color: $0.strokeColor) }
     }
 
+    var selectedLayerStrokeGradientStartColor: NSColor {
+        document.selectedLayer?.style.strokeGradientStartColor ?? .white
+    }
+
+    var selectedLayerStrokeGradientStartColorState: ImageEditorLayerStyleValueState<ImageEditorProjectColor> {
+        selectedLayerStyleValueState {
+            ImageEditorProjectColor(color: $0.strokeGradientStartColor)
+        }
+    }
+
+    var selectedLayerStrokeGradientEndColor: NSColor {
+        document.selectedLayer?.style.strokeGradientEndColor ?? .black
+    }
+
+    var selectedLayerStrokeGradientEndColorState: ImageEditorLayerStyleValueState<ImageEditorProjectColor> {
+        selectedLayerStyleValueState {
+            ImageEditorProjectColor(color: $0.strokeGradientEndColor)
+        }
+    }
+
     var selectedLayerStrokeGradientStyle: ImageEditorGradientFillStyle {
         document.selectedLayer?.style.strokeGradientStyle ?? .linear
     }
@@ -1122,6 +1142,35 @@ extension ImageEditorViewModel {
             $0.strokeEnabled = true
             $0.strokeFillType = .color
             $0.strokeColor = color.usingColorSpace(.sRGB) ?? color
+        }
+    }
+
+    @discardableResult
+    func setSelectedLayerStrokeGradientStartColor(_ color: NSColor) -> Int {
+        let normalizedColor = color.usingColorSpace(.sRGB) ?? color
+        let defaultEndColor = strokeGradientEndColor().usingColorSpace(.sRGB)
+            ?? strokeGradientEndColor()
+        return updateSelectedLayerStyle {
+            if $0.strokeFillType != .gradient {
+                $0.strokeGradientEndColor = defaultEndColor
+            }
+            $0.strokeEnabled = true
+            $0.strokeFillType = .gradient
+            $0.strokeGradientStartColor = normalizedColor
+        }
+    }
+
+    @discardableResult
+    func setSelectedLayerStrokeGradientEndColor(_ color: NSColor) -> Int {
+        let normalizedColor = color.usingColorSpace(.sRGB) ?? color
+        let defaultStartColor = foregroundColor.usingColorSpace(.sRGB) ?? foregroundColor
+        return updateSelectedLayerStyle {
+            if $0.strokeFillType != .gradient {
+                $0.strokeGradientStartColor = defaultStartColor
+            }
+            $0.strokeEnabled = true
+            $0.strokeFillType = .gradient
+            $0.strokeGradientEndColor = normalizedColor
         }
     }
 
