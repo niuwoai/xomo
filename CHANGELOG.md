@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.12.0-rc512 - 2026-07-23
+
+### Fixed
+- 斜面与浮雕“高光颜色”现在显示真实的多选共同值；可编辑图层颜色不一致时提示“多个值”，选择颜色后一次收敛全部目标，锁定层与重复值安全跳过。
+- 高光颜色统一归一化到 sRGB，只启用斜面并修改高光色；阴影色、大小、透明度、柔化、方向和光照参数保持，每次批量操作只生成一步 Undo/History，选择不会丢失。
+
+### Automation
+- `xomo.layer.style_settings property=bevelHighlightColor` 使用当前前景色并返回真实 `updatedLayerCount`；没有图层需要变化时明确失败，工具描述同步声明真实计数语义。
+
+### Verification
+- Xcode 专项 3/3、SwiftPM CLI 2/2、发布契约 4/4（10 条断言）通过，覆盖 Display P3→sRGB、多选混合值、不可聚焦颜色入口、参数隔离、锁定层保护、单步 Undo/Redo、重复值零历史、MCP schema、真实修改数和零变化失败。常规完整 Release、冒烟与 `/Applications` 覆盖门禁仍为 rc520；下一小步处理斜面阴影颜色事务。
+
 ## 2.12.0-rc511 - 2026-07-23
 
 ### Fixed

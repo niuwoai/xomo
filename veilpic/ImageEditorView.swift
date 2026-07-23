@@ -7775,15 +7775,12 @@ struct ImageEditorView: View {
 
                 Group {
 
-                HStack(spacing: 8) {
-                    Text(L10n.text("imageEditor.properties.bevelHighlightColor"))
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
-                    ColorPicker("", selection: selectedLayerBevelHighlightColorBinding, supportsOpacity: false)
-                        .labelsHidden()
-                        .frame(width: 32)
-                    Spacer(minLength: 4)
-                }
+                layerStyleColorPickerRow(
+                    labelKey: "imageEditor.properties.bevelHighlightColor",
+                    state: viewModel.selectedLayerBevelHighlightColorState,
+                    selection: selectedLayerBevelHighlightColorBinding,
+                    accessibilityIdentifier: "image-editor-layer-style-bevel-highlight-color"
+                )
                 HStack(spacing: 8) {
                     Text(L10n.text("imageEditor.properties.bevelShadowColor"))
                         .font(.system(size: 10, weight: .medium))
