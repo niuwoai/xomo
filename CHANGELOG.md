@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.12.0-rc515 - 2026-07-23
+
+### Fixed
+- 斜面与浮雕“方向”现在完整返回真实批量修改数；多选方向不一致时继续显示“多个值”，选择“上”或“下”后一次收敛全部可编辑目标，锁定层与重复值安全跳过。
+- 方向事务只启用斜面并修改方向；大小、透明度、柔化、高光/阴影颜色和光照参数保持，每次批量操作只生成一步 Undo/History，选择不会丢失。
+
+### Automation
+- `xomo.layer.style_settings property=bevelDirection` 返回真实 `updatedLayerCount`；没有图层需要变化时明确失败，不再返回含糊的通用动作结果。
+
+### Verification
+- Xcode 专项 3/3、SwiftPM CLI 2/2、发布契约 4/4（10 条断言）通过，覆盖多选混合值、不可聚焦本地化选择器、参数隔离、锁定层保护、单步 Undo/Redo、重复值零历史、MCP schema、真实修改数和零变化失败。常规完整 Release、冒烟与 `/Applications` 覆盖门禁仍为 rc520；下一小步收紧斜面光照角度事务。
+
 ## 2.12.0-rc514 - 2026-07-23
 
 ### Fixed

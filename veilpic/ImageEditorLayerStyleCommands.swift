@@ -1754,7 +1754,8 @@ extension ImageEditorViewModel {
         setSelectedLayerUsesGlobalLight(selectedLayerGlobalLightState(effect) != .on, effect: effect)
     }
 
-    func setSelectedLayerBevelDirection(_ direction: ImageEditorBevelDirection) {
+    @discardableResult
+    func setSelectedLayerBevelDirection(_ direction: ImageEditorBevelDirection) -> Int {
         updateSelectedLayerStyle {
             $0.bevelEnabled = true
             $0.bevelDirection = direction
