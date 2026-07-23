@@ -1297,7 +1297,8 @@ extension ImageEditorViewModel {
         }
     }
 
-    func setSelectedLayerShadowUsesGlobalLight(_ enabled: Bool) {
+    @discardableResult
+    func setSelectedLayerShadowUsesGlobalLight(_ enabled: Bool) -> Int {
         setSelectedLayerUsesGlobalLight(enabled, effect: .shadow)
     }
 
@@ -1390,7 +1391,8 @@ extension ImageEditorViewModel {
         setSelectedLayerLightAngle(angle, effect: .innerShadow)
     }
 
-    func setSelectedLayerInnerShadowUsesGlobalLight(_ enabled: Bool) {
+    @discardableResult
+    func setSelectedLayerInnerShadowUsesGlobalLight(_ enabled: Bool) -> Int {
         setSelectedLayerUsesGlobalLight(enabled, effect: .innerShadow)
     }
 
@@ -1747,12 +1749,16 @@ extension ImageEditorViewModel {
         setSelectedLayerLightAngle(angle, effect: .bevel)
     }
 
-    func setSelectedLayerBevelUsesGlobalLight(_ enabled: Bool) {
+    @discardableResult
+    func setSelectedLayerBevelUsesGlobalLight(_ enabled: Bool) -> Int {
         setSelectedLayerUsesGlobalLight(enabled, effect: .bevel)
     }
 
     func toggleSelectedLayerUsesGlobalLight(_ effect: ImageEditorLayerLightEffect) {
-        setSelectedLayerUsesGlobalLight(selectedLayerGlobalLightState(effect) != .on, effect: effect)
+        _ = setSelectedLayerUsesGlobalLight(
+            selectedLayerGlobalLightState(effect) != .on,
+            effect: effect
+        )
     }
 
     @discardableResult
@@ -1875,10 +1881,11 @@ extension ImageEditorViewModel {
         }
     }
 
+    @discardableResult
     private func setSelectedLayerUsesGlobalLight(
         _ enabled: Bool,
         effect: ImageEditorLayerLightEffect
-    ) {
+    ) -> Int {
         updateSelectedLayerStyle { style in
             let resolvedAngle = resolvedLayerStyleLightAngle(style, effect: effect)
             setLayerStyleUsesGlobalLight(enabled, effect: effect, style: &style)
