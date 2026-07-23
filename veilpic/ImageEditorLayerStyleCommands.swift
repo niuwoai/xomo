@@ -1620,9 +1620,10 @@ extension ImageEditorViewModel {
         }
     }
 
-    func setSelectedLayerSatinOpacity(_ opacity: Double) {
+    @discardableResult
+    func setSelectedLayerSatinOpacity(_ opacity: Double) -> Int {
         let defaultColor = satinColor()
-        updateSelectedLayerStyle {
+        return updateSelectedLayerStyle {
             if !$0.satinEnabled {
                 $0.satinColor = defaultColor
             }
@@ -1631,23 +1632,26 @@ extension ImageEditorViewModel {
         }
     }
 
-    func setSelectedLayerSatinColorFromForeground() {
+    @discardableResult
+    func setSelectedLayerSatinColorFromForeground() -> Int {
         updateSelectedLayerStyle {
             $0.satinEnabled = true
             $0.satinColor = satinColor()
         }
     }
 
-    func setSelectedLayerSatinColor(_ color: NSColor) {
+    @discardableResult
+    func setSelectedLayerSatinColor(_ color: NSColor) -> Int {
         updateSelectedLayerStyle {
             $0.satinEnabled = true
             $0.satinColor = color.usingColorSpace(.sRGB) ?? color
         }
     }
 
-    func setSelectedLayerSatinDistance(_ distance: Double) {
+    @discardableResult
+    func setSelectedLayerSatinDistance(_ distance: Double) -> Int {
         let defaultColor = satinColor()
-        updateSelectedLayerStyle {
+        return updateSelectedLayerStyle {
             if !$0.satinEnabled {
                 $0.satinColor = defaultColor
             }
@@ -1656,9 +1660,10 @@ extension ImageEditorViewModel {
         }
     }
 
-    func setSelectedLayerSatinSize(_ size: Double) {
+    @discardableResult
+    func setSelectedLayerSatinSize(_ size: Double) -> Int {
         let defaultColor = satinColor()
-        updateSelectedLayerStyle {
+        return updateSelectedLayerStyle {
             if !$0.satinEnabled {
                 $0.satinColor = defaultColor
             }
@@ -1667,9 +1672,10 @@ extension ImageEditorViewModel {
         }
     }
 
-    func setSelectedLayerSatinAngle(_ angle: Double) {
+    @discardableResult
+    func setSelectedLayerSatinAngle(_ angle: Double) -> Int {
         let defaultColor = satinColor()
-        updateSelectedLayerStyle {
+        return updateSelectedLayerStyle {
             if !$0.satinEnabled {
                 $0.satinColor = defaultColor
             }
@@ -1678,9 +1684,10 @@ extension ImageEditorViewModel {
         }
     }
 
-    func setSelectedLayerSatinInvert(_ enabled: Bool) {
+    @discardableResult
+    func setSelectedLayerSatinInvert(_ enabled: Bool) -> Int {
         let defaultColor = satinColor()
-        updateSelectedLayerStyle {
+        return updateSelectedLayerStyle {
             if !$0.satinEnabled {
                 $0.satinColor = defaultColor
             }
@@ -1690,12 +1697,13 @@ extension ImageEditorViewModel {
     }
 
     func toggleSelectedLayerSatinInvert() {
-        setSelectedLayerSatinInvert(selectedLayerSatinInvertState != .on)
+        _ = setSelectedLayerSatinInvert(selectedLayerSatinInvertState != .on)
     }
 
-    func setSelectedLayerSatinContour(_ contour: ImageEditorLayerEffectContour) {
+    @discardableResult
+    func setSelectedLayerSatinContour(_ contour: ImageEditorLayerEffectContour) -> Int {
         let defaultColor = satinColor()
-        updateSelectedLayerStyle {
+        return updateSelectedLayerStyle {
             if !$0.satinEnabled {
                 $0.satinColor = defaultColor
             }

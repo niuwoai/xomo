@@ -2858,18 +2858,47 @@ final class XomoAutomationRegistry {
             return .object([
                 "updatedLayerCount": .number(Double(updatedLayerCount))
             ])
-        case "satinOpacity": viewModel.setSelectedLayerSatinOpacity(try number())
-        case "satinColor": viewModel.setSelectedLayerSatinColor(viewModel.foregroundColor)
-        case "satinDistance": viewModel.setSelectedLayerSatinDistance(try number())
-        case "satinSize": viewModel.setSelectedLayerSatinSize(try number())
-        case "satinAngle": viewModel.setSelectedLayerSatinAngle(try number())
-        case "satinInvert": viewModel.setSelectedLayerSatinInvert(try requiredBool("enabled", in: arguments))
+        case "satinOpacity":
+            return try satinUpdateResult(
+                viewModel.setSelectedLayerSatinOpacity(try number()),
+                property: "opacity"
+            )
+        case "satinColor":
+            return try satinUpdateResult(
+                viewModel.setSelectedLayerSatinColor(viewModel.foregroundColor),
+                property: "color"
+            )
+        case "satinDistance":
+            return try satinUpdateResult(
+                viewModel.setSelectedLayerSatinDistance(try number()),
+                property: "distance"
+            )
+        case "satinSize":
+            return try satinUpdateResult(
+                viewModel.setSelectedLayerSatinSize(try number()),
+                property: "size"
+            )
+        case "satinAngle":
+            return try satinUpdateResult(
+                viewModel.setSelectedLayerSatinAngle(try number()),
+                property: "angle"
+            )
+        case "satinInvert":
+            return try satinUpdateResult(
+                viewModel.setSelectedLayerSatinInvert(
+                    try requiredBool("enabled", in: arguments)
+                ),
+                property: "invert"
+            )
         case "satinContour":
             let rawValue = try requiredString("satinContour", in: arguments)
             guard let contour = ImageEditorLayerEffectContour(rawValue: rawValue) else {
                 throw XomoAutomationCallError.invalidArgument("Unknown satin contour")
             }
-            viewModel.setSelectedLayerSatinContour(contour)
+            return try satinUpdateResult(
+                viewModel.setSelectedLayerSatinContour(contour),
+                property: "contour"
+            )
         case "bevelSize":
             let updatedLayerCount = viewModel.setSelectedLayerBevelSize(try number())
             guard updatedLayerCount > 0 else {
@@ -2975,7 +3004,6 @@ final class XomoAutomationRegistry {
             ])
         default: throw XomoAutomationCallError.invalidArgument("Unknown layer style setting")
         }
-        return actionResult(viewModel)
     }
 
     private func globalLightLinkageResult(
@@ -2985,6 +3013,20 @@ final class XomoAutomationRegistry {
         guard updatedLayerCount > 0 else {
             throw XomoAutomationCallError.operationFailed(
                 "No editable layer needs the requested \(property) global-light linkage"
+            )
+        }
+        return .object([
+            "updatedLayerCount": .number(Double(updatedLayerCount))
+        ])
+    }
+
+    private func satinUpdateResult(
+        _ updatedLayerCount: Int,
+        property: String
+    ) throws -> XomoJSONValue {
+        guard updatedLayerCount > 0 else {
+            throw XomoAutomationCallError.operationFailed(
+                "No editable layer needs the requested satin \(property)"
             )
         }
         return .object([
