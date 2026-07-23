@@ -4479,6 +4479,93 @@ struct XomoAutomationTests {
         #expect(viewModel.document.layers[2].style.strokePatternScale == 30)
     }
 
+    @Test func registrySetsStrokePatternOffsetsAcrossEditableSelection() throws {
+        let viewModel = makeViewModel()
+        let canvasSize = viewModel.document.canvasSize
+        var first = ImageEditorLayer.blank(name: "First", size: canvasSize)
+        var second = ImageEditorLayer.blank(name: "Second", size: canvasSize)
+        var locked = ImageEditorLayer.blank(name: "Locked", size: canvasSize)
+        first.style.strokeFillType = .color
+        first.style.strokePatternKind = .checkerboard
+        first.style.strokePatternScale = 10
+        first.style.strokePatternOffset = .zero
+        second.style.strokeEnabled = true
+        second.style.strokeFillType = .pattern
+        second.style.strokePatternKind = .dots
+        second.style.strokePatternColor = .systemGreen
+        second.style.strokePatternScale = 24
+        second.style.strokePatternOffset = CGSize(width: 20, height: -10)
+        locked.style.strokeFillType = .pattern
+        locked.style.strokePatternOffset = CGSize(width: 30, height: 40)
+        locked.isLocked = true
+        viewModel.document.layers = [first, second, locked]
+        viewModel.document.selectedLayerID = first.id
+        viewModel.document.selectedLayerIDs = [first.id, second.id, locked.id]
+        let historyCount = viewModel.document.history.count
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        try assertNumericLayerStylePropertySchema("strokePatternOffsetX", in: toolsResponse)
+        try assertNumericLayerStylePropertySchema("strokePatternOffsetY", in: toolsResponse)
+
+        let horizontal = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("strokePatternOffsetX"),
+                "value": .number(20)
+            ]
+        ))
+        #expect(horizontal.ok)
+        #expect(horizontal.result?.objectValue?["updatedLayerCount"] == .number(1))
+        #expect(viewModel.document.layers[0].style.strokeFillType == .pattern)
+        #expect(viewModel.document.layers[0].style.strokePatternOffset == CGSize(width: 20, height: 0))
+        #expect(viewModel.document.layers[1].style.strokePatternOffset == CGSize(width: 20, height: -10))
+        #expect(viewModel.document.layers[0].style.strokePatternKind == .checkerboard)
+        #expect(viewModel.document.layers[1].style.strokePatternKind == .dots)
+        #expect(viewModel.document.layers[0].style.strokePatternScale == 10)
+        #expect(viewModel.document.layers[1].style.strokePatternScale == 24)
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        let vertical = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("strokePatternOffsetY"),
+                "value": .number(-10)
+            ]
+        ))
+        #expect(vertical.ok)
+        #expect(vertical.result?.objectValue?["updatedLayerCount"] == .number(1))
+        #expect(viewModel.document.layers[0].style.strokePatternOffset == CGSize(width: 20, height: -10))
+        #expect(viewModel.document.layers[1].style.strokePatternOffset == CGSize(width: 20, height: -10))
+        #expect(viewModel.document.layers[2].style.strokePatternOffset == CGSize(width: 30, height: 40))
+        #expect(viewModel.document.selectedLayerIDs == [first.id, second.id, locked.id])
+        #expect(viewModel.document.history.count == historyCount + 2)
+
+        let historyAfterOffsets = viewModel.document.history.count
+        let repeatedX = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("strokePatternOffsetX"),
+                "value": .number(20)
+            ]
+        ))
+        let repeatedY = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("strokePatternOffsetY"),
+                "value": .number(-10)
+            ]
+        ))
+        #expect(!repeatedX.ok)
+        #expect(!repeatedY.ok)
+        #expect(viewModel.document.history.count == historyAfterOffsets)
+    }
+
     @Test func registrySetsMixedInnerGlowSourceWithAdvertisedEnum() throws {
         let viewModel = makeViewModel()
         let canvasSize = viewModel.document.canvasSize

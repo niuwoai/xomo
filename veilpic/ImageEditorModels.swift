@@ -2179,6 +2179,7 @@ struct ImageEditorLayerStyle {
     var strokePatternKind = ImageEditorPatternOverlayKind.checkerboard
     var strokePatternColor = NSColor.white
     var strokePatternScale: CGFloat = 14
+    var strokePatternOffset = CGSize.zero
     var shadowEnabled = false
     var shadowColor = NSColor.black
     var shadowOpacity: CGFloat = 0.35
@@ -2279,6 +2280,10 @@ struct ImageEditorLayerStyle {
         style.effectScale = 1
         style.strokeWidth *= scale
         style.strokePatternScale *= scale
+        style.strokePatternOffset = CGSize(
+            width: strokePatternOffset.width * scale,
+            height: strokePatternOffset.height * scale
+        )
         style.shadowBlur *= scale
         style.shadowSpread *= scale
         style.shadowDistance *= scale
@@ -2383,6 +2388,15 @@ struct ImageEditorLayerStyle {
                 scale: strokePatternScale
             )
             return NSImage.rendered(size: size) { rect in
+                let context = NSGraphicsContext.current
+                let originalPatternPhase = context?.patternPhase ?? .zero
+                context?.patternPhase = CGPoint(
+                    x: strokePatternOffset.width,
+                    y: strokePatternOffset.height
+                )
+                defer {
+                    context?.patternPhase = originalPatternPhase
+                }
                 NSColor(patternImage: tile).setFill()
                 rect.fill()
             } ?? NSImage.transparent(size: size)

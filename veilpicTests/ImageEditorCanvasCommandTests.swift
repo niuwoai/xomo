@@ -21,6 +21,7 @@ struct ImageEditorCanvasCommandTests {
         viewModel.document.layers[layerIndex].frame = CGRect(x: 10, y: 12, width: 20, height: 16)
         viewModel.document.layers[layerIndex].image = NSImage.transparent(size: CGSize(width: 20, height: 16))
         viewModel.document.layers[layerIndex].mask = NSImage.opaqueMask(size: CGSize(width: 20, height: 16))
+        viewModel.document.layers[layerIndex].style.strokePatternOffset = CGSize(width: 3, height: -4)
         viewModel.document.layers[layerIndex].vectorMask = ImageEditorShapeContent(
             kind: .path,
             fillColor: .white,
@@ -45,6 +46,7 @@ struct ImageEditorCanvasCommandTests {
         #expect(resizedLayer.frame == CGRect(x: 20, y: 24, width: 40, height: 32))
         #expect(resizedLayer.image.size == CGSize(width: 40, height: 32))
         #expect(resizedLayer.mask?.size == CGSize(width: 40, height: 32))
+        #expect(resizedLayer.style.strokePatternOffset == CGSize(width: 6, height: -8))
         #expect(resizedLayer.vectorMask?.pathPoints.first == CGPoint(x: 8, y: 10))
         #expect(viewModel.document.selection?.points.first == CGPoint(x: 10, y: 16))
         #expect(viewModel.document.alphaChannels.first?.mask.width == 200)

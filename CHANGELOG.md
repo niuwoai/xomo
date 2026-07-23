@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.12.0-rc524 - 2026-07-23
+
+### Added
+- 描边图案新增 X/Y 相位偏移，可在属性面板以不可键盘聚焦的步进控件调整；多选混合值、锁定层跳过、单步 History/Undo/Redo、效果缩放与画布缩放均采用一致语义。
+- 图案偏移写入项目和图层样式预设，旧项目缺少该字段时回退到原点；渲染使用 AppKit 原生 `patternPhase`，实际移动铺图而非只改变参数。
+- `xomo.layer.style_settings` 新增 `strokePatternOffsetX` 与 `strokePatternOffsetY`，返回实际修改图层数并拒绝重复空操作。
+
+### Fixed
+- 修复关闭 Xcode 自动签名后的增量测试宿主可能保留失效资源封印、被 macOS 在 XCTest 连接前强制终止的问题；测试包完成签名后会同步重签并严格校验其宿主 App。
+
+### Verification
+- 关闭并行后，描边图案偏移、真实渲染/持久化、效果与画布缩放、界面契约、MCP、本地化以及工具功能冒烟定向 Xcode 测试 40/40 通过；Debug 测试包自动重签后宿主可通过 `codesign --verify --deep --strict` 并正常启动。
+- Computer Use 在当前 `/Applications/Xomo.app` 逐项点击全部 30 个工具 30/30，并验证“工具 → 组件库 → 工具 → 画笔”往返后第一击仍立即生效；CLI 2/2、发布契约 4/4（10 个断言）通过，三语 3286 个本地化键一致。下一次完整构建、冒烟和 `/Applications` 覆盖门禁为 rc560。
+
 ## 2.12.0-rc523 - 2026-07-23
 
 ### Added

@@ -346,6 +346,22 @@ extension ImageEditorViewModel {
         selectedLayerStyleValueState(\.strokePatternScale)
     }
 
+    var selectedLayerStrokePatternOffsetX: Double {
+        Double(document.selectedLayer?.style.strokePatternOffset.width ?? 0)
+    }
+
+    var selectedLayerStrokePatternOffsetXState: ImageEditorLayerStyleValueState<CGFloat> {
+        selectedLayerStyleValueState { $0.strokePatternOffset.width }
+    }
+
+    var selectedLayerStrokePatternOffsetY: Double {
+        Double(document.selectedLayer?.style.strokePatternOffset.height ?? 0)
+    }
+
+    var selectedLayerStrokePatternOffsetYState: ImageEditorLayerStyleValueState<CGFloat> {
+        selectedLayerStyleValueState { $0.strokePatternOffset.height }
+    }
+
     var selectedLayerShadowOpacity: Double {
         Double(document.selectedLayer?.style.shadowOpacity ?? 0.35)
     }
@@ -1245,6 +1261,32 @@ extension ImageEditorViewModel {
                 $0.strokePatternColor = strokePatternColor()
             }
             $0.strokePatternScale = max(6, min(64, CGFloat(scale)))
+        }
+    }
+
+    @discardableResult
+    func setSelectedLayerStrokePatternOffsetX(_ offset: Double) -> Int {
+        updateSelectedLayerStyle {
+            let fillTypeChanged = $0.strokeFillType != .pattern
+            $0.strokeEnabled = true
+            $0.strokeFillType = .pattern
+            if fillTypeChanged {
+                $0.strokePatternColor = strokePatternColor()
+            }
+            $0.strokePatternOffset.width = max(-128, min(128, CGFloat(offset)))
+        }
+    }
+
+    @discardableResult
+    func setSelectedLayerStrokePatternOffsetY(_ offset: Double) -> Int {
+        updateSelectedLayerStyle {
+            let fillTypeChanged = $0.strokeFillType != .pattern
+            $0.strokeEnabled = true
+            $0.strokeFillType = .pattern
+            if fillTypeChanged {
+                $0.strokePatternColor = strokePatternColor()
+            }
+            $0.strokePatternOffset.height = max(-128, min(128, CGFloat(offset)))
         }
     }
 

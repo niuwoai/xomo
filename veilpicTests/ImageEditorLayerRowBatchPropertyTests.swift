@@ -998,6 +998,81 @@ struct ImageEditorLayerRowBatchPropertyTests {
         #expect(source.contains("L10n.format(\"imageEditor.properties.strokePatternScaleValue\""))
     }
 
+    @Test func layerStyleStrokePatternOffsetsConvergeAcrossEditableSelection() throws {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        let firstID = fixture.layers[0].id
+        let secondID = fixture.layers[1].id
+        let lockedID = fixture.layers[2].id
+        viewModel.document.layers[0].style.strokeFillType = .color
+        viewModel.document.layers[0].style.strokePatternKind = .checkerboard
+        viewModel.document.layers[0].style.strokePatternScale = 10
+        viewModel.document.layers[0].style.strokePatternOffset = CGSize(width: 4, height: -2)
+        viewModel.document.layers[1].style.strokeEnabled = true
+        viewModel.document.layers[1].style.strokeFillType = .pattern
+        viewModel.document.layers[1].style.strokePatternKind = .dots
+        viewModel.document.layers[1].style.strokePatternColor = .systemGreen
+        viewModel.document.layers[1].style.strokePatternScale = 24
+        viewModel.document.layers[1].style.strokePatternOffset = CGSize(width: 12, height: 8)
+        viewModel.document.layers[2].style.strokeFillType = .pattern
+        viewModel.document.layers[2].style.strokePatternOffset = CGSize(width: 30, height: 40)
+        viewModel.document.layers[2].isLocked = true
+        select(Set(fixture.layers.map(\.id)), primary: firstID, in: viewModel)
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.selectedLayerStrokePatternOffsetXState == .mixed)
+        #expect(viewModel.selectedLayerStrokePatternOffsetYState == .mixed)
+        #expect(viewModel.setSelectedLayerStrokePatternOffsetX(12) == 1)
+        #expect(viewModel.selectedLayerStrokePatternOffsetXState == .value(12))
+        #expect((try layer(firstID, in: viewModel)).style.strokeFillType == .pattern)
+        #expect((try layer(firstID, in: viewModel)).style.strokeEnabled)
+        #expect((try layer(firstID, in: viewModel)).style.strokePatternOffset == CGSize(width: 12, height: -2))
+        #expect((try layer(secondID, in: viewModel)).style.strokePatternOffset == CGSize(width: 12, height: 8))
+        #expect((try layer(firstID, in: viewModel)).style.strokePatternKind == .checkerboard)
+        #expect((try layer(secondID, in: viewModel)).style.strokePatternKind == .dots)
+        #expect((try layer(firstID, in: viewModel)).style.strokePatternScale == 10)
+        #expect((try layer(secondID, in: viewModel)).style.strokePatternScale == 24)
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        #expect(viewModel.setSelectedLayerStrokePatternOffsetY(-6) == 2)
+        #expect(viewModel.selectedLayerStrokePatternOffsetYState == .value(-6))
+        #expect((try layer(firstID, in: viewModel)).style.strokePatternOffset == CGSize(width: 12, height: -6))
+        #expect((try layer(secondID, in: viewModel)).style.strokePatternOffset == CGSize(width: 12, height: -6))
+        #expect((try layer(lockedID, in: viewModel)).style.strokePatternOffset == CGSize(width: 30, height: 40))
+        #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+        #expect(viewModel.document.history.count == historyCount + 2)
+
+        let historyAfterUpdate = viewModel.document.history.count
+        #expect(viewModel.setSelectedLayerStrokePatternOffsetX(12) == 0)
+        #expect(viewModel.setSelectedLayerStrokePatternOffsetY(-6) == 0)
+        #expect(viewModel.document.history.count == historyAfterUpdate)
+        viewModel.undo()
+        #expect((try layer(firstID, in: viewModel)).style.strokePatternOffset.height == -2)
+        #expect((try layer(secondID, in: viewModel)).style.strokePatternOffset.height == 8)
+        viewModel.redo()
+        #expect((try layer(firstID, in: viewModel)).style.strokePatternOffset.height == -6)
+        #expect((try layer(secondID, in: viewModel)).style.strokePatternOffset.height == -6)
+    }
+
+    @Test func layerStyleStrokePatternOffsetControlsUseMixedNumericSteppers() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("state: viewModel.selectedLayerStrokePatternOffsetXState"))
+        #expect(source.contains("value: selectedLayerStrokePatternOffsetXBinding"))
+        #expect(source.contains("image-editor-layer-style-stroke-pattern-offset-x"))
+        #expect(source.contains("imageEditor.properties.strokePatternOffsetXValue"))
+        #expect(source.contains("state: viewModel.selectedLayerStrokePatternOffsetYState"))
+        #expect(source.contains("value: selectedLayerStrokePatternOffsetYBinding"))
+        #expect(source.contains("image-editor-layer-style-stroke-pattern-offset-y"))
+        #expect(source.contains("imageEditor.properties.strokePatternOffsetYValue"))
+    }
+
     @Test func layerStyleMixedInnerGlowSourceConvergesAcrossEditableSelection() throws {
         try assertInnerGlowSourceConvergence()
     }

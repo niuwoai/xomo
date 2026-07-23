@@ -404,6 +404,33 @@ struct ImageEditorLayerStyleTests {
         #expect(restoredLayer.style.strokePatternScale == 12)
     }
 
+    @Test func strokePatternOffsetChangesRenderedPhaseAndRoundTripsProjectState() throws {
+        var style = ImageEditorLayerStyle()
+        style.strokeEnabled = true
+        style.strokeFillType = .pattern
+        style.strokePatternKind = .checkerboard
+        style.strokePatternColor = .white
+        style.strokePatternScale = 8
+        style.strokePatternOffset = .zero
+        let original = style.strokeFillImage(size: CGSize(width: 24, height: 24))
+        let originalData = try #require(original.qingtuPNGData())
+
+        style.strokePatternOffset = CGSize(width: 4, height: 0)
+        let shifted = style.strokeFillImage(size: CGSize(width: 24, height: 24))
+        let shiftedData = try #require(shifted.qingtuPNGData())
+        #expect(shiftedData != originalData)
+
+        let encoded = try JSONEncoder().encode(ImageEditorProjectLayerStyle(style: style))
+        let decoded = try JSONDecoder().decode(ImageEditorProjectLayerStyle.self, from: encoded).layerStyle
+        #expect(decoded.strokePatternOffset == CGSize(width: 4, height: 0))
+
+        var legacyObject = try #require(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
+        legacyObject.removeValue(forKey: "strokePatternOffset")
+        let legacyData = try JSONSerialization.data(withJSONObject: legacyObject)
+        let legacy = try JSONDecoder().decode(ImageEditorProjectLayerStyle.self, from: legacyData).layerStyle
+        #expect(legacy.strokePatternOffset == .zero)
+    }
+
     @Test func imageEditorDropShadowRemainsVisibleWhenFillOpacityIsZero() async throws {
         let canvasSize = NSSize(width: 80, height: 60)
         let baseColor = NSColor(srgbRed: 0.04, green: 0.1, blue: 0.92, alpha: 1)

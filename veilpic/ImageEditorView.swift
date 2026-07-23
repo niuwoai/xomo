@@ -4127,6 +4127,22 @@ struct ImageEditorView: View {
         }
     }
 
+    private var selectedLayerStrokePatternOffsetXBinding: Binding<Double> {
+        Binding {
+            viewModel.selectedLayerStrokePatternOffsetX
+        } set: { value in
+            viewModel.setSelectedLayerStrokePatternOffsetX(value)
+        }
+    }
+
+    private var selectedLayerStrokePatternOffsetYBinding: Binding<Double> {
+        Binding {
+            viewModel.selectedLayerStrokePatternOffsetY
+        } set: { value in
+            viewModel.setSelectedLayerStrokePatternOffsetY(value)
+        }
+    }
+
     private var selectedLayerShadowOpacityBinding: Binding<Double> {
         Binding {
             viewModel.selectedLayerShadowOpacity
@@ -7250,6 +7266,24 @@ struct ImageEditorView: View {
                         accessibilityIdentifier: "image-editor-layer-style-stroke-pattern-scale"
                     ) { value in
                         L10n.format("imageEditor.properties.strokePatternScaleValue", Int(value.rounded()))
+                    }
+                    layerStyleNumericStepper(
+                        state: viewModel.selectedLayerStrokePatternOffsetXState,
+                        value: selectedLayerStrokePatternOffsetXBinding,
+                        range: -128...128,
+                        step: 1,
+                        accessibilityIdentifier: "image-editor-layer-style-stroke-pattern-offset-x"
+                    ) { value in
+                        L10n.format("imageEditor.properties.strokePatternOffsetXValue", Int(value.rounded()))
+                    }
+                    layerStyleNumericStepper(
+                        state: viewModel.selectedLayerStrokePatternOffsetYState,
+                        value: selectedLayerStrokePatternOffsetYBinding,
+                        range: -128...128,
+                        step: 1,
+                        accessibilityIdentifier: "image-editor-layer-style-stroke-pattern-offset-y"
+                    ) { value in
+                        L10n.format("imageEditor.properties.strokePatternOffsetYValue", Int(value.rounded()))
                     }
                 }
                 layerStyleNumericStepper(

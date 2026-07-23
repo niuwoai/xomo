@@ -557,6 +557,28 @@ struct LocalizationResourceTests {
         }
     }
 
+    @Test func layerStyleStrokePatternOffsetsAreLocalizedInEverySupportedLanguage() throws {
+        let paths = try Self.repositoryPaths()
+        let expectedValues = [
+            "zh-Hans": ["描边图案 X 偏移：%d px", "描边图案 Y 偏移：%d px"],
+            "en": ["Stroke Pattern X Offset: %d px", "Stroke Pattern Y Offset: %d px"],
+            "ja": ["境界線パターン X オフセット：%d px", "境界線パターン Y オフセット：%d px"]
+        ]
+        let keys = [
+            "imageEditor.properties.strokePatternOffsetXValue",
+            "imageEditor.properties.strokePatternOffsetYValue"
+        ]
+
+        for (localizationID, expected) in expectedValues {
+            let strings = try Self.stringTable(
+                tableName: "Localizable",
+                localizationID: localizationID,
+                appDirectory: paths.appDirectory
+            )
+            #expect(keys.compactMap { strings[$0] } == expected)
+        }
+    }
+
     @Test func layerStyleMixedInnerGlowSourceIsLocalizedInEverySupportedLanguage() throws {
         let paths = try Self.repositoryPaths()
         let expectedValues = [

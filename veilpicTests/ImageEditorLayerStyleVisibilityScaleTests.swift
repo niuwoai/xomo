@@ -43,6 +43,7 @@ struct ImageEditorLayerStyleVisibilityScaleTests {
         style.strokeWidth = 4
         style.strokeFillType = .pattern
         style.strokePatternScale = 12
+        style.strokePatternOffset = CGSize(width: 3, height: -4)
         style.shadowEnabled = true
         style.shadowBlur = 6
         style.shadowSpread = 3
@@ -78,6 +79,7 @@ struct ImageEditorLayerStyleVisibilityScaleTests {
         #expect(rendered.effectScale == 1)
         #expect(rendered.strokeWidth == 8)
         #expect(rendered.strokePatternScale == 24)
+        #expect(rendered.strokePatternOffset == CGSize(width: 6, height: -8))
         #expect(rendered.shadowBlur == 12)
         #expect(rendered.shadowSpread == 6)
         #expect(rendered.shadowDistance == 16)

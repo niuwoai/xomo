@@ -809,6 +809,7 @@ struct ImageEditorProjectLayerStyle: Codable, Equatable {
     var strokePatternKind: ImageEditorPatternOverlayKind?
     var strokePatternColor: ImageEditorProjectColor?
     var strokePatternScale: CGFloat?
+    var strokePatternOffset: CGSize?
     var shadowEnabled: Bool
     var shadowColor: ImageEditorProjectColor
     var shadowOpacity: CGFloat
@@ -900,6 +901,7 @@ struct ImageEditorProjectLayerStyle: Codable, Equatable {
         strokePatternKind = style.strokePatternKind
         strokePatternColor = ImageEditorProjectColor(color: style.strokePatternColor)
         strokePatternScale = style.strokePatternScale
+        strokePatternOffset = style.strokePatternOffset
         shadowEnabled = style.shadowEnabled
         shadowColor = ImageEditorProjectColor(color: style.shadowColor)
         shadowOpacity = style.shadowOpacity
@@ -995,6 +997,10 @@ struct ImageEditorProjectLayerStyle: Codable, Equatable {
             strokePatternKind: strokePatternKind ?? .checkerboard,
             strokePatternColor: strokePatternColor?.nsColor ?? .white,
             strokePatternScale: max(6, min(64, strokePatternScale ?? 14)),
+            strokePatternOffset: CGSize(
+                width: max(-128, min(128, strokePatternOffset?.width ?? 0)),
+                height: max(-128, min(128, strokePatternOffset?.height ?? 0))
+            ),
             shadowEnabled: shadowEnabled,
             shadowColor: shadowColor.nsColor,
             shadowOpacity: shadowOpacity,

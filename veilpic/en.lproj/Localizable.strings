@@ -1119,6 +1119,8 @@
 "imageEditor.properties.strokePatternKind" = "Stroke Pattern";
 "imageEditor.properties.strokePatternColor" = "Stroke Pattern Color";
 "imageEditor.properties.strokePatternScaleValue" = "Stroke Pattern Scale: %d px";
+"imageEditor.properties.strokePatternOffsetXValue" = "Stroke Pattern X Offset: %d px";
+"imageEditor.properties.strokePatternOffsetYValue" = "Stroke Pattern Y Offset: %d px";
 "imageEditor.properties.shadowOpacityValue" = "Shadow Opacity: %d%%";
 "imageEditor.properties.shadowColor" = "Shadow Color";
 "imageEditor.properties.outerGlowColor" = "Outer Glow Color";

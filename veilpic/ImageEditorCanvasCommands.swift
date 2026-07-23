@@ -458,6 +458,10 @@ private extension ImageEditorLayerStyle {
         var style = self
         style.strokeWidth *= scale
         style.strokePatternScale *= scale
+        style.strokePatternOffset = CGSize(
+            width: strokePatternOffset.width * scale,
+            height: strokePatternOffset.height * scale
+        )
         style.shadowBlur *= scale
         style.shadowSpread *= scale
         style.shadowDistance *= scale

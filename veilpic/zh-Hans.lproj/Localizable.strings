@@ -1119,6 +1119,8 @@
 "imageEditor.properties.strokePatternKind" = "描边图案";
 "imageEditor.properties.strokePatternColor" = "描边图案颜色";
 "imageEditor.properties.strokePatternScaleValue" = "描边图案缩放：%d px";
+"imageEditor.properties.strokePatternOffsetXValue" = "描边图案 X 偏移：%d px";
+"imageEditor.properties.strokePatternOffsetYValue" = "描边图案 Y 偏移：%d px";
 "imageEditor.properties.shadowOpacityValue" = "投影不透明度：%d%%";
 "imageEditor.properties.shadowColor" = "投影颜色";
 "imageEditor.properties.outerGlowColor" = "外发光颜色";

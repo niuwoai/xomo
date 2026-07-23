@@ -8,6 +8,29 @@ readonly codesign_binary='/usr/bin/codesign'
 readonly entitlements_path="${SRCROOT}/veilpic/Debug.entitlements"
 readonly product_path="${CODESIGNING_FOLDER_PATH}"
 
+resign_containing_test_host() {
+  local nested_product_path="$1"
+  local host_app_path
+
+  if [[ "${nested_product_path}" != *.app/* ]]; then
+    return
+  fi
+
+  host_app_path="${nested_product_path%%.app/*}.app"
+  if [[ ! -d "${host_app_path}" ]]; then
+    echo "Missing test host app: ${host_app_path}" >&2
+    exit 1
+  fi
+
+  "${codesign_binary}" \
+    --force \
+    --deep \
+    --sign - \
+    --entitlements "${entitlements_path}" \
+    "${host_app_path}"
+  "${codesign_binary}" --verify --deep --strict "${host_app_path}"
+}
+
 if [[ "${CONFIGURATION}" != "${debug_configuration}" ]]; then
   exit 0
 fi
@@ -43,6 +66,10 @@ if [[ "${WRAPPER_EXTENSION}" == "${app_extension}" ]]; then
   "${codesign_binary}" --force --sign - --entitlements "${entitlements_path}" "${product_path}"
 else
   "${codesign_binary}" --force --deep --sign - "${product_path}"
+  # Unit and UI test products live inside a host app. Re-signing only the
+  # nested .xctest leaves the host's resource seal stale, so macOS terminates
+  # the runner before XCTest can connect.
+  resign_containing_test_host "${product_path}"
 fi
 
 "${codesign_binary}" --verify --strict "${product_path}"
