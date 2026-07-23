@@ -1117,6 +1117,7 @@
 "imageEditor.properties.strokeGradientEndColor" = "Stroke Gradient End Color";
 "imageEditor.properties.strokeGradientAngleValue" = "Stroke Gradient Angle: %d°";
 "imageEditor.properties.strokePatternKind" = "Stroke Pattern";
+"imageEditor.properties.strokePatternColor" = "Stroke Pattern Color";
 "imageEditor.properties.strokePatternScaleValue" = "Stroke Pattern Scale: %d px";
 "imageEditor.properties.shadowOpacityValue" = "Shadow Opacity: %d%%";
 "imageEditor.properties.shadowColor" = "Shadow Color";

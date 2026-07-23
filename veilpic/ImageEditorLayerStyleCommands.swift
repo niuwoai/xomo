@@ -328,6 +328,16 @@ extension ImageEditorViewModel {
         selectedLayerStyleValueState(\.strokePatternKind)
     }
 
+    var selectedLayerStrokePatternColor: NSColor {
+        document.selectedLayer?.style.strokePatternColor ?? .white
+    }
+
+    var selectedLayerStrokePatternColorState: ImageEditorLayerStyleValueState<ImageEditorProjectColor> {
+        selectedLayerStyleValueState {
+            ImageEditorProjectColor(color: $0.strokePatternColor)
+        }
+    }
+
     var selectedLayerStrokePatternScale: Double {
         Double(document.selectedLayer?.style.strokePatternScale ?? 14)
     }
@@ -1212,6 +1222,16 @@ extension ImageEditorViewModel {
             if fillTypeChanged {
                 $0.strokePatternColor = strokePatternColor()
             }
+        }
+    }
+
+    @discardableResult
+    func setSelectedLayerStrokePatternColor(_ color: NSColor) -> Int {
+        let normalizedColor = color.usingColorSpace(.sRGB) ?? color
+        return updateSelectedLayerStyle {
+            $0.strokeEnabled = true
+            $0.strokeFillType = .pattern
+            $0.strokePatternColor = normalizedColor
         }
     }
 

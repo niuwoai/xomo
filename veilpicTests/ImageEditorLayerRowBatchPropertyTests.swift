@@ -891,6 +891,57 @@ struct ImageEditorLayerRowBatchPropertyTests {
         return fixture
     }
 
+    @Test func layerStyleStrokePatternColorConvergesAcrossEditableSelection() throws {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        let firstID = fixture.layers[0].id
+        let secondID = fixture.layers[1].id
+        let lockedID = fixture.layers[2].id
+        viewModel.document.layers[0].style.strokeFillType = .color
+        viewModel.document.layers[0].style.strokePatternKind = .checkerboard
+        viewModel.document.layers[0].style.strokePatternColor = .systemRed
+        viewModel.document.layers[0].style.strokePatternScale = 10
+        viewModel.document.layers[1].style.strokeEnabled = true
+        viewModel.document.layers[1].style.strokeFillType = .pattern
+        viewModel.document.layers[1].style.strokePatternKind = .dots
+        viewModel.document.layers[1].style.strokePatternColor = .systemGreen
+        viewModel.document.layers[1].style.strokePatternScale = 24
+        viewModel.document.layers[2].style.strokeFillType = .pattern
+        viewModel.document.layers[2].style.strokePatternColor = .systemPurple
+        viewModel.document.layers[2].isLocked = true
+        select(Set(fixture.layers.map(\.id)), primary: firstID, in: viewModel)
+        let target = NSColor(displayP3Red: 0.78, green: 0.22, blue: 0.46, alpha: 1)
+        let normalizedTarget = try #require(target.usingColorSpace(.sRGB))
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.selectedLayerStrokePatternColorState == .mixed)
+        #expect(viewModel.setSelectedLayerStrokePatternColor(target) == 2)
+        #expect(viewModel.selectedLayerStrokePatternColorState == .value(
+            ImageEditorProjectColor(color: normalizedTarget)
+        ))
+        #expect((try layer(firstID, in: viewModel)).style.strokeEnabled)
+        #expect((try layer(firstID, in: viewModel)).style.strokeFillType == .pattern)
+        #expect((try layer(firstID, in: viewModel)).style.strokePatternColor.isEqual(normalizedTarget))
+        #expect((try layer(secondID, in: viewModel)).style.strokePatternColor.isEqual(normalizedTarget))
+        #expect((try layer(firstID, in: viewModel)).style.strokePatternKind == .checkerboard)
+        #expect((try layer(secondID, in: viewModel)).style.strokePatternKind == .dots)
+        #expect((try layer(firstID, in: viewModel)).style.strokePatternScale == 10)
+        #expect((try layer(secondID, in: viewModel)).style.strokePatternScale == 24)
+        #expect((try layer(lockedID, in: viewModel)).style.strokePatternColor.isEqual(NSColor.systemPurple))
+        #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        let historyAfterUpdate = viewModel.document.history.count
+        #expect(viewModel.setSelectedLayerStrokePatternColor(target) == 0)
+        #expect(viewModel.document.history.count == historyAfterUpdate)
+        viewModel.undo()
+        #expect((try layer(firstID, in: viewModel)).style.strokeFillType == .color)
+        #expect((try layer(secondID, in: viewModel)).style.strokePatternColor.isEqual(NSColor.systemGreen))
+        viewModel.redo()
+        #expect((try layer(firstID, in: viewModel)).style.strokeFillType == .pattern)
+        #expect((try layer(secondID, in: viewModel)).style.strokePatternColor.isEqual(normalizedTarget))
+    }
+
     @Test func layerStyleStrokePatternScaleMixedValueConvergesAcrossEditableSelection() throws {
         let fixture = makeFixture()
         let viewModel = fixture.viewModel

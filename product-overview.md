@@ -1,6 +1,8 @@
 # 像界（Xomo）产品概览
 
-> 最后更新：2026-07-23 | 当前版本：v2.12.0-rc522
+> 最后更新：2026-07-23 | 当前版本：v2.12.0-rc523
+
+v2.12.0-rc523 补齐描边图案颜色的直接编辑能力：属性面板在图案描边分支提供不可键盘聚焦的颜色入口，并对多选混合值、锁定层跳过、单步 History/Undo/Redo 采用统一事务，同时保留每层原有图案种类与缩放。MCP/CLI `xomo.layer.style_settings` 新增 `strokePatternColor`，使用当前前景色并返回实际修改图层数。下一次每 40 版完整构建、冒烟与 `/Applications` 覆盖门禁为 rc560。
 
 v2.12.0-rc522 补齐描边渐变的两个真正可编辑颜色端点：起点和终点都能在属性面板直接选色，并对多选混合值、锁定层、单步 History/Undo/Redo 与另一端颜色保留采用同一事务语义。MCP/CLI `xomo.layer.style_settings` 同步新增 `strokeGradientStartColor` 和 `strokeGradientEndColor`，分别采用当前前景色与背景色，返回实际修改图层数并拒绝重复空操作。下一次每 40 版完整构建、冒烟与 `/Applications` 覆盖门禁为 rc560。
 

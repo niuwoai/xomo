@@ -1117,6 +1117,7 @@
 "imageEditor.properties.strokeGradientEndColor" = "境界線グラデーション終了色";
 "imageEditor.properties.strokeGradientAngleValue" = "境界線グラデーション角度：%d°";
 "imageEditor.properties.strokePatternKind" = "境界線パターン";
+"imageEditor.properties.strokePatternColor" = "境界線パターンの色";
 "imageEditor.properties.strokePatternScaleValue" = "境界線パターンスケール：%d px";
 "imageEditor.properties.shadowOpacityValue" = "影の不透明度：%d%%";
 "imageEditor.properties.shadowColor" = "影の色";

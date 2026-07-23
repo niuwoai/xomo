@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc523 - 2026-07-23
+
+### Added
+- 描边填充为图案时，可直接编辑图案颜色；颜色入口支持多选混合值、不可键盘聚焦、锁定层跳过、单步 History/Undo/Redo，并在切换到图案描边时保留每层既有图案种类与缩放。
+- `xomo.layer.style_settings` 新增 `strokePatternColor`，使用当前前景色调用与界面相同的批量事务，返回实际修改图层数并拒绝重复空操作。
+
+### Verification
+- 描边图案颜色事务、界面契约、MCP schema/调用与三语本地化定向 Xcode 测试 5/5 通过；CLI 测试 2/2、发布契约 4/4（10 个断言）通过，三语 `Localizable.strings` 语法正常且 3284 个键一致。下一次完整构建、冒烟和 `/Applications` 覆盖门禁为 rc560。
+
 ## 2.12.0-rc522 - 2026-07-23
 
 ### Added

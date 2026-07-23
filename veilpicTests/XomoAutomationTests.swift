@@ -4347,6 +4347,65 @@ struct XomoAutomationTests {
         #expect(viewModel.document.history.count == historyAfterUpdate)
     }
 
+    @Test func registrySetsStrokePatternColorAcrossEditableSelection() throws {
+        let viewModel = makeViewModel()
+        let canvasSize = viewModel.document.canvasSize
+        var first = ImageEditorLayer.blank(name: "First", size: canvasSize)
+        var second = ImageEditorLayer.blank(name: "Second", size: canvasSize)
+        var locked = ImageEditorLayer.blank(name: "Locked", size: canvasSize)
+        let foreground = NSColor(srgbRed: 0.76, green: 0.18, blue: 0.43, alpha: 1)
+        first.style.strokeFillType = .color
+        first.style.strokePatternKind = .checkerboard
+        first.style.strokePatternColor = .systemRed
+        first.style.strokePatternScale = 10
+        second.style.strokeEnabled = true
+        second.style.strokeFillType = .pattern
+        second.style.strokePatternKind = .dots
+        second.style.strokePatternColor = .systemGreen
+        second.style.strokePatternScale = 24
+        locked.style.strokeFillType = .pattern
+        locked.style.strokePatternColor = .systemPurple
+        locked.isLocked = true
+        viewModel.document.layers = [first, second, locked]
+        viewModel.document.selectedLayerID = first.id
+        viewModel.document.selectedLayerIDs = [first.id, second.id, locked.id]
+        viewModel.foregroundColor = foreground
+        let historyCount = viewModel.document.history.count
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        try assertLayerStylePropertySchema("strokePatternColor", in: toolsResponse)
+
+        let result = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: ["property": .string("strokePatternColor")]
+        ))
+        #expect(result.ok)
+        #expect(result.result?.objectValue?["updatedLayerCount"] == .number(2))
+        #expect(viewModel.document.layers[0].style.strokeEnabled)
+        #expect(viewModel.document.layers[0].style.strokeFillType == .pattern)
+        #expect(viewModel.document.layers[0].style.strokePatternColor.isEqual(foreground))
+        #expect(viewModel.document.layers[1].style.strokePatternColor.isEqual(foreground))
+        #expect(viewModel.document.layers[0].style.strokePatternKind == .checkerboard)
+        #expect(viewModel.document.layers[1].style.strokePatternKind == .dots)
+        #expect(viewModel.document.layers[0].style.strokePatternScale == 10)
+        #expect(viewModel.document.layers[1].style.strokePatternScale == 24)
+        #expect(viewModel.document.layers[2].style.strokePatternColor.isEqual(NSColor.systemPurple))
+        #expect(viewModel.document.selectedLayerIDs == [first.id, second.id, locked.id])
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        let historyAfterUpdate = viewModel.document.history.count
+        let repeated = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: ["property": .string("strokePatternColor")]
+        ))
+        #expect(!repeated.ok)
+        #expect(viewModel.document.history.count == historyAfterUpdate)
+    }
+
     @Test func registrySetsLayerStyleStrokePatternScaleAcrossEditableSelection() throws {
         let viewModel = makeViewModel()
         let canvasSize = viewModel.document.canvasSize

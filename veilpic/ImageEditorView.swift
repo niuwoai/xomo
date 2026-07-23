@@ -4015,6 +4015,14 @@ struct ImageEditorView: View {
         }
     }
 
+    private var selectedLayerStrokePatternColorBinding: Binding<Color> {
+        Binding {
+            Color(nsColor: viewModel.selectedLayerStrokePatternColor)
+        } set: { value in
+            viewModel.setSelectedLayerStrokePatternColor(NSColor(value))
+        }
+    }
+
     private var selectedLayerShadowColorBinding: Binding<Color> {
         Binding {
             Color(nsColor: viewModel.selectedLayerShadowColor)
@@ -7219,6 +7227,12 @@ struct ImageEditorView: View {
                         L10n.format("imageEditor.properties.strokeGradientAngleValue", Int(value.rounded()))
                     }
                 } else if viewModel.selectedLayerStrokeFillTypeState.value == .pattern {
+                    layerStyleColorPickerRow(
+                        labelKey: "imageEditor.properties.strokePatternColor",
+                        state: viewModel.selectedLayerStrokePatternColorState,
+                        selection: selectedLayerStrokePatternColorBinding,
+                        accessibilityIdentifier: "image-editor-layer-style-stroke-pattern-color"
+                    )
                     layerStyleValuePicker(
                         state: viewModel.selectedLayerStrokePatternKindState,
                         values: ImageEditorPatternOverlayKind.allCases,

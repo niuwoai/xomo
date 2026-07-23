@@ -1117,6 +1117,7 @@
 "imageEditor.properties.strokeGradientEndColor" = "描边渐变终点颜色";
 "imageEditor.properties.strokeGradientAngleValue" = "描边渐变角度：%d°";
 "imageEditor.properties.strokePatternKind" = "描边图案";
+"imageEditor.properties.strokePatternColor" = "描边图案颜色";
 "imageEditor.properties.strokePatternScaleValue" = "描边图案缩放：%d px";
 "imageEditor.properties.shadowOpacityValue" = "投影不透明度：%d%%";
 "imageEditor.properties.shadowColor" = "投影颜色";

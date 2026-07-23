@@ -539,6 +539,24 @@ struct LocalizationResourceTests {
         }
     }
 
+    @Test func layerStyleStrokePatternColorIsLocalizedInEverySupportedLanguage() throws {
+        let paths = try Self.repositoryPaths()
+        let expectedValues = [
+            "zh-Hans": "描边图案颜色",
+            "en": "Stroke Pattern Color",
+            "ja": "境界線パターンの色"
+        ]
+
+        for (localizationID, expectedValue) in expectedValues {
+            let strings = try Self.stringTable(
+                tableName: "Localizable",
+                localizationID: localizationID,
+                appDirectory: paths.appDirectory
+            )
+            #expect(strings["imageEditor.properties.strokePatternColor"] == expectedValue)
+        }
+    }
+
     @Test func layerStyleMixedInnerGlowSourceIsLocalizedInEverySupportedLanguage() throws {
         let paths = try Self.repositoryPaths()
         let expectedValues = [
