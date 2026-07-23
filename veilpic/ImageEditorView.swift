@@ -11426,6 +11426,11 @@ private struct EditorToolRailTile<Label: View>: View {
                     action: action,
                     onHoverChanged: { isHovered = $0 }
                 )
+                // `NSViewRepresentable` has no intrinsic size. Without an
+                // explicit fill constraint SwiftUI may lay the native hit
+                // surface out at zero size even though the 36 pt icon remains
+                // visible, leaving the whole rail apparently unclickable.
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .accessibilityHidden(true)
             }
             .focusable(false)
@@ -11442,27 +11447,27 @@ private struct EditorToolRailClickSurface: NSViewRepresentable {
     let action: () -> Void
     let onHoverChanged: (Bool) -> Void
 
-    func makeNSView(context: Context) -> EditorToolRailClickNSView {
-        let view = EditorToolRailClickNSView()
-        view.action = action
+    func makeNSView(context: Context) -> EditorToolRailClickNSButton {
+        let view = EditorToolRailClickNSButton()
+        view.activationHandler = action
         view.onHoverChanged = onHoverChanged
         return view
     }
 
-    func updateNSView(_ nsView: EditorToolRailClickNSView, context: Context) {
-        nsView.action = action
+    func updateNSView(_ nsView: EditorToolRailClickNSButton, context: Context) {
+        nsView.activationHandler = action
         nsView.onHoverChanged = onHoverChanged
     }
 
-    static func dismantleNSView(_ nsView: EditorToolRailClickNSView, coordinator: ()) {
+    static func dismantleNSView(_ nsView: EditorToolRailClickNSButton, coordinator: ()) {
         nsView.onHoverChanged?(false)
-        nsView.action = nil
+        nsView.activationHandler = nil
         nsView.onHoverChanged = nil
     }
 }
 
-final class EditorToolRailClickNSView: NSView {
-    var action: (() -> Void)?
+final class EditorToolRailClickNSButton: NSButton {
+    var activationHandler: (() -> Void)?
     var onHoverChanged: ((Bool) -> Void)?
     private var hoverTrackingArea: NSTrackingArea?
 
@@ -11470,6 +11475,13 @@ final class EditorToolRailClickNSView: NSView {
 
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+        title = ""
+        isBordered = false
+        isTransparent = true
+        setButtonType(.momentaryChange)
+        target = self
+        action = #selector(activateFromMouseDown(_:))
+        sendAction(on: .leftMouseDown)
         focusRingType = .none
         setAccessibilityElement(false)
     }
@@ -11483,12 +11495,8 @@ final class EditorToolRailClickNSView: NSView {
         true
     }
 
-    override func mouseDown(with event: NSEvent) {
-        guard event.buttonNumber == 0 else {
-            super.mouseDown(with: event)
-            return
-        }
-        action?()
+    @objc private func activateFromMouseDown(_ sender: NSButton) {
+        activationHandler?()
     }
 
     override func updateTrackingAreas() {

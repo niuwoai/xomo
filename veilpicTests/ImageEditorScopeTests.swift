@@ -257,6 +257,13 @@ struct ImageEditorScopeTests {
             source[railItemStart.upperBound...].range(of: "private var selectedToolHint: some View")
         )
         let railItemSource = source[railItemStart.lowerBound..<railItemEnd.lowerBound]
+        let clickSurfaceStart = try #require(
+            source.range(of: "private struct EditorToolRailTile<Label: View>: View")
+        )
+        let clickSurfaceEnd = try #require(
+            source[clickSurfaceStart.upperBound...].range(of: "struct EditorIconButtonStyle: ButtonStyle")
+        )
+        let clickSurfaceSource = source[clickSurfaceStart.lowerBound..<clickSurfaceEnd.lowerBound]
 
         #expect(railItemSource.components(separatedBy: ".accessibilityLabel(tool.title)").count - 1 == 2)
         #expect(railItemSource.components(separatedBy: ".focusable(false)").count - 1 >= 3)
@@ -267,10 +274,11 @@ struct ImageEditorScopeTests {
         #expect(source.contains("private let imageEditorToolButtonHitSize: CGFloat = 36"))
         #expect(source.contains("private struct EditorToolRailTile<Label: View>: View"))
         #expect(source.contains("private struct EditorToolRailClickSurface: NSViewRepresentable"))
-        #expect(source.contains("final class EditorToolRailClickNSView: NSView"))
+        #expect(source.contains("final class EditorToolRailClickNSButton: NSButton"))
         #expect(source.contains("override func acceptsFirstMouse(for event: NSEvent?) -> Bool"))
-        #expect(source.contains("override func mouseDown(with event: NSEvent)"))
-        #expect(!source.contains(".onTapGesture(perform: action)"))
+        #expect(source.contains("sendAction(on: .leftMouseDown)"))
+        #expect(source.contains(".frame(maxWidth: .infinity, maxHeight: .infinity)"))
+        #expect(!clickSurfaceSource.contains(".onTapGesture(perform: action)"))
         #expect(source.contains(".accessibilityAction {\n                action()\n            }"))
         #expect(
             railItemSource.components(
@@ -280,10 +288,10 @@ struct ImageEditorScopeTests {
     }
 
     @MainActor
-    @Test func toolRailClickSurfaceActivatesOnMouseDownWithoutTakingFocus() throws {
-        let view = EditorToolRailClickNSView(frame: NSRect(x: 0, y: 0, width: 36, height: 36))
+    @Test func toolRailClickSurfaceUsesNativeMouseDownActionWithoutTakingFocus() throws {
+        let button = EditorToolRailClickNSButton(frame: NSRect(x: 0, y: 0, width: 36, height: 36))
         var activationCount = 0
-        view.action = { activationCount += 1 }
+        button.activationHandler = { activationCount += 1 }
         let event = try #require(NSEvent.mouseEvent(
             with: .leftMouseDown,
             location: NSPoint(x: 18, y: 18),
@@ -295,12 +303,14 @@ struct ImageEditorScopeTests {
             clickCount: 1,
             pressure: 1
         ))
+        let selector = try #require(button.action)
 
-        view.mouseDown(with: event)
+        #expect(button.sendAction(selector, to: button.target))
 
         #expect(activationCount == 1)
-        #expect(view.acceptsFirstMouse(for: event))
-        #expect(!view.acceptsFirstResponder)
+        #expect(button.acceptsFirstMouse(for: event))
+        #expect(!button.acceptsFirstResponder)
+        #expect(!button.isBordered)
     }
 
     @Test func marqueeShapeMenuDoesNotConsumeTheNextToolClick() throws {
