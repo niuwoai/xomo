@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc511 - 2026-07-23
+
+### Fixed
+- 左侧 26 个工具格不再依赖 `ScrollView` / 组件拖拽共享的 SwiftUI tap 手势链；每个工具使用独立 AppKit 命中面，在鼠标按下时立即切换，避免拖拽或视图切换后工具栏看得见却点不动。
+- 工具命中面显式接受非活动窗口的第一次点击，同时保持不可聚焦、无焦点环；36 × 36 pt 命中范围、悬停、选中、帮助提示、白色图标、辅助功能动作和矩形选区子菜单保持不变。
+
+### Verification
+- Xcode 源码契约与 AppKit mouse-down 行为测试 2/2、Computer Use 真实坐标连续点击套索/画笔/橡皮擦 3/3 通过；组合 UI Runner 编译完成但本机 Xcode 卡在 worker materialize 阶段，未虚报执行通过。SwiftPM CLI 2/2、发布契约 4/4（10 条断言）通过；常规完整 Release 门禁仍为 rc520。
+
 ## 2.12.0-rc510 - 2026-07-23
 
 ### Fixed

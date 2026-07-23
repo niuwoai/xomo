@@ -11384,11 +11384,12 @@ private struct ImageEditorMarqueeToolSymbol: View {
     }
 }
 
-/// Tool choices deliberately avoid SwiftUI's native `Button` tracking.
-/// AppKit can leave a mouse tracking session alive after a component drag or
-/// transient menu interaction, causing every subsequent toolbar button to
-/// miss its mouse-up event. A plain hit-test surface with an explicit tap and
-/// accessibility action remains clickable without accepting keyboard focus.
+/// Tool choices deliberately avoid SwiftUI's gesture arena. Component drag
+/// sessions and the surrounding `ScrollView` can delay or swallow the next
+/// SwiftUI tap, which makes the rail appear dead after returning from the
+/// component library. A tiny AppKit surface handles mouse-down directly: the
+/// tool changes immediately, accepts the first click in an inactive window,
+/// and never becomes keyboard focusable.
 private struct EditorToolRailTile<Label: View>: View {
     let isSelected: Bool
     let action: () -> Void
@@ -11423,9 +11424,13 @@ private struct EditorToolRailTile<Label: View>: View {
                 RoundedRectangle(cornerRadius: 5, style: .continuous)
                     .strokeBorder(isSelected ? Color.white.opacity(0.16) : .clear, lineWidth: 1)
             }
-            .contentShape(Rectangle())
-            .onHover { isHovered = $0 }
-            .onTapGesture(perform: action)
+            .overlay {
+                EditorToolRailClickSurface(
+                    action: action,
+                    onHoverChanged: { isHovered = $0 }
+                )
+                .accessibilityHidden(true)
+            }
             .focusable(false)
             .xomoFocusEffectDisabled()
             .accessibilityElement(children: .ignore)
@@ -11433,6 +11438,83 @@ private struct EditorToolRailTile<Label: View>: View {
             .accessibilityAction {
                 action()
             }
+    }
+}
+
+private struct EditorToolRailClickSurface: NSViewRepresentable {
+    let action: () -> Void
+    let onHoverChanged: (Bool) -> Void
+
+    func makeNSView(context: Context) -> EditorToolRailClickNSView {
+        let view = EditorToolRailClickNSView()
+        view.action = action
+        view.onHoverChanged = onHoverChanged
+        return view
+    }
+
+    func updateNSView(_ nsView: EditorToolRailClickNSView, context: Context) {
+        nsView.action = action
+        nsView.onHoverChanged = onHoverChanged
+    }
+
+    static func dismantleNSView(_ nsView: EditorToolRailClickNSView, coordinator: ()) {
+        nsView.onHoverChanged?(false)
+        nsView.action = nil
+        nsView.onHoverChanged = nil
+    }
+}
+
+final class EditorToolRailClickNSView: NSView {
+    var action: (() -> Void)?
+    var onHoverChanged: ((Bool) -> Void)?
+    private var hoverTrackingArea: NSTrackingArea?
+
+    override var acceptsFirstResponder: Bool { false }
+
+    override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        focusRingType = .none
+        setAccessibilityElement(false)
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool {
+        true
+    }
+
+    override func mouseDown(with event: NSEvent) {
+        guard event.buttonNumber == 0 else {
+            super.mouseDown(with: event)
+            return
+        }
+        action?()
+    }
+
+    override func updateTrackingAreas() {
+        if let hoverTrackingArea {
+            removeTrackingArea(hoverTrackingArea)
+        }
+        let trackingArea = NSTrackingArea(
+            rect: bounds,
+            options: [.activeInKeyWindow, .inVisibleRect, .mouseEnteredAndExited],
+            owner: self,
+            userInfo: nil
+        )
+        addTrackingArea(trackingArea)
+        hoverTrackingArea = trackingArea
+        super.updateTrackingAreas()
+    }
+
+    override func mouseEntered(with event: NSEvent) {
+        onHoverChanged?(true)
+    }
+
+    override func mouseExited(with event: NSEvent) {
+        onHoverChanged?(false)
     }
 }
 
