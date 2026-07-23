@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.12.0-rc521 - 2026-07-23
+
+### Fixed
+- 修复左侧工具栏在侧栏重建或组件库往返后偶发“图标可见但全部点不动”：原生命中面不再依赖 Lazy Grid 推导无固有尺寸的透明 `NSButton`，改为与图标严格一致的固定 36 × 36 `NSView`，在 `mouseDown` 首击直接切换工具且永不获取键盘焦点。
+
+### Verification
+- 原生命中源码/行为专项 2/2、工具冒烟 31/31、组件库往返 1/1、CLI 2/2、发布契约 4/4（10 条断言）通过；单任务 `build-for-testing` 与 macOS 13 双架构 Release 构建成功。
+- Computer Use 在安装版上按真实屏幕坐标逐项点击全部 30 个工具：可见区 26/26、滚动区 4/4；“工具 → 组件库 → 工具 → 画笔”往返后仍可首击切换。
+- `codesign --verify --deep --strict` 可通过的 Apple Development 新签名仍被当前系统在新 CDHash 启动前终止；同一双架构产物使用仓库支持的本地 ad-hoc 签名后可稳定启动、严格验签并覆盖安装到 `/Applications/Xomo.app`。未删除隔离或来源属性规避系统安全策略。
+
 ## 2.12.0-rc520 - 2026-07-23
 
 ### Changed

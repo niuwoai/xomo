@@ -274,10 +274,10 @@ struct ImageEditorScopeTests {
         #expect(source.contains("private let imageEditorToolButtonHitSize: CGFloat = 36"))
         #expect(source.contains("private struct EditorToolRailTile<Label: View>: View"))
         #expect(source.contains("private struct EditorToolRailClickSurface: NSViewRepresentable"))
-        #expect(source.contains("final class EditorToolRailClickNSButton: NSButton"))
+        #expect(source.contains("final class EditorToolRailClickNSView: NSView"))
         #expect(source.contains("override func acceptsFirstMouse(for event: NSEvent?) -> Bool"))
-        #expect(source.contains("sendAction(on: .leftMouseDown)"))
-        #expect(source.contains(".frame(maxWidth: .infinity, maxHeight: .infinity)"))
+        #expect(source.contains("override func mouseDown(with event: NSEvent)"))
+        #expect(source.contains("width: imageEditorToolButtonHitSize,\n                    height: imageEditorToolButtonHitSize"))
         #expect(!clickSurfaceSource.contains(".onTapGesture(perform: action)"))
         #expect(source.contains(".accessibilityAction {\n                action()\n            }"))
         #expect(
@@ -288,10 +288,10 @@ struct ImageEditorScopeTests {
     }
 
     @MainActor
-    @Test func toolRailClickSurfaceUsesNativeMouseDownActionWithoutTakingFocus() throws {
-        let button = EditorToolRailClickNSButton(frame: NSRect(x: 0, y: 0, width: 36, height: 36))
+    @Test func toolRailClickSurfaceUsesFixedNativeMouseDownWithoutTakingFocus() throws {
+        let surface = EditorToolRailClickNSView(frame: NSRect(x: 0, y: 0, width: 36, height: 36))
         var activationCount = 0
-        button.activationHandler = { activationCount += 1 }
+        surface.activationHandler = { activationCount += 1 }
         let event = try #require(NSEvent.mouseEvent(
             with: .leftMouseDown,
             location: NSPoint(x: 18, y: 18),
@@ -303,14 +303,13 @@ struct ImageEditorScopeTests {
             clickCount: 1,
             pressure: 1
         ))
-        let selector = try #require(button.action)
 
-        #expect(button.sendAction(selector, to: button.target))
+        surface.mouseDown(with: event)
 
         #expect(activationCount == 1)
-        #expect(button.acceptsFirstMouse(for: event))
-        #expect(!button.acceptsFirstResponder)
-        #expect(!button.isBordered)
+        #expect(surface.acceptsFirstMouse(for: event))
+        #expect(!surface.acceptsFirstResponder)
+        #expect(surface.hitTest(NSPoint(x: 18, y: 18)) === surface)
     }
 
     @Test func marqueeShapeMenuDoesNotConsumeTheNextToolClick() throws {
