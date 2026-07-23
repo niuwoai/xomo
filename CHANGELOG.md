@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.12.0-rc520 - 2026-07-23
+
+### Changed
+- 执行每 40 个候选版本一次的完整质量门禁，不引入新的产品行为；统一复核 macOS 13 部署目标、主程序、CLI、全量测试、Release 双架构、签名、安装包与真实工具点击。
+
+### Verification
+- 单任务整包测试在 Swift Testing 内部并发下出现共享 AppKit/CoreGraphics 状态互相污染，因此改按测试 Suite 分进程审计：覆盖 1,507 项测试、93 个 Suite，68 个 Suite 直接通过；其余 25 个并发敏感 Suite 已保留到 `test-reports/rc520-suites/report.json` 与 Markdown 报告，后续继续拆成单测试隔离，未把“组失败”误报成 871 项断言失败。
+- 关键交互专项已独立通过：工具冒烟 31/31、画布光标 33/33、图层行批量属性 126/126；发布契约 4/4（10 条断言）通过。
+- 首轮 `build-for-testing` 遇到 Swift 批编译对象文件丢失；切换单任务、whole-module 编译后完整测试构建成功。Release 双架构 `arm64 + x86_64` 构建成功，部署目标保持 macOS 13，版本/构建号为 `2.12.0-rc520 (520)`。
+- 当前机器的 Developer ID 证书链不受系统信任，Developer ID 与 ad-hoc 产物均被当前 macOS 拒绝启动；改用本机 Apple Development 身份签名后完成真实启动、套索→画笔→橡皮擦点击及组件库默认箭头语义冒烟，并覆盖安装到 `/Applications/Xomo.app`。
+
 ## 2.12.0-rc519 - 2026-07-23
 
 ### Changed

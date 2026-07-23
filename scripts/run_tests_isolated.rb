@@ -20,6 +20,7 @@
 # 用法：
 #   ruby scripts/run_tests_isolated.rb                 # 串行，最稳（默认）
 #   ruby scripts/run_tests_isolated.rb --jobs 4        # 4 个独立进程并行（更快）
+#   ruby scripts/run_tests_isolated.rb --group-by-suite # 每个测试套件一个独立进程
 #   ruby scripts/run_tests_isolated.rb --filter Filter # 只跑名字含 Filter 的测试
 #   ruby scripts/run_tests_isolated.rb --skip-build    # 复用上次 build-for-testing 产物
 #   XOMO_DERIVED_DATA_PATH=/tmp/xomo-tests ruby scripts/run_tests_isolated.rb --skip-build
@@ -50,6 +51,7 @@ options = {
   out_dir: File.join(__dir__, '..', 'test-reports'),
   skip_build: false,
   stop_on_first_failure: false,
+  group_by_suite: false,
 }
 
 OptionParser.new do |o|
@@ -58,6 +60,9 @@ OptionParser.new do |o|
   o.on('--filter SUBSTR', '只运行标识符包含该子串的测试') { |v| options[:filter] = v }
   o.on('--out DIR', '报告输出目录（默认 test-reports/）') { |v| options[:out_dir] = v }
   o.on('--skip-build', '跳过 build-for-testing，复用已有产物') { options[:skip_build] = true }
+  o.on('--group-by-suite', '每个测试套件一个独立进程，兼顾隔离与完整门禁速度') {
+    options[:group_by_suite] = true
+  }
   o.on('--fail-fast', '出现第一个失败即停止') { options[:stop_on_first_failure] = true }
   o.on('-h', '--help', '显示帮助') { puts o; exit 0 }
 end.parse!
@@ -116,8 +121,10 @@ end
 
 # 运行单个测试；返回 result Hash
 def run_one(test, logs_dir)
-  identifier = "#{TEST_TARGET}/#{test[:suite]}/#{test[:method]}()"
-  result_bundle_path = File.join(logs_dir, "#{test[:suite]}.#{test[:method]}.xcresult")
+  test_selector = test[:method] ? "#{test[:method]}()" : nil
+  identifier = [TEST_TARGET, test[:suite], test_selector].compact.join('/')
+  log_stem = [test[:suite], test[:method]].compact.join('.')
+  result_bundle_path = File.join(logs_dir, "#{log_stem}.xcresult")
   args = base_xcodebuild_args + [
     'test-without-building',
     "-only-testing:#{identifier}",
@@ -142,7 +149,7 @@ def run_one(test, logs_dir)
   out = output_chunks.join
   duration = Time.now - started
 
-  log_path = File.join(logs_dir, "#{test[:suite]}.#{test[:method]}.log")
+  log_path = File.join(logs_dir, "#{log_stem}.log")
   File.write(log_path, out)
 
   passed = status.success?
@@ -153,6 +160,7 @@ def run_one(test, logs_dir)
     method: test[:method],
     identifier: identifier,
     file: test[:file],
+    test_count: test.fetch(:test_count, 1),
     passed: passed,
     duration: duration.round(3),
     infrastructure_retries: attempts,
@@ -179,17 +187,30 @@ if tests.empty?
   abort '没有匹配到任何测试。请检查 --filter 或测试源码。'
 end
 
+work_items = if options[:group_by_suite]
+               tests.group_by { |test| test[:suite] }.map do |suite, suite_tests|
+                 {
+                   suite: suite,
+                   method: nil,
+                   file: suite_tests.map { |test| test[:file] }.uniq.join(', '),
+                   test_count: suite_tests.size,
+                 }
+               end
+             else
+               tests
+             end
+
 FileUtils.mkdir_p(options[:out_dir])
 logs_dir = File.join(options[:out_dir], 'logs')
 FileUtils.mkdir_p(logs_dir)
 
-puts "==> 共 #{tests.size} 个测试，jobs=#{options[:jobs]}，输出目录：#{options[:out_dir]}"
+puts "==> 共 #{tests.size} 个测试，#{work_items.size} 个执行组，jobs=#{options[:jobs]}，输出目录：#{options[:out_dir]}"
 build_for_testing unless options[:skip_build]
 
 results = []
 results_mutex = Mutex.new
 queue = Queue.new
-tests.each_with_index { |t, i| queue << [i, t] }
+work_items.each_with_index { |t, i| queue << [i, t] }
 stop = false
 done_count = 0
 
@@ -209,7 +230,16 @@ workers = Array.new(options[:jobs]) do
         done_count += 1
         mark = res[:passed] ? '✔' : '✘'
         retry_note = res[:infrastructure_retries].positive? ? "，基础设施重试 #{res[:infrastructure_retries]} 次" : ''
-        printf("[%3d/%3d] %s %s (%.1fs%s)\n", done_count, tests.size, mark, res[:identifier], res[:duration], retry_note)
+        printf(
+          "[%3d/%3d] %s %s（%d 项）(%.1fs%s)\n",
+          done_count,
+          work_items.size,
+          mark,
+          res[:identifier],
+          res[:test_count],
+          res[:duration],
+          retry_note
+        )
         if !res[:passed] && options[:stop_on_first_failure]
           stop = true
         end
@@ -225,6 +255,8 @@ workers.each(&:join)
 results.sort_by! { |r| [r[:suite].to_s, r[:method].to_s] }
 passed = results.count { |r| r[:passed] }
 failed = results.size - passed
+passed_test_count = results.select { |r| r[:passed] }.sum { |r| r[:test_count] }
+failed_test_count = results.reject { |r| r[:passed] }.sum { |r| r[:test_count] }
 generated_at = Time.now.strftime('%Y-%m-%d %H:%M:%S %z')
 
 summary = {
@@ -232,6 +264,9 @@ summary = {
   total: results.size,
   passed: passed,
   failed: failed,
+  total_tests: results.sum { |r| r[:test_count] },
+  passed_tests: passed_test_count,
+  failed_tests_in_failed_groups: failed_test_count,
   jobs: options[:jobs],
   results: results,
 }
@@ -242,7 +277,8 @@ File.write(json_path, JSON.pretty_generate(summary))
 md = +""
 md << "# veilpicTests 独立进程测试报告\n\n"
 md << "- 生成时间：#{generated_at}\n"
-md << "- 总数：**#{results.size}**，通过：**#{passed}**，失败：**#{failed}**\n"
+md << "- 执行组：**#{results.size}**，通过：**#{passed}**，失败：**#{failed}**\n"
+md << "- 覆盖测试：**#{results.sum { |r| r[:test_count] }}**，通过组内测试：**#{passed_test_count}**，失败组内测试：**#{failed_test_count}**\n"
 md << "- 并行度（jobs）：#{options[:jobs]}\n\n"
 
 if failed.zero?
@@ -272,5 +308,5 @@ File.write(md_path, md)
 puts "\n==> 报告已生成："
 puts "    #{json_path}"
 puts "    #{md_path}"
-puts "==> 结果：通过 #{passed} / #{results.size}，失败 #{failed}"
+puts "==> 结果：执行组通过 #{passed} / #{results.size}，失败 #{failed}；覆盖测试 #{results.sum { |r| r[:test_count] }}"
 exit(failed.zero? ? 0 : 1)
