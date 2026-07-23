@@ -867,6 +867,7 @@ struct ImageEditorProjectLayerStyle: Codable, Equatable {
     var patternOverlayColor: ImageEditorProjectColor
     var patternOverlayOpacity: CGFloat
     var patternOverlayScale: CGFloat
+    var patternOverlayOffset: CGSize?
     var satinEnabled: Bool
     var satinColor: ImageEditorProjectColor
     var satinOpacity: CGFloat
@@ -959,6 +960,7 @@ struct ImageEditorProjectLayerStyle: Codable, Equatable {
         patternOverlayColor = ImageEditorProjectColor(color: style.patternOverlayColor)
         patternOverlayOpacity = style.patternOverlayOpacity
         patternOverlayScale = style.patternOverlayScale
+        patternOverlayOffset = style.patternOverlayOffset
         satinEnabled = style.satinEnabled
         satinColor = ImageEditorProjectColor(color: style.satinColor)
         satinOpacity = style.satinOpacity
@@ -1058,6 +1060,10 @@ struct ImageEditorProjectLayerStyle: Codable, Equatable {
             patternOverlayColor: patternOverlayColor.nsColor,
             patternOverlayOpacity: patternOverlayOpacity,
             patternOverlayScale: patternOverlayScale,
+            patternOverlayOffset: CGSize(
+                width: max(-128, min(128, patternOverlayOffset?.width ?? 0)),
+                height: max(-128, min(128, patternOverlayOffset?.height ?? 0))
+            ),
             satinEnabled: satinEnabled,
             satinColor: satinColor.nsColor,
             satinOpacity: satinOpacity,

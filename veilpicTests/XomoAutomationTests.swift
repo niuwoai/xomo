@@ -7218,6 +7218,83 @@ struct XomoAutomationTests {
         #expect(viewModel.document.layers[1].style.patternOverlayOpacity == 0.75)
     }
 
+    @Test func registrySetsPatternOverlayOffsetsAcrossEditableSelection() throws {
+        let viewModel = makeViewModel()
+        let canvasSize = viewModel.document.canvasSize
+        var first = ImageEditorLayer.blank(name: "First", size: canvasSize)
+        var second = ImageEditorLayer.blank(name: "Second", size: canvasSize)
+        var locked = ImageEditorLayer.blank(name: "Locked", size: canvasSize)
+        first.style.patternOverlayKind = .checkerboard
+        first.style.patternOverlayScale = 10
+        first.style.patternOverlayOffset = .zero
+        second.style.patternOverlayEnabled = true
+        second.style.patternOverlayKind = .dots
+        second.style.patternOverlayColor = .systemGreen
+        second.style.patternOverlayScale = 24
+        second.style.patternOverlayOffset = CGSize(width: 20, height: -10)
+        locked.style.patternOverlayOffset = CGSize(width: 30, height: 40)
+        locked.isLocked = true
+        viewModel.document.layers = [first, second, locked]
+        viewModel.document.selectedLayerID = first.id
+        viewModel.document.selectedLayerIDs = [first.id, second.id, locked.id]
+        let historyCount = viewModel.document.history.count
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        try assertNumericLayerStylePropertySchema("patternOverlayOffsetX", in: toolsResponse)
+        try assertNumericLayerStylePropertySchema("patternOverlayOffsetY", in: toolsResponse)
+
+        let horizontal = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("patternOverlayOffsetX"),
+                "value": .number(20)
+            ]
+        ))
+        #expect(horizontal.ok)
+        #expect(horizontal.result?.objectValue?["updatedLayerCount"] == .number(1))
+        #expect(viewModel.document.layers[0].style.patternOverlayEnabled)
+        #expect(viewModel.document.layers[0].style.patternOverlayOffset == CGSize(width: 20, height: 0))
+        #expect(viewModel.document.layers[1].style.patternOverlayOffset == CGSize(width: 20, height: -10))
+        #expect(viewModel.document.layers[0].style.patternOverlayKind == .checkerboard)
+        #expect(viewModel.document.layers[1].style.patternOverlayKind == .dots)
+        #expect(viewModel.document.layers[0].style.patternOverlayScale == 10)
+        #expect(viewModel.document.layers[1].style.patternOverlayScale == 24)
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        let vertical = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.style_settings",
+            arguments: [
+                "property": .string("patternOverlayOffsetY"),
+                "value": .number(-10)
+            ]
+        ))
+        #expect(vertical.ok)
+        #expect(vertical.result?.objectValue?["updatedLayerCount"] == .number(1))
+        #expect(viewModel.document.layers[0].style.patternOverlayOffset == CGSize(width: 20, height: -10))
+        #expect(viewModel.document.layers[1].style.patternOverlayOffset == CGSize(width: 20, height: -10))
+        #expect(viewModel.document.layers[2].style.patternOverlayOffset == CGSize(width: 30, height: 40))
+        #expect(viewModel.document.selectedLayerIDs == [first.id, second.id, locked.id])
+        #expect(viewModel.document.history.count == historyCount + 2)
+
+        let historyAfterOffsets = viewModel.document.history.count
+        for property in ["patternOverlayOffsetX", "patternOverlayOffsetY"] {
+            let repeated = registry.execute(request(
+                operation: "call",
+                name: "xomo.layer.style_settings",
+                arguments: [
+                    "property": .string(property),
+                    "value": .number(property.hasSuffix("X") ? 20 : -10)
+                ]
+            ))
+            #expect(!repeated.ok)
+        }
+        #expect(viewModel.document.history.count == historyAfterOffsets)
+    }
+
     @Test func registrySetsLayerStylePatternOverlayOpacityAcrossEditableSelection() throws {
         let viewModel = makeViewModel()
         let canvasSize = viewModel.document.canvasSize

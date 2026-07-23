@@ -474,6 +474,10 @@ private extension ImageEditorLayerStyle {
         style.innerGlowBlur *= scale
         style.innerGlowChoke *= scale
         style.patternOverlayScale *= scale
+        style.patternOverlayOffset = CGSize(
+            width: patternOverlayOffset.width * scale,
+            height: patternOverlayOffset.height * scale
+        )
         style.satinDistance *= scale
         style.satinSize *= scale
         style.bevelSize *= scale

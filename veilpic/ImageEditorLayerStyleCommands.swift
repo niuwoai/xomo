@@ -745,6 +745,22 @@ extension ImageEditorViewModel {
         selectedLayerStyleValueState(\.patternOverlayScale)
     }
 
+    var selectedLayerPatternOverlayOffsetX: Double {
+        Double(document.selectedLayer?.style.patternOverlayOffset.width ?? 0)
+    }
+
+    var selectedLayerPatternOverlayOffsetXState: ImageEditorLayerStyleValueState<CGFloat> {
+        selectedLayerStyleValueState { $0.patternOverlayOffset.width }
+    }
+
+    var selectedLayerPatternOverlayOffsetY: Double {
+        Double(document.selectedLayer?.style.patternOverlayOffset.height ?? 0)
+    }
+
+    var selectedLayerPatternOverlayOffsetYState: ImageEditorLayerStyleValueState<CGFloat> {
+        selectedLayerStyleValueState { $0.patternOverlayOffset.height }
+    }
+
     var selectedLayerSatinOpacity: Double {
         Double(document.selectedLayer?.style.satinOpacity ?? 0.35)
     }
@@ -1728,6 +1744,22 @@ extension ImageEditorViewModel {
         updateSelectedLayerStyle {
             $0.patternOverlayEnabled = true
             $0.patternOverlayScale = max(6, min(64, CGFloat(scale)))
+        }
+    }
+
+    @discardableResult
+    func setSelectedLayerPatternOverlayOffsetX(_ offset: Double) -> Int {
+        updateSelectedLayerStyle {
+            $0.patternOverlayEnabled = true
+            $0.patternOverlayOffset.width = max(-128, min(128, CGFloat(offset)))
+        }
+    }
+
+    @discardableResult
+    func setSelectedLayerPatternOverlayOffsetY(_ offset: Double) -> Int {
+        updateSelectedLayerStyle {
+            $0.patternOverlayEnabled = true
+            $0.patternOverlayOffset.height = max(-128, min(128, CGFloat(offset)))
         }
     }
 

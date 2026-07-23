@@ -4407,6 +4407,22 @@ struct ImageEditorView: View {
         }
     }
 
+    private var selectedLayerPatternOverlayOffsetXBinding: Binding<Double> {
+        Binding {
+            viewModel.selectedLayerPatternOverlayOffsetX
+        } set: { value in
+            viewModel.setSelectedLayerPatternOverlayOffsetX(value)
+        }
+    }
+
+    private var selectedLayerPatternOverlayOffsetYBinding: Binding<Double> {
+        Binding {
+            viewModel.selectedLayerPatternOverlayOffsetY
+        } set: { value in
+            viewModel.setSelectedLayerPatternOverlayOffsetY(value)
+        }
+    }
+
     private var selectedLayerSatinOpacityBinding: Binding<Double> {
         Binding {
             viewModel.selectedLayerSatinOpacity
@@ -7765,6 +7781,24 @@ struct ImageEditorView: View {
                     ) { value in
                         L10n.format("imageEditor.properties.patternOverlayScaleValue", Int(value.rounded()))
                     }
+                }
+                layerStyleNumericStepper(
+                    state: viewModel.selectedLayerPatternOverlayOffsetXState,
+                    value: selectedLayerPatternOverlayOffsetXBinding,
+                    range: -128...128,
+                    step: 1,
+                    accessibilityIdentifier: "image-editor-layer-style-pattern-overlay-offset-x"
+                ) { value in
+                    L10n.format("imageEditor.properties.patternOverlayOffsetXValue", Int(value.rounded()))
+                }
+                layerStyleNumericStepper(
+                    state: viewModel.selectedLayerPatternOverlayOffsetYState,
+                    value: selectedLayerPatternOverlayOffsetYBinding,
+                    range: -128...128,
+                    step: 1,
+                    accessibilityIdentifier: "image-editor-layer-style-pattern-overlay-offset-y"
+                ) { value in
+                    L10n.format("imageEditor.properties.patternOverlayOffsetYValue", Int(value.rounded()))
                 }
                 HStack {
                     Stepper(

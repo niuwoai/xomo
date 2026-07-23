@@ -2914,6 +2914,26 @@ final class XomoAutomationRegistry {
             return .object([
                 "updatedLayerCount": .number(Double(updatedLayerCount))
             ])
+        case "patternOverlayOffsetX":
+            let updatedLayerCount = viewModel.setSelectedLayerPatternOverlayOffsetX(try number())
+            guard updatedLayerCount > 0 else {
+                throw XomoAutomationCallError.operationFailed(
+                    "No editable layer needs the requested pattern overlay X offset"
+                )
+            }
+            return .object([
+                "updatedLayerCount": .number(Double(updatedLayerCount))
+            ])
+        case "patternOverlayOffsetY":
+            let updatedLayerCount = viewModel.setSelectedLayerPatternOverlayOffsetY(try number())
+            guard updatedLayerCount > 0 else {
+                throw XomoAutomationCallError.operationFailed(
+                    "No editable layer needs the requested pattern overlay Y offset"
+                )
+            }
+            return .object([
+                "updatedLayerCount": .number(Double(updatedLayerCount))
+            ])
         case "satinOpacity":
             return try satinUpdateResult(
                 viewModel.setSelectedLayerSatinOpacity(try number()),
@@ -4616,8 +4636,8 @@ private extension XomoAutomationRegistry {
             "direction": XomoAutomationSchema.string(description: "Preset ordering direction", values: ImageEditorLayerStylePresetMoveDirection.allCases.map(\.rawValue)),
             "path": XomoAutomationSchema.string(description: "Local .xomostyles path for preset import preview, import, or export")
         ], required: ["action"]),
-        tool("xomo.layer.style_settings", "Set effect scale; complete stroke gradient endpoints, stroke pattern color/offset, and other stroke settings; shadow; inner-shadow; outer/inner-glow settings; color-overlay color/opacity; complete gradient-overlay and pattern-overlay settings; bevel settings; and per-effect global-light linkage with actual updated-layer counts. Stroke/overlay gradient start, stroke/overlay pattern, and bevel colors use the current foreground color; stroke/overlay gradient end colors use the current background color. Shadow, inner-shadow, and bevel angle updates report whether global light changed; direct global-light updates report affected layer/effect counts across all linked shadows, inner shadows, and bevels.", [
-            "property": XomoAutomationSchema.string(description: "Layer style property", values: ["effectScale", "strokeWidth", "strokePosition", "strokeFillType", "strokeGradientStartColor", "strokeGradientEndColor", "strokeGradientStyle", "strokeGradientAngle", "strokePatternKind", "strokePatternColor", "strokePatternScale", "strokePatternOffsetX", "strokePatternOffsetY", "strokeOpacity", "strokeColor", "shadowOpacity", "shadowColor", "shadowBlur", "shadowSpread", "shadowNoise", "shadowContour", "shadowDistance", "shadowAngle", "shadowUsesGlobalLight", "globalLightAngle", "innerShadowOpacity", "innerShadowBlur", "innerShadowChoke", "innerShadowNoise", "innerShadowContour", "innerShadowDistance", "innerShadowAngle", "innerShadowUsesGlobalLight", "outerGlowOpacity", "outerGlowColor", "outerGlowBlur", "outerGlowSpread", "outerGlowTechnique", "outerGlowNoise", "outerGlowContour", "outerGlowRange", "outerGlowJitter", "innerGlowOpacity", "innerGlowColor", "innerGlowBlur", "innerGlowChoke", "innerGlowTechnique", "innerGlowNoise", "innerGlowSource", "innerGlowContour", "innerGlowRange", "innerGlowJitter", "colorOverlayOpacity", "colorOverlayColor", "gradientOverlayOpacity", "gradientOverlayStartColor", "gradientOverlayEndColor", "gradientOverlayScale", "gradientOverlayAngle", "gradientOverlayStyle", "patternOverlayKind", "patternOverlayColor", "patternOverlayOpacity", "patternOverlayScale", "satinOpacity", "satinColor", "satinDistance", "satinSize", "satinAngle", "satinInvert", "satinContour", "bevelSize", "bevelOpacity", "bevelHighlightColor", "bevelShadowColor", "bevelSoften", "bevelAngle", "bevelUsesGlobalLight", "bevelDirection"]),
+        tool("xomo.layer.style_settings", "Set effect scale; complete stroke gradient endpoints, stroke pattern color/offset, and other stroke settings; shadow; inner-shadow; outer/inner-glow settings; color-overlay color/opacity; complete gradient-overlay and pattern-overlay settings including pattern phase offsets; bevel settings; and per-effect global-light linkage with actual updated-layer counts. Stroke/overlay gradient start, stroke/overlay pattern, and bevel colors use the current foreground color; stroke/overlay gradient end colors use the current background color. Shadow, inner-shadow, and bevel angle updates report whether global light changed; direct global-light updates report affected layer/effect counts across all linked shadows, inner shadows, and bevels.", [
+            "property": XomoAutomationSchema.string(description: "Layer style property", values: ["effectScale", "strokeWidth", "strokePosition", "strokeFillType", "strokeGradientStartColor", "strokeGradientEndColor", "strokeGradientStyle", "strokeGradientAngle", "strokePatternKind", "strokePatternColor", "strokePatternScale", "strokePatternOffsetX", "strokePatternOffsetY", "strokeOpacity", "strokeColor", "shadowOpacity", "shadowColor", "shadowBlur", "shadowSpread", "shadowNoise", "shadowContour", "shadowDistance", "shadowAngle", "shadowUsesGlobalLight", "globalLightAngle", "innerShadowOpacity", "innerShadowBlur", "innerShadowChoke", "innerShadowNoise", "innerShadowContour", "innerShadowDistance", "innerShadowAngle", "innerShadowUsesGlobalLight", "outerGlowOpacity", "outerGlowColor", "outerGlowBlur", "outerGlowSpread", "outerGlowTechnique", "outerGlowNoise", "outerGlowContour", "outerGlowRange", "outerGlowJitter", "innerGlowOpacity", "innerGlowColor", "innerGlowBlur", "innerGlowChoke", "innerGlowTechnique", "innerGlowNoise", "innerGlowSource", "innerGlowContour", "innerGlowRange", "innerGlowJitter", "colorOverlayOpacity", "colorOverlayColor", "gradientOverlayOpacity", "gradientOverlayStartColor", "gradientOverlayEndColor", "gradientOverlayScale", "gradientOverlayAngle", "gradientOverlayStyle", "patternOverlayKind", "patternOverlayColor", "patternOverlayOpacity", "patternOverlayScale", "patternOverlayOffsetX", "patternOverlayOffsetY", "satinOpacity", "satinColor", "satinDistance", "satinSize", "satinAngle", "satinInvert", "satinContour", "bevelSize", "bevelOpacity", "bevelHighlightColor", "bevelShadowColor", "bevelSoften", "bevelAngle", "bevelUsesGlobalLight", "bevelDirection"]),
             "value": XomoAutomationSchema.number(description: "Numeric style value"),
             "position": XomoAutomationSchema.string(description: "Stroke position", values: ImageEditorStrokePosition.allCases.map(\.rawValue)),
             "fillType": XomoAutomationSchema.string(description: "Stroke fill type", values: ImageEditorStrokeFillType.allCases.map(\.rawValue)),

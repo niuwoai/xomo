@@ -1174,6 +1174,8 @@
 "imageEditor.properties.patternOverlayColor" = "Pattern Color";
 "imageEditor.properties.patternOverlayOpacityValue" = "Pattern Overlay Opacity: %d%%";
 "imageEditor.properties.patternOverlayScaleValue" = "Pattern Scale: %d px";
+"imageEditor.properties.patternOverlayOffsetXValue" = "Pattern Overlay X Offset: %d px";
+"imageEditor.properties.patternOverlayOffsetYValue" = "Pattern Overlay Y Offset: %d px";
 "imageEditor.properties.satinOpacityValue" = "Satin Opacity: %d%%";
 "imageEditor.properties.satinDistanceValue" = "Satin Distance: %d px";
 "imageEditor.properties.satinColor" = "Satin Color";

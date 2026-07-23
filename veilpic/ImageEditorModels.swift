@@ -2237,6 +2237,7 @@ struct ImageEditorLayerStyle {
     var patternOverlayColor = NSColor.white
     var patternOverlayOpacity: CGFloat = 0.45
     var patternOverlayScale: CGFloat = 14
+    var patternOverlayOffset = CGSize.zero
     var satinEnabled = false
     var satinColor = NSColor.black
     var satinOpacity: CGFloat = 0.35
@@ -2297,6 +2298,10 @@ struct ImageEditorLayerStyle {
         style.innerGlowChoke *= scale
         style.gradientOverlayScale *= scale
         style.patternOverlayScale *= scale
+        style.patternOverlayOffset = CGSize(
+            width: patternOverlayOffset.width * scale,
+            height: patternOverlayOffset.height * scale
+        )
         style.satinDistance *= scale
         style.satinSize *= scale
         style.bevelSize *= scale
@@ -3716,6 +3721,15 @@ struct ImageEditorLayer: Identifiable {
                     scale: style.patternOverlayScale
                 )
                 let patternCanvas = NSImage.rendered(size: outputSize) { _ in
+                    let context = NSGraphicsContext.current
+                    let originalPatternPhase = context?.patternPhase ?? .zero
+                    context?.patternPhase = CGPoint(
+                        x: style.patternOverlayOffset.width,
+                        y: style.patternOverlayOffset.height
+                    )
+                    defer {
+                        context?.patternPhase = originalPatternPhase
+                    }
                     NSColor(patternImage: patternImage).setFill()
                     contentRect.fill()
                     baseImage.draw(

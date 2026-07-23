@@ -1,6 +1,8 @@
 # 像界（Xomo）产品概览
 
-> 最后更新：2026-07-23 | 当前版本：v2.12.0-rc524
+> 最后更新：2026-07-23 | 当前版本：v2.12.0-rc525
+
+v2.12.0-rc525 把可编辑图案相位扩展到图案叠加。X/Y 偏移真正移动合成铺图，并在属性面板支持多选混合值、锁定跳过和单步 History/Undo/Redo；项目文件、图层样式预设、效果缩放与画布缩放保持一致，旧项目默认原点。MCP/CLI `xomo.layer.style_settings` 新增 `patternOverlayOffsetX/Y`。下一小步审计图案填充图层的同类相位缺口；下一次每 40 版完整构建、冒烟与 `/Applications` 覆盖门禁为 rc560。
 
 v2.12.0-rc524 为描边图案加入真正参与渲染的 X/Y 相位偏移。属性面板支持多选混合值、锁定层跳过和单步 History/Undo/Redo；项目文件、图层样式预设、效果缩放和画布缩放都会保留或同步调整偏移，旧项目默认回到原点。MCP/CLI `xomo.layer.style_settings` 同步新增 `strokePatternOffsetX`、`strokePatternOffsetY`。定向 Xcode 测试 40/40、CLI 2/2、发布契约 4/4 通过；Computer Use 在安装版逐项点击全部 30 个工具，并确认组件库往返后第一击仍生效。下一次每 40 版完整构建、冒烟与 `/Applications` 覆盖门禁为 rc560。
 

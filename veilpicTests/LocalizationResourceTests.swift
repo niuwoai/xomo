@@ -579,6 +579,28 @@ struct LocalizationResourceTests {
         }
     }
 
+    @Test func layerStylePatternOverlayOffsetsAreLocalizedInEverySupportedLanguage() throws {
+        let paths = try Self.repositoryPaths()
+        let expectedValues = [
+            "zh-Hans": ["图案叠加 X 偏移：%d px", "图案叠加 Y 偏移：%d px"],
+            "en": ["Pattern Overlay X Offset: %d px", "Pattern Overlay Y Offset: %d px"],
+            "ja": ["パターンオーバーレイ X オフセット：%d px", "パターンオーバーレイ Y オフセット：%d px"]
+        ]
+        let keys = [
+            "imageEditor.properties.patternOverlayOffsetXValue",
+            "imageEditor.properties.patternOverlayOffsetYValue"
+        ]
+
+        for (localizationID, expected) in expectedValues {
+            let strings = try Self.stringTable(
+                tableName: "Localizable",
+                localizationID: localizationID,
+                appDirectory: paths.appDirectory
+            )
+            #expect(keys.compactMap { strings[$0] } == expected)
+        }
+    }
+
     @Test func layerStyleMixedInnerGlowSourceIsLocalizedInEverySupportedLanguage() throws {
         let paths = try Self.repositoryPaths()
         let expectedValues = [

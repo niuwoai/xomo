@@ -1999,6 +1999,41 @@ struct ImageEditorLayerStyleTests {
         #expect(compositedAfterStyle != compositedBeforeStyle)
     }
 
+    @Test func patternOverlayOffsetChangesRenderedPhaseAndRoundTripsProjectState() throws {
+        let canvasSize = NSSize(width: 48, height: 40)
+        let baseImage = solidImage(color: .black, size: canvasSize)
+        let layerImage = centerRectImage(size: canvasSize, color: .white)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: baseImage) { _ in }
+        viewModel.replaceSelectedLayerImageForTesting(
+            layerImage,
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+        viewModel.setSelectedLayerPatternOverlayKind(.checkerboard)
+        viewModel.setSelectedLayerPatternOverlayColor(.systemRed)
+        viewModel.setSelectedLayerPatternOverlayOpacity(1)
+        viewModel.setSelectedLayerPatternOverlayScale(8)
+        let originalData = try #require(viewModel.currentImage.qingtuPNGData())
+
+        #expect(viewModel.setSelectedLayerPatternOverlayOffsetX(4) == 1)
+        let shiftedData = try #require(viewModel.currentImage.qingtuPNGData())
+        #expect(shiftedData != originalData)
+        #expect(viewModel.setSelectedLayerPatternOverlayOffsetY(-3) == 1)
+
+        let styledLayer = try #require(viewModel.document.selectedLayer)
+        #expect(styledLayer.style.patternOverlayOffset == CGSize(width: 4, height: -3))
+        let project = try ImageEditorProjectDocument(document: viewModel.document)
+        let restoredDocument = try project.restoredDocument()
+        let restoredLayer = try #require(restoredDocument.layers.first { $0.id == styledLayer.id })
+        #expect(restoredLayer.style.patternOverlayOffset == CGSize(width: 4, height: -3))
+
+        let encoded = try JSONEncoder().encode(ImageEditorProjectLayerStyle(style: styledLayer.style))
+        var legacyObject = try #require(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
+        legacyObject.removeValue(forKey: "patternOverlayOffset")
+        let legacyData = try JSONSerialization.data(withJSONObject: legacyObject)
+        let legacyStyle = try JSONDecoder().decode(ImageEditorProjectLayerStyle.self, from: legacyData)
+        #expect(legacyStyle.layerStyle.patternOverlayOffset == .zero)
+    }
+
     @Test func imageEditorSatinIsNonDestructiveAndUpdatesStyleParameters() async throws {
         let canvasSize = NSSize(width: 80, height: 60)
         let baseImage = solidImage(color: .systemBlue, size: canvasSize)

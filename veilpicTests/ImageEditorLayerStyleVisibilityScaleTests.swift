@@ -61,6 +61,7 @@ struct ImageEditorLayerStyleVisibilityScaleTests {
         style.innerGlowChoke = 2
         style.patternOverlayEnabled = true
         style.patternOverlayScale = 14
+        style.patternOverlayOffset = CGSize(width: -5, height: 7)
         style.satinEnabled = true
         style.satinDistance = 10
         style.satinSize = 6
@@ -92,6 +93,7 @@ struct ImageEditorLayerStyleVisibilityScaleTests {
         #expect(rendered.innerGlowBlur == 16)
         #expect(rendered.innerGlowChoke == 4)
         #expect(rendered.patternOverlayScale == 28)
+        #expect(rendered.patternOverlayOffset == CGSize(width: -10, height: 14))
         #expect(rendered.satinDistance == 20)
         #expect(rendered.satinSize == 12)
         #expect(rendered.bevelSize == 10)

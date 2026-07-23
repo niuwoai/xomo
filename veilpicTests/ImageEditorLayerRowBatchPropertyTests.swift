@@ -3648,6 +3648,80 @@ struct ImageEditorLayerRowBatchPropertyTests {
         return fixture
     }
 
+    @Test func layerStylePatternOverlayOffsetsConvergeAcrossEditableSelection() throws {
+        let fixture = makeFixture()
+        let viewModel = fixture.viewModel
+        let firstID = fixture.layers[0].id
+        let secondID = fixture.layers[1].id
+        let lockedID = fixture.layers[2].id
+        viewModel.document.layers[0].style.patternOverlayKind = .checkerboard
+        viewModel.document.layers[0].style.patternOverlayColor = .systemBlue
+        viewModel.document.layers[0].style.patternOverlayOpacity = 0.25
+        viewModel.document.layers[0].style.patternOverlayScale = 8
+        viewModel.document.layers[0].style.patternOverlayOffset = CGSize(width: 4, height: -2)
+        viewModel.document.layers[1].style.patternOverlayEnabled = true
+        viewModel.document.layers[1].style.patternOverlayKind = .dots
+        viewModel.document.layers[1].style.patternOverlayColor = .systemGreen
+        viewModel.document.layers[1].style.patternOverlayOpacity = 0.75
+        viewModel.document.layers[1].style.patternOverlayScale = 24
+        viewModel.document.layers[1].style.patternOverlayOffset = CGSize(width: 12, height: 8)
+        viewModel.document.layers[2].style.patternOverlayOffset = CGSize(width: 30, height: 40)
+        viewModel.document.layers[2].isLocked = true
+        select(Set(fixture.layers.map(\.id)), primary: firstID, in: viewModel)
+        let historyCount = viewModel.document.history.count
+
+        #expect(viewModel.selectedLayerPatternOverlayOffsetXState == .mixed)
+        #expect(viewModel.selectedLayerPatternOverlayOffsetYState == .mixed)
+        #expect(viewModel.setSelectedLayerPatternOverlayOffsetX(12) == 1)
+        #expect(viewModel.selectedLayerPatternOverlayOffsetXState == .value(12))
+        #expect((try layer(firstID, in: viewModel)).style.patternOverlayEnabled)
+        #expect((try layer(firstID, in: viewModel)).style.patternOverlayOffset == CGSize(width: 12, height: -2))
+        #expect((try layer(secondID, in: viewModel)).style.patternOverlayOffset == CGSize(width: 12, height: 8))
+        #expect((try layer(firstID, in: viewModel)).style.patternOverlayKind == .checkerboard)
+        #expect((try layer(secondID, in: viewModel)).style.patternOverlayKind == .dots)
+        #expect((try layer(firstID, in: viewModel)).style.patternOverlayScale == 8)
+        #expect((try layer(secondID, in: viewModel)).style.patternOverlayScale == 24)
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        #expect(viewModel.setSelectedLayerPatternOverlayOffsetY(-6) == 2)
+        #expect(viewModel.selectedLayerPatternOverlayOffsetYState == .value(-6))
+        #expect((try layer(firstID, in: viewModel)).style.patternOverlayOffset == CGSize(width: 12, height: -6))
+        #expect((try layer(secondID, in: viewModel)).style.patternOverlayOffset == CGSize(width: 12, height: -6))
+        #expect((try layer(lockedID, in: viewModel)).style.patternOverlayOffset == CGSize(width: 30, height: 40))
+        #expect(viewModel.document.selectedLayerIDs == [firstID, secondID, lockedID])
+        #expect(viewModel.document.history.count == historyCount + 2)
+
+        let historyAfterUpdate = viewModel.document.history.count
+        #expect(viewModel.setSelectedLayerPatternOverlayOffsetX(12) == 0)
+        #expect(viewModel.setSelectedLayerPatternOverlayOffsetY(-6) == 0)
+        #expect(viewModel.document.history.count == historyAfterUpdate)
+        viewModel.undo()
+        #expect((try layer(firstID, in: viewModel)).style.patternOverlayOffset.height == -2)
+        #expect((try layer(secondID, in: viewModel)).style.patternOverlayOffset.height == 8)
+        viewModel.redo()
+        #expect((try layer(firstID, in: viewModel)).style.patternOverlayOffset.height == -6)
+        #expect((try layer(secondID, in: viewModel)).style.patternOverlayOffset.height == -6)
+    }
+
+    @Test func layerStylePatternOverlayOffsetControlsUseMixedNumericSteppers() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("state: viewModel.selectedLayerPatternOverlayOffsetXState"))
+        #expect(source.contains("value: selectedLayerPatternOverlayOffsetXBinding"))
+        #expect(source.contains("image-editor-layer-style-pattern-overlay-offset-x"))
+        #expect(source.contains("imageEditor.properties.patternOverlayOffsetXValue"))
+        #expect(source.contains("state: viewModel.selectedLayerPatternOverlayOffsetYState"))
+        #expect(source.contains("value: selectedLayerPatternOverlayOffsetYBinding"))
+        #expect(source.contains("image-editor-layer-style-pattern-overlay-offset-y"))
+        #expect(source.contains("imageEditor.properties.patternOverlayOffsetYValue"))
+    }
+
     @Test func layerStyleMixedShadowContourConvergesAcrossEditableSelection() throws {
         let fixture = shadowContourFixture()
         let viewModel = fixture.viewModel

@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.12.0-rc525 - 2026-07-23
+
+### Added
+- 图案叠加新增 X/Y 相位偏移，属性面板以不可键盘聚焦的步进控件支持多选混合值、锁定层跳过与单步 History/Undo/Redo。
+- 图案相位通过 AppKit `patternPhase` 真正参与合成渲染，并写入项目及图层样式预设；效果缩放、画布缩放同步缩放相位，旧项目缺失字段时回退原点。
+- `xomo.layer.style_settings` 新增 `patternOverlayOffsetX` 与 `patternOverlayOffsetY`，返回实际修改图层数并拒绝重复空操作。
+
+### Verification
+- 待完成图案叠加相位事务、真实渲染与持久化、缩放、界面契约、MCP、三语本地化、CLI 与发布契约定向验证；下一次完整构建、冒烟和 `/Applications` 覆盖门禁为 rc560。
+
 ## 2.12.0-rc524 - 2026-07-23
 
 ### Added
