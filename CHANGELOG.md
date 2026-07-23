@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.12.0-rc514 - 2026-07-23
+
+### Fixed
+- 斜面与浮雕“柔化”现在显示真实的多选共同值；可编辑图层数值不一致时提示“多个值”，调整后一次收敛全部目标，锁定层与重复值安全跳过。
+- 柔化值统一限制在 0–24 px，只启用斜面并修改柔化；大小、透明度、高光/阴影颜色、方向和光照参数保持，每次批量操作只生成一步 Undo/History，选择不会丢失。
+
+### Automation
+- `xomo.layer.style_settings property=bevelSoften` 返回真实 `updatedLayerCount`；没有图层需要变化时明确失败，不再把空操作报告为成功。
+
+### Verification
+- Xcode 专项 3/3、SwiftPM CLI 2/2 通过，覆盖混合值收敛、0–24 px 夹取、参数隔离、锁定层保护、单步 Undo/Redo、重复值零历史、MCP schema、真实修改数和零变化失败。额外清理了遗留的 Xcode Debug 测试宿主，只保留 `/Applications/Xomo.app`，Computer Use 真实坐标连续点击工具与组件库往返均即时切换；常规完整 Release、冒烟与安装门禁仍为 rc520。
+
 ## 2.12.0-rc513 - 2026-07-23
 
 ### Fixed

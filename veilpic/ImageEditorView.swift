@@ -7787,12 +7787,15 @@ struct ImageEditorView: View {
                     selection: selectedLayerBevelShadowColorBinding,
                     accessibilityIdentifier: "image-editor-layer-style-bevel-shadow-color"
                 )
-                Stepper(
-                    L10n.format("imageEditor.properties.bevelSoftenValue", Int(viewModel.selectedLayerBevelSoften.rounded())),
+                layerStyleNumericStepper(
+                    state: viewModel.selectedLayerBevelSoftenState,
                     value: selectedLayerBevelSoftenBinding,
-                    in: 0...24,
-                    step: 1
-                )
+                    range: 0...24,
+                    step: 1,
+                    accessibilityIdentifier: "image-editor-layer-style-bevel-soften"
+                ) { value in
+                    L10n.format("imageEditor.properties.bevelSoftenValue", Int(value.rounded()))
+                }
                 layerStyleGlobalLightToggle(
                     .bevel,
                     labelKey: "imageEditor.properties.bevelUseGlobalLight",

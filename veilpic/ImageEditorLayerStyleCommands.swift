@@ -767,6 +767,10 @@ extension ImageEditorViewModel {
         Double(document.selectedLayer?.style.bevelSoften ?? 0)
     }
 
+    var selectedLayerBevelSoftenState: ImageEditorLayerStyleValueState<CGFloat> {
+        selectedLayerStyleValueState(\.bevelSoften)
+    }
+
     var selectedLayerBevelAngle: Double {
         guard let style = document.selectedLayer?.style else { return -45 }
         return Double(style.resolvedBevelAngle(globalLightAngle: document.globalLightAngle))
@@ -1730,7 +1734,8 @@ extension ImageEditorViewModel {
         }
     }
 
-    func setSelectedLayerBevelSoften(_ soften: Double) {
+    @discardableResult
+    func setSelectedLayerBevelSoften(_ soften: Double) -> Int {
         updateSelectedLayerStyle {
             $0.bevelEnabled = true
             $0.bevelSoften = max(0, min(24, CGFloat(soften)))
