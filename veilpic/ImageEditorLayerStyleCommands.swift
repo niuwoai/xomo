@@ -1742,7 +1742,8 @@ extension ImageEditorViewModel {
         }
     }
 
-    func setSelectedLayerBevelAngle(_ angle: Double) {
+    @discardableResult
+    func setSelectedLayerBevelAngle(_ angle: Double) -> Int {
         setSelectedLayerLightAngle(angle, effect: .bevel)
     }
 

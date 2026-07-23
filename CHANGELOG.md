@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.12.0-rc516 - 2026-07-23
+
+### Fixed
+- 斜面与浮雕“光照角度”现在返回真实的可编辑选中层修改数，并明确报告本次操作是否同步改变文档全局光；混合选择在一次事务中收敛，锁定层与重复值安全跳过。
+- 使用全局光时角度变化继续联动文档中所有已链接的投影、内阴影和斜面；使用本地光时只修改选中层。两条路径都保持大小、透明度、柔化、方向与颜色参数，每次只生成一步 Undo/History。
+
+### Automation
+- `xomo.layer.style_settings property=bevelAngle` 返回 `updatedLayerCount` 与 `globalLightUpdated`；规范化后没有变化时明确失败。跨文档的完整联动层/效果统计继续由显式 `globalLightAngle` 操作返回。
+
+### Verification
+- Xcode 专项 3/3、SwiftPM CLI 2/2、发布契约 4/4（10 条断言）通过，覆盖全局/本地光分支、角度规范化、混合值收敛、参数隔离、锁定层保护、跨层投影联动、单步 Undo/Redo、重复值零历史、MCP schema、真实修改数与全局光标记。常规完整 Release、冒烟与 `/Applications` 覆盖门禁仍为 rc520；下一小步处理斜面“使用全局光”开关事务。
+
 ## 2.12.0-rc515 - 2026-07-23
 
 ### Fixed
