@@ -759,6 +759,10 @@ extension ImageEditorViewModel {
         document.selectedLayer?.style.bevelShadowColor ?? .black
     }
 
+    var selectedLayerBevelShadowColorState: ImageEditorLayerStyleValueState<ImageEditorProjectColor> {
+        selectedLayerStyleValueState { ImageEditorProjectColor(color: $0.bevelShadowColor) }
+    }
+
     var selectedLayerBevelSoften: Double {
         Double(document.selectedLayer?.style.bevelSoften ?? 0)
     }
@@ -1718,7 +1722,8 @@ extension ImageEditorViewModel {
         }
     }
 
-    func setSelectedLayerBevelShadowColor(_ color: NSColor) {
+    @discardableResult
+    func setSelectedLayerBevelShadowColor(_ color: NSColor) -> Int {
         updateSelectedLayerStyle {
             $0.bevelEnabled = true
             $0.bevelShadowColor = color.usingColorSpace(.sRGB) ?? color
