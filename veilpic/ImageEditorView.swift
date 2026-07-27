@@ -12,6 +12,8 @@ private let imageEditorRightDockWidth: CGFloat = 384
 private let imageEditorCanvasToolbarHeight: CGFloat = 42
 private let imageEditorToolRailWidth: CGFloat = 84
 private let imageEditorToolButtonHitSize: CGFloat = 36
+private let imageEditorToolGridColumnCount = 2
+private let imageEditorToolGridSpacing: CGFloat = 2
 private let imageEditorComponentLibraryWidth: CGFloat = 220
 
 enum ImageEditorOptionsBarAppearance {
@@ -121,6 +123,7 @@ struct ImageEditorView: View {
     @State private var canvasModifierFlags: NSEvent.ModifierFlags = []
     @State private var activeBrushPressure: CGFloat?
     @State private var isMarqueeShapeMenuPresented = false
+    @State private var hoveredTool: ImageEditorTool?
     @State private var isQuickMaskOptionsPresented = false
     @State var isFigmaLinkImportPresented = false
     @State private var canvasTextEditingOrigin: CGPoint?
@@ -974,6 +977,7 @@ struct ImageEditorView: View {
                 ForEach(XomoLeftSidebarTab.allCases) { tab in
                     Button {
                         isMarqueeShapeMenuPresented = false
+                        hoveredTool = nil
                         viewModel.selectLeftSidebarTab(tab)
                     } label: {
                         Image(systemName: tab.symbolName)
@@ -1021,18 +1025,46 @@ struct ImageEditorView: View {
     private var toolRail: some View {
         VStack(spacing: 8) {
             ScrollView(.vertical, showsIndicators: false) {
-                LazyVGrid(
-                    columns: Array(
-                        repeating: GridItem(.fixed(imageEditorToolButtonHitSize), spacing: 2),
-                        count: 2
-                    ),
-                    spacing: 2
-                ) {
-                    ForEach(ImageEditorTool.allCases) { tool in
-                        toolRailItem(tool)
+                ZStack(alignment: .topLeading) {
+                    LazyVGrid(
+                        columns: Array(
+                            repeating: GridItem(
+                                .fixed(imageEditorToolButtonHitSize),
+                                spacing: imageEditorToolGridSpacing
+                            ),
+                            count: imageEditorToolGridColumnCount
+                        ),
+                        spacing: imageEditorToolGridSpacing
+                    ) {
+                        ForEach(ImageEditorTool.allCases) { tool in
+                            toolRailItem(tool)
+                        }
                     }
+                    .frame(
+                        width: imageEditorToolGridWidth,
+                        height: imageEditorToolGridHeight,
+                        alignment: .top
+                    )
+
+                    EditorToolRailGridClickSurface(
+                        toolCount: ImageEditorTool.allCases.count,
+                        marqueeToolIndex: ImageEditorTool.allCases.firstIndex(of: .marquee),
+                        onActivate: selectToolFromRail(at:),
+                        onToggleMarqueeMenu: {
+                            isMarqueeShapeMenuPresented.toggle()
+                        },
+                        onHoverChanged: updateHoveredTool(at:)
+                    )
+                    .frame(
+                        width: imageEditorToolGridWidth,
+                        height: imageEditorToolGridHeight
+                    )
+                    .accessibilityHidden(true)
                 }
-                .frame(width: imageEditorToolButtonHitSize * 2 + 2)
+                .frame(
+                    width: imageEditorToolGridWidth,
+                    height: imageEditorToolGridHeight
+                )
             }
 
             Divider().overlay(editorBorder)
@@ -1156,6 +1188,7 @@ struct ImageEditorView: View {
             ZStack(alignment: .bottomTrailing) {
                 EditorToolRailTile(
                     isSelected: viewModel.selectedTool == tool,
+                    isHovered: hoveredTool == tool,
                     action: { selectToolFromRail(tool) }
                 ) {
                     ZStack {
@@ -1170,19 +1203,16 @@ struct ImageEditorView: View {
                 .accessibilityLabel(tool.title)
 
                 Color.clear
-                .frame(width: 11, height: 11)
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    isMarqueeShapeMenuPresented.toggle()
-                }
-                .focusable(false)
-                .xomoFocusEffectDisabled()
-                .padding(1)
-                .accessibilityLabel(L10n.text("imageEditor.option.marqueeShape"))
-                .accessibilityAddTraits(.isButton)
-                .accessibilityAction {
-                    isMarqueeShapeMenuPresented.toggle()
-                }
+                    .frame(width: 11, height: 11)
+                    .allowsHitTesting(false)
+                    .focusable(false)
+                    .xomoFocusEffectDisabled()
+                    .padding(1)
+                    .accessibilityLabel(L10n.text("imageEditor.option.marqueeShape"))
+                    .accessibilityAddTraits(.isButton)
+                    .accessibilityAction {
+                        isMarqueeShapeMenuPresented.toggle()
+                    }
             }
             .frame(width: imageEditorToolButtonHitSize, height: imageEditorToolButtonHitSize)
             .help(L10n.text("imageEditor.option.marqueeShape"))
@@ -1191,6 +1221,7 @@ struct ImageEditorView: View {
         } else {
             EditorToolRailTile(
                 isSelected: viewModel.selectedTool == tool,
+                isHovered: hoveredTool == tool,
                 action: { selectToolFromRail(tool) }
             ) {
                 ZStack {
@@ -1244,6 +1275,31 @@ struct ImageEditorView: View {
     private func selectToolFromRail(_ tool: ImageEditorTool) {
         isMarqueeShapeMenuPresented = false
         viewModel.selectTool(tool)
+    }
+
+    private func selectToolFromRail(at index: Int) {
+        guard ImageEditorTool.allCases.indices.contains(index) else { return }
+        selectToolFromRail(ImageEditorTool.allCases[index])
+    }
+
+    private func updateHoveredTool(at index: Int?) {
+        guard let index, ImageEditorTool.allCases.indices.contains(index) else {
+            hoveredTool = nil
+            return
+        }
+        hoveredTool = ImageEditorTool.allCases[index]
+    }
+
+    private var imageEditorToolGridWidth: CGFloat {
+        imageEditorToolButtonHitSize * CGFloat(imageEditorToolGridColumnCount)
+            + imageEditorToolGridSpacing * CGFloat(imageEditorToolGridColumnCount - 1)
+    }
+
+    private var imageEditorToolGridHeight: CGFloat {
+        let rowCount = (ImageEditorTool.allCases.count + imageEditorToolGridColumnCount - 1)
+            / imageEditorToolGridColumnCount
+        return imageEditorToolButtonHitSize * CGFloat(rowCount)
+            + imageEditorToolGridSpacing * CGFloat(max(0, rowCount - 1))
     }
 
     private var selectedToolHint: some View {
@@ -11491,24 +11547,23 @@ private struct ImageEditorMarqueeToolSymbol: View {
     }
 }
 
-/// Tool choices deliberately avoid SwiftUI's gesture arena. Component drag
-/// sessions and the surrounding `ScrollView` can delay or swallow the next
-/// SwiftUI tap, which makes the rail appear dead after returning from the
-/// component library. A tiny AppKit surface handles mouse-down directly: the
-/// tool changes immediately, accepts the first click in an inactive window,
-/// and never becomes keyboard focusable.
+/// Tool visuals stay in SwiftUI while a single AppKit grid surface owns mouse
+/// hit testing. Keeping one stable native surface avoids `LazyVGrid` recycling
+/// dozens of transparent representables into stale or zero-sized hit areas.
 private struct EditorToolRailTile<Label: View>: View {
     let isSelected: Bool
+    let isHovered: Bool
     let action: () -> Void
     @ViewBuilder let label: Label
-    @State private var isHovered = false
 
     init(
         isSelected: Bool,
+        isHovered: Bool,
         action: @escaping () -> Void,
         @ViewBuilder label: () -> Label
     ) {
         self.isSelected = isSelected
+        self.isHovered = isHovered
         self.action = action
         self.label = label()
     }
@@ -11531,20 +11586,7 @@ private struct EditorToolRailTile<Label: View>: View {
                 RoundedRectangle(cornerRadius: 5, style: .continuous)
                     .strokeBorder(isSelected ? Color.white.opacity(0.16) : .clear, lineWidth: 1)
             }
-            .overlay {
-                EditorToolRailClickSurface(
-                    action: action,
-                    onHoverChanged: { isHovered = $0 }
-                )
-                // Never ask the lazy grid to infer a representable's size.
-                // The visual tile and its native hit surface must be the same
-                // fixed rectangle in every sidebar rebuild.
-                .frame(
-                    width: imageEditorToolButtonHitSize,
-                    height: imageEditorToolButtonHitSize
-                )
-                .accessibilityHidden(true)
-            }
+            .allowsHitTesting(false)
             .focusable(false)
             .xomoFocusEffectDisabled()
             .accessibilityElement(children: .ignore)
@@ -11555,35 +11597,49 @@ private struct EditorToolRailTile<Label: View>: View {
     }
 }
 
-private struct EditorToolRailClickSurface: NSViewRepresentable {
-    let action: () -> Void
-    let onHoverChanged: (Bool) -> Void
+private struct EditorToolRailGridClickSurface: NSViewRepresentable {
+    let toolCount: Int
+    let marqueeToolIndex: Int?
+    let onActivate: (Int) -> Void
+    let onToggleMarqueeMenu: () -> Void
+    let onHoverChanged: (Int?) -> Void
 
-    func makeNSView(context: Context) -> EditorToolRailClickNSView {
-        let view = EditorToolRailClickNSView()
-        view.activationHandler = action
-        view.onHoverChanged = onHoverChanged
+    func makeNSView(context: Context) -> EditorToolRailGridClickNSView {
+        let view = EditorToolRailGridClickNSView()
+        configure(view)
         return view
     }
 
-    func updateNSView(_ nsView: EditorToolRailClickNSView, context: Context) {
-        nsView.activationHandler = action
-        nsView.onHoverChanged = onHoverChanged
+    func updateNSView(_ nsView: EditorToolRailGridClickNSView, context: Context) {
+        configure(nsView)
     }
 
-    static func dismantleNSView(_ nsView: EditorToolRailClickNSView, coordinator: ()) {
-        nsView.onHoverChanged?(false)
+    static func dismantleNSView(_ nsView: EditorToolRailGridClickNSView, coordinator: ()) {
+        nsView.onHoverChanged?(nil)
         nsView.activationHandler = nil
+        nsView.marqueeMenuHandler = nil
         nsView.onHoverChanged = nil
+    }
+
+    private func configure(_ view: EditorToolRailGridClickNSView) {
+        view.toolCount = toolCount
+        view.marqueeToolIndex = marqueeToolIndex
+        view.activationHandler = onActivate
+        view.marqueeMenuHandler = onToggleMarqueeMenu
+        view.onHoverChanged = onHoverChanged
     }
 }
 
-final class EditorToolRailClickNSView: NSView {
-    var activationHandler: (() -> Void)?
-    var onHoverChanged: ((Bool) -> Void)?
+final class EditorToolRailGridClickNSView: NSView {
+    var toolCount = 0
+    var marqueeToolIndex: Int?
+    var activationHandler: ((Int) -> Void)?
+    var marqueeMenuHandler: (() -> Void)?
+    var onHoverChanged: ((Int?) -> Void)?
     private var hoverTrackingArea: NSTrackingArea?
 
     override var acceptsFirstResponder: Bool { false }
+    override var isFlipped: Bool { true }
 
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -11604,7 +11660,15 @@ final class EditorToolRailClickNSView: NSView {
             super.mouseDown(with: event)
             return
         }
-        activationHandler?()
+        let point = convert(event.locationInWindow, from: nil)
+        guard let hit = toolHit(at: point) else { return }
+        if hit.index == marqueeToolIndex,
+           hit.localPoint.x >= imageEditorToolButtonHitSize - 11,
+           hit.localPoint.y >= imageEditorToolButtonHitSize - 11 {
+            marqueeMenuHandler?()
+            return
+        }
+        activationHandler?(hit.index)
     }
 
     override func updateTrackingAreas() {
@@ -11613,7 +11677,7 @@ final class EditorToolRailClickNSView: NSView {
         }
         let trackingArea = NSTrackingArea(
             rect: bounds,
-            options: [.activeInKeyWindow, .inVisibleRect, .mouseEnteredAndExited],
+            options: [.activeInKeyWindow, .inVisibleRect, .mouseEnteredAndExited, .mouseMoved],
             owner: self,
             userInfo: nil
         )
@@ -11623,11 +11687,43 @@ final class EditorToolRailClickNSView: NSView {
     }
 
     override func mouseEntered(with event: NSEvent) {
-        onHoverChanged?(true)
+        updateHover(with: event)
+    }
+
+    override func mouseMoved(with event: NSEvent) {
+        updateHover(with: event)
     }
 
     override func mouseExited(with event: NSEvent) {
-        onHoverChanged?(false)
+        onHoverChanged?(nil)
+    }
+
+    func toolHit(at point: NSPoint) -> (index: Int, localPoint: NSPoint)? {
+        guard bounds.contains(point) else { return nil }
+        let pitch = imageEditorToolButtonHitSize + imageEditorToolGridSpacing
+        let column = Int(point.x / pitch)
+        let row = Int(point.y / pitch)
+        guard column >= 0, column < imageEditorToolGridColumnCount, row >= 0 else {
+            return nil
+        }
+        let localPoint = NSPoint(
+            x: point.x - CGFloat(column) * pitch,
+            y: point.y - CGFloat(row) * pitch
+        )
+        guard localPoint.x >= 0,
+              localPoint.y >= 0,
+              localPoint.x < imageEditorToolButtonHitSize,
+              localPoint.y < imageEditorToolButtonHitSize else {
+            return nil
+        }
+        let index = row * imageEditorToolGridColumnCount + column
+        guard index >= 0, index < toolCount else { return nil }
+        return (index, localPoint)
+    }
+
+    private func updateHover(with event: NSEvent) {
+        let point = convert(event.locationInWindow, from: nil)
+        onHoverChanged?(toolHit(at: point)?.index)
     }
 }
 

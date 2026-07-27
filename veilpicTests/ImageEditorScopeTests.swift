@@ -273,11 +273,14 @@ struct ImageEditorScopeTests {
         #expect(railItemSource.contains(".accessibilityIdentifier(\"image-editor-tool-\\(tool.rawValue)\")"))
         #expect(source.contains("private let imageEditorToolButtonHitSize: CGFloat = 36"))
         #expect(source.contains("private struct EditorToolRailTile<Label: View>: View"))
-        #expect(source.contains("private struct EditorToolRailClickSurface: NSViewRepresentable"))
-        #expect(source.contains("final class EditorToolRailClickNSView: NSView"))
+        #expect(source.contains("private struct EditorToolRailGridClickSurface: NSViewRepresentable"))
+        #expect(source.contains("final class EditorToolRailGridClickNSView: NSView"))
         #expect(source.contains("override func acceptsFirstMouse(for event: NSEvent?) -> Bool"))
         #expect(source.contains("override func mouseDown(with event: NSEvent)"))
-        #expect(source.contains("width: imageEditorToolButtonHitSize,\n                    height: imageEditorToolButtonHitSize"))
+        #expect(source.contains("toolCount: ImageEditorTool.allCases.count"))
+        #expect(source.contains("onActivate: selectToolFromRail(at:)"))
+        #expect(source.contains("onHoverChanged: updateHoveredTool(at:)"))
+        #expect(source.contains(".allowsHitTesting(false)"))
         #expect(!clickSurfaceSource.contains(".onTapGesture(perform: action)"))
         #expect(source.contains(".accessibilityAction {\n                action()\n            }"))
         #expect(
@@ -288,28 +291,31 @@ struct ImageEditorScopeTests {
     }
 
     @MainActor
-    @Test func toolRailClickSurfaceUsesFixedNativeMouseDownWithoutTakingFocus() throws {
-        let surface = EditorToolRailClickNSView(frame: NSRect(x: 0, y: 0, width: 36, height: 36))
-        var activationCount = 0
-        surface.activationHandler = { activationCount += 1 }
-        let event = try #require(NSEvent.mouseEvent(
-            with: .leftMouseDown,
-            location: NSPoint(x: 18, y: 18),
-            modifierFlags: [],
-            timestamp: 0,
-            windowNumber: 0,
-            context: nil,
-            eventNumber: 1,
-            clickCount: 1,
-            pressure: 1
-        ))
+    @Test func toolRailGridClickSurfaceMapsEveryFixedCellWithoutTakingFocus() throws {
+        let toolCount = ImageEditorTool.allCases.count
+        let rowCount = (toolCount + 1) / 2
+        let surface = EditorToolRailGridClickNSView(
+            frame: NSRect(x: 0, y: 0, width: 74, height: CGFloat(rowCount * 38 - 2))
+        )
+        surface.toolCount = toolCount
 
-        surface.mouseDown(with: event)
+        for index in 0..<toolCount {
+            let column = index % 2
+            let row = index / 2
+            let point = NSPoint(
+                x: CGFloat(column * 38 + 18),
+                y: CGFloat(row * 38 + 18)
+            )
+            let hit = try #require(surface.toolHit(at: point))
+            #expect(hit.index == index)
+            #expect(hit.localPoint == NSPoint(x: 18, y: 18))
+        }
 
-        #expect(activationCount == 1)
-        #expect(surface.acceptsFirstMouse(for: event))
+        #expect(surface.toolHit(at: NSPoint(x: 37, y: 18)) == nil)
+        #expect(surface.toolHit(at: NSPoint(x: 18, y: 37)) == nil)
+        #expect(surface.toolHit(at: NSPoint(x: -1, y: 18)) == nil)
         #expect(!surface.acceptsFirstResponder)
-        #expect(surface.hitTest(NSPoint(x: 18, y: 18)) === surface)
+        #expect(surface.isFlipped)
     }
 
     @Test func marqueeShapeMenuDoesNotConsumeTheNextToolClick() throws {

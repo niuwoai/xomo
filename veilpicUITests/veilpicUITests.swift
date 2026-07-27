@@ -83,6 +83,45 @@ final class veilpicUITests: XCTestCase {
     }
 
     @MainActor
+    func testEveryToolButtonRemainsClickableAfterComponentLibraryRoundTrip() throws {
+        let app = XCUIApplication()
+        app.launchArguments += ["-AppleLanguages", "(zh-Hans)", "-AppleLocale", "zh_CN"]
+        app.launch()
+
+        let componentsTab = app.buttons["组件库"]
+        let toolsTab = app.buttons["工具"]
+        XCTAssertTrue(componentsTab.waitForExistence(timeout: 5))
+        componentsTab.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).click()
+        XCTAssertTrue(toolsTab.waitForExistence(timeout: 5))
+        toolsTab.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).click()
+
+        let toolIDs = [
+            "move", "marquee", "lasso", "magicWand", "quickSelection", "crop",
+            "brush", "eraser", "cloneStamp", "dodge", "burn", "sponge",
+            "blur", "sharpen", "smudge", "healingBrush", "patchTool", "redEye",
+            "paintBucket", "gradient", "eyedropper", "colorSampler", "text",
+            "rectangle", "ellipse", "pen", "pathSelection", "directSelection",
+            "hand", "zoom"
+        ]
+        let toolScrollView = app.scrollViews
+            .matching(identifier: "xomo-left-sidebar")
+            .firstMatch
+
+        for toolID in toolIDs {
+            if toolID == "pathSelection" {
+                XCTAssertTrue(toolScrollView.waitForExistence(timeout: 5))
+                toolScrollView.swipeUp()
+            }
+            let button = app.buttons
+                .matching(identifier: "image-editor-tool-\(toolID)")
+                .firstMatch
+            XCTAssertTrue(button.waitForExistence(timeout: 5), "Missing tool \(toolID)")
+            button.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).click()
+            XCTAssertEqual(button.value as? String, "selected", "Tool \(toolID) did not activate")
+        }
+    }
+
+    @MainActor
     func testToolButtonsRemainClickableAfterDraggingComponentToCanvas() throws {
         let app = XCUIApplication()
         app.launchArguments += ["-AppleLanguages", "(zh-Hans)", "-AppleLocale", "zh_CN"]
