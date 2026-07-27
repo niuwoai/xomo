@@ -98,6 +98,23 @@ extension XomoAutomationRegistry {
         }
     }
 
+    func createGradientFillLayer(
+        _ arguments: [String: XomoJSONValue],
+        viewModel: ImageEditorViewModel
+    ) throws {
+        let settingKeys = [
+            "preset", "style", "reverse", "angle", "scale",
+            "startColor", "endColor", "stops"
+        ]
+        guard settingKeys.contains(where: { arguments[$0] != nil }) else {
+            viewModel.addGradientFillLayer()
+            return
+        }
+        let content = try gradientFillContent(in: arguments)
+        syncGradientFillControls(content, viewModel: viewModel)
+        viewModel.addGradientFillLayer(content: content)
+    }
+
     private func setGradientFillSettings(
         _ arguments: [String: XomoJSONValue],
         viewModel: ImageEditorViewModel

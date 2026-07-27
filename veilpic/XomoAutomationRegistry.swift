@@ -2025,7 +2025,8 @@ final class XomoAutomationRegistry {
                 viewModel.patternFillOffsetY = requestedOffsetY
             }
             viewModel.addPatternFillLayer()
-        case "gradientFill": viewModel.addGradientFillLayer()
+        case "gradientFill":
+            try createGradientFillLayer(arguments, viewModel: viewModel)
         default: throw XomoAutomationCallError.invalidArgument("Unknown layer kind")
         }
     }
@@ -4745,7 +4746,15 @@ private extension XomoAutomationRegistry {
             "patternOpacity": XomoAutomationSchema.number(description: "Optional pattern-fill opacity from 0.05 to 1"),
             "patternScale": XomoAutomationSchema.number(description: "Optional pattern-fill tile size from 6 to 64 pixels"),
             "offsetX": XomoAutomationSchema.number(description: "Optional pattern-fill horizontal phase in pixels"),
-            "offsetY": XomoAutomationSchema.number(description: "Optional pattern-fill vertical phase in pixels")
+            "offsetY": XomoAutomationSchema.number(description: "Optional pattern-fill vertical phase in pixels"),
+            "preset": XomoAutomationSchema.string(description: "Optional gradient-fill preset", values: ImageEditorGradientFillPreset.allCases.map(\.rawValue)),
+            "style": XomoAutomationSchema.string(description: "Optional gradient-fill style", values: ImageEditorGradientFillStyle.allCases.map(\.rawValue)),
+            "reverse": XomoAutomationSchema.boolean(description: "Optional gradient-fill reverse direction"),
+            "angle": XomoAutomationSchema.number(description: "Optional gradient-fill angle from -180 to 180 degrees"),
+            "scale": XomoAutomationSchema.number(description: "Optional gradient-fill span scale from 0.25 to 4"),
+            "startColor": shapeColorSchema,
+            "endColor": shapeColorSchema,
+            "stops": gradientFillStopsSchema
         ]),
         tool("xomo.layer.solid_color_fill_settings", "Read or replace the RGB color of selected solid-color-fill layers, skipping locked and ineligible layers and reporting the actual updated count.", [
             "action": XomoAutomationSchema.string(description: "Solid-color-fill settings action", values: ["get", "set"]),
@@ -4762,19 +4771,7 @@ private extension XomoAutomationRegistry {
             "scale": XomoAutomationSchema.number(description: "Gradient span scale from 0.25 to 4"),
             "startColor": shapeColorSchema,
             "endColor": shapeColorSchema,
-            "stops": .object([
-                "type": .string("array"),
-                "description": .string("Optional ordered 2 to 16 color stops spanning positions 0 through 1"),
-                "items": XomoAutomationSchema.object(
-                    properties: [
-                        "position": XomoAutomationSchema.number(description: "Normalized position from 0 to 1"),
-                        "color": shapeColorSchema
-                    ],
-                    required: ["position", "color"]
-                ),
-                "minItems": .number(2),
-                "maxItems": .number(16)
-            ])
+            "stops": gradientFillStopsSchema
         ], required: ["action"]),
         tool("xomo.layer.pattern_fill_settings", "Read or replace the complete settings of selected pattern-fill layers, skipping locked and ineligible layers and reporting the actual updated count.", [
             "action": XomoAutomationSchema.string(description: "Pattern-fill settings action", values: ["get", "set"]),
@@ -5266,6 +5263,19 @@ private extension XomoAutomationRegistry {
         ],
         required: ["red", "green", "blue"]
     )
+    static let gradientFillStopsSchema: XomoJSONValue = .object([
+        "type": .string("array"),
+        "description": .string("Optional ordered 2 to 16 color stops spanning positions 0 through 1"),
+        "items": XomoAutomationSchema.object(
+            properties: [
+                "position": XomoAutomationSchema.number(description: "Normalized position from 0 to 1"),
+                "color": shapeColorSchema
+            ],
+            required: ["position", "color"]
+        ),
+        "minItems": .number(2),
+        "maxItems": .number(16)
+    ])
     static let shapeGradientSchema = XomoAutomationSchema.object(
         properties: [
             "startColor": shapeColorSchema,

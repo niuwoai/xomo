@@ -2125,6 +2125,91 @@ struct XomoAutomationTests {
         #expect(retained.colorStops?[1].green == 0.50)
     }
 
+    @Test func registryCreatesParameterizedMultiStopGradientFillWithoutUIStateLeakage() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        defer { registry.unregister(viewModel) }
+
+        func color(_ red: Double, _ green: Double, _ blue: Double) -> XomoJSONValue {
+            .object([
+                "red": .number(red),
+                "green": .number(green),
+                "blue": .number(blue)
+            ])
+        }
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        let createTool = try #require(
+            automationTool(named: "xomo.layer.create", in: toolsResponse)
+        )
+        let properties = try #require(
+            createTool["inputSchema"]?.objectValue?["properties"]?.objectValue
+        )
+        #expect(
+            properties["preset"]?.objectValue?["enum"]?.arrayValue
+                == ImageEditorGradientFillPreset.allCases.map { .string($0.rawValue) }
+        )
+        #expect(properties["stops"]?.objectValue?["minItems"] == .number(2))
+        #expect(properties["stops"]?.objectValue?["maxItems"] == .number(16))
+
+        viewModel.selectedGradientFillPreset = .sunset
+        viewModel.selectedGradientFillStyle = .radial
+        viewModel.gradientFillReverse = false
+        viewModel.gradientFillAngle = -120
+        viewModel.gradientFillScale = 0.50
+
+        let layerCount = viewModel.document.layers.count
+        let historyCount = viewModel.document.history.count
+        let createArguments: [String: XomoJSONValue] = [
+            "kind": .string("gradientFill"),
+            "preset": .string(ImageEditorGradientFillPreset.custom.rawValue),
+            "style": .string(ImageEditorGradientFillStyle.reflected.rawValue),
+            "reverse": .bool(true),
+            "angle": .number(80),
+            "scale": .number(2.25),
+            "startColor": color(0.05, 0.10, 0.15),
+            "endColor": color(0.85, 0.90, 0.95),
+            "stops": .array([
+                .object(["position": .number(0), "color": color(0.05, 0.10, 0.15)]),
+                .object(["position": .number(0.25), "color": color(0.30, 0.35, 0.40)]),
+                .object(["position": .number(0.70), "color": color(0.60, 0.65, 0.70)]),
+                .object(["position": .number(1), "color": color(0.85, 0.90, 0.95)])
+            ])
+        ]
+        let createResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.create",
+            arguments: createArguments
+        ))
+        #expect(createResponse.ok)
+        #expect(viewModel.document.layers.count == layerCount + 1)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        let content = try #require(viewModel.document.selectedLayer?.gradientFillContent?.normalized())
+        #expect(content.preset == .custom)
+        #expect(content.style == .reflected)
+        #expect(content.reverse)
+        #expect(content.angle == 80)
+        #expect(content.scale == 2.25)
+        #expect(content.colorStops?.count == 4)
+        #expect(content.colorStops?[1].position == 0.25)
+        #expect(content.colorStops?[2].blue == 0.70)
+
+        var invalidArguments = createArguments
+        invalidArguments["stops"] = .array([
+            .object(["position": .number(0.10), "color": color(0, 0, 0)]),
+            .object(["position": .number(1), "color": color(1, 1, 1)])
+        ])
+        let invalidResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.create",
+            arguments: invalidArguments
+        ))
+        #expect(!invalidResponse.ok)
+        #expect(viewModel.document.layers.count == layerCount + 1)
+        #expect(viewModel.document.history.count == historyCount + 1)
+    }
+
     @Test func registryReadsAndUpdatesSelectedPatternFillLayersWithActualCounts() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

@@ -5603,11 +5603,15 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func addGradientFillLayer() {
+        addGradientFillLayer(content: currentGradientFillContent())
+    }
+
+    func addGradientFillLayer(content: ImageEditorGradientFillContent) {
         pushUndo()
         let layer = ImageEditorLayer.gradientFill(
             name: L10n.text("imageEditor.layer.gradientFillName"),
             size: document.canvasSize,
-            content: currentGradientFillContent()
+            content: content.normalized()
         )
         let insertionIndex = min((document.selectedLayerIndex ?? (document.layers.count - 1)) + 1, document.layers.count)
         document.layers.insert(layer, at: insertionIndex)
