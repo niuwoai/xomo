@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.12.0-rc530 - 2026-07-27
+
+### Added
+- MCP/CLI 新增 `xomo.layer.pattern_fill_settings`，可读取当前选中的图案填充层，或一次替换图案类型、RGB 颜色、不透明度、缩放与 X/Y 相位。
+- 批量设置跳过锁定层和非图案填充层，返回真实 `updatedLayerCount`；数值沿用界面与渲染模型的归一化边界。
+
+### Fixed
+- 重复设置不再伪装成功或制造多余 Undo/History；未知图案类型在修改文档前明确失败。
+
+### Verification
+- MCP schema、读取、批量更新、锁定跳过、数值归一化、重复空操作与未知类型定向 Xcode 测试 1/1 通过；CLI 2/2、发布契约 4/4（10 个断言）通过。
+- rc529 通用 Release（`arm64 + x86_64`）已完成签名校验、真实启动并覆盖 `/Applications/Xomo.app`；下一次常规完整门禁仍为 rc560。
+
 ## 2.12.0-rc529 - 2026-07-27
 
 ### Fixed

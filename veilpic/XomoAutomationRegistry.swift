@@ -110,6 +110,8 @@ final class XomoAutomationRegistry {
             viewModel.selectLayer(id, extendingSelection: arguments["extend"]?.boolValue ?? false)
         case "xomo.layer.create":
             try createLayer(arguments, viewModel: viewModel)
+        case "xomo.layer.pattern_fill_settings":
+            return try patternFillSettingsAction(arguments, viewModel: viewModel)
         case "xomo.layer.delete":
             viewModel.deleteSelectedLayer()
         case "xomo.layer.duplicate":
@@ -1863,6 +1865,90 @@ final class XomoAutomationRegistry {
             "selectedLayerId": viewModel.document.selectedLayerID.map { .string($0.uuidString) } ?? .null,
             "historyCount": .number(Double(viewModel.document.history.count))
         ])
+    }
+
+    private func patternFillSettingsAction(
+        _ arguments: [String: XomoJSONValue],
+        viewModel: ImageEditorViewModel
+    ) throws -> XomoJSONValue {
+        switch try requiredString("action", in: arguments) {
+        case "get":
+            return patternFillSettingsResult(viewModel)
+        case "set":
+            let rawKind = try requiredString("patternKind", in: arguments)
+            guard let kind = ImageEditorPatternOverlayKind(rawValue: rawKind) else {
+                throw XomoAutomationCallError.invalidArgument("Unknown pattern fill kind: \(rawKind)")
+            }
+            let target = ImageEditorPatternFillContent(
+                kind: kind,
+                red: try requiredNumber("red", in: arguments),
+                green: try requiredNumber("green", in: arguments),
+                blue: try requiredNumber("blue", in: arguments),
+                opacity: try requiredNumber("opacity", in: arguments),
+                scale: CGFloat(try requiredNumber("scale", in: arguments)),
+                offsetX: CGFloat(try requiredNumber("offsetX", in: arguments)),
+                offsetY: CGFloat(try requiredNumber("offsetY", in: arguments))
+            ).normalized()
+            let selectedIDs = viewModel.document.selectedLayerIDs
+            let updatedLayerCount = viewModel.document.layers.reduce(into: 0) { count, layer in
+                guard
+                    selectedIDs.contains(layer.id),
+                    !viewModel.document.isEffectivelyPixelsLocked(layer),
+                    let content = layer.patternFillContent?.normalized(),
+                    content != target
+                else {
+                    return
+                }
+                count += 1
+            }
+            guard updatedLayerCount > 0 else {
+                throw XomoAutomationCallError.operationFailed(
+                    "Pattern fill settings require a changed editable selected pattern-fill layer"
+                )
+            }
+
+            viewModel.selectedPatternFillKind = target.kind
+            viewModel.patternFillRed = target.red
+            viewModel.patternFillGreen = target.green
+            viewModel.patternFillBlue = target.blue
+            viewModel.patternFillOpacity = target.opacity
+            viewModel.patternFillScale = Double(target.scale)
+            viewModel.patternFillOffsetX = Double(target.offsetX)
+            viewModel.patternFillOffsetY = Double(target.offsetY)
+            viewModel.updateSelectedPatternFillLayer()
+
+            return .object([
+                "updatedLayerCount": .number(Double(updatedLayerCount)),
+                "layers": patternFillSettingsResult(viewModel)
+            ])
+        default:
+            throw XomoAutomationCallError.invalidArgument("Unknown pattern fill settings action")
+        }
+    }
+
+    private func patternFillSettingsResult(_ viewModel: ImageEditorViewModel) -> XomoJSONValue {
+        let selectedIDs = viewModel.document.selectedLayerIDs
+        return .array(viewModel.document.layers.compactMap { layer in
+            guard
+                selectedIDs.contains(layer.id),
+                let content = layer.patternFillContent?.normalized()
+            else {
+                return nil
+            }
+            return .object([
+                "id": .string(layer.id.uuidString),
+                "name": .string(layer.name),
+                "locked": .bool(viewModel.document.isEffectivelyPixelsLocked(layer)),
+                "patternKind": .string(content.kind.rawValue),
+                "red": .number(content.red),
+                "green": .number(content.green),
+                "blue": .number(content.blue),
+                "opacity": .number(content.opacity),
+                "scale": .number(Double(content.scale)),
+                "offsetX": .number(Double(content.offsetX)),
+                "offsetY": .number(Double(content.offsetY))
+            ])
+        })
     }
 
     private func createLayer(
@@ -4657,6 +4743,17 @@ private extension XomoAutomationRegistry {
             "offsetX": XomoAutomationSchema.number(description: "Optional pattern-fill horizontal phase in pixels"),
             "offsetY": XomoAutomationSchema.number(description: "Optional pattern-fill vertical phase in pixels")
         ]),
+        tool("xomo.layer.pattern_fill_settings", "Read or replace the complete settings of selected pattern-fill layers, skipping locked and ineligible layers and reporting the actual updated count.", [
+            "action": XomoAutomationSchema.string(description: "Pattern-fill settings action", values: ["get", "set"]),
+            "patternKind": XomoAutomationSchema.string(description: "Pattern kind", values: ImageEditorPatternOverlayKind.allCases.map(\.rawValue)),
+            "red": XomoAutomationSchema.number(description: "Red channel from 0 to 1"),
+            "green": XomoAutomationSchema.number(description: "Green channel from 0 to 1"),
+            "blue": XomoAutomationSchema.number(description: "Blue channel from 0 to 1"),
+            "opacity": XomoAutomationSchema.number(description: "Pattern opacity from 0.05 to 1"),
+            "scale": XomoAutomationSchema.number(description: "Pattern tile size from 6 to 64 pixels"),
+            "offsetX": XomoAutomationSchema.number(description: "Horizontal phase from -128 to 128 pixels"),
+            "offsetY": XomoAutomationSchema.number(description: "Vertical phase from -128 to 128 pixels")
+        ], required: ["action"]),
         tool("xomo.layer.delete", "Delete unlocked selected layer roots as complete subtrees and preserve a visible selection fallback."),
         tool("xomo.layer.duplicate", "Duplicate selected layer roots as hierarchy-safe subtrees within their original parents."),
         tool("xomo.layer.rename", "Rename the primary selected layer.", ["name": XomoAutomationSchema.string(description: "New layer name")], required: ["name"]),

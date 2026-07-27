@@ -42,7 +42,7 @@ struct XomoAutomationTests {
             Issue.record("Expected tool array")
             return
         }
-        #expect(tools.count == 133)
+        #expect(tools.count == 134)
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.layer.list")
@@ -1895,6 +1895,114 @@ struct XomoAutomationTests {
         ))
         #expect(!invalidResponse.ok)
         #expect(viewModel.document.layers.count == layerCount)
+    }
+
+    @Test func registryReadsAndUpdatesSelectedPatternFillLayersWithActualCounts() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        defer { registry.unregister(viewModel) }
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        let settingsTool = try #require(
+            automationTool(named: "xomo.layer.pattern_fill_settings", in: toolsResponse)
+        )
+        let properties = try #require(
+            settingsTool["inputSchema"]?.objectValue?["properties"]?.objectValue
+        )
+        #expect(
+            properties["patternKind"]?.objectValue?["enum"]?.arrayValue
+                == ImageEditorPatternOverlayKind.allCases.map { .string($0.rawValue) }
+        )
+        #expect(properties["offsetX"]?.objectValue?["type"] == .string("number"))
+        #expect(properties["offsetY"]?.objectValue?["type"] == .string("number"))
+
+        viewModel.selectedPatternFillKind = .checkerboard
+        viewModel.patternFillRed = 0.10
+        viewModel.patternFillGreen = 0.20
+        viewModel.patternFillBlue = 0.30
+        viewModel.patternFillOpacity = 0.40
+        viewModel.patternFillScale = 12
+        viewModel.addPatternFillLayer()
+        let editableID = try #require(viewModel.document.selectedLayerID)
+
+        viewModel.selectedPatternFillKind = .dots
+        viewModel.patternFillOpacity = 0.70
+        viewModel.patternFillScale = 20
+        viewModel.addPatternFillLayer()
+        let lockedID = try #require(viewModel.document.selectedLayerID)
+        viewModel.toggleLayerLock(lockedID)
+        viewModel.selectLayer(editableID, extendingSelection: true)
+
+        let getResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.pattern_fill_settings",
+            arguments: ["action": .string("get")]
+        ))
+        #expect(getResponse.ok)
+        #expect(getResponse.result?.arrayValue?.count == 2)
+
+        let historyCount = viewModel.document.history.count
+        let setArguments: [String: XomoJSONValue] = [
+            "action": .string("set"),
+            "patternKind": .string(ImageEditorPatternOverlayKind.diagonalStripes.rawValue),
+            "red": .number(2),
+            "green": .number(-1),
+            "blue": .number(0.75),
+            "opacity": .number(0),
+            "scale": .number(999),
+            "offsetX": .number(-999),
+            "offsetY": .number(999)
+        ]
+        let setResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.pattern_fill_settings",
+            arguments: setArguments
+        ))
+        #expect(setResponse.ok)
+        #expect(setResponse.result?.objectValue?["updatedLayerCount"] == .number(1))
+        let editable = try #require(
+            viewModel.document.layers.first(where: { $0.id == editableID })?.patternFillContent?.normalized()
+        )
+        let locked = try #require(
+            viewModel.document.layers.first(where: { $0.id == lockedID })?.patternFillContent?.normalized()
+        )
+        #expect(editable.kind == .diagonalStripes)
+        #expect(editable.red == 1)
+        #expect(editable.green == 0)
+        #expect(editable.blue == 0.75)
+        #expect(editable.opacity == 0.05)
+        #expect(editable.scale == 64)
+        #expect(editable.offsetX == -128)
+        #expect(editable.offsetY == 128)
+        #expect(locked.kind == .dots)
+        #expect(locked.opacity == 0.70)
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        let duplicateResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.pattern_fill_settings",
+            arguments: setArguments
+        ))
+        #expect(!duplicateResponse.ok)
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        let invalidResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.pattern_fill_settings",
+            arguments: [
+                "action": .string("set"),
+                "patternKind": .string("unknown-pattern"),
+                "red": .number(0),
+                "green": .number(0),
+                "blue": .number(0),
+                "opacity": .number(1),
+                "scale": .number(16),
+                "offsetX": .number(0),
+                "offsetY": .number(0)
+            ]
+        ))
+        #expect(!invalidResponse.ok)
     }
 
     @Test func registryControlsSelectionsChannelsToolsAndComponents() throws {
