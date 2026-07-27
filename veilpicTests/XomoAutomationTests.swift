@@ -42,7 +42,7 @@ struct XomoAutomationTests {
             Issue.record("Expected tool array")
             return
         }
-        #expect(tools.count == 136)
+        #expect(tools.count == 137)
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.layer.list")
@@ -2046,6 +2046,81 @@ struct XomoAutomationTests {
         #expect(!incompleteResponse.ok)
         #expect(viewModel.document.layers.count == layerCount + 1)
         #expect(viewModel.document.history.count == historyCount + 1)
+    }
+
+    @Test func registryReadsCompleteSelectedAdjustmentLayerSettings() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        defer { registry.unregister(viewModel) }
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        let settingsTool = try #require(
+            automationTool(named: "xomo.layer.adjustment_settings", in: toolsResponse)
+        )
+        let properties = try #require(
+            settingsTool["inputSchema"]?.objectValue?["properties"]?.objectValue
+        )
+        #expect(
+            properties["action"]?.objectValue?["enum"]?.arrayValue
+                == [.string("get")]
+        )
+
+        viewModel.selectedAdjustment = .levels
+        viewModel.adjustmentValue = 0.20
+        viewModel.levelsBlackPoint = 0.15
+        viewModel.levelsGamma = 1.75
+        viewModel.levelsWhitePoint = 0.90
+        viewModel.addAdjustmentLayer()
+        let levelsID = try #require(viewModel.document.selectedLayerID)
+
+        viewModel.selectedAdjustment = .brightness
+        viewModel.adjustmentValue = 0.35
+        viewModel.brightnessContrastBrightness = 0.40
+        viewModel.brightnessContrastContrast = -0.25
+        viewModel.addAdjustmentLayer()
+        let brightnessID = try #require(viewModel.document.selectedLayerID)
+        viewModel.toggleLayerLock(brightnessID)
+        viewModel.selectLayer(levelsID, extendingSelection: true)
+
+        let historyCount = viewModel.document.history.count
+        let getResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.adjustment_settings",
+            arguments: ["action": .string("get")]
+        ))
+        #expect(getResponse.ok)
+        let layers = try #require(getResponse.result?.arrayValue)
+        #expect(layers.count == 2)
+
+        let levelResult = layers.compactMap(\.objectValue).first {
+            $0["id"] == .string(levelsID.uuidString)
+        }
+        let levelSettings = levelResult?["settings"]?.objectValue
+        #expect(levelResult?["adjustment"] == .string(ImageEditorAdjustment.levels.rawValue))
+        #expect(levelResult?["amount"] == .number(0.20))
+        #expect(levelResult?["locked"] == .bool(false))
+        #expect(levelSettings?["levelsBlackPoint"] == .number(0.15))
+        #expect(levelSettings?["levelsGamma"] == .number(1.75))
+        #expect(levelSettings?["levelsWhitePoint"] == .number(0.90))
+
+        let brightnessResult = layers.compactMap(\.objectValue).first {
+            $0["id"] == .string(brightnessID.uuidString)
+        }
+        let brightnessSettings = brightnessResult?["settings"]?.objectValue
+        #expect(brightnessResult?["adjustment"] == .string(ImageEditorAdjustment.brightness.rawValue))
+        #expect(brightnessResult?["locked"] == .bool(true))
+        #expect(brightnessSettings?["brightnessContrastBrightness"] == .number(0.40))
+        #expect(brightnessSettings?["brightnessContrastContrast"] == .number(-0.25))
+        #expect(viewModel.document.history.count == historyCount)
+
+        let invalidResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.adjustment_settings",
+            arguments: ["action": .string("set")]
+        ))
+        #expect(!invalidResponse.ok)
+        #expect(viewModel.document.history.count == historyCount)
     }
 
     @Test func registryReadsAndUpdatesMultiStopGradientFillLayersWithoutFlatteningStops() throws {

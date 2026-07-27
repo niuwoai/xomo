@@ -112,6 +112,8 @@ final class XomoAutomationRegistry {
             try createLayer(arguments, viewModel: viewModel)
         case "xomo.layer.solid_color_fill_settings":
             return try solidColorFillSettingsAction(arguments, viewModel: viewModel)
+        case "xomo.layer.adjustment_settings":
+            return try adjustmentLayerSettingsAction(arguments, viewModel: viewModel)
         case "xomo.layer.gradient_fill_settings":
             return try gradientFillSettingsAction(arguments, viewModel: viewModel)
         case "xomo.layer.pattern_fill_settings":
@@ -4765,6 +4767,9 @@ private extension XomoAutomationRegistry {
             "red": XomoAutomationSchema.number(description: "Red channel from 0 to 1"),
             "green": XomoAutomationSchema.number(description: "Green channel from 0 to 1"),
             "blue": XomoAutomationSchema.number(description: "Blue channel from 0 to 1")
+        ], required: ["action"]),
+        tool("xomo.layer.adjustment_settings", "Read the complete normalized settings of selected non-destructive adjustment layers.", [
+            "action": XomoAutomationSchema.string(description: "Adjustment-layer settings action", values: ["get"])
         ], required: ["action"]),
         tool("xomo.layer.gradient_fill_settings", "Read or replace the complete settings of selected gradient-fill layers, including optional ordered multi-color stops, while skipping locked and ineligible layers.", [
             "action": XomoAutomationSchema.string(description: "Gradient-fill settings action", values: ["get", "set"]),
