@@ -114,6 +114,8 @@ final class XomoAutomationRegistry {
             return try solidColorFillSettingsAction(arguments, viewModel: viewModel)
         case "xomo.layer.adjustment_settings":
             return try adjustmentLayerSettingsAction(arguments, viewModel: viewModel)
+        case "xomo.layer.filter_settings":
+            return try filterLayerSettingsAction(arguments, viewModel: viewModel)
         case "xomo.layer.gradient_fill_settings":
             return try gradientFillSettingsAction(arguments, viewModel: viewModel)
         case "xomo.layer.pattern_fill_settings":
@@ -4772,6 +4774,15 @@ private extension XomoAutomationRegistry {
         tool("xomo.layer.adjustment_settings", "Read or replace the complete normalized settings of selected non-destructive adjustment layers while skipping locked and ineligible layers.", [
             "action": XomoAutomationSchema.string(description: "Adjustment-layer settings action", values: ["get", "set"]),
             "amount": XomoAutomationSchema.number(description: "Optional main adjustment amount; posterize uses 2 to 32 and other adjustments use -1 to 1"),
+            "settings": .object([
+                "type": .string("object"),
+                "description": .string("Optional complete settings object returned by the get action"),
+                "additionalProperties": .bool(true)
+            ])
+        ], required: ["action"]),
+        tool("xomo.layer.filter_settings", "Read or replace the intensity and complete normalized settings of selected non-destructive filter layers while skipping locked and ineligible layers.", [
+            "action": XomoAutomationSchema.string(description: "Filter-layer settings action", values: ["get", "set"]),
+            "intensity": XomoAutomationSchema.number(description: "Optional filter intensity from 0 to 1"),
             "settings": .object([
                 "type": .string("object"),
                 "description": .string("Optional complete settings object returned by the get action"),

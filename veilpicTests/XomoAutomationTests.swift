@@ -2180,6 +2180,129 @@ struct XomoAutomationTests {
         #expect(viewModel.document.history.count == noOpHistoryCount)
     }
 
+    @Test func registryReadsAndReplacesCompleteSelectedFilterLayerSettings() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        defer { registry.unregister(viewModel) }
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        let settingsTool = try #require(
+            automationTool(named: "xomo.layer.filter_settings", in: toolsResponse)
+        )
+        let properties = try #require(
+            settingsTool["inputSchema"]?.objectValue?["properties"]?.objectValue
+        )
+        #expect(
+            properties["action"]?.objectValue?["enum"]?.arrayValue
+                == [.string("get"), .string("set")]
+        )
+        #expect(properties["intensity"]?.objectValue?["type"] == .string("number"))
+        #expect(properties["settings"]?.objectValue?["type"] == .string("object"))
+
+        viewModel.selectedFilter = .lensCorrection
+        viewModel.filterIntensity = 0.80
+        viewModel.filterLensDistortion = 0.40
+        viewModel.addFilterLayer()
+        let lensID = try #require(viewModel.document.selectedLayerID)
+
+        viewModel.selectedFilter = .wave
+        viewModel.filterIntensity = 0.55
+        viewModel.filterWaveAmplitude = -0.25
+        viewModel.filterWaveFrequency = 0.75
+        viewModel.addFilterLayer()
+        let waveID = try #require(viewModel.document.selectedLayerID)
+        viewModel.toggleLayerLock(waveID)
+        viewModel.selectLayer(lensID, extendingSelection: true)
+
+        let historyCount = viewModel.document.history.count
+        let getResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.filter_settings",
+            arguments: ["action": .string("get")]
+        ))
+        #expect(getResponse.ok)
+        let layers = try #require(getResponse.result?.arrayValue)
+        #expect(layers.count == 2)
+
+        let lensResult = layers.compactMap(\.objectValue).first {
+            $0["id"] == .string(lensID.uuidString)
+        }
+        let lensSettings = lensResult?["settings"]?.objectValue
+        #expect(lensResult?["filter"] == .string(ImageEditorFilter.lensCorrection.rawValue))
+        #expect(lensResult?["intensity"] == .number(0.80))
+        #expect(lensResult?["locked"] == .bool(false))
+        #expect(lensSettings?["lensDistortion"] == .number(0.40))
+
+        let waveResult = layers.compactMap(\.objectValue).first {
+            $0["id"] == .string(waveID.uuidString)
+        }
+        let waveSettings = waveResult?["settings"]?.objectValue
+        #expect(waveResult?["filter"] == .string(ImageEditorFilter.wave.rawValue))
+        #expect(waveResult?["locked"] == .bool(true))
+        #expect(waveSettings?["waveAmplitude"] == .number(-0.25))
+        #expect(waveSettings?["waveFrequency"] == .number(0.75))
+        #expect(viewModel.document.history.count == historyCount)
+
+        var replacementSettings = try #require(lensSettings)
+        replacementSettings["lensDistortion"] = .number(-2)
+        let setResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.filter_settings",
+            arguments: [
+                "action": .string("set"),
+                "intensity": .number(2),
+                "settings": .object(replacementSettings)
+            ]
+        ))
+        #expect(setResponse.ok)
+        #expect(
+            setResponse.result?.objectValue?["updatedLayerCount"]
+                == .number(1)
+        )
+        let updatedLens = try #require(
+            viewModel.document.layers.first { $0.id == lensID }
+        )
+        #expect(updatedLens.filter?.kind == .lensCorrection)
+        #expect(updatedLens.filter?.intensity == 1)
+        #expect(updatedLens.filterSettings.lensDistortion == -1)
+        #expect(viewModel.selectedFilter == .lensCorrection)
+        #expect(viewModel.filterIntensity == 1)
+        #expect(viewModel.filterLensDistortion == -1)
+
+        let lockedWave = try #require(
+            viewModel.document.layers.first { $0.id == waveID }
+        )
+        #expect(lockedWave.filter?.intensity == 0.55)
+        #expect(lockedWave.filterSettings.waveAmplitude == -0.25)
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        let noOpHistoryCount = viewModel.document.history.count
+        let noOpResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.filter_settings",
+            arguments: [
+                "action": .string("set"),
+                "intensity": .number(1),
+                "settings": .object(replacementSettings)
+            ]
+        ))
+        #expect(!noOpResponse.ok)
+        #expect(viewModel.document.history.count == noOpHistoryCount)
+
+        replacementSettings.removeValue(forKey: "lensDistortion")
+        let incompleteResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.filter_settings",
+            arguments: [
+                "action": .string("set"),
+                "settings": .object(replacementSettings)
+            ]
+        ))
+        #expect(!incompleteResponse.ok)
+        #expect(viewModel.document.history.count == noOpHistoryCount)
+    }
+
     @Test func registryReadsAndUpdatesMultiStopGradientFillLayersWithoutFlatteningStops() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

@@ -7650,7 +7650,7 @@ final class ImageEditorViewModel: ObservableObject {
         gradientMapHighlightBlue = settings.gradientMapHighlightBlue
     }
 
-    private func syncFilterControlsFromSelection() {
+    func syncFilterControlsFromSelection() {
         if let smartFilter = document.selectedLayer?.smartFilters.last {
             syncSmartFilterControls(smartFilter)
             return
