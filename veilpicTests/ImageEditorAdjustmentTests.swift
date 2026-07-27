@@ -114,6 +114,8 @@ struct ImageEditorAdjustmentTests {
         viewModel.patternFillBlue = 0.10
         viewModel.patternFillOpacity = 1
         viewModel.patternFillScale = 10
+        viewModel.patternFillOffsetX = 5
+        viewModel.patternFillOffsetY = -3
         viewModel.addPatternFillLayer()
 
         let patternLayer = try #require(viewModel.document.selectedLayer)
@@ -131,22 +133,44 @@ struct ImageEditorAdjustmentTests {
         #expect(abs(patternContent.blue - 0.10) < 0.001)
         #expect(abs(patternContent.opacity - 1) < 0.001)
         #expect(abs(patternContent.scale - 10) < 0.001)
+        #expect(abs(patternContent.offsetX - 5) < 0.001)
+        #expect(abs(patternContent.offsetY + 3) < 0.001)
+        var zeroPhaseContent = patternContent
+        zeroPhaseContent.offsetX = 0
+        zeroPhaseContent.offsetY = 0
+        #expect(
+            patternContent.renderedImage(size: canvasSize).qingtuPNGData()
+                != zeroPhaseContent.renderedImage(size: canvasSize).qingtuPNGData()
+        )
         #expect(coloredSquare.redComponent > transparentSquare.redComponent + 0.45)
         #expect(coloredSquare.greenComponent > transparentSquare.greenComponent + 0.08)
         #expect(viewModel.document.layers.first { $0.id == baseLayerID }?.image.qingtuPNGData() == basePixelsBefore)
-        #expect(viewModel.selectedLayerGeometryText == L10n.format("imageEditor.properties.patternFillLayerValue", patternContent.kind.title, 100, 10))
+        #expect(
+            viewModel.selectedLayerGeometryText == L10n.format(
+                "imageEditor.properties.patternFillLayerValue",
+                patternContent.kind.title,
+                100,
+                10,
+                5,
+                -3
+            )
+        )
         #expect(viewModel.visibleLayerRows(matching: "", kindFilter: .patternFill).contains { $0.id == patternLayer.id })
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerPatternFillNew"))
 
         viewModel.selectedPatternFillKind = .dots
         viewModel.patternFillOpacity = 0.50
         viewModel.patternFillScale = 18
+        viewModel.patternFillOffsetX = -11
+        viewModel.patternFillOffsetY = 9
         viewModel.updateSelectedPatternFillLayer()
 
         let updatedContent = try #require(viewModel.document.selectedLayer?.patternFillContent?.normalized())
         #expect(updatedContent.kind == .dots)
         #expect(abs(updatedContent.opacity - 0.50) < 0.001)
         #expect(abs(updatedContent.scale - 18) < 0.001)
+        #expect(abs(updatedContent.offsetX + 11) < 0.001)
+        #expect(abs(updatedContent.offsetY - 9) < 0.001)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerPatternFillUpdate"))
 
         viewModel.selectedFilter = .vignette
@@ -166,7 +190,26 @@ struct ImageEditorAdjustmentTests {
         #expect(restoredContent.kind == .dots)
         #expect(abs(restoredContent.opacity - 0.50) < 0.001)
         #expect(abs(restoredContent.scale - 18) < 0.001)
+        #expect(abs(restoredContent.offsetX + 11) < 0.001)
+        #expect(abs(restoredContent.offsetY - 9) < 0.001)
         #expect(restoredLayer.smartFilters.first?.kind == .vignette)
+
+        let legacyJSON = """
+        {
+          "kind": "checkerboard",
+          "red": 0.1,
+          "green": 0.2,
+          "blue": 0.3,
+          "opacity": 0.5,
+          "scale": 12
+        }
+        """
+        let legacyContent = try JSONDecoder().decode(
+            ImageEditorPatternFillContent.self,
+            from: try #require(legacyJSON.data(using: .utf8))
+        )
+        #expect(legacyContent.offsetX == 0)
+        #expect(legacyContent.offsetY == 0)
     }
 
     @Test func imageEditorSolidColorFillLayerRendersSmartFiltersAndRoundTripsProjectState() async throws {
@@ -1236,6 +1279,8 @@ struct ImageEditorAdjustmentTests {
         viewModel.patternFillBlue = 0.80
         viewModel.patternFillOpacity = 0.65
         viewModel.patternFillScale = 22
+        viewModel.patternFillOffsetX = -17
+        viewModel.patternFillOffsetY = 23
         viewModel.updateSelectedPatternFillLayer()
 
         let first = try #require(layer(firstID, in: viewModel)?.patternFillContent?.normalized())
@@ -1245,12 +1290,18 @@ struct ImageEditorAdjustmentTests {
         #expect(first.red == 0.70)
         #expect(first.opacity == 0.65)
         #expect(first.scale == 22)
+        #expect(first.offsetX == -17)
+        #expect(first.offsetY == 23)
         #expect(second.kind == .diagonalStripes)
         #expect(second.blue == 0.80)
         #expect(second.scale == 22)
+        #expect(second.offsetX == -17)
+        #expect(second.offsetY == 23)
         #expect(locked.kind == .diagonalStripes)
         #expect(locked.opacity == 0.40)
         #expect(locked.scale == 14)
+        #expect(locked.offsetX == 0)
+        #expect(locked.offsetY == 0)
         #expect(try #require(layer(baseLayerID, in: viewModel)).isPatternFill == false)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.layerPatternFillUpdateSelected"))
         #expect(viewModel.statusText == L10n.format("imageEditor.status.layerPatternFillUpdatedSelected", 2))

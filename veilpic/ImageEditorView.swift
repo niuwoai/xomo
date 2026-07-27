@@ -8643,8 +8643,8 @@ struct ImageEditorView: View {
         }
     }
 
-    private var patternFillControls: some View {
-        VStack(alignment: .leading, spacing: 6) {
+    private var patternFillControls: AnyView {
+        AnyView(VStack(alignment: .leading, spacing: 6) {
             Text(L10n.text("imageEditor.patternFill.title"))
                 .font(.system(size: 10, weight: .bold))
                 .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
@@ -8673,6 +8673,28 @@ struct ImageEditorView: View {
                 step: 1,
                 displayText: L10n.format("imageEditor.patternFill.scaleValue", Int(viewModel.patternFillScale.rounded()))
             )
+            adjustmentSlider(
+                labelKey: "imageEditor.patternFill.offsetX",
+                value: $viewModel.patternFillOffsetX,
+                range: -128...128,
+                step: 1,
+                displayText: L10n.format(
+                    "imageEditor.patternFill.offsetXValue",
+                    Int(viewModel.patternFillOffsetX.rounded())
+                )
+            )
+            .accessibilityIdentifier("image-editor-pattern-fill-offset-x")
+            adjustmentSlider(
+                labelKey: "imageEditor.patternFill.offsetY",
+                value: $viewModel.patternFillOffsetY,
+                range: -128...128,
+                step: 1,
+                displayText: L10n.format(
+                    "imageEditor.patternFill.offsetYValue",
+                    Int(viewModel.patternFillOffsetY.rounded())
+                )
+            )
+            .accessibilityIdentifier("image-editor-pattern-fill-offset-y")
             HStack {
                 Button(L10n.text("imageEditor.action.layerPatternFillNew")) {
                     viewModel.addPatternFillLayer()
@@ -8685,7 +8707,7 @@ struct ImageEditorView: View {
                     .buttonStyle(EditorTextButtonStyle())
                 }
             }
-        }
+        })
     }
 
     private var gradientFillControls: some View {

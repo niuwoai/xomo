@@ -1877,7 +1877,14 @@ final class XomoAutomationRegistry {
         case "adjustment": viewModel.addAdjustmentLayer()
         case "filter": viewModel.addFilterLayer()
         case "solidColorFill": viewModel.addSolidColorFillLayer()
-        case "patternFill": viewModel.addPatternFillLayer()
+        case "patternFill":
+            if arguments["offsetX"] != nil {
+                viewModel.patternFillOffsetX = try requiredNumber("offsetX", in: arguments)
+            }
+            if arguments["offsetY"] != nil {
+                viewModel.patternFillOffsetY = try requiredNumber("offsetY", in: arguments)
+            }
+            viewModel.addPatternFillLayer()
         case "gradientFill": viewModel.addGradientFillLayer()
         default: throw XomoAutomationCallError.invalidArgument("Unknown layer kind")
         }
@@ -4590,7 +4597,9 @@ private extension XomoAutomationRegistry {
         tool("xomo.layer.create", "Create a pixel, group, text, adjustment, filter, or fill layer.", [
             "kind": XomoAutomationSchema.string(description: "Layer kind", values: ["pixel", "group", "text", "adjustment", "filter", "solidColorFill", "patternFill", "gradientFill"]),
             "x": XomoAutomationSchema.number(description: "Optional canvas x position"),
-            "y": XomoAutomationSchema.number(description: "Optional canvas y position")
+            "y": XomoAutomationSchema.number(description: "Optional canvas y position"),
+            "offsetX": XomoAutomationSchema.number(description: "Optional pattern-fill horizontal phase in pixels"),
+            "offsetY": XomoAutomationSchema.number(description: "Optional pattern-fill vertical phase in pixels")
         ]),
         tool("xomo.layer.delete", "Delete unlocked selected layer roots as complete subtrees and preserve a visible selection fallback."),
         tool("xomo.layer.duplicate", "Duplicate selected layer roots as hierarchy-safe subtrees within their original parents."),

@@ -885,7 +885,7 @@
 "imageEditor.properties.gradientMapDitherLayerValue" = "Gradient Map: %@ · dither";
 "imageEditor.properties.filterLayerValue" = "%@ Filter: %d%%";
 "imageEditor.properties.solidColorFillLayerValue" = "Solid Color Fill: R %d · G %d · B %d";
-"imageEditor.properties.patternFillLayerValue" = "Pattern Fill: %@ · Opacity %d%% · %d px";
+"imageEditor.properties.patternFillLayerValue" = "Pattern Fill: %@ · Opacity %d%% · %d px · Offset %d, %d px";
 "imageEditor.properties.gradientFillLayerValue" = "Gradient Fill: %@ · %@, %d°, %d%%";
 "imageEditor.properties.unsharpFilterLayerValue" = "Unsharp Mask: Amount %d%% · Radius %@ · Threshold %d";
 "imageEditor.properties.textLayerValue" = "Text: %@ · %d px";
@@ -1043,6 +1043,10 @@
 "imageEditor.patternFill.opacityValue" = "%d%%";
 "imageEditor.patternFill.scale" = "Scale";
 "imageEditor.patternFill.scaleValue" = "%d px";
+"imageEditor.patternFill.offsetX" = "Horizontal Offset";
+"imageEditor.patternFill.offsetXValue" = "X %d px";
+"imageEditor.patternFill.offsetY" = "Vertical Offset";
+"imageEditor.patternFill.offsetYValue" = "Y %d px";
 "imageEditor.properties.layerStyle" = "Layer Style";
 "imageEditor.option.layerStylePreset" = "Style Presets";
 "imageEditor.help.layerStylePreset" = "Apply a preset or save the selected layer's complete style";

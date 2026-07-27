@@ -737,6 +737,28 @@ struct ImageEditorPatternFillContent: Equatable, Codable {
     var blue: Double = 0.95
     var opacity: Double = 0.55
     var scale: CGFloat = 16
+    var offsetX: CGFloat = 0
+    var offsetY: CGFloat = 0
+
+    init(
+        kind: ImageEditorPatternOverlayKind = .checkerboard,
+        red: Double = 0.10,
+        green: Double = 0.24,
+        blue: Double = 0.95,
+        opacity: Double = 0.55,
+        scale: CGFloat = 16,
+        offsetX: CGFloat = 0,
+        offsetY: CGFloat = 0
+    ) {
+        self.kind = kind
+        self.red = red
+        self.green = green
+        self.blue = blue
+        self.opacity = opacity
+        self.scale = scale
+        self.offsetX = offsetX
+        self.offsetY = offsetY
+    }
 
     func normalized() -> ImageEditorPatternFillContent {
         ImageEditorPatternFillContent(
@@ -745,7 +767,9 @@ struct ImageEditorPatternFillContent: Equatable, Codable {
             green: Self.zeroOne(green),
             blue: Self.zeroOne(blue),
             opacity: max(0.05, min(1, opacity)),
-            scale: max(6, min(64, scale))
+            scale: max(6, min(64, scale)),
+            offsetX: Self.normalizedOffset(offsetX),
+            offsetY: Self.normalizedOffset(offsetY)
         )
     }
 
@@ -757,6 +781,12 @@ struct ImageEditorPatternFillContent: Equatable, Codable {
     func renderedImage(size: CGSize) -> NSImage {
         let content = normalized()
         return NSImage.rendered(size: size) { rect in
+            let context = NSGraphicsContext.current
+            let originalPatternPhase = context?.patternPhase ?? .zero
+            context?.patternPhase = CGPoint(x: content.offsetX, y: content.offsetY)
+            defer {
+                context?.patternPhase = originalPatternPhase
+            }
             NSColor(patternImage: content.kind.tileImage(
                 color: content.color,
                 opacity: CGFloat(content.opacity),
@@ -768,6 +798,47 @@ struct ImageEditorPatternFillContent: Equatable, Codable {
 
     private static func zeroOne(_ value: Double) -> Double {
         max(0, min(1, value))
+    }
+
+    private static func normalizedOffset(_ value: CGFloat) -> CGFloat {
+        guard value.isFinite else { return 0 }
+        return max(-128, min(128, value))
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case kind
+        case red
+        case green
+        case blue
+        case opacity
+        case scale
+        case offsetX
+        case offsetY
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        kind = try container.decode(ImageEditorPatternOverlayKind.self, forKey: .kind)
+        red = try container.decode(Double.self, forKey: .red)
+        green = try container.decode(Double.self, forKey: .green)
+        blue = try container.decode(Double.self, forKey: .blue)
+        opacity = try container.decode(Double.self, forKey: .opacity)
+        scale = try container.decode(CGFloat.self, forKey: .scale)
+        offsetX = try container.decodeIfPresent(CGFloat.self, forKey: .offsetX) ?? 0
+        offsetY = try container.decodeIfPresent(CGFloat.self, forKey: .offsetY) ?? 0
+    }
+
+    func encode(to encoder: Encoder) throws {
+        let content = normalized()
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(content.kind, forKey: .kind)
+        try container.encode(content.red, forKey: .red)
+        try container.encode(content.green, forKey: .green)
+        try container.encode(content.blue, forKey: .blue)
+        try container.encode(content.opacity, forKey: .opacity)
+        try container.encode(content.scale, forKey: .scale)
+        try container.encode(content.offsetX, forKey: .offsetX)
+        try container.encode(content.offsetY, forKey: .offsetY)
     }
 }
 

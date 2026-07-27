@@ -45,7 +45,9 @@ extension ImageEditorViewModel {
                 "imageEditor.properties.patternFillLayerValue",
                 patternFillContent.kind.title,
                 Int((patternFillContent.opacity * 100).rounded()),
-                Int(patternFillContent.scale.rounded())
+                Int(patternFillContent.scale.rounded()),
+                Int(patternFillContent.offsetX.rounded()),
+                Int(patternFillContent.offsetY.rounded())
             )
         }
         if let gradientFillContent = layer.gradientFillContent?.normalized() {

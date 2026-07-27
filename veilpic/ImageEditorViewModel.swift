@@ -291,6 +291,8 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var patternFillBlue: Double = 0.95
     @Published var patternFillOpacity: Double = 0.55
     @Published var patternFillScale: Double = 16
+    @Published var patternFillOffsetX: Double = 0
+    @Published var patternFillOffsetY: Double = 0
     @Published var selectedGradientFillPreset: ImageEditorGradientFillPreset = .blueOrange
     @Published var selectedGradientFillStyle: ImageEditorGradientFillStyle = .linear
     @Published var gradientFillReverse: Bool = false
@@ -6504,7 +6506,9 @@ final class ImageEditorViewModel: ObservableObject {
             green: patternFillGreen,
             blue: patternFillBlue,
             opacity: patternFillOpacity,
-            scale: CGFloat(patternFillScale)
+            scale: CGFloat(patternFillScale),
+            offsetX: CGFloat(patternFillOffsetX),
+            offsetY: CGFloat(patternFillOffsetY)
         ).normalized()
     }
 
@@ -6607,6 +6611,8 @@ final class ImageEditorViewModel: ObservableObject {
         patternFillBlue = 0.95
         patternFillOpacity = 0.55
         patternFillScale = 16
+        patternFillOffsetX = 0
+        patternFillOffsetY = 0
         selectedGradientFillPreset = .blueOrange
         selectedGradientFillStyle = .linear
         gradientFillReverse = false
@@ -7662,6 +7668,8 @@ final class ImageEditorViewModel: ObservableObject {
         patternFillBlue = content.blue
         patternFillOpacity = content.opacity
         patternFillScale = Double(content.scale)
+        patternFillOffsetX = Double(content.offsetX)
+        patternFillOffsetY = Double(content.offsetY)
     }
 
     private func syncGradientFillControlsFromSelection() {

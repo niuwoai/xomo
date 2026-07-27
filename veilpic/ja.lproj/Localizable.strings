@@ -885,7 +885,7 @@
 "imageEditor.properties.gradientMapDitherLayerValue" = "グラデーションマップ：%@・ディザー";
 "imageEditor.properties.filterLayerValue" = "%@ フィルター：%d%%";
 "imageEditor.properties.solidColorFillLayerValue" = "べた塗り：R %d・G %d・B %d";
-"imageEditor.properties.patternFillLayerValue" = "パターン塗り：%@・不透明度 %d%%・%d px";
+"imageEditor.properties.patternFillLayerValue" = "パターン塗り：%@・不透明度 %d%%・%d px・オフセット %d, %d px";
 "imageEditor.properties.gradientFillLayerValue" = "グラデーション塗り：%@・%@、%d°、%d%%";
 "imageEditor.properties.unsharpFilterLayerValue" = "アンシャープマスク：量 %d%% · 半径 %@ · しきい値 %d";
 "imageEditor.properties.textLayerValue" = "文字：%@・%d px";
@@ -1043,6 +1043,10 @@
 "imageEditor.patternFill.opacityValue" = "%d%%";
 "imageEditor.patternFill.scale" = "スケール";
 "imageEditor.patternFill.scaleValue" = "%d px";
+"imageEditor.patternFill.offsetX" = "水平オフセット";
+"imageEditor.patternFill.offsetXValue" = "X %d px";
+"imageEditor.patternFill.offsetY" = "垂直オフセット";
+"imageEditor.patternFill.offsetYValue" = "Y %d px";
 "imageEditor.properties.layerStyle" = "レイヤースタイル";
 "imageEditor.option.layerStylePreset" = "スタイルプリセット";
 "imageEditor.help.layerStylePreset" = "プリセットを適用するか、選択レイヤーの完全なスタイルを保存します";

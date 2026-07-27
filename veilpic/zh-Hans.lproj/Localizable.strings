@@ -885,7 +885,7 @@
 "imageEditor.properties.gradientMapDitherLayerValue" = "渐变映射：%@ · 抖动";
 "imageEditor.properties.filterLayerValue" = "%@ 滤镜：%d%%";
 "imageEditor.properties.solidColorFillLayerValue" = "纯色填充：R %d · G %d · B %d";
-"imageEditor.properties.patternFillLayerValue" = "图案填充：%@ · 不透明度 %d%% · %d px";
+"imageEditor.properties.patternFillLayerValue" = "图案填充：%@ · 不透明度 %d%% · %d px · 偏移 %d, %d px";
 "imageEditor.properties.gradientFillLayerValue" = "渐变填充：%@ · %@，%d°，%d%%";
 "imageEditor.properties.unsharpFilterLayerValue" = "USM 锐化：数量 %d%% · 半径 %@ · 阈值 %d";
 "imageEditor.properties.textLayerValue" = "文字：%@ · %d px";
@@ -1043,6 +1043,10 @@
 "imageEditor.patternFill.opacityValue" = "%d%%";
 "imageEditor.patternFill.scale" = "缩放";
 "imageEditor.patternFill.scaleValue" = "%d px";
+"imageEditor.patternFill.offsetX" = "水平偏移";
+"imageEditor.patternFill.offsetXValue" = "X %d px";
+"imageEditor.patternFill.offsetY" = "垂直偏移";
+"imageEditor.patternFill.offsetYValue" = "Y %d px";
 "imageEditor.properties.layerStyle" = "图层样式";
 "imageEditor.option.layerStylePreset" = "样式预设";
 "imageEditor.help.layerStylePreset" = "应用预设，或保存当前图层的完整样式";

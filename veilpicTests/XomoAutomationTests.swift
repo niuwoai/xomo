@@ -1834,6 +1834,36 @@ struct XomoAutomationTests {
         #expect(viewModel.document.selectedLayer?.name == "MCP Group")
     }
 
+    @Test func registryCreatesPatternFillLayersWithClampedPhaseOffsets() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        defer { registry.unregister(viewModel) }
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        let createTool = try #require(automationTool(named: "xomo.layer.create", in: toolsResponse))
+        let properties = try #require(
+            createTool["inputSchema"]?.objectValue?["properties"]?.objectValue
+        )
+        #expect(properties["offsetX"]?.objectValue?["type"] == .string("number"))
+        #expect(properties["offsetY"]?.objectValue?["type"] == .string("number"))
+
+        let createResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.create",
+            arguments: [
+                "kind": .string("patternFill"),
+                "offsetX": .number(999),
+                "offsetY": .number(-999)
+            ]
+        ))
+
+        #expect(createResponse.ok)
+        let content = try #require(viewModel.document.selectedLayer?.patternFillContent?.normalized())
+        #expect(content.offsetX == 128)
+        #expect(content.offsetY == -128)
+    }
+
     @Test func registryControlsSelectionsChannelsToolsAndComponents() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared
