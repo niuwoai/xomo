@@ -1878,11 +1878,61 @@ final class XomoAutomationRegistry {
         case "filter": viewModel.addFilterLayer()
         case "solidColorFill": viewModel.addSolidColorFillLayer()
         case "patternFill":
-            if arguments["offsetX"] != nil {
-                viewModel.patternFillOffsetX = try requiredNumber("offsetX", in: arguments)
+            let requestedKind: ImageEditorPatternOverlayKind?
+            if arguments["patternKind"] != nil {
+                let rawKind = try requiredString("patternKind", in: arguments)
+                guard let kind = ImageEditorPatternOverlayKind(rawValue: rawKind) else {
+                    throw XomoAutomationCallError.invalidArgument("Unknown pattern fill kind: \(rawKind)")
+                }
+                requestedKind = kind
+            } else {
+                requestedKind = nil
             }
-            if arguments["offsetY"] != nil {
-                viewModel.patternFillOffsetY = try requiredNumber("offsetY", in: arguments)
+            let requestedRed = try arguments["patternRed"].map { _ in
+                try requiredNumber("patternRed", in: arguments)
+            }
+            let requestedGreen = try arguments["patternGreen"].map { _ in
+                try requiredNumber("patternGreen", in: arguments)
+            }
+            let requestedBlue = try arguments["patternBlue"].map { _ in
+                try requiredNumber("patternBlue", in: arguments)
+            }
+            let requestedOpacity = try arguments["patternOpacity"].map { _ in
+                try requiredNumber("patternOpacity", in: arguments)
+            }
+            let requestedScale = try arguments["patternScale"].map { _ in
+                try requiredNumber("patternScale", in: arguments)
+            }
+            let requestedOffsetX = try arguments["offsetX"].map { _ in
+                try requiredNumber("offsetX", in: arguments)
+            }
+            let requestedOffsetY = try arguments["offsetY"].map { _ in
+                try requiredNumber("offsetY", in: arguments)
+            }
+
+            if let requestedKind {
+                viewModel.selectedPatternFillKind = requestedKind
+            }
+            if let requestedRed {
+                viewModel.patternFillRed = requestedRed
+            }
+            if let requestedGreen {
+                viewModel.patternFillGreen = requestedGreen
+            }
+            if let requestedBlue {
+                viewModel.patternFillBlue = requestedBlue
+            }
+            if let requestedOpacity {
+                viewModel.patternFillOpacity = requestedOpacity
+            }
+            if let requestedScale {
+                viewModel.patternFillScale = requestedScale
+            }
+            if let requestedOffsetX {
+                viewModel.patternFillOffsetX = requestedOffsetX
+            }
+            if let requestedOffsetY {
+                viewModel.patternFillOffsetY = requestedOffsetY
             }
             viewModel.addPatternFillLayer()
         case "gradientFill": viewModel.addGradientFillLayer()
@@ -4598,6 +4648,12 @@ private extension XomoAutomationRegistry {
             "kind": XomoAutomationSchema.string(description: "Layer kind", values: ["pixel", "group", "text", "adjustment", "filter", "solidColorFill", "patternFill", "gradientFill"]),
             "x": XomoAutomationSchema.number(description: "Optional canvas x position"),
             "y": XomoAutomationSchema.number(description: "Optional canvas y position"),
+            "patternKind": XomoAutomationSchema.string(description: "Optional pattern-fill kind", values: ImageEditorPatternOverlayKind.allCases.map(\.rawValue)),
+            "patternRed": XomoAutomationSchema.number(description: "Optional pattern-fill red channel from 0 to 1"),
+            "patternGreen": XomoAutomationSchema.number(description: "Optional pattern-fill green channel from 0 to 1"),
+            "patternBlue": XomoAutomationSchema.number(description: "Optional pattern-fill blue channel from 0 to 1"),
+            "patternOpacity": XomoAutomationSchema.number(description: "Optional pattern-fill opacity from 0.05 to 1"),
+            "patternScale": XomoAutomationSchema.number(description: "Optional pattern-fill tile size from 6 to 64 pixels"),
             "offsetX": XomoAutomationSchema.number(description: "Optional pattern-fill horizontal phase in pixels"),
             "offsetY": XomoAutomationSchema.number(description: "Optional pattern-fill vertical phase in pixels")
         ]),

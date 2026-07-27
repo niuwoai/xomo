@@ -1834,7 +1834,7 @@ struct XomoAutomationTests {
         #expect(viewModel.document.selectedLayer?.name == "MCP Group")
     }
 
-    @Test func registryCreatesPatternFillLayersWithClampedPhaseOffsets() throws {
+    @Test func registryCreatesConfiguredPatternFillLayersWithNormalizedValues() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared
         registry.register(viewModel)
@@ -1845,6 +1845,15 @@ struct XomoAutomationTests {
         let properties = try #require(
             createTool["inputSchema"]?.objectValue?["properties"]?.objectValue
         )
+        #expect(
+            properties["patternKind"]?.objectValue?["enum"]?.arrayValue
+                == ImageEditorPatternOverlayKind.allCases.map { .string($0.rawValue) }
+        )
+        #expect(properties["patternRed"]?.objectValue?["type"] == .string("number"))
+        #expect(properties["patternGreen"]?.objectValue?["type"] == .string("number"))
+        #expect(properties["patternBlue"]?.objectValue?["type"] == .string("number"))
+        #expect(properties["patternOpacity"]?.objectValue?["type"] == .string("number"))
+        #expect(properties["patternScale"]?.objectValue?["type"] == .string("number"))
         #expect(properties["offsetX"]?.objectValue?["type"] == .string("number"))
         #expect(properties["offsetY"]?.objectValue?["type"] == .string("number"))
 
@@ -1853,6 +1862,12 @@ struct XomoAutomationTests {
             name: "xomo.layer.create",
             arguments: [
                 "kind": .string("patternFill"),
+                "patternKind": .string(ImageEditorPatternOverlayKind.dots.rawValue),
+                "patternRed": .number(2),
+                "patternGreen": .number(-1),
+                "patternBlue": .number(0.4),
+                "patternOpacity": .number(0),
+                "patternScale": .number(999),
                 "offsetX": .number(999),
                 "offsetY": .number(-999)
             ]
@@ -1860,8 +1875,26 @@ struct XomoAutomationTests {
 
         #expect(createResponse.ok)
         let content = try #require(viewModel.document.selectedLayer?.patternFillContent?.normalized())
+        #expect(content.kind == .dots)
+        #expect(content.red == 1)
+        #expect(content.green == 0)
+        #expect(content.blue == 0.4)
+        #expect(content.opacity == 0.05)
+        #expect(content.scale == 64)
         #expect(content.offsetX == 128)
         #expect(content.offsetY == -128)
+
+        let layerCount = viewModel.document.layers.count
+        let invalidResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.create",
+            arguments: [
+                "kind": .string("patternFill"),
+                "patternKind": .string("unknown-pattern")
+            ]
+        ))
+        #expect(!invalidResponse.ok)
+        #expect(viewModel.document.layers.count == layerCount)
     }
 
     @Test func registryControlsSelectionsChannelsToolsAndComponents() throws {

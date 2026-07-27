@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.12.0-rc528 - 2026-07-27
+
+### Added
+- MCP/CLI 的 `xomo.layer.create` 创建图案填充图层时，新增 `patternKind`、`patternRed`、`patternGreen`、`patternBlue`、`patternOpacity` 与 `patternScale` 可选参数，不再只能继承界面里碰巧留下的图案设置。
+- 图案类型 schema 直接列出棋盘格、斜纹和圆点三种合法值；颜色、不透明度、缩放与既有相位偏移统一走图案填充模型的归一化边界。
+
+### Verification
+- 自动化专项覆盖完整 schema、三种图案枚举、颜色/不透明度/缩放/相位边界归一化，以及未知图案拒绝且不创建图层。
+- 组件库模式继续由统一光标解析器强制恢复系统箭头，全部工具采用既有成熟软件语义映射；下一次完整构建、冒烟和 `/Applications` 覆盖门禁仍为 rc560。
+
 ## 2.12.0-rc527 - 2026-07-27
 
 ### Added
