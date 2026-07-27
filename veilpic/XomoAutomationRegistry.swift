@@ -1966,7 +1966,8 @@ final class XomoAutomationRegistry {
             viewModel.addText(at: optionalPoint(arguments))
         case "adjustment": viewModel.addAdjustmentLayer()
         case "filter": viewModel.addFilterLayer()
-        case "solidColorFill": viewModel.addSolidColorFillLayer()
+        case "solidColorFill":
+            try createSolidColorFillLayer(arguments, viewModel: viewModel)
         case "patternFill":
             let requestedKind: ImageEditorPatternOverlayKind?
             if arguments["patternKind"] != nil {
@@ -4739,6 +4740,9 @@ private extension XomoAutomationRegistry {
             "kind": XomoAutomationSchema.string(description: "Layer kind", values: ["pixel", "group", "text", "adjustment", "filter", "solidColorFill", "patternFill", "gradientFill"]),
             "x": XomoAutomationSchema.number(description: "Optional canvas x position"),
             "y": XomoAutomationSchema.number(description: "Optional canvas y position"),
+            "solidRed": XomoAutomationSchema.number(description: "Optional solid-color-fill red channel from 0 to 1"),
+            "solidGreen": XomoAutomationSchema.number(description: "Optional solid-color-fill green channel from 0 to 1"),
+            "solidBlue": XomoAutomationSchema.number(description: "Optional solid-color-fill blue channel from 0 to 1"),
             "patternKind": XomoAutomationSchema.string(description: "Optional pattern-fill kind", values: ImageEditorPatternOverlayKind.allCases.map(\.rawValue)),
             "patternRed": XomoAutomationSchema.number(description: "Optional pattern-fill red channel from 0 to 1"),
             "patternGreen": XomoAutomationSchema.number(description: "Optional pattern-fill green channel from 0 to 1"),

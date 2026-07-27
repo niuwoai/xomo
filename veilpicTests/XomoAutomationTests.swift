@@ -1988,6 +1988,66 @@ struct XomoAutomationTests {
         #expect(!missingChannelResponse.ok)
     }
 
+    @Test func registryCreatesParameterizedSolidColorFillWithoutUIStateLeakage() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        defer { registry.unregister(viewModel) }
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        let createTool = try #require(
+            automationTool(named: "xomo.layer.create", in: toolsResponse)
+        )
+        let properties = try #require(
+            createTool["inputSchema"]?.objectValue?["properties"]?.objectValue
+        )
+        #expect(properties["solidRed"]?.objectValue?["type"] == .string("number"))
+        #expect(properties["solidGreen"]?.objectValue?["type"] == .string("number"))
+        #expect(properties["solidBlue"]?.objectValue?["type"] == .string("number"))
+
+        viewModel.solidColorFillRed = 0.15
+        viewModel.solidColorFillGreen = 0.25
+        viewModel.solidColorFillBlue = 0.35
+        let layerCount = viewModel.document.layers.count
+        let historyCount = viewModel.document.history.count
+
+        let createResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.create",
+            arguments: [
+                "kind": .string("solidColorFill"),
+                "solidRed": .number(2),
+                "solidGreen": .number(-1),
+                "solidBlue": .number(0.65)
+            ]
+        ))
+        #expect(createResponse.ok)
+        #expect(viewModel.document.layers.count == layerCount + 1)
+        #expect(viewModel.document.history.count == historyCount + 1)
+        let content = try #require(
+            viewModel.document.selectedLayer?.solidColorFillContent?.normalized()
+        )
+        #expect(content.red == 1)
+        #expect(content.green == 0)
+        #expect(content.blue == 0.65)
+        #expect(viewModel.solidColorFillRed == 1)
+        #expect(viewModel.solidColorFillGreen == 0)
+        #expect(viewModel.solidColorFillBlue == 0.65)
+
+        let incompleteResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.create",
+            arguments: [
+                "kind": .string("solidColorFill"),
+                "solidRed": .number(0.10),
+                "solidGreen": .number(0.20)
+            ]
+        ))
+        #expect(!incompleteResponse.ok)
+        #expect(viewModel.document.layers.count == layerCount + 1)
+        #expect(viewModel.document.history.count == historyCount + 1)
+    }
+
     @Test func registryReadsAndUpdatesMultiStopGradientFillLayersWithoutFlatteningStops() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

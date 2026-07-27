@@ -7,6 +7,26 @@ import Foundation
 
 @MainActor
 extension XomoAutomationRegistry {
+    func createSolidColorFillLayer(
+        _ arguments: [String: XomoJSONValue],
+        viewModel: ImageEditorViewModel
+    ) throws {
+        let settingKeys = ["solidRed", "solidGreen", "solidBlue"]
+        guard settingKeys.contains(where: { arguments[$0] != nil }) else {
+            viewModel.addSolidColorFillLayer()
+            return
+        }
+        let content = ImageEditorSolidColorFillContent(
+            red: try finiteNumber("solidRed", in: arguments),
+            green: try finiteNumber("solidGreen", in: arguments),
+            blue: try finiteNumber("solidBlue", in: arguments)
+        ).normalized()
+        viewModel.solidColorFillRed = content.red
+        viewModel.solidColorFillGreen = content.green
+        viewModel.solidColorFillBlue = content.blue
+        viewModel.addSolidColorFillLayer(content: content)
+    }
+
     func solidColorFillSettingsAction(
         _ arguments: [String: XomoJSONValue],
         viewModel: ImageEditorViewModel

@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.12.0-rc534 - 2026-07-27
+
+### Added
+- `xomo.layer.create` 创建纯色填充层时可一次指定 `solidRed`、`solidGreen`、`solidBlue`，颜色与界面/渲染模型共用 0–1 归一化边界。
+- 新增带完整 `ImageEditorSolidColorFillContent` 的视图模型创建入口，使界面与 MCP 共用图层插入、选中和历史记录语义。
+
+### Fixed
+- 参数化创建不再继承属性面板上一次残留的纯色填充颜色；缺少任一颜色通道时会在插入图层和写入 Undo/History 前失败。
+
+### Verification
+- 创建 schema、颜色归一化、界面状态隔离与缺参原子失败定向 Xcode 测试 1/1 通过；CLI 2/2、发布契约 4/4（10 个断言）通过。
+- 下一次常规完整构建、完整冒烟和 `/Applications` 覆盖门禁仍为 rc560。
+
 ## 2.12.0-rc533 - 2026-07-27
 
 ### Added

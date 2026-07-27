@@ -5541,11 +5541,15 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func addSolidColorFillLayer() {
+        addSolidColorFillLayer(content: currentSolidColorFillContent())
+    }
+
+    func addSolidColorFillLayer(content: ImageEditorSolidColorFillContent) {
         pushUndo()
         let layer = ImageEditorLayer.solidColorFill(
             name: L10n.text("imageEditor.layer.solidColorFillName"),
             size: document.canvasSize,
-            content: currentSolidColorFillContent()
+            content: content.normalized()
         )
         let insertionIndex = min((document.selectedLayerIndex ?? (document.layers.count - 1)) + 1, document.layers.count)
         document.layers.insert(layer, at: insertionIndex)
