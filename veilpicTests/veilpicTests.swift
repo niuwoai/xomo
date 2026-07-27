@@ -6400,6 +6400,44 @@ struct veilpicTests {
     }
 
     @MainActor
+    @Test func imageEditorMarqueeThenGradientWorkflowKeepsSelectionAndMasksFill() throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "marquee-gradient.png",
+            image: testImage(color: .clear, size: NSSize(width: 100, height: 80))
+        ) { _ in }
+
+        viewModel.foregroundColor = .systemRed
+        viewModel.backgroundColor = .systemBlue
+        viewModel.opacity = 1
+        viewModel.selectTool(.marquee)
+        viewModel.createMarqueeSelection(
+            from: CGPoint(x: 12, y: 10),
+            to: CGPoint(x: 58, y: 62)
+        )
+        let selectionBeforeToolSwitch = try #require(viewModel.document.selection)
+
+        viewModel.selectTool(.gradient)
+        #expect(viewModel.canvasInteractionTool == .gradient)
+        #expect(viewModel.document.selection == selectionBeforeToolSwitch)
+
+        viewModel.drawGradient(
+            from: CGPoint(x: 12, y: 36),
+            to: CGPoint(x: 58, y: 36)
+        )
+
+        let image = try #require(viewModel.document.selectedLayer?.image)
+        let selectedPixel = try #require(
+            image.color(at: CGPoint(x: 35, y: 36))?.usingColorSpace(.deviceRGB)
+        )
+        let outsidePixel = try #require(
+            image.color(at: CGPoint(x: 80, y: 36))?.usingColorSpace(.deviceRGB)
+        )
+        #expect(selectedPixel.alphaComponent > 0.8)
+        #expect(outsidePixel.alphaComponent < 0.1)
+        #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.gradient"))
+    }
+
+    @MainActor
     @Test func imageEditorGradientSelectionUsesTopLeftCanvasCoordinates() async throws {
         let canvasSize = NSSize(width: 120, height: 90)
         let viewModel = ImageEditorViewModel(

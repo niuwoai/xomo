@@ -1772,6 +1772,41 @@ struct ImageEditorView: View {
                             isCanvasPanGestureActive = false
                             refreshCanvasCursor(in: geometry.size)
                         },
+                        onRangeToolDragBegan: { location in
+                            guard canvasInteractionTool == .marquee
+                                    || canvasInteractionTool == .gradient,
+                                  let imagePoint = imagePoint(from: location, in: geometry.size)
+                            else { return false }
+                            dragStart = imagePoint
+                            dragEnd = imagePoint
+                            viewModel.updatePointer(imagePoint)
+                            return true
+                        },
+                        onRangeToolDragChanged: { location in
+                            let imagePoint = imagePoint(from: location, in: geometry.size)
+                            viewModel.updatePointer(imagePoint)
+                            if canvasInteractionTool == .marquee {
+                                dragEnd = boundedImagePoint(from: location, in: geometry.size)
+                            } else {
+                                dragEnd = imagePoint
+                            }
+                        },
+                        onRangeToolDragEnded: { location in
+                            if canvasInteractionTool == .marquee, let dragStart {
+                                viewModel.createMarqueeSelection(
+                                    from: dragStart,
+                                    to: boundedImagePoint(from: location, in: geometry.size)
+                                )
+                            } else if canvasInteractionTool == .gradient {
+                                viewModel.drawGradient(
+                                    from: dragStart,
+                                    to: imagePoint(from: location, in: geometry.size)
+                                )
+                            }
+                            dragStart = nil
+                            dragEnd = nil
+                            refreshCanvasCursor(in: geometry.size)
+                        },
                         onObjectMoveCandidateBegan: { location, modifierFlags in
                             guard canvasInteractionTool == .move,
                                   modifierFlags.isEmpty,

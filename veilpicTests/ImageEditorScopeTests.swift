@@ -620,6 +620,16 @@ struct ImageEditorScopeTests {
         #expect(source.contains("onMiddleMousePanChanged"))
         #expect(source.contains("onMiddleMousePanEnded"))
         #expect(source.contains("onMouseMoved"))
+        let nativeRangeStart = try #require(source.range(of: "onRangeToolDragBegan:"))
+        let objectMoveStart = try #require(
+            source[nativeRangeStart.upperBound...].range(of: "onObjectMoveCandidateBegan:")
+        )
+        let nativeRangeSource = source[nativeRangeStart.lowerBound..<objectMoveStart.lowerBound]
+        #expect(nativeRangeSource.contains("onRangeToolDragChanged:"))
+        #expect(nativeRangeSource.contains("onRangeToolDragEnded:"))
+        #expect(nativeRangeSource.contains("viewModel.createMarqueeSelection("))
+        #expect(nativeRangeSource.contains("viewModel.drawGradient("))
+        #expect(nativeRangeSource.contains("to: imagePoint(from: location, in: geometry.size)"))
         #expect(source.contains("updateCanvasCursor(at: location, in: geometry.size)"))
         #expect(source.contains("viewModel.magnifyCanvas(factor, at: location, viewportSize: viewportSize)"))
         #expect(source.contains("viewModel.endCanvasMagnify()"))

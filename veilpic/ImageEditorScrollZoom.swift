@@ -67,6 +67,12 @@ struct ScrollWheelZoomView: NSViewRepresentable {
     let onMiddleMousePanBegan: () -> Void
     let onMiddleMousePanChanged: (_ delta: CGSize) -> Void
     let onMiddleMousePanEnded: () -> Void
+    /// Marquee and gradient both require a balanced down/drag/up sequence.
+    /// Capturing that sequence here avoids macOS 13's drop destination
+    /// occasionally delivering SwiftUI's `onChanged` without `onEnded`.
+    let onRangeToolDragBegan: (_ location: CGPoint) -> Bool
+    let onRangeToolDragChanged: (_ location: CGPoint) -> Void
+    let onRangeToolDragEnded: (_ location: CGPoint) -> Void
     /// Mouse-down only selects and records a draggable component candidate.
     /// The actual transform transaction starts after a familiar small drag
     /// threshold, so an ordinary click stays cheap and responsive.
@@ -82,6 +88,9 @@ struct ScrollWheelZoomView: NSViewRepresentable {
         view.onMiddleMousePanBegan = onMiddleMousePanBegan
         view.onMiddleMousePanChanged = onMiddleMousePanChanged
         view.onMiddleMousePanEnded = onMiddleMousePanEnded
+        view.onRangeToolDragBegan = onRangeToolDragBegan
+        view.onRangeToolDragChanged = onRangeToolDragChanged
+        view.onRangeToolDragEnded = onRangeToolDragEnded
         view.onObjectMoveCandidateBegan = onObjectMoveCandidateBegan
         view.onObjectMoveActivated = onObjectMoveActivated
         view.onObjectMoveChanged = onObjectMoveChanged
@@ -95,6 +104,9 @@ struct ScrollWheelZoomView: NSViewRepresentable {
         nsView.onMiddleMousePanBegan = onMiddleMousePanBegan
         nsView.onMiddleMousePanChanged = onMiddleMousePanChanged
         nsView.onMiddleMousePanEnded = onMiddleMousePanEnded
+        nsView.onRangeToolDragBegan = onRangeToolDragBegan
+        nsView.onRangeToolDragChanged = onRangeToolDragChanged
+        nsView.onRangeToolDragEnded = onRangeToolDragEnded
         nsView.onObjectMoveCandidateBegan = onObjectMoveCandidateBegan
         nsView.onObjectMoveActivated = onObjectMoveActivated
         nsView.onObjectMoveChanged = onObjectMoveChanged
@@ -112,6 +124,9 @@ final class ScrollWheelZoomNSView: NSView {
     var onMiddleMousePanBegan: (() -> Void)?
     var onMiddleMousePanChanged: ((CGSize) -> Void)?
     var onMiddleMousePanEnded: (() -> Void)?
+    var onRangeToolDragBegan: ((_ location: CGPoint) -> Bool)?
+    var onRangeToolDragChanged: ((_ location: CGPoint) -> Void)?
+    var onRangeToolDragEnded: ((_ location: CGPoint) -> Void)?
     var onObjectMoveCandidateBegan: ((_ location: CGPoint, _ modifierFlags: NSEvent.ModifierFlags) -> Bool)?
     var onObjectMoveActivated: (() -> Bool)?
     var onObjectMoveChanged: ((_ translation: CGSize) -> Void)?
@@ -126,6 +141,8 @@ final class ScrollWheelZoomNSView: NSView {
     private var hasObjectMoveCandidate = false
     private var isObjectMoveCaptureRejected = false
     private var objectMoveStartPoint: CGPoint?
+    private var isRangeToolDragging = false
+    private var lastRangeToolPoint: CGPoint?
 
     // 采用左上原点，坐标系与 SwiftUI 画布对齐，锚点不会上下翻转。
     override var isFlipped: Bool { true }
@@ -170,7 +187,7 @@ final class ScrollWheelZoomNSView: NSView {
                 matching: [.leftMouseDown, .leftMouseDragged, .leftMouseUp]
             ) { [weak self] event in
                 guard let self else { return event }
-                guard self.handleObjectMove(event) else { return event }
+                guard self.handleCanvasPointerDrag(event) else { return event }
                 return nil
             }
         }
@@ -200,6 +217,8 @@ final class ScrollWheelZoomNSView: NSView {
         hasObjectMoveCandidate = false
         isObjectMoveCaptureRejected = false
         objectMoveStartPoint = nil
+        isRangeToolDragging = false
+        lastRangeToolPoint = nil
         if isMiddleMousePanning {
             onMiddleMousePanEnded?()
         }
@@ -219,10 +238,10 @@ final class ScrollWheelZoomNSView: NSView {
     }
 
     /// The canvas is also a drop destination on macOS 13. Once a mouse-down
-    /// hits a movable Xomo object, this monitor owns that complete pointer
-    /// sequence so SwiftUI's canvas gesture cannot race the object transaction.
-    /// All unrelated events pass through untouched.
-    private func handleObjectMove(_ event: NSEvent) -> Bool {
+    /// begins a range tool or hits a movable Xomo object, this monitor owns
+    /// that complete pointer sequence so SwiftUI's canvas gesture cannot race
+    /// the document transaction. All unrelated events pass through untouched.
+    private func handleCanvasPointerDrag(_ event: NSEvent) -> Bool {
         guard let window, event.buttonNumber == 0 else { return false }
 
         switch event.type {
@@ -237,6 +256,11 @@ final class ScrollWheelZoomNSView: NSView {
             guard bounds.contains(location) else {
                 return false
             }
+            if onRangeToolDragBegan?(location) == true {
+                isRangeToolDragging = true
+                lastRangeToolPoint = location
+                return true
+            }
             let flags = event.modifierFlags.intersection([.command, .option, .shift, .control])
             guard onObjectMoveCandidateBegan?(location, flags) == true else { return false }
             hasObjectMoveCandidate = true
@@ -244,6 +268,13 @@ final class ScrollWheelZoomNSView: NSView {
             objectMoveStartPoint = location
             return true
         case .leftMouseDragged:
+            if isRangeToolDragging {
+                guard event.window === window else { return true }
+                let location = convert(event.locationInWindow, from: nil)
+                lastRangeToolPoint = location
+                onRangeToolDragChanged?(location)
+                return true
+            }
             guard event.window === window else { return hasObjectMoveCandidate }
             let location = convert(event.locationInWindow, from: nil)
             guard hasObjectMoveCandidate, let objectMoveStartPoint else { return false }
@@ -270,6 +301,18 @@ final class ScrollWheelZoomNSView: NSView {
             ))
             return true
         case .leftMouseUp:
+            if isRangeToolDragging {
+                let location: CGPoint
+                if event.window === window {
+                    location = convert(event.locationInWindow, from: nil)
+                } else {
+                    location = lastRangeToolPoint ?? .zero
+                }
+                onRangeToolDragEnded?(location)
+                isRangeToolDragging = false
+                lastRangeToolPoint = nil
+                return true
+            }
             // A local monitor may still receive the release after the pointer
             // has crossed the canvas/window edge. Always close the transaction
             // once a drag has started, otherwise the next click is swallowed
