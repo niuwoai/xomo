@@ -4768,8 +4768,14 @@ private extension XomoAutomationRegistry {
             "green": XomoAutomationSchema.number(description: "Green channel from 0 to 1"),
             "blue": XomoAutomationSchema.number(description: "Blue channel from 0 to 1")
         ], required: ["action"]),
-        tool("xomo.layer.adjustment_settings", "Read the complete normalized settings of selected non-destructive adjustment layers.", [
-            "action": XomoAutomationSchema.string(description: "Adjustment-layer settings action", values: ["get"])
+        tool("xomo.layer.adjustment_settings", "Read or replace the complete normalized settings of selected non-destructive adjustment layers while skipping locked and ineligible layers.", [
+            "action": XomoAutomationSchema.string(description: "Adjustment-layer settings action", values: ["get", "set"]),
+            "amount": XomoAutomationSchema.number(description: "Optional main adjustment amount; posterize uses 2 to 32 and other adjustments use -1 to 1"),
+            "settings": .object([
+                "type": .string("object"),
+                "description": .string("Optional complete settings object returned by the get action"),
+                "additionalProperties": .bool(true)
+            ])
         ], required: ["action"]),
         tool("xomo.layer.gradient_fill_settings", "Read or replace the complete settings of selected gradient-fill layers, including optional ordered multi-color stops, while skipping locked and ineligible layers.", [
             "action": XomoAutomationSchema.string(description: "Gradient-fill settings action", values: ["get", "set"]),

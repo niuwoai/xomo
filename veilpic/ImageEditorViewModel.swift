@@ -7558,7 +7558,7 @@ final class ImageEditorViewModel: ObservableObject {
         syncPathControlsFromSelection()
     }
 
-    private func syncAdjustmentControlsFromSelection() {
+    func syncAdjustmentControlsFromSelection() {
         guard let adjustment = document.selectedLayer?.adjustment else { return }
         selectedAdjustment = adjustment.kind
         adjustmentValue = adjustment.amount

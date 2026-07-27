@@ -2048,7 +2048,7 @@ struct XomoAutomationTests {
         #expect(viewModel.document.history.count == historyCount + 1)
     }
 
-    @Test func registryReadsCompleteSelectedAdjustmentLayerSettings() throws {
+    @Test func registryReadsAndReplacesCompleteSelectedAdjustmentLayerSettings() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared
         registry.register(viewModel)
@@ -2063,8 +2063,10 @@ struct XomoAutomationTests {
         )
         #expect(
             properties["action"]?.objectValue?["enum"]?.arrayValue
-                == [.string("get")]
+                == [.string("get"), .string("set")]
         )
+        #expect(properties["amount"]?.objectValue?["type"] == .string("number"))
+        #expect(properties["settings"]?.objectValue?["type"] == .string("object"))
 
         viewModel.selectedAdjustment = .levels
         viewModel.adjustmentValue = 0.20
@@ -2114,13 +2116,60 @@ struct XomoAutomationTests {
         #expect(brightnessSettings?["brightnessContrastContrast"] == .number(-0.25))
         #expect(viewModel.document.history.count == historyCount)
 
-        let invalidResponse = registry.execute(request(
+        var replacementSettings = try #require(levelSettings)
+        replacementSettings["levelsBlackPoint"] = .number(0.25)
+        replacementSettings["levelsGamma"] = .number(2.25)
+        let setResponse = registry.execute(request(
             operation: "call",
             name: "xomo.layer.adjustment_settings",
-            arguments: ["action": .string("set")]
+            arguments: [
+                "action": .string("set"),
+                "amount": .number(0.70),
+                "settings": .object(replacementSettings)
+            ]
         ))
-        #expect(!invalidResponse.ok)
-        #expect(viewModel.document.history.count == historyCount)
+        #expect(setResponse.ok)
+        #expect(
+            setResponse.result?.objectValue?["updatedLayerCount"]
+                == .number(1)
+        )
+        let updatedLevels = try #require(
+            viewModel.document.layers.first { $0.id == levelsID }
+        )
+        #expect(updatedLevels.adjustment?.amount == 0.70)
+        #expect(updatedLevels.adjustmentSettings.levelsBlackPoint == 0.25)
+        #expect(updatedLevels.adjustmentSettings.levelsGamma == 2.25)
+        let lockedBrightness = try #require(
+            viewModel.document.layers.first { $0.id == brightnessID }
+        )
+        #expect(lockedBrightness.adjustment?.amount == 0.35)
+        #expect(lockedBrightness.adjustmentSettings.brightnessContrastBrightness == 0.40)
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        let noOpHistoryCount = viewModel.document.history.count
+        let noOpResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.adjustment_settings",
+            arguments: [
+                "action": .string("set"),
+                "amount": .number(0.70),
+                "settings": .object(replacementSettings)
+            ]
+        ))
+        #expect(!noOpResponse.ok)
+        #expect(viewModel.document.history.count == noOpHistoryCount)
+
+        replacementSettings.removeValue(forKey: "levelsGamma")
+        let incompleteResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.adjustment_settings",
+            arguments: [
+                "action": .string("set"),
+                "settings": .object(replacementSettings)
+            ]
+        ))
+        #expect(!incompleteResponse.ok)
+        #expect(viewModel.document.history.count == noOpHistoryCount)
     }
 
     @Test func registryReadsAndUpdatesMultiStopGradientFillLayersWithoutFlatteningStops() throws {
