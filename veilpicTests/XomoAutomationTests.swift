@@ -550,15 +550,23 @@ struct XomoAutomationTests {
             operation: "call",
             name: "xomo.filter.configure",
             arguments: [
-                "filter": .string(ImageEditorFilter.pixelate.rawValue),
+                "filter": .string(ImageEditorFilter.lensCorrection.rawValue),
                 "action": .string("addSmartFilter"),
-                "settings": .object(["intensity": .number(0.6)])
+                "settings": .object([
+                    "intensity": .number(0.6),
+                    "lensDistortion": .number(2)
+                ])
             ]
         ))
         #expect(configuredAddResponse.ok)
         #expect(configuredAddResponse.result?.objectValue?["addedLayerCount"] == .number(1))
         #expect(viewModel.document.layers.first { $0.id == primaryID }?.smartFilters.count == 1)
         #expect(viewModel.document.layers.first { $0.id == peerID }?.smartFilters.count == 3)
+        let configuredFilter = try #require(
+            viewModel.document.layers.first { $0.id == peerID }?.smartFilters.last
+        )
+        #expect(configuredFilter.kind == .lensCorrection)
+        #expect(configuredFilter.normalizedSettings.lensDistortion == 1)
 
         let peerFilterOrder = try #require(
             viewModel.document.layers.first { $0.id == peerID }?.smartFilters.map(\.id)

@@ -330,6 +330,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var filterRippleFrequency: Double = 0.25
     @Published var filterPinchAmount: Double = 0.5
     @Published var filterSpherizeAmount: Double = 0.5
+    @Published var filterLensDistortion: Double = 0.35
     @Published var selectedChannelPreview: ImageEditorChannelPreview = .composite
     @Published var selectedAlphaChannelID: UUID?
     @Published var previewedAlphaChannelID: UUID?
@@ -1573,6 +1574,17 @@ final class ImageEditorViewModel: ObservableObject {
                 filter.kind.title,
                 Int((filter.normalizedIntensity * 100).rounded()),
                 Int((settings.spherizeAmount * 100).rounded())
+            )
+            guard !filter.isEnabled else { return title }
+            return L10n.format("imageEditor.properties.smartFilterDisabled", title)
+        }
+        if filter.kind == .lensCorrection {
+            let settings = filter.normalizedSettings
+            let title = L10n.format(
+                "imageEditor.properties.smartFilterLensCorrectionItem",
+                filter.kind.title,
+                Int((filter.normalizedIntensity * 100).rounded()),
+                Int((settings.lensDistortion * 100).rounded())
             )
             guard !filter.isEnabled else { return title }
             return L10n.format("imageEditor.properties.smartFilterDisabled", title)
@@ -6177,7 +6189,8 @@ final class ImageEditorViewModel: ObservableObject {
             rippleAmount: filterRippleAmount,
             rippleFrequency: filterRippleFrequency,
             pinchAmount: filterPinchAmount,
-            spherizeAmount: filterSpherizeAmount
+            spherizeAmount: filterSpherizeAmount,
+            lensDistortion: filterLensDistortion
         ).normalized()
     }
 
@@ -7673,6 +7686,7 @@ final class ImageEditorViewModel: ObservableObject {
         filterRippleFrequency = normalized.rippleFrequency
         filterPinchAmount = normalized.pinchAmount
         filterSpherizeAmount = normalized.spherizeAmount
+        filterLensDistortion = normalized.lensDistortion
     }
 
     private func syncSolidColorFillControlsFromSelection() {

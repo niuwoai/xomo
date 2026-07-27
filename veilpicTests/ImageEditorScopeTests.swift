@@ -96,6 +96,7 @@ struct ImageEditorScopeTests {
                 "ripple",
                 "pinch",
                 "spherize",
+                "lensCorrection",
                 "liquifyPush",
                 "liquifyTwirl",
                 "liquifyPuckerBloat"

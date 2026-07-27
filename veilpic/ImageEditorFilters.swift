@@ -70,6 +70,9 @@ extension NSImage {
         if kind == .spherize {
             return spherized(intensity: clamped, settings: settings)
         }
+        if kind == .lensCorrection {
+            return lensCorrected(intensity: clamped, settings: settings)
+        }
         if kind == .liquifyPush {
             return liquifyPushed(intensity: clamped, settings: settings)
         }
@@ -137,6 +140,8 @@ extension NSImage {
             return pinched(intensity: clamped, settings: settings)
         case .spherize:
             return spherized(intensity: clamped, settings: settings)
+        case .lensCorrection:
+            return lensCorrected(intensity: clamped, settings: settings)
         case .liquifyPush:
             return liquifyPushed(intensity: clamped, settings: settings)
         case .liquifyTwirl:
@@ -901,6 +906,36 @@ extension NSImage {
             let sourceDistance = radius * (normalizedDistance + abs(amount) * (targetDistance - normalizedDistance))
             let sourceX = centerX + dx / distance * sourceDistance
             let sourceY = centerY + dy / distance * sourceDistance
+            return Self.samplePixel(
+                x: sourceX,
+                y: sourceY,
+                width: width,
+                height: height,
+                pixels: pixels,
+                bytesPerRow: bytesPerRow,
+                bytesPerPixel: bytesPerPixel
+            )
+        }
+    }
+
+    private func lensCorrected(intensity: Double, settings: ImageEditorFilterSettings) -> NSImage? {
+        let clampedIntensity = max(0, min(1, intensity))
+        guard clampedIntensity > 0 else { return self }
+        let distortion = settings.normalized().lensDistortion * clampedIntensity
+        guard abs(distortion) > 0.000_1 else { return self }
+
+        return pixelSampledFromBuffer { x, y, width, height, pixels, bytesPerRow, bytesPerPixel in
+            let centerX = Double(max(width - 1, 1)) / 2
+            let centerY = Double(max(height - 1, 1)) / 2
+            let halfWidth = max(centerX, 1)
+            let halfHeight = max(centerY, 1)
+            let normalizedX = (Double(x) - centerX) / halfWidth
+            let normalizedY = (Double(y) - centerY) / halfHeight
+            let radiusSquared = normalizedX * normalizedX + normalizedY * normalizedY
+            let radialScale = max(0.25, 1 + distortion * radiusSquared * 0.55)
+            let sourceX = centerX + normalizedX * halfWidth * radialScale
+            let sourceY = centerY + normalizedY * halfHeight * radialScale
+
             return Self.samplePixel(
                 x: sourceX,
                 y: sourceY,

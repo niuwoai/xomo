@@ -4113,6 +4113,7 @@ final class XomoAutomationRegistry {
             case "rippleFrequency": viewModel.filterRippleFrequency = try numericSetting(value, key: key)
             case "pinchAmount": viewModel.filterPinchAmount = try numericSetting(value, key: key)
             case "spherizeAmount": viewModel.filterSpherizeAmount = try numericSetting(value, key: key)
+            case "lensDistortion": viewModel.filterLensDistortion = try numericSetting(value, key: key)
             default: throw XomoAutomationCallError.invalidArgument("Unknown filter setting: \(key)")
             }
         }
@@ -5360,7 +5361,8 @@ private extension XomoAutomationRegistry {
         "rippleAmount": XomoAutomationSchema.number(description: "Ripple amount"),
         "rippleFrequency": XomoAutomationSchema.number(description: "Ripple frequency"),
         "pinchAmount": XomoAutomationSchema.number(description: "Pinch amount"),
-        "spherizeAmount": XomoAutomationSchema.number(description: "Spherize amount")
+        "spherizeAmount": XomoAutomationSchema.number(description: "Spherize amount"),
+        "lensDistortion": XomoAutomationSchema.number(description: "Lens distortion correction")
     ])
 
     static func idBoolProperties(key: String) -> [String: XomoJSONValue] {

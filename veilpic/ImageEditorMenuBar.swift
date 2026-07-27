@@ -1586,6 +1586,9 @@ extension ImageEditorView {
             Button(ImageEditorFilter.spherize.title) {
                 viewModel.selectFilter(.spherize)
             }
+            Button(ImageEditorFilter.lensCorrection.title) {
+                viewModel.selectFilter(.lensCorrection)
+            }
             Button(ImageEditorFilter.vignette.title) {
                 viewModel.selectFilter(.vignette)
             }

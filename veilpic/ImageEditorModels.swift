@@ -1738,6 +1738,7 @@ enum ImageEditorFilter: String, CaseIterable, Identifiable {
     case ripple
     case pinch
     case spherize
+    case lensCorrection
     case liquifyPush
     case liquifyTwirl
     case liquifyPuckerBloat
@@ -1860,6 +1861,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
     var rippleFrequency: Double = 0.25
     var pinchAmount: Double = 0.5
     var spherizeAmount: Double = 0.5
+    var lensDistortion: Double = 0.35
 
     init(
         gaussianBlurRadius: Double? = nil,
@@ -1876,7 +1878,8 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         rippleAmount: Double = 0.5,
         rippleFrequency: Double = 0.25,
         pinchAmount: Double = 0.5,
-        spherizeAmount: Double = 0.5
+        spherizeAmount: Double = 0.5,
+        lensDistortion: Double = 0.35
     ) {
         self.gaussianBlurRadius = gaussianBlurRadius
         self.unsharpRadius = unsharpRadius
@@ -1893,6 +1896,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         self.rippleFrequency = rippleFrequency
         self.pinchAmount = pinchAmount
         self.spherizeAmount = spherizeAmount
+        self.lensDistortion = lensDistortion
     }
 
     init(from decoder: Decoder) throws {
@@ -1912,6 +1916,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         rippleFrequency = try container.decodeIfPresent(Double.self, forKey: .rippleFrequency) ?? 0.25
         pinchAmount = try container.decodeIfPresent(Double.self, forKey: .pinchAmount) ?? 0.5
         spherizeAmount = try container.decodeIfPresent(Double.self, forKey: .spherizeAmount) ?? 0.5
+        lensDistortion = try container.decodeIfPresent(Double.self, forKey: .lensDistortion) ?? 0.35
     }
 
     func encode(to encoder: Encoder) throws {
@@ -1931,6 +1936,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         try container.encode(rippleFrequency, forKey: .rippleFrequency)
         try container.encode(pinchAmount, forKey: .pinchAmount)
         try container.encode(spherizeAmount, forKey: .spherizeAmount)
+        try container.encode(lensDistortion, forKey: .lensDistortion)
     }
 
     func normalized() -> ImageEditorFilterSettings {
@@ -1949,7 +1955,8 @@ struct ImageEditorFilterSettings: Equatable, Codable {
             rippleAmount: max(-1, min(1, rippleAmount)),
             rippleFrequency: max(0, min(1, rippleFrequency)),
             pinchAmount: max(-1, min(1, pinchAmount)),
-            spherizeAmount: max(-1, min(1, spherizeAmount))
+            spherizeAmount: max(-1, min(1, spherizeAmount)),
+            lensDistortion: max(-1, min(1, lensDistortion))
         )
     }
 
@@ -1969,6 +1976,7 @@ struct ImageEditorFilterSettings: Equatable, Codable {
         case rippleFrequency
         case pinchAmount
         case spherizeAmount
+        case lensDistortion
     }
 }
 

@@ -667,6 +667,7 @@
 "imageEditor.filter.ripple" = "波纹";
 "imageEditor.filter.pinch" = "挤压";
 "imageEditor.filter.spherize" = "球面化";
+"imageEditor.filter.lensCorrection" = "镜头校正";
 "imageEditor.filter.liquifyPush" = "液化推移";
 "imageEditor.filter.liquifyTwirl" = "液化旋转";
 "imageEditor.filter.liquifyPuckerBloat" = "液化收缩/膨胀";
@@ -696,6 +697,8 @@
 "imageEditor.filter.pinchAmountValue" = "%d";
 "imageEditor.filter.spherizeAmount" = "数量";
 "imageEditor.filter.spherizeAmountValue" = "%d";
+"imageEditor.filter.lensDistortion" = "畸变校正";
+"imageEditor.filter.lensDistortionValue" = "%d";
 "imageEditor.shape.rectangle" = "矩形";
 "imageEditor.shape.ellipse" = "椭圆";
 "imageEditor.shape.path" = "路径";
@@ -841,6 +844,7 @@
 "imageEditor.properties.smartFilterRippleItem" = "%@ %d%% · 数量 %d · 频率 %d";
 "imageEditor.properties.smartFilterPinchItem" = "%@ %d%% · 数量 %d";
 "imageEditor.properties.smartFilterSpherizeItem" = "%@ %d%% · 数量 %d";
+"imageEditor.properties.smartFilterLensCorrectionItem" = "%@ %d%% · 畸变 %d";
 "imageEditor.properties.smartFilterDisabled" = "%@（已关闭）";
 "imageEditor.properties.smartFilterSeparator" = " · ";
 "imageEditor.properties.textPlaceholder" = "输入要添加的文字";
