@@ -112,6 +112,8 @@ final class XomoAutomationRegistry {
             try createLayer(arguments, viewModel: viewModel)
         case "xomo.layer.solid_color_fill_settings":
             return try solidColorFillSettingsAction(arguments, viewModel: viewModel)
+        case "xomo.layer.gradient_fill_settings":
+            return try gradientFillSettingsAction(arguments, viewModel: viewModel)
         case "xomo.layer.pattern_fill_settings":
             return try patternFillSettingsAction(arguments, viewModel: viewModel)
         case "xomo.layer.delete":
@@ -4750,6 +4752,29 @@ private extension XomoAutomationRegistry {
             "red": XomoAutomationSchema.number(description: "Red channel from 0 to 1"),
             "green": XomoAutomationSchema.number(description: "Green channel from 0 to 1"),
             "blue": XomoAutomationSchema.number(description: "Blue channel from 0 to 1")
+        ], required: ["action"]),
+        tool("xomo.layer.gradient_fill_settings", "Read or replace the complete settings of selected gradient-fill layers, including optional ordered multi-color stops, while skipping locked and ineligible layers.", [
+            "action": XomoAutomationSchema.string(description: "Gradient-fill settings action", values: ["get", "set"]),
+            "preset": XomoAutomationSchema.string(description: "Gradient preset", values: ImageEditorGradientFillPreset.allCases.map(\.rawValue)),
+            "style": XomoAutomationSchema.string(description: "Gradient style", values: ImageEditorGradientFillStyle.allCases.map(\.rawValue)),
+            "reverse": XomoAutomationSchema.boolean(description: "Reverse the gradient direction"),
+            "angle": XomoAutomationSchema.number(description: "Gradient angle from -180 to 180 degrees"),
+            "scale": XomoAutomationSchema.number(description: "Gradient span scale from 0.25 to 4"),
+            "startColor": shapeColorSchema,
+            "endColor": shapeColorSchema,
+            "stops": .object([
+                "type": .string("array"),
+                "description": .string("Optional ordered 2 to 16 color stops spanning positions 0 through 1"),
+                "items": XomoAutomationSchema.object(
+                    properties: [
+                        "position": XomoAutomationSchema.number(description: "Normalized position from 0 to 1"),
+                        "color": shapeColorSchema
+                    ],
+                    required: ["position", "color"]
+                ),
+                "minItems": .number(2),
+                "maxItems": .number(16)
+            ])
         ], required: ["action"]),
         tool("xomo.layer.pattern_fill_settings", "Read or replace the complete settings of selected pattern-fill layers, skipping locked and ineligible layers and reporting the actual updated count.", [
             "action": XomoAutomationSchema.string(description: "Pattern-fill settings action", values: ["get", "set"]),

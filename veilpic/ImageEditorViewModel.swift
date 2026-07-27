@@ -6513,7 +6513,20 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     private func currentGradientFillContent() -> ImageEditorGradientFillContent {
-        ImageEditorGradientFillContent(
+        var retainedColorStops: [ImageEditorGradientColorStop]?
+        if selectedGradientFillPreset == .custom,
+           var stops = document.selectedLayer?.gradientFillContent?.normalized().colorStops,
+           stops.count >= 2 {
+            stops[0].red = gradientFillStartRed
+            stops[0].green = gradientFillStartGreen
+            stops[0].blue = gradientFillStartBlue
+            let lastIndex = stops.count - 1
+            stops[lastIndex].red = gradientFillEndRed
+            stops[lastIndex].green = gradientFillEndGreen
+            stops[lastIndex].blue = gradientFillEndBlue
+            retainedColorStops = stops
+        }
+        return ImageEditorGradientFillContent(
             preset: selectedGradientFillPreset,
             style: selectedGradientFillStyle,
             reverse: gradientFillReverse,
@@ -6524,7 +6537,8 @@ final class ImageEditorViewModel: ObservableObject {
             startBlue: gradientFillStartBlue,
             endRed: gradientFillEndRed,
             endGreen: gradientFillEndGreen,
-            endBlue: gradientFillEndBlue
+            endBlue: gradientFillEndBlue,
+            colorStops: retainedColorStops
         ).normalized()
     }
 

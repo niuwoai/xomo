@@ -42,7 +42,7 @@ struct XomoAutomationTests {
             Issue.record("Expected tool array")
             return
         }
-        #expect(tools.count == 135)
+        #expect(tools.count == 136)
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.layer.list")
@@ -1986,6 +1986,143 @@ struct XomoAutomationTests {
             ]
         ))
         #expect(!missingChannelResponse.ok)
+    }
+
+    @Test func registryReadsAndUpdatesMultiStopGradientFillLayersWithoutFlatteningStops() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        defer { registry.unregister(viewModel) }
+
+        func color(_ red: Double, _ green: Double, _ blue: Double) -> XomoJSONValue {
+            .object([
+                "red": .number(red),
+                "green": .number(green),
+                "blue": .number(blue)
+            ])
+        }
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        let settingsTool = try #require(
+            automationTool(named: "xomo.layer.gradient_fill_settings", in: toolsResponse)
+        )
+        let properties = try #require(
+            settingsTool["inputSchema"]?.objectValue?["properties"]?.objectValue
+        )
+        #expect(
+            properties["preset"]?.objectValue?["enum"]?.arrayValue
+                == ImageEditorGradientFillPreset.allCases.map { .string($0.rawValue) }
+        )
+        #expect(
+            properties["style"]?.objectValue?["enum"]?.arrayValue
+                == ImageEditorGradientFillStyle.allCases.map { .string($0.rawValue) }
+        )
+        #expect(properties["stops"]?.objectValue?["minItems"] == .number(2))
+        #expect(properties["stops"]?.objectValue?["maxItems"] == .number(16))
+
+        viewModel.selectedGradientFillPreset = .blackWhite
+        viewModel.selectedGradientFillStyle = .linear
+        viewModel.addGradientFillLayer()
+        let editableID = try #require(viewModel.document.selectedLayerID)
+
+        viewModel.selectedGradientFillPreset = .sunset
+        viewModel.selectedGradientFillStyle = .radial
+        viewModel.addGradientFillLayer()
+        let lockedID = try #require(viewModel.document.selectedLayerID)
+        viewModel.toggleLayerLock(lockedID)
+        viewModel.selectLayer(editableID, extendingSelection: true)
+
+        let initialGetResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.gradient_fill_settings",
+            arguments: ["action": .string("get")]
+        ))
+        #expect(initialGetResponse.ok)
+        #expect(initialGetResponse.result?.arrayValue?.count == 2)
+
+        let historyCount = viewModel.document.history.count
+        let setArguments: [String: XomoJSONValue] = [
+            "action": .string("set"),
+            "preset": .string(ImageEditorGradientFillPreset.custom.rawValue),
+            "style": .string(ImageEditorGradientFillStyle.diamond.rawValue),
+            "reverse": .bool(true),
+            "angle": .number(35),
+            "scale": .number(1.75),
+            "startColor": color(0.10, 0.20, 0.30),
+            "endColor": color(0.80, 0.90, 1),
+            "stops": .array([
+                .object(["position": .number(0), "color": color(0.10, 0.20, 0.30)]),
+                .object(["position": .number(0.45), "color": color(0.40, 0.50, 0.60)]),
+                .object(["position": .number(1), "color": color(0.80, 0.90, 1)])
+            ])
+        ]
+        let setResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.gradient_fill_settings",
+            arguments: setArguments
+        ))
+        #expect(setResponse.ok)
+        #expect(setResponse.result?.objectValue?["updatedLayerCount"] == .number(1))
+        let editable = try #require(
+            viewModel.document.layers.first(where: { $0.id == editableID })?.gradientFillContent?.normalized()
+        )
+        let locked = try #require(
+            viewModel.document.layers.first(where: { $0.id == lockedID })?.gradientFillContent?.normalized()
+        )
+        #expect(editable.preset == .custom)
+        #expect(editable.style == .diamond)
+        #expect(editable.reverse)
+        #expect(editable.angle == 35)
+        #expect(editable.scale == 1.75)
+        #expect(editable.colorStops?.count == 3)
+        #expect(editable.colorStops?[1].position == 0.45)
+        #expect(editable.colorStops?[1].green == 0.50)
+        #expect(locked.preset == .sunset)
+        #expect(locked.style == .radial)
+        #expect(locked.colorStops == nil)
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        let duplicateResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.gradient_fill_settings",
+            arguments: setArguments
+        ))
+        #expect(!duplicateResponse.ok)
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        let getResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.gradient_fill_settings",
+            arguments: ["action": .string("get")]
+        ))
+        let editableResult = getResponse.result?.arrayValue?.compactMap(\.objectValue).first {
+            $0["id"] == .string(editableID.uuidString)
+        }
+        #expect(getResponse.ok)
+        #expect(editableResult?["stops"]?.arrayValue?.count == 3)
+
+        var invalidArguments = setArguments
+        invalidArguments["stops"] = .array([
+            .object(["position": .number(0), "color": color(0, 0, 0)]),
+            .object(["position": .number(0.75), "color": color(0.50, 0.50, 0.50)]),
+            .object(["position": .number(0.50), "color": color(1, 1, 1)])
+        ])
+        let invalidResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.gradient_fill_settings",
+            arguments: invalidArguments
+        ))
+        #expect(!invalidResponse.ok)
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        viewModel.selectLayer(editableID)
+        viewModel.gradientFillStartRed = 0.95
+        viewModel.updateSelectedGradientFillLayer()
+        let retained = try #require(viewModel.document.selectedLayer?.gradientFillContent?.normalized())
+        #expect(retained.colorStops?.count == 3)
+        #expect(retained.colorStops?[0].red == 0.95)
+        #expect(retained.colorStops?[1].position == 0.45)
+        #expect(retained.colorStops?[1].green == 0.50)
     }
 
     @Test func registryReadsAndUpdatesSelectedPatternFillLayersWithActualCounts() throws {
