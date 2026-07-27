@@ -3388,7 +3388,7 @@ struct ImageEditorView: View {
             .font(.system(size: 11, weight: .medium).monospacedDigit())
             .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
         }
-        .frame(height: showsTitle ? 262 : 226)
+        .frame(height: showsTitle ? 292 : 256)
         .accessibilityIdentifier("image-editor-navigator-panel")
     }
 
@@ -3460,21 +3460,25 @@ struct ImageEditorView: View {
         VStack(alignment: .leading, spacing: 4) {
             Text(L10n.text("imageEditor.histogram.title"))
                 .font(.system(size: 10, weight: .semibold))
+            HStack(spacing: 4) {
+                ForEach(ImageEditorHistogramChannel.allCases) { channel in
+                    Button(channel.shortTitle) {
+                        viewModel.selectedHistogramChannel = channel
+                    }
+                    .buttonStyle(EditorSegmentButtonStyle(
+                        isSelected: viewModel.selectedHistogramChannel == channel
+                    ))
+                    .focusable(false)
+                    .xomoFocusEffectDisabled()
+                    .help(channel.title)
+                    .accessibilityLabel(channel.title)
+                    .accessibilityIdentifier("image-editor-histogram-channel-\(channel.rawValue)")
+                }
+            }
             HStack(alignment: .bottom, spacing: 1) {
                 ForEach(summary.bins) { bin in
                     ZStack(alignment: .bottom) {
-                        Rectangle()
-                            .fill(Color.white.opacity(0.20))
-                            .frame(height: max(1, 38 * bin.luminance))
-                        Rectangle()
-                            .fill(Color.red.opacity(0.55))
-                            .frame(height: max(1, 38 * bin.red))
-                        Rectangle()
-                            .fill(Color.green.opacity(0.45))
-                            .frame(height: max(1, 38 * bin.green))
-                        Rectangle()
-                            .fill(Color.blue.opacity(0.55))
-                            .frame(height: max(1, 38 * bin.blue))
+                        histogramBars(for: bin)
                     }
                     .frame(maxWidth: .infinity, minHeight: 38, maxHeight: 38, alignment: .bottom)
                 }
@@ -3484,6 +3488,38 @@ struct ImageEditorView: View {
             .background(Color.black.opacity(0.18))
             .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
             .accessibilityLabel(L10n.text("imageEditor.histogram.title"))
+        }
+    }
+
+    @ViewBuilder
+    private func histogramBars(for bin: ImageEditorHistogramBin) -> some View {
+        switch viewModel.selectedHistogramChannel {
+        case .rgb:
+            Rectangle()
+                .fill(Color.red.opacity(0.55))
+                .frame(height: max(1, 38 * bin.red))
+            Rectangle()
+                .fill(Color.green.opacity(0.45))
+                .frame(height: max(1, 38 * bin.green))
+            Rectangle()
+                .fill(Color.blue.opacity(0.55))
+                .frame(height: max(1, 38 * bin.blue))
+        case .luminance:
+            Rectangle()
+                .fill(Color.white.opacity(0.62))
+                .frame(height: max(1, 38 * bin.luminance))
+        case .red:
+            Rectangle()
+                .fill(Color.red.opacity(0.72))
+                .frame(height: max(1, 38 * bin.red))
+        case .green:
+            Rectangle()
+                .fill(Color.green.opacity(0.62))
+                .frame(height: max(1, 38 * bin.green))
+        case .blue:
+            Rectangle()
+                .fill(Color.blue.opacity(0.72))
+                .frame(height: max(1, 38 * bin.blue))
         }
     }
 

@@ -997,13 +997,52 @@ struct ImageEditorChannelTests {
         #expect(approximately(summary.clippedHighlightRatio, 0.25, tolerance: 0.01))
     }
 
+    @Test func histogramChannelsExposeTheirOwnBinsAndAverages() async throws {
+        let summary = ImageEditorHistogramSummary(
+            bins: [
+                ImageEditorHistogramBin(
+                    index: 0,
+                    red: 0.25,
+                    green: 0.50,
+                    blue: 0.75,
+                    luminance: 0.45
+                )
+            ],
+            pixelCount: 4,
+            averageRed: 64,
+            averageGreen: 128,
+            averageBlue: 192,
+            averageLuminance: 116,
+            clippedShadowPixels: 1,
+            clippedHighlightPixels: 1
+        )
+        let bin = try #require(summary.bins.first)
+
+        #expect(ImageEditorHistogramChannel.allCases.map(\.rawValue) == [
+            "rgb", "luminance", "red", "green", "blue"
+        ])
+        #expect(approximately(ImageEditorHistogramChannel.rgb.value(in: bin), 0.75, tolerance: 0.0001))
+        #expect(approximately(ImageEditorHistogramChannel.luminance.value(in: bin), 0.45, tolerance: 0.0001))
+        #expect(approximately(ImageEditorHistogramChannel.red.value(in: bin), 0.25, tolerance: 0.0001))
+        #expect(approximately(ImageEditorHistogramChannel.green.value(in: bin), 0.50, tolerance: 0.0001))
+        #expect(approximately(ImageEditorHistogramChannel.blue.value(in: bin), 0.75, tolerance: 0.0001))
+        #expect(approximately(ImageEditorHistogramChannel.rgb.average(in: summary), 116, tolerance: 0.0001))
+        #expect(approximately(ImageEditorHistogramChannel.red.average(in: summary), 64, tolerance: 0.0001))
+        #expect(approximately(ImageEditorHistogramChannel.green.average(in: summary), 128, tolerance: 0.0001))
+        #expect(approximately(ImageEditorHistogramChannel.blue.average(in: summary), 192, tolerance: 0.0001))
+    }
+
     @Test func viewModelExposesHistogramReadoutsForNavigatorPanel() async throws {
         let image = grayscaleHistogramImage()
         let viewModel = ImageEditorViewModel(sourceName: "histogram.png", image: image) { _ in }
 
-        #expect(viewModel.histogramSummary.bins.count == 32)
-        #expect(viewModel.histogramAverageText.contains("128"))
-        #expect(viewModel.histogramLuminanceText.contains("128"))
+        #expect(viewModel.selectedHistogramChannel == .rgb)
+        viewModel.selectedHistogramChannel = .red
+        #expect(viewModel.selectedHistogramChannel == .red)
+        let summary = viewModel.histogramSummary
+        #expect(summary.bins.count == 32)
+        #expect(viewModel.histogramAverageText.contains("\(Int(summary.averageRed.rounded()))"))
+        #expect(viewModel.histogramLuminanceText.contains("\(Int(summary.averageLuminance.rounded()))"))
         #expect(viewModel.histogramClippingText.contains("25"))
     }
 

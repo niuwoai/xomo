@@ -51,7 +51,7 @@ final class XomoAutomationRegistry {
     }
 
     private func statusResult() -> XomoJSONValue {
-        .object([
+        return .object([
             "app": .string("Xomo"),
             "version": .string(AppVersion.current),
             "editorActive": .bool(activeViewModel != nil),
@@ -68,7 +68,7 @@ final class XomoAutomationRegistry {
         case "xomo.app.status":
             return statusResult()
         case "xomo.document.get":
-            return documentResult(viewModel)
+            return try documentResult(arguments, viewModel: viewModel)
         case "xomo.document.create":
             try createDocument(arguments, viewModel: viewModel)
         case "xomo.project.export":
@@ -523,8 +523,22 @@ final class XomoAutomationRegistry {
         return actionResult(viewModel)
     }
 
-    private func documentResult(_ viewModel: ImageEditorViewModel) -> XomoJSONValue {
-        .object([
+    private func documentResult(
+        _ arguments: [String: XomoJSONValue],
+        viewModel: ImageEditorViewModel
+    ) throws -> XomoJSONValue {
+        let histogramChannel: ImageEditorHistogramChannel
+        if let rawValue = arguments["histogramChannel"]?.stringValue {
+            guard let channel = ImageEditorHistogramChannel(rawValue: rawValue) else {
+                throw XomoAutomationCallError.invalidArgument("Unknown histogram channel: \(rawValue)")
+            }
+            histogramChannel = channel
+        } else {
+            histogramChannel = viewModel.selectedHistogramChannel
+        }
+        let histogram = viewModel.histogramSummary
+
+        return .object([
             "name": .string(viewModel.document.sourceName),
             "width": .number(viewModel.document.canvasSize.width),
             "height": .number(viewModel.document.canvasSize.height),
@@ -537,6 +551,20 @@ final class XomoAutomationRegistry {
                 y: viewModel.canvasOffset.height
             )),
             "zoom": .number(viewModel.zoom),
+            "histogram": .object([
+                "channel": .string(histogramChannel.rawValue),
+                "pixelCount": .number(Double(histogram.pixelCount)),
+                "average": .number(histogramChannel.average(in: histogram)),
+                "averageRed": .number(histogram.averageRed),
+                "averageGreen": .number(histogram.averageGreen),
+                "averageBlue": .number(histogram.averageBlue),
+                "averageLuminance": .number(histogram.averageLuminance),
+                "clippedShadowRatio": .number(histogram.clippedShadowRatio),
+                "clippedHighlightRatio": .number(histogram.clippedHighlightRatio),
+                "bins": .array(histogram.bins.map {
+                    .number(histogramChannel.value(in: $0))
+                })
+            ]),
             "status": .string(viewModel.statusText)
         ])
     }
@@ -4679,7 +4707,12 @@ enum XomoAutomationCallError: LocalizedError {
 private extension XomoAutomationRegistry {
     static let tools: [XomoAutomationToolDefinition] = [
         tool("xomo.app.status", "Get Xomo app, version, active editor, and capability status."),
-        tool("xomo.document.get", "Inspect the active Xomo document and canvas."),
+        tool("xomo.document.get", "Inspect the active Xomo document, canvas, and histogram.", [
+            "histogramChannel": XomoAutomationSchema.string(
+                description: "Histogram channel to inspect",
+                values: ImageEditorHistogramChannel.allCases.map(\.rawValue)
+            )
+        ]),
         tool("xomo.document.create", "Replace the active document with a new preset or custom canvas.", [
             "preset": XomoAutomationSchema.string(description: "Canvas preset", values: XomoCanvasPreset.allCases.map(\.rawValue)),
             "width": XomoAutomationSchema.number(description: "Optional custom width"),

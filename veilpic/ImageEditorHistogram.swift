@@ -8,6 +8,52 @@
 import AppKit
 import CoreGraphics
 
+enum ImageEditorHistogramChannel: String, CaseIterable, Identifiable {
+    case rgb
+    case luminance
+    case red
+    case green
+    case blue
+
+    var id: String { rawValue }
+
+    var title: String {
+        L10n.text("imageEditor.histogram.channel.\(rawValue)")
+    }
+
+    var shortTitle: String {
+        L10n.text("imageEditor.histogram.channel.\(rawValue).short")
+    }
+
+    func value(in bin: ImageEditorHistogramBin) -> Double {
+        switch self {
+        case .rgb:
+            return max(bin.red, bin.green, bin.blue)
+        case .luminance:
+            return bin.luminance
+        case .red:
+            return bin.red
+        case .green:
+            return bin.green
+        case .blue:
+            return bin.blue
+        }
+    }
+
+    func average(in summary: ImageEditorHistogramSummary) -> Double {
+        switch self {
+        case .rgb, .luminance:
+            return summary.averageLuminance
+        case .red:
+            return summary.averageRed
+        case .green:
+            return summary.averageGreen
+        case .blue:
+            return summary.averageBlue
+        }
+    }
+}
+
 struct ImageEditorHistogramBin: Equatable, Identifiable {
     let index: Int
     let red: Double

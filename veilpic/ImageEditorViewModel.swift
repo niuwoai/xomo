@@ -331,6 +331,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var filterPinchAmount: Double = 0.5
     @Published var filterSpherizeAmount: Double = 0.5
     @Published var filterLensDistortion: Double = 0.35
+    @Published var selectedHistogramChannel: ImageEditorHistogramChannel = .rgb
     @Published var selectedChannelPreview: ImageEditorChannelPreview = .composite
     @Published var selectedAlphaChannelID: UUID?
     @Published var previewedAlphaChannelID: UUID?

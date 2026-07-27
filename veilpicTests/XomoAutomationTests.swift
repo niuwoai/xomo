@@ -42,7 +42,7 @@ struct XomoAutomationTests {
             Issue.record("Expected tool array")
             return
         }
-        #expect(tools.count == 137)
+        #expect(tools.count == 138)
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.layer.list")
@@ -57,6 +57,15 @@ struct XomoAutomationTests {
         #expect(objectSelectTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["mode"]?.objectValue?["enum"] == .array([
             .string("auto"), .string("component"), .string("deep")
         ]))
+        let documentTool = try #require(tools.compactMap { tool -> [String: XomoJSONValue]? in
+            guard case .object(let value) = tool else { return nil }
+            return value
+        }.first { $0["name"] == .string("xomo.document.get") })
+        #expect(
+            documentTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["histogramChannel"]?
+                .objectValue?["enum"]?.arrayValue
+                == ImageEditorHistogramChannel.allCases.map { .string($0.rawValue) }
+        )
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.channel.action")
@@ -1840,6 +1849,40 @@ struct XomoAutomationTests {
         ))
         #expect(renameResponse.ok)
         #expect(viewModel.document.selectedLayer?.name == "MCP Group")
+    }
+
+    @Test func registryInspectsRequestedHistogramChannelWithoutMutatingHistory() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        defer { registry.unregister(viewModel) }
+        let historyCount = viewModel.document.history.count
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.document.get",
+            arguments: ["histogramChannel": .string("red")]
+        ))
+
+        #expect(response.ok)
+        let result = try #require(response.result?.objectValue)
+        let histogram = try #require(result["histogram"]?.objectValue)
+        #expect(histogram["channel"] == .string("red"))
+        #expect(histogram["pixelCount"] == .number(Double(viewModel.histogramSummary.pixelCount)))
+        #expect(histogram["average"] == .number(viewModel.histogramSummary.averageRed))
+        #expect(histogram["bins"]?.arrayValue?.count == 32)
+        #expect(histogram["clippedShadowRatio"]?.doubleValue != nil)
+        #expect(histogram["clippedHighlightRatio"]?.doubleValue != nil)
+        #expect(viewModel.document.history.count == historyCount)
+
+        let invalidResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.document.get",
+            arguments: ["histogramChannel": .string("cyan")]
+        ))
+        #expect(!invalidResponse.ok)
+        #expect(invalidResponse.error?.contains("Unknown histogram channel") == true)
+        #expect(viewModel.document.history.count == historyCount)
     }
 
     @Test func registryCreatesConfiguredPatternFillLayersWithNormalizedValues() throws {

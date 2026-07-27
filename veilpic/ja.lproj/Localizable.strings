@@ -705,6 +705,16 @@
 "imageEditor.panel.navigator" = "ナビ / 情報";
 "imageEditor.navigator.preview" = "ナビゲーターのキャンバス表示領域";
 "imageEditor.histogram.title" = "ヒストグラム";
+"imageEditor.histogram.channel.rgb" = "RGB チャンネル";
+"imageEditor.histogram.channel.rgb.short" = "RGB";
+"imageEditor.histogram.channel.luminance" = "輝度";
+"imageEditor.histogram.channel.luminance.short" = "L";
+"imageEditor.histogram.channel.red" = "赤チャンネル";
+"imageEditor.histogram.channel.red.short" = "R";
+"imageEditor.histogram.channel.green" = "緑チャンネル";
+"imageEditor.histogram.channel.green.short" = "G";
+"imageEditor.histogram.channel.blue" = "青チャンネル";
+"imageEditor.histogram.channel.blue.short" = "B";
 "imageEditor.histogram.average" = "平均 RGB：%d / %d / %d";
 "imageEditor.histogram.luminance" = "平均輝度：%d";
 "imageEditor.histogram.clipping" = "クリップ 暗/明：%d%% / %d%%";

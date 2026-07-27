@@ -705,6 +705,16 @@
 "imageEditor.panel.navigator" = "导航器 / 信息";
 "imageEditor.navigator.preview" = "导航器画布视口";
 "imageEditor.histogram.title" = "直方图";
+"imageEditor.histogram.channel.rgb" = "RGB 通道";
+"imageEditor.histogram.channel.rgb.short" = "RGB";
+"imageEditor.histogram.channel.luminance" = "亮度通道";
+"imageEditor.histogram.channel.luminance.short" = "明";
+"imageEditor.histogram.channel.red" = "红色通道";
+"imageEditor.histogram.channel.red.short" = "R";
+"imageEditor.histogram.channel.green" = "绿色通道";
+"imageEditor.histogram.channel.green.short" = "G";
+"imageEditor.histogram.channel.blue" = "蓝色通道";
+"imageEditor.histogram.channel.blue.short" = "B";
 "imageEditor.histogram.average" = "平均 RGB：%d / %d / %d";
 "imageEditor.histogram.luminance" = "平均亮度：%d";
 "imageEditor.histogram.clipping" = "裁切 暗/亮：%d%% / %d%%";
