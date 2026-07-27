@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.12.0-rc531 - 2026-07-27
+
+### Added
+- MCP/CLI 新增 `xomo.layer.solid_color_fill_settings`，可读取当前选中的纯色填充层，或一次批量替换完整 RGB 颜色。
+- 设置操作跳过锁定层和非纯色填充层，返回真实 `updatedLayerCount`；颜色继续使用界面与渲染模型的 0–1 归一化。
+
+### Fixed
+- 重复设置不再制造多余 Undo/History；缺少颜色通道或没有可编辑目标时明确失败。
+
+### Verification
+- MCP schema、读取、批量更新、锁定跳过、颜色归一化、重复空操作与缺参定向 Xcode 测试 1/1 通过；CLI 2/2、发布契约 4/4（10 个断言）通过。
+- 下一次常规完整构建、完整冒烟和 `/Applications` 覆盖门禁仍为 rc560。
+
 ## 2.12.0-rc530 - 2026-07-27
 
 ### Added

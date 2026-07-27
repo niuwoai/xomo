@@ -42,7 +42,7 @@ struct XomoAutomationTests {
             Issue.record("Expected tool array")
             return
         }
-        #expect(tools.count == 134)
+        #expect(tools.count == 135)
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.layer.list")
@@ -1895,6 +1895,97 @@ struct XomoAutomationTests {
         ))
         #expect(!invalidResponse.ok)
         #expect(viewModel.document.layers.count == layerCount)
+    }
+
+    @Test func registryReadsAndUpdatesSelectedSolidColorFillLayersWithActualCounts() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        defer { registry.unregister(viewModel) }
+
+        let toolsResponse = registry.execute(request(operation: "tools"))
+        let settingsTool = try #require(
+            automationTool(named: "xomo.layer.solid_color_fill_settings", in: toolsResponse)
+        )
+        let properties = try #require(
+            settingsTool["inputSchema"]?.objectValue?["properties"]?.objectValue
+        )
+        #expect(
+            properties["action"]?.objectValue?["enum"]?.arrayValue
+                == [.string("get"), .string("set")]
+        )
+        #expect(properties["red"]?.objectValue?["type"] == .string("number"))
+        #expect(properties["green"]?.objectValue?["type"] == .string("number"))
+        #expect(properties["blue"]?.objectValue?["type"] == .string("number"))
+
+        viewModel.solidColorFillRed = 0.10
+        viewModel.solidColorFillGreen = 0.20
+        viewModel.solidColorFillBlue = 0.30
+        viewModel.addSolidColorFillLayer()
+        let editableID = try #require(viewModel.document.selectedLayerID)
+
+        viewModel.solidColorFillRed = 0.70
+        viewModel.solidColorFillGreen = 0.80
+        viewModel.solidColorFillBlue = 0.90
+        viewModel.addSolidColorFillLayer()
+        let lockedID = try #require(viewModel.document.selectedLayerID)
+        viewModel.toggleLayerLock(lockedID)
+        viewModel.selectLayer(editableID, extendingSelection: true)
+
+        let getResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.solid_color_fill_settings",
+            arguments: ["action": .string("get")]
+        ))
+        #expect(getResponse.ok)
+        #expect(getResponse.result?.arrayValue?.count == 2)
+
+        let historyCount = viewModel.document.history.count
+        let setArguments: [String: XomoJSONValue] = [
+            "action": .string("set"),
+            "red": .number(2),
+            "green": .number(-1),
+            "blue": .number(0.60)
+        ]
+        let setResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.solid_color_fill_settings",
+            arguments: setArguments
+        ))
+        #expect(setResponse.ok)
+        #expect(setResponse.result?.objectValue?["updatedLayerCount"] == .number(1))
+        let editable = try #require(
+            viewModel.document.layers.first(where: { $0.id == editableID })?.solidColorFillContent?.normalized()
+        )
+        let locked = try #require(
+            viewModel.document.layers.first(where: { $0.id == lockedID })?.solidColorFillContent?.normalized()
+        )
+        #expect(editable.red == 1)
+        #expect(editable.green == 0)
+        #expect(editable.blue == 0.60)
+        #expect(locked.red == 0.70)
+        #expect(locked.green == 0.80)
+        #expect(locked.blue == 0.90)
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        let duplicateResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.solid_color_fill_settings",
+            arguments: setArguments
+        ))
+        #expect(!duplicateResponse.ok)
+        #expect(viewModel.document.history.count == historyCount + 1)
+
+        let missingChannelResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.solid_color_fill_settings",
+            arguments: [
+                "action": .string("set"),
+                "red": .number(0),
+                "green": .number(0)
+            ]
+        ))
+        #expect(!missingChannelResponse.ok)
     }
 
     @Test func registryReadsAndUpdatesSelectedPatternFillLayersWithActualCounts() throws {

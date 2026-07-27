@@ -110,6 +110,8 @@ final class XomoAutomationRegistry {
             viewModel.selectLayer(id, extendingSelection: arguments["extend"]?.boolValue ?? false)
         case "xomo.layer.create":
             try createLayer(arguments, viewModel: viewModel)
+        case "xomo.layer.solid_color_fill_settings":
+            return try solidColorFillSettingsAction(arguments, viewModel: viewModel)
         case "xomo.layer.pattern_fill_settings":
             return try patternFillSettingsAction(arguments, viewModel: viewModel)
         case "xomo.layer.delete":
@@ -4651,7 +4653,7 @@ final class XomoAutomationRegistry {
     }
 }
 
-private enum XomoAutomationCallError: LocalizedError {
+enum XomoAutomationCallError: LocalizedError {
     case invalidArgument(String)
     case notFound(String)
     case operationFailed(String)
@@ -4743,6 +4745,12 @@ private extension XomoAutomationRegistry {
             "offsetX": XomoAutomationSchema.number(description: "Optional pattern-fill horizontal phase in pixels"),
             "offsetY": XomoAutomationSchema.number(description: "Optional pattern-fill vertical phase in pixels")
         ]),
+        tool("xomo.layer.solid_color_fill_settings", "Read or replace the RGB color of selected solid-color-fill layers, skipping locked and ineligible layers and reporting the actual updated count.", [
+            "action": XomoAutomationSchema.string(description: "Solid-color-fill settings action", values: ["get", "set"]),
+            "red": XomoAutomationSchema.number(description: "Red channel from 0 to 1"),
+            "green": XomoAutomationSchema.number(description: "Green channel from 0 to 1"),
+            "blue": XomoAutomationSchema.number(description: "Blue channel from 0 to 1")
+        ], required: ["action"]),
         tool("xomo.layer.pattern_fill_settings", "Read or replace the complete settings of selected pattern-fill layers, skipping locked and ineligible layers and reporting the actual updated count.", [
             "action": XomoAutomationSchema.string(description: "Pattern-fill settings action", values: ["get", "set"]),
             "patternKind": XomoAutomationSchema.string(description: "Pattern kind", values: ImageEditorPatternOverlayKind.allCases.map(\.rawValue)),
