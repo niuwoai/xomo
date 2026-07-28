@@ -1909,6 +1909,7 @@ extension ImageEditorView {
                 viewModel.statusText = [
                     viewModel.pointerColorInfoText,
                     viewModel.selectionBoundsInfoText,
+                    viewModel.selectedObjectBoundsInfoText,
                     viewModel.sizeText
                 ].joined(separator: " | ")
             }

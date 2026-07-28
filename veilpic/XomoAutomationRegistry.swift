@@ -95,6 +95,8 @@ final class XomoAutomationRegistry {
             viewModel.selectTool(tool)
         case "xomo.layer.list":
             return try layersResult(arguments, viewModel: viewModel)
+        case "xomo.layer.selection_bounds":
+            return selectedLayerBoundsResult(viewModel)
         case "xomo.object.select_at":
             return try selectObjectAtPoint(arguments, viewModel: viewModel)
         case "xomo.figma.bindings":
@@ -950,6 +952,40 @@ final class XomoAutomationRegistry {
             "component": viewModel.selectedXomoObjectKind.map {
                 .string($0.rawValue)
             } ?? .null,
+            "bounds": .object([
+                "x": .number(bounds.minX),
+                "y": .number(bounds.minY),
+                "width": .number(bounds.width),
+                "height": .number(bounds.height)
+            ])
+        ])
+    }
+
+    private func selectedLayerBoundsResult(
+        _ viewModel: ImageEditorViewModel
+    ) -> XomoJSONValue {
+        let selectedLayerIDs = viewModel.document.selectedLayerIDs
+            .map(\.uuidString)
+            .sorted()
+        guard let bounds = (
+            viewModel.movingObjectPreviewFrame
+                ?? viewModel.selectedLayerTransformFrame
+        )?.standardized,
+              !bounds.isNull,
+              !bounds.isEmpty
+        else {
+            return .object([
+                "active": .bool(false),
+                "preview": .bool(false),
+                "selectedCount": .number(Double(selectedLayerIDs.count)),
+                "selectedLayerIds": .array(selectedLayerIDs.map(XomoJSONValue.string))
+            ])
+        }
+        return .object([
+            "active": .bool(true),
+            "preview": .bool(viewModel.movingObjectPreviewFrame != nil),
+            "selectedCount": .number(Double(selectedLayerIDs.count)),
+            "selectedLayerIds": .array(selectedLayerIDs.map(XomoJSONValue.string)),
             "bounds": .object([
                 "x": .number(bounds.minX),
                 "y": .number(bounds.minY),
@@ -5025,6 +5061,7 @@ private extension XomoAutomationRegistry {
         tool("xomo.layer.list", "List layers with hierarchy, bounds, visibility, locks, opacity, blend mode, preserved Figma variable bindings, and optional binding filters.", [
             "figmaBindings": XomoAutomationSchema.string(description: "Filter by preserved Figma variable bindings", values: ["all", "bound", "unbound"])
         ]),
+        tool("xomo.layer.selection_bounds", "Inspect the shared transform bounds of selected layers or component objects, including the lightweight live drag preview."),
         tool("xomo.object.select_at", "Select the frontmost visible canvas object at a point using the editor's alpha-aware component and layer hit testing.", [
             "x": XomoAutomationSchema.number(description: "Canvas x coordinate"),
             "y": XomoAutomationSchema.number(description: "Canvas y coordinate"),

@@ -467,6 +467,9 @@
 "imageEditor.info.pointer.coordinates.empty" = "X: —  Y: —";
 "imageEditor.info.selection.empty" = "Selection · X —  Y — · W —  H —";
 "imageEditor.info.selection.bounds" = "Selection · X %d  Y %d · W %d  H %d px";
+"imageEditor.info.object.empty" = "Object · X —  Y — · W —  H —";
+"imageEditor.info.object.bounds" = "Object · X %@  Y %@ · W %@  H %@ px";
+"imageEditor.info.objects.bounds" = "%d objects · X %@  Y %@ · W %@  H %@ px";
 "imageEditor.info.pointer.empty" = "Pointer · X —  Y — · —";
 "imageEditor.info.pointer.rgb" = "Pointer · X %d  Y %d · R %d  G %d  B %d  A %d";
 "imageEditor.info.pointer.hsb" = "Pointer · X %d  Y %d · H %d°  S %d%%  B %d%%  A %d%%";

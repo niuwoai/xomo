@@ -42,10 +42,14 @@ struct XomoAutomationTests {
             Issue.record("Expected tool array")
             return
         }
-        #expect(tools.count == 143)
+        #expect(tools.count == 144)
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.layer.list")
+        })
+        #expect(tools.contains { tool in
+            guard case .object(let value) = tool else { return false }
+            return value["name"] == .string("xomo.layer.selection_bounds")
         })
         let objectSelectTool = try #require(tools.compactMap { tool -> [String: XomoJSONValue]? in
             guard case .object(let value) = tool else { return nil }
@@ -1443,6 +1447,84 @@ struct XomoAutomationTests {
         ))
         #expect(!rejected.ok)
         #expect(rejected.error?.contains("Unknown object selection mode") == true)
+    }
+
+    @Test func registryReportsMultiObjectBoundsAndLiveMovePreview() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        defer { registry.unregister(viewModel) }
+
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 60, y: 80))
+        let firstID = try #require(viewModel.document.selectedLayerID)
+        let firstFrame = try #require(viewModel.selectedXomoObjectFrame)
+        viewModel.insertXomoComponent(.avatar, at: CGPoint(x: 220, y: 140))
+        let secondID = try #require(viewModel.document.selectedLayerID)
+        let secondFrame = try #require(viewModel.selectedXomoObjectFrame)
+        viewModel.selectLayer(firstID)
+        viewModel.selectLayer(secondID, extendingSelection: true)
+        let expectedBounds = firstFrame.union(secondFrame)
+        let historyCount = viewModel.document.history.count
+
+        let initial = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.selection_bounds"
+        ))
+
+        #expect(initial.ok)
+        #expect(initial.result?.objectValue?["active"] == .bool(true))
+        #expect(initial.result?.objectValue?["preview"] == .bool(false))
+        #expect(initial.result?.objectValue?["selectedCount"] == .number(2))
+        #expect(initial.result?.objectValue?["selectedLayerIds"]?.arrayValue == [
+            firstID.uuidString,
+            secondID.uuidString
+        ].sorted().map(XomoJSONValue.string))
+        #expect(initial.result?.objectValue?["bounds"] == .object([
+            "x": .number(expectedBounds.minX),
+            "y": .number(expectedBounds.minY),
+            "width": .number(expectedBounds.width),
+            "height": .number(expectedBounds.height)
+        ]))
+        #expect(viewModel.selectedObjectBoundsInfoText.contains("2"))
+        #expect(viewModel.document.history.count == historyCount)
+
+        #expect(viewModel.beginMovingSelectedLayer())
+        viewModel.moveSelectedLayer(by: CGSize(width: 13.5, height: -7.5))
+        let preview = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.selection_bounds"
+        ))
+
+        #expect(preview.ok)
+        #expect(preview.result?.objectValue?["preview"] == .bool(true))
+        #expect(
+            preview.result?.objectValue?["bounds"]?.objectValue?["x"]
+                == .number(expectedBounds.minX + 13.5)
+        )
+        #expect(
+            preview.result?.objectValue?["bounds"]?.objectValue?["y"]
+                == .number(expectedBounds.minY - 7.5)
+        )
+        #expect(viewModel.selectedObjectBoundsInfoText.contains(".5"))
+        #expect(viewModel.document.history.count == historyCount)
+
+        #expect(viewModel.cancelMovingSelectedLayer())
+        let restored = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.selection_bounds"
+        ))
+        #expect(restored.result?.objectValue?["preview"] == .bool(false))
+        #expect(restored.result?.objectValue?["bounds"] == initial.result?.objectValue?["bounds"])
+        #expect(viewModel.document.history.count == historyCount)
+
+        viewModel.clearLayerSelection()
+        let empty = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.selection_bounds"
+        ))
+        #expect(empty.result?.objectValue?["active"] == .bool(false))
+        #expect(empty.result?.objectValue?["selectedCount"] == .number(0))
+        #expect(viewModel.selectedObjectBoundsInfoText.contains("—"))
     }
 
     @Test func registryImportsLocalComponentTokensForSubsequentInsertion() throws {

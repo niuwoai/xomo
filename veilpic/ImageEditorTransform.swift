@@ -22,6 +22,43 @@ extension ImageEditorViewModel {
         return transformFrame(for: selectedTransformableLayerIndices)
     }
 
+    var selectedObjectBoundsInfoText: String {
+        guard let frame = (movingObjectPreviewFrame ?? selectedLayerTransformFrame)?
+            .standardized,
+              !frame.isNull,
+              !frame.isEmpty
+        else {
+            return L10n.text("imageEditor.info.object.empty")
+        }
+        let arguments: [CVarArg] = [
+            geometryInfoValue(frame.minX),
+            geometryInfoValue(frame.minY),
+            geometryInfoValue(frame.width),
+            geometryInfoValue(frame.height)
+        ]
+        if document.selectedLayerIDs.count > 1 {
+            let multipleArguments: [CVarArg] = [document.selectedLayerIDs.count]
+            return String(
+                format: L10n.text("imageEditor.info.objects.bounds"),
+                locale: Locale.current,
+                arguments: multipleArguments + arguments
+            )
+        }
+        return String(
+            format: L10n.text("imageEditor.info.object.bounds"),
+            locale: Locale.current,
+            arguments: arguments
+        )
+    }
+
+    private func geometryInfoValue(_ value: CGFloat) -> String {
+        let integerValue = value.rounded()
+        guard abs(value - integerValue) >= 0.005 else {
+            return String(Int(integerValue))
+        }
+        return String(format: "%.1f", locale: Locale.current, Double(value))
+    }
+
     var canResizeSelectedLayer: Bool {
         let indices = selectedTransformableLayerIndices
         guard !indices.isEmpty, selectedLayerTransformFrame != nil else { return false }

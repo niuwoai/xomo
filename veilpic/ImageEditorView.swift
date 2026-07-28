@@ -3491,6 +3491,10 @@ struct ImageEditorView: View {
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
                     .accessibilityIdentifier("image-editor-info-selection-bounds")
+                Text(viewModel.selectedObjectBoundsInfoText)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+                    .accessibilityIdentifier("image-editor-info-object-bounds")
                 Text(viewModel.pointerColorInfoText)
                     .lineLimit(1)
                     .minimumScaleFactor(0.72)
@@ -3601,7 +3605,7 @@ struct ImageEditorView: View {
             .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
         }
         .frame(
-            height: (showsTitle ? 458 : 422)
+            height: (showsTitle ? 474 : 438)
                 + CGFloat(viewModel.colorSamplerPoints.count * 16)
         )
         .accessibilityIdentifier("image-editor-navigator-panel")

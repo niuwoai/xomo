@@ -2061,6 +2061,7 @@ struct ImageEditorScopeTests {
         #expect(infoMenuSource.contains("viewModel.pointerColorInfoText"))
         #expect(infoMenuSource.contains("viewModel.sizeText"))
         #expect(infoMenuSource.contains("viewModel.selectionBoundsInfoText"))
+        #expect(infoMenuSource.contains("viewModel.selectedObjectBoundsInfoText"))
         #expect(!infoMenuSource.contains("viewModel.colorText"))
     }
 
