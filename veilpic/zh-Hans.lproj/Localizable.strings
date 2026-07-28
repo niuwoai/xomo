@@ -717,6 +717,7 @@
 "imageEditor.histogram.channel.blue.short" = "B";
 "imageEditor.histogram.average" = "平均 RGB：%d / %d / %d";
 "imageEditor.histogram.luminance" = "平均亮度：%d";
+"imageEditor.histogram.selectedChannelAverage" = "%@平均值：%d";
 "imageEditor.histogram.clipping" = "裁切 暗/亮：%d%% / %d%%";
 "imageEditor.panel.history" = "历史";
 "imageEditor.panel.layers" = "图层";

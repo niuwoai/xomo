@@ -717,6 +717,7 @@
 "imageEditor.histogram.channel.blue.short" = "B";
 "imageEditor.histogram.average" = "Avg RGB: %d / %d / %d";
 "imageEditor.histogram.luminance" = "Avg Luma: %d";
+"imageEditor.histogram.selectedChannelAverage" = "%@ Avg: %d";
 "imageEditor.histogram.clipping" = "Clip S/H: %d%% / %d%%";
 "imageEditor.panel.history" = "History";
 "imageEditor.panel.layers" = "Layers";

@@ -3381,14 +3381,13 @@ struct ImageEditorView: View {
                 histogramView(summary: histogramSummary)
                 Text(viewModel.sizeText)
                 Text(viewModel.colorText)
-                Text(viewModel.histogramAverageText(for: histogramSummary))
-                Text(viewModel.histogramLuminanceText(for: histogramSummary))
+                Text(viewModel.selectedHistogramChannelAverageText(for: histogramSummary))
                 Text(viewModel.histogramClippingText(for: histogramSummary))
             }
             .font(.system(size: 11, weight: .medium).monospacedDigit())
             .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
         }
-        .frame(height: showsTitle ? 292 : 256)
+        .frame(height: showsTitle ? 278 : 242)
         .accessibilityIdentifier("image-editor-navigator-panel")
     }
 

@@ -740,6 +740,21 @@ final class ImageEditorViewModel: ObservableObject {
         return L10n.format("imageEditor.histogram.luminance", Int(summary.averageLuminance.rounded()))
     }
 
+    func selectedHistogramChannelAverageText(for summary: ImageEditorHistogramSummary) -> String {
+        switch selectedHistogramChannel {
+        case .rgb:
+            return histogramAverageText(for: summary)
+        case .luminance:
+            return histogramLuminanceText(for: summary)
+        case .red, .green, .blue:
+            return L10n.format(
+                "imageEditor.histogram.selectedChannelAverage",
+                selectedHistogramChannel.title,
+                Int(selectedHistogramChannel.average(in: summary).rounded())
+            )
+        }
+    }
+
     var histogramClippingText: String {
         histogramClippingText(for: histogramSummary)
     }

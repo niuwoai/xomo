@@ -1080,8 +1080,15 @@ struct ImageEditorChannelTests {
         #expect(viewModel.selectedHistogramChannel == .red)
         let summary = viewModel.histogramSummary
         #expect(summary.bins.count == 32)
-        #expect(viewModel.histogramAverageText.contains("\(Int(summary.averageRed.rounded()))"))
-        #expect(viewModel.histogramLuminanceText.contains("\(Int(summary.averageLuminance.rounded()))"))
+        let redReadout = viewModel.selectedHistogramChannelAverageText(for: summary)
+        #expect(redReadout.contains(ImageEditorHistogramChannel.red.title))
+        #expect(redReadout.contains("\(Int(summary.averageRed.rounded()))"))
+        viewModel.selectedHistogramChannel = .luminance
+        let luminanceReadout = viewModel.selectedHistogramChannelAverageText(for: summary)
+        #expect(luminanceReadout == viewModel.histogramLuminanceText(for: summary))
+        viewModel.selectedHistogramChannel = .rgb
+        let rgbReadout = viewModel.selectedHistogramChannelAverageText(for: summary)
+        #expect(rgbReadout == viewModel.histogramAverageText(for: summary))
         #expect(viewModel.histogramClippingText.contains("25"))
     }
 
