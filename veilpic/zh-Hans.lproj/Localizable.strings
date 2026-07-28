@@ -728,6 +728,7 @@
 "imageEditor.histogram.pixelCount" = "有效采样像素：%d / %d";
 "imageEditor.histogram.probe" = "色阶 %d–%d · 计数 %d · 百分位 %.1f%%";
 "imageEditor.histogram.probe.empty" = "色阶 — · 计数 — · 百分位 —";
+"imageEditor.histogram.rangeProbe" = "色阶 %d–%d · 计数 %d · 占比 %.1f%%";
 "imageEditor.histogram.clipping" = "裁切 暗/亮：%d%% / %d%%";
 "imageEditor.panel.history" = "历史";
 "imageEditor.panel.layers" = "图层";

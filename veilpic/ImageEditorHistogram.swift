@@ -130,6 +130,13 @@ struct ImageEditorHistogramProbe: Equatable {
     let percentile: Double
 }
 
+struct ImageEditorHistogramRangeProbe: Equatable {
+    let lowerLevel: Int
+    let upperLevel: Int
+    let count: Int
+    let percentage: Double
+}
+
 struct ImageEditorHistogramSummary: Equatable {
     static let empty = ImageEditorHistogramSummary(
         bins: [],
@@ -198,6 +205,46 @@ struct ImageEditorHistogramSummary: Equatable {
             percentile: pixelCount > 0
                 ? Double(cumulativeCount) / Double(pixelCount)
                 : 0
+        )
+    }
+
+    func rangeProbe(
+        channel: ImageEditorHistogramChannel,
+        lowerBinIndex: Int,
+        upperBinIndex: Int
+    ) -> ImageEditorHistogramRangeProbe? {
+        guard bins.indices.contains(lowerBinIndex),
+              bins.indices.contains(upperBinIndex)
+        else { return nil }
+        let lowerIndex = min(lowerBinIndex, upperBinIndex)
+        let upperIndex = max(lowerBinIndex, upperBinIndex)
+        let count = bins[lowerIndex...upperIndex].reduce(into: 0) { result, bin in
+            result += channel.count(in: bin)
+        }
+        return ImageEditorHistogramRangeProbe(
+            lowerLevel: lowerIndex * 256 / bins.count,
+            upperLevel: min(255, ((upperIndex + 1) * 256 / bins.count) - 1),
+            count: count,
+            percentage: pixelCount > 0 ? Double(count) / Double(pixelCount) : 0
+        )
+    }
+
+    func binIndex(forLevel level: Int) -> Int? {
+        guard !bins.isEmpty, (0...255).contains(level) else { return nil }
+        return min(bins.count - 1, level * bins.count / 256)
+    }
+
+    func binIndex(
+        atX x: CGFloat,
+        plotWidth: CGFloat,
+        horizontalPadding: CGFloat = 4
+    ) -> Int? {
+        let contentWidth = plotWidth - horizontalPadding * 2
+        guard !bins.isEmpty, contentWidth > 0 else { return nil }
+        let contentX = min(max(x - horizontalPadding, 0), contentWidth)
+        return min(
+            bins.count - 1,
+            Int(contentX / contentWidth * CGFloat(bins.count))
         )
     }
 }

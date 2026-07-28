@@ -123,6 +123,9 @@ struct ImageEditorView: View {
     @State private var canvasModifierFlags: NSEvent.ModifierFlags = []
     @State private var activeBrushPressure: CGFloat?
     @State private var histogramProbeBinIndex: Int?
+    @State private var histogramRangeAnchorBinIndex: Int?
+    @State private var histogramRangeEndBinIndex: Int?
+    @State private var isHistogramRangeDragging = false
     @State private var isMarqueeShapeMenuPresented = false
     @State private var hoveredTool: ImageEditorTool?
     @State private var isQuickMaskOptionsPresented = false
@@ -3462,7 +3465,8 @@ struct ImageEditorView: View {
     }
 
     private func histogramView(summary: ImageEditorHistogramSummary) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
+        let selectedRange = histogramSelectedBinRange
+        return VStack(alignment: .leading, spacing: 4) {
             Text(L10n.text("imageEditor.histogram.title"))
                 .font(.system(size: 10, weight: .semibold))
             HStack(spacing: 4) {
@@ -3496,40 +3500,85 @@ struct ImageEditorView: View {
                     .accessibilityIdentifier("image-editor-histogram-channel-\(channel.rawValue)")
                 }
             }
-            HStack(alignment: .bottom, spacing: 1) {
-                ForEach(summary.bins) { bin in
-                    ZStack(alignment: .bottom) {
-                        histogramBars(for: bin)
-                    }
-                    .frame(maxWidth: .infinity, minHeight: 38, maxHeight: 38, alignment: .bottom)
-                    .background(
-                        histogramProbeBinIndex == bin.index
-                            ? Color(nsColor: ImageEditorTheme.selected).opacity(0.16)
-                            : Color.clear
-                    )
-                    .contentShape(Rectangle())
-                    .onHover { isHovering in
-                        if isHovering {
-                            histogramProbeBinIndex = bin.index
-                        } else if histogramProbeBinIndex == bin.index {
-                            histogramProbeBinIndex = nil
+            GeometryReader { geometry in
+                HStack(alignment: .bottom, spacing: 1) {
+                    ForEach(summary.bins) { bin in
+                        ZStack(alignment: .bottom) {
+                            histogramBars(for: bin)
+                        }
+                        .frame(maxWidth: .infinity, minHeight: 38, maxHeight: 38, alignment: .bottom)
+                        .background(
+                            selectedRange?.contains(bin.index) == true
+                                ? Color(nsColor: ImageEditorTheme.selected).opacity(0.24)
+                                : histogramProbeBinIndex == bin.index
+                                    ? Color(nsColor: ImageEditorTheme.selected).opacity(0.16)
+                                    : Color.clear
+                        )
+                        .contentShape(Rectangle())
+                        .onHover { isHovering in
+                            if isHovering {
+                                histogramProbeBinIndex = bin.index
+                            } else if histogramProbeBinIndex == bin.index {
+                                histogramProbeBinIndex = nil
+                            }
                         }
                     }
                 }
+                .padding(.horizontal, 4)
+                .contentShape(Rectangle())
+                .gesture(histogramRangeGesture(
+                    summary: summary,
+                    plotWidth: geometry.size.width
+                ))
             }
             .frame(height: 40)
-            .padding(.horizontal, 4)
             .background(Color.black.opacity(0.18))
             .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
             .accessibilityLabel(L10n.text("imageEditor.histogram.title"))
             Text(viewModel.histogramProbeText(
                 for: summary,
-                binIndex: histogramProbeBinIndex
+                binIndex: histogramProbeBinIndex,
+                selectedRange: selectedRange
             ))
             .lineLimit(1)
             .minimumScaleFactor(0.8)
             .accessibilityIdentifier("image-editor-histogram-probe")
         }
+    }
+
+    private var histogramSelectedBinRange: ClosedRange<Int>? {
+        guard let anchor = histogramRangeAnchorBinIndex,
+              let end = histogramRangeEndBinIndex
+        else { return nil }
+        return min(anchor, end)...max(anchor, end)
+    }
+
+    private func histogramRangeGesture(
+        summary: ImageEditorHistogramSummary,
+        plotWidth: CGFloat
+    ) -> some Gesture {
+        DragGesture(minimumDistance: 0)
+            .onChanged { value in
+                guard let binIndex = summary.binIndex(
+                    atX: value.location.x,
+                    plotWidth: plotWidth
+                ) else { return }
+                if !isHistogramRangeDragging {
+                    histogramRangeAnchorBinIndex = binIndex
+                    isHistogramRangeDragging = true
+                }
+                histogramRangeEndBinIndex = binIndex
+                histogramProbeBinIndex = binIndex
+            }
+            .onEnded { value in
+                guard let binIndex = summary.binIndex(
+                    atX: value.location.x,
+                    plotWidth: plotWidth
+                ) else { return }
+                histogramRangeEndBinIndex = binIndex
+                histogramProbeBinIndex = binIndex
+                isHistogramRangeDragging = false
+            }
     }
 
     @ViewBuilder

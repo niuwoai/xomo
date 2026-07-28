@@ -1875,7 +1875,9 @@ struct XomoAutomationTests {
             name: "xomo.document.get",
             arguments: [
                 "histogramSource": .string("selectedLayer"),
-                "histogramChannel": .string("blue")
+                "histogramChannel": .string("blue"),
+                "histogramRangeLowerLevel": .number(250),
+                "histogramRangeUpperLevel": .number(251)
             ]
         ))
 
@@ -1918,6 +1920,11 @@ struct XomoAutomationTests {
         #expect(binLevelRanges.first?.objectValue?["upperLevel"] == .number(7))
         #expect(binLevelRanges.last?.objectValue?["lowerLevel"] == .number(248))
         #expect(binLevelRanges.last?.objectValue?["upperLevel"] == .number(255))
+        let range = try #require(histogram["range"]?.objectValue)
+        #expect(range["lowerLevel"] == .number(248))
+        #expect(range["upperLevel"] == .number(255))
+        #expect(range["count"] == .number(Double(selectedLayerHistogram.pixelCount)))
+        #expect(range["percentage"] == .number(1))
         #expect(histogram["clippedShadowRatio"]?.doubleValue != nil)
         #expect(histogram["clippedHighlightRatio"]?.doubleValue != nil)
         #expect(viewModel.document.history.count == historyCount)
@@ -1942,6 +1949,35 @@ struct XomoAutomationTests {
         ))
         #expect(!invalidResponse.ok)
         #expect(invalidResponse.error?.contains("Unknown histogram channel") == true)
+        #expect(viewModel.document.history.count == historyCount)
+
+        let incompleteRangeResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.document.get",
+            arguments: ["histogramRangeLowerLevel": .number(64)]
+        ))
+        #expect(!incompleteRangeResponse.ok)
+        #expect(incompleteRangeResponse.error?.contains("must be provided together") == true)
+        let reversedRangeResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.document.get",
+            arguments: [
+                "histogramRangeLowerLevel": .number(192),
+                "histogramRangeUpperLevel": .number(64)
+            ]
+        ))
+        #expect(!reversedRangeResponse.ok)
+        #expect(reversedRangeResponse.error?.contains("must not exceed") == true)
+        let fractionalRangeResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.document.get",
+            arguments: [
+                "histogramRangeLowerLevel": .number(64.5),
+                "histogramRangeUpperLevel": .number(128)
+            ]
+        ))
+        #expect(!fractionalRangeResponse.ok)
+        #expect(fractionalRangeResponse.error?.contains("must be an integer") == true)
         #expect(viewModel.document.history.count == historyCount)
 
         viewModel.document.selection = nil

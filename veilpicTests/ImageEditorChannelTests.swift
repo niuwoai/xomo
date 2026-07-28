@@ -1019,6 +1019,30 @@ struct ImageEditorChannelTests {
         #expect(approximately(probe.percentile, 0.75, tolerance: 0.001))
         #expect(summary.probe(channel: .luminance, binIndex: -1) == nil)
         #expect(summary.probe(channel: .luminance, binIndex: 4) == nil)
+        let rangeProbe = try #require(summary.rangeProbe(
+            channel: .luminance,
+            lowerBinIndex: 3,
+            upperBinIndex: 1
+        ))
+        #expect(rangeProbe.lowerLevel == 64)
+        #expect(rangeProbe.upperLevel == 255)
+        #expect(rangeProbe.count * 4 == summary.pixelCount * 3)
+        #expect(approximately(rangeProbe.percentage, 0.75, tolerance: 0.001))
+        #expect(summary.rangeProbe(
+            channel: .luminance,
+            lowerBinIndex: -1,
+            upperBinIndex: 1
+        ) == nil)
+        #expect(summary.binIndex(forLevel: 0) == 0)
+        #expect(summary.binIndex(forLevel: 63) == 0)
+        #expect(summary.binIndex(forLevel: 64) == 1)
+        #expect(summary.binIndex(forLevel: 255) == 3)
+        #expect(summary.binIndex(forLevel: -1) == nil)
+        #expect(summary.binIndex(forLevel: 256) == nil)
+        #expect(summary.binIndex(atX: -20, plotWidth: 100) == 0)
+        #expect(summary.binIndex(atX: 50, plotWidth: 100) == 2)
+        #expect(summary.binIndex(atX: 120, plotWidth: 100) == 3)
+        #expect(summary.binIndex(atX: 4, plotWidth: 8) == nil)
     }
 
     @Test func histogramChannelsExposeTheirOwnBinsAndAverages() async throws {
@@ -1196,6 +1220,13 @@ struct ImageEditorChannelTests {
         let probeReadout = viewModel.histogramProbeText(for: summary, binIndex: 0)
         #expect(probeReadout.contains("0"))
         #expect(probeReadout.contains("7"))
+        let rangeReadout = viewModel.histogramProbeText(
+            for: summary,
+            binIndex: nil,
+            selectedRange: 0...1
+        )
+        #expect(rangeReadout.contains("0"))
+        #expect(rangeReadout.contains("15"))
         #expect(viewModel.histogramClippingText.contains("25"))
     }
 

@@ -728,6 +728,7 @@
 "imageEditor.histogram.pixelCount" = "有効サンプル：%d / %d";
 "imageEditor.histogram.probe" = "レベル %d–%d · カウント %d · パーセンタイル %.1f%%";
 "imageEditor.histogram.probe.empty" = "レベル — · カウント — · パーセンタイル —";
+"imageEditor.histogram.rangeProbe" = "レベル %d–%d · カウント %d · 割合 %.1f%%";
 "imageEditor.histogram.clipping" = "クリップ 暗/明：%d%% / %d%%";
 "imageEditor.panel.history" = "履歴";
 "imageEditor.panel.layers" = "レイヤー";

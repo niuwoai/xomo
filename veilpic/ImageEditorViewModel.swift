@@ -840,8 +840,23 @@ final class ImageEditorViewModel: ObservableObject {
 
     func histogramProbeText(
         for summary: ImageEditorHistogramSummary,
-        binIndex: Int?
+        binIndex: Int?,
+        selectedRange: ClosedRange<Int>? = nil
     ) -> String {
+        if let selectedRange,
+           let probe = summary.rangeProbe(
+               channel: selectedHistogramChannel,
+               lowerBinIndex: selectedRange.lowerBound,
+               upperBinIndex: selectedRange.upperBound
+           ) {
+            return L10n.format(
+                "imageEditor.histogram.rangeProbe",
+                probe.lowerLevel,
+                probe.upperLevel,
+                probe.count,
+                probe.percentage * 100
+            )
+        }
         guard let binIndex,
               let probe = summary.probe(
                 channel: selectedHistogramChannel,

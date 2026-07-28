@@ -523,6 +523,24 @@ final class XomoAutomationRegistry {
         return actionResult(viewModel)
     }
 
+    private func histogramRangeLevel(
+        named name: String,
+        in arguments: [String: XomoJSONValue]
+    ) throws -> Int? {
+        guard let value = arguments[name] else { return nil }
+        guard let number = value.doubleValue,
+              number.isFinite,
+              number.rounded() == number,
+              number >= 0,
+              number <= 255
+        else {
+            throw XomoAutomationCallError.invalidArgument(
+                "\(name) must be an integer from 0 through 255"
+            )
+        }
+        return Int(number)
+    }
+
     private func documentResult(
         _ arguments: [String: XomoJSONValue],
         viewModel: ImageEditorViewModel
@@ -558,6 +576,47 @@ final class XomoAutomationRegistry {
             histogramSource = viewModel.activeHistogramSource
         }
         let histogram = viewModel.histogramSummary(for: histogramSource)
+        let lowerRangeLevel = try histogramRangeLevel(
+            named: "histogramRangeLowerLevel",
+            in: arguments
+        )
+        let upperRangeLevel = try histogramRangeLevel(
+            named: "histogramRangeUpperLevel",
+            in: arguments
+        )
+        let histogramRangeJSON: XomoJSONValue
+        switch (lowerRangeLevel, upperRangeLevel) {
+        case (nil, nil):
+            histogramRangeJSON = .null
+        case (.some(let lowerLevel), .some(let upperLevel)):
+            guard lowerLevel <= upperLevel else {
+                throw XomoAutomationCallError.invalidArgument(
+                    "histogramRangeLowerLevel must not exceed histogramRangeUpperLevel"
+                )
+            }
+            guard let lowerBinIndex = histogram.binIndex(forLevel: lowerLevel),
+                  let upperBinIndex = histogram.binIndex(forLevel: upperLevel),
+                  let range = histogram.rangeProbe(
+                    channel: histogramChannel,
+                    lowerBinIndex: lowerBinIndex,
+                    upperBinIndex: upperBinIndex
+                  )
+            else {
+                throw XomoAutomationCallError.operationFailed(
+                    "Histogram range is unavailable"
+                )
+            }
+            histogramRangeJSON = .object([
+                "lowerLevel": .number(Double(range.lowerLevel)),
+                "upperLevel": .number(Double(range.upperLevel)),
+                "count": .number(Double(range.count)),
+                "percentage": .number(range.percentage)
+            ])
+        default:
+            throw XomoAutomationCallError.invalidArgument(
+                "histogramRangeLowerLevel and histogramRangeUpperLevel must be provided together"
+            )
+        }
 
         return .object([
             "name": .string(viewModel.document.sourceName),
@@ -595,6 +654,7 @@ final class XomoAutomationRegistry {
                 "standardDeviationLuminance": .number(histogram.standardDeviationLuminance),
                 "clippedShadowRatio": .number(histogram.clippedShadowRatio),
                 "clippedHighlightRatio": .number(histogram.clippedHighlightRatio),
+                "range": histogramRangeJSON,
                 "bins": .array(histogram.bins.map {
                     .number(histogramChannel.value(in: $0))
                 }),
@@ -4765,6 +4825,12 @@ private extension XomoAutomationRegistry {
             "histogramChannel": XomoAutomationSchema.string(
                 description: "Histogram channel to inspect",
                 values: ImageEditorHistogramChannel.allCases.map(\.rawValue)
+            ),
+            "histogramRangeLowerLevel": XomoAutomationSchema.integer(
+                description: "Optional inclusive histogram range start from 0 through 255"
+            ),
+            "histogramRangeUpperLevel": XomoAutomationSchema.integer(
+                description: "Optional inclusive histogram range end from 0 through 255"
             )
         ]),
         tool("xomo.document.create", "Replace the active document with a new preset or custom canvas.", [
