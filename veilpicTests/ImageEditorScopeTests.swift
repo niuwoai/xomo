@@ -2058,9 +2058,9 @@ struct ImageEditorScopeTests {
         #expect(infoMenuSource.contains("imageEditor.menu.window.info"))
         #expect(infoMenuSource.contains("imageEditor.action.infoShowPanel"))
         #expect(infoMenuSource.contains("KeyEquivalent(Character(UnicodeScalar(NSF8FunctionKey)!))"))
-        #expect(infoMenuSource.contains("viewModel.pointerText"))
+        #expect(infoMenuSource.contains("viewModel.pointerColorInfoText"))
         #expect(infoMenuSource.contains("viewModel.sizeText"))
-        #expect(infoMenuSource.contains("viewModel.colorText"))
+        #expect(!infoMenuSource.contains("viewModel.colorText"))
     }
 
     @Test func windowMenuExposesHistogramPanelActionsInPhotoshopStyleLocation() throws {

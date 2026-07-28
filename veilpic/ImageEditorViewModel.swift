@@ -177,7 +177,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var selectedHotspotID: UUID?
     @Published var isStatusBarVisible = true
     @Published var historyQuery = ""
-    @Published var pointerText: String = "X: 0 Y: 0"
+    @Published private(set) var pointerCanvasPoint: CGPoint?
     @Published var textValue: String = ""
     @Published var textSize: Double = 32
     @Published var selectedFontFamilyName: String = ImageEditorTextContent.systemFontFamilyName
@@ -361,6 +361,10 @@ final class ImageEditorViewModel: ObservableObject {
     // SwiftUI reads these values from several panels in one render pass. Keep all
     // pixel work behind one document-scoped cache rather than recompositing per view.
     private var cachedCurrentImage: NSImage?
+    private var cachedPointerSampleImage: NSImage?
+    private var cachedPointerSamplePixels: [UInt8] = []
+    private var cachedPointerSampleWidth = 0
+    private var cachedPointerSampleHeight = 0
     private var cachedChannelPreviewImages: [String: NSImage] = [:]
     private var cachedAlphaChannelPreviewImages: [UUID: NSImage] = [:]
     private var cachedChannelThumbnailImages: [String: NSImage] = [:]
@@ -877,6 +881,56 @@ final class ImageEditorViewModel: ObservableObject {
         )
     }
 
+    var pointerText: String {
+        guard let point = pointerCanvasPoint else {
+            return L10n.text("imageEditor.info.pointer.coordinates.empty")
+        }
+        return L10n.format(
+            "imageEditor.info.pointer.coordinates",
+            Int(point.x),
+            Int(point.y)
+        )
+    }
+
+    var pointerColorInfoText: String {
+        guard let point = pointerCanvasPoint,
+              let color = pointerColor(at: point)
+        else {
+            return L10n.text("imageEditor.info.pointer.empty")
+        }
+
+        let reading = ImageEditorColorSamplerReading(color: color)
+        switch selectedColorSamplerReadoutMode {
+        case .rgb:
+            return L10n.format(
+                "imageEditor.info.pointer.rgb",
+                Int(point.x),
+                Int(point.y),
+                reading.red8,
+                reading.green8,
+                reading.blue8,
+                reading.alpha8
+            )
+        case .hsb:
+            return L10n.format(
+                "imageEditor.info.pointer.hsb",
+                Int(point.x),
+                Int(point.y),
+                reading.hueDegrees,
+                reading.saturationPercent,
+                reading.brightnessPercent,
+                reading.alphaPercent
+            )
+        case .hexadecimal:
+            return L10n.format(
+                "imageEditor.info.pointer.hexadecimal",
+                Int(point.x),
+                Int(point.y),
+                reading.hexadecimalRGBA
+            )
+        }
+    }
+
     func colorSamplerInfoText(
         index: Int,
         sample: ImageEditorColorSamplerPoint,
@@ -920,6 +974,99 @@ final class ImageEditorViewModel: ObservableObject {
                 arguments: sharedArguments + [reading.hexadecimalRGBA]
             )
         }
+    }
+
+    private func pointerColor(at point: CGPoint) -> NSColor? {
+        let image = currentImage
+        if cachedPointerSampleImage !== image {
+            guard let cgImage = image.cgImage(
+                forProposedRect: nil,
+                context: nil,
+                hints: nil
+            ),
+            cgImage.width > 0,
+            cgImage.height > 0
+            else {
+                resetPointerSampleCache()
+                return nil
+            }
+
+            let bytesPerPixel = 4
+            let bytesPerRow = cgImage.width * bytesPerPixel
+            var pixels = [UInt8](
+                repeating: 0,
+                count: bytesPerRow * cgImage.height
+            )
+            guard let context = CGContext(
+                data: &pixels,
+                width: cgImage.width,
+                height: cgImage.height,
+                bitsPerComponent: 8,
+                bytesPerRow: bytesPerRow,
+                space: CGColorSpaceCreateDeviceRGB(),
+                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+            ) else {
+                resetPointerSampleCache()
+                return nil
+            }
+            context.interpolationQuality = .none
+            context.draw(
+                cgImage,
+                in: CGRect(
+                    x: 0,
+                    y: 0,
+                    width: cgImage.width,
+                    height: cgImage.height
+                )
+            )
+
+            cachedPointerSampleImage = image
+            cachedPointerSamplePixels = pixels
+            cachedPointerSampleWidth = cgImage.width
+            cachedPointerSampleHeight = cgImage.height
+        }
+
+        guard cachedPointerSampleWidth > 0,
+              cachedPointerSampleHeight > 0,
+              !cachedPointerSamplePixels.isEmpty
+        else { return nil }
+        let x = min(
+            max(
+                Int(
+                    point.x / max(image.size.width, 1)
+                        * CGFloat(cachedPointerSampleWidth)
+                ),
+                0
+            ),
+            cachedPointerSampleWidth - 1
+        )
+        let y = min(
+            max(
+                Int(
+                    point.y / max(image.size.height, 1)
+                        * CGFloat(cachedPointerSampleHeight)
+                ),
+                0
+            ),
+            cachedPointerSampleHeight - 1
+        )
+        let offset = (
+            y * cachedPointerSampleWidth + x
+        ) * 4
+        guard offset + 3 < cachedPointerSamplePixels.count else { return nil }
+        return NSColor(
+            deviceRed: CGFloat(cachedPointerSamplePixels[offset]) / 255,
+            green: CGFloat(cachedPointerSamplePixels[offset + 1]) / 255,
+            blue: CGFloat(cachedPointerSamplePixels[offset + 2]) / 255,
+            alpha: CGFloat(cachedPointerSamplePixels[offset + 3]) / 255
+        )
+    }
+
+    private func resetPointerSampleCache() {
+        cachedPointerSampleImage = nil
+        cachedPointerSamplePixels.removeAll(keepingCapacity: false)
+        cachedPointerSampleWidth = 0
+        cachedPointerSampleHeight = 0
     }
 
     var selectedLayerOpacity: Double {
@@ -2830,11 +2977,13 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     func updatePointer(_ point: CGPoint?) {
-        guard let point else {
-            pointerText = "X: 0 Y: 0"
-            return
+        let normalizedPoint = point.flatMap { point -> CGPoint? in
+            let bounds = CGRect(origin: .zero, size: document.canvasSize)
+            guard bounds.contains(point) else { return nil }
+            return CGPoint(x: floor(point.x), y: floor(point.y))
         }
-        pointerText = "X: \(Int(point.x.rounded())) Y: \(Int(point.y.rounded()))"
+        guard normalizedPoint != pointerCanvasPoint else { return }
+        pointerCanvasPoint = normalizedPoint
     }
 
     func undo() {
@@ -8125,6 +8274,7 @@ final class ImageEditorViewModel: ObservableObject {
 
     private func invalidateRenderedImageCaches() {
         cachedCurrentImage = nil
+        resetPointerSampleCache()
         cachedChannelPreviewImages.removeAll(keepingCapacity: true)
         cachedAlphaChannelPreviewImages.removeAll(keepingCapacity: true)
         cachedChannelThumbnailImages.removeAll(keepingCapacity: true)

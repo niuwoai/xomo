@@ -1575,7 +1575,7 @@ struct ImageEditorView: View {
         case .toggleWorkspaceChrome: viewModel.toggleWorkspaceChromeVisibility()
         case .toggleRightDock: viewModel.toggleRightDockVisibility()
         case .showInfoSummary:
-            viewModel.statusText = "\(viewModel.pointerText) | \(viewModel.sizeText) | \(viewModel.colorText)"
+            viewModel.statusText = "\(viewModel.pointerColorInfoText) | \(viewModel.sizeText)"
         case .showColorSummary: viewModel.statusText = viewModel.colorPanelSummaryText
         case .showBrushSummary: viewModel.statusText = viewModel.brushesPanelSummaryText
         case .showLayersPanel:
@@ -3384,7 +3384,10 @@ struct ImageEditorView: View {
                 navigatorPreview
                 histogramView(summary: histogramSummary)
                 Text(viewModel.sizeText)
-                Text(viewModel.colorText)
+                Text(viewModel.pointerColorInfoText)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.72)
+                    .accessibilityIdentifier("image-editor-info-pointer-color")
                 Text(viewModel.selectedHistogramChannelAverageText(for: histogramSummary))
                 Text(viewModel.selectedHistogramStatisticsText(for: histogramSummary))
                     .lineLimit(1)

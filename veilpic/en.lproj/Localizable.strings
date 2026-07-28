@@ -448,6 +448,12 @@
 "imageEditor.info.colorSampler.mode.hsb.short" = "HSB";
 "imageEditor.info.colorSampler.mode.hexadecimal" = "Hexadecimal RGBA";
 "imageEditor.info.colorSampler.mode.hexadecimal.short" = "HEX";
+"imageEditor.info.pointer.coordinates" = "X: %d  Y: %d";
+"imageEditor.info.pointer.coordinates.empty" = "X: —  Y: —";
+"imageEditor.info.pointer.empty" = "Pointer · X —  Y — · —";
+"imageEditor.info.pointer.rgb" = "Pointer · X %d  Y %d · R %d  G %d  B %d  A %d";
+"imageEditor.info.pointer.hsb" = "Pointer · X %d  Y %d · H %d°  S %d%%  B %d%%  A %d%%";
+"imageEditor.info.pointer.hexadecimal" = "Pointer · X %d  Y %d · %@";
 "imageEditor.action.redo" = "Redo";
 "imageEditor.export.title" = "Export Image";
 "imageEditor.export.format" = "Format";

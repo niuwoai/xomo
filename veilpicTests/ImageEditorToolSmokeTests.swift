@@ -1046,6 +1046,49 @@ struct ImageEditorToolSmokeTests {
         #expect(viewModel.clearColorSamplers() == 0)
     }
 
+    @Test func pointerReadoutTracksCurrentCanvasPixelAndClearsOutside() throws {
+        let red = NSColor(deviceRed: 1, green: 0, blue: 0, alpha: 1)
+        let viewModel = makeViewModel(image: solidImage(color: red))
+        let initialHistoryCount = viewModel.document.history.count
+
+        #expect(viewModel.pointerCanvasPoint == nil)
+        #expect(viewModel.pointerText.contains("—"))
+        #expect(viewModel.pointerColorInfoText.contains("—"))
+
+        viewModel.updatePointer(CGPoint(x: 20.8, y: 14.9))
+
+        #expect(viewModel.pointerCanvasPoint == CGPoint(x: 20, y: 14))
+        #expect(viewModel.pointerText.contains("X: 20"))
+        #expect(viewModel.pointerText.contains("Y: 14"))
+        #expect(viewModel.pointerColorInfoText.contains("R 255"))
+        #expect(viewModel.pointerColorInfoText.contains("G 0"))
+        #expect(viewModel.pointerColorInfoText.contains("A 255"))
+        #expect(viewModel.document.history.count == initialHistoryCount)
+
+        viewModel.selectedColorSamplerReadoutMode = .hsb
+        #expect(viewModel.pointerColorInfoText.contains("H 0°"))
+        #expect(viewModel.pointerColorInfoText.contains("S 100%"))
+        #expect(viewModel.pointerColorInfoText.contains("B 100%"))
+
+        viewModel.selectedColorSamplerReadoutMode = .hexadecimal
+        #expect(viewModel.pointerColorInfoText.contains("#FF0000FF"))
+
+        let blue = NSColor(deviceRed: 0, green: 0, blue: 1, alpha: 1)
+        viewModel.replaceSelectedLayerImageForTesting(
+            solidImage(color: blue),
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+        #expect(viewModel.pointerColorInfoText.contains("#0000FFFF"))
+        let historyCountAfterReplacement = viewModel.document.history.count
+
+        viewModel.updatePointer(CGPoint(x: canvasSize.width, y: 14))
+
+        #expect(viewModel.pointerCanvasPoint == nil)
+        #expect(viewModel.pointerText.contains("—"))
+        #expect(!viewModel.pointerColorInfoText.contains("#0000FFFF"))
+        #expect(viewModel.document.history.count == historyCountAfterReplacement)
+    }
+
     private let canvasSize = NSSize(width: 40, height: 28)
 
     private func makeViewModel(image: NSImage) -> ImageEditorViewModel {
