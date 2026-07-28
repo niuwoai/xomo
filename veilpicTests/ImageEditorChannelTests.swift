@@ -1012,6 +1012,13 @@ struct ImageEditorChannelTests {
         #expect(summary.clippedHighlightPixels * 4 == summary.pixelCount)
         #expect(approximately(summary.clippedShadowRatio, 0.25, tolerance: 0.01))
         #expect(approximately(summary.clippedHighlightRatio, 0.25, tolerance: 0.01))
+        let probe = try #require(summary.probe(channel: .luminance, binIndex: 2))
+        #expect(probe.lowerLevel == 128)
+        #expect(probe.upperLevel == 191)
+        #expect(probe.count * 4 == summary.pixelCount)
+        #expect(approximately(probe.percentile, 0.75, tolerance: 0.001))
+        #expect(summary.probe(channel: .luminance, binIndex: -1) == nil)
+        #expect(summary.probe(channel: .luminance, binIndex: 4) == nil)
     }
 
     @Test func histogramChannelsExposeTheirOwnBinsAndAverages() async throws {
@@ -1022,7 +1029,11 @@ struct ImageEditorChannelTests {
                     red: 0.25,
                     green: 0.50,
                     blue: 0.75,
-                    luminance: 0.45
+                    luminance: 0.45,
+                    redCount: 1,
+                    greenCount: 2,
+                    blueCount: 3,
+                    luminanceCount: 4
                 )
             ],
             sampledPixelCount: 4,
@@ -1053,6 +1064,11 @@ struct ImageEditorChannelTests {
         #expect(approximately(ImageEditorHistogramChannel.red.value(in: bin), 0.25, tolerance: 0.0001))
         #expect(approximately(ImageEditorHistogramChannel.green.value(in: bin), 0.50, tolerance: 0.0001))
         #expect(approximately(ImageEditorHistogramChannel.blue.value(in: bin), 0.75, tolerance: 0.0001))
+        #expect(ImageEditorHistogramChannel.rgb.count(in: bin) == 4)
+        #expect(ImageEditorHistogramChannel.luminance.count(in: bin) == 4)
+        #expect(ImageEditorHistogramChannel.red.count(in: bin) == 1)
+        #expect(ImageEditorHistogramChannel.green.count(in: bin) == 2)
+        #expect(ImageEditorHistogramChannel.blue.count(in: bin) == 3)
         #expect(approximately(ImageEditorHistogramChannel.rgb.average(in: summary), 116, tolerance: 0.0001))
         #expect(approximately(ImageEditorHistogramChannel.red.average(in: summary), 64, tolerance: 0.0001))
         #expect(approximately(ImageEditorHistogramChannel.green.average(in: summary), 128, tolerance: 0.0001))
@@ -1138,7 +1154,14 @@ struct ImageEditorChannelTests {
         #expect(summary.clippedHighlightRatio == 0)
         #expect(summary.bins.count == 4)
         #expect(summary.bins.allSatisfy {
-            $0.red == 0 && $0.green == 0 && $0.blue == 0 && $0.luminance == 0
+            $0.red == 0
+                && $0.green == 0
+                && $0.blue == 0
+                && $0.luminance == 0
+                && $0.redCount == 0
+                && $0.greenCount == 0
+                && $0.blueCount == 0
+                && $0.luminanceCount == 0
         })
     }
 
@@ -1166,6 +1189,13 @@ struct ImageEditorChannelTests {
         let pixelCountReadout = viewModel.histogramPixelCountText(for: summary)
         #expect(pixelCountReadout.contains("\(summary.pixelCount)"))
         #expect(pixelCountReadout.contains("\(summary.sampledPixelCount)"))
+        #expect(
+            viewModel.histogramProbeText(for: summary, binIndex: nil)
+                == L10n.text("imageEditor.histogram.probe.empty")
+        )
+        let probeReadout = viewModel.histogramProbeText(for: summary, binIndex: 0)
+        #expect(probeReadout.contains("0"))
+        #expect(probeReadout.contains("7"))
         #expect(viewModel.histogramClippingText.contains("25"))
     }
 

@@ -726,6 +726,8 @@
 "imageEditor.histogram.selectedChannelAverage" = "%@平均：%d";
 "imageEditor.histogram.statistics" = "%@：中央値 %d · 標準偏差 %.1f";
 "imageEditor.histogram.pixelCount" = "有効サンプル：%d / %d";
+"imageEditor.histogram.probe" = "レベル %d–%d · カウント %d · パーセンタイル %.1f%%";
+"imageEditor.histogram.probe.empty" = "レベル — · カウント — · パーセンタイル —";
 "imageEditor.histogram.clipping" = "クリップ 暗/明：%d%% / %d%%";
 "imageEditor.panel.history" = "履歴";
 "imageEditor.panel.layers" = "レイヤー";

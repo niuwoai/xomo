@@ -122,6 +122,7 @@ struct ImageEditorView: View {
     @State private var hoverViewPoint: CGPoint?
     @State private var canvasModifierFlags: NSEvent.ModifierFlags = []
     @State private var activeBrushPressure: CGFloat?
+    @State private var histogramProbeBinIndex: Int?
     @State private var isMarqueeShapeMenuPresented = false
     @State private var hoveredTool: ImageEditorTool?
     @State private var isQuickMaskOptionsPresented = false
@@ -3392,7 +3393,7 @@ struct ImageEditorView: View {
             .font(.system(size: 11, weight: .medium).monospacedDigit())
             .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
         }
-        .frame(height: showsTitle ? 338 : 302)
+        .frame(height: showsTitle ? 356 : 320)
         .accessibilityIdentifier("image-editor-navigator-panel")
     }
 
@@ -3501,6 +3502,19 @@ struct ImageEditorView: View {
                         histogramBars(for: bin)
                     }
                     .frame(maxWidth: .infinity, minHeight: 38, maxHeight: 38, alignment: .bottom)
+                    .background(
+                        histogramProbeBinIndex == bin.index
+                            ? Color(nsColor: ImageEditorTheme.selected).opacity(0.16)
+                            : Color.clear
+                    )
+                    .contentShape(Rectangle())
+                    .onHover { isHovering in
+                        if isHovering {
+                            histogramProbeBinIndex = bin.index
+                        } else if histogramProbeBinIndex == bin.index {
+                            histogramProbeBinIndex = nil
+                        }
+                    }
                 }
             }
             .frame(height: 40)
@@ -3508,6 +3522,13 @@ struct ImageEditorView: View {
             .background(Color.black.opacity(0.18))
             .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
             .accessibilityLabel(L10n.text("imageEditor.histogram.title"))
+            Text(viewModel.histogramProbeText(
+                for: summary,
+                binIndex: histogramProbeBinIndex
+            ))
+            .lineLimit(1)
+            .minimumScaleFactor(0.8)
+            .accessibilityIdentifier("image-editor-histogram-probe")
         }
     }
 

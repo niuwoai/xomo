@@ -1903,6 +1903,21 @@ struct XomoAutomationTests {
                 == .number(selectedLayerHistogram.standardDeviationLuminance)
         )
         #expect(histogram["bins"]?.arrayValue?.count == 32)
+        let binCounts = try #require(histogram["binCounts"]?.arrayValue)
+        #expect(binCounts.count == 32)
+        #expect(
+            binCounts.reduce(0) { $0 + Int($1.doubleValue ?? 0) }
+                == selectedLayerHistogram.pixelCount
+        )
+        let binPercentiles = try #require(histogram["binPercentiles"]?.arrayValue)
+        #expect(binPercentiles.count == 32)
+        #expect(binPercentiles.last == .number(1))
+        let binLevelRanges = try #require(histogram["binLevelRanges"]?.arrayValue)
+        #expect(binLevelRanges.count == 32)
+        #expect(binLevelRanges.first?.objectValue?["lowerLevel"] == .number(0))
+        #expect(binLevelRanges.first?.objectValue?["upperLevel"] == .number(7))
+        #expect(binLevelRanges.last?.objectValue?["lowerLevel"] == .number(248))
+        #expect(binLevelRanges.last?.objectValue?["upperLevel"] == .number(255))
         #expect(histogram["clippedShadowRatio"]?.doubleValue != nil)
         #expect(histogram["clippedHighlightRatio"]?.doubleValue != nil)
         #expect(viewModel.document.history.count == historyCount)

@@ -726,6 +726,8 @@
 "imageEditor.histogram.selectedChannelAverage" = "%@ Avg: %d";
 "imageEditor.histogram.statistics" = "%@: Median %d · Std Dev %.1f";
 "imageEditor.histogram.pixelCount" = "Visible samples: %d / %d";
+"imageEditor.histogram.probe" = "Level %d–%d · Count %d · Percentile %.1f%%";
+"imageEditor.histogram.probe.empty" = "Level — · Count — · Percentile —";
 "imageEditor.histogram.clipping" = "Clip S/H: %d%% / %d%%";
 "imageEditor.panel.history" = "History";
 "imageEditor.panel.layers" = "Layers";

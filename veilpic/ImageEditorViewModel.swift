@@ -838,6 +838,27 @@ final class ImageEditorViewModel: ObservableObject {
         )
     }
 
+    func histogramProbeText(
+        for summary: ImageEditorHistogramSummary,
+        binIndex: Int?
+    ) -> String {
+        guard let binIndex,
+              let probe = summary.probe(
+                channel: selectedHistogramChannel,
+                binIndex: binIndex
+              )
+        else {
+            return L10n.text("imageEditor.histogram.probe.empty")
+        }
+        return L10n.format(
+            "imageEditor.histogram.probe",
+            probe.lowerLevel,
+            probe.upperLevel,
+            probe.count,
+            probe.percentile * 100
+        )
+    }
+
     var selectedLayerOpacity: Double {
         guard let layer = document.selectedLayer else { return 1 }
         return layer.opacity

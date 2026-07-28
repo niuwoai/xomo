@@ -56,6 +56,19 @@ enum ImageEditorHistogramChannel: String, CaseIterable, Identifiable {
         }
     }
 
+    func count(in bin: ImageEditorHistogramBin) -> Int {
+        switch self {
+        case .rgb, .luminance:
+            return bin.luminanceCount
+        case .red:
+            return bin.redCount
+        case .green:
+            return bin.greenCount
+        case .blue:
+            return bin.blueCount
+        }
+    }
+
     func average(in summary: ImageEditorHistogramSummary) -> Double {
         switch self {
         case .rgb, .luminance:
@@ -102,8 +115,19 @@ struct ImageEditorHistogramBin: Equatable, Identifiable {
     let green: Double
     let blue: Double
     let luminance: Double
+    let redCount: Int
+    let greenCount: Int
+    let blueCount: Int
+    let luminanceCount: Int
 
     var id: Int { index }
+}
+
+struct ImageEditorHistogramProbe: Equatable {
+    let lowerLevel: Int
+    let upperLevel: Int
+    let count: Int
+    let percentile: Double
 }
 
 struct ImageEditorHistogramSummary: Equatable {
@@ -155,6 +179,26 @@ struct ImageEditorHistogramSummary: Equatable {
     var clippedHighlightRatio: Double {
         guard pixelCount > 0 else { return 0 }
         return Double(clippedHighlightPixels) / Double(pixelCount)
+    }
+
+    func probe(
+        channel: ImageEditorHistogramChannel,
+        binIndex: Int
+    ) -> ImageEditorHistogramProbe? {
+        guard bins.indices.contains(binIndex) else { return nil }
+        let lowerLevel = binIndex * 256 / bins.count
+        let upperLevel = min(255, ((binIndex + 1) * 256 / bins.count) - 1)
+        let cumulativeCount = bins[...binIndex].reduce(into: 0) { result, bin in
+            result += channel.count(in: bin)
+        }
+        return ImageEditorHistogramProbe(
+            lowerLevel: lowerLevel,
+            upperLevel: upperLevel,
+            count: channel.count(in: bins[binIndex]),
+            percentile: pixelCount > 0
+                ? Double(cumulativeCount) / Double(pixelCount)
+                : 0
+        )
     }
 }
 
@@ -262,7 +306,11 @@ extension NSImage {
                 red: Double(redBins[index]) / Double(peak),
                 green: Double(greenBins[index]) / Double(peak),
                 blue: Double(blueBins[index]) / Double(peak),
-                luminance: Double(luminanceBins[index]) / Double(peak)
+                luminance: Double(luminanceBins[index]) / Double(peak),
+                redCount: redBins[index],
+                greenCount: greenBins[index],
+                blueCount: blueBins[index],
+                luminanceCount: luminanceBins[index]
             )
         }
 

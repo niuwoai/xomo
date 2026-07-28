@@ -11,9 +11,9 @@ class ReleaseContractTest < Minitest::Test
     result = XomoReleaseContract.collect(File.expand_path("..", __dir__))
 
     assert result["passed"], result.inspect
-    assert_equal "2.12.0-rc543", result["version"]
-    assert_equal ["2.12.0-rc543"], result["project_versions"]
-    assert_equal ["543"], result["build_versions"]
+    assert_equal "2.12.0-rc544", result["version"]
+    assert_equal ["2.12.0-rc544"], result["project_versions"]
+    assert_equal ["544"], result["build_versions"]
   end
 
   def test_version_drift_fails_the_contract

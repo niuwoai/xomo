@@ -597,6 +597,22 @@ final class XomoAutomationRegistry {
                 "clippedHighlightRatio": .number(histogram.clippedHighlightRatio),
                 "bins": .array(histogram.bins.map {
                     .number(histogramChannel.value(in: $0))
+                }),
+                "binCounts": .array(histogram.bins.map {
+                    .number(Double(histogramChannel.count(in: $0)))
+                }),
+                "binPercentiles": .array(histogram.bins.compactMap { bin in
+                    histogram.probe(channel: histogramChannel, binIndex: bin.index).map {
+                        .number($0.percentile)
+                    }
+                }),
+                "binLevelRanges": .array(histogram.bins.compactMap { bin in
+                    histogram.probe(channel: histogramChannel, binIndex: bin.index).map {
+                        .object([
+                            "lowerLevel": .number(Double($0.lowerLevel)),
+                            "upperLevel": .number(Double($0.upperLevel))
+                        ])
+                    }
                 })
             ]),
             "status": .string(viewModel.statusText)
