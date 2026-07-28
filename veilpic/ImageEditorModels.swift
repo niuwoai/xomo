@@ -326,9 +326,19 @@ enum ImageEditorMarqueeShape: String, CaseIterable, Identifiable {
 }
 
 struct ImageEditorColorSamplerPoint: Identifiable {
-    let id = UUID()
+    let id: UUID
     let point: CGPoint
     let color: NSColor
+
+    init(
+        id: UUID = UUID(),
+        point: CGPoint,
+        color: NSColor
+    ) {
+        self.id = id
+        self.point = point
+        self.color = color
+    }
 }
 
 enum ImageEditorSelectionMode: String, CaseIterable, Identifiable {

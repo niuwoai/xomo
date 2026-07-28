@@ -983,6 +983,37 @@ struct ImageEditorToolSmokeTests {
         #expect(infoText.contains("R 255"))
         #expect(infoText.contains("B 255"))
         #expect(infoText.contains("A 255"))
+        let sampleID = sample.id
+
+        viewModel.replaceSelectedLayerImageForTesting(
+            solidImage(color: .systemGreen),
+            historyTitle: L10n.text("imageEditor.history.brush")
+        )
+        var refreshedSample = try #require(viewModel.colorSamplerPoints.last)
+        var refreshedColor = try #require(
+            refreshedSample.color.usingColorSpace(NSColorSpace.deviceRGB)
+        )
+        #expect(refreshedSample.id == sampleID)
+        #expect(refreshedColor.greenComponent > 0.8)
+        #expect(refreshedColor.greenComponent > refreshedColor.redComponent + 0.5)
+
+        viewModel.undo()
+        refreshedSample = try #require(viewModel.colorSamplerPoints.last)
+        refreshedColor = try #require(
+            refreshedSample.color.usingColorSpace(NSColorSpace.deviceRGB)
+        )
+        #expect(refreshedSample.id == sampleID)
+        #expect(refreshedColor.redComponent > 0.8)
+        #expect(refreshedColor.blueComponent > 0.8)
+
+        viewModel.redo()
+        refreshedSample = try #require(viewModel.colorSamplerPoints.last)
+        refreshedColor = try #require(
+            refreshedSample.color.usingColorSpace(NSColorSpace.deviceRGB)
+        )
+        #expect(refreshedSample.id == sampleID)
+        #expect(refreshedColor.greenComponent > 0.8)
+        #expect(refreshedColor.greenComponent > refreshedColor.redComponent + 0.5)
         #expect(viewModel.clearColorSamplers() == 1)
         #expect(viewModel.colorSamplerPoints.isEmpty)
         #expect(viewModel.clearColorSamplers() == 0)

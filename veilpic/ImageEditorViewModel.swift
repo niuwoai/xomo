@@ -528,6 +528,7 @@ final class ImageEditorViewModel: ObservableObject {
         newDocument.designCanvasMetadata = XomoDesignCanvasMetadata(draft: draft)
 
         document = newDocument
+        colorSamplerPoints.removeAll()
         psdCompatibilityReport = nil
         psdCompatibilityFileName = ""
         isPSDCompatibilityReportPresented = false
@@ -570,6 +571,7 @@ final class ImageEditorViewModel: ObservableObject {
             sourceName: L10n.text("source.clipboard"),
             image: normalized
         )
+        colorSamplerPoints.removeAll()
         psdCompatibilityReport = nil
         psdCompatibilityFileName = ""
         isPSDCompatibilityReportPresented = false
@@ -2820,6 +2822,7 @@ final class ImageEditorViewModel: ObservableObject {
         syncFilterControlsFromSelection()
         syncTextControlsFromSelection()
         syncShapeControlsFromSelection()
+        refreshColorSamplers()
         updateStatus()
     }
 
@@ -2837,6 +2840,7 @@ final class ImageEditorViewModel: ObservableObject {
         syncFilterControlsFromSelection()
         syncTextControlsFromSelection()
         syncShapeControlsFromSelection()
+        refreshColorSamplers()
         updateStatus()
     }
 
@@ -2880,6 +2884,7 @@ final class ImageEditorViewModel: ObservableObject {
         syncFilterControlsFromSelection()
         syncTextControlsFromSelection()
         syncShapeControlsFromSelection()
+        refreshColorSamplers()
         updateStatus()
         statusText = L10n.format("imageEditor.status.historyTruncated", removedCount)
     }
@@ -5463,18 +5468,42 @@ final class ImageEditorViewModel: ObservableObject {
     func addColorSampler(at point: CGPoint) -> Bool {
         let canvasBounds = CGRect(origin: .zero, size: document.canvasSize)
         guard canvasBounds.contains(point) else { return false }
-        guard let color = averagedColorSample(at: point) else { return false }
+        let image = currentImage
+        guard let color = averagedColorSample(at: point, image: image) else { return false }
         let sample = ImageEditorColorSamplerPoint(point: point, color: color)
         colorSamplerPoints = Array((colorSamplerPoints + [sample]).suffix(4))
         statusText = L10n.format("imageEditor.status.colorSamplerAdded", colorSamplerPoints.count)
         return true
     }
 
-    private func averagedColorSample(at point: CGPoint) -> NSColor? {
+    @discardableResult
+    func refreshColorSamplers() -> Int {
+        guard !colorSamplerPoints.isEmpty else { return 0 }
+        let canvasBounds = CGRect(origin: .zero, size: document.canvasSize)
+        let image = currentImage
+        colorSamplerPoints = colorSamplerPoints.compactMap { sample in
+            guard canvasBounds.contains(sample.point),
+                  let color = averagedColorSample(at: sample.point, image: image)
+            else { return nil }
+            return ImageEditorColorSamplerPoint(
+                id: sample.id,
+                point: sample.point,
+                color: color
+            )
+        }
+        return colorSamplerPoints.count
+    }
+
+    private func averagedColorSample(
+        at point: CGPoint,
+        image: NSImage
+    ) -> NSColor? {
         let offsets: [CGFloat] = [-1, 0, 1]
         let colors = offsets.flatMap { yOffset in
             offsets.compactMap { xOffset in
-                document.compositedImage.color(at: CGPoint(x: point.x + xOffset, y: point.y + yOffset))?.usingColorSpace(.deviceRGB)
+                image.color(
+                    at: CGPoint(x: point.x + xOffset, y: point.y + yOffset)
+                )?.usingColorSpace(.deviceRGB)
             }
         }
         guard !colors.isEmpty else { return nil }
@@ -7655,6 +7684,7 @@ final class ImageEditorViewModel: ObservableObject {
         }
         historySnapshots[entry.id] = document
         selectedHistoryEntryID = entry.id
+        refreshColorSamplers()
         updateStatus()
     }
 

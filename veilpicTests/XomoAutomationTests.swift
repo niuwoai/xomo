@@ -1905,6 +1905,31 @@ struct XomoAutomationTests {
         )
         #expect(viewModel.document.history.count == historyCount)
 
+        let redImage = NSImage.rendered(size: viewModel.document.canvasSize) { rect in
+            NSColor(deviceRed: 1, green: 0, blue: 0, alpha: 1).setFill()
+            rect.fill()
+        } ?? NSImage.transparent(size: viewModel.document.canvasSize)
+        if let selectedLayerIndex = viewModel.document.selectedLayerIndex {
+            viewModel.document.layers[selectedLayerIndex].image = redImage
+        }
+        let refreshedListResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.color_sampler.list"
+        ))
+        #expect(refreshedListResponse.ok)
+        let refreshedColor = try #require(
+            refreshedListResponse.result?.arrayValue?.first?.objectValue?["color"]?.objectValue
+        )
+        let refreshedRed = try #require(refreshedColor["red"]?.doubleValue)
+        let refreshedGreen = try #require(refreshedColor["green"]?.doubleValue)
+        let refreshedBlue = try #require(refreshedColor["blue"]?.doubleValue)
+        let refreshedAlpha = try #require(refreshedColor["alpha"]?.doubleValue)
+        #expect(refreshedRed > 0.8)
+        #expect(refreshedRed > refreshedGreen + 0.5)
+        #expect(refreshedRed > refreshedBlue + 0.5)
+        #expect(refreshedAlpha > 0.95)
+        #expect(viewModel.document.history.count == historyCount)
+
         let invalidAddResponse = registry.execute(request(
             operation: "call",
             name: "xomo.color_sampler.add",

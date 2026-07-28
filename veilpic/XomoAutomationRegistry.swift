@@ -4764,7 +4764,8 @@ final class XomoAutomationRegistry {
     private func colorSamplersResult(
         _ viewModel: ImageEditorViewModel
     ) -> XomoJSONValue {
-        .array(viewModel.colorSamplerPoints.enumerated().map { index, sample in
+        viewModel.refreshColorSamplers()
+        return .array(viewModel.colorSamplerPoints.enumerated().map { index, sample in
             colorSamplerJSON(sample, index: index)
         })
     }
