@@ -469,7 +469,9 @@
 "imageEditor.info.selection.bounds" = "选区 · X %d  Y %d · W %d  H %d px";
 "imageEditor.info.object.empty" = "对象 · X —  Y — · W —  H —";
 "imageEditor.info.object.bounds" = "对象 · X %@  Y %@ · W %@  H %@ px";
+"imageEditor.info.object.bounds.preview" = "对象 · X %@  Y %@ · W %@  H %@ px · ΔX %@  ΔY %@ px";
 "imageEditor.info.objects.bounds" = "%d 个对象 · X %@  Y %@ · W %@  H %@ px";
+"imageEditor.info.objects.bounds.preview" = "%d 个对象 · X %@  Y %@ · W %@  H %@ px · ΔX %@  ΔY %@ px";
 "imageEditor.info.pointer.empty" = "指针 · X —  Y — · —";
 "imageEditor.info.pointer.rgb" = "指针 · X %d  Y %d · R %d  G %d  B %d  A %d";
 "imageEditor.info.pointer.hsb" = "指针 · X %d  Y %d · H %d°  S %d%%  B %d%%  A %d%%";

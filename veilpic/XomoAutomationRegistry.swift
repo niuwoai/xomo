@@ -981,7 +981,7 @@ final class XomoAutomationRegistry {
                 "selectedLayerIds": .array(selectedLayerIDs.map(XomoJSONValue.string))
             ])
         }
-        return .object([
+        var result: [String: XomoJSONValue] = [
             "active": .bool(true),
             "preview": .bool(viewModel.movingObjectPreviewFrame != nil),
             "selectedCount": .number(Double(selectedLayerIDs.count)),
@@ -992,7 +992,14 @@ final class XomoAutomationRegistry {
                 "width": .number(bounds.width),
                 "height": .number(bounds.height)
             ])
-        ])
+        ]
+        if let delta = viewModel.movingObjectPreviewDelta {
+            result["delta"] = .object([
+                "x": .number(delta.width),
+                "y": .number(delta.height)
+            ])
+        }
+        return .object(result)
     }
 
     private func figmaImageFillJSON(_ metadata: XomoFigmaImageFillMetadata?) -> XomoJSONValue {
@@ -5061,7 +5068,7 @@ private extension XomoAutomationRegistry {
         tool("xomo.layer.list", "List layers with hierarchy, bounds, visibility, locks, opacity, blend mode, preserved Figma variable bindings, and optional binding filters.", [
             "figmaBindings": XomoAutomationSchema.string(description: "Filter by preserved Figma variable bindings", values: ["all", "bound", "unbound"])
         ]),
-        tool("xomo.layer.selection_bounds", "Inspect the shared transform bounds of selected layers or component objects, including the lightweight live drag preview."),
+        tool("xomo.layer.selection_bounds", "Inspect the shared transform bounds of selected layers or component objects, including live drag-preview bounds and delta."),
         tool("xomo.object.select_at", "Select the frontmost visible canvas object at a point using the editor's alpha-aware component and layer hit testing.", [
             "x": XomoAutomationSchema.number(description: "Canvas x coordinate"),
             "y": XomoAutomationSchema.number(description: "Canvas y coordinate"),

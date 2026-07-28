@@ -1474,6 +1474,7 @@ struct XomoAutomationTests {
         #expect(initial.ok)
         #expect(initial.result?.objectValue?["active"] == .bool(true))
         #expect(initial.result?.objectValue?["preview"] == .bool(false))
+        #expect(initial.result?.objectValue?["delta"] == nil)
         #expect(initial.result?.objectValue?["selectedCount"] == .number(2))
         #expect(initial.result?.objectValue?["selectedLayerIds"]?.arrayValue == [
             firstID.uuidString,
@@ -1497,6 +1498,10 @@ struct XomoAutomationTests {
 
         #expect(preview.ok)
         #expect(preview.result?.objectValue?["preview"] == .bool(true))
+        #expect(preview.result?.objectValue?["delta"] == .object([
+            "x": .number(13.5),
+            "y": .number(-7.5)
+        ]))
         #expect(
             preview.result?.objectValue?["bounds"]?.objectValue?["x"]
                 == .number(expectedBounds.minX + 13.5)
@@ -1505,7 +1510,10 @@ struct XomoAutomationTests {
             preview.result?.objectValue?["bounds"]?.objectValue?["y"]
                 == .number(expectedBounds.minY - 7.5)
         )
+        #expect(viewModel.selectedObjectBoundsInfoText.contains("ΔX"))
+        #expect(viewModel.selectedObjectBoundsInfoText.contains("ΔY"))
         #expect(viewModel.selectedObjectBoundsInfoText.contains(".5"))
+        #expect(viewModel.movingObjectPreviewDelta == CGSize(width: 13.5, height: -7.5))
         #expect(viewModel.document.history.count == historyCount)
 
         #expect(viewModel.cancelMovingSelectedLayer())
@@ -1514,7 +1522,9 @@ struct XomoAutomationTests {
             name: "xomo.layer.selection_bounds"
         ))
         #expect(restored.result?.objectValue?["preview"] == .bool(false))
+        #expect(restored.result?.objectValue?["delta"] == nil)
         #expect(restored.result?.objectValue?["bounds"] == initial.result?.objectValue?["bounds"])
+        #expect(viewModel.movingObjectPreviewDelta == nil)
         #expect(viewModel.document.history.count == historyCount)
 
         viewModel.clearLayerSelection()

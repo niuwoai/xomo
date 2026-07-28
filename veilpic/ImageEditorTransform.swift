@@ -22,6 +22,18 @@ extension ImageEditorViewModel {
         return transformFrame(for: selectedTransformableLayerIndices)
     }
 
+    var movingObjectPreviewDelta: CGSize? {
+        guard let originalFrame = movingOriginalTransformFrame?.standardized,
+              let previewFrame = movingObjectPreviewFrame?.standardized,
+              !originalFrame.isNull,
+              !previewFrame.isNull
+        else { return nil }
+        return CGSize(
+            width: previewFrame.minX - originalFrame.minX,
+            height: previewFrame.minY - originalFrame.minY
+        )
+    }
+
     var selectedObjectBoundsInfoText: String {
         guard let frame = (movingObjectPreviewFrame ?? selectedLayerTransformFrame)?
             .standardized,
@@ -36,18 +48,36 @@ extension ImageEditorViewModel {
             geometryInfoValue(frame.width),
             geometryInfoValue(frame.height)
         ]
+        let previewDelta = movingObjectPreviewDelta
+        let previewArguments: [CVarArg]
+        if let delta = previewDelta {
+            previewArguments = arguments + [
+                geometryInfoValue(delta.width),
+                geometryInfoValue(delta.height)
+            ]
+        } else {
+            previewArguments = arguments
+        }
         if document.selectedLayerIDs.count > 1 {
             let multipleArguments: [CVarArg] = [document.selectedLayerIDs.count]
             return String(
-                format: L10n.text("imageEditor.info.objects.bounds"),
+                format: L10n.text(
+                    previewDelta == nil
+                        ? "imageEditor.info.objects.bounds"
+                        : "imageEditor.info.objects.bounds.preview"
+                ),
                 locale: Locale.current,
-                arguments: multipleArguments + arguments
+                arguments: multipleArguments + previewArguments
             )
         }
         return String(
-            format: L10n.text("imageEditor.info.object.bounds"),
+            format: L10n.text(
+                previewDelta == nil
+                    ? "imageEditor.info.object.bounds"
+                    : "imageEditor.info.object.bounds.preview"
+            ),
             locale: Locale.current,
-            arguments: arguments
+            arguments: previewArguments
         )
     }
 
