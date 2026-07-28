@@ -441,11 +441,14 @@
 "imageEditor.info.colorSamplers.empty" = "暂无颜色取样点";
 "imageEditor.info.colorSampler" = "%d · X %d  Y %d · R %d  G %d  B %d  A %d";
 "imageEditor.info.colorSampler.hsb" = "%d · X %d  Y %d · H %d°  S %d%%  B %d%%  A %d%%";
+"imageEditor.info.colorSampler.cmyk" = "%d · X %d  Y %d · C %d%%  M %d%%  Y %d%%  K %d%%  A %d%%";
 "imageEditor.info.colorSampler.hexadecimal" = "%d · X %d  Y %d · %@";
 "imageEditor.info.colorSampler.mode.rgb" = "8 位 RGB";
 "imageEditor.info.colorSampler.mode.rgb.short" = "RGB";
 "imageEditor.info.colorSampler.mode.hsb" = "色相 / 饱和度 / 明度";
 "imageEditor.info.colorSampler.mode.hsb.short" = "HSB";
+"imageEditor.info.colorSampler.mode.cmyk" = "Device RGB 推导 CMYK";
+"imageEditor.info.colorSampler.mode.cmyk.short" = "CMYK";
 "imageEditor.info.colorSampler.mode.hexadecimal" = "十六进制 RGBA";
 "imageEditor.info.colorSampler.mode.hexadecimal.short" = "HEX";
 "imageEditor.info.colorSampler.sampleSize" = "取样大小";
@@ -465,6 +468,7 @@
 "imageEditor.info.pointer.empty" = "指针 · X —  Y — · —";
 "imageEditor.info.pointer.rgb" = "指针 · X %d  Y %d · R %d  G %d  B %d  A %d";
 "imageEditor.info.pointer.hsb" = "指针 · X %d  Y %d · H %d°  S %d%%  B %d%%  A %d%%";
+"imageEditor.info.pointer.cmyk" = "指针 · X %d  Y %d · C %d%%  M %d%%  Y %d%%  K %d%%  A %d%%";
 "imageEditor.info.pointer.hexadecimal" = "指针 · X %d  Y %d · %@";
 "imageEditor.action.redo" = "重做";
 "imageEditor.export.title" = "导出图像";

@@ -4884,6 +4884,14 @@ final class XomoAutomationRegistry {
                 "brightness": .number(Double(reading.brightness)),
                 "alpha": .number(Double(reading.alpha))
             ]),
+            "cmyk": .object([
+                "cyan": .number(Double(reading.cyan)),
+                "magenta": .number(Double(reading.magenta)),
+                "yellow": .number(Double(reading.yellow)),
+                "key": .number(Double(reading.key)),
+                "alpha": .number(Double(reading.alpha)),
+                "conversion": .string("deviceRGB")
+            ]),
             "hexRGBA": .string(reading.hexadecimalRGBA)
         ])
     }

@@ -441,11 +441,14 @@
 "imageEditor.info.colorSamplers.empty" = "No color samples";
 "imageEditor.info.colorSampler" = "%d · X %d  Y %d · R %d  G %d  B %d  A %d";
 "imageEditor.info.colorSampler.hsb" = "%d · X %d  Y %d · H %d°  S %d%%  B %d%%  A %d%%";
+"imageEditor.info.colorSampler.cmyk" = "%d · X %d  Y %d · C %d%%  M %d%%  Y %d%%  K %d%%  A %d%%";
 "imageEditor.info.colorSampler.hexadecimal" = "%d · X %d  Y %d · %@";
 "imageEditor.info.colorSampler.mode.rgb" = "8-bit RGB";
 "imageEditor.info.colorSampler.mode.rgb.short" = "RGB";
 "imageEditor.info.colorSampler.mode.hsb" = "Hue / Saturation / Brightness";
 "imageEditor.info.colorSampler.mode.hsb.short" = "HSB";
+"imageEditor.info.colorSampler.mode.cmyk" = "Device RGB-derived CMYK";
+"imageEditor.info.colorSampler.mode.cmyk.short" = "CMYK";
 "imageEditor.info.colorSampler.mode.hexadecimal" = "Hexadecimal RGBA";
 "imageEditor.info.colorSampler.mode.hexadecimal.short" = "HEX";
 "imageEditor.info.colorSampler.sampleSize" = "Sample Size";
@@ -465,6 +468,7 @@
 "imageEditor.info.pointer.empty" = "Pointer · X —  Y — · —";
 "imageEditor.info.pointer.rgb" = "Pointer · X %d  Y %d · R %d  G %d  B %d  A %d";
 "imageEditor.info.pointer.hsb" = "Pointer · X %d  Y %d · H %d°  S %d%%  B %d%%  A %d%%";
+"imageEditor.info.pointer.cmyk" = "Pointer · X %d  Y %d · C %d%%  M %d%%  Y %d%%  K %d%%  A %d%%";
 "imageEditor.info.pointer.hexadecimal" = "Pointer · X %d  Y %d · %@";
 "imageEditor.action.redo" = "Redo";
 "imageEditor.export.title" = "Export Image";

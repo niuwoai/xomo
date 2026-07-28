@@ -931,6 +931,17 @@ final class ImageEditorViewModel: ObservableObject {
                 reading.brightnessPercent,
                 reading.alphaPercent
             )
+        case .cmyk:
+            return L10n.format(
+                "imageEditor.info.pointer.cmyk",
+                Int(point.x),
+                Int(point.y),
+                reading.cyanPercent,
+                reading.magentaPercent,
+                reading.yellowPercent,
+                reading.keyPercent,
+                reading.alphaPercent
+            )
         case .hexadecimal:
             return L10n.format(
                 "imageEditor.info.pointer.hexadecimal",
@@ -974,6 +985,18 @@ final class ImageEditorViewModel: ObservableObject {
                     reading.hueDegrees,
                     reading.saturationPercent,
                     reading.brightnessPercent,
+                    reading.alphaPercent
+                ]
+            )
+        case .cmyk:
+            return String(
+                format: L10n.text("imageEditor.info.colorSampler.cmyk"),
+                locale: Locale.current,
+                arguments: sharedArguments + [
+                    reading.cyanPercent,
+                    reading.magentaPercent,
+                    reading.yellowPercent,
+                    reading.keyPercent,
                     reading.alphaPercent
                 ]
             )

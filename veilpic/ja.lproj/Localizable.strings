@@ -441,11 +441,14 @@
 "imageEditor.info.colorSamplers.empty" = "カラーサンプルなし";
 "imageEditor.info.colorSampler" = "%d · X %d  Y %d · R %d  G %d  B %d  A %d";
 "imageEditor.info.colorSampler.hsb" = "%d · X %d  Y %d · H %d°  S %d%%  B %d%%  A %d%%";
+"imageEditor.info.colorSampler.cmyk" = "%d · X %d  Y %d · C %d%%  M %d%%  Y %d%%  K %d%%  A %d%%";
 "imageEditor.info.colorSampler.hexadecimal" = "%d · X %d  Y %d · %@";
 "imageEditor.info.colorSampler.mode.rgb" = "8ビット RGB";
 "imageEditor.info.colorSampler.mode.rgb.short" = "RGB";
 "imageEditor.info.colorSampler.mode.hsb" = "色相・彩度・明度";
 "imageEditor.info.colorSampler.mode.hsb.short" = "HSB";
+"imageEditor.info.colorSampler.mode.cmyk" = "Device RGB 由来 CMYK";
+"imageEditor.info.colorSampler.mode.cmyk.short" = "CMYK";
 "imageEditor.info.colorSampler.mode.hexadecimal" = "16進 RGBA";
 "imageEditor.info.colorSampler.mode.hexadecimal.short" = "HEX";
 "imageEditor.info.colorSampler.sampleSize" = "サンプル範囲";
@@ -465,6 +468,7 @@
 "imageEditor.info.pointer.empty" = "ポインター · X —  Y — · —";
 "imageEditor.info.pointer.rgb" = "ポインター · X %d  Y %d · R %d  G %d  B %d  A %d";
 "imageEditor.info.pointer.hsb" = "ポインター · X %d  Y %d · H %d°  S %d%%  B %d%%  A %d%%";
+"imageEditor.info.pointer.cmyk" = "ポインター · X %d  Y %d · C %d%%  M %d%%  Y %d%%  K %d%%  A %d%%";
 "imageEditor.info.pointer.hexadecimal" = "ポインター · X %d  Y %d · %@";
 "imageEditor.action.redo" = "やり直す";
 "imageEditor.export.title" = "画像を書き出し";

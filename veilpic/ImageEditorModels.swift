@@ -346,6 +346,7 @@ struct ImageEditorColorSamplerPoint: Identifiable {
 enum ImageEditorColorSamplerReadoutMode: String, CaseIterable, Identifiable {
     case rgb
     case hsb
+    case cmyk
     case hexadecimal
 
     var id: String { rawValue }
@@ -406,6 +407,10 @@ struct ImageEditorColorSamplerReading {
     let hue: CGFloat
     let saturation: CGFloat
     let brightness: CGFloat
+    let cyan: CGFloat
+    let magenta: CGFloat
+    let yellow: CGFloat
+    let key: CGFloat
 
     init(color: NSColor) {
         let rgb = color.usingColorSpace(.deviceRGB) ?? color
@@ -427,6 +432,19 @@ struct ImageEditorColorSamplerReading {
         self.hue = hue
         self.saturation = saturation
         self.brightness = brightness
+
+        let key = 1 - max(red, max(green, blue))
+        self.key = key
+        if key >= 1 - 0.000_001 {
+            cyan = 0
+            magenta = 0
+            yellow = 0
+        } else {
+            let printableRange = 1 - key
+            cyan = (1 - red - key) / printableRange
+            magenta = (1 - green - key) / printableRange
+            yellow = (1 - blue - key) / printableRange
+        }
     }
 
     var red8: Int { Self.byte(red) }
@@ -440,6 +458,10 @@ struct ImageEditorColorSamplerReading {
     var saturationPercent: Int { Self.percent(saturation) }
     var brightnessPercent: Int { Self.percent(brightness) }
     var alphaPercent: Int { Self.percent(alpha) }
+    var cyanPercent: Int { Self.percent(cyan) }
+    var magentaPercent: Int { Self.percent(magenta) }
+    var yellowPercent: Int { Self.percent(yellow) }
+    var keyPercent: Int { Self.percent(key) }
 
     var hexadecimalRGBA: String {
         String(

@@ -995,6 +995,20 @@ struct ImageEditorToolSmokeTests {
         #expect(hsbInfoText.contains("H 300°"))
         #expect(hsbInfoText.contains("S 100%"))
         #expect(hsbInfoText.contains("B 100%"))
+        let cmykInfoText = viewModel.colorSamplerInfoText(
+            index: 0,
+            sample: readoutSample,
+            mode: .cmyk
+        )
+        #expect(cmykInfoText.contains("C 0%"))
+        #expect(cmykInfoText.contains("M 100%"))
+        #expect(cmykInfoText.contains("Y 0%"))
+        #expect(cmykInfoText.contains("K 0%"))
+        let blackCMYK = ImageEditorColorSamplerReading(color: .black)
+        #expect(blackCMYK.cyanPercent == 0)
+        #expect(blackCMYK.magentaPercent == 0)
+        #expect(blackCMYK.yellowPercent == 0)
+        #expect(blackCMYK.keyPercent == 100)
         let wrappedHueReading = ImageEditorColorSamplerReading(
             color: NSColor(
                 deviceHue: 0.999,
@@ -1127,6 +1141,12 @@ struct ImageEditorToolSmokeTests {
         #expect(viewModel.pointerColorInfoText.contains("H 0°"))
         #expect(viewModel.pointerColorInfoText.contains("S 100%"))
         #expect(viewModel.pointerColorInfoText.contains("B 100%"))
+
+        viewModel.selectedColorSamplerReadoutMode = .cmyk
+        #expect(viewModel.pointerColorInfoText.contains("C 0%"))
+        #expect(viewModel.pointerColorInfoText.contains("M 100%"))
+        #expect(viewModel.pointerColorInfoText.contains("Y 100%"))
+        #expect(viewModel.pointerColorInfoText.contains("K 0%"))
 
         viewModel.selectedColorSamplerReadoutMode = .hexadecimal
         #expect(viewModel.pointerColorInfoText.contains("#FF0000FF"))
