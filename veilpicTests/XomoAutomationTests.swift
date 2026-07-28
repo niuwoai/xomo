@@ -83,6 +83,11 @@ struct XomoAutomationTests {
                 .objectValue?["sampleSize"]?.objectValue?["enum"]?.arrayValue
                 == ImageEditorColorSamplerSampleSize.allCases.map { .string($0.rawValue) }
         )
+        #expect(
+            colorSamplerAddTool["inputSchema"]?.objectValue?["properties"]?
+                .objectValue?["sampleSource"]?.objectValue?["enum"]?.arrayValue
+                == ImageEditorColorSamplerSource.allCases.map { .string($0.rawValue) }
+        )
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.color_sampler.list")
@@ -1878,6 +1883,15 @@ struct XomoAutomationTests {
 
     @Test func registryManagesColorSamplersWithoutMutatingHistory() throws {
         let viewModel = makeViewModel()
+        var blueLayer = ImageEditorLayer.blank(
+            name: "Blue Overlay",
+            size: viewModel.document.canvasSize
+        )
+        blueLayer.image = NSImage.rendered(size: viewModel.document.canvasSize) { rect in
+            NSColor.blue.setFill()
+            rect.fill()
+        } ?? blueLayer.image
+        viewModel.document.layers.append(blueLayer)
         let registry = XomoAutomationRegistry.shared
         registry.register(viewModel)
         defer { registry.unregister(viewModel) }
@@ -1889,14 +1903,17 @@ struct XomoAutomationTests {
             arguments: [
                 "x": .number(24),
                 "y": .number(18),
-                "sampleSize": .string("5x5")
+                "sampleSize": .string("5x5"),
+                "sampleSource": .string("selectedLayer")
             ]
         ))
         #expect(addResponse.ok)
         let added = try #require(addResponse.result?.objectValue)
         #expect(added["index"] == .number(1))
         #expect(added["sampleSize"] == .string("5x5"))
+        #expect(added["sampleSource"] == .string("selectedLayer"))
         #expect(viewModel.selectedColorSamplerSampleSize == .fiveByFive)
+        #expect(viewModel.selectedColorSamplerSource == .selectedLayer)
         #expect(added["point"]?.objectValue?["x"] == .number(24))
         #expect(added["point"]?.objectValue?["y"] == .number(18))
         #expect(added["color"]?.objectValue?["alpha"] == .number(0))
@@ -1917,6 +1934,10 @@ struct XomoAutomationTests {
         #expect(
             listResponse.result?.arrayValue?.first?.objectValue?["sampleSize"]
                 == .string("5x5")
+        )
+        #expect(
+            listResponse.result?.arrayValue?.first?.objectValue?["sampleSource"]
+                == .string("selectedLayer")
         )
         #expect(viewModel.document.history.count == historyCount)
 
@@ -1960,19 +1981,39 @@ struct XomoAutomationTests {
         #expect(hexadecimal.count == 9)
         #expect(viewModel.document.history.count == historyCount)
 
+        let compositeAddResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.color_sampler.add",
+            arguments: [
+                "x": .number(24),
+                "y": .number(18),
+                "sampleSource": .string("composite")
+            ]
+        ))
+        #expect(compositeAddResponse.ok)
+        let compositeSample = try #require(compositeAddResponse.result?.objectValue)
+        #expect(compositeSample["sampleSource"] == .string("composite"))
+        let compositeColor = try #require(compositeSample["color"]?.objectValue)
+        #expect((compositeColor["blue"]?.doubleValue ?? 0) > 0.8)
+        #expect((compositeColor["red"]?.doubleValue ?? 1) < 0.2)
+        #expect(viewModel.selectedColorSamplerSource == .composite)
+        #expect(viewModel.colorSamplerPoints.count == 2)
+
         let invalidAddResponse = registry.execute(request(
             operation: "call",
             name: "xomo.color_sampler.add",
             arguments: [
                 "x": .number(640),
                 "y": .number(480),
-                "sampleSize": .string("1x1")
+                "sampleSize": .string("1x1"),
+                "sampleSource": .string("selectedLayer")
             ]
         ))
         #expect(!invalidAddResponse.ok)
         #expect(invalidAddResponse.error?.contains("inside the canvas") == true)
-        #expect(viewModel.colorSamplerPoints.count == 1)
+        #expect(viewModel.colorSamplerPoints.count == 2)
         #expect(viewModel.selectedColorSamplerSampleSize == .fiveByFive)
+        #expect(viewModel.selectedColorSamplerSource == .composite)
 
         let unsupportedSizeResponse = registry.execute(request(
             operation: "call",
@@ -1985,15 +2026,29 @@ struct XomoAutomationTests {
         ))
         #expect(!unsupportedSizeResponse.ok)
         #expect(unsupportedSizeResponse.error?.contains("Unsupported") == true)
-        #expect(viewModel.colorSamplerPoints.count == 1)
+        #expect(viewModel.colorSamplerPoints.count == 2)
         #expect(viewModel.selectedColorSamplerSampleSize == .fiveByFive)
+
+        let unsupportedSourceResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.color_sampler.add",
+            arguments: [
+                "x": .number(20),
+                "y": .number(14),
+                "sampleSource": .string("selection")
+            ]
+        ))
+        #expect(!unsupportedSourceResponse.ok)
+        #expect(unsupportedSourceResponse.error?.contains("Unsupported") == true)
+        #expect(viewModel.colorSamplerPoints.count == 2)
+        #expect(viewModel.selectedColorSamplerSource == .composite)
 
         let clearResponse = registry.execute(request(
             operation: "call",
             name: "xomo.color_sampler.clear"
         ))
         #expect(clearResponse.ok)
-        #expect(clearResponse.result?.objectValue?["clearedCount"] == .number(1))
+        #expect(clearResponse.result?.objectValue?["clearedCount"] == .number(2))
         #expect(viewModel.colorSamplerPoints.isEmpty)
 
         let emptyClearResponse = registry.execute(request(

@@ -455,6 +455,11 @@
 "imageEditor.info.colorSampler.sampleSize.3x3.short" = "3×3";
 "imageEditor.info.colorSampler.sampleSize.5x5" = "平均 5 × 5 像素";
 "imageEditor.info.colorSampler.sampleSize.5x5.short" = "5×5";
+"imageEditor.info.colorSampler.source" = "取样来源";
+"imageEditor.info.colorSampler.source.composite" = "取样合成画布";
+"imageEditor.info.colorSampler.source.composite.short" = "合成";
+"imageEditor.info.colorSampler.source.selectedLayer" = "仅取样当前图层";
+"imageEditor.info.colorSampler.source.selectedLayer.short" = "图层";
 "imageEditor.info.pointer.coordinates" = "X: %d  Y: %d";
 "imageEditor.info.pointer.coordinates.empty" = "X: —  Y: —";
 "imageEditor.info.pointer.empty" = "指针 · X —  Y — · —";

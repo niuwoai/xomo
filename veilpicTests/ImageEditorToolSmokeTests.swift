@@ -1162,6 +1162,43 @@ struct ImageEditorToolSmokeTests {
         #expect(viewModel.document.history.count == historyCount)
     }
 
+    @Test func colorSamplerSourceSwitchesBetweenCompositeAndSelectedLayer() throws {
+        let viewModel = makeViewModel(image: solidImage(color: .red))
+        let sourceLayerID = try #require(viewModel.document.layers.first?.id)
+        var blueLayer = ImageEditorLayer.blank(
+            name: "Blue Overlay",
+            size: canvasSize
+        )
+        blueLayer.image = solidImage(color: .blue)
+        viewModel.document.layers.append(blueLayer)
+        viewModel.selectLayer(sourceLayerID)
+        let historyCount = viewModel.document.history.count
+        let point = CGPoint(x: 12, y: 10)
+
+        viewModel.updatePointer(point)
+        #expect(viewModel.activeColorSamplerSource == .composite)
+        #expect(viewModel.pointerColorInfoText.contains("B 255"))
+
+        #expect(viewModel.selectColorSamplerSource(.selectedLayer))
+        #expect(viewModel.activeColorSamplerSource == .selectedLayer)
+        #expect(viewModel.pointerColorInfoText.contains("R 255"))
+        #expect(viewModel.addColorSampler(at: point))
+        var sampledColor = try #require(
+            viewModel.colorSamplerPoints.last?.color.usingColorSpace(.deviceRGB)
+        )
+        #expect(sampledColor.redComponent > 0.95)
+        #expect(sampledColor.blueComponent < 0.05)
+
+        #expect(viewModel.selectColorSamplerSource(.composite))
+        sampledColor = try #require(
+            viewModel.colorSamplerPoints.last?.color.usingColorSpace(.deviceRGB)
+        )
+        #expect(sampledColor.blueComponent > 0.95)
+        #expect(sampledColor.redComponent < 0.05)
+        #expect(viewModel.pointerColorInfoText.contains("B 255"))
+        #expect(viewModel.document.history.count == historyCount)
+    }
+
     private let canvasSize = NSSize(width: 40, height: 28)
 
     private func makeViewModel(image: NSImage) -> ImageEditorViewModel {

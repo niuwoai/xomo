@@ -455,6 +455,11 @@
 "imageEditor.info.colorSampler.sampleSize.3x3.short" = "3×3";
 "imageEditor.info.colorSampler.sampleSize.5x5" = "5 × 5 ピクセルを平均";
 "imageEditor.info.colorSampler.sampleSize.5x5.short" = "5×5";
+"imageEditor.info.colorSampler.source" = "サンプル元";
+"imageEditor.info.colorSampler.source.composite" = "合成キャンバスをサンプル";
+"imageEditor.info.colorSampler.source.composite.short" = "合成";
+"imageEditor.info.colorSampler.source.selectedLayer" = "選択レイヤーのみをサンプル";
+"imageEditor.info.colorSampler.source.selectedLayer.short" = "レイヤー";
 "imageEditor.info.pointer.coordinates" = "X: %d  Y: %d";
 "imageEditor.info.pointer.coordinates.empty" = "X: —  Y: —";
 "imageEditor.info.pointer.empty" = "ポインター · X —  Y — · —";

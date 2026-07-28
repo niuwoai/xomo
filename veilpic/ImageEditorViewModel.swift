@@ -335,6 +335,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var selectedHistogramChannel: ImageEditorHistogramChannel = .rgb
     @Published var selectedColorSamplerReadoutMode: ImageEditorColorSamplerReadoutMode = .rgb
     @Published private(set) var selectedColorSamplerSampleSize: ImageEditorColorSamplerSampleSize = .threeByThree
+    @Published private(set) var selectedColorSamplerSource: ImageEditorColorSamplerSource = .composite
     @Published var selectedChannelPreview: ImageEditorChannelPreview = .composite
     @Published var selectedAlphaChannelID: UUID?
     @Published var previewedAlphaChannelID: UUID?
@@ -366,6 +367,10 @@ final class ImageEditorViewModel: ObservableObject {
     private var cachedPointerSamplePixels: [UInt8] = []
     private var cachedPointerSampleWidth = 0
     private var cachedPointerSampleHeight = 0
+    private var cachedSelectedLayerColorSamplerImage: (
+        layerID: UUID,
+        image: NSImage
+    )?
     private var cachedChannelPreviewImages: [String: NSImage] = [:]
     private var cachedAlphaChannelPreviewImages: [UUID: NSImage] = [:]
     private var cachedChannelThumbnailImages: [String: NSImage] = [:]
@@ -897,7 +902,8 @@ final class ImageEditorViewModel: ObservableObject {
         guard let point = pointerCanvasPoint,
               let color = sampledCanvasColor(
                 at: point,
-                sampleSize: selectedColorSamplerSampleSize
+                sampleSize: selectedColorSamplerSampleSize,
+                source: activeColorSamplerSource
               )
         else {
             return L10n.text("imageEditor.info.pointer.empty")
@@ -988,11 +994,64 @@ final class ImageEditorViewModel: ObservableObject {
         refreshColorSamplers()
     }
 
+    var activeColorSamplerSource: ImageEditorColorSamplerSource {
+        canSampleColorSamplerSource(selectedColorSamplerSource)
+            ? selectedColorSamplerSource
+            : .composite
+    }
+
+    func canSampleColorSamplerSource(
+        _ source: ImageEditorColorSamplerSource
+    ) -> Bool {
+        switch source {
+        case .composite:
+            return true
+        case .selectedLayer:
+            guard let layer = document.selectedLayer else { return false }
+            return layer.isGroup || (!layer.isAdjustment && !layer.isFilter)
+        }
+    }
+
+    @discardableResult
+    func selectColorSamplerSource(
+        _ source: ImageEditorColorSamplerSource
+    ) -> Bool {
+        guard canSampleColorSamplerSource(source) else { return false }
+        guard source != selectedColorSamplerSource else { return true }
+        selectedColorSamplerSource = source
+        refreshColorSamplers()
+        return true
+    }
+
+    private func colorSamplerImage(
+        for source: ImageEditorColorSamplerSource
+    ) -> NSImage? {
+        switch source {
+        case .composite:
+            return currentImage
+        case .selectedLayer:
+            guard canSampleColorSamplerSource(source),
+                  let layer = document.selectedLayer
+            else { return nil }
+            if let cachedSelectedLayerColorSamplerImage,
+               cachedSelectedLayerColorSamplerImage.layerID == layer.id {
+                return cachedSelectedLayerColorSamplerImage.image
+            }
+            let image = layer.isGroup
+                ? document.compositedImage(includingOnly: [layer.id])
+                : selectedLayerExportImage()
+            guard let image else { return nil }
+            cachedSelectedLayerColorSamplerImage = (layer.id, image)
+            return image
+        }
+    }
+
     private func sampledCanvasColor(
         at point: CGPoint,
-        sampleSize: ImageEditorColorSamplerSampleSize
+        sampleSize: ImageEditorColorSamplerSampleSize,
+        source: ImageEditorColorSamplerSource
     ) -> NSColor? {
-        let image = currentImage
+        guard let image = colorSamplerImage(for: source) else { return nil }
         if cachedPointerSampleImage !== image {
             guard let cgImage = image.cgImage(
                 forProposedRect: nil,
@@ -1105,6 +1164,7 @@ final class ImageEditorViewModel: ObservableObject {
         cachedPointerSamplePixels.removeAll(keepingCapacity: false)
         cachedPointerSampleWidth = 0
         cachedPointerSampleHeight = 0
+        cachedSelectedLayerColorSamplerImage = nil
     }
 
     var selectedLayerOpacity: Double {
@@ -5683,17 +5743,25 @@ final class ImageEditorViewModel: ObservableObject {
     @discardableResult
     func addColorSampler(
         at point: CGPoint,
-        sampleSize requestedSampleSize: ImageEditorColorSamplerSampleSize? = nil
+        sampleSize requestedSampleSize: ImageEditorColorSamplerSampleSize? = nil,
+        source requestedSource: ImageEditorColorSamplerSource? = nil
     ) -> Bool {
         let canvasBounds = CGRect(origin: .zero, size: document.canvasSize)
         guard canvasBounds.contains(point) else { return false }
         let sampleSize = requestedSampleSize ?? selectedColorSamplerSampleSize
+        let source = requestedSource ?? activeColorSamplerSource
+        guard canSampleColorSamplerSource(source) else { return false }
         guard let color = sampledCanvasColor(
             at: point,
-            sampleSize: sampleSize
+            sampleSize: sampleSize,
+            source: source
         ) else { return false }
-        if sampleSize != selectedColorSamplerSampleSize {
-            selectedColorSamplerSampleSize = sampleSize
+        let shouldRefreshExistingSamples =
+            sampleSize != selectedColorSamplerSampleSize
+                || source != selectedColorSamplerSource
+        selectedColorSamplerSampleSize = sampleSize
+        selectedColorSamplerSource = source
+        if shouldRefreshExistingSamples {
             refreshColorSamplers()
         }
         let sample = ImageEditorColorSamplerPoint(point: point, color: color)
@@ -5710,7 +5778,8 @@ final class ImageEditorViewModel: ObservableObject {
             guard canvasBounds.contains(sample.point),
                   let color = sampledCanvasColor(
                     at: sample.point,
-                    sampleSize: selectedColorSamplerSampleSize
+                    sampleSize: selectedColorSamplerSampleSize,
+                    source: activeColorSamplerSource
                   )
             else { return nil }
             return ImageEditorColorSamplerPoint(

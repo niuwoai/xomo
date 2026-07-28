@@ -381,6 +381,21 @@ enum ImageEditorColorSamplerSampleSize: String, CaseIterable, Identifiable {
     }
 }
 
+enum ImageEditorColorSamplerSource: String, CaseIterable, Identifiable {
+    case composite
+    case selectedLayer
+
+    var id: String { rawValue }
+
+    var title: String {
+        L10n.text("imageEditor.info.colorSampler.source.\(rawValue)")
+    }
+
+    var shortTitle: String {
+        L10n.text("imageEditor.info.colorSampler.source.\(rawValue).short")
+    }
+}
+
 struct ImageEditorColorSamplerReading {
     let red: CGFloat
     let green: CGFloat

@@ -3431,6 +3431,26 @@ struct ImageEditorView: View {
                     .accessibilityIdentifier("image-editor-info-clear-color-samplers")
                 }
                 HStack(spacing: 6) {
+                    Text(L10n.text("imageEditor.info.colorSampler.source"))
+                    Spacer()
+                    ForEach(ImageEditorColorSamplerSource.allCases) { source in
+                        Button(source.shortTitle) {
+                            viewModel.selectColorSamplerSource(source)
+                        }
+                        .buttonStyle(EditorSegmentButtonStyle(
+                            isSelected: viewModel.activeColorSamplerSource == source
+                        ))
+                        .disabled(!viewModel.canSampleColorSamplerSource(source))
+                        .focusable(false)
+                        .xomoFocusEffectDisabled()
+                        .help(source.title)
+                        .accessibilityLabel(source.title)
+                        .accessibilityIdentifier(
+                            "image-editor-info-color-sampler-source-\(source.rawValue)"
+                        )
+                    }
+                }
+                HStack(spacing: 6) {
                     Text(L10n.text("imageEditor.info.colorSampler.sampleSize"))
                     Spacer()
                     ForEach(ImageEditorColorSamplerSampleSize.allCases) { sampleSize in
@@ -3474,7 +3494,7 @@ struct ImageEditorView: View {
             .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
         }
         .frame(
-            height: (showsTitle ? 414 : 378)
+            height: (showsTitle ? 442 : 406)
                 + CGFloat(viewModel.colorSamplerPoints.count * 16)
         )
         .accessibilityIdentifier("image-editor-navigator-panel")

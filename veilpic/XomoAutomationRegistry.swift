@@ -359,9 +359,28 @@ final class XomoAutomationRegistry {
             } else {
                 sampleSize = nil
             }
+            let sampleSource: ImageEditorColorSamplerSource?
+            if let rawSampleSource = arguments["sampleSource"]?.stringValue {
+                guard let parsedSampleSource = ImageEditorColorSamplerSource(
+                    rawValue: rawSampleSource
+                ) else {
+                    throw XomoAutomationCallError.invalidArgument(
+                        "Unsupported color sampler source: \(rawSampleSource)"
+                    )
+                }
+                guard viewModel.canSampleColorSamplerSource(parsedSampleSource) else {
+                    throw XomoAutomationCallError.invalidArgument(
+                        "The selected layer cannot be sampled"
+                    )
+                }
+                sampleSource = parsedSampleSource
+            } else {
+                sampleSource = nil
+            }
             guard viewModel.addColorSampler(
                 at: point,
-                sampleSize: sampleSize
+                sampleSize: sampleSize,
+                source: sampleSource
             ),
                   let sample = viewModel.colorSamplerPoints.last
             else {
@@ -372,7 +391,8 @@ final class XomoAutomationRegistry {
             return colorSamplerJSON(
                 sample,
                 index: viewModel.colorSamplerPoints.count - 1,
-                sampleSize: viewModel.selectedColorSamplerSampleSize
+                sampleSize: viewModel.selectedColorSamplerSampleSize,
+                sampleSource: viewModel.activeColorSamplerSource
             )
         case "xomo.color_sampler.clear":
             let clearedCount = viewModel.clearColorSamplers()
@@ -4786,7 +4806,8 @@ final class XomoAutomationRegistry {
             colorSamplerJSON(
                 sample,
                 index: index,
-                sampleSize: viewModel.selectedColorSamplerSampleSize
+                sampleSize: viewModel.selectedColorSamplerSampleSize,
+                sampleSource: viewModel.activeColorSamplerSource
             )
         })
     }
@@ -4794,12 +4815,14 @@ final class XomoAutomationRegistry {
     private func colorSamplerJSON(
         _ sample: ImageEditorColorSamplerPoint,
         index: Int,
-        sampleSize: ImageEditorColorSamplerSampleSize
+        sampleSize: ImageEditorColorSamplerSampleSize,
+        sampleSource: ImageEditorColorSamplerSource
     ) -> XomoJSONValue {
         let reading = ImageEditorColorSamplerReading(color: sample.color)
         return .object([
             "index": .number(Double(index + 1)),
             "sampleSize": .string(sampleSize.rawValue),
+            "sampleSource": .string(sampleSource.rawValue),
             "point": pointJSON(sample.point),
             "color": colorJSON(sample.color),
             "rgb8": .object([
@@ -5271,6 +5294,10 @@ private extension XomoAutomationRegistry {
             "sampleSize": XomoAutomationSchema.string(
                 description: "Optional square pixel sampling area",
                 values: ImageEditorColorSamplerSampleSize.allCases.map(\.rawValue)
+            ),
+            "sampleSource": XomoAutomationSchema.string(
+                description: "Optional rendered source to sample",
+                values: ImageEditorColorSamplerSource.allCases.map(\.rawValue)
             )
         ], required: ["x", "y"]),
         tool("xomo.color_sampler.clear", "Clear all canvas color samplers and report the actual cleared count."),

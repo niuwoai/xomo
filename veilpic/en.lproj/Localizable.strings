@@ -455,6 +455,11 @@
 "imageEditor.info.colorSampler.sampleSize.3x3.short" = "3×3";
 "imageEditor.info.colorSampler.sampleSize.5x5" = "Average 5 × 5 pixels";
 "imageEditor.info.colorSampler.sampleSize.5x5.short" = "5×5";
+"imageEditor.info.colorSampler.source" = "Sample";
+"imageEditor.info.colorSampler.source.composite" = "Sample the composited canvas";
+"imageEditor.info.colorSampler.source.composite.short" = "Composite";
+"imageEditor.info.colorSampler.source.selectedLayer" = "Sample only the selected layer";
+"imageEditor.info.colorSampler.source.selectedLayer.short" = "Layer";
 "imageEditor.info.pointer.coordinates" = "X: %d  Y: %d";
 "imageEditor.info.pointer.coordinates.empty" = "X: —  Y: —";
 "imageEditor.info.pointer.empty" = "Pointer · X —  Y — · —";
