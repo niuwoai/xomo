@@ -19,6 +19,118 @@ struct ImageEditorProjectDocumentTests {
         #expect(ImageEditorViewModel.legacyProjectContentType.identifier != "public.json")
     }
 
+    @Test
+    func projectDocumentRoundTripsColorSamplerStateAndRestoresLegacyDefaults() throws {
+        let canvasSize = NSSize(width: 32, height: 24)
+        let sourceImage = testImage(color: .blue, size: canvasSize)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "samplers.png",
+            image: sourceImage
+        ) { _ in }
+        viewModel.selectedColorSamplerReadoutMode = .hexadecimal
+        viewModel.selectColorSamplerSampleSize(.fiveByFive)
+        #expect(viewModel.selectColorSamplerSource(.selectedLayer))
+        #expect(viewModel.addColorSampler(at: CGPoint(x: 4, y: 5)))
+        #expect(viewModel.addColorSampler(at: CGPoint(x: 20, y: 12)))
+        let savedIDs = viewModel.colorSamplerPoints.map(\.id)
+        let savedColor = try #require(
+            viewModel.colorSamplerPoints.first?.color.usingColorSpace(.deviceRGB)
+        )
+
+        let data = try viewModel.projectData()
+        let project = try JSONDecoder().decode(
+            ImageEditorProjectDocument.self,
+            from: data
+        )
+        #expect(project.formatVersion == ImageEditorProjectDocument.formatVersion)
+        #expect(project.colorSamplerPoints?.map(\.id) == savedIDs)
+        #expect(project.colorSamplerReadoutMode == .hexadecimal)
+        #expect(project.colorSamplerSampleSize == .fiveByFive)
+        #expect(project.colorSamplerSource == .selectedLayer)
+
+        let reopened = ImageEditorViewModel(
+            sourceName: "empty.png",
+            image: testImage(color: .black, size: NSSize(width: 8, height: 8))
+        ) { _ in }
+        try reopened.loadProjectData(data)
+
+        #expect(reopened.colorSamplerPoints.map(\.id) == savedIDs)
+        #expect(
+            reopened.colorSamplerPoints.map(\.point)
+                == [CGPoint(x: 4, y: 5), CGPoint(x: 20, y: 12)]
+        )
+        #expect(reopened.selectedColorSamplerReadoutMode == .hexadecimal)
+        #expect(reopened.selectedColorSamplerSampleSize == .fiveByFive)
+        #expect(reopened.selectedColorSamplerSource == .selectedLayer)
+        let reopenedColor = try #require(
+            reopened.colorSamplerPoints.first?.color.usingColorSpace(.deviceRGB)
+        )
+        #expect(abs(reopenedColor.redComponent - savedColor.redComponent) < 0.01)
+        #expect(abs(reopenedColor.greenComponent - savedColor.greenComponent) < 0.01)
+        #expect(abs(reopenedColor.blueComponent - savedColor.blueComponent) < 0.01)
+        #expect(abs(reopenedColor.alphaComponent - savedColor.alphaComponent) < 0.01)
+
+        var normalizedProject = project
+        let duplicateID = UUID()
+        normalizedProject.colorSamplerSource = .composite
+        normalizedProject.colorSamplerPoints = [
+            ImageEditorProjectColorSamplerPoint(
+                id: UUID(),
+                point: CGPoint(x: -1, y: 3)
+            ),
+            ImageEditorProjectColorSamplerPoint(
+                id: duplicateID,
+                point: CGPoint(x: 2, y: 3)
+            ),
+            ImageEditorProjectColorSamplerPoint(
+                id: duplicateID,
+                point: CGPoint(x: 4, y: 5)
+            ),
+            ImageEditorProjectColorSamplerPoint(
+                id: UUID(),
+                point: CGPoint(x: 6, y: 7)
+            ),
+            ImageEditorProjectColorSamplerPoint(
+                id: UUID(),
+                point: CGPoint(x: 8, y: 9)
+            ),
+            ImageEditorProjectColorSamplerPoint(
+                id: UUID(),
+                point: CGPoint(x: 10, y: 11)
+            )
+        ]
+        let normalizedData = try JSONEncoder().encode(normalizedProject)
+        try reopened.loadProjectData(normalizedData)
+        #expect(
+            reopened.colorSamplerPoints.count
+                == ImageEditorColorSamplerPoint.maximumCount
+        )
+        #expect(Set(reopened.colorSamplerPoints.map(\.id)).count == 4)
+        #expect(
+            reopened.colorSamplerPoints.map(\.point)
+                == [
+                    CGPoint(x: 2, y: 3),
+                    CGPoint(x: 4, y: 5),
+                    CGPoint(x: 6, y: 7),
+                    CGPoint(x: 8, y: 9)
+                ]
+        )
+
+        var legacyObject = try #require(
+            JSONSerialization.jsonObject(with: data) as? [String: Any]
+        )
+        legacyObject.removeValue(forKey: "colorSamplerPoints")
+        legacyObject.removeValue(forKey: "colorSamplerReadoutMode")
+        legacyObject.removeValue(forKey: "colorSamplerSampleSize")
+        legacyObject.removeValue(forKey: "colorSamplerSource")
+        let legacyData = try JSONSerialization.data(withJSONObject: legacyObject)
+        try reopened.loadProjectData(legacyData)
+        #expect(reopened.colorSamplerPoints.isEmpty)
+        #expect(reopened.selectedColorSamplerReadoutMode == .rgb)
+        #expect(reopened.selectedColorSamplerSampleSize == .threeByThree)
+        #expect(reopened.selectedColorSamplerSource == .composite)
+    }
+
     @Test func textFontFamilyRoundTripsAndLegacyPayloadUsesSystemFont() throws {
         let content = ImageEditorTextContent(
             text: "Typography",

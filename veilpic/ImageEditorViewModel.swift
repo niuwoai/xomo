@@ -5765,9 +5765,55 @@ final class ImageEditorViewModel: ObservableObject {
             refreshColorSamplers()
         }
         let sample = ImageEditorColorSamplerPoint(point: point, color: color)
-        colorSamplerPoints = Array((colorSamplerPoints + [sample]).suffix(4))
+        colorSamplerPoints = Array(
+            (colorSamplerPoints + [sample]).suffix(
+                ImageEditorColorSamplerPoint.maximumCount
+            )
+        )
         statusText = L10n.format("imageEditor.status.colorSamplerAdded", colorSamplerPoints.count)
         return true
+    }
+
+    func restoreColorSamplerState(
+        points: [ImageEditorProjectColorSamplerPoint],
+        readoutMode: ImageEditorColorSamplerReadoutMode,
+        sampleSize: ImageEditorColorSamplerSampleSize,
+        source: ImageEditorColorSamplerSource
+    ) {
+        selectedColorSamplerReadoutMode = readoutMode
+        selectedColorSamplerSampleSize = sampleSize
+        selectedColorSamplerSource = canSampleColorSamplerSource(source)
+            ? source
+            : .composite
+
+        let canvasBounds = CGRect(origin: .zero, size: document.canvasSize)
+        var restoredPoints: [ImageEditorColorSamplerPoint] = []
+        var restoredIDs = Set<UUID>()
+        for storedPoint in points {
+            guard restoredPoints.count < ImageEditorColorSamplerPoint.maximumCount else {
+                break
+            }
+            guard canvasBounds.contains(storedPoint.point),
+                  let color = sampledCanvasColor(
+                      at: storedPoint.point,
+                      sampleSize: sampleSize,
+                      source: selectedColorSamplerSource
+                  )
+            else { continue }
+
+            let id = restoredIDs.insert(storedPoint.id).inserted
+                ? storedPoint.id
+                : UUID()
+            restoredIDs.insert(id)
+            restoredPoints.append(
+                ImageEditorColorSamplerPoint(
+                    id: id,
+                    point: storedPoint.point,
+                    color: color
+                )
+            )
+        }
+        colorSamplerPoints = restoredPoints
     }
 
     @discardableResult

@@ -23,6 +23,9 @@ extension ImageEditorBlendMode: Codable {}
 extension ImageEditorPatternOverlayKind: Codable {}
 extension ImageEditorTextAlignment: Codable {}
 extension ImageEditorShapeKind: Codable {}
+extension ImageEditorColorSamplerReadoutMode: Codable {}
+extension ImageEditorColorSamplerSampleSize: Codable {}
+extension ImageEditorColorSamplerSource: Codable {}
 
 enum ImageEditorProjectDocumentError: LocalizedError {
     case imageEncodingFailed(String)
@@ -46,7 +49,7 @@ struct ImageEditorProjectDocument: Codable {
     /// so existing documents remain safe to open after the product rename.
     static let fileExtension = "xomoproject"
     static let legacyFileExtension = "qpicproject"
-    static let formatVersion = 9
+    static let formatVersion = 10
 
     var formatVersion: Int
     var appVersion: String
@@ -80,13 +83,21 @@ struct ImageEditorProjectDocument: Codable {
     var xomoComponentTheme: XomoComponentTheme?
     var xomoLocalThemeTokenSnapshot: XomoComponentThemeTokenSnapshot?
     var globalLightAngle: CGFloat?
+    var colorSamplerPoints: [ImageEditorProjectColorSamplerPoint]?
+    var colorSamplerReadoutMode: ImageEditorColorSamplerReadoutMode?
+    var colorSamplerSampleSize: ImageEditorColorSamplerSampleSize?
+    var colorSamplerSource: ImageEditorColorSamplerSource?
     var historyTitles: [String]
 
     @MainActor
     init(
         document: ImageEditorDocument,
         xomoComponentTheme: XomoComponentTheme? = nil,
-        xomoLocalThemeTokenSnapshot: XomoComponentThemeTokenSnapshot? = nil
+        xomoLocalThemeTokenSnapshot: XomoComponentThemeTokenSnapshot? = nil,
+        colorSamplerPoints: [ImageEditorColorSamplerPoint] = [],
+        colorSamplerReadoutMode: ImageEditorColorSamplerReadoutMode = .rgb,
+        colorSamplerSampleSize: ImageEditorColorSamplerSampleSize = .threeByThree,
+        colorSamplerSource: ImageEditorColorSamplerSource = .composite
     ) throws {
         formatVersion = Self.formatVersion
         appVersion = AppVersion.current
@@ -126,6 +137,14 @@ struct ImageEditorProjectDocument: Codable {
         self.xomoComponentTheme = xomoComponentTheme
         self.xomoLocalThemeTokenSnapshot = xomoLocalThemeTokenSnapshot
         globalLightAngle = document.globalLightAngle
+        self.colorSamplerPoints = colorSamplerPoints.isEmpty
+            ? nil
+            : colorSamplerPoints.map {
+                ImageEditorProjectColorSamplerPoint(sample: $0)
+            }
+        self.colorSamplerReadoutMode = colorSamplerReadoutMode
+        self.colorSamplerSampleSize = colorSamplerSampleSize
+        self.colorSamplerSource = colorSamplerSource
         historyTitles = document.history.map(\.title)
     }
 
@@ -1109,6 +1128,21 @@ struct ImageEditorProjectColor: Codable, Equatable {
     }
 }
 
+struct ImageEditorProjectColorSamplerPoint: Codable, Equatable {
+    var id: UUID
+    var point: CGPoint
+
+    init(id: UUID, point: CGPoint) {
+        self.id = id
+        self.point = point
+    }
+
+    init(sample: ImageEditorColorSamplerPoint) {
+        id = sample.id
+        point = sample.point
+    }
+}
+
 @MainActor
 extension ImageEditorViewModel {
     static var projectContentType: UTType {
@@ -1123,7 +1157,11 @@ extension ImageEditorViewModel {
         let project = try ImageEditorProjectDocument(
             document: document,
             xomoComponentTheme: xomoComponentTheme,
-            xomoLocalThemeTokenSnapshot: xomoLocalThemeTokenSnapshot
+            xomoLocalThemeTokenSnapshot: xomoLocalThemeTokenSnapshot,
+            colorSamplerPoints: colorSamplerPoints,
+            colorSamplerReadoutMode: selectedColorSamplerReadoutMode,
+            colorSamplerSampleSize: selectedColorSamplerSampleSize,
+            colorSamplerSource: selectedColorSamplerSource
         )
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
@@ -1144,6 +1182,12 @@ extension ImageEditorViewModel {
         if let metadata = document.designCanvasMetadata {
             exportSettings.scale = Double(metadata.exportScale)
         }
+        restoreColorSamplerState(
+            points: project.colorSamplerPoints ?? [],
+            readoutMode: project.colorSamplerReadoutMode ?? .rgb,
+            sampleSize: project.colorSamplerSampleSize ?? .threeByThree,
+            source: project.colorSamplerSource ?? .composite
+        )
         clearUndoHistory()
         historySnapshots.removeAll()
         document.history.forEach { entry in

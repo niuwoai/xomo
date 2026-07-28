@@ -1013,7 +1013,7 @@ struct ImageEditorToolSmokeTests {
         let sampleID = sample.id
 
         viewModel.replaceSelectedLayerImageForTesting(
-            solidImage(color: .systemGreen),
+            solidImage(color: .green),
             historyTitle: L10n.text("imageEditor.history.brush")
         )
         var refreshedSample = try #require(viewModel.colorSamplerPoints.last)

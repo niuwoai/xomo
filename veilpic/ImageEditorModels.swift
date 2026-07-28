@@ -326,6 +326,8 @@ enum ImageEditorMarqueeShape: String, CaseIterable, Identifiable {
 }
 
 struct ImageEditorColorSamplerPoint: Identifiable {
+    static let maximumCount = 4
+
     let id: UUID
     let point: CGPoint
     let color: NSColor
