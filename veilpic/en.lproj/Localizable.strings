@@ -465,6 +465,8 @@
 "imageEditor.info.colorSampler.source.selectedLayer.short" = "Layer";
 "imageEditor.info.pointer.coordinates" = "X: %d  Y: %d";
 "imageEditor.info.pointer.coordinates.empty" = "X: —  Y: —";
+"imageEditor.info.selection.empty" = "Selection · X —  Y — · W —  H —";
+"imageEditor.info.selection.bounds" = "Selection · X %d  Y %d · W %d  H %d px";
 "imageEditor.info.pointer.empty" = "Pointer · X —  Y — · —";
 "imageEditor.info.pointer.rgb" = "Pointer · X %d  Y %d · R %d  G %d  B %d  A %d";
 "imageEditor.info.pointer.hsb" = "Pointer · X %d  Y %d · H %d°  S %d%%  B %d%%  A %d%%";

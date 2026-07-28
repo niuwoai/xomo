@@ -1906,7 +1906,11 @@ extension ImageEditorView {
     private var infoActionsMenu: some View {
         Menu(L10n.text("imageEditor.menu.window.info")) {
             Button(L10n.text("imageEditor.action.infoShowPanel")) {
-                viewModel.statusText = "\(viewModel.pointerColorInfoText) | \(viewModel.sizeText)"
+                viewModel.statusText = [
+                    viewModel.pointerColorInfoText,
+                    viewModel.selectionBoundsInfoText,
+                    viewModel.sizeText
+                ].joined(separator: " | ")
             }
             .keyboardShortcut(KeyEquivalent(Character(UnicodeScalar(NSF8FunctionKey)!)), modifiers: [])
         }

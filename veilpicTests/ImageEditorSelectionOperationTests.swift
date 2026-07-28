@@ -12,6 +12,37 @@ import Testing
 @MainActor
 @Suite(.serialized)
 struct ImageEditorSelectionOperationTests {
+    @Test func informationPanelReportsSelectionGeometryAndInvertedCanvasBounds() {
+        let canvasSize = NSSize(width: 80, height: 60)
+        let viewModel = ImageEditorViewModel(
+            sourceName: "source.png",
+            image: testImage(size: canvasSize)
+        ) { _ in }
+
+        #expect(viewModel.selectionBoundsInfoText.contains("—"))
+
+        viewModel.createRectSelection(
+            from: CGPoint(x: 10.2, y: 8.4),
+            to: CGPoint(x: 31.7, y: 29.1)
+        )
+
+        #expect(viewModel.selectionBoundsInfoText.contains("X 10"))
+        #expect(viewModel.selectionBoundsInfoText.contains("Y 8"))
+        #expect(viewModel.selectionBoundsInfoText.contains("W 22"))
+        #expect(viewModel.selectionBoundsInfoText.contains("H 22"))
+
+        viewModel.invertSelection()
+
+        #expect(viewModel.selectionBoundsInfoText.contains("X 0"))
+        #expect(viewModel.selectionBoundsInfoText.contains("Y 0"))
+        #expect(viewModel.selectionBoundsInfoText.contains("W 80"))
+        #expect(viewModel.selectionBoundsInfoText.contains("H 60"))
+
+        viewModel.clearSelection()
+
+        #expect(viewModel.selectionBoundsInfoText.contains("—"))
+    }
+
     @Test func imageEditorCreatesFixedAspectMarqueeShapes() async throws {
         let canvasSize = NSSize(width: 80, height: 60)
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: testImage(size: canvasSize)) { _ in }

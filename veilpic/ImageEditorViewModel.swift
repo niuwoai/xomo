@@ -731,6 +731,27 @@ final class ImageEditorViewModel: ObservableObject {
         return "\(Int(size.width.rounded())) x \(Int(size.height.rounded())) px"
     }
 
+    var selectionBoundsInfoText: String {
+        guard let selection = document.selection else {
+            return L10n.text("imageEditor.info.selection.empty")
+        }
+        let canvasBounds = CGRect(origin: .zero, size: document.canvasSize)
+        let candidateBounds = selection.isInverted
+            ? canvasBounds
+            : selection.bounds.standardized.intersection(canvasBounds)
+        guard !candidateBounds.isNull, !candidateBounds.isEmpty else {
+            return L10n.text("imageEditor.info.selection.empty")
+        }
+        let pixelBounds = candidateBounds.integral
+        return L10n.format(
+            "imageEditor.info.selection.bounds",
+            Int(pixelBounds.minX),
+            Int(pixelBounds.minY),
+            Int(pixelBounds.width),
+            Int(pixelBounds.height)
+        )
+    }
+
     var activeHistogramSource: ImageEditorHistogramSource {
         canInspectHistogramSource(selectedHistogramSource) ? selectedHistogramSource : .composite
     }
