@@ -437,6 +437,9 @@
 "imageEditor.action.undo" = "Undo";
 "imageEditor.action.cloneSourcePick" = "Set Clone Source";
 "imageEditor.action.colorSamplerClear" = "Clear Samples";
+"imageEditor.info.colorSamplers" = "Color Samplers";
+"imageEditor.info.colorSamplers.empty" = "No color samples";
+"imageEditor.info.colorSampler" = "%d · X %d  Y %d · R %d  G %d  B %d  A %d";
 "imageEditor.action.redo" = "Redo";
 "imageEditor.export.title" = "Export Image";
 "imageEditor.export.format" = "Format";

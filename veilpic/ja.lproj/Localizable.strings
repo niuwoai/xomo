@@ -437,6 +437,9 @@
 "imageEditor.action.undo" = "取り消す";
 "imageEditor.action.cloneSourcePick" = "スタンプのサンプル元を設定";
 "imageEditor.action.colorSamplerClear" = "サンプルを消去";
+"imageEditor.info.colorSamplers" = "カラーサンプラー";
+"imageEditor.info.colorSamplers.empty" = "カラーサンプルなし";
+"imageEditor.info.colorSampler" = "%d · X %d  Y %d · R %d  G %d  B %d  A %d";
 "imageEditor.action.redo" = "やり直す";
 "imageEditor.export.title" = "画像を書き出し";
 "imageEditor.export.format" = "形式";

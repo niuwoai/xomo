@@ -3392,11 +3392,54 @@ struct ImageEditorView: View {
                 Text(viewModel.histogramPixelCountText(for: histogramSummary))
                     .lineLimit(1)
                 Text(viewModel.histogramClippingText(for: histogramSummary))
+                Divider()
+                    .overlay(Color.white.opacity(0.12))
+                HStack(spacing: 6) {
+                    Text(L10n.text("imageEditor.info.colorSamplers"))
+                        .fontWeight(.semibold)
+                    Spacer()
+                    Button {
+                        viewModel.clearColorSamplers()
+                    } label: {
+                        Image(systemName: "trash")
+                            .font(.system(size: 10, weight: .semibold))
+                    }
+                    .buttonStyle(EditorIconButtonStyle(isSelected: false))
+                    .focusable(false)
+                    .xomoFocusEffectDisabled()
+                    .disabled(viewModel.colorSamplerPoints.isEmpty)
+                    .help(L10n.text("imageEditor.action.colorSamplerClear"))
+                    .accessibilityLabel(L10n.text("imageEditor.action.colorSamplerClear"))
+                    .accessibilityIdentifier("image-editor-info-clear-color-samplers")
+                }
+                if viewModel.colorSamplerPoints.isEmpty {
+                    Text(L10n.text("imageEditor.info.colorSamplers.empty"))
+                        .foregroundStyle(Color(nsColor: ImageEditorTheme.menuMutedText))
+                } else {
+                    ForEach(
+                        Array(viewModel.colorSamplerPoints.enumerated()),
+                        id: \.element.id
+                    ) { index, sample in
+                        HStack(spacing: 5) {
+                            Circle()
+                                .fill(Color(nsColor: sample.color))
+                                .overlay(Circle().stroke(Color.white.opacity(0.4), lineWidth: 1))
+                                .frame(width: 9, height: 9)
+                            Text(viewModel.colorSamplerInfoText(index: index, sample: sample))
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.72)
+                        }
+                        .accessibilityIdentifier("image-editor-info-color-sampler-\(index + 1)")
+                    }
+                }
             }
             .font(.system(size: 11, weight: .medium).monospacedDigit())
             .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
         }
-        .frame(height: showsTitle ? 356 : 320)
+        .frame(
+            height: (showsTitle ? 386 : 350)
+                + CGFloat(viewModel.colorSamplerPoints.count * 16)
+        )
         .accessibilityIdentifier("image-editor-navigator-panel")
     }
 

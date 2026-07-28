@@ -972,11 +972,20 @@ struct ImageEditorToolSmokeTests {
         #expect(foreground.redComponent > 0.8)
         #expect(foreground.blueComponent > 0.8)
 
-        viewModel.addColorSampler(at: CGPoint(x: 20, y: 14))
+        #expect(viewModel.addColorSampler(at: CGPoint(x: 20, y: 14)))
         let sample = try #require(viewModel.colorSamplerPoints.last)
         let sampledColor = try #require(sample.color.usingColorSpace(NSColorSpace.deviceRGB))
         #expect(sampledColor.redComponent > 0.8)
         #expect(sampledColor.blueComponent > 0.8)
+        let infoText = viewModel.colorSamplerInfoText(index: 0, sample: sample)
+        #expect(infoText.contains("X 20"))
+        #expect(infoText.contains("Y 14"))
+        #expect(infoText.contains("R 255"))
+        #expect(infoText.contains("B 255"))
+        #expect(infoText.contains("A 255"))
+        #expect(viewModel.clearColorSamplers() == 1)
+        #expect(viewModel.colorSamplerPoints.isEmpty)
+        #expect(viewModel.clearColorSamplers() == 0)
     }
 
     private let canvasSize = NSSize(width: 40, height: 28)

@@ -42,7 +42,7 @@ struct XomoAutomationTests {
             Issue.record("Expected tool array")
             return
         }
-        #expect(tools.count == 138)
+        #expect(tools.count == 141)
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.layer.list")
@@ -71,6 +71,21 @@ struct XomoAutomationTests {
                 .objectValue?["enum"]?.arrayValue
                 == ImageEditorHistogramSource.allCases.map { .string($0.rawValue) }
         )
+        let colorSamplerAddTool = try #require(tools.compactMap { tool -> [String: XomoJSONValue]? in
+            guard case .object(let value) = tool else { return nil }
+            return value
+        }.first { $0["name"] == .string("xomo.color_sampler.add") })
+        #expect(colorSamplerAddTool["inputSchema"]?.objectValue?["required"] == .array([
+            .string("x"), .string("y")
+        ]))
+        #expect(tools.contains { tool in
+            guard case .object(let value) = tool else { return false }
+            return value["name"] == .string("xomo.color_sampler.list")
+        })
+        #expect(tools.contains { tool in
+            guard case .object(let value) = tool else { return false }
+            return value["name"] == .string("xomo.color_sampler.clear")
+        })
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.channel.action")
@@ -1854,6 +1869,69 @@ struct XomoAutomationTests {
         ))
         #expect(renameResponse.ok)
         #expect(viewModel.document.selectedLayer?.name == "MCP Group")
+    }
+
+    @Test func registryManagesColorSamplersWithoutMutatingHistory() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        defer { registry.unregister(viewModel) }
+        let historyCount = viewModel.document.history.count
+
+        let addResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.color_sampler.add",
+            arguments: [
+                "x": .number(24),
+                "y": .number(18)
+            ]
+        ))
+        #expect(addResponse.ok)
+        let added = try #require(addResponse.result?.objectValue)
+        #expect(added["index"] == .number(1))
+        #expect(added["point"]?.objectValue?["x"] == .number(24))
+        #expect(added["point"]?.objectValue?["y"] == .number(18))
+        #expect(added["color"]?.objectValue?["alpha"] == .number(0))
+
+        let listResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.color_sampler.list"
+        ))
+        #expect(listResponse.ok)
+        #expect(listResponse.result?.arrayValue?.count == 1)
+        #expect(
+            listResponse.result?.arrayValue?.first?.objectValue?["point"]?
+                .objectValue?["x"] == .number(24)
+        )
+        #expect(viewModel.document.history.count == historyCount)
+
+        let invalidAddResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.color_sampler.add",
+            arguments: [
+                "x": .number(640),
+                "y": .number(480)
+            ]
+        ))
+        #expect(!invalidAddResponse.ok)
+        #expect(invalidAddResponse.error?.contains("inside the canvas") == true)
+        #expect(viewModel.colorSamplerPoints.count == 1)
+
+        let clearResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.color_sampler.clear"
+        ))
+        #expect(clearResponse.ok)
+        #expect(clearResponse.result?.objectValue?["clearedCount"] == .number(1))
+        #expect(viewModel.colorSamplerPoints.isEmpty)
+
+        let emptyClearResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.color_sampler.clear"
+        ))
+        #expect(!emptyClearResponse.ok)
+        #expect(emptyClearResponse.error?.contains("No color samplers") == true)
+        #expect(viewModel.document.history.count == historyCount)
     }
 
     @Test func registryInspectsRequestedHistogramChannelWithoutMutatingHistory() throws {

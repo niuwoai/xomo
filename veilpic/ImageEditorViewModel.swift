@@ -874,6 +874,23 @@ final class ImageEditorViewModel: ObservableObject {
         )
     }
 
+    func colorSamplerInfoText(
+        index: Int,
+        sample: ImageEditorColorSamplerPoint
+    ) -> String {
+        let color = sample.color.usingColorSpace(.deviceRGB) ?? sample.color
+        return L10n.format(
+            "imageEditor.info.colorSampler",
+            index + 1,
+            Int(sample.point.x.rounded()),
+            Int(sample.point.y.rounded()),
+            Int((color.redComponent * 255).rounded()),
+            Int((color.greenComponent * 255).rounded()),
+            Int((color.blueComponent * 255).rounded()),
+            Int((color.alphaComponent * 255).rounded())
+        )
+    }
+
     var selectedLayerOpacity: Double {
         guard let layer = document.selectedLayer else { return 1 }
         return layer.opacity
@@ -5442,11 +5459,15 @@ final class ImageEditorViewModel: ObservableObject {
         statusText = L10n.text("imageEditor.status.colorSampled")
     }
 
-    func addColorSampler(at point: CGPoint) {
-        guard let color = averagedColorSample(at: point) else { return }
+    @discardableResult
+    func addColorSampler(at point: CGPoint) -> Bool {
+        let canvasBounds = CGRect(origin: .zero, size: document.canvasSize)
+        guard canvasBounds.contains(point) else { return false }
+        guard let color = averagedColorSample(at: point) else { return false }
         let sample = ImageEditorColorSamplerPoint(point: point, color: color)
         colorSamplerPoints = Array((colorSamplerPoints + [sample]).suffix(4))
         statusText = L10n.format("imageEditor.status.colorSamplerAdded", colorSamplerPoints.count)
+        return true
     }
 
     private func averagedColorSample(at point: CGPoint) -> NSColor? {
@@ -5466,10 +5487,13 @@ final class ImageEditorViewModel: ObservableObject {
         )
     }
 
-    func clearColorSamplers() {
-        guard !colorSamplerPoints.isEmpty else { return }
+    @discardableResult
+    func clearColorSamplers() -> Int {
+        let clearedCount = colorSamplerPoints.count
+        guard clearedCount > 0 else { return 0 }
         colorSamplerPoints.removeAll()
         statusText = L10n.text("imageEditor.status.colorSamplerCleared")
+        return clearedCount
     }
 
     func selectAdjustment(_ adjustment: ImageEditorAdjustment) {

@@ -342,6 +342,31 @@ final class XomoAutomationRegistry {
             viewModel.swapForegroundBackgroundColors()
         case "xomo.color.reset":
             viewModel.resetForegroundBackgroundColors()
+        case "xomo.color_sampler.list":
+            return colorSamplersResult(viewModel)
+        case "xomo.color_sampler.add":
+            let point = try requiredPoint(arguments)
+            guard viewModel.addColorSampler(at: point),
+                  let sample = viewModel.colorSamplerPoints.last
+            else {
+                throw XomoAutomationCallError.invalidArgument(
+                    "Color sampler point must be inside the canvas"
+                )
+            }
+            return colorSamplerJSON(
+                sample,
+                index: viewModel.colorSamplerPoints.count - 1
+            )
+        case "xomo.color_sampler.clear":
+            let clearedCount = viewModel.clearColorSamplers()
+            guard clearedCount > 0 else {
+                throw XomoAutomationCallError.operationFailed(
+                    "No color samplers to clear"
+                )
+            }
+            return .object([
+                "clearedCount": .number(Double(clearedCount))
+            ])
         case "xomo.brush.preset":
             return try brushPresetAction(arguments, viewModel: viewModel)
         case "xomo.paint.stroke":
@@ -4736,6 +4761,25 @@ final class XomoAutomationRegistry {
         ])
     }
 
+    private func colorSamplersResult(
+        _ viewModel: ImageEditorViewModel
+    ) -> XomoJSONValue {
+        .array(viewModel.colorSamplerPoints.enumerated().map { index, sample in
+            colorSamplerJSON(sample, index: index)
+        })
+    }
+
+    private func colorSamplerJSON(
+        _ sample: ImageEditorColorSamplerPoint,
+        index: Int
+    ) -> XomoJSONValue {
+        .object([
+            "index": .number(Double(index + 1)),
+            "point": pointJSON(sample.point),
+            "color": colorJSON(sample.color)
+        ])
+    }
+
     private func pointJSON(_ point: CGPoint) -> XomoJSONValue {
         .object([
             "x": .number(point.x),
@@ -5182,6 +5226,12 @@ private extension XomoAutomationRegistry {
         ], required: ["red", "green", "blue"]),
         tool("xomo.color.swap", "Swap foreground and background colors."),
         tool("xomo.color.reset", "Reset foreground to black and background to white."),
+        tool("xomo.color_sampler.list", "List up to four canvas color samplers with coordinates and RGBA colors."),
+        tool("xomo.color_sampler.add", "Add a color sampler at a canvas coordinate, retaining the newest four samples.", [
+            "x": XomoAutomationSchema.number(description: "Canvas x coordinate"),
+            "y": XomoAutomationSchema.number(description: "Canvas y coordinate")
+        ], required: ["x", "y"]),
+        tool("xomo.color_sampler.clear", "Clear all canvas color samplers and report the actual cleared count."),
         tool("xomo.brush.preset", "List, create, apply, or delete persisted brush presets.", [
             "action": XomoAutomationSchema.string(description: "Brush preset action", values: ["list", "create", "apply", "delete"]),
             "id": XomoAutomationSchema.string(description: "Preset identifier for apply or delete")

@@ -437,6 +437,9 @@
 "imageEditor.action.undo" = "撤销";
 "imageEditor.action.cloneSourcePick" = "设置图章取样点";
 "imageEditor.action.colorSamplerClear" = "清除取样点";
+"imageEditor.info.colorSamplers" = "颜色取样点";
+"imageEditor.info.colorSamplers.empty" = "暂无颜色取样点";
+"imageEditor.info.colorSampler" = "%d · X %d  Y %d · R %d  G %d  B %d  A %d";
 "imageEditor.action.redo" = "重做";
 "imageEditor.export.title" = "导出图像";
 "imageEditor.export.format" = "格式";
