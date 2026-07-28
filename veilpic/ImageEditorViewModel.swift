@@ -5771,6 +5771,44 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     @discardableResult
+    func moveColorSampler(id: UUID, to point: CGPoint) -> Bool {
+        guard let index = colorSamplerPoints.firstIndex(where: { $0.id == id }) else {
+            return false
+        }
+        let canvasBounds = CGRect(origin: .zero, size: document.canvasSize)
+        guard canvasBounds.contains(point),
+              let color = sampledCanvasColor(
+                  at: point,
+                  sampleSize: selectedColorSamplerSampleSize,
+                  source: activeColorSamplerSource
+              )
+        else { return false }
+        colorSamplerPoints[index] = ImageEditorColorSamplerPoint(
+            id: id,
+            point: point,
+            color: color
+        )
+        statusText = L10n.format(
+            "imageEditor.status.colorSamplerMoved",
+            index + 1
+        )
+        return true
+    }
+
+    @discardableResult
+    func removeColorSampler(id: UUID) -> ImageEditorColorSamplerPoint? {
+        guard let index = colorSamplerPoints.firstIndex(where: { $0.id == id }) else {
+            return nil
+        }
+        let removedSample = colorSamplerPoints.remove(at: index)
+        statusText = L10n.format(
+            "imageEditor.status.colorSamplerRemoved",
+            index + 1
+        )
+        return removedSample
+    }
+
+    @discardableResult
     func refreshColorSamplers() -> Int {
         guard !colorSamplerPoints.isEmpty else { return 0 }
         let canvasBounds = CGRect(origin: .zero, size: document.canvasSize)

@@ -1046,6 +1046,64 @@ struct ImageEditorToolSmokeTests {
         #expect(viewModel.clearColorSamplers() == 0)
     }
 
+    @Test func colorSamplerMoveAndRemoveAreAtomicAndHistoryFree() throws {
+        let image = try #require(NSImage.rendered(size: canvasSize) { rect in
+            NSColor(deviceRed: 1, green: 0, blue: 0, alpha: 1).setFill()
+            CGRect(
+                x: rect.minX,
+                y: rect.minY,
+                width: rect.width / 2,
+                height: rect.height
+            ).fill()
+            NSColor(deviceRed: 0, green: 0, blue: 1, alpha: 1).setFill()
+            CGRect(
+                x: rect.midX,
+                y: rect.minY,
+                width: rect.width / 2,
+                height: rect.height
+            ).fill()
+        })
+        let viewModel = makeViewModel(image: image)
+        let historyCount = viewModel.document.history.count
+        viewModel.selectColorSamplerSampleSize(.oneByOne)
+        #expect(viewModel.addColorSampler(at: CGPoint(x: 8, y: 12)))
+        let originalSample = try #require(viewModel.colorSamplerPoints.first)
+        let originalColor = try #require(
+            originalSample.color.usingColorSpace(.deviceRGB)
+        )
+        #expect(originalColor.redComponent > 0.8)
+        #expect(originalColor.blueComponent < 0.2)
+
+        #expect(viewModel.moveColorSampler(
+            id: originalSample.id,
+            to: CGPoint(x: 38, y: 12)
+        ))
+        let movedSample = try #require(viewModel.colorSamplerPoints.first)
+        let movedColor = try #require(
+            movedSample.color.usingColorSpace(.deviceRGB)
+        )
+        #expect(movedSample.id == originalSample.id)
+        #expect(movedSample.point == CGPoint(x: 38, y: 12))
+        #expect(movedColor.blueComponent > 0.8)
+        #expect(movedColor.redComponent < 0.2)
+        #expect(viewModel.document.history.count == historyCount)
+
+        #expect(!viewModel.moveColorSampler(
+            id: originalSample.id,
+            to: CGPoint(x: -1, y: 12)
+        ))
+        #expect(viewModel.colorSamplerPoints.first?.point == CGPoint(x: 38, y: 12))
+        #expect(viewModel.document.history.count == historyCount)
+
+        let removedSample = try #require(
+            viewModel.removeColorSampler(id: originalSample.id)
+        )
+        #expect(removedSample.id == originalSample.id)
+        #expect(viewModel.colorSamplerPoints.isEmpty)
+        #expect(viewModel.removeColorSampler(id: originalSample.id) == nil)
+        #expect(viewModel.document.history.count == historyCount)
+    }
+
     @Test func pointerReadoutTracksCurrentCanvasPixelAndClearsOutside() throws {
         let red = NSColor(deviceRed: 1, green: 0, blue: 0, alpha: 1)
         let viewModel = makeViewModel(image: solidImage(color: red))

@@ -645,7 +645,7 @@
 "imageEditor.tool.paintBucket.help" = "Paint Bucket: fill neighboring similar pixels with the foreground color.";
 "imageEditor.tool.gradient.help" = "Gradient: drag to fill a foreground-to-background color gradient.";
 "imageEditor.tool.eyedropper.help" = "Eyedropper: sample the canvas and set the foreground color.";
-"imageEditor.tool.colorSampler.help" = "Color Sampler: retain up to four canvas samples and inspect them as RGB, HSB, or hexadecimal.";
+"imageEditor.tool.colorSampler.help" = "Color Sampler: retain up to four samples, drag a numbered point to move it, or Option-click it to remove it.";
 "imageEditor.tool.text.help" = "Text: click the canvas to create an editable text layer.";
 "imageEditor.tool.rectangle.help" = "Rectangle: drag to create a rectangular shape layer.";
 "imageEditor.tool.ellipse.help" = "Ellipse: drag to create an elliptical shape layer.";
@@ -1841,6 +1841,8 @@
 "imageEditor.status.savedPathStroked" = "Stroked path “%@” with the current brush";
 "imageEditor.status.colorSampled" = "Foreground color sampled";
 "imageEditor.status.colorSamplerAdded" = "Color sampler %d added";
+"imageEditor.status.colorSamplerMoved" = "Color sampler %d moved";
+"imageEditor.status.colorSamplerRemoved" = "Color sampler %d removed";
 "imageEditor.status.colorSamplerCleared" = "Color samplers cleared";
 "imageEditor.status.gradientApplied" = "Gradient applied from drag";
 "imageEditor.status.adjustmentFailed" = "Adjustment failed";

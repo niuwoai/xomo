@@ -645,7 +645,7 @@
 "imageEditor.tool.paintBucket.help" = "油漆桶：向相邻的相似像素区域填充前景色。";
 "imageEditor.tool.gradient.help" = "渐变：拖拽以填充前景色到背景色的渐变。";
 "imageEditor.tool.eyedropper.help" = "吸管：从画布取样并设置前景色。";
-"imageEditor.tool.colorSampler.help" = "颜色取样器：在画布保留最多四个取样点，并以 RGB、HSB 或十六进制查看。";
+"imageEditor.tool.colorSampler.help" = "颜色取样器：保留最多四个取样点；拖动编号点可移动，按住 Option 点击可单独删除。";
 "imageEditor.tool.text.help" = "文字：点击画布创建可编辑文字图层。";
 "imageEditor.tool.rectangle.help" = "矩形：拖拽创建矩形形状图层。";
 "imageEditor.tool.ellipse.help" = "椭圆：拖拽创建椭圆形状图层。";
@@ -1841,6 +1841,8 @@
 "imageEditor.status.savedPathStroked" = "已用当前画笔描边路径“%@”";
 "imageEditor.status.colorSampled" = "已取样前景色";
 "imageEditor.status.colorSamplerAdded" = "已添加颜色取样点 %d";
+"imageEditor.status.colorSamplerMoved" = "已移动颜色取样点 %d";
+"imageEditor.status.colorSamplerRemoved" = "已删除颜色取样点 %d";
 "imageEditor.status.colorSamplerCleared" = "已清除颜色取样点";
 "imageEditor.status.gradientApplied" = "已应用拖拽渐变";
 "imageEditor.status.adjustmentFailed" = "调整失败";

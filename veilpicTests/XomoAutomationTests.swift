@@ -42,7 +42,7 @@ struct XomoAutomationTests {
             Issue.record("Expected tool array")
             return
         }
-        #expect(tools.count == 141)
+        #expect(tools.count == 143)
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.layer.list")
@@ -92,6 +92,20 @@ struct XomoAutomationTests {
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.color_sampler.list")
         })
+        let colorSamplerMoveTool = try #require(tools.compactMap { tool -> [String: XomoJSONValue]? in
+            guard case .object(let value) = tool else { return nil }
+            return value
+        }.first { $0["name"] == .string("xomo.color_sampler.move") })
+        #expect(colorSamplerMoveTool["inputSchema"]?.objectValue?["required"] == .array([
+            .string("id"), .string("x"), .string("y")
+        ]))
+        let colorSamplerRemoveTool = try #require(tools.compactMap { tool -> [String: XomoJSONValue]? in
+            guard case .object(let value) = tool else { return nil }
+            return value
+        }.first { $0["name"] == .string("xomo.color_sampler.remove") })
+        #expect(colorSamplerRemoveTool["inputSchema"]?.objectValue?["required"] == .array([
+            .string("id")
+        ]))
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.color_sampler.clear")
@@ -2057,6 +2071,90 @@ struct XomoAutomationTests {
         ))
         #expect(!emptyClearResponse.ok)
         #expect(emptyClearResponse.error?.contains("No color samplers") == true)
+        #expect(viewModel.document.history.count == historyCount)
+    }
+
+    @Test func registryMovesAndRemovesOneColorSamplerByStableID() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        defer { registry.unregister(viewModel) }
+        let historyCount = viewModel.document.history.count
+
+        let firstAdd = registry.execute(request(
+            operation: "call",
+            name: "xomo.color_sampler.add",
+            arguments: ["x": .number(10), "y": .number(12)]
+        ))
+        let secondAdd = registry.execute(request(
+            operation: "call",
+            name: "xomo.color_sampler.add",
+            arguments: ["x": .number(30), "y": .number(24)]
+        ))
+        #expect(firstAdd.ok)
+        #expect(secondAdd.ok)
+        let firstID = try #require(firstAdd.result?.objectValue?["id"]?.stringValue)
+        let secondID = try #require(secondAdd.result?.objectValue?["id"]?.stringValue)
+        #expect(firstID != secondID)
+
+        let moveResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.color_sampler.move",
+            arguments: [
+                "id": .string(firstID),
+                "x": .number(18),
+                "y": .number(20)
+            ]
+        ))
+        #expect(moveResponse.ok)
+        #expect(moveResponse.result?.objectValue?["id"] == .string(firstID))
+        #expect(moveResponse.result?.objectValue?["index"] == .number(1))
+        #expect(moveResponse.result?.objectValue?["point"]?.objectValue?["x"] == .number(18))
+        #expect(moveResponse.result?.objectValue?["point"]?.objectValue?["y"] == .number(20))
+        #expect(viewModel.colorSamplerPoints.count == 2)
+        #expect(viewModel.document.history.count == historyCount)
+
+        let originalMovedPoint = try #require(
+            viewModel.colorSamplerPoints.first(where: {
+                $0.id.uuidString == firstID
+            })
+        ).point
+        let invalidMove = registry.execute(request(
+            operation: "call",
+            name: "xomo.color_sampler.move",
+            arguments: [
+                "id": .string(firstID),
+                "x": .number(10_000),
+                "y": .number(10_000)
+            ]
+        ))
+        #expect(!invalidMove.ok)
+        #expect(
+            viewModel.colorSamplerPoints.first(where: {
+                $0.id.uuidString == firstID
+            })?.point == originalMovedPoint
+        )
+
+        let removeResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.color_sampler.remove",
+            arguments: ["id": .string(secondID)]
+        ))
+        #expect(removeResponse.ok)
+        #expect(
+            removeResponse.result?.objectValue?["removed"]?.objectValue?["id"]
+                == .string(secondID)
+        )
+        #expect(removeResponse.result?.objectValue?["remainingCount"] == .number(1))
+        #expect(viewModel.colorSamplerPoints.map(\.id.uuidString) == [firstID])
+
+        let repeatedRemove = registry.execute(request(
+            operation: "call",
+            name: "xomo.color_sampler.remove",
+            arguments: ["id": .string(secondID)]
+        ))
+        #expect(!repeatedRemove.ok)
+        #expect(viewModel.colorSamplerPoints.map(\.id.uuidString) == [firstID])
         #expect(viewModel.document.history.count == historyCount)
     }
 

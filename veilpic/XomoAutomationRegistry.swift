@@ -394,6 +394,52 @@ final class XomoAutomationRegistry {
                 sampleSize: viewModel.selectedColorSamplerSampleSize,
                 sampleSource: viewModel.activeColorSamplerSource
             )
+        case "xomo.color_sampler.move":
+            let rawID = try requiredString("id", in: arguments)
+            guard let id = UUID(uuidString: rawID),
+                  viewModel.colorSamplerPoints.contains(where: { $0.id == id })
+            else {
+                throw XomoAutomationCallError.invalidArgument(
+                    "Unknown color sampler id: \(rawID)"
+                )
+            }
+            let point = try requiredPoint(arguments)
+            guard viewModel.moveColorSampler(id: id, to: point),
+                  let index = viewModel.colorSamplerPoints.firstIndex(where: {
+                      $0.id == id
+                  })
+            else {
+                throw XomoAutomationCallError.invalidArgument(
+                    "Color sampler point must be inside the canvas"
+                )
+            }
+            return colorSamplerJSON(
+                viewModel.colorSamplerPoints[index],
+                index: index,
+                sampleSize: viewModel.selectedColorSamplerSampleSize,
+                sampleSource: viewModel.activeColorSamplerSource
+            )
+        case "xomo.color_sampler.remove":
+            let rawID = try requiredString("id", in: arguments)
+            guard let id = UUID(uuidString: rawID),
+                  let index = viewModel.colorSamplerPoints.firstIndex(where: {
+                      $0.id == id
+                  }),
+                  let removedSample = viewModel.removeColorSampler(id: id)
+            else {
+                throw XomoAutomationCallError.invalidArgument(
+                    "Unknown color sampler id: \(rawID)"
+                )
+            }
+            return .object([
+                "removed": colorSamplerJSON(
+                    removedSample,
+                    index: index,
+                    sampleSize: viewModel.selectedColorSamplerSampleSize,
+                    sampleSource: viewModel.activeColorSamplerSource
+                ),
+                "remainingCount": .number(Double(viewModel.colorSamplerPoints.count))
+            ])
         case "xomo.color_sampler.clear":
             let clearedCount = viewModel.clearColorSamplers()
             guard clearedCount > 0 else {
@@ -4820,6 +4866,7 @@ final class XomoAutomationRegistry {
     ) -> XomoJSONValue {
         let reading = ImageEditorColorSamplerReading(color: sample.color)
         return .object([
+            "id": .string(sample.id.uuidString),
             "index": .number(Double(index + 1)),
             "sampleSize": .string(sampleSize.rawValue),
             "sampleSource": .string(sampleSource.rawValue),
@@ -5300,6 +5347,14 @@ private extension XomoAutomationRegistry {
                 values: ImageEditorColorSamplerSource.allCases.map(\.rawValue)
             )
         ], required: ["x", "y"]),
+        tool("xomo.color_sampler.move", "Move one color sampler by stable id without writing document history.", [
+            "id": XomoAutomationSchema.string(description: "Stable color sampler UUID"),
+            "x": XomoAutomationSchema.number(description: "New canvas x coordinate"),
+            "y": XomoAutomationSchema.number(description: "New canvas y coordinate")
+        ], required: ["id", "x", "y"]),
+        tool("xomo.color_sampler.remove", "Remove one color sampler by stable id without clearing the other points.", [
+            "id": XomoAutomationSchema.string(description: "Stable color sampler UUID")
+        ], required: ["id"]),
         tool("xomo.color_sampler.clear", "Clear all canvas color samplers and report the actual cleared count."),
         tool("xomo.brush.preset", "List, create, apply, or delete persisted brush presets.", [
             "action": XomoAutomationSchema.string(description: "Brush preset action", values: ["list", "create", "apply", "delete"]),

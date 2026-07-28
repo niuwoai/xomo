@@ -817,6 +817,47 @@ struct ImageEditorCanvasCursorTests {
         #expect(ImageEditorCanvasCursor.cursor(for: .pen, brushDiameter: 18) !== NSCursor.crosshair)
     }
 
+    @Test func colorSamplerCursorDistinguishesPlacementMoveAndOptionRemoval() {
+        let placement = ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .colorSampler,
+            brushDiameter: 18
+        )
+        let pointHover = ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .colorSampler,
+            brushDiameter: 18,
+            isPointerOverColorSamplerPoint: true
+        )
+        let moving = ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .colorSampler,
+            brushDiameter: 18,
+            isColorSamplerMoveGestureActive: true
+        )
+        let removing = ImageEditorCanvasCursor.cursor(
+            for: .tools,
+            selectedTool: .colorSampler,
+            brushDiameter: 18,
+            isPointerOverColorSamplerPoint: true,
+            modifierFlags: [.option]
+        )
+        let componentLibrary = ImageEditorCanvasCursor.cursor(
+            for: .components,
+            selectedTool: .colorSampler,
+            brushDiameter: 18,
+            isPointerOverColorSamplerPoint: true,
+            modifierFlags: [.option]
+        )
+
+        #expect(placement === NSCursor.crosshair)
+        #expect(pointHover === ImageEditorCanvasCursor.objectMoveCursor())
+        #expect(moving === ImageEditorCanvasCursor.objectMoveCursor())
+        #expect(removing !== NSCursor.crosshair)
+        #expect(removing !== ImageEditorCanvasCursor.objectMoveCursor())
+        #expect(componentLibrary === NSCursor.arrow)
+    }
+
     @Test func pathSelectionUsesTheFamiliarSystemArrowAndPhotoshopShortcut() {
         #expect(ImageEditorCanvasCursor.family(for: .pathSelection) == .systemArrow)
         #expect(ImageEditorCanvasCursor.cursor(for: .pathSelection, brushDiameter: 18) === NSCursor.arrow)

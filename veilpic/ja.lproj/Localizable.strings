@@ -645,7 +645,7 @@
 "imageEditor.tool.paintBucket.help" = "塗りつぶし：隣接する類似ピクセルを前景色で塗りつぶします。";
 "imageEditor.tool.gradient.help" = "グラデ：ドラッグして前景色から背景色のグラデーションを描きます。";
 "imageEditor.tool.eyedropper.help" = "スポイト：キャンバスから色を取得して前景色に設定します。";
-"imageEditor.tool.colorSampler.help" = "カラーサンプラー：キャンバス上に最大4点を保持し、RGB・HSB・16進数で確認します。";
+"imageEditor.tool.colorSampler.help" = "カラーサンプラー：最大4点を保持し、番号付きポイントをドラッグして移動、Option クリックで個別に削除します。";
 "imageEditor.tool.text.help" = "文字：キャンバスをクリックして編集可能な文字レイヤーを作成します。";
 "imageEditor.tool.rectangle.help" = "矩形：ドラッグして矩形シェイプレイヤーを作成します。";
 "imageEditor.tool.ellipse.help" = "楕円：ドラッグして楕円シェイプレイヤーを作成します。";
@@ -1841,6 +1841,8 @@
 "imageEditor.status.savedPathStroked" = "現在のブラシでパス「%@」をストロークしました";
 "imageEditor.status.colorSampled" = "前景色を取得しました";
 "imageEditor.status.colorSamplerAdded" = "カラーサンプラー %d を追加しました";
+"imageEditor.status.colorSamplerMoved" = "カラーサンプラー %d を移動しました";
+"imageEditor.status.colorSamplerRemoved" = "カラーサンプラー %d を削除しました";
 "imageEditor.status.colorSamplerCleared" = "カラーサンプラーを消去しました";
 "imageEditor.status.gradientApplied" = "ドラッグしたグラデを適用しました";
 "imageEditor.status.adjustmentFailed" = "調整に失敗しました";

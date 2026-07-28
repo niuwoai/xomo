@@ -60,6 +60,11 @@ private struct ImageEditorDeliveryDrag: Equatable {
     var previewFrame: CGRect
 }
 
+private struct ImageEditorColorSamplerDrag: Equatable {
+    let id: UUID
+    var previewPoint: CGPoint
+}
+
 struct ImageEditorView: View {
     @StateObject var viewModel: ImageEditorViewModel
     @State private var dragPoints: [CGPoint] = []
@@ -85,6 +90,9 @@ struct ImageEditorView: View {
     @State private var isSelectedObjectMoveGestureActive = false
     @State private var isDeliveryObjectMoveGestureActive = false
     @State private var deliveryDrag: ImageEditorDeliveryDrag?
+    @State private var colorSamplerDrag: ImageEditorColorSamplerDrag?
+    @State private var pendingColorSamplerRemovalID: UUID?
+    @State private var isColorSamplerRemovalGestureActive = false
     @State private var activeResizeHandle: ImageEditorLayerResizeHandle?
     @State private var activeShapeGradientHandle: ImageEditorShapeGradientHandle?
     @State private var activeShapeRadialGradientHandle: ImageEditorShapeRadialGradientHandle?
@@ -1879,8 +1887,17 @@ struct ImageEditorView: View {
                             isPointerOverCanvas: isPointerOverDrawableCanvas,
                             isPointerOverMovableContent: contentHit.isMovable,
                             isPointerOverBlockedContent: contentHit.isBlocked,
+                            isPointerOverColorSamplerPoint:
+                                canvasInteractionTool == .colorSampler
+                                    && hoverViewPoint.map {
+                                        colorSamplerPointID(
+                                            at: $0,
+                                            in: geometry.size
+                                        ) != nil
+                                    } == true,
                             handIsDragging: isCanvasPanGestureActive,
                             isObjectMoveGestureActive: objectMoveIsActive,
+                            isColorSamplerMoveGestureActive: colorSamplerDrag != nil,
                             isSpacebarPanning: isSpacebarPanning,
                             isCanvasPanGestureActive: isCanvasPanGestureActive,
                             modifierFlags: canvasModifierFlags,
@@ -1896,6 +1913,9 @@ struct ImageEditorView: View {
                         pendingCropRect = nil
                         endPendingCropInteraction()
                     }
+                    if tool != .colorSampler {
+                        resetColorSamplerGesture()
+                    }
                     if tool != .text {
                         cancelCanvasTextEditing()
                     }
@@ -1906,6 +1926,7 @@ struct ImageEditorView: View {
                     if tab == .components {
                         pendingCropRect = nil
                         endPendingCropInteraction()
+                        resetColorSamplerGesture()
                         cancelCanvasTextEditing()
                         // Changing sidebar mode must immediately clear the
                         // previous tool cursor, even before the next hover
@@ -1942,6 +1963,7 @@ struct ImageEditorView: View {
                     isPointerInsideCanvas = false
                     activeBrushPressure = nil
                     endPendingCropInteraction()
+                    resetColorSamplerGesture()
                     NSCursor.arrow.set()
                 }
                 .onAppear {
@@ -2246,14 +2268,26 @@ struct ImageEditorView: View {
     @ViewBuilder
     private func colorSamplerOverlay(in size: CGSize) -> some View {
         ForEach(Array(viewModel.colorSamplerPoints.enumerated()), id: \.element.id) { index, sample in
-            let point = viewPoint(from: sample.point, in: size)
+            let samplePoint = colorSamplerDrag?.id == sample.id
+                ? colorSamplerDrag?.previewPoint ?? sample.point
+                : sample.point
+            let point = viewPoint(from: samplePoint, in: size)
+            let isRemovalTarget = pendingColorSamplerRemovalID == sample.id
             Text("\(index + 1)")
                 .font(.system(size: 10, weight: .bold))
                 .foregroundStyle(.white)
                 .frame(width: 18, height: 18)
-                .background(Color(nsColor: sample.color).opacity(0.92))
+                .background(Color(nsColor: sample.color).opacity(isRemovalTarget ? 0.52 : 0.92))
                 .clipShape(Circle())
-                .overlay(Circle().stroke(Color.black.opacity(0.7), lineWidth: 1))
+                .overlay {
+                    Circle()
+                        .stroke(
+                            Color.white.opacity(isRemovalTarget ? 0.76 : 0),
+                            style: StrokeStyle(lineWidth: 1, dash: [3, 2])
+                        )
+                        .padding(-3)
+                    Circle().stroke(Color.black.opacity(0.7), lineWidth: 1)
+                }
                 .position(point)
                 .allowsHitTesting(false)
 
@@ -2265,8 +2299,33 @@ struct ImageEditorView: View {
                 .background(Color.black.opacity(0.68))
                 .clipShape(RoundedRectangle(cornerRadius: 3, style: .continuous))
                 .position(x: point.x + 54, y: point.y - 14)
+                .opacity(isRemovalTarget ? 0.56 : 1)
                 .allowsHitTesting(false)
         }
+    }
+
+    private func colorSamplerPointID(
+        at viewPoint: CGPoint,
+        in size: CGSize,
+        hitRadius: CGFloat = 12
+    ) -> UUID? {
+        let maximumDistanceSquared = hitRadius * hitRadius
+        return viewModel.colorSamplerPoints
+            .map { sample -> (id: UUID, distanceSquared: CGFloat) in
+                let sampleViewPoint = self.viewPoint(from: sample.point, in: size)
+                let deltaX = sampleViewPoint.x - viewPoint.x
+                let deltaY = sampleViewPoint.y - viewPoint.y
+                return (sample.id, deltaX * deltaX + deltaY * deltaY)
+            }
+            .filter { $0.distanceSquared <= maximumDistanceSquared }
+            .min { $0.distanceSquared < $1.distanceSquared }?
+            .id
+    }
+
+    private func resetColorSamplerGesture() {
+        colorSamplerDrag = nil
+        pendingColorSamplerRemovalID = nil
+        isColorSamplerRemovalGestureActive = false
     }
 
     private func colorSamplerLabel(index: Int, color: NSColor) -> String {
@@ -2709,6 +2768,31 @@ struct ImageEditorView: View {
                     if let pointerImagePoint {
                         dragPoints.append(pointerImagePoint)
                     }
+                case .colorSampler:
+                    if colorSamplerDrag == nil, !isColorSamplerRemovalGestureActive {
+                        let hitID = colorSamplerPointID(
+                            at: value.startLocation,
+                            in: size
+                        )
+                        if NSEvent.modifierFlags.contains(.option) {
+                            isColorSamplerRemovalGestureActive = true
+                            pendingColorSamplerRemovalID = hitID
+                        } else if let hitID,
+                                  let sample = viewModel.colorSamplerPoints.first(where: {
+                                      $0.id == hitID
+                                  }) {
+                            colorSamplerDrag = ImageEditorColorSamplerDrag(
+                                id: hitID,
+                                previewPoint: sample.point
+                            )
+                        }
+                    }
+                    if var colorSamplerDrag,
+                       let previewPoint = imagePoint(from: value.location, in: size) {
+                        colorSamplerDrag.previewPoint = previewPoint
+                        self.colorSamplerDrag = colorSamplerDrag
+                        ImageEditorCanvasCursor.objectMoveCursor().set()
+                    }
                 default:
                     break
                 }
@@ -2882,7 +2966,20 @@ struct ImageEditorView: View {
                         viewModel.sampleColor(at: endImagePoint)
                     }
                 case .colorSampler:
-                    if let endImagePoint {
+                    if isColorSamplerRemovalGestureActive {
+                        if let pendingColorSamplerRemovalID,
+                           colorSamplerPointID(
+                               at: value.location,
+                               in: size
+                           ) == pendingColorSamplerRemovalID {
+                            viewModel.removeColorSampler(id: pendingColorSamplerRemovalID)
+                        }
+                    } else if let colorSamplerDrag {
+                        viewModel.moveColorSampler(
+                            id: colorSamplerDrag.id,
+                            to: colorSamplerDrag.previewPoint
+                        )
+                    } else if let endImagePoint {
                         viewModel.addColorSampler(at: endImagePoint)
                     }
                 case .gradient:
@@ -2914,6 +3011,7 @@ struct ImageEditorView: View {
                 isSelectedObjectMoveGestureActive = false
                 isDeliveryObjectMoveGestureActive = false
                 deliveryDrag = nil
+                resetColorSamplerGesture()
                 isMovingPathAnchor = false
                 activeResizeHandle = nil
                 refreshCanvasCursor(in: size)
@@ -3151,9 +3249,13 @@ struct ImageEditorView: View {
             isPointerOverCanvas: canvasPoint != nil,
             isPointerOverMovableContent: contentHit.isMovable,
             isPointerOverBlockedContent: contentHit.isBlocked,
+            isPointerOverColorSamplerPoint:
+                canvasInteractionTool == .colorSampler
+                    && colorSamplerPointID(at: viewPoint, in: size) != nil,
             penIsClosing: canvasInteractionTool == .pen && viewModel.isPenCloseCandidate(at: canvasPoint),
             handIsDragging: isCanvasPanGestureActive,
             isObjectMoveGestureActive: isSelectedObjectMoveGestureActive || isObjectMoveGestureActive,
+            isColorSamplerMoveGestureActive: colorSamplerDrag != nil,
             isSpacebarPanning: isSpacebarPanning,
             isCanvasPanGestureActive: isCanvasPanGestureActive,
             modifierFlags: NSEvent.modifierFlags,
@@ -3182,6 +3284,7 @@ struct ImageEditorView: View {
             isPointerOverMovableContent: false,
             handIsDragging: isCanvasPanGestureActive,
             isObjectMoveGestureActive: isSelectedObjectMoveGestureActive || isObjectMoveGestureActive,
+            isColorSamplerMoveGestureActive: colorSamplerDrag != nil,
             isSpacebarPanning: isSpacebarPanning,
             isCanvasPanGestureActive: isCanvasPanGestureActive,
             modifierFlags: canvasModifierFlags,
@@ -9439,9 +9542,11 @@ enum ImageEditorCanvasCursor {
         isPointerOverCanvas: Bool = true,
         isPointerOverMovableContent: Bool = true,
         isPointerOverBlockedContent: Bool = false,
+        isPointerOverColorSamplerPoint: Bool = false,
         penIsClosing: Bool = false,
         handIsDragging: Bool = false,
         isObjectMoveGestureActive: Bool = false,
+        isColorSamplerMoveGestureActive: Bool = false,
         isSpacebarPanning: Bool = false,
         isCanvasPanGestureActive: Bool = false,
         modifierFlags: NSEvent.ModifierFlags = [],
@@ -9485,6 +9590,14 @@ enum ImageEditorCanvasCursor {
                 modifierFlags: modifierFlags
             )
         case .tool(let selectedTool):
+            if selectedTool == .colorSampler, isColorSamplerMoveGestureActive {
+                return objectMoveCursor()
+            }
+            if selectedTool == .colorSampler, isPointerOverColorSamplerPoint {
+                return modifierFlags.contains(.option)
+                    ? colorSamplerRemovalCursor()
+                    : objectMoveCursor()
+            }
             if selectedTool == .move, isPointerOverBlockedContent {
                 return .operationNotAllowed
             }
@@ -9716,6 +9829,70 @@ enum ImageEditorCanvasCursor {
     /// hands exclusively for the document viewport.
     static func objectMoveCursor(isDuplicating: Bool = false) -> NSCursor {
         moveToolCursor(isDuplicating: isDuplicating)
+    }
+
+    /// Photoshop exposes Option-click as the familiar way to remove an
+    /// existing color sampler. Keep the precision crosshair and add a compact
+    /// minus badge only while the pointer is over a real sampler point.
+    private static func colorSamplerRemovalCursor() -> NSCursor {
+        let cacheKey = "color-sampler:remove"
+        if let cachedCursor = cursorCache[cacheKey] {
+            return cachedCursor
+        }
+
+        let side: CGFloat = 30
+        let center = NSPoint(x: 12, y: 18)
+        let image = NSImage(size: NSSize(width: side, height: side))
+        image.lockFocus()
+
+        let crosshair = NSBezierPath()
+        crosshair.move(to: NSPoint(x: center.x - 8, y: center.y))
+        crosshair.line(to: NSPoint(x: center.x + 8, y: center.y))
+        crosshair.move(to: NSPoint(x: center.x, y: center.y - 8))
+        crosshair.line(to: NSPoint(x: center.x, y: center.y + 8))
+        NSColor.black.withAlphaComponent(0.92).setStroke()
+        crosshair.lineWidth = 3
+        crosshair.stroke()
+        NSColor.white.withAlphaComponent(0.98).setStroke()
+        crosshair.lineWidth = 1
+        crosshair.stroke()
+
+        let target = NSBezierPath(ovalIn: NSRect(
+            x: center.x - 3.5,
+            y: center.y - 3.5,
+            width: 7,
+            height: 7
+        ))
+        NSColor.black.withAlphaComponent(0.92).setStroke()
+        target.lineWidth = 3
+        target.stroke()
+        NSColor.white.withAlphaComponent(0.98).setStroke()
+        target.lineWidth = 1
+        target.stroke()
+
+        let badgeRect = NSRect(x: 17, y: 3, width: 11, height: 11)
+        let badge = NSBezierPath(ovalIn: badgeRect)
+        NSColor.black.withAlphaComponent(0.96).setFill()
+        badge.fill()
+        NSColor.white.withAlphaComponent(0.98).setStroke()
+        badge.lineWidth = 1
+        badge.stroke()
+
+        let minus = NSBezierPath()
+        minus.move(to: NSPoint(x: badgeRect.minX + 3, y: badgeRect.midY))
+        minus.line(to: NSPoint(x: badgeRect.maxX - 3, y: badgeRect.midY))
+        NSColor.white.setStroke()
+        minus.lineWidth = 1.5
+        minus.stroke()
+
+        image.unlockFocus()
+        return cache(
+            NSCursor(
+                image: image,
+                hotSpot: NSPoint(x: center.x, y: side - center.y)
+            ),
+            for: cacheKey
+        )
     }
 
     /// Photoshop's Direct Selection tool uses a white node-editing arrow,
