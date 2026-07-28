@@ -78,6 +78,11 @@ struct XomoAutomationTests {
         #expect(colorSamplerAddTool["inputSchema"]?.objectValue?["required"] == .array([
             .string("x"), .string("y")
         ]))
+        #expect(
+            colorSamplerAddTool["inputSchema"]?.objectValue?["properties"]?
+                .objectValue?["sampleSize"]?.objectValue?["enum"]?.arrayValue
+                == ImageEditorColorSamplerSampleSize.allCases.map { .string($0.rawValue) }
+        )
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.color_sampler.list")
@@ -1883,12 +1888,15 @@ struct XomoAutomationTests {
             name: "xomo.color_sampler.add",
             arguments: [
                 "x": .number(24),
-                "y": .number(18)
+                "y": .number(18),
+                "sampleSize": .string("5x5")
             ]
         ))
         #expect(addResponse.ok)
         let added = try #require(addResponse.result?.objectValue)
         #expect(added["index"] == .number(1))
+        #expect(added["sampleSize"] == .string("5x5"))
+        #expect(viewModel.selectedColorSamplerSampleSize == .fiveByFive)
         #expect(added["point"]?.objectValue?["x"] == .number(24))
         #expect(added["point"]?.objectValue?["y"] == .number(18))
         #expect(added["color"]?.objectValue?["alpha"] == .number(0))
@@ -1905,6 +1913,10 @@ struct XomoAutomationTests {
         #expect(
             listResponse.result?.arrayValue?.first?.objectValue?["point"]?
                 .objectValue?["x"] == .number(24)
+        )
+        #expect(
+            listResponse.result?.arrayValue?.first?.objectValue?["sampleSize"]
+                == .string("5x5")
         )
         #expect(viewModel.document.history.count == historyCount)
 
@@ -1953,12 +1965,28 @@ struct XomoAutomationTests {
             name: "xomo.color_sampler.add",
             arguments: [
                 "x": .number(640),
-                "y": .number(480)
+                "y": .number(480),
+                "sampleSize": .string("1x1")
             ]
         ))
         #expect(!invalidAddResponse.ok)
         #expect(invalidAddResponse.error?.contains("inside the canvas") == true)
         #expect(viewModel.colorSamplerPoints.count == 1)
+        #expect(viewModel.selectedColorSamplerSampleSize == .fiveByFive)
+
+        let unsupportedSizeResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.color_sampler.add",
+            arguments: [
+                "x": .number(20),
+                "y": .number(14),
+                "sampleSize": .string("7x7")
+            ]
+        ))
+        #expect(!unsupportedSizeResponse.ok)
+        #expect(unsupportedSizeResponse.error?.contains("Unsupported") == true)
+        #expect(viewModel.colorSamplerPoints.count == 1)
+        #expect(viewModel.selectedColorSamplerSampleSize == .fiveByFive)
 
         let clearResponse = registry.execute(request(
             operation: "call",

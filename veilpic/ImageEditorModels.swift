@@ -357,6 +357,30 @@ enum ImageEditorColorSamplerReadoutMode: String, CaseIterable, Identifiable {
     }
 }
 
+enum ImageEditorColorSamplerSampleSize: String, CaseIterable, Identifiable {
+    case oneByOne = "1x1"
+    case threeByThree = "3x3"
+    case fiveByFive = "5x5"
+
+    var id: String { rawValue }
+
+    var dimension: Int {
+        switch self {
+        case .oneByOne: 1
+        case .threeByThree: 3
+        case .fiveByFive: 5
+        }
+    }
+
+    var title: String {
+        L10n.text("imageEditor.info.colorSampler.sampleSize.\(rawValue)")
+    }
+
+    var shortTitle: String {
+        L10n.text("imageEditor.info.colorSampler.sampleSize.\(rawValue).short")
+    }
+}
+
 struct ImageEditorColorSamplerReading {
     let red: CGFloat
     let green: CGFloat

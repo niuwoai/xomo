@@ -448,6 +448,13 @@
 "imageEditor.info.colorSampler.mode.hsb.short" = "HSB";
 "imageEditor.info.colorSampler.mode.hexadecimal" = "16進 RGBA";
 "imageEditor.info.colorSampler.mode.hexadecimal.short" = "HEX";
+"imageEditor.info.colorSampler.sampleSize" = "サンプル範囲";
+"imageEditor.info.colorSampler.sampleSize.1x1" = "1 × 1 ピクセルをサンプル";
+"imageEditor.info.colorSampler.sampleSize.1x1.short" = "1×1";
+"imageEditor.info.colorSampler.sampleSize.3x3" = "3 × 3 ピクセルを平均";
+"imageEditor.info.colorSampler.sampleSize.3x3.short" = "3×3";
+"imageEditor.info.colorSampler.sampleSize.5x5" = "5 × 5 ピクセルを平均";
+"imageEditor.info.colorSampler.sampleSize.5x5.short" = "5×5";
 "imageEditor.info.pointer.coordinates" = "X: %d  Y: %d";
 "imageEditor.info.pointer.coordinates.empty" = "X: —  Y: —";
 "imageEditor.info.pointer.empty" = "ポインター · X —  Y — · —";

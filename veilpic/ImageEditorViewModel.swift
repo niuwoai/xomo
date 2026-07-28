@@ -334,6 +334,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var selectedHistogramSource: ImageEditorHistogramSource = .composite
     @Published var selectedHistogramChannel: ImageEditorHistogramChannel = .rgb
     @Published var selectedColorSamplerReadoutMode: ImageEditorColorSamplerReadoutMode = .rgb
+    @Published private(set) var selectedColorSamplerSampleSize: ImageEditorColorSamplerSampleSize = .threeByThree
     @Published var selectedChannelPreview: ImageEditorChannelPreview = .composite
     @Published var selectedAlphaChannelID: UUID?
     @Published var previewedAlphaChannelID: UUID?
@@ -894,7 +895,10 @@ final class ImageEditorViewModel: ObservableObject {
 
     var pointerColorInfoText: String {
         guard let point = pointerCanvasPoint,
-              let color = pointerColor(at: point)
+              let color = sampledCanvasColor(
+                at: point,
+                sampleSize: selectedColorSamplerSampleSize
+              )
         else {
             return L10n.text("imageEditor.info.pointer.empty")
         }
@@ -976,7 +980,18 @@ final class ImageEditorViewModel: ObservableObject {
         }
     }
 
-    private func pointerColor(at point: CGPoint) -> NSColor? {
+    func selectColorSamplerSampleSize(
+        _ sampleSize: ImageEditorColorSamplerSampleSize
+    ) {
+        guard sampleSize != selectedColorSamplerSampleSize else { return }
+        selectedColorSamplerSampleSize = sampleSize
+        refreshColorSamplers()
+    }
+
+    private func sampledCanvasColor(
+        at point: CGPoint,
+        sampleSize: ImageEditorColorSamplerSampleSize
+    ) -> NSColor? {
         let image = currentImage
         if cachedPointerSampleImage !== image {
             guard let cgImage = image.cgImage(
@@ -991,16 +1006,18 @@ final class ImageEditorViewModel: ObservableObject {
                 return nil
             }
 
+            let sampleWidth = max(Int(image.size.width.rounded()), 1)
+            let sampleHeight = max(Int(image.size.height.rounded()), 1)
             let bytesPerPixel = 4
-            let bytesPerRow = cgImage.width * bytesPerPixel
+            let bytesPerRow = sampleWidth * bytesPerPixel
             var pixels = [UInt8](
                 repeating: 0,
-                count: bytesPerRow * cgImage.height
+                count: bytesPerRow * sampleHeight
             )
             guard let context = CGContext(
                 data: &pixels,
-                width: cgImage.width,
-                height: cgImage.height,
+                width: sampleWidth,
+                height: sampleHeight,
                 bitsPerComponent: 8,
                 bytesPerRow: bytesPerRow,
                 space: CGColorSpaceCreateDeviceRGB(),
@@ -1015,15 +1032,15 @@ final class ImageEditorViewModel: ObservableObject {
                 in: CGRect(
                     x: 0,
                     y: 0,
-                    width: cgImage.width,
-                    height: cgImage.height
+                    width: sampleWidth,
+                    height: sampleHeight
                 )
             )
 
             cachedPointerSampleImage = image
             cachedPointerSamplePixels = pixels
-            cachedPointerSampleWidth = cgImage.width
-            cachedPointerSampleHeight = cgImage.height
+            cachedPointerSampleWidth = sampleWidth
+            cachedPointerSampleHeight = sampleHeight
         }
 
         guard cachedPointerSampleWidth > 0,
@@ -1050,15 +1067,36 @@ final class ImageEditorViewModel: ObservableObject {
             ),
             cachedPointerSampleHeight - 1
         )
-        let offset = (
-            y * cachedPointerSampleWidth + x
-        ) * 4
-        guard offset + 3 < cachedPointerSamplePixels.count else { return nil }
+        let radius = sampleSize.dimension / 2
+        var red = 0
+        var green = 0
+        var blue = 0
+        var alpha = 0
+        var sampleCount = 0
+        for yOffset in -radius...radius {
+            let sampledY = min(max(y + yOffset, 0), cachedPointerSampleHeight - 1)
+            for xOffset in -radius...radius {
+                let sampledX = min(max(x + xOffset, 0), cachedPointerSampleWidth - 1)
+                let offset = (
+                    sampledY * cachedPointerSampleWidth + sampledX
+                ) * 4
+                guard offset + 3 < cachedPointerSamplePixels.count else {
+                    continue
+                }
+                red += Int(cachedPointerSamplePixels[offset])
+                green += Int(cachedPointerSamplePixels[offset + 1])
+                blue += Int(cachedPointerSamplePixels[offset + 2])
+                alpha += Int(cachedPointerSamplePixels[offset + 3])
+                sampleCount += 1
+            }
+        }
+        guard sampleCount > 0 else { return nil }
+        let divisor = CGFloat(sampleCount * 255)
         return NSColor(
-            deviceRed: CGFloat(cachedPointerSamplePixels[offset]) / 255,
-            green: CGFloat(cachedPointerSamplePixels[offset + 1]) / 255,
-            blue: CGFloat(cachedPointerSamplePixels[offset + 2]) / 255,
-            alpha: CGFloat(cachedPointerSamplePixels[offset + 3]) / 255
+            deviceRed: CGFloat(red) / divisor,
+            green: CGFloat(green) / divisor,
+            blue: CGFloat(blue) / divisor,
+            alpha: CGFloat(alpha) / divisor
         )
     }
 
@@ -5643,11 +5681,21 @@ final class ImageEditorViewModel: ObservableObject {
     }
 
     @discardableResult
-    func addColorSampler(at point: CGPoint) -> Bool {
+    func addColorSampler(
+        at point: CGPoint,
+        sampleSize requestedSampleSize: ImageEditorColorSamplerSampleSize? = nil
+    ) -> Bool {
         let canvasBounds = CGRect(origin: .zero, size: document.canvasSize)
         guard canvasBounds.contains(point) else { return false }
-        let image = currentImage
-        guard let color = averagedColorSample(at: point, image: image) else { return false }
+        let sampleSize = requestedSampleSize ?? selectedColorSamplerSampleSize
+        guard let color = sampledCanvasColor(
+            at: point,
+            sampleSize: sampleSize
+        ) else { return false }
+        if sampleSize != selectedColorSamplerSampleSize {
+            selectedColorSamplerSampleSize = sampleSize
+            refreshColorSamplers()
+        }
         let sample = ImageEditorColorSamplerPoint(point: point, color: color)
         colorSamplerPoints = Array((colorSamplerPoints + [sample]).suffix(4))
         statusText = L10n.format("imageEditor.status.colorSamplerAdded", colorSamplerPoints.count)
@@ -5658,10 +5706,12 @@ final class ImageEditorViewModel: ObservableObject {
     func refreshColorSamplers() -> Int {
         guard !colorSamplerPoints.isEmpty else { return 0 }
         let canvasBounds = CGRect(origin: .zero, size: document.canvasSize)
-        let image = currentImage
         colorSamplerPoints = colorSamplerPoints.compactMap { sample in
             guard canvasBounds.contains(sample.point),
-                  let color = averagedColorSample(at: sample.point, image: image)
+                  let color = sampledCanvasColor(
+                    at: sample.point,
+                    sampleSize: selectedColorSamplerSampleSize
+                  )
             else { return nil }
             return ImageEditorColorSamplerPoint(
                 id: sample.id,
@@ -5670,28 +5720,6 @@ final class ImageEditorViewModel: ObservableObject {
             )
         }
         return colorSamplerPoints.count
-    }
-
-    private func averagedColorSample(
-        at point: CGPoint,
-        image: NSImage
-    ) -> NSColor? {
-        let offsets: [CGFloat] = [-1, 0, 1]
-        let colors = offsets.flatMap { yOffset in
-            offsets.compactMap { xOffset in
-                image.color(
-                    at: CGPoint(x: point.x + xOffset, y: point.y + yOffset)
-                )?.usingColorSpace(.deviceRGB)
-            }
-        }
-        guard !colors.isEmpty else { return nil }
-        let divisor = CGFloat(colors.count)
-        return NSColor(
-            deviceRed: colors.reduce(0) { $0 + $1.redComponent } / divisor,
-            green: colors.reduce(0) { $0 + $1.greenComponent } / divisor,
-            blue: colors.reduce(0) { $0 + $1.blueComponent } / divisor,
-            alpha: colors.reduce(0) { $0 + $1.alphaComponent } / divisor
-        )
     }
 
     @discardableResult

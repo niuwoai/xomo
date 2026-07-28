@@ -448,6 +448,13 @@
 "imageEditor.info.colorSampler.mode.hsb.short" = "HSB";
 "imageEditor.info.colorSampler.mode.hexadecimal" = "Hexadecimal RGBA";
 "imageEditor.info.colorSampler.mode.hexadecimal.short" = "HEX";
+"imageEditor.info.colorSampler.sampleSize" = "Sample Size";
+"imageEditor.info.colorSampler.sampleSize.1x1" = "Sample 1 × 1 pixel";
+"imageEditor.info.colorSampler.sampleSize.1x1.short" = "1×1";
+"imageEditor.info.colorSampler.sampleSize.3x3" = "Average 3 × 3 pixels";
+"imageEditor.info.colorSampler.sampleSize.3x3.short" = "3×3";
+"imageEditor.info.colorSampler.sampleSize.5x5" = "Average 5 × 5 pixels";
+"imageEditor.info.colorSampler.sampleSize.5x5.short" = "5×5";
 "imageEditor.info.pointer.coordinates" = "X: %d  Y: %d";
 "imageEditor.info.pointer.coordinates.empty" = "X: —  Y: —";
 "imageEditor.info.pointer.empty" = "Pointer · X —  Y — · —";

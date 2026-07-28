@@ -1089,6 +1089,79 @@ struct ImageEditorToolSmokeTests {
         #expect(viewModel.document.history.count == historyCountAfterReplacement)
     }
 
+    @Test func colorSamplerSampleSizeControlsPointerAndPlacedSamples() throws {
+        let width = Int(canvasSize.width)
+        let height = Int(canvasSize.height)
+        let bytesPerPixel = 4
+        var pixels = [UInt8](
+            repeating: 0,
+            count: width * height * bytesPerPixel
+        )
+        for pixelOffset in stride(
+            from: 0,
+            to: pixels.count,
+            by: bytesPerPixel
+        ) {
+            pixels[pixelOffset + 3] = 255
+        }
+        let whitePixelOffset = (14 * width + 20) * bytesPerPixel
+        for componentOffset in 0..<bytesPerPixel {
+            pixels[whitePixelOffset + componentOffset] = 255
+        }
+        let provider = try #require(
+            CGDataProvider(data: Data(pixels) as CFData)
+        )
+        let cgImage = try #require(CGImage(
+            width: width,
+            height: height,
+            bitsPerComponent: 8,
+            bitsPerPixel: bytesPerPixel * 8,
+            bytesPerRow: width * bytesPerPixel,
+            space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGBitmapInfo(
+                rawValue: CGImageAlphaInfo.premultipliedLast.rawValue
+            ),
+            provider: provider,
+            decode: nil,
+            shouldInterpolate: false,
+            intent: .defaultIntent
+        ))
+        let image = NSImage(cgImage: cgImage, size: canvasSize)
+        let viewModel = makeViewModel(image: image)
+        let historyCount = viewModel.document.history.count
+        let point = CGPoint(x: 20, y: 14)
+
+        viewModel.selectColorSamplerSampleSize(.oneByOne)
+        viewModel.updatePointer(point)
+        #expect(viewModel.addColorSampler(at: point))
+        var sampledColor = try #require(
+            viewModel.colorSamplerPoints.last?.color.usingColorSpace(.deviceRGB)
+        )
+        let oneByOneRed = sampledColor.redComponent
+        #expect(oneByOneRed > 0.7)
+        #expect(viewModel.pointerColorInfoText.contains(
+            "R \(Int((oneByOneRed * 255).rounded()))"
+        ))
+
+        viewModel.selectColorSamplerSampleSize(.threeByThree)
+        sampledColor = try #require(
+            viewModel.colorSamplerPoints.last?.color.usingColorSpace(.deviceRGB)
+        )
+        #expect(sampledColor.redComponent < oneByOneRed)
+        #expect(sampledColor.redComponent > 0.08)
+        #expect(sampledColor.redComponent < 0.14)
+        #expect(viewModel.pointerColorInfoText.contains("R 28"))
+
+        viewModel.selectColorSamplerSampleSize(.fiveByFive)
+        sampledColor = try #require(
+            viewModel.colorSamplerPoints.last?.color.usingColorSpace(.deviceRGB)
+        )
+        #expect(sampledColor.redComponent > 0.02)
+        #expect(sampledColor.redComponent < 0.06)
+        #expect(viewModel.pointerColorInfoText.contains("R 10"))
+        #expect(viewModel.document.history.count == historyCount)
+    }
+
     private let canvasSize = NSSize(width: 40, height: 28)
 
     private func makeViewModel(image: NSImage) -> ImageEditorViewModel {
