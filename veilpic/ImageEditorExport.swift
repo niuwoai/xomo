@@ -339,7 +339,7 @@ extension ImageEditorViewModel {
         return bounded
     }
 
-    private func selectedSelectionExportImage() -> NSImage? {
+    func selectedSelectionExportImage() -> NSImage? {
         guard let selection = document.selection,
               let bounds = selectionExportBounds,
               let composited = document.compositedImage.croppedFromTopLeftCanvas(to: bounds),
@@ -379,7 +379,7 @@ extension ImageEditorViewModel {
         }
     }
 
-    private func selectedLayerExportImage() -> NSImage? {
+    func selectedLayerExportImage() -> NSImage? {
         guard let index = document.selectedLayerIndex else { return nil }
         let layer = document.layers[index]
         guard !layer.isGroup, !layer.isAdjustment, !layer.isFilter else { return nil }

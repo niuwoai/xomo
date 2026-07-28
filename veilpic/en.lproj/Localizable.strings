@@ -705,6 +705,12 @@
 "imageEditor.panel.navigator" = "Navigator / Info";
 "imageEditor.navigator.preview" = "Navigator canvas viewport";
 "imageEditor.histogram.title" = "Histogram";
+"imageEditor.histogram.source.composite" = "Composite Image";
+"imageEditor.histogram.source.composite.short" = "All";
+"imageEditor.histogram.source.selectedLayer" = "Selected Layer";
+"imageEditor.histogram.source.selectedLayer.short" = "Layer";
+"imageEditor.histogram.source.selection" = "Current Selection";
+"imageEditor.histogram.source.selection.short" = "Selection";
 "imageEditor.histogram.channel.rgb" = "RGB Channels";
 "imageEditor.histogram.channel.rgb.short" = "RGB";
 "imageEditor.histogram.channel.luminance" = "Luminance";

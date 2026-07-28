@@ -66,6 +66,11 @@ struct XomoAutomationTests {
                 .objectValue?["enum"]?.arrayValue
                 == ImageEditorHistogramChannel.allCases.map { .string($0.rawValue) }
         )
+        #expect(
+            documentTool["inputSchema"]?.objectValue?["properties"]?.objectValue?["histogramSource"]?
+                .objectValue?["enum"]?.arrayValue
+                == ImageEditorHistogramSource.allCases.map { .string($0.rawValue) }
+        )
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.channel.action")
@@ -1853,6 +1858,13 @@ struct XomoAutomationTests {
 
     @Test func registryInspectsRequestedHistogramChannelWithoutMutatingHistory() throws {
         let viewModel = makeViewModel()
+        var blueLayer = ImageEditorLayer.blank(name: "Blue", size: viewModel.document.canvasSize)
+        blueLayer.image = NSImage.rendered(size: viewModel.document.canvasSize) { rect in
+            NSColor.blue.setFill()
+            rect.fill()
+        } ?? blueLayer.image
+        viewModel.document.layers.append(blueLayer)
+        viewModel.selectLayer(blueLayer.id)
         let registry = XomoAutomationRegistry.shared
         registry.register(viewModel)
         defer { registry.unregister(viewModel) }
@@ -1861,20 +1873,38 @@ struct XomoAutomationTests {
         let response = registry.execute(request(
             operation: "call",
             name: "xomo.document.get",
-            arguments: ["histogramChannel": .string("red")]
+            arguments: [
+                "histogramSource": .string("selectedLayer"),
+                "histogramChannel": .string("blue")
+            ]
         ))
 
         #expect(response.ok)
         let result = try #require(response.result?.objectValue)
         let histogram = try #require(result["histogram"]?.objectValue)
-        #expect(histogram["channel"] == .string("red"))
-        #expect(histogram["sampledPixelCount"] == .number(Double(viewModel.histogramSummary.sampledPixelCount)))
-        #expect(histogram["pixelCount"] == .number(Double(viewModel.histogramSummary.pixelCount)))
-        #expect(histogram["transparentPixelCount"] == .number(Double(viewModel.histogramSummary.transparentPixelCount)))
-        #expect(histogram["average"] == .number(viewModel.histogramSummary.averageRed))
+        let selectedLayerHistogram = viewModel.histogramSummary(for: .selectedLayer)
+        #expect(histogram["source"] == .string("selectedLayer"))
+        #expect(histogram["channel"] == .string("blue"))
+        #expect(histogram["sampledPixelCount"] == .number(Double(selectedLayerHistogram.sampledPixelCount)))
+        #expect(histogram["pixelCount"] == .number(Double(selectedLayerHistogram.pixelCount)))
+        #expect(histogram["transparentPixelCount"] == .number(Double(selectedLayerHistogram.transparentPixelCount)))
+        #expect(histogram["average"] == .number(selectedLayerHistogram.averageBlue))
         #expect(histogram["bins"]?.arrayValue?.count == 32)
         #expect(histogram["clippedShadowRatio"]?.doubleValue != nil)
         #expect(histogram["clippedHighlightRatio"]?.doubleValue != nil)
+        #expect(viewModel.document.history.count == historyCount)
+
+        viewModel.document.selection = .rectangle(CGRect(x: 0, y: 0, width: 160, height: 240))
+        let selectionResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.document.get",
+            arguments: ["histogramSource": .string("selection")]
+        ))
+        #expect(selectionResponse.ok)
+        #expect(
+            selectionResponse.result?.objectValue?["histogram"]?.objectValue?["source"]
+                == .string("selection")
+        )
         #expect(viewModel.document.history.count == historyCount)
 
         let invalidResponse = registry.execute(request(
@@ -1884,6 +1914,25 @@ struct XomoAutomationTests {
         ))
         #expect(!invalidResponse.ok)
         #expect(invalidResponse.error?.contains("Unknown histogram channel") == true)
+        #expect(viewModel.document.history.count == historyCount)
+
+        viewModel.document.selection = nil
+        let unavailableSourceResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.document.get",
+            arguments: ["histogramSource": .string("selection")]
+        ))
+        #expect(!unavailableSourceResponse.ok)
+        #expect(unavailableSourceResponse.error?.contains("Histogram source is unavailable") == true)
+        #expect(viewModel.document.history.count == historyCount)
+
+        let wrongTypeResponse = registry.execute(request(
+            operation: "call",
+            name: "xomo.document.get",
+            arguments: ["histogramSource": .bool(true)]
+        ))
+        #expect(!wrongTypeResponse.ok)
+        #expect(wrongTypeResponse.error?.contains("histogramSource must be a string") == true)
         #expect(viewModel.document.history.count == historyCount)
     }
 

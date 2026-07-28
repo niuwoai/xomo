@@ -8,6 +8,22 @@
 import AppKit
 import CoreGraphics
 
+enum ImageEditorHistogramSource: String, CaseIterable, Identifiable {
+    case composite
+    case selectedLayer
+    case selection
+
+    var id: String { rawValue }
+
+    var title: String {
+        L10n.text("imageEditor.histogram.source.\(rawValue)")
+    }
+
+    var shortTitle: String {
+        L10n.text("imageEditor.histogram.source.\(rawValue).short")
+    }
+}
+
 enum ImageEditorHistogramChannel: String, CaseIterable, Identifiable {
     case rgb
     case luminance

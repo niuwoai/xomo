@@ -528,7 +528,10 @@ final class XomoAutomationRegistry {
         viewModel: ImageEditorViewModel
     ) throws -> XomoJSONValue {
         let histogramChannel: ImageEditorHistogramChannel
-        if let rawValue = arguments["histogramChannel"]?.stringValue {
+        if let value = arguments["histogramChannel"] {
+            guard let rawValue = value.stringValue else {
+                throw XomoAutomationCallError.invalidArgument("histogramChannel must be a string")
+            }
             guard let channel = ImageEditorHistogramChannel(rawValue: rawValue) else {
                 throw XomoAutomationCallError.invalidArgument("Unknown histogram channel: \(rawValue)")
             }
@@ -536,7 +539,25 @@ final class XomoAutomationRegistry {
         } else {
             histogramChannel = viewModel.selectedHistogramChannel
         }
-        let histogram = viewModel.histogramSummary
+
+        let histogramSource: ImageEditorHistogramSource
+        if let value = arguments["histogramSource"] {
+            guard let rawValue = value.stringValue else {
+                throw XomoAutomationCallError.invalidArgument("histogramSource must be a string")
+            }
+            guard let source = ImageEditorHistogramSource(rawValue: rawValue) else {
+                throw XomoAutomationCallError.invalidArgument("Unknown histogram source: \(rawValue)")
+            }
+            guard viewModel.canInspectHistogramSource(source) else {
+                throw XomoAutomationCallError.operationFailed(
+                    "Histogram source is unavailable: \(rawValue)"
+                )
+            }
+            histogramSource = source
+        } else {
+            histogramSource = viewModel.activeHistogramSource
+        }
+        let histogram = viewModel.histogramSummary(for: histogramSource)
 
         return .object([
             "name": .string(viewModel.document.sourceName),
@@ -552,6 +573,7 @@ final class XomoAutomationRegistry {
             )),
             "zoom": .number(viewModel.zoom),
             "histogram": .object([
+                "source": .string(histogramSource.rawValue),
                 "channel": .string(histogramChannel.rawValue),
                 "sampledPixelCount": .number(Double(histogram.sampledPixelCount)),
                 "pixelCount": .number(Double(histogram.pixelCount)),
@@ -4710,6 +4732,10 @@ private extension XomoAutomationRegistry {
     static let tools: [XomoAutomationToolDefinition] = [
         tool("xomo.app.status", "Get Xomo app, version, active editor, and capability status."),
         tool("xomo.document.get", "Inspect the active Xomo document, canvas, and histogram.", [
+            "histogramSource": XomoAutomationSchema.string(
+                description: "Histogram analysis source",
+                values: ImageEditorHistogramSource.allCases.map(\.rawValue)
+            ),
             "histogramChannel": XomoAutomationSchema.string(
                 description: "Histogram channel to inspect",
                 values: ImageEditorHistogramChannel.allCases.map(\.rawValue)

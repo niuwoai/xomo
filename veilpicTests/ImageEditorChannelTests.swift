@@ -1092,6 +1092,55 @@ struct ImageEditorChannelTests {
         #expect(viewModel.histogramClippingText.contains("25"))
     }
 
+    @Test func viewModelScopesHistogramToCompositeSelectedLayerAndSelection() async throws {
+        let viewModel = ImageEditorViewModel(
+            sourceName: "histogram-scopes.png",
+            image: splitChannelImage()
+        ) { _ in }
+        var blueLayer = ImageEditorLayer.blank(
+            name: "Blue Overlay",
+            size: viewModel.document.canvasSize
+        )
+        blueLayer.image = NSImage.rendered(size: viewModel.document.canvasSize) { _ in
+            NSColor.blue.setFill()
+            CGRect(x: 0, y: 0, width: 1, height: 1).fill()
+        } ?? blueLayer.image
+        viewModel.document.layers.append(blueLayer)
+        viewModel.selectLayer(blueLayer.id)
+
+        #expect(ImageEditorHistogramSource.allCases.map(\.rawValue) == [
+            "composite", "selectedLayer", "selection"
+        ])
+        #expect(viewModel.activeHistogramSource == .composite)
+        #expect(viewModel.canInspectHistogramSource(.selectedLayer))
+        #expect(!viewModel.canInspectHistogramSource(.selection))
+
+        let composite = viewModel.histogramSummary(for: .composite)
+        let selectedLayer = viewModel.histogramSummary(for: .selectedLayer)
+        #expect(selectedLayer.averageBlue > 245)
+        #expect(selectedLayer.averageGreen < 5)
+        #expect(composite.averageGreen > 100)
+        #expect(composite.averageBlue > 100)
+
+        viewModel.selectedHistogramSource = .selection
+        #expect(viewModel.activeHistogramSource == .composite)
+        #expect(viewModel.histogramSummary == composite)
+
+        viewModel.document.selection = .rectangle(CGRect(x: 1, y: 0, width: 1, height: 1))
+        #expect(viewModel.activeHistogramSource == .selection)
+        let selection = viewModel.histogramSummary
+        #expect(selection.averageGreen > 245)
+        #expect(selection.averageRed < 5)
+        #expect(selection.averageBlue < 5)
+
+        let backgroundID = try #require(viewModel.document.layers.first?.id)
+        viewModel.selectLayer(backgroundID)
+        let background = viewModel.histogramSummary(for: .selectedLayer)
+        #expect(background.averageRed > 100)
+        #expect(background.averageGreen > 100)
+        #expect(background.averageBlue < 5)
+    }
+
     private func channelTestImage() -> NSImage {
         NSImage.rendered(size: NSSize(width: 2, height: 1)) { _ in
             NSColor(calibratedRed: 0.25, green: 0.50, blue: 0.75, alpha: 1).setFill()

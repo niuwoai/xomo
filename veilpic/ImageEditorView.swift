@@ -3387,7 +3387,7 @@ struct ImageEditorView: View {
             .font(.system(size: 11, weight: .medium).monospacedDigit())
             .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
         }
-        .frame(height: showsTitle ? 278 : 242)
+        .frame(height: showsTitle ? 306 : 270)
         .accessibilityIdentifier("image-editor-navigator-panel")
     }
 
@@ -3459,6 +3459,22 @@ struct ImageEditorView: View {
         VStack(alignment: .leading, spacing: 4) {
             Text(L10n.text("imageEditor.histogram.title"))
                 .font(.system(size: 10, weight: .semibold))
+            HStack(spacing: 4) {
+                ForEach(ImageEditorHistogramSource.allCases) { source in
+                    Button(source.shortTitle) {
+                        viewModel.selectedHistogramSource = source
+                    }
+                    .buttonStyle(EditorSegmentButtonStyle(
+                        isSelected: viewModel.activeHistogramSource == source
+                    ))
+                    .focusable(false)
+                    .xomoFocusEffectDisabled()
+                    .disabled(!viewModel.canInspectHistogramSource(source))
+                    .help(source.title)
+                    .accessibilityLabel(source.title)
+                    .accessibilityIdentifier("image-editor-histogram-source-\(source.rawValue)")
+                }
+            }
             HStack(spacing: 4) {
                 ForEach(ImageEditorHistogramChannel.allCases) { channel in
                     Button(channel.shortTitle) {

@@ -331,6 +331,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var filterPinchAmount: Double = 0.5
     @Published var filterSpherizeAmount: Double = 0.5
     @Published var filterLensDistortion: Double = 0.35
+    @Published var selectedHistogramSource: ImageEditorHistogramSource = .composite
     @Published var selectedHistogramChannel: ImageEditorHistogramChannel = .rgb
     @Published var selectedChannelPreview: ImageEditorChannelPreview = .composite
     @Published var selectedAlphaChannelID: UUID?
@@ -364,6 +365,14 @@ final class ImageEditorViewModel: ObservableObject {
     private var cachedChannelThumbnailImages: [String: NSImage] = [:]
     private var cachedAlphaChannelThumbnailImages: [UUID: NSImage] = [:]
     private var cachedHistogramSummary: ImageEditorHistogramSummary?
+    private var cachedSelectedLayerHistogramSummary: (
+        layerID: UUID,
+        summary: ImageEditorHistogramSummary
+    )?
+    private var cachedSelectionHistogramSummary: (
+        selection: ImageEditorSelection,
+        summary: ImageEditorHistogramSummary
+    )?
     var cachedLayerTransparencySelectionAvailability: Bool?
     var cachedLayerTransformContentFrames: [UUID: CGRect] = [:]
     var cachedEmptyTransformLayerIDs = Set<UUID>()
@@ -709,14 +718,59 @@ final class ImageEditorViewModel: ObservableObject {
         return "\(Int(size.width.rounded())) x \(Int(size.height.rounded())) px"
     }
 
-    var histogramSummary: ImageEditorHistogramSummary {
-        if let cachedHistogramSummary {
-            return cachedHistogramSummary
-        }
+    var activeHistogramSource: ImageEditorHistogramSource {
+        canInspectHistogramSource(selectedHistogramSource) ? selectedHistogramSource : .composite
+    }
 
-        let summary = currentImage.histogramSummary()
-        cachedHistogramSummary = summary
-        return summary
+    var histogramSummary: ImageEditorHistogramSummary {
+        histogramSummary(for: activeHistogramSource)
+    }
+
+    func canInspectHistogramSource(_ source: ImageEditorHistogramSource) -> Bool {
+        switch source {
+        case .composite:
+            return true
+        case .selectedLayer:
+            guard let layer = document.selectedLayer else { return false }
+            return layer.isGroup || (!layer.isAdjustment && !layer.isFilter)
+        case .selection:
+            return canExportSelection
+        }
+    }
+
+    func histogramSummary(for source: ImageEditorHistogramSource) -> ImageEditorHistogramSummary {
+        guard canInspectHistogramSource(source) else { return .empty }
+
+        switch source {
+        case .composite:
+            if let cachedHistogramSummary {
+                return cachedHistogramSummary
+            }
+            let summary = currentImage.histogramSummary()
+            cachedHistogramSummary = summary
+            return summary
+        case .selectedLayer:
+            guard let layer = document.selectedLayer else { return .empty }
+            if let cachedSelectedLayerHistogramSummary,
+               cachedSelectedLayerHistogramSummary.layerID == layer.id {
+                return cachedSelectedLayerHistogramSummary.summary
+            }
+            let image = layer.isGroup
+                ? document.compositedImage(includingOnly: [layer.id])
+                : selectedLayerExportImage()
+            let summary = image?.histogramSummary() ?? .empty
+            cachedSelectedLayerHistogramSummary = (layer.id, summary)
+            return summary
+        case .selection:
+            guard let selection = document.selection else { return .empty }
+            if let cachedSelectionHistogramSummary,
+               cachedSelectionHistogramSummary.selection == selection {
+                return cachedSelectionHistogramSummary.summary
+            }
+            let summary = selectedSelectionExportImage()?.histogramSummary() ?? .empty
+            cachedSelectionHistogramSummary = (selection, summary)
+            return summary
+        }
     }
 
     var histogramAverageText: String {
@@ -7940,6 +7994,8 @@ final class ImageEditorViewModel: ObservableObject {
         cachedChannelThumbnailImages.removeAll(keepingCapacity: true)
         cachedAlphaChannelThumbnailImages.removeAll(keepingCapacity: true)
         cachedHistogramSummary = nil
+        cachedSelectedLayerHistogramSummary = nil
+        cachedSelectionHistogramSummary = nil
         cachedLayerTransparencySelectionAvailability = nil
         cachedLayerTransformContentFrames.removeAll(keepingCapacity: true)
         cachedEmptyTransformLayerIDs.removeAll(keepingCapacity: true)
