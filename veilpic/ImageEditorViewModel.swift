@@ -821,6 +821,23 @@ final class ImageEditorViewModel: ObservableObject {
         )
     }
 
+    func selectedHistogramStatisticsText(for summary: ImageEditorHistogramSummary) -> String {
+        L10n.format(
+            "imageEditor.histogram.statistics",
+            selectedHistogramChannel.title,
+            Int(selectedHistogramChannel.median(in: summary).rounded()),
+            selectedHistogramChannel.standardDeviation(in: summary)
+        )
+    }
+
+    func histogramPixelCountText(for summary: ImageEditorHistogramSummary) -> String {
+        L10n.format(
+            "imageEditor.histogram.pixelCount",
+            summary.pixelCount,
+            summary.sampledPixelCount
+        )
+    }
+
     var selectedLayerOpacity: Double {
         guard let layer = document.selectedLayer else { return 1 }
         return layer.opacity

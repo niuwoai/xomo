@@ -68,6 +68,32 @@ enum ImageEditorHistogramChannel: String, CaseIterable, Identifiable {
             return summary.averageBlue
         }
     }
+
+    func median(in summary: ImageEditorHistogramSummary) -> Double {
+        switch self {
+        case .rgb, .luminance:
+            return summary.medianLuminance
+        case .red:
+            return summary.medianRed
+        case .green:
+            return summary.medianGreen
+        case .blue:
+            return summary.medianBlue
+        }
+    }
+
+    func standardDeviation(in summary: ImageEditorHistogramSummary) -> Double {
+        switch self {
+        case .rgb, .luminance:
+            return summary.standardDeviationLuminance
+        case .red:
+            return summary.standardDeviationRed
+        case .green:
+            return summary.standardDeviationGreen
+        case .blue:
+            return summary.standardDeviationBlue
+        }
+    }
 }
 
 struct ImageEditorHistogramBin: Equatable, Identifiable {
@@ -90,6 +116,14 @@ struct ImageEditorHistogramSummary: Equatable {
         averageGreen: 0,
         averageBlue: 0,
         averageLuminance: 0,
+        medianRed: 0,
+        medianGreen: 0,
+        medianBlue: 0,
+        medianLuminance: 0,
+        standardDeviationRed: 0,
+        standardDeviationGreen: 0,
+        standardDeviationBlue: 0,
+        standardDeviationLuminance: 0,
         clippedShadowPixels: 0,
         clippedHighlightPixels: 0
     )
@@ -102,6 +136,14 @@ struct ImageEditorHistogramSummary: Equatable {
     let averageGreen: Double
     let averageBlue: Double
     let averageLuminance: Double
+    let medianRed: Double
+    let medianGreen: Double
+    let medianBlue: Double
+    let medianLuminance: Double
+    let standardDeviationRed: Double
+    let standardDeviationGreen: Double
+    let standardDeviationBlue: Double
+    let standardDeviationLuminance: Double
     let clippedShadowPixels: Int
     let clippedHighlightPixels: Int
 
@@ -149,10 +191,18 @@ extension NSImage {
         var greenBins = [Int](repeating: 0, count: binCount)
         var blueBins = [Int](repeating: 0, count: binCount)
         var luminanceBins = [Int](repeating: 0, count: binCount)
+        var redValueCounts = [Int](repeating: 0, count: 256)
+        var greenValueCounts = [Int](repeating: 0, count: 256)
+        var blueValueCounts = [Int](repeating: 0, count: 256)
+        var luminanceValueCounts = [Int](repeating: 0, count: 256)
         var redTotal = 0
         var greenTotal = 0
         var blueTotal = 0
         var luminanceTotal = 0
+        var redSquaredTotal = 0.0
+        var greenSquaredTotal = 0.0
+        var blueSquaredTotal = 0.0
+        var luminanceSquaredTotal = 0.0
         var clippedShadowPixels = 0
         var clippedHighlightPixels = 0
         let sampledPixelCount = sampleWidth * sampleHeight
@@ -178,6 +228,10 @@ extension NSImage {
                 greenBins[histogramBinIndex(for: green, binCount: binCount)] += 1
                 blueBins[histogramBinIndex(for: blue, binCount: binCount)] += 1
                 luminanceBins[histogramBinIndex(for: luminance, binCount: binCount)] += 1
+                redValueCounts[red] += 1
+                greenValueCounts[green] += 1
+                blueValueCounts[blue] += 1
+                luminanceValueCounts[luminance] += 1
                 if luminance <= 0 {
                     clippedShadowPixels += 1
                 }
@@ -188,6 +242,10 @@ extension NSImage {
                 greenTotal += green
                 blueTotal += blue
                 luminanceTotal += luminance
+                redSquaredTotal += Double(red * red)
+                greenSquaredTotal += Double(green * green)
+                blueSquaredTotal += Double(blue * blue)
+                luminanceSquaredTotal += Double(luminance * luminance)
             }
         }
 
@@ -218,20 +276,56 @@ extension NSImage {
                 averageGreen: 0,
                 averageBlue: 0,
                 averageLuminance: 0,
+                medianRed: 0,
+                medianGreen: 0,
+                medianBlue: 0,
+                medianLuminance: 0,
+                standardDeviationRed: 0,
+                standardDeviationGreen: 0,
+                standardDeviationBlue: 0,
+                standardDeviationLuminance: 0,
                 clippedShadowPixels: 0,
                 clippedHighlightPixels: 0
             )
         }
 
+        let averageRed = Double(redTotal) / Double(pixelCount)
+        let averageGreen = Double(greenTotal) / Double(pixelCount)
+        let averageBlue = Double(blueTotal) / Double(pixelCount)
+        let averageLuminance = Double(luminanceTotal) / Double(pixelCount)
         return ImageEditorHistogramSummary(
             bins: bins,
             sampledPixelCount: sampledPixelCount,
             pixelCount: pixelCount,
             transparentPixelCount: transparentPixelCount,
-            averageRed: Double(redTotal) / Double(pixelCount),
-            averageGreen: Double(greenTotal) / Double(pixelCount),
-            averageBlue: Double(blueTotal) / Double(pixelCount),
-            averageLuminance: Double(luminanceTotal) / Double(pixelCount),
+            averageRed: averageRed,
+            averageGreen: averageGreen,
+            averageBlue: averageBlue,
+            averageLuminance: averageLuminance,
+            medianRed: histogramMedian(valueCounts: redValueCounts, pixelCount: pixelCount),
+            medianGreen: histogramMedian(valueCounts: greenValueCounts, pixelCount: pixelCount),
+            medianBlue: histogramMedian(valueCounts: blueValueCounts, pixelCount: pixelCount),
+            medianLuminance: histogramMedian(valueCounts: luminanceValueCounts, pixelCount: pixelCount),
+            standardDeviationRed: histogramStandardDeviation(
+                squaredTotal: redSquaredTotal,
+                average: averageRed,
+                pixelCount: pixelCount
+            ),
+            standardDeviationGreen: histogramStandardDeviation(
+                squaredTotal: greenSquaredTotal,
+                average: averageGreen,
+                pixelCount: pixelCount
+            ),
+            standardDeviationBlue: histogramStandardDeviation(
+                squaredTotal: blueSquaredTotal,
+                average: averageBlue,
+                pixelCount: pixelCount
+            ),
+            standardDeviationLuminance: histogramStandardDeviation(
+                squaredTotal: luminanceSquaredTotal,
+                average: averageLuminance,
+                pixelCount: pixelCount
+            ),
             clippedShadowPixels: clippedShadowPixels,
             clippedHighlightPixels: clippedHighlightPixels
         )
@@ -244,5 +338,34 @@ extension NSImage {
     private func histogramUnpremultipliedChannel(_ value: Int, alpha: Int) -> Int {
         guard alpha < 255 else { return value }
         return min(255, (value * 255 + alpha / 2) / alpha)
+    }
+
+    private func histogramMedian(valueCounts: [Int], pixelCount: Int) -> Double {
+        guard pixelCount > 0 else { return 0 }
+        let lowerRank = (pixelCount - 1) / 2
+        let upperRank = pixelCount / 2
+        var cumulativeCount = 0
+        var lowerValue: Int?
+
+        for (value, count) in valueCounts.enumerated() {
+            cumulativeCount += count
+            if lowerValue == nil, cumulativeCount > lowerRank {
+                lowerValue = value
+            }
+            if cumulativeCount > upperRank {
+                return Double((lowerValue ?? value) + value) / 2
+            }
+        }
+        return 0
+    }
+
+    private func histogramStandardDeviation(
+        squaredTotal: Double,
+        average: Double,
+        pixelCount: Int
+    ) -> Double {
+        guard pixelCount > 0 else { return 0 }
+        let variance = max(0, squaredTotal / Double(pixelCount) - average * average)
+        return sqrt(variance)
     }
 }

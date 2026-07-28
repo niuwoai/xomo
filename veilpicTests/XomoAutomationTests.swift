@@ -1889,6 +1889,19 @@ struct XomoAutomationTests {
         #expect(histogram["pixelCount"] == .number(Double(selectedLayerHistogram.pixelCount)))
         #expect(histogram["transparentPixelCount"] == .number(Double(selectedLayerHistogram.transparentPixelCount)))
         #expect(histogram["average"] == .number(selectedLayerHistogram.averageBlue))
+        #expect(histogram["median"] == .number(selectedLayerHistogram.medianBlue))
+        #expect(
+            histogram["standardDeviation"]
+                == .number(selectedLayerHistogram.standardDeviationBlue)
+        )
+        #expect(histogram["medianRed"] == .number(selectedLayerHistogram.medianRed))
+        #expect(histogram["medianGreen"] == .number(selectedLayerHistogram.medianGreen))
+        #expect(histogram["medianBlue"] == .number(selectedLayerHistogram.medianBlue))
+        #expect(histogram["medianLuminance"] == .number(selectedLayerHistogram.medianLuminance))
+        #expect(
+            histogram["standardDeviationLuminance"]
+                == .number(selectedLayerHistogram.standardDeviationLuminance)
+        )
         #expect(histogram["bins"]?.arrayValue?.count == 32)
         #expect(histogram["clippedShadowRatio"]?.doubleValue != nil)
         #expect(histogram["clippedHighlightRatio"]?.doubleValue != nil)

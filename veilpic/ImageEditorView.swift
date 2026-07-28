@@ -3382,12 +3382,17 @@ struct ImageEditorView: View {
                 Text(viewModel.sizeText)
                 Text(viewModel.colorText)
                 Text(viewModel.selectedHistogramChannelAverageText(for: histogramSummary))
+                Text(viewModel.selectedHistogramStatisticsText(for: histogramSummary))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+                Text(viewModel.histogramPixelCountText(for: histogramSummary))
+                    .lineLimit(1)
                 Text(viewModel.histogramClippingText(for: histogramSummary))
             }
             .font(.system(size: 11, weight: .medium).monospacedDigit())
             .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
         }
-        .frame(height: showsTitle ? 306 : 270)
+        .frame(height: showsTitle ? 338 : 302)
         .accessibilityIdentifier("image-editor-navigator-panel")
     }
 

@@ -724,6 +724,8 @@
 "imageEditor.histogram.average" = "平均 RGB：%d / %d / %d";
 "imageEditor.histogram.luminance" = "平均輝度：%d";
 "imageEditor.histogram.selectedChannelAverage" = "%@平均：%d";
+"imageEditor.histogram.statistics" = "%@：中央値 %d · 標準偏差 %.1f";
+"imageEditor.histogram.pixelCount" = "有効サンプル：%d / %d";
 "imageEditor.histogram.clipping" = "クリップ 暗/明：%d%% / %d%%";
 "imageEditor.panel.history" = "履歴";
 "imageEditor.panel.layers" = "レイヤー";

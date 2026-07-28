@@ -991,6 +991,23 @@ struct ImageEditorChannelTests {
         #expect(approximately(summary.averageRed, summary.averageGreen, tolerance: 0.01))
         #expect(approximately(summary.averageGreen, summary.averageBlue, tolerance: 0.01))
         #expect(approximately(summary.averageBlue, summary.averageLuminance, tolerance: 0.01))
+        // NSColor's calibrated gray samples are converted into the histogram's
+        // device-RGB space before analysis; the two middle samples land at 111
+        // and 177, so their even-sized median is 144.
+        #expect(approximately(summary.medianLuminance, 144, tolerance: 2))
+        #expect(approximately(summary.medianRed, summary.medianGreen, tolerance: 0.01))
+        #expect(approximately(summary.medianGreen, summary.medianBlue, tolerance: 0.01))
+        #expect(approximately(summary.standardDeviationLuminance, 95, tolerance: 2))
+        #expect(approximately(
+            summary.standardDeviationRed,
+            summary.standardDeviationGreen,
+            tolerance: 0.01
+        ))
+        #expect(approximately(
+            summary.standardDeviationGreen,
+            summary.standardDeviationBlue,
+            tolerance: 0.01
+        ))
         #expect(summary.clippedShadowPixels * 4 == summary.pixelCount)
         #expect(summary.clippedHighlightPixels * 4 == summary.pixelCount)
         #expect(approximately(summary.clippedShadowRatio, 0.25, tolerance: 0.01))
@@ -1015,6 +1032,14 @@ struct ImageEditorChannelTests {
             averageGreen: 128,
             averageBlue: 192,
             averageLuminance: 116,
+            medianRed: 60,
+            medianGreen: 120,
+            medianBlue: 180,
+            medianLuminance: 110,
+            standardDeviationRed: 10,
+            standardDeviationGreen: 20,
+            standardDeviationBlue: 30,
+            standardDeviationLuminance: 25,
             clippedShadowPixels: 1,
             clippedHighlightPixels: 1
         )
@@ -1032,6 +1057,30 @@ struct ImageEditorChannelTests {
         #expect(approximately(ImageEditorHistogramChannel.red.average(in: summary), 64, tolerance: 0.0001))
         #expect(approximately(ImageEditorHistogramChannel.green.average(in: summary), 128, tolerance: 0.0001))
         #expect(approximately(ImageEditorHistogramChannel.blue.average(in: summary), 192, tolerance: 0.0001))
+        #expect(approximately(ImageEditorHistogramChannel.rgb.median(in: summary), 110, tolerance: 0.0001))
+        #expect(approximately(ImageEditorHistogramChannel.red.median(in: summary), 60, tolerance: 0.0001))
+        #expect(approximately(ImageEditorHistogramChannel.green.median(in: summary), 120, tolerance: 0.0001))
+        #expect(approximately(ImageEditorHistogramChannel.blue.median(in: summary), 180, tolerance: 0.0001))
+        #expect(approximately(
+            ImageEditorHistogramChannel.rgb.standardDeviation(in: summary),
+            25,
+            tolerance: 0.0001
+        ))
+        #expect(approximately(
+            ImageEditorHistogramChannel.red.standardDeviation(in: summary),
+            10,
+            tolerance: 0.0001
+        ))
+        #expect(approximately(
+            ImageEditorHistogramChannel.green.standardDeviation(in: summary),
+            20,
+            tolerance: 0.0001
+        ))
+        #expect(approximately(
+            ImageEditorHistogramChannel.blue.standardDeviation(in: summary),
+            30,
+            tolerance: 0.0001
+        ))
     }
 
     @Test func histogramIgnoresTransparentPixelsAndRestoresPartiallyTransparentColor() async throws {
@@ -1048,6 +1097,20 @@ struct ImageEditorChannelTests {
         #expect(approximately(summary.averageGreen, opaqueReference.averageGreen, tolerance: 1))
         #expect(approximately(summary.averageBlue, opaqueReference.averageBlue, tolerance: 1))
         #expect(approximately(summary.averageLuminance, opaqueReference.averageLuminance, tolerance: 1))
+        #expect(approximately(summary.medianRed, opaqueReference.medianRed, tolerance: 1))
+        #expect(approximately(summary.medianGreen, opaqueReference.medianGreen, tolerance: 1))
+        #expect(approximately(summary.medianBlue, opaqueReference.medianBlue, tolerance: 1))
+        #expect(approximately(summary.medianLuminance, opaqueReference.medianLuminance, tolerance: 1))
+        #expect(approximately(
+            summary.standardDeviationRed,
+            opaqueReference.standardDeviationRed,
+            tolerance: 1
+        ))
+        #expect(approximately(
+            summary.standardDeviationLuminance,
+            opaqueReference.standardDeviationLuminance,
+            tolerance: 1
+        ))
         #expect(summary.clippedShadowPixels == opaqueReference.clippedShadowPixels)
         #expect(summary.clippedHighlightPixels == opaqueReference.clippedHighlightPixels)
     }
@@ -1063,6 +1126,14 @@ struct ImageEditorChannelTests {
         #expect(summary.averageGreen == 0)
         #expect(summary.averageBlue == 0)
         #expect(summary.averageLuminance == 0)
+        #expect(summary.medianRed == 0)
+        #expect(summary.medianGreen == 0)
+        #expect(summary.medianBlue == 0)
+        #expect(summary.medianLuminance == 0)
+        #expect(summary.standardDeviationRed == 0)
+        #expect(summary.standardDeviationGreen == 0)
+        #expect(summary.standardDeviationBlue == 0)
+        #expect(summary.standardDeviationLuminance == 0)
         #expect(summary.clippedShadowRatio == 0)
         #expect(summary.clippedHighlightRatio == 0)
         #expect(summary.bins.count == 4)
@@ -1089,6 +1160,12 @@ struct ImageEditorChannelTests {
         viewModel.selectedHistogramChannel = .rgb
         let rgbReadout = viewModel.selectedHistogramChannelAverageText(for: summary)
         #expect(rgbReadout == viewModel.histogramAverageText(for: summary))
+        let statisticsReadout = viewModel.selectedHistogramStatisticsText(for: summary)
+        #expect(statisticsReadout.contains(ImageEditorHistogramChannel.rgb.title))
+        #expect(statisticsReadout.contains("\(Int(summary.medianLuminance.rounded()))"))
+        let pixelCountReadout = viewModel.histogramPixelCountText(for: summary)
+        #expect(pixelCountReadout.contains("\(summary.pixelCount)"))
+        #expect(pixelCountReadout.contains("\(summary.sampledPixelCount)"))
         #expect(viewModel.histogramClippingText.contains("25"))
     }
 
