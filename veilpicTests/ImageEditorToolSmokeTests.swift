@@ -983,6 +983,33 @@ struct ImageEditorToolSmokeTests {
         #expect(infoText.contains("R 255"))
         #expect(infoText.contains("B 255"))
         #expect(infoText.contains("A 255"))
+        let readoutSample = ImageEditorColorSamplerPoint(
+            point: sample.point,
+            color: NSColor(deviceRed: 1, green: 0, blue: 1, alpha: 1)
+        )
+        let hsbInfoText = viewModel.colorSamplerInfoText(
+            index: 0,
+            sample: readoutSample,
+            mode: .hsb
+        )
+        #expect(hsbInfoText.contains("H 300°"))
+        #expect(hsbInfoText.contains("S 100%"))
+        #expect(hsbInfoText.contains("B 100%"))
+        let wrappedHueReading = ImageEditorColorSamplerReading(
+            color: NSColor(
+                deviceHue: 0.999,
+                saturation: 1,
+                brightness: 1,
+                alpha: 1
+            )
+        )
+        #expect(wrappedHueReading.hueDegrees == 0)
+        viewModel.selectedColorSamplerReadoutMode = .hexadecimal
+        let hexadecimalInfoText = viewModel.colorSamplerInfoText(
+            index: 0,
+            sample: readoutSample
+        )
+        #expect(hexadecimalInfoText.contains("#FF00FFFF"))
         let sampleID = sample.id
 
         viewModel.replaceSelectedLayerImageForTesting(

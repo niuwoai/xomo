@@ -1892,6 +1892,9 @@ struct XomoAutomationTests {
         #expect(added["point"]?.objectValue?["x"] == .number(24))
         #expect(added["point"]?.objectValue?["y"] == .number(18))
         #expect(added["color"]?.objectValue?["alpha"] == .number(0))
+        #expect(added["rgb8"]?.objectValue?["alpha"] == .number(0))
+        #expect(added["hsb"]?.objectValue?["alpha"] == .number(0))
+        #expect(added["hexRGBA"] == .string("#00000000"))
 
         let listResponse = registry.execute(request(
             operation: "call",
@@ -1928,6 +1931,21 @@ struct XomoAutomationTests {
         #expect(refreshedRed > refreshedGreen + 0.5)
         #expect(refreshedRed > refreshedBlue + 0.5)
         #expect(refreshedAlpha > 0.95)
+        let refreshedSample = try #require(
+            refreshedListResponse.result?.arrayValue?.first?.objectValue
+        )
+        let refreshedRGB8 = try #require(refreshedSample["rgb8"]?.objectValue)
+        let refreshedHSB = try #require(refreshedSample["hsb"]?.objectValue)
+        let red8 = try #require(refreshedRGB8["red"]?.doubleValue)
+        let green8 = try #require(refreshedRGB8["green"]?.doubleValue)
+        #expect(red8 > green8 + 100)
+        #expect(refreshedRGB8["alpha"] == .number(255))
+        #expect((refreshedHSB["saturation"]?.doubleValue ?? 0) > 0.7)
+        #expect((refreshedHSB["brightness"]?.doubleValue ?? 0) > 0.8)
+        let hexadecimal = try #require(refreshedSample["hexRGBA"]?.stringValue)
+        #expect(hexadecimal.hasPrefix("#"))
+        #expect(hexadecimal.hasSuffix("FF"))
+        #expect(hexadecimal.count == 9)
         #expect(viewModel.document.history.count == historyCount)
 
         let invalidAddResponse = registry.execute(request(

@@ -4774,10 +4774,24 @@ final class XomoAutomationRegistry {
         _ sample: ImageEditorColorSamplerPoint,
         index: Int
     ) -> XomoJSONValue {
-        .object([
+        let reading = ImageEditorColorSamplerReading(color: sample.color)
+        return .object([
             "index": .number(Double(index + 1)),
             "point": pointJSON(sample.point),
-            "color": colorJSON(sample.color)
+            "color": colorJSON(sample.color),
+            "rgb8": .object([
+                "red": .number(Double(reading.red8)),
+                "green": .number(Double(reading.green8)),
+                "blue": .number(Double(reading.blue8)),
+                "alpha": .number(Double(reading.alpha8))
+            ]),
+            "hsb": .object([
+                "hueDegrees": .number(Double(reading.hueDegrees)),
+                "saturation": .number(Double(reading.saturation)),
+                "brightness": .number(Double(reading.brightness)),
+                "alpha": .number(Double(reading.alpha))
+            ]),
+            "hexRGBA": .string(reading.hexadecimalRGBA)
         ])
     }
 

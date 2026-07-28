@@ -440,6 +440,14 @@
 "imageEditor.info.colorSamplers" = "Color Samplers";
 "imageEditor.info.colorSamplers.empty" = "No color samples";
 "imageEditor.info.colorSampler" = "%d · X %d  Y %d · R %d  G %d  B %d  A %d";
+"imageEditor.info.colorSampler.hsb" = "%d · X %d  Y %d · H %d°  S %d%%  B %d%%  A %d%%";
+"imageEditor.info.colorSampler.hexadecimal" = "%d · X %d  Y %d · %@";
+"imageEditor.info.colorSampler.mode.rgb" = "8-bit RGB";
+"imageEditor.info.colorSampler.mode.rgb.short" = "RGB";
+"imageEditor.info.colorSampler.mode.hsb" = "Hue / Saturation / Brightness";
+"imageEditor.info.colorSampler.mode.hsb.short" = "HSB";
+"imageEditor.info.colorSampler.mode.hexadecimal" = "Hexadecimal RGBA";
+"imageEditor.info.colorSampler.mode.hexadecimal.short" = "HEX";
 "imageEditor.action.redo" = "Redo";
 "imageEditor.export.title" = "Export Image";
 "imageEditor.export.format" = "Format";
@@ -619,7 +627,7 @@
 "imageEditor.tool.paintBucket.help" = "Paint Bucket: fill neighboring similar pixels with the foreground color.";
 "imageEditor.tool.gradient.help" = "Gradient: drag to fill a foreground-to-background color gradient.";
 "imageEditor.tool.eyedropper.help" = "Eyedropper: sample the canvas and set the foreground color.";
-"imageEditor.tool.colorSampler.help" = "Color Sampler: retain up to four RGB sampling points on the canvas.";
+"imageEditor.tool.colorSampler.help" = "Color Sampler: retain up to four canvas samples and inspect them as RGB, HSB, or hexadecimal.";
 "imageEditor.tool.text.help" = "Text: click the canvas to create an editable text layer.";
 "imageEditor.tool.rectangle.help" = "Rectangle: drag to create a rectangular shape layer.";
 "imageEditor.tool.ellipse.help" = "Ellipse: drag to create an elliptical shape layer.";

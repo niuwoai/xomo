@@ -333,6 +333,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var filterLensDistortion: Double = 0.35
     @Published var selectedHistogramSource: ImageEditorHistogramSource = .composite
     @Published var selectedHistogramChannel: ImageEditorHistogramChannel = .rgb
+    @Published var selectedColorSamplerReadoutMode: ImageEditorColorSamplerReadoutMode = .rgb
     @Published var selectedChannelPreview: ImageEditorChannelPreview = .composite
     @Published var selectedAlphaChannelID: UUID?
     @Published var previewedAlphaChannelID: UUID?
@@ -878,19 +879,47 @@ final class ImageEditorViewModel: ObservableObject {
 
     func colorSamplerInfoText(
         index: Int,
-        sample: ImageEditorColorSamplerPoint
+        sample: ImageEditorColorSamplerPoint,
+        mode requestedMode: ImageEditorColorSamplerReadoutMode? = nil
     ) -> String {
-        let color = sample.color.usingColorSpace(.deviceRGB) ?? sample.color
-        return L10n.format(
-            "imageEditor.info.colorSampler",
+        let reading = ImageEditorColorSamplerReading(color: sample.color)
+        let mode = requestedMode ?? selectedColorSamplerReadoutMode
+        let sharedArguments: [CVarArg] = [
             index + 1,
             Int(sample.point.x.rounded()),
-            Int(sample.point.y.rounded()),
-            Int((color.redComponent * 255).rounded()),
-            Int((color.greenComponent * 255).rounded()),
-            Int((color.blueComponent * 255).rounded()),
-            Int((color.alphaComponent * 255).rounded())
-        )
+            Int(sample.point.y.rounded())
+        ]
+
+        switch mode {
+        case .rgb:
+            return String(
+                format: L10n.text("imageEditor.info.colorSampler"),
+                locale: Locale.current,
+                arguments: sharedArguments + [
+                    reading.red8,
+                    reading.green8,
+                    reading.blue8,
+                    reading.alpha8
+                ]
+            )
+        case .hsb:
+            return String(
+                format: L10n.text("imageEditor.info.colorSampler.hsb"),
+                locale: Locale.current,
+                arguments: sharedArguments + [
+                    reading.hueDegrees,
+                    reading.saturationPercent,
+                    reading.brightnessPercent,
+                    reading.alphaPercent
+                ]
+            )
+        case .hexadecimal:
+            return String(
+                format: L10n.text("imageEditor.info.colorSampler.hexadecimal"),
+                locale: Locale.current,
+                arguments: sharedArguments + [reading.hexadecimalRGBA]
+            )
+        }
     }
 
     var selectedLayerOpacity: Double {

@@ -440,6 +440,14 @@
 "imageEditor.info.colorSamplers" = "カラーサンプラー";
 "imageEditor.info.colorSamplers.empty" = "カラーサンプルなし";
 "imageEditor.info.colorSampler" = "%d · X %d  Y %d · R %d  G %d  B %d  A %d";
+"imageEditor.info.colorSampler.hsb" = "%d · X %d  Y %d · H %d°  S %d%%  B %d%%  A %d%%";
+"imageEditor.info.colorSampler.hexadecimal" = "%d · X %d  Y %d · %@";
+"imageEditor.info.colorSampler.mode.rgb" = "8ビット RGB";
+"imageEditor.info.colorSampler.mode.rgb.short" = "RGB";
+"imageEditor.info.colorSampler.mode.hsb" = "色相・彩度・明度";
+"imageEditor.info.colorSampler.mode.hsb.short" = "HSB";
+"imageEditor.info.colorSampler.mode.hexadecimal" = "16進 RGBA";
+"imageEditor.info.colorSampler.mode.hexadecimal.short" = "HEX";
 "imageEditor.action.redo" = "やり直す";
 "imageEditor.export.title" = "画像を書き出し";
 "imageEditor.export.format" = "形式";
@@ -619,7 +627,7 @@
 "imageEditor.tool.paintBucket.help" = "塗りつぶし：隣接する類似ピクセルを前景色で塗りつぶします。";
 "imageEditor.tool.gradient.help" = "グラデ：ドラッグして前景色から背景色のグラデーションを描きます。";
 "imageEditor.tool.eyedropper.help" = "スポイト：キャンバスから色を取得して前景色に設定します。";
-"imageEditor.tool.colorSampler.help" = "カラーサンプラー：キャンバス上に最大4つのRGBサンプル点を保持します。";
+"imageEditor.tool.colorSampler.help" = "カラーサンプラー：キャンバス上に最大4点を保持し、RGB・HSB・16進数で確認します。";
 "imageEditor.tool.text.help" = "文字：キャンバスをクリックして編集可能な文字レイヤーを作成します。";
 "imageEditor.tool.rectangle.help" = "矩形：ドラッグして矩形シェイプレイヤーを作成します。";
 "imageEditor.tool.ellipse.help" = "楕円：ドラッグして楕円シェイプレイヤーを作成します。";

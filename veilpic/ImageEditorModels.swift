@@ -341,6 +341,84 @@ struct ImageEditorColorSamplerPoint: Identifiable {
     }
 }
 
+enum ImageEditorColorSamplerReadoutMode: String, CaseIterable, Identifiable {
+    case rgb
+    case hsb
+    case hexadecimal
+
+    var id: String { rawValue }
+
+    var title: String {
+        L10n.text("imageEditor.info.colorSampler.mode.\(rawValue)")
+    }
+
+    var shortTitle: String {
+        L10n.text("imageEditor.info.colorSampler.mode.\(rawValue).short")
+    }
+}
+
+struct ImageEditorColorSamplerReading {
+    let red: CGFloat
+    let green: CGFloat
+    let blue: CGFloat
+    let alpha: CGFloat
+    let hue: CGFloat
+    let saturation: CGFloat
+    let brightness: CGFloat
+
+    init(color: NSColor) {
+        let rgb = color.usingColorSpace(.deviceRGB) ?? color
+        red = rgb.redComponent
+        green = rgb.greenComponent
+        blue = rgb.blueComponent
+        alpha = rgb.alphaComponent
+
+        var hue: CGFloat = 0
+        var saturation: CGFloat = 0
+        var brightness: CGFloat = 0
+        var ignoredAlpha: CGFloat = 0
+        rgb.getHue(
+            &hue,
+            saturation: &saturation,
+            brightness: &brightness,
+            alpha: &ignoredAlpha
+        )
+        self.hue = hue
+        self.saturation = saturation
+        self.brightness = brightness
+    }
+
+    var red8: Int { Self.byte(red) }
+    var green8: Int { Self.byte(green) }
+    var blue8: Int { Self.byte(blue) }
+    var alpha8: Int { Self.byte(alpha) }
+    var hueDegrees: Int {
+        let roundedDegrees = Int((hue * 360).rounded())
+        return ((roundedDegrees % 360) + 360) % 360
+    }
+    var saturationPercent: Int { Self.percent(saturation) }
+    var brightnessPercent: Int { Self.percent(brightness) }
+    var alphaPercent: Int { Self.percent(alpha) }
+
+    var hexadecimalRGBA: String {
+        String(
+            format: "#%02X%02X%02X%02X",
+            red8,
+            green8,
+            blue8,
+            alpha8
+        )
+    }
+
+    private static func byte(_ value: CGFloat) -> Int {
+        min(max(Int((value * 255).rounded()), 0), 255)
+    }
+
+    private static func percent(_ value: CGFloat) -> Int {
+        min(max(Int((value * 100).rounded()), 0), 100)
+    }
+}
+
 enum ImageEditorSelectionMode: String, CaseIterable, Identifiable {
     case replace
     case add

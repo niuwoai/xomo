@@ -3398,6 +3398,21 @@ struct ImageEditorView: View {
                     Text(L10n.text("imageEditor.info.colorSamplers"))
                         .fontWeight(.semibold)
                     Spacer()
+                    ForEach(ImageEditorColorSamplerReadoutMode.allCases) { mode in
+                        Button(mode.shortTitle) {
+                            viewModel.selectedColorSamplerReadoutMode = mode
+                        }
+                        .buttonStyle(EditorSegmentButtonStyle(
+                            isSelected: viewModel.selectedColorSamplerReadoutMode == mode
+                        ))
+                        .focusable(false)
+                        .xomoFocusEffectDisabled()
+                        .help(mode.title)
+                        .accessibilityLabel(mode.title)
+                        .accessibilityIdentifier(
+                            "image-editor-info-color-sampler-mode-\(mode.rawValue)"
+                        )
+                    }
                     Button {
                         viewModel.clearColorSamplers()
                     } label: {

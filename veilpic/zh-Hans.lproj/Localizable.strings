@@ -440,6 +440,14 @@
 "imageEditor.info.colorSamplers" = "颜色取样点";
 "imageEditor.info.colorSamplers.empty" = "暂无颜色取样点";
 "imageEditor.info.colorSampler" = "%d · X %d  Y %d · R %d  G %d  B %d  A %d";
+"imageEditor.info.colorSampler.hsb" = "%d · X %d  Y %d · H %d°  S %d%%  B %d%%  A %d%%";
+"imageEditor.info.colorSampler.hexadecimal" = "%d · X %d  Y %d · %@";
+"imageEditor.info.colorSampler.mode.rgb" = "8 位 RGB";
+"imageEditor.info.colorSampler.mode.rgb.short" = "RGB";
+"imageEditor.info.colorSampler.mode.hsb" = "色相 / 饱和度 / 明度";
+"imageEditor.info.colorSampler.mode.hsb.short" = "HSB";
+"imageEditor.info.colorSampler.mode.hexadecimal" = "十六进制 RGBA";
+"imageEditor.info.colorSampler.mode.hexadecimal.short" = "HEX";
 "imageEditor.action.redo" = "重做";
 "imageEditor.export.title" = "导出图像";
 "imageEditor.export.format" = "格式";
@@ -619,7 +627,7 @@
 "imageEditor.tool.paintBucket.help" = "油漆桶：向相邻的相似像素区域填充前景色。";
 "imageEditor.tool.gradient.help" = "渐变：拖拽以填充前景色到背景色的渐变。";
 "imageEditor.tool.eyedropper.help" = "吸管：从画布取样并设置前景色。";
-"imageEditor.tool.colorSampler.help" = "颜色取样器：在画布保留最多四个 RGB 取样点。";
+"imageEditor.tool.colorSampler.help" = "颜色取样器：在画布保留最多四个取样点，并以 RGB、HSB 或十六进制查看。";
 "imageEditor.tool.text.help" = "文字：点击画布创建可编辑文字图层。";
 "imageEditor.tool.rectangle.help" = "矩形：拖拽创建矩形形状图层。";
 "imageEditor.tool.ellipse.help" = "椭圆：拖拽创建椭圆形状图层。";
