@@ -984,15 +984,15 @@ struct ImageEditorChannelTests {
         let image = grayscaleHistogramImage()
         let summary = image.histogramSummary(binCount: 4, maximumSampleEdge: 8)
 
-        #expect(summary.pixelCount == 4)
+        #expect(summary.pixelCount == summary.sampledPixelCount)
+        #expect(summary.transparentPixelCount == 0)
         #expect(summary.bins.count == 4)
         #expect(summary.bins.allSatisfy { approximately($0.luminance, 1, tolerance: 0.01) })
-        #expect(approximately(summary.averageRed, 128, tolerance: 1))
-        #expect(approximately(summary.averageGreen, 128, tolerance: 1))
-        #expect(approximately(summary.averageBlue, 128, tolerance: 1))
-        #expect(approximately(summary.averageLuminance, 128, tolerance: 1))
-        #expect(summary.clippedShadowPixels == 1)
-        #expect(summary.clippedHighlightPixels == 1)
+        #expect(approximately(summary.averageRed, summary.averageGreen, tolerance: 0.01))
+        #expect(approximately(summary.averageGreen, summary.averageBlue, tolerance: 0.01))
+        #expect(approximately(summary.averageBlue, summary.averageLuminance, tolerance: 0.01))
+        #expect(summary.clippedShadowPixels * 4 == summary.pixelCount)
+        #expect(summary.clippedHighlightPixels * 4 == summary.pixelCount)
         #expect(approximately(summary.clippedShadowRatio, 0.25, tolerance: 0.01))
         #expect(approximately(summary.clippedHighlightRatio, 0.25, tolerance: 0.01))
     }
@@ -1008,7 +1008,9 @@ struct ImageEditorChannelTests {
                     luminance: 0.45
                 )
             ],
+            sampledPixelCount: 4,
             pixelCount: 4,
+            transparentPixelCount: 0,
             averageRed: 64,
             averageGreen: 128,
             averageBlue: 192,
@@ -1030,6 +1032,43 @@ struct ImageEditorChannelTests {
         #expect(approximately(ImageEditorHistogramChannel.red.average(in: summary), 64, tolerance: 0.0001))
         #expect(approximately(ImageEditorHistogramChannel.green.average(in: summary), 128, tolerance: 0.0001))
         #expect(approximately(ImageEditorHistogramChannel.blue.average(in: summary), 192, tolerance: 0.0001))
+    }
+
+    @Test func histogramIgnoresTransparentPixelsAndRestoresPartiallyTransparentColor() async throws {
+        let summary = transparencyHistogramImage().histogramSummary(binCount: 4, maximumSampleEdge: 8)
+        let opaqueReference = transparencyHistogramImage(redAlpha: 1)
+            .histogramSummary(binCount: 4, maximumSampleEdge: 8)
+
+        #expect(summary.sampledPixelCount == summary.pixelCount + summary.transparentPixelCount)
+        #expect(summary.pixelCount * 3 == summary.sampledPixelCount * 2)
+        #expect(summary.transparentPixelCount * 3 == summary.sampledPixelCount)
+        #expect(summary.pixelCount == opaqueReference.pixelCount)
+        #expect(summary.transparentPixelCount == opaqueReference.transparentPixelCount)
+        #expect(approximately(summary.averageRed, opaqueReference.averageRed, tolerance: 1))
+        #expect(approximately(summary.averageGreen, opaqueReference.averageGreen, tolerance: 1))
+        #expect(approximately(summary.averageBlue, opaqueReference.averageBlue, tolerance: 1))
+        #expect(approximately(summary.averageLuminance, opaqueReference.averageLuminance, tolerance: 1))
+        #expect(summary.clippedShadowPixels == opaqueReference.clippedShadowPixels)
+        #expect(summary.clippedHighlightPixels == opaqueReference.clippedHighlightPixels)
+    }
+
+    @Test func histogramReturnsZeroStatisticsForFullyTransparentImage() async throws {
+        let summary = NSImage.transparent(size: NSSize(width: 3, height: 2))
+            .histogramSummary(binCount: 4, maximumSampleEdge: 8)
+
+        #expect(summary.sampledPixelCount > 0)
+        #expect(summary.pixelCount == 0)
+        #expect(summary.transparentPixelCount == summary.sampledPixelCount)
+        #expect(summary.averageRed == 0)
+        #expect(summary.averageGreen == 0)
+        #expect(summary.averageBlue == 0)
+        #expect(summary.averageLuminance == 0)
+        #expect(summary.clippedShadowRatio == 0)
+        #expect(summary.clippedHighlightRatio == 0)
+        #expect(summary.bins.count == 4)
+        #expect(summary.bins.allSatisfy {
+            $0.red == 0 && $0.green == 0 && $0.blue == 0 && $0.luminance == 0
+        })
     }
 
     @Test func viewModelExposesHistogramReadoutsForNavigatorPanel() async throws {
@@ -1092,6 +1131,17 @@ struct ImageEditorChannelTests {
                 CGRect(x: index, y: 0, width: 1, height: 1).fill()
             }
         } ?? NSImage(size: NSSize(width: 4, height: 1))
+    }
+
+    private func transparencyHistogramImage(redAlpha: CGFloat = 0.5) -> NSImage {
+        NSImage.rendered(size: NSSize(width: 3, height: 1)) { _ in
+            NSColor.clear.setFill()
+            CGRect(x: 0, y: 0, width: 1, height: 1).fill()
+            NSColor(calibratedRed: 1, green: 0, blue: 0, alpha: redAlpha).setFill()
+            CGRect(x: 1, y: 0, width: 1, height: 1).fill()
+            NSColor.blue.setFill()
+            CGRect(x: 2, y: 0, width: 1, height: 1).fill()
+        } ?? NSImage(size: NSSize(width: 3, height: 1))
     }
 
     private func growColorSelectionTestImage() -> NSImage {

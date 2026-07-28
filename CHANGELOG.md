@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.12.0-rc540 - 2026-07-29
+
+### Fixed
+- 直方图不再把完全透明像素误算成黑色，透明画布不会凭空出现暗部峰值或虚假的死黑裁切。
+- 半透明像素在统计前恢复非预乘 RGB，避免红、绿、蓝与亮度平均值被 Alpha 预乘错误压暗；全透明图仍安全返回零统计。
+
+### Changed
+- MCP/CLI 的 `xomo.document.get` 直方图结果新增 `sampledPixelCount` 与 `transparentPixelCount`，`pixelCount` 明确表示实际参与颜色统计的可见采样像素数。
+
+### Verification
+- 透明像素过滤、半透明颜色恢复、全透明零统计、既有通道统计与 MCP 读数定向 Xcode 测试 4/4 通过；CLI 2/2、发布契约 4/4（10 个断言）与差异检查通过。
+- 下一次完整构建、完整冒烟和 `/Applications` 覆盖门禁仍为 rc560；`/Applications/Xomo.app` 当前保留已验证的稳定 rc538。
+
 ## 2.12.0-rc539 - 2026-07-27
 
 ### Added

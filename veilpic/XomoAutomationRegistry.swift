@@ -553,7 +553,9 @@ final class XomoAutomationRegistry {
             "zoom": .number(viewModel.zoom),
             "histogram": .object([
                 "channel": .string(histogramChannel.rawValue),
+                "sampledPixelCount": .number(Double(histogram.sampledPixelCount)),
                 "pixelCount": .number(Double(histogram.pixelCount)),
+                "transparentPixelCount": .number(Double(histogram.transparentPixelCount)),
                 "average": .number(histogramChannel.average(in: histogram)),
                 "averageRed": .number(histogram.averageRed),
                 "averageGreen": .number(histogram.averageGreen),
