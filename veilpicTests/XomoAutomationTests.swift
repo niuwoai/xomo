@@ -1504,6 +1504,7 @@ struct XomoAutomationTests {
             "x": .number(13.5),
             "y": .number(-7.5)
         ]))
+        #expect(preview.result?.objectValue?["sizeDelta"] == nil)
         #expect(
             preview.result?.objectValue?["bounds"]?.objectValue?["x"]
                 == .number(expectedBounds.minX + 13.5)
@@ -1572,6 +1573,7 @@ struct XomoAutomationTests {
         #expect(rotation.result?.objectValue?["operation"] == .string("rotate"))
         #expect(rotation.result?.objectValue?["rotationDeltaDegrees"] == .number(15))
         #expect(rotation.result?.objectValue?["delta"] == nil)
+        #expect(rotation.result?.objectValue?["sizeDelta"] == nil)
         #expect(viewModel.selectedObjectBoundsInfoText.contains("Δθ"))
         #expect(viewModel.selectedObjectBoundsInfoText.contains("15°"))
         #expect(viewModel.document.history.count == historyCount)
@@ -1604,14 +1606,21 @@ struct XomoAutomationTests {
         #expect(resize.result?.objectValue?["rotationDeltaDegrees"] == nil)
         let resizedFrame = try #require(viewModel.selectedLayerTransformFrame)
         #expect(resizedFrame.width > originalFrame.width)
+        #expect(resize.result?.objectValue?["sizeDelta"] == .object([
+            "width": .number(resizedFrame.width - originalFrame.width),
+            "height": .number(resizedFrame.height - originalFrame.height)
+        ]))
         #expect(
             resize.result?.objectValue?["bounds"]?.objectValue?["width"]
                 == .number(resizedFrame.width)
         )
+        #expect(viewModel.selectedObjectBoundsInfoText.contains("ΔW"))
+        #expect(viewModel.selectedObjectBoundsInfoText.contains("ΔH"))
         #expect(viewModel.document.history.count == historyCount)
 
         #expect(viewModel.cancelTransformingSelectedLayer())
         #expect(viewModel.selectedLayerTransformFrame == originalFrame)
+        #expect(viewModel.resizingObjectPreviewDelta == nil)
         #expect(viewModel.document.history.count == historyCount)
     }
 

@@ -1012,6 +1012,12 @@ final class XomoAutomationRegistry {
                 "y": .number(delta.height)
             ])
         }
+        if let delta = viewModel.resizingObjectPreviewDelta {
+            result["sizeDelta"] = .object([
+                "width": .number(delta.width),
+                "height": .number(delta.height)
+            ])
+        }
         if let degrees = viewModel.rotatingPreviewDegrees {
             result["rotationDeltaDegrees"] = .number(degrees)
         }
@@ -5084,7 +5090,7 @@ private extension XomoAutomationRegistry {
         tool("xomo.layer.list", "List layers with hierarchy, bounds, visibility, locks, opacity, blend mode, preserved Figma variable bindings, and optional binding filters.", [
             "figmaBindings": XomoAutomationSchema.string(description: "Filter by preserved Figma variable bindings", values: ["all", "bound", "unbound"])
         ]),
-        tool("xomo.layer.selection_bounds", "Inspect selected object bounds plus live move, resize, or rotate preview context, including movement and rotation deltas."),
+        tool("xomo.layer.selection_bounds", "Inspect selected object bounds plus live move, resize, or rotate preview context, including movement, size, and rotation deltas."),
         tool("xomo.object.select_at", "Select the frontmost visible canvas object at a point using the editor's alpha-aware component and layer hit testing.", [
             "x": XomoAutomationSchema.number(description: "Canvas x coordinate"),
             "y": XomoAutomationSchema.number(description: "Canvas y coordinate"),

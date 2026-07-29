@@ -470,9 +470,11 @@
 "imageEditor.info.object.empty" = "Object · X —  Y — · W —  H —";
 "imageEditor.info.object.bounds" = "Object · X %@  Y %@ · W %@  H %@ px";
 "imageEditor.info.object.bounds.preview" = "Object · X %@  Y %@ · W %@  H %@ px · ΔX %@  ΔY %@ px";
+"imageEditor.info.object.bounds.resize" = "Object · X %@  Y %@ · W %@  H %@ px · ΔW %@  ΔH %@ px";
 "imageEditor.info.object.bounds.rotation" = "Object · X %@  Y %@ · W %@  H %@ px · Δθ %@°";
 "imageEditor.info.objects.bounds" = "%d objects · X %@  Y %@ · W %@  H %@ px";
 "imageEditor.info.objects.bounds.preview" = "%d objects · X %@  Y %@ · W %@  H %@ px · ΔX %@  ΔY %@ px";
+"imageEditor.info.objects.bounds.resize" = "%d objects · X %@  Y %@ · W %@  H %@ px · ΔW %@  ΔH %@ px";
 "imageEditor.info.objects.bounds.rotation" = "%d objects · X %@  Y %@ · W %@  H %@ px · Δθ %@°";
 "imageEditor.info.pointer.empty" = "Pointer · X —  Y — · —";
 "imageEditor.info.pointer.rgb" = "Pointer · X %d  Y %d · R %d  G %d  B %d  A %d";

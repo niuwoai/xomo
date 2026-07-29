@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.12.0-rc559 - 2026-07-29
+
+### Added
+- 对象缩放期间的信息面板几何行新增实时 `ΔW / ΔH`，当前 X/Y/W/H 与相对按下时尺寸变化使用同一变换框口径。
+- `xomo.layer.selection_bounds` 在 `operation=resize` 时新增结构化 `sizeDelta.width / sizeDelta.height`。
+
+### Changed
+- 移动、缩放、旋转三类预览分别只返回各自适用的位移、尺寸或角度增量；取消缩放后尺寸增量立即清除，原始几何和 History 保持不变。
+
+### Verification
+- Xcode 定向测试 1/1 通过，覆盖缩放实时尺寸增量、信息面板 `ΔW / ΔH`、MCP `sizeDelta`、取消恢复与零额外 History；CLI 测试 2/2、发布契约 4/4（10 个断言）、三语资源 3364 × 3 与差异检查通过。
+- `/Applications/Xomo.app` 已按用户要求安装并严格验签为 rc558；rc560 仍执行周期性完整构建、冒烟与覆盖安装。
+
 ## 2.12.0-rc558 - 2026-07-29
 
 ### Added

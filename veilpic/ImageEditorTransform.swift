@@ -34,6 +34,19 @@ extension ImageEditorViewModel {
         )
     }
 
+    var resizingObjectPreviewDelta: CGSize? {
+        guard isResizingSelectedLayer,
+              let originalFrame = resizingOriginalTransformFrame?.standardized,
+              let previewFrame = selectedLayerTransformFrame?.standardized,
+              !originalFrame.isNull,
+              !previewFrame.isNull
+        else { return nil }
+        return CGSize(
+            width: previewFrame.width - originalFrame.width,
+            height: previewFrame.height - originalFrame.height
+        )
+    }
+
     var selectedObjectBoundsInfoText: String {
         guard let frame = (movingObjectPreviewFrame ?? selectedLayerTransformFrame)?
             .standardized,
@@ -49,8 +62,14 @@ extension ImageEditorViewModel {
             geometryInfoValue(frame.height)
         ]
         let previewDelta = movingObjectPreviewDelta
+        let resizeDelta = resizingObjectPreviewDelta
         let previewArguments: [CVarArg]
         if let delta = previewDelta {
+            previewArguments = arguments + [
+                geometryInfoValue(delta.width),
+                geometryInfoValue(delta.height)
+            ]
+        } else if let delta = resizeDelta {
             previewArguments = arguments + [
                 geometryInfoValue(delta.width),
                 geometryInfoValue(delta.height)
@@ -67,6 +86,8 @@ extension ImageEditorViewModel {
             let localizationKey: String
             if previewDelta != nil {
                 localizationKey = "imageEditor.info.objects.bounds.preview"
+            } else if resizeDelta != nil {
+                localizationKey = "imageEditor.info.objects.bounds.resize"
             } else if rotatingPreviewDegrees != nil {
                 localizationKey = "imageEditor.info.objects.bounds.rotation"
             } else {
@@ -81,6 +102,8 @@ extension ImageEditorViewModel {
         let localizationKey: String
         if previewDelta != nil {
             localizationKey = "imageEditor.info.object.bounds.preview"
+        } else if resizeDelta != nil {
+            localizationKey = "imageEditor.info.object.bounds.resize"
         } else if rotatingPreviewDegrees != nil {
             localizationKey = "imageEditor.info.object.bounds.rotation"
         } else {
