@@ -10,7 +10,7 @@ import Foundation
 
 enum ImageEditorTransformHUDMode: Equatable {
     case move
-    case resize
+    case resize(scalePercent: CGSize?)
     case rotate(degrees: CGFloat)
 }
 
@@ -32,8 +32,9 @@ enum ImageEditorTransformHUD {
         switch mode {
         case .move:
             return "X \(format(frame.minX))  Y \(format(frame.minY))  ·  \(size)"
-        case .resize:
-            return size
+        case let .resize(scalePercent):
+            guard let scalePercent else { return size }
+            return "\(size)  ·  W \(format(scalePercent.width))%  H \(format(scalePercent.height))%"
         case let .rotate(degrees):
             return "\(format(degrees))°"
         }

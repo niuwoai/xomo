@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.12.0-rc561 - 2026-07-29
+
+### Added
+- 对象缩放时的画布 HUD 在当前宽高之外新增实时 `W / H` 百分比，直接显示相对按下时原始变换框的缩放比例。
+
+### Changed
+- 缩放 HUD 复用 `resizingObjectPreviewScalePercent`，与信息面板、MCP `scalePercent` 和最终提交使用同一几何来源；比例暂不可用时安全回退为仅显示尺寸。
+
+### Verification
+- 缩放 HUD 百分比与无比例回退的定向 Xcode 测试 2/2、CLI 测试 2/2、发布契约 5/5（13 个断言）、三语资源语法及 3364 × 3 键数量、差异检查通过。
+- `/Applications/Xomo.app` 按每 40 个候选版本的约定保持已严格验签并运行的 rc560；下一次完整构建、冒烟和覆盖安装门槛为 rc600。
+
 ## 2.12.0-rc560 - 2026-07-29
 
 ### Added

@@ -5592,7 +5592,7 @@ struct ImageEditorView: View {
 
     private var transformHUDMode: ImageEditorTransformHUDMode? {
         if viewModel.isResizingSelectedLayer {
-            return .resize
+            return .resize(scalePercent: viewModel.resizingObjectPreviewScalePercent)
         }
         if let degrees = viewModel.rotatingPreviewDegrees {
             return .rotate(degrees: degrees)

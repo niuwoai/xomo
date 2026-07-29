@@ -13,14 +13,23 @@ struct ImageEditorTransformHUDTests {
         #expect(text == "X 12  Y 24  ·  120.3 × 43.8")
     }
 
-    @Test func resizeReadoutOnlyShowsDimensions() {
+    @Test func resizeReadoutShowsDimensionsAndLiveScalePercent() {
         let text = ImageEditorTransformHUD.displayText(
             frame: CGRect(x: 90, y: 80, width: 164, height: 48),
-            mode: .resize
+            mode: .resize(scalePercent: CGSize(width: 136.67, height: 100))
         )
 
-        #expect(text == "164 × 48")
+        #expect(text == "164 × 48  ·  W 136.7%  H 100%")
         #expect(ImageEditorTransformHUD.badgeSize(for: text).width >= 88)
+    }
+
+    @Test func resizeReadoutFallsBackToDimensionsWhenScaleIsUnavailable() {
+        #expect(
+            ImageEditorTransformHUD.displayText(
+                frame: CGRect(x: 90, y: 80, width: 164, height: 48),
+                mode: .resize(scalePercent: nil)
+            ) == "164 × 48"
+        )
     }
 
     @Test func rotationReadoutShowsSignedAngleToOneDecimalPlace() {
