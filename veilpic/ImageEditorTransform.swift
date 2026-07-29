@@ -287,7 +287,9 @@ extension ImageEditorViewModel {
 
     @discardableResult
     func resetSelectedLayerTransformReferencePoint() -> Bool {
-        guard hasCustomTransformReferencePoint else { return false }
+        let hadCustomReferencePoint = hasCustomTransformReferencePoint
+        finishSelectedLayerTransformReferencePointDrag()
+        guard hadCustomReferencePoint else { return false }
         clearSelectedLayerTransformReferencePoint()
         return true
     }

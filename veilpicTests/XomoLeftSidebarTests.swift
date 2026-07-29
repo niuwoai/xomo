@@ -597,6 +597,20 @@ struct XomoLeftSidebarTests {
         #expect(source.contains("guard !isTransformReferencePointDragCancelled else { return }"))
     }
 
+    @Test func transformReferencePointGestureWiresDeferredDoubleClickReset() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("TapGesture(count: 2)"))
+        #expect(source.contains("DispatchQueue.main.async"))
+        #expect(source.contains("viewModel.resetSelectedLayerTransformReferencePoint()"))
+    }
+
     @Test func insertingButtonCreatesEditableGroupedLayers() throws {
         let image = NSImage.transparent(size: CGSize(width: 640, height: 480))
         let viewModel = ImageEditorViewModel(sourceName: "source", image: image) { _ in }

@@ -6184,6 +6184,15 @@ struct ImageEditorView: View {
                 refreshCanvasCursor(in: canvasSize)
             }
         )
+        .simultaneousGesture(
+            TapGesture(count: 2)
+                .onEnded {
+                    DispatchQueue.main.async {
+                        _ = viewModel.resetSelectedLayerTransformReferencePoint()
+                        refreshCanvasCursor(in: canvasSize)
+                    }
+                }
+        )
         .help(L10n.text("imageEditor.action.layerTransformReferencePoint"))
         .accessibilityIdentifier("image-editor-transform-reference-point")
     }
