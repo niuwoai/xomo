@@ -9,7 +9,7 @@ import CoreGraphics
 import Foundation
 
 enum ImageEditorTransformHUDMode: Equatable {
-    case move
+    case move(delta: CGSize?)
     case resize(scalePercent: CGSize?)
     case rotate(degrees: CGFloat)
 }
@@ -30,8 +30,11 @@ enum ImageEditorTransformHUD {
         let frame = frame.standardized
         let size = "\(format(frame.width)) × \(format(frame.height))"
         switch mode {
-        case .move:
-            return "X \(format(frame.minX))  Y \(format(frame.minY))  ·  \(size)"
+        case let .move(delta):
+            guard let delta else {
+                return "X \(format(frame.minX))  Y \(format(frame.minY))  ·  \(size)"
+            }
+            return "X \(format(frame.minX))  Y \(format(frame.minY))  ·  ΔX \(format(delta.width))  ΔY \(format(delta.height))"
         case let .resize(scalePercent):
             guard let scalePercent else { return size }
             return "\(size)  ·  W \(format(scalePercent.width))%  H \(format(scalePercent.height))%"

@@ -4,13 +4,22 @@ import Testing
 @testable import musepic
 
 struct ImageEditorTransformHUDTests {
-    @Test func moveReadoutIncludesRoundedPositionAndLiveSize() {
+    @Test func moveReadoutIncludesRoundedPositionAndCumulativeDelta() {
         let text = ImageEditorTransformHUD.displayText(
             frame: CGRect(x: 12.04, y: 23.96, width: 120.25, height: 43.84),
-            mode: .move
+            mode: .move(delta: CGSize(width: 13.46, height: -7.54))
         )
 
-        #expect(text == "X 12  Y 24  ·  120.3 × 43.8")
+        #expect(text == "X 12  Y 24  ·  ΔX 13.5  ΔY -7.5")
+    }
+
+    @Test func moveReadoutFallsBackToLiveSizeWhenDeltaIsUnavailable() {
+        #expect(
+            ImageEditorTransformHUD.displayText(
+                frame: CGRect(x: 12.04, y: 23.96, width: 120.25, height: 43.84),
+                mode: .move(delta: nil)
+            ) == "X 12  Y 24  ·  120.3 × 43.8"
+        )
     }
 
     @Test func resizeReadoutShowsDimensionsAndLiveScalePercent() {

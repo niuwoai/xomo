@@ -5598,7 +5598,7 @@ struct ImageEditorView: View {
             return .rotate(degrees: degrees)
         }
         if viewModel.movingObjectPreviewFrame != nil {
-            return .move
+            return .move(delta: viewModel.movingObjectPreviewDelta)
         }
         return nil
     }
