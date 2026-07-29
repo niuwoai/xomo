@@ -55,27 +55,39 @@ extension ImageEditorViewModel {
                 geometryInfoValue(delta.width),
                 geometryInfoValue(delta.height)
             ]
+        } else if let degrees = rotatingPreviewDegrees {
+            previewArguments = arguments + [
+                geometryInfoValue(degrees)
+            ]
         } else {
             previewArguments = arguments
         }
         if document.selectedLayerIDs.count > 1 {
             let multipleArguments: [CVarArg] = [document.selectedLayerIDs.count]
+            let localizationKey: String
+            if previewDelta != nil {
+                localizationKey = "imageEditor.info.objects.bounds.preview"
+            } else if rotatingPreviewDegrees != nil {
+                localizationKey = "imageEditor.info.objects.bounds.rotation"
+            } else {
+                localizationKey = "imageEditor.info.objects.bounds"
+            }
             return String(
-                format: L10n.text(
-                    previewDelta == nil
-                        ? "imageEditor.info.objects.bounds"
-                        : "imageEditor.info.objects.bounds.preview"
-                ),
+                format: L10n.text(localizationKey),
                 locale: Locale.current,
                 arguments: multipleArguments + previewArguments
             )
         }
+        let localizationKey: String
+        if previewDelta != nil {
+            localizationKey = "imageEditor.info.object.bounds.preview"
+        } else if rotatingPreviewDegrees != nil {
+            localizationKey = "imageEditor.info.object.bounds.rotation"
+        } else {
+            localizationKey = "imageEditor.info.object.bounds"
+        }
         return String(
-            format: L10n.text(
-                previewDelta == nil
-                    ? "imageEditor.info.object.bounds"
-                    : "imageEditor.info.object.bounds.preview"
-            ),
+            format: L10n.text(localizationKey),
             locale: Locale.current,
             arguments: previewArguments
         )

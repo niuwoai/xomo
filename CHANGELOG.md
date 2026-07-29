@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.12.0-rc558 - 2026-07-29
+
+### Added
+- 旋转对象期间的信息面板几何行新增 `Δθ`，显示相对按下位置的实时旋转增量；Shift 15° 吸附后的实际角度直接反映在读数中。
+- `xomo.layer.selection_bounds` 新增活动变换 `operation`，可区分 `move`、`resize` 和 `rotate`；旋转期间另返回 `rotationDeltaDegrees`。
+
+### Changed
+- MCP 的 `preview` 从仅代表对象移动扩展为三类画布变换事务；缩放期间返回实时边界，移动继续返回 `delta`，旋转继续返回实时边界和角度。
+- 没有活动变换时省略 `operation`、移动增量和旋转增量；取消缩放或旋转会恢复原始几何，清除预览字段且不写 History。
+
+### Verification
+- Xcode 定向测试 2/2 通过，覆盖移动累计位移、吸附后的缩放边界、旋转 15° 吸附、三种 `operation`、取消恢复及零额外 History；CLI 测试 2/2、发布契约 4/4（10 个断言）、三语资源 3362 × 3 与差异检查通过。
+- `/Applications/Xomo.app` 保持已严格验签的 rc552；下一次周期性全量构建、冒烟与覆盖安装门禁仍为 rc560。
+
 ## 2.12.0-rc557 - 2026-07-29
 
 ### Added

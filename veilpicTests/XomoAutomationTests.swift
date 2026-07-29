@@ -1474,6 +1474,7 @@ struct XomoAutomationTests {
         #expect(initial.ok)
         #expect(initial.result?.objectValue?["active"] == .bool(true))
         #expect(initial.result?.objectValue?["preview"] == .bool(false))
+        #expect(initial.result?.objectValue?["operation"] == nil)
         #expect(initial.result?.objectValue?["delta"] == nil)
         #expect(initial.result?.objectValue?["selectedCount"] == .number(2))
         #expect(initial.result?.objectValue?["selectedLayerIds"]?.arrayValue == [
@@ -1498,6 +1499,7 @@ struct XomoAutomationTests {
 
         #expect(preview.ok)
         #expect(preview.result?.objectValue?["preview"] == .bool(true))
+        #expect(preview.result?.objectValue?["operation"] == .string("move"))
         #expect(preview.result?.objectValue?["delta"] == .object([
             "x": .number(13.5),
             "y": .number(-7.5)
@@ -1522,6 +1524,7 @@ struct XomoAutomationTests {
             name: "xomo.layer.selection_bounds"
         ))
         #expect(restored.result?.objectValue?["preview"] == .bool(false))
+        #expect(restored.result?.objectValue?["operation"] == nil)
         #expect(restored.result?.objectValue?["delta"] == nil)
         #expect(restored.result?.objectValue?["bounds"] == initial.result?.objectValue?["bounds"])
         #expect(viewModel.movingObjectPreviewDelta == nil)
@@ -1535,6 +1538,81 @@ struct XomoAutomationTests {
         #expect(empty.result?.objectValue?["active"] == .bool(false))
         #expect(empty.result?.objectValue?["selectedCount"] == .number(0))
         #expect(viewModel.selectedObjectBoundsInfoText.contains("—"))
+    }
+
+    @Test func registryReportsResizeAndRotationPreviewContext() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        defer { registry.unregister(viewModel) }
+
+        viewModel.textValue = "Transform"
+        viewModel.textSize = 28
+        viewModel.addText(at: CGPoint(x: 80, y: 90))
+        let originalFrame = try #require(viewModel.selectedLayerTransformFrame)
+        let historyCount = viewModel.document.history.count
+        let center = CGPoint(x: originalFrame.midX, y: originalFrame.midY)
+        let radius: CGFloat = 80
+        let start = CGPoint(x: center.x, y: center.y + radius)
+        let dragAngle = CGFloat(104) * .pi / 180
+        let end = CGPoint(
+            x: center.x + cos(dragAngle) * radius,
+            y: center.y + sin(dragAngle) * radius
+        )
+
+        viewModel.beginRotatingSelectedLayer(from: start)
+        viewModel.rotateSelectedLayer(to: end, snappingToStep: true)
+        let rotation = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.selection_bounds"
+        ))
+
+        #expect(rotation.ok)
+        #expect(rotation.result?.objectValue?["preview"] == .bool(true))
+        #expect(rotation.result?.objectValue?["operation"] == .string("rotate"))
+        #expect(rotation.result?.objectValue?["rotationDeltaDegrees"] == .number(15))
+        #expect(rotation.result?.objectValue?["delta"] == nil)
+        #expect(viewModel.selectedObjectBoundsInfoText.contains("Δθ"))
+        #expect(viewModel.selectedObjectBoundsInfoText.contains("15°"))
+        #expect(viewModel.document.history.count == historyCount)
+
+        #expect(viewModel.cancelTransformingSelectedLayer())
+        #expect(viewModel.selectedLayerTransformFrame == originalFrame)
+        let restoredAfterRotation = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.selection_bounds"
+        ))
+        #expect(restoredAfterRotation.result?.objectValue?["preview"] == .bool(false))
+        #expect(restoredAfterRotation.result?.objectValue?["operation"] == nil)
+        #expect(restoredAfterRotation.result?.objectValue?["rotationDeltaDegrees"] == nil)
+        #expect(viewModel.document.history.count == historyCount)
+
+        viewModel.beginResizingSelectedLayer(handle: .right)
+        viewModel.resizeSelectedLayer(
+            to: CGPoint(x: originalFrame.maxX + 20, y: originalFrame.midY),
+            handle: .right
+        )
+        let resize = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.selection_bounds"
+        ))
+
+        #expect(resize.ok)
+        #expect(resize.result?.objectValue?["preview"] == .bool(true))
+        #expect(resize.result?.objectValue?["operation"] == .string("resize"))
+        #expect(resize.result?.objectValue?["delta"] == nil)
+        #expect(resize.result?.objectValue?["rotationDeltaDegrees"] == nil)
+        let resizedFrame = try #require(viewModel.selectedLayerTransformFrame)
+        #expect(resizedFrame.width > originalFrame.width)
+        #expect(
+            resize.result?.objectValue?["bounds"]?.objectValue?["width"]
+                == .number(resizedFrame.width)
+        )
+        #expect(viewModel.document.history.count == historyCount)
+
+        #expect(viewModel.cancelTransformingSelectedLayer())
+        #expect(viewModel.selectedLayerTransformFrame == originalFrame)
+        #expect(viewModel.document.history.count == historyCount)
     }
 
     @Test func registryImportsLocalComponentTokensForSubsequentInsertion() throws {

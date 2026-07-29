@@ -1,6 +1,8 @@
 # 像界（Xomo）产品概览
 
-> 最后更新：2026-07-29 | 当前版本：v2.12.0-rc557
+> 最后更新：2026-07-29 | 当前版本：v2.12.0-rc558
+
+v2.12.0-rc558 把对象检查扩展到完整的活动变换语境：旋转时，信息面板在 X/Y/W/H 后追加实时 `Δθ`，Shift 吸附后的 15° 档位就是最终显示值；MCP/CLI 的 `xomo.layer.selection_bounds` 用 `operation=move|resize|rotate` 区分事务，移动返回位移、缩放返回变化后的边界、旋转返回边界与 `rotationDeltaDegrees`。没有活动变换时不残留预览字段，Escape 取消缩放或旋转会恢复原始几何且不制造 History。`/Applications/Xomo.app` 保持已严格验签的 rc552；下一次完整门禁仍为 rc560。
 
 v2.12.0-rc557 让对象拖动的几何反馈从“现在在哪里”补全为“从哪里移动了多少”：信息面板在活动拖动期间追加 `ΔX / ΔY`，数值来自原始变换框与当前虚线预览框，因此吸附、轴向约束、组件、多选和子像素移动采用同一坐标事实。MCP/CLI 的 `xomo.layer.selection_bounds` 同步返回结构化 `delta`，平时省略，避免把没有发生的动作表达成零位移。整个高频路径仍只更新轻量预览状态，松手才提交图层并写入 History。`/Applications/Xomo.app` 保持已严格验签的 rc552；下一次完整门禁仍为 rc560。
 

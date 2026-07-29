@@ -981,9 +981,19 @@ final class XomoAutomationRegistry {
                 "selectedLayerIds": .array(selectedLayerIDs.map(XomoJSONValue.string))
             ])
         }
+        let previewOperation: String?
+        if viewModel.movingObjectPreviewFrame != nil {
+            previewOperation = "move"
+        } else if viewModel.isResizingSelectedLayer {
+            previewOperation = "resize"
+        } else if viewModel.rotatingPreviewDegrees != nil {
+            previewOperation = "rotate"
+        } else {
+            previewOperation = nil
+        }
         var result: [String: XomoJSONValue] = [
             "active": .bool(true),
-            "preview": .bool(viewModel.movingObjectPreviewFrame != nil),
+            "preview": .bool(previewOperation != nil),
             "selectedCount": .number(Double(selectedLayerIDs.count)),
             "selectedLayerIds": .array(selectedLayerIDs.map(XomoJSONValue.string)),
             "bounds": .object([
@@ -993,11 +1003,17 @@ final class XomoAutomationRegistry {
                 "height": .number(bounds.height)
             ])
         ]
+        if let previewOperation {
+            result["operation"] = .string(previewOperation)
+        }
         if let delta = viewModel.movingObjectPreviewDelta {
             result["delta"] = .object([
                 "x": .number(delta.width),
                 "y": .number(delta.height)
             ])
+        }
+        if let degrees = viewModel.rotatingPreviewDegrees {
+            result["rotationDeltaDegrees"] = .number(degrees)
         }
         return .object(result)
     }
@@ -5068,7 +5084,7 @@ private extension XomoAutomationRegistry {
         tool("xomo.layer.list", "List layers with hierarchy, bounds, visibility, locks, opacity, blend mode, preserved Figma variable bindings, and optional binding filters.", [
             "figmaBindings": XomoAutomationSchema.string(description: "Filter by preserved Figma variable bindings", values: ["all", "bound", "unbound"])
         ]),
-        tool("xomo.layer.selection_bounds", "Inspect the shared transform bounds of selected layers or component objects, including live drag-preview bounds and delta."),
+        tool("xomo.layer.selection_bounds", "Inspect selected object bounds plus live move, resize, or rotate preview context, including movement and rotation deltas."),
         tool("xomo.object.select_at", "Select the frontmost visible canvas object at a point using the editor's alpha-aware component and layer hit testing.", [
             "x": XomoAutomationSchema.number(description: "Canvas x coordinate"),
             "y": XomoAutomationSchema.number(description: "Canvas y coordinate"),
