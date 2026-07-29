@@ -27,9 +27,23 @@ struct XomoMCPServerTests {
         ]))
         let result = try #require(response["result"] as? [String: Any])
         let tools = try #require(result["tools"] as? [[String: Any]])
-        #expect(tools.count == 125)
+        #expect(tools.count == 126)
         #expect(tools.contains { $0["name"] as? String == "xomo.layer.list" })
         #expect(tools.contains { $0["name"] as? String == "xomo.layer.selection_bounds" })
+        let transformReferenceTool = try #require(tools.first {
+            $0["name"] as? String == "xomo.layer.transform_reference"
+        })
+        let transformReferenceSchema = try #require(
+            transformReferenceTool["inputSchema"] as? [String: Any]
+        )
+        #expect(transformReferenceSchema["required"] as? [String] == ["action"])
+        let transformReferenceProperties = try #require(
+            transformReferenceSchema["properties"] as? [String: Any]
+        )
+        let transformReferenceAction = try #require(
+            transformReferenceProperties["action"] as? [String: Any]
+        )
+        #expect(transformReferenceAction["enum"] as? [String] == ["set", "reset"])
         let objectSelectTool = try #require(tools.first { $0["name"] as? String == "xomo.object.select_at" })
         let objectSelectSchema = try #require(objectSelectTool["inputSchema"] as? [String: Any])
         #expect(objectSelectSchema["required"] as? [String] == ["x", "y"])

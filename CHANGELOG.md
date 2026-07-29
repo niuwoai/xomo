@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.12.0-rc566 - 2026-07-29
+
+### Added
+- 新增 `xomo.layer.transform_reference`，自动化可用画布坐标设置当前对象/多选的旋转支点，或一键复位到选区中心。
+
+### Changed
+- 写入结果返回实际 `referencePoint`、`custom`、`changed` 和稳定排序的选择 ID；重复设置或重复复位明确报告未变化。
+- 参考点自动化不写入文档 History，空选择与未知动作返回明确错误；CLI 离线 MCP 目录同步完整参数 schema。
+
+### Verification
+- 参考点写入/复位/幂等/错误/History 语义与 MCP schema 的定向 Xcode 测试 2/2、CLI 测试 2/2、发布契约 5/5（13 个断言）、三语资源语法及 3364 × 3 键数量、差异检查通过。
+- `/Applications/Xomo.app` 保持本轮刚完成 Release、严格验签并启动的 rc565；下一次周期性完整构建与覆盖安装门槛仍为 rc600。
+
 ## 2.12.0-rc565 - 2026-07-29
 
 ### Added

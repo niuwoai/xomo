@@ -97,6 +97,8 @@ final class XomoAutomationRegistry {
             return try layersResult(arguments, viewModel: viewModel)
         case "xomo.layer.selection_bounds":
             return selectedLayerBoundsResult(viewModel)
+        case "xomo.layer.transform_reference":
+            return try transformReferenceAction(arguments, viewModel: viewModel)
         case "xomo.object.select_at":
             return try selectObjectAtPoint(arguments, viewModel: viewModel)
         case "xomo.figma.bindings":
@@ -1043,6 +1045,50 @@ final class XomoAutomationRegistry {
             result["rotationDeltaDegrees"] = .number(degrees)
         }
         return .object(result)
+    }
+
+    private func transformReferenceAction(
+        _ arguments: [String: XomoJSONValue],
+        viewModel: ImageEditorViewModel
+    ) throws -> XomoJSONValue {
+        guard let originalPoint = viewModel.selectedLayerTransformReferencePoint else {
+            throw XomoAutomationCallError.operationFailed("No transformable layer selection")
+        }
+        let action = try requiredString("action", in: arguments)
+        let wasCustom = viewModel.hasCustomTransformReferencePoint
+        let changed: Bool
+
+        switch action {
+        case "set":
+            let point = try requiredPoint(arguments)
+            viewModel.setSelectedLayerTransformReferencePoint(point)
+            changed = !wasCustom || point != originalPoint
+        case "reset":
+            changed = viewModel.resetSelectedLayerTransformReferencePoint()
+        default:
+            throw XomoAutomationCallError.invalidArgument(
+                "Unknown transform reference action: \(action)"
+            )
+        }
+
+        guard let point = viewModel.selectedLayerTransformReferencePoint else {
+            throw XomoAutomationCallError.operationFailed("Transform reference point became unavailable")
+        }
+        return .object([
+            "action": .string(action),
+            "changed": .bool(changed),
+            "referencePoint": .object([
+                "x": .number(point.x),
+                "y": .number(point.y),
+                "custom": .bool(viewModel.hasCustomTransformReferencePoint)
+            ]),
+            "selectedLayerIds": .array(
+                viewModel.document.selectedLayerIDs
+                    .map(\.uuidString)
+                    .sorted()
+                    .map(XomoJSONValue.string)
+            )
+        ])
     }
 
     private func figmaImageFillJSON(_ metadata: XomoFigmaImageFillMetadata?) -> XomoJSONValue {
@@ -5112,6 +5158,11 @@ private extension XomoAutomationRegistry {
             "figmaBindings": XomoAutomationSchema.string(description: "Filter by preserved Figma variable bindings", values: ["all", "bound", "unbound"])
         ]),
         tool("xomo.layer.selection_bounds", "Inspect selected object bounds, transform reference point, and live move, resize, or rotate preview context, including original bounds, movement, size, scale, and rotation deltas."),
+        tool("xomo.layer.transform_reference", "Set or reset the transform reference point for the current transformable layer selection without changing document history.", [
+            "action": XomoAutomationSchema.string(description: "Transform reference action", values: ["set", "reset"]),
+            "x": XomoAutomationSchema.number(description: "Canvas x coordinate required by set"),
+            "y": XomoAutomationSchema.number(description: "Canvas y coordinate required by set")
+        ], required: ["action"]),
         tool("xomo.object.select_at", "Select the frontmost visible canvas object at a point using the editor's alpha-aware component and layer hit testing.", [
             "x": XomoAutomationSchema.number(description: "Canvas x coordinate"),
             "y": XomoAutomationSchema.number(description: "Canvas y coordinate"),

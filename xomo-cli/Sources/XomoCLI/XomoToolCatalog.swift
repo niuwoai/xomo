@@ -62,6 +62,18 @@ enum XomoToolCatalog {
                     "additionalProperties": false
                 ]
             }
+            if name == "xomo.layer.transform_reference" {
+                tool["inputSchema"] = [
+                    "type": "object",
+                    "properties": [
+                        "action": ["type": "string", "enum": ["set", "reset"]],
+                        "x": ["type": "number"],
+                        "y": ["type": "number"]
+                    ],
+                    "required": ["action"],
+                    "additionalProperties": false
+                ]
+            }
             if name == "xomo.paint.special" {
                 tool["inputSchema"] = [
                     "type": "object",
@@ -126,6 +138,7 @@ enum XomoToolCatalog {
         ("xomo.tool.select", "Select the active editor tool."),
         ("xomo.layer.list", "List layers, hierarchy, bounds, visibility, locks, opacity, blend mode, preserved Figma variable bindings, and optional binding filters."),
         ("xomo.layer.selection_bounds", "Inspect selected object bounds, transform reference point, and live move, resize, or rotate preview context, including original bounds, movement, size, scale, and rotation deltas."),
+        ("xomo.layer.transform_reference", "Set or reset the transform reference point for the current transformable layer selection without changing document history."),
         ("xomo.object.select_at", "Select the frontmost visible canvas object at a point using Xomo's alpha-aware component and layer hit testing."),
         ("xomo.figma.bindings", "List or copy the deduplicated Figma variable bindings from the current layer selection."),
         ("xomo.figma.link", "Validate and canonicalize a Figma link without network access or credential storage."),

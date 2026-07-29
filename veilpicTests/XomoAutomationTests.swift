@@ -42,7 +42,7 @@ struct XomoAutomationTests {
             Issue.record("Expected tool array")
             return
         }
-        #expect(tools.count == 144)
+        #expect(tools.count == 145)
         #expect(tools.contains { tool in
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.layer.list")
@@ -51,6 +51,19 @@ struct XomoAutomationTests {
             guard case .object(let value) = tool else { return false }
             return value["name"] == .string("xomo.layer.selection_bounds")
         })
+        let transformReferenceTool = try #require(tools.compactMap { tool -> [String: XomoJSONValue]? in
+            guard case .object(let value) = tool else { return nil }
+            return value
+        }.first { $0["name"] == .string("xomo.layer.transform_reference") })
+        #expect(transformReferenceTool["inputSchema"]?.objectValue?["required"] == .array([
+            .string("action")
+        ]))
+        #expect(
+            transformReferenceTool["inputSchema"]?.objectValue?["properties"]?
+                .objectValue?["action"]?.objectValue?["enum"] == .array([
+                    .string("set"), .string("reset")
+                ])
+        )
         let objectSelectTool = try #require(tools.compactMap { tool -> [String: XomoJSONValue]? in
             guard case .object(let value) = tool else { return nil }
             return value
@@ -1702,6 +1715,92 @@ struct XomoAutomationTests {
         ))
         #expect(empty.result?.objectValue?["active"] == .bool(false))
         #expect(empty.result?.objectValue?["referencePoint"] == nil)
+    }
+
+    @Test func registrySetsAndResetsTransformReferencePointWithoutHistory() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        defer { registry.unregister(viewModel) }
+
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 140, y: 110))
+        let frame = try #require(viewModel.selectedXomoObjectFrame)
+        let historyCount = viewModel.document.history.count
+        let point = CGPoint(x: frame.maxX + 18, y: frame.minY - 12)
+
+        let set = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.transform_reference",
+            arguments: [
+                "action": .string("set"),
+                "x": .number(point.x),
+                "y": .number(point.y)
+            ]
+        ))
+
+        #expect(set.ok)
+        #expect(set.result?.objectValue?["changed"] == .bool(true))
+        #expect(set.result?.objectValue?["referencePoint"] == .object([
+            "x": .number(point.x),
+            "y": .number(point.y),
+            "custom": .bool(true)
+        ]))
+        #expect(viewModel.document.history.count == historyCount)
+
+        let unchanged = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.transform_reference",
+            arguments: [
+                "action": .string("set"),
+                "x": .number(point.x),
+                "y": .number(point.y)
+            ]
+        ))
+        #expect(unchanged.ok)
+        #expect(unchanged.result?.objectValue?["changed"] == .bool(false))
+
+        let reset = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.transform_reference",
+            arguments: ["action": .string("reset")]
+        ))
+        #expect(reset.ok)
+        #expect(reset.result?.objectValue?["changed"] == .bool(true))
+        #expect(reset.result?.objectValue?["referencePoint"] == .object([
+            "x": .number(frame.midX),
+            "y": .number(frame.midY),
+            "custom": .bool(false)
+        ]))
+        #expect(viewModel.document.history.count == historyCount)
+
+        let alreadyReset = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.transform_reference",
+            arguments: ["action": .string("reset")]
+        ))
+        #expect(alreadyReset.ok)
+        #expect(alreadyReset.result?.objectValue?["changed"] == .bool(false))
+
+        let unknownAction = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.transform_reference",
+            arguments: ["action": .string("unexpected")]
+        ))
+        #expect(!unknownAction.ok)
+        #expect(viewModel.document.history.count == historyCount)
+
+        viewModel.clearLayerSelection()
+        let missingSelection = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.transform_reference",
+            arguments: [
+                "action": .string("set"),
+                "x": .number(10),
+                "y": .number(20)
+            ]
+        ))
+        #expect(!missingSelection.ok)
+        #expect(viewModel.document.history.count == historyCount)
     }
 
     @Test func registryImportsLocalComponentTokensForSubsequentInsertion() throws {
