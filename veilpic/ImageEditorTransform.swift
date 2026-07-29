@@ -47,6 +47,31 @@ extension ImageEditorViewModel {
         )
     }
 
+    var resizingObjectPreviewScalePercent: CGSize? {
+        guard let originalFrame = resizingOriginalTransformFrame?.standardized,
+              let previewFrame = selectedLayerTransformFrame?.standardized,
+              originalFrame.width > 0,
+              originalFrame.height > 0
+        else { return nil }
+        return CGSize(
+            width: previewFrame.width / originalFrame.width * 100,
+            height: previewFrame.height / originalFrame.height * 100
+        )
+    }
+
+    var activeTransformOriginalFrame: CGRect? {
+        if movingObjectPreviewFrame != nil {
+            return movingOriginalTransformFrame?.standardized
+        }
+        if isResizingSelectedLayer {
+            return resizingOriginalTransformFrame?.standardized
+        }
+        if rotatingPreviewDegrees != nil {
+            return rotatingOriginalTransformFrame?.standardized
+        }
+        return nil
+    }
+
     var selectedObjectBoundsInfoText: String {
         guard let frame = (movingObjectPreviewFrame ?? selectedLayerTransformFrame)?
             .standardized,

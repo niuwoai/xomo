@@ -1475,6 +1475,7 @@ struct XomoAutomationTests {
         #expect(initial.result?.objectValue?["active"] == .bool(true))
         #expect(initial.result?.objectValue?["preview"] == .bool(false))
         #expect(initial.result?.objectValue?["operation"] == nil)
+        #expect(initial.result?.objectValue?["originalBounds"] == nil)
         #expect(initial.result?.objectValue?["delta"] == nil)
         #expect(initial.result?.objectValue?["selectedCount"] == .number(2))
         #expect(initial.result?.objectValue?["selectedLayerIds"]?.arrayValue == [
@@ -1500,11 +1501,16 @@ struct XomoAutomationTests {
         #expect(preview.ok)
         #expect(preview.result?.objectValue?["preview"] == .bool(true))
         #expect(preview.result?.objectValue?["operation"] == .string("move"))
+        #expect(
+            preview.result?.objectValue?["originalBounds"]
+                == initial.result?.objectValue?["bounds"]
+        )
         #expect(preview.result?.objectValue?["delta"] == .object([
             "x": .number(13.5),
             "y": .number(-7.5)
         ]))
         #expect(preview.result?.objectValue?["sizeDelta"] == nil)
+        #expect(preview.result?.objectValue?["scalePercent"] == nil)
         #expect(
             preview.result?.objectValue?["bounds"]?.objectValue?["x"]
                 == .number(expectedBounds.minX + 13.5)
@@ -1526,6 +1532,7 @@ struct XomoAutomationTests {
         ))
         #expect(restored.result?.objectValue?["preview"] == .bool(false))
         #expect(restored.result?.objectValue?["operation"] == nil)
+        #expect(restored.result?.objectValue?["originalBounds"] == nil)
         #expect(restored.result?.objectValue?["delta"] == nil)
         #expect(restored.result?.objectValue?["bounds"] == initial.result?.objectValue?["bounds"])
         #expect(viewModel.movingObjectPreviewDelta == nil)
@@ -1571,9 +1578,16 @@ struct XomoAutomationTests {
         #expect(rotation.ok)
         #expect(rotation.result?.objectValue?["preview"] == .bool(true))
         #expect(rotation.result?.objectValue?["operation"] == .string("rotate"))
+        #expect(rotation.result?.objectValue?["originalBounds"] == .object([
+            "x": .number(originalFrame.minX),
+            "y": .number(originalFrame.minY),
+            "width": .number(originalFrame.width),
+            "height": .number(originalFrame.height)
+        ]))
         #expect(rotation.result?.objectValue?["rotationDeltaDegrees"] == .number(15))
         #expect(rotation.result?.objectValue?["delta"] == nil)
         #expect(rotation.result?.objectValue?["sizeDelta"] == nil)
+        #expect(rotation.result?.objectValue?["scalePercent"] == nil)
         #expect(viewModel.selectedObjectBoundsInfoText.contains("Δθ"))
         #expect(viewModel.selectedObjectBoundsInfoText.contains("15°"))
         #expect(viewModel.document.history.count == historyCount)
@@ -1586,6 +1600,7 @@ struct XomoAutomationTests {
         ))
         #expect(restoredAfterRotation.result?.objectValue?["preview"] == .bool(false))
         #expect(restoredAfterRotation.result?.objectValue?["operation"] == nil)
+        #expect(restoredAfterRotation.result?.objectValue?["originalBounds"] == nil)
         #expect(restoredAfterRotation.result?.objectValue?["rotationDeltaDegrees"] == nil)
         #expect(viewModel.document.history.count == historyCount)
 
@@ -1602,6 +1617,12 @@ struct XomoAutomationTests {
         #expect(resize.ok)
         #expect(resize.result?.objectValue?["preview"] == .bool(true))
         #expect(resize.result?.objectValue?["operation"] == .string("resize"))
+        #expect(resize.result?.objectValue?["originalBounds"] == .object([
+            "x": .number(originalFrame.minX),
+            "y": .number(originalFrame.minY),
+            "width": .number(originalFrame.width),
+            "height": .number(originalFrame.height)
+        ]))
         #expect(resize.result?.objectValue?["delta"] == nil)
         #expect(resize.result?.objectValue?["rotationDeltaDegrees"] == nil)
         let resizedFrame = try #require(viewModel.selectedLayerTransformFrame)
@@ -1609,6 +1630,10 @@ struct XomoAutomationTests {
         #expect(resize.result?.objectValue?["sizeDelta"] == .object([
             "width": .number(resizedFrame.width - originalFrame.width),
             "height": .number(resizedFrame.height - originalFrame.height)
+        ]))
+        #expect(resize.result?.objectValue?["scalePercent"] == .object([
+            "width": .number(resizedFrame.width / originalFrame.width * 100),
+            "height": .number(resizedFrame.height / originalFrame.height * 100)
         ]))
         #expect(
             resize.result?.objectValue?["bounds"]?.objectValue?["width"]
@@ -1621,6 +1646,7 @@ struct XomoAutomationTests {
         #expect(viewModel.cancelTransformingSelectedLayer())
         #expect(viewModel.selectedLayerTransformFrame == originalFrame)
         #expect(viewModel.resizingObjectPreviewDelta == nil)
+        #expect(viewModel.resizingObjectPreviewScalePercent == nil)
         #expect(viewModel.document.history.count == historyCount)
     }
 

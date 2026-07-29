@@ -11,9 +11,10 @@ class ReleaseContractTest < Minitest::Test
     result = XomoReleaseContract.collect(File.expand_path("..", __dir__))
 
     assert result["passed"], result.inspect
-    assert_equal "2.12.0-rc559", result["version"]
-    assert_equal ["2.12.0-rc559"], result["project_versions"]
-    assert_equal ["559"], result["build_versions"]
+    assert_equal "2.12.0-rc560", result["version"]
+    assert_equal ["2.12.0-rc560"], result["project_versions"]
+    assert_equal ["560"], result["build_versions"]
+    assert result["checks"]["release_entitlements_are_hardened"]
   end
 
   def test_version_drift_fails_the_contract
@@ -49,6 +50,17 @@ class ReleaseContractTest < Minitest::Test
     end
   end
 
+  def test_debuggable_release_entitlements_fail_the_contract
+    with_fixture do |root|
+      write_fixture(root, release_debuggable: true)
+
+      result = XomoReleaseContract.collect(root)
+
+      refute result["passed"]
+      refute result["checks"]["release_entitlements_are_hardened"]
+    end
+  end
+
   private
 
   def with_fixture
@@ -60,7 +72,8 @@ class ReleaseContractTest < Minitest::Test
     version: "2.12.0-rc285",
     cli_version: version,
     deployment_target: "13.0",
-    build_version: version[/-rc(\d+)\z/, 1]
+    build_version: version[/-rc(\d+)\z/, 1],
+    release_debuggable: false
   )
     FileUtils.mkdir_p(File.join(root, "veilpic.xcodeproj"))
     FileUtils.mkdir_p(File.join(root, "veilpic"))
@@ -80,5 +93,14 @@ class ReleaseContractTest < Minitest::Test
     File.write(File.join(root, "scripts/build_xomo_cli_release.sh"), "swift build --arch arm64 --arch x86_64\n")
     File.write(File.join(root, "scripts/release.sh"), "xcodebuild archive\nxcodebuild -exportArchive\n")
     File.write(File.join(root, "scripts/run_tests_isolated.rb"), "build-for-testing\ntest-without-building\n")
+    debug_entitlement = release_debuggable ? "<key>com.apple.security.get-task-allow</key><true/>" : ""
+    File.write(File.join(root, "veilpic/Release.entitlements"), <<~PLIST)
+      <plist><dict>
+      <key>com.apple.security.app-sandbox</key><true/>
+      <key>com.apple.security.files.user-selected.read-write</key><true/>
+      <key>com.apple.security.network.client</key><true/>
+      #{debug_entitlement}
+      </dict></plist>
+    PLIST
   end
 end

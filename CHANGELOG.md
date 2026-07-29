@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.12.0-rc560 - 2026-07-29
+
+### Added
+- `xomo.layer.selection_bounds` 在移动、缩放或旋转事务期间新增 `originalBounds`，自动化可直接比较按下时与当前预览的几何，不必在外部抢先缓存状态。
+- 缩放事务新增 `scalePercent.width / scalePercent.height`，与 `sizeDelta` 和实时 `bounds` 使用同一原始变换框计算。
+
+### Changed
+- 原始边界与缩放百分比只在适用的活动事务中出现；完成或取消变换后立即省略，移动与旋转不会夹带缩放字段。
+- Release 配置明确关闭测试覆盖率插桩和调试 entitlement 注入，并使用独立最小权限清单保留沙盒、用户文件、下载目录与网络能力；Developer ID 安装包不再携带 `get-task-allow`。
+
+### Verification
+- 变换上下文定向 Xcode 测试 2/2、工具冒烟 35/35、CLI 2/2、发布契约 5/5（13 个断言，包含正式权限防回归）、三语资源 3364 × 3 与差异检查通过。
+- 周期性隔离全量回归实际执行 1548 项、93 个套件：68 个套件通过，25 个既有跨域回归债务仍失败；JSON 与 Markdown 报告保存在 `/tmp/veilpic-rc560-test-reports/`，未将其虚报为全绿。
+- Xomo 与 CLI 的 macOS 13 Release 均完成 `arm64 + x86_64` 通用构建；应用通过 Developer ID 深度严格验签，正式权限清单不含 `get-task-allow`，构建产物与 `/Applications/Xomo.app` 均真实启动成功，安装版本复验为 `2.12.0-rc560 (560)`。
+
 ## 2.12.0-rc559 - 2026-07-29
 
 ### Added

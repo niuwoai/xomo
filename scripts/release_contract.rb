@@ -16,6 +16,7 @@ module XomoReleaseContract
     cli_release = read(root, "scripts/build_xomo_cli_release.sh")
     release = read(root, "scripts/release.sh")
     isolated_tests = read(root, "scripts/run_tests_isolated.rb")
+    release_entitlements = read(root, "veilpic/Release.entitlements")
 
     app_version = app_source[/static let current = "([^"]+)"/, 1]
     cli_version = cli_source[/xomoCLIVersion = "([^"]+)"/, 1]
@@ -35,6 +36,11 @@ module XomoReleaseContract
       "cli_release_is_universal" => cli_release.include?("--arch arm64") && cli_release.include?("--arch x86_64"),
       "release_entrypoint_present" => release.include?("xcodebuild") && release.include?("-exportArchive"),
       "isolated_test_entrypoint_present" => isolated_tests.include?("build-for-testing") && isolated_tests.include?("test-without-building"),
+      "release_entitlements_are_hardened" =>
+        release_entitlements.include?("com.apple.security.app-sandbox") &&
+        release_entitlements.include?("com.apple.security.files.user-selected.read-write") &&
+        release_entitlements.include?("com.apple.security.network.client") &&
+        !release_entitlements.include?("com.apple.security.get-task-allow"),
     }
 
     {

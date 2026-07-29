@@ -1,8 +1,10 @@
 # 像界（Xomo）产品概览
 
-> 最后更新：2026-07-29 | 当前版本：v2.12.0-rc559
+> 最后更新：2026-07-29 | 当前版本：v2.12.0-rc560
 
-v2.12.0-rc559 让对象缩放的精确反馈与移动、旋转对齐：拖住控制点时，信息面板在实时 X/Y/W/H 后追加 `ΔW / ΔH`，直接显示相对按下时放大或缩小了多少；MCP/CLI 的 `xomo.layer.selection_bounds` 在 `operation=resize` 时同步返回 `sizeDelta`，移动和旋转不会夹带无关字段。Escape 取消会恢复原始几何、清除尺寸增量且不制造 History。`/Applications/Xomo.app` 已按用户要求安装并严格验签为 rc558；rc560 仍执行下一次完整构建、冒烟与覆盖安装。
+v2.12.0-rc560 为自动化补齐变换的明确参照系：移动、缩放或旋转期间，`xomo.layer.selection_bounds` 返回按下时的 `originalBounds`；缩放还返回相对于该边界的 `scalePercent`，与实时 `bounds`、`sizeDelta` 保持同源。完成或取消后这些事务字段立即消失，调用方不需要自行抢先缓存几何，也不会误把旧预览当成当前状态。周期性 Release 门槛同时关闭覆盖率插桩和调试 entitlement 注入，并用独立最小权限清单保留沙盒、文件和网络能力。Xomo 与 CLI 已完成 macOS 13、Apple Silicon/Intel 通用 Release 构建；应用严格验签、真实启动并覆盖安装为 `/Applications/Xomo.app`。全量隔离回归的 93 个套件中 68 个通过，25 个既有跨域失败已留存报告，继续作为明确测试债务处理。
+
+v2.12.0-rc559 让对象缩放的精确反馈与移动、旋转对齐：拖住控制点时，信息面板在实时 X/Y/W/H 后追加 `ΔW / ΔH`，直接显示相对按下时放大或缩小了多少；MCP/CLI 的 `xomo.layer.selection_bounds` 在 `operation=resize` 时同步返回 `sizeDelta`，移动和旋转不会夹带无关字段。Escape 取消会恢复原始几何、清除尺寸增量且不制造 History。`/Applications/Xomo.app` 已按用户要求安装并严格验签为 rc558；rc560 执行下一次完整构建、冒烟与覆盖安装。
 
 v2.12.0-rc558 把对象检查扩展到完整的活动变换语境：旋转时，信息面板在 X/Y/W/H 后追加实时 `Δθ`，Shift 吸附后的 15° 档位就是最终显示值；MCP/CLI 的 `xomo.layer.selection_bounds` 用 `operation=move|resize|rotate` 区分事务，移动返回位移、缩放返回变化后的边界、旋转返回边界与 `rotationDeltaDegrees`。没有活动变换时不残留预览字段，Escape 取消缩放或旋转会恢复原始几何且不制造 History。`/Applications/Xomo.app` 已按用户要求安装并严格验签为 rc558；下一次完整门禁仍为 rc560。
 
