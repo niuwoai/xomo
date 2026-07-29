@@ -1003,6 +1003,13 @@ final class XomoAutomationRegistry {
                 "height": .number(bounds.height)
             ])
         ]
+        if let referencePoint = viewModel.selectedLayerTransformReferencePoint {
+            result["referencePoint"] = .object([
+                "x": .number(referencePoint.x),
+                "y": .number(referencePoint.y),
+                "custom": .bool(viewModel.hasCustomTransformReferencePoint)
+            ])
+        }
         if let previewOperation {
             result["operation"] = .string(previewOperation)
         }
@@ -5104,7 +5111,7 @@ private extension XomoAutomationRegistry {
         tool("xomo.layer.list", "List layers with hierarchy, bounds, visibility, locks, opacity, blend mode, preserved Figma variable bindings, and optional binding filters.", [
             "figmaBindings": XomoAutomationSchema.string(description: "Filter by preserved Figma variable bindings", values: ["all", "bound", "unbound"])
         ]),
-        tool("xomo.layer.selection_bounds", "Inspect selected object bounds plus live move, resize, or rotate preview context, including original bounds, movement, size, scale, and rotation deltas."),
+        tool("xomo.layer.selection_bounds", "Inspect selected object bounds, transform reference point, and live move, resize, or rotate preview context, including original bounds, movement, size, scale, and rotation deltas."),
         tool("xomo.object.select_at", "Select the frontmost visible canvas object at a point using the editor's alpha-aware component and layer hit testing.", [
             "x": XomoAutomationSchema.number(description: "Canvas x coordinate"),
             "y": XomoAutomationSchema.number(description: "Canvas y coordinate"),

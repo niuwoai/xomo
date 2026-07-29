@@ -1650,6 +1650,60 @@ struct XomoAutomationTests {
         #expect(viewModel.document.history.count == historyCount)
     }
 
+    @Test func registryReportsDefaultAndCustomTransformReferencePoint() throws {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        defer { registry.unregister(viewModel) }
+
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 120, y: 90))
+        let frame = try #require(viewModel.selectedXomoObjectFrame)
+        let historyCount = viewModel.document.history.count
+
+        let initial = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.selection_bounds"
+        ))
+
+        #expect(initial.ok)
+        #expect(initial.result?.objectValue?["referencePoint"] == .object([
+            "x": .number(frame.midX),
+            "y": .number(frame.midY),
+            "custom": .bool(false)
+        ]))
+
+        let customPoint = CGPoint(x: frame.minX - 14, y: frame.maxY + 9)
+        viewModel.setSelectedLayerTransformReferencePoint(customPoint)
+        let custom = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.selection_bounds"
+        ))
+
+        #expect(custom.ok)
+        #expect(custom.result?.objectValue?["referencePoint"] == .object([
+            "x": .number(customPoint.x),
+            "y": .number(customPoint.y),
+            "custom": .bool(true)
+        ]))
+        #expect(viewModel.document.history.count == historyCount)
+
+        #expect(viewModel.resetSelectedLayerTransformReferencePoint())
+        let restored = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.selection_bounds"
+        ))
+        #expect(restored.result?.objectValue?["referencePoint"] == initial.result?.objectValue?["referencePoint"])
+        #expect(viewModel.document.history.count == historyCount)
+
+        viewModel.clearLayerSelection()
+        let empty = registry.execute(request(
+            operation: "call",
+            name: "xomo.layer.selection_bounds"
+        ))
+        #expect(empty.result?.objectValue?["active"] == .bool(false))
+        #expect(empty.result?.objectValue?["referencePoint"] == nil)
+    }
+
     @Test func registryImportsLocalComponentTokensForSubsequentInsertion() throws {
         let viewModel = makeViewModel()
         let registry = XomoAutomationRegistry.shared

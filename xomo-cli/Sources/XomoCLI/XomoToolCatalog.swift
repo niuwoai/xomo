@@ -125,7 +125,7 @@ enum XomoToolCatalog {
         ("xomo.tool.list", "List all image editor tools."),
         ("xomo.tool.select", "Select the active editor tool."),
         ("xomo.layer.list", "List layers, hierarchy, bounds, visibility, locks, opacity, blend mode, preserved Figma variable bindings, and optional binding filters."),
-        ("xomo.layer.selection_bounds", "Inspect selected object bounds plus live move, resize, or rotate preview context, including original bounds, movement, size, scale, and rotation deltas."),
+        ("xomo.layer.selection_bounds", "Inspect selected object bounds, transform reference point, and live move, resize, or rotate preview context, including original bounds, movement, size, scale, and rotation deltas."),
         ("xomo.object.select_at", "Select the frontmost visible canvas object at a point using Xomo's alpha-aware component and layer hit testing."),
         ("xomo.figma.bindings", "List or copy the deduplicated Figma variable bindings from the current layer selection."),
         ("xomo.figma.link", "Validate and canonicalize a Figma link without network access or credential storage."),
