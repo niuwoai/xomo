@@ -582,6 +582,21 @@ struct XomoLeftSidebarTests {
         #expect(source.components(separatedBy: "switch canvasInteractionTool").count - 1 >= 3)
     }
 
+    @Test func transformReferencePointGestureWiresTransactionalCancellation() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(source.contains("viewModel.beginSelectedLayerTransformReferencePointDrag()"))
+        #expect(source.contains("viewModel.cancelSelectedLayerTransformReferencePointDrag()"))
+        #expect(source.contains("viewModel.finishSelectedLayerTransformReferencePointDrag()"))
+        #expect(source.contains("guard !isTransformReferencePointDragCancelled else { return }"))
+    }
+
     @Test func insertingButtonCreatesEditableGroupedLayers() throws {
         let image = NSImage.transparent(size: CGSize(width: 640, height: 480))
         let viewModel = ImageEditorViewModel(sourceName: "source", image: image) { _ in }

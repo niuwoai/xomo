@@ -227,7 +227,7 @@ struct ImageEditorView: View {
                 cancelSelectedObject: {
                     if isMovingTransformReferencePoint {
                         isTransformReferencePointDragCancelled = true
-                        _ = viewModel.resetSelectedLayerTransformReferencePoint()
+                        _ = viewModel.cancelSelectedLayerTransformReferencePointDrag()
                         NSCursor.crosshair.set()
                         return true
                     }
@@ -295,6 +295,7 @@ struct ImageEditorView: View {
             syncFigmaComponentPropertyDrafts()
         }
         .onChange(of: viewModel.document.selectedLayerIDs) { _ in
+            viewModel.finishSelectedLayerTransformReferencePointDrag()
             viewModel.clearSelectedLayerTransformReferencePoint()
             isMovingTransformReferencePoint = false
             isTransformReferencePointDragCancelled = false
@@ -6164,6 +6165,7 @@ struct ImageEditorView: View {
             )
             .onChanged { value in
                 guard !isTransformReferencePointDragCancelled else { return }
+                viewModel.beginSelectedLayerTransformReferencePointDrag()
                 isMovingTransformReferencePoint = true
                 viewModel.setSelectedLayerTransformReferencePoint(
                     unboundedImagePoint(from: value.location, in: canvasSize)
@@ -6176,6 +6178,7 @@ struct ImageEditorView: View {
                         unboundedImagePoint(from: value.location, in: canvasSize)
                     )
                 }
+                viewModel.finishSelectedLayerTransformReferencePointDrag()
                 isMovingTransformReferencePoint = false
                 isTransformReferencePointDragCancelled = false
                 refreshCanvasCursor(in: canvasSize)

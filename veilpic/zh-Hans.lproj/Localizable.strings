@@ -2399,7 +2399,7 @@
 "imageEditor.action.layerScaleUp" = "放大图层";
 "imageEditor.action.layerResizeHandle" = "拖拽缩放图层；Shift 等比缩放，Option 从中心缩放";
 "imageEditor.action.layerRotateHandle" = "拖拽旋转图层，按住 Shift 吸附 15°";
-"imageEditor.action.layerTransformReferencePoint" = "拖动变换参考点；旋转将围绕这里进行";
+"imageEditor.action.layerTransformReferencePoint" = "拖动变换参考点；旋转将围绕这里进行，按 Escape 取消";
 "imageEditor.action.layerMore" = "更多图层操作";
 "imageEditor.action.layerMoreOpenMenu" = "更多命令请使用顶部“图层”菜单";
 "imageEditor.status.layerMoreOpenMenu" = "完整图层命令位于顶部“图层”菜单";

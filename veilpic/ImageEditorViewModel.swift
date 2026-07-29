@@ -417,6 +417,9 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var rotatingPreviewDegrees: CGFloat?
     @Published var transformReferenceUnitPoint: CGPoint?
     var transformReferenceLayerIDs = Set<UUID>()
+    var isTransformReferencePointDragActive = false
+    var transformReferenceDragOriginalUnitPoint: CGPoint?
+    var transformReferenceDragOriginalLayerIDs = Set<UUID>()
     var editingShapeGradientLayerID: UUID?
     var editingShapeGradientOriginalContent: ImageEditorShapeContent?
     var editingShapeGradientStopIndex: Int?

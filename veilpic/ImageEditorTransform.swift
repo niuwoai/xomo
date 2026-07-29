@@ -263,6 +263,28 @@ extension ImageEditorViewModel {
         )
     }
 
+    func beginSelectedLayerTransformReferencePointDrag() {
+        guard !isTransformReferencePointDragActive else { return }
+        isTransformReferencePointDragActive = true
+        transformReferenceDragOriginalUnitPoint = transformReferenceUnitPoint
+        transformReferenceDragOriginalLayerIDs = transformReferenceLayerIDs
+    }
+
+    func finishSelectedLayerTransformReferencePointDrag() {
+        isTransformReferencePointDragActive = false
+        transformReferenceDragOriginalUnitPoint = nil
+        transformReferenceDragOriginalLayerIDs = []
+    }
+
+    @discardableResult
+    func cancelSelectedLayerTransformReferencePointDrag() -> Bool {
+        guard isTransformReferencePointDragActive else { return false }
+        transformReferenceUnitPoint = transformReferenceDragOriginalUnitPoint
+        transformReferenceLayerIDs = transformReferenceDragOriginalLayerIDs
+        finishSelectedLayerTransformReferencePointDrag()
+        return true
+    }
+
     @discardableResult
     func resetSelectedLayerTransformReferencePoint() -> Bool {
         guard hasCustomTransformReferencePoint else { return false }

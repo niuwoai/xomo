@@ -2399,7 +2399,7 @@
 "imageEditor.action.layerScaleUp" = "レイヤーを拡大";
 "imageEditor.action.layerResizeHandle" = "ドラッグして拡大縮小。Shift で比率を固定、Option で中心基準";
 "imageEditor.action.layerRotateHandle" = "ドラッグしてレイヤーを回転。Shift で 15° ごとにスナップ";
-"imageEditor.action.layerTransformReferencePoint" = "変形基準点をドラッグ。この点を中心に回転します";
+"imageEditor.action.layerTransformReferencePoint" = "変形基準点をドラッグ。この点を中心に回転します。Escape でキャンセル";
 "imageEditor.action.layerMore" = "その他のレイヤー操作";
 "imageEditor.action.layerMoreOpenMenu" = "その他のコマンドは上部の「レイヤー」メニューへ";
 "imageEditor.status.layerMoreOpenMenu" = "すべてのレイヤーコマンドは上部の「レイヤー」メニューにあります。";

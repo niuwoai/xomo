@@ -40,6 +40,33 @@ struct ImageEditorTransformReferencePointTests {
         )
     }
 
+    @Test func cancellingReferencePointDragRestoresExactStartingState() throws {
+        let viewModel = makeViewModel()
+        let selectedLayerID = try #require(viewModel.document.selectedLayerID)
+        let originalUnitPoint = CGPoint(x: -0.15, y: 1.2)
+        viewModel.transformReferenceLayerIDs = [selectedLayerID]
+        viewModel.transformReferenceUnitPoint = originalUnitPoint
+
+        viewModel.beginSelectedLayerTransformReferencePointDrag()
+        viewModel.transformReferenceLayerIDs = []
+        viewModel.transformReferenceUnitPoint = CGPoint(x: 1.4, y: -0.3)
+
+        #expect(viewModel.isTransformReferencePointDragActive)
+        #expect(viewModel.cancelSelectedLayerTransformReferencePointDrag())
+        #expect(viewModel.transformReferenceLayerIDs == Set([selectedLayerID]))
+        #expect(viewModel.transformReferenceUnitPoint == originalUnitPoint)
+        #expect(!viewModel.isTransformReferencePointDragActive)
+        #expect(!viewModel.cancelSelectedLayerTransformReferencePointDrag())
+
+        viewModel.clearSelectedLayerTransformReferencePoint()
+        viewModel.beginSelectedLayerTransformReferencePointDrag()
+        viewModel.transformReferenceLayerIDs = [selectedLayerID]
+        viewModel.transformReferenceUnitPoint = CGPoint(x: 0.8, y: 0.2)
+        #expect(viewModel.cancelSelectedLayerTransformReferencePointDrag())
+        #expect(viewModel.transformReferenceLayerIDs.isEmpty)
+        #expect(viewModel.transformReferenceUnitPoint == nil)
+    }
+
     @Test func customReferencePointControlsInteractiveRotationAndSurvivesCommit() throws {
         let viewModel = makeViewModel(size: CGSize(width: 40, height: 20))
         let originalFrame = try #require(viewModel.document.selectedLayer?.frame.standardized)
