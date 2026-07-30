@@ -278,7 +278,7 @@ struct ImageEditorView: View {
             .allowsHitTesting(false)
         )
         .overlay(alignment: .bottom) {
-            selectedToolHint
+            workspaceInputModeHint
                 .padding(.bottom, viewModel.isStatusBarVisible ? 4 : 8)
         }
         .foregroundStyle(Color(nsColor: ImageEditorTheme.text))
@@ -354,7 +354,17 @@ struct ImageEditorView: View {
         }
     }
 
+    @ViewBuilder
     private var optionBar: some View {
+        switch viewModel.workspaceInputMode {
+        case .tool:
+            toolOptionBar
+        case .componentLibrary(let selectedComponent):
+            componentLibraryOptionBar(selectedComponent: selectedComponent)
+        }
+    }
+
+    private var toolOptionBar: some View {
         HStack(spacing: 12) {
             Label {
                 Text(viewModel.selectedTool.title)
@@ -636,33 +646,76 @@ struct ImageEditorView: View {
                 .disabled(viewModel.colorSamplerPoints.isEmpty)
             }
 
-            Spacer()
-
-            Button {
-                viewModel.undo()
-            } label: {
-                Image(systemName: "arrow.uturn.backward")
-            }
-            .buttonStyle(EditorIconButtonStyle(isSelected: false))
-            .focusable(false)
-            .disabled(!viewModel.canUndo)
-            .help(L10n.text("imageEditor.action.undo"))
-
-            Button {
-                viewModel.redo()
-            } label: {
-                Image(systemName: "arrow.uturn.forward")
-            }
-            .buttonStyle(EditorIconButtonStyle(isSelected: false))
-            .focusable(false)
-            .disabled(!viewModel.canRedo)
-            .help(L10n.text("imageEditor.action.redo"))
+            optionHistoryButtons
         }
         .frame(height: 48)
         .padding(.horizontal, 12)
         .foregroundStyle(Color(nsColor: ImageEditorOptionsBarAppearance.foregroundColor))
         .environment(\.colorScheme, .dark)
         .background(Color(nsColor: ImageEditorTheme.panel))
+    }
+
+    private func componentLibraryOptionBar(
+        selectedComponent: XomoComponentKind?
+    ) -> some View {
+        HStack(spacing: 12) {
+            Label(
+                XomoLeftSidebarTab.components.title,
+                systemImage: XomoLeftSidebarTab.components.symbolName
+            )
+            .font(.system(size: 12, weight: .semibold))
+            .frame(width: 132, alignment: .leading)
+            .accessibilityIdentifier("image-editor-component-library-mode")
+            .accessibilityValue(selectedComponent?.rawValue ?? XomoLeftSidebarTab.components.rawValue)
+
+            if let selectedComponent {
+                Divider()
+                    .frame(height: 20)
+                    .overlay(editorBorder)
+                Text(selectedComponent.title)
+                    .font(.system(size: 11, weight: .semibold))
+                    .lineLimit(1)
+                    .accessibilityIdentifier("image-editor-selected-component")
+                    .accessibilityValue(selectedComponent.rawValue)
+            } else {
+                Text(L10n.text("xomo.componentLibrary.subtitle"))
+                    .font(.system(size: 11))
+                    .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                    .lineLimit(1)
+            }
+
+            optionHistoryButtons
+        }
+        .frame(height: 48)
+        .padding(.horizontal, 12)
+        .foregroundStyle(Color(nsColor: ImageEditorOptionsBarAppearance.foregroundColor))
+        .environment(\.colorScheme, .dark)
+        .background(Color(nsColor: ImageEditorTheme.panel))
+    }
+
+    @ViewBuilder
+    private var optionHistoryButtons: some View {
+        Spacer()
+
+        Button {
+            viewModel.undo()
+        } label: {
+            Image(systemName: "arrow.uturn.backward")
+        }
+        .buttonStyle(EditorIconButtonStyle(isSelected: false))
+        .focusable(false)
+        .disabled(!viewModel.canUndo)
+        .help(L10n.text("imageEditor.action.undo"))
+
+        Button {
+            viewModel.redo()
+        } label: {
+            Image(systemName: "arrow.uturn.forward")
+        }
+        .buttonStyle(EditorIconButtonStyle(isSelected: false))
+        .focusable(false)
+        .disabled(!viewModel.canRedo)
+        .help(L10n.text("imageEditor.action.redo"))
     }
 
     private var usesBrushOptions: Bool {
@@ -1317,6 +1370,16 @@ struct ImageEditorView: View {
             + imageEditorToolGridSpacing * CGFloat(max(0, rowCount - 1))
     }
 
+    @ViewBuilder
+    private var workspaceInputModeHint: some View {
+        switch viewModel.workspaceInputMode {
+        case .tool:
+            selectedToolHint
+        case .componentLibrary(let selectedComponent):
+            componentLibraryHint(selectedComponent: selectedComponent)
+        }
+    }
+
     private var selectedToolHint: some View {
         VStack(alignment: .leading, spacing: 2) {
             Label {
@@ -1342,6 +1405,39 @@ struct ImageEditorView: View {
         .allowsHitTesting(false)
         .accessibilityIdentifier("image-editor-selected-tool-hint")
         .accessibilityValue(viewModel.selectedTool.rawValue)
+    }
+
+    private func componentLibraryHint(
+        selectedComponent: XomoComponentKind?
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Label(
+                selectedComponent?.title ?? XomoLeftSidebarTab.components.title,
+                systemImage: XomoLeftSidebarTab.components.symbolName
+            )
+            .font(.system(size: 11, weight: .semibold))
+            Text(L10n.text("xomo.componentLibrary.subtitle"))
+                .font(.system(size: 11, weight: .regular))
+                .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                .lineLimit(1)
+        }
+        .frame(minWidth: 230, maxWidth: 440, alignment: .leading)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 7)
+        .background(
+            Color(nsColor: ImageEditorTheme.panelRaised).opacity(0.96),
+            in: RoundedRectangle(cornerRadius: 6)
+        )
+        .overlay {
+            RoundedRectangle(cornerRadius: 6)
+                .stroke(editorBorder, lineWidth: 1)
+        }
+        .shadow(color: .black.opacity(0.28), radius: 6, x: 0, y: 2)
+        .allowsHitTesting(false)
+        .accessibilityIdentifier("image-editor-component-library-hint")
+        .accessibilityValue(
+            selectedComponent?.rawValue ?? XomoLeftSidebarTab.components.rawValue
+        )
     }
 
     @ViewBuilder

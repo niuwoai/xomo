@@ -2936,6 +2936,14 @@ final class ImageEditorViewModel: ObservableObject {
         selectedLeftSidebarTab == .components ? .move : selectedTool
     }
 
+    var workspaceInputMode: XomoWorkspaceInputMode {
+        XomoWorkspaceInputMode.resolve(
+            sidebarTab: selectedLeftSidebarTab,
+            selectedTool: selectedTool,
+            selectedComponent: selectedXomoObjectKind
+        )
+    }
+
     func selectLeftSidebarTab(_ tab: XomoLeftSidebarTab) {
         selectedLeftSidebarTab = tab
     }

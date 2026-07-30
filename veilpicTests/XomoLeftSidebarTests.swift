@@ -214,7 +214,7 @@ struct XomoLeftSidebarTests {
     @Test func refreshingMappedComponentsUpdatesLocalTokensAsOneUndoableOperation() throws {
         let base = XomoComponentTheme.native.tokenSnapshot
         var firstColors = base.colors
-        firstColors["accent"] = "#801F4FFF"
+        firstColors["surface"] = "#801F4FFF"
         let firstSnapshot = XomoComponentThemeTokenSnapshot(
             schemaVersion: 1,
             theme: "local-brand",
@@ -223,7 +223,7 @@ struct XomoLeftSidebarTests {
             metrics: base.metrics
         )
         var secondColors = firstColors
-        secondColors["accent"] = "#1D4ED8FF"
+        secondColors["surface"] = "#1D4ED8FF"
         let secondSnapshot = XomoComponentThemeTokenSnapshot(
             schemaVersion: 1,
             theme: "local-brand-v2",
@@ -505,18 +505,67 @@ struct XomoLeftSidebarTests {
         let viewModel = ImageEditorViewModel(sourceName: "source", image: image) { _ in }
         viewModel.selectTool(.brush)
         #expect(viewModel.canvasInteractionTool == .brush)
+        #expect(viewModel.workspaceInputMode == .tool(.brush))
 
         viewModel.selectLeftSidebarTab(.components)
 
         #expect(viewModel.selectedLeftSidebarTab == .components)
         #expect(viewModel.selectedTool == .brush)
         #expect(viewModel.canvasInteractionTool == .move)
+        #expect(viewModel.workspaceInputMode == .componentLibrary(nil))
 
         viewModel.selectLeftSidebarTab(.tools)
 
         #expect(viewModel.selectedLeftSidebarTab == .tools)
         #expect(viewModel.selectedTool == .brush)
         #expect(viewModel.canvasInteractionTool == .brush)
+        #expect(viewModel.workspaceInputMode == .tool(.brush))
+    }
+
+    @Test func componentWorkspacePresentationTracksTheSelectedComponentNotTheStoredTool() {
+        let image = NSImage.transparent(size: CGSize(width: 640, height: 480))
+        let viewModel = ImageEditorViewModel(sourceName: "source", image: image) { _ in }
+        viewModel.selectTool(.brush)
+        viewModel.insertXomoComponent(.iconButton, at: CGPoint(x: 80, y: 90))
+        viewModel.selectLeftSidebarTab(.components)
+
+        #expect(viewModel.selectedTool == .brush)
+        #expect(viewModel.canvasInteractionTool == .move)
+        #expect(viewModel.workspaceInputMode == .componentLibrary(.iconButton))
+    }
+
+    @Test func componentWorkspaceOwnsItsOptionBarAndHintPresentation() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let optionStart = try #require(
+            source.range(of: "private func componentLibraryOptionBar(")
+        )
+        let optionEnd = try #require(
+            source[optionStart.upperBound...].range(of: "private var optionHistoryButtons:")
+        )
+        let optionSource = source[optionStart.lowerBound..<optionEnd.lowerBound]
+        let hintStart = try #require(
+            source.range(of: "private func componentLibraryHint(")
+        )
+        let hintEnd = try #require(
+            source[hintStart.upperBound...].range(of: "@ViewBuilder\n    private var selectedToolIcon")
+        )
+        let hintSource = source[hintStart.lowerBound..<hintEnd.lowerBound]
+
+        #expect(source.contains("switch viewModel.workspaceInputMode"))
+        #expect(optionSource.contains("XomoLeftSidebarTab.components.title"))
+        #expect(optionSource.contains("selectedComponent.title"))
+        #expect(optionSource.contains("xomo.componentLibrary.subtitle"))
+        #expect(optionSource.contains("image-editor-component-library-mode"))
+        #expect(!optionSource.contains("viewModel.selectedTool"))
+        #expect(hintSource.contains("image-editor-component-library-hint"))
+        #expect(hintSource.contains("selectedComponent?.title"))
+        #expect(!hintSource.contains("viewModel.selectedTool"))
     }
 
     @Test func componentSidebarWiresMoveSemanticsIntoCanvasCursorAndGestures() throws {

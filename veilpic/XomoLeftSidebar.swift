@@ -26,6 +26,24 @@ enum XomoLeftSidebarTab: String, CaseIterable, Identifiable {
     }
 }
 
+enum XomoWorkspaceInputMode: Equatable {
+    case tool(ImageEditorTool)
+    case componentLibrary(XomoComponentKind?)
+
+    static func resolve(
+        sidebarTab: XomoLeftSidebarTab,
+        selectedTool: ImageEditorTool,
+        selectedComponent: XomoComponentKind?
+    ) -> Self {
+        switch sidebarTab {
+        case .tools:
+            .tool(selectedTool)
+        case .components:
+            .componentLibrary(selectedComponent)
+        }
+    }
+}
+
 private struct XomoComponentLibraryPreviewItem: Identifiable {
     let id: String
     let titleKey: String
