@@ -3223,6 +3223,7 @@
 "xomo.figma.node.target.vector" = "ベクターパス";
 "xomo.figma.node.target.image" = "画像ピクセルレイヤー";
 "xomo.figma.node.target.imagePlaceholder" = "画像プレースホルダー";
+"xomo.figma.node.target.slice" = "書き出しスライス";
 "xomo.figma.node.fidelity.exact" = "完全マッピング";
 "xomo.figma.node.fidelity.partial" = "縮退マッピング";
 "xomo.figma.node.fidelity.unsupported" = "未対応";

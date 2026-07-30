@@ -618,6 +618,8 @@ enum XomoFigmaNodeImportMapper {
             }
             inspectPaints(node: node, allowsGradientFill: true, issues: &issues)
             return (.vector, false)
+        case "SLICE":
+            return (.slice, false)
         default:
             issues.append(.unsupportedNodeType)
             return (nil, false)

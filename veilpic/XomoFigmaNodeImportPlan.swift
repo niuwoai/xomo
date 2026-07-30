@@ -8,6 +8,7 @@ enum XomoFigmaNodeTargetKind: String, CaseIterable, Sendable {
     case vector
     case image
     case imagePlaceholder
+    case slice
 
     var localizationKey: String {
         "xomo.figma.node.target.\(rawValue)"

@@ -3223,6 +3223,7 @@
 "xomo.figma.node.target.vector" = "Vector path";
 "xomo.figma.node.target.image" = "Image pixel layer";
 "xomo.figma.node.target.imagePlaceholder" = "Image placeholder";
+"xomo.figma.node.target.slice" = "Export slice";
 "xomo.figma.node.fidelity.exact" = "Exact mapping";
 "xomo.figma.node.fidelity.partial" = "Degraded mapping";
 "xomo.figma.node.fidelity.unsupported" = "Unsupported";

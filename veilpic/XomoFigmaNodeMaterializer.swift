@@ -3,6 +3,7 @@ import Foundation
 
 struct XomoFigmaNodeMaterializationResult {
     var layers: [ImageEditorLayer]
+    var slices: [ImageEditorSlice]
     var selectedLayerID: UUID?
     var importedCount: Int
     var omittedCount: Int
@@ -46,6 +47,7 @@ enum XomoFigmaNodeMaterializer {
         let sourceBounds = importBounds(plan: plan)
         let transform = importTransform(sourceBounds: sourceBounds, canvasSize: canvasSize)
         var layers: [ImageEditorLayer] = []
+        var slices: [ImageEditorSlice] = []
         var layerIDsBySource: [String: UUID] = [:]
         var emittedSourceIDs = Set<String>()
         var omittedCount = 0
@@ -86,6 +88,20 @@ enum XomoFigmaNodeMaterializer {
                     omitMaterializedSubtree(child)
                 }
             }
+            if item.targetKind == .slice {
+                guard slices.count < ImageEditorSlice.maximumCount,
+                      let frame = mappedFrame(item.frame, transform: transform),
+                      let slice = ImageEditorSlice(
+                          name: item.sourceName,
+                          frame: frame
+                      ).normalized(canvasSize: canvasSize)
+                else {
+                    omittedCount += 1
+                    return
+                }
+                slices.append(slice)
+                return
+            }
             guard var layer = makeLayer(
                 item: item,
                 canvasSize: canvasSize,
@@ -111,8 +127,9 @@ enum XomoFigmaNodeMaterializer {
         let selectedLayerID = layerIDsBySource[plan.rootSourceID] ?? layers.last?.id
         return XomoFigmaNodeMaterializationResult(
             layers: layers,
+            slices: slices,
             selectedLayerID: selectedLayerID,
-            importedCount: layers.count,
+            importedCount: layers.count + slices.count,
             omittedCount: omittedCount
         )
     }
@@ -181,6 +198,8 @@ enum XomoFigmaNodeMaterializer {
         case .imagePlaceholder:
             guard let frame = mappedFrame(item.frame, transform: transform) else { return nil }
             layer = makeImagePlaceholderLayer(item: item, frame: frame)
+        case .slice:
+            return nil
         }
         if let siblingMaskFrame = item.siblingMaskFrame,
            let mappedMaskFrame = mappedFrame(siblingMaskFrame, transform: transform),
@@ -874,29 +893,48 @@ extension ImageEditorViewModel {
     @discardableResult
     func importFigmaNodePlan(_ plan: XomoFigmaNodeImportPlan) -> Bool {
         let result = XomoFigmaNodeMaterializer.materialize(plan: plan, canvasSize: document.canvasSize)
-        guard !result.layers.isEmpty else {
+        let availableSliceCapacity = max(0, ImageEditorSlice.maximumCount - document.slices.count)
+        let importedSlices = Array(result.slices.prefix(availableSliceCapacity))
+        let skippedSliceCount = result.slices.count - importedSlices.count
+        let importedCount = result.layers.count + importedSlices.count
+        let omittedCount = result.omittedCount + skippedSliceCount
+        guard importedCount > 0 else {
             statusText = L10n.text("imageEditor.status.figmaNodeImportEmpty")
             return false
         }
         pushUndo()
-        let insertionAnchorID = document.selectedLayer.map { selectedLayer in
-            document.ancestorGroups(for: selectedLayer).last?.id ?? selectedLayer.id
+        if !result.layers.isEmpty {
+            let insertionAnchorID = document.selectedLayer.map { selectedLayer in
+                document.ancestorGroups(for: selectedLayer).last?.id ?? selectedLayer.id
+            }
+            let insertionIndex = min(
+                (insertionAnchorID.flatMap { anchorID in
+                    document.layers.firstIndex { $0.id == anchorID }
+                } ?? (document.layers.count - 1)) + 1,
+                document.layers.count
+            )
+            document.layers.insert(contentsOf: result.layers, at: insertionIndex)
+            if let selectedLayerID = result.selectedLayerID {
+                document.selectedLayerID = selectedLayerID
+                document.selectedLayerIDs = [selectedLayerID]
+                isEditingLayerMask = false
+            }
         }
-        let insertionIndex = min(
-            (insertionAnchorID.flatMap { anchorID in
-                document.layers.firstIndex { $0.id == anchorID }
-            } ?? (document.layers.count - 1)) + 1,
-            document.layers.count
-        )
-        document.layers.insert(contentsOf: result.layers, at: insertionIndex)
-        document.selectedLayerID = result.selectedLayerID
-        document.selectedLayerIDs = Set(result.selectedLayerID.map { [$0] } ?? [])
-        isEditingLayerMask = false
+        if !importedSlices.isEmpty {
+            document.slices.append(contentsOf: importedSlices)
+            if let firstSlice = importedSlices.first {
+                exportSettings.sliceID = firstSlice.id
+                if result.layers.isEmpty {
+                    exportSettings.scope = .slice
+                }
+                isSlicesPanelVisible = true
+            }
+        }
         appendHistory(L10n.text("imageEditor.history.figmaNodeImport"))
         statusText = L10n.format(
             "imageEditor.status.figmaNodeImported",
-            result.importedCount,
-            result.omittedCount
+            importedCount,
+            omittedCount
         )
         return true
     }

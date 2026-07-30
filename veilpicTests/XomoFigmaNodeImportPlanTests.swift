@@ -13,6 +13,84 @@ import Testing
 
 @MainActor
 struct XomoFigmaNodeImportPlanTests {
+    @Test func figmaSliceBecomesNativeFireworksSliceAndExportsWithoutCreatingLayer() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                """
+                {
+                  "name": "Delivery",
+                  "version": "1",
+                  "nodes": {
+                    "1:70": {
+                      "document": {
+                        "id": "1:70",
+                        "name": "Hero Export",
+                        "type": "SLICE",
+                        "absoluteBoundingBox": {"x": 120, "y": 240, "width": 80, "height": 40}
+                      }
+                    }
+                  }
+                }
+                """.utf8
+            )
+        )
+        let plan = try XomoFigmaNodeImportMapper.makePlan(
+            response: response,
+            requestedNodeID: "1:70"
+        )
+        let item = try #require(plan.items.first)
+        #expect(item.targetKind == .slice)
+        #expect(item.fidelity == .exact)
+        #expect(item.issues.isEmpty)
+
+        let materialized = XomoFigmaNodeMaterializer.materialize(
+            plan: plan,
+            canvasSize: CGSize(width: 400, height: 300)
+        )
+        let slice = try #require(materialized.slices.first)
+        #expect(materialized.layers.isEmpty)
+        #expect(materialized.importedCount == 1)
+        #expect(materialized.omittedCount == 0)
+        #expect(slice.name == "Hero Export")
+        #expect(slice.frame == CGRect(x: 160, y: 130, width: 80, height: 40))
+
+        let viewModel = ImageEditorViewModel(
+            sourceName: "delivery.png",
+            image: NSImage.rendered(size: CGSize(width: 400, height: 300)) { rect in
+                NSColor.systemBlue.setFill()
+                rect.fill()
+            } ?? NSImage.transparent(size: CGSize(width: 400, height: 300))
+        ) { _ in }
+        let initialLayerIDs = viewModel.document.layers.map(\.id)
+        let initialHistoryCount = viewModel.document.history.count
+
+        #expect(viewModel.importFigmaNodePlan(plan))
+        #expect(viewModel.document.layers.map(\.id) == initialLayerIDs)
+        #expect(viewModel.document.slices.count == 1)
+        #expect(viewModel.document.slices.first?.name == "Hero Export")
+        #expect(viewModel.exportSettings.scope == .slice)
+        #expect(viewModel.exportSettings.sliceID == viewModel.document.slices.first?.id)
+        #expect(viewModel.isSlicesPanelVisible)
+        #expect(viewModel.document.history.count == initialHistoryCount + 1)
+        #expect(viewModel.statusText == L10n.format("imageEditor.status.figmaNodeImported", 1, 0))
+
+        let exported = try #require(viewModel.exportData(settings: viewModel.exportSettings))
+        let exportedImage = try #require(NSImage(data: exported))
+        #expect(exportedImage.size == CGSize(width: 80, height: 40))
+
+        let restored = try ImageEditorProjectDocument(document: viewModel.document).restoredDocument()
+        #expect(restored.slices == viewModel.document.slices)
+
+        viewModel.undo()
+        #expect(viewModel.document.slices.isEmpty)
+        #expect(viewModel.document.layers.map(\.id) == initialLayerIDs)
+
+        viewModel.redo()
+        #expect(viewModel.document.slices.count == 1)
+        #expect(viewModel.document.layers.map(\.id) == initialLayerIDs)
+    }
+
     @Test func gradientStopResolutionRunsOffMainActorAndRejectsInvalidValues() async {
         let resolved = await Task.detached {
             XomoFigmaNodeImportMapper.resolveGradientStopColor(

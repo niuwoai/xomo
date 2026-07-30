@@ -3223,6 +3223,7 @@
 "xomo.figma.node.target.vector" = "矢量路径";
 "xomo.figma.node.target.image" = "图片像素层";
 "xomo.figma.node.target.imagePlaceholder" = "图片占位层";
+"xomo.figma.node.target.slice" = "导出切片";
 "xomo.figma.node.fidelity.exact" = "完整映射";
 "xomo.figma.node.fidelity.partial" = "降级映射";
 "xomo.figma.node.fidelity.unsupported" = "不支持";
