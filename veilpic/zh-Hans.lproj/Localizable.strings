@@ -407,6 +407,8 @@
 "imageEditor.action.colorUseEyedropper" = "使用吸管";
 "imageEditor.action.colorSampleScreenForeground" = "从屏幕拾取前景色";
 "imageEditor.action.colorSampleScreenBackground" = "从屏幕拾取背景色";
+"imageEditor.action.colorEditForeground" = "编辑前景色";
+"imageEditor.action.colorEditBackground" = "编辑背景色";
 "imageEditor.action.preview" = "预览";
 "imageEditor.action.swatchesShowPanel" = "显示色板面板";
 "imageEditor.action.brushesShowPanel" = "显示画笔面板";

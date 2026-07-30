@@ -407,6 +407,8 @@
 "imageEditor.action.colorUseEyedropper" = "スポイトを使用";
 "imageEditor.action.colorSampleScreenForeground" = "画面から描画色を取得";
 "imageEditor.action.colorSampleScreenBackground" = "画面から背景色を取得";
+"imageEditor.action.colorEditForeground" = "描画色を編集";
+"imageEditor.action.colorEditBackground" = "背景色を編集";
 "imageEditor.action.preview" = "プレビュー";
 "imageEditor.action.swatchesShowPanel" = "スウォッチパネルを表示";
 "imageEditor.action.brushesShowPanel" = "ブラシパネルを表示";

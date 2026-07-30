@@ -1,201 +1,36 @@
 {
-  "generated_at": "2026-07-15 06:48:11 +0800",
-  "total": 16,
-  "passed": 16,
+  "generated_at": "2026-07-30 22:36:12 +0800",
+  "total": 2,
+  "passed": 2,
   "failed": 0,
+  "total_tests": 2,
+  "passed_tests": 2,
+  "failed_tests_in_failed_groups": 0,
   "jobs": 1,
   "results": [
     {
-      "suite": "XomoFigmaNodeImportPlanTests",
-      "method": "clientMapsBadRequestAuthorizationMissingNodeRateLimitAndServerErrors",
-      "identifier": "veilpicTests/XomoFigmaNodeImportPlanTests/clientMapsBadRequestAuthorizationMissingNodeRateLimitAndServerErrors",
-      "file": "XomoFigmaNodeImportPlanTests.swift",
+      "suite": "ImageEditorColorWellTests",
+      "method": "colorWellIsKeyboardNeutralAndPublishesContinuousColorChanges",
+      "identifier": "veilpicTests/ImageEditorColorWellTests/colorWellIsKeyboardNeutralAndPublishesContinuousColorChanges()",
+      "file": "ImageEditorColorWellTests.swift",
+      "test_count": 1,
       "passed": true,
-      "duration": 2.792,
-      "issues": [
-
-      ],
-      "log": "XomoFigmaNodeImportPlanTests.clientMapsBadRequestAuthorizationMissingNodeRateLimitAndServerErrors.log"
+      "duration": 5.305,
+      "infrastructure_retries": 0,
+      "issues": [],
+      "log": "ImageEditorColorWellTests.colorWellIsKeyboardNeutralAndPublishesContinuousColorChanges.log"
     },
     {
-      "suite": "XomoFigmaNodeImportPlanTests",
-      "method": "clientRejectsMissingNodeOversizedResponsesAndExcessiveTrees",
-      "identifier": "veilpicTests/XomoFigmaNodeImportPlanTests/clientRejectsMissingNodeOversizedResponsesAndExcessiveTrees",
-      "file": "XomoFigmaNodeImportPlanTests.swift",
+      "suite": "ImageEditorColorWellTests",
+      "method": "editorUsesColorWellsInsteadOfInvisibleScreenSamplerButtons",
+      "identifier": "veilpicTests/ImageEditorColorWellTests/editorUsesColorWellsInsteadOfInvisibleScreenSamplerButtons()",
+      "file": "ImageEditorColorWellTests.swift",
+      "test_count": 1,
       "passed": true,
-      "duration": 2.792,
-      "issues": [
-
-      ],
-      "log": "XomoFigmaNodeImportPlanTests.clientRejectsMissingNodeOversizedResponsesAndExcessiveTrees.log"
-    },
-    {
-      "suite": "XomoFigmaNodeImportPlanTests",
-      "method": "clientRequiresSpecificNodeAndUsesBoundedOfficialEndpoint",
-      "identifier": "veilpicTests/XomoFigmaNodeImportPlanTests/clientRequiresSpecificNodeAndUsesBoundedOfficialEndpoint",
-      "file": "XomoFigmaNodeImportPlanTests.swift",
-      "passed": true,
-      "duration": 2.783,
-      "issues": [
-
-      ],
-      "log": "XomoFigmaNodeImportPlanTests.clientRequiresSpecificNodeAndUsesBoundedOfficialEndpoint.log"
-    },
-    {
-      "suite": "XomoFigmaNodeImportPlanTests",
-      "method": "controllerDoesNotReadUntilExplicitUserActionAndClearsStalePlan",
-      "identifier": "veilpicTests/XomoFigmaNodeImportPlanTests/controllerDoesNotReadUntilExplicitUserActionAndClearsStalePlan",
-      "file": "XomoFigmaNodeImportPlanTests.swift",
-      "passed": true,
-      "duration": 2.771,
-      "issues": [
-
-      ],
-      "log": "XomoFigmaNodeImportPlanTests.controllerDoesNotReadUntilExplicitUserActionAndClearsStalePlan.log"
-    },
-    {
-      "suite": "XomoFigmaNodeImportPlanTests",
-      "method": "importedHierarchySurvivesProjectDataAndCompositeExport",
-      "identifier": "veilpicTests/XomoFigmaNodeImportPlanTests/importedHierarchySurvivesProjectDataAndCompositeExport",
-      "file": "XomoFigmaNodeImportPlanTests.swift",
-      "passed": true,
-      "duration": 2.813,
-      "issues": [
-
-      ],
-      "log": "XomoFigmaNodeImportPlanTests.importedHierarchySurvivesProjectDataAndCompositeExport.log"
-    },
-    {
-      "suite": "XomoFigmaNodeImportPlanTests",
-      "method": "mapperBuildsEditableHierarchyAndRelativeFrames",
-      "identifier": "veilpicTests/XomoFigmaNodeImportPlanTests/mapperBuildsEditableHierarchyAndRelativeFrames",
-      "file": "XomoFigmaNodeImportPlanTests.swift",
-      "passed": true,
-      "duration": 2.824,
-      "issues": [
-
-      ],
-      "log": "XomoFigmaNodeImportPlanTests.mapperBuildsEditableHierarchyAndRelativeFrames.log"
-    },
-    {
-      "suite": "XomoFigmaNodeImportPlanTests",
-      "method": "mapperKeepsUniformCornersAndReportsIndependentOrSmoothedCorners",
-      "identifier": "veilpicTests/XomoFigmaNodeImportPlanTests/mapperKeepsUniformCornersAndReportsIndependentOrSmoothedCorners",
-      "file": "XomoFigmaNodeImportPlanTests.swift",
-      "passed": true,
-      "duration": 2.783,
-      "issues": [
-
-      ],
-      "log": "XomoFigmaNodeImportPlanTests.mapperKeepsUniformCornersAndReportsIndependentOrSmoothedCorners.log"
-    },
-    {
-      "suite": "XomoFigmaNodeImportPlanTests",
-      "method": "mapperReportsPartialImageComponentLayoutAndUnsupportedNodes",
-      "identifier": "veilpicTests/XomoFigmaNodeImportPlanTests/mapperReportsPartialImageComponentLayoutAndUnsupportedNodes",
-      "file": "XomoFigmaNodeImportPlanTests.swift",
-      "passed": true,
-      "duration": 2.98,
-      "issues": [
-
-      ],
-      "log": "XomoFigmaNodeImportPlanTests.mapperReportsPartialImageComponentLayoutAndUnsupportedNodes.log"
-    },
-    {
-      "suite": "XomoFigmaNodeImportPlanTests",
-      "method": "mapperReportsUnsupportedWrapWhileKeepingFillChildSemantics",
-      "identifier": "veilpicTests/XomoFigmaNodeImportPlanTests/mapperReportsUnsupportedWrapWhileKeepingFillChildSemantics",
-      "file": "XomoFigmaNodeImportPlanTests.swift",
-      "passed": true,
-      "duration": 2.88,
-      "issues": [
-
-      ],
-      "log": "XomoFigmaNodeImportPlanTests.mapperReportsUnsupportedWrapWhileKeepingFillChildSemantics.log"
-    },
-    {
-      "suite": "XomoFigmaNodeImportPlanTests",
-      "method": "mapperUsesStrokeGeometryAndReportsInheritedRotatedTransform",
-      "identifier": "veilpicTests/XomoFigmaNodeImportPlanTests/mapperUsesStrokeGeometryAndReportsInheritedRotatedTransform",
-      "file": "XomoFigmaNodeImportPlanTests.swift",
-      "passed": true,
-      "duration": 2.805,
-      "issues": [
-
-      ],
-      "log": "XomoFigmaNodeImportPlanTests.mapperUsesStrokeGeometryAndReportsInheritedRotatedTransform.log"
-    },
-    {
-      "suite": "XomoFigmaNodeImportPlanTests",
-      "method": "materializerCreatesEditableHierarchyAtCenteredScaleAndHonestPlaceholder",
-      "identifier": "veilpicTests/XomoFigmaNodeImportPlanTests/materializerCreatesEditableHierarchyAtCenteredScaleAndHonestPlaceholder",
-      "file": "XomoFigmaNodeImportPlanTests.swift",
-      "passed": true,
-      "duration": 2.769,
-      "issues": [
-
-      ],
-      "log": "XomoFigmaNodeImportPlanTests.materializerCreatesEditableHierarchyAtCenteredScaleAndHonestPlaceholder.log"
-    },
-    {
-      "suite": "XomoFigmaNodeImportPlanTests",
-      "method": "materializerOnlyShrinksOversizedRootAndKeepsItInsideCanvasInset",
-      "identifier": "veilpicTests/XomoFigmaNodeImportPlanTests/materializerOnlyShrinksOversizedRootAndKeepsItInsideCanvasInset",
-      "file": "XomoFigmaNodeImportPlanTests.swift",
-      "passed": true,
-      "duration": 2.798,
-      "issues": [
-
-      ],
-      "log": "XomoFigmaNodeImportPlanTests.materializerOnlyShrinksOversizedRootAndKeepsItInsideCanvasInset.log"
-    },
-    {
-      "suite": "XomoFigmaNodeImportPlanTests",
-      "method": "sheetMakesNodeReadExplicitAndRequiresNodeSelection",
-      "identifier": "veilpicTests/XomoFigmaNodeImportPlanTests/sheetMakesNodeReadExplicitAndRequiresNodeSelection",
-      "file": "XomoFigmaNodeImportPlanTests.swift",
-      "passed": true,
-      "duration": 2.748,
-      "issues": [
-
-      ],
-      "log": "XomoFigmaNodeImportPlanTests.sheetMakesNodeReadExplicitAndRequiresNodeSelection.log"
-    },
-    {
-      "suite": "XomoFigmaNodeImportPlanTests",
-      "method": "svgParserSupportsRelativeCurvesQuadraticsAndArcs",
-      "identifier": "veilpicTests/XomoFigmaNodeImportPlanTests/svgParserSupportsRelativeCurvesQuadraticsAndArcs",
-      "file": "XomoFigmaNodeImportPlanTests.swift",
-      "passed": true,
-      "duration": 2.781,
-      "issues": [
-
-      ],
-      "log": "XomoFigmaNodeImportPlanTests.svgParserSupportsRelativeCurvesQuadraticsAndArcs.log"
-    },
-    {
-      "suite": "XomoFigmaNodeImportPlanTests",
-      "method": "viewModelImportsPlanAsSingleUndoableHistoryStep",
-      "identifier": "veilpicTests/XomoFigmaNodeImportPlanTests/viewModelImportsPlanAsSingleUndoableHistoryStep",
-      "file": "XomoFigmaNodeImportPlanTests.swift",
-      "passed": true,
-      "duration": 2.79,
-      "issues": [
-
-      ],
-      "log": "XomoFigmaNodeImportPlanTests.viewModelImportsPlanAsSingleUndoableHistoryStep.log"
-    },
-    {
-      "suite": "XomoFigmaNodeImportPlanTests",
-      "method": "viewModelInsertsImportedRootAfterExistingTopLevelGroup",
-      "identifier": "veilpicTests/XomoFigmaNodeImportPlanTests/viewModelInsertsImportedRootAfterExistingTopLevelGroup",
-      "file": "XomoFigmaNodeImportPlanTests.swift",
-      "passed": true,
-      "duration": 2.768,
-      "issues": [
-
-      ],
-      "log": "XomoFigmaNodeImportPlanTests.viewModelInsertsImportedRootAfterExistingTopLevelGroup.log"
+      "duration": 3.296,
+      "infrastructure_retries": 0,
+      "issues": [],
+      "log": "ImageEditorColorWellTests.editorUsesColorWellsInsteadOfInvisibleScreenSamplerButtons.log"
     }
   ]
 }

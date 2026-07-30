@@ -1694,18 +1694,16 @@ struct ImageEditorView: View {
     private var colorChips: some View {
         ZStack(alignment: .topLeading) {
             colorChip(
-                color: viewModel.backgroundColor,
-                action: viewModel.sampleScreenColorForBackground,
-                accessibilityIdentifier: "image-editor-background-color-sampler",
-                accessibilityLabelKey: "imageEditor.action.colorSampleScreenBackground"
+                color: $viewModel.backgroundColor,
+                accessibilityIdentifier: "image-editor-background-color-well",
+                accessibilityLabelKey: "imageEditor.action.colorEditBackground"
             )
                 .offset(x: 11, y: 11)
 
             colorChip(
-                color: viewModel.foregroundColor,
-                action: viewModel.sampleScreenColorForForeground,
-                accessibilityIdentifier: "image-editor-foreground-color-sampler",
-                accessibilityLabelKey: "imageEditor.action.colorSampleScreenForeground"
+                color: $viewModel.foregroundColor,
+                accessibilityIdentifier: "image-editor-foreground-color-well",
+                accessibilityLabelKey: "imageEditor.action.colorEditForeground"
             )
 
             Button {
@@ -1727,25 +1725,22 @@ struct ImageEditorView: View {
     }
 
     private func colorChip(
-        color: NSColor,
-        action: @escaping () -> Void,
+        color: Binding<NSColor>,
         accessibilityIdentifier: String,
         accessibilityLabelKey: String
     ) -> some View {
-        Button(action: action) {
-            Color(nsColor: color)
-                .frame(width: 26, height: 26)
-                .overlay {
-                    Rectangle()
-                        .strokeBorder(Color.white.opacity(0.92), lineWidth: 1)
-                }
-                .contentShape(Rectangle())
+        ImageEditorColorWell(
+            color: color,
+            accessibilityIdentifier: accessibilityIdentifier,
+            accessibilityLabel: L10n.text(accessibilityLabelKey)
+        )
+        .frame(width: 26, height: 26)
+        .overlay {
+            Rectangle()
+                .strokeBorder(Color.white.opacity(0.92), lineWidth: 1)
+                .allowsHitTesting(false)
         }
-        .buttonStyle(.plain)
-        .focusable(false)
         .help(L10n.text(accessibilityLabelKey))
-        .accessibilityIdentifier(accessibilityIdentifier)
-        .accessibilityLabel(L10n.text(accessibilityLabelKey))
     }
 
     private var canvasWorkspace: some View {

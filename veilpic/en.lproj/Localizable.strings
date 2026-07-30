@@ -407,6 +407,8 @@
 "imageEditor.action.colorUseEyedropper" = "Use Eyedropper";
 "imageEditor.action.colorSampleScreenForeground" = "Sample Foreground Color from Screen";
 "imageEditor.action.colorSampleScreenBackground" = "Sample Background Color from Screen";
+"imageEditor.action.colorEditForeground" = "Edit Foreground Color";
+"imageEditor.action.colorEditBackground" = "Edit Background Color";
 "imageEditor.action.preview" = "Preview";
 "imageEditor.action.swatchesShowPanel" = "Show Swatches Panel";
 "imageEditor.action.brushesShowPanel" = "Show Brushes Panel";
