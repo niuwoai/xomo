@@ -1925,7 +1925,7 @@ struct ImageEditorView: View {
                                 in: geometry.size
                             ) else { return false }
                             activeResizeHandle = handle
-                            viewModel.beginResizingSelectedLayer(handle: handle)
+                            viewModel.beginResizingSelectedLayer(handle: handle.transformModelHandle)
                             ImageEditorCanvasCursor.transformCursor(for: .resize(handle)).set()
                             return true
                         },
@@ -1933,7 +1933,7 @@ struct ImageEditorView: View {
                             guard let handle = activeResizeHandle else { return }
                             viewModel.resizeSelectedLayer(
                                 to: unboundedImagePoint(from: location, in: geometry.size),
-                                handle: handle,
+                                handle: handle.transformModelHandle,
                                 preservingAspectRatio: NSEvent.modifierFlags.contains(.shift),
                                 resizingFromCenter: NSEvent.modifierFlags.contains(.option)
                             )
@@ -1942,7 +1942,7 @@ struct ImageEditorView: View {
                             if let handle = activeResizeHandle {
                                 viewModel.resizeSelectedLayer(
                                     to: unboundedImagePoint(from: location, in: geometry.size),
-                                    handle: handle,
+                                    handle: handle.transformModelHandle,
                                     preservingAspectRatio: NSEvent.modifierFlags.contains(.shift),
                                     resizingFromCenter: NSEvent.modifierFlags.contains(.option)
                                 )
@@ -5746,7 +5746,7 @@ struct ImageEditorView: View {
             if canvasInteractionTool == .move,
                viewModel.document.areTransformControlsVisible,
                viewModel.canResizeSelectedLayer {
-                ForEach(ImageEditorLayerResizeHandle.allCases) { handle in
+                ForEach(ImageEditorLayerTransformControlLayout.visibleResizeHandles(in: rect)) { handle in
                     resizeHandleView(handle: handle, in: rect, canvasSize: size)
                 }
             }
@@ -5754,7 +5754,9 @@ struct ImageEditorView: View {
             if canvasInteractionTool == .move,
                viewModel.document.areTransformControlsVisible,
                viewModel.canRotateSelectedLayer {
-                transformReferencePointView(in: size)
+                if ImageEditorLayerTransformControlLayout.showsReferencePoint(in: rect) {
+                    transformReferencePointView(in: size)
+                }
                 rotateHandleView(in: rect, canvasSize: size)
             }
         }
@@ -6239,12 +6241,12 @@ struct ImageEditorView: View {
                     .onChanged { value in
                         if activeResizeHandle == nil {
                             activeResizeHandle = handle
-                            viewModel.beginResizingSelectedLayer(handle: handle)
+                            viewModel.beginResizingSelectedLayer(handle: handle.transformModelHandle)
                             ImageEditorCanvasCursor.transformCursor(for: .resize(handle)).set()
                         }
                         viewModel.resizeSelectedLayer(
                             to: unboundedImagePoint(from: value.location, in: canvasSize),
-                            handle: handle,
+                            handle: handle.transformModelHandle,
                             preservingAspectRatio: NSEvent.modifierFlags.contains(.shift),
                             resizingFromCenter: NSEvent.modifierFlags.contains(.option)
                         )
@@ -9656,6 +9658,61 @@ enum ImageEditorLayerTransformCursorTarget: Equatable {
     case referencePoint
 }
 
+enum ImageEditorLayerTransformControlLayout {
+    /// Eight resize handles plus a draggable transform origin are useful on a
+    /// large object, but they consume the entire hit area of a compact icon or
+    /// control.  Keep a body-sized move target by reducing compact selections
+    /// to their four familiar corner handles.
+    static let compactDimensionThreshold: CGFloat = 44
+
+    static func visibleResizeHandles(in frame: CGRect) -> [ImageEditorLayerResizeHandle] {
+        guard frame.width >= compactDimensionThreshold,
+              frame.height >= compactDimensionThreshold
+        else {
+            return [.topLeft, .topRight, .bottomLeft, .bottomRight]
+        }
+        return ImageEditorLayerResizeHandle.allCases
+    }
+
+    static func showsReferencePoint(in frame: CGRect) -> Bool {
+        frame.width >= compactDimensionThreshold
+            && frame.height >= compactDimensionThreshold
+    }
+
+    static func resizeHitRadius(in frame: CGRect, preferredRadius: CGFloat) -> CGFloat {
+        guard !showsReferencePoint(in: frame) else { return preferredRadius }
+        let compactDimension = min(frame.width, frame.height)
+        return min(preferredRadius, max(2, compactDimension * 0.22))
+    }
+}
+
+extension ImageEditorLayerResizeHandle {
+    /// The canvas view uses the conventional top-left UI origin, while the
+    /// transform model keeps its historical bottom-left handle semantics.
+    /// Convert only at the UI boundary so dragging a visible top handle grows
+    /// the object upward instead of collapsing it toward the opposite edge.
+    var transformModelHandle: ImageEditorLayerResizeHandle {
+        switch self {
+        case .topLeft:
+            .bottomLeft
+        case .top:
+            .bottom
+        case .topRight:
+            .bottomRight
+        case .left:
+            .left
+        case .right:
+            .right
+        case .bottomLeft:
+            .topLeft
+        case .bottom:
+            .top
+        case .bottomRight:
+            .topRight
+        }
+    }
+}
+
 enum ImageEditorSelectionCursorMode: String, Equatable, CaseIterable {
     case replace
     case add
@@ -9836,27 +9893,38 @@ enum ImageEditorCanvasCursor {
         hitRadius: CGFloat = 9
     ) -> ImageEditorLayerTransformCursorTarget? {
         guard let point, let frame else { return nil }
-        var candidates: [(ImageEditorLayerTransformCursorTarget, CGPoint)] = []
+        var candidates: [(ImageEditorLayerTransformCursorTarget, CGPoint, CGFloat)] = []
         if canResize {
-            candidates.append(contentsOf: ImageEditorLayerResizeHandle.allCases.map {
-                (.resize($0), transformHandlePoint($0, in: frame))
+            let resizeHitRadius = ImageEditorLayerTransformControlLayout.resizeHitRadius(
+                in: frame,
+                preferredRadius: hitRadius
+            )
+            candidates.append(contentsOf: ImageEditorLayerTransformControlLayout
+                .visibleResizeHandles(in: frame)
+                .map {
+                (.resize($0), transformHandlePoint($0, in: frame), resizeHitRadius)
             })
         }
         if canRotate {
-            candidates.append((.rotate, transformRotateHandlePoint(in: frame)))
+            candidates.append((.rotate, transformRotateHandlePoint(in: frame), hitRadius))
         }
-        if canMoveReferencePoint, let referencePoint {
-            candidates.append((.referencePoint, referencePoint))
+        if canMoveReferencePoint,
+           ImageEditorLayerTransformControlLayout.showsReferencePoint(in: frame),
+           let referencePoint {
+            candidates.append((.referencePoint, referencePoint, hitRadius))
         }
 
-        let maximumDistanceSquared = hitRadius * hitRadius
         return candidates
             .map { candidate in
                 let deltaX = candidate.1.x - point.x
                 let deltaY = candidate.1.y - point.y
-                return (candidate.0, deltaX * deltaX + deltaY * deltaY)
+                return (
+                    candidate.0,
+                    deltaX * deltaX + deltaY * deltaY,
+                    candidate.2 * candidate.2
+                )
             }
-            .filter { $0.1 <= maximumDistanceSquared }
+            .filter { $0.1 <= $0.2 }
             .min { $0.1 < $1.1 }?
             .0
     }

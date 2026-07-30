@@ -550,7 +550,12 @@ struct ImageEditorCanvasCursorTests {
         #expect(monitorSource.contains("onLayerResizeChanged?(location)"))
         #expect(monitorSource.contains("onLayerResizeEnded?(location)"))
         #expect(viewSource.contains("onLayerResizeBegan: { location in"))
-        #expect(viewSource.contains("viewModel.beginResizingSelectedLayer(handle: handle)"))
+        #expect(
+            viewSource.contains(
+                "viewModel.beginResizingSelectedLayer(handle: handle.transformModelHandle)"
+            )
+        )
+        #expect(viewSource.contains("handle: handle.transformModelHandle,"))
         #expect(viewSource.contains("viewModel.finishResizingSelectedLayer()"))
     }
 
@@ -866,6 +871,52 @@ struct ImageEditorCanvasCursorTests {
         #expect(rotate !== NSCursor.crosshair)
         #expect(rotate.image.tiffRepresentation != forward.image.tiffRepresentation)
         #expect(referencePoint === NSCursor.crosshair)
+    }
+
+    @Test func compactLayerTransformControlsPreserveAnInteriorMoveTarget() {
+        let compactFrame = CGRect(x: 40, y: 40, width: 12, height: 12)
+
+        #expect(
+            ImageEditorLayerTransformControlLayout.visibleResizeHandles(in: compactFrame)
+                == [.topLeft, .topRight, .bottomLeft, .bottomRight]
+        )
+        #expect(!ImageEditorLayerTransformControlLayout.showsReferencePoint(in: compactFrame))
+        #expect(
+            ImageEditorCanvasCursor.transformTarget(
+                at: CGPoint(x: 46, y: 46),
+                frame: compactFrame,
+                canResize: true,
+                canRotate: true,
+                referencePoint: CGPoint(x: 46, y: 46),
+                canMoveReferencePoint: true
+            ) == nil
+        )
+        #expect(
+            ImageEditorCanvasCursor.transformTarget(
+                at: CGPoint(x: 40, y: 40),
+                frame: compactFrame,
+                canResize: true,
+                canRotate: true
+            ) == .resize(.topLeft)
+        )
+
+        let regularFrame = CGRect(x: 40, y: 40, width: 120, height: 80)
+        #expect(
+            ImageEditorLayerTransformControlLayout.visibleResizeHandles(in: regularFrame)
+                == ImageEditorLayerResizeHandle.allCases
+        )
+        #expect(ImageEditorLayerTransformControlLayout.showsReferencePoint(in: regularFrame))
+    }
+
+    @Test func visualResizeHandlesMapToTheTransformModelsVerticalAxis() {
+        #expect(ImageEditorLayerResizeHandle.topLeft.transformModelHandle == .bottomLeft)
+        #expect(ImageEditorLayerResizeHandle.top.transformModelHandle == .bottom)
+        #expect(ImageEditorLayerResizeHandle.topRight.transformModelHandle == .bottomRight)
+        #expect(ImageEditorLayerResizeHandle.left.transformModelHandle == .left)
+        #expect(ImageEditorLayerResizeHandle.right.transformModelHandle == .right)
+        #expect(ImageEditorLayerResizeHandle.bottomLeft.transformModelHandle == .topLeft)
+        #expect(ImageEditorLayerResizeHandle.bottom.transformModelHandle == .top)
+        #expect(ImageEditorLayerResizeHandle.bottomRight.transformModelHandle == .topRight)
     }
 
     @Test func activeLayerTransformKeepsItsCursorAfterPointerLeavesTheHandle() {
