@@ -451,7 +451,9 @@ extension ImageEditorView {
         Button(L10n.text("imageEditor.action.layerDuplicate")) {
             viewModel.duplicateSelectionOrSelectedLayer()
         }
-        .keyboardShortcut("j", modifiers: [.command])
+        // Command-J is consumed by ImageEditorKeyboardShortcutMonitor. Giving
+        // the same action a SwiftUI Menu shortcut lets AppKit dispatch it a
+        // second time in the same key press, producing “副本的副本”.
         .disabled(!viewModel.canDuplicateSelectionOrSelectedLayer)
         Button(L10n.text("imageEditor.action.selectionCopyLayer")) {
             viewModel.copySelectionToNewLayer()
@@ -460,7 +462,6 @@ extension ImageEditorView {
         Button(L10n.text("imageEditor.action.selectionCutLayer")) {
             viewModel.cutSelectionToNewLayer()
         }
-        .keyboardShortcut("j", modifiers: [.command, .shift])
         .disabled(!viewModel.canCutSelectionToNewLayer)
         Button(L10n.text("imageEditor.action.layerDelete")) {
             viewModel.deleteSelectedLayer()

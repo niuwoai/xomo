@@ -110,6 +110,10 @@ struct ImageEditorLayerRangeSelectionTests {
         #expect(source.contains("viewModel.selectLayerRange("))
         #expect(source.contains("addingToSelection: flags.contains(.command)"))
         #expect(source.contains("extendingSelection: flags.contains(.command)"))
+        #expect(source.contains("Button {"))
+        #expect(source.contains("selectLayerFromPanel(layer)"))
+        #expect(source.contains(".focusable(false)"))
+        #expect(source.contains("image-editor-layer-content-\\(layer.id.uuidString)"))
         #expect(!source.contains("flags.contains(.command) || flags.contains(.shift)"))
     }
 

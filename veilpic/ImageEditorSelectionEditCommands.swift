@@ -58,11 +58,11 @@ extension ImageEditorViewModel {
     }
 
     var canDuplicateSelectionOrSelectedLayer: Bool {
-        hasSelection ? canCopySelectionToNewLayer : canDuplicateSelectedLayer
+        canCopySelectionToNewLayer || canDuplicateSelectedLayer
     }
 
     func duplicateSelectionOrSelectedLayer() {
-        if hasSelection {
+        if canCopySelectionToNewLayer {
             copySelectionToNewLayer()
         } else {
             duplicateSelectedLayer()

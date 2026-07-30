@@ -72,6 +72,7 @@ struct ImageEditorView: View {
     @State private var toneAirbrushStroke = ImageEditorToneAirbrushStroke()
     @State private var dragStart: CGPoint?
     @State private var dragEnd: CGPoint?
+    @State private var primaryToolViewStart: CGPoint?
     @State private var patchPreviewImage: NSImage?
     @State private var isDrawingPatchSelection = false
     @State private var lastPatchPreviewUpdateTime: TimeInterval = 0
@@ -318,6 +319,7 @@ struct ImageEditorView: View {
             lastPatchPreviewUpdateTime = 0
             dragStart = nil
             dragEnd = nil
+            primaryToolViewStart = nil
             dragPoints = []
             brushStrokeSamples = []
             activeBrushPressure = nil
@@ -1763,6 +1765,15 @@ struct ImageEditorView: View {
                 .simultaneousGesture(canvasGesture(in: geometry.size))
                 .overlay(
                     ScrollWheelZoomView(
+                        pointerCaptureState: viewModel.canvasPointerCaptureState,
+                        pointerCaptureKind: ImageEditorPrimaryToolPointerCapture.captureKind(
+                            sidebarTab: viewModel.selectedLeftSidebarTab,
+                            tool: canvasInteractionTool
+                        ),
+                        capturesPrimaryPointer: ImageEditorPrimaryToolPointerCapture.usesDirectCanvasHitTarget(
+                            sidebarTab: viewModel.selectedLeftSidebarTab,
+                            tool: canvasInteractionTool
+                        ),
                         onZoom: { factor, location, viewportSize in
                             // 每个离散滚轮 tick 独立锚定当前状态：复用捏合缩放的锚定数学，
                             // 立即结束一次缩放会话，避免下一次滚动沿用上一次的基准而叠加错位。
@@ -1820,13 +1831,142 @@ struct ImageEditorView: View {
                             dragEnd = nil
                             refreshCanvasCursor(in: geometry.size)
                         },
+                        onPrimaryToolDragBegan: { location in
+                            guard ImageEditorPrimaryToolPointerCapture.shouldCapture(
+                                    sidebarTab: viewModel.selectedLeftSidebarTab,
+                                    tool: canvasInteractionTool
+                                  ),
+                                  let imagePoint = imagePoint(from: location, in: geometry.size)
+                            else { return false }
+                            // Keep the native NSView as first responder for the
+                            // whole brush stroke. Mutating several SwiftUI
+                            // states on mouse-down can rebuild the overlay
+                            // before mouse-up and strand the responder.
+                            if canvasInteractionTool != .brush && canvasInteractionTool != .eraser {
+                                primaryToolViewStart = location
+                                dragStart = imagePoint
+                                dragEnd = imagePoint
+                                viewModel.updatePointer(imagePoint)
+                            }
+                            return true
+                        },
+                        onPrimaryToolDragChanged: { location in
+                            guard let imagePoint = imagePoint(from: location, in: geometry.size) else { return }
+                            if canvasInteractionTool == .brush || canvasInteractionTool == .eraser {
+                                return
+                            }
+                            dragEnd = imagePoint
+                            viewModel.updatePointer(imagePoint)
+                        },
+                        onPrimaryToolDragEnded: { location, samples in
+                            let endImagePoint = imagePoint(from: location, in: geometry.size) ?? dragEnd
+                            let fallbackBrushSamples = samples.compactMap { sample in
+                                imagePoint(from: sample.location, in: geometry.size).map {
+                                    ImageEditorBrushStrokeSample(
+                                        point: $0,
+                                        pressure: sample.pressure
+                                    )
+                                }
+                            }
+                            if let endImagePoint,
+                               canvasInteractionTool == .brush || canvasInteractionTool == .eraser {
+                                brushStrokeSamples.append(
+                                    ImageEditorBrushStrokeSample(
+                                        point: endImagePoint,
+                                        pressure: ImageEditorBrushPressureInput.pressure(from: NSApp.currentEvent)
+                                    )
+                                )
+                            }
+                            let committedBrushSamples = brushStrokeSamples.count >= 2
+                                ? brushStrokeSamples
+                                : fallbackBrushSamples
+                            switch canvasInteractionTool {
+                            case .brush:
+                                viewModel.drawBrush(samples: committedBrushSamples)
+                            case .eraser:
+                                viewModel.drawBrush(
+                                    samples: committedBrushSamples,
+                                    erase: true
+                                )
+                            case .rectangle:
+                                if let dragStart, let endImagePoint {
+                                    viewModel.drawShape(from: dragStart, to: endImagePoint, ellipse: false)
+                                }
+                            case .ellipse:
+                                if let dragStart, let endImagePoint {
+                                    viewModel.drawShape(from: dragStart, to: endImagePoint, ellipse: true)
+                                }
+                            case .text:
+                                let viewTranslation = CGSize(
+                                    width: location.x - (primaryToolViewStart?.x ?? location.x),
+                                    height: location.y - (primaryToolViewStart?.y ?? location.y)
+                                )
+                                if let paragraphRect = ImageEditorTextBoxGeometry.paragraphRect(
+                                    from: dragStart,
+                                    to: endImagePoint,
+                                    viewTranslation: viewTranslation
+                                ) {
+                                    beginCanvasParagraphTextEditing(in: paragraphRect)
+                                } else {
+                                    beginCanvasTextEditing(at: endImagePoint)
+                                }
+                            default:
+                                break
+                            }
+                            brushStrokeSamples = []
+                            dragStart = nil
+                            dragEnd = nil
+                            primaryToolViewStart = nil
+                            refreshCanvasCursor(in: geometry.size)
+                        },
+                        onLayerResizeBegan: { location in
+                            guard case let .resize(handle) = layerTransformCursorTarget(
+                                at: location,
+                                in: geometry.size
+                            ) else { return false }
+                            activeResizeHandle = handle
+                            viewModel.beginResizingSelectedLayer(handle: handle)
+                            ImageEditorCanvasCursor.transformCursor(for: .resize(handle)).set()
+                            return true
+                        },
+                        onLayerResizeChanged: { location in
+                            guard let handle = activeResizeHandle else { return }
+                            viewModel.resizeSelectedLayer(
+                                to: unboundedImagePoint(from: location, in: geometry.size),
+                                handle: handle,
+                                preservingAspectRatio: NSEvent.modifierFlags.contains(.shift),
+                                resizingFromCenter: NSEvent.modifierFlags.contains(.option)
+                            )
+                        },
+                        onLayerResizeEnded: { location in
+                            if let handle = activeResizeHandle {
+                                viewModel.resizeSelectedLayer(
+                                    to: unboundedImagePoint(from: location, in: geometry.size),
+                                    handle: handle,
+                                    preservingAspectRatio: NSEvent.modifierFlags.contains(.shift),
+                                    resizingFromCenter: NSEvent.modifierFlags.contains(.option)
+                                )
+                                viewModel.finishResizingSelectedLayer()
+                            }
+                            activeResizeHandle = nil
+                            refreshCanvasCursor(in: geometry.size)
+                        },
                         onObjectMoveCandidateBegan: { location, modifierFlags in
                             guard canvasInteractionTool == .move,
-                                  modifierFlags.isEmpty,
-                                  let imagePoint = imagePoint(from: location, in: geometry.size),
-                                  viewModel.selectXomoObject(at: imagePoint),
-                                  viewModel.canResizeSelectedLayer
+                                  ImageEditorObjectDragEventPolicy.allowsCandidate(
+                                    modifierFlags: modifierFlags,
+                                    hasTransformTarget: layerTransformCursorTarget(
+                                        at: location,
+                                        in: geometry.size
+                                    ) != nil
+                                  ),
+                                  let imagePoint = imagePoint(from: location, in: geometry.size)
                             else { return false }
+                            let selectedFrame = viewModel.selectedXomoObjectFrame
+                            let isInsideSelectedObject = selectedFrame?.contains(imagePoint) == true
+                            let didSelectObject = isInsideSelectedObject
+                                || viewModel.selectXomoObject(at: imagePoint)
+                            guard didSelectObject, viewModel.canResizeSelectedLayer else { return false }
                             return true
                         },
                         onObjectMoveActivated: {
@@ -1849,7 +1989,12 @@ struct ImageEditorView: View {
                             refreshCanvasCursor(in: geometry.size)
                         }
                     )
-                    .allowsHitTesting(false)
+                    .allowsHitTesting(
+                        ImageEditorPrimaryToolPointerCapture.usesDirectCanvasHitTarget(
+                            sidebarTab: viewModel.selectedLeftSidebarTab,
+                            tool: canvasInteractionTool
+                        )
+                    )
                 )
                 .overlay {
                     let imageRect = fittedImageRect(in: geometry.size)
@@ -2570,6 +2715,18 @@ struct ImageEditorView: View {
 
                 switch canvasInteractionTool {
                 case .move:
+                    if !isObjectMoveGestureActive,
+                       !isSelectedObjectMoveGestureActive,
+                       layerTransformCursorTarget(
+                        at: value.startLocation,
+                        in: size
+                       ) != nil {
+                        // Resize/rotate/reference-point handles own this
+                        // sequence. The parent canvas gesture is simultaneous
+                        // with them for component drops, so it must explicitly
+                        // stand down instead of starting a competing move.
+                        return
+                    }
                     if !isDeliveryObjectMoveGestureActive,
                        !isCanvasSelectionGestureActive,
                        !isObjectMoveGestureActive,
@@ -2817,6 +2974,18 @@ struct ImageEditorView: View {
 
                 let endImagePoint = imagePoint(from: value.location, in: size)
                 activeBrushPressure = nil
+                let fallbackBrushSamples = [
+                    imagePoint(from: value.startLocation, in: size),
+                    endImagePoint
+                ].compactMap { $0 }.map {
+                    ImageEditorBrushStrokeSample(
+                        point: $0,
+                        pressure: ImageEditorBrushPressureInput.pressure(from: NSApp.currentEvent)
+                    )
+                }
+                let committedBrushSamples = brushStrokeSamples.count >= 2
+                    ? brushStrokeSamples
+                    : fallbackBrushSamples
 
                 if activeCropHandle != nil {
                     endPendingCropInteraction()
@@ -2869,9 +3038,9 @@ struct ImageEditorView: View {
                 case .quickSelection:
                     viewModel.createQuickSelection(points: dragPoints)
                 case .brush:
-                    viewModel.drawBrush(samples: brushStrokeSamples)
+                    viewModel.drawBrush(samples: committedBrushSamples)
                 case .eraser:
-                    viewModel.drawBrush(samples: brushStrokeSamples, erase: true)
+                    viewModel.drawBrush(samples: committedBrushSamples, erase: true)
                 case .cloneStamp:
                     if viewModel.isSettingCloneSource || NSEvent.modifierFlags.contains(.option), let endImagePoint {
                         viewModel.setCloneSource(at: endImagePoint)
@@ -6062,8 +6231,11 @@ struct ImageEditorView: View {
             .frame(width: 10, height: 10)
             .position(point)
             .contentShape(Rectangle().inset(by: -4))
-            .gesture(
-                DragGesture(minimumDistance: 0)
+            .highPriorityGesture(
+                DragGesture(
+                    minimumDistance: 0,
+                    coordinateSpace: .named("image-editor-canvas-space")
+                )
                     .onChanged { value in
                         if activeResizeHandle == nil {
                             activeResizeHandle = handle
@@ -11763,10 +11935,18 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
                     return nil
                 }
             }
-            if isDelete, relevantFlags.isEmpty, !isTextInputActive, deleteSelectedObject() {
+            if event.type == .keyDown,
+               isDelete,
+               relevantFlags.isEmpty,
+               !isTextInputActive,
+               deleteSelectedObject() {
                 return nil
             }
-            if isDelete, relevantFlags.isEmpty, !isTextInputActive, deleteSelectedHistory() {
+            if event.type == .keyDown,
+               isDelete,
+               relevantFlags.isEmpty,
+               !isTextInputActive,
+               deleteSelectedHistory() {
                 return nil
             }
 
@@ -11780,7 +11960,8 @@ struct ImageEditorKeyboardShortcutMonitor: NSViewRepresentable {
                 return nil
             }
 
-            if let action = ImageEditorKeyboardShortcutAction.resolve(
+            if event.type == .keyDown,
+               let action = ImageEditorKeyboardShortcutAction.resolve(
                 charactersIgnoringModifiers: event.charactersIgnoringModifiers,
                 modifierFlags: event.modifierFlags,
                 keyCode: event.keyCode,

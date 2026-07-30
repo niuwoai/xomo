@@ -13,7 +13,6 @@ enum ImageEditorBrushPressureInput {
         let supportsPressure = event.type == .tabletPoint
             || event.subtype == .tabletPoint
             || event.type == .pressure
-            || event.stage > 0
         return normalizedPressure(
             rawPressure: CGFloat(event.pressure),
             supportsPressure: supportsPressure

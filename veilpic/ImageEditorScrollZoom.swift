@@ -9,6 +9,7 @@
 //
 
 import AppKit
+import Combine
 import SwiftUI
 
 enum ImageEditorCanvasMiddleMousePanGeometry {
@@ -29,6 +30,14 @@ enum ImageEditorObjectDragEventPolicy {
         let deltaX = current.x - start.x
         let deltaY = current.y - start.y
         return hypot(deltaX, deltaY) >= activationDistance
+    }
+
+    static func allowsCandidate(
+        modifierFlags: NSEvent.ModifierFlags,
+        hasTransformTarget: Bool
+    ) -> Bool {
+        let relevantFlags = modifierFlags.intersection([.command, .option, .shift, .control])
+        return relevantFlags.isEmpty && !hasTransformTarget
     }
 
     static func releaseDecision(
@@ -56,9 +65,79 @@ enum ImageEditorObjectDragEventPolicy {
     }
 }
 
+enum ImageEditorPrimaryToolPointerCapture {
+    enum Kind: Equatable {
+        case none
+        case primaryTool
+        case rangeTool
+    }
+
+    static func shouldCapture(
+        sidebarTab: XomoLeftSidebarTab,
+        tool: ImageEditorTool
+    ) -> Bool {
+        guard sidebarTab == .tools else { return false }
+        return switch tool {
+        case .brush, .eraser, .rectangle, .ellipse, .text:
+            true
+        default:
+            false
+        }
+    }
+
+    static func usesDirectCanvasHitTarget(
+        sidebarTab: XomoLeftSidebarTab,
+        tool: ImageEditorTool
+    ) -> Bool {
+        captureKind(sidebarTab: sidebarTab, tool: tool) != .none
+    }
+
+    static func captureKind(
+        sidebarTab: XomoLeftSidebarTab,
+        tool: ImageEditorTool
+    ) -> Kind {
+        guard sidebarTab == .tools else { return .none }
+        if shouldCapture(sidebarTab: sidebarTab, tool: tool) {
+            return .primaryTool
+        }
+        if tool == .marquee || tool == .gradient {
+            return .rangeTool
+        }
+        return .none
+    }
+}
+
+struct ImageEditorPrimaryPointerSample {
+    let location: CGPoint
+    let pressure: CGFloat?
+}
+
+final class ImageEditorCanvasPointerCaptureState: ObservableObject {
+    var activeKind: ImageEditorPrimaryToolPointerCapture.Kind = .none
+    var isRangeToolDragging = false
+    var lastRangeToolPoint: CGPoint?
+    var isPrimaryToolDragging = false
+    var lastPrimaryToolPoint: CGPoint?
+    var primaryToolSamples: [ImageEditorPrimaryPointerSample] = []
+    var isLayerResizing = false
+
+    func reset() {
+        activeKind = .none
+        isRangeToolDragging = false
+        lastRangeToolPoint = nil
+        isPrimaryToolDragging = false
+        lastPrimaryToolPoint = nil
+        primaryToolSamples = []
+        isLayerResizing = false
+    }
+}
+
 /// 覆盖在画布上的滚轮缩放捕获层。自身对鼠标点击完全透明（hitTest 返回 nil），
 /// 不会影响 SwiftUI 的绘制、选择和拖拽平移。
 struct ScrollWheelZoomView: NSViewRepresentable {
+    let pointerCaptureState: ImageEditorCanvasPointerCaptureState
+    let pointerCaptureKind: ImageEditorPrimaryToolPointerCapture.Kind
+    let capturesPrimaryPointer: Bool
     /// 回调参数：本次缩放乘法系数、光标在视口内的坐标（左上原点 y-down）、视口尺寸。
     let onZoom: (_ factor: CGFloat, _ location: CGPoint, _ viewportSize: CGSize) -> Void
     /// macOS 13 的 SwiftUI onHover 不提供坐标；由透明 AppKit 承载层补发
@@ -73,6 +152,21 @@ struct ScrollWheelZoomView: NSViewRepresentable {
     let onRangeToolDragBegan: (_ location: CGPoint) -> Bool
     let onRangeToolDragChanged: (_ location: CGPoint) -> Void
     let onRangeToolDragEnded: (_ location: CGPoint) -> Void
+    /// Brush, shape, and text tools also require a balanced pointer sequence.
+    /// Keeping their primary gesture on the same AppKit event path prevents
+    /// fast drags from losing SwiftUI's `onEnded` callback on macOS 13.
+    let onPrimaryToolDragBegan: (_ location: CGPoint) -> Bool
+    let onPrimaryToolDragChanged: (_ location: CGPoint) -> Void
+    let onPrimaryToolDragEnded: (
+        _ location: CGPoint,
+        _ samples: [ImageEditorPrimaryPointerSample]
+    ) -> Void
+    /// Transform handles need the same balanced AppKit sequence as canvas
+    /// tools on macOS 13; SwiftUI's nested handle gesture can otherwise lose
+    /// the drag to the simultaneous canvas/drop gesture.
+    let onLayerResizeBegan: (_ location: CGPoint) -> Bool
+    let onLayerResizeChanged: (_ location: CGPoint) -> Void
+    let onLayerResizeEnded: (_ location: CGPoint) -> Void
     /// Mouse-down only selects and records a draggable component candidate.
     /// The actual transform transaction starts after a familiar small drag
     /// threshold, so an ordinary click stays cheap and responsive.
@@ -83,6 +177,9 @@ struct ScrollWheelZoomView: NSViewRepresentable {
 
     func makeNSView(context: Context) -> ScrollWheelZoomNSView {
         let view = ScrollWheelZoomNSView()
+        view.pointerCaptureState = pointerCaptureState
+        view.pointerCaptureKind = pointerCaptureKind
+        view.capturesPrimaryPointer = capturesPrimaryPointer
         view.onZoom = onZoom
         view.onMouseMoved = onMouseMoved
         view.onMiddleMousePanBegan = onMiddleMousePanBegan
@@ -91,14 +188,24 @@ struct ScrollWheelZoomView: NSViewRepresentable {
         view.onRangeToolDragBegan = onRangeToolDragBegan
         view.onRangeToolDragChanged = onRangeToolDragChanged
         view.onRangeToolDragEnded = onRangeToolDragEnded
+        view.onPrimaryToolDragBegan = onPrimaryToolDragBegan
+        view.onPrimaryToolDragChanged = onPrimaryToolDragChanged
+        view.onPrimaryToolDragEnded = onPrimaryToolDragEnded
+        view.onLayerResizeBegan = onLayerResizeBegan
+        view.onLayerResizeChanged = onLayerResizeChanged
+        view.onLayerResizeEnded = onLayerResizeEnded
         view.onObjectMoveCandidateBegan = onObjectMoveCandidateBegan
         view.onObjectMoveActivated = onObjectMoveActivated
         view.onObjectMoveChanged = onObjectMoveChanged
         view.onObjectMoveEnded = onObjectMoveEnded
+        view.markAsCurrentPointerHost()
         return view
     }
 
     func updateNSView(_ nsView: ScrollWheelZoomNSView, context: Context) {
+        nsView.pointerCaptureState = pointerCaptureState
+        nsView.pointerCaptureKind = pointerCaptureKind
+        nsView.capturesPrimaryPointer = capturesPrimaryPointer
         nsView.onZoom = onZoom
         nsView.onMouseMoved = onMouseMoved
         nsView.onMiddleMousePanBegan = onMiddleMousePanBegan
@@ -107,10 +214,17 @@ struct ScrollWheelZoomView: NSViewRepresentable {
         nsView.onRangeToolDragBegan = onRangeToolDragBegan
         nsView.onRangeToolDragChanged = onRangeToolDragChanged
         nsView.onRangeToolDragEnded = onRangeToolDragEnded
+        nsView.onPrimaryToolDragBegan = onPrimaryToolDragBegan
+        nsView.onPrimaryToolDragChanged = onPrimaryToolDragChanged
+        nsView.onPrimaryToolDragEnded = onPrimaryToolDragEnded
+        nsView.onLayerResizeBegan = onLayerResizeBegan
+        nsView.onLayerResizeChanged = onLayerResizeChanged
+        nsView.onLayerResizeEnded = onLayerResizeEnded
         nsView.onObjectMoveCandidateBegan = onObjectMoveCandidateBegan
         nsView.onObjectMoveActivated = onObjectMoveActivated
         nsView.onObjectMoveChanged = onObjectMoveChanged
         nsView.onObjectMoveEnded = onObjectMoveEnded
+        nsView.markAsCurrentPointerHost()
     }
 
     static func dismantleNSView(_ nsView: ScrollWheelZoomNSView, coordinator: ()) {
@@ -118,7 +232,83 @@ struct ScrollWheelZoomView: NSViewRepresentable {
     }
 }
 
+final class ImageEditorCanvasPointerGestureRecognizer: NSGestureRecognizer {
+    enum Phase: Equatable {
+        case down
+        case dragged
+        case up
+    }
+
+    /// SwiftUI may replace the representable view after mouse-down (for
+    /// example when a brush stroke updates editor state). Keep the handler
+    /// captured at mouse-down alive until the matching mouse-up so the
+    /// in-flight AppKit gesture cannot be stranded on a rebuilt view.
+    private static var activePointerHandler: ((Phase, NSEvent) -> Void)?
+
+    var onPointerEvent: ((Phase, NSEvent) -> Void)?
+
+    override func mouseDown(with event: NSEvent) {
+        Self.activePointerHandler = onPointerEvent
+        state = .began
+        Self.activePointerHandler?(.down, event)
+    }
+
+    override func mouseDragged(with event: NSEvent) {
+        state = .changed
+        Self.activePointerHandler?(.dragged, event)
+    }
+
+    override func mouseUp(with event: NSEvent) {
+        Self.activePointerHandler?(.up, event)
+        Self.activePointerHandler = nil
+        state = .ended
+    }
+}
+
+final class ImageEditorActiveCanvasPointerTransaction {
+    let kind: ImageEditorPrimaryToolPointerCapture.Kind
+    var lastPoint: CGPoint
+    var lastWindowPoint: CGPoint
+    var samples: [ImageEditorPrimaryPointerSample]
+    let onRangeChanged: ((CGPoint) -> Void)?
+    let onRangeEnded: ((CGPoint) -> Void)?
+    let onPrimaryChanged: ((CGPoint) -> Void)?
+    let onPrimaryEnded: ((CGPoint, [ImageEditorPrimaryPointerSample]) -> Void)?
+
+    init(
+        kind: ImageEditorPrimaryToolPointerCapture.Kind,
+        point: CGPoint,
+        windowPoint: CGPoint,
+        pressure: CGFloat?,
+        onRangeChanged: ((CGPoint) -> Void)? = nil,
+        onRangeEnded: ((CGPoint) -> Void)? = nil,
+        onPrimaryChanged: ((CGPoint) -> Void)? = nil,
+        onPrimaryEnded: ((CGPoint, [ImageEditorPrimaryPointerSample]) -> Void)? = nil
+    ) {
+        self.kind = kind
+        lastPoint = point
+        lastWindowPoint = windowPoint
+        samples = [
+            ImageEditorPrimaryPointerSample(
+                location: point,
+                pressure: pressure
+            )
+        ]
+        self.onRangeChanged = onRangeChanged
+        self.onRangeEnded = onRangeEnded
+        self.onPrimaryChanged = onPrimaryChanged
+        self.onPrimaryEnded = onPrimaryEnded
+    }
+}
+
 final class ScrollWheelZoomNSView: NSView {
+    private static var activePointerTransaction: ImageEditorActiveCanvasPointerTransaction?
+    private static weak var currentPointerHost: ScrollWheelZoomNSView?
+    private static var canvasPointerMonitor: Any?
+
+    var pointerCaptureState = ImageEditorCanvasPointerCaptureState()
+    var pointerCaptureKind: ImageEditorPrimaryToolPointerCapture.Kind = .none
+    var capturesPrimaryPointer = false
     var onZoom: ((CGFloat, CGPoint, CGSize) -> Void)?
     var onMouseMoved: ((CGPoint) -> Void)?
     var onMiddleMousePanBegan: (() -> Void)?
@@ -127,6 +317,15 @@ final class ScrollWheelZoomNSView: NSView {
     var onRangeToolDragBegan: ((_ location: CGPoint) -> Bool)?
     var onRangeToolDragChanged: ((_ location: CGPoint) -> Void)?
     var onRangeToolDragEnded: ((_ location: CGPoint) -> Void)?
+    var onPrimaryToolDragBegan: ((_ location: CGPoint) -> Bool)?
+    var onPrimaryToolDragChanged: ((_ location: CGPoint) -> Void)?
+    var onPrimaryToolDragEnded: ((
+        _ location: CGPoint,
+        _ samples: [ImageEditorPrimaryPointerSample]
+    ) -> Void)?
+    var onLayerResizeBegan: ((_ location: CGPoint) -> Bool)?
+    var onLayerResizeChanged: ((_ location: CGPoint) -> Void)?
+    var onLayerResizeEnded: ((_ location: CGPoint) -> Void)?
     var onObjectMoveCandidateBegan: ((_ location: CGPoint, _ modifierFlags: NSEvent.ModifierFlags) -> Bool)?
     var onObjectMoveActivated: (() -> Bool)?
     var onObjectMoveChanged: ((_ translation: CGSize) -> Void)?
@@ -134,28 +333,76 @@ final class ScrollWheelZoomNSView: NSView {
     private var monitor: Any?
     private var middleMouseMonitor: Any?
     private var mouseMovedMonitor: Any?
-    private var leftMouseMonitor: Any?
     private var isMiddleMousePanning = false
     private var lastMiddleMousePoint: CGPoint?
     private var isObjectMoving = false
+    private var isLayerResizing = false
     private var hasObjectMoveCandidate = false
     private var isObjectMoveCaptureRejected = false
     private var objectMoveStartPoint: CGPoint?
-    private var isRangeToolDragging = false
-    private var lastRangeToolPoint: CGPoint?
+    private lazy var primaryPointerGestureRecognizer: ImageEditorCanvasPointerGestureRecognizer = {
+        let recognizer = ImageEditorCanvasPointerGestureRecognizer()
+        installPrimaryPointerHandler(on: recognizer)
+        return recognizer
+    }()
+
+    override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        addGestureRecognizer(primaryPointerGestureRecognizer)
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        addGestureRecognizer(primaryPointerGestureRecognizer)
+    }
+
+    private func installPrimaryPointerHandler(
+        on recognizer: ImageEditorCanvasPointerGestureRecognizer
+    ) {
+        recognizer.onPointerEvent = { phase, event in
+            _ = self.handleCanvasPointerDrag(event, phase: phase)
+            guard phase == .up else { return }
+            recognizer.onPointerEvent = nil
+            DispatchQueue.main.async { [weak self, weak recognizer] in
+                guard let self, let recognizer else { return }
+                self.installPrimaryPointerHandler(on: recognizer)
+            }
+        }
+    }
 
     // 采用左上原点，坐标系与 SwiftUI 画布对齐，锚点不会上下翻转。
     override var isFlipped: Bool { true }
 
-    // 对所有命中测试透明，滚轮之外的一切鼠标事件都穿透给下方 SwiftUI 视图。
-    override func hitTest(_ point: NSPoint) -> NSView? { nil }
+    // Drawing/range tools use an explicit AppKit tracking loop so SwiftUI's
+    // surrounding drop host cannot take over after mouse-down. Move/component
+    // modes remain transparent for transform handles and drop targets.
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        capturesPrimaryPointer && bounds.contains(point) ? self : nil
+    }
 
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
         if window != nil {
+            markAsCurrentPointerHost()
             installMonitor()
         } else {
             teardownMonitor()
+        }
+    }
+
+    func markAsCurrentPointerHost() {
+        Self.currentPointerHost = self
+        Self.installCanvasPointerMonitorIfNeeded()
+    }
+
+    private static func installCanvasPointerMonitorIfNeeded() {
+        guard canvasPointerMonitor == nil else { return }
+        canvasPointerMonitor = NSEvent.addLocalMonitorForEvents(
+            matching: [.leftMouseDown, .leftMouseDragged, .leftMouseUp]
+        ) { event in
+            guard let host = currentPointerHost else { return event }
+            guard host.handleCanvasPointerDrag(event) else { return event }
+            return nil
         }
     }
 
@@ -182,15 +429,6 @@ final class ScrollWheelZoomNSView: NSView {
                 return event
             }
         }
-        if leftMouseMonitor == nil {
-            leftMouseMonitor = NSEvent.addLocalMonitorForEvents(
-                matching: [.leftMouseDown, .leftMouseDragged, .leftMouseUp]
-            ) { [weak self] event in
-                guard let self else { return event }
-                guard self.handleCanvasPointerDrag(event) else { return event }
-                return nil
-            }
-        }
     }
 
     func teardownMonitor() {
@@ -206,10 +444,6 @@ final class ScrollWheelZoomNSView: NSView {
             NSEvent.removeMonitor(mouseMovedMonitor)
         }
         mouseMovedMonitor = nil
-        if let leftMouseMonitor {
-            NSEvent.removeMonitor(leftMouseMonitor)
-        }
-        leftMouseMonitor = nil
         if isObjectMoving {
             onObjectMoveEnded?()
         }
@@ -217,8 +451,6 @@ final class ScrollWheelZoomNSView: NSView {
         hasObjectMoveCandidate = false
         isObjectMoveCaptureRejected = false
         objectMoveStartPoint = nil
-        isRangeToolDragging = false
-        lastRangeToolPoint = nil
         if isMiddleMousePanning {
             onMiddleMousePanEnded?()
         }
@@ -241,11 +473,77 @@ final class ScrollWheelZoomNSView: NSView {
     /// begins a range tool or hits a movable Xomo object, this monitor owns
     /// that complete pointer sequence so SwiftUI's canvas gesture cannot race
     /// the document transaction. All unrelated events pass through untouched.
-    private func handleCanvasPointerDrag(_ event: NSEvent) -> Bool {
-        guard let window, event.buttonNumber == 0 else { return false }
+    private func handleCanvasPointerDrag(
+        _ event: NSEvent,
+        phase explicitPhase: ImageEditorCanvasPointerGestureRecognizer.Phase? = nil
+    ) -> Bool {
+        if let explicitPhase,
+           explicitPhase != .down,
+           let transaction = Self.activePointerTransaction {
+            let location = convert(event.locationInWindow, from: nil)
+            switch explicitPhase {
+            case .dragged:
+                transaction.lastPoint = location
+                switch transaction.kind {
+                case .rangeTool:
+                    transaction.onRangeChanged?(location)
+                case .primaryTool:
+                    transaction.samples.append(
+                        ImageEditorPrimaryPointerSample(
+                            location: location,
+                            pressure: ImageEditorBrushPressureInput.pressure(from: event)
+                        )
+                    )
+                    transaction.onPrimaryChanged?(location)
+                case .none:
+                    break
+                }
+            case .up:
+                Self.activePointerTransaction = nil
+                switch transaction.kind {
+                case .rangeTool:
+                    transaction.onRangeEnded?(location)
+                case .primaryTool:
+                    transaction.samples.append(
+                        ImageEditorPrimaryPointerSample(
+                            location: location,
+                            pressure: ImageEditorBrushPressureInput.pressure(from: event)
+                        )
+                    )
+                    transaction.onPrimaryEnded?(location, transaction.samples)
+                case .none:
+                    break
+                }
+                pointerCaptureState.reset()
+            case .down:
+                break
+            }
+            return true
+        }
 
-        switch event.type {
-        case .leftMouseDown:
+        guard let window = event.window ?? self.window else { return false }
+        if explicitPhase == nil, event.buttonNumber != 0 {
+            return false
+        }
+        let phase: ImageEditorCanvasPointerGestureRecognizer.Phase?
+        if let explicitPhase {
+            phase = explicitPhase
+        } else {
+            switch event.type {
+            case .leftMouseDown:
+                phase = .down
+            case .leftMouseDragged:
+                phase = .dragged
+            case .leftMouseUp:
+                phase = .up
+            default:
+                phase = nil
+            }
+        }
+
+        switch phase {
+        case .down:
+            pointerCaptureState.reset()
             if hasObjectMoveCandidate || isObjectMoving {
                 cancelStaleObjectMoveCapture()
             }
@@ -256,9 +554,42 @@ final class ScrollWheelZoomNSView: NSView {
             guard bounds.contains(location) else {
                 return false
             }
+            let primaryAccepted = onPrimaryToolDragBegan?(location) == true
+            if primaryAccepted {
+                pointerCaptureState.activeKind = .primaryTool
+                pointerCaptureState.lastPrimaryToolPoint = location
+                pointerCaptureState.primaryToolSamples = [
+                    ImageEditorPrimaryPointerSample(
+                        location: location,
+                        pressure: ImageEditorBrushPressureInput.pressure(from: event)
+                    )
+                ]
+                Self.activePointerTransaction = ImageEditorActiveCanvasPointerTransaction(
+                        kind: .primaryTool,
+                        point: location,
+                        windowPoint: event.locationInWindow,
+                        pressure: ImageEditorBrushPressureInput.pressure(from: event),
+                        onPrimaryChanged: onPrimaryToolDragChanged,
+                        onPrimaryEnded: onPrimaryToolDragEnded
+                    )
+                return true
+            }
             if onRangeToolDragBegan?(location) == true {
-                isRangeToolDragging = true
-                lastRangeToolPoint = location
+                pointerCaptureState.activeKind = .rangeTool
+                pointerCaptureState.lastRangeToolPoint = location
+                Self.activePointerTransaction = ImageEditorActiveCanvasPointerTransaction(
+                        kind: .rangeTool,
+                        point: location,
+                        windowPoint: event.locationInWindow,
+                        pressure: nil,
+                        onRangeChanged: onRangeToolDragChanged,
+                        onRangeEnded: onRangeToolDragEnded
+                    )
+                return true
+            }
+            if onLayerResizeBegan?(location) == true {
+                isLayerResizing = true
+                pointerCaptureState.isLayerResizing = true
                 return true
             }
             let flags = event.modifierFlags.intersection([.command, .option, .shift, .control])
@@ -267,12 +598,53 @@ final class ScrollWheelZoomNSView: NSView {
             isObjectMoveCaptureRejected = false
             objectMoveStartPoint = location
             return true
-        case .leftMouseDragged:
-            if isRangeToolDragging {
+        case .dragged:
+            if let transaction = Self.activePointerTransaction {
+                let location = event.window == nil
+                    ? transaction.lastPoint
+                    : convert(event.locationInWindow, from: nil)
+                transaction.lastPoint = location
+                switch transaction.kind {
+                case .rangeTool:
+                    transaction.onRangeChanged?(location)
+                case .primaryTool:
+                    transaction.samples.append(
+                        ImageEditorPrimaryPointerSample(
+                            location: location,
+                            pressure: ImageEditorBrushPressureInput.pressure(from: event)
+                        )
+                    )
+                    transaction.onPrimaryChanged?(location)
+                case .none:
+                    break
+                }
+                return true
+            }
+            if pointerCaptureState.activeKind == .rangeTool {
                 guard event.window === window else { return true }
                 let location = convert(event.locationInWindow, from: nil)
-                lastRangeToolPoint = location
+                pointerCaptureState.lastRangeToolPoint = location
                 onRangeToolDragChanged?(location)
+                return true
+            }
+            if pointerCaptureState.activeKind == .primaryTool {
+                guard event.window === window else { return true }
+                let location = convert(event.locationInWindow, from: nil)
+                pointerCaptureState.lastPrimaryToolPoint = location
+                pointerCaptureState.primaryToolSamples.append(
+                    ImageEditorPrimaryPointerSample(
+                        location: location,
+                        pressure: ImageEditorBrushPressureInput.pressure(from: event)
+                    )
+                )
+                onPrimaryToolDragChanged?(location)
+                return true
+            }
+            if isLayerResizing || pointerCaptureState.isLayerResizing {
+                let location = event.window == nil
+                    ? .zero
+                    : convert(event.locationInWindow, from: nil)
+                onLayerResizeChanged?(location)
                 return true
             }
             guard event.window === window else { return hasObjectMoveCandidate }
@@ -300,17 +672,70 @@ final class ScrollWheelZoomNSView: NSView {
                 height: location.y - objectMoveStartPoint.y
             ))
             return true
-        case .leftMouseUp:
-            if isRangeToolDragging {
+        case .up:
+            if let transaction = Self.activePointerTransaction {
+                Self.activePointerTransaction = nil
+                let location = event.window == nil
+                    ? transaction.lastPoint
+                    : convert(event.locationInWindow, from: nil)
+                switch transaction.kind {
+                case .rangeTool:
+                    transaction.onRangeEnded?(location)
+                case .primaryTool:
+                    transaction.samples.append(
+                        ImageEditorPrimaryPointerSample(
+                            location: location,
+                            pressure: ImageEditorBrushPressureInput.pressure(from: event)
+                        )
+                    )
+                    transaction.onPrimaryEnded?(location, transaction.samples)
+                case .none:
+                    break
+                }
+                pointerCaptureState.reset()
+                return true
+            }
+            if pointerCaptureState.activeKind == .rangeTool {
                 let location: CGPoint
                 if event.window === window {
                     location = convert(event.locationInWindow, from: nil)
                 } else {
-                    location = lastRangeToolPoint ?? .zero
+                    location = pointerCaptureState.lastRangeToolPoint ?? .zero
                 }
                 onRangeToolDragEnded?(location)
-                isRangeToolDragging = false
-                lastRangeToolPoint = nil
+                pointerCaptureState.lastRangeToolPoint = nil
+                pointerCaptureState.activeKind = .none
+                return true
+            }
+            if pointerCaptureState.activeKind == .primaryTool {
+                let location: CGPoint
+                if event.window === window {
+                    location = convert(event.locationInWindow, from: nil)
+                } else {
+                    location = pointerCaptureState.lastPrimaryToolPoint ?? .zero
+                }
+                pointerCaptureState.primaryToolSamples.append(
+                    ImageEditorPrimaryPointerSample(
+                        location: location,
+                        pressure: ImageEditorBrushPressureInput.pressure(from: event)
+                    )
+                )
+                onPrimaryToolDragEnded?(
+                    location,
+                    pointerCaptureState.primaryToolSamples
+                )
+                pointerCaptureState.lastPrimaryToolPoint = nil
+                pointerCaptureState.primaryToolSamples = []
+                pointerCaptureState.activeKind = .none
+                return true
+            }
+            if isLayerResizing || pointerCaptureState.isLayerResizing {
+                let location = event.window == nil
+                    ? .zero
+                    : convert(event.locationInWindow, from: nil)
+                onLayerResizeEnded?(location)
+                isLayerResizing = false
+                pointerCaptureState.isLayerResizing = false
                 return true
             }
             // A local monitor may still receive the release after the pointer
@@ -331,7 +756,7 @@ final class ScrollWheelZoomNSView: NSView {
             isObjectMoveCaptureRejected = false
             objectMoveStartPoint = nil
             return releaseDecision.shouldConsumeEvent
-        default:
+        case .none:
             return false
         }
     }
@@ -344,6 +769,62 @@ final class ScrollWheelZoomNSView: NSView {
         hasObjectMoveCandidate = false
         isObjectMoveCaptureRejected = false
         objectMoveStartPoint = nil
+    }
+
+    private static func continueActivePointerTransaction(
+        phase: ImageEditorCanvasPointerGestureRecognizer.Phase,
+        event: NSEvent
+    ) {
+        guard phase != .down,
+              let transaction = activePointerTransaction
+        else { return }
+        let windowPoint = event.locationInWindow
+        let delta = CGPoint(
+            x: windowPoint.x - transaction.lastWindowPoint.x,
+            y: windowPoint.y - transaction.lastWindowPoint.y
+        )
+        let location = CGPoint(
+            x: transaction.lastPoint.x + delta.x,
+            y: transaction.lastPoint.y - delta.y
+        )
+        transaction.lastWindowPoint = windowPoint
+        transaction.lastPoint = location
+
+        switch phase {
+        case .dragged:
+            switch transaction.kind {
+            case .rangeTool:
+                transaction.onRangeChanged?(location)
+            case .primaryTool:
+                transaction.samples.append(
+                    ImageEditorPrimaryPointerSample(
+                        location: location,
+                        pressure: ImageEditorBrushPressureInput.pressure(from: event)
+                    )
+                )
+                transaction.onPrimaryChanged?(location)
+            case .none:
+                break
+            }
+        case .up:
+            activePointerTransaction = nil
+            switch transaction.kind {
+            case .rangeTool:
+                transaction.onRangeEnded?(location)
+            case .primaryTool:
+                transaction.samples.append(
+                    ImageEditorPrimaryPointerSample(
+                        location: location,
+                        pressure: ImageEditorBrushPressureInput.pressure(from: event)
+                    )
+                )
+                transaction.onPrimaryEnded?(location, transaction.samples)
+            case .none:
+                break
+            }
+        case .down:
+            break
+        }
     }
 
     /// 返回 true 表示已处理并应消费该滚轮事件。

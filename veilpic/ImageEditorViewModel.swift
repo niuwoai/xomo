@@ -72,6 +72,7 @@ final class ImageEditorViewModel: ObservableObject {
     static let maximumZoom: CGFloat = 8
     static let figmaImageFillScaleModes = ["FILL", "FIT", "CROP", "TILE", "STRETCH"]
 
+    let canvasPointerCaptureState = ImageEditorCanvasPointerCaptureState()
     private var preservesRenderedImageCachesForNextDocumentMutation = false
 
     @Published var document: ImageEditorDocument {

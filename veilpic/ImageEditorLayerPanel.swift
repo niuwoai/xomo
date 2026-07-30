@@ -2076,10 +2076,6 @@ extension ImageEditorView {
             .padding(.vertical, 8)
             .background(layerRowBackground(layer))
             .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
-            .onDrag {
-                viewModel.selectLayer(layer.id)
-                return NSItemProvider(object: layer.id.uuidString as NSString)
-            }
             .onDrop(
                 of: [UTType.plainText],
                 delegate: ImageEditorLayerDropDelegate(
@@ -2264,38 +2260,46 @@ extension ImageEditorView {
     }
 
     private func layerContentButton(_ layer: ImageEditorLayer) -> some View {
-        HStack(spacing: 8) {
-            layerLabelColorSwatch(layer)
-            layerThumbnail(layer)
-            layerRasterMaskThumbnail(layer)
-            layerVectorMaskThumbnail(layer)
-            layerNameEditor(layer)
-            Spacer()
-            layerBadges(layer)
-            layerLockToggles(layer)
-            Text("\(Int((layer.opacity * 100).rounded()))%")
-                .font(.system(size: 11, weight: .medium).monospacedDigit())
-                .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
-                .lineLimit(1)
-                .fixedSize(horizontal: true, vertical: false)
-                .frame(minWidth: 32, alignment: .trailing)
-        }
-        .contentShape(Rectangle())
-        .onTapGesture {
-            let flags = NSEvent.modifierFlags
-            if flags.contains(.shift) {
-                viewModel.selectLayerRange(
-                    to: layer.id,
-                    among: filteredVisibleLayerRows.map(\.id),
-                    addingToSelection: flags.contains(.command)
-                )
-            } else {
-                viewModel.selectLayer(
-                    layer.id,
-                    editingMask: false,
-                    extendingSelection: flags.contains(.command)
-                )
+        Button {
+            selectLayerFromPanel(layer)
+        } label: {
+            HStack(spacing: 8) {
+                layerLabelColorSwatch(layer)
+                layerThumbnail(layer)
+                layerRasterMaskThumbnail(layer)
+                layerVectorMaskThumbnail(layer)
+                layerNameEditor(layer)
+                Spacer()
+                layerBadges(layer)
+                layerLockToggles(layer)
+                Text("\(Int((layer.opacity * 100).rounded()))%")
+                    .font(.system(size: 11, weight: .medium).monospacedDigit())
+                    .foregroundStyle(Color(nsColor: ImageEditorTheme.mutedText))
+                    .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
+                    .frame(minWidth: 32, alignment: .trailing)
             }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .focusable(false)
+        .accessibilityIdentifier("image-editor-layer-content-\(layer.id.uuidString)")
+    }
+
+    private func selectLayerFromPanel(_ layer: ImageEditorLayer) {
+        let flags = NSEvent.modifierFlags
+        if flags.contains(.shift) {
+            viewModel.selectLayerRange(
+                to: layer.id,
+                among: filteredVisibleLayerRows.map(\.id),
+                addingToSelection: flags.contains(.command)
+            )
+        } else {
+            viewModel.selectLayer(
+                layer.id,
+                editingMask: false,
+                extendingSelection: flags.contains(.command)
+            )
         }
     }
 

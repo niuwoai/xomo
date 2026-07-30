@@ -338,8 +338,15 @@ struct ImageEditorSelectionOperationTests {
         let canvasSize = NSSize(width: 40, height: 30)
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: solidImage(color: .systemRed, size: canvasSize)) { _ in }
 
-        viewModel.convertBackgroundToLayer()
         let sourceLayerID = try #require(viewModel.document.selectedLayerID)
+        let sourceLayerIndex = try #require(
+            viewModel.document.layers.firstIndex { $0.id == sourceLayerID }
+        )
+        viewModel.document.layers[sourceLayerIndex].image = solidImage(
+            color: .systemRed,
+            size: canvasSize
+        )
+        let originalLayerCount = viewModel.document.layers.count
         viewModel.document.selection = ImageEditorSelection.rectangle(CGRect(x: 6, y: 4, width: 16, height: 12))
 
         #expect(viewModel.canDuplicateSelectionOrSelectedLayer)
@@ -349,12 +356,32 @@ struct ImageEditorSelectionOperationTests {
         let copiedInside = try #require(copiedLayer.image.color(at: CGPoint(x: 8, y: 6))?.usingColorSpace(.deviceRGB))
         let copiedOutside = try #require(copiedLayer.image.color(at: CGPoint(x: 2, y: 2))?.usingColorSpace(.deviceRGB))
 
-        #expect(viewModel.document.layers.count == 2)
+        #expect(viewModel.document.layers.count == originalLayerCount + 1)
         #expect(copiedLayer.id != sourceLayerID)
         #expect(copiedInside.redComponent > 0.75)
         #expect(copiedInside.alphaComponent > 0.95)
         #expect(copiedOutside.alphaComponent < 0.05)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.selectionCopyLayer"))
+    }
+
+    @Test func imageEditorCommandJDuplicatesSelectedGroupWhenSelectionCannotBeCopied() async throws {
+        let canvasSize = NSSize(width: 40, height: 30)
+        let viewModel = ImageEditorViewModel(sourceName: "source.png", image: solidImage(color: .systemRed, size: canvasSize)) { _ in }
+
+        viewModel.addLayerGroup()
+        let sourceGroupID = try #require(viewModel.document.selectedLayerID)
+        let sourceGroupName = try #require(viewModel.document.selectedLayer?.name)
+        viewModel.document.selection = ImageEditorSelection.rectangle(CGRect(x: 6, y: 4, width: 16, height: 12))
+
+        #expect(viewModel.canDuplicateSelectionOrSelectedLayer)
+        #expect(!viewModel.canCopySelectionToNewLayer)
+        viewModel.duplicateSelectionOrSelectedLayer()
+
+        let copiedGroup = try #require(viewModel.document.selectedLayer)
+        #expect(copiedGroup.isGroup)
+        #expect(copiedGroup.id != sourceGroupID)
+        #expect(copiedGroup.name == L10n.format("imageEditor.layer.copyName", sourceGroupName))
+        #expect(viewModel.document.selection != nil)
     }
 
     @Test func imageEditorBatchEditsSelectionPixelsAcrossSelectedPixelLayersAndSkipsLockedOrIneligibleLayers() async throws {

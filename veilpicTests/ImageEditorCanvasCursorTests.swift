@@ -437,6 +437,166 @@ struct ImageEditorCanvasCursorTests {
         )
     }
 
+    @Test func transformHandlesWinBeforeComponentMoveCapture() {
+        #expect(
+            ImageEditorObjectDragEventPolicy.allowsCandidate(
+                modifierFlags: [],
+                hasTransformTarget: false
+            )
+        )
+        #expect(
+            !ImageEditorObjectDragEventPolicy.allowsCandidate(
+                modifierFlags: [],
+                hasTransformTarget: true
+            )
+        )
+        #expect(
+            !ImageEditorObjectDragEventPolicy.allowsCandidate(
+                modifierFlags: [.shift],
+                hasTransformTarget: false
+            )
+        )
+    }
+
+    @Test func primaryDrawingToolsUseBalancedAppKitPointerCaptureOnlyInToolsMode() {
+        for tool in [ImageEditorTool.brush, .eraser, .rectangle, .ellipse, .text] {
+            #expect(
+                ImageEditorPrimaryToolPointerCapture.shouldCapture(
+                    sidebarTab: .tools,
+                    tool: tool
+                )
+            )
+            #expect(
+                !ImageEditorPrimaryToolPointerCapture.shouldCapture(
+                    sidebarTab: .components,
+                    tool: tool
+                )
+            )
+        }
+
+        for tool in [ImageEditorTool.move, .marquee, .gradient, .hand, .zoom] {
+            #expect(
+                !ImageEditorPrimaryToolPointerCapture.shouldCapture(
+                    sidebarTab: .tools,
+                    tool: tool
+                )
+            )
+        }
+
+        for tool in [ImageEditorTool.brush, .eraser, .rectangle, .ellipse, .text, .marquee, .gradient] {
+            #expect(
+                ImageEditorPrimaryToolPointerCapture.usesDirectCanvasHitTarget(
+                    sidebarTab: .tools,
+                    tool: tool
+                )
+            )
+            #expect(
+                !ImageEditorPrimaryToolPointerCapture.usesDirectCanvasHitTarget(
+                    sidebarTab: .components,
+                    tool: tool
+                )
+            )
+        }
+        for tool in [
+            ImageEditorTool.move,
+            .hand,
+            .zoom,
+        ] {
+            #expect(
+                !ImageEditorPrimaryToolPointerCapture.usesDirectCanvasHitTarget(
+                    sidebarTab: .tools,
+                    tool: tool
+                )
+            )
+        }
+    }
+
+    @Test func brushCommitKeepsAStartAndEndFallbackWhenDragUpdatesAreCoalesced() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let viewSource = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let monitorSource = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorScrollZoom.swift"),
+            encoding: .utf8
+        )
+        let pressureSource = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorBrushPressure.swift"),
+            encoding: .utf8
+        )
+
+        #expect(viewSource.contains("let fallbackBrushSamples = ["))
+        #expect(viewSource.contains("brushStrokeSamples.count >= 2"))
+        #expect(viewSource.contains("viewModel.drawBrush(samples: committedBrushSamples)"))
+        #expect(viewSource.contains(".allowsHitTesting("))
+        #expect(viewSource.contains("ImageEditorPrimaryToolPointerCapture.usesDirectCanvasHitTarget("))
+        #expect(
+            monitorSource.contains(
+                "var samples: [ImageEditorPrimaryPointerSample]"
+            )
+        )
+        #expect(monitorSource.contains("transaction.onPrimaryEnded?(location, transaction.samples)"))
+        #expect(monitorSource.contains("ImageEditorBrushPressureInput.pressure(from: event)"))
+        #expect(monitorSource.contains("private static var canvasPointerMonitor: Any?"))
+        #expect(monitorSource.contains("guard let host = currentPointerHost else { return event }"))
+        #expect(viewSource.contains("if event.type == .keyDown,\n               isDelete,"))
+        #expect(viewSource.contains("if event.type == .keyDown,\n               let action = ImageEditorKeyboardShortcutAction.resolve("))
+        #expect(!pressureSource.contains("event.stage"))
+        #expect(monitorSource.contains("onLayerResizeBegan?(location) == true"))
+        #expect(monitorSource.contains("pointerCaptureState.isLayerResizing = true"))
+        #expect(monitorSource.contains("onLayerResizeChanged?(location)"))
+        #expect(monitorSource.contains("onLayerResizeEnded?(location)"))
+        #expect(viewSource.contains("onLayerResizeBegan: { location in"))
+        #expect(viewSource.contains("viewModel.beginResizingSelectedLayer(handle: handle)"))
+        #expect(viewSource.contains("viewModel.finishResizingSelectedLayer()"))
+    }
+
+    @Test func canvasMoveGestureYieldsToTransformHandles() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let viewSource = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(viewSource.contains("layerTransformCursorTarget("))
+        #expect(viewSource.contains("at: value.startLocation"))
+        #expect(viewSource.contains("The parent canvas gesture is simultaneous"))
+    }
+
+    @Test func commandJUsesOnlyTheWindowShortcutMonitor() throws {
+        #expect(
+            ImageEditorKeyboardShortcutAction.resolve(
+                charactersIgnoringModifiers: "j",
+                modifierFlags: [.command]
+            ) == .duplicateSelectionOrLayer
+        )
+        #expect(
+            ImageEditorKeyboardShortcutAction.resolve(
+                charactersIgnoringModifiers: "j",
+                modifierFlags: [.command, .shift]
+            ) == .cutSelectionToLayer
+        )
+
+        let menuSource = try String(
+            contentsOf: URL(fileURLWithPath: #filePath)
+                .deletingLastPathComponent()
+                .deletingLastPathComponent()
+                .appendingPathComponent("veilpic/ImageEditorMenuBar.swift"),
+            encoding: .utf8
+        )
+        let layerMenuStart = try #require(menuSource.range(of: "private var layerMenu: some View"))
+        let selectMenuStart = try #require(
+            menuSource[layerMenuStart.upperBound...].range(of: "private var selectMenu: some View")
+        )
+        let layerMenuSource = menuSource[layerMenuStart.lowerBound..<selectMenuStart.lowerBound]
+        #expect(!layerMenuSource.contains(".keyboardShortcut(\"j\""))
+    }
+
     @Test func componentTilesDoNotCombineNativeButtonTrackingWithDragSources() throws {
         let source = try String(
             contentsOf: URL(fileURLWithPath: #filePath)
