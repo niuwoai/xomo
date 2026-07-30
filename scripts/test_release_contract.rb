@@ -11,9 +11,10 @@ class ReleaseContractTest < Minitest::Test
     result = XomoReleaseContract.collect(File.expand_path("..", __dir__))
 
     assert result["passed"], result.inspect
-    assert_equal "2.12.0-rc571", result["version"]
-    assert_equal ["2.12.0-rc571"], result["project_versions"]
-    assert_equal ["571"], result["build_versions"]
+    assert_equal "2.12.0-rc572", result["version"]
+    assert_equal ["2.12.0-rc572"], result["project_versions"]
+    assert_equal ["572"], result["build_versions"]
+    assert result["checks"]["release_signing_requests_secure_timestamp"]
     assert result["checks"]["release_entitlements_are_hardened"]
   end
 
@@ -61,6 +62,17 @@ class ReleaseContractTest < Minitest::Test
     end
   end
 
+  def test_missing_secure_timestamp_fails_the_contract
+    with_fixture do |root|
+      write_fixture(root, secure_timestamp: false)
+
+      result = XomoReleaseContract.collect(root)
+
+      refute result["passed"]
+      refute result["checks"]["release_signing_requests_secure_timestamp"]
+    end
+  end
+
   private
 
   def with_fixture
@@ -73,7 +85,8 @@ class ReleaseContractTest < Minitest::Test
     cli_version: version,
     deployment_target: "13.0",
     build_version: version[/-rc(\d+)\z/, 1],
-    release_debuggable: false
+    release_debuggable: false,
+    secure_timestamp: true
   )
     FileUtils.mkdir_p(File.join(root, "veilpic.xcodeproj"))
     FileUtils.mkdir_p(File.join(root, "veilpic"))
@@ -89,6 +102,7 @@ class ReleaseContractTest < Minitest::Test
       PRODUCT_BUNDLE_IDENTIFIER = im.some.xomo;
       PRODUCT_BUNDLE_IDENTIFIER = im.some.xomoTests;
       PRODUCT_BUNDLE_IDENTIFIER = im.some.xomoUITests;
+      #{"OTHER_CODE_SIGN_FLAGS = \"--timestamp\";" if secure_timestamp}
     PBX
     File.write(File.join(root, "scripts/build_xomo_cli_release.sh"), "swift build --arch arm64 --arch x86_64\n")
     File.write(File.join(root, "scripts/release.sh"), "xcodebuild archive\nxcodebuild -exportArchive\n")

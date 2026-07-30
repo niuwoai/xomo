@@ -36,6 +36,7 @@ module XomoReleaseContract
       "cli_release_is_universal" => cli_release.include?("--arch arm64") && cli_release.include?("--arch x86_64"),
       "release_entrypoint_present" => release.include?("xcodebuild") && release.include?("-exportArchive"),
       "isolated_test_entrypoint_present" => isolated_tests.include?("build-for-testing") && isolated_tests.include?("test-without-building"),
+      "release_signing_requests_secure_timestamp" => project.include?('OTHER_CODE_SIGN_FLAGS = "--timestamp";'),
       "release_entitlements_are_hardened" =>
         release_entitlements.include?("com.apple.security.app-sandbox") &&
         release_entitlements.include?("com.apple.security.files.user-selected.read-write") &&

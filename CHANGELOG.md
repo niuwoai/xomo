@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.12.0-rc572 - 2026-07-30
+
+### Fixed
+- Xomo 的 Release 目标显式向 Apple 请求安全代码签名时间戳，修复 Xcode 26 归档在 Developer ID 主应用签名阶段报错 `A timestamp was expected but was not found`、从而无法进入公证与发布的问题。
+
+### Verification
+- 首次 rc571 正式发布完整完成 arm64 与 x86_64 编译，但在主应用签名阶段按预期停止，未生成或上传 DMG；对失败临时产物显式使用 `--timestamp` 后签名成功，确认身份、证书和 Apple 时间戳服务正常。
+- 发布契约新增安全时间戳防回归检查，避免以后再次依赖 Xcode 的隐式签名参数。
+
 ## 2.12.0-rc571 - 2026-07-30
 
 ### Added
