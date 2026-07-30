@@ -554,6 +554,12 @@ final class ScrollWheelZoomNSView: NSView {
             guard bounds.contains(location) else {
                 return false
             }
+            // Remote desktops, accessibility clients and pointer warps can
+            // deliver mouse-down at a new location without a preceding
+            // mouseMoved event. Refresh the semantic pointer state before
+            // capture arbitration so the first click already shows the
+            // active tool cursor (or the component library's native arrow).
+            onMouseMoved?(location)
             let primaryAccepted = onPrimaryToolDragBegan?(location) == true
             if primaryAccepted {
                 pointerCaptureState.activeKind = .primaryTool

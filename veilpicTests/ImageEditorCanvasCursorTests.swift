@@ -559,6 +559,26 @@ struct ImageEditorCanvasCursorTests {
         #expect(viewSource.contains("viewModel.finishResizingSelectedLayer()"))
     }
 
+    @Test func pointerDownRefreshesTheSemanticCursorBeforeCaptureArbitration() throws {
+        let repositoryRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let source = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorScrollZoom.swift"),
+            encoding: .utf8
+        )
+        let downStart = try #require(source.range(of: "case .down:\n"))
+        let primaryCapture = try #require(
+            source[downStart.upperBound...].range(
+                of: "let primaryAccepted = onPrimaryToolDragBegan?(location) == true"
+            )
+        )
+        let downPrefix = source[downStart.lowerBound..<primaryCapture.lowerBound]
+
+        #expect(downPrefix.contains("guard bounds.contains(location)"))
+        #expect(downPrefix.contains("onMouseMoved?(location)"))
+    }
+
     @Test func canvasMoveGestureYieldsToTransformHandles() throws {
         let repositoryRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
