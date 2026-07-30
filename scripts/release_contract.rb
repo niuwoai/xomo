@@ -25,6 +25,9 @@ module XomoReleaseContract
     bundle_ids = project.scan(/PRODUCT_BUNDLE_IDENTIFIER = ([^;]+);/).flatten.map { |value| value.strip.delete('"') }.uniq
     deployment_targets = project.scan(/MACOSX_DEPLOYMENT_TARGET = ([^;]+);/).flatten.map { |value| value.strip.delete('"') }.uniq
     expected_build_version = app_version&.match(/-rc(\d+)\z/)&.[](1)
+    app_release_settings = project.scan(/buildSettings = \{\n(.*?)\n\s*\};/m).flatten.find do |settings|
+      settings.include?("CODE_SIGN_ENTITLEMENTS = veilpic/Release.entitlements;")
+    end
 
     checks = {
       "app_and_cli_version_match" => !app_version.nil? && app_version == cli_version,
@@ -36,7 +39,8 @@ module XomoReleaseContract
       "cli_release_is_universal" => cli_release.include?("--arch arm64") && cli_release.include?("--arch x86_64"),
       "release_entrypoint_present" => release.include?("xcodebuild") && release.include?("-exportArchive"),
       "isolated_test_entrypoint_present" => isolated_tests.include?("build-for-testing") && isolated_tests.include?("test-without-building"),
-      "release_signing_requests_secure_timestamp" => project.include?('OTHER_CODE_SIGN_FLAGS = "--timestamp";'),
+      "release_signing_requests_secure_timestamp" =>
+        !app_release_settings.nil? && app_release_settings.include?('OTHER_CODE_SIGN_FLAGS = "--timestamp";'),
       "release_entitlements_are_hardened" =>
         release_entitlements.include?("com.apple.security.app-sandbox") &&
         release_entitlements.include?("com.apple.security.files.user-selected.read-write") &&

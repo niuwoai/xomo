@@ -11,9 +11,9 @@ class ReleaseContractTest < Minitest::Test
     result = XomoReleaseContract.collect(File.expand_path("..", __dir__))
 
     assert result["passed"], result.inspect
-    assert_equal "2.12.0-rc572", result["version"]
-    assert_equal ["2.12.0-rc572"], result["project_versions"]
-    assert_equal ["572"], result["build_versions"]
+    assert_equal "2.12.0-rc573", result["version"]
+    assert_equal ["2.12.0-rc573"], result["project_versions"]
+    assert_equal ["573"], result["build_versions"]
     assert result["checks"]["release_signing_requests_secure_timestamp"]
     assert result["checks"]["release_entitlements_are_hardened"]
   end
@@ -96,13 +96,16 @@ class ReleaseContractTest < Minitest::Test
     File.write(File.join(root, "veilpic/AppModels.swift"), "enum AppVersion { static let current = \"#{version}\" }\n")
     File.write(File.join(root, "xomo-cli/Sources/XomoCLI/main.swift"), "private let xomoCLIVersion = \"#{cli_version}\"\n")
     File.write(File.join(root, "veilpic.xcodeproj/project.pbxproj"), <<~PBX)
-      CURRENT_PROJECT_VERSION = #{build_version};
-      MACOSX_DEPLOYMENT_TARGET = #{deployment_target};
-      MARKETING_VERSION = #{version};
-      PRODUCT_BUNDLE_IDENTIFIER = im.some.xomo;
-      PRODUCT_BUNDLE_IDENTIFIER = im.some.xomoTests;
-      PRODUCT_BUNDLE_IDENTIFIER = im.some.xomoUITests;
-      #{"OTHER_CODE_SIGN_FLAGS = \"--timestamp\";" if secure_timestamp}
+      buildSettings = {
+        CODE_SIGN_ENTITLEMENTS = veilpic/Release.entitlements;
+        CURRENT_PROJECT_VERSION = #{build_version};
+        MACOSX_DEPLOYMENT_TARGET = #{deployment_target};
+        MARKETING_VERSION = #{version};
+        PRODUCT_BUNDLE_IDENTIFIER = im.some.xomo;
+        PRODUCT_BUNDLE_IDENTIFIER = im.some.xomoTests;
+        PRODUCT_BUNDLE_IDENTIFIER = im.some.xomoUITests;
+        #{"OTHER_CODE_SIGN_FLAGS = \"--timestamp\";" if secure_timestamp}
+      };
     PBX
     File.write(File.join(root, "scripts/build_xomo_cli_release.sh"), "swift build --arch arm64 --arch x86_64\n")
     File.write(File.join(root, "scripts/release.sh"), "xcodebuild archive\nxcodebuild -exportArchive\n")
