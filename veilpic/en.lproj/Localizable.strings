@@ -578,6 +578,9 @@
 "imageEditor.option.pressureHelp" = "Use pen pressure to control brush size and flow";
 "imageEditor.option.pressureLiveHelp" = "Shows live stylus pressure; an ordinary mouse remains undetected";
 "imageEditor.option.pressureNotDetected" = "No pen pressure detected";
+"imageEditor.option.stylusDynamics" = "Stylus";
+"imageEditor.option.stylusDynamicsHelp" = "Control brush size and flow with pressure, and brush-tip shape with tilt";
+"imageEditor.option.tiltShape" = "Tilt Controls Tip";
 "imageEditor.option.stylusInput" = "Stylus input";
 "imageEditor.option.stylusLiveHelp" = "Shows live stylus pressure and tilt; the dial arrow indicates tilt direction and magnitude, while an ordinary mouse remains undetected";
 "imageEditor.option.stylusLiveValue" = "%@; %@";

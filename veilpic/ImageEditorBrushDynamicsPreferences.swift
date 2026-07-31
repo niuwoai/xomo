@@ -16,18 +16,51 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
     static let defaultValue = ImageEditorBrushDynamicsPreferences(
         pressureControlsSize: true,
         pressureControlsFlow: true,
-        pressureSensitivity: 50
+        pressureSensitivity: 50,
+        tiltControlsShape: false
     )
 
     var pressureControlsSize: Bool
     var pressureControlsFlow: Bool
     var pressureSensitivity: Double
+    var tiltControlsShape: Bool
+
+    init(
+        pressureControlsSize: Bool,
+        pressureControlsFlow: Bool,
+        pressureSensitivity: Double,
+        tiltControlsShape: Bool = false
+    ) {
+        self.pressureControlsSize = pressureControlsSize
+        self.pressureControlsFlow = pressureControlsFlow
+        self.pressureSensitivity = pressureSensitivity
+        self.tiltControlsShape = tiltControlsShape
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case pressureControlsSize
+        case pressureControlsFlow
+        case pressureSensitivity
+        case tiltControlsShape
+    }
+
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        pressureControlsSize = try values.decode(Bool.self, forKey: .pressureControlsSize)
+        pressureControlsFlow = try values.decode(Bool.self, forKey: .pressureControlsFlow)
+        pressureSensitivity = try values.decode(Double.self, forKey: .pressureSensitivity)
+        tiltControlsShape = try values.decodeIfPresent(
+            Bool.self,
+            forKey: .tiltControlsShape
+        ) ?? false
+    }
 
     var normalized: ImageEditorBrushDynamicsPreferences {
         ImageEditorBrushDynamicsPreferences(
             pressureControlsSize: pressureControlsSize,
             pressureControlsFlow: pressureControlsFlow,
-            pressureSensitivity: max(0, min(100, pressureSensitivity))
+            pressureSensitivity: max(0, min(100, pressureSensitivity)),
+            tiltControlsShape: tiltControlsShape
         )
     }
 

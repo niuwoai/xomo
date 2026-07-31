@@ -76,6 +76,32 @@ struct XomoMCPServerTests {
         #expect(tools.contains { $0["name"] as? String == "xomo.text.convert" })
         #expect(tools.contains { $0["name"] as? String == "xomo.text.fitBox" })
         #expect(tools.contains { $0["name"] as? String == "xomo.component.tokens" })
+        let paintStrokeTool = try #require(
+            tools.first { $0["name"] as? String == "xomo.paint.stroke" }
+        )
+        let paintStrokeSchema = try #require(
+            paintStrokeTool["inputSchema"] as? [String: Any]
+        )
+        let paintStrokeProperties = try #require(
+            paintStrokeSchema["properties"] as? [String: Any]
+        )
+        #expect(
+            (paintStrokeProperties["tiltShape"] as? [String: Any])?["type"] as? String
+                == "boolean"
+        )
+        let paintPoints = try #require(
+            paintStrokeProperties["points"] as? [String: Any]
+        )
+        let paintPointItems = try #require(paintPoints["items"] as? [String: Any])
+        let paintPointProperties = try #require(
+            paintPointItems["properties"] as? [String: Any]
+        )
+        #expect(
+            (paintPointProperties["tiltX"] as? [String: Any])?["minimum"] as? Int == -1
+        )
+        #expect(
+            (paintPointProperties["tiltY"] as? [String: Any])?["maximum"] as? Int == 1
+        )
         let specialPaintTool = try #require(tools.first { $0["name"] as? String == "xomo.paint.special" })
         let specialPaintSchema = try #require(specialPaintTool["inputSchema"] as? [String: Any])
         let specialPaintProperties = try #require(specialPaintSchema["properties"] as? [String: Any])

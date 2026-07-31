@@ -74,6 +74,41 @@ enum XomoToolCatalog {
                     "additionalProperties": false
                 ]
             }
+            if name == "xomo.paint.stroke" {
+                tool["inputSchema"] = [
+                    "type": "object",
+                    "properties": [
+                        "tool": ["type": "string", "enum": ["brush", "eraser"]],
+                        "points": [
+                            "type": "array",
+                            "items": [
+                                "type": "object",
+                                "properties": [
+                                    "x": ["type": "number"],
+                                    "y": ["type": "number"],
+                                    "pressure": ["type": "number", "minimum": 0, "maximum": 1],
+                                    "tiltX": ["type": "number", "minimum": -1, "maximum": 1],
+                                    "tiltY": ["type": "number", "minimum": -1, "maximum": 1]
+                                ],
+                                "required": ["x", "y"],
+                                "additionalProperties": false
+                            ],
+                            "minItems": 1
+                        ],
+                        "size": ["type": "number"],
+                        "opacity": ["type": "number", "minimum": 0, "maximum": 1],
+                        "hardness": ["type": "number", "minimum": 0, "maximum": 1],
+                        "flow": ["type": "number", "minimum": 1, "maximum": 100],
+                        "spacing": ["type": "number", "minimum": 1, "maximum": 200],
+                        "pressureSize": ["type": "boolean"],
+                        "pressureFlow": ["type": "boolean"],
+                        "pressureSensitivity": ["type": "number", "minimum": 0, "maximum": 100],
+                        "tiltShape": ["type": "boolean"]
+                    ],
+                    "required": ["points"],
+                    "additionalProperties": false
+                ]
+            }
             if name == "xomo.paint.special" {
                 tool["inputSchema"] = [
                     "type": "object",

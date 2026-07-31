@@ -1624,7 +1624,8 @@ final class XomoAutomationRegistry {
                 "spacing": .number(Double(preset.spacing)),
                 "pressureSize": .bool(preset.pressureControlsSize),
                 "pressureFlow": .bool(preset.pressureControlsFlow),
-                "pressureSensitivity": .number(Double(preset.pressureSensitivity))
+                "pressureSensitivity": .number(Double(preset.pressureSensitivity)),
+                "tiltShape": .bool(preset.tiltControlsShape)
             ])
         })
     }
@@ -4058,6 +4059,10 @@ final class XomoAutomationRegistry {
         viewModel: ImageEditorViewModel
     ) throws {
         let tool = arguments["tool"]?.stringValue ?? "brush"
+        guard tool == "brush" || tool == "eraser" else {
+            throw XomoAutomationCallError.invalidArgument("Stroke tool must be brush or eraser")
+        }
+        let samples = try requiredBrushSamples("points", in: arguments)
         if let size = arguments["size"]?.doubleValue { viewModel.brushSize = size }
         if let opacity = arguments["opacity"]?.doubleValue { viewModel.opacity = opacity }
         if let hardness = arguments["hardness"]?.doubleValue {
@@ -4078,11 +4083,13 @@ final class XomoAutomationRegistry {
         if let pressureSensitivity = arguments["pressureSensitivity"]?.doubleValue {
             viewModel.setBrushPressureSensitivity(CGFloat(pressureSensitivity))
         }
-        let samples = try requiredBrushSamples("points", in: arguments)
+        if let tiltShape = arguments["tiltShape"]?.boolValue {
+            viewModel.setBrushTiltControlsShape(tiltShape)
+        }
         switch tool {
         case "brush": viewModel.drawBrush(samples: samples)
         case "eraser": viewModel.drawBrush(samples: samples, erase: true)
-        default: throw XomoAutomationCallError.invalidArgument("Stroke tool must be brush or eraser")
+        default: break
         }
     }
 
@@ -4955,9 +4962,27 @@ final class XomoAutomationRegistry {
             let pressure = object["pressure"]?.doubleValue.map {
                 CGFloat(max(0, min(1, $0)))
             }
+            let tiltX = object["tiltX"]?.doubleValue
+            let tiltY = object["tiltY"]?.doubleValue
+            let tilt: ImageEditorStylusTilt?
+            switch (tiltX, tiltY) {
+            case (nil, nil):
+                tilt = nil
+            case (.some(let x), .some(let y)):
+                tilt = ImageEditorStylusInput.normalizedTilt(
+                    rawX: CGFloat(x),
+                    rawY: CGFloat(y),
+                    supportsTilt: true
+                )
+            default:
+                throw XomoAutomationCallError.invalidArgument(
+                    "Each stylus point needs both tiltX and tiltY"
+                )
+            }
             return ImageEditorBrushStrokeSample(
                 point: CGPoint(x: x, y: y),
-                pressure: pressure
+                pressure: pressure,
+                tilt: tilt
             )
         }
         guard !samples.isEmpty else {
@@ -5516,7 +5541,8 @@ private extension XomoAutomationRegistry {
             "spacing": XomoAutomationSchema.number(description: "Stamp spacing from 1 to 200 percent of brush diameter"),
             "pressureSize": XomoAutomationSchema.boolean(description: "Use point pressure to control brush diameter"),
             "pressureFlow": XomoAutomationSchema.boolean(description: "Use point pressure to control per-stamp flow"),
-            "pressureSensitivity": XomoAutomationSchema.number(description: "Pressure curve sensitivity from 0 to 100")
+            "pressureSensitivity": XomoAutomationSchema.number(description: "Pressure curve sensitivity from 0 to 100"),
+            "tiltShape": XomoAutomationSchema.boolean(description: "Use point tilt to flatten and orient the brush tip")
         ], required: ["points"]),
         tool("xomo.paint.gradient", "Paint a gradient between exactly two canvas points.", ["points": pointsSchema], required: ["points"]),
         tool("xomo.paint.special", "Use clone, tone, sponge, blur, sharpen, smudge, healing, red-eye, or paint-bucket tools.", [
@@ -5724,7 +5750,9 @@ private extension XomoAutomationRegistry {
     static let pointProperties = [
         "x": XomoAutomationSchema.number(description: "Canvas x coordinate"),
         "y": XomoAutomationSchema.number(description: "Canvas y coordinate"),
-        "pressure": XomoAutomationSchema.number(description: "Optional normalized pen pressure from 0 to 1")
+        "pressure": XomoAutomationSchema.number(description: "Optional normalized pen pressure from 0 to 1"),
+        "tiltX": XomoAutomationSchema.number(description: "Optional horizontal stylus tilt from -1 to 1; requires tiltY"),
+        "tiltY": XomoAutomationSchema.number(description: "Optional vertical stylus tilt from -1 to 1; requires tiltX")
     ]
     static let magicPointProperties = pointProperties.merging([
         "tolerance": XomoAutomationSchema.number(description: "Color-distance tolerance from 0 to 1")

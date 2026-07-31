@@ -46,6 +46,7 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
     let pressureControlsSize: Bool
     let pressureControlsFlow: Bool
     let pressureSensitivity: CGFloat
+    let tiltControlsShape: Bool
     let isBuiltIn: Bool
 
     init(
@@ -58,6 +59,7 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
         pressureControlsSize: Bool = true,
         pressureControlsFlow: Bool = true,
         pressureSensitivity: CGFloat = 50,
+        tiltControlsShape: Bool = false,
         isBuiltIn: Bool = false
     ) {
         self.id = id
@@ -69,7 +71,49 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
         self.pressureControlsSize = pressureControlsSize
         self.pressureControlsFlow = pressureControlsFlow
         self.pressureSensitivity = pressureSensitivity
+        self.tiltControlsShape = tiltControlsShape
         self.isBuiltIn = isBuiltIn
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case name
+        case size
+        case hardness
+        case flow
+        case spacing
+        case pressureControlsSize
+        case pressureControlsFlow
+        case pressureSensitivity
+        case tiltControlsShape
+        case isBuiltIn
+    }
+
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        id = try values.decode(String.self, forKey: .id)
+        name = try values.decodeIfPresent(String.self, forKey: .name)
+        size = try values.decode(CGFloat.self, forKey: .size)
+        hardness = try values.decode(CGFloat.self, forKey: .hardness)
+        flow = try values.decode(CGFloat.self, forKey: .flow)
+        spacing = try values.decode(CGFloat.self, forKey: .spacing)
+        pressureControlsSize = try values.decode(
+            Bool.self,
+            forKey: .pressureControlsSize
+        )
+        pressureControlsFlow = try values.decode(
+            Bool.self,
+            forKey: .pressureControlsFlow
+        )
+        pressureSensitivity = try values.decode(
+            CGFloat.self,
+            forKey: .pressureSensitivity
+        )
+        tiltControlsShape = try values.decodeIfPresent(
+            Bool.self,
+            forKey: .tiltControlsShape
+        ) ?? false
+        isBuiltIn = try values.decode(Bool.self, forKey: .isBuiltIn)
     }
 
     var title: String {
@@ -90,6 +134,7 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
             pressureControlsSize: pressureControlsSize,
             pressureControlsFlow: pressureControlsFlow,
             pressureSensitivity: max(0, min(100, pressureSensitivity)),
+            tiltControlsShape: tiltControlsShape,
             isBuiltIn: false
         )
     }
@@ -101,7 +146,8 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
         spacing: CGFloat,
         pressureControlsSize: Bool,
         pressureControlsFlow: Bool,
-        pressureSensitivity: CGFloat
+        pressureSensitivity: CGFloat,
+        tiltControlsShape: Bool
     ) -> Bool {
         let tolerance = CGFloat(0.0001)
         return abs(self.size - size) < tolerance
@@ -111,6 +157,7 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
             && self.pressureControlsSize == pressureControlsSize
             && self.pressureControlsFlow == pressureControlsFlow
             && abs(self.pressureSensitivity - pressureSensitivity) < tolerance
+            && self.tiltControlsShape == tiltControlsShape
     }
 
     static let defaultPresets: [ImageEditorBrushPreset] = [3, 9, 18, 36, 72].map { size in

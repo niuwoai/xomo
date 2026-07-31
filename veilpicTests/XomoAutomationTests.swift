@@ -4996,8 +4996,20 @@ struct XomoAutomationTests {
             arguments: [
                 "tool": .string("brush"),
                 "points": .array([
-                    .object(["x": .number(12), "y": .number(18), "pressure": .number(0.2)]),
-                    .object(["x": .number(52), "y": .number(18), "pressure": .number(1)])
+                    .object([
+                        "x": .number(12),
+                        "y": .number(18),
+                        "pressure": .number(0.2),
+                        "tiltX": .number(0.25),
+                        "tiltY": .number(-0.5)
+                    ]),
+                    .object([
+                        "x": .number(52),
+                        "y": .number(18),
+                        "pressure": .number(1),
+                        "tiltX": .number(1),
+                        "tiltY": .number(0)
+                    ])
                 ]),
                 "size": .number(14),
                 "opacity": .number(0.75),
@@ -5006,7 +5018,8 @@ struct XomoAutomationTests {
                 "spacing": .number(140),
                 "pressureSize": .bool(false),
                 "pressureFlow": .bool(true),
-                "pressureSensitivity": .number(72)
+                "pressureSensitivity": .number(72),
+                "tiltShape": .bool(true)
             ]
         ))
 
@@ -5019,7 +5032,34 @@ struct XomoAutomationTests {
         #expect(!viewModel.brushPressureControlsSize)
         #expect(viewModel.brushPressureControlsFlow)
         #expect(viewModel.brushPressureSensitivity == 72)
+        #expect(viewModel.brushTiltControlsShape)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.brush"))
+    }
+
+    @Test func registryRejectsIncompleteStylusTiltPairsAtomically() {
+        let viewModel = makeViewModel()
+        let registry = XomoAutomationRegistry.shared
+        registry.register(viewModel)
+        let historyCount = viewModel.document.history.count
+
+        let response = registry.execute(request(
+            operation: "call",
+            name: "xomo.paint.stroke",
+            arguments: [
+                "points": .array([
+                    .object([
+                        "x": .number(12),
+                        "y": .number(18),
+                        "tiltX": .number(0.5)
+                    ])
+                ]),
+                "tiltShape": .bool(true)
+            ]
+        ))
+
+        #expect(!response.ok)
+        #expect(viewModel.document.history.count == historyCount)
+        #expect(!viewModel.brushTiltControlsShape)
     }
 
     @Test func registryCreatesListsAppliesAndDeletesPersistedBrushPresets() throws {

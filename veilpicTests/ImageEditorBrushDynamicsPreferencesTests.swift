@@ -19,13 +19,15 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         ImageEditorBrushDynamicsPreferences(
             pressureControlsSize: false,
             pressureControlsFlow: true,
-            pressureSensitivity: 140
+            pressureSensitivity: 140,
+            tiltControlsShape: true
         ).save(to: defaults)
 
         let loaded = ImageEditorBrushDynamicsPreferences.load(from: defaults)
         #expect(!loaded.pressureControlsSize)
         #expect(loaded.pressureControlsFlow)
         #expect(loaded.pressureSensitivity == 100)
+        #expect(loaded.tiltControlsShape)
 
         defaults.set(
             Data("not-json".utf8),
@@ -46,6 +48,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         first.setBrushPressureControlsSize(false)
         first.setBrushPressureControlsFlow(true)
         first.setBrushPressureSensitivity(73)
+        first.setBrushTiltControlsShape(true)
 
         let restored = ImageEditorViewModel(
             sourceName: "restored.png",
@@ -55,6 +58,46 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(!restored.brushPressureControlsSize)
         #expect(restored.brushPressureControlsFlow)
         #expect(restored.brushPressureSensitivity == 73)
+        #expect(restored.brushTiltControlsShape)
+    }
+
+    @Test func legacyBrushDynamicsAndPresetsDefaultTiltShapeOff() throws {
+        let legacyDynamics = Data(
+            """
+            {
+              "pressureControlsSize": true,
+              "pressureControlsFlow": false,
+              "pressureSensitivity": 64
+            }
+            """.utf8
+        )
+        let decodedDynamics = try JSONDecoder().decode(
+            ImageEditorBrushDynamicsPreferences.self,
+            from: legacyDynamics
+        )
+        #expect(!decodedDynamics.tiltControlsShape)
+
+        let legacyPreset = Data(
+            """
+            {
+              "id": "legacy",
+              "name": "Legacy",
+              "size": 18,
+              "hardness": 0.8,
+              "flow": 100,
+              "spacing": 25,
+              "pressureControlsSize": true,
+              "pressureControlsFlow": true,
+              "pressureSensitivity": 50,
+              "isBuiltIn": false
+            }
+            """.utf8
+        )
+        let decodedPreset = try JSONDecoder().decode(
+            ImageEditorBrushPreset.self,
+            from: legacyPreset
+        )
+        #expect(!decodedPreset.tiltControlsShape)
     }
 
     @Test func retouchPressurePreferencesDefaultOffPersistAndStayIndependent() {
@@ -140,6 +183,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         first.setBrushPressureControlsSize(false)
         first.setBrushPressureControlsFlow(true)
         first.setBrushPressureSensitivity(73)
+        first.setBrushTiltControlsShape(true)
 
         let created = try #require(first.createBrushPresetFromCurrentSettings())
         #expect(!created.isBuiltIn)
@@ -156,6 +200,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(!restored.brushPressureControlsSize)
         #expect(restored.brushPressureControlsFlow)
         #expect(restored.brushPressureSensitivity == 73)
+        #expect(restored.brushTiltControlsShape)
         #expect(restored.activeBrushPreset?.id == created.id)
 
         restored.brushFlow = 66
@@ -177,6 +222,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         viewModel.setBrushPressureControlsSize(false)
         viewModel.setBrushPressureControlsFlow(false)
         viewModel.setBrushPressureSensitivity(0)
+        viewModel.setBrushTiltControlsShape(true)
 
         viewModel.applyBrushPreset(builtIn)
         viewModel.deleteBrushPreset(builtIn)
@@ -188,6 +234,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(viewModel.brushPressureControlsSize)
         #expect(viewModel.brushPressureControlsFlow)
         #expect(viewModel.brushPressureSensitivity == 50)
+        #expect(!viewModel.brushTiltControlsShape)
         #expect(viewModel.customBrushPresets.isEmpty)
     }
 

@@ -942,6 +942,13 @@ struct ImageEditorView: View {
                     set: { viewModel.setBrushPressureControlsFlow($0) }
                 )
             )
+            Toggle(
+                L10n.text("imageEditor.option.tiltShape"),
+                isOn: Binding(
+                    get: { viewModel.brushTiltControlsShape },
+                    set: { viewModel.setBrushTiltControlsShape($0) }
+                )
+            )
             Picker(
                 L10n.text("imageEditor.option.pressureSensitivity"),
                 selection: Binding(
@@ -955,14 +962,17 @@ struct ImageEditorView: View {
                 }
             }
         } label: {
-            Label(L10n.text("imageEditor.option.pressure"), systemImage: "scribble.variable")
+            Label(
+                L10n.text("imageEditor.option.stylusDynamics"),
+                systemImage: "scribble.variable"
+            )
                 .font(.system(size: 11, weight: .semibold))
         }
         .menuStyle(.borderlessButton)
         .fixedSize()
         .focusable(false)
         .xomoFocusEffectDisabled()
-        .help(L10n.text("imageEditor.option.pressureHelp"))
+        .help(L10n.text("imageEditor.option.stylusDynamicsHelp"))
         .accessibilityIdentifier("image-editor-brush-pressure-menu")
     }
 

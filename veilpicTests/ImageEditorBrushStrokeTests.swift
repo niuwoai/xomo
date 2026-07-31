@@ -338,6 +338,81 @@ struct ImageEditorBrushStrokeTests {
         #expect(abs(middle.tilt?.y ?? 1) < 0.0001)
     }
 
+    @Test func tiltShapeFlattensAndOrientsTheBrushTipOnlyWhenEnabled() {
+        let stamp = ImageEditorBrushStrokeSample(
+            point: CGPoint(x: 20.5, y: 20.5),
+            pressure: 1,
+            tilt: ImageEditorStylusTilt(x: 1, y: 0)
+        )
+        var settings = ImageEditorBrushStrokeSettings(
+            diameter: 20,
+            hardness: 1,
+            opacity: 1,
+            flow: 1,
+            spacing: 0.25,
+            tiltControlsShape: true
+        )
+        let tilted = ImageEditorBrushStrokeKernel.coverage(
+            width: 41,
+            height: 41,
+            stamps: [stamp],
+            settings: settings
+        )
+        let horizontalEdge = 20 * 41 + 28
+        let verticalEdge = 28 * 41 + 20
+
+        #expect(tilted[horizontalEdge] > 240)
+        #expect(tilted[verticalEdge] == 0)
+        #expect(ImageEditorBrushStrokeKernel.tiltTipAspectRatio(
+            tilt: stamp.tilt,
+            isEnabled: true
+        ) == 0.25)
+
+        settings.tiltControlsShape = false
+        let circular = ImageEditorBrushStrokeKernel.coverage(
+            width: 41,
+            height: 41,
+            stamps: [stamp],
+            settings: settings
+        )
+        #expect(circular[horizontalEdge] == circular[verticalEdge])
+        #expect(circular[verticalEdge] > 240)
+    }
+
+    @Test func missingOrPerpendicularTiltPreservesTheCircularMouseFootprint() {
+        let settings = ImageEditorBrushStrokeSettings(
+            diameter: 16,
+            hardness: 0.65,
+            opacity: 0.8,
+            flow: 0.7,
+            spacing: 0.25,
+            tiltControlsShape: true
+        )
+        let mouse = ImageEditorBrushStrokeKernel.coverage(
+            width: 32,
+            height: 32,
+            stamps: [ImageEditorBrushStrokeSample(point: CGPoint(x: 16, y: 16))],
+            settings: settings
+        )
+        let perpendicular = ImageEditorBrushStrokeKernel.coverage(
+            width: 32,
+            height: 32,
+            stamps: [
+                ImageEditorBrushStrokeSample(
+                    point: CGPoint(x: 16, y: 16),
+                    tilt: ImageEditorStylusTilt(x: 0, y: 0)
+                )
+            ],
+            settings: settings
+        )
+
+        #expect(mouse == perpendicular)
+        #expect(ImageEditorBrushStrokeKernel.tiltTipAspectRatio(
+            tilt: nil,
+            isEnabled: true
+        ) == 1)
+    }
+
     @Test func stylusEraserProximityTemporarilyOverridesOnlyToolMode() {
         var isEraserInProximity = false
         isEraserInProximity = ImageEditorStylusEraserProximity.nextState(
@@ -529,6 +604,54 @@ struct ImageEditorBrushStrokeTests {
         let lowPressure = try #require(layerMask.color(at: CGPoint(x: 15, y: 15)))
         let fullPressure = try #require(layerMask.color(at: CGPoint(x: 55, y: 15)))
         #expect(lowPressure.alphaComponent > fullPressure.alphaComponent)
+    }
+
+    @Test func quickMaskAndLayerMaskShareTiltShapeDynamics() throws {
+        let size = CGSize(width: 41, height: 41)
+        let samples = [
+            ImageEditorBrushStrokeSample(
+                point: CGPoint(x: 20.5, y: 20.5),
+                pressure: 1,
+                tilt: ImageEditorStylusTilt(x: 1, y: 0)
+            )
+        ]
+        let horizontalEdge = 20 * 41 + 28
+        let verticalEdge = 28 * 41 + 20
+        let selectionMask = ImageEditorSelectionMask(
+            width: 41,
+            height: 41,
+            alpha: [UInt8](repeating: .max, count: 41 * 41)
+        )
+        let quickMask = try #require(selectionMask.paintedByQuickMaskStroke(
+            samples: samples,
+            canvasSize: size,
+            diameter: 20,
+            opacity: 1,
+            hardness: 1,
+            flow: 1,
+            tiltControlsShape: true,
+            reveal: false
+        ))
+        #expect(quickMask.alpha[horizontalEdge] < 15)
+        #expect(quickMask.alpha[verticalEdge] == .max)
+
+        let sourceMask = NSImage.rendered(size: size) { rect in
+            NSColor.white.setFill()
+            rect.fill()
+        } ?? NSImage.transparent(size: size)
+        let layerMask = try #require(sourceMask.withMaskStroke(
+            samples: samples,
+            width: 20,
+            opacity: 1,
+            hardness: 1,
+            flow: 1,
+            tiltControlsShape: true,
+            reveal: false
+        ))
+        let horizontalColor = try #require(layerMask.color(at: CGPoint(x: 28, y: 20)))
+        let verticalColor = try #require(layerMask.color(at: CGPoint(x: 20, y: 28)))
+        #expect(horizontalColor.alphaComponent < 0.06)
+        #expect(verticalColor.alphaComponent > 0.95)
     }
 
     @Test func brushStrokeRespectsTransparentPixelLock() throws {

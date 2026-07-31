@@ -101,6 +101,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var brushPressureControlsSize = true
     @Published var brushPressureControlsFlow = true
     @Published var brushPressureSensitivity: CGFloat = 50
+    @Published var brushTiltControlsShape = false
     @Published var retouchPressureControlsSize = false
     @Published var retouchPressureSensitivity: CGFloat = 50
     @Published var toneRange: ImageEditorToneRange = .midtones
@@ -458,6 +459,7 @@ final class ImageEditorViewModel: ObservableObject {
         brushPressureControlsSize = brushDynamicsPreferences.pressureControlsSize
         brushPressureControlsFlow = brushDynamicsPreferences.pressureControlsFlow
         brushPressureSensitivity = CGFloat(brushDynamicsPreferences.pressureSensitivity)
+        brushTiltControlsShape = brushDynamicsPreferences.tiltControlsShape
         retouchPressureControlsSize = retouchDynamicsPreferences.pressureControlsSize
         retouchPressureSensitivity = CGFloat(retouchDynamicsPreferences.pressureSensitivity)
         customBrushPresets = brushPresetPreferences.presets
@@ -499,6 +501,7 @@ final class ImageEditorViewModel: ObservableObject {
         brushPressureControlsSize = brushDynamicsPreferences.pressureControlsSize
         brushPressureControlsFlow = brushDynamicsPreferences.pressureControlsFlow
         brushPressureSensitivity = CGFloat(brushDynamicsPreferences.pressureSensitivity)
+        brushTiltControlsShape = brushDynamicsPreferences.tiltControlsShape
         retouchPressureControlsSize = retouchDynamicsPreferences.pressureControlsSize
         retouchPressureSensitivity = CGFloat(retouchDynamicsPreferences.pressureSensitivity)
         customBrushPresets = brushPresetPreferences.presets
@@ -2528,7 +2531,8 @@ final class ImageEditorViewModel: ObservableObject {
             spacing: brushSpacing,
             pressureControlsSize: brushPressureControlsSize,
             pressureControlsFlow: brushPressureControlsFlow,
-            pressureSensitivity: brushPressureSensitivity
+            pressureSensitivity: brushPressureSensitivity,
+            tiltControlsShape: brushTiltControlsShape
         )
     }
 
@@ -2673,6 +2677,7 @@ final class ImageEditorViewModel: ObservableObject {
         brushPressureControlsSize = preset.pressureControlsSize
         brushPressureControlsFlow = preset.pressureControlsFlow
         brushPressureSensitivity = max(0, min(100, preset.pressureSensitivity))
+        brushTiltControlsShape = preset.tiltControlsShape
         persistBrushDynamicsPreferences()
         statusText = L10n.format("imageEditor.status.brushPresetApplied", preset.title, brushesPanelSummaryText)
     }
@@ -2703,7 +2708,8 @@ final class ImageEditorViewModel: ObservableObject {
             spacing: brushSpacing,
             pressureControlsSize: brushPressureControlsSize,
             pressureControlsFlow: brushPressureControlsFlow,
-            pressureSensitivity: brushPressureSensitivity
+            pressureSensitivity: brushPressureSensitivity,
+            tiltControlsShape: brushTiltControlsShape
         ).normalizedCustomPreset
         customBrushPresets.append(preset)
         persistBrushPresetPreferences()
@@ -3404,7 +3410,8 @@ final class ImageEditorViewModel: ObservableObject {
         ImageEditorBrushDynamicsPreferences(
             pressureControlsSize: brushPressureControlsSize,
             pressureControlsFlow: brushPressureControlsFlow,
-            pressureSensitivity: Double(brushPressureSensitivity)
+            pressureSensitivity: Double(brushPressureSensitivity),
+            tiltControlsShape: brushTiltControlsShape
         ).save(to: workspacePreferencesDefaults)
     }
 
@@ -3448,6 +3455,12 @@ final class ImageEditorViewModel: ObservableObject {
         let normalized = max(0, min(100, sensitivity))
         guard brushPressureSensitivity != normalized else { return }
         brushPressureSensitivity = normalized
+        persistBrushDynamicsPreferences()
+    }
+
+    func setBrushTiltControlsShape(_ isEnabled: Bool) {
+        guard brushTiltControlsShape != isEnabled else { return }
+        brushTiltControlsShape = isEnabled
         persistBrushDynamicsPreferences()
     }
 
@@ -5176,7 +5189,8 @@ final class ImageEditorViewModel: ObservableObject {
                 spacing: brushSpacing / 100,
                 pressureControlsSize: brushPressureControlsSize,
                 pressureControlsFlow: brushPressureControlsFlow,
-                pressureSensitivity: brushPressureSensitivity / 100
+                pressureSensitivity: brushPressureSensitivity / 100,
+                tiltControlsShape: brushTiltControlsShape
             ),
             erase: erase
         ) else {
@@ -5204,6 +5218,7 @@ final class ImageEditorViewModel: ObservableObject {
                 pressureControlsSize: brushPressureControlsSize,
                 pressureControlsFlow: brushPressureControlsFlow,
                 pressureSensitivity: brushPressureSensitivity / 100,
+                tiltControlsShape: brushTiltControlsShape,
                 reveal: reveal
               )
         else {
@@ -6889,6 +6904,7 @@ final class ImageEditorViewModel: ObservableObject {
             pressureControlsSize: brushPressureControlsSize,
             pressureControlsFlow: brushPressureControlsFlow,
             pressureSensitivity: brushPressureSensitivity / 100,
+            tiltControlsShape: brushTiltControlsShape,
             reveal: reveal
         ) else {
             statusText = L10n.text("imageEditor.status.operationFailed")
@@ -8724,6 +8740,7 @@ extension NSImage {
         pressureControlsSize: Bool = false,
         pressureControlsFlow: Bool = false,
         pressureSensitivity: CGFloat = 0.5,
+        tiltControlsShape: Bool = false,
         reveal: Bool
     ) -> NSImage? {
         withBrushStroke(
@@ -8737,7 +8754,8 @@ extension NSImage {
                 spacing: spacing,
                 pressureControlsSize: pressureControlsSize,
                 pressureControlsFlow: pressureControlsFlow,
-                pressureSensitivity: pressureSensitivity
+                pressureSensitivity: pressureSensitivity,
+                tiltControlsShape: tiltControlsShape
             ),
             erase: !reveal
         )
