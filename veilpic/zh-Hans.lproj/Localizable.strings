@@ -3248,6 +3248,7 @@
 "xomo.figma.node.issue.cornerRadiusFlattened" = "圆角平滑使用可编辑的超椭圆曲线近似";
 "xomo.figma.node.issue.transformFlattened" = "旋转、镜像或倾斜变换暂按轴对齐边界处理";
 "xomo.figma.node.issue.variableBindingPreserved" = "已保留 Figma 变量绑定 ID；具备 Variables 权限时会解析实时值";
+"xomo.figma.node.issue.exportSettingsPartiallyPreserved" = "部分 Figma 导出设置暂不支持；兼容的 PNG 与 JPG 预设会继续保留";
 "xomo.figma.node.error.nodeSelectionRequired" = "请先粘贴包含 node-id 的 Figma 节点链接。";
 "xomo.figma.node.error.credentialMissing" = "没有已保存的 Figma 令牌，请先连接。";
 "xomo.figma.node.error.invalidRequest" = "节点读取参数无效，请检查链接后重试。";
@@ -3359,6 +3360,9 @@
 "imageEditor.slices.height" = "高";
 "imageEditor.slices.save" = "保存切片";
 "imageEditor.slices.delete" = "删除切片";
+"imageEditor.slices.exportPreset.scale" = "%@ 倍";
+"imageEditor.slices.exportPreset.width" = "宽 %@ 像素";
+"imageEditor.slices.exportPreset.height" = "高 %@ 像素";
 "imageEditor.status.slicesPanelShown" = "已显示切片面板";
 "imageEditor.status.slicesPanelHidden" = "已隐藏切片面板";
 "imageEditor.status.sliceSelected" = "已选中切片：%@";

@@ -84,9 +84,23 @@ extension ImageEditorViewModel {
         selectedHotspotID = nil
         exportSettings.scope = .slice
         exportSettings.sliceID = id
+        applyPrimaryExportPreset(for: slice)
         isSlicesPanelVisible = true
         statusText = L10n.format("imageEditor.status.sliceSelected", slice.name)
         return slice
+    }
+
+    func applyPrimaryExportPreset(for slice: ImageEditorSlice) {
+        exportSettings.filenameSuffix = ""
+        guard let preset = (slice.exportPresets ?? []).first(where: {
+            $0.resolvedScale(for: slice.frame) != nil
+        }), let scale = preset.resolvedScale(for: slice.frame) else {
+            return
+        }
+        exportSettings.format = preset.format
+        exportSettings.scale = scale
+        exportSettings.batchScales = []
+        exportSettings.filenameSuffix = preset.suffix
     }
 
     private var sliceBoundsFromSelection: CGRect? {

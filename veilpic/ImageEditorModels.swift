@@ -4694,18 +4694,90 @@ struct ImageEditorGuide: Identifiable, Equatable, Codable {
 
 /// A named rectangular delivery region inspired by Fireworks slices.
 /// Slices are document metadata: they do not alter pixels or layer geometry.
+enum ImageEditorSliceExportConstraint: String, Codable, Equatable, Sendable {
+    case scale
+    case width
+    case height
+}
+
+struct ImageEditorSliceExportPreset: Codable, Equatable, Sendable {
+    static let maximumSuffixLength = 40
+
+    var suffix: String
+    var format: ImageEditorExportFormat
+    var constraint: ImageEditorSliceExportConstraint
+    var value: Double
+
+    init(
+        suffix: String = "",
+        format: ImageEditorExportFormat,
+        constraint: ImageEditorSliceExportConstraint,
+        value: Double
+    ) {
+        self.suffix = Self.sanitizedSuffix(suffix)
+        self.format = format
+        self.constraint = constraint
+        self.value = value
+    }
+
+    func resolvedScale(for frame: CGRect) -> Double? {
+        guard value.isFinite, value > 0 else { return nil }
+        let scale: Double
+        switch constraint {
+        case .scale:
+            scale = value
+        case .width:
+            guard frame.width > 0 else { return nil }
+            scale = value / Double(frame.width)
+        case .height:
+            guard frame.height > 0 else { return nil }
+            scale = value / Double(frame.height)
+        }
+        guard scale.isFinite,
+              ImageEditorExportSettings.supportedScaleRange.contains(scale)
+        else {
+            return nil
+        }
+        return scale
+    }
+
+    static func sanitizedSuffix(_ rawValue: String) -> String {
+        String(sanitizedFilenameComponent(rawValue).prefix(maximumSuffixLength))
+    }
+
+    static func sanitizedFilenameComponent(_ rawValue: String) -> String {
+        let forbidden = CharacterSet.controlCharacters.union(
+            CharacterSet(charactersIn: "/\\:")
+        )
+        let scalars = rawValue.unicodeScalars.map { scalar -> Character in
+            forbidden.contains(scalar) ? "-" : Character(String(scalar))
+        }
+        return String(scalars)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+}
+
 struct ImageEditorSlice: Identifiable, Equatable, Codable {
     static let maximumCount = 256
     static let maximumNameLength = 80
+    static let maximumExportPresetCount = 16
 
     var id = UUID()
     var name: String
     var frame: CGRect
+    /// Optional keeps projects created before export presets source-compatible.
+    var exportPresets: [ImageEditorSliceExportPreset]?
 
-    init(id: UUID = UUID(), name: String, frame: CGRect) {
+    init(
+        id: UUID = UUID(),
+        name: String,
+        frame: CGRect,
+        exportPresets: [ImageEditorSliceExportPreset] = []
+    ) {
         self.id = id
         self.name = name
         self.frame = frame
+        self.exportPresets = exportPresets.isEmpty ? nil : exportPresets
     }
 
     func normalized(canvasSize: CGSize) -> ImageEditorSlice? {
@@ -4714,10 +4786,23 @@ struct ImageEditorSlice: Identifiable, Equatable, Codable {
         guard bounded.width > 0, bounded.height > 0 else { return nil }
         let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedName.isEmpty else { return nil }
+        let normalizedPresets = (exportPresets ?? [])
+            .prefix(Self.maximumExportPresetCount)
+            .compactMap { preset -> ImageEditorSliceExportPreset? in
+                guard preset.format == .png || preset.format == .jpeg else { return nil }
+                let normalized = ImageEditorSliceExportPreset(
+                    suffix: preset.suffix,
+                    format: preset.format,
+                    constraint: preset.constraint,
+                    value: preset.value
+                )
+                return normalized.resolvedScale(for: bounded) == nil ? nil : normalized
+            }
         return ImageEditorSlice(
             id: id,
             name: String(trimmedName.prefix(Self.maximumNameLength)),
-            frame: bounded
+            frame: bounded,
+            exportPresets: normalizedPresets
         )
     }
 }

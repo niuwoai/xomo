@@ -116,7 +116,7 @@ struct ImageEditorExportPanel: View {
                         Stepper(
                             "",
                             value: scaleBinding,
-                            in: 0.25...4,
+                            in: ImageEditorExportSettings.supportedScaleRange,
                             step: 0.25
                         )
                         .labelsHidden()
@@ -277,7 +277,14 @@ struct ImageEditorExportPanel: View {
     private var sliceBinding: Binding<UUID?> {
         Binding(
             get: { viewModel.exportSettings.sliceID },
-            set: { viewModel.exportSettings.sliceID = $0 }
+            set: { sliceID in
+                guard let sliceID else {
+                    viewModel.exportSettings.sliceID = nil
+                    viewModel.exportSettings.filenameSuffix = ""
+                    return
+                }
+                _ = viewModel.selectSlice(id: sliceID)
+            }
         )
     }
 

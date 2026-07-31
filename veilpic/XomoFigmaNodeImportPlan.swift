@@ -82,6 +82,7 @@ enum XomoFigmaNodeMappingIssue: String, CaseIterable, Sendable {
     case cornerRadiusFlattened
     case transformFlattened
     case variableBindingPreserved
+    case exportSettingsPartiallyPreserved
 
     var localizationKey: String {
         "xomo.figma.node.issue.\(rawValue)"
@@ -364,6 +365,7 @@ struct XomoFigmaNodeImportItem: Equatable, Identifiable, Sendable {
     var imageRotation: Double?
     var imageFilters: XomoFigmaPlanImageFilters = XomoFigmaPlanImageFilters()
     var effects: [XomoFigmaPlanEffect] = []
+    var exportPresets: [ImageEditorSliceExportPreset] = []
     var stackLayout: ImageEditorStackLayout?
     var stackChildLayout: ImageEditorStackChildLayout?
     var isStackLayoutExcluded: Bool

@@ -1,3 +1,4 @@
+import CoreGraphics
 import Foundation
 
 @MainActor
@@ -283,6 +284,13 @@ enum XomoFigmaNodeImportMapper {
         if transformFlattened {
             issues.append(.transformFlattened)
         }
+        let exportPresetMapping = mappedExportPresets(
+            node.exportSettings,
+            frame: node.absoluteBoundingBox
+        )
+        if exportPresetMapping.omittedCount > 0 {
+            issues.append(.exportSettingsPartiallyPreserved)
+        }
         if mapping.target == .vector,
            !geometryPaths(node).isEmpty,
            geometryPaths(node).contains(where: { XomoSVGPathParser.parse($0.path) == nil }) {
@@ -377,10 +385,60 @@ enum XomoFigmaNodeImportMapper {
                 )
             } ?? XomoFigmaPlanImageFilters(),
             effects: effects,
+            exportPresets: exportPresetMapping.presets,
             stackLayout: nativeStackLayout,
             stackChildLayout: stackChildLayout(node),
             isStackLayoutExcluded: node.layoutPositioning == "ABSOLUTE"
         )
+    }
+
+    private static func mappedExportPresets(
+        _ settings: [XomoFigmaExportSetting]?,
+        frame: XomoFigmaRectangle?
+    ) -> (presets: [ImageEditorSliceExportPreset], omittedCount: Int) {
+        let settings = settings ?? []
+        let presets = settings
+            .prefix(ImageEditorSlice.maximumExportPresetCount)
+            .compactMap { setting -> ImageEditorSliceExportPreset? in
+                let format: ImageEditorExportFormat
+                switch setting.format {
+                case "PNG":
+                    format = .png
+                case "JPG":
+                    format = .jpeg
+                default:
+                    return nil
+                }
+                let constraint: ImageEditorSliceExportConstraint
+                switch setting.constraint.type {
+                case "SCALE":
+                    constraint = .scale
+                case "WIDTH":
+                    constraint = .width
+                case "HEIGHT":
+                    constraint = .height
+                default:
+                    return nil
+                }
+                let preset = ImageEditorSliceExportPreset(
+                    suffix: setting.suffix,
+                    format: format,
+                    constraint: constraint,
+                    value: setting.constraint.value
+                )
+                guard let frame else { return nil }
+                let presetFrame = CGRect(
+                    x: frame.x,
+                    y: frame.y,
+                    width: frame.width,
+                    height: frame.height
+                )
+                guard preset.resolvedScale(for: presetFrame) != nil else {
+                    return nil
+                }
+                return preset
+            }
+        return (presets, settings.count - presets.count)
     }
 
     private static func mappedBlendMode(_ rawValue: String?) -> ImageEditorBlendMode? {
@@ -1097,6 +1155,18 @@ struct XomoFigmaNode: Decodable {
     var strokeGeometry: [XomoFigmaPath]?
     var boundVariables: XomoFigmaBoundVariables?
     var componentProperties: [String: XomoFigmaComponentProperty]?
+    var exportSettings: [XomoFigmaExportSetting]?
+}
+
+struct XomoFigmaExportSetting: Decodable {
+    var suffix: String
+    var format: String
+    var constraint: XomoFigmaExportConstraint
+}
+
+struct XomoFigmaExportConstraint: Decodable {
+    var type: String
+    var value: Double
 }
 
 struct XomoFigmaVariableReference: Decodable {

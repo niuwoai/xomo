@@ -9,7 +9,7 @@ import AppKit
 import ImageIO
 import UniformTypeIdentifiers
 
-enum ImageEditorExportFormat: String, CaseIterable, Identifiable {
+enum ImageEditorExportFormat: String, CaseIterable, Identifiable, Codable, Sendable {
     case png
     case jpeg
     case webp
@@ -86,6 +86,7 @@ enum ImageEditorExportNamingRule: String, CaseIterable, Identifiable {
 
 struct ImageEditorExportSettings: Equatable {
     static let batchScalePresets: [Double] = [1, 2, 3]
+    static let supportedScaleRange = 0.25...4.0
 
     var format: ImageEditorExportFormat = .png
     var scope: ImageEditorExportScope = .composited
@@ -94,6 +95,7 @@ struct ImageEditorExportSettings: Equatable {
     var batchScales: Set<Double> = []
     var namingRule: ImageEditorExportNamingRule = .sourceScopeAndScale
     var quality: Double = 0.9
+    var filenameSuffix: String = ""
 
     var usesQuality: Bool {
         format == .jpeg || format == .webp
@@ -280,7 +282,11 @@ extension ImageEditorViewModel {
         if normalized.format == .pdf {
             normalized.scale = 1
         }
-        normalized.scale = min(4, max(0.25, normalized.scale))
+        let supportedScaleRange = ImageEditorExportSettings.supportedScaleRange
+        normalized.scale = min(
+            supportedScaleRange.upperBound,
+            max(supportedScaleRange.lowerBound, normalized.scale)
+        )
         normalized.batchScales = Set(normalized.batchScales.filter { scale in
             ImageEditorExportSettings.batchScalePresets.contains(scale)
         })
@@ -420,6 +426,16 @@ extension ImageEditorViewModel {
         scale: Double,
         includesScaleSuffix: Bool
     ) -> String {
+        if settings.scope == .slice,
+           let sliceID = settings.sliceID,
+           let slice = slice(with: sliceID) {
+            let sliceName = Self.sanitizedExportBasename(slice.name, fallback: "slice")
+            let presetSuffix = ImageEditorSliceExportPreset.sanitizedSuffix(settings.filenameSuffix)
+            let scaleSuffix = includesScaleSuffix && settings.usesScale
+                ? "@\(exportScaleLabel(scale))"
+                : ""
+            return "\(sliceName)\(presetSuffix)\(scaleSuffix).\(settings.format.filenameExtension)"
+        }
         let base = (document.sourceName as NSString).deletingPathExtension
         let cleaned = base.trimmingCharacters(in: .whitespacesAndNewlines)
         let sourceName = cleaned.isEmpty ? "image" : cleaned
@@ -445,6 +461,11 @@ extension ImageEditorViewModel {
         }
         let scaleSuffix = includesScaleSuffix && settings.usesScale ? "@\(exportScaleLabel(scale))" : ""
         return "\(name)\(scaleSuffix).\(settings.format.filenameExtension)"
+    }
+
+    private static func sanitizedExportBasename(_ rawValue: String, fallback: String) -> String {
+        let sanitized = ImageEditorSliceExportPreset.sanitizedFilenameComponent(rawValue)
+        return sanitized.isEmpty ? fallback : sanitized
     }
 
     private func batchExportURL(

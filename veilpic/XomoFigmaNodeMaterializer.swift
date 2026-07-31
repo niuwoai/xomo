@@ -88,19 +88,24 @@ enum XomoFigmaNodeMaterializer {
                     omitMaterializedSubtree(child)
                 }
             }
-            if item.targetKind == .slice {
-                guard slices.count < ImageEditorSlice.maximumCount,
-                      let frame = mappedFrame(item.frame, transform: transform),
-                      let slice = ImageEditorSlice(
-                          name: item.sourceName,
-                          frame: frame
-                      ).normalized(canvasSize: canvasSize)
-                else {
+            if item.targetKind == .slice || !item.exportPresets.isEmpty {
+                if slices.count < ImageEditorSlice.maximumCount,
+                   let frame = mappedFrame(item.frame, transform: transform),
+                   let slice = ImageEditorSlice(
+                       name: item.sourceName,
+                       frame: frame,
+                       exportPresets: item.exportPresets
+                   ).normalized(canvasSize: canvasSize) {
+                    slices.append(slice)
+                } else {
                     omittedCount += 1
+                    if item.targetKind == .slice {
+                        return
+                    }
+                }
+                if item.targetKind == .slice {
                     return
                 }
-                slices.append(slice)
-                return
             }
             guard var layer = makeLayer(
                 item: item,
@@ -924,8 +929,9 @@ extension ImageEditorViewModel {
             document.slices.append(contentsOf: importedSlices)
             if let firstSlice = importedSlices.first {
                 exportSettings.sliceID = firstSlice.id
-                if result.layers.isEmpty {
+                if result.layers.isEmpty || !(firstSlice.exportPresets ?? []).isEmpty {
                     exportSettings.scope = .slice
+                    applyPrimaryExportPreset(for: firstSlice)
                 }
                 isSlicesPanelVisible = true
             }

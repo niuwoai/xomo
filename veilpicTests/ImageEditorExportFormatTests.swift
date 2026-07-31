@@ -158,7 +158,7 @@ struct ImageEditorExportFormatTests {
 
         #expect(exported.size == CGSize(width: 40, height: 30))
         #expect(exported.color(at: CGPoint(x: 20, y: 15))?.alphaComponent ?? 0 > 0.8)
-        #expect(viewModel.exportFilenames(settings: settings) == ["landing-slice.png"])
+        #expect(viewModel.exportFilenames(settings: settings) == ["Hero.png"])
     }
 
     @Test func hotspotHTMLExportEmbedsCanvasAndEscapesImageMapMetadata() throws {

@@ -319,6 +319,17 @@ private struct ImageEditorSlicePanelRow: View {
             .contentShape(Rectangle())
             .onTapGesture(perform: onSelect)
 
+            if let presets = slice.exportPresets, !presets.isEmpty {
+                VStack(alignment: .leading, spacing: 2) {
+                    ForEach(presets.indices, id: \.self) { index in
+                        Text(exportPresetSummary(presets[index]))
+                            .font(.system(size: 10))
+                            .foregroundColor(Color(nsColor: ImageEditorTheme.mutedText))
+                            .lineLimit(1)
+                    }
+                }
+            }
+
             TextField(L10n.text("imageEditor.slices.name"), text: $draft.name)
                 .textFieldStyle(.roundedBorder)
                 .onSubmit { onSave(draft) }
@@ -346,6 +357,23 @@ private struct ImageEditorSlicePanelRow: View {
             RoundedRectangle(cornerRadius: 6, style: .continuous)
                 .stroke(Color.cyan.opacity(isSelected ? 0.7 : 0.18), lineWidth: 1)
         )
+    }
+
+    private func exportPresetSummary(_ preset: ImageEditorSliceExportPreset) -> String {
+        let value = ImageEditorExportScaleFormatter.string(from: preset.value)
+        let constraint: String
+        switch preset.constraint {
+        case .scale:
+            constraint = L10n.format("imageEditor.slices.exportPreset.scale", value)
+        case .width:
+            constraint = L10n.format("imageEditor.slices.exportPreset.width", value)
+        case .height:
+            constraint = L10n.format("imageEditor.slices.exportPreset.height", value)
+        }
+        if preset.suffix.isEmpty {
+            return "\(preset.format.title) · \(constraint)"
+        }
+        return "\(preset.format.title) · \(constraint) · \(preset.suffix)"
     }
 
     private func coordinateField(_ key: String, text: Binding<String>) -> some View {

@@ -3248,6 +3248,7 @@
 "xomo.figma.node.issue.cornerRadiusFlattened" = "コーナースムージングは編集可能なスーパー楕円で近似されます";
 "xomo.figma.node.issue.transformFlattened" = "回転、反転、傾斜は軸に沿った境界へ縮退します";
 "xomo.figma.node.issue.variableBindingPreserved" = "Figma 変数のバインディング ID を保持し、Variables 権限があればライブ値を解決します";
+"xomo.figma.node.issue.exportSettingsPartiallyPreserved" = "一部の Figma 書き出し設定は未対応です。互換性のある PNG と JPG プリセットは保持されます";
 "xomo.figma.node.error.nodeSelectionRequired" = "先に node-id を含む Figma ノードリンクを貼り付けてください。";
 "xomo.figma.node.error.credentialMissing" = "保存済みの Figma トークンがありません。先に接続してください。";
 "xomo.figma.node.error.invalidRequest" = "ノード読み取りパラメータが無効です。リンクを確認してください。";
@@ -3359,6 +3360,9 @@
 "imageEditor.slices.height" = "高さ";
 "imageEditor.slices.save" = "スライスを保存";
 "imageEditor.slices.delete" = "スライスを削除";
+"imageEditor.slices.exportPreset.scale" = "%@ 倍";
+"imageEditor.slices.exportPreset.width" = "幅 %@ px";
+"imageEditor.slices.exportPreset.height" = "高さ %@ px";
 "imageEditor.status.slicesPanelShown" = "スライスパネルを表示しました";
 "imageEditor.status.slicesPanelHidden" = "スライスパネルを非表示にしました";
 "imageEditor.status.sliceSelected" = "スライスを選択しました：%@";
