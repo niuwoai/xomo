@@ -131,6 +131,7 @@ struct ImageEditorView: View {
     @State private var hoverViewPoint: CGPoint?
     @State private var canvasModifierFlags: NSEvent.ModifierFlags = []
     @State private var activeBrushPressure: CGFloat?
+    @State private var isStylusEraserInProximity = false
     @State private var histogramProbeBinIndex: Int?
     @State private var histogramRangeAnchorBinIndex: Int?
     @State private var histogramRangeEndBinIndex: Int?
@@ -1876,6 +1877,11 @@ struct ImageEditorView: View {
                             hoverViewPoint = location
                             updateCanvasCursor(at: location, in: geometry.size)
                         },
+                        onStylusEraserProximityChanged: { isInProximity in
+                            isStylusEraserInProximity = isInProximity
+                            activeBrushPressure = nil
+                            refreshCanvasCursor(in: geometry.size)
+                        },
                         onMiddleMousePanBegan: {
                             isCanvasPanGestureActive = true
                             NSCursor.closedHand.set()
@@ -1929,6 +1935,7 @@ struct ImageEditorView: View {
                                   ),
                                   let imagePoint = imagePoint(from: location, in: geometry.size)
                             else { return false }
+                            viewModel.canvasPointerCaptureState.activeTool = canvasInteractionTool
                             // Keep the native NSView as first responder for the
                             // whole brush stroke. Mutating several SwiftUI
                             // states on mouse-down can rebuild the overlay
@@ -1943,7 +1950,9 @@ struct ImageEditorView: View {
                         },
                         onPrimaryToolDragChanged: { location, pressure in
                             guard let imagePoint = imagePoint(from: location, in: geometry.size) else { return }
-                            if canvasInteractionTool == .brush || canvasInteractionTool == .eraser {
+                            let primaryTool = viewModel.canvasPointerCaptureState.activeTool
+                                ?? canvasInteractionTool
+                            if primaryTool == .brush || primaryTool == .eraser {
                                 activeBrushPressure = pressure
                                 updateCanvasCursor(at: location, in: geometry.size)
                                 return
@@ -1952,6 +1961,8 @@ struct ImageEditorView: View {
                             viewModel.updatePointer(imagePoint)
                         },
                         onPrimaryToolDragEnded: { location, samples in
+                            let primaryTool = viewModel.canvasPointerCaptureState.activeTool
+                                ?? canvasInteractionTool
                             let endImagePoint = imagePoint(from: location, in: geometry.size) ?? dragEnd
                             let fallbackBrushSamples = samples.compactMap { sample in
                                 imagePoint(from: sample.location, in: geometry.size).map {
@@ -1962,7 +1973,7 @@ struct ImageEditorView: View {
                                 }
                             }
                             if let endImagePoint,
-                               canvasInteractionTool == .brush || canvasInteractionTool == .eraser {
+                               primaryTool == .brush || primaryTool == .eraser {
                                 brushStrokeSamples.append(
                                     ImageEditorBrushStrokeSample(
                                         point: endImagePoint,
@@ -1973,7 +1984,7 @@ struct ImageEditorView: View {
                             let committedBrushSamples = brushStrokeSamples.count >= 2
                                 ? brushStrokeSamples
                                 : fallbackBrushSamples
-                            switch canvasInteractionTool {
+                            switch primaryTool {
                             case .brush:
                                 viewModel.drawBrush(samples: committedBrushSamples)
                             case .eraser:
@@ -3599,7 +3610,11 @@ struct ImageEditorView: View {
     }
 
     private var canvasInteractionTool: ImageEditorTool {
-        viewModel.canvasInteractionTool
+        ImageEditorStylusToolOverride.effectiveTool(
+            baseTool: viewModel.canvasInteractionTool,
+            sidebarTab: viewModel.selectedLeftSidebarTab,
+            isEraserInProximity: isStylusEraserInProximity
+        )
     }
 
     private func imagePoint(from viewPoint: CGPoint, in size: CGSize) -> CGPoint? {

@@ -264,6 +264,50 @@ struct ImageEditorBrushStrokeTests {
         ) == 1)
     }
 
+    @Test func stylusEraserProximityTemporarilyOverridesOnlyToolMode() {
+        var isEraserInProximity = false
+        isEraserInProximity = ImageEditorStylusEraserProximity.nextState(
+            current: isEraserInProximity,
+            isEraserDevice: true,
+            enteringProximity: true
+        )
+        #expect(isEraserInProximity)
+        #expect(ImageEditorStylusToolOverride.effectiveTool(
+            baseTool: .brush,
+            sidebarTab: .tools,
+            isEraserInProximity: isEraserInProximity
+        ) == .eraser)
+        #expect(ImageEditorStylusToolOverride.effectiveTool(
+            baseTool: .move,
+            sidebarTab: .components,
+            isEraserInProximity: isEraserInProximity
+        ) == .move)
+
+        // An unrelated leaving event cannot cancel the eraser; a pen tip
+        // entering does replace the old device state.
+        #expect(ImageEditorStylusEraserProximity.nextState(
+            current: true,
+            isEraserDevice: false,
+            enteringProximity: false
+        ))
+        #expect(!ImageEditorStylusEraserProximity.nextState(
+            current: true,
+            isEraserDevice: false,
+            enteringProximity: true
+        ))
+        #expect(!ImageEditorStylusEraserProximity.nextState(
+            current: true,
+            isEraserDevice: true,
+            enteringProximity: false
+        ))
+
+        let captureState = ImageEditorCanvasPointerCaptureState()
+        captureState.activeTool = .eraser
+        #expect(captureState.activeTool == .eraser)
+        captureState.reset()
+        #expect(captureState.activeTool == nil)
+    }
+
     @Test func viewModelBrushUsesFlowSpacingSelectionAndHistory() throws {
         let size = CGSize(width: 80, height: 30)
         let viewModel = ImageEditorViewModel(

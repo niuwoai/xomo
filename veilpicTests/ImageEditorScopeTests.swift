@@ -2702,6 +2702,43 @@ struct ImageEditorScopeTests {
         #expect(pointerSource.contains("onPrimaryToolDragChanged?(location, pressure)"))
     }
 
+    @Test func stylusEraserProximityUsesNativeAppKitWithoutOverridingComponents() throws {
+        let repositoryRoot = Self.repositoryRoot()
+        let pointerSource = try String(
+            contentsOf: repositoryRoot.appendingPathComponent(
+                "veilpic/ImageEditorScrollZoom.swift"
+            ),
+            encoding: .utf8
+        )
+        let viewSource = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(pointerSource.contains("matching: .tabletProximity"))
+        #expect(pointerSource.contains("event.pointingDeviceType == .eraser"))
+        #expect(pointerSource.contains("enteringProximity: event.isEnteringProximity"))
+        #expect(pointerSource.contains("currentPointerHost?.reportStylusEraserProximity(nextState)"))
+        #expect(pointerSource.contains(
+            "guard lastReportedStylusEraserInProximity != isInProximity"
+        ))
+        #expect(viewSource.contains("@State private var isStylusEraserInProximity = false"))
+        #expect(viewSource.contains("onStylusEraserProximityChanged: { isInProximity in"))
+        #expect(viewSource.contains("ImageEditorStylusToolOverride.effectiveTool("))
+        #expect(viewSource.contains(
+            "viewModel.canvasPointerCaptureState.activeTool = canvasInteractionTool"
+        ))
+        #expect(viewSource.contains(
+            "let primaryTool = viewModel.canvasPointerCaptureState.activeTool"
+        ))
+        #expect(viewSource.contains("switch primaryTool"))
+        #expect(ImageEditorStylusToolOverride.effectiveTool(
+            baseTool: .move,
+            sidebarTab: .components,
+            isEraserInProximity: true
+        ) == .move)
+    }
+
     @Test func retouchPressureSensitivityMenuIsCompactSharedAndNonFocusable() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),

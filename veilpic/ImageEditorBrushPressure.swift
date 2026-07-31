@@ -27,3 +27,32 @@ enum ImageEditorBrushPressureInput {
         return max(0, min(1, rawPressure))
     }
 }
+
+enum ImageEditorStylusEraserProximity {
+    static func nextState(
+        current: Bool,
+        isEraserDevice: Bool,
+        enteringProximity: Bool
+    ) -> Bool {
+        if isEraserDevice {
+            return enteringProximity
+        }
+        // A pen tip entering replaces any stale eraser-tip state. A leaving
+        // event for an unrelated device must not cancel an eraser that is
+        // still in proximity.
+        return enteringProximity ? false : current
+    }
+}
+
+enum ImageEditorStylusToolOverride {
+    static func effectiveTool(
+        baseTool: ImageEditorTool,
+        sidebarTab: XomoLeftSidebarTab,
+        isEraserInProximity: Bool
+    ) -> ImageEditorTool {
+        guard sidebarTab == .tools, isEraserInProximity else {
+            return baseTool
+        }
+        return .eraser
+    }
+}
