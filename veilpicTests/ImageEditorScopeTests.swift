@@ -2770,10 +2770,15 @@ struct ImageEditorScopeTests {
         #expect(indicatorSource.contains(
             "ImageEditorStylusTiltDisplay(tilt: activeBrushTilt)"
         ))
-        #expect(indicatorSource.contains("imageEditor.option.stylusLiveHelp"))
+        #expect(indicatorSource.contains("imageEditor.option.stylusLiveDeviceHelp"))
         #expect(indicatorSource.contains("imageEditor.option.stylusLiveValue"))
+        #expect(indicatorSource.contains("imageEditor.option.stylusDeviceNotDetected"))
+        #expect(indicatorSource.contains("imageEditor.option.stylusPenDetected"))
+        #expect(indicatorSource.contains("imageEditor.option.stylusEraserDetected"))
         #expect(indicatorSource.contains("imageEditor.option.tiltNotDetected"))
         #expect(indicatorSource.contains("imageEditor.option.pressureNotDetected"))
+        #expect(indicatorSource.contains("stylusProximity == .eraser"))
+        #expect(indicatorSource.contains("stylusProximity == .pen"))
         #expect(indicatorSource.contains(".focusable(false)"))
         #expect(indicatorSource.contains(
             ".accessibilityIdentifier(\"image-editor-live-pressure\")"
@@ -2819,7 +2824,7 @@ struct ImageEditorScopeTests {
         #expect(viewSource.contains("activeBrushTilt = nil"))
     }
 
-    @Test func stylusEraserProximityUsesNativeAppKitWithoutOverridingComponents() throws {
+    @Test func stylusProximityUsesNativeAppKitWithoutOverridingComponents() throws {
         let repositoryRoot = Self.repositoryRoot()
         let pointerSource = try String(
             contentsOf: repositoryRoot.appendingPathComponent(
@@ -2833,14 +2838,17 @@ struct ImageEditorScopeTests {
         )
 
         #expect(pointerSource.contains("matching: .tabletProximity"))
-        #expect(pointerSource.contains("event.pointingDeviceType == .eraser"))
+        #expect(pointerSource.contains("ImageEditorStylusProximity.device("))
         #expect(pointerSource.contains("enteringProximity: event.isEnteringProximity"))
-        #expect(pointerSource.contains("currentPointerHost?.reportStylusEraserProximity(nextState)"))
+        #expect(pointerSource.contains("currentPointerHost?.reportStylusProximity(nextState)"))
         #expect(pointerSource.contains(
-            "guard lastReportedStylusEraserInProximity != isInProximity"
+            "guard lastReportedStylusProximity != proximity"
         ))
-        #expect(viewSource.contains("@State private var isStylusEraserInProximity = false"))
-        #expect(viewSource.contains("onStylusEraserProximityChanged: { isInProximity in"))
+        #expect(viewSource.contains(
+            "@State private var stylusProximity: ImageEditorStylusProximity = .none"
+        ))
+        #expect(viewSource.contains("onStylusProximityChanged: { proximity in"))
+        #expect(viewSource.contains("stylusProximity = proximity"))
         #expect(viewSource.contains("ImageEditorStylusToolOverride.effectiveTool("))
         #expect(viewSource.contains(
             "viewModel.canvasPointerCaptureState.activeTool = canvasInteractionTool"

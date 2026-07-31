@@ -132,7 +132,7 @@ struct ImageEditorView: View {
     @State private var canvasModifierFlags: NSEvent.ModifierFlags = []
     @State private var activeBrushPressure: CGFloat?
     @State private var activeBrushTilt: ImageEditorStylusTilt?
-    @State private var isStylusEraserInProximity = false
+    @State private var stylusProximity: ImageEditorStylusProximity = .none
     @State private var histogramProbeBinIndex: Int?
     @State private var histogramRangeAnchorBinIndex: Int?
     @State private var histogramRangeEndBinIndex: Int?
@@ -816,6 +816,14 @@ struct ImageEditorView: View {
     private var brushPressureIndicator: some View {
         let pressureDisplay = ImageEditorBrushPressureDisplay(pressure: activeBrushPressure)
         let tiltDisplay = ImageEditorStylusTiltDisplay(tilt: activeBrushTilt)
+        let deviceStatus = switch stylusProximity {
+        case .none:
+            L10n.text("imageEditor.option.stylusDeviceNotDetected")
+        case .pen:
+            L10n.text("imageEditor.option.stylusPenDetected")
+        case .eraser:
+            L10n.text("imageEditor.option.stylusEraserDetected")
+        }
         let valueText = pressureDisplay.percent.map {
             L10n.format("imageEditor.option.percentPreset", $0)
         } ?? "—"
@@ -840,13 +848,26 @@ struct ImageEditorView: View {
         return HStack(spacing: 4) {
             ZStack {
                 Circle()
-                    .stroke(Color.white.opacity(0.28), lineWidth: 1)
+                    .stroke(
+                        stylusProximity == .none
+                            ? Color.white.opacity(0.28)
+                            : Color.accentColor.opacity(0.9),
+                        lineWidth: 1
+                    )
                 if let azimuthDegrees = tiltDisplay.azimuthDegrees {
                     Image(systemName: "location.north.fill")
                         .font(.system(size: 7, weight: .semibold))
                         .foregroundStyle(Color.accentColor)
                         .scaleEffect(0.55 + tiltDisplay.magnitudeFraction * 0.45)
                         .rotationEffect(.degrees(Double(azimuthDegrees) + 90))
+                } else if stylusProximity == .eraser {
+                    Image(systemName: "eraser.fill")
+                        .font(.system(size: 7, weight: .semibold))
+                        .foregroundStyle(Color.accentColor)
+                } else if stylusProximity == .pen {
+                    Image(systemName: "pencil.tip")
+                        .font(.system(size: 7, weight: .semibold))
+                        .foregroundStyle(Color.accentColor)
                 } else {
                     Circle()
                         .fill(Color.white.opacity(tiltDisplay.magnitudePercent == nil ? 0.22 : 0.72))
@@ -874,11 +895,15 @@ struct ImageEditorView: View {
         }
         .frame(width: 48)
         .focusable(false)
-        .help(L10n.text("imageEditor.option.stylusLiveHelp"))
+        .help(L10n.format(
+            "imageEditor.option.stylusLiveDeviceHelp",
+            deviceStatus
+        ))
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(L10n.text("imageEditor.option.stylusInput"))
         .accessibilityValue(L10n.format(
             "imageEditor.option.stylusLiveValue",
+            deviceStatus,
             pressureAccessibilityText,
             tiltAccessibilityText
         ))
@@ -2052,8 +2077,8 @@ struct ImageEditorView: View {
                             }
                             updateCanvasCursor(at: location, in: geometry.size)
                         },
-                        onStylusEraserProximityChanged: { isInProximity in
-                            isStylusEraserInProximity = isInProximity
+                        onStylusProximityChanged: { proximity in
+                            stylusProximity = proximity
                             activeBrushPressure = nil
                             activeBrushTilt = nil
                             refreshCanvasCursor(in: geometry.size)
@@ -3817,7 +3842,7 @@ struct ImageEditorView: View {
         ImageEditorStylusToolOverride.effectiveTool(
             baseTool: viewModel.canvasInteractionTool,
             sidebarTab: viewModel.selectedLeftSidebarTab,
-            isEraserInProximity: isStylusEraserInProximity
+            isEraserInProximity: stylusProximity.isEraser
         )
     }
 

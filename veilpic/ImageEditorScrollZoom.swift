@@ -149,7 +149,7 @@ struct ScrollWheelZoomView: NSViewRepresentable {
         _ location: CGPoint,
         _ stylusInput: ImageEditorStylusEventSample
     ) -> Void
-    let onStylusEraserProximityChanged: (_ isInProximity: Bool) -> Void
+    let onStylusProximityChanged: (_ proximity: ImageEditorStylusProximity) -> Void
     let onMiddleMousePanBegan: () -> Void
     let onMiddleMousePanChanged: (_ delta: CGSize) -> Void
     let onMiddleMousePanEnded: () -> Void
@@ -193,7 +193,7 @@ struct ScrollWheelZoomView: NSViewRepresentable {
         view.capturesPrimaryPointer = capturesPrimaryPointer
         view.onZoom = onZoom
         view.onMouseMoved = onMouseMoved
-        view.onStylusEraserProximityChanged = onStylusEraserProximityChanged
+        view.onStylusProximityChanged = onStylusProximityChanged
         view.onMiddleMousePanBegan = onMiddleMousePanBegan
         view.onMiddleMousePanChanged = onMiddleMousePanChanged
         view.onMiddleMousePanEnded = onMiddleMousePanEnded
@@ -220,7 +220,7 @@ struct ScrollWheelZoomView: NSViewRepresentable {
         nsView.capturesPrimaryPointer = capturesPrimaryPointer
         nsView.onZoom = onZoom
         nsView.onMouseMoved = onMouseMoved
-        nsView.onStylusEraserProximityChanged = onStylusEraserProximityChanged
+        nsView.onStylusProximityChanged = onStylusProximityChanged
         nsView.onMiddleMousePanBegan = onMiddleMousePanBegan
         nsView.onMiddleMousePanChanged = onMiddleMousePanChanged
         nsView.onMiddleMousePanEnded = onMiddleMousePanEnded
@@ -320,14 +320,14 @@ final class ScrollWheelZoomNSView: NSView {
     private static weak var currentPointerHost: ScrollWheelZoomNSView?
     private static var canvasPointerMonitor: Any?
     private static var tabletProximityMonitor: Any?
-    private static var isStylusEraserInProximity = false
+    private static var stylusProximity: ImageEditorStylusProximity = .none
 
     var pointerCaptureState = ImageEditorCanvasPointerCaptureState()
     var pointerCaptureKind: ImageEditorPrimaryToolPointerCapture.Kind = .none
     var capturesPrimaryPointer = false
     var onZoom: ((CGFloat, CGPoint, CGSize) -> Void)?
     var onMouseMoved: ((CGPoint, ImageEditorStylusEventSample) -> Void)?
-    var onStylusEraserProximityChanged: ((Bool) -> Void)?
+    var onStylusProximityChanged: ((ImageEditorStylusProximity) -> Void)?
     var onMiddleMousePanBegan: (() -> Void)?
     var onMiddleMousePanChanged: ((CGSize) -> Void)?
     var onMiddleMousePanEnded: (() -> Void)?
@@ -361,7 +361,7 @@ final class ScrollWheelZoomNSView: NSView {
     private var hasObjectMoveCandidate = false
     private var isObjectMoveCaptureRejected = false
     private var objectMoveStartPoint: CGPoint?
-    private var lastReportedStylusEraserInProximity: Bool?
+    private var lastReportedStylusProximity: ImageEditorStylusProximity?
     private lazy var primaryPointerGestureRecognizer: ImageEditorCanvasPointerGestureRecognizer = {
         let recognizer = ImageEditorCanvasPointerGestureRecognizer()
         installPrimaryPointerHandler(on: recognizer)
@@ -416,7 +416,7 @@ final class ScrollWheelZoomNSView: NSView {
         Self.currentPointerHost = self
         Self.installCanvasPointerMonitorIfNeeded()
         Self.installTabletProximityMonitorIfNeeded()
-        reportStylusEraserProximity(Self.isStylusEraserInProximity)
+        reportStylusProximity(Self.stylusProximity)
     }
 
     private static func installCanvasPointerMonitorIfNeeded() {
@@ -435,31 +435,33 @@ final class ScrollWheelZoomNSView: NSView {
         tabletProximityMonitor = NSEvent.addLocalMonitorForEvents(
             matching: .tabletProximity
         ) { event in
-            updateStylusEraserProximity(from: event)
+            updateStylusProximity(from: event)
             return event
         }
     }
 
-    private static func updateStylusEraserProximity(from event: NSEvent) {
+    private static func updateStylusProximity(from event: NSEvent) {
         guard event.type == .tabletProximity || event.subtype == .tabletProximity else {
             return
         }
-        let nextState = ImageEditorStylusEraserProximity.nextState(
-            current: isStylusEraserInProximity,
-            isEraserDevice: event.pointingDeviceType == .eraser,
+        let nextState = ImageEditorStylusProximity.nextState(
+            current: stylusProximity,
+            device: ImageEditorStylusProximity.device(
+                from: event.pointingDeviceType
+            ),
             enteringProximity: event.isEnteringProximity
         )
-        guard nextState != isStylusEraserInProximity else { return }
-        isStylusEraserInProximity = nextState
-        currentPointerHost?.reportStylusEraserProximity(nextState)
+        guard nextState != stylusProximity else { return }
+        stylusProximity = nextState
+        currentPointerHost?.reportStylusProximity(nextState)
     }
 
-    private func reportStylusEraserProximity(_ isInProximity: Bool) {
-        guard lastReportedStylusEraserInProximity != isInProximity else {
+    private func reportStylusProximity(_ proximity: ImageEditorStylusProximity) {
+        guard lastReportedStylusProximity != proximity else {
             return
         }
-        lastReportedStylusEraserInProximity = isInProximity
-        onStylusEraserProximityChanged?(isInProximity)
+        lastReportedStylusProximity = proximity
+        onStylusProximityChanged?(proximity)
     }
 
     private func installMonitor() {
@@ -519,7 +521,7 @@ final class ScrollWheelZoomNSView: NSView {
     }
 
     private func handleMouseMoved(_ event: NSEvent) {
-        Self.updateStylusEraserProximity(from: event)
+        Self.updateStylusProximity(from: event)
         guard let window, event.window === window else { return }
         let location = convert(event.locationInWindow, from: nil)
         guard bounds.contains(location) else { return }

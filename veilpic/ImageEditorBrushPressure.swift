@@ -112,6 +112,41 @@ struct ImageEditorStylusTiltDisplay: Equatable {
     }
 }
 
+enum ImageEditorStylusProximity: Equatable {
+    case none
+    case pen
+    case eraser
+
+    static func device(from pointingDeviceType: NSEvent.PointingDeviceType) -> Self? {
+        switch pointingDeviceType {
+        case .pen:
+            .pen
+        case .eraser:
+            .eraser
+        case .unknown, .cursor:
+            nil
+        @unknown default:
+            nil
+        }
+    }
+
+    static func nextState(
+        current: Self,
+        device: Self?,
+        enteringProximity: Bool
+    ) -> Self {
+        guard let device, device != .none else { return current }
+        if enteringProximity {
+            return device
+        }
+        return current == device ? .none : current
+    }
+
+    var isEraser: Bool {
+        self == .eraser
+    }
+}
+
 struct ImageEditorBrushCursorFootprint: Equatable {
     static let minimumDiameter: CGFloat = 3
     static let maximumDiameter: CGFloat = 256
@@ -174,22 +209,6 @@ struct ImageEditorBrushCursorFootprint: Equatable {
             "\(Int((aspectRatio * 100).rounded()))",
             "\(rotationDegrees)"
         ].joined(separator: ":")
-    }
-}
-
-enum ImageEditorStylusEraserProximity {
-    static func nextState(
-        current: Bool,
-        isEraserDevice: Bool,
-        enteringProximity: Bool
-    ) -> Bool {
-        if isEraserDevice {
-            return enteringProximity
-        }
-        // A pen tip entering replaces any stale eraser-tip state. A leaving
-        // event for an unrelated device must not cancel an eraser that is
-        // still in proximity.
-        return enteringProximity ? false : current
     }
 }
 

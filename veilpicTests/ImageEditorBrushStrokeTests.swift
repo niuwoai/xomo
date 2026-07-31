@@ -544,42 +544,63 @@ struct ImageEditorBrushStrokeTests {
         ) == 1)
     }
 
-    @Test func stylusEraserProximityTemporarilyOverridesOnlyToolMode() {
-        var isEraserInProximity = false
-        isEraserInProximity = ImageEditorStylusEraserProximity.nextState(
-            current: isEraserInProximity,
-            isEraserDevice: true,
+    @Test func stylusProximityReportsPenAndEraserWithoutOverridingComponents() {
+        #expect(
+            ImageEditorStylusProximity.device(from: .pen) == .pen
+        )
+        #expect(
+            ImageEditorStylusProximity.device(from: .eraser) == .eraser
+        )
+        #expect(
+            ImageEditorStylusProximity.device(from: .cursor) == nil
+        )
+
+        var proximity = ImageEditorStylusProximity.none
+        proximity = ImageEditorStylusProximity.nextState(
+            current: proximity,
+            device: .pen,
             enteringProximity: true
         )
-        #expect(isEraserInProximity)
+        #expect(proximity == .pen)
+        proximity = ImageEditorStylusProximity.nextState(
+            current: proximity,
+            device: .eraser,
+            enteringProximity: true
+        )
+        #expect(proximity == .eraser)
         #expect(ImageEditorStylusToolOverride.effectiveTool(
             baseTool: .brush,
             sidebarTab: .tools,
-            isEraserInProximity: isEraserInProximity
+            isEraserInProximity: proximity.isEraser
         ) == .eraser)
         #expect(ImageEditorStylusToolOverride.effectiveTool(
             baseTool: .move,
             sidebarTab: .components,
-            isEraserInProximity: isEraserInProximity
+            isEraserInProximity: proximity.isEraser
         ) == .move)
 
-        // An unrelated leaving event cannot cancel the eraser; a pen tip
-        // entering does replace the old device state.
-        #expect(ImageEditorStylusEraserProximity.nextState(
-            current: true,
-            isEraserDevice: false,
+        // A leaving event for an unrelated pen cannot cancel the eraser; a
+        // pen tip entering does replace the old active device.
+        #expect(ImageEditorStylusProximity.nextState(
+            current: .eraser,
+            device: .pen,
             enteringProximity: false
-        ))
-        #expect(!ImageEditorStylusEraserProximity.nextState(
-            current: true,
-            isEraserDevice: false,
+        ) == .eraser)
+        #expect(ImageEditorStylusProximity.nextState(
+            current: .eraser,
+            device: .pen,
             enteringProximity: true
-        ))
-        #expect(!ImageEditorStylusEraserProximity.nextState(
-            current: true,
-            isEraserDevice: true,
+        ) == .pen)
+        #expect(ImageEditorStylusProximity.nextState(
+            current: .eraser,
+            device: .eraser,
             enteringProximity: false
-        ))
+        ) == .none)
+        #expect(ImageEditorStylusProximity.nextState(
+            current: .pen,
+            device: nil,
+            enteringProximity: true
+        ) == .pen)
 
         let captureState = ImageEditorCanvasPointerCaptureState()
         captureState.activeTool = .eraser
