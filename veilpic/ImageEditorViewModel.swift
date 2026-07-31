@@ -102,6 +102,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var brushPressureControlsFlow = true
     @Published var brushPressureSensitivity: CGFloat = 50
     @Published var brushTiltControlsShape = false
+    @Published var brushSmoothing: CGFloat = 0
     @Published var retouchPressureControlsSize = false
     @Published var retouchPressureSensitivity: CGFloat = 50
     @Published var toneRange: ImageEditorToneRange = .midtones
@@ -460,6 +461,7 @@ final class ImageEditorViewModel: ObservableObject {
         brushPressureControlsFlow = brushDynamicsPreferences.pressureControlsFlow
         brushPressureSensitivity = CGFloat(brushDynamicsPreferences.pressureSensitivity)
         brushTiltControlsShape = brushDynamicsPreferences.tiltControlsShape
+        brushSmoothing = CGFloat(brushDynamicsPreferences.smoothing)
         retouchPressureControlsSize = retouchDynamicsPreferences.pressureControlsSize
         retouchPressureSensitivity = CGFloat(retouchDynamicsPreferences.pressureSensitivity)
         customBrushPresets = brushPresetPreferences.presets
@@ -502,6 +504,7 @@ final class ImageEditorViewModel: ObservableObject {
         brushPressureControlsFlow = brushDynamicsPreferences.pressureControlsFlow
         brushPressureSensitivity = CGFloat(brushDynamicsPreferences.pressureSensitivity)
         brushTiltControlsShape = brushDynamicsPreferences.tiltControlsShape
+        brushSmoothing = CGFloat(brushDynamicsPreferences.smoothing)
         retouchPressureControlsSize = retouchDynamicsPreferences.pressureControlsSize
         retouchPressureSensitivity = CGFloat(retouchDynamicsPreferences.pressureSensitivity)
         customBrushPresets = brushPresetPreferences.presets
@@ -2532,7 +2535,8 @@ final class ImageEditorViewModel: ObservableObject {
             pressureControlsSize: brushPressureControlsSize,
             pressureControlsFlow: brushPressureControlsFlow,
             pressureSensitivity: brushPressureSensitivity,
-            tiltControlsShape: brushTiltControlsShape
+            tiltControlsShape: brushTiltControlsShape,
+            smoothing: brushSmoothing
         )
     }
 
@@ -2678,6 +2682,7 @@ final class ImageEditorViewModel: ObservableObject {
         brushPressureControlsFlow = preset.pressureControlsFlow
         brushPressureSensitivity = max(0, min(100, preset.pressureSensitivity))
         brushTiltControlsShape = preset.tiltControlsShape
+        brushSmoothing = max(0, min(100, preset.smoothing))
         persistBrushDynamicsPreferences()
         statusText = L10n.format("imageEditor.status.brushPresetApplied", preset.title, brushesPanelSummaryText)
     }
@@ -2709,7 +2714,8 @@ final class ImageEditorViewModel: ObservableObject {
             pressureControlsSize: brushPressureControlsSize,
             pressureControlsFlow: brushPressureControlsFlow,
             pressureSensitivity: brushPressureSensitivity,
-            tiltControlsShape: brushTiltControlsShape
+            tiltControlsShape: brushTiltControlsShape,
+            smoothing: brushSmoothing
         ).normalizedCustomPreset
         customBrushPresets.append(preset)
         persistBrushPresetPreferences()
@@ -3411,7 +3417,8 @@ final class ImageEditorViewModel: ObservableObject {
             pressureControlsSize: brushPressureControlsSize,
             pressureControlsFlow: brushPressureControlsFlow,
             pressureSensitivity: Double(brushPressureSensitivity),
-            tiltControlsShape: brushTiltControlsShape
+            tiltControlsShape: brushTiltControlsShape,
+            smoothing: Double(brushSmoothing)
         ).save(to: workspacePreferencesDefaults)
     }
 
@@ -3461,6 +3468,13 @@ final class ImageEditorViewModel: ObservableObject {
     func setBrushTiltControlsShape(_ isEnabled: Bool) {
         guard brushTiltControlsShape != isEnabled else { return }
         brushTiltControlsShape = isEnabled
+        persistBrushDynamicsPreferences()
+    }
+
+    func setBrushSmoothing(_ smoothing: CGFloat) {
+        let normalized = max(0, min(100, smoothing))
+        guard brushSmoothing != normalized else { return }
+        brushSmoothing = normalized
         persistBrushDynamicsPreferences()
     }
 
@@ -5190,7 +5204,8 @@ final class ImageEditorViewModel: ObservableObject {
                 pressureControlsSize: brushPressureControlsSize,
                 pressureControlsFlow: brushPressureControlsFlow,
                 pressureSensitivity: brushPressureSensitivity / 100,
-                tiltControlsShape: brushTiltControlsShape
+                tiltControlsShape: brushTiltControlsShape,
+                smoothing: brushSmoothing / 100
             ),
             erase: erase
         ) else {
@@ -5219,6 +5234,7 @@ final class ImageEditorViewModel: ObservableObject {
                 pressureControlsFlow: brushPressureControlsFlow,
                 pressureSensitivity: brushPressureSensitivity / 100,
                 tiltControlsShape: brushTiltControlsShape,
+                smoothing: brushSmoothing / 100,
                 reveal: reveal
               )
         else {
@@ -6905,6 +6921,7 @@ final class ImageEditorViewModel: ObservableObject {
             pressureControlsFlow: brushPressureControlsFlow,
             pressureSensitivity: brushPressureSensitivity / 100,
             tiltControlsShape: brushTiltControlsShape,
+            smoothing: brushSmoothing / 100,
             reveal: reveal
         ) else {
             statusText = L10n.text("imageEditor.status.operationFailed")
@@ -8741,6 +8758,7 @@ extension NSImage {
         pressureControlsFlow: Bool = false,
         pressureSensitivity: CGFloat = 0.5,
         tiltControlsShape: Bool = false,
+        smoothing: CGFloat = 0,
         reveal: Bool
     ) -> NSImage? {
         withBrushStroke(
@@ -8755,7 +8773,8 @@ extension NSImage {
                 pressureControlsSize: pressureControlsSize,
                 pressureControlsFlow: pressureControlsFlow,
                 pressureSensitivity: pressureSensitivity,
-                tiltControlsShape: tiltControlsShape
+                tiltControlsShape: tiltControlsShape,
+                smoothing: smoothing
             ),
             erase: !reveal
         )

@@ -174,6 +174,85 @@ struct ImageEditorBrushStrokeTests {
         #expect(abs((try #require(stamps[2].pressure)) - 0.6) < 0.0001)
     }
 
+    @Test func smoothingReducesJitterWhilePreservingEndpointsAndStylusDynamics() throws {
+        let samples = [
+            ImageEditorBrushStrokeSample(
+                point: CGPoint(x: 0, y: 10),
+                pressure: 0.1,
+                tilt: ImageEditorStylusTilt(x: 0.1, y: 0)
+            ),
+            ImageEditorBrushStrokeSample(
+                point: CGPoint(x: 10, y: 18),
+                pressure: 0.3,
+                tilt: ImageEditorStylusTilt(x: 0.3, y: 0)
+            ),
+            ImageEditorBrushStrokeSample(
+                point: CGPoint(x: 20, y: 2),
+                pressure: 0.5,
+                tilt: ImageEditorStylusTilt(x: 0.5, y: 0)
+            ),
+            ImageEditorBrushStrokeSample(
+                point: CGPoint(x: 30, y: 18),
+                pressure: 0.7,
+                tilt: ImageEditorStylusTilt(x: 0.7, y: 0)
+            ),
+            ImageEditorBrushStrokeSample(
+                point: CGPoint(x: 40, y: 10),
+                pressure: 0.9,
+                tilt: ImageEditorStylusTilt(x: 0.9, y: 0)
+            )
+        ]
+
+        let smoothed = ImageEditorBrushStrokeKernel.smoothedSamples(
+            samples,
+            amount: 1
+        )
+
+        #expect(smoothed.first == samples.first)
+        #expect(smoothed.last == samples.last)
+        #expect(smoothed.map(\.pressure) == samples.map(\.pressure))
+        #expect(smoothed.map(\.tilt) == samples.map(\.tilt))
+        let originalDeviation = samples.dropFirst().dropLast().reduce(CGFloat.zero) {
+            $0 + abs($1.point.y - 10)
+        }
+        let smoothedDeviation = smoothed.dropFirst().dropLast().reduce(CGFloat.zero) {
+            $0 + abs($1.point.y - 10)
+        }
+        #expect(smoothedDeviation < originalDeviation * 0.35)
+    }
+
+    @Test func zeroSmoothingAndShortStrokesRemainExactlyCompatible() {
+        let samples = [
+            ImageEditorBrushStrokeSample(point: CGPoint(x: 0, y: 4), pressure: 0.2),
+            ImageEditorBrushStrokeSample(point: CGPoint(x: 10, y: 12), pressure: 0.6),
+            ImageEditorBrushStrokeSample(point: CGPoint(x: 20, y: 4), pressure: 1)
+        ]
+        #expect(ImageEditorBrushStrokeKernel.smoothedSamples(
+            samples,
+            amount: 0
+        ) == samples)
+        #expect(ImageEditorBrushStrokeKernel.smoothedSamples(
+            Array(samples.prefix(2)),
+            amount: 1
+        ) == Array(samples.prefix(2)))
+        #expect(ImageEditorBrushStrokeSettings(
+            diameter: 12,
+            hardness: 1,
+            opacity: 1,
+            flow: 1,
+            spacing: 0.25,
+            smoothing: -1
+        ).normalized.smoothing == 0)
+        #expect(ImageEditorBrushStrokeSettings(
+            diameter: 12,
+            hardness: 1,
+            opacity: 1,
+            flow: 1,
+            spacing: 0.25,
+            smoothing: 2
+        ).normalized.smoothing == 1)
+    }
+
     @Test func pressureCanControlDiameterAndFlowIndependently() {
         let stamps = [
             ImageEditorBrushStrokeSample(point: CGPoint(x: 15, y: 20), pressure: 0.2),
@@ -652,6 +731,58 @@ struct ImageEditorBrushStrokeTests {
         let verticalColor = try #require(layerMask.color(at: CGPoint(x: 20, y: 28)))
         #expect(horizontalColor.alphaComponent < 0.06)
         #expect(verticalColor.alphaComponent > 0.95)
+    }
+
+    @Test func quickMaskAndLayerMaskShareEndpointPreservingSmoothing() throws {
+        let size = CGSize(width: 60, height: 40)
+        let samples = [
+            ImageEditorBrushStrokeSample(point: CGPoint(x: 10, y: 20)),
+            ImageEditorBrushStrokeSample(point: CGPoint(x: 20, y: 30)),
+            ImageEditorBrushStrokeSample(point: CGPoint(x: 30, y: 10)),
+            ImageEditorBrushStrokeSample(point: CGPoint(x: 40, y: 30)),
+            ImageEditorBrushStrokeSample(point: CGPoint(x: 50, y: 20))
+        ]
+        let selectionMask = ImageEditorSelectionMask(
+            width: 60,
+            height: 40,
+            alpha: [UInt8](repeating: .max, count: 60 * 40)
+        )
+        let quickMask = try #require(selectionMask.paintedByQuickMaskStroke(
+            samples: samples,
+            canvasSize: size,
+            diameter: 4,
+            opacity: 1,
+            hardness: 1,
+            flow: 1,
+            spacing: 0.25,
+            smoothing: 1,
+            reveal: false
+        ))
+        #expect(quickMask.alpha[10 * 60 + 30] == .max)
+        #expect(quickMask.alpha[20 * 60 + 30] < 20)
+
+        let sourceMask = NSImage.rendered(size: size) { rect in
+            NSColor.white.setFill()
+            rect.fill()
+        } ?? NSImage.transparent(size: size)
+        let layerMask = try #require(sourceMask.withMaskStroke(
+            samples: samples,
+            width: 4,
+            opacity: 1,
+            hardness: 1,
+            flow: 1,
+            spacing: 0.25,
+            smoothing: 1,
+            reveal: false
+        ))
+        let formerSpike = try #require(
+            layerMask.color(at: CGPoint(x: 30, y: 10))
+        )
+        let smoothedCenter = try #require(
+            layerMask.color(at: CGPoint(x: 30, y: 20))
+        )
+        #expect(formerSpike.alphaComponent > 0.95)
+        #expect(smoothedCenter.alphaComponent < 0.08)
     }
 
     @Test func brushStrokeRespectsTransparentPixelLock() throws {

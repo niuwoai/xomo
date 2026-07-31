@@ -259,6 +259,7 @@ extension ImageEditorSelectionMask {
         pressureControlsFlow: Bool = false,
         pressureSensitivity: CGFloat = 0.5,
         tiltControlsShape: Bool = false,
+        smoothing: CGFloat = 0,
         reveal: Bool
     ) -> ImageEditorSelectionMask? {
         guard width > 0,
@@ -278,7 +279,8 @@ extension ImageEditorSelectionMask {
                 pressureControlsSize: pressureControlsSize,
                 pressureControlsFlow: pressureControlsFlow,
                 pressureSensitivity: pressureSensitivity,
-                tiltControlsShape: tiltControlsShape
+                tiltControlsShape: tiltControlsShape,
+                smoothing: smoothing
               )
         else { return nil }
 
@@ -305,7 +307,8 @@ extension ImageEditorSelectionMask {
         pressureControlsSize: Bool,
         pressureControlsFlow: Bool,
         pressureSensitivity: CGFloat,
-        tiltControlsShape: Bool
+        tiltControlsShape: Bool,
+        smoothing: CGFloat
     ) -> [UInt8]? {
         guard !samples.isEmpty else { return nil }
         let scaleX = CGFloat(width) / canvasSize.width
@@ -327,7 +330,8 @@ extension ImageEditorSelectionMask {
             pressureControlsSize: pressureControlsSize,
             pressureControlsFlow: pressureControlsFlow,
             pressureSensitivity: pressureSensitivity,
-            tiltControlsShape: tiltControlsShape
+            tiltControlsShape: tiltControlsShape,
+            smoothing: smoothing
         )
         return ImageEditorBrushStrokeKernel.coverage(
             width: width,
@@ -335,7 +339,8 @@ extension ImageEditorSelectionMask {
             stamps: ImageEditorBrushStrokeKernel.stampSamples(
                 samples: scaledSamples,
                 diameter: scaledDiameter,
-                spacing: spacing
+                spacing: spacing,
+                smoothing: smoothing
             ),
             settings: settings
         )

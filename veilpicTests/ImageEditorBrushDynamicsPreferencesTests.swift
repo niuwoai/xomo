@@ -20,7 +20,8 @@ struct ImageEditorBrushDynamicsPreferencesTests {
             pressureControlsSize: false,
             pressureControlsFlow: true,
             pressureSensitivity: 140,
-            tiltControlsShape: true
+            tiltControlsShape: true,
+            smoothing: 140
         ).save(to: defaults)
 
         let loaded = ImageEditorBrushDynamicsPreferences.load(from: defaults)
@@ -28,6 +29,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(loaded.pressureControlsFlow)
         #expect(loaded.pressureSensitivity == 100)
         #expect(loaded.tiltControlsShape)
+        #expect(loaded.smoothing == 100)
 
         defaults.set(
             Data("not-json".utf8),
@@ -49,6 +51,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         first.setBrushPressureControlsFlow(true)
         first.setBrushPressureSensitivity(73)
         first.setBrushTiltControlsShape(true)
+        first.setBrushSmoothing(64)
 
         let restored = ImageEditorViewModel(
             sourceName: "restored.png",
@@ -59,6 +62,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(restored.brushPressureControlsFlow)
         #expect(restored.brushPressureSensitivity == 73)
         #expect(restored.brushTiltControlsShape)
+        #expect(restored.brushSmoothing == 64)
     }
 
     @Test func legacyBrushDynamicsAndPresetsDefaultTiltShapeOff() throws {
@@ -76,6 +80,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
             from: legacyDynamics
         )
         #expect(!decodedDynamics.tiltControlsShape)
+        #expect(decodedDynamics.smoothing == 0)
 
         let legacyPreset = Data(
             """
@@ -98,6 +103,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
             from: legacyPreset
         )
         #expect(!decodedPreset.tiltControlsShape)
+        #expect(decodedPreset.smoothing == 0)
     }
 
     @Test func retouchPressurePreferencesDefaultOffPersistAndStayIndependent() {
@@ -153,6 +159,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
             pressureControlsSize: false,
             pressureControlsFlow: true,
             pressureSensitivity: 180,
+            smoothing: 180,
             isBuiltIn: true
         )
         ImageEditorBrushPresetPreferences(presets: [invalid, invalid]).save(to: defaults)
@@ -166,6 +173,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(preset.flow == 100)
         #expect(preset.spacing == 1)
         #expect(preset.pressureSensitivity == 100)
+        #expect(preset.smoothing == 100)
         #expect(!preset.isBuiltIn)
 
         defaults.set(Data("broken".utf8), forKey: ImageEditorBrushPresetPreferences.storageKey)
@@ -184,6 +192,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         first.setBrushPressureControlsFlow(true)
         first.setBrushPressureSensitivity(73)
         first.setBrushTiltControlsShape(true)
+        first.setBrushSmoothing(64)
 
         let created = try #require(first.createBrushPresetFromCurrentSettings())
         #expect(!created.isBuiltIn)
@@ -201,6 +210,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(restored.brushPressureControlsFlow)
         #expect(restored.brushPressureSensitivity == 73)
         #expect(restored.brushTiltControlsShape)
+        #expect(restored.brushSmoothing == 64)
         #expect(restored.activeBrushPreset?.id == created.id)
 
         restored.brushFlow = 66
@@ -223,6 +233,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         viewModel.setBrushPressureControlsFlow(false)
         viewModel.setBrushPressureSensitivity(0)
         viewModel.setBrushTiltControlsShape(true)
+        viewModel.setBrushSmoothing(75)
 
         viewModel.applyBrushPreset(builtIn)
         viewModel.deleteBrushPreset(builtIn)
@@ -235,6 +246,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(viewModel.brushPressureControlsFlow)
         #expect(viewModel.brushPressureSensitivity == 50)
         #expect(!viewModel.brushTiltControlsShape)
+        #expect(viewModel.brushSmoothing == 0)
         #expect(viewModel.customBrushPresets.isEmpty)
     }
 

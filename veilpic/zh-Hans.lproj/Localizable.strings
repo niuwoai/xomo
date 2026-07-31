@@ -571,6 +571,9 @@
 "imageEditor.option.hardness" = "硬度";
 "imageEditor.option.flow" = "流量";
 "imageEditor.option.spacing" = "间距";
+"imageEditor.option.smoothing" = "平滑";
+"imageEditor.option.smoothingValue" = "平滑 %d%%";
+"imageEditor.help.brushSmoothing" = "在生成画笔间距前减少鼠标或数位笔路径抖动";
 "imageEditor.option.pressure" = "笔压";
 "imageEditor.option.pressureSize" = "控制大小";
 "imageEditor.option.pressureFlow" = "控制流量";

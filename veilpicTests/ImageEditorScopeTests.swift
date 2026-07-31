@@ -2602,6 +2602,28 @@ struct ImageEditorScopeTests {
         #expect(menuSource.contains("image-editor-brush-preset-menu"))
     }
 
+    @Test func brushAndEraserExposeCompactNonFocusableSmoothingPresets() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let menuStart = try #require(
+            source.range(of: "private var brushSmoothingMenu: some View")
+        )
+        let menuEnd = try #require(
+            source[menuStart.upperBound...].range(
+                of: "private var retouchPressureSensitivityMenu: some View"
+            )
+        )
+        let menuSource = source[menuStart.lowerBound..<menuEnd.lowerBound]
+
+        #expect(source.contains("brushSmoothingMenu\n                    brushPressureMenu"))
+        #expect(menuSource.contains("ImageEditorBrushSmoothingPresets.values"))
+        #expect(menuSource.contains("viewModel.setBrushSmoothing($0)"))
+        #expect(menuSource.contains(".focusable(false)"))
+        #expect(menuSource.contains("image-editor-brush-smoothing"))
+    }
+
     @Test func patchToolExposesModesAndWiresTwoPhaseLivePreviewInteraction() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),

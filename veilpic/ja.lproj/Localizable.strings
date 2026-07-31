@@ -571,6 +571,9 @@
 "imageEditor.option.hardness" = "硬さ";
 "imageEditor.option.flow" = "流量";
 "imageEditor.option.spacing" = "間隔";
+"imageEditor.option.smoothing" = "滑らかさ";
+"imageEditor.option.smoothingValue" = "滑らかさ %d%%";
+"imageEditor.help.brushSmoothing" = "ブラシストロークの間隔処理前にポインターの揺れを抑えます";
 "imageEditor.option.pressure" = "筆圧";
 "imageEditor.option.pressureSize" = "サイズを制御";
 "imageEditor.option.pressureFlow" = "流量を制御";

@@ -11,30 +11,38 @@ enum ImageEditorPressureSensitivityPresets {
     static let values: [CGFloat] = [0, 25, 50, 75, 100]
 }
 
+enum ImageEditorBrushSmoothingPresets {
+    static let values: [CGFloat] = [0, 10, 25, 50, 75, 100]
+}
+
 struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
     static let storageKey = "im.some.xomo.imageEditor.brushDynamicsPreferences"
     static let defaultValue = ImageEditorBrushDynamicsPreferences(
         pressureControlsSize: true,
         pressureControlsFlow: true,
         pressureSensitivity: 50,
-        tiltControlsShape: false
+        tiltControlsShape: false,
+        smoothing: 0
     )
 
     var pressureControlsSize: Bool
     var pressureControlsFlow: Bool
     var pressureSensitivity: Double
     var tiltControlsShape: Bool
+    var smoothing: Double
 
     init(
         pressureControlsSize: Bool,
         pressureControlsFlow: Bool,
         pressureSensitivity: Double,
-        tiltControlsShape: Bool = false
+        tiltControlsShape: Bool = false,
+        smoothing: Double = 0
     ) {
         self.pressureControlsSize = pressureControlsSize
         self.pressureControlsFlow = pressureControlsFlow
         self.pressureSensitivity = pressureSensitivity
         self.tiltControlsShape = tiltControlsShape
+        self.smoothing = smoothing
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -42,6 +50,7 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
         case pressureControlsFlow
         case pressureSensitivity
         case tiltControlsShape
+        case smoothing
     }
 
     init(from decoder: Decoder) throws {
@@ -53,6 +62,10 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
             Bool.self,
             forKey: .tiltControlsShape
         ) ?? false
+        smoothing = try values.decodeIfPresent(
+            Double.self,
+            forKey: .smoothing
+        ) ?? 0
     }
 
     var normalized: ImageEditorBrushDynamicsPreferences {
@@ -60,7 +73,8 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
             pressureControlsSize: pressureControlsSize,
             pressureControlsFlow: pressureControlsFlow,
             pressureSensitivity: max(0, min(100, pressureSensitivity)),
-            tiltControlsShape: tiltControlsShape
+            tiltControlsShape: tiltControlsShape,
+            smoothing: max(0, min(100, smoothing))
         )
     }
 

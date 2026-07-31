@@ -89,6 +89,12 @@ struct XomoMCPServerTests {
             (paintStrokeProperties["tiltShape"] as? [String: Any])?["type"] as? String
                 == "boolean"
         )
+        #expect(
+            (paintStrokeProperties["smoothing"] as? [String: Any])?["minimum"] as? Int == 0
+        )
+        #expect(
+            (paintStrokeProperties["smoothing"] as? [String: Any])?["maximum"] as? Int == 100
+        )
         let paintPoints = try #require(
             paintStrokeProperties["points"] as? [String: Any]
         )

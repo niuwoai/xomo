@@ -596,6 +596,7 @@ struct ImageEditorView: View {
                     brushPresetMenu
                     optionSlider(titleKey: "imageEditor.option.flow", value: $viewModel.brushFlow, range: 1...100, step: 1, suffix: "%")
                     optionSlider(titleKey: "imageEditor.option.spacing", value: $viewModel.brushSpacing, range: 1...200, step: 1, suffix: "%")
+                    brushSmoothingMenu
                     brushPressureMenu
                 }
                 if viewModel.selectedTool.supportsSelectionMode {
@@ -974,6 +975,38 @@ struct ImageEditorView: View {
         .xomoFocusEffectDisabled()
         .help(L10n.text("imageEditor.option.stylusDynamicsHelp"))
         .accessibilityIdentifier("image-editor-brush-pressure-menu")
+    }
+
+    private var brushSmoothingMenu: some View {
+        Menu {
+            Picker(
+                L10n.text("imageEditor.option.smoothing"),
+                selection: Binding(
+                    get: { viewModel.brushSmoothing },
+                    set: { viewModel.setBrushSmoothing($0) }
+                )
+            ) {
+                ForEach(ImageEditorBrushSmoothingPresets.values, id: \.self) { smoothing in
+                    Text(L10n.format("imageEditor.option.percentPreset", Int(smoothing)))
+                        .tag(smoothing)
+                }
+            }
+        } label: {
+            Text(
+                L10n.format(
+                    "imageEditor.option.smoothingValue",
+                    Int(viewModel.brushSmoothing.rounded())
+                )
+            )
+                .font(.system(size: 11, weight: .medium))
+                .lineLimit(1)
+        }
+        .menuStyle(.borderlessButton)
+        .fixedSize()
+        .focusable(false)
+        .xomoFocusEffectDisabled()
+        .help(L10n.text("imageEditor.help.brushSmoothing"))
+        .accessibilityIdentifier("image-editor-brush-smoothing")
     }
 
     private var retouchPressureSensitivityMenu: some View {

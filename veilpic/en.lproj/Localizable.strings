@@ -571,6 +571,9 @@
 "imageEditor.option.hardness" = "Hardness";
 "imageEditor.option.flow" = "Flow";
 "imageEditor.option.spacing" = "Spacing";
+"imageEditor.option.smoothing" = "Smoothing";
+"imageEditor.option.smoothingValue" = "Smoothing %d%%";
+"imageEditor.help.brushSmoothing" = "Reduce pointer jitter before spacing the brush stroke";
 "imageEditor.option.pressure" = "Pressure";
 "imageEditor.option.pressureSize" = "Control Size";
 "imageEditor.option.pressureFlow" = "Control Flow";

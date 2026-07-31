@@ -1625,7 +1625,8 @@ final class XomoAutomationRegistry {
                 "pressureSize": .bool(preset.pressureControlsSize),
                 "pressureFlow": .bool(preset.pressureControlsFlow),
                 "pressureSensitivity": .number(Double(preset.pressureSensitivity)),
-                "tiltShape": .bool(preset.tiltControlsShape)
+                "tiltShape": .bool(preset.tiltControlsShape),
+                "smoothing": .number(Double(preset.smoothing))
             ])
         })
     }
@@ -4086,6 +4087,9 @@ final class XomoAutomationRegistry {
         if let tiltShape = arguments["tiltShape"]?.boolValue {
             viewModel.setBrushTiltControlsShape(tiltShape)
         }
+        if let smoothing = arguments["smoothing"]?.doubleValue {
+            viewModel.setBrushSmoothing(CGFloat(smoothing))
+        }
         switch tool {
         case "brush": viewModel.drawBrush(samples: samples)
         case "eraser": viewModel.drawBrush(samples: samples, erase: true)
@@ -5542,7 +5546,8 @@ private extension XomoAutomationRegistry {
             "pressureSize": XomoAutomationSchema.boolean(description: "Use point pressure to control brush diameter"),
             "pressureFlow": XomoAutomationSchema.boolean(description: "Use point pressure to control per-stamp flow"),
             "pressureSensitivity": XomoAutomationSchema.number(description: "Pressure curve sensitivity from 0 to 100"),
-            "tiltShape": XomoAutomationSchema.boolean(description: "Use point tilt to flatten and orient the brush tip")
+            "tiltShape": XomoAutomationSchema.boolean(description: "Use point tilt to flatten and orient the brush tip"),
+            "smoothing": XomoAutomationSchema.number(description: "Endpoint-preserving pointer-path smoothing from 0 to 100")
         ], required: ["points"]),
         tool("xomo.paint.gradient", "Paint a gradient between exactly two canvas points.", ["points": pointsSchema], required: ["points"]),
         tool("xomo.paint.special", "Use clone, tone, sponge, blur, sharpen, smudge, healing, red-eye, or paint-bucket tools.", [

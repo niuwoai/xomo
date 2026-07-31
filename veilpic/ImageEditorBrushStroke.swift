@@ -34,6 +34,7 @@ struct ImageEditorBrushStrokeSettings: Equatable {
     var pressureControlsFlow: Bool
     var pressureSensitivity: CGFloat
     var tiltControlsShape: Bool
+    var smoothing: CGFloat
 
     init(
         diameter: CGFloat,
@@ -44,7 +45,8 @@ struct ImageEditorBrushStrokeSettings: Equatable {
         pressureControlsSize: Bool = false,
         pressureControlsFlow: Bool = false,
         pressureSensitivity: CGFloat = 0.5,
-        tiltControlsShape: Bool = false
+        tiltControlsShape: Bool = false,
+        smoothing: CGFloat = 0
     ) {
         self.diameter = diameter
         self.hardness = hardness
@@ -55,6 +57,7 @@ struct ImageEditorBrushStrokeSettings: Equatable {
         self.pressureControlsFlow = pressureControlsFlow
         self.pressureSensitivity = pressureSensitivity
         self.tiltControlsShape = tiltControlsShape
+        self.smoothing = smoothing
     }
 
     var normalized: ImageEditorBrushStrokeSettings {
@@ -67,13 +70,15 @@ struct ImageEditorBrushStrokeSettings: Equatable {
             pressureControlsSize: pressureControlsSize,
             pressureControlsFlow: pressureControlsFlow,
             pressureSensitivity: max(0, min(1, pressureSensitivity)),
-            tiltControlsShape: tiltControlsShape
+            tiltControlsShape: tiltControlsShape,
+            smoothing: max(0, min(1, smoothing))
         )
     }
 }
 
 enum ImageEditorBrushStrokeKernel {
     static let bytesPerPixel = 4
+    private static let maximumSmoothingRadius = 8
 
     static func stampCenters(
         points: [CGPoint],
@@ -90,9 +95,12 @@ enum ImageEditorBrushStrokeKernel {
     static func stampSamples(
         samples: [ImageEditorBrushStrokeSample],
         diameter: CGFloat,
-        spacing: CGFloat
+        spacing: CGFloat,
+        smoothing: CGFloat = 0
     ) -> [ImageEditorBrushStrokeSample] {
-        let normalizedSamples = normalizedStylusSamples(samples)
+        let normalizedSamples = normalizedStylusSamples(
+            smoothedSamples(samples, amount: smoothing)
+        )
         guard let first = normalizedSamples.first else { return [] }
         let step = max(0.5, max(1, diameter) * max(0.01, min(2, spacing)))
         var stamps = [first]
@@ -135,6 +143,52 @@ enum ImageEditorBrushStrokeKernel {
             stamps.append(lastSample)
         }
         return stamps
+    }
+
+    /// Applies an endpoint-preserving triangular moving average to pointer
+    /// geometry before spacing resampling. Pressure and tilt stay attached to
+    /// their original samples so smoothing never invents tablet dynamics.
+    static func smoothedSamples(
+        _ samples: [ImageEditorBrushStrokeSample],
+        amount: CGFloat
+    ) -> [ImageEditorBrushStrokeSample] {
+        let normalizedAmount = max(0, min(1, amount))
+        guard samples.count > 2, normalizedAmount > 0 else { return samples }
+        let radius = max(
+            1,
+            Int(ceil(normalizedAmount * CGFloat(maximumSmoothingRadius)))
+        )
+        let lastIndex = samples.index(before: samples.endIndex)
+
+        return samples.indices.map { index in
+            guard index != samples.startIndex, index != lastIndex else {
+                return samples[index]
+            }
+            let lowerBound = max(samples.startIndex, index - radius)
+            let upperBound = min(lastIndex, index + radius)
+            var weightedX: CGFloat = 0
+            var weightedY: CGFloat = 0
+            var totalWeight: CGFloat = 0
+
+            for neighborIndex in lowerBound...upperBound {
+                let distance = abs(neighborIndex - index)
+                let weight = CGFloat(radius + 1 - distance)
+                weightedX += samples[neighborIndex].point.x * weight
+                weightedY += samples[neighborIndex].point.y * weight
+                totalWeight += weight
+            }
+
+            let average = CGPoint(
+                x: weightedX / totalWeight,
+                y: weightedY / totalWeight
+            )
+            var output = samples[index]
+            output.point = CGPoint(
+                x: output.point.x + (average.x - output.point.x) * normalizedAmount,
+                y: output.point.y + (average.y - output.point.y) * normalizedAmount
+            )
+            return output
+        }
     }
 
     static func coverage(
@@ -379,7 +433,8 @@ extension NSImage {
         let stamps = ImageEditorBrushStrokeKernel.stampSamples(
             samples: samples,
             diameter: normalized.diameter,
-            spacing: normalized.spacing
+            spacing: normalized.spacing,
+            smoothing: normalized.smoothing
         )
         let strokeCoverage = ImageEditorBrushStrokeKernel.coverage(
             width: pixelWidth,
