@@ -102,6 +102,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var brushPressureControlsFlow = true
     @Published var brushPressureSensitivity: CGFloat = 50
     @Published var brushMinimumDiameter: CGFloat = 0
+    @Published var brushMinimumFlow: CGFloat = 0
     @Published var brushTiltControlsShape = false
     @Published var brushTipRoundness: CGFloat = 100
     @Published var brushTipAngleDegrees: CGFloat = 0
@@ -464,6 +465,7 @@ final class ImageEditorViewModel: ObservableObject {
         brushPressureControlsFlow = brushDynamicsPreferences.pressureControlsFlow
         brushPressureSensitivity = CGFloat(brushDynamicsPreferences.pressureSensitivity)
         brushMinimumDiameter = CGFloat(brushDynamicsPreferences.minimumDiameter)
+        brushMinimumFlow = CGFloat(brushDynamicsPreferences.minimumFlow)
         brushTiltControlsShape = brushDynamicsPreferences.tiltControlsShape
         brushTipRoundness = CGFloat(brushDynamicsPreferences.tipRoundness)
         brushTipAngleDegrees = CGFloat(brushDynamicsPreferences.tipAngleDegrees)
@@ -510,6 +512,7 @@ final class ImageEditorViewModel: ObservableObject {
         brushPressureControlsFlow = brushDynamicsPreferences.pressureControlsFlow
         brushPressureSensitivity = CGFloat(brushDynamicsPreferences.pressureSensitivity)
         brushMinimumDiameter = CGFloat(brushDynamicsPreferences.minimumDiameter)
+        brushMinimumFlow = CGFloat(brushDynamicsPreferences.minimumFlow)
         brushTiltControlsShape = brushDynamicsPreferences.tiltControlsShape
         brushTipRoundness = CGFloat(brushDynamicsPreferences.tipRoundness)
         brushTipAngleDegrees = CGFloat(brushDynamicsPreferences.tipAngleDegrees)
@@ -2545,6 +2548,7 @@ final class ImageEditorViewModel: ObservableObject {
             pressureControlsFlow: brushPressureControlsFlow,
             pressureSensitivity: brushPressureSensitivity,
             minimumDiameter: brushMinimumDiameter,
+            minimumFlow: brushMinimumFlow,
             tiltControlsShape: brushTiltControlsShape,
             tipRoundness: brushTipRoundness,
             tipAngleDegrees: brushTipAngleDegrees,
@@ -2694,6 +2698,7 @@ final class ImageEditorViewModel: ObservableObject {
         brushPressureControlsFlow = preset.pressureControlsFlow
         brushPressureSensitivity = max(0, min(100, preset.pressureSensitivity))
         brushMinimumDiameter = max(0, min(100, preset.minimumDiameter))
+        brushMinimumFlow = max(0, min(100, preset.minimumFlow))
         brushTiltControlsShape = preset.tiltControlsShape
         brushTipRoundness = max(10, min(100, preset.tipRoundness))
         brushTipAngleDegrees = max(-180, min(180, preset.tipAngleDegrees))
@@ -2730,6 +2735,7 @@ final class ImageEditorViewModel: ObservableObject {
             pressureControlsFlow: brushPressureControlsFlow,
             pressureSensitivity: brushPressureSensitivity,
             minimumDiameter: brushMinimumDiameter,
+            minimumFlow: brushMinimumFlow,
             tiltControlsShape: brushTiltControlsShape,
             tipRoundness: brushTipRoundness,
             tipAngleDegrees: brushTipAngleDegrees,
@@ -3436,6 +3442,7 @@ final class ImageEditorViewModel: ObservableObject {
             pressureControlsFlow: brushPressureControlsFlow,
             pressureSensitivity: Double(brushPressureSensitivity),
             minimumDiameter: Double(brushMinimumDiameter),
+            minimumFlow: Double(brushMinimumFlow),
             tiltControlsShape: brushTiltControlsShape,
             tipRoundness: Double(brushTipRoundness),
             tipAngleDegrees: Double(brushTipAngleDegrees),
@@ -3490,6 +3497,13 @@ final class ImageEditorViewModel: ObservableObject {
         let normalized = max(0, min(100, diameter))
         guard brushMinimumDiameter != normalized else { return }
         brushMinimumDiameter = normalized
+        persistBrushDynamicsPreferences()
+    }
+
+    func setBrushMinimumFlow(_ flow: CGFloat) {
+        let normalized = max(0, min(100, flow))
+        guard brushMinimumFlow != normalized else { return }
+        brushMinimumFlow = normalized
         persistBrushDynamicsPreferences()
     }
 
@@ -5247,6 +5261,7 @@ final class ImageEditorViewModel: ObservableObject {
                 pressureControlsFlow: brushPressureControlsFlow,
                 pressureSensitivity: brushPressureSensitivity / 100,
                 minimumDiameter: brushMinimumDiameter / 100,
+                minimumFlow: brushMinimumFlow / 100,
                 tiltControlsShape: brushTiltControlsShape,
                 tipRoundness: brushTipRoundness / 100,
                 tipAngleDegrees: brushTipAngleDegrees,
@@ -5279,6 +5294,7 @@ final class ImageEditorViewModel: ObservableObject {
                 pressureControlsFlow: brushPressureControlsFlow,
                 pressureSensitivity: brushPressureSensitivity / 100,
                 minimumDiameter: brushMinimumDiameter / 100,
+                minimumFlow: brushMinimumFlow / 100,
                 tiltControlsShape: brushTiltControlsShape,
                 tipRoundness: brushTipRoundness / 100,
                 tipAngleDegrees: brushTipAngleDegrees,
@@ -6969,6 +6985,7 @@ final class ImageEditorViewModel: ObservableObject {
             pressureControlsFlow: brushPressureControlsFlow,
             pressureSensitivity: brushPressureSensitivity / 100,
             minimumDiameter: brushMinimumDiameter / 100,
+            minimumFlow: brushMinimumFlow / 100,
             tiltControlsShape: brushTiltControlsShape,
             tipRoundness: brushTipRoundness / 100,
             tipAngleDegrees: brushTipAngleDegrees,
@@ -8809,6 +8826,7 @@ extension NSImage {
         pressureControlsFlow: Bool = false,
         pressureSensitivity: CGFloat = 0.5,
         minimumDiameter: CGFloat = 0,
+        minimumFlow: CGFloat = 0,
         tiltControlsShape: Bool = false,
         tipRoundness: CGFloat = 1,
         tipAngleDegrees: CGFloat = 0,
@@ -8828,6 +8846,7 @@ extension NSImage {
                 pressureControlsFlow: pressureControlsFlow,
                 pressureSensitivity: pressureSensitivity,
                 minimumDiameter: minimumDiameter,
+                minimumFlow: minimumFlow,
                 tiltControlsShape: tiltControlsShape,
                 tipRoundness: tipRoundness,
                 tipAngleDegrees: tipAngleDegrees,

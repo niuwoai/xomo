@@ -266,6 +266,18 @@ struct ImageEditorBrushStrokeTests {
             mappedPressure: 2,
             minimumDiameter: -1
         ) == 1)
+        #expect(ImageEditorBrushStrokeKernel.pressureFlowScale(
+            mappedPressure: 0.05,
+            minimumFlow: 0.4
+        ) == 0.4)
+        #expect(ImageEditorBrushStrokeKernel.pressureFlowScale(
+            mappedPressure: 0.75,
+            minimumFlow: 0.4
+        ) == 0.75)
+        #expect(ImageEditorBrushStrokeKernel.pressureFlowScale(
+            mappedPressure: 2,
+            minimumFlow: -1
+        ) == 1)
         let stamps = [
             ImageEditorBrushStrokeSample(point: CGPoint(x: 15, y: 20), pressure: 0.2),
             ImageEditorBrushStrokeSample(point: CGPoint(x: 55, y: 20), pressure: 1)
@@ -314,6 +326,17 @@ struct ImageEditorBrushStrokeTests {
         )
         #expect(flowed[20 * 80 + 15] < flowed[20 * 80 + 55])
         #expect(flowed[20 * 80 + 55] == UInt8((0.8 * 255).rounded()))
+
+        var minimumFlowSettings = flowSettings
+        minimumFlowSettings.minimumFlow = 0.5
+        let minimumFlowed = ImageEditorBrushStrokeKernel.coverage(
+            width: 80,
+            height: 40,
+            stamps: stamps,
+            settings: minimumFlowSettings
+        )
+        #expect(minimumFlowed[20 * 80 + 15] > flowed[20 * 80 + 15])
+        #expect(minimumFlowed[20 * 80 + 55] == flowed[20 * 80 + 55])
     }
 
     @Test func missingPressureFallsBackToFullPressureWithoutChangingMouseStrokes() {
@@ -783,6 +806,7 @@ struct ImageEditorBrushStrokeTests {
             pressureControlsFlow: true,
             pressureSensitivity: 0.5,
             minimumDiameter: 0.5,
+            minimumFlow: 0.5,
             reveal: false
         ))
         #expect(quickMask.alpha[15 * 70 + 15] > quickMask.alpha[15 * 70 + 55])
@@ -803,6 +827,7 @@ struct ImageEditorBrushStrokeTests {
             pressureControlsFlow: true,
             pressureSensitivity: 0.5,
             minimumDiameter: 0.5,
+            minimumFlow: 0.5,
             reveal: false
         ))
         let lowPressure = try #require(layerMask.color(at: CGPoint(x: 15, y: 15)))

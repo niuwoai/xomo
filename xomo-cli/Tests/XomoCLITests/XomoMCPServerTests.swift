@@ -96,6 +96,12 @@ struct XomoMCPServerTests {
             (paintStrokeProperties["minimumDiameter"] as? [String: Any])?["maximum"] as? Int == 100
         )
         #expect(
+            (paintStrokeProperties["minimumFlow"] as? [String: Any])?["minimum"] as? Int == 0
+        )
+        #expect(
+            (paintStrokeProperties["minimumFlow"] as? [String: Any])?["maximum"] as? Int == 100
+        )
+        #expect(
             (paintStrokeProperties["roundness"] as? [String: Any])?["minimum"] as? Int == 10
         )
         #expect(

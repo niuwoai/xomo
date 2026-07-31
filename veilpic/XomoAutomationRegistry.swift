@@ -1626,6 +1626,7 @@ final class XomoAutomationRegistry {
                 "pressureFlow": .bool(preset.pressureControlsFlow),
                 "pressureSensitivity": .number(Double(preset.pressureSensitivity)),
                 "minimumDiameter": .number(Double(preset.minimumDiameter)),
+                "minimumFlow": .number(Double(preset.minimumFlow)),
                 "tiltShape": .bool(preset.tiltControlsShape),
                 "roundness": .number(Double(preset.tipRoundness)),
                 "angle": .number(Double(preset.tipAngleDegrees)),
@@ -4090,6 +4091,9 @@ final class XomoAutomationRegistry {
         if let minimumDiameter = arguments["minimumDiameter"]?.doubleValue {
             viewModel.setBrushMinimumDiameter(CGFloat(minimumDiameter))
         }
+        if let minimumFlow = arguments["minimumFlow"]?.doubleValue {
+            viewModel.setBrushMinimumFlow(CGFloat(minimumFlow))
+        }
         if let tiltShape = arguments["tiltShape"]?.boolValue {
             viewModel.setBrushTiltControlsShape(tiltShape)
         }
@@ -5559,6 +5563,7 @@ private extension XomoAutomationRegistry {
             "pressureFlow": XomoAutomationSchema.boolean(description: "Use point pressure to control per-stamp flow"),
             "pressureSensitivity": XomoAutomationSchema.number(description: "Pressure curve sensitivity from 0 to 100"),
             "minimumDiameter": XomoAutomationSchema.number(description: "Minimum pressure-controlled brush diameter from 0 to 100 percent"),
+            "minimumFlow": XomoAutomationSchema.number(description: "Minimum pressure-controlled per-stamp flow from 0 to 100 percent"),
             "tiltShape": XomoAutomationSchema.boolean(description: "Use point tilt to flatten and orient the brush tip"),
             "roundness": XomoAutomationSchema.number(description: "Static brush-tip roundness from 10 to 100 percent"),
             "angle": XomoAutomationSchema.number(description: "Static brush-tip angle from -180 to 180 degrees; live tilt takes priority"),

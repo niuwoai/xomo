@@ -982,6 +982,19 @@ struct ImageEditorView: View {
                     set: { viewModel.setBrushPressureControlsFlow($0) }
                 )
             )
+            Picker(
+                L10n.text("imageEditor.option.minimumFlow"),
+                selection: Binding(
+                    get: { viewModel.brushMinimumFlow },
+                    set: { viewModel.setBrushMinimumFlow($0) }
+                )
+            ) {
+                ForEach(ImageEditorBrushMinimumFlowPresets.values, id: \.self) { flow in
+                    Text(L10n.format("imageEditor.option.percentPreset", Int(flow)))
+                        .tag(flow)
+                }
+            }
+            .disabled(!viewModel.brushPressureControlsFlow)
             Toggle(
                 L10n.text("imageEditor.option.tiltShape"),
                 isOn: Binding(

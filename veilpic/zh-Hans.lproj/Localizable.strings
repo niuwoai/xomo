@@ -584,6 +584,7 @@
 "imageEditor.option.pressure" = "笔压";
 "imageEditor.option.pressureSize" = "控制大小";
 "imageEditor.option.minimumDiameter" = "最小直径";
+"imageEditor.option.minimumFlow" = "最小流量";
 "imageEditor.option.pressureFlow" = "控制流量";
 "imageEditor.option.pressureSensitivity" = "灵敏度";
 "imageEditor.option.pressureHelp" = "使用数位笔压力控制画笔大小和流量";
@@ -593,7 +594,7 @@
 "imageEditor.option.stylusPenDetected" = "笔尖已进入感应范围";
 "imageEditor.option.stylusEraserDetected" = "橡皮端已进入感应范围";
 "imageEditor.option.stylusDynamics" = "数位笔";
-"imageEditor.option.stylusDynamicsHelp" = "设置笔压对大小、最小直径、流量的控制，以及倾斜对笔尖形状的控制";
+"imageEditor.option.stylusDynamicsHelp" = "设置笔压对大小、最小直径、流量和最小流量的控制，以及倾斜对笔尖形状的控制";
 "imageEditor.option.tiltShape" = "倾斜控制笔尖";
 "imageEditor.option.stylusInput" = "数位笔输入";
 "imageEditor.option.stylusLiveHelp" = "实时显示数位笔压力和倾斜；圆盘箭头表示倾斜方向与幅度，普通鼠标保持未检测状态";

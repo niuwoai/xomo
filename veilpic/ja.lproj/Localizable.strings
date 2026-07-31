@@ -584,6 +584,7 @@
 "imageEditor.option.pressure" = "筆圧";
 "imageEditor.option.pressureSize" = "サイズを制御";
 "imageEditor.option.minimumDiameter" = "最小直径";
+"imageEditor.option.minimumFlow" = "最小流量";
 "imageEditor.option.pressureFlow" = "流量を制御";
 "imageEditor.option.pressureSensitivity" = "感度";
 "imageEditor.option.pressureHelp" = "ペンの筆圧でブラシサイズと流量を制御します";
@@ -593,7 +594,7 @@
 "imageEditor.option.stylusPenDetected" = "ペン先が検出範囲内です";
 "imageEditor.option.stylusEraserDetected" = "消しゴム側が検出範囲内です";
 "imageEditor.option.stylusDynamics" = "スタイラス";
-"imageEditor.option.stylusDynamicsHelp" = "筆圧でサイズ、最小直径、流量を、傾きでブラシ先端の形状を制御します";
+"imageEditor.option.stylusDynamicsHelp" = "筆圧でサイズ、最小直径、流量、最小流量を、傾きでブラシ先端の形状を制御します";
 "imageEditor.option.tiltShape" = "傾きで先端を制御";
 "imageEditor.option.stylusInput" = "スタイラス入力";
 "imageEditor.option.stylusLiveHelp" = "ペン圧と傾きをリアルタイム表示します。ダイヤルの矢印は傾きの方向と大きさを示し、通常のマウスは未検出のままです";
