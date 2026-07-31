@@ -1941,9 +1941,11 @@ struct ImageEditorView: View {
                             }
                             return true
                         },
-                        onPrimaryToolDragChanged: { location in
+                        onPrimaryToolDragChanged: { location, pressure in
                             guard let imagePoint = imagePoint(from: location, in: geometry.size) else { return }
                             if canvasInteractionTool == .brush || canvasInteractionTool == .eraser {
+                                activeBrushPressure = pressure
+                                updateCanvasCursor(at: location, in: geometry.size)
                                 return
                             }
                             dragEnd = imagePoint
@@ -2005,6 +2007,7 @@ struct ImageEditorView: View {
                                 break
                             }
                             brushStrokeSamples = []
+                            activeBrushPressure = nil
                             dragStart = nil
                             dragEnd = nil
                             primaryToolViewStart = nil

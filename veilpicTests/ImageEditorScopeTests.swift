@@ -2673,6 +2673,12 @@ struct ImageEditorScopeTests {
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
             encoding: .utf8
         )
+        let pointerSource = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent(
+                "veilpic/ImageEditorScrollZoom.swift"
+            ),
+            encoding: .utf8
+        )
 
         #expect(source.contains("@State private var activeBrushPressure: CGFloat?"))
         #expect(source.contains(
@@ -2688,6 +2694,12 @@ struct ImageEditorScopeTests {
         #expect(source.contains("retouchPressureControlsSize: viewModel.retouchPressureControlsSize"))
         #expect(source.contains("activeBrushPressure = nil"))
         #expect(source.contains("updateCanvasCursor(at: value.location, in: size)"))
+        #expect(source.contains("onPrimaryToolDragChanged: { location, pressure in"))
+        #expect(source.contains("activeBrushPressure = pressure"))
+        #expect(source.contains("updateCanvasCursor(at: location, in: geometry.size)"))
+        #expect(pointerSource.contains("let onPrimaryChanged: ((CGPoint, CGFloat?) -> Void)?"))
+        #expect(pointerSource.contains("transaction.onPrimaryChanged?(location, pressure)"))
+        #expect(pointerSource.contains("onPrimaryToolDragChanged?(location, pressure)"))
     }
 
     @Test func retouchPressureSensitivityMenuIsCompactSharedAndNonFocusable() throws {

@@ -156,7 +156,10 @@ struct ScrollWheelZoomView: NSViewRepresentable {
     /// Keeping their primary gesture on the same AppKit event path prevents
     /// fast drags from losing SwiftUI's `onEnded` callback on macOS 13.
     let onPrimaryToolDragBegan: (_ location: CGPoint) -> Bool
-    let onPrimaryToolDragChanged: (_ location: CGPoint) -> Void
+    let onPrimaryToolDragChanged: (
+        _ location: CGPoint,
+        _ pressure: CGFloat?
+    ) -> Void
     let onPrimaryToolDragEnded: (
         _ location: CGPoint,
         _ samples: [ImageEditorPrimaryPointerSample]
@@ -272,7 +275,7 @@ final class ImageEditorActiveCanvasPointerTransaction {
     var samples: [ImageEditorPrimaryPointerSample]
     let onRangeChanged: ((CGPoint) -> Void)?
     let onRangeEnded: ((CGPoint) -> Void)?
-    let onPrimaryChanged: ((CGPoint) -> Void)?
+    let onPrimaryChanged: ((CGPoint, CGFloat?) -> Void)?
     let onPrimaryEnded: ((CGPoint, [ImageEditorPrimaryPointerSample]) -> Void)?
 
     init(
@@ -282,7 +285,7 @@ final class ImageEditorActiveCanvasPointerTransaction {
         pressure: CGFloat?,
         onRangeChanged: ((CGPoint) -> Void)? = nil,
         onRangeEnded: ((CGPoint) -> Void)? = nil,
-        onPrimaryChanged: ((CGPoint) -> Void)? = nil,
+        onPrimaryChanged: ((CGPoint, CGFloat?) -> Void)? = nil,
         onPrimaryEnded: ((CGPoint, [ImageEditorPrimaryPointerSample]) -> Void)? = nil
     ) {
         self.kind = kind
@@ -318,7 +321,10 @@ final class ScrollWheelZoomNSView: NSView {
     var onRangeToolDragChanged: ((_ location: CGPoint) -> Void)?
     var onRangeToolDragEnded: ((_ location: CGPoint) -> Void)?
     var onPrimaryToolDragBegan: ((_ location: CGPoint) -> Bool)?
-    var onPrimaryToolDragChanged: ((_ location: CGPoint) -> Void)?
+    var onPrimaryToolDragChanged: ((
+        _ location: CGPoint,
+        _ pressure: CGFloat?
+    ) -> Void)?
     var onPrimaryToolDragEnded: ((
         _ location: CGPoint,
         _ samples: [ImageEditorPrimaryPointerSample]
@@ -488,13 +494,14 @@ final class ScrollWheelZoomNSView: NSView {
                 case .rangeTool:
                     transaction.onRangeChanged?(location)
                 case .primaryTool:
+                    let pressure = ImageEditorBrushPressureInput.pressure(from: event)
                     transaction.samples.append(
                         ImageEditorPrimaryPointerSample(
                             location: location,
-                            pressure: ImageEditorBrushPressureInput.pressure(from: event)
+                            pressure: pressure
                         )
                     )
-                    transaction.onPrimaryChanged?(location)
+                    transaction.onPrimaryChanged?(location, pressure)
                 case .none:
                     break
                 }
@@ -614,13 +621,14 @@ final class ScrollWheelZoomNSView: NSView {
                 case .rangeTool:
                     transaction.onRangeChanged?(location)
                 case .primaryTool:
+                    let pressure = ImageEditorBrushPressureInput.pressure(from: event)
                     transaction.samples.append(
                         ImageEditorPrimaryPointerSample(
                             location: location,
-                            pressure: ImageEditorBrushPressureInput.pressure(from: event)
+                            pressure: pressure
                         )
                     )
-                    transaction.onPrimaryChanged?(location)
+                    transaction.onPrimaryChanged?(location, pressure)
                 case .none:
                     break
                 }
@@ -637,13 +645,14 @@ final class ScrollWheelZoomNSView: NSView {
                 guard event.window === window else { return true }
                 let location = convert(event.locationInWindow, from: nil)
                 pointerCaptureState.lastPrimaryToolPoint = location
+                let pressure = ImageEditorBrushPressureInput.pressure(from: event)
                 pointerCaptureState.primaryToolSamples.append(
                     ImageEditorPrimaryPointerSample(
                         location: location,
-                        pressure: ImageEditorBrushPressureInput.pressure(from: event)
+                        pressure: pressure
                     )
                 )
-                onPrimaryToolDragChanged?(location)
+                onPrimaryToolDragChanged?(location, pressure)
                 return true
             }
             if isLayerResizing || pointerCaptureState.isLayerResizing {
@@ -802,13 +811,14 @@ final class ScrollWheelZoomNSView: NSView {
             case .rangeTool:
                 transaction.onRangeChanged?(location)
             case .primaryTool:
+                let pressure = ImageEditorBrushPressureInput.pressure(from: event)
                 transaction.samples.append(
                     ImageEditorPrimaryPointerSample(
                         location: location,
-                        pressure: ImageEditorBrushPressureInput.pressure(from: event)
+                        pressure: pressure
                     )
                 )
-                transaction.onPrimaryChanged?(location)
+                transaction.onPrimaryChanged?(location, pressure)
             case .none:
                 break
             }
