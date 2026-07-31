@@ -15,6 +15,10 @@ enum ImageEditorBrushSmoothingPresets {
     static let values: [CGFloat] = [0, 10, 25, 50, 75, 100]
 }
 
+enum ImageEditorBrushRoundnessPresets {
+    static let values: [CGFloat] = [10, 25, 50, 75, 100]
+}
+
 struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
     static let storageKey = "im.some.xomo.imageEditor.brushDynamicsPreferences"
     static let defaultValue = ImageEditorBrushDynamicsPreferences(
@@ -22,6 +26,7 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
         pressureControlsFlow: true,
         pressureSensitivity: 50,
         tiltControlsShape: false,
+        tipRoundness: 100,
         smoothing: 0
     )
 
@@ -29,6 +34,7 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
     var pressureControlsFlow: Bool
     var pressureSensitivity: Double
     var tiltControlsShape: Bool
+    var tipRoundness: Double
     var smoothing: Double
 
     init(
@@ -36,12 +42,14 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
         pressureControlsFlow: Bool,
         pressureSensitivity: Double,
         tiltControlsShape: Bool = false,
+        tipRoundness: Double = 100,
         smoothing: Double = 0
     ) {
         self.pressureControlsSize = pressureControlsSize
         self.pressureControlsFlow = pressureControlsFlow
         self.pressureSensitivity = pressureSensitivity
         self.tiltControlsShape = tiltControlsShape
+        self.tipRoundness = tipRoundness
         self.smoothing = smoothing
     }
 
@@ -50,6 +58,7 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
         case pressureControlsFlow
         case pressureSensitivity
         case tiltControlsShape
+        case tipRoundness
         case smoothing
     }
 
@@ -62,6 +71,10 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
             Bool.self,
             forKey: .tiltControlsShape
         ) ?? false
+        tipRoundness = try values.decodeIfPresent(
+            Double.self,
+            forKey: .tipRoundness
+        ) ?? 100
         smoothing = try values.decodeIfPresent(
             Double.self,
             forKey: .smoothing
@@ -74,6 +87,7 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
             pressureControlsFlow: pressureControlsFlow,
             pressureSensitivity: max(0, min(100, pressureSensitivity)),
             tiltControlsShape: tiltControlsShape,
+            tipRoundness: max(10, min(100, tipRoundness)),
             smoothing: max(0, min(100, smoothing))
         )
     }

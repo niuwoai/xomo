@@ -102,6 +102,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var brushPressureControlsFlow = true
     @Published var brushPressureSensitivity: CGFloat = 50
     @Published var brushTiltControlsShape = false
+    @Published var brushTipRoundness: CGFloat = 100
     @Published var brushSmoothing: CGFloat = 0
     @Published var retouchPressureControlsSize = false
     @Published var retouchPressureSensitivity: CGFloat = 50
@@ -461,6 +462,7 @@ final class ImageEditorViewModel: ObservableObject {
         brushPressureControlsFlow = brushDynamicsPreferences.pressureControlsFlow
         brushPressureSensitivity = CGFloat(brushDynamicsPreferences.pressureSensitivity)
         brushTiltControlsShape = brushDynamicsPreferences.tiltControlsShape
+        brushTipRoundness = CGFloat(brushDynamicsPreferences.tipRoundness)
         brushSmoothing = CGFloat(brushDynamicsPreferences.smoothing)
         retouchPressureControlsSize = retouchDynamicsPreferences.pressureControlsSize
         retouchPressureSensitivity = CGFloat(retouchDynamicsPreferences.pressureSensitivity)
@@ -504,6 +506,7 @@ final class ImageEditorViewModel: ObservableObject {
         brushPressureControlsFlow = brushDynamicsPreferences.pressureControlsFlow
         brushPressureSensitivity = CGFloat(brushDynamicsPreferences.pressureSensitivity)
         brushTiltControlsShape = brushDynamicsPreferences.tiltControlsShape
+        brushTipRoundness = CGFloat(brushDynamicsPreferences.tipRoundness)
         brushSmoothing = CGFloat(brushDynamicsPreferences.smoothing)
         retouchPressureControlsSize = retouchDynamicsPreferences.pressureControlsSize
         retouchPressureSensitivity = CGFloat(retouchDynamicsPreferences.pressureSensitivity)
@@ -2536,6 +2539,7 @@ final class ImageEditorViewModel: ObservableObject {
             pressureControlsFlow: brushPressureControlsFlow,
             pressureSensitivity: brushPressureSensitivity,
             tiltControlsShape: brushTiltControlsShape,
+            tipRoundness: brushTipRoundness,
             smoothing: brushSmoothing
         )
     }
@@ -2682,6 +2686,7 @@ final class ImageEditorViewModel: ObservableObject {
         brushPressureControlsFlow = preset.pressureControlsFlow
         brushPressureSensitivity = max(0, min(100, preset.pressureSensitivity))
         brushTiltControlsShape = preset.tiltControlsShape
+        brushTipRoundness = max(10, min(100, preset.tipRoundness))
         brushSmoothing = max(0, min(100, preset.smoothing))
         persistBrushDynamicsPreferences()
         statusText = L10n.format("imageEditor.status.brushPresetApplied", preset.title, brushesPanelSummaryText)
@@ -2715,6 +2720,7 @@ final class ImageEditorViewModel: ObservableObject {
             pressureControlsFlow: brushPressureControlsFlow,
             pressureSensitivity: brushPressureSensitivity,
             tiltControlsShape: brushTiltControlsShape,
+            tipRoundness: brushTipRoundness,
             smoothing: brushSmoothing
         ).normalizedCustomPreset
         customBrushPresets.append(preset)
@@ -3418,6 +3424,7 @@ final class ImageEditorViewModel: ObservableObject {
             pressureControlsFlow: brushPressureControlsFlow,
             pressureSensitivity: Double(brushPressureSensitivity),
             tiltControlsShape: brushTiltControlsShape,
+            tipRoundness: Double(brushTipRoundness),
             smoothing: Double(brushSmoothing)
         ).save(to: workspacePreferencesDefaults)
     }
@@ -3475,6 +3482,13 @@ final class ImageEditorViewModel: ObservableObject {
         let normalized = max(0, min(100, smoothing))
         guard brushSmoothing != normalized else { return }
         brushSmoothing = normalized
+        persistBrushDynamicsPreferences()
+    }
+
+    func setBrushTipRoundness(_ roundness: CGFloat) {
+        let normalized = max(10, min(100, roundness))
+        guard brushTipRoundness != normalized else { return }
+        brushTipRoundness = normalized
         persistBrushDynamicsPreferences()
     }
 
@@ -5205,6 +5219,7 @@ final class ImageEditorViewModel: ObservableObject {
                 pressureControlsFlow: brushPressureControlsFlow,
                 pressureSensitivity: brushPressureSensitivity / 100,
                 tiltControlsShape: brushTiltControlsShape,
+                tipRoundness: brushTipRoundness / 100,
                 smoothing: brushSmoothing / 100
             ),
             erase: erase
@@ -5234,6 +5249,7 @@ final class ImageEditorViewModel: ObservableObject {
                 pressureControlsFlow: brushPressureControlsFlow,
                 pressureSensitivity: brushPressureSensitivity / 100,
                 tiltControlsShape: brushTiltControlsShape,
+                tipRoundness: brushTipRoundness / 100,
                 smoothing: brushSmoothing / 100,
                 reveal: reveal
               )
@@ -6921,6 +6937,7 @@ final class ImageEditorViewModel: ObservableObject {
             pressureControlsFlow: brushPressureControlsFlow,
             pressureSensitivity: brushPressureSensitivity / 100,
             tiltControlsShape: brushTiltControlsShape,
+            tipRoundness: brushTipRoundness / 100,
             smoothing: brushSmoothing / 100,
             reveal: reveal
         ) else {
@@ -8758,6 +8775,7 @@ extension NSImage {
         pressureControlsFlow: Bool = false,
         pressureSensitivity: CGFloat = 0.5,
         tiltControlsShape: Bool = false,
+        tipRoundness: CGFloat = 1,
         smoothing: CGFloat = 0,
         reveal: Bool
     ) -> NSImage? {
@@ -8774,6 +8792,7 @@ extension NSImage {
                 pressureControlsFlow: pressureControlsFlow,
                 pressureSensitivity: pressureSensitivity,
                 tiltControlsShape: tiltControlsShape,
+                tipRoundness: tipRoundness,
                 smoothing: smoothing
             ),
             erase: !reveal

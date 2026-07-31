@@ -47,6 +47,7 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
     let pressureControlsFlow: Bool
     let pressureSensitivity: CGFloat
     let tiltControlsShape: Bool
+    let tipRoundness: CGFloat
     let smoothing: CGFloat
     let isBuiltIn: Bool
 
@@ -61,6 +62,7 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
         pressureControlsFlow: Bool = true,
         pressureSensitivity: CGFloat = 50,
         tiltControlsShape: Bool = false,
+        tipRoundness: CGFloat = 100,
         smoothing: CGFloat = 0,
         isBuiltIn: Bool = false
     ) {
@@ -74,6 +76,7 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
         self.pressureControlsFlow = pressureControlsFlow
         self.pressureSensitivity = pressureSensitivity
         self.tiltControlsShape = tiltControlsShape
+        self.tipRoundness = tipRoundness
         self.smoothing = smoothing
         self.isBuiltIn = isBuiltIn
     }
@@ -89,6 +92,7 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
         case pressureControlsFlow
         case pressureSensitivity
         case tiltControlsShape
+        case tipRoundness
         case smoothing
         case isBuiltIn
     }
@@ -117,6 +121,10 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
             Bool.self,
             forKey: .tiltControlsShape
         ) ?? false
+        tipRoundness = try values.decodeIfPresent(
+            CGFloat.self,
+            forKey: .tipRoundness
+        ) ?? 100
         smoothing = try values.decodeIfPresent(
             CGFloat.self,
             forKey: .smoothing
@@ -143,6 +151,7 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
             pressureControlsFlow: pressureControlsFlow,
             pressureSensitivity: max(0, min(100, pressureSensitivity)),
             tiltControlsShape: tiltControlsShape,
+            tipRoundness: max(10, min(100, tipRoundness)),
             smoothing: max(0, min(100, smoothing)),
             isBuiltIn: false
         )
@@ -157,6 +166,7 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
         pressureControlsFlow: Bool,
         pressureSensitivity: CGFloat,
         tiltControlsShape: Bool,
+        tipRoundness: CGFloat,
         smoothing: CGFloat
     ) -> Bool {
         let tolerance = CGFloat(0.0001)
@@ -168,6 +178,7 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
             && self.pressureControlsFlow == pressureControlsFlow
             && abs(self.pressureSensitivity - pressureSensitivity) < tolerance
             && self.tiltControlsShape == tiltControlsShape
+            && abs(self.tipRoundness - tipRoundness) < tolerance
             && abs(self.smoothing - smoothing) < tolerance
     }
 

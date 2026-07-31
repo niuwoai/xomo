@@ -458,6 +458,58 @@ struct ImageEditorBrushStrokeTests {
         #expect(circular[verticalEdge] > 240)
     }
 
+    @Test func manualRoundnessCreatesAFlatMouseTipAndTiltCanOrientIt() {
+        let mouseStamp = ImageEditorBrushStrokeSample(
+            point: CGPoint(x: 20.5, y: 20.5),
+            pressure: 1
+        )
+        var settings = ImageEditorBrushStrokeSettings(
+            diameter: 20,
+            hardness: 1,
+            opacity: 1,
+            flow: 1,
+            spacing: 0.25,
+            tipRoundness: 0.25
+        )
+        let horizontal = ImageEditorBrushStrokeKernel.coverage(
+            width: 41,
+            height: 41,
+            stamps: [mouseStamp],
+            settings: settings
+        )
+        let horizontalEdge = 20 * 41 + 28
+        let verticalEdge = 28 * 41 + 20
+        #expect(horizontal[horizontalEdge] > 240)
+        #expect(horizontal[verticalEdge] == 0)
+        #expect(ImageEditorBrushStrokeKernel.effectiveTipAspectRatio(
+            roundness: 0.25,
+            tilt: nil,
+            tiltControlsShape: false
+        ) == 0.25)
+
+        settings.tipRoundness = 0.5
+        settings.tiltControlsShape = true
+        let vertical = ImageEditorBrushStrokeKernel.coverage(
+            width: 41,
+            height: 41,
+            stamps: [
+                ImageEditorBrushStrokeSample(
+                    point: mouseStamp.point,
+                    pressure: 1,
+                    tilt: ImageEditorStylusTilt(x: 0, y: 0.2)
+                )
+            ],
+            settings: settings
+        )
+        #expect(vertical[horizontalEdge] == 0)
+        #expect(vertical[verticalEdge] > 240)
+        #expect(ImageEditorBrushStrokeKernel.effectiveTipAspectRatio(
+            roundness: 0.5,
+            tilt: ImageEditorStylusTilt(x: 0, y: 0.2),
+            tiltControlsShape: true
+        ) == 0.5)
+    }
+
     @Test func missingOrPerpendicularTiltPreservesTheCircularMouseFootprint() {
         let settings = ImageEditorBrushStrokeSettings(
             diameter: 16,
@@ -725,6 +777,53 @@ struct ImageEditorBrushStrokeTests {
             hardness: 1,
             flow: 1,
             tiltControlsShape: true,
+            reveal: false
+        ))
+        let horizontalColor = try #require(layerMask.color(at: CGPoint(x: 28, y: 20)))
+        let verticalColor = try #require(layerMask.color(at: CGPoint(x: 20, y: 28)))
+        #expect(horizontalColor.alphaComponent < 0.06)
+        #expect(verticalColor.alphaComponent > 0.95)
+    }
+
+    @Test func quickMaskAndLayerMaskShareManualBrushRoundness() throws {
+        let size = CGSize(width: 41, height: 41)
+        let samples = [
+            ImageEditorBrushStrokeSample(
+                point: CGPoint(x: 20.5, y: 20.5),
+                pressure: 1
+            )
+        ]
+        let horizontalEdge = 20 * 41 + 28
+        let verticalEdge = 28 * 41 + 20
+        let selectionMask = ImageEditorSelectionMask(
+            width: 41,
+            height: 41,
+            alpha: [UInt8](repeating: .max, count: 41 * 41)
+        )
+        let quickMask = try #require(selectionMask.paintedByQuickMaskStroke(
+            samples: samples,
+            canvasSize: size,
+            diameter: 20,
+            opacity: 1,
+            hardness: 1,
+            flow: 1,
+            tipRoundness: 0.25,
+            reveal: false
+        ))
+        #expect(quickMask.alpha[horizontalEdge] < 15)
+        #expect(quickMask.alpha[verticalEdge] == .max)
+
+        let sourceMask = NSImage.rendered(size: size) { rect in
+            NSColor.white.setFill()
+            rect.fill()
+        } ?? NSImage.transparent(size: size)
+        let layerMask = try #require(sourceMask.withMaskStroke(
+            samples: samples,
+            width: 20,
+            opacity: 1,
+            hardness: 1,
+            flow: 1,
+            tipRoundness: 0.25,
             reveal: false
         ))
         let horizontalColor = try #require(layerMask.color(at: CGPoint(x: 28, y: 20)))

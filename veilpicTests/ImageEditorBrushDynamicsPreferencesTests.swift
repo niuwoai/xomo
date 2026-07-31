@@ -21,6 +21,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
             pressureControlsFlow: true,
             pressureSensitivity: 140,
             tiltControlsShape: true,
+            tipRoundness: 2,
             smoothing: 140
         ).save(to: defaults)
 
@@ -29,6 +30,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(loaded.pressureControlsFlow)
         #expect(loaded.pressureSensitivity == 100)
         #expect(loaded.tiltControlsShape)
+        #expect(loaded.tipRoundness == 10)
         #expect(loaded.smoothing == 100)
 
         defaults.set(
@@ -51,6 +53,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         first.setBrushPressureControlsFlow(true)
         first.setBrushPressureSensitivity(73)
         first.setBrushTiltControlsShape(true)
+        first.setBrushTipRoundness(47)
         first.setBrushSmoothing(64)
 
         let restored = ImageEditorViewModel(
@@ -62,6 +65,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(restored.brushPressureControlsFlow)
         #expect(restored.brushPressureSensitivity == 73)
         #expect(restored.brushTiltControlsShape)
+        #expect(restored.brushTipRoundness == 47)
         #expect(restored.brushSmoothing == 64)
     }
 
@@ -80,6 +84,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
             from: legacyDynamics
         )
         #expect(!decodedDynamics.tiltControlsShape)
+        #expect(decodedDynamics.tipRoundness == 100)
         #expect(decodedDynamics.smoothing == 0)
 
         let legacyPreset = Data(
@@ -103,6 +108,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
             from: legacyPreset
         )
         #expect(!decodedPreset.tiltControlsShape)
+        #expect(decodedPreset.tipRoundness == 100)
         #expect(decodedPreset.smoothing == 0)
     }
 
@@ -133,6 +139,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
 
     @Test func retouchPressureSensitivityPresetsPersistEveryExposedChoice() {
         #expect(ImageEditorPressureSensitivityPresets.values == [0, 25, 50, 75, 100])
+        #expect(ImageEditorBrushRoundnessPresets.values == [10, 25, 50, 75, 100])
         let (defaults, suiteName) = temporaryDefaults()
         defer { defaults.removePersistentDomain(forName: suiteName) }
         let viewModel = makeViewModel(defaults: defaults)
@@ -159,6 +166,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
             pressureControlsSize: false,
             pressureControlsFlow: true,
             pressureSensitivity: 180,
+            tipRoundness: 2,
             smoothing: 180,
             isBuiltIn: true
         )
@@ -173,6 +181,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(preset.flow == 100)
         #expect(preset.spacing == 1)
         #expect(preset.pressureSensitivity == 100)
+        #expect(preset.tipRoundness == 10)
         #expect(preset.smoothing == 100)
         #expect(!preset.isBuiltIn)
 
@@ -192,6 +201,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         first.setBrushPressureControlsFlow(true)
         first.setBrushPressureSensitivity(73)
         first.setBrushTiltControlsShape(true)
+        first.setBrushTipRoundness(47)
         first.setBrushSmoothing(64)
 
         let created = try #require(first.createBrushPresetFromCurrentSettings())
@@ -210,6 +220,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(restored.brushPressureControlsFlow)
         #expect(restored.brushPressureSensitivity == 73)
         #expect(restored.brushTiltControlsShape)
+        #expect(restored.brushTipRoundness == 47)
         #expect(restored.brushSmoothing == 64)
         #expect(restored.activeBrushPreset?.id == created.id)
 
@@ -233,6 +244,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         viewModel.setBrushPressureControlsFlow(false)
         viewModel.setBrushPressureSensitivity(0)
         viewModel.setBrushTiltControlsShape(true)
+        viewModel.setBrushTipRoundness(25)
         viewModel.setBrushSmoothing(75)
 
         viewModel.applyBrushPreset(builtIn)
@@ -246,6 +258,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(viewModel.brushPressureControlsFlow)
         #expect(viewModel.brushPressureSensitivity == 50)
         #expect(!viewModel.brushTiltControlsShape)
+        #expect(viewModel.brushTipRoundness == 100)
         #expect(viewModel.brushSmoothing == 0)
         #expect(viewModel.customBrushPresets.isEmpty)
     }

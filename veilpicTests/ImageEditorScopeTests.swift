@@ -2624,6 +2624,28 @@ struct ImageEditorScopeTests {
         #expect(menuSource.contains("image-editor-brush-smoothing"))
     }
 
+    @Test func brushAndEraserExposeCompactNonFocusableRoundnessPresets() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let menuStart = try #require(
+            source.range(of: "private var brushRoundnessMenu: some View")
+        )
+        let menuEnd = try #require(
+            source[menuStart.upperBound...].range(
+                of: "private var retouchPressureSensitivityMenu: some View"
+            )
+        )
+        let menuSource = source[menuStart.lowerBound..<menuEnd.lowerBound]
+
+        #expect(source.contains("brushPresetMenu\n                    brushRoundnessMenu"))
+        #expect(menuSource.contains("ImageEditorBrushRoundnessPresets.values"))
+        #expect(menuSource.contains("viewModel.setBrushTipRoundness($0)"))
+        #expect(menuSource.contains(".focusable(false)"))
+        #expect(menuSource.contains("image-editor-brush-roundness"))
+    }
+
     @Test func patchToolExposesModesAndWiresTwoPhaseLivePreviewInteraction() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),

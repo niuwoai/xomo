@@ -259,6 +259,7 @@ extension ImageEditorSelectionMask {
         pressureControlsFlow: Bool = false,
         pressureSensitivity: CGFloat = 0.5,
         tiltControlsShape: Bool = false,
+        tipRoundness: CGFloat = 1,
         smoothing: CGFloat = 0,
         reveal: Bool
     ) -> ImageEditorSelectionMask? {
@@ -280,6 +281,7 @@ extension ImageEditorSelectionMask {
                 pressureControlsFlow: pressureControlsFlow,
                 pressureSensitivity: pressureSensitivity,
                 tiltControlsShape: tiltControlsShape,
+                tipRoundness: tipRoundness,
                 smoothing: smoothing
               )
         else { return nil }
@@ -308,6 +310,7 @@ extension ImageEditorSelectionMask {
         pressureControlsFlow: Bool,
         pressureSensitivity: CGFloat,
         tiltControlsShape: Bool,
+        tipRoundness: CGFloat,
         smoothing: CGFloat
     ) -> [UInt8]? {
         guard !samples.isEmpty else { return nil }
@@ -331,6 +334,7 @@ extension ImageEditorSelectionMask {
             pressureControlsFlow: pressureControlsFlow,
             pressureSensitivity: pressureSensitivity,
             tiltControlsShape: tiltControlsShape,
+            tipRoundness: tipRoundness,
             smoothing: smoothing
         )
         return ImageEditorBrushStrokeKernel.coverage(

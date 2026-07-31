@@ -574,6 +574,9 @@
 "imageEditor.option.smoothing" = "平滑";
 "imageEditor.option.smoothingValue" = "平滑 %d%%";
 "imageEditor.help.brushSmoothing" = "在生成画笔间距前减少鼠标或数位笔路径抖动";
+"imageEditor.option.brushRoundness" = "笔尖圆度";
+"imageEditor.option.brushRoundnessValue" = "圆度 %d%%";
+"imageEditor.help.brushRoundness" = "调整画笔和橡皮擦笔尖的扁平程度";
 "imageEditor.option.pressure" = "笔压";
 "imageEditor.option.pressureSize" = "控制大小";
 "imageEditor.option.pressureFlow" = "控制流量";

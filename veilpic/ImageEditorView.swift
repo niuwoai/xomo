@@ -594,6 +594,7 @@ struct ImageEditorView: View {
                 }
                 if usesBrushDynamicsOptions {
                     brushPresetMenu
+                    brushRoundnessMenu
                     optionSlider(titleKey: "imageEditor.option.flow", value: $viewModel.brushFlow, range: 1...100, step: 1, suffix: "%")
                     optionSlider(titleKey: "imageEditor.option.spacing", value: $viewModel.brushSpacing, range: 1...200, step: 1, suffix: "%")
                     brushSmoothingMenu
@@ -1007,6 +1008,38 @@ struct ImageEditorView: View {
         .xomoFocusEffectDisabled()
         .help(L10n.text("imageEditor.help.brushSmoothing"))
         .accessibilityIdentifier("image-editor-brush-smoothing")
+    }
+
+    private var brushRoundnessMenu: some View {
+        Menu {
+            Picker(
+                L10n.text("imageEditor.option.brushRoundness"),
+                selection: Binding(
+                    get: { viewModel.brushTipRoundness },
+                    set: { viewModel.setBrushTipRoundness($0) }
+                )
+            ) {
+                ForEach(ImageEditorBrushRoundnessPresets.values, id: \.self) { roundness in
+                    Text(L10n.format("imageEditor.option.percentPreset", Int(roundness)))
+                        .tag(roundness)
+                }
+            }
+        } label: {
+            Text(
+                L10n.format(
+                    "imageEditor.option.brushRoundnessValue",
+                    Int(viewModel.brushTipRoundness.rounded())
+                )
+            )
+                .font(.system(size: 11, weight: .medium))
+                .lineLimit(1)
+        }
+        .menuStyle(.borderlessButton)
+        .fixedSize()
+        .focusable(false)
+        .xomoFocusEffectDisabled()
+        .help(L10n.text("imageEditor.help.brushRoundness"))
+        .accessibilityIdentifier("image-editor-brush-roundness")
     }
 
     private var retouchPressureSensitivityMenu: some View {
@@ -2287,6 +2320,7 @@ struct ImageEditorView: View {
                             brushDiameter: displayedBrushDiameter,
                             brushTilt: activeBrushTilt,
                             brushTiltControlsShape: viewModel.brushTiltControlsShape,
+                            brushTipRoundness: viewModel.brushTipRoundness / 100,
                             isPointerOverCanvas: isPointerOverDrawableCanvas,
                             isPointerOverMovableContent: contentHit.isMovable,
                             isPointerOverBlockedContent: contentHit.isBlocked,
@@ -3690,6 +3724,7 @@ struct ImageEditorView: View {
             brushDiameter: displayedBrushDiameter,
             brushTilt: activeBrushTilt,
             brushTiltControlsShape: viewModel.brushTiltControlsShape,
+            brushTipRoundness: viewModel.brushTipRoundness / 100,
             isPointerOverCanvas: canvasPoint != nil,
             isPointerOverMovableContent: contentHit.isMovable,
             isPointerOverBlockedContent: contentHit.isBlocked,
@@ -10068,6 +10103,7 @@ enum ImageEditorCanvasCursor {
         brushDiameter: CGFloat,
         brushTilt: ImageEditorStylusTilt? = nil,
         brushTiltControlsShape: Bool = false,
+        brushTipRoundness: CGFloat = 1,
         isPointerOverCanvas: Bool = true,
         isPointerOverMovableContent: Bool = true,
         isPointerOverBlockedContent: Bool = false,
@@ -10144,6 +10180,7 @@ enum ImageEditorCanvasCursor {
                 brushDiameter: brushDiameter,
                 brushTilt: brushTilt,
                 brushTiltControlsShape: brushTiltControlsShape,
+                brushTipRoundness: brushTipRoundness,
                 penIsClosing: penIsClosing,
                 handIsDragging: handIsDragging,
                 modifierFlags: modifierFlags,
@@ -10559,6 +10596,7 @@ enum ImageEditorCanvasCursor {
         brushDiameter: CGFloat,
         brushTilt: ImageEditorStylusTilt? = nil,
         brushTiltControlsShape: Bool = false,
+        brushTipRoundness: CGFloat = 1,
         penIsClosing: Bool = false,
         handIsDragging: Bool = false,
         modifierFlags: NSEvent.ModifierFlags = [],
@@ -10601,7 +10639,8 @@ enum ImageEditorCanvasCursor {
                 : familiarBrushCursor(
                     diameter: brushDiameter,
                     tilt: brushTilt,
-                    tiltControlsShape: brushTiltControlsShape
+                    tiltControlsShape: brushTiltControlsShape,
+                    tipRoundness: brushTipRoundness
                 )
         case .toneBrush, .retouchBrush:
             return modifierFlags.contains(.capsLock)
@@ -10649,13 +10688,15 @@ enum ImageEditorCanvasCursor {
     private static func familiarBrushCursor(
         diameter: CGFloat,
         tilt: ImageEditorStylusTilt? = nil,
-        tiltControlsShape: Bool = false
+        tiltControlsShape: Bool = false,
+        tipRoundness: CGFloat = 1
     ) -> NSCursor {
         brushCursor(
             footprint: ImageEditorBrushCursorFootprint(
                 diameter: diameter,
                 tilt: tilt,
-                tiltControlsShape: tiltControlsShape
+                tiltControlsShape: tiltControlsShape,
+                tipRoundness: tipRoundness
             ),
             symbolName: ""
         )

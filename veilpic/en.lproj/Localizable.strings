@@ -574,6 +574,9 @@
 "imageEditor.option.smoothing" = "Smoothing";
 "imageEditor.option.smoothingValue" = "Smoothing %d%%";
 "imageEditor.help.brushSmoothing" = "Reduce pointer jitter before spacing the brush stroke";
+"imageEditor.option.brushRoundness" = "Tip Roundness";
+"imageEditor.option.brushRoundnessValue" = "Roundness %d%%";
+"imageEditor.help.brushRoundness" = "Adjust how flat the brush and eraser tip appears";
 "imageEditor.option.pressure" = "Pressure";
 "imageEditor.option.pressureSize" = "Control Size";
 "imageEditor.option.pressureFlow" = "Control Flow";

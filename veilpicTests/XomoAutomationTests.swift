@@ -5020,6 +5020,7 @@ struct XomoAutomationTests {
                 "pressureFlow": .bool(true),
                 "pressureSensitivity": .number(72),
                 "tiltShape": .bool(true),
+                "roundness": .number(35),
                 "smoothing": .number(75)
             ]
         ))
@@ -5034,6 +5035,7 @@ struct XomoAutomationTests {
         #expect(viewModel.brushPressureControlsFlow)
         #expect(viewModel.brushPressureSensitivity == 72)
         #expect(viewModel.brushTiltControlsShape)
+        #expect(viewModel.brushTipRoundness == 35)
         #expect(viewModel.brushSmoothing == 75)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.brush"))
     }

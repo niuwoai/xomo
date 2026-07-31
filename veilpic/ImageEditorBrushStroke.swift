@@ -34,6 +34,7 @@ struct ImageEditorBrushStrokeSettings: Equatable {
     var pressureControlsFlow: Bool
     var pressureSensitivity: CGFloat
     var tiltControlsShape: Bool
+    var tipRoundness: CGFloat
     var smoothing: CGFloat
 
     init(
@@ -46,6 +47,7 @@ struct ImageEditorBrushStrokeSettings: Equatable {
         pressureControlsFlow: Bool = false,
         pressureSensitivity: CGFloat = 0.5,
         tiltControlsShape: Bool = false,
+        tipRoundness: CGFloat = 1,
         smoothing: CGFloat = 0
     ) {
         self.diameter = diameter
@@ -57,6 +59,7 @@ struct ImageEditorBrushStrokeSettings: Equatable {
         self.pressureControlsFlow = pressureControlsFlow
         self.pressureSensitivity = pressureSensitivity
         self.tiltControlsShape = tiltControlsShape
+        self.tipRoundness = tipRoundness
         self.smoothing = smoothing
     }
 
@@ -71,6 +74,7 @@ struct ImageEditorBrushStrokeSettings: Equatable {
             pressureControlsFlow: pressureControlsFlow,
             pressureSensitivity: max(0, min(1, pressureSensitivity)),
             tiltControlsShape: tiltControlsShape,
+            tipRoundness: max(0.1, min(1, tipRoundness)),
             smoothing: max(0, min(1, smoothing))
         )
     }
@@ -224,9 +228,14 @@ enum ImageEditorBrushStrokeKernel {
             let flowScale = settings.pressureControlsFlow ? mappedPressure : 1
             let radius = max(1, settings.diameter * diameterScale) / 2
             let innerRadius = radius * settings.hardness
-            let tiltAspectRatio = tiltTipAspectRatio(
+            let tipAspectRatio = effectiveTipAspectRatio(
+                roundness: settings.tipRoundness,
                 tilt: stamp.tilt,
-                isEnabled: settings.tiltControlsShape
+                tiltControlsShape: settings.tiltControlsShape
+            )
+            let tipDirection = resolvedTipDirection(
+                tilt: stamp.tilt,
+                tiltControlsShape: settings.tiltControlsShape
             )
             let minX = max(0, Int(floor(stamp.point.x - radius - 1)))
             let maxX = min(width - 1, Int(ceil(stamp.point.x + radius + 1)))
@@ -241,8 +250,8 @@ enum ImageEditorBrushStrokeKernel {
                     let distance = tipDistance(
                         deltaX: deltaX,
                         deltaY: deltaY,
-                        tilt: stamp.tilt,
-                        aspectRatio: tiltAspectRatio
+                        direction: tipDirection,
+                        aspectRatio: tipAspectRatio
                     )
                     let stampCoverage = radialCoverage(
                         distance: distance,
@@ -277,6 +286,17 @@ enum ImageEditorBrushStrokeKernel {
     ) -> CGFloat {
         guard isEnabled, let tilt else { return 1 }
         return max(0.25, 1 - tilt.magnitude * 0.75)
+    }
+
+    static func effectiveTipAspectRatio(
+        roundness: CGFloat,
+        tilt: ImageEditorStylusTilt?,
+        tiltControlsShape: Bool
+    ) -> CGFloat {
+        min(
+            max(0.1, min(1, roundness)),
+            tiltTipAspectRatio(tilt: tilt, isEnabled: tiltControlsShape)
+        )
     }
 
     static func composite(
@@ -333,18 +353,29 @@ enum ImageEditorBrushStrokeKernel {
     private static func tipDistance(
         deltaX: CGFloat,
         deltaY: CGFloat,
-        tilt: ImageEditorStylusTilt?,
+        direction: CGVector,
         aspectRatio: CGFloat
     ) -> CGFloat {
-        guard aspectRatio < 0.9999,
+        guard aspectRatio < 0.9999 else { return hypot(deltaX, deltaY) }
+        let alongTilt = deltaX * direction.dx + deltaY * direction.dy
+        let acrossTilt = -deltaX * direction.dy + deltaY * direction.dx
+        return hypot(alongTilt, acrossTilt / aspectRatio)
+    }
+
+    private static func resolvedTipDirection(
+        tilt: ImageEditorStylusTilt?,
+        tiltControlsShape: Bool
+    ) -> CGVector {
+        guard tiltControlsShape,
               let tilt,
               tilt.magnitude > 0.0001
-        else { return hypot(deltaX, deltaY) }
-        let directionX = tilt.x / tilt.magnitude
-        let directionY = tilt.y / tilt.magnitude
-        let alongTilt = deltaX * directionX + deltaY * directionY
-        let acrossTilt = -deltaX * directionY + deltaY * directionX
-        return hypot(alongTilt, acrossTilt / aspectRatio)
+        else {
+            return CGVector(dx: 1, dy: 0)
+        }
+        return CGVector(
+            dx: tilt.x / tilt.magnitude,
+            dy: tilt.y / tilt.magnitude
+        )
     }
 
     private static func byte(_ value: CGFloat) -> UInt8 {

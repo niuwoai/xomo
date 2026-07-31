@@ -288,6 +288,50 @@ struct ImageEditorCanvasCursorTests {
         ) === NSCursor.arrow)
     }
 
+    @Test func manualRoundnessUpdatesOnlyBrushAndEraserFootprintCursors() {
+        let flatFootprint = ImageEditorBrushCursorFootprint(
+            diameter: 80,
+            tilt: nil,
+            tiltControlsShape: false,
+            tipRoundness: 0.25
+        )
+        #expect(flatFootprint.majorDiameter == 80)
+        #expect(flatFootprint.minorDiameter == 20)
+        #expect(flatFootprint.aspectRatio == 0.25)
+        #expect(flatFootprint.rotationDegrees == 0)
+
+        let roundBrush = ImageEditorCanvasCursor.cursor(
+            for: .brush,
+            brushDiameter: 80
+        )
+        let flatBrush = ImageEditorCanvasCursor.cursor(
+            for: .brush,
+            brushDiameter: 80,
+            brushTipRoundness: 0.25
+        )
+        let flatEraser = ImageEditorCanvasCursor.cursor(
+            for: .eraser,
+            brushDiameter: 80,
+            brushTipRoundness: 0.25
+        )
+        let cloneStamp = ImageEditorCanvasCursor.cursor(
+            for: .cloneStamp,
+            brushDiameter: 80,
+            brushTipRoundness: 0.25
+        )
+
+        #expect(flatBrush !== roundBrush)
+        #expect(flatEraser === flatBrush)
+        #expect(cloneStamp !== flatBrush)
+        #expect(flatBrush.image.tiffRepresentation != roundBrush.image.tiffRepresentation)
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .components,
+            selectedTool: .brush,
+            brushDiameter: 80,
+            brushTipRoundness: 0.25
+        ) === NSCursor.arrow)
+    }
+
     @Test func draggingAnObjectKeepsMoveCursorAcrossSidebarModes() {
         let componentDrag = ImageEditorCanvasCursor.cursor(
             for: .components,

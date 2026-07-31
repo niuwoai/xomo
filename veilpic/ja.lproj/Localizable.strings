@@ -574,6 +574,9 @@
 "imageEditor.option.smoothing" = "滑らかさ";
 "imageEditor.option.smoothingValue" = "滑らかさ %d%%";
 "imageEditor.help.brushSmoothing" = "ブラシストロークの間隔処理前にポインターの揺れを抑えます";
+"imageEditor.option.brushRoundness" = "ブラシ先端の真円率";
+"imageEditor.option.brushRoundnessValue" = "真円率 %d%%";
+"imageEditor.help.brushRoundness" = "ブラシと消しゴムの先端の扁平率を調整します";
 "imageEditor.option.pressure" = "筆圧";
 "imageEditor.option.pressureSize" = "サイズを制御";
 "imageEditor.option.pressureFlow" = "流量を制御";
