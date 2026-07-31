@@ -976,6 +976,13 @@ struct ImageEditorView: View {
             }
             .disabled(!viewModel.brushPressureControlsSize)
             Toggle(
+                L10n.text("imageEditor.option.pressureOpacity"),
+                isOn: Binding(
+                    get: { viewModel.brushPressureControlsOpacity },
+                    set: { viewModel.setBrushPressureControlsOpacity($0) }
+                )
+            )
+            Toggle(
                 L10n.text("imageEditor.option.pressureFlow"),
                 isOn: Binding(
                     get: { viewModel.brushPressureControlsFlow },

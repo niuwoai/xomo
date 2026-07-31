@@ -18,6 +18,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         defer { defaults.removePersistentDomain(forName: suiteName) }
         ImageEditorBrushDynamicsPreferences(
             pressureControlsSize: false,
+            pressureControlsOpacity: true,
             pressureControlsFlow: true,
             pressureSensitivity: 140,
             minimumDiameter: 140,
@@ -30,6 +31,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
 
         let loaded = ImageEditorBrushDynamicsPreferences.load(from: defaults)
         #expect(!loaded.pressureControlsSize)
+        #expect(loaded.pressureControlsOpacity)
         #expect(loaded.pressureControlsFlow)
         #expect(loaded.pressureSensitivity == 100)
         #expect(loaded.minimumDiameter == 100)
@@ -56,6 +58,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
             preferencesDefaults: defaults
         ) { _ in }
         first.setBrushPressureControlsSize(false)
+        first.setBrushPressureControlsOpacity(true)
         first.setBrushPressureControlsFlow(true)
         first.setBrushPressureSensitivity(73)
         first.setBrushMinimumDiameter(37)
@@ -71,6 +74,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
             preferencesDefaults: defaults
         ) { _ in }
         #expect(!restored.brushPressureControlsSize)
+        #expect(restored.brushPressureControlsOpacity)
         #expect(restored.brushPressureControlsFlow)
         #expect(restored.brushPressureSensitivity == 73)
         #expect(restored.brushMinimumDiameter == 37)
@@ -95,6 +99,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
             ImageEditorBrushDynamicsPreferences.self,
             from: legacyDynamics
         )
+        #expect(!decodedDynamics.pressureControlsOpacity)
         #expect(!decodedDynamics.tiltControlsShape)
         #expect(decodedDynamics.minimumDiameter == 0)
         #expect(decodedDynamics.minimumFlow == 0)
@@ -122,6 +127,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
             ImageEditorBrushPreset.self,
             from: legacyPreset
         )
+        #expect(!decodedPreset.pressureControlsOpacity)
         #expect(!decodedPreset.tiltControlsShape)
         #expect(decodedPreset.minimumDiameter == 0)
         #expect(decodedPreset.minimumFlow == 0)
@@ -185,6 +191,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
             flow: 140,
             spacing: 0,
             pressureControlsSize: false,
+            pressureControlsOpacity: true,
             pressureControlsFlow: true,
             pressureSensitivity: 180,
             minimumDiameter: -20,
@@ -204,6 +211,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(preset.hardness == 0)
         #expect(preset.flow == 100)
         #expect(preset.spacing == 1)
+        #expect(preset.pressureControlsOpacity)
         #expect(preset.pressureSensitivity == 100)
         #expect(preset.minimumDiameter == 0)
         #expect(preset.minimumFlow == 100)
@@ -225,6 +233,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         first.brushFlow = 67
         first.brushSpacing = 81
         first.setBrushPressureControlsSize(false)
+        first.setBrushPressureControlsOpacity(true)
         first.setBrushPressureControlsFlow(true)
         first.setBrushPressureSensitivity(73)
         first.setBrushMinimumDiameter(37)
@@ -247,6 +256,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(restored.brushFlow == 67)
         #expect(restored.brushSpacing == 81)
         #expect(!restored.brushPressureControlsSize)
+        #expect(restored.brushPressureControlsOpacity)
         #expect(restored.brushPressureControlsFlow)
         #expect(restored.brushPressureSensitivity == 73)
         #expect(restored.brushMinimumDiameter == 37)
@@ -274,6 +284,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         viewModel.brushFlow = 12
         viewModel.brushSpacing = 190
         viewModel.setBrushPressureControlsSize(false)
+        viewModel.setBrushPressureControlsOpacity(true)
         viewModel.setBrushPressureControlsFlow(false)
         viewModel.setBrushPressureSensitivity(0)
         viewModel.setBrushMinimumDiameter(75)
@@ -291,6 +302,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(viewModel.brushFlow == builtIn.flow)
         #expect(viewModel.brushSpacing == builtIn.spacing)
         #expect(viewModel.brushPressureControlsSize)
+        #expect(!viewModel.brushPressureControlsOpacity)
         #expect(viewModel.brushPressureControlsFlow)
         #expect(viewModel.brushPressureSensitivity == 50)
         #expect(viewModel.brushMinimumDiameter == 0)

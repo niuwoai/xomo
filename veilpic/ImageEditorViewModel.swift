@@ -99,6 +99,7 @@ final class ImageEditorViewModel: ObservableObject {
     @Published var brushFlow: CGFloat = 100
     @Published var brushSpacing: CGFloat = 25
     @Published var brushPressureControlsSize = true
+    @Published var brushPressureControlsOpacity = false
     @Published var brushPressureControlsFlow = true
     @Published var brushPressureSensitivity: CGFloat = 50
     @Published var brushMinimumDiameter: CGFloat = 0
@@ -462,6 +463,7 @@ final class ImageEditorViewModel: ObservableObject {
         quickMaskOverlayColor = quickMaskPreferences.color.nsColor
         quickMaskOverlayOpacity = CGFloat(quickMaskPreferences.opacity)
         brushPressureControlsSize = brushDynamicsPreferences.pressureControlsSize
+        brushPressureControlsOpacity = brushDynamicsPreferences.pressureControlsOpacity
         brushPressureControlsFlow = brushDynamicsPreferences.pressureControlsFlow
         brushPressureSensitivity = CGFloat(brushDynamicsPreferences.pressureSensitivity)
         brushMinimumDiameter = CGFloat(brushDynamicsPreferences.minimumDiameter)
@@ -509,6 +511,7 @@ final class ImageEditorViewModel: ObservableObject {
         quickMaskOverlayColor = quickMaskPreferences.color.nsColor
         quickMaskOverlayOpacity = CGFloat(quickMaskPreferences.opacity)
         brushPressureControlsSize = brushDynamicsPreferences.pressureControlsSize
+        brushPressureControlsOpacity = brushDynamicsPreferences.pressureControlsOpacity
         brushPressureControlsFlow = brushDynamicsPreferences.pressureControlsFlow
         brushPressureSensitivity = CGFloat(brushDynamicsPreferences.pressureSensitivity)
         brushMinimumDiameter = CGFloat(brushDynamicsPreferences.minimumDiameter)
@@ -2545,6 +2548,7 @@ final class ImageEditorViewModel: ObservableObject {
             flow: brushFlow,
             spacing: brushSpacing,
             pressureControlsSize: brushPressureControlsSize,
+            pressureControlsOpacity: brushPressureControlsOpacity,
             pressureControlsFlow: brushPressureControlsFlow,
             pressureSensitivity: brushPressureSensitivity,
             minimumDiameter: brushMinimumDiameter,
@@ -2695,6 +2699,7 @@ final class ImageEditorViewModel: ObservableObject {
         brushFlow = max(1, min(100, preset.flow))
         brushSpacing = max(1, min(200, preset.spacing))
         brushPressureControlsSize = preset.pressureControlsSize
+        brushPressureControlsOpacity = preset.pressureControlsOpacity
         brushPressureControlsFlow = preset.pressureControlsFlow
         brushPressureSensitivity = max(0, min(100, preset.pressureSensitivity))
         brushMinimumDiameter = max(0, min(100, preset.minimumDiameter))
@@ -2732,6 +2737,7 @@ final class ImageEditorViewModel: ObservableObject {
             flow: brushFlow,
             spacing: brushSpacing,
             pressureControlsSize: brushPressureControlsSize,
+            pressureControlsOpacity: brushPressureControlsOpacity,
             pressureControlsFlow: brushPressureControlsFlow,
             pressureSensitivity: brushPressureSensitivity,
             minimumDiameter: brushMinimumDiameter,
@@ -3439,6 +3445,7 @@ final class ImageEditorViewModel: ObservableObject {
     private func persistBrushDynamicsPreferences() {
         ImageEditorBrushDynamicsPreferences(
             pressureControlsSize: brushPressureControlsSize,
+            pressureControlsOpacity: brushPressureControlsOpacity,
             pressureControlsFlow: brushPressureControlsFlow,
             pressureSensitivity: Double(brushPressureSensitivity),
             minimumDiameter: Double(brushMinimumDiameter),
@@ -3477,6 +3484,12 @@ final class ImageEditorViewModel: ObservableObject {
     func setBrushPressureControlsSize(_ isEnabled: Bool) {
         guard brushPressureControlsSize != isEnabled else { return }
         brushPressureControlsSize = isEnabled
+        persistBrushDynamicsPreferences()
+    }
+
+    func setBrushPressureControlsOpacity(_ isEnabled: Bool) {
+        guard brushPressureControlsOpacity != isEnabled else { return }
+        brushPressureControlsOpacity = isEnabled
         persistBrushDynamicsPreferences()
     }
 
@@ -5258,6 +5271,7 @@ final class ImageEditorViewModel: ObservableObject {
                 flow: brushFlow / 100,
                 spacing: brushSpacing / 100,
                 pressureControlsSize: brushPressureControlsSize,
+                pressureControlsOpacity: brushPressureControlsOpacity,
                 pressureControlsFlow: brushPressureControlsFlow,
                 pressureSensitivity: brushPressureSensitivity / 100,
                 minimumDiameter: brushMinimumDiameter / 100,
@@ -5291,6 +5305,7 @@ final class ImageEditorViewModel: ObservableObject {
                 flow: brushFlow / 100,
                 spacing: brushSpacing / 100,
                 pressureControlsSize: brushPressureControlsSize,
+                pressureControlsOpacity: brushPressureControlsOpacity,
                 pressureControlsFlow: brushPressureControlsFlow,
                 pressureSensitivity: brushPressureSensitivity / 100,
                 minimumDiameter: brushMinimumDiameter / 100,
@@ -6982,6 +6997,7 @@ final class ImageEditorViewModel: ObservableObject {
             flow: brushFlow / 100,
             spacing: brushSpacing / 100,
             pressureControlsSize: brushPressureControlsSize,
+            pressureControlsOpacity: brushPressureControlsOpacity,
             pressureControlsFlow: brushPressureControlsFlow,
             pressureSensitivity: brushPressureSensitivity / 100,
             minimumDiameter: brushMinimumDiameter / 100,
@@ -8823,6 +8839,7 @@ extension NSImage {
         flow: CGFloat = 1,
         spacing: CGFloat = 0.25,
         pressureControlsSize: Bool = false,
+        pressureControlsOpacity: Bool = false,
         pressureControlsFlow: Bool = false,
         pressureSensitivity: CGFloat = 0.5,
         minimumDiameter: CGFloat = 0,
@@ -8843,6 +8860,7 @@ extension NSImage {
                 flow: flow,
                 spacing: spacing,
                 pressureControlsSize: pressureControlsSize,
+                pressureControlsOpacity: pressureControlsOpacity,
                 pressureControlsFlow: pressureControlsFlow,
                 pressureSensitivity: pressureSensitivity,
                 minimumDiameter: minimumDiameter,

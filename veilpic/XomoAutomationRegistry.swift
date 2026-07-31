@@ -1623,6 +1623,7 @@ final class XomoAutomationRegistry {
                 "flow": .number(Double(preset.flow)),
                 "spacing": .number(Double(preset.spacing)),
                 "pressureSize": .bool(preset.pressureControlsSize),
+                "pressureOpacity": .bool(preset.pressureControlsOpacity),
                 "pressureFlow": .bool(preset.pressureControlsFlow),
                 "pressureSensitivity": .number(Double(preset.pressureSensitivity)),
                 "minimumDiameter": .number(Double(preset.minimumDiameter)),
@@ -4082,6 +4083,9 @@ final class XomoAutomationRegistry {
         if let pressureSize = arguments["pressureSize"]?.boolValue {
             viewModel.setBrushPressureControlsSize(pressureSize)
         }
+        if let pressureOpacity = arguments["pressureOpacity"]?.boolValue {
+            viewModel.setBrushPressureControlsOpacity(pressureOpacity)
+        }
         if let pressureFlow = arguments["pressureFlow"]?.boolValue {
             viewModel.setBrushPressureControlsFlow(pressureFlow)
         }
@@ -5560,6 +5564,7 @@ private extension XomoAutomationRegistry {
             "flow": XomoAutomationSchema.number(description: "Per-stamp flow from 1 to 100 percent"),
             "spacing": XomoAutomationSchema.number(description: "Stamp spacing from 1 to 200 percent of brush diameter"),
             "pressureSize": XomoAutomationSchema.boolean(description: "Use point pressure to control brush diameter"),
+            "pressureOpacity": XomoAutomationSchema.boolean(description: "Use point pressure to control the per-position opacity ceiling"),
             "pressureFlow": XomoAutomationSchema.boolean(description: "Use point pressure to control per-stamp flow"),
             "pressureSensitivity": XomoAutomationSchema.number(description: "Pressure curve sensitivity from 0 to 100"),
             "minimumDiameter": XomoAutomationSchema.number(description: "Minimum pressure-controlled brush diameter from 0 to 100 percent"),

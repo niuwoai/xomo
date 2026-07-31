@@ -2640,6 +2640,8 @@ struct ImageEditorScopeTests {
         #expect(menuSource.contains("ImageEditorBrushMinimumDiameterPresets.values"))
         #expect(menuSource.contains("viewModel.setBrushMinimumDiameter($0)"))
         #expect(menuSource.contains(".disabled(!viewModel.brushPressureControlsSize)"))
+        #expect(menuSource.contains("imageEditor.option.pressureOpacity"))
+        #expect(menuSource.contains("viewModel.setBrushPressureControlsOpacity($0)"))
         #expect(menuSource.contains("ImageEditorBrushMinimumFlowPresets.values"))
         #expect(menuSource.contains("viewModel.setBrushMinimumFlow($0)"))
         #expect(menuSource.contains(".disabled(!viewModel.brushPressureControlsFlow)"))

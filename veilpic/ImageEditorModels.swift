@@ -44,6 +44,7 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
     let flow: CGFloat
     let spacing: CGFloat
     let pressureControlsSize: Bool
+    let pressureControlsOpacity: Bool
     let pressureControlsFlow: Bool
     let pressureSensitivity: CGFloat
     let minimumDiameter: CGFloat
@@ -62,6 +63,7 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
         flow: CGFloat = 100,
         spacing: CGFloat = 25,
         pressureControlsSize: Bool = true,
+        pressureControlsOpacity: Bool = false,
         pressureControlsFlow: Bool = true,
         pressureSensitivity: CGFloat = 50,
         minimumDiameter: CGFloat = 0,
@@ -79,6 +81,7 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
         self.flow = flow
         self.spacing = spacing
         self.pressureControlsSize = pressureControlsSize
+        self.pressureControlsOpacity = pressureControlsOpacity
         self.pressureControlsFlow = pressureControlsFlow
         self.pressureSensitivity = pressureSensitivity
         self.minimumDiameter = minimumDiameter
@@ -98,6 +101,7 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
         case flow
         case spacing
         case pressureControlsSize
+        case pressureControlsOpacity
         case pressureControlsFlow
         case pressureSensitivity
         case minimumDiameter
@@ -121,6 +125,10 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
             Bool.self,
             forKey: .pressureControlsSize
         )
+        pressureControlsOpacity = try values.decodeIfPresent(
+            Bool.self,
+            forKey: .pressureControlsOpacity
+        ) ?? false
         pressureControlsFlow = try values.decode(
             Bool.self,
             forKey: .pressureControlsFlow
@@ -172,6 +180,7 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
             flow: max(1, min(100, flow)),
             spacing: max(1, min(200, spacing)),
             pressureControlsSize: pressureControlsSize,
+            pressureControlsOpacity: pressureControlsOpacity,
             pressureControlsFlow: pressureControlsFlow,
             pressureSensitivity: max(0, min(100, pressureSensitivity)),
             minimumDiameter: max(0, min(100, minimumDiameter)),
@@ -190,6 +199,7 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
         flow: CGFloat,
         spacing: CGFloat,
         pressureControlsSize: Bool,
+        pressureControlsOpacity: Bool,
         pressureControlsFlow: Bool,
         pressureSensitivity: CGFloat,
         minimumDiameter: CGFloat,
@@ -205,6 +215,7 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
             && abs(self.flow - flow) < tolerance
             && abs(self.spacing - spacing) < tolerance
             && self.pressureControlsSize == pressureControlsSize
+            && self.pressureControlsOpacity == pressureControlsOpacity
             && self.pressureControlsFlow == pressureControlsFlow
             && abs(self.pressureSensitivity - pressureSensitivity) < tolerance
             && abs(self.minimumDiameter - minimumDiameter) < tolerance

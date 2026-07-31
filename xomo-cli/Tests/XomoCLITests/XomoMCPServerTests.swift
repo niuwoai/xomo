@@ -90,6 +90,10 @@ struct XomoMCPServerTests {
                 == "boolean"
         )
         #expect(
+            (paintStrokeProperties["pressureOpacity"] as? [String: Any])?["type"] as? String
+                == "boolean"
+        )
+        #expect(
             (paintStrokeProperties["minimumDiameter"] as? [String: Any])?["minimum"] as? Int == 0
         )
         #expect(

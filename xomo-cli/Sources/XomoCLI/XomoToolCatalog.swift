@@ -101,6 +101,7 @@ enum XomoToolCatalog {
                         "flow": ["type": "number", "minimum": 1, "maximum": 100],
                         "spacing": ["type": "number", "minimum": 1, "maximum": 200],
                         "pressureSize": ["type": "boolean"],
+                        "pressureOpacity": ["type": "boolean"],
                         "pressureFlow": ["type": "boolean"],
                         "pressureSensitivity": ["type": "number", "minimum": 0, "maximum": 100],
                         "minimumDiameter": ["type": "number", "minimum": 0, "maximum": 100],

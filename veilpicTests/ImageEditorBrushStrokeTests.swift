@@ -253,7 +253,7 @@ struct ImageEditorBrushStrokeTests {
         ).normalized.smoothing == 1)
     }
 
-    @Test func pressureCanControlDiameterAndFlowIndependently() {
+    @Test func pressureCanControlDiameterOpacityAndFlowIndependently() {
         #expect(ImageEditorBrushStrokeKernel.pressureDiameterScale(
             mappedPressure: 0.05,
             minimumDiameter: 0.4
@@ -278,6 +278,9 @@ struct ImageEditorBrushStrokeTests {
             mappedPressure: 2,
             minimumFlow: -1
         ) == 1)
+        #expect(ImageEditorBrushStrokeKernel.pressureOpacityScale(mappedPressure: -1) == 0)
+        #expect(ImageEditorBrushStrokeKernel.pressureOpacityScale(mappedPressure: 0.4) == 0.4)
+        #expect(ImageEditorBrushStrokeKernel.pressureOpacityScale(mappedPressure: 2) == 1)
         let stamps = [
             ImageEditorBrushStrokeSample(point: CGPoint(x: 15, y: 20), pressure: 0.2),
             ImageEditorBrushStrokeSample(point: CGPoint(x: 55, y: 20), pressure: 1)
@@ -314,6 +317,19 @@ struct ImageEditorBrushStrokeTests {
         #expect(minimumSized[20 * 80 + 19] > 200)
         #expect(minimumSized[fullPressureOuterPixel] == sized[fullPressureOuterPixel])
 
+        var opacitySettings = sizeSettings
+        opacitySettings.pressureControlsSize = false
+        opacitySettings.pressureControlsOpacity = true
+        opacitySettings.opacity = 0.8
+        let opacityControlled = ImageEditorBrushStrokeKernel.coverage(
+            width: 80,
+            height: 40,
+            stamps: stamps,
+            settings: opacitySettings
+        )
+        #expect(opacityControlled[20 * 80 + 15] < opacityControlled[20 * 80 + 55])
+        #expect(opacityControlled[20 * 80 + 55] == UInt8((0.8 * 255).rounded()))
+
         var flowSettings = sizeSettings
         flowSettings.pressureControlsSize = false
         flowSettings.pressureControlsFlow = true
@@ -347,6 +363,7 @@ struct ImageEditorBrushStrokeTests {
             flow: 0.4,
             spacing: 0.25,
             pressureControlsSize: true,
+            pressureControlsOpacity: true,
             pressureControlsFlow: true
         )
         let mouseStamps = ImageEditorBrushStrokeKernel.stampSamples(
@@ -803,6 +820,7 @@ struct ImageEditorBrushStrokeTests {
             flow: 1,
             spacing: 2,
             pressureControlsSize: true,
+            pressureControlsOpacity: true,
             pressureControlsFlow: true,
             pressureSensitivity: 0.5,
             minimumDiameter: 0.5,
@@ -824,6 +842,7 @@ struct ImageEditorBrushStrokeTests {
             flow: 1,
             spacing: 2,
             pressureControlsSize: true,
+            pressureControlsOpacity: true,
             pressureControlsFlow: true,
             pressureSensitivity: 0.5,
             minimumDiameter: 0.5,

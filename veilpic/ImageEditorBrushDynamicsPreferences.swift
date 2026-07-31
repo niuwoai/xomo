@@ -35,6 +35,7 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
     static let storageKey = "im.some.xomo.imageEditor.brushDynamicsPreferences"
     static let defaultValue = ImageEditorBrushDynamicsPreferences(
         pressureControlsSize: true,
+        pressureControlsOpacity: false,
         pressureControlsFlow: true,
         pressureSensitivity: 50,
         minimumDiameter: 0,
@@ -46,6 +47,7 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
     )
 
     var pressureControlsSize: Bool
+    var pressureControlsOpacity: Bool
     var pressureControlsFlow: Bool
     var pressureSensitivity: Double
     var minimumDiameter: Double
@@ -57,6 +59,7 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
 
     init(
         pressureControlsSize: Bool,
+        pressureControlsOpacity: Bool = false,
         pressureControlsFlow: Bool,
         pressureSensitivity: Double,
         minimumDiameter: Double = 0,
@@ -67,6 +70,7 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
         smoothing: Double = 0
     ) {
         self.pressureControlsSize = pressureControlsSize
+        self.pressureControlsOpacity = pressureControlsOpacity
         self.pressureControlsFlow = pressureControlsFlow
         self.pressureSensitivity = pressureSensitivity
         self.minimumDiameter = minimumDiameter
@@ -79,6 +83,7 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
 
     private enum CodingKeys: String, CodingKey {
         case pressureControlsSize
+        case pressureControlsOpacity
         case pressureControlsFlow
         case pressureSensitivity
         case minimumDiameter
@@ -92,6 +97,10 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
     init(from decoder: Decoder) throws {
         let values = try decoder.container(keyedBy: CodingKeys.self)
         pressureControlsSize = try values.decode(Bool.self, forKey: .pressureControlsSize)
+        pressureControlsOpacity = try values.decodeIfPresent(
+            Bool.self,
+            forKey: .pressureControlsOpacity
+        ) ?? false
         pressureControlsFlow = try values.decode(Bool.self, forKey: .pressureControlsFlow)
         pressureSensitivity = try values.decode(Double.self, forKey: .pressureSensitivity)
         minimumDiameter = try values.decodeIfPresent(
@@ -123,6 +132,7 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
     var normalized: ImageEditorBrushDynamicsPreferences {
         ImageEditorBrushDynamicsPreferences(
             pressureControlsSize: pressureControlsSize,
+            pressureControlsOpacity: pressureControlsOpacity,
             pressureControlsFlow: pressureControlsFlow,
             pressureSensitivity: max(0, min(100, pressureSensitivity)),
             minimumDiameter: max(0, min(100, minimumDiameter)),

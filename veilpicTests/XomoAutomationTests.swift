@@ -5017,6 +5017,7 @@ struct XomoAutomationTests {
                 "flow": .number(17),
                 "spacing": .number(140),
                 "pressureSize": .bool(false),
+                "pressureOpacity": .bool(true),
                 "pressureFlow": .bool(true),
                 "pressureSensitivity": .number(72),
                 "minimumDiameter": .number(42),
@@ -5035,6 +5036,7 @@ struct XomoAutomationTests {
         #expect(viewModel.brushFlow == 17)
         #expect(viewModel.brushSpacing == 140)
         #expect(!viewModel.brushPressureControlsSize)
+        #expect(viewModel.brushPressureControlsOpacity)
         #expect(viewModel.brushPressureControlsFlow)
         #expect(viewModel.brushPressureSensitivity == 72)
         #expect(viewModel.brushMinimumDiameter == 42)
