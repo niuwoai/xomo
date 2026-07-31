@@ -1946,6 +1946,8 @@ struct ImageEditorView: View {
                             refreshCanvasCursor(in: geometry.size)
                         } else if !isInside {
                             viewModel.updatePointer(nil)
+                            activeBrushPressure = nil
+                            activeBrushTilt = nil
                             NSCursor.arrow.set()
                         }
                     }
@@ -1972,9 +1974,16 @@ struct ImageEditorView: View {
                             viewModel.magnifyCanvas(factor, at: location, viewportSize: viewportSize)
                             viewModel.endCanvasMagnify()
                         },
-                        onMouseMoved: { location in
+                        onMouseMoved: { location, stylusInput in
                             isPointerInsideCanvas = true
                             hoverViewPoint = location
+                            if usesPressureInputIndicator {
+                                activeBrushPressure = stylusInput.pressure
+                                activeBrushTilt = stylusInput.tilt
+                            } else {
+                                activeBrushPressure = nil
+                                activeBrushTilt = nil
+                            }
                             updateCanvasCursor(at: location, in: geometry.size)
                         },
                         onStylusEraserProximityChanged: { isInProximity in
@@ -2243,6 +2252,8 @@ struct ImageEditorView: View {
                             for: viewModel.selectedLeftSidebarTab,
                             selectedTool: viewModel.selectedTool,
                             brushDiameter: displayedBrushDiameter,
+                            brushTilt: activeBrushTilt,
+                            brushTiltControlsShape: viewModel.brushTiltControlsShape,
                             isPointerOverCanvas: isPointerOverDrawableCanvas,
                             isPointerOverMovableContent: contentHit.isMovable,
                             isPointerOverBlockedContent: contentHit.isBlocked,
@@ -2308,6 +2319,9 @@ struct ImageEditorView: View {
                     refreshCanvasCursor(in: geometry.size)
                 }
                 .onChange(of: viewModel.brushSize) { _ in
+                    refreshCanvasCursor(in: geometry.size)
+                }
+                .onChange(of: viewModel.brushTiltControlsShape) { _ in
                     refreshCanvasCursor(in: geometry.size)
                 }
                 .onChange(of: isSpacebarPanning) { _ in
@@ -3641,6 +3655,8 @@ struct ImageEditorView: View {
             for: viewModel.selectedLeftSidebarTab,
             selectedTool: viewModel.selectedTool,
             brushDiameter: displayedBrushDiameter,
+            brushTilt: activeBrushTilt,
+            brushTiltControlsShape: viewModel.brushTiltControlsShape,
             isPointerOverCanvas: canvasPoint != nil,
             isPointerOverMovableContent: contentHit.isMovable,
             isPointerOverBlockedContent: contentHit.isBlocked,
@@ -10017,6 +10033,8 @@ enum ImageEditorCanvasCursor {
         for sidebarTab: XomoLeftSidebarTab,
         selectedTool: ImageEditorTool,
         brushDiameter: CGFloat,
+        brushTilt: ImageEditorStylusTilt? = nil,
+        brushTiltControlsShape: Bool = false,
         isPointerOverCanvas: Bool = true,
         isPointerOverMovableContent: Bool = true,
         isPointerOverBlockedContent: Bool = false,
@@ -10091,6 +10109,8 @@ enum ImageEditorCanvasCursor {
             return cursor(
                 for: selectedTool,
                 brushDiameter: brushDiameter,
+                brushTilt: brushTilt,
+                brushTiltControlsShape: brushTiltControlsShape,
                 penIsClosing: penIsClosing,
                 handIsDragging: handIsDragging,
                 modifierFlags: modifierFlags,
@@ -10504,6 +10524,8 @@ enum ImageEditorCanvasCursor {
     static func cursor(
         for tool: ImageEditorTool,
         brushDiameter: CGFloat,
+        brushTilt: ImageEditorStylusTilt? = nil,
+        brushTiltControlsShape: Bool = false,
         penIsClosing: Bool = false,
         handIsDragging: Bool = false,
         modifierFlags: NSEvent.ModifierFlags = [],
@@ -10540,7 +10562,15 @@ enum ImageEditorCanvasCursor {
             return modifierFlags.contains(.capsLock)
                 ? .crosshair
                 : familiarBrushCursor(diameter: brushDiameter)
-        case .brushTool, .eraserTool, .toneBrush, .retouchBrush:
+        case .brushTool, .eraserTool:
+            return modifierFlags.contains(.capsLock)
+                ? .crosshair
+                : familiarBrushCursor(
+                    diameter: brushDiameter,
+                    tilt: brushTilt,
+                    tiltControlsShape: brushTiltControlsShape
+                )
+        case .toneBrush, .retouchBrush:
             return modifierFlags.contains(.capsLock)
                 ? .crosshair
                 : familiarBrushCursor(diameter: brushDiameter)
@@ -10583,13 +10613,27 @@ enum ImageEditorCanvasCursor {
     /// Brush-like tools share one predictable footprint cursor. The active
     /// tool is already visible in the toolbar, so a large invented symbol on
     /// the pointer only adds noise while painting.
-    private static func familiarBrushCursor(diameter: CGFloat) -> NSCursor {
-        brushCursor(diameter: diameter, symbolName: "")
+    private static func familiarBrushCursor(
+        diameter: CGFloat,
+        tilt: ImageEditorStylusTilt? = nil,
+        tiltControlsShape: Bool = false
+    ) -> NSCursor {
+        brushCursor(
+            footprint: ImageEditorBrushCursorFootprint(
+                diameter: diameter,
+                tilt: tilt,
+                tiltControlsShape: tiltControlsShape
+            ),
+            symbolName: ""
+        )
     }
 
-    private static func brushCursor(diameter requestedDiameter: CGFloat, symbolName: String) -> NSCursor {
-        let diameter = max(3, min(256, requestedDiameter.rounded()))
-        let cacheKey = "brush:\(symbolName):\(Int(diameter))"
+    private static func brushCursor(
+        footprint: ImageEditorBrushCursorFootprint,
+        symbolName: String
+    ) -> NSCursor {
+        let diameter = footprint.majorDiameter
+        let cacheKey = "brush:\(symbolName):\(footprint.cacheKey)"
         if let cachedCursor = cursorCache[cacheKey] {
             return cachedCursor
         }
@@ -10599,10 +10643,16 @@ enum ImageEditorCanvasCursor {
         image.lockFocus()
         let center = NSPoint(x: side / 2, y: side / 2)
         let ringRect = NSRect(
-            x: center.x - diameter / 2,
-            y: center.y - diameter / 2,
+            x: -diameter / 2,
+            y: -footprint.minorDiameter / 2,
             width: diameter,
-            height: diameter
+            height: footprint.minorDiameter
+        )
+        let graphicsContext = NSGraphicsContext.current?.cgContext
+        graphicsContext?.saveGState()
+        graphicsContext?.translateBy(x: center.x, y: center.y)
+        graphicsContext?.rotate(
+            by: -CGFloat(footprint.rotationDegrees) * .pi / 180
         )
         let ring = NSBezierPath(ovalIn: ringRect)
         NSColor.black.withAlphaComponent(0.88).setStroke()
@@ -10611,6 +10661,7 @@ enum ImageEditorCanvasCursor {
         NSColor.white.withAlphaComponent(0.96).setStroke()
         ring.lineWidth = 1.75
         ring.stroke()
+        graphicsContext?.restoreGState()
 
         let crossSize: CGFloat = diameter >= 10 ? 3.5 : 2.5
         let cross = NSBezierPath()

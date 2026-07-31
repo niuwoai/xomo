@@ -181,6 +181,113 @@ struct ImageEditorCanvasCursorTests {
         ) === NSCursor.arrow)
     }
 
+    @Test func tiltCursorFootprintMatchesTheRenderedBrushTipAndKeepsMouseCircular() {
+        let horizontal = ImageEditorBrushCursorFootprint(
+            diameter: 80,
+            tilt: ImageEditorStylusTilt(x: 1, y: 0),
+            tiltControlsShape: true
+        )
+        #expect(horizontal.majorDiameter == 80)
+        #expect(horizontal.minorDiameter == 20)
+        #expect(horizontal.aspectRatio == 0.25)
+        #expect(horizontal.rotationDegrees == 0)
+
+        let vertical = ImageEditorBrushCursorFootprint(
+            diameter: 80,
+            tilt: ImageEditorStylusTilt(x: 0, y: 1),
+            tiltControlsShape: true
+        )
+        #expect(vertical.majorDiameter == 80)
+        #expect(vertical.minorDiameter == 20)
+        #expect(vertical.rotationDegrees == 90)
+
+        let diagonal = ImageEditorBrushCursorFootprint(
+            diameter: 80,
+            tilt: ImageEditorStylusTilt(x: 0.5, y: 0.5),
+            tiltControlsShape: true
+        )
+        #expect(diagonal.rotationDegrees == 45)
+        #expect(diagonal.aspectRatio == 0.47)
+
+        let mouse = ImageEditorBrushCursorFootprint(
+            diameter: 80,
+            tilt: nil,
+            tiltControlsShape: true
+        )
+        let disabled = ImageEditorBrushCursorFootprint(
+            diameter: 80,
+            tilt: ImageEditorStylusTilt(x: 1, y: 0),
+            tiltControlsShape: false
+        )
+        let perpendicular = ImageEditorBrushCursorFootprint(
+            diameter: 80,
+            tilt: ImageEditorStylusTilt(x: 0, y: 0),
+            tiltControlsShape: true
+        )
+        for circular in [mouse, disabled, perpendicular] {
+            #expect(circular.majorDiameter == 80)
+            #expect(circular.minorDiameter == 80)
+            #expect(circular.aspectRatio == 1)
+            #expect(circular.rotationDegrees == 0)
+        }
+    }
+
+    @Test func tiltChangesOnlyBrushAndEraserFootprintCursors() {
+        let tilt = ImageEditorStylusTilt(x: 1, y: 0)
+        let roundBrush = ImageEditorCanvasCursor.cursor(
+            for: .brush,
+            brushDiameter: 80
+        )
+        let disabledBrush = ImageEditorCanvasCursor.cursor(
+            for: .brush,
+            brushDiameter: 80,
+            brushTilt: tilt,
+            brushTiltControlsShape: false
+        )
+        let tiltedBrush = ImageEditorCanvasCursor.cursor(
+            for: .brush,
+            brushDiameter: 80,
+            brushTilt: tilt,
+            brushTiltControlsShape: true
+        )
+        let tiltedEraser = ImageEditorCanvasCursor.cursor(
+            for: .eraser,
+            brushDiameter: 80,
+            brushTilt: tilt,
+            brushTiltControlsShape: true
+        )
+        let roundClone = ImageEditorCanvasCursor.cursor(
+            for: .cloneStamp,
+            brushDiameter: 80
+        )
+        let tiltedClone = ImageEditorCanvasCursor.cursor(
+            for: .cloneStamp,
+            brushDiameter: 80,
+            brushTilt: tilt,
+            brushTiltControlsShape: true
+        )
+
+        #expect(roundBrush === disabledBrush)
+        #expect(tiltedBrush !== roundBrush)
+        #expect(tiltedEraser === tiltedBrush)
+        #expect(tiltedClone === roundClone)
+        #expect(tiltedBrush.image.tiffRepresentation != roundBrush.image.tiffRepresentation)
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .brush,
+            brushDiameter: 80,
+            brushTilt: tilt,
+            brushTiltControlsShape: true,
+            modifierFlags: [.capsLock]
+        ) === NSCursor.crosshair)
+        #expect(ImageEditorCanvasCursor.cursor(
+            for: .components,
+            selectedTool: .brush,
+            brushDiameter: 80,
+            brushTilt: tilt,
+            brushTiltControlsShape: true
+        ) === NSCursor.arrow)
+    }
+
     @Test func draggingAnObjectKeepsMoveCursorAcrossSidebarModes() {
         let componentDrag = ImageEditorCanvasCursor.cursor(
             for: .components,
@@ -539,7 +646,7 @@ struct ImageEditorCanvasCursorTests {
             )
         )
         #expect(monitorSource.contains("transaction.onPrimaryEnded?(location, transaction.samples)"))
-        #expect(monitorSource.contains("ImageEditorBrushPressureInput.pressure(from: event)"))
+        #expect(monitorSource.contains("ImageEditorStylusInput.sample(from: event)"))
         #expect(monitorSource.contains("private static var canvasPointerMonitor: Any?"))
         #expect(monitorSource.contains("guard let host = currentPointerHost else { return event }"))
         #expect(viewSource.contains("if event.type == .keyDown,\n               isDelete,"))
@@ -576,7 +683,9 @@ struct ImageEditorCanvasCursorTests {
         let downPrefix = source[downStart.lowerBound..<primaryCapture.lowerBound]
 
         #expect(downPrefix.contains("guard bounds.contains(location)"))
-        #expect(downPrefix.contains("onMouseMoved?(location)"))
+        #expect(downPrefix.contains(
+            "onMouseMoved?(location, ImageEditorStylusInput.sample(from: event))"
+        ))
     }
 
     @Test func canvasMoveGestureYieldsToTransformHandles() throws {

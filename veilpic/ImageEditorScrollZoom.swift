@@ -145,7 +145,10 @@ struct ScrollWheelZoomView: NSViewRepresentable {
     let onZoom: (_ factor: CGFloat, _ location: CGPoint, _ viewportSize: CGSize) -> Void
     /// macOS 13 的 SwiftUI onHover 不提供坐标；由透明 AppKit 承载层补发
     /// 鼠标位置，让移动工具可以准确区分空白画布和可移动对象。
-    let onMouseMoved: (_ location: CGPoint) -> Void
+    let onMouseMoved: (
+        _ location: CGPoint,
+        _ stylusInput: ImageEditorStylusEventSample
+    ) -> Void
     let onStylusEraserProximityChanged: (_ isInProximity: Bool) -> Void
     let onMiddleMousePanBegan: () -> Void
     let onMiddleMousePanChanged: (_ delta: CGSize) -> Void
@@ -323,7 +326,7 @@ final class ScrollWheelZoomNSView: NSView {
     var pointerCaptureKind: ImageEditorPrimaryToolPointerCapture.Kind = .none
     var capturesPrimaryPointer = false
     var onZoom: ((CGFloat, CGPoint, CGSize) -> Void)?
-    var onMouseMoved: ((CGPoint) -> Void)?
+    var onMouseMoved: ((CGPoint, ImageEditorStylusEventSample) -> Void)?
     var onStylusEraserProximityChanged: ((Bool) -> Void)?
     var onMiddleMousePanBegan: (() -> Void)?
     var onMiddleMousePanChanged: ((CGSize) -> Void)?
@@ -520,7 +523,7 @@ final class ScrollWheelZoomNSView: NSView {
         guard let window, event.window === window else { return }
         let location = convert(event.locationInWindow, from: nil)
         guard bounds.contains(location) else { return }
-        onMouseMoved?(location)
+        onMouseMoved?(location, ImageEditorStylusInput.sample(from: event))
     }
 
     /// The canvas is also a drop destination on macOS 13. Once a mouse-down
@@ -621,7 +624,7 @@ final class ScrollWheelZoomNSView: NSView {
             // mouseMoved event. Refresh the semantic pointer state before
             // capture arbitration so the first click already shows the
             // active tool cursor (or the component library's native arrow).
-            onMouseMoved?(location)
+            onMouseMoved?(location, ImageEditorStylusInput.sample(from: event))
             let primaryAccepted = onPrimaryToolDragBegan?(location) == true
             if primaryAccepted {
                 let stylusInput = ImageEditorStylusInput.sample(from: event)

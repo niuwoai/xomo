@@ -112,6 +112,66 @@ struct ImageEditorStylusTiltDisplay: Equatable {
     }
 }
 
+struct ImageEditorBrushCursorFootprint: Equatable {
+    static let minimumDiameter: CGFloat = 3
+    static let maximumDiameter: CGFloat = 256
+
+    let majorDiameter: CGFloat
+    let minorDiameter: CGFloat
+    /// Clockwise rotation in the canvas' top-left-origin coordinate system.
+    /// The AppKit cursor image applies the inverse rotation because its
+    /// drawing context uses a bottom-left origin.
+    let rotationDegrees: Int
+    let aspectRatio: CGFloat
+
+    init(
+        diameter: CGFloat,
+        tilt: ImageEditorStylusTilt?,
+        tiltControlsShape: Bool
+    ) {
+        let normalizedDiameter = max(
+            Self.minimumDiameter,
+            min(Self.maximumDiameter, diameter.rounded())
+        )
+        let rawAspectRatio = ImageEditorBrushStrokeKernel.tiltTipAspectRatio(
+            tilt: tilt,
+            isEnabled: tiltControlsShape
+        )
+        guard tiltControlsShape,
+              let tilt,
+              tilt.magnitude > 0.0001,
+              rawAspectRatio < 0.9999
+        else {
+            majorDiameter = normalizedDiameter
+            minorDiameter = normalizedDiameter
+            rotationDegrees = 0
+            aspectRatio = 1
+            return
+        }
+
+        // One-percent aspect and one-degree direction buckets keep the cursor
+        // visually continuous while allowing the existing bounded cache to
+        // reuse images during high-frequency tablet hover events.
+        let quantizedAspectRatio = max(
+            0.25,
+            min(1, (rawAspectRatio * 100).rounded() / 100)
+        )
+        let canvasAzimuth = tilt.azimuthDegrees ?? 0
+        majorDiameter = normalizedDiameter
+        minorDiameter = max(1, normalizedDiameter * quantizedAspectRatio)
+        rotationDegrees = ((canvasAzimuth % 180) + 180) % 180
+        aspectRatio = quantizedAspectRatio
+    }
+
+    var cacheKey: String {
+        [
+            "\(Int(majorDiameter))",
+            "\(Int((aspectRatio * 100).rounded()))",
+            "\(rotationDegrees)"
+        ].joined(separator: ":")
+    }
+}
+
 enum ImageEditorStylusEraserProximity {
     static func nextState(
         current: Bool,

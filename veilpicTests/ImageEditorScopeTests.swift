@@ -2758,9 +2758,20 @@ struct ImageEditorScopeTests {
         #expect(viewSource.contains(
             "onPrimaryToolDragChanged: { location, pressure, tilt in"
         ))
+        #expect(viewSource.contains(
+            "onMouseMoved: { location, stylusInput in"
+        ))
+        #expect(pointerSource.contains(
+            "onMouseMoved?(location, ImageEditorStylusInput.sample(from: event))"
+        ))
         #expect(viewSource.contains("activeBrushTilt = tilt"))
+        #expect(viewSource.contains("activeBrushTilt = stylusInput.tilt"))
         #expect(viewSource.contains("tilt: sample.tilt"))
         #expect(viewSource.contains("tilt: stylusInput.tilt"))
+        #expect(viewSource.contains("brushTilt: activeBrushTilt"))
+        #expect(viewSource.contains(
+            "brushTiltControlsShape: viewModel.brushTiltControlsShape"
+        ))
         #expect(viewSource.contains("activeBrushTilt = nil"))
     }
 
