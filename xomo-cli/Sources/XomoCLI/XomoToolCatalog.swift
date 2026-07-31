@@ -105,6 +105,7 @@ enum XomoToolCatalog {
                         "pressureSensitivity": ["type": "number", "minimum": 0, "maximum": 100],
                         "tiltShape": ["type": "boolean"],
                         "roundness": ["type": "number", "minimum": 10, "maximum": 100],
+                        "angle": ["type": "number", "minimum": -180, "maximum": 180],
                         "smoothing": ["type": "number", "minimum": 0, "maximum": 100]
                     ],
                     "required": ["points"],
@@ -253,7 +254,7 @@ enum XomoToolCatalog {
         ("xomo.color.swap", "Swap foreground and background colors."),
         ("xomo.color.reset", "Reset foreground and background colors."),
         ("xomo.brush.preset", "List, create, apply, or delete persisted brush presets."),
-        ("xomo.paint.stroke", "Paint a pressure-aware brush or eraser stroke with size, hardness, opacity, flow, spacing, roundness, smoothing, and tablet-dynamics controls."),
+        ("xomo.paint.stroke", "Paint a pressure-aware brush or eraser stroke with size, hardness, opacity, flow, spacing, roundness, angle, smoothing, and tablet-dynamics controls."),
         ("xomo.paint.gradient", "Paint a gradient between canvas points."),
         ("xomo.paint.special", "Use clone or healing with explicit source and sampling options, source/destination patching, exposure-, tonal-range-, tone-protection-, and gradual-airbrush-aware dodge and burn, pressure-size-, flow-, and vibrance-aware sponge, strength-aware blur, sharpen, and smudge, red-eye, and paint-bucket tools."),
         ("xomo.shape.create", "Create an editable rectangle or ellipse with solid or multi-stop linear-gradient fill, independent stroke, corner radii, and superellipse smoothing."),

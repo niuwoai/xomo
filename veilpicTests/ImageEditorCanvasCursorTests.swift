@@ -288,17 +288,18 @@ struct ImageEditorCanvasCursorTests {
         ) === NSCursor.arrow)
     }
 
-    @Test func manualRoundnessUpdatesOnlyBrushAndEraserFootprintCursors() {
+    @Test func manualRoundnessAndAngleUpdateBrushAndEraserWhileTiltTakesPriority() {
         let flatFootprint = ImageEditorBrushCursorFootprint(
             diameter: 80,
             tilt: nil,
             tiltControlsShape: false,
-            tipRoundness: 0.25
+            tipRoundness: 0.25,
+            tipAngleDegrees: 90
         )
         #expect(flatFootprint.majorDiameter == 80)
         #expect(flatFootprint.minorDiameter == 20)
         #expect(flatFootprint.aspectRatio == 0.25)
-        #expect(flatFootprint.rotationDegrees == 0)
+        #expect(flatFootprint.rotationDegrees == 90)
 
         let roundBrush = ImageEditorCanvasCursor.cursor(
             for: .brush,
@@ -307,12 +308,27 @@ struct ImageEditorCanvasCursorTests {
         let flatBrush = ImageEditorCanvasCursor.cursor(
             for: .brush,
             brushDiameter: 80,
-            brushTipRoundness: 0.25
+            brushTipRoundness: 0.25,
+            brushTipAngleDegrees: 90
         )
         let flatEraser = ImageEditorCanvasCursor.cursor(
             for: .eraser,
             brushDiameter: 80,
+            brushTipRoundness: 0.25,
+            brushTipAngleDegrees: 90
+        )
+        let horizontalFlatBrush = ImageEditorCanvasCursor.cursor(
+            for: .brush,
+            brushDiameter: 80,
             brushTipRoundness: 0.25
+        )
+        let tiltOverridesManualAngle = ImageEditorCanvasCursor.cursor(
+            for: .brush,
+            brushDiameter: 80,
+            brushTilt: ImageEditorStylusTilt(x: 1, y: 0),
+            brushTiltControlsShape: true,
+            brushTipRoundness: 0.25,
+            brushTipAngleDegrees: 90
         )
         let cloneStamp = ImageEditorCanvasCursor.cursor(
             for: .cloneStamp,
@@ -322,6 +338,8 @@ struct ImageEditorCanvasCursorTests {
 
         #expect(flatBrush !== roundBrush)
         #expect(flatEraser === flatBrush)
+        #expect(horizontalFlatBrush !== flatBrush)
+        #expect(tiltOverridesManualAngle === horizontalFlatBrush)
         #expect(cloneStamp !== flatBrush)
         #expect(flatBrush.image.tiffRepresentation != roundBrush.image.tiffRepresentation)
         #expect(ImageEditorCanvasCursor.cursor(

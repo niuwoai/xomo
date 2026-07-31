@@ -577,6 +577,10 @@
 "imageEditor.option.brushRoundness" = "ブラシ先端の真円率";
 "imageEditor.option.brushRoundnessValue" = "真円率 %d%%";
 "imageEditor.help.brushRoundness" = "ブラシと消しゴムの先端の扁平率を調整します";
+"imageEditor.option.brushAngle" = "ブラシ先端の角度";
+"imageEditor.option.degreePreset" = "%d°";
+"imageEditor.option.brushTipShapeValue" = "先端 %d%% / %d°";
+"imageEditor.help.brushTipShape" = "ブラシと消しゴムの先端の真円率と角度を調整します。有効なペン傾斜が角度を優先します";
 "imageEditor.option.pressure" = "筆圧";
 "imageEditor.option.pressureSize" = "サイズを制御";
 "imageEditor.option.pressureFlow" = "流量を制御";

@@ -96,6 +96,12 @@ struct XomoMCPServerTests {
             (paintStrokeProperties["roundness"] as? [String: Any])?["maximum"] as? Int == 100
         )
         #expect(
+            (paintStrokeProperties["angle"] as? [String: Any])?["minimum"] as? Int == -180
+        )
+        #expect(
+            (paintStrokeProperties["angle"] as? [String: Any])?["maximum"] as? Int == 180
+        )
+        #expect(
             (paintStrokeProperties["smoothing"] as? [String: Any])?["minimum"] as? Int == 0
         )
         #expect(

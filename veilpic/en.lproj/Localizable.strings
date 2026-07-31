@@ -577,6 +577,10 @@
 "imageEditor.option.brushRoundness" = "Tip Roundness";
 "imageEditor.option.brushRoundnessValue" = "Roundness %d%%";
 "imageEditor.help.brushRoundness" = "Adjust how flat the brush and eraser tip appears";
+"imageEditor.option.brushAngle" = "Tip Angle";
+"imageEditor.option.degreePreset" = "%d°";
+"imageEditor.option.brushTipShapeValue" = "Tip %d%% / %d°";
+"imageEditor.help.brushTipShape" = "Adjust brush and eraser tip roundness and angle; active stylus tilt takes over the angle";
 "imageEditor.option.pressure" = "Pressure";
 "imageEditor.option.pressureSize" = "Control Size";
 "imageEditor.option.pressureFlow" = "Control Flow";

@@ -1049,11 +1049,25 @@ struct ImageEditorView: View {
                         .tag(roundness)
                 }
             }
+            Divider()
+            Picker(
+                L10n.text("imageEditor.option.brushAngle"),
+                selection: Binding(
+                    get: { viewModel.brushTipAngleDegrees },
+                    set: { viewModel.setBrushTipAngleDegrees($0) }
+                )
+            ) {
+                ForEach(ImageEditorBrushAnglePresets.values, id: \.self) { angle in
+                    Text(L10n.format("imageEditor.option.degreePreset", Int(angle)))
+                        .tag(angle)
+                }
+            }
         } label: {
             Text(
                 L10n.format(
-                    "imageEditor.option.brushRoundnessValue",
-                    Int(viewModel.brushTipRoundness.rounded())
+                    "imageEditor.option.brushTipShapeValue",
+                    Int(viewModel.brushTipRoundness.rounded()),
+                    Int(viewModel.brushTipAngleDegrees.rounded())
                 )
             )
                 .font(.system(size: 11, weight: .medium))
@@ -1063,7 +1077,7 @@ struct ImageEditorView: View {
         .fixedSize()
         .focusable(false)
         .xomoFocusEffectDisabled()
-        .help(L10n.text("imageEditor.help.brushRoundness"))
+        .help(L10n.text("imageEditor.help.brushTipShape"))
         .accessibilityIdentifier("image-editor-brush-roundness")
     }
 
@@ -2346,6 +2360,7 @@ struct ImageEditorView: View {
                             brushTilt: activeBrushTilt,
                             brushTiltControlsShape: viewModel.brushTiltControlsShape,
                             brushTipRoundness: viewModel.brushTipRoundness / 100,
+                            brushTipAngleDegrees: viewModel.brushTipAngleDegrees,
                             isPointerOverCanvas: isPointerOverDrawableCanvas,
                             isPointerOverMovableContent: contentHit.isMovable,
                             isPointerOverBlockedContent: contentHit.isBlocked,
@@ -3750,6 +3765,7 @@ struct ImageEditorView: View {
             brushTilt: activeBrushTilt,
             brushTiltControlsShape: viewModel.brushTiltControlsShape,
             brushTipRoundness: viewModel.brushTipRoundness / 100,
+            brushTipAngleDegrees: viewModel.brushTipAngleDegrees,
             isPointerOverCanvas: canvasPoint != nil,
             isPointerOverMovableContent: contentHit.isMovable,
             isPointerOverBlockedContent: contentHit.isBlocked,
@@ -10129,6 +10145,7 @@ enum ImageEditorCanvasCursor {
         brushTilt: ImageEditorStylusTilt? = nil,
         brushTiltControlsShape: Bool = false,
         brushTipRoundness: CGFloat = 1,
+        brushTipAngleDegrees: CGFloat = 0,
         isPointerOverCanvas: Bool = true,
         isPointerOverMovableContent: Bool = true,
         isPointerOverBlockedContent: Bool = false,
@@ -10206,6 +10223,7 @@ enum ImageEditorCanvasCursor {
                 brushTilt: brushTilt,
                 brushTiltControlsShape: brushTiltControlsShape,
                 brushTipRoundness: brushTipRoundness,
+                brushTipAngleDegrees: brushTipAngleDegrees,
                 penIsClosing: penIsClosing,
                 handIsDragging: handIsDragging,
                 modifierFlags: modifierFlags,
@@ -10622,6 +10640,7 @@ enum ImageEditorCanvasCursor {
         brushTilt: ImageEditorStylusTilt? = nil,
         brushTiltControlsShape: Bool = false,
         brushTipRoundness: CGFloat = 1,
+        brushTipAngleDegrees: CGFloat = 0,
         penIsClosing: Bool = false,
         handIsDragging: Bool = false,
         modifierFlags: NSEvent.ModifierFlags = [],
@@ -10665,7 +10684,8 @@ enum ImageEditorCanvasCursor {
                     diameter: brushDiameter,
                     tilt: brushTilt,
                     tiltControlsShape: brushTiltControlsShape,
-                    tipRoundness: brushTipRoundness
+                    tipRoundness: brushTipRoundness,
+                    tipAngleDegrees: brushTipAngleDegrees
                 )
         case .toneBrush, .retouchBrush:
             return modifierFlags.contains(.capsLock)
@@ -10714,14 +10734,16 @@ enum ImageEditorCanvasCursor {
         diameter: CGFloat,
         tilt: ImageEditorStylusTilt? = nil,
         tiltControlsShape: Bool = false,
-        tipRoundness: CGFloat = 1
+        tipRoundness: CGFloat = 1,
+        tipAngleDegrees: CGFloat = 0
     ) -> NSCursor {
         brushCursor(
             footprint: ImageEditorBrushCursorFootprint(
                 diameter: diameter,
                 tilt: tilt,
                 tiltControlsShape: tiltControlsShape,
-                tipRoundness: tipRoundness
+                tipRoundness: tipRoundness,
+                tipAngleDegrees: tipAngleDegrees
             ),
             symbolName: ""
         )

@@ -35,6 +35,7 @@ struct ImageEditorBrushStrokeSettings: Equatable {
     var pressureSensitivity: CGFloat
     var tiltControlsShape: Bool
     var tipRoundness: CGFloat
+    var tipAngleDegrees: CGFloat
     var smoothing: CGFloat
 
     init(
@@ -48,6 +49,7 @@ struct ImageEditorBrushStrokeSettings: Equatable {
         pressureSensitivity: CGFloat = 0.5,
         tiltControlsShape: Bool = false,
         tipRoundness: CGFloat = 1,
+        tipAngleDegrees: CGFloat = 0,
         smoothing: CGFloat = 0
     ) {
         self.diameter = diameter
@@ -60,6 +62,7 @@ struct ImageEditorBrushStrokeSettings: Equatable {
         self.pressureSensitivity = pressureSensitivity
         self.tiltControlsShape = tiltControlsShape
         self.tipRoundness = tipRoundness
+        self.tipAngleDegrees = tipAngleDegrees
         self.smoothing = smoothing
     }
 
@@ -75,6 +78,7 @@ struct ImageEditorBrushStrokeSettings: Equatable {
             pressureSensitivity: max(0, min(1, pressureSensitivity)),
             tiltControlsShape: tiltControlsShape,
             tipRoundness: max(0.1, min(1, tipRoundness)),
+            tipAngleDegrees: max(-180, min(180, tipAngleDegrees)),
             smoothing: max(0, min(1, smoothing))
         )
     }
@@ -234,6 +238,7 @@ enum ImageEditorBrushStrokeKernel {
                 tiltControlsShape: settings.tiltControlsShape
             )
             let tipDirection = resolvedTipDirection(
+                manualAngleDegrees: settings.tipAngleDegrees,
                 tilt: stamp.tilt,
                 tiltControlsShape: settings.tiltControlsShape
             )
@@ -362,19 +367,33 @@ enum ImageEditorBrushStrokeKernel {
         return hypot(alongTilt, acrossTilt / aspectRatio)
     }
 
+    static func resolvedTipAngleDegrees(
+        manualAngleDegrees: CGFloat,
+        tilt: ImageEditorStylusTilt?,
+        tiltControlsShape: Bool
+    ) -> CGFloat {
+        if tiltControlsShape,
+           let tilt,
+           tilt.magnitude > 0.0001 {
+            return CGFloat(tilt.azimuthDegrees ?? 0)
+        }
+        return max(-180, min(180, manualAngleDegrees))
+    }
+
     private static func resolvedTipDirection(
+        manualAngleDegrees: CGFloat,
         tilt: ImageEditorStylusTilt?,
         tiltControlsShape: Bool
     ) -> CGVector {
-        guard tiltControlsShape,
-              let tilt,
-              tilt.magnitude > 0.0001
-        else {
-            return CGVector(dx: 1, dy: 0)
-        }
+        let angle = resolvedTipAngleDegrees(
+            manualAngleDegrees: manualAngleDegrees,
+            tilt: tilt,
+            tiltControlsShape: tiltControlsShape
+        )
+        let radians = angle * .pi / 180
         return CGVector(
-            dx: tilt.x / tilt.magnitude,
-            dy: tilt.y / tilt.magnitude
+            dx: cos(radians),
+            dy: sin(radians)
         )
     }
 

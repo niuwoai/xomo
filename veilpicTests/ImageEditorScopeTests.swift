@@ -2624,7 +2624,7 @@ struct ImageEditorScopeTests {
         #expect(menuSource.contains("image-editor-brush-smoothing"))
     }
 
-    @Test func brushAndEraserExposeCompactNonFocusableRoundnessPresets() throws {
+    @Test func brushAndEraserExposeCompactNonFocusableTipShapePresets() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
             encoding: .utf8
@@ -2641,7 +2641,10 @@ struct ImageEditorScopeTests {
 
         #expect(source.contains("brushPresetMenu\n                    brushRoundnessMenu"))
         #expect(menuSource.contains("ImageEditorBrushRoundnessPresets.values"))
+        #expect(menuSource.contains("ImageEditorBrushAnglePresets.values"))
         #expect(menuSource.contains("viewModel.setBrushTipRoundness($0)"))
+        #expect(menuSource.contains("viewModel.setBrushTipAngleDegrees($0)"))
+        #expect(menuSource.contains("imageEditor.option.brushTipShapeValue"))
         #expect(menuSource.contains(".focusable(false)"))
         #expect(menuSource.contains("image-editor-brush-roundness"))
     }

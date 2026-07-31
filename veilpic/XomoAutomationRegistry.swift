@@ -1627,6 +1627,7 @@ final class XomoAutomationRegistry {
                 "pressureSensitivity": .number(Double(preset.pressureSensitivity)),
                 "tiltShape": .bool(preset.tiltControlsShape),
                 "roundness": .number(Double(preset.tipRoundness)),
+                "angle": .number(Double(preset.tipAngleDegrees)),
                 "smoothing": .number(Double(preset.smoothing))
             ])
         })
@@ -4091,6 +4092,9 @@ final class XomoAutomationRegistry {
         if let roundness = arguments["roundness"]?.doubleValue {
             viewModel.setBrushTipRoundness(CGFloat(roundness))
         }
+        if let angle = arguments["angle"]?.doubleValue {
+            viewModel.setBrushTipAngleDegrees(CGFloat(angle))
+        }
         if let smoothing = arguments["smoothing"]?.doubleValue {
             viewModel.setBrushSmoothing(CGFloat(smoothing))
         }
@@ -5552,6 +5556,7 @@ private extension XomoAutomationRegistry {
             "pressureSensitivity": XomoAutomationSchema.number(description: "Pressure curve sensitivity from 0 to 100"),
             "tiltShape": XomoAutomationSchema.boolean(description: "Use point tilt to flatten and orient the brush tip"),
             "roundness": XomoAutomationSchema.number(description: "Static brush-tip roundness from 10 to 100 percent"),
+            "angle": XomoAutomationSchema.number(description: "Static brush-tip angle from -180 to 180 degrees; live tilt takes priority"),
             "smoothing": XomoAutomationSchema.number(description: "Endpoint-preserving pointer-path smoothing from 0 to 100")
         ], required: ["points"]),
         tool("xomo.paint.gradient", "Paint a gradient between exactly two canvas points.", ["points": pointsSchema], required: ["points"]),

@@ -458,7 +458,7 @@ struct ImageEditorBrushStrokeTests {
         #expect(circular[verticalEdge] > 240)
     }
 
-    @Test func manualRoundnessCreatesAFlatMouseTipAndTiltCanOrientIt() {
+    @Test func manualRoundnessAndAngleCreateAFlatTipWhileTiltTakesPriority() {
         let mouseStamp = ImageEditorBrushStrokeSample(
             point: CGPoint(x: 20.5, y: 20.5),
             pressure: 1
@@ -486,8 +486,24 @@ struct ImageEditorBrushStrokeTests {
             tilt: nil,
             tiltControlsShape: false
         ) == 0.25)
+        #expect(ImageEditorBrushStrokeKernel.resolvedTipAngleDegrees(
+            manualAngleDegrees: 0,
+            tilt: nil,
+            tiltControlsShape: false
+        ) == 0)
+
+        settings.tipAngleDegrees = 90
+        let manualVertical = ImageEditorBrushStrokeKernel.coverage(
+            width: 41,
+            height: 41,
+            stamps: [mouseStamp],
+            settings: settings
+        )
+        #expect(manualVertical[horizontalEdge] == 0)
+        #expect(manualVertical[verticalEdge] > 240)
 
         settings.tipRoundness = 0.5
+        settings.tipAngleDegrees = -45
         settings.tiltControlsShape = true
         let vertical = ImageEditorBrushStrokeKernel.coverage(
             width: 41,
@@ -508,6 +524,16 @@ struct ImageEditorBrushStrokeTests {
             tilt: ImageEditorStylusTilt(x: 0, y: 0.2),
             tiltControlsShape: true
         ) == 0.5)
+        #expect(ImageEditorBrushStrokeKernel.resolvedTipAngleDegrees(
+            manualAngleDegrees: -45,
+            tilt: ImageEditorStylusTilt(x: 0, y: 0.2),
+            tiltControlsShape: true
+        ) == 90)
+        #expect(ImageEditorBrushStrokeKernel.resolvedTipAngleDegrees(
+            manualAngleDegrees: 250,
+            tilt: nil,
+            tiltControlsShape: true
+        ) == 180)
     }
 
     @Test func missingOrPerpendicularTiltPreservesTheCircularMouseFootprint() {
@@ -806,7 +832,7 @@ struct ImageEditorBrushStrokeTests {
         #expect(verticalColor.alphaComponent > 0.95)
     }
 
-    @Test func quickMaskAndLayerMaskShareManualBrushRoundness() throws {
+    @Test func quickMaskAndLayerMaskShareManualBrushRoundnessAndAngle() throws {
         let size = CGSize(width: 41, height: 41)
         let samples = [
             ImageEditorBrushStrokeSample(
@@ -829,10 +855,11 @@ struct ImageEditorBrushStrokeTests {
             hardness: 1,
             flow: 1,
             tipRoundness: 0.25,
+            tipAngleDegrees: 90,
             reveal: false
         ))
-        #expect(quickMask.alpha[horizontalEdge] < 15)
-        #expect(quickMask.alpha[verticalEdge] == .max)
+        #expect(quickMask.alpha[horizontalEdge] == .max)
+        #expect(quickMask.alpha[verticalEdge] < 15)
 
         let sourceMask = NSImage.rendered(size: size) { rect in
             NSColor.white.setFill()
@@ -845,12 +872,13 @@ struct ImageEditorBrushStrokeTests {
             hardness: 1,
             flow: 1,
             tipRoundness: 0.25,
+            tipAngleDegrees: 90,
             reveal: false
         ))
         let horizontalColor = try #require(layerMask.color(at: CGPoint(x: 28, y: 20)))
         let verticalColor = try #require(layerMask.color(at: CGPoint(x: 20, y: 28)))
-        #expect(horizontalColor.alphaComponent < 0.06)
-        #expect(verticalColor.alphaComponent > 0.95)
+        #expect(horizontalColor.alphaComponent > 0.95)
+        #expect(verticalColor.alphaComponent < 0.06)
     }
 
     @Test func quickMaskAndLayerMaskShareEndpointPreservingSmoothing() throws {

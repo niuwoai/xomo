@@ -163,7 +163,8 @@ struct ImageEditorBrushCursorFootprint: Equatable {
         diameter: CGFloat,
         tilt: ImageEditorStylusTilt?,
         tiltControlsShape: Bool,
-        tipRoundness: CGFloat = 1
+        tipRoundness: CGFloat = 1,
+        tipAngleDegrees: CGFloat = 0
     ) {
         let normalizedDiameter = max(
             Self.minimumDiameter,
@@ -189,14 +190,11 @@ struct ImageEditorBrushCursorFootprint: Equatable {
             0.25,
             min(1, (rawAspectRatio * 100).rounded() / 100)
         )
-        let canvasAzimuth: Int
-        if tiltControlsShape,
-           let tilt,
-           tilt.magnitude > 0.0001 {
-            canvasAzimuth = tilt.azimuthDegrees ?? 0
-        } else {
-            canvasAzimuth = 0
-        }
+        let canvasAzimuth = Int(ImageEditorBrushStrokeKernel.resolvedTipAngleDegrees(
+            manualAngleDegrees: tipAngleDegrees,
+            tilt: tilt,
+            tiltControlsShape: tiltControlsShape
+        ).rounded())
         majorDiameter = normalizedDiameter
         minorDiameter = max(1, normalizedDiameter * quantizedAspectRatio)
         rotationDegrees = ((canvasAzimuth % 180) + 180) % 180
