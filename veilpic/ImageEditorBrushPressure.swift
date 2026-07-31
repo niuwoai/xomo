@@ -28,6 +28,22 @@ enum ImageEditorBrushPressureInput {
     }
 }
 
+struct ImageEditorBrushPressureDisplay: Equatable {
+    let fraction: CGFloat
+    let percent: Int?
+
+    init(pressure: CGFloat?) {
+        guard let pressure, pressure.isFinite else {
+            fraction = 0
+            percent = nil
+            return
+        }
+        let normalized = max(0, min(1, pressure))
+        fraction = normalized
+        percent = Int((normalized * 100).rounded())
+    }
+}
+
 enum ImageEditorStylusEraserProximity {
     static func nextState(
         current: Bool,

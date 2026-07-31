@@ -576,6 +576,8 @@
 "imageEditor.option.pressureFlow" = "Control Flow";
 "imageEditor.option.pressureSensitivity" = "Sensitivity";
 "imageEditor.option.pressureHelp" = "Use pen pressure to control brush size and flow";
+"imageEditor.option.pressureLiveHelp" = "Shows live stylus pressure; an ordinary mouse remains undetected";
+"imageEditor.option.pressureNotDetected" = "No pen pressure detected";
 "imageEditor.option.retouchPressureSensitivity.help" = "Adjust how pen pressure changes the retouch brush size";
 "imageEditor.option.spongePressureSize.help" = "Use pen pressure to control the Sponge brush size";
 "imageEditor.option.tonePressureSize.help" = "Use pen pressure to control the Dodge or Burn brush size";

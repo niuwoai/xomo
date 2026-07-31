@@ -2702,6 +2702,32 @@ struct ImageEditorScopeTests {
         #expect(pointerSource.contains("onPrimaryToolDragChanged?(location, pressure)"))
     }
 
+    @Test func livePressureIndicatorIsVisibleNonFocusableAndUsesSharedInput() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let indicatorStart = try #require(
+            source.range(of: "private var brushPressureIndicator: some View {")
+        )
+        let presetStart = try #require(
+            source[indicatorStart.upperBound...].range(of: "private var brushPresetMenu: some View {")
+        )
+        let indicatorSource = source[indicatorStart.lowerBound..<presetStart.lowerBound]
+
+        #expect(source.contains("if usesPressureInputIndicator {"))
+        #expect(source.contains("usesBrushDynamicsOptions || usesRetouchPressureOptions"))
+        #expect(indicatorSource.contains(
+            "ImageEditorBrushPressureDisplay(pressure: activeBrushPressure)"
+        ))
+        #expect(indicatorSource.contains("imageEditor.option.pressureLiveHelp"))
+        #expect(indicatorSource.contains("imageEditor.option.pressureNotDetected"))
+        #expect(indicatorSource.contains(".focusable(false)"))
+        #expect(indicatorSource.contains(
+            ".accessibilityIdentifier(\"image-editor-live-pressure\")"
+        ))
+    }
+
     @Test func stylusEraserProximityUsesNativeAppKitWithoutOverridingComponents() throws {
         let repositoryRoot = Self.repositoryRoot()
         let pointerSource = try String(

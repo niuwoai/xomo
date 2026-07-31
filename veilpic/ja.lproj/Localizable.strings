@@ -576,6 +576,8 @@
 "imageEditor.option.pressureFlow" = "流量を制御";
 "imageEditor.option.pressureSensitivity" = "感度";
 "imageEditor.option.pressureHelp" = "ペンの筆圧でブラシサイズと流量を制御します";
+"imageEditor.option.pressureLiveHelp" = "現在のペン圧をリアルタイム表示します。通常のマウスは未検出のままです";
+"imageEditor.option.pressureNotDetected" = "筆圧は検出されていません";
 "imageEditor.option.retouchPressureSensitivity.help" = "筆圧によるレタッチブラシサイズの変化感度を調整します";
 "imageEditor.option.spongePressureSize.help" = "ペンの筆圧でスポンジブラシのサイズを制御します";
 "imageEditor.option.tonePressureSize.help" = "ペンの筆圧で覆い焼きまたは焼き込みブラシのサイズを制御します";

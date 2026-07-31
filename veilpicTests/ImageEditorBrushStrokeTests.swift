@@ -264,6 +264,23 @@ struct ImageEditorBrushStrokeTests {
         ) == 1)
     }
 
+    @Test func livePressureDisplayClampsAndDistinguishesMissingInput() {
+        let missing = ImageEditorBrushPressureDisplay(pressure: nil)
+        #expect(missing.percent == nil)
+        #expect(missing.fraction == 0)
+
+        let invalid = ImageEditorBrushPressureDisplay(pressure: .nan)
+        #expect(invalid.percent == nil)
+        #expect(invalid.fraction == 0)
+
+        let measured = ImageEditorBrushPressureDisplay(pressure: 0.426)
+        #expect(measured.percent == 43)
+        #expect(abs(measured.fraction - 0.426) < 0.0001)
+
+        #expect(ImageEditorBrushPressureDisplay(pressure: -1).percent == 0)
+        #expect(ImageEditorBrushPressureDisplay(pressure: 2).percent == 100)
+    }
+
     @Test func stylusEraserProximityTemporarilyOverridesOnlyToolMode() {
         var isEraserInProximity = false
         isEraserInProximity = ImageEditorStylusEraserProximity.nextState(

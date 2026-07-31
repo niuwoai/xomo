@@ -373,7 +373,10 @@ struct ImageEditorView: View {
                 selectedToolIcon
             }
                 .font(.system(size: 12, weight: .semibold))
-                .frame(width: 132, alignment: .leading)
+                .frame(
+                    width: usesPressureInputIndicator ? 72 : 132,
+                    alignment: .leading
+                )
                 .accessibilityIdentifier("image-editor-selected-tool")
                 .accessibilityValue(viewModel.selectedTool.rawValue)
 
@@ -556,6 +559,10 @@ struct ImageEditorView: View {
 
             if usesRetouchPressureOptions {
                 retouchPressureSensitivityMenu
+            }
+
+            if usesPressureInputIndicator {
+                brushPressureIndicator
             }
 
             if viewModel.selectedTool == .text {
@@ -798,6 +805,50 @@ struct ImageEditorView: View {
         }
     }
 
+    private var usesPressureInputIndicator: Bool {
+        usesBrushDynamicsOptions || usesRetouchPressureOptions
+    }
+
+    private var brushPressureIndicator: some View {
+        let display = ImageEditorBrushPressureDisplay(pressure: activeBrushPressure)
+        let valueText = display.percent.map {
+            L10n.format("imageEditor.option.percentPreset", $0)
+        } ?? "—"
+
+        return HStack(spacing: 4) {
+            Image(systemName: "scribble.variable")
+                .font(.system(size: 11, weight: .semibold))
+
+            VStack(alignment: .trailing, spacing: 2) {
+                Text(valueText)
+                    .monospacedDigit()
+                    .font(.system(size: 9, weight: .medium))
+
+                GeometryReader { proxy in
+                    ZStack(alignment: .leading) {
+                        Capsule()
+                            .fill(Color.white.opacity(0.14))
+                        Capsule()
+                            .fill(Color.accentColor.opacity(display.percent == nil ? 0 : 0.9))
+                            .frame(width: proxy.size.width * display.fraction)
+                    }
+                }
+                .frame(width: 30, height: 3)
+            }
+        }
+        .frame(width: 48)
+        .focusable(false)
+        .help(L10n.text("imageEditor.option.pressureLiveHelp"))
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(L10n.text("imageEditor.option.pressure"))
+        .accessibilityValue(
+            display.percent.map {
+                L10n.format("imageEditor.option.percentPreset", $0)
+            } ?? L10n.text("imageEditor.option.pressureNotDetected")
+        )
+        .accessibilityIdentifier("image-editor-live-pressure")
+    }
+
     private var brushPresetMenu: some View {
         Menu {
             ForEach(viewModel.brushPresets) { preset in
@@ -1022,8 +1073,10 @@ struct ImageEditorView: View {
             Text(L10n.text(titleKey))
                 .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(Color(nsColor: ImageEditorOptionsBarAppearance.foregroundColor))
+                .lineLimit(1)
+                .fixedSize()
             Slider(value: value, in: range, step: step)
-                .frame(width: 92)
+                .frame(width: usesBrushDynamicsOptions ? 76 : 92)
                 .focusable(false)
                 .xomoFocusEffectDisabled()
             Text(sliderText(value.wrappedValue * displayMultiplier, suffix: suffix))
