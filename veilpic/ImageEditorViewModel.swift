@@ -7001,7 +7001,8 @@ final class ImageEditorViewModel: ObservableObject {
         samples.map {
             ImageEditorBrushStrokeSample(
                 point: rasterLocalPoint($0.point, layer: layer),
-                pressure: $0.pressure
+                pressure: $0.pressure,
+                tilt: $0.tilt
             )
         }
     }

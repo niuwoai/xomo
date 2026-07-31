@@ -281,6 +281,63 @@ struct ImageEditorBrushStrokeTests {
         #expect(ImageEditorBrushPressureDisplay(pressure: 2).percent == 100)
     }
 
+    @Test func stylusTiltNormalizesDirectionsAndRejectsOrdinaryMouseInput() throws {
+        #expect(ImageEditorStylusInput.normalizedTilt(
+            rawX: 0.4,
+            rawY: -0.2,
+            supportsTilt: false
+        ) == nil)
+        #expect(ImageEditorStylusInput.normalizedTilt(
+            rawX: .nan,
+            rawY: 0,
+            supportsTilt: true
+        ) == nil)
+
+        let clamped = try #require(ImageEditorStylusInput.normalizedTilt(
+            rawX: 1.4,
+            rawY: -1.2,
+            supportsTilt: true
+        ))
+        #expect(clamped.x == 1)
+        #expect(clamped.y == -1)
+        #expect(clamped.magnitude == 1)
+
+        #expect(ImageEditorStylusTilt(x: 1, y: 0).azimuthDegrees == 0)
+        #expect(ImageEditorStylusTilt(x: 0, y: 1).azimuthDegrees == 90)
+        #expect(ImageEditorStylusTilt(x: -1, y: 0).azimuthDegrees == 180)
+        #expect(ImageEditorStylusTilt(x: 0, y: -1).azimuthDegrees == 270)
+        #expect(ImageEditorStylusTilt(x: 0, y: 0).azimuthDegrees == nil)
+
+        let missingDisplay = ImageEditorStylusTiltDisplay(tilt: nil)
+        #expect(missingDisplay.magnitudePercent == nil)
+        #expect(missingDisplay.azimuthDegrees == nil)
+    }
+
+    @Test func brushStampInterpolationPreservesTiltSamples() throws {
+        let stamps = ImageEditorBrushStrokeKernel.stampSamples(
+            samples: [
+                ImageEditorBrushStrokeSample(
+                    point: CGPoint(x: 0, y: 0),
+                    pressure: 0.2,
+                    tilt: ImageEditorStylusTilt(x: 0, y: 0)
+                ),
+                ImageEditorBrushStrokeSample(
+                    point: CGPoint(x: 10, y: 0),
+                    pressure: 0.8,
+                    tilt: ImageEditorStylusTilt(x: 1, y: 0)
+                )
+            ],
+            diameter: 10,
+            spacing: 0.5
+        )
+
+        #expect(stamps.count == 3)
+        let middle = try #require(stamps.dropFirst().first)
+        #expect(abs((middle.pressure ?? 0) - 0.5) < 0.0001)
+        #expect(abs((middle.tilt?.x ?? 0) - 0.5) < 0.0001)
+        #expect(abs(middle.tilt?.y ?? 1) < 0.0001)
+    }
+
     @Test func stylusEraserProximityTemporarilyOverridesOnlyToolMode() {
         var isEraserInProximity = false
         isEraserInProximity = ImageEditorStylusEraserProximity.nextState(

@@ -2682,8 +2682,9 @@ struct ImageEditorScopeTests {
 
         #expect(source.contains("@State private var activeBrushPressure: CGFloat?"))
         #expect(source.contains(
-            "let eventPressure = ImageEditorBrushPressureInput.pressure(from: NSApp.currentEvent)"
+            "let stylusInput = ImageEditorStylusInput.sample(from: NSApp.currentEvent)"
         ))
+        #expect(source.contains("let eventPressure = stylusInput.pressure"))
         #expect(source.contains("activeBrushPressure = eventPressure"))
         #expect(source.contains(
             "activeBrushPressure = isSettingSampledBrushSourceGesture ? nil : eventPressure"
@@ -2694,12 +2695,14 @@ struct ImageEditorScopeTests {
         #expect(source.contains("retouchPressureControlsSize: viewModel.retouchPressureControlsSize"))
         #expect(source.contains("activeBrushPressure = nil"))
         #expect(source.contains("updateCanvasCursor(at: value.location, in: size)"))
-        #expect(source.contains("onPrimaryToolDragChanged: { location, pressure in"))
+        #expect(source.contains("onPrimaryToolDragChanged: { location, pressure, tilt in"))
         #expect(source.contains("activeBrushPressure = pressure"))
         #expect(source.contains("updateCanvasCursor(at: location, in: geometry.size)"))
-        #expect(pointerSource.contains("let onPrimaryChanged: ((CGPoint, CGFloat?) -> Void)?"))
-        #expect(pointerSource.contains("transaction.onPrimaryChanged?(location, pressure)"))
-        #expect(pointerSource.contains("onPrimaryToolDragChanged?(location, pressure)"))
+        #expect(pointerSource.contains(
+            "let onPrimaryChanged: ((CGPoint, CGFloat?, ImageEditorStylusTilt?) -> Void)?"
+        ))
+        #expect(pointerSource.contains("transaction.onPrimaryChanged?("))
+        #expect(pointerSource.contains("onPrimaryToolDragChanged?("))
     }
 
     @Test func livePressureIndicatorIsVisibleNonFocusableAndUsesSharedInput() throws {
@@ -2720,12 +2723,45 @@ struct ImageEditorScopeTests {
         #expect(indicatorSource.contains(
             "ImageEditorBrushPressureDisplay(pressure: activeBrushPressure)"
         ))
-        #expect(indicatorSource.contains("imageEditor.option.pressureLiveHelp"))
+        #expect(indicatorSource.contains(
+            "ImageEditorStylusTiltDisplay(tilt: activeBrushTilt)"
+        ))
+        #expect(indicatorSource.contains("imageEditor.option.stylusLiveHelp"))
+        #expect(indicatorSource.contains("imageEditor.option.stylusLiveValue"))
+        #expect(indicatorSource.contains("imageEditor.option.tiltNotDetected"))
         #expect(indicatorSource.contains("imageEditor.option.pressureNotDetected"))
         #expect(indicatorSource.contains(".focusable(false)"))
         #expect(indicatorSource.contains(
             ".accessibilityIdentifier(\"image-editor-live-pressure\")"
         ))
+    }
+
+    @Test func nativeStylusTiltFlowsThroughPointerTransactionsAndBrushSamples() throws {
+        let repositoryRoot = Self.repositoryRoot()
+        let pointerSource = try String(
+            contentsOf: repositoryRoot.appendingPathComponent(
+                "veilpic/ImageEditorScrollZoom.swift"
+            ),
+            encoding: .utf8
+        )
+        let viewSource = try String(
+            contentsOf: repositoryRoot.appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+
+        #expect(pointerSource.contains("let tilt: ImageEditorStylusTilt?"))
+        #expect(pointerSource.contains("ImageEditorStylusInput.sample(from: event)"))
+        #expect(pointerSource.contains("tilt: stylusInput.tilt"))
+        #expect(pointerSource.contains(
+            "transaction.onPrimaryChanged?("
+        ))
+        #expect(viewSource.contains(
+            "onPrimaryToolDragChanged: { location, pressure, tilt in"
+        ))
+        #expect(viewSource.contains("activeBrushTilt = tilt"))
+        #expect(viewSource.contains("tilt: sample.tilt"))
+        #expect(viewSource.contains("tilt: stylusInput.tilt"))
+        #expect(viewSource.contains("activeBrushTilt = nil"))
     }
 
     @Test func stylusEraserProximityUsesNativeAppKitWithoutOverridingComponents() throws {

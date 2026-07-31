@@ -498,7 +498,8 @@ extension NSImage {
             }
             return ImageEditorBrushStrokeSample(
                 point: sample.point,
-                pressure: previousPressure
+                pressure: previousPressure,
+                tilt: sample.tilt
             )
         }
     }

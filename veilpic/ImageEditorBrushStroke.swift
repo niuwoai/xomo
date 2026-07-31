@@ -11,10 +11,16 @@ import Foundation
 struct ImageEditorBrushStrokeSample: Equatable {
     var point: CGPoint
     var pressure: CGFloat?
+    var tilt: ImageEditorStylusTilt?
 
-    init(point: CGPoint, pressure: CGFloat? = nil) {
+    init(
+        point: CGPoint,
+        pressure: CGFloat? = nil,
+        tilt: ImageEditorStylusTilt? = nil
+    ) {
         self.point = point
         self.pressure = pressure
+        self.tilt = tilt
     }
 }
 
@@ -82,7 +88,7 @@ enum ImageEditorBrushStrokeKernel {
         diameter: CGFloat,
         spacing: CGFloat
     ) -> [ImageEditorBrushStrokeSample] {
-        let normalizedSamples = normalizedPressureSamples(samples)
+        let normalizedSamples = normalizedStylusSamples(samples)
         guard let first = normalizedSamples.first else { return [] }
         let step = max(0.5, max(1, diameter) * max(0.01, min(2, spacing)))
         var stamps = [first]
@@ -98,12 +104,18 @@ enum ImageEditorBrushStrokeKernel {
                 let progress = distanceUntilNextStamp / segmentLength
                 let startPressure = start.pressure ?? 1
                 let endPressure = end.pressure ?? startPressure
+                let interpolatedTilt = interpolatedTilt(
+                    from: start.tilt,
+                    to: end.tilt,
+                    progress: progress
+                )
                 stamps.append(ImageEditorBrushStrokeSample(
                     point: CGPoint(
                         x: start.point.x + deltaX * progress,
                         y: start.point.y + deltaY * progress
                     ),
-                    pressure: startPressure + (endPressure - startPressure) * progress
+                    pressure: startPressure + (endPressure - startPressure) * progress,
+                    tilt: interpolatedTilt
                 ))
                 distanceUntilNextStamp += step
             }
@@ -248,17 +260,41 @@ enum ImageEditorBrushStrokeKernel {
         UInt8(max(0, min(255, (value * 255).rounded())))
     }
 
-    private static func normalizedPressureSamples(
+    private static func normalizedStylusSamples(
         _ samples: [ImageEditorBrushStrokeSample]
     ) -> [ImageEditorBrushStrokeSample] {
         let firstKnownPressure = samples.compactMap(\.pressure).first.map { max(0, min(1, $0)) } ?? 1
+        let firstKnownTilt = samples.compactMap(\.tilt).first
         var previousPressure = firstKnownPressure
+        var previousTilt = firstKnownTilt
         return samples.map { sample in
             if let pressure = sample.pressure {
                 previousPressure = max(0, min(1, pressure))
             }
-            return ImageEditorBrushStrokeSample(point: sample.point, pressure: previousPressure)
+            if let tilt = sample.tilt {
+                previousTilt = tilt
+            }
+            return ImageEditorBrushStrokeSample(
+                point: sample.point,
+                pressure: previousPressure,
+                tilt: previousTilt
+            )
         }
+    }
+
+    private static func interpolatedTilt(
+        from start: ImageEditorStylusTilt?,
+        to end: ImageEditorStylusTilt?,
+        progress: CGFloat
+    ) -> ImageEditorStylusTilt? {
+        guard let fallback = start ?? end else { return nil }
+        let start = start ?? fallback
+        let end = end ?? fallback
+        return ImageEditorStylusInput.normalizedTilt(
+            rawX: start.x + (end.x - start.x) * progress,
+            rawY: start.y + (end.y - start.y) * progress,
+            supportsTilt: true
+        )
     }
 }
 

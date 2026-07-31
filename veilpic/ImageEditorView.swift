@@ -131,6 +131,7 @@ struct ImageEditorView: View {
     @State private var hoverViewPoint: CGPoint?
     @State private var canvasModifierFlags: NSEvent.ModifierFlags = []
     @State private var activeBrushPressure: CGFloat?
+    @State private var activeBrushTilt: ImageEditorStylusTilt?
     @State private var isStylusEraserInProximity = false
     @State private var histogramProbeBinIndex: Int?
     @State private var histogramRangeAnchorBinIndex: Int?
@@ -324,6 +325,7 @@ struct ImageEditorView: View {
             dragPoints = []
             brushStrokeSamples = []
             activeBrushPressure = nil
+            activeBrushTilt = nil
             toneAirbrushStroke.reset()
             if viewModel.selectedTool != .crop {
                 pendingCropRect = nil
@@ -810,14 +812,46 @@ struct ImageEditorView: View {
     }
 
     private var brushPressureIndicator: some View {
-        let display = ImageEditorBrushPressureDisplay(pressure: activeBrushPressure)
-        let valueText = display.percent.map {
+        let pressureDisplay = ImageEditorBrushPressureDisplay(pressure: activeBrushPressure)
+        let tiltDisplay = ImageEditorStylusTiltDisplay(tilt: activeBrushTilt)
+        let valueText = pressureDisplay.percent.map {
             L10n.format("imageEditor.option.percentPreset", $0)
         } ?? "—"
+        let pressureAccessibilityText = pressureDisplay.percent.map {
+            L10n.format("imageEditor.option.percentPreset", $0)
+        } ?? L10n.text("imageEditor.option.pressureNotDetected")
+        let tiltAccessibilityText: String
+        if let magnitudePercent = tiltDisplay.magnitudePercent {
+            if let azimuthDegrees = tiltDisplay.azimuthDegrees {
+                tiltAccessibilityText = L10n.format(
+                    "imageEditor.option.tiltValue",
+                    magnitudePercent,
+                    "\(azimuthDegrees)°"
+                )
+            } else {
+                tiltAccessibilityText = L10n.text("imageEditor.option.tiltPerpendicular")
+            }
+        } else {
+            tiltAccessibilityText = L10n.text("imageEditor.option.tiltNotDetected")
+        }
 
         return HStack(spacing: 4) {
-            Image(systemName: "scribble.variable")
-                .font(.system(size: 11, weight: .semibold))
+            ZStack {
+                Circle()
+                    .stroke(Color.white.opacity(0.28), lineWidth: 1)
+                if let azimuthDegrees = tiltDisplay.azimuthDegrees {
+                    Image(systemName: "location.north.fill")
+                        .font(.system(size: 7, weight: .semibold))
+                        .foregroundStyle(Color.accentColor)
+                        .scaleEffect(0.55 + tiltDisplay.magnitudeFraction * 0.45)
+                        .rotationEffect(.degrees(Double(azimuthDegrees) + 90))
+                } else {
+                    Circle()
+                        .fill(Color.white.opacity(tiltDisplay.magnitudePercent == nil ? 0.22 : 0.72))
+                        .frame(width: 3, height: 3)
+                }
+            }
+            .frame(width: 14, height: 14)
 
             VStack(alignment: .trailing, spacing: 2) {
                 Text(valueText)
@@ -829,8 +863,8 @@ struct ImageEditorView: View {
                         Capsule()
                             .fill(Color.white.opacity(0.14))
                         Capsule()
-                            .fill(Color.accentColor.opacity(display.percent == nil ? 0 : 0.9))
-                            .frame(width: proxy.size.width * display.fraction)
+                            .fill(Color.accentColor.opacity(pressureDisplay.percent == nil ? 0 : 0.9))
+                            .frame(width: proxy.size.width * pressureDisplay.fraction)
                     }
                 }
                 .frame(width: 30, height: 3)
@@ -838,13 +872,16 @@ struct ImageEditorView: View {
         }
         .frame(width: 48)
         .focusable(false)
-        .help(L10n.text("imageEditor.option.pressureLiveHelp"))
+        .help(L10n.text("imageEditor.option.stylusLiveHelp"))
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(L10n.text("imageEditor.option.pressure"))
-        .accessibilityValue(
-            display.percent.map {
-                L10n.format("imageEditor.option.percentPreset", $0)
-            } ?? L10n.text("imageEditor.option.pressureNotDetected")
+        .accessibilityLabel(L10n.text("imageEditor.option.stylusInput"))
+        .accessibilityValue(L10n.format(
+            "imageEditor.option.stylusLiveValue",
+            pressureAccessibilityText,
+            tiltAccessibilityText
+        ))
+        .accessibilityHint(
+            L10n.text("imageEditor.option.stylusLiveHelp")
         )
         .accessibilityIdentifier("image-editor-live-pressure")
     }
@@ -1933,6 +1970,7 @@ struct ImageEditorView: View {
                         onStylusEraserProximityChanged: { isInProximity in
                             isStylusEraserInProximity = isInProximity
                             activeBrushPressure = nil
+                            activeBrushTilt = nil
                             refreshCanvasCursor(in: geometry.size)
                         },
                         onMiddleMousePanBegan: {
@@ -2001,12 +2039,13 @@ struct ImageEditorView: View {
                             }
                             return true
                         },
-                        onPrimaryToolDragChanged: { location, pressure in
+                        onPrimaryToolDragChanged: { location, pressure, tilt in
                             guard let imagePoint = imagePoint(from: location, in: geometry.size) else { return }
                             let primaryTool = viewModel.canvasPointerCaptureState.activeTool
                                 ?? canvasInteractionTool
                             if primaryTool == .brush || primaryTool == .eraser {
                                 activeBrushPressure = pressure
+                                activeBrushTilt = tilt
                                 updateCanvasCursor(at: location, in: geometry.size)
                                 return
                             }
@@ -2021,16 +2060,21 @@ struct ImageEditorView: View {
                                 imagePoint(from: sample.location, in: geometry.size).map {
                                     ImageEditorBrushStrokeSample(
                                         point: $0,
-                                        pressure: sample.pressure
+                                        pressure: sample.pressure,
+                                        tilt: sample.tilt
                                     )
                                 }
                             }
                             if let endImagePoint,
                                primaryTool == .brush || primaryTool == .eraser {
+                                let endStylusInput = ImageEditorStylusInput.sample(
+                                    from: NSApp.currentEvent
+                                )
                                 brushStrokeSamples.append(
                                     ImageEditorBrushStrokeSample(
                                         point: endImagePoint,
-                                        pressure: ImageEditorBrushPressureInput.pressure(from: NSApp.currentEvent)
+                                        pressure: endStylusInput.pressure,
+                                        tilt: endStylusInput.tilt
                                     )
                                 )
                             }
@@ -2072,6 +2116,7 @@ struct ImageEditorView: View {
                             }
                             brushStrokeSamples = []
                             activeBrushPressure = nil
+                            activeBrushTilt = nil
                             dragStart = nil
                             dragEnd = nil
                             primaryToolViewStart = nil
@@ -2227,6 +2272,7 @@ struct ImageEditorView: View {
                 }
                 .onChange(of: viewModel.selectedLeftSidebarTab) { tab in
                     activeBrushPressure = nil
+                    activeBrushTilt = nil
                     if tab == .components {
                         pendingCropRect = nil
                         endPendingCropInteraction()
@@ -2266,6 +2312,7 @@ struct ImageEditorView: View {
                 .onDisappear {
                     isPointerInsideCanvas = false
                     activeBrushPressure = nil
+                    activeBrushTilt = nil
                     endPendingCropInteraction()
                     resetColorSamplerGesture()
                     NSCursor.arrow.set()
@@ -2855,7 +2902,8 @@ struct ImageEditorView: View {
                 }
 
                 let pointerImagePoint = imagePoint(from: value.location, in: size)
-                let eventPressure = ImageEditorBrushPressureInput.pressure(from: NSApp.currentEvent)
+                let stylusInput = ImageEditorStylusInput.sample(from: NSApp.currentEvent)
+                let eventPressure = stylusInput.pressure
                 viewModel.updatePointer(pointerImagePoint)
 
                 if canvasInteractionTool == .crop {
@@ -2971,19 +3019,23 @@ struct ImageEditorView: View {
                 case .brush, .eraser, .sponge:
                     if let pointerImagePoint {
                         activeBrushPressure = eventPressure
+                        activeBrushTilt = stylusInput.tilt
                         brushStrokeSamples.append(ImageEditorBrushStrokeSample(
                             point: pointerImagePoint,
-                            pressure: eventPressure
+                            pressure: eventPressure,
+                            tilt: stylusInput.tilt
                         ))
                         updateCanvasCursor(at: value.location, in: size)
                     }
                 case .dodge, .burn:
                     if let pointerImagePoint {
                         activeBrushPressure = eventPressure
+                        activeBrushTilt = stylusInput.tilt
                         dragPoints.append(pointerImagePoint)
                         brushStrokeSamples.append(ImageEditorBrushStrokeSample(
                             point: pointerImagePoint,
-                            pressure: eventPressure
+                            pressure: eventPressure,
+                            tilt: stylusInput.tilt
                         ))
                         updateToneAirbrushStroke(at: pointerImagePoint, pressure: eventPressure)
                         updateCanvasCursor(at: value.location, in: size)
@@ -2991,10 +3043,12 @@ struct ImageEditorView: View {
                 case .cloneStamp, .blur, .sharpen, .smudge, .healingBrush:
                     if let pointerImagePoint {
                         activeBrushPressure = isSettingSampledBrushSourceGesture ? nil : eventPressure
+                        activeBrushTilt = isSettingSampledBrushSourceGesture ? nil : stylusInput.tilt
                         dragPoints.append(pointerImagePoint)
                         brushStrokeSamples.append(ImageEditorBrushStrokeSample(
                             point: pointerImagePoint,
-                            pressure: eventPressure
+                            pressure: eventPressure,
+                            tilt: stylusInput.tilt
                         ))
                         updateCanvasCursor(at: value.location, in: size)
                     }
@@ -3132,13 +3186,16 @@ struct ImageEditorView: View {
 
                 let endImagePoint = imagePoint(from: value.location, in: size)
                 activeBrushPressure = nil
+                activeBrushTilt = nil
+                let endStylusInput = ImageEditorStylusInput.sample(from: NSApp.currentEvent)
                 let fallbackBrushSamples = [
                     imagePoint(from: value.startLocation, in: size),
                     endImagePoint
                 ].compactMap { $0 }.map {
                     ImageEditorBrushStrokeSample(
                         point: $0,
-                        pressure: ImageEditorBrushPressureInput.pressure(from: NSApp.currentEvent)
+                        pressure: endStylusInput.pressure,
+                        tilt: endStylusInput.tilt
                     )
                 }
                 let committedBrushSamples = brushStrokeSamples.count >= 2

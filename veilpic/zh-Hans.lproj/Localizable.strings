@@ -578,6 +578,12 @@
 "imageEditor.option.pressureHelp" = "使用数位笔压力控制画笔大小和流量";
 "imageEditor.option.pressureLiveHelp" = "实时显示数位笔当前压力；普通鼠标保持未检测状态";
 "imageEditor.option.pressureNotDetected" = "未检测到笔压";
+"imageEditor.option.stylusInput" = "数位笔输入";
+"imageEditor.option.stylusLiveHelp" = "实时显示数位笔压力和倾斜；圆盘箭头表示倾斜方向与幅度，普通鼠标保持未检测状态";
+"imageEditor.option.stylusLiveValue" = "%@；%@";
+"imageEditor.option.tiltNotDetected" = "未检测到倾斜";
+"imageEditor.option.tiltPerpendicular" = "数位笔垂直";
+"imageEditor.option.tiltValue" = "倾斜 %d%%，方向 %@";
 "imageEditor.option.retouchPressureSensitivity.help" = "调整数位笔压力控制修饰画笔大小的灵敏度";
 "imageEditor.option.spongePressureSize.help" = "使用数位笔压力控制海绵画笔大小";
 "imageEditor.option.tonePressureSize.help" = "使用数位笔压力控制减淡或加深画笔大小";

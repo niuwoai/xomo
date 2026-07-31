@@ -578,6 +578,12 @@
 "imageEditor.option.pressureHelp" = "Use pen pressure to control brush size and flow";
 "imageEditor.option.pressureLiveHelp" = "Shows live stylus pressure; an ordinary mouse remains undetected";
 "imageEditor.option.pressureNotDetected" = "No pen pressure detected";
+"imageEditor.option.stylusInput" = "Stylus input";
+"imageEditor.option.stylusLiveHelp" = "Shows live stylus pressure and tilt; the dial arrow indicates tilt direction and magnitude, while an ordinary mouse remains undetected";
+"imageEditor.option.stylusLiveValue" = "%@; %@";
+"imageEditor.option.tiltNotDetected" = "No stylus tilt detected";
+"imageEditor.option.tiltPerpendicular" = "Stylus perpendicular";
+"imageEditor.option.tiltValue" = "Tilt %d%%, direction %@";
 "imageEditor.option.retouchPressureSensitivity.help" = "Adjust how pen pressure changes the retouch brush size";
 "imageEditor.option.spongePressureSize.help" = "Use pen pressure to control the Sponge brush size";
 "imageEditor.option.tonePressureSize.help" = "Use pen pressure to control the Dodge or Burn brush size";

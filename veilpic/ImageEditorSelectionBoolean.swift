@@ -310,7 +310,8 @@ extension ImageEditorSelectionMask {
         let scaledSamples = samples.map {
             ImageEditorBrushStrokeSample(
                 point: CGPoint(x: $0.point.x * scaleX, y: $0.point.y * scaleY),
-                pressure: $0.pressure
+                pressure: $0.pressure,
+                tilt: $0.tilt
             )
         }
         let scaledDiameter = max(1, diameter * (scaleX + scaleY) / 2)

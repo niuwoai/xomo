@@ -28,6 +28,56 @@ enum ImageEditorBrushPressureInput {
     }
 }
 
+struct ImageEditorStylusTilt: Equatable {
+    let x: CGFloat
+    let y: CGFloat
+
+    var magnitude: CGFloat {
+        min(1, hypot(x, y))
+    }
+
+    var azimuthDegrees: Int? {
+        guard magnitude > 0.0001 else { return nil }
+        let rawDegrees = atan2(y, x) * 180 / .pi
+        return Int((rawDegrees < 0 ? rawDegrees + 360 : rawDegrees).rounded()) % 360
+    }
+}
+
+struct ImageEditorStylusEventSample: Equatable {
+    let pressure: CGFloat?
+    let tilt: ImageEditorStylusTilt?
+}
+
+enum ImageEditorStylusInput {
+    static func sample(from event: NSEvent?) -> ImageEditorStylusEventSample {
+        guard let event else {
+            return ImageEditorStylusEventSample(pressure: nil, tilt: nil)
+        }
+        let supportsTilt = event.type == .tabletPoint || event.subtype == .tabletPoint
+        let tilt = supportsTilt ? event.tilt : .zero
+        return ImageEditorStylusEventSample(
+            pressure: ImageEditorBrushPressureInput.pressure(from: event),
+            tilt: normalizedTilt(
+                rawX: tilt.x,
+                rawY: tilt.y,
+                supportsTilt: supportsTilt
+            )
+        )
+    }
+
+    static func normalizedTilt(
+        rawX: CGFloat,
+        rawY: CGFloat,
+        supportsTilt: Bool
+    ) -> ImageEditorStylusTilt? {
+        guard supportsTilt, rawX.isFinite, rawY.isFinite else { return nil }
+        return ImageEditorStylusTilt(
+            x: max(-1, min(1, rawX)),
+            y: max(-1, min(1, rawY))
+        )
+    }
+}
+
 struct ImageEditorBrushPressureDisplay: Equatable {
     let fraction: CGFloat
     let percent: Int?
@@ -41,6 +91,24 @@ struct ImageEditorBrushPressureDisplay: Equatable {
         let normalized = max(0, min(1, pressure))
         fraction = normalized
         percent = Int((normalized * 100).rounded())
+    }
+}
+
+struct ImageEditorStylusTiltDisplay: Equatable {
+    let magnitudeFraction: CGFloat
+    let magnitudePercent: Int?
+    let azimuthDegrees: Int?
+
+    init(tilt: ImageEditorStylusTilt?) {
+        guard let tilt else {
+            magnitudeFraction = 0
+            magnitudePercent = nil
+            azimuthDegrees = nil
+            return
+        }
+        magnitudeFraction = tilt.magnitude
+        magnitudePercent = Int((tilt.magnitude * 100).rounded())
+        azimuthDegrees = tilt.azimuthDegrees
     }
 }
 
