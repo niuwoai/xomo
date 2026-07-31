@@ -254,6 +254,18 @@ struct ImageEditorBrushStrokeTests {
     }
 
     @Test func pressureCanControlDiameterAndFlowIndependently() {
+        #expect(ImageEditorBrushStrokeKernel.pressureDiameterScale(
+            mappedPressure: 0.05,
+            minimumDiameter: 0.4
+        ) == 0.4)
+        #expect(ImageEditorBrushStrokeKernel.pressureDiameterScale(
+            mappedPressure: 0.75,
+            minimumDiameter: 0.4
+        ) == 0.75)
+        #expect(ImageEditorBrushStrokeKernel.pressureDiameterScale(
+            mappedPressure: 2,
+            minimumDiameter: -1
+        ) == 1)
         let stamps = [
             ImageEditorBrushStrokeSample(point: CGPoint(x: 15, y: 20), pressure: 0.2),
             ImageEditorBrushStrokeSample(point: CGPoint(x: 55, y: 20), pressure: 1)
@@ -278,6 +290,17 @@ struct ImageEditorBrushStrokeTests {
         let fullPressureOuterPixel = 20 * 80 + 61
         #expect(sized[lowPressureOuterPixel] == 0)
         #expect(sized[fullPressureOuterPixel] > 200)
+
+        var minimumDiameterSettings = sizeSettings
+        minimumDiameterSettings.minimumDiameter = 0.5
+        let minimumSized = ImageEditorBrushStrokeKernel.coverage(
+            width: 80,
+            height: 40,
+            stamps: stamps,
+            settings: minimumDiameterSettings
+        )
+        #expect(minimumSized[20 * 80 + 19] > 200)
+        #expect(minimumSized[fullPressureOuterPixel] == sized[fullPressureOuterPixel])
 
         var flowSettings = sizeSettings
         flowSettings.pressureControlsSize = false
@@ -759,9 +782,11 @@ struct ImageEditorBrushStrokeTests {
             pressureControlsSize: true,
             pressureControlsFlow: true,
             pressureSensitivity: 0.5,
+            minimumDiameter: 0.5,
             reveal: false
         ))
         #expect(quickMask.alpha[15 * 70 + 15] > quickMask.alpha[15 * 70 + 55])
+        #expect(quickMask.alpha[15 * 70 + 17] < .max)
 
         let sourceMask = NSImage.rendered(size: CGSize(width: 70, height: 30)) { rect in
             NSColor.white.setFill()
@@ -777,11 +802,14 @@ struct ImageEditorBrushStrokeTests {
             pressureControlsSize: true,
             pressureControlsFlow: true,
             pressureSensitivity: 0.5,
+            minimumDiameter: 0.5,
             reveal: false
         ))
         let lowPressure = try #require(layerMask.color(at: CGPoint(x: 15, y: 15)))
         let fullPressure = try #require(layerMask.color(at: CGPoint(x: 55, y: 15)))
+        let minimumDiameterEdge = try #require(layerMask.color(at: CGPoint(x: 17, y: 15)))
         #expect(lowPressure.alphaComponent > fullPressure.alphaComponent)
+        #expect(minimumDiameterEdge.alphaComponent < 1)
     }
 
     @Test func quickMaskAndLayerMaskShareTiltShapeDynamics() throws {

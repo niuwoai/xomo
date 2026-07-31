@@ -115,6 +115,18 @@ struct ImageEditorCanvasCursorTests {
         )
         #expect(abs(brushDiameter - expectedBrushDiameter) < 0.001)
 
+        let minimumDiameter = ImageEditorCanvasCursor.pressureAdjustedBrushDiameter(
+            baseDiameter: baseDiameter,
+            tool: .brush,
+            pressure: 0,
+            brushPressureControlsSize: true,
+            retouchPressureControlsSize: false,
+            brushPressureSensitivity: 0.5,
+            brushMinimumDiameter: 0.5,
+            retouchPressureSensitivity: 0.5
+        )
+        #expect(minimumDiameter == baseDiameter * 0.5)
+
         let retouchTools: [ImageEditorTool] = [
             .cloneStamp, .dodge, .burn, .sponge,
             .blur, .sharpen, .smudge, .healingBrush

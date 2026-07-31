@@ -583,6 +583,7 @@
 "imageEditor.help.brushTipShape" = "Adjust brush and eraser tip roundness and angle; active stylus tilt takes over the angle";
 "imageEditor.option.pressure" = "Pressure";
 "imageEditor.option.pressureSize" = "Control Size";
+"imageEditor.option.minimumDiameter" = "Minimum Diameter";
 "imageEditor.option.pressureFlow" = "Control Flow";
 "imageEditor.option.pressureSensitivity" = "Sensitivity";
 "imageEditor.option.pressureHelp" = "Use pen pressure to control brush size and flow";
@@ -592,7 +593,7 @@
 "imageEditor.option.stylusPenDetected" = "Pen tip in proximity";
 "imageEditor.option.stylusEraserDetected" = "Eraser tip in proximity";
 "imageEditor.option.stylusDynamics" = "Stylus";
-"imageEditor.option.stylusDynamicsHelp" = "Control brush size and flow with pressure, and brush-tip shape with tilt";
+"imageEditor.option.stylusDynamicsHelp" = "Control brush size, minimum diameter, and flow with pressure, and brush-tip shape with tilt";
 "imageEditor.option.tiltShape" = "Tilt Controls Tip";
 "imageEditor.option.stylusInput" = "Stylus input";
 "imageEditor.option.stylusLiveHelp" = "Shows live stylus pressure and tilt; the dial arrow indicates tilt direction and magnitude, while an ordinary mouse remains undetected";

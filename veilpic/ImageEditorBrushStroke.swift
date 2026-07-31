@@ -33,6 +33,7 @@ struct ImageEditorBrushStrokeSettings: Equatable {
     var pressureControlsSize: Bool
     var pressureControlsFlow: Bool
     var pressureSensitivity: CGFloat
+    var minimumDiameter: CGFloat
     var tiltControlsShape: Bool
     var tipRoundness: CGFloat
     var tipAngleDegrees: CGFloat
@@ -47,6 +48,7 @@ struct ImageEditorBrushStrokeSettings: Equatable {
         pressureControlsSize: Bool = false,
         pressureControlsFlow: Bool = false,
         pressureSensitivity: CGFloat = 0.5,
+        minimumDiameter: CGFloat = 0,
         tiltControlsShape: Bool = false,
         tipRoundness: CGFloat = 1,
         tipAngleDegrees: CGFloat = 0,
@@ -60,6 +62,7 @@ struct ImageEditorBrushStrokeSettings: Equatable {
         self.pressureControlsSize = pressureControlsSize
         self.pressureControlsFlow = pressureControlsFlow
         self.pressureSensitivity = pressureSensitivity
+        self.minimumDiameter = minimumDiameter
         self.tiltControlsShape = tiltControlsShape
         self.tipRoundness = tipRoundness
         self.tipAngleDegrees = tipAngleDegrees
@@ -76,6 +79,7 @@ struct ImageEditorBrushStrokeSettings: Equatable {
             pressureControlsSize: pressureControlsSize,
             pressureControlsFlow: pressureControlsFlow,
             pressureSensitivity: max(0, min(1, pressureSensitivity)),
+            minimumDiameter: max(0, min(1, minimumDiameter)),
             tiltControlsShape: tiltControlsShape,
             tipRoundness: max(0.1, min(1, tipRoundness)),
             tipAngleDegrees: max(-180, min(180, tipAngleDegrees)),
@@ -228,7 +232,12 @@ enum ImageEditorBrushStrokeKernel {
                 stamp.pressure ?? 1,
                 sensitivity: settings.pressureSensitivity
             )
-            let diameterScale = settings.pressureControlsSize ? mappedPressure : 1
+            let diameterScale = settings.pressureControlsSize
+                ? pressureDiameterScale(
+                    mappedPressure: mappedPressure,
+                    minimumDiameter: settings.minimumDiameter
+                )
+                : 1
             let flowScale = settings.pressureControlsFlow ? mappedPressure : 1
             let radius = max(1, settings.diameter * diameterScale) / 2
             let innerRadius = radius * settings.hardness
@@ -283,6 +292,16 @@ enum ImageEditorBrushStrokeKernel {
         let exponent = pow(4, 0.5 - normalizedSensitivity)
         let curved = pow(normalizedPressure, exponent)
         return 0.05 + curved * 0.95
+    }
+
+    static func pressureDiameterScale(
+        mappedPressure: CGFloat,
+        minimumDiameter: CGFloat
+    ) -> CGFloat {
+        max(
+            max(0, min(1, mappedPressure)),
+            max(0, min(1, minimumDiameter))
+        )
     }
 
     static func tiltTipAspectRatio(

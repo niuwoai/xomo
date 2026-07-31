@@ -11,9 +11,9 @@ class ReleaseContractTest < Minitest::Test
     result = XomoReleaseContract.collect(File.expand_path("..", __dir__))
 
     assert result["passed"], result.inspect
-    assert_equal "2.12.0-rc585", result["version"]
-    assert_equal ["2.12.0-rc585"], result["project_versions"]
-    assert_equal ["585"], result["build_versions"]
+    assert_equal "2.12.0-rc586", result["version"]
+    assert_equal ["2.12.0-rc586"], result["project_versions"]
+    assert_equal ["586"], result["build_versions"]
     assert result["checks"]["release_signing_requests_secure_timestamp"]
     assert result["checks"]["release_entitlements_are_hardened"]
   end

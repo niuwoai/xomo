@@ -20,6 +20,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
             pressureControlsSize: false,
             pressureControlsFlow: true,
             pressureSensitivity: 140,
+            minimumDiameter: 140,
             tiltControlsShape: true,
             tipRoundness: 2,
             tipAngleDegrees: 250,
@@ -30,6 +31,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(!loaded.pressureControlsSize)
         #expect(loaded.pressureControlsFlow)
         #expect(loaded.pressureSensitivity == 100)
+        #expect(loaded.minimumDiameter == 100)
         #expect(loaded.tiltControlsShape)
         #expect(loaded.tipRoundness == 10)
         #expect(loaded.tipAngleDegrees == 180)
@@ -54,6 +56,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         first.setBrushPressureControlsSize(false)
         first.setBrushPressureControlsFlow(true)
         first.setBrushPressureSensitivity(73)
+        first.setBrushMinimumDiameter(37)
         first.setBrushTiltControlsShape(true)
         first.setBrushTipRoundness(47)
         first.setBrushTipAngleDegrees(-45)
@@ -67,6 +70,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(!restored.brushPressureControlsSize)
         #expect(restored.brushPressureControlsFlow)
         #expect(restored.brushPressureSensitivity == 73)
+        #expect(restored.brushMinimumDiameter == 37)
         #expect(restored.brushTiltControlsShape)
         #expect(restored.brushTipRoundness == 47)
         #expect(restored.brushTipAngleDegrees == -45)
@@ -88,6 +92,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
             from: legacyDynamics
         )
         #expect(!decodedDynamics.tiltControlsShape)
+        #expect(decodedDynamics.minimumDiameter == 0)
         #expect(decodedDynamics.tipRoundness == 100)
         #expect(decodedDynamics.tipAngleDegrees == 0)
         #expect(decodedDynamics.smoothing == 0)
@@ -113,6 +118,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
             from: legacyPreset
         )
         #expect(!decodedPreset.tiltControlsShape)
+        #expect(decodedPreset.minimumDiameter == 0)
         #expect(decodedPreset.tipRoundness == 100)
         #expect(decodedPreset.tipAngleDegrees == 0)
         #expect(decodedPreset.smoothing == 0)
@@ -145,6 +151,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
 
     @Test func retouchPressureSensitivityPresetsPersistEveryExposedChoice() {
         #expect(ImageEditorPressureSensitivityPresets.values == [0, 25, 50, 75, 100])
+        #expect(ImageEditorBrushMinimumDiameterPresets.values == [0, 10, 25, 50, 75, 100])
         #expect(ImageEditorBrushRoundnessPresets.values == [10, 25, 50, 75, 100])
         #expect(ImageEditorBrushAnglePresets.values == [-90, -45, 0, 45, 90])
         let (defaults, suiteName) = temporaryDefaults()
@@ -173,6 +180,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
             pressureControlsSize: false,
             pressureControlsFlow: true,
             pressureSensitivity: 180,
+            minimumDiameter: -20,
             tipRoundness: 2,
             tipAngleDegrees: -250,
             smoothing: 180,
@@ -189,6 +197,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(preset.flow == 100)
         #expect(preset.spacing == 1)
         #expect(preset.pressureSensitivity == 100)
+        #expect(preset.minimumDiameter == 0)
         #expect(preset.tipRoundness == 10)
         #expect(preset.tipAngleDegrees == -180)
         #expect(preset.smoothing == 100)
@@ -209,6 +218,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         first.setBrushPressureControlsSize(false)
         first.setBrushPressureControlsFlow(true)
         first.setBrushPressureSensitivity(73)
+        first.setBrushMinimumDiameter(37)
         first.setBrushTiltControlsShape(true)
         first.setBrushTipRoundness(47)
         first.setBrushTipAngleDegrees(-45)
@@ -229,6 +239,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(!restored.brushPressureControlsSize)
         #expect(restored.brushPressureControlsFlow)
         #expect(restored.brushPressureSensitivity == 73)
+        #expect(restored.brushMinimumDiameter == 37)
         #expect(restored.brushTiltControlsShape)
         #expect(restored.brushTipRoundness == 47)
         #expect(restored.brushTipAngleDegrees == -45)
@@ -254,6 +265,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         viewModel.setBrushPressureControlsSize(false)
         viewModel.setBrushPressureControlsFlow(false)
         viewModel.setBrushPressureSensitivity(0)
+        viewModel.setBrushMinimumDiameter(75)
         viewModel.setBrushTiltControlsShape(true)
         viewModel.setBrushTipRoundness(25)
         viewModel.setBrushTipAngleDegrees(90)
@@ -269,6 +281,7 @@ struct ImageEditorBrushDynamicsPreferencesTests {
         #expect(viewModel.brushPressureControlsSize)
         #expect(viewModel.brushPressureControlsFlow)
         #expect(viewModel.brushPressureSensitivity == 50)
+        #expect(viewModel.brushMinimumDiameter == 0)
         #expect(!viewModel.brushTiltControlsShape)
         #expect(viewModel.brushTipRoundness == 100)
         #expect(viewModel.brushTipAngleDegrees == 0)

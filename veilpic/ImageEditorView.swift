@@ -962,6 +962,19 @@ struct ImageEditorView: View {
                     set: { viewModel.setBrushPressureControlsSize($0) }
                 )
             )
+            Picker(
+                L10n.text("imageEditor.option.minimumDiameter"),
+                selection: Binding(
+                    get: { viewModel.brushMinimumDiameter },
+                    set: { viewModel.setBrushMinimumDiameter($0) }
+                )
+            ) {
+                ForEach(ImageEditorBrushMinimumDiameterPresets.values, id: \.self) { diameter in
+                    Text(L10n.format("imageEditor.option.percentPreset", Int(diameter)))
+                        .tag(diameter)
+                }
+            }
+            .disabled(!viewModel.brushPressureControlsSize)
             Toggle(
                 L10n.text("imageEditor.option.pressureFlow"),
                 isOn: Binding(
@@ -2350,6 +2363,7 @@ struct ImageEditorView: View {
                         brushPressureControlsSize: viewModel.brushPressureControlsSize,
                         retouchPressureControlsSize: viewModel.retouchPressureControlsSize,
                         brushPressureSensitivity: viewModel.brushPressureSensitivity / 100,
+                        brushMinimumDiameter: viewModel.brushMinimumDiameter / 100,
                         retouchPressureSensitivity: viewModel.retouchPressureSensitivity / 100
                     )
                     ImageEditorCursorRectView(
@@ -3756,6 +3770,7 @@ struct ImageEditorView: View {
             brushPressureControlsSize: viewModel.brushPressureControlsSize,
             retouchPressureControlsSize: viewModel.retouchPressureControlsSize,
             brushPressureSensitivity: viewModel.brushPressureSensitivity / 100,
+            brushMinimumDiameter: viewModel.brushMinimumDiameter / 100,
             retouchPressureSensitivity: viewModel.retouchPressureSensitivity / 100
         )
         ImageEditorCanvasCursor.cursor(
@@ -10112,24 +10127,32 @@ enum ImageEditorCanvasCursor {
         brushPressureControlsSize: Bool,
         retouchPressureControlsSize: Bool,
         brushPressureSensitivity: CGFloat,
+        brushMinimumDiameter: CGFloat = 0,
         retouchPressureSensitivity: CGFloat
     ) -> CGFloat {
         guard let pressure else { return baseDiameter }
-        let settings: (isEnabled: Bool, sensitivity: CGFloat)
+        let settings: (isEnabled: Bool, sensitivity: CGFloat, minimumDiameter: CGFloat)
         switch tool {
         case .brush, .eraser:
-            settings = (brushPressureControlsSize, brushPressureSensitivity)
+            settings = (
+                brushPressureControlsSize,
+                brushPressureSensitivity,
+                brushMinimumDiameter
+            )
         case .cloneStamp, .dodge, .burn, .sponge, .blur, .sharpen, .smudge, .healingBrush:
-            settings = (retouchPressureControlsSize, retouchPressureSensitivity)
+            settings = (retouchPressureControlsSize, retouchPressureSensitivity, 0)
         default:
             return baseDiameter
         }
         guard settings.isEnabled else { return baseDiameter }
         return max(
             1,
-            baseDiameter * ImageEditorBrushStrokeKernel.mappedPressure(
-                pressure,
-                sensitivity: settings.sensitivity
+            baseDiameter * ImageEditorBrushStrokeKernel.pressureDiameterScale(
+                mappedPressure: ImageEditorBrushStrokeKernel.mappedPressure(
+                    pressure,
+                    sensitivity: settings.sensitivity
+                ),
+                minimumDiameter: settings.minimumDiameter
             )
         )
     }

@@ -2624,6 +2624,26 @@ struct ImageEditorScopeTests {
         #expect(menuSource.contains("image-editor-brush-smoothing"))
     }
 
+    @Test func brushPressureMenuExposesMinimumDiameterWithoutAddingToolbarWidth() throws {
+        let source = try String(
+            contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
+            encoding: .utf8
+        )
+        let menuStart = try #require(
+            source.range(of: "private var brushPressureMenu: some View")
+        )
+        let menuEnd = try #require(
+            source[menuStart.upperBound...].range(of: "private var brushSmoothingMenu: some View")
+        )
+        let menuSource = source[menuStart.lowerBound..<menuEnd.lowerBound]
+
+        #expect(menuSource.contains("ImageEditorBrushMinimumDiameterPresets.values"))
+        #expect(menuSource.contains("viewModel.setBrushMinimumDiameter($0)"))
+        #expect(menuSource.contains(".disabled(!viewModel.brushPressureControlsSize)"))
+        #expect(menuSource.contains(".focusable(false)"))
+        #expect(menuSource.contains("image-editor-brush-pressure-menu"))
+    }
+
     @Test func brushAndEraserExposeCompactNonFocusableTipShapePresets() throws {
         let source = try String(
             contentsOf: Self.repositoryRoot().appendingPathComponent("veilpic/ImageEditorView.swift"),
