@@ -330,6 +330,30 @@ struct ImageEditorSelectionFillCoverageTests {
         #expect(imageEditorMaximumPixelDifference(viewModel.document.compositedImage, before) <= 1)
     }
 
+    @Test func copyingSelectionPreservesLayerStyle() throws {
+        let viewModel = styledLayerViewModel(sourceName: "styled-copy.png")
+
+        viewModel.copySelectionToNewLayer()
+
+        let copiedLayer = try #require(viewModel.document.selectedLayer)
+        #expect(copiedLayer.style.strokeEnabled)
+        #expect(copiedLayer.style.strokeWidth == 4)
+        #expect(copiedLayer.style.shadowEnabled)
+        #expect(copiedLayer.style.shadowOpacity == 0.6)
+    }
+
+    @Test func cuttingSelectionPreservesLayerStyleAppearance() throws {
+        let viewModel = styledLayerViewModel(sourceName: "styled-cut.png")
+        let before = viewModel.document.compositedImage
+
+        viewModel.cutSelectionToNewLayer()
+
+        let cutLayer = try #require(viewModel.document.selectedLayer)
+        #expect(cutLayer.style.strokeEnabled)
+        #expect(cutLayer.style.shadowEnabled)
+        #expect(imageEditorMaximumPixelDifference(viewModel.document.compositedImage, before) <= 1)
+    }
+
     private func clippingMaskViewModel(sourceName: String) -> ImageEditorViewModel {
         let size = CGSize(width: 48, height: 32)
         let baseImage = NSImage(size: size, flipped: false) { rect in
@@ -352,6 +376,29 @@ struct ImageEditorSelectionFillCoverageTests {
         )
         if let sourceIndex = viewModel.document.selectedLayerIndex {
             viewModel.document.layers[sourceIndex].isClippingMask = true
+        }
+        viewModel.selectAll()
+        return viewModel
+    }
+
+    private func styledLayerViewModel(sourceName: String) -> ImageEditorViewModel {
+        let size = CGSize(width: 48, height: 32)
+        let image = NSImage(size: size, flipped: false) { rect in
+            NSColor.clear.setFill()
+            rect.fill()
+            NSColor.systemBlue.setFill()
+            CGRect(x: 8, y: 7, width: 24, height: 16).fill()
+            return true
+        }
+        let viewModel = ImageEditorViewModel(sourceName: sourceName, image: image) { _ in }
+        if let sourceIndex = viewModel.document.selectedLayerIndex {
+            viewModel.document.layers[sourceIndex].style.strokeEnabled = true
+            viewModel.document.layers[sourceIndex].style.strokeWidth = 4
+            viewModel.document.layers[sourceIndex].style.strokeColor = .white
+            viewModel.document.layers[sourceIndex].style.shadowEnabled = true
+            viewModel.document.layers[sourceIndex].style.shadowOpacity = 0.6
+            viewModel.document.layers[sourceIndex].style.shadowBlur = 3
+            viewModel.document.layers[sourceIndex].style.shadowOffset = CGSize(width: 2, height: -2)
         }
         viewModel.selectAll()
         return viewModel
