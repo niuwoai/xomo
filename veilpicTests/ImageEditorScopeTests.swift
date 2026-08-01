@@ -2278,8 +2278,9 @@ struct ImageEditorScopeTests {
         let dockSource = source[dockStart.lowerBound..<nextSectionStart.lowerBound]
 
         #expect(source.contains("@State private var isLayersDockExpanded = true"))
-        #expect(source.contains("@State private var isNavigatorDockExpanded = true"))
+        #expect(source.contains("@State private var isNavigatorDockExpanded = false"))
         #expect(dockSource.contains("ScrollView"))
+        #expect(dockSource.contains("EditorDockDisclosure("))
         #expect(dockSource.contains("title: L10n.text(\"imageEditor.panel.layersChannels\")"))
         #expect(dockSource.contains("isExpanded: $isLayersDockExpanded"))
         #expect(dockSource.contains("layersPanel(showsTitle: false)"))
