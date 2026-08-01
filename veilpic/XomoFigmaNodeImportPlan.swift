@@ -176,6 +176,7 @@ struct XomoFigmaPlanText: Equatable, Sendable {
     var lineHeight: Double? = nil
     var isItalic: Bool = false
     var decoration: String? = nil
+    var paragraphIndent: Double? = nil
 }
 
 struct XomoFigmaImageAsset: Equatable, Sendable {

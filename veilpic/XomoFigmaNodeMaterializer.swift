@@ -502,7 +502,8 @@ enum XomoFigmaNodeMaterializer {
             ),
             boxWidth: max(1, frame.width - padding * 2),
             boxHeight: max(1, frame.height - padding * 2),
-            alignment: textAlignment(text.horizontalAlignment)
+            alignment: textAlignment(text.horizontalAlignment),
+            firstLineIndent: CGFloat(text.paragraphIndent ?? 0) * scale
         )
         return ImageEditorLayer.text(name: item.sourceName, origin: frame.origin, content: content)
     }
