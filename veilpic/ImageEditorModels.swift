@@ -48,6 +48,7 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
     let pressureControlsFlow: Bool
     let pressureSensitivity: CGFloat
     let minimumDiameter: CGFloat
+    let minimumOpacity: CGFloat
     let minimumFlow: CGFloat
     let tiltControlsShape: Bool
     let tipRoundness: CGFloat
@@ -67,6 +68,7 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
         pressureControlsFlow: Bool = true,
         pressureSensitivity: CGFloat = 50,
         minimumDiameter: CGFloat = 0,
+        minimumOpacity: CGFloat = 0,
         minimumFlow: CGFloat = 0,
         tiltControlsShape: Bool = false,
         tipRoundness: CGFloat = 100,
@@ -85,6 +87,7 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
         self.pressureControlsFlow = pressureControlsFlow
         self.pressureSensitivity = pressureSensitivity
         self.minimumDiameter = minimumDiameter
+        self.minimumOpacity = minimumOpacity
         self.minimumFlow = minimumFlow
         self.tiltControlsShape = tiltControlsShape
         self.tipRoundness = tipRoundness
@@ -105,6 +108,7 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
         case pressureControlsFlow
         case pressureSensitivity
         case minimumDiameter
+        case minimumOpacity
         case minimumFlow
         case tiltControlsShape
         case tipRoundness
@@ -140,6 +144,10 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
         minimumDiameter = try values.decodeIfPresent(
             CGFloat.self,
             forKey: .minimumDiameter
+        ) ?? 0
+        minimumOpacity = try values.decodeIfPresent(
+            CGFloat.self,
+            forKey: .minimumOpacity
         ) ?? 0
         minimumFlow = try values.decodeIfPresent(
             CGFloat.self,
@@ -184,6 +192,7 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
             pressureControlsFlow: pressureControlsFlow,
             pressureSensitivity: max(0, min(100, pressureSensitivity)),
             minimumDiameter: max(0, min(100, minimumDiameter)),
+            minimumOpacity: max(0, min(100, minimumOpacity)),
             minimumFlow: max(0, min(100, minimumFlow)),
             tiltControlsShape: tiltControlsShape,
             tipRoundness: max(10, min(100, tipRoundness)),
@@ -203,6 +212,7 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
         pressureControlsFlow: Bool,
         pressureSensitivity: CGFloat,
         minimumDiameter: CGFloat,
+        minimumOpacity: CGFloat,
         minimumFlow: CGFloat,
         tiltControlsShape: Bool,
         tipRoundness: CGFloat,
@@ -219,6 +229,7 @@ struct ImageEditorBrushPreset: Identifiable, Codable, Equatable {
             && self.pressureControlsFlow == pressureControlsFlow
             && abs(self.pressureSensitivity - pressureSensitivity) < tolerance
             && abs(self.minimumDiameter - minimumDiameter) < tolerance
+            && abs(self.minimumOpacity - minimumOpacity) < tolerance
             && abs(self.minimumFlow - minimumFlow) < tolerance
             && self.tiltControlsShape == tiltControlsShape
             && abs(self.tipRoundness - tipRoundness) < tolerance

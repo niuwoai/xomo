@@ -585,6 +585,7 @@
 "imageEditor.option.pressureSize" = "Control Size";
 "imageEditor.option.pressureOpacity" = "Control Opacity";
 "imageEditor.option.minimumDiameter" = "Minimum Diameter";
+"imageEditor.option.minimumOpacity" = "Minimum Opacity";
 "imageEditor.option.minimumFlow" = "Minimum Flow";
 "imageEditor.option.pressureFlow" = "Control Flow";
 "imageEditor.option.pressureSensitivity" = "Sensitivity";

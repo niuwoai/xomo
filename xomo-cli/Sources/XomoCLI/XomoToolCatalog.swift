@@ -105,6 +105,7 @@ enum XomoToolCatalog {
                         "pressureFlow": ["type": "boolean"],
                         "pressureSensitivity": ["type": "number", "minimum": 0, "maximum": 100],
                         "minimumDiameter": ["type": "number", "minimum": 0, "maximum": 100],
+                        "minimumOpacity": ["type": "number", "minimum": 0, "maximum": 100],
                         "minimumFlow": ["type": "number", "minimum": 0, "maximum": 100],
                         "tiltShape": ["type": "boolean"],
                         "roundness": ["type": "number", "minimum": 10, "maximum": 100],

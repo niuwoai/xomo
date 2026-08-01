@@ -5021,6 +5021,7 @@ struct XomoAutomationTests {
                 "pressureFlow": .bool(true),
                 "pressureSensitivity": .number(72),
                 "minimumDiameter": .number(42),
+                "minimumOpacity": .number(31),
                 "minimumFlow": .number(36),
                 "tiltShape": .bool(true),
                 "roundness": .number(35),
@@ -5040,6 +5041,7 @@ struct XomoAutomationTests {
         #expect(viewModel.brushPressureControlsFlow)
         #expect(viewModel.brushPressureSensitivity == 72)
         #expect(viewModel.brushMinimumDiameter == 42)
+        #expect(viewModel.brushMinimumOpacity == 31)
         #expect(viewModel.brushMinimumFlow == 36)
         #expect(viewModel.brushTiltControlsShape)
         #expect(viewModel.brushTipRoundness == 35)

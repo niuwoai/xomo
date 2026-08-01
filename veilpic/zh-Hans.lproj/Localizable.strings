@@ -585,6 +585,7 @@
 "imageEditor.option.pressureSize" = "控制大小";
 "imageEditor.option.pressureOpacity" = "控制不透明度";
 "imageEditor.option.minimumDiameter" = "最小直径";
+"imageEditor.option.minimumOpacity" = "最小不透明度";
 "imageEditor.option.minimumFlow" = "最小流量";
 "imageEditor.option.pressureFlow" = "控制流量";
 "imageEditor.option.pressureSensitivity" = "灵敏度";

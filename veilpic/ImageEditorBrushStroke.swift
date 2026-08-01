@@ -35,6 +35,7 @@ struct ImageEditorBrushStrokeSettings: Equatable {
     var pressureControlsFlow: Bool
     var pressureSensitivity: CGFloat
     var minimumDiameter: CGFloat
+    var minimumOpacity: CGFloat
     var minimumFlow: CGFloat
     var tiltControlsShape: Bool
     var tipRoundness: CGFloat
@@ -52,6 +53,7 @@ struct ImageEditorBrushStrokeSettings: Equatable {
         pressureControlsFlow: Bool = false,
         pressureSensitivity: CGFloat = 0.5,
         minimumDiameter: CGFloat = 0,
+        minimumOpacity: CGFloat = 0,
         minimumFlow: CGFloat = 0,
         tiltControlsShape: Bool = false,
         tipRoundness: CGFloat = 1,
@@ -68,6 +70,7 @@ struct ImageEditorBrushStrokeSettings: Equatable {
         self.pressureControlsFlow = pressureControlsFlow
         self.pressureSensitivity = pressureSensitivity
         self.minimumDiameter = minimumDiameter
+        self.minimumOpacity = minimumOpacity
         self.minimumFlow = minimumFlow
         self.tiltControlsShape = tiltControlsShape
         self.tipRoundness = tipRoundness
@@ -87,6 +90,7 @@ struct ImageEditorBrushStrokeSettings: Equatable {
             pressureControlsFlow: pressureControlsFlow,
             pressureSensitivity: max(0, min(1, pressureSensitivity)),
             minimumDiameter: max(0, min(1, minimumDiameter)),
+            minimumOpacity: max(0, min(1, minimumOpacity)),
             minimumFlow: max(0, min(1, minimumFlow)),
             tiltControlsShape: tiltControlsShape,
             tipRoundness: max(0.1, min(1, tipRoundness)),
@@ -254,7 +258,10 @@ enum ImageEditorBrushStrokeKernel {
                 : 1
             let opacityLimit = settings.opacity * (
                 settings.pressureControlsOpacity
-                    ? pressureOpacityScale(mappedPressure: mappedPressure)
+                    ? pressureOpacityScale(
+                        mappedPressure: mappedPressure,
+                        minimumOpacity: settings.minimumOpacity
+                    )
                     : 1
             )
             let radius = max(1, settings.diameter * diameterScale) / 2
@@ -332,8 +339,14 @@ enum ImageEditorBrushStrokeKernel {
         )
     }
 
-    static func pressureOpacityScale(mappedPressure: CGFloat) -> CGFloat {
-        max(0, min(1, mappedPressure))
+    static func pressureOpacityScale(
+        mappedPressure: CGFloat,
+        minimumOpacity: CGFloat = 0
+    ) -> CGFloat {
+        max(
+            max(0, min(1, mappedPressure)),
+            max(0, min(1, minimumOpacity))
+        )
     }
 
     static func tiltTipAspectRatio(

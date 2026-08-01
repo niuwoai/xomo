@@ -15,6 +15,10 @@ enum ImageEditorBrushMinimumDiameterPresets {
     static let values: [CGFloat] = [0, 10, 25, 50, 75, 100]
 }
 
+enum ImageEditorBrushMinimumOpacityPresets {
+    static let values: [CGFloat] = [0, 10, 25, 50, 75, 100]
+}
+
 enum ImageEditorBrushMinimumFlowPresets {
     static let values: [CGFloat] = [0, 10, 25, 50, 75, 100]
 }
@@ -39,6 +43,7 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
         pressureControlsFlow: true,
         pressureSensitivity: 50,
         minimumDiameter: 0,
+        minimumOpacity: 0,
         minimumFlow: 0,
         tiltControlsShape: false,
         tipRoundness: 100,
@@ -51,6 +56,7 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
     var pressureControlsFlow: Bool
     var pressureSensitivity: Double
     var minimumDiameter: Double
+    var minimumOpacity: Double
     var minimumFlow: Double
     var tiltControlsShape: Bool
     var tipRoundness: Double
@@ -63,6 +69,7 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
         pressureControlsFlow: Bool,
         pressureSensitivity: Double,
         minimumDiameter: Double = 0,
+        minimumOpacity: Double = 0,
         minimumFlow: Double = 0,
         tiltControlsShape: Bool = false,
         tipRoundness: Double = 100,
@@ -74,6 +81,7 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
         self.pressureControlsFlow = pressureControlsFlow
         self.pressureSensitivity = pressureSensitivity
         self.minimumDiameter = minimumDiameter
+        self.minimumOpacity = minimumOpacity
         self.minimumFlow = minimumFlow
         self.tiltControlsShape = tiltControlsShape
         self.tipRoundness = tipRoundness
@@ -87,6 +95,7 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
         case pressureControlsFlow
         case pressureSensitivity
         case minimumDiameter
+        case minimumOpacity
         case minimumFlow
         case tiltControlsShape
         case tipRoundness
@@ -106,6 +115,10 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
         minimumDiameter = try values.decodeIfPresent(
             Double.self,
             forKey: .minimumDiameter
+        ) ?? 0
+        minimumOpacity = try values.decodeIfPresent(
+            Double.self,
+            forKey: .minimumOpacity
         ) ?? 0
         minimumFlow = try values.decodeIfPresent(
             Double.self,
@@ -136,6 +149,7 @@ struct ImageEditorBrushDynamicsPreferences: Codable, Equatable {
             pressureControlsFlow: pressureControlsFlow,
             pressureSensitivity: max(0, min(100, pressureSensitivity)),
             minimumDiameter: max(0, min(100, minimumDiameter)),
+            minimumOpacity: max(0, min(100, minimumOpacity)),
             minimumFlow: max(0, min(100, minimumFlow)),
             tiltControlsShape: tiltControlsShape,
             tipRoundness: max(10, min(100, tipRoundness)),

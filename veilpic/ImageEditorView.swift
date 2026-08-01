@@ -982,6 +982,19 @@ struct ImageEditorView: View {
                     set: { viewModel.setBrushPressureControlsOpacity($0) }
                 )
             )
+            Picker(
+                L10n.text("imageEditor.option.minimumOpacity"),
+                selection: Binding(
+                    get: { viewModel.brushMinimumOpacity },
+                    set: { viewModel.setBrushMinimumOpacity($0) }
+                )
+            ) {
+                ForEach(ImageEditorBrushMinimumOpacityPresets.values, id: \.self) { opacity in
+                    Text(L10n.format("imageEditor.option.percentPreset", Int(opacity)))
+                        .tag(opacity)
+                }
+            }
+            .disabled(!viewModel.brushPressureControlsOpacity)
             Toggle(
                 L10n.text("imageEditor.option.pressureFlow"),
                 isOn: Binding(

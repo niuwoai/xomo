@@ -278,9 +278,18 @@ struct ImageEditorBrushStrokeTests {
             mappedPressure: 2,
             minimumFlow: -1
         ) == 1)
-        #expect(ImageEditorBrushStrokeKernel.pressureOpacityScale(mappedPressure: -1) == 0)
-        #expect(ImageEditorBrushStrokeKernel.pressureOpacityScale(mappedPressure: 0.4) == 0.4)
-        #expect(ImageEditorBrushStrokeKernel.pressureOpacityScale(mappedPressure: 2) == 1)
+        #expect(ImageEditorBrushStrokeKernel.pressureOpacityScale(
+            mappedPressure: 0.05,
+            minimumOpacity: 0.4
+        ) == 0.4)
+        #expect(ImageEditorBrushStrokeKernel.pressureOpacityScale(
+            mappedPressure: 0.75,
+            minimumOpacity: 0.4
+        ) == 0.75)
+        #expect(ImageEditorBrushStrokeKernel.pressureOpacityScale(
+            mappedPressure: 2,
+            minimumOpacity: -1
+        ) == 1)
         let stamps = [
             ImageEditorBrushStrokeSample(point: CGPoint(x: 15, y: 20), pressure: 0.2),
             ImageEditorBrushStrokeSample(point: CGPoint(x: 55, y: 20), pressure: 1)
@@ -329,6 +338,17 @@ struct ImageEditorBrushStrokeTests {
         )
         #expect(opacityControlled[20 * 80 + 15] < opacityControlled[20 * 80 + 55])
         #expect(opacityControlled[20 * 80 + 55] == UInt8((0.8 * 255).rounded()))
+
+        var minimumOpacitySettings = opacitySettings
+        minimumOpacitySettings.minimumOpacity = 0.5
+        let minimumOpacityControlled = ImageEditorBrushStrokeKernel.coverage(
+            width: 80,
+            height: 40,
+            stamps: stamps,
+            settings: minimumOpacitySettings
+        )
+        #expect(minimumOpacityControlled[20 * 80 + 15] > opacityControlled[20 * 80 + 15])
+        #expect(minimumOpacityControlled[20 * 80 + 55] == opacityControlled[20 * 80 + 55])
 
         var flowSettings = sizeSettings
         flowSettings.pressureControlsSize = false
@@ -824,6 +844,7 @@ struct ImageEditorBrushStrokeTests {
             pressureControlsFlow: true,
             pressureSensitivity: 0.5,
             minimumDiameter: 0.5,
+            minimumOpacity: 0.5,
             minimumFlow: 0.5,
             reveal: false
         ))
@@ -846,6 +867,7 @@ struct ImageEditorBrushStrokeTests {
             pressureControlsFlow: true,
             pressureSensitivity: 0.5,
             minimumDiameter: 0.5,
+            minimumOpacity: 0.5,
             minimumFlow: 0.5,
             reveal: false
         ))
