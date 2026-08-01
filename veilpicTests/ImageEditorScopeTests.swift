@@ -1170,16 +1170,17 @@ struct ImageEditorScopeTests {
             encoding: .utf8
         )
 
-        #expect(source.contains("toolRail\n                        .fixedSize(horizontal: true, vertical: false)"))
+        #expect(source.contains("leftSidebar\n                        .fixedSize(horizontal: true, vertical: false)\n                        .layoutPriority(2)"))
         #expect(source.contains("canvasWorkspace\n                    .frame(minWidth: 0)"))
-        #expect(source.contains("rightDock\n                        .fixedSize(horizontal: true, vertical: false)"))
+        #expect(source.contains("canvasWorkspace\n                    .frame(minWidth: 0)\n                    .clipped()\n                    .layoutPriority(0)"))
+        #expect(source.contains("rightDock\n                        .fixedSize(horizontal: true, vertical: false)\n                        .layoutPriority(2)"))
 
         let dockStart = try #require(source.range(of: "private var rightDock: some View"))
         let dockEnd = try #require(source[dockStart.upperBound...].range(of: "private func navigatorPanel"))
         let dockSource = source[dockStart.lowerBound..<dockEnd.lowerBound]
         #expect(dockSource.contains("VStack(spacing: 8)"))
         #expect(!dockSource.contains("LazyVStack"))
-        #expect(dockSource.contains(".frame(width: 348)"))
+        #expect(dockSource.contains(".frame(width: imageEditorRightDockWidth)"))
         #expect(dockSource.contains(".clipped()"))
 
         let filterStart = try #require(source.range(of: "private var filtersQuickPanel: some View"))
