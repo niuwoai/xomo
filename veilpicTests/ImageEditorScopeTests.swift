@@ -1250,18 +1250,30 @@ struct ImageEditorScopeTests {
 
     @MainActor
     @Test func imageEditorCanHideTransformControlsWithoutChangingSelectedLayerFrame() throws {
-        let image = NSImage(size: NSSize(width: 80, height: 60))
+        let image = try #require(NSImage.rendered(size: NSSize(width: 80, height: 60)) { rect in
+            NSColor.systemGreen.setFill()
+            rect.fill()
+        })
         let viewModel = ImageEditorViewModel(sourceName: "source.png", image: image) { _ in }
+        let selectedLayerID = try #require(viewModel.document.layers.first?.id)
+        viewModel.selectLayer(selectedLayerID)
+        let persistedFrame = try #require(
+            viewModel.document.layers.first { $0.id == selectedLayerID }?.frame
+        )
         let selectedFrame = try #require(viewModel.selectedLayerTransformFrame)
 
         viewModel.toggleTransformControlsVisible()
 
         #expect(!viewModel.document.areTransformControlsVisible)
         #expect(viewModel.selectedLayerTransformFrame == selectedFrame)
+        #expect(viewModel.document.layers.first { $0.id == selectedLayerID }?.frame == persistedFrame)
         #expect(viewModel.document.history.last?.title == L10n.text("imageEditor.history.transformControlsVisibility"))
         #expect(viewModel.statusText == L10n.text("imageEditor.status.transformControlsHidden"))
 
         viewModel.toggleTransformControlsVisible()
+        #expect(viewModel.document.areTransformControlsVisible)
+        #expect(viewModel.selectedLayerTransformFrame == selectedFrame)
+        #expect(viewModel.document.layers.first { $0.id == selectedLayerID }?.frame == persistedFrame)
 
         #expect(viewModel.document.areTransformControlsVisible)
         #expect(viewModel.selectedLayerTransformFrame == selectedFrame)
