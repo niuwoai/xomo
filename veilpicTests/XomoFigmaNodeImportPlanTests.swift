@@ -46,6 +46,21 @@ struct XomoFigmaNodeImportPlanTests {
         #expect(XomoFigmaNodeImportMapper.lineHeight(for: intrinsic) == nil)
     }
 
+    @Test func unmappableIntrinsicLineHeightIsReportedAsPartialInsteadOfExact() throws {
+        let response = try JSONDecoder().decode(
+            XomoFigmaNodeResponse.self,
+            from: Data(
+                #"{"name":"Typography","nodes":{"1:1":{"document":{"id":"1:1","name":"Caption","type":"TEXT","characters":"Caption","style":{"fontSize":16,"lineHeightPercent":120,"lineHeightUnit":"INTRINSIC_%"},"fills":[{"type":"SOLID","color":{"r":0,"g":0,"b":0,"a":1}}],"absoluteBoundingBox":{"x":0,"y":0,"width":120,"height":24}}}}}"#.utf8
+            )
+        )
+
+        let plan = try XomoFigmaNodeImportMapper.makePlan(response: response, requestedNodeID: "1:1")
+        let item = try #require(plan.items.first)
+        #expect(item.text?.lineHeight == nil)
+        #expect(item.fidelity == .partial)
+        #expect(item.issues.contains(.textLineHeightFlattened))
+    }
+
     @Test func figmaSliceBecomesNativeFireworksSliceAndExportsWithoutCreatingLayer() throws {
         let response = try JSONDecoder().decode(
             XomoFigmaNodeResponse.self,

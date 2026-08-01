@@ -288,6 +288,9 @@ enum XomoFigmaNodeImportMapper {
            textCase != "ORIGINAL" {
             issues.append(.textCaseFlattened)
         }
+        if hasUnmappedLineHeight(node.style) {
+            issues.append(.textLineHeightFlattened)
+        }
         let exportPresetMapping = mappedExportPresets(
             node.exportSettings,
             frame: node.absoluteBoundingBox
@@ -1004,6 +1007,15 @@ enum XomoFigmaNodeImportMapper {
             ? style.lineHeightPercent.flatMap { $0.isFinite && $0 >= 0 ? $0 : nil }
             : nil)
         return percent.map { fontSize * $0 / 100 }
+    }
+
+    private static func hasUnmappedLineHeight(_ style: XomoFigmaTypeStyle?) -> Bool {
+        guard let style else { return false }
+        let exposesLineHeight = style.lineHeightPx != nil
+            || style.lineHeightPercentFontSize != nil
+            || style.lineHeightPercent != nil
+            || style.lineHeightUnit != nil
+        return exposesLineHeight && lineHeight(for: style) == nil
     }
 
     private static func hasUnsupportedCornerStyle(_ node: XomoFigmaNode) -> Bool {
