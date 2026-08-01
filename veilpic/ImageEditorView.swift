@@ -2462,11 +2462,11 @@ struct ImageEditorView: View {
                         refreshCanvasCursor(in: geometry.size)
                     }
                 }
-                .onChange(of: viewModel.selectedXomoObjectKind) { _ in
-                    // Clicking an item in the component library can insert a
-                    // new object without changing the sidebar tab. Refresh
-                    // here so a stale drawing-tool cursor cannot remain over
-                    // the canvas after the object becomes selected.
+                .onChange(of: viewModel.document.selectedLayerID) { _ in
+                    // Selection identity, rather than component kind, is the
+                    // authoritative change signal. Moving from one button to
+                    // another button must refresh the cursor even though both
+                    // objects have the same kind.
                     if viewModel.selectedLeftSidebarTab == .components {
                         NSCursor.arrow.set()
                     }

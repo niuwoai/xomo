@@ -534,6 +534,23 @@ struct XomoLeftSidebarTests {
         #expect(viewModel.workspaceInputMode == .componentLibrary(.iconButton))
     }
 
+    @Test func sameKindComponentInsertionChangesSelectionIdentity() throws {
+        let image = NSImage.transparent(size: CGSize(width: 640, height: 480))
+        let viewModel = ImageEditorViewModel(sourceName: "source", image: image) { _ in }
+        viewModel.selectLeftSidebarTab(.components)
+
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 60, y: 70))
+        let firstID = try #require(viewModel.document.selectedLayerID)
+        #expect(viewModel.selectedXomoObjectKind == .button)
+
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 220, y: 70))
+        let secondID = try #require(viewModel.document.selectedLayerID)
+
+        #expect(secondID != firstID)
+        #expect(viewModel.selectedXomoObjectKind == .button)
+        #expect(viewModel.workspaceInputMode == .componentLibrary(.button))
+    }
+
     @Test func componentWorkspaceOwnsItsOptionBarAndHintPresentation() throws {
         let repositoryRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
@@ -578,7 +595,8 @@ struct XomoLeftSidebarTests {
         )
 
         #expect(source.contains(".onChange(of: viewModel.selectedLeftSidebarTab)"))
-        #expect(source.contains(".onChange(of: viewModel.selectedXomoObjectKind)"))
+        #expect(source.contains(".onChange(of: viewModel.document.selectedLayerID)"))
+        #expect(!source.contains(".onChange(of: viewModel.selectedXomoObjectKind)"))
         #expect(source.contains("switch canvasInteractionTool"))
         #expect(source.contains(".simultaneousGesture(canvasGesture(in: geometry.size))"))
         #expect(source.contains("NSEvent.modifierFlags.contains(.shift)"))
