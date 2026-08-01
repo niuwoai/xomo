@@ -570,6 +570,22 @@ struct XomoLeftSidebarTests {
         #expect(viewModel.document.selectedLayerIDs == [firstID])
     }
 
+    @Test func lockingSelectedComponentRemovesTransformCapabilities() throws {
+        let image = NSImage.transparent(size: CGSize(width: 640, height: 480))
+        let viewModel = ImageEditorViewModel(sourceName: "source", image: image) { _ in }
+        viewModel.insertXomoComponent(.button, at: CGPoint(x: 60, y: 70))
+        let componentID = try #require(viewModel.document.selectedLayerID)
+
+        #expect(viewModel.canResizeSelectedLayer)
+        #expect(viewModel.canRotateSelectedLayer)
+
+        viewModel.toggleLayerLock(componentID)
+
+        #expect(!viewModel.canResizeSelectedLayer)
+        #expect(!viewModel.canRotateSelectedLayer)
+        #expect(viewModel.document.selectedLayerID == componentID)
+    }
+
     @Test func componentWorkspaceOwnsItsOptionBarAndHintPresentation() throws {
         let repositoryRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
@@ -618,6 +634,8 @@ struct XomoLeftSidebarTests {
         #expect(!source.contains(".onChange(of: viewModel.document.selectedLayerID)"))
         #expect(source.contains(".onChange(of: viewModel.document.areTransformControlsVisible)"))
         #expect(source.contains(".onChange(of: viewModel.document.areExtrasVisible)"))
+        #expect(source.contains(".onChange(of: viewModel.canResizeSelectedLayer)"))
+        #expect(source.contains(".onChange(of: viewModel.canRotateSelectedLayer)"))
         #expect(!source.contains(".onChange(of: viewModel.selectedXomoObjectKind)"))
         #expect(source.contains("switch canvasInteractionTool"))
         #expect(source.contains(".simultaneousGesture(canvasGesture(in: geometry.size))"))

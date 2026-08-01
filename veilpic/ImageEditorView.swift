@@ -2477,6 +2477,12 @@ struct ImageEditorView: View {
                 .onChange(of: viewModel.document.areExtrasVisible) { _ in
                     refreshCanvasCursor(in: geometry.size)
                 }
+                .onChange(of: viewModel.canResizeSelectedLayer) { _ in
+                    refreshCanvasCursor(in: geometry.size)
+                }
+                .onChange(of: viewModel.canRotateSelectedLayer) { _ in
+                    refreshCanvasCursor(in: geometry.size)
+                }
                 .onChange(of: viewModel.brushSize) { _ in
                     refreshCanvasCursor(in: geometry.size)
                 }
